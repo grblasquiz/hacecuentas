@@ -1,12 +1,32 @@
 {
   "slug": "calculadora-sueldo-neto-a-bruto",
-  "title": "Calculadora de Sueldo Neto a Bruto Argentina 2026 | Hacé Cuentas",
-  "h1": "Calculadora de sueldo neto a bruto",
-  "description": "Partís del neto (lo que cobrás en mano) y te decimos qué sueldo bruto genera ese neto. Útil para negociar aumento o comparar ofertas.",
+  "title": "Calculadora Sueldo Neto a Bruto 2026 Argentina | Hacé Cuentas",
+  "h1": "Calculadora de sueldo neto a bruto en Argentina",
+  "description": "Convertí tu sueldo neto 'en mano' a bruto 2026: partimos del neto y despejamos el bruto con aportes 17% + escala Ganancias ARCA. Ideal para negociar aumento.",
   "category": "finanzas",
   "icon": "🔄",
   "formulaId": "neto-a-bruto",
-  "intro": "Cuando te ofrecen un trabajo \"en mano\" y querés saber cuánto bruto corresponde, o cuando negociás un aumento del neto. Te despejamos el bruto aplicando 17 % de aportes + la escala de Ganancias.",
+  "seoKeywords": [
+    "sueldo neto a bruto",
+    "convertir neto en bruto",
+    "calculadora bruto desde neto",
+    "sueldo en mano argentina",
+    "de neto a bruto 2026",
+    "bruto equivalente",
+    "aportes 17 por ciento",
+    "escala ganancias 2026",
+    "negociar aumento en mano",
+    "oferta laboral neto"
+  ],
+  "intro": "Cuando te ofrecen un trabajo **\"en mano\"** (neto), comparás dos ofertas **una con bruto y otra con neto**, o negociás un aumento sobre lo que cobrás efectivamente, necesitás hacer el camino inverso al habitual: **desde el neto despejar el bruto**. Este cálculo **no es lineal** porque el **Impuesto a las Ganancias 4ta categoría** es **progresivo** (cuanto más bruto, más alícuota marginal), por lo que **no podés simplemente dividir por 0.83** (suponiendo solo aportes del 17%). La calculadora aplica **búsqueda binaria**: prueba distintos brutos hasta que la fórmula `bruto − aportes(17%) − ganancias(base)` coincida con el neto que pediste. Tiene en cuenta **familiares a cargo** (cónyuge + hijos menores de 18, sube el MNI ~$482k por cada uno) para que la respuesta sea precisa. Útil para **candidatos en entrevistas**, **empleados negociando aumento**, **reclutadores** que cotizan ofertas, **liquidadores** que arman recibos a partir de un acuerdo en mano y **empresas** que acuerdan un neto con un directivo.",
+  "keyTakeaway": "La conversión **neto → bruto NO es lineal**. Para sueldos **bajos (sin Ganancias)** el bruto es aproximadamente **neto × 1.205** (17% aportes). Para sueldos **altos (con Ganancias)** el multiplicador sube a **1.35× – 1.55×** según alícuota marginal aplicable. **Por cada familiar a cargo**, el umbral sube ~$482k y baja el impuesto.",
+  "useCases": [
+    "Te ofrecen un puesto 'en mano' y querés saber qué bruto pedir en el contrato formal.",
+    "Tu RRHH te ofrece un aumento del 20% en neto y necesitás saber a cuánto bruto equivale.",
+    "Comparás dos ofertas: una te da $1.5M bruto, la otra $1.2M neto — cuál pagás más.",
+    "Sos headhunter y convertís rápido entre neto y bruto para armar propuestas.",
+    "Sos empresa acordando un neto garantizado con un directivo y necesitás el bruto para el contrato."
+  ],
   "fields": [
     { "id": "neto", "label": "Sueldo neto (en mano)", "type": "number", "prefix": "$", "placeholder": "1200000", "format": "thousands", "min": 0, "step": 1000, "required": true },
     { "id": "cargas", "label": "Familiares a cargo", "type": "select", "default": "0", "options": [{"value":"0","label":"Ninguno"},{"value":"1","label":"1"},{"value":"2","label":"2"},{"value":"3","label":"3"},{"value":"4","label":"4 o más"}] }
@@ -17,8 +37,66 @@
     { "id": "aportes", "label": "Aportes (17%)", "format": "currency" },
     { "id": "ganancias", "label": "Impuesto a las Ganancias", "format": "currency" }
   ],
-  "explanation": "## Cómo se despeja el bruto\n\nLa relación neto ↔ bruto no es lineal porque el Impuesto a las Ganancias es progresivo. Por eso se usa **búsqueda binaria**: vamos probando brutos hasta que el neto calculado coincide con el que pediste.\n\n```\nNeto = Bruto − (17% aportes) − Ganancias(base)\n```\n\n### Cuándo usarla\n\n- Negociás un aumento de \"$X en mano\"\n- Comparás ofertas (una te da neto, otra bruto)\n- Estimás costo laboral para un monto neto acordado",
+  "example": {
+    "title": "Ejemplo real: quiero $2.000.000 'en mano' sin familiares a cargo",
+    "steps": [
+      "**Neto deseado**: $2.000.000.",
+      "**Familiares a cargo**: ninguno (soltero sin hijos).",
+      "**Primer intento**: bruto = $2.000.000 / 0.83 = $2.409.639.",
+      "  • Aportes 17%: $409.639.",
+      "  • Neto de aportes: $2.000.000.",
+      "  • Base imponible Ganancias: $2M − MNI $2.28M = **negativa → no paga Ganancias**.",
+      "  • **Neto efectivo**: $2.000.000 ✓ (primera iteración coincide).",
+      "**Verificación**: si pidiera $3.000.000 neto, el cálculo sería distinto: bruto ~$3.7M, aportes $629k, Ganancias ~$70k, neto real ~$3.001.000.",
+      "Para brutos cerca de $2.75M empieza a haber Ganancias, y el ratio neto/bruto baja."
+    ],
+    "result": "Para cobrar **$2M en mano** sin familiares a cargo, pedí **$2.409.639 bruto** (multiplicador 1.20×). Si quisieras $3M en mano, necesitás ~$3.7M bruto (multiplicador 1.23× porque ya paga algo de Ganancias). Para $5M en mano, bruto ~$6.8M (multiplicador 1.36×, tramo alto de Ganancias)."
+  },
+  "explanation": "## Cómo se convierte sueldo neto a bruto\n\nLa relación **neto ↔ bruto** en Argentina **no es lineal** porque el Impuesto a las Ganancias de 4ta categoría es **progresivo**. Por eso no podés hacer simplemente `neto / 0.83` (asumiendo solo aportes del 17%).\n\n### Fórmula completa\n\n```\nNeto = Bruto − Aportes (17%) − Ganancias(Bruto, familiares, otras deducciones)\n```\n\nDonde:\n- **Aportes 17%** = 11% jubilación + 3% obra social + 3% PAMI.\n- **Ganancias** depende del excedente sobre el MNI efectivo y la escala progresiva.\n- **Familiares a cargo** suben el MNI, reduciendo Ganancias.\n\n### Método: búsqueda binaria\n\nComo la función **Ganancias(Bruto)** es no lineal, la calculadora usa **búsqueda binaria**:\n\n```\n1. Estima bruto_inicial = neto / 0.83\n2. Calcula neto(bruto_inicial)\n3. Si resultado > objetivo: baja el bruto\n   Si resultado < objetivo: sube el bruto\n4. Itera hasta que la diferencia < $100\n```\n\nConverge en 15-20 iteraciones para cualquier monto.\n\n## Tabla de conversión rápida (sin familiares a cargo, 2026)\n\n| Neto deseado | Bruto equivalente | Multiplicador | Ganancias mensual |\n|---|---|---|---|\n| $500.000 | $602.410 | 1.20× | $0 |\n| $1.000.000 | $1.204.819 | 1.20× | $0 |\n| $1.500.000 | $1.807.229 | 1.20× | $0 |\n| $2.000.000 | $2.409.639 | 1.20× | $0 |\n| $2.500.000 | $3.050.000 | 1.22× | $28.000 |\n| $3.000.000 | $3.750.000 | 1.25× | $85.000 |\n| $3.500.000 | $4.500.000 | 1.29× | $180.000 |\n| $4.000.000 | $5.300.000 | 1.33× | $305.000 |\n| $5.000.000 | $6.850.000 | 1.37× | $610.000 |\n| $7.000.000 | $10.150.000 | 1.45× | $1.400.000 |\n| $10.000.000 | $15.250.000 | 1.53× | $2.850.000 |\n\n## Impacto de los familiares a cargo\n\nCada **familiar a cargo** (cónyuge sin ingresos superiores al MNI, hijos menores de 18, padres mayores) **sube el MNI efectivo** ~$482.000/mes, reduciendo Ganancias:\n\n| Familiares a cargo | Umbral Ganancias (bruto desde el cual paga) | Reducción mensual |\n|---|---|---|\n| 0 | ~$2.750.000 | — |\n| 1 (cónyuge) | ~$3.232.000 | ~$30.000/mes |\n| 2 (cónyuge + 1 hijo) | ~$3.714.000 | ~$60.000/mes |\n| 3 (cónyuge + 2 hijos) | ~$4.196.000 | ~$85.000/mes |\n| 4 (cónyuge + 3 hijos) | ~$4.678.000 | ~$110.000/mes |\n\n## Qué deducciones no incluye la calculadora (pero podrías sumar)\n\nLa calculadora estima con **MNI + deducción especial 4.8× + familiares a cargo**. **No incluye** las siguientes deducciones opcionales que podés cargar en **SIRADIG** (Art. 85 Ley 20.628):\n\n| Deducción | Descripción | Impacto mensual típico |\n|---|---|---|\n| Alquiler (40%, tope MNI anual) | Vivienda única con contrato registrado | +$100-$500k |\n| Medicina prepaga | Titular + grupo familiar | +$50-$200k |\n| Servicio doméstico | Personal registrado | +$150-$300k |\n| Crédito hipotecario | Intereses (no capital) | +$20-$50k |\n| Donaciones (hasta 5% ganancia neta) | Instituciones registradas ARCA | Variable |\n| Seguros de vida y retiro | Primas | +$3-$10k |\n\nSi cargás estas deducciones, **tu neto real es mayor al que calcula esta herramienta**, lo que significa que **pedí un bruto menor** del que te devuelve.\n\n## Uso en negociación salarial\n\n### Escenario 1: te ofrecen $X neto\n\n1. Poné el neto y tus familiares a cargo en la calculadora.\n2. Obtené el bruto equivalente.\n3. **Pedí ese bruto en el contrato**. Asegurate que el contrato diga bruto (no 'en mano'), porque si cambian tus cargas o las alícuotas, tu neto queda protegido.\n\n### Escenario 2: comparás ofertas\n\nLlevá las dos ofertas al **mismo denominador**:\n\n- Oferta A: $2.000.000 bruto → usá [calculadora de sueldo en mano](/sueldo-en-mano-argentina) para sacar neto.\n- Oferta B: $1.400.000 neto → usá esta calculadora para sacar bruto.\n\nLuego compará **bruto vs bruto** o **neto vs neto**.\n\n### Escenario 3: pedís aumento\n\nTu recibo dice **neto $1.200.000** y querés **$1.500.000 en mano**. La calculadora te dice que el bruto debe pasar de X a Y. Pedí ese **aumento del bruto** al empleador: un aumento del 25% en el neto puede ser un aumento del **27-30% en el bruto** si cruzás la barrera de Ganancias.\n\n## ¿Por qué el bruto no es simplemente neto × 1.21?\n\nPorque:\n\n1. El **17% de aportes** (jubilación + OS + PAMI) es fijo y proporcional → multiplicador base 1/0.83 = **1.205**.\n2. El **Impuesto a las Ganancias** es **progresivo** (5% → 35% marginal). A medida que subís de sueldo, retenés más proporción.\n3. Las **deducciones personales** (MNI, familiares) reducen Ganancias pero su efecto es **fijo en pesos**, no proporcional.\n4. Los **aportes tienen tope MOPRE** a sueldos muy altos (~$4.3M en 2024), que pueden cambiar el cálculo en tramos extremos.\n\nPor todo esto, el multiplicador **real** va de **1.20× (sueldos bajos)** a **1.55× (sueldos muy altos con Ganancias 35%)**.\n\n## Errores comunes\n\n1. **Dividir neto por 0.83**: solo sirve para sueldos por debajo del MNI de Ganancias (~$2.75M bruto). Encima, subestimás el bruto.\n2. **Multiplicar neto por 1.21**: error frecuente en RRHH. El ratio bruto/neto depende del tramo.\n3. **Olvidar familiares a cargo**: si tenés cónyuge + hijos, el bruto necesario es **menor** porque Ganancias es menor.\n4. **No cargar SIRADIG**: si tenés alquiler, prepaga, servicio doméstico, podés tener neto mayor con el mismo bruto. Ver [calculadora de Ganancias](/calculadora-impuesto-ganancias-sueldo).\n5. **Firmar contrato en neto**: siempre firmá en bruto. Si cambian las alícuotas o deducciones, protegés tu ingreso real.\n\n## Calculadoras relacionadas\n\n- [Sueldo en mano Argentina (bruto a neto)](/sueldo-en-mano-argentina) — la operación inversa.\n- [Ganancias sobre sueldo](/calculadora-impuesto-ganancias-sueldo) — detalle de las retenciones aplicadas.\n- [Sueldo por hora](/calculadora-sueldo-por-hora) — convertir el bruto resultante a valor por hora.\n- [Costo laboral empleado](/calculadora-costo-laboral-empleado) — cuánto le cuesta a la empresa el bruto calculado.",
   "faq": [
-    { "q": "¿Por qué el bruto no es simplemente neto × 1.17?", "a": "Porque si superás el MNI de Ganancias, el impuesto se suma a los descuentos. La proporción varía según el sueldo." }
+    {
+      "q": "¿Por qué el bruto no es simplemente neto × 1.17?",
+      "a": "Porque el **Impuesto a las Ganancias es progresivo**. Mientras el sueldo sea **bajo (sin Ganancias)**, sí funciona la multiplicación por 1.205 (inverso del 17% aportes). Pero en cuanto superás el MNI (~$2.75M bruto sin familiares), empieza a retener Ganancias y el multiplicador sube: **1.25× para sueldos medios**, **1.35-1.45× para sueldos altos**, **1.55×** cerca de la alícuota máxima del 35%. La calculadora aplica búsqueda binaria para encontrar el bruto exacto."
+    },
+    {
+      "q": "¿Cómo afectan los familiares a cargo?",
+      "a": "Cada **familiar a cargo** (cónyuge sin ingresos, hijo menor de 18, hijo estudiante hasta 24, padre mayor) **sube el MNI efectivo** ~$482.000 mensuales (para 2026), lo que **reduce Ganancias** y baja el bruto necesario. Por ejemplo: para cobrar **$3M neto sin hijos** necesitás ~$3.75M bruto. Para cobrar **$3M neto con cónyuge + 2 hijos** necesitás **~$3.5M bruto** (~$250k menos). Declarás cargas en **SIRADIG-Trabajador** de ARCA."
+    },
+    {
+      "q": "¿Qué pasa con el aguinaldo en esta conversión?",
+      "a": "La calculadora estima el **sueldo mensual neto → bruto**. El **aguinaldo (SAC)** se paga aparte en junio y diciembre (50% del mejor sueldo del semestre). Como las Ganancias se proyectan sobre **13 sueldos anuales**, la retención mensual ya incluye la proporción del aguinaldo. Entonces el bruto mensual calculado **aplica 13 veces al año** (12 sueldos + 1 SAC). Ver [calculadora de aguinaldo](/calculadora-aguinaldo-sac)."
+    },
+    {
+      "q": "¿Incluye deducciones de alquiler o prepaga?",
+      "a": "**No**. La calculadora estima con **MNI + deducción especial + familiares a cargo**. Las deducciones opcionales (**alquiler al 40%**, **medicina prepaga**, **servicio doméstico**, **crédito hipotecario**, **donaciones**) las cargás en **SIRADIG** y reducen tu retención real. Si las cargás, tu neto real es **mayor al que calcula esta herramienta** → podés pedir un **bruto menor** para el mismo neto objetivo."
+    },
+    {
+      "q": "¿Cómo negocio si me ofrecen un neto bajo?",
+      "a": "**Usá esta calculadora para llevar todo a bruto**, que es el lenguaje estándar de contratos. Si te ofrecen '$X en mano', pedí que te lo pongan **en bruto** en el contrato con la equivalencia de la calculadora. **Ventajas**: 1) Si las alícuotas cambian, tu bruto queda fijo (tu neto puede subir o bajar, pero el compromiso del empleador es claro). 2) Es el número que afecta tu jubilación futura, aguinaldo, vacaciones, indemnización. 3) Es más fácil comparar con mercado."
+    },
+    {
+      "q": "¿Qué descuentos incluye el cálculo del neto?",
+      "a": "**Descuentos legales obligatorios**: **17% aportes** (11% SIPA jubilación + 3% obra social + 3% PAMI) + **Impuesto a las Ganancias 4ta categoría** (progresivo). **NO incluye**: cuota sindical (2-3% según CCT), seguro de vida colectivo (~0.5%), cuota prepaga diferencial si corresponde. Esos descuentos bajarán aún más tu neto real, por lo que **el bruto calculado es el mínimo** para alcanzar el neto objetivo."
+    },
+    {
+      "q": "¿Es lo mismo para todas las provincias?",
+      "a": "**Casi. Excepción zona patagónica**: La Pampa, Río Negro, Neuquén, Chubut, Santa Cruz, Tierra del Fuego tienen **MNI y escala de Ganancias incrementados un 22%** (Art. 82 Ley 27.541). Un empleado en **Ushuaia** con sueldo alto pagaría **menos Ganancias** que uno en **Buenos Aires** con el mismo bruto → el **multiplicador neto→bruto sería menor**. La calculadora usa la escala nacional general; si estás en patagónica, restá aproximadamente 20% al impuesto Ganancias calculado."
+    },
+    {
+      "q": "¿Puedo aplicar esta calculadora a monotributistas?",
+      "a": "**No**. Los **monotributistas** pagan una **cuota fija mensual** por categoría que incluye todo el componente impositivo. No hay conversión neto→bruto lineal para ellos porque no tienen aportes porcentuales ni escala progresiva. Para monotributistas: el **neto** es igual al **facturado − cuota mensual − IIBB**. Ver [calculadora de monotributo](/calculadora-monotributo-2026) y [monotributo vs RI](/calculadora-monotributo-vs-responsable-inscripto)."
+    }
+  ],
+  "sources": [
+    { "name": "Ley 20.628 - Impuesto a las Ganancias", "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/40000-44999/44911/texact.htm" },
+    { "name": "Ley 24.241 - Sistema Integrado Previsional Argentino (aportes 17%)", "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/639/texact.htm" },
+    { "name": "Ley 27.743 - Ley Bases (restauración Ganancias 4ta)", "url": "https://www.argentina.gob.ar/normativa/nacional/ley-27743-400946" },
+    { "name": "ARCA - SIRADIG-Trabajador", "url": "https://servicios1.afip.gov.ar/siradig/" }
+  ],
+  "relatedSlugs": [
+    "sueldo-en-mano-argentina",
+    "calculadora-impuesto-ganancias-sueldo",
+    "calculadora-sueldo-por-hora",
+    "calculadora-costo-laboral-empleado"
   ]
 }

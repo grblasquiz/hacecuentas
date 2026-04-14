@@ -52,11 +52,27 @@ const categoryLabels: Record<string, string> = {
   cocina: 'Cocina',
 };
 
+// dateModified = fecha del archivo JSON (freshness real) con fallback a build date
+let dateModified: string;
+try {
+  const { statSync } = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const { dirname, join } = await import('node:path');
+  const __dir = dirname(fileURLToPath(import.meta.url));
+  const filePath = join(__dir, '..', 'content', 'calcs', `${calc.formulaId || calc.slug}.json`);
+  dateModified = statSync(filePath).mtime.toISOString();
+} catch {
+  dateModified = new Date().toISOString();
+}
+const datePublished = '2025-09-01T00:00:00Z';
+
 const schemaHowTo = {
   '@context': 'https://schema.org',
   '@type': 'HowTo',
   name: calc.h1,
   description: calc.description,
+  totalTime: 'PT1M',
+  inLanguage: 'es-AR',
   step: calc.fields.map((f: any, i: number) => ({
     '@type': 'HowToStep',
     position: i + 1,
@@ -88,7 +104,31 @@ const schemaBreadcrumb = {
   ],
 };
 
-const schemaGraph = [schemaHowTo, schemaBreadcrumb];
+// SoftwareApplication + WebApplication — Google las usa para web apps / calculadoras
+const schemaApp = {
+  '@context': 'https://schema.org',
+  '@type': ['SoftwareApplication', 'WebApplication'],
+  name: calc.h1,
+  description: calc.description,
+  url: `https://hacecuentas.com/${calc.slug}`,
+  mainEntityOfPage: `https://hacecuentas.com/${calc.slug}`,
+  applicationCategory: 'UtilitiesApplication',
+  applicationSubCategory: 'Calculator',
+  operatingSystem: 'Any (Web)',
+  browserRequirements: 'Requires JavaScript. Requires HTML5.',
+  inLanguage: 'es-AR',
+  isAccessibleForFree: true,
+  datePublished,
+  dateModified,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Hacé Cuentas',
+    url: 'https://hacecuentas.com',
+  },
+};
+
+const schemaGraph: any[] = [schemaHowTo, schemaBreadcrumb, schemaApp];
 if (schemaFAQ) schemaGraph.push(schemaFAQ);
 const schema = { '@context': 'https://schema.org', '@graph': schemaGraph };
 
@@ -97,6 +137,20 @@ const updated = new Date().toLocaleDateString('es-AR', { month: 'long', year: 'n
 // Reading time: ~200 palabras/minuto en español
 const wordCount = calc.explanation ? calc.explanation.split(/\s+/).length : 0;
 const readingMin = Math.max(1, Math.round(wordCount / 200));
+
+// Nuevos campos SEO (todos opcionales)
+const sources: Array<{ name: string; url?: string }> = calc.sources || [];
+const useCases: string[] = calc.useCases || [];
+const example: { title?: string; steps?: string[]; result?: string } | null = calc.example || null;
+const keyTakeaway: string = calc.keyTakeaway || '';
+const relatedSlugs: string[] = calc.relatedSlugs || [];
+
+// Lookup para related links dentro del contenido
+const allCalcsModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
+const relatedContextual = relatedSlugs
+  .map((s) => allCalcs.find((c) => c.slug === s))
+  .filter(Boolean);
 ---
 
 <Layout
@@ -129,10 +183,18 @@ const readingMin = Math.max(1, Math.round(wordCount / 200));
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Actualizado: {updated}
         </span>
-        <span class="meta-item">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          Fórmula explicada
-        </span>
+        {sources.length > 0 && (
+          <span class="meta-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            Fuente: {sources.map((s) => s.name).join(', ')}
+          </span>
+        )}
+        {sources.length === 0 && (
+          <span class="meta-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Fórmula explicada
+          </span>
+        )}
         <span class="meta-item">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           100% privado
@@ -141,6 +203,38 @@ const readingMin = Math.max(1, Math.round(wordCount / 200));
     </header>
 
     <Calculator config={calc} />
+
+    {keyTakeaway && (
+      <aside class="key-takeaway" aria-label="Resumen rápido">
+        <div class="kt-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </div>
+        <div><strong>En pocas palabras:</strong> <span set:html={md(keyTakeaway)} /></div>
+      </aside>
+    )}
+
+    {useCases.length > 0 && (
+      <section class="use-cases" aria-labelledby="use-cases-heading">
+        <h2 id="use-cases-heading">Cuándo usar esta calculadora</h2>
+        <ul>
+          {useCases.map((u: string) => (
+            <li set:html={md(u)} />
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {example && example.steps && (
+      <section class="example" aria-labelledby="example-heading">
+        <h2 id="example-heading">{example.title || 'Ejemplo paso a paso'}</h2>
+        <ol class="example-steps">
+          {example.steps.map((s: string) => <li set:html={md(s)} />)}
+        </ol>
+        {example.result && (
+          <div class="example-result"><strong>Resultado:</strong> <span set:html={md(example.result)} /></div>
+        )}
+      </section>
+    )}
 
     {calc.explanation && (
       <section class="explanation">
@@ -165,8 +259,41 @@ const readingMin = Math.max(1, Math.round(wordCount / 200));
                 <span>{f.q}</span>
                 <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
               </summary>
-              <p>{f.a}</p>
+              <div set:html={`<p>${md(f.a)}</p>`} />
             </details>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {sources.length > 0 && (
+      <section class="sources-box" aria-labelledby="sources-heading">
+        <h2 id="sources-heading">Fuentes y referencias</h2>
+        <ul>
+          {sources.map((s: any) => (
+            <li>
+              {s.url
+                ? <a href={s.url} target="_blank" rel="noopener nofollow">{s.name}</a>
+                : <span>{s.name}</span>
+              }
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {relatedContextual.length > 0 && (
+      <section class="also-see" aria-labelledby="also-heading">
+        <h2 id="also-heading">También te puede interesar</h2>
+        <div class="also-grid">
+          {relatedContextual.map((c: any) => (
+            <a href={`/${c.slug}`} class="also-card">
+              <span class="also-icon" aria-hidden="true">{c.icon}</span>
+              <span class="also-body">
+                <span class="also-title">{c.h1}</span>
+                <span class="also-desc">{c.description}</span>
+              </span>
+            </a>
           ))}
         </div>
       </section>
@@ -452,6 +579,162 @@ const readingMin = Math.max(1, Math.round(wordCount / 200));
     margin: 0;
     line-height: 1.65;
     font-size: 0.9375rem;
+  }
+
+  /* Key takeaway (resumen rápido) */
+  .key-takeaway {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    margin-top: 2rem;
+    padding: 1rem 1.25rem;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+  .key-takeaway .kt-icon { color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+  .key-takeaway strong { color: var(--accent-strong); }
+
+  /* Use cases */
+  .use-cases {
+    margin-top: 2.5rem;
+    padding: 1.75rem 2rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .use-cases h2 {
+    margin: 0 0 0.875rem;
+    font-size: 1.25rem;
+  }
+  .use-cases ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .use-cases li {
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 0.375rem;
+  }
+
+  /* Example paso a paso */
+  .example {
+    margin-top: 2.5rem;
+    padding: 1.75rem 2rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .example h2 { margin: 0 0 1rem; font-size: 1.25rem; }
+  .example-steps {
+    margin: 0 0 1rem;
+    padding-left: 1.25rem;
+    counter-reset: step;
+  }
+  .example-steps li {
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 0.5rem;
+  }
+  .example-steps li :global(code), .example-steps :global(code) {
+    background: var(--bg-muted);
+    padding: 0.0625rem 0.375rem;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    color: var(--accent-strong);
+  }
+  .example-result {
+    padding: 0.75rem 1rem;
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.9375rem;
+  }
+  .example-result strong { color: var(--accent-strong); }
+
+  /* Fuentes */
+  .sources-box {
+    margin-top: 2.5rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .sources-box h2 {
+    margin: 0 0 0.625rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .sources-box ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .sources-box li {
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    font-size: 0.9375rem;
+  }
+  .sources-box a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .sources-box a:hover { text-decoration: underline; }
+
+  /* Related contextual */
+  .also-see {
+    margin-top: 3rem;
+  }
+  .also-see h2 {
+    font-size: 1.25rem;
+    margin: 0 0 1rem;
+  }
+  .also-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.75rem;
+  }
+  .also-card {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .also-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+  }
+  .also-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+  }
+  .also-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.125rem; }
+  .also-title { font-weight: 600; font-size: 0.9375rem; line-height: 1.3; }
+  .also-desc { font-size: 0.75rem; color: var(--text-subtle); line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   /* CTA back */

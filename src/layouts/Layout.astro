@@ -16,7 +16,9 @@ const {
 } = Astro.props;
 
 const siteUrl = 'https://hacecuentas.com';
-const fullCanonical = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${Astro.url.pathname}`;
+// Cloudflare Pages sirve /foo.html en /foo — canonical sin .html para matchear sitemap
+const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/') || '/';
+const fullCanonical = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${cleanPath}`;
 const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
 
 // Schema.org WebSite + Organization global (siempre presente)
@@ -76,6 +78,10 @@ const globalSchema = {
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={fullCanonical} />
+    <link rel="alternate" hreflang="es-AR" href={fullCanonical} />
+    <link rel="alternate" hreflang="es" href={fullCanonical} />
+    <link rel="alternate" hreflang="x-default" href={fullCanonical} />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />

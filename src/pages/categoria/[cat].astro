@@ -15,110 +15,703 @@ export async function getStaticPaths() {
 
 const { cat, calcs } = Astro.props;
 
-const meta: Record<string, { label: string; title: string; desc: string; intro: string; color: string; icon: string }> = {
+interface CatMeta {
+  label: string;
+  title: string;
+  desc: string;
+  intro: string;
+  color: string;
+  icon: string;
+  seoContent: string; // markdown con H2/H3
+  faq: Array<{ q: string; a: string }>;
+}
+
+const meta: Record<string, CatMeta> = {
   finanzas: {
     label: 'Finanzas',
-    title: 'Calculadoras de Finanzas — Sueldo, Préstamos, Impuestos | Hacé Cuentas',
+    title: 'Calculadoras de Finanzas 2026 — Sueldo, Préstamos, Impuestos | Hacé Cuentas',
     desc: 'Calculadoras financieras para Argentina: sueldo en mano, aguinaldo, indemnización, préstamos, monotributo, plazo fijo y más. Fórmulas oficiales actualizadas.',
     intro: 'Todo lo que necesitás calcular para manejar tu plata y tu trabajo: sueldos, aguinaldo, indemnización, préstamos, impuestos e inversiones. Fórmulas adaptadas a la legislación argentina y actualizadas a 2026.',
     color: '#2563eb',
     icon: '💰',
+    seoContent: `## Cálculos financieros más usados en Argentina
+
+Las finanzas personales en Argentina requieren entender varios conceptos clave: el **sueldo bruto y neto** (con descuentos del 17% por Jubilación, Obra Social y PAMI), el **aguinaldo o SAC** (50% del mejor sueldo semestral), la **indemnización por despido** (fallo Vizzoti como tope histórico), el **monotributo** con sus categorías A-K actualizadas semestralmente por AFIP/ARCA, el **plazo fijo** con TNA vs TEA, y los **préstamos bancarios** con cuota calculada por el sistema francés. Cada una de estas calculadoras usa las **fórmulas oficiales vigentes** (Ley 20.744 LCT, Ley 20.628 Ganancias, Ley 27.743 Bases, Resolución General 5860 ARCA) y se actualiza cuando hay cambios normativos.
+
+## Conceptos clave
+
+- **TNA (Tasa Nominal Anual)**: la que te publica el banco. No refleja el rendimiento real porque no capitaliza intereses.
+- **TEA (Tasa Efectiva Anual)**: la que realmente rinde una inversión cuando capitalizás los intereses. Siempre mayor que la TNA.
+- **CFT (Costo Financiero Total)**: el "verdadero precio" de un préstamo. Suma TNA + IVA sobre intereses + comisiones + seguros.
+- **Aguinaldo**: mitad del mejor sueldo del semestre. Se paga en junio (primer SAC) y diciembre (segundo SAC).
+- **Indemnización**: un sueldo por año de antigüedad, topeado por el fallo Vizzoti (2004) a 3× el convenio promedio.
+- **Ganancias (4ta categoría)**: grava sueldos altos. Tiene mínimo no imponible + cargas de familia + deducciones.
+
+## Cuándo usar cada calculadora
+
+Si acabás de cobrar el primer sueldo o cambiaste de trabajo, usá la calculadora de **sueldo neto** para saber cuánto te queda después de descuentos. Si te despidieron, calculá la **indemnización** con tu antigüedad. Si sos freelance o autónomo, compará **Monotributo vs Responsable Inscripto** para decidir el régimen tributario óptimo. Si estás por sacar un **préstamo o hipotecario UVA**, simulá la cuota y el CFT antes de firmar. Si tenés ahorros, calculá el rendimiento real del **plazo fijo** restando la inflación esperada (tasa real = tasa nominal − inflación).`,
+    faq: [
+      {
+        q: '¿Las fórmulas están actualizadas a 2026?',
+        a: 'Sí. Todas nuestras calculadoras financieras se actualizan cuando hay cambios normativos (ARCA/AFIP, BCRA, Ministerio de Economía). El aguinaldo, Ganancias, Monotributo y escalas salariales reflejan los valores **vigentes a 2026**.',
+      },
+      {
+        q: '¿Qué calculadora usar si me acaban de despedir?',
+        a: 'Empezá por la [calculadora de indemnización por despido](/calculadora-indemnizacion-despido). Calcula antigüedad, preaviso, vacaciones no gozadas, SAC proporcional y aplica el **tope Vizzoti**. Después usá la de [sueldo neto](/calculadora-sueldo-en-mano-argentina) para proyectar tu próximo ingreso.',
+      },
+      {
+        q: '¿Cómo elijo entre Monotributo y Responsable Inscripto?',
+        a: 'Usá la [calculadora de Monotributo vs Inscripto](/calculadora-monotributo-vs-responsable-inscripto). Compara impuestos totales, carga administrativa y límites de facturación. Como **regla práctica**: si facturás menos de ~$90M/año y vendés principalmente a consumidor final, conviene Monotributo. Si facturás más o vendés a empresas que necesitan factura A, conviene Responsable Inscripto.',
+      },
+      {
+        q: '¿Qué diferencia hay entre TNA, TEA y CFT?',
+        a: '**TNA** es la tasa nominal sin capitalización. **TEA** capitaliza intereses (siempre mayor que TNA). **CFT** incluye todos los costos adicionales del préstamo (IVA, comisiones, seguros). Para comparar préstamos usá siempre **CFT**, no TNA — es el único número que refleja lo que realmente pagás.',
+      },
+      {
+        q: '¿Los resultados son vinculantes?',
+        a: 'No. Son **estimaciones con fines informativos**, basadas en fórmulas oficiales y parámetros públicos. Para valores finales vinculantes (liquidación de sueldo, indemnización, deuda real con ARCA) consultá a un contador, abogado laboral o al banco/entidad correspondiente.',
+      },
+      {
+        q: '¿Puedo usar estas calculadoras para trámites oficiales?',
+        a: 'Sirven como **guía y para verificar cálculos**, pero los trámites oficiales (liquidación final, presentación de Ganancias, monotributo) deben hacerse con los **sistemas oficiales de ARCA** (ex-AFIP). Usá nuestras calculadoras para estimar antes, y los sistemas oficiales para declarar.',
+      },
+    ],
   },
   salud: {
     label: 'Salud',
-    title: 'Calculadoras de Salud — IMC, Calorías, Embarazo | Hacé Cuentas',
-    desc: 'Calculadoras de salud: IMC, calorías diarias (TDEE), semanas de embarazo, ovulación. Basadas en fórmulas de la OMS y ACOG.',
+    title: 'Calculadoras de Salud 2026 — IMC, Calorías, Embarazo | Hacé Cuentas',
+    desc: 'Calculadoras de salud: IMC, calorías diarias (TDEE), semanas de embarazo, ovulación, BMR, frecuencia cardíaca. Basadas en fórmulas OMS y ACOG.',
     intro: 'Herramientas para monitorear tu salud: IMC, necesidades calóricas, embarazo y ciclo menstrual. Basadas en fórmulas validadas por OMS y ACOG.',
     color: '#16a34a',
     icon: '❤️',
+    seoContent: `## Calculadoras de salud basadas en evidencia
+
+Las calculadoras de salud se apoyan en **fórmulas médicas validadas**: **IMC** según la OMS (Adolphe Quetelet, 1832), **BMR** con Mifflin-St Jeor (1990) o Harris-Benedict revisada, **TDEE** con factor de actividad ACSM, **FPP (fecha probable de parto)** por regla de Naegele, **ventana fértil** según fórmula de Ogino-Knaus, y **frecuencia cardíaca máxima** con Tanaka (208 − 0.7 × edad). Estas herramientas **no reemplazan una consulta médica**: son útiles para orientarte, planificar dieta o ejercicio, y hacer seguimiento, pero ante cualquier síntoma o duda concreta consultá con tu médico o un especialista.
+
+## Fórmulas más importantes
+
+| Métrica | Fórmula | Fuente |
+|---|---|---|
+| **IMC** | peso (kg) / altura² (m) | OMS |
+| **BMR (Hombres)** | 10×peso + 6.25×altura − 5×edad + 5 | Mifflin-St Jeor |
+| **BMR (Mujeres)** | 10×peso + 6.25×altura − 5×edad − 161 | Mifflin-St Jeor |
+| **TDEE** | BMR × factor actividad (1.2 a 1.9) | ACSM |
+| **FPP embarazo** | FUM + 280 días (40 semanas) | Naegele |
+| **FC máxima** | 208 − (0.7 × edad) | Tanaka et al. |
+
+## Cuándo consultar profesional
+
+- Si tu **IMC está fuera de 18.5 – 29.9** (bajo peso u obesidad).
+- Si querés **bajar o subir más de 5 kg** con una dieta específica.
+- Si sos **embarazada** — ningún cálculo reemplaza los controles obstétricos.
+- Si tenés **dudas sobre medicación** (especialmente en mascotas).
+- Si tu **frecuencia cardíaca en reposo > 100 bpm** o en ejercicio no baja tras descansar.`,
+    faq: [
+      {
+        q: '¿Son precisos los resultados de estas calculadoras?',
+        a: 'Las fórmulas son **estándares médicos validados** (OMS, ACSM, ACOG). Sin embargo, son **estimaciones**: tu metabolismo real puede variar ±10-15% por factores genéticos, masa muscular, hormonales. Usalas como **punto de partida**, no como verdad absoluta.',
+      },
+      {
+        q: '¿Un IMC alto siempre significa obesidad?',
+        a: 'No. El [IMC](/calculadora-imc) no distingue **músculo de grasa**. Un deportista puede tener IMC alto con % de grasa bajo. Para una medición más precisa usá la calculadora de [grasa corporal](/calculadora-grasa-corporal) (Navy, Jackson-Pollock) o pedí un DEXA scan.',
+      },
+      {
+        q: '¿Las calculadoras de embarazo reemplazan la ecografía?',
+        a: '**No**. La [fecha probable de parto](/calculadora-fecha-parto) y las [semanas de embarazo](/calculadora-semanas-embarazo) son estimaciones por regla de Naegele (FUM + 280 días). La **ecografía del primer trimestre** es el estándar de oro para datar el embarazo. Si tus ciclos son irregulares o no recordás la FUM exacta, la ecografía es más confiable.',
+      },
+      {
+        q: '¿Puedo dosificar medicación para mi mascota con la calculadora?',
+        a: 'La calculadora de [dosis para mascota](/calculadora-dosis-mascota) da un **valor estimativo** basado en peso y droga estándar. **Siempre consultá al veterinario** antes de administrar cualquier medicamento. Algunos fármacos (ibuprofeno, paracetamol, xilitol) son **tóxicos letales** para perros y gatos aun en dosis pequeñas.',
+      },
+      {
+        q: '¿Qué TDEE usar si hago deporte irregular?',
+        a: 'Usá el factor de actividad **intermedio (1.55 "moderado")** y promediá. Si entrenás 3-4 veces por semana, "moderado" es correcto. Si hacés deporte 5-6 veces, "activo" (1.725). Si es solo caminata diaria, "ligero" (1.375). La [calculadora TDEE](/calculadora-calorias-tdee) te explica cada nivel.',
+      },
+      {
+        q: '¿El percentil pediátrico funciona para Argentina?',
+        a: 'Sí. Usa las **curvas de la OMS (WHO Growth Standards)** que son internacionales y utilizadas oficialmente por la Sociedad Argentina de Pediatría. Para bebés argentinos hasta 5 años las tablas son idénticas a las que usa tu pediatra.',
+      },
+      {
+        q: '¿Por qué mi BMR es más bajo/alto que otras calculadoras?',
+        a: 'Hay **4 fórmulas principales** (Harris-Benedict 1919, Harris-Benedict revisada 1984, Mifflin-St Jeor 1990, Katch-McArdle). Nuestra calculadora usa **Mifflin-St Jeor** por ser la más precisa (±10% en estudios). Otras usan fórmulas más viejas que sobreestiman entre 5-10%.',
+      },
+    ],
   },
   vida: {
     label: 'Vida cotidiana',
-    title: 'Calculadoras de Vida Cotidiana — Edad, Fechas, Porcentajes | Hacé Cuentas',
-    desc: 'Calculadoras para el día a día: edad exacta, días entre fechas, porcentajes, propinas y más.',
+    title: 'Calculadoras de Vida Cotidiana 2026 — Edad, Fechas, Porcentajes | Hacé Cuentas',
+    desc: 'Calculadoras para el día a día: edad exacta, días entre fechas, porcentajes, propinas y más. Gratis y sin registro.',
     intro: 'Las cuentas chicas que hacés todos los días: tu edad, cuántos días faltan, calcular porcentajes, dividir una cuenta con amigos.',
     color: '#d97706',
     icon: '📅',
+    seoContent: `## Cálculos del día a día
+
+Las cuentas "chicas" son las que más hacemos y las que más errores generan por hacerlas mental o apurados. Esta categoría reúne las herramientas para **calcular edad exacta** (años-meses-días), **días entre dos fechas** (corridos y hábiles), **porcentajes** (descuentos, aumentos, regla de tres), **propinas** en restaurantes (10% estándar en Argentina) y para **contar hacia atrás** hasta una fecha futura. Son calculadoras **100% privadas** (todo corre en tu navegador) y pensadas para responder dudas en segundos sin abrir Excel.
+
+## Problemas frecuentes
+
+- ¿Cuántos años, meses y días tengo exactamente? → [Edad exacta](/calculadora-edad)
+- ¿Cuántos días faltan para mi viaje / cumpleaños / feriado? → [Cuenta regresiva](/calculadora-cuenta-regresiva)
+- ¿Qué día de la semana nací / cae mi cumple? → [Qué día fue / será](/calculadora-que-dia-fue)
+- ¿20% off de $15.000 cuánto queda? → [Porcentajes](/calculadora-porcentajes)
+- ¿Cuánto de propina con 10% en una cena de $40.000? → [Propina](/calculadora-propina-dividir-cuenta)
+- ¿Cómo divido la cuenta de 6 amigos de forma justa? → [Dividir cuenta](/calculadora-dividir-gastos-viaje-amigos)
+
+## Tips matemáticos rápidos
+
+- **10% mental**: corré la coma una posición (1.000 → 100).
+- **20%**: calculá 10% y multiplicá por 2.
+- **15%**: calculá 10% + la mitad de ese 10%.
+- **X% de Y = Y% de X**: el 25% de 400 es lo mismo que el 400% de 25 = 100.
+- **Regla de 3 simple directa**: si 100 vale X, 50 vale X/2.`,
+    faq: [
+      {
+        q: '¿Por qué la calculadora de edad a veces da un día más o menos?',
+        a: 'Depende si cuenta el **día actual** como transcurrido o no, y si hay años bisiestos en el medio. Nuestra calculadora de [edad](/calculadora-edad) usa el método **estándar civil**: cuenta días completos desde la fecha de nacimiento hasta hoy, e incluye el ajuste por años bisiestos.',
+      },
+      {
+        q: '¿Cómo calculo los días hábiles descontando feriados argentinos?',
+        a: 'La [calculadora de días entre fechas](/calculadora-dias-entre-fechas) tiene un modo "días hábiles" que **excluye sábados, domingos y feriados nacionales argentinos**. Para 2026 incluye los 18 feriados oficiales. No cuenta feriados bancarios ni provinciales.',
+      },
+      {
+        q: '¿Cuál es la propina estándar en Argentina?',
+        a: '**10%** del total (sin IVA adicional). Es costumbre, **no obligatoria**. Si te atendieron muy bien, podés dar 15%. Si el servicio fue malo, podés no dejar. Ver [propina y dividir cuenta](/calculadora-propina-dividir-cuenta) para el cálculo automático.',
+      },
+      {
+        q: '¿Un descuento del 30% + 20% es igual a 50%?',
+        a: '**No**. Los descuentos encadenados se **multiplican, no se suman**. 30% off + 20% off = (1 − 0.3) × (1 − 0.2) = 0.56 → **44% de descuento total**, no 50%. La [calculadora de porcentajes](/calculadora-porcentajes) tiene modo "descuentos en cadena".',
+      },
+      {
+        q: '¿Cómo divido una cuenta si uno comió más que los otros?',
+        a: 'Usá el **modo mixto**: los platos compartidos (entradas, picadas, postres) se dividen en partes iguales, y los individuales los paga quien los pidió. La calculadora de [dividir gastos de viaje/grupo](/calculadora-dividir-gastos-viaje-amigos) soporta hasta 6 personas.',
+      },
+      {
+        q: '¿Qué día de la semana cae el 25 de mayo de 2026?',
+        a: 'El 25 de mayo de 2026 cae **lunes** (feriado nacional — Revolución de Mayo). Podés verificar cualquier fecha con la calculadora [qué día fue o será](/calculadora-que-dia-fue), que usa el algoritmo de Zeller.',
+      },
+      {
+        q: '¿Los datos que ingreso quedan guardados?',
+        a: '**No**. Todas las calculadoras corren **100% en tu navegador** (sin servidor). Los datos no se envían, guardan ni analizan. Si cerrás la pestaña, se pierden. Podés usar la calculadora **offline** una vez que cargaste la página.',
+      },
+    ],
   },
   marketing: {
     label: 'Marketing',
-    title: 'Calculadoras de Marketing — CTR, CPC, CPM, ROAS, CAC | Hacé Cuentas',
-    desc: 'Calculadoras para marketing digital: CTR, CPC, CPM, ROAS, tasa de conversión, CAC y LTV. Benchmarks por canal e industria.',
+    title: 'Calculadoras de Marketing Digital 2026 — CTR, CPC, CPM, ROAS, CAC | Hacé Cuentas',
+    desc: 'Calculadoras para marketing digital: CTR, CPC, CPM, ROAS, tasa de conversión, CAC y LTV. Benchmarks por canal e industria 2026.',
     intro: 'Las métricas clave del marketing digital: CTR, CPC, CPM, ROAS, tasa de conversión y CAC/LTV. Para decidir si tus campañas de Google Ads, Meta o TikTok están rindiendo.',
     color: '#e11d48',
     icon: '📈',
+    seoContent: `## Métricas clave del marketing digital
+
+Las calculadoras de esta categoría cubren las **métricas fundamentales** que usan media buyers, CMOs y equipos de performance: **CTR** (Click Through Rate), **CPC** (Cost Per Click), **CPM** (Cost Per Mille), **CPA** (Cost Per Action), **ROAS** (Return On Ad Spend), **CAC** (Customer Acquisition Cost), **LTV** (Lifetime Value), **tasa de conversión**, **open rate** de email y **engagement rate** de redes sociales. Cada calculadora incluye **benchmarks actualizados por industria 2026** (e-commerce, SaaS, B2B, infoproductos, inmobiliaria) y está diseñada para tomar decisiones de presupuesto e inversión publicitaria.
+
+## Fórmulas esenciales
+
+| Métrica | Fórmula | Benchmark "bueno" |
+|---|---|---|
+| **CTR** | (clicks / impresiones) × 100 | >2% search, >1% display |
+| **CPC** | gasto / clicks | Depende industria |
+| **CPM** | (gasto / impresiones) × 1000 | $2-15 Meta, $10-40 Google |
+| **CPA** | gasto / conversiones | Debe ser < LTV |
+| **ROAS** | ingresos / inversión en ads | >3× (con margen 30%+) |
+| **CAC** | costo total marketing / clientes nuevos | Debe ser < LTV/3 |
+| **LTV** | ARPU × margen × 1/churn | 3× CAC o más |
+| **Conversion Rate** | (conversiones / visitantes) × 100 | 2-5% e-commerce |
+
+## Por qué el ROAS no alcanza
+
+Un ROAS positivo (>1×) **no significa ganancia**. Si tu margen bruto es 30%, necesitás un **ROAS break-even de 3.3×** para empatar. Por debajo de eso, perdés plata aun cuando Meta/Google marquen la campaña como "exitosa". Siempre cruzá ROAS con margen y mirá **POAS (Profit On Ad Spend)** para una imagen real.
+
+## El impacto de iOS 14 en las métricas
+
+Desde abril 2021, **iOS 14+** requiere opt-in explícito para tracking. Solo ~25% de usuarios iOS acepta. Consecuencia: Meta Ads, TikTok y otras plataformas ven **menos conversiones en iPhone**, subestimando ROAS y sobreestimando CPA. Complementá con **MER (Marketing Efficiency Ratio = ingresos totales / inversión total)** y **CAPI (Conversions API)** para métricas más fieles.`,
+    faq: [
+      {
+        q: '¿Qué es más importante: CTR o CPC?',
+        a: '**Depende del objetivo**. Si optimizás para **tráfico**, el CTR es clave (alto CTR = relevancia del anuncio). Si optimizás para **conversiones**, el CPA importa más que el CPC. Un CPC bajo con CPA alto = tráfico barato pero irrelevante. Usá la [calculadora de CPC](/calculadora-cpc-costo-por-clic) y [CPA](/calculadora-cpa-costo-por-accion).',
+      },
+      {
+        q: '¿ROAS de 4× es bueno?',
+        a: '**Depende del margen bruto**. Con margen del **40%**, ROAS 4× deja ganancia. Con margen del **15%**, ROAS 4× **pierde plata** (break-even = 6.7×). Nunca evalúes ROAS sin cruzarlo con margen. Usá la [calculadora ROAS](/calculadora-roas-retorno-inversion-publicitaria) que calcula el break-even automáticamente.',
+      },
+      {
+        q: '¿Qué relación debe haber entre CAC y LTV?',
+        a: 'La regla clásica de SaaS: **LTV/CAC > 3**. Menor a 3 es marginal; menor a 1 pierde plata. **Payback period** (tiempo en recuperar CAC) debe ser **< 12 meses** en SaaS y **< 6 meses** en e-commerce transaccional. Ver [LTV](/calculadora-ltv-valor-vida-cliente) y [CAC](/calculadora-cac-costo-adquisicion-cliente).',
+      },
+      {
+        q: '¿Cuál es un CTR bueno en Meta Ads?',
+        a: 'En **Facebook/Instagram Ads**, CTR promedio es **0.9-1.5%** en feed y **1-2%** en Reels/Stories. **>2% es excelente**. En **search de Google Ads** CTR bueno es **3-5%**. En display, CTR bueno es **0.5-1%**. Depende mucho del formato, sector y audiencia. Usá la [calculadora CTR](/calculadora-ctr-click-through-rate).',
+      },
+      {
+        q: '¿Qué es un buen open rate de email?',
+        a: 'Promedio global 2026: **20-25%** (Mailchimp benchmarks). **>30% es muy bueno**. **>40% es excelente** (típico de newsletters nicho con lista orgánica). Lista comprada o antigua suele rondar 5-10%. Usá la [calculadora de open rate](/calculadora-open-rate-email).',
+      },
+      {
+        q: '¿Cómo mido ROI cuando la atribución está rota por iOS 14?',
+        a: 'Usá **MER (Marketing Efficiency Ratio)** = ingresos totales del negocio / gasto total en ads (blended). Es más conservador que el ROAS de cada plataforma pero más fiel. Implementá también **CAPI de Meta**, **enhanced conversions de Google** y UTM tracking coherente. Más datos en nuestra [calculadora ROAS](/calculadora-roas-retorno-inversion-publicitaria).',
+      },
+      {
+        q: '¿Qué engagement rate es bueno en Instagram?',
+        a: 'En **Instagram 2026**: cuenta con >100k seguidores **>1%** está bien, **>3%** es excelente. Cuentas con <10k seguidores suelen tener engagement más alto (**5-10%**). Facebook y X (Twitter) tienen engagement promedio más bajo (<1%). TikTok es el más alto (**5-15%**).',
+      },
+    ],
   },
   viajes: {
     label: 'Viajes',
-    title: 'Calculadoras de Viajes — Combustible, Presupuesto, Dividir Gastos | Hacé Cuentas',
-    desc: 'Calculadoras para planificar tus viajes: combustible, presupuesto total, división de gastos entre amigos.',
+    title: 'Calculadoras de Viajes 2026 — Combustible, Presupuesto, Dividir Gastos | Hacé Cuentas',
+    desc: 'Calculadoras para planificar tus viajes: combustible, presupuesto total, división de gastos entre amigos. Argentina y exterior.',
     intro: 'Calculadoras para antes, durante y después del viaje: combustible, presupuesto completo, división de gastos con amigos. Pensadas para viajes en Argentina y al exterior.',
     color: '#0891b2',
     icon: '✈️',
+    seoContent: `## Cálculos para planificar tu viaje
+
+Las calculadoras de viajes resuelven los 3 cálculos más frecuentes: **cuánto gasto en nafta** para ir de A a B (consumo del auto × distancia × precio), **cuánto va a costar el viaje completo** (hospedaje + comidas + transporte + excursiones + imprevistos del 10-15%), y **cómo dividir los gastos** entre amigos cuando vuelven (para no quedarse discutiendo quién le debe a quién). También cubrimos **cuenta regresiva** al viaje, **equipaje permitido por aerolínea** (Aerolíneas, Flybondi, JetSMART, LATAM), **propinas por país** (USA 15-20%, Europa 5-10%, Japón no se deja) y **ajuste por jet lag** para vuelos largos.
+
+## Estimaciones típicas 2026
+
+| Destino desde Buenos Aires | Distancia | Nafta (Súper) | Tiempo auto |
+|---|---|---|---|
+| Mar del Plata | 400 km | ~$50.000 | 4-5 h |
+| Bariloche | 1.600 km | ~$200.000 | 18-20 h |
+| Córdoba | 700 km | ~$88.000 | 7-8 h |
+| Mendoza | 1.050 km | ~$130.000 | 11-12 h |
+| Iguazú | 1.300 km | ~$162.000 | 16-18 h |
+
+*Asumiendo consumo 8L/100km y Súper a $1.600/L. Usá la [calculadora de combustible](/calculadora-combustible-viaje-auto) con tu auto real.*
+
+## Tips para viajar en grupo
+
+1. **Definan antes qué es "común"**: asado sí, souvenir no.
+2. **Uno paga lo grande** (Airbnb, excursión): menos transferencias finales.
+3. **Foto del ticket o comprobante**: evita peleas al final.
+4. **Hagan balance al final, no cada comida**: minimiza discusión.
+5. **Si viajan al exterior**: fijen un tipo de cambio único (MEP del día del retorno).`,
+    faq: [
+      {
+        q: '¿Cómo calculo la nafta para un viaje al sur?',
+        a: 'Usá la [calculadora de combustible](/calculadora-combustible-viaje-auto). Ingresá la distancia, el consumo de tu auto (típico 7-10 L/100km para nafteros, 5-7 para diésel) y el precio por litro. Ejemplo: **BA → Bariloche = 1.600 km × 8L/100km × $1.600/L ≈ $205.000** (una dirección).',
+      },
+      {
+        q: '¿Cuánto tengo que llevar de imprevistos?',
+        a: 'La regla clásica: **10-15% del presupuesto total** para imprevistos (cambios de clima, pérdidas, ajustes de itinerario, extras en restaurantes). En países con alta inflación o con cambio volátil (Argentina al exterior), **subilo a 20%** para dormir tranquilo.',
+      },
+      {
+        q: '¿Cómo divido gastos si viajamos a distinta cantidad de noches?',
+        a: 'Dividí por **"noches-persona"**: si el Airbnb costó $300.000 y uno se quedó 3 noches y otro 5, son 8 noches-persona total. Precio por noche-persona = 300.000 / 8 = $37.500. Quien estuvo 3 noches paga $112.500; quien estuvo 5 noches paga $187.500. La [calculadora de dividir gastos](/calculadora-dividir-gastos-viaje-amigos) soporta 6 personas.',
+      },
+      {
+        q: '¿Cuánto de propina dejar en cada país?',
+        a: '**USA**: 15-20% obligatorio. **Canadá**: 15-18%. **México**: 10-15%. **Europa**: 5-10% o redondeo. **Japón/Corea**: no se deja (se considera ofensivo). **Argentina/Uruguay**: 10%. **Brasil**: 10% (suele estar incluido "servicio"). Más detalle en [propina por país](/calculadora-propina-viaje).',
+      },
+      {
+        q: '¿Cuánto equipaje puedo llevar en Flybondi o JetSMART?',
+        a: 'Las **low cost en Argentina** suelen permitir solo **1 mochila personal (máx 10kg/45x35x25cm) gratis**. El **carry-on (8-10kg)** y el **check-in (15-23kg)** se pagan aparte. Aerolíneas Argentinas incluye carry-on gratis. Verificá en [equipaje vuelo](/calculadora-equipaje-vuelo) las políticas actualizadas.',
+      },
+      {
+        q: '¿Me conviene sacar seguro de viaje?',
+        a: '**Sí, casi siempre**. En USA una internación puede costar USD 50.000+. Un seguro de viaje por 15 días ronda **USD 30-80** (cubre cancelación + médico + equipaje). Es **obligatorio** para entrar a Schengen (Europa) con cobertura mínima de USD 30.000.',
+      },
+      {
+        q: '¿Cómo evito el jet lag en vuelos largos?',
+        a: 'Regla básica: **1 día por cada hora de cambio horario** para adaptarse. Tips: **dormir en el avión** si es noche en destino, **luz solar** al llegar, **evitar café/alcohol en el vuelo**, **hidratar bien**. Ver [calculadora de jet lag](/calculadora-jet-lag).',
+      },
+    ],
   },
   deportes: {
     label: 'Deportes',
-    title: 'Calculadoras de Deportes — Descenso del Fútbol Argentino | Hacé Cuentas',
-    desc: 'Calculadoras deportivas: descenso del fútbol argentino por promedios, proyecciones de temporada y más.',
-    intro: 'Calculadoras para los fanáticos del deporte: descenso del fútbol argentino, proyección de promedios y más.',
+    title: 'Calculadoras de Deportes 2026 — Descenso Fútbol, Running, Fitness | Hacé Cuentas',
+    desc: 'Calculadoras deportivas: descenso del fútbol argentino por promedios, pace y predicción de maratón, 1RM, VO2 max, frecuencia cardíaca.',
+    intro: 'Calculadoras para los fanáticos del deporte: descenso del fútbol argentino, pace de running, predicción de maratón, 1RM de fuerza y VO2 max.',
     color: '#65a30d',
     icon: '⚽',
+    seoContent: `## Calculadoras para deportistas y fanáticos
+
+Esta categoría reúne herramientas para **seguir tu equipo** (cálculo de **promedios y descenso del fútbol argentino** según el sistema oficial AFA desde 1983) y para **optimizar tu entrenamiento deportivo**: **pace de running** (minutos por km por ritmo), **predicción de tiempo en 10K/21K/42K** (fórmula de Riegel y Daniels), **VO2 max** por Cooper o Rockport, **1RM (una repetición máxima)** de Brzycki/Epley para pesas, **frecuencia cardíaca zonas** por Tanaka, y **calorías quemadas por deporte** según MET.
+
+## Fórmulas de referencia
+
+| Métrica | Fórmula | Autor/Fuente |
+|---|---|---|
+| **1RM** | peso × (36 / (37 − reps)) | Brzycki |
+| **Pace running** | tiempo total / distancia | — |
+| **VO2 max Cooper** | (dist 12' − 504.9) / 44.73 | Cooper (1968) |
+| **Predicción maratón** | tiempo₁ × (dist₂/dist₁)^1.06 | Riegel |
+| **FC max** | 208 − (0.7 × edad) | Tanaka et al. |
+| **FC zona 70%** | FC max × 0.70 | ACSM |
+
+## Cómo funciona el descenso del fútbol argentino
+
+La **AFA** aplica dos tablas para descensos: **tabla de promedios** (puntos últimas 3 temporadas / partidos jugados) y **tabla anual** (solo temporada actual). Descienden 2 equipos por año. Un **recién ascendido** cuenta solo la temporada actual → promedio más volátil. Ver la [calculadora de descenso](/calculadora-descenso-futbol-argentino-promedios) para proyectar el promedio final con diferentes escenarios.`,
+    faq: [
+      {
+        q: '¿Por qué en Argentina se desciende por promedios y no por tabla?',
+        a: 'El sistema de **promedios se instauró en 1983**, justo después de que River casi desciende en 1982. La AFA quiso **evitar descensos traumáticos** por una sola mala temporada. Desde entonces suman puntos de últimas 3 temporadas y dividen por partidos jugados. Ver [calculadora de descenso](/calculadora-descenso-futbol-argentino-promedios) para detalle.',
+      },
+      {
+        q: '¿Qué tan precisa es la predicción de maratón?',
+        a: 'Usa la **fórmula de Riegel (1981)**: tiempo₂ = tiempo₁ × (dist₂/dist₁)^1.06. Precisión **±3-5%** si tu entrenamiento es consistente y la distancia base es de 5K-10K. Para distancias muy distintas (5K predice 42K), la precisión baja a **±10%**. Ver [predicción de maratón](/calculadora-prediccion-maraton).',
+      },
+      {
+        q: '¿Cómo calculo mi 1RM sin hacerlo real?',
+        a: 'Usá la fórmula de **Brzycki**: 1RM = peso × (36 / (37 − reps)). Funciona bien con **2-10 repeticiones**. Más allá pierde precisión. Ejemplo: si hacés 70kg × 8 reps → 1RM ≈ 87kg. Ver [1RM fuerza](/calculadora-1rm-fuerza-maxima).',
+      },
+      {
+        q: '¿Qué es un VO2 max bueno?',
+        a: 'Depende de edad y sexo. Para **hombres 25-35 años**: >48 ml/kg/min es excelente, 40-48 bueno, 30-40 promedio, <30 bajo. Para **mujeres** restá 5-8 ml/kg/min a esas referencias. Atletas de elite pueden llegar a **70+**. Ver [VO2 max](/calculadora-vo2-max).',
+      },
+      {
+        q: '¿Cómo calculo mi frecuencia cardíaca de entrenamiento?',
+        a: 'Usá **Tanaka**: FC max = 208 − (0.7 × edad). Zonas de entrenamiento: **Z1 (50-60%)** recuperación, **Z2 (60-70%)** resistencia aeróbica, **Z3 (70-80%)** tempo, **Z4 (80-90%)** umbral, **Z5 (90-100%)** VO2 max. Ver [frecuencia cardíaca zonas](/calculadora-frecuencia-cardiaca-zonas).',
+      },
+      {
+        q: '¿Cuántas calorías quemo corriendo?',
+        a: 'Aproximadamente **1 kcal por kg de peso por km recorrido**. Persona de 70kg corriendo 10km quema ~700 kcal (independiente del ritmo, dentro de rangos normales). Ciclismo: ~0.5 kcal/kg/km. Nadar: ~1.2 kcal/kg/km. Ver [calorías por deporte](/calculadora-calorias-deporte).',
+      },
+      {
+        q: '¿Un equipo recién ascendido tiene más chances de descender?',
+        a: 'Estadísticamente **sí**: como solo cuenta la temporada actual, su promedio es **más volátil** y cualquier mala racha lo hunde rápido. Históricamente ~40% de los ascendidos desciende en el mismo año. Los ascendidos suelen estar en zona de riesgo toda la temporada.',
+      },
+    ],
   },
   negocios: {
     label: 'Negocios',
-    title: 'Calculadoras para Negocios — Margen, Precio, Break-even | Hacé Cuentas',
-    desc: 'Calculadoras para pymes y emprendedores: margen de ganancia, precio con IVA, punto de equilibrio, facturación mínima monotributo, rotación de inventario, DSO, comisiones.',
+    title: 'Calculadoras para Negocios 2026 — Margen, Precio, Break-even | Hacé Cuentas',
+    desc: 'Calculadoras para pymes y emprendedores: margen de ganancia, precio con IVA, punto de equilibrio, facturación mínima monotributo, rotación de inventario, DSO, comisiones, churn, MRR, NPS.',
     intro: 'Herramientas para tomar decisiones comerciales con números: márgenes, precios de venta con IVA, punto de equilibrio (break-even), costo laboral, comisiones y gestión de cobros. Para pymes, autónomos y emprendedores en Argentina.',
     color: '#7c3aed',
     icon: '📊',
+    seoContent: `## Calculadoras esenciales para pymes y SaaS
+
+Si tenés un negocio (comercio, servicios, SaaS, e-commerce) hay **métricas que no podés dejar de medir**: **margen bruto** (define si tu modelo es viable), **punto de equilibrio / break-even** (cuánto tenés que vender para no perder), **precio con IVA 21%** (fórmula exacta + desglose), **costo laboral total** (sueldo + cargas sociales + aportes + ART, llega a +90% del neto), **DSO (Days Sales Outstanding)** para medir cuánto tardás en cobrar, **churn rate** mensual en SaaS, **MRR/ARR** y **NPS**. Todas las calculadoras incluyen **benchmarks por industria** y contexto legal/tributario argentino 2026.
+
+## Fórmulas clave de rentabilidad
+
+| Métrica | Fórmula | Benchmark "saludable" |
+|---|---|---|
+| **Margen bruto** | (ingresos − COGS) / ingresos × 100 | >40% retail, >70% SaaS |
+| **Break-even** | costos fijos / (precio − costo variable) | — |
+| **Precio con IVA** | precio neto × 1.21 | — |
+| **Markup → margen** | markup / (1 + markup) | — |
+| **DSO** | (cuentas por cobrar / ventas anuales) × 365 | <45 días |
+| **Churn (SaaS)** | bajas mes / clientes al inicio | <5% mensual |
+| **Rotación inventario** | costo ventas / inventario promedio | >6 veces/año |
+
+## Modelos comerciales típicos
+
+- **Retail físico**: margen 30-50%, rotación alta (6-12/año), break-even sensible a alquiler.
+- **E-commerce**: margen 40-60%, logística come 5-15% del ingreso, CAC alto.
+- **SaaS**: margen >70%, LTV alto, payback 6-18 meses, churn clave.
+- **Servicios profesionales**: margen variable (40-80%), DSO alto si factura a empresas (60-90 días).
+- **Delivery/marketplace**: margen bajo (10-25%), volumen y frecuencia compensan.`,
+    faq: [
+      {
+        q: '¿Cómo calculo el precio de venta con IVA incluido?',
+        a: 'Multiplicá el **precio neto × 1.21** (IVA 21%). Ejemplo: producto a $10.000 neto → precio final = $12.100. Si tenés el precio final y querés sacar el neto: **dividí por 1.21**. Usá la [calculadora de precio con IVA](/calculadora-precio-iva).',
+      },
+      {
+        q: '¿Cuánto cuesta un empleado por encima de su sueldo neto?',
+        a: 'Aproximadamente **+90% a +110%**. El **sueldo bruto** ya incluye descuentos del empleado (~17%). Arriba el empleador paga: cargas patronales (24-26%), ART (~1-3%), SAC (1/12 del sueldo = 8.33%), vacaciones, días por examen/enfermedad, y cargas proporcionales sobre aguinaldo. Ver [costo laboral total](/calculadora-costo-laboral-empleado).',
+      },
+      {
+        q: '¿Qué es el break-even y cómo lo calculo?',
+        a: 'Es el **punto de equilibrio**: cuántas unidades tenés que vender para cubrir todos los costos (no ganar ni perder). **Fórmula**: costos fijos / (precio unitario − costo variable unitario). Ver [calculadora break-even](/calculadora-break-even-punto-equilibrio). Si alquiler + sueldos = $2M/mes, precio producto = $10k y costo variable = $4k → break-even = 334 unidades/mes.',
+      },
+      {
+        q: '¿Qué churn mensual es aceptable en SaaS?',
+        a: 'Depende del **ARPU** y el segmento. **SMB**: churn mensual <5-7% está OK. **Mid-market**: <2-3%. **Enterprise**: <1%. Churn anual >30% indica problemas de product-market fit. Ver [churn rate](/calculadora-churn-rate).',
+      },
+      {
+        q: '¿Qué es más importante: margen bruto o margen neto?',
+        a: '**Ambos, pero miden cosas distintas**. Margen bruto = viabilidad del producto (precio − COGS). Margen neto = rentabilidad real del negocio (después de todos los costos fijos, impuestos, etc.). **Margen bruto >40%** te da aire para vivir; si tu margen bruto es <20% vas a sufrir.',
+      },
+      {
+        q: '¿Cómo reduzco el DSO?',
+        a: 'Cinco tácticas: (1) **factura inmediata** al cerrar la venta, no al final del mes; (2) **descuentos por pago al contado** (2-3% off); (3) **seguimiento automatizado** a 7, 14, 30 días; (4) **cláusula de interés** por mora (CER + tasa); (5) **factura electrónica firmada digitalmente** para agilizar cobro. Ver [calculadora DSO](/calculadora-dso-dias-cobranza).',
+      },
+      {
+        q: '¿Cuál es un buen NPS?',
+        a: '**NPS > 50 es excelente** (clase mundial: Apple, Tesla, Costco). **0-30 aceptable**, **30-50 bueno**, **<0 malo** (hay más detractores que promotores). Depende del sector: B2B SaaS suele tener NPS mayor que retail masivo. Ver [calculadora NPS](/calculadora-nps-net-promoter-score).',
+      },
+    ],
   },
   negocio: {
     label: 'Negocios',
-    title: 'Calculadoras para Negocios — Margen, Precio, Break-even | Hacé Cuentas',
+    title: 'Calculadoras para Negocios 2026 — Margen, Precio, Break-even | Hacé Cuentas',
     desc: 'Calculadoras para pymes y emprendedores: margen de ganancia, precio con IVA, punto de equilibrio, facturación mínima monotributo, rotación de inventario.',
     intro: 'Herramientas para decisiones comerciales: márgenes, precios, facturación, break-even y gestión de cobros.',
     color: '#7c3aed',
     icon: '📊',
+    seoContent: '## Calculadoras para decisiones comerciales\n\nMétricas clave para pymes: margen bruto, punto de equilibrio, precio con IVA, costo laboral. Ver lista completa abajo.',
+    faq: [],
   },
   mascotas: {
     label: 'Mascotas',
-    title: 'Calculadoras para Mascotas — Edad Perro/Gato, Alimento, Dosis | Hacé Cuentas',
-    desc: 'Calculadoras para el cuidado de tu mascota: edad en años humanos, alimento diario, peso ideal y dosis de medicamentos según peso.',
+    title: 'Calculadoras para Mascotas 2026 — Edad Perro/Gato, Alimento, Dosis | Hacé Cuentas',
+    desc: 'Calculadoras para el cuidado de tu mascota: edad en años humanos (Cornell/UCSD 2019), alimento diario (NRC 2006), peso ideal por raza, dosis de medicamentos según peso.',
     intro: 'Herramientas para cuidar mejor a tu perro o gato: edad en años humanos (escala UCSD 2019 y Cornell), cuánto alimento necesita por día (NRC 2006), peso ideal por raza y dosis de medicamentos.',
     color: '#db2777',
     icon: '🐶',
+    seoContent: `## Cuidar mejor a tu perro o gato
+
+Esta categoría reúne herramientas para estimar la **edad real** de tu mascota en años humanos (el famoso "×7" es **incorrecto** — la **UCSD 2019** propone una escala no lineal basada en metilación del ADN), calcular el **peso ideal** por raza y contextura, estimar la **dosis de medicamentos** según peso (antiparasitarios, antiinflamatorios), y el **alimento diario** según las recomendaciones del **NRC 2006 (National Research Council)**.
+
+## La fórmula de edad humana moderna (UCSD 2019)
+
+**Fórmula:** edad_humana = 16 × ln(edad_perro) + 31
+
+Un perro de 1 año = 31 años humanos. De 4 años = 53 años humanos. De 12 años = 71 años humanos. Es **no lineal**: los perros envejecen rápido de cachorros y más lento después.
+
+## Alimento diario (guía NRC 2006)
+
+| Peso del perro | Alimento seco/día (adulto activo) |
+|---|---|
+| 5 kg | 120 g |
+| 10 kg | 200 g |
+| 20 kg | 340 g |
+| 30 kg | 470 g |
+| 40 kg | 590 g |
+
+*Valores aproximados. Consultá la etiqueta del alimento específico y ajustá por nivel de actividad.*
+
+## ⚠️ Medicación: consultar veterinario
+
+**Siempre consultá al veterinario antes de administrar medicamentos.** Fármacos comunes para humanos como **ibuprofeno, paracetamol, xilitol y chocolate son tóxicos letales** para perros y gatos. La [calculadora de dosis](/calculadora-dosis-mascota) sirve como **orientación**, no como indicación médica.`,
+    faq: [
+      {
+        q: '¿Es cierto que 1 año de perro = 7 años humanos?',
+        a: '**No, es un mito**. La fórmula correcta según la UCSD (2019) es: **edad humana = 16 × ln(edad perro) + 31**. Un perro de 1 año ya equivale a **31 años humanos** (pubertad), no 7. La relación **no es lineal** — los perros envejecen rápido de cachorros y después más lento. Ver [edad del perro](/calculadora-edad-perro).',
+      },
+      {
+        q: '¿Cuánto alimento seco le doy por día?',
+        a: 'Depende del peso, edad y nivel de actividad. **Adulto activo 20kg**: ~340g/día. **Cachorro**: necesita 2× más que un adulto del mismo peso. **Senior (>7 años)**: 10-20% menos. Mejor guía: la **etiqueta del alimento** específico. Usá la [calculadora de alimento](/calculadora-alimento-perro) como referencia.',
+      },
+      {
+        q: '¿Puedo darle ibuprofeno a mi perro si le duele algo?',
+        a: '**NO**. El **ibuprofeno y paracetamol son tóxicos letales** para perros y gatos. También lo son: **chocolate, uvas/pasas, cebolla, ajo, xilitol, aguacate**. Si tu mascota tiene dolor, **consultá al veterinario**. Nunca automediques.',
+      },
+      {
+        q: '¿Cómo sé si mi perro tiene el peso correcto?',
+        a: 'Usá la [calculadora de peso ideal](/calculadora-peso-ideal-perro) con la raza y altura. Método visual rápido: **deberías sentir las costillas sin verlas**, y el perro debería tener **cintura definida vista desde arriba**. Si no sentís costillas o no tiene cintura, está con sobrepeso.',
+      },
+      {
+        q: '¿Los gatos envejecen al mismo ritmo que los perros?',
+        a: '**No**. Los gatos envejecen **más lento** y viven más (12-18 años típico, 20+ en gatos interiores). Regla aproximada: gato 1 año = 15 humanos; gato 2 años = 24; después **+4 años humanos por año gatuno**. Ver [edad del gato](/calculadora-edad-gato).',
+      },
+      {
+        q: '¿Qué raza vive más?',
+        a: 'Los **perros chicos viven más que los grandes**. **Chihuahua, Poodle, Yorkie, Dachshund** viven 13-18 años. **Labrador, Golden, Boxer** 10-12 años. **San Bernardo, Gran Danés, Mastín** 6-9 años. Los gatos mestizos viven más que los puros.',
+      },
+      {
+        q: '¿Cómo calculo la dosis de antiparasitario?',
+        a: 'Según el peso de tu mascota y el principio activo. La [calculadora de dosis](/calculadora-dosis-mascota) te da un valor estimativo. **SIEMPRE** verificá con el veterinario antes de dar medicamentos — hay razas (Collie, Australian Shepherd) con **sensibilidad a ivermectina** (mutación MDR1) que puede matarlas.',
+      },
+    ],
   },
   matematica: {
     label: 'Matemática',
-    title: 'Calculadoras de Matemática — Pitágoras, Factorial, MCD/MCM | Hacé Cuentas',
-    desc: 'Calculadoras de matemática: teorema de Pitágoras, ecuación cuadrática, factorial, combinatoria, MCD, MCM, promedio, mediana, moda, interés simple.',
+    title: 'Calculadoras de Matemática 2026 — Pitágoras, Factorial, MCD/MCM | Hacé Cuentas',
+    desc: 'Calculadoras de matemática: teorema de Pitágoras, ecuación cuadrática, factorial, combinatoria, MCD, MCM, promedio, mediana, moda, interés simple, regla de tres.',
     intro: 'Cálculos matemáticos del cole y la facultad: Pitágoras, fórmula resolvente, factorial y combinatoria, MCD/MCM, estadística básica e interés simple. Con fórmulas y pasos explicados.',
     color: '#0d9488',
     icon: '🧮',
+    seoContent: `## Calculadoras con explicación paso a paso
+
+Esta categoría está pensada para **estudiantes** (secundaria, CBC, ingeniería, matemática financiera) y **profesores**: cada calculadora muestra no solo el resultado, sino **cómo se llega al resultado** con la fórmula y los pasos. Cubrimos desde lo más básico (**regla de tres, porcentajes**) hasta **trigonometría, álgebra (ecuación cuadrática, factorial) y estadística (promedio, mediana, moda, desviación)**.
+
+## Fórmulas más buscadas
+
+| Cálculo | Fórmula |
+|---|---|
+| **Pitágoras** | c² = a² + b² |
+| **Ecuación cuadrática** | x = (−b ± √(b²−4ac)) / 2a |
+| **Factorial** | n! = n × (n−1) × ... × 2 × 1 |
+| **Combinatoria C(n,k)** | n! / (k! × (n−k)!) |
+| **MCD** | Algoritmo de Euclides |
+| **MCM** | (a × b) / MCD(a,b) |
+| **Promedio** | Σxᵢ / n |
+| **Mediana** | valor central (ordenado) |
+| **Regla de tres directa** | x = (b × c) / a |
+| **Interés simple** | I = C × i × t |
+
+## Errores comunes al calcular
+
+1. **Pitágoras**: confundir hipotenusa (lado más largo) con catetos.
+2. **Ecuación cuadrática**: no chequear si el discriminante (b²−4ac) es negativo (raíces complejas).
+3. **Regla de tres**: confundir directa (proporcional) con inversa (inversamente proporcional).
+4. **Porcentajes encadenados**: sumar en lugar de multiplicar. 30% + 20% = **44% total**, no 50%.
+5. **Promedio con valores atípicos**: usar mediana en lugar de promedio cuando hay outliers.`,
+    faq: [
+      {
+        q: '¿Cómo resuelvo una ecuación cuadrática a mano?',
+        a: 'Usá la **fórmula resolvente**: x = (−b ± √(b²−4ac)) / 2a, donde la ecuación tiene la forma **ax² + bx + c = 0**. El **discriminante (b²−4ac)** te dice si tiene 2 soluciones reales (>0), 1 doble (=0) o complejas (<0). Usá la [calculadora de ecuación cuadrática](/calculadora-ecuacion-cuadratica) para ver los pasos.',
+      },
+      {
+        q: '¿Cuál es la diferencia entre regla de tres directa e inversa?',
+        a: '**Directa (proporcional)**: si una variable aumenta, la otra también. Ej: si 3 kg de manzanas cuestan $2.400, 5 kg cuestan $4.000. **Inversa**: si una aumenta, la otra baja. Ej: si 4 obreros hacen una obra en 10 días, 8 obreros la hacen en 5 días. Ver [regla de tres](/calculadora-regla-de-tres).',
+      },
+      {
+        q: '¿Qué es el factorial y para qué sirve?',
+        a: '**n! = n × (n−1) × (n−2) × ... × 1**. Ej: 5! = 5×4×3×2×1 = 120. Se usa en **combinatoria** (cuántas maneras hay de ordenar X elementos) y **probabilidad**. 0! = 1 por convención. Ver [factorial y combinatoria](/calculadora-factorial).',
+      },
+      {
+        q: '¿Cómo calculo el MCD de dos números grandes?',
+        a: 'Usá el **algoritmo de Euclides**: MCD(a,b) = MCD(b, a mod b) hasta que b = 0. Ej: MCD(48, 18) → MCD(18, 12) → MCD(12, 6) → MCD(6, 0) = 6. Usá la [calculadora MCD/MCM](/calculadora-mcd-mcm) que aplica Euclides automáticamente.',
+      },
+      {
+        q: '¿Cuándo uso promedio y cuándo mediana?',
+        a: '**Promedio**: cuando los datos son simétricos y sin outliers extremos. Ej: notas de un examen. **Mediana**: cuando hay valores atípicos que distorsionan el promedio. Ej: sueldos (un CEO con $10M sube el promedio pero no la mediana). Ver [promedio, mediana, moda](/calculadora-promedio-mediana-moda).',
+      },
+      {
+        q: '¿30% + 20% de descuento es 50%?',
+        a: '**No**, es **44%**. Los descuentos se **multiplican**, no se suman: (1 − 0.3) × (1 − 0.2) = 0.7 × 0.8 = 0.56 → **44% de descuento total**. Ver [calculadora de porcentajes](/calculadora-porcentajes) modo "descuentos encadenados".',
+      },
+      {
+        q: '¿Cuál es la diferencia entre interés simple y compuesto?',
+        a: '**Interés simple**: calcula sobre el capital original siempre. **I = C × i × t**. **Interés compuesto**: reinvierte los intereses y genera interés sobre los intereses. **M = C × (1+i)^t**. A largo plazo, el compuesto es **exponencialmente superior**. Ver [interés simple](/calculadora-interes-simple) y [interés compuesto](/calculadora-interes-compuesto).',
+      },
+    ],
   },
   construccion: {
     label: 'Construcción',
-    title: 'Calculadoras de Construcción — Ladrillos, Cemento, Pintura, Cerámicos | Hacé Cuentas',
-    desc: 'Calculadoras para construcción y refacción: ladrillos por m², cemento/arena/piedra por m³ (CIRSOC 201), pintura por m², pisos cerámicos y costo por m² de obra.',
+    title: 'Calculadoras de Construcción 2026 — Ladrillos, Cemento, Pintura | Hacé Cuentas',
+    desc: 'Calculadoras para construcción y refacción: ladrillos por m² (52/m² común), cemento/arena/piedra por m³ (CIRSOC 201), pintura por m², pisos cerámicos y costo por m² de obra.',
     intro: 'Cuántos ladrillos, bolsas de cemento, litros de pintura y cajas de cerámicos necesitás. Dosificaciones según CIRSOC 201 y costos actualizados por zona. Para obras, refacciones y albañilería en Argentina.',
     color: '#b45309',
     icon: '🏗️',
+    seoContent: `## Presupuestar materiales sin errores
+
+Si estás por **construir, refaccionar o pintar**, estas calculadoras te ayudan a estimar materiales con precisión razonable para no comprar de menos ni de más. Usamos **dosificaciones estándar CIRSOC 201** para hormigones y mampostería, y **rendimientos de mercado** para pinturas y cerámicos. Los **precios son estimativos** (Argentina 2026) y varían por zona y marca.
+
+## Rendimientos estándar
+
+| Material | Rendimiento/unidad | Por m² o m³ |
+|---|---|---|
+| **Ladrillo común 5×12×25** | — | 52 ud/m² (muro 15cm) |
+| **Ladrillo hueco 12×18×33** | — | 17 ud/m² (muro 12cm) |
+| **Cemento CPN 50kg** | 7-10 bolsas | por m³ de mampostería |
+| **Arena** | 0.3 m³ | por m³ de mampostería |
+| **Piedra partida** | 0.3 m³ | por m³ de hormigón armado |
+| **Pintura látex interior** | 12 m²/litro | 2 manos |
+| **Pintura látex exterior** | 8-10 m²/litro | 2 manos |
+| **Cerámicos 30×30** | 11.1 pzs/m² | +10% rotura |
+| **Cerámicos 60×60** | 2.78 pzs/m² | +10% rotura |
+
+## Costos de obra 2026 (orientativo)
+
+- **Obra nueva con terminaciones medias**: USD 700-1.000 por m² (mano de obra + materiales).
+- **Refacción/ampliación**: USD 600-900 por m².
+- **Pintura interior completa**: USD 8-15 por m².
+- **Cerámicos con colocación**: USD 25-45 por m².
+
+*Variaciones importantes según provincia, calidad de terminación y fluctuaciones del dólar.*`,
+    faq: [
+      {
+        q: '¿Cuántos ladrillos comunes entran en 1 m² de muro?',
+        a: '**52 ladrillos comunes** (5×12×25 cm) en un muro de 15cm de espesor. Para ladrillos huecos 12×18×33 entran **17 unidades/m²** en muro de 12cm. Sumá **+5-10% de rotura**. Ver [ladrillos por m²](/calculadora-ladrillos-m2).',
+      },
+      {
+        q: '¿Cuántas bolsas de cemento compro por m³ de mampostería?',
+        a: 'Dosificación estándar para mampostería común: **7-10 bolsas de cemento de 50kg por m³** de muro (junta de 1,5cm, mortero 1:4 cemento:arena). Para hormigón estructural: **12-14 bolsas/m³**. Ver [cemento por m³](/calculadora-cemento-arena-m3) para desglose preciso por dosaje.',
+      },
+      {
+        q: '¿Cuánta pintura látex para pintar una habitación de 4×4m?',
+        a: 'Para las 4 paredes (perímetro × altura = 16×2.60 = 41.6 m²) + techo (16 m²) = **57.6 m²**. Con látex rindiendo 12 m²/litro a 2 manos → **9.6 litros = 10 litros (1 lata + 1 cuarto)**. Ver [pintura por m²](/calculadora-pintura-m2).',
+      },
+      {
+        q: '¿Cómo calculo cuántas cajas de cerámicos necesito?',
+        a: 'Dividí el área a cubrir (m²) entre el **rendimiento/caja** (depende del tamaño de la pieza). Ej: cerámico 30×30 rinde **~1 m²/caja de 11 piezas**. Sumá **+10% de rotura/corte** (en esquinas y bordes). Ver [pisos cerámicos](/calculadora-pisos-ceramicos-m2).',
+      },
+      {
+        q: '¿Cuánto cuesta construir 1 m² en Argentina 2026?',
+        a: 'Para **obra nueva con terminaciones medias**: **USD 700-1.000 por m²** (mano de obra + materiales). Varía por provincia, calidad de terminación, y volatilidad del dólar/pesos. Ver [costo de construcción por m²](/calculadora-costo-m2-construccion) actualizado por zona.',
+      },
+      {
+        q: '¿Cuánta arena y piedra por m³ de hormigón armado?',
+        a: 'Dosaje estándar **1:2:3 (cemento:arena:piedra)** → por m³: ~7 bolsas cemento (50kg) + ~0.5 m³ arena + ~0.75 m³ piedra partida + ~180 L agua. Norma CIRSOC 201. Ver [cemento-arena-piedra](/calculadora-cemento-arena-m3).',
+      },
+      {
+        q: '¿La calculadora incluye aberturas (puertas, ventanas)?',
+        a: '**Depende de la calculadora**. Para pintura y cerámicos podés **restar aberturas** manualmente del área total. Para **ladrillos/cemento**, conviene calcular por muro completo y después descontar (es más conservador, compensa rotura).',
+      },
+    ],
   },
   cocina: {
     label: 'Cocina',
-    title: 'Calculadoras de Cocina — Tazas a Gramos, Escalar Receta, Cocción | Hacé Cuentas',
+    title: 'Calculadoras de Cocina 2026 — Tazas a Gramos, Escalar Receta, Cocción | Hacé Cuentas',
     desc: 'Calculadoras para la cocina: convertir tazas a gramos, escalar recetas a más o menos porciones, tiempo y temperatura de cocción por carne y peso.',
     intro: 'Todo lo que necesitás en la cocina: convertir tazas y cucharadas a gramos, multiplicar o dividir recetas, y tiempos de cocción por carne y peso. Con densidades por ingrediente y temperaturas internas seguras.',
     color: '#ea580c',
     icon: '🍳',
+    seoContent: `## Medir bien = cocinar bien
+
+La mayoría de las recetas vienen en **tazas, cucharadas y cucharaditas** (especialmente las latinoamericanas), pero los resultados varían mucho según la **densidad del ingrediente**. Una taza de harina 000 pesa **120g** pero una taza de azúcar pesa **200g**. Estas calculadoras convierten correctamente por ingrediente, escalan recetas proporcionalmente y te dicen el tiempo/temperatura exacta de cocción por tipo y peso de carne.
+
+## Equivalencias argentinas
+
+| Medida | Equivalente |
+|---|---|
+| **1 taza argentina** | 240 ml |
+| **1 cucharada sopera** | 15 ml |
+| **1 cucharadita de té** | 5 ml |
+| **1 taza de harina 000** | 120 g |
+| **1 taza de azúcar** | 200 g |
+| **1 taza de leche** | 245 g |
+| **1 taza de manteca** | 225 g |
+| **1 taza de aceite** | 220 g |
+
+## Temperatura interna segura de carnes
+
+| Carne | Temperatura interna |
+|---|---|
+| **Pollo (entero o partes)** | 74°C |
+| **Cerdo** | 70-74°C |
+| **Vaca (jugosa)** | 54-57°C |
+| **Vaca (a punto)** | 60-63°C |
+| **Vaca (bien cocida)** | 70°C+ |
+| **Pescado** | 63°C |
+| **Huevos** | 70°C |
+
+*Usar termómetro de carne para precisión. Fuente: USDA y SENASA.*`,
+    faq: [
+      {
+        q: '¿Cuántos gramos de harina tiene 1 taza?',
+        a: '**1 taza argentina (240 ml) de harina 000 pesa ~120 g**. Harina 0000 (más fina): ~115 g. Tamizada: ~100 g (toma más aire). No es lo mismo que azúcar, que pesa 200 g por taza. Usá la [calculadora tazas a gramos](/calculadora-tazas-a-gramos) para cada ingrediente.',
+      },
+      {
+        q: '¿Cómo escalo una receta de 4 a 6 porciones?',
+        a: 'Multiplicá todos los ingredientes por **6/4 = 1.5**. Si la receta pide 200g harina, usá 300g. **Excepción**: el tiempo de cocción NO escala lineal — un pollo más grande necesita proporcionalmente menos tiempo que dos pollos chicos. Ver [escalar receta](/calculadora-multiplicar-receta).',
+      },
+      {
+        q: '¿A qué temperatura está bien cocido el pollo?',
+        a: '**Temperatura interna de 74°C** medida con termómetro en la parte más gruesa (pechuga o muslo). Por debajo puede tener salmonella. Al corte, los jugos deben salir claros, no rosados. Ver [tiempos de cocción](/calculadora-tiempo-coccion-carne).',
+      },
+      {
+        q: '¿Cuánto tarda un asado de 2kg en el horno?',
+        a: 'A **180°C**: **~45-60 minutos** para un asado de tira o matambre (a punto). Para vacío: **1h-1h15m**. Para peceto entero (2kg): **1h20m-1h40m** (75% del tiempo a 180°C + 25% descansando envuelto en papel). Usá la [calculadora de cocción](/calculadora-tiempo-coccion-carne) por corte/peso específico.',
+      },
+      {
+        q: '¿Cuánto es 1/4 de taza en gramos de azúcar?',
+        a: '1 taza de azúcar = 200g, entonces **1/4 de taza = 50g**. Para harina: 1/4 taza = 30g. Para manteca: 1/4 taza = 56g. La [calculadora tazas a gramos](/calculadora-tazas-a-gramos) te da la conversión por ingrediente exacto.',
+      },
+      {
+        q: '¿Puedo sustituir manteca por aceite en una receta?',
+        a: '**Sí, pero con ajuste**. Usá **0.8 tazas de aceite por cada 1 taza de manteca** (la manteca tiene agua + grasa, el aceite solo grasa). Queda un poco más húmedo. Para bizcochuelos y tortas funciona bien; para masas cortas (sablé, tartas) cambia mucho la textura.',
+      },
+      {
+        q: '¿Cómo calculo la cantidad de arroz por persona?',
+        a: 'Como guarnición: **70-80g de arroz crudo por persona**. Como plato principal: **100-120g por persona**. Al cocinarse, el arroz **triplica su peso** (100g crudo → 300g cocido). 1 taza de arroz crudo pesa ~200g.',
+      },
+    ],
   },
 };
 
 const m = meta[cat] || meta.finanzas;
 
-const schema = {
-  '@context': 'https://schema.org',
+// Schemas combinados: CollectionPage + BreadcrumbList + FAQPage
+const schemaCollection = {
   '@type': 'CollectionPage',
+  '@id': `https://hacecuentas.com/categoria/${cat}`,
   name: m.label,
   description: m.desc,
   url: `https://hacecuentas.com/categoria/${cat}`,
@@ -133,6 +726,48 @@ const schema = {
     })),
   },
 };
+
+const schemaBreadcrumb = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+    { '@type': 'ListItem', position: 2, name: m.label, item: `https://hacecuentas.com/categoria/${cat}` },
+  ],
+};
+
+const schemaFAQ = m.faq.length > 0 ? {
+  '@type': 'FAQPage',
+  mainEntity: m.faq.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: f.a,
+    },
+  })),
+} : null;
+
+const graph: any[] = [schemaCollection, schemaBreadcrumb];
+if (schemaFAQ) graph.push(schemaFAQ);
+const schema = { '@context': 'https://schema.org', '@graph': graph };
+
+// Markdown → HTML (simple, igual que [...slug].astro)
+function md(text: string): string {
+  return text
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" rel="noopener">$1</a>')
+    .replace(/^\- (.+)$/gm, '<li>$1</li>')
+    .replace(/^\| (.+) \|$/gm, (match) => {
+      const cells = match.slice(2, -2).split(' | ');
+      return '<tr>' + cells.map((c) => `<td>${c}</td>`).join('') + '</tr>';
+    })
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+}
 ---
 
 <Layout title={m.title} description={m.desc} schema={schema}>
@@ -171,6 +806,29 @@ const schema = {
       </a>
     ))}
   </div>
+
+  {m.seoContent && (
+    <section class="seo-content">
+      <Fragment set:html={`<p>${md(m.seoContent)}</p>`} />
+    </section>
+  )}
+
+  {m.faq.length > 0 && (
+    <section class="faq">
+      <h2>Preguntas frecuentes sobre {m.label}</h2>
+      <div class="faq-list">
+        {m.faq.map((f) => (
+          <details>
+            <summary>
+              <span>{f.q}</span>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div set:html={`<p>${md(f.a)}</p>`} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
 
   <aside class="cta-back">
     <p>¿Buscás otra categoría?</p>
@@ -280,6 +938,117 @@ const schema = {
   }
   .card-arrow { flex-shrink: 0; color: var(--text-subtle); transition: all 0.15s; margin-top: 0.5rem; }
 
+  /* SEO content block */
+  .seo-content {
+    margin-top: 3rem;
+    padding: 2rem 2.25rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .seo-content :global(h2) {
+    font-size: 1.375rem;
+    margin: 1.5rem 0 0.75rem;
+  }
+  .seo-content :global(h2):first-child { margin-top: 0; }
+  .seo-content :global(h3) {
+    font-size: 1.0625rem;
+    margin: 1.25rem 0 0.5rem;
+  }
+  .seo-content :global(p) {
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 0.75rem;
+  }
+  .seo-content :global(strong) { color: var(--text); font-weight: 600; }
+  .seo-content :global(code) {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 0.125rem 0.375rem;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.8125em;
+    color: var(--accent-strong);
+  }
+  .seo-content :global(ul) { margin-left: 1.25rem; margin-bottom: 1rem; }
+  .seo-content :global(li) {
+    margin-bottom: 0.375rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+  }
+  .seo-content :global(table) {
+    border-collapse: collapse;
+    margin: 1rem 0;
+    width: 100%;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .seo-content :global(td) {
+    padding: 0.625rem 0.875rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+  }
+  .seo-content :global(tr:last-child td) { border-bottom: none; }
+  .seo-content :global(a) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* FAQ category */
+  .faq {
+    margin-top: 3rem;
+  }
+  .faq h2 {
+    margin-bottom: 1.25rem;
+    font-size: 1.5rem;
+  }
+  .faq-list { display: grid; gap: 0.625rem; }
+  .faq details {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 0.15s;
+  }
+  .faq details:hover { border-color: var(--border-strong); }
+  .faq details[open] {
+    border-color: var(--accent);
+    background: var(--bg);
+    box-shadow: var(--shadow-sm);
+  }
+  .faq summary {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text);
+    list-style: none;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq .chev {
+    color: var(--text-subtle);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .faq details[open] .chev {
+    transform: rotate(180deg);
+    color: var(--accent);
+  }
+  .faq details p {
+    color: var(--text-muted);
+    padding: 0 1.25rem 1.125rem;
+    margin: 0;
+    line-height: 1.65;
+    font-size: 0.9375rem;
+  }
+
   .cta-back {
     margin-top: 3rem;
     padding: 1.5rem;
@@ -302,4 +1071,8 @@ const schema = {
     transition: all 0.15s;
   }
   .btn-ghost:hover { background: var(--accent); color: var(--bg); }
+
+  @media (max-width: 640px) {
+    .seo-content { padding: 1.5rem 1.25rem; }
+  }
 </style>

@@ -1,12 +1,21 @@
 {
   "slug": "calculadora-edad-exacta",
-  "title": "Calculadora de Edad Exacta — Años, Meses, Días | Hacé Cuentas",
+  "title": "Calculadora de Edad Exacta — Años, Meses y Días | Hacé Cuentas",
   "h1": "Calculadora de edad",
-  "description": "Calculá tu edad exacta en años, meses y días. Incluye días vividos totales, próximo cumpleaños y horas totales.",
+  "description": "Calculá tu edad exacta en años, meses y días desde tu fecha de nacimiento. Incluye días vividos, horas totales y cuánto falta para tu próximo cumpleaños.",
   "category": "vida",
   "icon": "🎂",
   "formulaId": "edad",
-  "intro": "Ingresá tu fecha de nacimiento y calculá tu edad exacta al día de hoy. Además, cuántos días viviste, cuántos faltan para tu próximo cumpleaños y más datos curiosos.",
+  "seoKeywords": ["calculadora edad", "edad exacta", "cuantos dias tengo", "calcular edad años meses dias", "edad en dias", "proximo cumpleaños", "edad en horas", "cuanto tiempo viví"],
+  "intro": "La edad se mide en años completos, pero en trámites oficiales, apps de salud, pediatría, demografía y juegos de cumpleaños hace falta un cálculo más preciso: cuántos **años, meses y días exactos** tiene una persona desde su fecha de nacimiento hasta hoy. Esta calculadora toma tu fecha de nacimiento (o la de cualquier persona) y devuelve al instante tu edad desglosada, los **días totales vividos**, las **horas aproximadas**, los **meses completos** y cuántos **días faltan para tu próximo cumpleaños**. Contempla años bisiestos, diferencias de mes (abril a mayo son 30 días, enero a febrero 28 o 29) y te muestra el cálculo día por día. Todo el procesamiento es en tu navegador — no almacenamos fechas ni tus datos.",
+  "keyTakeaway": "Tu edad exacta = **año actual − año nacimiento**, ajustando por si tu cumpleaños ya pasó. Para días totales, usá la diferencia en milisegundos ÷ 86.400.000. La calculadora contempla bisiestos automáticamente.",
+  "useCases": [
+    "Estás por tramitar la jubilación y querés verificar los años exactos al día de hoy.",
+    "Sos pediatra o papá/mamá y necesitás calcular la edad de un bebé en días o meses.",
+    "Querés saber cuántos días vivís y cuántos faltan para tu próximo cumpleaños.",
+    "Tenés que completar un formulario con edad exacta en años, meses y días.",
+    "Querés comparar edades exactas entre dos personas (pareja, hijos, hermanos)."
+  ],
   "fields": [
     {
       "id": "fechaNacimiento",
@@ -23,23 +32,63 @@
     { "id": "proximoCumpleanios", "label": "Próximo cumpleaños", "format": "date" },
     { "id": "diasHastaCumple", "label": "Días hasta el próximo cumple", "format": "number" }
   ],
-  "explanation": "## Cómo se calcula la edad\n\nLa edad es simple en teoría: años completos desde el nacimiento hasta hoy. Pero el cálculo exacto tiene sus sutilezas.\n\n### Paso a paso\n1. **Años**: año actual − año de nacimiento\n2. **Meses**: mes actual − mes de nacimiento. Si el día actual es menor al día de nacimiento, se resta 1 mes\n3. **Días**: día actual − día de nacimiento. Si es negativo, se suma los días del mes anterior\n\n### Ejemplo\nNacido el 15 de marzo de 1990, hoy 10 de abril de 2026:\n- Años: 2026 − 1990 = 36\n- Pero en abril todavía no pasó el 15, así que todavía no cumpliste 36. Edad real: 35 años, 11 meses y 26 días\n\n### Datos curiosos\n- **Días vividos**: diferencia total en milisegundos / milisegundos por día\n- **Próximo cumpleaños**: si ya pasó este año, el del año siguiente\n- **Años bisiestos**: hay 1 día extra cada 4 años (excepto años divisibles por 100 pero no por 400)\n\n### Uso común\nEsta calculadora es útil para:\n- Trámites (jubilación, beneficios por edad)\n- Apps de salud\n- Comparar edades exactas (entre amigos, pareja)\n- Pedidos escolares (\"¿cuántos días tenés?\")",
+  "example": {
+    "title": "Ejemplo real: Nacido el 15 de marzo de 1990, hoy 14 de abril de 2026",
+    "steps": [
+      "**Fecha de nacimiento**: 15/03/1990.",
+      "**Fecha actual**: 14/04/2026.",
+      "**Años**: `2026 − 1990` = 36. Como estamos en abril (15/03 ya pasó), el resultado son **36 años**.",
+      "**Meses completos**: 1 mes entero (abril tras marzo).",
+      "**Días restantes**: del 15/03 al 14/04 = 30 días, pero estamos al día 14/04, así que son 0 meses completos + 30 días totales.",
+      "**Días vividos totales**: `(14/04/2026 − 15/03/1990)` ≈ 13.179 días.",
+      "**Próximo cumpleaños**: 15 de marzo de 2027 → **335 días**."
+    ],
+    "result": "Tenés **36 años, 0 meses y 30 días**. Viviste ≈ **13.179 días** o ≈ **316.300 horas**. Faltan 335 días para tu próximo cumple."
+  },
+  "explanation": "## Cómo se calcula la edad exacta\n\nLa edad es simple en teoría: años completos desde el nacimiento hasta hoy. Pero el cálculo exacto tiene sus sutilezas con los meses y días.\n\n### Paso a paso\n\n1. **Años**: `año_actual − año_nacimiento`. Si tu cumpleaños de este año ya pasó, este es tu número final. Si no, restá 1.\n2. **Meses**: `mes_actual − mes_nacimiento`. Si el día actual es menor al día de nacimiento, restá 1 mes.\n3. **Días**: `día_actual − día_nacimiento`. Si da negativo, sumale los días del mes anterior.\n\n### Fórmula directa en días\n\n```\ndias_totales = (fecha_hoy − fecha_nacimiento) / 86.400.000\n```\n\nSe calcula la diferencia en milisegundos y se divide por 86.400.000 (milisegundos en un día). JavaScript y la mayoría de los lenguajes ya incluyen años bisiestos automáticamente porque usan el calendario gregoriano.\n\n## Años bisiestos\n\nUn año es bisiesto si:\n- Es divisible por 4 (`año % 4 == 0`), **excepto**\n- Si es divisible por 100 (`año % 100 == 0`), **salvo**\n- Que también sea divisible por 400 (`año % 400 == 0`).\n\n**Ejemplos**: 2000 fue bisiesto (divisible por 400). 1900 NO fue bisiesto (divisible por 100 pero no 400). 2024 sí, 2025 no, 2026 no, 2028 sí.\n\n## Tabla de días promedio por edad\n\n| Edad | Días aproximados | Horas aproximadas |\n|---|---|---|\n| 10 años | 3.653 | 87.660 |\n| 18 años | 6.575 | 157.800 |\n| 25 años | 9.131 | 219.150 |\n| 40 años | 14.610 | 350.640 |\n| 65 años | 23.741 | 569.790 |\n| 80 años | 29.220 | 701.280 |\n| 100 años | 36.525 | 876.600 |\n\n## Edad civil vs otras formas\n\n- **Edad civil (Argentina y Occidente)**: cumplís años el día de tu cumpleaños. Al nacer tenés 0 años.\n- **Edad coreana tradicional**: al nacer tenés 1 año. Todos cumplen en Año Nuevo (1° de enero). Una persona nacida en diciembre cumple 2 años en enero.\n- **Edad gestacional**: se mide desde la última menstruación de la madre. Al nacer, un bebé tiene ~40 semanas de gestación pero 0 años de edad civil.\n- **Edad ósea / biológica**: medida por marcadores biológicos. Puede diferir de la edad cronológica.\n\n## Usos prácticos del cálculo de edad\n\n- **ANSES (jubilación)**: mujeres a los 60 años, varones a los 65 (con 30 años de aportes).\n- **DNI argentino**: a los 14 años se actualiza el DNI.\n- **Licencia de conducir**: 17 años con permiso, 18 años normal.\n- **Apto para votar**: 16 años (voto joven) o 18 años (obligatorio).\n- **Mayoría de edad legal**: 18 años en Argentina.\n- **Edad pediátrica**: hasta los 14 años se calcula en meses hasta los 2 años, y después en años.\n- **Seguros de vida**: premium depende de edad exacta.\n\n## Cosas que podés calcular con tu edad\n\n- **Días vividos**: diferencia de fechas en días.\n- **Horas / minutos / segundos**: multiplicá por 24 / 1440 / 86400 respectivamente.\n- **Latidos aproximados**: 70 latidos/min × 60 × 24 × días_vividos.\n- **Número de lunas llenas vistas**: días_vividos / 29.5.\n- **Vueltas al sol**: tu edad en años.\n\n## Errores comunes\n\n1. **Olvidarse de ajustar por bisiestos**: si multiplicás 365 × años, te quedan cortos 1 día cada 4 años.\n2. **Confundir edad legal con edad cumplida**: si alguien nació el 14/04/2000 y hoy es 14/04/2026, cumple 26 hoy (no 25).\n3. **Calcular desde el 1° de enero del año de nacimiento**: error común en sistemas viejos (como la edad coreana tradicional).\n4. **Meses de distinto largo**: enero tiene 31 días, febrero 28 o 29; el cálculo exacto depende del calendario real, no del promedio.\n\n## Calculadoras relacionadas\n\n- [Días entre fechas](/calculadora-dias-entre-fechas) — diferencia exacta entre dos fechas cualesquiera.\n- [Fecha de parto](/calculadora-fecha-parto) — 40 semanas desde la última menstruación.\n- [Edad gestacional](/calculadora-embarazo-semanas) — semanas de embarazo a la fecha.\n- [Esperanza de vida](/calculadora-esperanza-de-vida-argentina) — cuánto tiempo queda según estadísticas del INDEC.",
   "faq": [
     {
       "q": "¿Mi edad cambia el día del cumpleaños o al día siguiente?",
-      "a": "Legalmente cambiás de edad el mismo día de tu cumpleaños, a las 00:00. Algunas culturas lo cuentan diferente (en Corea del Sur, por ejemplo, todos cumplen años en Año Nuevo)."
+      "a": "**Legalmente cambiás de edad el mismo día de tu cumpleaños, a las 00:00** hora local. Algunas culturas lo cuentan diferente: en Corea del Sur tradicional, todos cumplían años en Año Nuevo (costumbre que oficialmente cambió en 2023 para alinearse al estándar internacional)."
     },
     {
-      "q": "¿Cuántos días vive una persona promedio?",
-      "a": "Con una expectativa de vida de 77 años (promedio Argentina), son aproximadamente 28.000 días. Poco más de 672.000 horas."
+      "q": "¿Cuántos días vive una persona promedio en Argentina?",
+      "a": "Con una esperanza de vida de **77 años** (INDEC 2024), son aproximadamente **28.130 días**, o **675.000 horas**. Las mujeres viven en promedio 80 años, los varones 74. Ver más en [esperanza de vida](/calculadora-esperanza-de-vida-argentina)."
     },
     {
       "q": "¿Por qué el cálculo no es exacto con años bisiestos?",
-      "a": "El promedio de días por año es 365.25 por los bisiestos. Esta calculadora usa fechas reales, así que incluye los bisiestos automáticamente."
+      "a": "Cada 4 años hay un día extra (29 de febrero). El promedio de días por año es **365.25**. Esta calculadora usa fechas reales con el calendario gregoriano, así que incluye los bisiestos automáticamente y el resultado es exacto."
     },
     {
-      "q": "¿Qué es la edad gestacional?",
-      "a": "Es la edad de un bebé medida desde la concepción. Al nacer, la edad gestacional suele ser de 40 semanas. No se cuenta para la edad civil, que empieza el día del nacimiento."
+      "q": "¿Qué es la edad gestacional y por qué es distinta a la civil?",
+      "a": "La **edad gestacional** es la edad de un bebé medida desde la **última menstruación de la madre**, no desde la concepción. Al nacer, la edad gestacional es típicamente de 38–40 semanas, pero la **edad civil** empieza en 0 el día del nacimiento."
+    },
+    {
+      "q": "¿A qué edad me puedo jubilar en Argentina?",
+      "a": "Según ANSES: **mujeres a los 60 años, varones a los 65**, siempre con **30 años de aportes**. Existen regímenes especiales (docentes, trabajadores en relación de dependencia insalubres, fuerzas armadas) con edades distintas. Podés calcular los años de aportes sumando tus [años trabajados](/calculadora-edad-exacta)."
+    },
+    {
+      "q": "¿Cómo se calcula la edad de un bebé en meses?",
+      "a": "Hasta los **24 meses**, pediatras usan meses completos: `(año_actual − año_nacimiento) × 12 + (mes_actual − mes_nacimiento)`. Si el día actual es anterior al de nacimiento, restás 1 mes. Por ejemplo, nacido el 15/02 y hoy 10/04 → 1 mes y 26 días."
+    },
+    {
+      "q": "¿Cuántos cumpleaños tiene una persona nacida un 29 de febrero?",
+      "a": "Cumple años **solo cada 4 años** (año bisiesto). El resto de los años, legalmente en Argentina (Art. 25 Código Civil) se considera que cumple el **1° de marzo**. Una persona de 20 años biológicos tuvo solo 5 'cumpleaños reales' (en 29/02)."
+    },
+    {
+      "q": "¿La calculadora funciona para edades muy avanzadas o fechas muy antiguas?",
+      "a": "**Sí**. Funciona con cualquier fecha desde el año 1900 hasta la actual. Para fechas anteriores a 1900 o mayores a 200 años, pueden aparecer discrepancias menores por cambios históricos del calendario (Juliano → Gregoriano en 1582). Para uso genealógico avanzado, consultá con herramientas especializadas."
     }
+  ],
+  "sources": [
+    { "name": "INDEC — Estadísticas Vitales", "url": "https://www.indec.gob.ar/indec/web/Nivel4-Tema-2-24-85" },
+    { "name": "ANSES - Requisitos para jubilarse", "url": "https://www.anses.gob.ar/jubilacion-ordinaria" },
+    { "name": "Código Civil y Comercial de la Nación", "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/235000-239999/235975/norma.htm" }
+  ],
+  "relatedSlugs": [
+    "calculadora-dias-entre-fechas",
+    "calculadora-fecha-parto",
+    "calculadora-embarazo-semanas",
+    "calculadora-esperanza-de-vida-argentina"
   ]
 }

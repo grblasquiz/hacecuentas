@@ -1,12 +1,21 @@
 {
   "slug": "calculadora-que-dia-de-la-semana",
-  "title": "¿Qué día de la semana fue/será? | Hacé Cuentas",
+  "title": "¿Qué Día de la Semana Fue o Será? Calendario 2026 | Hacé Cuentas",
   "h1": "Qué día de la semana es una fecha",
-  "description": "Descubrí qué día de la semana fue o será una fecha cualquiera, más semana del año, día del año y si el año es bisiesto.",
+  "description": "Averiguá qué día de la semana fue o será cualquier fecha: pasado, presente o futuro. Incluye día del año, semana ISO, feriados argentinos 2026 y años bisiestos. Entrá y descubrilo.",
   "category": "vida",
   "icon": "📅",
   "formulaId": "que-dia",
-  "intro": "Útil para planificar eventos, ver qué día cae tu cumpleaños el año que viene, o averiguar qué día fue tu nacimiento.",
+  "seoKeywords": ["que dia de la semana fue", "que dia cae", "calendario 2026", "que dia nací", "dia de la semana fecha", "algoritmo de zeller", "año bisiesto", "semana iso", "feriados argentina 2026", "dia del año"],
+  "intro": "¿Querés saber **qué día de la semana naciste**? ¿En qué día cae tu cumpleaños el año que viene? ¿Qué día de la semana fue la independencia argentina (9 de julio de 1816)? Esta calculadora usa el **algoritmo de Zeller** (o directamente el motor de fechas gregoriano del navegador) para darte la respuesta instantánea para cualquier fecha entre el año 1583 y el 9999. Además te dice el **día del año** (1–366), la **semana ISO 8601**, si el año es bisiesto y si la fecha coincide con un feriado nacional argentino. Todo el cálculo corre en tu navegador — no guardamos nada.",
+  "keyTakeaway": "El calendario gregoriano tiene un ciclo de **400 años exactos** (146.097 días, que son 20.871 semanas completas). Eso significa que toda fecha vuelve a caer en el mismo día de la semana cada 400 años. El día 1 de enero de 2026 cae **jueves**, igual que el 1 de enero de 1626 y el 1 de enero de 2426.",
+  "useCases": [
+    "Querés saber qué día de la semana naciste (especialmente si fue antes de 1990 y no te acordás).",
+    "Estás planificando un evento y querés ver en qué día de la semana cae una fecha específica.",
+    "Necesitás revisar si una fecha futura es día hábil o cae fin de semana.",
+    "Te interesa saber qué día fue un hito histórico (Revolución de Mayo, Independencia, etc.).",
+    "Estás armando calendarios o planillas y necesitás confirmar el día de una fecha."
+  ],
   "fields": [
     { "id": "fecha", "label": "Fecha", "type": "date", "required": true }
   ],
@@ -17,9 +26,67 @@
     { "id": "numeroSemana", "label": "Semana del año", "format": "number" },
     { "id": "esBisiesto", "label": "¿Año bisiesto?", "format": "text" }
   ],
-  "explanation": "## Cómo se calcula\n\nLas fechas del calendario gregoriano (vigente desde 1582) pueden calcularse con el **algoritmo de Zeller** o simplemente delegando en la clase `Date` de JavaScript.\n\n### Año bisiesto\n\nUn año es bisiesto si:\n- Es divisible por 4 Y\n- NO es divisible por 100, O\n- Sí es divisible por 400\n\n```\n2024 → bisiesto (divisible por 4)\n2100 → NO bisiesto (divisible por 100, no por 400)\n2000 → bisiesto (divisible por 400)\n```\n\n### Semana del año (ISO 8601)\n\nLa semana 1 es la que contiene el primer **jueves** del año. La semana comienza en lunes. Por eso a veces el 1 de enero está en la semana 52 del año anterior.\n\n### Usos comunes\n\n- **¿Qué día cae mi cumple?**: planificar festejo.\n- **¿Qué día de la semana nací?**: curiosidad personal.\n- **Planificar feriados**: si cae martes, conviene sacar el lunes para 'fin de semana largo'.\n- **Ciclos de trabajo**: ver en qué semana del año estamos.\n\n### Feriados Argentina 2026 (Ley 27.399)\n\n- 1 enero (J) — Año Nuevo\n- 16-17 febrero (L-M) — Carnaval\n- 24 marzo (M) — Día Memoria\n- 2 abril (J) — Malvinas\n- 3 abril (V) — Viernes Santo\n- 1 mayo (V) — Trabajador\n- 25 mayo (L) — Revolución Mayo\n- 15 junio (L) — Día Bandera (trasladado del 20)\n- 9 julio (J) — Independencia\n- 17 agosto (L) — San Martín\n- 12 octubre (L) — Diversidad Cultural\n- 20 noviembre (V) — Soberanía\n- 8 diciembre (M) — Inmaculada Concepción\n- 25 diciembre (V) — Navidad",
+  "example": {
+    "title": "Ejemplo real: 9 de julio de 1816 (Declaración de la Independencia argentina)",
+    "steps": [
+      "**Fecha ingresada**: 09/07/1816.",
+      "**Día del año**: 191 (1816 no fue bisiesto).",
+      "**Aplicando el algoritmo de Zeller** con q=9, m=7, K=16, J=18 → `h = (9 + ⌊13×8/5⌋ + 16 + ⌊16/4⌋ + ⌊18/4⌋ − 2×18) mod 7`.",
+      "**Cálculo**: `(9 + 20 + 16 + 4 + 4 − 36) mod 7 = 17 mod 7 = 3` → **martes** (Zeller codifica 0=sábado, 3=martes).",
+      "**Semana ISO 8601**: semana 28 de 1816.",
+      "**Año bisiesto**: 1816 es divisible por 4 y no por 100 → **SÍ fue bisiesto**."
+    ],
+    "result": "El **9 de julio de 1816 fue un martes**. Era el día 191 del año, semana 28 ISO, y el año fue bisiesto."
+  },
+  "explanation": "## Cómo se calcula el día de la semana\n\nEl calendario gregoriano (vigente desde el 15 de octubre de 1582) es determinístico: dada una fecha, hay una fórmula exacta para obtener su día de la semana. La forma moderna es delegar en `new Date(año, mes, día).getDay()` de JavaScript, que devuelve 0=domingo, 1=lunes, ..., 6=sábado. Pero históricamente se usó el **algoritmo de Zeller**.\n\n### Algoritmo de Zeller (1882)\n\n```\nh = (q + ⌊13(m+1)/5⌋ + K + ⌊K/4⌋ + ⌊J/4⌋ − 2J) mod 7\n```\n\nDonde:\n- **q** = día del mes\n- **m** = mes (3=marzo, ..., 14=febrero; enero y febrero cuentan como mes 13 y 14 del año anterior)\n- **K** = año mod 100 (dos últimos dígitos)\n- **J** = ⌊año / 100⌋ (siglo)\n- **h** = 0=sábado, 1=domingo, 2=lunes, 3=martes, 4=miércoles, 5=jueves, 6=viernes\n\n### Año bisiesto\n\nUn año es bisiesto si cumple simultáneamente:\n\n1. Es divisible por **4**, Y\n2. NO es divisible por **100**, O\n3. Sí es divisible por **400**.\n\n| Año | ¿Bisiesto? | Motivo |\n|---|---|---|\n| 2024 | Sí | Divisible por 4, no por 100 |\n| 2025 | No | No divisible por 4 |\n| 2026 | No | No divisible por 4 |\n| 2028 | Sí | Divisible por 4, no por 100 |\n| 2100 | No | Divisible por 100, no por 400 |\n| 2000 | Sí | Divisible por 400 |\n| 2400 | Sí | Divisible por 400 |\n\n### Semana ISO 8601\n\nLa norma ISO 8601 (usada en Europa, en empresas globales y en Excel con `WEEKNUM(fecha, 21)`) define:\n\n- La **semana empieza el lunes** (no el domingo como en EEUU).\n- La **semana 1** es aquella que contiene el primer **jueves** del año (equivalente: la que contiene el 4 de enero).\n- Los primeros días de enero pueden pertenecer a la semana 52 o 53 del año anterior.\n- Los últimos días de diciembre pueden pertenecer a la semana 1 del año siguiente.\n\n## Ciclo del calendario gregoriano\n\nCada ciclo de 400 años tiene exactamente:\n\n- **400 × 365 + 97 bisiestos = 146.097 días**\n- **146.097 / 7 = 20.871 semanas exactas**\n\nPor eso cada 400 años todas las fechas caen el mismo día. Un cumpleaños del 14 de abril cae el mismo día de la semana en 1626, 2026 y 2426.\n\n## Calendario 2026 — Hitos clave\n\n| Fecha | Día | Qué es |\n|---|---|---|\n| 01/01/2026 | Jueves | Año Nuevo |\n| 24/03/2026 | Martes | Día Memoria, Verdad y Justicia |\n| 02/04/2026 | Jueves | Veteranos de Malvinas |\n| 01/05/2026 | Viernes | Día del Trabajador |\n| 25/05/2026 | Lunes | Revolución de Mayo |\n| 20/06/2026 | Sábado | Día de la Bandera |\n| 09/07/2026 | Jueves | Independencia |\n| 17/08/2026 | Lunes | San Martín |\n| 12/10/2026 | Lunes | Diversidad Cultural |\n| 20/11/2026 | Viernes | Soberanía Nacional |\n| 08/12/2026 | Martes | Inmaculada Concepción |\n| 25/12/2026 | Viernes | Navidad |\n\n## Feriados Argentina 2026 (Ley 27.399)\n\n### Inamovibles (no se trasladan)\n- **1 enero** (J) — Año Nuevo\n- **16 y 17 febrero** (L-M) — Carnaval\n- **24 marzo** (M) — Día Memoria\n- **2 abril** (J) — Veteranos de Malvinas\n- **Viernes Santo** (3 abril 2026, V) — calendario móvil\n- **1 mayo** (V) — Día del Trabajador\n- **25 mayo** (L) — Día de la Patria\n- **20 junio** (S) — Día de la Bandera\n- **9 julio** (J) — Día de la Independencia\n- **8 diciembre** (M) — Inmaculada Concepción\n- **25 diciembre** (V) — Navidad\n\n### Trasladables (se pasan al lunes más cercano)\n- **17 agosto** — Paso a la inmortalidad de San Martín (se traslada al lunes si no cae)\n- **12 octubre** — Respeto a la Diversidad Cultural\n- **20 noviembre** — Día de la Soberanía Nacional\n\n## Hitos históricos argentinos — ¿Qué día fueron?\n\n| Evento | Fecha | Día |\n|---|---|---|\n| Revolución de Mayo | 25/05/1810 | Viernes |\n| Declaración Independencia | 09/07/1816 | Martes |\n| Combate de San Lorenzo | 03/02/1813 | Miércoles |\n| Batalla de Maipú | 05/04/1818 | Domingo |\n| Cruce de los Andes (inicio) | 12/01/1817 | Domingo |\n| Nacimiento de San Martín | 25/02/1778 | Miércoles |\n| Fundación de Buenos Aires (2°) | 11/06/1580 | Miércoles (juliano) |\n| Mundial Argentina 78 (final) | 25/06/1978 | Domingo |\n| Mundial México 86 (final) | 29/06/1986 | Domingo |\n| Mundial Qatar 2022 (final) | 18/12/2022 | Domingo |\n\n## Regla de los años bisiestos del siglo XXI\n\n**Bisiestos confirmados 2000–2100**: 2000, 2004, 2008, 2012, 2016, 2020, 2024, 2028, 2032, 2036, 2040, 2044, 2048, 2052, 2056, 2060, 2064, 2068, 2072, 2076, 2080, 2084, 2088, 2092, 2096. **2100 NO será bisiesto** (divisible por 100 pero no por 400).\n\n## Errores comunes\n\n1. **Confundir calendario juliano con gregoriano**: antes del 15/10/1582 rigió el juliano. Hay 10–13 días de desfase. Rusia usó el juliano hasta 1918 (por eso la 'Revolución de Octubre' fue en noviembre según el gregoriano).\n2. **Asumir que la semana empieza el domingo**: en Argentina y la norma ISO empieza el **lunes**. En EEUU y ciertas apps empieza el **domingo**.\n3. **Olvidarse del 29 de febrero**: si programás un evento para el 29/02/2025, no existe — 2025 no es bisiesto.\n4. **Año 0**: no existe. Después del 1 a.C. viene el 1 d.C. Los astrónomos sí usan año 0, pero el calendario civil no.\n\n## Calculadoras relacionadas\n\n- [Días entre dos fechas](/calculadora-dias-entre-fechas) — diferencia exacta en días, meses y años.\n- [Calculadora de edad](/calculadora-edad-exacta) — tu edad exacta con días vividos.\n- [Fecha de parto](/calculadora-fecha-parto) — 40 semanas desde la última menstruación.\n- [Sumar o restar días a una fecha](/calculadora-sumar-dias-fecha) — obtené la fecha resultante.",
   "faq": [
-    { "q": "¿Funciona con fechas antiguas?", "a": "Sí, pero con precisión desde 1582 (calendario gregoriano). Para fechas anteriores (juliano) hay desfase de 10-13 días según la época." },
-    { "q": "¿Y con fechas muy futuras?", "a": "Sí, el calendario gregoriano es predecible: el año 3000 NO será bisiesto (divisible por 1000 pero no por 400)." }
+    {
+      "q": "¿Qué día de la semana nació mi abuela?",
+      "a": "Ingresá su fecha de nacimiento en la calculadora. Funciona sin problemas para cualquier fecha desde el **15 de octubre de 1582** (inicio del calendario gregoriano). Para fechas anteriores, aplican reglas del calendario juliano y puede haber un desfase de 10 a 13 días."
+    },
+    {
+      "q": "¿Por qué la semana empieza el lunes y no el domingo?",
+      "a": "En Argentina y en la norma **ISO 8601** (estándar internacional), la semana laboral empieza el **lunes** y el fin de semana es sábado–domingo. En EEUU y países anglosajones la semana empieza el domingo. Apps como Google Calendar, WhatsApp o Excel te dejan elegir el formato."
+    },
+    {
+      "q": "¿Cuáles son los próximos años bisiestos?",
+      "a": "**2028, 2032, 2036, 2040, 2044, 2048 y 2052**. Entre 2025 y 2099 todos los años divisibles por 4 son bisiestos. 2100, 2200 y 2300 NO serán bisiestos (divisibles por 100 pero no por 400). 2400 sí lo será."
+    },
+    {
+      "q": "¿Qué es el algoritmo de Zeller?",
+      "a": "Es una fórmula aritmética creada por Christian Zeller en 1882 para calcular el día de la semana de cualquier fecha sin necesidad de una tabla ni computadora. Toma el día, mes, año de siglo y siglo, los combina con operaciones módulo 7 y devuelve el día. Se sigue usando hoy como algoritmo académico y en sistemas embebidos donde no se puede cargar una librería de fechas."
+    },
+    {
+      "q": "¿Los feriados trasladables en Argentina cambian cada año?",
+      "a": "**Sí**. La **Ley 27.399 (2017)** estableció que los feriados del 17 de agosto, 12 de octubre y 20 de noviembre se trasladan al lunes más cercano si no caen en lunes. Los demás (1/1, 24/3, 2/4, 1/5, 25/5, 20/6, 9/7, 8/12, 25/12) son inamovibles. El carnaval y el Viernes Santo se calculan según el calendario católico."
+    },
+    {
+      "q": "¿Por qué el calendario se repite cada 400 años?",
+      "a": "Porque **400 × 365 + 97 bisiestos = 146.097 días = 20.871 semanas exactas**. El ciclo encaja perfecto con los días de la semana. Cada 28 años también se repite (en promedio) dentro de un mismo siglo, pero el ciclo exacto garantizado es 400."
+    },
+    {
+      "q": "¿Qué día de la semana cae el 29 de febrero de 2028?",
+      "a": "**Martes**. 2028 es año bisiesto (divisible por 4, no por 100). El ciclo del 29 de febrero sigue el patrón: 2024 jueves, 2028 martes, 2032 domingo, 2036 viernes, 2040 miércoles. Las personas nacidas un 29 de febrero se llaman 'leaplings' y en Argentina (Art. 25 Código Civil) se considera que cumplen el 1° de marzo en años no bisiestos."
+    },
+    {
+      "q": "¿Cómo se numera la semana del año (ISO 8601)?",
+      "a": "La **semana 1** es la que contiene el primer jueves del año (o equivalentemente, la que contiene el 4 de enero). Por eso el 1° de enero a veces pertenece a la semana 52 o 53 del año anterior. La semana siempre va de lunes a domingo. En 2026, el 1° de enero (jueves) es la semana 1; en 2027, el 1° de enero (viernes) será la semana 53 de 2026."
+    },
+    {
+      "q": "¿El año 2000 fue bisiesto?",
+      "a": "**Sí, 2000 fue bisiesto** porque es divisible por 400. Muchos sistemas viejos (anteriores al Y2K) tenían el bug de marcarlo como no bisiesto por ser divisible por 100, lo que causó fallas en el 29 de febrero de 2000. Fue uno de los últimos coletazos del problema del Y2K. Los años 1700, 1800 y 1900 NO fueron bisiestos; 1600 y 2000 sí."
+    }
+  ],
+  "sources": [
+    { "name": "Ley 27.399 — Feriados Nacionales Argentina", "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/300000-304999/303099/norma.htm" },
+    { "name": "ISO 8601:2019 — Representación de fechas y horas", "url": "https://www.iso.org/iso-8601-date-and-time-format.html" },
+    { "name": "Ministerio del Interior - Calendario de feriados", "url": "https://www.argentina.gob.ar/interior/feriados" },
+    { "name": "Algoritmo de Zeller (referencia académica)", "url": "https://en.wikipedia.org/wiki/Zeller%27s_congruence" }
+  ],
+  "relatedSlugs": [
+    "calculadora-dias-entre-fechas",
+    "calculadora-edad-exacta",
+    "calculadora-fecha-parto",
+    "calculadora-sumar-dias-fecha"
   ]
 }
