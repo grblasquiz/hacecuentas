@@ -28,10 +28,15 @@ export const GET: APIRoute = () => {
       const topSlugs = [
         'sueldo-en-mano-argentina',
         'calculadora-aguinaldo-sac',
+        'calculadora-indemnizacion-despido',
         'calculadora-imc',
         'calculadora-cuota-prestamo',
         'calculadora-interes-compuesto',
         'calculadora-monotributo-2026',
+        'calculadora-plazo-fijo',
+        'calculadora-retencion-ganancias-rg-830',
+        'calculadora-roas-retorno-inversion-publicitaria',
+        'calculadora-descenso-futbol-argentino-promedios',
       ];
       const isTop = topSlugs.includes(c.slug);
       return {

@@ -1,0 +1,130 @@
+{
+  "slug": "calculadora-descenso-futbol-argentino-promedios",
+  "title": "Calculadora de Descenso del Fútbol Argentino (Promedios) | Hacé Cuentas",
+  "h1": "Calculadora de promedios y descenso — Liga Profesional Argentina",
+  "description": "Calculá el promedio de puntos de tu equipo en las últimas 3 temporadas y proyectá si se salva o desciende. Basado en el sistema oficial de la Liga Profesional.",
+  "category": "deportes",
+  "icon": "⚽",
+  "formulaId": "descenso-futbol",
+  "intro": "El descenso en Argentina se define por el promedio de puntos de las últimas 3 temporadas. Ingresá los puntos y partidos jugados por tu equipo, el promedio del rival directo y los partidos que faltan. Te proyectamos si se salva o se va al Nacional B.",
+  "fields": [
+    {
+      "id": "puntosT1",
+      "label": "Puntos temporada más vieja (año −2)",
+      "type": "number",
+      "placeholder": "35",
+      "default": 0,
+      "min": 0,
+      "max": 200,
+      "step": 1,
+      "help": "Si tu equipo no jugó en Primera ese año, dejá 0."
+    },
+    {
+      "id": "partidosT1",
+      "label": "Partidos jugados en esa temporada",
+      "type": "number",
+      "placeholder": "27",
+      "default": 0,
+      "min": 0,
+      "max": 200,
+      "step": 1
+    },
+    {
+      "id": "puntosT2",
+      "label": "Puntos temporada pasada (año −1)",
+      "type": "number",
+      "placeholder": "42",
+      "default": 0,
+      "min": 0,
+      "max": 200,
+      "step": 1
+    },
+    {
+      "id": "partidosT2",
+      "label": "Partidos jugados temporada pasada",
+      "type": "number",
+      "placeholder": "27",
+      "default": 0,
+      "min": 0,
+      "max": 200,
+      "step": 1
+    },
+    {
+      "id": "puntosT3",
+      "label": "Puntos temporada actual",
+      "type": "number",
+      "placeholder": "18",
+      "default": 0,
+      "min": 0,
+      "max": 200,
+      "step": 1
+    },
+    {
+      "id": "partidosT3",
+      "label": "Partidos jugados temporada actual",
+      "type": "number",
+      "placeholder": "15",
+      "default": 0,
+      "min": 0,
+      "max": 200,
+      "step": 1
+    },
+    {
+      "id": "partidosRestantes",
+      "label": "Partidos que faltan",
+      "type": "number",
+      "placeholder": "12",
+      "default": 0,
+      "min": 0,
+      "max": 200,
+      "step": 1,
+      "help": "Partidos restantes hasta fin de la temporada."
+    },
+    {
+      "id": "promedioRival",
+      "label": "Promedio del rival directo",
+      "type": "number",
+      "placeholder": "1.150",
+      "default": 0,
+      "min": 0,
+      "max": 3,
+      "step": 0.001,
+      "help": "El promedio del penúltimo en la tabla (el que está arriba tuyo)."
+    }
+  ],
+  "outputs": [
+    { "id": "veredicto", "label": "Proyección", "format": "text", "primary": true },
+    { "id": "promedioActual", "label": "Promedio actual", "format": "number" },
+    { "id": "diferenciaConRival", "label": "Diferencia con rival (+/-)", "format": "number" },
+    { "id": "puntosNecesariosParaIgualar", "label": "Puntos necesarios para igualar al rival", "format": "number" },
+    { "id": "proyeccionSiGanaTodo", "label": "Promedio si gana todos los restantes", "format": "number" },
+    { "id": "proyeccionSiEmpataTodo", "label": "Promedio si empata todos", "format": "number" },
+    { "id": "proyeccionSiPierdeTodo", "label": "Promedio si pierde todos", "format": "number" },
+    { "id": "puntosTotales", "label": "Puntos totales 3 temporadas", "format": "number" },
+    { "id": "partidosTotales", "label": "Partidos totales (con restantes)", "format": "number" },
+    { "id": "promedioRivalFormat", "label": "Promedio rival", "format": "text" }
+  ],
+  "explanation": "## Cómo funciona el descenso en el fútbol argentino\n\nLa AFA aplica un sistema de **dos tablas** en la Liga Profesional para determinar los descensos:\n\n### 1. Tabla de promedios\n\nSe suman los puntos de las últimas **3 temporadas** y se dividen por los partidos jugados.\n\n```\npromedio = (puntos T−2 + puntos T−1 + puntos T−actual) / (partidos totales)\n```\n\nEl equipo con el **peor promedio** desciende.\n\n### 2. Tabla anual\n\nSe suman los puntos solo de la temporada actual. El último de esa tabla también desciende — salvo que ya haya descendido por promedios.\n\n**Total:** 2 equipos descienden cada año.\n\n### ¿Qué pasa con los ascendidos?\n\nUn equipo recién ascendido empieza su promedio desde su ascenso: solo cuenta la temporada actual. Eso les da una ventaja (menos partidos = promedio más volátil).\n\n### Cómo proyectar el promedio final\n\nSi te faltan X partidos, el mejor escenario es ganar los 3 puntos en todos (promedio sube). El peor es perderlos todos (el promedio baja diluyéndose).\n\n**Fórmula:**\n\n```\npromedio_final = (puntos_actuales + puntos_futuros) / (partidos_totales)\n```\n\n### Puntos que necesitás para salvarte\n\n```\npuntos_necesarios = promedio_rival × partidos_totales − puntos_actuales\n```\n\nSi el rival tiene promedio de 1.150 y vas a terminar con 42 partidos jugados en total, necesitás 1.150 × 42 = **48.3 puntos** para igualarlo. Restás lo que ya sumaste y te quedan los que necesitás en los restantes.\n\n### Limitaciones de la calculadora\n\n- Asume que el rival directo NO suma más puntos (peor caso realista)\n- Si el rival también juega, ellos también pueden mejorar su promedio — mirá cada fecha las dos columnas\n- No considera Copa Argentina / Sudamericana / Libertadores — solo la liga local\n\n### Fuente\n\n- Reglamento AFA — Liga Profesional de Fútbol Argentino\n- Histórico de descensos (desde 1983, cuando se instauró el sistema de promedios)",
+  "faq": [
+    {
+      "q": "¿Por qué 3 temporadas y no solo la actual?",
+      "a": "El sistema de promedios se instaló en 1983 para evitar que los equipos grandes descendieran por una sola mala temporada. Apunta a premiar la regularidad."
+    },
+    {
+      "q": "¿Cuántos equipos descienden por año?",
+      "a": "Actualmente 2: uno por promedios y uno por tabla anual. Puede variar según torneo (en algunos años fueron más)."
+    },
+    {
+      "q": "¿Qué pasa si mi equipo acaba de ascender?",
+      "a": "Solo contás la temporada actual. Tu promedio es más volátil porque jugaste menos partidos. En la práctica, los ascendidos suelen empezar con promedio bajo y tienen riesgo."
+    },
+    {
+      "q": "¿Se puede salvar matemáticamente quedando último?",
+      "a": "Sí, si ganás los restantes y el rival directo pierde todo, podés revertirlo. La calculadora te dice 'matemáticamente descendido' solo cuando no alcanza ni ganando todos."
+    },
+    {
+      "q": "¿Qué es mejor: empatar o arriesgar?",
+      "a": "Depende del rival. Si el rival está a 4 puntos y faltan 5 fechas, ganar un partido clave al rival directo suma 3 para vos y le saca 3 — es el doble de efectivo que empatar."
+    }
+  ]
+}
