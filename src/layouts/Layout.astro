@@ -1,4 +1,6 @@
 ---
+import CookieConsent from '../components/CookieConsent.astro';
+
 export interface Props {
   title: string;
   description: string;
@@ -111,14 +113,24 @@ const globalSchema = {
       rel="stylesheet"
     />
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
+    <!-- Google Consent Mode v2 — default 'denied' hasta que el usuario decida (GDPR/AdSense compliant) -->
     <script is:inline>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        functionality_storage: 'granted',
+        security_storage: 'granted',
+        wait_for_update: 500
+      });
       gtag('js', new Date());
-      gtag('config', 'G-789KMTKWX2');
+      gtag('config', 'G-789KMTKWX2', { anonymize_ip: true });
     </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
   </head>
   <body>
     <slot name="header" />
@@ -126,6 +138,7 @@ const globalSchema = {
       <slot />
     </main>
     <slot name="footer" />
+    <CookieConsent />
 
     <style is:global>
       :root {

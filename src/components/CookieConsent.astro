@@ -1,0 +1,360 @@
+---
+// CookieConsent.astro — banner GDPR/IAB TCF compatible con Consent Mode v2
+// El gtag('consent', 'default', ...) se setea en Layout.astro ANTES de gtag('config').
+// Este componente lee/escribe la decisión del usuario y dispara gtag('consent', 'update').
+---
+
+<div class="hc-cookie-banner" id="hc-cookie-banner" role="dialog" aria-modal="false" aria-label="Aviso de cookies" hidden>
+  <div class="hc-cb-card">
+    <div class="hc-cb-icon" aria-hidden="true">🍪</div>
+    <div class="hc-cb-body">
+      <h2 class="hc-cb-title">Cookies y privacidad</h2>
+      <p class="hc-cb-text">
+        Usamos cookies para medir el tráfico (Google Analytics) y mostrar publicidad relevante.
+        Las cookies necesarias para que el sitio funcione siempre están activas. Podés aceptar todo,
+        rechazar las opcionales o configurar tus preferencias.
+        <a href="/privacidad">Más info</a> · <a href="/cookies">Lista de cookies</a>
+      </p>
+      <div class="hc-cb-actions">
+        <button type="button" class="hc-btn hc-btn-ghost" id="hc-cb-reject">Solo necesarias</button>
+        <button type="button" class="hc-btn hc-btn-secondary" id="hc-cb-customize">Configurar</button>
+        <button type="button" class="hc-btn hc-btn-primary" id="hc-cb-accept">Aceptar todo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="hc-cookie-modal" id="hc-cookie-modal" role="dialog" aria-modal="true" aria-labelledby="hc-cm-title" hidden>
+  <div class="hc-cm-backdrop" data-close></div>
+  <div class="hc-cm-panel">
+    <div class="hc-cm-head">
+      <h2 id="hc-cm-title">Configurar cookies</h2>
+      <button type="button" class="hc-cm-close" aria-label="Cerrar" data-close>×</button>
+    </div>
+    <div class="hc-cm-body">
+      <p>Elegí qué cookies querés permitir. Tu decisión se guarda en este dispositivo.</p>
+
+      <label class="hc-cm-row hc-cm-row-locked">
+        <div>
+          <div class="hc-cm-label">Necesarias <span class="hc-cm-required">Siempre activas</span></div>
+          <p class="hc-cm-desc">Permiten el funcionamiento básico del sitio (ej. recordar tu preferencia de tema claro/oscuro). No se pueden desactivar.</p>
+        </div>
+        <input type="checkbox" checked disabled aria-label="Cookies necesarias (siempre activas)" />
+      </label>
+
+      <label class="hc-cm-row">
+        <div>
+          <div class="hc-cm-label">Análisis (Google Analytics)</div>
+          <p class="hc-cm-desc">Nos ayudan a entender qué calculadoras se usan más y mejorar el sitio. Datos agregados, sin información personal.</p>
+        </div>
+        <input type="checkbox" id="hc-cm-analytics" />
+      </label>
+
+      <label class="hc-cm-row">
+        <div>
+          <div class="hc-cm-label">Publicidad (Google AdSense)</div>
+          <p class="hc-cm-desc">Permiten mostrar anuncios relevantes y medir su efectividad. Sin esto verás anuncios genéricos.</p>
+        </div>
+        <input type="checkbox" id="hc-cm-ads" />
+      </label>
+    </div>
+    <div class="hc-cm-foot">
+      <button type="button" class="hc-btn hc-btn-ghost" data-close>Cancelar</button>
+      <button type="button" class="hc-btn hc-btn-primary" id="hc-cm-save">Guardar preferencias</button>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+(function () {
+  var STORAGE_KEY = 'hc-consent-v1';
+  var banner = document.getElementById('hc-cookie-banner');
+  var modal = document.getElementById('hc-cookie-modal');
+  var chkAnalytics = document.getElementById('hc-cm-analytics');
+  var chkAds = document.getElementById('hc-cm-ads');
+
+  function safeGtag() {
+    if (typeof window.gtag === 'function') {
+      window.gtag.apply(null, arguments);
+    } else {
+      // Si gtag aún no cargó, encolamos en dataLayer
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push(arguments);
+    }
+  }
+
+  function applyConsent(prefs) {
+    safeGtag('consent', 'update', {
+      ad_storage: prefs.ads ? 'granted' : 'denied',
+      ad_user_data: prefs.ads ? 'granted' : 'denied',
+      ad_personalization: prefs.ads ? 'granted' : 'denied',
+      analytics_storage: prefs.analytics ? 'granted' : 'denied',
+    });
+  }
+
+  function savePrefs(prefs) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        analytics: !!prefs.analytics,
+        ads: !!prefs.ads,
+        ts: Date.now(),
+        v: 1,
+      }));
+    } catch (e) {}
+    applyConsent(prefs);
+  }
+
+  function readPrefs() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+
+  function showBanner() { banner.hidden = false; }
+  function hideBanner() { banner.hidden = true; }
+  function showModal() {
+    var prefs = readPrefs() || { analytics: false, ads: false };
+    chkAnalytics.checked = !!prefs.analytics;
+    chkAds.checked = !!prefs.ads;
+    modal.hidden = false;
+    setTimeout(function () { document.querySelector('.hc-cm-panel').focus(); }, 30);
+  }
+  function hideModal() { modal.hidden = true; }
+
+  // Event listeners
+  document.getElementById('hc-cb-accept').addEventListener('click', function () {
+    savePrefs({ analytics: true, ads: true });
+    hideBanner();
+    hideModal();
+  });
+  document.getElementById('hc-cb-reject').addEventListener('click', function () {
+    savePrefs({ analytics: false, ads: false });
+    hideBanner();
+    hideModal();
+  });
+  document.getElementById('hc-cb-customize').addEventListener('click', function () {
+    showModal();
+  });
+  document.getElementById('hc-cm-save').addEventListener('click', function () {
+    savePrefs({ analytics: chkAnalytics.checked, ads: chkAds.checked });
+    hideModal();
+    hideBanner();
+  });
+  modal.addEventListener('click', function (e) {
+    if (e.target.dataset && e.target.dataset.close !== undefined) hideModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !modal.hidden) hideModal();
+  });
+
+  // Exponer función para que el footer pueda re-abrir
+  window.hcOpenCookieSettings = function () { showModal(); };
+
+  // Boot: aplicar preferencia guardada o mostrar banner
+  var saved = readPrefs();
+  if (saved) {
+    applyConsent(saved);
+  } else {
+    // Pequeño delay para que no compita con la primera pintada
+    setTimeout(showBanner, 300);
+  }
+})();
+</script>
+
+<style is:global>
+  .hc-cookie-banner {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    z-index: 200;
+    pointer-events: none;
+    animation: hcCbSlide 0.3s ease-out;
+  }
+  .hc-cookie-banner[hidden] { display: none; }
+
+  .hc-cb-card {
+    pointer-events: auto;
+    max-width: 480px;
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: var(--radius-lg, 14px);
+    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.25);
+    padding: 1.125rem 1.25rem;
+    display: flex;
+    gap: 0.875rem;
+    align-items: flex-start;
+  }
+
+  .hc-cb-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; padding-top: 0.125rem; }
+  .hc-cb-body { flex: 1; min-width: 0; }
+  .hc-cb-title { margin: 0 0 0.375rem; font-size: 1rem; font-weight: 700; color: var(--text, #0f172a); }
+  .hc-cb-text {
+    margin: 0 0 0.875rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted, #475569);
+    line-height: 1.55;
+  }
+  .hc-cb-text a { color: var(--accent, #2563eb); text-decoration: underline; }
+
+  .hc-cb-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .hc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--radius-sm, 6px);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .hc-btn-primary { background: var(--accent, #2563eb); color: #fff; }
+  .hc-btn-primary:hover { background: var(--accent-hover, #1d4ed8); }
+  .hc-btn-secondary {
+    background: var(--bg, #fff);
+    color: var(--text, #0f172a);
+    border-color: var(--border, #e2e8f0);
+  }
+  .hc-btn-secondary:hover { border-color: var(--border-strong, #cbd5e1); }
+  .hc-btn-ghost {
+    background: transparent;
+    color: var(--text-muted, #475569);
+  }
+  .hc-btn-ghost:hover { background: var(--bg-soft, #f8fafc); color: var(--text, #0f172a); }
+
+  /* Modal */
+  .hc-cookie-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 220;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .hc-cookie-modal[hidden] { display: none; }
+
+  .hc-cm-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    animation: hcCbFade 0.15s ease-out;
+  }
+  .hc-cm-panel {
+    position: relative;
+    width: 100%;
+    max-width: 540px;
+    max-height: 86vh;
+    overflow-y: auto;
+    background: var(--bg, #fff);
+    border-radius: var(--radius-lg, 14px);
+    box-shadow: 0 25px 50px -10px rgba(15, 23, 42, 0.5);
+    animation: hcCbPop 0.18s ease-out;
+  }
+  .hc-cm-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.125rem 1.5rem;
+    border-bottom: 1px solid var(--border, #e2e8f0);
+  }
+  .hc-cm-head h2 { margin: 0; font-size: 1.125rem; }
+  .hc-cm-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--text-subtle, #64748b);
+    border-radius: var(--radius-sm, 6px);
+  }
+  .hc-cm-close:hover { background: var(--bg-soft, #f8fafc); color: var(--text, #0f172a); }
+
+  .hc-cm-body { padding: 1rem 1.5rem 1.25rem; }
+  .hc-cm-body > p {
+    font-size: 0.875rem;
+    color: var(--text-muted, #475569);
+    margin: 0 0 1rem;
+  }
+
+  .hc-cm-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 0;
+    border-top: 1px solid var(--border, #e2e8f0);
+    cursor: pointer;
+  }
+  .hc-cm-row-locked { cursor: default; opacity: 0.85; }
+  .hc-cm-row > div { flex: 1; min-width: 0; }
+  .hc-cm-label {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text, #0f172a);
+    margin-bottom: 0.25rem;
+  }
+  .hc-cm-required {
+    display: inline-block;
+    margin-left: 0.375rem;
+    padding: 0.0625rem 0.4375rem;
+    background: var(--success-soft, #f0fdf4);
+    color: var(--success, #16a34a);
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .hc-cm-desc {
+    font-size: 0.8125rem;
+    color: var(--text-muted, #475569);
+    margin: 0;
+    line-height: 1.5;
+  }
+  .hc-cm-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 0.25rem;
+    accent-color: var(--accent, #2563eb);
+    flex-shrink: 0;
+  }
+
+  .hc-cm-foot {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border, #e2e8f0);
+    background: var(--bg-soft, #f8fafc);
+    border-radius: 0 0 var(--radius-lg, 14px) var(--radius-lg, 14px);
+  }
+
+  @keyframes hcCbSlide { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes hcCbFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes hcCbPop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hc-cookie-banner, .hc-cm-backdrop, .hc-cm-panel { animation: none; }
+  }
+
+  @media (max-width: 540px) {
+    .hc-cookie-banner { left: 0.5rem; right: 0.5rem; bottom: 0.5rem; }
+    .hc-cb-card { padding: 1rem; }
+    .hc-cb-actions { flex-direction: column; align-items: stretch; }
+    .hc-cb-actions .hc-btn { width: 100%; }
+  }
+</style>

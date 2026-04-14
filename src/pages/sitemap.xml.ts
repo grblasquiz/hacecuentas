@@ -76,6 +76,7 @@ export const GET: APIRoute = () => {
     // Legales
     { loc: `${site}/sobre-nosotros`, priority: '0.4', changefreq: 'yearly', lastmod: buildDate },
     { loc: `${site}/privacidad`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
+    { loc: `${site}/cookies`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
     { loc: `${site}/terminos`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
     { loc: `${site}/contacto`, priority: '0.4', changefreq: 'yearly', lastmod: buildDate },
   ];
