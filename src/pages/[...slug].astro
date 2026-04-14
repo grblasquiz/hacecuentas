@@ -77,13 +77,17 @@ lastReviewedLabel = new Date(dateModified).toLocaleDateString('es-AR', {
 });
 const datePublished = '2025-09-01T00:00:00Z';
 
+// audience: 'AR' = específica para Argentina; 'global' (default) = aplica en todo el mundo hispanohablante
+const audience: 'AR' | 'global' = calc.audience === 'AR' ? 'AR' : 'global';
+const schemaLang = audience === 'AR' ? 'es-AR' : 'es';
+
 const schemaHowTo = {
   '@context': 'https://schema.org',
   '@type': 'HowTo',
   name: calc.h1,
   description: calc.description,
   totalTime: 'PT1M',
-  inLanguage: 'es-AR',
+  inLanguage: schemaLang,
   step: calc.fields.map((f: any, i: number) => ({
     '@type': 'HowToStep',
     position: i + 1,
@@ -127,11 +131,11 @@ const schemaApp = {
   applicationSubCategory: 'Calculator',
   operatingSystem: 'Any (Web)',
   browserRequirements: 'Requires JavaScript. Requires HTML5.',
-  inLanguage: 'es-AR',
+  inLanguage: schemaLang,
   isAccessibleForFree: true,
   datePublished,
   dateModified,
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: audience === 'AR' ? 'ARS' : 'USD' },
   publisher: {
     '@type': 'Organization',
     name: 'Hacé Cuentas',
@@ -148,7 +152,7 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   description: calc.description,
   url: `https://hacecuentas.com/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/${calc.slug}`,
-  inLanguage: 'es-AR',
+  inLanguage: schemaLang,
   datePublished,
   dateModified,
   author: {
@@ -220,6 +224,7 @@ const reportBody = encodeURIComponent(
   title={calc.title}
   description={calc.description}
   schema={schema}
+  audience={audience}
 >
   <Header slot="header" />
 
@@ -237,10 +242,19 @@ const reportBody = encodeURIComponent(
         <span class="icon-wrap" aria-hidden="true">{calc.icon}</span>
         <div>
           <div class="eyebrow">{categoryLabels[calc.category] || calc.category}</div>
-          <h1>{calc.h1}</h1>
+          <h1>{calc.h1}{audience === 'AR' && <span class="ar-badge-h1" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>}</h1>
         </div>
       </div>
       <p class="intro">{calc.intro}</p>
+      {audience === 'AR' && (
+        <aside class="audience-notice" role="note" aria-label="Aviso sobre la audiencia de esta calculadora">
+          <span class="an-flag" aria-hidden="true">🇦🇷</span>
+          <div class="an-body">
+            <strong>Calculadora específica para Argentina.</strong>
+            Las leyes, escalas y valores usados son los vigentes en Argentina (AFIP/ARCA, BCRA, ANSES). Para otros países los importes no aplican.
+          </div>
+        </aside>
+      )}
       <div class="meta">
         <span class="meta-item" title={`Última revisión: ${updated} · Equipo Hacé Cuentas`}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -582,6 +596,42 @@ const reportBody = encodeURIComponent(
     color: var(--text-muted);
     margin-bottom: 1rem;
     line-height: 1.6;
+  }
+
+  /* Badge AR en H1 */
+  .ar-badge-h1 {
+    display: inline-block;
+    margin-left: 0.4em;
+    font-size: 0.7em;
+    vertical-align: 0.15em;
+    line-height: 1;
+  }
+
+  /* Audience notice — banda visual para calculadoras AR-only */
+  .audience-notice {
+    display: flex;
+    gap: 0.875rem;
+    align-items: flex-start;
+    margin: 0.75rem 0 1.25rem;
+    padding: 0.875rem 1.125rem;
+    background: var(--warning-soft);
+    border-left: 3px solid var(--warning);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+  .audience-notice .an-flag {
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+  .audience-notice .an-body { color: var(--text-muted); }
+  .audience-notice strong {
+    display: block;
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 0.125rem;
   }
 
   .meta-reviewer a {

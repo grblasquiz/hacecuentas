@@ -7,6 +7,7 @@ export interface Props {
   canonical?: string;
   schema?: object;
   image?: string;
+  audience?: 'AR' | 'global'; // 'AR' = calculadora/página específica de Argentina; default 'global'
 }
 
 const {
@@ -15,6 +16,7 @@ const {
   canonical,
   schema,
   image = '/og-default.png',
+  audience = 'global',
 } = Astro.props;
 
 const siteUrl = 'https://hacecuentas.com';
@@ -22,6 +24,13 @@ const siteUrl = 'https://hacecuentas.com';
 const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/') || '/';
 const fullCanonical = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${cleanPath}`;
 const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
+
+// Lang/locale dinámicos según audience.
+// Para AR-only: es-AR fuerte (Google la prioriza para usuarios argentinos).
+// Para globales: es genérico + alternate es-AR/es-419 (es-419 = español Latinoamérica).
+const htmlLang = audience === 'AR' ? 'es-AR' : 'es';
+const ogLocale = audience === 'AR' ? 'es_AR' : 'es_419';
+const schemaLang = audience === 'AR' ? 'es-AR' : 'es';
 
 // Schema.org WebSite + Organization global (siempre presente)
 const globalSchema = {
@@ -33,7 +42,7 @@ const globalSchema = {
       name: 'Hacé Cuentas',
       url: siteUrl,
       logo: `${siteUrl}/favicon.svg`,
-      description: 'Calculadoras online gratuitas para Argentina y Latinoamérica.',
+      description: 'Calculadoras online gratuitas para todo el mundo hispanohablante, con cobertura específica para Argentina.',
       sameAs: [],
     },
     {
@@ -42,7 +51,7 @@ const globalSchema = {
       url: siteUrl,
       name: 'Hacé Cuentas',
       publisher: { '@id': `${siteUrl}/#organization` },
-      inLanguage: 'es-AR',
+      inLanguage: ['es', 'es-AR', 'es-419'],
       potentialAction: {
         '@type': 'SearchAction',
         target: `${siteUrl}/buscar?q={search_term_string}`,
@@ -54,7 +63,7 @@ const globalSchema = {
 ---
 
 <!doctype html>
-<html lang="es-AR">
+<html lang={htmlLang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -80,9 +89,19 @@ const globalSchema = {
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={fullCanonical} />
-    <link rel="alternate" hreflang="es-AR" href={fullCanonical} />
-    <link rel="alternate" hreflang="es" href={fullCanonical} />
-    <link rel="alternate" hreflang="x-default" href={fullCanonical} />
+    {audience === 'AR' ? (
+      <>
+        <link rel="alternate" hreflang="es-AR" href={fullCanonical} />
+        <link rel="alternate" hreflang="x-default" href={fullCanonical} />
+      </>
+    ) : (
+      <>
+        <link rel="alternate" hreflang="es" href={fullCanonical} />
+        <link rel="alternate" hreflang="es-AR" href={fullCanonical} />
+        <link rel="alternate" hreflang="es-419" href={fullCanonical} />
+        <link rel="alternate" hreflang="x-default" href={fullCanonical} />
+      </>
+    )}
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     <link rel="alternate" type="application/rss+xml" title="Hacé Cuentas — Calculadoras actualizadas" href="/rss.xml" />
 
@@ -92,7 +111,8 @@ const globalSchema = {
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={fullImage} />
-    <meta property="og:locale" content="es_AR" />
+    <meta property="og:locale" content={ogLocale} />
+    {audience !== 'AR' && <meta property="og:locale:alternate" content="es_AR" />}
     <meta property="og:site_name" content="Hacé Cuentas" />
 
     <!-- Twitter -->

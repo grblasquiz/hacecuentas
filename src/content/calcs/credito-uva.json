@@ -6,7 +6,16 @@
   "category": "finanzas",
   "icon": "🏡",
   "formulaId": "credito-uva",
-  "seoKeywords": ["credito UVA", "UVA vs tasa fija", "simulador hipotecario 2026", "credito hipotecario argentina", "cuota UVA", "credito primera vivienda", "UVA Banco Nacion", "cuota/salario credito"],
+  "seoKeywords": [
+    "credito UVA",
+    "UVA vs tasa fija",
+    "simulador hipotecario 2026",
+    "credito hipotecario argentina",
+    "cuota UVA",
+    "credito primera vivienda",
+    "UVA Banco Nacion",
+    "cuota/salario credito"
+  ],
   "intro": "Después de años sin oferta, **los créditos hipotecarios volvieron con fuerza en 2024-2026**: Banco Nación, Ciudad, Santander, Galicia, ICBC y varios más reabrieron líneas **UVA** (ajustadas por inflación) y algunos bancos ofrecen **tasa fija en pesos**. La decisión entre uno y otro **no es obvia**: el UVA arranca con una **cuota baja** pero se ajusta mes a mes por **inflación (CER)**; el fijo arranca con **cuota alta** pero **no varía** (en pesos nominales). Esta calculadora simula ambos caminos con los parámetros reales de tu operación (monto, plazo, tasa UVA, tasa fija, inflación esperada y salario), proyecta las **cuotas inicial y final**, el **total a pagar** y el **ratio cuota/salario** — el indicador clave que mira el banco (y deberías mirar vos también) para aprobar el crédito. Te damos además una **recomendación automática** según el escenario. Valores 2026 — verificá siempre las condiciones vigentes con tu banco.",
   "keyTakeaway": "**UVA**: cuota inicial baja, se ajusta por inflación, riesgo si el salario no acompaña. **Fija**: cuota alta inicial pero predecible, se licúa con inflación alta. **Regla**: cuota/salario **< 25%** siempre, UVA solo si tu salario le sigue al IPC, fijo cuando la tasa < inflación esperada.",
   "useCases": [
@@ -17,22 +26,110 @@
     "Proyectás la cuota final del crédito si la inflación se mantiene en 20% anual."
   ],
   "fields": [
-    { "id": "monto", "label": "Monto del crédito", "type": "number", "prefix": "$", "placeholder": "50000000", "format": "thousands", "min": 0, "step": 1000, "required": true },
-    { "id": "plazoAnos", "label": "Plazo (años)", "type": "number", "placeholder": "20", "min": 1, "max": 40, "step": 1, "required": true },
-    { "id": "tasaUVA", "label": "Tasa crédito UVA (anual, por encima de UVA)", "type": "number", "suffix": "%", "placeholder": "5", "min": 0, "step": 0.1, "required": true },
-    { "id": "tasaFija", "label": "Tasa crédito fija (TNA anual)", "type": "number", "suffix": "%", "placeholder": "55", "min": 0, "step": 0.1, "required": true },
-    { "id": "inflacionEsperada", "label": "Inflación anual esperada (%)", "type": "number", "suffix": "%", "placeholder": "40", "min": 0, "step": 0.1, "required": true },
-    { "id": "salarioActual", "label": "Tu salario mensual actual (opcional)", "type": "number", "prefix": "$", "placeholder": "2000000", "format": "thousands", "min": 0, "step": 1000 }
+    {
+      "id": "monto",
+      "label": "Monto del crédito",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "50000000",
+      "format": "thousands",
+      "min": 0,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "plazoAnos",
+      "label": "Plazo (años)",
+      "type": "number",
+      "placeholder": "20",
+      "min": 1,
+      "max": 40,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "tasaUVA",
+      "label": "Tasa crédito UVA (anual, por encima de UVA)",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "5",
+      "min": 0,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "tasaFija",
+      "label": "Tasa crédito fija (TNA anual)",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "55",
+      "min": 0,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "inflacionEsperada",
+      "label": "Inflación anual esperada (%)",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "40",
+      "min": 0,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "salarioActual",
+      "label": "Tu salario mensual actual (opcional)",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "2000000",
+      "format": "thousands",
+      "min": 0,
+      "step": 1000
+    }
   ],
   "outputs": [
-    { "id": "cuotaInicialUVA", "label": "Cuota inicial UVA", "format": "currency", "primary": true },
-    { "id": "cuotaInicialFija", "label": "Cuota inicial tasa fija", "format": "currency" },
-    { "id": "cuotaFinalUVAEstimada", "label": "Cuota final UVA estimada", "format": "currency" },
-    { "id": "totalPagarUVAEstimado", "label": "Total a pagar UVA (estimado)", "format": "currency" },
-    { "id": "totalPagarFija", "label": "Total a pagar tasa fija", "format": "currency" },
-    { "id": "ratioCuotaSalarioInicial", "label": "Cuota/salario inicial (%)", "format": "percentage" },
-    { "id": "ratioCuotaSalarioFinal", "label": "Cuota/salario final estimado (%)", "format": "percentage" },
-    { "id": "recomendacion", "label": "Recomendación", "format": "text" }
+    {
+      "id": "cuotaInicialUVA",
+      "label": "Cuota inicial UVA",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "cuotaInicialFija",
+      "label": "Cuota inicial tasa fija",
+      "format": "currency"
+    },
+    {
+      "id": "cuotaFinalUVAEstimada",
+      "label": "Cuota final UVA estimada",
+      "format": "currency"
+    },
+    {
+      "id": "totalPagarUVAEstimado",
+      "label": "Total a pagar UVA (estimado)",
+      "format": "currency"
+    },
+    {
+      "id": "totalPagarFija",
+      "label": "Total a pagar tasa fija",
+      "format": "currency"
+    },
+    {
+      "id": "ratioCuotaSalarioInicial",
+      "label": "Cuota/salario inicial (%)",
+      "format": "percentage"
+    },
+    {
+      "id": "ratioCuotaSalarioFinal",
+      "label": "Cuota/salario final estimado (%)",
+      "format": "percentage"
+    },
+    {
+      "id": "recomendacion",
+      "label": "Recomendación",
+      "format": "text"
+    }
   ],
   "example": {
     "title": "Ejemplo: crédito $50M a 20 años, UVA+5% vs tasa fija 55%, inflación 20%",
@@ -83,14 +180,24 @@
     }
   ],
   "sources": [
-    { "name": "BCRA — UVA, CER y líneas hipotecarias", "url": "https://www.bcra.gob.ar/PublicacionesEstadisticas/Principales_variables.asp" },
-    { "name": "Decreto 767/2020 — Cláusula gatillo UVA", "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/340000-344999/343006/norma.htm" },
-    { "name": "Ley 24.240 — Defensa del Consumidor", "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/638/texact.htm" }
+    {
+      "name": "BCRA — UVA, CER y líneas hipotecarias",
+      "url": "https://www.bcra.gob.ar/PublicacionesEstadisticas/Principales_variables.asp"
+    },
+    {
+      "name": "Decreto 767/2020 — Cláusula gatillo UVA",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/340000-344999/343006/norma.htm"
+    },
+    {
+      "name": "Ley 24.240 — Defensa del Consumidor",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/638/texact.htm"
+    }
   ],
   "relatedSlugs": [
     "calculadora-cuota-prestamo",
     "calculadora-actualizacion-inflacion-ipc",
     "calculadora-plazo-fijo",
     "calculadora-interes-compuesto"
-  ]
+  ],
+  "audience": "AR"
 }
