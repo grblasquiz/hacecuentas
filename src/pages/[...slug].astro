@@ -139,8 +139,40 @@ const schemaApp = {
   },
 };
 
+// Article schema para categorías YMYL (Finanzas, Salud) y cualquier calc con explanation extensa
+const isYMYL = ['finanzas', 'salud', 'negocios', 'mascotas'].includes(calc.category);
+const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 1500)) ? {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: calc.h1,
+  description: calc.description,
+  url: `https://hacecuentas.com/${calc.slug}`,
+  mainEntityOfPage: `https://hacecuentas.com/${calc.slug}`,
+  inLanguage: 'es-AR',
+  datePublished,
+  dateModified,
+  author: {
+    '@type': 'Organization',
+    name: 'Equipo Hacé Cuentas',
+    url: 'https://hacecuentas.com/politica-editorial',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Hacé Cuentas',
+    url: 'https://hacecuentas.com',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://hacecuentas.com/og-default.png',
+    },
+  },
+  about: categoryLabels[calc.category] || calc.category,
+  isAccessibleForFree: true,
+  citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+} : null;
+
 const schemaGraph: any[] = [schemaHowTo, schemaBreadcrumb, schemaApp];
 if (schemaFAQ) schemaGraph.push(schemaFAQ);
+if (schemaArticle) schemaGraph.push(schemaArticle);
 const schema = { '@context': 'https://schema.org', '@graph': schemaGraph };
 
 const updated = lastReviewedLabel;
@@ -162,6 +194,26 @@ const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
 const relatedContextual = relatedSlugs
   .map((s) => allCalcs.find((c) => c.slug === s))
   .filter(Boolean);
+
+// TOC: secciones top-level renderizadas (en orden de aparición)
+const tocSections: Array<{ id: string; label: string }> = [
+  { id: 'calculadora', label: 'Calculadora' },
+];
+if (keyTakeaway) tocSections.push({ id: 'resumen', label: 'En pocas palabras' });
+if (useCases.length > 0) tocSections.push({ id: 'cuando-usar', label: 'Cuándo usar' });
+if (example && example.steps) tocSections.push({ id: 'ejemplo', label: 'Ejemplo paso a paso' });
+if (calc.explanation) tocSections.push({ id: 'como-funciona', label: 'Cómo funciona' });
+if (calc.faq && calc.faq.length > 0) tocSections.push({ id: 'faq', label: 'Preguntas frecuentes' });
+if (sources.length > 0) tocSections.push({ id: 'fuentes', label: 'Fuentes y referencias' });
+
+// Detección heurística de fórmulas LaTeX en el explanation (para cargar KaTeX condicional)
+const hasMath = calc.explanation && /(\$[^$\n]+\$|\\frac|\\sqrt|\\sum|\\times|\\cdot)/.test(calc.explanation);
+
+// Asunto pre-llenado para "Reportar error"
+const reportSubject = encodeURIComponent(`Error en /${calc.slug}`);
+const reportBody = encodeURIComponent(
+  `Hola Equipo Hacé Cuentas,\n\nEncontré un error en la calculadora "${calc.h1}":\n\nURL: https://hacecuentas.com/${calc.slug}\nDatos que ingresé: \nResultado esperado: \nResultado obtenido: \nFuente / referencia: \n\nGracias.`
+);
 ---
 
 <Layout
@@ -217,110 +269,234 @@ const relatedContextual = relatedSlugs
       </div>
     </header>
 
-    <Calculator config={calc} />
+    <div class="calc-layout">
+      {tocSections.length > 2 && (
+        <aside class="toc" aria-label="Índice del artículo">
+          <div class="toc-title">En esta página</div>
+          <ol class="toc-list">
+            {tocSections.map((s) => (
+              <li><a href={`#${s.id}`} data-toc-link={s.id}>{s.label}</a></li>
+            ))}
+          </ol>
+        </aside>
+      )}
 
-    {keyTakeaway && (
-      <aside class="key-takeaway" aria-label="Resumen rápido">
-        <div class="kt-icon" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        </div>
-        <div><strong>En pocas palabras:</strong> <span set:html={md(keyTakeaway)} /></div>
-      </aside>
-    )}
+      <div class="calc-main">
+        <section id="calculadora">
+          <Calculator config={calc} />
+        </section>
 
-    {useCases.length > 0 && (
-      <section class="use-cases" aria-labelledby="use-cases-heading">
-        <h2 id="use-cases-heading">Cuándo usar esta calculadora</h2>
-        <ul>
-          {useCases.map((u: string) => (
-            <li set:html={md(u)} />
-          ))}
-        </ul>
-      </section>
-    )}
-
-    {example && example.steps && (
-      <section class="example" aria-labelledby="example-heading">
-        <h2 id="example-heading">{example.title || 'Ejemplo paso a paso'}</h2>
-        <ol class="example-steps">
-          {example.steps.map((s: string) => <li set:html={md(s)} />)}
-        </ol>
-        {example.result && (
-          <div class="example-result"><strong>Resultado:</strong> <span set:html={md(example.result)} /></div>
-        )}
-      </section>
-    )}
-
-    {calc.explanation && (
-      <section class="explanation">
-        <div class="explanation-header">
-          <h2 class="explanation-title">Cómo funciona</h2>
-          <span class="reading-time">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            {readingMin} min de lectura
-          </span>
-        </div>
-        <Fragment set:html={`<p>${md(calc.explanation)}</p>`} />
-      </section>
-    )}
-
-    {calc.faq && calc.faq.length > 0 && (
-      <section class="faq">
-        <h2>Preguntas frecuentes</h2>
-        <div class="faq-list">
-          {calc.faq.map((f: any) => (
-            <details>
-              <summary>
-                <span>{f.q}</span>
-                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </summary>
-              <div set:html={`<p>${md(f.a)}</p>`} />
-            </details>
-          ))}
-        </div>
-      </section>
-    )}
-
-    {sources.length > 0 && (
-      <section class="sources-box" aria-labelledby="sources-heading">
-        <h2 id="sources-heading">Fuentes y referencias</h2>
-        <ul>
-          {sources.map((s: any) => (
-            <li>
-              {s.url
-                ? <a href={s.url} target="_blank" rel="noopener nofollow">{s.name}</a>
-                : <span>{s.name}</span>
-              }
-            </li>
-          ))}
-        </ul>
-      </section>
-    )}
-
-    {relatedContextual.length > 0 && (
-      <section class="also-see" aria-labelledby="also-heading">
-        <h2 id="also-heading">También te puede interesar</h2>
-        <div class="also-grid">
-          {relatedContextual.map((c: any) => (
-            <a href={`/${c.slug}`} class="also-card">
-              <span class="also-icon" aria-hidden="true">{c.icon}</span>
-              <span class="also-body">
-                <span class="also-title">{c.h1}</span>
-                <span class="also-desc">{c.description}</span>
-              </span>
+        <div class="calc-actions" id="calc-actions">
+          <div class="ca-feedback" data-state="ask">
+            <span class="ca-q">¿Te resultó útil esta calculadora?</span>
+            <div class="ca-buttons">
+              <button type="button" class="ca-vote" data-vote="up" aria-label="Sí, me sirvió">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7"/></svg>
+                Sí
+              </button>
+              <button type="button" class="ca-vote" data-vote="down" aria-label="No me sirvió">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H17"/></svg>
+                No
+              </button>
+            </div>
+          </div>
+          <div class="ca-tools">
+            <button type="button" class="ca-tool" id="ca-share" data-url={`https://hacecuentas.com/${calc.slug}`} data-title={calc.h1}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Compartir
+            </button>
+            <a class="ca-tool" href={`mailto:errores@hacecuentas.com?subject=${reportSubject}&body=${reportBody}`}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+              Reportar error
             </a>
-          ))}
+          </div>
         </div>
-      </section>
-    )}
 
-    <RelatedCalcs currentSlug={calc.slug} category={calc.category} limit={4} />
+        {keyTakeaway && (
+          <aside id="resumen" class="key-takeaway" aria-label="Resumen rápido">
+            <div class="kt-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </div>
+            <div><strong>En pocas palabras:</strong> <span set:html={md(keyTakeaway)} /></div>
+          </aside>
+        )}
 
-    <aside class="cta-back">
-      <p>¿Buscabas otra calculadora?</p>
-      <a href="/" class="btn-ghost">Ver todas las calculadoras →</a>
-    </aside>
+        {useCases.length > 0 && (
+          <section id="cuando-usar" class="use-cases" aria-labelledby="use-cases-heading">
+            <h2 id="use-cases-heading">Cuándo usar esta calculadora</h2>
+            <ul>
+              {useCases.map((u: string) => (
+                <li set:html={md(u)} />
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {example && example.steps && (
+          <section id="ejemplo" class="example" aria-labelledby="example-heading">
+            <h2 id="example-heading">{example.title || 'Ejemplo paso a paso'}</h2>
+            <ol class="example-steps">
+              {example.steps.map((s: string) => <li set:html={md(s)} />)}
+            </ol>
+            {example.result && (
+              <div class="example-result"><strong>Resultado:</strong> <span set:html={md(example.result)} /></div>
+            )}
+          </section>
+        )}
+
+        {calc.explanation && (
+          <section id="como-funciona" class="explanation" data-has-math={hasMath ? 'true' : 'false'}>
+            <div class="explanation-header">
+              <h2 class="explanation-title">Cómo funciona</h2>
+              <span class="reading-time">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                {readingMin} min de lectura
+              </span>
+            </div>
+            <Fragment set:html={`<p>${md(calc.explanation)}</p>`} />
+          </section>
+        )}
+
+        {calc.faq && calc.faq.length > 0 && (
+          <section id="faq" class="faq">
+            <h2>Preguntas frecuentes</h2>
+            <div class="faq-list">
+              {calc.faq.map((f: any) => (
+                <details>
+                  <summary>
+                    <span>{f.q}</span>
+                    <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </summary>
+                  <div set:html={`<p>${md(f.a)}</p>`} />
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {sources.length > 0 && (
+          <section id="fuentes" class="sources-box" aria-labelledby="sources-heading">
+            <h2 id="sources-heading">Fuentes y referencias</h2>
+            <ul>
+              {sources.map((s: any) => (
+                <li>
+                  {s.url
+                    ? <a href={s.url} target="_blank" rel="noopener nofollow">{s.name}</a>
+                    : <span>{s.name}</span>
+                  }
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {relatedContextual.length > 0 && (
+          <section class="also-see" aria-labelledby="also-heading">
+            <h2 id="also-heading">También te puede interesar</h2>
+            <div class="also-grid">
+              {relatedContextual.map((c: any) => (
+                <a href={`/${c.slug}`} class="also-card">
+                  <span class="also-icon" aria-hidden="true">{c.icon}</span>
+                  <span class="also-body">
+                    <span class="also-title">{c.h1}</span>
+                    <span class="also-desc">{c.description}</span>
+                  </span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <RelatedCalcs currentSlug={calc.slug} category={calc.category} limit={4} />
+
+        <aside class="cta-back">
+          <p>¿Buscabas otra calculadora?</p>
+          <a href="/" class="btn-ghost">Ver todas las calculadoras →</a>
+        </aside>
+      </div>
+    </div>
   </article>
+
+  {hasMath && (
+    <Fragment>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous" />
+      <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+      <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.querySelector('#como-funciona'), {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\\\(',right:'\\\\)',display:false},{left:'\\\\[',right:'\\\\]',display:true}], throwOnError:false});"></script>
+    </Fragment>
+  )}
+
+  <script is:inline>
+    (function () {
+      // Thumbs feedback
+      var feedback = document.querySelector('.ca-feedback');
+      if (feedback) {
+        var slug = window.location.pathname;
+        var key = 'hc-vote-' + slug;
+        var prev = null;
+        try { prev = localStorage.getItem(key); } catch (e) {}
+        if (prev === 'up' || prev === 'down') {
+          renderThanks(prev);
+        }
+        feedback.querySelectorAll('.ca-vote').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var v = btn.getAttribute('data-vote');
+            try { localStorage.setItem(key, v); } catch (e) {}
+            renderThanks(v);
+            // GA4 (si está cargado)
+            if (typeof window.gtag === 'function') {
+              window.gtag('event', 'calc_feedback', { value: v, slug: slug });
+            }
+          });
+        });
+        function renderThanks(v) {
+          if (v === 'up') {
+            feedback.setAttribute('data-state', 'thanks');
+            feedback.innerHTML = '<span class="ca-msg">¡Gracias por tu voto! 🙌</span>';
+          } else {
+            feedback.setAttribute('data-state', 'sorry');
+            feedback.innerHTML = '<span class="ca-msg">Gracias. ¿Qué falta o está mal? <a href="mailto:errores@hacecuentas.com?subject=Mejora en ' + encodeURIComponent(slug) + '">Decinos por mail</a>.</span>';
+          }
+        }
+      }
+
+      // Compartir
+      var shareBtn = document.getElementById('ca-share');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', async function () {
+          var url = shareBtn.getAttribute('data-url');
+          var title = shareBtn.getAttribute('data-title');
+          if (navigator.share) {
+            try { await navigator.share({ title: title, url: url }); } catch (e) {}
+          } else if (navigator.clipboard) {
+            try {
+              await navigator.clipboard.writeText(url);
+              var orig = shareBtn.innerHTML;
+              shareBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ¡Copiado!';
+              setTimeout(function () { shareBtn.innerHTML = orig; }, 2000);
+            } catch (e) {}
+          }
+        });
+      }
+
+      // TOC scrollspy
+      var tocLinks = document.querySelectorAll('[data-toc-link]');
+      if (tocLinks.length > 0 && 'IntersectionObserver' in window) {
+        var sections = Array.from(tocLinks).map(function (l) {
+          return document.getElementById(l.getAttribute('data-toc-link'));
+        }).filter(Boolean);
+        var observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              tocLinks.forEach(function (l) { l.classList.remove('active'); });
+              var match = document.querySelector('[data-toc-link="' + entry.target.id + '"]');
+              if (match) match.classList.add('active');
+            }
+          });
+        }, { rootMargin: '-80px 0px -60% 0px' });
+        sections.forEach(function (s) { observer.observe(s); });
+      }
+    })();
+  </script>
 
   <ScrollToTop />
 
@@ -796,9 +972,154 @@ const relatedContextual = relatedSlugs
     text-decoration: none;
   }
 
+  /* Layout con TOC sticky lateral */
+  .calc-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+  }
+  .calc-main { min-width: 0; }
+
+  @media (min-width: 1100px) {
+    .calc-page { max-width: 1080px; }
+    .calc-layout { grid-template-columns: 220px minmax(0, 1fr); align-items: flex-start; }
+    .toc {
+      position: sticky;
+      top: 90px;
+      align-self: flex-start;
+      max-height: calc(100vh - 110px);
+      overflow-y: auto;
+    }
+  }
+
+  .toc {
+    padding: 1rem 1.125rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .toc-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.625rem;
+  }
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  .toc-list a {
+    display: block;
+    padding: 0.375rem 0.625rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    transition: background 0.12s, color 0.12s;
+    border-left: 2px solid transparent;
+  }
+  .toc-list a:hover { background: var(--bg); color: var(--text); }
+  .toc-list a.active {
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
+
+  @media (max-width: 1099px) {
+    .toc-list { flex-direction: row; flex-wrap: wrap; gap: 0.25rem; }
+    .toc-list a { font-size: 0.75rem; padding: 0.25rem 0.625rem; }
+  }
+
+  /* Calc actions: thumbs + share + reportar */
+  .calc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding: 0.875rem 1.125rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .ca-feedback {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex-wrap: wrap;
+  }
+  .ca-q { font-size: 0.875rem; color: var(--text-muted); font-weight: 500; }
+  .ca-msg { font-size: 0.875rem; color: var(--text-muted); }
+  .ca-msg a { color: var(--accent); text-decoration: underline; }
+  .ca-buttons { display: inline-flex; gap: 0.375rem; }
+  .ca-vote {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+    padding: 0.375rem 0.75rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .ca-vote:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .ca-tools { display: inline-flex; gap: 0.375rem; flex-wrap: wrap; }
+  .ca-tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+    padding: 0.375rem 0.75rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .ca-tool:hover {
+    border-color: var(--text-subtle);
+    color: var(--text);
+    background: var(--bg-soft);
+  }
+
+  /* KaTeX overrides leves */
+  .explanation :global(.katex-display) {
+    margin: 1rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+  }
+  .explanation :global(.katex) {
+    font-size: 1em;
+  }
+
   @media (max-width: 640px) {
     .explanation { padding: 1.5rem 1.25rem; }
     .header-left { flex-direction: row; }
     .icon-wrap { width: 48px; height: 48px; font-size: 1.5rem; }
+    .calc-actions { flex-direction: column; align-items: stretch; }
+    .ca-feedback, .ca-tools { justify-content: center; }
   }
 </style>

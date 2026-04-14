@@ -14,6 +14,7 @@ export interface Field {
   required?: boolean;
   help?: string;
   format?: 'thousands';
+  advanced?: boolean;
 }
 
 export interface Preset {
@@ -66,6 +67,9 @@ const disclaimers: Record<string, string> = {
 };
 
 const disclaimer = disclaimers[config.slug];
+
+const basicFields = config.fields.filter((f) => !f.advanced);
+const advancedFields = config.fields.filter((f) => f.advanced);
 ---
 
 <div class="calc-container" data-slug={config.slug} data-formula={config.formulaId}>
@@ -89,7 +93,7 @@ const disclaimer = disclaimers[config.slug];
 
   <form id={`form-${config.slug}`} class="calc-form" novalidate>
     <div class="fields-grid">
-      {config.fields.map((field) => (
+      {basicFields.map((field) => (
         <div class={`field ${field.type === 'select' || field.type === 'date' ? 'field-wide' : ''}`}>
           <label for={field.id}>
             <span class="label-text">{field.label}</span>
@@ -132,6 +136,60 @@ const disclaimer = disclaimers[config.slug];
         </div>
       ))}
     </div>
+
+    {advancedFields.length > 0 && (
+      <details class="advanced-toggle">
+        <summary>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Opciones avanzadas
+          <span class="adv-count">({advancedFields.length})</span>
+        </summary>
+        <div class="fields-grid advanced-grid">
+          {advancedFields.map((field) => (
+            <div class={`field ${field.type === 'select' || field.type === 'date' ? 'field-wide' : ''}`}>
+              <label for={field.id}>
+                <span class="label-text">{field.label}</span>
+                {field.help && (
+                  <span class="help-wrap">
+                    <span class="help" tabindex="0" aria-label={field.help}>?</span>
+                    <span class="help-tip" role="tooltip">{field.help}</span>
+                  </span>
+                )}
+              </label>
+              <div class="input-wrap">
+                {field.prefix && <span class="prefix">{field.prefix}</span>}
+                {field.type === 'select' ? (
+                  <select id={field.id} name={field.id} required={field.required}>
+                    {field.options?.map((opt) => (
+                      <option value={opt.value} selected={opt.value === field.default}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    id={field.id}
+                    name={field.id}
+                    type={field.type === 'number' && field.format === 'thousands' ? 'text' : field.type}
+                    placeholder={field.placeholder}
+                    min={field.min}
+                    max={field.max}
+                    step={field.step}
+                    value={field.default}
+                    required={field.required}
+                    inputmode={field.type === 'number' ? 'decimal' : undefined}
+                    autocomplete="off"
+                    data-format={field.format}
+                    data-type={field.type}
+                  />
+                )}
+                {field.suffix && <span class="suffix">{field.suffix}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </details>
+    )}
 
     <button type="submit" class="btn-primary">
       <span class="btn-content">
@@ -394,6 +452,42 @@ const disclaimer = disclaimers[config.slug];
   .prefix {
     border-left: none;
     border-right: 1px solid var(--border);
+  }
+
+  /* Modo simple/experto */
+  .advanced-toggle {
+    margin: 0.875rem 0 1rem;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    background: transparent;
+  }
+  .advanced-toggle[open] {
+    background: var(--bg-soft);
+    border-style: solid;
+    border-color: var(--border);
+  }
+  .advanced-toggle summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.625rem 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    user-select: none;
+  }
+  .advanced-toggle summary::-webkit-details-marker { display: none; }
+  .advanced-toggle summary:hover { color: var(--accent); }
+  .advanced-toggle .adv-count {
+    font-weight: 500;
+    color: var(--text-subtle);
+  }
+  .advanced-grid {
+    padding: 0.5rem 0.875rem 0.875rem;
+    border-top: 1px solid var(--border);
+    margin-top: 0.25rem;
   }
 
   /* Submit */

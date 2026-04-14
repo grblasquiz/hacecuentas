@@ -84,6 +84,7 @@ const globalSchema = {
     <link rel="alternate" hreflang="es" href={fullCanonical} />
     <link rel="alternate" hreflang="x-default" href={fullCanonical} />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <link rel="alternate" type="application/rss+xml" title="Hacé Cuentas — Calculadoras actualizadas" href="/rss.xml" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -139,6 +140,17 @@ const globalSchema = {
     </main>
     <slot name="footer" />
     <CookieConsent />
+
+    <!-- Service Worker — solo en producción y si el browser lo soporta -->
+    <script is:inline>
+      if ('serviceWorker' in navigator && location.protocol === 'https:') {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function () {
+            /* silencioso: el sitio funciona sin SW */
+          });
+        });
+      }
+    </script>
 
     <style is:global>
       :root {

@@ -57,6 +57,73 @@ import Footer from '../components/Footer.astro';
       personalizado. Escribinos a contacto@hacecuentas.com si te interesa.</p>
     </details>
 
+    <h2>O escribinos directo desde acá</h2>
+    <form id="hc-contact-form" class="contact-form" novalidate>
+      <div class="form-row">
+        <label for="cf-topic">Tema</label>
+        <select id="cf-topic" name="topic" required>
+          <option value="contacto">Consulta general</option>
+          <option value="errores">Reportar error</option>
+          <option value="sugerencias">Sugerir calculadora nueva</option>
+          <option value="privacidad">Privacidad / datos</option>
+          <option value="prensa">Prensa / colaboración</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="cf-email">Tu email</label>
+        <input type="email" id="cf-email" name="email" required placeholder="tu@email.com" autocomplete="email" />
+      </div>
+      <div class="form-row">
+        <label for="cf-msg">Tu mensaje</label>
+        <textarea id="cf-msg" name="message" rows="5" required placeholder="Contanos qué necesitás o qué error encontraste"></textarea>
+      </div>
+      <button type="submit" class="cf-submit">
+        Abrir mail con el mensaje
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+      <p class="cf-help">
+        Te abrimos tu cliente de mail con el mensaje listo para enviar. Sin formularios que se pierden:
+        el mail llega y te respondemos.
+      </p>
+    </form>
+
+    <script is:inline>
+      (function () {
+        var f = document.getElementById('hc-contact-form');
+        if (!f) return;
+        f.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var topic = f.topic.value;
+          var email = f.email.value.trim();
+          var msg = f.message.value.trim();
+          if (!email || !msg) return;
+          var addresses = {
+            contacto: 'contacto@hacecuentas.com',
+            errores: 'errores@hacecuentas.com',
+            sugerencias: 'sugerencias@hacecuentas.com',
+            privacidad: 'privacidad@hacecuentas.com',
+            prensa: 'contacto@hacecuentas.com',
+          };
+          var subjects = {
+            contacto: 'Consulta general',
+            errores: 'Reporte de error',
+            sugerencias: 'Sugerencia de calculadora',
+            privacidad: 'Privacidad / datos',
+            prensa: 'Prensa / colaboración',
+          };
+          var to = addresses[topic] || addresses.contacto;
+          var subject = encodeURIComponent('[' + (subjects[topic] || 'Consulta') + '] desde el form');
+          var body = encodeURIComponent('De: ' + email + '\n\n' + msg + '\n\n--\nEnviado desde el formulario de hacecuentas.com');
+          window.location.href = 'mailto:' + to + '?subject=' + subject + '&body=' + body;
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', 'contact_form_submit', { topic: topic });
+          }
+        });
+      })();
+    </script>
+
     <h2>Respuestas</h2>
     <p>
       Respondemos en <strong>48 horas hábiles</strong>. Si no escuchás nada después de ese
@@ -146,5 +213,66 @@ import Footer from '../components/Footer.astro';
   }
   details p {
     margin-bottom: 0;
+  }
+
+  /* Form */
+  .contact-form {
+    margin: 1.25rem 0 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    padding: 1.5rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .form-row { display: flex; flex-direction: column; gap: 0.375rem; }
+  .form-row label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .form-row select,
+  .form-row input,
+  .form-row textarea {
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .form-row select:focus,
+  .form-row input:focus,
+  .form-row textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .form-row textarea { resize: vertical; min-height: 100px; }
+  .cf-submit {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .cf-submit:hover { background: var(--accent-strong); }
+  .cf-help {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    line-height: 1.5;
   }
 </style>

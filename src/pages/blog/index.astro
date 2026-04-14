@@ -1,0 +1,321 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Newsletter from '../../components/Newsletter.astro';
+
+// Lista de temas que vamos a cubrir cuando arranque el blog.
+// Esto sirve como anchor SEO y como expectativa para el usuario.
+const proximosArticulos = [
+  {
+    cat: 'finanzas',
+    titulo: 'Cómo se calcula el sueldo en mano en Argentina paso a paso',
+    bajada: 'Aportes, descuentos, ganancias: la fórmula completa con un ejemplo real.',
+  },
+  {
+    cat: 'finanzas',
+    titulo: 'Plazo fijo vs UVA vs dólar: cuál te conviene este mes',
+    bajada: 'Comparativa con TNA actualizada y simulación a 30, 60 y 90 días.',
+  },
+  {
+    cat: 'finanzas',
+    titulo: 'Monotributo 2026: nuevas escalas y cuándo recategorizar',
+    bajada: 'Tabla actualizada de cuotas, topes y obra social por categoría.',
+  },
+  {
+    cat: 'finanzas',
+    titulo: 'Indemnización por despido: cómo calcular el mejor remunerativo',
+    bajada: 'Errores comunes que te pueden costar varios sueldos.',
+  },
+  {
+    cat: 'salud',
+    titulo: 'IMC, grasa corporal y TDEE: qué mide cada cosa y cuál te sirve',
+    bajada: 'Las 3 calculadoras de salud más buscadas, explicadas sin tecnicismos.',
+  },
+  {
+    cat: 'salud',
+    titulo: 'Calorías para bajar de peso: el método Mifflin-St Jeor',
+    bajada: 'Por qué las "calculadoras de calorías" online suelen darte mal.',
+  },
+  {
+    cat: 'negocios',
+    titulo: 'Markup vs margen: el error que arruina los precios de tu negocio',
+    bajada: 'Diferencias prácticas y cómo subir precios sin perder clientes.',
+  },
+  {
+    cat: 'marketing',
+    titulo: 'CAC, LTV y payback: las tres métricas que definen si tu negocio escala',
+    bajada: 'Fórmulas, benchmarks por industria y cómo mejorarlas.',
+  },
+  {
+    cat: 'vida',
+    titulo: 'Calcular gastos compartidos: la mejor forma de no pelearte con tus amigos',
+    bajada: 'Tres métodos para dividir cuentas (proporcional, igualitario, ponderado).',
+  },
+];
+
+const description =
+  'Próximamente: artículos sobre finanzas personales, sueldos, impuestos, ' +
+  'salud y negocios para Argentina. Suscribite al newsletter para enterarte cuando publiquemos.';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  '@id': 'https://hacecuentas.com/blog#blog',
+  name: 'Blog de Hacé Cuentas',
+  description,
+  url: 'https://hacecuentas.com/blog',
+  inLanguage: 'es-AR',
+  publisher: {
+    '@type': 'Organization',
+    name: 'Hacé Cuentas',
+    url: 'https://hacecuentas.com',
+    logo: 'https://hacecuentas.com/favicon.svg',
+  },
+};
+---
+
+<Layout
+  title="Blog — Próximamente | Hacé Cuentas"
+  description={description}
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <article class="blog-stub">
+    <nav class="breadcrumbs" aria-label="Migas de pan">
+      <a href="/">Inicio</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">Blog</span>
+    </nav>
+
+    <header class="hero">
+      <span class="badge">Próximamente</span>
+      <h1>Blog de Hacé Cuentas</h1>
+      <p class="lead">
+        Artículos prácticos sobre finanzas personales, impuestos argentinos,
+        salud, negocios y todo lo que quieras calcular bien. Sin tecnicismos
+        innecesarios, con ejemplos reales y fuentes oficiales.
+      </p>
+      <p class="meta">
+        <strong>Estamos preparando el primer lote.</strong> Si querés que te
+        avisemos cuando publiquemos, suscribite al newsletter abajo.
+      </p>
+    </header>
+
+    <section class="upcoming">
+      <h2>Lo que estamos preparando</h2>
+      <p class="upcoming-intro">
+        Estos son algunos de los artículos que publicaremos primero. ¿Te falta
+        alguno? <a href="/contacto">Sugerinos un tema.</a>
+      </p>
+      <ul class="article-list">
+        {proximosArticulos.map((a) => (
+          <li class="article-item">
+            <span class={`cat-tag cat-${a.cat}`}>{a.cat}</span>
+            <h3>{a.titulo}</h3>
+            <p>{a.bajada}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="meanwhile">
+      <h2>Mientras tanto</h2>
+      <p>
+        Tenemos más de <strong>100 calculadoras gratis</strong> con explicaciones
+        paso a paso, fórmulas y fuentes. Cada una incluye un glosario corto y
+        ejemplos para que entiendas qué estás calculando, no solo el resultado.
+      </p>
+      <div class="quick-links">
+        <a href="/categoria/finanzas" class="ql-card">
+          <span class="ql-icon">💰</span>
+          <span class="ql-title">Calculadoras de finanzas</span>
+          <span class="ql-arrow">→</span>
+        </a>
+        <a href="/categoria/salud" class="ql-card">
+          <span class="ql-icon">❤️</span>
+          <span class="ql-title">Calculadoras de salud</span>
+          <span class="ql-arrow">→</span>
+        </a>
+        <a href="/glosario" class="ql-card">
+          <span class="ql-icon">📚</span>
+          <span class="ql-title">Glosario de términos</span>
+          <span class="ql-arrow">→</span>
+        </a>
+        <a href="/buscar" class="ql-card">
+          <span class="ql-icon">🔎</span>
+          <span class="ql-title">Buscar una calculadora</span>
+          <span class="ql-arrow">→</span>
+        </a>
+      </div>
+    </section>
+
+    <Newsletter />
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .blog-stub {
+    max-width: 880px;
+    margin: 1rem auto 2rem;
+    padding: 0 1rem;
+  }
+
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-subtle);
+    margin-bottom: 1.5rem;
+  }
+  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumbs a:hover { color: var(--accent); }
+
+  .hero {
+    text-align: center;
+    padding: 2rem 0 2.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+  .hero .badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 1rem;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+    margin-bottom: 1rem;
+  }
+  .hero .lead {
+    font-size: 1.0625rem;
+    color: var(--text-muted);
+    max-width: 640px;
+    margin: 0 auto 1rem;
+    line-height: 1.6;
+  }
+  .hero .meta {
+    font-size: 0.9375rem;
+    color: var(--text-subtle);
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .hero .meta strong { color: var(--text); }
+
+  section { margin-bottom: 3rem; }
+
+  .upcoming h2,
+  .meanwhile h2 {
+    font-size: 1.375rem;
+    margin-bottom: 0.5rem;
+  }
+  .upcoming-intro {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    font-size: 0.9375rem;
+  }
+  .upcoming-intro a { color: var(--accent); font-weight: 500; }
+
+  .article-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .article-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .article-item:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+  }
+  .cat-tag {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.1875rem 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+  .cat-finanzas { background: #fef3c7; color: #92400e; }
+  .cat-salud { background: #fce7f3; color: #9d174d; }
+  .cat-marketing { background: #ddd6fe; color: #5b21b6; }
+  .cat-negocios { background: #d1fae5; color: #065f46; }
+  .cat-vida { background: #dbeafe; color: #1e40af; }
+
+  :global([data-theme="dark"]) .cat-finanzas { background: #78350f33; color: #fcd34d; }
+  :global([data-theme="dark"]) .cat-salud { background: #831843aa; color: #f9a8d4; }
+  :global([data-theme="dark"]) .cat-marketing { background: #4c1d9544; color: #c4b5fd; }
+  :global([data-theme="dark"]) .cat-negocios { background: #064e3b44; color: #6ee7b7; }
+  :global([data-theme="dark"]) .cat-vida { background: #1e3a8a44; color: #93c5fd; }
+
+  .article-item h3 {
+    font-size: 1rem;
+    line-height: 1.35;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+  .article-item p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .meanwhile p {
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 1.5rem;
+  }
+  .meanwhile strong { color: var(--text); }
+
+  .quick-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+  }
+  .ql-card {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .ql-card:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+  .ql-icon { font-size: 1.25rem; }
+  .ql-title { flex: 1; font-weight: 500; font-size: 0.9375rem; }
+  .ql-arrow { color: var(--text-subtle); transition: transform 0.15s; }
+  .ql-card:hover .ql-arrow { transform: translateX(2px); color: var(--accent); }
+
+  @media (max-width: 560px) {
+    .article-list { grid-template-columns: 1fr; }
+  }
+</style>

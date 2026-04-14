@@ -81,6 +81,8 @@ export const GET: APIRoute = () => {
     { loc: `${site}/politica-editorial`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
     { loc: `${site}/metodologia`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
     { loc: `${site}/contacto`, priority: '0.4', changefreq: 'yearly', lastmod: buildDate },
+    { loc: `${site}/glosario`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
+    { loc: `${site}/blog`, priority: '0.4', changefreq: 'monthly', lastmod: buildDate },
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
