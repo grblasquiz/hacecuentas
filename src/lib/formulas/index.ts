@@ -112,6 +112,16 @@ import { ecuacionCuadratica } from './ecuacion-cuadratica';
 import { factorialCalc } from './factorial';
 import { interesSimple } from './interes-simple';
 import { mcdMcm } from './mcd-mcm';
+import { fracciones } from './fracciones';
+import { trigonometria } from './trigonometria';
+import { logaritmos } from './logaritmos';
+import { potenciasRaices } from './potencias-raices';
+import { progresionAritmetica } from './progresion-aritmetica';
+import { progresionGeometrica } from './progresion-geometrica';
+import { numerosPrimos } from './numeros-primos';
+import { notacionCientifica } from './notacion-cientifica';
+import { reglaTresCompuesta } from './regla-tres-compuesta';
+import { sistemasEcuaciones } from './sistemas-ecuaciones';
 
 // Construcción
 import { ladrillosM2 } from './ladrillos-m2';
@@ -240,6 +250,16 @@ export const formulas = {
   factorial: factorialCalc,
   'interes-simple': interesSimple,
   'mcd-mcm': mcdMcm,
+  fracciones,
+  trigonometria,
+  logaritmos,
+  'potencias-raices': potenciasRaices,
+  'progresion-aritmetica': progresionAritmetica,
+  'progresion-geometrica': progresionGeometrica,
+  'numeros-primos': numerosPrimos,
+  'notacion-cientifica': notacionCientifica,
+  'regla-tres-compuesta': reglaTresCompuesta,
+  'sistemas-ecuaciones': sistemasEcuaciones,
 
   // Construcción
   'ladrillos-m2': ladrillosM2,
