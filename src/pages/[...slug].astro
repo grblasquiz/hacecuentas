@@ -37,6 +37,16 @@ function md(text: string): string {
     .replace(/\n/g, '<br>');
 }
 
+// Markdown inline-only — para campos que viven dentro de un <p> u otro inline
+// (no genera <p>, <h2>, <li>, <br>; solo bold, em, code, links).
+function mdInline(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" rel="noopener">$1</a>');
+}
+
 const categoryLabels: Record<string, string> = {
   finanzas: 'Finanzas',
   negocios: 'Negocios',
@@ -245,7 +255,7 @@ const reportBody = encodeURIComponent(
           <h1>{calc.h1}{audience === 'AR' && <span class="ar-badge-h1" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>}</h1>
         </div>
       </div>
-      <p class="intro">{calc.intro}</p>
+      <p class="intro" set:html={mdInline(calc.intro)}></p>
       {audience === 'AR' && (
         <aside class="audience-notice" role="note" aria-label="Aviso sobre la audiencia de esta calculadora">
           <span class="an-flag" aria-hidden="true">🇦🇷</span>
