@@ -6,7 +6,18 @@
   "category": "vida",
   "icon": "💡",
   "formulaId": "consumo-electrico",
-  "seoKeywords": ["calculadora kwh", "cuanto consume aire acondicionado", "tarifa edenor edesur 2026", "segmentacion luz N1 N2 N3", "factura luz argentina", "kwh por artefacto", "cuanto consume heladera", "costo luz mensual", "subsidio luz 2026", "quitar subsidio luz"],
+  "seoKeywords": [
+    "calculadora kwh",
+    "cuanto consume aire acondicionado",
+    "tarifa edenor edesur 2026",
+    "segmentacion luz N1 N2 N3",
+    "factura luz argentina",
+    "kwh por artefacto",
+    "cuanto consume heladera",
+    "costo luz mensual",
+    "subsidio luz 2026",
+    "quitar subsidio luz"
+  ],
   "intro": "La **factura de luz** en Argentina cambió mucho con la **quita parcial de subsidios** post-DNU 70/2023: ahora se paga según **categoría de segmentación (N1, N2, N3)** y con **tope de consumo**. Esta calculadora estima **cuántos kWh consume un electrodoméstico al mes** y **cuánto le suma a tu factura** según tu distribuidora (**Edenor, Edesur, Edelap en AMBA; EPEC Córdoba; EPE Santa Fe; EDEA Mar del Plata; y otras**) y tu nivel de subsidio. Ingresás la **potencia en watts** (la encontrás en la etiqueta del electrodoméstico), las **horas de uso diarias** y el **precio del kWh** que figura en tu factura (típico residencial 2026: **$40-$120/kWh** según segmentación). Te devuelve: **kWh mensuales y anuales**, **costo mensual y anual**. Incluye tabla con consumos típicos de heladera, aire acondicionado, termotanque, secarropas, lavarropas, PC, TV, y los **5 artefactos que más plata chupan** por mes.",
   "keyTakeaway": "**kWh = (Watts × horas) ÷ 1.000**. **Costo = kWh × precio_kWh**. **Aire acondicionado** y **termotanque eléctrico** son los que más consumen. Un **aire split 3.000 frigorías** en verano puede sumar **$30.000-$60.000/mes** solo él. Cambiá a **LED** para ahorrar 85% en iluminación.",
   "useCases": [
@@ -17,17 +28,76 @@
     "Trabajás desde casa y querés saber cuánto le suma tu PC a la factura."
   ],
   "fields": [
-    { "id": "potenciaWatts", "label": "Potencia (Watts)", "type": "number", "placeholder": "1500", "min": 0, "step": 1, "required": true },
-    { "id": "horasPorDia", "label": "Horas de uso por día", "type": "number", "placeholder": "3", "min": 0, "max": 24, "step": 0.25, "required": true },
-    { "id": "diasPorMes", "label": "Días de uso al mes", "type": "number", "default": 30, "min": 1, "max": 31, "step": 1 },
-    { "id": "precioKwh", "label": "Precio del kWh (ARS)", "type": "number", "prefix": "$", "default": 55, "min": 0, "step": 1, "help": "Mirá tu factura. Típico residencial: $40-$120/kWh en 2026 según segmentación." }
+    {
+      "id": "potenciaWatts",
+      "label": "Potencia (Watts)",
+      "type": "number",
+      "placeholder": "1500",
+      "min": 0,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "horasPorDia",
+      "label": "Horas de uso por día",
+      "type": "number",
+      "placeholder": "3",
+      "min": 0,
+      "max": 24,
+      "step": 0.25,
+      "required": true
+    },
+    {
+      "id": "diasPorMes",
+      "label": "Días de uso al mes",
+      "type": "number",
+      "default": 30,
+      "min": 1,
+      "max": 31,
+      "step": 1
+    },
+    {
+      "id": "precioKwh",
+      "label": "Precio del kWh (ARS)",
+      "type": "number",
+      "prefix": "$",
+      "default": 55,
+      "min": 0,
+      "step": 1,
+      "help": "Mirá tu factura. Típico residencial: $40-$120/kWh en 2026 según segmentación.",
+      "format": "thousands"
+    }
   ],
   "outputs": [
-    { "id": "costoMensual", "label": "Costo mensual", "format": "currency", "primary": true },
-    { "id": "consumoKwhMes", "label": "Consumo mensual (kWh)", "format": "number", "suffix": " kWh" },
-    { "id": "costoAnual", "label": "Costo anual", "format": "currency" },
-    { "id": "consumoAnualKwh", "label": "Consumo anual (kWh)", "format": "number", "suffix": " kWh" },
-    { "id": "consumoKwhDia", "label": "Consumo diario", "format": "number", "suffix": " kWh" }
+    {
+      "id": "costoMensual",
+      "label": "Costo mensual",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "consumoKwhMes",
+      "label": "Consumo mensual (kWh)",
+      "format": "number",
+      "suffix": " kWh"
+    },
+    {
+      "id": "costoAnual",
+      "label": "Costo anual",
+      "format": "currency"
+    },
+    {
+      "id": "consumoAnualKwh",
+      "label": "Consumo anual (kWh)",
+      "format": "number",
+      "suffix": " kWh"
+    },
+    {
+      "id": "consumoKwhDia",
+      "label": "Consumo diario",
+      "format": "number",
+      "suffix": " kWh"
+    }
   ],
   "example": {
     "title": "Ejemplo real: aire acondicionado split 3.000 frigorías en verano",
@@ -84,11 +154,26 @@
     }
   ],
   "sources": [
-    { "name": "Edenor - Tarifas residenciales", "url": "https://www.edenor.com/hogares" },
-    { "name": "Edesur - Precios y categorías", "url": "https://www.edesur.com.ar" },
-    { "name": "Secretaría de Energía - Subsidios", "url": "https://www.argentina.gob.ar/economia/energia/subsidios" },
-    { "name": "ENRE - Ente Nacional Regulador", "url": "https://www.enre.gov.ar" },
-    { "name": "RASE - Registro de Acceso a Subsidios", "url": "https://www.argentina.gob.ar/subsidios" }
+    {
+      "name": "Edenor - Tarifas residenciales",
+      "url": "https://www.edenor.com/hogares"
+    },
+    {
+      "name": "Edesur - Precios y categorías",
+      "url": "https://www.edesur.com.ar"
+    },
+    {
+      "name": "Secretaría de Energía - Subsidios",
+      "url": "https://www.argentina.gob.ar/economia/energia/subsidios"
+    },
+    {
+      "name": "ENRE - Ente Nacional Regulador",
+      "url": "https://www.enre.gov.ar"
+    },
+    {
+      "name": "RASE - Registro de Acceso a Subsidios",
+      "url": "https://www.argentina.gob.ar/subsidios"
+    }
   ],
   "relatedSlugs": [
     "calculadora-tiempo-temperatura-coccion-carne",

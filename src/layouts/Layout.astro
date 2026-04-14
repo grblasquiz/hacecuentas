@@ -324,7 +324,7 @@ const globalSchema = {
         html { scroll-behavior: auto; }
       }
 
-      /* Print — optimizar para cuando imprimen resultados */
+      /* Print — optimizar para cuando imprimen resultados (PDF-friendly) */
       @media print {
         :root {
           --bg: #fff;
@@ -341,15 +341,40 @@ const globalSchema = {
           --shadow-md: none;
           --shadow-lg: none;
         }
-        body { font-size: 12pt; color: #000; background: #fff; }
-        main { max-width: 100%; padding: 0.5cm; }
-        header, footer, .skip-link, nav, button, .share, .cta-back,
+        body { font-size: 11pt; color: #000; background: #fff; }
+        main { max-width: 100%; padding: 0; margin: 0; }
+        /* Ocultar todo excepto el calc container, título H1 y breadcrumbs */
+        header, footer, .skip-link, nav:not(.breadcrumbs), button, .share, .cta-back,
         .scroll-top, .scroll-progress, .related, .hero-featured, .sources,
-        .faq details:not([open]) { display: none !important; }
-        a, a:visited { color: #000; text-decoration: underline; }
-        .calc-container { border: 1px solid #000; box-shadow: none; page-break-inside: avoid; }
+        .hero-meta, .explanation, .faq, .key-takeaway, .intro, .use-cases,
+        .example-box, .seo-content, .cat-faq, .hc-embed-overlay { display: none !important; }
+        .breadcrumbs { font-size: 9pt; color: #666; margin-bottom: 0.5cm; }
+        h1 { font-size: 20pt; margin-bottom: 0.3cm; }
+        a, a:visited { color: #000; text-decoration: none; }
+        .calc-container { border: 1px solid #000; box-shadow: none; page-break-inside: avoid; padding: 1cm; }
         .result.primary { background: #f5f5f5 !important; color: #000 !important; border: 2px solid #000; }
         h1, h2, h3 { page-break-after: avoid; }
+        /* Branding footer en print: logo Hacé Cuentas + URL + fecha */
+        body::after {
+          content: "Cálculo generado con Hacé Cuentas — hacecuentas.com";
+          display: block;
+          text-align: center;
+          font-size: 9pt;
+          color: #666;
+          margin-top: 1cm;
+          padding-top: 0.5cm;
+          border-top: 1px solid #ccc;
+        }
+        /* Force date via ::before si es útil */
+        .calc-container::before {
+          content: "Hacé Cuentas · " attr(data-slug);
+          display: block;
+          font-size: 9pt;
+          color: #888;
+          margin-bottom: 0.5cm;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
       }
     </style>
   </body>

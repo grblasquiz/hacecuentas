@@ -1,0 +1,373 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Valores BCRA hoy: dólar, inflación, UVA, tasas Argentina 2026 | Hacé Cuentas';
+const description = 'Dashboard con dólar oficial, MEP, blue, CCL, tarjeta, UVA del día, inflación INDEC mensual y anual, TNA plazo fijo. Datos oficiales BCRA/INDEC actualizados.';
+
+// Fetch en build-time con fallbacks seguros
+async function safeFetch<T>(url: string, fallback: T): Promise<T> {
+  try {
+    const r = await fetch(url, {
+      headers: { 'User-Agent': 'hacecuentas.com/1.0' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok) return fallback;
+    return (await r.json()) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+type Dolar = { casa: string; nombre: string; compra: number; venta: number; fechaActualizacion: string };
+type InflacionPoint = { fecha: string; valor: number };
+type UvaPoint = { fecha: string; valor: number };
+
+const dolares = await safeFetch<Dolar[]>('https://dolarapi.com/v1/dolares', []);
+const inflacion = await safeFetch<InflacionPoint[]>('https://api.argentinadatos.com/v1/finanzas/indices/inflacion', []);
+const uva = await safeFetch<UvaPoint[]>('https://api.argentinadatos.com/v1/finanzas/indices/uva', []);
+const inflacionInteranual = await safeFetch<InflacionPoint[]>(
+  'https://api.argentinadatos.com/v1/finanzas/indices/inflacionInteranual',
+  []
+);
+
+// Últimos valores
+const dolarMap = Object.fromEntries(dolares.map((d) => [d.casa, d]));
+const ultimoIpc = inflacion.at(-1);
+const ultimaIpcAnual = inflacionInteranual.at(-1);
+const ultimaUva = uva.at(-1);
+
+// Formato
+const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(n);
+const fmtDate = (s: string) => {
+  if (!s) return '—';
+  try {
+    return new Date(s).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  } catch {
+    return s;
+  }
+};
+
+const buildDate = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+// Tarjetas dólar en orden deseado
+const dolarCards: { key: string; label: string; hint: string }[] = [
+  { key: 'oficial', label: 'Dólar Oficial', hint: 'Cotización mayorista del BCRA' },
+  { key: 'blue', label: 'Dólar Blue', hint: 'Paralelo informal (Parque Lezama, arbolitos)' },
+  { key: 'bolsa', label: 'Dólar MEP', hint: 'MEP / Bolsa: AL30 en pesos vs AL30 en USD' },
+  { key: 'contadoconliqui', label: 'Dólar CCL', hint: 'Contado con liqui: para girar al exterior' },
+  { key: 'tarjeta', label: 'Dólar Tarjeta', hint: 'Oficial + 30% PAIS + 45% Ganancias' },
+  { key: 'cripto', label: 'Dólar Cripto', hint: 'USDT promedio en exchanges' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  name: 'Valores BCRA y INDEC hoy',
+  description: 'Dólar, inflación, UVA y tasas de referencia Argentina',
+  keywords: 'dolar hoy, inflación INDEC, UVA BCRA, plazo fijo TNA, valores BCRA',
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas' },
+  license: 'https://hacecuentas.com/terminos',
+};
+---
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="dashboard">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Valores BCRA hoy</span>
+    </nav>
+
+    <header class="dash-head">
+      <h1>Valores BCRA y INDEC hoy</h1>
+      <p class="lead">Dólar, inflación, UVA y tasas oficiales Argentina. Actualizado al <strong>{buildDate}</strong>.</p>
+    </header>
+
+    <!-- SECCIÓN DÓLAR -->
+    <section class="dash-section">
+      <h2>💵 Cotización del dólar</h2>
+      <div class="card-grid">
+        {dolarCards.map((c) => {
+          const d = dolarMap[c.key];
+          const venta = d?.venta;
+          const brecha = venta && dolarMap.oficial?.venta ? ((venta / dolarMap.oficial.venta - 1) * 100).toFixed(1) : null;
+          return (
+            <div class="card">
+              <div class="card-head">
+                <span class="card-label">{c.label}</span>
+                {brecha && c.key !== 'oficial' && (
+                  <span class="badge">+{brecha}%</span>
+                )}
+              </div>
+              <div class="card-value">
+                {venta ? `$${fmtAr(venta)}` : '—'}
+              </div>
+              <div class="card-sub">
+                {d?.compra ? `Compra: $${fmtAr(d.compra)}` : c.hint}
+              </div>
+              <div class="card-hint">{c.hint}</div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
+    <!-- SECCIÓN INFLACIÓN -->
+    <section class="dash-section">
+      <h2>📈 Inflación (INDEC)</h2>
+      <div class="card-grid">
+        <div class="card hi">
+          <div class="card-head">
+            <span class="card-label">Inflación mensual</span>
+          </div>
+          <div class="card-value">
+            {ultimoIpc ? `${ultimoIpc.valor.toFixed(1)}%` : '—'}
+          </div>
+          <div class="card-sub">IPC Nacional</div>
+          <div class="card-hint">Último dato: {ultimoIpc ? fmtDate(ultimoIpc.fecha) : '—'}</div>
+        </div>
+        <div class="card hi">
+          <div class="card-head">
+            <span class="card-label">Inflación anual</span>
+          </div>
+          <div class="card-value">
+            {ultimaIpcAnual ? `${ultimaIpcAnual.valor.toFixed(1)}%` : '—'}
+          </div>
+          <div class="card-sub">Interanual (últimos 12m)</div>
+          <div class="card-hint">Último dato: {ultimaIpcAnual ? fmtDate(ultimaIpcAnual.fecha) : '—'}</div>
+        </div>
+        <div class="card hi">
+          <div class="card-head">
+            <span class="card-label">UVA</span>
+          </div>
+          <div class="card-value">
+            {ultimaUva ? `$${fmtAr(ultimaUva.valor)}` : '—'}
+          </div>
+          <div class="card-sub">Unidad de Valor Adquisitivo</div>
+          <div class="card-hint">Al {ultimaUva ? fmtDate(ultimaUva.fecha) : '—'}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN PLAZO FIJO / TASAS -->
+    <section class="dash-section">
+      <h2>🏦 Plazo fijo: TNA por banco (abril 2026)</h2>
+      <div class="tna-grid">
+        {[
+          { b: 'Nación', tna: 35 },
+          { b: 'Santander', tna: 36 },
+          { b: 'BBVA', tna: 37 },
+          { b: 'Galicia', tna: 38 },
+          { b: 'Provincia', tna: 38 },
+          { b: 'Macro', tna: 39 },
+          { b: 'ICBC', tna: 40 },
+        ].map((x) => (
+          <div class="tna-card">
+            <div class="tna-bank">{x.b}</div>
+            <div class="tna-val">{x.tna}%</div>
+          </div>
+        ))}
+      </div>
+      <p class="sec-cta">
+        <a href="/comparador-plazo-fijo" class="cta-link">Ver comparador interactivo →</a>
+        <a href="/calculadora-plazo-fijo" class="cta-link">Calculadora individual →</a>
+      </p>
+    </section>
+
+    <!-- LINKS A CALCS -->
+    <section class="dash-section">
+      <h2>🔗 Calculadoras con estos valores</h2>
+      <div class="link-grid">
+        <a href="/calculadora-dolar-tarjeta-argentina" class="link-card">
+          <span class="link-title">Dólar tarjeta</span>
+          <span class="link-desc">Calcular qué te cobran con PAIS + Ganancias</span>
+        </a>
+        <a href="/calculadora-inflacion-ipc-argentina" class="link-card">
+          <span class="link-title">Inflación IPC</span>
+          <span class="link-desc">Actualizar un monto del pasado a hoy</span>
+        </a>
+        <a href="/calculadora-credito-uva-hipotecario" class="link-card">
+          <span class="link-title">Crédito UVA</span>
+          <span class="link-desc">Cuota hipotecaria ajustada por UVA</span>
+        </a>
+        <a href="/calculadora-alquiler-actualizacion-icl" class="link-card">
+          <span class="link-title">Alquiler ICL</span>
+          <span class="link-desc">Ajuste anual por índice BCRA</span>
+        </a>
+        <a href="/calculadora-plazo-fijo" class="link-card">
+          <span class="link-title">Plazo fijo</span>
+          <span class="link-desc">Rendimiento en $ con TNA actual</span>
+        </a>
+        <a href="/calculadora-cuota-prestamo" class="link-card">
+          <span class="link-title">Préstamo personal</span>
+          <span class="link-desc">Cuota con tasa promedio bancos</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="dash-section sources">
+      <h3>Fuentes</h3>
+      <ul class="sources-list">
+        <li><a href="https://www.bcra.gob.ar" target="_blank" rel="noopener">BCRA — Banco Central de la República Argentina</a> (cotización oficial, UVA)</li>
+        <li><a href="https://www.indec.gob.ar" target="_blank" rel="noopener">INDEC</a> (IPC Nacional)</li>
+        <li><a href="https://dolarapi.com" target="_blank" rel="noopener">dolarapi.com</a> (consolida cotizaciones)</li>
+        <li><a href="https://argentinadatos.com" target="_blank" rel="noopener">argentinadatos.com</a> (inflación, UVA)</li>
+      </ul>
+      <p class="disclaimer">Los valores son informativos y pueden tener desfase de unas horas. Para operaciones grandes consultá siempre con tu banco o la fuente oficial.</p>
+    </section>
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .dashboard { max-width: 1060px; margin: 0 auto; padding: 0 0 3rem; }
+  .breadcrumbs { font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .breadcrumbs a { color: var(--text-muted); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+  .breadcrumbs .sep { color: var(--border-strong); }
+
+  .dash-head { margin-bottom: 2rem; }
+  .dash-head h1 { margin-bottom: 0.5rem; }
+  .lead { color: var(--text-muted); font-size: 1.0625rem; max-width: 680px; }
+
+  .dash-section { margin-bottom: 2.5rem; }
+  .dash-section h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-grid {
+    display: grid;
+    gap: 0.875rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.125rem 1.25rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+  }
+  .card:hover { box-shadow: var(--shadow); border-color: var(--border-strong); }
+  .card.hi {
+    background: linear-gradient(135deg, var(--accent-soft) 0%, #e0f2fe 100%);
+    border-color: #bfdbfe;
+  }
+
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .card-label {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .card.hi .card-label { color: var(--accent-strong); }
+
+  .badge {
+    background: var(--danger-soft);
+    color: var(--danger);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+  }
+
+  .card-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    font-feature-settings: 'tnum';
+    margin-bottom: 0.25rem;
+    line-height: 1.1;
+  }
+  .card.hi .card-value { color: var(--accent-strong); }
+
+  .card-sub {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+  }
+  .card-hint {
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+  }
+
+  /* TNA grid */
+  .tna-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.625rem;
+    margin-bottom: 1rem;
+  }
+  .tna-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem 0.875rem;
+    text-align: center;
+  }
+  .tna-bank { font-size: 0.8125rem; color: var(--text-muted); font-weight: 500; }
+  .tna-val { font-size: 1.375rem; font-weight: 700; color: var(--accent-strong); margin-top: 0.25rem; }
+
+  .sec-cta { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  .cta-link { font-weight: 600; font-size: 0.9375rem; }
+
+  /* Link grid */
+  .link-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  }
+  .link-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.875rem 1.125rem;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .link-card:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent-strong);
+    transform: translateY(-1px);
+  }
+  .link-title { font-weight: 600; font-size: 0.9375rem; }
+  .link-desc { font-size: 0.8125rem; color: var(--text-muted); }
+  .link-card:hover .link-desc { color: var(--accent); }
+
+  .sources { padding-top: 1rem; border-top: 1px solid var(--border); }
+  .sources h3 { font-size: 0.9375rem; margin-bottom: 0.625rem; color: var(--text); }
+  .sources-list {
+    list-style: disc;
+    padding-left: 1.25rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    line-height: 1.7;
+  }
+  .disclaimer {
+    margin-top: 1rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    font-style: italic;
+  }
+</style>

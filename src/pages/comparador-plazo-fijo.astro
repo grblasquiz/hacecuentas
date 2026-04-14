@@ -1,0 +1,292 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Comparador de Plazo Fijo Bancos Argentina 2026 | Hacé Cuentas';
+const description = 'Compará el rendimiento de un plazo fijo en Galicia, Santander, BBVA, Macro, Nación, Provincia e ICBC. Ingresá capital y días y ves el interés lado a lado.';
+
+// Bancos con TNA (mismos datos que los presets de plazo-fijo)
+const bancos = [
+  { nombre: 'Banco Nación', tna: 35, color: '#00a651' },
+  { nombre: 'Santander', tna: 36, color: '#ec0000' },
+  { nombre: 'BBVA', tna: 37, color: '#004481' },
+  { nombre: 'Galicia', tna: 38, color: '#fb6409' },
+  { nombre: 'Provincia', tna: 38, color: '#00893d' },
+  { nombre: 'Macro', tna: 39, color: '#1f2b5e' },
+  { nombre: 'ICBC', tna: 40, color: '#e60012' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Comparador de Plazo Fijo',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  offers: { '@type': 'Offer', price: '0' },
+};
+---
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="compare-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Comparador de plazo fijo</span>
+    </nav>
+
+    <h1>Comparador de plazo fijo: bancos Argentina 2026</h1>
+    <p class="lead">
+      Ingresá <strong>capital</strong> y <strong>plazo en días</strong> y ves en tiempo real cuánto rinde tu plazo fijo en cada banco, ordenado de mayor a menor.
+    </p>
+
+    <div class="compare-controls">
+      <div class="control">
+        <label for="capital">Capital a invertir</label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input id="capital" type="text" inputmode="decimal" value="1000000" autocomplete="off" />
+        </div>
+      </div>
+      <div class="control">
+        <label for="dias">Plazo (días)</label>
+        <div class="input-wrap">
+          <input id="dias" type="number" min="30" max="365" step="1" value="30" />
+          <span class="suffix">días</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="results-table" role="table" aria-label="Resultados de plazo fijo por banco">
+      <div class="tr head" role="row">
+        <div role="columnheader">Banco</div>
+        <div role="columnheader">TNA</div>
+        <div role="columnheader">Interés ganado</div>
+        <div role="columnheader">Total a recibir</div>
+        <div role="columnheader">Rendimiento %</div>
+      </div>
+      {bancos.map((b) => (
+        <div class="tr body" role="row" data-tna={b.tna}>
+          <div role="cell" class="bank-name"><span class="bank-dot" style={`background:${b.color}`}></span>{b.nombre}</div>
+          <div role="cell" class="tna" data-tna-cell>{b.tna}%</div>
+          <div role="cell" data-interes>—</div>
+          <div role="cell" class="total" data-total>—</div>
+          <div role="cell" data-rendimiento>—</div>
+        </div>
+      ))}
+    </div>
+
+    <p class="compare-note">
+      <strong>Datos de referencia</strong> — TNA promedio de plazo fijo tradicional a 30 días publicado por cada entidad, abril 2026. Verificá con tu banco antes de invertir: las tasas pueden variar día a día. Los resultados son estimativos.
+    </p>
+
+    <section class="compare-extra">
+      <h2>Cómo funciona el comparador</h2>
+      <p>
+        El rendimiento de un plazo fijo tradicional en Argentina se calcula con la fórmula de <strong>interés simple</strong>: <code>Interés = Capital × (TNA/100) × (días/365)</code>. La TNA (Tasa Nominal Anual) es la que publica cada banco, y la mayoría de las entidades ofrece entre <strong>30 y 40% anual</strong> para plazos a 30 días.
+      </p>
+      <p>
+        <strong>Ganarle a la inflación</strong> es el desafío real: si la inflación mensual es 2% y el plazo fijo te paga 3%, ganás 1% real. Para cálculo de tasa real usá la <a href="/calculadora-interes-compuesto-rendimiento">calculadora de interés compuesto</a> o la <a href="/calculadora-inflacion-ipc-argentina">calculadora de inflación</a>. Para un análisis personal, la <a href="/calculadora-plazo-fijo">calculadora de plazo fijo</a> te da más detalle (TEA, interés diario, mensual equivalente).
+      </p>
+      <h2>¿Qué banco elegir?</h2>
+      <p>
+        La diferencia de TNA entre el banco que más paga y el que menos paga suele ser de <strong>4-5 puntos</strong>. En $1.000.000 a 30 días eso representa entre $3.000 y $4.500 de diferencia. Si ya tenés cuenta en un banco conviene comparar antes de mover plata — muchas veces no vale la pena el trámite por pocos pesos. Ciertos bancos ofrecen <strong>TNA preferencial</strong> para clientes con sueldo depositado, jubilados o montos altos (+$10M).
+      </p>
+    </section>
+
+    <div class="compare-cta">
+      <h3>¿Querés más detalle de un banco en particular?</h3>
+      <p>Usá la <a href="/calculadora-plazo-fijo">calculadora de plazo fijo</a> individual para ver TEA, interés diario y mensual equivalente.</p>
+    </div>
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script>
+  const capitalEl = document.getElementById('capital') as HTMLInputElement;
+  const diasEl = document.getElementById('dias') as HTMLInputElement;
+  const rows = Array.from(document.querySelectorAll<HTMLElement>('.tr.body'));
+  const tableContainer = document.querySelector<HTMLElement>('.results-table')!;
+
+  function parseThousands(v: string): number {
+    return Number(v.replace(/\./g, '').replace(/,/g, '.'));
+  }
+  function formatThousands(v: string): string {
+    const clean = v.replace(/[^\d]/g, '');
+    if (!clean) return '';
+    return new Intl.NumberFormat('es-AR').format(Number(clean));
+  }
+  function fmtAr(n: number): string {
+    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+  }
+
+  // Format capital while typing
+  capitalEl.addEventListener('input', () => {
+    const cursor = capitalEl.selectionStart || 0;
+    const prev = capitalEl.value.length;
+    capitalEl.value = formatThousands(capitalEl.value);
+    const diff = capitalEl.value.length - prev;
+    capitalEl.setSelectionRange(cursor + diff, cursor + diff);
+    recalc();
+  });
+  diasEl.addEventListener('input', recalc);
+  capitalEl.value = formatThousands(capitalEl.value);
+
+  function recalc() {
+    const capital = parseThousands(capitalEl.value);
+    const dias = Number(diasEl.value);
+    if (!capital || !dias) return;
+
+    const results = rows.map((row) => {
+      const tna = Number(row.dataset.tna);
+      const interes = capital * (tna / 100) * (dias / 365);
+      const total = capital + interes;
+      const rend = (interes / capital) * 100;
+      return { row, tna, interes, total, rend };
+    });
+
+    // Ordenar por rendimiento descendente y reordenar DOM
+    results.sort((a, b) => b.interes - a.interes);
+    results.forEach((r) => tableContainer.appendChild(r.row));
+
+    results.forEach((r, idx) => {
+      r.row.querySelector('[data-interes]')!.textContent = fmtAr(Math.round(r.interes));
+      r.row.querySelector('[data-total]')!.textContent = fmtAr(Math.round(r.total));
+      r.row.querySelector('[data-rendimiento]')!.textContent = r.rend.toFixed(2) + '%';
+      r.row.classList.toggle('winner', idx === 0);
+    });
+  }
+
+  recalc();
+</script>
+
+<style>
+  .compare-page { max-width: 960px; margin: 0 auto; padding: 0 0 3rem; }
+  .breadcrumbs { font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .breadcrumbs a { color: var(--text-muted); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+  .breadcrumbs .sep { color: var(--border-strong); }
+
+  h1 { margin-bottom: 0.75rem; }
+  .lead { font-size: 1.0625rem; color: var(--text-muted); margin-bottom: 2rem; max-width: 720px; }
+
+  .compare-controls {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+  .control { display: flex; flex-direction: column; gap: 0.4375rem; }
+  .control label { font-weight: 500; font-size: 0.875rem; }
+
+  .input-wrap {
+    display: flex;
+    align-items: stretch;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .input-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .input-wrap input {
+    flex: 1; padding: 0.6875rem 0.875rem; background: transparent; border: none; outline: none;
+    font-size: 0.9375rem; font-feature-settings: 'tnum'; color: var(--text);
+  }
+  .prefix, .suffix {
+    padding: 0 0.75rem; background: var(--bg-muted); color: var(--text-subtle);
+    font-size: 0.875rem; font-weight: 500; display: flex; align-items: center;
+  }
+  .prefix { border-right: 1px solid var(--border); }
+  .suffix { border-left: 1px solid var(--border); }
+
+  .results-table {
+    display: grid;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg-card);
+    box-shadow: var(--shadow);
+    margin-bottom: 1.25rem;
+  }
+  .tr {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr 1.5fr 1fr;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1rem;
+    font-size: 0.9375rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .tr:last-child { border-bottom: none; }
+  .tr.head {
+    background: var(--bg-soft);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .tr.body { transition: background 0.2s; font-feature-settings: 'tnum'; }
+  .tr.body:hover { background: var(--bg-soft); }
+  .tr.body.winner {
+    background: var(--success-soft);
+    font-weight: 600;
+  }
+  .tr.body.winner .total { color: var(--success); }
+  .tr.body.winner::before { content: '\1f3c6'; margin-right: 0.25rem; }
+
+  .bank-name { display: flex; align-items: center; gap: 0.5rem; font-weight: 500; }
+  .bank-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .tna { font-weight: 600; color: var(--accent-strong); }
+  .total { font-weight: 600; }
+
+  .compare-note {
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    padding: 0.875rem 1rem;
+    background: var(--bg-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    margin-bottom: 2rem;
+  }
+
+  .compare-extra {
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .compare-extra h2 { margin-top: 1.5rem; font-size: 1.375rem; }
+  .compare-extra h2:first-child { margin-top: 0; }
+  .compare-extra p { margin-bottom: 0.875rem; color: var(--text-muted); }
+  .compare-extra code {
+    background: var(--bg-soft);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+  }
+
+  .compare-cta {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-lg);
+    text-align: center;
+  }
+  .compare-cta h3 { color: var(--accent-strong); margin-bottom: 0.5rem; }
+
+  @media (max-width: 640px) {
+    .compare-controls { grid-template-columns: 1fr; padding: 1rem; }
+    .tr { grid-template-columns: 1.5fr 0.7fr 1fr 1fr 0.8fr; font-size: 0.8125rem; padding: 0.625rem 0.5rem; gap: 0.375rem; }
+    .tr.head { font-size: 0.6875rem; }
+  }
+</style>

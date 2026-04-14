@@ -37,6 +37,8 @@ export const GET: APIRoute = () => {
     // Top-tier
     { loc: `${site}/`, priority: '1.0', changefreq: 'daily', lastmod: buildDate },
     { loc: `${site}/buscar`, priority: '0.7', changefreq: 'monthly', lastmod: buildDate },
+    { loc: `${site}/comparador-plazo-fijo`, priority: '0.85', changefreq: 'daily', lastmod: buildDate },
+    { loc: `${site}/valores-bcra`, priority: '0.85', changefreq: 'daily', lastmod: buildDate },
 
     // Categorías
     ...cats.map((cat) => ({

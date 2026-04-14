@@ -16,6 +16,17 @@ export interface Field {
   format?: 'thousands';
 }
 
+export interface Preset {
+  label: string;
+  values: Record<string, string | number>;
+  note?: string;
+}
+
+export interface PresetsGroup {
+  title?: string;
+  items: Preset[];
+}
+
 export interface CalcConfig {
   slug: string;
   title: string;
@@ -25,6 +36,7 @@ export interface CalcConfig {
   icon: string;
   fields: Field[];
   formulaId: string;
+  presets?: PresetsGroup;
   outputs: {
     id: string;
     label: string;
@@ -57,6 +69,24 @@ const disclaimer = disclaimers[config.slug];
 ---
 
 <div class="calc-container" data-slug={config.slug} data-formula={config.formulaId}>
+  {config.presets && config.presets.items.length > 0 && (
+    <div class="presets">
+      {config.presets.title && <span class="presets-title">{config.presets.title}</span>}
+      <div class="presets-list">
+        {config.presets.items.map((p) => (
+          <button
+            type="button"
+            class="preset-btn"
+            data-preset={JSON.stringify(p.values)}
+            title={p.note}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+
   <form id={`form-${config.slug}`} class="calc-form" novalidate>
     <div class="fields-grid">
       {config.fields.map((field) => (
@@ -162,9 +192,17 @@ const disclaimer = disclaimers[config.slug];
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         WhatsApp
       </button>
-      <button type="button" class="btn-share" data-action="copy-link">
+      <button type="button" class="btn-share" data-action="copy-link" title="Copia un link que, al abrirlo, precarga los datos y vuelve a calcular">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        <span data-copy-link-label>Copiar link</span>
+        <span data-copy-link-label>Copiar link con datos</span>
+      </button>
+      <button type="button" class="btn-share" data-action="print" title="Abre el diálogo de imprimir (podés guardarlo como PDF)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        PDF
+      </button>
+      <button type="button" class="btn-share" data-action="embed" title="Cop\u00ed el c\u00f3digo para embeber esta calc en tu sitio">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Embeber
       </button>
       <button type="button" class="btn-share" data-action="reset">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
@@ -187,6 +225,47 @@ const disclaimer = disclaimers[config.slug];
   }
 
   .calc-form { display: block; }
+
+  /* Presets (valores sugeridos tipo botones de bancos) */
+  .presets {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed var(--border);
+  }
+  .presets-title {
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    font-weight: 500;
+  }
+  .presets-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .preset-btn {
+    padding: 0.4375rem 0.875rem;
+    background: var(--bg-soft);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .preset-btn:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent-strong);
+  }
+  .preset-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
 
   .fields-grid {
     display: grid;
@@ -565,6 +644,110 @@ const disclaimer = disclaimers[config.slug];
   }
 </style>
 
+<style is:global>
+  /* Embed modal (global porque se inyecta en <body>) */
+  .hc-embed-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: hc-embed-fade 0.15s ease-out;
+  }
+  @keyframes hc-embed-fade { from { opacity: 0; } to { opacity: 1; } }
+  .hc-embed-modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    max-width: 640px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+  }
+  .hc-embed-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .hc-embed-head h3 {
+    font-size: 1.125rem;
+    margin: 0;
+    color: var(--text);
+  }
+  .hc-embed-close {
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    padding: 0 0.5rem;
+    line-height: 1;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  .hc-embed-close:hover { color: var(--text); }
+  .hc-embed-desc {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+  .hc-embed-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .hc-tab {
+    background: none;
+    border: none;
+    padding: 0.5rem 0.875rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .hc-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .hc-embed-code {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.875rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--text);
+    overflow-x: auto;
+    margin: 0 0 1rem 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .hc-embed-code code { font-family: inherit; }
+  .hc-embed-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .hc-embed-copy {
+    padding: 0.625rem 1.25rem !important;
+    width: auto !important;
+  }
+  .hc-embed-preview {
+    color: var(--accent);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+</style>
+
 <script>
   import { formulas } from '../lib/formulas/index';
 
@@ -601,6 +784,78 @@ const disclaimer = disclaimers[config.slug];
     return new Intl.NumberFormat('es-AR').format(Number(clean));
   }
 
+  function openEmbedModal(slug: string) {
+    const origin = 'https://hacecuentas.com';
+    const embedUrl = `${origin}/embed/${slug}`;
+    const iframeSnippet = `<iframe src="${embedUrl}" width="100%" height="560" style="border:1px solid #e2e8f0;border-radius:12px;max-width:720px" loading="lazy" title="Calculadora de Hac\u00e9 Cuentas"></iframe>`;
+    const scriptSnippet = `<div data-hc-embed="${slug}"></div>\n<script async src="${origin}/embed.js"><\/script>`;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'hc-embed-overlay';
+    overlay.innerHTML = `
+      <div class="hc-embed-modal" role="dialog" aria-modal="true" aria-labelledby="hc-embed-title">
+        <div class="hc-embed-head">
+          <h3 id="hc-embed-title">Embeber esta calculadora</h3>
+          <button type="button" class="hc-embed-close" aria-label="Cerrar">\u00d7</button>
+        </div>
+        <p class="hc-embed-desc">Cop\u00e1 uno de estos snippets y peg\u00e1 en tu sitio. Da c\u00e9ditos con backlink a hacecuentas.com \u2014 gracias por compartir.</p>
+        <div class="hc-embed-tabs">
+          <button type="button" class="hc-tab active" data-tab="iframe">iframe (simple)</button>
+          <button type="button" class="hc-tab" data-tab="script">Script (responsive)</button>
+        </div>
+        <pre class="hc-embed-code" data-pane="iframe"><code></code></pre>
+        <pre class="hc-embed-code" data-pane="script" hidden><code></code></pre>
+        <div class="hc-embed-actions">
+          <button type="button" class="btn-primary hc-embed-copy">Copiar c\u00f3digo</button>
+          <a href="${embedUrl}" target="_blank" rel="noopener" class="hc-embed-preview">Ver preview \u2192</a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const iframePane = overlay.querySelector<HTMLElement>('[data-pane="iframe"] code')!;
+    const scriptPane = overlay.querySelector<HTMLElement>('[data-pane="script"] code')!;
+    iframePane.textContent = iframeSnippet;
+    scriptPane.textContent = scriptSnippet;
+
+    const close = () => overlay.remove();
+    overlay.querySelector('.hc-embed-close')!.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); }
+    });
+
+    overlay.querySelectorAll<HTMLButtonElement>('.hc-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        overlay.querySelectorAll('.hc-tab').forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        const which = tab.dataset.tab;
+        overlay.querySelectorAll<HTMLElement>('[data-pane]').forEach((p) => {
+          p.hidden = p.dataset.pane !== which;
+        });
+      });
+    });
+
+    overlay.querySelector<HTMLButtonElement>('.hc-embed-copy')!.addEventListener('click', async (e) => {
+      const activeTab = overlay.querySelector<HTMLElement>('.hc-tab.active')!.dataset.tab;
+      const code = activeTab === 'iframe' ? iframeSnippet : scriptSnippet;
+      try {
+        await navigator.clipboard.writeText(code);
+        const btn = e.currentTarget as HTMLButtonElement;
+        const orig = btn.textContent;
+        btn.textContent = '\u00a1Copiado!';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+        if (typeof (window as any).gtag === 'function') {
+          (window as any).gtag('event', 'embed_copy', { calc_slug: slug, type: activeTab });
+        }
+      } catch {}
+    });
+
+    if (typeof (window as any).gtag === 'function') {
+      (window as any).gtag('event', 'embed_open', { calc_slug: slug });
+    }
+  }
+
   document.querySelectorAll<HTMLElement>('.calc-container').forEach((container) => {
     const slug = container.dataset.slug!;
     const formulaId = container.dataset.formula!;
@@ -626,6 +881,29 @@ const disclaimer = disclaimers[config.slug];
         inp.setSelectionRange(cursor + diff, cursor + diff);
       });
     });
+
+    // Precargar fields desde querystring (viralización: link con datos precargados)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.size > 0) {
+      let filled = 0;
+      form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[name]').forEach((el) => {
+        const val = urlParams.get(el.name);
+        if (val === null) return;
+        if ((el as HTMLInputElement).dataset?.format === 'thousands') {
+          el.value = formatThousands(val);
+        } else {
+          el.value = val;
+        }
+        filled++;
+      });
+      // Auto-calcular si precargamos y todos los campos required están llenos
+      // (no usamos checkValidity porque step=0.1 puede rechazar valores enteros)
+      const requiredEls = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[required]'));
+      const allRequiredFilled = requiredEls.every((el) => el.value.trim() !== '');
+      if (filled > 0 && allRequiredFilled) {
+        setTimeout(() => form.requestSubmit(), 120);
+      }
+    }
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -681,6 +959,30 @@ const disclaimer = disclaimers[config.slug];
       }, 180);
     });
 
+    // Preset buttons: click precarga y calcula
+    container.querySelectorAll<HTMLButtonElement>('.preset-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        try {
+          const values = JSON.parse(btn.dataset.preset || '{}') as Record<string, string | number>;
+          Object.entries(values).forEach(([name, val]) => {
+            const el = form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`);
+            if (!el) return;
+            if ((el as HTMLInputElement).dataset?.format === 'thousands') {
+              el.value = formatThousands(String(val));
+            } else {
+              el.value = String(val);
+            }
+          });
+          container.querySelectorAll('.preset-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          if (typeof (window as any).gtag === 'function') {
+            (window as any).gtag('event', 'preset_click', { calc_slug: slug, preset: btn.textContent?.trim() });
+          }
+          form.requestSubmit();
+        } catch {}
+      });
+    });
+
     // Action buttons
     container.querySelectorAll<HTMLButtonElement>('.btn-share').forEach((btn) => {
       btn.addEventListener('click', async () => {
@@ -713,17 +1015,40 @@ const disclaimer = disclaimers[config.slug];
             }, 1500);
           } catch {}
         } else if (action === 'copy-link') {
+          // Armar link con fields actuales como querystring (viralización)
+          const data = new FormData(form);
+          const params = new URLSearchParams();
+          data.forEach((v, k) => {
+            if (!v) return;
+            const el = form.querySelector<HTMLInputElement>(`[name="${k}"]`);
+            if (el?.dataset.format === 'thousands') {
+              params.set(k, String(parseThousands(v as string)));
+            } else {
+              params.set(k, String(v));
+            }
+          });
+          const shareUrl = `${window.location.origin}${window.location.pathname}${params.size > 0 ? '?' + params.toString() : ''}`;
           try {
-            await navigator.clipboard.writeText(url);
+            await navigator.clipboard.writeText(shareUrl);
             const label = btn.querySelector<HTMLElement>('[data-copy-link-label]')!;
             const original = label.textContent;
             label.textContent = '¡Copiado!';
             btn.classList.add('copied');
+            if (typeof (window as any).gtag === 'function') {
+              (window as any).gtag('event', 'share_link', { calc_slug: slug });
+            }
             setTimeout(() => {
               label.textContent = original;
               btn.classList.remove('copied');
             }, 1500);
           } catch {}
+        } else if (action === 'print') {
+          if (typeof (window as any).gtag === 'function') {
+            (window as any).gtag('event', 'print_pdf', { calc_slug: slug });
+          }
+          window.print();
+        } else if (action === 'embed') {
+          openEmbedModal(slug);
         } else if (action === 'reset') {
           form.reset();
           results.hidden = true;
