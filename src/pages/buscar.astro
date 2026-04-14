@@ -1,0 +1,266 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const calcs = Object.values(calcModules).map((m: any) => m.default || m);
+
+const categoryLabels: Record<string, string> = {
+  finanzas: 'Finanzas',
+  salud: 'Salud',
+  vida: 'Vida cotidiana',
+  negocio: 'Negocios',
+};
+---
+
+<Layout
+  title="Buscar calculadoras | Hacé Cuentas"
+  description="Buscá entre todas las calculadoras online gratuitas de Hacé Cuentas."
+>
+  <Header slot="header" />
+
+  <nav class="breadcrumbs" aria-label="Ruta de navegación">
+    <a href="/">Inicio</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <span class="current">Buscar</span>
+  </nav>
+
+  <header class="page-header">
+    <h1>Buscar calculadora</h1>
+    <p>Escribí lo que buscás: sueldo, préstamo, IMC, embarazo, lo que sea.</p>
+  </header>
+
+  <div class="search-wrap">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input id="search-input" type="search" placeholder="Buscar..." autocomplete="off" autofocus />
+    <button id="search-clear" type="button" aria-label="Limpiar búsqueda" hidden>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="chip active" data-cat="all">Todas ({calcs.length})</button>
+    {Object.entries(categoryLabels).map(([cat, label]) => {
+      const count = calcs.filter((c: any) => c.category === cat).length;
+      return count > 0 ? <button class="chip" data-cat={cat}>{label} ({count})</button> : null;
+    })}
+  </div>
+
+  <div class="results-count" id="results-count" aria-live="polite"></div>
+
+  <div class="grid" id="grid">
+    {calcs.map((c: any) => (
+      <a
+        href={`/${c.slug}`}
+        class="card"
+        data-title={c.h1}
+        data-desc={c.description}
+        data-slug={c.slug}
+        data-cat={c.category}
+      >
+        <div class="card-icon">{c.icon}</div>
+        <div class="card-body">
+          <div class="card-cat">{categoryLabels[c.category] || c.category}</div>
+          <div class="card-title">{c.h1}</div>
+          <div class="card-desc">{c.description}</div>
+        </div>
+      </a>
+    ))}
+  </div>
+
+  <div class="empty" id="empty" hidden>
+    <div class="empty-icon">🔍</div>
+    <h3>Sin resultados</h3>
+    <p>No encontramos calculadoras que coincidan con tu búsqueda.</p>
+  </div>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .breadcrumbs {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    margin-bottom: 1.25rem;
+  }
+  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumbs a:hover { color: var(--accent); }
+  .breadcrumbs .sep { color: var(--border-strong); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+
+  .page-header { margin-bottom: 1.5rem; }
+  .page-header h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); margin-bottom: 0.5rem; }
+  .page-header p { color: var(--text-muted); margin: 0; }
+
+  .search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.875rem 1.125rem;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    color: var(--text-subtle);
+    transition: all 0.15s;
+  }
+  .search-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .search-wrap input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1rem;
+    color: var(--text);
+  }
+  #search-clear {
+    background: transparent;
+    border: none;
+    color: var(--text-subtle);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: var(--radius-sm);
+  }
+  #search-clear:hover { color: var(--text); background: var(--bg-muted); }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .chip {
+    padding: 0.4375rem 0.875rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .chip:hover { border-color: var(--border-strong); color: var(--text); }
+  .chip.active { background: var(--accent); color: #ffffff; border-color: var(--accent); }
+
+  .results-count {
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    margin-bottom: 1rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 0.875rem;
+  }
+
+  .card {
+    display: flex;
+    gap: 0.875rem;
+    padding: 1.125rem 1.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .card[hidden] { display: none; }
+  .card-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+  }
+  .card-body { flex: 1; min-width: 0; }
+  .card-cat {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.25rem;
+  }
+  .card-title { font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.25rem; line-height: 1.35; }
+  .card-desc { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.5; }
+
+  .empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+  }
+  .empty-icon { font-size: 3rem; margin-bottom: 0.5rem; opacity: 0.6; }
+  .empty h3 { margin-bottom: 0.5rem; }
+</style>
+
+<script>
+  const input = document.getElementById('search-input') as HTMLInputElement;
+  const clear = document.getElementById('search-clear') as HTMLButtonElement;
+  const grid = document.getElementById('grid')!;
+  const empty = document.getElementById('empty')!;
+  const count = document.getElementById('results-count')!;
+  const filters = document.getElementById('filters')!;
+  const cards = Array.from(grid.querySelectorAll<HTMLElement>('.card'));
+
+  let activeCat = 'all';
+
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  function apply() {
+    const q = norm(input.value.trim());
+    let visible = 0;
+    cards.forEach((card) => {
+      const title = card.dataset.title || '';
+      const desc = card.dataset.desc || '';
+      const slug = card.dataset.slug || '';
+      const cat = card.dataset.cat || '';
+      const matchText = !q || norm(`${title} ${desc} ${slug}`).includes(q);
+      const matchCat = activeCat === 'all' || cat === activeCat;
+      const show = matchText && matchCat;
+      card.hidden = !show;
+      if (show) visible++;
+    });
+    empty.hidden = visible > 0;
+    count.textContent = q || activeCat !== 'all'
+      ? `${visible} resultado${visible === 1 ? '' : 's'}`
+      : '';
+    clear.hidden = !input.value;
+  }
+
+  input.addEventListener('input', apply);
+  clear.addEventListener('click', () => { input.value = ''; input.focus(); apply(); });
+
+  filters.querySelectorAll<HTMLButtonElement>('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      filters.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeCat = chip.dataset.cat || 'all';
+      apply();
+    });
+  });
+
+  // Leer ?q= de la URL
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('q');
+  if (q) { input.value = q; apply(); }
+</script>

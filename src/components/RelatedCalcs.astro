@@ -1,0 +1,130 @@
+---
+export interface Props {
+  currentSlug: string;
+  category: string;
+  limit?: number;
+}
+
+const { currentSlug, category, limit = 4 } = Astro.props;
+
+const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
+
+// Priorizar misma categoría, después otras populares
+const sameCategory = allCalcs.filter((c) => c.category === category && c.slug !== currentSlug);
+const others = allCalcs.filter((c) => c.category !== category);
+const related = [...sameCategory, ...others].slice(0, limit);
+
+const categoryLabels: Record<string, string> = {
+  finanzas: 'Finanzas',
+  salud: 'Salud',
+  vida: 'Vida cotidiana',
+  negocio: 'Negocios',
+};
+---
+
+{related.length > 0 && (
+  <section class="related">
+    <div class="related-header">
+      <h2>Calculadoras relacionadas</h2>
+      <a href="/" class="see-all">Ver todas →</a>
+    </div>
+    <div class="related-grid">
+      {related.map((c: any) => (
+        <a href={`/${c.slug}`} class="related-card">
+          <div class="related-icon">{c.icon}</div>
+          <div class="related-body">
+            <div class="related-cat">{categoryLabels[c.category] || c.category}</div>
+            <div class="related-title">{c.h1}</div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+)}
+
+<style>
+  .related {
+    margin-top: 3rem;
+  }
+
+  .related-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+  }
+
+  .related h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .see-all {
+    font-size: 0.875rem;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .see-all:hover { text-decoration: underline; }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.625rem;
+  }
+
+  .related-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+
+  .related-card:hover {
+    border-color: var(--accent);
+    background: var(--bg);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .related-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+  }
+
+  .related-body { flex: 1; min-width: 0; }
+
+  .related-cat {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.125rem;
+  }
+
+  .related-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text);
+  }
+</style>

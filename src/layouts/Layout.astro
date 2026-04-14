@@ -18,6 +18,35 @@ const {
 const siteUrl = 'https://hacecuentas.com';
 const fullCanonical = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${Astro.url.pathname}`;
 const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
+
+// Schema.org WebSite + Organization global (siempre presente)
+const globalSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${siteUrl}/#organization`,
+      name: 'Hacé Cuentas',
+      url: siteUrl,
+      logo: `${siteUrl}/favicon.svg`,
+      description: 'Calculadoras online gratuitas para Argentina y Latinoamérica.',
+      sameAs: [],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${siteUrl}/#website`,
+      url: siteUrl,
+      name: 'Hacé Cuentas',
+      publisher: { '@id': `${siteUrl}/#organization` },
+      inLanguage: 'es-AR',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${siteUrl}/buscar?q={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
+};
 ---
 
 <!doctype html>
@@ -25,8 +54,24 @@ const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Theme init: prevent FOUC leyendo localStorage antes del paint -->
+    <script is:inline>
+      (function() {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t === 'dark' || (t === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
 
     <title>{title}</title>
     <meta name="description" content={description} />
@@ -47,7 +92,9 @@ const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={fullImage} />
 
-    <!-- Schema.org -->
+    <!-- Schema.org global (Organization + WebSite) -->
+    <script type="application/ld+json" set:html={JSON.stringify(globalSchema)} />
+    <!-- Schema.org específico de página -->
     {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
 
     <!-- Fonts -->
@@ -120,6 +167,43 @@ const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
         /* Type */
         --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+      }
+
+      /* Dark mode — data-theme="dark" en <html> */
+      html[data-theme="dark"] {
+        --bg: #0f172a;
+        --bg-soft: #1e293b;
+        --bg-muted: #334155;
+        --bg-card: #1e293b;
+
+        --border: #334155;
+        --border-strong: #475569;
+
+        --text: #f1f5f9;
+        --text-muted: #cbd5e1;
+        --text-subtle: #94a3b8;
+
+        --accent: #60a5fa;
+        --accent-hover: #3b82f6;
+        --accent-soft: #1e3a8a33;
+        --accent-strong: #93c5fd;
+
+        --success: #4ade80;
+        --success-soft: #14532d33;
+        --danger: #f87171;
+        --danger-soft: #7f1d1d33;
+        --warning: #fbbf24;
+        --warning-soft: #78350f33;
+
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.25);
+        --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.35), 0 1px 2px -1px rgb(0 0 0 / 0.25);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.25);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+      }
+
+      html[data-theme="dark"] ::selection {
+        background: var(--accent-soft);
+        color: var(--accent-strong);
       }
 
       * {
@@ -221,6 +305,45 @@ const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
         max-width: 1120px;
         margin: 0 auto;
         padding: 0 1.25rem;
+      }
+
+      /* Respect prefers-reduced-motion */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+        html { scroll-behavior: auto; }
+      }
+
+      /* Print — optimizar para cuando imprimen resultados */
+      @media print {
+        :root {
+          --bg: #fff;
+          --bg-soft: #fff;
+          --bg-card: #fff;
+          --bg-muted: #fff;
+          --border: #ccc;
+          --text: #000;
+          --text-muted: #333;
+          --accent: #000;
+          --accent-soft: #eee;
+          --shadow-sm: none;
+          --shadow: none;
+          --shadow-md: none;
+          --shadow-lg: none;
+        }
+        body { font-size: 12pt; color: #000; background: #fff; }
+        main { max-width: 100%; padding: 0.5cm; }
+        header, footer, .skip-link, nav, button, .share, .cta-back,
+        .scroll-top, .scroll-progress, .related, .hero-featured, .sources,
+        .faq details:not([open]) { display: none !important; }
+        a, a:visited { color: #000; text-decoration: underline; }
+        .calc-container { border: 1px solid #000; box-shadow: none; page-break-inside: avoid; }
+        .result.primary { background: #f5f5f5 !important; color: #000 !important; border: 2px solid #000; }
+        h1, h2, h3 { page-break-after: avoid; }
       }
     </style>
   </body>

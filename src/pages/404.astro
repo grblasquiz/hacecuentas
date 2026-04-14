@@ -1,0 +1,225 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const calcs = Object.values(calcModules).map((m: any) => m.default || m);
+
+const popularSlugs = [
+  'sueldo-en-mano-argentina',
+  'calculadora-aguinaldo-sac',
+  'calculadora-imc',
+  'calculadora-cuota-prestamo',
+  'calculadora-porcentajes',
+  'calculadora-interes-compuesto',
+];
+const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
+---
+
+<Layout
+  title="Página no encontrada (404) | Hacé Cuentas"
+  description="La página que buscás no existe. Explorá nuestras calculadoras online gratuitas."
+>
+  <Header slot="header" />
+
+  <section class="not-found">
+    <div class="glyph">
+      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </div>
+    <div class="code">404</div>
+    <h1>No encontramos esta página</h1>
+    <p class="lead">
+      El link que seguiste puede estar roto, o la calculadora cambió de nombre.
+      Buscá abajo o andá al inicio.
+    </p>
+
+    <div class="search-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input id="nf-search" type="search" placeholder="Buscar calculadora (ej: sueldo, IMC, monotributo)" autocomplete="off" />
+    </div>
+
+    <div id="nf-results" class="results"></div>
+
+    <h2>Calculadoras populares</h2>
+    <div class="grid">
+      {popular.map((c: any) => (
+        <a href={`/${c.slug}`} class="card">
+          <span class="card-icon">{c.icon}</span>
+          <span class="card-title">{c.h1}</span>
+        </a>
+      ))}
+    </div>
+
+    <div class="actions">
+      <a href="/" class="btn-primary">← Volver al inicio</a>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .not-found {
+    max-width: 680px;
+    margin: 2rem auto;
+    text-align: center;
+  }
+
+  .glyph {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+  }
+
+  .code {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .not-found h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin-bottom: 0.75rem;
+  }
+
+  .lead {
+    color: var(--text-muted);
+    font-size: 1.0625rem;
+    max-width: 480px;
+    margin: 0 auto 2rem;
+  }
+
+  .search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.875rem 1.125rem;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    max-width: 500px;
+    margin: 0 auto 1rem;
+    color: var(--text-subtle);
+    transition: border-color 0.15s;
+  }
+  .search-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .search-wrap input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.9375rem;
+    color: var(--text);
+  }
+
+  .results {
+    max-width: 500px;
+    margin: 0 auto 2.5rem;
+    display: grid;
+    gap: 0.375rem;
+  }
+
+  .results:empty { display: none; }
+
+  .results a {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text);
+    font-size: 0.9375rem;
+    transition: all 0.15s;
+    text-align: left;
+  }
+  .results a:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+
+  .not-found h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 2rem 0 1rem;
+    color: var(--text);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.625rem;
+    margin-bottom: 2rem;
+  }
+
+  .card {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text);
+    font-size: 0.875rem;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .card:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .card-icon { font-size: 1.125rem; }
+  .card-title { font-weight: 500; line-height: 1.3; }
+
+  .actions { margin-top: 2rem; }
+  .btn-primary {
+    display: inline-flex;
+    padding: 0.75rem 1.5rem;
+    background: var(--accent);
+    color: #ffffff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+</style>
+
+<script define:vars={{ calcs }}>
+  const input = document.getElementById('nf-search');
+  const results = document.getElementById('nf-results');
+  if (input && results) {
+    const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    input.addEventListener('input', (e) => {
+      const q = norm(e.target.value.trim());
+      if (!q || q.length < 2) { results.innerHTML = ''; return; }
+      const matches = calcs
+        .filter((c) => norm(c.h1 + ' ' + c.description + ' ' + c.slug).includes(q))
+        .slice(0, 6);
+      results.innerHTML = matches.map((c) =>
+        `<a href="/${c.slug}"><span>${c.icon}</span><span>${c.h1}</span></a>`
+      ).join('');
+    });
+  }
+</script>

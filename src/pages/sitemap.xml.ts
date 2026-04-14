@@ -7,9 +7,45 @@ export const GET: APIRoute = () => {
   const site = 'https://hacecuentas.com';
   const now = new Date().toISOString().split('T')[0];
 
+  // Categorías únicas
+  const cats = [...new Set(calcs.map((c) => c.category))];
+
+  // URLs con prioridades diferenciadas
   const urls = [
-    { loc: `${site}/`, priority: '1.0' },
-    ...calcs.map((c) => ({ loc: `${site}/${c.slug}`, priority: '0.8' })),
+    // Top-tier
+    { loc: `${site}/`, priority: '1.0', changefreq: 'daily' },
+    { loc: `${site}/buscar`, priority: '0.7', changefreq: 'monthly' },
+
+    // Categorías
+    ...cats.map((cat) => ({
+      loc: `${site}/categoria/${cat}`,
+      priority: '0.8',
+      changefreq: 'weekly',
+    })),
+
+    // Calculadoras — prioridad según popularidad
+    ...calcs.map((c: any) => {
+      const topSlugs = [
+        'sueldo-en-mano-argentina',
+        'calculadora-aguinaldo-sac',
+        'calculadora-imc',
+        'calculadora-cuota-prestamo',
+        'calculadora-interes-compuesto',
+        'calculadora-monotributo-2026',
+      ];
+      const isTop = topSlugs.includes(c.slug);
+      return {
+        loc: `${site}/${c.slug}`,
+        priority: isTop ? '0.9' : '0.7',
+        changefreq: 'weekly',
+      };
+    }),
+
+    // Legales
+    { loc: `${site}/sobre-nosotros`, priority: '0.4', changefreq: 'yearly' },
+    { loc: `${site}/privacidad`, priority: '0.3', changefreq: 'yearly' },
+    { loc: `${site}/terminos`, priority: '0.3', changefreq: 'yearly' },
+    { loc: `${site}/contacto`, priority: '0.4', changefreq: 'yearly' },
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -17,12 +53,12 @@ export const GET: APIRoute = () => {
 ${urls.map((u) => `  <url>
     <loc>${u.loc}</loc>
     <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>${u.changefreq}</changefreq>
     <priority>${u.priority}</priority>
   </url>`).join('\n')}
 </urlset>`;
 
   return new Response(xml, {
-    headers: { 'Content-Type': 'application/xml' },
+    headers: { 'Content-Type': 'application/xml; charset=utf-8' },
   });
 };
