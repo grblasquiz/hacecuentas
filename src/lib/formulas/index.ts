@@ -16,6 +16,7 @@ import { interesCompuesto } from './interes-compuesto';
 import { indemnizacion } from './indemnizacion';
 import { horasExtra } from './horas-extra';
 import { gananciasRG830 } from './ganancias-rg830';
+import { gananciasSueldo } from './ganancias-sueldo';
 import { plazoFijo } from './plazo-fijo';
 import { marketingCtr } from './marketing-ctr';
 import { marketingCpc } from './marketing-cpc';
@@ -47,6 +48,7 @@ export const formulas = {
   indemnizacion,
   'horas-extra': horasExtra,
   'ganancias-rg830': gananciasRG830,
+  'ganancias-sueldo': gananciasSueldo,
   'plazo-fijo': plazoFijo,
   'marketing-ctr': marketingCtr,
   'marketing-cpc': marketingCpc,

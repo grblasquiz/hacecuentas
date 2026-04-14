@@ -35,6 +35,7 @@ export const GET: APIRoute = () => {
         'calculadora-monotributo-2026',
         'calculadora-plazo-fijo',
         'calculadora-retencion-ganancias-rg-830',
+        'calculadora-impuesto-ganancias-sueldo',
         'calculadora-roas-retorno-inversion-publicitaria',
         'calculadora-descenso-futbol-argentino-promedios',
       ];
