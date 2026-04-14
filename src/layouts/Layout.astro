@@ -1,0 +1,134 @@
+---
+export interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  schema?: object;
+  image?: string;
+}
+
+const {
+  title,
+  description,
+  canonical,
+  schema,
+  image = '/og-default.png',
+} = Astro.props;
+
+const siteUrl = 'https://hacecuentas.com';
+const fullCanonical = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${Astro.url.pathname}`;
+const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
+---
+
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={fullCanonical} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={fullCanonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={fullImage} />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:site_name" content="Hacé Cuentas" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={fullImage} />
+
+    <!-- Schema.org -->
+    {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- GA4 — reemplazar GA_MEASUREMENT_ID cuando configures -->
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script> -->
+  </head>
+  <body>
+    <slot name="header" />
+    <main>
+      <slot />
+    </main>
+    <slot name="footer" />
+
+    <style is:global>
+      :root {
+        --bg: #0f172a;
+        --bg-card: #1e293b;
+        --border: #334155;
+        --text: #f1f5f9;
+        --text-muted: #94a3b8;
+        --accent: #22d3ee;
+        --accent-hover: #06b6d4;
+        --success: #10b981;
+        --danger: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+
+      h1, h2, h3 {
+        line-height: 1.2;
+        font-weight: 700;
+      }
+
+      h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); margin-bottom: 0.5rem; }
+      h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); margin: 1.5rem 0 0.75rem; }
+      h3 { font-size: 1.125rem; margin: 1rem 0 0.5rem; }
+
+      p { margin-bottom: 1rem; color: var(--text-muted); }
+
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+      }
+
+      input, select {
+        font-family: inherit;
+        font-size: 1rem;
+      }
+    </style>
+  </body>
+</html>

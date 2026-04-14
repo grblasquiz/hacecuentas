@@ -1,0 +1,223 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Calculator from '../components/Calculator.astro';
+
+export async function getStaticPaths() {
+  const calcs = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+  return Object.values(calcs).map((mod: any) => {
+    const c = mod.default || mod;
+    return {
+      params: { slug: c.slug },
+      props: { calc: c },
+    };
+  });
+}
+
+const { calc } = Astro.props;
+
+// Simple markdown → HTML (básico, suficiente para SEO)
+function md(text: string): string {
+  return text
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
+    .replace(/^\- (.+)$/gm, '<li>$1</li>')
+    .replace(/^\| (.+) \|$/gm, (match) => {
+      const cells = match.slice(2, -2).split(' | ');
+      return '<tr>' + cells.map((c) => `<td>${c}</td>`).join('') + '</tr>';
+    })
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+}
+
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: calc.h1,
+  description: calc.description,
+  step: calc.fields.map((f: any, i: number) => ({
+    '@type': 'HowToStep',
+    position: i + 1,
+    name: f.label,
+    text: f.help || `Ingresá ${f.label.toLowerCase()}`,
+  })),
+};
+
+const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: calc.faq.map((f: any) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: f.a,
+    },
+  })),
+} : null;
+
+const schema = schemaFAQ
+  ? { '@context': 'https://schema.org', '@graph': [schemaHowTo, schemaFAQ] }
+  : schemaHowTo;
+---
+
+<Layout
+  title={calc.title}
+  description={calc.description}
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <article>
+    <div class="breadcrumbs">
+      <a href="/">Inicio</a> / <a href={`/categoria/${calc.category}`}>{calc.category}</a> / <span>{calc.h1}</span>
+    </div>
+
+    <header class="calc-header">
+      <div class="icon">{calc.icon}</div>
+      <h1>{calc.h1}</h1>
+      <p class="intro">{calc.intro}</p>
+    </header>
+
+    <Calculator config={calc} />
+
+    {calc.explanation && (
+      <section class="explanation">
+        <Fragment set:html={`<p>${md(calc.explanation)}</p>`} />
+      </section>
+    )}
+
+    {calc.faq && calc.faq.length > 0 && (
+      <section class="faq">
+        <h2>Preguntas frecuentes</h2>
+        {calc.faq.map((f: any) => (
+          <details>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </section>
+    )}
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .breadcrumbs {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .breadcrumbs a {
+    color: var(--text-muted);
+  }
+
+  .breadcrumbs a:hover {
+    color: var(--accent);
+  }
+
+  .calc-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .calc-header .icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .intro {
+    max-width: 700px;
+    margin: 1rem auto 0;
+  }
+
+  .explanation {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  .explanation :global(h2) {
+    margin-top: 0;
+    color: var(--text);
+  }
+
+  .explanation :global(h3) {
+    margin-top: 1.5rem;
+    color: var(--text);
+  }
+
+  .explanation :global(p) {
+    color: var(--text-muted);
+  }
+
+  .explanation :global(strong) {
+    color: var(--text);
+  }
+
+  .explanation :global(code) {
+    background: rgba(148, 163, 184, 0.15);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 0.875em;
+    color: var(--accent);
+  }
+
+  .explanation :global(ul), .explanation :global(ol) {
+    margin-left: 1.5rem;
+  }
+
+  .explanation :global(li) {
+    margin-bottom: 0.5rem;
+    color: var(--text-muted);
+  }
+
+  .explanation :global(table) {
+    border-collapse: collapse;
+    margin: 1rem 0;
+    width: 100%;
+  }
+
+  .explanation :global(td) {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .faq {
+    margin-top: 3rem;
+  }
+
+  .faq details {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .faq summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .faq details[open] summary {
+    margin-bottom: 0.75rem;
+  }
+
+  .faq details p {
+    color: var(--text-muted);
+    margin-bottom: 0;
+  }
+</style>
