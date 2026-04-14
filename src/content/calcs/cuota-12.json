@@ -1,0 +1,28 @@
+{
+  "slug": "calculadora-12-cuotas-sin-interes",
+  "title": "12 Cuotas Sin Interés: Costo Real y CFT Implícito | Hacé Cuentas",
+  "h1": "¿Son realmente 12 cuotas sin interés?",
+  "description": "Calculá el CFT (Costo Financiero Total) oculto en las 12 cuotas. Compará contado vs financiado y descubrí la tasa efectiva mensual y anual.",
+  "category": "finanzas",
+  "icon": "💳",
+  "formulaId": "cuota-12",
+  "intro": "En Argentina, 'sin interés' muchas veces significa que el precio de lista ya tiene el interés adentro — y al contado tenés descuento. Comparamos los dos precios y te decimos qué tasa implícita te están cobrando.",
+  "fields": [
+    { "id": "precioContado", "label": "Precio al contado (o con descuento)", "type": "number", "prefix": "$", "placeholder": "500000", "format": "thousands", "min": 0, "step": 1000, "required": true },
+    { "id": "precio12Cuotas", "label": "Precio total en 12 cuotas", "type": "number", "prefix": "$", "placeholder": "600000", "format": "thousands", "min": 0, "step": 1000, "required": true, "help": "Si te muestran '12 de $50.000', poné $600.000." },
+    { "id": "cuotas", "label": "Cantidad de cuotas", "type": "number", "default": 12, "min": 1, "max": 60 }
+  ],
+  "outputs": [
+    { "id": "cuotaMensual", "label": "Cuota mensual", "format": "currency" },
+    { "id": "sobreprecio", "label": "Sobreprecio vs contado", "format": "currency", "primary": true },
+    { "id": "sobreprecioPorcentual", "label": "Sobreprecio %", "format": "percentage" },
+    { "id": "tasaMensualImplicita", "label": "Tasa mensual implícita", "format": "percentage" },
+    { "id": "cftAnual", "label": "CFT anual equivalente", "format": "percentage" },
+    { "id": "mensaje", "label": "Veredicto", "format": "text" }
+  ],
+  "explanation": "## Cómo se calcula el CFT implícito\n\nEl CFT (Costo Financiero Total) es la **TIR** del flujo de pagos. Si pagás $600.000 en 12 cuotas de $50.000 pero el contado vale $500.000, estás aceptando una tasa implícita.\n\n```\n500.000 = 50.000 × [1 − (1+i)^−12] / i\n```\n\nSe resuelve por iteración (Newton-Raphson o bisección). Si al contado salía lo mismo que la suma de cuotas, la tasa implícita es **0 %** y es genuinamente sin interés.\n\n### Cuándo conviene financiar\n\n1. **Sin sobreprecio + tu plata rinde**: pagá en cuotas e invertí la diferencia en plazo fijo.\n2. **Con sobreprecio pero menor que la inflación esperada**: igual podés ganarle.\n3. **Con sobreprecio mayor al rendimiento**: pagá al contado si podés.\n\n### Ejemplo clásico\n\nProducto de $500.000 al contado, $600.000 en 12. Sobreprecio 20 %, tasa mensual ≈ 2.92 %, **CFT ≈ 41 % anual**. Si tu plazo fijo paga menos, pagá al contado.",
+  "faq": [
+    { "q": "¿Qué pasa con Ahora 12 / 18?", "a": "Muchas veces el programa oficial es sin interés real, pero el comercio aumenta el precio de lista antes de aplicarlo. Compará siempre con el precio de otra sucursal o marketplace." },
+    { "q": "¿Por qué el CFT no es igual a la tasa mensual × 12?", "a": "Porque el capital se va amortizando con cada cuota. La TIR anualizada usa capitalización compuesta." }
+  ]
+}

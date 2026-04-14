@@ -1,0 +1,28 @@
+{
+  "slug": "calculadora-comision-venta-vendedor",
+  "title": "Calculadora de Comisión por Venta | Hacé Cuentas",
+  "h1": "Comisión de venta (vendedor / inmobiliaria / freelancer)",
+  "description": "Calculá la comisión por venta: porcentaje sobre bruto o neto, con o sin IVA. Sirve para vendedores, agentes inmobiliarios o freelancers.",
+  "category": "negocios",
+  "icon": "🤝",
+  "formulaId": "comision-venta",
+  "intro": "Cobrás 3 % de comisión sobre una venta de $1.000.000. ¿Es sobre el neto o el total con IVA? ¿Vos como monotributista cobrás en factura C, o sumás IVA? Resolvemos los casos típicos.",
+  "fields": [
+    { "id": "montoVenta", "label": "Monto de la venta", "type": "number", "prefix": "$", "placeholder": "1000000", "format": "thousands", "min": 0, "step": 1000, "required": true },
+    { "id": "porcentajeComision", "label": "Porcentaje de comisión (%)", "type": "number", "suffix": "%", "placeholder": "3", "min": 0, "step": 0.01, "required": true },
+    { "id": "baseImponible", "label": "La comisión se calcula sobre", "type": "select", "default": "bruto", "options": [{"value":"bruto","label":"Monto total (bruto, con IVA)"},{"value":"neto","label":"Monto neto (sin IVA)"}] },
+    { "id": "alicuotaIva", "label": "Alícuota IVA (%)", "type": "number", "default": 21, "suffix": "%", "min": 0, "max": 30, "step": 0.1 },
+    { "id": "aplicarIvaSobreComision", "label": "¿La comisión lleva IVA?", "type": "select", "default": "no", "options": [{"value":"si","label":"Sí (factura A/B con IVA 21 %)"},{"value":"no","label":"No (monotributo, factura C o neto)"}] }
+  ],
+  "outputs": [
+    { "id": "comisionNeta", "label": "Comisión neta", "format": "currency", "primary": true },
+    { "id": "ivaComision", "label": "IVA sobre comisión", "format": "currency" },
+    { "id": "comisionTotal", "label": "Comisión total a cobrar", "format": "currency" },
+    { "id": "porcentajeSobreVenta", "label": "% real sobre venta bruta", "format": "percentage" }
+  ],
+  "explanation": "## Comisión — bruto o neto, con o sin IVA\n\nDepende del acuerdo contractual y del régimen fiscal de cada parte.\n\n### Casos típicos\n\n1. **Inmobiliaria**: 3 % sobre valor de venta (bruto, inmueble está exento IVA).\n2. **Vendedor en relación de dependencia**: sobre neto (porque la empresa factura A).\n3. **Freelancer monotributista**: cobra en factura C, sin sumar IVA.\n4. **Freelancer inscripto**: cobra neto + IVA 21 % (factura A).\n\n### Fórmula\n\n```\nComisión = base × (porcentaje / 100)\nTotal = Comisión × (1 + IVA / 100)    ← si corresponde sumar IVA\n```\n\n### Ejemplo inmobiliaria\n\nVenta inmueble $120.000.000, comisión 3 % + IVA:\n\n```\nComisión = 120.000.000 × 0.03 = $3.600.000\nIVA = $3.600.000 × 0.21 = $756.000\nTotal = $4.356.000\n```",
+  "faq": [
+    { "q": "¿Qué es la Ley Martiller en inmuebles?", "a": "Ley 7.307 en PBA y 2.340 en CABA regulan las comisiones inmobiliarias. En CABA, la comisión máxima al comprador (no al vendedor) está topada en 4 % para residencial según la Ley 5.859." },
+    { "q": "¿Monotributista puede facturar comisión con IVA?", "a": "No. El monotributo integra IVA en la cuota mensual. Si facturás factura C, no discriminás IVA. Para sumar IVA tenés que ser responsable inscripto." }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "slug": "calculadora-tir-van-inversion",
+  "title": "Calculadora de TIR y VAN — Evaluación de Inversiones | Hacé Cuentas",
+  "h1": "TIR y VAN de un proyecto de inversión",
+  "description": "Evaluá una inversión con flujos anuales: VAN (Valor Actual Neto), TIR (Tasa Interna de Retorno) y payback. Decidí si el proyecto es viable.",
+  "category": "finanzas",
+  "icon": "📊",
+  "formulaId": "tir-van",
+  "intro": "¿Te conviene invertir $10M en un proyecto que te devuelve $3M al año por 5 años, si el plazo fijo paga 40 %? VAN y TIR te dan la respuesta. Ingresá los datos y te decimos si vale la pena.",
+  "fields": [
+    { "id": "inversionInicial", "label": "Inversión inicial", "type": "number", "prefix": "$", "placeholder": "10000000", "format": "thousands", "min": 0, "step": 1000, "required": true },
+    { "id": "flujoAnual", "label": "Flujo anual esperado", "type": "number", "prefix": "$", "placeholder": "3000000", "format": "thousands", "step": 1000, "required": true, "help": "Si los flujos son variables, usá el promedio. Para flujos no uniformes se necesita una planilla." },
+    { "id": "anos", "label": "Años de duración", "type": "number", "placeholder": "5", "min": 1, "step": 1, "required": true },
+    { "id": "tasaDescuento", "label": "Tasa de descuento (costo de oportunidad)", "type": "number", "suffix": "%", "placeholder": "40", "min": 0, "step": 0.1, "required": true, "help": "Rendimiento mínimo exigido: plazo fijo, bono, WACC de la empresa." }
+  ],
+  "outputs": [
+    { "id": "van", "label": "VAN (Valor Actual Neto)", "format": "currency", "primary": true },
+    { "id": "tir", "label": "TIR (%)", "format": "percentage" },
+    { "id": "payback", "label": "Payback (años sin descontar)", "format": "number" },
+    { "id": "totalRecibido", "label": "Total recibido (suma de flujos)", "format": "currency" },
+    { "id": "veredicto", "label": "Veredicto", "format": "text" }
+  ],
+  "explanation": "## VAN y TIR — los dos indicadores clave\n\n### VAN (Valor Actual Neto)\n\n```\nVAN = −Inversión + Σ Flujo_t / (1 + r)^t\n```\n\nSi VAN > 0 → el proyecto genera riqueza a la tasa exigida. Si VAN < 0 → destruye valor.\n\n### TIR (Tasa Interna de Retorno)\n\nLa tasa **r\\*** que hace VAN = 0. Es la rentabilidad efectiva del proyecto. Si TIR > tasa de descuento, el proyecto es viable.\n\n### Regla de decisión\n\n| Criterio | Acepto proyecto si |\n|---|---|\n| VAN | VAN > 0 |\n| TIR | TIR > tasa de descuento |\n| Payback | Payback < umbral que te pongas |\n\n### Ejemplo\n\nInversión $10M, flujo $3M/año por 5 años, tasa de descuento 40 %:\n\n```\nVAN = −10.000.000 + 3.000.000 × [1 − 1.40⁻⁵] / 0.40\n    = −10.000.000 + 5.566.000 = −$4.434.000  ❌\n```\n\nVAN negativo → no conviene. El mismo proyecto con tasa 15 % daría VAN +$56.700 (sí convendría).\n\n### ⚠️ Flujos no uniformes\n\nEsta calc asume un flujo anual constante. Para flujos variables año por año, usá Excel / Google Sheets con `VAN()` y `TIR()`.",
+  "faq": [
+    { "q": "¿Qué tasa de descuento uso?", "a": "Tu costo de oportunidad: plazo fijo, bono soberano, rendimiento de otro proyecto alternativo. En empresas se usa el WACC (costo promedio del capital)." },
+    { "q": "¿Y si hay un solo flujo a futuro (no anual)?", "a": "Poné años = 1 y el flujo al primer año. Es equivalente a descontar un solo pago." }
+  ]
+}
