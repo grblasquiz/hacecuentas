@@ -15,86 +15,49 @@ calcs.forEach((c) => {
   byCategory[c.category].push(c);
 });
 
-const categoryMeta: Record<string, { label: string; desc: string; color: string }> = {
-  finanzas: {
-    label: 'Finanzas',
-    desc: 'Sueldo, aguinaldo, indemnización, préstamos, impuestos e inversiones.',
-    color: '#2563eb',
-  },
-  negocios: {
-    label: 'Negocios',
-    desc: 'Márgenes, IVA, punto de equilibrio, comisiones, costo laboral, DSO.',
-    color: '#7c3aed',
-  },
-  salud: {
-    label: 'Salud',
-    desc: 'IMC, calorías, macros, embarazo, grasa corporal, frecuencia cardíaca.',
-    color: '#16a34a',
-  },
-  marketing: {
-    label: 'Marketing',
-    desc: 'CTR, CPC, CPM, ROAS, conversión, CAC, LTV, NPS, MRR, churn.',
-    color: '#e11d48',
-  },
-  deportes: {
-    label: 'Deportes',
-    desc: 'Pace running, 1RM, VO2 max, ciclismo watts/kg, maratón.',
-    color: '#65a30d',
-  },
-  viajes: {
-    label: 'Viajes',
-    desc: 'Combustible, presupuesto, división de gastos, jet lag, propinas, equipaje.',
-    color: '#0891b2',
-  },
-  vida: {
-    label: 'Vida cotidiana',
-    desc: 'Edad, fechas, porcentajes, regla de tres, conversores, área y perímetro.',
-    color: '#d97706',
-  },
-  mascotas: {
-    label: 'Mascotas',
-    desc: 'Edad perro/gato en años humanos, alimentación diaria, dosis por peso.',
-    color: '#db2777',
-  },
-  matematica: {
-    label: 'Matemática',
-    desc: 'Promedio, mediana, Pitágoras, cuadrática, factorial, MCD y MCM.',
-    color: '#0d9488',
-  },
-  construccion: {
-    label: 'Construcción',
-    desc: 'Ladrillos, cemento, pintura, pisos cerámicos, costo por m².',
-    color: '#b45309',
-  },
-  cocina: {
-    label: 'Cocina',
-    desc: 'Tazas a gramos, ajustar receta por porciones, tiempo de cocción.',
-    color: '#ea580c',
-  },
-  negocio: {
-    label: 'Negocios',
-    desc: 'Facturación, márgenes y cálculos comerciales.',
-    color: '#7c3aed',
-  },
+const categoryMeta: Record<string, { label: string; desc: string; color: string; icon: string }> = {
+  finanzas: { label: 'Finanzas', desc: 'Sueldo, aguinaldo, indemnización, préstamos, impuestos.', color: '#2563eb', icon: '💰' },
+  salud: { label: 'Salud', desc: 'IMC, calorías, macros, embarazo, frecuencia cardíaca.', color: '#16a34a', icon: '❤️' },
+  negocios: { label: 'Negocios', desc: 'Márgenes, IVA, punto de equilibrio, costo laboral.', color: '#7c3aed', icon: '📊' },
+  marketing: { label: 'Marketing', desc: 'CTR, CPC, ROAS, CAC, LTV, MRR, churn.', color: '#e11d48', icon: '📈' },
+  vida: { label: 'Vida cotidiana', desc: 'Edad, fechas, porcentajes, regla de tres, conversores.', color: '#d97706', icon: '🗓️' },
+  deportes: { label: 'Deportes', desc: 'Pace, 1RM, VO2 max, ciclismo watts/kg, maratón.', color: '#65a30d', icon: '🏃' },
+  viajes: { label: 'Viajes', desc: 'Combustible, presupuesto, dividir gastos, propinas.', color: '#0891b2', icon: '✈️' },
+  construccion: { label: 'Construcción', desc: 'Ladrillos, cemento, pintura, pisos cerámicos.', color: '#b45309', icon: '🧱' },
+  cocina: { label: 'Cocina', desc: 'Tazas a gramos, ajustar receta, tiempo de cocción.', color: '#ea580c', icon: '🍳' },
+  mascotas: { label: 'Mascotas', desc: 'Edad perro/gato, alimentación, dosis por peso.', color: '#db2777', icon: '🐕' },
+  matematica: { label: 'Matemática', desc: 'Promedio, Pitágoras, cuadrática, factorial, MCD.', color: '#0d9488', icon: '🧮' },
 };
 
 // Orden deseado de categorías
-const categoryOrder = ['finanzas', 'negocios', 'salud', 'marketing', 'deportes', 'viajes', 'vida', 'mascotas', 'matematica', 'construccion', 'cocina', 'negocio'];
+const categoryOrder = ['finanzas', 'salud', 'negocios', 'marketing', 'vida', 'deportes', 'viajes', 'construccion', 'cocina', 'mascotas', 'matematica'];
 
-// Calculadoras destacadas para el hero
-const featuredSlugs = [
-  'sueldo-en-mano-argentina',
-  'calculadora-aguinaldo-sac',
-  'calculadora-cuota-prestamo',
-  'calculadora-imc',
-  'calculadora-interes-compuesto',
-  'calculadora-porcentajes',
-];
-const featured = featuredSlugs
-  .map((slug) => calcs.find((c) => c.slug === slug))
-  .filter(Boolean);
+// Top 3 calcs por categoría (curadas para destacar las más útiles)
+const topPerCategory: Record<string, string[]> = {
+  finanzas: ['sueldo-en-mano-argentina', 'calculadora-aguinaldo-sac', 'calculadora-indemnizacion-despido'],
+  salud: ['calculadora-imc', 'calculadora-calorias-diarias-tdee', 'calculadora-embarazo'],
+  negocios: ['calculadora-iva-agregar-discriminar', 'calculadora-margen-ganancia-markup', 'calculadora-monotributo-vs-responsable-inscripto'],
+  marketing: ['calculadora-roas-retorno-inversion-publicitaria', 'calculadora-cac-ltv-costo-adquisicion-cliente', 'calculadora-tasa-de-conversion'],
+  vida: ['calculadora-edad-exacta', 'calculadora-porcentajes', 'calculadora-regla-de-tres-simple'],
+  deportes: ['calculadora-pace-ritmo-running', 'calculadora-1rm-peso-maximo-levantamiento', 'calculadora-calorias-quemadas-deporte'],
+  viajes: ['calculadora-combustible-viaje-auto', 'calculadora-dividir-gastos-viaje-amigos', 'calculadora-propina-por-pais-viaje'],
+  construccion: ['calculadora-ladrillos-por-m2-construccion', 'calculadora-pintura-por-m2-litros-latas', 'calculadora-costo-m2-construccion-argentina'],
+  cocina: ['conversor-tazas-gramos-cocina-recetas', 'calculadora-multiplicar-dividir-receta-porciones', 'calculadora-tiempo-temperatura-coccion-carne'],
+  mascotas: ['calculadora-edad-perro-anos-humanos', 'calculadora-edad-gato-anos-humanos', 'calculadora-alimento-diario-perro'],
+  matematica: ['calculadora-teorema-pitagoras-hipotenusa-cateto', 'calculadora-promedio-mediana-moda-estadistica', 'calculadora-ecuacion-cuadratica-formula-resolvente'],
+};
 
-// Populares rail: top 6 para home prominente
+function getTopCalcs(cat: string): any[] {
+  const slugs = topPerCategory[cat] || [];
+  const picked = slugs.map((s) => (byCategory[cat] || []).find((c) => c.slug === s)).filter(Boolean);
+  if (picked.length >= 3) return picked.slice(0, 3);
+  // Fallback: completar con los primeros del array
+  const existing = new Set(picked.map((c: any) => c.slug));
+  const fallback = (byCategory[cat] || []).filter((c: any) => !existing.has(c.slug));
+  return [...picked, ...fallback].slice(0, 3);
+}
+
+// Populares (rail top 6)
 const popularSlugs = [
   'sueldo-en-mano-argentina',
   'calculadora-aguinaldo-sac',
@@ -149,16 +112,18 @@ const schema = {
     </h1>
     <p class="hero-lead">
       Sueldo en mano, aguinaldo, préstamos, IMC, interés compuesto y más.
-      Fórmulas adaptadas a las leyes e impuestos de Argentina, con explicaciones paso a paso.
+      Fórmulas adaptadas a Argentina, con explicaciones paso a paso.
     </p>
 
-    <div class="hero-featured">
-      {featured.map((c: any) => (
-        <a href={`/${c.slug}`} class="chip">
-          <span class="chip-icon" aria-hidden="true">{c.icon}</span>
-          <span>{c.h1.replace(/^Calculadora de /i, '')}</span>
-        </a>
-      ))}
+    <div class="hero-ctas">
+      <a href="/buscar" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Buscar entre {calcs.length} calculadoras
+      </a>
+      <a href="/valores-bcra" class="btn-secondary">
+        <span class="dot-live"></span>
+        Valores BCRA hoy
+      </a>
     </div>
 
     <div class="sources">
@@ -171,30 +136,45 @@ const schema = {
     </div>
   </section>
 
-  <section class="stats">
-    <div class="stat">
-      <div class="stat-num">{calcs.length}</div>
-      <div class="stat-label">Calculadoras disponibles</div>
+  <section class="destacados" aria-labelledby="destacados-heading">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow eyebrow-inline">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          Herramientas destacadas
+        </span>
+        <h2 id="destacados-heading">Lo nuevo en Hacé Cuentas</h2>
+      </div>
     </div>
-    <div class="stat">
-      <div class="stat-num">100%</div>
-      <div class="stat-label">Gratis, sin publicidad invasiva</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">AR</div>
-      <div class="stat-label">Pensado para Argentina</div>
+    <div class="destacados-grid">
+      <a href="/valores-bcra" class="feature-card feature-bcra">
+        <div class="feature-badge">Nuevo</div>
+        <div class="feature-icon">🏦</div>
+        <h3>Valores BCRA hoy</h3>
+        <p>Dólar oficial, blue, MEP y CCL. Inflación, UVA y TNA de los principales bancos — actualizados al último cierre.</p>
+        <span class="feature-cta">Ver dashboard →</span>
+      </a>
+      <a href="/comparador-plazo-fijo" class="feature-card feature-pf">
+        <div class="feature-badge">Nuevo</div>
+        <div class="feature-icon">📊</div>
+        <h3>Comparador de plazo fijo</h3>
+        <p>Galicia, Santander, BBVA, Macro, Nación, Provincia e ICBC lado a lado. Ingresá capital y días, ves el ganador.</p>
+        <span class="feature-cta">Comparar bancos →</span>
+      </a>
     </div>
   </section>
 
   <section class="populares" aria-labelledby="populares-heading">
-    <div class="populares-header">
+    <div class="section-header">
       <div>
-        <div class="eyebrow">
+        <span class="eyebrow eyebrow-inline">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/>
           </svg>
           Más populares
-        </div>
+        </span>
         <h2 id="populares-heading">Las más usadas esta semana</h2>
       </div>
       <a href="/buscar" class="see-all">Ver todas →</a>
@@ -213,38 +193,68 @@ const schema = {
     </div>
   </section>
 
-  {categoryOrder.filter(cat => byCategory[cat]?.length).map((cat) => {
-    const meta = categoryMeta[cat];
-    return (
-      <section class="category" style={`--cat-color: ${meta.color}`}>
-        <div class="category-header">
-          <div class="category-accent"></div>
-          <div>
-            <h2>{meta.label}</h2>
-            <p class="category-desc">{meta.desc}</p>
-          </div>
-          <div class="category-count">{byCategory[cat].length} calculadoras</div>
-        </div>
-        <div class="grid">
-          {byCategory[cat].map((c: any) => (
-            <a href={`/${c.slug}`} class="card">
-              <div class="card-icon" aria-hidden="true">{c.icon}</div>
-              <div class="card-body">
-                <div class="card-title">{c.h1}</div>
-                <div class="card-desc">{c.description}</div>
+  <section class="categorias" aria-labelledby="categorias-heading">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow eyebrow-inline">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          Explorá por categoría
+        </span>
+        <h2 id="categorias-heading">Todas las categorías</h2>
+      </div>
+      <a href="/buscar" class="see-all">Ver todas →</a>
+    </div>
+    <div class="cat-grid">
+      {categoryOrder.filter(cat => byCategory[cat]?.length).map((cat) => {
+        const meta = categoryMeta[cat];
+        const top = getTopCalcs(cat);
+        const count = byCategory[cat].length;
+        return (
+          <div class="cat-card" style={`--cat-color: ${meta.color}`}>
+            <a href={`/categoria/${cat}`} class="cat-head">
+              <div class="cat-icon" aria-hidden="true">{meta.icon}</div>
+              <div class="cat-titles">
+                <div class="cat-name">{meta.label}</div>
+                <div class="cat-count">{count} calculadoras</div>
               </div>
-              <div class="card-arrow" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                  <polyline points="12 5 19 12 12 19"/>
-                </svg>
-              </div>
+              <svg class="cat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
             </a>
-          ))}
-        </div>
-      </section>
-    );
-  })}
+            <p class="cat-desc">{meta.desc}</p>
+            <ul class="cat-list">
+              {top.map((c: any) => (
+                <li>
+                  <a href={`/${c.slug}`} class="cat-item">
+                    <span class="cat-item-icon">{c.icon}</span>
+                    <span class="cat-item-name">{c.h1}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <a href={`/categoria/${cat}`} class="cat-see-all">Ver las {count} →</a>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat">
+      <div class="stat-num">{calcs.length}</div>
+      <div class="stat-label">Calculadoras disponibles</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Gratis, sin publicidad invasiva</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">AR</div>
+      <div class="stat-label">Pensado para Argentina</div>
+    </div>
+  </section>
 
   <section class="why">
     <h2>¿Por qué Hacé Cuentas?</h2>
@@ -277,6 +287,15 @@ const schema = {
         <h3>En cualquier dispositivo</h3>
         <p>Responsive desde el primer día. Del celular en el bondi a la compu en la oficina.</p>
       </div>
+    </div>
+  </section>
+
+  <section class="final-cta">
+    <h3>¿No encontrás la calculadora que buscás?</h3>
+    <p>Explorá el buscador con las {calcs.length} calculadoras disponibles, o escribinos qué te falta.</p>
+    <div class="cta-actions">
+      <a href="/buscar" class="btn-primary">Buscar calculadora</a>
+      <a href="/contacto" class="btn-ghost">Sugerir una nueva →</a>
     </div>
   </section>
 
@@ -328,47 +347,66 @@ const schema = {
 
   .hero-lead {
     font-size: 1.0625rem;
-    max-width: 640px;
-    margin: 0 auto 2rem;
+    max-width: 620px;
+    margin: 0 auto 1.75rem;
     color: var(--text-muted);
     line-height: 1.6;
   }
 
-  .hero-featured {
-    display: flex;
+  .hero-ctas {
+    display: inline-flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 0.5rem;
-    max-width: 780px;
-    margin: 0 auto;
+    gap: 0.625rem;
+    margin-bottom: 2rem;
   }
 
-  .chip {
+  .btn-primary, .btn-secondary, .btn-ghost {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 0.875rem;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text);
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9375rem;
+    font-weight: 600;
     text-decoration: none;
     transition: all 0.15s;
-    box-shadow: var(--shadow-sm);
+    border: 1px solid transparent;
   }
-
-  .chip:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    transform: translateY(-1px);
-    text-decoration: none;
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
     box-shadow: var(--shadow);
   }
+  .btn-primary:hover { background: var(--accent-strong); color: #fff; transform: translateY(-1px); box-shadow: var(--shadow-md); text-decoration: none; }
 
-  .chip-icon {
-    font-size: 1rem;
+  .btn-secondary {
+    background: var(--bg-card);
+    color: var(--text);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--accent);
+    padding: 0.75rem 1rem;
+  }
+  .btn-ghost:hover { background: var(--accent-soft); text-decoration: none; }
+
+  .dot-live {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
   }
 
   /* Sources */
@@ -378,8 +416,8 @@ const schema = {
     justify-content: center;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 2rem;
-    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
     border-top: 1px dashed var(--border);
   }
 
@@ -402,34 +440,38 @@ const schema = {
     border: 1px solid var(--border);
   }
 
-  /* Populares */
-  .populares {
-    margin: 3rem 0 3rem;
+  /* Sección headers */
+  .section-title {
+    margin: 0 0 1.25rem;
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+  .section-title .eyebrow {
+    display: block;
+    margin-bottom: 0.375rem;
   }
 
-  .populares-header {
+  .section-header {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
   }
+  .section-header h2 { margin: 0; font-size: 1.5rem; }
 
   .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
     font-size: 0.75rem;
     font-weight: 700;
     color: var(--accent);
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    margin-bottom: 0.375rem;
   }
-
-  .populares-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
+  .eyebrow-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-bottom: 0.375rem;
   }
 
   .see-all {
@@ -439,9 +481,86 @@ const schema = {
     font-weight: 500;
     white-space: nowrap;
   }
-
   .see-all:hover { text-decoration: underline; }
 
+  /* Destacados (BCRA + Comparador) */
+  .destacados {
+    margin: 2.5rem 0 3rem;
+  }
+  .destacados-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+  }
+
+  .feature-card {
+    position: relative;
+    display: block;
+    padding: 1.5rem 1.5rem 1.25rem;
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: var(--text);
+    overflow: hidden;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .feature-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    text-decoration: none;
+  }
+  .feature-bcra {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(14, 165, 233, 0.05));
+    border-color: rgba(37, 99, 235, 0.25);
+  }
+  .feature-pf {
+    background: linear-gradient(135deg, rgba(22, 163, 74, 0.08), rgba(22, 163, 74, 0.03));
+    border-color: rgba(22, 163, 74, 0.25);
+  }
+
+  .feature-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.1875rem 0.5rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .feature-pf .feature-badge { background: var(--success); }
+
+  .feature-icon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    line-height: 1;
+  }
+  .feature-card h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+  .feature-card p {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    margin: 0 0 1rem;
+    line-height: 1.5;
+  }
+  .feature-cta {
+    display: inline-flex;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.9375rem;
+  }
+  .feature-pf .feature-cta { color: var(--success); }
+
+  /* Populares */
+  .populares {
+    margin: 2rem 0 3rem;
+  }
   .populares-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -499,36 +618,152 @@ const schema = {
   }
 
   .pop-body { flex: 1; min-width: 0; }
-
   .pop-title {
     font-weight: 600;
     font-size: 0.9375rem;
     line-height: 1.3;
     margin-bottom: 0.125rem;
   }
-
   .pop-cat {
     font-size: 0.75rem;
     color: var(--text-subtle);
     font-weight: 500;
   }
 
+  /* Categorías (compact grid) */
+  .categorias { margin: 2rem 0 3rem; }
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0.875rem;
+  }
+
+  .cat-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cat-color, var(--accent));
+    border-radius: var(--radius);
+    padding: 1rem 1.125rem 1.125rem;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.15s;
+  }
+  .cat-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  .cat-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.625rem;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .cat-head:hover { text-decoration: none; }
+  .cat-head:hover .cat-name { color: var(--cat-color); }
+  .cat-head:hover .cat-arrow { transform: translateX(2px); color: var(--cat-color); }
+
+  .cat-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--cat-color) 12%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+  }
+  .cat-titles { flex: 1; min-width: 0; }
+  .cat-name {
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.2;
+    margin-bottom: 0.125rem;
+    transition: color 0.15s;
+  }
+  .cat-count {
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    font-weight: 500;
+  }
+  .cat-arrow {
+    flex-shrink: 0;
+    color: var(--text-subtle);
+    transition: all 0.15s;
+  }
+
+  .cat-desc {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin: 0 0 0.625rem;
+    line-height: 1.45;
+  }
+
+  .cat-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  .cat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    transition: all 0.1s;
+  }
+  .cat-item:hover {
+    background: var(--bg-soft);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .cat-item-icon {
+    font-size: 0.9375rem;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .cat-item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cat-see-all {
+    margin-top: auto;
+    align-self: flex-start;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--cat-color, var(--accent));
+    text-decoration: none;
+    padding: 0.25rem 0;
+    letter-spacing: 0.01em;
+  }
+  .cat-see-all:hover { text-decoration: underline; }
+
   /* Stats */
   .stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
-    margin: 2rem 0 4rem;
-    padding: 1.75rem;
+    margin: 3rem 0;
+    padding: 1.5rem;
     background: var(--bg-soft);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
   }
 
-  .stat {
-    text-align: center;
-  }
-
+  .stat { text-align: center; }
   .stat-num {
     font-size: clamp(1.5rem, 3vw, 2rem);
     font-weight: 800;
@@ -537,155 +772,34 @@ const schema = {
     line-height: 1;
     margin-bottom: 0.25rem;
   }
-
   .stat-label {
     font-size: 0.8125rem;
     color: var(--text-muted);
     font-weight: 500;
   }
 
-  /* Categories */
-  .category {
-    margin: 3rem 0;
-  }
-
-  .category-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .category-accent {
-    width: 4px;
-    height: 36px;
-    background: var(--cat-color, var(--accent));
-    border-radius: 999px;
-    flex-shrink: 0;
-  }
-
-  .category-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-  }
-
-  .category-desc {
-    margin: 0.25rem 0 0;
-    font-size: 0.9375rem;
-    color: var(--text-muted);
-  }
-
-  .category-count {
-    margin-left: auto;
-    font-size: 0.8125rem;
-    color: var(--text-subtle);
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-    gap: 0.875rem;
-  }
-
-  .card {
-    position: relative;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.875rem;
-    padding: 1.125rem 1.25rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    text-decoration: none;
-    color: var(--text);
-    transition: all 0.15s;
-    min-height: 116px;
-  }
-
-  .card:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    text-decoration: none;
-  }
-
-  .card:hover .card-arrow {
-    color: var(--accent);
-    transform: translateX(2px);
-  }
-
-  .card-icon {
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    background: var(--accent-soft);
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-  }
-
-  .card-body {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .card-title {
-    font-weight: 600;
-    font-size: 0.9375rem;
-    color: var(--text);
-    margin-bottom: 0.25rem;
-    line-height: 1.35;
-  }
-
-  .card-desc {
-    font-size: 0.8125rem;
-    color: var(--text-muted);
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .card-arrow {
-    flex-shrink: 0;
-    color: var(--text-subtle);
-    transition: all 0.15s;
-    margin-top: 0.5rem;
-  }
-
   /* Why */
   .why {
-    margin-top: 5rem;
-    padding: 3rem 0 1rem;
+    margin-top: 3rem;
+    padding-top: 3rem;
     border-top: 1px solid var(--border);
   }
-
   .why h2 {
     text-align: center;
     margin-bottom: 2rem;
     font-size: 1.75rem;
   }
-
   .why-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
-
   .why-item {
     padding: 1.5rem;
     background: var(--bg-soft);
     border: 1px solid var(--border);
     border-radius: var(--radius);
   }
-
   .why-icon {
     width: 44px;
     height: 44px;
@@ -697,12 +811,7 @@ const schema = {
     justify-content: center;
     margin-bottom: 1rem;
   }
-
-  .why-item h3 {
-    margin-bottom: 0.5rem;
-    font-size: 1rem;
-  }
-
+  .why-item h3 { margin-bottom: 0.5rem; font-size: 1rem; }
   .why-item p {
     font-size: 0.9375rem;
     color: var(--text-muted);
@@ -710,9 +819,40 @@ const schema = {
     line-height: 1.6;
   }
 
+  /* Final CTA */
+  .final-cta {
+    margin: 4rem 0 2rem;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-lg);
+  }
+  .final-cta h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.375rem;
+    color: var(--accent-strong);
+  }
+  .final-cta p {
+    margin: 0 0 1.25rem;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+  }
+  .cta-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.625rem;
+  }
+
   @media (max-width: 640px) {
-    .stats { grid-template-columns: 1fr; gap: 1.25rem; }
-    .category-count { display: none; }
-    .card { min-height: auto; }
+    .hero { padding: 2.5rem 0 2rem; }
+    .stats { grid-template-columns: 1fr; gap: 1rem; padding: 1.25rem; }
+    .section-header { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+    .section-header h2 { font-size: 1.25rem; }
+    .feature-card { padding: 1.25rem; }
+    .feature-card h3 { font-size: 1.125rem; }
+    .cat-card { padding: 0.875rem 1rem; }
+    .final-cta { padding: 1.75rem 1.25rem; }
   }
 </style>
