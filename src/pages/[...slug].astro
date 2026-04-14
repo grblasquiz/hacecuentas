@@ -17,7 +17,7 @@ export async function getStaticPaths() {
 
 const { calc } = Astro.props;
 
-// Simple markdown → HTML (básico, suficiente para SEO)
+// Markdown simple → HTML
 function md(text: string): string {
   return text
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
@@ -25,7 +25,7 @@ function md(text: string): string {
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" rel="noopener">$1</a>')
     .replace(/^\- (.+)$/gm, '<li>$1</li>')
     .replace(/^\| (.+) \|$/gm, (match) => {
       const cells = match.slice(2, -2).split(' | ');
@@ -34,6 +34,13 @@ function md(text: string): string {
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>');
 }
+
+const categoryLabels: Record<string, string> = {
+  finanzas: 'Finanzas',
+  salud: 'Salud',
+  vida: 'Vida cotidiana',
+  negocio: 'Negocios',
+};
 
 const schemaHowTo = {
   '@context': 'https://schema.org',
@@ -61,9 +68,21 @@ const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
   })),
 } : null;
 
-const schema = schemaFAQ
-  ? { '@context': 'https://schema.org', '@graph': [schemaHowTo, schemaFAQ] }
-  : schemaHowTo;
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+    { '@type': 'ListItem', position: 2, name: categoryLabels[calc.category] || calc.category, item: `https://hacecuentas.com/categoria/${calc.category}` },
+    { '@type': 'ListItem', position: 3, name: calc.h1 },
+  ],
+};
+
+const schemaGraph = [schemaHowTo, schemaBreadcrumb];
+if (schemaFAQ) schemaGraph.push(schemaFAQ);
+const schema = { '@context': 'https://schema.org', '@graph': schemaGraph };
+
+const updated = new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
 ---
 
 <Layout
@@ -73,15 +92,38 @@ const schema = schemaFAQ
 >
   <Header slot="header" />
 
-  <article>
-    <div class="breadcrumbs">
-      <a href="/">Inicio</a> / <a href={`/categoria/${calc.category}`}>{calc.category}</a> / <span>{calc.h1}</span>
-    </div>
+  <article class="calc-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href={`/categoria/${calc.category}`}>{categoryLabels[calc.category] || calc.category}</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">{calc.h1}</span>
+    </nav>
 
     <header class="calc-header">
-      <div class="icon">{calc.icon}</div>
-      <h1>{calc.h1}</h1>
+      <div class="header-left">
+        <span class="icon-wrap" aria-hidden="true">{calc.icon}</span>
+        <div>
+          <div class="eyebrow">{categoryLabels[calc.category] || calc.category}</div>
+          <h1>{calc.h1}</h1>
+        </div>
+      </div>
       <p class="intro">{calc.intro}</p>
+      <div class="meta">
+        <span class="meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Actualizado: {updated}
+        </span>
+        <span class="meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Fórmula explicada
+        </span>
+        <span class="meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          100% privado
+        </span>
+      </div>
     </header>
 
     <Calculator config={calc} />
@@ -95,129 +137,312 @@ const schema = schemaFAQ
     {calc.faq && calc.faq.length > 0 && (
       <section class="faq">
         <h2>Preguntas frecuentes</h2>
-        {calc.faq.map((f: any) => (
-          <details>
-            <summary>{f.q}</summary>
-            <p>{f.a}</p>
-          </details>
-        ))}
+        <div class="faq-list">
+          {calc.faq.map((f: any) => (
+            <details>
+              <summary>
+                <span>{f.q}</span>
+                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </summary>
+              <p>{f.a}</p>
+            </details>
+          ))}
+        </div>
       </section>
     )}
+
+    <aside class="cta-back">
+      <p>¿Buscabas otra calculadora?</p>
+      <a href="/" class="btn-ghost">Ver todas las calculadoras →</a>
+    </aside>
   </article>
 
   <Footer slot="footer" />
 </Layout>
 
 <style>
+  .calc-page {
+    max-width: 780px;
+    margin: 0 auto;
+  }
+
+  /* Breadcrumbs */
   .breadcrumbs {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    margin-bottom: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    margin-bottom: 1.75rem;
   }
 
   .breadcrumbs a {
     color: var(--text-muted);
+    text-decoration: none;
   }
 
   .breadcrumbs a:hover {
     color: var(--accent);
   }
 
+  .breadcrumbs .sep {
+    color: var(--border-strong);
+  }
+
+  .breadcrumbs .current {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* Header */
   .calc-header {
-    text-align: center;
     margin-bottom: 2rem;
   }
 
-  .calc-header .icon {
-    font-size: 3rem;
-    margin-bottom: 0.5rem;
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .icon-wrap {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    background: var(--accent-soft);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+  }
+
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.25rem;
+  }
+
+  .calc-header h1 {
+    margin: 0;
+    font-size: clamp(1.625rem, 3.5vw, 2.25rem);
+    line-height: 1.15;
   }
 
   .intro {
-    max-width: 700px;
-    margin: 1rem auto 0;
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    line-height: 1.6;
   }
 
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    font-weight: 500;
+  }
+
+  /* Explanation */
   .explanation {
     margin-top: 3rem;
-    padding: 2rem;
-    background: var(--bg-card);
-    border-radius: 12px;
+    padding: 2rem 2.25rem;
+    background: var(--bg-soft);
     border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
   }
 
   .explanation :global(h2) {
     margin-top: 0;
-    color: var(--text);
+    font-size: 1.375rem;
   }
 
   .explanation :global(h3) {
-    margin-top: 1.5rem;
-    color: var(--text);
+    margin: 1.75rem 0 0.5rem;
+    font-size: 1.0625rem;
   }
 
   .explanation :global(p) {
     color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    line-height: 1.7;
   }
 
   .explanation :global(strong) {
     color: var(--text);
+    font-weight: 600;
   }
 
   .explanation :global(code) {
-    background: rgba(148, 163, 184, 0.15);
+    background: var(--bg);
+    border: 1px solid var(--border);
     padding: 0.125rem 0.375rem;
-    border-radius: 4px;
-    font-family: 'SF Mono', Monaco, monospace;
-    font-size: 0.875em;
-    color: var(--accent);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.8125em;
+    color: var(--accent-strong);
   }
 
-  .explanation :global(ul), .explanation :global(ol) {
-    margin-left: 1.5rem;
+  .explanation :global(ul),
+  .explanation :global(ol) {
+    margin-left: 1.25rem;
+    margin-bottom: 1rem;
   }
 
   .explanation :global(li) {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.375rem;
     color: var(--text-muted);
+    line-height: 1.65;
   }
 
   .explanation :global(table) {
     border-collapse: collapse;
     margin: 1rem 0;
     width: 100%;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
   }
 
   .explanation :global(td) {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--border);
+    padding: 0.625rem 0.875rem;
+    border-bottom: 1px solid var(--border);
     color: var(--text-muted);
+    font-size: 0.9375rem;
   }
 
+  .explanation :global(tr:last-child td) {
+    border-bottom: none;
+  }
+
+  .explanation :global(a) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* FAQ */
   .faq {
     margin-top: 3rem;
+  }
+
+  .faq h2 {
+    margin-bottom: 1.25rem;
+    font-size: 1.5rem;
+  }
+
+  .faq-list {
+    display: grid;
+    gap: 0.625rem;
   }
 
   .faq details {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 0.75rem;
+    border-radius: var(--radius);
+    transition: border-color 0.15s;
+  }
+
+  .faq details:hover {
+    border-color: var(--border-strong);
+  }
+
+  .faq details[open] {
+    border-color: var(--accent);
+    background: var(--bg);
+    box-shadow: var(--shadow-sm);
   }
 
   .faq summary {
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
     font-weight: 600;
+    font-size: 0.9375rem;
     color: var(--text);
+    list-style: none;
   }
 
-  .faq details[open] summary {
-    margin-bottom: 0.75rem;
+  .faq summary::-webkit-details-marker { display: none; }
+
+  .faq .chev {
+    color: var(--text-subtle);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .faq details[open] .chev {
+    transform: rotate(180deg);
+    color: var(--accent);
   }
 
   .faq details p {
     color: var(--text-muted);
-    margin-bottom: 0;
+    padding: 0 1.25rem 1.125rem;
+    margin: 0;
+    line-height: 1.65;
+    font-size: 0.9375rem;
+  }
+
+  /* CTA back */
+  .cta-back {
+    margin-top: 3.5rem;
+    padding: 1.75rem;
+    background: var(--accent-soft);
+    border: 1px solid #dbeafe;
+    border-radius: var(--radius-lg);
+    text-align: center;
+  }
+
+  .cta-back p {
+    margin: 0 0 0.75rem;
+    color: var(--accent-strong);
+    font-weight: 500;
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.625rem 1.125rem;
+    background: var(--bg);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+
+  .btn-ghost:hover {
+    background: var(--accent);
+    color: var(--bg);
+    text-decoration: none;
+  }
+
+  @media (max-width: 640px) {
+    .explanation { padding: 1.5rem 1.25rem; }
+    .header-left { flex-direction: row; }
+    .icon-wrap { width: 48px; height: 48px; font-size: 1.5rem; }
   }
 </style>

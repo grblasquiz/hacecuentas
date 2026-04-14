@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 
-// Cargar todas las calculadoras desde /content/calcs
+// Cargar todas las calculadoras
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const calcs = Object.values(calcModules).map((m: any) => m.default || m);
 
@@ -14,12 +14,44 @@ calcs.forEach((c) => {
   byCategory[c.category].push(c);
 });
 
-const categoryLabels: Record<string, string> = {
-  finanzas: '💰 Finanzas',
-  salud: '❤️ Salud',
-  vida: '📅 Vida cotidiana',
-  negocio: '📊 Negocios',
+const categoryMeta: Record<string, { label: string; desc: string; color: string }> = {
+  finanzas: {
+    label: 'Finanzas',
+    desc: 'Sueldo, aguinaldo, préstamos, impuestos e inversiones.',
+    color: '#2563eb',
+  },
+  salud: {
+    label: 'Salud',
+    desc: 'IMC, calorías, embarazo y ciclo menstrual.',
+    color: '#16a34a',
+  },
+  vida: {
+    label: 'Vida cotidiana',
+    desc: 'Edad, fechas, porcentajes y propinas.',
+    color: '#d97706',
+  },
+  negocio: {
+    label: 'Negocios',
+    desc: 'Facturación, márgenes y cálculos comerciales.',
+    color: '#7c3aed',
+  },
 };
+
+// Orden deseado de categorías
+const categoryOrder = ['finanzas', 'salud', 'vida', 'negocio'];
+
+// Calculadoras destacadas para el hero
+const featuredSlugs = [
+  'sueldo-en-mano-argentina',
+  'calculadora-aguinaldo-sac',
+  'calculadora-cuota-prestamo',
+  'calculadora-imc',
+  'calculadora-interes-compuesto',
+  'calculadora-porcentajes',
+];
+const featured = featuredSlugs
+  .map((slug) => calcs.find((c) => c.slug === slug))
+  .filter(Boolean);
 
 const schema = {
   '@context': 'https://schema.org',
@@ -38,56 +70,124 @@ const schema = {
 
 <Layout
   title="Hacé Cuentas — Calculadoras online gratuitas para Argentina"
-  description="Decenas de calculadoras online gratuitas: sueldo, embarazo, IMC, dólar, días entre fechas y más. Precisas, rápidas y pensadas para Argentina."
+  description="Calculadoras online gratis y precisas para Argentina: sueldo en mano, aguinaldo, préstamos, IMC, interés compuesto y más. Fórmulas oficiales, actualizadas 2026."
   schema={schema}
 >
   <Header slot="header" />
 
   <section class="hero">
-    <h1>Calculadoras online para todo 🧮</h1>
-    <p class="lead">
-      Sueldo, embarazo, dólar, IMC, préstamos, alquileres y mucho más.
-      Gratis, sin registro y pensadas para Argentina.
+    <div class="trust-row">
+      <span class="trust-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Fórmulas oficiales
+      </span>
+      <span class="trust-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Actualizado 2026
+      </span>
+      <span class="trust-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Sin registro
+      </span>
+    </div>
+
+    <h1 class="hero-title">
+      Las calculadoras que <span class="accent">necesitás</span>,<br />
+      sin vueltas.
+    </h1>
+    <p class="hero-lead">
+      Sueldo en mano, aguinaldo, préstamos, IMC, interés compuesto y más.
+      Fórmulas adaptadas a las leyes e impuestos de Argentina, con explicaciones paso a paso.
     </p>
+
+    <div class="hero-featured">
+      {featured.map((c: any) => (
+        <a href={`/${c.slug}`} class="chip">
+          <span class="chip-icon" aria-hidden="true">{c.icon}</span>
+          <span>{c.h1.replace(/^Calculadora de /i, '')}</span>
+        </a>
+      ))}
+    </div>
   </section>
 
-  {Object.entries(byCategory).map(([cat, items]) => (
-    <section class="category">
-      <h2>{categoryLabels[cat] || cat}</h2>
-      <div class="grid">
-        {items.map((c) => (
-          <a href={`/${c.slug}`} class="card">
-            <div class="card-icon">{c.icon}</div>
-            <div class="card-title">{c.h1}</div>
-            <div class="card-desc">{c.description}</div>
-          </a>
-        ))}
-      </div>
-    </section>
-  ))}
+  <section class="stats">
+    <div class="stat">
+      <div class="stat-num">{calcs.length}</div>
+      <div class="stat-label">Calculadoras disponibles</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Gratis, sin publicidad invasiva</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">AR</div>
+      <div class="stat-label">Pensado para Argentina</div>
+    </div>
+  </section>
+
+  {categoryOrder.filter(cat => byCategory[cat]?.length).map((cat) => {
+    const meta = categoryMeta[cat];
+    return (
+      <section class="category" style={`--cat-color: ${meta.color}`}>
+        <div class="category-header">
+          <div class="category-accent"></div>
+          <div>
+            <h2>{meta.label}</h2>
+            <p class="category-desc">{meta.desc}</p>
+          </div>
+          <div class="category-count">{byCategory[cat].length} calculadoras</div>
+        </div>
+        <div class="grid">
+          {byCategory[cat].map((c: any) => (
+            <a href={`/${c.slug}`} class="card">
+              <div class="card-icon" aria-hidden="true">{c.icon}</div>
+              <div class="card-body">
+                <div class="card-title">{c.h1}</div>
+                <div class="card-desc">{c.description}</div>
+              </div>
+              <div class="card-arrow" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    );
+  })}
 
   <section class="why">
     <h2>¿Por qué Hacé Cuentas?</h2>
     <div class="why-grid">
       <div class="why-item">
-        <div class="why-icon">⚡</div>
-        <h3>Rápido</h3>
-        <p>Resultados instantáneos, sin esperas ni registros.</p>
+        <div class="why-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <h3>Resultados al instante</h3>
+        <p>Sin esperas, sin registro. Ingresás los datos y obtenés el resultado en milisegundos.</p>
       </div>
       <div class="why-item">
-        <div class="why-icon">🇦🇷</div>
-        <h3>Pensado para Argentina</h3>
-        <p>Fórmulas adaptadas a leyes, impuestos y realidad local.</p>
+        <div class="why-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>Datos que no salen de tu equipo</h3>
+        <p>Todos los cálculos corren en tu navegador. No guardamos sueldos ni datos personales.</p>
       </div>
       <div class="why-item">
-        <div class="why-icon">🔒</div>
-        <h3>Privado</h3>
-        <p>Todo se calcula en tu navegador. Nunca guardamos tus datos.</p>
+        <div class="why-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <h3>Fórmulas explicadas</h3>
+        <p>Cada calculadora incluye la explicación paso a paso, fuentes oficiales y FAQ.</p>
       </div>
       <div class="why-item">
-        <div class="why-icon">📱</div>
-        <h3>Compartible</h3>
-        <p>Mandás resultados por WhatsApp con un click.</p>
+        <div class="why-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h3>En cualquier dispositivo</h3>
+        <p>Responsive desde el primer día. Del celular en el bondi a la compu en la oficina.</p>
       </div>
     </div>
   </section>
@@ -96,103 +196,292 @@ const schema = {
 </Layout>
 
 <style>
+  /* Hero */
   .hero {
+    padding: 3.5rem 0 2.5rem;
     text-align: center;
-    padding: 3rem 1rem 2rem;
   }
 
-  .hero h1 {
-    font-size: clamp(2rem, 5vw, 3rem);
-    margin-bottom: 1rem;
-    background: linear-gradient(135deg, var(--accent), var(--success));
+  .trust-row {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .trust-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.3125rem 0.75rem;
+    background: var(--success-soft);
+    color: var(--success);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 5.5vw, 3.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.25rem;
+    font-weight: 800;
+  }
+
+  .hero-title .accent {
+    background: linear-gradient(135deg, var(--accent), #0ea5e9);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  .lead {
-    font-size: 1.125rem;
-    max-width: 600px;
-    margin: 0 auto;
+  .hero-lead {
+    font-size: 1.0625rem;
+    max-width: 640px;
+    margin: 0 auto 2rem;
     color: var(--text-muted);
+    line-height: 1.6;
   }
 
+  .hero-featured {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    transition: all 0.15s;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+    text-decoration: none;
+    box-shadow: var(--shadow);
+  }
+
+  .chip-icon {
+    font-size: 1rem;
+  }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 2rem 0 4rem;
+    padding: 1.75rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* Categories */
   .category {
     margin: 3rem 0;
   }
 
-  .category h2 {
-    margin-bottom: 1rem;
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .category-accent {
+    width: 4px;
+    height: 36px;
+    background: var(--cat-color, var(--accent));
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+
+  .category-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .category-desc {
+    margin: 0.25rem 0 0;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+  }
+
+  .category-count {
+    margin-left: auto;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    font-weight: 500;
+    white-space: nowrap;
   }
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 0.875rem;
   }
 
   .card {
+    position: relative;
     display: flex;
-    flex-direction: column;
-    padding: 1.25rem;
+    align-items: flex-start;
+    gap: 0.875rem;
+    padding: 1.125rem 1.25rem;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: var(--radius);
     text-decoration: none;
     color: var(--text);
-    transition: all 0.2s;
+    transition: all 0.15s;
+    min-height: 116px;
   }
 
   .card:hover {
     border-color: var(--accent);
     transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
     text-decoration: none;
   }
 
+  .card:hover .card-arrow {
+    color: var(--accent);
+    transform: translateX(2px);
+  }
+
   .card-icon {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+  }
+
+  .card-body {
+    flex: 1;
+    min-width: 0;
   }
 
   .card-title {
     font-weight: 600;
-    margin-bottom: 0.25rem;
+    font-size: 0.9375rem;
     color: var(--text);
+    margin-bottom: 0.25rem;
+    line-height: 1.35;
   }
 
   .card-desc {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     color: var(--text-muted);
     line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
+  .card-arrow {
+    flex-shrink: 0;
+    color: var(--text-subtle);
+    transition: all 0.15s;
+    margin-top: 0.5rem;
+  }
+
+  /* Why */
   .why {
-    margin-top: 4rem;
-    padding: 2rem 0;
+    margin-top: 5rem;
+    padding: 3rem 0 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .why h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.75rem;
   }
 
   .why-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1.5rem;
-    margin-top: 1.5rem;
   }
 
   .why-item {
-    text-align: center;
+    padding: 1.5rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
   }
 
   .why-icon {
-    font-size: 2.5rem;
-    margin-bottom: 0.75rem;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
   }
 
   .why-item h3 {
     margin-bottom: 0.5rem;
+    font-size: 1rem;
   }
 
   .why-item p {
     font-size: 0.9375rem;
     color: var(--text-muted);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 640px) {
+    .stats { grid-template-columns: 1fr; gap: 1.25rem; }
+    .category-count { display: none; }
+    .card { min-height: auto; }
   }
 </style>

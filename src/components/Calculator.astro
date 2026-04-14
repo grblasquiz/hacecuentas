@@ -29,6 +29,7 @@ export interface CalcConfig {
     label: string;
     format: 'currency' | 'number' | 'percentage' | 'date' | 'text' | 'duration';
     primary?: boolean;
+    suffix?: string;
   }[];
 }
 
@@ -40,262 +41,454 @@ const { config } = Astro.props;
 ---
 
 <div class="calc-container" data-slug={config.slug} data-formula={config.formulaId}>
-  <form id={`form-${config.slug}`} class="calc-form">
-    {config.fields.map((field) => (
-      <div class="field">
-        <label for={field.id}>
-          {field.label}
-          {field.help && <span class="help" title={field.help}>?</span>}
-        </label>
-        <div class="input-wrap">
-          {field.prefix && <span class="prefix">{field.prefix}</span>}
-          {field.type === 'select' ? (
-            <select id={field.id} name={field.id} required={field.required}>
-              {field.options?.map((opt) => (
-                <option value={opt.value} selected={opt.value === field.default}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              id={field.id}
-              name={field.id}
-              type={field.type}
-              placeholder={field.placeholder}
-              min={field.min}
-              max={field.max}
-              step={field.step}
-              value={field.default}
-              required={field.required}
-              inputmode={field.type === 'number' ? 'decimal' : undefined}
-            />
-          )}
-          {field.suffix && <span class="suffix">{field.suffix}</span>}
+  <form id={`form-${config.slug}`} class="calc-form" novalidate>
+    <div class="fields-grid">
+      {config.fields.map((field) => (
+        <div class={`field ${field.type === 'select' || field.type === 'date' ? 'field-wide' : ''}`}>
+          <label for={field.id}>
+            <span class="label-text">{field.label}</span>
+            {field.help && (
+              <span class="help-wrap">
+                <span class="help" tabindex="0" aria-label={field.help}>?</span>
+                <span class="help-tip" role="tooltip">{field.help}</span>
+              </span>
+            )}
+          </label>
+          <div class="input-wrap">
+            {field.prefix && <span class="prefix">{field.prefix}</span>}
+            {field.type === 'select' ? (
+              <select id={field.id} name={field.id} required={field.required}>
+                {field.options?.map((opt) => (
+                  <option value={opt.value} selected={opt.value === field.default}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                id={field.id}
+                name={field.id}
+                type={field.type}
+                placeholder={field.placeholder}
+                min={field.min}
+                max={field.max}
+                step={field.step}
+                value={field.default}
+                required={field.required}
+                inputmode={field.type === 'number' ? 'decimal' : undefined}
+                autocomplete="off"
+              />
+            )}
+            {field.suffix && <span class="suffix">{field.suffix}</span>}
+          </div>
         </div>
-      </div>
-    ))}
-    <button type="submit" class="btn-primary">Calcular</button>
+      ))}
+    </div>
+
+    <button type="submit" class="btn-primary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="4" y="2" width="16" height="20" rx="2"/>
+        <line x1="8" y1="6" x2="16" y2="6"/>
+        <line x1="16" y1="14" x2="16" y2="18"/>
+        <line x1="8" y1="10" x2="8" y2="10"/>
+        <line x1="12" y1="10" x2="12" y2="10"/>
+        <line x1="16" y1="10" x2="16" y2="10"/>
+        <line x1="8" y1="14" x2="8" y2="14"/>
+        <line x1="12" y1="14" x2="12" y2="14"/>
+        <line x1="8" y1="18" x2="8" y2="18"/>
+        <line x1="12" y1="18" x2="12" y2="18"/>
+      </svg>
+      Calcular
+    </button>
   </form>
 
   <div class="calc-results" id={`results-${config.slug}`} hidden>
-    <h2>Resultado</h2>
+    <div class="results-header">
+      <span class="results-badge">Resultado</span>
+    </div>
     <div class="results-grid">
       {config.outputs.map((out) => (
-        <div class={`result ${out.primary ? 'primary' : ''}`} data-output={out.id} data-format={out.format}>
+        <div class={`result ${out.primary ? 'primary' : ''}`} data-output={out.id} data-format={out.format} data-suffix={out.suffix || ''}>
           <div class="result-label">{out.label}</div>
           <div class="result-value" data-value></div>
         </div>
       ))}
     </div>
     <div class="share">
-      <button type="button" class="btn-share" data-action="whatsapp">
-        📱 Compartir por WhatsApp
+      <span class="share-label">Compartir:</span>
+      <button type="button" class="btn-share" data-action="whatsapp" aria-label="Compartir por WhatsApp">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp
       </button>
       <button type="button" class="btn-share" data-action="copy">
-        🔗 Copiar link
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span data-copy-label>Copiar link</span>
+      </button>
+      <button type="button" class="btn-share" data-action="reset">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        Nuevo cálculo
       </button>
     </div>
   </div>
 
-  <div class="calc-error" id={`error-${config.slug}`} hidden></div>
+  <div class="calc-error" id={`error-${config.slug}`} hidden role="alert"></div>
 </div>
 
 <style>
   .calc-container {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
     margin-bottom: 2rem;
+    box-shadow: var(--shadow);
   }
 
-  .calc-form {
+  /* Form */
+  .calc-form { display: block; }
+
+  .fields-grid {
     display: grid;
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
   }
 
   .field {
     display: flex;
     flex-direction: column;
-    gap: 0.375rem;
+    gap: 0.4375rem;
   }
+
+  .field-wide { grid-column: 1 / -1; }
 
   label {
     font-weight: 500;
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
+    color: var(--text);
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+  .label-text { letter-spacing: -0.005em; }
+
+  .help-wrap {
+    position: relative;
+    display: inline-flex;
   }
 
   .help {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
-    background: var(--border);
+    background: var(--bg-muted);
     color: var(--text-muted);
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
     cursor: help;
+    border: 1px solid var(--border);
+  }
+
+  .help-tip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 240px;
+    padding: 0.5rem 0.75rem;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.4;
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 10;
+    box-shadow: var(--shadow-md);
+  }
+
+  .help:hover + .help-tip,
+  .help:focus + .help-tip {
+    opacity: 1;
   }
 
   .input-wrap {
     display: flex;
     align-items: stretch;
     background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
     overflow: hidden;
-    transition: border-color 0.15s;
+    transition: all 0.15s;
+  }
+
+  .input-wrap:hover {
+    border-color: var(--border-strong);
   }
 
   .input-wrap:focus-within {
     border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
   }
 
   input, select {
     flex: 1;
-    padding: 0.75rem 1rem;
+    padding: 0.6875rem 0.875rem;
     background: transparent;
     color: var(--text);
     border: none;
     outline: none;
     width: 100%;
+    font-size: 0.9375rem;
+    font-feature-settings: 'tnum';
+  }
+
+  select {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.25rem;
   }
 
   .prefix, .suffix {
-    padding: 0.75rem 1rem;
-    background: rgba(148, 163, 184, 0.1);
-    color: var(--text-muted);
+    padding: 0 0.75rem;
+    background: var(--bg-muted);
+    color: var(--text-subtle);
     font-size: 0.875rem;
+    font-weight: 500;
     display: flex;
     align-items: center;
+    border-left: 1px solid var(--border);
   }
 
+  .prefix {
+    border-left: none;
+    border-right: 1px solid var(--border);
+  }
+
+  /* Submit */
   .btn-primary {
-    margin-top: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     padding: 0.875rem 1.5rem;
     background: var(--accent);
-    color: var(--bg);
-    border-radius: 8px;
+    color: #ffffff;
+    border-radius: var(--radius-sm);
     font-weight: 600;
-    font-size: 1rem;
-    transition: background 0.15s;
+    font-size: 0.9375rem;
+    transition: all 0.15s;
+    box-shadow: var(--shadow-sm);
+    width: 100%;
+    letter-spacing: -0.005em;
   }
 
   .btn-primary:hover {
     background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
   }
 
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  /* Results */
   .calc-results {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
+    margin-top: 1.75rem;
+    padding-top: 1.75rem;
     border-top: 1px solid var(--border);
+    animation: slideUp 0.3s ease-out;
   }
 
-  .calc-results h2 {
-    margin: 0 0 1rem;
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .results-header {
+    margin-bottom: 1rem;
+  }
+
+  .results-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    background: var(--success-soft);
+    color: var(--success);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .results-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--success);
+    border-radius: 50%;
   }
 
   .results-grid {
     display: grid;
-    gap: 0.75rem;
+    gap: 0.625rem;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 
   .result {
-    background: var(--bg);
-    padding: 1rem;
-    border-radius: 8px;
+    padding: 1rem 1.125rem;
+    background: var(--bg-soft);
+    border-radius: var(--radius-sm);
     border: 1px solid var(--border);
   }
 
   .result.primary {
-    background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(16, 185, 129, 0.1));
-    border-color: var(--accent);
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--accent-soft) 0%, #e0f2fe 100%);
+    border-color: #bfdbfe;
+    padding: 1.5rem 1.75rem;
   }
 
   .result-label {
     font-size: 0.8125rem;
     color: var(--text-muted);
-    margin-bottom: 0.25rem;
+    font-weight: 500;
+    margin-bottom: 0.375rem;
+  }
+
+  .result.primary .result-label {
+    color: var(--accent-strong);
+    font-weight: 600;
   }
 
   .result-value {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--text);
+    font-feature-settings: 'tnum';
+    letter-spacing: -0.015em;
+    line-height: 1.2;
   }
 
   .result.primary .result-value {
-    color: var(--accent);
-    font-size: 1.875rem;
+    color: var(--accent-strong);
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
   }
 
+  /* Share */
   .share {
     display: flex;
-    gap: 0.75rem;
+    align-items: center;
+    gap: 0.5rem;
     margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
     flex-wrap: wrap;
   }
 
+  .share-label {
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    font-weight: 500;
+    margin-right: 0.25rem;
+  }
+
   .btn-share {
-    padding: 0.625rem 1rem;
-    background: transparent;
-    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    background: var(--bg);
+    color: var(--text-muted);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.875rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
     font-weight: 500;
     transition: all 0.15s;
   }
 
   .btn-share:hover {
-    background: var(--bg);
-    border-color: var(--accent);
-    color: var(--accent);
+    background: var(--bg-muted);
+    color: var(--text);
+    border-color: var(--border-strong);
   }
 
+  .btn-share[data-action="whatsapp"]:hover {
+    color: #25d366;
+    border-color: #25d366;
+    background: #25d36610;
+  }
+
+  /* Error */
   .calc-error {
-    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
     padding: 0.75rem 1rem;
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid var(--danger);
-    border-radius: 8px;
+    background: var(--danger-soft);
+    border: 1px solid #fecaca;
+    border-left: 3px solid var(--danger);
+    border-radius: var(--radius-sm);
     color: var(--danger);
     font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .calc-error::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23dc2626' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3ccircle cx='12' cy='12' r='10'/%3e%3cline x1='12' y1='8' x2='12' y2='12'/%3e%3cline x1='12' y1='16' x2='12.01' y2='16'/%3e%3c/svg%3e");
+    background-size: contain;
+  }
+
+  @media (max-width: 640px) {
+    .calc-container { padding: 1.25rem; }
+    .fields-grid { grid-template-columns: 1fr; }
   }
 </style>
 
 <script>
   import { formulas } from '../lib/formulas/index';
 
-  function formatValue(value: number | string, format: string): string {
+  function formatValue(value: number | string, format: string, suffix = ''): string {
     if (value === null || value === undefined || value === '') return '—';
+    let formatted: string;
     if (format === 'currency') {
-      return new Intl.NumberFormat('es-AR', {
+      formatted = new Intl.NumberFormat('es-AR', {
         style: 'currency',
         currency: 'ARS',
         maximumFractionDigits: 0,
       }).format(Number(value));
-    }
-    if (format === 'number') {
-      return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(Number(value));
-    }
-    if (format === 'percentage') {
-      return `${Number(value).toFixed(2)}%`;
-    }
-    if (format === 'date') {
+    } else if (format === 'number') {
+      formatted = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(Number(value));
+    } else if (format === 'percentage') {
+      formatted = `${Number(value).toFixed(2)}%`;
+    } else if (format === 'date') {
       const d = new Date(value);
-      return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+      formatted = d.toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+    } else {
+      formatted = String(value);
     }
-    if (format === 'duration') {
-      return String(value);
-    }
-    return String(value);
+    return suffix ? `${formatted} ${suffix}` : formatted;
   }
 
   document.querySelectorAll<HTMLElement>('.calc-container').forEach((container) => {
@@ -328,30 +521,51 @@ const { config } = Astro.props;
         container.querySelectorAll<HTMLElement>('[data-output]').forEach((el) => {
           const outId = el.dataset.output!;
           const format = el.dataset.format!;
+          const suffix = el.dataset.suffix || '';
           const val = output[outId];
           const valueEl = el.querySelector<HTMLElement>('[data-value]')!;
-          valueEl.textContent = formatValue(val, format);
+          valueEl.textContent = formatValue(val, format, suffix);
         });
         results.hidden = false;
         results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // GA4 event
+        if (typeof (window as any).gtag === 'function') {
+          (window as any).gtag('event', 'calculator_used', {
+            calc_slug: slug,
+            formula_id: formulaId,
+          });
+        }
       } catch (err: any) {
         errorBox.textContent = err.message || 'Error al calcular. Revisá los datos.';
         errorBox.hidden = false;
       }
     });
 
-    // Share buttons
+    // Action buttons
     container.querySelectorAll<HTMLButtonElement>('.btn-share').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const action = btn.dataset.action;
         const url = window.location.href;
         const text = `Mirá esta calculadora en Hacé Cuentas: ${document.title}`;
+
         if (action === 'whatsapp') {
-          window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, '_blank');
+          window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, '_blank', 'noopener');
         } else if (action === 'copy') {
-          await navigator.clipboard.writeText(url);
-          btn.textContent = '✅ Copiado';
-          setTimeout(() => (btn.textContent = '🔗 Copiar link'), 1500);
+          try {
+            await navigator.clipboard.writeText(url);
+            const label = btn.querySelector<HTMLElement>('[data-copy-label]')!;
+            const original = label.textContent;
+            label.textContent = '¡Copiado!';
+            setTimeout(() => (label.textContent = original), 1500);
+          } catch {
+            // fallback silencioso
+          }
+        } else if (action === 'reset') {
+          form.reset();
+          results.hidden = true;
+          errorBox.hidden = true;
+          form.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });
     });

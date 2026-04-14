@@ -25,7 +25,7 @@ const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#ffffff" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <title>{title}</title>
@@ -54,7 +54,7 @@ const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap"
       rel="stylesheet"
     />
 
@@ -76,15 +76,50 @@ const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
 
     <style is:global>
       :root {
-        --bg: #0f172a;
-        --bg-card: #1e293b;
-        --border: #334155;
-        --text: #f1f5f9;
-        --text-muted: #94a3b8;
-        --accent: #22d3ee;
-        --accent-hover: #06b6d4;
-        --success: #10b981;
-        --danger: #ef4444;
+        /* Surfaces */
+        --bg: #ffffff;
+        --bg-soft: #f8fafc;
+        --bg-muted: #f1f5f9;
+        --bg-card: #ffffff;
+
+        /* Borders */
+        --border: #e2e8f0;
+        --border-strong: #cbd5e1;
+
+        /* Text */
+        --text: #0f172a;
+        --text-muted: #475569;
+        --text-subtle: #64748b;
+
+        /* Brand — trust blue */
+        --accent: #2563eb;
+        --accent-hover: #1d4ed8;
+        --accent-soft: #eff6ff;
+        --accent-strong: #1e40af;
+
+        /* Status */
+        --success: #16a34a;
+        --success-soft: #f0fdf4;
+        --danger: #dc2626;
+        --danger-soft: #fef2f2;
+        --warning: #d97706;
+        --warning-soft: #fffbeb;
+
+        /* Elevation */
+        --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+        --shadow: 0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.06);
+        --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.05);
+        --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 0.1), 0 4px 6px -4px rgb(15 23 42 / 0.05);
+
+        /* Radii */
+        --radius-sm: 6px;
+        --radius: 10px;
+        --radius-lg: 14px;
+        --radius-xl: 20px;
+
+        /* Type */
+        --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
       }
 
       * {
@@ -94,8 +129,11 @@ const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
       }
 
       html {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: var(--font-body);
         scroll-behavior: smooth;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
       }
 
       body {
@@ -103,37 +141,86 @@ const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
         color: var(--text);
         line-height: 1.6;
         min-height: 100vh;
+        font-size: 16px;
       }
 
       main {
-        max-width: 1100px;
+        max-width: 1120px;
         margin: 0 auto;
-        padding: 2rem 1rem;
+        padding: 2rem 1.25rem 4rem;
       }
 
-      h1, h2, h3 {
+      h1, h2, h3, h4 {
         line-height: 1.2;
         font-weight: 700;
+        color: var(--text);
+        letter-spacing: -0.015em;
       }
 
-      h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); margin-bottom: 0.5rem; }
-      h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); margin: 1.5rem 0 0.75rem; }
-      h3 { font-size: 1.125rem; margin: 1rem 0 0.5rem; }
+      h1 {
+        font-size: clamp(1.875rem, 4vw, 2.75rem);
+        letter-spacing: -0.025em;
+        font-weight: 800;
+      }
 
-      p { margin-bottom: 1rem; color: var(--text-muted); }
+      h2 {
+        font-size: clamp(1.375rem, 3vw, 1.875rem);
+        margin-bottom: 0.5rem;
+      }
 
-      a { color: var(--accent); text-decoration: none; }
-      a:hover { color: var(--accent-hover); text-decoration: underline; }
+      h3 {
+        font-size: 1.125rem;
+      }
+
+      h4 {
+        font-size: 0.9375rem;
+        font-weight: 600;
+      }
+
+      p {
+        color: var(--text-muted);
+        line-height: 1.65;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+        transition: color 0.15s;
+      }
+
+      a:hover {
+        color: var(--accent-hover);
+      }
 
       button {
         font-family: inherit;
         cursor: pointer;
         border: none;
+        background: none;
       }
 
-      input, select {
+      input, select, textarea {
         font-family: inherit;
         font-size: 1rem;
+        color: inherit;
+      }
+
+      ::selection {
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+      }
+
+      /* Focus ring universal */
+      *:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+
+      .container {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 1.25rem;
       }
     </style>
   </body>
