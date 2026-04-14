@@ -78,6 +78,8 @@ export const GET: APIRoute = () => {
     { loc: `${site}/privacidad`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
     { loc: `${site}/cookies`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
     { loc: `${site}/terminos`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
+    { loc: `${site}/politica-editorial`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
+    { loc: `${site}/metodologia`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
     { loc: `${site}/contacto`, priority: '0.4', changefreq: 'yearly', lastmod: buildDate },
   ];
 

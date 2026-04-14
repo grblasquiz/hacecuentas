@@ -107,23 +107,31 @@ const schema = {
     </div>
 
     <h1 class="hero-title">
-      Las calculadoras que <span class="accent">necesitás</span>,<br />
-      sin vueltas.
+      Tu vida <span class="accent">más fácil</span>.
     </h1>
     <p class="hero-lead">
-      Sueldo en mano, aguinaldo, préstamos, IMC, interés compuesto y más.
-      Fórmulas adaptadas a Argentina, con explicaciones paso a paso.
+      <strong>{calcs.length} calculadoras gratis</strong> adaptadas a Argentina:
+      sueldo, aguinaldo, préstamos, IMC, interés compuesto y más.
+      Fórmulas oficiales con explicación paso a paso.
     </p>
 
-    <div class="hero-ctas">
-      <a href="/buscar" class="btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        Buscar entre {calcs.length} calculadoras
-      </a>
-      <a href="/valores-bcra" class="btn-secondary">
-        <span class="dot-live"></span>
-        Valores BCRA hoy
-      </a>
+    <button type="button" class="hero-search" id="hero-search-btn" aria-label="Buscar calculadora">
+      <svg class="hs-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <span class="hs-placeholder">Buscar entre {calcs.length} calculadoras…</span>
+      <kbd class="hs-kbd">⌘K</kbd>
+    </button>
+
+    <div class="hero-meta-row">
+      <span class="hero-stat"><strong>{calcs.length}</strong> calculadoras</span>
+      <span class="hero-dot" aria-hidden="true">·</span>
+      <span class="hero-stat"><strong>{categoryOrder.length}</strong> categorías</span>
+      <span class="hero-dot" aria-hidden="true">·</span>
+      <span class="hero-stat"><strong>0</strong> registros</span>
+      <span class="hero-dot" aria-hidden="true">·</span>
+      <a href="/valores-bcra" class="hero-live"><span class="dot-live"></span>Valores BCRA hoy</a>
     </div>
 
     <div class="sources">
@@ -303,6 +311,14 @@ const schema = {
   <Footer slot="footer" />
 </Layout>
 
+<script is:inline>
+  // Hero search button → abre el modal de search del header
+  document.getElementById('hero-search-btn')?.addEventListener('click', function () {
+    var openBtn = document.getElementById('open-search');
+    if (openBtn) openBtn.click();
+  });
+</script>
+
 <style>
   /* Hero */
   .hero {
@@ -359,6 +375,82 @@ const schema = {
     justify-content: center;
     gap: 0.625rem;
     margin-bottom: 2rem;
+  }
+
+  /* Hero search input grande */
+  .hero-search {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto 1.25rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: inherit;
+    text-align: left;
+  }
+  .hero-search:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+  .hs-icon { color: var(--accent); flex-shrink: 0; }
+  .hs-placeholder {
+    flex: 1;
+    color: var(--text-subtle);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+  .hs-kbd {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-subtle);
+    flex-shrink: 0;
+  }
+
+  .hero-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem 0.625rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+  .hero-stat strong { color: var(--text); font-weight: 700; }
+  .hero-dot { color: var(--border-strong); }
+  .hero-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    padding: 0.25rem 0.625rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    transition: all 0.15s;
+  }
+  .hero-live:hover { background: var(--accent); color: #fff; text-decoration: none; }
+
+  @media (max-width: 540px) {
+    .hs-placeholder { font-size: 0.9375rem; }
+    .hs-kbd { display: none; }
+    .hero-meta-row { font-size: 0.8125rem; gap: 0.375rem 0.5rem; }
   }
 
   .btn-primary, .btn-secondary, .btn-ghost {

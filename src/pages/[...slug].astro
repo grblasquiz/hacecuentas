@@ -52,18 +52,29 @@ const categoryLabels: Record<string, string> = {
   cocina: 'Cocina',
 };
 
-// dateModified = fecha del archivo JSON (freshness real) con fallback a build date
+// dateModified = lastReviewed del JSON > mtime del archivo > build date
 let dateModified: string;
+let lastReviewedLabel: string;
 try {
   const { statSync } = await import('node:fs');
   const { fileURLToPath } = await import('node:url');
   const { dirname, join } = await import('node:path');
   const __dir = dirname(fileURLToPath(import.meta.url));
   const filePath = join(__dir, '..', 'content', 'calcs', `${calc.formulaId || calc.slug}.json`);
-  dateModified = statSync(filePath).mtime.toISOString();
+  // Si el JSON declara lastReviewed (YYYY-MM-DD), tiene precedencia
+  if (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
+    dateModified = new Date(calc.lastReviewed + 'T00:00:00Z').toISOString();
+  } else {
+    dateModified = statSync(filePath).mtime.toISOString();
+  }
 } catch {
   dateModified = new Date().toISOString();
 }
+lastReviewedLabel = new Date(dateModified).toLocaleDateString('es-AR', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+});
 const datePublished = '2025-09-01T00:00:00Z';
 
 const schemaHowTo = {
@@ -132,7 +143,7 @@ const schemaGraph: any[] = [schemaHowTo, schemaBreadcrumb, schemaApp];
 if (schemaFAQ) schemaGraph.push(schemaFAQ);
 const schema = { '@context': 'https://schema.org', '@graph': schemaGraph };
 
-const updated = new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+const updated = lastReviewedLabel;
 
 // Reading time: ~200 palabras/minuto en español
 const wordCount = calc.explanation ? calc.explanation.split(/\s+/).length : 0;
@@ -179,9 +190,13 @@ const relatedContextual = relatedSlugs
       </div>
       <p class="intro">{calc.intro}</p>
       <div class="meta">
-        <span class="meta-item">
+        <span class="meta-item" title={`Última revisión: ${updated} · Equipo Hacé Cuentas`}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Actualizado: {updated}
+          Última revisión: <strong>{updated}</strong>
+        </span>
+        <span class="meta-item meta-reviewer">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Verificado por <a href="/politica-editorial">Equipo Hacé Cuentas</a>
         </span>
         {sources.length > 0 && (
           <span class="meta-item">
@@ -392,6 +407,13 @@ const relatedContextual = relatedSlugs
     margin-bottom: 1rem;
     line-height: 1.6;
   }
+
+  .meta-reviewer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .meta-reviewer a:hover { text-decoration: underline; }
 
   .meta {
     display: flex;
