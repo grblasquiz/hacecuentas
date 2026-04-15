@@ -53,6 +53,16 @@ import { ovulacion } from './ovulacion';
 import { fechaParto } from './fecha-parto';
 import { alcoholSangre } from './alcohol-sangre';
 import { percentilPediatrico } from './percentil-pediatrico';
+import { cinturaCadera } from './cintura-cadera';
+import { presionArterial } from './presion-arterial';
+import { a1cGlucosa } from './a1c-glucosa';
+import { tfgCreatinina } from './tfg-creatinina';
+import { superficieCorporal } from './superficie-corporal';
+import { ffmi } from './ffmi';
+import { horasSueno } from './horas-sueno';
+import { frecuenciaRespiratoria } from './frecuencia-respiratoria';
+import { caloriasCaminando } from './calorias-caminando';
+import { temperaturaCorporal } from './temperatura-corporal';
 
 // Marketing
 import { marketingCtr } from './marketing-ctr';
@@ -191,6 +201,16 @@ export const formulas = {
   'fecha-parto': fechaParto,
   'alcohol-sangre': alcoholSangre,
   'percentil-pediatrico': percentilPediatrico,
+  'cintura-cadera': cinturaCadera,
+  'presion-arterial': presionArterial,
+  'a1c-glucosa': a1cGlucosa,
+  'tfg-creatinina': tfgCreatinina,
+  'superficie-corporal': superficieCorporal,
+  ffmi,
+  'horas-sueno': horasSueno,
+  'frecuencia-respiratoria': frecuenciaRespiratoria,
+  'calorias-caminando': caloriasCaminando,
+  'temperatura-corporal': temperaturaCorporal,
 
   // Marketing
   'marketing-ctr': marketingCtr,

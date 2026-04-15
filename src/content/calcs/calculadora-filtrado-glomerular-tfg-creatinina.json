@@ -1,0 +1,140 @@
+{
+  "slug": "calculadora-filtrado-glomerular-tfg-creatinina",
+  "title": "Calculadora de filtrado glomerular (eGFR) — CKD-EPI 2021",
+  "h1": "Calculadora de filtrado glomerular (eGFR) por creatinina",
+  "description": "Calculá tu eGFR según la fórmula CKD-EPI 2021 (sin coeficiente racial). Te decimos el estadio KDIGO de enfermedad renal crónica.",
+  "category": "salud",
+  "icon": "Droplet",
+  "formulaId": "tfg-creatinina",
+  "seoKeywords": [
+    "filtrado glomerular calcular",
+    "eGFR creatinina",
+    "ckd-epi 2021 fórmula",
+    "tfg estimada",
+    "estadios enfermedad renal crónica",
+    "kdigo estadios",
+    "función renal análisis sangre",
+    "creatinina valor normal",
+    "calculadora función renal",
+    "tasa filtración glomerular"
+  ],
+  "intro": "La **tasa de filtrado glomerular estimada (eGFR)** es el mejor indicador de función renal. Esta calculadora aplica la **CKD-EPI 2021** — la fórmula recomendada hoy por las guías KDIGO, NKF y ASN — que **eliminó el coeficiente racial** previamente usado, por considerarse no fundamentado en biología y por reducir el acceso a transplante renal a pacientes negros. Usa creatinina sérica, edad y sexo para estimar tu filtrado en mL/min/1.73 m².",
+  "keyTakeaway": "eGFR ≥ 90: función normal. 60–89: leve disminución. 30–59: enfermedad renal crónica moderada. < 30: severa. < 15: indicación de diálisis.",
+  "useCases": [
+    "Interpretar el valor de creatinina en un análisis de rutina",
+    "Detectar enfermedad renal crónica temprana",
+    "Ajustar dosis de fármacos eliminados por riñón (metformina, AINEs, antibióticos, IECAs)",
+    "Decidir necesidad de derivación al nefrólogo",
+    "Hacer seguimiento de progresión renal en personas con HTA o diabetes"
+  ],
+  "fields": [
+    {
+      "name": "creatinina",
+      "label": "Creatinina sérica (mg/dL)",
+      "type": "number",
+      "placeholder": "0.9",
+      "min": 0.1,
+      "max": 20,
+      "step": 0.01,
+      "required": true,
+      "help": "Valor del análisis de sangre, en mg/dL. Si tu lab usa µmol/L, dividilo por 88.4 para convertir."
+    },
+    {
+      "name": "edad",
+      "label": "Edad (años)",
+      "type": "number",
+      "placeholder": "45",
+      "min": 18,
+      "max": 120,
+      "step": 1,
+      "required": true,
+      "help": "CKD-EPI es para adultos (≥ 18 años). En niños se usa Schwartz."
+    },
+    {
+      "name": "sexo",
+      "label": "Sexo",
+      "type": "select",
+      "options": [
+        { "value": "mujer", "label": "Mujer" },
+        { "value": "hombre", "label": "Hombre" }
+      ],
+      "required": true,
+      "default": "mujer"
+    }
+  ],
+  "outputs": [
+    { "key": "egfr", "label": "eGFR (mL/min/1.73 m²)" },
+    { "key": "estadio", "label": "Estadio KDIGO" },
+    { "key": "descripcion", "label": "Descripción del estadio" },
+    { "key": "formula", "label": "Fórmula aplicada" },
+    { "key": "resumen", "label": "Resumen" }
+  ],
+  "example": {
+    "title": "Ejemplo paso a paso",
+    "steps": [
+      "**Mujer de 55 años**, creatinina 1.1 mg/dL.",
+      "κ = 0.7 (mujer), α = −0.241 (mujer).",
+      "ratio = 1.1 / 0.7 = 1.571.",
+      "minTerm = min(1.571, 1)^−0.241 = 1^−0.241 = **1.0**.",
+      "maxTerm = max(1.571, 1)^−1.200 = 1.571^−1.200 = **0.5763**.",
+      "ageTerm = 0.9938^55 = **0.7104**.",
+      "factorSexo = 1.012 (mujer).",
+      "eGFR = 142 × 1.0 × 0.5763 × 0.7104 × 1.012 = **58.8 mL/min/1.73 m²**.",
+      "Estadio G3a (45–59): ERC moderada → consulta con nefrólogo."
+    ],
+    "result": "eGFR 58.8 mL/min/1.73 m² → G3a (ERC moderada)."
+  },
+  "explanation": "## La fórmula CKD-EPI 2021\n\n```\neGFR = 142 × min(Scr/κ, 1)^α × max(Scr/κ, 1)^−1.200 × 0.9938^edad × (1.012 si mujer)\n```\n\n| Sexo | κ | α |\n|------|------|--------|\n| Hombre | 0.9 | −0.302 |\n| Mujer | 0.7 | −0.241 |\n\n**Scr** = creatinina sérica en mg/dL. Si tu laboratorio reporta en µmol/L, dividí por 88.4.\n\n## ¿Por qué se eliminó el coeficiente racial?\n\nLa CKD-EPI original (2009) multiplicaba el resultado por **1.159 si el paciente era negro**, basándose en estudios donde la creatinina promedio era mayor en personas negras (atribuido históricamente, sin evidencia sólida, a mayor masa muscular). Esto resultaba en eGFR más alto y por tanto menor acceso a transplante renal y derivación tardía a nefrología.\n\nEn 2021 NKF y ASN publicaron una **nueva fórmula sin raza**, recalibrada para que la diferencia entre poblaciones sea pequeña. Es la versión actual recomendada.\n\n## Estadios KDIGO de Enfermedad Renal Crónica\n\n| Estadio | eGFR (mL/min/1.73 m²) | Descripción |\n|---------|-----------------------|-------------|\n| G1 | ≥ 90 | Normal o aumentada |\n| G2 | 60 – 89 | Leve disminución |\n| G3a | 45 – 59 | Leve a moderada |\n| G3b | 30 – 44 | Moderada a severa |\n| G4 | 15 – 29 | Severa |\n| G5 | < 15 | Falla renal terminal (diálisis) |\n\n**Para diagnosticar ERC se requieren además marcadores de daño** (proteinuria, hematuria, alteraciones en imagen) o eGFR < 60 sostenido por **más de 3 meses**.\n\n## Limitaciones\n\nLa eGFR por creatinina puede ser inexacta cuando:\n- **Masa muscular extrema:** atletas o desnutridos.\n- **Amputaciones, paraplejía:** menor masa muscular subestima la creatinina y sobreestima el eGFR.\n- **Embarazo:** mayor filtrado, fórmulas no validadas.\n- **Cambios agudos:** la creatinina cambia lentamente (24–48 h), no refleja injuria renal aguda. Mejor usar marcadores como NGAL o cistatina C.\n- **Dieta proteica reciente:** comer mucha carne sube la creatinina sin cambio real de función renal.\n\nEn casos dudosos se pide **cistatina C** o **clearance medido con urea de 24 h**.\n\n## Ajustes de fármacos\n\nMuchos medicamentos requieren ajuste o suspensión según eGFR:\n\n- **Metformina:** suspender si eGFR < 30; reducir dosis si 30–45.\n- **AINEs (ibuprofeno, diclofenac):** evitar si eGFR < 60.\n- **IECAs/ARA-II:** monitorear creatinina y K+; suspender si eGFR baja > 30 % o K+ > 5.5 tras inicio.\n- **Antibióticos:** ajustar amoxicilina, ciprofloxacino, vancomicina, etc.\n- **Contrastes yodados:** prevenir nefropatía hidratando previo si eGFR < 60.",
+  "faq": [
+    {
+      "q": "¿Cuál es la diferencia entre TFG y eGFR?",
+      "a": "**TFG** (tasa de filtrado glomerular) es el filtrado real, medido directamente con una sustancia exógena como inulina (gold standard, casi nunca se hace). **eGFR** (estimated GFR) es el filtrado estimado mediante fórmulas a partir de creatinina y otras variables. En la práctica clínica solo se usa eGFR."
+    },
+    {
+      "q": "Mi creatinina está en rango normal pero mi eGFR es bajo. ¿Por qué?",
+      "a": "El \"rango normal\" de creatinina del laboratorio es para población general adulta y no tiene en cuenta tu edad, sexo ni masa muscular. La eGFR sí los incorpora. Por ejemplo, una mujer de 70 años con creatinina 1.0 mg/dL (\"normal\") puede tener eGFR 50 mL/min/1.73 m² → ERC moderada. La eGFR es siempre más informativa que la creatinina sola."
+    },
+    {
+      "q": "¿La creatinina me dio alta pero un solo análisis. ¿Tengo enfermedad renal?",
+      "a": "Para diagnosticar ERC se requiere eGFR < 60 sostenido por **más de 3 meses** o presencia de daño renal (proteinuria, hematuria, anomalías estructurales). Una sola medición alta puede deberse a deshidratación, dieta proteica reciente, ejercicio intenso o medicación. Repetí en 2–4 semanas en condiciones basales antes de concluir."
+    },
+    {
+      "q": "¿Por qué CKD-EPI y no MDRD?",
+      "a": "**MDRD** (2006) fue ampliamente usada pero **subestima sistemáticamente la eGFR cuando es > 60 mL/min/1.73 m²**. CKD-EPI 2009 y su actualización 2021 son más precisas en todo el rango de función renal. Hoy MDRD está obsoleta — si tu lab todavía la reporta, pediles que actualicen."
+    },
+    {
+      "q": "Mi eGFR es 90 pero tengo proteínas en la orina. ¿Es normal?",
+      "a": "**No.** La presencia de proteinuria significativa (≥ 30 mg/g de cociente albúmina/creatinina) ya es diagnóstico de enfermedad renal crónica, incluso con eGFR normal. Es uno de los **marcadores de daño** que requieren consulta nefrológica."
+    },
+    {
+      "q": "¿La fórmula sirve para chicos?",
+      "a": "No. CKD-EPI es solo para adultos (≥ 18 años). En pediatría se usa la **fórmula de Schwartz**: eGFR = (k × altura cm) / creatinina, donde k varía según edad y sexo. Algunos hospitales usan también el método de Schwartz \"bedside\" k=0.413."
+    },
+    {
+      "q": "¿Cómo puedo cuidar mis riñones?",
+      "a": "Las medidas más efectivas: 1) Controlar **presión arterial** (< 130/80 si hay ERC). 2) Controlar **glucemia** si sos diabético. 3) Hidratarte adecuadamente (sin exceso). 4) Evitar **AINEs crónicos**. 5) Dejar de fumar. 6) Bajar peso si sobrepeso. 7) Dieta moderada en sodio (< 5 g/día) y proteínas si ya hay ERC. 8) Controles anuales si tenés HTA, diabetes o antecedentes familiares."
+    },
+    {
+      "q": "¿Qué es la cistatina C y por qué se usa a veces?",
+      "a": "La **cistatina C** es una proteína producida por todas las células nucleadas a tasa constante, filtrada por el riñón. A diferencia de la creatinina, **no depende de la masa muscular ni de la dieta**. Es más precisa en ancianos, amputados, atletas y desnutridos. Se usa la fórmula CKD-EPI cistatina o la combinada creatinina-cistatina, que es la más precisa de todas."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Inker LA et al. — New Creatinine- and Cystatin C-Based Equations to Estimate GFR without Race (NEJM 2021)",
+      "url": "https://www.nejm.org/doi/full/10.1056/NEJMoa2102953",
+      "publisher": "New England Journal of Medicine"
+    },
+    {
+      "title": "KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of CKD",
+      "url": "https://kdigo.org/guidelines/ckd-evaluation-and-management/",
+      "publisher": "Kidney Disease: Improving Global Outcomes"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-hemoglobina-glicosilada-a1c-glucosa",
+    "calculadora-presion-arterial-clasificacion",
+    "calculadora-imc-indice-masa-corporal",
+    "calculadora-superficie-corporal-bsa-mosteller"
+  ]
+}
