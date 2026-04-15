@@ -133,7 +133,7 @@ const schema = {
       <span class="hero-dot" aria-hidden="true">·</span>
       <span class="hero-stat"><strong>{categoryOrder.length}</strong> categorías</span>
       <span class="hero-dot" aria-hidden="true">·</span>
-      <span class="hero-stat"><strong>0</strong> registros</span>
+      <span class="hero-stat"><strong id="registros-count">0</strong> registros</span>
       <span class="hero-dot" aria-hidden="true">·</span>
       <a href="/valores-bcra" class="hero-live"><span class="dot-live"></span>Valores BCRA hoy</a>
     </div>
@@ -333,6 +333,22 @@ const schema = {
     var openBtn = document.getElementById('open-search');
     if (openBtn) openBtn.click();
   });
+
+  // Registros counter: suma todos los cálculos guardados en localStorage
+  (function () {
+    try {
+      var total = 0;
+      for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (key && key.indexOf('hc-history-') === 0) {
+          var arr = JSON.parse(localStorage.getItem(key) || '[]');
+          if (Array.isArray(arr)) total += arr.length;
+        }
+      }
+      var el = document.getElementById('registros-count');
+      if (el && total > 0) el.textContent = String(total);
+    } catch (e) {}
+  })();
 </script>
 
 <style>
