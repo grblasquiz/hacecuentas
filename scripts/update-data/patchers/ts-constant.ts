@@ -70,6 +70,71 @@ export function replaceArrayLiteral(
 }
 
 /**
+ * Reemplaza un object literal completo asignado a una const.
+ *   const NAME: Record<string, Foo> = { ... };
+ * Se matchea por nombre y se reemplaza todo el contenido entre `{` y `};`.
+ * Cuenta llaves balanceadas para soportar objects anidados.
+ * El newContent debe ser el texto TS interno (sin `{` `}` — solo las entries).
+ */
+export function replaceObjectLiteral(
+  filePath: string,
+  constName: string,
+  newContent: string,
+): boolean {
+  const src = readFileSync(filePath, 'utf8');
+  // Match: const NAME<opcional tipo> = {
+  const headRe = new RegExp(
+    `(const\\s+${constName}(?:\\s*:\\s*[^=]+)?\\s*=\\s*)\\{`,
+  );
+  const headMatch = headRe.exec(src);
+  if (!headMatch) return false;
+  const braceStart = headMatch.index + headMatch[0].length - 1; // posición del `{`
+  // Contar llaves balanceadas hasta encontrar la de cierre
+  let depth = 0;
+  let end = -1;
+  let inString: string | null = null;
+  let escaped = false;
+  for (let i = braceStart; i < src.length; i++) {
+    const ch = src[i];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      escaped = true;
+      continue;
+    }
+    if (inString) {
+      if (ch === inString) inString = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      inString = ch;
+      continue;
+    }
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  if (end === -1) return false;
+  // Consumir opcional `;` (y whitespace intermedio) después del `}`
+  let tail = end + 1;
+  while (tail < src.length && /\s/.test(src[tail])) tail++;
+  if (src[tail] === ';') tail++;
+  const before = src.slice(0, headMatch.index + headMatch[0].length);
+  const after = src.slice(tail);
+  const replaced = `${before}\n${newContent}\n};${after}`;
+  if (replaced === src) return false;
+  writeFileSync(filePath, replaced, 'utf8');
+  return true;
+}
+
+/**
  * Reemplaza el valor numérico de una const top-level:
  *   export const NAME = 2_280_000;
  *   const NAME: number = 340000;

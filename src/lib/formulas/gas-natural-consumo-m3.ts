@@ -16,6 +16,15 @@ export interface Outputs {
   resumen: string;
 }
 
+// Cuadro tarifario residencial ENARGAS (Argentina 2026, valores base sin subsidio).
+// Mantenido por scripts/update-data/fetchers/gas-natural.ts.
+const PRECIO_R1 = 280;
+const PRECIO_R2 = 340;
+const PRECIO_R3 = 420;
+const CARGO_FIJO_R1 = 2_500;
+const CARGO_FIJO_R2 = 3_200;
+const CARGO_FIJO_R3 = 4_500;
+
 export function gasNaturalConsumoM3(i: Inputs): Outputs {
   const m3 = Number(i.consumoM3Bimestral);
   const categoriaIn = String(i.categoria || 'auto');
@@ -35,25 +44,29 @@ export function gasNaturalConsumoM3(i: Inputs): Outputs {
   if (categoriaIn === 'auto') {
     if (m3Anuales < 500) {
       categoriaDetectada = 'R1 (bajo consumo)';
-      if (!precioIn) precioPorM3 = 280; // ARS/m3 residencial
-      cargoFijo = 2500;
+      if (!precioIn) precioPorM3 = PRECIO_R1;
+      cargoFijo = CARGO_FIJO_R1;
     } else if (m3Anuales < 1100) {
       categoriaDetectada = 'R2 (medio)';
-      if (!precioIn) precioPorM3 = 340;
-      cargoFijo = 3200;
+      if (!precioIn) precioPorM3 = PRECIO_R2;
+      cargoFijo = CARGO_FIJO_R2;
     } else {
       categoriaDetectada = 'R3 (alto)';
-      if (!precioIn) precioPorM3 = 420;
-      cargoFijo = 4500;
+      if (!precioIn) precioPorM3 = PRECIO_R3;
+      cargoFijo = CARGO_FIJO_R3;
     }
   } else {
     categoriaDetectada = categoriaIn;
     if (!precioIn) {
-      if (categoriaIn.includes('R1')) precioPorM3 = 280;
-      else if (categoriaIn.includes('R2')) precioPorM3 = 340;
-      else precioPorM3 = 420;
+      if (categoriaIn.includes('R1')) precioPorM3 = PRECIO_R1;
+      else if (categoriaIn.includes('R2')) precioPorM3 = PRECIO_R2;
+      else precioPorM3 = PRECIO_R3;
     }
-    cargoFijo = categoriaIn.includes('R1') ? 2500 : categoriaIn.includes('R2') ? 3200 : 4500;
+    cargoFijo = categoriaIn.includes('R1')
+      ? CARGO_FIJO_R1
+      : categoriaIn.includes('R2')
+        ? CARGO_FIJO_R2
+        : CARGO_FIJO_R3;
   }
 
   const subtotal = m3 * precioPorM3 + cargoFijo;

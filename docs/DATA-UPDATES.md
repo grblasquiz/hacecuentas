@@ -25,11 +25,13 @@ Distribución de las 205 calcs por `frequency`:
 
 | Frequency | Calcs | Implementado |
 |-----------|------:|:-------------|
-| never     | 176   | N/A (no se actualizan nunca — incluye math-puros tipo aguinaldo/indemnización/vacaciones/edad-jubilación/impuesto-cheque) |
+| never     | 184   | N/A (no se actualizan nunca — incluye math-puros tipo aguinaldo/indemnización/vacaciones/edad-jubilación/impuesto-cheque) |
 | daily     | 2     | ✅ `fetchers/dolar.ts` (2 de 2) |
-| monthly   | 9     | ✅ parcial: `fetchers/bcra.ts` + `fetchers/ipc.ts` + `fetchers/jubilacion-anses.ts` (5 de 9) |
-| biannual  | 7     | ✅ parcial: `fetchers/monotributo.ts` + `fetchers/monotributo-vs-inscripto.ts` + `fetchers/ganancias-escala.ts` + `fetchers/smvm.ts` (6 de 7) |
-| yearly    | 11    | ✅ parcial: `fetchers/bienes-personales.ts` + `fetchers/costo-laboral.ts` (2 de 11) |
+| monthly   | 5     | ✅ `fetchers/bcra.ts` + `fetchers/ipc.ts` + `fetchers/jubilacion-anses.ts` (5 de 5) |
+| biannual  | 7     | ✅ `fetchers/monotributo.ts` + `fetchers/monotributo-vs-inscripto.ts` + `fetchers/ganancias-escala.ts` + `fetchers/smvm.ts` + `fetchers/ganancias-rg830.ts` (7 de 7) |
+| yearly    | 7     | ✅ `fetchers/bienes-personales.ts` + `fetchers/costo-laboral.ts` + `fetchers/costo-mochilero.ts` + `fetchers/propinas.ts` + `fetchers/gas-natural.ts` + `fetchers/costo-m2.ts` + `fetchers/ingresos-brutos.ts` (7 de 7) |
+
+**Cobertura actual: 21 de 21 calcs updateable tienen fetcher (100%).**
 
 Para ver el detalle vivo: `node --experimental-strip-types scripts/update-data/index.ts --report`.
 
@@ -37,8 +39,8 @@ Para ver el detalle vivo: `node --experimental-strip-types scripts/update-data/i
 
 - **[`update-data-daily.yml`](../.github/workflows/update-data-daily.yml)** — corre `0 10 * * *` (07:00 ARG). Fetchers: dolar. Abre PR si hay cambios.
 - **[`update-data-monthly.yml`](../.github/workflows/update-data-monthly.yml)** — corre día 16 del mes (INDEC ya publicó IPC). Fetchers: bcra, ipc, jubilacion-anses (auto-llm, ANSES actualiza mensual por Ley 27.609). Abre PR.
-- **[`update-data-biannual.yml`](../.github/workflows/update-data-biannual.yml)** — cron 15 enero + 15 julio. Fetchers: monotributo, monotributo-vs-inscripto, ganancias-escala, smvm. Si falta `ANTHROPIC_API_KEY`, abre issue con checklist manual.
-- **[`update-data-yearly.yml`](../.github/workflows/update-data-yearly.yml)** — cron 1 febrero (ya publicó ARCA el año fiscal). Fetchers: bienes-personales, costo-laboral. Mismo fallback manual.
+- **[`update-data-biannual.yml`](../.github/workflows/update-data-biannual.yml)** — cron 15 enero + 15 julio. Fetchers: monotributo, monotributo-vs-inscripto, ganancias-escala, smvm, ganancias-rg830 (ARCA ajusta MNI/escala ~2x/año por inflación). Si falta `ANTHROPIC_API_KEY`, abre issue con checklist manual.
+- **[`update-data-yearly.yml`](../.github/workflows/update-data-yearly.yml)** — cron 1 febrero (ya publicó ARCA el año fiscal). Fetchers: bienes-personales, costo-laboral, costo-mochilero, propinas, gas-natural, costo-m2, ingresos-brutos. Mismo fallback manual.
 
 Todos tienen `workflow_dispatch` con flag `dry` para testear manualmente desde la UI de Actions.
 
@@ -76,7 +78,13 @@ scripts/update-data/
 │   ├── smvm.ts                      # auto-llm → salario-minimo.ts (SMVM mensual + hora + fecha)
 │   ├── jubilacion-anses.ts          # auto-llm → jubilacion-minima.ts (HABER_MINIMO + BONO_EXTRA)
 │   ├── bienes-personales.ts         # auto-llm → bienes-personales.ts (MNI + escala + deducción casa)
-│   └── costo-laboral.ts             # auto-llm → costo-laboral.ts (cargas patronales + ART)
+│   ├── costo-laboral.ts             # auto-llm → costo-laboral.ts (cargas patronales + ART)
+│   ├── costo-mochilero.ts           # auto-llm → costo-mochilero-por-pais.ts (29 países USD/día)
+│   ├── propinas.ts                  # auto-llm → propina-viaje.ts (12 países: resto/taxi/hotel + regla)
+│   ├── gas-natural.ts               # auto-llm → gas-natural-consumo-m3.ts (precios R1/R2/R3 + cargos fijos)
+│   ├── costo-m2.ts                  # auto-llm → costo-m2-construccion.ts (10 tipologías USD/m²)
+│   ├── ganancias-rg830.ts           # auto-llm → ganancias-rg830.ts (conceptos + escala profesional)
+│   └── ingresos-brutos.ts           # auto-llm → ingresos-brutos.ts (5 provincias × 5 actividades)
 ├── patchers/             # primitivas para tocar archivos
 │   ├── data-update-date.ts   # actualiza dataUpdate.lastUpdated en JSON
 │   ├── json-field.ts         # patches a fields[].default y presets[]

@@ -85,21 +85,37 @@ const conceptos: Record<string, ConceptoConfig> = {
 };
 
 /**
- * Escala progresiva simplificada para honorarios profesionales (cód. 119).
- * Basada en RG 5423/2023. Valores actualizados periódicamente por ARCA.
+ * Escala progresiva para honorarios profesionales (cód. 119).
+ * Basada en RG 5423/2023 y ajustes periódicos de ARCA.
+ * Tramos: { desde, hasta, fijo, alicuota }. Último tramo usa hasta=Infinity.
+ * Mantenido por scripts/update-data/fetchers/ganancias-rg830.ts.
  */
+interface TramoProfesionales {
+  desde: number;
+  hasta: number;
+  fijo: number;
+  alicuota: number;
+}
+const ESCALA_PROFESIONALES: TramoProfesionales[] = [
+  { desde: 0,           hasta: 1_300_000,  fijo: 0,          alicuota: 0.05 },
+  { desde: 1_300_000,   hasta: 2_600_000,  fijo: 65_000,     alicuota: 0.09 },
+  { desde: 2_600_000,   hasta: 3_900_000,  fijo: 182_000,    alicuota: 0.12 },
+  { desde: 3_900_000,   hasta: 5_200_000,  fijo: 338_000,    alicuota: 0.15 },
+  { desde: 5_200_000,   hasta: 6_500_000,  fijo: 533_000,    alicuota: 0.19 },
+  { desde: 6_500_000,   hasta: 13_000_000, fijo: 780_000,    alicuota: 0.23 },
+  { desde: 13_000_000,  hasta: 26_000_000, fijo: 2_275_000,  alicuota: 0.27 },
+  { desde: 26_000_000,  hasta: Infinity,   fijo: 5_785_000,  alicuota: 0.31 },
+];
+
 function calcularEscalaProfesionales(baseExcedente: number): number {
-  // Aprox 2026 (RG 5423 + ajustes). Consultar simulador para valores exactos.
-  // Base de excedente = monto_acumulado - MNI
   if (baseExcedente <= 0) return 0;
-  if (baseExcedente <= 1300000) return baseExcedente * 0.05;
-  if (baseExcedente <= 2600000) return 65000 + (baseExcedente - 1300000) * 0.09;
-  if (baseExcedente <= 3900000) return 182000 + (baseExcedente - 2600000) * 0.12;
-  if (baseExcedente <= 5200000) return 338000 + (baseExcedente - 3900000) * 0.15;
-  if (baseExcedente <= 6500000) return 533000 + (baseExcedente - 5200000) * 0.19;
-  if (baseExcedente <= 13000000) return 780000 + (baseExcedente - 6500000) * 0.23;
-  if (baseExcedente <= 26000000) return 2275000 + (baseExcedente - 13000000) * 0.27;
-  return 5785000 + (baseExcedente - 26000000) * 0.31;
+  for (const tramo of ESCALA_PROFESIONALES) {
+    if (baseExcedente <= tramo.hasta) {
+      return tramo.fijo + (baseExcedente - tramo.desde) * tramo.alicuota;
+    }
+  }
+  const last = ESCALA_PROFESIONALES[ESCALA_PROFESIONALES.length - 1];
+  return last.fijo + (baseExcedente - last.desde) * last.alicuota;
 }
 
 export interface GananciasRG830Outputs {

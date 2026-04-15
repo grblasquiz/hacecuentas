@@ -21,6 +21,12 @@ import { fetchJubilacionAnses } from './fetchers/jubilacion-anses.ts';
 import { fetchBienesPersonales } from './fetchers/bienes-personales.ts';
 import { fetchCostoLaboral } from './fetchers/costo-laboral.ts';
 import { fetchMonotributoVsInscripto } from './fetchers/monotributo-vs-inscripto.ts';
+import { fetchCostoMochilero } from './fetchers/costo-mochilero.ts';
+import { fetchPropinas } from './fetchers/propinas.ts';
+import { fetchGasNatural } from './fetchers/gas-natural.ts';
+import { fetchCostoM2 } from './fetchers/costo-m2.ts';
+import { fetchGananciasRG830 } from './fetchers/ganancias-rg830.ts';
+import { fetchIngresosBrutos } from './fetchers/ingresos-brutos.ts';
 
 export interface FetcherEntry {
   name: string;
@@ -106,6 +112,48 @@ export const REGISTRY: FetcherEntry[] = [
     slugs: ['calculadora-costo-laboral-empleado'],
     frequency: 'yearly',
     run: fetchCostoLaboral,
+  },
+  {
+    name: 'costo-mochilero',
+    // Presupuestos diarios USD/día para 29 países (Nomadic Matt, BBP, Budget Your Trip).
+    slugs: ['calculadora-costo-mochilero-por-pais'],
+    frequency: 'yearly',
+    run: fetchCostoMochilero,
+  },
+  {
+    name: 'propinas',
+    // % propina por 12 países (restaurante, taxi, hotel) + regla local.
+    slugs: ['calculadora-propina-por-pais-viaje'],
+    frequency: 'yearly',
+    run: fetchPropinas,
+  },
+  {
+    name: 'gas-natural',
+    // Cuadro tarifario ENARGAS: precio/m³ + cargo fijo bimestral R1/R2/R3.
+    slugs: ['calculadora-gas-natural-consumo-m3'],
+    frequency: 'yearly',
+    run: fetchGasNatural,
+  },
+  {
+    name: 'costo-m2',
+    // Costo construcción USD/m² × 10 tipologías (CAC / CPIC / Reporte Inmobiliario).
+    slugs: ['calculadora-costo-m2-construccion-argentina'],
+    frequency: 'yearly',
+    run: fetchCostoM2,
+  },
+  {
+    name: 'ganancias-rg830',
+    // Anexo VIII RG 830 — MNI + alícuotas + escala progresiva (ARCA actualiza 2x/año).
+    slugs: ['calculadora-retencion-ganancias-rg-830'],
+    frequency: 'biannual',
+    run: fetchGananciasRG830,
+  },
+  {
+    name: 'ingresos-brutos',
+    // Alícuotas IIBB 5 provincias × 5 actividades (ley tarifaria provincial anual).
+    slugs: ['calculadora-ingresos-brutos-provincial'],
+    frequency: 'yearly',
+    run: fetchIngresosBrutos,
   },
 ];
 
