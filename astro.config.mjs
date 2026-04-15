@@ -1,6 +1,5 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import sitemap from '@astrojs/sitemap';
 import compressor from 'astro-compressor';
 
 // https://astro.build/config
@@ -13,7 +12,6 @@ export default defineConfig({
   },
   compressHTML: true,
   integrations: [
-    sitemap(),
     compressor(), // gzip + brotli de HTML/CSS/JS en dist/
   ],
   // Prefetch on hover: acelera navegación entre calcs sin inflar el payload inicial.
