@@ -323,14 +323,13 @@ async function main(): Promise<void> {
 
     const outPath = join(OUT_DIR, `${calc.slug}.png`);
 
-    // Cache check: skip if PNG exists AND is newer than the source JSON.
-    if (existsSync(outPath)) {
-      const outMtime = statSync(outPath).mtimeMs;
-      const srcMtime = statSync(srcPath).mtimeMs;
-      if (outMtime >= srcMtime) {
-        result.cached++;
-        continue;
-      }
+    // Cache check: skip if PNG already exists and has content.
+    // NOTE: no usamos mtime porque en CI (Cloudflare Pages) el git clone
+    // le pone el mismo timestamp a todos los archivos, lo que fuerza
+    // regeneración innecesaria de TODAS las imágenes → build timeout.
+    if (existsSync(outPath) && statSync(outPath).size > 1000) {
+      result.cached++;
+      continue;
     }
 
     try {
