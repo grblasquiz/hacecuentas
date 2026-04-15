@@ -1,0 +1,123 @@
+{
+  "slug": "calculadora-transferencia-archivo-red-lan-tiempo",
+  "title": "Calculadora Tiempo de Transferencia por LAN — 2026 | Hacé Cuentas",
+  "h1": "Calculadora Tiempo de Transferencia de Archivos por Red LAN",
+  "description": "Calculá cuánto tarda transferir un archivo por red LAN según tamaño y velocidad de red. Gigabit, 10G, WiFi. Resultado al instante.",
+  "category": "tecnologia",
+  "icon": "💻",
+  "formulaId": "transferencia-archivo-red-lan-tiempo",
+  "seoKeywords": [
+    "tiempo transferencia red lan",
+    "cuanto tarda copiar archivo red",
+    "velocidad transferencia gigabit",
+    "calculadora transferencia lan",
+    "copiar archivos por red tiempo"
+  ],
+  "intro": "¿Cuánto tarda copiar **100 GB** de archivos entre dos PCs por **Gigabit Ethernet**? En teoría, **1 Gbps** son **125 MB/s**, así que 100 GB tardarían **~13 minutos**. Pero en la práctica, con overhead de protocolo y limitaciones de disco, se logran **80-110 MB/s** reales. Esta calculadora estima el tiempo de transferencia de archivos por red LAN considerando la **velocidad de red**, el **tamaño del archivo** y la **eficiencia real** del protocolo.",
+  "keyTakeaway": "**Por Gigabit Ethernet (1 Gbps) transferís ~110 MB/s reales. 100 GB tardan ~15 minutos.** WiFi 6 logra ~60-80 MB/s reales. WiFi 5 solo ~30-50 MB/s.",
+  "useCases": [
+    "Necesitás copiar archivos grandes entre PCs y querés estimar el tiempo.",
+    "Estás migrando datos a un NAS y querés saber cuánto va a tardar.",
+    "Evaluás si vale la pena actualizar de Fast Ethernet a Gigabit.",
+    "Querés saber cuánto tarda un backup por red a un servidor.",
+    "Estás planificando una migración de datos y necesitás tiempos estimados."
+  ],
+  "fields": [
+    {
+      "id": "tamanoGb",
+      "label": "Tamaño del archivo (GB)",
+      "type": "number",
+      "placeholder": "100",
+      "min": 0.001,
+      "step": 0.1,
+      "required": true,
+      "help": "Tamaño total a transferir en gigabytes"
+    },
+    {
+      "id": "velocidadRed",
+      "label": "Velocidad de red",
+      "type": "select",
+      "default": "gigabit",
+      "options": [
+        { "value": "fast_ethernet", "label": "Fast Ethernet (100 Mbps)" },
+        { "value": "gigabit", "label": "Gigabit Ethernet (1 Gbps)" },
+        { "value": "2.5g", "label": "2.5G Ethernet (2,5 Gbps)" },
+        { "value": "10g", "label": "10G Ethernet (10 Gbps)" },
+        { "value": "wifi5", "label": "WiFi 5 (AC) — ~300 Mbps real" },
+        { "value": "wifi6", "label": "WiFi 6 (AX) — ~600 Mbps real" }
+      ]
+    },
+    {
+      "id": "eficiencia",
+      "label": "Eficiencia de la red (%)",
+      "type": "number",
+      "placeholder": "85",
+      "min": 10,
+      "max": 100,
+      "step": 5,
+      "required": false,
+      "help": "Porcentaje de la velocidad teórica que se aprovecha. Cable: 85-95%. WiFi: 40-70%"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmula estándar de transferencia de datos"
+  },
+  "outputs": [
+    { "id": "tiempoSegundos", "label": "Tiempo estimado (segundos)", "format": "number", "primary": true },
+    { "id": "tiempoMinutos", "label": "Tiempo (minutos)", "format": "number" },
+    { "id": "tiempoHoras", "label": "Tiempo (horas)", "format": "number" },
+    { "id": "velocidadMBs", "label": "Velocidad real (MB/s)", "format": "number" },
+    { "id": "detalle", "label": "Detalle", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo real: copiar 500 GB a un NAS por Gigabit Ethernet",
+    "steps": [
+      "**Tamaño**: 500 GB = 512.000 MB.",
+      "**Velocidad teórica**: 1 Gbps = 125 MB/s.",
+      "**Eficiencia**: 85 % → velocidad real: 106,25 MB/s.",
+      "**Tiempo**: 512.000 ÷ 106,25 = **4.820 seg ≈ 80 minutos** (~1 h 20 min)."
+    ],
+    "result": "Copiar 500 GB por Gigabit Ethernet tarda aproximadamente **1 hora y 20 minutos** a velocidad real. Por WiFi 5 tardaría ~4,5 horas."
+  },
+  "explanation": "## La fórmula\n\n```\nVelocidad real (MB/s) = Velocidad teórica (Mbps) × eficiencia ÷ 8\nTiempo (seg) = Tamaño (MB) ÷ Velocidad real (MB/s)\n```\n\n## Velocidades de red teóricas vs reales\n\n| Tipo de red | Teórica | Real típica |\n|---|---|---|\n| Fast Ethernet | 100 Mbps (12,5 MB/s) | 10-11 MB/s |\n| Gigabit Ethernet | 1.000 Mbps (125 MB/s) | 100-115 MB/s |\n| 2.5G Ethernet | 2.500 Mbps (312 MB/s) | 260-290 MB/s |\n| 10G Ethernet | 10.000 Mbps (1.250 MB/s) | 1.000-1.150 MB/s |\n| WiFi 5 (AC) | 867 Mbps | 200-400 Mbps (25-50 MB/s) |\n| WiFi 6 (AX) | 2.400 Mbps | 400-800 Mbps (50-100 MB/s) |\n| WiFi 6E | 4.800 Mbps | 600-1.200 Mbps (75-150 MB/s) |\n\n## Tiempos de transferencia por red\n\n| Tamaño | Fast Ethernet | Gigabit | 2.5G | 10G |\n|---|---|---|---|---|\n| 1 GB | 1,5 min | 10 seg | 4 seg | 1 seg |\n| 10 GB | 15 min | 1,6 min | 38 seg | 10 seg |\n| 100 GB | 2,5 h | 16 min | 6,3 min | 1,6 min |\n| 500 GB | 12,5 h | 80 min | 32 min | 8 min |\n| 1 TB | 25 h | 2,7 h | 64 min | 16 min |\n\n## Factores que limitan la velocidad\n\n1. **Disco duro mecánico (HDD)**: lee/escribe a 80-180 MB/s. Puede ser el cuello de botella en Gigabit.\n2. **SSD SATA**: 500-550 MB/s. Limitante en 10G.\n3. **SSD NVMe**: 3.000-7.000 MB/s. Solo limitante con redes >10G.\n4. **CPU del NAS**: NAS baratos tienen CPUs lentos que no saturan Gigabit con encriptación.\n5. **Protocolo**: SMB es más lento que NFS en Linux. rsync/scp agregan overhead.\n\n## Muchos archivos chicos vs pocos grandes\n\nTransferir **1.000 archivos de 1 MB** es mucho más lento que **1 archivo de 1 GB** por el overhead de abrir/cerrar cada archivo. Si necesitás transferir muchos archivos chicos, comprimí en un .zip o .tar antes de transferir.\n\n## ¿Vale la pena 10G en casa?\n\nSi editás video 4K/8K desde un NAS, o hacés backups de varios TB frecuentemente, **sí**. Para uso normal (streaming, gaming, office), Gigabit sobra. Un switch 10G cuesta ~USD 100-300 y las NIC 10G ~USD 30-80.",
+  "faq": [
+    {
+      "q": "¿Cuánto tarda copiar 1 TB por Gigabit Ethernet?",
+      "a": "Aproximadamente **2 horas y 40 minutos** a velocidad real (~106 MB/s). Con discos HDD puede ser más lento (el disco es el cuello de botella). Con SSD, la red es el límite. Por WiFi 6 tardaría ~5,5 horas."
+    },
+    {
+      "q": "¿Por qué la transferencia es más lenta que la velocidad teórica?",
+      "a": "Por el **overhead de protocolo** (TCP/IP headers, SMB/NFS overhead), la **eficiencia del switch/router**, la **velocidad del disco** (HDD/SSD) y posibles **otros dispositivos** usando la red. Lo normal es lograr un **80-92 %** de la velocidad teórica por cable."
+    },
+    {
+      "q": "¿WiFi o cable para transferencias grandes?",
+      "a": "Siempre **cable Ethernet**. Gigabit por cable da ~110 MB/s reales, vs WiFi 5 ~30-50 MB/s y WiFi 6 ~60-100 MB/s. Para archivos de decenas de GB, la diferencia es de **horas**. Además, el cable es mucho más estable."
+    },
+    {
+      "q": "¿SMB es más lento que NFS?",
+      "a": "En Linux/macOS, **NFS** suele ser 10-20 % más rápido que SMB para archivos grandes. En Windows, **SMB3** está muy optimizado y la diferencia es mínima. Para máxima velocidad, usá **SMB Direct** (si tu hardware lo soporta) o **rsync** para copias incrementales."
+    },
+    {
+      "q": "¿Mi disco HDD limita la velocidad de red?",
+      "a": "Si tu HDD lee/escribe a 100-150 MB/s, es el **cuello de botella** en una red Gigabit (que llega a 110 MB/s) solo si el HDD es lento. En 2.5G o 10G, un HDD siempre será el límite. Usá **SSD** para saturar redes rápidas."
+    },
+    {
+      "q": "¿Comprimir antes de transferir ahorra tiempo?",
+      "a": "Depende del tipo de datos. Para **texto, bases de datos, código**: sí, la compresión puede reducir el tamaño 50-80 % y el tiempo neto baja. Para **imágenes, videos, archivos ya comprimidos**: no, porque casi no se comprimen y sumás tiempo de CPU."
+    },
+    {
+      "q": "¿Puedo conectar dos PCs directamente con un cable Ethernet?",
+      "a": "Sí, con un **cable Ethernet cruzado** (o cable normal si las NIC soportan Auto-MDIX, que es la mayoría hoy). Configurá IPs estáticas en ambas (ej: 192.168.1.1 y 192.168.1.2) y transferí directo sin switch/router."
+    }
+  ],
+  "sources": [
+    { "name": "IEEE 802.3 — Ethernet standards", "url": "https://standards.ieee.org/ieee/802.3/10422/" },
+    { "name": "SmallNetBuilder — NAS performance tests", "url": "https://www.smallnetbuilder.com/" }
+  ],
+  "relatedSlugs": []
+}

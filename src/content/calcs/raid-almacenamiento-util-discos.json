@@ -1,0 +1,122 @@
+{
+  "slug": "calculadora-raid-almacenamiento-util-discos",
+  "title": "Calculadora RAID — Espacio Útil según Configuración 2026 | Hacé Cuentas",
+  "h1": "Calculadora RAID — Almacenamiento Útil según Discos",
+  "description": "Calculá el espacio útil de un array RAID según nivel, cantidad y tamaño de discos. Soporta RAID 0, 1, 5, 6 y 10. Resultado inmediato.",
+  "category": "tecnologia",
+  "icon": "💻",
+  "formulaId": "raid-almacenamiento-util-discos",
+  "seoKeywords": [
+    "calculadora raid almacenamiento",
+    "espacio util raid 5",
+    "calculadora raid discos",
+    "raid 1 vs raid 5",
+    "cuanto espacio pierde raid"
+  ],
+  "intro": "¿Cuánto espacio usable tenés en un **RAID 5** con 4 discos de 4 TB? No es 16 TB — es **12 TB**, porque un disco entero se usa para paridad. Cada nivel de **RAID** (Redundant Array of Independent Disks) ofrece un balance distinto entre **rendimiento, redundancia y capacidad**. Esta calculadora te dice el **espacio útil**, el **espacio perdido por redundancia** y la **tolerancia a fallas** según el nivel RAID, la cantidad de discos y su tamaño.",
+  "keyTakeaway": "**RAID 0 = máximo espacio (0 redundancia), RAID 1 = 50 %, RAID 5 = (N-1)/N, RAID 6 = (N-2)/N, RAID 10 = 50 %.** Siempre se pierde espacio por seguridad.",
+  "useCases": [
+    "Estás armando un NAS y querés saber cuánto espacio útil vas a tener.",
+    "Necesitás elegir entre RAID 5 y RAID 6 para un servidor.",
+    "Querés calcular cuántos discos comprar para tener X TB útiles.",
+    "Estás evaluando la relación costo/capacidad de distintos niveles RAID.",
+    "Administrás un servidor y necesitás planificar una expansión de storage."
+  ],
+  "fields": [
+    {
+      "id": "cantidadDiscos",
+      "label": "Cantidad de discos",
+      "type": "number",
+      "placeholder": "4",
+      "min": 2,
+      "max": 100,
+      "step": 1,
+      "required": true,
+      "help": "Mínimo 2 para RAID 0/1, 3 para RAID 5, 4 para RAID 6/10"
+    },
+    {
+      "id": "tamanoDisco",
+      "label": "Tamaño de cada disco (TB)",
+      "type": "number",
+      "placeholder": "4",
+      "min": 0.1,
+      "step": 0.1,
+      "required": true,
+      "help": "Capacidad individual de cada disco en terabytes"
+    },
+    {
+      "id": "nivelRaid",
+      "label": "Nivel RAID",
+      "type": "select",
+      "default": "5",
+      "options": [
+        { "value": "0", "label": "RAID 0 (Stripe — sin redundancia)" },
+        { "value": "1", "label": "RAID 1 (Mirror — espejo)" },
+        { "value": "5", "label": "RAID 5 (Stripe + 1 paridad)" },
+        { "value": "6", "label": "RAID 6 (Stripe + 2 paridades)" },
+        { "value": "10", "label": "RAID 10 (Mirror + Stripe)" }
+      ]
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar RAID"
+  },
+  "outputs": [
+    { "id": "espacioUtil", "label": "Espacio útil (TB)", "format": "number", "primary": true, "suffix": " TB" },
+    { "id": "espacioTotal", "label": "Espacio total bruto (TB)", "format": "number" },
+    { "id": "espacioPerdido", "label": "Espacio por redundancia (TB)", "format": "number" },
+    { "id": "toleranciaFallas", "label": "Discos que pueden fallar", "format": "number" },
+    { "id": "detalle", "label": "Detalle", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo real: 4 discos de 4 TB en RAID 5",
+    "steps": [
+      "**Total bruto**: 4 × 4 TB = **16 TB**.",
+      "**RAID 5**: se pierde 1 disco para paridad → (4−1) × 4 = **12 TB útiles**.",
+      "**Espacio perdido**: 4 TB (25 % del total).",
+      "**Tolerancia**: puede fallar **1 disco** sin perder datos."
+    ],
+    "result": "Con 4 discos de 4 TB en RAID 5 tenés **12 TB útiles** y podés perder 1 disco sin perder datos. Si necesitás más seguridad, RAID 6 te da 8 TB útiles pero tolera 2 fallas."
+  },
+  "explanation": "## Fórmulas por nivel RAID\n\n| RAID | Espacio útil | Discos mínimos | Fallas toleradas |\n|---|---|---|---|\n| RAID 0 | N × Disco | 2 | 0 (ninguna) |\n| RAID 1 | 1 × Disco | 2 | N/2 (la mitad) |\n| RAID 5 | (N−1) × Disco | 3 | 1 disco |\n| RAID 6 | (N−2) × Disco | 4 | 2 discos |\n| RAID 10 | N/2 × Disco | 4 (par) | 1 por mirror |\n\n## Cuándo usar cada RAID\n\n### RAID 0 — Máxima velocidad, cero seguridad\nIdeal para **archivos temporales**, **scratch disks** para edición de video, o **benchmarks**. Si falla un disco, perdés todo.\n\n### RAID 1 — Máxima seguridad, 50 % de espacio\nIdeal para **sistema operativo** y datos críticos pequeños. Cada dato se copia en ambos discos.\n\n### RAID 5 — Balance velocidad/seguridad\nEl más popular para **NAS y servidores**. Buena velocidad de lectura, tolera 1 falla, pierde solo 1/N del espacio.\n\n### RAID 6 — Doble paridad\nComo RAID 5 pero tolera **2 fallas simultáneas**. Recomendado con discos grandes (>4 TB) donde el rebuild es lento.\n\n### RAID 10 — Mirror + Stripe\nCombina velocidad de RAID 0 con seguridad de RAID 1. Ideal para **bases de datos** y cargas de escritura intensiva.\n\n## Tabla de espacio útil\n\n| Discos × Tamaño | RAID 0 | RAID 1 | RAID 5 | RAID 6 | RAID 10 |\n|---|---|---|---|---|---|\n| 4 × 2 TB | 8 TB | 2 TB | 6 TB | 4 TB | 4 TB |\n| 4 × 4 TB | 16 TB | 4 TB | 12 TB | 8 TB | 8 TB |\n| 6 × 4 TB | 24 TB | 4 TB | 20 TB | 16 TB | 12 TB |\n| 8 × 8 TB | 64 TB | 8 TB | 56 TB | 48 TB | 32 TB |\n\n## RAID no es backup\n\nRAID protege contra **falla de disco**, pero NO contra:\n- **Borrado accidental** de archivos\n- **Ransomware** / virus\n- **Incendio** / robo del equipo\n- **Falla del controlador RAID**\n\nSiempre tené un **backup externo** además del RAID.",
+  "faq": [
+    {
+      "q": "¿RAID 5 o RAID 6 para un NAS doméstico?",
+      "a": "Con discos de hasta 4 TB, **RAID 5** es suficiente (el rebuild es rápido). Con discos de 8+ TB, **RAID 6** es más seguro porque el rebuild puede tardar 12-24 horas, tiempo en el que otro disco podría fallar. Muchos NAS Synology/QNAP recomiendan RAID 6 con discos grandes."
+    },
+    {
+      "q": "¿Puedo mezclar discos de distinto tamaño en RAID?",
+      "a": "Técnicamente sí, pero el RAID **usa el tamaño del disco más chico** como referencia. Si mezclás uno de 2 TB con tres de 4 TB, se tratan todos como 2 TB, desperdiciando 6 TB. Usá siempre discos del **mismo tamaño** y modelo."
+    },
+    {
+      "q": "¿RAID 0 es peligroso?",
+      "a": "Sí, mucho. Si **cualquier disco** del array falla, perdés **toda la información**. RAID 0 es solo para datos temporales que podés recrear. Nunca lo uses para fotos, documentos o datos que no tengas backupeados en otro lado."
+    },
+    {
+      "q": "¿Cuánto tarda el rebuild de un RAID?",
+      "a": "Depende del tamaño del disco y la carga del servidor. Un disco de **4 TB** en RAID 5 puede tardar **4-8 horas**. Uno de **12 TB** puede tardar **12-24 horas**. Durante el rebuild, el rendimiento baja y si falla otro disco (en RAID 5), perdés todo."
+    },
+    {
+      "q": "¿RAID reemplaza al backup?",
+      "a": "**No, nunca.** RAID protege contra falla de hardware, pero no contra borrado accidental, virus, ransomware o desastres físicos. Seguí la regla **3-2-1**: 3 copias de los datos, en 2 medios distintos, con 1 copia offsite (nube o disco externo)."
+    },
+    {
+      "q": "¿Qué es mejor: RAID por hardware o por software?",
+      "a": "**RAID por hardware** (controladora dedicada) es más confiable y rápido, pero más caro. **RAID por software** (mdadm en Linux, Storage Spaces en Windows) es gratis y funciona bien para NAS domésticos. ZFS/Btrfs ofrecen RAID por software con ventajas adicionales."
+    },
+    {
+      "q": "¿Puedo expandir un RAID agregando discos?",
+      "a": "Depende del nivel. **RAID 5 y 6** permiten agregar discos y expandir el array (con rebuild largo). **RAID 1** no se expande. **RAID 10** necesita agregar pares. En un NAS Synology con SHR (Synology Hybrid RAID), expandir es muy fácil."
+    }
+  ],
+  "sources": [
+    { "name": "Wikipedia — RAID Standard Levels", "url": "https://en.wikipedia.org/wiki/Standard_RAID_levels" },
+    { "name": "Synology — RAID Calculator", "url": "https://www.synology.com/en-us/support/RAID_calculator" }
+  ],
+  "relatedSlugs": []
+}

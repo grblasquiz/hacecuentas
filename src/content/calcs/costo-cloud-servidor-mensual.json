@@ -1,0 +1,163 @@
+{
+  "slug": "calculadora-costo-cloud-servidor-mensual",
+  "title": "Calculadora Costo Servidor Cloud Mensual — AWS/GCP/Azure 2026 | Hacé Cuentas",
+  "h1": "Calculadora Costo de Servidor Cloud Mensual",
+  "description": "Estimá el costo mensual de un servidor cloud según CPU, RAM, storage y tráfico. Referencia para AWS, GCP y Azure. Resultado inmediato.",
+  "category": "tecnologia",
+  "icon": "💻",
+  "formulaId": "costo-cloud-servidor-mensual",
+  "seoKeywords": [
+    "calculadora costo cloud",
+    "cuanto cuesta servidor aws",
+    "precio servidor cloud mensual",
+    "costo vps mensual",
+    "calculadora aws pricing"
+  ],
+  "intro": "¿Cuánto sale un servidor en la nube? Depende de los **vCPUs, RAM, almacenamiento y tráfico** que necesites. Los precios de **AWS, Google Cloud y Azure** son complejos (cobran por hora, por GB, por request), pero esta calculadora te da una **estimación rápida** del costo mensual basándose en las tarifas promedio de los principales proveedores. Ingresá los recursos que necesitás y obtené un rango de precio para planificar tu presupuesto de infraestructura.",
+  "keyTakeaway": "**Un servidor básico (2 vCPU, 4 GB RAM, 50 GB SSD) cuesta ~USD 30-50/mes en cloud.** El tráfico de salida (egress) es el costo oculto que más sorprende.",
+  "useCases": [
+    "Estás por migrar tu aplicación a la nube y necesitás estimar costos.",
+    "Querés comparar el costo de un VPS vs cloud managed.",
+    "Necesitás presupuestar infraestructura para un proyecto nuevo.",
+    "Evaluás si conviene más AWS, GCP o un VPS como DigitalOcean.",
+    "Querés calcular cuánto ahorrás con instancias reservadas vs on-demand."
+  ],
+  "fields": [
+    {
+      "id": "vcpus",
+      "label": "Cantidad de vCPUs",
+      "type": "number",
+      "placeholder": "2",
+      "min": 1,
+      "max": 128,
+      "step": 1,
+      "required": true,
+      "help": "Cores virtuales. Web básica: 1-2, App media: 2-4, Heavy: 8+"
+    },
+    {
+      "id": "ramGb",
+      "label": "RAM (GB)",
+      "type": "number",
+      "placeholder": "4",
+      "min": 0.5,
+      "max": 512,
+      "step": 0.5,
+      "required": true,
+      "help": "Memoria RAM en GB. Web: 2-4, App: 4-8, DB: 16+"
+    },
+    {
+      "id": "storageGb",
+      "label": "Almacenamiento SSD (GB)",
+      "type": "number",
+      "placeholder": "50",
+      "min": 10,
+      "step": 10,
+      "required": true,
+      "help": "Disco SSD en GB"
+    },
+    {
+      "id": "traficoGb",
+      "label": "Tráfico de salida mensual (GB)",
+      "type": "number",
+      "placeholder": "100",
+      "min": 0,
+      "step": 10,
+      "required": false,
+      "help": "GB de datos que salen del servidor al mes. 0 si no sabés"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-15",
+    "source": "AWS/GCP/Azure pricing pages",
+    "sourceUrl": "https://aws.amazon.com/pricing/",
+    "updateType": "manual",
+    "notes": "Precios promedio de referencia, pueden variar por región y tipo de instancia"
+  },
+  "outputs": [
+    {
+      "id": "costoMensualUsd",
+      "label": "Costo estimado mensual (USD)",
+      "format": "number",
+      "primary": true,
+      "prefix": "USD "
+    },
+    {
+      "id": "costoCompute",
+      "label": "Costo compute (USD)",
+      "format": "number"
+    },
+    {
+      "id": "costoStorage",
+      "label": "Costo storage (USD)",
+      "format": "number"
+    },
+    {
+      "id": "costoTrafico",
+      "label": "Costo tráfico (USD)",
+      "format": "number"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo real: servidor para app Node.js con tráfico moderado",
+    "steps": [
+      "**Recursos**: 2 vCPU, 4 GB RAM, 50 GB SSD, 100 GB tráfico/mes.",
+      "**Compute**: 2 vCPU × $10 + 4 GB × $5 = **$40/mes**.",
+      "**Storage**: 50 GB × $0,10 = **$5/mes**.",
+      "**Tráfico**: 100 GB × $0,09 = **$9/mes**.",
+      "**Total**: ~**$54/mes** en cloud on-demand."
+    ],
+    "result": "Un servidor de 2 vCPU / 4 GB RAM para una app Node.js con tráfico moderado cuesta aproximadamente **USD 54/mes** en cloud on-demand. Con instancias reservadas podés ahorrar 30-40 %."
+  },
+  "explanation": "## Cómo se estima el costo\n\nEl precio de cloud tiene 3 componentes principales:\n\n```\nCosto total = Compute + Storage + Tráfico de salida\n```\n\n### Precios promedio de referencia (2026)\n\n| Recurso | Precio aprox. |\n|---|---|\n| 1 vCPU | ~USD 10/mes |\n| 1 GB RAM | ~USD 5/mes |\n| 1 GB SSD | ~USD 0,10/mes |\n| 1 GB tráfico salida | ~USD 0,09/mes |\n\nEstos son **promedios** entre AWS, GCP y Azure para instancias on-demand de propósito general. Los precios reales varían por región, tipo de instancia y compromisos.\n\n## Comparativa por proveedor\n\n| Config | AWS (t3.medium) | GCP (e2-medium) | Azure (B2s) | DigitalOcean |\n|---|---|---|---|---|\n| 2 vCPU / 4 GB | ~$30-40 | ~$25-35 | ~$30-40 | $24 |\n| 4 vCPU / 8 GB | ~$60-80 | ~$55-70 | ~$60-80 | $48 |\n| 8 vCPU / 16 GB | ~$120-160 | ~$110-140 | ~$120-160 | $96 |\n\n## El costo oculto: tráfico de salida\n\nLos proveedores cloud cobran por el **tráfico que sale** de sus servidores (egress). El tráfico de entrada es gratis. Si tu sitio sirve muchas imágenes, videos o descargas, el costo de tráfico puede superar al de compute.\n\n| Proveedor | Egress (primeros 10 TB) |\n|---|---|\n| AWS | $0,09/GB |\n| GCP | $0,085/GB |\n| Azure | $0,087/GB |\n| Cloudflare R2 | $0 (¡gratis!) |\n\n## Cómo ahorrar en cloud\n\n1. **Instancias reservadas**: comprometerte 1-3 años ahorra 30-60 %.\n2. **Spot/Preemptible**: instancias interrumpibles a 60-90 % de descuento.\n3. **Right-sizing**: monitorear y reducir recursos sobredimensionados.\n4. **Cloudflare/CDN**: reducir egress sirviendo assets desde CDN.\n5. **Auto-scaling**: escalar solo cuando hay demanda.\n\n## ¿Cloud o VPS?\n\nPara proyectos chicos/medianos, un **VPS** (DigitalOcean, Vultr, Hetzner) suele ser 40-60 % más barato que AWS/GCP. Pero no ofrecen el mismo nivel de servicios managed (RDS, Lambda, etc.). La elección depende de tus necesidades.",
+  "faq": [
+    {
+      "q": "¿Cuánto cuesta un servidor cloud básico?",
+      "a": "Un servidor básico (1-2 vCPU, 2-4 GB RAM, 50 GB SSD) cuesta entre **USD 20-50/mes** en los grandes proveedores (AWS, GCP, Azure) y **USD 12-24/mes** en VPS como DigitalOcean o Vultr. Con poco tráfico, un Hetzner cloud sale desde USD 4/mes."
+    },
+    {
+      "q": "¿AWS es más caro que Google Cloud?",
+      "a": "Son bastante similares en precios base. GCP tiende a ser 5-10 % más barato en compute y ofrece descuentos automáticos por uso sostenido. AWS tiene más servicios y opciones de instancias. Azure suele ser competitivo si ya usás Microsoft 365."
+    },
+    {
+      "q": "¿Qué es el tráfico de salida y por qué cuesta?",
+      "a": "Es la data que **sale** de tu servidor hacia internet (páginas web, imágenes, descargas, APIs). Los proveedores lo cobran a ~**USD 0,09/GB**. 1 TB de tráfico = ~USD 90/mes. Usá un CDN (Cloudflare es gratis) para reducir este costo drásticamente."
+    },
+    {
+      "q": "¿Qué son las instancias reservadas?",
+      "a": "Es un compromiso de uso de 1 o 3 años a cambio de un **descuento del 30-60 %**. Pagás por adelantado (total o parcial) y te asegurás un precio fijo. Conviene si sabés que vas a usar el servidor por más de 1 año. AWS y GCP las ofrecen."
+    },
+    {
+      "q": "¿Conviene usar serverless en lugar de un servidor?",
+      "a": "Para cargas de trabajo **irregulares** (pocas requests diarias, picos esporádicos), serverless (AWS Lambda, GCP Cloud Functions) puede ser **mucho más barato** o incluso gratis. Para cargas **constantes** (servidor 24/7), un servidor dedicado es más económico."
+    },
+    {
+      "q": "¿Cuánto storage necesito para una base de datos?",
+      "a": "Depende de tus datos. Una app web típica con **100.000 usuarios** necesita 5-20 GB de DB. Un e-commerce mediano, 50-200 GB. Las bases de datos managed (RDS, Cloud SQL) cuestan 2-3x más que el storage puro, pero incluyen backups y replicación."
+    },
+    {
+      "q": "¿Puedo pagar cloud en pesos argentinos?",
+      "a": "AWS, GCP y Azure facturan en **dólares**. Si pagás con tarjeta argentina, se aplica el tipo de cambio + impuestos (65 %+ de recargo). DigitalOcean y Vultr también facturan en USD. Hetzner factura en EUR. No hay escape del dólar para cloud, salvo proveedores locales."
+    }
+  ],
+  "sources": [
+    {
+      "name": "AWS — EC2 Pricing",
+      "url": "https://aws.amazon.com/ec2/pricing/"
+    },
+    {
+      "name": "Google Cloud — Pricing Calculator",
+      "url": "https://cloud.google.com/products/calculator"
+    },
+    {
+      "name": "Azure — Pricing Calculator",
+      "url": "https://azure.microsoft.com/en-us/pricing/calculator/"
+    }
+  ],
+  "relatedSlugs": []
+}

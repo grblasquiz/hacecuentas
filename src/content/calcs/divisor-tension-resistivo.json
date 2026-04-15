@@ -1,0 +1,97 @@
+{
+  "slug": "calculadora-divisor-tension-resistivo",
+  "title": "Calculadora Divisor de Tensión Resistivo 2026 — Voltage Divider | Hacé Cuentas",
+  "h1": "Calculadora de divisor de tensión resistivo",
+  "description": "Calculá el voltaje de salida de un divisor de tensión con dos resistencias. Fórmula Vout = Vin × R2/(R1+R2).",
+  "category": "electronica",
+  "icon": "⚡",
+  "formulaId": "divisor-tension-resistivo",
+  "seoKeywords": [
+    "divisor de tension calculadora",
+    "voltage divider calculator",
+    "Vout R1 R2 calculadora",
+    "divisor resistivo voltaje",
+    "calcular divisor tension"
+  ],
+  "intro": "El **divisor de tensión** es uno de los circuitos más usados en electrónica. Con solo **dos resistencias** podés reducir un voltaje a cualquier valor menor. La fórmula es **Vout = Vin × R2 / (R1 + R2)**. Se usa para alimentar sensores, establecer puntos de polarización, leer voltajes altos con microcontroladores (como medir una batería de 12V con un Arduino de 5V) y mucho más.",
+  "keyTakeaway": "**Vout = Vin × R2 / (R1 + R2). Con R1 = R2 el voltaje de salida es exactamente la mitad del de entrada.**",
+  "useCases": [
+    "Necesitás reducir un voltaje para conectar a un microcontrolador.",
+    "Querés medir una batería de 12V con un ADC de 3,3V o 5V.",
+    "Estás diseñando un punto de polarización para un transistor.",
+    "Querés obtener un voltaje de referencia fijo.",
+    "Necesitás adaptar niveles de señal entre circuitos."
+  ],
+  "fields": [
+    { "id": "voltajeEntrada", "label": "Voltaje de entrada Vin (V)", "type": "number", "placeholder": "12", "min": 0.1, "max": 10000, "step": 0.1, "required": true, "help": "Voltaje que querés dividir" },
+    { "id": "r1Ohm", "label": "Resistencia R1 (Ω) — la de arriba", "type": "number", "placeholder": "10000", "min": 1, "step": 1, "required": true, "help": "Conectada entre Vin y Vout" },
+    { "id": "r2Ohm", "label": "Resistencia R2 (Ω) — la de abajo", "type": "number", "placeholder": "10000", "min": 1, "step": 1, "required": true, "help": "Conectada entre Vout y GND" }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmula estándar de divisor de tensión"
+  },
+  "outputs": [
+    { "id": "voltajeSalida", "label": "Voltaje de salida Vout (V)", "format": "number", "primary": true },
+    { "id": "factorDivision", "label": "Factor de división", "format": "number" },
+    { "id": "corrienteCircuito", "label": "Corriente por el divisor (mA)", "format": "number" },
+    { "id": "detalle", "label": "Detalle", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo real: 12V con dos resistencias de 10 kΩ",
+    "steps": [
+      "**Datos**: Vin = 12V, R1 = 10 kΩ, R2 = 10 kΩ.",
+      "**Fórmula**: Vout = 12 × 10.000 / (10.000 + 10.000).",
+      "**Cálculo**: `12 × 0,5` = **6V**.",
+      "**Corriente**: `12 / 20.000` = **0,6 mA**.",
+      "**Con R1 = R2, la salida es siempre la mitad de la entrada.**"
+    ],
+    "result": "El divisor entrega **6V** de salida con una corriente de **0,6 mA**."
+  },
+  "explanation": "## Cómo se calcula\n\n```\nVout = Vin × R2 / (R1 + R2)\nFactor = R2 / (R1 + R2)\nCorriente = Vin / (R1 + R2)\n```\n\n## Esquema del circuito\n\n```\n  Vin ─── R1 ──┬── Vout\n               │\n               R2\n               │\n              GND\n```\n\nR1 está \"arriba\" (entre Vin y Vout) y R2 está \"abajo\" (entre Vout y GND).\n\n## Tabla de divisiones comunes\n\n| R1 | R2 | Factor | Vin 12V → Vout |\n|---|---|---|---|\n| 10 kΩ | 10 kΩ | 0,50 | 6,00V |\n| 10 kΩ | 4,7 kΩ | 0,32 | 3,84V |\n| 10 kΩ | 3,3 kΩ | 0,25 | 2,98V |\n| 10 kΩ | 2,2 kΩ | 0,18 | 2,16V |\n| 10 kΩ | 1 kΩ | 0,09 | 1,09V |\n\n## Limitaciones importantes\n\n1. **Carga**: si conectás algo que consume corriente a Vout, el voltaje baja. El divisor funciona bien solo cuando la carga consume **mucho menos** que la corriente del divisor.\n2. **Eficiencia**: el divisor disipa potencia en las resistencias. No es eficiente para alimentar circuitos que consumen mucha corriente. Para eso usá un **regulador de voltaje**.\n3. **Impedancia**: la impedancia de salida es R1 ∥ R2, lo que puede afectar circuitos sensibles.\n\n## Regla del 10:1\n\nPara que el divisor funcione correctamente, la resistencia de carga debe ser **al menos 10 veces mayor** que R2. Si R2 = 10 kΩ, la carga debe ser de al menos 100 kΩ.\n\n## Ejemplo práctico: medir batería de 12V con Arduino\n\nEl ADC del Arduino lee hasta 5V. Para medir 12V:\n```\nR2 / (R1 + R2) = 5 / 12 = 0,417\nSi R2 = 10 kΩ → R1 = 14 kΩ (usá 15 kΩ comercial)\nVout = 12 × 10 / (15 + 10) = 4,8V ✓\n```",
+  "faq": [
+    {
+      "q": "¿Cómo funciona un divisor de tensión?",
+      "a": "Dos resistencias en serie dividen el voltaje proporcionalmente. La salida se toma del **punto medio** entre ambas. R2 (la de abajo) determina qué fracción del voltaje de entrada aparece en la salida."
+    },
+    {
+      "q": "¿Puedo alimentar un circuito con un divisor de tensión?",
+      "a": "Solo si el circuito consume **muy poca corriente** (menos de 1/10 de la corriente del divisor). Para cargas que consumen más, usá un **regulador de voltaje** (como el 7805 o un LM317)."
+    },
+    {
+      "q": "¿Qué pasa si R1 = R2?",
+      "a": "El voltaje de salida es **exactamente la mitad** del de entrada. Es el divisor más simple y se usa mucho como referencia de punto medio."
+    },
+    {
+      "q": "¿Cómo mido 12V con un Arduino de 5V?",
+      "a": "Usá un divisor con R1 = 15 kΩ y R2 = 10 kΩ. Eso da un factor de 0,40, así que 12V se convierten en **4,8V**, seguro para el ADC del Arduino."
+    },
+    {
+      "q": "¿Importa el valor absoluto de las resistencias?",
+      "a": "Lo que importa es la **proporción** entre R1 y R2, no sus valores absolutos. Pero valores muy bajos desperdician energía y valores muy altos son sensibles al ruido. **10 kΩ a 100 kΩ** es un buen rango."
+    },
+    {
+      "q": "¿Un potenciómetro es un divisor de tensión?",
+      "a": "Sí, exactamente. Un **potenciómetro** es un divisor de tensión variable. Al girar la perilla, cambiás la proporción entre las dos \"resistencias\" internas."
+    },
+    {
+      "q": "¿Puedo usar un divisor para convertir 5V a 3,3V?",
+      "a": "Técnicamente sí (con R1 = 5,1 kΩ y R2 = 10 kΩ obtenés 3,3V), pero para alimentar un circuito digital **no es recomendable**. Usá un regulador de 3,3V. El divisor solo sirve para señales de muy baja corriente."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SparkFun — Voltage Dividers",
+      "url": "https://learn.sparkfun.com/tutorials/voltage-dividers"
+    },
+    {
+      "name": "All About Circuits — Voltage Divider",
+      "url": "https://www.allaboutcircuits.com/tools/voltage-divider-calculator/"
+    }
+  ],
+  "relatedSlugs": []
+}

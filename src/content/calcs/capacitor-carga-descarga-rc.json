@@ -1,0 +1,97 @@
+{
+  "slug": "calculadora-capacitor-carga-descarga-rc",
+  "title": "Calculadora Circuito RC — Constante de Tiempo y Carga 2026 | Hacé Cuentas",
+  "h1": "Calculadora de circuito RC (carga y descarga de capacitor)",
+  "description": "Calculá la constante de tiempo RC de un circuito resistor-capacitor. Tiempo de carga, descarga y voltaje en cualquier instante.",
+  "category": "electronica",
+  "icon": "⚡",
+  "formulaId": "capacitor-carga-descarga-rc",
+  "seoKeywords": [
+    "constante de tiempo RC",
+    "calculadora circuito RC",
+    "carga descarga capacitor",
+    "tau RC calculadora",
+    "tiempo carga capacitor"
+  ],
+  "intro": "Un circuito **RC** (resistor + capacitor) es uno de los bloques fundamentales de la electrónica. La **constante de tiempo (tau, τ)** = R × C determina qué tan rápido se carga o descarga el capacitor. Después de **1 tau** el capacitor alcanza el 63% del voltaje final; después de **5 tau**, se considera completamente cargado (99,3%). Esta calculadora te da el tau, los tiempos de carga/descarga y el voltaje en un instante dado.",
+  "keyTakeaway": "**τ = R × C. Un capacitor de 100 μF con 10 kΩ tiene τ = 1 segundo.** Se carga al 99% en 5 segundos.",
+  "useCases": [
+    "Necesitás calcular cuánto tarda en cargarse un capacitor.",
+    "Estás diseñando un circuito temporizador RC.",
+    "Querés dimensionar un filtro RC pasa-bajos.",
+    "Necesitás saber el voltaje del capacitor en un instante dado.",
+    "Estás aprendiendo sobre transitorios en circuitos eléctricos."
+  ],
+  "fields": [
+    { "id": "resistenciaOhm", "label": "Resistencia (Ω)", "type": "number", "placeholder": "10000", "min": 1, "max": 100000000, "step": 1, "required": true, "help": "En ohms. 10 kΩ = 10000 Ω" },
+    { "id": "capacitanciaUf", "label": "Capacitancia (μF)", "type": "number", "placeholder": "100", "min": 0.001, "max": 1000000, "step": 0.001, "required": true, "help": "En microfaradios. 100 μF = 0,0001 F" },
+    { "id": "voltajeFuente", "label": "Voltaje de la fuente (V)", "type": "number", "placeholder": "5", "min": 0.1, "max": 1000, "step": 0.1, "required": true, "help": "Voltaje al que se carga el capacitor" }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmula estándar de circuitos RC"
+  },
+  "outputs": [
+    { "id": "tauSegundos", "label": "Constante de tiempo τ (segundos)", "format": "number", "primary": true },
+    { "id": "tiempoCarga99", "label": "Tiempo de carga al 99% (segundos)", "format": "number" },
+    { "id": "voltaje1Tau", "label": "Voltaje después de 1τ (V)", "format": "number" },
+    { "id": "voltaje3Tau", "label": "Voltaje después de 3τ (V)", "format": "number" },
+    { "id": "detalle", "label": "Detalle", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo real: 10 kΩ + 100 μF + 5V",
+    "steps": [
+      "**τ**: `10.000 Ω × 0,0001 F` = **1 segundo**.",
+      "**Carga al 99%**: `5 × τ` = **5 segundos**.",
+      "**Voltaje a 1τ**: `5V × 0,632` = **3,16V**.",
+      "**Voltaje a 3τ**: `5V × 0,950` = **4,75V**."
+    ],
+    "result": "El capacitor tiene τ = **1 segundo**, se carga al 63% en 1s y al 99% en **5 segundos**."
+  },
+  "explanation": "## Cómo se calcula\n\n```\nτ (tau) = R × C\nTiempo al 99% = 5 × τ\n```\n\nDonde R está en ohms y C en faradios. Como los capacitores se miden en μF, convertimos: C(F) = C(μF) / 1.000.000.\n\n## Voltaje durante la carga\n\n```\nVc(t) = Vfuente × (1 - e^(-t/τ))\n```\n\n| Tiempo | % cargado | Voltaje (con 5V) |\n|---|---|---|\n| 1τ | 63,2% | 3,16V |\n| 2τ | 86,5% | 4,32V |\n| 3τ | 95,0% | 4,75V |\n| 4τ | 98,2% | 4,91V |\n| 5τ | 99,3% | 4,97V |\n\n## Voltaje durante la descarga\n\n```\nVc(t) = V0 × e^(-t/τ)\n```\n\nEl capacitor se descarga con la misma constante de tiempo. Después de 5τ queda a 0,7% del voltaje inicial.\n\n## Aplicaciones del circuito RC\n\n| Aplicación | Descripción |\n|---|---|\n| Filtro pasa-bajos | Elimina frecuencias altas |\n| Temporizador | Retardo proporcional a τ |\n| Suavizado de señal | Elimina ruido de alta frecuencia |\n| Debouncing | Elimina rebotes de botones |\n| Circuito de reset | Retardo de encendido |\n\n## Frecuencia de corte del filtro RC\n\n```\nfc = 1 / (2π × R × C)\n```\n\nPara R = 10 kΩ y C = 100 μF: fc = 0,16 Hz. Frecuencias por encima de fc se atenúan.\n\n## Capacitores comunes\n\n| Valor | Uso típico |\n|---|---|\n| 0,1 μF (100 nF) | Desacople de alimentación |\n| 1 μF | Filtro de señal |\n| 10 μF | Suavizado de fuente |\n| 100 μF | Filtro de fuente de poder |\n| 1000 μF | Filtro de fuente de alta corriente |\n| 4700 μF | Fuente de audio |",
+  "faq": [
+    {
+      "q": "¿Qué es la constante de tiempo tau?",
+      "a": "**Tau (τ) = R × C** y se mide en segundos. Es el tiempo que tarda el capacitor en cargarse al **63,2%** del voltaje final. Después de 5τ se considera completamente cargado (99,3%)."
+    },
+    {
+      "q": "¿Cuánto tarda en cargarse completamente un capacitor?",
+      "a": "Técnicamente nunca se carga al 100% (es asintótico), pero después de **5τ** alcanza el 99,3%, que para fines prácticos es \"completo\". Con R = 10 kΩ y C = 100 μF, son 5 segundos."
+    },
+    {
+      "q": "¿Cómo hago un retardo de 10 segundos con un RC?",
+      "a": "Necesitás τ = 2 segundos para que 5τ = 10s. Posibles combinaciones: **20 kΩ + 100 μF**, o **100 kΩ + 20 μF**, o **10 kΩ + 200 μF**."
+    },
+    {
+      "q": "¿El capacitor se carga y descarga a la misma velocidad?",
+      "a": "Sí, si la resistencia es la misma. La constante de tiempo τ aplica tanto para la carga como para la descarga. La curva de descarga es la inversa de la de carga."
+    },
+    {
+      "q": "¿Qué diferencia hay entre un capacitor electrolítico y uno cerámico?",
+      "a": "Los **electrolíticos** tienen alta capacitancia (1 μF - 10.000 μF) pero son polarizados. Los **cerámicos** son pequeños (pF - μF), no polarizados y mejores para alta frecuencia."
+    },
+    {
+      "q": "¿Puedo usar un circuito RC como temporizador?",
+      "a": "Sí, pero no es muy preciso. Para temporizadores precisos es mejor un **timer 555** o un microcontrolador. El RC se usa para retardos simples donde la precisión no es crítica."
+    },
+    {
+      "q": "¿Qué pasa si la resistencia es muy baja?",
+      "a": "El capacitor se carga muy rápido (τ pequeño) pero la corriente pico es muy alta (**I = V/R**). Esto puede dañar la fuente o los componentes. Siempre asegurate de que la corriente pico sea tolerable."
+    }
+  ],
+  "sources": [
+    {
+      "name": "HyperPhysics — RC Circuits",
+      "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/electric/rcimp.html"
+    },
+    {
+      "name": "All About Circuits — RC Time Constant",
+      "url": "https://www.allaboutcircuits.com/textbook/direct-current/chpt-16/voltage-and-current-calculations/"
+    }
+  ],
+  "relatedSlugs": []
+}

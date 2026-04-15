@@ -1,0 +1,131 @@
+{
+  "slug": "calculadora-espacio-backup-crecimiento-mensual",
+  "title": "Calculadora Espacio para Backups y Crecimiento Mensual — 2026 | Hacé Cuentas",
+  "h1": "Calculadora Espacio para Backups — Crecimiento Mensual",
+  "description": "Calculá cuánto almacenamiento necesitás para backups según el tamaño actual, crecimiento mensual y retención. Planificá tu storage.",
+  "category": "tecnologia",
+  "icon": "💻",
+  "formulaId": "espacio-backup-crecimiento-mensual",
+  "seoKeywords": [
+    "calculadora espacio backup",
+    "cuanto storage para backups",
+    "planificacion almacenamiento backup",
+    "crecimiento datos mensual",
+    "calculadora retencion backups"
+  ],
+  "intro": "¿Cuánto almacenamiento necesitás para guardar **backups de los últimos 12 meses** si tus datos crecen **10 % por mes**? Más de lo que pensás. Si hoy tenés **100 GB** de datos, en 12 meses vas a tener **~314 GB** (crecimiento compuesto), y si guardás un backup full mensual, necesitás **~2,5 TB** solo para retención. Esta calculadora estima el **espacio total necesario** para backups según tu tamaño actual, tasa de crecimiento y política de retención.",
+  "keyTakeaway": "**Con 10 % de crecimiento mensual y 12 meses de retención, necesitás ~25x tu tamaño actual en storage para backups.** El crecimiento compuesto sorprende.",
+  "useCases": [
+    "Estás planificando la infraestructura de backups para un servidor o NAS.",
+    "Necesitás presupuestar storage para backups en la nube (S3, Glacier).",
+    "Querés saber cuándo tu disco de backup se va a llenar.",
+    "Sos sysadmin y necesitás justificar la compra de almacenamiento.",
+    "Estás definiendo la política de retención de backups de tu empresa."
+  ],
+  "fields": [
+    {
+      "id": "tamanoActualGb",
+      "label": "Tamaño actual de datos (GB)",
+      "type": "number",
+      "placeholder": "100",
+      "min": 0.1,
+      "step": 0.1,
+      "required": true,
+      "help": "Tamaño total de los datos que vas a backupear hoy"
+    },
+    {
+      "id": "crecimientoMensual",
+      "label": "Crecimiento mensual (%)",
+      "type": "number",
+      "placeholder": "5",
+      "min": 0,
+      "max": 100,
+      "step": 0.5,
+      "required": true,
+      "help": "Porcentaje de crecimiento mensual de datos"
+    },
+    {
+      "id": "mesesRetencion",
+      "label": "Meses de retención",
+      "type": "number",
+      "placeholder": "12",
+      "min": 1,
+      "max": 120,
+      "step": 1,
+      "required": true,
+      "help": "Cuántos meses de backups querés conservar"
+    },
+    {
+      "id": "frecuenciaBackup",
+      "label": "Frecuencia de backup",
+      "type": "select",
+      "default": "mensual",
+      "options": [
+        { "value": "diario", "label": "Diario" },
+        { "value": "semanal", "label": "Semanal" },
+        { "value": "mensual", "label": "Mensual" }
+      ]
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmula de crecimiento compuesto + sumatoria de retención"
+  },
+  "outputs": [
+    { "id": "espacioTotalGb", "label": "Espacio total necesario (GB)", "format": "number", "primary": true, "suffix": " GB" },
+    { "id": "espacioTotalTb", "label": "Espacio total (TB)", "format": "number" },
+    { "id": "tamanoFinalGb", "label": "Tamaño de datos al final del período (GB)", "format": "number" },
+    { "id": "cantidadBackups", "label": "Cantidad de backups a retener", "format": "number" },
+    { "id": "detalle", "label": "Detalle", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo real: 100 GB de datos, 5 % crecimiento mensual, 12 meses retención",
+    "steps": [
+      "**Mes 1**: backup de 100 GB.",
+      "**Mes 6**: datos crecen a 100 × 1,05⁶ = **134 GB**.",
+      "**Mes 12**: datos crecen a 100 × 1,05¹² = **179,6 GB**.",
+      "**Suma total de 12 backups**: 100 + 105 + 110,25 + ... + 179,6 = **~1.591 GB** (1,55 TB)."
+    ],
+    "result": "Necesitás ~**1,6 TB** de storage para guardar 12 backups mensuales de datos que empezaron en 100 GB y crecen 5 %/mes. Si la frecuencia fuera semanal, necesitarías ~6,9 TB."
+  },
+  "explanation": "## La fórmula\n\nPara backups full (sin compresión ni incrementales):\n\n```\nTamaño mes N = Tamaño actual × (1 + crecimiento)^N\nEspacio total = Σ (Tamaño en cada punto de backup)\n```\n\nEs una **sumatoria geométrica** de todos los backups que vas a retener.\n\n## Backup full vs incremental\n\n| Tipo | Ventaja | Desventaja |\n|---|---|---|\n| Full | Restauración rápida | Ocupa mucho espacio |\n| Incremental | Ocupa poco espacio | Restauración más lenta |\n| Diferencial | Balance intermedio | Crece con el tiempo |\n\nEsta calculadora estima para **backups full**. Con backups incrementales, el espacio se reduce un **60-80 %** dependiendo de cuánto cambien tus datos.\n\n## Tabla de crecimiento compuesto\n\n| Crecimiento/mes | En 6 meses | En 12 meses | En 24 meses |\n|---|---|---|---|\n| 2 % | ×1,13 | ×1,27 | ×1,61 |\n| 5 % | ×1,34 | ×1,80 | ×3,23 |\n| 10 % | ×1,77 | ×3,14 | ×9,85 |\n| 15 % | ×2,31 | ×5,35 | ×28,6 |\n\n## Regla 3-2-1\n\nLa mejor práctica para backups:\n- **3** copias de los datos (original + 2 backups).\n- **2** medios distintos (disco local + nube, o NAS + disco externo).\n- **1** copia offsite (nube o ubicación física distinta).\n\n## Costos de almacenamiento para backups\n\n| Opción | Costo/TB/mes |\n|---|---|\n| Disco externo USB | ~$1 (amortizado) |\n| NAS (2-bay) | ~$2-3 (amortizado) |\n| AWS S3 Standard | $23 |\n| AWS S3 Glacier | $4 |\n| AWS S3 Glacier Deep | $1 |\n| Google Coldline | $4 |\n| Backblaze B2 | $5 |\n\n## Compresión\n\nLos datos se comprimen antes del backup, reduciendo el espacio:\n- **Bases de datos**: 70-90 % de compresión.\n- **Documentos/texto**: 60-80 %.\n- **Imágenes JPEG/videos**: 5-10 % (ya comprimidos).\n- **Promedio general**: 40-60 % de reducción.",
+  "faq": [
+    {
+      "q": "¿Cuánto storage necesito para 1 año de backups?",
+      "a": "Depende del tamaño, crecimiento y frecuencia. Para **100 GB** con **5 % de crecimiento mensual** y backups **mensuales**, necesitás ~**1,6 TB**. Con backups **semanales** sube a ~**6,9 TB**. Con backups **diarios**, ~**30 TB**. La frecuencia multiplica el espacio enormemente."
+    },
+    {
+      "q": "¿Backup full o incremental?",
+      "a": "**Incremental** para el día a día (ahorra 60-80 % de espacio), con un **full semanal o mensual**. Los incrementales guardan solo lo que cambió desde el último backup. Combiná ambos: la mayoría de herramientas (Borg, restic, Veeam) lo hacen automáticamente."
+    },
+    {
+      "q": "¿Cada cuánto debería hacer backups?",
+      "a": "Preguntate: **¿cuántos datos puedo perder?** Si la respuesta es 'ni un día', hacé **backups diarios**. Si es 'una semana', **semanales**. Las bases de datos de producción generalmente necesitan backup diario o incluso continuo (WAL shipping)."
+    },
+    {
+      "q": "¿Cuánto cuesta backup en la nube?",
+      "a": "Para 1 TB: **AWS S3 Glacier** ~$4/mes, **Backblaze B2** ~$5/mes, **Google Coldline** ~$4/mes. Para datos que raramente accedés, **S3 Glacier Deep Archive** cuesta solo ~$1/TB/mes. Ojo: el costo de **restaurar** datos de Glacier puede ser alto."
+    },
+    {
+      "q": "¿La compresión reduce mucho el espacio?",
+      "a": "Depende del tipo de datos. **Bases de datos y texto** se comprimen un 70-90 %. **Imágenes y videos** casi no se comprimen (ya están comprimidos). En promedio, la compresión reduce el espacio de backup un **40-60 %**. Herramientas como Borg y restic comprimen automáticamente."
+    },
+    {
+      "q": "¿Qué pasa si mi disco de backup se llena?",
+      "a": "Si se llena, los **backups nuevos fallan** y perdés protección. Configurá alertas cuando el disco llegue al 80 % de uso. Considerá: rotar backups viejos automáticamente, comprimir más agresivamente, o agregar más storage antes de que se llene."
+    },
+    {
+      "q": "¿Deduplicación ahorra espacio?",
+      "a": "Sí, mucho. **Deduplicación** detecta bloques de datos idénticos entre backups y los guarda una sola vez. Herramientas como **Borg Backup**, **restic** y **ZFS** ofrecen deduplicación. Puede reducir el espacio total un **50-90 %** dependiendo de cuánto se repiten los datos."
+    }
+  ],
+  "sources": [
+    { "name": "Veeam — Backup best practices", "url": "https://www.veeam.com/blog/backup-best-practices.html" },
+    { "name": "Backblaze — Storage pricing", "url": "https://www.backblaze.com/cloud-storage/pricing" }
+  ],
+  "relatedSlugs": []
+}

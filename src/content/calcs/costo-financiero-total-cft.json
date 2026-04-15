@@ -1,0 +1,192 @@
+{
+  "slug": "calculadora-costo-financiero-total-cft",
+  "title": "Calculadora Costo Financiero Total (CFT) Préstamo 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Costo Financiero Total (CFT)",
+  "description": "Calculá el CFT real de un préstamo incluyendo TNA, seguros, gastos e IVA. Compará el costo verdadero de distintos créditos en Argentina 2026.",
+  "category": "finanzas",
+  "icon": "🏷️",
+  "formulaId": "costo-financiero-total-cft",
+  "seoKeywords": [
+    "costo financiero total",
+    "CFT prestamo",
+    "calcular CFT",
+    "tasa real prestamo",
+    "comparar prestamos argentina"
+  ],
+  "intro": "El **Costo Financiero Total (CFT)** es el indicador que realmente muestra cuánto te sale un préstamo, porque incluye **no solo la tasa de interés (TNA) sino también seguros, gastos administrativos e IVA sobre intereses**. El BCRA obliga a los bancos a informar el CFT, pero muchas veces lo esconden en letra chica. Esta calculadora te permite ingresar los componentes de tu préstamo y obtener el **CFT real** en forma de tasa efectiva anual. Usala para **comparar ofertas de crédito** de distintos bancos y saber cuál es realmente más barato. **La TNA miente; el CFT no.**",
+  "keyTakeaway": "**CFT = TNA + seguros + gastos + IVA.** Siempre es mayor que la TNA. Para comparar préstamos, usá exclusivamente el CFT — es el único indicador que refleja el costo real.",
+  "useCases": [
+    "Estás comparando préstamos de distintos bancos y querés saber cuál es más barato.",
+    "Te ofrecieron un crédito con TNA baja pero sospechás que los gastos son altos.",
+    "Querés calcular el costo real de un préstamo que incluye seguro de vida obligatorio.",
+    "Necesitás verificar si el CFT que te informa el banco es correcto.",
+    "Estás evaluando si la financiación de un auto o electrodoméstico es razonable."
+  ],
+  "fields": [
+    {
+      "id": "monto",
+      "label": "Monto del préstamo",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "5000000",
+      "format": "thousands",
+      "min": 1,
+      "step": 10000,
+      "required": true
+    },
+    {
+      "id": "tna",
+      "label": "TNA del préstamo",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "80",
+      "min": 0.1,
+      "max": 500,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "plazoMeses",
+      "label": "Plazo en meses",
+      "type": "number",
+      "suffix": "meses",
+      "placeholder": "24",
+      "min": 1,
+      "max": 360,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "seguroMensual",
+      "label": "Seguro de vida mensual",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "5000",
+      "format": "thousands",
+      "min": 0,
+      "step": 100,
+      "default": 0,
+      "help": "Seguro de vida del deudor (obligatorio en muchos créditos)"
+    },
+    {
+      "id": "gastoOtorgamiento",
+      "label": "Gasto de otorgamiento",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "50000",
+      "format": "thousands",
+      "min": 0,
+      "step": 1000,
+      "default": 0,
+      "help": "Comisión o gasto único al inicio"
+    },
+    {
+      "id": "ivaIntereses",
+      "label": "IVA sobre intereses",
+      "type": "select",
+      "default": "21",
+      "options": [
+        { "value": "0", "label": "Sin IVA (exento)" },
+        { "value": "10.5", "label": "10.5% (responsable inscripto)" },
+        { "value": "21", "label": "21% (consumidor final)" }
+      ]
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "CFT calculado como TIR del flujo de fondos real del préstamo."
+  },
+  "outputs": [
+    {
+      "id": "cftAnual",
+      "label": "CFT (tasa efectiva anual)",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "cuotaTotalMensual",
+      "label": "Cuota mensual total (con gastos)",
+      "format": "currency"
+    },
+    {
+      "id": "totalPagado",
+      "label": "Total pagado",
+      "format": "currency"
+    },
+    {
+      "id": "costoTotal",
+      "label": "Costo total del crédito",
+      "format": "currency"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo real: préstamo $5M al 80% TNA con seguros",
+    "steps": [
+      "**Monto**: $5.000.000.",
+      "**TNA**: 80%. **Tasa mensual**: 6.67%.",
+      "**Plazo**: 24 meses.",
+      "**Seguro mensual**: $5.000.",
+      "**Gasto otorgamiento**: $50.000.",
+      "**IVA intereses**: 21%.",
+      "**Cuota pura**: ~$415.000. **Cuota + seguro + IVA**: ~$440.000.",
+      "**CFT resultante**: ~115% TEA (vs 80% TNA anunciada)."
+    ],
+    "result": "Un préstamo que parece del 80% TNA realmente cuesta **~115% CFT** al incluir IVA, seguros y gastos. La diferencia es de 35 puntos porcentuales."
+  },
+  "explanation": "## Qué es el CFT\n\nEl **Costo Financiero Total** es una tasa efectiva anual que incluye todos los costos asociados al crédito:\n\n- **TNA** (tasa de interés nominal).\n- **IVA sobre intereses** (21% para consumidor final, 10.5% para RI).\n- **Seguro de vida** del deudor.\n- **Seguros adicionales** (desempleo, robo, etc.).\n- **Gastos de otorgamiento** o comisión inicial.\n- **Gastos administrativos mensuales**.\n\n### Cómo se calcula\n\nEl CFT se obtiene calculando la **TIR (Tasa Interna de Retorno)** del flujo de fondos real:\n\n```\nMonto neto recibido = Σ (cuota_total_mes_k / (1 + cft_mensual)^k)\n```\n\nSe resuelve iterativamente para encontrar la tasa mensual que iguala el flujo, y luego se anualiza.\n\n## Por qué la TNA no alcanza para comparar\n\n| Banco | TNA | Seguro | IVA | CFT real |\n|---|---|---|---|---|\n| Banco A | 70% | $3.000/mes | 21% | **98%** |\n| Banco B | 80% | $0 | 0% | **80%** |\n| Banco C | 65% | $8.000/mes | 21% | **105%** |\n\nEl Banco A anuncia TNA más baja que B, pero **su CFT es mayor** por los seguros. Sin mirar el CFT, elegirías mal.\n\n## Regulación BCRA\n\nEl BCRA obliga a todas las entidades financieras a informar el CFT en publicidades, contratos y simuladores. La norma distingue entre:\n\n- **CFTEA**: Costo Financiero Total Efectivo Anual (incluye todo).\n- **CFNA**: Costo Financiero Nominal Anual (sin capitalizar).\n\n## Tips para comparar préstamos\n\n1. **Siempre compará por CFT**, nunca por TNA.\n2. **Pedí el cuadro de marcha** completo antes de firmar.\n3. **Verificá qué seguros son obligatorios** y cuáles opcionales.\n4. **Preguntá por el gasto de otorgamiento** — algunos bancos cobran hasta el 2% del monto.\n5. **El CFT con IVA es el real para consumidor final** — no te dejes engañar por el CFT sin IVA.",
+  "faq": [
+    {
+      "q": "¿Qué diferencia hay entre TNA y CFT?",
+      "a": "La **TNA** es solo la tasa de interés nominal anual. El **CFT** incluye TNA + IVA sobre intereses + seguros + gastos. El CFT siempre es **mayor** que la TNA, a veces por 30-50 puntos porcentuales."
+    },
+    {
+      "q": "¿El banco está obligado a informar el CFT?",
+      "a": "Sí. El **BCRA** obliga a todas las entidades financieras a informar el **CFTEA (con IVA)** y el **CFTEA sin IVA** en toda publicidad, simulador y contrato de préstamo."
+    },
+    {
+      "q": "¿Por qué el CFT es tan diferente a la TNA?",
+      "a": "Principalmente por el **IVA sobre intereses** (21% para consumidor final), que agrega un 21% sobre el componente de interés de cada cuota. También suman los **seguros obligatorios** y gastos administrativos."
+    },
+    {
+      "q": "¿El seguro de vida es obligatorio en un préstamo?",
+      "a": "En la mayoría de los préstamos personales y todos los hipotecarios, el **seguro de vida del deudor** es obligatorio. Sin embargo, podés elegir contratar el seguro con la compañía que prefieras (no necesariamente la del banco)."
+    },
+    {
+      "q": "¿Cómo comparo préstamos si uno es a 12 y otro a 24 meses?",
+      "a": "Compará por **CFT (tasa efectiva anual)**, que es comparable independientemente del plazo. Un préstamo a 12 meses con CFT 90% es más caro que uno a 24 meses con CFT 85%, para el mismo monto."
+    },
+    {
+      "q": "¿El CFT incluye punitorios por mora?",
+      "a": "No. El CFT asume que pagás todas las cuotas en fecha. Los intereses punitorios por atraso son adicionales y pueden duplicar el costo del préstamo."
+    },
+    {
+      "q": "¿Qué CFT es razonable en Argentina 2026?",
+      "a": "Depende del contexto macroeconómico. Con tasas de referencia del BCRA en torno al 30-40%, un CFT de préstamo personal **entre 60% y 100%** es habitual. Menos de 60% es una buena oferta, más de 120% es caro."
+    }
+  ],
+  "sources": [
+    {
+      "name": "BCRA — Costo Financiero Total",
+      "url": "https://www.bcra.gob.ar/BCRAyVos/Costo_Financiero_Total.asp"
+    },
+    {
+      "name": "BCRA — Comunicación A sobre transparencia",
+      "url": "https://www.bcra.gob.ar/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-cuota-prestamo",
+    "calculadora-amortizacion-prestamo-frances-aleman",
+    "calculadora-tasa-anual-equivalente-tea",
+    "calculadora-conversion-tna-tem-tea"
+  ]
+}

@@ -351,6 +351,223 @@ import { litrosNaftaViaje } from './litros-nafta-viaje';
 import { diasIdealesViaje } from './dias-ideales-viaje';
 import { propinaPais } from './propina-pais';
 
+
+// =========================================================================
+// Batch 16-25 — 200 nuevas calcs (educacion, automotor, tecnologia,
+// medio-ambiente, electronica, finanzas, salud, negocios, marketing,
+// vida, cocina, deportes, matematica, construccion, viajes, mascotas)
+// =========================================================================
+import { adaptadorEnchufeVoltajePais } from './adaptador-enchufe-voltaje-pais';
+import { aguaConsumoHogarAhorro } from './agua-consumo-hogar-ahorro';
+import { aguaPastaLitrosGramos } from './agua-pasta-litros-gramos';
+import { ahorroCambiarLamparasLed } from './ahorro-cambiar-lamparas-led';
+import { ahorroEnergiaSolarPaneles } from './ahorro-energia-solar-paneles';
+import { ahorroTermoElectricoVsGas } from './ahorro-termo-electrico-vs-gas';
+import { ahorroTransportePublicoVsAuto } from './ahorro-transporte-publico-vs-auto';
+import { almacenamientoBytesKbMbGbTb } from './almacenamiento-bytes-kb-mb-gb-tb';
+import { amortizacionAutoValorResidual } from './amortizacion-auto-valor-residual';
+import { amortizacionPrestamoFrancesAleman } from './amortizacion-prestamo-frances-aleman';
+import { anchoBandaDescargaTiempo } from './ancho-banda-descarga-tiempo';
+import { arbolesCompensarCo2Huella } from './arboles-compensar-co2-huella';
+import { areaTrianguloVerticesCoordenadas } from './area-triangulo-vertices-coordenadas';
+import { arenaRellenoTerrenoM3 } from './arena-relleno-terreno-m3';
+import { arenaSanitariaGatoKgMes } from './arena-sanitaria-gato-kg-mes';
+import { attributionModeloPrimerUltimoClick } from './attribution-modelo-primer-ultimo-click';
+import { audioBitrateTamanoMp3 } from './audio-bitrate-tamano-mp3';
+import { autonomiaTanqueCombustible } from './autonomia-tanque-combustible';
+import { bebidasEventoLitrosPorPersona } from './bebidas-evento-litros-por-persona';
+import { becaPorcentajeDescuentoCuota } from './beca-porcentaje-descuento-cuota';
+import { biodegradacionTiempoMateriales } from './biodegradacion-tiempo-materiales';
+import { caloriasBasquetIntensidad } from './calorias-basquet-intensidad';
+import { caloriasDiariasGatoPesoActividad } from './calorias-diarias-gato-peso-actividad';
+import { caloriasEmbarazoTrimestre } from './calorias-embarazo-trimestre';
+import { caloriasEscaladaBoulderMuro } from './calorias-escalada-boulder-muro';
+import { caloriasLactanciaProduccionLeche } from './calorias-lactancia-produccion-leche';
+import { caloriasPlayoArgentinoTipico } from './calorias-plato-argentino-tipico';
+import { caloriasSkiSnowboardMontaña } from './calorias-ski-snowboard-montaña';
+import { cambioAceiteKilometraje } from './cambio-aceite-kilometraje';
+import { canoEstructuralPesoMl } from './cano-estructural-peso-ml';
+import { cantidadVentanasLuzNaturalM2 } from './cantidad-ventanas-luz-natural-m2';
+import { capacitorCargaDescargaRc } from './capacitor-carga-descarga-rc';
+import { carneAsadoKgPorPersona } from './carne-asado-kg-por-persona';
+import { castracionEdadIdealPerroGato } from './castracion-edad-ideal-perro-gato';
+import { cedearRatioConversionDolares } from './cedear-ratio-conversion-dolares';
+import { cilindradaMotorCcLitros } from './cilindrada-motor-cc-litros';
+import { citasBibliograficasFormatoApa } from './citas-bibliograficas-formato-apa';
+import { clearanceCreatininaCockcroftGault } from './clearance-creatinina-cockcroft-gault';
+import { codigoLineasEstimacionProyecto } from './codigo-lineas-estimacion-proyecto';
+import { comidaCachorroGramosEdad } from './comida-cachorro-gramos-edad';
+import { compararNaftaVsGncAhorro } from './comparar-nafta-vs-gnc-ahorro';
+import { compostajeResiduosOrganicos } from './compostaje-residuos-organicos';
+import { consumoDatosMovilesStreaming } from './consumo-datos-moviles-streaming';
+import { consumoElectricoAparatoKwhMes } from './consumo-electrico-aparato-kwh-mes';
+import { consumoElectricoPcGamerWatts } from './consumo-electrico-pc-gamer-watts';
+import { consumoNaftaLitros100km } from './consumo-nafta-litros-100km';
+import { conversionColesterolMgMmol } from './conversion-colesterol-mg-mmol';
+import { conversionPorcentajeFraccionDecimal } from './conversion-porcentaje-fraccion-decimal';
+import { correccionCalcioAlbumina } from './correccion-calcio-albumina';
+import { correccionSodioGlucemia } from './correccion-sodio-glucemia';
+import { costoAlmacenamientoInventario } from './costo-almacenamiento-inventario';
+import { costoCloudServidorMensual } from './costo-cloud-servidor-mensual';
+import { costoEstacionamientoAeropuertoDias } from './costo-estacionamiento-aeropuerto-dias';
+import { costoFinancieroTotalCft } from './costo-financiero-total-cft';
+import { costoHoraEmpleadoReal } from './costo-hora-empleado-real';
+import { costoLavadoRopaLavadoraVsLavanderia } from './costo-lavado-ropa-lavadora-vs-lavanderia';
+import { costoMantenimientoHogarAnual } from './costo-mantenimiento-hogar-anual';
+import { costoMascotaPrimerAno } from './costo-mascota-primer-ano';
+import { costoMaterialEstudioCuatrimestre } from './costo-material-estudio-cuatrimestre';
+import { costoMedianeraMuroLindero } from './costo-medianera-muro-lindero';
+import { costoPorKilometroAuto } from './costo-por-kilometro-auto';
+import { costoPorViewCpvVideo } from './costo-por-view-cpv-video';
+import { costoRecetaPrecioPorPorcion } from './costo-receta-precio-por-porcion';
+import { costoRoamingDatosExterior } from './costo-roaming-datos-exterior';
+import { costoSupermercadoCanasticaBasica } from './costo-supermercado-canasta-basica';
+import { costoTotalPropiedadAutoAnual } from './costo-total-propiedad-auto-anual';
+import { costoUniversidadPrivadaCuota } from './costo-universidad-privada-cuota';
+import { costoVeterinarioConsultaPromedio } from './costo-veterinario-consulta-promedio';
+import { creditosUniversitariosAvance } from './creditos-universitarios-avance';
+import { cuotaAlimentariaEstimacion } from './cuota-alimentaria-estimacion';
+import { cuotaSindicalDescuentoSueldo } from './cuota-sindical-descuento-sueldo';
+import { customerEffortScoreCes } from './customer-effort-score-ces';
+import { deckMaderaTablastornillos } from './deck-madera-tablas-tornillos';
+import { depreciacionActivosLineaRecta } from './depreciacion-activos-linea-recta';
+import { derivadaFuncionBasica } from './derivada-funcion-basica';
+import { deudaTarjetaPagoMinimoMeses } from './deuda-tarjeta-pago-minimo-meses';
+import { diasPromedioPagoProveedoresDpp } from './dias-promedio-pago-proveedores-dpp';
+import { distanciaEntreDosPuntos2d3d } from './distancia-entre-dos-puntos-2d-3d';
+import { distanciaRecorridaFutbolJugador } from './distancia-recorrida-futbol-jugador';
+import { divisorTensionResistivo } from './divisor-tension-resistivo';
+import { dolarBlueVsOficialBrecha } from './dolar-blue-vs-oficial-brecha';
+import { dosisAmoxicilinaPediatricaPeso } from './dosis-amoxicilina-pediatrica-peso';
+import { dosisAntipulgasPesoMascota } from './dosis-antipulgas-peso-mascota';
+import { dosisVitaminaDDiariaRecomendada } from './dosis-vitamina-d-diaria-recomendada';
+import { duracionBateriaMahConsumo } from './duracion-bateria-mah-consumo';
+import { duracionCarreraMateriasPorCuatrimestre } from './duracion-carrera-materias-por-cuatrimestre';
+import { embargoSueldoPorcentajeMaximo } from './embargo-sueldo-porcentaje-maximo';
+import { emisionCo2AutoCombustible } from './emision-co2-auto-combustible';
+import { escalaGlasgowNivelConciencia } from './escala-glasgow-nivel-conciencia';
+import { espacioBackupCrecimientoMensual } from './espacio-backup-crecimiento-mensual';
+import { esperanzaVidaGatoRazaIndoor } from './esperanza-vida-gato-raza-indoor';
+import { expensasVsAlquilerRatio } from './expensas-vs-alquiler-ratio';
+import { fechaProbablePartoEcografia } from './fecha-probable-parto-ecografia';
+import { financiacionAutoCuotaPrendario } from './financiacion-auto-cuota-prendario';
+import { flujoCajaLibreFcf } from './flujo-caja-libre-fcf';
+import { fpsFramesPorSegundoJuego } from './fps-frames-por-segundo-juego';
+import { frecuenciaCardiacaMaximaEdad } from './frecuencia-cardiaca-maxima-edad';
+import { frecuenciaCorteUnasPerroGato } from './frecuencia-corte-unas-perro-gato';
+import { frecuenciaEntrenamientoSupercompensacion } from './frecuencia-entrenamiento-supercompensacion';
+import { frecuenciaLongitudOnda } from './frecuencia-longitud-onda';
+import { fusibleAmperajeCableSeccion } from './fusible-amperaje-cable-seccion';
+import { gastosEscrituraCompraInmueble } from './gastos-escritura-compra-inmueble';
+import { gpaArgentinoAEscala4 } from './gpa-argentino-a-escala-4';
+import { handicapGolfDiferencial } from './handicap-golf-diferencial';
+import { horaCheckInAeropuertoAnticipacion } from './hora-check-in-aeropuerto-anticipacion';
+import { horasEstudioMateriaCreditos } from './horas-estudio-materia-creditos';
+import { huellaCarbonoAutoAnual } from './huella-carbono-auto-anual';
+import { huellaHidricaAlimentosLitros } from './huella-hidrica-alimentos-litros';
+import { impuestoSellosInmuebleContrato } from './impuesto-sellos-inmueble-contrato';
+import { indiceAsistenciaFaltas } from './indice-asistencia-faltas';
+import { indiceMasaCorporalPediatrico } from './indice-masa-corporal-pediatrico';
+import { inflacionAcumuladaPeriodo } from './inflacion-acumulada-periodo';
+import { integralDefinidaBasica } from './integral-definida-basica';
+import { interpolacionLinealValor } from './interpolacion-lineal-valor';
+import { ivaIncluidoNetoDiscriminar } from './iva-incluido-neto-discriminar';
+import { leyOhmVoltajeCorrienteResistencia } from './ley-ohm-voltaje-corriente-resistencia';
+import { licenciaPorMaternidadPaternidadDias } from './licencia-por-maternidad-paternidad-dias';
+import { mallaSimaLosaM2 } from './malla-sima-losa-m2';
+import { matrizMultiplicacion3x3 } from './matriz-multiplicacion-3x3';
+import { mediaGeometricaArmonica } from './media-geometrica-armonica';
+import { monedaLocalCambioPais } from './moneda-local-cambio-pais';
+import { monitorTamanoDistanciaIdeal } from './monitor-tamano-distancia-ideal';
+import { monotributoCategoriaIngresosTope } from './monotributo-categoria-ingresos-tope';
+import { multaTransitoPuntosLicencia } from './multa-transito-puntos-licencia';
+import { necesidadCaloricaHospitalizado } from './necesidad-calorica-hospitalizado';
+import { neumaticosMedidaEquivalente } from './neumaticos-medida-equivalente';
+import { notaNecesariaAprobar } from './nota-necesaria-aprobar';
+import { notaParcialRecuperatorioPromocion } from './nota-parcial-recuperatorio-promocion';
+import { palabrasPorPaginaTrabajo } from './palabras-por-pagina-trabajo';
+import { passwordFortalezaEntropia } from './password-fortaleza-entropia';
+import { patenteAutoProvincia } from './patente-auto-provincia';
+import { peajeRutaCostoTotalViaje } from './peaje-ruta-costo-total-viaje';
+import { pendienteRectaDosPuntos } from './pendiente-recta-dos-puntos';
+import { pesoGuantesBoxeoKgOz } from './peso-guantes-boxeo-kg-oz';
+import { pesoIdealBebeMesPercentil } from './peso-ideal-bebe-mes-percentil';
+import { piletaNatacionLitrosM3 } from './pileta-natacion-litros-m3';
+import { pingLatenciaGamingAceptable } from './ping-latencia-gaming-aceptable';
+import { pinturaParedesHabitacionLitros } from './pintura-paredes-habitacion-litros';
+import { pisoFlotanteM2Tablas } from './piso-flotante-m2-tablas';
+import { poderAdquisitivoSueldoReal } from './poder-adquisitivo-sueldo-real';
+import { porcelanatoLiquidoLitrosM2 } from './porcelanato-liquido-litros-m2';
+import { potenciaElectricaWattsVoltsAmperes } from './potencia-electrica-watts-volts-amperes';
+import { potenciaHpKwCv } from './potencia-hp-kw-cv';
+import { precioPsicologico999 } from './precio-psicologico-9-99';
+import { presionNeumaticosPsiBar } from './presion-neumaticos-psi-bar';
+import { prestamoEstudiantilCuotas } from './prestamo-estudiantil-cuotas';
+import { presupuestoDiarioMochileroCiudad } from './presupuesto-diario-mochilero-ciudad';
+import { productividadEmpleadosOutputHora } from './productividad-empleados-output-hora';
+import { promedioNotasUniversidad } from './promedio-notas-universidad';
+import { promedioPonderadoUniversidad } from './promedio-ponderado-universidad';
+import { propinaRestaurantePaisPorcentaje } from './propina-restaurante-pais-porcentaje';
+import { puntajeIngresoUniversidad } from './puntaje-ingreso-universidad';
+import { puntosRankingAjedrezElo } from './puntos-ranking-ajedrez-elo';
+import { raidAlmacenamientoUtilDiscos } from './raid-almacenamiento-util-discos';
+import { ratioAlumnoProfesorCurso } from './ratio-alumno-profesor-curso';
+import { ratioLiquidezCorrienteSeco } from './ratio-liquidez-corriente-seco';
+import { reachFrequencyGrpMedios } from './reach-frequency-grp-medios';
+import { reciclajeAhorroResiduos } from './reciclaje-ahorro-residuos';
+import { recoleccionAguaLluviaTecho } from './recoleccion-agua-lluvia-techo';
+import { rendimientoFciMoneyMarket } from './rendimiento-fci-money-market';
+import { rendimientoMasaEmpanadasCantidad } from './rendimiento-masa-empanadas-cantidad';
+import { resistenciaLedVoltajeCaida } from './resistencia-led-voltaje-caida';
+import { resistenciaParaleloSerie } from './resistencia-paralelo-serie';
+import { resolucionPantallaPpiDensidad } from './resolucion-pantalla-ppi-densidad';
+import { retornoRealInversionDescontandoInflacion } from './retorno-real-inversion-descontando-inflacion';
+import { riesgoCaidaAdultoMayorEscala } from './riesgo-caida-adulto-mayor-escala';
+import { riesgoDiabetesFindrisc } from './riesgo-diabetes-findrisc';
+import { roiCapacitacionEmpleados } from './roi-capacitacion-empleados';
+import { roiPodcastSponsorship } from './roi-podcast-sponsorship';
+import { roiSeoTraficoOrganico } from './roi-seo-trafico-organico';
+import { ropaMaletaDiasViaje } from './ropa-maleta-dias-viaje';
+import { scoreWellsTrombosisVenosa } from './score-wells-trombosis-venosa';
+import { seguroAutoEstimacionPrecio } from './seguro-auto-estimacion-precio';
+import { seguroHogarEstimacionCobertura } from './seguro-hogar-estimacion-cobertura';
+import { seguroViajeCoberturaEstimacion } from './seguro-viaje-cobertura-estimacion';
+import { semanasGestacionEcografia } from './semanas-gestacion-ecografia';
+import { splitGastosGrupoAmigos } from './split-gastos-grupo-amigos';
+import { sueldoHoraExtraNocturnaFeriado } from './sueldo-hora-extra-nocturna-feriado';
+import { superficieQuemaduraReglaNueves } from './superficie-quemadura-regla-nueves';
+import { sustitucionIngredientesCocina } from './sustitucion-ingredientes-cocina';
+import { tablaWilksPowerliftingScore } from './tabla-wilks-powerlifting-score';
+import { tamanoAireAcondicionadoBtuHabitacion } from './tamano-aire-acondicionado-btu-habitacion';
+import { tamanoImagenPixelesMegapixeles } from './tamano-imagen-pixeles-megapixeles';
+import { tamanoParrillaPersonasM2 } from './tamano-parrilla-personas-m2';
+import { tasaAprobacionMateria } from './tasa-aprobacion-materia';
+import { tasaMetabolicaReposoKatchMcardle } from './tasa-metabolica-reposo-katch-mcardle';
+import { tasaReboteBenchmarkSitioWeb } from './tasa-rebote-benchmark-sitio-web';
+import { tasaViralidadKFactor } from './tasa-viralidad-k-factor';
+import { tiempoCoccionLegumbresRemojo } from './tiempo-coccion-legumbres-remojo';
+import { tiempoContenidoBlogRoiEstimado } from './tiempo-contenido-blog-roi-estimado';
+import { tiempoLecturaPaginasEstudio } from './tiempo-lectura-paginas-estudio';
+import { tiempoMarinadoCarnePescado } from './tiempo-marinado-carne-pescado';
+import { tiempoTesisMonografia } from './tiempo-tesis-monografia';
+import { transferAutoCostoRegistro } from './transfer-auto-costo-registro';
+import { transferenciaArchivoRedLanTiempo } from './transferencia-archivo-red-lan-tiempo';
+import { transformadorRelacionEspiras } from './transformador-relacion-espiras';
+import { transportadoraTamanoMascotaViaje } from './transportadora-tamano-mascota-viaje';
+import { uptimePorcentajeMinutosCaida } from './uptime-porcentaje-minutos-caida';
+import { vacunasGatoCalendarioGatito } from './vacunas-gato-calendario-gatito';
+import { valorPaginaVistaRpm } from './valor-pagina-vista-rpm';
+import { valuacionStartupMetodoBerkus } from './valuacion-startup-metodo-berkus';
+import { vectorSumaRestaMagnitud } from './vector-suma-resta-magnitud';
+import { velocidadInternetMbpsReal } from './velocidad-internet-mbps-real';
+import { velocidadMaximaRelacionPotenciaPeso } from './velocidad-maxima-relacion-potencia-peso';
+import { velocidadPelotaFutbolTiro } from './velocidad-pelota-futbol-tiro';
+import { velocidadPromedioTrayectoCiudad } from './velocidad-promedio-trayecto-ciudad';
+import { videoBitrateTamanoArchivo } from './video-bitrate-tamano-archivo';
+import { visaRequisitosPasaporteArgentino } from './visa-requisitos-pasaporte-argentino';
+import { vtvVencimientoTurno } from './vtv-vencimiento-turno';
+import { yesoCielorrasoPlacasM2 } from './yeso-cielorraso-placas-m2';
+
 export const formulas = {
   // Finanzas
   'sueldo-ar': sueldoAR,
@@ -704,6 +921,218 @@ export const formulas = {
   'litros-nafta-viaje': litrosNaftaViaje,
   'dias-ideales-viaje': diasIdealesViaje,
   'propina-pais': propinaPais,
+
+  // === 200 nuevas calcs ===
+  'adaptador-enchufe-voltaje-pais': adaptadorEnchufeVoltajePais,
+  'agua-consumo-hogar-ahorro': aguaConsumoHogarAhorro,
+  'agua-pasta-litros-gramos': aguaPastaLitrosGramos,
+  'ahorro-cambiar-lamparas-led': ahorroCambiarLamparasLed,
+  'ahorro-energia-solar-paneles': ahorroEnergiaSolarPaneles,
+  'ahorro-termo-electrico-vs-gas': ahorroTermoElectricoVsGas,
+  'ahorro-transporte-publico-vs-auto': ahorroTransportePublicoVsAuto,
+  'almacenamiento-bytes-kb-mb-gb-tb': almacenamientoBytesKbMbGbTb,
+  'amortizacion-auto-valor-residual': amortizacionAutoValorResidual,
+  'amortizacion-prestamo-frances-aleman': amortizacionPrestamoFrancesAleman,
+  'ancho-banda-descarga-tiempo': anchoBandaDescargaTiempo,
+  'arboles-compensar-co2-huella': arbolesCompensarCo2Huella,
+  'area-triangulo-vertices-coordenadas': areaTrianguloVerticesCoordenadas,
+  'arena-relleno-terreno-m3': arenaRellenoTerrenoM3,
+  'arena-sanitaria-gato-kg-mes': arenaSanitariaGatoKgMes,
+  'attribution-modelo-primer-ultimo-click': attributionModeloPrimerUltimoClick,
+  'audio-bitrate-tamano-mp3': audioBitrateTamanoMp3,
+  'autonomia-tanque-combustible': autonomiaTanqueCombustible,
+  'bebidas-evento-litros-por-persona': bebidasEventoLitrosPorPersona,
+  'beca-porcentaje-descuento-cuota': becaPorcentajeDescuentoCuota,
+  'biodegradacion-tiempo-materiales': biodegradacionTiempoMateriales,
+  'calorias-basquet-intensidad': caloriasBasquetIntensidad,
+  'calorias-diarias-gato-peso-actividad': caloriasDiariasGatoPesoActividad,
+  'calorias-embarazo-trimestre': caloriasEmbarazoTrimestre,
+  'calorias-escalada-boulder-muro': caloriasEscaladaBoulderMuro,
+  'calorias-lactancia-produccion-leche': caloriasLactanciaProduccionLeche,
+  'calorias-plato-argentino-tipico': caloriasPlayoArgentinoTipico,
+  'calorias-ski-snowboard-montaña': caloriasSkiSnowboardMontaña,
+  'cambio-aceite-kilometraje': cambioAceiteKilometraje,
+  'cano-estructural-peso-ml': canoEstructuralPesoMl,
+  'cantidad-ventanas-luz-natural-m2': cantidadVentanasLuzNaturalM2,
+  'capacitor-carga-descarga-rc': capacitorCargaDescargaRc,
+  'carne-asado-kg-por-persona': carneAsadoKgPorPersona,
+  'castracion-edad-ideal-perro-gato': castracionEdadIdealPerroGato,
+  'cedear-ratio-conversion-dolares': cedearRatioConversionDolares,
+  'cilindrada-motor-cc-litros': cilindradaMotorCcLitros,
+  'citas-bibliograficas-formato-apa': citasBibliograficasFormatoApa,
+  'clearance-creatinina-cockcroft-gault': clearanceCreatininaCockcroftGault,
+  'codigo-lineas-estimacion-proyecto': codigoLineasEstimacionProyecto,
+  'comida-cachorro-gramos-edad': comidaCachorroGramosEdad,
+  'comparar-nafta-vs-gnc-ahorro': compararNaftaVsGncAhorro,
+  'compostaje-residuos-organicos': compostajeResiduosOrganicos,
+  'consumo-datos-moviles-streaming': consumoDatosMovilesStreaming,
+  'consumo-electrico-aparato-kwh-mes': consumoElectricoAparatoKwhMes,
+  'consumo-electrico-pc-gamer-watts': consumoElectricoPcGamerWatts,
+  'consumo-nafta-litros-100km': consumoNaftaLitros100km,
+  'conversion-colesterol-mg-mmol': conversionColesterolMgMmol,
+  'conversion-porcentaje-fraccion-decimal': conversionPorcentajeFraccionDecimal,
+  'correccion-calcio-albumina': correccionCalcioAlbumina,
+  'correccion-sodio-glucemia': correccionSodioGlucemia,
+  'costo-almacenamiento-inventario': costoAlmacenamientoInventario,
+  'costo-cloud-servidor-mensual': costoCloudServidorMensual,
+  'costo-estacionamiento-aeropuerto-dias': costoEstacionamientoAeropuertoDias,
+  'costo-financiero-total-cft': costoFinancieroTotalCft,
+  'costo-hora-empleado-real': costoHoraEmpleadoReal,
+  'costo-lavado-ropa-lavadora-vs-lavanderia': costoLavadoRopaLavadoraVsLavanderia,
+  'costo-mantenimiento-hogar-anual': costoMantenimientoHogarAnual,
+  'costo-mascota-primer-ano': costoMascotaPrimerAno,
+  'costo-material-estudio-cuatrimestre': costoMaterialEstudioCuatrimestre,
+  'costo-medianera-muro-lindero': costoMedianeraMuroLindero,
+  'costo-por-kilometro-auto': costoPorKilometroAuto,
+  'costo-por-view-cpv-video': costoPorViewCpvVideo,
+  'costo-receta-precio-por-porcion': costoRecetaPrecioPorPorcion,
+  'costo-roaming-datos-exterior': costoRoamingDatosExterior,
+  'costo-supermercado-canasta-basica': costoSupermercadoCanasticaBasica,
+  'costo-total-propiedad-auto-anual': costoTotalPropiedadAutoAnual,
+  'costo-universidad-privada-cuota': costoUniversidadPrivadaCuota,
+  'costo-veterinario-consulta-promedio': costoVeterinarioConsultaPromedio,
+  'creditos-universitarios-avance': creditosUniversitariosAvance,
+  'cuota-alimentaria-estimacion': cuotaAlimentariaEstimacion,
+  'cuota-sindical-descuento-sueldo': cuotaSindicalDescuentoSueldo,
+  'customer-effort-score-ces': customerEffortScoreCes,
+  'deck-madera-tablas-tornillos': deckMaderaTablastornillos,
+  'depreciacion-activos-linea-recta': depreciacionActivosLineaRecta,
+  'derivada-funcion-basica': derivadaFuncionBasica,
+  'deuda-tarjeta-pago-minimo-meses': deudaTarjetaPagoMinimoMeses,
+  'dias-promedio-pago-proveedores-dpp': diasPromedioPagoProveedoresDpp,
+  'distancia-entre-dos-puntos-2d-3d': distanciaEntreDosPuntos2d3d,
+  'distancia-recorrida-futbol-jugador': distanciaRecorridaFutbolJugador,
+  'divisor-tension-resistivo': divisorTensionResistivo,
+  'dolar-blue-vs-oficial-brecha': dolarBlueVsOficialBrecha,
+  'dosis-amoxicilina-pediatrica-peso': dosisAmoxicilinaPediatricaPeso,
+  'dosis-antipulgas-peso-mascota': dosisAntipulgasPesoMascota,
+  'dosis-vitamina-d-diaria-recomendada': dosisVitaminaDDiariaRecomendada,
+  'duracion-bateria-mah-consumo': duracionBateriaMahConsumo,
+  'duracion-carrera-materias-por-cuatrimestre': duracionCarreraMateriasPorCuatrimestre,
+  'embargo-sueldo-porcentaje-maximo': embargoSueldoPorcentajeMaximo,
+  'emision-co2-auto-combustible': emisionCo2AutoCombustible,
+  'escala-glasgow-nivel-conciencia': escalaGlasgowNivelConciencia,
+  'espacio-backup-crecimiento-mensual': espacioBackupCrecimientoMensual,
+  'esperanza-vida-gato-raza-indoor': esperanzaVidaGatoRazaIndoor,
+  'expensas-vs-alquiler-ratio': expensasVsAlquilerRatio,
+  'fecha-probable-parto-ecografia': fechaProbablePartoEcografia,
+  'financiacion-auto-cuota-prendario': financiacionAutoCuotaPrendario,
+  'flujo-caja-libre-fcf': flujoCajaLibreFcf,
+  'fps-frames-por-segundo-juego': fpsFramesPorSegundoJuego,
+  'frecuencia-cardiaca-maxima-edad': frecuenciaCardiacaMaximaEdad,
+  'frecuencia-corte-unas-perro-gato': frecuenciaCorteUnasPerroGato,
+  'frecuencia-entrenamiento-supercompensacion': frecuenciaEntrenamientoSupercompensacion,
+  'frecuencia-longitud-onda': frecuenciaLongitudOnda,
+  'fusible-amperaje-cable-seccion': fusibleAmperajeCableSeccion,
+  'gastos-escritura-compra-inmueble': gastosEscrituraCompraInmueble,
+  'gpa-argentino-a-escala-4': gpaArgentinoAEscala4,
+  'handicap-golf-diferencial': handicapGolfDiferencial,
+  'hora-check-in-aeropuerto-anticipacion': horaCheckInAeropuertoAnticipacion,
+  'horas-estudio-materia-creditos': horasEstudioMateriaCreditos,
+  'huella-carbono-auto-anual': huellaCarbonoAutoAnual,
+  'huella-hidrica-alimentos-litros': huellaHidricaAlimentosLitros,
+  'impuesto-sellos-inmueble-contrato': impuestoSellosInmuebleContrato,
+  'indice-asistencia-faltas': indiceAsistenciaFaltas,
+  'indice-masa-corporal-pediatrico': indiceMasaCorporalPediatrico,
+  'inflacion-acumulada-periodo': inflacionAcumuladaPeriodo,
+  'integral-definida-basica': integralDefinidaBasica,
+  'interpolacion-lineal-valor': interpolacionLinealValor,
+  'iva-incluido-neto-discriminar': ivaIncluidoNetoDiscriminar,
+  'ley-ohm-voltaje-corriente-resistencia': leyOhmVoltajeCorrienteResistencia,
+  'licencia-por-maternidad-paternidad-dias': licenciaPorMaternidadPaternidadDias,
+  'malla-sima-losa-m2': mallaSimaLosaM2,
+  'matriz-multiplicacion-3x3': matrizMultiplicacion3x3,
+  'media-geometrica-armonica': mediaGeometricaArmonica,
+  'moneda-local-cambio-pais': monedaLocalCambioPais,
+  'monitor-tamano-distancia-ideal': monitorTamanoDistanciaIdeal,
+  'monotributo-categoria-ingresos-tope': monotributoCategoriaIngresosTope,
+  'multa-transito-puntos-licencia': multaTransitoPuntosLicencia,
+  'necesidad-calorica-hospitalizado': necesidadCaloricaHospitalizado,
+  'neumaticos-medida-equivalente': neumaticosMedidaEquivalente,
+  'nota-necesaria-aprobar': notaNecesariaAprobar,
+  'nota-parcial-recuperatorio-promocion': notaParcialRecuperatorioPromocion,
+  'palabras-por-pagina-trabajo': palabrasPorPaginaTrabajo,
+  'password-fortaleza-entropia': passwordFortalezaEntropia,
+  'patente-auto-provincia': patenteAutoProvincia,
+  'peaje-ruta-costo-total-viaje': peajeRutaCostoTotalViaje,
+  'pendiente-recta-dos-puntos': pendienteRectaDosPuntos,
+  'peso-guantes-boxeo-kg-oz': pesoGuantesBoxeoKgOz,
+  'peso-ideal-bebe-mes-percentil': pesoIdealBebeMesPercentil,
+  'pileta-natacion-litros-m3': piletaNatacionLitrosM3,
+  'ping-latencia-gaming-aceptable': pingLatenciaGamingAceptable,
+  'pintura-paredes-habitacion-litros': pinturaParedesHabitacionLitros,
+  'piso-flotante-m2-tablas': pisoFlotanteM2Tablas,
+  'poder-adquisitivo-sueldo-real': poderAdquisitivoSueldoReal,
+  'porcelanato-liquido-litros-m2': porcelanatoLiquidoLitrosM2,
+  'potencia-electrica-watts-volts-amperes': potenciaElectricaWattsVoltsAmperes,
+  'potencia-hp-kw-cv': potenciaHpKwCv,
+  'precio-psicologico-9-99': precioPsicologico999,
+  'presion-neumaticos-psi-bar': presionNeumaticosPsiBar,
+  'prestamo-estudiantil-cuotas': prestamoEstudiantilCuotas,
+  'presupuesto-diario-mochilero-ciudad': presupuestoDiarioMochileroCiudad,
+  'productividad-empleados-output-hora': productividadEmpleadosOutputHora,
+  'promedio-notas-universidad': promedioNotasUniversidad,
+  'promedio-ponderado-universidad': promedioPonderadoUniversidad,
+  'propina-restaurante-pais-porcentaje': propinaRestaurantePaisPorcentaje,
+  'puntaje-ingreso-universidad': puntajeIngresoUniversidad,
+  'puntos-ranking-ajedrez-elo': puntosRankingAjedrezElo,
+  'raid-almacenamiento-util-discos': raidAlmacenamientoUtilDiscos,
+  'ratio-alumno-profesor-curso': ratioAlumnoProfesorCurso,
+  'ratio-liquidez-corriente-seco': ratioLiquidezCorrienteSeco,
+  'reach-frequency-grp-medios': reachFrequencyGrpMedios,
+  'reciclaje-ahorro-residuos': reciclajeAhorroResiduos,
+  'recoleccion-agua-lluvia-techo': recoleccionAguaLluviaTecho,
+  'rendimiento-fci-money-market': rendimientoFciMoneyMarket,
+  'rendimiento-masa-empanadas-cantidad': rendimientoMasaEmpanadasCantidad,
+  'resistencia-led-voltaje-caida': resistenciaLedVoltajeCaida,
+  'resistencia-paralelo-serie': resistenciaParaleloSerie,
+  'resolucion-pantalla-ppi-densidad': resolucionPantallaPpiDensidad,
+  'retorno-real-inversion-descontando-inflacion': retornoRealInversionDescontandoInflacion,
+  'riesgo-caida-adulto-mayor-escala': riesgoCaidaAdultoMayorEscala,
+  'riesgo-diabetes-findrisc': riesgoDiabetesFindrisc,
+  'roi-capacitacion-empleados': roiCapacitacionEmpleados,
+  'roi-podcast-sponsorship': roiPodcastSponsorship,
+  'roi-seo-trafico-organico': roiSeoTraficoOrganico,
+  'ropa-maleta-dias-viaje': ropaMaletaDiasViaje,
+  'score-wells-trombosis-venosa': scoreWellsTrombosisVenosa,
+  'seguro-auto-estimacion-precio': seguroAutoEstimacionPrecio,
+  'seguro-hogar-estimacion-cobertura': seguroHogarEstimacionCobertura,
+  'seguro-viaje-cobertura-estimacion': seguroViajeCoberturaEstimacion,
+  'semanas-gestacion-ecografia': semanasGestacionEcografia,
+  'split-gastos-grupo-amigos': splitGastosGrupoAmigos,
+  'sueldo-hora-extra-nocturna-feriado': sueldoHoraExtraNocturnaFeriado,
+  'superficie-quemadura-regla-nueves': superficieQuemaduraReglaNueves,
+  'sustitucion-ingredientes-cocina': sustitucionIngredientesCocina,
+  'tabla-wilks-powerlifting-score': tablaWilksPowerliftingScore,
+  'tamano-aire-acondicionado-btu-habitacion': tamanoAireAcondicionadoBtuHabitacion,
+  'tamano-imagen-pixeles-megapixeles': tamanoImagenPixelesMegapixeles,
+  'tamano-parrilla-personas-m2': tamanoParrillaPersonasM2,
+  'tasa-aprobacion-materia': tasaAprobacionMateria,
+  'tasa-metabolica-reposo-katch-mcardle': tasaMetabolicaReposoKatchMcardle,
+  'tasa-rebote-benchmark-sitio-web': tasaReboteBenchmarkSitioWeb,
+  'tasa-viralidad-k-factor': tasaViralidadKFactor,
+  'tiempo-coccion-legumbres-remojo': tiempoCoccionLegumbresRemojo,
+  'tiempo-contenido-blog-roi-estimado': tiempoContenidoBlogRoiEstimado,
+  'tiempo-lectura-paginas-estudio': tiempoLecturaPaginasEstudio,
+  'tiempo-marinado-carne-pescado': tiempoMarinadoCarnePescado,
+  'tiempo-tesis-monografia': tiempoTesisMonografia,
+  'transfer-auto-costo-registro': transferAutoCostoRegistro,
+  'transferencia-archivo-red-lan-tiempo': transferenciaArchivoRedLanTiempo,
+  'transformador-relacion-espiras': transformadorRelacionEspiras,
+  'transportadora-tamano-mascota-viaje': transportadoraTamanoMascotaViaje,
+  'uptime-porcentaje-minutos-caida': uptimePorcentajeMinutosCaida,
+  'vacunas-gato-calendario-gatito': vacunasGatoCalendarioGatito,
+  'valor-pagina-vista-rpm': valorPaginaVistaRpm,
+  'valuacion-startup-metodo-berkus': valuacionStartupMetodoBerkus,
+  'vector-suma-resta-magnitud': vectorSumaRestaMagnitud,
+  'velocidad-internet-mbps-real': velocidadInternetMbpsReal,
+  'velocidad-maxima-relacion-potencia-peso': velocidadMaximaRelacionPotenciaPeso,
+  'velocidad-pelota-futbol-tiro': velocidadPelotaFutbolTiro,
+  'velocidad-promedio-trayecto-ciudad': velocidadPromedioTrayectoCiudad,
+  'video-bitrate-tamano-archivo': videoBitrateTamanoArchivo,
+  'visa-requisitos-pasaporte-argentino': visaRequisitosPasaporteArgentino,
+  'vtv-vencimiento-turno': vtvVencimientoTurno,
+  'yeso-cielorraso-placas-m2': yesoCielorrasoPlacasM2,
 };
 
 export type FormulaId = keyof typeof formulas;

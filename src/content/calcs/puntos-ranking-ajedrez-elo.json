@@ -1,0 +1,163 @@
+{
+  "slug": "calculadora-puntos-ranking-ajedrez-elo",
+  "title": "Calculadora de Rating ELO Ajedrez — Variación de Puntos 2026 | Hacé Cuentas",
+  "h1": "Calculadora de variación ELO en ajedrez",
+  "description": "Calculá cuántos puntos ELO ganás o perdés tras una partida de ajedrez según tu rating, el del rival y el resultado. Fórmula FIDE oficial.",
+  "category": "deportes",
+  "icon": "⚽",
+  "formulaId": "puntos-ranking-ajedrez-elo",
+  "seoKeywords": [
+    "elo ajedrez",
+    "calcular elo",
+    "variacion elo",
+    "rating fide",
+    "puntos ajedrez"
+  ],
+  "intro": "El sistema **ELO** es el método estándar para medir la fuerza de un ajedrecista. Después de cada partida, tu rating sube o baja según el **resultado** y la **diferencia de rating** con tu rival. Esta calculadora aplica la **fórmula oficial FIDE** con el factor K correspondiente para mostrarte cuántos puntos ganás o perdés. Ideal para jugadores de torneo que quieren **anticipar cambios en su rating**, entender cómo funciona el sistema o planificar qué resultados necesitan para alcanzar un objetivo.",
+  "keyTakeaway": "**Nuevo ELO = ELO actual + K × (Resultado − Esperado)**. Factor K: 40 (nuevos), 20 (< 2400), 10 (>= 2400). Ganarle a alguien con **mucho más rating** da más puntos.",
+  "useCases": [
+    "Calcular cuántos puntos ganás si le ganás a un rival 200 puntos arriba.",
+    "Saber cuánto perdés si empatás con alguien de menor rating.",
+    "Planificar resultados necesarios para subir de categoría.",
+    "Entender la variación de ELO en un torneo de ajedrez.",
+    "Comparar el impacto de ganar, perder o empatar contra distintos rivales."
+  ],
+  "fields": [
+    {
+      "id": "eloJugador",
+      "label": "Tu rating ELO",
+      "type": "number",
+      "placeholder": "1500",
+      "min": 100,
+      "max": 3000,
+      "step": 1,
+      "required": true,
+      "help": "Tu rating ELO actual (FIDE, FADA o plataforma online)."
+    },
+    {
+      "id": "eloRival",
+      "label": "Rating ELO del rival",
+      "type": "number",
+      "placeholder": "1700",
+      "min": 100,
+      "max": 3000,
+      "step": 1,
+      "required": true,
+      "help": "Rating ELO de tu oponente."
+    },
+    {
+      "id": "resultado",
+      "label": "Resultado",
+      "type": "select",
+      "default": "1",
+      "options": [
+        { "value": "1", "label": "Ganaste (1 punto)" },
+        { "value": "0.5", "label": "Empate (½ punto)" },
+        { "value": "0", "label": "Perdiste (0 puntos)" }
+      ],
+      "required": true,
+      "help": "Resultado de la partida desde tu perspectiva."
+    },
+    {
+      "id": "factorK",
+      "label": "Factor K",
+      "type": "select",
+      "default": "20",
+      "options": [
+        { "value": "40", "label": "K=40 (nuevos / sub-18 con <2300)" },
+        { "value": "20", "label": "K=20 (rating < 2400)" },
+        { "value": "10", "label": "K=10 (rating >= 2400)" }
+      ],
+      "required": true,
+      "help": "Factor de desarrollo FIDE. K más alto = cambios más grandes."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmula estándar FIDE ELO"
+  },
+  "outputs": [
+    {
+      "id": "result",
+      "label": "Variación de puntos",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "nuevoElo",
+      "label": "Nuevo ELO",
+      "format": "number"
+    },
+    {
+      "id": "esperado",
+      "label": "Resultado esperado",
+      "format": "number"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: ELO 1500 le gana a ELO 1700, K=20",
+    "steps": [
+      "**Tu ELO**: 1500.",
+      "**ELO rival**: 1700 (diferencia: 200).",
+      "**Resultado esperado**: 1 / (1 + 10^(200/400)) = 0.24.",
+      "**Resultado real**: 1 (ganaste).",
+      "**Variación**: 20 × (1 − 0.24) = **+15.2 puntos**.",
+      "**Nuevo ELO**: 1500 + 15.2 = **1515**."
+    ],
+    "result": "Ganás **+15.2 puntos ELO**. Tu nuevo rating sería **1515**. Ganarle a alguien 200 puntos arriba da muchos más puntos que ganarle a alguien de tu nivel."
+  },
+  "explanation": "## Fórmula ELO\n\n```\nEsperado = 1 / (1 + 10^((ELO_rival − ELO_jugador) / 400))\nVariación = K × (Resultado − Esperado)\nNuevo ELO = ELO actual + Variación\n```\n\n## El resultado esperado\n\nLa fórmula calcula la **probabilidad estadística** de que ganes:\n\n| Diferencia de rating | Probabilidad de ganar |\n|---|---|\n| 0 (igual nivel) | 50% |\n| +100 (vos tenés más) | 64% |\n| +200 | 76% |\n| +400 | 91% |\n| −100 (rival tiene más) | 36% |\n| −200 | 24% |\n| −400 | 9% |\n\n## El factor K\n\nEl factor K determina **cuánto pesa cada partida**:\n\n- **K = 40**: jugadores nuevos (< 30 partidas) o sub-18 con rating < 2300. Cambios grandes y rápidos.\n- **K = 20**: la mayoría de jugadores con rating < 2400.\n- **K = 10**: jugadores de elite (>= 2400). Cambios lentos, rating más estable.\n\n## ¿Cómo funciona en la práctica?\n\nSi le ganás a alguien de **tu mismo nivel**, ganás K/2 puntos (10 con K=20). Si le ganás a alguien con **mucho más rating**, ganás casi K puntos (hasta 19.2 con K=20). Si perdés contra alguien mucho más débil, perdés casi K puntos.\n\n## ELO en plataformas online\n\n**Chess.com** y **Lichess** usan variaciones del sistema ELO (Glicko-2 en Lichess). Los ratings no son directamente comparables con FIDE:\n\n| Nivel | FIDE | Chess.com | Lichess |\n|---|---|---|---|\n| Principiante | 800-1200 | 400-1000 | 800-1400 |\n| Club | 1200-1600 | 1000-1400 | 1400-1800 |\n| Avanzado | 1600-2000 | 1400-1800 | 1800-2200 |\n| Experto | 2000-2200 | 1800-2100 | 2200-2500 |\n| Maestro | 2200+ | 2100+ | 2500+ |\n\n## Categorías FIDE\n\n| Título | Rating mínimo |\n|---|---|\n| Candidato a Maestro (CM) | 2200 |\n| Maestro FIDE (MF) | 2300 |\n| Maestro Internacional (MI) | 2400 |\n| Gran Maestro (GM) | 2500 |\n\n## Tips para subir de ELO\n\n1. **Jugá contra rivales ligeramente más fuertes** (+50 a +150): ganás más puntos si ganás y perdés menos si perdés.\n2. **Estudiá finales**: la mayoría de partidas de club se definen en el final.\n3. **Analizá tus partidas**: usá un engine (Stockfish) para encontrar tus errores recurrentes.\n4. **Consistencia > talento**: jugar 3 torneos por mes con preparación es mejor que 1 sin preparar.",
+  "faq": [
+    {
+      "q": "¿Cuántos puntos ELO ganás por ganar una partida?",
+      "a": "**Depende de la diferencia de rating**. Si le ganás a alguien de tu nivel, ganás ~10 puntos (K=20). Si le ganás a alguien 200 puntos arriba, ganás ~15. Si le ganás a alguien 200 puntos abajo, ganás solo ~5. El sistema premia ganarle a rivales fuertes."
+    },
+    {
+      "q": "¿Puedo perder ELO si empato?",
+      "a": "**Sí**, si tu rival tiene mucho menos rating. Un empate contra alguien 200 puntos abajo te hace perder ~5 puntos porque se \"esperaba\" que ganaras. Contra alguien de tu nivel, un empate no cambia casi nada (+/- 0)."
+    },
+    {
+      "q": "¿Qué es un buen ELO en ajedrez?",
+      "a": "**1200-1400 FIDE** = jugador de club que conoce las reglas y tácticas básicas. **1600-1800** = nivel intermedio fuerte. **2000+** = nivel experto/candidato a maestro. **2200+** = maestro. El promedio de un jugador casual que estudia un poco ronda los **1300-1500**."
+    },
+    {
+      "q": "¿El ELO de Chess.com es igual al ELO FIDE?",
+      "a": "**No son directamente comparables**. El ELO de Chess.com suele ser **100-200 puntos menor** que FIDE para el mismo nivel de juego, porque la base de jugadores es distinta. Lichess suele ser **200-400 puntos mayor** que FIDE. Para referencia real, solo vale el FIDE."
+    },
+    {
+      "q": "¿Cuánto tarda subir 100 puntos de ELO?",
+      "a": "**Depende del nivel**. De 1000 a 1100 puede tomar 1-2 meses de práctica regular. De 1800 a 1900 puede tomar 6-12 meses. A mayor rating, más difícil subir. Un jugador que estudia 1 hora/día y juega 3 torneos/mes puede subir **100-200 puntos por año** en nivel intermedio."
+    },
+    {
+      "q": "¿Qué pasa si pierdo muchas partidas seguidas?",
+      "a": "**Tu ELO baja**, pero el sistema se autocorrige: al bajar, enfrentás rivales más débiles, tenés más chances de ganar y recuperar. Si bajaste por un mal torneo, generalmente recuperás en 2-3 torneos normales. Con K=40 (nuevos), las bajadas son más pronunciadas pero también las subidas."
+    },
+    {
+      "q": "¿Cómo funciona el ELO en Argentina?",
+      "a": "La **FADA (Federación Argentina de Ajedrez)** administra el rating nacional que es distinto del FIDE. Para tener rating FIDE necesitás jugar **torneos homologados FIDE** (con al menos un jugador con rating FIDE). Muchos torneos de club son solo FADA."
+    }
+  ],
+  "sources": [
+    {
+      "name": "FIDE Handbook — Rating Regulations",
+      "url": "https://handbook.fide.com/chapter/B022024"
+    },
+    {
+      "name": "FADA — Federación Argentina de Ajedrez",
+      "url": "https://www.fada.org.ar/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-probabilidad-eventos-dados-monedas",
+    "calculadora-promedio-mediana-moda-estadistica"
+  ]
+}
