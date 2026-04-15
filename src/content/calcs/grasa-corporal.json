@@ -6,7 +6,16 @@
   "category": "salud",
   "icon": "💪",
   "formulaId": "grasa-corporal",
-  "seoKeywords": ["calculadora grasa corporal", "porcentaje de grasa corporal", "metodo US Navy", "grasa corporal cinta metrica", "calcular grasa corporal sin balanza", "grasa corporal hombre mujer", "porcentaje grasa saludable", "composicion corporal"],
+  "seoKeywords": [
+    "calculadora grasa corporal",
+    "porcentaje de grasa corporal",
+    "metodo US Navy",
+    "grasa corporal cinta metrica",
+    "calcular grasa corporal sin balanza",
+    "grasa corporal hombre mujer",
+    "porcentaje grasa saludable",
+    "composicion corporal"
+  ],
   "intro": "El **porcentaje de grasa corporal** es un indicador mucho más útil que el peso o el IMC para evaluar composición corporal. El **método US Navy** (desarrollado por la Armada de Estados Unidos en los '80) estima el % de grasa usando solo una **cinta métrica**: **3 mediciones en hombres** (cuello, cintura y altura) y **4 en mujeres** (sumando cadera). Es el protocolo oficial de la **US Navy Circumference Method**, validado con un margen de error de **±3 % a 5 %** contra métodos gold standard como **DEXA** o **BodPod**. Es gratis, se puede hacer en casa y es ideal para seguimiento a lo largo del tiempo. Esta calculadora aplica las fórmulas logarítmicas originales y clasifica el resultado según los estándares del **American Council on Exercise (ACE)**: grasa esencial, atletas, fitness, promedio u obesidad. Si querés comparar con balanzas de bioimpedancia o plicometría, tené en cuenta que cada método tiene su margen.",
   "keyTakeaway": "**US Navy = cinta métrica + cuello + cintura (+ cadera en mujeres)**. Un **hombre entre 14–17 %** o una **mujer entre 21–24 %** entra en rango fitness. Bajo 6 % (hombres) o 14 % (mujeres) es grasa esencial — no sostenible a largo plazo.",
   "useCases": [
@@ -17,15 +26,85 @@
     "Entrenás para un objetivo estético/deportivo y querés llegar a un % grasa específico."
   ],
   "fields": [
-    { "id": "sexo", "label": "Sexo", "type": "select", "default": "m", "options": [{"value":"m","label":"Masculino"},{"value":"f","label":"Femenino"}] },
-    { "id": "altura", "label": "Altura (cm)", "type": "number", "placeholder": "175", "min": 100, "max": 250, "step": 1, "required": true },
-    { "id": "cuello", "label": "Cuello (cm)", "type": "number", "placeholder": "38", "min": 20, "max": 80, "step": 0.1, "required": true, "help": "Medí en la parte más angosta, debajo de la nuez de Adán." },
-    { "id": "cintura", "label": "Cintura (cm)", "type": "number", "placeholder": "85", "min": 40, "max": 200, "step": 0.1, "required": true, "help": "Hombres: a la altura del ombligo. Mujeres: parte más angosta entre costillas y cadera." },
-    { "id": "cadera", "label": "Cadera (cm, solo mujeres)", "type": "number", "placeholder": "100", "min": 50, "max": 200, "step": 0.1, "help": "Parte más ancha de las caderas." }
+    {
+      "id": "sexo",
+      "label": "Sexo",
+      "type": "select",
+      "default": "m",
+      "options": [
+        {
+          "value": "m",
+          "label": "Masculino"
+        },
+        {
+          "value": "f",
+          "label": "Femenino"
+        }
+      ]
+    },
+    {
+      "id": "altura",
+      "label": "Altura (cm)",
+      "type": "number",
+      "placeholder": "175",
+      "min": 100,
+      "max": 250,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "cuello",
+      "label": "Cuello (cm)",
+      "type": "number",
+      "placeholder": "38",
+      "min": 20,
+      "max": 80,
+      "step": 0.1,
+      "required": true,
+      "help": "Medí en la parte más angosta, debajo de la nuez de Adán."
+    },
+    {
+      "id": "cintura",
+      "label": "Cintura (cm)",
+      "type": "number",
+      "placeholder": "85",
+      "min": 40,
+      "max": 200,
+      "step": 0.1,
+      "required": true,
+      "help": "Hombres: a la altura del ombligo. Mujeres: parte más angosta entre costillas y cadera."
+    },
+    {
+      "id": "cadera",
+      "label": "Cadera (cm, solo mujeres)",
+      "type": "number",
+      "placeholder": "100",
+      "min": 50,
+      "max": 200,
+      "step": 0.1,
+      "help": "Parte más ancha de las caderas."
+    }
   ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Método US Navy con antropometría. Fórmula fija."
+  },
   "outputs": [
-    { "id": "porcentajeGrasa", "label": "% grasa corporal", "format": "percentage", "primary": true },
-    { "id": "categoria", "label": "Categoría", "format": "text" }
+    {
+      "id": "porcentajeGrasa",
+      "label": "% grasa corporal",
+      "format": "percentage",
+      "primary": true
+    },
+    {
+      "id": "categoria",
+      "label": "Categoría",
+      "format": "text"
+    }
   ],
   "example": {
     "title": "Ejemplo real: hombre de 178 cm, cuello 40 cm, cintura 87 cm",
@@ -41,20 +120,56 @@
   },
   "explanation": "## Método US Navy (Hodgdon & Beckett, 1984)\n\nEl protocolo oficial de la Armada de EE.UU. para evaluar aptitud física. Las fórmulas usan logaritmos en base 10 de las circunferencias corporales.\n\n### Hombres\n\n```\n% grasa = 495 / (1,0324 − 0,19077 × log10(cintura − cuello) + 0,15456 × log10(altura)) − 450\n```\n\n### Mujeres\n\n```\n% grasa = 495 / (1,29579 − 0,35004 × log10(cintura + cadera − cuello) + 0,22100 × log10(altura)) − 450\n```\n\n## Clasificación ACE (American Council on Exercise)\n\n| Categoría | Hombres | Mujeres |\n|---|---|---|\n| Grasa esencial | 2 – 5 % | 10 – 13 % |\n| Atletas | 6 – 13 % | 14 – 20 % |\n| Fitness | 14 – 17 % | 21 – 24 % |\n| Promedio | 18 – 24 % | 25 – 31 % |\n| Obesidad | 25 % + | 32 % + |\n\n### Nota sobre mujeres\n\nLas mujeres tienen **más grasa esencial** (mamas, caderas, reserva reproductiva) y por eso sus rangos son más altos. Por debajo del 12 % puede aparecer **amenorrea** (interrupción del ciclo menstrual), algo común en atletas de alta competencia.\n\n## Cómo medir correctamente\n\n### Cuello\n- Parte más **angosta**, justo debajo de la nuez de Adán (laringe).\n- Cinta horizontal, no apretar.\n\n### Cintura (hombres)\n- A **nivel del ombligo** (o 2 cm arriba).\n- Medir al **exhalar suave**, sin contraer.\n\n### Cintura (mujeres)\n- Parte **más angosta** entre costillas y cadera.\n- Generalmente 3–5 cm arriba del ombligo.\n\n### Cadera (mujeres)\n- Parte **más ancha**, a nivel de los trocánteres (huesos laterales).\n- Pies juntos, relajada.\n\n### Tips generales\n- Medir **en ayunas**, apenas levantada/o (para evitar variación por hidratación y comida).\n- **3 mediciones** por zona, promediar.\n- Cinta no elástica, ajustada sin apretar la piel.\n\n## Precisión vs otros métodos\n\n| Método | Precisión | Costo | Disponibilidad |\n|---|---|---|---|\n| DEXA (rayos X) | ±1 % | $$$ | Hospitales, algunos gym premium |\n| BodPod (pletismografía) | ±2 % | $$$ | Pocos centros en CABA |\n| Hidrostática (tanque) | ±1,5 % | $$ | Casi no se usa |\n| Plicometría (pinzas) | ±3 % | $ | Nutricionistas, gym |\n| **US Navy (cinta)** | **±3–5 %** | **Gratis** | **Cualquiera en casa** |\n| Bioimpedancia (balanza) | ±4–6 % | $ | Muy variable por hidratación |\n\n## Por qué es mejor que el IMC\n\nEl **IMC (Índice de Masa Corporal)** no distingue **grasa de músculo**. Un fisicoculturista de 1,80 m y 95 kg tiene IMC 29 (sobrepeso-obesidad) pero puede tener 8 % de grasa. Una mujer de 1,65 m y 55 kg tiene IMC 20 (normal) pero puede tener 32 % de grasa ('skinny fat'). El % de grasa corporal da la foto real.\n\n## Errores comunes\n\n1. **Medir la cintura en el punto más ancho**: hay que medir según protocolo (ombligo en hombres, más angosta en mujeres), no donde más panza tenés.\n2. **Medir después de comer**: la cintura puede cambiar 2–3 cm por hinchazón.\n3. **Contraer abdomen**: falsea 2–4 cm menos.\n4. **Comparar con bioimpedancia en desayuno**: la balanza de bioimpedancia varía hasta 4 % por hidratación.\n5. **Esperar cambios diarios**: el % grasa real cambia ~0,3 puntos por semana con déficit. Medí una vez por semana.\n\n## Riesgo cardiovascular: más allá del %\n\nLa **grasa visceral** (alrededor de órganos) es más peligrosa que la subcutánea. Un indicador rápido:\n\n- **Perímetro de cintura en hombres > 94 cm**: riesgo moderado. **>102 cm**: riesgo alto.\n- **Perímetro de cintura en mujeres > 80 cm**: riesgo moderado. **>88 cm**: riesgo alto.\n\nSon criterios de la **Federación Internacional de Diabetes** y las **guías de la Fundación Favaloro**.\n\n## Calculadoras relacionadas\n\n- [IMC](/calculadora-imc) — índice clásico según OMS.\n- [Peso ideal](/calculadora-peso-ideal) — 3 fórmulas médicas.\n- [BMR y TDEE](/calculadora-metabolismo-basal-bmr-tdee) — metabolismo basal.\n- [Proteína diaria](/calculadora-proteina-diaria-objetivo) — para recomposición corporal.",
   "faq": [
-    { "q": "¿Qué porcentaje de grasa corporal es saludable?", "a": "En **hombres**, entre **14 % y 20 %** (rango fitness + atletas superior). En **mujeres**, entre **21 % y 28 %**. Niveles por debajo de 6 % (hombres) o 14 % (mujeres) corresponden a grasa esencial y no son sostenibles: afectan hormonas, temperatura corporal, ciclo menstrual y sistema inmune." },
-    { "q": "¿Cómo mido bien la cintura y el cuello?", "a": "**Cintura en hombres**: a la altura del **ombligo**. **Cintura en mujeres**: parte **más angosta** entre costillas y cadera. **Cuello**: parte **más angosta**, debajo de la nuez de Adán. Cinta horizontal, ajustada pero sin apretar, al exhalar suave. Medí 3 veces y promediá." },
-    { "q": "¿El método US Navy es preciso?", "a": "Tiene un margen de **±3 a 5 %** contra métodos de referencia como DEXA o BodPod. Es **más preciso que el IMC** y similar a la bioimpedancia, pero menos que DEXA (considerado gold standard). Sirve muy bien para **seguimiento personal** a lo largo del tiempo." },
-    { "q": "¿Por qué la fórmula de mujeres incluye cadera?", "a": "Porque la **distribución de grasa** es distinta: los hombres acumulan más en abdomen (patrón 'manzana'), las mujeres más en caderas y muslos (patrón 'pera'). Para que la fórmula sea válida en ambos sexos, en mujeres se suma la cadera como variable." },
-    { "q": "¿Cuánto tarda en bajar 5 % de grasa corporal?", "a": "Con un **déficit de 500 kcal/día + entrenamiento de fuerza + proteína alta**, podés bajar **0,3–0,5 kg de grasa por semana**. Para perder 5 kg de grasa (aproximadamente 5 % en una persona de 80 kg) se necesitan **10–16 semanas**. Ver [calorías TDEE](/calculadora-calorias-diarias-tdee) y [proteína diaria](/calculadora-proteina-diaria-objetivo)." },
-    { "q": "¿Esta calculadora sirve para embarazadas?", "a": "**No**. Durante el embarazo, el perímetro de cintura aumenta por razones fisiológicas (no por grasa), y la composición corporal cambia por retención hídrica, aumento de volumen sanguíneo y desarrollo del feto. Evaluá composición corporal **post-parto** (mínimo 6 semanas) con tu médico/a." },
-    { "q": "¿Por qué la balanza de bioimpedancia me da un valor distinto?", "a": "La bioimpedancia mide **agua corporal** y estima grasa por fórmulas. Varía según **hidratación, hora del día, comida reciente y menstruación** (hasta ±4 % entre mediciones). El método US Navy es **más estable** porque mide estructura, no electricidad. Ninguno es DEXA, pero US Navy tiene menor variabilidad." },
-    { "q": "¿Es peligroso tener poca grasa corporal?", "a": "**Sí, por debajo de 6 % (hombres) o 14 % (mujeres)**, la grasa esencial es insuficiente para funciones vitales: producción de **hormonas sexuales**, regulación térmica, amortiguación de órganos. Puede aparecer **amenorrea** en mujeres, **baja de testosterona** en hombres, osteoporosis y problemas inmunes. **Importante**: estos valores son estimativos. Si buscás reducción de grasa por motivos de salud, consultá con nutricionista matriculado/a." }
+    {
+      "q": "¿Qué porcentaje de grasa corporal es saludable?",
+      "a": "En **hombres**, entre **14 % y 20 %** (rango fitness + atletas superior). En **mujeres**, entre **21 % y 28 %**. Niveles por debajo de 6 % (hombres) o 14 % (mujeres) corresponden a grasa esencial y no son sostenibles: afectan hormonas, temperatura corporal, ciclo menstrual y sistema inmune."
+    },
+    {
+      "q": "¿Cómo mido bien la cintura y el cuello?",
+      "a": "**Cintura en hombres**: a la altura del **ombligo**. **Cintura en mujeres**: parte **más angosta** entre costillas y cadera. **Cuello**: parte **más angosta**, debajo de la nuez de Adán. Cinta horizontal, ajustada pero sin apretar, al exhalar suave. Medí 3 veces y promediá."
+    },
+    {
+      "q": "¿El método US Navy es preciso?",
+      "a": "Tiene un margen de **±3 a 5 %** contra métodos de referencia como DEXA o BodPod. Es **más preciso que el IMC** y similar a la bioimpedancia, pero menos que DEXA (considerado gold standard). Sirve muy bien para **seguimiento personal** a lo largo del tiempo."
+    },
+    {
+      "q": "¿Por qué la fórmula de mujeres incluye cadera?",
+      "a": "Porque la **distribución de grasa** es distinta: los hombres acumulan más en abdomen (patrón 'manzana'), las mujeres más en caderas y muslos (patrón 'pera'). Para que la fórmula sea válida en ambos sexos, en mujeres se suma la cadera como variable."
+    },
+    {
+      "q": "¿Cuánto tarda en bajar 5 % de grasa corporal?",
+      "a": "Con un **déficit de 500 kcal/día + entrenamiento de fuerza + proteína alta**, podés bajar **0,3–0,5 kg de grasa por semana**. Para perder 5 kg de grasa (aproximadamente 5 % en una persona de 80 kg) se necesitan **10–16 semanas**. Ver [calorías TDEE](/calculadora-calorias-diarias-tdee) y [proteína diaria](/calculadora-proteina-diaria-objetivo)."
+    },
+    {
+      "q": "¿Esta calculadora sirve para embarazadas?",
+      "a": "**No**. Durante el embarazo, el perímetro de cintura aumenta por razones fisiológicas (no por grasa), y la composición corporal cambia por retención hídrica, aumento de volumen sanguíneo y desarrollo del feto. Evaluá composición corporal **post-parto** (mínimo 6 semanas) con tu médico/a."
+    },
+    {
+      "q": "¿Por qué la balanza de bioimpedancia me da un valor distinto?",
+      "a": "La bioimpedancia mide **agua corporal** y estima grasa por fórmulas. Varía según **hidratación, hora del día, comida reciente y menstruación** (hasta ±4 % entre mediciones). El método US Navy es **más estable** porque mide estructura, no electricidad. Ninguno es DEXA, pero US Navy tiene menor variabilidad."
+    },
+    {
+      "q": "¿Es peligroso tener poca grasa corporal?",
+      "a": "**Sí, por debajo de 6 % (hombres) o 14 % (mujeres)**, la grasa esencial es insuficiente para funciones vitales: producción de **hormonas sexuales**, regulación térmica, amortiguación de órganos. Puede aparecer **amenorrea** en mujeres, **baja de testosterona** en hombres, osteoporosis y problemas inmunes. **Importante**: estos valores son estimativos. Si buscás reducción de grasa por motivos de salud, consultá con nutricionista matriculado/a."
+    }
   ],
   "sources": [
-    { "name": "Hodgdon JA & Beckett MB — US Navy Circumference Method (1984)", "url": "https://apps.dtic.mil/sti/citations/ADA143890" },
-    { "name": "American Council on Exercise — Body Fat Categories", "url": "https://www.acefitness.org" },
-    { "name": "Federación Internacional de Diabetes — Criterios de cintura", "url": "https://idf.org" },
-    { "name": "Fundación Favaloro — Prevención cardiovascular", "url": "https://www.fundacionfavaloro.org" }
+    {
+      "name": "Hodgdon JA & Beckett MB — US Navy Circumference Method (1984)",
+      "url": "https://apps.dtic.mil/sti/citations/ADA143890"
+    },
+    {
+      "name": "American Council on Exercise — Body Fat Categories",
+      "url": "https://www.acefitness.org"
+    },
+    {
+      "name": "Federación Internacional de Diabetes — Criterios de cintura",
+      "url": "https://idf.org"
+    },
+    {
+      "name": "Fundación Favaloro — Prevención cardiovascular",
+      "url": "https://www.fundacionfavaloro.org"
+    }
   ],
   "relatedSlugs": [
     "calculadora-imc",

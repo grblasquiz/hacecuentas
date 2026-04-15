@@ -6,7 +6,18 @@
   "category": "viajes",
   "icon": "Car",
   "formulaId": "kilometros-auto-viaje",
-  "seoKeywords": ["costo viaje auto", "auto vs avion", "cuanto cuesta viaje auto", "nafta viaje larga distancia", "peajes argentina", "viaje en bus", "costo km auto", "viaje familia auto", "comparar transportes viaje", "auto vs bus"],
+  "seoKeywords": [
+    "costo viaje auto",
+    "auto vs avion",
+    "cuanto cuesta viaje auto",
+    "nafta viaje larga distancia",
+    "peajes argentina",
+    "viaje en bus",
+    "costo km auto",
+    "viaje familia auto",
+    "comparar transportes viaje",
+    "auto vs bus"
+  ],
   "intro": "Cuando armás un viaje de media distancia (Buenos Aires → Bariloche, Mendoza → Córdoba, etc.), la pregunta clave es **¿auto, avión o bus?**. La respuesta depende de **cuántos viajan, cuántos días vas, el precio del combustible vs el vuelo** y el **valor de tu tiempo**. Esta calculadora compara las 3 opciones en un solo lugar: calcula el costo total del viaje en auto (nafta + peajes), el costo total del vuelo y el costo total del bus para la cantidad de pasajeros que quieras. Te dice cuál es la **opción más económica** y te muestra el **costo por persona** para que puedas decidir. Tip: viajar en auto suele ser más barato con **3 o más pasajeros**, y los viajes largos en avión suelen ganar si solo viajás con 1-2 personas.",
   "keyTakeaway": "**Costo auto = (km × 2 si ida y vuelta) × (consumo L/100km) × (precio litro) / 100 + peajes**. Con **3+ pasajeros casi siempre gana el auto**. Con **1-2 pasajeros para distancias > 1.000 km, suele ganar el avión**.",
   "useCases": [
@@ -17,28 +28,154 @@
     "Saber si conviene alquilar auto o volar + alquilar allá."
   ],
   "fields": [
-    { "id": "distanciaKm", "label": "Distancia por tramo", "type": "number", "suffix": "km", "placeholder": "1400", "min": 10, "step": 10 },
-    { "id": "consumoLitros100km", "label": "Consumo del auto", "type": "number", "suffix": "L/100km", "placeholder": "8", "min": 3, "max": 25, "step": 0.1 },
-    { "id": "precioLitroNafta", "label": "Precio del litro", "type": "number", "suffix": "AR$", "placeholder": "1400", "min": 1, "step": 1 },
-    { "id": "peajesTotal", "label": "Peajes totales (por tramo)", "type": "number", "suffix": "AR$", "placeholder": "30000", "min": 0, "step": 100 },
-    { "id": "precioVueloUsd", "label": "Precio del vuelo por persona", "type": "number", "suffix": "USD", "placeholder": "120", "min": 0, "step": 1, "help": "Ida y vuelta si aplica. 0 para no considerar." },
-    { "id": "precioBusUsd", "label": "Precio del bus por persona", "type": "number", "suffix": "USD", "placeholder": "80", "min": 0, "step": 1, "help": "Ida y vuelta si aplica. 0 para no considerar." },
-    { "id": "cotizacionUsd", "label": "Cotización USD/ARS", "type": "number", "suffix": "AR$", "placeholder": "1200", "min": 1, "step": 1 },
-    { "id": "pasajeros", "label": "Pasajeros", "type": "number", "placeholder": "4", "min": 1, "max": 9, "step": 1 },
-    { "id": "idaVuelta", "label": "Ida y vuelta", "type": "select", "default": "si", "options": [
-      {"value":"si","label":"Sí (multiplica km y peajes por 2)"},
-      {"value":"no","label":"No (solo ida)"}
-    ] }
+    {
+      "id": "distanciaKm",
+      "label": "Distancia por tramo",
+      "type": "number",
+      "suffix": "km",
+      "placeholder": "1400",
+      "min": 10,
+      "step": 10
+    },
+    {
+      "id": "consumoLitros100km",
+      "label": "Consumo del auto",
+      "type": "number",
+      "suffix": "L/100km",
+      "placeholder": "8",
+      "min": 3,
+      "max": 25,
+      "step": 0.1
+    },
+    {
+      "id": "precioLitroNafta",
+      "label": "Precio del litro",
+      "type": "number",
+      "suffix": "AR$",
+      "placeholder": "1400",
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "peajesTotal",
+      "label": "Peajes totales (por tramo)",
+      "type": "number",
+      "suffix": "AR$",
+      "placeholder": "30000",
+      "min": 0,
+      "step": 100
+    },
+    {
+      "id": "precioVueloUsd",
+      "label": "Precio del vuelo por persona",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "120",
+      "min": 0,
+      "step": 1,
+      "help": "Ida y vuelta si aplica. 0 para no considerar."
+    },
+    {
+      "id": "precioBusUsd",
+      "label": "Precio del bus por persona",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "80",
+      "min": 0,
+      "step": 1,
+      "help": "Ida y vuelta si aplica. 0 para no considerar."
+    },
+    {
+      "id": "cotizacionUsd",
+      "label": "Cotización USD/ARS",
+      "type": "number",
+      "suffix": "AR$",
+      "placeholder": "1200",
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "pasajeros",
+      "label": "Pasajeros",
+      "type": "number",
+      "placeholder": "4",
+      "min": 1,
+      "max": 9,
+      "step": 1
+    },
+    {
+      "id": "idaVuelta",
+      "label": "Ida y vuelta",
+      "type": "select",
+      "default": "si",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí (multiplica km y peajes por 2)"
+        },
+        {
+          "value": "no",
+          "label": "No (solo ida)"
+        }
+      ]
+    }
   ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Comparación costo/km. Precios los ingresa usuario."
+  },
   "outputs": [
-    { "id": "costoTotalAutoArs", "label": "Costo total en auto", "format": "number", "primary": true, "prefix": "AR$ " },
-    { "id": "costoPorPersonaArs", "label": "Por persona en auto", "format": "number", "prefix": "AR$ " },
-    { "id": "litrosTotales", "label": "Litros de nafta", "format": "number", "suffix": "L" },
-    { "id": "costoNaftaArs", "label": "Costo solo nafta", "format": "number", "prefix": "AR$ " },
-    { "id": "costoVueloArs", "label": "Costo vuelo total", "format": "number", "prefix": "AR$ " },
-    { "id": "costoBusArs", "label": "Costo bus total", "format": "number", "prefix": "AR$ " },
-    { "id": "mejorOpcion", "label": "Opción más barata", "format": "text" },
-    { "id": "resumen", "label": "Resumen", "format": "text" }
+    {
+      "id": "costoTotalAutoArs",
+      "label": "Costo total en auto",
+      "format": "number",
+      "primary": true,
+      "prefix": "AR$ "
+    },
+    {
+      "id": "costoPorPersonaArs",
+      "label": "Por persona en auto",
+      "format": "number",
+      "prefix": "AR$ "
+    },
+    {
+      "id": "litrosTotales",
+      "label": "Litros de nafta",
+      "format": "number",
+      "suffix": "L"
+    },
+    {
+      "id": "costoNaftaArs",
+      "label": "Costo solo nafta",
+      "format": "number",
+      "prefix": "AR$ "
+    },
+    {
+      "id": "costoVueloArs",
+      "label": "Costo vuelo total",
+      "format": "number",
+      "prefix": "AR$ "
+    },
+    {
+      "id": "costoBusArs",
+      "label": "Costo bus total",
+      "format": "number",
+      "prefix": "AR$ "
+    },
+    {
+      "id": "mejorOpcion",
+      "label": "Opción más barata",
+      "format": "text"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen",
+      "format": "text"
+    }
   ],
   "example": {
     "title": "Ejemplo: Buenos Aires → Bariloche en familia (4 personas)",
@@ -89,9 +226,21 @@
     }
   ],
   "sources": [
-    { "name": "IAPSER Secretaría de Transporte — Nafta promedio", "url": "https://www.argentina.gob.ar/transporte", "publisher": "Gobierno Argentino" },
-    { "name": "Vialidad Nacional — Peajes", "url": "https://www.vialidad.gob.ar/", "publisher": "Vialidad Nacional" },
-    { "name": "ACA — Consumo de autos", "url": "https://www.aca.org.ar/", "publisher": "Automóvil Club Argentino" }
+    {
+      "name": "IAPSER Secretaría de Transporte — Nafta promedio",
+      "url": "https://www.argentina.gob.ar/transporte",
+      "publisher": "Gobierno Argentino"
+    },
+    {
+      "name": "Vialidad Nacional — Peajes",
+      "url": "https://www.vialidad.gob.ar/",
+      "publisher": "Vialidad Nacional"
+    },
+    {
+      "name": "ACA — Consumo de autos",
+      "url": "https://www.aca.org.ar/",
+      "publisher": "Automóvil Club Argentino"
+    }
   ],
   "relatedSlugs": [
     "calculadora-viaje-combustible",

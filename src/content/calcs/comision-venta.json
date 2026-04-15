@@ -6,7 +6,16 @@
   "category": "negocios",
   "icon": "🤝",
   "formulaId": "comision-venta",
-  "seoKeywords": ["calculadora comision", "comision por venta", "comision inmobiliaria", "calcular comision vendedor", "comision con iva", "comision monotributo", "ley martiller comision", "comision freelancer"],
+  "seoKeywords": [
+    "calculadora comision",
+    "comision por venta",
+    "comision inmobiliaria",
+    "calcular comision vendedor",
+    "comision con iva",
+    "comision monotributo",
+    "ley martiller comision",
+    "comision freelancer"
+  ],
   "intro": "La **comisión por venta** es una de las formas más usadas de remuneración variable en Argentina: vendedores en retail, corredores inmobiliarios, brokers de seguros, freelancers que cierran cuentas, affiliate marketers y cualquier intermediario que cobra un porcentaje sobre la operación. Parece simple — '3% de comisión sobre $1.000.000' — pero enseguida aparecen preguntas: ¿el 3% es sobre el **bruto con IVA** o sobre el **neto**? ¿La comisión se factura con **IVA 21%**? ¿Si sos **monotributista** podés sumar IVA? ¿Cómo lo ve el que te paga? Ingresá el **monto de la venta**, el **porcentaje pactado**, definí si el cálculo es sobre **bruto o neto**, la **alícuota de IVA** aplicable y si **tu comisión lleva IVA** según tu condición fiscal, y la calculadora te devuelve la **comisión neta**, el **IVA discriminado**, el **total a cobrar** y el **% real** que representa sobre la venta bruta — así evitás confusiones al cerrar el trato y al facturar. Contempla los casos típicos de inmobiliaria (Ley 5.859 CABA, Ley Martiller 7.307 PBA), vendedores en relación de dependencia, freelancers y affiliate marketing.",
   "keyTakeaway": "**Comisión = base × porcentaje**, donde la base puede ser el monto **bruto (con IVA)** o el **neto (sin IVA)** según contrato. Si facturás como **Responsable Inscripto**, la comisión lleva IVA 21% adicional (`Total = Comisión × 1,21`); si sos **monotributista**, facturás con **factura C** sin discriminar IVA. Siempre dejá por escrito sobre qué base se calcula el porcentaje — es la fuente más común de conflicto entre vendedor y empresa.",
   "useCases": [
@@ -17,17 +26,100 @@
     "Sos affiliate marketer y necesitás calcular cuánto cobrás sobre las ventas que generás."
   ],
   "fields": [
-    { "id": "montoVenta", "label": "Monto de la venta", "type": "number", "prefix": "$", "placeholder": "1000000", "format": "thousands", "min": 0, "step": 1000, "required": true },
-    { "id": "porcentajeComision", "label": "Porcentaje de comisión (%)", "type": "number", "suffix": "%", "placeholder": "3", "min": 0, "step": 0.01, "required": true },
-    { "id": "baseImponible", "label": "La comisión se calcula sobre", "type": "select", "default": "bruto", "options": [{"value":"bruto","label":"Monto total (bruto, con IVA)"},{"value":"neto","label":"Monto neto (sin IVA)"}] },
-    { "id": "alicuotaIva", "label": "Alícuota IVA (%)", "type": "number", "default": 21, "suffix": "%", "min": 0, "max": 30, "step": 0.1 },
-    { "id": "aplicarIvaSobreComision", "label": "¿La comisión lleva IVA?", "type": "select", "default": "no", "options": [{"value":"si","label":"Sí (factura A/B con IVA 21 %)"},{"value":"no","label":"No (monotributo, factura C o neto)"}] }
+    {
+      "id": "montoVenta",
+      "label": "Monto de la venta",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "1000000",
+      "format": "thousands",
+      "min": 0,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "porcentajeComision",
+      "label": "Porcentaje de comisión (%)",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "3",
+      "min": 0,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "baseImponible",
+      "label": "La comisión se calcula sobre",
+      "type": "select",
+      "default": "bruto",
+      "options": [
+        {
+          "value": "bruto",
+          "label": "Monto total (bruto, con IVA)"
+        },
+        {
+          "value": "neto",
+          "label": "Monto neto (sin IVA)"
+        }
+      ]
+    },
+    {
+      "id": "alicuotaIva",
+      "label": "Alícuota IVA (%)",
+      "type": "number",
+      "default": 21,
+      "suffix": "%",
+      "min": 0,
+      "max": 30,
+      "step": 0.1
+    },
+    {
+      "id": "aplicarIvaSobreComision",
+      "label": "¿La comisión lleva IVA?",
+      "type": "select",
+      "default": "no",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí (factura A/B con IVA 21 %)"
+        },
+        {
+          "value": "no",
+          "label": "No (monotributo, factura C o neto)"
+        }
+      ]
+    }
   ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "% sobre bruto/neto, con o sin IVA 21% fijo (Ley 23.349 estable)."
+  },
   "outputs": [
-    { "id": "comisionNeta", "label": "Comisión neta", "format": "currency", "primary": true },
-    { "id": "ivaComision", "label": "IVA sobre comisión", "format": "currency" },
-    { "id": "comisionTotal", "label": "Comisión total a cobrar", "format": "currency" },
-    { "id": "porcentajeSobreVenta", "label": "% real sobre venta bruta", "format": "percentage" }
+    {
+      "id": "comisionNeta",
+      "label": "Comisión neta",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "ivaComision",
+      "label": "IVA sobre comisión",
+      "format": "currency"
+    },
+    {
+      "id": "comisionTotal",
+      "label": "Comisión total a cobrar",
+      "format": "currency"
+    },
+    {
+      "id": "porcentajeSobreVenta",
+      "label": "% real sobre venta bruta",
+      "format": "percentage"
+    }
   ],
   "example": {
     "title": "Ejemplo real: corredor inmobiliario responsable inscripto, venta departamento $120M",
@@ -82,9 +174,18 @@
     }
   ],
   "sources": [
-    { "name": "Ley 5.859 CABA - Comisiones Inmobiliarias", "url": "https://www.buenosaires.gob.ar/economiayfinanzas/ley-5859" },
-    { "name": "AFIP - Factura y Régimen General", "url": "https://www.afip.gob.ar/facturacion/" },
-    { "name": "Colegio de Martilleros PBA - Ley 7.307", "url": "https://www.cucicba.com.ar" }
+    {
+      "name": "Ley 5.859 CABA - Comisiones Inmobiliarias",
+      "url": "https://www.buenosaires.gob.ar/economiayfinanzas/ley-5859"
+    },
+    {
+      "name": "AFIP - Factura y Régimen General",
+      "url": "https://www.afip.gob.ar/facturacion/"
+    },
+    {
+      "name": "Colegio de Martilleros PBA - Ley 7.307",
+      "url": "https://www.cucicba.com.ar"
+    }
   ],
   "relatedSlugs": [
     "calculadora-margen-ganancia-markup",

@@ -6,7 +6,18 @@
   "category": "vida",
   "icon": "Flame",
   "formulaId": "gas-natural-consumo-m3",
-  "seoKeywords": ["factura gas", "consumo gas m3", "precio m3 gas", "categoria r1 r2 r3", "metrogas factura", "naturgy factura", "ban factura gas", "cuadro tarifario gas", "calcular factura gas", "gas natural argentina"],
+  "seoKeywords": [
+    "factura gas",
+    "consumo gas m3",
+    "precio m3 gas",
+    "categoria r1 r2 r3",
+    "metrogas factura",
+    "naturgy factura",
+    "ban factura gas",
+    "cuadro tarifario gas",
+    "calcular factura gas",
+    "gas natural argentina"
+  ],
   "intro": "La **factura de gas natural** en Argentina se cobra **bimestralmente** y depende de tu **categoría tarifaria** (R1, R2, R3 según consumo anual) y **m³ consumidos**. Con el **nuevo esquema tarifario 2026** y la quita de subsidios, una familia tipo paga entre **$30.000 y $80.000 por bimestre**, con picos en invierno. Esta calculadora estima tu factura en base al consumo en m³ del bimestre, detecta automáticamente tu **categoría R**, aplica el **cargo variable por m³**, el **cargo fijo** y suma el **IVA 21%**. Valores estimados; para precios exactos consultá tu cuadro tarifario en Metrogas, Naturgy BAN, Camuzzi Gas del Sur u otros.",
   "keyTakeaway": "**Categorías gas residencial**: R1 (< 500 m³/año, bajo consumo), R2 (500-1100 m³/año, medio), R3 (>1100 m³/año, alto). Precio por m³ y cargo fijo **aumentan** con la categoría. El **IVA 21%** se aplica sobre el subtotal.",
   "useCases": [
@@ -17,24 +28,108 @@
     "Chequear si el consumo corresponde a tu forma de vida (alertar fugas)."
   ],
   "fields": [
-    { "id": "consumoM3Bimestral", "label": "Consumo del bimestre (m³)", "type": "number", "placeholder": "150", "min": 0, "max": 5000, "step": 1, "required": true, "suffix": "m³" },
-    { "id": "categoria", "label": "Categoría tarifaria", "type": "select", "default": "auto", "options": [
-      {"value":"auto","label":"Detectar automáticamente"},
-      {"value":"R1","label":"R1 — bajo consumo (<500 m³/año)"},
-      {"value":"R2","label":"R2 — medio (500-1100 m³/año)"},
-      {"value":"R3","label":"R3 — alto (>1100 m³/año)"}
-    ]},
-    { "id": "precioPorM3", "label": "Precio por m³ (opcional, ARS)", "type": "number", "placeholder": "340", "min": 0, "max": 2000, "step": 10, "suffix": "ARS" }
+    {
+      "id": "consumoM3Bimestral",
+      "label": "Consumo del bimestre (m³)",
+      "type": "number",
+      "placeholder": "150",
+      "min": 0,
+      "max": 5000,
+      "step": 1,
+      "required": true,
+      "suffix": "m³"
+    },
+    {
+      "id": "categoria",
+      "label": "Categoría tarifaria",
+      "type": "select",
+      "default": "auto",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Detectar automáticamente"
+        },
+        {
+          "value": "R1",
+          "label": "R1 — bajo consumo (<500 m³/año)"
+        },
+        {
+          "value": "R2",
+          "label": "R2 — medio (500-1100 m³/año)"
+        },
+        {
+          "value": "R3",
+          "label": "R3 — alto (>1100 m³/año)"
+        }
+      ]
+    },
+    {
+      "id": "precioPorM3",
+      "label": "Precio por m³ (opcional, ARS)",
+      "type": "number",
+      "placeholder": "340",
+      "min": 0,
+      "max": 2000,
+      "step": 10,
+      "suffix": "ARS"
+    }
   ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-15",
+    "source": "ENARGAS",
+    "sourceUrl": "https://www.enargas.gob.ar/",
+    "updateType": "auto-scrape",
+    "notes": "Cuadros tarifarios de gas natural R1/R2/R3 se fijan por resolución ENARGAS. Cambios anuales o por segmentación."
+  },
   "outputs": [
-    { "id": "total", "label": "Total factura bimestral", "format": "number", "primary": true, "prefix": "$" },
-    { "id": "totalMensual", "label": "Equivalente mensual", "format": "number", "prefix": "$" },
-    { "id": "subtotal", "label": "Subtotal (sin IVA)", "format": "number", "prefix": "$" },
-    { "id": "iva", "label": "IVA 21%", "format": "number", "prefix": "$" },
-    { "id": "cargoFijo", "label": "Cargo fijo del bimestre", "format": "number", "prefix": "$" },
-    { "id": "consumoM3Mensual", "label": "Consumo mensual (m³)", "format": "number", "suffix": "m³" },
-    { "id": "categoriaDetectada", "label": "Tu categoría", "format": "text" },
-    { "id": "resumen", "label": "Resumen", "format": "text" }
+    {
+      "id": "total",
+      "label": "Total factura bimestral",
+      "format": "number",
+      "primary": true,
+      "prefix": "$"
+    },
+    {
+      "id": "totalMensual",
+      "label": "Equivalente mensual",
+      "format": "number",
+      "prefix": "$"
+    },
+    {
+      "id": "subtotal",
+      "label": "Subtotal (sin IVA)",
+      "format": "number",
+      "prefix": "$"
+    },
+    {
+      "id": "iva",
+      "label": "IVA 21%",
+      "format": "number",
+      "prefix": "$"
+    },
+    {
+      "id": "cargoFijo",
+      "label": "Cargo fijo del bimestre",
+      "format": "number",
+      "prefix": "$"
+    },
+    {
+      "id": "consumoM3Mensual",
+      "label": "Consumo mensual (m³)",
+      "format": "number",
+      "suffix": "m³"
+    },
+    {
+      "id": "categoriaDetectada",
+      "label": "Tu categoría",
+      "format": "text"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen",
+      "format": "text"
+    }
   ],
   "example": {
     "title": "Ejemplo: familia de 4 personas consume 150 m³ en bimestre invierno",
@@ -86,9 +181,21 @@
     }
   ],
   "sources": [
-    { "title": "ENARGAS — Cuadros Tarifarios", "url": "https://www.enargas.gob.ar/secciones/publicaciones/cuadro-tarifario.php", "publisher": "Ente Nacional Regulador del Gas" },
-    { "title": "Metrogas — Tarifas", "url": "https://www.metrogas.com.ar/tarifas/", "publisher": "Metrogas S.A." },
-    { "title": "Secretaría de Energía — Tarifa Social", "url": "https://www.argentina.gob.ar/economia/energia/subsidios", "publisher": "Ministerio de Economía" }
+    {
+      "title": "ENARGAS — Cuadros Tarifarios",
+      "url": "https://www.enargas.gob.ar/secciones/publicaciones/cuadro-tarifario.php",
+      "publisher": "Ente Nacional Regulador del Gas"
+    },
+    {
+      "title": "Metrogas — Tarifas",
+      "url": "https://www.metrogas.com.ar/tarifas/",
+      "publisher": "Metrogas S.A."
+    },
+    {
+      "title": "Secretaría de Energía — Tarifa Social",
+      "url": "https://www.argentina.gob.ar/economia/energia/subsidios",
+      "publisher": "Ministerio de Economía"
+    }
   ],
   "relatedSlugs": [
     "calculadora-consumo-electrico-kwh-mensual-costo",

@@ -6,7 +6,18 @@
   "category": "construccion",
   "icon": "Wind",
   "formulaId": "aire-acondicionado-frigorias",
-  "seoKeywords": ["cuantas frigorias necesito", "calculo aire acondicionado", "split 3000 frigorias m2", "frigorias por m2", "btu a frigorias", "aire acondicionado ambiente", "que split comprar", "split 9000 btu ambiente", "calculo a a a split", "aire orientacion oeste"],
+  "seoKeywords": [
+    "cuantas frigorias necesito",
+    "calculo aire acondicionado",
+    "split 3000 frigorias m2",
+    "frigorias por m2",
+    "btu a frigorias",
+    "aire acondicionado ambiente",
+    "que split comprar",
+    "split 9000 btu ambiente",
+    "calculo a a a split",
+    "aire orientacion oeste"
+  ],
   "intro": "Elegir el **aire acondicionado** adecuado empieza por saber **cuántas frigorías** (o BTU/h, es equivalente) necesitás. La regla más conocida en Argentina es **'100 frigorías por m²'**, pero esta fórmula es una simplificación que no considera factores críticos: **orientación del ambiente** (los ambientes al **oeste con sol de la tarde** requieren **+15%**), **cantidad de ocupantes** (cada persona aporta 100 frig de calor metabólico), **electrónicos** (TV, PC, monitores aportan calor), **altura del techo** (mayor a 2,80 m = +10% por cada 20 cm extra), y **aislación del ambiente** (ventanales grandes, sin cortinas, paredes delgadas = +20%). Esta calculadora aplica todos estos factores y te devuelve la **potencia en frigorías, BTU/h y watts térmicos**, más el **modelo comercial de split** recomendado (2.200, 3.000, 4.500, 6.000, 9.000 frigorías) y el **consumo eléctrico estimado** asumiendo un EER de 3 (equipo estándar).",
   "keyTakeaway": "**Regla base**: **100 frig/m²** en ambiente de orientación sur, 2 ocupantes, aislación media. Ajustes: **oeste +15%**, **3+ ocupantes +100 frig/u**, **aislación mala +20%**. **Split 3.000 frig ≈ 12.000 BTU ≈ 3.500 W térmicos** — alcanza para ~30 m².",
   "useCases": [
@@ -17,30 +28,143 @@
     "Dimensionás un **multisplit** para varios ambientes."
   ],
   "fields": [
-    { "id": "largo", "label": "Largo del ambiente (m)", "type": "number", "placeholder": "4", "min": 1, "step": 0.1, "required": true },
-    { "id": "ancho", "label": "Ancho del ambiente (m)", "type": "number", "placeholder": "3", "min": 1, "step": 0.1, "required": true },
-    { "id": "altoTecho", "label": "Alto del techo (m)", "type": "number", "default": 2.6, "min": 2, "max": 5, "step": 0.1 },
-    { "id": "orientacion", "label": "Orientación del ambiente", "type": "select", "default": "sur", "options": [
-      {"value":"sur","label":"Sur (sin sol directo, más fresco)"},
-      {"value":"norte","label":"Norte (sol en medio día, +10%)"},
-      {"value":"este","label":"Este (sol mañana, +5%)"},
-      {"value":"oeste","label":"Oeste (sol tarde fuerte, +15%)"}
-    ] },
-    { "id": "ocupantes", "label": "Ocupantes habituales", "type": "number", "default": 2, "min": 1, "max": 20, "step": 1, "help": "Cada persona adicional suma 100 frig." },
-    { "id": "electronicos", "label": "Electrónicos (TVs, PCs, monitores)", "type": "number", "default": 1, "min": 0, "max": 15, "step": 1, "help": "Cada uno suma 100 frig." },
-    { "id": "aislacion", "label": "Aislación del ambiente", "type": "select", "default": "media", "options": [
-      {"value":"buena","label":"Buena (doble vidrio, cortinas, pared 18 cm)"},
-      {"value":"media","label":"Media (ventana simple, pared común)"},
-      {"value":"mala","label":"Mala (ventanales grandes sin cortinas, ático)"}
-    ] }
+    {
+      "id": "largo",
+      "label": "Largo del ambiente (m)",
+      "type": "number",
+      "placeholder": "4",
+      "min": 1,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "ancho",
+      "label": "Ancho del ambiente (m)",
+      "type": "number",
+      "placeholder": "3",
+      "min": 1,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "altoTecho",
+      "label": "Alto del techo (m)",
+      "type": "number",
+      "default": 2.6,
+      "min": 2,
+      "max": 5,
+      "step": 0.1
+    },
+    {
+      "id": "orientacion",
+      "label": "Orientación del ambiente",
+      "type": "select",
+      "default": "sur",
+      "options": [
+        {
+          "value": "sur",
+          "label": "Sur (sin sol directo, más fresco)"
+        },
+        {
+          "value": "norte",
+          "label": "Norte (sol en medio día, +10%)"
+        },
+        {
+          "value": "este",
+          "label": "Este (sol mañana, +5%)"
+        },
+        {
+          "value": "oeste",
+          "label": "Oeste (sol tarde fuerte, +15%)"
+        }
+      ]
+    },
+    {
+      "id": "ocupantes",
+      "label": "Ocupantes habituales",
+      "type": "number",
+      "default": 2,
+      "min": 1,
+      "max": 20,
+      "step": 1,
+      "help": "Cada persona adicional suma 100 frig."
+    },
+    {
+      "id": "electronicos",
+      "label": "Electrónicos (TVs, PCs, monitores)",
+      "type": "number",
+      "default": 1,
+      "min": 0,
+      "max": 15,
+      "step": 1,
+      "help": "Cada uno suma 100 frig."
+    },
+    {
+      "id": "aislacion",
+      "label": "Aislación del ambiente",
+      "type": "select",
+      "default": "media",
+      "options": [
+        {
+          "value": "buena",
+          "label": "Buena (doble vidrio, cortinas, pared 18 cm)"
+        },
+        {
+          "value": "media",
+          "label": "Media (ventana simple, pared común)"
+        },
+        {
+          "value": "mala",
+          "label": "Mala (ventanales grandes sin cortinas, ático)"
+        }
+      ]
+    }
   ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Frigorías/BTU por m³ y orientación. Guía técnica estable."
+  },
   "outputs": [
-    { "id": "frigorias", "label": "Frigorías necesarias", "format": "number", "primary": true, "suffix": " frig/h" },
-    { "id": "btuH", "label": "BTU/h", "format": "number", "suffix": " BTU/h" },
-    { "id": "watts", "label": "Watts térmicos", "format": "number", "suffix": " W" },
-    { "id": "m2", "label": "Superficie del ambiente", "format": "number", "suffix": " m²" },
-    { "id": "splitRecomendado", "label": "Split recomendado", "format": "text" },
-    { "id": "potenciaConsumo", "label": "Consumo eléctrico estimado", "format": "number", "suffix": " W" }
+    {
+      "id": "frigorias",
+      "label": "Frigorías necesarias",
+      "format": "number",
+      "primary": true,
+      "suffix": " frig/h"
+    },
+    {
+      "id": "btuH",
+      "label": "BTU/h",
+      "format": "number",
+      "suffix": " BTU/h"
+    },
+    {
+      "id": "watts",
+      "label": "Watts térmicos",
+      "format": "number",
+      "suffix": " W"
+    },
+    {
+      "id": "m2",
+      "label": "Superficie del ambiente",
+      "format": "number",
+      "suffix": " m²"
+    },
+    {
+      "id": "splitRecomendado",
+      "label": "Split recomendado",
+      "format": "text"
+    },
+    {
+      "id": "potenciaConsumo",
+      "label": "Consumo eléctrico estimado",
+      "format": "number",
+      "suffix": " W"
+    }
   ],
   "example": {
     "title": "Ejemplo real: dormitorio 3×4 m al oeste, 2 personas, 1 TV, aislación media",
@@ -96,10 +220,26 @@
     }
   ],
   "sources": [
-    { "title": "Secretaría de Energía - Etiquetado de eficiencia energética", "url": "https://www.argentina.gob.ar/energia", "publisher": "Ministerio de Energía" },
-    { "title": "IRAM 62406 - Acondicionadores de aire domésticos", "url": "https://catalogo.iram.org.ar", "publisher": "IRAM" },
-    { "title": "BGH - Guía técnica aires acondicionados", "url": "https://www.bgh.com.ar", "publisher": "BGH" },
-    { "title": "Wikipedia - Aire acondicionado", "url": "https://es.wikipedia.org/wiki/Aire_acondicionado", "publisher": "Wikipedia" }
+    {
+      "title": "Secretaría de Energía - Etiquetado de eficiencia energética",
+      "url": "https://www.argentina.gob.ar/energia",
+      "publisher": "Ministerio de Energía"
+    },
+    {
+      "title": "IRAM 62406 - Acondicionadores de aire domésticos",
+      "url": "https://catalogo.iram.org.ar",
+      "publisher": "IRAM"
+    },
+    {
+      "title": "BGH - Guía técnica aires acondicionados",
+      "url": "https://www.bgh.com.ar",
+      "publisher": "BGH"
+    },
+    {
+      "title": "Wikipedia - Aire acondicionado",
+      "url": "https://es.wikipedia.org/wiki/Aire_acondicionado",
+      "publisher": "Wikipedia"
+    }
   ],
   "relatedSlugs": [
     "calculadora-calefaccion-watts-kcal-ambiente",

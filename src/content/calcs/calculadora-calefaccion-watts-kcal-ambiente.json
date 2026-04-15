@@ -6,7 +6,18 @@
   "category": "construccion",
   "icon": "Flame",
   "formulaId": "calefactor-watts-ambiente",
-  "seoKeywords": ["calculadora calefaccion ambiente", "watts por m2 calefaccion", "kcal hora ambiente", "tiro balanceado kcal", "calefactor electrico watts", "calefaccion dormitorio", "calefaccion living ambiente", "radiador que potencia", "piso radiante calculo", "caldera ambiente"],
+  "seoKeywords": [
+    "calculadora calefaccion ambiente",
+    "watts por m2 calefaccion",
+    "kcal hora ambiente",
+    "tiro balanceado kcal",
+    "calefactor electrico watts",
+    "calefaccion dormitorio",
+    "calefaccion living ambiente",
+    "radiador que potencia",
+    "piso radiante calculo",
+    "caldera ambiente"
+  ],
   "intro": "Saber **cuánta potencia calefactora** (en **watts**, **kcal/h** o **BTU/h**) necesitás para un ambiente es fundamental para **no comprar un equipo insuficiente** (frío en invierno) ni **sobredimensionado** (consumo inútil). La regla base en Argentina es **50 kcal/h por m³** en ambiente de aislación media de zona centro (Buenos Aires, Córdoba, Rosario) — pero se ajusta por **aislación del ambiente** (buena / media / mala), **zona climática** (Patagonia 45 kcal/m³ más que CABA 40), y **tipo de ambiente** (los **baños pierden más calor** por humedad +15%; las **cocinas ganan calor** del horno −15%). Esta calculadora te devuelve la **potencia en las tres unidades** (kcal/h, watts, BTU/h), la **cantidad de calefactores de tiro balanceado** (modelos comerciales de 2000, 2500, 3000, 5000 kcal/h) y una **recomendación** del tipo de equipo ideal (tiro balanceado, caloventor, split frío/calor, caldera + radiadores).",
   "keyTakeaway": "**Regla base**: **50 kcal/h × m³** (ambiente centro, aislación media) = **58 W por m³**. Un **dormitorio de 3×4 m × 2,6 m = 31 m³ → 1.550 kcal/h** (un calefactor de 2000 TB). Aislación mala: +30%. Patagonia: +20%.",
   "useCases": [
@@ -17,35 +28,152 @@
     "Instalás **piso radiante** y necesitás los watts/m² por zona."
   ],
   "fields": [
-    { "id": "largo", "label": "Largo del ambiente (m)", "type": "number", "placeholder": "4", "min": 1, "step": 0.1, "required": true },
-    { "id": "ancho", "label": "Ancho del ambiente (m)", "type": "number", "placeholder": "3", "min": 1, "step": 0.1, "required": true },
-    { "id": "altoTecho", "label": "Alto de techo (m)", "type": "number", "default": 2.6, "min": 2, "max": 5, "step": 0.1, "help": "Residencial estándar: 2,60-2,80 m" },
-    { "id": "aislacion", "label": "Aislación del ambiente", "type": "select", "default": "media", "options": [
-      {"value":"buena","label":"Buena (doble vidrio, pared 18 cm, techo aislado)"},
-      {"value":"media","label":"Media (vivienda estándar con ladrillo común)"},
-      {"value":"mala","label":"Mala (muchos vidrios, techo sin aislante, ático frío)"}
-    ] },
-    { "id": "zona", "label": "Zona climática", "type": "select", "default": "centro", "options": [
-      {"value":"norte","label":"Norte (Salta, Jujuy, Formosa) — inviernos leves"},
-      {"value":"centro","label":"Centro (CABA, Córdoba, Santa Fe, Mendoza)"},
-      {"value":"sur","label":"Sur (Bahía Blanca, Patagonia, Comodoro) — inviernos duros"}
-    ] },
-    { "id": "tipoAmbiente", "label": "Tipo de ambiente", "type": "select", "default": "living", "options": [
-      {"value":"dormitorio","label":"Dormitorio"},
-      {"value":"living","label":"Living / comedor"},
-      {"value":"cocina","label":"Cocina (menor factor — gana calor del horno)"},
-      {"value":"bano","label":"Baño (mayor factor — pierde por humedad)"},
-      {"value":"oficina","label":"Oficina / estudio"}
-    ] }
+    {
+      "id": "largo",
+      "label": "Largo del ambiente (m)",
+      "type": "number",
+      "placeholder": "4",
+      "min": 1,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "ancho",
+      "label": "Ancho del ambiente (m)",
+      "type": "number",
+      "placeholder": "3",
+      "min": 1,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "altoTecho",
+      "label": "Alto de techo (m)",
+      "type": "number",
+      "default": 2.6,
+      "min": 2,
+      "max": 5,
+      "step": 0.1,
+      "help": "Residencial estándar: 2,60-2,80 m"
+    },
+    {
+      "id": "aislacion",
+      "label": "Aislación del ambiente",
+      "type": "select",
+      "default": "media",
+      "options": [
+        {
+          "value": "buena",
+          "label": "Buena (doble vidrio, pared 18 cm, techo aislado)"
+        },
+        {
+          "value": "media",
+          "label": "Media (vivienda estándar con ladrillo común)"
+        },
+        {
+          "value": "mala",
+          "label": "Mala (muchos vidrios, techo sin aislante, ático frío)"
+        }
+      ]
+    },
+    {
+      "id": "zona",
+      "label": "Zona climática",
+      "type": "select",
+      "default": "centro",
+      "options": [
+        {
+          "value": "norte",
+          "label": "Norte (Salta, Jujuy, Formosa) — inviernos leves"
+        },
+        {
+          "value": "centro",
+          "label": "Centro (CABA, Córdoba, Santa Fe, Mendoza)"
+        },
+        {
+          "value": "sur",
+          "label": "Sur (Bahía Blanca, Patagonia, Comodoro) — inviernos duros"
+        }
+      ]
+    },
+    {
+      "id": "tipoAmbiente",
+      "label": "Tipo de ambiente",
+      "type": "select",
+      "default": "living",
+      "options": [
+        {
+          "value": "dormitorio",
+          "label": "Dormitorio"
+        },
+        {
+          "value": "living",
+          "label": "Living / comedor"
+        },
+        {
+          "value": "cocina",
+          "label": "Cocina (menor factor — gana calor del horno)"
+        },
+        {
+          "value": "bano",
+          "label": "Baño (mayor factor — pierde por humedad)"
+        },
+        {
+          "value": "oficina",
+          "label": "Oficina / estudio"
+        }
+      ]
+    }
   ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "W/kcal/BTU por m³ y aislación. Guía técnica estable."
+  },
   "outputs": [
-    { "id": "kcalHora", "label": "Potencia (kcal/h)", "format": "number", "primary": true, "suffix": " kcal/h" },
-    { "id": "watts", "label": "Potencia (W)", "format": "number", "suffix": " W" },
-    { "id": "btuH", "label": "Potencia (BTU/h)", "format": "number", "suffix": " BTU/h" },
-    { "id": "calefactorTiroBalanceado", "label": "Equivalente en calefactores TB 2.500 kcal", "format": "number" },
-    { "id": "m3", "label": "Volumen del ambiente", "format": "number", "suffix": " m³" },
-    { "id": "factorAplicado", "label": "Factor aplicado (kcal/h por m³)", "format": "number" },
-    { "id": "recomendacion", "label": "Recomendación", "format": "text" }
+    {
+      "id": "kcalHora",
+      "label": "Potencia (kcal/h)",
+      "format": "number",
+      "primary": true,
+      "suffix": " kcal/h"
+    },
+    {
+      "id": "watts",
+      "label": "Potencia (W)",
+      "format": "number",
+      "suffix": " W"
+    },
+    {
+      "id": "btuH",
+      "label": "Potencia (BTU/h)",
+      "format": "number",
+      "suffix": " BTU/h"
+    },
+    {
+      "id": "calefactorTiroBalanceado",
+      "label": "Equivalente en calefactores TB 2.500 kcal",
+      "format": "number"
+    },
+    {
+      "id": "m3",
+      "label": "Volumen del ambiente",
+      "format": "number",
+      "suffix": " m³"
+    },
+    {
+      "id": "factorAplicado",
+      "label": "Factor aplicado (kcal/h por m³)",
+      "format": "number"
+    },
+    {
+      "id": "recomendacion",
+      "label": "Recomendación",
+      "format": "text"
+    }
   ],
   "example": {
     "title": "Ejemplo real: living 4×5 m × 2,6 m, aislación media, zona centro (CABA)",
@@ -101,10 +229,26 @@
     }
   ],
   "sources": [
-    { "title": "IRAM 11603 - Zonificación bioambiental de la República Argentina", "url": "https://catalogo.iram.org.ar", "publisher": "IRAM" },
-    { "title": "ENARGAS - Información técnica para usuarios", "url": "https://www.enargas.gov.ar", "publisher": "ENARGAS" },
-    { "title": "Secretaría de Energía - Eficiencia en calefacción", "url": "https://www.argentina.gob.ar/energia", "publisher": "Ministerio de Energía" },
-    { "title": "Orbis - Manual técnico calefactores", "url": "https://www.orbis.com.ar", "publisher": "Orbis" }
+    {
+      "title": "IRAM 11603 - Zonificación bioambiental de la República Argentina",
+      "url": "https://catalogo.iram.org.ar",
+      "publisher": "IRAM"
+    },
+    {
+      "title": "ENARGAS - Información técnica para usuarios",
+      "url": "https://www.enargas.gov.ar",
+      "publisher": "ENARGAS"
+    },
+    {
+      "title": "Secretaría de Energía - Eficiencia en calefacción",
+      "url": "https://www.argentina.gob.ar/energia",
+      "publisher": "Ministerio de Energía"
+    },
+    {
+      "title": "Orbis - Manual técnico calefactores",
+      "url": "https://www.orbis.com.ar",
+      "publisher": "Orbis"
+    }
   ],
   "relatedSlugs": [
     "calculadora-aire-acondicionado-frigorias-ambiente",

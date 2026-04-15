@@ -6,7 +6,18 @@
   "category": "construccion",
   "icon": "Hammer",
   "formulaId": "hierro-construccion",
-  "seoKeywords": ["hierro por m2 losa", "kg acero por m2", "calculo hierro losa", "armadura losa maciza", "hierro del 8 10 12", "acero construccion argentina", "barras 12 metros", "alambre de atar", "armadura platea fundacion", "hierro del 6 contrapiso"],
+  "seoKeywords": [
+    "hierro por m2 losa",
+    "kg acero por m2",
+    "calculo hierro losa",
+    "armadura losa maciza",
+    "hierro del 8 10 12",
+    "acero construccion argentina",
+    "barras 12 metros",
+    "alambre de atar",
+    "armadura platea fundacion",
+    "hierro del 6 contrapiso"
+  ],
   "intro": "Calcular la **cantidad de hierro (acero)** necesaria para una losa es clave porque es **uno de los insumos más caros** de cualquier obra. Una losa maciza estándar en vivienda argentina consume **entre 10 y 20 kg de hierro por m²**, dependiendo de la **luz** (distancia entre apoyos), del **diseño estructural** (armadura simple, doble, en cruz), y del uso del ambiente. Esta calculadora estima el peso total de acero a comprar según el **tipo de losa** (maciza, alivianada con vigueta + bovedilla, platea de fundación, contrapiso armado) y la **luz estructural**. Incluye también el cálculo de **alambre de atar** (≈2% del peso total) y traduce el peso a **cantidad de barras comerciales de 12 m** en los diámetros más usados (**6 mm, 8 mm, 10 mm, 12 mm**). **Importante**: este es un cálculo estimativo de presupuesto — la armadura definitiva debe ser calculada por un **ingeniero civil o proyectista estructural** según CIRSOC 201.",
   "keyTakeaway": "Regla rápida: **losa maciza residencial = 12-15 kg de hierro/m²**. Para **luz corta (< 4 m)**: ~10 kg/m² con hierro del 8. Para **luz larga (> 6 m)**: ~18 kg/m² con hierro del 12. Comprá siempre **+7% de desperdicio** para empalmes y cortes.",
   "useCases": [
@@ -17,26 +28,116 @@
     "Construís una platea de fundación y querés saber el hierro a pedir."
   ],
   "fields": [
-    { "id": "m2", "label": "m² de losa", "type": "number", "placeholder": "30", "min": 0, "step": 0.1, "required": true },
-    { "id": "tipoLosa", "label": "Tipo de losa", "type": "select", "default": "losa_maciza_media", "options": [
-      {"value":"losa_maciza_corta","label":"Losa maciza luz ≤ 4 m (10 kg/m²)"},
-      {"value":"losa_maciza_media","label":"Losa maciza luz 4-6 m (14 kg/m²)"},
-      {"value":"losa_maciza_larga","label":"Losa maciza luz > 6 m (18 kg/m²)"},
-      {"value":"losa_alivianada","label":"Losa alivianada (vigueta + bovedilla) (8 kg/m²)"},
-      {"value":"platea","label":"Platea de fundación (12 kg/m²)"},
-      {"value":"contrapiso","label":"Contrapiso armado (4 kg/m²)"}
-    ] },
-    { "id": "luz", "label": "Luz de la losa (m)", "type": "number", "placeholder": "4", "min": 1, "max": 12, "step": 0.1, "help": "Distancia entre apoyos (paredes o vigas). En losa maciza, afecta el diámetro de la armadura." },
-    { "id": "desperdicio", "label": "Desperdicio (%)", "type": "number", "default": 7, "min": 0, "max": 20, "step": 1, "suffix": "%" }
+    {
+      "id": "m2",
+      "label": "m² de losa",
+      "type": "number",
+      "placeholder": "30",
+      "min": 0,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "tipoLosa",
+      "label": "Tipo de losa",
+      "type": "select",
+      "default": "losa_maciza_media",
+      "options": [
+        {
+          "value": "losa_maciza_corta",
+          "label": "Losa maciza luz ≤ 4 m (10 kg/m²)"
+        },
+        {
+          "value": "losa_maciza_media",
+          "label": "Losa maciza luz 4-6 m (14 kg/m²)"
+        },
+        {
+          "value": "losa_maciza_larga",
+          "label": "Losa maciza luz > 6 m (18 kg/m²)"
+        },
+        {
+          "value": "losa_alivianada",
+          "label": "Losa alivianada (vigueta + bovedilla) (8 kg/m²)"
+        },
+        {
+          "value": "platea",
+          "label": "Platea de fundación (12 kg/m²)"
+        },
+        {
+          "value": "contrapiso",
+          "label": "Contrapiso armado (4 kg/m²)"
+        }
+      ]
+    },
+    {
+      "id": "luz",
+      "label": "Luz de la losa (m)",
+      "type": "number",
+      "placeholder": "4",
+      "min": 1,
+      "max": 12,
+      "step": 0.1,
+      "help": "Distancia entre apoyos (paredes o vigas). En losa maciza, afecta el diámetro de la armadura."
+    },
+    {
+      "id": "desperdicio",
+      "label": "Desperdicio (%)",
+      "type": "number",
+      "default": 7,
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "suffix": "%"
+    }
   ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "kg acero/m² por tipo de losa. Normativa CIRSOC estable."
+  },
   "outputs": [
-    { "id": "kgTotales", "label": "Hierro total (kg)", "format": "number", "primary": true, "suffix": " kg" },
-    { "id": "kgPorM2", "label": "Hierro por m²", "format": "number", "suffix": " kg/m²" },
-    { "id": "tipo", "label": "Tipo de losa", "format": "text" },
-    { "id": "barras8mm", "label": "Barras del 8 (12 m)", "format": "number" },
-    { "id": "barras10mm", "label": "Barras del 10 (12 m)", "format": "number" },
-    { "id": "barras12mm", "label": "Barras del 12 (12 m)", "format": "number" },
-    { "id": "alambre", "label": "Alambre de atar (kg)", "format": "number", "suffix": " kg" }
+    {
+      "id": "kgTotales",
+      "label": "Hierro total (kg)",
+      "format": "number",
+      "primary": true,
+      "suffix": " kg"
+    },
+    {
+      "id": "kgPorM2",
+      "label": "Hierro por m²",
+      "format": "number",
+      "suffix": " kg/m²"
+    },
+    {
+      "id": "tipo",
+      "label": "Tipo de losa",
+      "format": "text"
+    },
+    {
+      "id": "barras8mm",
+      "label": "Barras del 8 (12 m)",
+      "format": "number"
+    },
+    {
+      "id": "barras10mm",
+      "label": "Barras del 10 (12 m)",
+      "format": "number"
+    },
+    {
+      "id": "barras12mm",
+      "label": "Barras del 12 (12 m)",
+      "format": "number"
+    },
+    {
+      "id": "alambre",
+      "label": "Alambre de atar (kg)",
+      "format": "number",
+      "suffix": " kg"
+    }
   ],
   "example": {
     "title": "Ejemplo real: losa maciza para ampliación de 5×6 m (30 m²), luz 5 m",
@@ -91,10 +192,26 @@
     }
   ],
   "sources": [
-    { "title": "CIRSOC 201 - Reglamento argentino de estructuras de hormigón", "url": "https://www.inti.gob.ar/cirsoc", "publisher": "INTI-CIRSOC" },
-    { "title": "IRAM-IAS U 500-528 - Barras de acero para hormigón armado", "url": "https://catalogo.iram.org.ar", "publisher": "IRAM" },
-    { "title": "Acindar - Ficha técnica barras conformadas", "url": "https://www.acindar.com.ar", "publisher": "Acindar ArcelorMittal" },
-    { "title": "Acerbrag - Productos laminados", "url": "https://www.acerbrag.com", "publisher": "Acerbrag" }
+    {
+      "title": "CIRSOC 201 - Reglamento argentino de estructuras de hormigón",
+      "url": "https://www.inti.gob.ar/cirsoc",
+      "publisher": "INTI-CIRSOC"
+    },
+    {
+      "title": "IRAM-IAS U 500-528 - Barras de acero para hormigón armado",
+      "url": "https://catalogo.iram.org.ar",
+      "publisher": "IRAM"
+    },
+    {
+      "title": "Acindar - Ficha técnica barras conformadas",
+      "url": "https://www.acindar.com.ar",
+      "publisher": "Acindar ArcelorMittal"
+    },
+    {
+      "title": "Acerbrag - Productos laminados",
+      "url": "https://www.acerbrag.com",
+      "publisher": "Acerbrag"
+    }
   ],
   "relatedSlugs": [
     "calculadora-cemento-arena-piedra-por-m3-hormigon",

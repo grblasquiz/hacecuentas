@@ -6,7 +6,18 @@
   "category": "viajes",
   "icon": "Plane",
   "formulaId": "tiempo-vuelo-estimado",
-  "seoKeywords": ["tiempo vuelo", "duracion vuelo", "cuanto dura vuelo", "km por hora avion", "velocidad crucero", "taxeo maniobras", "viento proa avion", "calcular duracion vuelo", "horas vuelo km", "estimador vuelo"],
+  "seoKeywords": [
+    "tiempo vuelo",
+    "duracion vuelo",
+    "cuanto dura vuelo",
+    "km por hora avion",
+    "velocidad crucero",
+    "taxeo maniobras",
+    "viento proa avion",
+    "calcular duracion vuelo",
+    "horas vuelo km",
+    "estimador vuelo"
+  ],
   "intro": "Cuando mirás un vuelo en una web de aerolínea ves una duración total que **no es km ÷ velocidad**. Hay **taxeo** (tiempo en pista antes de despegar), **ascenso y descenso**, **vientos de proa o de cola** que pueden sumar o restar hasta 1 hora en vuelos transatlánticos, y **tráfico aéreo** en terminales grandes. Esta calculadora te estima una duración realista partiendo de la **distancia en kilómetros** y el **tipo de avión** (comercial, regional, low-cost, privado). Sumale el viento de proa si lo conocés y vas a tener un número cercano al real. Sirve para dimensionar conexiones, para chequear si un vuelo cotizado tiene tiempos razonables, o para planificar salidas y llegadas.",
   "keyTakeaway": "**Tiempo de vuelo ≈ (distancia / velocidad efectiva) + 30 minutos de taxeo y maniobras**. La velocidad de crucero típica de un comercial es **880 km/h**; un low-cost ronda 850; un regional 720 km/h.",
   "useCases": [
@@ -17,22 +28,93 @@
     "Saber cuándo conviene salir de casa para un vuelo temprano."
   ],
   "fields": [
-    { "id": "distanciaKm", "label": "Distancia del vuelo", "type": "number", "suffix": "km", "placeholder": "10000", "min": 50, "step": 1 },
-    { "id": "tipoAvion", "label": "Tipo de avión", "type": "select", "default": "comercial", "options": [
-      {"value":"comercial","label":"Comercial (Boeing 777, Airbus A330) — 880 km/h"},
-      {"value":"lowcost","label":"Low-cost (A320, 737) — 850 km/h"},
-      {"value":"regional","label":"Regional (E190, CRJ) — 720 km/h"},
-      {"value":"privado","label":"Privado (jet) — 780 km/h"},
-      {"value":"turbohelice","label":"Turbohélice (ATR, Dash) — 550 km/h"}
-    ] },
-    { "id": "vientoProa", "label": "Viento de proa (resta velocidad)", "type": "number", "suffix": "km/h", "placeholder": "0", "min": -300, "max": 300, "step": 1, "help": "Positivo si es viento en contra, negativo si es viento de cola" }
+    {
+      "id": "distanciaKm",
+      "label": "Distancia del vuelo",
+      "type": "number",
+      "suffix": "km",
+      "placeholder": "10000",
+      "min": 50,
+      "step": 1
+    },
+    {
+      "id": "tipoAvion",
+      "label": "Tipo de avión",
+      "type": "select",
+      "default": "comercial",
+      "options": [
+        {
+          "value": "comercial",
+          "label": "Comercial (Boeing 777, Airbus A330) — 880 km/h"
+        },
+        {
+          "value": "lowcost",
+          "label": "Low-cost (A320, 737) — 850 km/h"
+        },
+        {
+          "value": "regional",
+          "label": "Regional (E190, CRJ) — 720 km/h"
+        },
+        {
+          "value": "privado",
+          "label": "Privado (jet) — 780 km/h"
+        },
+        {
+          "value": "turbohelice",
+          "label": "Turbohélice (ATR, Dash) — 550 km/h"
+        }
+      ]
+    },
+    {
+      "id": "vientoProa",
+      "label": "Viento de proa (resta velocidad)",
+      "type": "number",
+      "suffix": "km/h",
+      "placeholder": "0",
+      "min": -300,
+      "max": 300,
+      "step": 1,
+      "help": "Positivo si es viento en contra, negativo si es viento de cola"
+    }
   ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Distancia/velocidad + maniobras. Fórmula física."
+  },
   "outputs": [
-    { "id": "tiempoFormato", "label": "Duración total estimada", "format": "text", "primary": true },
-    { "id": "tiempoHoras", "label": "Horas decimales", "format": "number", "suffix": "h" },
-    { "id": "velocidadCrucero", "label": "Velocidad de crucero", "format": "number", "suffix": "km/h" },
-    { "id": "tiempoTaxeo", "label": "Taxeo y maniobras", "format": "number", "suffix": "min" },
-    { "id": "resumen", "label": "Resumen", "format": "text" }
+    {
+      "id": "tiempoFormato",
+      "label": "Duración total estimada",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "tiempoHoras",
+      "label": "Horas decimales",
+      "format": "number",
+      "suffix": "h"
+    },
+    {
+      "id": "velocidadCrucero",
+      "label": "Velocidad de crucero",
+      "format": "number",
+      "suffix": "km/h"
+    },
+    {
+      "id": "tiempoTaxeo",
+      "label": "Taxeo y maniobras",
+      "format": "number",
+      "suffix": "min"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen",
+      "format": "text"
+    }
   ],
   "example": {
     "title": "Ejemplo: Buenos Aires → Madrid en Boeing 777",
@@ -83,9 +165,21 @@
     }
   ],
   "sources": [
-    { "name": "FAA — Flight planning", "url": "https://www.faa.gov/", "publisher": "Federal Aviation Administration" },
-    { "name": "Wikipedia — Velocidad de crucero", "url": "https://es.wikipedia.org/wiki/Velocidad_de_crucero", "publisher": "Wikipedia" },
-    { "name": "Flightradar24 — Longest flights", "url": "https://www.flightradar24.com/", "publisher": "Flightradar24" }
+    {
+      "name": "FAA — Flight planning",
+      "url": "https://www.faa.gov/",
+      "publisher": "Federal Aviation Administration"
+    },
+    {
+      "name": "Wikipedia — Velocidad de crucero",
+      "url": "https://es.wikipedia.org/wiki/Velocidad_de_crucero",
+      "publisher": "Wikipedia"
+    },
+    {
+      "name": "Flightradar24 — Longest flights",
+      "url": "https://www.flightradar24.com/",
+      "publisher": "Flightradar24"
+    }
   ],
   "relatedSlugs": [
     "calculadora-distancia-vuelo-2-ciudades",

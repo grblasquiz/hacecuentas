@@ -6,7 +6,18 @@
   "category": "construccion",
   "icon": "Home",
   "formulaId": "techos-tejas",
-  "seoKeywords": ["cuantas tejas por m2", "tejas francesas por metro", "teja colonial cantidad", "teja shingle m2", "calcular techo tejas", "pendiente techo tejas", "cumbreras teja francesa", "listones techo", "teja romana por m2", "tejas de cemento"],
+  "seoKeywords": [
+    "cuantas tejas por m2",
+    "tejas francesas por metro",
+    "teja colonial cantidad",
+    "teja shingle m2",
+    "calcular techo tejas",
+    "pendiente techo tejas",
+    "cumbreras teja francesa",
+    "listones techo",
+    "teja romana por m2",
+    "tejas de cemento"
+  ],
   "intro": "La cantidad de **tejas por m²** depende del **tipo de teja**, la **pendiente del techo** y el **solape entre piezas** definido por el fabricante. En Argentina los tipos más usados son: **teja francesa** (14 u/m² — la más popular y económica), **teja colonial criolla** (30 u/m² — look tradicional hispano), **teja romana** (12 u/m² — moderna), **portuguesa** (15 u/m²), **shingle asfáltico** (3,3 u/m² en piezas de 30×100 cm), y **teja de cemento** tipo Tegola (10 u/m²). Esta calculadora parte de los **m² en proyección horizontal** (la superficie 'vista desde arriba'), aplica el **factor de inclinación** según la pendiente del techo para obtener los m² reales de cubierta, y te devuelve **cantidad de tejas + cumbreras + metros lineales de listón de madera** (tirantes/alfajías). Recomendamos siempre **10% de desperdicio** (más en techos con muchas aguas o limahoyas).",
   "keyTakeaway": "Teja **francesa = 14 u/m²**, **colonial = 30 u/m²**, **romana = 12 u/m²**, **shingle = 3,3 u/m²**. Sumale **factor de pendiente** (30% = ×1,044; 50% = ×1,118; 100% = ×1,414) y **10% de desperdicio**. El m² de planta NO es igual al m² de techo inclinado.",
   "useCases": [
@@ -17,26 +28,116 @@
     "Calculás las **cumbreras y limatesas** de un techo a dos aguas."
   ],
   "fields": [
-    { "id": "m2", "label": "m² del techo (proyección horizontal)", "type": "number", "placeholder": "60", "min": 0, "step": 0.1, "required": true, "help": "Superficie vista desde arriba (largo × ancho), no la superficie inclinada." },
-    { "id": "tipoTeja", "label": "Tipo de teja", "type": "select", "default": "francesa", "options": [
-      {"value":"francesa","label":"Teja francesa (plana mecanizada) — 14 u/m²"},
-      {"value":"colonial","label":"Teja colonial (criolla) — 30 u/m²"},
-      {"value":"romana","label":"Teja romana — 12 u/m²"},
-      {"value":"portuguesa","label":"Teja portuguesa — 15 u/m²"},
-      {"value":"espanola","label":"Teja española — 12 u/m²"},
-      {"value":"shingle","label":"Teja asfáltica / shingle — 3,3 piezas/m²"},
-      {"value":"cemento","label":"Teja de cemento (Tegola) — 10 u/m²"}
-    ] },
-    { "id": "pendiente", "label": "Pendiente del techo (%)", "type": "number", "default": 30, "min": 5, "max": 100, "step": 1, "suffix": "%", "help": "Ej: 30% = 30 cm de subida por cada metro. Tejas: mínimo 25-30%." },
-    { "id": "desperdicio", "label": "Desperdicio (%)", "type": "number", "default": 10, "min": 0, "max": 30, "step": 1, "suffix": "%" }
+    {
+      "id": "m2",
+      "label": "m² del techo (proyección horizontal)",
+      "type": "number",
+      "placeholder": "60",
+      "min": 0,
+      "step": 0.1,
+      "required": true,
+      "help": "Superficie vista desde arriba (largo × ancho), no la superficie inclinada."
+    },
+    {
+      "id": "tipoTeja",
+      "label": "Tipo de teja",
+      "type": "select",
+      "default": "francesa",
+      "options": [
+        {
+          "value": "francesa",
+          "label": "Teja francesa (plana mecanizada) — 14 u/m²"
+        },
+        {
+          "value": "colonial",
+          "label": "Teja colonial (criolla) — 30 u/m²"
+        },
+        {
+          "value": "romana",
+          "label": "Teja romana — 12 u/m²"
+        },
+        {
+          "value": "portuguesa",
+          "label": "Teja portuguesa — 15 u/m²"
+        },
+        {
+          "value": "espanola",
+          "label": "Teja española — 12 u/m²"
+        },
+        {
+          "value": "shingle",
+          "label": "Teja asfáltica / shingle — 3,3 piezas/m²"
+        },
+        {
+          "value": "cemento",
+          "label": "Teja de cemento (Tegola) — 10 u/m²"
+        }
+      ]
+    },
+    {
+      "id": "pendiente",
+      "label": "Pendiente del techo (%)",
+      "type": "number",
+      "default": 30,
+      "min": 5,
+      "max": 100,
+      "step": 1,
+      "suffix": "%",
+      "help": "Ej: 30% = 30 cm de subida por cada metro. Tejas: mínimo 25-30%."
+    },
+    {
+      "id": "desperdicio",
+      "label": "Desperdicio (%)",
+      "type": "number",
+      "default": 10,
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "suffix": "%"
+    }
   ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Tejas por m² por tipo y pendiente. Guía técnica estable."
+  },
   "outputs": [
-    { "id": "tejas", "label": "Tejas totales", "format": "number", "primary": true },
-    { "id": "tipo", "label": "Tipo de teja", "format": "text" },
-    { "id": "tejasPorM2", "label": "Unidades por m²", "format": "number" },
-    { "id": "m2Reales", "label": "m² reales del techo (inclinado)", "format": "number", "suffix": " m²" },
-    { "id": "cumbreras", "label": "Cumbreras (aprox)", "format": "number" },
-    { "id": "listonesMlineales", "label": "Listones (metros lineales)", "format": "number", "suffix": " m" }
+    {
+      "id": "tejas",
+      "label": "Tejas totales",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "tipo",
+      "label": "Tipo de teja",
+      "format": "text"
+    },
+    {
+      "id": "tejasPorM2",
+      "label": "Unidades por m²",
+      "format": "number"
+    },
+    {
+      "id": "m2Reales",
+      "label": "m² reales del techo (inclinado)",
+      "format": "number",
+      "suffix": " m²"
+    },
+    {
+      "id": "cumbreras",
+      "label": "Cumbreras (aprox)",
+      "format": "number"
+    },
+    {
+      "id": "listonesMlineales",
+      "label": "Listones (metros lineales)",
+      "format": "number",
+      "suffix": " m"
+    }
   ],
   "example": {
     "title": "Ejemplo real: techo de 8×6 m (48 m² planta) a dos aguas con pendiente 30%, teja francesa",
@@ -92,10 +193,26 @@
     }
   ],
   "sources": [
-    { "title": "IRAM 12556 - Tejas cerámicas", "url": "https://catalogo.iram.org.ar", "publisher": "IRAM" },
-    { "title": "Cerámica Palmar - Ficha técnica tejas", "url": "https://www.palmar.com.ar", "publisher": "Palmar" },
-    { "title": "Cámara Argentina de la Construcción - Cubiertas", "url": "https://www.camarco.org.ar", "publisher": "CAMARCO" },
-    { "title": "Revista Vivienda - Sistemas de cubierta", "url": "https://www.revistavivienda.com.ar", "publisher": "Revista Vivienda" }
+    {
+      "title": "IRAM 12556 - Tejas cerámicas",
+      "url": "https://catalogo.iram.org.ar",
+      "publisher": "IRAM"
+    },
+    {
+      "title": "Cerámica Palmar - Ficha técnica tejas",
+      "url": "https://www.palmar.com.ar",
+      "publisher": "Palmar"
+    },
+    {
+      "title": "Cámara Argentina de la Construcción - Cubiertas",
+      "url": "https://www.camarco.org.ar",
+      "publisher": "CAMARCO"
+    },
+    {
+      "title": "Revista Vivienda - Sistemas de cubierta",
+      "url": "https://www.revistavivienda.com.ar",
+      "publisher": "Revista Vivienda"
+    }
   ],
   "relatedSlugs": [
     "calculadora-pendiente-techo-grados-porcentaje",

@@ -6,7 +6,17 @@
   "category": "viajes",
   "icon": "💱",
   "formulaId": "cambio-moneda",
-  "seoKeywords": ["conversor dolar euro real", "cambio moneda argentina", "euro a peso", "real brasileño a peso", "dolar tarjeta 2026", "conversor multi divisa", "brecha cambiaria", "viajar argentina dolar", "cotizacion euro blue"],
+  "seoKeywords": [
+    "conversor dolar euro real",
+    "cambio moneda argentina",
+    "euro a peso",
+    "real brasileño a peso",
+    "dolar tarjeta 2026",
+    "conversor multi divisa",
+    "brecha cambiaria",
+    "viajar argentina dolar",
+    "cotizacion euro blue"
+  ],
   "intro": "Si viajás al exterior, hacés compras internacionales o cobrás en moneda extranjera, necesitás saber **cuánto vale en pesos cada divisa**. En Argentina no hay un solo tipo de cambio: **oficial**, **blue**, **MEP** y **tarjeta** pueden diferir hasta 60%. Esta calculadora convierte **USD, EUR y BRL** (dólar, euro y real brasileño) a pesos **(o al revés)** aplicando **los cuatro tipos de cambio** más habituales. Ideal para presupuestar un **viaje a Miami, Madrid, Río o Punta del Este**, cotizar compras online en AliExpress/Amazon, convertir facturas de freelance recibidas en USD o EUR, o evaluar si conviene pagar con tarjeta argentina o cambiar efectivo. Ingresá manualmente las **cotizaciones del día** (fáciles de ver en dolarhoy.com, ámbito.com, BCRA) y obtené la conversión exacta. Valores 2026 — actualizá las cotizaciones cada vez que uses la calculadora, cambian hora a hora.",
   "keyTakeaway": "En Argentina hay **4 tipos de cambio** que aplican a la mayoría de divisas: **oficial, blue, MEP y tarjeta**. El **tarjeta** = oficial × 1.60 por percepciones. Para **viajar** suele convenir **MEP o efectivo en destino**. **Brecha** blue/oficial > 25% = momento caro para dolarizarse.",
   "useCases": [
@@ -17,21 +27,126 @@
     "Estás vendiendo un **auto usado** y el comprador paga en dólares — querés saber a qué cotización cerrar."
   ],
   "fields": [
-    { "id": "monto", "label": "Monto", "type": "number", "placeholder": "100", "min": 0, "step": 0.01, "required": true },
-    { "id": "moneda", "label": "Moneda", "type": "select", "default": "usd", "options": [{"value":"usd","label":"Dólar (USD)"},{"value":"eur","label":"Euro (EUR)"},{"value":"brl","label":"Real (BRL)"}] },
-    { "id": "cotizacionOficial", "label": "Cotización oficial (ARS)", "type": "number", "placeholder": "1050", "min": 0, "step": 0.01, "required": true, "help": "Consultar en BCRA o banco al día." },
-    { "id": "cotizacionBlue", "label": "Cotización blue (opcional)", "type": "number", "placeholder": "1450", "min": 0, "step": 0.01 },
-    { "id": "cotizacionMEP", "label": "Cotización MEP / dólar bolsa", "type": "number", "placeholder": "1200", "min": 0, "step": 0.01 },
-    { "id": "cotizacionTarjeta", "label": "Cotización tarjeta / turista", "type": "number", "placeholder": "1700", "min": 0, "step": 0.01 },
-    { "id": "direccion", "label": "Dirección", "type": "select", "default": "a-pesos", "options": [{"value":"a-pesos","label":"Convertir a pesos"},{"value":"a-divisa","label":"Convertir pesos a divisa"}] }
+    {
+      "id": "monto",
+      "label": "Monto",
+      "type": "number",
+      "placeholder": "100",
+      "min": 0,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "moneda",
+      "label": "Moneda",
+      "type": "select",
+      "default": "usd",
+      "options": [
+        {
+          "value": "usd",
+          "label": "Dólar (USD)"
+        },
+        {
+          "value": "eur",
+          "label": "Euro (EUR)"
+        },
+        {
+          "value": "brl",
+          "label": "Real (BRL)"
+        }
+      ]
+    },
+    {
+      "id": "cotizacionOficial",
+      "label": "Cotización oficial (ARS)",
+      "type": "number",
+      "placeholder": "1050",
+      "min": 0,
+      "step": 0.01,
+      "required": true,
+      "help": "Consultar en BCRA o banco al día."
+    },
+    {
+      "id": "cotizacionBlue",
+      "label": "Cotización blue (opcional)",
+      "type": "number",
+      "placeholder": "1450",
+      "min": 0,
+      "step": 0.01
+    },
+    {
+      "id": "cotizacionMEP",
+      "label": "Cotización MEP / dólar bolsa",
+      "type": "number",
+      "placeholder": "1200",
+      "min": 0,
+      "step": 0.01
+    },
+    {
+      "id": "cotizacionTarjeta",
+      "label": "Cotización tarjeta / turista",
+      "type": "number",
+      "placeholder": "1700",
+      "min": 0,
+      "step": 0.01
+    },
+    {
+      "id": "direccion",
+      "label": "Dirección",
+      "type": "select",
+      "default": "a-pesos",
+      "options": [
+        {
+          "value": "a-pesos",
+          "label": "Convertir a pesos"
+        },
+        {
+          "value": "a-divisa",
+          "label": "Convertir pesos a divisa"
+        }
+      ]
+    }
   ],
+  "dataUpdate": {
+    "frequency": "daily",
+    "lastUpdated": "2026-04-15",
+    "source": "dolarapi.com / BCRA",
+    "sourceUrl": "https://dolarapi.com/v1/dolares",
+    "updateType": "auto-api",
+    "notes": "Conversor multi-divisa USD/EUR/BRL con dólar blue/MEP/oficial/tarjeta. Cotización diaria."
+  },
   "outputs": [
-    { "id": "enBlue", "label": "Al blue", "format": "currency", "primary": true },
-    { "id": "enOficial", "label": "Al oficial", "format": "currency" },
-    { "id": "enMEP", "label": "Al MEP / bolsa", "format": "currency" },
-    { "id": "enTarjeta", "label": "Al tarjeta / turista", "format": "currency" },
-    { "id": "brechaPct", "label": "Brecha blue vs oficial", "format": "percentage" },
-    { "id": "mejorParaComprar", "label": "Mejor opción", "format": "text" }
+    {
+      "id": "enBlue",
+      "label": "Al blue",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "enOficial",
+      "label": "Al oficial",
+      "format": "currency"
+    },
+    {
+      "id": "enMEP",
+      "label": "Al MEP / bolsa",
+      "format": "currency"
+    },
+    {
+      "id": "enTarjeta",
+      "label": "Al tarjeta / turista",
+      "format": "currency"
+    },
+    {
+      "id": "brechaPct",
+      "label": "Brecha blue vs oficial",
+      "format": "percentage"
+    },
+    {
+      "id": "mejorParaComprar",
+      "label": "Mejor opción",
+      "format": "text"
+    }
   ],
   "example": {
     "title": "Ejemplo: convertir EUR 500 a pesos con cotizaciones del día",
@@ -82,9 +197,18 @@
     }
   ],
   "sources": [
-    { "name": "BCRA — Cotizaciones oficiales", "url": "https://www.bcra.gob.ar/PublicacionesEstadisticas/Tipos_de_cambios.asp" },
-    { "name": "RG 5463 ARCA — Percepción dólar tarjeta", "url": "https://www.arca.gob.ar/normativa/" },
-    { "name": "Ley 27.541 — Impuesto PAIS y actualizaciones", "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/333000-334999/333564/norma.htm" }
+    {
+      "name": "BCRA — Cotizaciones oficiales",
+      "url": "https://www.bcra.gob.ar/PublicacionesEstadisticas/Tipos_de_cambios.asp"
+    },
+    {
+      "name": "RG 5463 ARCA — Percepción dólar tarjeta",
+      "url": "https://www.arca.gob.ar/normativa/"
+    },
+    {
+      "name": "Ley 27.541 — Impuesto PAIS y actualizaciones",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/333000-334999/333564/norma.htm"
+    }
   ],
   "relatedSlugs": [
     "conversor-dolar-argentina",

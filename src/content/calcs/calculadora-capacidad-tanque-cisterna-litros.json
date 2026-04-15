@@ -6,7 +6,18 @@
   "category": "construccion",
   "icon": "Droplet",
   "formulaId": "capacidad-tanque-cisterna",
-  "seoKeywords": ["calcular litros tanque", "capacidad cisterna m3", "volumen tanque cilindrico", "litros por m3", "tanque de agua 1000 litros", "cisterna subterranea", "tanque rectangular litros", "formula volumen cilindro", "volumen pileta natacion", "agua potable familia"],
+  "seoKeywords": [
+    "calcular litros tanque",
+    "capacidad cisterna m3",
+    "volumen tanque cilindrico",
+    "litros por m3",
+    "tanque de agua 1000 litros",
+    "cisterna subterranea",
+    "tanque rectangular litros",
+    "formula volumen cilindro",
+    "volumen pileta natacion",
+    "agua potable familia"
+  ],
   "intro": "Saber la **capacidad exacta** de un **tanque o cisterna** es fundamental al proyectar el suministro de agua de una vivienda, calcular el stock de agua ante cortes, dimensionar una pileta, o comparar opciones de compra (tanques Rotoplas, Eternit, cisternas subterráneas). Esta calculadora sirve para **dos formas**: **cilíndrica** (la más común — tanques de agua, piletas redondas) y **rectangular** (cisternas enterradas, piletas, depósitos). Usás las dimensiones en **centímetros** y te devuelve el volumen en **litros y m³**, el **volumen útil** (descontando el vacío superior de aire, típicamente 10%), y los **días de consumo** que cubre para una familia de 2 o 4 personas (base: 200 L/persona/día, que es el promedio OSE/Aysa). Para tanques comerciales estandarizados (500, 850, 1.100, 2.000 L) el volumen útil ya viene especificado por el fabricante.",
   "keyTakeaway": "**Cilíndrico**: `V = π × r² × h`. **Rectangular**: `V = l × a × h`. Convertir de **cm³ a litros**: dividir por **1.000**. Una **familia de 4 gasta ~800 L/día** (200 L/persona). Un tanque de **1.100 L Rotoplas** cubre ~1,4 días sin reposición.",
   "useCases": [
@@ -17,23 +28,113 @@
     "Diseñás un **aljibe o cisterna de reserva** para emergencias."
   ],
   "fields": [
-    { "id": "forma", "label": "Forma del tanque", "type": "select", "default": "cilindrico", "options": [
-      {"value":"cilindrico","label":"Cilíndrico (tanque de agua, pileta redonda)"},
-      {"value":"rectangular","label":"Rectangular (cisterna, pileta, depósito)"}
-    ] },
-    { "id": "diametro", "label": "Diámetro (cm, si es cilíndrico)", "type": "number", "placeholder": "130", "min": 0, "step": 1, "help": "Diámetro interno del tanque en cm." },
-    { "id": "largo", "label": "Largo (cm, si rectangular)", "type": "number", "placeholder": "200", "min": 0, "step": 1 },
-    { "id": "ancho", "label": "Ancho (cm, si rectangular)", "type": "number", "placeholder": "150", "min": 0, "step": 1 },
-    { "id": "alto", "label": "Alto / profundidad (cm)", "type": "number", "placeholder": "120", "min": 0, "step": 1, "required": true },
-    { "id": "llenadoPct", "label": "Porcentaje de llenado útil (%)", "type": "number", "default": 90, "min": 50, "max": 100, "step": 1, "suffix": "%", "help": "Normalmente se deja 10% de aire arriba. Para pileta usar 90-95%." }
+    {
+      "id": "forma",
+      "label": "Forma del tanque",
+      "type": "select",
+      "default": "cilindrico",
+      "options": [
+        {
+          "value": "cilindrico",
+          "label": "Cilíndrico (tanque de agua, pileta redonda)"
+        },
+        {
+          "value": "rectangular",
+          "label": "Rectangular (cisterna, pileta, depósito)"
+        }
+      ]
+    },
+    {
+      "id": "diametro",
+      "label": "Diámetro (cm, si es cilíndrico)",
+      "type": "number",
+      "placeholder": "130",
+      "min": 0,
+      "step": 1,
+      "help": "Diámetro interno del tanque en cm."
+    },
+    {
+      "id": "largo",
+      "label": "Largo (cm, si rectangular)",
+      "type": "number",
+      "placeholder": "200",
+      "min": 0,
+      "step": 1
+    },
+    {
+      "id": "ancho",
+      "label": "Ancho (cm, si rectangular)",
+      "type": "number",
+      "placeholder": "150",
+      "min": 0,
+      "step": 1
+    },
+    {
+      "id": "alto",
+      "label": "Alto / profundidad (cm)",
+      "type": "number",
+      "placeholder": "120",
+      "min": 0,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "llenadoPct",
+      "label": "Porcentaje de llenado útil (%)",
+      "type": "number",
+      "default": 90,
+      "min": 50,
+      "max": 100,
+      "step": 1,
+      "suffix": "%",
+      "help": "Normalmente se deja 10% de aire arriba. Para pileta usar 90-95%."
+    }
   ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Volumen cilindro/rectangular. Geometría pura."
+  },
   "outputs": [
-    { "id": "volumenLitros", "label": "Capacidad total", "format": "number", "primary": true, "suffix": " L" },
-    { "id": "volumenM3", "label": "Capacidad en m³", "format": "number", "suffix": " m³" },
-    { "id": "volumenUtilLitros", "label": "Volumen útil (descontando aire)", "format": "number", "suffix": " L" },
-    { "id": "diasConsumoFamilia4", "label": "Días de consumo — familia de 4", "format": "number", "suffix": " días" },
-    { "id": "diasConsumoFamilia2", "label": "Días de consumo — pareja", "format": "number", "suffix": " días" },
-    { "id": "forma", "label": "Forma", "format": "text" }
+    {
+      "id": "volumenLitros",
+      "label": "Capacidad total",
+      "format": "number",
+      "primary": true,
+      "suffix": " L"
+    },
+    {
+      "id": "volumenM3",
+      "label": "Capacidad en m³",
+      "format": "number",
+      "suffix": " m³"
+    },
+    {
+      "id": "volumenUtilLitros",
+      "label": "Volumen útil (descontando aire)",
+      "format": "number",
+      "suffix": " L"
+    },
+    {
+      "id": "diasConsumoFamilia4",
+      "label": "Días de consumo — familia de 4",
+      "format": "number",
+      "suffix": " días"
+    },
+    {
+      "id": "diasConsumoFamilia2",
+      "label": "Días de consumo — pareja",
+      "format": "number",
+      "suffix": " días"
+    },
+    {
+      "id": "forma",
+      "label": "Forma",
+      "format": "text"
+    }
   ],
   "example": {
     "title": "Ejemplo real: tanque cilíndrico Rotoplas de 130 cm Ø × 120 cm alto",
@@ -88,10 +189,26 @@
     }
   ],
   "sources": [
-    { "title": "Aysa - Consumos residenciales recomendados", "url": "https://www.aysa.com.ar", "publisher": "Aysa" },
-    { "title": "OMS - Necesidades mínimas de agua", "url": "https://www.who.int/water_sanitation_health/es/", "publisher": "OMS" },
-    { "title": "Rotoplas Argentina - Catálogo tanques", "url": "https://rotoplas.com.ar", "publisher": "Rotoplas" },
-    { "title": "Wikipedia - Volumen de cilindro", "url": "https://es.wikipedia.org/wiki/Cilindro", "publisher": "Wikipedia" }
+    {
+      "title": "Aysa - Consumos residenciales recomendados",
+      "url": "https://www.aysa.com.ar",
+      "publisher": "Aysa"
+    },
+    {
+      "title": "OMS - Necesidades mínimas de agua",
+      "url": "https://www.who.int/water_sanitation_health/es/",
+      "publisher": "OMS"
+    },
+    {
+      "title": "Rotoplas Argentina - Catálogo tanques",
+      "url": "https://rotoplas.com.ar",
+      "publisher": "Rotoplas"
+    },
+    {
+      "title": "Wikipedia - Volumen de cilindro",
+      "url": "https://es.wikipedia.org/wiki/Cilindro",
+      "publisher": "Wikipedia"
+    }
   ],
   "relatedSlugs": [
     "calculadora-agua-diaria-recomendada",

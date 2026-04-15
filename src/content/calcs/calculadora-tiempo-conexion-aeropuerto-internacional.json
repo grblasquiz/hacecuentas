@@ -6,7 +6,18 @@
   "category": "viajes",
   "icon": "Plane",
   "formulaId": "tiempo-conexion-aeropuerto",
-  "seoKeywords": ["tiempo minimo conexion", "mct aeropuerto", "cuanto tiempo entre vuelos", "conexion internacional", "cambio terminal", "escala aeropuerto", "iata mct", "conexion riesgosa", "calculadora escala", "tiempo entre vuelos"],
+  "seoKeywords": [
+    "tiempo minimo conexion",
+    "mct aeropuerto",
+    "cuanto tiempo entre vuelos",
+    "conexion internacional",
+    "cambio terminal",
+    "escala aeropuerto",
+    "iata mct",
+    "conexion riesgosa",
+    "calculadora escala",
+    "tiempo entre vuelos"
+  ],
   "intro": "Cuando comprás un vuelo con escala, el sistema de la aerolínea aplica una **Minimum Connecting Time (MCT)** que es el tiempo mínimo legal entre el aterrizaje del primer vuelo y el despegue del segundo. El problema: ese MCT es el **mínimo legal**, no el recomendado. Si vas justo y hay demoras, migraciones lentas, cambio de terminal o retirar equipaje, **perdés el vuelo**. Esta calculadora combina los tiempos típicos que recomienda la IATA y las aerolíneas para distintas combinaciones: **doméstico → doméstico**, **internacional → internacional**, cambios de aerolínea, cambios de terminal y si el aeropuerto es grande (JFK, LHR, CDG, GRU) o chico. Usala antes de comprar el boleto o cuando te están ofreciendo una conexión que parece corta.",
   "keyTakeaway": "**Tiempo mínimo de conexión típico**: doméstico→doméstico 45-60 min, internacional→internacional 75-90 min, internacional→doméstico 90-120 min. **Sumale 30 min si cambiás de terminal** y 15 más si cambiás de aerolínea sin convenio.",
   "useCases": [
@@ -17,33 +28,124 @@
     "Planificar compras en freeshop con margen real en la escala."
   ],
   "fields": [
-    { "id": "tipoOrigen", "label": "Vuelo de llegada", "type": "select", "default": "internacional", "options": [
-      {"value":"domestico","label":"Doméstico (dentro del mismo país)"},
-      {"value":"internacional","label":"Internacional"}
-    ] },
-    { "id": "tipoDestino", "label": "Vuelo de salida", "type": "select", "default": "internacional", "options": [
-      {"value":"domestico","label":"Doméstico"},
-      {"value":"internacional","label":"Internacional"}
-    ] },
-    { "id": "mismaTerminal", "label": "¿Misma terminal?", "type": "select", "default": "si", "options": [
-      {"value":"si","label":"Sí"},
-      {"value":"no","label":"No (cambio de terminal)"}
-    ] },
-    { "id": "cambioAerolinea", "label": "¿Cambio de aerolínea?", "type": "select", "default": "no", "options": [
-      {"value":"no","label":"No (misma aerolínea o alianza)"},
-      {"value":"si","label":"Sí (sin acuerdo de código compartido)"}
-    ] },
-    { "id": "aeropuertoGrande", "label": "¿Aeropuerto muy grande?", "type": "select", "default": "no", "options": [
-      {"value":"no","label":"No (tamaño normal)"},
-      {"value":"si","label":"Sí (JFK, LHR, CDG, GRU, FRA, AMS)"}
-    ] }
+    {
+      "id": "tipoOrigen",
+      "label": "Vuelo de llegada",
+      "type": "select",
+      "default": "internacional",
+      "options": [
+        {
+          "value": "domestico",
+          "label": "Doméstico (dentro del mismo país)"
+        },
+        {
+          "value": "internacional",
+          "label": "Internacional"
+        }
+      ]
+    },
+    {
+      "id": "tipoDestino",
+      "label": "Vuelo de salida",
+      "type": "select",
+      "default": "internacional",
+      "options": [
+        {
+          "value": "domestico",
+          "label": "Doméstico"
+        },
+        {
+          "value": "internacional",
+          "label": "Internacional"
+        }
+      ]
+    },
+    {
+      "id": "mismaTerminal",
+      "label": "¿Misma terminal?",
+      "type": "select",
+      "default": "si",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí"
+        },
+        {
+          "value": "no",
+          "label": "No (cambio de terminal)"
+        }
+      ]
+    },
+    {
+      "id": "cambioAerolinea",
+      "label": "¿Cambio de aerolínea?",
+      "type": "select",
+      "default": "no",
+      "options": [
+        {
+          "value": "no",
+          "label": "No (misma aerolínea o alianza)"
+        },
+        {
+          "value": "si",
+          "label": "Sí (sin acuerdo de código compartido)"
+        }
+      ]
+    },
+    {
+      "id": "aeropuertoGrande",
+      "label": "¿Aeropuerto muy grande?",
+      "type": "select",
+      "default": "no",
+      "options": [
+        {
+          "value": "no",
+          "label": "No (tamaño normal)"
+        },
+        {
+          "value": "si",
+          "label": "Sí (JFK, LHR, CDG, GRU, FRA, AMS)"
+        }
+      ]
+    }
   ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Tiempos mínimos IATA por tipo. Guía estable."
+  },
   "outputs": [
-    { "id": "tiempoFormato", "label": "Tiempo recomendado", "format": "text", "primary": true },
-    { "id": "minutosRecomendados", "label": "Minutos recomendados", "format": "number", "suffix": "min" },
-    { "id": "minutosMinimo", "label": "MCT legal mínimo", "format": "number", "suffix": "min" },
-    { "id": "riesgo", "label": "Nivel de riesgo", "format": "text" },
-    { "id": "resumen", "label": "Resumen", "format": "text" }
+    {
+      "id": "tiempoFormato",
+      "label": "Tiempo recomendado",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "minutosRecomendados",
+      "label": "Minutos recomendados",
+      "format": "number",
+      "suffix": "min"
+    },
+    {
+      "id": "minutosMinimo",
+      "label": "MCT legal mínimo",
+      "format": "number",
+      "suffix": "min"
+    },
+    {
+      "id": "riesgo",
+      "label": "Nivel de riesgo",
+      "format": "text"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen",
+      "format": "text"
+    }
   ],
   "example": {
     "title": "Ejemplo: conexión internacional → doméstico en JFK",
@@ -94,9 +196,21 @@
     }
   ],
   "sources": [
-    { "name": "IATA — Minimum Connecting Times", "url": "https://www.iata.org/en/publications/", "publisher": "IATA" },
-    { "name": "Wikipedia — Interlining", "url": "https://en.wikipedia.org/wiki/Interline_agreement", "publisher": "Wikipedia" },
-    { "name": "FAA — Passenger Information", "url": "https://www.faa.gov/", "publisher": "FAA" }
+    {
+      "name": "IATA — Minimum Connecting Times",
+      "url": "https://www.iata.org/en/publications/",
+      "publisher": "IATA"
+    },
+    {
+      "name": "Wikipedia — Interlining",
+      "url": "https://en.wikipedia.org/wiki/Interline_agreement",
+      "publisher": "Wikipedia"
+    },
+    {
+      "name": "FAA — Passenger Information",
+      "url": "https://www.faa.gov/",
+      "publisher": "FAA"
+    }
   ],
   "relatedSlugs": [
     "calculadora-jet-lag",

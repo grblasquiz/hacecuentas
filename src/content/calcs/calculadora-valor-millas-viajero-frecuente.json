@@ -6,7 +6,18 @@
   "category": "viajes",
   "icon": "Plane",
   "formulaId": "valor-millas-viajero-frecuente",
-  "seoKeywords": ["valor milla", "latam pass valor", "aerolineas plus millas", "smiles valor", "cuanto vale milla", "millas vs efectivo", "canje millas", "viajero frecuente", "mejor canje millas", "aadvantage valor"],
+  "seoKeywords": [
+    "valor milla",
+    "latam pass valor",
+    "aerolineas plus millas",
+    "smiles valor",
+    "cuanto vale milla",
+    "millas vs efectivo",
+    "canje millas",
+    "viajero frecuente",
+    "mejor canje millas",
+    "aadvantage valor"
+  ],
   "intro": "Las **millas de viajero frecuente** son una moneda virtual con un valor que **vos definís al canjearlas**. No tienen un precio fijo: una misma cantidad de millas LATAM Pass puede valerte US$ 200 en un canje malo o **US$ 2.000 en un canje premium** para un vuelo business transatlántico. La regla de oro: calculá siempre los **centavos de USD que obtenés por milla**. Esta calculadora toma la cantidad de millas que te piden, el precio del vuelo en efectivo y las tasas/impuestos que igual tenés que pagar, y te dice si tu canje está **por encima o por debajo del valor de mercado** de tu programa (LATAM Pass ~1.4¢, Smiles 1.5¢, Aerolíneas Plus 1.2¢). Si obtenés más valor que eso, canjeá; si menos, guardá las millas.",
   "keyTakeaway": "**Valor milla = (precio en efectivo − tasas) / millas requeridas × 100**. Si el resultado supera el valor promedio del programa (1.2¢ a 1.5¢ USD), **el canje es bueno**.",
   "useCases": [
@@ -17,27 +28,118 @@
     "Elegir entre canjear millas de LATAM Pass o de Smiles para un mismo vuelo."
   ],
   "fields": [
-    { "id": "programa", "label": "Programa de viajero frecuente", "type": "select", "default": "latam-pass", "options": [
-      {"value":"latam-pass","label":"LATAM Pass (1.4¢ valor promedio)"},
-      {"value":"aerolineas-plus","label":"Aerolíneas Plus (1.2¢)"},
-      {"value":"smiles","label":"Smiles / GOL (1.5¢)"},
-      {"value":"aadvantage","label":"AAdvantage / American (1.5¢)"},
-      {"value":"united","label":"United MileagePlus (1.3¢)"},
-      {"value":"miles-and-more","label":"Miles & More / Lufthansa (1.4¢)"},
-      {"value":"generico","label":"Otro / genérico (1.3¢)"}
-    ] },
-    { "id": "millas", "label": "Millas requeridas para el canje", "type": "number", "placeholder": "80000", "min": 1, "step": 1000 },
-    { "id": "valorVueloUsd", "label": "Precio del vuelo en efectivo (USD)", "type": "number", "suffix": "USD", "placeholder": "1200", "min": 1, "step": 1 },
-    { "id": "cotizacionUsd", "label": "Cotización USD (AR$)", "type": "number", "suffix": "AR$", "placeholder": "1200", "min": 1, "step": 1 }
+    {
+      "id": "programa",
+      "label": "Programa de viajero frecuente",
+      "type": "select",
+      "default": "latam-pass",
+      "options": [
+        {
+          "value": "latam-pass",
+          "label": "LATAM Pass (1.4¢ valor promedio)"
+        },
+        {
+          "value": "aerolineas-plus",
+          "label": "Aerolíneas Plus (1.2¢)"
+        },
+        {
+          "value": "smiles",
+          "label": "Smiles / GOL (1.5¢)"
+        },
+        {
+          "value": "aadvantage",
+          "label": "AAdvantage / American (1.5¢)"
+        },
+        {
+          "value": "united",
+          "label": "United MileagePlus (1.3¢)"
+        },
+        {
+          "value": "miles-and-more",
+          "label": "Miles & More / Lufthansa (1.4¢)"
+        },
+        {
+          "value": "generico",
+          "label": "Otro / genérico (1.3¢)"
+        }
+      ]
+    },
+    {
+      "id": "millas",
+      "label": "Millas requeridas para el canje",
+      "type": "number",
+      "placeholder": "80000",
+      "min": 1,
+      "step": 1000
+    },
+    {
+      "id": "valorVueloUsd",
+      "label": "Precio del vuelo en efectivo (USD)",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "1200",
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "cotizacionUsd",
+      "label": "Cotización USD (AR$)",
+      "type": "number",
+      "suffix": "AR$",
+      "placeholder": "1200",
+      "min": 1,
+      "step": 1
+    }
   ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-15",
+    "source": "Programas de millas (LATAM Pass, Smiles, etc.)",
+    "sourceUrl": "https://latampass.latamairlines.com/",
+    "updateType": "auto-llm",
+    "notes": "Valor por milla de programas de viajero frecuente. Revisión anual ante devaluaciones de millas."
+  },
   "outputs": [
-    { "id": "valorPorMillaUsd", "label": "Valor por milla (USD)", "format": "number", "primary": true, "prefix": "US$ " },
-    { "id": "valorPorMillaArs", "label": "Valor por milla (AR$)", "format": "number", "prefix": "AR$ " },
-    { "id": "valorTotalUsd", "label": "Valor total del canje (USD)", "format": "number", "prefix": "US$ " },
-    { "id": "valorTotalArs", "label": "Valor total (AR$)", "format": "number", "prefix": "AR$ " },
-    { "id": "valorBaseMillaCent", "label": "Valor promedio del programa (¢)", "format": "number" },
-    { "id": "esBuenCanje", "label": "Evaluación del canje", "format": "text" },
-    { "id": "resumen", "label": "Resumen", "format": "text" }
+    {
+      "id": "valorPorMillaUsd",
+      "label": "Valor por milla (USD)",
+      "format": "number",
+      "primary": true,
+      "prefix": "US$ "
+    },
+    {
+      "id": "valorPorMillaArs",
+      "label": "Valor por milla (AR$)",
+      "format": "number",
+      "prefix": "AR$ "
+    },
+    {
+      "id": "valorTotalUsd",
+      "label": "Valor total del canje (USD)",
+      "format": "number",
+      "prefix": "US$ "
+    },
+    {
+      "id": "valorTotalArs",
+      "label": "Valor total (AR$)",
+      "format": "number",
+      "prefix": "AR$ "
+    },
+    {
+      "id": "valorBaseMillaCent",
+      "label": "Valor promedio del programa (¢)",
+      "format": "number"
+    },
+    {
+      "id": "esBuenCanje",
+      "label": "Evaluación del canje",
+      "format": "text"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen",
+      "format": "text"
+    }
   ],
   "example": {
     "title": "Ejemplo: canjear 80.000 LATAM Pass para vuelo EZE-MAD",
@@ -87,9 +189,21 @@
     }
   ],
   "sources": [
-    { "name": "LATAM Pass — Reglamento", "url": "https://www.latam.com/es_ar/latam-pass/", "publisher": "LATAM Airlines" },
-    { "name": "Aerolíneas Plus", "url": "https://www.aerolineas.com.ar/aerolineasplus", "publisher": "Aerolíneas Argentinas" },
-    { "name": "The Points Guy — Valuations", "url": "https://thepointsguy.com/", "publisher": "The Points Guy" }
+    {
+      "name": "LATAM Pass — Reglamento",
+      "url": "https://www.latam.com/es_ar/latam-pass/",
+      "publisher": "LATAM Airlines"
+    },
+    {
+      "name": "Aerolíneas Plus",
+      "url": "https://www.aerolineas.com.ar/aerolineasplus",
+      "publisher": "Aerolíneas Argentinas"
+    },
+    {
+      "name": "The Points Guy — Valuations",
+      "url": "https://thepointsguy.com/",
+      "publisher": "The Points Guy"
+    }
   ],
   "relatedSlugs": [
     "calculadora-cambio-moneda",

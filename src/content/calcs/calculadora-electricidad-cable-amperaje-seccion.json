@@ -6,7 +6,18 @@
   "category": "construccion",
   "icon": "Cable",
   "formulaId": "electricidad-cable-amperaje",
-  "seoKeywords": ["seccion cable electrico", "cable 2 5 mm2 amperaje", "cable 4 mm2 cuantos amperes", "caida de tension calculo", "cable 10 mm2 amperes", "tabla secciones cable", "cable para aire acondicionado", "cable trifasico 380", "termica amperes cable", "cable cobre mm2"],
+  "seoKeywords": [
+    "seccion cable electrico",
+    "cable 2 5 mm2 amperaje",
+    "cable 4 mm2 cuantos amperes",
+    "caida de tension calculo",
+    "cable 10 mm2 amperes",
+    "tabla secciones cable",
+    "cable para aire acondicionado",
+    "cable trifasico 380",
+    "termica amperes cable",
+    "cable cobre mm2"
+  ],
   "intro": "Elegir la **sección correcta** (mm²) del cable eléctrico es **crítico para la seguridad** de la instalación: un cable **muy chico** para el amperaje que transporta **se calienta, funde el aislante y puede causar incendio**. La sección se define por **dos criterios**: **(1)** la **capacidad de corriente** del cable (cuántos amperes puede conducir sin calentarse) y **(2)** la **caída de tensión** admisible (máximo 3% en residencial, 5% en industrial). Esta calculadora evalúa ambos criterios y te devuelve la **sección comercial más pequeña** (1,5 | 2,5 | 4 | 6 | 10 | 16 | 25 | 35 mm²) que cumple **con margen de seguridad**. Además te sugiere la **térmica (llave automática) apropiada** y calcula la **caída real de tensión** en tu instalación. Válido para 220V monofásico (residencial) y 380V trifásico (industrial/grandes cargas). Basado en la **AEA 90364** (Asociación Electrotécnica Argentina) — reglamentación vigente en Argentina.",
   "keyTakeaway": "Para **residencial 220V**: **cable 1,5 mm² = 14 A (iluminación)**, **2,5 mm² = 21 A (tomas comunes)**, **4 mm² = 28 A (aire acondicionado)**, **6 mm² = 36 A (horno eléctrico)**. A **distancias > 20 m**: subir una sección. Caída de tensión máx: **3%**.",
   "useCases": [
@@ -17,21 +28,102 @@
     "Electricista matriculado armando **planos y memoria** de proyecto."
   ],
   "fields": [
-    { "id": "amperaje", "label": "Amperaje del equipo/circuito (A)", "type": "number", "placeholder": "20", "min": 1, "max": 400, "step": 0.1, "required": true, "help": "Si tenés el equipo, dividí watts por 220. Ej: 4.400 W / 220 = 20 A." },
-    { "id": "distancia", "label": "Distancia del cable (metros, un solo sentido)", "type": "number", "placeholder": "25", "min": 1, "max": 500, "step": 1, "required": true, "help": "De la térmica al equipo, solo ida (la calc duplica para monofásico)." },
-    { "id": "tension", "label": "Tensión", "type": "select", "default": "220", "options": [
-      {"value":"220","label":"220 V monofásico (residencial estándar)"},
-      {"value":"380","label":"380 V trifásico (industrial, grandes cargas)"}
-    ] },
-    { "id": "caidaMaxPct", "label": "Caída de tensión máxima permitida (%)", "type": "number", "default": 3, "min": 1, "max": 10, "step": 0.5, "suffix": "%", "help": "3% residencial (AEA), 5% industrial, 1% equipos sensibles." }
+    {
+      "id": "amperaje",
+      "label": "Amperaje del equipo/circuito (A)",
+      "type": "number",
+      "placeholder": "20",
+      "min": 1,
+      "max": 400,
+      "step": 0.1,
+      "required": true,
+      "help": "Si tenés el equipo, dividí watts por 220. Ej: 4.400 W / 220 = 20 A."
+    },
+    {
+      "id": "distancia",
+      "label": "Distancia del cable (metros, un solo sentido)",
+      "type": "number",
+      "placeholder": "25",
+      "min": 1,
+      "max": 500,
+      "step": 1,
+      "required": true,
+      "help": "De la térmica al equipo, solo ida (la calc duplica para monofásico)."
+    },
+    {
+      "id": "tension",
+      "label": "Tensión",
+      "type": "select",
+      "default": "220",
+      "options": [
+        {
+          "value": "220",
+          "label": "220 V monofásico (residencial estándar)"
+        },
+        {
+          "value": "380",
+          "label": "380 V trifásico (industrial, grandes cargas)"
+        }
+      ]
+    },
+    {
+      "id": "caidaMaxPct",
+      "label": "Caída de tensión máxima permitida (%)",
+      "type": "number",
+      "default": 3,
+      "min": 1,
+      "max": 10,
+      "step": 0.5,
+      "suffix": "%",
+      "help": "3% residencial (AEA), 5% industrial, 1% equipos sensibles."
+    }
   ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Sección por amperaje y distancia. AEA 90364 estable."
+  },
   "outputs": [
-    { "id": "seccionRecomendada", "label": "Sección de cable recomendada", "format": "number", "primary": true, "suffix": " mm²" },
-    { "id": "seccionCalculada", "label": "Sección mínima teórica", "format": "number", "suffix": " mm²" },
-    { "id": "caidaReal", "label": "Caída de tensión real", "format": "number", "suffix": "%" },
-    { "id": "caidaVolts", "label": "Caída de tensión en volts", "format": "number", "suffix": " V" },
-    { "id": "amperajeMaxCable", "label": "Capacidad del cable elegido", "format": "number", "suffix": " A" },
-    { "id": "termicaRecomendada", "label": "Térmica recomendada", "format": "number", "suffix": " A" }
+    {
+      "id": "seccionRecomendada",
+      "label": "Sección de cable recomendada",
+      "format": "number",
+      "primary": true,
+      "suffix": " mm²"
+    },
+    {
+      "id": "seccionCalculada",
+      "label": "Sección mínima teórica",
+      "format": "number",
+      "suffix": " mm²"
+    },
+    {
+      "id": "caidaReal",
+      "label": "Caída de tensión real",
+      "format": "number",
+      "suffix": "%"
+    },
+    {
+      "id": "caidaVolts",
+      "label": "Caída de tensión en volts",
+      "format": "number",
+      "suffix": " V"
+    },
+    {
+      "id": "amperajeMaxCable",
+      "label": "Capacidad del cable elegido",
+      "format": "number",
+      "suffix": " A"
+    },
+    {
+      "id": "termicaRecomendada",
+      "label": "Térmica recomendada",
+      "format": "number",
+      "suffix": " A"
+    }
   ],
   "example": {
     "title": "Ejemplo real: cable para un aire acondicionado de 3.000 frig (consumo ~1.200 W) a 25 m del tablero",
@@ -86,10 +178,26 @@
     }
   ],
   "sources": [
-    { "title": "AEA 90364 - Reglamentación para instalaciones eléctricas", "url": "https://www.aea.org.ar", "publisher": "Asociación Electrotécnica Argentina" },
-    { "title": "ENRE - Normas técnicas", "url": "https://www.enre.gov.ar", "publisher": "ENRE" },
-    { "title": "IRAM 2183 - Cables aislados con PVC", "url": "https://catalogo.iram.org.ar", "publisher": "IRAM" },
-    { "title": "Prysmian - Catálogo técnico cables", "url": "https://www.prysmian.com", "publisher": "Prysmian" }
+    {
+      "title": "AEA 90364 - Reglamentación para instalaciones eléctricas",
+      "url": "https://www.aea.org.ar",
+      "publisher": "Asociación Electrotécnica Argentina"
+    },
+    {
+      "title": "ENRE - Normas técnicas",
+      "url": "https://www.enre.gov.ar",
+      "publisher": "ENRE"
+    },
+    {
+      "title": "IRAM 2183 - Cables aislados con PVC",
+      "url": "https://catalogo.iram.org.ar",
+      "publisher": "IRAM"
+    },
+    {
+      "title": "Prysmian - Catálogo técnico cables",
+      "url": "https://www.prysmian.com",
+      "publisher": "Prysmian"
+    }
   ],
   "relatedSlugs": [
     "calculadora-consumo-electrico-kwh-factura-luz",
