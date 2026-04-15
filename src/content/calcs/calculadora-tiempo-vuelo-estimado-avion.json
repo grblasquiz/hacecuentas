@@ -1,0 +1,96 @@
+{
+  "slug": "calculadora-tiempo-vuelo-estimado-avion",
+  "title": "Calculadora de Tiempo de Vuelo Estimado — Duración según Km y Tipo de Avión | Hacé Cuentas",
+  "h1": "Duración estimada de un vuelo",
+  "description": "Calculá cuánto dura un vuelo según la distancia en km, tipo de avión (comercial, regional, low-cost) y viento de proa. Incluye taxeo y maniobras.",
+  "category": "viajes",
+  "icon": "Plane",
+  "formulaId": "tiempo-vuelo-estimado",
+  "seoKeywords": ["tiempo vuelo", "duracion vuelo", "cuanto dura vuelo", "km por hora avion", "velocidad crucero", "taxeo maniobras", "viento proa avion", "calcular duracion vuelo", "horas vuelo km", "estimador vuelo"],
+  "intro": "Cuando mirás un vuelo en una web de aerolínea ves una duración total que **no es km ÷ velocidad**. Hay **taxeo** (tiempo en pista antes de despegar), **ascenso y descenso**, **vientos de proa o de cola** que pueden sumar o restar hasta 1 hora en vuelos transatlánticos, y **tráfico aéreo** en terminales grandes. Esta calculadora te estima una duración realista partiendo de la **distancia en kilómetros** y el **tipo de avión** (comercial, regional, low-cost, privado). Sumale el viento de proa si lo conocés y vas a tener un número cercano al real. Sirve para dimensionar conexiones, para chequear si un vuelo cotizado tiene tiempos razonables, o para planificar salidas y llegadas.",
+  "keyTakeaway": "**Tiempo de vuelo ≈ (distancia / velocidad efectiva) + 30 minutos de taxeo y maniobras**. La velocidad de crucero típica de un comercial es **880 km/h**; un low-cost ronda 850; un regional 720 km/h.",
+  "useCases": [
+    "Estimar si llegás a una reunión 3 horas después de aterrizar.",
+    "Verificar si una conexión de 1h 30m es razonable o demasiado justa.",
+    "Comparar vuelo directo vs vuelo con escala (suma los tiempos).",
+    "Planificar jet lag y fase de descanso al llegar.",
+    "Saber cuándo conviene salir de casa para un vuelo temprano."
+  ],
+  "fields": [
+    { "id": "distanciaKm", "label": "Distancia del vuelo", "type": "number", "suffix": "km", "placeholder": "10000", "min": 50, "step": 1 },
+    { "id": "tipoAvion", "label": "Tipo de avión", "type": "select", "default": "comercial", "options": [
+      {"value":"comercial","label":"Comercial (Boeing 777, Airbus A330) — 880 km/h"},
+      {"value":"lowcost","label":"Low-cost (A320, 737) — 850 km/h"},
+      {"value":"regional","label":"Regional (E190, CRJ) — 720 km/h"},
+      {"value":"privado","label":"Privado (jet) — 780 km/h"},
+      {"value":"turbohelice","label":"Turbohélice (ATR, Dash) — 550 km/h"}
+    ] },
+    { "id": "vientoProa", "label": "Viento de proa (resta velocidad)", "type": "number", "suffix": "km/h", "placeholder": "0", "min": -300, "max": 300, "step": 1, "help": "Positivo si es viento en contra, negativo si es viento de cola" }
+  ],
+  "outputs": [
+    { "id": "tiempoFormato", "label": "Duración total estimada", "format": "text", "primary": true },
+    { "id": "tiempoHoras", "label": "Horas decimales", "format": "number", "suffix": "h" },
+    { "id": "velocidadCrucero", "label": "Velocidad de crucero", "format": "number", "suffix": "km/h" },
+    { "id": "tiempoTaxeo", "label": "Taxeo y maniobras", "format": "number", "suffix": "min" },
+    { "id": "resumen", "label": "Resumen", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo: Buenos Aires → Madrid en Boeing 777",
+    "steps": [
+      "**Distancia**: 10.044 km.",
+      "**Tipo de avión**: comercial (880 km/h).",
+      "**Viento de proa**: 30 km/h (típico en ruta este → oeste).",
+      "**Velocidad efectiva**: 880 − 30 = 850 km/h.",
+      "**Tiempo en aire**: 10.044 / 850 = **11.82 horas**.",
+      "**Más taxeo y maniobras**: 11.82 + 0.5 = **12.32 horas** ≈ **12h 19m**.",
+      "**Conclusión**: vuelo EZE-MAD = entre 12h y 13h según vientos."
+    ],
+    "result": "El vuelo dura aproximadamente **12h 19m**. En la dirección opuesta (MAD→EZE con vientos de cola) bajaría a ~11h 30m."
+  },
+  "explanation": "## Factores que afectan la duración\n\n### 1. Velocidad de crucero según tipo de avión\n\n| Avión | Velocidad crucero | Uso típico |\n|---|---|---|\n| Boeing 777 / A350 / A380 | 880-905 km/h | Larga distancia |\n| Boeing 737 / A320 / A321 | 830-870 km/h | Mediana distancia, low-cost |\n| Embraer E-Jet | 780-850 km/h | Regional |\n| ATR 72 | 500-550 km/h | Corta distancia turbohélice |\n| Cessna Citation / G650 | 780-900 km/h | Aviación privada |\n\n### 2. Taxeo y maniobras\n\nUn vuelo típico suma **25-45 minutos** entre:\n- **Pushback y taxeo al despegue**: 10-20 min.\n- **Ascenso hasta altitud de crucero**: 15-20 min.\n- **Descenso, aproximación y taxeo a gate**: 15-25 min.\n\nEsta calculadora usa un estimado fijo de **30 minutos**, razonable para un vuelo largo.\n\n### 3. Vientos de altura\n\nLos **chorros de viento** (jet streams) soplan de oeste a este a 200-300 km/h a 10.000 metros. Eso hace que:\n- **Vuelos hacia el este** (EZE → MAD) tengan **viento de cola**: ahorran 30-60 min.\n- **Vuelos hacia el oeste** (MAD → EZE) tengan **viento de proa**: suman 30-60 min.\n\nPor eso el mismo recorrido puede durar 11h 30m o 13h según la dirección.\n\n### 4. Ruta real vs distancia\n\nLa distancia **ortodrómica** (círculo máximo, la que calcula [Haversine](/calculadora-distancia-vuelo-2-ciudades)) es la ruta más corta, pero:\n- **Restricciones de espacio aéreo** pueden obligar a desvíos.\n- Los pilotos eligen **rutas con vientos favorables**, a veces más largas pero más rápidas.\n- Vuelos sobre **océanos** siguen corredores ETOPS por si hay emergencia.\n\n## Duración típica de rutas populares\n\n| Ruta | Distancia | Duración típica | Tipo |\n|---|---|---|---|\n| EZE → MAD | 10.044 km | 11h 30m – 12h 30m | Internacional |\n| EZE → MIA | 7.111 km | 9h – 9h 30m | Internacional |\n| EZE → SCL | 1.141 km | 2h | Regional |\n| EZE → GRU | 1.679 km | 2h 30m | Regional |\n| EZE → JFK | 8.525 km | 10h 30m – 11h | Internacional |\n| AEP → USH | 2.410 km | 3h 30m | Doméstico |\n| AEP → COR | 700 km | 1h 15m | Doméstico |\n\n## Errores comunes\n\n1. **Dividir km por velocidad y listo**: ignora taxeo (30 min) y vientos (±1h). Siempre sumá margen.\n2. **Usar velocidad de un avión cualquiera**: un turbohélice tarda 50% más que un jet. Mirá en la reserva qué avión opera el vuelo.\n3. **Olvidar cambios de zona horaria**: duración real (horas de vuelo) es lo que mostramos acá. La hora local de llegada puede ser muy distinta a la de salida.\n\n## Tiempo entre destinos — referencia rápida\n\n- Corta distancia (< 500 km): **30 min – 1h 30m** con taxeo.\n- Media (500 – 3.000 km): **1h 30m – 4h**.\n- Larga (3.000 – 8.000 km): **4h – 10h**.\n- Muy larga (> 8.000 km): **10h – 18h**. Vuelos trans-polares (Singapore → Newark) rozan las 19h.\n\n## Related\n\n- [Distancia entre ciudades (Haversine)](/calculadora-distancia-vuelo-2-ciudades) — km en línea recta.\n- [Tiempo mínimo de conexión en aeropuerto](/calculadora-tiempo-conexion-aeropuerto-internacional)\n- [Hora de llegada con zona horaria](/calculadora-horario-llegada-zona-horaria)\n- [Jet lag](/calculadora-jet-lag)",
+  "faq": [
+    {
+      "q": "¿Por qué el mismo vuelo dura distinto ida que vuelta?",
+      "a": "Por los **vientos de altura** (jet streams). Soplan de oeste a este a 200-300 km/h. Un Buenos Aires → Madrid tiene viento de cola y dura ~11h 30m. La vuelta Madrid → Buenos Aires tiene viento en contra y dura ~13h. Puede haber 1-2h de diferencia en vuelos transoceánicos."
+    },
+    {
+      "q": "¿Cuál es la velocidad real de un avión comercial?",
+      "a": "Los comerciales modernos (Boeing 777, Airbus A330/A350) vuelan a **Mach 0.82-0.85** que equivale a **880-905 km/h** a altitud de crucero (10.000-12.000 m). La velocidad respecto al aire (TAS) es fija; la velocidad respecto al suelo (groundspeed) varía con el viento."
+    },
+    {
+      "q": "¿Qué incluye el tiempo de 'taxeo y maniobras'?",
+      "a": "Incluye el **pushback** (empujar el avión hacia atrás del gate), **taxeo a pista** de despegue (5-15 min según aeropuerto), **espera en cabecera** (a veces 10-30 min en hubs), **ascenso a crucero** (15-20 min), **descenso y aproximación** al destino (15-25 min) y **taxeo final al gate** (5-10 min). Total típico: 30-50 min."
+    },
+    {
+      "q": "¿Cómo afecta el viento de proa al tiempo de vuelo?",
+      "a": "Un viento en contra de 50 km/h en un vuelo de 10.000 km suma **~40 minutos**. Un viento de cola de 50 km/h resta lo mismo. En vuelos transoceánicos, los **jet streams** (vientos de altura) pueden ser de 200-300 km/h y hacer variar la duración **hasta 2 horas** entre un día y otro."
+    },
+    {
+      "q": "¿Cuánto dura el vuelo más largo del mundo?",
+      "a": "El vuelo comercial más largo es **Singapore Airlines SQ23/24 entre Singapur (SIN) y Newark (EWR)** con unos **18h 40m** y 16.700 km. Le siguen Auckland → Doha (~18h), Perth → Londres (~17h) y Los Ángeles → Singapur (~17h 30m). Todos operados con **Airbus A350-900ULR** o Boeing 777-200LR."
+    },
+    {
+      "q": "¿Puedo usar esta calculadora para vuelos con escala?",
+      "a": "Sí, pero tenés que sumar manualmente los dos (o más) tramos y el **tiempo de conexión** (ver nuestra [calculadora de tiempo mínimo de conexión](/calculadora-tiempo-conexion-aeropuerto-internacional)). Ejemplo: EZE → SCL → MAD = 2h vuelo 1 + 2h conexión + 12h vuelo 2 = **16 horas** en total."
+    },
+    {
+      "q": "¿Por qué a veces los vuelos llegan antes del horario previsto?",
+      "a": "Las aerolíneas **añaden márgenes** en el horario publicado para mejorar su puntualidad reportada. Un vuelo de 11h puede figurar como 11h 45m. Si el día está con buen viento de cola y poco tráfico aéreo, se gana tiempo y terminás aterrizando 20-30 min antes de lo previsto. Por eso muchos vuelos llegan 'adelantados'."
+    },
+    {
+      "q": "¿Los vuelos privados son más rápidos?",
+      "a": "**No significativamente**. Un jet privado tipo **Gulfstream G650** vuela a Mach 0.85, igual que un Boeing 777. Pero **ahorran tiempo en tierra**: 10 min de check-in vs 2 horas en comerciales, taxeo directo, sin esperar maletas. Total: para un trayecto de 2h un privado te puede ahorrar 2-3 horas de 'experiencia de viaje'."
+    }
+  ],
+  "sources": [
+    { "name": "FAA — Flight planning", "url": "https://www.faa.gov/", "publisher": "Federal Aviation Administration" },
+    { "name": "Wikipedia — Velocidad de crucero", "url": "https://es.wikipedia.org/wiki/Velocidad_de_crucero", "publisher": "Wikipedia" },
+    { "name": "Flightradar24 — Longest flights", "url": "https://www.flightradar24.com/", "publisher": "Flightradar24" }
+  ],
+  "relatedSlugs": [
+    "calculadora-distancia-vuelo-2-ciudades",
+    "calculadora-jet-lag",
+    "calculadora-tiempo-conexion-aeropuerto-internacional",
+    "calculadora-horario-llegada-zona-horaria"
+  ]
+}

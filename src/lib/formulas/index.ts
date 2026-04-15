@@ -145,6 +145,102 @@ import { tazasGramos } from './tazas-gramos';
 import { multiplicarReceta } from './multiplicar-receta';
 import { tiempoCoccion } from './tiempo-coccion';
 
+// Batch 3 — Construcción (agente A)
+import { hierroConstruccion } from './hierro-construccion';
+import { arenaGrava } from './arena-grava';
+import { techosTejas } from './techos-tejas';
+import { escalerasPasos } from './escaleras-pasos';
+import { capacidadTanqueCisterna } from './capacidad-tanque-cisterna';
+import { pendienteTecho } from './pendiente-techo';
+import { calefactorWattsAmbiente } from './calefactor-watts-ambiente';
+import { aireAcondicionadoFrigorias } from './aire-acondicionado-frigorias';
+import { revoqueMortero } from './revoque-mortero';
+import { electricidadCableAmperaje } from './electricidad-cable-amperaje';
+
+// Batch 4 — Cocina + Mascotas (agente A)
+import { conversionMedidasCocina } from './conversion-medidas-cocina';
+import { levaduraFermentacion } from './levadura-fermentacion';
+import { temperaturaHornoConversion } from './temperatura-horno-conversion';
+import { arrozAguaProporcion } from './arroz-agua-proporcion';
+import { comidaPerroDiaria } from './comida-perro-diaria';
+import { comidaGatoDiaria } from './comida-gato-diaria';
+import { pesoIdealGato } from './peso-ideal-gato';
+import { vacunasPerroCalendario } from './vacunas-perro-calendario';
+import { aguaPerroGatoDiaria } from './agua-perro-gato-diaria';
+import { esperanzaVidaPerroRaza } from './esperanza-vida-perro-raza';
+
+// Batch 5 — Viajes (agente B)
+import { distanciaVueloHaversine } from './distancia-vuelo-haversine';
+import { tiempoVueloEstimado } from './tiempo-vuelo-estimado';
+import { tiempoConexionAeropuerto } from './tiempo-conexion-aeropuerto';
+import { valorMillasViajeroFrecuente } from './valor-millas-viajero-frecuente';
+import { conversionTemperaturaClima } from './conversion-temperatura-clima';
+import { costoMochileroPorPais } from './costo-mochilero-por-pais';
+import { diasMesVacacionesOptimo } from './dias-mes-vacaciones-optimo';
+import { kilometrosAutoViaje } from './kilometros-auto-viaje';
+import { descuentoVueloMillasVsCash } from './descuento-vuelo-millas-vs-cash';
+import { horarioLlegadaZonaHoraria } from './horario-llegada-zona-horaria';
+
+// Batch 6 — Deportes (agente B)
+import { zonasFrecuenciaCardiacaEntrenamiento } from './zonas-frecuencia-cardiaca-entrenamiento';
+import { caloriasNatacion } from './calorias-natacion';
+import { caloriasCiclismo } from './calorias-ciclismo';
+import { ftpWattsCiclismo } from './ftp-watts-ciclismo';
+import { planMaratonSemanas } from './plan-maraton-semanas';
+import { pressBancaRelativo } from './press-banca-relativo';
+import { squatDeadliftRelativo } from './squat-deadlift-relativo';
+import { velocidadNatacion100m } from './velocidad-natacion-100m';
+import { caloriasTenisPadel } from './calorias-tenis-padel';
+import { caloriasFutbol } from './calorias-futbol';
+
+// Batch 7 — Vida (agente C)
+import { conversionLitrosGalones } from './conversion-litros-galones';
+import { consumoAguaHogarMensual } from './consumo-agua-hogar-mensual';
+import { ahorroLedVsIncandescente } from './ahorro-led-vs-incandescente';
+import { anosLuzDistanciaConversion } from './anos-luz-distancia-conversion';
+import { antiguedadAutoAmortizacion } from './antiguedad-auto-amortizacion';
+import { cuotasCreditoMercado } from './cuotas-credito-mercado';
+import { edadJubilacionAnosAporte } from './edad-jubilacion-anos-aporte';
+import { gasNaturalConsumoM3 } from './gas-natural-consumo-m3';
+import { vidaUtilizadaPorcentaje } from './vida-utilizada-porcentaje';
+import { proporcionAureaPhi } from './proporcion-aurea-phi';
+
+// Batch 8 — Salud avanzada (agente C)
+import { glucemiaConversionMgDlMmolL } from './glucemia-conversion-mg-dl-mmol-l';
+import { saturacionOxigenoEvaluacion } from './saturacion-oxigeno-evaluacion';
+import { indiceTobilloBrazoItb } from './indice-tobillo-brazo-itb';
+import { framinghamRiesgoCardiovascular } from './framingham-riesgo-cardiovascular';
+import { escalaEvaDolor } from './escala-eva-dolor';
+import { anionGapElectrolitos } from './anion-gap-electrolitos';
+import { caloriasAmamantarExtra } from './calorias-amamantar-extra';
+import { indiceGlucemicoAlimentos } from './indice-glucemico-alimentos';
+import { dosisParacetamolPediatrico } from './dosis-paracetamol-pediatrico';
+import { scoreApgarRecienNacido } from './score-apgar-recien-nacido';
+
+// Batch 9 — Finanzas globales (agente D)
+import { regla72DuplicarDinero } from './regla-72-duplicar-dinero';
+import { roiInversion } from './roi-inversion';
+import { valorPresenteNetoVpn } from './valor-presente-neto-vpn';
+import { tasaAnualEquivalenteTea } from './tasa-anual-equivalente-tea';
+import { fondoEmergenciaMeses } from './fondo-emergencia-meses';
+import { fireRetiroTemprano } from './fire-retiro-temprano';
+import { dividendosYieldAnual } from './dividendos-yield-anual';
+import { costoOportunidadDecision } from './costo-oportunidad-decision';
+import { interesAcumuladoTarjeta } from './interes-acumulado-tarjeta';
+import { valorFuturoAporteMensual } from './valor-futuro-aporte-mensual';
+
+// Batch 10 — Negocios + Marketing (agente D)
+import { ltvCustomerLifetimeValue } from './ltv-customer-lifetime-value';
+import { cacPaybackMonths } from './cac-payback-months';
+import { grossMarginVsNet } from './gross-margin-vs-net';
+import { ebitdaEmpresa } from './ebitda-empresa';
+import { freelanceHourlyRate } from './freelance-hourly-rate';
+import { shareOfVoiceMarketing } from './share-of-voice-marketing';
+import { adFrequencyImpresiones } from './ad-frequency-impresiones';
+import { descuentoVolumenCantidad } from './descuento-volumen-cantidad';
+import { markupVsMargen } from './markup-vs-margen';
+import { valorEmpresaMultiploEbitda } from './valor-empresa-multiplo-ebitda';
+
 export const formulas = {
   // Finanzas
   'sueldo-ar': sueldoAR,
@@ -292,6 +388,102 @@ export const formulas = {
   'tazas-gramos': tazasGramos,
   'multiplicar-receta': multiplicarReceta,
   'tiempo-coccion': tiempoCoccion,
+
+  // Batch 3 — Construcción
+  'hierro-construccion': hierroConstruccion,
+  'arena-grava': arenaGrava,
+  'techos-tejas': techosTejas,
+  'escaleras-pasos': escalerasPasos,
+  'capacidad-tanque-cisterna': capacidadTanqueCisterna,
+  'pendiente-techo': pendienteTecho,
+  'calefactor-watts-ambiente': calefactorWattsAmbiente,
+  'aire-acondicionado-frigorias': aireAcondicionadoFrigorias,
+  'revoque-mortero': revoqueMortero,
+  'electricidad-cable-amperaje': electricidadCableAmperaje,
+
+  // Batch 4 — Cocina + Mascotas
+  'conversion-medidas-cocina': conversionMedidasCocina,
+  'levadura-fermentacion': levaduraFermentacion,
+  'temperatura-horno-conversion': temperaturaHornoConversion,
+  'arroz-agua-proporcion': arrozAguaProporcion,
+  'comida-perro-diaria': comidaPerroDiaria,
+  'comida-gato-diaria': comidaGatoDiaria,
+  'peso-ideal-gato': pesoIdealGato,
+  'vacunas-perro-calendario': vacunasPerroCalendario,
+  'agua-perro-gato-diaria': aguaPerroGatoDiaria,
+  'esperanza-vida-perro-raza': esperanzaVidaPerroRaza,
+
+  // Batch 5 — Viajes
+  'distancia-vuelo-haversine': distanciaVueloHaversine,
+  'tiempo-vuelo-estimado': tiempoVueloEstimado,
+  'tiempo-conexion-aeropuerto': tiempoConexionAeropuerto,
+  'valor-millas-viajero-frecuente': valorMillasViajeroFrecuente,
+  'conversion-temperatura-clima': conversionTemperaturaClima,
+  'costo-mochilero-por-pais': costoMochileroPorPais,
+  'dias-mes-vacaciones-optimo': diasMesVacacionesOptimo,
+  'kilometros-auto-viaje': kilometrosAutoViaje,
+  'descuento-vuelo-millas-vs-cash': descuentoVueloMillasVsCash,
+  'horario-llegada-zona-horaria': horarioLlegadaZonaHoraria,
+
+  // Batch 6 — Deportes
+  'zonas-frecuencia-cardiaca-entrenamiento': zonasFrecuenciaCardiacaEntrenamiento,
+  'calorias-natacion': caloriasNatacion,
+  'calorias-ciclismo': caloriasCiclismo,
+  'ftp-watts-ciclismo': ftpWattsCiclismo,
+  'plan-maraton-semanas': planMaratonSemanas,
+  'press-banca-relativo': pressBancaRelativo,
+  'squat-deadlift-relativo': squatDeadliftRelativo,
+  'velocidad-natacion-100m': velocidadNatacion100m,
+  'calorias-tenis-padel': caloriasTenisPadel,
+  'calorias-futbol': caloriasFutbol,
+
+  // Batch 7 — Vida
+  'conversion-litros-galones': conversionLitrosGalones,
+  'consumo-agua-hogar-mensual': consumoAguaHogarMensual,
+  'ahorro-led-vs-incandescente': ahorroLedVsIncandescente,
+  'anos-luz-distancia-conversion': anosLuzDistanciaConversion,
+  'antiguedad-auto-amortizacion': antiguedadAutoAmortizacion,
+  'cuotas-credito-mercado': cuotasCreditoMercado,
+  'edad-jubilacion-anos-aporte': edadJubilacionAnosAporte,
+  'gas-natural-consumo-m3': gasNaturalConsumoM3,
+  'vida-utilizada-porcentaje': vidaUtilizadaPorcentaje,
+  'proporcion-aurea-phi': proporcionAureaPhi,
+
+  // Batch 8 — Salud avanzada
+  'glucemia-conversion-mg-dl-mmol-l': glucemiaConversionMgDlMmolL,
+  'saturacion-oxigeno-evaluacion': saturacionOxigenoEvaluacion,
+  'indice-tobillo-brazo-itb': indiceTobilloBrazoItb,
+  'framingham-riesgo-cardiovascular': framinghamRiesgoCardiovascular,
+  'escala-eva-dolor': escalaEvaDolor,
+  'anion-gap-electrolitos': anionGapElectrolitos,
+  'calorias-amamantar-extra': caloriasAmamantarExtra,
+  'indice-glucemico-alimentos': indiceGlucemicoAlimentos,
+  'dosis-paracetamol-pediatrico': dosisParacetamolPediatrico,
+  'score-apgar-recien-nacido': scoreApgarRecienNacido,
+
+  // Batch 9 — Finanzas globales
+  'regla-72-duplicar-dinero': regla72DuplicarDinero,
+  'roi-inversion': roiInversion,
+  'valor-presente-neto-vpn': valorPresenteNetoVpn,
+  'tasa-anual-equivalente-tea': tasaAnualEquivalenteTea,
+  'fondo-emergencia-meses': fondoEmergenciaMeses,
+  'fire-retiro-temprano': fireRetiroTemprano,
+  'dividendos-yield-anual': dividendosYieldAnual,
+  'costo-oportunidad-decision': costoOportunidadDecision,
+  'interes-acumulado-tarjeta': interesAcumuladoTarjeta,
+  'valor-futuro-aporte-mensual': valorFuturoAporteMensual,
+
+  // Batch 10 — Negocios + Marketing
+  'ltv-customer-lifetime-value': ltvCustomerLifetimeValue,
+  'cac-payback-months': cacPaybackMonths,
+  'gross-margin-vs-net': grossMarginVsNet,
+  'ebitda-empresa': ebitdaEmpresa,
+  'freelance-hourly-rate': freelanceHourlyRate,
+  'share-of-voice-marketing': shareOfVoiceMarketing,
+  'ad-frequency-impresiones': adFrequencyImpresiones,
+  'descuento-volumen-cantidad': descuentoVolumenCantidad,
+  'markup-vs-margen': markupVsMargen,
+  'valor-empresa-multiplo-ebitda': valorEmpresaMultiploEbitda,
 };
 
 export type FormulaId = keyof typeof formulas;

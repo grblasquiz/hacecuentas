@@ -1,0 +1,96 @@
+{
+  "slug": "calculadora-conversion-temperatura-clima",
+  "title": "Conversor de Temperatura Celsius, Fahrenheit, Kelvin + Sensación Térmica | Hacé Cuentas",
+  "h1": "Conversor de temperatura y sensación térmica para viajes",
+  "description": "Convertí entre Celsius, Fahrenheit y Kelvin. Incluye sensación térmica por viento y por humedad, y recomendación de ropa para tu destino.",
+  "category": "viajes",
+  "icon": "Sun",
+  "formulaId": "conversion-temperatura-clima",
+  "seoKeywords": ["celsius a fahrenheit", "fahrenheit a celsius", "kelvin conversion", "sensacion termica", "wind chill", "indice de calor", "heat index", "temperatura clima", "que ropa llevar", "conversor temperatura"],
+  "intro": "Si te vas de viaje a **Miami en julio** (30°C / 86°F con 80% de humedad) o a **Islandia en invierno** (-5°C con viento de 40 km/h), saber la temperatura no alcanza — importa la **sensación térmica**. Esta calculadora convierte entre **Celsius, Fahrenheit y Kelvin** y además calcula las dos sensaciones térmicas oficiales: el **wind chill** (enfriamiento por viento, fórmula de Environment Canada) cuando hace frío, y el **heat index** (índice de calor, fórmula de la NWS de EE.UU.) cuando hace calor y humedad alta. Te devuelve una **recomendación de ropa** según la temperatura real y ambos factores. Útil para armar maleta, para interpretar un forecast en Fahrenheit, o para entender por qué 20°C en Londres (lluvia y viento) se siente más frío que 20°C en Mendoza (seco).",
+  "keyTakeaway": "**°C → °F**: `°F = °C × 9/5 + 32`. **°F → °C**: `°C = (°F − 32) × 5/9`. **°C → K**: `K = °C + 273.15`. La **sensación térmica** real combina temperatura + viento (frío) o temperatura + humedad (calor).",
+  "useCases": [
+    "Saber si los 75°F de Orlando son mucho calor o poco (son 24°C, agradable).",
+    "Armar maleta para un viaje a Islandia con temperatura real + wind chill.",
+    "Interpretar el forecast en Fahrenheit de una app americana.",
+    "Entender por qué hace 'tanto calor' con solo 32°C (índice de calor con humedad).",
+    "Convertir la temperatura del horno de una receta americana."
+  ],
+  "fields": [
+    { "id": "valor", "label": "Temperatura", "type": "number", "placeholder": "20", "step": 0.1 },
+    { "id": "unidadOrigen", "label": "Unidad de origen", "type": "select", "default": "celsius", "options": [
+      {"value":"celsius","label":"Celsius (°C)"},
+      {"value":"fahrenheit","label":"Fahrenheit (°F)"},
+      {"value":"kelvin","label":"Kelvin (K)"}
+    ] },
+    { "id": "vientoKmh", "label": "Velocidad del viento", "type": "number", "suffix": "km/h", "placeholder": "0", "min": 0, "max": 200, "step": 1 },
+    { "id": "humedad", "label": "Humedad relativa", "type": "number", "suffix": "%", "placeholder": "50", "min": 0, "max": 100, "step": 1 }
+  ],
+  "outputs": [
+    { "id": "celsius", "label": "Celsius", "format": "number", "primary": true, "suffix": "°C" },
+    { "id": "fahrenheit", "label": "Fahrenheit", "format": "number", "suffix": "°F" },
+    { "id": "kelvin", "label": "Kelvin", "format": "number", "suffix": "K" },
+    { "id": "sensacionTermica", "label": "Sensación térmica (wind chill)", "format": "number", "suffix": "°C" },
+    { "id": "indiceCalor", "label": "Índice de calor (heat index)", "format": "number", "suffix": "°C" },
+    { "id": "recomendacion", "label": "Recomendación de ropa", "format": "text" },
+    { "id": "resumen", "label": "Resumen", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo: Miami 86°F con 80% de humedad",
+    "steps": [
+      "**Valor**: 86°F.",
+      "**Conversión a Celsius**: `(86 − 32) × 5/9 = 30°C`.",
+      "**Conversión a Kelvin**: `30 + 273.15 = 303.15 K`.",
+      "**Humedad relativa**: 80%.",
+      "**Heat Index (índice de calor)**: con fórmula NWS, 30°C + 80% humedad ≈ **38°C** de sensación.",
+      "**Recomendación**: algodón, ropa ligera, protector solar, mucha hidratación."
+    ],
+    "result": "86°F = **30°C reales** pero se sienten **38°C** por la humedad. Los días de Miami en verano requieren hidratación constante y evitar el sol entre 11 y 16h."
+  },
+  "explanation": "## Fórmulas de conversión\n\n### Celsius ↔ Fahrenheit\n\n```\n°F = °C × (9/5) + 32\n°C = (°F − 32) × (5/9)\n```\n\n**Mnemotecnia rápida** para °C → °F aproximado: duplicá y sumá 30. Ej: 20°C → 20×2 + 30 = 70°F (real: 68°F). Sirve para estimaciones.\n\n### Celsius ↔ Kelvin\n\n```\nK = °C + 273.15\n°C = K − 273.15\n```\n\n**0 K = cero absoluto** = -273.15°C. La menor temperatura físicamente posible.\n\n### Puntos de referencia\n\n| Evento | °C | °F | K |\n|---|---|---|---|\n| Cero absoluto | -273.15 | -459.67 | 0 |\n| Congelación del agua | 0 | 32 | 273.15 |\n| Temperatura corporal | 37 | 98.6 | 310.15 |\n| Ebullición del agua | 100 | 212 | 373.15 |\n\n## Sensación térmica por viento (wind chill)\n\nEl **wind chill** es cuánto frío sentís cuando hay viento. Fórmula oficial de **Environment Canada y NWS** (2001):\n\n```\nTWC = 13.12 + 0.6215×T − 11.37×V^0.16 + 0.3965×T×V^0.16\n```\n\nDonde T es temperatura en °C y V en km/h. Solo aplica si **T ≤ 10°C** y **V ≥ 4.8 km/h**.\n\n### Tabla de wind chill\n\n| T real (°C) | Viento 10 km/h | 20 km/h | 40 km/h | 60 km/h |\n|---|---|---|---|---|\n| 0 | -1 | -3 | -5 | -7 |\n| -10 | -13 | -16 | -19 | -22 |\n| -20 | -24 | -28 | -32 | -36 |\n| -30 | -36 | -41 | -46 | -50 |\n\n**Riesgo de congelación**: -27°C wind chill = la piel expuesta se puede congelar en 10-30 minutos.\n\n## Índice de calor (heat index)\n\nCuánto calor sentís cuando hay humedad. Fórmula de **Rothfusz (NWS)**:\n\n```\nHI = −42.379 + 2.04901523×T + 10.14333127×RH \n     − 0.22475541×T×RH − 6.83783e-3×T² − 5.481717e-2×RH² \n     + 1.22874e-3×T²×RH + 8.5282e-4×T×RH² − 1.99e-6×T²×RH²\n```\n\nDonde T está en °F y RH en %. Aplica si **T ≥ 27°C (80°F)**.\n\n### Tabla heat index\n\n| T real (°C) | 40% humedad | 60% | 80% | 100% |\n|---|---|---|---|---|\n| 27 | 27 | 28 | 29 | 30 |\n| 30 | 30 | 33 | 38 | 43 |\n| 32 | 33 | 38 | 46 | 54 |\n| 35 | 37 | 46 | 57 | 71 |\n| 38 | 43 | 55 | 70 | 89 |\n\n**Peligro extremo** >54°C HI: riesgo inmediato de golpe de calor.\n\n## Recomendación de ropa según temperatura\n\n| Temperatura real | Qué llevar |\n|---|---|\n| < -10°C | Abrigo técnico, gorro, guantes, bufanda, cubrir cara. Calzado aislante. |\n| -10 a 0°C | Campera de pluma, guantes, gorro. Capas térmicas. |\n| 0 a 10°C | Campera + polar, pantalón largo, zapatos cerrados. |\n| 10 a 20°C | Pulóver liviano, jeans, zapatilla. |\n| 20 a 28°C | Remera, pantalón liviano. Campera fina por las noches. |\n| 28 a 35°C | Algodón, shorts/vestidos, protector solar, gorra. |\n| > 35°C | Ropa blanca/clara, mínima exposición al sol, hidratación. |\n\n## Ciudades turísticas — temperaturas promedio\n\n| Ciudad | Enero (invierno sur) | Julio (verano sur) |\n|---|---|---|\n| Buenos Aires | 24°C | 11°C |\n| Río de Janeiro | 27°C | 22°C |\n| Miami | 20°C | 29°C |\n| Madrid | 6°C | 26°C |\n| Nueva York | 0°C | 25°C |\n| Londres | 5°C | 19°C |\n| Tokio | 6°C | 27°C |\n| Cancún | 23°C | 28°C |\n| Bariloche | 15°C | 2°C |\n| Ushuaia | 10°C | 1°C |\n\n## Related\n\n- [Jet lag](/calculadora-jet-lag)\n- [Equipaje de vuelo](/calculadora-equipaje-vuelo)\n- [Presupuesto de viaje](/calculadora-presupuesto-viaje)\n- [Hora de llegada con zona horaria](/calculadora-horario-llegada-zona-horaria)",
+  "faq": [
+    {
+      "q": "¿Cómo convierto 100°F a Celsius rápido mentalmente?",
+      "a": "Regla rápida: **restá 32 y dividí por 2** aproximadamente. `(100 − 32) / 2 = 34°C` (valor exacto: 37.78°C, error de 10%). Para mayor precisión: `(100 − 32) × 5/9 = 37.78°C`. 100°F es la temperatura típica de un día de calor fuerte en Miami o Texas."
+    },
+    {
+      "q": "¿Por qué 20°C se siente distinto según el lugar?",
+      "a": "Por la **humedad**, el **viento** y el **sol directo**. 20°C en Mendoza (35% humedad, sol pleno) se siente cálido y agradable. 20°C en Londres (85% humedad, nublado, viento 20 km/h) se siente fresco y hasta frío. La **sensación térmica** combina temperatura con estos factores para darte una medida más realista."
+    },
+    {
+      "q": "¿A partir de qué wind chill hay que preocuparse?",
+      "a": "**-27°C wind chill**: la piel expuesta se puede congelar en **10-30 minutos** (hipotermia y daño tisular). **-40°C**: congelación en **5-10 min**. **-55°C** (sensación): peligro extremo, evitar salir. Ciudades como Moscú, Harbin, Winnipeg o Ushuaia en invierno pueden superar -30°C wind chill fácilmente."
+    },
+    {
+      "q": "¿Qué es más peligroso: calor seco o húmedo?",
+      "a": "**El calor húmedo** es mucho más peligroso. El sudor no se evapora bien con alta humedad, así que el cuerpo no se enfría. Un 35°C con 80% humedad (heat index 57°C) es peligro extremo; un 40°C seco con 20% humedad (HI 39°C) es más tolerable. Por eso Miami/Bangkok parecen 'agobiar' y Phoenix/Mendoza son tolerables aunque el termómetro marque más."
+    },
+    {
+      "q": "¿Cuál es la temperatura del cuerpo en Fahrenheit?",
+      "a": "**98.6°F = 37°C**. Rango normal: 97.0 a 99.5°F (36.1 a 37.5°C). Con más de **100.4°F (38°C)** ya hay fiebre. Importante si visitás un médico en EE.UU. y te dan un forecast de temperatura corporal en Fahrenheit."
+    },
+    {
+      "q": "¿Para qué sirve la escala Kelvin?",
+      "a": "Para **ciencia**: física, termodinámica, química. Empieza en **0 K = cero absoluto** (-273.15°C), la menor temperatura posible donde cesa todo movimiento molecular. Es una escala absoluta, lo que simplifica ecuaciones como la ley de los gases ideales (PV = nRT). En la vida diaria no se usa."
+    },
+    {
+      "q": "¿Qué ropa llevar a una ciudad con -20°C wind chill?",
+      "a": "Regla de oro: **capas**. Capa 1: térmica (lana merino o polipropileno). Capa 2: polar o fleece. Capa 3: campera de pluma impermeable con capucha. **Gorro que cubra orejas**, **guantes** (mejor si son 2 pares, uno fino + uno grueso), **bufanda/buff**, **calzado impermeable con aislante**. Evitar algodón (absorbe humedad). Nunca dejar piel expuesta más de 10 min."
+    },
+    {
+      "q": "¿Cuál es la menor temperatura registrada en la Tierra?",
+      "a": "**-89.2°C** en la estación Vostok (Antártida), 21 de julio de 1983. Record absoluto. Lugares habitados: **-67.7°C** en Oymyakon (Siberia, Rusia). Los cuerpos humanos no sobreviven sin protección extrema más de minutos a esas temperaturas. El cero absoluto teórico es **-273.15°C**, inalcanzable experimentalmente."
+    }
+  ],
+  "sources": [
+    { "name": "Environment Canada — Wind Chill", "url": "https://www.canada.ca/en/environment-climate-change/services/weather-health/wind-chill-cold-weather/calculation.html", "publisher": "Environment Canada" },
+    { "name": "NOAA / NWS — Heat Index", "url": "https://www.weather.gov/ama/heatindex", "publisher": "National Weather Service" },
+    { "name": "Wikipedia — Conversión de temperatura", "url": "https://es.wikipedia.org/wiki/Conversi%C3%B3n_de_unidades_de_temperatura", "publisher": "Wikipedia" }
+  ],
+  "relatedSlugs": [
+    "calculadora-jet-lag",
+    "calculadora-equipaje-vuelo",
+    "calculadora-presupuesto-viaje",
+    "calculadora-horario-llegada-zona-horaria"
+  ]
+}

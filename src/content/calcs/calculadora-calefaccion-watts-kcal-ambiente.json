@@ -1,0 +1,115 @@
+{
+  "slug": "calculadora-calefaccion-watts-kcal-ambiente",
+  "title": "Calculadora de Calefacción 2026 — Watts y kcal/h por Ambiente | Hacé Cuentas",
+  "h1": "¿Cuántos watts / kcal/h necesito para calefaccionar mi ambiente?",
+  "description": "Calculá la potencia necesaria (W, kcal/h, BTU/h) para calefaccionar un ambiente según m³, aislación y zona. Incluye calefactores tiro balanceado.",
+  "category": "construccion",
+  "icon": "Flame",
+  "formulaId": "calefactor-watts-ambiente",
+  "seoKeywords": ["calculadora calefaccion ambiente", "watts por m2 calefaccion", "kcal hora ambiente", "tiro balanceado kcal", "calefactor electrico watts", "calefaccion dormitorio", "calefaccion living ambiente", "radiador que potencia", "piso radiante calculo", "caldera ambiente"],
+  "intro": "Saber **cuánta potencia calefactora** (en **watts**, **kcal/h** o **BTU/h**) necesitás para un ambiente es fundamental para **no comprar un equipo insuficiente** (frío en invierno) ni **sobredimensionado** (consumo inútil). La regla base en Argentina es **50 kcal/h por m³** en ambiente de aislación media de zona centro (Buenos Aires, Córdoba, Rosario) — pero se ajusta por **aislación del ambiente** (buena / media / mala), **zona climática** (Patagonia 45 kcal/m³ más que CABA 40), y **tipo de ambiente** (los **baños pierden más calor** por humedad +15%; las **cocinas ganan calor** del horno −15%). Esta calculadora te devuelve la **potencia en las tres unidades** (kcal/h, watts, BTU/h), la **cantidad de calefactores de tiro balanceado** (modelos comerciales de 2000, 2500, 3000, 5000 kcal/h) y una **recomendación** del tipo de equipo ideal (tiro balanceado, caloventor, split frío/calor, caldera + radiadores).",
+  "keyTakeaway": "**Regla base**: **50 kcal/h × m³** (ambiente centro, aislación media) = **58 W por m³**. Un **dormitorio de 3×4 m × 2,6 m = 31 m³ → 1.550 kcal/h** (un calefactor de 2000 TB). Aislación mala: +30%. Patagonia: +20%.",
+  "useCases": [
+    "Vas a comprar un **calefactor tiro balanceado** y no sabés qué potencia pedir.",
+    "Elegís entre **caloventor eléctrico** (consumo alto) vs **split calor** (más eficiente).",
+    "Sos arquitecto y calculás la **potencia de caldera + radiadores** para una vivienda.",
+    "Querés saber por qué tu **calefactor actual no alcanza** (tal vez es chico).",
+    "Instalás **piso radiante** y necesitás los watts/m² por zona."
+  ],
+  "fields": [
+    { "id": "largo", "label": "Largo del ambiente (m)", "type": "number", "placeholder": "4", "min": 1, "step": 0.1, "required": true },
+    { "id": "ancho", "label": "Ancho del ambiente (m)", "type": "number", "placeholder": "3", "min": 1, "step": 0.1, "required": true },
+    { "id": "altoTecho", "label": "Alto de techo (m)", "type": "number", "default": 2.6, "min": 2, "max": 5, "step": 0.1, "help": "Residencial estándar: 2,60-2,80 m" },
+    { "id": "aislacion", "label": "Aislación del ambiente", "type": "select", "default": "media", "options": [
+      {"value":"buena","label":"Buena (doble vidrio, pared 18 cm, techo aislado)"},
+      {"value":"media","label":"Media (vivienda estándar con ladrillo común)"},
+      {"value":"mala","label":"Mala (muchos vidrios, techo sin aislante, ático frío)"}
+    ] },
+    { "id": "zona", "label": "Zona climática", "type": "select", "default": "centro", "options": [
+      {"value":"norte","label":"Norte (Salta, Jujuy, Formosa) — inviernos leves"},
+      {"value":"centro","label":"Centro (CABA, Córdoba, Santa Fe, Mendoza)"},
+      {"value":"sur","label":"Sur (Bahía Blanca, Patagonia, Comodoro) — inviernos duros"}
+    ] },
+    { "id": "tipoAmbiente", "label": "Tipo de ambiente", "type": "select", "default": "living", "options": [
+      {"value":"dormitorio","label":"Dormitorio"},
+      {"value":"living","label":"Living / comedor"},
+      {"value":"cocina","label":"Cocina (menor factor — gana calor del horno)"},
+      {"value":"bano","label":"Baño (mayor factor — pierde por humedad)"},
+      {"value":"oficina","label":"Oficina / estudio"}
+    ] }
+  ],
+  "outputs": [
+    { "id": "kcalHora", "label": "Potencia (kcal/h)", "format": "number", "primary": true, "suffix": " kcal/h" },
+    { "id": "watts", "label": "Potencia (W)", "format": "number", "suffix": " W" },
+    { "id": "btuH", "label": "Potencia (BTU/h)", "format": "number", "suffix": " BTU/h" },
+    { "id": "calefactorTiroBalanceado", "label": "Equivalente en calefactores TB 2.500 kcal", "format": "number" },
+    { "id": "m3", "label": "Volumen del ambiente", "format": "number", "suffix": " m³" },
+    { "id": "factorAplicado", "label": "Factor aplicado (kcal/h por m³)", "format": "number" },
+    { "id": "recomendacion", "label": "Recomendación", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo real: living 4×5 m × 2,6 m, aislación media, zona centro (CABA)",
+    "steps": [
+      "**Dimensiones**: 4 × 5 = 20 m² × 2,6 m alto = **52 m³**.",
+      "**Factor zona centro, aislación media**: **50 kcal/h × m³**.",
+      "**Ajuste living**: sin modificación (factor 1,0).",
+      "**Cálculo**: 52 × 50 = **2.600 kcal/h**.",
+      "**En watts**: 2.600 × 1,163 = **3.024 W**.",
+      "**En BTU/h**: 2.600 × 3,968 = **10.316 BTU/h**.",
+      "**Tiro balanceado 2.500 kcal**: necesitás **1 unidad** (2.500 ≈ 2.600 es aceptable).",
+      "**Alternativa eléctrica**: panel de 3.000 W o split frío/calor 3.500 frig."
+    ],
+    "result": "Necesitás **~2.600 kcal/h (3.000 W)**. Soluciones: **1 tiro balanceado de 3.000 kcal**, **split calor 3.500 frig**, o **caloventor de 3.000 W** (consumo alto). Para gas natural, el TB es el más económico de operación."
+  },
+  "explanation": "## Fórmula\n\n```\nPotencia (kcal/h) = m³_ambiente × factor (kcal/h por m³)\nm³               = largo × ancho × alto_techo\n\nConversiones:\n1 kcal/h = 1,163 W = 3,968 BTU/h\n1 W      = 0,86 kcal/h = 3,412 BTU/h\n1 BTU/h  = 0,252 kcal/h = 0,293 W\n```\n\n## Factor kcal/h por m³ según zona y aislación\n\n| Aislación | Norte | Centro | Sur |\n|---|---|---|---|\n| **Buena** | 35 | 40 | 45 |\n| **Media** | 45 | **50** | 55 |\n| **Mala** | 55 | 60 | 70 |\n\n> **Zona norte**: Salta, Jujuy, Chaco, Formosa, norte Santa Fe. **Centro**: CABA, Córdoba, Mendoza, San Luis, Santa Fe, Entre Ríos. **Sur**: Bahía Blanca, La Pampa, Neuquén, Río Negro, Chubut, Santa Cruz.\n\n## Factor por tipo de ambiente\n\n| Ambiente | Factor |\n|---|---|\n| Dormitorio | ×1,0 |\n| Living / comedor | ×1,0 |\n| Oficina / estudio | ×1,0 |\n| **Baño** (humedad, ventilación) | **×1,15** |\n| Cocina (gana calor del horno) | ×0,85 |\n| Galería cerrada | ×1,1 |\n| Ático / buhardilla | ×1,3 |\n\n## Tipos de calefactores y consumo\n\n### Tiro balanceado (gas natural)\n\n- **Potencias comerciales**: 2.000, 2.500, 3.000, 3.500, 5.000 kcal/h.\n- **Consumo gas**: ~0,30 m³ por 1.000 kcal/h.\n- **Eficiencia**: 85-90% (tiro balanceado estándar), 92-95% (condensación).\n- **Precio operación (gas natural 2026)**: $100-150/hora funcionando (TB 2.500 kcal).\n\n### Caloventor / panel eléctrico\n\n- **Potencia**: 500 - 3.000 W típicos.\n- **Eficiencia**: 100% (toda la energía eléctrica se convierte en calor).\n- **Consumo**: 1 W = 1 W. Costo: $120/kWh x hora de uso.\n- **Precio operación (2026)**: $360/hora (panel 3.000 W) — MUY caro.\n\n### Split frío/calor (bomba de calor)\n\n- **COP 3-4** (por cada 1 W eléctrico, entrega 3-4 W de calor).\n- **Consumo real**: 3.500 W frigoríficos → 1.000 W eléctricos reales.\n- **Eficiencia**: **300-400% aparente**.\n- **Precio operación**: $120/hora (split 3.500 frig en calor).\n- ⭐ La **opción más económica en electricidad**.\n\n### Caldera + radiadores\n\n- **Potencia caldera**: 15.000 - 30.000 kcal/h (residencial).\n- **Distribución**: radiadores dimensionados por ambiente (dormitorio 800-1.200 kcal; living 2.500-4.000 kcal).\n- **Eficiencia**: 88-95%.\n- **Precio operación**: $80-120/hora con condensación a gas.\n- Inversión alta pero **confort superior** (calor uniforme, silencio).\n\n### Piso radiante\n\n- **Potencia**: 80-120 W/m² (piso radiante eléctrico); 60-90 W/m² (por agua).\n- **Confort**: máximo (calor desde el piso).\n- **Inversión**: alta (obra nueva o remodelación).\n\n## Comparación económica por hora de funcionamiento (2026)\n\n| Sistema | Potencia | Consumo | $/hora |\n|---|---|---|---|\n| Caloventor eléctrico | 2.000 W | 2 kWh | $240 |\n| Panel eléctrico | 3.000 W | 3 kWh | $360 |\n| Tiro balanceado TB | 2.500 kcal/h | 0,8 m³ gas | $120 |\n| Split frío/calor (inverter) | 3.500 frig | 1 kWh | $120 |\n| Caldera condensación | 20.000 kcal/h | 2 m³ gas | $300 |\n\n## Cuántos calefactores por casa típica\n\n### Casa 70 m² (2 dorm + living + cocina + baño) en zona centro\n\n- Dormitorio 1: 12 m² × 2,6 = 31 m³ → 1.500 kcal → **TB 2.000**.\n- Dormitorio 2: 10 m² × 2,6 = 26 m³ → 1.300 kcal → **TB 2.000**.\n- Living: 20 m² × 2,6 = 52 m³ → 2.600 kcal → **TB 3.000**.\n- Cocina: 8 m² × 2,6 = 21 m³ × 0,85 = 890 kcal → **TB 2.000 compartido con baño**.\n- Baño: 4 m² × 2,6 = 10 m³ × 1,15 = 600 kcal → **opcional toallero eléctrico**.\n\n**Total**: **4 TB** (2 dorm + 1 living + 1 cocina-baño) o **1 caldera de 15.000 kcal + 4 radiadores**.\n\n## Relación frigorías / kcal para splits\n\n- **1 frigoría = 1 kcal** (las 'frig' se usan para frío, las 'kcal' para calor pero son la misma unidad).\n- Un **split 3.500 frig** tiene **3.500 kcal/h de calor** en modo calefacción.\n- Diferencia vs frío: los splits suelen tener **-10%** de potencia en calor vs frío.\n\n## Tips para calcular bien\n\n1. **Medí el volumen, no el área**. El aire se calienta, y el aire ocupa volumen. Un techo de 3 m requiere 15% más potencia que uno de 2,6 m.\n2. **Considerá aberturas**: dormitorio con gran ventanal tiene pérdidas extra. Subir a 'mala' aislación.\n3. **Cielorraso aislado con lana**: reduce pérdida hasta 40%. Pasá a 'buena' aislación.\n4. **Orientación**: ambientes al sur reciben menos sol invernal, requieren más potencia.\n5. **Ambientes conectados**: si el living y la cocina están unidos (sin puerta), calculá como **un solo ambiente**.\n\n## Calculadoras relacionadas\n\n- [Aire acondicionado frigorías](/calculadora-aire-acondicionado-frigorias-ambiente) — lo mismo pero para enfriar.\n- [Consumo eléctrico kWh](/calculadora-consumo-electrico-kwh-factura-luz) — estimar costo del calefactor eléctrico.\n- [Sección de cable por amperaje](/calculadora-electricidad-cable-amperaje-seccion) — si instalás panel eléctrico grande.\n- [Ladrillos por m²](/calculadora-ladrillos-por-m2-construccion) — paredes 18 cm mejoran aislación.",
+  "faq": [
+    {
+      "q": "¿Cuántas kcal/h por m² necesito para calefaccionar?",
+      "a": "Regla base Argentina centro: **50 kcal/h × m³** (no m²). Para ambiente con **techo 2,60 m**: 50 × 2,6 = **130 kcal/h por m²**. Ejemplo: dormitorio de 12 m² → 12 × 130 = **1.560 kcal/h**. Ajustá según aislación (buena −20%, mala +30%) y zona (Patagonia +20%)."
+    },
+    {
+      "q": "¿Cuántos watts para un dormitorio?",
+      "a": "Un **dormitorio estándar de 3×4 m × 2,6 m (31 m³)** en zona centro, aislación media, requiere: **1.550 kcal/h = 1.800 W = 6.160 BTU/h**. Soluciones: 1 TB de 2.000 kcal, panel eléctrico de 2.000 W (consumo caro), o split 2.250 frig (eficiente). Un **radiador eléctrico de aceite de 1.500 W** suele ser suficiente."
+    },
+    {
+      "q": "¿Cuánto kcal/h tiene un calefactor tiro balanceado?",
+      "a": "Modelos comerciales en Argentina: **2.000 kcal/h** (dormitorio chico), **2.500 kcal/h** (dorm. mediano, el más vendido), **3.000 kcal/h** (living chico/comedor), **3.500 kcal/h** (living estándar), **5.000 kcal/h** (living grande o 2 ambientes unidos). Marcas: Orbis, Eskabe, Peabody, Longvie, Coppens."
+    },
+    {
+      "q": "¿Qué es más barato: tiro balanceado a gas o split calor?",
+      "a": "**Split frío/calor inverter** (COP 3-4) iguala al **tiro balanceado a gas** en costo operativo: ambos rondan $100-130/hora en 2026. **Diferencia**: el split tiene ventaja en aires vivos (enfría en verano y calienta en invierno, 1 equipo), y **no requiere conexión de gas**. **Tiro balanceado** es ligeramente más barato de **instalación** y **no depende de electricidad** (útil en cortes)."
+    },
+    {
+      "q": "¿Los caloventores eléctricos son eficientes?",
+      "a": "Son **100% eficientes en convertir electricidad en calor** (ley de conservación de energía), pero **la electricidad es cara**. Un caloventor de 2.000 W consume $240/hora en 2026 (electricidad ~$120/kWh). Por el mismo calor, **un split inverter** en modo calor cuesta **$80-100/hora**. Usá caloventor solo en **usos breves** (baño antes de ducharse) o en emergencia."
+    },
+    {
+      "q": "¿Cómo paso de kcal/h a watts?",
+      "a": "**1 kcal/h = 1,163 W**. Ejemplos: 1.000 kcal/h = 1.163 W. 2.500 kcal/h = 2.908 W. 5.000 kcal/h = 5.815 W. Inversa: **1 W = 0,86 kcal/h**. Un **panel eléctrico de 2.000 W** entrega 2.000 × 0,86 = **1.720 kcal/h**."
+    },
+    {
+      "q": "¿Qué zona climática soy?",
+      "a": "**Norte** (IRAM 11603 zona I-II-III): Jujuy, Salta, Formosa, Chaco, Corrientes, Misiones, Tucumán, norte Santa Fe. **Centro** (zona IV): Buenos Aires, CABA, Córdoba, Santa Fe, Entre Ríos, San Juan, Mendoza, San Luis. **Sur** (zona V-VI): Bahía Blanca, La Pampa, Neuquén, Río Negro, Chubut, Santa Cruz, Tierra del Fuego."
+    },
+    {
+      "q": "¿Cuánto consume un calefactor por hora?",
+      "a": "**TB 2.500 kcal/h a gas natural**: ~0,8 m³/h ≈ **$120/hora** (gas $150/m³ en 2026). **Caloventor 2.000 W eléctrico**: 2 kWh ≈ **$240/hora**. **Split 3.500 frig en modo calor**: ~1 kWh ≈ **$120/hora**. **Caldera condensación 20.000 kcal**: 2 m³/h ≈ **$300/hora** (calienta toda la casa). Valores orientativos con energía 2026."
+    },
+    {
+      "q": "¿Sirve poner 2 calefactores chicos en vez de 1 grande?",
+      "a": "**Depende**. Ventajas de 2 chicos: **mejor distribución** del calor, redundancia si falla uno. **Desventajas**: mayor costo de instalación de gas/eléctrico, más mantenimiento. **Recomendación**: 1 calefactor de potencia justa si el ambiente es **simple**, 2 calefactores en **ambientes grandes en L** o con **zonas frías lejos de la fuente**."
+    }
+  ],
+  "sources": [
+    { "title": "IRAM 11603 - Zonificación bioambiental de la República Argentina", "url": "https://catalogo.iram.org.ar", "publisher": "IRAM" },
+    { "title": "ENARGAS - Información técnica para usuarios", "url": "https://www.enargas.gov.ar", "publisher": "ENARGAS" },
+    { "title": "Secretaría de Energía - Eficiencia en calefacción", "url": "https://www.argentina.gob.ar/energia", "publisher": "Ministerio de Energía" },
+    { "title": "Orbis - Manual técnico calefactores", "url": "https://www.orbis.com.ar", "publisher": "Orbis" }
+  ],
+  "relatedSlugs": [
+    "calculadora-aire-acondicionado-frigorias-ambiente",
+    "calculadora-consumo-electrico-kwh-factura-luz",
+    "calculadora-electricidad-cable-amperaje-seccion",
+    "calculadora-ladrillos-por-m2-construccion"
+  ]
+}

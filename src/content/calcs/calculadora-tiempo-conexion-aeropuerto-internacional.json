@@ -1,0 +1,107 @@
+{
+  "slug": "calculadora-tiempo-conexion-aeropuerto-internacional",
+  "title": "Calculadora de Tiempo Mínimo de Conexión en Aeropuertos | Hacé Cuentas",
+  "h1": "Tiempo mínimo de conexión (MCT) en aeropuertos",
+  "description": "Calculá cuánto tiempo de conexión necesitás entre vuelos según tipo (doméstico/internacional), cambio de terminal y aerolínea. Evitá perder el vuelo.",
+  "category": "viajes",
+  "icon": "Plane",
+  "formulaId": "tiempo-conexion-aeropuerto",
+  "seoKeywords": ["tiempo minimo conexion", "mct aeropuerto", "cuanto tiempo entre vuelos", "conexion internacional", "cambio terminal", "escala aeropuerto", "iata mct", "conexion riesgosa", "calculadora escala", "tiempo entre vuelos"],
+  "intro": "Cuando comprás un vuelo con escala, el sistema de la aerolínea aplica una **Minimum Connecting Time (MCT)** que es el tiempo mínimo legal entre el aterrizaje del primer vuelo y el despegue del segundo. El problema: ese MCT es el **mínimo legal**, no el recomendado. Si vas justo y hay demoras, migraciones lentas, cambio de terminal o retirar equipaje, **perdés el vuelo**. Esta calculadora combina los tiempos típicos que recomienda la IATA y las aerolíneas para distintas combinaciones: **doméstico → doméstico**, **internacional → internacional**, cambios de aerolínea, cambios de terminal y si el aeropuerto es grande (JFK, LHR, CDG, GRU) o chico. Usala antes de comprar el boleto o cuando te están ofreciendo una conexión que parece corta.",
+  "keyTakeaway": "**Tiempo mínimo de conexión típico**: doméstico→doméstico 45-60 min, internacional→internacional 75-90 min, internacional→doméstico 90-120 min. **Sumale 30 min si cambiás de terminal** y 15 más si cambiás de aerolínea sin convenio.",
+  "useCases": [
+    "Decidir si acepto una conexión de 1 hora en EZE entre un internacional y uno doméstico.",
+    "Ver si una escala de 2h en Frankfurt cambiando de aerolínea es suficiente.",
+    "Comprar tranquilo un vuelo con escala en LHR (aeropuerto grande y complejo).",
+    "Decidir si conviene elegir una conexión más larga por $100 menos.",
+    "Planificar compras en freeshop con margen real en la escala."
+  ],
+  "fields": [
+    { "id": "tipoOrigen", "label": "Vuelo de llegada", "type": "select", "default": "internacional", "options": [
+      {"value":"domestico","label":"Doméstico (dentro del mismo país)"},
+      {"value":"internacional","label":"Internacional"}
+    ] },
+    { "id": "tipoDestino", "label": "Vuelo de salida", "type": "select", "default": "internacional", "options": [
+      {"value":"domestico","label":"Doméstico"},
+      {"value":"internacional","label":"Internacional"}
+    ] },
+    { "id": "mismaTerminal", "label": "¿Misma terminal?", "type": "select", "default": "si", "options": [
+      {"value":"si","label":"Sí"},
+      {"value":"no","label":"No (cambio de terminal)"}
+    ] },
+    { "id": "cambioAerolinea", "label": "¿Cambio de aerolínea?", "type": "select", "default": "no", "options": [
+      {"value":"no","label":"No (misma aerolínea o alianza)"},
+      {"value":"si","label":"Sí (sin acuerdo de código compartido)"}
+    ] },
+    { "id": "aeropuertoGrande", "label": "¿Aeropuerto muy grande?", "type": "select", "default": "no", "options": [
+      {"value":"no","label":"No (tamaño normal)"},
+      {"value":"si","label":"Sí (JFK, LHR, CDG, GRU, FRA, AMS)"}
+    ] }
+  ],
+  "outputs": [
+    { "id": "tiempoFormato", "label": "Tiempo recomendado", "format": "text", "primary": true },
+    { "id": "minutosRecomendados", "label": "Minutos recomendados", "format": "number", "suffix": "min" },
+    { "id": "minutosMinimo", "label": "MCT legal mínimo", "format": "number", "suffix": "min" },
+    { "id": "riesgo", "label": "Nivel de riesgo", "format": "text" },
+    { "id": "resumen", "label": "Resumen", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo: conexión internacional → doméstico en JFK",
+    "steps": [
+      "**Llegada**: vuelo EZE → JFK (internacional).",
+      "**Salida**: vuelo JFK → LAX (doméstico dentro de EE.UU.).",
+      "**Combinación**: internacional → doméstico = **90 min base**.",
+      "**Cambio de terminal**: T4 → T8, sumar **+30 min**.",
+      "**Misma aerolínea (American)**: +0 min.",
+      "**Aeropuerto grande (JFK)**: +30 min.",
+      "**Total recomendado**: 90 + 30 + 30 = **150 min** = 2h 30m."
+    ],
+    "result": "Para esta conexión necesitás **al menos 2h 30m**. El MCT legal sería 120 min, pero con **migraciones de EE.UU.** (puede tardar 1h 30m), cambio de terminal y equipaje, 2h 30m es lo **seguro**."
+  },
+  "explanation": "## Qué es MCT y por qué importa\n\nEl **Minimum Connecting Time (MCT)** lo publica cada aeropuerto y la IATA lo centraliza. Es el **tiempo mínimo legal** entre el horario previsto de llegada (ETA) del vuelo 1 y el horario de salida (ETD) del vuelo 2 para que el pasaje sea legal.\n\n**Ojo**: el MCT es el mínimo teórico. Si el vuelo 1 llega en horario exacto y no hay demoras, hacés migraciones rápido, no perdés equipaje y el vuelo 2 está en la puerta vecina... podés llegar. En la realidad, **1 de cada 5 conexiones con MCT exacto se pierden**.\n\n## Tiempo de conexión recomendado por combinación\n\n| Tipo 1 → Tipo 2 | MCT legal típico | Recomendado |\n|---|---|---|\n| Doméstico → Doméstico | 30-45 min | **1h** |\n| Doméstico → Internacional | 45-60 min | **1h 30m** |\n| Internacional → Doméstico | 60-90 min | **2h** |\n| Internacional → Internacional | 60-90 min | **1h 30m – 2h** |\n\nSumale:\n- **+30 min** si cambiás de terminal.\n- **+15 min** si cambiás de aerolínea sin acuerdo (tenés que re-despachar equipaje, hacer check-in de nuevo).\n- **+30 min** si es un mega-aeropuerto (JFK, LHR T5↔T3, CDG, GRU, FRA, AMS).\n- **+45 min** si el destino final requiere retirar y re-despachar equipaje (ej. primera entrada a USA por migraciones).\n\n## Aeropuertos especialmente riesgosos\n\n| Aeropuerto | Por qué |\n|---|---|\n| **JFK (Nueva York)** | 6 terminales, sin airside connection entre varias; migraciones lentas en T4 |\n| **LHR (Londres)** | 5 terminales, algunas solo conectadas por bus/tren |\n| **CDG (París)** | 3 terminales + sub-terminales; tramos largos |\n| **FRA (Frankfurt)** | Hub gigante; conexiones Schengen ↔ no-Schengen |\n| **GRU (São Paulo)** | 3 terminales distantes, migraciones frecuentemente lentas |\n| **ORD (Chicago)** | Clima impredecible, alta probabilidad de demoras |\n| **MEX (Ciudad de México)** | T1 y T2 separadas; aerotrén desaparece ocasionalmente |\n| **EZE (Buenos Aires)** | Terminal única pero migraciones lentas en pico |\n\n## Aeropuertos cómodos para conexión\n\n- **Singapore Changi (SIN)**: terminales conectadas, sistema súper eficiente.\n- **Doha (DOH)**: todo en una terminal, conexión rápida.\n- **Estambul (IST)**: terminal gigante, todo junto.\n- **Schiphol (AMS)**: única terminal con todos los gates conectados.\n\n## Qué hacer si la conexión es ajustada\n\n1. **Elegí asiento adelante** en el primer vuelo (bajás primero).\n2. **Solo equipaje de mano** si es posible (sin esperar cinta).\n3. **Check-in online** del segundo vuelo con pase de embarque digital.\n4. **Avisá en el primer vuelo** al personal de cabina; a veces llaman al gate.\n5. **Si son misma aerolínea o alianza**, el sistema te re-protege en el próximo vuelo gratis si perdés la conexión.\n\n## Qué pasa si perdés la conexión\n\n- **Si el boleto es un único PNR** (reserva única): la aerolínea **te reubica sin costo** en el siguiente vuelo.\n- **Si son dos boletos separados**: **perdés el segundo vuelo sin reembolso**. Por eso conviene comprar todo junto.\n- Seguros de viaje premium cubren \"conexión perdida\" por cancelación o demora del vuelo 1.\n\n## Related\n\n- [Calculadora de jet lag](/calculadora-jet-lag)\n- [Hora de llegada con zona horaria](/calculadora-horario-llegada-zona-horaria)\n- [Distancia entre ciudades](/calculadora-distancia-vuelo-2-ciudades)\n- [Tiempo de vuelo estimado](/calculadora-tiempo-vuelo-estimado-avion)",
+  "faq": [
+    {
+      "q": "¿Qué pasa si tengo dos boletos separados y pierdo la conexión?",
+      "a": "**Mala noticia**: la aerolínea del segundo boleto no tiene ninguna obligación legal. Te podés quedar sin el tramo y sin reembolso. Por eso **siempre comprá la conexión como un único PNR** (reserva con los dos tramos juntos) — así si el vuelo 1 se demora la aerolínea te reubica sin costo."
+    },
+    {
+      "q": "¿Qué es el MCT que usa la aerolínea?",
+      "a": "El **Minimum Connecting Time** es el tiempo mínimo publicado por cada aeropuerto en la base de datos IATA. Las aerolíneas usan este MCT como filtro para **no venderte una conexión imposible**. Si ves 45 min en una conexión internacional → internacional, es porque el MCT del aeropuerto para ese tipo es de 45 min. Aún así, puede ser arriesgado."
+    },
+    {
+      "q": "¿Tengo que retirar el equipaje en la escala?",
+      "a": "**Depende**. Si es la misma aerolínea o alianza y el equipaje fue *through-checked* (etiquetado hasta destino final), no. Excepciones frecuentes: **primer ingreso a EE.UU.** (siempre retirás, hacés migraciones y re-despachás), **conexión entre dos boletos separados** (siempre retirás), o **cambio de aerolínea sin acuerdo**. Consultá al despachar el equipaje."
+    },
+    {
+      "q": "¿Cuánto tardan las migraciones internacionales?",
+      "a": "Muy variable. **EE.UU.** (JFK, MIA, LAX): 30-90 min en horas pico; con **Global Entry** 5-10 min. **Europa Schengen** (MAD, FRA, CDG): 10-30 min. **Argentina (EZE)**: 15-45 min. **Reino Unido (LHR)**: 15-60 min. Para armar margen de conexión, asumí **60 min de migraciones** donde apliquen."
+    },
+    {
+      "q": "¿Cambio de aerolínea suma tiempo de conexión?",
+      "a": "Sí, **al menos 15 min**. Si no hay acuerdo de código compartido entre las dos aerolíneas, el equipaje se retira en la cinta y se vuelve a despachar en el mostrador de la segunda, haciendo check-in de nuevo. Con aerolíneas en misma alianza (Star Alliance, SkyTeam, oneworld) suele haber *through-check* de equipaje y el proceso es más rápido."
+    },
+    {
+      "q": "¿Cuál es la conexión más riesgosa en el mundo?",
+      "a": "**JFK T4 → T1** y **LHR T5 → T3** están entre las peores: requieren salir del aeropuerto airside, tomar shuttle bus o tren, y volver a hacer seguridad. Tiempo mínimo realista: **2h 30m**. Para JFK + inmigración USA desde internacional, **sumá 1h más**."
+    },
+    {
+      "q": "¿Conviene comprar un boleto con conexión corta por ser más barato?",
+      "a": "Solo si es **mismo PNR** (una reserva, no dos boletos). Si el vuelo 1 se demora, la aerolínea te reubica sin costo en el próximo vuelo hasta destino final. Si son **dos PNR separados**, el ahorro no compensa el riesgo de perder el segundo tramo sin derecho a reembolso."
+    },
+    {
+      "q": "¿Qué es 'hidden city ticketing'?",
+      "a": "Una práctica donde comprás un boleto **con escala** pero te bajás en la escala porque te sale más barato. Ejemplo: A → B → C más barato que A → B directo. **Las aerolíneas lo prohíben explícitamente** en sus contratos y pueden cancelar el vuelo de vuelta, cerrar tu cuenta de viajero frecuente y hasta demandarte. Riesgoso, aunque algunos lo usan."
+    }
+  ],
+  "sources": [
+    { "name": "IATA — Minimum Connecting Times", "url": "https://www.iata.org/en/publications/", "publisher": "IATA" },
+    { "name": "Wikipedia — Interlining", "url": "https://en.wikipedia.org/wiki/Interline_agreement", "publisher": "Wikipedia" },
+    { "name": "FAA — Passenger Information", "url": "https://www.faa.gov/", "publisher": "FAA" }
+  ],
+  "relatedSlugs": [
+    "calculadora-jet-lag",
+    "calculadora-distancia-vuelo-2-ciudades",
+    "calculadora-tiempo-vuelo-estimado-avion",
+    "calculadora-equipaje-vuelo"
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "slug": "calculadora-kilometros-auto-viaje-vs-avion-bus",
+  "title": "Calculadora de Viaje en Auto vs Avión vs Bus — Costo Total por Kilómetro | Hacé Cuentas",
+  "h1": "Costo de viajar en auto, avión o bus",
+  "description": "Compará cuánto te sale ir en auto, avión o bus un viaje de X km. Incluye combustible, peajes y precio por persona. Cuál es la opción más barata.",
+  "category": "viajes",
+  "icon": "Car",
+  "formulaId": "kilometros-auto-viaje",
+  "seoKeywords": ["costo viaje auto", "auto vs avion", "cuanto cuesta viaje auto", "nafta viaje larga distancia", "peajes argentina", "viaje en bus", "costo km auto", "viaje familia auto", "comparar transportes viaje", "auto vs bus"],
+  "intro": "Cuando armás un viaje de media distancia (Buenos Aires → Bariloche, Mendoza → Córdoba, etc.), la pregunta clave es **¿auto, avión o bus?**. La respuesta depende de **cuántos viajan, cuántos días vas, el precio del combustible vs el vuelo** y el **valor de tu tiempo**. Esta calculadora compara las 3 opciones en un solo lugar: calcula el costo total del viaje en auto (nafta + peajes), el costo total del vuelo y el costo total del bus para la cantidad de pasajeros que quieras. Te dice cuál es la **opción más económica** y te muestra el **costo por persona** para que puedas decidir. Tip: viajar en auto suele ser más barato con **3 o más pasajeros**, y los viajes largos en avión suelen ganar si solo viajás con 1-2 personas.",
+  "keyTakeaway": "**Costo auto = (km × 2 si ida y vuelta) × (consumo L/100km) × (precio litro) / 100 + peajes**. Con **3+ pasajeros casi siempre gana el auto**. Con **1-2 pasajeros para distancias > 1.000 km, suele ganar el avión**.",
+  "useCases": [
+    "Decidir cómo ir a Mar del Plata con tu familia (4 pasajeros).",
+    "Comparar auto vs bus para ir a Mendoza solo.",
+    "Calcular cuánto ahorro yendo a Bariloche con amigos en auto vs vuelo.",
+    "Planificar el costo total de un viaje de trabajo en auto de empresa.",
+    "Saber si conviene alquilar auto o volar + alquilar allá."
+  ],
+  "fields": [
+    { "id": "distanciaKm", "label": "Distancia por tramo", "type": "number", "suffix": "km", "placeholder": "1400", "min": 10, "step": 10 },
+    { "id": "consumoLitros100km", "label": "Consumo del auto", "type": "number", "suffix": "L/100km", "placeholder": "8", "min": 3, "max": 25, "step": 0.1 },
+    { "id": "precioLitroNafta", "label": "Precio del litro", "type": "number", "suffix": "AR$", "placeholder": "1400", "min": 1, "step": 1 },
+    { "id": "peajesTotal", "label": "Peajes totales (por tramo)", "type": "number", "suffix": "AR$", "placeholder": "30000", "min": 0, "step": 100 },
+    { "id": "precioVueloUsd", "label": "Precio del vuelo por persona", "type": "number", "suffix": "USD", "placeholder": "120", "min": 0, "step": 1, "help": "Ida y vuelta si aplica. 0 para no considerar." },
+    { "id": "precioBusUsd", "label": "Precio del bus por persona", "type": "number", "suffix": "USD", "placeholder": "80", "min": 0, "step": 1, "help": "Ida y vuelta si aplica. 0 para no considerar." },
+    { "id": "cotizacionUsd", "label": "Cotización USD/ARS", "type": "number", "suffix": "AR$", "placeholder": "1200", "min": 1, "step": 1 },
+    { "id": "pasajeros", "label": "Pasajeros", "type": "number", "placeholder": "4", "min": 1, "max": 9, "step": 1 },
+    { "id": "idaVuelta", "label": "Ida y vuelta", "type": "select", "default": "si", "options": [
+      {"value":"si","label":"Sí (multiplica km y peajes por 2)"},
+      {"value":"no","label":"No (solo ida)"}
+    ] }
+  ],
+  "outputs": [
+    { "id": "costoTotalAutoArs", "label": "Costo total en auto", "format": "number", "primary": true, "prefix": "AR$ " },
+    { "id": "costoPorPersonaArs", "label": "Por persona en auto", "format": "number", "prefix": "AR$ " },
+    { "id": "litrosTotales", "label": "Litros de nafta", "format": "number", "suffix": "L" },
+    { "id": "costoNaftaArs", "label": "Costo solo nafta", "format": "number", "prefix": "AR$ " },
+    { "id": "costoVueloArs", "label": "Costo vuelo total", "format": "number", "prefix": "AR$ " },
+    { "id": "costoBusArs", "label": "Costo bus total", "format": "number", "prefix": "AR$ " },
+    { "id": "mejorOpcion", "label": "Opción más barata", "format": "text" },
+    { "id": "resumen", "label": "Resumen", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo: Buenos Aires → Bariloche en familia (4 personas)",
+    "steps": [
+      "**Distancia por tramo**: 1.600 km. **Ida y vuelta**: 3.200 km totales.",
+      "**Consumo auto**: 8 L/100km. **Precio nafta**: AR$ 1.400/L.",
+      "**Peajes**: AR$ 40.000 ida y vuelta.",
+      "**Nafta total**: (3.200 / 100) × 8 × 1.400 = **AR$ 358.400**.",
+      "**Costo total auto**: 358.400 + 40.000 = **AR$ 398.400** (AR$ 99.600 por persona).",
+      "**Vuelo ida y vuelta**: US$ 180 × 4 = US$ 720 × 1.200 AR$/USD = **AR$ 864.000**.",
+      "**Bus ida y vuelta**: US$ 100 × 4 = US$ 400 × 1.200 = **AR$ 480.000**."
+    ],
+    "result": "Para 4 personas, el **auto gana claramente** (~AR$ 100k por persona) contra AR$ 216k en avión. Además llevás equipaje ilimitado. Pero sumale 20 horas de manejo por tramo."
+  },
+  "explanation": "## Cuándo conviene cada opción\n\n### Auto\n**Ventajas**: flexibilidad de horarios, equipaje ilimitado, paradas libres en ruta, costo bajo con 3+ pasajeros.\n**Desventajas**: cansancio, tiempo largo, desgaste del auto, riesgo de ruta, combustible.\n**Conviene**: 3+ pasajeros, distancias < 1.500 km, quieren parar en lugares intermedios.\n\n### Avión\n**Ventajas**: rápido, cómodo, menos cansancio.\n**Desventajas**: equipaje limitado, traslados aeropuerto, horarios fijos, precio alto con muchos pasajeros.\n**Conviene**: 1-2 pasajeros, distancias > 1.000 km, pocos días disponibles.\n\n### Bus\n**Ventajas**: barato, sin cansancio de manejar, nocturnos ahorran 1 noche de hotel.\n**Desventajas**: lento, horarios fijos, comodidad variable según categoría.\n**Conviene**: solo/pareja, presupuesto ajustado, distancias cortas-medias.\n\n## Punto de equilibrio auto vs avión\n\nUsando valores promedio Argentina 2026:\n- **Nafta**: AR$ 1.400/L.\n- **Consumo**: 8 L/100km.\n- **Costo por km en auto**: ~AR$ 112 + peajes.\n- **Vuelo doméstico promedio**: AR$ 150.000 por persona ida y vuelta.\n\n**Para 2 pasajeros**: auto gana si el viaje es < 1.500 km. Vuelo gana si > 1.500 km.\n**Para 4 pasajeros**: auto gana casi siempre, salvo distancias muy largas (>2.500 km).\n\n## Consumo promedio de autos (L/100km)\n\n| Tipo de auto | Ciudad | Ruta |\n|---|---|---|\n| Auto chico (Fiat Cronos, VW Polo) | 7-9 | 5-7 |\n| Auto mediano (VW Vento, Toyota Corolla) | 8-10 | 6-8 |\n| SUV chica (Peugeot 2008, VW T-Cross) | 9-11 | 7-9 |\n| SUV grande (Toyota SW4, Jeep Cherokee) | 11-14 | 8-10 |\n| Pickup (Hilux, Amarok) | 10-13 | 8-10 |\n| Auto eléctrico | 15-20 kWh | 12-18 kWh |\n\n## Peajes típicos en rutas argentinas (2026)\n\n| Ruta | Peajes aprox (ida) |\n|---|---|\n| BA → Mar del Plata (Autovía 2) | AR$ 8.000-12.000 |\n| BA → Córdoba | AR$ 15.000-20.000 |\n| BA → Rosario | AR$ 6.000-9.000 |\n| BA → Bariloche | AR$ 18.000-25.000 |\n| BA → Mendoza | AR$ 20.000-28.000 |\n| BA → Iguazú | AR$ 25.000-35.000 |\n| BA → Salta | AR$ 28.000-35.000 |\n| BA → Ushuaia | AR$ 40.000+ (+ ferry) |\n\n## Otros costos a considerar (no entran en la calculadora)\n\n1. **Desgaste del auto**: regla informal = **AR$ 50-80 por km extra** de mantenimiento futuro (gomas, aceites, frenos).\n2. **Hotel durante viaje**: tramos de >1.200 km requieren 1 noche en el camino.\n3. **Comidas en ruta**: AR$ 10.000-15.000 por persona/día.\n4. **Estacionamiento** en destino (puede ser AR$ 3.000-8.000/día en hoteles).\n5. **Alquiler de auto en destino** si vas en avión.\n\n## Cálculo de tiempo\n\n```\ntiempo auto = distancia / velocidad promedio (80-90 km/h en ruta)\n```\n\nBA → Mendoza: 1.050 km / 85 = 12 horas de manejo (+ paradas).\nBA → Bariloche: 1.600 km / 85 = ~19 horas (normalmente se parte en 2 días).\n\n**Vuelo equivalente**: 2h + 2h traslados = 4h total. Ganan horas pero perdés flexibilidad.\n\n## Related\n\n- [Calculadora de combustible de viaje](/calculadora-viaje-combustible)\n- [Presupuesto de viaje](/calculadora-presupuesto-viaje)\n- [Dividir gastos de viaje](/calculadora-viaje-dividir)\n- [Distancia en vuelo entre ciudades](/calculadora-distancia-vuelo-2-ciudades)",
+  "faq": [
+    {
+      "q": "¿A partir de qué distancia conviene el avión sobre el auto?",
+      "a": "Depende de **cuántos pasajeros**. Para **1-2 personas**, vuelo gana a partir de **~1.000 km** (EZE-MDZ o EZE-BRC en vuelo doméstico). Para **4 personas**, auto gana casi siempre hasta **~2.000 km**. Después de 2.500 km el cansancio hace inviable el auto incluso con 4 pasajeros. Buenos Aires-Ushuaia (3.000+ km) solo tiene sentido por avión salvo que el viaje sea el fin en sí."
+    },
+    {
+      "q": "¿Cuánto gasta realmente mi auto en ruta?",
+      "a": "Mejor que el fabricante es medirlo: llenar tanque al 100%, manejar 300+ km en ruta, rellenar hasta el mismo nivel, dividir litros por km/100. Valor típico en **Argentina 2026**: auto chico 5-7 L/100km en ruta, SUV 8-10, pickup 10-12. Aire acondicionado encendido suma 0.5-1 L/100km. Velocidades >120 km/h suman mucho más."
+    },
+    {
+      "q": "¿Y si tengo auto híbrido o eléctrico?",
+      "a": "**Híbrido** (Toyota Corolla Cross HV, Prius): 4-5 L/100km en ruta, casi la mitad de un nafta normal. **Eléctrico** (Tesla, BYD): calcular costo por kWh (~AR$ 150/kWh con carga domiciliaria, AR$ 400+ en cargador público). Un eléctrico consume 15-20 kWh/100km. **Peligro en Argentina**: **faltan cargadores rápidos** en rutas largas, investigá antes el itinerario de carga."
+    },
+    {
+      "q": "¿Cómo calculo el consumo en subidas y bajadas?",
+      "a": "Una ruta con mucha montaña (como BA-Bariloche o BA-Salta) aumenta el consumo **20-30%** vs ruta plana. Si tu auto consume 8 L/100 en llano, asumí **10 L/100 en montaña**. El viento en contra fuerte también suma 1-2 L/100km. En invierno, con **neumáticos fríos y aire acondicionado con calefacción**, sumá 0.3-0.5 L/100."
+    },
+    {
+      "q": "¿Vale la pena alquilar auto en destino en vez de llevar el propio?",
+      "a": "Si el viaje es **>1.500 km y 2 personas**, alquilar en destino + volar suele salir parecido o menos que llevar el auto (sumando nafta, peajes, desgaste, tiempo). Alquiler típico en Argentina: US$ 50-80 por día + seguro + combustible. Ventaja: llegás rápido y descansado. Desventaja: auto chico y con políticas de combustible."
+    },
+    {
+      "q": "¿Cómo ahorrar en peajes?",
+      "a": "**Tag electrónico** (Pase, Telepase, OnePass) te da **descuentos del 20-40%** en la mayoría de rutas argentinas. Algunos autopistas tienen tarifas 'finde largo' más altas (pico). Evitar peajes con apps como **Waze o Google Maps** (hay opción 'sin peajes') es posible pero el tramo alternativo suele ser más largo, más lento y más gasto en combustible."
+    },
+    {
+      "q": "¿Qué me olvido al calcular el costo de viaje en auto?",
+      "a": "5 cosas: **desgaste de neumáticos** (~AR$ 50/km), **aceite y filtros** (cambio cada 10.000 km = AR$ 80-120k), **lavado y arreglos post-viaje**, **estacionamiento en destino**, y **tiempo** (si ganás AR$ 10k por hora, 20 hs de manejo son AR$ 200k de costo de oportunidad). Sumando todo, el auto no es 'tan barato' como parece al contar solo nafta + peajes."
+    },
+    {
+      "q": "¿El bus es más seguro que el auto?",
+      "a": "**Estadísticamente sí**: el bus tiene 1/50 de accidentes fatales por km-pasajero que el auto particular. En Argentina el bus de larga distancia (cama, semicama) es **muy seguro** si elegís empresas con buena reputación (Andesmar, Flecha Bus, Via Bariloche). Ventajas extra: sin manejar, podés dormir, suele incluir comida. Desventaja: tiempos y horarios fijos."
+    }
+  ],
+  "sources": [
+    { "name": "IAPSER Secretaría de Transporte — Nafta promedio", "url": "https://www.argentina.gob.ar/transporte", "publisher": "Gobierno Argentino" },
+    { "name": "Vialidad Nacional — Peajes", "url": "https://www.vialidad.gob.ar/", "publisher": "Vialidad Nacional" },
+    { "name": "ACA — Consumo de autos", "url": "https://www.aca.org.ar/", "publisher": "Automóvil Club Argentino" }
+  ],
+  "relatedSlugs": [
+    "calculadora-viaje-combustible",
+    "calculadora-presupuesto-viaje",
+    "calculadora-viaje-dividir",
+    "calculadora-distancia-vuelo-2-ciudades"
+  ]
+}

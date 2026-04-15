@@ -1,0 +1,100 @@
+{
+  "slug": "calculadora-electricidad-cable-amperaje-seccion",
+  "title": "Calculadora de Sección de Cable Eléctrico 2026 — Amperaje y Distancia | Hacé Cuentas",
+  "h1": "¿Qué sección de cable necesito según amperaje y distancia?",
+  "description": "Calculá la sección (mm²) del cable eléctrico según amperaje, distancia y tensión. Evita caída de tensión >3%. Incluye térmica recomendada.",
+  "category": "construccion",
+  "icon": "Cable",
+  "formulaId": "electricidad-cable-amperaje",
+  "seoKeywords": ["seccion cable electrico", "cable 2 5 mm2 amperaje", "cable 4 mm2 cuantos amperes", "caida de tension calculo", "cable 10 mm2 amperes", "tabla secciones cable", "cable para aire acondicionado", "cable trifasico 380", "termica amperes cable", "cable cobre mm2"],
+  "intro": "Elegir la **sección correcta** (mm²) del cable eléctrico es **crítico para la seguridad** de la instalación: un cable **muy chico** para el amperaje que transporta **se calienta, funde el aislante y puede causar incendio**. La sección se define por **dos criterios**: **(1)** la **capacidad de corriente** del cable (cuántos amperes puede conducir sin calentarse) y **(2)** la **caída de tensión** admisible (máximo 3% en residencial, 5% en industrial). Esta calculadora evalúa ambos criterios y te devuelve la **sección comercial más pequeña** (1,5 | 2,5 | 4 | 6 | 10 | 16 | 25 | 35 mm²) que cumple **con margen de seguridad**. Además te sugiere la **térmica (llave automática) apropiada** y calcula la **caída real de tensión** en tu instalación. Válido para 220V monofásico (residencial) y 380V trifásico (industrial/grandes cargas). Basado en la **AEA 90364** (Asociación Electrotécnica Argentina) — reglamentación vigente en Argentina.",
+  "keyTakeaway": "Para **residencial 220V**: **cable 1,5 mm² = 14 A (iluminación)**, **2,5 mm² = 21 A (tomas comunes)**, **4 mm² = 28 A (aire acondicionado)**, **6 mm² = 36 A (horno eléctrico)**. A **distancias > 20 m**: subir una sección. Caída de tensión máx: **3%**.",
+  "useCases": [
+    "Instalás un **aire acondicionado** en un ambiente lejos del tablero — qué cable usar.",
+    "Hacés la **instalación eléctrica** de una ampliación o casa nueva.",
+    "**Agregás circuito** para horno eléctrico, termotanque eléctrico o motor.",
+    "Tu **térmica se dispara seguido** y querés saber si el cable es chico.",
+    "Electricista matriculado armando **planos y memoria** de proyecto."
+  ],
+  "fields": [
+    { "id": "amperaje", "label": "Amperaje del equipo/circuito (A)", "type": "number", "placeholder": "20", "min": 1, "max": 400, "step": 0.1, "required": true, "help": "Si tenés el equipo, dividí watts por 220. Ej: 4.400 W / 220 = 20 A." },
+    { "id": "distancia", "label": "Distancia del cable (metros, un solo sentido)", "type": "number", "placeholder": "25", "min": 1, "max": 500, "step": 1, "required": true, "help": "De la térmica al equipo, solo ida (la calc duplica para monofásico)." },
+    { "id": "tension", "label": "Tensión", "type": "select", "default": "220", "options": [
+      {"value":"220","label":"220 V monofásico (residencial estándar)"},
+      {"value":"380","label":"380 V trifásico (industrial, grandes cargas)"}
+    ] },
+    { "id": "caidaMaxPct", "label": "Caída de tensión máxima permitida (%)", "type": "number", "default": 3, "min": 1, "max": 10, "step": 0.5, "suffix": "%", "help": "3% residencial (AEA), 5% industrial, 1% equipos sensibles." }
+  ],
+  "outputs": [
+    { "id": "seccionRecomendada", "label": "Sección de cable recomendada", "format": "number", "primary": true, "suffix": " mm²" },
+    { "id": "seccionCalculada", "label": "Sección mínima teórica", "format": "number", "suffix": " mm²" },
+    { "id": "caidaReal", "label": "Caída de tensión real", "format": "number", "suffix": "%" },
+    { "id": "caidaVolts", "label": "Caída de tensión en volts", "format": "number", "suffix": " V" },
+    { "id": "amperajeMaxCable", "label": "Capacidad del cable elegido", "format": "number", "suffix": " A" },
+    { "id": "termicaRecomendada", "label": "Térmica recomendada", "format": "number", "suffix": " A" }
+  ],
+  "example": {
+    "title": "Ejemplo real: cable para un aire acondicionado de 3.000 frig (consumo ~1.200 W) a 25 m del tablero",
+    "steps": [
+      "**Amperaje**: 1.200 W / 220 V ≈ **5,5 A continuos**. Con pico de arranque + margen: **dimensionar a 20 A** (térmica + cable).",
+      "**Distancia**: 25 m del tablero al split.",
+      "**Fórmula sección**: S = (2 × L × A × ρ_cobre) / ΔV = (2 × 25 × 20 × 0,0178) / 6,6 = **2,70 mm²**.",
+      "**Sección comercial**: sube al próximo entero → **4 mm²** (2,5 mm² no tiene margen suficiente para 20 A ni para la caída).",
+      "**Capacidad cable 4 mm²**: 28 A (2 veces el consumo real con margen).",
+      "**Caída real con 4 mm²**: (2 × 25 × 20 × 0,0178) / 4 = **4,45 V = 2,02%** ✓ (< 3%).",
+      "**Térmica**: 20 A (justo por encima del consumo con pico y por debajo de la capacidad del cable)."
+    ],
+    "result": "Para un split de 3.000 frig a 25 m: **cable 4 mm² + térmica 20 A**. La caída de tensión es de 2,02%, dentro del 3% AEA. Costo cable: ~$8.000-$12.000 por los 25 m."
+  },
+  "explanation": "## Fórmulas\n\n### Caída de tensión (monofásico 220V)\n\n```\nΔV = 2 × L × A × ρ / S\n\nDonde:\n  ΔV = caída de tensión (V)\n  L  = longitud del cable (m, un solo sentido)\n  A  = amperaje (A)\n  ρ  = resistividad del cobre = 0.0178 Ω·mm²/m a 20°C\n  S  = sección del conductor (mm²)\n  2  = factor por ida y vuelta del circuito\n```\n\n### Para trifásico 380V\n\n```\nΔV = √3 × L × A × ρ / S\n```\n\n### Despejar sección\n\n```\nS = (2 × L × A × ρ) / ΔV_max\n```\n\nDonde `ΔV_max = V × (caidaMax% / 100)` → para 220V y 3%: `ΔV_max = 6,6 V`.\n\n## Tabla de capacidades por sección (AEA 90364)\n\n| Sección (mm²) | Capacidad A (interior) | Capacidad A (aire libre) | Uso típico |\n|---|---|---|---|\n| **1,0** | 10 | 14 | Iluminación circuitos chicos |\n| **1,5** | 14 | 19 | **Iluminación estándar (IU)** |\n| **2,5** | 21 | 26 | **Tomacorrientes comunes (TU)** |\n| **4,0** | 28 | 36 | **Aire acondicionado, TUG** |\n| **6,0** | 36 | 45 | Horno eléctrico, termotanque |\n| **10,0** | 50 | 63 | Cocina, TUE (especial) |\n| **16,0** | 68 | 85 | Ingreso principal casa chica |\n| **25,0** | 89 | 112 | Ingreso casa grande |\n| **35,0** | 110 | 140 | Ingreso edificio |\n| **50,0** | 134 | 170 | Conexión generador |\n| **70,0** | 171 | 215 | Tableros industriales |\n| **95,0** | 207 | 260 | Distribución industrial |\n\n## Circuitos de vivienda según AEA\n\n| Circuito | Sección | Térmica | Consumo ejemplo |\n|---|---|---|---|\n| **IUA** (iluminación uso ambiente) | 1,5 mm² | 10 A | 1.500 W iluminación |\n| **IUG** (iluminación uso general) | 1,5 mm² | 10 A | 1.500 W iluminación |\n| **TUA** (tomas uso ambiente) | 2,5 mm² | 20 A | 4.400 W (PC, TV, etc.) |\n| **TUG** (tomas uso general) | 2,5 mm² | 20 A | 4.400 W |\n| **TUE** (toma uso especial cocina/lavadero) | 4,0 mm² | 25 A | 5.500 W (lavarropa, microondas) |\n| **ACU** (aire acondicionado) | 4,0-6,0 mm² | 20-25 A | 4.500-5.500 W |\n| **Termotanque eléctrico** | 4,0-6,0 mm² | 25 A | 5.500 W |\n| **Horno eléctrico** | 6,0 mm² | 32 A | 7.000 W |\n| **Ingreso bifásico** | 16 mm² | 40-63 A | Casa completa |\n\n## Tensión, amperaje y potencia\n\n```\nP (W)  = V × A       (monofásico)\nP (W)  = √3 × V × A × cos(φ)   (trifásico)\nA      = P / V\n\nEjemplos residenciales:\n  Lámpara 100 W en 220V  → 0,45 A\n  TV LED 150 W           → 0,68 A\n  Microondas 1.200 W     → 5,45 A\n  Termotanque 2.200 W    → 10,0 A\n  Horno 3.500 W          → 15,9 A\n  Aire 3.000 frig 1.200W → 5,45 A\n  Cocina eléctrica 7.000 W → 31,8 A (¡alto!)\n```\n\n## Caída de tensión: por qué importa\n\nLa **caída de tensión** es la pérdida de voltaje en el camino por la **resistencia del cable**. Si tenés 220V en el tablero y 210V llegan al equipo, la caída es de 10V = 4,5%.\n\n### Consecuencias de caída excesiva\n\n- **Equipos funcionan mal**: lámparas más tenues, motores arrancan mal.\n- **Sobrecalentamiento**: motores exigen más amperes al no tener tensión nominal.\n- **Electrónica sensible**: PCs, televisores, equipos con tarjeta se estropean.\n- **Consumo ineficiente**: el equipo trabaja más tiempo para hacer lo mismo.\n\n### Máximos admisibles (AEA)\n\n| Aplicación | Caída máxima |\n|---|---|\n| **Residencial** | **3%** |\n| Comercial | 4% |\n| Industrial | 5% |\n| Circuitos de motor (arranque) | 6% |\n| Equipos sensibles (UPS, servidores) | 1% |\n\n## Térmica: cómo elegir\n\nLa **térmica** (llave termomagnética) protege el cable del sobrecalentamiento. Debe cumplir:\n\n```\nA_equipo  ≤  A_termica  ≤  A_cable\n```\n\n**Ejemplo**: equipo 15 A, cable 2,5 mm² (21 A) → **térmica 16 A** (la más cercana por encima del equipo, por debajo del cable).\n\n**Térmicas comerciales** (A): **6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160**.\n\n## Disyuntor diferencial\n\nAdemás de la térmica, **TODA instalación residencial** debe tener **disyuntor diferencial de 30 mA** (obligatorio por AEA). Protege contra electrocución. **No sustituye a la térmica** — son dos dispositivos complementarios.\n\n## Colores de cable según AEA\n\n| Color | Uso |\n|---|---|\n| **Marrón** / Negro | Fase (vivo, 220V) |\n| **Celeste** / Azul claro | Neutro |\n| **Verde/amarillo** | Tierra (puesta a tierra) |\n| **Rojo / gris** | Segunda fase (bifásico/trifásico) |\n\nLa combinación **verde sin amarillo** o solo **amarillo** NO es tierra (pueden ser otras funciones). El estándar AEA es **verde con amarillo**.\n\n## Tipos de cable\n\n| Tipo | Aplicación |\n|---|---|\n| **NYM** / NYA | Instalaciones fijas en pared |\n| **Taller flexible** | Prolongaciones, electrodomésticos |\n| **Subterráneo** | Bajo tierra, con vaina doble |\n| **Antiflama** | Edificios altos (baja emisión de humo) |\n| **Tierra desnudo** | Puesta a tierra, dentro de caño |\n| **Blindado (MC)** | Industrial, alta interferencia |\n\n## Precios orientativos (Argentina 2026)\n\n| Cable (metro) | Precio (bobina 100 m) |\n|---|---|\n| 1,5 mm² | $800 - $1.200/m |\n| 2,5 mm² | $1.200 - $1.800/m |\n| 4 mm² | $1.800 - $2.800/m |\n| 6 mm² | $2.500 - $3.800/m |\n| 10 mm² | $4.000 - $5.500/m |\n| 16 mm² | $6.000 - $8.500/m |\n\nMarcas comunes: **Imsa, Pirelli, Delcable, Prysmian**.\n\n## Tips de instalación\n\n1. **Nunca sobrecargues un tomacorriente**: no uses 'zapatillas' para aires o microondas.\n2. **Tendido en cañería**: los cables van dentro de caño plástico corrugado o rígido.\n3. **Sin empalmes dentro del caño**: los empalmes van solo en cajas de conexión.\n4. **Código de colores estricto**: un electricista confiable siempre respeta los colores AEA.\n5. **Tablero seccional**: casa >100 m² conviene tablero secundario cerca de zona de grandes consumos (cocina, lavadero).\n6. **Revisión cada 5 años**: el cable envejece. Chequear aislante, conexiones flojas, calentamiento de llaves.\n\n## Casos típicos residenciales\n\n### Casa 70 m² (2 dorm + living + cocina + baño)\n\n- 1 circuito IU (iluminación): 1,5 mm² + térmica 10 A\n- 1 circuito TU (tomas): 2,5 mm² + térmica 20 A\n- 1 circuito TUE (cocina/microondas): 4 mm² + térmica 25 A\n- 1 circuito aire (si hay split): 4 mm² + térmica 20 A\n- Ingreso: 16 mm² + térmica 40 A + diferencial 25 A / 30 mA\n\n### Casa 150 m² con más consumo\n\n- 2 circuitos IU (6+6 A)\n- 2 circuitos TU (20+20 A)\n- 1 TUE (25 A)\n- 2 circuitos aire (25+25 A)\n- 1 termotanque (32 A)\n- Ingreso: 25 mm² + térmica 63 A + diferencial 63 A / 30 mA\n\n## Errores comunes\n\n1. **'Saltá de 1,5 a 4 mm² por seguridad'**: innecesariamente caro. Usá la tabla.\n2. **Ignorar la distancia**: 30 m con 2,5 mm² a 20 A tiene caída > 5% (fuera de norma).\n3. **Térmica más grande que cable**: NUNCA. Si cable es 2,5 mm² (21 A), térmica máx es 20 A.\n4. **Sin diferencial de 30 mA**: obligatorio por AEA. Sin diferencial = incumplimiento legal.\n5. **Puesta a tierra inexistente**: la mayoría de casas viejas tienen tierra deficiente. Medir con telurímetro.\n\n## Calculadoras relacionadas\n\n- [Consumo eléctrico kWh](/calculadora-consumo-electrico-kwh-factura-luz) — estimá costo de la factura.\n- [Aire acondicionado frigorías](/calculadora-aire-acondicionado-frigorias-ambiente) — calculá el consumo antes de cablear.\n- [Calefacción watts ambiente](/calculadora-calefaccion-watts-kcal-ambiente) — paneles eléctricos consumen mucho amperaje.\n- [Costo de construcción por m²](/calculadora-costo-m2-construccion-argentina) — presupuesto integral.",
+  "faq": [
+    {
+      "q": "¿Qué sección de cable necesito para un aire acondicionado?",
+      "a": "Depende del consumo. **Split 3.000 frig (1.200 W)**: cable **4 mm² + térmica 20 A** recomendado (con margen para picos de arranque). **Split 4.500 frig (1.800 W)**: **4 mm² + térmica 25 A**. **Split 6.000 frig (2.400 W)**: **6 mm² + térmica 25 A**. A distancias > 25 m subir una sección por caída de tensión. SIEMPRE circuito **dedicado** (no compartir con otros tomas)."
+    },
+    {
+      "q": "¿Cuántos amperes soporta un cable de 2,5 mm²?",
+      "a": "**21 A en interior** (en pared, dentro de caño) según AEA 90364. **26 A al aire libre** (sin caño). Para residencial se usa siempre el valor interior (21 A). Con térmica **de 20 A** (la más cercana por debajo) podés conectar equipos hasta **20 A = 4.400 W** a 220V. Es la sección **más usada para tomacorrientes comunes**."
+    },
+    {
+      "q": "¿Cómo calculo la caída de tensión?",
+      "a": "**Fórmula**: `ΔV = (2 × L × A × 0,0178) / S`. Donde L es longitud en m, A amperes, S sección en mm², y 0,0178 la resistividad del cobre. Ejemplo: 30 m con 2,5 mm² a 15 A → (2 × 30 × 15 × 0,0178) / 2,5 = 6,4 V = **2,9%**. Apenas dentro del 3% permitido. Para más seguridad, usar **4 mm²**."
+    },
+    {
+      "q": "¿Qué es mejor: cable de cobre o de aluminio?",
+      "a": "**Cobre**: estándar residencial argentino. Mayor conductividad (0,0178 Ω·mm²/m), más durable, mejor contactos. **Aluminio**: más barato (~40%), pero mayor resistividad (0,028 Ω·mm²/m) → requiere **más sección** (~50% más gruesa). **Solo** se usa en **cables de distribución aérea/subterránea de alta tensión** y en **secciones > 35 mm²** para abaratar obra. En casa: **SIEMPRE cobre**."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre monofásico y trifásico?",
+      "a": "**Monofásico**: 220V, 2 cables (fase + neutro) + tierra. **Estándar residencial** argentino. Hasta ~40 A de consumo total. **Trifásico**: 380V entre fases (220V entre fase-neutro), 4 cables (3 fases + neutro) + tierra. Para consumos > 40 A o motores grandes. Industrias, edificios, comercios. Fórmulas distintas: monofásico P=V×A, trifásico P=√3×V×A×cos(φ)."
+    },
+    {
+      "q": "¿Necesito disyuntor diferencial sí o sí?",
+      "a": "**SÍ, obligatorio por AEA** desde 1990 en toda instalación residencial. Protege contra **electrocución** (corta corriente si hay fuga a tierra > 30 mA). Se instala en el tablero principal, protegiendo todos los circuitos aguas abajo. **Sin diferencial**: (1) riesgo de muerte por contacto indirecto, (2) incumplimiento legal (seguros rechazan reclamos), (3) EDENOR/EDESUR puede rechazar la conexión."
+    },
+    {
+      "q": "¿Por qué se me dispara la térmica seguido?",
+      "a": "Tres causas principales: **(1) Sobrecarga**: estás consumiendo más amperes que la térmica aguanta → sacá equipos del circuito. **(2) Cortocircuito**: fase tocando neutro o tierra → llamá electricista (peligro de incendio). **(3) Térmica vieja o defectuosa**: cada 10-15 años se degrada → reemplazar. **Nunca** cambies la térmica por una mayor sin verificar que el cable aguante."
+    },
+    {
+      "q": "¿Cuánta distancia soporta un cable 4 mm² con 20 A?",
+      "a": "Para **caída 3% máximo a 220V**: `L_max = (ΔV × S) / (2 × A × ρ)` = (6,6 × 4) / (2 × 20 × 0,0178) = **~37 metros**. Cable 4 mm² con 20 A puede llegar hasta **~37 m** sin problema. A más distancia subir a 6 mm² (~55 m con misma caída). **Regla práctica**: cada 20-25 m subir una sección."
+    },
+    {
+      "q": "¿Qué pasa si uso un cable más chico del que corresponde?",
+      "a": "**Muy peligroso**. El cable se **calienta por efecto Joule** (P = I²×R), lo que: (1) **funde el aislante** (se ve ennegrecido), (2) **cortocircuito a tierra** (peligro de electrocución), (3) **INCENDIO ELÉCTRICO** (causa #1 de incendios residenciales en Argentina). La térmica puede no disparar si el exceso es leve pero continuo. **Siempre respetar la tabla AEA** — es literalmente cuestión de vida o muerte."
+    }
+  ],
+  "sources": [
+    { "title": "AEA 90364 - Reglamentación para instalaciones eléctricas", "url": "https://www.aea.org.ar", "publisher": "Asociación Electrotécnica Argentina" },
+    { "title": "ENRE - Normas técnicas", "url": "https://www.enre.gov.ar", "publisher": "ENRE" },
+    { "title": "IRAM 2183 - Cables aislados con PVC", "url": "https://catalogo.iram.org.ar", "publisher": "IRAM" },
+    { "title": "Prysmian - Catálogo técnico cables", "url": "https://www.prysmian.com", "publisher": "Prysmian" }
+  ],
+  "relatedSlugs": [
+    "calculadora-consumo-electrico-kwh-factura-luz",
+    "calculadora-aire-acondicionado-frigorias-ambiente",
+    "calculadora-calefaccion-watts-kcal-ambiente",
+    "calculadora-costo-m2-construccion-argentina"
+  ]
+}
