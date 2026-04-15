@@ -20,28 +20,28 @@ interface Categoria {
 
 // Datos aproximados 2026 — actualizar con AFIP
 const categoriasServicios: Categoria[] = [
-  { letra: 'A', limiteAnual: 8500000, cuota: 52000 },
-  { letra: 'B', limiteAnual: 12500000, cuota: 62000 },
-  { letra: 'C', limiteAnual: 17500000, cuota: 74000 },
-  { letra: 'D', limiteAnual: 22000000, cuota: 92000 },
-  { letra: 'E', limiteAnual: 26000000, cuota: 130000 },
-  { letra: 'F', limiteAnual: 32500000, cuota: 165000 },
-  { letra: 'G', limiteAnual: 39000000, cuota: 215000 },
-  { letra: 'H', limiteAnual: 53000000, cuota: 320000 },
+  { letra: 'A', limiteAnual: 10277988, cuota: 42387 },
+  { letra: 'B', limiteAnual: 15058448, cuota: 48251 },
+  { letra: 'C', limiteAnual: 21113697, cuota: 56502 },
+  { letra: 'D', limiteAnual: 26212853, cuota: 72414 },
+  { letra: 'E', limiteAnual: 30833964, cuota: 102538 },
+  { letra: 'F', limiteAnual: 38642048, cuota: 129045 },
+  { letra: 'G', limiteAnual: 46211109, cuota: 197108 },
+  { letra: 'H', limiteAnual: 70113407, cuota: 447347 },
 ];
 
 const categoriasBienes: Categoria[] = [
-  { letra: 'A', limiteAnual: 8500000, cuota: 52000 },
-  { letra: 'B', limiteAnual: 12500000, cuota: 62000 },
-  { letra: 'C', limiteAnual: 17500000, cuota: 74000 },
-  { letra: 'D', limiteAnual: 22000000, cuota: 92000 },
-  { letra: 'E', limiteAnual: 26000000, cuota: 130000 },
-  { letra: 'F', limiteAnual: 32500000, cuota: 165000 },
-  { letra: 'G', limiteAnual: 39000000, cuota: 215000 },
-  { letra: 'H', limiteAnual: 53000000, cuota: 290000 },
-  { letra: 'I', limiteAnual: 59000000, cuota: 360000 },
-  { letra: 'J', limiteAnual: 68000000, cuota: 430000 },
-  { letra: 'K', limiteAnual: 82000000, cuota: 530000 },
+  { letra: 'A', limiteAnual: 10277988, cuota: 42387 },
+  { letra: 'B', limiteAnual: 15058448, cuota: 48251 },
+  { letra: 'C', limiteAnual: 21113697, cuota: 55227 },
+  { letra: 'D', limiteAnual: 26212853, cuota: 70661 },
+  { letra: 'E', limiteAnual: 30833964, cuota: 92658 },
+  { letra: 'F', limiteAnual: 38642048, cuota: 111198 },
+  { letra: 'G', limiteAnual: 46211109, cuota: 135918 },
+  { letra: 'H', limiteAnual: 70113407, cuota: 272063 },
+  { letra: 'I', limiteAnual: 78479212, cuota: 406512 },
+  { letra: 'J', limiteAnual: 89872640, cuota: 497059 },
+  { letra: 'K', limiteAnual: 108357084, cuota: 1381688 },
 ];
 
 export interface MonotributoOutputs {
