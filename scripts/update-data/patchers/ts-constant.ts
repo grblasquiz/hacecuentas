@@ -68,3 +68,63 @@ export function replaceArrayLiteral(
   writeFileSync(filePath, replaced, 'utf8');
   return true;
 }
+
+/**
+ * Reemplaza el valor numérico de una const top-level:
+ *   export const NAME = 2_280_000;
+ *   const NAME: number = 340000;
+ * Preserva underscores de miles en la salida (style del proyecto).
+ */
+export function replaceNumericConst(
+  filePath: string,
+  constName: string,
+  newValue: number,
+): { changed: boolean; oldValue: number | null } {
+  const src = readFileSync(filePath, 'utf8');
+  const re = new RegExp(
+    `(const\\s+${constName}(?:\\s*:\\s*[^=]+)?\\s*=\\s*)(-?[\\d_]+(?:\\.\\d+)?)(\\s*;)`,
+  );
+  const m = re.exec(src);
+  if (!m) return { changed: false, oldValue: null };
+  const oldRaw = m[2].replace(/_/g, '');
+  const oldValue = Number(oldRaw);
+  if (oldValue === newValue) return { changed: false, oldValue };
+  const formatted = formatNumberWithUnderscores(newValue);
+  const replaced = src.replace(re, `$1${formatted}$3`);
+  writeFileSync(filePath, replaced, 'utf8');
+  return { changed: true, oldValue };
+}
+
+/**
+ * Reemplaza el valor string de una const top-level:
+ *   const FECHA = 'abril 2026';
+ *   export const FECHA = "abril 2026";
+ * Preserva el tipo de quote (comilla simple/doble) que ya haya en el archivo.
+ */
+export function replaceStringConst(
+  filePath: string,
+  constName: string,
+  newValue: string,
+): { changed: boolean; oldValue: string | null } {
+  const src = readFileSync(filePath, 'utf8');
+  const re = new RegExp(
+    `(const\\s+${constName}(?:\\s*:\\s*[^=]+)?\\s*=\\s*)(['"\`])([^'"\`]*)(['"\`])(\\s*;)`,
+  );
+  const m = re.exec(src);
+  if (!m) return { changed: false, oldValue: null };
+  const oldValue = m[3];
+  if (oldValue === newValue) return { changed: false, oldValue };
+  // Escapar quote del tipo usado
+  const quote = m[2];
+  const escaped = newValue.replace(new RegExp(quote, 'g'), `\\${quote}`);
+  const replaced = src.replace(re, `$1${quote}${escaped}${quote}$5`);
+  writeFileSync(filePath, replaced, 'utf8');
+  return { changed: true, oldValue };
+}
+
+/** Formatea un entero con underscores cada 3 dígitos (estilo del proyecto). */
+export function formatNumberWithUnderscores(n: number): string {
+  if (!Number.isFinite(n)) return 'Infinity';
+  if (!Number.isInteger(n)) return String(n);
+  return n.toLocaleString('en-US').replace(/,/g, '_');
+}

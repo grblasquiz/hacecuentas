@@ -15,6 +15,9 @@ import { fetchDolar } from './fetchers/dolar.ts';
 import { fetchBcra } from './fetchers/bcra.ts';
 import { fetchIpc } from './fetchers/ipc.ts';
 import { fetchMonotributo } from './fetchers/monotributo.ts';
+import { fetchGananciasEscala } from './fetchers/ganancias-escala.ts';
+import { fetchSmvm } from './fetchers/smvm.ts';
+import { fetchJubilacionAnses } from './fetchers/jubilacion-anses.ts';
 
 export interface FetcherEntry {
   name: string;
@@ -54,6 +57,31 @@ export const REGISTRY: FetcherEntry[] = [
     slugs: ['calculadora-monotributo-2026'],
     frequency: 'biannual',
     run: fetchMonotributo,
+  },
+  {
+    name: 'ganancias-escala',
+    // Los 3 calcs comparten `_ganancias-escala.ts` (MNI + INCREMENTO + ESCALA).
+    // sueldo-en-mano y sueldo-neto-a-bruto importan de sueldo-ar.ts que a su
+    // vez lee la escala compartida — un solo patch los actualiza a los 3.
+    slugs: [
+      'calculadora-impuesto-ganancias-sueldo',
+      'calculadora-sueldo-neto-a-bruto',
+      'sueldo-en-mano-argentina',
+    ],
+    frequency: 'biannual',
+    run: fetchGananciasEscala,
+  },
+  {
+    name: 'smvm',
+    slugs: ['salario-minimo-vital-movil-argentina'],
+    frequency: 'biannual',
+    run: fetchSmvm,
+  },
+  {
+    name: 'jubilacion-anses',
+    slugs: ['calculadora-jubilacion-minima-anses'],
+    frequency: 'monthly',
+    run: fetchJubilacionAnses,
   },
 ];
 

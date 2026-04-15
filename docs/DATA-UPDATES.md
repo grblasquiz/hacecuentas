@@ -26,9 +26,9 @@ Distribución de las 205 calcs por `frequency`:
 | Frequency | Calcs | Implementado |
 |-----------|------:|:-------------|
 | never     | 171   | N/A (no se actualizan nunca) |
-| daily     | 2     | ✅ `fetchers/dolar.ts` |
-| monthly   | 9     | ✅ parcial: `fetchers/bcra.ts` + `fetchers/ipc.ts` (6 de 9) |
-| biannual  | 8     | ✅ parcial: `fetchers/monotributo.ts` (1 de 8, resto auto-llm pendientes) |
+| daily     | 2     | ✅ `fetchers/dolar.ts` (2 de 2) |
+| monthly   | 9     | ✅ parcial: `fetchers/bcra.ts` + `fetchers/ipc.ts` + `fetchers/jubilacion-anses.ts` (5 de 9) |
+| biannual  | 8     | ✅ parcial: `fetchers/monotributo.ts` + `fetchers/ganancias-escala.ts` + `fetchers/smvm.ts` (5 de 8) |
 | yearly    | 15    | ⏳ pendiente (mezcla auto-llm + auto-scrape) |
 
 Para ver el detalle vivo: `node --experimental-strip-types scripts/update-data/index.ts --report`.
@@ -36,8 +36,8 @@ Para ver el detalle vivo: `node --experimental-strip-types scripts/update-data/i
 ## Workflows de GitHub Actions
 
 - **[`update-data-daily.yml`](../.github/workflows/update-data-daily.yml)** — corre `0 10 * * *` (07:00 ARG). Fetchers: dolar. Abre PR si hay cambios.
-- **[`update-data-monthly.yml`](../.github/workflows/update-data-monthly.yml)** — corre día 16 del mes (INDEC ya publicó IPC). Fetchers: bcra, ipc. Abre PR.
-- **[`update-data-biannual.yml`](../.github/workflows/update-data-biannual.yml)** — cron 15 enero + 15 julio. Si hay `ANTHROPIC_API_KEY` configurada en los secrets, corre los fetchers auto-llm (monotributo por ahora) y abre PR. Si falta la key, abre un issue con checklist manual.
+- **[`update-data-monthly.yml`](../.github/workflows/update-data-monthly.yml)** — corre día 16 del mes (INDEC ya publicó IPC). Fetchers: bcra, ipc, jubilacion-anses (auto-llm, ANSES actualiza mensual por Ley 27.609). Abre PR.
+- **[`update-data-biannual.yml`](../.github/workflows/update-data-biannual.yml)** — cron 15 enero + 15 julio. Si hay `ANTHROPIC_API_KEY` configurada en los secrets, corre los fetchers auto-llm (monotributo, ganancias-escala, smvm) y abre PR. Si falta la key, abre un issue con checklist manual.
 
 Todos tienen `workflow_dispatch` con flag `dry` para testear manualmente desde la UI de Actions.
 
@@ -66,16 +66,21 @@ scripts/update-data/
 ├── index.ts              # orchestrator CLI + SUMMARY:: output
 ├── registry.ts           # mapea name → run (fetcher), slugs afectados, frecuencia
 ├── fetchers/
-│   ├── dolar.ts         # dolarapi.com → src/lib/formulas/dolar-ar.ts (fallback)
-│   ├── bcra.ts          # BCRA v4 → alquiler-icl + credito-uva + plazo-fijo
-│   └── ipc.ts           # argentinadatos IPC → inflacion-ipc
+│   ├── dolar.ts              # dolarapi.com → src/lib/formulas/dolar-ar.ts (fallback)
+│   ├── bcra.ts               # BCRA v4 → alquiler-icl + credito-uva + plazo-fijo
+│   ├── ipc.ts                # argentinadatos IPC → inflacion-ipc
+│   ├── monotributo.ts        # auto-llm → monotributo.ts (categorías servicios + bienes)
+│   ├── ganancias-escala.ts   # auto-llm → _ganancias-escala.ts (MNI + incremento + escala)
+│   ├── smvm.ts               # auto-llm → salario-minimo.ts (SMVM mensual + hora + fecha)
+│   └── jubilacion-anses.ts   # auto-llm → jubilacion-minima.ts (HABER_MINIMO + BONO_EXTRA)
 ├── patchers/             # primitivas para tocar archivos
 │   ├── data-update-date.ts   # actualiza dataUpdate.lastUpdated en JSON
 │   ├── json-field.ts         # patches a fields[].default y presets[]
 │   └── ts-constant.ts        # patches a constants y arrays en archivos .ts
 └── utils/
     ├── freshness.ts      # listAllCalcs(), isStale(), filterByFrequency()
-    └── logger.ts         # logger con prefijo + niveles info/warn/error/success/skip
+    ├── logger.ts         # logger con prefijo + niveles info/warn/error/success/skip
+    └── ask-claude.ts     # wrapper tipado de Messages API + web_search + web_fetch
 ```
 
 ## Agregar un fetcher nuevo

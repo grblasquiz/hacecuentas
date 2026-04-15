@@ -1,16 +1,18 @@
 /**
  * Impuesto a las Ganancias — Trabajadores en relación de dependencia (4ta categoría)
  *
- * Usa los MISMOS valores y escala que la calculadora de sueldo en mano (sueldo-ar.ts)
- * para garantizar consistencia entre ambas calcs. Esta versión pone el foco en el
- * detalle del impuesto (deducciones, base, alícuota, anual vs mensual).
- *
- * Valores 2026 (aproximados — ARCA los actualiza semestralmente por RIPTE):
- *   - MNI efectivo mensual (ya incluye deducción especial 4.8×): $2.280.000
- *   - Incremento por familiar a cargo: $400.000/mes
+ * Usa los MISMOS valores y escala que la calc de sueldo en mano (sueldo-ar.ts):
+ * ambos importan de `_ganancias-escala.ts` para que el fetcher auto-llm actualice
+ * una sola vez y propague a las dos calcs.
  *
  * Base legal: Ley 20.628 + Ley 27.743 (Ley Bases 2024) + RG ARCA vigentes.
  */
+
+import {
+  MNI_MENSUAL_BASE,
+  INCREMENTO_POR_FAMILIAR,
+  aplicarEscalaMensual,
+} from './_ganancias-escala';
 
 export interface GananciasSueldoInputs {
   brutoMensual: number;
@@ -37,45 +39,6 @@ export interface GananciasSueldoOutputs {
   paga: boolean;
   mensaje: string;
   umbralMensual: number; // sueldo bruto desde el que empieza a pagar
-}
-
-// Valores mensuales 2026 (mismos que sueldo-ar.ts para consistencia)
-const MNI_MENSUAL_BASE = 2_280_000; // MNI + DE 4.8× prorrateado
-const INCREMENTO_POR_FAMILIAR = 400_000;
-
-/**
- * Escala mensual simplificada 2026 (5 tramos + excedente)
- * Igual que sueldo-ar.ts — ajustable cuando ARCA publique nuevos valores.
- */
-interface TramoEscala {
-  hasta: number;
-  tasa: number;
-  acumulado: number;
-}
-
-const ESCALA: TramoEscala[] = [
-  { hasta: 500_000, tasa: 0.05, acumulado: 0 },
-  { hasta: 1_000_000, tasa: 0.09, acumulado: 25_000 },
-  { hasta: 1_500_000, tasa: 0.12, acumulado: 70_000 },
-  { hasta: 2_500_000, tasa: 0.15, acumulado: 130_000 },
-  { hasta: 4_000_000, tasa: 0.19, acumulado: 280_000 },
-  { hasta: Infinity, tasa: 0.27, acumulado: 565_000 },
-];
-
-function aplicarEscalaMensual(base: number): { impuesto: number; marginal: number } {
-  if (base <= 0) return { impuesto: 0, marginal: 0 };
-  let anterior = 0;
-  for (const tramo of ESCALA) {
-    if (base <= tramo.hasta) {
-      return {
-        impuesto: tramo.acumulado + (base - anterior) * tramo.tasa,
-        marginal: tramo.tasa,
-      };
-    }
-    anterior = tramo.hasta;
-  }
-  const ult = ESCALA[ESCALA.length - 1];
-  return { impuesto: ult.acumulado + (base - anterior) * ult.tasa, marginal: ult.tasa };
 }
 
 export function gananciasSueldo(inputs: GananciasSueldoInputs): GananciasSueldoOutputs {

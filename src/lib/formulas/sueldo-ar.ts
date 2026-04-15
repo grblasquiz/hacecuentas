@@ -7,10 +7,15 @@
  *   - Obra Social: 3%
  *   - PAMI (INSSJP): 3%
  *
- * Impuesto a las Ganancias: tabla simplificada 2026
- * Mínimo no imponible aprox: $2.280.000/mes bruto para soltero sin hijos
- * (valores actualizados anualmente, a validar con AFIP)
+ * Ganancias: MNI + escala compartida con `ganancias-sueldo.ts` — ambos importan
+ * `_ganancias-escala.ts` para que el auto-updater patchee un solo lugar.
  */
+
+import {
+  MNI_MENSUAL_BASE,
+  INCREMENTO_POR_FAMILIAR,
+  aplicarEscalaMensual,
+} from './_ganancias-escala';
 
 export interface SueldoInputs {
   bruto: number;
@@ -44,21 +49,11 @@ export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
 
   // Base imponible para Ganancias
   const brutoSinAportes = bruto - aportes;
-
-  // Mínimo no imponible mensual aproximado (2026 — ajustar periódicamente)
-  const mni = 2280000 + cargas * 400000; // MNI + deducción por familiar
+  const mni = MNI_MENSUAL_BASE + cargas * INCREMENTO_POR_FAMILIAR;
   const baseGanancias = Math.max(0, brutoSinAportes - mni);
 
-  // Escala de Ganancias simplificada (alícuota promedio progresiva)
-  let ganancias = 0;
-  if (baseGanancias > 0) {
-    if (baseGanancias <= 500000) ganancias = baseGanancias * 0.05;
-    else if (baseGanancias <= 1000000) ganancias = 25000 + (baseGanancias - 500000) * 0.09;
-    else if (baseGanancias <= 1500000) ganancias = 70000 + (baseGanancias - 1000000) * 0.12;
-    else if (baseGanancias <= 2500000) ganancias = 130000 + (baseGanancias - 1500000) * 0.15;
-    else if (baseGanancias <= 4000000) ganancias = 280000 + (baseGanancias - 2500000) * 0.19;
-    else ganancias = 565000 + (baseGanancias - 4000000) * 0.27;
-  }
+  // Escala progresiva (compartida con ganancias-sueldo.ts vía _ganancias-escala.ts)
+  const ganancias = aplicarEscalaMensual(baseGanancias).impuesto;
 
   const descuentoTotal = aportes + ganancias;
   const neto = bruto - descuentoTotal;
