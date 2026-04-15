@@ -18,6 +18,9 @@ import { fetchMonotributo } from './fetchers/monotributo.ts';
 import { fetchGananciasEscala } from './fetchers/ganancias-escala.ts';
 import { fetchSmvm } from './fetchers/smvm.ts';
 import { fetchJubilacionAnses } from './fetchers/jubilacion-anses.ts';
+import { fetchBienesPersonales } from './fetchers/bienes-personales.ts';
+import { fetchCostoLaboral } from './fetchers/costo-laboral.ts';
+import { fetchMonotributoVsInscripto } from './fetchers/monotributo-vs-inscripto.ts';
 
 export interface FetcherEntry {
   name: string;
@@ -53,10 +56,17 @@ export const REGISTRY: FetcherEntry[] = [
     name: 'monotributo',
     // Solo `calculadora-monotributo-2026` usa la formula monotributo.ts.
     // `calculadora-monotributo-vs-responsable-inscripto` usa monotributo-vs-inscripto.ts
-    // con otra estructura — requiere su propio fetcher (pendiente).
+    // con otra estructura (tabla simplificada con cuota unificada) — fetcher propio.
     slugs: ['calculadora-monotributo-2026'],
     frequency: 'biannual',
     run: fetchMonotributo,
+  },
+  {
+    name: 'monotributo-vs-inscripto',
+    // Tabla aparte con 11 categorías { letra, topeFactServ, topeFactCom, cuota }
+    slugs: ['calculadora-monotributo-vs-responsable-inscripto'],
+    frequency: 'biannual',
+    run: fetchMonotributoVsInscripto,
   },
   {
     name: 'ganancias-escala',
@@ -82,6 +92,20 @@ export const REGISTRY: FetcherEntry[] = [
     slugs: ['calculadora-jubilacion-minima-anses'],
     frequency: 'monthly',
     run: fetchJubilacionAnses,
+  },
+  {
+    name: 'bienes-personales',
+    // Ley 27.743 baja alícuotas 2024→2027 — ARCA actualiza MNI y escala anualmente.
+    slugs: ['calculadora-bienes-personales-2026'],
+    frequency: 'yearly',
+    run: fetchBienesPersonales,
+  },
+  {
+    name: 'costo-laboral',
+    // Alícuotas patronales grande/pyme + ART promedio.
+    slugs: ['calculadora-costo-laboral-empleado'],
+    frequency: 'yearly',
+    run: fetchCostoLaboral,
   },
 ];
 

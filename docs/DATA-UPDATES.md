@@ -25,11 +25,11 @@ Distribución de las 205 calcs por `frequency`:
 
 | Frequency | Calcs | Implementado |
 |-----------|------:|:-------------|
-| never     | 171   | N/A (no se actualizan nunca) |
+| never     | 176   | N/A (no se actualizan nunca — incluye math-puros tipo aguinaldo/indemnización/vacaciones/edad-jubilación/impuesto-cheque) |
 | daily     | 2     | ✅ `fetchers/dolar.ts` (2 de 2) |
 | monthly   | 9     | ✅ parcial: `fetchers/bcra.ts` + `fetchers/ipc.ts` + `fetchers/jubilacion-anses.ts` (5 de 9) |
-| biannual  | 8     | ✅ parcial: `fetchers/monotributo.ts` + `fetchers/ganancias-escala.ts` + `fetchers/smvm.ts` (5 de 8) |
-| yearly    | 15    | ⏳ pendiente (mezcla auto-llm + auto-scrape) |
+| biannual  | 7     | ✅ parcial: `fetchers/monotributo.ts` + `fetchers/monotributo-vs-inscripto.ts` + `fetchers/ganancias-escala.ts` + `fetchers/smvm.ts` (6 de 7) |
+| yearly    | 11    | ✅ parcial: `fetchers/bienes-personales.ts` + `fetchers/costo-laboral.ts` (2 de 11) |
 
 Para ver el detalle vivo: `node --experimental-strip-types scripts/update-data/index.ts --report`.
 
@@ -37,7 +37,8 @@ Para ver el detalle vivo: `node --experimental-strip-types scripts/update-data/i
 
 - **[`update-data-daily.yml`](../.github/workflows/update-data-daily.yml)** — corre `0 10 * * *` (07:00 ARG). Fetchers: dolar. Abre PR si hay cambios.
 - **[`update-data-monthly.yml`](../.github/workflows/update-data-monthly.yml)** — corre día 16 del mes (INDEC ya publicó IPC). Fetchers: bcra, ipc, jubilacion-anses (auto-llm, ANSES actualiza mensual por Ley 27.609). Abre PR.
-- **[`update-data-biannual.yml`](../.github/workflows/update-data-biannual.yml)** — cron 15 enero + 15 julio. Si hay `ANTHROPIC_API_KEY` configurada en los secrets, corre los fetchers auto-llm (monotributo, ganancias-escala, smvm) y abre PR. Si falta la key, abre un issue con checklist manual.
+- **[`update-data-biannual.yml`](../.github/workflows/update-data-biannual.yml)** — cron 15 enero + 15 julio. Fetchers: monotributo, monotributo-vs-inscripto, ganancias-escala, smvm. Si falta `ANTHROPIC_API_KEY`, abre issue con checklist manual.
+- **[`update-data-yearly.yml`](../.github/workflows/update-data-yearly.yml)** — cron 1 febrero (ya publicó ARCA el año fiscal). Fetchers: bienes-personales, costo-laboral. Mismo fallback manual.
 
 Todos tienen `workflow_dispatch` con flag `dry` para testear manualmente desde la UI de Actions.
 
@@ -66,13 +67,16 @@ scripts/update-data/
 ├── index.ts              # orchestrator CLI + SUMMARY:: output
 ├── registry.ts           # mapea name → run (fetcher), slugs afectados, frecuencia
 ├── fetchers/
-│   ├── dolar.ts              # dolarapi.com → src/lib/formulas/dolar-ar.ts (fallback)
-│   ├── bcra.ts               # BCRA v4 → alquiler-icl + credito-uva + plazo-fijo
-│   ├── ipc.ts                # argentinadatos IPC → inflacion-ipc
-│   ├── monotributo.ts        # auto-llm → monotributo.ts (categorías servicios + bienes)
-│   ├── ganancias-escala.ts   # auto-llm → _ganancias-escala.ts (MNI + incremento + escala)
-│   ├── smvm.ts               # auto-llm → salario-minimo.ts (SMVM mensual + hora + fecha)
-│   └── jubilacion-anses.ts   # auto-llm → jubilacion-minima.ts (HABER_MINIMO + BONO_EXTRA)
+│   ├── dolar.ts                     # dolarapi.com → src/lib/formulas/dolar-ar.ts (fallback)
+│   ├── bcra.ts                      # BCRA v4 → alquiler-icl + credito-uva + plazo-fijo
+│   ├── ipc.ts                       # argentinadatos IPC → inflacion-ipc
+│   ├── monotributo.ts               # auto-llm → monotributo.ts (categorías servicios + bienes)
+│   ├── monotributo-vs-inscripto.ts  # auto-llm → monotributo-vs-inscripto.ts (tabla simple)
+│   ├── ganancias-escala.ts          # auto-llm → _ganancias-escala.ts (MNI + incremento + escala)
+│   ├── smvm.ts                      # auto-llm → salario-minimo.ts (SMVM mensual + hora + fecha)
+│   ├── jubilacion-anses.ts          # auto-llm → jubilacion-minima.ts (HABER_MINIMO + BONO_EXTRA)
+│   ├── bienes-personales.ts         # auto-llm → bienes-personales.ts (MNI + escala + deducción casa)
+│   └── costo-laboral.ts             # auto-llm → costo-laboral.ts (cargas patronales + ART)
 ├── patchers/             # primitivas para tocar archivos
 │   ├── data-update-date.ts   # actualiza dataUpdate.lastUpdated en JSON
 │   ├── json-field.ts         # patches a fields[].default y presets[]
