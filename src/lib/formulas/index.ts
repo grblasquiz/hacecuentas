@@ -241,6 +241,116 @@ import { descuentoVolumenCantidad } from './descuento-volumen-cantidad';
 import { markupVsMargen } from './markup-vs-margen';
 import { valorEmpresaMultiploEbitda } from './valor-empresa-multiplo-ebitda';
 
+// Batch 11 — Finanzas + Negocios (100 nuevas)
+import { splitGastosPareja } from './split-gastos-pareja';
+import { ahorroHormiga } from './ahorro-hormiga';
+import { regla503020 } from './regla-50-30-20';
+import { sueldoNecesarioAlquiler } from './sueldo-necesario-alquiler';
+import { costoRealCuotas } from './costo-real-cuotas';
+import { gananciaCrypto } from './ganancia-crypto';
+import { conversionTnaTem } from './conversion-tna-tem';
+import { sueldoAutonomoNeto } from './sueldo-autonomo-neto';
+import { metaAhorroMensual } from './meta-ahorro-mensual';
+import { compararInversiones } from './comparar-inversiones';
+import { margenContribucion } from './margen-contribucion';
+import { burnRateRunway } from './burn-rate-runway';
+import { precioMinimoVenta } from './precio-minimo-venta';
+import { stockSeguridad } from './stock-seguridad';
+import { ticketPromedio } from './ticket-promedio';
+import { paybackInversion } from './payback-inversion';
+import { costoEnvioPaquete } from './costo-envio-paquete';
+import { productividadHora } from './productividad-hora';
+import { proyeccionVentas } from './proyeccion-ventas';
+import { tasaAbandonoCarrito } from './tasa-abandono-carrito';
+
+// Batch 12 — Salud + Mascotas
+import { hidratacionEjercicio } from './hidratacion-ejercicio';
+import { caloriasEscaleras } from './calorias-escaleras';
+import { cinturaAlturaWhtr } from './cintura-altura-whtr';
+import { pesoEmbarazo } from './peso-embarazo';
+import { dosisIbuprofeno } from './dosis-ibuprofeno';
+import { caloriasYoga } from './calorias-yoga';
+import { deficitCalorico } from './deficit-calorico';
+import { fechaConcepcion } from './fecha-concepcion';
+import { evaluacionHidratacion } from './evaluacion-hidratacion';
+import { caloriasTareasHogar } from './calorias-tareas-hogar';
+import { edadConejo } from './edad-conejo';
+import { frecuenciaBanoPerro } from './frecuencia-bano-perro';
+import { caloriasPerro } from './calorias-perro';
+import { dosisAntiparasitario } from './dosis-antiparasitario';
+import { tamanoPecera } from './tamano-pecera';
+import { paseoPerro } from './paseo-perro';
+import { gestacionAnimal } from './gestacion-animal';
+import { edadHamster } from './edad-hamster';
+import { tamanoCuchaPerro } from './tamano-cucha-perro';
+import { costoMascotaMes } from './costo-mascota-mes';
+
+// Batch 13 — Vida + Cocina
+import { tiempoLectura } from './tiempo-lectura';
+import { huellaCarbono } from './huella-carbono';
+import { estimadorUberTaxi } from './estimador-uber-taxi';
+import { exposicionRuido } from './exposicion-ruido';
+import { tiempoDescarga } from './tiempo-descarga';
+import { horasTrabajoComprar } from './horas-trabajo-comprar';
+import { tamanoTvDistancia } from './tamano-tv-distancia';
+import { ahorroBiciVsAuto } from './ahorro-bici-vs-auto';
+import { costoMudanza } from './costo-mudanza';
+import { tamanoColchon } from './tamano-colchon';
+import { masaPizza } from './masa-pizza';
+import { tiempoDescongelar } from './tiempo-descongelar';
+import { caloriasReceta } from './calorias-receta';
+import { salAguaPasta } from './sal-agua-pasta';
+import { porcionesTorta } from './porciones-torta';
+import { temperaturaCarne } from './temperatura-carne';
+import { conversionPesoVolumen } from './conversion-peso-volumen';
+import { proporcionCafe } from './proporcion-cafe';
+import { fermentacionMasa } from './fermentacion-masa';
+import { caloriasBebidaAlcohol } from './calorias-bebida-alcohol';
+
+// Batch 14 — Deportes + Matemática
+import { velocidadCarrera } from './velocidad-carrera';
+import { caloriasCuerda } from './calorias-cuerda';
+import { hidratacionCorredor } from './hidratacion-corredor';
+import { caloriasRemo } from './calorias-remo';
+import { caloriasCrossfit } from './calorias-crossfit';
+import { prediccion5k10k } from './prediccion-5k-10k';
+import { descansoSeries } from './descanso-series';
+import { caloriasBoxeo } from './calorias-boxeo';
+import { ritmoCaminata } from './ritmo-caminata';
+import { vo2maxCooper } from './vo2max-cooper';
+import { determinanteMatriz } from './determinante-matriz';
+import { combinatoriaPermutaciones } from './combinatoria-permutaciones';
+import { conversionBases } from './conversion-bases';
+import { mediaPonderada } from './media-ponderada';
+import { desviacionEstandar } from './desviacion-estandar';
+import { areaCirculoSector } from './area-circulo-sector';
+import { conversionGradosRadianes } from './conversion-grados-radianes';
+import { probabilidadEventos } from './probabilidad-eventos';
+import { fibonacci } from './fibonacci';
+import { teoremaTales } from './teorema-tales';
+
+// Batch 15 — Construcción + Marketing + Viajes
+import { bloquesM2 } from './bloques-m2';
+import { pendienteDesague } from './pendiente-desague';
+import { volumenExcavacion } from './volumen-excavacion';
+import { alambreCerco } from './alambre-cerco';
+import { tornillosDurlock } from './tornillos-durlock';
+import { impermeabilizanteM2 } from './impermeabilizante-m2';
+import { diametroCaneria } from './diametro-caneria';
+import { morteroJuntas } from './mortero-juntas';
+import { espesorVidrio } from './espesor-vidrio';
+import { cargaColumna } from './carga-columna';
+import { roiEmailMarketing } from './roi-email-marketing';
+import { costoPorLead } from './costo-por-lead';
+import { alcanceOrganico } from './alcance-organico';
+import { frecuenciaPublicacion } from './frecuencia-publicacion';
+import { roiInfluencer } from './roi-influencer';
+import { diferenciaHoraria } from './diferencia-horaria';
+import { pesoMochilaTrekking } from './peso-mochila-trekking';
+import { litrosNaftaViaje } from './litros-nafta-viaje';
+import { diasIdealesViaje } from './dias-ideales-viaje';
+import { propinaPais } from './propina-pais';
+
 export const formulas = {
   // Finanzas
   'sueldo-ar': sueldoAR,
@@ -484,6 +594,116 @@ export const formulas = {
   'descuento-volumen-cantidad': descuentoVolumenCantidad,
   'markup-vs-margen': markupVsMargen,
   'valor-empresa-multiplo-ebitda': valorEmpresaMultiploEbitda,
+
+  // Batch 11 — Finanzas + Negocios
+  'split-gastos-pareja': splitGastosPareja,
+  'ahorro-hormiga': ahorroHormiga,
+  'regla-50-30-20': regla503020,
+  'sueldo-necesario-alquiler': sueldoNecesarioAlquiler,
+  'costo-real-cuotas': costoRealCuotas,
+  'ganancia-crypto': gananciaCrypto,
+  'conversion-tna-tem': conversionTnaTem,
+  'sueldo-autonomo-neto': sueldoAutonomoNeto,
+  'meta-ahorro-mensual': metaAhorroMensual,
+  'comparar-inversiones': compararInversiones,
+  'margen-contribucion': margenContribucion,
+  'burn-rate-runway': burnRateRunway,
+  'precio-minimo-venta': precioMinimoVenta,
+  'stock-seguridad': stockSeguridad,
+  'ticket-promedio': ticketPromedio,
+  'payback-inversion': paybackInversion,
+  'costo-envio-paquete': costoEnvioPaquete,
+  'productividad-hora': productividadHora,
+  'proyeccion-ventas': proyeccionVentas,
+  'tasa-abandono-carrito': tasaAbandonoCarrito,
+
+  // Batch 12 — Salud + Mascotas
+  'hidratacion-ejercicio': hidratacionEjercicio,
+  'calorias-escaleras': caloriasEscaleras,
+  'cintura-altura-whtr': cinturaAlturaWhtr,
+  'peso-embarazo': pesoEmbarazo,
+  'dosis-ibuprofeno': dosisIbuprofeno,
+  'calorias-yoga': caloriasYoga,
+  'deficit-calorico': deficitCalorico,
+  'fecha-concepcion': fechaConcepcion,
+  'evaluacion-hidratacion': evaluacionHidratacion,
+  'calorias-tareas-hogar': caloriasTareasHogar,
+  'edad-conejo': edadConejo,
+  'frecuencia-bano-perro': frecuenciaBanoPerro,
+  'calorias-perro': caloriasPerro,
+  'dosis-antiparasitario': dosisAntiparasitario,
+  'tamano-pecera': tamanoPecera,
+  'paseo-perro': paseoPerro,
+  'gestacion-animal': gestacionAnimal,
+  'edad-hamster': edadHamster,
+  'tamano-cucha-perro': tamanoCuchaPerro,
+  'costo-mascota-mes': costoMascotaMes,
+
+  // Batch 13 — Vida + Cocina
+  'tiempo-lectura': tiempoLectura,
+  'huella-carbono': huellaCarbono,
+  'estimador-uber-taxi': estimadorUberTaxi,
+  'exposicion-ruido': exposicionRuido,
+  'tiempo-descarga': tiempoDescarga,
+  'horas-trabajo-comprar': horasTrabajoComprar,
+  'tamano-tv-distancia': tamanoTvDistancia,
+  'ahorro-bici-vs-auto': ahorroBiciVsAuto,
+  'costo-mudanza': costoMudanza,
+  'tamano-colchon': tamanoColchon,
+  'masa-pizza': masaPizza,
+  'tiempo-descongelar': tiempoDescongelar,
+  'calorias-receta': caloriasReceta,
+  'sal-agua-pasta': salAguaPasta,
+  'porciones-torta': porcionesTorta,
+  'temperatura-carne': temperaturaCarne,
+  'conversion-peso-volumen': conversionPesoVolumen,
+  'proporcion-cafe': proporcionCafe,
+  'fermentacion-masa': fermentacionMasa,
+  'calorias-bebida-alcohol': caloriasBebidaAlcohol,
+
+  // Batch 14 — Deportes + Matemática
+  'velocidad-carrera': velocidadCarrera,
+  'calorias-cuerda': caloriasCuerda,
+  'hidratacion-corredor': hidratacionCorredor,
+  'calorias-remo': caloriasRemo,
+  'calorias-crossfit': caloriasCrossfit,
+  'prediccion-5k-10k': prediccion5k10k,
+  'descanso-series': descansoSeries,
+  'calorias-boxeo': caloriasBoxeo,
+  'ritmo-caminata': ritmoCaminata,
+  'vo2max-cooper': vo2maxCooper,
+  'determinante-matriz': determinanteMatriz,
+  'combinatoria-permutaciones': combinatoriaPermutaciones,
+  'conversion-bases': conversionBases,
+  'media-ponderada': mediaPonderada,
+  'desviacion-estandar': desviacionEstandar,
+  'area-circulo-sector': areaCirculoSector,
+  'conversion-grados-radianes': conversionGradosRadianes,
+  'probabilidad-eventos': probabilidadEventos,
+  fibonacci,
+  'teorema-tales': teoremaTales,
+
+  // Batch 15 — Construcción + Marketing + Viajes
+  'bloques-m2': bloquesM2,
+  'pendiente-desague': pendienteDesague,
+  'volumen-excavacion': volumenExcavacion,
+  'alambre-cerco': alambreCerco,
+  'tornillos-durlock': tornillosDurlock,
+  'impermeabilizante-m2': impermeabilizanteM2,
+  'diametro-caneria': diametroCaneria,
+  'mortero-juntas': morteroJuntas,
+  'espesor-vidrio': espesorVidrio,
+  'carga-columna': cargaColumna,
+  'roi-email-marketing': roiEmailMarketing,
+  'costo-por-lead': costoPorLead,
+  'alcance-organico': alcanceOrganico,
+  'frecuencia-publicacion': frecuenciaPublicacion,
+  'roi-influencer': roiInfluencer,
+  'diferencia-horaria': diferenciaHoraria,
+  'peso-mochila-trekking': pesoMochilaTrekking,
+  'litros-nafta-viaje': litrosNaftaViaje,
+  'dias-ideales-viaje': diasIdealesViaje,
+  'propina-pais': propinaPais,
 };
 
 export type FormulaId = keyof typeof formulas;

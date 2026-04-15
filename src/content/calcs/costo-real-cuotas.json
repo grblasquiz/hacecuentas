@@ -1,0 +1,151 @@
+{
+  "slug": "calculadora-costo-real-cuotas-vs-contado",
+  "title": "Calculadora Costo Real en Cuotas vs Contado 2026 — Recargo e Interés | Hacé Cuentas",
+  "h1": "Calculadora de Costo Real en Cuotas vs Contado",
+  "description": "Compará el precio de contado contra el pago en cuotas: calculá el recargo total, porcentaje de interés y tasa mensual real. Argentina 2026. Gratis.",
+  "category": "finanzas",
+  "icon": "💳",
+  "formulaId": "costo-real-cuotas",
+  "seoKeywords": [
+    "costo real cuotas",
+    "cuotas vs contado",
+    "recargo cuotas tarjeta",
+    "tasa interes cuotas",
+    "calculadora cuotas con interes"
+  ],
+  "intro": "¿Te ofrecen **12 cuotas sin interés** pero el precio de contado es menor? ¿O te dicen cuotas fijas pero no sabés cuánto estás pagando de más? Esta calculadora te muestra la **verdad detrás de las cuotas**: cuánto pagás en total, cuánto es de **interés o recargo**, qué **porcentaje de sobreprecio** tiene, y cuál es la **tasa mensual implícita**. Es la herramienta ideal para decidir si conviene pagar de contado (quizás con descuento) o financiar en cuotas. En Argentina, donde las cuotas son moneda corriente, saber el costo real de financiarse es fundamental para no regalar plata.",
+  "keyTakeaway": "**Costo total = Cantidad de cuotas × Monto de cada cuota. Recargo = Costo total − Precio de contado.** Muchas \"12 cuotas sin interés\" tienen un 20-40% de sobreprecio escondido respecto al precio de contado real.",
+  "useCases": [
+    "Te ofrecen un producto en 12 cuotas fijas y querés saber cuánto pagás de más vs contado.",
+    "Querés comparar la opción de contado con descuento vs cuotas con recargo.",
+    "Necesitás calcular la tasa mensual implícita de un plan de cuotas para compararla con tu inversión.",
+    "Estás evaluando financiar una compra grande (electrodoméstico, viaje, auto) y querés ver el costo real.",
+    "Querés saber si te conviene sacar las cuotas o usar la plata que tenés invertida y pagar de contado."
+  ],
+  "fields": [
+    {
+      "id": "precioContado",
+      "label": "Precio de contado",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "500000",
+      "format": "thousands",
+      "min": 0,
+      "step": 1000,
+      "required": true,
+      "help": "El precio si pagás todo junto, de una vez."
+    },
+    {
+      "id": "cantidadCuotas",
+      "label": "Cantidad de cuotas",
+      "type": "number",
+      "placeholder": "12",
+      "min": 1,
+      "step": 1,
+      "required": true,
+      "help": "En cuántas cuotas mensuales se paga."
+    },
+    {
+      "id": "montoCuota",
+      "label": "Monto de cada cuota",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "55000",
+      "format": "thousands",
+      "min": 0,
+      "step": 100,
+      "required": true,
+      "help": "Lo que pagás cada mes de cuota."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-15",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Comparación aritmética de precio contado vs cuotas. Fórmula de tasa implícita."
+  },
+  "outputs": [
+    {
+      "id": "costoTotal",
+      "label": "Costo total en cuotas",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "interesTotal",
+      "label": "Interés / recargo total",
+      "format": "currency"
+    },
+    {
+      "id": "porcentajeRecargo",
+      "label": "Porcentaje de recargo",
+      "format": "number"
+    },
+    {
+      "id": "tasaMensual",
+      "label": "Tasa mensual implícita",
+      "format": "number"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo real: Celular $500.000 contado vs 12 cuotas de $55.000",
+    "steps": [
+      "**Precio contado**: $500.000.",
+      "**12 cuotas de**: $55.000.",
+      "**Costo total en cuotas**: 12 × $55.000 = **$660.000**.",
+      "**Recargo total**: $660.000 − $500.000 = **$160.000**.",
+      "**Porcentaje de recargo**: ($160.000 / $500.000) × 100 = **32%**.",
+      "**Tasa mensual implícita**: ~**2,35%** (calculada con método de Newton).",
+      "**Resultado**: pagás un 32% más en cuotas que de contado."
+    ],
+    "result": "El celular en **12 cuotas de $55.000** te cuesta **$660.000**, o sea **$160.000 más** que de contado (un **32% de recargo**). La tasa mensual implícita es **~2,35%**, equivalente a una TNA del 28,2%."
+  },
+  "explanation": "## Cómo se calcula el costo real de las cuotas\n\n### Recargo simple\n\n```\nCosto total = Cuotas × Monto por cuota\nRecargo = Costo total - Precio contado\n% Recargo = (Recargo / Precio contado) × 100\n```\n\n### Tasa mensual implícita\n\nLa tasa mensual implícita es la tasa que iguala el valor presente de las cuotas con el precio de contado. Se resuelve con la ecuación:\n\n```\nPrecio contado = Cuota × [(1 - (1+r)^(-n)) / r]\n```\n\nDonde `r` es la tasa mensual y `n` el número de cuotas. No tiene solución analítica — se calcula con **método de Newton-Raphson** (iterativo).\n\n### Tabla: recargos típicos en Argentina 2026\n\n| Cuotas | Recargo típico | TNA implícita aprox |\n|---|---|---|\n| 3 sin interés | 0-5% | 0-10% |\n| 6 sin interés | 5-15% | 10-20% |\n| 12 \"sin interés\" | 15-35% | 20-40% |\n| 18 con interés | 30-60% | 30-50% |\n| 24 con interés | 50-80% | 35-55% |\n\n### ¿Cuotas sin interés = realmente sin interés?\n\nEn la mayoría de los casos, **no**. Lo que pasa es:\n\n1. El **precio de contado con descuento** es menor que el precio publicado.\n2. El precio publicado (sobre el que se calculan las \"cuotas sin interés\") ya tiene el financiamiento incluido.\n3. El descuento por contado puede ser 10-30%.\n\n**Ejemplo**: un producto publicado a $600.000 en \"12 cuotas sin interés de $50.000\". Pero si pagás contado te hacen 20% de descuento: $480.000. El recargo real es $120.000 (25%).\n\n### Cuándo convienen las cuotas\n\nLas cuotas convienen cuando:\n\n1. **La tasa implícita es menor a la inflación**: si el recargo es 20% anual pero la inflación es 30%, estás ganando.\n2. **Podés invertir la plata**: si tenés los $500.000 y los ponés en un FCI al 40% TNA mientras pagás cuotas al 28%, ganás la diferencia.\n3. **No tenés la plata**: obvio, si no podés pagar de contado, las cuotas son tu opción.\n\n### Cuándo conviene el contado\n\n1. **El descuento de contado supera el rendimiento de tu inversión**: si te dan 25% de descuento y tu plata rinde 15%, pagá contado.\n2. **No querés deuda**: el beneficio psicológico de no tener cuotas tiene valor.\n3. **Es un gasto chico**: financiar montos chicos no vale la pena por el tracking administrativo.\n\n### Errores comunes\n\n1. **Creer que \"sin interés\" es gratis**: comparar siempre contra el precio de contado real (con descuento).\n2. **No considerar el costo de oportunidad**: la plata que usás para contado podría estar rindiendo.\n3. **Acumular demasiadas cuotas**: 5 compras en cuotas pueden comer todo tu ingreso futuro.\n4. **No leer la letra chica**: algunas cuotas tienen seguros o cargos adicionales.\n\n### Calculadoras relacionadas\n\n- [Cuota de préstamo](/calculadora-cuota-prestamo) — si necesitás un préstamo.\n- [Interés compuesto](/calculadora-interes-compuesto) — costo de oportunidad.\n- [Plazo fijo](/calculadora-plazo-fijo) — rendimiento alternativo.",
+  "faq": [
+    {
+      "q": "¿Las cuotas 'sin interés' realmente no tienen interés?",
+      "a": "**Casi nunca**. El truco es que el precio publicado ya incluye el costo financiero. Pedí siempre el **precio de contado con descuento** y compará: si hay diferencia, eso es el interés escondido. En Argentina, un \"12 cuotas sin interés\" suele tener un 15-35% de recargo respecto al contado real."
+    },
+    {
+      "q": "¿Cómo sé si me conviene pagar contado o en cuotas?",
+      "a": "Compará la **tasa mensual implícita** de las cuotas con el **rendimiento mensual de tu inversión**. Si tu plata rinde más que lo que te cobran en cuotas, financiá y dejá la plata invertida. Ejemplo: cuotas al 2% mensual y tu FCI rinde 3,5% mensual → convienen las cuotas. Si no invertís la plata, pagá contado."
+    },
+    {
+      "q": "¿Qué es la tasa mensual implícita?",
+      "a": "Es la **tasa de interés real** que estás pagando al financiar en cuotas. Se calcula igualando el valor presente de todas las cuotas con el precio de contado. Es la forma más precisa de comparar el costo financiero de las cuotas con otras alternativas de crédito o inversión."
+    },
+    {
+      "q": "¿Cómo se calcula el CFT (Costo Financiero Total)?",
+      "a": "El **CFT** incluye la tasa de interés + seguros + gastos administrativos + IVA sobre intereses. Es siempre **mayor** que la TNA. En Argentina, los bancos están obligados a mostrar el CFT. Esta calculadora te da la tasa implícita (sin gastos extras), que es el piso del costo financiero real."
+    },
+    {
+      "q": "¿Conviene pagar cuotas por adelantado?",
+      "a": "Depende si las cuotas tienen **interés precalculado** o son **sistema francés**. Si el interés ya está calculado en cada cuota fija, adelantar no te ahorra intereses (ya los pagaste). Si es sistema francés (banco/financiera), adelantar reduce el capital y ahorrás intereses futuros. Preguntá antes de adelantar."
+    },
+    {
+      "q": "¿Cómo afecta la inflación a las cuotas?",
+      "a": "**A tu favor**. Si las cuotas son fijas en pesos y hay inflación, cada cuota futura vale menos en términos reales. Si la inflación es 30% anual y tus cuotas son fijas, la última cuota vale un 30% menos en poder adquisitivo que la primera. Por eso en Argentina con inflación alta, **las cuotas fijas tienden a convenir**."
+    },
+    {
+      "q": "¿Cuántas cuotas debería tener como máximo?",
+      "a": "Como regla general, **el total de cuotas mensuales (todas tus compras en cuotas) no debería superar el 20-25% de tu ingreso neto**. Si cobrás $1.000.000 y ya pagás $200.000 en cuotas de compras anteriores, pensalo dos veces antes de sumar más. Usá el [presupuesto 50/30/20](/calculadora-presupuesto-regla-50-30-20) para ver tu margen."
+    }
+  ],
+  "sources": [
+    {
+      "name": "BCRA — Transparencia en tasas de interés",
+      "url": "https://www.bcra.gob.ar/BCRAyVos/Tasas_de_interes.asp"
+    },
+    {
+      "name": "AFIP — Factura electrónica y financiamiento",
+      "url": "https://www.afip.gob.ar"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-cuota-prestamo",
+    "calculadora-interes-compuesto",
+    "calculadora-plazo-fijo"
+  ]
+}
