@@ -139,6 +139,7 @@ const formatFreshnessDate = (iso: string): string => {
             class="preset-btn"
             data-preset={JSON.stringify(p.values)}
             title={p.note}
+            aria-pressed="false"
           >
             {p.label}
           </button>
@@ -155,8 +156,8 @@ const formatFreshnessDate = (iso: string): string => {
             <span class="label-text">{field.label}</span>
             {field.help && (
               <span class="help-wrap">
-                <span class="help" tabindex="0" aria-label={field.help}>?</span>
-                <span class="help-tip" role="tooltip">{field.help}</span>
+                <span class="help" tabindex="0" aria-describedby={`tip-${field.id}`}>?</span>
+                <span class="help-tip" id={`tip-${field.id}`} role="tooltip">{field.help}</span>
               </span>
             )}
           </label>
@@ -207,8 +208,8 @@ const formatFreshnessDate = (iso: string): string => {
                 <span class="label-text">{field.label}</span>
                 {field.help && (
                   <span class="help-wrap">
-                    <span class="help" tabindex="0" aria-label={field.help}>?</span>
-                    <span class="help-tip" role="tooltip">{field.help}</span>
+                    <span class="help" tabindex="0" aria-describedby={`tip-${field.id}`}>?</span>
+                    <span class="help-tip" id={`tip-${field.id}`} role="tooltip">{field.help}</span>
                   </span>
                 )}
               </label>
@@ -272,7 +273,7 @@ const formatFreshnessDate = (iso: string): string => {
     </button>
   </form>
 
-  <div class="calc-results" id={`results-${config.slug}`} hidden>
+  <div class="calc-results" id={`results-${config.slug}`} hidden aria-live="polite" aria-atomic="true">
     <div class="results-header">
       <span class="results-badge">Resultado</span>
     </div>
@@ -860,14 +861,17 @@ const formatFreshnessDate = (iso: string): string => {
   }
 
   /* Historial de cálculos (localStorage) */
+  .calc-history[hidden] { display: none; }
   .calc-history {
     margin: -0.5rem 0 1.25rem;
     padding: 0.75rem 0.875rem;
     background: var(--bg-soft);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
+    min-height: 0;
+    transition: min-height 0.2s;
+    will-change: min-height;
   }
-  .calc-history[hidden] { display: none; }
   .history-head {
     display: flex;
     justify-content: space-between;
@@ -1438,6 +1442,21 @@ const formatFreshnessDate = (iso: string): string => {
     },
   };
 
+  function animateValue(el: HTMLElement, end: any, duration: number) {
+    if (typeof end !== 'number' || isNaN(end) || !isFinite(end)) { el.textContent = end; return; }
+    var start = 0;
+    var startTime: number | null = null;
+    function step(ts: number) {
+      if (!startTime) startTime = ts;
+      var progress = Math.min((ts - startTime) / duration, 1);
+      var eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      var current = start + (end - start) * eased;
+      el.textContent = (el as any)._formatter ? (el as any)._formatter(current) : current.toLocaleString('es-AR', {maximumFractionDigits: 2});
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
   function formatValue(value: number | string, format: string, suffix = ''): string {
     if (value === null || value === undefined || value === '') return '—';
     let formatted: string;
@@ -1628,7 +1647,13 @@ const formatFreshnessDate = (iso: string): string => {
             const suffix = el.dataset.suffix || '';
             const val = output[outId];
             const valueEl = el.querySelector<HTMLElement>('[data-value]')!;
-            valueEl.textContent = formatValue(val, format, suffix);
+            const isPrimary = el.dataset.primary === 'true';
+            if (isPrimary && (format === 'currency' || format === 'number' || format === 'percentage') && typeof val === 'number' && isFinite(val)) {
+              (valueEl as any)._formatter = (n: number) => formatValue(n, format, suffix);
+              animateValue(valueEl, val, 600);
+            } else {
+              valueEl.textContent = formatValue(val, format, suffix);
+            }
           });
           results.hidden = false;
           results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1694,8 +1719,9 @@ const formatFreshnessDate = (iso: string): string => {
               el.value = String(val);
             }
           });
-          container.querySelectorAll('.preset-btn').forEach((b) => b.classList.remove('active'));
+          container.querySelectorAll('.preset-btn').forEach((b) => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
           btn.classList.add('active');
+          btn.setAttribute('aria-pressed', 'true');
           if (typeof (window as any).gtag === 'function') {
             (window as any).gtag('event', 'preset_click', { calc_slug: slug, preset: btn.textContent?.trim() });
           }

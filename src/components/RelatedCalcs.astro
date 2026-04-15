@@ -38,10 +38,22 @@ for (const c of [...manual, ...auto]) {
 
 // 4. Fallback final: si el mapping auto no tiene nada (JSON recién agregado), misma categoría
 if (related.length < limit) {
-  const sameCategory = allCalcs.filter(
-    (c: any) => c.category === category && !seen.has(c.slug)
-  );
-  for (const c of sameCategory) {
+  // Heuristic score: calcs con más contenido SEO tienden a ser más populares/útiles
+  const sameCategory = allCalcs
+    .filter((c: any) => c.category === category && !seen.has(c.slug))
+    .map((c: any) => ({
+      calc: c,
+      score:
+        (c.faq?.length || 0) * 2 +
+        (c.useCases?.length || 0) +
+        (c.example ? 3 : 0) +
+        (c.explanation ? Math.min(c.explanation.length / 500, 5) : 0) +
+        (c.sources?.length || 0) +
+        (c.relatedSlugs?.length || 0) +
+        (c.presets?.items?.length || 0),
+    }))
+    .sort((a: any, b: any) => b.score - a.score);
+  for (const { calc: c } of sameCategory) {
     seen.add(c.slug);
     related.push(c);
     if (related.length >= limit) break;

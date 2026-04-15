@@ -443,6 +443,7 @@ const reportBody = encodeURIComponent(
         <aside class="cta-back">
           <p>¿Buscabas otra calculadora?</p>
           <a href="/" class="btn-ghost">Ver todas las calculadoras →</a>
+          <p class="cta-suggest">¿No encontrás lo que buscás? <a href="mailto:ideas@hacecuentas.com?subject=Idea de calculadora&body=Me gustaría que Hacé Cuentas tenga una calculadora de...">Pedí una calculadora nueva →</a></p>
         </aside>
       </div>
     </div>
@@ -526,8 +527,36 @@ const reportBody = encodeURIComponent(
         }, { rootMargin: '-80px 0px -60% 0px' });
         sections.forEach(function (s) { observer.observe(s); });
       }
+
+      // Floating recalculate FAB (mobile only)
+      var fab = document.getElementById('fab-recalc');
+      if (fab && window.innerWidth < 1100) {
+        var calcSection = document.getElementById('calculadora');
+        if (calcSection) {
+          var resultsEl = calcSection.querySelector('.calc-results');
+          var calcObs = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              if (resultsEl && !resultsEl.hidden && !entry.isIntersecting) {
+                fab.hidden = false;
+              } else {
+                fab.hidden = true;
+              }
+            });
+          }, { threshold: 0 });
+          calcObs.observe(calcSection);
+          fab.addEventListener('click', function () {
+            calcSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        }
+      }
     })();
   </script>
+
+  <!-- Floating recalculate (mobile only, post-result) -->
+  <div class="fab-recalc" id="fab-recalc" hidden aria-label="Volver a calcular">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+    Recalcular
+  </div>
 
   <ScrollToTop />
 
@@ -1189,5 +1218,50 @@ const reportBody = encodeURIComponent(
     .icon-wrap { width: 48px; height: 48px; font-size: 1.5rem; }
     .calc-actions { flex-direction: column; align-items: stretch; }
     .ca-feedback, .ca-tools { justify-content: center; }
+  }
+
+  .fab-recalc {
+    display: none;
+  }
+  @media (max-width: 1099px) {
+    .fab-recalc {
+      display: none; /* JS controls via hidden attr */
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      z-index: 50;
+      padding: 0.625rem 1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .fab-recalc:not([hidden]) {
+      display: inline-flex;
+    }
+    .fab-recalc:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+    }
+  }
+
+  .cta-suggest {
+    margin: 0.75rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+  .cta-suggest a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 500;
   }
 </style>

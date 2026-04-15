@@ -43,7 +43,9 @@ const globalSchema = {
       url: siteUrl,
       logo: `${siteUrl}/favicon.svg`,
       description: 'Calculadoras online gratuitas para todo el mundo hispanohablante, con cobertura específica para Argentina.',
-      sameAs: [],
+      sameAs: [
+        'https://github.com/grblasquiz/hacecuentas',
+      ],
     },
     {
       '@type': 'WebSite',
@@ -126,13 +128,20 @@ const globalSchema = {
     <!-- Schema.org específico de página -->
     {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
 
-    <!-- Fonts -->
+    <!-- Fonts — preload CSS para evitar render-blocking -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap"
-      rel="stylesheet"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" /></noscript>
+
+    <!-- Preconnect CDN externo (Chart.js, KaTeX) -->
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 
     <!-- Google Consent Mode v2 — default 'denied' hasta que el usuario decida (GDPR/AdSense compliant) -->
     <script is:inline>
