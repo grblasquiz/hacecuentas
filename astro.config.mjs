@@ -1,6 +1,9 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import compressor from 'astro-compressor';
+
+// NOTE: astro-compressor removido. Cloudflare Pages comprime automáticamente
+// en el edge (gzip + brotli) → la compresión local era redundante y causaba
+// OOM kill en CI al procesar 650+ archivos con zstd/brotli.
 
 // https://astro.build/config
 export default defineConfig({
@@ -11,9 +14,7 @@ export default defineConfig({
     format: 'file',
   },
   compressHTML: true,
-  integrations: [
-    compressor(), // gzip + brotli de HTML/CSS/JS en dist/
-  ],
+  integrations: [],
   // Prefetch on hover: acelera navegación entre calcs sin inflar el payload inicial.
   // "hover" = prefetch cuando el usuario hoverea un link interno (default en Astro v4+).
   // Para opt-in por link agregar data-astro-prefetch en <a>.
