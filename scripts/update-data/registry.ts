@@ -14,6 +14,7 @@ import type { Frequency } from './utils/freshness.ts';
 import { fetchDolar } from './fetchers/dolar.ts';
 import { fetchBcra } from './fetchers/bcra.ts';
 import { fetchIpc } from './fetchers/ipc.ts';
+import { fetchMonotributo } from './fetchers/monotributo.ts';
 
 export interface FetcherEntry {
   name: string;
@@ -44,6 +45,15 @@ export const REGISTRY: FetcherEntry[] = [
     slugs: ['calculadora-actualizacion-inflacion-ipc'],
     frequency: 'monthly',
     run: fetchIpc,
+  },
+  {
+    name: 'monotributo',
+    // Solo `calculadora-monotributo-2026` usa la formula monotributo.ts.
+    // `calculadora-monotributo-vs-responsable-inscripto` usa monotributo-vs-inscripto.ts
+    // con otra estructura — requiere su propio fetcher (pendiente).
+    slugs: ['calculadora-monotributo-2026'],
+    frequency: 'biannual',
+    run: fetchMonotributo,
   },
 ];
 

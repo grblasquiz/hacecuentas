@@ -1,29 +1,33 @@
-name: Update data (biannual / yearly — issue tracker)
+name: Update data (biannual auto-llm)
 
-# Los calcs con frequency biannual/yearly requieren un updater auto-llm
-# (leer normativa desde páginas oficiales, a veces PDFs). Ese fetcher todavía
-# no está implementado.
+# Los calcs con frequency biannual/yearly requieren updater auto-llm: leer
+# fuentes oficiales (AFIP/ARCA, ANSES, infoleg) que no tienen API REST
+# estructurada. Usamos Claude + web_search + web_fetch para investigar y
+# parsear a JSON.
 #
-# Hasta que esté, este workflow crea un issue cada 6 meses (15 enero y 15
-# julio) con la lista de calcs que probablemente necesiten revisión manual.
-# Así Martin no se olvida y podemos trackear el backlog.
-#
-# Cuando implementemos el auto-llm fetcher, este workflow va a correrlo
-# en vez de abrir issue.
+# Si ANTHROPIC_API_KEY está configurada como secret, corre los fetchers
+# auto-llm y abre PR. Si no, abre un issue con checklist para revisión
+# manual (modo fallback hasta que se configure la key).
 
 on:
   schedule:
     # 15 de enero y 15 de julio, 10:00 UTC
     - cron: '0 10 15 1,7 *'
   workflow_dispatch:
+    inputs:
+      dry:
+        description: 'Dry run (no escribe archivos, no abre PR)'
+        type: boolean
+        default: false
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
   issues: write
 
 jobs:
-  remind:
-    name: Crear issue de revisión
+  update:
+    name: Auto-LLM fetchers
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,22 +42,87 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Generate pending list
+      - name: Detect API key
+        id: config
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "mode=auto" >> $GITHUB_OUTPUT
+            echo "✓ ANTHROPIC_API_KEY configurada — corriendo auto-llm"
+          else
+            echo "mode=manual" >> $GITHUB_OUTPUT
+            echo "✗ ANTHROPIC_API_KEY no configurada — abrirá issue de revisión manual"
+          fi
+
+      # Modo AUTO: corre fetchers auto-llm con Claude
+      - name: Run biannual fetchers
+        if: steps.config.outputs.mode == 'auto'
+        id: run
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          FLAGS="--frequency=biannual"
+          if [ "${{ inputs.dry }}" = "true" ]; then FLAGS="$FLAGS --dry"; fi
+          node --experimental-strip-types scripts/update-data/index.ts $FLAGS | tee /tmp/update.log
+          SUMMARY=$(grep '^SUMMARY::' /tmp/update.log | tail -1 | sed 's/^SUMMARY:://')
+          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+          CHANGED=$(echo "$SUMMARY" | node -e "const s=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log(s.changed||0)")
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+
+      - name: Create pull request
+        if: steps.config.outputs.mode == 'auto' && steps.run.outputs.changed != '0' && inputs.dry != true
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: auto/update-biannual
+          delete-branch: true
+          commit-message: |
+            chore(data): actualización semestral auto-llm
+
+            ${{ steps.run.outputs.summary }}
+          title: '🔄 Update data (biannual auto-llm) — ${{ github.run_number }}'
+          body: |
+            Pipeline automático de actualización semestral usando Claude + WebSearch.
+
+            **Summary:**
+            ```json
+            ${{ steps.run.outputs.summary }}
+            ```
+
+            ⚠️ **REVISAR CUIDADOSAMENTE** — estos valores vienen de Claude investigando
+            fuentes oficiales (AFIP/ARCA, ANSES, infoleg, etc.). Verificar contra la
+            normativa publicada antes de mergear:
+
+            - Chequear que los valores nuevos matcheen con la resolución/ley oficial.
+            - Confirmar la fecha de vigencia (a veces rigen retroactivamente).
+            - Revisar que no haya cambios estructurales (categorías nuevas/removidas).
+
+            Si algo está mal, cerrar el PR y corregir el prompt del fetcher antes del próximo cron.
+          labels: |
+            data-update
+            automated
+            auto-llm
+            needs-review
+
+      # Modo MANUAL: abre issue con checklist (fallback cuando falta API key)
+      - name: Generate pending list (fallback)
+        if: steps.config.outputs.mode == 'manual'
         id: pending
         run: |
           node --experimental-strip-types scripts/update-data/index.ts --report > /tmp/report.txt 2>&1 || true
           {
             echo 'body<<EOF'
-            echo "## 📋 Revisión semestral de calcs biannual / yearly"
+            echo "## 📋 Revisión semestral manual"
             echo ""
-            echo "Estos calcs tienen frecuencia de actualización biannual o yearly y"
-            echo "requieren revisión manual (todavía no hay fetcher auto-llm)."
+            echo "**Config pendiente:** falta \`ANTHROPIC_API_KEY\` en los secrets del repo."
+            echo "Agregarla en Settings → Secrets → Actions para que este workflow corra"
+            echo "los fetchers auto-llm automáticamente en vez de abrir este issue."
             echo ""
-            echo "### Checklist"
+            echo "### Checklist manual"
             echo ""
-            echo "- [ ] Revisar cada fuente oficial (AFIP/ARCA, ANSES, Ministerio de Trabajo, etc.)"
+            echo "- [ ] Revisar cada fuente oficial (AFIP/ARCA, ANSES, Ministerio de Trabajo)"
             echo "- [ ] Actualizar valores hardcodeados en formulas \`.ts\` y presets JSON"
-            echo "- [ ] Correr \`npm run new-calc\` si hay calcs nuevas (no olvidar \`dataUpdate\`)"
             echo "- [ ] Verificar que \`lastUpdated\` quedó con fecha correcta"
             echo "- [ ] Correr \`npm run build\` y revisar que no falle validación"
             echo ""
@@ -67,7 +136,8 @@ jobs:
             echo EOF
           } >> $GITHUB_OUTPUT
 
-      - name: Create issue
+      - name: Create fallback issue
+        if: steps.config.outputs.mode == 'manual'
         uses: actions/github-script@v7
         with:
           script: |
@@ -78,5 +148,5 @@ jobs:
               repo: context.repo.repo,
               title: `📋 Revisión semestral de datos — ${today}`,
               body,
-              labels: ['data-update', 'manual-review']
+              labels: ['data-update', 'manual-review', 'config-needed']
             });
