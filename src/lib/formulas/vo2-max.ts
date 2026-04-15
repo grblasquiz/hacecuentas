@@ -4,6 +4,7 @@ export interface Outputs {
   vo2max: number;
   categoria: string;
   percentilEdad: string;
+  _chart?: any;
 }
 
 export function vo2Max(i: Inputs): Outputs {
@@ -44,9 +45,29 @@ export function vo2Max(i: Inputs): Outputs {
   else if (vo2 < row[5]) cat = 'Muy bueno';
   else cat = 'Excelente (atlético)';
 
+  // Chart tipo "scale": rangos de categoría + marker con el valor del usuario
+  const rangos = [
+    { nombre: 'Muy bajo', max: row[1] },
+    { nombre: 'Bajo', max: row[2] },
+    { nombre: 'Promedio', max: row[3] },
+    { nombre: 'Bueno', max: row[4] },
+    { nombre: 'Muy bueno', max: row[5] },
+    { nombre: 'Excelente', max: Math.max(row[5] + 10, Math.ceil(vo2) + 2) },
+  ];
+  const chart = {
+    type: 'scale' as const,
+    ariaLabel: `Escala de VO2max: tu valor ${Math.round(vo2 * 10) / 10} ml/kg/min cae en la categoría "${cat}".`,
+    marker: Math.round(vo2 * 10) / 10,
+    markerLabel: `Tu VO2max: ${Math.round(vo2 * 10) / 10}`,
+    segments: rangos,
+    unit: 'ml/kg/min',
+    min: 0,
+  };
+
   return {
     vo2max: Math.round(vo2 * 10) / 10,
     categoria: cat,
     percentilEdad: `Referencia para ${sexo === 'f' ? 'mujeres' : 'hombres'} de ~${row[0]} años: promedio ${row[3]} ml/kg/min`,
+    _chart: chart,
   };
 }

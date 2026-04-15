@@ -73,6 +73,18 @@ const advancedFields = config.fields.filter((f) => f.advanced);
 ---
 
 <div class="calc-container" data-slug={config.slug} data-formula={config.formulaId}>
+  <!-- Historial: últimos cálculos del usuario (localStorage) — solo se muestra si hay entries -->
+  <div class="calc-history" data-history-widget hidden>
+    <div class="history-head">
+      <span class="history-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+        Tus últimos cálculos
+      </span>
+      <button type="button" class="history-clear" data-history-clear aria-label="Borrar historial">Limpiar</button>
+    </div>
+    <div class="history-list" data-history-list></div>
+  </div>
+
   {config.presets && config.presets.items.length > 0 && (
     <div class="presets">
       {config.presets.title && <span class="presets-title">{config.presets.title}</span>}
@@ -229,6 +241,10 @@ const advancedFields = config.fields.filter((f) => f.advanced);
       ))}
     </div>
 
+    <div class="chart-wrap" data-chart-wrap hidden>
+      <canvas data-chart-canvas role="img" aria-label="Gráfico del resultado"></canvas>
+    </div>
+
     {disclaimer && (
       <div class="inline-disclaimer" role="note">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -266,6 +282,27 @@ const advancedFields = config.fields.filter((f) => f.advanced);
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
         Nuevo cálculo
       </button>
+    </div>
+
+    <!-- Feedback inline: thumbs + comentario opcional -->
+    <div class="feedback" data-feedback>
+      <div class="feedback-prompt" data-feedback-prompt>
+        <span>¿Te sirvió este cálculo?</span>
+        <button type="button" class="fb-btn" data-feedback-vote="up" aria-label="Sí, me sirvió">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7V10l4-8a1 1 0 0 1 1 .52z" fill="none"/></svg>
+          Sí
+        </button>
+        <button type="button" class="fb-btn" data-feedback-vote="down" aria-label="No, no me sirvió">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H17v12l-4 8a1 1 0 0 1-1-.52z" fill="none"/></svg>
+          No
+        </button>
+      </div>
+      <div class="feedback-followup" data-feedback-followup hidden>
+        <label for={`fb-msg-${config.slug}`} class="fb-label" data-feedback-label></label>
+        <textarea id={`fb-msg-${config.slug}`} rows="2" maxlength="500" placeholder="Contanos (opcional, 500 chars)" data-feedback-text></textarea>
+        <button type="button" class="fb-send" data-feedback-send>Enviar</button>
+      </div>
+      <div class="feedback-thanks" data-feedback-thanks hidden>¡Gracias! Tu feedback nos ayuda a mejorar.</div>
     </div>
   </div>
 
@@ -633,6 +670,27 @@ const advancedFields = config.fields.filter((f) => f.advanced);
     letter-spacing: -0.025em;
   }
 
+  /* Chart (lazy loaded Chart.js) */
+  .chart-wrap {
+    margin-top: 1rem;
+    padding: 0.875rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    position: relative;
+  }
+  .chart-wrap[hidden] { display: none; }
+  .chart-wrap canvas {
+    display: block;
+    width: 100% !important;
+    max-width: 100%;
+    height: 280px !important;
+  }
+  @media (max-width: 640px) {
+    .chart-wrap canvas { height: 240px !important; }
+    .chart-wrap { padding: 0.625rem; }
+  }
+
   /* Disclaimer inline */
   .inline-disclaimer {
     display: flex;
@@ -732,9 +790,177 @@ const advancedFields = config.fields.filter((f) => f.advanced);
     background-size: contain;
   }
 
+  /* Historial de cálculos (localStorage) */
+  .calc-history {
+    margin: -0.5rem 0 1.25rem;
+    padding: 0.75rem 0.875rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .calc-history[hidden] { display: none; }
+  .history-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .history-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .history-clear {
+    background: none;
+    border: none;
+    color: var(--text-subtle);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0 0.25rem;
+  }
+  .history-clear:hover { color: var(--danger); }
+  .history-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+  .history-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    font-family: var(--font-mono);
+    transition: all 0.15s;
+  }
+  .history-item:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent-strong);
+  }
+  .history-item strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .history-item time {
+    color: var(--text-subtle);
+    font-size: 0.6875rem;
+    margin-left: 0.25rem;
+  }
+
+  /* Feedback inline */
+  .feedback {
+    margin-top: 1rem;
+    padding-top: 0.875rem;
+    border-top: 1px dashed var(--border);
+    font-size: 0.8125rem;
+  }
+  .feedback-prompt {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .fb-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.625rem;
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .fb-btn:hover {
+    background: var(--bg-muted);
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+  .fb-btn[data-feedback-vote="up"].selected {
+    background: var(--success-soft);
+    color: var(--success);
+    border-color: var(--success);
+  }
+  .fb-btn[data-feedback-vote="down"].selected {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-color: var(--danger);
+  }
+  .feedback-followup {
+    margin-top: 0.625rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .fb-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .feedback-followup textarea {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    resize: vertical;
+    font-family: inherit;
+  }
+  .feedback-followup textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .fb-send {
+    align-self: flex-start;
+    padding: 0.4rem 0.875rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .fb-send:hover { background: var(--accent-hover); }
+  .feedback-thanks {
+    color: var(--success);
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
   @media (max-width: 640px) {
     .calc-container { padding: 1.25rem; }
     .fields-grid { grid-template-columns: 1fr; }
+    /* Sticky CTA mobile: el "Calcular" se pega al bottom dentro del form */
+    .btn-primary {
+      position: sticky;
+      bottom: 0.5rem;
+      z-index: 10;
+      box-shadow: 0 4px 14px -2px rgb(37 99 235 / 0.35), 0 2px 6px -1px rgb(15 23 42 / 0.15);
+    }
+    /* En estado loading o cuando los resultados ya aparecen, desactivar sticky */
+    .calc-container:has(.calc-results:not([hidden])) .btn-primary,
+    .btn-primary.loading {
+      position: static;
+      box-shadow: var(--shadow-sm);
+    }
   }
 </style>
 
@@ -844,6 +1070,304 @@ const advancedFields = config.fields.filter((f) => f.advanced);
 
 <script>
   import { formulas } from '../lib/formulas/index';
+
+  // ── Chart.js lazy loader (singleton) ─────────────────────────
+  const CHART_CDN = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js';
+  let chartJsPromise: Promise<any> | null = null;
+  function loadChartJs(): Promise<any> {
+    if ((window as any).Chart) return Promise.resolve((window as any).Chart);
+    if (chartJsPromise) return chartJsPromise;
+    chartJsPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = CHART_CDN;
+      s.async = true;
+      s.crossOrigin = 'anonymous';
+      s.onload = () => resolve((window as any).Chart);
+      s.onerror = () => {
+        chartJsPromise = null;
+        reject(new Error('No se pudo cargar Chart.js'));
+      };
+      document.head.appendChild(s);
+    });
+    return chartJsPromise;
+  }
+
+  function themeColors() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return {
+      isDark,
+      text: isDark ? '#cbd5e1' : '#475569',
+      grid: isDark ? 'rgba(203, 213, 225, 0.12)' : 'rgba(71, 85, 105, 0.12)',
+      accent: isDark ? '#60a5fa' : '#2563eb',
+      accentSoft: isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(37, 99, 235, 0.14)',
+      accentStrong: isDark ? '#93c5fd' : '#1d4ed8',
+      muted: isDark ? '#94a3b8' : '#64748b',
+      mutedSoft: isDark ? 'rgba(148, 163, 184, 0.35)' : 'rgba(100, 116, 139, 0.22)',
+    };
+  }
+
+  // Formato compacto (1.2k, 3.4M) para ejes numéricos
+  function compactFmt(n: number): string {
+    if (!isFinite(n)) return String(n);
+    const abs = Math.abs(n);
+    if (abs >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B';
+    if (abs >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (abs >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(Math.round(n * 100) / 100);
+  }
+
+  // Render: devuelve la instancia Chart o null
+  function renderChart(Chart: any, canvas: HTMLCanvasElement, spec: any, existing: any | null): any {
+    if (existing) { try { existing.destroy(); } catch {} }
+    const col = themeColors();
+    const type = spec.type;
+
+    // Tipo "scale": lo renderizamos como un bar horizontal con un único segmento coloreado por categoría,
+    // y un marker vertical con annotations (sin plugins: hacemos overlay simple).
+    if (type === 'scale') {
+      const segments = spec.segments as Array<{ nombre: string; max: number }>;
+      const minVal = spec.min ?? 0;
+      const marker = spec.marker as number;
+      const markerLabel = spec.markerLabel as string;
+      const unit = spec.unit || '';
+      // Construimos segmentos: cada uno es una barra apilada horizontal
+      const palette = col.isDark
+        ? ['#7f1d1d', '#9a3412', '#b45309', '#166534', '#1e40af', '#6d28d9']
+        : ['#fecaca', '#fed7aa', '#fde68a', '#bbf7d0', '#bfdbfe', '#ddd6fe'];
+      const palText = col.isDark ? '#f1f5f9' : '#334155';
+      let cursor = minVal;
+      const datasets = segments.map((seg, idx) => {
+        const width = Math.max(0, seg.max - cursor);
+        const ds = {
+          label: seg.nombre,
+          data: [width],
+          backgroundColor: palette[idx % palette.length],
+          borderWidth: 0,
+          barPercentage: 0.75,
+          categoryPercentage: 0.75,
+          stack: 's',
+        };
+        cursor = seg.max;
+        return ds;
+      });
+      const finalMax = segments[segments.length - 1].max;
+
+      return new Chart(canvas, {
+        type: 'bar',
+        data: { labels: [spec.markerLabel ? '' : 'Rango'], datasets },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 28, bottom: 4, left: 8, right: 16 } },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: col.text, boxWidth: 10, padding: 8, font: { size: 11 } },
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx: any) => `${ctx.dataset.label}`,
+              },
+            },
+            markerAnnotation: {
+              value: marker,
+              label: markerLabel,
+              min: minVal,
+              max: finalMax,
+              color: col.accent,
+              textColor: col.text,
+              bg: col.isDark ? '#0f172a' : '#ffffff',
+              unit,
+            },
+          },
+          scales: {
+            x: {
+              stacked: true,
+              min: minVal,
+              max: finalMax,
+              ticks: {
+                color: col.text,
+                callback: (v: any) => compactFmt(Number(v)) + (unit ? ' ' + unit.split(' ')[0] : ''),
+              },
+              grid: { color: col.grid, drawBorder: false },
+            },
+            y: {
+              stacked: true,
+              ticks: { color: col.text, display: false },
+              grid: { display: false, drawBorder: false },
+            },
+          },
+        },
+        plugins: [markerAnnotationPlugin],
+      });
+    }
+
+    // Line / bar genéricos
+    const isBar = type === 'bar';
+    const isStacked = !!spec.stacked;
+    const indexAxis = spec.indexAxis || 'x';
+
+    const palette = [col.accent, col.muted];
+    const paletteSoft = [col.accentSoft, col.mutedSoft];
+
+    const datasets = (spec.data.datasets || []).map((ds: any, idx: number) => {
+      const useMuted = ds.color === 'muted' || idx > 0;
+      const border = useMuted ? palette[1] : palette[0];
+      const fill = useMuted ? paletteSoft[1] : paletteSoft[0];
+      const base: any = {
+        label: ds.label,
+        data: ds.data,
+      };
+      if (isBar) {
+        base.backgroundColor = useMuted ? paletteSoft[1] : col.accent;
+        base.borderColor = border;
+        base.borderWidth = 0;
+        base.borderRadius = 4;
+        base.maxBarThickness = 48;
+        if (isStacked) base.stack = 's';
+      } else {
+        base.borderColor = border;
+        base.backgroundColor = fill;
+        base.fill = ds.fill !== false;
+        base.tension = typeof ds.tension === 'number' ? ds.tension : 0.25;
+        base.pointRadius = ds.data.length > 40 ? 0 : 2;
+        base.pointHoverRadius = 4;
+        base.borderWidth = 2;
+        if (ds.dashed) base.borderDash = [6, 4];
+      }
+      return base;
+    });
+
+    // suffix para tooltip y ticks
+    const suffix = (spec.data.datasets && spec.data.datasets[0] && spec.data.datasets[0].suffix) || '';
+
+    const options: any = {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: datasets.length > 1,
+          position: 'bottom',
+          labels: { color: col.text, boxWidth: 12, padding: 10, font: { size: 11 } },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx: any) => {
+              const v = ctx.parsed.y ?? ctx.parsed.x ?? ctx.parsed;
+              const num = typeof v === 'number' ? v : Number(v);
+              const s = suffix || '';
+              if (s === '%') return `${ctx.dataset.label}: ${num.toFixed(2)}%`;
+              if (s) return `${ctx.dataset.label}: ${new Intl.NumberFormat('es-AR').format(num)}${s}`;
+              return `${ctx.dataset.label}: ${new Intl.NumberFormat('es-AR').format(num)}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: (() => {
+          const xs: any = {
+            stacked: isStacked,
+            ticks: {
+              color: col.text,
+              maxRotation: 0,
+              autoSkip: true,
+              maxTicksLimit: indexAxis === 'y' ? 8 : 10,
+            },
+            grid: { color: col.grid, drawBorder: false },
+          };
+          if (indexAxis === 'y') {
+            // Para barras horizontales con rangos, permitimos override de xRange
+            if (Array.isArray(spec.xRange) && spec.xRange.length === 2) {
+              xs.min = spec.xRange[0];
+              xs.max = spec.xRange[1];
+            } else {
+              xs.beginAtZero = true;
+            }
+            xs.ticks.callback = (v: any) => compactFmt(Number(v)) + (suffix === '%' ? '%' : '');
+          }
+          return xs;
+        })(),
+        y: (() => {
+          const ys: any = {
+            stacked: isStacked,
+            ticks: { color: col.text },
+            grid: { color: col.grid, drawBorder: false },
+          };
+          if (indexAxis === 'x') {
+            ys.beginAtZero = true;
+            ys.ticks.callback = (v: any) => compactFmt(Number(v)) + (suffix === '%' ? '%' : '');
+          }
+          return ys;
+        })(),
+      },
+    };
+
+    return new Chart(canvas, {
+      type: isBar ? 'bar' : 'line',
+      data: { labels: spec.data.labels, datasets },
+      options,
+    });
+  }
+
+  // Plugin: dibuja un marker vertical sobre un gráfico "scale"
+  const markerAnnotationPlugin = {
+    id: 'markerAnnotation',
+    afterDatasetsDraw(chart: any, _args: any, opts: any) {
+      if (!opts || typeof opts.value !== 'number') return;
+      const { ctx, chartArea, scales } = chart;
+      const xScale = scales.x;
+      if (!xScale) return;
+      const clamped = Math.max(opts.min ?? xScale.min, Math.min(opts.max ?? xScale.max, opts.value));
+      const x = xScale.getPixelForValue(clamped);
+      const top = chartArea.top - 24;
+      const bottom = chartArea.bottom;
+      ctx.save();
+      // línea vertical
+      ctx.strokeStyle = opts.color || '#2563eb';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(x, top + 18);
+      ctx.lineTo(x, bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // pill con label
+      const label = opts.label || String(opts.value);
+      ctx.font = '600 11px system-ui, -apple-system, sans-serif';
+      const padX = 8;
+      const padY = 4;
+      const metrics = ctx.measureText(label);
+      const w = metrics.width + padX * 2;
+      const h = 20;
+      let pillX = x - w / 2;
+      if (pillX < chartArea.left) pillX = chartArea.left;
+      if (pillX + w > chartArea.right) pillX = chartArea.right - w;
+      const pillY = top;
+      // fondo
+      ctx.fillStyle = opts.color || '#2563eb';
+      const r = 10;
+      ctx.beginPath();
+      ctx.moveTo(pillX + r, pillY);
+      ctx.lineTo(pillX + w - r, pillY);
+      ctx.quadraticCurveTo(pillX + w, pillY, pillX + w, pillY + r);
+      ctx.lineTo(pillX + w, pillY + h - r);
+      ctx.quadraticCurveTo(pillX + w, pillY + h, pillX + w - r, pillY + h);
+      ctx.lineTo(pillX + r, pillY + h);
+      ctx.quadraticCurveTo(pillX, pillY + h, pillX, pillY + h - r);
+      ctx.lineTo(pillX, pillY + r);
+      ctx.quadraticCurveTo(pillX, pillY, pillX + r, pillY);
+      ctx.closePath();
+      ctx.fill();
+      // texto
+      ctx.fillStyle = '#ffffff';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, pillX + padX, pillY + h / 2 + 0.5);
+      ctx.restore();
+    },
+  };
 
   function formatValue(value: number | string, format: string, suffix = ''): string {
     if (value === null || value === undefined || value === '') return '—';
@@ -958,6 +1482,10 @@ const advancedFields = config.fields.filter((f) => f.advanced);
     const errorBox = container.querySelector<HTMLElement>('.calc-error')!;
     const submitBtn = form.querySelector<HTMLButtonElement>('.btn-primary')!;
     const formula = (formulas as any)[formulaId];
+    const chartWrap = container.querySelector<HTMLElement>('[data-chart-wrap]');
+    const chartCanvas = container.querySelector<HTMLCanvasElement>('[data-chart-canvas]');
+    let chartInstance: any = null;
+    let lastChartSpec: any = null;
 
     if (!formula) {
       console.error(`Fórmula no encontrada: ${formulaId}`);
@@ -1036,6 +1564,25 @@ const advancedFields = config.fields.filter((f) => f.advanced);
           results.hidden = false;
           results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
+          // Chart opcional — solo si la fórmula devolvió _chart
+          if (output._chart && chartWrap && chartCanvas) {
+            lastChartSpec = output._chart;
+            if (output._chart.ariaLabel) {
+              chartCanvas.setAttribute('aria-label', output._chart.ariaLabel);
+            }
+            chartWrap.hidden = false;
+            loadChartJs().then((Chart) => {
+              chartInstance = renderChart(Chart, chartCanvas, output._chart, chartInstance);
+            }).catch((err) => {
+              console.warn('[Calculator] Chart.js load failed:', err);
+              chartWrap.hidden = true;
+            });
+          } else if (chartWrap) {
+            chartWrap.hidden = true;
+            if (chartInstance) { try { chartInstance.destroy(); } catch {} chartInstance = null; }
+            lastChartSpec = null;
+          }
+
           // GA4 event
           if (typeof (window as any).gtag === 'function') {
             (window as any).gtag('event', 'calculator_used', {
@@ -1043,6 +1590,17 @@ const advancedFields = config.fields.filter((f) => f.advanced);
               formula_id: formulaId,
             });
           }
+
+          // Guardar en historial (localStorage) — solo si la primary existe
+          try {
+            const primaryEl = container.querySelector<HTMLElement>('.result.primary');
+            const primaryValue = primaryEl?.querySelector<HTMLElement>('[data-value]')?.textContent || '';
+            const primaryLabel = primaryEl?.querySelector<HTMLElement>('.result-label')?.textContent || '';
+            if (primaryValue && primaryValue !== '—') {
+              saveToHistory(slug, { inputs, primary: primaryValue, label: primaryLabel, ts: Date.now() });
+              renderHistory(container, slug, form);
+            }
+          } catch {}
         } catch (err: any) {
           errorBox.textContent = err.message || 'Error al calcular. Revisá los datos.';
           errorBox.hidden = false;
@@ -1147,9 +1705,161 @@ const advancedFields = config.fields.filter((f) => f.advanced);
           form.reset();
           results.hidden = true;
           errorBox.hidden = true;
+          if (chartWrap) chartWrap.hidden = true;
+          if (chartInstance) { try { chartInstance.destroy(); } catch {} chartInstance = null; }
+          lastChartSpec = null;
           form.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });
     });
+
+    // ── Re-render del chart al cambiar tema o al resize ────────
+    if (chartWrap && chartCanvas) {
+      const themeObserver = new MutationObserver(() => {
+        if (!lastChartSpec || !(window as any).Chart) return;
+        chartInstance = renderChart((window as any).Chart, chartCanvas, lastChartSpec, chartInstance);
+      });
+      themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+      let resizeTimer: any = null;
+      window.addEventListener('resize', () => {
+        if (!chartInstance) return;
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => { try { chartInstance.resize(); } catch {} }, 120);
+      });
+    }
+
+    // ── Historial ──────────────────────────────────────────────
+    renderHistory(container, slug, form);
+
+    container.querySelector<HTMLButtonElement>('[data-history-clear]')?.addEventListener('click', () => {
+      try {
+        localStorage.removeItem(`hc-history-${slug}`);
+        renderHistory(container, slug, form);
+      } catch {}
+    });
+
+    // ── Feedback ──────────────────────────────────────────────
+    const fbEl = container.querySelector<HTMLElement>('[data-feedback]');
+    if (fbEl) {
+      // Ocultar si ya votó recientemente (hace menos de 30 días)
+      try {
+        const last = localStorage.getItem(`hc-feedback-${slug}`);
+        if (last) {
+          const lastTs = Number(last);
+          if (!isNaN(lastTs) && Date.now() - lastTs < 30 * 24 * 60 * 60 * 1000) {
+            fbEl.hidden = true;
+          }
+        }
+      } catch {}
+
+      let currentVote: 'up' | 'down' | null = null;
+      const promptEl = fbEl.querySelector<HTMLElement>('[data-feedback-prompt]')!;
+      const followupEl = fbEl.querySelector<HTMLElement>('[data-feedback-followup]')!;
+      const labelEl = fbEl.querySelector<HTMLElement>('[data-feedback-label]')!;
+      const textEl = fbEl.querySelector<HTMLTextAreaElement>('[data-feedback-text]')!;
+      const thanksEl = fbEl.querySelector<HTMLElement>('[data-feedback-thanks]')!;
+
+      fbEl.querySelectorAll<HTMLButtonElement>('[data-feedback-vote]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          currentVote = btn.dataset.feedbackVote as 'up' | 'down';
+          fbEl.querySelectorAll('[data-feedback-vote]').forEach((b) => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          labelEl.textContent = currentVote === 'up' ? '¿Qué fue lo mejor? (opcional)' : '¿Qué te faltó o estuvo mal? (opcional)';
+          followupEl.hidden = false;
+          textEl.focus();
+          if (typeof (window as any).gtag === 'function') {
+            (window as any).gtag('event', 'feedback_vote', { calc_slug: slug, vote: currentVote });
+          }
+        });
+      });
+
+      fbEl.querySelector<HTMLButtonElement>('[data-feedback-send]')?.addEventListener('click', () => {
+        const text = textEl.value.trim().slice(0, 500);
+        if (typeof (window as any).gtag === 'function') {
+          (window as any).gtag('event', 'feedback_submit', {
+            calc_slug: slug,
+            vote: currentVote,
+            feedback_text: text || '(sin comentario)',
+          });
+        }
+        try { localStorage.setItem(`hc-feedback-${slug}`, String(Date.now())); } catch {}
+        promptEl.hidden = true;
+        followupEl.hidden = true;
+        thanksEl.hidden = false;
+      });
+    }
   });
+
+  // ── Helpers de historial ─────────────────────────────────────
+  const HISTORY_MAX = 5;
+
+  function saveToHistory(
+    slug: string,
+    entry: { inputs: Record<string, string | number>; primary: string; label: string; ts: number }
+  ) {
+    try {
+      const key = `hc-history-${slug}`;
+      const existing: any[] = JSON.parse(localStorage.getItem(key) || '[]');
+      // Deduplicar: si ya existe un entry con los mismos inputs, lo movemos al frente (no duplicamos)
+      const inputsKey = JSON.stringify(entry.inputs);
+      const filtered = existing.filter((e) => JSON.stringify(e.inputs) !== inputsKey);
+      const next = [entry, ...filtered].slice(0, HISTORY_MAX);
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch {}
+  }
+
+  function renderHistory(container: HTMLElement, slug: string, form: HTMLFormElement) {
+    const widget = container.querySelector<HTMLElement>('[data-history-widget]');
+    const list = container.querySelector<HTMLElement>('[data-history-list]');
+    if (!widget || !list) return;
+
+    let history: any[] = [];
+    try { history = JSON.parse(localStorage.getItem(`hc-history-${slug}`) || '[]'); } catch {}
+
+    if (history.length === 0) {
+      widget.hidden = true;
+      return;
+    }
+    widget.hidden = false;
+    list.innerHTML = '';
+
+    history.forEach((entry) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'history-item';
+      const timeAgo = relativeTime(entry.ts);
+      btn.innerHTML = `<strong>${escapeHtml(entry.primary)}</strong><span>${escapeHtml(entry.label || '')}</span><time>${timeAgo}</time>`;
+      btn.addEventListener('click', () => {
+        // Precargar form con los inputs del entry y resubmit
+        Object.entries(entry.inputs).forEach(([name, val]) => {
+          const el = form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`);
+          if (!el) return;
+          if ((el as HTMLInputElement).dataset?.format === 'thousands') {
+            el.value = new Intl.NumberFormat('es-AR').format(Number(val));
+          } else {
+            el.value = String(val);
+          }
+        });
+        form.requestSubmit();
+      });
+      list.appendChild(btn);
+    });
+  }
+
+  function relativeTime(ts: number): string {
+    const diff = Date.now() - ts;
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return 'ahora';
+    if (min < 60) return `hace ${min} min`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `hace ${hr} h`;
+    const day = Math.floor(hr / 24);
+    if (day < 30) return `hace ${day} d`;
+    return new Date(ts).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
+  }
+
+  function escapeHtml(s: string): string {
+    return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+  }
 </script>

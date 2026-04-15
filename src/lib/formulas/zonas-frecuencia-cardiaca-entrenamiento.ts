@@ -14,6 +14,7 @@ export interface Outputs {
   zona4: { min: number; max: number; nombre: string };
   zona5: { min: number; max: number; nombre: string };
   resumen: string;
+  _chart?: any;
 }
 
 export function zonasFrecuenciaCardiacaEntrenamiento(i: Inputs): Outputs {
@@ -40,6 +41,31 @@ export function zonasFrecuenciaCardiacaEntrenamiento(i: Inputs): Outputs {
   const z4 = { ...zona(0.80, 0.90), nombre: 'Umbral anaeróbico' };
   const z5 = { ...zona(0.90, 1.00), nombre: 'Máximo (VO2max)' };
 
+  // Chart: barras horizontales, cada barra es un rango [min, max] por zona
+  const zonas = [
+    { key: 'Z1 · Recuperación', range: [z1.min, z1.max] },
+    { key: 'Z2 · Aeróbico suave', range: [z2.min, z2.max] },
+    { key: 'Z3 · Aeróbico', range: [z3.min, z3.max] },
+    { key: 'Z4 · Umbral', range: [z4.min, z4.max] },
+    { key: 'Z5 · Máximo', range: [z5.min, z5.max] },
+  ];
+  const chart = {
+    type: 'bar' as const,
+    indexAxis: 'y',
+    ariaLabel: `Zonas de frecuencia cardíaca: Z1 ${z1.min}-${z1.max}, Z2 ${z2.min}-${z2.max}, Z3 ${z3.min}-${z3.max}, Z4 ${z4.min}-${z4.max}, Z5 ${z5.min}-${z5.max} bpm. FC máxima ${Math.round(fcMax)} bpm.`,
+    data: {
+      labels: zonas.map((z) => z.key),
+      datasets: [
+        {
+          label: 'Rango bpm',
+          data: zonas.map((z) => [z.range[0], z.range[1]]),
+          suffix: ' bpm',
+        },
+      ],
+    },
+    xRange: [fcRep, Math.round(fcMax)],
+  };
+
   return {
     fcMaxCalculada: Math.round(fcMax),
     fcReserva: Math.round(reserva),
@@ -49,5 +75,6 @@ export function zonasFrecuenciaCardiacaEntrenamiento(i: Inputs): Outputs {
     zona4: z4,
     zona5: z5,
     resumen: `Tu FCmax es ${Math.round(fcMax)} bpm y tu reserva cardíaca ${Math.round(reserva)} bpm. Entrená la mayor parte del tiempo en **Z2 (${z2.min}-${z2.max} bpm)** para quemar grasa y fortalecer base aeróbica.`,
+    _chart: chart,
   };
 }

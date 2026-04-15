@@ -14,6 +14,7 @@ export interface Outputs {
   rentaMensualFire: number;
   progreso: number; // %
   resumen: string;
+  _chart?: any;
 }
 
 export function fireRetiroTemprano(i: Inputs): Outputs {
@@ -56,6 +57,46 @@ export function fireRetiroTemprano(i: Inputs): Outputs {
     ? `Ya llegaste a FIRE. Tu patrimonio cubre tus gastos actuales a perpetuidad (${tasaRetiro}% anual).`
     : `Necesitás ${numeroFire.toLocaleString()} para alcanzar la independencia financiera (regla del ${tasaRetiro}%). ${aniosHastaFire > 0 ? `A tu ritmo actual llegarías en ${aniosHastaFire.toFixed(1)} años.` : ''}`;
 
+  // Proyección de net worth año a año hasta alcanzar FIRE (o 40 años máximo)
+  const horizonte = aniosHastaFire > 0
+    ? Math.min(40, Math.ceil(aniosHastaFire) + 2)
+    : Math.min(40, 20);
+  const labels: string[] = [];
+  const proyeccion: number[] = [];
+  const metaFire: number[] = [];
+  for (let year = 0; year <= horizonte; year++) {
+    labels.push(`Año ${year}`);
+    const months = year * 12;
+    const factor = Math.pow(1 + r, months);
+    const vf = patrimonio * factor + (r > 0 ? aporte * ((factor - 1) / r) : aporte * months);
+    proyeccion.push(Math.round(vf));
+    metaFire.push(Math.round(numeroFire));
+  }
+
+  const chart = {
+    type: 'line' as const,
+    ariaLabel: `Proyección de patrimonio neto: desde ${Math.round(patrimonio).toLocaleString('es-AR')} iniciales hasta ${Math.round(proyeccion[horizonte]).toLocaleString('es-AR')} en ${horizonte} años. Meta FIRE: ${Math.round(numeroFire).toLocaleString('es-AR')}.`,
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Net worth proyectado',
+          data: proyeccion,
+          fill: true,
+          tension: 0.2,
+        },
+        {
+          label: 'Meta FIRE',
+          data: metaFire,
+          fill: false,
+          dashed: true,
+          color: 'muted',
+          tension: 0,
+        },
+      ],
+    },
+  };
+
   return {
     numeroFire: Math.round(numeroFire),
     gastosAnuales: Math.round(gastosAnuales),
@@ -64,5 +105,6 @@ export function fireRetiroTemprano(i: Inputs): Outputs {
     rentaMensualFire: Math.round(rentaMensualFire),
     progreso: Number(progreso.toFixed(1)),
     resumen,
+    _chart: chart,
   };
 }

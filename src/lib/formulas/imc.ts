@@ -14,6 +14,7 @@ export interface IMCOutputs {
   pesoIdealMin: number;
   pesoIdealMax: number;
   diferenciaPesoIdeal: string;
+  _chart?: any;
 }
 
 export function imc(inputs: IMCInputs): IMCOutputs {
@@ -46,11 +47,30 @@ export function imc(inputs: IMCInputs): IMCOutputs {
     diferencia = 'Estás dentro del peso normal';
   }
 
+  const imcRedondeado = Number(imcValue.toFixed(2));
+  const chart = {
+    type: 'scale' as const,
+    ariaLabel: `Escala de IMC: tu valor ${imcRedondeado} corresponde a "${categoria.replace(/[^\p{L}\p{N}\s]/gu, '').trim()}".`,
+    marker: imcRedondeado,
+    markerLabel: `Tu IMC: ${imcRedondeado}`,
+    segments: [
+      { nombre: 'Bajo peso', max: 18.5 },
+      { nombre: 'Normal', max: 25 },
+      { nombre: 'Sobrepeso', max: 30 },
+      { nombre: 'Obesidad I', max: 35 },
+      { nombre: 'Obesidad II', max: 40 },
+      { nombre: 'Obesidad III', max: Math.max(50, Math.ceil(imcValue) + 2) },
+    ],
+    unit: '',
+    min: 10,
+  };
+
   return {
-    imc: Number(imcValue.toFixed(2)),
+    imc: imcRedondeado,
     categoria,
     pesoIdealMin: Number(pesoIdealMin.toFixed(1)),
     pesoIdealMax: Number(pesoIdealMax.toFixed(1)),
     diferenciaPesoIdeal: diferencia,
+    _chart: chart,
   };
 }

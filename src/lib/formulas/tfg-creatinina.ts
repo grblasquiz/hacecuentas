@@ -10,6 +10,7 @@ export interface Outputs {
   descripcion: string;
   formula: string;
   resumen: string;
+  _chart?: any;
 }
 
 export function tfgCreatinina(i: Inputs): Outputs {
@@ -58,11 +59,32 @@ export function tfgCreatinina(i: Inputs): Outputs {
     descripcion = 'eGFR < 15 mL/min/1.73 m². Indicación de diálisis o trasplante renal.';
   }
 
+  // Chart: escala con estadios G1-G5 y marker en la eGFR actual
+  // Las categorías van de menor (G5) a mayor (G1), pero para la barra las ordenamos de menor a mayor eGFR
+  const egfrRedondeado = Math.round(egfr * 10) / 10;
+  const chart = {
+    type: 'scale' as const,
+    ariaLabel: `Escala de eGFR: tu valor ${egfrRedondeado} mL/min/1.73 m² corresponde a ${estadio.split('—')[0].trim()}.`,
+    marker: egfrRedondeado,
+    markerLabel: `Tu eGFR: ${egfrRedondeado}`,
+    segments: [
+      { nombre: 'G5', max: 15 },
+      { nombre: 'G4', max: 30 },
+      { nombre: 'G3b', max: 45 },
+      { nombre: 'G3a', max: 60 },
+      { nombre: 'G2', max: 90 },
+      { nombre: 'G1 (normal)', max: Math.max(120, Math.ceil(egfr) + 5) },
+    ],
+    unit: 'mL/min/1.73 m²',
+    min: 0,
+  };
+
   return {
     egfr: Number(egfr.toFixed(1)),
     estadio,
     descripcion,
     formula: `CKD-EPI 2021: 142 × min(${cr}/${k}, 1)^${alpha} × max(${cr}/${k}, 1)^−1.200 × 0.9938^${edad}${sexo !== 'hombre' ? ' × 1.012' : ''}`,
     resumen: `Tu eGFR estimada es ${egfr.toFixed(1)} mL/min/1.73 m² → ${estadio}.`,
+    _chart: chart,
   };
 }

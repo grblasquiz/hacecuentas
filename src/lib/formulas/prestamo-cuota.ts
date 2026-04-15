@@ -16,6 +16,7 @@ export interface PrestamoOutputs {
   totalIntereses: number;
   tasaMensual: string;
   cae: string;
+  _chart?: any;
 }
 
 export function prestamoCuota(inputs: PrestamoInputs): PrestamoOutputs {
@@ -43,11 +44,65 @@ export function prestamoCuota(inputs: PrestamoInputs): PrestamoOutputs {
   // CAE aproximado (asume 0 gastos; CAE real incluye seguros y comisiones)
   const cae = (Math.pow(1 + i, 12) - 1) * 100;
 
+  // Tabla de amortización simplificada: capital vs interés por cuota
+  // Si hay muchas cuotas, agrupamos por bucket para no saturar el gráfico
+  const buckets = plazoMeses <= 24 ? plazoMeses : plazoMeses <= 60 ? 12 : plazoMeses <= 120 ? 10 : 12;
+  const bucketSize = Math.ceil(plazoMeses / buckets);
+  const labels: string[] = [];
+  const capitalPorBucket: number[] = [];
+  const interesPorBucket: number[] = [];
+
+  let saldo = capital;
+  let idxBucket = 0;
+  let accCapital = 0;
+  let accInteres = 0;
+  let cuotasEnBucket = 0;
+  let primeraCuotaBucket = 1;
+
+  for (let mes = 1; mes <= plazoMeses; mes++) {
+    const interesMes = saldo * i;
+    const capitalMes = cuota - interesMes;
+    saldo = Math.max(0, saldo - capitalMes);
+    accCapital += capitalMes;
+    accInteres += interesMes;
+    cuotasEnBucket++;
+
+    if (cuotasEnBucket === bucketSize || mes === plazoMeses) {
+      const labelTxt = bucketSize === 1
+        ? `Cuota ${mes}`
+        : primeraCuotaBucket === mes
+          ? `Cuota ${mes}`
+          : `${primeraCuotaBucket}-${mes}`;
+      labels.push(labelTxt);
+      capitalPorBucket.push(Math.round(accCapital));
+      interesPorBucket.push(Math.round(accInteres));
+      idxBucket++;
+      accCapital = 0;
+      accInteres = 0;
+      cuotasEnBucket = 0;
+      primeraCuotaBucket = mes + 1;
+    }
+  }
+
+  const chart = {
+    type: 'bar' as const,
+    stacked: true,
+    ariaLabel: `Distribución de cuotas del préstamo: capital total ${Math.round(capital).toLocaleString('es-AR')}, intereses totales ${Math.round(totalIntereses).toLocaleString('es-AR')}.`,
+    data: {
+      labels,
+      datasets: [
+        { label: 'Capital', data: capitalPorBucket },
+        { label: 'Interés', data: interesPorBucket, color: 'muted' },
+      ],
+    },
+  };
+
   return {
     cuota: Math.round(cuota),
     totalPagar: Math.round(totalPagar),
     totalIntereses: Math.round(totalIntereses),
     tasaMensual: `${(i * 100).toFixed(2)}%`,
     cae: `${cae.toFixed(2)}% (aprox, sin gastos)`,
+    _chart: chart,
   };
 }

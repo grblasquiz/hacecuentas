@@ -10,6 +10,7 @@ export interface Outputs {
   presionMedia: number;
   resumen: string;
   recomendacion: string;
+  _chart?: any;
 }
 
 export function presionArterial(i: Inputs): Outputs {
@@ -53,6 +54,24 @@ export function presionArterial(i: Inputs): Outputs {
   const presionPulso = s - d;
   const presionMedia = d + (s - d) / 3; // PAM = diastólica + 1/3 × (sistólica − diastólica)
 
+  // Escala sobre la sistólica (según AHA/ACC)
+  const chart = {
+    type: 'scale' as const,
+    ariaLabel: `Clasificación de presión arterial ${s}/${d} mmHg: ${categoria}. Riesgo ${riesgo}.`,
+    marker: s,
+    markerLabel: `Sistólica: ${s} mmHg`,
+    segments: [
+      { nombre: 'Hipotensión', max: 90 },
+      { nombre: 'Normal', max: 120 },
+      { nombre: 'Elevada', max: 130 },
+      { nombre: 'HTA 1', max: 140 },
+      { nombre: 'HTA 2', max: 180 },
+      { nombre: 'Crisis', max: Math.max(200, s + 10) },
+    ],
+    unit: 'mmHg',
+    min: 60,
+  };
+
   return {
     categoria,
     riesgo,
@@ -60,5 +79,6 @@ export function presionArterial(i: Inputs): Outputs {
     presionMedia: Number(presionMedia.toFixed(1)),
     resumen: `${s}/${d} mmHg → ${categoria}.`,
     recomendacion,
+    _chart: chart,
   };
 }

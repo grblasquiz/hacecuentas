@@ -10,6 +10,7 @@ export interface Outputs {
   aniosCuadruplicar: number;
   capitalFinal: number;
   resumen: string;
+  _chart?: any;
 }
 
 export function regla72DuplicarDinero(i: Inputs): Outputs {
@@ -29,6 +30,26 @@ export function regla72DuplicarDinero(i: Inputs): Outputs {
 
   const resumen = `A una tasa del ${tasa}% anual compuesto, tu dinero se duplica en aproximadamente ${aniosDuplicar.toFixed(1)} años (regla del 72).`;
 
+  // Serie de crecimiento año a año (25 años, o hasta cuadruplicar + 5)
+  const horizonte = Math.min(30, Math.max(25, Math.ceil(aniosCuadruplicar) + 4));
+  const labels = Array.from({ length: horizonte + 1 }, (_, k) => `Año ${k}`);
+  const data = labels.map((_, k) => Math.round(capital * Math.pow(1 + tasa / 100, k)));
+  const chart = {
+    type: 'line' as const,
+    ariaLabel: `Gráfico de crecimiento del capital: desde ${capital.toLocaleString('es-AR')} en año 0 hasta ${data[horizonte].toLocaleString('es-AR')} en año ${horizonte}, a una tasa del ${tasa}% anual compuesto.`,
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Capital acumulado',
+          data,
+          fill: true,
+          tension: 0.25,
+        },
+      ],
+    },
+  };
+
   return {
     aniosDuplicar: Number(aniosDuplicar.toFixed(2)),
     aniosExacto: Number(aniosExacto.toFixed(2)),
@@ -36,5 +57,6 @@ export function regla72DuplicarDinero(i: Inputs): Outputs {
     aniosCuadruplicar: Number(aniosCuadruplicar.toFixed(2)),
     capitalFinal: Math.round(capitalFinal),
     resumen,
+    _chart: chart,
   };
 }

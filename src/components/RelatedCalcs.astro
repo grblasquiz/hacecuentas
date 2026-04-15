@@ -1,19 +1,52 @@
 ---
+import relatedAuto from '../lib/related-auto.json';
+
 export interface Props {
   currentSlug: string;
   category: string;
   limit?: number;
+  manualSlugs?: string[]; // override manual desde el JSON de la calc (relatedSlugs)
 }
 
-const { currentSlug, category, limit = 4 } = Astro.props;
+const { currentSlug, category, limit = 4, manualSlugs = [] } = Astro.props;
 
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
+const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
 
-// Priorizar misma categoría, después otras populares
-const sameCategory = allCalcs.filter((c) => c.category === category && c.slug !== currentSlug);
-const others = allCalcs.filter((c) => c.category !== category);
-const related = [...sameCategory, ...others].slice(0, limit);
+// 1. Slugs manuales (si los definió el autor en el JSON) tienen prioridad
+const manual = manualSlugs
+  .map((s) => bySlug.get(s))
+  .filter((c: any) => c && c.slug !== currentSlug);
+
+// 2. Si faltan para llegar a limit, completamos con el mapping auto (TF-IDF)
+const autoSlugs: string[] = (relatedAuto as Record<string, string[]>)[currentSlug] || [];
+const auto = autoSlugs
+  .map((s) => bySlug.get(s))
+  .filter((c: any) => c && c.slug !== currentSlug);
+
+// 3. Deduplicar manteniendo orden manual > auto, y cortar a limit
+const seen = new Set<string>([currentSlug]);
+const related: any[] = [];
+for (const c of [...manual, ...auto]) {
+  if (!seen.has(c.slug)) {
+    seen.add(c.slug);
+    related.push(c);
+    if (related.length >= limit) break;
+  }
+}
+
+// 4. Fallback final: si el mapping auto no tiene nada (JSON recién agregado), misma categoría
+if (related.length < limit) {
+  const sameCategory = allCalcs.filter(
+    (c: any) => c.category === category && !seen.has(c.slug)
+  );
+  for (const c of sameCategory) {
+    seen.add(c.slug);
+    related.push(c);
+    if (related.length >= limit) break;
+  }
+}
 
 const categoryLabels: Record<string, string> = {
   finanzas: 'Finanzas',

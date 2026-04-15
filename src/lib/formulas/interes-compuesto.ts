@@ -17,6 +17,7 @@ export interface InteresOutputs {
   gananciaIntereses: number;
   rendimiento: string;
   tasaMensual: string;
+  _chart?: any;
 }
 
 export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
@@ -42,11 +43,47 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
   const gananciaIntereses = valorFinal - totalAportado;
   const rendimiento = ((gananciaIntereses / totalAportado) * 100).toFixed(2);
 
+  // Serie anual: capital acumulado y aportes acumulados (sin rendimiento)
+  const labels = Array.from({ length: anios + 1 }, (_, k) => `Año ${k}`);
+  const serieValor: number[] = [];
+  const serieAportado: number[] = [];
+  for (let k = 0; k <= anios; k++) {
+    const nK = k * 12;
+    const factorK = Math.pow(1 + i, nK);
+    const vfK = capital * factorK + (i === 0 ? aporte * nK : aporte * ((factorK - 1) / i));
+    serieValor.push(Math.round(vfK));
+    serieAportado.push(Math.round(capital + aporte * nK));
+  }
+
+  const chart = {
+    type: 'line' as const,
+    ariaLabel: `Evolución del capital durante ${anios} años: valor final de ${Math.round(valorFinal).toLocaleString('es-AR')} vs total aportado de ${Math.round(totalAportado).toLocaleString('es-AR')}.`,
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Valor acumulado',
+          data: serieValor,
+          fill: true,
+          tension: 0.25,
+        },
+        {
+          label: 'Total aportado',
+          data: serieAportado,
+          fill: false,
+          dashed: true,
+          tension: 0.15,
+        },
+      ],
+    },
+  };
+
   return {
     valorFinal: Math.round(valorFinal),
     totalAportado: Math.round(totalAportado),
     gananciaIntereses: Math.round(gananciaIntereses),
     rendimiento: `${rendimiento}% total`,
     tasaMensual: `${(i * 100).toFixed(2)}%`,
+    _chart: chart,
   };
 }

@@ -12,6 +12,7 @@ export interface Outputs {
   rendimientoPorcentual: number;
   aporteAnual: number;
   resumen: string;
+  _chart?: any;
 }
 
 export function valorFuturoAporteMensual(i: Inputs): Outputs {
@@ -41,6 +42,50 @@ export function valorFuturoAporteMensual(i: Inputs): Outputs {
 
   const resumen = `Aportando ${aporte.toLocaleString()}/mes durante ${anios} años a ${tasa}% anual, terminás con ${Math.round(valorFuturo).toLocaleString()} (${Math.round(interesGanado).toLocaleString()} son intereses).`;
 
+  // Serie mensual acumulada: muestrear 1 punto por mes si ≤120 meses, sino cada 3 meses
+  const totalMeses = anios * 12;
+  const step = totalMeses > 120 ? 3 : 1;
+  const labels: string[] = [];
+  const serieValor: number[] = [];
+  const serieAportado: number[] = [];
+  for (let m = 0; m <= totalMeses; m += step) {
+    const factorM = Math.pow(1 + r, m);
+    const vfM = capital * factorM + (r === 0 ? aporte * m : aporte * ((factorM - 1) / r));
+    labels.push(`Mes ${m}`);
+    serieValor.push(Math.round(vfM));
+    serieAportado.push(Math.round(capital + aporte * m));
+  }
+  // asegurar último punto
+  if ((totalMeses % step) !== 0) {
+    const factorF = Math.pow(1 + r, totalMeses);
+    labels.push(`Mes ${totalMeses}`);
+    serieValor.push(Math.round(valorFuturo));
+    serieAportado.push(Math.round(capital + aporte * totalMeses));
+  }
+
+  const chart = {
+    type: 'line' as const,
+    ariaLabel: `Acumulado mensual durante ${anios} años: de ${capital.toLocaleString('es-AR')} iniciales hasta ${Math.round(valorFuturo).toLocaleString('es-AR')} de valor futuro.`,
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Valor acumulado',
+          data: serieValor,
+          fill: true,
+          tension: 0.25,
+        },
+        {
+          label: 'Total aportado',
+          data: serieAportado,
+          fill: false,
+          dashed: true,
+          tension: 0.15,
+        },
+      ],
+    },
+  };
+
   return {
     valorFuturo: Math.round(valorFuturo),
     totalAportado: Math.round(totalAportado),
@@ -48,5 +93,6 @@ export function valorFuturoAporteMensual(i: Inputs): Outputs {
     rendimientoPorcentual: Number(rendimientoPorcentual.toFixed(2)),
     aporteAnual: Math.round(aporteAnual),
     resumen,
+    _chart: chart,
   };
 }

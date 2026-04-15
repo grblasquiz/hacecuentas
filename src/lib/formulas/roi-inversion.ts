@@ -11,6 +11,7 @@ export interface Outputs {
   multiplo: number;
   veredicto: string;
   resumen: string;
+  _chart?: any;
 }
 
 export function roiInversion(i: Inputs): Outputs {
@@ -38,6 +39,32 @@ export function roiInversion(i: Inputs): Outputs {
 
   const resumen = `El ROI fue de ${roi.toFixed(2)}% (${roiAnualizado.toFixed(2)}% anualizado en ${anios} año${anios === 1 ? '' : 's'}).`;
 
+  // Chart: ROI acumulado por año asumiendo crecimiento constante = roiAnualizado
+  // (proyección teórica — representa cómo sería el retorno si se repartiera parejo)
+  const rAnual = roiAnualizado / 100;
+  const yearsToShow = Math.max(1, Math.min(Math.ceil(anios), 20));
+  const labels: string[] = [];
+  const roiAcum: number[] = [];
+  for (let y = 1; y <= yearsToShow; y++) {
+    labels.push(`Año ${y}`);
+    const roiY = (Math.pow(1 + rAnual, y) - 1) * 100;
+    roiAcum.push(Number(roiY.toFixed(2)));
+  }
+  const chart = {
+    type: 'bar' as const,
+    ariaLabel: `ROI acumulado proyectado al ${roiAnualizado.toFixed(2)}% anualizado durante ${yearsToShow} año${yearsToShow === 1 ? '' : 's'}.`,
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'ROI acumulado',
+          data: roiAcum,
+          suffix: '%',
+        },
+      ],
+    },
+  };
+
   return {
     gananciaNeta: Math.round(gananciaNeta),
     roi: Number(roi.toFixed(2)),
@@ -45,5 +72,6 @@ export function roiInversion(i: Inputs): Outputs {
     multiplo: Number(multiplo.toFixed(2)),
     veredicto,
     resumen,
+    _chart: chart,
   };
 }
