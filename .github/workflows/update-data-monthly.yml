@@ -1,0 +1,85 @@
+name: Update data (monthly)
+
+# Corre el día 16 de cada mes a las 10:00 UTC. El INDEC publica IPC
+# alrededor del día 12-15, así que el 16 ya está disponible. BCRA publica
+# ICL/UVA/TNA a diario pero nos alcanza con tomar el último valor una vez
+# por mes para las calcs monthly.
+#
+# Fetchers monthly actuales: bcra (ICL + UVA + TNA plazo fijo), ipc.
+
+on:
+  schedule:
+    - cron: '0 10 16 * *'
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: 'Correr en dry mode (no escribe archivos)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    name: Fetch y proponer PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run monthly fetchers
+        id: run
+        run: |
+          FLAGS="--frequency=monthly"
+          if [ "${{ inputs.dry }}" = "true" ]; then FLAGS="$FLAGS --dry"; fi
+          node --experimental-strip-types scripts/update-data/index.ts $FLAGS | tee /tmp/update.log
+          SUMMARY=$(grep '^SUMMARY::' /tmp/update.log | tail -1 | sed 's/^SUMMARY:://')
+          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+          CHANGED=$(echo "$SUMMARY" | node -e "const s=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log(s.changed||0)")
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+
+      - name: Create pull request
+        if: steps.run.outputs.changed != '0' && inputs.dry != true
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: auto/update-monthly
+          delete-branch: true
+          commit-message: |
+            chore(data): actualización automática mensual
+
+            Fetchers: bcra, ipc
+            ${{ steps.run.outputs.summary }}
+          title: '🔄 Update data (monthly) — ${{ github.run_number }}'
+          body: |
+            Pipeline automático de actualización mensual.
+
+            **Summary:**
+            ```json
+            ${{ steps.run.outputs.summary }}
+            ```
+
+            Fetchers que corrieron:
+            - `bcra` — ICL (alquileres), UVA (créditos), TNA plazo fijo
+            - `ipc` — inflación mensual INDEC
+
+            **Qué revisar:**
+            - Que los valores nuevos tengan sentido vs el mes anterior (no saltos raros).
+            - Si el BCRA cambió el ID de una variable, el fetcher tira warning en logs.
+            - Los presets de plazo-fijo usan TNA BCRA +/- spread típico — verificar que no se disparó.
+
+            Si algo está mal, cerrar el PR y corregir el fetcher antes del próximo cron.
+          labels: |
+            data-update
+            automated

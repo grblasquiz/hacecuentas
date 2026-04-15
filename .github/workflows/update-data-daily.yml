@@ -1,0 +1,77 @@
+name: Update data (daily)
+
+# Corre todos los días a las 10:00 UTC (~07:00 ARG).
+# Fetchers daily actuales: dolar (dolarapi.com).
+# Si detecta cambios, abre un PR en vez de commitear a main directo — así
+# cualquier regression queda visible antes de deployar.
+
+on:
+  schedule:
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: 'Correr en dry mode (no escribe archivos)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    name: Fetch y proponer PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run daily fetchers
+        id: run
+        run: |
+          FLAGS="--frequency=daily"
+          if [ "${{ inputs.dry }}" = "true" ]; then FLAGS="$FLAGS --dry"; fi
+          node --experimental-strip-types scripts/update-data/index.ts $FLAGS | tee /tmp/update.log
+          SUMMARY=$(grep '^SUMMARY::' /tmp/update.log | tail -1 | sed 's/^SUMMARY:://')
+          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+          CHANGED=$(echo "$SUMMARY" | node -e "const s=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log(s.changed||0)")
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+
+      - name: Create pull request
+        if: steps.run.outputs.changed != '0' && inputs.dry != true
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: auto/update-daily
+          delete-branch: true
+          commit-message: |
+            chore(data): actualización automática diaria
+
+            Fetchers: dolar
+            ${{ steps.run.outputs.summary }}
+          title: '🔄 Update data (daily) — ${{ github.run_number }}'
+          body: |
+            Pipeline automático de actualización diaria.
+
+            **Summary:**
+            ```json
+            ${{ steps.run.outputs.summary }}
+            ```
+
+            Fetchers que corrieron:
+            - `dolar` — dolarapi.com (cotizaciones USD/ARS)
+
+            Revisar los cambios antes de mergear. Si algo está raro, cerrar el PR y el próximo cron vuelve a intentar.
+          labels: |
+            data-update
+            automated
