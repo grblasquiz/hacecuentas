@@ -1329,17 +1329,20 @@ const formatFreshnessDate = (iso: string): string => {
       const markerLabel = spec.markerLabel as string;
       const unit = spec.unit || '';
       // Construimos segmentos: cada uno es una barra apilada horizontal
-      const palette = col.isDark
+      const defaultPalette = col.isDark
         ? ['#7f1d1d', '#9a3412', '#b45309', '#166534', '#1e40af', '#6d28d9']
         : ['#fecaca', '#fed7aa', '#fde68a', '#bbf7d0', '#bfdbfe', '#ddd6fe'];
       const palText = col.isDark ? '#f1f5f9' : '#334155';
       let cursor = minVal;
-      const datasets = segments.map((seg, idx) => {
+      const datasets = segments.map((seg: any, idx: number) => {
         const width = Math.max(0, seg.max - cursor);
+        const segColor = seg.color
+          ? (col.isDark ? (seg.colorDark || seg.color) : seg.color)
+          : defaultPalette[idx % defaultPalette.length];
         const ds = {
           label: seg.nombre,
           data: [width],
-          backgroundColor: palette[idx % palette.length],
+          backgroundColor: segColor,
           borderWidth: 0,
           barPercentage: 0.75,
           categoryPercentage: 0.75,

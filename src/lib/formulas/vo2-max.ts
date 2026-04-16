@@ -47,12 +47,12 @@ export function vo2Max(i: Inputs): Outputs {
 
   // Chart tipo "scale": rangos de categoría + marker con el valor del usuario
   const rangos = [
-    { nombre: 'Muy bajo', max: row[1] },
-    { nombre: 'Bajo', max: row[2] },
-    { nombre: 'Promedio', max: row[3] },
-    { nombre: 'Bueno', max: row[4] },
-    { nombre: 'Muy bueno', max: row[5] },
-    { nombre: 'Excelente', max: Math.max(row[5] + 10, Math.ceil(vo2) + 2) },
+    { nombre: 'Muy bajo', max: row[1], color: '#fecaca', colorDark: '#b91c1c' },
+    { nombre: 'Bajo', max: row[2], color: '#fed7aa', colorDark: '#9a3412' },
+    { nombre: 'Promedio', max: row[3], color: '#fde68a', colorDark: '#b45309' },
+    { nombre: 'Bueno', max: row[4], color: '#d9f99d', colorDark: '#3f6212' },
+    { nombre: 'Muy bueno', max: row[5], color: '#bbf7d0', colorDark: '#166534' },
+    { nombre: 'Excelente', max: Math.max(row[5] + 10, Math.ceil(vo2) + 2), color: '#93c5fd', colorDark: '#1e40af' },
   ];
   const chart = {
     type: 'scale' as const,
