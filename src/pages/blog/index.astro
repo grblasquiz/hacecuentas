@@ -4,60 +4,122 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import Newsletter from '../../components/Newsletter.astro';
 
-// Lista de temas que vamos a cubrir cuando arranque el blog.
-// Esto sirve como anchor SEO y como expectativa para el usuario.
-const proximosArticulos = [
+// Load all published blog posts from content/blog/*.json
+const postModules = import.meta.glob('../../content/blog/*.json', { eager: true });
+
+interface BlogPost {
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  readingTime: number;
+  heroEmoji: string;
+  seoKeywords?: string[];
+}
+
+const allPosts: BlogPost[] = Object.values(postModules) as BlogPost[];
+
+// Sort by date descending
+const posts = allPosts.sort(
+  (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+);
+
+// Which "planned" topics have NOT yet been published as posts
+const publishedSlugs = new Set(posts.map((p) => p.slug));
+
+const plannedArticulos = [
   {
     cat: 'finanzas',
     titulo: 'Cómo se calcula el sueldo en mano en Argentina paso a paso',
     bajada: 'Aportes, descuentos, ganancias: la fórmula completa con un ejemplo real.',
+    slug: 'como-calcular-sueldo-en-mano-argentina',
   },
   {
     cat: 'finanzas',
     titulo: 'Plazo fijo vs UVA vs dólar: cuál te conviene este mes',
     bajada: 'Comparativa con TNA actualizada y simulación a 30, 60 y 90 días.',
+    slug: 'plazo-fijo-vs-uva-vs-dolar',
   },
   {
     cat: 'finanzas',
     titulo: 'Monotributo 2026: nuevas escalas y cuándo recategorizar',
     bajada: 'Tabla actualizada de cuotas, topes y obra social por categoría.',
+    slug: 'monotributo-2026-escalas-recategorizar',
   },
   {
     cat: 'finanzas',
     titulo: 'Indemnización por despido: cómo calcular el mejor remunerativo',
     bajada: 'Errores comunes que te pueden costar varios sueldos.',
+    slug: 'indemnizacion-despido-mejor-remunerativo',
   },
   {
     cat: 'salud',
     titulo: 'IMC, grasa corporal y TDEE: qué mide cada cosa y cuál te sirve',
     bajada: 'Las 3 calculadoras de salud más buscadas, explicadas sin tecnicismos.',
+    slug: 'imc-grasa-corporal-tdee-diferencias',
   },
   {
     cat: 'salud',
     titulo: 'Calorías para bajar de peso: el método Mifflin-St Jeor',
     bajada: 'Por qué las "calculadoras de calorías" online suelen darte mal.',
+    slug: 'calorias-bajar-peso-mifflin-st-jeor',
   },
   {
     cat: 'negocios',
     titulo: 'Markup vs margen: el error que arruina los precios de tu negocio',
     bajada: 'Diferencias prácticas y cómo subir precios sin perder clientes.',
+    slug: 'markup-vs-margen-precios-negocio',
   },
   {
     cat: 'marketing',
     titulo: 'CAC, LTV y payback: las tres métricas que definen si tu negocio escala',
     bajada: 'Fórmulas, benchmarks por industria y cómo mejorarlas.',
+    slug: 'cac-ltv-payback-metricas-negocio',
   },
   {
     cat: 'vida',
     titulo: 'Calcular gastos compartidos: la mejor forma de no pelearte con tus amigos',
     bajada: 'Tres métodos para dividir cuentas (proporcional, igualitario, ponderado).',
+    slug: 'calcular-gastos-compartidos-metodos',
   },
-];
+].filter((a) => !publishedSlugs.has(a.slug));
 
-const description =
-  'Próximamente: artículos sobre finanzas personales, salud, negocios y matemática práctica ' +
-  'para todo el mundo hispanohablante, con cobertura específica para Argentina (sueldos, impuestos, monotributo). ' +
-  'Suscribite al newsletter para enterarte cuando publiquemos.';
+// Format date: "15 abril 2026"
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+const hasPosts = posts.length > 0;
+const featuredPost = hasPosts ? posts[0] : null;
+const restPosts = hasPosts ? posts.slice(1) : [];
+
+const description = hasPosts
+  ? 'Artículos prácticos sobre finanzas personales, salud, negocios y matemática aplicada. ' +
+    'Con cobertura específica para Argentina en sueldos, impuestos y monotributo. Sin tecnicismos, con ejemplos reales.'
+  : 'Próximamente: artículos sobre finanzas personales, salud, negocios y matemática práctica ' +
+    'para todo el mundo hispanohablante, con cobertura específica para Argentina (sueldos, impuestos, monotributo). ' +
+    'Suscribite al newsletter para enterarte cuando publiquemos.';
+
+const blogPostingEntries = posts.map((p) => ({
+  '@type': 'BlogPosting',
+  headline: p.title,
+  description: p.description,
+  datePublished: p.date,
+  url: `https://hacecuentas.com/blog/${p.slug}`,
+  author: {
+    '@type': 'Organization',
+    name: 'Hacé Cuentas',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Hacé Cuentas',
+    url: 'https://hacecuentas.com',
+    logo: 'https://hacecuentas.com/favicon.svg',
+  },
+  inLanguage: 'es',
+}));
 
 const schema = {
   '@context': 'https://schema.org',
@@ -73,18 +135,18 @@ const schema = {
     url: 'https://hacecuentas.com',
     logo: 'https://hacecuentas.com/favicon.svg',
   },
+  ...(blogPostingEntries.length > 0 && { blogPost: blogPostingEntries }),
 };
 ---
 
 <Layout
-  title="Blog — Próximamente | Hacé Cuentas"
+  title="Blog | Hacé Cuentas"
   description={description}
   schema={schema}
-  noindex={true}
 >
   <Header slot="header" />
 
-  <article class="blog-stub">
+  <article class="blog-index">
     <nav class="breadcrumbs" aria-label="Migas de pan">
       <a href="/">Inicio</a>
       <span aria-hidden="true">›</span>
@@ -92,37 +154,80 @@ const schema = {
     </nav>
 
     <header class="hero">
-      <span class="badge">Próximamente</span>
-      <h1>Blog de Hacé Cuentas</h1>
+      <h1>Blog</h1>
       <p class="lead">
         Artículos prácticos sobre finanzas personales, salud, negocios y todo
         lo que quieras calcular bien. Universales para hispanohablantes, con
         cobertura específica para Argentina <span aria-hidden="true">🇦🇷</span> en
-        sueldos, impuestos y monotributo. Sin tecnicismos innecesarios, con
-        ejemplos reales y fuentes oficiales.
-      </p>
-      <p class="meta">
-        <strong>Estamos preparando el primer lote.</strong> Si querés que te
-        avisemos cuando publiquemos, suscribite al newsletter abajo.
+        sueldos, impuestos y monotributo. Sin tecnicismos, con ejemplos reales y fuentes oficiales.
       </p>
     </header>
 
-    <section class="upcoming">
-      <h2>Lo que estamos preparando</h2>
-      <p class="upcoming-intro">
-        Estos son algunos de los artículos que publicaremos primero. ¿Te falta
-        alguno? <a href="/contacto">Sugerinos un tema.</a>
-      </p>
-      <ul class="article-list">
-        {proximosArticulos.map((a) => (
-          <li class="article-item">
-            <span class={`cat-tag cat-${a.cat}`}>{a.cat}</span>
-            <h3>{a.titulo}</h3>
-            <p>{a.bajada}</p>
-          </li>
-        ))}
-      </ul>
-    </section>
+    {hasPosts ? (
+      <section class="posts-section">
+        {/* Featured post — full width */}
+        {featuredPost && (
+          <a href={`/blog/${featuredPost.slug}`} class="post-card post-card--featured">
+            <div class="post-card__emoji" aria-hidden="true">{featuredPost.heroEmoji}</div>
+            <div class="post-card__body">
+              <span class={`cat-tag cat-${featuredPost.category}`}>{featuredPost.category}</span>
+              <h2 class="post-card__title">{featuredPost.title}</h2>
+              <p class="post-card__desc">{featuredPost.description}</p>
+              <div class="post-card__meta">
+                <time datetime={featuredPost.date}>{formatDate(featuredPost.date)}</time>
+                <span class="meta-dot" aria-hidden="true">·</span>
+                <span>{featuredPost.readingTime} min de lectura</span>
+              </div>
+            </div>
+          </a>
+        )}
+
+        {/* Rest of posts — 2-column grid */}
+        {restPosts.length > 0 && (
+          <ul class="posts-grid">
+            {restPosts.map((post) => (
+              <li>
+                <a href={`/blog/${post.slug}`} class="post-card">
+                  <div class="post-card__emoji" aria-hidden="true">{post.heroEmoji}</div>
+                  <div class="post-card__body">
+                    <span class={`cat-tag cat-${post.category}`}>{post.category}</span>
+                    <h3 class="post-card__title">{post.title}</h3>
+                    <p class="post-card__desc">{post.description}</p>
+                    <div class="post-card__meta">
+                      <time datetime={post.date}>{formatDate(post.date)}</time>
+                      <span class="meta-dot" aria-hidden="true">·</span>
+                      <span>{post.readingTime} min de lectura</span>
+                    </div>
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    ) : null}
+
+    {/* Planned articles (only if there are unpublished ones left) */}
+    {plannedArticulos.length > 0 && (
+      <section class="upcoming">
+        <h2>{hasPosts ? 'Próximamente' : 'Lo que estamos preparando'}</h2>
+        <p class="upcoming-intro">
+          {hasPosts
+            ? 'Artículos que estamos terminando de preparar.'
+            : 'Estos son algunos de los artículos que publicaremos primero. ¿Te falta alguno?'}{' '}
+          <a href="/contacto">Sugerinos un tema.</a>
+        </p>
+        <ul class="article-list">
+          {plannedArticulos.map((a) => (
+            <li class="article-item">
+              <span class={`cat-tag cat-${a.cat}`}>{a.cat}</span>
+              <h3>{a.titulo}</h3>
+              <p>{a.bajada}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
 
     <section class="meanwhile">
       <h2>Mientras tanto</h2>
@@ -162,12 +267,13 @@ const schema = {
 </Layout>
 
 <style>
-  .blog-stub {
+  .blog-index {
     max-width: 880px;
     margin: 1rem auto 2rem;
     padding: 0 1rem;
   }
 
+  /* ── Breadcrumbs ── */
   .breadcrumbs {
     display: flex;
     align-items: center;
@@ -179,23 +285,12 @@ const schema = {
   .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
   .breadcrumbs a:hover { color: var(--accent); }
 
+  /* ── Hero ── */
   .hero {
     text-align: center;
     padding: 2rem 0 2.5rem;
     border-bottom: 1px solid var(--border);
     margin-bottom: 2.5rem;
-  }
-  .hero .badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    background: var(--accent-soft);
-    color: var(--accent-strong);
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 1rem;
   }
   .hero h1 {
     font-size: clamp(2rem, 4.5vw, 2.75rem);
@@ -205,17 +300,149 @@ const schema = {
     font-size: 1.0625rem;
     color: var(--text-muted);
     max-width: 640px;
-    margin: 0 auto 1rem;
+    margin: 0 auto;
     line-height: 1.6;
   }
-  .hero .meta {
-    font-size: 0.9375rem;
-    color: var(--text-subtle);
-    max-width: 560px;
-    margin: 0 auto;
-  }
-  .hero .meta strong { color: var(--text); }
 
+  /* ── Category badges ── */
+  .cat-tag {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.1875rem 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+  .cat-finanzas  { background: #fef3c7; color: #92400e; }
+  .cat-salud     { background: #fce7f3; color: #9d174d; }
+  .cat-marketing { background: #ddd6fe; color: #5b21b6; }
+  .cat-negocios  { background: #d1fae5; color: #065f46; }
+  .cat-vida      { background: #dbeafe; color: #1e40af; }
+  .cat-matematica { background: #fef9c3; color: #713f12; }
+  .cat-educacion { background: #e0f2fe; color: #0369a1; }
+
+  :global([data-theme="dark"]) .cat-finanzas   { background: #78350f33; color: #fcd34d; }
+  :global([data-theme="dark"]) .cat-salud      { background: #831843aa; color: #f9a8d4; }
+  :global([data-theme="dark"]) .cat-marketing  { background: #4c1d9544; color: #c4b5fd; }
+  :global([data-theme="dark"]) .cat-negocios   { background: #064e3b44; color: #6ee7b7; }
+  :global([data-theme="dark"]) .cat-vida       { background: #1e3a8a44; color: #93c5fd; }
+  :global([data-theme="dark"]) .cat-matematica { background: #78350f22; color: #fde68a; }
+  :global([data-theme="dark"]) .cat-educacion  { background: #0c4a6e44; color: #7dd3fc; }
+
+  /* ── Posts section ── */
+  .posts-section {
+    margin-bottom: 3rem;
+  }
+
+  /* Featured card */
+  .post-card--featured {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    margin-bottom: 1.5rem;
+    width: 100%;
+  }
+  .post-card--featured:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    text-decoration: none;
+    color: inherit;
+  }
+  .post-card--featured .post-card__emoji {
+    font-size: 3rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+  .post-card--featured .post-card__title {
+    font-size: 1.375rem;
+    line-height: 1.3;
+    margin-bottom: 0.625rem;
+    color: var(--text);
+  }
+  .post-card--featured .post-card__desc {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin-bottom: 0.875rem;
+  }
+
+  /* Grid of remaining posts */
+  .posts-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  /* Regular post card (in grid) */
+  .post-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .post-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    text-decoration: none;
+    color: inherit;
+  }
+  .post-card .post-card__emoji {
+    font-size: 2rem;
+    line-height: 1;
+  }
+  .post-card .post-card__title {
+    font-size: 1rem;
+    line-height: 1.35;
+    margin-bottom: 0.375rem;
+    color: var(--text);
+  }
+  .post-card .post-card__desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    flex: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Shared card body */
+  .post-card__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .post-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+  }
+  .meta-dot { opacity: 0.5; }
+
+  /* ── Upcoming (planned) ── */
   section { margin-bottom: 3rem; }
 
   .upcoming h2,
@@ -249,28 +476,6 @@ const schema = {
     border-color: var(--border-strong);
     transform: translateY(-2px);
   }
-  .cat-tag {
-    display: inline-block;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 0.1875rem 0.5rem;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-  }
-  .cat-finanzas { background: #fef3c7; color: #92400e; }
-  .cat-salud { background: #fce7f3; color: #9d174d; }
-  .cat-marketing { background: #ddd6fe; color: #5b21b6; }
-  .cat-negocios { background: #d1fae5; color: #065f46; }
-  .cat-vida { background: #dbeafe; color: #1e40af; }
-
-  :global([data-theme="dark"]) .cat-finanzas { background: #78350f33; color: #fcd34d; }
-  :global([data-theme="dark"]) .cat-salud { background: #831843aa; color: #f9a8d4; }
-  :global([data-theme="dark"]) .cat-marketing { background: #4c1d9544; color: #c4b5fd; }
-  :global([data-theme="dark"]) .cat-negocios { background: #064e3b44; color: #6ee7b7; }
-  :global([data-theme="dark"]) .cat-vida { background: #1e3a8a44; color: #93c5fd; }
-
   .article-item h3 {
     font-size: 1rem;
     line-height: 1.35;
@@ -284,6 +489,7 @@ const schema = {
     margin: 0;
   }
 
+  /* ── Meanwhile quick links ── */
   .meanwhile p {
     color: var(--text-muted);
     line-height: 1.65;
@@ -319,7 +525,20 @@ const schema = {
   .ql-arrow { color: var(--text-subtle); transition: transform 0.15s; }
   .ql-card:hover .ql-arrow { transform: translateX(2px); color: var(--accent); }
 
-  @media (max-width: 560px) {
-    .article-list { grid-template-columns: 1fr; }
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .post-card--featured {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .post-card--featured .post-card__emoji {
+      font-size: 2.25rem;
+    }
+    .posts-grid {
+      grid-template-columns: 1fr;
+    }
+    .article-list {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

@@ -19,12 +19,18 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const CALCS_DIR = join(ROOT, 'src', 'content', 'calcs');
 const CALCS_EN_DIR = join(ROOT, 'src', 'content', 'calcs-en');
+const BLOG_DIR = join(ROOT, 'src', 'content', 'blog');
 const OUT_FILE = join(ROOT, 'public', 'sitemap.xml');
 
 // Leer todos los JSONs de calcs
 const calcs = readdirSync(CALCS_DIR)
   .filter((f) => f.endsWith('.json'))
   .map((f) => JSON.parse(readFileSync(join(CALCS_DIR, f), 'utf8')));
+
+// Leer todos los JSONs de blog
+const blogPosts = readdirSync(BLOG_DIR)
+  .filter((f) => f.endsWith('.json'))
+  .map((f) => JSON.parse(readFileSync(join(BLOG_DIR, f), 'utf8')));
 
 // Leer todos los JSONs de calcs en inglés
 const calcsEn = readdirSync(CALCS_EN_DIR)
@@ -96,6 +102,14 @@ const urls = [
     lastmod: buildDate,
   })),
 
+  // Blog posts
+  ...blogPosts.map((p: any) => ({
+    loc: `${site}/blog/${p.slug}`,
+    priority: '0.7',
+    changefreq: 'monthly',
+    lastmod: p.updatedDate || p.date || buildDate,
+  })),
+
   // Legales y editoriales
   { loc: `${site}/sobre-nosotros`, priority: '0.4', changefreq: 'yearly', lastmod: buildDate },
   { loc: `${site}/privacidad`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
@@ -105,7 +119,7 @@ const urls = [
   { loc: `${site}/metodologia`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
   { loc: `${site}/contacto`, priority: '0.4', changefreq: 'yearly', lastmod: buildDate },
   { loc: `${site}/glosario`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
-  { loc: `${site}/blog`, priority: '0.4', changefreq: 'monthly', lastmod: buildDate },
+  { loc: `${site}/blog`, priority: '0.7', changefreq: 'weekly', lastmod: buildDate },
 ];
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
