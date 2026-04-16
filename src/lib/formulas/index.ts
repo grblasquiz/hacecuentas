@@ -633,6 +633,7 @@ import { suenoBebe } from './sueno-bebe-horas';
 import { suenoIdealEdad } from './sueno-ideal-edad';
 import { superavitCalorico } from './superavit-calorico';
 import { superficieCorporal } from './superficie-corporal';
+import { superficieCorporalBsa } from './superficie-corporal-bsa';
 import { superficieQuemaduraReglaNueves } from './superficie-quemadura-regla-nueves';
 import { sustitucionIngredientesCocina } from './sustitucion-ingredientes-cocina';
 import { tablaWilksPowerliftingScore } from './tabla-wilks-powerlifting-score';
@@ -696,6 +697,7 @@ import { vacaciones } from './vacaciones';
 import { vacunasBebe } from './vacunas-bebe-calendario';
 import { vacunasGatoCalendarioGatito } from './vacunas-gato-calendario-gatito';
 import { vacunasPerroCalendario } from './vacunas-perro-calendario';
+import { vacunasPerroCalendarioCachorro } from './vacunas-perro-calendario-cachorro';
 import { valorEmpresaMultiploEbitda } from './valor-empresa-multiplo-ebitda';
 import { valorFuturoAporteMensual } from './valor-futuro-aporte-mensual';
 import { valorHoraTrabajo } from './valor-hora-trabajo';
@@ -1358,6 +1360,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sueno-ideal-edad': suenoIdealEdad,
   'superavit-calorico': superavitCalorico,
   'superficie-corporal': superficieCorporal,
+  'superficie-corporal-bsa': superficieCorporalBsa,
   'superficie-quemadura-regla-nueves': superficieQuemaduraReglaNueves,
   'sustitucion-ingredientes-cocina': sustitucionIngredientesCocina,
   'tabla-wilks-powerlifting-score': tablaWilksPowerliftingScore,
@@ -1421,6 +1424,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'vacunas-bebe-calendario': vacunasBebe,
   'vacunas-gato-calendario-gatito': vacunasGatoCalendarioGatito,
   'vacunas-perro-calendario': vacunasPerroCalendario,
+  'vacunas-perro-calendario-cachorro': vacunasPerroCalendarioCachorro,
   'valor-empresa-multiplo-ebitda': valorEmpresaMultiploEbitda,
   'valor-futuro-aporte-mensual': valorFuturoAporteMensual,
   'valor-hora-trabajo': valorHoraTrabajo,
