@@ -18,12 +18,18 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const CALCS_DIR = join(ROOT, 'src', 'content', 'calcs');
+const CALCS_EN_DIR = join(ROOT, 'src', 'content', 'calcs-en');
 const OUT_FILE = join(ROOT, 'public', 'sitemap.xml');
 
 // Leer todos los JSONs de calcs
 const calcs = readdirSync(CALCS_DIR)
   .filter((f) => f.endsWith('.json'))
   .map((f) => JSON.parse(readFileSync(join(CALCS_DIR, f), 'utf8')));
+
+// Leer todos los JSONs de calcs en inglés
+const calcsEn = readdirSync(CALCS_EN_DIR)
+  .filter((f) => f.endsWith('.json'))
+  .map((f) => JSON.parse(readFileSync(join(CALCS_EN_DIR, f), 'utf8')));
 
 const site = 'https://hacecuentas.com';
 const buildDate = new Date().toISOString().split('T')[0];
@@ -80,6 +86,14 @@ const urls = [
     priority: topSlugs.includes(c.slug) ? '0.9' : '0.7',
     changefreq: 'weekly',
     lastmod: getLastMod(c.slug),
+  })),
+
+  // Calculadoras en inglés
+  ...calcsEn.map((c: any) => ({
+    loc: `${site}/en/${c.slug}`,
+    priority: '0.7',
+    changefreq: 'monthly',
+    lastmod: buildDate,
   })),
 
   // Legales y editoriales
