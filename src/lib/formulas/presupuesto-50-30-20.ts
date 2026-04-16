@@ -1,20 +1,39 @@
-/** Regla 50/30/20 presupuesto personal */
-export interface Inputs { ingresoNeto: number; ingresosExtra?: number; }
-export interface Outputs { necesidades: number; deseos: number; ahorro: number; detalle: string; }
+/** Distribución sueldo regla 50/30/20 */
+
+export interface Inputs {
+  ingresoMensual: number;
+  moneda: string;
+}
+
+export interface Outputs {
+  necesidades50: number;
+  deseos30: number;
+  ahorro20: number;
+  ahorroAnual: number;
+  formula: string;
+  explicacion: string;
+}
 
 export function presupuesto503020(i: Inputs): Outputs {
-  const ingreso = Number(i.ingresoNeto) + (Number(i.ingresosExtra) || 0);
-  if (!ingreso || ingreso <= 0) throw new Error('Ingresá tu ingreso neto mensual');
+  const ingreso = Number(i.ingresoMensual);
+  const moneda = String(i.moneda || '$');
 
-  const necesidades = ingreso * 0.5;
-  const deseos = ingreso * 0.3;
-  const ahorro = ingreso * 0.2;
-  const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  if (!ingreso || ingreso <= 0) throw new Error('Ingresá tu ingreso mensual');
+
+  const necesidades50 = ingreso * 0.50;
+  const deseos30 = ingreso * 0.30;
+  const ahorro20 = ingreso * 0.20;
+  const ahorroAnual = ahorro20 * 12;
+
+  const formula = `${moneda}${ingreso.toLocaleString()} → 50%: ${moneda}${Math.round(necesidades50).toLocaleString()} | 30%: ${moneda}${Math.round(deseos30).toLocaleString()} | 20%: ${moneda}${Math.round(ahorro20).toLocaleString()}`;
+  const explicacion = `Ingreso mensual: ${moneda}${ingreso.toLocaleString()}. **50% necesidades**: ${moneda}${Math.round(necesidades50).toLocaleString()} (alquiler, servicios, comida, transporte, salud). **30% deseos**: ${moneda}${Math.round(deseos30).toLocaleString()} (entretenimiento, restaurantes, ropa, suscripciones). **20% ahorro/inversión**: ${moneda}${Math.round(ahorro20).toLocaleString()}/mes = ${moneda}${Math.round(ahorroAnual).toLocaleString()}/año. Si no llegás al 50/30/20, empezá con 60/20/20 o 70/20/10 y ajustá gradualmente.`;
 
   return {
-    necesidades: Math.round(necesidades),
-    deseos: Math.round(deseos),
-    ahorro: Math.round(ahorro),
-    detalle: `De $${fmt.format(ingreso)}: $${fmt.format(necesidades)} necesidades (alquiler, comida, servicios) + $${fmt.format(deseos)} deseos (salidas, suscripciones) + $${fmt.format(ahorro)} ahorro (fondo emergencia, inversión).`,
+    necesidades50: Math.round(necesidades50),
+    deseos30: Math.round(deseos30),
+    ahorro20: Math.round(ahorro20),
+    ahorroAnual: Math.round(ahorroAnual),
+    formula,
+    explicacion,
   };
 }

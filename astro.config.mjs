@@ -19,7 +19,7 @@ export default defineConfig({
   // "hover" = prefetch cuando el usuario hoverea un link interno (default en Astro v4+).
   // Para opt-in por link agregar data-astro-prefetch en <a>.
   prefetch: {
-    prefetchAll: true,
+    prefetchAll: false,
     defaultStrategy: 'hover',
   },
 });

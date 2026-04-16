@@ -1,53 +1,58 @@
-/** Fondo de emergencia: cuánto ahorrar según gastos mensuales × meses objetivo */
+/** Monto ideal para fondo de emergencia según gastos y situación */
+
 export interface Inputs {
   gastosMensuales: number;
   mesesObjetivo: number;
-  ahorroActual?: number;
-  aporteMensual?: number;
+  ingresoVariable: string;
+  dependientes: number;
+  fondoActual: number;
 }
+
 export interface Outputs {
-  fondoObjetivo: number;
-  faltaAhorrar: number;
-  mesesHastaMeta: number;
-  cobertura: string;
-  recomendacion: string;
-  resumen: string;
+  fondoIdeal: number;
+  mesesCubiertos: number;
+  faltante: number;
+  ahorroMensualSugerido: number;
+  mesesParaCompletarlo: number;
+  formula: string;
+  explicacion: string;
 }
 
 export function fondoEmergenciaMeses(i: Inputs): Outputs {
   const gastos = Number(i.gastosMensuales);
-  const meses = Number(i.mesesObjetivo);
-  const actual = Number(i.ahorroActual) || 0;
-  const aporte = Number(i.aporteMensual) || 0;
+  let mesesObj = Number(i.mesesObjetivo) || 0;
+  const ingresoVar = i.ingresoVariable === 'si' || i.ingresoVariable === 'true';
+  const dependientes = Number(i.dependientes) || 0;
+  const fondoActual = Number(i.fondoActual) || 0;
 
   if (!gastos || gastos <= 0) throw new Error('Ingresá tus gastos mensuales');
-  if (!meses || meses <= 0) throw new Error('Ingresá los meses objetivo (típico 3-6)');
-  if (actual < 0) throw new Error('El ahorro actual no puede ser negativo');
 
-  const fondoObjetivo = gastos * meses;
-  const falta = Math.max(fondoObjetivo - actual, 0);
-  const mesesHastaMeta = aporte > 0 ? falta / aporte : 0;
+  // Si no especificó meses, calcular según situación
+  if (mesesObj <= 0) {
+    mesesObj = 6;
+    if (ingresoVar) mesesObj += 3;
+    if (dependientes > 0) mesesObj += dependientes;
+    mesesObj = Math.min(12, mesesObj);
+  }
 
-  const mesesCubiertos = actual / gastos;
-  let cobertura = '';
-  if (mesesCubiertos >= meses) cobertura = `Ya tenés ${mesesCubiertos.toFixed(1)} meses de cobertura. Meta alcanzada.`;
-  else if (mesesCubiertos >= 3) cobertura = `Tenés ${mesesCubiertos.toFixed(1)} meses cubiertos. Base mínima lograda, seguí sumando.`;
-  else if (mesesCubiertos >= 1) cobertura = `Solo ${mesesCubiertos.toFixed(1)} meses de cobertura. Acelerá el ahorro.`;
-  else cobertura = 'Tenés menos de un mes de gastos cubierto. Priorizá armar el fondo antes que otras inversiones.';
+  const fondoIdeal = gastos * mesesObj;
+  const mesesCubiertos = fondoActual > 0 ? fondoActual / gastos : 0;
+  const faltante = Math.max(0, fondoIdeal - fondoActual);
 
-  let recomendacion = '';
-  if (meses <= 3) recomendacion = '3 meses es el mínimo recomendado si tenés ingresos estables.';
-  else if (meses <= 6) recomendacion = '6 meses es el estándar para la mayoría de familias y monotributistas.';
-  else recomendacion = '9-12 meses aplica si sos freelancer, autónomo o tu ingreso es muy variable.';
+  // Sugerencia: ahorrar el 20% de gastos para el fondo
+  const ahorroSugerido = gastos * 0.20;
+  const mesesParaCompletarlo = ahorroSugerido > 0 && faltante > 0 ? Math.ceil(faltante / ahorroSugerido) : 0;
 
-  const resumen = `Necesitás ${fondoObjetivo.toLocaleString()} para cubrir ${meses} meses de gastos. ${falta > 0 ? `Te faltan ${falta.toLocaleString()}.` : 'Ya tenés el fondo completo.'}`;
+  const formula = `Fondo ideal = $${gastos.toLocaleString()} × ${mesesObj} meses = $${fondoIdeal.toLocaleString()}`;
+  const explicacion = `Gastos mensuales: $${gastos.toLocaleString()}. Fondo de emergencia recomendado: ${mesesObj} meses = $${fondoIdeal.toLocaleString()} (${ingresoVar ? 'ingreso variable +3' : 'ingreso fijo'}${dependientes > 0 ? `, ${dependientes} dependiente(s) +${dependientes}` : ''}).${fondoActual > 0 ? ` Fondo actual: $${fondoActual.toLocaleString()} (${mesesCubiertos.toFixed(1)} meses cubiertos).` : ''} ${faltante > 0 ? `Faltante: $${faltante.toLocaleString()}. Ahorrando $${Math.round(ahorroSugerido).toLocaleString()}/mes (20% de gastos), lo completás en ${mesesParaCompletarlo} meses.` : 'Ya tenés tu fondo de emergencia completo.'}`;
 
   return {
-    fondoObjetivo: Math.round(fondoObjetivo),
-    faltaAhorrar: Math.round(falta),
-    mesesHastaMeta: Number(mesesHastaMeta.toFixed(1)),
-    cobertura,
-    recomendacion,
-    resumen,
+    fondoIdeal: Math.round(fondoIdeal),
+    mesesCubiertos: Number(mesesCubiertos.toFixed(1)),
+    faltante: Math.round(faltante),
+    ahorroMensualSugerido: Math.round(ahorroSugerido),
+    mesesParaCompletarlo,
+    formula,
+    explicacion,
   };
 }
