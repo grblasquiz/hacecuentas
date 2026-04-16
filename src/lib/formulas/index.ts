@@ -568,6 +568,32 @@ import { visaRequisitosPasaporteArgentino } from './visa-requisitos-pasaporte-ar
 import { vtvVencimientoTurno } from './vtv-vencimiento-turno';
 import { yesoCielorrasoPlacasM2 } from './yeso-cielorraso-placas-m2';
 
+// Batch — Conversores standalone
+import { celsiusFahrenheit } from './celsius-fahrenheit';
+import { kgLibras } from './kg-libras';
+import { pulgadasCentimetros } from './pulgadas-centimetros';
+import { metrosHectareas } from './metros-hectareas';
+import { litrosGalones } from './litros-galones';
+import { diasLaborablesEntreFechas } from './dias-laborables-entre-fechas';
+import { raizCuadradaCubica } from './raiz-cuadrada-cubica';
+import { mcmMcd } from './mcm-mcd';
+
+// Batch 17 — High-traffic niche (vida, matematica, educacion, finanzas)
+import { cuentaRegresivaFecha } from './cuenta-regresiva-fecha';
+import { feriadosArgentina2026 } from './feriados-argentina-2026';
+import { reglaTresInversa } from './regla-tres-inversa';
+import { notaFinalUniversidad } from './nota-final-universidad';
+import { conversorMonedaLatam } from './conversor-moneda-latam';
+import { prestamoCuotaMexico } from './prestamo-cuota-mexico';
+
+// Batch 18 — LATAM financial calculators
+import { sueldoNetoMexico } from './sueldo-neto-mexico';
+import { aguinaldoMexico } from './aguinaldo-mexico';
+import { ivaPaisesLatam } from './iva-paises-latam';
+import { sueldoNetoColombia } from './sueldo-neto-colombia';
+import { sueldoNetoChile } from './sueldo-neto-chile';
+import { cesantiasColombia } from './cesantias-colombia';
+
 export const formulas = {
   // Finanzas
   'sueldo-ar': sueldoAR,
@@ -1133,6 +1159,31 @@ export const formulas = {
   'visa-requisitos-pasaporte-argentino': visaRequisitosPasaporteArgentino,
   'vtv-vencimiento-turno': vtvVencimientoTurno,
   'yeso-cielorraso-placas-m2': yesoCielorrasoPlacasM2,
+  // Conversores standalone
+  'celsius-fahrenheit': celsiusFahrenheit,
+  'kg-libras': kgLibras,
+  'pulgadas-centimetros': pulgadasCentimetros,
+  'metros-hectareas': metrosHectareas,
+  'litros-galones': litrosGalones,
+  'dias-laborables-entre-fechas': diasLaborablesEntreFechas,
+  'raiz-cuadrada-cubica': raizCuadradaCubica,
+  'mcm-mcd': mcmMcd,
+
+  // Batch 17 — High-traffic niche
+  'cuenta-regresiva-fecha': cuentaRegresivaFecha,
+  'feriados-argentina-2026': feriadosArgentina2026,
+  'regla-tres-inversa': reglaTresInversa,
+  'nota-final-universidad': notaFinalUniversidad,
+  'conversor-moneda-latam': conversorMonedaLatam,
+  'prestamo-cuota-mexico': prestamoCuotaMexico,
+
+  // Batch 18 — LATAM financial calculators
+  'sueldo-neto-mexico': sueldoNetoMexico,
+  'aguinaldo-mexico': aguinaldoMexico,
+  'iva-paises-latam': ivaPaisesLatam,
+  'sueldo-neto-colombia': sueldoNetoColombia,
+  'sueldo-neto-chile': sueldoNetoChile,
+  'cesantias-colombia': cesantiasColombia,
 };
 
 export type FormulaId = keyof typeof formulas;
