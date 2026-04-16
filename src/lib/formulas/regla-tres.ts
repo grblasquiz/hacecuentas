@@ -17,6 +17,7 @@ export function reglaTres(i: Inputs): Outputs {
   const c = Number(i.c);
   const tipo = String(i.tipo || 'directa');
   if (!a || isNaN(b) || isNaN(c)) throw new Error('Ingresá los tres valores');
+  if (tipo === 'inversa' && c === 0) throw new Error('En regla de tres inversa, el tercer valor no puede ser 0 (división por cero)');
 
   let resultado = 0;
   let formula = '';

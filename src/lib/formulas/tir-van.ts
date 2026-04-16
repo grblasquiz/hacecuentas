@@ -39,7 +39,7 @@ export function tirVan(i: Inputs): Outputs {
   const tir = (lo + hi) / 2;
 
   // Payback simple (sin descontar)
-  const payback = inv / flujo;
+  const payback = flujo <= 0 ? Infinity : inv / flujo;
 
   const total = flujo * n;
   let veredicto = '';

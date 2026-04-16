@@ -37,7 +37,7 @@ export function sistemasEcuaciones(i: Inputs): Outputs {
   if (det === 0) {
     // Sistema incompatible o indeterminado
     // Si c/a = f/d y b/a = e/d → infinitas soluciones (proporcionales)
-    if (a !== 0 && d !== 0 && (c / a === f / d) && (b / a === e / d)) {
+    if (a !== 0 && d !== 0 && Math.abs(c / a - f / d) < 1e-10 && Math.abs(b / a - e / d) < 1e-10) {
       tipo = 'compatible indeterminado';
       x = '∞ (infinitas soluciones)';
       y = '∞ (infinitas soluciones)';

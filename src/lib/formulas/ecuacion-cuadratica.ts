@@ -31,7 +31,7 @@ export function ecuacionCuadratica(i: Inputs): Outputs {
     tipo = 'Una raíz real (doble)';
   } else {
     const re = (-b / (2 * a)).toFixed(4);
-    const im = (Math.sqrt(-disc) / (2 * a)).toFixed(4);
+    const im = (Math.sqrt(-disc) / Math.abs(2 * a)).toFixed(4);
     x1 = `${re} + ${im}i`;
     x2 = `${re} − ${im}i`;
     tipo = 'Dos raíces complejas conjugadas (no cortan al eje x)';

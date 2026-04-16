@@ -36,7 +36,7 @@ export function fireRetiroTemprano(i: Inputs): Outputs {
   // Años para alcanzar FIRE con aportes mensuales y rendimiento compuesto
   const r = rend / 100 / 12;
   let aniosHastaFire = 0;
-  if (falta > 0 && aporte > 0) {
+  if (falta > 0 && (aporte > 0 || patrimonio > 0)) {
     // Resolver: patrimonio*(1+r)^n + aporte*((1+r)^n -1)/r = numeroFire
     // Búsqueda binaria sobre meses
     let lo = 0;

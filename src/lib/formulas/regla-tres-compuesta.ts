@@ -25,6 +25,10 @@ export function reglaTresCompuesta(i: Inputs): Outputs {
 
   if (!a1 || !b1 || !c1) throw new Error('Los valores conocidos no pueden ser 0');
   if (isNaN(a2) || isNaN(b2)) throw new Error('Ingresá los nuevos valores de A y B');
+  if (relB === 'inversa' && b2 === 0) throw new Error('B2 no puede ser 0 cuando la relación B es inversa (división por cero)');
+  if (relB === 'directa' && b1 === 0) throw new Error('B1 no puede ser 0 cuando la relación B es directa (división por cero)');
+  if (relC === 'inversa' && a2 === 0) throw new Error('A2 no puede ser 0 cuando la relación A es inversa (división por cero)');
+  if (relC === 'directa' && a1 === 0) throw new Error('A1 no puede ser 0 cuando la relación A es directa (división por cero)');
 
   // Para magnitudes B y C, si son inversas a A (la incógnita c2),
   // se invierte el factor: directa = b2/b1, inversa = b1/b2.

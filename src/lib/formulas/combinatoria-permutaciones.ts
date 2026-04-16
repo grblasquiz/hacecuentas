@@ -20,6 +20,7 @@ export function combinatoriaPermutaciones(i: Inputs): Outputs {
   const tipo = String(i.tipo || 'combinacion');
   if (isNaN(n) || n < 0) throw new Error('Ingresá un valor válido para n');
   if (isNaN(r) || r < 0) throw new Error('Ingresá un valor válido para r');
+  if (n > 170) throw new Error('n no puede ser mayor a 170 (el factorial desborda el límite numérico de JavaScript)');
 
   let resultado: number;
   let formula: string;

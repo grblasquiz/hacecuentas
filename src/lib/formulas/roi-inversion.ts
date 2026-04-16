@@ -26,7 +26,10 @@ export function roiInversion(i: Inputs): Outputs {
   const gananciaNeta = final - inv;
   const roi = (gananciaNeta / inv) * 100;
   // ROI anualizado: (1 + ROI)^(1/n) − 1
-  const roiAnualizado = (Math.pow(final / inv, 1 / anios) - 1) * 100;
+  // Guard: Math.pow(negative, fractional) returns NaN — use simple average annual loss instead
+  const roiAnualizado = final / inv < 0
+    ? ((final - inv) / inv) * 100 / anios
+    : (Math.pow(final / inv, 1 / anios) - 1) * 100;
   const multiplo = final / inv;
 
   let veredicto = '';
