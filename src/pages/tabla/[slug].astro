@@ -1,0 +1,865 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Newsletter from '../../components/Newsletter.astro';
+
+export async function getStaticPaths() {
+  const tablas = import.meta.glob<any>('../../content/tablas/*.json', { eager: true });
+  return Object.values(tablas).map((mod: any) => {
+    const t = mod.default || mod;
+    return {
+      params: { slug: t.slug },
+      props: { tabla: t },
+    };
+  });
+}
+
+const { tabla } = Astro.props;
+
+const siteUrl = 'https://hacecuentas.com';
+
+// ─── Related calcs ────────────────────────────────────────────────────────────
+const calcModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
+const calcBySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+
+const relatedCalcs = (tabla.relatedCalcs || [])
+  .map((s: string) => calcBySlug.get(s))
+  .filter(Boolean);
+
+const firstRelatedCalc = relatedCalcs[0] || null;
+
+// ─── Category labels ──────────────────────────────────────────────────────────
+const categoryLabels: Record<string, string> = {
+  finanzas: 'Finanzas',
+  negocios: 'Negocios',
+  negocio: 'Negocios',
+  salud: 'Salud',
+  marketing: 'Marketing',
+  deportes: 'Deportes',
+  viajes: 'Viajes',
+  vida: 'Vida cotidiana',
+  mascotas: 'Mascotas',
+  matematica: 'Matemática',
+  construccion: 'Construcción',
+  cocina: 'Cocina',
+  educacion: 'Educación',
+  automotor: 'Automotor',
+  tecnologia: 'Tecnología',
+  'medio-ambiente': 'Medio Ambiente',
+  electronica: 'Electrónica',
+};
+
+const categoryLabel = categoryLabels[tabla.category] || tabla.category;
+
+// ─── Category badge colors ────────────────────────────────────────────────────
+const categoryColors: Record<string, { bg: string; text: string }> = {
+  finanzas:         { bg: '#eff6ff', text: '#1d4ed8' },
+  negocios:         { bg: '#f0fdf4', text: '#15803d' },
+  negocio:          { bg: '#f0fdf4', text: '#15803d' },
+  salud:            { bg: '#fdf4ff', text: '#9333ea' },
+  marketing:        { bg: '#fff7ed', text: '#c2410c' },
+  deportes:         { bg: '#ecfdf5', text: '#059669' },
+  viajes:           { bg: '#fff1f2', text: '#be123c' },
+  vida:             { bg: '#f0f9ff', text: '#0369a1' },
+  mascotas:         { bg: '#fefce8', text: '#854d0e' },
+  matematica:       { bg: '#f5f3ff', text: '#6d28d9' },
+  construccion:     { bg: '#fafaf9', text: '#78716c' },
+  cocina:           { bg: '#fff7ed', text: '#c2410c' },
+  educacion:        { bg: '#eff6ff', text: '#1d4ed8' },
+  automotor:        { bg: '#f8fafc', text: '#475569' },
+  tecnologia:       { bg: '#f0fdf4', text: '#15803d' },
+  'medio-ambiente': { bg: '#f0fdf4', text: '#166534' },
+  electronica:      { bg: '#eff6ff', text: '#1e40af' },
+};
+const catColor = categoryColors[tabla.category] || { bg: 'var(--accent-soft)', text: 'var(--accent)' };
+
+// ─── Color range helper ───────────────────────────────────────────────────────
+interface ColorRange {
+  min: number;
+  max: number;
+  class: string;
+  label: string;
+}
+
+function getCellClass(value: string, ranges: ColorRange[] | undefined): string {
+  if (!ranges || !ranges.length) return '';
+  const num = parseFloat(value.replace(',', '.'));
+  if (isNaN(num)) return '';
+  for (const range of ranges) {
+    if (num >= range.min && num < range.max) return range.class;
+  }
+  return '';
+}
+
+// ─── Schema.org ───────────────────────────────────────────────────────────────
+const pageUrl = `${siteUrl}/tabla/${tabla.slug}`;
+
+const webPageSchema: any = {
+  '@type': 'WebPage',
+  '@id': pageUrl,
+  name: tabla.title,
+  description: tabla.description,
+  url: pageUrl,
+  inLanguage: 'es-AR',
+  keywords: (tabla.seoKeywords || []).join(', '),
+};
+
+// Embed table data as Dataset
+const datasetSchemas = (tabla.tables || []).map((t: any) => ({
+  '@type': 'Dataset',
+  name: t.caption || tabla.title,
+  description: tabla.description,
+  url: pageUrl,
+  inLanguage: 'es-AR',
+}));
+
+const breadcrumbSchema = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+    { '@type': 'ListItem', position: 2, name: 'Tablas', item: `${siteUrl}/tabla` },
+    { '@type': 'ListItem', position: 3, name: tabla.title, item: pageUrl },
+  ],
+};
+
+const faqSchema = tabla.faq && tabla.faq.length > 0
+  ? {
+      '@type': 'FAQPage',
+      mainEntity: tabla.faq.map((item: { q: string; a: string }) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    }
+  : null;
+
+const pageSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    webPageSchema,
+    breadcrumbSchema,
+    ...datasetSchemas,
+    ...(faqSchema ? [faqSchema] : []),
+  ],
+};
+---
+
+<Layout
+  title={tabla.title}
+  description={tabla.description}
+  canonical={`/tabla/${tabla.slug}`}
+  schema={pageSchema}
+  noindex={false}
+  audience="AR"
+>
+  <Header slot="header" />
+
+  <div class="tabla-wrap">
+
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Inicio</a></li>
+        <li aria-hidden="true" class="sep">›</li>
+        <li><a href="/tabla">Tablas</a></li>
+        <li aria-hidden="true" class="sep">›</li>
+        <li aria-current="page">{tabla.title}</li>
+      </ol>
+    </nav>
+
+    <article class="tabla-article">
+
+      <!-- Hero -->
+      <header class="tabla-header">
+        <div class="hero-emoji" aria-hidden="true">{tabla.heroEmoji || '📊'}</div>
+        <span
+          class="cat-badge"
+          style={`background:${catColor.bg};color:${catColor.text}`}
+        >{categoryLabel}</span>
+        <h1>{tabla.title}</h1>
+        {tabla.intro && (
+          <div class="tabla-intro prose" set:html={tabla.intro} />
+        )}
+      </header>
+
+      <!-- Tables -->
+      {(tabla.tables || []).map((t: any) => (
+        <section class="table-section" id={t.id}>
+          <div class="table-scroll-wrapper" role="region" aria-label={t.caption}>
+            <table class="data-table">
+              {t.caption && <caption>{t.caption}</caption>}
+              <thead>
+                <tr>
+                  {(t.headers || []).map((h: string, i: number) => (
+                    <th scope={i === 0 ? 'col' : 'col'} class={i === 0 ? 'col-header sticky-col' : ''}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(t.rows || []).map((row: string[], ri: number) => (
+                  <tr class={ri % 2 === 0 ? 'row-even' : 'row-odd'}>
+                    {row.map((cell: string, ci: number) => (
+                      ci === 0
+                        ? <th scope="row" class="sticky-col row-header">{cell}</th>
+                        : <td class={getCellClass(cell, t.colorRanges)}>{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Color legend -->
+          {t.colorRanges && t.colorRanges.length > 0 && (
+            <div class="color-legend" aria-label="Referencia de colores">
+              {t.colorRanges.map((range: ColorRange) => (
+                <div class="legend-item">
+                  <span class={`legend-dot ${range.class}`} aria-hidden="true"></span>
+                  <span class="legend-label">{range.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      ))}
+
+      <!-- Content -->
+      {tabla.content && (
+        <div class="tabla-content prose" set:html={tabla.content} />
+      )}
+
+      <!-- Related calcs -->
+      {relatedCalcs.length > 0 && (
+        <section class="related-calcs-section">
+          <h2>Calculadoras relacionadas</h2>
+          <div class="related-calcs-grid">
+            {relatedCalcs.map((calc: any) => (
+              <a href={`/${calc.slug}`} class="calc-card">
+                <div class="calc-card-icon">{calc.icon}</div>
+                <div class="calc-card-body">
+                  <div class="calc-card-cat">
+                    {categoryLabels[calc.category] || calc.category}
+                  </div>
+                  <div class="calc-card-title">{calc.h1}</div>
+                  {calc.description && (
+                    <div class="calc-card-desc">{calc.description.slice(0, 90)}{calc.description.length > 90 ? '…' : ''}</div>
+                  )}
+                </div>
+                <svg class="calc-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- FAQ -->
+      {tabla.faq && tabla.faq.length > 0 && (
+        <section class="faq-section">
+          <h2>Preguntas frecuentes</h2>
+          <div class="faq-list">
+            {tabla.faq.map((item: { q: string; a: string }, i: number) => (
+              <details class="faq-item" open={i === 0}>
+                <summary class="faq-q">
+                  <span>{item.q}</span>
+                  <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </summary>
+                <div class="faq-a" set:html={item.a} />
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- CTA -->
+      {firstRelatedCalc && (
+        <div class="cta-block">
+          <p class="cta-text">¿Necesitás calcular tu valor exacto?</p>
+          <a href={`/${firstRelatedCalc.slug}`} class="cta-btn">
+            {firstRelatedCalc.icon && <span aria-hidden="true">{firstRelatedCalc.icon}</span>}
+            Usar {firstRelatedCalc.h1}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      )}
+
+      <!-- Newsletter -->
+      <div class="newsletter-wrap">
+        <Newsletter />
+      </div>
+
+      <!-- Sources -->
+      {tabla.sources && tabla.sources.length > 0 && (
+        <footer class="sources-section">
+          <h3>Fuentes</h3>
+          <ul class="sources-list">
+            {tabla.sources.map((src: string) => (
+              <li>{src}</li>
+            ))}
+          </ul>
+        </footer>
+      )}
+
+    </article>
+  </div><!-- /tabla-wrap -->
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  /* ── Page wrapper ────────────────────────────────────────────────────────── */
+  .tabla-wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 4rem;
+  }
+
+  /* ── Breadcrumb ──────────────────────────────────────────────────────────── */
+  .breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.375rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+  .breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover { color: var(--accent); text-decoration: underline; }
+  .breadcrumb .sep { color: var(--border-strong); }
+  .breadcrumb [aria-current="page"] {
+    color: var(--text-subtle);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 320px;
+  }
+
+  /* ── Article ─────────────────────────────────────────────────────────────── */
+  .tabla-article {
+    margin-top: 1.5rem;
+  }
+
+  /* ── Hero header ─────────────────────────────────────────────────────────── */
+  .tabla-header {
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-emoji {
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .cat-badge {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.25rem 0.625rem;
+    border-radius: 99px;
+    margin-bottom: 0.875rem;
+  }
+
+  .tabla-header h1 {
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--text);
+    margin: 0 0 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  .tabla-intro {
+    font-size: 1.0625rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  /* ── Table section ───────────────────────────────────────────────────────── */
+  .table-section {
+    margin-bottom: 2.5rem;
+  }
+
+  /* Scrollable container on narrow screens */
+  .table-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    /* Subtle shadow to hint scroll on mobile */
+    box-shadow: inset -4px 0 8px -4px rgba(0,0,0,0.06);
+  }
+
+  /* ── Data table ──────────────────────────────────────────────────────────── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .data-table caption {
+    caption-side: top;
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 0.625rem 0.875rem 0.375rem;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Header row */
+  .data-table thead th {
+    background: var(--bg-soft);
+    color: var(--text-subtle);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.625rem 0.875rem;
+    border-bottom: 2px solid var(--border-strong);
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .data-table thead th.col-header {
+    text-align: left;
+  }
+
+  /* Body cells */
+  .data-table tbody td,
+  .data-table tbody .row-header {
+    padding: 0.5rem 0.875rem;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    color: var(--text);
+  }
+
+  .data-table tbody .row-header {
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+
+  /* Zebra striping */
+  .data-table tbody .row-even td,
+  .data-table tbody .row-even .row-header {
+    background: var(--bg);
+  }
+  .data-table tbody .row-odd td,
+  .data-table tbody .row-odd .row-header {
+    background: var(--bg-soft);
+  }
+
+  .data-table tbody tr:last-child td,
+  .data-table tbody tr:last-child .row-header {
+    border-bottom: none;
+  }
+
+  /* ── Sticky first column ─────────────────────────────────────────────────── */
+  .sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+  }
+
+  /* Sticky col must inherit row background — override with solid colors */
+  .data-table tbody .row-even .sticky-col {
+    background: var(--bg);
+  }
+  .data-table tbody .row-odd .sticky-col {
+    background: var(--bg-soft);
+  }
+  .data-table thead .sticky-col {
+    z-index: 3;
+  }
+
+  /* Right border on sticky col to separate from scrollable area */
+  .sticky-col {
+    border-right: 1px solid var(--border-strong);
+  }
+
+  /* ── Cell color classes ──────────────────────────────────────────────────── */
+  .cell-low {
+    background: #eff6ff !important;
+    color: #1e40af !important;
+    font-weight: 600;
+  }
+  .cell-normal {
+    background: #f0fdf4 !important;
+    color: #15803d !important;
+    font-weight: 600;
+  }
+  .cell-high {
+    background: #fefce8 !important;
+    color: #854d0e !important;
+    font-weight: 600;
+  }
+  .cell-danger {
+    background: #fff1f2 !important;
+    color: #be123c !important;
+    font-weight: 600;
+  }
+  .cell-info {
+    background: #f0f9ff !important;
+    color: #0369a1 !important;
+    font-weight: 600;
+  }
+
+  /* ── Color legend ────────────────────────────────────────────────────────── */
+  .color-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    margin-top: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.8125rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-muted);
+  }
+
+  .legend-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* Legend dot fills match cell classes */
+  .legend-dot.cell-low    { background: #bfdbfe; }
+  .legend-dot.cell-normal { background: #bbf7d0; }
+  .legend-dot.cell-high   { background: #fef08a; }
+  .legend-dot.cell-danger { background: #fecdd3; }
+  .legend-dot.cell-info   { background: #bae6fd; }
+
+  /* ── Content (prose) ─────────────────────────────────────────────────────── */
+  .tabla-content {
+    margin-top: 2rem;
+  }
+
+  /* ── Prose base ──────────────────────────────────────────────────────────── */
+  .prose {
+    color: var(--text);
+    line-height: 1.75;
+  }
+  .prose h2 {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 2rem 0 0.75rem;
+    letter-spacing: -0.015em;
+  }
+  .prose h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 1.5rem 0 0.5rem;
+  }
+  .prose p { margin: 0 0 1rem; }
+  .prose ul, .prose ol {
+    padding-left: 1.5rem;
+    margin: 0 0 1rem;
+  }
+  .prose li { margin-bottom: 0.375rem; }
+  .prose strong { font-weight: 700; color: var(--text); }
+  .prose a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .prose a:hover { text-decoration: none; }
+
+  /* ── Related calcs ───────────────────────────────────────────────────────── */
+  .related-calcs-section {
+    margin-top: 3rem;
+  }
+  .related-calcs-section h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+  .related-calcs-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .calc-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .calc-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .calc-card-icon {
+    font-size: 1.75rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .calc-card-body { flex: 1; min-width: 0; }
+  .calc-card-cat {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin-bottom: 0.2rem;
+  }
+  .calc-card-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .calc-card-desc {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .calc-card-arrow {
+    color: var(--text-subtle);
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+  .calc-card:hover .calc-card-arrow { transform: translateX(3px); }
+
+  /* ── FAQ ─────────────────────────────────────────────────────────────────── */
+  .faq-section {
+    margin-top: 3rem;
+  }
+  .faq-section h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .faq-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .faq-item[open] { border-color: var(--accent); }
+  .faq-q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text);
+    list-style: none;
+    user-select: none;
+  }
+  .faq-q::-webkit-details-marker { display: none; }
+  .faq-chevron {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+  }
+  .faq-item[open] .faq-chevron { transform: rotate(180deg); }
+  .faq-a {
+    padding: 0 1rem 1rem;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    border-top: 1px solid var(--border);
+    padding-top: 0.75rem;
+  }
+
+  /* ── CTA block ───────────────────────────────────────────────────────────── */
+  .cta-block {
+    margin-top: 3rem;
+    padding: 1.5rem 1.75rem;
+    background: var(--accent-soft, #eff6ff);
+    border: 1px solid var(--accent, #2563eb);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .cta-text {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+    flex: 1;
+    min-width: 200px;
+  }
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent, #2563eb);
+    color: #fff;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  .cta-btn:hover { opacity: 0.88; }
+
+  /* ── Newsletter wrap ─────────────────────────────────────────────────────── */
+  .newsletter-wrap {
+    margin-top: 3rem;
+  }
+
+  /* ── Sources ─────────────────────────────────────────────────────────────── */
+  .sources-section {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .sources-section h3 {
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-subtle);
+    margin: 0 0 0.5rem;
+  }
+  .sources-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 1rem;
+  }
+  .sources-list li {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+  .sources-list li::before {
+    content: '•';
+    margin-right: 0.375rem;
+    color: var(--border-strong);
+  }
+
+  /* ── Print styles ────────────────────────────────────────────────────────── */
+  @media print {
+    /* Hide navigation chrome */
+    header, footer, .breadcrumb, .related-calcs-section,
+    .newsletter-wrap, .cta-block {
+      display: none !important;
+    }
+
+    .tabla-wrap {
+      padding: 0;
+      max-width: 100%;
+    }
+
+    /* Remove scrollable container so full table prints */
+    .table-scroll-wrapper {
+      overflow: visible;
+      border: none;
+      box-shadow: none;
+    }
+
+    .data-table {
+      white-space: normal;
+    }
+
+    /* Preserve colors when printing */
+    .cell-low    { background: #bfdbfe !important; color: #1e3a8a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cell-normal { background: #bbf7d0 !important; color: #14532d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cell-high   { background: #fef08a !important; color: #713f12 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cell-danger { background: #fecdd3 !important; color: #881337 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cell-info   { background: #bae6fd !important; color: #0c4a6e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    .data-table thead th {
+      background: #f1f5f9 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .data-table tbody .row-odd td,
+    .data-table tbody .row-odd .row-header {
+      background: #f8fafc !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Remove sticky positioning for print */
+    .sticky-col {
+      position: static;
+    }
+
+    /* Expand all FAQ items */
+    .faq-item { border: none; }
+    .faq-item details { display: block; }
+    .faq-chevron { display: none; }
+    .faq-a { display: block !important; padding-top: 0.5rem; }
+
+    /* Page break hints */
+    .table-section { page-break-inside: avoid; }
+    .faq-item { page-break-inside: avoid; }
+  }
+
+  /* ── Responsive tweaks ───────────────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    .tabla-wrap {
+      padding: 1rem 0.75rem 3rem;
+    }
+    .data-table {
+      font-size: 0.8125rem;
+    }
+    .data-table tbody td,
+    .data-table tbody .row-header {
+      padding: 0.4rem 0.625rem;
+    }
+    .cta-block {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .cta-btn { width: 100%; justify-content: center; }
+  }
+</style>
