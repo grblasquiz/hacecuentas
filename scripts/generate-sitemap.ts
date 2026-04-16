@@ -21,6 +21,7 @@ const CALCS_DIR = join(ROOT, 'src', 'content', 'calcs');
 const CALCS_EN_DIR = join(ROOT, 'src', 'content', 'calcs-en');
 const BLOG_DIR = join(ROOT, 'src', 'content', 'blog');
 const TABLAS_DIR = join(ROOT, 'src', 'content', 'tablas');
+const COMPARACIONES_DIR = join(ROOT, 'src', 'content', 'comparaciones');
 const OUT_FILE = join(ROOT, 'public', 'sitemap.xml');
 
 // Leer todos los JSONs de calcs
@@ -37,6 +38,11 @@ const blogPosts = readdirSync(BLOG_DIR)
 const tablas = readdirSync(TABLAS_DIR)
   .filter((f) => f.endsWith('.json'))
   .map((f) => JSON.parse(readFileSync(join(TABLAS_DIR, f), 'utf8')));
+
+// Leer todos los JSONs de comparaciones
+const comparaciones = readdirSync(COMPARACIONES_DIR)
+  .filter((f) => f.endsWith('.json'))
+  .map((f) => JSON.parse(readFileSync(join(COMPARACIONES_DIR, f), 'utf8')));
 
 // Leer todos los JSONs de calcs en inglés
 const calcsEn = readdirSync(CALCS_EN_DIR)
@@ -103,6 +109,14 @@ const urls = [
   // Calculadoras en inglés
   ...calcsEn.map((c: any) => ({
     loc: `${site}/en/${c.slug}`,
+    priority: '0.7',
+    changefreq: 'monthly',
+    lastmod: buildDate,
+  })),
+
+  // Comparaciones
+  ...comparaciones.map((c: any) => ({
+    loc: `${site}/comparar/${c.slug}`,
     priority: '0.7',
     changefreq: 'monthly',
     lastmod: buildDate,

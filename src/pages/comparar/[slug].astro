@@ -1,0 +1,999 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Newsletter from '../../components/Newsletter.astro';
+
+export async function getStaticPaths() {
+  const comparaciones = import.meta.glob<any>('../../content/comparaciones/*.json', { eager: true });
+  return Object.values(comparaciones).map((mod: any) => {
+    const c = mod.default || mod;
+    return {
+      params: { slug: c.slug },
+      props: { comparacion: c },
+    };
+  });
+}
+
+const { comparacion } = Astro.props;
+
+const siteUrl = 'https://hacecuentas.com';
+
+// ─── Related calcs ────────────────────────────────────────────────────────────
+const calcModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
+const calcBySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+
+const relatedCalcs = (comparacion.relatedCalcs || [])
+  .map((s: string) => calcBySlug.get(s))
+  .filter(Boolean);
+
+const firstRelatedCalc = relatedCalcs[0] || null;
+
+// ─── Category labels ──────────────────────────────────────────────────────────
+const categoryLabels: Record<string, string> = {
+  finanzas:         'Finanzas',
+  negocios:         'Negocios',
+  negocio:          'Negocios',
+  salud:            'Salud',
+  marketing:        'Marketing',
+  deportes:         'Deportes',
+  viajes:           'Viajes',
+  vida:             'Vida cotidiana',
+  mascotas:         'Mascotas',
+  matematica:       'Matemática',
+  construccion:     'Construcción',
+  cocina:           'Cocina',
+  educacion:        'Educación',
+  automotor:        'Automotor',
+  tecnologia:       'Tecnología',
+  'medio-ambiente': 'Medio Ambiente',
+  electronica:      'Electrónica',
+};
+
+const categoryLabel = categoryLabels[comparacion.category] || comparacion.category;
+
+// ─── Category badge colors ────────────────────────────────────────────────────
+const categoryColors: Record<string, { bg: string; text: string }> = {
+  finanzas:         { bg: '#eff6ff', text: '#1d4ed8' },
+  negocios:         { bg: '#f0fdf4', text: '#15803d' },
+  negocio:          { bg: '#f0fdf4', text: '#15803d' },
+  salud:            { bg: '#fdf4ff', text: '#9333ea' },
+  marketing:        { bg: '#fff7ed', text: '#c2410c' },
+  deportes:         { bg: '#ecfdf5', text: '#059669' },
+  viajes:           { bg: '#fff1f2', text: '#be123c' },
+  vida:             { bg: '#f0f9ff', text: '#0369a1' },
+  mascotas:         { bg: '#fefce8', text: '#854d0e' },
+  matematica:       { bg: '#f5f3ff', text: '#6d28d9' },
+  construccion:     { bg: '#fafaf9', text: '#78716c' },
+  cocina:           { bg: '#fff7ed', text: '#c2410c' },
+  educacion:        { bg: '#eff6ff', text: '#1d4ed8' },
+  automotor:        { bg: '#f8fafc', text: '#475569' },
+  tecnologia:       { bg: '#f0fdf4', text: '#15803d' },
+  'medio-ambiente': { bg: '#f0fdf4', text: '#166534' },
+  electronica:      { bg: '#eff6ff', text: '#1e40af' },
+};
+const catColor = categoryColors[comparacion.category] || { bg: 'var(--accent-soft)', text: 'var(--accent)' };
+
+// ─── Schema.org ───────────────────────────────────────────────────────────────
+const pageUrl = `${siteUrl}/comparar/${comparacion.slug}`;
+
+const webPageSchema: any = {
+  '@type': 'WebPage',
+  '@id': pageUrl,
+  name: comparacion.title,
+  description: comparacion.description,
+  url: pageUrl,
+  inLanguage: 'es-AR',
+  keywords: (comparacion.seoKeywords || []).join(', '),
+};
+
+const breadcrumbSchema = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+    { '@type': 'ListItem', position: 2, name: 'Comparar', item: `${siteUrl}/comparar` },
+    { '@type': 'ListItem', position: 3, name: comparacion.title, item: pageUrl },
+  ],
+};
+
+const faqSchema = comparacion.faq && comparacion.faq.length > 0
+  ? {
+      '@type': 'FAQPage',
+      mainEntity: comparacion.faq.map((item: { q: string; a: string }) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    }
+  : null;
+
+const pageSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    webPageSchema,
+    breadcrumbSchema,
+    ...(faqSchema ? [faqSchema] : []),
+  ],
+};
+---
+
+<Layout
+  title={comparacion.title}
+  description={comparacion.description}
+  canonical={`/comparar/${comparacion.slug}`}
+  schema={pageSchema}
+  noindex={false}
+  audience="AR"
+>
+  <Header slot="header" />
+
+  <div class="comparar-wrap">
+
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Inicio</a></li>
+        <li aria-hidden="true" class="sep">›</li>
+        <li><a href="/comparar">Comparar</a></li>
+        <li aria-hidden="true" class="sep">›</li>
+        <li aria-current="page">{comparacion.title}</li>
+      </ol>
+    </nav>
+
+    <article class="comparar-article">
+
+      <!-- Hero -->
+      <header class="comparar-header">
+        <div class="hero-emoji" aria-hidden="true">{comparacion.heroEmoji || '⚖️'}</div>
+        <span
+          class="cat-badge"
+          style={`background:${catColor.bg};color:${catColor.text}`}
+        >{categoryLabel}</span>
+        <h1>{comparacion.title}</h1>
+        <p class="comparar-intro">{comparacion.description}</p>
+      </header>
+
+      <!-- Options cards -->
+      {comparacion.options && comparacion.options.length > 0 && (
+        <section class="options-section">
+          <div class="options-grid">
+            {comparacion.options.map((opt: any) => (
+              <div class="option-card" style={`--option-color:${opt.color || 'var(--accent)'}`}>
+                <div class="option-card-top">
+                  <span class="option-icon" aria-hidden="true">{opt.icon}</span>
+                  <h2 class="option-name">{opt.name}</h2>
+                </div>
+
+                {opt.pros && opt.pros.length > 0 && (
+                  <div class="option-section">
+                    <ul class="pros-list">
+                      {opt.pros.map((pro: string) => (
+                        <li class="pro-item">
+                          <span class="pro-icon" aria-hidden="true">✓</span>
+                          {pro}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {opt.cons && opt.cons.length > 0 && (
+                  <div class="option-section">
+                    <ul class="cons-list">
+                      {opt.cons.map((con: string) => (
+                        <li class="con-item">
+                          <span class="con-icon" aria-hidden="true">✗</span>
+                          {con}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {opt.bestFor && (
+                  <div class="best-for-badge">
+                    <span class="best-for-label">Ideal para:</span>
+                    <span class="best-for-text">{opt.bestFor}</span>
+                  </div>
+                )}
+
+                {opt.metrics && Object.keys(opt.metrics).length > 0 && (
+                  <dl class="metrics-list">
+                    {Object.entries(opt.metrics).map(([key, val]: [string, any]) => (
+                      <div class="metric-row">
+                        <dt class="metric-key">{key}</dt>
+                        <dd class="metric-val">{val}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- Comparison table -->
+      {comparacion.comparisonTable && (
+        <section class="comparison-table-section">
+          <h2 class="section-title">Comparativa detallada</h2>
+          <div class="table-scroll-wrapper" role="region" aria-label="Tabla comparativa">
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  {(comparacion.comparisonTable.headers || []).map((h: string, i: number) => (
+                    <th scope="col" class={i === 0 ? 'col-header sticky-col' : ''}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(comparacion.comparisonTable.rows || []).map((row: string[], ri: number) => (
+                  <tr class={ri % 2 === 0 ? 'row-even' : 'row-odd'}>
+                    {row.map((cell: string, ci: number) => (
+                      ci === 0
+                        ? <th scope="row" class="sticky-col row-header">{cell}</th>
+                        : <td>{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      <!-- Verdict -->
+      {comparacion.verdict && (
+        <section class="verdict-section">
+          <div class="verdict-box prose" set:html={comparacion.verdict} />
+        </section>
+      )}
+
+      <!-- Detailed content -->
+      {comparacion.content && (
+        <div class="comparar-content prose" set:html={comparacion.content} />
+      )}
+
+      <!-- Related calculators -->
+      {relatedCalcs.length > 0 && (
+        <section class="related-calcs-section">
+          <h2>Calculadoras relacionadas</h2>
+          <div class="related-calcs-grid">
+            {relatedCalcs.map((calc: any) => (
+              <a href={`/${calc.slug}`} class="calc-card">
+                <div class="calc-card-icon">{calc.icon}</div>
+                <div class="calc-card-body">
+                  <div class="calc-card-cat">
+                    {categoryLabels[calc.category] || calc.category}
+                  </div>
+                  <div class="calc-card-title">{calc.h1}</div>
+                  {calc.description && (
+                    <div class="calc-card-desc">{calc.description.slice(0, 90)}{calc.description.length > 90 ? '…' : ''}</div>
+                  )}
+                </div>
+                <svg class="calc-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- FAQ -->
+      {comparacion.faq && comparacion.faq.length > 0 && (
+        <section class="faq-section">
+          <h2>Preguntas frecuentes</h2>
+          <div class="faq-list">
+            {comparacion.faq.map((item: { q: string; a: string }, i: number) => (
+              <details class="faq-item" open={i === 0}>
+                <summary class="faq-q">
+                  <span>{item.q}</span>
+                  <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </summary>
+                <div class="faq-a" set:html={item.a} />
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- CTA -->
+      {firstRelatedCalc && (
+        <div class="cta-block">
+          <p class="cta-text">Calculá tu caso exacto</p>
+          <a href={`/${firstRelatedCalc.slug}`} class="cta-btn">
+            {firstRelatedCalc.icon && <span aria-hidden="true">{firstRelatedCalc.icon}</span>}
+            Usar {firstRelatedCalc.h1}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      )}
+
+      <!-- Newsletter -->
+      <div class="newsletter-wrap">
+        <Newsletter />
+      </div>
+
+      <!-- Sources -->
+      {comparacion.sources && comparacion.sources.length > 0 && (
+        <footer class="sources-section">
+          <h3>Fuentes</h3>
+          <ul class="sources-list">
+            {comparacion.sources.map((src: string) => (
+              <li>{src}</li>
+            ))}
+          </ul>
+        </footer>
+      )}
+
+    </article>
+  </div><!-- /comparar-wrap -->
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  /* ── Page wrapper ────────────────────────────────────────────────────────── */
+  .comparar-wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 4rem;
+  }
+
+  /* ── Breadcrumb ──────────────────────────────────────────────────────────── */
+  .breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.375rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+  .breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover { color: var(--accent); text-decoration: underline; }
+  .breadcrumb .sep { color: var(--border-strong); }
+  .breadcrumb [aria-current="page"] {
+    color: var(--text-subtle);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 320px;
+  }
+
+  /* ── Article ─────────────────────────────────────────────────────────────── */
+  .comparar-article {
+    margin-top: 1.5rem;
+  }
+
+  /* ── Hero ────────────────────────────────────────────────────────────────── */
+  .comparar-header {
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-emoji {
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .cat-badge {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.25rem 0.625rem;
+    border-radius: 99px;
+    margin-bottom: 0.875rem;
+  }
+
+  .comparar-header h1 {
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--text);
+    margin: 0 0 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  .comparar-intro {
+    font-size: 1.0625rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin: 0;
+    max-width: 72ch;
+  }
+
+  /* ── Options section ─────────────────────────────────────────────────────── */
+  .options-section {
+    margin-bottom: 3rem;
+  }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+
+  /* Option card */
+  .option-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    border-top: 4px solid var(--option-color, var(--accent));
+    padding: 1.375rem 1.25rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: box-shadow 0.15s ease;
+  }
+
+  .option-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  }
+
+  .option-card-top {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  .option-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .option-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  /* Pros & cons */
+  .option-section {
+    /* spacing container */
+  }
+
+  .pros-list,
+  .cons-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .pro-item,
+  .con-item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+  }
+
+  .pro-icon {
+    color: #16a34a;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-size: 0.875rem;
+  }
+
+  .con-icon {
+    color: #dc2626;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-size: 0.875rem;
+  }
+
+  /* Ideal para badge */
+  .best-for-badge {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 2px);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .best-for-label {
+    font-weight: 700;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.6875rem;
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+
+  .best-for-text {
+    color: var(--text-muted);
+  }
+
+  /* Metrics */
+  .metrics-list {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 2px);
+    overflow: hidden;
+  }
+
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.875rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .metric-row:last-child {
+    border-bottom: none;
+  }
+
+  .metric-row:nth-child(even) {
+    background: var(--bg-soft);
+  }
+
+  .metric-key {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    flex-shrink: 0;
+  }
+
+  .metric-val {
+    color: var(--text);
+    font-weight: 600;
+    text-align: right;
+    font-size: 0.875rem;
+  }
+
+  /* ── Section title ───────────────────────────────────────────────────────── */
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 1.25rem;
+  }
+
+  /* ── Comparison table ────────────────────────────────────────────────────── */
+  .comparison-table-section {
+    margin-bottom: 3rem;
+  }
+
+  .table-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: inset -4px 0 8px -4px rgba(0,0,0,0.06);
+  }
+
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .comparison-table thead th {
+    background: var(--bg-soft);
+    color: var(--text-subtle);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.625rem 0.875rem;
+    border-bottom: 2px solid var(--border-strong);
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .comparison-table thead th.col-header {
+    text-align: left;
+  }
+
+  .comparison-table tbody td,
+  .comparison-table tbody .row-header {
+    padding: 0.5rem 0.875rem;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    color: var(--text);
+  }
+
+  .comparison-table tbody .row-header {
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+
+  .comparison-table tbody .row-even td,
+  .comparison-table tbody .row-even .row-header {
+    background: var(--bg);
+  }
+  .comparison-table tbody .row-odd td,
+  .comparison-table tbody .row-odd .row-header {
+    background: var(--bg-soft);
+  }
+
+  .comparison-table tbody tr:last-child td,
+  .comparison-table tbody tr:last-child .row-header {
+    border-bottom: none;
+  }
+
+  /* Sticky first column */
+  .sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    border-right: 1px solid var(--border-strong);
+  }
+
+  .comparison-table tbody .row-even .sticky-col {
+    background: var(--bg);
+  }
+  .comparison-table tbody .row-odd .sticky-col {
+    background: var(--bg-soft);
+  }
+  .comparison-table thead .sticky-col {
+    z-index: 3;
+    background: var(--bg-soft);
+  }
+
+  /* ── Verdict section ─────────────────────────────────────────────────────── */
+  .verdict-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .verdict-box {
+    border-left: 4px solid var(--accent);
+    background: var(--bg-soft);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.5rem 1.75rem;
+  }
+
+  .verdict-box :global(h2) {
+    margin-top: 0;
+    font-size: 1.25rem;
+    color: var(--text);
+  }
+
+  .verdict-box :global(p) {
+    color: var(--text-muted);
+    line-height: 1.75;
+    margin-bottom: 0.875rem;
+  }
+
+  .verdict-box :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  /* ── Detailed content ────────────────────────────────────────────────────── */
+  .comparar-content {
+    margin-bottom: 2.5rem;
+  }
+
+  /* ── Prose base ──────────────────────────────────────────────────────────── */
+  .prose :global(h2) {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 2rem 0 0.75rem;
+  }
+
+  .prose :global(h3) {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  .prose :global(p) {
+    color: var(--text-muted);
+    line-height: 1.75;
+    margin-bottom: 1rem;
+  }
+
+  .prose :global(ul),
+  .prose :global(ol) {
+    color: var(--text-muted);
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .prose :global(li) {
+    margin-bottom: 0.375rem;
+    line-height: 1.65;
+  }
+
+  .prose :global(strong) {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ── Related calcs ───────────────────────────────────────────────────────── */
+  .related-calcs-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .related-calcs-section h2 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+
+  .related-calcs-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .calc-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .calc-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .calc-card-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .calc-card-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .calc-card-cat {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin-bottom: 0.2rem;
+  }
+
+  .calc-card-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .calc-card-desc {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .calc-card-arrow {
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  /* ── FAQ ─────────────────────────────────────────────────────────────────── */
+  .faq-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .faq-section h2 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .faq-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .faq-item[open] {
+    border-color: var(--accent);
+  }
+
+  .faq-q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text);
+    list-style: none;
+    user-select: none;
+    background: var(--bg);
+  }
+
+  .faq-q::-webkit-details-marker { display: none; }
+
+  .faq-q:hover { background: var(--bg-soft); }
+
+  .faq-chevron {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+  }
+
+  .faq-item[open] .faq-chevron {
+    transform: rotate(180deg);
+  }
+
+  .faq-a {
+    padding: 0.75rem 1rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    border-top: 1px solid var(--border);
+    background: var(--bg-soft);
+  }
+
+  .faq-a :global(p) { margin: 0 0 0.75rem; }
+  .faq-a :global(p:last-child) { margin-bottom: 0; }
+
+  /* ── CTA block ───────────────────────────────────────────────────────────── */
+  .cta-block {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 2.5rem;
+  }
+
+  .cta-text {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: var(--radius);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+
+  .cta-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  /* ── Newsletter ──────────────────────────────────────────────────────────── */
+  .newsletter-wrap {
+    margin-bottom: 2.5rem;
+  }
+
+  /* ── Sources ─────────────────────────────────────────────────────────────── */
+  .sources-section {
+    border-top: 1px solid var(--border);
+    padding-top: 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .sources-section h3 {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin: 0 0 0.625rem;
+  }
+
+  .sources-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 1rem;
+  }
+
+  .sources-list li {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Dark mode ───────────────────────────────────────────────────────────── */
+  @media (prefers-color-scheme: dark) {
+    .option-card:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+    .calc-card:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .table-scroll-wrapper {
+      box-shadow: inset -4px 0 8px -4px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  /* ── Responsive ──────────────────────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .comparar-wrap {
+      padding: 1rem 0.875rem 3rem;
+    }
+
+    .hero-emoji {
+      font-size: 2.25rem;
+    }
+
+    .options-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .option-card {
+      padding: 1.125rem 1rem;
+    }
+
+    .metric-row {
+      flex-direction: column;
+      gap: 0.125rem;
+      align-items: flex-start;
+    }
+
+    .metric-val {
+      text-align: left;
+    }
+
+    .verdict-box {
+      padding: 1.125rem 1.25rem;
+    }
+
+    .cta-block {
+      padding: 1.5rem 1rem;
+    }
+  }
+</style>
