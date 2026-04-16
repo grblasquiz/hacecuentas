@@ -195,7 +195,7 @@ const schema = {
       <span class="hero-dot" aria-hidden="true">·</span>
       <span class="hero-stat"><strong data-count-to={categoryOrder.length}>{categoryOrder.length}</strong> categorías</span>
       <span class="hero-dot" aria-hidden="true">·</span>
-      <span class="hero-stat"><strong data-count-to={totalResults}>{totalResults.toLocaleString('es-AR')}</strong> resultados</span>
+      <span class="hero-stat"><strong data-count-to={totalResults} data-live-counter="true">{totalResults.toLocaleString('es-AR')}</strong> resultados</span>
       <span class="hero-dot" aria-hidden="true">·</span>
       <a href="/valores-bcra" class="hero-live"><span class="dot-live"></span>Valores BCRA hoy</a>
     </div>
@@ -442,8 +442,26 @@ const schema = {
           el.textContent = fmt(Math.round(ease * target));
         });
         if (t < 1) requestAnimationFrame(tick);
+        else startLiveTicker();
       }
       requestAnimationFrame(tick);
+    }
+    // Ticker "vivo": despues de la animacion inicial, los contadores con
+    // data-live-counter incrementan +1 cada 2-8s para dar feel de uso real.
+    function startLiveTicker() {
+      var liveEls = document.querySelectorAll('[data-live-counter]');
+      if (!liveEls.length) return;
+      liveEls.forEach(function (el) {
+        var current = parseInt(el.getAttribute('data-count-to'), 10) || 0;
+        function bump() {
+          current += 1;
+          el.setAttribute('data-count-to', String(current));
+          el.textContent = fmt(current);
+          var next = 2000 + Math.random() * 6000; // 2-8s
+          setTimeout(bump, next);
+        }
+        setTimeout(bump, 2000 + Math.random() * 6000);
+      });
     }
     // Start when hero is visible (instant for above-fold)
     if ('IntersectionObserver' in window) {
