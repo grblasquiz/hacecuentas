@@ -140,5 +140,28 @@
       "name": "Revisá el costo",
       "text": "Mirá cuánto te sale en ETH y en USD la transacción."
     }
+  ],
+  "explanation": "## Cómo funciona el gas en Ethereum\n\nEl **gas** es la unidad de medida del cómputo en Ethereum. Cada operación consume una cantidad de gas y multiplica por el **gas price** (en Gwei) para determinar el costo total: **costo = gas_usado × gas_price (Gwei) / 10⁹ ETH**. El gas price fluctúa según la demanda de la red; en horas pico puede ser 10x más caro que de madrugada.\n\nDesde **EIP-1559 (agosto 2021)** el gas price se compone de **base fee (quemada)** + **priority fee (propina al validador)**.\n\n## Gas consumido por tipo de transacción\n\n| Operación | Gas usado |\n|---|---|\n| Transferencia ETH simple | 21.000 |\n| Transferencia ERC-20 (USDT, USDC) | 45.000 - 65.000 |\n| Swap en Uniswap V3 | 150.000 - 200.000 |\n| Aprobación ERC-20 | 45.000 |\n| Mint NFT (ERC-721) | 80.000 - 200.000 |\n| Deploy contrato simple | 500.000 - 2.000.000 |\n| Claim de airdrop | 100.000 - 300.000 |\n| Stake en Lido | 100.000 |\n\n### Rangos de gas price (Gwei)\n\n- **Madrugada UTC (low load)**: 5-15 Gwei\n- **Horario normal**: 15-40 Gwei\n- **Horas pico / mint hype**: 100-300 Gwei\n- **Eventos extremos (NFT drop viral)**: 500+ Gwei\n\n## Cuándo usar / Errores comunes\n\n- **Layer 2 (Arbitrum, Optimism, Base)**: fees 10-100x menores. Si hacés > 2 tx por mes, usá L2.\n- **Gas price muy bajo**: la tx queda pendiente hasta que algún validador la incluya o puede ser descartada.\n- **Gas limit insuficiente**: la tx falla pero **pagás igual** el gas consumido hasta el out-of-gas.\n- **Horarios convenientes**: fines de semana y madrugada UTC (3-6 AM hora Argentina en invierno) son los más baratos.\n- **Checker de gas**: etherscan.io/gastracker muestra el gas price actual en tiempo real.\n\nPara estimar cripto a ARS mirá la [calculadora de conversión cripto](/calculadora-conversion-cripto-pesos-argentinos).",
+  "example": {
+    "title": "Ejemplo real: swap en Uniswap con gas moderado",
+    "steps": [
+      "**Datos**: tipo = swap en Uniswap V3 (gas 175.000), gas price = 25 Gwei, precio ETH = USD 3.500.",
+      "**Gas usado**: 175.000.",
+      "**Costo en Gwei**: 175.000 × 25 = **4.375.000 Gwei**.",
+      "**Costo en ETH**: 4.375.000 / 10⁹ = **0,004375 ETH**.",
+      "**Costo en USD**: 0,004375 × 3.500 = **~$15,31 USD**.",
+      "**Costo en ARS** (CCL $1.320): **~$20.203 ARS**."
+    ],
+    "result": "Un swap simple cuesta ~USD 15 a 25 Gwei. En horas pico (100 Gwei) sería ~USD 60. Por eso los usuarios pequeños migran a L2: el mismo swap en Arbitrum cuesta ~USD 0,30."
+  },
+  "sources": [
+    {
+      "name": "Etherscan Gas Tracker",
+      "url": "https://etherscan.io/gastracker"
+    },
+    {
+      "name": "EIP-1559 Documentation",
+      "url": "https://eips.ethereum.org/EIPS/eip-1559"
+    }
   ]
 }

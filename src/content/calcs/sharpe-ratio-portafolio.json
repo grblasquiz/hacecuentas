@@ -124,5 +124,26 @@
       "name": "Compará escenarios",
       "text": "Modificá los datos y recalculá para comparar opciones."
     }
+  ],
+  "explanation": "## Qué es el Sharpe Ratio\n\nEl **Sharpe Ratio** mide la **rentabilidad que obtenés por cada unidad de riesgo asumido**. Lo creó **William Sharpe** en 1966 (Nobel de Economía 1990) y es la métrica más usada para comparar fondos de inversión, portafolios y estrategias: dos portafolios pueden tener el mismo rendimiento, pero si uno lo hace con la mitad de volatilidad, es objetivamente mejor.\n\n```\nSharpe = (R_p − R_f) / σ_p\n```\n\n- **R_p**: rendimiento anual del portafolio.\n- **R_f**: tasa libre de riesgo (US Treasury 10Y, bono soberano).\n- **σ_p**: desvío estándar anualizado de los retornos del portafolio (volatilidad).\n\n## Interpretación de resultados\n\n| Sharpe | Calificación |\n|---|---|\n| < 0 | Malo — rindiendo menos que la tasa libre de riesgo |\n| 0 – 1 | Mediocre |\n| 1 – 2 | **Bueno** |\n| 2 – 3 | Muy bueno |\n| > 3 | Excelente (poco común, sospechar sobreajuste) |\n\nEl S&P 500 histórico tiene un Sharpe promedio de ~0.5. Buenos hedge funds sostienen 1.0–1.5. Sharpes > 3 en backtest suelen ser resultado de overfitting.\n\n## Cuándo usar / Errores comunes\n\nUsalo para comparar portafolios o fondos de **riesgo comparable** y con **mismo período temporal**. Errores habituales:\n\n- **Usar retornos no anualizados**: si tus datos son mensuales, anualizá con × √12. Si son diarios, × √252.\n- **Aplicarlo a distribuciones muy asimétricas**: estrategias de venta de opciones tienen Sharpe alto en época buena y catastrófico cuando explotan. Para eso usá Sortino (solo volatilidad negativa).\n- **Comparar Sharpe entre clases de activos radicalmente diferentes**: cripto vs bonos del tesoro no son comparables directamente.\n- **Elegir R_f irreal**: en Argentina, la \"tasa libre de riesgo\" en pesos es difícil de definir. Uses USD como referencia.\n\nPara ver la otra cara, el [WACC de costo de capital](/calculadora-wacc-costo-capital-promedio-ponderado) y el [valor intrínseco DCF](/calculadora-dcf-valor-intrinseco-flujo-caja) ayudan a evaluar activos individuales más allá del ratio.",
+  "example": {
+    "title": "Ejemplo real: portafolio mixto acciones + bonos",
+    "steps": [
+      "**Rendimiento anual del portafolio**: 12 %.",
+      "**Tasa libre de riesgo (US Treasury 10Y)**: 4.5 %.",
+      "**Desvío estándar anualizado**: 15 %.",
+      "**Exceso de retorno**: 12 − 4.5 = 7.5 %.",
+      "**Sharpe**: 7.5 / 15 = **0.50**."
+    ],
+    "result": "Sharpe 0.50 — en línea con el promedio histórico del S&P 500. Para subir a 1.0 habría que mantener el rendimiento reduciendo volatilidad (más diversificación, menos correlación)."
+  },
+  "sources": [
+    {
+      "name": "Sharpe, W. - Mutual Fund Performance (1966)"
+    },
+    {
+      "name": "CFA Institute - Sharpe Ratio",
+      "url": "https://www.cfainstitute.org/"
+    }
   ]
 }

@@ -171,5 +171,28 @@
       "name": "Configurá OBS",
       "text": "Usá el bitrate y preset recomendado en la configuración de OBS."
     }
+  ],
+  "explanation": "## Qué es el bitrate y por qué importa\n\nEl **bitrate** es la cantidad de datos (kbps, kilobits por segundo) que tu stream envía al servidor. Muy bajo → el stream se ve pixelado, especialmente en escenas rápidas. Muy alto → tu internet no aguanta, hay buffering, o la plataforma rechaza el stream (Twitch limita a 6000 kbps para cuentas no-partner).\n\n```\nBitrate total = bitrate_video + bitrate_audio\nUpload necesario = bitrate × 1.5   (para headroom)\n```\n\n## Presets recomendados 2026\n\n| Resolución / FPS | Twitch | YouTube | Kick |\n|---|---|---|---|\n| 720p30 | 2500 – 3500 | 3000 – 4500 | 3000 – 4000 |\n| 720p60 | 3500 – 5000 | 5000 – 7500 | 4000 – 6000 |\n| 1080p30 | 3500 – 5000 | 5000 – 8000 | 4500 – 6000 |\n| **1080p60** | **4500 – 6000** | **8000 – 12000** | **6000 – 8500** |\n| 1440p60 | No soportado | 12000 – 16000 | 8000 – 12000 |\n| 4K60 | No soportado | 30000 – 51000 | N/A |\n\n**Audio**: 160 kbps AAC estéreo es el estándar.\n\n## Cuándo usar / Errores comunes\n\nUsalo al configurar OBS por primera vez o cuando cambiás de juego / plataforma. Errores habituales:\n\n- **Poner el bitrate al máximo sin testear upload**: si tu upload es 10 Mbps y streameás a 8 Mbps, cualquier spike te tira el stream. Regla 1.5x.\n- **Usar x264 con CPU lento**: si tenés GPU NVIDIA reciente, usá **NVENC** (casi gratis en performance). Para CPU débil, stream a 720p.\n- **Bitrate alto en juego CPU-bound**: juegos como Escape from Tarkov te comen CPU y encoding x264 veryfast baja FPS. NVENC salva.\n- **No usar CBR**: Twitch requiere CBR (bitrate constante). En YouTube podés usar VBR para optimizar.\n\nCombinalo con el cálculo de [PPI de monitor](/calculadora-resolucion-pantalla-ppi) para elegir la resolución correcta y la [duración ideal de video](/calculadora-video-duracion-ideal-plataforma) si hacés VOD.",
+  "example": {
+    "title": "Ejemplo real: stream 1080p60 en Twitch con internet 50/10 Mbps",
+    "steps": [
+      "**Upload disponible**: 10 Mbps = 10.000 kbps.",
+      "**Bitrate máximo seguro**: 10.000 / 1.5 = **6.666 kbps**.",
+      "**Bitrate configurado en OBS**: 6000 kbps video + 160 kbps audio = **6160 kbps total**.",
+      "**Encoder**: NVENC H.264 Preset Quality con B-frames = 2.",
+      "**Keyframe interval**: 2 segundos (Twitch requerido).",
+      "**Rate control**: CBR obligatorio para Twitch."
+    ],
+    "result": "Con upload de 10 Mbps, 6000 kbps CBR es el tope estable para 1080p60 en Twitch. Margen de 33 % para spikes o tráfico paralelo."
+  },
+  "sources": [
+    {
+      "name": "Twitch - Broadcasting Guidelines",
+      "url": "https://help.twitch.tv/s/article/broadcasting-guidelines"
+    },
+    {
+      "name": "YouTube - Live encoder settings",
+      "url": "https://support.google.com/youtube/answer/2853702"
+    }
   ]
 }

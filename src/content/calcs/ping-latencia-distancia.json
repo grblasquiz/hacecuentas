@@ -126,5 +126,16 @@
       "name": "Revisá el diagnóstico",
       "text": "La calculadora te dice si tu ping es normal o hay problemas en la red."
     }
-  ]
+  ],
+  "explanation": "## Por qué hay un ping mínimo inevitable\n\nEl ping (latencia de ida y vuelta) tiene un **límite físico**: la velocidad de la luz en fibra óptica es **~200.000 km/s** (2/3 de c en vacío por el índice de refracción). Ningún paquete puede ir más rápido que eso.\n\n## Tabla ping teórico mínimo vs distancias reales\n\n| Origen → Destino | Distancia aprox. | Ping teórico | Ping real típico |\n|---|---|---|---|\n| Buenos Aires → BA | < 10 km | < 1 ms | 5 – 15 ms |\n| BA → Santiago | 1.150 km | 11.5 ms | 25 – 40 ms |\n| BA → Miami | 7.100 km | 71 ms | 130 – 170 ms |\n| BA → Virginia (AWS us-east-1) | 8.400 km | 84 ms | 140 – 180 ms |\n| BA → Frankfurt | 11.800 km | 118 ms | 200 – 240 ms |\n| BA → Tokio | 18.400 km | 184 ms | 280 – 340 ms |\n\n## Fórmula\n\n**Ping teórico mínimo (ms) = (distancia_km × 2) / 200 × 1000 / 1000 = distancia_km / 100**.\n\nEs ida y vuelta: por eso multiplicamos por 2. El overhead real (routers, switches, queueing, procesamiento) suele sumar un 50-100% sobre el teórico.\n\n## Cuándo usar y errores comunes\n\n- **Tu cable submarino real no va recto**: los cables reales son 20-30% más largos que línea recta.\n- **CDN cercanos** (Cloudflare, Akamai) reducen ping real al acercar servidor.\n- **Wi-Fi agrega 3-10 ms**: Ethernet siempre menos.\n- Para gaming competitivo, ping < 50 ms es lo mínimo aceptable.",
+  "example": {
+    "title": "Ejemplo real: Gamer argentino jugando en servidor Virginia",
+    "steps": [
+      "**Datos**: distancia al servidor = 8.400 km, ping real medido = 150 ms.",
+      "**Ping teórico mínimo**: 8.400 × 2 / 200.000 × 1000 = **84 ms**.",
+      "**Overhead de red**: 150 - 84 = 66 ms (78% de overhead).",
+      "**Diagnóstico**: overhead alto pero normal para saltos transatlánticos múltiples."
+    ],
+    "result": "Ping real 150 ms vs teórico 84 ms: 66 ms de overhead, consistente con ruta internacional."
+  }
 }

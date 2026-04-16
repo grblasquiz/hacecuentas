@@ -116,5 +116,26 @@
       "name": "Mejorá si es necesario",
       "text": "Seguí las sugerencias para fortalecer tu contraseña."
     }
+  ],
+  "explanation": "## Qué es la entropía de una contraseña\n\nLa **entropía** se mide en bits y cuantifica la aleatoriedad: cuántas combinaciones posibles tendría un atacante que probar por fuerza bruta. Se calcula como `log₂(tamaño_alfabeto ^ longitud)`. Un alfabeto de 26 letras minúsculas con 8 caracteres da ~37 bits; agregar mayúsculas, números y símbolos llega a ~52 bits. Cada bit extra **duplica** el tiempo de crackeo.\n\n## Tabla de fortaleza por entropía\n\n| Entropía | Nivel | Tiempo estimado (GPU moderna) |\n|---|---|---|\n| < 28 bits | Muy débil | Segundos |\n| 28–35 | Débil | Minutos |\n| 36–59 | Moderada | Horas a días |\n| 60–127 | Fuerte | Años |\n| ≥ 128 | Excelente | Siglos |\n\n## Cuándo usar / Errores comunes\n\nUsala **antes de crear** una contraseña nueva, y **periódicamente** para revisar si las tuyas siguen siendo seguras frente a los avances en GPUs. Errores típicos: confiar en sustituciones tipo \"P@ssw0rd\" (los diccionarios las prueban primero), reutilizar la misma contraseña en varios sitios, o pensar que agregar un \"!\" al final la vuelve fuerte. La mejor estrategia es una **passphrase larga** de 4–5 palabras al azar, o directamente un password manager ([Bitwarden](https://bitwarden.com/), 1Password) que genere claves de 20+ caracteres. Sumale [2FA](/calculadora-huella-digital-estimacion) y prácticamente bloqueás cualquier ataque por contraseña sola.",
+  "example": {
+    "title": "Ejemplo real: evaluar 'Verano2025!'",
+    "steps": [
+      "**Datos**: contraseña = `Verano2025!` (11 caracteres, incluye mayúscula, minúscula, número y símbolo).",
+      "**Fórmula**: entropía = log₂(94^11) ≈ 72 bits teóricos, pero al ser una palabra del diccionario + año, los crackers la prueban con reglas y la entropía efectiva baja a ~30 bits.",
+      "**Resultado**: nivel **débil**, crackeable en **minutos** con diccionario + reglas.",
+      "**Interpretación**: una passphrase como `cielo-roto-mesa-verde-42` tiene 90+ bits efectivos y es infinitamente más segura pese a no tener mayúsculas ni símbolos."
+    ],
+    "result": "72 bits teóricos pero ~30 efectivos por ser predecible. Usá passphrases largas en vez de sustituciones sobre palabras del diccionario."
+  },
+  "sources": [
+    {
+      "name": "NIST SP 800-63B - Digital Identity Guidelines",
+      "url": "https://pages.nist.gov/800-63-3/sp800-63b.html"
+    },
+    {
+      "name": "OWASP - Password Storage Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
+    }
   ]
 }

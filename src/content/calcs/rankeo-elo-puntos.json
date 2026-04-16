@@ -151,5 +151,23 @@
       "name": "Obtené el nuevo rating",
       "text": "Revisá tu nuevo ELO y cuántos puntos ganaste o perdiste."
     }
+  ],
+  "explanation": "## Qué es el sistema ELO\n\nEl **sistema ELO**, inventado por Arpad Elo para rankear ajedrecistas (adoptado por FIDE en 1970), hoy se usa en **League of Legends, CS2, Valorant, Dota 2, Fortnite** y casi cualquier juego competitivo. La idea es simple: **ganarle a un rival más fuerte te da más puntos que ganarle a uno más débil**.\n\n## Fórmula\n\n**Nuevo ELO = ELO actual + K × (Resultado - Expectativa)**\n\nDonde:\n- **K** = factor de variación (32 estándar FIDE, 40 para novatos, 10 para elite).\n- **Resultado** = 1 (victoria), 0.5 (empate), 0 (derrota).\n- **Expectativa** = 1 / (1 + 10^((ELO_rival - ELO_propio) / 400)).\n\n## Tabla de intercambio según diferencia\n\n| Diferencia ELO | Prob. victoria | Puntos si ganás (K=32) |\n|---|---|---|\n| +400 | 91% | +3 |\n| +200 | 76% | +8 |\n| 0 | 50% | +16 |\n| -200 | 24% | +24 |\n| -400 | 9% | +29 |\n\n## Cuándo usar y errores comunes\n\n- **K alto para novatos**: permiten subir rápido cuando son mejores de lo que su ELO sugiere.\n- **Empates** dan puntos al jugador más bajo, quitan al más alto.\n- **ELO inicial 1200-1500** en la mayoría de sistemas.\n- Videojuegos modernos usan **MMR** (Match Making Rating) que es ELO tuneado con factores adicionales como streaks y performance individual.",
+  "example": {
+    "title": "Ejemplo real: ELO 1200 vs rival 1350, perdés",
+    "steps": [
+      "**Datos**: tu ELO = 1200, rival = 1350, resultado = derrota (0), K = 32.",
+      "**Expectativa**: 1 / (1 + 10^((1350-1200)/400)) = 1 / (1 + 10^0.375) = **0.296**.",
+      "**Cambio**: 32 × (0 - 0.296) = **-9.47**.",
+      "**Nuevo ELO**: 1200 - 9 = **1191**.",
+      "**Probabilidad esperada de victoria**: 29.6% (había chance pero no era favorito)."
+    ],
+    "result": "Perdés 9 puntos al ser derrotado por rival +150 ELO (como esperaba el sistema)."
+  },
+  "sources": [
+    {
+      "name": "FIDE - Rating Regulations",
+      "url": "https://www.fide.com/"
+    }
   ]
 }
