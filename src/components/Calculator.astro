@@ -367,6 +367,20 @@ const formatFreshnessDate = (iso: string): string => {
       </button>
     </div>
 
+    <!-- Email capture CTA -->
+    <div class="email-capture" data-email-capture style="display:none">
+      <p class="email-heading"><strong>Recibí este resultado por email</strong></p>
+      <form class="email-form" data-email-form>
+        <input type="email" placeholder="tu@email.com" required data-email-input>
+        <button type="submit">Enviar</button>
+      </form>
+      <p class="email-note">Gratis. Sin spam. Solo tu resultado.</p>
+      <p class="email-success" data-email-success style="display:none">Guardado. Próximamente vas a recibir tus resultados por email.</p>
+    </div>
+
+    <!-- Calc usage counter -->
+    <div class="calc-counter" data-calc-counter style="display:none"></div>
+
     <!-- Feedback inline: thumbs + comentario opcional -->
     <div class="feedback" data-feedback>
       <div class="feedback-prompt" data-feedback-prompt>
@@ -1143,6 +1157,76 @@ const formatFreshnessDate = (iso: string): string => {
     font-weight: 500;
   }
 
+  /* Email capture CTA */
+  .email-capture {
+    margin-top: 1.25rem;
+    padding: 1rem 1.25rem;
+    background: color-mix(in srgb, var(--accent) 6%, var(--bg-card));
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+    border-radius: var(--radius-sm);
+  }
+  .email-heading {
+    font-size: 0.875rem;
+    color: var(--text);
+    margin: 0 0 0.625rem;
+  }
+  .email-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.375rem;
+  }
+  .email-form input[type="email"] {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .email-form input[type="email"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .email-form button {
+    padding: 0.5rem 1rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .email-form button:hover {
+    background: var(--accent-hover);
+  }
+  .email-note {
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    margin: 0;
+  }
+  .email-success {
+    font-size: 0.8125rem;
+    color: var(--success);
+    font-weight: 500;
+    margin: 0;
+  }
+
+  /* Calc usage counter */
+  .calc-counter {
+    margin-top: 0.75rem;
+    padding: 0.5rem 0;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    text-align: center;
+    border-top: 1px dashed var(--border);
+  }
+
   @media (max-width: 640px) {
     .calc-container { padding: 1.25rem; }
     .fields-grid { grid-template-columns: 1fr; }
@@ -1158,6 +1242,9 @@ const formatFreshnessDate = (iso: string): string => {
     .btn-primary.loading {
       position: static;
       box-shadow: var(--shadow-sm);
+    }
+    .email-form {
+      flex-direction: column;
     }
   }
 </style>
@@ -1829,6 +1916,26 @@ const formatFreshnessDate = (iso: string): string => {
               renderHistory(container, slug, form);
             }
           } catch {}
+
+          // Mostrar email capture CTA
+          const emailCapture = container.querySelector<HTMLElement>('[data-email-capture]');
+          if (emailCapture) {
+            emailCapture.style.display = 'block';
+          }
+
+          // Incrementar y mostrar contador de cálculos
+          try {
+            const countKey = 'hc_calc_count';
+            const counts: Record<string, number> = JSON.parse(localStorage.getItem(countKey) || '{}');
+            counts[slug] = (counts[slug] || 0) + 1;
+            localStorage.setItem(countKey, JSON.stringify(counts));
+            const counterEl = container.querySelector<HTMLElement>('[data-calc-counter]');
+            if (counterEl) {
+              const total = Object.values(counts).reduce((a, b) => a + b, 0);
+              counterEl.textContent = `\u{1F525} ${total.toLocaleString('es-AR')} cálculos realizados`;
+              counterEl.style.display = 'block';
+            }
+          } catch {}
         } catch (err: any) {
           errorBox.textContent = err.message || 'Error al calcular. Revisá los datos.';
           errorBox.hidden = false;
@@ -1937,6 +2044,17 @@ const formatFreshnessDate = (iso: string): string => {
           if (chartWrap) chartWrap.hidden = true;
           if (chartInstance) { try { chartInstance.destroy(); } catch {} chartInstance = null; }
           lastChartSpec = null;
+          // Reset email capture state
+          const emailCap = container.querySelector<HTMLElement>('[data-email-capture]');
+          if (emailCap) {
+            emailCap.style.display = 'none';
+            const ef = emailCap.querySelector<HTMLFormElement>('[data-email-form]');
+            if (ef) { ef.reset(); ef.style.display = 'flex'; }
+            const en = emailCap.querySelector<HTMLElement>('.email-note');
+            if (en) en.style.display = 'block';
+            const es = emailCap.querySelector<HTMLElement>('[data-email-success]');
+            if (es) es.style.display = 'none';
+          }
           form.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });
@@ -2018,6 +2136,57 @@ const formatFreshnessDate = (iso: string): string => {
         thanksEl.hidden = false;
       });
     }
+
+    // ── Email capture ─────────────────────────────────────────
+    const emailForm = container.querySelector<HTMLFormElement>('[data-email-form]');
+    if (emailForm) {
+      emailForm.addEventListener('submit', (ev) => {
+        ev.preventDefault();
+        const emailInput = emailForm.querySelector<HTMLInputElement>('[data-email-input]');
+        const email = emailInput?.value.trim();
+        if (!email) return;
+
+        // Obtener resultado primary
+        const primaryVal = container.querySelector<HTMLElement>('.result.primary [data-value]')?.textContent || '';
+
+        // Guardar en localStorage
+        try {
+          const stored: any[] = JSON.parse(localStorage.getItem('hc_emails') || '[]');
+          stored.push({
+            email,
+            slug,
+            result: primaryVal,
+            date: new Date().toISOString(),
+          });
+          localStorage.setItem('hc_emails', JSON.stringify(stored));
+        } catch {}
+
+        // Mostrar éxito
+        emailForm.style.display = 'none';
+        const noteEl = container.querySelector<HTMLElement>('.email-note');
+        if (noteEl) noteEl.style.display = 'none';
+        const successEl = container.querySelector<HTMLElement>('[data-email-success]');
+        if (successEl) successEl.style.display = 'block';
+
+        // GA4 event
+        if (typeof (window as any).gtag === 'function') {
+          (window as any).gtag('event', 'email_capture', { calc_slug: slug });
+        }
+      });
+    }
+
+    // ── Mostrar contador existente al cargar ──────────────────
+    try {
+      const counts: Record<string, number> = JSON.parse(localStorage.getItem('hc_calc_count') || '{}');
+      const total = Object.values(counts).reduce((a, b) => a + b, 0);
+      if (total > 0) {
+        const counterEl = container.querySelector<HTMLElement>('[data-calc-counter]');
+        if (counterEl) {
+          counterEl.textContent = `\u{1F525} ${total.toLocaleString('es-AR')} cálculos realizados`;
+          counterEl.style.display = 'block';
+        }
+      }
+    } catch {}
   });
 
   // ── Helpers de historial ─────────────────────────────────────

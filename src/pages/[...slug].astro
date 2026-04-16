@@ -215,6 +215,26 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
 const schemaGraph: any[] = [schemaHowTo, schemaBreadcrumb, schemaApp];
 if (schemaFAQ) schemaGraph.push(schemaFAQ);
 if (schemaArticle) schemaGraph.push(schemaArticle);
+
+// Dataset schema for calcs whose explanation contains markdown tables
+const hasTable = calc.explanation && /\|.*\|.*\n\|[-:\s|]+\|/.test(calc.explanation);
+if (hasTable) {
+  schemaGraph.push({
+    '@type': 'Dataset',
+    name: `${calc.h1} — Datos y tablas de referencia`,
+    description: calc.description,
+    url: `https://hacecuentas.com/${calc.slug}`,
+    inLanguage: schemaLang,
+    creator: {
+      '@type': 'Organization',
+      name: 'Hacé Cuentas',
+      url: 'https://hacecuentas.com',
+    },
+    dateModified,
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+  });
+}
+
 const schema = { '@context': 'https://schema.org', '@graph': schemaGraph };
 
 const updated = lastReviewedLabel;

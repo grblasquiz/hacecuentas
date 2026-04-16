@@ -6,6 +6,14 @@ import Footer from '../components/Footer.astro';
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const calcs = Object.values(calcModules).map((m: any) => m.default || m);
 
+// Build lightweight array for client-side fuzzy matching
+const calcIndex = calcs.map((c: any) => ({
+  slug: c.slug,
+  h1: c.h1,
+  icon: c.icon,
+  cat: c.category,
+}));
+
 const popularSlugs = [
   'sueldo-en-mano-argentina',
   'calculadora-aguinaldo-sac',
@@ -34,31 +42,55 @@ const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(
     <h1>No encontramos esta página</h1>
     <p class="lead">
       El link que seguiste puede estar roto, o la calculadora cambió de nombre.
-      Buscá abajo o andá al inicio.
     </p>
 
-    <div class="search-wrap">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <circle cx="11" cy="11" r="8"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input id="nf-search" type="search" placeholder="Buscar calculadora (ej: sueldo, IMC, monotributo)" autocomplete="off" />
+    <!-- Fuzzy suggestions injected by client-side JS -->
+    <div id="suggestions" class="suggestions" style="display:none;">
+      <h2 class="suggestions-heading">¿Buscabas alguna de estas?</h2>
+      <div id="suggestions-grid" class="suggestions-grid"></div>
     </div>
 
-    <div id="nf-results" class="results"></div>
+    <!-- Search -->
+    <div class="search-section">
+      <h2 class="search-heading">O probá buscando:</h2>
+      <div class="search-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input id="nf-search" type="search" placeholder="Buscar calculadora (ej: sueldo, IMC, monotributo)" autocomplete="off" />
+      </div>
+      <div id="nf-results" class="results"></div>
+    </div>
 
-    <h2>Calculadoras populares</h2>
-    <div class="grid">
-      {popular.map((c: any) => (
-        <a href={`/${c.slug}`} class="card">
-          <span class="card-icon">{c.icon}</span>
-          <span class="card-title">{c.h1}</span>
-        </a>
-      ))}
+    <!-- Popular calcs -->
+    <div class="popular-section">
+      <h2>Calculadoras populares</h2>
+      <div class="grid">
+        {popular.map((c: any) => (
+          <a href={`/${c.slug}`} class="card">
+            <span class="card-icon">{c.icon}</span>
+            <span class="card-title">{c.h1}</span>
+          </a>
+        ))}
+      </div>
     </div>
 
     <div class="actions">
-      <a href="/" class="btn-primary">← Volver al inicio</a>
+      <a href="/" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Volver al inicio
+      </a>
+      <a href="/buscar" class="btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Ver todas las calculadoras
+      </a>
     </div>
   </section>
 
@@ -105,6 +137,78 @@ const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(
     margin: 0 auto 2rem;
   }
 
+  /* Fuzzy suggestions */
+  .suggestions {
+    max-width: 560px;
+    margin: 0 auto 2rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.06), rgba(168, 85, 247, 0.04));
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+    border-radius: var(--radius-lg);
+  }
+
+  .suggestions-heading {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.875rem;
+    color: var(--text);
+  }
+
+  .suggestions-grid {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .suggestions-grid a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    font-size: 0.9375rem;
+    transition: all 0.15s;
+    text-align: left;
+  }
+  .suggestions-grid a:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+  }
+  .suggestions-grid .sg-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+  }
+  .suggestions-grid .sg-title {
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* Search section */
+  .search-section {
+    margin-bottom: 2rem;
+  }
+
+  .search-heading {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+  }
+
   .search-wrap {
     display: flex;
     align-items: center;
@@ -133,7 +237,7 @@ const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(
 
   .results {
     max-width: 500px;
-    margin: 0 auto 2.5rem;
+    margin: 0 auto;
     display: grid;
     gap: 0.375rem;
   }
@@ -160,10 +264,17 @@ const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(
     color: var(--accent-strong);
   }
 
-  .not-found h2 {
+  /* Popular calcs */
+  .popular-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .popular-section h2 {
     font-size: 1.125rem;
     font-weight: 600;
-    margin: 2rem 0 1rem;
+    margin-bottom: 1rem;
     color: var(--text);
   }
 
@@ -188,38 +299,124 @@ const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(
     text-align: left;
     transition: all 0.15s;
   }
-  .card:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .card:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+  }
   .card-icon { font-size: 1.125rem; }
   .card-title { font-weight: 500; line-height: 1.3; }
 
-  .actions { margin-top: 2rem; }
-  .btn-primary {
+  .actions {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.625rem;
+  }
+  .btn-primary, .btn-secondary {
     display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background: var(--accent);
-    color: #ffffff;
     border-radius: var(--radius-sm);
     font-weight: 600;
     text-decoration: none;
     transition: all 0.15s;
+    border: 1px solid transparent;
   }
-  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn-primary {
+    background: var(--accent);
+    color: #ffffff;
+  }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); color: #ffffff; text-decoration: none; }
+  .btn-secondary {
+    background: var(--bg-card);
+    color: var(--text);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; transform: translateY(-1px); }
 </style>
 
-<script define:vars={{ calcs }}>
-  const input = document.getElementById('nf-search');
-  const results = document.getElementById('nf-results');
-  if (input && results) {
-    const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    input.addEventListener('input', (e) => {
-      const q = norm(e.target.value.trim());
+<script define:vars={{ calcIndex }}>
+  // [1] Fuzzy matching — find similar calcs based on attempted URL
+  (function () {
+    var path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '');
+    if (!path) return;
+
+    // Normalize: strip "calculadora-" prefix, replace hyphens with spaces
+    function toWords(s) {
+      return s.replace(/^calculadora-/, '').replace(/-/g, ' ').toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    var attemptedWords = toWords(path).split(/\s+/).filter(function (w) { return w.length > 2; });
+    if (!attemptedWords.length) return;
+
+    // Score each calc by counting matching words
+    var scored = calcIndex.map(function (c) {
+      var slugWords = toWords(c.slug).split(/\s+/);
+      var h1Words = toWords(c.h1).split(/\s+/);
+      var allWords = slugWords.concat(h1Words);
+      var score = 0;
+      for (var i = 0; i < attemptedWords.length; i++) {
+        for (var j = 0; j < allWords.length; j++) {
+          if (allWords[j] === attemptedWords[i]) {
+            score += 3; // exact match
+          } else if (allWords[j].indexOf(attemptedWords[i]) !== -1 || attemptedWords[i].indexOf(allWords[j]) !== -1) {
+            score += 1; // partial match
+          }
+        }
+      }
+      return { calc: c, score: score };
+    }).filter(function (s) { return s.score > 0; });
+
+    scored.sort(function (a, b) { return b.score - a.score; });
+
+    var top = scored.slice(0, 3);
+    if (!top.length) return;
+
+    var container = document.getElementById('suggestions');
+    var grid = document.getElementById('suggestions-grid');
+    if (!container || !grid) return;
+
+    grid.innerHTML = top.map(function (s) {
+      var c = s.calc;
+      return '<a href="/' + c.slug + '">' +
+        '<span class="sg-icon" aria-hidden="true">' + c.icon + '</span>' +
+        '<span class="sg-title">' + c.h1 + '</span>' +
+        '</a>';
+    }).join('');
+
+    container.style.display = '';
+  })();
+
+  // [2] Search input
+  (function () {
+    var input = document.getElementById('nf-search');
+    var results = document.getElementById('nf-results');
+    if (!input || !results) return;
+    var norm = function (s) { return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); };
+    input.addEventListener('input', function (e) {
+      var q = norm(e.target.value.trim());
       if (!q || q.length < 2) { results.innerHTML = ''; return; }
-      const matches = calcs
-        .filter((c) => norm(c.h1 + ' ' + c.description + ' ' + c.slug).includes(q))
+      var matches = calcIndex
+        .filter(function (c) { return norm(c.h1 + ' ' + c.slug).indexOf(q) !== -1; })
         .slice(0, 6);
-      results.innerHTML = matches.map((c) =>
-        `<a href="/${c.slug}"><span>${c.icon}</span><span>${c.h1}</span></a>`
-      ).join('');
+      results.innerHTML = matches.map(function (c) {
+        return '<a href="/' + c.slug + '"><span>' + c.icon + '</span><span>' + c.h1 + '</span></a>';
+      }).join('');
     });
-  }
+
+    // Auto-fill search from attempted path
+    var path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '');
+    if (path) {
+      var readable = path.replace(/^calculadora-/, '').replace(/-/g, ' ');
+      input.value = readable;
+      input.dispatchEvent(new Event('input'));
+    }
+  })();
 </script>

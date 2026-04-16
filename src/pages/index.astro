@@ -87,6 +87,44 @@ const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(
 
 const arOnlyCount = calcs.filter((c: any) => c.audience === 'AR').length;
 
+// Country-specific calc slugs for "Para vos" section
+const countryCalcSlugs: Record<string, string[]> = {
+  AR: [
+    'calculadora-aguinaldo-sac',
+    'sueldo-en-mano-argentina',
+    'calculadora-monotributo-2026',
+    'calculadora-indemnizacion-despido',
+  ],
+  MX: [
+    'calculadora-isr-mensual-mexico-2026',
+    'calculadora-aguinaldo-mexico-2026',
+    'calculadora-finiquito-liquidacion-mexico-2026',
+    'calculadora-prima-vacacional-mexico-2026',
+  ],
+  CO: [
+    'calculadora-cesantias-colombia-2026',
+    'calculadora-prima-servicios-colombia-2026',
+    'calculadora-impuesto-renta-colombia-persona-natural-2026',
+    'calculadora-sueldo-neto-colombia-2026',
+  ],
+  PE: [
+    'calculadora-cts-peru-compensacion-tiempo-servicios-2026',
+    'calculadora-gratificacion-peru-julio-diciembre-2026',
+    'calculadora-impuesto-renta-peru-4ta-5ta-2026',
+  ],
+};
+
+// Build country calc data with full info for client-side rendering
+const countryCalcData: Record<string, Array<{slug: string; h1: string; icon: string}>> = {};
+for (const [country, slugs] of Object.entries(countryCalcSlugs)) {
+  countryCalcData[country] = slugs
+    .map((s) => {
+      const c = calcs.find((calc: any) => calc.slug === s);
+      return c ? { slug: c.slug, h1: c.h1, icon: c.icon } : null;
+    })
+    .filter(Boolean) as Array<{slug: string; h1: string; icon: string}>;
+}
+
 // Contador global de resultados: base + crecimiento diario desde lanzamiento.
 // Se recalcula en cada build → crece con cada deploy.
 const LAUNCH_DATE = new Date('2025-01-15');
@@ -153,11 +191,11 @@ const schema = {
     </button>
 
     <div class="hero-meta-row">
-      <span class="hero-stat"><strong data-count-to={calcs.length}>0</strong> calculadoras</span>
+      <span class="hero-stat"><strong data-count-to={calcs.length}>{calcs.length}</strong> calculadoras</span>
       <span class="hero-dot" aria-hidden="true">·</span>
-      <span class="hero-stat"><strong data-count-to={categoryOrder.length}>0</strong> categorías</span>
+      <span class="hero-stat"><strong data-count-to={categoryOrder.length}>{categoryOrder.length}</strong> categorías</span>
       <span class="hero-dot" aria-hidden="true">·</span>
-      <span class="hero-stat"><strong data-count-to={totalResults}>0</strong> resultados</span>
+      <span class="hero-stat"><strong data-count-to={totalResults}>{totalResults.toLocaleString('es-AR')}</strong> resultados</span>
       <span class="hero-dot" aria-hidden="true">·</span>
       <a href="/valores-bcra" class="hero-live"><span class="dot-live"></span>Valores BCRA hoy</a>
     </div>
@@ -200,6 +238,19 @@ const schema = {
         <span class="feature-cta">Comparar bancos →</span>
       </a>
     </div>
+  </section>
+
+  <section class="para-vos" id="para-vos-section" aria-labelledby="para-vos-heading" style="display:none;">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow eyebrow-inline">
+          <span id="pv-flag" aria-hidden="true"></span>
+          Para vos
+        </span>
+        <h2 id="para-vos-heading">Calculadoras para <span id="pv-country-name">tu país</span></h2>
+      </div>
+    </div>
+    <div class="pv-grid" id="pv-grid"></div>
   </section>
 
   <section class="populares" aria-labelledby="populares-heading">
@@ -292,7 +343,7 @@ const schema = {
       <div class="stat-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/></svg>
       </div>
-      <div class="stat-num" data-count-to={calcs.length}>0</div>
+      <div class="stat-num" data-count-to={calcs.length}>{calcs.length}</div>
       <div class="stat-label">Calculadoras disponibles</div>
     </div>
     <div class="stat">
@@ -368,11 +419,16 @@ const schema = {
   });
 
   // [2] Animated counters — count from 0 to data-count-to
+  // SSR renders the final number so noscript/slow-JS users see the real value.
+  // JS animates from 0 → target once the section is visible.
   (function () {
     var els = document.querySelectorAll('[data-count-to]');
     if (!els.length) return;
     var duration = 1200;
     var started = false;
+    var fmt = typeof Intl !== 'undefined'
+      ? new Intl.NumberFormat('es-AR').format
+      : function (n) { return String(n); };
     function animate() {
       if (started) return;
       started = true;
@@ -383,7 +439,7 @@ const schema = {
         var ease = 1 - (1 - t) * (1 - t);
         els.forEach(function (el) {
           var target = parseInt(el.getAttribute('data-count-to'), 10);
-          el.textContent = String(Math.round(ease * target));
+          el.textContent = fmt(Math.round(ease * target));
         });
         if (t < 1) requestAnimationFrame(tick);
       }
@@ -392,9 +448,12 @@ const schema = {
     // Start when hero is visible (instant for above-fold)
     if ('IntersectionObserver' in window) {
       var obs = new IntersectionObserver(function (entries) {
-        if (entries[0].isIntersecting) { animate(); obs.disconnect(); }
-      }, { threshold: 0.1 });
-      obs.observe(els[0]);
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) { animate(); obs.disconnect(); }
+        });
+      }, { threshold: 0, rootMargin: '0px 0px 100px 0px' });
+      // Observe all counter elements so any becoming visible triggers animation
+      els.forEach(function (el) { obs.observe(el); });
     } else {
       animate();
     }
@@ -424,6 +483,73 @@ const schema = {
     }, 3000);
     // Cleanup if navigated away (SPA)
     document.addEventListener('astro:before-swap', function () { clearInterval(interval); });
+  })();
+</script>
+
+<script define:vars={{ countryCalcData }}>
+  // [4] Country detection — "Para vos" section
+  (function () {
+    var COUNTRY_NAMES = { AR: 'Argentina', MX: 'México', CO: 'Colombia', PE: 'Perú' };
+    var COUNTRY_FLAGS = { AR: '\u{1F1E6}\u{1F1F7}', MX: '\u{1F1F2}\u{1F1FD}', CO: '\u{1F1E8}\u{1F1F4}', PE: '\u{1F1F5}\u{1F1EA}' };
+    var LANG_MAP = { 'es-AR': 'AR', 'es-MX': 'MX', 'es-CO': 'CO', 'es-PE': 'PE' };
+
+    function detectCountry() {
+      // 1. Check localStorage first
+      try {
+        var saved = localStorage.getItem('hc_country');
+        if (saved && countryCalcData[saved]) return saved;
+      } catch (e) {}
+
+      // 2. navigator.language / navigator.languages
+      var langs = [];
+      try {
+        if (navigator.languages && navigator.languages.length) {
+          langs = [].slice.call(navigator.languages);
+        } else if (navigator.language) {
+          langs = [navigator.language];
+        }
+      } catch (e) {}
+
+      for (var i = 0; i < langs.length; i++) {
+        var code = LANG_MAP[langs[i]];
+        if (code) return code;
+      }
+
+      return null;
+    }
+
+    function renderSection(country) {
+      var section = document.getElementById('para-vos-section');
+      var grid = document.getElementById('pv-grid');
+      var flag = document.getElementById('pv-flag');
+      var name = document.getElementById('pv-country-name');
+      if (!section || !grid || !country) return;
+
+      var calcsData = countryCalcData[country];
+      if (!calcsData || !calcsData.length) return;
+
+      // Set heading
+      if (flag) flag.textContent = COUNTRY_FLAGS[country] || '';
+      if (name) name.textContent = COUNTRY_NAMES[country] || 'tu país';
+
+      // Render cards
+      grid.innerHTML = calcsData.map(function (c) {
+        return '<a href="/' + c.slug + '" class="pv-card">' +
+          '<span class="pv-icon" aria-hidden="true">' + c.icon + '</span>' +
+          '<span class="pv-title">' + c.h1 + '</span>' +
+          '</a>';
+      }).join('');
+
+      section.style.display = '';
+
+      // Save to localStorage
+      try { localStorage.setItem('hc_country', country); } catch (e) {}
+    }
+
+    var detected = detectCountry();
+    if (detected) {
+      renderSection(detected);
+    }
   })();
 </script>
 
@@ -808,6 +934,64 @@ const schema = {
     font-size: 0.9375rem;
   }
   .feature-pf .feature-cta { color: var(--success); }
+
+  /* [4.5] Para vos — country-specific section */
+  .para-vos {
+    margin: 2rem 0 2.5rem;
+    padding: 1.25rem 1.5rem 1.5rem;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.06), rgba(168, 85, 247, 0.04));
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+    border-radius: var(--radius-lg);
+  }
+  .para-vos .section-header { margin-bottom: 1rem; }
+  .para-vos .eyebrow { gap: 0.5rem; }
+
+  .pv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.625rem;
+  }
+
+  .pv-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .pv-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+  }
+
+  .pv-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+  }
+
+  .pv-title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    line-height: 1.3;
+  }
+
+  @media (max-width: 640px) {
+    .para-vos { padding: 1rem 1.125rem 1.25rem; }
+  }
 
   /* [5] Populares with medal rankings */
   .populares {

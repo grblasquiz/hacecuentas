@@ -153,6 +153,10 @@ const globalSchema = {
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 
+    <!-- Preconnect Google Tag Manager (gtag.js, Google Ads) -->
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+
     <!-- Google Consent Mode v2 — default 'denied' hasta que el usuario decida (GDPR/AdSense compliant) -->
     <script is:inline>
       window.dataLayer = window.dataLayer || [];
@@ -185,6 +189,9 @@ const globalSchema = {
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18096606872"></script>
   </head>
   <body>
+    <!-- Print-only header (hidden on screen, visible when printing) -->
+    <div class="print-header" aria-hidden="true">Resultado de calculadora — hacecuentas.com</div>
+
     <slot name="header" />
     <main>
       <slot />
@@ -203,7 +210,21 @@ const globalSchema = {
       }
     </script>
 
+    <!-- Inject current date into print header -->
+    <script is:inline>
+      (function() {
+        var ph = document.querySelector('.print-header');
+        if (ph) {
+          var d = new Date();
+          var fecha = d.toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });
+          ph.textContent = 'Resultado de calculadora — hacecuentas.com — ' + fecha;
+        }
+      })();
+    </script>
+
     <style is:global>
+      /* Print header: hidden on screen, shown on print */
+      .print-header { display: none; }
       :root {
         /* Surfaces */
         --bg: #ffffff;
@@ -400,7 +421,9 @@ const globalSchema = {
         html { scroll-behavior: auto; }
       }
 
-      /* Print — optimizar para cuando imprimen resultados (PDF-friendly) */
+      /* ========================================
+         Print stylesheet — PDF-friendly output
+         ======================================== */
       @media print {
         :root {
           --bg: #fff;
@@ -408,31 +431,184 @@ const globalSchema = {
           --bg-card: #fff;
           --bg-muted: #fff;
           --border: #ccc;
+          --border-strong: #999;
           --text: #000;
           --text-muted: #333;
+          --text-subtle: #555;
           --accent: #000;
           --accent-soft: #eee;
+          --accent-hover: #000;
+          --accent-strong: #000;
           --shadow-sm: none;
           --shadow: none;
           --shadow-md: none;
           --shadow-lg: none;
         }
-        body { font-size: 11pt; color: #000; background: #fff; }
+
+        /* 1. System fonts — remove web fonts for print */
+        html {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+        }
+        * {
+          font-family: inherit !important;
+        }
+        code, pre, .result-value, [data-value] {
+          font-family: 'Courier New', Courier, monospace !important;
+        }
+
+        /* 2. Clean base — black on white, no decorations */
+        body {
+          font-size: 11pt;
+          color: #000;
+          background: #fff !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
         main { max-width: 100%; padding: 0; margin: 0; }
-        /* Ocultar todo excepto el calc container, título H1 y breadcrumbs */
-        header, footer, .skip-link, nav:not(.breadcrumbs), button, .share, .cta-back,
+
+        /* 3. Hide non-essential elements */
+        header, footer, .skip-link, nav:not(.breadcrumbs),
         .scroll-top, .scroll-progress, .related, .hero-featured, .sources,
         .hero-meta, .explanation, .faq, .key-takeaway, .intro, .use-cases,
-        .example-box, .seo-content, .cat-faq, .hc-embed-overlay { display: none !important; }
+        .example-box, .seo-content, .cat-faq, .hc-embed-overlay,
+        /* Cookie consent & modal */
+        .hc-cookie-banner, .hc-cookie-modal,
+        /* Ads */
+        .ad-slot, .adsbygoogle,
+        /* Share buttons, embed button */
+        .share, .embed-cta,
+        /* Feedback section */
+        .feedback,
+        /* Search overlay */
+        #search-modal,
+        /* CTA & navigation */
+        .cta-back, .mobile-nav,
+        /* Theme toggle, menu toggle, search btn */
+        #theme-toggle, #menu-toggle, #open-search,
+        /* Data update badge (not useful on print) */
+        .data-update,
+        /* Presets section (already selected) */
+        .presets { display: none !important; }
+
+        /* Hide all interactive buttons on print */
+        button { display: none !important; }
+
+        /* 4. Show calculator title (h1) prominently */
         .breadcrumbs { font-size: 9pt; color: #666; margin-bottom: 0.5cm; }
         h1 { font-size: 20pt; margin-bottom: 0.3cm; }
         a, a:visited { color: #000; text-decoration: none; }
-        .calc-container { border: 1px solid #000; box-shadow: none; page-break-inside: avoid; padding: 1cm; }
-        .result.primary { background: #f5f5f5 !important; color: #000 !important; border: 2px solid #000; }
+
+        /* 5. Calculator container — clean, no shadows/radius */
+        .calc-container {
+          border: 1px solid #000;
+          box-shadow: none !important;
+          border-radius: 0 !important;
+          page-break-inside: avoid;
+          padding: 0.75cm;
+        }
+
+        /* 6. Inputs — visible with their values */
+        .calc-form {
+          page-break-inside: avoid;
+        }
+        .field-group {
+          margin-bottom: 0.3cm;
+        }
+        input, select, textarea {
+          border: 1px solid #999 !important;
+          background: #fff !important;
+          box-shadow: none !important;
+          border-radius: 0 !important;
+          padding: 0.15cm 0.25cm;
+          font-size: 10pt;
+        }
+        label {
+          font-size: 9pt;
+          font-weight: 600;
+          color: #000;
+        }
+        /* Show advanced fields (they might be hidden) */
+        .advanced-fields, .advanced-fields[hidden] {
+          display: block !important;
+        }
+
+        /* 7. Results — prominent display */
+        .calc-results, .calc-results[hidden] {
+          display: block !important;
+        }
+        .results-grid {
+          gap: 0.3cm;
+        }
+        .result {
+          border: 1px solid #999;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          padding: 0.3cm 0.4cm;
+          page-break-inside: avoid;
+          background: #fff !important;
+        }
+        .result.primary {
+          background: #f0f0f0 !important;
+          color: #000 !important;
+          border: 2px solid #000;
+          font-size: 12pt;
+        }
+        .result-label {
+          font-size: 9pt;
+          color: #333;
+        }
+        .result-value {
+          font-size: 14pt;
+          font-weight: 700;
+          color: #000 !important;
+        }
+        .result.primary .result-value {
+          font-size: 18pt;
+        }
+
+        /* 8. Chart — show if visible, avoid break */
+        .chart-wrap {
+          page-break-inside: avoid;
+          margin-top: 0.5cm;
+        }
+        .chart-wrap[hidden] { display: none !important; }
+
+        /* 9. Disclaimer — keep visible */
+        .inline-disclaimer {
+          font-size: 8pt;
+          color: #555;
+          border: none;
+          padding: 0.2cm 0;
+          background: none !important;
+        }
+
+        /* 10. Page break rules */
         h1, h2, h3 { page-break-after: avoid; }
-        /* Branding footer en print: logo Hacé Cuentas + URL + fecha */
+        .result { page-break-inside: avoid; }
+
+        /* 11. Remove all shadows, border-radius, decorative elements */
+        *, *::before, *::after {
+          box-shadow: none !important;
+          text-shadow: none !important;
+        }
+
+        /* 12. Print header — "Resultado de calculadora" + date via JS-injected element */
+        .print-header {
+          display: block !important;
+          font-size: 9pt;
+          color: #666;
+          text-align: center;
+          padding-bottom: 0.4cm;
+          margin-bottom: 0.5cm;
+          border-bottom: 1px solid #ccc;
+        }
+
+        /* 13. Branding footer on printed pages */
+        @page {
+          margin: 1.5cm;
+        }
         body::after {
-          content: "Cálculo generado con Hacé Cuentas — hacecuentas.com";
+          content: "Cálculo generado con hacecuentas.com";
           display: block;
           text-align: center;
           font-size: 9pt;
@@ -441,7 +617,8 @@ const globalSchema = {
           padding-top: 0.5cm;
           border-top: 1px solid #ccc;
         }
-        /* Force date via ::before si es útil */
+
+        /* 14. Calc container header with slug */
         .calc-container::before {
           content: "Hacé Cuentas · " attr(data-slug);
           display: block;
