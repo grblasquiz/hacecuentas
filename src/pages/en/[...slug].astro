@@ -1,13 +1,13 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import Calculator from '../components/Calculator.astro';
-import RelatedCalcs from '../components/RelatedCalcs.astro';
-import ScrollToTop from '../components/ScrollToTop.astro';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Calculator from '../../components/Calculator.astro';
+import RelatedCalcs from '../../components/RelatedCalcs.astro';
+import ScrollToTop from '../../components/ScrollToTop.astro';
 
 export async function getStaticPaths() {
-  const calcs = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+  const calcs = import.meta.glob<any>('../../content/calcs-en/*.json', { eager: true });
   return Object.values(calcs).map((mod: any) => {
     const c = mod.default || mod;
     return {
@@ -18,10 +18,6 @@ export async function getStaticPaths() {
 }
 
 const { calc } = Astro.props;
-
-// Cargar calcs inglesas para detectar si hay versión EN (hreflang bidireccional)
-const enCalcModules = import.meta.glob<any>('../content/calcs-en/*.json', { eager: true });
-const enCalcs = Object.values(enCalcModules).map((m: any) => m.default || m);
 
 // Markdown simple → HTML
 function md(text: string): string {
@@ -49,8 +45,8 @@ function md(text: string): string {
     .replace(/\n/g, '<br>');
 }
 
-// Markdown inline-only — para campos que viven dentro de un <p> u otro inline
-// (no genera <p>, <h2>, <li>, <br>; solo bold, em, code, links).
+// Markdown inline-only — for fields that live inside a <p> or other inline element
+// (no <p>, <h2>, <li>, <br>; only bold, em, code, links).
 function mdInline(text: string): string {
   return text
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -60,38 +56,37 @@ function mdInline(text: string): string {
 }
 
 const categoryLabels: Record<string, string> = {
-  finanzas: 'Finanzas',
-  negocios: 'Negocios',
-  negocio: 'Negocios',
-  salud: 'Salud',
+  finanzas: 'Finance',
+  negocios: 'Business',
+  negocio: 'Business',
+  salud: 'Health',
   marketing: 'Marketing',
-  deportes: 'Deportes',
-  viajes: 'Viajes',
-  vida: 'Vida cotidiana',
-  mascotas: 'Mascotas',
-  matematica: 'Matemática',
-  construccion: 'Construcción',
-  cocina: 'Cocina',
-  educacion: 'Educación',
-  automotor: 'Automotor',
-  tecnologia: 'Tecnología',
-  'medio-ambiente': 'Medio Ambiente',
-  electronica: 'Electrónica',
+  deportes: 'Sports',
+  viajes: 'Travel',
+  vida: 'Daily Life',
+  mascotas: 'Pets',
+  matematica: 'Math',
+  construccion: 'Construction',
+  cocina: 'Cooking',
+  educacion: 'Education',
+  automotor: 'Automotive',
+  tecnologia: 'Technology',
+  'medio-ambiente': 'Environment',
+  electronica: 'Electronics',
 };
 
-// dateModified = lastReviewed del JSON > mtime del archivo > build date
+// dateModified = lastReviewed from JSON > mtime > build date
 let dateModified: string;
 let lastReviewedLabel: string;
-// OG image: si existe /public/og/{slug}.png usamos esa, sino fallback al default.
+// OG image: if /public/og/{slug}.png exists use it, else fallback to default
 let ogImage = '/og-default.png';
 try {
   const { statSync, existsSync } = await import('node:fs');
   const { join } = await import('node:path');
   const cwd = process.cwd();
-  const filePath = join(cwd, 'src', 'content', 'calcs', `${calc.formulaId || calc.slug}.json`);
+  const filePath = join(cwd, 'src', 'content', 'calcs-en', `${calc.formulaId || calc.slug}.json`);
   const ogPath = join(cwd, 'public', 'og', `${calc.slug}.png`);
   if (existsSync(ogPath)) ogImage = `/og/${calc.slug}.png`;
-  // Si el JSON declara lastReviewed (YYYY-MM-DD), tiene precedencia
   if (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
     dateModified = new Date(calc.lastReviewed + 'T00:00:00Z').toISOString();
   } else {
@@ -100,16 +95,15 @@ try {
 } catch {
   dateModified = new Date().toISOString();
 }
-lastReviewedLabel = new Date(dateModified).toLocaleDateString('es-AR', {
-  day: '2-digit',
+lastReviewedLabel = new Date(dateModified).toLocaleDateString('en-US', {
+  day: 'numeric',
   month: 'long',
   year: 'numeric',
 });
 const datePublished = '2025-09-01T00:00:00Z';
 
-// audience: 'AR' = específica para Argentina; 'global' (default) = aplica en todo el mundo hispanohablante
+// audience: 'AR' = Argentina-specific; 'global' (default) = worldwide
 const audience: 'AR' | 'global' = calc.audience === 'AR' ? 'AR' : 'global';
-const schemaLang = audience === 'AR' ? 'es-AR' : 'es';
 
 const schemaHowTo = {
   '@context': 'https://schema.org',
@@ -117,12 +111,12 @@ const schemaHowTo = {
   name: calc.h1,
   description: calc.description,
   totalTime: 'PT1M',
-  inLanguage: schemaLang,
+  inLanguage: 'en',
   step: calc.fields.map((f: any, i: number) => ({
     '@type': 'HowToStep',
     position: i + 1,
     name: f.label,
-    text: f.help || `Ingresá ${f.label.toLowerCase()}`,
+    text: f.help || `Enter ${f.label.toLowerCase()}`,
   })),
 };
 
@@ -143,29 +137,29 @@ const schemaBreadcrumb = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
-    { '@type': 'ListItem', position: 2, name: categoryLabels[calc.category] || calc.category, item: `https://hacecuentas.com/categoria/${calc.category}` },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en/' },
+    { '@type': 'ListItem', position: 2, name: categoryLabels[calc.category] || calc.category, item: `https://hacecuentas.com/en/categoria/${calc.category}` },
     { '@type': 'ListItem', position: 3, name: calc.h1 },
   ],
 };
 
-// SoftwareApplication + WebApplication — Google las usa para web apps / calculadoras
+// SoftwareApplication + WebApplication
 const schemaApp = {
   '@context': 'https://schema.org',
   '@type': ['SoftwareApplication', 'WebApplication'],
   name: calc.h1,
   description: calc.description,
-  url: `https://hacecuentas.com/${calc.slug}`,
-  mainEntityOfPage: `https://hacecuentas.com/${calc.slug}`,
+  url: `https://hacecuentas.com/en/${calc.slug}`,
+  mainEntityOfPage: `https://hacecuentas.com/en/${calc.slug}`,
   applicationCategory: 'UtilitiesApplication',
   applicationSubCategory: 'Calculator',
   operatingSystem: 'Any (Web)',
   browserRequirements: 'Requires JavaScript. Requires HTML5.',
-  inLanguage: schemaLang,
+  inLanguage: 'en',
   isAccessibleForFree: true,
   datePublished,
   dateModified,
-  offers: { '@type': 'Offer', price: '0', priceCurrency: audience === 'AR' ? 'ARS' : 'USD' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   publisher: {
     '@type': 'Organization',
     name: 'Hacé Cuentas',
@@ -173,21 +167,21 @@ const schemaApp = {
   },
 };
 
-// Article schema para categorías YMYL (Finanzas, Salud) y cualquier calc con explanation extensa
+// Article schema for YMYL categories
 const isYMYL = ['finanzas', 'salud', 'negocios', 'mascotas'].includes(calc.category);
 const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 1500)) ? {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: calc.h1,
   description: calc.description,
-  url: `https://hacecuentas.com/${calc.slug}`,
-  mainEntityOfPage: `https://hacecuentas.com/${calc.slug}`,
-  inLanguage: schemaLang,
+  url: `https://hacecuentas.com/en/${calc.slug}`,
+  mainEntityOfPage: `https://hacecuentas.com/en/${calc.slug}`,
+  inLanguage: 'en',
   datePublished,
   dateModified,
   author: {
     '@type': 'Organization',
-    name: 'Equipo Hacé Cuentas',
+    name: 'Hacé Cuentas Team',
     url: 'https://hacecuentas.com/politica-editorial',
   },
   publisher: {
@@ -211,50 +205,50 @@ const schema = { '@context': 'https://schema.org', '@graph': schemaGraph };
 
 const updated = lastReviewedLabel;
 
-// Reading time: ~200 palabras/minuto en español
+// Reading time: ~250 words/minute in English
 const wordCount = calc.explanation ? calc.explanation.split(/\s+/).length : 0;
-const readingMin = Math.max(1, Math.round(wordCount / 200));
+const readingMin = Math.max(1, Math.round(wordCount / 250));
 
-// Nuevos campos SEO (todos opcionales)
+// Optional SEO fields
 const sources: Array<{ name: string; url?: string }> = calc.sources || [];
 const useCases: string[] = calc.useCases || [];
 const example: { title?: string; steps?: string[]; result?: string } | null = calc.example || null;
 const keyTakeaway: string = calc.keyTakeaway || '';
 const relatedSlugs: string[] = calc.relatedSlugs || [];
 
-// Lookup para related links dentro del contenido
-const allCalcsModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+// Lookup for related links — load English calcs
+const allCalcsModules = import.meta.glob<any>('../../content/calcs-en/*.json', { eager: true });
 const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
 const relatedContextual = relatedSlugs
   .map((s) => allCalcs.find((c) => c.slug === s))
   .filter(Boolean);
 
-// TOC: secciones top-level renderizadas (en orden de aparición)
+// TOC: top-level rendered sections (in order of appearance)
 const tocSections: Array<{ id: string; label: string }> = [
-  { id: 'calculadora', label: 'Calculadora' },
+  { id: 'calculator', label: 'Calculator' },
 ];
-if (keyTakeaway) tocSections.push({ id: 'resumen', label: 'En pocas palabras' });
-if (useCases.length > 0) tocSections.push({ id: 'cuando-usar', label: 'Cuándo usar' });
-if (example && example.steps) tocSections.push({ id: 'ejemplo', label: 'Ejemplo paso a paso' });
-if (calc.explanation) tocSections.push({ id: 'como-funciona', label: 'Cómo funciona' });
-if (calc.faq && calc.faq.length > 0) tocSections.push({ id: 'faq', label: 'Preguntas frecuentes' });
-if (sources.length > 0) tocSections.push({ id: 'fuentes', label: 'Fuentes y referencias' });
+if (keyTakeaway) tocSections.push({ id: 'summary', label: 'In a nutshell' });
+if (useCases.length > 0) tocSections.push({ id: 'when-to-use', label: 'When to use' });
+if (example && example.steps) tocSections.push({ id: 'example', label: 'Step-by-step example' });
+if (calc.explanation) tocSections.push({ id: 'how-it-works', label: 'How it works' });
+if (calc.faq && calc.faq.length > 0) tocSections.push({ id: 'faq', label: 'FAQ' });
+if (sources.length > 0) tocSections.push({ id: 'sources', label: 'Sources' });
 
-// Detección heurística de fórmulas LaTeX en el explanation (para cargar KaTeX condicional)
+// Heuristic LaTeX detection in explanation (to conditionally load KaTeX)
 const hasMath = calc.explanation && /(\$[^$\n]+\$|\\frac|\\sqrt|\\sum|\\times|\\cdot)/.test(calc.explanation);
 
-// Asunto pre-llenado para "Reportar error"
-const reportSubject = encodeURIComponent(`Error en /${calc.slug}`);
+// Pre-filled subject for "Report error"
+const reportSubject = encodeURIComponent(`Error in /en/${calc.slug}`);
 const reportBody = encodeURIComponent(
-  `Hola Equipo Hacé Cuentas,\n\nEncontré un error en la calculadora "${calc.h1}":\n\nURL: https://hacecuentas.com/${calc.slug}\nDatos que ingresé: \nResultado esperado: \nResultado obtenido: \nFuente / referencia: \n\nGracias.`
+  `Hi Hacé Cuentas Team,\n\nI found an error in the calculator "${calc.h1}":\n\nURL: https://hacecuentas.com/en/${calc.slug}\nInput data: \nExpected result: \nActual result: \nSource / reference: \n\nThank you.`
 );
 
-// hreflang bidireccional: si existe versión inglesa, agregar tags
-const enVersion = enCalcs.find((c: any) => c.esSlug === calc.slug);
-const hreflangTags = enVersion ? [
-  { lang: 'es', href: `https://hacecuentas.com/${calc.slug}` },
-  { lang: 'en', href: `https://hacecuentas.com/en/${enVersion.slug}` },
-  { lang: 'x-default', href: `https://hacecuentas.com/${calc.slug}` },
+// hreflang: link to Spanish equivalent via esSlug
+const esSlug = calc.esSlug;
+const hreflangTags = esSlug ? [
+  { lang: 'es', href: `https://hacecuentas.com/${esSlug}` },
+  { lang: 'en', href: `https://hacecuentas.com/en/${calc.slug}` },
+  { lang: 'x-default', href: `https://hacecuentas.com/${esSlug}` },
 ] : undefined;
 ---
 
@@ -264,15 +258,16 @@ const hreflangTags = enVersion ? [
   schema={schema}
   audience={audience}
   image={ogImage}
+  lang="en"
   hreflang={hreflangTags}
 >
   <Header slot="header" />
 
   <article class="calc-page">
-    <nav class="breadcrumbs" aria-label="Ruta de navegación">
-      <a href="/">Inicio</a>
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/en/">Home</a>
       <span class="sep" aria-hidden="true">/</span>
-      <a href={`/categoria/${calc.category}`}>{categoryLabels[calc.category] || calc.category}</a>
+      <a href={`/en/categoria/${calc.category}`}>{categoryLabels[calc.category] || calc.category}</a>
       <span class="sep" aria-hidden="true">/</span>
       <span class="current">{calc.h1}</span>
     </nav>
@@ -282,15 +277,15 @@ const hreflangTags = enVersion ? [
         <span class="icon-wrap" aria-hidden="true">{calc.icon}</span>
         <div>
           <div class="eyebrow">{categoryLabels[calc.category] || calc.category}</div>
-          <h1>{calc.h1}{audience === 'AR' && <span class="ar-badge-h1" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>}</h1>
+          <h1>{calc.h1}{audience === 'AR' && <span class="ar-badge-h1" title="Argentina-specific" aria-label="Argentina-specific">🇦🇷</span>}</h1>
         </div>
       </div>
     </header>
 
     <div class="calc-layout">
       {tocSections.length > 2 && (
-        <aside class="toc" aria-label="Índice del artículo">
-          <div class="toc-title">En esta página</div>
+        <aside class="toc" aria-label="Table of contents">
+          <div class="toc-title">On this page</div>
           <ol class="toc-list">
             {tocSections.map((s) => (
               <li><a href={`#${s.id}`} data-toc-link={s.id}>{s.label}</a></li>
@@ -300,32 +295,32 @@ const hreflangTags = enVersion ? [
       )}
 
       <div class="calc-main">
-        <section id="calculadora">
-          <Calculator config={calc} />
+        <section id="calculator">
+          <Calculator config={calc} lang="en" />
         </section>
 
         <div class="calc-actions" id="calc-actions">
           <div class="ca-feedback" data-state="ask">
-            <span class="ca-q">¿Te resultó útil esta calculadora?</span>
+            <span class="ca-q">Was this calculator helpful?</span>
             <div class="ca-buttons">
-              <button type="button" class="ca-vote" data-vote="up" aria-label="Sí, me sirvió">
+              <button type="button" class="ca-vote" data-vote="up" aria-label="Yes, it was helpful">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7"/></svg>
-                Sí
+                Yes
               </button>
-              <button type="button" class="ca-vote" data-vote="down" aria-label="No me sirvió">
+              <button type="button" class="ca-vote" data-vote="down" aria-label="Not helpful">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H17"/></svg>
                 No
               </button>
             </div>
           </div>
           <div class="ca-tools">
-            <button type="button" class="ca-tool" id="ca-share" data-url={`https://hacecuentas.com/${calc.slug}`} data-title={calc.h1}>
+            <button type="button" class="ca-tool" id="ca-share" data-url={`https://hacecuentas.com/en/${calc.slug}`} data-title={calc.h1}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              Compartir
+              Share
             </button>
             <a class="ca-tool" href={`mailto:errores@hacecuentas.com?subject=${reportSubject}&body=${reportBody}`}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-              Reportar error
+              Report error
             </a>
           </div>
         </div>
@@ -333,54 +328,54 @@ const hreflangTags = enVersion ? [
         <p class="intro" set:html={mdInline(calc.intro)}></p>
 
         {audience === 'AR' && (
-          <aside class="audience-notice" role="note" aria-label="Aviso sobre la audiencia de esta calculadora">
+          <aside class="audience-notice" role="note" aria-label="Audience notice for this calculator">
             <span class="an-flag" aria-hidden="true">🇦🇷</span>
             <div class="an-body">
-              <strong>Calculadora específica para Argentina.</strong>
-              Las leyes, escalas y valores usados son los vigentes en Argentina (AFIP/ARCA, BCRA, ANSES). Para otros países los importes no aplican.
+              <strong>Argentina-specific calculator.</strong>
+              The laws, tax brackets, and values used are those in effect in Argentina (AFIP/ARCA, BCRA, ANSES). They do not apply to other countries.
             </div>
           </aside>
         )}
 
         <div class="meta">
-          <span class="meta-item" title={`Última revisión: ${updated} · Equipo Hacé Cuentas`}>
+          <span class="meta-item" title={`Last reviewed: ${updated} · Hacé Cuentas Team`}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Última revisión: <strong>{updated}</strong>
+            Last reviewed: <strong>{updated}</strong>
           </span>
           <span class="meta-item meta-reviewer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-            Verificado por <a href="/politica-editorial">Equipo Hacé Cuentas</a>
+            Verified by <a href="/politica-editorial">Hacé Cuentas Team</a>
           </span>
           {sources.length > 0 && (
             <span class="meta-item">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-              Fuente: {sources.map((s) => s.name).join(', ')}
+              Source: {sources.map((s) => s.name).join(', ')}
             </span>
           )}
           {sources.length === 0 && (
             <span class="meta-item">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-              Fórmula explicada
+              Formula explained
             </span>
           )}
           <span class="meta-item">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            100% privado
+            100% private
           </span>
         </div>
 
         {keyTakeaway && (
-          <aside id="resumen" class="key-takeaway" aria-label="Resumen rápido">
+          <aside id="summary" class="key-takeaway" aria-label="Quick summary">
             <div class="kt-icon" aria-hidden="true">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             </div>
-            <div><strong>En pocas palabras:</strong> <span set:html={md(keyTakeaway)} /></div>
+            <div><strong>In a nutshell:</strong> <span set:html={md(keyTakeaway)} /></div>
           </aside>
         )}
 
         {useCases.length > 0 && (
-          <section id="cuando-usar" class="use-cases" aria-labelledby="use-cases-heading">
-            <h2 id="use-cases-heading">Cuándo usar esta calculadora</h2>
+          <section id="when-to-use" class="use-cases" aria-labelledby="use-cases-heading">
+            <h2 id="use-cases-heading">When to use this calculator</h2>
             <ul>
               {useCases.map((u: string) => (
                 <li set:html={md(u)} />
@@ -390,24 +385,24 @@ const hreflangTags = enVersion ? [
         )}
 
         {example && example.steps && (
-          <section id="ejemplo" class="example" aria-labelledby="example-heading">
-            <h2 id="example-heading">{example.title || 'Ejemplo paso a paso'}</h2>
+          <section id="example" class="example" aria-labelledby="example-heading">
+            <h2 id="example-heading">{example.title || 'Step-by-step example'}</h2>
             <ol class="example-steps">
               {example.steps.map((s: string) => <li set:html={md(s)} />)}
             </ol>
             {example.result && (
-              <div class="example-result"><strong>Resultado:</strong> <span set:html={md(example.result)} /></div>
+              <div class="example-result"><strong>Result:</strong> <span set:html={md(example.result)} /></div>
             )}
           </section>
         )}
 
         {calc.explanation && (
-          <section id="como-funciona" class="explanation" data-has-math={hasMath ? 'true' : 'false'}>
+          <section id="how-it-works" class="explanation" data-has-math={hasMath ? 'true' : 'false'}>
             <div class="explanation-header">
-              <h2 class="explanation-title">Cómo funciona</h2>
+              <h2 class="explanation-title">How it works</h2>
               <span class="reading-time">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                {readingMin} min de lectura
+                {readingMin} min read
               </span>
             </div>
             <Fragment set:html={`<p>${md(calc.explanation)}</p>`} />
@@ -416,7 +411,7 @@ const hreflangTags = enVersion ? [
 
         {calc.faq && calc.faq.length > 0 && (
           <section id="faq" class="faq">
-            <h2>Preguntas frecuentes</h2>
+            <h2>Frequently asked questions</h2>
             <div class="faq-list">
               {calc.faq.map((f: any) => (
                 <details>
@@ -432,8 +427,8 @@ const hreflangTags = enVersion ? [
         )}
 
         {sources.length > 0 && (
-          <section id="fuentes" class="sources-box" aria-labelledby="sources-heading">
-            <h2 id="sources-heading">Fuentes y referencias</h2>
+          <section id="sources" class="sources-box" aria-labelledby="sources-heading">
+            <h2 id="sources-heading">Sources and references</h2>
             <ul>
               {sources.map((s: any) => (
                 <li>
@@ -449,10 +444,10 @@ const hreflangTags = enVersion ? [
 
         {relatedContextual.length > 0 && (
           <section class="also-see" aria-labelledby="also-heading">
-            <h2 id="also-heading">También te puede interesar</h2>
+            <h2 id="also-heading">You may also find useful</h2>
             <div class="also-grid">
               {relatedContextual.map((c: any) => (
-                <a href={`/${c.slug}`} class="also-card">
+                <a href={`/en/${c.slug}`} class="also-card">
                   <span class="also-icon" aria-hidden="true">{c.icon}</span>
                   <span class="also-body">
                     <span class="also-title">{c.h1}</span>
@@ -467,9 +462,9 @@ const hreflangTags = enVersion ? [
         <RelatedCalcs currentSlug={calc.slug} category={calc.category} limit={4} manualSlugs={relatedSlugs} />
 
         <aside class="cta-back">
-          <p>¿Buscabas otra calculadora?</p>
-          <a href="/" class="btn-ghost">Ver todas las calculadoras →</a>
-          <p class="cta-suggest">¿No encontrás lo que buscás? <a href="mailto:ideas@hacecuentas.com?subject=Idea de calculadora&body=Me gustaría que Hacé Cuentas tenga una calculadora de...">Pedí una calculadora nueva →</a></p>
+          <p>Looking for a different calculator?</p>
+          <a href="/en/" class="btn-ghost">See all calculators &rarr;</a>
+          <p class="cta-suggest">Can't find what you need? <a href="mailto:ideas@hacecuentas.com?subject=Calculator idea&body=I'd like Hacé Cuentas to have a calculator for...">Request a new calculator &rarr;</a></p>
         </aside>
       </div>
     </div>
@@ -479,7 +474,7 @@ const hreflangTags = enVersion ? [
     <Fragment>
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous" />
       <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
-      <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.querySelector('#como-funciona'), {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\\\(',right:'\\\\)',display:false},{left:'\\\\[',right:'\\\\]',display:true}], throwOnError:false});"></script>
+      <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.querySelector('#how-it-works'), {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\\\(',right:'\\\\)',display:false},{left:'\\\\[',right:'\\\\]',display:true}], throwOnError:false});"></script>
     </Fragment>
   )}
 
@@ -500,7 +495,6 @@ const hreflangTags = enVersion ? [
             var v = btn.getAttribute('data-vote');
             try { localStorage.setItem(key, v); } catch (e) {}
             renderThanks(v);
-            // GA4 (si está cargado)
             if (typeof window.gtag === 'function') {
               window.gtag('event', 'calc_feedback', { value: v, slug: slug });
             }
@@ -509,15 +503,15 @@ const hreflangTags = enVersion ? [
         function renderThanks(v) {
           if (v === 'up') {
             feedback.setAttribute('data-state', 'thanks');
-            feedback.innerHTML = '<span class="ca-msg">¡Gracias por tu voto! 🙌</span>';
+            feedback.innerHTML = '<span class="ca-msg">Thanks for your feedback!</span>';
           } else {
             feedback.setAttribute('data-state', 'sorry');
-            feedback.innerHTML = '<span class="ca-msg">Gracias. ¿Qué falta o está mal? <a href="mailto:errores@hacecuentas.com?subject=Mejora en ' + encodeURIComponent(slug) + '">Decinos por mail</a>.</span>';
+            feedback.innerHTML = '<span class="ca-msg">Thanks. What\'s missing or wrong? <a href="mailto:errores@hacecuentas.com?subject=Improvement for ' + encodeURIComponent(slug) + '">Let us know by email</a>.</span>';
           }
         }
       }
 
-      // Compartir
+      // Share
       var shareBtn = document.getElementById('ca-share');
       if (shareBtn) {
         shareBtn.addEventListener('click', async function () {
@@ -529,7 +523,7 @@ const hreflangTags = enVersion ? [
             try {
               await navigator.clipboard.writeText(url);
               var orig = shareBtn.innerHTML;
-              shareBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ¡Copiado!';
+              shareBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
               setTimeout(function () { shareBtn.innerHTML = orig; }, 2000);
             } catch (e) {}
           }
@@ -557,7 +551,7 @@ const hreflangTags = enVersion ? [
       // Floating recalculate FAB (mobile only)
       var fab = document.getElementById('fab-recalc');
       if (fab && window.innerWidth < 1100) {
-        var calcSection = document.getElementById('calculadora');
+        var calcSection = document.getElementById('calculator');
         if (calcSection) {
           var resultsEl = calcSection.querySelector('.calc-results');
           var calcObs = new IntersectionObserver(function (entries) {
@@ -579,9 +573,9 @@ const hreflangTags = enVersion ? [
   </script>
 
   <!-- Floating recalculate (mobile only, post-result) -->
-  <div class="fab-recalc" id="fab-recalc" hidden aria-label="Volver a calcular">
+  <div class="fab-recalc" id="fab-recalc" hidden aria-label="Recalculate">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-    Recalcular
+    Recalculate
   </div>
 
   <ScrollToTop />
@@ -679,7 +673,7 @@ const hreflangTags = enVersion ? [
     line-height: 1;
   }
 
-  /* Audience notice — banda visual para calculadoras AR-only */
+  /* Audience notice */
   .audience-notice {
     display: flex;
     gap: 0.875rem;
@@ -910,7 +904,7 @@ const hreflangTags = enVersion ? [
     font-size: 0.9375rem;
   }
 
-  /* Key takeaway (resumen rápido) */
+  /* Key takeaway */
   .key-takeaway {
     display: flex;
     gap: 0.75rem;
@@ -949,7 +943,7 @@ const hreflangTags = enVersion ? [
     margin-bottom: 0.375rem;
   }
 
-  /* Example paso a paso */
+  /* Example */
   .example {
     margin-top: 2.5rem;
     padding: 1.75rem 2rem;
@@ -985,7 +979,7 @@ const hreflangTags = enVersion ? [
   }
   .example-result strong { color: var(--accent-strong); }
 
-  /* Fuentes */
+  /* Sources */
   .sources-box {
     margin-top: 2.5rem;
     padding: 1.25rem 1.5rem;
@@ -1103,7 +1097,7 @@ const hreflangTags = enVersion ? [
     text-decoration: none;
   }
 
-  /* Layout con TOC sticky lateral */
+  /* Layout with sticky sidebar TOC */
   .calc-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -1165,12 +1159,10 @@ const hreflangTags = enVersion ? [
   }
 
   @media (max-width: 1099px) {
-    /* En mobile ocultamos el TOC para que la calculadora aparezca arriba del fold.
-       Las secciones son pocas y la navegación vertical scroll alcanza. */
     .toc { display: none; }
   }
 
-  /* Calc actions: thumbs + share + reportar */
+  /* Calc actions: thumbs + share + report */
   .calc-actions {
     display: flex;
     flex-wrap: wrap;
@@ -1236,7 +1228,7 @@ const hreflangTags = enVersion ? [
     background: var(--bg-soft);
   }
 
-  /* KaTeX overrides leves */
+  /* KaTeX overrides */
   .explanation :global(.katex-display) {
     margin: 1rem 0;
     overflow-x: auto;
@@ -1260,7 +1252,7 @@ const hreflangTags = enVersion ? [
   }
   @media (max-width: 1099px) {
     .fab-recalc {
-      display: none; /* JS controls via hidden attr */
+      display: none;
       position: fixed;
       bottom: 1.25rem;
       right: 1.25rem;

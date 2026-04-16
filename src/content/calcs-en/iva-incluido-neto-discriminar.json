@@ -1,0 +1,144 @@
+{
+  "slug": "vat-tax-calculator",
+  "esSlug": "calculadora-iva-incluido-neto-discriminar",
+  "title": "VAT / Sales Tax Calculator 2026 — Add or Remove Tax | Hacé Cuentas",
+  "h1": "VAT / Sales Tax Calculator",
+  "description": "Add or remove VAT/sales tax from any price. Supports multiple tax rates (10.5%, 21%, 27%). See net price, tax amount, and total instantly.",
+  "category": "finanzas",
+  "icon": "🧾",
+  "formulaId": "iva-incluido-neto-discriminar",
+  "audience": "global",
+  "seoKeywords": [
+    "vat calculator",
+    "sales tax calculator",
+    "remove vat from price",
+    "add vat to price",
+    "tax included price",
+    "net price calculator",
+    "vat reverse calculator",
+    "tax breakdown"
+  ],
+  "intro": "Need to **extract VAT from a final price** or **add tax to a net price**? This calculator does both instantly with three common VAT rates: **10.5%** (reduced rate for basic goods and transport), **21%** (standard rate), and **27%** (higher rate for telecom and energy). Enter the amount, choose whether it includes or excludes tax, and get the **net price**, **tax amount**, and **total** immediately. While the rates shown are based on Argentina's VAT system (IVA), the math works identically for any country's VAT or sales tax -- just match the rate to your jurisdiction. **Essential for invoicing, quoting, and comparing prices.**",
+  "keyTakeaway": "**To remove VAT: net = price / (1 + rate/100). To add VAT: total = net x (1 + rate/100).** The tax is the difference between total and net. Always compare prices on a net (pre-tax) basis.",
+  "useCases": [
+    "You have a tax-included price and need the net amount for invoicing.",
+    "You want to add VAT to a net price for a customer quote.",
+    "You need to extract the tax amount from an invoice to claim a tax credit.",
+    "You're comparing suppliers (some quote with tax, others without).",
+    "You want to calculate how much tax you're paying on a large purchase."
+  ],
+  "fields": [
+    {
+      "id": "monto",
+      "label": "Amount",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "121000",
+      "format": "thousands",
+      "min": 0.01,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "montoTipo",
+      "label": "The amount entered is:",
+      "type": "select",
+      "default": "conIva",
+      "options": [
+        { "value": "conIva", "label": "Tax included (I want to extract the tax)" },
+        { "value": "sinIva", "label": "Net / before tax (I want to add tax)" }
+      ]
+    },
+    {
+      "id": "alicuota",
+      "label": "Tax rate",
+      "type": "select",
+      "default": "21",
+      "options": [
+        { "value": "10.5", "label": "10.5% (reduced: basic goods, transport)" },
+        { "value": "21", "label": "21% (standard)" },
+        { "value": "27", "label": "27% (higher: telecom, energy)" }
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "id": "neto",
+      "label": "Net price (before tax)",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "iva",
+      "label": "Tax amount",
+      "format": "currency"
+    },
+    {
+      "id": "total",
+      "label": "Total (tax included)",
+      "format": "currency"
+    },
+    {
+      "id": "detalle",
+      "label": "Detail",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Common VAT/Sales Tax Rates Worldwide\n\nWhile this calculator shows Argentina's VAT (IVA) rates, the formulas work for any jurisdiction:\n\n| Country | Standard Rate | Reduced Rate |\n|---|---|---|\n| Argentina | 21% | 10.5% |\n| United States | 0-10.25% (varies by state) | N/A |\n| United Kingdom | 20% | 5% |\n| European Union | 15-27% (varies by country) | 5-13% |\n| Canada (GST) | 5% | 0% |\n| Australia (GST) | 10% | 0% |\n| Mexico | 16% | 0% |\n| Brazil | 12-25% (varies) | Varies |\n\n## Formulas\n\n### Remove Tax from a Tax-Included Price\n\n```\nnet = price_with_tax / (1 + rate/100)\ntax = price_with_tax - net\n```\n\n### Add Tax to a Net Price\n\n```\ntotal = net_price x (1 + rate/100)\ntax = total - net_price\n```\n\n## The Most Common Mistake\n\nPeople often try to extract tax by multiplying the total by the rate. **This is wrong.**\n\nExample with 21% VAT and a $121 total:\n- **Wrong**: $121 x 0.21 = $25.41 (this is NOT the tax)\n- **Correct**: $121 / 1.21 = $100 (net), tax = $21\n\nThe rate is applied to the **net price**, not the total. To reverse-engineer from the total, you must **divide by (1 + rate)**, not multiply by the rate.\n\n## Business vs Consumer Perspective\n\n- **Consumer**: pays the tax-included final price. The tax is invisible (embedded in the price).\n- **Business (VAT-registered)**: charges tax on sales (output tax), pays tax on purchases (input tax), and remits the **difference** to the government.\n- **Small business / simplified regime**: may not separate tax in invoices (tax is included in a flat monthly fee).\n\n## Tax Credits (for Businesses)\n\nIf you're VAT-registered, the tax you pay on business purchases (input tax) is deducted from the tax you charge on sales (output tax). You only remit the **net difference** to the tax authority.\n\n```\nTax payable = Output tax (on sales) - Input tax (on purchases)\n```\n\nIf your input tax exceeds your output tax, you carry the balance forward.\n\n## Common Mistakes\n\n1. **Multiplying the total by the tax rate to find tax**: this overestimates the tax. Always divide the total by (1 + rate).\n2. **Comparing tax-included prices with net prices**: always convert to the same basis before comparing suppliers.\n3. **Calculating profit margin on tax-included prices**: margin should be on net prices -- the tax isn't yours to keep.\n4. **Forgetting that not all products have the same rate**: food, medicine, and basic goods often have reduced rates.",
+  "faq": [
+    {
+      "q": "How do I remove VAT/tax from a price?",
+      "a": "Divide the price by **(1 + rate/100)**. For 21% VAT: divide by **1.21**. For 10.5%: divide by **1.105**. For 27%: divide by **1.27**. The result is the net (pre-tax) price. The difference between the original price and the net is the tax amount."
+    },
+    {
+      "q": "How do I add VAT/tax to a net price?",
+      "a": "Multiply the net price by **(1 + rate/100)**. For 21% VAT: multiply by **1.21**. Example: $100,000 x 1.21 = $121,000 (total with tax)."
+    },
+    {
+      "q": "Why are there different tax rates?",
+      "a": "Reduced rates (like 10.5%) are designed to make **essential goods** more affordable (food, medicine, transport). Higher rates (like 27%) apply to specific services. The standard rate (21%) covers everything else. Different countries set different rate tiers based on social policy."
+    },
+    {
+      "q": "Can I claim back the tax on my purchases?",
+      "a": "Only if you're **VAT-registered** (in Argentina: 'Responsable Inscripto'). The tax on your business purchases (input tax) is credited against the tax you charge customers (output tax). If you purchased more than you sold, the balance carries forward to the next period."
+    },
+    {
+      "q": "Do consumer prices include tax?",
+      "a": "In most countries, consumer-facing prices **must include all taxes** by law. Business-to-business prices are often quoted **net (before tax)** with tax added separately on the invoice. Always confirm whether a quoted price includes or excludes tax."
+    },
+    {
+      "q": "Why can't I just multiply the total by the tax rate to find the tax?",
+      "a": "Because the tax rate applies to the **net price**, not the total. If the total is $121 and the rate is 21%, the tax is NOT $121 x 0.21 = $25.41. The correct calculation: net = $121 / 1.21 = $100, tax = $21. The common mistake overestimates the tax by the rate applied to the tax itself."
+    },
+    {
+      "q": "How does this work for US sales tax?",
+      "a": "The math is identical. US sales tax varies by state (0% to 10.25%). To remove 8% sales tax from a total of $108: net = $108 / 1.08 = $100, tax = $8. The only difference is that US prices are often displayed **before sales tax** at the register, while most other countries display tax-included prices."
+    }
+  ],
+  "sources": [
+    {
+      "name": "OECD - Value Added Tax",
+      "url": "https://www.oecd.org/tax/consumption/"
+    },
+    {
+      "name": "Investopedia - Value Added Tax (VAT)",
+      "url": "https://www.investopedia.com/terms/v/valueaddedtax.asp"
+    },
+    {
+      "name": "European Commission - VAT Rates",
+      "url": "https://taxation-customs.ec.europa.eu/vat-rates_en"
+    }
+  ],
+  "example": {
+    "title": "Example: Remove 21% VAT from $121,000",
+    "steps": [
+      "**Price with tax**: $121,000.",
+      "**Tax rate**: 21%.",
+      "**Net price**: `121,000 / 1.21` = **$100,000**.",
+      "**Tax amount**: `121,000 - 100,000` = **$21,000**.",
+      "Verification: `100,000 x 1.21 = 121,000` confirmed."
+    ],
+    "result": "From $121,000 tax-included, the net price is **$100,000** and the tax is **$21,000** (21%)."
+  },
+  "relatedSlugs": []
+}

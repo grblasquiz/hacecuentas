@@ -8,6 +8,8 @@ export interface Props {
   schema?: object;
   image?: string;
   audience?: 'AR' | 'global'; // 'AR' = calculadora/página específica de Argentina; default 'global'
+  lang?: 'es' | 'en';
+  hreflang?: Array<{lang: string, href: string}>;
 }
 
 const {
@@ -17,6 +19,8 @@ const {
   schema,
   image = '/og-default.png',
   audience = 'global',
+  lang,
+  hreflang,
 } = Astro.props;
 
 const siteUrl = 'https://hacecuentas.com';
@@ -25,12 +29,13 @@ const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, 
 const fullCanonical = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${cleanPath}`;
 const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
 
-// Lang/locale dinámicos según audience.
+// Lang/locale dinámicos según audience y lang.
+// Para EN: 'en' + en_US.
 // Para AR-only: es-AR fuerte (Google la prioriza para usuarios argentinos).
 // Para globales: es genérico + alternate es-AR/es-419 (es-419 = español Latinoamérica).
-const htmlLang = audience === 'AR' ? 'es-AR' : 'es';
-const ogLocale = audience === 'AR' ? 'es_AR' : 'es_419';
-const schemaLang = audience === 'AR' ? 'es-AR' : 'es';
+const htmlLang = lang === 'en' ? 'en' : audience === 'AR' ? 'es-AR' : 'es';
+const ogLocale = lang === 'en' ? 'en_US' : audience === 'AR' ? 'es_AR' : 'es_419';
+const schemaLang = lang === 'en' ? 'en' : audience === 'AR' ? 'es-AR' : 'es';
 
 // Schema.org WebSite + Organization global (siempre presente)
 const globalSchema = {
@@ -91,7 +96,9 @@ const globalSchema = {
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={fullCanonical} />
-    {audience === 'AR' ? (
+    {hreflang ? (
+      hreflang.map(h => <link rel="alternate" hreflang={h.lang} href={h.href} />)
+    ) : audience === 'AR' ? (
       <>
         <link rel="alternate" hreflang="es-AR" href={fullCanonical} />
         <link rel="alternate" hreflang="x-default" href={fullCanonical} />
