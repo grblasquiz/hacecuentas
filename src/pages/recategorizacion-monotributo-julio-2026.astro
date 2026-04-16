@@ -1,0 +1,426 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Newsletter from '../components/Newsletter.astro';
+
+const title = 'Recategorización Monotributo Julio 2026: fechas, categorías y cómo hacerla | Hacé Cuentas';
+const description = 'Guía completa de la recategorización monotributo julio 2026: vencimiento 20 de julio, nuevas categorías A a K con montos actualizados, paso a paso en AFIP y errores a evitar.';
+
+const siteUrl = 'https://hacecuentas.com';
+
+const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+
+// Categorías monotributo 2026 (valores estimados basados en actualizaciones semestrales)
+const categorias = [
+  { cat: 'A', ingresosAnuales: 7813063, cuotaTotal: 26600, impuesto: 3190, sipa: 18516, obraSocial: 4894, actividad: 'Servicios y comercio' },
+  { cat: 'B', ingresosAnuales: 11601632, cuotaTotal: 30400, impuesto: 5995, sipa: 20348, obraSocial: 4057, actividad: 'Servicios y comercio' },
+  { cat: 'C', ingresosAnuales: 16267027, cuotaTotal: 35300, impuesto: 10239, sipa: 22383, obraSocial: 4678, actividad: 'Servicios y comercio' },
+  { cat: 'D', ingresosAnuales: 20199891, cuotaTotal: 43800, impuesto: 17028, sipa: 24621, obraSocial: 5151, actividad: 'Servicios y comercio' },
+  { cat: 'E', ingresosAnuales: 23789586, cuotaTotal: 60450, impuesto: 30302, sipa: 27083, obraSocial: 5665, actividad: 'Servicios y comercio' },
+  { cat: 'F', ingresosAnuales: 29727527, cuotaTotal: 75900, impuesto: 40554, sipa: 29791, obraSocial: 5555, actividad: 'Solo comercio' },
+  { cat: 'G', ingresosAnuales: 35621792, cuotaTotal: 90150, impuesto: 49765, sipa: 32770, obraSocial: 5615, actividad: 'Solo comercio' },
+  { cat: 'H', ingresosAnuales: 53423400, cuotaTotal: 157050, impuesto: 110587, sipa: 36047, obraSocial: 10416, actividad: 'Solo comercio' },
+  { cat: 'I', ingresosAnuales: 59591045, cuotaTotal: 202900, impuesto: 150380, sipa: 39652, obraSocial: 12868, actividad: 'Solo comercio' },
+  { cat: 'J', ingresosAnuales: 68253710, cuotaTotal: 232350, impuesto: 173432, sipa: 43617, obraSocial: 15301, actividad: 'Solo comercio' },
+  { cat: 'K', ingresosAnuales: 82069578, cuotaTotal: 263900, impuesto: 198024, sipa: 47979, obraSocial: 17897, actividad: 'Solo comercio' },
+];
+
+const faqItems = [
+  {
+    q: '¿Cuándo es la recategorización del monotributo julio 2026?',
+    a: 'La recategorización semestral del monotributo de julio 2026 vence el 20 de julio de 2026. Debés evaluar tus ingresos, gastos y parámetros de los últimos 12 meses (julio 2025 a junio 2026) y, si corresponde, cambiar de categoría a través del portal de AFIP.'
+  },
+  {
+    q: '¿Qué período se evalúa en la recategorización de julio 2026?',
+    a: 'Se evalúan los últimos 12 meses inmediatos anteriores, es decir, desde julio 2025 hasta junio 2026. Se analizan los ingresos brutos acumulados, los gastos inherentes a la actividad, la superficie afectada, la energía eléctrica consumida y el monto de alquileres devengados.'
+  },
+  {
+    q: '¿Qué pasa si no me recategorizo y me corresponde un cambio?',
+    a: 'Si no te recategorizás y AFIP detecta que debés estar en una categoría superior, te recategorizará de oficio y deberás abonar la diferencia de cuota desde el momento en que debiste cambiar, más intereses resarcitorios. Si debías bajar de categoría, perdés la oportunidad de pagar menos hasta la próxima recategorización en enero 2027.'
+  },
+  {
+    q: '¿Cómo sé en qué categoría me corresponde estar?',
+    a: 'Sumá todos tus ingresos brutos de los últimos 12 meses. Si el total no supera el tope de tu categoría actual, no necesitás cambiar. Si lo supera, debés subir a la categoría cuyo tope cubra tus ingresos. También verificá los otros parámetros: superficie del local, energía eléctrica consumida y monto de alquileres. Usá nuestra calculadora de monotributo para determinarlo rápidamente.'
+  },
+  {
+    q: '¿La recategorización es obligatoria aunque no cambie mi situación?',
+    a: 'No. Si tus parámetros (ingresos, superficie, energía, alquileres) no cambiaron y seguís encuadrando en la misma categoría, no es necesario que hagas ningún trámite. Tu categoría se mantiene automáticamente. Solo debés recategorizarte si hay un cambio.'
+  },
+  {
+    q: '¿Puedo recategorizarme fuera de las fechas establecidas?',
+    a: 'No. La recategorización solo puede hacerse en los períodos habilitados por AFIP: enero y julio de cada año. Fuera de esas ventanas, no es posible cambiar de categoría voluntariamente. La excepción es la exclusión de oficio, que AFIP puede realizar en cualquier momento.'
+  },
+  {
+    q: '¿Qué diferencia hay entre recategorización y exclusión del monotributo?',
+    a: 'La recategorización es el cambio de categoría dentro del monotributo. La exclusión implica que salís del régimen simplificado (porque superaste los topes de la categoría más alta o incumpliste requisitos) y pasás a ser Responsable Inscripto, con obligaciones tributarias más complejas (IVA, Ganancias, etc.).'
+  },
+  {
+    q: '¿Cuándo empieza a regir la nueva categoría?',
+    a: 'La nueva categoría rige desde el mes siguiente a la recategorización. Si te recategorizás en julio 2026, la nueva cuota aplica desde agosto 2026. El pago de julio se realiza con la categoría anterior.'
+  },
+  {
+    q: '¿Puedo bajar de categoría en la recategorización?',
+    a: 'Sí. Si tus ingresos de los últimos 12 meses bajaron y ahora encuadrás en una categoría inferior, podés (y debés) bajar. Esto te permitirá pagar una cuota mensual menor. Muchos monotributistas no lo saben y siguen pagando de más.'
+  }
+];
+
+const howToSteps = [
+  { name: 'Ingresá a AFIP con CUIT y clave fiscal', text: 'Accedé a www.afip.gob.ar con tu CUIT y clave fiscal nivel 2 o superior. Si no tenés clave fiscal, podés generarla online o en una dependencia de AFIP.' },
+  { name: 'Entrá al servicio "Monotributo"', text: 'En el menú de servicios, buscá "Monotributo" o "Régimen Simplificado". Si no lo tenés habilitado, agregalo desde "Administrador de Relaciones de Clave Fiscal".' },
+  { name: 'Seleccioná "Recategorización"', text: 'Dentro del servicio de Monotributo, hacé clic en "Recategorización". El sistema te mostrará tu categoría actual y los parámetros vigentes.' },
+  { name: 'Completá los datos del período', text: 'Ingresá tus ingresos brutos de los últimos 12 meses, la superficie afectada a la actividad, el consumo de energía eléctrica y el monto de alquileres devengados. El sistema calculará automáticamente la categoría que te corresponde.' },
+  { name: 'Confirmá la nueva categoría', text: 'Verificá que la categoría sugerida sea correcta y confirmá el cambio. El sistema emitirá una constancia de recategorización que podés descargar en PDF.' },
+  { name: 'Pagá la nueva cuota desde el mes siguiente', text: 'La nueva cuota del monotributo rige desde agosto 2026. Podés generar el VEP (Volante Electrónico de Pago) desde el mismo portal o configurar el débito automático.' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${siteUrl}/recategorizacion-monotributo-julio-2026`,
+      url: `${siteUrl}/recategorizacion-monotributo-julio-2026`,
+      name: title,
+      description: description,
+      isPartOf: { '@id': `${siteUrl}/#website` },
+      inLanguage: 'es-AR',
+      datePublished: '2026-04-16',
+      dateModified: '2026-04-16',
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: 'Finanzas', item: `${siteUrl}/categoria/finanzas` },
+        { '@type': 'ListItem', position: 3, name: 'Recategorización Monotributo Julio 2026' },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
+    {
+      '@type': 'HowTo',
+      name: 'Cómo recategorizarse en el monotributo por AFIP',
+      description: 'Guía paso a paso para hacer la recategorización del monotributo en el portal de AFIP.',
+      totalTime: 'PT15M',
+      step: howToSteps.map((s, i) => ({
+        '@type': 'HowToStep',
+        position: i + 1,
+        name: s.name,
+        text: s.text,
+      })),
+    },
+  ],
+};
+---
+<Layout title={title} description={description} schema={schema} audience="AR">
+  <Header slot="header" />
+
+  <article class="landing">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Recategorización Monotributo Julio 2026</span>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+      <h1>Recategorización Monotributo Julio 2026: fechas, categorías y paso a paso</h1>
+      <p class="lead">
+        Cada 6 meses (enero y julio) los monotributistas deben evaluar si les corresponde cambiar de categoría. La <strong>recategorización de julio 2026 vence el 20 de julio</strong>. En esta guía te explicamos todo: las nuevas categorías con montos actualizados, cómo hacerla en AFIP paso a paso y qué pasa si no te recategorizás.
+      </p>
+      <div class="hero-meta">
+        <span>Actualizado: abril 2026</span>
+        <span>Vencimiento: 20 de julio 2026</span>
+      </div>
+    </header>
+
+    <!-- FECHAS CLAVE -->
+    <section class="section">
+      <h2>Fechas clave</h2>
+      <div class="dates-grid">
+        <div class="date-card">
+          <div class="date-label">Período evaluado</div>
+          <div class="date-value">Jul 2025 - Jun 2026</div>
+          <div class="date-hint">Últimos 12 meses de actividad</div>
+        </div>
+        <div class="date-card accent">
+          <div class="date-label">Vencimiento recategorización</div>
+          <div class="date-value">20 de julio 2026</div>
+          <div class="date-hint">Fecha límite para cambiar de categoría</div>
+        </div>
+        <div class="date-card">
+          <div class="date-label">Vigencia nueva categoría</div>
+          <div class="date-value">Agosto 2026</div>
+          <div class="date-hint">La nueva cuota aplica desde agosto</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TABLA DE CATEGORÍAS -->
+    <section class="section">
+      <h2>Categorías del monotributo 2026 (valores actualizados)</h2>
+      <p>
+        Los montos se actualizan semestralmente según el índice de movilidad jubilatoria. Estos son los valores vigentes para la recategorización de julio 2026.
+        <strong>Nota:</strong> los valores son estimados basados en la actualización proyectada. Verificá los montos oficiales en la web de AFIP al momento de recategorizarte.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cat.</th>
+              <th>Ingresos anuales (tope)</th>
+              <th>Cuota total</th>
+              <th>Impuesto integrado</th>
+              <th>SIPA</th>
+              <th>Obra social</th>
+              <th>Tipo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {categorias.map((c) => (
+              <tr>
+                <td class="cat-letter">{c.cat}</td>
+                <td>{fmtAr(c.ingresosAnuales)}</td>
+                <td class="highlight">{fmtAr(c.cuotaTotal)}</td>
+                <td>{fmtAr(c.impuesto)}</td>
+                <td>{fmtAr(c.sipa)}</td>
+                <td>{fmtAr(c.obraSocial)}</td>
+                <td class="tipo">{c.actividad}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        Las categorías A a E aplican tanto para servicios como para venta de bienes. Las categorías F a K son exclusivas para venta de bienes (comercio). Si prestás servicios y superás el tope de la categoría E, quedás excluido del monotributo.
+      </p>
+    </section>
+
+    <!-- CTA CALCULADORA -->
+    <div class="cta-box">
+      <h3>Calculá tu categoría de monotributo</h3>
+      <p>Ingresá tus ingresos de los últimos 12 meses y descubrí en qué categoría deberías estar.</p>
+      <a href="/calculadora-monotributo-2026" class="cta-btn">Ir a la calculadora de monotributo</a>
+    </div>
+
+    <!-- PASO A PASO -->
+    <section class="section">
+      <h2>Cómo recategorizarte paso a paso en AFIP</h2>
+      <p>El trámite se hace 100% online a través del portal de AFIP. Te lleva aproximadamente 15 minutos.</p>
+      <div class="steps-list">
+        {howToSteps.map((step, i) => (
+          <div class="step">
+            <div class="step-num">{i + 1}</div>
+            <div class="step-content">
+              <h4>{step.name}</h4>
+              <p>{step.text}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- QUÉ EVALUAR -->
+    <section class="section">
+      <h2>Parámetros que se evalúan en la recategorización</h2>
+      <p>No solo importan los ingresos. AFIP evalúa múltiples parámetros para determinar tu categoría:</p>
+      <div class="params-grid">
+        <div class="param-card">
+          <h4>Ingresos brutos anuales</h4>
+          <p>Sumá todo lo facturado en los últimos 12 meses (julio 2025 a junio 2026). Es el parámetro principal.</p>
+        </div>
+        <div class="param-card">
+          <h4>Superficie afectada</h4>
+          <p>Los metros cuadrados del local o espacio donde desarrollás tu actividad. No aplica si trabajás desde tu casa sin un espacio exclusivo.</p>
+        </div>
+        <div class="param-card">
+          <h4>Energía eléctrica consumida</h4>
+          <p>El consumo anual en kW del local afectado a la actividad. Verificá tus facturas de luz de los últimos 12 meses.</p>
+        </div>
+        <div class="param-card">
+          <h4>Alquileres devengados</h4>
+          <p>El monto anual pagado por alquiler del local donde se desarrolla la actividad. Si sos propietario, este parámetro no aplica.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MONOTRIBUTO VS RI -->
+    <section class="section">
+      <h2>Monotributo vs. Responsable Inscripto: cuándo conviene pasar</h2>
+      <p>
+        Si estás cerca del tope de tu categoría (especialmente la E para servicios o la K para comercio), es buen momento para evaluar si te conviene pasarte a Responsable Inscripto. En algunos casos, especialmente si tenés muchos gastos deducibles, el régimen general puede ser más conveniente.
+      </p>
+      <p>
+        Usá nuestra <a href="/calculadora-monotributo-vs-responsable-inscripto">calculadora comparativa Monotributo vs. RI</a> para simular ambos escenarios con tus números reales.
+      </p>
+    </section>
+
+    <!-- LINKS RELACIONADOS -->
+    <section class="section">
+      <h2>Calculadoras relacionadas</h2>
+      <div class="link-grid">
+        <a href="/calculadora-monotributo-2026" class="link-card">
+          <span class="link-title">Calculadora Monotributo 2026</span>
+          <span class="link-desc">Calculá tu cuota mensual según categoría</span>
+        </a>
+        <a href="/calculadora-monotributo-categoria-ingresos-tope" class="link-card">
+          <span class="link-title">Categoría por Ingresos</span>
+          <span class="link-desc">Averiguá qué categoría te corresponde según tus ingresos</span>
+        </a>
+        <a href="/calculadora-monotributo-vs-responsable-inscripto" class="link-card">
+          <span class="link-title">Monotributo vs. Resp. Inscripto</span>
+          <span class="link-desc">Compará cuál régimen te conviene más</span>
+        </a>
+        <a href="/calculadora-impuesto-ganancias-sueldo" class="link-card">
+          <span class="link-title">Impuesto a las Ganancias</span>
+          <span class="link-desc">Calculá Ganancias si pasás a Resp. Inscripto</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section faq-section">
+      <h2>Preguntas frecuentes sobre la recategorización julio 2026</h2>
+      <div class="faq-list">
+        {faqItems.map((item) => (
+          <details class="faq-item">
+            <summary>{item.q}</summary>
+            <p>{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <Newsletter />
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .landing { max-width: 860px; margin: 0 auto; padding: 0 0 3rem; }
+  .breadcrumbs { font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .breadcrumbs a { color: var(--text-muted); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+  .breadcrumbs .sep { color: var(--border-strong); }
+
+  .hero { margin-bottom: 2.5rem; }
+  .hero h1 { margin-bottom: 1rem; }
+  .lead { font-size: 1.0625rem; color: var(--text-muted); margin-bottom: 1rem; max-width: 760px; line-height: 1.65; }
+  .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.8125rem; color: var(--text-subtle); }
+
+  .section { margin-bottom: 2.5rem; }
+  .section h2 { margin-bottom: 0.75rem; }
+  .section h3 { margin: 1.25rem 0 0.5rem; font-size: 1.125rem; }
+  .section p { margin-bottom: 0.75rem; color: var(--text-muted); line-height: 1.65; }
+
+  .dates-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.875rem; margin-top: 1rem; }
+  .date-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.25rem; box-shadow: var(--shadow-sm);
+  }
+  .date-card.accent { background: var(--accent-soft); border-color: var(--accent); }
+  .date-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); margin-bottom: 0.375rem; }
+  .date-card.accent .date-label { color: var(--accent-strong); }
+  .date-value { font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem; }
+  .date-card.accent .date-value { color: var(--accent-strong); }
+  .date-hint { font-size: 0.8125rem; color: var(--text-subtle); }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; margin: 1rem 0; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; font-feature-settings: 'tnum'; }
+  thead { background: var(--bg-soft); }
+  th {
+    padding: 0.75rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 600;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  td { padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-soft); }
+  .cat-letter { font-weight: 800; color: var(--accent-strong); font-size: 1rem; }
+  .highlight { font-weight: 700; color: var(--success); }
+  .tipo { font-size: 0.75rem; color: var(--text-subtle); }
+  .table-note { font-size: 0.8125rem; color: var(--text-subtle); margin-top: 0.5rem; }
+
+  /* CTA */
+  .cta-box {
+    text-align: center; padding: 2rem 1.5rem; margin: 2rem 0;
+    background: linear-gradient(135deg, var(--accent-soft) 0%, var(--bg-soft) 100%);
+    border: 1px solid var(--accent); border-radius: var(--radius-lg);
+  }
+  .cta-box h3 { color: var(--accent-strong); margin-bottom: 0.5rem; }
+  .cta-box p { margin-bottom: 1rem; }
+  .cta-btn {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.75rem 1.5rem; background: var(--accent); color: #fff;
+    border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9375rem;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .cta-btn:hover { background: var(--accent-strong); transform: translateY(-1px); color: #fff; }
+
+  /* Steps */
+  .steps-list { display: flex; flex-direction: column; gap: 1rem; margin: 1.25rem 0; }
+  .step { display: flex; gap: 1rem; align-items: flex-start; }
+  .step-num {
+    flex-shrink: 0; width: 2rem; height: 2rem; background: var(--accent);
+    color: #fff; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-weight: 700; font-size: 0.875rem;
+  }
+  .step-content h4 { margin-bottom: 0.25rem; }
+  .step-content p { font-size: 0.9375rem; margin: 0; }
+
+  /* Params grid */
+  .params-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.875rem; margin-top: 1rem; }
+  .param-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.25rem; box-shadow: var(--shadow-sm);
+  }
+  .param-card h4 { margin-bottom: 0.375rem; color: var(--text); }
+  .param-card p { font-size: 0.875rem; color: var(--text-subtle); margin: 0; line-height: 1.5; }
+
+  /* Link grid */
+  .link-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1rem; }
+  .link-card {
+    display: flex; flex-direction: column; gap: 0.25rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 0.875rem 1.125rem; color: var(--text); transition: all 0.15s;
+  }
+  .link-card:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); transform: translateY(-1px); }
+  .link-title { font-weight: 600; font-size: 0.9375rem; }
+  .link-desc { font-size: 0.8125rem; color: var(--text-muted); }
+  .link-card:hover .link-desc { color: var(--accent); }
+
+  /* FAQ */
+  .faq-section { padding-top: 1rem; border-top: 1px solid var(--border); }
+  .faq-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
+  .faq-item {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; transition: border-color 0.15s;
+  }
+  .faq-item[open] { border-color: var(--accent); }
+  .faq-item summary {
+    padding: 1rem 1.25rem; font-weight: 600; font-size: 0.9375rem;
+    cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.75rem;
+    color: var(--text);
+  }
+  .faq-item summary::before { content: '+'; font-size: 1.25rem; font-weight: 700; color: var(--accent); flex-shrink: 0; width: 1.25rem; text-align: center; }
+  .faq-item[open] summary::before { content: '\2212'; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item p { padding: 0 1.25rem 1rem; font-size: 0.9375rem; color: var(--text-muted); line-height: 1.65; }
+
+  @media (max-width: 640px) {
+    .dates-grid { grid-template-columns: 1fr; }
+    .params-grid { grid-template-columns: 1fr; }
+    th, td { padding: 0.5rem 0.5rem; font-size: 0.75rem; }
+  }
+</style>

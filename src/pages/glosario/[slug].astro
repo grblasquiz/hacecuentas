@@ -1,0 +1,480 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Newsletter from '../../components/Newsletter.astro';
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob<any>('../../content/glosario/*.json', { eager: true });
+  return Object.values(modules).map((mod: any) => {
+    const t = mod.default || mod;
+    return {
+      params: { slug: t.slug },
+      props: { term: t },
+    };
+  });
+}
+
+const { term } = Astro.props;
+
+const siteUrl = 'https://hacecuentas.com';
+
+// ─── Load all glossary terms for related links ──────────────────────────────
+const glosarioModules = import.meta.glob<any>('../../content/glosario/*.json', { eager: true });
+const allTerms = Object.values(glosarioModules).map((m: any) => m.default || m);
+const termBySlug = new Map(allTerms.map((t: any) => [t.slug, t]));
+
+// ─── Load calcs for related calculators ─────────────────────────────────────
+const calcModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
+const calcBySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+
+const relatedCalcs = (term.relatedCalcs || [])
+  .map((s: string) => calcBySlug.get(s))
+  .filter(Boolean);
+
+const relatedTerms = (term.relatedTerms || [])
+  .map((s: string) => termBySlug.get(s))
+  .filter(Boolean);
+
+// ─── Category labels & colors ───────────────────────────────────────────────
+const categoryLabels: Record<string, string> = {
+  finanzas: 'Finanzas',
+  salud: 'Salud',
+  deportes: 'Deportes',
+  matematica: 'Matematica',
+  negocios: 'Negocios',
+  marketing: 'Marketing',
+};
+const categoryLabel = categoryLabels[term.category] || term.category;
+
+const categoryColors: Record<string, { bg: string; text: string }> = {
+  finanzas:    { bg: '#eff6ff', text: '#1d4ed8' },
+  salud:       { bg: '#fdf4ff', text: '#9333ea' },
+  deportes:    { bg: '#ecfdf5', text: '#059669' },
+  matematica:  { bg: '#f5f3ff', text: '#6d28d9' },
+  negocios:    { bg: '#f0fdf4', text: '#15803d' },
+  marketing:   { bg: '#fff7ed', text: '#c2410c' },
+};
+const catColor = categoryColors[term.category] || { bg: 'var(--accent-soft)', text: 'var(--accent)' };
+
+const today = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+// ─── Schema.org ─────────────────────────────────────────────────────────────
+const definedTermSchema = {
+  '@type': 'DefinedTerm',
+  name: term.term,
+  description: term.shortDef,
+  inDefinedTermSet: {
+    '@type': 'DefinedTermSet',
+    name: 'Glosario de Hacé Cuentas',
+    url: `${siteUrl}/glosario`,
+  },
+  url: `${siteUrl}/glosario/${term.slug}`,
+};
+
+const breadcrumbSchema = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+    { '@type': 'ListItem', position: 2, name: 'Glosario', item: `${siteUrl}/glosario` },
+    { '@type': 'ListItem', position: 3, name: term.term, item: `${siteUrl}/glosario/${term.slug}` },
+  ],
+};
+
+const faqSchema = term.faq && term.faq.length > 0
+  ? {
+      '@type': 'FAQPage',
+      mainEntity: term.faq.map((item: { q: string; a: string }) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    }
+  : null;
+
+const pageSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    definedTermSchema,
+    breadcrumbSchema,
+    ...(faqSchema ? [faqSchema] : []),
+  ],
+};
+
+const metaTitle = `${term.term}: Que es, Como se Calcula y Ejemplos | Hace Cuentas`;
+---
+
+<Layout
+  title={metaTitle}
+  description={term.shortDef}
+  canonical={`/glosario/${term.slug}`}
+  schema={pageSchema}
+>
+  <Header slot="header" />
+
+  <article class="glosario-term">
+
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumbs" aria-label="Ruta de navegacion">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/glosario">Glosario</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">{term.term}</span>
+    </nav>
+
+    <!-- Header -->
+    <header class="term-header">
+      <div class="term-meta">
+        <span class="term-cat" style={`background:${catColor.bg}; color:${catColor.text}`}>{categoryLabel}</span>
+        <span class="term-date">Actualizado al {today}</span>
+      </div>
+      <h1>{term.term}</h1>
+      <p class="term-short">{term.shortDef}</p>
+    </header>
+
+    <!-- AKA -->
+    {term.aka && term.aka.length > 0 && (
+      <div class="aka-box">
+        <span class="aka-label">Tambien conocido como:</span>
+        <div class="aka-tags">
+          {term.aka.map((alias: string) => (
+            <span class="aka-tag">{alias}</span>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <!-- Full Definition -->
+    <section class="definition-section">
+      <h2>Definicion</h2>
+      <div class="definition-body" set:html={term.definition} />
+    </section>
+
+    <!-- Formula -->
+    {term.formula && (
+      <section class="formula-section">
+        <h2>Formula</h2>
+        <pre class="formula-block"><code>{term.formula}</code></pre>
+        {term.source && <p class="formula-source">Fuente: {term.source}</p>}
+      </section>
+    )}
+
+    <!-- Example -->
+    {term.example && (
+      <section class="example-section">
+        <h2>Ejemplo practico</h2>
+        <div class="example-box">
+          <svg class="example-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <p>{term.example}</p>
+        </div>
+      </section>
+    )}
+
+    <!-- FAQ -->
+    {term.faq && term.faq.length > 0 && (
+      <section class="faq-section">
+        <h2>Preguntas frecuentes</h2>
+        <dl class="faq-list">
+          {term.faq.map((item: { q: string; a: string }) => (
+            <div class="faq-item">
+              <dt>{item.q}</dt>
+              <dd>{item.a}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    )}
+
+    <!-- Related Calculators -->
+    {relatedCalcs.length > 0 && (
+      <section class="related-section">
+        <h2>Calculadoras relacionadas</h2>
+        <div class="related-grid">
+          {relatedCalcs.map((c: any) => (
+            <a href={`/${c.slug}`} class="related-card">
+              <span class="related-icon">{c.icon || '🔢'}</span>
+              <span class="related-name">{c.h1}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Related Terms -->
+    {relatedTerms.length > 0 && (
+      <section class="related-section">
+        <h2>Terminos relacionados</h2>
+        <div class="related-terms-list">
+          {relatedTerms.map((t: any) => (
+            <a href={`/glosario/${t.slug}`} class="related-term-chip">
+              {t.term}
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Back link -->
+    <nav class="back-link">
+      <a href="/glosario">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Ver todos los terminos del glosario
+      </a>
+    </nav>
+
+  </article>
+
+  <Newsletter />
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .glosario-term {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  /* Breadcrumbs */
+  .breadcrumbs {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumbs a:hover { text-decoration: underline; }
+  .breadcrumbs .sep { color: var(--border-strong); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+
+  /* Header */
+  .term-header { margin-bottom: 2rem; }
+  .term-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .term-cat {
+    display: inline-block;
+    padding: 0.125rem 0.625rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  .term-date {
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+  }
+  .term-header h1 {
+    margin: 0 0 0.625rem;
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    line-height: 1.2;
+  }
+  .term-short {
+    font-size: 1.0625rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* AKA */
+  .aka-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 2rem;
+    font-size: 0.875rem;
+  }
+  .aka-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .aka-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+  .aka-tag {
+    padding: 0.125rem 0.5rem;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  /* Sections */
+  section { margin-bottom: 2rem; }
+  section h2 {
+    font-size: 1.25rem;
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Definition */
+  .definition-body {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--text);
+  }
+  .definition-body :global(p) {
+    margin: 0 0 1rem;
+  }
+  .definition-body :global(strong) {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* Formula */
+  .formula-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .formula-block code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--accent-strong);
+  }
+  .formula-source {
+    margin: 0.5rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+  }
+
+  /* Example */
+  .example-box {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 1rem 1.25rem;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  .example-icon {
+    flex-shrink: 0;
+    color: var(--accent);
+    margin-top: 0.125rem;
+  }
+  .example-box p {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: var(--text);
+  }
+
+  /* FAQ */
+  .faq-list {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+  }
+  .faq-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .faq-item:last-child { border-bottom: none; }
+  .faq-item dt {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.375rem;
+    color: var(--text);
+  }
+  .faq-item dd {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: var(--text-muted);
+  }
+
+  /* Related calculators */
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.75rem;
+  }
+  .related-card {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .related-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .related-icon { font-size: 1.25rem; flex-shrink: 0; }
+  .related-name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  /* Related terms */
+  .related-terms-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .related-term-chip {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .related-term-chip:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* Back link */
+  .back-link {
+    margin: 2rem 0 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .back-link a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.9375rem;
+    font-weight: 500;
+  }
+  .back-link a:hover { text-decoration: underline; }
+</style>

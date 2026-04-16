@@ -23,6 +23,7 @@ const BLOG_DIR = join(ROOT, 'src', 'content', 'blog');
 const TABLAS_DIR = join(ROOT, 'src', 'content', 'tablas');
 const COMPARACIONES_DIR = join(ROOT, 'src', 'content', 'comparaciones');
 const ARGENTINA_DIR = join(ROOT, 'src', 'content', 'argentina');
+const GLOSARIO_DIR = join(ROOT, 'src', 'content', 'glosario');
 const OUT_FILE = join(ROOT, 'public', 'sitemap.xml');
 
 // Leer todos los JSONs de calcs
@@ -51,6 +52,11 @@ const argCalcs = readdirSync(ARGENTINA_DIR)
   .filter((f) => f.endsWith('.json') && f !== 'provincias.json')
   .map((f) => JSON.parse(readFileSync(join(ARGENTINA_DIR, f), 'utf8')))
   .filter((c: any) => c.calcSlug);
+
+// Leer todos los JSONs de glosario
+const glosarioTerms = readdirSync(GLOSARIO_DIR)
+  .filter((f) => f.endsWith('.json'))
+  .map((f) => JSON.parse(readFileSync(join(GLOSARIO_DIR, f), 'utf8')));
 
 // Leer todos los JSONs de calcs en inglés
 const calcsEn = readdirSync(CALCS_EN_DIR)
@@ -156,6 +162,14 @@ const urls = [
     priority: '0.7',
     changefreq: 'monthly',
     lastmod: p.updatedDate || p.date || buildDate,
+  })),
+
+  // Glosario individual term pages
+  ...glosarioTerms.map((t: any) => ({
+    loc: `${site}/glosario/${t.slug}`,
+    priority: '0.6',
+    changefreq: 'monthly',
+    lastmod: buildDate,
   })),
 
   // Legales y editoriales

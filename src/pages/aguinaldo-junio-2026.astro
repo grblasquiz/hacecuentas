@@ -1,0 +1,471 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Newsletter from '../components/Newsletter.astro';
+
+const title = 'Aguinaldo Junio 2026: Cuándo cobro, cómo calcularlo y montos | Hacé Cuentas';
+const description = 'Todo sobre el aguinaldo de junio 2026 en Argentina: fecha límite de pago (30/06), fórmula del SAC, tabla con ejemplos por sueldo, descuentos y qué hacer si no te pagan.';
+
+const siteUrl = 'https://hacecuentas.com';
+
+const ejemplos = [
+  { sueldo: 400000, aguinaldoBruto: 200000, jubilacion: 22000, obraSocial: 6000, pami: 6000, neto: 166000 },
+  { sueldo: 600000, aguinaldoBruto: 300000, jubilacion: 33000, obraSocial: 9000, pami: 9000, neto: 249000 },
+  { sueldo: 800000, aguinaldoBruto: 400000, jubilacion: 44000, obraSocial: 12000, pami: 12000, neto: 332000 },
+  { sueldo: 1000000, aguinaldoBruto: 500000, jubilacion: 55000, obraSocial: 15000, pami: 15000, neto: 415000 },
+  { sueldo: 1500000, aguinaldoBruto: 750000, jubilacion: 82500, obraSocial: 22500, pami: 22500, neto: 622500 },
+  { sueldo: 2000000, aguinaldoBruto: 1000000, jubilacion: 110000, obraSocial: 30000, pami: 30000, neto: 830000 },
+];
+
+const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+
+const faqItems = [
+  {
+    q: '¿Cuándo se cobra el aguinaldo de junio 2026?',
+    a: 'La fecha límite legal es el 30 de junio de 2026. El empleador tiene hasta 4 días hábiles posteriores para acreditarlo, es decir, hasta el 6 de julio de 2026. Si no lo depositó para esa fecha, está incumpliendo la ley.'
+  },
+  {
+    q: '¿Cómo se calcula el aguinaldo de junio 2026?',
+    a: 'Se toma la mejor remuneración bruta mensual del primer semestre (enero a junio 2026), se divide por 2, y si no trabajaste los 6 meses completos, se multiplica por los meses trabajados dividido 6. La fórmula es: Aguinaldo = (Mejor sueldo del semestre / 2) x (meses trabajados / 6).'
+  },
+  {
+    q: '¿El aguinaldo incluye horas extra y comisiones?',
+    a: 'Sí. Para calcular el aguinaldo se toma la mayor remuneración mensual devengada, que incluye todos los conceptos remunerativos: sueldo básico, horas extra, comisiones, presentismo, plus por antigüedad y premios habituales. No incluye asignaciones familiares ni viáticos sin rendición.'
+  },
+  {
+    q: '¿Qué descuentos tiene el aguinaldo?',
+    a: 'Al aguinaldo se le aplican los mismos descuentos que al sueldo: 11% de jubilación (SIPA), 3% de obra social, 3% de PAMI (Ley 19.032) y el aporte sindical si corresponde. En total, aproximadamente un 17-19% de descuentos. Además, puede estar alcanzado por el Impuesto a las Ganancias si tu remuneración supera el mínimo no imponible.'
+  },
+  {
+    q: '¿Me corresponde aguinaldo si empecé a trabajar en abril 2026?',
+    a: 'Sí, te corresponde un aguinaldo proporcional. Si empezaste en abril y trabajaste hasta junio (3 meses), tu aguinaldo será: (Mejor sueldo / 2) x (3/6) = un cuarto de tu mejor sueldo bruto del período. El derecho al aguinaldo nace desde el primer día de trabajo.'
+  },
+  {
+    q: '¿El aguinaldo paga Impuesto a las Ganancias?',
+    a: 'Sí. El SAC está alcanzado por el Impuesto a las Ganancias de cuarta categoría. En el mes de junio, al sumarse el aguinaldo a la remuneración habitual, la retención puede ser significativamente mayor. Algunos empleadores distribuyen el impacto a lo largo del año para evitar un golpe concentrado en junio y diciembre.'
+  },
+  {
+    q: '¿Qué pasa si mi empleador no me paga el aguinaldo a tiempo?',
+    a: 'Si tu empleador no paga el aguinaldo dentro de los plazos legales (30 de junio + 4 días hábiles), podés intimar por escrito (carta documento o telegrama laboral gratuito) exigiendo el pago con intereses. Si no responde, podés hacer una denuncia en el Ministerio de Trabajo o iniciar acciones legales con un abogado laboralista. Los intereses se calculan desde la fecha en que debió pagarse.'
+  },
+  {
+    q: '¿Me corresponde aguinaldo si estoy en período de prueba?',
+    a: 'Sí. El período de prueba (primeros 3 meses de relación laboral) no exime al empleador de ninguna obligación salarial. Te corresponde aguinaldo proporcional a los días trabajados. Si te despiden durante la prueba, el SAC proporcional debe incluirse en la liquidación final.'
+  },
+  {
+    q: '¿Cómo verifico que mi aguinaldo está bien calculado?',
+    a: 'Revisá tus recibos de sueldo de enero a junio 2026, identificá el mes con mayor remuneración bruta (incluyendo horas extra y comisiones), dividilo por 2, y si no trabajaste los 6 meses, multiplicá por la proporción de meses. Compará ese resultado con el concepto "SAC" en tu recibo de junio. Si hay diferencia, reclamá por escrito a RRHH.'
+  },
+  {
+    q: '¿El aguinaldo se calcula sobre el sueldo bruto o el neto?',
+    a: 'Siempre se calcula sobre el sueldo bruto (remuneración devengada). Después, al monto del aguinaldo bruto se le aplican los descuentos de ley (jubilación, obra social, PAMI). El resultado es el aguinaldo neto o "en mano".'
+  }
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${siteUrl}/aguinaldo-junio-2026`,
+      url: `${siteUrl}/aguinaldo-junio-2026`,
+      name: title,
+      description: description,
+      isPartOf: { '@id': `${siteUrl}/#website` },
+      inLanguage: 'es-AR',
+      datePublished: '2026-04-16',
+      dateModified: '2026-04-16',
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: 'Finanzas', item: `${siteUrl}/categoria/finanzas` },
+        { '@type': 'ListItem', position: 3, name: 'Aguinaldo Junio 2026' },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.a,
+        },
+      })),
+    },
+  ],
+};
+---
+<Layout title={title} description={description} schema={schema} audience="AR">
+  <Header slot="header" />
+
+  <article class="landing">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Aguinaldo Junio 2026</span>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+      <h1>Aguinaldo Junio 2026: cuándo se cobra, cómo calcularlo y tabla de montos</h1>
+      <p class="lead">
+        El primer aguinaldo del año (SAC - Sueldo Anual Complementario) tiene como <strong>fecha límite de pago el 30 de junio de 2026</strong>.
+        Acá te explicamos la fórmula, los descuentos que se aplican, ejemplos con distintos sueldos y qué hacer si tu empleador se atrasa.
+      </p>
+      <div class="hero-meta">
+        <span>Actualizado: abril 2026</span>
+        <span>Aplica a: trabajadores en relación de dependencia en Argentina</span>
+      </div>
+    </header>
+
+    <!-- FECHAS CLAVE -->
+    <section class="section">
+      <h2>Fechas clave del aguinaldo junio 2026</h2>
+      <div class="dates-grid">
+        <div class="date-card">
+          <div class="date-label">Período que cubre</div>
+          <div class="date-value">Enero - Junio 2026</div>
+          <div class="date-hint">Primer semestre del año</div>
+        </div>
+        <div class="date-card accent">
+          <div class="date-label">Fecha límite de pago</div>
+          <div class="date-value">30 de junio 2026</div>
+          <div class="date-hint">+ 4 días hábiles de tolerancia</div>
+        </div>
+        <div class="date-card">
+          <div class="date-label">Tolerancia máxima</div>
+          <div class="date-value">6 de julio 2026</div>
+          <div class="date-hint">Después de esa fecha es incumplimiento</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FÓRMULA -->
+    <section class="section">
+      <h2>Fórmula del aguinaldo (SAC)</h2>
+      <div class="formula-box">
+        <div class="formula">
+          <code>Aguinaldo = (Mejor sueldo bruto del semestre / 2) &times; (meses trabajados / 6)</code>
+        </div>
+        <p class="formula-note">
+          Se toma la <strong>mayor remuneración mensual devengada</strong> del semestre enero-junio 2026. Incluye sueldo básico, horas extra, comisiones, presentismo y todo concepto remunerativo. Si trabajaste los 6 meses completos, el factor (meses/6) es 1 y no afecta el cálculo.
+        </p>
+      </div>
+
+      <h3>Ejemplo rápido</h3>
+      <p>
+        Si tu mejor sueldo bruto del semestre fue de <strong>$800.000</strong> y trabajaste los 6 meses completos:
+      </p>
+      <ul class="example-steps">
+        <li>Aguinaldo bruto = $800.000 / 2 = <strong>$400.000</strong></li>
+        <li>Descuento jubilación (11%) = $44.000</li>
+        <li>Descuento obra social (3%) = $12.000</li>
+        <li>Descuento PAMI (3%) = $12.000</li>
+        <li>Aguinaldo neto (en mano) = <strong>$332.000</strong></li>
+      </ul>
+    </section>
+
+    <!-- CTA CALCULADORA -->
+    <div class="cta-box">
+      <h3>Calculá tu aguinaldo exacto ahora</h3>
+      <p>Ingresá tu mejor sueldo, los meses trabajados y obtené el resultado con descuentos incluidos.</p>
+      <a href="/calculadora-aguinaldo-sac" class="cta-btn">Ir a la calculadora de aguinaldo</a>
+    </div>
+
+    <!-- TABLA DE EJEMPLOS -->
+    <section class="section">
+      <h2>Tabla: aguinaldo junio 2026 según tu sueldo</h2>
+      <p>
+        Ejemplos para trabajadores que cumplieron el semestre completo (enero a junio 2026).
+        Los descuentos incluyen jubilación (11%), obra social (3%) y PAMI (3%) = 17% total.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mejor sueldo bruto</th>
+              <th>Aguinaldo bruto</th>
+              <th>Jubilación (11%)</th>
+              <th>Obra social (3%)</th>
+              <th>PAMI (3%)</th>
+              <th>Aguinaldo neto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ejemplos.map((e) => (
+              <tr>
+                <td>{fmtAr(e.sueldo)}</td>
+                <td>{fmtAr(e.aguinaldoBruto)}</td>
+                <td>{fmtAr(e.jubilacion)}</td>
+                <td>{fmtAr(e.obraSocial)}</td>
+                <td>{fmtAr(e.pami)}</td>
+                <td class="highlight">{fmtAr(e.neto)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        <strong>Nota:</strong> estos montos no incluyen el aporte sindical (varía según gremio, típicamente 2-3%) ni la retención de Impuesto a las Ganancias (aplica si tu remuneración supera el mínimo no imponible). Usá la <a href="/calculadora-aguinaldo-sac">calculadora de aguinaldo</a> para un cálculo personalizado.
+      </p>
+    </section>
+
+    <!-- DESCUENTOS -->
+    <section class="section">
+      <h2>Descuentos del aguinaldo: qué te retienen</h2>
+      <p>Al aguinaldo se le aplican exactamente los mismos descuentos que al sueldo mensual. Los aportes obligatorios del trabajador son:</p>
+      <div class="descuentos-grid">
+        <div class="descuento-card">
+          <div class="descuento-pct">11%</div>
+          <div class="descuento-name">Jubilación (SIPA)</div>
+          <div class="descuento-detail">Aporte al Sistema Integrado Previsional Argentino. Es el descuento más grande y financia las jubilaciones.</div>
+        </div>
+        <div class="descuento-card">
+          <div class="descuento-pct">3%</div>
+          <div class="descuento-name">Obra Social</div>
+          <div class="descuento-detail">Aporte obligatorio a la obra social sindical. Podés derivarlo a una prepaga si lo deseás (aportar + diferencia).</div>
+        </div>
+        <div class="descuento-card">
+          <div class="descuento-pct">3%</div>
+          <div class="descuento-name">PAMI (Ley 19.032)</div>
+          <div class="descuento-detail">Aporte al INSSJP (PAMI). Es obligatorio para todos los trabajadores en relación de dependencia, sin importar la edad.</div>
+        </div>
+        <div class="descuento-card warning">
+          <div class="descuento-pct">Variable</div>
+          <div class="descuento-name">Impuesto a las Ganancias</div>
+          <div class="descuento-detail">Aplica si tu remuneración bruta supera el mínimo no imponible. En junio, al sumarse el aguinaldo, la retención puede ser mayor. Usá la <a href="/calculadora-impuesto-ganancias-sueldo">calculadora de Ganancias</a> para estimar el impacto.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUÉ PASA SI NO PAGAN -->
+    <section class="section">
+      <h2>Si tu empleador no paga el aguinaldo a tiempo</h2>
+      <p>
+        La Ley de Contrato de Trabajo establece que el aguinaldo debe pagarse antes del 30 de junio (con un máximo de 4 días hábiles de tolerancia). Si tu empleador no cumple, tenés varias opciones:
+      </p>
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h4>Intimación por escrito</h4>
+            <p>Enviá un telegrama laboral gratuito (en cualquier oficina del Correo Argentino, sin costo para el trabajador) o una carta documento intimando al pago del SAC con intereses. Esto deja constancia legal de tu reclamo.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h4>Denuncia en el Ministerio de Trabajo</h4>
+            <p>Podés hacer una denuncia online o presencial en la delegación del Ministerio de Trabajo de tu jurisdicción. El Ministerio citará al empleador a una audiencia de conciliación.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h4>Acción judicial</h4>
+            <p>Si la conciliación no prospera, podés iniciar una demanda laboral con un abogado laboralista. El empleador deberá pagar el aguinaldo adeudado más intereses (generalmente tasa activa del Banco Nación) desde la fecha en que debió pagarse.</p>
+          </div>
+        </div>
+      </div>
+      <p class="legal-note">
+        <strong>Importante:</strong> el no pago del aguinaldo puede constituir una injuria laboral grave que habilita al trabajador a considerarse despedido (despido indirecto) con derecho a indemnización completa. Sin embargo, siempre es recomendable agotar las vías de conciliación antes de tomar medidas drásticas. Consultá con un abogado laboralista antes de intimar despido indirecto.
+      </p>
+    </section>
+
+    <!-- LINKS RELACIONADOS -->
+    <section class="section">
+      <h2>Calculadoras relacionadas</h2>
+      <div class="link-grid">
+        <a href="/calculadora-aguinaldo-sac" class="link-card">
+          <span class="link-title">Calculadora de Aguinaldo (SAC)</span>
+          <span class="link-desc">Calculá tu aguinaldo bruto y neto con descuentos</span>
+        </a>
+        <a href="/sueldo-en-mano-argentina" class="link-card">
+          <span class="link-title">Sueldo en Mano</span>
+          <span class="link-desc">De bruto a neto con todos los descuentos</span>
+        </a>
+        <a href="/calculadora-impuesto-ganancias-sueldo" class="link-card">
+          <span class="link-title">Impuesto a las Ganancias</span>
+          <span class="link-desc">Estimá la retención de 4ta categoría sobre tu sueldo</span>
+        </a>
+        <a href="/calculadora-indemnizacion-despido" class="link-card">
+          <span class="link-title">Indemnización por Despido</span>
+          <span class="link-desc">Incluye SAC proporcional en la liquidación final</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section faq-section">
+      <h2>Preguntas frecuentes sobre el aguinaldo junio 2026</h2>
+      <div class="faq-list">
+        {faqItems.map((item) => (
+          <details class="faq-item">
+            <summary>{item.q}</summary>
+            <p>{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <Newsletter />
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .landing { max-width: 860px; margin: 0 auto; padding: 0 0 3rem; }
+  .breadcrumbs { font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .breadcrumbs a { color: var(--text-muted); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+  .breadcrumbs .sep { color: var(--border-strong); }
+
+  .hero { margin-bottom: 2.5rem; }
+  .hero h1 { margin-bottom: 1rem; }
+  .lead { font-size: 1.0625rem; color: var(--text-muted); margin-bottom: 1rem; max-width: 760px; line-height: 1.65; }
+  .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.8125rem; color: var(--text-subtle); }
+
+  .section { margin-bottom: 2.5rem; }
+  .section h2 { margin-bottom: 0.75rem; }
+  .section h3 { margin: 1.25rem 0 0.5rem; font-size: 1.125rem; }
+  .section p { margin-bottom: 0.75rem; color: var(--text-muted); line-height: 1.65; }
+
+  /* Dates grid */
+  .dates-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.875rem; margin-top: 1rem; }
+  .date-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.25rem; box-shadow: var(--shadow-sm);
+  }
+  .date-card.accent { background: var(--accent-soft); border-color: var(--accent); }
+  .date-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); margin-bottom: 0.375rem; }
+  .date-card.accent .date-label { color: var(--accent-strong); }
+  .date-value { font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem; }
+  .date-card.accent .date-value { color: var(--accent-strong); }
+  .date-hint { font-size: 0.8125rem; color: var(--text-subtle); }
+
+  /* Formula */
+  .formula-box {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.5rem; margin: 1rem 0; box-shadow: var(--shadow-sm);
+  }
+  .formula { margin-bottom: 0.75rem; }
+  .formula code {
+    font-family: var(--font-mono); font-size: 0.9375rem; background: var(--bg-soft);
+    padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); display: inline-block;
+    color: var(--accent-strong); font-weight: 500;
+  }
+  .formula-note { font-size: 0.875rem; color: var(--text-subtle); margin: 0; }
+
+  .example-steps {
+    list-style: none; padding: 0; margin: 0.75rem 0;
+    display: flex; flex-direction: column; gap: 0.375rem;
+  }
+  .example-steps li {
+    padding: 0.5rem 0.75rem; background: var(--bg-soft); border-radius: var(--radius-sm);
+    font-size: 0.9375rem; color: var(--text-muted);
+  }
+  .example-steps li:last-child { background: var(--success-soft); color: var(--success); font-weight: 600; }
+
+  /* CTA */
+  .cta-box {
+    text-align: center; padding: 2rem 1.5rem; margin: 2rem 0;
+    background: linear-gradient(135deg, var(--accent-soft) 0%, var(--bg-soft) 100%);
+    border: 1px solid var(--accent); border-radius: var(--radius-lg);
+  }
+  .cta-box h3 { color: var(--accent-strong); margin-bottom: 0.5rem; }
+  .cta-box p { margin-bottom: 1rem; }
+  .cta-btn {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.75rem 1.5rem; background: var(--accent); color: #fff;
+    border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9375rem;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .cta-btn:hover { background: var(--accent-strong); transform: translateY(-1px); color: #fff; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; margin: 1rem 0; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; font-feature-settings: 'tnum'; }
+  thead { background: var(--bg-soft); }
+  th {
+    padding: 0.75rem 1rem; text-align: left; font-size: 0.8125rem; font-weight: 600;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-soft); }
+  .highlight { font-weight: 700; color: var(--success); }
+  .table-note { font-size: 0.8125rem; color: var(--text-subtle); margin-top: 0.5rem; }
+
+  /* Descuentos */
+  .descuentos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.875rem; margin-top: 1rem; }
+  .descuento-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.25rem; box-shadow: var(--shadow-sm);
+  }
+  .descuento-card.warning { border-color: var(--warning); background: var(--warning-soft); }
+  .descuento-pct { font-size: 1.5rem; font-weight: 800; color: var(--accent-strong); margin-bottom: 0.25rem; }
+  .descuento-card.warning .descuento-pct { color: var(--warning); }
+  .descuento-name { font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.375rem; }
+  .descuento-detail { font-size: 0.8125rem; color: var(--text-subtle); line-height: 1.5; }
+
+  /* Steps */
+  .steps-list { display: flex; flex-direction: column; gap: 1rem; margin: 1.25rem 0; }
+  .step { display: flex; gap: 1rem; align-items: flex-start; }
+  .step-num {
+    flex-shrink: 0; width: 2rem; height: 2rem; background: var(--accent);
+    color: #fff; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-weight: 700; font-size: 0.875rem;
+  }
+  .step-content h4 { margin-bottom: 0.25rem; }
+  .step-content p { font-size: 0.9375rem; margin: 0; }
+  .legal-note {
+    font-size: 0.875rem; color: var(--text-subtle); padding: 1rem;
+    background: var(--warning-soft); border-left: 3px solid var(--warning);
+    border-radius: var(--radius-sm); margin-top: 1rem;
+  }
+
+  /* Link grid */
+  .link-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1rem; }
+  .link-card {
+    display: flex; flex-direction: column; gap: 0.25rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 0.875rem 1.125rem; color: var(--text); transition: all 0.15s;
+  }
+  .link-card:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); transform: translateY(-1px); }
+  .link-title { font-weight: 600; font-size: 0.9375rem; }
+  .link-desc { font-size: 0.8125rem; color: var(--text-muted); }
+  .link-card:hover .link-desc { color: var(--accent); }
+
+  /* FAQ */
+  .faq-section { padding-top: 1rem; border-top: 1px solid var(--border); }
+  .faq-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
+  .faq-item {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; transition: border-color 0.15s;
+  }
+  .faq-item[open] { border-color: var(--accent); }
+  .faq-item summary {
+    padding: 1rem 1.25rem; font-weight: 600; font-size: 0.9375rem;
+    cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.75rem;
+    color: var(--text);
+  }
+  .faq-item summary::before { content: '+'; font-size: 1.25rem; font-weight: 700; color: var(--accent); flex-shrink: 0; width: 1.25rem; text-align: center; }
+  .faq-item[open] summary::before { content: '\2212'; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item p { padding: 0 1.25rem 1rem; font-size: 0.9375rem; color: var(--text-muted); line-height: 1.65; }
+
+  @media (max-width: 640px) {
+    .dates-grid { grid-template-columns: 1fr; }
+    .descuentos-grid { grid-template-columns: 1fr; }
+    .table-wrap { font-size: 0.8125rem; }
+    th, td { padding: 0.5rem 0.625rem; }
+  }
+</style>

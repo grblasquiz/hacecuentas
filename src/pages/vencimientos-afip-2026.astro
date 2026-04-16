@@ -1,0 +1,563 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Newsletter from '../components/Newsletter.astro';
+
+const title = 'Vencimientos AFIP 2026: calendario fiscal completo mes por mes | Hacé Cuentas';
+const description = 'Calendario completo de vencimientos AFIP 2026: monotributo, ganancias, bienes personales, IVA, autónomos. Todas las fechas mes por mes con detalle según terminación de CUIT.';
+
+const siteUrl = 'https://hacecuentas.com';
+
+// Vencimientos monotributo mensuales 2026 (día 20 de cada mes, con ajuste si cae en feriado/fin de semana)
+const meses = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+const monotributoVto = [
+  { mes: 'Enero', fecha: '20/01' },
+  { mes: 'Febrero', fecha: '20/02' },
+  { mes: 'Marzo', fecha: '20/03' },
+  { mes: 'Abril', fecha: '21/04' },
+  { mes: 'Mayo', fecha: '20/05' },
+  { mes: 'Junio', fecha: '22/06' },
+  { mes: 'Julio', fecha: '20/07' },
+  { mes: 'Agosto', fecha: '20/08' },
+  { mes: 'Septiembre', fecha: '22/09' },
+  { mes: 'Octubre', fecha: '20/10' },
+  { mes: 'Noviembre', fecha: '20/11' },
+  { mes: 'Diciembre', fecha: '22/12' },
+];
+
+// Calendario detallado por mes
+const calendario = [
+  {
+    mes: 'Enero 2026',
+    items: [
+      { fecha: '13/01', concepto: 'DDJJ Ganancias - Anticipos (CUIT 0-3)', tipo: 'ganancias' },
+      { fecha: '14/01', concepto: 'DDJJ Ganancias - Anticipos (CUIT 4-6)', tipo: 'ganancias' },
+      { fecha: '15/01', concepto: 'DDJJ Ganancias - Anticipos (CUIT 7-9)', tipo: 'ganancias' },
+      { fecha: '15/01', concepto: 'IVA - DDJJ mensual (CUIT 0-3)', tipo: 'iva' },
+      { fecha: '16/01', concepto: 'IVA - DDJJ mensual (CUIT 4-6)', tipo: 'iva' },
+      { fecha: '17/01', concepto: 'IVA - DDJJ mensual (CUIT 7-9)', tipo: 'iva' },
+      { fecha: '20/01', concepto: 'Monotributo - Cuota mensual', tipo: 'monotributo' },
+      { fecha: '20/01', concepto: 'Recategorización monotributo (semestral)', tipo: 'monotributo' },
+    ]
+  },
+  {
+    mes: 'Febrero 2026',
+    items: [
+      { fecha: '13/02', concepto: 'IVA - DDJJ mensual (CUIT 0-3)', tipo: 'iva' },
+      { fecha: '14/02', concepto: 'IVA - DDJJ mensual (CUIT 4-6)', tipo: 'iva' },
+      { fecha: '15/02', concepto: 'IVA - DDJJ mensual (CUIT 7-9)', tipo: 'iva' },
+      { fecha: '20/02', concepto: 'Monotributo - Cuota mensual', tipo: 'monotributo' },
+    ]
+  },
+  {
+    mes: 'Marzo 2026',
+    items: [
+      { fecha: '13/03', concepto: 'IVA - DDJJ mensual (CUIT 0-3)', tipo: 'iva' },
+      { fecha: '14/03', concepto: 'IVA - DDJJ mensual (CUIT 4-6)', tipo: 'iva' },
+      { fecha: '15/03', concepto: 'IVA - DDJJ mensual (CUIT 7-9)', tipo: 'iva' },
+      { fecha: '20/03', concepto: 'Monotributo - Cuota mensual', tipo: 'monotributo' },
+    ]
+  },
+  {
+    mes: 'Abril 2026',
+    items: [
+      { fecha: '13/04', concepto: 'IVA - DDJJ mensual (CUIT 0-3)', tipo: 'iva' },
+      { fecha: '14/04', concepto: 'IVA - DDJJ mensual (CUIT 4-6)', tipo: 'iva' },
+      { fecha: '15/04', concepto: 'IVA - DDJJ mensual (CUIT 7-9)', tipo: 'iva' },
+      { fecha: '21/04', concepto: 'Monotributo - Cuota mensual', tipo: 'monotributo' },
+    ]
+  },
+  {
+    mes: 'Mayo 2026',
+    items: [
+      { fecha: '13/05', concepto: 'IVA - DDJJ mensual (CUIT 0-3)', tipo: 'iva' },
+      { fecha: '14/05', concepto: 'IVA - DDJJ mensual (CUIT 4-6)', tipo: 'iva' },
+      { fecha: '15/05', concepto: 'IVA - DDJJ mensual (CUIT 7-9)', tipo: 'iva' },
+      { fecha: '20/05', concepto: 'Monotributo - Cuota mensual', tipo: 'monotributo' },
+    ]
+  },
+  {
+    mes: 'Junio 2026',
+    items: [
+      { fecha: '11/06', concepto: 'Bienes Personales - DDJJ anual (CUIT 0-3)', tipo: 'bienes' },
+      { fecha: '12/06', concepto: 'Bienes Personales - DDJJ anual (CUIT 4-6)', tipo: 'bienes' },
+      { fecha: '13/06', concepto: 'Bienes Personales - DDJJ anual (CUIT 7-9)', tipo: 'bienes' },
+      { fecha: '11/06', concepto: 'Ganancias Personas Humanas - DDJJ anual (CUIT 0-3)', tipo: 'ganancias' },
+      { fecha: '12/06', concepto: 'Ganancias Personas Humanas - DDJJ anual (CUIT 4-6)', tipo: 'ganancias' },
+      { fecha: '13/06', concepto: 'Ganancias Personas Humanas - DDJJ anual (CUIT 7-9)', tipo: 'ganancias' },
+      { fecha: '15/06', concepto: 'IVA - DDJJ mensual (CUIT 0-3)', tipo: 'iva' },
+      { fecha: '16/06', concepto: 'IVA - DDJJ mensual (CUIT 4-6)', tipo: 'iva' },
+      { fecha: '17/06', concepto: 'IVA - DDJJ mensual (CUIT 7-9)', tipo: 'iva' },
+      { fecha: '22/06', concepto: 'Monotributo - Cuota mensual', tipo: 'monotributo' },
+    ]
+  },
+  {
+    mes: 'Julio 2026',
+    items: [
+      { fecha: '13/07', concepto: 'IVA - DDJJ mensual (CUIT 0-3)', tipo: 'iva' },
+      { fecha: '14/07', concepto: 'IVA - DDJJ mensual (CUIT 4-6)', tipo: 'iva' },
+      { fecha: '15/07', concepto: 'IVA - DDJJ mensual (CUIT 7-9)', tipo: 'iva' },
+      { fecha: '20/07', concepto: 'Monotributo - Cuota mensual', tipo: 'monotributo' },
+      { fecha: '20/07', concepto: 'Recategorización monotributo (semestral)', tipo: 'monotributo' },
+    ]
+  },
+  {
+    mes: 'Agosto 2026',
+    items: [
+      { fecha: '13/08', concepto: 'Ganancias - Anticipos (CUIT 0-3)', tipo: 'ganancias' },
+      { fecha: '14/08', concepto: 'Ganancias - Anticipos (CUIT 4-6)', tipo: 'ganancias' },
+      { fecha: '15/08', concepto: 'Ganancias - Anticipos (CUIT 7-9)', tipo: 'ganancias' },
+      { fecha: '13/08', concepto: 'IVA - DDJJ mensual (CUIT 0-3)', tipo: 'iva' },
+      { fecha: '14/08', concepto: 'IVA - DDJJ mensual (CUIT 4-6)', tipo: 'iva' },
+      { fecha: '15/08', concepto: 'IVA - DDJJ mensual (CUIT 7-9)', tipo: 'iva' },
+      { fecha: '20/08', concepto: 'Monotributo - Cuota mensual', tipo: 'monotributo' },
+    ]
+  },
+  {
+    mes: 'Septiembre 2026',
+    items: [
+      { fecha: '14/09', concepto: 'IVA - DDJJ mensual (CUIT 0-3)', tipo: 'iva' },
+      { fecha: '15/09', concepto: 'IVA - DDJJ mensual (CUIT 4-6)', tipo: 'iva' },
+      { fecha: '16/09', concepto: 'IVA - DDJJ mensual (CUIT 7-9)', tipo: 'iva' },
+      { fecha: '22/09', concepto: 'Monotributo - Cuota mensual', tipo: 'monotributo' },
+    ]
+  },
+  {
+    mes: 'Octubre 2026',
+    items: [
+      { fecha: '13/10', concepto: 'Ganancias - Anticipos (CUIT 0-3)', tipo: 'ganancias' },
+      { fecha: '14/10', concepto: 'Ganancias - Anticipos (CUIT 4-6)', tipo: 'ganancias' },
+      { fecha: '15/10', concepto: 'Ganancias - Anticipos (CUIT 7-9)', tipo: 'ganancias' },
+      { fecha: '13/10', concepto: 'IVA - DDJJ mensual (CUIT 0-3)', tipo: 'iva' },
+      { fecha: '14/10', concepto: 'IVA - DDJJ mensual (CUIT 4-6)', tipo: 'iva' },
+      { fecha: '15/10', concepto: 'IVA - DDJJ mensual (CUIT 7-9)', tipo: 'iva' },
+      { fecha: '20/10', concepto: 'Monotributo - Cuota mensual', tipo: 'monotributo' },
+    ]
+  },
+  {
+    mes: 'Noviembre 2026',
+    items: [
+      { fecha: '13/11', concepto: 'IVA - DDJJ mensual (CUIT 0-3)', tipo: 'iva' },
+      { fecha: '14/11', concepto: 'IVA - DDJJ mensual (CUIT 4-6)', tipo: 'iva' },
+      { fecha: '15/11', concepto: 'IVA - DDJJ mensual (CUIT 7-9)', tipo: 'iva' },
+      { fecha: '20/11', concepto: 'Monotributo - Cuota mensual', tipo: 'monotributo' },
+    ]
+  },
+  {
+    mes: 'Diciembre 2026',
+    items: [
+      { fecha: '13/12', concepto: 'Ganancias - Anticipos (CUIT 0-3)', tipo: 'ganancias' },
+      { fecha: '14/12', concepto: 'Ganancias - Anticipos (CUIT 4-6)', tipo: 'ganancias' },
+      { fecha: '15/12', concepto: 'Ganancias - Anticipos (CUIT 7-9)', tipo: 'ganancias' },
+      { fecha: '15/12', concepto: 'IVA - DDJJ mensual (CUIT 0-3)', tipo: 'iva' },
+      { fecha: '16/12', concepto: 'IVA - DDJJ mensual (CUIT 4-6)', tipo: 'iva' },
+      { fecha: '17/12', concepto: 'IVA - DDJJ mensual (CUIT 7-9)', tipo: 'iva' },
+      { fecha: '22/12', concepto: 'Monotributo - Cuota mensual', tipo: 'monotributo' },
+    ]
+  },
+];
+
+const faqItems = [
+  {
+    q: '¿Cuándo vence el monotributo cada mes en 2026?',
+    a: 'El monotributo vence el día 20 de cada mes. Si el 20 cae en día no hábil (feriado o fin de semana), el vencimiento se traslada al siguiente día hábil. Las fechas exactas para 2026 son: 20/01, 20/02, 20/03, 21/04, 20/05, 22/06, 20/07, 20/08, 22/09, 20/10, 20/11 y 22/12.'
+  },
+  {
+    q: '¿Cuándo se presenta la declaración jurada de Ganancias 2025?',
+    a: 'La declaración jurada anual de Ganancias para personas humanas (ejercicio fiscal 2025) vence en junio de 2026, con fechas escalonadas según la terminación del CUIT: 11/06 para CUIT terminados en 0-3, 12/06 para 4-6 y 13/06 para 7-9. El pago se realiza en la misma fecha o se puede optar por un plan de facilidades.'
+  },
+  {
+    q: '¿Cuándo vence Bienes Personales 2025?',
+    a: 'La declaración jurada de Bienes Personales (ejercicio 2025) vence en junio de 2026 junto con Ganancias: 11/06 (CUIT 0-3), 12/06 (CUIT 4-6) y 13/06 (CUIT 7-9). Están obligados a presentarla quienes posean bienes al 31/12/2025 que superen el mínimo no imponible vigente.'
+  },
+  {
+    q: '¿Cuándo son las recategorizaciones del monotributo en 2026?',
+    a: 'Las recategorizaciones del monotributo se realizan dos veces al año: en enero (vencimiento 20/01/2026) evaluando los últimos 12 meses anteriores, y en julio (vencimiento 20/07/2026) evaluando julio 2025 a junio 2026. Si tus parámetros no cambiaron, no es necesario recategorizarte.'
+  },
+  {
+    q: '¿Qué pasa si no pago el monotributo a tiempo?',
+    a: 'Si no pagás el monotributo antes del vencimiento, se generan intereses resarcitorios automáticos (actualmente alrededor de la tasa efectiva mensual que fija AFIP). Además, la mora reiterada puede dar lugar a una baja de oficio del monotributo. Podés regularizar pagando con el VEP que incluya los intereses, o adherirte a un plan de facilidades.'
+  },
+  {
+    q: '¿Cómo pago mis obligaciones de AFIP?',
+    a: 'Las obligaciones de AFIP se pagan mediante VEP (Volante Electrónico de Pago) que se genera desde el portal de AFIP y se abona por homebanking, billetera virtual o en cualquier entidad bancaria. También podés configurar el débito automático en cuenta bancaria o tarjeta de crédito para el monotributo.'
+  },
+  {
+    q: '¿Cuándo vence el IVA mensual en 2026?',
+    a: 'El IVA mensual para Responsables Inscriptos vence entre el día 13 y 17 de cada mes, según la terminación del CUIT: días 13/14/15 para CUIT terminados en 0-1/2-3, 4-5/6-7 y 8-9 respectivamente. Si la fecha cae en día no hábil, se traslada al siguiente día hábil.'
+  },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${siteUrl}/vencimientos-afip-2026`,
+      url: `${siteUrl}/vencimientos-afip-2026`,
+      name: title,
+      description: description,
+      isPartOf: { '@id': `${siteUrl}/#website` },
+      inLanguage: 'es-AR',
+      datePublished: '2026-04-16',
+      dateModified: '2026-04-16',
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: 'Finanzas', item: `${siteUrl}/categoria/finanzas` },
+        { '@type': 'ListItem', position: 3, name: 'Vencimientos AFIP 2026' },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
+  ],
+};
+
+// Colores por tipo para los badges
+const tipoLabel: Record<string, string> = {
+  monotributo: 'Monotributo',
+  ganancias: 'Ganancias',
+  iva: 'IVA',
+  bienes: 'Bienes Personales',
+};
+---
+<Layout title={title} description={description} schema={schema} audience="AR">
+  <Header slot="header" />
+
+  <article class="landing">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Vencimientos AFIP 2026</span>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+      <h1>Vencimientos AFIP 2026: calendario fiscal completo</h1>
+      <p class="lead">
+        Todas las fechas de vencimiento de AFIP para 2026: monotributo mensual, IVA, Ganancias, Bienes Personales, anticipos y recategorizaciones. Filtrá por mes y tipo de obligación para encontrar tus fechas rápido.
+      </p>
+      <div class="hero-meta">
+        <span>Actualizado: abril 2026</span>
+        <span>Fuente: AFIP / RG vigentes</span>
+      </div>
+    </header>
+
+    <!-- FILTROS -->
+    <section class="section">
+      <div class="filters" id="filters">
+        <button class="filter-btn active" data-filter="all">Todos</button>
+        <button class="filter-btn" data-filter="monotributo">Monotributo</button>
+        <button class="filter-btn" data-filter="iva">IVA</button>
+        <button class="filter-btn" data-filter="ganancias">Ganancias</button>
+        <button class="filter-btn" data-filter="bienes">Bienes Personales</button>
+      </div>
+    </section>
+
+    <!-- RESUMEN RÁPIDO MONOTRIBUTO -->
+    <section class="section">
+      <h2>Vencimientos monotributo 2026 (resumen)</h2>
+      <div class="mono-grid">
+        {monotributoVto.map((v) => (
+          <div class="mono-card">
+            <div class="mono-mes">{v.mes}</div>
+            <div class="mono-fecha">{v.fecha}</div>
+          </div>
+        ))}
+      </div>
+      <p class="section-note">
+        La cuota del monotributo vence el día 20 de cada mes. Cuando el 20 cae en feriado o fin de semana, se corre al siguiente día hábil. Podés pagar con VEP, débito automático o en red de pagos.
+      </p>
+    </section>
+
+    <!-- CALENDARIO MES A MES -->
+    <section class="section" id="calendario">
+      <h2>Calendario completo mes a mes</h2>
+      <p>Hacé clic en cada mes para ver el detalle de vencimientos. Usá los filtros de arriba para mostrar solo un tipo de obligación.</p>
+
+      <div class="calendar-accordion">
+        {calendario.map((m, idx) => (
+          <details class="month-block" open={idx === 3}>
+            <summary class="month-header">
+              <span class="month-name">{m.mes}</span>
+              <span class="month-count">{m.items.length} vencimientos</span>
+            </summary>
+            <div class="month-body">
+              {m.items.map((item) => (
+                <div class={`vto-row ${item.tipo}`} data-tipo={item.tipo}>
+                  <span class="vto-fecha">{item.fecha}</span>
+                  <span class={`vto-badge ${item.tipo}`}>{tipoLabel[item.tipo]}</span>
+                  <span class="vto-concepto">{item.concepto}</span>
+                </div>
+              ))}
+            </div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <!-- FECHAS DESTACADAS -->
+    <section class="section">
+      <h2>Fechas clave 2026</h2>
+      <div class="key-dates">
+        <div class="kd-card">
+          <div class="kd-date">20 de enero</div>
+          <div class="kd-title">Recategorización monotributo</div>
+          <div class="kd-desc">Primera recategorización semestral. Evaluación julio-diciembre 2025.</div>
+        </div>
+        <div class="kd-card accent">
+          <div class="kd-date">11-13 de junio</div>
+          <div class="kd-title">DDJJ Ganancias + Bienes Personales</div>
+          <div class="kd-desc">Declaraciones juradas anuales del ejercicio 2025. Fecha según terminación de CUIT.</div>
+        </div>
+        <div class="kd-card">
+          <div class="kd-date">20 de julio</div>
+          <div class="kd-title">Recategorización monotributo</div>
+          <div class="kd-desc">Segunda recategorización semestral. Evaluación julio 2025 - junio 2026.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="cta-box">
+      <h3>Calculadoras para monotributistas y autónomos</h3>
+      <p>Calculá tu cuota, comparate con Responsable Inscripto o estimá Ganancias.</p>
+      <div class="cta-links">
+        <a href="/calculadora-monotributo-2026" class="cta-btn">Monotributo 2026</a>
+        <a href="/calculadora-impuesto-ganancias-sueldo" class="cta-btn secondary">Imp. Ganancias</a>
+      </div>
+    </div>
+
+    <!-- LINKS RELACIONADOS -->
+    <section class="section">
+      <h2>Calculadoras y guías relacionadas</h2>
+      <div class="link-grid">
+        <a href="/calculadora-monotributo-2026" class="link-card">
+          <span class="link-title">Calculadora Monotributo</span>
+          <span class="link-desc">Cuota mensual según tu categoría</span>
+        </a>
+        <a href="/calculadora-monotributo-categoria-ingresos-tope" class="link-card">
+          <span class="link-title">Categoría por Ingresos</span>
+          <span class="link-desc">En qué categoría te corresponde estar</span>
+        </a>
+        <a href="/calculadora-impuesto-ganancias-sueldo" class="link-card">
+          <span class="link-title">Impuesto a las Ganancias</span>
+          <span class="link-desc">Estimá la retención de 4ta categoría</span>
+        </a>
+        <a href="/calculadora-monotributo-vs-responsable-inscripto" class="link-card">
+          <span class="link-title">Monotributo vs. Resp. Inscripto</span>
+          <span class="link-desc">Compará regímenes antes de la recategorización</span>
+        </a>
+        <a href="/recategorizacion-monotributo-julio-2026" class="link-card">
+          <span class="link-title">Recategorización Julio 2026</span>
+          <span class="link-desc">Guía paso a paso para recategorizarte</span>
+        </a>
+        <a href="/aguinaldo-junio-2026" class="link-card">
+          <span class="link-title">Aguinaldo Junio 2026</span>
+          <span class="link-desc">Fechas, cálculo y montos del SAC</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section faq-section">
+      <h2>Preguntas frecuentes sobre vencimientos AFIP 2026</h2>
+      <div class="faq-list">
+        {faqItems.map((item) => (
+          <details class="faq-item">
+            <summary>{item.q}</summary>
+            <p>{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <Newsletter />
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script>
+  // Filtro interactivo por tipo de obligación
+  const filters = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+  const rows = document.querySelectorAll<HTMLElement>('.vto-row');
+
+  filters.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter;
+      filters.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      rows.forEach((row) => {
+        if (filter === 'all' || row.dataset.tipo === filter) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      // Update month counts
+      document.querySelectorAll<HTMLElement>('.month-block').forEach((block) => {
+        const visibleRows = block.querySelectorAll<HTMLElement>('.vto-row:not([style*="display: none"])');
+        const countEl = block.querySelector('.month-count');
+        if (countEl) {
+          countEl.textContent = `${visibleRows.length} vencimiento${visibleRows.length !== 1 ? 's' : ''}`;
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .landing { max-width: 920px; margin: 0 auto; padding: 0 0 3rem; }
+  .breadcrumbs { font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .breadcrumbs a { color: var(--text-muted); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+  .breadcrumbs .sep { color: var(--border-strong); }
+
+  .hero { margin-bottom: 2.5rem; }
+  .hero h1 { margin-bottom: 1rem; }
+  .lead { font-size: 1.0625rem; color: var(--text-muted); margin-bottom: 1rem; max-width: 760px; line-height: 1.65; }
+  .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.8125rem; color: var(--text-subtle); }
+
+  .section { margin-bottom: 2.5rem; }
+  .section h2 { margin-bottom: 0.75rem; }
+  .section p { margin-bottom: 0.75rem; color: var(--text-muted); line-height: 1.65; }
+  .section-note { font-size: 0.8125rem; color: var(--text-subtle); margin-top: 0.75rem; }
+
+  /* Filters */
+  .filters { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .filter-btn {
+    padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 999px;
+    background: var(--bg-card); color: var(--text-muted); font-size: 0.8125rem;
+    font-weight: 500; cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Monotributo grid */
+  .mono-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem; margin-top: 1rem; }
+  .mono-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 0.75rem; text-align: center; box-shadow: var(--shadow-sm);
+  }
+  .mono-mes { font-size: 0.6875rem; color: var(--text-subtle); font-weight: 500; text-transform: uppercase; letter-spacing: 0.03em; }
+  .mono-fecha { font-size: 1.125rem; font-weight: 700; color: var(--accent-strong); margin-top: 0.125rem; }
+
+  /* Calendar accordion */
+  .calendar-accordion { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
+  .month-block {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    overflow: hidden; transition: border-color 0.15s;
+  }
+  .month-block[open] { border-color: var(--accent); }
+  .month-header {
+    padding: 1rem 1.25rem; cursor: pointer; list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 600; color: var(--text);
+  }
+  .month-header::-webkit-details-marker { display: none; }
+  .month-name { font-size: 1.0625rem; }
+  .month-count { font-size: 0.75rem; color: var(--text-subtle); font-weight: 500; background: var(--bg-soft); padding: 0.25rem 0.625rem; border-radius: 999px; }
+  .month-body { padding: 0 1.25rem 1rem; display: flex; flex-direction: column; gap: 0.375rem; }
+
+  .vto-row {
+    display: grid; grid-template-columns: 4.5rem auto 1fr; gap: 0.75rem; align-items: center;
+    padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.875rem;
+    background: var(--bg-soft); transition: background 0.15s;
+  }
+  .vto-row:hover { background: var(--bg-muted); }
+  .vto-fecha { font-weight: 700; color: var(--text); font-feature-settings: 'tnum'; }
+  .vto-badge {
+    font-size: 0.6875rem; font-weight: 600; padding: 0.1875rem 0.5rem;
+    border-radius: 999px; text-align: center; white-space: nowrap;
+  }
+  .vto-badge.monotributo { background: #dbeafe; color: #1e40af; }
+  .vto-badge.iva { background: #fce7f3; color: #9d174d; }
+  .vto-badge.ganancias { background: #d1fae5; color: #065f46; }
+  .vto-badge.bienes { background: #fef3c7; color: #92400e; }
+  .vto-concepto { color: var(--text-muted); }
+
+  /* Key dates */
+  .key-dates { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.875rem; margin-top: 1rem; }
+  .kd-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.25rem; box-shadow: var(--shadow-sm);
+  }
+  .kd-card.accent { background: var(--accent-soft); border-color: var(--accent); }
+  .kd-date { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); margin-bottom: 0.25rem; }
+  .kd-card.accent .kd-date { color: var(--accent-strong); }
+  .kd-title { font-weight: 700; margin-bottom: 0.25rem; }
+  .kd-desc { font-size: 0.8125rem; color: var(--text-subtle); }
+
+  /* CTA */
+  .cta-box {
+    text-align: center; padding: 2rem 1.5rem; margin: 2rem 0;
+    background: linear-gradient(135deg, var(--accent-soft) 0%, var(--bg-soft) 100%);
+    border: 1px solid var(--accent); border-radius: var(--radius-lg);
+  }
+  .cta-box h3 { color: var(--accent-strong); margin-bottom: 0.5rem; }
+  .cta-box p { margin-bottom: 1rem; }
+  .cta-links { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+  .cta-btn {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.75rem 1.5rem; background: var(--accent); color: #fff;
+    border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9375rem;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .cta-btn:hover { background: var(--accent-strong); transform: translateY(-1px); color: #fff; }
+  .cta-btn.secondary { background: var(--bg-card); color: var(--accent); border: 1px solid var(--accent); }
+  .cta-btn.secondary:hover { background: var(--accent-soft); color: var(--accent-strong); }
+
+  /* Link grid */
+  .link-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1rem; }
+  .link-card {
+    display: flex; flex-direction: column; gap: 0.25rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 0.875rem 1.125rem; color: var(--text); transition: all 0.15s;
+  }
+  .link-card:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); transform: translateY(-1px); }
+  .link-title { font-weight: 600; font-size: 0.9375rem; }
+  .link-desc { font-size: 0.8125rem; color: var(--text-muted); }
+  .link-card:hover .link-desc { color: var(--accent); }
+
+  /* FAQ */
+  .faq-section { padding-top: 1rem; border-top: 1px solid var(--border); }
+  .faq-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
+  .faq-item {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; transition: border-color 0.15s;
+  }
+  .faq-item[open] { border-color: var(--accent); }
+  .faq-item summary {
+    padding: 1rem 1.25rem; font-weight: 600; font-size: 0.9375rem;
+    cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.75rem;
+    color: var(--text);
+  }
+  .faq-item summary::before { content: '+'; font-size: 1.25rem; font-weight: 700; color: var(--accent); flex-shrink: 0; width: 1.25rem; text-align: center; }
+  .faq-item[open] summary::before { content: '\2212'; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item p { padding: 0 1.25rem 1rem; font-size: 0.9375rem; color: var(--text-muted); line-height: 1.65; }
+
+  @media (max-width: 640px) {
+    .mono-grid { grid-template-columns: repeat(4, 1fr); }
+    .vto-row { grid-template-columns: 3.5rem auto 1fr; gap: 0.5rem; font-size: 0.8125rem; padding: 0.375rem 0.5rem; }
+    .key-dates { grid-template-columns: 1fr; }
+  }
+</style>

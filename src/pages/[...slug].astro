@@ -111,18 +111,26 @@ const datePublished = '2025-09-01T00:00:00Z';
 const audience: 'AR' | 'global' = calc.audience === 'AR' ? 'AR' : 'global';
 const schemaLang = audience === 'AR' ? 'es-AR' : 'es';
 
+const howToSteps = calc.howToSteps && calc.howToSteps.length > 0
+  ? calc.howToSteps
+  : calc.fields.map((f: any) => ({
+      name: f.label,
+      text: f.help || `Ingresá ${f.label.toLowerCase()}`,
+    }));
+
 const schemaHowTo = {
   '@context': 'https://schema.org',
   '@type': 'HowTo',
-  name: calc.h1,
+  name: `Cómo usar la ${calc.h1}`,
   description: calc.description,
   totalTime: 'PT1M',
   inLanguage: schemaLang,
-  step: calc.fields.map((f: any, i: number) => ({
+  step: howToSteps.map((s: any, i: number) => ({
     '@type': 'HowToStep',
     position: i + 1,
-    name: f.label,
-    text: f.help || `Ingresá ${f.label.toLowerCase()}`,
+    name: s.name,
+    text: s.text,
+    url: `https://hacecuentas.com/${calc.slug}#paso-${i + 1}`,
   })),
 };
 

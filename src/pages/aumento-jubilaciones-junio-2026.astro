@@ -1,0 +1,433 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Newsletter from '../components/Newsletter.astro';
+
+const title = 'Aumento Jubilaciones Junio 2026: porcentaje, haberes y movilidad | Hacé Cuentas';
+const description = 'Todo sobre el aumento de jubilaciones de junio 2026: porcentaje de movilidad jubilatoria, tabla con nuevos haberes mínimos y máximos, fórmula de cálculo y proyecciones.';
+
+const siteUrl = 'https://hacecuentas.com';
+
+const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+const fmtPct = (n: number) => n.toFixed(1) + '%';
+
+// Haberes estimados post-aumento junio 2026 (proyección basada en movilidad trimestral)
+// La fórmula de movilidad combina inflación IPC + variación RIPTE
+const aumentoEstimado = 5.2; // % trimestral estimado (Q2 2026)
+
+const haberes = [
+  { concepto: 'Haber mínimo', antes: 340000, despues: 357680 },
+  { concepto: 'PBU (Prestación Básica Universal)', antes: 155000, despues: 163060 },
+  { concepto: 'Haber medio del sistema', antes: 580000, despues: 610160 },
+  { concepto: 'Jubilación con 30 años + sueldo promedio', antes: 720000, despues: 757440 },
+  { concepto: 'Haber máximo', antes: 2450000, despues: 2577400 },
+];
+
+// Historial de aumentos
+const historial = [
+  { periodo: 'Marzo 2025', pct: 12.5 },
+  { periodo: 'Junio 2025', pct: 8.7 },
+  { periodo: 'Septiembre 2025', pct: 6.9 },
+  { periodo: 'Diciembre 2025', pct: 5.8 },
+  { periodo: 'Marzo 2026', pct: 5.5 },
+  { periodo: 'Junio 2026 (estimado)', pct: aumentoEstimado },
+];
+
+const faqItems = [
+  {
+    q: '¿Cuánto aumentan las jubilaciones en junio 2026?',
+    a: `El aumento estimado de jubilaciones para junio 2026 es del ${fmtPct(aumentoEstimado)} según la fórmula de movilidad jubilatoria. Este porcentaje se aplica automáticamente a todos los haberes del sistema previsional: jubilaciones, pensiones, PBU y PUAM. El monto exacto será confirmado por ANSES antes del inicio del mes.`
+  },
+  {
+    q: '¿Cómo se calcula la movilidad jubilatoria?',
+    a: 'Desde la Ley 27.609 (modificada), la movilidad jubilatoria se calcula trimestralmente combinando la variación del IPC (índice de precios al consumidor publicado por INDEC) y la variación del RIPTE (Remuneración Imponible Promedio de los Trabajadores Estables). Se toma la fórmula que resulte más favorable para los jubilados entre ambos indicadores.'
+  },
+  {
+    q: '¿Cuál es el haber mínimo jubilatorio en junio 2026?',
+    a: `Con el aumento estimado del ${fmtPct(aumentoEstimado)}, el haber mínimo jubilatorio pasaría a ser de aproximadamente ${fmtAr(haberes[0].despues)}. Este es el monto bruto; sobre el mismo se aplican los descuentos de obra social (entre 3% y 6% según la obra social elegida).`
+  },
+  {
+    q: '¿Cuándo cobro el aumento de junio 2026?',
+    a: 'El aumento de movilidad se aplica automáticamente al haber de junio 2026. Las fechas de cobro dependen de la terminación del DNI y se publican en el calendario de pagos de ANSES. Generalmente, los pagos comienzan los primeros días del mes para haberes que no superan el mínimo y luego para el resto.'
+  },
+  {
+    q: '¿El bono extra para jubilaciones mínimas sigue vigente en junio 2026?',
+    a: 'Los bonos extraordinarios se decretan mes a mes por el Poder Ejecutivo y no forman parte de la movilidad. Al momento de esta publicación no hay confirmación oficial sobre un bono para junio 2026. Seguí las novedades en ANSES y medios oficiales.'
+  },
+  {
+    q: '¿Las pensiones también reciben el aumento de junio 2026?',
+    a: 'Sí. La movilidad jubilatoria se aplica a todos los beneficios del sistema previsional: jubilaciones ordinarias, pensiones por fallecimiento, pensiones por invalidez, la Prestación Básica Universal (PBU), la PUAM (Pensión Universal para el Adulto Mayor) y las pensiones no contributivas.'
+  },
+  {
+    q: '¿Puedo reclamar si mi jubilación no refleja el aumento?',
+    a: 'Sí. Si tu haber de junio 2026 no refleja el porcentaje de movilidad, podés consultar primero en la web de ANSES (mi.anses.gob.ar) verificando el detalle de tu liquidación. Si hay error, podés hacer un reclamo en la UDAI (Unidad de Atención Integral) más cercana o llamar al 130 (línea gratuita de ANSES).'
+  },
+  {
+    q: '¿Cada cuánto aumentan las jubilaciones en Argentina?',
+    a: 'Las jubilaciones se actualizan trimestralmente por ley: en marzo, junio, septiembre y diciembre. El porcentaje de cada trimestre se calcula automáticamente con la fórmula de movilidad vigente, que combina inflación (IPC) y salarios (RIPTE).'
+  }
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${siteUrl}/aumento-jubilaciones-junio-2026`,
+      url: `${siteUrl}/aumento-jubilaciones-junio-2026`,
+      name: title,
+      description: description,
+      isPartOf: { '@id': `${siteUrl}/#website` },
+      inLanguage: 'es-AR',
+      datePublished: '2026-04-16',
+      dateModified: '2026-04-16',
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: 'Finanzas', item: `${siteUrl}/categoria/finanzas` },
+        { '@type': 'ListItem', position: 3, name: 'Aumento Jubilaciones Junio 2026' },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
+  ],
+};
+---
+<Layout title={title} description={description} schema={schema} audience="AR">
+  <Header slot="header" />
+
+  <article class="landing">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Aumento Jubilaciones Junio 2026</span>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+      <h1>Aumento Jubilaciones Junio 2026: movilidad, porcentaje y nuevos haberes</h1>
+      <p class="lead">
+        Las jubilaciones y pensiones se actualizan trimestralmente por ley de movilidad. El aumento de <strong>junio 2026</strong> se estima en un <strong>{fmtPct(aumentoEstimado)}</strong> basado en la fórmula que combina inflación (IPC) y salarios (RIPTE). Acá te mostramos cómo queda cada haber, la fórmula de cálculo y el historial de aumentos.
+      </p>
+      <div class="hero-meta">
+        <span>Actualizado: abril 2026</span>
+        <span>Fuente: ANSES / INDEC / MTEySS</span>
+      </div>
+    </header>
+
+    <!-- DATO DESTACADO -->
+    <section class="section">
+      <div class="highlight-box">
+        <div class="highlight-main">
+          <div class="highlight-label">Aumento estimado junio 2026</div>
+          <div class="highlight-value">{fmtPct(aumentoEstimado)}</div>
+          <div class="highlight-sub">Movilidad trimestral (Ley 27.609 modificada)</div>
+        </div>
+        <div class="highlight-side">
+          <div class="highlight-item">
+            <span class="hl-label">Haber mínimo estimado</span>
+            <span class="hl-value">{fmtAr(haberes[0].despues)}</span>
+          </div>
+          <div class="highlight-item">
+            <span class="hl-label">Haber máximo estimado</span>
+            <span class="hl-value">{fmtAr(haberes[4].despues)}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FÓRMULA DE MOVILIDAD -->
+    <section class="section">
+      <h2>Fórmula de movilidad jubilatoria</h2>
+      <p>
+        Desde la reforma de la Ley 27.609, los haberes previsionales se ajustan cada 3 meses (marzo, junio, septiembre y diciembre). La fórmula combina dos indicadores:
+      </p>
+      <div class="formula-grid">
+        <div class="formula-card">
+          <h4>IPC (INDEC)</h4>
+          <p>Variación trimestral del Índice de Precios al Consumidor publicado por el INDEC. Refleja cuánto subieron los precios en los últimos 3 meses.</p>
+        </div>
+        <div class="formula-card">
+          <h4>RIPTE (MTEySS)</h4>
+          <p>Variación trimestral de la Remuneración Imponible Promedio de los Trabajadores Estables. Refleja cuánto subieron los salarios formales.</p>
+        </div>
+      </div>
+      <div class="formula-note">
+        <p>
+          La fórmula toma el <strong>mayor valor</strong> entre la variación trimestral del IPC y la variación trimestral del RIPTE. Esto busca que los jubilados no pierdan contra la inflación ni queden rezagados respecto a los salarios.
+        </p>
+        <p>
+          <strong>Importante:</strong> los valores utilizados para el cálculo del trimestre de junio 2026 son los del período enero-marzo 2026 (último dato disponible al momento de fijar el aumento). Existe un desfase inherente de un trimestre.
+        </p>
+      </div>
+    </section>
+
+    <!-- TABLA DE HABERES -->
+    <section class="section">
+      <h2>Tabla de haberes: antes y después del aumento de junio 2026</h2>
+      <p>
+        Proyección de haberes aplicando el aumento estimado del {fmtPct(aumentoEstimado)}. Los montos son brutos (antes de descuentos de obra social).
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th>Haber mayo 2026</th>
+              <th>Haber junio 2026 (estimado)</th>
+              <th>Diferencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            {haberes.map((h) => (
+              <tr>
+                <td class="concepto">{h.concepto}</td>
+                <td>{fmtAr(h.antes)}</td>
+                <td class="highlight">{fmtAr(h.despues)}</td>
+                <td class="diff">+{fmtAr(h.despues - h.antes)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        <strong>Nota:</strong> estos montos son estimaciones basadas en el porcentaje de movilidad proyectado. Los valores oficiales serán confirmados por ANSES. El haber neto depende además del descuento de obra social, que varía entre 3% y 6% según el plan elegido.
+      </p>
+    </section>
+
+    <!-- HISTORIAL -->
+    <section class="section">
+      <h2>Historial de aumentos jubilatorios (últimos 6 trimestres)</h2>
+      <div class="historial-grid">
+        {historial.map((h) => (
+          <div class={`hist-card ${h.periodo.includes('estimado') ? 'estimated' : ''}`}>
+            <div class="hist-period">{h.periodo}</div>
+            <div class="hist-pct">+{fmtPct(h.pct)}</div>
+          </div>
+        ))}
+      </div>
+      <p class="trend-note">
+        La tendencia muestra una desaceleración gradual de los aumentos trimestrales, consistente con la baja de la inflación mensual. A medida que la inflación se estabiliza, los aumentos de movilidad también tienden a ser menores en términos porcentuales, pero el poder adquisitivo se mantiene o mejora levemente.
+      </p>
+    </section>
+
+    <!-- CTA -->
+    <div class="cta-box">
+      <h3>Calculadoras para jubilados</h3>
+      <p>Estimá tu haber, calculá la edad jubilatoria o actualizá montos por inflación.</p>
+      <div class="cta-links">
+        <a href="/calculadora-jubilacion-minima" class="cta-btn">Calculadora jubilación mínima</a>
+        <a href="/calculadora-edad-jubilacion-anos-aporte" class="cta-btn secondary">Edad de jubilación</a>
+      </div>
+    </div>
+
+    <!-- QUIÉN COBRA -->
+    <section class="section">
+      <h2>A quién aplica el aumento</h2>
+      <p>El aumento de movilidad del {fmtPct(aumentoEstimado)} se aplica a todos los beneficios del sistema previsional argentino:</p>
+      <ul class="benefit-list">
+        <li><strong>Jubilaciones ordinarias</strong> (con 30 o más años de aportes)</li>
+        <li><strong>Jubilaciones con moratoria</strong> (ley de reparación histórica y similares)</li>
+        <li><strong>Pensiones por fallecimiento</strong> del titular</li>
+        <li><strong>Pensiones por invalidez</strong></li>
+        <li><strong>PUAM</strong> (Pensión Universal para el Adulto Mayor, equivale al 80% del haber mínimo)</li>
+        <li><strong>PBU</strong> (Prestación Básica Universal)</li>
+        <li><strong>Pensiones no contributivas</strong> (madres de 7 o más hijos, invalidez, vejez)</li>
+        <li><strong>Retiros y pensiones</strong> de fuerzas armadas y de seguridad</li>
+      </ul>
+    </section>
+
+    <!-- LINKS RELACIONADOS -->
+    <section class="section">
+      <h2>Calculadoras y herramientas relacionadas</h2>
+      <div class="link-grid">
+        <a href="/calculadora-jubilacion-minima" class="link-card">
+          <span class="link-title">Jubilación Mínima</span>
+          <span class="link-desc">Consultá el haber mínimo actualizado</span>
+        </a>
+        <a href="/calculadora-edad-jubilacion-anos-aporte" class="link-card">
+          <span class="link-title">Edad de Jubilación</span>
+          <span class="link-desc">Cuántos años te faltan para jubilarte</span>
+        </a>
+        <a href="/calculadora-actualizacion-inflacion-ipc" class="link-card">
+          <span class="link-title">Actualización por Inflación</span>
+          <span class="link-desc">Actualizá un monto del pasado a hoy con IPC</span>
+        </a>
+        <a href="/calculadora-plazo-fijo" class="link-card">
+          <span class="link-title">Plazo Fijo</span>
+          <span class="link-desc">Cuánto rinde un plazo fijo con tu jubilación</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section faq-section">
+      <h2>Preguntas frecuentes sobre el aumento de jubilaciones junio 2026</h2>
+      <div class="faq-list">
+        {faqItems.map((item) => (
+          <details class="faq-item">
+            <summary>{item.q}</summary>
+            <p>{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <Newsletter />
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .landing { max-width: 860px; margin: 0 auto; padding: 0 0 3rem; }
+  .breadcrumbs { font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .breadcrumbs a { color: var(--text-muted); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+  .breadcrumbs .sep { color: var(--border-strong); }
+
+  .hero { margin-bottom: 2.5rem; }
+  .hero h1 { margin-bottom: 1rem; }
+  .lead { font-size: 1.0625rem; color: var(--text-muted); margin-bottom: 1rem; max-width: 760px; line-height: 1.65; }
+  .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.8125rem; color: var(--text-subtle); }
+
+  .section { margin-bottom: 2.5rem; }
+  .section h2 { margin-bottom: 0.75rem; }
+  .section p { margin-bottom: 0.75rem; color: var(--text-muted); line-height: 1.65; }
+
+  /* Highlight box */
+  .highlight-box {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+    background: linear-gradient(135deg, var(--accent-soft) 0%, #e0f2fe 100%);
+    border: 1px solid var(--accent); border-radius: var(--radius-lg);
+    padding: 2rem; margin-top: 1rem;
+  }
+  .highlight-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-strong); margin-bottom: 0.25rem; }
+  .highlight-value { font-size: 3rem; font-weight: 800; color: var(--accent-strong); line-height: 1; margin-bottom: 0.25rem; letter-spacing: -0.02em; }
+  .highlight-sub { font-size: 0.8125rem; color: var(--text-muted); }
+  .highlight-side { display: flex; flex-direction: column; justify-content: center; gap: 1rem; }
+  .highlight-item { display: flex; flex-direction: column; gap: 0.125rem; }
+  .hl-label { font-size: 0.75rem; color: var(--text-subtle); font-weight: 500; }
+  .hl-value { font-size: 1.375rem; font-weight: 700; color: var(--text); font-feature-settings: 'tnum'; }
+
+  /* Formula grid */
+  .formula-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.875rem; margin: 1rem 0; }
+  .formula-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.25rem; box-shadow: var(--shadow-sm);
+  }
+  .formula-card h4 { margin-bottom: 0.375rem; color: var(--accent-strong); }
+  .formula-card p { font-size: 0.875rem; color: var(--text-subtle); margin: 0; line-height: 1.5; }
+  .formula-note {
+    padding: 1rem 1.25rem; background: var(--bg-soft); border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm); margin-top: 0.5rem;
+  }
+  .formula-note p { font-size: 0.875rem; margin-bottom: 0.5rem; }
+  .formula-note p:last-child { margin-bottom: 0; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; margin: 1rem 0; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; font-feature-settings: 'tnum'; }
+  thead { background: var(--bg-soft); }
+  th {
+    padding: 0.75rem 1rem; text-align: left; font-size: 0.8125rem; font-weight: 600;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-soft); }
+  .concepto { font-weight: 500; color: var(--text); }
+  .highlight { font-weight: 700; color: var(--success); }
+  .diff { color: var(--success); font-weight: 600; }
+  .table-note { font-size: 0.8125rem; color: var(--text-subtle); margin-top: 0.5rem; }
+
+  /* Historial */
+  .historial-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+  .hist-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1rem; text-align: center; box-shadow: var(--shadow-sm);
+  }
+  .hist-card.estimated { border-color: var(--accent); background: var(--accent-soft); border-style: dashed; }
+  .hist-period { font-size: 0.75rem; color: var(--text-subtle); font-weight: 500; margin-bottom: 0.375rem; }
+  .hist-pct { font-size: 1.375rem; font-weight: 800; color: var(--accent-strong); }
+  .trend-note { font-size: 0.875rem; color: var(--text-subtle); margin-top: 1rem; font-style: italic; }
+
+  /* CTA */
+  .cta-box {
+    text-align: center; padding: 2rem 1.5rem; margin: 2rem 0;
+    background: linear-gradient(135deg, var(--accent-soft) 0%, var(--bg-soft) 100%);
+    border: 1px solid var(--accent); border-radius: var(--radius-lg);
+  }
+  .cta-box h3 { color: var(--accent-strong); margin-bottom: 0.5rem; }
+  .cta-box p { margin-bottom: 1rem; }
+  .cta-links { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+  .cta-btn {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.75rem 1.5rem; background: var(--accent); color: #fff;
+    border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9375rem;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .cta-btn:hover { background: var(--accent-strong); transform: translateY(-1px); color: #fff; }
+  .cta-btn.secondary { background: var(--bg-card); color: var(--accent); border: 1px solid var(--accent); }
+  .cta-btn.secondary:hover { background: var(--accent-soft); color: var(--accent-strong); }
+
+  /* Benefit list */
+  .benefit-list {
+    list-style: none; padding: 0; margin: 0.75rem 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.375rem;
+  }
+  .benefit-list li {
+    padding: 0.625rem 0.875rem; background: var(--bg-soft); border-radius: var(--radius-sm);
+    font-size: 0.9375rem; color: var(--text-muted);
+  }
+
+  /* Link grid */
+  .link-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1rem; }
+  .link-card {
+    display: flex; flex-direction: column; gap: 0.25rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 0.875rem 1.125rem; color: var(--text); transition: all 0.15s;
+  }
+  .link-card:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); transform: translateY(-1px); }
+  .link-title { font-weight: 600; font-size: 0.9375rem; }
+  .link-desc { font-size: 0.8125rem; color: var(--text-muted); }
+  .link-card:hover .link-desc { color: var(--accent); }
+
+  /* FAQ */
+  .faq-section { padding-top: 1rem; border-top: 1px solid var(--border); }
+  .faq-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
+  .faq-item {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; transition: border-color 0.15s;
+  }
+  .faq-item[open] { border-color: var(--accent); }
+  .faq-item summary {
+    padding: 1rem 1.25rem; font-weight: 600; font-size: 0.9375rem;
+    cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.75rem;
+    color: var(--text);
+  }
+  .faq-item summary::before { content: '+'; font-size: 1.25rem; font-weight: 700; color: var(--accent); flex-shrink: 0; width: 1.25rem; text-align: center; }
+  .faq-item[open] summary::before { content: '\2212'; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item p { padding: 0 1.25rem 1rem; font-size: 0.9375rem; color: var(--text-muted); line-height: 1.65; }
+
+  @media (max-width: 640px) {
+    .highlight-box { grid-template-columns: 1fr; padding: 1.5rem; }
+    .highlight-value { font-size: 2.25rem; }
+    .formula-grid { grid-template-columns: 1fr; }
+    .historial-grid { grid-template-columns: repeat(2, 1fr); }
+    th, td { padding: 0.5rem 0.625rem; font-size: 0.8125rem; }
+  }
+</style>
