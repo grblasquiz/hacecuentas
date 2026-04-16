@@ -37,7 +37,7 @@ export function betaHcg(i: Inputs): Outputs {
   if (beta2 > 0 && hcg > 0 && beta2 !== hcg) {
     const ratio = beta2 / hcg;
     if (ratio > 1) {
-      const tiempoDuplicacion = (dias * Math.log(2)) / Math.log(ratio);
+      const tiempoDuplicacion = (dias * Math.log(2)) / Math.log(ratio) * 24;
       duplicacion = `Tiempo de duplicación: ${tiempoDuplicacion.toFixed(1)} horas (${(tiempoDuplicacion / 24).toFixed(1)} días)`;
       if (tiempoDuplicacion <= 72) duplicacion += '. Duplicación normal (< 72 horas).';
       else if (tiempoDuplicacion <= 96) duplicacion += '. Duplicación aceptable pero a monitorear.';

@@ -11,7 +11,7 @@ export interface Outputs {
 }
 
 export function fechaProbablePartoEcografia(i: Inputs): Outputs {
-  const fechaEco = new Date(i.fechaEco);
+  const fechaEco = new Date(i.fechaEco + 'T00:00:00');
   if (isNaN(fechaEco.getTime())) throw new Error('Ingresá una fecha de ecografía válida');
 
   const semanas = Number(i.semanasEco);

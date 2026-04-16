@@ -20,7 +20,7 @@ export function fechaProximoPeriodo(i: Inputs): Outputs {
   const duracionPeriodo = Number(i.duracionPeriodo) || 5;
   if (!fechaStr) throw new Error('Ingresá la fecha del último período');
 
-  const fechaUltimo = new Date(fechaStr);
+  const fechaUltimo = new Date(fechaStr + 'T00:00:00');
   if (isNaN(fechaUltimo.getTime())) throw new Error('Fecha inválida');
 
   const hoy = new Date();

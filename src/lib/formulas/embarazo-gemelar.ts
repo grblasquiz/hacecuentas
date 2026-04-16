@@ -3,7 +3,7 @@ export interface Inputs { fum: string; tipoGemelar?: string; semanaActual?: numb
 export interface Outputs { fppGemelar: string; pesoEstimado: string; controles: string; riesgos: string; }
 
 export function embarazoGemelar(i: Inputs): Outputs {
-  const fum = new Date(i.fum);
+  const fum = new Date(i.fum + 'T00:00:00');
   if (isNaN(fum.getTime())) throw new Error('Ingresá una FUM válida');
   const tipo = String(i.tipoGemelar || 'no-se');
   const sem = Number(i.semanaActual) || 0;
@@ -53,7 +53,7 @@ export function embarazoGemelar(i: Inputs): Outputs {
   }
 
   return {
-    fppGemelar: fpp.toISOString().split('T')[0],
+    fppGemelar: `${fpp.getFullYear()}-${String(fpp.getMonth()+1).padStart(2,'0')}-${String(fpp.getDate()).padStart(2,'0')}`,
     pesoEstimado,
     controles,
     riesgos,

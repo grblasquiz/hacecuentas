@@ -10,7 +10,7 @@ export interface Outputs {
 }
 
 export function semanasEmbarazo(i: Inputs): Outputs {
-  const fum = new Date(i.fum);
+  const fum = new Date(i.fum + 'T00:00:00');
   if (isNaN(fum.getTime())) throw new Error('Ingresá una fecha de última menstruación válida');
 
   const hoy = new Date();
@@ -39,7 +39,7 @@ export function semanasEmbarazo(i: Inputs): Outputs {
   return {
     semanasYDias: `${semanas} semanas y ${dias} días`,
     trimestre,
-    fpp: fpp.toISOString().split('T')[0],
+    fpp: `${fpp.getFullYear()}-${String(fpp.getMonth()+1).padStart(2,'0')}-${String(fpp.getDate()).padStart(2,'0')}`,
     porcentaje: `${porcentaje.toFixed(1)}% completado`,
   };
 }

@@ -13,7 +13,7 @@ export interface Outputs {
 export function semanasGestacionEcografia(i: Inputs): Outputs {
   const tipo = String(i.tipoMedida || 'lcc');
   const mm = Number(i.medidaMm);
-  const fechaEco = new Date(i.fechaEco);
+  const fechaEco = new Date(i.fechaEco + 'T00:00:00');
 
   if (!mm || mm <= 0) throw new Error('Ingresá la medida en milímetros');
   if (isNaN(fechaEco.getTime())) throw new Error('Ingresá una fecha de ecografía válida');

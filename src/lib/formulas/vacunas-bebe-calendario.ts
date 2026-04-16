@@ -16,7 +16,7 @@ const esquema = [
 ];
 
 export function vacunasBebe(i: Inputs): Outputs {
-  const nac = new Date(i.fechaNacimiento);
+  const nac = new Date(i.fechaNacimiento + 'T00:00:00');
   if (isNaN(nac.getTime())) throw new Error('Ingresá una fecha de nacimiento válida');
 
   const hoy = new Date();
@@ -30,7 +30,7 @@ export function vacunasBebe(i: Inputs): Outputs {
   for (const e of esquema) {
     const fechaVacuna = new Date(nac.getTime());
     fechaVacuna.setMonth(fechaVacuna.getMonth() + e.meses);
-    const fechaStr = fechaVacuna.toISOString().split('T')[0];
+    const fechaStr = `${fechaVacuna.getFullYear()}-${String(fechaVacuna.getMonth()+1).padStart(2,'0')}-${String(fechaVacuna.getDate()).padStart(2,'0')}`;
     const estado = edadMeses >= e.meses ? '✓' : '○';
     calendario += `${estado} ${e.meses} meses (${fechaStr}): ${e.vacunas}\n`;
 

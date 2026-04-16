@@ -19,7 +19,7 @@ export interface EdadOutputs {
 export function edad(inputs: EdadInputs): EdadOutputs {
   if (!inputs.fechaNacimiento) throw new Error('Ingresá tu fecha de nacimiento');
 
-  const nacimiento = new Date(inputs.fechaNacimiento);
+  const nacimiento = new Date(inputs.fechaNacimiento + 'T00:00:00');
   if (isNaN(nacimiento.getTime())) throw new Error('Fecha inválida');
 
   const hoy = new Date();
@@ -59,7 +59,7 @@ export function edad(inputs: EdadInputs): EdadOutputs {
     diasTotal,
     mesesTotal,
     horasTotal,
-    proximoCumpleanios: proxCumple.toISOString().split('T')[0],
+    proximoCumpleanios: `${proxCumple.getFullYear()}-${String(proxCumple.getMonth()+1).padStart(2,'0')}-${String(proxCumple.getDate()).padStart(2,'0')}`,
     diasHastaCumple,
   };
 }

@@ -3,10 +3,10 @@ export interface Inputs { fechaReferencia: string; tipoCalculo?: string; }
 export interface Outputs { ventanaImplantacion: string; diaMasProbable: string; primerTestConfiable: string; sintomas: string; }
 
 export function implantacionEmbrion(i: Inputs): Outputs {
-  const ref = new Date(i.fechaReferencia);
+  const ref = new Date(i.fechaReferencia + 'T00:00:00');
   if (isNaN(ref.getTime())) throw new Error('Ingresá una fecha válida');
   const tipo = String(i.tipoCalculo || 'ovulacion');
-  const fmt = (d: Date) => d.toISOString().split('T')[0];
+  const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
   // Ajustar DPO según tipo
   let offsetInicio = 6, offsetPico = 9, offsetFin = 12;

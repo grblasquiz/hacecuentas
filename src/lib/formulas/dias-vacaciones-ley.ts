@@ -16,7 +16,7 @@ export interface DiasVacacionesLeyOutputs {
 }
 
 export function diasVacacionesLey(inputs: DiasVacacionesLeyInputs): DiasVacacionesLeyOutputs {
-  const fechaIngreso = new Date(inputs.fechaIngreso);
+  const fechaIngreso = new Date(inputs.fechaIngreso + 'T00:00:00');
   if (isNaN(fechaIngreso.getTime())) {
     throw new Error('Ingresá una fecha de ingreso válida');
   }

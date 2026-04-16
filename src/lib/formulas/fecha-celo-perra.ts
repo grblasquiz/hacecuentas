@@ -11,7 +11,7 @@ function fmtDate(d: Date): string {
 }
 
 export function fechaCeloPerra(inputs: FechaCeloInputs): FechaCeloOutputs {
-  const fecha = new Date(inputs.fechaUltimoCelo);
+  const fecha = new Date(inputs.fechaUltimoCelo + 'T00:00:00');
   if (isNaN(fecha.getTime())) throw new Error('Ingresá la fecha del último celo');
   const ciclo = Number(inputs.cicloMeses) || 6;
 

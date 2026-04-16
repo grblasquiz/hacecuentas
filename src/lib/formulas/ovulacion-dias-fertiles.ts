@@ -11,7 +11,7 @@ export interface Outputs {
 }
 
 export function ovulacionDiasFertiles(i: Inputs): Outputs {
-  const fum = new Date(i.fumOvulacion);
+  const fum = new Date(i.fumOvulacion + 'T00:00:00');
   if (isNaN(fum.getTime())) throw new Error('Ingresá una fecha válida');
   const ciclo = Number(i.duracionCiclo) || 28;
   if (ciclo < 21 || ciclo > 45) throw new Error('La duración del ciclo debe estar entre 21 y 45 días');
@@ -35,7 +35,7 @@ export function ovulacionDiasFertiles(i: Inputs): Outputs {
   // Días hasta ovulación
   const diasHastaOvulacion = Math.floor((fechaOvulacion.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
 
-  const fmt = (d: Date) => d.toISOString().split('T')[0];
+  const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
   return {
     fechaOvulacion: fmt(fechaOvulacion),

@@ -17,8 +17,8 @@ export interface AntiguedadLaboralOutputs {
 }
 
 export function antiguedadLaboral(inputs: AntiguedadLaboralInputs): AntiguedadLaboralOutputs {
-  const fechaIngreso = new Date(inputs.fechaIngreso);
-  const fechaCalculo = inputs.fechaCalculo ? new Date(inputs.fechaCalculo) : new Date();
+  const fechaIngreso = new Date(inputs.fechaIngreso + 'T00:00:00');
+  const fechaCalculo = inputs.fechaCalculo ? new Date(inputs.fechaCalculo + 'T00:00:00') : new Date();
 
   if (isNaN(fechaIngreso.getTime())) {
     throw new Error('Ingresá una fecha de ingreso válida');

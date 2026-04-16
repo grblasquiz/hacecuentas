@@ -20,7 +20,7 @@ export function embarazo(inputs: EmbarazoInputs): EmbarazoOutputs {
     throw new Error('Ingresá la fecha de tu última menstruación');
   }
 
-  const fum = new Date(inputs.fum);
+  const fum = new Date(inputs.fum + 'T00:00:00');
   if (isNaN(fum.getTime())) {
     throw new Error('Fecha inválida');
   }
@@ -54,7 +54,7 @@ export function embarazo(inputs: EmbarazoInputs): EmbarazoOutputs {
   const progreso = Math.min(100, (diasTranscurridos / 280) * 100).toFixed(1);
 
   return {
-    fpp: fpp.toISOString().split('T')[0],
+    fpp: `${fpp.getFullYear()}-${String(fpp.getMonth()+1).padStart(2,'0')}-${String(fpp.getDate()).padStart(2,'0')}`,
     semanas: `${semanasTotales} semanas y ${diasExtra} días`,
     trimestre,
     diasRestantes,

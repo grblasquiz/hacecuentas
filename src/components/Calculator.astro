@@ -1349,6 +1349,11 @@ const formatFreshnessDate = (iso: string): string => {
         return ds;
       });
       const finalMax = segments[segments.length - 1].max;
+      // The stacked bar widths accumulate from 0, so the bar coordinate
+      // system goes from 0 to (finalMax - minVal).  We must use that same
+      // coordinate system for the x-axis and the marker, and offset the
+      // tick labels so they show the real absolute values.
+      const totalWidth = finalMax - minVal;
 
       return new Chart(canvas, {
         type: 'bar',
@@ -1369,10 +1374,10 @@ const formatFreshnessDate = (iso: string): string => {
               },
             },
             markerAnnotation: {
-              value: marker,
+              value: marker - minVal,
               label: markerLabel,
-              min: minVal,
-              max: finalMax,
+              min: 0,
+              max: totalWidth,
               color: col.accent,
               textColor: col.text,
               bg: col.isDark ? '#0f172a' : '#ffffff',
@@ -1382,11 +1387,11 @@ const formatFreshnessDate = (iso: string): string => {
           scales: {
             x: {
               stacked: true,
-              min: minVal,
-              max: finalMax,
+              min: 0,
+              max: totalWidth,
               ticks: {
                 color: col.text,
-                callback: (v: any) => compactFmt(Number(v)) + (unit ? ' ' + unit.split(' ')[0] : ''),
+                callback: (v: any) => compactFmt(Number(v) + minVal) + (unit ? ' ' + unit.split(' ')[0] : ''),
               },
               grid: { color: col.grid, drawBorder: false },
             },

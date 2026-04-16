@@ -10,7 +10,7 @@ export interface Outputs {
 }
 
 export function cuentaRegresiva(i: Inputs): Outputs {
-  const destino = new Date(i.fechaObjetivo);
+  const destino = new Date(i.fechaObjetivo + 'T00:00:00');
   if (isNaN(destino.getTime())) throw new Error('Ingresá una fecha válida');
 
   const hoy = new Date();

@@ -26,7 +26,7 @@ function addDays(date: Date, days: number): Date {
 }
 
 function toISODate(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 }
 
 export function ovulacion(inputs: OvulacionInputs): OvulacionOutputs {
@@ -36,7 +36,7 @@ export function ovulacion(inputs: OvulacionInputs): OvulacionOutputs {
     throw new Error('El largo del ciclo debe estar entre 21 y 40 días');
   }
 
-  const fum = new Date(inputs.fum);
+  const fum = new Date(inputs.fum + 'T00:00:00');
   if (isNaN(fum.getTime())) throw new Error('Fecha inválida');
 
   const hoy = new Date();

@@ -78,7 +78,7 @@ const ANGELES: {n:string;v:string;desde:[number,number];hasta:[number,number]}[]
 ];
 
 export function angelGuardianFecha(i: Inputs): Outputs {
-  const d = new Date(i.fechaNacimiento);
+  const d = new Date(i.fechaNacimiento + 'T00:00:00');
   if (isNaN(d.getTime())) throw new Error('Ingresá una fecha válida');
   const m = d.getMonth() + 1;
   const day = d.getDate();

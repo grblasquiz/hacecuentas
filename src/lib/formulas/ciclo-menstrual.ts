@@ -3,14 +3,14 @@ export interface Inputs { fumCiclo: string; duracionCicloM: number; duracionSang
 export interface Outputs { proximaMenstruacion: string; ovulacionEstimada: string; fasesActuales: string; proximosTresCiclos: string; }
 
 export function cicloMenstrual(i: Inputs): Outputs {
-  const fum = new Date(i.fumCiclo);
+  const fum = new Date(i.fumCiclo + 'T00:00:00');
   if (isNaN(fum.getTime())) throw new Error('Ingresá una fecha válida');
   const ciclo = Number(i.duracionCicloM) || 28;
   const sangrado = Number(i.duracionSangrado) || 5;
   if (ciclo < 21 || ciclo > 45) throw new Error('El ciclo debe estar entre 21 y 45 días');
 
   const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-  const fmt = (d: Date) => d.toISOString().split('T')[0];
+  const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
   // Próxima menstruación
   const proxima = new Date(fum.getTime());

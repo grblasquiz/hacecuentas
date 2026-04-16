@@ -2,6 +2,7 @@
 export interface Inputs {
   sexo: string;
   edad: number;
+  peso: number;
   pliegue1: number;
   pliegue2: number;
   pliegue3: number;
@@ -18,6 +19,7 @@ export interface Outputs {
 export function grasaCorporalPliegues(i: Inputs): Outputs {
   const sexo = String(i.sexo || 'm');
   const edad = Number(i.edad);
+  const peso = Number(i.peso) || 0;
   const p1 = Number(i.pliegue1); // Hombres: pecho, Mujeres: tríceps
   const p2 = Number(i.pliegue2); // Hombres: abdomen, Mujeres: suprailiaco
   const p3 = Number(i.pliegue3); // Hombres: muslo, Mujeres: muslo
@@ -57,8 +59,8 @@ export function grasaCorporalPliegues(i: Inputs): Outputs {
   return {
     densidadCorporal: Number(densidad.toFixed(5)),
     porcentajeGrasa: Number(porcentajeGrasa.toFixed(1)),
-    masaGrasa: 0, // Necesita peso total, se muestra como referencia
-    masaMagra: 0,
+    masaGrasa: peso > 0 ? Number((peso * porcentajeGrasa / 100).toFixed(1)) : 0,
+    masaMagra: peso > 0 ? Number((peso - peso * porcentajeGrasa / 100).toFixed(1)) : 0,
     categoria,
     mensaje: `Tu porcentaje de grasa corporal estimado es ${porcentajeGrasa.toFixed(1)}% — categoría: ${categoria}.`,
   };

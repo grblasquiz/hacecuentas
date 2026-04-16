@@ -20,8 +20,8 @@ export interface InteresJudicialOutputs {
 export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudicialOutputs {
   const capital = Number(inputs.capital);
   const tasaAnual = Number(inputs.tasaAnual);
-  const fechaDesde = new Date(inputs.fechaDesde);
-  const fechaHasta = inputs.fechaHasta ? new Date(inputs.fechaHasta) : new Date();
+  const fechaDesde = new Date(inputs.fechaDesde + 'T00:00:00');
+  const fechaHasta = inputs.fechaHasta ? new Date(inputs.fechaHasta + 'T00:00:00') : new Date();
 
   if (!capital || capital <= 0) throw new Error('Ingresá el capital de la deuda');
   if (!tasaAnual || tasaAnual <= 0) throw new Error('Ingresá la tasa anual');

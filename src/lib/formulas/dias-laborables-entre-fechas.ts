@@ -23,8 +23,8 @@ export function diasLaborablesEntreFechas(inputs: DiasLaborablesInputs): DiasLab
 
   if (!fechaInicio || !fechaFin) throw new Error('Ingresá ambas fechas');
 
-  const inicio = new Date(fechaInicio);
-  const fin = new Date(fechaFin);
+  const inicio = new Date(fechaInicio + 'T00:00:00');
+  const fin = new Date(fechaFin + 'T00:00:00');
 
   if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) throw new Error('Fecha inválida');
 

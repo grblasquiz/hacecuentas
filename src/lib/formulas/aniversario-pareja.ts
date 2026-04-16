@@ -3,7 +3,7 @@ export interface Inputs { fechaInicio: string; }
 export interface Outputs { resumen: string; totalDias: number; totalSemanas: number; totalHoras: number; finesDeSemana: number; proximoHito: string; }
 
 export function aniversarioPareja(i: Inputs): Outputs {
-  const inicio = new Date(i.fechaInicio);
+  const inicio = new Date(i.fechaInicio + 'T00:00:00');
   const hoy = new Date();
   if (isNaN(inicio.getTime())) throw new Error('Ingresá una fecha válida');
   if (inicio > hoy) throw new Error('La fecha debe ser anterior a hoy');

@@ -10,7 +10,7 @@ function fmtDate(d: Date): string {
 }
 
 export function gestacionPerra(inputs: GestacionPerraInputs): GestacionPerraOutputs {
-  const fechaMonta = new Date(inputs.fechaMonta);
+  const fechaMonta = new Date(inputs.fechaMonta + 'T00:00:00');
   if (isNaN(fechaMonta.getTime())) throw new Error('Ingresá la fecha de monta');
 
   const DIAS_GESTACION = 63;

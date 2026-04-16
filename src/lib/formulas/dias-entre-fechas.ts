@@ -20,8 +20,8 @@ export function diasEntreFechas(inputs: DiasInputs): DiasOutputs {
     throw new Error('Ingresá ambas fechas');
   }
 
-  const desde = new Date(inputs.desde);
-  const hasta = new Date(inputs.hasta);
+  const desde = new Date(inputs.desde + 'T00:00:00');
+  const hasta = new Date(inputs.hasta + 'T00:00:00');
 
   if (isNaN(desde.getTime()) || isNaN(hasta.getTime())) {
     throw new Error('Fecha inválida');

@@ -3,7 +3,7 @@ export interface Inputs { fumTest: string; duracionCicloTest: number; }
 export interface Outputs { testSangre: string; testOrina: string; ovulacionEstimada: string; nota: string; }
 
 export function testEmbarazoCuando(i: Inputs): Outputs {
-  const fum = new Date(i.fumTest);
+  const fum = new Date(i.fumTest + 'T00:00:00');
   if (isNaN(fum.getTime())) throw new Error('Ingresá una fecha válida');
   const ciclo = Number(i.duracionCicloTest) || 28;
 
@@ -19,7 +19,7 @@ export function testEmbarazoCuando(i: Inputs): Outputs {
   const orina = new Date(fum.getTime());
   orina.setDate(orina.getDate() + ciclo);
 
-  const fmt = (d: Date) => d.toISOString().split('T')[0];
+  const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
   return {
     testSangre: fmt(sangre),

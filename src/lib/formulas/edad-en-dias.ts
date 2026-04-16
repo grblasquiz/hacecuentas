@@ -1,7 +1,7 @@
 export interface Inputs { fechaNacimiento: string; }
 export interface Outputs { diasVividos: number; hitos: string; mensaje: string; }
 export function edadEnDias(i: Inputs): Outputs {
-  const nac = new Date(i.fechaNacimiento);
+  const nac = new Date(i.fechaNacimiento + 'T00:00:00');
   const hoy = new Date();
   if (isNaN(nac.getTime())) throw new Error('Ingresá una fecha válida');
   if (nac > hoy) throw new Error('La fecha debe ser anterior a hoy');
