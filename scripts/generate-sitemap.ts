@@ -22,6 +22,7 @@ const CALCS_EN_DIR = join(ROOT, 'src', 'content', 'calcs-en');
 const BLOG_DIR = join(ROOT, 'src', 'content', 'blog');
 const TABLAS_DIR = join(ROOT, 'src', 'content', 'tablas');
 const COMPARACIONES_DIR = join(ROOT, 'src', 'content', 'comparaciones');
+const ARGENTINA_DIR = join(ROOT, 'src', 'content', 'argentina');
 const OUT_FILE = join(ROOT, 'public', 'sitemap.xml');
 
 // Leer todos los JSONs de calcs
@@ -43,6 +44,13 @@ const tablas = readdirSync(TABLAS_DIR)
 const comparaciones = readdirSync(COMPARACIONES_DIR)
   .filter((f) => f.endsWith('.json'))
   .map((f) => JSON.parse(readFileSync(join(COMPARACIONES_DIR, f), 'utf8')));
+
+// Leer provincias + calcs provinciales
+const provincias = JSON.parse(readFileSync(join(ARGENTINA_DIR, 'provincias.json'), 'utf8'));
+const argCalcs = readdirSync(ARGENTINA_DIR)
+  .filter((f) => f.endsWith('.json') && f !== 'provincias.json')
+  .map((f) => JSON.parse(readFileSync(join(ARGENTINA_DIR, f), 'utf8')))
+  .filter((c: any) => c.calcSlug);
 
 // Leer todos los JSONs de calcs en inglés
 const calcsEn = readdirSync(CALCS_EN_DIR)
@@ -113,6 +121,18 @@ const urls = [
     changefreq: 'monthly',
     lastmod: buildDate,
   })),
+
+  // Argentina provincial pages
+  ...argCalcs.flatMap((calc: any) =>
+    provincias
+      .filter((p: any) => calc.provinceData && calc.provinceData[p.slug])
+      .map((p: any) => ({
+        loc: `${site}/argentina/${p.slug}/${calc.calcSlug}`,
+        priority: '0.6',
+        changefreq: 'monthly',
+        lastmod: buildDate,
+      }))
+  ),
 
   // Comparaciones
   ...comparaciones.map((c: any) => ({

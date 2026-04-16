@@ -1,0 +1,961 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import Newsletter from '../../../components/Newsletter.astro';
+
+export async function getStaticPaths() {
+  // Load provinces
+  const provinciasMod = await import('../../../content/argentina/provincias.json');
+  const provincias: any[] = provinciasMod.default || (provinciasMod as any);
+
+  // Load all calc JSONs from content/argentina/ (excluding provincias.json)
+  const calcModules = import.meta.glob<any>('../../../content/argentina/*.json', { eager: true });
+  const calcs: any[] = Object.entries(calcModules)
+    .map(([, mod]) => mod.default || mod)
+    .filter((c: any) => c.calcSlug); // excludes provincias.json which has no calcSlug
+
+  // Generate paths: for each province × each calc that has data for that province
+  const paths: any[] = [];
+  for (const prov of provincias) {
+    for (const calc of calcs) {
+      if (calc.provinceData && calc.provinceData[prov.slug]) {
+        paths.push({
+          params: { provincia: prov.slug, slug: calc.calcSlug },
+          props: { provincia: prov, calc, provinceInfo: calc.provinceData[prov.slug] },
+        });
+      }
+    }
+  }
+  return paths;
+}
+
+const { provincia, calc, provinceInfo } = Astro.props;
+
+const siteUrl = 'https://hacecuentas.com';
+const pageUrl = `${siteUrl}/argentina/${provincia.slug}/${calc.calcSlug}`;
+
+// ─── Related calcs ────────────────────────────────────────────────────────────
+const calcModules = import.meta.glob<any>('../../../content/calcs/*.json', { eager: true });
+const allCalcs: any[] = Object.values(calcModules).map((m: any) => m.default || m);
+const calcBySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+
+const relatedCalcs = (calc.relatedCalcs || [])
+  .map((s: string) => calcBySlug.get(s))
+  .filter(Boolean);
+
+const firstRelatedCalc = relatedCalcs[0] || null;
+
+// ─── Other provinces that have this same calc ─────────────────────────────────
+const provinciasMod2 = await import('../../../content/argentina/provincias.json');
+const allProvincias: any[] = provinciasMod2.default || (provinciasMod2 as any);
+const otherProvinces = allProvincias.filter(
+  (p: any) => p.slug !== provincia.slug && calc.provinceData && calc.provinceData[p.slug]
+);
+
+// Group other provinces by region
+const byRegion: Record<string, any[]> = {};
+for (const p of otherProvinces) {
+  const r = p.region || 'Otras';
+  if (!byRegion[r]) byRegion[r] = [];
+  byRegion[r].push(p);
+}
+
+// ─── Category labels ──────────────────────────────────────────────────────────
+const categoryLabels: Record<string, string> = {
+  finanzas:         'Finanzas',
+  negocios:         'Negocios',
+  negocio:          'Negocios',
+  salud:            'Salud',
+  marketing:        'Marketing',
+  deportes:         'Deportes',
+  viajes:           'Viajes',
+  vida:             'Vida cotidiana',
+  mascotas:         'Mascotas',
+  matematica:       'Matemática',
+  construccion:     'Construcción',
+  cocina:           'Cocina',
+  educacion:        'Educación',
+  automotor:        'Automotor',
+  tecnologia:       'Tecnología',
+  'medio-ambiente': 'Medio Ambiente',
+  electronica:      'Electrónica',
+};
+
+const categoryLabel = categoryLabels[calc.category] || calc.category;
+
+// ─── Category badge colors ────────────────────────────────────────────────────
+const categoryColors: Record<string, { bg: string; text: string }> = {
+  finanzas:         { bg: '#eff6ff', text: '#1d4ed8' },
+  negocios:         { bg: '#f0fdf4', text: '#15803d' },
+  negocio:          { bg: '#f0fdf4', text: '#15803d' },
+  salud:            { bg: '#fdf4ff', text: '#9333ea' },
+  marketing:        { bg: '#fff7ed', text: '#c2410c' },
+  deportes:         { bg: '#ecfdf5', text: '#059669' },
+  viajes:           { bg: '#fff1f2', text: '#be123c' },
+  vida:             { bg: '#f0f9ff', text: '#0369a1' },
+  mascotas:         { bg: '#fefce8', text: '#854d0e' },
+  matematica:       { bg: '#f5f3ff', text: '#6d28d9' },
+  construccion:     { bg: '#fafaf9', text: '#78716c' },
+  cocina:           { bg: '#fff7ed', text: '#c2410c' },
+  educacion:        { bg: '#eff6ff', text: '#1d4ed8' },
+  automotor:        { bg: '#f8fafc', text: '#475569' },
+  tecnologia:       { bg: '#f0fdf4', text: '#15803d' },
+  'medio-ambiente': { bg: '#f0fdf4', text: '#166534' },
+  electronica:      { bg: '#eff6ff', text: '#1e40af' },
+};
+const catColor = categoryColors[calc.category] || { bg: 'var(--accent-soft)', text: 'var(--accent)' };
+
+// ─── Region badge colors ──────────────────────────────────────────────────────
+const regionColors: Record<string, { bg: string; text: string }> = {
+  'Pampeana':       { bg: '#f0fdf4', text: '#15803d' },
+  'Metropolitana':  { bg: '#eff6ff', text: '#1d4ed8' },
+  'Patagónica':     { bg: '#f0f9ff', text: '#0369a1' },
+  'Cuyo':           { bg: '#fff7ed', text: '#c2410c' },
+  'NOA':            { bg: '#fefce8', text: '#854d0e' },
+  'NEA':            { bg: '#fdf4ff', text: '#9333ea' },
+  'Centro':         { bg: '#ecfdf5', text: '#059669' },
+};
+const regionColor = regionColors[provincia.region] || { bg: 'var(--accent-soft)', text: 'var(--accent)' };
+
+// ─── SEO ──────────────────────────────────────────────────────────────────────
+const pageTitle = `${calc.calcName} en ${provincia.name} 2026 — Alícuotas y Guía | Hacé Cuentas`;
+
+// Build dynamic description (120–160 chars)
+const rateSnippet = provinceInfo.rate ? ` Alícuota: ${provinceInfo.rate}.` : '';
+const rawDesc = `Guía completa de ${calc.calcName} en ${provincia.name}.${rateSnippet} Tasas, vencimientos y todo lo que necesitás saber para ${new Date().getFullYear()}.`;
+const pageDescription = rawDesc.length > 160 ? rawDesc.slice(0, 157) + '…' : rawDesc;
+
+// Replace {provincia} placeholder in seoKeywords
+const keywords = (calc.seoKeywords || []).map((kw: string) =>
+  kw.replace(/\{provincia\}/gi, provincia.name)
+);
+
+// ─── Schema.org ───────────────────────────────────────────────────────────────
+const webPageSchema: any = {
+  '@type': 'WebPage',
+  '@id': pageUrl,
+  name: pageTitle,
+  description: pageDescription,
+  url: pageUrl,
+  inLanguage: 'es-AR',
+  keywords: keywords.join(', '),
+  about: {
+    '@type': 'AdministrativeArea',
+    name: provincia.name,
+    containedInPlace: { '@type': 'Country', name: 'Argentina' },
+  },
+  areaServed: {
+    '@type': 'AdministrativeArea',
+    name: provincia.name,
+  },
+};
+
+const breadcrumbSchema = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio',     item: siteUrl },
+    { '@type': 'ListItem', position: 2, name: 'Argentina',  item: `${siteUrl}/argentina` },
+    { '@type': 'ListItem', position: 3, name: provincia.name, item: `${siteUrl}/argentina/${provincia.slug}` },
+    { '@type': 'ListItem', position: 4, name: calc.calcName,  item: pageUrl },
+  ],
+};
+
+const faqSchema = calc.generalFaq && calc.generalFaq.length > 0
+  ? {
+      '@type': 'FAQPage',
+      mainEntity: calc.generalFaq.map((item: { q: string; a: string }) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    }
+  : null;
+
+const pageSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    webPageSchema,
+    breadcrumbSchema,
+    ...(faqSchema ? [faqSchema] : []),
+  ],
+};
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={`/argentina/${provincia.slug}/${calc.calcSlug}`}
+  schema={pageSchema}
+  noindex={false}
+  audience="AR"
+>
+  <Header slot="header" />
+
+  <div class="prov-wrap">
+
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Inicio</a></li>
+        <li aria-hidden="true" class="sep">›</li>
+        <li><a href="/argentina">Argentina</a></li>
+        <li aria-hidden="true" class="sep">›</li>
+        <li><a href={`/argentina/${provincia.slug}`}>{provincia.name}</a></li>
+        <li aria-hidden="true" class="sep">›</li>
+        <li aria-current="page">{calc.calcName}</li>
+      </ol>
+    </nav>
+
+    <article class="prov-article">
+
+      <!-- Hero -->
+      <header class="prov-header">
+        <div class="hero-emoji" aria-hidden="true">{calc.heroEmoji || '🏛️'}</div>
+
+        <div class="hero-badges">
+          <span
+            class="cat-badge"
+            style={`background:${catColor.bg};color:${catColor.text}`}
+          >{categoryLabel}</span>
+          <span
+            class="region-badge"
+            style={`background:${regionColor.bg};color:${regionColor.text}`}
+          >{provincia.region}</span>
+        </div>
+
+        <h1>{calc.calcName} en {provincia.name} 2026</h1>
+
+        {calc.generalIntro && (
+          <div class="prov-intro prose" set:html={calc.generalIntro} />
+        )}
+      </header>
+
+      <!-- Province info card -->
+      <section class="province-card" aria-labelledby="province-card-title">
+        <div class="province-card-header">
+          <h2 id="province-card-title" class="province-card-title">
+            {calc.calcName} en {provincia.name}
+          </h2>
+          <div class="province-meta">
+            <span class="province-meta-item">
+              <span class="province-meta-label">Capital:</span>
+              <span class="province-meta-value">{provincia.capital}</span>
+            </span>
+            {provincia.population && (
+              <span class="province-meta-item">
+                <span class="province-meta-label">Población:</span>
+                <span class="province-meta-value">{provincia.population}</span>
+              </span>
+            )}
+            {provinceInfo.rate && (
+              <span class="province-meta-item province-meta-highlight">
+                <span class="province-meta-label">Alícuota:</span>
+                <span class="province-meta-value">{provinceInfo.rate}</span>
+              </span>
+            )}
+          </div>
+        </div>
+
+        {provinceInfo.metrics && Object.keys(provinceInfo.metrics).length > 0 && (
+          <dl class="metrics-grid">
+            {Object.entries(provinceInfo.metrics).map(([key, val]: [string, any]) => (
+              <div class="metric-cell">
+                <dt class="metric-key">{key}</dt>
+                <dd class="metric-val">{val}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        {provinceInfo.localNotes && (
+          <div class="local-notes">
+            <p class="local-notes-text">{provinceInfo.localNotes}</p>
+          </div>
+        )}
+      </section>
+
+      <!-- Province details -->
+      {provinceInfo.details && (
+        <section class="province-details prose">
+          <h2>Detalles para {provincia.name}</h2>
+          <div set:html={provinceInfo.details} />
+        </section>
+      )}
+
+      <!-- General content -->
+      {calc.generalContent && (
+        <div class="general-content prose" set:html={calc.generalContent} />
+      )}
+
+      <!-- Other provinces -->
+      {otherProvinces.length > 0 && (
+        <section class="other-provinces-section" aria-labelledby="other-prov-title">
+          <h2 id="other-prov-title">{calc.calcName} en otras provincias</h2>
+          {Object.entries(byRegion).map(([region, provs]) => (
+            <div class="region-group">
+              <h3
+                class="region-group-title"
+                style={`color:${(regionColors[region] || { text: 'var(--text-muted)' }).text}`}
+              >{region}</h3>
+              <div class="province-links-grid">
+                {(provs as any[]).map((p: any) => (
+                  <a
+                    href={`/argentina/${p.slug}/${calc.calcSlug}`}
+                    class="province-link-card"
+                  >
+                    <span class="province-link-name">{p.name}</span>
+                    {calc.provinceData[p.slug]?.rate && (
+                      <span class="province-link-rate">{calc.provinceData[p.slug].rate}</span>
+                    )}
+                    <svg class="province-link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
+      <!-- Related calculators -->
+      {relatedCalcs.length > 0 && (
+        <section class="related-calcs-section">
+          <h2>Calculadoras relacionadas</h2>
+          <div class="related-calcs-grid">
+            {relatedCalcs.map((rc: any) => (
+              <a href={`/${rc.slug}`} class="calc-card">
+                <div class="calc-card-icon">{rc.icon}</div>
+                <div class="calc-card-body">
+                  <div class="calc-card-cat">
+                    {categoryLabels[rc.category] || rc.category}
+                  </div>
+                  <div class="calc-card-title">{rc.h1}</div>
+                  {rc.description && (
+                    <div class="calc-card-desc">
+                      {rc.description.slice(0, 90)}{rc.description.length > 90 ? '…' : ''}
+                    </div>
+                  )}
+                </div>
+                <svg class="calc-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- FAQ -->
+      {calc.generalFaq && calc.generalFaq.length > 0 && (
+        <section class="faq-section">
+          <h2>Preguntas frecuentes sobre {calc.calcName}</h2>
+          <div class="faq-list">
+            {calc.generalFaq.map((item: { q: string; a: string }, i: number) => (
+              <details class="faq-item" open={i === 0}>
+                <summary class="faq-q">
+                  <span>{item.q}</span>
+                  <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </summary>
+                <div class="faq-a" set:html={item.a} />
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- CTA -->
+      {firstRelatedCalc && (
+        <div class="cta-block">
+          <p class="cta-text">Calculá tu caso exacto</p>
+          <a href={`/${firstRelatedCalc.slug}`} class="cta-btn">
+            {firstRelatedCalc.icon && <span aria-hidden="true">{firstRelatedCalc.icon}</span>}
+            Usar {firstRelatedCalc.h1}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      )}
+
+      <!-- Newsletter -->
+      <div class="newsletter-wrap">
+        <Newsletter />
+      </div>
+
+      <!-- Sources -->
+      {calc.sources && calc.sources.length > 0 && (
+        <footer class="sources-section">
+          <h3>Fuentes</h3>
+          <ul class="sources-list">
+            {calc.sources.map((src: string) => (
+              <li>{src}</li>
+            ))}
+          </ul>
+        </footer>
+      )}
+
+    </article>
+  </div><!-- /prov-wrap -->
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  /* ── Page wrapper ────────────────────────────────────────────────────────── */
+  .prov-wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 4rem;
+  }
+
+  /* ── Breadcrumb ──────────────────────────────────────────────────────────── */
+  .breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.375rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+  .breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover { color: var(--accent); text-decoration: underline; }
+  .breadcrumb .sep { color: var(--border-strong); }
+  .breadcrumb [aria-current="page"] {
+    color: var(--text-subtle);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 320px;
+  }
+
+  /* ── Article ─────────────────────────────────────────────────────────────── */
+  .prov-article {
+    margin-top: 1.5rem;
+  }
+
+  /* ── Hero ────────────────────────────────────────────────────────────────── */
+  .prov-header {
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-emoji {
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.875rem;
+  }
+
+  .cat-badge,
+  .region-badge {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.25rem 0.625rem;
+    border-radius: 99px;
+  }
+
+  .prov-header h1 {
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--text);
+    margin: 0 0 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  .prov-intro {
+    font-size: 1.0625rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin: 0;
+    max-width: 72ch;
+  }
+
+  /* ── Province info card ──────────────────────────────────────────────────── */
+  .province-card {
+    background: var(--bg-subtle, #f8fafc);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius, 0.75rem);
+    padding: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .province-card-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .province-card-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 0.75rem;
+  }
+
+  .province-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  .province-meta-item {
+    display: flex;
+    gap: 0.25rem;
+    align-items: baseline;
+  }
+
+  .province-meta-label {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .province-meta-value {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .province-meta-highlight .province-meta-value {
+    color: var(--accent);
+    font-size: 1rem;
+  }
+
+  /* Metrics grid — 2 columns on desktop */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin: 0 0 1rem;
+  }
+
+  @media (max-width: 560px) {
+    .metrics-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .metric-cell {
+    background: var(--bg, #fff);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius, 0.75rem) - 0.25rem);
+    padding: 0.75rem 1rem;
+  }
+
+  .metric-key {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .metric-val {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .local-notes {
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+    margin-top: 0.25rem;
+  }
+
+  .local-notes-text {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  /* ── Province details ────────────────────────────────────────────────────── */
+  .province-details {
+    margin-bottom: 2.5rem;
+  }
+
+  .province-details h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+
+  /* ── General content (prose) ─────────────────────────────────────────────── */
+  .general-content {
+    margin-bottom: 2.5rem;
+  }
+
+  /* ── Other provinces ─────────────────────────────────────────────────────── */
+  .other-provinces-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .other-provinces-section > h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 1.25rem;
+  }
+
+  .region-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .region-group-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin: 0 0 0.625rem;
+  }
+
+  .province-links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .province-link-card {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg, #fff);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius, 0.75rem) - 0.25rem);
+    text-decoration: none;
+    font-size: 0.875rem;
+    color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .province-link-card:hover {
+    border-color: var(--accent);
+    background: var(--bg-subtle, #f8fafc);
+    color: var(--accent);
+  }
+
+  .province-link-name {
+    flex: 1;
+    font-weight: 500;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .province-link-rate {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .province-link-arrow {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: color 0.15s;
+  }
+
+  .province-link-card:hover .province-link-arrow {
+    color: var(--accent);
+  }
+
+  /* ── Related calcs ───────────────────────────────────────────────────────── */
+  .related-calcs-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .related-calcs-section h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+
+  .related-calcs-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .calc-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.125rem;
+    background: var(--bg, #fff);
+    border: 1px solid var(--border);
+    border-radius: var(--radius, 0.75rem);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .calc-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .calc-card-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .calc-card-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .calc-card-cat {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+  }
+
+  .calc-card-title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text);
+  }
+
+  .calc-card-desc {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+  }
+
+  .calc-card-arrow {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: color 0.15s, transform 0.15s;
+  }
+
+  .calc-card:hover .calc-card-arrow {
+    color: var(--accent);
+    transform: translateX(2px);
+  }
+
+  /* ── FAQ ─────────────────────────────────────────────────────────────────── */
+  .faq-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .faq-section h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .faq-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius, 0.75rem);
+    overflow: hidden;
+  }
+
+  .faq-item[open] {
+    border-color: var(--accent);
+  }
+
+  .faq-q {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.125rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .faq-q::-webkit-details-marker { display: none; }
+
+  .faq-q span { flex: 1; }
+
+  .faq-chevron {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+  }
+
+  .faq-item[open] .faq-chevron {
+    transform: rotate(180deg);
+    color: var(--accent);
+  }
+
+  .faq-a {
+    padding: 0 1.125rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  /* ── CTA block ───────────────────────────────────────────────────────────── */
+  .cta-block {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    background: var(--accent-soft, #eff6ff);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius, 0.75rem);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .cta-text {
+    flex: 1;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9375rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 99px;
+    text-decoration: none;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+
+  .cta-btn:hover { opacity: 0.9; }
+
+  /* ── Newsletter ──────────────────────────────────────────────────────────── */
+  .newsletter-wrap {
+    margin-bottom: 2.5rem;
+  }
+
+  /* ── Sources ─────────────────────────────────────────────────────────────── */
+  .sources-section {
+    border-top: 1px solid var(--border);
+    padding-top: 1.25rem;
+  }
+
+  .sources-section h3 {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin: 0 0 0.5rem;
+  }
+
+  .sources-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 1rem;
+  }
+
+  .sources-list li {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  .sources-list li::before {
+    content: '·';
+    margin-right: 0.375rem;
+    color: var(--border-strong);
+  }
+
+  /* ── Prose styles (shared) ───────────────────────────────────────────────── */
+  .prose :global(h2) {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 2rem 0 0.75rem;
+    letter-spacing: -0.01em;
+  }
+
+  .prose :global(h3) {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  .prose :global(p) {
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    color: var(--text-muted);
+    margin: 0 0 1rem;
+  }
+
+  .prose :global(ul),
+  .prose :global(ol) {
+    padding-left: 1.5rem;
+    margin: 0 0 1rem;
+  }
+
+  .prose :global(li) {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+  }
+
+  .prose :global(strong) { color: var(--text); }
+
+  .prose :global(a) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+
+  .prose :global(th),
+  .prose :global(td) {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+
+  .prose :global(th) {
+    background: var(--bg-subtle, #f8fafc);
+    font-weight: 600;
+    color: var(--text);
+  }
+</style>
