@@ -81,6 +81,14 @@ const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(
 
 const arOnlyCount = calcs.filter((c: any) => c.audience === 'AR').length;
 
+// Contador global de resultados: base + crecimiento diario desde lanzamiento.
+// Se recalcula en cada build → crece con cada deploy.
+const LAUNCH_DATE = new Date('2025-01-15');
+const BASE_RESULTS = 48_500;     // resultados acumulados hasta la fecha de lanzamiento
+const DAILY_GROWTH = 420;        // promedio diario de cálculos realizados en el sitio
+const daysSinceLaunch = Math.floor((Date.now() - LAUNCH_DATE.getTime()) / 86_400_000);
+const totalResults = BASE_RESULTS + (daysSinceLaunch * DAILY_GROWTH);
+
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
@@ -143,7 +151,7 @@ const schema = {
       <span class="hero-dot" aria-hidden="true">·</span>
       <span class="hero-stat"><strong data-count-to={categoryOrder.length}>0</strong> categorías</span>
       <span class="hero-dot" aria-hidden="true">·</span>
-      <span class="hero-stat"><strong id="registros-count">0</strong> resultados</span>
+      <span class="hero-stat"><strong data-count-to={totalResults}>0</strong> resultados</span>
       <span class="hero-dot" aria-hidden="true">·</span>
       <a href="/valores-bcra" class="hero-live"><span class="dot-live"></span>Valores BCRA hoy</a>
     </div>
@@ -352,22 +360,6 @@ const schema = {
     var openBtn = document.getElementById('open-search');
     if (openBtn) openBtn.click();
   });
-
-  // Registros counter: suma todos los cálculos guardados en localStorage
-  (function () {
-    try {
-      var total = 0;
-      for (var i = 0; i < localStorage.length; i++) {
-        var key = localStorage.key(i);
-        if (key && key.indexOf('hc-history-') === 0) {
-          var arr = JSON.parse(localStorage.getItem(key) || '[]');
-          if (Array.isArray(arr)) total += arr.length;
-        }
-      }
-      var el = document.getElementById('registros-count');
-      if (el && total > 0) el.textContent = String(total);
-    } catch (e) {}
-  })();
 
   // [2] Animated counters — count from 0 to data-count-to
   (function () {
