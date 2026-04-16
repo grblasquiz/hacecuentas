@@ -2,9 +2,13 @@
 # El problema histórico era que el HTML quedaba cacheado en el browser/edge
 # y los usuarios veían versiones viejas. Esto fuerza revalidación en cada visita.
 
-# HTML pages: revalidar siempre. Cloudflare cachea en edge pero el browser pide nueva versión.
+# HTML pages: browser revalida siempre + CF edge NO cachea.
+# CDN-Cache-Control: no-store → le dice al edge de CF que NUNCA guarde HTML en su caché.
+# Esto elimina el bug recurrente de CF cacheando 404s antes de que el deploy propague.
+# En CF Pages los assets ya viven en el edge, así que no perdemos performance.
 /*
   Cache-Control: public, max-age=0, must-revalidate
+  CDN-Cache-Control: no-store
 
 # Service worker: NUNCA cachear el script, así las actualizaciones bajan inmediato.
 /sw.js
