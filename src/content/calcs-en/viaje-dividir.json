@@ -1,0 +1,209 @@
+{
+  "slug": "split-travel-expenses",
+  "esSlug": "calculadora-dividir-gastos-viaje-amigos",
+  "title": "Split Travel Expenses Calculator 2026 — Among Friends | Hacé Cuentas",
+  "h1": "Split Travel Expenses Among Friends",
+  "description": "Split travel expenses: calculate what each person spent on a group trip and who owes whom. Up to 6 people. For trips, vacations, weekends, and more.",
+  "category": "viajes",
+  "icon": "👯",
+  "formulaId": "viaje-dividir",
+  "audience": "global",
+  "seoKeywords": [
+    "split travel expenses",
+    "split group bill",
+    "who owes whom",
+    "calculate friends expenses",
+    "divide group trip",
+    "splitwise alternative",
+    "split gas lodging",
+    "group expenses"
+  ],
+  "intro": "After a group trip comes the least fun moment: **splitting expenses**. One paid for the Airbnb, another for gas, someone covered the last-night dinner, another the excursion… and nobody knows who owes whom. This calculator solves it instantly: you enter what **each person spent** (up to 6 participants), it calculates the **common total**, **divides it equally**, and tells you exactly **how much each person should transfer and to whom** so everyone ends up even, minimizing the number of transfers needed. Works for weekend getaways, long vacations, birthdays, road trips, international travel with expenses in multiple currencies, and any situation where several people contributed to a shared pool.",
+  "keyTakeaway": "**Fair share per person = total spent / number of people**. Whoever spent more receives; whoever spent less pays. Direct 'debtor → creditor' payments avoid chains of transfers.",
+  "useCases": [
+    "You're back from a trip with friends and need to settle up.",
+    "Someone paid for the Airbnb with a credit card and needs reimbursement.",
+    "You want to split a BBQ, birthday party, or group night out.",
+    "You're planning a trip and want to estimate the final balance.",
+    "You're on a sports team or parents' group and share recurring expenses."
+  ],
+  "fields": [
+    {
+      "id": "persona1",
+      "label": "Spent by person 1",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "1200",
+      "format": "thousands",
+      "min": 0,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "persona2",
+      "label": "Spent by person 2",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "800",
+      "format": "thousands",
+      "min": 0,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "persona3",
+      "label": "Spent by person 3",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "0",
+      "format": "thousands",
+      "default": 0,
+      "min": 0,
+      "step": 10,
+      "help": "Leave at 0 if there's no person 3."
+    },
+    {
+      "id": "persona4",
+      "label": "Spent by person 4",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "0",
+      "format": "thousands",
+      "default": 0,
+      "min": 0,
+      "step": 10,
+      "help": "Leave at 0 if there's no person 4."
+    },
+    {
+      "id": "persona5",
+      "label": "Spent by person 5",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "0",
+      "format": "thousands",
+      "default": 0,
+      "min": 0,
+      "step": 10,
+      "help": "Leave at 0 if there's no person 5."
+    },
+    {
+      "id": "persona6",
+      "label": "Spent by person 6",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "0",
+      "format": "thousands",
+      "default": 0,
+      "min": 0,
+      "step": 10,
+      "help": "Leave at 0 if there's no person 6."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "parteJusta",
+      "label": "Fair share per person",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "totalGastado",
+      "label": "Total spent between everyone",
+      "format": "currency"
+    },
+    {
+      "id": "personasActivas",
+      "label": "Number of people",
+      "format": "number"
+    },
+    {
+      "id": "liquidacion",
+      "label": "How each person ends up",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Example: 4 friends on a ski trip",
+    "steps": [
+      "**Spent by John**: $2,000 (Airbnb 3 nights).",
+      "**Spent by Mary**: $800 (food and groceries).",
+      "**Spent by Paul**: $600 (gas round trip).",
+      "**Spent by Lu**: $400 (tolls and tour).",
+      "**Common total**: $3,800.",
+      "**Fair share per person**: `3,800 / 4` = **$950**.",
+      "**John**: $2,000 − $950 = +$1,050 (is owed $1,050).",
+      "**Mary**: $800 − $950 = −$150 (owes $150).",
+      "**Paul**: $600 − $950 = −$350 (owes $350).",
+      "**Lu**: $400 − $950 = −$550 (owes $550)."
+    ],
+    "result": "**Transfers**: Mary → John $150. Paul → John $350. Lu → John $550. Everyone ends with $950 of final spending."
+  },
+  "explanation": "## How to Split Group Trip Expenses\n\n### Calculation Logic\n\n1. **Add up what each person spent** in the common pool.\n2. **Divide the total by the number of people** → that's the **fair cost per head**.\n3. Each person who spent **more than the fair share** has a positive balance (they're owed).\n4. Each person who spent **less than the fair share** has a negative balance (they need to pay).\n5. Debtors transfer to creditors until everything balances.\n\n### Formula\n\n```\nfair_share = total_spent / number_people\nbalance_X = spent_X − fair_share\n\nIf balance > 0 → they're owed\nIf balance < 0 → they owe\n```\n\n## Minimizing Transfers\n\nFor 4 people with 3 creditors and 1 debtor (or vice versa), there can be up to **n-1 transfers**. Rule:\n\n- **Debtors transfer directly to the main creditor**.\n- Avoid chains like 'A pays B, B pays C, C pays D' → you multiply errors and work.\n- When there are several creditors, the optimal algorithm assigns each debtor to the creditor where the amount fits best.\n\n## Tips for Group Travel Without Fights\n\n1. **Use a shared list**: Google Keep, iPhone Notes, Notion, or a WhatsApp sheet. Each person records what they pay with a photo of the receipt.\n2. **Save receipts and transfers**: as photos to avoid losing them.\n3. **Define what's 'common' before leaving**: the group BBQ yes, the personal souvenir no; lodging yes, a private romantic dinner no.\n4. **Assign a 'main payer'**: one person pays big items (Airbnb, group tour) with a card, reducing transfers and earning points/discounts.\n5. **Don't mix common spending with treats**: if someone's treating, it doesn't go in the pool.\n6. **Balance at the end, not at every meal**: minimizes on-the-spot arguments.\n7. **Convert currencies at the same exchange rate**: if you traveled abroad, lock the rate (e.g., USD/EUR on the return day) and apply to all expenses.\n\n## Special Cases\n\n### A guest who doesn't contribute\nIf you invited someone who won't contribute (parent, child), the group covers them. Either subtract that person from the divisor or include them and split their share among the rest.\n\n### Someone only participated in some expenses\nIf they didn't go on a tour or to a dinner, that expense **is only split among participants**. Run a sub-calculation or subtract proportionally.\n\n### Cash vs. card payments\nCash payments can lose tracking. Recommendation: **photo of the receipt** or have everyone pay with apps for automatic records.\n\n## Recommended Apps to Split Expenses\n\n| App | Best for | Free |\n|---|---|---|\n| **Splitwise** | Multi-currency, debt history, reminders | Freemium |\n| **Tricount** | No registration, ideal for one-off trips | 100% free |\n| **Settle Up** | Good UX, auto currency conversion | Freemium |\n| **Venmo / PayPal** | Social money transfers, US-based | Free |\n| **Google Sheets** | Total flexibility | 100% free |\n\n## Common Conflicts and How to Resolve\n\n1. **'I already sent you a transfer'**: request a screenshot of the receipt.\n2. **'I don't remember how much it was'**: whoever doesn't remember, absorbs their share without complaint.\n3. **'I ate less'**: if you agreed to split equally at the start, respect the agreement.\n4. **'That expense isn't common'**: discuss it on the spot, not at the end.\n5. **Expense in another currency with varying rates**: agree on a single rate beforehand.\n\n## Math: Why Transfer Count Is Minimized\n\nSplitting group expenses is a version of the **min-cash-flow problem**. For `n` people:\n- **No optimization**: up to `n × (n-1)/2` transfers.\n- **Optimized**: maximum `n-1` transfers.\n\nThis calculator applies the optimized version: all debtors transfer first to the creditor with the largest balance, and so on.",
+  "faq": [
+    {
+      "q": "Can I split expenses among more than 6 people?",
+      "a": "This version supports up to **6 people**. For more: (1) split into **subgroups** of 6 and each calculates its balance, (2) use an app like **Splitwise** or **Tricount** that supports unlimited people, or (3) use a **Google Sheets spreadsheet** with a simple sum and division table."
+    },
+    {
+      "q": "How do the final transfers work?",
+      "a": "Easiest way: **debtors transfer directly to creditors**. With Venmo, PayPal, Zelle, or a bank transfer it's a minute. Avoid chains of transfers ('A pays B, and B pays C') because you multiply errors and work."
+    },
+    {
+      "q": "What if someone treats or there's a gift?",
+      "a": "**If someone treats, it doesn't go in the common pool**: it stays outside the calculation. If someone paid for **just their group or individual purchase** (e.g., a special dessert, a souvenir), it also doesn't enter the pool. Agree on this before the trip to avoid arguments."
+    },
+    {
+      "q": "What if we want to split by who participated in what?",
+      "a": "This calculator **splits equally** among all participants. For **tours, meals, or payments where not everyone joined**, apply the calculator **only to those who participated** in that specific expense, and for the rest do a separate calculation. Apps like Splitwise allow splitting item-by-item with different participants."
+    },
+    {
+      "q": "How do I split an Airbnb shared for different numbers of nights?",
+      "a": "Divide the expense by **'person-nights'**: if Airbnb cost $3,000 and one stayed 3 nights and another 5 nights, that's 8 person-nights. Price per person-night is `3,000 / 8 = $375`. Whoever stayed 3 nights pays $1,125, whoever stayed 5 pays $1,875."
+    },
+    {
+      "q": "How do I log expenses paid together but in different currencies?",
+      "a": "**Set a single exchange rate** at the start of the trip (for example, the dollar rate on the return day) and **convert everything to that currency** when logging. If you used dollars + euros + pesos, move them all to one currency before adding. Splitwise does auto conversion."
+    },
+    {
+      "q": "What do I do if someone paid by card and others paid cash?",
+      "a": "**Log the total each person paid**, regardless of method. If John paid the hotel with a card ($2,000) and Mary paid for a BBQ with cash ($500), both contributed to the common pool in those amounts. The final calculation equalizes contributions."
+    },
+    {
+      "q": "What if someone refuses to pay their share?",
+      "a": "It's the **uncomfortable moment** of every group trip. Recommendations: (1) **define rules BEFORE the trip** ('everything common is split equally'); (2) **keep receipts** to avoid doubts; (3) if someone refuses, it becomes **personal debt** you can log in apps or write off for future invitations. Best: don't travel again with someone who doesn't respect agreements."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Splitwise - Expense splitting guide",
+      "url": "https://www.splitwise.com/guide"
+    }
+  ],
+  "relatedSlugs": [],
+  "howToSteps": [
+    {
+      "name": "Enter spent by person 1",
+      "text": "Enter amount spent by person 1 (e.g., $1,200)."
+    },
+    {
+      "name": "Enter spent by person 2",
+      "text": "Enter amount spent by person 2 (e.g., $800)."
+    },
+    {
+      "name": "Enter spent by person 3",
+      "text": "Enter amount spent by person 3 (e.g., $0)."
+    },
+    {
+      "name": "Complete remaining fields",
+      "text": "Fill in spent by persons 4, 5, and 6 if applicable."
+    },
+    {
+      "name": "Click Calculate",
+      "text": "Press \"Calculate\" to get the result."
+    },
+    {
+      "name": "Review the results",
+      "text": "Review the results below the form. Modify any value and recalculate."
+    }
+  ]
+}

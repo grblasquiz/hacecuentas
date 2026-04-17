@@ -38,8 +38,8 @@ export function cuentaRegresivaFecha(inputs: CuentaRegresivaFechaInputs): Cuenta
   // Contar días laborables (lun-vie) y fines de semana (sáb-dom)
   let laborables = 0;
   let finDeSemana = 0;
-  const inicio = esPasado ? new Date(destino + 'T00:00:00') : new Date(hoy);
-  const fin = esPasado ? new Date(hoy) : new Date(destino + 'T00:00:00');
+  const inicio = esPasado ? new Date(destino.getTime()) : new Date(hoy);
+  const fin = esPasado ? new Date(hoy) : new Date(destino.getTime());
   // Empezamos desde el día siguiente al inicio hasta el día de la fecha fin
   const cursor = new Date(inicio);
   cursor.setDate(cursor.getDate() + 1);

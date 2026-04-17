@@ -20,7 +20,9 @@ export interface OvulacionOutputs {
 }
 
 function addDays(date: Date, days: number): Date {
-  const result = new Date(date + 'T00:00:00');
+  // date ya es Date — solo clonar. Appendear 'T00:00:00' rompe (NaN)
+  // porque Date + string concatena la representación string del Date.
+  const result = new Date(date.getTime());
   result.setDate(result.getDate() + days);
   return result;
 }

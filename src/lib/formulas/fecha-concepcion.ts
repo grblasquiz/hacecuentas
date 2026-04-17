@@ -22,16 +22,16 @@ export function fechaConcepcion(i: Inputs): Outputs {
   let fum: Date;
 
   if (tipo === 'fum') {
-    fum = new Date(fecha + 'T00:00:00');
+    fum = new Date(fecha.getTime());
     // Concepción = FUM + 14 días (ovulación)
-    concepcion = new Date(fecha + 'T00:00:00');
+    concepcion = new Date(fecha.getTime());
     concepcion.setDate(concepcion.getDate() + 14);
   } else {
     // Desde FPP: concepción = FPP - 266 días
-    concepcion = new Date(fecha + 'T00:00:00');
+    concepcion = new Date(fecha.getTime());
     concepcion.setDate(concepcion.getDate() - 266);
     // FUM = FPP - 280 días
-    fum = new Date(fecha + 'T00:00:00');
+    fum = new Date(fecha.getTime());
     fum.setDate(fum.getDate() - 280);
   }
 

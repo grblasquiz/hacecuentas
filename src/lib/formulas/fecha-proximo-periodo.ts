@@ -27,7 +27,7 @@ export function fechaProximoPeriodo(i: Inputs): Outputs {
   hoy.setHours(0, 0, 0, 0);
 
   // Próximo período
-  const proximoPeriodo = new Date(fechaUltimo + 'T00:00:00');
+  const proximoPeriodo = new Date(fechaUltimo.getTime());
   proximoPeriodo.setDate(proximoPeriodo.getDate() + duracionCiclo);
 
   // Si ya pasó, calcular el siguiente

@@ -39,7 +39,7 @@ export function diasLaborablesEntreFechas(inputs: DiasLaborablesInputs): DiasLab
 
   let laborables = 0;
   let finDeSemana = 0;
-  const current = new Date(desde + 'T00:00:00');
+  const current = new Date(inicio.getTime());
 
   for (let d = 0; d < diasTotales; d++) {
     const dia = current.getDay(); // 0=dom, 6=sab

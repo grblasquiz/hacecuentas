@@ -38,7 +38,7 @@ export function diasEntreFechas(inputs: DiasInputs): DiasOutputs {
   let habiles = 0;
   const start = diasRaw >= 0 ? desde : hasta;
   const end = diasRaw >= 0 ? hasta : desde;
-  const current = new Date(start + 'T00:00:00');
+  const current = new Date(start.getTime());
   while (current < end) {
     const day = current.getDay();
     if (day !== 0 && day !== 6) habiles++;

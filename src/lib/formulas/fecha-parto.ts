@@ -14,8 +14,8 @@ export function fechaParto(i: Inputs): Outputs {
   const fecha = new Date(fum + 'T00:00:00');
   if (isNaN(fecha.getTime())) throw new Error('Fecha inválida');
 
-  // Naegele: FUM + 280 días (40 semanas)
-  const fpp = new Date(fecha + 'T00:00:00');
+  // Naegele: FUM + 280 días (40 semanas). Clonamos sin +'T' (bug NaN en Date).
+  const fpp = new Date(fecha.getTime());
   fpp.setDate(fpp.getDate() + 280);
 
   const hoy = new Date();

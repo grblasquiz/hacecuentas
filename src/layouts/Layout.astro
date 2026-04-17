@@ -1,5 +1,6 @@
 ---
 import CookieConsent from '../components/CookieConsent.astro';
+import InstallPrompt from '../components/InstallPrompt.astro';
 
 export interface Props {
   title: string;
@@ -177,11 +178,17 @@ const globalSchema = {
         var callback = function () {
           if (typeof url === 'string') { window.location = url; }
         };
-        gtag('event', 'manual_event_PAGE_VIEW', {
+        gtag('event', 'conversion_event_default', {
           'event_callback': callback,
           'event_timeout': 2000,
         });
         return false;
+      }
+      // Helper sin navegación: dispara conversion_event_default sin redirigir.
+      // Usado por Calculator.astro al completar cada cálculo (cada uso = 1 conversión).
+      function gtagTriggerConversion() {
+        if (typeof gtag !== 'function') return;
+        gtag('event', 'conversion_event_default', {});
       }
     </script>
     <!-- Google tag (gtag.js) — un solo script cubre GA4 + Google Ads (ambos IDs se configuran arriba con gtag('config', ...)) -->
@@ -197,6 +204,7 @@ const globalSchema = {
     </main>
     <slot name="footer" />
     <CookieConsent />
+    <InstallPrompt />
 
     <!-- Service Worker — solo en producción y si el browser lo soporta -->
     <script is:inline>
