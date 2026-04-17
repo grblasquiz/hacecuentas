@@ -996,6 +996,26 @@ import { yesoCielorrasoPlacasM2 } from './yeso-cielorraso-placas-m2';
 import { zScoreValorNormal } from './z-score-valor-normal';
 import { zonaHabitableEstrella } from './zona-habitable-estrella';
 import { zonasFrecuenciaCardiacaEntrenamiento } from './zonas-frecuencia-cardiaca-entrenamiento';
+import { ahorroProgramadoMx } from './ahorro-programado-mx';
+import { catTarjetaCreditoMexico } from './cat-tarjeta-credito-mexico';
+import { cetesRendimientoMx } from './cetes-rendimiento-mx';
+import { cuotasImssMexico } from './cuotas-imss-mexico';
+import { devolucionIsrAnualMexico } from './devolucion-isr-anual-mexico';
+import { finiquitoLiquidacionMexico } from './finiquito-liquidacion-mexico';
+import { ineTramiteCostos } from './ine-tramite-costos';
+import { infonavitDescuentoSueldo } from './infonavit-descuento-sueldo';
+import { isrHonorariosMexico } from './isr-honorarios-mexico';
+import { isrSueldoMexico } from './isr-sueldo-mexico';
+import { mxnUsdConversion } from './mxn-usd-conversion';
+import { pensionImss1997 } from './pension-imss-1997';
+import { placasAutoMx } from './placas-auto-mx';
+import { primaAntiguedadMexico } from './prima-antiguedad-mexico';
+import { ptuMexico } from './ptu-mexico';
+import { semanasImssFaltantes } from './semanas-imss-faltantes';
+import { smgMexicoConversion } from './smg-mexico-conversion';
+import { tenenciaVehicularMx } from './tenencia-vehicular-mx';
+import { umaConversion } from './uma-conversion';
+import { verificacionVehicularMx } from './verificacion-vehicular-mx';
 
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
@@ -1993,4 +2013,24 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'z-score-valor-normal': zScoreValorNormal,
   'zona-habitable-estrella': zonaHabitableEstrella,
   'zonas-frecuencia-cardiaca-entrenamiento': zonasFrecuenciaCardiacaEntrenamiento,
+  'ahorro-programado-mx': ahorroProgramadoMx,
+  'cat-tarjeta-credito-mexico': catTarjetaCreditoMexico,
+  'cetes-rendimiento-mx': cetesRendimientoMx,
+  'cuotas-imss-mexico': cuotasImssMexico,
+  'devolucion-isr-anual-mexico': devolucionIsrAnualMexico,
+  'finiquito-liquidacion-mexico': finiquitoLiquidacionMexico,
+  'ine-tramite-costos': ineTramiteCostos,
+  'infonavit-descuento-sueldo': infonavitDescuentoSueldo,
+  'isr-honorarios-mexico': isrHonorariosMexico,
+  'isr-sueldo-mexico': isrSueldoMexico,
+  'mxn-usd-conversion': mxnUsdConversion,
+  'pension-imss-1997': pensionImss1997,
+  'placas-auto-mx': placasAutoMx,
+  'prima-antiguedad-mexico': primaAntiguedadMexico,
+  'ptu-mexico': ptuMexico,
+  'semanas-imss-faltantes': semanasImssFaltantes,
+  'smg-mexico-conversion': smgMexicoConversion,
+  'tenencia-vehicular-mx': tenenciaVehicularMx,
+  'uma-conversion': umaConversion,
+  'verificacion-vehicular-mx': verificacionVehicularMx,
 };

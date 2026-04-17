@@ -1,0 +1,449 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ScrollToTop from '../../components/ScrollToTop.astro';
+
+// Load all English calculators
+const calcModules = import.meta.glob<any>('../../content/calcs-mx/*.json', { eager: true });
+const calcs = Object.values(calcModules).map((m: any) => m.default || m);
+
+// Group by category
+const byCategory: Record<string, any[]> = {};
+calcs.forEach((c) => {
+  if (!byCategory[c.category]) byCategory[c.category] = [];
+  byCategory[c.category].push(c);
+});
+
+// English-friendly category metadata
+const categoryMeta: Record<string, { label: string; desc: string; color: string; icon: string }> = {
+  finanzas:        { label: 'Finance',       desc: 'Salary, severance, loans, taxes, compound interest.',    color: '#2563eb', icon: '💰' },
+  salud:           { label: 'Health',        desc: 'BMI, calories, body fat, pregnancy, fitness.',            color: '#16a34a', icon: '❤️' },
+  negocios:        { label: 'Business',      desc: 'Margins, VAT, markup, break-even, pricing.',              color: '#7c3aed', icon: '📊' },
+  marketing:       { label: 'Marketing',     desc: 'CTR, CPC, ROAS, CAC, LTV, MRR, churn.',                  color: '#e11d48', icon: '📈' },
+  vida:            { label: 'Daily Life',    desc: 'Age, dates, percentages, rule of three, converters.',     color: '#d97706', icon: '🗓️' },
+  deportes:        { label: 'Sports',        desc: 'Pace, 1RM, calories burned, running, strength training.', color: '#65a30d', icon: '🏃' },
+  viajes:          { label: 'Travel',        desc: 'Fuel costs, trip budgets, expense splitting, tips.',      color: '#0891b2', icon: '✈️' },
+  construccion:    { label: 'Construction',  desc: 'Bricks, cement, paint, flooring estimates.',              color: '#b45309', icon: '🧱' },
+  cocina:          { label: 'Cooking',       desc: 'Cups to grams, recipe scaling, cooking conversions.',     color: '#ea580c', icon: '🍳' },
+  mascotas:        { label: 'Pets',          desc: 'Dog/cat age, feeding, medication by weight.',             color: '#db2777', icon: '🐕' },
+  matematica:      { label: 'Math',          desc: 'Average, Pythagoras, quadratic, factorial, GCD.',         color: '#0d9488', icon: '🧮' },
+  educacion:       { label: 'Education',     desc: 'Grades, averages, credits, scholarships.',                color: '#8b5cf6', icon: '🎓' },
+  automotor:       { label: 'Automotive',    desc: 'Fuel consumption, insurance, registration fees.',         color: '#6366f1', icon: '🚗' },
+  tecnologia:      { label: 'Technology',    desc: 'Storage, bandwidth, battery, FPS, cloud costs.',          color: '#06b6d4', icon: '💻' },
+  'medio-ambiente':{ label: 'Environment',  desc: 'Carbon footprint, recycling, water, solar energy.',       color: '#22c55e', icon: '🌱' },
+  electronica:     { label: 'Electronics',  desc: "Ohm's law, resistors, kWh consumption, circuits.",        color: '#f59e0b', icon: '⚡' },
+};
+
+// Show categories that have at least one English calc, in a sensible order
+const categoryOrder = ['finanzas', 'salud', 'negocios', 'marketing', 'vida', 'deportes', 'viajes',
+  'construccion', 'cocina', 'mascotas', 'matematica', 'educacion', 'automotor', 'tecnologia',
+  'medio-ambiente', 'electronica'];
+
+const activeCategories = categoryOrder.filter((cat) => byCategory[cat] && byCategory[cat].length > 0);
+
+const totalCalcs = calcs.length;
+
+// Schema.org
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': ['CollectionPage', 'WebPage'],
+      '@id': 'https://hacecuentas.com/mx/#webpage',
+      url: 'https://hacecuentas.com/mx/',
+      name: 'Free Online Calculators — Hacé Cuentas',
+      description: 'Directory of free online calculators for finance, health, math, business, and more. Accurate, private, and no sign-up required.',
+      inLanguage: 'en',
+      isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+      breadcrumb: { '@id': 'https://hacecuentas.com/mx/#breadcrumb' },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': 'https://hacecuentas.com/mx/#breadcrumb',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Hacé Cuentas', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'English Calculators', item: 'https://hacecuentas.com/mx/' },
+      ],
+    },
+    {
+      '@type': 'ItemList',
+      name: 'Free Online Calculators',
+      description: `${totalCalcs} free online calculators for finance, health, math, business, sports, and more.`,
+      numberOfItems: totalCalcs,
+      itemListElement: calcs.map((c, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: c.h1,
+        url: `https://hacecuentas.com/mx/${c.slug}`,
+        description: c.description,
+      })),
+    },
+  ],
+};
+
+const hreflangTags = [
+  { lang: 'es',        href: 'https://hacecuentas.com/mx/' },
+  { lang: 'es',        href: 'https://hacecuentas.com/' },
+  { lang: 'x-default', href: 'https://hacecuentas.com/' },
+];
+---
+
+<Layout
+  title="Free Online Calculators — Hacé Cuentas"
+  description="Free online calculators for finance, health, math, business, sports, and everyday life. Accurate formulas, instant results, 100% private. No registration required."
+  lang="es"
+  hreflang={hreflangTags}
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <div class="en-index">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-badge">English Calculators</div>
+        <h1>Free Online Calculators</h1>
+        <p class="hero-sub">Accurate, private, and easy to use. No registration required.</p>
+        <div class="hero-stats">
+          <span class="stat">
+            <strong>{totalCalcs}</strong> calculators
+          </span>
+          <span class="stat-sep" aria-hidden="true">·</span>
+          <span class="stat">
+            <strong>{activeCategories.length}</strong> categories
+          </span>
+          <span class="stat-sep" aria-hidden="true">·</span>
+          <span class="stat">
+            <strong>100%</strong> free &amp; private
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Hacé Cuentas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">English Calculators</span>
+    </nav>
+
+    <!-- Calculator grid grouped by category -->
+    <div class="categories">
+      {activeCategories.map((catKey) => {
+        const meta = categoryMeta[catKey];
+        const catCalcs = byCategory[catKey];
+        return (
+          <section class="category-section" aria-labelledby={`cat-${catKey}`}>
+            <div class="cat-header">
+              <span class="cat-icon" aria-hidden="true" style={`background: ${meta?.color}18`}>
+                {meta?.icon ?? '📁'}
+              </span>
+              <div class="cat-meta">
+                <h2 id={`cat-${catKey}`} class="cat-label">{meta?.label ?? catKey}</h2>
+                {meta?.desc && <p class="cat-desc">{meta.desc}</p>}
+              </div>
+            </div>
+
+            <div class="calc-grid">
+              {catCalcs.map((calc) => (
+                <a href={`/mx/${calc.slug}`} class="calc-card">
+                  <span class="card-icon" aria-hidden="true">{calc.icon}</span>
+                  <div class="card-body">
+                    <span class="card-title">{calc.h1}</span>
+                    <span class="card-desc">{calc.description}</span>
+                  </div>
+                  <span
+                    class="card-badge"
+                    style={`background:${meta?.color}18; color:${meta?.color}`}
+                  >
+                    {meta?.label ?? catKey}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+
+    <!-- Footer CTA -->
+    <aside class="cta-footer" aria-label="More calculators">
+      <p class="cta-text">Looking for more?</p>
+      <p class="cta-sub">
+        Visit our full site in Spanish with 100+ calculators —
+        including Argentina-specific tools for taxes, wages, and more.
+      </p>
+      <a href="/" class="cta-link">Ver calculadoras en español &rarr;</a>
+    </aside>
+
+  </div>
+
+  <ScrollToTop />
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .en-index {
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    text-align: center;
+    padding: 3rem 1rem 2.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+  }
+
+  .hero-inner {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    padding: 0.3rem 0.875rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-bottom: 1.25rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    letter-spacing: -0.03em;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero-sub {
+    font-size: 1.0625rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+    color: var(--text-subtle);
+  }
+
+  .stat strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .stat-sep {
+    color: var(--border-strong);
+  }
+
+  /* ── Breadcrumbs ── */
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    margin-bottom: 2rem;
+  }
+
+  .breadcrumbs a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .breadcrumbs a:hover { color: var(--accent); }
+
+  .breadcrumbs .sep { color: var(--border-strong); }
+
+  .breadcrumbs .current {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* ── Category sections ── */
+  .categories {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .category-section {}
+
+  .cat-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .cat-icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.375rem;
+  }
+
+  .cat-meta { flex: 1; min-width: 0; }
+
+  .cat-label {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.1875rem;
+    line-height: 1.25;
+  }
+
+  .cat-desc {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-subtle);
+    line-height: 1.45;
+  }
+
+  /* ── Calculator grid ── */
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  @media (max-width: 900px) {
+    .calc-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 560px) {
+    .calc-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Calc card ── */
+  .calc-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 1.125rem 0.875rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  }
+
+  .calc-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .card-icon {
+    flex-shrink: 0;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3125rem;
+  }
+
+  .card-title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    line-height: 1.3;
+    color: var(--text);
+  }
+
+  .card-desc {
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-badge {
+    align-self: flex-start;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    margin-top: auto;
+  }
+
+  /* ── CTA footer ── */
+  .cta-footer {
+    margin-top: 4rem;
+    padding: 2rem 2.25rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+  }
+
+  .cta-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  .cta-sub {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .cta-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.625rem 1.375rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.15s;
+  }
+
+  .cta-link:hover {
+    background: var(--accent-hover);
+    color: #fff;
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+
+  /* ── Responsive tweaks ── */
+  @media (max-width: 640px) {
+    .hero { padding: 2rem 0.75rem 2rem; }
+    .cta-footer { padding: 1.5rem 1.25rem; }
+    .cat-header { align-items: center; }
+  }
+</style>

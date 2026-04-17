@@ -28,6 +28,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const CALCS_DIR = join(ROOT, 'src', 'content', 'calcs');
 const CALCS_EN_DIR = join(ROOT, 'src', 'content', 'calcs-en');
+const CALCS_MX_DIR = join(ROOT, 'src', 'content', 'calcs-mx');
 const BLOG_DIR = join(ROOT, 'src', 'content', 'blog');
 const TABLAS_DIR = join(ROOT, 'src', 'content', 'tablas');
 const COMPARACIONES_DIR = join(ROOT, 'src', 'content', 'comparaciones');
@@ -93,6 +94,7 @@ ${sitemaps.map((s) => `  <sitemap>
 
 const calcs = readJSONs(CALCS_DIR);
 const calcsEn = readJSONs(CALCS_EN_DIR);
+const calcsMx = readJSONs(CALCS_MX_DIR);
 const blogPosts = readJSONs(BLOG_DIR);
 const tablas = readJSONs(TABLAS_DIR);
 const comparaciones = readJSONs(COMPARACIONES_DIR);
@@ -187,6 +189,22 @@ if (calcsEn.length > 0) {
       changefreq: 'monthly',
       lastmod: buildDate,
     })),
+  });
+}
+
+// 3b. Calcs México
+if (calcsMx.length > 0) {
+  sitemaps.push({
+    name: 'sitemap-mx.xml',
+    urls: [
+      { loc: `${site}/mx/`, priority: '0.8', changefreq: 'weekly', lastmod: buildDate },
+      ...(calcsMx as any[]).map((c: any) => ({
+        loc: `${site}/mx/${c.slug}`,
+        priority: '0.7',
+        changefreq: 'monthly',
+        lastmod: buildDate,
+      })),
+    ],
   });
 }
 
