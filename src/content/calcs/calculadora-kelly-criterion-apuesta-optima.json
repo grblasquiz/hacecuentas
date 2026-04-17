@@ -1,0 +1,171 @@
+{
+  "slug": "calculadora-kelly-criterion-apuesta-optima",
+  "title": "Calculadora Kelly Criterion 2026 — Apuesta Óptima | Hacé Cuentas",
+  "h1": "Calculadora de Kelly Criterion (apuesta óptima)",
+  "description": "Kelly Criterion: % óptimo del capital a arriesgar según winrate y payoff. Fórmula usada por Warren Buffett y Ed Thorp.",
+  "category": "finanzas",
+  "icon": "📊",
+  "formulaId": "kelly-criterion-apuesta-optima",
+  "audience": "global",
+  "seoKeywords": [
+    "kelly criterion",
+    "kelly formula",
+    "apuesta optima",
+    "bet sizing",
+    "fractional kelly",
+    "edward thorp"
+  ],
+  "intro": "La **fórmula de Kelly**, publicada por John L. Kelly Jr. en 1956 (Bell Labs), calcula la **fracción óptima del capital** a apostar en cada trade para maximizar el crecimiento geométrico de largo plazo. La usaron **Ed Thorp** para blackjack, **Warren Buffett** en Berkshire (confirmado por Charlie Munger) y los quants de Renaissance Technologies. Con tu **winrate** (p) y el **payoff ratio** (b = ganancia/pérdida por trade), Kelly te dice el % exacto a arriesgar. La advertencia: Kelly asume que conocés tu edge con precisión — y en trading real eso nunca es cierto. Por eso los pros usan **Fractional Kelly** (½ o ¼ de Kelly) para reducir varianza. Esta calculadora te da ambos.",
+  "keyTakeaway": "**f* = (b×p − q) / b** donde p=winrate, q=1−p, b=payoff ratio. Usá **½ Kelly** en trading real para reducir varianza.",
+  "useCases": [
+    "Dimensionar posiciones en estrategia con winrate conocido.",
+    "Comparar estrategias por crecimiento geométrico, no sólo expectancy.",
+    "Evitar ruina por sobreapalancamiento.",
+    "Apostar en deportes con edge probado (value betting).",
+    "Calibrar Fractional Kelly tras backtest."
+  ],
+  "fields": [
+    {
+      "id": "winrate",
+      "label": "Winrate (%)",
+      "type": "number",
+      "placeholder": "55",
+      "required": true,
+      "min": 0.01,
+      "max": 100,
+      "step": 0.1
+    },
+    {
+      "id": "gananciaPromedio",
+      "label": "Ganancia promedio por trade (USD)",
+      "type": "number",
+      "placeholder": "150",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "perdidaPromedio",
+      "label": "Pérdida promedio por trade (USD)",
+      "type": "number",
+      "placeholder": "100",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "capital",
+      "label": "Capital total (USD)",
+      "type": "number",
+      "placeholder": "10000",
+      "required": true,
+      "min": 1,
+      "step": 1
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-16",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria."
+  },
+  "outputs": [
+    {
+      "id": "kellyPorcentaje",
+      "label": "Kelly completo (%)",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "halfKelly",
+      "label": "½ Kelly (%)",
+      "format": "number"
+    },
+    {
+      "id": "quarterKelly",
+      "label": "¼ Kelly (%)",
+      "format": "number"
+    },
+    {
+      "id": "montoOptimo",
+      "label": "Monto óptimo a arriesgar",
+      "format": "currency"
+    },
+    {
+      "id": "evaluacion",
+      "label": "Evaluación",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Estrategia con 55% winrate, ganancia 150, pérdida 100",
+    "steps": [
+      "p = 0.55, q = 0.45, b = 150/100 = 1.5.",
+      "f* = (1.5×0.55 − 0.45) / 1.5 = 0.375/1.5 = **25%**.",
+      "½ Kelly = **12.5%**.",
+      "Con 10.000 capital → arriesgá 1.250 USD."
+    ],
+    "result": "Kelly dice **25%** pero eso es agresivo. Usá **½ Kelly (12.5%)** = 1.250 USD/trade."
+  },
+  "explanation": "## La fórmula de Kelly\n\nEn 1956, John Kelly (ingeniero de Bell Labs) derivó la fórmula mientras modelaba ruido en señales telefónicas:\n\n```\nf* = (b × p − q) / b\n```\n\nDonde:\n- **p** = probabilidad de ganar (winrate)\n- **q** = 1 − p (probabilidad de perder)\n- **b** = payoff ratio (ganancia promedio / pérdida promedio)\n- **f*** = fracción óptima del capital a arriesgar\n\n## Tabla: Kelly por winrate y R:R\n\n| Winrate | R:R 1:1 | R:R 1:2 | R:R 1:3 |\n|---|---|---|---|\n| 40% | -20% (no apostar) | 10% | 20% |\n| 50% | 0% | 25% | 33% |\n| 55% | 10% | 33% | 40% |\n| 60% | 20% | 40% | 47% |\n| 70% | 40% | 55% | 60% |\n\n> Kelly negativo = no hay edge, **no apostar**.\n\n## Por qué Fractional Kelly\n\nKelly completo **maximiza expectancy geométrica** — pero con enorme varianza. Simulaciones reales muestran:\n- **Full Kelly**: 50% probabilidad de -50% drawdown.\n- **½ Kelly**: mantiene ~75% del crecimiento con 25% del drawdown.\n- **¼ Kelly**: estándar para gestores institucionales.\n\n## Usuarios famosos\n\n- **Ed Thorp**: blackjack (Beat the Dealer, 1962), hedge fund PNP (+20% anual 20 años).\n- **Warren Buffett**: Munger lo confirmó — posiciones concentradas al 25–40% del capital.\n- **Jim Simons (Renaissance)**: Kelly adaptado para Medallion Fund.\n\nComplementos: [Position size](/calculadora-position-size-forex-pips-riesgo) · [R:R](/calculadora-risk-reward-ratio-trade) · [Drawdown](/calculadora-drawdown-maximo-aceptable)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.",
+  "faq": [
+    {
+      "q": "¿Kelly o % fijo 1%?",
+      "a": "Si conocés bien tu edge, Kelly (o ½ Kelly) optimiza crecimiento. Si no lo conocés, **1–2% fijo** es más seguro. Nunca uses Full Kelly con estimaciones nuevas."
+    },
+    {
+      "q": "¿Por qué Kelly puede dar >100%?",
+      "a": "Con edge muy alto (winrate 80%+ y buen R:R). En práctica no podés apalancar infinito — capeá a tu leverage máximo."
+    },
+    {
+      "q": "¿Funciona para apuestas deportivas?",
+      "a": "Sí — fue su uso original. Requiere **odds reales** vs odds del bookie + probabilidad honesta. Sin edge real, Kelly = 0 o negativo."
+    },
+    {
+      "q": "¿Qué pasa si sobreestimé el winrate?",
+      "a": "Kelly es **muy sensible**: si el winrate real es 5% menor, Full Kelly te lleva a drawdowns brutales. Por eso ½ Kelly es más robusto."
+    },
+    {
+      "q": "¿Puedo aplicarlo a portfolio de estrategias?",
+      "a": "Sí — es la base del **Modern Portfolio Theory** extendido. Sumá las fracciones optimales y capeá a 100%."
+    },
+    {
+      "q": "¿Y con pérdidas correlacionadas?",
+      "a": "Kelly clásico asume trades independientes. Con correlación alta (ej: todas longs en cripto) ajustá dividiendo Kelly por el número efectivo de trades correlacionados."
+    }
+  ],
+  "sources": [
+    {
+      "name": "John Kelly - A New Interpretation of Information Rate (1956)"
+    },
+    {
+      "name": "Ed Thorp - Beat the Dealer / Kelly Formula Paper"
+    },
+    {
+      "name": "Investopedia - Kelly Criterion",
+      "url": "https://www.investopedia.com/articles/trading/04/091504.asp"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-position-size-forex-pips-riesgo",
+    "calculadora-risk-reward-ratio-trade",
+    "calculadora-drawdown-maximo-aceptable",
+    "calculadora-pnl-trade-stock-cripto"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "slug": "calculadora-apalancamiento-liquidacion",
+  "title": "Calculadora Apalancamiento y Liquidación 2026 — Precio Liq | Hacé Cuentas",
+  "h1": "Calculadora de Apalancamiento y Precio de Liquidación",
+  "description": "Apalancamiento liquidación: precio al que liquida tu posición con leverage. Fórmula para futuros cripto, forex y CFDs.",
+  "category": "finanzas",
+  "icon": "📊",
+  "formulaId": "apalancamiento-liquidacion",
+  "audience": "global",
+  "seoKeywords": [
+    "apalancamiento liquidacion",
+    "precio liquidacion",
+    "leverage calculator",
+    "futuros cripto liquidacion",
+    "cfd margin"
+  ],
+  "intro": "El **precio de liquidación** es el valor al que el exchange/broker cierra automáticamente tu posición apalancada por haber consumido casi todo el margen. No es una alarma — es una **ejecución forzada**. Para una posición **long**, liquida cuando el precio baja lo suficiente para que la pérdida = margen − mantenimiento. Cuanto mayor el leverage, **más cerca está la liquidación**: a 10x, una caída de ~9.5% liquida; a 100x, ~0.95%. Esta calculadora aplica la fórmula estándar de futuros perpetuos (Binance, Bybit, BitMEX) y te devuelve precio exacto de liquidación, % de movimiento para llegar y nivel de riesgo. Imprescindible antes de cualquier trade con leverage.",
+  "keyTakeaway": "**% a liquidación ≈ 1/Leverage × (1 − mantRate)**. 10x ≈ 9.5% · 20x ≈ 4.75% · 100x ≈ 0.95%.",
+  "useCases": [
+    "Saber cuánto espacio tenés antes de liquidación.",
+    "Comparar leverage 5x vs 20x en el mismo trade.",
+    "Calcular precio de seguridad para mover stop.",
+    "Evitar liquidación en velas de alta volatilidad.",
+    "Dimensionar margen a agregar si el precio cae."
+  ],
+  "fields": [
+    {
+      "id": "precioEntrada",
+      "label": "Precio de entrada",
+      "type": "number",
+      "placeholder": "40000",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "leverage",
+      "label": "Leverage (x)",
+      "type": "number",
+      "placeholder": "10",
+      "required": true,
+      "min": 1,
+      "max": 125,
+      "step": 1
+    },
+    {
+      "id": "direccion",
+      "label": "Dirección",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "long",
+          "label": "Long"
+        },
+        {
+          "value": "short",
+          "label": "Short"
+        }
+      ]
+    },
+    {
+      "id": "mantenimientoPorcentaje",
+      "label": "Tasa de mantenimiento (%)",
+      "type": "number",
+      "placeholder": "0.5",
+      "required": true,
+      "min": 0,
+      "max": 20,
+      "step": 0.01
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-16",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria."
+  },
+  "outputs": [
+    {
+      "id": "precioLiquidacion",
+      "label": "Precio de liquidación",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "distanciaPorcentaje",
+      "label": "% a liquidación",
+      "format": "number"
+    },
+    {
+      "id": "distanciaAbsoluta",
+      "label": "Distancia absoluta",
+      "format": "currency"
+    },
+    {
+      "id": "nivelRiesgo",
+      "label": "Nivel de riesgo",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Long BTC 40.000, leverage 10x, mant 0.5%",
+    "steps": [
+      "% a liquidación = (1/10) × (1 − 0.005) = **9.95%**.",
+      "Distancia = 40.000 × 9.95% = 3.980 USD.",
+      "Precio liq = 40.000 − 3.980 = **36.020 USD**."
+    ],
+    "result": "Liquidación a **36.020** (9.95% abajo). Leverage 10x = espacio razonable."
+  },
+  "explanation": "## Cómo liquida el exchange\n\nEn futuros perpetuos (Binance, Bybit, OKX), el exchange monitorea tu **margen ratio** en tiempo real:\n\n```\nMarginRatio = Margen usado / (MargenUsado + PnL)\n```\n\nCuando cae por debajo del **maintenance margin rate** (típicamente 0.4%–2.5% según size), ejecuta liquidación. El ejecutor obtiene un bonus del insurance fund.\n\n## Fórmula precio de liquidación\n\n```\n% a liq (long) ≈ 1/Leverage × (1 − mantRate)\nPrecio liq long = Entrada × (1 − %aLiq)\nPrecio liq short = Entrada × (1 + %aLiq)\n```\n\n## Tabla: distancia a liquidación por leverage\n\n| Leverage | % caída para liquidar | Recomendación |\n|---|---|---|\n| 2x | ~49.5% | Muy conservador |\n| 3x | ~33% | Conservador |\n| 5x | ~19.5% | Estándar |\n| 10x | ~9.5% | ⚠️ Cuidado con volatilidad |\n| 20x | ~4.75% | ⚠️ Sólo trades cortos |\n| 50x | ~1.9% | ☠️ Casi casino |\n| 100x | ~0.95% | ☠️ 1 vela te liquida |\n| 125x | ~0.76% | ☠️ Binance max |\n\n## Qué evita liquidación\n\n1. **Stop-loss antes** del precio de liquidación (siempre).\n2. **Bajar leverage** si la vol sube.\n3. **Agregar margen** (isolated → cross, o cash adicional).\n4. **Cerrar parcial** si el trade se mueve contra vos.\n\nLos exchanges cobran **fee de liquidación** (0.5%–1%) + fee de cierre. Es caro — mejor stopear primero.\n\nComplementos: [Position size cripto](/calculadora-position-size-cripto-leverage) · [Margin call](/calculadora-margin-call-futuros-precio)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.",
+  "faq": [
+    {
+      "q": "¿Por qué liquidan antes de -100%?",
+      "a": "El exchange necesita colchón para cerrar sin quedar en deuda (mantenimiento rate 0.5%–2.5%). Deja margen para slippage en vela violenta."
+    },
+    {
+      "q": "¿Isolated vs cross margin?",
+      "a": "**Isolated**: cada posición tiene su margen. Liquida sólo esa. **Cross**: todo el balance respalda todas. Más seguro contra liquidación pero riesgo de wipe-out total."
+    },
+    {
+      "q": "¿Se puede evitar con stop-loss?",
+      "a": "Sí — setéalo siempre **antes** del precio de liquidación (mínimo 20% de buffer). Pero en flash crashes el stop puede no ejecutarse y liquidar igual."
+    },
+    {
+      "q": "¿Qué pasa con el funding rate?",
+      "a": "Es independiente. Podés ser liquidado en sentido del funding si el precio se mueve mucho, incluso pagando/cobrando funding."
+    },
+    {
+      "q": "¿Hay ADL (auto-deleverage)?",
+      "a": "Sí en Binance/Bybit — si el insurance fund no alcanza, liquidan posiciones ganadoras más apalancadas. Riesgo residual de cripto."
+    },
+    {
+      "q": "¿Funciona para forex CFD?",
+      "a": "Mismo principio. Brokers regulados ESMA limitan leverage a 30x retail. Precio de liquidación = 50% del margen usado perdido."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Binance Futures",
+      "url": "https://www.binance.com/en/futures"
+    },
+    {
+      "name": "Bybit Learn",
+      "url": "https://learn.bybit.com"
+    },
+    {
+      "name": "Investopedia - Liquidation",
+      "url": "https://www.investopedia.com/terms/l/liquidation.asp"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-position-size-cripto-leverage",
+    "calculadora-margin-call-futuros-precio",
+    "calculadora-drawdown-maximo-aceptable",
+    "calculadora-pnl-trade-stock-cripto"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

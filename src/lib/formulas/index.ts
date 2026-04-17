@@ -1018,6 +1018,106 @@ import { smgMexicoConversion } from './smg-mexico-conversion';
 import { tenenciaVehicularMx } from './tenencia-vehicular-mx';
 import { umaConversion } from './uma-conversion';
 import { verificacionVehicularMx } from './verificacion-vehicular-mx';
+import { acidezOrinaAlimentos } from './acidez-orina-alimentos';
+import { antiinflamatorioScoreComida } from './antiinflamatorio-score-comida';
+import { apalancamientoLiquidacion } from './apalancamiento-liquidacion';
+import { azucarAgregadaOcultaGramos } from './azucar-agregada-oculta-gramos';
+import { blackScholesOpcionCallPut } from './black-scholes-opcion-call-put';
+import { breakevenTradeComisiones } from './breakeven-trade-comisiones';
+import { cachorrosCamadaRaza } from './cachorros-camada-raza';
+import { caloriasPerroPorRazaEdad } from './calorias-perro-por-raza-edad';
+import { cargaGlucemicaComida } from './carga-glucemica-comida';
+import { checkInAnticipoHorasAeropuerto } from './check-in-anticipo-horas-aeropuerto';
+import { comidaDiariaRazaPerro } from './comida-diaria-raza-perro';
+import { conexionVueloMinimoMinutos } from './conexion-vuelo-minimo-minutos';
+import { costoCriarCachorroPrimerAno } from './costo-criar-cachorro-primer-ano';
+import { costoMensualRazaPerro } from './costo-mensual-raza-perro';
+import { densidadNutricionalScore } from './densidad-nutricional-score';
+import { dietaPcrmScore } from './dieta-pcrm-score';
+import { drawdownMaximoAceptable } from './drawdown-maximo-aceptable';
+import { edadHumanaPorRazaPerro } from './edad-humana-por-raza-perro';
+import { ejercicioDiarioRazaPerro } from './ejercicio-diario-raza-perro';
+import { escalaSuficienteTiempo } from './escala-suficiente-tiempo';
+import { estaUsaRequisitos } from './esta-usa-requisitos';
+import { etaCanadaRequisitos } from './eta-canada-requisitos';
+import { expectativaVidaRazaPerro } from './expectativa-vida-raza-perro';
+import { greeksDeltaGammaTheta } from './greeks-delta-gamma-theta';
+import { indiceGlucemicoPorAlimento } from './indice-glucemico-por-alimento';
+import { indiceSaciedadAlimento } from './indice-saciedad-alimento';
+import { jetLagMedicacionTiming } from './jet-lag-medicacion-timing';
+import { jetLagRecoveryDiasRuta } from './jet-lag-recovery-dias-ruta';
+import { kellyCriterionApuestaOptima } from './kelly-criterion-apuesta-optima';
+import { llegadaAeropuertoMinutosVuelo } from './llegada-aeropuerto-minutos-vuelo';
+import { marginCallFuturosPrecio } from './margin-call-futuros-precio';
+import { millasAmericanAaDestino } from './millas-american-aa-destino';
+import { millasAviancaLifemiles } from './millas-avianca-lifemiles';
+import { millasDeltaSkymiles } from './millas-delta-skymiles';
+import { millasLatamDestino } from './millas-latam-destino';
+import { millasUnitedMileageplus } from './millas-united-mileageplus';
+import { pHAlimentoAlcalinidad } from './pH-alimento-alcalinidad';
+import { pasaporteRenovacionCostoTiempo } from './pasaporte-renovacion-costo-tiempo';
+import { paseosDiariosPerroRaza } from './paseos-diarios-perro-raza';
+import { perroDepartamentoApto } from './perro-departamento-apto';
+import { pesoIdealBeagle } from './peso-ideal-beagle';
+import { pesoIdealBoxer } from './peso-ideal-boxer';
+import { pesoIdealBulldogFrances } from './peso-ideal-bulldog-frances';
+import { pesoIdealBulldogIngles } from './peso-ideal-bulldog-ingles';
+import { pesoIdealCanichePoodle } from './peso-ideal-caniche-poodle';
+import { pesoIdealChihuahua } from './peso-ideal-chihuahua';
+import { pesoIdealDachshundSalchicha } from './peso-ideal-dachshund-salchicha';
+import { pesoIdealGatoBritanico } from './peso-ideal-gato-britanico';
+import { pesoIdealGatoPersa } from './peso-ideal-gato-persa';
+import { pesoIdealGatoSiames } from './peso-ideal-gato-siames';
+import { pesoIdealGoldenRetriever } from './peso-ideal-golden-retriever';
+import { pesoIdealHuskySiberiano } from './peso-ideal-husky-siberiano';
+import { pesoIdealLabradorRetriever } from './peso-ideal-labrador-retriever';
+import { pesoIdealMaineCoon } from './peso-ideal-maine-coon';
+import { pesoIdealPastorAleman } from './peso-ideal-pastor-aleman';
+import { pesoIdealPitbull } from './peso-ideal-pitbull';
+import { pesoIdealRagdoll } from './peso-ideal-ragdoll';
+import { pesoIdealRottweiler } from './peso-ideal-rottweiler';
+import { pesoIdealShihTzu } from './peso-ideal-shih-tzu';
+import { pesoIdealYorkshireTerrier } from './peso-ideal-yorkshire-terrier';
+import { pipsProfitForexPar } from './pips-profit-forex-par';
+import { pnlTradeStockCripto } from './pnl-trade-stock-cripto';
+import { positionSizeCriptoLeverage } from './position-size-cripto-leverage';
+import { positionSizeForexPipsRiesgo } from './position-size-forex-pips-riesgo';
+import { positionSizeStocksPorcentaje } from './position-size-stocks-porcentaje';
+import { presupuestoViajeBaliIndonesia } from './presupuesto-viaje-bali-indonesia';
+import { presupuestoViajeBarcelona } from './presupuesto-viaje-barcelona';
+import { presupuestoViajeDubai } from './presupuesto-viaje-dubai';
+import { presupuestoViajeLimaPeru } from './presupuesto-viaje-lima-peru';
+import { presupuestoViajeLondres } from './presupuesto-viaje-londres';
+import { presupuestoViajeMadrid } from './presupuesto-viaje-madrid';
+import { presupuestoViajeMexicoDf } from './presupuesto-viaje-mexico-df';
+import { presupuestoViajeNuevaYork } from './presupuesto-viaje-nueva-york';
+import { presupuestoViajeParis } from './presupuesto-viaje-paris';
+import { presupuestoViajeRioJaneiro } from './presupuesto-viaje-rio-janeiro';
+import { presupuestoViajeSantiagoChile } from './presupuesto-viaje-santiago-chile';
+import { presupuestoViajeTokio } from './presupuesto-viaje-tokio';
+import { procesadosNovaClasificacion } from './procesados-nova-clasificacion';
+import { puntosAmexMembershipRewards } from './puntos-amex-membership-rewards';
+import { puntosVsCashVueloCuandoConviene } from './puntos-vs-cash-vuelo-cuando-conviene';
+import { retrasoVueloCompensacionEu } from './retraso-vuelo-compensacion-eu';
+import { retrasoVueloCompensacionUsa } from './retraso-vuelo-compensacion-usa';
+import { riskRewardRatioTrade } from './risk-reward-ratio-trade';
+import { stopLossAtrVolatilidad } from './stop-loss-atr-volatilidad';
+import { tiempoVueloEstimadoDistancia } from './tiempo-vuelo-estimado-distancia';
+import { trasladoAeropuertoCiudadTiempo } from './traslado-aeropuerto-ciudad-tiempo';
+import { vacunaFiebreAmarillaCuantoAntes } from './vacuna-fiebre-amarilla-cuanto-antes';
+import { vacunasObligatoriasDestinoViaje } from './vacunas-obligatorias-destino-viaje';
+import { valorMillasPuntoCentavos } from './valor-millas-punto-centavos';
+import { visaBrasilCiudadanoArgentino } from './visa-brasil-ciudadano-argentino';
+import { visaChinaTuristaCosto } from './visa-china-turista-costo';
+import { visaJaponArgentino } from './visa-japon-argentino';
+import { visaSchengenEuropaRequisitos } from './visa-schengen-europa-requisitos';
+import { visaUsaCostoTiempoPasaporte } from './visa-usa-costo-tiempo-pasaporte';
+import { volatilidadImplicitaOpciones } from './volatilidad-implicita-opciones';
+import { youtubeCpmPorNicho } from './youtube-cpm-por-nicho';
+import { youtubeIngresosVistasPais } from './youtube-ingresos-vistas-pais';
+import { youtubePremiumSplitPayout } from './youtube-premium-split-payout';
+import { youtubeShortsFundIngreso } from './youtube-shorts-fund-ingreso';
+import { youtubeTiempoParaMonetizar } from './youtube-tiempo-para-monetizar';
 
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
@@ -2037,4 +2137,104 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tenencia-vehicular-mx': tenenciaVehicularMx,
   'uma-conversion': umaConversion,
   'verificacion-vehicular-mx': verificacionVehicularMx,
+  'acidez-orina-alimentos': acidezOrinaAlimentos,
+  'antiinflamatorio-score-comida': antiinflamatorioScoreComida,
+  'apalancamiento-liquidacion': apalancamientoLiquidacion,
+  'azucar-agregada-oculta-gramos': azucarAgregadaOcultaGramos,
+  'black-scholes-opcion-call-put': blackScholesOpcionCallPut,
+  'breakeven-trade-comisiones': breakevenTradeComisiones,
+  'cachorros-camada-raza': cachorrosCamadaRaza,
+  'calorias-perro-por-raza-edad': caloriasPerroPorRazaEdad,
+  'carga-glucemica-comida': cargaGlucemicaComida,
+  'check-in-anticipo-horas-aeropuerto': checkInAnticipoHorasAeropuerto,
+  'comida-diaria-raza-perro': comidaDiariaRazaPerro,
+  'conexion-vuelo-minimo-minutos': conexionVueloMinimoMinutos,
+  'costo-criar-cachorro-primer-ano': costoCriarCachorroPrimerAno,
+  'costo-mensual-raza-perro': costoMensualRazaPerro,
+  'densidad-nutricional-score': densidadNutricionalScore,
+  'dieta-pcrm-score': dietaPcrmScore,
+  'drawdown-maximo-aceptable': drawdownMaximoAceptable,
+  'edad-humana-por-raza-perro': edadHumanaPorRazaPerro,
+  'ejercicio-diario-raza-perro': ejercicioDiarioRazaPerro,
+  'escala-suficiente-tiempo': escalaSuficienteTiempo,
+  'esta-usa-requisitos': estaUsaRequisitos,
+  'eta-canada-requisitos': etaCanadaRequisitos,
+  'expectativa-vida-raza-perro': expectativaVidaRazaPerro,
+  'greeks-delta-gamma-theta': greeksDeltaGammaTheta,
+  'indice-glucemico-por-alimento': indiceGlucemicoPorAlimento,
+  'indice-saciedad-alimento': indiceSaciedadAlimento,
+  'jet-lag-medicacion-timing': jetLagMedicacionTiming,
+  'jet-lag-recovery-dias-ruta': jetLagRecoveryDiasRuta,
+  'kelly-criterion-apuesta-optima': kellyCriterionApuestaOptima,
+  'llegada-aeropuerto-minutos-vuelo': llegadaAeropuertoMinutosVuelo,
+  'margin-call-futuros-precio': marginCallFuturosPrecio,
+  'millas-american-aa-destino': millasAmericanAaDestino,
+  'millas-avianca-lifemiles': millasAviancaLifemiles,
+  'millas-delta-skymiles': millasDeltaSkymiles,
+  'millas-latam-destino': millasLatamDestino,
+  'millas-united-mileageplus': millasUnitedMileageplus,
+  'pH-alimento-alcalinidad': pHAlimentoAlcalinidad,
+  'pasaporte-renovacion-costo-tiempo': pasaporteRenovacionCostoTiempo,
+  'paseos-diarios-perro-raza': paseosDiariosPerroRaza,
+  'perro-departamento-apto': perroDepartamentoApto,
+  'peso-ideal-beagle': pesoIdealBeagle,
+  'peso-ideal-boxer': pesoIdealBoxer,
+  'peso-ideal-bulldog-frances': pesoIdealBulldogFrances,
+  'peso-ideal-bulldog-ingles': pesoIdealBulldogIngles,
+  'peso-ideal-caniche-poodle': pesoIdealCanichePoodle,
+  'peso-ideal-chihuahua': pesoIdealChihuahua,
+  'peso-ideal-dachshund-salchicha': pesoIdealDachshundSalchicha,
+  'peso-ideal-gato-britanico': pesoIdealGatoBritanico,
+  'peso-ideal-gato-persa': pesoIdealGatoPersa,
+  'peso-ideal-gato-siames': pesoIdealGatoSiames,
+  'peso-ideal-golden-retriever': pesoIdealGoldenRetriever,
+  'peso-ideal-husky-siberiano': pesoIdealHuskySiberiano,
+  'peso-ideal-labrador-retriever': pesoIdealLabradorRetriever,
+  'peso-ideal-maine-coon': pesoIdealMaineCoon,
+  'peso-ideal-pastor-aleman': pesoIdealPastorAleman,
+  'peso-ideal-pitbull': pesoIdealPitbull,
+  'peso-ideal-ragdoll': pesoIdealRagdoll,
+  'peso-ideal-rottweiler': pesoIdealRottweiler,
+  'peso-ideal-shih-tzu': pesoIdealShihTzu,
+  'peso-ideal-yorkshire-terrier': pesoIdealYorkshireTerrier,
+  'pips-profit-forex-par': pipsProfitForexPar,
+  'pnl-trade-stock-cripto': pnlTradeStockCripto,
+  'position-size-cripto-leverage': positionSizeCriptoLeverage,
+  'position-size-forex-pips-riesgo': positionSizeForexPipsRiesgo,
+  'position-size-stocks-porcentaje': positionSizeStocksPorcentaje,
+  'presupuesto-viaje-bali-indonesia': presupuestoViajeBaliIndonesia,
+  'presupuesto-viaje-barcelona': presupuestoViajeBarcelona,
+  'presupuesto-viaje-dubai': presupuestoViajeDubai,
+  'presupuesto-viaje-lima-peru': presupuestoViajeLimaPeru,
+  'presupuesto-viaje-londres': presupuestoViajeLondres,
+  'presupuesto-viaje-madrid': presupuestoViajeMadrid,
+  'presupuesto-viaje-mexico-df': presupuestoViajeMexicoDf,
+  'presupuesto-viaje-nueva-york': presupuestoViajeNuevaYork,
+  'presupuesto-viaje-paris': presupuestoViajeParis,
+  'presupuesto-viaje-rio-janeiro': presupuestoViajeRioJaneiro,
+  'presupuesto-viaje-santiago-chile': presupuestoViajeSantiagoChile,
+  'presupuesto-viaje-tokio': presupuestoViajeTokio,
+  'procesados-nova-clasificacion': procesadosNovaClasificacion,
+  'puntos-amex-membership-rewards': puntosAmexMembershipRewards,
+  'puntos-vs-cash-vuelo-cuando-conviene': puntosVsCashVueloCuandoConviene,
+  'retraso-vuelo-compensacion-eu': retrasoVueloCompensacionEu,
+  'retraso-vuelo-compensacion-usa': retrasoVueloCompensacionUsa,
+  'risk-reward-ratio-trade': riskRewardRatioTrade,
+  'stop-loss-atr-volatilidad': stopLossAtrVolatilidad,
+  'tiempo-vuelo-estimado-distancia': tiempoVueloEstimadoDistancia,
+  'traslado-aeropuerto-ciudad-tiempo': trasladoAeropuertoCiudadTiempo,
+  'vacuna-fiebre-amarilla-cuanto-antes': vacunaFiebreAmarillaCuantoAntes,
+  'vacunas-obligatorias-destino-viaje': vacunasObligatoriasDestinoViaje,
+  'valor-millas-punto-centavos': valorMillasPuntoCentavos,
+  'visa-brasil-ciudadano-argentino': visaBrasilCiudadanoArgentino,
+  'visa-china-turista-costo': visaChinaTuristaCosto,
+  'visa-japon-argentino': visaJaponArgentino,
+  'visa-schengen-europa-requisitos': visaSchengenEuropaRequisitos,
+  'visa-usa-costo-tiempo-pasaporte': visaUsaCostoTiempoPasaporte,
+  'volatilidad-implicita-opciones': volatilidadImplicitaOpciones,
+  'youtube-cpm-por-nicho': youtubeCpmPorNicho,
+  'youtube-ingresos-vistas-pais': youtubeIngresosVistasPais,
+  'youtube-premium-split-payout': youtubePremiumSplitPayout,
+  'youtube-shorts-fund-ingreso': youtubeShortsFundIngreso,
+  'youtube-tiempo-para-monetizar': youtubeTiempoParaMonetizar,
 };

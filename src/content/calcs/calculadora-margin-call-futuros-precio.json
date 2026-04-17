@@ -1,0 +1,196 @@
+{
+  "slug": "calculadora-margin-call-futuros-precio",
+  "title": "Calculadora Margin Call Futuros 2026 — Precio | Hacé Cuentas",
+  "h1": "Calculadora de Margin Call en Futuros (precio de llamada)",
+  "description": "Margin call futuros: precio al que el broker te llama a reponer margen. ES, CL, GC, ZB y cualquier futuro CME/CBOT.",
+  "category": "finanzas",
+  "icon": "📊",
+  "formulaId": "margin-call-futuros-precio",
+  "audience": "global",
+  "seoKeywords": [
+    "margin call",
+    "futuros cme",
+    "maintenance margin",
+    "call margen",
+    "liquidacion futuros",
+    "futures broker"
+  ],
+  "intro": "Cuando operás **futuros en CME, CBOT, NYMEX o BYMA**, trabajás con dos niveles de margen: el **inicial** (lo que bloquea tu broker al abrir) y el **de mantenimiento** (mínimo que tu cuenta debe tener para que la posición siga viva). Si el precio se mueve en contra y tu equity cae por debajo del margen de mantenimiento, el broker te envía un **margin call**: reponé cash en 24h o liquida tu posición. Esta calculadora calcula el **precio exacto al que sucede el margin call** según tu precio de entrada, contratos, multiplicador, margen inicial y de mantenimiento. Funciona para cualquier futuro: ES (S&P 500), CL (crudo), GC (oro), ZB (bonos), 6E (euro fx), futuros de Matba Rofex (soja, trigo).",
+  "keyTakeaway": "**Precio MC = Entrada − (Equity−MaintMargin)/(Contratos×Mult)**. Cuanto más cerca el MC, menos espacio antes de liquidación.",
+  "useCases": [
+    "Calcular precio de llamada antes de abrir posición.",
+    "Dimensionar contratos para no recibir call con volatilidad normal.",
+    "Comparar qué tan apalancado estás vs peer.",
+    "Prevenir liquidaciones forzadas en gaps.",
+    "Planificar reposición de cash en drawdown."
+  ],
+  "fields": [
+    {
+      "id": "precioEntrada",
+      "label": "Precio de entrada",
+      "type": "number",
+      "placeholder": "4500",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "contratos",
+      "label": "Cantidad de contratos",
+      "type": "number",
+      "placeholder": "1",
+      "required": true,
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "multiplicador",
+      "label": "Multiplicador del contrato (USD/punto)",
+      "type": "number",
+      "placeholder": "50",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "equityCuenta",
+      "label": "Equity en la cuenta (USD)",
+      "type": "number",
+      "placeholder": "15000",
+      "required": true,
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "margenMantenimiento",
+      "label": "Margen de mantenimiento por contrato (USD)",
+      "type": "number",
+      "placeholder": "12000",
+      "required": true,
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "direccion",
+      "label": "Dirección",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "long",
+          "label": "Long"
+        },
+        {
+          "value": "short",
+          "label": "Short"
+        }
+      ]
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-16",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria."
+  },
+  "outputs": [
+    {
+      "id": "precioMarginCall",
+      "label": "Precio de margin call",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "distanciaMargin",
+      "label": "Distancia al MC (puntos)",
+      "format": "number"
+    },
+    {
+      "id": "distanciaPorcentaje",
+      "label": "Distancia al MC (%)",
+      "format": "number"
+    },
+    {
+      "id": "perdidaAlMC",
+      "label": "Pérdida al llegar al MC",
+      "format": "currency"
+    },
+    {
+      "id": "evaluacion",
+      "label": "Evaluación",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Long 1 ES a 4500, equity 15k, maint margin 12k, mult 50",
+    "steps": [
+      "Exceso sobre maint: 15.000 − 12.000 = 3.000 USD.",
+      "Puntos que puede caer: 3.000 / (1×50) = 60 puntos.",
+      "Precio MC = 4500 − 60 = **4440**.",
+      "Distancia: 1.33%."
+    ],
+    "result": "MC a **4440** (60 puntos abajo). Si cae más, reponer cash o liquidan."
+  },
+  "explanation": "## Cómo funciona el margin call\n\nEn futuros, el **margin** es un depósito de garantía, no un préstamo. Hay dos niveles:\n\n- **Initial margin**: lo que bloquea el broker al abrir. ~7-10% del valor nominal.\n- **Maintenance margin**: mínimo de equity. ~80-90% del initial.\n\nCuando tu equity cae por debajo del maint → **margin call**.\n\n## Fórmula\n\n```\nPérdida máx tolerada = Equity − MaintMargin\nPuntos máx en contra = PérdidaMáx / (Contratos × Multiplicador)\nPrecio MC (long) = Entrada − PuntosMáx\nPrecio MC (short) = Entrada + PuntosMáx\n```\n\n## Tabla: multiplicadores populares\n\n| Futuro | Símbolo | Multiplicador | Tick |\n|---|---|---|---|\n| S&P 500 E-mini | ES | 50 USD/punto | 0.25 = 12.50 |\n| Nasdaq E-mini | NQ | 20 USD/punto | 0.25 = 5.00 |\n| Crude oil | CL | 1000 USD/dólar | 0.01 = 10 |\n| Gold | GC | 100 USD/dólar | 0.10 = 10 |\n| 10Y T-Note | ZN | 1000 USD/punto | 0.0078125 |\n| EURO FX | 6E | 125.000 USD/par | 0.00005 = 6.25 |\n\n## Qué hacer si te llaman\n\n1. **Reponer cash** dentro de 24h (o plazo broker).\n2. **Reducir contratos**: liquidar parcial para liberar margin.\n3. **Hedge parcial**: comprar opciones para cortar downside.\n4. **Cerrar**: mejor perder 30% que ser forzado a liquidar en el peor momento.\n\nComplementos: [Apalancamiento](/calculadora-apalancamiento-liquidacion) · [Position size](/calculadora-position-size-cripto-leverage)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.",
+  "faq": [
+    {
+      "q": "¿Cuánto margen piden los brokers?",
+      "a": "CME overnight: ~5-10% del nocional. Intraday: algunos brokers permiten 25-50% de ese valor (day trading margin)."
+    },
+    {
+      "q": "¿El margin call es inmediato?",
+      "a": "No — generalmente tenés 24h (o al cierre de siguiente sesión) para reponer. Si no respondés, liquidan automáticamente."
+    },
+    {
+      "q": "¿Puedo evitar el margin call?",
+      "a": "Reduciendo size (menos contratos por cuenta) o aumentando capital. Nunca sobrepases 3x el maintenance como equity útil."
+    },
+    {
+      "q": "¿Cómo difiere de cripto?",
+      "a": "En cripto hay **liquidación automática** (no call humano). Se ejecuta instantánea vía smart contract cuando margen cae bajo 0.5%-2%."
+    },
+    {
+      "q": "¿Qué pasa en gaps de overnight?",
+      "a": "El MC puede saltarse — el precio liquida directamente en el gap. Es por qué muchos brokers aumentan margin antes de weekends o feriados."
+    },
+    {
+      "q": "¿Vale para micro-futuros?",
+      "a": "Sí — MES (micro S&P), MNQ (micro Nasdaq). Multiplicador 10x menor, margen proporcionalmente menor. Ideal para cuentas <20k."
+    }
+  ],
+  "sources": [
+    {
+      "name": "CME Margin",
+      "url": "https://www.cmegroup.com/markets/margin.html"
+    },
+    {
+      "name": "Investopedia - Margin Call",
+      "url": "https://www.investopedia.com/terms/m/margincall.asp"
+    },
+    {
+      "name": "BYMA Matba Rofex"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-apalancamiento-liquidacion",
+    "calculadora-position-size-cripto-leverage",
+    "calculadora-drawdown-maximo-aceptable",
+    "calculadora-pnl-trade-stock-cripto"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

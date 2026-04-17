@@ -1,0 +1,194 @@
+{
+  "slug": "calculadora-breakeven-trade-comisiones",
+  "title": "Calculadora Breakeven Trade 2026 — Comisiones y Spread | Hacé Cuentas",
+  "h1": "Calculadora de Breakeven por Comisiones y Spread",
+  "description": "Breakeven trade: precio mínimo de salida para cubrir comisión de entrada, salida y spread. Cripto, forex, stocks.",
+  "category": "finanzas",
+  "icon": "📊",
+  "formulaId": "breakeven-trade-comisiones",
+  "audience": "global",
+  "seoKeywords": [
+    "breakeven trade",
+    "comisiones trading",
+    "spread forex",
+    "fees cripto",
+    "punto equilibrio trading"
+  ],
+  "intro": "Cada trade tiene un **costo invisible**: comisiones de entrada + comisiones de salida + spread bid/ask. Hasta que el precio no supera esos costos, **no ganaste nada** aunque parezca que sí. Esta calculadora te da el **precio exacto de breakeven**: a qué valor tu trade pasa de perder a empezar a ganar. Soporta fees porcentuales (típico cripto/stocks) o fixed (forex, futuros). En cripto con fees de 0.1% + 0.1% + 0.05% spread, un long debe subir ~0.25% sólo para no perder. Multiplicado por cientos de trades al año, es la diferencia entre rentable y ruina. También calcula la pérdida si cerrás en breakeven nominal sin considerar fees.",
+  "keyTakeaway": "**BE long = Entrada × (1 + feesTotal%)**. Ej: 0.25% de fees = precio debe subir 0.25% sólo para empatar.",
+  "useCases": [
+    "Saber si cerrar un trade en verde realmente es ganancia.",
+    "Comparar brokers por impacto real de comisiones.",
+    "Decidir si scalping con baja comisión vale la pena.",
+    "Calcular impacto en estrategias de alta frecuencia.",
+    "Auditar trades cerrados que parecían breakeven."
+  ],
+  "fields": [
+    {
+      "id": "precioEntrada",
+      "label": "Precio de entrada",
+      "type": "number",
+      "placeholder": "40000",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "tamanoPosicion",
+      "label": "Tamaño de posición (unidades)",
+      "type": "number",
+      "placeholder": "1",
+      "required": true,
+      "min": 0.0001,
+      "step": 0.0001
+    },
+    {
+      "id": "comisionEntradaPorc",
+      "label": "Comisión entrada (%)",
+      "type": "number",
+      "placeholder": "0.1",
+      "required": true,
+      "min": 0,
+      "max": 10,
+      "step": 0.001
+    },
+    {
+      "id": "comisionSalidaPorc",
+      "label": "Comisión salida (%)",
+      "type": "number",
+      "placeholder": "0.1",
+      "required": true,
+      "min": 0,
+      "max": 10,
+      "step": 0.001
+    },
+    {
+      "id": "spreadPorcentaje",
+      "label": "Spread bid/ask (%)",
+      "type": "number",
+      "placeholder": "0.05",
+      "required": true,
+      "min": 0,
+      "max": 10,
+      "step": 0.001
+    },
+    {
+      "id": "direccion",
+      "label": "Dirección",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "long",
+          "label": "Long"
+        },
+        {
+          "value": "short",
+          "label": "Short"
+        }
+      ]
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-16",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria."
+  },
+  "outputs": [
+    {
+      "id": "precioBreakeven",
+      "label": "Precio de breakeven",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "movimientoNecesario",
+      "label": "% movimiento necesario",
+      "format": "number"
+    },
+    {
+      "id": "costoTotalFees",
+      "label": "Costo total en fees",
+      "format": "currency"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Long BTC 40.000, 1 unidad, fees 0.1+0.1+0.05%",
+    "steps": [
+      "Total fees = 0.25%.",
+      "BE long = 40.000 × 1.0025 = **40.100 USD**.",
+      "Costo total = 40.000 × 0.0025 = **100 USD**.",
+      "Si cerrás a 40.050 creés que ganaste 50, pero perdiste 50 (fee)."
+    ],
+    "result": "BE a **40.100**. Costo total **100 USD**. Subir <0.25% = pérdida neta."
+  },
+  "explanation": "## Fórmula de breakeven\n\nPara una posición **long**:\n\n```\nCosto total % = feeEntrada + feeSalida + spread\nBE long = Entrada × (1 + costoTotal/100)\nBE short = Entrada × (1 − costoTotal/100)\n```\n\nPara fees fijos (futuros, forex con comisión por lote):\n```\nBE = Entrada + (FeeTotal / TamañoPosición)\n```\n\n## Tabla: costos típicos por mercado\n\n| Mercado | Fee típico | Spread |\n|---|---|---|\n| Binance spot | 0.1% (0.075% con BNB) | 0.01-0.05% |\n| Coinbase Pro | 0.5% (retail) | 0.02-0.1% |\n| Kraken | 0.16-0.26% | 0.02-0.1% |\n| IBKR stocks | 0.005/share (min 1 USD) | 0.01% |\n| Forex ECN | 0.3-0.7 pips | incluido |\n| Brokers retail | 0-0.1% | 1-3 pips |\n| MELI/IOL (ARG) | 0.5-0.7% | 0.1-0.5% |\n\n## Impacto en estrategias\n\nScalper 100 trades/día × 0.25% = **25% al día** sólo en fees. Imposible rentable.\n\nSwing trader 20 trades/mes × 0.25% = 5% al mes. Si tu edge es 10%, fees se comen la mitad.\n\nPor eso HFT/market makers negocian **rebate**: cobran por dar liquidez en lugar de pagar.\n\n## Cómo reducir costos\n\n1. **Limit orders** en lugar de market (evitás spread).\n2. **Maker fees** menores (Binance 0.02% vs taker 0.05% con alto volumen).\n3. **Brokers ECN** con fee fija en vez de spread variable.\n4. **Reducir frecuencia** — cada trade cuenta.\n\nComplementos: [R:R](/calculadora-risk-reward-ratio-trade) · [PnL](/calculadora-pnl-trade-stock-cripto)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.",
+  "faq": [
+    {
+      "q": "¿Spread cuenta como costo?",
+      "a": "Sí — siempre. En forex el spread ES el costo principal. En cripto/stocks es secundario pero real."
+    },
+    {
+      "q": "¿Cómo negocio mejores fees?",
+      "a": "Aumentando volumen mensual. Binance VIP 0: 0.1%, VIP 9: 0.012% maker. Cuentas institucionales: fees casi 0."
+    },
+    {
+      "q": "¿Break-even incluye impuestos?",
+      "a": "No — este cálculo es pre-impuestos. Para impuestos sumalos como costo adicional (depende de tu jurisdicción)."
+    },
+    {
+      "q": "¿Diferencia entre maker y taker?",
+      "a": "**Maker** (colocás limit que queda en el libro) paga menos o cobra rebate. **Taker** (ejecutás contra orden existente) paga más."
+    },
+    {
+      "q": "¿Impacta en scalping?",
+      "a": "Brutal. Con fees de 0.1% total y stops de 0.3%, tu R:R real se reduce en 33%. Por eso pros scalping buscan fees <0.02%."
+    },
+    {
+      "q": "¿Vale para swing trading?",
+      "a": "Menos impacto (fees amortizados en movimientos grandes), pero sigue restando al edge. Siempre calculalos."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Binance Fees",
+      "url": "https://www.binance.com/en/fee/schedule"
+    },
+    {
+      "name": "IBKR Commissions",
+      "url": "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php"
+    },
+    {
+      "name": "Investopedia - Trading Costs",
+      "url": "https://www.investopedia.com/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-pnl-trade-stock-cripto",
+    "calculadora-risk-reward-ratio-trade",
+    "calculadora-pips-profit-forex-par",
+    "calculadora-position-size-forex-pips-riesgo"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

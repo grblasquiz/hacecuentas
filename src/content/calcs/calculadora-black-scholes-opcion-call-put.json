@@ -1,0 +1,187 @@
+{
+  "slug": "calculadora-black-scholes-opcion-call-put",
+  "title": "Calculadora Black-Scholes 2026 — Precio Call y Put | Hacé Cuentas",
+  "h1": "Calculadora Black-Scholes (precio de opción Call/Put)",
+  "description": "Black-Scholes: precio teórico de call y put según subyacente, strike, tiempo, tasa y volatilidad. Modelo Nobel 1997.",
+  "category": "finanzas",
+  "icon": "📊",
+  "formulaId": "black-scholes-opcion-call-put",
+  "audience": "global",
+  "seoKeywords": [
+    "black scholes",
+    "precio opciones",
+    "call put calculadora",
+    "modelo black scholes",
+    "opciones teorico",
+    "scholes nobel"
+  ],
+  "intro": "El modelo **Black-Scholes** (1973) revolucionó las finanzas: por primera vez existía una fórmula cerrada para valuar opciones. Sus autores Fischer Black, Myron Scholes y Robert Merton ganaron el Nobel en 1997 por ello. Esta calculadora calcula el **precio teórico de una call o put europea** bajo los supuestos clásicos: volatilidad constante, distribución log-normal del subyacente, sin dividendos y ejercicio al vencimiento. Ingresás precio del subyacente (S), strike (K), días al vencimiento, tasa libre de riesgo (r) y volatilidad anual (σ). Devuelve precio de call y put, valor intrínseco, valor temporal y distancia al strike. Es la base del precio de todas las opciones listadas en CBOE, NYSE, Eurex, BYMA y exchanges cripto.",
+  "keyTakeaway": "**Call = S×N(d1) − K×e^(−rT)×N(d2)**. Put se obtiene por paridad: Put = Call − S + K×e^(−rT).",
+  "useCases": [
+    "Comparar precio de mercado de una opción con el teórico B-S.",
+    "Pricing de strategies: spreads, condors, butterflies.",
+    "Proyectar cómo cambia el precio si varía σ o tiempo.",
+    "Evaluar mispricing en opciones ilíquidas.",
+    "Aprendizaje académico del modelo Nobel."
+  ],
+  "fields": [
+    {
+      "id": "precioSubyacente",
+      "label": "Precio del subyacente (S)",
+      "type": "number",
+      "placeholder": "100",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "strike",
+      "label": "Strike (K)",
+      "type": "number",
+      "placeholder": "100",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "diasVencimiento",
+      "label": "Días al vencimiento",
+      "type": "number",
+      "placeholder": "30",
+      "required": true,
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "tasaRiesgo",
+      "label": "Tasa libre de riesgo (% anual)",
+      "type": "number",
+      "placeholder": "5",
+      "required": true,
+      "min": 0,
+      "max": 100,
+      "step": 0.1
+    },
+    {
+      "id": "volatilidad",
+      "label": "Volatilidad anual (%)",
+      "type": "number",
+      "placeholder": "25",
+      "required": true,
+      "min": 0.1,
+      "max": 500,
+      "step": 0.1
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-16",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria."
+  },
+  "outputs": [
+    {
+      "id": "precioCall",
+      "label": "Precio Call teórico",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "precioPut",
+      "label": "Precio Put teórico",
+      "format": "currency"
+    },
+    {
+      "id": "valorIntrinsecoCall",
+      "label": "Valor intrínseco Call",
+      "format": "currency"
+    },
+    {
+      "id": "valorTemporalCall",
+      "label": "Valor temporal Call",
+      "format": "currency"
+    },
+    {
+      "id": "d1",
+      "label": "d1",
+      "format": "number"
+    },
+    {
+      "id": "d2",
+      "label": "d2",
+      "format": "number"
+    }
+  ],
+  "example": {
+    "title": "S=100, K=100, 30 días, r=5%, σ=25%",
+    "steps": [
+      "T=30/365≈0.082",
+      "d1 = (ln(1)+(0.05+0.25²/2)×0.082)/(0.25×√0.082) ≈ 0.094",
+      "d2 = 0.094 − 0.25×√0.082 ≈ 0.022",
+      "Call = 100×N(0.094) − 100×e^(-0.004)×N(0.022) ≈ **2.95 USD**",
+      "Put ≈ 2.54 USD (por paridad)"
+    ],
+    "result": "Call teórica **2.95 USD**, Put **2.54 USD**. At-the-money, 30d, vol 25%."
+  },
+  "explanation": "## La fórmula de Black-Scholes\n\nPara una **call europea**:\n\n```\nC = S × N(d1) − K × e^(−rT) × N(d2)\nd1 = [ln(S/K) + (r + σ²/2)×T] / (σ×√T)\nd2 = d1 − σ×√T\n```\n\nDonde N(·) es la función de distribución acumulada normal estándar.\n\nPara la **put** por paridad call-put: `P = C − S + K×e^(−rT)`\n\n## Supuestos del modelo (y sus limitaciones)\n\n1. **Volatilidad constante**: en realidad cambia (→ IV smile/skew).\n2. **Log-normal** del precio: subestima colas gordas (crashes).\n3. **Sin dividendos**: la versión Merton los incluye.\n4. **Tasa libre riesgo constante**: real cambia poco en plazos cortos.\n5. **Ejercicio europeo**: americanas necesitan trees/FDM.\n\n## Tabla: sensibilidad del precio call\n\n| Cambio | Efecto en call |\n|---|---|\n| +1% subyacente (S) | +delta × 1 |\n| +1 día pasado | −theta |\n| +1% volatilidad | +vega |\n| +1% tasa | +rho (chico) |\n\n## Usos prácticos\n\n- **Arbitraje**: detectar opciones mispriced vs teórico.\n- **Hedging**: delta-hedge una posición.\n- **Strategy pricing**: iron condor = vender call spread + put spread.\n- **Vol trading**: comprar cuando IV < HV, vender cuando IV > HV.\n\nComplementos: [Greeks](/calculadora-greeks-delta-gamma-theta) · [IV](/calculadora-volatilidad-implicita-opciones)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.",
+  "faq": [
+    {
+      "q": "¿Call o Put más cara at-the-money?",
+      "a": "Call ligeramente más cara por el término de tasa (favorece al comprador de call). A tasa 0% son iguales ATM."
+    },
+    {
+      "q": "¿Vale para opciones americanas?",
+      "a": "Aproximadamente para calls sobre activos sin dividendos (Merton probó que no conviene ejercer antes). Para puts o con dividendos, necesita modelos binomiales."
+    },
+    {
+      "q": "¿Por qué la vol es clave?",
+      "a": "Es la única variable **no observable** que entra al modelo. Todo lo demás lo ves. La vol es literalmente el precio que se negocia."
+    },
+    {
+      "q": "¿Qué es la paridad call-put?",
+      "a": "Relación obligatoria: C − P = S − K×e^(−rT). Si no se cumple, hay arbitraje posible."
+    },
+    {
+      "q": "¿Es preciso para cripto?",
+      "a": "Imperfecto — cripto tiene colas más gordas y vol muy cambiante. Pero sigue siendo el punto de partida en Deribit."
+    },
+    {
+      "q": "¿Por qué ganó el Nobel?",
+      "a": "Resolvió un problema abierto ~70 años y permitió la explosión de mercados de derivados (opciones, futures, swaps). Volumen anual actual: trillones USD."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Black & Scholes - The Pricing of Options (1973)"
+    },
+    {
+      "name": "Hull - Options, Futures and Other Derivatives"
+    },
+    {
+      "name": "Investopedia - Black-Scholes",
+      "url": "https://www.investopedia.com/terms/b/blackscholes.asp"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-volatilidad-implicita-opciones",
+    "calculadora-greeks-delta-gamma-theta",
+    "calculadora-breakeven-trade-comisiones",
+    "calculadora-risk-reward-ratio-trade"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

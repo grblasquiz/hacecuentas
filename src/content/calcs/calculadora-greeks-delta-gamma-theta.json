@@ -1,0 +1,200 @@
+{
+  "slug": "calculadora-greeks-delta-gamma-theta",
+  "title": "Calculadora Griegas Opciones 2026 — Delta Gamma Theta Vega | Hacé Cuentas",
+  "h1": "Calculadora de Greeks (Delta, Gamma, Theta, Vega, Rho)",
+  "description": "Greeks opciones: delta, gamma, theta, vega, rho. Sensibilidades Black-Scholes para hedging y análisis de riesgo.",
+  "category": "finanzas",
+  "icon": "📊",
+  "formulaId": "greeks-delta-gamma-theta",
+  "audience": "global",
+  "seoKeywords": [
+    "greeks opciones",
+    "delta gamma theta",
+    "vega opciones",
+    "rho black scholes",
+    "opciones griegas",
+    "delta hedge"
+  ],
+  "intro": "Las **griegas (Greeks)** son las derivadas parciales del precio de una opción respecto a cada variable del modelo Black-Scholes. Son el panel de control del trader de opciones: con las griegas sabés exactamente **cómo se va a mover tu posición** ante cambios de precio, tiempo y volatilidad. **Delta** mide sensibilidad al subyacente (0 a 1 call, −1 a 0 put). **Gamma** es la segunda derivada (aceleración del delta). **Theta** es el decay diario (negativo para compradores). **Vega** es sensibilidad a volatilidad (+100 básicos IV). **Rho** es sensibilidad a la tasa (el menos importante). Esta calculadora las computa todas a partir de los mismos inputs que Black-Scholes. Indispensable para delta-hedging, vol trading, portfolio management.",
+  "keyTakeaway": "**Delta** = Δprecio/ΔS. **Gamma** = Δdelta/ΔS. **Theta** = Δprecio/día. **Vega** = Δprecio por +1% IV. **Rho** = por +1% tasa.",
+  "useCases": [
+    "Delta-hedgear un portfolio de opciones.",
+    "Saber cuánto pierde una posición por día (theta).",
+    "Medir exposición a vol (vega).",
+    "Riesgo de gamma ante earnings.",
+    "Comparar griegas de distintos strikes/vencimientos."
+  ],
+  "fields": [
+    {
+      "id": "precioSubyacente",
+      "label": "Precio del subyacente",
+      "type": "number",
+      "placeholder": "100",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "strike",
+      "label": "Strike",
+      "type": "number",
+      "placeholder": "100",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "diasVencimiento",
+      "label": "Días al vencimiento",
+      "type": "number",
+      "placeholder": "30",
+      "required": true,
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "tasaRiesgo",
+      "label": "Tasa (% anual)",
+      "type": "number",
+      "placeholder": "5",
+      "required": true,
+      "min": 0,
+      "max": 100,
+      "step": 0.1
+    },
+    {
+      "id": "volatilidad",
+      "label": "Volatilidad anual (%)",
+      "type": "number",
+      "placeholder": "25",
+      "required": true,
+      "min": 0.1,
+      "max": 500,
+      "step": 0.1
+    },
+    {
+      "id": "tipo",
+      "label": "Tipo",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "call",
+          "label": "Call"
+        },
+        {
+          "value": "put",
+          "label": "Put"
+        }
+      ]
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-16",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria."
+  },
+  "outputs": [
+    {
+      "id": "delta",
+      "label": "Delta",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "gamma",
+      "label": "Gamma",
+      "format": "number"
+    },
+    {
+      "id": "theta",
+      "label": "Theta (por día)",
+      "format": "number"
+    },
+    {
+      "id": "vega",
+      "label": "Vega (por +1% IV)",
+      "format": "number"
+    },
+    {
+      "id": "rho",
+      "label": "Rho (por +1% tasa)",
+      "format": "number"
+    }
+  ],
+  "example": {
+    "title": "ATM call: S=100, K=100, 30d, r=5%, σ=25%",
+    "steps": [
+      "d1 ≈ 0.094",
+      "**Delta** = N(d1) ≈ 0.537",
+      "**Gamma** = N'(d1)/(S×σ×√T) ≈ 0.055",
+      "**Theta** = − impacto tiempo ≈ -0.045 USD/día",
+      "**Vega** = S×N'(d1)×√T ≈ 0.113",
+      "**Rho** = K×T×e^(−rT)×N(d2) ≈ 0.041"
+    ],
+    "result": "Delta 0.54, Gamma 0.055, Theta −0.045, Vega 0.11, Rho 0.04."
+  },
+  "explanation": "## Las 5 griegas clave\n\n### Delta (Δ)\nCambio en el precio de la opción por cada +1 USD del subyacente.\n- **Call**: 0 a +1 (deep ITM ≈ 1, OTM ≈ 0, ATM ≈ 0.5)\n- **Put**: −1 a 0\n\n### Gamma (Γ)\nAceleración del delta (segunda derivada). Máxima ATM y cerca del vencimiento. Es el **riesgo invisible** de posiciones ATM cortas.\n\n### Theta (Θ)\nPérdida de valor por el paso del tiempo. **Negativa para compradores** (premium drena), positiva para vendedores. Se acelera en las últimas 30 días (theta decay).\n\n### Vega (ν)\nCambio por cada +1% de volatilidad. Alta para opciones ATM y con tiempo. Es el riesgo principal de posiciones de vol.\n\n### Rho (ρ)\nSensibilidad a la tasa libre de riesgo. Pequeña en plazos cortos — importa en LEAPS.\n\n## Tabla: Greeks típicos ATM\n\n| Maturity | Delta | Gamma | Theta | Vega |\n|---|---|---|---|---|\n| 7 días | 0.50 | 0.12 | -0.10 | 0.05 |\n| 30 días | 0.54 | 0.055 | -0.045 | 0.11 |\n| 90 días | 0.56 | 0.03 | -0.025 | 0.20 |\n| 1 año | 0.60 | 0.012 | -0.012 | 0.40 |\n\n## Estrategias por griegas\n\n- **Long call**: +Δ, +Γ, −Θ, +ν\n- **Short put**: +Δ, −Γ, +Θ, −ν\n- **Iron condor**: ~0 Δ, −Γ, +Θ, −ν (premium seller)\n- **Calendar spread**: ~0 Δ, +Γ, +Θ, +ν (vol long)\n\nComplementos: [Black-Scholes](/calculadora-black-scholes-opcion-call-put) · [IV](/calculadora-volatilidad-implicita-opciones)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.",
+  "faq": [
+    {
+      "q": "¿Qué griega es la más importante?",
+      "a": "Depende del estilo: direccional → **Delta**. Vol traders → **Vega**. Premium sellers → **Theta**. Arbitraje ATM → **Gamma**."
+    },
+    {
+      "q": "¿Delta = probabilidad de ITM?",
+      "a": "Aproximadamente — es una muy buena heurística. Delta 0.30 ≈ 30% probabilidad de terminar ITM."
+    },
+    {
+      "q": "¿Cómo hago delta-hedge?",
+      "a": "Short 100 calls con delta 0.5 → long 50 acciones (contra 5000 del contrato). Rebalanceá cuando delta cambie significativamente."
+    },
+    {
+      "q": "¿Theta se paga de a ratos?",
+      "a": "Es continuo, pero la liquidación es más pronunciada en weekends (pasa 3 días en 2 sesiones). Los traders lo llaman 'weekend theta'."
+    },
+    {
+      "q": "¿Gamma risk en earnings?",
+      "a": "Sí. Un gap grande con gamma corta te liquida. Por eso vol sellers evitan posiciones ATM en earnings."
+    },
+    {
+      "q": "¿Hay más griegas?",
+      "a": "Segunda generación: Vanna, Vomma, Charm, Speed. Las usan mesas de trading institucionales."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Hull - Options, Futures and Other Derivatives"
+    },
+    {
+      "name": "CBOE Education",
+      "url": "https://www.cboe.com/education/"
+    },
+    {
+      "name": "Investopedia - Option Greeks",
+      "url": "https://www.investopedia.com/trading/getting-to-know-the-greeks/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-black-scholes-opcion-call-put",
+    "calculadora-volatilidad-implicita-opciones",
+    "calculadora-breakeven-trade-comisiones",
+    "calculadora-risk-reward-ratio-trade"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

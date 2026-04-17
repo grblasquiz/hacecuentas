@@ -1,0 +1,193 @@
+{
+  "slug": "calculadora-volatilidad-implicita-opciones",
+  "title": "Calculadora Volatilidad Implícita 2026 — Opciones IV | Hacé Cuentas",
+  "h1": "Calculadora de Volatilidad Implícita (IV) en Opciones",
+  "description": "Volatilidad implícita opciones: IV anual, IV rank, IV percentil. Newton-Raphson sobre Black-Scholes.",
+  "category": "finanzas",
+  "icon": "📊",
+  "formulaId": "volatilidad-implicita-opciones",
+  "audience": "global",
+  "seoKeywords": [
+    "volatilidad implicita",
+    "iv opciones",
+    "iv rank",
+    "implied volatility",
+    "black scholes iv",
+    "iv percentil"
+  ],
+  "intro": "La **volatilidad implícita (IV)** es **el precio del miedo**: refleja cuánto movimiento futuro descuenta el mercado en el precio de una opción. A diferencia de la volatilidad histórica (HV), que mira hacia atrás, la IV se despeja del precio actual de la opción usando el modelo **Black-Scholes**. Esta calculadora usa el método de **Newton-Raphson** para resolver la IV que iguala el precio observado con el teórico. Inputs: precio de la opción, precio del subyacente, strike, días al vencimiento, tasa libre de riesgo y tipo (call/put). Devuelve IV anualizada, IV diaria y una interpretación (alta/baja) según benchmarks típicos. Fundamental para venta de opciones (short strangles, iron condors) y estrategias de volatilidad.",
+  "keyTakeaway": "**IV = volatilidad implícita anual** en % anual. SPX típico 15–25%. Crypto/small-caps 50–150%+.",
+  "useCases": [
+    "Verificar si la IV está alta/baja antes de vender premium.",
+    "Comparar IV actual contra IV percentil histórico.",
+    "Calcular esperanza de movimiento diario.",
+    "Evaluar iron condors: IV alto = mejor prima.",
+    "Entender por qué una call OTM es tan cara."
+  ],
+  "fields": [
+    {
+      "id": "precioOpcion",
+      "label": "Precio de la opción (USD)",
+      "type": "number",
+      "placeholder": "5",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "precioSubyacente",
+      "label": "Precio del subyacente",
+      "type": "number",
+      "placeholder": "100",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "strike",
+      "label": "Strike",
+      "type": "number",
+      "placeholder": "105",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "diasVencimiento",
+      "label": "Días al vencimiento",
+      "type": "number",
+      "placeholder": "30",
+      "required": true,
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "tasaRiesgo",
+      "label": "Tasa libre de riesgo (% anual)",
+      "type": "number",
+      "placeholder": "5",
+      "required": true,
+      "min": 0,
+      "max": 100,
+      "step": 0.1
+    },
+    {
+      "id": "tipo",
+      "label": "Tipo",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "call",
+          "label": "Call"
+        },
+        {
+          "value": "put",
+          "label": "Put"
+        }
+      ]
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-16",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria."
+  },
+  "outputs": [
+    {
+      "id": "ivAnualPorcentaje",
+      "label": "IV anualizada (%)",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "ivDiaria",
+      "label": "IV diaria (%)",
+      "format": "number"
+    },
+    {
+      "id": "movimientoEsperado1Sigma",
+      "label": "Mov. esperado 1σ (USD)",
+      "format": "currency"
+    },
+    {
+      "id": "categoria",
+      "label": "Categoría",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Opción 5 USD, subyacente 100, strike 105, 30 días, call",
+    "steps": [
+      "Aplicando Newton-Raphson sobre Black-Scholes.",
+      "Iteración converge en σ ≈ 0.35.",
+      "IV = **35% anual**.",
+      "IV diaria = 35% / √252 ≈ 2.2%.",
+      "Mov. esperado 1σ: 100 × 2.2% × √30/30 ≈ ±7.8 USD."
+    ],
+    "result": "IV **35%** — nivel medio para equities. Mov esperado 1σ en 30 días: ±7.80 USD."
+  },
+  "explanation": "## Qué es la volatilidad implícita\n\nLa **IV** es la volatilidad que, insertada en Black-Scholes, produce el precio observado de la opción. No es un pronóstico — es el **consenso del mercado** sobre volatilidad futura.\n\n## Método: Newton-Raphson\n\nBlack-Scholes expresa precio en función de σ (volatilidad). IV se obtiene resolviendo:\n\n```\nBS_precio(σ) = precio_observado\n```\n\nIterativamente con Newton-Raphson: σ_nuevo = σ_actual − (BS(σ) − precio) / vega(σ)\n\nConverge en 5–15 iteraciones con precisión 10⁻⁶.\n\n## Tabla: benchmarks IV típicos\n\n| Activo | IV típica anual |\n|---|---|\n| SPX/SPY (S&P 500) | 15–25% |\n| QQQ (Nasdaq) | 20–30% |\n| AAPL, MSFT (large-cap tech) | 25–35% |\n| NVDA (mega-cap volátil) | 40–60% |\n| TSLA | 50–80% |\n| Small-caps (Russell 2000) | 25–40% |\n| Crypto BTC | 50–80% |\n| Crypto altcoins | 80–200%+ |\n\n## IV Rank vs IV Percentil\n\n- **IV Rank** = (IV actual − min 52w) / (max 52w − min 52w) × 100\n- **IV Percentil** = % de días del último año con IV menor al actual\n\nLos **short-vol traders** buscan IVR >50 (para vender caro) y evitan IVR <20 (premium bajo, no compensa riesgo).\n\n## Movimiento esperado 1-sigma\n\n```\nσ_diario = σ_anual / √252\nMov 1σ en T días = Precio × σ_diario × √T\n```\n\nHay 68% probabilidad de estar dentro de ±1σ al vencimiento.\n\nComplementos: [Black-Scholes](/calculadora-black-scholes-opcion-call-put) · [Greeks](/calculadora-greeks-delta-gamma-theta)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.",
+  "faq": [
+    {
+      "q": "¿IV o HV cuál es más útil?",
+      "a": "**IV** para decidir trades (es lo que te pagan por vender). **HV** como referencia de qué hubo. Cuando IV > HV significativamente, es momento de vender premium."
+    },
+    {
+      "q": "¿Por qué la IV sube antes de earnings?",
+      "a": "Los inversores compran opciones para protegerse/especular. Sube el precio → sube la IV. Post-earnings la IV colapsa (\"volatility crush\") aunque el precio se mueva."
+    },
+    {
+      "q": "¿Qué es IV Skew?",
+      "a": "La diferencia de IV entre puts OTM y calls OTM. En equities, puts OTM tienen IV más alta (miedo a crashes). En cripto suele ser más simétrico."
+    },
+    {
+      "q": "¿IV del 100% es mucho?",
+      "a": "Para SPX sí. Para cripto o biotech en trials — normal. El benchmark depende totalmente del activo."
+    },
+    {
+      "q": "¿Newton-Raphson siempre converge?",
+      "a": "Casi siempre. Para opciones deep OTM o ITM puede ser lento o requerir método de bisección como fallback."
+    },
+    {
+      "q": "¿Cómo uso la IV para trading?",
+      "a": "Vendé premium cuando IV Rank >50 (strangle, condor). Comprá cuando IVR <20 (directional trades). Evitá vender vol cerca de eventos binarios sin hedge."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Black & Scholes - Pricing of Options (1973)"
+    },
+    {
+      "name": "CBOE - VIX Methodology",
+      "url": "https://www.cboe.com/tradable_products/vix/"
+    },
+    {
+      "name": "Investopedia - Implied Volatility",
+      "url": "https://www.investopedia.com/terms/i/iv.asp"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-black-scholes-opcion-call-put",
+    "calculadora-greeks-delta-gamma-theta",
+    "calculadora-risk-reward-ratio-trade",
+    "calculadora-breakeven-trade-comisiones"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "slug": "calculadora-pnl-trade-stock-cripto",
+  "title": "Calculadora PnL Trade 2026 — Ganancia/Pérdida Stocks y Cripto | Hacé Cuentas",
+  "h1": "Calculadora de PnL (Profit and Loss) por Trade",
+  "description": "PnL trade: ganancia/pérdida exacta con comisiones, % rendimiento, R (múltiplos de riesgo). Stocks, cripto, forex.",
+  "category": "finanzas",
+  "icon": "💰",
+  "formulaId": "pnl-trade-stock-cripto",
+  "audience": "global",
+  "seoKeywords": [
+    "pnl calculadora",
+    "ganancia trade",
+    "profit loss trading",
+    "rendimiento operacion",
+    "multiplo r trading"
+  ],
+  "intro": "El **PnL (Profit and Loss)** es el número final que importa: ¿ganaste o perdiste, y cuánto? Parece trivial pero en la práctica hay que restar comisiones de entrada y salida, spread, y considerar shorts vs longs. Esta calculadora toma precio de entrada, precio de salida, tamaño de posición, comisiones y dirección, y devuelve: PnL bruto, PnL neto después de fees, rendimiento porcentual, múltiplo R (si ingresás el riesgo inicial) y ROI sobre capital comprometido. Funciona para cualquier mercado — el concepto es idéntico en stocks, forex, cripto y futuros. Ideal para journaling de trades, auditoría de performance y planificación de estrategias.",
+  "keyTakeaway": "**PnL neto = (Salida − Entrada) × Cantidad − Fees**. R = PnL / Riesgo inicial. Rendimiento% = PnL / Capital invertido × 100.",
+  "useCases": [
+    "Auditar un trade cerrado para journaling.",
+    "Calcular R múltiplo de una estrategia.",
+    "Medir rendimiento % sobre capital invertido.",
+    "Comparar PnL bruto vs neto tras fees.",
+    "Saber si un short fue más rentable que un long equivalente."
+  ],
+  "fields": [
+    {
+      "id": "precioEntrada",
+      "label": "Precio de entrada",
+      "type": "number",
+      "placeholder": "100",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "precioSalida",
+      "label": "Precio de salida",
+      "type": "number",
+      "placeholder": "110",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "cantidad",
+      "label": "Cantidad de unidades",
+      "type": "number",
+      "placeholder": "100",
+      "required": true,
+      "min": 0.0001,
+      "step": 0.0001
+    },
+    {
+      "id": "comisionTotal",
+      "label": "Comisión total (USD, entrada+salida)",
+      "type": "number",
+      "placeholder": "5",
+      "required": true,
+      "min": 0,
+      "step": 0.01
+    },
+    {
+      "id": "riesgoInicial",
+      "label": "Riesgo inicial planificado (USD, opcional)",
+      "type": "number",
+      "placeholder": "200",
+      "required": false,
+      "min": 0,
+      "step": 0.01
+    },
+    {
+      "id": "direccion",
+      "label": "Dirección",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "long",
+          "label": "Long"
+        },
+        {
+          "value": "short",
+          "label": "Short"
+        }
+      ]
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-16",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria."
+  },
+  "outputs": [
+    {
+      "id": "pnlBruto",
+      "label": "PnL bruto",
+      "format": "currency"
+    },
+    {
+      "id": "pnlNeto",
+      "label": "PnL neto (tras fees)",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "rendimientoPorcentaje",
+      "label": "Rendimiento (%)",
+      "format": "number"
+    },
+    {
+      "id": "multiploR",
+      "label": "Múltiplo R",
+      "format": "number"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Long 100 unidades a 100, sale a 110, fees 5",
+    "steps": [
+      "PnL bruto = (110−100) × 100 = **1.000 USD**.",
+      "PnL neto = 1.000 − 5 = **995 USD**.",
+      "Capital invertido: 100 × 100 = 10.000.",
+      "Rendimiento = 995/10.000 = **9.95%**.",
+      "Si riesgo inicial era 200, R = 995/200 = **5R**."
+    ],
+    "result": "PnL neto **+995 USD** (+9.95%). Trade de 5R — excelente."
+  },
+  "explanation": "## PnL — la fórmula completa\n\nPara **long**:\n```\nPnL bruto = (PrecioSalida − PrecioEntrada) × Cantidad\nPnL neto = PnL bruto − ComisionesTotales\n```\n\nPara **short**:\n```\nPnL bruto = (PrecioEntrada − PrecioSalida) × Cantidad\n```\n\n## Métricas derivadas\n\n### Rendimiento %\n```\n% = PnL neto / CapitalInvertido × 100\n```\n\n### Múltiplo R\n```\nR = PnL neto / RiesgoInicial\n```\n\nEl R múltiplo es la métrica favorita de los **journaling traders** porque normaliza trades de distinto tamaño. Un 2R es igual de bueno sea 200 o 20.000 USD.\n\n## Tabla: PnL típico por estrategia\n\n| Estrategia | R promedio por trade | Winrate |\n|---|---|---|\n| Trend-following | +2R a +5R wins, -1R losses | 35-45% |\n| Mean reversion | +1R wins, -1R losses | 55-65% |\n| Scalping | +0.3R a +1R | 60-70% |\n| Swing | +2R a +3R | 45-55% |\n| Options premium | +0.3R frecuente, -3R raro | 80%+ |\n\n## Errores al medir PnL\n\n1. **Ignorar fees**: 0.25% × 100 trades = -25% sin mover precio.\n2. **No contar slippage**: en volatilidad puede costar 0.1-0.5% extra.\n3. **Calcular %% sobre capital total** en lugar del comprometido — infla números.\n4. **Omitir impuestos**: en ARG 15% sobre ganancias CEDEAR.\n\n## Journaling\n\nAnotá cada trade: entrada, salida, R múltiplo, tesis, emoción, errores. Es la única forma de mejorar. Herramientas: Edgewonk, TraderSync, spreadsheet propio.\n\nComplementos: [R:R](/calculadora-risk-reward-ratio-trade) · [Position size](/calculadora-position-size-forex-pips-riesgo)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.",
+  "faq": [
+    {
+      "q": "¿PnL bruto o neto?",
+      "a": "Para performance real, **neto**. Pero trackeá ambos — diferencia te muestra impacto de fees."
+    },
+    {
+      "q": "¿Qué es un 'R'?",
+      "a": "Múltiplo del riesgo inicial. Ganaste 2R = el doble de lo que estabas dispuesto a perder. Normaliza trades de distinto size."
+    },
+    {
+      "q": "¿Cómo calculo PnL en short?",
+      "a": "Invertido: PnL = (Entrada − Salida) × Cantidad. Si entrada > salida, ganás."
+    },
+    {
+      "q": "¿Fees se restan o dividen?",
+      "a": "Se **restan** del PnL bruto. No afectan el rendimiento % si los calculás sobre capital invertido."
+    },
+    {
+      "q": "¿ROI vs rendimiento por trade?",
+      "a": "ROI total = PnL / CapitalTotal. Rendimiento por trade = PnL / CapitalComprometido ese trade. Segundo es más útil para benchmark."
+    },
+    {
+      "q": "¿Cómo afectan impuestos?",
+      "a": "Depende jurisdicción. En ARG, ganancias en bolsa tributan 15% (no residentes) o escala (residentes) — restá al PnL neto para saber el real disponible."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Van Tharp - Definitive Guide to Position Sizing"
+    },
+    {
+      "name": "Investopedia - Profit and Loss",
+      "url": "https://www.investopedia.com/terms/p/plstatement.asp"
+    },
+    {
+      "name": "Edgewonk Trading Journal"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-risk-reward-ratio-trade",
+    "calculadora-breakeven-trade-comisiones",
+    "calculadora-position-size-forex-pips-riesgo",
+    "calculadora-drawdown-maximo-aceptable"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

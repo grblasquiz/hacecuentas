@@ -1,0 +1,190 @@
+{
+  "slug": "calculadora-position-size-cripto-leverage",
+  "title": "Calculadora Position Size Cripto 2026 — Leverage y Riesgo | Hacé Cuentas",
+  "h1": "Calculadora de Position Size en Cripto (con leverage)",
+  "description": "Position size cripto futuros: tamaño de posición, margen requerido y precio de liquidación según leverage y riesgo. Binance/Bybit/BitMEX.",
+  "category": "finanzas",
+  "icon": "💰",
+  "formulaId": "position-size-cripto-leverage",
+  "audience": "global",
+  "seoKeywords": [
+    "position size cripto",
+    "leverage bitcoin",
+    "margen bybit",
+    "liquidacion binance futures",
+    "cripto apalancamiento",
+    "btc futures calculadora"
+  ],
+  "intro": "Operar **cripto con leverage** (Binance Futures, Bybit, BitMEX, OKX) es el instrumento con mayor ratio riesgo/retorno del mercado. Un leverage 10x en BTC multiplica por 10 tus ganancias — y también tus pérdidas. Esta calculadora te da: el **tamaño óptimo** de la posición basado en tu regla de riesgo (%capital), el **margen inicial** requerido y el **precio de liquidación estimado** según el leverage elegido. Ingresás capital, % de riesgo, precio de entrada, stop-loss y leverage. La calculadora aplica la fórmula estándar de futuros perpetuos y te muestra cuánto quedás lejos de la liquidación forzosa. Funciona para BTC, ETH, SOL y cualquier par USDT-margined.",
+  "keyTakeaway": "**Tamaño = (Capital × %riesgo) / |Entrada − Stop|**. El leverage sólo reduce el margen bloqueado. Precio liquidación ≈ Entrada × (1 − 1/Leverage × 0.95).",
+  "useCases": [
+    "Abrir long en BTC/USDT a 10x con 2% de riesgo.",
+    "Calcular precio de liquidación antes de entrar.",
+    "Comparar margen requerido en leverage 5x vs 20x.",
+    "Evitar liquidaciones en volatilidad alta.",
+    "Sizing para scalping en Bybit con apalancamiento."
+  ],
+  "fields": [
+    {
+      "id": "capital",
+      "label": "Capital (USDT)",
+      "type": "number",
+      "placeholder": "5000",
+      "required": true,
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "riesgoPorcentaje",
+      "label": "Riesgo por trade (%)",
+      "type": "number",
+      "placeholder": "2",
+      "required": true,
+      "min": 0.01,
+      "max": 100,
+      "step": 0.1
+    },
+    {
+      "id": "precioEntrada",
+      "label": "Precio de entrada (USDT)",
+      "type": "number",
+      "placeholder": "40000",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "precioStop",
+      "label": "Precio del stop (USDT)",
+      "type": "number",
+      "placeholder": "39000",
+      "required": true,
+      "min": 0.01,
+      "step": 0.01
+    },
+    {
+      "id": "leverage",
+      "label": "Leverage (x)",
+      "type": "number",
+      "placeholder": "10",
+      "required": true,
+      "min": 1,
+      "max": 125,
+      "step": 1
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-16",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria."
+  },
+  "outputs": [
+    {
+      "id": "tamanoPosicionUSD",
+      "label": "Tamaño de la posición (USDT)",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "unidades",
+      "label": "Unidades del activo",
+      "format": "number"
+    },
+    {
+      "id": "margenRequerido",
+      "label": "Margen requerido",
+      "format": "currency"
+    },
+    {
+      "id": "precioLiquidacion",
+      "label": "Precio de liquidación",
+      "format": "currency"
+    },
+    {
+      "id": "riesgoUSD",
+      "label": "Pérdida máxima",
+      "format": "currency"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "5.000 USDT, 2% riesgo, BTC entrada 40k stop 39k, leverage 10x",
+    "steps": [
+      "Capital 5.000, riesgo 2% = 100 USDT.",
+      "Distancia: 40k − 39k = 1.000 USDT.",
+      "Unidades: 100 / 1.000 = **0.1 BTC**.",
+      "Tamaño: 0.1 × 40.000 = 4.000 USDT.",
+      "Margen = 4.000/10 = **400 USDT**.",
+      "Liq ≈ 40.000 × (1 − 0.95/10) = **36.200 USDT**."
+    ],
+    "result": "Abrís **0.1 BTC long** (4.000 USDT). Margen 400. SL = 100 USDT. Liquidación ~36.200."
+  },
+  "explanation": "## Cómo funciona el position sizing en cripto con leverage\n\nEn futuros perpetuos (Binance, Bybit, BitMEX) el **leverage no cambia el riesgo** si respetás tu stop: sólo cambia el **margen bloqueado**. El riesgo real está en que el mercado se mueva tan rápido que no alcances a salir antes de la liquidación forzosa.\n\n## Fórmulas clave\n\n```\nUnidades = (Capital × %Riesgo/100) / |Entrada − Stop|\nTamaño USD = Unidades × Entrada\nMargen = Tamaño / Leverage\nPrecio liquidación (long) ≈ Entrada × (1 − 1/Leverage × 0.95)\n```\n\nEl factor 0.95 refleja comisiones + margin rate. Exchanges usan fórmulas levemente distintas (isolated vs cross, mantenimiento variable).\n\n## Tabla: distancia a liquidación por leverage\n\n| Leverage | % caída a liquidación (long) |\n|---|---|\n| 2x | ~47% |\n| 5x | ~19% |\n| 10x | ~9.5% |\n| 20x | ~4.75% |\n| 50x | ~1.9% |\n| 100x | ~0.95% |\n\n> A **100x** una vela de 1% te liquida. Por eso los pros usan 3–10x máximo.\n\n## Riesgos específicos de cripto\n\n1. **Liquidaciones en cascada**: velas de -10% en minutos son normales.\n2. **Funding rate**: en perpetuos pagás cada 8h si estás del lado \"caro\".\n3. **Socialización de pérdidas**: en algunos exchanges.\n4. **Stop hunting**: el mercado busca stops obvios.\n\nRelacionados: [Margin call](/calculadora-margin-call-futuros-precio) · [Apalancamiento](/calculadora-apalancamiento-liquidacion) · [PnL](/calculadora-pnl-trade-stock-cripto)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.",
+  "faq": [
+    {
+      "q": "¿Cuánto leverage es seguro?",
+      "a": "Para BTC/ETH: **3–10x máx**. Para altcoins volátiles: **2–3x**. Arriba de 10x es casino."
+    },
+    {
+      "q": "¿Isolated o cross margin?",
+      "a": "**Isolated**: sólo arriesgás el margen del trade. **Cross**: usa toda la cuenta como colateral. Para novatos, isolated siempre."
+    },
+    {
+      "q": "¿Qué pasa con el funding rate?",
+      "a": "En perpetuos pagás o cobrás cada 8h según si estás largo/corto cuando el funding es positivo/negativo. Rangos normales: ±0.01% a ±0.05%."
+    },
+    {
+      "q": "¿Por qué mi liquidación es distinta de la calculada?",
+      "a": "Cada exchange usa margin rates de mantenimiento distintos (0.5%–2.5%) y fees. La calculadora da estimado — confirmá en el exchange."
+    },
+    {
+      "q": "¿Es mejor leverage o spot sizing mayor?",
+      "a": "Depende. Leverage = sin inmovilizar capital pero con riesgo de liquidación. Spot = capital total bloqueado sin liquidación forzosa."
+    },
+    {
+      "q": "¿Funciona para altcoins?",
+      "a": "Sí, pero ajustá el stop: altcoins tienen volatilidad 2–3x mayor que BTC. Reducí leverage a la mitad."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Binance Futures - Leverage",
+      "url": "https://www.binance.com/en/futures"
+    },
+    {
+      "name": "Bybit Academy",
+      "url": "https://learn.bybit.com"
+    },
+    {
+      "name": "Investopedia - Leverage",
+      "url": "https://www.investopedia.com/terms/l/leverage.asp"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-position-size-forex-pips-riesgo",
+    "calculadora-apalancamiento-liquidacion",
+    "calculadora-margin-call-futuros-precio",
+    "calculadora-pnl-trade-stock-cripto"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}
