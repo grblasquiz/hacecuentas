@@ -1,12 +1,21 @@
 /**
- * Genera public/sitemap.xml como archivo estático antes del build de Astro.
+ * Genera sitemap segmentado como archivos estáticos antes del build de Astro.
  *
- * ¿Por qué no usar src/pages/sitemap.xml.ts (API route)?
- * Cloudflare Pages intenta correr los API routes con miniflare (Workers runtime)
- * que no soporta Node.js fs APIs → explota con "Illegal invocation".
- * Generarlo como archivo estático en public/ lo resuelve de raíz.
+ * Arquitectura:
+ *   /sitemap.xml                    → sitemap index (tabla de contenidos)
+ *     → /sitemap-core.xml           → home, legales, páginas institucionales
+ *     → /sitemap-calcs-{cat}.xml    → 1 sitemap por categoría (20 sitemaps)
+ *     → /sitemap-en.xml             → calculadoras inglés
+ *     → /sitemap-blog.xml           → posts del blog
+ *     → /sitemap-comparaciones.xml
+ *     → /sitemap-tablas.xml
+ *     → /sitemap-glosario.xml
+ *     → /sitemap-argentina.xml      → calcs por provincia
  *
- * Se actualiza solo en cada build — cada calc nueva aparece automáticamente.
+ * Por qué segmentar:
+ *   Un sitemap con 2200+ URLs se crawlea lento y Google prioriza los primeros N.
+ *   Separar por sección hace que Google descubra más rápido las calcs nuevas y
+ *   permite ver en Search Console qué sección tiene más/menos indexación.
  *
  * Usage: npm run sitemap (también corre en prebuild)
  */
@@ -24,65 +33,87 @@ const TABLAS_DIR = join(ROOT, 'src', 'content', 'tablas');
 const COMPARACIONES_DIR = join(ROOT, 'src', 'content', 'comparaciones');
 const ARGENTINA_DIR = join(ROOT, 'src', 'content', 'argentina');
 const GLOSARIO_DIR = join(ROOT, 'src', 'content', 'glosario');
-const OUT_FILE = join(ROOT, 'public', 'sitemap.xml');
+const PUBLIC_DIR = join(ROOT, 'public');
 
-// Leer todos los JSONs de calcs
-const calcs = readdirSync(CALCS_DIR)
-  .filter((f) => f.endsWith('.json'))
-  .map((f) => JSON.parse(readFileSync(join(CALCS_DIR, f), 'utf8')));
+// --------------------------------------------------------------------------
+// Helpers
+// --------------------------------------------------------------------------
 
-// Leer todos los JSONs de blog
-const blogPosts = readdirSync(BLOG_DIR)
-  .filter((f) => f.endsWith('.json'))
-  .map((f) => JSON.parse(readFileSync(join(BLOG_DIR, f), 'utf8')));
+interface Url {
+  loc: string;
+  priority: string;
+  changefreq: string;
+  lastmod: string;
+}
 
-// Leer todos los JSONs de tablas
-const tablas = readdirSync(TABLAS_DIR)
-  .filter((f) => f.endsWith('.json'))
-  .map((f) => JSON.parse(readFileSync(join(TABLAS_DIR, f), 'utf8')));
+function safeReadDir(dir: string): string[] {
+  try { return readdirSync(dir); } catch { return []; }
+}
 
-// Leer todos los JSONs de comparaciones
-const comparaciones = readdirSync(COMPARACIONES_DIR)
-  .filter((f) => f.endsWith('.json'))
-  .map((f) => JSON.parse(readFileSync(join(COMPARACIONES_DIR, f), 'utf8')));
+function readJSONs(dir: string): any[] {
+  return safeReadDir(dir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => {
+      try { return JSON.parse(readFileSync(join(dir, f), 'utf8')); } catch { return null; }
+    })
+    .filter(Boolean);
+}
 
-// Leer provincias + calcs provinciales
-const provincias = JSON.parse(readFileSync(join(ARGENTINA_DIR, 'provincias.json'), 'utf8'));
-const argCalcs = readdirSync(ARGENTINA_DIR)
+function getLastMod(filepath: string, fallback: string): string {
+  try {
+    return statSync(filepath).mtime.toISOString().split('T')[0];
+  } catch { return fallback; }
+}
+
+function urlsetXml(urls: Url[]): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map((u) => `  <url>
+    <loc>${u.loc}</loc>
+    <lastmod>${u.lastmod}</lastmod>
+    <changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+}
+
+function indexXml(sitemaps: Array<{ loc: string; lastmod: string }>): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${sitemaps.map((s) => `  <sitemap>
+    <loc>${s.loc}</loc>
+    <lastmod>${s.lastmod}</lastmod>
+  </sitemap>`).join('\n')}
+</sitemapindex>`;
+}
+
+// --------------------------------------------------------------------------
+// Data loading
+// --------------------------------------------------------------------------
+
+const calcs = readJSONs(CALCS_DIR);
+const calcsEn = readJSONs(CALCS_EN_DIR);
+const blogPosts = readJSONs(BLOG_DIR);
+const tablas = readJSONs(TABLAS_DIR);
+const comparaciones = readJSONs(COMPARACIONES_DIR);
+const glosarioTerms = readJSONs(GLOSARIO_DIR);
+
+let provincias: any[] = [];
+try {
+  provincias = JSON.parse(readFileSync(join(ARGENTINA_DIR, 'provincias.json'), 'utf8'));
+} catch { provincias = []; }
+
+const argCalcs = safeReadDir(ARGENTINA_DIR)
   .filter((f) => f.endsWith('.json') && f !== 'provincias.json')
-  .map((f) => JSON.parse(readFileSync(join(ARGENTINA_DIR, f), 'utf8')))
-  .filter((c: any) => c.calcSlug);
-
-// Leer todos los JSONs de glosario
-const glosarioTerms = readdirSync(GLOSARIO_DIR)
-  .filter((f) => f.endsWith('.json'))
-  .map((f) => JSON.parse(readFileSync(join(GLOSARIO_DIR, f), 'utf8')));
-
-// Leer todos los JSONs de calcs en inglés
-const calcsEn = readdirSync(CALCS_EN_DIR)
-  .filter((f) => f.endsWith('.json'))
-  .map((f) => JSON.parse(readFileSync(join(CALCS_EN_DIR, f), 'utf8')));
+  .map((f) => {
+    try { return JSON.parse(readFileSync(join(ARGENTINA_DIR, f), 'utf8')); } catch { return null; }
+  })
+  .filter((c: any) => c && c.calcSlug);
 
 const site = 'https://hacecuentas.com';
 const buildDate = new Date().toISOString().split('T')[0];
 
-function getLastMod(slug: string): string {
-  try {
-    const calc = calcs.find((c: any) => c.slug === slug);
-    if (!calc) return buildDate;
-    const filename = `${calc.formulaId || slug}.json`;
-    const stat = statSync(join(CALCS_DIR, filename));
-    return stat.mtime.toISOString().split('T')[0];
-  } catch {
-    return buildDate;
-  }
-}
-
-// Categorías únicas
-const cats = [...new Set(calcs.map((c: any) => c.category))];
-
-// Top-tier calcs con mayor prioridad
-const topSlugs = [
+const topSlugs = new Set([
   'sueldo-en-mano-argentina',
   'calculadora-aguinaldo-sac',
   'calculadora-indemnizacion-despido',
@@ -95,105 +126,157 @@ const topSlugs = [
   'calculadora-impuesto-ganancias-sueldo',
   'calculadora-roas-retorno-inversion-publicitaria',
   'calculadora-descenso-futbol-argentino-promedios',
-];
+]);
 
-const urls = [
-  // Top-tier
-  { loc: `${site}/`, priority: '1.0', changefreq: 'daily', lastmod: buildDate },
-  { loc: `${site}/buscar`, priority: '0.7', changefreq: 'monthly', lastmod: buildDate },
-  { loc: `${site}/comparador-plazo-fijo`, priority: '0.85', changefreq: 'daily', lastmod: buildDate },
-  { loc: `${site}/valores-bcra`, priority: '0.85', changefreq: 'daily', lastmod: buildDate },
+// --------------------------------------------------------------------------
+// Build individual sitemaps
+// --------------------------------------------------------------------------
 
-  // Categorías
-  ...cats.map((cat) => ({
-    loc: `${site}/categoria/${cat}`,
-    priority: '0.8',
-    changefreq: 'weekly',
-    lastmod: buildDate,
-  })),
+const sitemaps: Array<{ name: string; urls: Url[] }> = [];
 
-  // Calculadoras
-  ...calcs.map((c: any) => ({
-    loc: `${site}/${c.slug}`,
-    priority: topSlugs.includes(c.slug) ? '0.9' : '0.7',
-    changefreq: 'weekly',
-    lastmod: getLastMod(c.slug),
-  })),
+// 1. Core: home + institucionales + páginas top
+sitemaps.push({
+  name: 'sitemap-core.xml',
+  urls: [
+    { loc: `${site}/`, priority: '1.0', changefreq: 'daily', lastmod: buildDate },
+    { loc: `${site}/buscar`, priority: '0.7', changefreq: 'monthly', lastmod: buildDate },
+    { loc: `${site}/comparador-plazo-fijo`, priority: '0.85', changefreq: 'daily', lastmod: buildDate },
+    { loc: `${site}/valores-bcra`, priority: '0.85', changefreq: 'daily', lastmod: buildDate },
+    { loc: `${site}/embeber`, priority: '0.6', changefreq: 'monthly', lastmod: buildDate },
+    { loc: `${site}/sobre-nosotros`, priority: '0.5', changefreq: 'yearly', lastmod: buildDate },
+    { loc: `${site}/privacidad`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
+    { loc: `${site}/cookies`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
+    { loc: `${site}/terminos`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
+    { loc: `${site}/politica-editorial`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
+    { loc: `${site}/metodologia`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
+    { loc: `${site}/contacto`, priority: '0.4', changefreq: 'yearly', lastmod: buildDate },
+    { loc: `${site}/glosario`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
+    { loc: `${site}/blog`, priority: '0.7', changefreq: 'weekly', lastmod: buildDate },
+  ],
+});
 
-  // Calculadoras en inglés
-  ...calcsEn.map((c: any) => ({
-    loc: `${site}/en/${c.slug}`,
-    priority: '0.7',
-    changefreq: 'monthly',
-    lastmod: buildDate,
-  })),
+// 2. Calcs por categoría (un sitemap por categoría)
+const byCat: Record<string, any[]> = {};
+for (const c of calcs as any[]) {
+  const cat = c.category || 'otros';
+  (byCat[cat] ||= []).push(c);
+}
 
-  // Argentina provincial pages
-  ...argCalcs.flatMap((calc: any) =>
-    provincias
-      .filter((p: any) => calc.provinceData && calc.provinceData[p.slug])
-      .map((p: any) => ({
+for (const [cat, items] of Object.entries(byCat).sort()) {
+  const urls: Url[] = [
+    // Categoría misma
+    { loc: `${site}/categoria/${cat}`, priority: '0.8', changefreq: 'weekly', lastmod: buildDate },
+    // Calcs de esa categoría
+    ...items.map((c: any) => ({
+      loc: `${site}/${c.slug}`,
+      priority: topSlugs.has(c.slug) ? '0.9' : '0.7',
+      changefreq: 'weekly',
+      lastmod: getLastMod(join(CALCS_DIR, `${c.formulaId || c.slug}.json`), buildDate),
+    })),
+  ];
+  sitemaps.push({ name: `sitemap-calcs-${cat}.xml`, urls });
+}
+
+// 3. Calcs inglés
+if (calcsEn.length > 0) {
+  sitemaps.push({
+    name: 'sitemap-en.xml',
+    urls: (calcsEn as any[]).map((c: any) => ({
+      loc: `${site}/en/${c.slug}`,
+      priority: '0.7',
+      changefreq: 'monthly',
+      lastmod: buildDate,
+    })),
+  });
+}
+
+// 4. Blog
+if (blogPosts.length > 0) {
+  sitemaps.push({
+    name: 'sitemap-blog.xml',
+    urls: (blogPosts as any[]).map((p: any) => ({
+      loc: `${site}/blog/${p.slug}`,
+      priority: '0.75',
+      changefreq: 'monthly',
+      lastmod: p.updatedDate || p.date || buildDate,
+    })),
+  });
+}
+
+// 5. Comparaciones
+if (comparaciones.length > 0) {
+  sitemaps.push({
+    name: 'sitemap-comparaciones.xml',
+    urls: (comparaciones as any[]).map((c: any) => ({
+      loc: `${site}/comparar/${c.slug}`,
+      priority: '0.7',
+      changefreq: 'monthly',
+      lastmod: buildDate,
+    })),
+  });
+}
+
+// 6. Tablas de referencia
+if (tablas.length > 0) {
+  sitemaps.push({
+    name: 'sitemap-tablas.xml',
+    urls: (tablas as any[]).map((t: any) => ({
+      loc: `${site}/tabla/${t.slug}`,
+      priority: '0.7',
+      changefreq: 'monthly',
+      lastmod: buildDate,
+    })),
+  });
+}
+
+// 7. Glosario
+if (glosarioTerms.length > 0) {
+  sitemaps.push({
+    name: 'sitemap-glosario.xml',
+    urls: (glosarioTerms as any[]).map((t: any) => ({
+      loc: `${site}/glosario/${t.slug}`,
+      priority: '0.6',
+      changefreq: 'monthly',
+      lastmod: buildDate,
+    })),
+  });
+}
+
+// 8. Argentina provincial
+const argUrls: Url[] = [];
+for (const calc of argCalcs as any[]) {
+  for (const p of provincias) {
+    if (calc.provinceData && calc.provinceData[p.slug]) {
+      argUrls.push({
         loc: `${site}/argentina/${p.slug}/${calc.calcSlug}`,
         priority: '0.6',
         changefreq: 'monthly',
         lastmod: buildDate,
-      }))
-  ),
+      });
+    }
+  }
+}
+if (argUrls.length > 0) {
+  sitemaps.push({ name: 'sitemap-argentina.xml', urls: argUrls });
+}
 
-  // Comparaciones
-  ...comparaciones.map((c: any) => ({
-    loc: `${site}/comparar/${c.slug}`,
-    priority: '0.7',
-    changefreq: 'monthly',
-    lastmod: buildDate,
-  })),
+// --------------------------------------------------------------------------
+// Write files
+// --------------------------------------------------------------------------
 
-  // Tablas de referencia
-  ...tablas.map((t: any) => ({
-    loc: `${site}/tabla/${t.slug}`,
-    priority: '0.7',
-    changefreq: 'monthly',
-    lastmod: buildDate,
-  })),
+let totalUrls = 0;
+for (const s of sitemaps) {
+  writeFileSync(join(PUBLIC_DIR, s.name), urlsetXml(s.urls), 'utf8');
+  totalUrls += s.urls.length;
+}
 
-  // Blog posts
-  ...blogPosts.map((p: any) => ({
-    loc: `${site}/blog/${p.slug}`,
-    priority: '0.7',
-    changefreq: 'monthly',
-    lastmod: p.updatedDate || p.date || buildDate,
-  })),
+// Index principal
+const indexContent = indexXml(
+  sitemaps.map((s) => ({ loc: `${site}/${s.name}`, lastmod: buildDate }))
+);
+writeFileSync(join(PUBLIC_DIR, 'sitemap.xml'), indexContent, 'utf8');
 
-  // Glosario individual term pages
-  ...glosarioTerms.map((t: any) => ({
-    loc: `${site}/glosario/${t.slug}`,
-    priority: '0.6',
-    changefreq: 'monthly',
-    lastmod: buildDate,
-  })),
-
-  // Legales y editoriales
-  { loc: `${site}/sobre-nosotros`, priority: '0.4', changefreq: 'yearly', lastmod: buildDate },
-  { loc: `${site}/privacidad`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
-  { loc: `${site}/cookies`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
-  { loc: `${site}/terminos`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
-  { loc: `${site}/politica-editorial`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
-  { loc: `${site}/metodologia`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
-  { loc: `${site}/contacto`, priority: '0.4', changefreq: 'yearly', lastmod: buildDate },
-  { loc: `${site}/glosario`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
-  { loc: `${site}/blog`, priority: '0.7', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/embeber`, priority: '0.6', changefreq: 'monthly', lastmod: buildDate },
-];
-
-const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((u) => `  <url>
-    <loc>${u.loc}</loc>
-    <lastmod>${u.lastmod}</lastmod>
-    <changefreq>${u.changefreq}</changefreq>
-    <priority>${u.priority}</priority>
-  </url>`).join('\n')}
-</urlset>`;
-
-writeFileSync(OUT_FILE, xml, 'utf8');
-console.log(`✓ sitemap.xml → ${urls.length} URLs`);
+console.log(`✓ sitemap index → ${sitemaps.length} sitemaps, ${totalUrls} URLs totales`);
+for (const s of sitemaps) {
+  console.log(`  · ${s.name.padEnd(40)} ${String(s.urls.length).padStart(5)} URLs`);
+}
