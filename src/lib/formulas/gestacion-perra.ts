@@ -14,12 +14,12 @@ export function gestacionPerra(inputs: GestacionPerraInputs): GestacionPerraOutp
   if (isNaN(fechaMonta.getTime())) throw new Error('Ingresá la fecha de monta');
 
   const DIAS_GESTACION = 63;
-  const fechaParto = new Date(fechaMonta);
+  const fechaParto = new Date(fechaMonta + 'T00:00:00');
   fechaParto.setDate(fechaParto.getDate() + DIAS_GESTACION);
 
-  const rangoMin = new Date(fechaMonta);
+  const rangoMin = new Date(fechaMonta + 'T00:00:00');
   rangoMin.setDate(rangoMin.getDate() + 58);
-  const rangoMax = new Date(fechaMonta);
+  const rangoMax = new Date(fechaMonta + 'T00:00:00');
   rangoMax.setDate(rangoMax.getDate() + 68);
 
   const hoy = new Date();

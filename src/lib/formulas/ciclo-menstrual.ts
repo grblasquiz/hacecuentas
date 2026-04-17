@@ -17,7 +17,7 @@ export function cicloMenstrual(i: Inputs): Outputs {
   proxima.setDate(proxima.getDate() + ciclo);
 
   // Si ya pasó, calcular la siguiente
-  let proxReal = new Date(proxima);
+  let proxReal = new Date(proxima + 'T00:00:00');
   while (proxReal < hoy) { proxReal.setDate(proxReal.getDate() + ciclo); }
 
   // Ovulación: ciclo - 14

@@ -15,7 +15,7 @@ export function fechaCeloPerra(inputs: FechaCeloInputs): FechaCeloOutputs {
   if (isNaN(fecha.getTime())) throw new Error('Ingresá la fecha del último celo');
   const ciclo = Number(inputs.cicloMeses) || 6;
 
-  const proximoCelo = new Date(fecha);
+  const proximoCelo = new Date(fecha + 'T00:00:00');
   proximoCelo.setMonth(proximoCelo.getMonth() + ciclo);
 
   const rangoMin = new Date(proximoCelo);

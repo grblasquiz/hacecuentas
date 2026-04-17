@@ -24,7 +24,7 @@ export function fechaProbablePartoEcografia(i: Inputs): Outputs {
   const diasRestantes = 280 - diasGestacionEnEco;
 
   // FPP
-  const fpp = new Date(fechaEco);
+  const fpp = new Date(fechaEco + 'T00:00:00');
   fpp.setDate(fpp.getDate() + diasRestantes);
 
   // Semanas actuales

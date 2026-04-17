@@ -42,7 +42,7 @@ export function embarazo(inputs: EmbarazoInputs): EmbarazoOutputs {
   const semanasTotales = Math.floor(diasTranscurridos / 7);
   const diasExtra = diasTranscurridos % 7;
 
-  const fpp = new Date(fum);
+  const fpp = new Date(fum + 'T00:00:00');
   fpp.setDate(fpp.getDate() + 280);
 
   const diasRestantes = Math.max(0, 280 - diasTranscurridos);

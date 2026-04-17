@@ -22,7 +22,7 @@ function formatDate(d: Date): string {
 }
 
 function addDays(d: Date, days: number): Date {
-  const result = new Date(d);
+  const result = new Date(d + 'T00:00:00');
   result.setDate(result.getDate() + days);
   return result;
 }

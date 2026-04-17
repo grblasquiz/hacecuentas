@@ -20,7 +20,7 @@ export interface OvulacionOutputs {
 }
 
 function addDays(date: Date, days: number): Date {
-  const result = new Date(date);
+  const result = new Date(date + 'T00:00:00');
   result.setDate(result.getDate() + days);
   return result;
 }

@@ -31,7 +31,7 @@ export function gestacionAnimal(i: Inputs): Outputs {
   const gest = gestaciones[especie] || gestaciones['perro'];
 
   // Fecha estimada de parto
-  const fpp = new Date(fechaCruza);
+  const fpp = new Date(fechaCruza + 'T00:00:00');
   fpp.setDate(fpp.getDate() + gest.dias);
 
   // Días transcurridos

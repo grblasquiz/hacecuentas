@@ -42,7 +42,7 @@ export function plazoPrescripcionDeuda(inputs: PlazoPrescripcionInputs): PlazoPr
   }
 
   const config = PLAZOS[tipo] || PLAZOS.generica;
-  const fechaPrescripcion = new Date(fecha);
+  const fechaPrescripcion = new Date(fecha + 'T00:00:00');
   fechaPrescripcion.setFullYear(fechaPrescripcion.getFullYear() + config.anios);
 
   const hoy = new Date();
