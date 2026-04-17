@@ -1,52 +1,81 @@
 /**
  * Calculadora del CAT (Costo Anual Total) en tarjeta de crédito México
- * Regulado por Banxico. Incluye intereses + comisiones + IVA sobre intereses
+ * Regulado por Banxico. Incluye intereses + comisiones + IVA sobre intereses.
  */
 
 export interface Inputs {
-  saldo: number;
-  pagoMinimo: number;
-  tasaAnual: number; // en %
-  comisionAnual: number; // anualidad $
+  saldoTc: number;
+  pagoMensual: number;
+  tasaAnualInteres: number; // en %
+  anualidad?: number;
+  comisionesAnio?: number;
   iva?: number; // % default 16
+  // retro-compat
+  saldo?: number;
+  pagoMinimo?: number;
+  tasaAnual?: number;
+  comisionAnual?: number;
 }
 
 export interface Outputs {
-  catPorcentaje: number;
+  cat: number;
+  mesesPagoTotal: number;
+  interesesPagados: number;
+  totalPagado: number;
   costoTotalAnual: number;
-  interesesAnuales: number;
-  comisionesAnuales: number;
-  ivaAnual: number;
   mensaje: string;
 }
 
 export function catTarjetaCreditoMexico(i: Inputs): Outputs {
-  const saldo = Number(i.saldo);
-  const pagoMin = Number(i.pagoMinimo);
-  const tasa = Number(i.tasaAnual);
-  const comision = Number(i.comisionAnual);
+  const saldo = Number(i.saldoTc ?? i.saldo);
+  const pagoMes = Number(i.pagoMensual ?? i.pagoMinimo);
+  const tasa = Number(i.tasaAnualInteres ?? i.tasaAnual);
+  const anualidad = Number(i.anualidad ?? 0);
+  const otrasComisiones = Number(i.comisionesAnio ?? 0);
+  const comisionTotal = anualidad + otrasComisiones + (i.comisionAnual !== undefined ? Number(i.comisionAnual) : 0);
   const iva = Number(i.iva ?? 16);
 
   if (!saldo || saldo <= 0) throw new Error('Ingresá el saldo de la tarjeta');
-  if (!pagoMin || pagoMin <= 0) throw new Error('Ingresá el pago mínimo');
+  if (!pagoMes || pagoMes <= 0) throw new Error('Ingresá el pago mensual');
   if (!tasa || tasa <= 0) throw new Error('Ingresá la tasa anual (%)');
 
-  // Saldo promedio aproximado (asume que vas pagando y el saldo baja)
-  const saldoPromedio = (saldo + Math.max(0, saldo - pagoMin * 12)) / 2;
+  // Amortización mes a mes
+  const iMensual = (tasa / 100) / 12;
+  let saldoActual = saldo;
+  let meses = 0;
+  let interesesPagados = 0;
+  const maxMeses = 600; // 50 años de tope
+  while (saldoActual > 0.01 && meses < maxMeses) {
+    const interesMes = saldoActual * iMensual;
+    const ivaMes = interesMes * (iva / 100);
+    const pagoEfectivo = pagoMes;
+    // El pago cubre primero intereses+IVA, luego capital
+    const cargos = interesMes + ivaMes;
+    if (pagoEfectivo <= cargos) {
+      // Pago no cubre ni los intereses: deuda se vuelve infinita
+      meses = maxMeses;
+      interesesPagados += cargos;
+      break;
+    }
+    const capitalPagado = pagoEfectivo - cargos;
+    saldoActual -= capitalPagado;
+    interesesPagados += interesMes + ivaMes;
+    meses++;
+  }
 
-  const interesesAnuales = saldoPromedio * tasa / 100;
-  const ivaAnual = interesesAnuales * iva / 100;
-  const comisionesAnuales = comision;
-  const costoTotalAnual = interesesAnuales + ivaAnual + comisionesAnuales;
-
-  const catPorcentaje = (costoTotalAnual / saldoPromedio) * 100;
+  const totalPagado = pagoMes * meses + comisionTotal;
+  // CAT = ((totalPagado / saldo)^(12/meses)) - 1, aproximado
+  const cat = meses > 0
+    ? (Math.pow(totalPagado / saldo, 12 / meses) - 1) * 100
+    : 0;
+  const costoTotalAnual = interesesPagados + comisionTotal;
 
   return {
-    catPorcentaje: Number(catPorcentaje.toFixed(2)),
+    cat: Number(cat.toFixed(2)),
+    mesesPagoTotal: meses,
+    interesesPagados: Number(interesesPagados.toFixed(2)),
+    totalPagado: Number(totalPagado.toFixed(2)),
     costoTotalAnual: Number(costoTotalAnual.toFixed(2)),
-    interesesAnuales: Number(interesesAnuales.toFixed(2)),
-    comisionesAnuales: Number(comisionesAnuales.toFixed(2)),
-    ivaAnual: Number(ivaAnual.toFixed(2)),
-    mensaje: `CAT aproximado: ${catPorcentaje.toFixed(2)}% anual. Costo total al año: $${costoTotalAnual.toFixed(2)} sobre saldo promedio $${saldoPromedio.toFixed(2)}.`,
+    mensaje: `CAT aproximado: ${cat.toFixed(2)}%. Liquidás en ${meses} meses pagando $${totalPagado.toFixed(2)} ($${interesesPagados.toFixed(2)} intereses).`,
   };
 }

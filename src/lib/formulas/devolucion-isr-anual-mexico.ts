@@ -7,8 +7,11 @@
 
 export interface Inputs {
   ingresosAnuales: number;
-  retencionesTotales: number;
-  deduccionesPersonales?: number;
+  isrRetenido: number;
+  gastosMedicos?: number;
+  colegiaturas?: number;
+  interesesHipoteca?: number;
+  aportacionesAfore?: number;
   subsidioRecibido?: number;
 }
 
@@ -18,12 +21,11 @@ export interface Outputs {
   debePagar: number;
   isrAnualCalculado: number;
   deduccionesAplicadas: number;
+  baseGravable: number;
   topeDeducciones: number;
   mensaje: string;
 }
 
-// Tabla ISR ANUAL 2026 (proyectada: 2025 +5%)
-// Valores proyectados 2026, validar contra fuente oficial
 const TABLA_ISR_ANUAL_2026 = [
   { limInf: 0.01,       limSup: 9900.74,     cuotaFija: 0.00,       tasa: 1.92 },
   { limInf: 9900.75,    limSup: 84064.62,    cuotaFija: 190.08,     tasa: 6.40 },
@@ -40,16 +42,20 @@ const TABLA_ISR_ANUAL_2026 = [
 
 export function devolucionIsrAnualMexico(i: Inputs): Outputs {
   const ingresos = Number(i.ingresosAnuales);
-  const retenciones = Number(i.retencionesTotales);
-  const deduccionesInput = Number(i.deduccionesPersonales ?? 0);
+  const retenciones = Number(i.isrRetenido);
   const subsidio = Number(i.subsidioRecibido ?? 0);
+
+  const gastosMedicos = Number(i.gastosMedicos ?? 0);
+  const colegiaturas = Number(i.colegiaturas ?? 0);
+  const interesesHipoteca = Number(i.interesesHipoteca ?? 0);
+  const aportacionesAfore = Number(i.aportacionesAfore ?? 0);
+  const deduccionesInput = gastosMedicos + colegiaturas + interesesHipoteca + aportacionesAfore;
 
   if (!ingresos || ingresos <= 0) throw new Error('Ingresá los ingresos anuales');
   if (retenciones === undefined || retenciones === null || isNaN(retenciones) || retenciones < 0) {
-    throw new Error('Ingresá las retenciones totales del año');
+    throw new Error('Ingresá el ISR retenido en el año');
   }
 
-  // Tope deducciones: menor entre 15% de ingresos o 5 UMA anuales (5 * 43800 = 219000 en 2026)
   const topeUMA = 5 * 43800;
   const tope15 = ingresos * 0.15;
   const topeDeducciones = Math.min(topeUMA, tope15);
@@ -60,8 +66,6 @@ export function devolucionIsrAnualMexico(i: Inputs): Outputs {
   const excedente = baseGravable - tramo.limInf;
   const isrAnualCalculado = tramo.cuotaFija + (excedente * tramo.tasa / 100);
 
-  // Saldo = retenciones + subsidio - ISR anual
-  // Positivo = devolución; Negativo = debe pagar
   const saldoFavor = retenciones + subsidio - isrAnualCalculado;
   const montoDevolucion = saldoFavor > 0 ? saldoFavor : 0;
   const debePagar = saldoFavor < 0 ? Math.abs(saldoFavor) : 0;
@@ -72,7 +76,7 @@ export function devolucionIsrAnualMexico(i: Inputs): Outputs {
   } else if (debePagar > 0) {
     mensaje = `Tenés ISR por pagar: $${debePagar.toFixed(2)} en tu declaración anual.`;
   } else {
-    mensaje = `Tus retenciones coinciden con el ISR anual calculado. No hay saldo a favor ni a cargo.`;
+    mensaje = `Tus retenciones coinciden con el ISR anual calculado.`;
   }
 
   return {
@@ -81,6 +85,7 @@ export function devolucionIsrAnualMexico(i: Inputs): Outputs {
     debePagar: Number(debePagar.toFixed(2)),
     isrAnualCalculado: Number(isrAnualCalculado.toFixed(2)),
     deduccionesAplicadas: Number(deduccionesAplicadas.toFixed(2)),
+    baseGravable: Number(baseGravable.toFixed(2)),
     topeDeducciones: Number(topeDeducciones.toFixed(2)),
     mensaje,
   };

@@ -1,47 +1,71 @@
 /**
  * Conversor de Salario Mínimo General (SMG) México
  * Dos zonas: General y Frontera Norte
- * Valores proyectados 2026, validar contra fuente oficial CONASAMI
+ * Valores 2026 (CONASAMI proyectados)
  */
 
 export interface Inputs {
   zona: 'general' | 'frontera';
+  sueldo?: number;
+  tipo?: 'diario' | 'mensual' | 'anual';
   dias?: number;
 }
 
 export interface Outputs {
-  importePesos: number;
-  mensual: number;
-  anual: number;
-  tasaDiaria: number;
+  cuantosMinimos: number;
+  smgDiario: number;
+  smgMensual: number;
+  smgAnual: number;
+  cumplePiso: string;
+  diferenciaMinimo: number;
   mensaje: string;
 }
 
-// Valores proyectados 2026, validar contra fuente oficial
 const SMG_2026 = {
-  general: 280.00,
-  frontera: 420.00,
+  general: 278.80,
+  frontera: 419.88,
 };
 
 export function smgMexicoConversion(i: Inputs): Outputs {
   const zona = i.zona;
-  const dias = Number(i.dias ?? 1);
-
   if (!['general', 'frontera'].includes(zona)) {
     throw new Error('Zona debe ser general o frontera');
   }
-  if (!dias || dias <= 0) throw new Error('Ingresá los días (mínimo 1)');
 
-  const tasaDiaria = SMG_2026[zona];
-  const importePesos = tasaDiaria * dias;
-  const mensual = tasaDiaria * 30.4;
-  const anual = tasaDiaria * 365;
+  const smgDiario = SMG_2026[zona];
+  const smgMensual = smgDiario * 30;
+  const smgAnual = smgDiario * 365;
+
+  const sueldo = Number(i.sueldo ?? 0);
+  const tipo = i.tipo ?? 'mensual';
+
+  // Convertir sueldo del usuario a base mensual para comparar
+  let sueldoMensual = 0;
+  if (sueldo > 0) {
+    switch (tipo) {
+      case 'diario':
+        sueldoMensual = sueldo * 30;
+        break;
+      case 'mensual':
+        sueldoMensual = sueldo;
+        break;
+      case 'anual':
+        sueldoMensual = sueldo / 12;
+        break;
+    }
+  }
+
+  const cuantosMinimos = sueldoMensual > 0 ? sueldoMensual / smgMensual : 0;
+  const diferenciaMinimo = sueldoMensual - smgMensual;
+  const cumplePiso = sueldoMensual >= smgMensual ? 'Sí cumple el piso' : 'No cumple el piso';
 
   return {
-    importePesos: Number(importePesos.toFixed(2)),
-    mensual: Number(mensual.toFixed(2)),
-    anual: Number(anual.toFixed(2)),
-    tasaDiaria,
-    mensaje: `SMG ${zona} 2026: $${tasaDiaria}/día × ${dias} días = $${importePesos.toFixed(2)}. Mensual: $${mensual.toFixed(2)} | Anual: $${anual.toFixed(2)}.`,
+    cuantosMinimos: Number(cuantosMinimos.toFixed(2)),
+    smgDiario: Number(smgDiario.toFixed(2)),
+    smgMensual: Number(smgMensual.toFixed(2)),
+    smgAnual: Number(smgAnual.toFixed(2)),
+    cumplePiso,
+    diferenciaMinimo: Number(diferenciaMinimo.toFixed(2)),
+    mensaje: `SMG ${zona} 2026: $${smgDiario}/día (mensual $${smgMensual.toFixed(2)}). ${sueldoMensual > 0 ? `Tu sueldo equivale a ${cuantosMinimos.toFixed(2)} SMG.` : ''}`,
   };
 }

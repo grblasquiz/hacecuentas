@@ -1,56 +1,75 @@
 /**
  * Calculadora de costo y vigencia de verificación vehicular México
- * Costo: 2.51 UMA diaria (aprox 2026). Vigencia depende del engomado
- * Valores proyectados 2026, validar contra fuente oficial SEDEMA
+ * Costo base: 2.51 UMA diaria (aprox 2026). Multa extemporánea: 20 UMA.
+ * Vigencia depende del holograma (00 = 24 meses, 0 = 12 meses, 1/2 = 6 meses).
  */
 
 export interface Inputs {
-  tipoEngomado: string; // 'amarillo' | 'rosa' | 'rojo' | 'verde' | 'azul' | '00' | '0'
-  uma?: number; // UMA diaria
+  tipoHolograma: string; // '00' | '0' | '1' | '2'
+  entidad?: string;
+  fueraCalendario?: 'si' | 'no' | boolean;
+  uma?: number;
+  // retro-compat
+  tipoEngomado?: string;
 }
 
 export interface Outputs {
-  costoPesos: number;
+  costoTotal: number;
+  costoBase: number;
+  multa: number;
+  proximaFecha: string;
   vigenciaMeses: number;
-  fechaSugerida: string;
   mensaje: string;
 }
 
-// Calendario aproximado por engomado (meses)
-// Valores proyectados 2026, validar contra fuente oficial
+// Vigencia por holograma (meses)
+const VIGENCIA_HOLOGRAMA: Record<string, number> = {
+  '00': 24,
+  '0': 12,
+  '1': 6,
+  '2': 6,
+};
+
+// Engomados (retro-compat)
 const CALENDARIO_ENGOMADO: Record<string, { meses: number[], vigencia: number }> = {
   amarillo: { meses: [2, 8], vigencia: 6 },
   rosa: { meses: [3, 9], vigencia: 6 },
   rojo: { meses: [4, 10], vigencia: 6 },
   verde: { meses: [5, 11], vigencia: 6 },
   azul: { meses: [6, 12], vigencia: 6 },
-  '00': { meses: [1, 7], vigencia: 24 },
-  '0': { meses: [1, 7], vigencia: 12 },
 };
 
 export function verificacionVehicularMx(i: Inputs): Outputs {
-  const tipo = (i.tipoEngomado ?? '').toLowerCase();
-  const uma = Number(i.uma ?? 120); // UMA diaria 2026 aprox
+  const tipoRaw = String(i.tipoHolograma ?? i.tipoEngomado ?? '').toLowerCase();
+  const uma = Number(i.uma ?? 120);
+  const fueraCalendario = i.fueraCalendario === true || i.fueraCalendario === 'si';
 
-  if (!tipo) throw new Error('Ingresá el tipo de engomado');
-  if (!CALENDARIO_ENGOMADO[tipo]) {
-    throw new Error('Tipo de engomado inválido (amarillo, rosa, rojo, verde, azul, 00, 0)');
+  if (!tipoRaw) throw new Error('Ingresá el tipo de holograma');
+
+  let vigencia: number;
+  if (VIGENCIA_HOLOGRAMA[tipoRaw] !== undefined) {
+    vigencia = VIGENCIA_HOLOGRAMA[tipoRaw];
+  } else if (CALENDARIO_ENGOMADO[tipoRaw]) {
+    vigencia = CALENDARIO_ENGOMADO[tipoRaw].vigencia;
+  } else {
+    throw new Error('Holograma inválido (00, 0, 1, 2) o engomado (amarillo, rosa, rojo, verde, azul)');
   }
 
-  const costoPesos = uma * 2.51;
-  const { meses, vigencia } = CALENDARIO_ENGOMADO[tipo];
+  const costoBase = uma * 2.51;
+  const multa = fueraCalendario ? uma * 20 : 0;
+  const costoTotal = costoBase + multa;
 
-  // Próximo mes de verificación desde hoy
+  // Próxima fecha: hoy + vigencia meses
   const hoy = new Date();
-  const mesActual = hoy.getMonth() + 1;
-  const proximoMes = meses.find(m => m >= mesActual) ?? meses[0];
-  const anioSugerido = proximoMes >= mesActual ? hoy.getFullYear() : hoy.getFullYear() + 1;
-  const fechaSugerida = `${String(proximoMes).padStart(2, '0')}/${anioSugerido}`;
+  const proxima = new Date(hoy.getFullYear(), hoy.getMonth() + vigencia, 1);
+  const proximaFecha = `${String(proxima.getMonth() + 1).padStart(2, '0')}/${proxima.getFullYear()}`;
 
   return {
-    costoPesos: Number(costoPesos.toFixed(2)),
+    costoTotal: Number(costoTotal.toFixed(2)),
+    costoBase: Number(costoBase.toFixed(2)),
+    multa: Number(multa.toFixed(2)),
+    proximaFecha,
     vigenciaMeses: vigencia,
-    fechaSugerida,
-    mensaje: `Verificación para engomado ${tipo}: $${costoPesos.toFixed(2)}, vigencia ${vigencia} meses. Próxima: ${fechaSugerida}.`,
+    mensaje: `Verificación (holograma ${tipoRaw}): costo base $${costoBase.toFixed(2)}${multa > 0 ? ` + multa $${multa.toFixed(2)}` : ''} = $${costoTotal.toFixed(2)}. Próxima: ${proximaFecha}.`,
   };
 }

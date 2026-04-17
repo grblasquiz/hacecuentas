@@ -1,49 +1,58 @@
 /**
- * Calculadora de ahorro programado con interés compuesto
+ * Calculadora de ahorro programado con interés compuesto (MX)
  * Fórmula: M = P(1+r)^n + A[((1+r)^n - 1)/r]
  */
 
 export interface Inputs {
-  aporteMensual: number;
+  aportacionMensual: number;
   tasaAnual: number; // %
-  plazoMeses: number;
+  plazoAnios: number;
   aporteInicial?: number;
+  inflacionAnual?: number;
 }
 
 export interface Outputs {
-  montoFinal: number;
-  aportadoTotal: number;
-  gananciaIntereses: number;
+  saldoNominal: number;
+  saldoReal: number;
+  totalAportado: number;
+  interesesGanados: number;
   tasaEfectivaAnual: number;
   mensaje: string;
 }
 
 export function ahorroProgramadoMx(i: Inputs): Outputs {
-  const aporte = Number(i.aporteMensual);
+  const aporte = Number(i.aportacionMensual);
   const tasa = Number(i.tasaAnual);
-  const meses = Number(i.plazoMeses);
+  const anios = Number(i.plazoAnios);
   const inicial = Number(i.aporteInicial ?? 0);
+  const inflacion = Number(i.inflacionAnual ?? 0);
 
-  if (!aporte || aporte <= 0) throw new Error('Ingresá el aporte mensual');
+  if (!aporte || aporte <= 0) throw new Error('Ingresá la aportación mensual');
   if (!tasa || tasa <= 0) throw new Error('Ingresá la tasa anual');
-  if (!meses || meses <= 0) throw new Error('Ingresá el plazo en meses');
+  if (!anios || anios <= 0) throw new Error('Ingresá el plazo en años');
 
+  const meses = anios * 12;
   const r = (tasa / 100) / 12; // tasa mensual
   const factor = Math.pow(1 + r, meses);
 
   const valorInicial = inicial * factor;
   const valorAportes = aporte * ((factor - 1) / r);
-  const montoFinal = valorInicial + valorAportes;
+  const saldoNominal = valorInicial + valorAportes;
 
-  const aportadoTotal = inicial + aporte * meses;
-  const gananciaIntereses = montoFinal - aportadoTotal;
+  const totalAportado = inicial + aporte * meses;
+  const interesesGanados = saldoNominal - totalAportado;
   const tasaEfectivaAnual = (Math.pow(1 + r, 12) - 1) * 100;
 
+  // Valor real descontando inflación compuesta
+  const factorInflacion = Math.pow(1 + inflacion / 100, anios);
+  const saldoReal = factorInflacion > 0 ? saldoNominal / factorInflacion : saldoNominal;
+
   return {
-    montoFinal: Number(montoFinal.toFixed(2)),
-    aportadoTotal: Number(aportadoTotal.toFixed(2)),
-    gananciaIntereses: Number(gananciaIntereses.toFixed(2)),
+    saldoNominal: Number(saldoNominal.toFixed(2)),
+    saldoReal: Number(saldoReal.toFixed(2)),
+    totalAportado: Number(totalAportado.toFixed(2)),
+    interesesGanados: Number(interesesGanados.toFixed(2)),
     tasaEfectivaAnual: Number(tasaEfectivaAnual.toFixed(2)),
-    mensaje: `Tras ${meses} meses aportando $${aporte}/mes, juntás $${montoFinal.toFixed(2)} (aportaste $${aportadoTotal.toFixed(2)} y ganaste $${gananciaIntereses.toFixed(2)} en intereses).`,
+    mensaje: `Tras ${anios} años aportando $${aporte}/mes, juntás $${saldoNominal.toFixed(2)} nominales ($${saldoReal.toFixed(2)} en valor real). Aportaste $${totalAportado.toFixed(2)} y ganaste $${interesesGanados.toFixed(2)} en intereses.`,
   };
 }

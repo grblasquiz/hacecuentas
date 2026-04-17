@@ -1,61 +1,66 @@
 /**
  * Calculadora de PTU (Participación de Trabajadores en las Utilidades) México
  * Ley Federal del Trabajo art. 117-131
- * 10% de la utilidad fiscal: mitad se reparte por días trabajados, mitad por sueldo
- * Valores proyectados 2026, validar contra fuente oficial
+ * 10% de la utilidad fiscal: 50% se reparte por días trabajados, 50% por salario.
+ * Tope reforma 2021: el mayor entre 3 meses de salario o promedio PTU últimos 3 años.
  */
 
 export interface Inputs {
-  sueldoAnualBruto: number;
+  utilidadesEmpresa: number;
+  salarioDiario: number;
+  diasTrabajados?: number;
+  totalDiasTodos: number;
+  totalSalariosTodos: number;
+  // retro-compat
+  sueldoAnualBruto?: number;
+  utilidadRepartible?: number;
+  totalEmpleados?: number;
+  totalSueldosEmpresa?: number;
   diasTrabajadosAnio?: number;
-  utilidadRepartible: number;
-  totalEmpleados: number;
-  totalSueldosEmpresa: number;
 }
 
 export interface Outputs {
   ptuTotal: number;
   ptuPorDias: number;
-  ptuPorSueldo: number;
-  topeAplicado: boolean;
+  ptuPorSalario: number;
+  topeAplicado: number;
   mensaje: string;
 }
 
 export function ptuMexico(i: Inputs): Outputs {
-  const sueldoAnual = Number(i.sueldoAnualBruto);
-  const dias = Number(i.diasTrabajadosAnio ?? 365);
-  const utilidad = Number(i.utilidadRepartible);
-  const totalEmp = Number(i.totalEmpleados);
-  const totalSueldos = Number(i.totalSueldosEmpresa);
+  // Fuente de inputs: primero el layout nuevo (JSON MX) y fallback al viejo
+  const salarioDiario = Number(i.salarioDiario ?? 0);
+  const dias = Number(i.diasTrabajados ?? i.diasTrabajadosAnio ?? 365);
+  const totalDiasTodos = Number(i.totalDiasTodos ?? 0);
+  const totalSalariosTodos = Number(i.totalSalariosTodos ?? i.totalSueldosEmpresa ?? 0);
+  const utilidadRepartir = i.utilidadRepartible !== undefined
+    ? Number(i.utilidadRepartible)
+    : (Number(i.utilidadesEmpresa ?? 0) * 0.10);
+  const sueldoAnual = i.sueldoAnualBruto !== undefined
+    ? Number(i.sueldoAnualBruto)
+    : salarioDiario * dias;
 
-  if (!sueldoAnual || sueldoAnual <= 0) throw new Error('Ingresá el sueldo anual bruto');
-  if (!utilidad || utilidad <= 0) throw new Error('Ingresá la utilidad repartible');
-  if (!totalEmp || totalEmp <= 0) throw new Error('Ingresá total de empleados');
-  if (!totalSueldos || totalSueldos <= 0) throw new Error('Ingresá total de sueldos de la empresa');
+  if (!salarioDiario && !i.sueldoAnualBruto) throw new Error('Ingresá tu salario diario');
+  if (!utilidadRepartir || utilidadRepartir <= 0) throw new Error('Ingresá las utilidades de la empresa');
+  if (!totalDiasTodos || totalDiasTodos <= 0) throw new Error('Ingresá el total de días trabajados de todos');
+  if (!totalSalariosTodos || totalSalariosTodos <= 0) throw new Error('Ingresá el total de salarios anuales de todos');
 
-  const mitad = utilidad / 2;
-  // Mitad 1: proporcional a días trabajados (asumiendo 365 días totales por empleado promedio)
-  const totalDiasEmpresa = totalEmp * 365;
-  const ptuPorDias = (dias / totalDiasEmpresa) * mitad;
-  // Mitad 2: proporcional al sueldo
-  const ptuPorSueldo = (sueldoAnual / totalSueldos) * mitad;
+  const mitad = utilidadRepartir / 2;
+  const ptuPorDias = (dias / totalDiasTodos) * mitad;
+  const ptuPorSalario = (sueldoAnual / totalSalariosTodos) * mitad;
 
-  // Tope: máximo 3 meses de sueldo o promedio de PTU últimos 3 años (lo mayor)
-  const topeTresMeses = (sueldoAnual / 12) * 3;
-  let ptuBruto = ptuPorDias + ptuPorSueldo;
-  let topeAplicado = false;
-  if (ptuBruto > topeTresMeses) {
-    ptuBruto = topeTresMeses;
-    topeAplicado = true;
-  }
+  const ptuBrutaSinTope = ptuPorDias + ptuPorSalario;
+  const topeTresMeses = (salarioDiario * 90) || (sueldoAnual / 12) * 3;
+  const aplicaTope = ptuBrutaSinTope > topeTresMeses;
+  const ptuTotal = aplicaTope ? topeTresMeses : ptuBrutaSinTope;
 
   return {
-    ptuTotal: Number(ptuBruto.toFixed(2)),
+    ptuTotal: Number(ptuTotal.toFixed(2)),
     ptuPorDias: Number(ptuPorDias.toFixed(2)),
-    ptuPorSueldo: Number(ptuPorSueldo.toFixed(2)),
-    topeAplicado,
-    mensaje: topeAplicado
-      ? `Tu PTU sería $${(ptuPorDias + ptuPorSueldo).toFixed(2)} pero se aplica tope de 3 meses de sueldo: $${ptuBruto.toFixed(2)}.`
-      : `Te corresponde una PTU de $${ptuBruto.toFixed(2)} (días: $${ptuPorDias.toFixed(2)} + sueldo: $${ptuPorSueldo.toFixed(2)}).`,
+    ptuPorSalario: Number(ptuPorSalario.toFixed(2)),
+    topeAplicado: Number(topeTresMeses.toFixed(2)),
+    mensaje: aplicaTope
+      ? `Tu PTU sería $${ptuBrutaSinTope.toFixed(2)} pero se aplica tope de 3 meses de sueldo: $${ptuTotal.toFixed(2)}.`
+      : `Te corresponde una PTU de $${ptuTotal.toFixed(2)} (días: $${ptuPorDias.toFixed(2)} + salario: $${ptuPorSalario.toFixed(2)}).`,
   };
 }

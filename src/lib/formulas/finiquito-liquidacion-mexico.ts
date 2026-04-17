@@ -5,51 +5,63 @@
  */
 
 export interface Inputs {
-  sueldoDiario: number;
-  aniosTrabajados: number;
-  diasPendientesMes: number;
-  diasVacacionesPendientes: number;
-  primaVacacional?: number; // % default 25
-  aguinaldo15Dias?: boolean;
-  tipo: 'finiquito' | 'liquidacion';
+  salarioDiario: number;
+  aniosAntiguedad: number;
+  tipoTerminacion?: 'renuncia' | 'despido-justificado' | 'despido-injustificado' | 'acuerdo';
+  diasAguinaldo?: number;
+  diasPendientesMes?: number;
+  diasVacacionesPendientes?: number;
+  primaVacacional?: number; // %
 }
 
 export interface Outputs {
   total: number;
+  finiquitoPartes: number;
+  tresMeses: number;
+  veinteDias: number;
+  primaAntiguedad: number;
   desglose: Record<string, number>;
   tipoCalculado: string;
   mensaje: string;
 }
 
+// LFT 2023: dias vacaciones por antiguedad
+function diasVacacionesLFT(anios: number): number {
+  if (anios < 1) return 0;
+  if (anios < 2) return 12;
+  if (anios < 3) return 14;
+  if (anios < 4) return 16;
+  if (anios < 5) return 18;
+  if (anios < 10) return 20;
+  if (anios < 15) return 22;
+  if (anios < 20) return 24;
+  return 26;
+}
+
 export function finiquitoLiquidacionMexico(i: Inputs): Outputs {
-  const sd = Number(i.sueldoDiario);
-  const anios = Number(i.aniosTrabajados);
-  const diasMes = Number(i.diasPendientesMes);
-  const diasVac = Number(i.diasVacacionesPendientes);
+  const sd = Number(i.salarioDiario);
+  const anios = Number(i.aniosAntiguedad);
+  const tipoTerm = i.tipoTerminacion ?? 'despido-injustificado';
+  const aguinaldoDias = Number(i.diasAguinaldo ?? 15);
+  const diasMes = Number(i.diasPendientesMes ?? 10);
+  const diasVacInput = i.diasVacacionesPendientes;
+  const diasVac = diasVacInput !== undefined && diasVacInput !== null && !isNaN(Number(diasVacInput))
+    ? Number(diasVacInput)
+    : diasVacacionesLFT(anios);
   const primaVacPct = Number(i.primaVacacional ?? 25);
-  const aguinaldoDias = i.aguinaldo15Dias ?? true ? 15 : 15;
-  const tipo = i.tipo;
 
-  if (!sd || sd <= 0) throw new Error('Ingresá el sueldo diario');
+  if (!sd || sd <= 0) throw new Error('Ingresá el salario diario');
   if (anios === undefined || anios === null || isNaN(anios) || anios < 0) {
-    throw new Error('Ingresá los años trabajados');
-  }
-  if (diasMes === undefined || diasMes === null || isNaN(diasMes) || diasMes < 0) {
-    throw new Error('Ingresá los días pendientes del mes');
-  }
-  if (!['finiquito', 'liquidacion'].includes(tipo)) {
-    throw new Error('Tipo debe ser finiquito o liquidacion');
+    throw new Error('Ingresá los años de antigüedad');
   }
 
-  // Componentes finiquito
   const sueldoPendiente = sd * diasMes;
   const vacacionesProp = sd * diasVac;
   const primaVacacional = vacacionesProp * (primaVacPct / 100);
-  // Aguinaldo proporcional: días/365 del año
-  const diasTranscurridosAnio = Math.min(365, diasMes + 30); // aprox al mes actual
+  const diasTranscurridosAnio = Math.min(365, diasMes + 30);
   const aguinaldoProp = (sd * aguinaldoDias * diasTranscurridosAnio) / 365;
 
-  const totalFiniquito = sueldoPendiente + vacacionesProp + primaVacacional + aguinaldoProp;
+  const finiquitoPartes = sueldoPendiente + vacacionesProp + primaVacacional + aguinaldoProp;
 
   const desglose: Record<string, number> = {
     'Sueldo pendiente': Number(sueldoPendiente.toFixed(2)),
@@ -58,26 +70,37 @@ export function finiquitoLiquidacionMexico(i: Inputs): Outputs {
     'Aguinaldo proporcional': Number(aguinaldoProp.toFixed(2)),
   };
 
-  let total = totalFiniquito;
+  let tresMeses = 0;
+  let veinteDias = 0;
+  let primaAntiguedad = 0;
   let tipoCalculado = 'Finiquito';
 
-  if (tipo === 'liquidacion') {
-    const tresMeses = sd * 90;
-    const veinteDiasPorAnio = sd * 20 * anios;
-    // Prima de antigüedad: 12 días por año (con tope 2 UMA ~ 240/día 2026)
+  if (tipoTerm === 'despido-injustificado') {
+    tresMeses = sd * 90;
+    veinteDias = sd * 20 * anios;
     const salarioTope = Math.min(sd, 240);
-    const primaAntiguedad = 12 * anios * salarioTope;
+    primaAntiguedad = 12 * anios * salarioTope;
 
     desglose['Indemnización 3 meses'] = Number(tresMeses.toFixed(2));
-    desglose['20 días por año'] = Number(veinteDiasPorAnio.toFixed(2));
+    desglose['20 días por año'] = Number(veinteDias.toFixed(2));
     desglose['Prima de antigüedad'] = Number(primaAntiguedad.toFixed(2));
 
-    total = totalFiniquito + tresMeses + veinteDiasPorAnio + primaAntiguedad;
     tipoCalculado = 'Liquidación (despido injustificado)';
+  } else if (tipoTerm === 'renuncia' && anios >= 15) {
+    // Renuncia con 15+ años: prima antigüedad (Art. 162 LFT)
+    const salarioTope = Math.min(sd, 240);
+    primaAntiguedad = 12 * anios * salarioTope;
+    desglose['Prima de antigüedad'] = Number(primaAntiguedad.toFixed(2));
   }
+
+  const total = finiquitoPartes + tresMeses + veinteDias + primaAntiguedad;
 
   return {
     total: Number(total.toFixed(2)),
+    finiquitoPartes: Number(finiquitoPartes.toFixed(2)),
+    tresMeses: Number(tresMeses.toFixed(2)),
+    veinteDias: Number(veinteDias.toFixed(2)),
+    primaAntiguedad: Number(primaAntiguedad.toFixed(2)),
     desglose,
     tipoCalculado,
     mensaje: `${tipoCalculado}: $${total.toFixed(2)} en total.`,

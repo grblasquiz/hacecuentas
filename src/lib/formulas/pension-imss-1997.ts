@@ -1,59 +1,68 @@
 /**
  * Calculadora de pensión IMSS Ley 1997 (cuentas individuales)
- * Simplificada: requiere 1250 semanas cotizadas y 60-65 años de edad
- * Valores proyectados 2026, validar contra fuente oficial
+ * Proyecta el saldo en AFORE al jubilar y estima pensión mensual.
+ * Fórmula: saldoFinal = saldoAfore * (1+r)^años + aporteMensual * [((1+r)^años -1)/r] capitalizado mensual
+ * Pensión mensual indicativa = saldoFinal * 0.004 (factor anualidad simplificada)
  */
 
 export interface Inputs {
-  sueldoBase: number;
-  semanasCotizadas: number;
-  edad: number;
+  saldoAfore: number;
+  edadActual: number;
+  edadJubilacion: number;
+  semanasCotizadas?: number;
+  aportacionVoluntariaMensual?: number;
+  rendimientoAnual?: number;
 }
 
 export interface Outputs {
-  pensionEstimada: number;
-  cumpleRequisitos: boolean;
-  semanasFaltantes: number;
-  edadFaltante: number;
+  pensionMensual: number;
+  saldoAcumulado: number;
+  pensionAnual: number;
+  superaPMG: string;
+  cumpleSemanas: boolean;
   mensaje: string;
 }
 
+const PMG_MENSUAL_2026 = 6500; // pensión mínima garantizada indicativa
+
 export function pensionImss1997(i: Inputs): Outputs {
-  const sueldo = Number(i.sueldoBase);
-  const semanas = Number(i.semanasCotizadas);
-  const edad = Number(i.edad);
+  const saldoAfore = Number(i.saldoAfore);
+  const edadActual = Number(i.edadActual);
+  const edadJubilacion = Number(i.edadJubilacion ?? 65);
+  const semanas = Number(i.semanasCotizadas ?? 0);
+  const aporteVol = Number(i.aportacionVoluntariaMensual ?? 0);
+  const rendAnual = Number(i.rendimientoAnual ?? 4);
 
-  if (!sueldo || sueldo <= 0) throw new Error('Ingresá el sueldo base de cotización');
-  if (!semanas || semanas < 0) throw new Error('Ingresá las semanas cotizadas');
-  if (!edad || edad <= 0) throw new Error('Ingresá la edad');
+  if (!saldoAfore && saldoAfore !== 0) throw new Error('Ingresá el saldo actual en AFORE');
+  if (saldoAfore < 0) throw new Error('El saldo AFORE no puede ser negativo');
+  if (!edadActual || edadActual <= 0) throw new Error('Ingresá la edad actual');
+  if (edadJubilacion <= edadActual) throw new Error('La edad de jubilación debe ser mayor a la edad actual');
 
-  const SEMANAS_REQ = 1250;
-  const EDAD_MIN = 60;
+  const anios = edadJubilacion - edadActual;
+  const meses = anios * 12;
+  const rMensual = rendAnual / 100 / 12;
 
-  const semanasFaltantes = Math.max(0, SEMANAS_REQ - semanas);
-  const edadFaltante = Math.max(0, EDAD_MIN - edad);
-  const cumpleRequisitos = semanas >= SEMANAS_REQ && edad >= EDAD_MIN;
-
-  // Fórmula simplificada indicativa: sueldo * (semanas/1250) * factor edad
-  const factorSemanas = Math.min(1, semanas / SEMANAS_REQ);
-  const factorEdad = edad >= 65 ? 0.40 : edad >= 60 ? 0.35 : 0.30;
-  const pensionEstimada = sueldo * factorSemanas * factorEdad;
-
-  let mensaje = '';
-  if (cumpleRequisitos) {
-    mensaje = `Cumplís requisitos. Pensión estimada: $${pensionEstimada.toFixed(2)} mensuales.`;
+  let saldoFinal: number;
+  if (rMensual === 0) {
+    saldoFinal = saldoAfore + aporteVol * meses;
   } else {
-    const faltan: string[] = [];
-    if (semanasFaltantes > 0) faltan.push(`${semanasFaltantes} semanas`);
-    if (edadFaltante > 0) faltan.push(`${edadFaltante} años de edad`);
-    mensaje = `Te faltan ${faltan.join(' y ')} para pensionarte bajo Ley 97.`;
+    const factor = Math.pow(1 + rMensual, meses);
+    const capitalInicial = saldoAfore * factor;
+    const aportes = aporteVol * ((factor - 1) / rMensual);
+    saldoFinal = capitalInicial + aportes;
   }
 
+  // Factor indicativo UMA: 0.004 (anualidad actuarial simplificada)
+  const pensionMensual = saldoFinal * 0.004;
+  const pensionAnual = pensionMensual * 12;
+  const cumpleSemanas = semanas >= 1000; // Ley 97 reformada 2020: 750 escalando a 1000
+
   return {
-    pensionEstimada: Number(pensionEstimada.toFixed(2)),
-    cumpleRequisitos,
-    semanasFaltantes,
-    edadFaltante,
-    mensaje,
+    pensionMensual: Number(pensionMensual.toFixed(2)),
+    saldoAcumulado: Number(saldoFinal.toFixed(2)),
+    pensionAnual: Number(pensionAnual.toFixed(2)),
+    superaPMG: pensionMensual >= PMG_MENSUAL_2026 ? 'Sí, supera la PMG' : 'No, aplicarías PMG',
+    cumpleSemanas,
+    mensaje: `Al jubilarte a los ${edadJubilacion} años acumulás ~$${Math.round(saldoFinal).toLocaleString('es-MX')} en AFORE. Pensión mensual estimada: $${Math.round(pensionMensual).toLocaleString('es-MX')}.${cumpleSemanas ? '' : ' Te faltan semanas cotizadas para pensión contributiva (mínimo 1000).'}`,
   };
 }

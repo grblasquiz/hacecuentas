@@ -31,6 +31,7 @@ import { ahorroTransportePublicoVsAuto } from './ahorro-transporte-publico-vs-au
 import { aireAcondicionadoFrigorias } from './aire-acondicionado-frigorias';
 import { aislacionTermicaRValue } from './aislacion-termica-r-value';
 import { ajusteSueldoInflacion } from './ajuste-sueldo-inflacion';
+import { ajusteSueldoInflacionMx } from './ajuste-sueldo-inflacion-mx';
 import { alambreCerco } from './alambre-cerco';
 import { alcanceOrganico } from './alcance-organico';
 import { alcoholSangreBac } from './alcohol-sangre-bac';
@@ -720,6 +721,7 @@ import { presionNeumaticosPsiBar } from './presion-neumaticos-psi-bar';
 import { pressBancaRelativo } from './press-banca-relativo';
 import { prestacionesSocialesVenezuela } from './prestaciones-sociales-venezuela';
 import { prestamoCuotaMexico } from './prestamo-cuota-mexico';
+import { hipotecaInfonavitMx } from './hipoteca-infonavit-mx';
 import { prestamoCuota } from './prestamo-cuota';
 import { prestamoEstudiantilCuotas } from './prestamo-estudiantil-cuotas';
 import { presupuesto503020 } from './presupuesto-50-30-20';
@@ -1048,6 +1050,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aire-acondicionado-frigorias': aireAcondicionadoFrigorias,
   'aislacion-termica-r-value': aislacionTermicaRValue,
   'ajuste-sueldo-inflacion': ajusteSueldoInflacion,
+  'ajuste-sueldo-inflacion-mx': ajusteSueldoInflacionMx,
   'alambre-cerco': alambreCerco,
   'alcance-organico': alcanceOrganico,
   'alcohol-sangre-bac': alcoholSangreBac,
@@ -1737,6 +1740,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'press-banca-relativo': pressBancaRelativo,
   'prestaciones-sociales-venezuela': prestacionesSocialesVenezuela,
   'prestamo-cuota-mexico': prestamoCuotaMexico,
+  'hipoteca-infonavit-mx': hipotecaInfonavitMx,
   'prestamo-cuota': prestamoCuota,
   'prestamo-estudiantil-cuotas': prestamoEstudiantilCuotas,
   'presupuesto-50-30-20': presupuesto503020,

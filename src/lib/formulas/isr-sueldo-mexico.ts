@@ -5,21 +5,23 @@
  */
 
 export interface Inputs {
-  sueldoBrutoMensual: number;
+  sueldoBruto: number;
+  tieneSubsidio?: 'si' | 'no' | boolean;
+  // retro-compat
+  sueldoBrutoMensual?: number;
   subsidioEmpleo?: number;
 }
 
 export interface Outputs {
-  isrRetencion: number;
-  subsidio: number;
-  isrNeto: number;
-  sueldoNeto: number;
+  isrMensual: number;
+  subsidioEmpleo: number;
+  netoPostIsr: number;
+  tasaMarginal: number;
+  tasaEfectiva: number;
   tramoAplicado: string;
   mensaje: string;
 }
 
-// Tabla ISR mensual 2026 (proyectada: 2025 +5%)
-// Valores proyectados 2026, validar contra fuente oficial
 const TABLA_ISR_2026 = [
   { limInf: 0.01,     limSup: 825.06,     cuotaFija: 0.00,      tasa: 1.92 },
   { limInf: 825.07,   limSup: 7005.38,    cuotaFija: 15.84,     tasa: 6.40 },
@@ -35,31 +37,38 @@ const TABLA_ISR_2026 = [
 ];
 
 export function isrSueldoMexico(i: Inputs): Outputs {
-  const sueldo = Number(i.sueldoBrutoMensual);
-  const subsidioInput = Number(i.subsidioEmpleo ?? 0);
-
+  const sueldo = Number(i.sueldoBruto ?? i.sueldoBrutoMensual);
   if (!sueldo || sueldo <= 0) throw new Error('Ingresá el sueldo bruto mensual');
+
+  const tieneSubsidio = i.tieneSubsidio === undefined
+    ? (i.subsidioEmpleo !== undefined ? (Number(i.subsidioEmpleo) > 0) : true)
+    : (typeof i.tieneSubsidio === 'boolean' ? i.tieneSubsidio : i.tieneSubsidio === 'si');
 
   const tramo = TABLA_ISR_2026.find(t => sueldo >= t.limInf && sueldo <= t.limSup)!;
   const excedente = sueldo - tramo.limInf;
   const isrRetencion = tramo.cuotaFija + (excedente * tramo.tasa / 100);
 
-  // Subsidio al empleo (aplica sólo si sueldo <= ~10,171 aprox. 2026)
-  let subsidio = subsidioInput;
-  if (subsidio === 0 && sueldo <= 10171) {
-    subsidio = 475; // subsidio aprox 2026
+  // Subsidio al empleo 2026: sólo sueldos <= ~$10,171
+  let subsidio = 0;
+  if (tieneSubsidio && sueldo <= 10171) {
+    subsidio = 475;
+  }
+  if (i.subsidioEmpleo !== undefined && Number(i.subsidioEmpleo) > 0) {
+    subsidio = Number(i.subsidioEmpleo);
   }
 
-  const isrNeto = Math.max(0, isrRetencion - subsidio);
-  const sueldoNeto = sueldo - isrNeto;
+  const isrMensual = Math.max(0, isrRetencion - subsidio);
+  const netoPostIsr = sueldo - isrMensual;
+  const tasaEfectiva = (isrMensual / sueldo) * 100;
   const tramoAplicado = `Tramo ${tramo.tasa}% (límite inferior $${tramo.limInf.toFixed(2)})`;
 
   return {
-    isrRetencion: Number(isrRetencion.toFixed(2)),
-    subsidio: Number(subsidio.toFixed(2)),
-    isrNeto: Number(isrNeto.toFixed(2)),
-    sueldoNeto: Number(sueldoNeto.toFixed(2)),
+    isrMensual: Number(isrMensual.toFixed(2)),
+    subsidioEmpleo: Number(subsidio.toFixed(2)),
+    netoPostIsr: Number(netoPostIsr.toFixed(2)),
+    tasaMarginal: tramo.tasa,
+    tasaEfectiva: Number(tasaEfectiva.toFixed(2)),
     tramoAplicado,
-    mensaje: `Con sueldo bruto $${sueldo.toFixed(2)} pagás ISR de $${isrNeto.toFixed(2)} y te quedan $${sueldoNeto.toFixed(2)} netos.`,
+    mensaje: `Con sueldo bruto $${sueldo.toFixed(2)} pagás ISR de $${isrMensual.toFixed(2)} y te quedan $${netoPostIsr.toFixed(2)} netos.`,
   };
 }

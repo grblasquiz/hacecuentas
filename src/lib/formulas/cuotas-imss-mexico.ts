@@ -5,29 +5,42 @@
  */
 
 export interface Inputs {
-  sueldoDiarioIntegrado: number;
+  sueldoMensual: number;
+  diasAguinaldo?: number;
+  primaVacacional?: number; // %
+  primaRiesgo?: number; // %
+  diasVacaciones?: number;
   diasPeriodo?: number;
 }
 
 export interface Outputs {
-  aporteObrero: number;
-  aportePatron: number;
-  totalCuotas: number;
+  cuotaObrero: number;
+  cuotaPatron: number;
+  costoTotalPatron: number;
+  sbcDiario: number;
+  porcObrero: number;
   desglose: Record<string, { obrero: number; patron: number }>;
   mensaje: string;
 }
 
 export function cuotasImssMexico(i: Inputs): Outputs {
-  const sdi = Number(i.sueldoDiarioIntegrado);
+  const sueldoMensual = Number(i.sueldoMensual);
+  const diasAguinaldo = Number(i.diasAguinaldo ?? 15);
+  const primaVac = Number(i.primaVacacional ?? 25);
+  const primaRiesgo = Number(i.primaRiesgo ?? 0.54);
+  const diasVac = Number(i.diasVacaciones ?? 12);
   const dias = Number(i.diasPeriodo ?? 30);
 
-  if (!sdi || sdi <= 0) throw new Error('Ingresá el sueldo diario integrado (SDI)');
-  if (!dias || dias <= 0) throw new Error('Ingresá los días del período');
+  if (!sueldoMensual || sueldoMensual <= 0) throw new Error('Ingresá el sueldo mensual');
 
-  const base = sdi * dias;
-  // Valores proyectados 2026 (porcentajes sobre SDI)
+  const salarioDiario = sueldoMensual / 30;
+  // Factor de integración = 1 + (aguinaldo/365) + (primaVac% × diasVac/365)
+  const factorIntegracion = 1 + (diasAguinaldo / 365) + ((primaVac / 100) * diasVac / 365);
+  const sbcDiario = salarioDiario * factorIntegracion;
+  const base = sbcDiario * dias;
+
   const pct = {
-    enfMatPatron: 20.40, // cuota fija estimada como % indicativo (incluye UMA fija + excedente)
+    enfMatPatron: 20.40,
     enfMatObrero: 0.40,
     invVidaPatron: 1.75,
     invVidaObrero: 0.625,
@@ -35,7 +48,7 @@ export function cuotasImssMexico(i: Inputs): Outputs {
     cesPatron: 3.15,
     cesObrero: 1.125,
     guarderiaPatron: 1.00,
-    riesgoPatron: 0.50, // promedio
+    riesgoPatron: primaRiesgo,
     infonavitPatron: 5.00,
   };
 
@@ -57,11 +70,11 @@ export function cuotasImssMexico(i: Inputs): Outputs {
     'Infonavit': infonavit,
   };
 
-  const aporteObrero = Object.values(desglose).reduce((s, v) => s + v.obrero, 0);
-  const aportePatron = Object.values(desglose).reduce((s, v) => s + v.patron, 0);
-  const totalCuotas = aporteObrero + aportePatron;
+  const cuotaObrero = Object.values(desglose).reduce((s, v) => s + v.obrero, 0);
+  const cuotaPatron = Object.values(desglose).reduce((s, v) => s + v.patron, 0);
+  const costoTotalPatron = sueldoMensual + cuotaPatron;
+  const porcObrero = (cuotaObrero / base) * 100;
 
-  // Redondear desglose
   const desgloseRedondeado: Record<string, { obrero: number; patron: number }> = {};
   for (const [k, v] of Object.entries(desglose)) {
     desgloseRedondeado[k] = {
@@ -71,10 +84,12 @@ export function cuotasImssMexico(i: Inputs): Outputs {
   }
 
   return {
-    aporteObrero: Number(aporteObrero.toFixed(2)),
-    aportePatron: Number(aportePatron.toFixed(2)),
-    totalCuotas: Number(totalCuotas.toFixed(2)),
+    cuotaObrero: Number(cuotaObrero.toFixed(2)),
+    cuotaPatron: Number(cuotaPatron.toFixed(2)),
+    costoTotalPatron: Number(costoTotalPatron.toFixed(2)),
+    sbcDiario: Number(sbcDiario.toFixed(2)),
+    porcObrero: Number(porcObrero.toFixed(2)),
     desglose: desgloseRedondeado,
-    mensaje: `Cuota obrera: $${aporteObrero.toFixed(2)} | Cuota patronal: $${aportePatron.toFixed(2)} | Total: $${totalCuotas.toFixed(2)} sobre ${dias} días.`,
+    mensaje: `SBC diario $${sbcDiario.toFixed(2)}. Cuota obrera: $${cuotaObrero.toFixed(2)} | Cuota patronal: $${cuotaPatron.toFixed(2)} | Costo total patrón: $${costoTotalPatron.toFixed(2)}.`,
   };
 }

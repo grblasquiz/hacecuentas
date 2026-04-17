@@ -4,31 +4,48 @@
  */
 
 export interface Inputs {
-  sueldoBrutoMensual: number;
-  factorDescuento?: number; // en %
+  sueldoMensual: number;
+  porcentajeDescuento?: number; // en %
+  tipoCredito?: 'pesos' | 'vsm';
+  cuotaFijaVSM?: number;
 }
 
 export interface Outputs {
   descuentoMensual: number;
-  sueldoConDescuento: number;
-  porcentajeAplicado: number;
+  sueldoNetoPostInfonavit: number;
+  porcentajeEfectivo: number;
+  descuentoAnual: number;
   mensaje: string;
 }
 
-export function infonavitDescuentoSueldo(i: Inputs): Outputs {
-  const sueldo = Number(i.sueldoBrutoMensual);
-  const factor = Number(i.factorDescuento ?? 30);
+const SMG_DIARIO_2026 = 278.80;
 
-  if (!sueldo || sueldo <= 0) throw new Error('Ingresá el sueldo bruto mensual');
+export function infonavitDescuentoSueldo(i: Inputs): Outputs {
+  const sueldo = Number(i.sueldoMensual);
+  const factor = Number(i.porcentajeDescuento ?? 30);
+  const tipo = i.tipoCredito ?? 'pesos';
+  const cuotaVSM = Number(i.cuotaFijaVSM ?? 0);
+
+  if (!sueldo || sueldo <= 0) throw new Error('Ingresá el sueldo mensual');
   if (factor < 0 || factor > 100) throw new Error('Factor de descuento debe estar entre 0 y 100');
 
-  const descuentoMensual = sueldo * factor / 100;
-  const sueldoConDescuento = sueldo - descuentoMensual;
+  let descuentoMensual: number;
+  if (tipo === 'vsm' && cuotaVSM > 0) {
+    // VSM: cuotaVSM * 30 dias * SMG diario
+    descuentoMensual = cuotaVSM * 30 * SMG_DIARIO_2026;
+  } else {
+    descuentoMensual = sueldo * factor / 100;
+  }
+
+  const sueldoNetoPostInfonavit = sueldo - descuentoMensual;
+  const porcentajeEfectivo = (descuentoMensual / sueldo) * 100;
+  const descuentoAnual = descuentoMensual * 12;
 
   return {
     descuentoMensual: Number(descuentoMensual.toFixed(2)),
-    sueldoConDescuento: Number(sueldoConDescuento.toFixed(2)),
-    porcentajeAplicado: factor,
-    mensaje: `Con factor ${factor}%, Infonavit te descuenta $${descuentoMensual.toFixed(2)} y recibís $${sueldoConDescuento.toFixed(2)}.`,
+    sueldoNetoPostInfonavit: Number(sueldoNetoPostInfonavit.toFixed(2)),
+    porcentajeEfectivo: Number(porcentajeEfectivo.toFixed(2)),
+    descuentoAnual: Number(descuentoAnual.toFixed(2)),
+    mensaje: `Con ${tipo === 'vsm' ? `cuota ${cuotaVSM} VSM` : `factor ${factor}%`}, Infonavit te descuenta $${descuentoMensual.toFixed(2)} y recibís $${sueldoNetoPostInfonavit.toFixed(2)}.`,
   };
 }
