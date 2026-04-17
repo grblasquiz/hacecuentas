@@ -1,0 +1,161 @@
+{
+  "slug": "calculadora-repeticion-espaciada-anki-intervalos",
+  "title": "Calculadora Intervalos Anki (Repetición Espaciada) 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Intervalos Anki",
+  "description": "Calculá los intervalos de repaso óptimos con repetición espaciada tipo Anki/SM-2: cuándo repetir cada tarjeta según respuestas.",
+  "icon": "📚",
+  "seoKeywords": [
+    "anki intervalos",
+    "repeticion espaciada",
+    "sm-2 algoritmo",
+    "anki calculadora",
+    "intervalos flashcards",
+    "cuando repasar anki",
+    "sistema leitner",
+    "repeticion espaciada intervalos"
+  ],
+  "intro": "La repetición espaciada es la técnica más eficiente para memorización a largo plazo. El algoritmo SM-2 (SuperMemo 2) desarrollado por Piotr Woźniak en 1985 es la base de Anki y calcula el próximo intervalo según tu respuesta: 'again' reinicia, 'good' multiplica por factor (~2.5) y 'easy' acelera más. Esta calculadora simula esos intervalos para que planifiques tu carga de repasos. Ideal para memorizar vocabulario de idiomas, leyes, términos médicos o cualquier contenido que requiera retención a largo plazo.",
+  "keyTakeaway": "Una tarjeta aprendida se repasa a **1, 3, 7, 15, 30, 60 días** con 'good' consistente. Si fallás, vuelve a 1 día. Anki ajusta automáticamente según tu ease factor.",
+  "useCases": [
+    "Querés dimensionar cuántas cartas Anki nuevas agregar por día.",
+    "Estás por examen y calculás si el mazo llega a tiempo.",
+    "Evaluás si tu plan de vocabulario idioma es sostenible.",
+    "Medicina/derecho: planificás memorización por ciclos."
+  ],
+  "fields": [
+    {
+      "id": "tarjetasTotales",
+      "label": "Tarjetas totales del mazo",
+      "type": "number",
+      "suffix": "tarj",
+      "placeholder": "2000",
+      "min": 10,
+      "max": 50000,
+      "step": 10,
+      "required": true,
+      "default": 2000
+    },
+    {
+      "id": "nuevasPorDia",
+      "label": "Tarjetas nuevas por día",
+      "type": "number",
+      "suffix": "tarj",
+      "placeholder": "20",
+      "min": 1,
+      "max": 200,
+      "step": 1,
+      "required": true,
+      "default": 20
+    },
+    {
+      "id": "easeFactor",
+      "label": "Ease factor promedio",
+      "type": "select",
+      "default": "2.5",
+      "options": [
+        {
+          "value": "2.1",
+          "label": "2.1 - material difícil"
+        },
+        {
+          "value": "2.5",
+          "label": "2.5 - promedio (default Anki)"
+        },
+        {
+          "value": "2.8",
+          "label": "2.8 - material fácil"
+        }
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "id": "diasCompletar",
+      "label": "Días para agregar todo",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "repasosDiarios",
+      "label": "Repasos diarios (régimen)",
+      "format": "number"
+    },
+    {
+      "id": "intervalos",
+      "label": "Intervalos típicos (días)",
+      "format": "text"
+    },
+    {
+      "id": "totalMinutos",
+      "label": "Minutos diarios estimados",
+      "format": "number"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: 2000 cartas, 20 nuevas/día, ease 2.5",
+    "steps": [
+      "**Nuevas/día**: 20.",
+      "**Días agregar**: 2000/20 = 100 días.",
+      "**Repasos en régimen**: ~200/día.",
+      "**Tiempo**: ~40 min/día."
+    ],
+    "result": "En **100 días** agregás todo. Repaso diario sostenido: ~200 cartas × 12 seg = 40 min."
+  },
+  "explanation": "## Algoritmo SM-2 explicado\n\nPor cada tarjeta respondida:\n\n```\nintervalo_nuevo = intervalo_anterior × ease_factor\n```\n\n**Ease factor** arranca en 2.5 y se ajusta:\n- 'again' (0): reinicia a 0 y baja ease 0.2.\n- 'hard' (3): mantiene ease o baja 0.15.\n- 'good' (4): mantiene ease.\n- 'easy' (5): sube ease 0.15.\n\n## Intervalos típicos\n\n| Repaso # | Intervalo (good) | Intervalo (easy) |\n|---|---|---|\n| 1 | 1 día | 4 días |\n| 2 | 3 días | 10 días |\n| 3 | 7 días | 25 días |\n| 4 | 15 días | 60 días |\n| 5 | 35 días | 150 días |\n| 6 | 90 días | 1 año |\n\n## Carga real de repasos\n\nEn régimen estable con 20 nuevas/día, terminás repasando **~8-12×** ese número en sesiones (incluyendo tarjetas viejas). Con mazo de 2.000 → 160-240 repasos diarios.\n\n## Reglas para no colapsar\n\n1. **Empezá conservador**: 10-15 nuevas/día primero mes.\n2. **Leave cards behind**: si te atrasás, pausá nuevas antes que abandonar repasos.\n3. **Precisión tarjetas**: 1 concepto por carta, imagen si ayuda.\n4. **Cloze deletion** para conceptos: más efectivo que front/back simple.\n\nMirá la [curva de Ebbinghaus](/calculadora-ebbinghaus-curva-olvido) para entender por qué estos intervalos funcionan, y la [calculadora de flashcards por día](/calculadora-flashcards-por-dia).",
+  "faq": [
+    {
+      "q": "¿Cuántas nuevas tarjetas por día?",
+      "a": "Empezá con 10-15 y subí gradualmente. Más de 30/día es insostenible para la mayoría."
+    },
+    {
+      "q": "¿Qué pasa si me atraso?",
+      "a": "Pausá nuevas y priorizá repasos. Mejor no agregar 2 semanas que abandonar el mazo."
+    },
+    {
+      "q": "¿Por qué Anki sigue mostrando cartas que sé?",
+      "a": "Por 'leeches': tarjetas que olvidás repetidamente. Anki las marca y requieren reformulación."
+    },
+    {
+      "q": "¿SM-2 es el mejor algoritmo?",
+      "a": "FSRS (2023) lo supera en eficiencia hasta 30%. Anki 23.10+ incluye FSRS opcional."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Woźniak, P. 1985 - SuperMemo SM-2",
+      "url": "https://super-memory.com/english/ol/sm2.htm"
+    }
+  ],
+  "howToSteps": [
+    {
+      "name": "Tarjetas totales",
+      "text": "Cuántas flashcards tiene tu mazo."
+    },
+    {
+      "name": "Nuevas/día",
+      "text": "Cuántas tarjetas nuevas querés aprender por día."
+    },
+    {
+      "name": "Ease factor",
+      "text": "2.5 default, 2.1 para material difícil."
+    },
+    {
+      "name": "Calculá",
+      "text": "Obtené días para completar y repasos diarios estimados."
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ebbinghaus-curva-olvido",
+    "calculadora-flashcards-por-dia",
+    "calculadora-repaso-optimo-examen"
+  ],
+  "formulaId": "repeticion-espaciada-anki-intervalos",
+  "category": "educacion",
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual"
+  }
+}

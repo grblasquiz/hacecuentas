@@ -1,0 +1,181 @@
+{
+  "slug": "calculadora-divisor-tension-formula",
+  "title": "Calculadora Divisor de Tensión 2026 — Fórmula R1 R2 | Hacé Cuentas",
+  "h1": "Calculadora de divisor de tensión con fórmula R1 R2",
+  "description": "Calculá el voltaje de salida de un divisor de tensión con dos resistencias R1 y R2, o diseñá el divisor para una salida deseada.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "⚡",
+  "formulaId": "divisor-tension-formula",
+  "seoKeywords": [
+    "divisor tension formula",
+    "r1 r2 voltaje",
+    "voltage divider calculator",
+    "vin vout resistencias",
+    "sensor analogico arduino",
+    "escalar voltaje"
+  ],
+  "intro": "El divisor de tensión es el circuito más básico de electrónica: dos resistencias R1 y R2 en serie desde Vin a GND, la salida Vout se toma entre R1 y R2. **Vout = Vin × R2 / (R1 + R2)**. Útil para: alimentar un Arduino 3.3V desde 5V, leer sensores, escalar voltajes. Esta calculadora tiene dos modos: dado R1 y R2 calcula Vout, o dado Vout deseado sugiere valores de R1/R2. Ej: querés Vout 3.3V desde Vin 5V con R2=10kΩ → R1 = R2 × (Vin - Vout) / Vout = 10k × 1.7/3.3 = 5.15kΩ ≈ 4.7k comercial. Para sensores, R1+R2 grande (50k-1M) para no cargar el circuito.",
+  "keyTakeaway": "**5V → 3.3V** con R2=10kΩ: R1 ≈ **4.7 kΩ** (comercial). **12V → 5V**: R1/R2 = 1.4 → R1=10k, R2=7.15k (comercial: 6.8k). Para sensores: R1+R2 ≥ 100kΩ.",
+  "useCases": [
+    "Escalás voltaje para entrada analógica de Arduino (5V → 3.3V ESP32).",
+    "Medís voltaje de batería mayor que 5V.",
+    "Creás referencia de voltaje intermedia.",
+    "Adaptás señal de sensor.",
+    "Calculás resistencia para lectura de fotorresistor / NTC."
+  ],
+  "fields": [
+    {
+      "id": "vIn",
+      "label": "Tensión entrada Vin",
+      "type": "number",
+      "placeholder": "5",
+      "min": 0.5,
+      "max": 100,
+      "step": 0.1,
+      "required": true,
+      "suffix": "V"
+    },
+    {
+      "id": "r1",
+      "label": "R1 (en ohms)",
+      "type": "number",
+      "placeholder": "1000",
+      "min": 10,
+      "max": 10000000,
+      "step": 10,
+      "required": true,
+      "suffix": "Ω"
+    },
+    {
+      "id": "r2",
+      "label": "R2 (en ohms)",
+      "type": "number",
+      "placeholder": "2200",
+      "min": 10,
+      "max": 10000000,
+      "step": 10,
+      "required": true,
+      "suffix": "Ω"
+    },
+    {
+      "id": "modo",
+      "label": "Modo (1=calcular Vout, 2=calcular R1 dado Vout y R2)",
+      "type": "number",
+      "placeholder": "1",
+      "min": 1,
+      "max": 2,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "vOutDeseado",
+      "label": "Vout deseado (si modo 2)",
+      "type": "number",
+      "placeholder": "3.3",
+      "min": 0.1,
+      "max": 95,
+      "step": 0.1,
+      "required": true,
+      "suffix": "V"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria para el cálculo propuesto."
+  },
+  "outputs": [
+    {
+      "id": "vOut",
+      "label": "Vout calculado",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "r1Sugerido",
+      "label": "R1 sugerido (si modo 2)",
+      "format": "text"
+    },
+    {
+      "id": "corriente",
+      "label": "Corriente circulante",
+      "format": "text"
+    },
+    {
+      "id": "potenciaTotal",
+      "label": "Potencia total disipada",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Vin 5V, R1=1kΩ, R2=2.2kΩ",
+    "steps": [
+      "**Vout** = 5 × 2200 / (1000 + 2200) = 5 × 2200 / 3200 = **3.44V**.",
+      "**Corriente**: 5 / 3200 = 1.56 mA.",
+      "**Potencia total**: 5 × 0.00156 = 7.8 mW.",
+      "**Uso**: alimentar pin 3.3V desde 5V."
+    ],
+    "result": "Divisor 1k/2.2k con Vin 5V da **3.44V** de salida, corriente 1.56 mA. Válido para lecturas de bajo consumo."
+  },
+  "explanation": "## Fórmulas\n\n### Vout dado R1 y R2\n\n```\nVout = Vin × R2 / (R1 + R2)\n```\n\n### R1 dado Vout, Vin y R2\n\n```\nR1 = R2 × (Vin - Vout) / Vout\n```\n\n### R2 dado Vout, Vin y R1\n\n```\nR2 = R1 × Vout / (Vin - Vout)\n```\n\n## Casos típicos de uso\n\n### Escalar 5V a 3.3V (Arduino → ESP32)\n\nR1 = 1.8kΩ, R2 = 3.3kΩ (o 1k/2k) → Vout = 3.24V ✓\n\n### Leer batería 12V con Arduino (max 5V)\n\nR1 = 20k, R2 = 10k → Vout = 12 × 10/30 = 4V ✓\nArduino mide 4V, multiplicás × 3 en código para recuperar 12V.\n\n### Potenciómetro como divisor\n\nUn pote de 10kΩ es un divisor variable: el cursor se mueve entre R1 y R2.\n\n### Sensor de temperatura NTC\n\nR_NTC varía con temperatura; pones resistencia fija en serie y medís Vout. Ecuación Steinhart-Hart para pasar Vout a temperatura.\n\n## Limitaciones del divisor\n\nEl divisor de tensión funciona **sin carga**. Si conectás una carga (R_carga) en paralelo a R2, la tensión cae:\n\n```\nVout_con_carga = Vin × (R2 || R_carga) / (R1 + (R2 || R_carga))\n```\n\nRegla: **R_carga ≥ 10 × R2** para que Vout no baje más de 10%.\n\n## Reglas de pulgar\n\n1. **Para Arduino**: usar R1+R2 entre 1k y 100k.\n2. **Para sensores**: R1+R2 grande (50k-1M).\n3. **Para regular potencia**: divisor NO sirve. Usar regulador (LM7805, buck converter).\n4. **Para precisión**: usar resistencias 1% tolerancia.\n\n## Valores comerciales cercanos\n\nSi calculás R1 no comercial (ej 3753 Ω), serie E12 más cercana:\n- 3.3kΩ (3300)\n- **3.9kΩ (3900)** ✅ más cercana a 3753\n- 4.7kΩ (4700)\n\n## Potencia disipada\n\n```\nI = Vin / (R1 + R2)\nP_R1 = I² × R1\nP_R2 = I² × R2\nP_total = Vin² / (R1 + R2)\n```\n\nLa mayoría de divisores para señales usan resistencias 1/4 W. Solo si hay mucha corriente (cargas directas), considerar más potencia.\n\n## Aplicaciones avanzadas\n\n- **Op-amp feedback**: divisor controla ganancia del amplificador inversor.\n- **Referencia de Vref**: convertidores ADC necesitan Vref estable.\n- **Pin pull-up / pull-down**: resistencias para fijar nivel lógico.\n\n## Errores comunes\n\n1. **Conectar carga directa a Vout**: cae tensión.\n2. **R muy chica**: mucha corriente, calentamiento, gasto batería.\n3. **R muy grande**: ruido y lenta respuesta.\n4. **Ignorar efecto de carga** en MOSFETs u op-amps.\n5. **No considerar tolerancia**: 2×5% de error en resistencias = ±10% Vout.\n\nCombiná con [resistencia LED](/calculadora-resistencia-led-tension-corriente), [amplificador](/calculadora-amplificador-operacional-ganancia), [watts fuente](/calculadora-watts-fuente-alimentacion-pc) y [carga batería](/calculadora-carga-bateria-tiempo-amp).",
+  "faq": [
+    {
+      "q": "¿Divisor soporta carga?",
+      "a": "Solo si la carga es de alta impedancia (>10× R2). Para potencia, usar regulador o LDO."
+    },
+    {
+      "q": "¿Qué resistencia uso para leer batería?",
+      "a": "Bateria 12V → Arduino 5V: R1=20k, R2=10k. Corriente 0.4 mA (insignificante)."
+    },
+    {
+      "q": "¿Divisor vs regulador?",
+      "a": "**Divisor**: señales, bajo consumo, no regula. **Regulador**: carga real, potencia, voltaje estable bajo distintos consumos."
+    },
+    {
+      "q": "¿R grandes o chicas?",
+      "a": "**Grandes (>100k)**: bajo consumo pero lento y ruidoso. **Chicas (<1k)**: rápido pero derrocha corriente. Balance en 1k-100k."
+    },
+    {
+      "q": "¿1% o 5% de tolerancia?",
+      "a": "Para divisor de precisión (referencias, medidores), 1%. Para señales generales, 5% alcanza."
+    },
+    {
+      "q": "¿Tres resistencias en serie?",
+      "a": "Funciona como 'divisor múltiple'. Podés sacar varias Vout distintas entre cada par."
+    }
+  ],
+  "sources": [
+    {
+      "name": "All About Circuits",
+      "url": "https://www.allaboutcircuits.com/"
+    },
+    {
+      "name": "Electronics Tutorials",
+      "url": "https://www.electronics-tutorials.ws/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-resistencia-led-tension-corriente",
+    "calculadora-amplificador-operacional-ganancia",
+    "calculadora-watts-fuente-alimentacion-pc",
+    "calculadora-carga-bateria-tiempo-amp"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón Calcular para obtener el resultado al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo del formulario. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

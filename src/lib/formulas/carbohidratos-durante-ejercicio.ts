@@ -48,6 +48,6 @@ export function carbohidratosDuranteEjercicio(i: Inputs): Outputs {
     tipoCarb,
     mensaje: duracion < 60
       ? 'No necesitás carbohidratos extra para sesiones menores a 60 minutos.'
-      : `Necesitás ~\${gramosHora}g/hora de carbs (\${totalSesion}g total ≈ \${geles} geles). Empezá a los 30-45 min de ejercicio.`
+      : `Necesitás ~${gramosHora}g/hora de carbs (${totalSesion}g total ≈ ${geles} geles). Empezá a los 30-45 min de ejercicio.`
   };
 }

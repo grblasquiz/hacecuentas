@@ -1,0 +1,170 @@
+{
+  "slug": "calculadora-amplificador-operacional-ganancia",
+  "title": "Calculadora Op-Amp Ganancia 2026 — Inversor / No Inversor | Hacé Cuentas",
+  "h1": "Calculadora de ganancia amplificador operacional",
+  "description": "Calculá la ganancia de un op-amp inversor o no inversor según resistencias R1 y Rf.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "⚡",
+  "formulaId": "amplificador-operacional-ganancia",
+  "seoKeywords": [
+    "amplificador operacional ganancia",
+    "op amp calculadora",
+    "ganancia inversor no inversor",
+    "lm358 tl081",
+    "op amp rf r1",
+    "ganancia db"
+  ],
+  "intro": "Un amplificador operacional (op-amp) amplifica una señal según la relación de dos resistencias. En configuración **no inversora**: Ganancia = 1 + Rf/R1. En configuración **inversora**: Ganancia = -Rf/R1. Esta calculadora toma tipo de configuración y valores de resistencia, y devuelve ganancia en V/V, ganancia en dB, tensión de salida dada la entrada, y el slew rate mínimo necesario para el ancho de banda deseado. Ej: no inversor con R1=1kΩ Rf=10kΩ → ganancia 11× (20.8 dB). Inversor mismas resistencias → -10× (20 dB con inversión de fase). Si entrada es 100 mV, salida es 1.1V (no-inv) o -1V (inv). Útil para sensores (amplificar señal débil de termopar 10-100 mV a nivel Arduino), audio, instrumentación.",
+  "keyTakeaway": "**No inversor R1=1k Rf=10k**: ganancia **11×** (20.8 dB). **Inversor**: **-10×**. Op-amps como LM358 (general), TL081 (audio), AD8656 (precisión).",
+  "useCases": [
+    "Armás circuito de amplificación de sensor.",
+    "Diseñás etapa de preamp para micrófono.",
+    "Calculás filtro activo o comparador.",
+    "Elegís entre inversor y no inversor.",
+    "Ajustás ganancia con pote."
+  ],
+  "fields": [
+    {
+      "id": "config",
+      "label": "Configuración (1=no inversor, 2=inversor, 3=buffer/seguidor)",
+      "type": "number",
+      "placeholder": "1",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "r1",
+      "label": "R1 (entrada / ground)",
+      "type": "number",
+      "placeholder": "1000",
+      "min": 10,
+      "max": 10000000,
+      "step": 10,
+      "required": true,
+      "suffix": "Ω"
+    },
+    {
+      "id": "rf",
+      "label": "Rf (realimentación)",
+      "type": "number",
+      "placeholder": "10000",
+      "min": 10,
+      "max": 10000000,
+      "step": 10,
+      "required": true,
+      "suffix": "Ω"
+    },
+    {
+      "id": "vIn",
+      "label": "Vin entrada",
+      "type": "number",
+      "placeholder": "0.1",
+      "min": 0.001,
+      "max": 15,
+      "step": 0.001,
+      "required": true,
+      "suffix": "V"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria para el cálculo propuesto."
+  },
+  "outputs": [
+    {
+      "id": "ganancia",
+      "label": "Ganancia",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "ganancia_dB",
+      "label": "Ganancia en dB",
+      "format": "text"
+    },
+    {
+      "id": "vOut",
+      "label": "Vout",
+      "format": "text"
+    },
+    {
+      "id": "consejo",
+      "label": "Consejo",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "No inversor R1=1k, Rf=10k, Vin=0.1V",
+    "steps": [
+      "**Ganancia** = 1 + 10k/1k = **11 V/V**.",
+      "**dB**: 20 × log10(11) = **20.8 dB**.",
+      "**Vout**: 0.1 × 11 = **1.1V**.",
+      "**Sin inversión de fase**."
+    ],
+    "result": "No inversor: ganancia **11× (20.8 dB)**. Vout = 1.1V si Vin = 100 mV. Ideal para amplificar sensores."
+  },
+  "explanation": "## Configuraciones op-amp\n\n### No inversor\n\n```\nGanancia = 1 + (Rf / R1)\nVout = Vin × Ganancia (misma polaridad)\n```\n\n- **Ganancia mínima**: 1 (unity, buffer).\n- **Ganancia máxima práctica**: 100-1000 (limitada por GBP y ruido).\n- **Impedancia entrada**: muy alta (buena para sensores).\n\n### Inversor\n\n```\nGanancia = -(Rf / R1)\nVout = -Vin × (Rf / R1)\n```\n\n- **Ganancia mínima**: tendiendo a 0 (Rf=0, corto).\n- **Ganancia máxima**: igual que no inversor.\n- **Impedancia entrada**: = R1 (menor que no inversor).\n\n### Seguidor (buffer)\n\n```\nGanancia = 1\nVout = Vin\n```\n\nSin resistencias. Uso: adaptar impedancias entre una alta impedancia (sensor) y una baja (ADC).\n\n## dB vs ganancia V/V\n\n```\ndB = 20 × log₁₀(Ganancia_V/V)\n```\n\n| Ganancia V/V | dB |\n|---|---|\n| 1 | 0 |\n| 2 | 6 |\n| 10 | 20 |\n| 100 | 40 |\n| 1000 | 60 |\n\n## Op-amps comunes\n\n| Op-amp | Tipo | Uso |\n|---|---|---|\n| LM358 / LM324 | General, bajo costo | Genérico |\n| TL081 / TL082 ✅ | JFET, audio | Audio, sensor |\n| NE5532 | Audio premium | Pro audio |\n| OP07 | Precisión | Instrumentación |\n| AD8656 | Rail-to-rail precisión | Sensor precision |\n| LM386 | Potencia audio | Parlantes |\n| LT1028 | Ultra bajo ruido | Precisión alta |\n\n## Consideraciones prácticas\n\n### 1. Ganancia máxima útil (GBP)\n\n```\nBW (ancho banda) = GBP / Ganancia\n```\n\nEj: TL081 tiene GBP = 4 MHz. Con ganancia 100: BW = 40 kHz.\nCon ganancia 1000: BW = 4 kHz (no sirve para audio, solo DC).\n\n### 2. Alimentación\n\n| Tipo alimentación | Rango Vout |\n|---|---|\n| ±15V (doble) | -14V a +14V |\n| ±5V (doble) | -4V a +4V |\n| +5V single-supply | 1V a 4V (excepto rail-to-rail) |\n| +5V rail-to-rail | 0.1V a 4.9V |\n\n### 3. Slew rate\n\n```\nVout_max_frequency = SR / (2π × V_pico)\n```\n\nCon SR = 0.5V/µs (LM358) y Vout pico = 5V:\nFreq_max = 0.5e6 / (2π × 5) = 15.9 kHz.\n\nPara audio, SR > 5V/µs (TL081 = 13V/µs).\n\n### 4. Ruido\n\nResistencias altas (>100k) aportan ruido térmico. Para bajo ruido, usar R1-Rf en rango 1k-10k.\n\n## Circuitos derivados\n\n### Amplificador de instrumentación\n\n3 op-amps en topología clásica (INA128, AD620). Ganancia = 1 + 2R/R_gain.\n\n### Sumador inversor\n\n```\nVout = -(Rf/R1 × V1 + Rf/R2 × V2 + ...)\n```\n\n### Integrador\n\nResistencia + capacitor. Ganancia = -1/(jωRC).\n\n### Derivador\n\nCapacitor + resistencia. Ganancia = -jωRC.\n\n### Filtro activo\n\nCombina op-amp con RC para low-pass, high-pass, band-pass. Topologías Sallen-Key, MFB.\n\n## Errores comunes\n\n1. **Saturar el op-amp**: Vout intentando superar alimentación → clip.\n2. **Ganancia > GBP permite**: atenuación a frecuencia deseada.\n3. **Ignorar offset input**: 1 mV × ganancia 1000 = 1V extra en salida.\n4. **Alimentación single-supply con señal bipolar**: necesitás referencia virtual (VCC/2).\n5. **Sin capacitor bypass** en VCC (100 nF): oscila.\n\nCombiná con [divisor tensión](/calculadora-divisor-tension-formula), [resistencia LED](/calculadora-resistencia-led-tension-corriente), [soldadura estaño](/calculadora-tiempo-soldadura-tipo-estano) y [carga batería](/calculadora-carga-bateria-tiempo-amp).",
+  "faq": [
+    {
+      "q": "¿Cuándo usar inversor vs no inversor?",
+      "a": "**No inversor** cuando necesitás alta impedancia de entrada (sensor capacitivo, micrófono piezo). **Inversor** cuando necesitás suma o filtro activo."
+    },
+    {
+      "q": "¿LM358 o TL081?",
+      "a": "**LM358**: barato, 'general purpose', OK para tensión DC y señales lentas. **TL081**: JFET input, mejor para audio e impedancias altas."
+    },
+    {
+      "q": "¿Necesito capacitor bypass?",
+      "a": "Siempre. 100 nF cerámico entre VCC y GND, cerca del op-amp. Evita oscilación y ruido."
+    },
+    {
+      "q": "¿Se puede alimentar con pila 9V?",
+      "a": "Sí, en configuración single-supply. Necesitás VCC/2 como referencia virtual con divisor resistivo."
+    },
+    {
+      "q": "¿Op-amp rail-to-rail?",
+      "a": "Saca salida casi hasta los rails de alimentación (0V a VCC). Normal requiere 1-2V headroom. R2R mejor para 3.3V o 5V single-supply."
+    },
+    {
+      "q": "¿Ganancia variable con pote?",
+      "a": "Sí. Reemplazar Rf o R1 con pote. En no inversor, pote como Rf varía entre 1 (min) y 1+Rf_max/R1. En inversor, pote como R1 varía Rf/R1."
+    }
+  ],
+  "sources": [
+    {
+      "name": "All About Circuits - Op-Amp",
+      "url": "https://www.allaboutcircuits.com/"
+    },
+    {
+      "name": "Texas Instruments - Op-Amps",
+      "url": "https://www.ti.com/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-divisor-tension-formula",
+    "calculadora-resistencia-led-tension-corriente",
+    "calculadora-tiempo-soldadura-tipo-estano",
+    "calculadora-carga-bateria-tiempo-amp"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón Calcular para obtener el resultado al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo del formulario. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

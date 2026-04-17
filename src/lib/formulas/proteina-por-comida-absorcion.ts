@@ -35,9 +35,9 @@ export function proteinaPorComidaAbsorcion(i: Inputs): Outputs {
 
   return {
     proteinaPorComida,
-    optimo: `${optimoMin}-\${optimoMax} g por comida`,
+    optimo: `${optimoMin}-${optimoMax} g por comida`,
     horasEntre,
     aprovechamiento,
-    mensaje: `${proteinaPorComida}g por comida en \${comidas} comidas. Rango óptimo: \${optimoMin}-\${optimoMax}g. Separá cada comida ~\${horasEntre}h.`
+    mensaje: `${proteinaPorComida}g por comida en ${comidas} comidas. Rango óptimo: ${optimoMin}-${optimoMax}g. Separá cada comida ~${horasEntre}h.`
   };
 }

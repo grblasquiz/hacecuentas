@@ -1,0 +1,228 @@
+{
+  "slug": "calculadora-uniswap-v3-fees-liquidez",
+  "title": "Calculadora Uniswap v3 LP Fees 2026 — APR por Provisión de Liquidez | Hacé Cuentas",
+  "h1": "Calculadora Uniswap v3 LP Fees",
+  "description": "Calculadora Uniswap v3: estimá fees diarias y APR como liquidity provider según TVL, volumen, fee tier y rango activo.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "🦄",
+  "formulaId": "uniswap-v3-fees",
+  "seoKeywords": [
+    "uniswap v3 calculadora",
+    "uniswap lp fees",
+    "apr uniswap v3",
+    "liquidity provider uniswap",
+    "fee tier uniswap",
+    "pool tvl uniswap"
+  ],
+  "intro": "**Uniswap v3** revolucionó DEX en 2021 introduciendo **concentrated liquidity**: en lugar de distribuir tu capital por toda la curva (v2), podés concentrarlo en un rango de precio específico, multiplicando la capital efficiency hasta 4,000x. Esta calculadora estima tus fees como liquidity provider (LP) según la cantidad que aportás, el TVL total del pool, el volumen diario que pasa por el pool, el **fee tier** (0.01% para stables, 0.05% / 0.3% / 1% para pares volátiles) y el **% del tiempo que tu liquidez está 'in range'**. El resultado muestra ingresos diarios, totales en el período y APR anualizado. No incluye **impermanent loss**, que podés calcular aparte en nuestra [calculadora de IL](/calculadora-impermanent-loss-pool).",
+  "keyTakeaway": "APR de LP Uniswap v3 = `(volumen × fee_tier × tu_share × %in_range × 365) / capital`. Rangos estrechos multiplican APR pero aumentan riesgo de salirse de rango. **LP de stables concentrados puede superar 20% APR**; en pares volátiles, 10-50% si elegís bien el rango.",
+  "useCases": [
+    "Estimás cuánto ganás como LP en un pool ETH/USDC v3.",
+    "Comparás fee tiers 0.05% vs 0.3% vs 1% para el mismo par.",
+    "Proyectás APR según volumen histórico del pool.",
+    "Analizás el impacto de tener la liquidez 'in range' solo 50% del tiempo.",
+    "Decidís si conviene LP activo o pasivo."
+  ],
+  "fields": [
+    {
+      "id": "liquidityUsd",
+      "label": "Tu liquidez USD",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "10000",
+      "min": 0,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "poolTvl",
+      "label": "TVL total del pool",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "50000000",
+      "min": 0,
+      "step": 10000,
+      "required": true
+    },
+    {
+      "id": "dailyVolume",
+      "label": "Volumen diario pool",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "20000000",
+      "min": 0,
+      "step": 10000,
+      "required": true
+    },
+    {
+      "id": "feeTier",
+      "label": "Fee tier (bps)",
+      "type": "select",
+      "options": [
+        {
+          "value": "1",
+          "label": "0.01% (stables)"
+        },
+        {
+          "value": "5",
+          "label": "0.05%"
+        },
+        {
+          "value": "30",
+          "label": "0.3%"
+        },
+        {
+          "value": "100",
+          "label": "1%"
+        }
+      ],
+      "required": true
+    },
+    {
+      "id": "inRangePct",
+      "label": "% tiempo in range",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "80",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "days",
+      "label": "Días de LP",
+      "type": "number",
+      "placeholder": "30",
+      "min": 1,
+      "max": 365,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "feeApr",
+      "label": "APR estimado",
+      "format": "percent",
+      "primary": true
+    },
+    {
+      "id": "dailyFees",
+      "label": "Fees diarias",
+      "format": "currency"
+    },
+    {
+      "id": "totalFees",
+      "label": "Fees en el período",
+      "format": "currency"
+    },
+    {
+      "id": "yourShare",
+      "label": "Tu share del pool %",
+      "format": "percent"
+    },
+    {
+      "id": "poolDailyFees",
+      "label": "Fees totales pool/día",
+      "format": "currency"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: $10K en ETH/USDC 0.05% Uniswap v3",
+    "steps": [
+      "**Pool**: TVL $50M, volumen diario $20M.",
+      "**Fee tier**: 0.05% → fees diarias del pool = $20M × 0.05% = $10,000.",
+      "**Tu share**: $10K / $50M = 0.02%.",
+      "**In range 80%**: ganás $10,000 × 0.02% × 0.8 = **$1.60/día**.",
+      "**APR**: $1.60 × 365 / $10,000 = **5.84% APR**."
+    ],
+    "result": "$10K en ETH/USDC 0.05% genera ~$584 USD/año si estás 80% in range."
+  },
+  "explanation": "## Fórmula\n\n```\nfees_diarias = volumen_pool × fee_tier × (tu_liquidez / TVL_pool) × %in_range\nAPR = fees_diarias × 365 / tu_liquidez\n```\n\nEl **% in range** es crítico: si el precio sale de tu rango, no ganás fees.\n\n## Fee tiers de Uniswap v3\n\n| Fee tier | Cuándo usarlo |\n|---|---|\n| **0.01%** | Stables (USDC/USDT, USDC/DAI) |\n| **0.05%** | Pares correlacionados (ETH/stETH, USDC/EURC) |\n| **0.3%** | Par clásico (ETH/USDC, ETH/WBTC) |\n| **1%** | Tokens exóticos de alta volatilidad |\n\n## Estrategia de rango\n\n| Estrategia | Rango | APR | Riesgo IL |\n|---|---|---|---|\n| Ultra-wide | ±50% | 5-15% | Bajo |\n| Wide | ±20% | 15-40% | Medio |\n| Narrow | ±5% | 40-100%+ | Alto |\n| Ultra-narrow | ±1% | 100%+ (si in range) | Muy alto |\n\n## Impermanent Loss\n\nEn rangos estrechos, el **IL puede superar los fees ganados** si el precio se mueve bruscamente. Usá nuestra [calculadora de IL](/calculadora-impermanent-loss-pool) para ver el trade-off completo.\n\n## LP pasivo vs activo\n\n- **Pasivo**: rango ±50%, rebalance anual. APR 8-15%.\n- **Activo**: rebalance semanal/diario, rango estrecho. APR 30-80% pero requiere tiempo y gas.\n- **Gamma/Arrakis**: managers automatizados que rebalancean por vos (cobran 5-15% fee).\n\n> **Aviso legal**: Esta calculadora es una herramienta educativa. **No constituye consejo de inversión, ni asesoramiento financiero, fiscal o legal.** Los rendimientos pasados no garantizan resultados futuros. Las criptomonedas son activos volátiles y de alto riesgo. Consultá siempre con un profesional calificado antes de tomar decisiones.",
+  "faq": [
+    {
+      "q": "¿Cuánto gana un LP de ETH/USDC en Uniswap v3?",
+      "a": "Depende del rango. **Ultra-wide (±50%)**: 5-15% APR. **Narrow (±5%)**: 40-100%+ APR pero con mayor impermanent loss. El APR promedio del pool ETH/USDC 0.05% fue **12-20% en 2025**."
+    },
+    {
+      "q": "¿Qué es 'in range' en Uniswap v3?",
+      "a": "Tu liquidez solo gana fees cuando el precio del par está **dentro de tu rango elegido**. Si definís ETH/USDC entre $2,800 y $3,500 y el precio salta a $3,600, tu liquidez pasa a ser 100% USDC y **deja de ganar fees** hasta que vuelva al rango."
+    },
+    {
+      "q": "¿Los fees pagan la impermanent loss?",
+      "a": "A veces. Estadísticamente, **~50% de los LPs v3 pierden dinero neto** (fees − IL < 0) según estudios de Bancor y Topaz Blue. En pares correlacionados (stables, LSTs) el IL es mínimo y los fees casi siempre ganan."
+    },
+    {
+      "q": "¿Qué son Arrakis y Gamma?",
+      "a": "Gestores automatizados de LP v3: depositás ETH+USDC y ellos rebalancean automáticamente el rango, reinvierten fees, etc. Cobran 5-15% de fee pero evitan que tengas que hacerlo manualmente."
+    },
+    {
+      "q": "¿Puedo perder dinero en Uniswap v3?",
+      "a": "Sí, por: (1) **impermanent loss** cuando el precio se mueve, (2) **salir de rango** y no ganar fees mientras tu capital queda parado, (3) **hacks del smart contract** (muy raro en Uniswap core)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Uniswap v3 Docs",
+      "url": "https://docs.uniswap.org"
+    },
+    {
+      "name": "Uniswap Info",
+      "url": "https://info.uniswap.org"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-impermanent-loss-pool",
+    "calculadora-sushiswap-lp-rewards",
+    "calculadora-curve-stable-pool-apy",
+    "calculadora-yield-farming-apy-real"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá tu liquidez usd",
+      "text": "Ingresá tu liquidez usd (ej: 10000). Es el valor de tu liquidez usd."
+    },
+    {
+      "name": "Ingresá tvl total del pool",
+      "text": "Ingresá tvl total del pool (ej: 50000000). Es el valor de tvl total del pool."
+    },
+    {
+      "name": "Ingresá volumen diario pool",
+      "text": "Ingresá volumen diario pool (ej: 20000000). Es el valor de volumen diario pool."
+    },
+    {
+      "name": "Ingresá fee tier (bps)",
+      "text": "Ingresá fee tier (bps) (ej: ). Es el valor de fee tier (bps)."
+    },
+    {
+      "name": "Ingresá % tiempo in range",
+      "text": "Ingresá % tiempo in range (ej: 80). Es el valor de % tiempo in range."
+    },
+    {
+      "name": "Ingresá días de lp",
+      "text": "Ingresá días de lp (ej: 30). Es el valor de días de lp."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado. La calculadora procesa los datos al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
+    }
+  ]
+}

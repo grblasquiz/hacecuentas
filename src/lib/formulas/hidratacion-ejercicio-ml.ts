@@ -38,7 +38,7 @@ export function hidratacionEjercicioMl(i: Inputs): Outputs {
   if (mlPorHora > 1200) mlPorHora = 1200;
 
   const totalSesion = Math.round(mlPorHora * (duracion / 60));
-  const cadaCuanto = `${Math.round(mlPorHora / 4)}-\${Math.round(mlPorHora / 3)} ml cada 15-20 min`;
+  const cadaCuanto = `${Math.round(mlPorHora / 4)}-${Math.round(mlPorHora / 3)} ml cada 15-20 min`;
 
   let electrolitos: string;
   if (duracion > 60 || (clima === 'caluroso' || clima === 'humedo')) {
@@ -52,6 +52,6 @@ export function hidratacionEjercicioMl(i: Inputs): Outputs {
     totalSesion,
     cadaCuanto,
     electrolitos,
-    mensaje: `Tomá ~\${mlPorHora} ml/hora (\${totalSesion} ml total). \${duracion > 60 ? 'Sumá electrolitos.' : 'Agua sola alcanza.'}`
+    mensaje: `Tomá ~${mlPorHora} ml/hora (${totalSesion} ml total). ${duracion > 60 ? 'Sumá electrolitos.' : 'Agua sola alcanza.'}`
   };
 }

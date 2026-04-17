@@ -1,0 +1,157 @@
+{
+  "slug": "calculadora-retraccion-3d-bowden-direct",
+  "title": "Calculadora Retracción 3D 2026 — Bowden vs Direct Drive | Hacé Cuentas",
+  "h1": "Calculadora de retracción 3D Bowden vs Direct Drive",
+  "description": "Calculá los valores óptimos de retracción (distancia y velocidad) para impresoras Bowden o Direct Drive según tu filamento.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "🖨️",
+  "formulaId": "retraccion-3d-bowden-direct",
+  "seoKeywords": [
+    "retraccion 3d",
+    "retraction bowden direct",
+    "stringing impresion 3d",
+    "retraccion pla petg",
+    "distancia retraccion",
+    "velocidad retraccion"
+  ],
+  "intro": "La retracción es el movimiento inverso del extrusor cuando el nozzle viaja sin imprimir, y evita los hilos (stringing) y manchas al cambiar de zona. Los valores óptimos dependen de dos variables: tipo de extrusor (Bowden, con tubo largo PTFE, o Direct Drive, extrusor arriba del hotend) y material. Bowden necesita más retracción (4-8 mm) porque el filamento se comprime en el tubo; Direct Drive con 0.5-2 mm alcanza. Esta calculadora te da distancia, velocidad y coasting recomendados. Si tenés stringing en PETG, probá bajar temperatura + subir retracción. En TPU flexible, casi no se retrae (0.5-1 mm) porque el filamento se dobla. Valores base para Ender 3 Bowden, Prusa MK4 Direct, Bambu A1/P1S Direct.",
+  "keyTakeaway": "**Bowden (Ender 3)**: 5-6 mm / 40-50 mm/s. **Direct Drive (MK4, Bambu)**: 0.8-1.5 mm / 30-45 mm/s. PETG retrae más que PLA; TPU casi no retrae.",
+  "useCases": [
+    "Tenés stringing entre objetos o dentro de una pieza.",
+    "Cambiaste de Bowden a Direct y no sabés los nuevos valores.",
+    "Imprimís PETG y los hilos son peores que con PLA.",
+    "Probás TPU flexible y no sabés qué retracción usar.",
+    "Migraste a Klipper con pressure advance."
+  ],
+  "fields": [
+    {
+      "id": "extrusor",
+      "label": "Extrusor (1=Bowden, 2=Direct Drive)",
+      "type": "number",
+      "placeholder": "2",
+      "min": 1,
+      "max": 2,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "material",
+      "label": "Material (1=PLA, 2=PETG, 3=ABS, 4=TPU)",
+      "type": "number",
+      "placeholder": "1",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "nozzle",
+      "label": "Nozzle",
+      "type": "number",
+      "placeholder": "0.4",
+      "min": 0.15,
+      "max": 1.2,
+      "step": 0.05,
+      "required": true,
+      "suffix": "mm"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria para el cálculo propuesto."
+  },
+  "outputs": [
+    {
+      "id": "distancia",
+      "label": "Distancia retracción",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "velocidad",
+      "label": "Velocidad retracción",
+      "format": "text"
+    },
+    {
+      "id": "coasting",
+      "label": "Coasting sugerido",
+      "format": "text"
+    },
+    {
+      "id": "consejo",
+      "label": "Consejo",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Bowden + PETG + nozzle 0.4",
+    "steps": [
+      "**Bowden base PLA**: 5 mm / 45 mm/s.",
+      "**PETG** necesita +1 mm y -5 °C: **6 mm / 40 mm/s**.",
+      "**Coasting**: 0.1 mm en Bowden, 0.05 en Direct."
+    ],
+    "result": "Retrá **6 mm a 40 mm/s** con 0.1 mm de coasting. Si sigue stringing, bajá temp 5 °C."
+  },
+  "explanation": "## Valores base\n\n| Extrusor | Distancia PLA | Velocidad |\n|---|---|---|\n| Bowden | 5 mm | 45 mm/s |\n| Direct Drive ✅ | 1 mm | 35 mm/s |\n\n## Ajuste por material\n\n| Material | Δ Distancia | Δ Velocidad | Extra |\n|---|---|---|---|\n| PLA | 0 | 0 | Base |\n| PETG | +1 mm | -5 mm/s | Bajar temp 5-10 °C |\n| ABS | +0.5 mm | +5 mm/s | Cerrar enclosure |\n| TPU 95A | -3 mm (casi 0) | -15 mm/s | Direct only ideal |\n| Nylon | +0.5 mm | 0 | Secar antes |\n| PC | +0.5 mm | 0 | Cerrar enclosure |\n\n## Coasting (parada de extrusión anticipada)\n\n| Extrusor | Coasting |\n|---|---|\n| Bowden | 0.1-0.2 mm |\n| Direct Drive | 0.05-0.1 mm |\n| Klipper pressure adv. | 0 (reemplaza coasting) |\n\n## Por nozzle\n\n| Nozzle | Multiplicador distancia |\n|---|---|\n| 0.2 | × 1.2 |\n| 0.4 ✅ | × 1 |\n| 0.6 | × 0.9 |\n| 0.8 | × 0.8 |\n\n## Señales de mala retracción\n\n- **Stringing (hilos)**: subí distancia +1 mm, velocidad +5 mm/s.\n- **Blobs al reiniciar**: bajá velocidad 5 mm/s o activá coast.\n- **Clicking del extrusor**: distancia demasiado alta, baja a límites razonables.\n- **Under-extrusion post-retract**: velocidad muy alta.\n\n## TPU y otros flexibles\n\nTPU **no se retrae bien** en Bowden. En Direct Drive, 0.5-1 mm a 20-25 mm/s es el máximo. Para stringing en TPU, reducí temperatura y activá **combing 'Within infill'**.\n\n## Klipper y pressure advance\n\nCon pressure advance bien calibrado, retracción pura puede bajarse 30-50%. Los oozes se compensan por anticipación de presión.\n\nCombiná con [nozzle y layer](/calculadora-nozzle-layer-height-3d), [primer layer](/calculadora-primer-layer-adherencia-bed) y [cooling fan](/calculadora-cooling-fan-3d-material).",
+  "faq": [
+    {
+      "q": "¿Qué es mejor: Bowden o Direct Drive?",
+      "a": "**Direct Drive** tiene mejor control de filamentos flexibles, menos retracción y mejor pressure advance. Bowden permite más velocidad y cabezal ligero. Impresoras modernas (MK4, Bambu) son todas Direct."
+    },
+    {
+      "q": "¿Por qué mi PETG tira hilos?",
+      "a": "PETG tiene baja viscosidad caliente. Subí retracción +1 mm, bajá temp 5-10 °C. Probá combing 'Off travel'."
+    },
+    {
+      "q": "¿Cuánta retracción en TPU?",
+      "a": "Casi cero. 0.5 mm máximo en Direct, a 20 mm/s. En Bowden muchas veces se imprime sin retracción con combing."
+    },
+    {
+      "q": "¿El firmware afecta la retracción?",
+      "a": "Sí. Klipper con pressure advance reduce la retracción necesaria 30-50%. Marlin con linear advance similar."
+    },
+    {
+      "q": "¿Distancia mayor a 8 mm existe?",
+      "a": "Sí, algunos extrusores Bowden largos (+500 mm tube) piden 8-12 mm. Pero 10+ mm suele indicar tube flojo o filamento húmedo."
+    },
+    {
+      "q": "¿Cuál es más importante: distancia o velocidad?",
+      "a": "**Distancia** es la variable principal para stringing. Velocidad mejora rapidez pero excesiva puede clickear el extrusor."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Prusa - Retraction",
+      "url": "https://help.prusa3d.com/"
+    },
+    {
+      "name": "Teaching Tech - Calibration",
+      "url": "https://teachingtechyt.github.io/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-nozzle-layer-height-3d",
+    "calculadora-tiempo-impresion-3d-layer",
+    "calculadora-cooling-fan-3d-material",
+    "calculadora-primer-layer-adherencia-bed"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón Calcular para obtener el resultado al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo del formulario. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

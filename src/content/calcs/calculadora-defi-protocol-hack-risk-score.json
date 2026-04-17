@@ -1,0 +1,221 @@
+{
+  "slug": "calculadora-defi-protocol-hack-risk-score",
+  "title": "Calculadora Risk Score DeFi 2026 — Heurística de Hack por Protocolo | Hacé Cuentas",
+  "h1": "Calculadora Risk Score DeFi (Hack Probability Heuristic)",
+  "description": "Calculadora risk score DeFi: evalúa un protocolo por TVL, audits, edad, bounty, timelock, multisig. Exposure máxima sugerida.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "🛡️",
+  "formulaId": "defi-hack-risk-score",
+  "seoKeywords": [
+    "defi risk score",
+    "hack probability defi",
+    "risk framework protocolo",
+    "defi seguridad",
+    "evaluar protocolo defi",
+    "audit defi"
+  ],
+  "intro": "El mayor riesgo de DeFi no es el precio del token: es el **hack del smart contract**. Desde 2020, se perdieron más de **$15B USD** en exploits, rug pulls y oracle manipulations. Esta calculadora asigna un **risk score de 0 a 100** según métricas objetivas: **TVL** (más alto = más atractivo pero más estresado), **cantidad de audits**, **edad del protocolo en meses** (>36m = battle-tested), **presencia de bug bounty activo**, **timelock de governance** (previene attacks gobernanza), **multisig signers** (descentralización), y **holders del token** (diversidad). El score sugiere una **exposure máxima del portfolio** según el nivel de riesgo. Es una heurística, no un predictor absoluto —Curve tenía 90+ cuando fue hackeado en 2023. Úsala como filtro, no como certeza.",
+  "keyTakeaway": "Un protocolo con **TVL >$1B + 3+ audits + >2 años + bounty + timelock** = score 80+ (exposure hasta 25% del port). Protocolos recién lanzados sin audit = score <20 (exposure <1%).",
+  "useCases": [
+    "Evaluás si depositar en un protocolo nuevo es seguro.",
+    "Comparás riesgo Curve vs Ondo vs Ethena.",
+    "Decidís qué % del portfolio exponer a DeFi.",
+    "Creás un framework de riesgo para tu treasury.",
+    "Justificás decisiones de inversión con criterios objetivos."
+  ],
+  "fields": [
+    {
+      "id": "tvlUsd",
+      "label": "TVL USD del protocolo",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "500000000",
+      "min": 0,
+      "step": 100000,
+      "required": true
+    },
+    {
+      "id": "audits",
+      "label": "Cantidad de audits",
+      "type": "number",
+      "placeholder": "3",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "ageMonths",
+      "label": "Edad del protocolo",
+      "type": "number",
+      "suffix": "meses",
+      "placeholder": "24",
+      "min": 0,
+      "max": 240,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "hasBounty",
+      "label": "¿Bug bounty activo?",
+      "type": "checkbox",
+      "required": true
+    },
+    {
+      "id": "hasTimelock",
+      "label": "¿Timelock en governance?",
+      "type": "checkbox",
+      "required": true
+    },
+    {
+      "id": "multisig",
+      "label": "Multisig signers",
+      "type": "number",
+      "placeholder": "5",
+      "min": 1,
+      "max": 50,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "tokenHolders",
+      "label": "Token holders",
+      "type": "number",
+      "placeholder": "15000",
+      "min": 0,
+      "step": 100,
+      "required": true
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "riskScore",
+      "label": "Risk score (0-100)",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "riskLabel",
+      "label": "Nivel de riesgo",
+      "format": "text"
+    },
+    {
+      "id": "recommendedExposure",
+      "label": "Exposure sugerida %",
+      "format": "percent"
+    },
+    {
+      "id": "breakdown",
+      "label": "Desglose del score",
+      "format": "text"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: Aave v3 (2026)",
+    "steps": [
+      "**TVL**: $25B → +25.",
+      "**Audits**: 15+ → +24.",
+      "**Edad**: 60+ meses → +20.",
+      "**Bounty**: Immunefi $1M → +8.",
+      "**Timelock**: 7d → +8.",
+      "**Multisig**: 6/10 → +8.",
+      "**Holders**: 150K+ → +7.",
+      "**Score**: 100 = **Muy bajo riesgo**, exposure hasta 25%."
+    ],
+    "result": "Aave v3 es top tier. Exposure hasta 25% del portfolio aceptable para perfil conservador."
+  },
+  "explanation": "## Factores críticos de riesgo DeFi\n\n### 1. TVL\nProtocolos con >$1B TVL tienen más incentivo para atacar, pero también más recursos para seguridad. Menos de $10M TVL = protocolo experimental.\n\n### 2. Audits\n| Audits | Señal |\n|---|---|\n| 0 | Rojo |\n| 1 | Amarillo |\n| 2-3 | Verde |\n| 4+ | Muy verde |\n\nAudits buenos: **Trail of Bits, OpenZeppelin, Certora (formal verification), Code4rena (competitive), Sigma Prime**.\n\n### 3. Edad\nBattle-tested > recién lanzado. Más de 2 años sin hack mayor = buen track record.\n\n### 4. Bug bounty\nPresencia en **Immunefi** con reward de al menos $500K = incentivo real a whitehats.\n\n### 5. Timelock\nUn timelock de 48h+ en upgrades de governance previene attacks tipo **compound.fi 2021** donde un malicious proposal era ejecutable inmediatamente.\n\n### 6. Multisig\n5-of-9 mínimo. Menos = peligroso (team puede robar). Ideal: multisig con **signers doxxed** y conocidos.\n\n### 7. Diversidad de holders\nProtocolos con <1000 holders suelen tener governance capturado por un whale. 10K+ holders = governance más saneado.\n\n## Hacks históricos con 'score alto'\n\nPara recordar que la heurística no es infalible:\n\n| Protocolo | Score pre-hack | Monto |\n|---|---|---|\n| **Curve (2023)** | 90 | $70M (vyper bug) |\n| **Euler (2023)** | 85 | $200M (flash loan) |\n| **Ronin (2022)** | 70 | $625M (multisig attack) |\n| **Nomad (2022)** | 60 | $190M (init bug) |\n| **Wormhole (2022)** | 75 | $320M (signature verif) |\n\n## Recomendaciones de exposure\n\n| Score | Exposure máxima |\n|---|---|\n| 80-100 | 25% del portfolio |\n| 60-79 | 15% |\n| 40-59 | 5% |\n| 20-39 | 1% |\n| 0-19 | 0.25% (yolo) |\n\n> **Aviso legal**: Esta calculadora es una herramienta educativa. **No constituye consejo de inversión, ni asesoramiento financiero, fiscal o legal.** Los rendimientos pasados no garantizan resultados futuros. Las criptomonedas son activos volátiles y de alto riesgo. Consultá siempre con un profesional calificado antes de tomar decisiones.",
+  "faq": [
+    {
+      "q": "¿Es este score garantía de seguridad?",
+      "a": "**No**. Es una heurística basada en factores observables. Curve tenía score 90 cuando fue hackeado por un bug del compilador **Vyper** en 2023. Usá este score como filtro, no como certeza."
+    },
+    {
+      "q": "¿Qué pasa si un protocolo tiene muchos audits pero es nuevo?",
+      "a": "Los audits son necesarios pero **insuficientes**. Muchos protocolos pre-lanzamiento con 3+ audits sufrieron hacks (Yearn v1 fue auditado 5 veces y tuvo exploits). La **edad y uso real** exponen bugs que audits no capturan."
+    },
+    {
+      "q": "¿Cómo uso el score en práctica?",
+      "a": "Definí tu **perfil de riesgo**. Conservador: solo protocolos con score >80. Agresivo: hasta score 50. Para farming especulativo de alta APY, score 20-40 aceptable con **exposure <1%** y aceptando posible pérdida total."
+    },
+    {
+      "q": "¿Qué es Immunefi y por qué importa?",
+      "a": "Plataforma de **bug bounties DeFi**. Los whitehats reportan vulnerabilidades a cambio de reward (típicamente $50K-$10M). Protocolos con bounties altos atraen más auditoría informal continua. Aave, Compound, MakerDAO pagan hasta $10M."
+    },
+    {
+      "q": "¿El score funciona para stablecoins?",
+      "a": "Parcialmente. Para stables hay que sumar: **mecanismo de peg** (over-collateral > algorítmico), **reservas auditadas** (USDC: sí, USDT: parcial), y **historia de depeg**. Ejemplo: Tether tiene TVL gigante pero transparencia baja."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DefiLlama Hacks",
+      "url": "https://defillama.com/hacks"
+    },
+    {
+      "name": "Rekt News",
+      "url": "https://rekt.news"
+    },
+    {
+      "name": "Immunefi",
+      "url": "https://immunefi.com"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-aave-lending-apy-supply",
+    "calculadora-compound-supply-borrow",
+    "calculadora-yield-farming-apy-real",
+    "calculadora-morpho-blue-markets-apy"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá tvl usd del protocolo",
+      "text": "Ingresá tvl usd del protocolo (ej: 500000000). Es el valor de tvl usd del protocolo."
+    },
+    {
+      "name": "Ingresá cantidad de audits",
+      "text": "Ingresá cantidad de audits (ej: 3). Es el valor de cantidad de audits."
+    },
+    {
+      "name": "Ingresá edad del protocolo",
+      "text": "Ingresá edad del protocolo (ej: 24). Es el valor de edad del protocolo."
+    },
+    {
+      "name": "Ingresá ¿bug bounty activo?",
+      "text": "Ingresá ¿bug bounty activo? (ej: ). Es el valor de ¿bug bounty activo?."
+    },
+    {
+      "name": "Ingresá ¿timelock en governance?",
+      "text": "Ingresá ¿timelock en governance? (ej: ). Es el valor de ¿timelock en governance?."
+    },
+    {
+      "name": "Ingresá multisig signers",
+      "text": "Ingresá multisig signers (ej: 5). Es el valor de multisig signers."
+    },
+    {
+      "name": "Ingresá token holders",
+      "text": "Ingresá token holders (ej: 15000). Es el valor de token holders."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado. La calculadora procesa los datos al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
+    }
+  ]
+}

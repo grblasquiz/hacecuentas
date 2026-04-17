@@ -46,6 +46,6 @@ export function recuperacionMuscularHoras(i: Inputs): Outputs {
     horasRecuperacion: horas,
     diasDescanso,
     frecuenciaSemanal: `${frecuenciaSemanal}x por semana como máximo`,
-    mensaje: `Descansá al menos \${horas} horas (\${diasDescanso} días) antes de volver a entrenar \${grupo}. Podés entrenarlos \${frecuenciaSemanal}x/semana.`
+    mensaje: `Descansá al menos ${horas} horas (${diasDescanso} días) antes de volver a entrenar ${grupo}. Podés entrenarlos ${frecuenciaSemanal}x/semana.`
   };
 }

@@ -1,0 +1,221 @@
+{
+  "slug": "calculadora-yield-farming-apy-real",
+  "title": "Calculadora Yield Farming APY Real 2026 — Neto de Gas + IL + Precio Token | Hacé Cuentas",
+  "h1": "Calculadora de APY Real en Yield Farming",
+  "description": "Calculadora yield farming: APY real ajustado por gas, impermanent loss y cambio de precio del token reward (CRV, SUSHI, CVX).",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "🌾",
+  "formulaId": "yield-farming-apy-real",
+  "seoKeywords": [
+    "yield farming apy real",
+    "farming defi calculadora",
+    "apy vs apr",
+    "neto gas il",
+    "rewards farming",
+    "apy sostenible defi"
+  ],
+  "intro": "El **APY nominal que publican los protocolos de yield farming** (300%, 1000%, incluso 10,000% en lanzamientos) casi nunca es lo que vas a ganar. Esta calculadora te muestra el **APY real neto** descontando las tres grandes pérdidas ocultas: (1) **impermanent loss** si farmeás en un LP, (2) **caída del precio del token reward** durante el período (CRV, SUSHI, CVX suelen dumpear post-emisión), y (3) **costos de gas** en Ethereum mainnet por depositar, reclamar, reinvertir y retirar. Ingresá capital, APY publicado, cambio esperado del token reward, gas total estimado, IL y meses: te da el APY real y P&L neto en USD. Diseñada para distinguir farms legítimas de ponzi schemes.",
+  "keyTakeaway": "**APY nominal − IL − gas − price dump = APY real**. Farms con 1000%+ APY casi siempre colapsan el token y terminan negativos. Farms sostenibles: 5-20% APY real.",
+  "useCases": [
+    "Evaluás si una farm con 500% APY es sostenible o ponzi.",
+    "Calculás cuánto realmente ganás descontando IL y gas.",
+    "Comparás farms en L1 (Ethereum) vs L2 (Arbitrum).",
+    "Proyectás P&L realista antes de entrar a una farm.",
+    "Analizás impacto de un dump del 50% del token reward."
+  ],
+  "fields": [
+    {
+      "id": "principalUsd",
+      "label": "Capital inicial",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "10000",
+      "min": 0,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "apyNominal",
+      "label": "APY nominal publicado",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "100",
+      "min": 0,
+      "max": 100000,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "tokenPriceChange",
+      "label": "Cambio esperado token reward",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "-50",
+      "min": -100,
+      "max": 1000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "gasCostUsd",
+      "label": "Gas total (deposit+claim+exit)",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "150",
+      "min": 0,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "ilPercent",
+      "label": "Impermanent loss esperado",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "5",
+      "min": 0,
+      "max": 100,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "months",
+      "label": "Meses de farming",
+      "type": "number",
+      "placeholder": "12",
+      "min": 1,
+      "max": 60,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "apyReal",
+      "label": "APY real neto",
+      "format": "percent",
+      "primary": true
+    },
+    {
+      "id": "netReturnUsd",
+      "label": "Retorno neto USD",
+      "format": "currency"
+    },
+    {
+      "id": "nominalReturn",
+      "label": "Retorno nominal",
+      "format": "currency"
+    },
+    {
+      "id": "priceAdjustment",
+      "label": "Ajuste precio token",
+      "format": "currency"
+    },
+    {
+      "id": "ilLoss",
+      "label": "Pérdida por IL",
+      "format": "currency"
+    },
+    {
+      "id": "gasCost",
+      "label": "Gas total",
+      "format": "currency"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: $10K en farm 100% APY que dumpea 50%",
+    "steps": [
+      "**Nominal**: 10,000 × 100% = $10,000 en tokens.",
+      "**Dump precio token −50%**: rewards valen $5,000.",
+      "**IL 5%**: $500 perdidos por divergencia.",
+      "**Gas**: $150 en tx varias.",
+      "**Neto**: $5,000 − $500 − $150 = **$4,350 USD** = 43.5% APY real."
+    ],
+    "result": "De 100% APY nominal a 43% real — mejor que muchas alternativas pero lejos de lo publicado."
+  },
+  "explanation": "## Por qué APY nominal engaña\n\nEl APY nominal asume tres cosas que nunca pasan:\n1. **Precio del token reward estable**: en la realidad, la emisión constante hace que el token caiga.\n2. **Sin gas fees**: en Ethereum, un ciclo entrar/reclamar/salir puede costar $100-400.\n3. **Sin impermanent loss**: en LPs volátiles, IL puede ser 5-30% en un año.\n\n## Fórmula APY real\n\n```\nnet_return = (capital × APY × tiempo × (1 + Δprecio_token)) − gas − IL_USD\nAPY_real = net_return / capital / años × 100\n```\n\n## Tipos de farming y APY real esperado\n\n| Tipo | APY nominal | APY real 2026 |\n|---|---|---|\n| Stable pool Curve + CVX | 8-15% | **6-13%** |\n| Aave/Compound supply | 3-7% | **3-6%** |\n| Uni v3 ETH/stable 0.05% | 15-40% | **8-25%** |\n| LSD loop leverage | 5-12% | **4-10%** |\n| Lanzamiento meme farm | 500-5000% | **−30% a +100%** (alto riesgo) |\n\n## Señales de farm ponzi\n\n1. **APY >500% sostenido**: emisión insostenible.\n2. **Token reward sin utilidad real**: solo gobernanza simbólica.\n3. **TVL creciendo solo por mercenary capital**: se va al segundo que caen los rewards.\n4. **Fair launch sin audit**: 50/50 de rug pull.\n\n## Estrategias sostenibles 2026\n\n- **Convex stables**: 8-13% real, bajo riesgo.\n- **Aave USDC**: 4-6% real, mínimo riesgo.\n- **Pendle fixed yield**: 6-15% lockeado.\n- **GMX/GLP**: 15-25% real pero con exposure de market.\n\nPara farming de derivados, usá la [calculadora GMX GLP](/calculadora-gmx-glp-apr-ingreso).\n\n> **Aviso legal**: Esta calculadora es una herramienta educativa. **No constituye consejo de inversión, ni asesoramiento financiero, fiscal o legal.** Los rendimientos pasados no garantizan resultados futuros. Las criptomonedas son activos volátiles y de alto riesgo. Consultá siempre con un profesional calificado antes de tomar decisiones.",
+  "faq": [
+    {
+      "q": "¿Por qué la APY nominal casi nunca se cumple?",
+      "a": "Porque asume que el token reward **mantiene su precio** y que no hay gas ni IL. En la realidad, farms de alta APY se financian con **inflación del token**, que diluye su precio 30-90% en meses. Una farm de 100% APY con token que cae 70% deja un APY real de 30%."
+    },
+    {
+      "q": "¿Cuál es un APY real sostenible en DeFi?",
+      "a": "Entre **5% y 15%** para farms blue-chip (Curve+Convex, Aave, Uniswap v3 en rangos amplios). Superar 20% real de forma consistente es **muy raro**. Arriba de 50% real implica alto riesgo de smart contract o tokenomics."
+    },
+    {
+      "q": "¿Conviene farmear en Ethereum o L2?",
+      "a": "En **L2 (Arbitrum, Base, Optimism)** casi siempre, salvo que muevas >$50K. Gas en L2 es 1-10% del de L1, lo que hace viable capital chico. Para capital >$100K, Ethereum mainnet tiene más profundidad y protocolos testeados."
+    },
+    {
+      "q": "¿El auto-compound aumenta mucho el APY real?",
+      "a": "Sí, pero **solo si el gas es bajo**. En L2 o con aggregators como Yearn/Beefy, el auto-compound suma 1-5% al APY real. En Ethereum L1 con capital chico, el gas de cada compound puede superar el beneficio."
+    },
+    {
+      "q": "¿Cómo calculo el IL esperado de una farm?",
+      "a": "Usá nuestra [calculadora de impermanent loss](/calculadora-impermanent-loss-pool). Como regla: pools de stables IL ≤ 0.5%, pools ETH/stable IL 3-10% anual, pools volátil/stable IL 10-30%+ anual."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DeFiLlama Yields",
+      "url": "https://defillama.com/yields"
+    },
+    {
+      "name": "Uniswap v2 IL paper",
+      "url": "https://docs.uniswap.org"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-impermanent-loss-pool",
+    "calculadora-aave-lending-apy-supply",
+    "calculadora-curve-stable-pool-apy",
+    "calculadora-uniswap-v3-fees-liquidez"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá capital inicial",
+      "text": "Ingresá capital inicial (ej: 10000). Es el valor de capital inicial."
+    },
+    {
+      "name": "Ingresá apy nominal publicado",
+      "text": "Ingresá apy nominal publicado (ej: 100). Es el valor de apy nominal publicado."
+    },
+    {
+      "name": "Ingresá cambio esperado token reward",
+      "text": "Ingresá cambio esperado token reward (ej: -50). Es el valor de cambio esperado token reward."
+    },
+    {
+      "name": "Ingresá gas total (deposit+claim+exit)",
+      "text": "Ingresá gas total (deposit+claim+exit) (ej: 150). Es el valor de gas total (deposit+claim+exit)."
+    },
+    {
+      "name": "Ingresá impermanent loss esperado",
+      "text": "Ingresá impermanent loss esperado (ej: 5). Es el valor de impermanent loss esperado."
+    },
+    {
+      "name": "Ingresá meses de farming",
+      "text": "Ingresá meses de farming (ej: 12). Es el valor de meses de farming."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado. La calculadora procesa los datos al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
+    }
+  ]
+}

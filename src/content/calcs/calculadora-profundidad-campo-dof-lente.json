@@ -1,0 +1,171 @@
+{
+  "slug": "calculadora-profundidad-campo-dof-lente",
+  "title": "Calculadora Profundidad de Campo (DoF) 2026 — Apertura y Distancia | Hacé Cuentas",
+  "h1": "Calculadora de profundidad de campo (DoF) por lente",
+  "description": "Calculá la profundidad de campo (DoF): cuánta área queda nítida delante y detrás del sujeto según focal, apertura y distancia.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "📸",
+  "formulaId": "profundidad-campo-dof-lente",
+  "seoKeywords": [
+    "profundidad de campo",
+    "dof calculadora",
+    "depth of field",
+    "bokeh calculator",
+    "dof apertura",
+    "circulo de confusion"
+  ],
+  "intro": "La profundidad de campo (DoF, Depth of Field) es la zona por delante y detrás del punto enfocado que aparece nítida en la foto. Depende de tres variables: distancia al sujeto, focal de la lente (mm) y apertura (f/). A menor distancia, mayor focal y menor f/, la DoF se reduce y se nota el bokeh. Esta calculadora usa la fórmula óptica con círculo de confusión estándar para full frame (0.030 mm) y APS-C (0.019 mm) y te devuelve: DoF cerca (cuánto antes del sujeto queda nítido), DoF lejos (cuánto después), DoF total, distancia hiperfocal y distancia de front/back focus. Útil para retratos (querés DoF chica, 5-20 cm), paisaje (querés todo nítido, usar hiperfocal) o macro (DoF mm, focus stacking necesario).",
+  "keyTakeaway": "**Retrato 85 mm f/1.8 a 2 m** → DoF ~9 cm. **Paisaje 24 mm f/8 a 10 m** → DoF ~8 m. **Macro 100 mm f/2.8 a 30 cm** → DoF ~2 mm.",
+  "useCases": [
+    "Hacés retratos y querés bokeh cremoso.",
+    "Paisajes donde todo debe estar nítido.",
+    "Macro fotografía y ves que solo una parte está enfocada.",
+    "Usás sensor APS-C y no sabés el equivalente DoF full frame.",
+    "Comparás lentes para comprar (50 1.8 vs 85 1.8)."
+  ],
+  "fields": [
+    {
+      "id": "focal",
+      "label": "Focal",
+      "type": "number",
+      "placeholder": "50",
+      "min": 8,
+      "max": 800,
+      "step": 1,
+      "required": true,
+      "suffix": "mm"
+    },
+    {
+      "id": "apertura",
+      "label": "Apertura",
+      "type": "number",
+      "placeholder": "2.8",
+      "min": 1.0,
+      "max": 32,
+      "step": 0.1,
+      "required": true,
+      "suffix": "f/"
+    },
+    {
+      "id": "distancia",
+      "label": "Distancia al sujeto",
+      "type": "number",
+      "placeholder": "2",
+      "min": 0.1,
+      "max": 100,
+      "step": 0.05,
+      "required": true,
+      "suffix": "m"
+    },
+    {
+      "id": "sensor",
+      "label": "Sensor (1=FF, 2=APS-C, 3=M4/3)",
+      "type": "number",
+      "placeholder": "1",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria para el cálculo propuesto."
+  },
+  "outputs": [
+    {
+      "id": "dofTotal",
+      "label": "DoF total",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "dofCerca",
+      "label": "Cerca (delante del sujeto)",
+      "format": "text"
+    },
+    {
+      "id": "dofLejos",
+      "label": "Lejos (detrás del sujeto)",
+      "format": "text"
+    },
+    {
+      "id": "hiperfocal",
+      "label": "Distancia hiperfocal",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "85 mm f/1.8 a 2 m en full frame",
+    "steps": [
+      "**CoC FF**: 0.030 mm.",
+      "**Hiperfocal**: (85²) / (1.8 × 0.030) ≈ **134 m**.",
+      "**DoF cerca**: distancia × hiperfocal / (hiperfocal + distancia - focal) ≈ 1.97 m.",
+      "**DoF lejos**: similar ≈ 2.03 m.",
+      "**DoF total**: ≈ **6 cm**."
+    ],
+    "result": "A 2 m con 85 f/1.8 tenés apenas **6 cm de nitidez**. Perfecto para retrato con ojos enfocados y fondo cremoso."
+  },
+  "explanation": "## Fórmula óptica\n\n```\nHiperfocal H = focal² / (apertura × CoC)\nDoF_near = (distancia × H) / (H + distancia - focal)\nDoF_far  = (distancia × H) / (H - distancia + focal)   [si distancia < H]\nDoF_total = DoF_far - DoF_near\n```\n\n**CoC (círculo de confusión)** es el tamaño máximo de un punto para percibirse como nítido:\n\n| Sensor | CoC (mm) |\n|---|---|\n| Full frame | 0.030 |\n| APS-C (Canon) | 0.019 |\n| APS-C (Nikon/Sony) | 0.020 |\n| Micro 4/3 | 0.015 |\n| 1\" | 0.011 |\n\n## Factores que reducen DoF (más bokeh)\n\n1. **Apertura más abierta** (f/1.4 vs f/8): ×10 menos DoF.\n2. **Focal más larga** (200 mm vs 24 mm): ×5-10 menos DoF.\n3. **Distancia menor al sujeto**: DoF chica, muy chica en macro.\n4. **Sensor más grande**: full frame tiene 1.5× menos DoF que APS-C misma focal-apertura.\n\n## DoF equivalente entre sensores\n\nPara el mismo framing y DoF, 85 mm f/1.8 FF = 55 mm f/1.2 APS-C.\n\n## Distancia hiperfocal\n\nEnfocando en la hiperfocal, todo desde la mitad de esa distancia hasta infinito sale nítido. Clave en paisaje.\n\n| Focal | f/8 hiperfocal FF |\n|---|---|\n| 14 mm | 0.8 m |\n| 24 mm | 2.4 m |\n| 35 mm | 5.1 m |\n| 50 mm | 10.4 m |\n| 85 mm | 30.1 m |\n\n## Usos típicos\n\n| Situación | Focal | Apertura | DoF típico |\n|---|---|---|---|\n| Retrato cara | 85-135 mm | f/1.4-2.8 | 5-15 cm |\n| Retrato cuerpo | 50-85 mm | f/2-4 | 20-50 cm |\n| Grupo | 35-50 mm | f/4-8 | 1-3 m |\n| Paisaje | 14-35 mm | f/8-11 | 2 m-∞ |\n| Macro | 90-180 mm | f/5.6-16 | 1-10 mm |\n| Producto | 50-100 mm | f/8-11 | 3-20 cm |\n\n## Errores comunes\n\n1. **Apertura máxima siempre**: f/1.4 tiene ojos nítidos pero nariz borrosa. Cerrá a 2.8-4 para cara entera.\n2. **Ignorar focus breathing**: algunos lentes cambian framing al enfocar.\n3. **Confiar en preview**: el visor muestra apertura máxima. Usá DoF preview button para ver real.\n4. **Zonas de nitidez asimétricas**: el \"1/3 delante, 2/3 atrás\" es aproximado; depende de distancia.\n\nCombiná con [hiperfocal](/calculadora-distancia-hiperfocal-lente), [triángulo](/calculadora-exposicion-triangulo-iso-diafragma) y [crop factor](/calculadora-tamano-sensor-crop-factor).",
+  "faq": [
+    {
+      "q": "¿Qué es bokeh?",
+      "a": "El aspecto estético del desenfoque fuera de la DoF. Lentes de diafragma redondo (9+ hojas) dan bokeh suave; octogonales dan polígonos."
+    },
+    {
+      "q": "¿Crop factor afecta DoF?",
+      "a": "Sí. APS-C tiene 1.5× más DoF que FF para misma focal y apertura. Por eso 50 mm f/1.8 en APS-C se siente como 75 mm f/2.8 FF en framing y DoF."
+    },
+    {
+      "q": "¿Por qué el macro tiene DoF tan chica?",
+      "a": "Porque distancia al sujeto es muy corta (20-50 cm). DoF es mm incluso en f/11. Por eso se usa focus stacking."
+    },
+    {
+      "q": "¿DoF es simétrica?",
+      "a": "Solo a distancia hiperfocal aprox. En distancias cortas, DoF es ~40% delante y 60% detrás. En infinito es imposible."
+    },
+    {
+      "q": "¿El sensor del celular?",
+      "a": "Sensores muy pequeños tienen DoF infinita casi. El 'Modo retrato' simula bokeh por software. Un 1/2.55 pulgada a f/1.8 tiene DoF equivalente a FF f/9."
+    },
+    {
+      "q": "¿Lentes stopped down son mejores?",
+      "a": "Sí, 2-3 stops cerrado del máximo. 50 f/1.4 brilla a f/2.8-4, no a f/1.4 donde hay aberraciones y edge softness."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DOFMaster",
+      "url": "https://www.dofmaster.com/"
+    },
+    {
+      "name": "Photography Life - DoF",
+      "url": "https://photographylife.com/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-exposicion-triangulo-iso-diafragma",
+    "calculadora-distancia-hiperfocal-lente",
+    "calculadora-tamano-sensor-crop-factor",
+    "calculadora-ancho-angulo-lente-distancia"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón Calcular para obtener el resultado al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo del formulario. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

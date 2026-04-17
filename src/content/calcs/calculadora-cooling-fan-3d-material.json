@@ -1,0 +1,158 @@
+{
+  "slug": "calculadora-cooling-fan-3d-material",
+  "title": "Calculadora Cooling Fan 3D 2026 — % Ventilador por Material | Hacé Cuentas",
+  "h1": "Calculadora de cooling fan (ventilador) por material 3D",
+  "description": "Calculá el porcentaje de ventilador ideal para cada material 3D: PLA, PETG, ABS y TPU sin warping ni mala adhesión.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "🖨️",
+  "formulaId": "cooling-fan-3d-material",
+  "seoKeywords": [
+    "cooling fan 3d",
+    "ventilador impresora 3d",
+    "fan pla",
+    "cooling petg",
+    "fan abs",
+    "enfriamiento 3d"
+  ],
+  "intro": "El cooling fan enfría la capa recién depositada para evitar que se deforme antes de solidificar. Pero el cooling correcto depende del material: PLA ama el cooling (100% fan), PETG lo pide moderado (40-60%), ABS lo odia (0-20% o se delamina), TPU lo tolera poco (20-30%). Esta calculadora te da porcentaje de fan, layer time mínimo, bridge fan y direcciones específicas si la pieza tiene partes delgadas o overhangs. Un fan mal ajustado genera: PLA blob en overhangs (fan bajo), PETG frágil entre capas (fan alto), ABS grietas y warping (fan alto), TPU superficies rugosas (fan alto).",
+  "keyTakeaway": "**PLA 100% fan** desde layer 3. **PETG 40-50%**. **ABS 0-20%** con enclosure. **TPU 20-30%**. Bridge fan siempre 100% independiente.",
+  "useCases": [
+    "Tenés warping en ABS y sospechás del fan.",
+    "PLA hace blobs en overhangs y el fan parece no alcanzar.",
+    "Cambiás de material y no sabés ajustar.",
+    "Tu PETG queda frágil y se parte entre capas.",
+    "Imprimís miniaturas PLA con detalles finos."
+  ],
+  "fields": [
+    {
+      "id": "material",
+      "label": "Material (1=PLA, 2=PETG, 3=ABS, 4=TPU, 5=ASA, 6=Nylon)",
+      "type": "number",
+      "placeholder": "1",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "enclosure",
+      "label": "Enclosure (1=sí, 0=no)",
+      "type": "number",
+      "placeholder": "0",
+      "min": 0,
+      "max": 1,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "capaFina",
+      "label": "Tiene detalles finos (<3 mm pared)",
+      "type": "number",
+      "placeholder": "0",
+      "min": 0,
+      "max": 1,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria para el cálculo propuesto."
+  },
+  "outputs": [
+    {
+      "id": "fan",
+      "label": "% de fan principal",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "layerMin",
+      "label": "Layer time mínimo",
+      "format": "text"
+    },
+    {
+      "id": "bridgeFan",
+      "label": "Bridge fan",
+      "format": "text"
+    },
+    {
+      "id": "consejo",
+      "label": "Consejo específico",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "PETG sin enclosure sin detalles finos",
+    "steps": [
+      "**PETG base**: 40-50%.",
+      "**Sin enclosure**: ok para PETG.",
+      "**Sin detalles finos**: mantener 50%.",
+      "**Layer time min**: 8 seg.",
+      "**Bridge**: 100%."
+    ],
+    "result": "**Fan 50%** desde layer 3, bridge 100%. Layer time mínimo 8 s para evitar calor acumulado."
+  },
+  "explanation": "## Fan por material\n\n| Material | Fan normal | Layer time min | Notas |\n|---|---|---|---|\n| PLA | 100% ✅ | 5 s | Desde layer 3 |\n| PLA Silk | 80-90% | 5 s | Bajar para brillo |\n| PETG | 40-60% | 8-10 s | Demasiado = frágil |\n| ABS | 0-20% | 10-15 s | Enclosure **requerido** |\n| ASA | 10-30% | 10-15 s | Enclosure recomendado |\n| TPU 95A | 20-40% | 8-10 s | Fan bajo, flow lento |\n| Nylon | 0-20% | 10-20 s | Secar antes, fan off |\n| PC | 0-10% | 15-20 s | Enclosure **requerido** |\n\n## Bridge cooling\n\nSiempre **100% fan en bridges** independiente del material, porque el puente sin soporte necesita solidificar rápido:\n\n| Material | Bridge fan |\n|---|---|\n| PLA | 100% |\n| PETG | 100% |\n| ABS | 50-70% (con enclosure) |\n| TPU | 60-80% |\n\n## Layer time mínimo\n\nSi la capa es pequeña (<10 seg de impresión real), el slicer **baja la velocidad** para darle tiempo a enfriar. Fórmula:\n\n```\nVelocidad_ajustada = Velocidad_nominal × (Tiempo_real / Layer_min)\n```\n\nSin layer time mínimo, puntas de figuras y detalles quedan blobby.\n\n## Casos específicos\n\n- **Miniaturas PLA** (Warhammer, D&D): fan 100%, layer time 8 s, velocidad 30 mm/s.\n- **Figura grande ABS**: fan 10%, enclosure 40-50 °C, layer time 12 s.\n- **TPU flexible**: flow 95%, fan 25%, velocidad 25 mm/s.\n\n## Errores comunes\n\n1. **PLA con fan 50%**: pierde detalle en overhangs, queda mate desigual.\n2. **PETG con fan 100%**: capas mal fusionadas, pieza frágil al doblar.\n3. **ABS con fan**: warping y delaminación 90% de los casos sin enclosure.\n4. **Fan desde layer 1**: mala adherencia de primera capa. Activar desde layer 3.\n\n## Duct y fan real\n\nEl porcentaje del slicer es teórico. Un fan 4010 en ducto original Ender genera muy poco flujo vs un ducto Satsana con fan 5015. Si tu PLA blobby no mejora con 100%, el problema es el hardware.\n\nCombiná con [primer layer](/calculadora-primer-layer-adherencia-bed), [retracción](/calculadora-retraccion-3d-bowden-direct) y [tiempo](/calculadora-tiempo-impresion-3d-layer).",
+  "faq": [
+    {
+      "q": "¿PLA siempre al 100%?",
+      "a": "Sí, salvo silk PLA (baja a 80% para brillo) o PLA+ técnicos (80-90%)."
+    },
+    {
+      "q": "¿Por qué ABS sin fan?",
+      "a": "ABS se contrae al enfriar. Si se enfría rápido capa a capa, contrae desigual → warping y grietas. Enclosure y fan 0-20% evita el problema."
+    },
+    {
+      "q": "¿Fan desde qué layer?",
+      "a": "Desde layer 2-3, no desde el primero. El primer layer no lleva fan para adherir mejor."
+    },
+    {
+      "q": "¿Bridge fan afecta warping?",
+      "a": "En bridges el fan es momentáneo y ayuda. En ABS aun así mantener la pieza en enclosure cerrada después."
+    },
+    {
+      "q": "¿Mi fan zumba feo?",
+      "a": "Fan 4010 stock tiene vida ~1000 hs. Cambialo por Noctua o Sunon. Mejora calidad y ruido drásticamente."
+    },
+    {
+      "q": "¿Part cooling vs hotend fan?",
+      "a": "**Hotend fan** siempre al 100% (enfría el heatbreak). **Part cooling** es el que el slicer controla. No confundirlos."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Prusa - Cooling",
+      "url": "https://help.prusa3d.com/"
+    },
+    {
+      "name": "All3DP - Cooling Guide",
+      "url": "https://all3dp.com/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-primer-layer-adherencia-bed",
+    "calculadora-retraccion-3d-bowden-direct",
+    "calculadora-tiempo-impresion-3d-layer",
+    "calculadora-nozzle-layer-height-3d"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón Calcular para obtener el resultado al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo del formulario. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

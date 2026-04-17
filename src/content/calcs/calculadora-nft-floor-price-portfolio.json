@@ -1,0 +1,219 @@
+{
+  "slug": "calculadora-nft-floor-price-portfolio",
+  "title": "Calculadora NFT Floor Portfolio 2026 — PnL y Valor de Venta | Hacé Cuentas",
+  "h1": "Calculadora NFT Floor Portfolio Value",
+  "description": "Calculadora NFT portfolio: valor al floor price, PnL unrealized vs cost basis, y neto tras marketplace fee y royalties.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "📦",
+  "formulaId": "nft-floor-portfolio",
+  "seoKeywords": [
+    "nft portfolio valor",
+    "floor price calculadora",
+    "nft pnl",
+    "nft tax basis",
+    "valor coleccion nft",
+    "venta nft fees"
+  ],
+  "intro": "Saber el valor real de tu portfolio NFT requiere más que multiplicar cantidad × floor: hay que descontar el **marketplace fee** (0.5-2.5% según OpenSea/Blur), el **royalty del creator** (opcional 0-10%) y el **gas de venta**. Esta calculadora te da: (1) **valor a floor** (upper bound si todos vendieran al floor), (2) **PnL unrealized** vs tu cost basis, (3) **valor neto realizable** si vendés hoy (descontando fees), y (4) **PnL %** sobre cost basis. Input: cantidad, floor actual, cost basis promedio (ETH que pagaste por NFT), precio ETH, marketplace fee % y royalty %. Útil para tax reporting y para decidir cuándo realizar ganancias.",
+  "keyTakeaway": "Valor real ≠ cantidad × floor. Descontá **2.5-5%** de marketplace + royalty. Si vendés al floor te puede quedar **92-97%** del valor bruto. Para gains grandes, considerá el tax hit adicional.",
+  "useCases": [
+    "Valoración de tu colección NFT al día.",
+    "Cálculo de PnL para reporting o tax.",
+    "Decidir si vender ahora o esperar.",
+    "Comparar OpenSea vs Blur net proceeds.",
+    "Estimar cuánto USD podés extraer de tu portfolio."
+  ],
+  "fields": [
+    {
+      "id": "quantity",
+      "label": "Cantidad de NFTs",
+      "type": "number",
+      "placeholder": "5",
+      "min": 1,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "floorPriceEth",
+      "label": "Floor price actual",
+      "type": "number",
+      "suffix": "ETH",
+      "placeholder": "0.5",
+      "min": 0,
+      "step": 0.0001,
+      "required": true
+    },
+    {
+      "id": "costBasisEth",
+      "label": "Cost basis promedio",
+      "type": "number",
+      "suffix": "ETH",
+      "placeholder": "0.3",
+      "min": 0,
+      "step": 0.0001,
+      "required": true
+    },
+    {
+      "id": "ethPriceUsd",
+      "label": "Precio ETH",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "3200",
+      "min": 0,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "marketplaceFeePercent",
+      "label": "Marketplace fee %",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "2.5",
+      "min": 0,
+      "max": 20,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "royaltyPercent",
+      "label": "Royalty %",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "5",
+      "min": 0,
+      "max": 20,
+      "step": 0.1,
+      "required": true
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "floorValueUsd",
+      "label": "Valor floor USD",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "floorValueEth",
+      "label": "Valor floor ETH",
+      "format": "number"
+    },
+    {
+      "id": "unrealizedPnlUsd",
+      "label": "PnL unrealized USD",
+      "format": "currency"
+    },
+    {
+      "id": "pnlPercent",
+      "label": "PnL %",
+      "format": "percent"
+    },
+    {
+      "id": "netSellableUsd",
+      "label": "Neto realizable USD",
+      "format": "currency"
+    },
+    {
+      "id": "unrealizedPnlEth",
+      "label": "PnL ETH",
+      "format": "number"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: 5 NFTs, floor 0.5 ETH, cost basis 0.3 ETH",
+    "steps": [
+      "**Valor floor**: 5 × 0.5 = 2.5 ETH = $8,000 USD.",
+      "**Cost basis**: 5 × 0.3 = 1.5 ETH.",
+      "**PnL unrealized**: +1 ETH = **+$3,200 USD (67%)**.",
+      "**Net sellable**: 2.5 × (1 − 2.5% − 5%) = 2.31 ETH = $7,400 USD.",
+      "**Gas venta estimado**: ~$20 USD cada uno → −$100 extra."
+    ],
+    "result": "PnL +67% vs cost basis. Neto al vender: ~$7,300 USD."
+  },
+  "explanation": "## Fórmula\n\n```\nvalor_floor = cantidad × floor_price × ETH_USD\nPnL_unrealized = valor_floor − (cantidad × cost_basis × ETH_USD)\nneto_venta = valor_floor × (1 − marketplace_fee − royalty) − gas\n```\n\n## Floor price: la métrica engañosa\n\nEl **floor price** es el precio de venta más bajo listado. Engaña porque:\n1. **Si vendés al floor, lo movés**: vender un NFT al floor puede hacer caer el floor 5-15%.\n2. **Wash trading**: en 2022-2024 se detectaron colecciones con 50%+ wash trading inflando floors.\n3. **Listings falsos**: algunos listings son solo para manipular floor.\n4. **Rareza**: tu NFT puede valer mucho más que el floor si tiene traits raros.\n\n## Volumen vs floor\n\nEl **floor puede estar flat pero el volumen secar**. Si nadie está comprando, el floor es ilusorio: tus NFTs son ilíquidos.\n\n| Métrica | Buena señal | Mala señal |\n|---|---|---|\n| Floor trending | Subiendo 10%+ semanal | Cayendo 5%+ |\n| Volumen semanal | >100 ETH | <10 ETH |\n| Holders únicos | >30% del supply | <10% |\n| Listings vs supply | <5% | >20% (oversupply) |\n\n## Blur bidding vs floor sell\n\nEn 2023 surgió **Blur bidding**: los traders pro no compran al floor, sino que ponen bids agresivos cerca del floor. Vender a **Blur bid** es usualmente 2-5% más bajo que el floor listed, pero la venta es **instantánea**.\n\n## Cost basis para tax\n\nPara propósitos fiscales, tu cost basis es:\n- **Mint**: precio_mint + gas_del_mint\n- **Compra secundary**: precio_compra + gas_compra + fee_marketplace_paid\n\nAlgunas jurisdicciones permiten usar **weighted average** si tenés muchos NFTs del mismo contrato.\n\n## Estrategia de realización\n\n| Situación | Estrategia |\n|---|---|\n| Bull run (floor +50% mes) | Trim 20% al floor caliente |\n| Lateral | Listar 10% arriba del floor |\n| Bear (floor −30% mes) | Hold si cash basis permite, cut if red >50% |\n| Iliquidez creciente | Accept lower offer o tank it |\n\n> **Aviso legal**: Esta calculadora es una herramienta educativa. **No constituye consejo de inversión, ni asesoramiento financiero, fiscal o legal.** Los rendimientos pasados no garantizan resultados futuros. Las criptomonedas son activos volátiles y de alto riesgo. Consultá siempre con un profesional calificado antes de tomar decisiones.",
+  "faq": [
+    {
+      "q": "¿Cómo se calcula el valor real de una colección NFT?",
+      "a": "**Cantidad × floor_price × ETH_USD**, menos fees de venta (2.5-7.5%) y gas. Pero el **valor real realizable** es usualmente 5-15% menos del floor porque vender N items al floor mueve el precio hacia abajo."
+    },
+    {
+      "q": "¿Por qué varía tanto el floor?",
+      "a": "Por **baja liquidez**. La mayoría de colecciones tienen <1% del supply listed. Un solo listing agresivo baja el floor 5-10%. Un solo comprador grande puede subirlo 10-20%. Floors son volátiles especialmente en colecciones con <500 holders."
+    },
+    {
+      "q": "¿Vale más mi NFT si tiene traits raros?",
+      "a": "Sí, a veces **mucho más**. Un 1/1 o gold trait puede valer 10-50x el floor. Para tu portfolio, mirá también **rarity floor** (floor de items con rarity similar a los tuyos) además del floor general."
+    },
+    {
+      "q": "¿Conviene vender en OpenSea o Blur?",
+      "a": "**Para vender rápido**: Blur (tomar bid). Fee: 0.5%, pero bid es 2-5% menor al floor listed. **Para maximizar precio**: OpenSea listing al floor, esperar comprador. Fee: 2.5% + royalty respetado. Blur: royalty opcional."
+    },
+    {
+      "q": "¿Cómo pago impuestos sobre NFTs?",
+      "a": "Depende de tu jurisdicción. En **USA**: capital gains al vender (short <1yr vs long-term). En **UK/Alemania/España**: similar. En **Argentina**: ganancia de capital 15% o income según carácter. Reportá cada venta con cost basis. Mirá [cripto tax USA](/calculadora-cripto-tax-usa-capital-gains) o [cripto tax España](/calculadora-cripto-tax-espana-irpf)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "OpenSea",
+      "url": "https://opensea.io"
+    },
+    {
+      "name": "Blur",
+      "url": "https://blur.io"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-nft-royalties-primary-secondary",
+    "calculadora-nft-mint-gas-eth",
+    "calculadora-nft-holder-boost-rewards",
+    "calculadora-cripto-tax-usa-capital-gains"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá cantidad de nfts",
+      "text": "Ingresá cantidad de nfts (ej: 5). Es el valor de cantidad de nfts."
+    },
+    {
+      "name": "Ingresá floor price actual",
+      "text": "Ingresá floor price actual (ej: 0.5). Es el valor de floor price actual."
+    },
+    {
+      "name": "Ingresá cost basis promedio",
+      "text": "Ingresá cost basis promedio (ej: 0.3). Es el valor de cost basis promedio."
+    },
+    {
+      "name": "Ingresá precio eth",
+      "text": "Ingresá precio eth (ej: 3200). Es el valor de precio eth."
+    },
+    {
+      "name": "Ingresá marketplace fee %",
+      "text": "Ingresá marketplace fee % (ej: 2.5). Es el valor de marketplace fee %."
+    },
+    {
+      "name": "Ingresá royalty %",
+      "text": "Ingresá royalty % (ej: 5). Es el valor de royalty %."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado. La calculadora procesa los datos al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
+    }
+  ]
+}

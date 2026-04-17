@@ -1,0 +1,152 @@
+{
+  "slug": "calculadora-hop-utilization-boil-time",
+  "title": "Calculadora Hop Utilization Boil Time 2026 | Hacé Cuentas",
+  "h1": "Utilización del lúpulo según tiempo de hervor",
+  "description": "Calculá el porcentaje de utilización del lúpulo según tiempo de hervor y densidad del mosto. Fórmula Tinseth.",
+  "category": "cocina",
+  "icon": "🍺",
+  "audience": "global",
+  "formulaId": "hop-utilization-boil-time",
+  "seoKeywords": [
+    "hop utilization",
+    "utilizacion lupulo",
+    "isomerizacion alfa acidos",
+    "tinseth tiempo"
+  ],
+  "intro": "La **utilización del lúpulo** es el porcentaje de alfa ácidos que se isomerizan y aportan amargor durante el hervor. Depende del **tiempo** y la **densidad del mosto**. La fórmula de Tinseth modela la curva: a mayor tiempo más utilización, pero con retornos decrecientes. A mayor OG, menor utilización. Esta calculadora te da el % exacto para planificar adiciones.",
+  "keyTakeaway": "Utilización a **60 min con OG 1.050 = 24%**. A 15 min = 12%. A 0 min (whirlpool caliente) = 1-5%. Mosto más denso → menos utilización.",
+  "useCases": [
+    "Estás planificando adiciones de lúpulo y querés calibrar tiempos.",
+    "Cambiaste de OG y querés ver el impacto en amargor.",
+    "Hacés whirlpool y necesitás saber cuánto aporta a IBU.",
+    "Compará hervor largo vs corto para tu estilo.",
+    "Querés entender por qué tu IPA salió más amarga de lo planeado."
+  ],
+  "fields": [
+    {
+      "id": "tiempoHervor",
+      "label": "Tiempo de hervor",
+      "type": "number",
+      "suffix": "min",
+      "placeholder": "60",
+      "min": 0,
+      "max": 180,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "ogMosto",
+      "label": "OG del mosto",
+      "type": "number",
+      "placeholder": "1.055",
+      "min": 1.0,
+      "max": 1.2,
+      "step": 0.001,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "utilizacion",
+      "label": "Utilización del lúpulo",
+      "format": "percent",
+      "primary": true
+    },
+    {
+      "id": "factorDensidad",
+      "label": "Factor densidad",
+      "format": "number"
+    },
+    {
+      "id": "factorTiempo",
+      "label": "Factor tiempo",
+      "format": "number"
+    },
+    {
+      "id": "comentario",
+      "label": "Interpretación",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: IPA OG 1.060, 60 min hervor",
+    "steps": [
+      "**Factor densidad**: 1.65 × 0.000125^(0.060) = 1.25.",
+      "**Factor tiempo**: (1 − e^(−0.04 × 60)) / 4.15 = 0.219.",
+      "**Utilización** = 1.25 × 0.219 = **27.4%**.",
+      "Si bajáramos a 30 min: utilización = 18%."
+    ],
+    "result": "27.4% de utilización — cerveza densa absorbe menos iso-alfa ácidos."
+  },
+  "explanation": "## Qué es la utilización del lúpulo\n\nEs el porcentaje de **alfa ácidos** del lúpulo que se convierten en **iso-alfa ácidos** (amargor) durante el hervor. Los factores clave son tiempo y densidad.\n\n## Fórmula de Tinseth\n\n```\nFactor_densidad = 1.65 × 0.000125^(OG − 1)\nFactor_tiempo = (1 − e^(−0.04 × t)) / 4.15\nUtilización = Factor_densidad × Factor_tiempo\n```\n\nA OG 1.000 (agua): factor densidad = 1.65 (máximo).\nA OG 1.080: factor densidad = 1.13.\nA OG 1.100: factor densidad = 1.00.\n\n## Tabla utilización por tiempo\n\n| Minutos | OG 1.040 | OG 1.060 | OG 1.080 |\n|---|---|---|---|\n| 5 | 5.6% | 5.1% | 4.6% |\n| 10 | 9.8% | 8.8% | 8.0% |\n| 15 | 13.5% | 12.2% | 11.0% |\n| 20 | 16.7% | 15.1% | 13.6% |\n| 30 | 21.8% | 19.7% | 17.8% |\n| **60** | **26.4%** | **23.9%** | **21.6%** |\n| 90 | 28.5% | 25.8% | 23.3% |\n| 120 | 29.1% | 26.3% | 23.8% |\n\n## Observaciones clave\n\n- **Plateau a 60-75 min**: más hervor da poco extra.\n- **Densidad penaliza**: IPAs densas necesitan más lúpulo.\n- **Whirlpool 85-95°C**: aporta 5-20% del potencial según tiempo.\n- **Flameout (0 min)**: <5% de utilización, pura aroma.\n\n## Estrategias por tipo\n\n1. **Cervezas amargas** (IPAs): bittering a 60 min con lúpulo alto AA (14-18%) para maximizar isomerización.\n2. **Cervezas aromáticas**: flameout y dry hop, sin contribuir IBU.\n3. **First Wort Hopping (FWH)**: lúpulo en la olla durante el sparge. 10% más utilización que equivalente a 60min.\n4. **Whirlpool / Hopstand**: 80-90°C por 20-30 min. Ver [calculadora IBU Tinseth](/calculadora-ibu-cerveza-lupulo-tinseth).\n\n## Errores comunes\n\n1. Asumir utilización fija (20% siempre). Varía con densidad.\n2. Confundir flores y pellets (pellets 10% más utilización).\n3. No contar el whirlpool en cálculos de IBU.\n4. Tapar la olla durante hervor: concentra DMS y altera utilización.",
+  "faq": [
+    {
+      "q": "¿Por qué más OG = menos utilización?",
+      "a": "Los azúcares del mosto compiten con los alfa ácidos por isomerización. A mayor densidad, menor eficiencia del proceso químico."
+    },
+    {
+      "q": "¿Hervir 90 min vs 60 min vale la pena?",
+      "a": "Solo ganás 2-3% más utilización. Pero ayuda a eliminar DMS en Pilsners y reduce SMM. No es solo por IBU."
+    },
+    {
+      "q": "¿Cuánto aporta un whirlpool?",
+      "a": "A 85°C por 20 min: 10-15% del potencial total. A 80°C por 30 min: 15-20%. Por debajo de 80°C casi nada."
+    },
+    {
+      "q": "¿First Wort Hopping da más IBU?",
+      "a": "Aporta similar cantidad que 60min pero con amargor más suave y redondo. Muchos prefieren este método."
+    },
+    {
+      "q": "¿Hop extract da misma utilización?",
+      "a": "Más alta (90%+) porque son alfa ácidos pre-isomerizados. Se usan mucho en comerciales para precisión."
+    },
+    {
+      "q": "¿Importa si es pellet T-45, T-90 o flor?",
+      "a": "T-90 (pellets) y flor rinden similar. T-45 (concentrados) rinden 15-20% más. Lúpulo seco a granel tiene -10% típico."
+    }
+  ],
+  "sources": [
+    {
+      "name": "How to Brew - John Palmer",
+      "url": "http://howtobrew.com/"
+    },
+    {
+      "name": "Brewer's Friend Calculators",
+      "url": "https://www.brewersfriend.com/"
+    },
+    {
+      "name": "BJCP Style Guidelines 2021"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ibu-cerveza-lupulo-tinseth",
+    "calculadora-abv-cerveza-og-fg",
+    "calculadora-evaporation-rate-boil",
+    "calculadora-srm-color-cerveza-morey"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá tiempo de hervor",
+      "text": "Ingresá tiempo de hervor (ej: 60). Es el valor de tiempo de hervor."
+    },
+    {
+      "name": "Ingresá og del mosto",
+      "text": "Ingresá og del mosto (ej: 1.055). Es el valor de og del mosto."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado. La calculadora procesa los datos al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual"
+  }
+}

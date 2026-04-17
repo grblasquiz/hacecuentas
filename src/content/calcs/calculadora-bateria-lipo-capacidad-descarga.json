@@ -1,0 +1,181 @@
+{
+  "slug": "calculadora-bateria-lipo-capacidad-descarga",
+  "title": "Calculadora Batería LiPo 2026 — Capacidad, Descarga y Tiempo | Hacé Cuentas",
+  "h1": "Calculadora de batería LiPo: capacidad, descarga y tiempo de vuelo",
+  "description": "Calculá cuánto dura una batería LiPo según capacidad mAh, consumo del dispositivo y tasa de descarga C.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "⚡",
+  "formulaId": "bateria-lipo-capacidad-descarga",
+  "seoKeywords": [
+    "bateria lipo calculadora",
+    "tiempo vuelo dron",
+    "descarga c lipo",
+    "capacidad mah lipo",
+    "3s 4s lipo",
+    "bateria rc tiempo"
+  ],
+  "intro": "Las baterías LiPo (Litio-Polímero) son el estándar para drones, RC, robots y bancos de potencia portables. Esta calculadora toma: capacidad (mAh), consumo del dispositivo (A o mA promedio), celdas en serie (S: 3S=11.1V, 4S=14.8V) y tasa C (descarga segura), y devuelve tiempo de vuelo/operación, corriente máxima admisible y potencia en watts. Una LiPo 3S 2200 mAh 25C entrega hasta 55A pico; un dron que consume 15A de media vuela ~8 min (2200 × 0.6/15 × 60/1000). La tasa C multiplicada por capacidad en Ah = corriente pico. Si excedés C, la batería se calienta y reduce vida útil o se daña.",
+  "keyTakeaway": "**LiPo 3S 2200 mAh 25C** entrega hasta **55 A**. Dron con consumo promedio 15 A → ~8 min vuelo con descarga 60%. Nunca bajar de 3.7V/celda para conservar batería.",
+  "useCases": [
+    "Elegís batería para dron FPV o freestyle.",
+    "Construís un robot RC y calculás autonomía.",
+    "Comparás 3S vs 4S según velocidad deseada.",
+    "Querés saber si tu ESC aguanta la corriente.",
+    "Calculás banco de potencia DIY."
+  ],
+  "fields": [
+    {
+      "id": "capacidad",
+      "label": "Capacidad mAh",
+      "type": "number",
+      "placeholder": "2200",
+      "min": 100,
+      "max": 30000,
+      "step": 100,
+      "required": true,
+      "suffix": "mAh"
+    },
+    {
+      "id": "celdas",
+      "label": "Celdas S (3S, 4S, 6S)",
+      "type": "number",
+      "placeholder": "4",
+      "min": 1,
+      "max": 8,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "tasaC",
+      "label": "Tasa C descarga",
+      "type": "number",
+      "placeholder": "45",
+      "min": 5,
+      "max": 200,
+      "step": 5,
+      "required": true,
+      "suffix": "C"
+    },
+    {
+      "id": "consumoPromedio",
+      "label": "Consumo promedio",
+      "type": "number",
+      "placeholder": "15",
+      "min": 0.1,
+      "max": 200,
+      "step": 0.5,
+      "required": true,
+      "suffix": "A"
+    },
+    {
+      "id": "descargaSegura",
+      "label": "Descarga segura (%)",
+      "type": "number",
+      "placeholder": "80",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "required": true,
+      "suffix": "%"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria para el cálculo propuesto."
+  },
+  "outputs": [
+    {
+      "id": "tiempoUso",
+      "label": "Tiempo de uso",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "corrienteMax",
+      "label": "Corriente máxima admisible",
+      "format": "text"
+    },
+    {
+      "id": "potenciaMax",
+      "label": "Potencia máxima",
+      "format": "text"
+    },
+    {
+      "id": "energiaTotal",
+      "label": "Energía almacenada",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "LiPo 4S 2200 mAh 45C, dron consume 15A",
+    "steps": [
+      "**Voltaje 4S**: 4 × 3.7 = 14.8V.",
+      "**Corriente max**: 2.2 × 45 = **99 A** (pico seguro).",
+      "**Tiempo de vuelo**: 2200 × 0.80 / 15000 × 60 = **7.0 min**.",
+      "**Energía**: 2.2 × 14.8 = 32.6 Wh."
+    ],
+    "result": "LiPo 4S 2200 45C: **99A pico** (ESC necesita soportarlo), **~7 min vuelo** a 15A promedio. Energía 32.6 Wh."
+  },
+  "explanation": "## Fundamentos LiPo\n\n### Voltaje por celda\n\n| Estado | Voltaje |\n|---|---|\n| Totalmente cargada | 4.20 V |\n| Nominal ✅ | 3.70 V |\n| Mínimo descarga | 3.30 V |\n| Voltaje muerto (dañada) | < 3.00 V |\n\n### Configuraciones comunes\n\n| S | Voltaje nominal | Uso |\n|---|---|---|\n| 1S | 3.7 V | Juguetes, FPV tiny |\n| 2S | 7.4 V | Robots, FPV chico |\n| 3S | 11.1 V | Multirrotor pequeño |\n| 4S ✅ | 14.8 V | Freestyle, FPV 5\" |\n| 6S | 22.2 V | Racing profesional |\n| 8S | 29.6 V | Cargas altas |\n\n## Tasa de descarga (C rating)\n\n```\nCorriente_max (A) = Capacidad (Ah) × C\n```\n\nEjemplos:\n- 2200 mAh 25C = 2.2 × 25 = **55 A**.\n- 1550 mAh 95C = 1.55 × 95 = **147 A**.\n\n### C por uso\n\n| Uso | C sugerido |\n|---|---|\n| Transmitters, electronics | 10-25 |\n| FPV suave | 35-45 |\n| FPV freestyle | 75-95 ✅ |\n| Racing | 100-120+ |\n| Drag / pulls | 150+ |\n\n**Nota**: Los ratings C son optimistas. Para aplicaciones críticas, calcular con 60-70% del C nominal.\n\n## Fórmula tiempo de uso\n\n```\nTiempo_min = (Capacidad_mAh × descarga_segura / 100) / (Consumo_A × 1000) × 60\n```\n\n### Descarga segura\n\n- **100%**: maltrata batería, baja vida útil.\n- **80% ✅**: balance vida/performance.\n- **60%**: máxima longevidad, menos tiempo.\n\n## Energía almacenada\n\n```\nEnergia_Wh = Capacidad_Ah × Voltaje_nominal\n```\n\nEj: 2200 mAh 4S = 2.2 × 14.8 = **32.6 Wh**.\n\nComparación:\n- LiPo 4S 2200 mAh: 32.6 Wh\n- Power bank USB 10000 mAh 5V: 50 Wh\n- Batería notebook 50 Wh: 50 Wh\n- Batería auto 40 Ah 12V: 480 Wh\n\n## Carga de LiPo\n\n### Tasa de carga\n\n- **1C (normal)**: LiPo 2200 mAh → 2.2A. Carga en 1 hs.\n- **2C**: 4.4A. Carga en 30 min. Calor considerable.\n- **5C (high)**: 11A. Carga en 12 min. Solo baterías preparadas (USB-C rápidas).\n\n### Balance charging\n\nSiempre cargar en modo balance: carga cada celda individualmente al mismo voltaje. Sin balance, una celda puede sobrecargar y quemar.\n\n## Seguridad\n\n1. **Nunca cargar bajo 3V/celda**: daño permanente. Considerá la batería muerta.\n2. **No sobrecargar**: las LiPo explotan si cargas >4.25V/celda.\n3. **Almacenar al 3.8V/celda (50-60%)** para largo plazo.\n4. **Usar bolsa LiPo ignífuga** en carga y almacenamiento.\n5. **Nunca dejar cargando sin supervisión**.\n\n## Vida útil\n\n- **100-300 ciclos** con cuidado (descarga 80%, carga 1C, storage voltage).\n- **50-100 ciclos** con uso duro (descarga 95%, carga 3C+).\n\nSignos de batería vieja: se hincha, no llega a 4.2V, cae de voltaje rápido bajo carga.\n\n## LiPo vs Li-Ion vs LiFePO4\n\n| Tipo | Voltaje celda | Densidad | Seguridad |\n|---|---|---|---|\n| LiPo | 3.7 V | Alta | Media |\n| Li-Ion 18650 | 3.7 V | Muy alta | Alta |\n| LiFePO4 | 3.2 V | Media | Muy alta |\n\nLi-Ion 18650 se usa en notebooks, Tesla, bancos de potencia. LiFePO4 en solar, barcos (estacionarios, alta vida).\n\nCombiná con [resistencia LED](/calculadora-resistencia-led-tension-corriente), [carga batería](/calculadora-carga-bateria-tiempo-amp) y [watts fuente PC](/calculadora-watts-fuente-alimentacion-pc).",
+  "faq": [
+    {
+      "q": "¿3S o 4S para mi dron?",
+      "a": "**3S** más estable, menos velocidad. **4S** más punch y velocidad, más demanda en motores y ESC. FPV freestyle moderno es 4S-6S."
+    },
+    {
+      "q": "¿Qué significa 45C?",
+      "a": "Que puede entregar 45 × capacidad_Ah sostenida. 2200 mAh 45C = 99 A pico seguros. Cuanto más alto C, más peso/precio."
+    },
+    {
+      "q": "¿Cuánto dura una LiPo?",
+      "a": "Bien cuidada **300 ciclos**. Maltratada **50-100 ciclos**. Guardar a 3.8V/celda si no usás por semanas."
+    },
+    {
+      "q": "¿Batería hinchada es peligrosa?",
+      "a": "Sí. Descartala correctamente (sumergir en agua salada varios días para descargarla completamente, luego tirar). Nunca la uses."
+    },
+    {
+      "q": "¿Cargador sin balance sirve?",
+      "a": "No para LiPo. Las celdas se desbalancean y alguna explota. Usá cargador balance (iMAX B6, ISDT, HOTA)."
+    },
+    {
+      "q": "¿LiPo o LiIon para e-bike?",
+      "a": "**LiIon 18650** estándar e-bike: más seguro, más ciclos, menos incendios. LiPo solo si necesitás descarga alta."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Oscar Liang - LiPo Guide",
+      "url": "https://oscarliang.com/"
+    },
+    {
+      "name": "RCGroups",
+      "url": "https://www.rcgroups.com/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-resistencia-led-tension-corriente",
+    "calculadora-carga-bateria-tiempo-amp",
+    "calculadora-watts-fuente-alimentacion-pc",
+    "calculadora-divisor-tension-formula"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón Calcular para obtener el resultado al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo del formulario. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

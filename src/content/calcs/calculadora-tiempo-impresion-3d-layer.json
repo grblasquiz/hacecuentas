@@ -1,0 +1,172 @@
+{
+  "slug": "calculadora-tiempo-impresion-3d-layer",
+  "title": "Calculadora Tiempo Impresión 3D 2026 — Horas por Layer Height | Hacé Cuentas",
+  "h1": "Calculadora de tiempo de impresión 3D por altura de capa",
+  "description": "Estimá cuántas horas tarda una impresión 3D según altura del modelo, layer height, velocidad y área por capa.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "🖨️",
+  "formulaId": "tiempo-impresion-3d-layer",
+  "seoKeywords": [
+    "tiempo impresion 3d",
+    "calcular horas impresion",
+    "layer height 3d",
+    "velocidad impresion fdm",
+    "estimar tiempo 3d",
+    "impresion 3d horas",
+    "altura capa tiempo"
+  ],
+  "intro": "Antes de darle Play a un print 3D es clave saber cuánto va a tardar: ¿arranco ahora o espero al fin de semana? ¿puedo dejar la impresora sola toda la noche? Esta calculadora estima el tiempo total combinando altura total del modelo en mm, layer height (0.08 a 0.32 mm), velocidad de impresión (mm/s) y área promedio de cada capa (cm²). Útil cuando evaluás calidad vs velocidad: bajar layer mejora detalle curvo pero multiplica tiempo; subirlo acelera prototipos. Los valores por defecto (0.2 mm, 60 mm/s) son el sweet spot de Ender 3, Prusa MK4, Bambu A1 y similares. Para impresoras CoreXY rápidas (Bambu X1C, Voron) podés subir a 150-300 mm/s reales.",
+  "keyTakeaway": "Un modelo de **100 mm de alto con 0.2 mm layer y 60 mm/s** tarda aproximadamente **6-8 horas** según complejidad. Duplicar layer height reduce tiempo 40-50% pero baja calidad superficial.",
+  "useCases": [
+    "Querés saber si un print cabe en la noche mientras dormís.",
+    "Comparás tiempos entre 0.2 mm y 0.12 mm para decidir calidad vs velocidad.",
+    "Cotizás trabajos y necesitás estimar horas-máquina.",
+    "Evaluás si vale la pena una impresora CoreXY rápida.",
+    "Planificás tanda de impresiones seriadas."
+  ],
+  "fields": [
+    {
+      "id": "altura",
+      "label": "Altura total del modelo",
+      "type": "number",
+      "placeholder": "100",
+      "min": 1,
+      "max": 500,
+      "step": 1,
+      "required": true,
+      "suffix": "mm"
+    },
+    {
+      "id": "layer",
+      "label": "Layer height",
+      "type": "number",
+      "placeholder": "0.2",
+      "min": 0.04,
+      "max": 0.4,
+      "step": 0.01,
+      "required": true,
+      "suffix": "mm"
+    },
+    {
+      "id": "velocidad",
+      "label": "Velocidad promedio",
+      "type": "number",
+      "placeholder": "60",
+      "min": 20,
+      "max": 500,
+      "step": 5,
+      "required": true,
+      "suffix": "mm/s"
+    },
+    {
+      "id": "areaCapa",
+      "label": "Área promedio por capa",
+      "type": "number",
+      "placeholder": "25",
+      "min": 0.5,
+      "max": 1000,
+      "step": 0.5,
+      "required": true,
+      "suffix": "cm²"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Fórmulas estándar de la industria para el cálculo propuesto."
+  },
+  "outputs": [
+    {
+      "id": "horas",
+      "label": "Tiempo estimado (horas)",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "tiempoFormato",
+      "label": "Tiempo formateado",
+      "format": "text"
+    },
+    {
+      "id": "capas",
+      "label": "Cantidad de capas",
+      "format": "number"
+    },
+    {
+      "id": "segundosPorCapa",
+      "label": "Segundos por capa",
+      "format": "number"
+    }
+  ],
+  "example": {
+    "title": "Figura 100 mm, 0.2 mm layer, 60 mm/s, 25 cm²/capa",
+    "steps": [
+      "**Capas**: 100 / 0.2 = **500**.",
+      "**Extrusión/capa**: 2500 mm² / (0.4 × 0.2) = 31250 mm.",
+      "**Tiempo/capa**: 31250/60 × factor 0.38 ≈ 198 s.",
+      "**Total**: 500 × 198 ≈ **99000 s ≈ 27.5 hs**."
+    ],
+    "result": "Con área media de 25 cm² el print tarda ~27 hs. Si bajás área a 10 cm² (figura esbelta): ~11 hs."
+  },
+  "explanation": "## Fórmula\n\n```\nCapas = Altura / Layer_height\nExtrusion_capa = Area_mm² / (nozzle_width × layer)\nTiempo_capa = (Extrusion_capa / velocidad) × factor_eficiencia\nTotal = Capas × Tiempo_capa\n```\n\nFactor de eficiencia típico: 0.30-0.40. Las impresoras aceleran/desaceleran, retraen, viajan.\n\n## Layer height: tiempo vs calidad\n\n| Layer | Tiempo relativo | Calidad | Uso |\n|---|---|---|---|\n| 0.08 mm | 2.5× | Excelsa | Miniaturas |\n| 0.12 mm | 1.7× | Muy alta | Figuras detalladas |\n| 0.16 mm | 1.25× | Alta | Detalles |\n| 0.20 mm | 1× ✅ | Buena | Uso general |\n| 0.28 mm | 0.7× | Media | Funcionales |\n| 0.32 mm | 0.6× | Baja | Prototipos |\n\n## Velocidades reales por impresora\n\n| Impresora | Velocidad real |\n|---|---|\n| Ender 3 stock | 40-60 mm/s |\n| Ender 3 + Klipper | 100-150 mm/s |\n| Prusa MK4 | 200 mm/s |\n| Bambu A1/P1S | 200-300 mm/s |\n| Bambu X1C | 300-500 mm/s |\n| Voron 2.4 | 250-400 mm/s |\n\n## Variables ignoradas\n\n- **Cooling**: fan al 100% puede forzar layer time mínimo.\n- **Soportes**: 15-30% más.\n- **Multicolor**: 60-180 s por cambio.\n- **Warmup**: 2-5 min en PLA, 10-15 min en ABS.\n\nPara costo total usá [costo de impresión 3D](/calculadora-costo-impresion-3d-pieza) y [precio/hora servicio](/calculadora-precio-hora-servicio-3d).",
+  "faq": [
+    {
+      "q": "¿Por qué mi impresora tarda más que esta calculadora?",
+      "a": "Retracciones, viajes, cambios de dirección y cooling mínimo suman 20-50%."
+    },
+    {
+      "q": "¿Layer 0.4 mm existe?",
+      "a": "Sí, con nozzle 0.6-0.8 mm. Prototipos funcionales grandes. 3-4× más rápido."
+    },
+    {
+      "q": "¿Bajar layer mejora la pieza?",
+      "a": "Sí en curvas y ángulos suaves (menos 'stair-step'). En superficies verticales planas no cambia casi nada."
+    },
+    {
+      "q": "¿Cuánto cambia con resina?",
+      "a": "SLA/MSLA es independiente del área: cada capa cura en 2-4 seg. 10 cm a 0.05 mm = 2000 capas × 3 s = 100 min."
+    },
+    {
+      "q": "¿Klipper acelera?",
+      "a": "Sí. Input shaping y pressure advance llevan Ender 3 de 50 a 150 mm/s reales sin perder calidad."
+    },
+    {
+      "q": "¿La cama caliente suma tiempo?",
+      "a": "Heat-up inicial 2-5 min antes de empezar. En cámara caliente (ABS/PC) 10-15 min."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Cura Manual",
+      "url": "https://ultimaker.com/"
+    },
+    {
+      "name": "Prusa - Layer Height",
+      "url": "https://help.prusa3d.com/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-filamento-3d-necesario-modelo",
+    "calculadora-costo-impresion-3d-pieza",
+    "calculadora-energia-electrica-impresion-3d",
+    "calculadora-nozzle-layer-height-3d"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá los datos",
+      "text": "Completá los campos del formulario con tus valores."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón Calcular para obtener el resultado al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Los resultados aparecen debajo del formulario. Podés modificar cualquier dato y recalcular."
+    }
+  ]
+}

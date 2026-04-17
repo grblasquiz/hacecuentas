@@ -1,0 +1,187 @@
+{
+  "slug": "calculadora-leverage-defi-liquidation-price",
+  "title": "Calculadora Liquidation Price DeFi 2026 — Leverage Aave/Compound/Morpho | Hacé Cuentas",
+  "h1": "Calculadora Liquidation Price DeFi (Leverage)",
+  "description": "Calculadora liquidation price DeFi: precio crítico de colateral, health factor y buffer para posiciones apalancadas en Aave, Compound, Morpho.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "📉",
+  "formulaId": "leverage-defi-liquidation",
+  "seoKeywords": [
+    "liquidation price defi",
+    "health factor aave",
+    "leverage defi calculadora",
+    "ltv defi",
+    "liquidation threshold",
+    "posicion apalancada defi"
+  ],
+  "intro": "En DeFi lending (Aave, Compound, Morpho, Spark) tu posición apalancada se **liquida automáticamente** cuando el valor del colateral cae por debajo del **liquidation threshold** (LT) del activo. Al liquidarte, pagás una **penalty de 5-13%** del colateral y el liquidador toma tus activos. Esta calculadora calcula: (1) **liquidation price** exacto del colateral, (2) **health factor** actual (>1 = seguro, <1 = liquidable), (3) **LTV** actual, (4) **max borrow** restante, y (5) el **buffer en %** de cuánto puede caer el precio antes de liquidación. Ingresá valor del colateral en USD, precio actual del token colateral, deuda actual y el liquidation threshold del par (83% típico para ETH, 86% stETH, 75% WBTC).",
+  "keyTakeaway": "**Health Factor (HF)** debe estar **>1.5** para dormir tranquilo. HF = (collateral × LT) / debt. Buffer típico seguro: **30-50% vs liquidation price**. Con <20% buffer, cualquier flash crash te liquida.",
+  "useCases": [
+    "Calculás a qué precio de ETH te liquidan tu loop Aave.",
+    "Evaluás health factor antes de tomar más borrow.",
+    "Comparás riesgo leverage en Aave vs Morpho.",
+    "Ajustás tu posición tras un movimiento de precio.",
+    "Proyectás buffer de seguridad para un crash del 30%."
+  ],
+  "fields": [
+    {
+      "id": "collateralUsd",
+      "label": "Colateral USD",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "10000",
+      "min": 0,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "collateralPrice",
+      "label": "Precio colateral actual",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "3200",
+      "min": 0,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "borrowUsd",
+      "label": "Borrow USD",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "5000",
+      "min": 0,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "liquidationThreshold",
+      "label": "Liquidation threshold",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "83",
+      "min": 0,
+      "max": 99,
+      "step": 0.5,
+      "required": true
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "liquidationPrice",
+      "label": "Liquidation price",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "healthFactor",
+      "label": "Health factor",
+      "format": "number"
+    },
+    {
+      "id": "bufferPercent",
+      "label": "Buffer seguridad %",
+      "format": "percent"
+    },
+    {
+      "id": "currentLtv",
+      "label": "LTV actual",
+      "format": "percent"
+    },
+    {
+      "id": "maxBorrow",
+      "label": "Max borrow $",
+      "format": "currency"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: $10K WETH colateral, $5K USDC borrow, LT 82.5%",
+    "steps": [
+      "**Tokens**: $10,000 / $3,200 = 3.125 WETH.",
+      "**Max borrow**: $10,000 × 82.5% = $8,250.",
+      "**Current LTV**: $5,000/$10,000 = 50%.",
+      "**Liquidation price**: $5,000 / (3.125 × 0.825) = **$1,939.39**.",
+      "**Buffer**: ($3,200 − $1,939) / $3,200 = **39.4%**.",
+      "**HF**: ($10,000 × 0.825) / $5,000 = **1.65**."
+    ],
+    "result": "ETH debe caer 39.4% para liquidación. HF 1.65 es aceptable."
+  },
+  "explanation": "## Conceptos clave\n\n### Liquidation threshold (LT)\nEl **máximo LTV antes de liquidación**. Varía por activo:\n\n| Activo | LT Aave v3 | LT Morpho | LT Compound v3 |\n|---|---|---|---|\n| WETH | 82.5% | 86% | 82.5% |\n| wstETH | 79% | 86% | 75% |\n| WBTC | 75% | 80% | 75% |\n| stables estables | 87% | 94.5% | 85% |\n\n### Health Factor\n```\nHF = (collateral_USD × LT) / debt_USD\n```\n- HF > 1: posición segura\n- HF < 1: liquidable\n- HF = 2: podés perder 50% de collateral y seguir viva\n\n### Liquidation price\n```\nliq_price = debt / (tokens_colateral × LT)\n```\n\n### Penalty de liquidación\nAave v3: 5-8.5% según activo. Compound v3: 5-10%. Morpho Blue: 4-7%.\n\n## Estrategias de gestión\n\n1. **Target HF 2+**: para buffer de crash 30-40%.\n2. **Monitoreo continuo**: Aave y Morpho tienen notificaciones via DeBank, Zerion, Revert.\n3. **Partial repay**: pagar parcial cuando HF baja a 1.5.\n4. **Add collateral**: depositar más colateral en lugar de repay (tax efficient).\n\n## Casos históricos\n\n- **Mayo 2021**: ETH cayó 50% en horas. $2B liquidados en Aave/Compound.\n- **Nov 2022 (FTX)**: stETH se depeg 7% → loops stETH/ETH liquidados masivamente.\n- **Agosto 2023 (Curve hack)**: CRV cayó 30% → Michael Egorov casi liquidado en $100M de préstamos.\n\n## Cascada de liquidación\n\nGrandes posiciones (>$10M) liquidándose mueven el precio y desencadenan más liquidaciones. Por eso, **quedate lejos del liq_price** en tiempos de alta volatilidad.\n\nPara calcular leverage de trading (no lending), usá nuestra [calculadora de apalancamiento liquidación](/calculadora-apalancamiento-liquidacion).\n\n> **Aviso legal**: Esta calculadora es una herramienta educativa. **No constituye consejo de inversión, ni asesoramiento financiero, fiscal o legal.** Los rendimientos pasados no garantizan resultados futuros. Las criptomonedas son activos volátiles y de alto riesgo. Consultá siempre con un profesional calificado antes de tomar decisiones.",
+  "faq": [
+    {
+      "q": "¿Qué health factor es seguro?",
+      "a": "**HF > 2** es conservador (soportas caída del 50% del colateral). **HF 1.5-2** es moderado. **HF < 1.3** es arriesgado: un flash crash típico (−20%) te puede liquidar. Nunca dejes HF < 1.1."
+    },
+    {
+      "q": "¿Cuál es la penalty de liquidación en Aave?",
+      "a": "Entre **5% y 8.5%** del colateral liquidado, según el activo. WETH: 5%. stables: 4.5%. Activos volátiles: hasta 13%. En Morpho Blue se puede configurar por mercado, típicamente 4-8%."
+    },
+    {
+      "q": "¿Puedo prevenir la liquidación?",
+      "a": "Sí: (1) **repay parcial** para bajar LTV, (2) **add collateral** para subir HF, (3) **liquidar voluntariamente vía swap** si ves que va a pasar y querés evitar penalty. Hay bots automáticos (DeFi Saver, Instadapp) que rebalancean cuando HF baja."
+    },
+    {
+      "q": "¿Qué pasa después de una liquidación?",
+      "a": "El liquidador paga tu deuda y toma tu colateral + penalty. Tu posición queda reducida (menos colateral, menos deuda). Podés retirar el **colateral restante** y no le debés nada al protocolo. Pero perdiste el 5-10% del colateral."
+    },
+    {
+      "q": "¿Es mejor tener liquidación parcial o total?",
+      "a": "En Aave v3 y Morpho, por defecto es **50% partial liquidation** (solo liquidan la mitad). En Compound v3, **full liquidation** si HF <1. Parcial es mejor para el usuario (menos pérdida absoluta)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Aave v3 Risk Params",
+      "url": "https://docs.aave.com"
+    },
+    {
+      "name": "Morpho Blue",
+      "url": "https://docs.morpho.org"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-aave-lending-apy-supply",
+    "calculadora-compound-supply-borrow",
+    "calculadora-morpho-blue-markets-apy",
+    "calculadora-liquid-staking-lido-reth"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá colateral usd",
+      "text": "Ingresá colateral usd (ej: 10000). Es el valor de colateral usd."
+    },
+    {
+      "name": "Ingresá precio colateral actual",
+      "text": "Ingresá precio colateral actual (ej: 3200). Es el valor de precio colateral actual."
+    },
+    {
+      "name": "Ingresá borrow usd",
+      "text": "Ingresá borrow usd (ej: 5000). Es el valor de borrow usd."
+    },
+    {
+      "name": "Ingresá liquidation threshold",
+      "text": "Ingresá liquidation threshold (ej: 83). Es el valor de liquidation threshold."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado. La calculadora procesa los datos al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
+    }
+  ]
+}

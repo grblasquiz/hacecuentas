@@ -41,10 +41,10 @@ export function pesoObjetivoCompeticion(i: Inputs): Outputs {
   const pesoMax = Number((bmiMax * alturaM * alturaM).toFixed(1));
 
   return {
-    pesoIdeal: `${pesoMin}-\${pesoMax} kg`,
-    bmiRango: `BMI \${bmiMin}-\${bmiMax}`,
+    pesoIdeal: `${pesoMin}-${pesoMax} kg`,
+    bmiRango: `BMI ${bmiMin}-${bmiMax}`,
     pesoMin,
     pesoMax,
-    mensaje: `Para \${deporte} a \${altura} cm (\${sexo}): peso competitivo entre \${pesoMin} y \${pesoMax} kg (BMI \${bmiMin}-\${bmiMax}).`
+    mensaje: `Para ${deporte} a ${altura} cm (${sexo}): peso competitivo entre ${pesoMin} y ${pesoMax} kg (BMI ${bmiMin}-${bmiMax}).`
   };
 }

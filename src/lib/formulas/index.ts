@@ -1118,6 +1118,386 @@ import { youtubeIngresosVistasPais } from './youtube-ingresos-vistas-pais';
 import { youtubePremiumSplitPayout } from './youtube-premium-split-payout';
 import { youtubeShortsFundIngreso } from './youtube-shorts-fund-ingreso';
 import { youtubeTiempoParaMonetizar } from './youtube-tiempo-para-monetizar';
+import { aaveLendingSupply } from './aave-lending-supply';
+import { abvCervezaOgFg } from './abv-cerveza-og-fg';
+import { achurasPorInvitadoParrilla } from './achuras-por-invitado-parrilla';
+import { acolchadoPatchworkCuadrados } from './acolchado-patchwork-cuadrados';
+import { aguaMineralizacionCafe } from './agua-mineralizacion-cafe';
+import { aguaPeriquitoDiaria } from './agua-periquito-diaria';
+import { aguaPezBettaLitros } from './agua-pez-betta-litros';
+import { aguaPorInvitadoFiesta } from './agua-por-invitado-fiesta';
+import { alcoholAttenuationLevadura } from './alcohol-attenuation-levadura';
+import { alianzaBodaPrecioPareja } from './alianza-boda-precio-pareja';
+import { alimentoAcuarioPorPez } from './alimento-acuario-por-pez';
+import { alimentoIguanaDiario } from './alimento-iguana-diario';
+import { alquilerAutoPaisPresupuesto } from './alquiler-auto-pais-presupuesto';
+import { amazonAssociatesComision } from './amazon-associates-comision';
+import { amplificadorOperacionalGanancia } from './amplificador-operacional-ganancia';
+import { anchoAnguloLenteDistancia } from './ancho-angulo-lente-distancia';
+import { anilloCompromisoPrecioSueldo } from './anillo-compromiso-precio-sueldo';
+import { anosFluidezIdioma } from './anos-fluidez-idioma';
+import { aperolSpritzProporciones } from './aperol-spritz-proporciones';
+import { appleMusicRoyaltiesPagos } from './apple-music-royalties-pagos';
+import { asadoPorInvitadoKgCarne } from './asado-por-invitado-kg-carne';
+import { audibleIngresoAudiolibro } from './audible-ingreso-audiolibro';
+import { barnizAceiteM2Madera } from './barniz-aceite-m2-madera';
+import { barrelAgingTiempoWhiskey } from './barrel-aging-tiempo-whiskey';
+import { bateriaLipoCapacidadDescarga } from './bateria-lipo-capacidad-descarga';
+import { bcaaPreWorkoutGramos } from './bcaa-pre-workout-gramos';
+import { bilingueSimultaneoNinos } from './bilingue-simultaneo-ninos';
+import { bitcoinHalvingCountdown } from './bitcoin-halving-countdown';
+import { bitcoinMiningProfit } from './bitcoin-mining-profit';
+import { blogAdsenseRpmNicho } from './blog-adsense-rpm-nicho';
+import { bloodyMarySpice } from './bloody-mary-spice';
+import { breakEvenFreelanceMes } from './break-even-freelance-mes';
+import { cacCostoAdquisicionSalesFunnel } from './cac-costo-adquisicion-sales-funnel';
+import { cafeAeropressReceta } from './cafe-aeropress-receta';
+import { cafeFrenchPressRatio } from './cafe-french-press-ratio';
+import { cafeRatioV60PourOver } from './cafe-ratio-v60-pour-over';
+import { cafeinaPorMetodoTaza } from './cafeina-por-metodo-taza';
+import { caipirinhaBrasileno } from './caipirinha-brasileno';
+import { calcioDiarioEdad } from './calcio-diario-edad';
+import { calentamientoEstudioMinutos } from './calentamiento-estudio-minutos';
+import { caloriasCopaVino } from './calorias-copa-vino';
+import { canapePorInvitadoCoctel } from './canape-por-invitado-coctel';
+import { candyBarPersonas } from './candy-bar-personas';
+import { cantidadPecesAcuarioLitros } from './cantidad-peces-acuario-litros';
+import { cargaBateriaTiempoAmp } from './carga-bateria-tiempo-amp';
+import { cervezaInvitadoEvento } from './cerveza-invitado-evento';
+import { cervezaPorInvitadoFiesta } from './cerveza-por-invitado-duracion-fiesta';
+import { champagnePorInvitadoBrindis } from './champagne-por-invitado-brindis';
+import { chorizosPorInvitadoAsado } from './chorizos-por-invitado-asado';
+import { cicloCircadianoEstudio } from './ciclo-circadiano-estudio';
+import { colagenoTipoDosisDiaria } from './colageno-tipo-dosis-diaria';
+import { coldBrewRatio } from './cold-brew-ratio';
+import { colesterolLdlHdlRatio } from './colesterol-ldl-hdl-ratio';
+import { comidaCanarioGramos } from './comida-canario-gramos';
+import { comidaDiariaConejoPeso } from './comida-diaria-conejo-peso';
+import { comidaHamsterSemana } from './comida-hamster-semana';
+import { comidaTortugaDiariaGramos } from './comida-tortuga-diaria-gramos';
+import { comisionAmazonFbaProducto } from './comision-amazon-fba-producto';
+import { comisionEbayVenta } from './comision-ebay-venta';
+import { comisionEtsyVentaHandmade } from './comision-etsy-venta-handmade';
+import { comisionMercadolibreVenta } from './comision-mercadolibre-venta';
+import { comisionUberEatsGlovoRider } from './comision-uber-eats-glovo-rider';
+import { compoundSupplyBorrow } from './compound-supply-borrow';
+import { comprensionLectoraScore } from './comprension-lectora-score';
+import { conversionRateEcommerceBenchmark } from './conversion-rate-ecommerce-benchmark';
+import { coolingFan3dMaterial } from './cooling-fan-3d-material';
+import { cornellApuntesTiempo } from './cornell-apuntes-tiempo';
+import { corpusNecesarioLecturaLibre } from './corpus-necesario-lectura-libre';
+import { corteOptimoTablero } from './corte-optimo-tablero';
+import { cosmopolitanIngredientes } from './cosmopolitan-ingredientes';
+import { costoEnvioPesoDestino } from './costo-envio-peso-destino';
+import { costoHoraConsultorMarketing } from './costo-hora-consultor-marketing';
+import { costoHoraDesarrolladorSenior } from './costo-hora-desarrollador-senior';
+import { costoHoraDisenadorGrafico } from './costo-hora-disenador-grafico';
+import { costoHoraFotografoEvento } from './costo-hora-fotografo-evento';
+import { costoHoraIlustradorDigital } from './costo-hora-ilustrador-digital';
+import { costoHoraRedactorCopywriter } from './costo-hora-redactor-copywriter';
+import { costoImpresion3dPieza } from './costo-impresion-3d-pieza';
+import { costoMensualPezAcuario } from './costo-mensual-pez-acuario';
+import { costoMensualRazaGato } from './costo-mensual-raza-gato';
+import { cotillonCumplePersonas } from './cotillon-cumple-personas';
+import { cotizacionProyectoPrecio } from './cotizacion-proyecto-precio';
+import { creatininaFuncionRenal } from './creatinina-funcion-renal';
+import { criptoTaxArgentinaGanancia } from './cripto-tax-argentina';
+import { criptoTaxEspanaIrpf } from './cripto-tax-espana';
+import { criptoTaxMexicoIsr } from './cripto-tax-mexico';
+import { criptoTaxUsaCapitalGains } from './cripto-tax-usa';
+import { cupcakesPorInvitadoCumple } from './cupcakes-por-invitado-cumple';
+import { curveStablePoolApy } from './curve-stable-pool';
+import { daiquiriClasicoPersonas } from './daiquiri-clasico-personas';
+import { decantacionTiempoVino } from './decantacion-tiempo-vino';
+import { defiProtocolHackRisk } from './defi-hack-risk-score';
+import { despedidaCasamientoPresupuesto } from './despedida-casamiento-presupuesto';
+import { dificultadIdiomaFsi } from './dificultad-idioma-fsi';
+import { dilucionCervezaAlcoholObjetivo } from './dilucion-cerveza-alcohol-objetivo';
+import { dilucionWhiskyAbvObjetivo } from './dilucion-whisky-abv-objetivo';
+import { discordServerBoostNitro } from './discord-server-boost-nitro';
+import { distanciaHiperfocalLente } from './distancia-hiperfocal-lente';
+import { divisorTensionFormula } from './divisor-tension-formula';
+import { duolingoXpObjetivo } from './duolingo-xp-objetivo';
+import { ebbinghausCurvaOlvido } from './ebbinghaus-curva-olvido';
+import { edadHumanaConejo } from './edad-humana-conejo';
+import { edadHumanaTortuga } from './edad-humana-tortuga';
+import { eficienciaMashPorcentaje } from './eficiencia-mash-porcentaje';
+import { eigenLayerRestaking } from './eigen-layer-restaking';
+import { ejercicioConejoDia } from './ejercicio-conejo-dia';
+import { electrolitosPrePostEntreno } from './electrolitos-pre-post-entreno';
+import { emailMarketingIngresoLista } from './email-marketing-ingreso-lista';
+import { empanadasPorInvitadoJuntada } from './empanadas-por-invitado-juntada';
+import { energiaElectricaImpresion3d } from './energia-electrica-impresion-3d';
+import { ensaladaPorInvitadoEvento } from './ensalada-por-invitado-evento';
+import { equipajeExtraCostoAerolinea } from './equipaje-extra-costo-aerolinea';
+import { escaleraMaderaHuellaContrahuella } from './escalera-madera-huella-contrahuella';
+import { espacioJaulaHamsterTamano } from './espacio-jaula-hamster-tamano';
+import { espressoTdsYield } from './espresso-tds-yield';
+import { estantesMaderaSoportePeso } from './estantes-madera-soporte-peso';
+import { ethereumClassicMining } from './ethereum-classic-mining';
+import { evaporationRateBoil } from './evaporation-rate-boil';
+import { expectativaVidaConejoRaza } from './expectativa-vida-conejo-raza';
+import { expectativaVidaReptilesEspecie } from './expectativa-vida-reptiles-especie';
+import { expectativaVidaTortugaTerrestre } from './expectativa-vida-tortuga-terrestre';
+import { exposicionTrianguloIsoDiafragma } from './exposicion-triangulo-iso-diafragma';
+import { facebookReelsBonusPagos } from './facebook-reels-bonus-pagos';
+import { facturarFreelanceMinimoMes } from './facturar-freelance-minimo-mes';
+import { fernetColaPorInvitadoJuntada } from './fernet-cola-por-invitado-juntada';
+import { fernetColaProporciones } from './fernet-cola-proporciones';
+import { fiambreQuesoPorInvitadoPicada } from './fiambre-queso-por-invitado-picada';
+import { fibraDiariaEdadSexo } from './fibra-diaria-edad-sexo';
+import { filamento3dNecesarioModelo } from './filamento-3d-necesario-modelo';
+import { filamentoSoldadorMm2 } from './filamento-soldador-mm2';
+import { filtroNdStopsTiempo } from './filtro-nd-stops-tiempo';
+import { finalVolumeCervezaFermentador } from './final-volume-cerveza-fermentador';
+import { flashcardsPorDia } from './flashcards-por-dia';
+import { floresParaMesaEvento } from './flores-para-mesa-evento';
+import { forroAlmohadonMedidas } from './forro-almohadon-medidas';
+import { fructosaMalabsorcion } from './fructosa-malabsorcion';
+import { frutaPorInvitadoCumple } from './fruta-por-invitado-cumple';
+import { gaseosaPorInvitadoCumpleInfantil } from './gaseosa-por-invitado-cumple-infantil';
+import { ginTonicProporciones } from './gin-tonic-proporciones';
+import { globosDecoracionSalonMetros } from './globos-decoracion-salon-metros';
+import { glutenSensibilidadScore } from './gluten-sensibilidad-score';
+import { gmxGlpApr } from './gmx-glp-apr';
+import { hidratacionClimaCalor } from './hidratacion-clima-calor';
+import { hidrometroCorreccionTemperatura } from './hidrometro-correccion-temperatura';
+import { hidromielProporcionesMielAgua } from './hidromiel-proporciones-miel-agua';
+import { hieloPorInvitadoFiesta } from './hielo-por-invitado-fiesta';
+import { hierroDiarioVegetariano } from './hierro-diario-vegetariano';
+import { hiloBordadoDiseno } from './hilo-bordado-diseno';
+import { histaminaAlimentoIntolerancia } from './histamina-alimento-intolerancia';
+import { honorariosPersonaFisicaMexico } from './honorarios-persona-fisica-mexico';
+import { hopUtilizationBoilTime } from './hop-utilization-boil-time';
+import { horaFreelancePorPaisMercado } from './hora-freelance-por-pais-mercado';
+import { horasAprenderAlemanC1 } from './horas-aprender-aleman-c1';
+import { horasAprenderArabeB2 } from './horas-aprender-arabe-b2';
+import { horasAprenderChinoHsk4 } from './horas-aprender-chino-hsk4';
+import { horasAprenderCoreanoTopik4 } from './horas-aprender-coreano-topik4';
+import { horasAprenderFrancesB2 } from './horas-aprender-frances-b2';
+import { horasAprenderInglesNivelC1 } from './horas-aprender-ingles-nivel-c1';
+import { horasAprenderItalianoB1 } from './horas-aprender-italiano-b1';
+import { horasAprenderJaponesN3 } from './horas-aprender-japones-n3';
+import { horasAprenderPortuguesB2 } from './horas-aprender-portugues-b2';
+import { horasAprenderRusoB2 } from './horas-aprender-ruso-b2';
+import { horasPrepararGre } from './horas-preparar-gre';
+import { horasPrepararSat } from './horas-preparar-sat';
+import { ibuCervezaLupuloTinseth } from './ibu-cerveza-lupulo-tinseth';
+import { idiomaParalelo2AlMismo } from './idioma-paralelo-2-al-mismo';
+import { impermanentLossPool } from './impermanent-loss-pool';
+import { impuestos1099ContractorUsa } from './impuestos-1099-contractor-usa';
+import { impuestosAutonomoEspana } from './impuestos-autonomo-espana';
+import { impuestosMonotributoFreelance } from './impuestos-monotributo-freelance';
+import { infillPorcentajePorUso } from './infill-porcentaje-por-uso';
+import { ingresoUberAirbnbHost } from './ingreso-uber-airbnb-host';
+import { inmersionSemanasC1 } from './inmersion-semanas-c1';
+import { instagramAdsCpmNicho } from './instagram-ads-cpm-nicho';
+import { instagramCarrouselSlidesOptimas } from './instagram-carrousel-slides-optimas';
+import { instagramHashtagsOptimos } from './instagram-hashtags-optimos';
+import { instagramInfluencerPagoHistoria } from './instagram-influencer-pago-historia';
+import { instagramMejorHoraPublicar } from './instagram-mejor-hora-publicar';
+import { instagramRateCardPorFollowers } from './instagram-rate-card-por-followers';
+import { instagramReachOrganicoPromedio } from './instagram-reach-organico-promedio';
+import { instagramReelsDuracionOptima } from './instagram-reels-duracion-optima';
+import { instagramStoriesVsFeedVistas } from './instagram-stories-vs-feed-vistas';
+import { inventarioTurnoverRatio } from './inventario-turnover-ratio';
+import { invitacionesCumpleNumero } from './invitaciones-cumple-numero';
+import { isoInvarianceCamaraModelo } from './iso-invariance-camara-modelo';
+import { jaulaIdealPeriquito } from './jaula-ideal-periquito';
+import { jugoPorInvitadoBautismo } from './jugo-por-invitado-bautismo';
+import { kaspaKasMining } from './kaspa-kas-mining';
+import { kefirLecheProporciones } from './kefir-leche-proporciones';
+import { kindleKdpIngresoEbook } from './kindle-kdp-ingreso-ebook';
+import { kombuchaFermentacionTiempo } from './kombucha-fermentacion-tiempo';
+import { lactosaAlimentoIntolerancia } from './lactosa-alimento-intolerancia';
+import { lanaTejerPrendaAgujas } from './lana-tejer-prenda-agujas';
+import { leverageDefiLiquidation } from './leverage-defi-liquidation';
+import { linkedinPostsAlcance } from './linkedin-posts-alcance';
+import { liquidStakingLidoReth } from './liquid-staking-lido-reth';
+import { ltvLifetimeValueSuscripcion } from './ltv-lifetime-value-suscripcion';
+import { machihembradoTablon } from './machihembrado-tablon';
+import { macrosAtkinsFases } from './macros-atkins-fases';
+import { macrosCarnivoraDieta } from './macros-carnivora-dieta';
+import { macrosCetogenicaCiclica } from './macros-cetogenica-ciclica';
+import { macrosDashHipertension } from './macros-dash-hipertension';
+import { macrosFlexitarianaSemana } from './macros-flexitariana-semana';
+import { macrosIifymFlexible } from './macros-iifym-flexible';
+import { macrosIntermitente168Ayuno } from './macros-intermitente-16-8-ayuno';
+import { macrosKetoDieta } from './macros-keto-dieta';
+import { macrosLowFodmapSibo } from './macros-low-fodmap-sibo';
+import { macrosMediterranea } from './macros-mediterranea';
+import { macrosPaleoDieta } from './macros-paleo-dieta';
+import { macrosVeganaDieta } from './macros-vegana-dieta';
+import { maderaNecesariaMueble } from './madera-necesaria-mueble';
+import { magnesioDiarioRequerido } from './magnesio-diario-requerido';
+import { manhattanClasico } from './manhattan-clasico';
+import { margaritaIngredientesJarra } from './margarita-ingredientes-jarra';
+import { margenDropshippingReal } from './margen-dropshipping-real';
+import { maridajeVinoComida } from './maridaje-vino-comida';
+import { martiniVermouthRatio } from './martini-vermouth-ratio';
+import { mashWaterRatioGrist } from './mash-water-ratio-grist';
+import { masitasDulcesPorInvitadoCasamiento } from './masitas-dulces-por-invitado-casamiento';
+import { mejorEpocaClimaDestino } from './mejor-epoca-clima-destino';
+import { mercadolibreComisionVenta } from './mercadolibre-comision-venta';
+import { meserosNecesariosInvitados } from './meseros-necesarios-invitados';
+import { mesesPrepararIelts } from './meses-preparar-ielts';
+import { metodoFeynmanTiempo } from './metodo-feynman-tiempo';
+import { mindMapPreparacion } from './mind-map-preparacion';
+import { miningRigBreakEven } from './mining-rig-break-even';
+import { mojitoCubanoIngredientes } from './mojito-cubano-ingredientes';
+import { mokaPotAguaCafe } from './moka-pot-agua-cafe';
+import { morphoBlueMarkets } from './morpho-blue-markets';
+import { negroniProporcionesInvitados } from './negroni-proporciones-invitados';
+import { nftFloorPricePortfolio } from './nft-floor-portfolio';
+import { nftHolderBoostRewards } from './nft-holder-boost';
+import { nftMintGas } from './nft-mint-gas';
+import { nftRoyaltiesPrimarySecondary } from './nft-royalties-ps';
+import { nivelGoetheAleman } from './nivel-goethe-aleman';
+import { nozzleLayerHeight3d } from './nozzle-layer-height-3d';
+import { ojalesDistanciaBotonesCamisa } from './ojales-distancia-botones-camisa';
+import { oldFashionedCantidadInvitados } from './old-fashioned-cantidad-invitados';
+import { omega36Ratio } from './omega-3-6-ratio';
+import { onlyfansIngresoSuscriptores } from './onlyfans-ingreso-suscriptores';
+import { oxalatosCalculosRenales } from './oxalatos-calculos-renales';
+import { palabrasDiaParaNivel } from './palabras-dia-para-nivel';
+import { palabrasPorMinutoLecturaNivel } from './palabras-por-minuto-lectura-nivel';
+import { panPorInvitadoEvento } from './pan-por-invitado-evento';
+import { panoramaFotoSolapamiento } from './panorama-foto-solapamiento';
+import { patreonTiersSetupOptimo } from './patreon-tiers-setup-optimo';
+import { pendleFixedYield } from './pendle-fixed-yield';
+import { pesoMaderaPorTipoVolumen } from './peso-madera-por-tipo-volumen';
+import { pesoPlaAbsPetgVolumen } from './peso-pla-abs-petg-volumen';
+import { piscoPorInvitadoPrevia } from './pisco-por-invitado-previa';
+import { piscoSourReceta } from './pisco-sour-receta';
+import { pizzaPorInvitadoPorciones } from './pizza-por-invitado-porciones';
+import { podcastDescargasParaMonetizar } from './podcast-descargas-para-monetizar';
+import { pomodoroOptimoMateria } from './pomodoro-optimo-materia';
+import { potasioDiarioNecesario } from './potasio-diario-necesario';
+import { prebioticosProbioticosDiarios } from './prebioticos-probioticos-diarios';
+import { precioEbookKindleKdp } from './precio-ebook-kindle-kdp';
+import { precioHoraServicio3d } from './precio-hora-servicio-3d';
+import { precioVentaProductoMarkup } from './precio-venta-producto-markup';
+import { presupuestoAniversarioBodas } from './presupuesto-aniversario-bodas';
+import { presupuestoBabyShower } from './presupuesto-baby-shower';
+import { presupuestoBautismoComunion } from './presupuesto-bautismo-comunion';
+import { presupuestoCasamientoPorInvitado } from './presupuesto-casamiento-por-invitado';
+import { presupuestoCumple15Quinceanera } from './presupuesto-cumple-15-quinceanera';
+import { presupuestoCumpleInfantil } from './presupuesto-cumple-infantil';
+import { presupuestoDespedidaSoltera } from './presupuesto-despedida-soltera';
+import { presupuestoFiestaFinAnoEmpresa } from './presupuesto-fiesta-fin-ano-empresa';
+import { presupuestoGraduacion } from './presupuesto-graduacion';
+import { presupuestoHalloweenCostumes } from './presupuesto-halloween-costumes';
+import { presupuestoLunaMielDestinoDias } from './presupuesto-luna-miel-destino-dias';
+import { primerLayerAdherenciaBed } from './primer-layer-adherencia-bed';
+import { primingSugarCarbonatacionCerveza } from './priming-sugar-carbonatacion-cerveza';
+import { profundidadCampoDofLente } from './profundidad-campo-dof-lente';
+import { proteinaDiariaObjetivo } from './proteina-diaria-objetivo';
+import { proteinaPorComidaAnabolismo } from './proteina-por-comida-anabolismo';
+import { puntajeDeleSpanish } from './puntaje-dele-spanish';
+import { puntajeDelfFrances } from './puntaje-delf-frances';
+import { purinasGotaAlimento } from './purinas-gota-alimento';
+import { rateHoraFreelanceNivel } from './rate-hora-freelance-nivel';
+import { refractometroCervezaCorreccion } from './refractometro-cerveza-correccion';
+import { regaloBodaApropiadoInvitado } from './regalo-boda-apropiado-invitado';
+import { regalosInvitadoSouvenir } from './regalos-invitado-souvenir';
+import { regla500AstrofotografiaEstrellas } from './regla-500-astrofotografia-estrellas';
+import { regla600Estrellas } from './regla-600-estrellas';
+import { repasoOptimoExamen } from './repaso-optimo-examen';
+import { repeticionEspaciadaAnkiIntervalos } from './repeticion-espaciada-anki-intervalos';
+import { resin3dMililitrosPieza } from './resin-3d-mililitros-pieza';
+import { resistenciaLedTensionCorriente } from './resistencia-led-tension-corriente';
+import { retraccion3dBowdenDirect } from './retraccion-3d-bowden-direct';
+import { roiAdSpendAmazonPpc } from './roi-ad-spend-amazon-ppc';
+import { roiAdSpendFacebookMeta } from './roi-ad-spend-facebook-meta';
+import { roiCoaching1On1Venta } from './roi-coaching-1-on-1-venta';
+import { roiCursoOnlineUdemy } from './roi-curso-online-udemy';
+import { scoreIeltsBandObjetivo } from './score-ielts-band-objetivo';
+import { scoreToeflMeta } from './score-toefl-meta';
+import { selenioDiarioOxidativo } from './selenio-diario-oxidativo';
+import { seoTraficoPotencialKeyword } from './seo-trafico-potencial-keyword';
+import { sillasMesasInvitados } from './sillas-mesas-invitados';
+import { snacksPorInvitadoJuntada } from './snacks-por-invitado-juntada';
+import { sodioDiarioHipertension } from './sodio-diario-hipertension';
+import { spargeWaterVolumen } from './sparge-water-volumen';
+import { speakingHoursNecesarias } from './speaking-hours-necesarias';
+import { spotifyRoyaltiesStreams } from './spotify-royalties-streams';
+import { sq3rTiempoCapitulo } from './sq3r-tiempo-capitulo';
+import { srmColorCervezaMorey } from './srm-color-cerveza-morey';
+import { stakingAdaRewards } from './staking-ada-rewards';
+import { stakingAtomRewards } from './staking-atom-rewards';
+import { stakingAvaxRewards } from './staking-avax-rewards';
+import { stakingBnbRewards } from './staking-bnb-rewards';
+import { stakingDotRewards } from './staking-dot-rewards';
+import { stakingEthRewards } from './staking-eth-rewards';
+import { stakingMaticRewards } from './staking-matic-rewards';
+import { stakingSolRewards } from './staking-sol-rewards';
+import { stopMotionFpsTiempo } from './stop-motion-fps-tiempo';
+import { streamerSetupPresupuesto } from './streamer-setup-presupuesto';
+import { substackSuscriptoresMeta } from './substack-suscriptores-meta';
+import { sushiPorInvitadoCena } from './sushi-por-invitado-cena';
+import { sushiswapLpRewards } from './sushiswap-lp-rewards';
+import { tamanoSensorCropFactor } from './tamano-sensor-crop-factor';
+import { tarjetaSdNecesariaSesion } from './tarjeta-sd-necesaria-sesion';
+import { teclaPorMinutoTypingTest } from './tecla-por-minuto-typing-test';
+import { tecnicaMemoryPalaceTiempo } from './tecnica-memory-palace-tiempo';
+import { telaCortinasVentana } from './tela-cortinas-ventana';
+import { telaNecesariaPrendaVestido } from './tela-necesaria-prenda-vestido';
+import { temperaturaAcuarioEspecie } from './temperatura-acuario-especie';
+import { temperaturaServicioVino } from './temperatura-servicio-vino';
+import { tiempoArticuloBlogPalabras } from './tiempo-articulo-blog-palabras';
+import { tiempoEnsayoUniversitario } from './tiempo-ensayo-universitario';
+import { tiempoEscribirTesisPalabras } from './tiempo-escribir-tesis-palabras';
+import { tiempoExposicionPanning } from './tiempo-exposicion-panning';
+import { tiempoImpresion3dLayer } from './tiempo-impresion-3d-layer';
+import { tiempoLecturaPorPaginas } from './tiempo-lectura-por-paginas';
+import { tiempoLeerLibroGeneral } from './tiempo-leer-libro-general';
+import { tiempoLeerNovelaGenero } from './tiempo-leer-novela-genero';
+import { tiempoSoldaduraTipoEstano } from './tiempo-soldadura-tipo-estano';
+import { tiktokCreatorFundIngreso } from './tiktok-creator-fund-ingreso';
+import { tiktokDuracionOptimaVideo } from './tiktok-duracion-optima-video';
+import { tiktokEngagementRate } from './tiktok-engagement-rate';
+import { tiktokHashtagsOptimosNicho } from './tiktok-hashtags-optimos-nicho';
+import { tiktokLiveDiamondsDolares } from './tiktok-live-diamonds-dolares';
+import { tiktokMejorHoraPublicar } from './tiktok-mejor-hora-publicar';
+import { tiktokSparkAdsCosto } from './tiktok-spark-ads-costo';
+import { tiktokViralizarViewsNecesarias } from './tiktok-viralizar-views-necesarias';
+import { timeLapseDuracionFotosMaker } from './time-lapse-duracion-fotos-maker';
+import { tornillosMaderaTipoLargo } from './tornillos-madera-tipo-largo';
+import { tortaPersonasKgPorciones } from './torta-personas-kg-porciones';
+import { transportePublicoViajePresupuesto } from './transporte-publico-viaje-presupuesto';
+import { twitchBitsDonacionesDolares } from './twitch-bits-donaciones-dolares';
+import { twitchHorasParaAfiliado } from './twitch-horas-para-afiliado';
+import { twitchHorasParaPartner } from './twitch-horas-para-partner';
+import { twitchRaidTrafficEstimado } from './twitch-raid-traffic-estimado';
+import { twitchSubsMetaDolares } from './twitch-subs-meta-dolares';
+import { twitterXMonetizacionIngreso } from './twitter-x-monetizacion-ingreso';
+import { tyramineMigranaAlimentos } from './tyramine-migrana-alimentos';
+import { uniswapV3Fees } from './uniswap-v3-fees';
+import { upgradeClaseAvionCosto } from './upgrade-clase-avion-costo';
+import { vajillaAlquilerInvitados } from './vajilla-alquiler-invitados';
+import { velasTortaCumple } from './velas-torta-cumple';
+import { velocidadLecturaRapidaEjercicio } from './velocidad-lectura-rapida-ejercicio';
+import { velocidadObturacionMovimiento } from './velocidad-obturacion-movimiento';
+import { viewersConcurrentesNecesariosIngreso } from './viewers-concurrentes-necesarios-ingreso';
+import { vinoPorInvitadoCena } from './vino-por-invitado-cena';
+import { vinoPorInvitadoHorasEvento } from './vino-por-invitado-horas-evento';
+import { vitaminaB12Vegano } from './vitamina-b12-vegano';
+import { vitaminaDPorLatitud } from './vitamina-d-por-latitud';
+import { vocabularioNivelIdioma } from './vocabulario-nivel-idioma';
+import { vodkaInfusionFrutasTiempo } from './vodka-infusion-frutas-tiempo';
+import { vueloEmisionesCo2Pasajero } from './vuelo-emisiones-co2-pasajero';
+import { wattsFuenteAlimentacionPc } from './watts-fuente-alimentacion-pc';
+import { whiskyPorInvitadoEvento } from './whisky-por-invitado-evento';
+import { whiskySourProporciones } from './whisky-sour-proporciones';
+import { yeastPitchRateCerveza } from './yeast-pitch-rate-cerveza';
+import { yieldFarmingApyReal } from './yield-farming-apy-real';
+import { yodoDiarioEmbarazo } from './yodo-diario-embarazo';
+import { youtubeCalendarioPublicacion } from './youtube-calendario-publicacion';
+import { youtubeCtrThumbnailPromedio } from './youtube-ctr-thumbnail-promedio';
+import { youtubeRetentionRateBenchmark } from './youtube-retention-rate-benchmark';
+import { youtubeSuscriptoresPara1000 } from './youtube-suscriptores-para-1000';
+import { youtubeWatchTimeHorasSubir } from './youtube-watch-time-horas-subir';
+import { zincDiarioNecesidad } from './zinc-diario-necesidad';
 
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
@@ -2237,4 +2617,384 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'youtube-premium-split-payout': youtubePremiumSplitPayout,
   'youtube-shorts-fund-ingreso': youtubeShortsFundIngreso,
   'youtube-tiempo-para-monetizar': youtubeTiempoParaMonetizar,
+  'aave-lending-supply': aaveLendingSupply,
+  'abv-cerveza-og-fg': abvCervezaOgFg,
+  'achuras-por-invitado-parrilla': achurasPorInvitadoParrilla,
+  'acolchado-patchwork-cuadrados': acolchadoPatchworkCuadrados,
+  'agua-mineralizacion-cafe': aguaMineralizacionCafe,
+  'agua-periquito-diaria': aguaPeriquitoDiaria,
+  'agua-pez-betta-litros': aguaPezBettaLitros,
+  'agua-por-invitado-fiesta': aguaPorInvitadoFiesta,
+  'alcohol-attenuation-levadura': alcoholAttenuationLevadura,
+  'alianza-boda-precio-pareja': alianzaBodaPrecioPareja,
+  'alimento-acuario-por-pez': alimentoAcuarioPorPez,
+  'alimento-iguana-diario': alimentoIguanaDiario,
+  'alquiler-auto-pais-presupuesto': alquilerAutoPaisPresupuesto,
+  'amazon-associates-comision': amazonAssociatesComision,
+  'amplificador-operacional-ganancia': amplificadorOperacionalGanancia,
+  'ancho-angulo-lente-distancia': anchoAnguloLenteDistancia,
+  'anillo-compromiso-precio-sueldo': anilloCompromisoPrecioSueldo,
+  'anos-fluidez-idioma': anosFluidezIdioma,
+  'aperol-spritz-proporciones': aperolSpritzProporciones,
+  'apple-music-royalties-pagos': appleMusicRoyaltiesPagos,
+  'asado-por-invitado-kg-carne': asadoPorInvitadoKgCarne,
+  'audible-ingreso-audiolibro': audibleIngresoAudiolibro,
+  'barniz-aceite-m2-madera': barnizAceiteM2Madera,
+  'barrel-aging-tiempo-whiskey': barrelAgingTiempoWhiskey,
+  'bateria-lipo-capacidad-descarga': bateriaLipoCapacidadDescarga,
+  'bcaa-pre-workout-gramos': bcaaPreWorkoutGramos,
+  'bilingue-simultaneo-ninos': bilingueSimultaneoNinos,
+  'bitcoin-halving-countdown': bitcoinHalvingCountdown,
+  'bitcoin-mining-profit': bitcoinMiningProfit,
+  'blog-adsense-rpm-nicho': blogAdsenseRpmNicho,
+  'bloody-mary-spice': bloodyMarySpice,
+  'break-even-freelance-mes': breakEvenFreelanceMes,
+  'cac-costo-adquisicion-sales-funnel': cacCostoAdquisicionSalesFunnel,
+  'cafe-aeropress-receta': cafeAeropressReceta,
+  'cafe-french-press-ratio': cafeFrenchPressRatio,
+  'cafe-ratio-v60-pour-over': cafeRatioV60PourOver,
+  'cafeina-por-metodo-taza': cafeinaPorMetodoTaza,
+  'caipirinha-brasileno': caipirinhaBrasileno,
+  'calcio-diario-edad': calcioDiarioEdad,
+  'calentamiento-estudio-minutos': calentamientoEstudioMinutos,
+  'calorias-copa-vino': caloriasCopaVino,
+  'canape-por-invitado-coctel': canapePorInvitadoCoctel,
+  'candy-bar-personas': candyBarPersonas,
+  'cantidad-peces-acuario-litros': cantidadPecesAcuarioLitros,
+  'carga-bateria-tiempo-amp': cargaBateriaTiempoAmp,
+  'cerveza-invitado-evento': cervezaInvitadoEvento,
+  'cerveza-por-invitado-duracion-fiesta': cervezaPorInvitadoFiesta,
+  'champagne-por-invitado-brindis': champagnePorInvitadoBrindis,
+  'chorizos-por-invitado-asado': chorizosPorInvitadoAsado,
+  'ciclo-circadiano-estudio': cicloCircadianoEstudio,
+  'colageno-tipo-dosis-diaria': colagenoTipoDosisDiaria,
+  'cold-brew-ratio': coldBrewRatio,
+  'colesterol-ldl-hdl-ratio': colesterolLdlHdlRatio,
+  'comida-canario-gramos': comidaCanarioGramos,
+  'comida-diaria-conejo-peso': comidaDiariaConejoPeso,
+  'comida-hamster-semana': comidaHamsterSemana,
+  'comida-tortuga-diaria-gramos': comidaTortugaDiariaGramos,
+  'comision-amazon-fba-producto': comisionAmazonFbaProducto,
+  'comision-ebay-venta': comisionEbayVenta,
+  'comision-etsy-venta-handmade': comisionEtsyVentaHandmade,
+  'comision-mercadolibre-venta': comisionMercadolibreVenta,
+  'comision-uber-eats-glovo-rider': comisionUberEatsGlovoRider,
+  'compound-supply-borrow': compoundSupplyBorrow,
+  'comprension-lectora-score': comprensionLectoraScore,
+  'conversion-rate-ecommerce-benchmark': conversionRateEcommerceBenchmark,
+  'cooling-fan-3d-material': coolingFan3dMaterial,
+  'cornell-apuntes-tiempo': cornellApuntesTiempo,
+  'corpus-necesario-lectura-libre': corpusNecesarioLecturaLibre,
+  'corte-optimo-tablero': corteOptimoTablero,
+  'cosmopolitan-ingredientes': cosmopolitanIngredientes,
+  'costo-envio-peso-destino': costoEnvioPesoDestino,
+  'costo-hora-consultor-marketing': costoHoraConsultorMarketing,
+  'costo-hora-desarrollador-senior': costoHoraDesarrolladorSenior,
+  'costo-hora-disenador-grafico': costoHoraDisenadorGrafico,
+  'costo-hora-fotografo-evento': costoHoraFotografoEvento,
+  'costo-hora-ilustrador-digital': costoHoraIlustradorDigital,
+  'costo-hora-redactor-copywriter': costoHoraRedactorCopywriter,
+  'costo-impresion-3d-pieza': costoImpresion3dPieza,
+  'costo-mensual-pez-acuario': costoMensualPezAcuario,
+  'costo-mensual-raza-gato': costoMensualRazaGato,
+  'cotillon-cumple-personas': cotillonCumplePersonas,
+  'cotizacion-proyecto-precio': cotizacionProyectoPrecio,
+  'creatinina-funcion-renal': creatininaFuncionRenal,
+  'cripto-tax-argentina': criptoTaxArgentinaGanancia,
+  'cripto-tax-espana': criptoTaxEspanaIrpf,
+  'cripto-tax-mexico': criptoTaxMexicoIsr,
+  'cripto-tax-usa': criptoTaxUsaCapitalGains,
+  'cupcakes-por-invitado-cumple': cupcakesPorInvitadoCumple,
+  'curve-stable-pool': curveStablePoolApy,
+  'daiquiri-clasico-personas': daiquiriClasicoPersonas,
+  'decantacion-tiempo-vino': decantacionTiempoVino,
+  'defi-hack-risk-score': defiProtocolHackRisk,
+  'despedida-casamiento-presupuesto': despedidaCasamientoPresupuesto,
+  'dificultad-idioma-fsi': dificultadIdiomaFsi,
+  'dilucion-cerveza-alcohol-objetivo': dilucionCervezaAlcoholObjetivo,
+  'dilucion-whisky-abv-objetivo': dilucionWhiskyAbvObjetivo,
+  'discord-server-boost-nitro': discordServerBoostNitro,
+  'distancia-hiperfocal-lente': distanciaHiperfocalLente,
+  'divisor-tension-formula': divisorTensionFormula,
+  'duolingo-xp-objetivo': duolingoXpObjetivo,
+  'ebbinghaus-curva-olvido': ebbinghausCurvaOlvido,
+  'edad-humana-conejo': edadHumanaConejo,
+  'edad-humana-tortuga': edadHumanaTortuga,
+  'eficiencia-mash-porcentaje': eficienciaMashPorcentaje,
+  'eigen-layer-restaking': eigenLayerRestaking,
+  'ejercicio-conejo-dia': ejercicioConejoDia,
+  'electrolitos-pre-post-entreno': electrolitosPrePostEntreno,
+  'email-marketing-ingreso-lista': emailMarketingIngresoLista,
+  'empanadas-por-invitado-juntada': empanadasPorInvitadoJuntada,
+  'energia-electrica-impresion-3d': energiaElectricaImpresion3d,
+  'ensalada-por-invitado-evento': ensaladaPorInvitadoEvento,
+  'equipaje-extra-costo-aerolinea': equipajeExtraCostoAerolinea,
+  'escalera-madera-huella-contrahuella': escaleraMaderaHuellaContrahuella,
+  'espacio-jaula-hamster-tamano': espacioJaulaHamsterTamano,
+  'espresso-tds-yield': espressoTdsYield,
+  'estantes-madera-soporte-peso': estantesMaderaSoportePeso,
+  'ethereum-classic-mining': ethereumClassicMining,
+  'evaporation-rate-boil': evaporationRateBoil,
+  'expectativa-vida-conejo-raza': expectativaVidaConejoRaza,
+  'expectativa-vida-reptiles-especie': expectativaVidaReptilesEspecie,
+  'expectativa-vida-tortuga-terrestre': expectativaVidaTortugaTerrestre,
+  'exposicion-triangulo-iso-diafragma': exposicionTrianguloIsoDiafragma,
+  'facebook-reels-bonus-pagos': facebookReelsBonusPagos,
+  'facturar-freelance-minimo-mes': facturarFreelanceMinimoMes,
+  'fernet-cola-por-invitado-juntada': fernetColaPorInvitadoJuntada,
+  'fernet-cola-proporciones': fernetColaProporciones,
+  'fiambre-queso-por-invitado-picada': fiambreQuesoPorInvitadoPicada,
+  'fibra-diaria-edad-sexo': fibraDiariaEdadSexo,
+  'filamento-3d-necesario-modelo': filamento3dNecesarioModelo,
+  'filamento-soldador-mm2': filamentoSoldadorMm2,
+  'filtro-nd-stops-tiempo': filtroNdStopsTiempo,
+  'final-volume-cerveza-fermentador': finalVolumeCervezaFermentador,
+  'flashcards-por-dia': flashcardsPorDia,
+  'flores-para-mesa-evento': floresParaMesaEvento,
+  'forro-almohadon-medidas': forroAlmohadonMedidas,
+  'fructosa-malabsorcion': fructosaMalabsorcion,
+  'fruta-por-invitado-cumple': frutaPorInvitadoCumple,
+  'gaseosa-por-invitado-cumple-infantil': gaseosaPorInvitadoCumpleInfantil,
+  'gin-tonic-proporciones': ginTonicProporciones,
+  'globos-decoracion-salon-metros': globosDecoracionSalonMetros,
+  'gluten-sensibilidad-score': glutenSensibilidadScore,
+  'gmx-glp-apr': gmxGlpApr,
+  'hidratacion-clima-calor': hidratacionClimaCalor,
+  'hidrometro-correccion-temperatura': hidrometroCorreccionTemperatura,
+  'hidromiel-proporciones-miel-agua': hidromielProporcionesMielAgua,
+  'hielo-por-invitado-fiesta': hieloPorInvitadoFiesta,
+  'hierro-diario-vegetariano': hierroDiarioVegetariano,
+  'hilo-bordado-diseno': hiloBordadoDiseno,
+  'histamina-alimento-intolerancia': histaminaAlimentoIntolerancia,
+  'honorarios-persona-fisica-mexico': honorariosPersonaFisicaMexico,
+  'hop-utilization-boil-time': hopUtilizationBoilTime,
+  'hora-freelance-por-pais-mercado': horaFreelancePorPaisMercado,
+  'horas-aprender-aleman-c1': horasAprenderAlemanC1,
+  'horas-aprender-arabe-b2': horasAprenderArabeB2,
+  'horas-aprender-chino-hsk4': horasAprenderChinoHsk4,
+  'horas-aprender-coreano-topik4': horasAprenderCoreanoTopik4,
+  'horas-aprender-frances-b2': horasAprenderFrancesB2,
+  'horas-aprender-ingles-nivel-c1': horasAprenderInglesNivelC1,
+  'horas-aprender-italiano-b1': horasAprenderItalianoB1,
+  'horas-aprender-japones-n3': horasAprenderJaponesN3,
+  'horas-aprender-portugues-b2': horasAprenderPortuguesB2,
+  'horas-aprender-ruso-b2': horasAprenderRusoB2,
+  'horas-preparar-gre': horasPrepararGre,
+  'horas-preparar-sat': horasPrepararSat,
+  'ibu-cerveza-lupulo-tinseth': ibuCervezaLupuloTinseth,
+  'idioma-paralelo-2-al-mismo': idiomaParalelo2AlMismo,
+  'impermanent-loss-pool': impermanentLossPool,
+  'impuestos-1099-contractor-usa': impuestos1099ContractorUsa,
+  'impuestos-autonomo-espana': impuestosAutonomoEspana,
+  'impuestos-monotributo-freelance': impuestosMonotributoFreelance,
+  'infill-porcentaje-por-uso': infillPorcentajePorUso,
+  'ingreso-uber-airbnb-host': ingresoUberAirbnbHost,
+  'inmersion-semanas-c1': inmersionSemanasC1,
+  'instagram-ads-cpm-nicho': instagramAdsCpmNicho,
+  'instagram-carrousel-slides-optimas': instagramCarrouselSlidesOptimas,
+  'instagram-hashtags-optimos': instagramHashtagsOptimos,
+  'instagram-influencer-pago-historia': instagramInfluencerPagoHistoria,
+  'instagram-mejor-hora-publicar': instagramMejorHoraPublicar,
+  'instagram-rate-card-por-followers': instagramRateCardPorFollowers,
+  'instagram-reach-organico-promedio': instagramReachOrganicoPromedio,
+  'instagram-reels-duracion-optima': instagramReelsDuracionOptima,
+  'instagram-stories-vs-feed-vistas': instagramStoriesVsFeedVistas,
+  'inventario-turnover-ratio': inventarioTurnoverRatio,
+  'invitaciones-cumple-numero': invitacionesCumpleNumero,
+  'iso-invariance-camara-modelo': isoInvarianceCamaraModelo,
+  'jaula-ideal-periquito': jaulaIdealPeriquito,
+  'jugo-por-invitado-bautismo': jugoPorInvitadoBautismo,
+  'kaspa-kas-mining': kaspaKasMining,
+  'kefir-leche-proporciones': kefirLecheProporciones,
+  'kindle-kdp-ingreso-ebook': kindleKdpIngresoEbook,
+  'kombucha-fermentacion-tiempo': kombuchaFermentacionTiempo,
+  'lactosa-alimento-intolerancia': lactosaAlimentoIntolerancia,
+  'lana-tejer-prenda-agujas': lanaTejerPrendaAgujas,
+  'leverage-defi-liquidation': leverageDefiLiquidation,
+  'linkedin-posts-alcance': linkedinPostsAlcance,
+  'liquid-staking-lido-reth': liquidStakingLidoReth,
+  'ltv-lifetime-value-suscripcion': ltvLifetimeValueSuscripcion,
+  'machihembrado-tablon': machihembradoTablon,
+  'macros-atkins-fases': macrosAtkinsFases,
+  'macros-carnivora-dieta': macrosCarnivoraDieta,
+  'macros-cetogenica-ciclica': macrosCetogenicaCiclica,
+  'macros-dash-hipertension': macrosDashHipertension,
+  'macros-flexitariana-semana': macrosFlexitarianaSemana,
+  'macros-iifym-flexible': macrosIifymFlexible,
+  'macros-intermitente-16-8-ayuno': macrosIntermitente168Ayuno,
+  'macros-keto-dieta': macrosKetoDieta,
+  'macros-low-fodmap-sibo': macrosLowFodmapSibo,
+  'macros-mediterranea': macrosMediterranea,
+  'macros-paleo-dieta': macrosPaleoDieta,
+  'macros-vegana-dieta': macrosVeganaDieta,
+  'madera-necesaria-mueble': maderaNecesariaMueble,
+  'magnesio-diario-requerido': magnesioDiarioRequerido,
+  'manhattan-clasico': manhattanClasico,
+  'margarita-ingredientes-jarra': margaritaIngredientesJarra,
+  'margen-dropshipping-real': margenDropshippingReal,
+  'maridaje-vino-comida': maridajeVinoComida,
+  'martini-vermouth-ratio': martiniVermouthRatio,
+  'mash-water-ratio-grist': mashWaterRatioGrist,
+  'masitas-dulces-por-invitado-casamiento': masitasDulcesPorInvitadoCasamiento,
+  'mejor-epoca-clima-destino': mejorEpocaClimaDestino,
+  'mercadolibre-comision-venta': mercadolibreComisionVenta,
+  'meseros-necesarios-invitados': meserosNecesariosInvitados,
+  'meses-preparar-ielts': mesesPrepararIelts,
+  'metodo-feynman-tiempo': metodoFeynmanTiempo,
+  'mind-map-preparacion': mindMapPreparacion,
+  'mining-rig-break-even': miningRigBreakEven,
+  'mojito-cubano-ingredientes': mojitoCubanoIngredientes,
+  'moka-pot-agua-cafe': mokaPotAguaCafe,
+  'morpho-blue-markets': morphoBlueMarkets,
+  'negroni-proporciones-invitados': negroniProporcionesInvitados,
+  'nft-floor-portfolio': nftFloorPricePortfolio,
+  'nft-holder-boost': nftHolderBoostRewards,
+  'nft-mint-gas': nftMintGas,
+  'nft-royalties-ps': nftRoyaltiesPrimarySecondary,
+  'nivel-goethe-aleman': nivelGoetheAleman,
+  'nozzle-layer-height-3d': nozzleLayerHeight3d,
+  'ojales-distancia-botones-camisa': ojalesDistanciaBotonesCamisa,
+  'old-fashioned-cantidad-invitados': oldFashionedCantidadInvitados,
+  'omega-3-6-ratio': omega36Ratio,
+  'onlyfans-ingreso-suscriptores': onlyfansIngresoSuscriptores,
+  'oxalatos-calculos-renales': oxalatosCalculosRenales,
+  'palabras-dia-para-nivel': palabrasDiaParaNivel,
+  'palabras-por-minuto-lectura-nivel': palabrasPorMinutoLecturaNivel,
+  'pan-por-invitado-evento': panPorInvitadoEvento,
+  'panorama-foto-solapamiento': panoramaFotoSolapamiento,
+  'patreon-tiers-setup-optimo': patreonTiersSetupOptimo,
+  'pendle-fixed-yield': pendleFixedYield,
+  'peso-madera-por-tipo-volumen': pesoMaderaPorTipoVolumen,
+  'peso-pla-abs-petg-volumen': pesoPlaAbsPetgVolumen,
+  'pisco-por-invitado-previa': piscoPorInvitadoPrevia,
+  'pisco-sour-receta': piscoSourReceta,
+  'pizza-por-invitado-porciones': pizzaPorInvitadoPorciones,
+  'podcast-descargas-para-monetizar': podcastDescargasParaMonetizar,
+  'pomodoro-optimo-materia': pomodoroOptimoMateria,
+  'potasio-diario-necesario': potasioDiarioNecesario,
+  'prebioticos-probioticos-diarios': prebioticosProbioticosDiarios,
+  'precio-ebook-kindle-kdp': precioEbookKindleKdp,
+  'precio-hora-servicio-3d': precioHoraServicio3d,
+  'precio-venta-producto-markup': precioVentaProductoMarkup,
+  'presupuesto-aniversario-bodas': presupuestoAniversarioBodas,
+  'presupuesto-baby-shower': presupuestoBabyShower,
+  'presupuesto-bautismo-comunion': presupuestoBautismoComunion,
+  'presupuesto-casamiento-por-invitado': presupuestoCasamientoPorInvitado,
+  'presupuesto-cumple-15-quinceanera': presupuestoCumple15Quinceanera,
+  'presupuesto-cumple-infantil': presupuestoCumpleInfantil,
+  'presupuesto-despedida-soltera': presupuestoDespedidaSoltera,
+  'presupuesto-fiesta-fin-ano-empresa': presupuestoFiestaFinAnoEmpresa,
+  'presupuesto-graduacion': presupuestoGraduacion,
+  'presupuesto-halloween-costumes': presupuestoHalloweenCostumes,
+  'presupuesto-luna-miel-destino-dias': presupuestoLunaMielDestinoDias,
+  'primer-layer-adherencia-bed': primerLayerAdherenciaBed,
+  'priming-sugar-carbonatacion-cerveza': primingSugarCarbonatacionCerveza,
+  'profundidad-campo-dof-lente': profundidadCampoDofLente,
+  'proteina-diaria-objetivo': proteinaDiariaObjetivo,
+  'proteina-por-comida-anabolismo': proteinaPorComidaAnabolismo,
+  'puntaje-dele-spanish': puntajeDeleSpanish,
+  'puntaje-delf-frances': puntajeDelfFrances,
+  'purinas-gota-alimento': purinasGotaAlimento,
+  'rate-hora-freelance-nivel': rateHoraFreelanceNivel,
+  'refractometro-cerveza-correccion': refractometroCervezaCorreccion,
+  'regalo-boda-apropiado-invitado': regaloBodaApropiadoInvitado,
+  'regalos-invitado-souvenir': regalosInvitadoSouvenir,
+  'regla-500-astrofotografia-estrellas': regla500AstrofotografiaEstrellas,
+  'regla-600-estrellas': regla600Estrellas,
+  'repaso-optimo-examen': repasoOptimoExamen,
+  'repeticion-espaciada-anki-intervalos': repeticionEspaciadaAnkiIntervalos,
+  'resin-3d-mililitros-pieza': resin3dMililitrosPieza,
+  'resistencia-led-tension-corriente': resistenciaLedTensionCorriente,
+  'retraccion-3d-bowden-direct': retraccion3dBowdenDirect,
+  'roi-ad-spend-amazon-ppc': roiAdSpendAmazonPpc,
+  'roi-ad-spend-facebook-meta': roiAdSpendFacebookMeta,
+  'roi-coaching-1-on-1-venta': roiCoaching1On1Venta,
+  'roi-curso-online-udemy': roiCursoOnlineUdemy,
+  'score-ielts-band-objetivo': scoreIeltsBandObjetivo,
+  'score-toefl-meta': scoreToeflMeta,
+  'selenio-diario-oxidativo': selenioDiarioOxidativo,
+  'seo-trafico-potencial-keyword': seoTraficoPotencialKeyword,
+  'sillas-mesas-invitados': sillasMesasInvitados,
+  'snacks-por-invitado-juntada': snacksPorInvitadoJuntada,
+  'sodio-diario-hipertension': sodioDiarioHipertension,
+  'sparge-water-volumen': spargeWaterVolumen,
+  'speaking-hours-necesarias': speakingHoursNecesarias,
+  'spotify-royalties-streams': spotifyRoyaltiesStreams,
+  'sq3r-tiempo-capitulo': sq3rTiempoCapitulo,
+  'srm-color-cerveza-morey': srmColorCervezaMorey,
+  'staking-ada-rewards': stakingAdaRewards,
+  'staking-atom-rewards': stakingAtomRewards,
+  'staking-avax-rewards': stakingAvaxRewards,
+  'staking-bnb-rewards': stakingBnbRewards,
+  'staking-dot-rewards': stakingDotRewards,
+  'staking-eth-rewards': stakingEthRewards,
+  'staking-matic-rewards': stakingMaticRewards,
+  'staking-sol-rewards': stakingSolRewards,
+  'stop-motion-fps-tiempo': stopMotionFpsTiempo,
+  'streamer-setup-presupuesto': streamerSetupPresupuesto,
+  'substack-suscriptores-meta': substackSuscriptoresMeta,
+  'sushi-por-invitado-cena': sushiPorInvitadoCena,
+  'sushiswap-lp-rewards': sushiswapLpRewards,
+  'tamano-sensor-crop-factor': tamanoSensorCropFactor,
+  'tarjeta-sd-necesaria-sesion': tarjetaSdNecesariaSesion,
+  'tecla-por-minuto-typing-test': teclaPorMinutoTypingTest,
+  'tecnica-memory-palace-tiempo': tecnicaMemoryPalaceTiempo,
+  'tela-cortinas-ventana': telaCortinasVentana,
+  'tela-necesaria-prenda-vestido': telaNecesariaPrendaVestido,
+  'temperatura-acuario-especie': temperaturaAcuarioEspecie,
+  'temperatura-servicio-vino': temperaturaServicioVino,
+  'tiempo-articulo-blog-palabras': tiempoArticuloBlogPalabras,
+  'tiempo-ensayo-universitario': tiempoEnsayoUniversitario,
+  'tiempo-escribir-tesis-palabras': tiempoEscribirTesisPalabras,
+  'tiempo-exposicion-panning': tiempoExposicionPanning,
+  'tiempo-impresion-3d-layer': tiempoImpresion3dLayer,
+  'tiempo-lectura-por-paginas': tiempoLecturaPorPaginas,
+  'tiempo-leer-libro-general': tiempoLeerLibroGeneral,
+  'tiempo-leer-novela-genero': tiempoLeerNovelaGenero,
+  'tiempo-soldadura-tipo-estano': tiempoSoldaduraTipoEstano,
+  'tiktok-creator-fund-ingreso': tiktokCreatorFundIngreso,
+  'tiktok-duracion-optima-video': tiktokDuracionOptimaVideo,
+  'tiktok-engagement-rate': tiktokEngagementRate,
+  'tiktok-hashtags-optimos-nicho': tiktokHashtagsOptimosNicho,
+  'tiktok-live-diamonds-dolares': tiktokLiveDiamondsDolares,
+  'tiktok-mejor-hora-publicar': tiktokMejorHoraPublicar,
+  'tiktok-spark-ads-costo': tiktokSparkAdsCosto,
+  'tiktok-viralizar-views-necesarias': tiktokViralizarViewsNecesarias,
+  'time-lapse-duracion-fotos-maker': timeLapseDuracionFotosMaker,
+  'tornillos-madera-tipo-largo': tornillosMaderaTipoLargo,
+  'torta-personas-kg-porciones': tortaPersonasKgPorciones,
+  'transporte-publico-viaje-presupuesto': transportePublicoViajePresupuesto,
+  'twitch-bits-donaciones-dolares': twitchBitsDonacionesDolares,
+  'twitch-horas-para-afiliado': twitchHorasParaAfiliado,
+  'twitch-horas-para-partner': twitchHorasParaPartner,
+  'twitch-raid-traffic-estimado': twitchRaidTrafficEstimado,
+  'twitch-subs-meta-dolares': twitchSubsMetaDolares,
+  'twitter-x-monetizacion-ingreso': twitterXMonetizacionIngreso,
+  'tyramine-migrana-alimentos': tyramineMigranaAlimentos,
+  'uniswap-v3-fees': uniswapV3Fees,
+  'upgrade-clase-avion-costo': upgradeClaseAvionCosto,
+  'vajilla-alquiler-invitados': vajillaAlquilerInvitados,
+  'velas-torta-cumple': velasTortaCumple,
+  'velocidad-lectura-rapida-ejercicio': velocidadLecturaRapidaEjercicio,
+  'velocidad-obturacion-movimiento': velocidadObturacionMovimiento,
+  'viewers-concurrentes-necesarios-ingreso': viewersConcurrentesNecesariosIngreso,
+  'vino-por-invitado-cena': vinoPorInvitadoCena,
+  'vino-por-invitado-horas-evento': vinoPorInvitadoHorasEvento,
+  'vitamina-b12-vegano': vitaminaB12Vegano,
+  'vitamina-d-por-latitud': vitaminaDPorLatitud,
+  'vocabulario-nivel-idioma': vocabularioNivelIdioma,
+  'vodka-infusion-frutas-tiempo': vodkaInfusionFrutasTiempo,
+  'vuelo-emisiones-co2-pasajero': vueloEmisionesCo2Pasajero,
+  'watts-fuente-alimentacion-pc': wattsFuenteAlimentacionPc,
+  'whisky-por-invitado-evento': whiskyPorInvitadoEvento,
+  'whisky-sour-proporciones': whiskySourProporciones,
+  'yeast-pitch-rate-cerveza': yeastPitchRateCerveza,
+  'yield-farming-apy-real': yieldFarmingApyReal,
+  'yodo-diario-embarazo': yodoDiarioEmbarazo,
+  'youtube-calendario-publicacion': youtubeCalendarioPublicacion,
+  'youtube-ctr-thumbnail-promedio': youtubeCtrThumbnailPromedio,
+  'youtube-retention-rate-benchmark': youtubeRetentionRateBenchmark,
+  'youtube-suscriptores-para-1000': youtubeSuscriptoresPara1000,
+  'youtube-watch-time-horas-subir': youtubeWatchTimeHorasSubir,
+  'zinc-diario-necesidad': zincDiarioNecesidad,
 };

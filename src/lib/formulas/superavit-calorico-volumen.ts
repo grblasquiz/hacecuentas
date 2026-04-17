@@ -55,6 +55,6 @@ export function superavitCaloricoVolumen(i: Inputs): Outputs {
     superavit,
     tdee,
     gananciaMusculoMes,
-    mensaje: `Comé \${caloriasVolumen} kcal/día (TDEE \${tdee} + \${superavit} superávit). Esperá ganar \${gananciaMusculoMes}.`
+    mensaje: `Comé ${caloriasVolumen} kcal/día (TDEE ${tdee} + ${superavit} superávit). Esperá ganar ${gananciaMusculoMes}.`
   };
 }

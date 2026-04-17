@@ -66,6 +66,6 @@ export function macrosObjetivoFitness(i: Inputs): Outputs {
     carbsGr,
     grasaGr,
     tdee,
-    mensaje: `Objetivo \${objLabel}: \${caloriasObjetivo} kcal/día. Proteína: \${proteinaGr}g, Carbs: \${carbsGr}g, Grasa: \${grasaGr}g.`
+    mensaje: `Objetivo ${objLabel}: ${caloriasObjetivo} kcal/día. Proteína: ${proteinaGr}g, Carbs: ${carbsGr}g, Grasa: ${grasaGr}g.`
   };
 }

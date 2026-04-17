@@ -1,0 +1,174 @@
+{
+  "slug": "calculadora-impermanent-loss-pool",
+  "title": "Calculadora Impermanent Loss 2026 — Pérdida vs HODL en Pools 50/50 | Hacé Cuentas",
+  "h1": "Calculadora de Impermanent Loss (Pool 50/50)",
+  "description": "Calculadora impermanent loss: compará LP vs HODL según movimiento de precio. Fórmula exacta Uniswap v2/Balancer 50/50.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "⚖️",
+  "formulaId": "impermanent-loss-pool",
+  "seoKeywords": [
+    "impermanent loss calculadora",
+    "il uniswap",
+    "perdida impermanente defi",
+    "lp vs hodl",
+    "pool 50 50 il",
+    "formula il uniswap v2"
+  ],
+  "intro": "El **impermanent loss (IL)** es la pérdida relativa que sufre un liquidity provider en un pool 50/50 cuando el precio de uno de los tokens se mueve respecto al otro. 'Impermanent' porque desaparece si el precio vuelve al punto inicial; se vuelve **permanente al retirar liquidez**. Esta calculadora usa la fórmula cerrada de Uniswap v2/Balancer 50/50: `IL% = (2√k / (1+k)) − 1` donde `k` es el ratio de precio final/inicial. Ingresá precio inicial, precio actual y el valor USD de tu depósito: te devuelve el IL en %, la diferencia en USD entre LP y HODL, y cuánto necesitás ganar en fees para break-even. Útil para entender el trade-off antes de proveer liquidez.",
+  "keyTakeaway": "Ganancias de precio de 2x → **IL 5.7%**. Precio de 5x → IL 25.5%. Precio de 10x → IL 42.3%. Si el precio NO se mueve, IL = 0. Las fees del pool compensan IL hasta cierto punto.",
+  "useCases": [
+    "Estás por entrar a un pool y querés saber cuánto podés perder.",
+    "Comparás estrategia LP vs HODL para un par ETH/USDC.",
+    "Calculás si los fees del pool compensan el IL esperado.",
+    "Analizás pools de alta volatilidad (nuevos tokens) vs estables.",
+    "Estimás cuánto perdiste históricamente en un pool."
+  ],
+  "fields": [
+    {
+      "id": "initialPrice",
+      "label": "Precio inicial del par",
+      "type": "number",
+      "placeholder": "2000",
+      "min": 0,
+      "step": 0.0001,
+      "required": true
+    },
+    {
+      "id": "currentPrice",
+      "label": "Precio actual del par",
+      "type": "number",
+      "placeholder": "3000",
+      "min": 0,
+      "step": 0.0001,
+      "required": true
+    },
+    {
+      "id": "initialAmountUsd",
+      "label": "Monto inicial USD",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "10000",
+      "min": 0,
+      "step": 100,
+      "required": true
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "ilPercent",
+      "label": "Impermanent loss %",
+      "format": "percent",
+      "primary": true
+    },
+    {
+      "id": "ilUsd",
+      "label": "IL en USD",
+      "format": "currency"
+    },
+    {
+      "id": "valueLp",
+      "label": "Valor LP USD",
+      "format": "currency"
+    },
+    {
+      "id": "valueHodl",
+      "label": "Valor HODL USD",
+      "format": "currency"
+    },
+    {
+      "id": "priceRatio",
+      "label": "Ratio precio (k)",
+      "format": "number"
+    },
+    {
+      "id": "breakEvenFees",
+      "label": "% fees para break-even",
+      "format": "percent"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: LP ETH/USDC, ETH pasa de $2K a $3K",
+    "steps": [
+      "**Ratio**: k = 3,000 / 2,000 = 1.5",
+      "**IL**: (2√1.5 / 2.5) − 1 = 2 × 1.2247 / 2.5 − 1 = **−2.02%**",
+      "**HODL**: $10,000 × (0.5 × 1.5 + 0.5) = $12,500.",
+      "**LP**: $10,000 × √1.5 = $12,247.",
+      "**Pérdida vs HODL**: $253 USD."
+    ],
+    "result": "Necesitás ganar >2.02% en fees para break-even con HODL."
+  },
+  "explanation": "## Fórmula matemática (pool 50/50)\n\nPara un pool Uniswap v2 o Balancer 50/50, el valor relativo del LP vs HODL es:\n\n```\nValue_LP / Value_HODL = 2√k / (1 + k)\nIL % = (2√k / (1 + k)) − 1\n\ndonde k = price_final / price_inicial\n```\n\nEl IL es **siempre negativo o cero** (0 cuando k=1).\n\n## Tabla de IL por movimiento de precio\n\n| Movimiento precio | Ratio k | IL % | Pérdida USD sobre $10K |\n|---|---|---|---|\n| +25% | 1.25 | −0.63% | $63 |\n| +50% | 1.5 | −2.02% | $202 |\n| 2x | 2 | −5.72% | $572 |\n| 3x | 3 | −13.40% | $1,340 |\n| 5x | 5 | −25.46% | $2,546 |\n| 10x | 10 | −42.27% | $4,227 |\n| 100x | 100 | −80.20% | $8,020 |\n| −50% | 0.5 | −5.72% | $572 |\n| −80% | 0.2 | −22.54% | $2,254 |\n\n## Por qué ocurre IL\n\nEl AMM constante `x·y=k` obliga a que cuando el precio sube, el pool **venda el token que sube y compre el que no**. Un holder simple se queda 100% con el token que sube, el LP se queda con menos.\n\n## Formas de mitigar IL\n\n1. **Pool de stables** (USDC/USDT): ratio siempre ~1, IL casi cero.\n2. **Pools correlacionados** (stETH/ETH, WBTC/cbBTC): IL mínimo.\n3. **Curve** usa una fórmula híbrida que minimiza IL para stables.\n4. **Uniswap v3** permite rangos estrechos pero AUMENTA IL dentro del rango.\n5. **IL protection** (Bancor v3, Thorchain): el protocolo absorbe IL (costoso).\n\n## Relación con fees\n\n```\nP&L real = fees ganadas − IL\n```\n\nSi el pool paga 20% APR en fees y el IL en 1 año es 10%, neto ganás 10%. Si IL > fees, conviene HODL.\n\n> **Aviso legal**: Esta calculadora es una herramienta educativa. **No constituye consejo de inversión, ni asesoramiento financiero, fiscal o legal.** Los rendimientos pasados no garantizan resultados futuros. Las criptomonedas son activos volátiles y de alto riesgo. Consultá siempre con un profesional calificado antes de tomar decisiones.",
+  "faq": [
+    {
+      "q": "¿Qué es impermanent loss en simple?",
+      "a": "Es la **diferencia de valor** entre dejar tus tokens quietos (HODL) y ponerlos en un pool AMM 50/50 cuando los precios se mueven. Si ETH sube 50%, el HODL vale más que el LP por ~2%. 'Impermanent' porque si el precio vuelve al inicio, el IL desaparece."
+    },
+    {
+      "q": "¿Se puede evitar el impermanent loss?",
+      "a": "**No se puede eliminar** en un AMM de precios variables. Se minimiza con: pools de stables, pools de tokens correlacionados (ETH/stETH), o con protocolos que usan rango dinámico como Uniswap v3 (trade-off: IL dentro del rango, sin fees fuera)."
+    },
+    {
+      "q": "¿Cómo compensan los fees el IL?",
+      "a": "Si `fees_APR > IL_%/año esperado`, el pool es rentable. Ej: pool ETH/USDC pagando 20% APR en fees vs IL de 10% anual = +10% net. Para evaluarlo, estimá la volatilidad del par y usá nuestra [calculadora de LP Uniswap v3](/calculadora-uniswap-v3-fees-liquidez)."
+    },
+    {
+      "q": "¿El IL pasa también si el precio baja?",
+      "a": "Sí, el IL es **simétrico**. Si ETH cae 50%, el IL es el mismo que si hubiera subido 50%. Solo importa el **ratio absoluto** de cambio."
+    },
+    {
+      "q": "¿Qué pools son mejores contra IL?",
+      "a": "Stables puros (USDC/USDT): IL casi cero, fees bajas. LSTs correlacionados (stETH/ETH, cbETH/ETH): IL mínimo, fees medias. WBTC/ETH, ETH/USDC: alto IL esperado, altas fees. Meme/ETH: máximo IL, fees altas en volumen inicial."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Uniswap v2 whitepaper",
+      "url": "https://docs.uniswap.org/whitepaper.pdf"
+    },
+    {
+      "name": "Balancer docs - IL",
+      "url": "https://docs.balancer.fi"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-uniswap-v3-fees-liquidez",
+    "calculadora-sushiswap-lp-rewards",
+    "calculadora-curve-stable-pool-apy",
+    "calculadora-yield-farming-apy-real"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá precio inicial del par",
+      "text": "Ingresá precio inicial del par (ej: 2000). Es el valor de precio inicial del par."
+    },
+    {
+      "name": "Ingresá precio actual del par",
+      "text": "Ingresá precio actual del par (ej: 3000). Es el valor de precio actual del par."
+    },
+    {
+      "name": "Ingresá monto inicial usd",
+      "text": "Ingresá monto inicial usd (ej: 10000). Es el valor de monto inicial usd."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\" para obtener el resultado. La calculadora procesa los datos al instante."
+    },
+    {
+      "name": "Revisá los resultados",
+      "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
+    }
+  ]
+}

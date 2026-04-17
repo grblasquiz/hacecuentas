@@ -31,9 +31,9 @@ export function creatinaDosisarga(i: Inputs): Outputs {
 
   let mensaje: string;
   if (protocolo === 'carga') {
-    mensaje = `Carga: \${dosisCargaDiaria}g/día (\${dosisCargaPorToma}g x 4 tomas) durante 5 días. Después mantenimiento: \${dosisMantenimiento}g/día.`;
+    mensaje = `Carga: ${dosisCargaDiaria}g/día (${dosisCargaPorToma}g x 4 tomas) durante 5 días. Después mantenimiento: ${dosisMantenimiento}g/día.`;
   } else {
-    mensaje = `Directo a mantenimiento: \${dosisMantenimiento}g/día. Saturación completa en ~28 días.`;
+    mensaje = `Directo a mantenimiento: ${dosisMantenimiento}g/día. Saturación completa en ~28 días.`;
   }
 
   return { dosisMantenimiento, dosisCargaDiaria, dosisCargaPorToma, diasCarga, poteDuracion, mensaje };
