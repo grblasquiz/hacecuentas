@@ -1942,6 +1942,15 @@ const formatFreshnessDate = (iso: string): string => {
       errorBox.hidden = true;
       errorBox.textContent = '';
 
+      // GA4 event: click en "Calcular" (independiente de si el cálculo es exitoso o no).
+      // Útil para medir intent + engagement vs. calcs que se abandonan por errores de input.
+      if (typeof (window as any).gtag === 'function') {
+        (window as any).gtag('event', 'calculate_click', {
+          calc_slug: slug,
+          formula_id: formulaId,
+        });
+      }
+
       // Loading state
       submitBtn.classList.add('loading');
       submitBtn.disabled = true;
