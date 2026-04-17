@@ -38,6 +38,48 @@ interface Calc {
   category?: string;
 }
 
+// Paleta por categoría — cada calc hereda un color de marca.
+// Los gradients combinan 2 tonos: base (55%) y acento (100%).
+// También devolvemos el color del "accent bar" superior.
+interface CategoryTheme {
+  base: string;     // inicio del gradient (tono oscuro)
+  mid: string;      // medio del gradient
+  accent: string;   // final del gradient + accent bar + badge + logo
+  label: string;    // texto legible del badge
+}
+
+const CATEGORY_THEMES: Record<string, CategoryTheme> = {
+  finanzas:       { base: '#052e16', mid: '#14532d', accent: '#22c55e', label: 'Finanzas' },
+  negocios:       { base: '#0f172a', mid: '#1e3a8a', accent: '#3b82f6', label: 'Negocios' },
+  marketing:      { base: '#1e1b4b', mid: '#4c1d95', accent: '#a855f7', label: 'Marketing' },
+  salud:          { base: '#500724', mid: '#9f1239', accent: '#f43f5e', label: 'Salud' },
+  deportes:       { base: '#431407', mid: '#9a3412', accent: '#f97316', label: 'Deportes' },
+  viajes:         { base: '#042f2e', mid: '#115e59', accent: '#06b6d4', label: 'Viajes' },
+  vida:           { base: '#172554', mid: '#1e40af', accent: '#60a5fa', label: 'Vida' },
+  mascotas:       { base: '#431407', mid: '#78350f', accent: '#f59e0b', label: 'Mascotas' },
+  matematica:     { base: '#0c0a09', mid: '#1e293b', accent: '#6366f1', label: 'Matemática' },
+  ciencia:        { base: '#1e1b4b', mid: '#312e81', accent: '#818cf8', label: 'Ciencia' },
+  cocina:         { base: '#422006', mid: '#713f12', accent: '#eab308', label: 'Cocina' },
+  educacion:      { base: '#064e3b', mid: '#065f46', accent: '#10b981', label: 'Educación' },
+  tecnologia:     { base: '#020617', mid: '#1e293b', accent: '#38bdf8', label: 'Tecnología' },
+  construccion:   { base: '#292524', mid: '#44403c', accent: '#eab308', label: 'Construcción' },
+  automotor:      { base: '#450a0a', mid: '#7f1d1d', accent: '#dc2626', label: 'Automotor' },
+  jardineria:     { base: '#052e16', mid: '#166534', accent: '#84cc16', label: 'Jardinería' },
+  'medio-ambiente': { base: '#022c22', mid: '#064e3b', accent: '#10b981', label: 'Medio Ambiente' },
+  electronica:    { base: '#082f49', mid: '#0c4a6e', accent: '#0ea5e9', label: 'Electrónica' },
+  entretenimiento: { base: '#3b0764', mid: '#6b21a8', accent: '#d946ef', label: 'Entretenimiento' },
+  auto:           { base: '#450a0a', mid: '#7f1d1d', accent: '#dc2626', label: 'Automotor' },
+};
+
+const DEFAULT_THEME: CategoryTheme = {
+  base: '#0f172a', mid: '#1e293b', accent: '#60a5fa', label: 'Calculadora',
+};
+
+function getTheme(category?: string): CategoryTheme {
+  if (!category) return DEFAULT_THEME;
+  return CATEGORY_THEMES[category] || DEFAULT_THEME;
+}
+
 // ---------------------------------------------------------------------------
 // Font loading (Inter 700 + 400 from Google Fonts, cached locally)
 // ---------------------------------------------------------------------------
@@ -98,12 +140,13 @@ function truncate(str: string, max: number): string {
  */
 function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
   const title = truncate(calc.h1, 60);
-  const description = truncate(calc.description, 160);
+  const description = truncate(calc.description, 140);
   const icon = calc.icon && calc.icon.trim().length > 0 ? calc.icon : '🧮';
+  const theme = getTheme(calc.category);
 
-  // Deep-blue gradient + subtle radial accent top-right for depth.
-  const background =
-    'linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #1e3a8a 100%)';
+  // Fondo: gradient diagonal que va del tono oscuro al tono accent.
+  // Cada categoría tiene su paleta propia → OG images visualmente distintas.
+  const background = `linear-gradient(135deg, ${theme.base} 0%, ${theme.mid} 55%, ${theme.accent} 100%)`;
 
   return {
     type: 'div',
@@ -113,14 +156,46 @@ function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
         height: '630px',
         display: 'flex',
         flexDirection: 'column',
-        padding: '72px',
+        padding: '72px 72px 60px',
         background,
-        color: '#f1f5f9',
+        color: '#f8fafc',
         fontFamily: 'Inter',
         position: 'relative',
       },
       children: [
-        // Accent bar
+        // Glow radial decorativo (esquina superior derecha)
+        {
+          type: 'div',
+          props: {
+            style: {
+              position: 'absolute',
+              top: '-160px',
+              right: '-160px',
+              width: '500px',
+              height: '500px',
+              borderRadius: '500px',
+              background: `radial-gradient(circle, ${theme.accent}55 0%, transparent 70%)`,
+              display: 'flex',
+            },
+          },
+        },
+        // Glow radial secundario (esquina inferior izquierda, sutil)
+        {
+          type: 'div',
+          props: {
+            style: {
+              position: 'absolute',
+              bottom: '-120px',
+              left: '-120px',
+              width: '400px',
+              height: '400px',
+              borderRadius: '400px',
+              background: `radial-gradient(circle, ${theme.accent}22 0%, transparent 65%)`,
+              display: 'flex',
+            },
+          },
+        },
+        // Accent bar superior
         {
           type: 'div',
           props: {
@@ -129,23 +204,64 @@ function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
               top: 0,
               left: 0,
               width: '100%',
-              height: '8px',
-              background: '#60a5fa',
+              height: '10px',
+              background: theme.accent,
               display: 'flex',
             },
           },
         },
-        // Icon
+        // Top row: badge categoría + icon en círculo
         {
           type: 'div',
           props: {
             style: {
-              fontSize: '112px',
-              lineHeight: 1,
-              marginBottom: '28px',
               display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+              marginBottom: '40px',
             },
-            children: icon,
+            children: [
+              // Badge de categoría
+              {
+                type: 'div',
+                props: {
+                  style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '12px 22px',
+                    background: `${theme.accent}33`,
+                    border: `2px solid ${theme.accent}`,
+                    borderRadius: '999px',
+                    fontSize: '22px',
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                  },
+                  children: theme.label,
+                },
+              },
+              // Icon grande en círculo con gradient
+              {
+                type: 'div',
+                props: {
+                  style: {
+                    width: '140px',
+                    height: '140px',
+                    borderRadius: '140px',
+                    background: `linear-gradient(135deg, ${theme.accent}66 0%, ${theme.accent}22 100%)`,
+                    border: `3px solid ${theme.accent}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '82px',
+                    lineHeight: 1,
+                  },
+                  children: icon,
+                },
+              },
+            ],
           },
         },
         // Title
@@ -153,12 +269,12 @@ function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
           type: 'div',
           props: {
             style: {
-              fontSize: '60px',
+              fontSize: '68px',
               fontWeight: 800,
-              lineHeight: 1.1,
-              letterSpacing: '-0.02em',
-              color: '#f1f5f9',
-              marginBottom: '20px',
+              lineHeight: 1.05,
+              letterSpacing: '-0.025em',
+              color: '#ffffff',
+              marginBottom: '24px',
               display: 'flex',
             },
             children: title,
@@ -169,10 +285,10 @@ function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
           type: 'div',
           props: {
             style: {
-              fontSize: '28px',
+              fontSize: '26px',
               fontWeight: 400,
-              lineHeight: 1.35,
-              color: '#cbd5e1',
+              lineHeight: 1.4,
+              color: '#e2e8f0',
               maxWidth: '1056px',
               display: 'flex',
             },
@@ -195,7 +311,7 @@ function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
               alignItems: 'center',
               justifyContent: 'space-between',
               width: '100%',
-              borderTop: '1px solid #334155',
+              borderTop: `2px solid ${theme.accent}55`,
               paddingTop: '28px',
             },
             children: [
@@ -205,26 +321,27 @@ function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
                   style: {
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '14px',
-                    fontSize: '24px',
-                    fontWeight: 700,
-                    color: '#f1f5f9',
+                    gap: '18px',
+                    fontSize: '30px',
+                    fontWeight: 800,
+                    color: '#ffffff',
                   },
                   children: [
                     {
                       type: 'div',
                       props: {
                         style: {
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '10px',
-                          background: '#60a5fa',
-                          color: '#0f172a',
+                          width: '56px',
+                          height: '56px',
+                          borderRadius: '14px',
+                          background: theme.accent,
+                          color: theme.base,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '22px',
+                          fontSize: '28px',
                           fontWeight: 800,
+                          letterSpacing: '-0.02em',
                         },
                         children: 'HC',
                       },
@@ -232,7 +349,7 @@ function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
                     {
                       type: 'div',
                       props: {
-                        style: { display: 'flex' },
+                        style: { display: 'flex', letterSpacing: '-0.015em' },
                         children: 'Hacé Cuentas',
                       },
                     },
@@ -243,12 +360,18 @@ function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
                 type: 'div',
                 props: {
                   style: {
-                    fontSize: '22px',
-                    fontWeight: 400,
-                    color: '#94a3b8',
                     display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px 18px',
+                    background: '#ffffff15',
+                    border: '1px solid #ffffff33',
+                    borderRadius: '999px',
+                    fontSize: '20px',
+                    fontWeight: 600,
+                    color: '#f1f5f9',
                   },
-                  children: 'hacecuentas.com',
+                  children: 'Gratis · Sin registro',
                 },
               },
             ],
