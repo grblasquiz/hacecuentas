@@ -1704,6 +1704,36 @@ import { consumoElectronicaHogarWattsMensual } from './consumo-electronica-hogar
 import { densidadPixelesPantallaPpiRetina } from './densidad-pixeles-pantalla-ppi-retina';
 import { tiempoCargaPaginaWebMetricas } from './tiempo-carga-pagina-web-metricas';
 import { conexionesDbPoolMaxConcurrentes } from './conexiones-db-pool-max-concurrentes';
+import { consumoCombustibleKmLitro } from './consumo-combustible-km-litro';
+import { costoViajeCombustibleKilometros } from './costo-viaje-combustible-kilometros';
+import { autonomiaTanqueLlenoKilometros } from './autonomia-tanque-lleno-kilometros';
+import { cilindradaMotorRelacionPotencia } from './cilindrada-motor-relacion-potencia';
+import { conversionHpKwCaballosKilowatts } from './conversion-hp-kw-caballos-kilowatts';
+import { conversionMedidaNeumaticoRadioDiametro } from './conversion-medida-neumatico-radio-diametro';
+import { aceiteMotorCapacidadCambioKm } from './aceite-motor-capacidad-cambio-km';
+import { velocidadAutoRpmMarchaRelacion } from './velocidad-auto-rpm-marcha-relacion';
+import { distanciaFrenadoVelocidadAdhesion } from './distancia-frenado-velocidad-adhesion';
+import { costoMantenimientoAutoAnualKm } from './costo-mantenimiento-auto-anual-km';
+import { conversionVelocidadKmhMphNudos } from './conversion-velocidad-kmh-mph-nudos';
+import { ahorroAutoElectricoVsNaftaAnual } from './ahorro-auto-electrico-vs-nafta-anual';
+import { patenteArgentinaAntiguedadVehiculo } from './patente-argentina-antiguedad-vehiculo';
+import { seguroAutoCuotaMensualCobertura } from './seguro-auto-cuota-mensual-cobertura';
+import { depreciacionAutoAnualValorResidual } from './depreciacion-auto-anual-valor-residual';
+import { ccaBateriaAutoTemperaturaMotor } from './cca-bateria-auto-temperatura-motor';
+import { presionNeumaticoPsiBarAuto } from './presion-neumatico-psi-bar-auto';
+import { consumoAireAcondicionadoAutoExtra } from './consumo-aire-acondicionado-auto-extra';
+import { correaDistribucionCambioIntervaloKm } from './correa-distribucion-cambio-intervalo-km';
+import { conversionTorqueNmLbFtKgm } from './conversion-torque-nm-lb-ft-kgm';
+import { ahorroGncVsNaftaAnualArs } from './ahorro-gnc-vs-nafta-anual-ars';
+import { leasingAutoMensualVsCompra } from './leasing-auto-mensual-vs-compra';
+import { litrosNaftaPorSalarioPoderCompra } from './litros-nafta-por-salario-poder-compra';
+import { emisionesCo2AutoGKmAnual } from './emisiones-co2-auto-g-km-anual';
+import { vtvRutaVencimientoVigenciaMeses } from './vtv-ruta-vencimiento-vigencia-meses';
+import { cuotaPrestamoAutoFrancesArgentino } from './cuota-prestamo-auto-frances-argentino';
+import { capacidadCargaCamionetaPesoUtil } from './capacidad-carga-camioneta-peso-util';
+import { tiempoViajeAutoDistanciaVelocidadParadas } from './tiempo-viaje-auto-distancia-velocidad-paradas';
+import { suspensionAlturaLibrePisoAuto } from './suspension-altura-libre-piso-auto';
+import { circunferenciaRuedaVelocimetroExacto } from './circunferencia-rueda-velocimetro-exacto';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3407,4 +3437,34 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'densidad-pixeles-pantalla-ppi-retina': densidadPixelesPantallaPpiRetina,
   'tiempo-carga-pagina-web-metricas': tiempoCargaPaginaWebMetricas,
   'conexiones-db-pool-max-concurrentes': conexionesDbPoolMaxConcurrentes,
+  'consumo-combustible-km-litro': consumoCombustibleKmLitro,
+  'costo-viaje-combustible-kilometros': costoViajeCombustibleKilometros,
+  'autonomia-tanque-lleno-kilometros': autonomiaTanqueLlenoKilometros,
+  'cilindrada-motor-relacion-potencia': cilindradaMotorRelacionPotencia,
+  'conversion-hp-kw-caballos-kilowatts': conversionHpKwCaballosKilowatts,
+  'conversion-medida-neumatico-radio-diametro': conversionMedidaNeumaticoRadioDiametro,
+  'aceite-motor-capacidad-cambio-km': aceiteMotorCapacidadCambioKm,
+  'velocidad-auto-rpm-marcha-relacion': velocidadAutoRpmMarchaRelacion,
+  'distancia-frenado-velocidad-adhesion': distanciaFrenadoVelocidadAdhesion,
+  'costo-mantenimiento-auto-anual-km': costoMantenimientoAutoAnualKm,
+  'conversion-velocidad-kmh-mph-nudos': conversionVelocidadKmhMphNudos,
+  'ahorro-auto-electrico-vs-nafta-anual': ahorroAutoElectricoVsNaftaAnual,
+  'patente-argentina-antiguedad-vehiculo': patenteArgentinaAntiguedadVehiculo,
+  'seguro-auto-cuota-mensual-cobertura': seguroAutoCuotaMensualCobertura,
+  'depreciacion-auto-anual-valor-residual': depreciacionAutoAnualValorResidual,
+  'cca-bateria-auto-temperatura-motor': ccaBateriaAutoTemperaturaMotor,
+  'presion-neumatico-psi-bar-auto': presionNeumaticoPsiBarAuto,
+  'consumo-aire-acondicionado-auto-extra': consumoAireAcondicionadoAutoExtra,
+  'correa-distribucion-cambio-intervalo-km': correaDistribucionCambioIntervaloKm,
+  'conversion-torque-nm-lb-ft-kgm': conversionTorqueNmLbFtKgm,
+  'ahorro-gnc-vs-nafta-anual-ars': ahorroGncVsNaftaAnualArs,
+  'leasing-auto-mensual-vs-compra': leasingAutoMensualVsCompra,
+  'litros-nafta-por-salario-poder-compra': litrosNaftaPorSalarioPoderCompra,
+  'emisiones-co2-auto-g-km-anual': emisionesCo2AutoGKmAnual,
+  'vtv-ruta-vencimiento-vigencia-meses': vtvRutaVencimientoVigenciaMeses,
+  'cuota-prestamo-auto-frances-argentino': cuotaPrestamoAutoFrancesArgentino,
+  'capacidad-carga-camioneta-peso-util': capacidadCargaCamionetaPesoUtil,
+  'tiempo-viaje-auto-distancia-velocidad-paradas': tiempoViajeAutoDistanciaVelocidadParadas,
+  'suspension-altura-libre-piso-auto': suspensionAlturaLibrePisoAuto,
+  'circunferencia-rueda-velocimetro-exacto': circunferenciaRuedaVelocimetroExacto,
 };
