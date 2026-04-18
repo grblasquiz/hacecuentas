@@ -144,7 +144,7 @@ sitemaps.push({
     { loc: `${site}/buscar`, priority: '0.7', changefreq: 'monthly', lastmod: buildDate },
     { loc: `${site}/comparador-plazo-fijo`, priority: '0.85', changefreq: 'daily', lastmod: buildDate },
     { loc: `${site}/valores-bcra`, priority: '0.85', changefreq: 'daily', lastmod: buildDate },
-    { loc: `${site}/dolar-hoy`, priority: '0.95', changefreq: 'hourly', lastmod: buildDate },
+    { loc: `${site}/cambio-de-monedas`, priority: '0.95', changefreq: 'hourly', lastmod: buildDate },
     { loc: `${site}/embeber`, priority: '0.6', changefreq: 'monthly', lastmod: buildDate },
     { loc: `${site}/sobre-nosotros`, priority: '0.5', changefreq: 'yearly', lastmod: buildDate },
     { loc: `${site}/privacidad`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
