@@ -1,0 +1,716 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Cambio de Monedas Hoy — Dólar Blue, Euro, Real en Vivo | Hacé Cuentas';
+const description = 'Cotizaciones en vivo de dólar blue, oficial, MEP, CCL, tarjeta, cripto, euro, real y 150+ monedas. Convertí entre cualquier divisa al tipo de cambio actualizado.';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Cambio de Monedas en Vivo',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  description,
+  offers: { '@type': 'Offer', price: '0' },
+};
+
+const faq = [
+  {
+    q: '¿De dónde salen las cotizaciones?',
+    a: 'Los valores del <strong>dólar argentino</strong> (blue, oficial, MEP, CCL, tarjeta, cripto, mayorista) y monedas regionales (EUR, BRL, CLP, UYU) vienen de <a href="https://dolarapi.com" rel="noopener">dolarapi.com</a>, que agrega casas de cambio y bancos en tiempo real. Los tipos de cambio <strong>internacionales</strong> (USD a 160+ monedas del mundo) salen de <a href="https://www.exchangerate-api.com" rel="noopener">open.er-api.com</a>, basado en datos oficiales de bancos centrales.',
+  },
+  {
+    q: '¿Cada cuánto se actualiza?',
+    a: 'La primera vez que abrís esta página se hace la consulta en vivo. Luego guardamos el valor <strong>15 minutos</strong> en tu navegador (localStorage) para no saturar las APIs. Tocá el botón <em>Actualizar</em> para forzar una consulta nueva.',
+  },
+  {
+    q: '¿Qué diferencia hay entre blue, oficial, MEP, CCL y tarjeta?',
+    a: '<strong>Oficial</strong>: cotización regulada del BCRA. <strong>Blue</strong>: mercado informal (efectivo en cueva). <strong>MEP</strong> (bolsa): comprás bonos en pesos y los vendés en USD. <strong>CCL</strong> (contado con liqui): bonos en CABA y acreditación USD afuera. <strong>Tarjeta</strong>: oficial + percepciones (≈60% extra en 2026). <strong>Cripto</strong>: USDT/USDC en exchanges.',
+  },
+  {
+    q: '¿Qué cotización me conviene para viajar?',
+    a: 'Depende del destino y forma de pago. Para <strong>efectivo en destino</strong> (comprar USD/EUR en Argentina y llevarlos): generalmente <strong>blue o MEP</strong>. Para <strong>tarjeta</strong>: se aplica el tipo <em>tarjeta</em> (oficial + 60%) en la mayoría de casos, salvo Brasil donde podés pagar con QR PIX que toma oficial sin percepciones.',
+  },
+  {
+    q: '¿Qué es la brecha cambiaria?',
+    a: '<strong>Brecha = (blue - oficial) / oficial × 100</strong>. Mide cuánto más caro está el dólar paralelo frente al oficial. Una brecha superior al 30% suele indicar tensión cambiaria; debajo del 10% suele ser síntoma de estabilidad.',
+  },
+  {
+    q: '¿Puedo usar esta calculadora offline?',
+    a: 'Una vez cargada, podés seguir convirtiendo con la última cotización guardada aunque pierdas conexión. El indicador <em>“Actualizado hace X min”</em> te avisa cuán fresco es el dato.',
+  },
+  {
+    q: '¿Qué monedas soporta?',
+    a: 'Todas las <strong>argentinas</strong> (dólar en sus 7 variantes + euro, real, chileno, uruguayo con la cotización de AR). Y <strong>~160 monedas internacionales</strong> basadas en USD: EUR, GBP, JPY, CNY, MXN, BRL, CLP, COP, PEN, y muchas más.',
+  },
+  {
+    q: '¿Guardan mi historial de consultas?',
+    a: 'No. Todo corre en tu navegador. No enviamos datos a servidores nuestros ni de terceros más allá de la llamada a la API de cotizaciones.',
+  },
+];
+
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
+  })),
+};
+---
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="fx-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Cambio de monedas</span>
+    </nav>
+
+    <header class="fx-header">
+      <h1>Cambio de monedas en vivo 💱</h1>
+      <p class="lead">
+        Convertí entre <strong>dólar (blue, oficial, MEP, CCL, cripto, tarjeta)</strong>, <strong>euro, real, libra, yen</strong> y 160+ monedas más. Cotizaciones actualizadas en vivo.
+      </p>
+      <div class="fx-status" id="status">
+        <span class="dot" id="status-dot"></span>
+        <span id="status-text">Cargando cotizaciones…</span>
+        <button id="refresh" class="btn-refresh" aria-label="Actualizar cotizaciones">↻ Actualizar</button>
+      </div>
+    </header>
+
+    <section class="converter">
+      <h2>Conversor</h2>
+      <div class="conv-grid">
+        <div class="conv-side">
+          <label for="from-amount">Monto</label>
+          <input id="from-amount" type="text" inputmode="decimal" value="100" autocomplete="off" />
+          <select id="from-currency" class="select-coin">
+            <option value="USD_BLUE">🇦🇷 USD Blue (AR)</option>
+          </select>
+        </div>
+
+        <button id="swap" class="swap-btn" aria-label="Invertir monedas">⇄</button>
+
+        <div class="conv-side">
+          <label for="to-amount">Equivale a</label>
+          <input id="to-amount" type="text" inputmode="decimal" readonly />
+          <select id="to-currency" class="select-coin">
+            <option value="ARS">🇦🇷 ARS (Peso)</option>
+          </select>
+        </div>
+      </div>
+      <p class="rate-line" id="rate-line">—</p>
+    </section>
+
+    <section class="ar-rates">
+      <h2>🇦🇷 Cotización del dólar hoy en Argentina</h2>
+      <p class="section-sub">Valores para <strong>1 USD</strong> en pesos argentinos. Compra / venta, con variación del día.</p>
+      <div class="rates-table" id="ar-table">
+        <div class="loading">Cargando…</div>
+      </div>
+      <div class="brecha-box" id="brecha-box"></div>
+    </section>
+
+    <section class="intl-rates">
+      <h2>🌍 Cotizaciones internacionales</h2>
+      <p class="section-sub">Tipo de cambio base <strong>USD</strong> contra <span id="intl-count">~160</span> monedas del mundo. <input type="text" id="intl-search" placeholder="Buscar moneda (ej: yen, BRL, peso)…" class="search-intl" /></p>
+      <div class="rates-table" id="intl-table">
+        <div class="loading">Cargando…</div>
+      </div>
+      <button id="intl-toggle" class="btn-more">Ver todas las monedas</button>
+    </section>
+
+    <section class="related">
+      <h2>Relacionadas</h2>
+      <ul class="rel-grid">
+        <li><a href="/calculadora-dolar-blue-vs-oficial-brecha">Calcular brecha dólar blue vs oficial</a></li>
+        <li><a href="/calculadora-sueldo-en-dolares">Sueldo en dólares</a></li>
+        <li><a href="/calculadora-cedear-ratio-conversion-dolares">CEDEAR: ratio de conversión</a></li>
+        <li><a href="/calculadora-precio-dolar-producto">Precio de un producto en dólares</a></li>
+        <li><a href="/calculadora-brecha-dolar-blue-mep-ccl-oficial">Brecha dólar blue vs MEP vs CCL</a></li>
+        <li><a href="/comparador-plazo-fijo">Comparar plazo fijo en bancos</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      <div class="faq-list">
+        {faq.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <div class="faq-answer" set:html={f.a}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="method">
+      <h2>Cómo funciona</h2>
+      <p>Esta página consulta dos APIs públicas de cotizaciones en el momento en que la cargás:</p>
+      <ul>
+        <li><strong>dolarapi.com</strong> → trae las 7 cotizaciones del dólar argentino (oficial, blue, MEP, CCL, tarjeta, cripto, mayorista) y las de EUR, BRL, CLP y UYU contra el peso argentino.</li>
+        <li><strong>open.er-api.com</strong> → trae un diccionario <em>USD → 160+ monedas</em> para conversiones internacionales sin Argentina de por medio.</li>
+      </ul>
+      <p>Las cotizaciones se guardan <strong>15 minutos</strong> en tu navegador. Al tocar <em>Actualizar</em> forzás una consulta nueva. No guardamos nada en servidores nuestros.</p>
+      <p class="disclaimer">⚠️ <strong>Aviso:</strong> los valores son orientativos. Para transacciones reales, verificá con tu banco o casa de cambio. Las APIs pueden demorar minutos en reflejar movimientos.</p>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .fx-page { max-width: 1000px; margin: 0 auto; padding: 1rem 1.25rem 4rem; }
+  .breadcrumbs { font-size: .875rem; color: #64748b; margin-bottom: 1rem; }
+  .breadcrumbs a { color: #2563eb; text-decoration: none; }
+  .breadcrumbs .sep { margin: 0 .4rem; }
+  .fx-header h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); margin: 0 0 .5rem; color: #0f172a; }
+  .lead { color: #475569; font-size: 1.05rem; margin: 0 0 1rem; line-height: 1.55; }
+  .fx-status { display: flex; align-items: center; gap: .75rem; padding: .6rem .9rem; background: #f1f5f9; border-radius: 8px; font-size: .9rem; color: #475569; flex-wrap: wrap; }
+  .fx-status .dot { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; display: inline-block; }
+  .fx-status .dot.ok { background: #10b981; box-shadow: 0 0 6px rgba(16,185,129,.5); }
+  .fx-status .dot.err { background: #ef4444; }
+  .btn-refresh { margin-left: auto; background: #2563eb; color: white; border: 0; padding: .4rem .8rem; border-radius: 6px; cursor: pointer; font-size: .85rem; font-weight: 600; }
+  .btn-refresh:hover { background: #1d4ed8; }
+
+  .converter { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+  .converter h2 { margin: 0 0 1rem; font-size: 1.25rem; }
+  .conv-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; align-items: end; }
+  .conv-side { display: flex; flex-direction: column; gap: .5rem; }
+  .conv-side label { font-size: .85rem; color: #64748b; font-weight: 600; }
+  .conv-side input { font-size: 1.5rem; padding: .6rem .8rem; border: 2px solid #e2e8f0; border-radius: 8px; font-weight: 700; color: #0f172a; }
+  .conv-side input:focus { outline: none; border-color: #2563eb; }
+  .select-coin { padding: .5rem; border: 1px solid #cbd5e1; border-radius: 6px; background: white; font-size: .95rem; cursor: pointer; }
+  .swap-btn { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 50%; width: 44px; height: 44px; font-size: 1.25rem; cursor: pointer; color: #475569; align-self: end; margin-bottom: .2rem; }
+  .swap-btn:hover { background: #2563eb; color: white; border-color: #2563eb; }
+  .rate-line { margin: 1rem 0 0; padding: .75rem; background: #f1f5f9; border-radius: 6px; font-size: .9rem; color: #475569; text-align: center; }
+
+  @media (max-width: 640px) {
+    .conv-grid { grid-template-columns: 1fr; gap: .75rem; }
+    .swap-btn { justify-self: center; transform: rotate(90deg); margin: 0; }
+  }
+
+  .ar-rates, .intl-rates { margin: 2rem 0; }
+  .section-sub { color: #64748b; font-size: .9rem; margin: 0 0 1rem; }
+  .rates-table { background: white; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+  .rate-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 1rem; padding: .85rem 1rem; border-bottom: 1px solid #f1f5f9; align-items: center; font-size: .95rem; }
+  .rate-row:last-child { border-bottom: 0; }
+  .rate-row .nom { font-weight: 600; color: #0f172a; }
+  .rate-row .sub { font-size: .8rem; color: #64748b; display: block; font-weight: 400; }
+  .rate-row .val { font-variant-numeric: tabular-nums; font-weight: 700; color: #0f172a; }
+  .rate-row .var { font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .rate-row .var.up { color: #dc2626; }
+  .rate-row .var.down { color: #059669; }
+  .rate-row .var.neutral { color: #94a3b8; }
+  .rate-row .cp { font-size: .8rem; color: #64748b; font-variant-numeric: tabular-nums; }
+  .loading { padding: 2rem; text-align: center; color: #94a3b8; }
+
+  .brecha-box { margin-top: 1rem; padding: 1rem; background: linear-gradient(90deg, #fef3c7, #fef9c3); border-left: 4px solid #eab308; border-radius: 6px; font-size: .95rem; color: #78350f; }
+  .brecha-box strong { color: #713f12; }
+
+  .search-intl { margin-left: .5rem; padding: .35rem .6rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: .85rem; min-width: 220px; }
+  .search-intl:focus { outline: none; border-color: #2563eb; }
+  .btn-more { display: block; margin: .75rem auto 0; background: #f1f5f9; color: #2563eb; border: 1px solid #cbd5e1; padding: .55rem 1.25rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: .9rem; }
+  .btn-more:hover { background: #e0e7ff; border-color: #2563eb; }
+
+  .related { margin: 2.5rem 0; }
+  .rel-grid { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .75rem; }
+  .rel-grid li a { display: block; padding: .75rem 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #2563eb; text-decoration: none; font-weight: 500; }
+  .rel-grid li a:hover { background: #e0e7ff; }
+
+  .faq { margin: 2.5rem 0; }
+  .faq h2 { margin: 0 0 1rem; }
+  .faq-list details { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: .5rem; overflow: hidden; }
+  .faq-list summary { padding: 1rem; cursor: pointer; font-weight: 600; color: #0f172a; background: #f8fafc; list-style: none; }
+  .faq-list summary::after { content: '+'; float: right; font-size: 1.25rem; color: #94a3b8; transition: transform .2s; }
+  .faq-list details[open] summary::after { content: '−'; }
+  .faq-list details[open] summary { background: #e0e7ff; }
+  .faq-answer { padding: 1rem; color: #475569; line-height: 1.6; }
+  .faq-answer a { color: #2563eb; }
+
+  .method { margin: 2.5rem 0; color: #475569; line-height: 1.6; background: #f8fafc; padding: 1.5rem; border-radius: 10px; }
+  .method h2 { margin: 0 0 .75rem; color: #0f172a; }
+  .method ul { padding-left: 1.25rem; }
+  .method li { margin: .5rem 0; }
+  .disclaimer { margin-top: 1rem; font-size: .9rem; padding: .75rem; background: #fef2f2; border-left: 3px solid #ef4444; color: #991b1b; border-radius: 4px; }
+</style>
+
+<script>
+  // ==========================================================
+  //  CACHE HELPERS (localStorage 15 min)
+  // ==========================================================
+  const CACHE_MIN = 15;
+  const CACHE_MS = CACHE_MIN * 60 * 1000;
+
+  interface Cached<T> { ts: number; data: T; }
+
+  function getCache<T>(key: string): T | null {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const obj = JSON.parse(raw) as Cached<T>;
+      if (Date.now() - obj.ts > CACHE_MS) return null;
+      return obj.data;
+    } catch { return null; }
+  }
+
+  function setCache<T>(key: string, data: T) {
+    try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data })); } catch {}
+  }
+
+  function getCacheTs(key: string): number | null {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      return (JSON.parse(raw) as Cached<unknown>).ts;
+    } catch { return null; }
+  }
+
+  // ==========================================================
+  //  API FETCHERS
+  // ==========================================================
+  interface DolarQuote { casa: string; nombre: string; compra: number; venta: number; fechaActualizacion: string; }
+  interface IntlRates { base_code: string; rates: Record<string, number>; time_last_update_unix: number; }
+
+  async function fetchArDolares(): Promise<DolarQuote[]> {
+    const cached = getCache<DolarQuote[]>('fx_ar_dolares');
+    if (cached) return cached;
+    const res = await fetch('https://dolarapi.com/v1/dolares');
+    if (!res.ok) throw new Error('Error dolarapi');
+    const data = (await res.json()) as DolarQuote[];
+    setCache('fx_ar_dolares', data);
+    return data;
+  }
+
+  async function fetchArOtras(): Promise<DolarQuote[]> {
+    const cached = getCache<DolarQuote[]>('fx_ar_otras');
+    if (cached) return cached;
+    const res = await fetch('https://dolarapi.com/v1/cotizaciones');
+    if (!res.ok) throw new Error('Error dolarapi otras');
+    const data = (await res.json()) as DolarQuote[];
+    setCache('fx_ar_otras', data);
+    return data;
+  }
+
+  async function fetchIntl(): Promise<IntlRates> {
+    const cached = getCache<IntlRates>('fx_intl');
+    if (cached) return cached;
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    if (!res.ok) throw new Error('Error exchangerate');
+    const data = (await res.json()) as IntlRates;
+    setCache('fx_intl', data);
+    return data;
+  }
+
+  function clearCache() {
+    ['fx_ar_dolares', 'fx_ar_otras', 'fx_intl'].forEach((k) => localStorage.removeItem(k));
+  }
+
+  // ==========================================================
+  //  FORMATTERS
+  // ==========================================================
+  function fmtArs(n: number): string {
+    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 }).format(n);
+  }
+
+  function fmtNum(n: number, max = 4): string {
+    return new Intl.NumberFormat('es-AR', { maximumFractionDigits: max }).format(n);
+  }
+
+  function parseAmount(v: string): number {
+    return Number(v.replace(/\./g, '').replace(/,/g, '.')) || 0;
+  }
+
+  function humanAgo(ts: number): string {
+    const min = Math.floor((Date.now() - ts) / 60000);
+    if (min < 1) return 'hace segundos';
+    if (min < 60) return `hace ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `hace ${h}h`;
+    return `hace ${Math.floor(h / 24)}d`;
+  }
+
+  // ==========================================================
+  //  STATE: tipos de cambio a "ARS 1"
+  // ==========================================================
+  //  rateARS[sym] = cuántos ARS vale 1 unidad de sym (usando venta)
+  //  sym: 'USD_BLUE', 'USD_OFICIAL', 'USD_MEP', 'USD_CCL', 'USD_TARJETA', 'USD_CRIPTO', 'USD_MAYORISTA', 'EUR', 'BRL', 'CLP', 'UYU'
+  //  Para monedas intl: rateIntl[sym] = cuántos sym vale 1 USD
+  type FxState = {
+    arsPerUnit: Record<string, { label: string; flag: string; venta: number; compra?: number; variacion?: number; casa?: string }>;
+    intlPerUsd: Record<string, number>;
+    intlNames: Record<string, string>;
+    updatedAt: number;
+  };
+
+  const COIN_LABELS: Record<string, { label: string; flag: string }> = {
+    USD_OFICIAL:  { label: 'USD Oficial',   flag: '🇦🇷' },
+    USD_BLUE:     { label: 'USD Blue',      flag: '🇦🇷' },
+    USD_MEP:      { label: 'USD MEP',       flag: '🇦🇷' },
+    USD_CCL:      { label: 'USD CCL',       flag: '🇦🇷' },
+    USD_TARJETA:  { label: 'USD Tarjeta',   flag: '🇦🇷' },
+    USD_CRIPTO:   { label: 'USD Cripto',    flag: '🇦🇷' },
+    USD_MAYORISTA:{ label: 'USD Mayorista', flag: '🇦🇷' },
+    EUR_AR:       { label: 'EUR (BNA)',     flag: '🇪🇺' },
+    BRL_AR:       { label: 'BRL (Real)',    flag: '🇧🇷' },
+    CLP_AR:       { label: 'CLP (Chile)',   flag: '🇨🇱' },
+    UYU_AR:       { label: 'UYU (Uruguay)', flag: '🇺🇾' },
+    ARS:          { label: 'ARS (Peso)',    flag: '🇦🇷' },
+  };
+
+  const INTL_TOP = ['EUR','GBP','JPY','CNY','CHF','CAD','AUD','MXN','BRL','CLP','UYU','COP','PEN','INR','KRW'];
+  // Diccionario ISO 4217 con nombre + bandera para ~170 monedas
+  const INTL_NAMES: Record<string, string> = {
+    AED:'Dirham EAU 🇦🇪', AFN:'Afgani 🇦🇫', ALL:'Lek albanés 🇦🇱', AMD:'Dram armenio 🇦🇲',
+    ANG:'Florín antillano 🇨🇼', AOA:'Kwanza angoleño 🇦🇴', ARS:'Peso argentino 🇦🇷',
+    AUD:'Dólar australiano 🇦🇺', AWG:'Florín arubeño 🇦🇼', AZN:'Manat azerí 🇦🇿',
+    BAM:'Marco convertible 🇧🇦', BBD:'Dólar de Barbados 🇧🇧', BDT:'Taka bangladeshí 🇧🇩',
+    BGN:'Lev búlgaro 🇧🇬', BHD:'Dinar bareiní 🇧🇭', BIF:'Franco burundés 🇧🇮',
+    BMD:'Dólar bermudeño 🇧🇲', BND:'Dólar bruneano 🇧🇳', BOB:'Boliviano 🇧🇴',
+    BRL:'Real brasileño 🇧🇷', BSD:'Dólar bahameño 🇧🇸', BTN:'Ngultrum butanés 🇧🇹',
+    BWP:'Pula botsuana 🇧🇼', BYN:'Rublo bielorruso 🇧🇾', BZD:'Dólar beliceño 🇧🇿',
+    CAD:'Dólar canadiense 🇨🇦', CDF:'Franco congoleño 🇨🇩', CHF:'Franco suizo 🇨🇭',
+    CLP:'Peso chileno 🇨🇱', CNY:'Yuan chino 🇨🇳', COP:'Peso colombiano 🇨🇴',
+    CRC:'Colón costarricense 🇨🇷', CUP:'Peso cubano 🇨🇺', CVE:'Escudo caboverdiano 🇨🇻',
+    CZK:'Corona checa 🇨🇿', DJF:'Franco yibutiano 🇩🇯', DKK:'Corona danesa 🇩🇰',
+    DOP:'Peso dominicano 🇩🇴', DZD:'Dinar argelino 🇩🇿', EGP:'Libra egipcia 🇪🇬',
+    ERN:'Nakfa eritreo 🇪🇷', ETB:'Birr etíope 🇪🇹', EUR:'Euro 🇪🇺',
+    FJD:'Dólar fiyiano 🇫🇯', FKP:'Libra malvinense 🇫🇰', FOK:'Corona feroesa 🇫🇴',
+    GBP:'Libra esterlina 🇬🇧', GEL:'Lari georgiano 🇬🇪', GGP:'Libra Guernsey 🇬🇬',
+    GHS:'Cedi ghanés 🇬🇭', GIP:'Libra de Gibraltar 🇬🇮', GMD:'Dalasi gambiano 🇬🇲',
+    GNF:'Franco guineano 🇬🇳', GTQ:'Quetzal guatemalteco 🇬🇹', GYD:'Dólar guyanés 🇬🇾',
+    HKD:'Dólar de Hong Kong 🇭🇰', HNL:'Lempira hondureño 🇭🇳', HRK:'Kuna croata 🇭🇷',
+    HTG:'Gourde haitiano 🇭🇹', HUF:'Florín húngaro 🇭🇺', IDR:'Rupia indonesia 🇮🇩',
+    ILS:'Séquel israelí 🇮🇱', IMP:'Libra Isla de Man 🇮🇲', INR:'Rupia india 🇮🇳',
+    IQD:'Dinar iraquí 🇮🇶', IRR:'Rial iraní 🇮🇷', ISK:'Corona islandesa 🇮🇸',
+    JEP:'Libra de Jersey 🇯🇪', JMD:'Dólar jamaiquino 🇯🇲', JOD:'Dinar jordano 🇯🇴',
+    JPY:'Yen japonés 🇯🇵', KES:'Chelín keniano 🇰🇪', KGS:'Som kirguís 🇰🇬',
+    KHR:'Riel camboyano 🇰🇭', KID:'Dólar Kiribati 🇰🇮', KMF:'Franco comorense 🇰🇲',
+    KRW:'Won surcoreano 🇰🇷', KWD:'Dinar kuwaití 🇰🇼', KYD:'Dólar caimán 🇰🇾',
+    KZT:'Tenge kazajo 🇰🇿', LAK:'Kip laosiano 🇱🇦', LBP:'Libra libanesa 🇱🇧',
+    LKR:'Rupia cingalesa 🇱🇰', LRD:'Dólar liberiano 🇱🇷', LSL:'Loti lesotense 🇱🇸',
+    LYD:'Dinar libio 🇱🇾', MAD:'Dirham marroquí 🇲🇦', MDL:'Leu moldavo 🇲🇩',
+    MGA:'Ariary malgache 🇲🇬', MKD:'Denar macedonio 🇲🇰', MMK:'Kyat birmano 🇲🇲',
+    MNT:'Tugrik mongol 🇲🇳', MOP:'Pataca macaense 🇲🇴', MRU:'Ouguiya mauritano 🇲🇷',
+    MUR:'Rupia mauriciana 🇲🇺', MVR:'Rupia maldiva 🇲🇻', MWK:'Kwacha malauí 🇲🇼',
+    MXN:'Peso mexicano 🇲🇽', MYR:'Ringgit malayo 🇲🇾', MZN:'Metical mozambiqueño 🇲🇿',
+    NAD:'Dólar namibio 🇳🇦', NGN:'Naira nigeriana 🇳🇬', NIO:'Córdoba nicaragüense 🇳🇮',
+    NOK:'Corona noruega 🇳🇴', NPR:'Rupia nepalí 🇳🇵', NZD:'Dólar neozelandés 🇳🇿',
+    OMR:'Rial omaní 🇴🇲', PAB:'Balboa panameña 🇵🇦', PEN:'Sol peruano 🇵🇪',
+    PGK:'Kina papú 🇵🇬', PHP:'Peso filipino 🇵🇭', PKR:'Rupia pakistaní 🇵🇰',
+    PLN:'Zloty polaco 🇵🇱', PYG:'Guaraní paraguayo 🇵🇾', QAR:'Rial catarí 🇶🇦',
+    RON:'Leu rumano 🇷🇴', RSD:'Dinar serbio 🇷🇸', RUB:'Rublo ruso 🇷🇺',
+    RWF:'Franco ruandés 🇷🇼', SAR:'Rial saudí 🇸🇦', SBD:'Dólar salomonense 🇸🇧',
+    SCR:'Rupia seychellense 🇸🇨', SDG:'Libra sudanesa 🇸🇩', SEK:'Corona sueca 🇸🇪',
+    SGD:'Dólar de Singapur 🇸🇬', SHP:'Libra Santa Elena 🇸🇭', SLE:'Leone sierraleonés 🇸🇱',
+    SLL:'Leone sierraleonés (viejo) 🇸🇱', SOS:'Chelín somalí 🇸🇴', SRD:'Dólar surinamés 🇸🇷',
+    SSP:'Libra sursudanesa 🇸🇸', STN:'Dobra santotomense 🇸🇹', SYP:'Libra siria 🇸🇾',
+    SZL:'Lilangeni esuatiní 🇸🇿', THB:'Baht tailandés 🇹🇭', TJS:'Somoni tayiko 🇹🇯',
+    TMT:'Manat turcomano 🇹🇲', TND:'Dinar tunecino 🇹🇳', TOP:'Paʻanga tongano 🇹🇴',
+    TRY:'Lira turca 🇹🇷', TTD:'Dólar Trinidad y Tobago 🇹🇹', TVD:'Dólar tuvaluano 🇹🇻',
+    TWD:'Nuevo dólar taiwanés 🇹🇼', TZS:'Chelín tanzano 🇹🇿', UAH:'Grivna ucraniana 🇺🇦',
+    UGX:'Chelín ugandés 🇺🇬', USD:'Dólar estadounidense 🇺🇸', UYU:'Peso uruguayo 🇺🇾',
+    UZS:'Som uzbeko 🇺🇿', VES:'Bolívar venezolano 🇻🇪', VND:'Dong vietnamita 🇻🇳',
+    VUV:'Vatu vanuatuense 🇻🇺', WST:'Tala samoana 🇼🇸', XAF:'Franco CFA Central 🌍',
+    XCD:'Dólar Caribe Oriental 🏝️', XDR:'Derecho especial de giro 🌐',
+    XOF:'Franco CFA Occidental 🌍', XPF:'Franco CFP 🏝️', YER:'Rial yemení 🇾🇪',
+    ZAR:'Rand sudafricano 🇿🇦', ZMW:'Kwacha zambiano 🇿🇲', ZWL:'Dólar zimbabuense 🇿🇼',
+  };
+
+  let STATE: FxState = { arsPerUnit: {}, intlPerUsd: {}, intlNames: INTL_NAMES, updatedAt: 0 };
+
+  // ==========================================================
+  //  LOAD DATA
+  // ==========================================================
+  async function load(force = false) {
+    if (force) clearCache();
+    setStatus('loading', 'Cargando cotizaciones…');
+    try {
+      const [dolares, otras, intl] = await Promise.all([fetchArDolares(), fetchArOtras(), fetchIntl()]);
+
+      const ars: FxState['arsPerUnit'] = {};
+      for (const d of dolares) {
+        const key = `USD_${d.casa.toUpperCase().replace('CONTADOCONLIQUI','CCL').replace('TURISTA','TARJETA')}`;
+        const k = key in COIN_LABELS ? key : `USD_${d.casa.toUpperCase()}`;
+        ars[k] = { ...COIN_LABELS[k] || { label: d.nombre, flag: '🇦🇷' }, venta: d.venta, compra: d.compra, casa: d.casa };
+      }
+      for (const o of otras) {
+        const ok = `${o.moneda}_AR`;
+        if (COIN_LABELS[ok]) ars[ok] = { ...COIN_LABELS[ok], venta: o.venta, compra: o.compra };
+      }
+
+      STATE = {
+        arsPerUnit: ars,
+        intlPerUsd: intl.rates,
+        intlNames: INTL_NAMES,
+        updatedAt: getCacheTs('fx_ar_dolares') || Date.now(),
+      };
+
+      renderAll();
+      setStatus('ok', `Actualizado ${humanAgo(STATE.updatedAt)}`);
+    } catch (e) {
+      console.error(e);
+      setStatus('err', '⚠️ No se pudo cargar. Reintentá.');
+    }
+  }
+
+  function setStatus(kind: 'loading' | 'ok' | 'err', text: string) {
+    const dot = document.getElementById('status-dot')!;
+    dot.className = 'dot ' + (kind === 'ok' ? 'ok' : kind === 'err' ? 'err' : '');
+    document.getElementById('status-text')!.textContent = text;
+  }
+
+  // ==========================================================
+  //  RENDER: AR TABLE
+  // ==========================================================
+  function renderArTable() {
+    const container = document.getElementById('ar-table')!;
+    const order = ['USD_OFICIAL', 'USD_BLUE', 'USD_MEP', 'USD_CCL', 'USD_TARJETA', 'USD_CRIPTO', 'USD_MAYORISTA', 'EUR_AR', 'BRL_AR', 'CLP_AR', 'UYU_AR'];
+    const rows: string[] = [];
+    for (const k of order) {
+      const q = STATE.arsPerUnit[k];
+      if (!q) continue;
+      const spread = q.compra && q.venta ? ((q.venta - q.compra) / q.compra * 100).toFixed(1) : null;
+      rows.push(`
+        <div class="rate-row">
+          <div><span class="nom">${q.flag} ${q.label}</span><span class="sub">compra / venta</span></div>
+          <div class="cp">${q.compra ? fmtArs(q.compra) : '—'}</div>
+          <div class="val">${fmtArs(q.venta)}</div>
+          <div class="var neutral">${spread !== null ? `spread ${spread}%` : ''}</div>
+        </div>
+      `);
+    }
+    container.innerHTML = rows.join('') || '<div class="loading">Sin datos</div>';
+
+    // Brecha
+    const oficial = STATE.arsPerUnit['USD_OFICIAL']?.venta;
+    const blue = STATE.arsPerUnit['USD_BLUE']?.venta;
+    const box = document.getElementById('brecha-box')!;
+    if (oficial && blue && oficial > 0) {
+      const brecha = ((blue - oficial) / oficial * 100);
+      const clima = brecha < 10 ? '🟢 baja (estabilidad)' : brecha < 30 ? '🟡 media (atención)' : '🔴 alta (tensión cambiaria)';
+      box.innerHTML = `<strong>Brecha cambiaria</strong>: ${brecha.toFixed(1)}% entre blue y oficial. ${clima}.`;
+    } else {
+      box.innerHTML = '';
+    }
+  }
+
+  // ==========================================================
+  //  RENDER: INTL TABLE
+  // ==========================================================
+  let INTL_EXPANDED = false;
+  let INTL_FILTER = '';
+
+  function renderIntlTable() {
+    const container = document.getElementById('intl-table')!;
+    const countEl = document.getElementById('intl-count')!;
+    const toggleBtn = document.getElementById('intl-toggle') as HTMLButtonElement;
+
+    const allKeys = Object.keys(STATE.intlPerUsd).filter(k => k !== 'USD' && k !== 'ARS');
+    countEl.textContent = allKeys.length.toString();
+
+    // Filtrado
+    const filter = INTL_FILTER.trim().toLowerCase();
+    let visible: string[];
+    if (filter) {
+      visible = allKeys.filter(k => {
+        const name = (INTL_NAMES[k] || k).toLowerCase();
+        return k.toLowerCase().includes(filter) || name.includes(filter);
+      });
+    } else if (INTL_EXPANDED) {
+      visible = allKeys.slice().sort((a, b) => (INTL_NAMES[a] || a).localeCompare(INTL_NAMES[b] || b, 'es'));
+    } else {
+      visible = INTL_TOP.filter(k => STATE.intlPerUsd[k]);
+    }
+
+    const rows: string[] = [];
+    for (const sym of visible) {
+      const rate = STATE.intlPerUsd[sym];
+      if (!rate) continue;
+      const inv = 1 / rate;
+      rows.push(`
+        <div class="rate-row">
+          <div><span class="nom">${INTL_NAMES[sym] || sym}</span><span class="sub">1 USD = ${fmtNum(rate, 4)} ${sym}</span></div>
+          <div></div>
+          <div class="val">${sym} ${fmtNum(rate, 4)}</div>
+          <div class="var neutral">1 ${sym} = ${fmtNum(inv, 6)} USD</div>
+        </div>
+      `);
+    }
+    container.innerHTML = rows.join('') || '<div class="loading">Sin resultados</div>';
+
+    if (filter) {
+      toggleBtn.style.display = 'none';
+    } else {
+      toggleBtn.style.display = '';
+      toggleBtn.textContent = INTL_EXPANDED ? '← Ver solo las 15 más populares' : `Ver las ${allKeys.length} monedas →`;
+    }
+  }
+
+  // ==========================================================
+  //  CONVERTER
+  // ==========================================================
+  function populateSelects() {
+    const selects = [document.getElementById('from-currency'), document.getElementById('to-currency')] as HTMLSelectElement[];
+    const optGroups: string[] = [];
+
+    // AR group
+    const arKeys = ['USD_OFICIAL','USD_BLUE','USD_MEP','USD_CCL','USD_TARJETA','USD_CRIPTO','USD_MAYORISTA','EUR_AR','BRL_AR','CLP_AR','UYU_AR'].filter(k => STATE.arsPerUnit[k]);
+    if (arKeys.length) {
+      const items = arKeys.map(k => `<option value="${k}">${STATE.arsPerUnit[k].flag} ${STATE.arsPerUnit[k].label}</option>`).join('');
+      optGroups.push(`<optgroup label="🇦🇷 Argentina (vs ARS)">${items}</optgroup>`);
+    }
+
+    // ARS base
+    optGroups.push(`<optgroup label="Peso argentino"><option value="ARS">🇦🇷 ARS (Peso argentino)</option></optgroup>`);
+
+    // Intl group: TODAS las monedas que devuelva la API, ordenadas alfabéticamente
+    const allIntl = Object.keys(STATE.intlPerUsd).filter(k => k !== 'ARS'); // ARS ya está en AR
+    if (!allIntl.includes('USD')) allIntl.unshift('USD');
+    allIntl.sort((a, b) => {
+      // USD y top monedas primero
+      const tops = ['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'CHF', 'BRL', 'MXN'];
+      const ai = tops.indexOf(a), bi = tops.indexOf(b);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return (INTL_NAMES[a] || a).localeCompare(INTL_NAMES[b] || b, 'es');
+    });
+    const intlItems = allIntl.map(k => `<option value="INTL_${k}">${INTL_NAMES[k] || k + ' (' + k + ')'}</option>`).join('');
+    optGroups.push(`<optgroup label="🌍 Internacional (${allIntl.length} monedas, base USD)">${intlItems}</optgroup>`);
+
+    const html = optGroups.join('');
+    const fromSaved = selects[0].value;
+    const toSaved = selects[1].value;
+    selects[0].innerHTML = html;
+    selects[1].innerHTML = html;
+
+    // Set defaults or restore
+    selects[0].value = STATE.arsPerUnit[fromSaved] || fromSaved.startsWith('INTL_') || fromSaved === 'ARS' ? fromSaved : 'USD_BLUE';
+    selects[1].value = STATE.arsPerUnit[toSaved] || toSaved.startsWith('INTL_') || toSaved === 'ARS' ? toSaved : 'ARS';
+  }
+
+  // Convert X units of "from" to "to"
+  // Uses ARS as common pivot for AR-coins, and USD as pivot for intl.
+  // Cross: if one is AR and other is INTL, goes AR → ARS → USD (oficial) → INTL.
+  function convert(amount: number, from: string, to: string): { value: number; explain: string } | null {
+    if (!amount || from === to) return { value: amount, explain: '1:1' };
+
+    const oficialVenta = STATE.arsPerUnit['USD_OFICIAL']?.venta;
+    const usdPerArs = oficialVenta ? 1 / oficialVenta : null;
+
+    // Helper: convert ANY currency to USD amount
+    const toUsd = (amt: number, sym: string): number | null => {
+      if (sym === 'USD' || sym === 'INTL_USD') return amt;
+      if (sym.startsWith('INTL_')) {
+        const code = sym.replace('INTL_', '');
+        const r = STATE.intlPerUsd[code];
+        return r ? amt / r : null;
+      }
+      if (sym === 'ARS') return usdPerArs ? amt * usdPerArs : null;
+      // AR coin (USD_BLUE etc) - venta = ARS per 1 unit
+      const q = STATE.arsPerUnit[sym];
+      if (!q) return null;
+      if (sym.startsWith('USD_')) return amt; // is already USD (variant)
+      // EUR_AR, BRL_AR, etc: 1 unit = q.venta ARS, convert to USD via oficial
+      if (!usdPerArs) return null;
+      return amt * q.venta * usdPerArs;
+    };
+
+    // Helper: convert USD amount to target
+    const fromUsd = (usd: number, sym: string): number | null => {
+      if (sym === 'USD' || sym === 'INTL_USD') return usd;
+      if (sym.startsWith('INTL_')) {
+        const code = sym.replace('INTL_', '');
+        const r = STATE.intlPerUsd[code];
+        return r ? usd * r : null;
+      }
+      if (sym === 'ARS') return oficialVenta ? usd * oficialVenta : null;
+      if (sym.startsWith('USD_')) return usd; // USD variant = same units of USD
+      const q = STATE.arsPerUnit[sym];
+      if (!q || !usdPerArs) return null;
+      return usd / (q.venta * usdPerArs);
+    };
+
+    // Special case: both AR-coins with ARS pivot (more accurate than USD pivot)
+    const fromIsAr = from in STATE.arsPerUnit || from === 'ARS';
+    const toIsAr = to in STATE.arsPerUnit || to === 'ARS';
+    if (fromIsAr && toIsAr) {
+      const arsFrom = from === 'ARS' ? amount : amount * STATE.arsPerUnit[from].venta;
+      const result = to === 'ARS' ? arsFrom : arsFrom / STATE.arsPerUnit[to].venta;
+      return { value: result, explain: `vía ARS` };
+    }
+
+    // Intl cross
+    const usd = toUsd(amount, from);
+    if (usd === null) return null;
+    const result = fromUsd(usd, to);
+    if (result === null) return null;
+    return { value: result, explain: 'vía USD' };
+  }
+
+  function renderConverter() {
+    const fromAmtEl = document.getElementById('from-amount') as HTMLInputElement;
+    const toAmtEl = document.getElementById('to-amount') as HTMLInputElement;
+    const fromEl = document.getElementById('from-currency') as HTMLSelectElement;
+    const toEl = document.getElementById('to-currency') as HTMLSelectElement;
+    const rateLine = document.getElementById('rate-line')!;
+
+    const amount = parseAmount(fromAmtEl.value);
+    const conv = convert(amount, fromEl.value, toEl.value);
+    if (conv === null) {
+      toAmtEl.value = '—';
+      rateLine.textContent = 'Sin cotización disponible';
+      return;
+    }
+    toAmtEl.value = fmtNum(conv.value, 4);
+    const unit = convert(1, fromEl.value, toEl.value);
+    if (unit) {
+      const fromLabel = fromEl.options[fromEl.selectedIndex].text;
+      const toLabel = toEl.options[toEl.selectedIndex].text;
+      rateLine.textContent = `1 ${fromLabel} = ${fmtNum(unit.value, 6)} ${toLabel} (${conv.explain})`;
+    }
+  }
+
+  function renderAll() {
+    renderArTable();
+    renderIntlTable();
+    populateSelects();
+    renderConverter();
+  }
+
+  // ==========================================================
+  //  EVENTS
+  // ==========================================================
+  document.getElementById('from-amount')!.addEventListener('input', renderConverter);
+  document.getElementById('from-currency')!.addEventListener('change', renderConverter);
+  document.getElementById('to-currency')!.addEventListener('change', renderConverter);
+  document.getElementById('swap')!.addEventListener('click', () => {
+    const fromEl = document.getElementById('from-currency') as HTMLSelectElement;
+    const toEl = document.getElementById('to-currency') as HTMLSelectElement;
+    [fromEl.value, toEl.value] = [toEl.value, fromEl.value];
+    renderConverter();
+  });
+  document.getElementById('refresh')!.addEventListener('click', () => load(true));
+  document.getElementById('intl-toggle')!.addEventListener('click', () => {
+    INTL_EXPANDED = !INTL_EXPANDED;
+    renderIntlTable();
+  });
+  document.getElementById('intl-search')!.addEventListener('input', (e) => {
+    INTL_FILTER = (e.target as HTMLInputElement).value;
+    renderIntlTable();
+  });
+
+  // ==========================================================
+  //  INIT
+  // ==========================================================
+  load(false);
+</script>
