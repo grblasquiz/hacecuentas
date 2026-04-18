@@ -1,0 +1,1169 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Dólar Hoy Argentina — Blue, Oficial, MEP, CCL, Tarjeta en Vivo | Hacé Cuentas';
+const description = 'Cotización del dólar hoy en Argentina: blue, oficial, MEP, CCL, tarjeta, cripto, mayorista. Conversor en vivo a euro, real, libra, yen y 160+ monedas actualizadas.';
+const buildTimestamp = new Date().toISOString();
+
+// Fetch server-side (build-time) para evitar problema de CSP con open.er-api.com client-side.
+// Las cotizaciones AR siguen cargando client-side desde dolarapi.com (permitido en CSP).
+let intlBuildRates: Record<string, number> = {};
+let intlBuildTs: number = 0;
+try {
+  const r = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(8000) });
+  if (r.ok) {
+    const d = await r.json() as { rates: Record<string, number>; time_last_update_unix: number };
+    intlBuildRates = d.rates || {};
+    intlBuildTs = (d.time_last_update_unix || Math.floor(Date.now() / 1000)) * 1000;
+  }
+} catch (e) {
+  console.warn('[cambio-de-monedas] fetch intl failed at build time:', e);
+}
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Dólar Hoy Argentina + Conversor de Monedas',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  description,
+  offers: { '@type': 'Offer', price: '0' },
+};
+
+const faq = [
+  {
+    q: '¿De dónde salen las cotizaciones?',
+    a: 'Los valores del <strong>dólar argentino</strong> (blue, oficial, MEP, CCL, tarjeta, cripto, mayorista) y monedas regionales (EUR, BRL, CLP, UYU) vienen de <a href="https://dolarapi.com" rel="noopener">dolarapi.com</a>, que agrega casas de cambio y bancos en tiempo real. Los tipos de cambio <strong>internacionales</strong> (USD a 160+ monedas del mundo) salen de <a href="https://www.exchangerate-api.com" rel="noopener">open.er-api.com</a>, basado en datos oficiales de bancos centrales.',
+  },
+  {
+    q: '¿Cada cuánto se actualiza?',
+    a: 'La primera vez que abrís esta página se hace la consulta en vivo. Luego guardamos el valor <strong>15 minutos</strong> en tu navegador (localStorage) para no saturar las APIs. Tocá el botón <em>Actualizar</em> para forzar una consulta nueva.',
+  },
+  {
+    q: '¿Qué diferencia hay entre blue, oficial, MEP, CCL y tarjeta?',
+    a: '<strong>Oficial</strong>: cotización regulada del BCRA. <strong>Blue</strong>: mercado informal (efectivo en cueva). <strong>MEP</strong> (bolsa): comprás bonos en pesos y los vendés en USD. <strong>CCL</strong> (contado con liqui): bonos en CABA y acreditación USD afuera. <strong>Tarjeta</strong>: oficial + percepciones (≈60% extra en 2026). <strong>Cripto</strong>: USDT/USDC en exchanges.',
+  },
+  {
+    q: '¿Qué cotización me conviene para viajar?',
+    a: 'Depende del destino y forma de pago. Para <strong>efectivo en destino</strong> (comprar USD/EUR en Argentina y llevarlos): generalmente <strong>blue o MEP</strong>. Para <strong>tarjeta</strong>: se aplica el tipo <em>tarjeta</em> (oficial + 60%) en la mayoría de casos, salvo Brasil donde podés pagar con QR PIX que toma oficial sin percepciones.',
+  },
+  {
+    q: '¿Qué es la brecha cambiaria?',
+    a: '<strong>Brecha = (blue - oficial) / oficial × 100</strong>. Mide cuánto más caro está el dólar paralelo frente al oficial. Una brecha superior al 30% suele indicar tensión cambiaria; debajo del 10% suele ser síntoma de estabilidad.',
+  },
+  {
+    q: '¿Puedo usar esta calculadora offline?',
+    a: 'Una vez cargada, podés seguir convirtiendo con la última cotización guardada aunque pierdas conexión. El indicador <em>“Actualizado hace X min”</em> te avisa cuán fresco es el dato.',
+  },
+  {
+    q: '¿Qué monedas soporta?',
+    a: 'Todas las <strong>argentinas</strong> (dólar en sus 7 variantes + euro, real, chileno, uruguayo con la cotización de AR). Y <strong>~160 monedas internacionales</strong> basadas en USD: EUR, GBP, JPY, CNY, MXN, BRL, CLP, COP, PEN, y muchas más.',
+  },
+  {
+    q: '¿Guardan mi historial de consultas?',
+    a: 'No. Todo corre en tu navegador. No enviamos datos a servidores nuestros ni de terceros más allá de la llamada a la API de cotizaciones.',
+  },
+];
+
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
+  })),
+};
+---
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="fx-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Dólar hoy</span>
+    </nav>
+
+    <header class="fx-header">
+      <h1>Dólar hoy Argentina + conversor de monedas 💱</h1>
+      <p class="lead">
+        Cotización del <strong>dólar blue, oficial, MEP, CCL, tarjeta, cripto y mayorista</strong> actualizada en vivo. Conversor entre pesos, dólar, <strong>euro, real, libra, yen</strong> y 160+ monedas del mundo.
+      </p>
+      <div class="fx-status" id="status">
+        <span class="dot" id="status-dot"></span>
+        <span id="status-text">Cargando cotizaciones…</span>
+        <button id="refresh" class="btn-refresh" aria-label="Actualizar cotizaciones">↻ Actualizar</button>
+      </div>
+    </header>
+
+    <section class="converter">
+      <h2>Conversor</h2>
+      <div class="conv-grid">
+        <div class="conv-side">
+          <label for="from-amount">Monto</label>
+          <input id="from-amount" type="text" inputmode="decimal" value="100" autocomplete="off" />
+          <select id="from-currency" class="select-coin">
+            <option value="USD_BLUE">🇦🇷 USD Blue (AR)</option>
+          </select>
+        </div>
+
+        <button id="swap" class="swap-btn" aria-label="Invertir monedas">⇄</button>
+
+        <div class="conv-side">
+          <label for="to-amount">Equivale a</label>
+          <input id="to-amount" type="text" inputmode="decimal" readonly />
+          <select id="to-currency" class="select-coin">
+            <option value="ARS">🇦🇷 ARS (Peso)</option>
+          </select>
+        </div>
+      </div>
+      <p class="rate-line" id="rate-line">—</p>
+    </section>
+
+    <section class="ar-rates">
+      <h2>🇦🇷 Cotización del dólar hoy en Argentina</h2>
+      <p class="section-sub">Valores para <strong>1 USD</strong> en pesos argentinos.</p>
+      <div class="rates-table">
+        <div class="rate-head">
+          <div>Tipo</div>
+          <div>Compra</div>
+          <div>Venta</div>
+          <div>Spread</div>
+        </div>
+        <div id="ar-table">
+          <div class="loading">Cargando cotizaciones…</div>
+        </div>
+      </div>
+      <div class="brecha-box" id="brecha-box" style="display:none"></div>
+    </section>
+
+    <section class="intl-rates">
+      <h2>🌍 Cotizaciones internacionales</h2>
+      <p class="section-sub">
+        Base <strong>USD</strong> contra <span id="intl-count">~160</span> monedas del mundo.
+        <input type="text" id="intl-search" placeholder="Buscar moneda (ej: yen, BRL, peso)…" class="search-intl" />
+      </p>
+      <div class="rates-table">
+        <div class="rate-head">
+          <div>Moneda</div>
+          <div></div>
+          <div>1 USD =</div>
+          <div>1 unidad =</div>
+        </div>
+        <div id="intl-table">
+          <div class="loading">Cargando cotizaciones…</div>
+        </div>
+      </div>
+      <button id="intl-toggle" class="btn-more">Ver todas las monedas →</button>
+    </section>
+
+    <section class="related">
+      <h2>Relacionadas</h2>
+      <ul class="rel-grid">
+        <li><a href="/calculadora-dolar-blue-vs-oficial-brecha">Calcular brecha dólar blue vs oficial</a></li>
+        <li><a href="/calculadora-sueldo-en-dolares">Sueldo en dólares</a></li>
+        <li><a href="/calculadora-cedear-ratio-conversion-dolares">CEDEAR: ratio de conversión</a></li>
+        <li><a href="/calculadora-precio-dolar-producto">Precio de un producto en dólares</a></li>
+        <li><a href="/calculadora-brecha-dolar-blue-mep-ccl-oficial">Brecha dólar blue vs MEP vs CCL</a></li>
+        <li><a href="/comparador-plazo-fijo">Comparar plazo fijo en bancos</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      <div class="faq-list">
+        {faq.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <div class="faq-answer" set:html={f.a}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="method">
+      <h2>Cómo funciona</h2>
+      <p>Esta página consulta dos APIs públicas de cotizaciones en el momento en que la cargás:</p>
+      <ul>
+        <li><strong>dolarapi.com</strong> → trae las 7 cotizaciones del dólar argentino (oficial, blue, MEP, CCL, tarjeta, cripto, mayorista) y las de EUR, BRL, CLP y UYU contra el peso argentino.</li>
+        <li><strong>open.er-api.com</strong> → trae un diccionario <em>USD → 160+ monedas</em> para conversiones internacionales sin Argentina de por medio.</li>
+      </ul>
+      <p>Las cotizaciones se guardan <strong>15 minutos</strong> en tu navegador. Al tocar <em>Actualizar</em> forzás una consulta nueva. No guardamos nada en servidores nuestros.</p>
+      <p class="disclaimer">⚠️ <strong>Aviso:</strong> los valores son orientativos. Para transacciones reales, verificá con tu banco o casa de cambio. Las APIs pueden demorar minutos en reflejar movimientos.</p>
+    </section>
+  </article>
+
+  <!-- build: {buildTimestamp} -->
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script id="fx-intl-build" type="application/json" set:html={JSON.stringify({ rates: intlBuildRates, ts: intlBuildTs })}></script>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  /* =====================================================
+     LAYOUT BASE — usa design tokens del Layout.astro
+     ===================================================== */
+  .fx-page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 1rem 1.25rem 5rem;
+    color: var(--text);
+  }
+  .breadcrumbs { font-size: .875rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .breadcrumbs a { color: var(--accent); text-decoration: none; }
+  .breadcrumbs a:hover { text-decoration: underline; }
+  .breadcrumbs .sep { margin: 0 .5rem; color: var(--text-subtle); }
+
+  /* =====================================================
+     HERO
+     ===================================================== */
+  .fx-header {
+    padding: 2rem 2rem 1.75rem;
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(1200px 400px at 10% -40%, rgba(59,130,246,.18), transparent 60%),
+      radial-gradient(900px 400px at 95% -30%, rgba(16,185,129,.15), transparent 65%),
+      linear-gradient(135deg, var(--bg-card), var(--bg-soft));
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+  }
+  .fx-header h1 {
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+    margin: 0 0 .75rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+  .lead { color: var(--text-muted); font-size: 1.1rem; margin: 0 0 1.5rem; line-height: 1.6; max-width: 780px; }
+  .lead strong { color: var(--text); font-weight: 700; }
+
+  .fx-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .5rem .9rem .5rem .75rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: .85rem;
+    color: var(--text-muted);
+  }
+  .fx-status .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text-subtle);
+    transition: background .3s, box-shadow .3s;
+  }
+  .fx-status .dot.ok { background: var(--success); box-shadow: 0 0 0 4px var(--success-soft); }
+  .fx-status .dot.err { background: var(--danger); box-shadow: 0 0 0 4px var(--danger-soft); }
+  .btn-refresh {
+    margin-left: .5rem;
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    padding: .4rem .9rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: .8rem;
+    font-weight: 600;
+    transition: background .15s, transform .1s;
+  }
+  .btn-refresh:hover { background: var(--accent-hover); }
+  .btn-refresh:active { transform: scale(.96); }
+
+  /* =====================================================
+     CONVERTER CARD (la estrella)
+     ===================================================== */
+  .converter {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    margin: 0 0 2.5rem;
+    box-shadow: var(--shadow-md);
+    position: relative;
+  }
+  .converter::before {
+    content: '💱';
+    position: absolute;
+    top: -1.2rem;
+    left: 1.5rem;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1.4rem;
+    width: 2.4rem; height: 2.4rem;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    box-shadow: var(--shadow-md);
+  }
+  .converter h2 { margin: 0 0 1.5rem .25rem; font-size: 1.35rem; font-weight: 700; color: var(--text); }
+
+  .conv-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  .conv-side {
+    background: var(--bg-soft);
+    padding: 1.1rem 1.2rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: .7rem;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .conv-side:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .conv-side label {
+    font-size: .72rem;
+    color: var(--text-subtle);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .conv-side input {
+    font-size: 2rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-weight: 800;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono), system-ui;
+    width: 100%;
+  }
+  .conv-side input:focus { outline: none; }
+  .conv-side input[readonly] { color: var(--accent); }
+  .select-coin {
+    padding: .55rem .7rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: .92rem;
+    font-weight: 500;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right .6rem center;
+    padding-right: 1.8rem;
+  }
+  .select-coin:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .swap-btn {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    width: 48px; height: 48px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    align-self: center;
+    transition: all .2s cubic-bezier(.4,0,.2,1);
+  }
+  .swap-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 4px 14px var(--accent-soft);
+  }
+  .rate-line {
+    margin: 1.2rem 0 0;
+    padding: .85rem 1rem;
+    background: var(--bg-soft);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    font-size: .88rem;
+    color: var(--text-muted);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 680px) {
+    .conv-grid { grid-template-columns: 1fr; gap: .65rem; }
+    .swap-btn { justify-self: center; transform: rotate(90deg); }
+    .swap-btn:hover { transform: rotate(270deg) scale(1.1); }
+    .converter { padding: 1.5rem 1.2rem; }
+  }
+
+  /* =====================================================
+     SECTIONS HEADERS
+     ===================================================== */
+  .ar-rates, .intl-rates { margin: 2.5rem 0; }
+  .ar-rates h2, .intl-rates h2 {
+    font-size: 1.3rem;
+    margin: 0 0 .5rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -.01em;
+  }
+  .section-sub { color: var(--text-muted); font-size: .92rem; margin: 0 0 1.25rem; display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+  .section-sub strong { color: var(--text); font-weight: 600; }
+
+  /* =====================================================
+     RATES TABLE
+     ===================================================== */
+  .rates-table {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .rate-row {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.8fr) minmax(100px, 1fr) minmax(120px, 1.1fr) minmax(120px, 1fr);
+    gap: .75rem 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    font-size: .95rem;
+    transition: background .15s;
+  }
+  .rate-row:hover { background: var(--bg-soft); }
+  .rate-row:last-child { border-bottom: 0; }
+  .rate-row .nom-wrap { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+  .rate-row .nom { font-weight: 600; color: var(--text); display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .rate-row .nom .badge {
+    font-size: .65rem;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .rate-row .sub { font-size: .78rem; color: var(--text-subtle); font-weight: 400; }
+  .rate-row .val {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: var(--text);
+    font-size: 1.05rem;
+    font-family: var(--font-mono), system-ui;
+    text-align: right;
+  }
+  .rate-row .cp {
+    font-size: .85rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono), system-ui;
+    text-align: right;
+  }
+  .rate-row .var { font-size: .8rem; font-variant-numeric: tabular-nums; color: var(--text-subtle); text-align: right; }
+
+  /* Badges por tipo de dólar */
+  .badge-oficial { background: #dcfce7; color: #15803d; }
+  .badge-blue    { background: #dbeafe; color: #1d4ed8; }
+  .badge-mep     { background: #f3e8ff; color: #7e22ce; }
+  .badge-ccl     { background: #fce7f3; color: #be185d; }
+  .badge-tarjeta { background: #fed7aa; color: #c2410c; }
+  .badge-cripto  { background: #fef3c7; color: #a16207; }
+  .badge-mayo    { background: #e2e8f0; color: #475569; }
+  .badge-eur     { background: #e0e7ff; color: #4338ca; }
+  .badge-brl     { background: #d1fae5; color: #047857; }
+  .badge-clp     { background: #dbeafe; color: #1e40af; }
+  .badge-uyu     { background: #e0f2fe; color: #0369a1; }
+  html[data-theme="dark"] .badge-oficial { background: rgba(16,185,129,.2); color: #6ee7b7; }
+  html[data-theme="dark"] .badge-blue    { background: rgba(59,130,246,.2); color: #93c5fd; }
+  html[data-theme="dark"] .badge-mep     { background: rgba(147,51,234,.2); color: #d8b4fe; }
+  html[data-theme="dark"] .badge-ccl     { background: rgba(219,39,119,.2); color: #f9a8d4; }
+  html[data-theme="dark"] .badge-tarjeta { background: rgba(234,88,12,.2); color: #fdba74; }
+  html[data-theme="dark"] .badge-cripto  { background: rgba(234,179,8,.2); color: #fde68a; }
+  html[data-theme="dark"] .badge-mayo    { background: rgba(148,163,184,.2); color: #cbd5e1; }
+  html[data-theme="dark"] .badge-eur     { background: rgba(99,102,241,.2); color: #a5b4fc; }
+  html[data-theme="dark"] .badge-brl     { background: rgba(16,185,129,.18); color: #86efac; }
+  html[data-theme="dark"] .badge-clp     { background: rgba(59,130,246,.18); color: #93c5fd; }
+  html[data-theme="dark"] .badge-uyu     { background: rgba(14,165,233,.2); color: #7dd3fc; }
+
+  .loading { padding: 2.5rem; text-align: center; color: var(--text-subtle); font-size: .95rem; }
+
+  /* Header fila (AR table) */
+  .rate-head {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.8fr) minmax(100px, 1fr) minmax(120px, 1.1fr) minmax(120px, 1fr);
+    gap: .75rem 1rem;
+    padding: .7rem 1.25rem;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border);
+    font-size: .7rem;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+  }
+  .rate-head > div:not(:first-child) { text-align: right; }
+
+  @media (max-width: 680px) {
+    .rate-head { display: none; }
+    .rate-row {
+      grid-template-columns: 1fr auto;
+      padding: .9rem 1rem;
+    }
+    .rate-row .nom-wrap { grid-column: 1 / 2; grid-row: 1 / 2; }
+    .rate-row .val { grid-column: 2 / 3; grid-row: 1 / 2; font-size: 1rem; }
+    .rate-row .cp, .rate-row .var { grid-column: 1 / 3; grid-row: 2 / 3; text-align: left; font-size: .78rem; }
+    .rate-row .cp::before { content: 'compra '; color: var(--text-subtle); }
+    .rate-row .var::before { content: '• '; color: var(--text-subtle); }
+    .rate-row .cp, .rate-row .var { display: inline-block; margin-right: .5rem; }
+  }
+
+  /* =====================================================
+     BRECHA CALLOUT
+     ===================================================== */
+  .brecha-box {
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(95deg, var(--warning-soft), rgba(234,179,8,.06));
+    border: 1px solid var(--warning);
+    border-left-width: 4px;
+    border-radius: var(--radius-sm);
+    font-size: .95rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+  .brecha-box::before { content: '📊'; font-size: 1.4rem; }
+  .brecha-box strong { font-weight: 700; }
+
+  /* =====================================================
+     INTL CONTROLS
+     ===================================================== */
+  .search-intl {
+    flex: 1;
+    min-width: 200px;
+    padding: .5rem .8rem .5rem 2.1rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: var(--bg-card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat .8rem center;
+    font-size: .85rem;
+    color: var(--text);
+  }
+  .search-intl:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .btn-more {
+    display: block;
+    margin: 1rem auto 0;
+    background: var(--bg-card);
+    color: var(--accent);
+    border: 1px solid var(--border-strong);
+    padding: .65rem 1.5rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: .88rem;
+    transition: all .15s;
+  }
+  .btn-more:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+  /* =====================================================
+     RELATED / FAQ / METHOD
+     ===================================================== */
+  .related { margin: 3rem 0; }
+  .related h2 { font-size: 1.3rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
+  .rel-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .75rem; }
+  .rel-grid li a {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .9rem 1.1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: .92rem;
+    transition: all .15s;
+  }
+  .rel-grid li a::before { content: '→'; color: var(--text-subtle); transition: transform .15s; }
+  .rel-grid li a:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .rel-grid li a:hover::before { transform: translateX(4px); color: var(--accent); }
+
+  .faq { margin: 3rem 0; }
+  .faq h2 { font-size: 1.4rem; margin: 0 0 1.25rem; color: var(--text); font-weight: 700; }
+  .faq-list details {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: .5rem;
+    overflow: hidden;
+    background: var(--bg-card);
+    transition: box-shadow .15s;
+  }
+  .faq-list details[open] { box-shadow: var(--shadow-sm); }
+  .faq-list summary {
+    padding: 1.1rem 1.25rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text);
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+  .faq-list summary::after {
+    content: '';
+    width: 10px; height: 10px;
+    border: 2px solid var(--text-muted);
+    border-top: 0;
+    border-left: 0;
+    transform: rotate(45deg);
+    transition: transform .2s;
+    flex-shrink: 0;
+  }
+  .faq-list details[open] summary::after { transform: rotate(-135deg); }
+  .faq-list summary:hover { color: var(--accent); }
+  .faq-answer { padding: 0 1.25rem 1.2rem; color: var(--text-muted); line-height: 1.65; font-size: .95rem; }
+  .faq-answer a { color: var(--accent); }
+
+  .method {
+    margin: 3rem 0;
+    padding: 1.75rem 2rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    line-height: 1.65;
+    color: var(--text-muted);
+  }
+  .method h2 { margin: 0 0 1rem; color: var(--text); font-size: 1.25rem; font-weight: 700; }
+  .method ul { padding-left: 1.25rem; margin: 0 0 1rem; }
+  .method li { margin: .6rem 0; }
+  .method strong { color: var(--text); font-weight: 600; }
+  .disclaimer {
+    margin-top: 1.2rem;
+    font-size: .88rem;
+    padding: .9rem 1.1rem;
+    background: var(--danger-soft);
+    border-left: 3px solid var(--danger);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+  }
+  .disclaimer strong { color: var(--danger); }
+
+  @media (max-width: 680px) {
+    .fx-page { padding: .5rem .8rem 4rem; }
+    .fx-header { padding: 1.5rem 1.25rem; }
+    .method { padding: 1.25rem; }
+  }
+</style>
+
+<script>
+  // ==========================================================
+  //  CACHE HELPERS (localStorage 15 min)
+  // ==========================================================
+  const CACHE_MIN = 15;
+  const CACHE_MS = CACHE_MIN * 60 * 1000;
+
+  interface Cached<T> { ts: number; data: T; }
+
+  function getCache<T>(key: string): T | null {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const obj = JSON.parse(raw) as Cached<T>;
+      if (Date.now() - obj.ts > CACHE_MS) return null;
+      return obj.data;
+    } catch { return null; }
+  }
+
+  function setCache<T>(key: string, data: T) {
+    try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data })); } catch {}
+  }
+
+  function getCacheTs(key: string): number | null {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      return (JSON.parse(raw) as Cached<unknown>).ts;
+    } catch { return null; }
+  }
+
+  // ==========================================================
+  //  API FETCHERS
+  // ==========================================================
+  interface DolarQuote { casa: string; nombre: string; compra: number; venta: number; fechaActualizacion: string; }
+  interface IntlRates { base_code: string; rates: Record<string, number>; time_last_update_unix: number; }
+
+  async function fetchArDolares(): Promise<DolarQuote[]> {
+    const cached = getCache<DolarQuote[]>('fx_ar_dolares');
+    if (cached) return cached;
+    const res = await fetch('https://dolarapi.com/v1/dolares');
+    if (!res.ok) throw new Error('Error dolarapi');
+    const data = (await res.json()) as DolarQuote[];
+    setCache('fx_ar_dolares', data);
+    return data;
+  }
+
+  async function fetchArOtras(): Promise<DolarQuote[]> {
+    const cached = getCache<DolarQuote[]>('fx_ar_otras');
+    if (cached) return cached;
+    const res = await fetch('https://dolarapi.com/v1/cotizaciones');
+    if (!res.ok) throw new Error('Error dolarapi otras');
+    const data = (await res.json()) as DolarQuote[];
+    setCache('fx_ar_otras', data);
+    return data;
+  }
+
+  async function fetchIntl(): Promise<IntlRates> {
+    // 1) Intentar cache local reciente (si el user forzó refresh via dolarapi pero intl no)
+    const cached = getCache<IntlRates>('fx_intl');
+    if (cached) return cached;
+
+    // 2) Leer datos embebidos en build-time (evita problema de CSP client-side)
+    const buildEl = document.getElementById('fx-intl-build');
+    if (buildEl && buildEl.textContent) {
+      try {
+        const parsed = JSON.parse(buildEl.textContent) as { rates: Record<string, number>; ts: number };
+        if (parsed.rates && Object.keys(parsed.rates).length > 10) {
+          const data: IntlRates = {
+            base_code: 'USD',
+            rates: parsed.rates,
+            time_last_update_unix: Math.floor(parsed.ts / 1000),
+          };
+          setCache('fx_intl', data);
+          return data;
+        }
+      } catch (e) { console.warn('build-intl parse error', e); }
+    }
+
+    // 3) Fallback: intentar fetch directo (puede bloquearse por CSP, pero probamos)
+    try {
+      const res = await fetch('https://open.er-api.com/v6/latest/USD');
+      if (!res.ok) throw new Error('Error exchangerate');
+      const data = (await res.json()) as IntlRates;
+      setCache('fx_intl', data);
+      return data;
+    } catch (e) {
+      // Devolver vacío si todo falla
+      return { base_code: 'USD', rates: {}, time_last_update_unix: 0 };
+    }
+  }
+
+  function clearCache() {
+    ['fx_ar_dolares', 'fx_ar_otras', 'fx_intl'].forEach((k) => localStorage.removeItem(k));
+  }
+
+  // ==========================================================
+  //  FORMATTERS
+  // ==========================================================
+  function fmtArs(n: number): string {
+    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 }).format(n);
+  }
+
+  function fmtNum(n: number, max = 4): string {
+    return new Intl.NumberFormat('es-AR', { maximumFractionDigits: max }).format(n);
+  }
+
+  function parseAmount(v: string): number {
+    return Number(v.replace(/\./g, '').replace(/,/g, '.')) || 0;
+  }
+
+  function humanAgo(ts: number): string {
+    const min = Math.floor((Date.now() - ts) / 60000);
+    if (min < 1) return 'hace segundos';
+    if (min < 60) return `hace ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `hace ${h}h`;
+    return `hace ${Math.floor(h / 24)}d`;
+  }
+
+  // ==========================================================
+  //  STATE: tipos de cambio a "ARS 1"
+  // ==========================================================
+  //  rateARS[sym] = cuántos ARS vale 1 unidad de sym (usando venta)
+  //  sym: 'USD_BLUE', 'USD_OFICIAL', 'USD_MEP', 'USD_CCL', 'USD_TARJETA', 'USD_CRIPTO', 'USD_MAYORISTA', 'EUR', 'BRL', 'CLP', 'UYU'
+  //  Para monedas intl: rateIntl[sym] = cuántos sym vale 1 USD
+  type FxState = {
+    arsPerUnit: Record<string, { label: string; flag: string; venta: number; compra?: number; variacion?: number; casa?: string }>;
+    intlPerUsd: Record<string, number>;
+    intlNames: Record<string, string>;
+    updatedAt: number;
+  };
+
+  const COIN_LABELS: Record<string, { label: string; flag: string }> = {
+    USD_OFICIAL:  { label: 'USD Oficial',   flag: '🇦🇷' },
+    USD_BLUE:     { label: 'USD Blue',      flag: '🇦🇷' },
+    USD_MEP:      { label: 'USD MEP',       flag: '🇦🇷' },
+    USD_CCL:      { label: 'USD CCL',       flag: '🇦🇷' },
+    USD_TARJETA:  { label: 'USD Tarjeta',   flag: '🇦🇷' },
+    USD_CRIPTO:   { label: 'USD Cripto',    flag: '🇦🇷' },
+    USD_MAYORISTA:{ label: 'USD Mayorista', flag: '🇦🇷' },
+    EUR_AR:       { label: 'EUR (BNA)',     flag: '🇪🇺' },
+    BRL_AR:       { label: 'BRL (Real)',    flag: '🇧🇷' },
+    CLP_AR:       { label: 'CLP (Chile)',   flag: '🇨🇱' },
+    UYU_AR:       { label: 'UYU (Uruguay)', flag: '🇺🇾' },
+    ARS:          { label: 'ARS (Peso)',    flag: '🇦🇷' },
+  };
+
+  const INTL_TOP = ['EUR','GBP','JPY','CNY','CHF','CAD','AUD','MXN','BRL','CLP','UYU','COP','PEN','INR','KRW'];
+  // Diccionario ISO 4217 con nombre + bandera para ~170 monedas
+  const INTL_NAMES: Record<string, string> = {
+    AED:'Dirham EAU 🇦🇪', AFN:'Afgani 🇦🇫', ALL:'Lek albanés 🇦🇱', AMD:'Dram armenio 🇦🇲',
+    ANG:'Florín antillano 🇨🇼', AOA:'Kwanza angoleño 🇦🇴', ARS:'Peso argentino 🇦🇷',
+    AUD:'Dólar australiano 🇦🇺', AWG:'Florín arubeño 🇦🇼', AZN:'Manat azerí 🇦🇿',
+    BAM:'Marco convertible 🇧🇦', BBD:'Dólar de Barbados 🇧🇧', BDT:'Taka bangladeshí 🇧🇩',
+    BGN:'Lev búlgaro 🇧🇬', BHD:'Dinar bareiní 🇧🇭', BIF:'Franco burundés 🇧🇮',
+    BMD:'Dólar bermudeño 🇧🇲', BND:'Dólar bruneano 🇧🇳', BOB:'Boliviano 🇧🇴',
+    BRL:'Real brasileño 🇧🇷', BSD:'Dólar bahameño 🇧🇸', BTN:'Ngultrum butanés 🇧🇹',
+    BWP:'Pula botsuana 🇧🇼', BYN:'Rublo bielorruso 🇧🇾', BZD:'Dólar beliceño 🇧🇿',
+    CAD:'Dólar canadiense 🇨🇦', CDF:'Franco congoleño 🇨🇩', CHF:'Franco suizo 🇨🇭',
+    CLP:'Peso chileno 🇨🇱', CNY:'Yuan chino 🇨🇳', COP:'Peso colombiano 🇨🇴',
+    CRC:'Colón costarricense 🇨🇷', CUP:'Peso cubano 🇨🇺', CVE:'Escudo caboverdiano 🇨🇻',
+    CZK:'Corona checa 🇨🇿', DJF:'Franco yibutiano 🇩🇯', DKK:'Corona danesa 🇩🇰',
+    DOP:'Peso dominicano 🇩🇴', DZD:'Dinar argelino 🇩🇿', EGP:'Libra egipcia 🇪🇬',
+    ERN:'Nakfa eritreo 🇪🇷', ETB:'Birr etíope 🇪🇹', EUR:'Euro 🇪🇺',
+    FJD:'Dólar fiyiano 🇫🇯', FKP:'Libra malvinense 🇫🇰', FOK:'Corona feroesa 🇫🇴',
+    GBP:'Libra esterlina 🇬🇧', GEL:'Lari georgiano 🇬🇪', GGP:'Libra Guernsey 🇬🇬',
+    GHS:'Cedi ghanés 🇬🇭', GIP:'Libra de Gibraltar 🇬🇮', GMD:'Dalasi gambiano 🇬🇲',
+    GNF:'Franco guineano 🇬🇳', GTQ:'Quetzal guatemalteco 🇬🇹', GYD:'Dólar guyanés 🇬🇾',
+    HKD:'Dólar de Hong Kong 🇭🇰', HNL:'Lempira hondureño 🇭🇳', HRK:'Kuna croata 🇭🇷',
+    HTG:'Gourde haitiano 🇭🇹', HUF:'Florín húngaro 🇭🇺', IDR:'Rupia indonesia 🇮🇩',
+    ILS:'Séquel israelí 🇮🇱', IMP:'Libra Isla de Man 🇮🇲', INR:'Rupia india 🇮🇳',
+    IQD:'Dinar iraquí 🇮🇶', IRR:'Rial iraní 🇮🇷', ISK:'Corona islandesa 🇮🇸',
+    JEP:'Libra de Jersey 🇯🇪', JMD:'Dólar jamaiquino 🇯🇲', JOD:'Dinar jordano 🇯🇴',
+    JPY:'Yen japonés 🇯🇵', KES:'Chelín keniano 🇰🇪', KGS:'Som kirguís 🇰🇬',
+    KHR:'Riel camboyano 🇰🇭', KID:'Dólar Kiribati 🇰🇮', KMF:'Franco comorense 🇰🇲',
+    KRW:'Won surcoreano 🇰🇷', KWD:'Dinar kuwaití 🇰🇼', KYD:'Dólar caimán 🇰🇾',
+    KZT:'Tenge kazajo 🇰🇿', LAK:'Kip laosiano 🇱🇦', LBP:'Libra libanesa 🇱🇧',
+    LKR:'Rupia cingalesa 🇱🇰', LRD:'Dólar liberiano 🇱🇷', LSL:'Loti lesotense 🇱🇸',
+    LYD:'Dinar libio 🇱🇾', MAD:'Dirham marroquí 🇲🇦', MDL:'Leu moldavo 🇲🇩',
+    MGA:'Ariary malgache 🇲🇬', MKD:'Denar macedonio 🇲🇰', MMK:'Kyat birmano 🇲🇲',
+    MNT:'Tugrik mongol 🇲🇳', MOP:'Pataca macaense 🇲🇴', MRU:'Ouguiya mauritano 🇲🇷',
+    MUR:'Rupia mauriciana 🇲🇺', MVR:'Rupia maldiva 🇲🇻', MWK:'Kwacha malauí 🇲🇼',
+    MXN:'Peso mexicano 🇲🇽', MYR:'Ringgit malayo 🇲🇾', MZN:'Metical mozambiqueño 🇲🇿',
+    NAD:'Dólar namibio 🇳🇦', NGN:'Naira nigeriana 🇳🇬', NIO:'Córdoba nicaragüense 🇳🇮',
+    NOK:'Corona noruega 🇳🇴', NPR:'Rupia nepalí 🇳🇵', NZD:'Dólar neozelandés 🇳🇿',
+    OMR:'Rial omaní 🇴🇲', PAB:'Balboa panameña 🇵🇦', PEN:'Sol peruano 🇵🇪',
+    PGK:'Kina papú 🇵🇬', PHP:'Peso filipino 🇵🇭', PKR:'Rupia pakistaní 🇵🇰',
+    PLN:'Zloty polaco 🇵🇱', PYG:'Guaraní paraguayo 🇵🇾', QAR:'Rial catarí 🇶🇦',
+    RON:'Leu rumano 🇷🇴', RSD:'Dinar serbio 🇷🇸', RUB:'Rublo ruso 🇷🇺',
+    RWF:'Franco ruandés 🇷🇼', SAR:'Rial saudí 🇸🇦', SBD:'Dólar salomonense 🇸🇧',
+    SCR:'Rupia seychellense 🇸🇨', SDG:'Libra sudanesa 🇸🇩', SEK:'Corona sueca 🇸🇪',
+    SGD:'Dólar de Singapur 🇸🇬', SHP:'Libra Santa Elena 🇸🇭', SLE:'Leone sierraleonés 🇸🇱',
+    SLL:'Leone sierraleonés (viejo) 🇸🇱', SOS:'Chelín somalí 🇸🇴', SRD:'Dólar surinamés 🇸🇷',
+    SSP:'Libra sursudanesa 🇸🇸', STN:'Dobra santotomense 🇸🇹', SYP:'Libra siria 🇸🇾',
+    SZL:'Lilangeni esuatiní 🇸🇿', THB:'Baht tailandés 🇹🇭', TJS:'Somoni tayiko 🇹🇯',
+    TMT:'Manat turcomano 🇹🇲', TND:'Dinar tunecino 🇹🇳', TOP:'Paʻanga tongano 🇹🇴',
+    TRY:'Lira turca 🇹🇷', TTD:'Dólar Trinidad y Tobago 🇹🇹', TVD:'Dólar tuvaluano 🇹🇻',
+    TWD:'Nuevo dólar taiwanés 🇹🇼', TZS:'Chelín tanzano 🇹🇿', UAH:'Grivna ucraniana 🇺🇦',
+    UGX:'Chelín ugandés 🇺🇬', USD:'Dólar estadounidense 🇺🇸', UYU:'Peso uruguayo 🇺🇾',
+    UZS:'Som uzbeko 🇺🇿', VES:'Bolívar venezolano 🇻🇪', VND:'Dong vietnamita 🇻🇳',
+    VUV:'Vatu vanuatuense 🇻🇺', WST:'Tala samoana 🇼🇸', XAF:'Franco CFA Central 🌍',
+    XCD:'Dólar Caribe Oriental 🏝️', XDR:'Derecho especial de giro 🌐',
+    XOF:'Franco CFA Occidental 🌍', XPF:'Franco CFP 🏝️', YER:'Rial yemení 🇾🇪',
+    ZAR:'Rand sudafricano 🇿🇦', ZMW:'Kwacha zambiano 🇿🇲', ZWL:'Dólar zimbabuense 🇿🇼',
+  };
+
+  let STATE: FxState = { arsPerUnit: {}, intlPerUsd: {}, intlNames: INTL_NAMES, updatedAt: 0 };
+
+  // ==========================================================
+  //  LOAD DATA
+  // ==========================================================
+  async function load(force = false) {
+    if (force) clearCache();
+    setStatus('loading', 'Cargando cotizaciones…');
+    try {
+      const [dolares, otras, intl] = await Promise.all([fetchArDolares(), fetchArOtras(), fetchIntl()]);
+
+      const ars: FxState['arsPerUnit'] = {};
+      for (const d of dolares) {
+        const key = `USD_${d.casa.toUpperCase().replace('CONTADOCONLIQUI','CCL').replace('TURISTA','TARJETA')}`;
+        const k = key in COIN_LABELS ? key : `USD_${d.casa.toUpperCase()}`;
+        ars[k] = { ...COIN_LABELS[k] || { label: d.nombre, flag: '🇦🇷' }, venta: d.venta, compra: d.compra, casa: d.casa };
+      }
+      for (const o of otras) {
+        const ok = `${o.moneda}_AR`;
+        if (COIN_LABELS[ok]) ars[ok] = { ...COIN_LABELS[ok], venta: o.venta, compra: o.compra };
+      }
+
+      STATE = {
+        arsPerUnit: ars,
+        intlPerUsd: intl.rates,
+        intlNames: INTL_NAMES,
+        updatedAt: getCacheTs('fx_ar_dolares') || Date.now(),
+      };
+
+      renderAll();
+      setStatus('ok', `Actualizado ${humanAgo(STATE.updatedAt)}`);
+    } catch (e) {
+      console.error(e);
+      setStatus('err', '⚠️ No se pudo cargar. Reintentá.');
+    }
+  }
+
+  function setStatus(kind: 'loading' | 'ok' | 'err', text: string) {
+    const dot = document.getElementById('status-dot')!;
+    dot.className = 'dot ' + (kind === 'ok' ? 'ok' : kind === 'err' ? 'err' : '');
+    document.getElementById('status-text')!.textContent = text;
+  }
+
+  // ==========================================================
+  //  RENDER: AR TABLE
+  // ==========================================================
+  const AR_BADGES: Record<string, string> = {
+    USD_OFICIAL: 'oficial', USD_BLUE: 'blue', USD_MEP: 'mep', USD_CCL: 'ccl',
+    USD_TARJETA: 'tarjeta', USD_CRIPTO: 'cripto', USD_MAYORISTA: 'mayo',
+    EUR_AR: 'eur', BRL_AR: 'brl', CLP_AR: 'clp', UYU_AR: 'uyu',
+  };
+
+  function renderArTable() {
+    const container = document.getElementById('ar-table')!;
+    const order = ['USD_OFICIAL', 'USD_BLUE', 'USD_MEP', 'USD_CCL', 'USD_TARJETA', 'USD_CRIPTO', 'USD_MAYORISTA', 'EUR_AR', 'BRL_AR', 'CLP_AR', 'UYU_AR'];
+    const rows: string[] = [];
+    for (const k of order) {
+      const q = STATE.arsPerUnit[k];
+      if (!q) continue;
+      const spread = q.compra && q.venta && q.compra > 0 ? ((q.venta - q.compra) / q.compra * 100) : null;
+      const badgeClass = AR_BADGES[k] ? `badge-${AR_BADGES[k]}` : '';
+      const badgeText = q.label.replace(/^USD /, '').replace(/\s*\(.*\)$/, '');
+      const isDolar = k.startsWith('USD_');
+      rows.push(`
+        <div class="rate-row">
+          <div class="nom-wrap">
+            <span class="nom">${q.flag} ${isDolar ? 'Dólar' : q.label.replace(/\s*\(.*\)$/, '')}<span class="badge ${badgeClass}">${isDolar ? badgeText : '1 unidad'}</span></span>
+            <span class="sub">${q.casa ? 'dolarapi · casa ' + q.casa : 'vs peso argentino'}</span>
+          </div>
+          <div class="cp">${q.compra ? fmtArs(q.compra) : '—'}</div>
+          <div class="val">${fmtArs(q.venta)}</div>
+          <div class="var">${spread !== null ? `${spread.toFixed(1)}%` : '—'}</div>
+        </div>
+      `);
+    }
+    container.innerHTML = rows.join('') || '<div class="loading">Sin datos</div>';
+
+    // Brecha
+    const oficial = STATE.arsPerUnit['USD_OFICIAL']?.venta;
+    const blue = STATE.arsPerUnit['USD_BLUE']?.venta;
+    const box = document.getElementById('brecha-box')!;
+    if (oficial && blue && oficial > 0) {
+      const brecha = ((blue - oficial) / oficial * 100);
+      const clima = brecha < 10 ? '🟢 baja (estabilidad)' : brecha < 30 ? '🟡 media (atención)' : '🔴 alta (tensión cambiaria)';
+      box.style.display = '';
+      box.innerHTML = `<div><strong>Brecha blue vs oficial:</strong> ${brecha.toFixed(1)}% · ${clima}</div>`;
+    } else {
+      box.style.display = 'none';
+    }
+  }
+
+  // ==========================================================
+  //  RENDER: INTL TABLE
+  // ==========================================================
+  let INTL_EXPANDED = false;
+  let INTL_FILTER = '';
+
+  function renderIntlTable() {
+    const container = document.getElementById('intl-table')!;
+    const countEl = document.getElementById('intl-count')!;
+    const toggleBtn = document.getElementById('intl-toggle') as HTMLButtonElement;
+
+    const allKeys = Object.keys(STATE.intlPerUsd).filter(k => k !== 'USD' && k !== 'ARS');
+    countEl.textContent = allKeys.length.toString();
+
+    // Filtrado
+    const filter = INTL_FILTER.trim().toLowerCase();
+    let visible: string[];
+    if (filter) {
+      visible = allKeys.filter(k => {
+        const name = (INTL_NAMES[k] || k).toLowerCase();
+        return k.toLowerCase().includes(filter) || name.includes(filter);
+      });
+    } else if (INTL_EXPANDED) {
+      visible = allKeys.slice().sort((a, b) => (INTL_NAMES[a] || a).localeCompare(INTL_NAMES[b] || b, 'es'));
+    } else {
+      visible = INTL_TOP.filter(k => STATE.intlPerUsd[k]);
+    }
+
+    const rows: string[] = [];
+    for (const sym of visible) {
+      const rate = STATE.intlPerUsd[sym];
+      if (!rate) continue;
+      const inv = 1 / rate;
+      const name = INTL_NAMES[sym] || sym;
+      rows.push(`
+        <div class="rate-row">
+          <div class="nom-wrap">
+            <span class="nom">${name}</span>
+            <span class="sub">ISO ${sym}</span>
+          </div>
+          <div></div>
+          <div class="val">${fmtNum(rate, 4)} ${sym}</div>
+          <div class="var">${fmtNum(inv, 6)} USD</div>
+        </div>
+      `);
+    }
+    container.innerHTML = rows.join('') || '<div class="loading">Sin resultados</div>';
+
+    if (filter) {
+      toggleBtn.style.display = 'none';
+    } else {
+      toggleBtn.style.display = '';
+      toggleBtn.textContent = INTL_EXPANDED ? '← Ver solo las 15 más populares' : `Ver las ${allKeys.length} monedas →`;
+    }
+  }
+
+  // ==========================================================
+  //  CONVERTER
+  // ==========================================================
+  function populateSelects() {
+    const selects = [document.getElementById('from-currency'), document.getElementById('to-currency')] as HTMLSelectElement[];
+    const optGroups: string[] = [];
+
+    // AR group
+    const arKeys = ['USD_OFICIAL','USD_BLUE','USD_MEP','USD_CCL','USD_TARJETA','USD_CRIPTO','USD_MAYORISTA','EUR_AR','BRL_AR','CLP_AR','UYU_AR'].filter(k => STATE.arsPerUnit[k]);
+    if (arKeys.length) {
+      const items = arKeys.map(k => `<option value="${k}">${STATE.arsPerUnit[k].flag} ${STATE.arsPerUnit[k].label}</option>`).join('');
+      optGroups.push(`<optgroup label="🇦🇷 Argentina (vs ARS)">${items}</optgroup>`);
+    }
+
+    // ARS base
+    optGroups.push(`<optgroup label="Peso argentino"><option value="ARS">🇦🇷 ARS (Peso argentino)</option></optgroup>`);
+
+    // Intl group: TODAS las monedas que devuelva la API, ordenadas alfabéticamente
+    const allIntl = Object.keys(STATE.intlPerUsd).filter(k => k !== 'ARS'); // ARS ya está en AR
+    if (!allIntl.includes('USD')) allIntl.unshift('USD');
+    allIntl.sort((a, b) => {
+      // USD y top monedas primero
+      const tops = ['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'CHF', 'BRL', 'MXN'];
+      const ai = tops.indexOf(a), bi = tops.indexOf(b);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return (INTL_NAMES[a] || a).localeCompare(INTL_NAMES[b] || b, 'es');
+    });
+    const intlItems = allIntl.map(k => `<option value="INTL_${k}">${INTL_NAMES[k] || k + ' (' + k + ')'}</option>`).join('');
+    optGroups.push(`<optgroup label="🌍 Internacional (${allIntl.length} monedas, base USD)">${intlItems}</optgroup>`);
+
+    const html = optGroups.join('');
+    const fromSaved = selects[0].value;
+    const toSaved = selects[1].value;
+    selects[0].innerHTML = html;
+    selects[1].innerHTML = html;
+
+    // Set defaults or restore
+    selects[0].value = STATE.arsPerUnit[fromSaved] || fromSaved.startsWith('INTL_') || fromSaved === 'ARS' ? fromSaved : 'USD_BLUE';
+    selects[1].value = STATE.arsPerUnit[toSaved] || toSaved.startsWith('INTL_') || toSaved === 'ARS' ? toSaved : 'ARS';
+  }
+
+  // Convert X units of "from" to "to"
+  // Uses ARS as common pivot for AR-coins, and USD as pivot for intl.
+  // Cross: if one is AR and other is INTL, goes AR → ARS → USD (oficial) → INTL.
+  function convert(amount: number, from: string, to: string): { value: number; explain: string } | null {
+    if (!amount || from === to) return { value: amount, explain: '1:1' };
+
+    const oficialVenta = STATE.arsPerUnit['USD_OFICIAL']?.venta;
+    const usdPerArs = oficialVenta ? 1 / oficialVenta : null;
+
+    // Helper: convert ANY currency to USD amount
+    const toUsd = (amt: number, sym: string): number | null => {
+      if (sym === 'USD' || sym === 'INTL_USD') return amt;
+      if (sym.startsWith('INTL_')) {
+        const code = sym.replace('INTL_', '');
+        const r = STATE.intlPerUsd[code];
+        return r ? amt / r : null;
+      }
+      if (sym === 'ARS') return usdPerArs ? amt * usdPerArs : null;
+      // AR coin (USD_BLUE etc) - venta = ARS per 1 unit
+      const q = STATE.arsPerUnit[sym];
+      if (!q) return null;
+      if (sym.startsWith('USD_')) return amt; // is already USD (variant)
+      // EUR_AR, BRL_AR, etc: 1 unit = q.venta ARS, convert to USD via oficial
+      if (!usdPerArs) return null;
+      return amt * q.venta * usdPerArs;
+    };
+
+    // Helper: convert USD amount to target
+    const fromUsd = (usd: number, sym: string): number | null => {
+      if (sym === 'USD' || sym === 'INTL_USD') return usd;
+      if (sym.startsWith('INTL_')) {
+        const code = sym.replace('INTL_', '');
+        const r = STATE.intlPerUsd[code];
+        return r ? usd * r : null;
+      }
+      if (sym === 'ARS') return oficialVenta ? usd * oficialVenta : null;
+      if (sym.startsWith('USD_')) return usd; // USD variant = same units of USD
+      const q = STATE.arsPerUnit[sym];
+      if (!q || !usdPerArs) return null;
+      return usd / (q.venta * usdPerArs);
+    };
+
+    // Special case: both AR-coins with ARS pivot (more accurate than USD pivot)
+    const fromIsAr = from in STATE.arsPerUnit || from === 'ARS';
+    const toIsAr = to in STATE.arsPerUnit || to === 'ARS';
+    if (fromIsAr && toIsAr) {
+      const arsFrom = from === 'ARS' ? amount : amount * STATE.arsPerUnit[from].venta;
+      const result = to === 'ARS' ? arsFrom : arsFrom / STATE.arsPerUnit[to].venta;
+      return { value: result, explain: `vía ARS` };
+    }
+
+    // Intl cross
+    const usd = toUsd(amount, from);
+    if (usd === null) return null;
+    const result = fromUsd(usd, to);
+    if (result === null) return null;
+    return { value: result, explain: 'vía USD' };
+  }
+
+  function renderConverter() {
+    const fromAmtEl = document.getElementById('from-amount') as HTMLInputElement;
+    const toAmtEl = document.getElementById('to-amount') as HTMLInputElement;
+    const fromEl = document.getElementById('from-currency') as HTMLSelectElement;
+    const toEl = document.getElementById('to-currency') as HTMLSelectElement;
+    const rateLine = document.getElementById('rate-line')!;
+
+    const amount = parseAmount(fromAmtEl.value);
+    const conv = convert(amount, fromEl.value, toEl.value);
+    if (conv === null) {
+      toAmtEl.value = '—';
+      rateLine.textContent = 'Sin cotización disponible';
+      return;
+    }
+    toAmtEl.value = fmtNum(conv.value, 4);
+    const unit = convert(1, fromEl.value, toEl.value);
+    if (unit) {
+      const fromLabel = fromEl.options[fromEl.selectedIndex].text;
+      const toLabel = toEl.options[toEl.selectedIndex].text;
+      rateLine.textContent = `1 ${fromLabel} = ${fmtNum(unit.value, 6)} ${toLabel} (${conv.explain})`;
+    }
+  }
+
+  function renderAll() {
+    renderArTable();
+    renderIntlTable();
+    populateSelects();
+    renderConverter();
+  }
+
+  // ==========================================================
+  //  EVENTS
+  // ==========================================================
+  document.getElementById('from-amount')!.addEventListener('input', renderConverter);
+  document.getElementById('from-currency')!.addEventListener('change', renderConverter);
+  document.getElementById('to-currency')!.addEventListener('change', renderConverter);
+  document.getElementById('swap')!.addEventListener('click', () => {
+    const fromEl = document.getElementById('from-currency') as HTMLSelectElement;
+    const toEl = document.getElementById('to-currency') as HTMLSelectElement;
+    [fromEl.value, toEl.value] = [toEl.value, fromEl.value];
+    renderConverter();
+  });
+  document.getElementById('refresh')!.addEventListener('click', () => load(true));
+  document.getElementById('intl-toggle')!.addEventListener('click', () => {
+    INTL_EXPANDED = !INTL_EXPANDED;
+    renderIntlTable();
+  });
+  document.getElementById('intl-search')!.addEventListener('input', (e) => {
+    INTL_FILTER = (e.target as HTMLInputElement).value;
+    renderIntlTable();
+  });
+
+  // ==========================================================
+  //  INIT
+  // ==========================================================
+  load(false);
+</script>
