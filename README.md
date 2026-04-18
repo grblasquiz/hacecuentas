@@ -23,11 +23,46 @@
 - **[Tablas de referencia](https://hacecuentas.com/tabla/tabla-imc-peso-altura)** — IMC, monotributo, ganancias, retenciones y más
 - **[Comparadores](https://hacecuentas.com/comparar/plazo-fijo-vs-fci-vs-dolar)** — plazo fijo vs FCI, monotributo vs RI, etc.
 - **[Páginas por provincia argentina](https://hacecuentas.com/argentina/buenos-aires/ingresos-brutos)** — IIBB, patente, sellos, costo del m²
+- **[Valores BCRA en vivo](https://hacecuentas.com/valores-bcra)** — dólar oficial, MEP, blue, CCL, tarjeta, UVA, inflación INDEC
 - **Calculadoras LATAM** — México, Colombia, Chile
 - **Schema.org completo** — FAQ, HowTo, BreadcrumbList, Dataset
 - **Dark mode + responsive** — funciona en cualquier dispositivo
 - **100% estático** — 0 dependencias de runtime, carga instantánea
 - **Sin cookies, sin tracking** — procesamiento 100% local en el browser
+
+---
+
+## Calculadoras más usadas
+
+### Finanzas y sueldos (Argentina)
+- [Sueldo en mano Argentina](https://hacecuentas.com/sueldo-en-mano-argentina) — neto a partir del bruto con descuentos
+- [Aguinaldo SAC](https://hacecuentas.com/calculadora-aguinaldo-sac) — primer y segundo semestre
+- [Indemnización por despido sin causa](https://hacecuentas.com/calculadora-indemnizacion-despido)
+- [Monotributo 2026](https://hacecuentas.com/calculadora-monotributo-2026) — categoría según ingresos
+- [Impuesto a las Ganancias (sueldo)](https://hacecuentas.com/calculadora-impuesto-ganancias-sueldo)
+- [Plazo fijo](https://hacecuentas.com/calculadora-plazo-fijo) — TNA, TEA, rendimiento
+- [Cuota de préstamo](https://hacecuentas.com/calculadora-cuota-prestamo)
+- [Interés compuesto](https://hacecuentas.com/calculadora-interes-compuesto)
+- [IVA: agregar o discriminar](https://hacecuentas.com/calculadora-iva-agregar-discriminar)
+- [Conversor dólar Argentina](https://hacecuentas.com/conversor-dolar-argentina) — oficial, MEP, blue, CCL, tarjeta
+
+### Salud y fitness
+- [IMC (Índice de Masa Corporal)](https://hacecuentas.com/calculadora-imc)
+- [Metabolismo basal (BMR) y TDEE](https://hacecuentas.com/calculadora-metabolismo-basal-bmr-tdee)
+- [Calorías diarias (TDEE)](https://hacecuentas.com/calculadora-calorias-diarias-tdee)
+- [Embarazo — fecha probable de parto](https://hacecuentas.com/calculadora-embarazo)
+- [Semanas de embarazo](https://hacecuentas.com/calculadora-semanas-embarazo)
+- [Agua diaria recomendada](https://hacecuentas.com/calculadora-agua-diaria-recomendada)
+
+### Matemática y conversiones
+- [Regla de tres simple](https://hacecuentas.com/calculadora-regla-de-tres-simple)
+- [Porcentajes](https://hacecuentas.com/calculadora-porcentajes)
+- [Edad exacta](https://hacecuentas.com/calculadora-edad-exacta) — años, meses y días
+- [Días entre dos fechas](https://hacecuentas.com/dias-entre-dos-fechas)
+- [Cuenta regresiva](https://hacecuentas.com/calculadora-cuenta-regresiva-dias-faltan)
+- [Propina y dividir cuenta](https://hacecuentas.com/calculadora-propina-dividir-cuenta)
+
+**[Ver las 535+ calculadoras →](https://hacecuentas.com)**
 
 ---
 

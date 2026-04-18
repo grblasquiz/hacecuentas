@@ -849,9 +849,10 @@ const formatFreshnessDate = (iso: string): string => {
     background:
       radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 55%),
       linear-gradient(135deg, var(--accent-soft) 0%, color-mix(in srgb, #a78bfa 15%, var(--accent-soft)) 100%);
-    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+    border: 1.5px solid color-mix(in srgb, var(--accent) 35%, transparent);
     padding: 2rem 1.75rem;
     overflow: hidden;
+    animation: primary-reveal 0.9s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .result.primary::before { display: none; }
   .result.primary::after {
@@ -862,6 +863,28 @@ const formatFreshnessDate = (iso: string): string => {
     background: radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, transparent), transparent 70%);
     border-radius: 50%;
     pointer-events: none;
+  }
+
+  /* Halo de primera aparición — se expande y desvanece una sola vez */
+  @keyframes primary-reveal {
+    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 28%, transparent); }
+    60%  { box-shadow: 0 0 0 12px color-mix(in srgb, var(--accent) 10%, transparent); }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+
+  /* Dark mode: reemplazar gradiente pastel por tint azul sobre el fondo oscuro */
+  html[data-theme="dark"] .result.primary {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(96, 165, 250, 0.18) 0%, transparent 55%),
+      linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(124, 58, 237, 0.10) 100%);
+    border-color: rgba(147, 197, 253, 0.28);
+  }
+  html[data-theme="dark"] .result.primary::after {
+    background: radial-gradient(circle, rgba(96, 165, 250, 0.22), transparent 70%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .result.primary { animation: none; }
   }
 
   .result-label {
