@@ -106,7 +106,8 @@ const schemaFaq = {
       <div class="conv-grid">
         <div class="conv-side">
           <label for="from-amount">Monto</label>
-          <input id="from-amount" type="text" inputmode="decimal" value="100" autocomplete="off" />
+          <input id="from-amount" type="text" inputmode="decimal" value="100" autocomplete="off" aria-label="Monto a convertir (editable)" />
+          <span class="edit-hint">Tocá para editar</span>
           <select id="from-currency" class="select-coin">
             <option value="USD_BLUE">🇦🇷 USD Blue (AR)</option>
           </select>
@@ -332,17 +333,44 @@ const schemaFaq = {
   }
   .conv-side input {
     font-size: 2rem;
-    padding: 0;
-    border: 0;
-    background: transparent;
+    padding: .4rem .65rem;
+    border: 2px dashed var(--border-strong);
+    border-radius: 6px;
+    background: var(--bg);
     font-weight: 800;
     color: var(--text);
     font-variant-numeric: tabular-nums;
     font-family: var(--font-mono), system-ui;
     width: 100%;
+    cursor: text;
+    transition: all .15s;
   }
-  .conv-side input:focus { outline: none; }
-  .conv-side input[readonly] { color: var(--accent); }
+  .conv-side input:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .conv-side input:focus {
+    outline: none;
+    border-style: solid;
+    border-color: var(--accent);
+    background: var(--bg);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .conv-side input[readonly] {
+    color: var(--accent);
+    border-style: dotted;
+    border-color: var(--border);
+    background: transparent;
+    cursor: default;
+  }
+  .conv-side input[readonly]:hover { background: transparent; border-color: var(--border); }
+  .conv-side .edit-hint {
+    font-size: .68rem;
+    color: var(--text-subtle);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    margin-top: -.3rem;
+  }
+  .conv-side .edit-hint::before { content: '✏️'; font-size: .85rem; }
   .select-coin {
     padding: .55rem .7rem;
     border: 1px solid var(--border-strong);
