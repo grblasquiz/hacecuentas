@@ -549,6 +549,9 @@ import { leyCoulombFuerzaElectrica } from './ley-coulomb-fuerza-electrica';
 import { leyGasesIdeales } from './ley-gases-ideales';
 import { leyOhmVoltajeCorrienteResistencia } from './ley-ohm-voltaje-corriente-resistencia';
 import { leyOhmVoltajeResistencia } from './ley-ohm-voltaje-resistencia';
+import { resistenciaLedSerieParalelo } from './resistencia-led-serie-paralelo';
+import { potenciaElectricaPVi } from './potencia-electrica-p-vi';
+import { divisorVoltajeResistencias } from './divisor-voltaje-resistencias';
 import { licenciaMaternidadPaternidad } from './licencia-maternidad-paternidad';
 import { licenciaPorMaternidadPaternidadDias } from './licencia-por-maternidad-paternidad-dias';
 import { limpiezaFrecuenciaAmbiente } from './limpieza-frecuencia-ambiente';
@@ -2048,6 +2051,9 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ley-gases-ideales': leyGasesIdeales,
   'ley-ohm-voltaje-corriente-resistencia': leyOhmVoltajeCorrienteResistencia,
   'ley-ohm-voltaje-resistencia': leyOhmVoltajeResistencia,
+  'resistencia-led-serie-paralelo': resistenciaLedSerieParalelo,
+  'potencia-electrica-p-vi': potenciaElectricaPVi,
+  'divisor-voltaje-resistencias': divisorVoltajeResistencias,
   'licencia-maternidad-paternidad': licenciaMaternidadPaternidad,
   'licencia-por-maternidad-paternidad-dias': licenciaPorMaternidadPaternidadDias,
   'limpieza-frecuencia-ambiente': limpiezaFrecuenciaAmbiente,

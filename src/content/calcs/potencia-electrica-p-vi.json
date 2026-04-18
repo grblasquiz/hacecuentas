@@ -1,0 +1,228 @@
+{
+  "slug": "calculadora-potencia-electrica-p-vi",
+  "title": "Calculadora Potencia Eléctrica 2026 — P=VI=I²R=V²/R | Hacé Cuentas",
+  "h1": "Calculadora de potencia eléctrica (P = V × I)",
+  "description": "Calculá potencia eléctrica en watts con cualquiera de las 3 fórmulas equivalentes: P = V×I, P = I²×R o P = V²/R. Ingresá cualquier par de (V, I, R) y obtené la potencia más el consumo mensual/anual y el costo en electricidad.",
+  "category": "electronica",
+  "audience": "global",
+  "icon": "🔌",
+  "formulaId": "potencia-electrica-p-vi",
+  "seoKeywords": [
+    "potencia electrica calculadora",
+    "P igual V por I",
+    "watts calculator",
+    "calcular watts",
+    "I cuadrado por R",
+    "V cuadrado sobre R",
+    "consumo electrico kwh",
+    "costo kwh mensual",
+    "potencia aparente vs activa",
+    "factor potencia"
+  ],
+  "intro": "La **potencia eléctrica (P)** se mide en **watts (W)** y representa la energía eléctrica transferida por unidad de tiempo. En circuitos DC y resistivos AC, se calcula por tres fórmulas equivalentes derivadas de la Ley de Ohm: **P = V × I**, **P = I² × R**, **P = V² / R**. Esta calculadora acepta cualquier par de valores (V-I, V-R, I-R) y devuelve la potencia junto con el **consumo diario, mensual y anual** en kWh, y el **costo eléctrico** según tarifa de tu país (AR, MX, CO, CL, EE.UU.).",
+  "keyTakeaway": "Potencia eléctrica: **P = V × I = I² × R = V² / R** (las 3 dan el mismo resultado). 1 W × 1 hora = 1 Wh; 1000 Wh = 1 kWh. Un aparato de **100 W** funcionando **24h/día** consume **72 kWh/mes** (~$3.600 AR tarifa residencial).",
+  "useCases": [
+    "Estimar el consumo mensual y costo de un electrodoméstico (heladera, aire, PC, TV).",
+    "Dimensionar una fuente de alimentación según la carga conectada.",
+    "Calcular la potencia disipada por una resistencia para elegir el tamaño correcto.",
+    "Comparar el costo operativo de distintos electrodomésticos (LED vs incandescente, A+++ vs B).",
+    "Diseñar un sistema solar fotovoltaico según consumo total de la casa.",
+    "Verificar que un circuito no exceda la capacidad del interruptor termomagnético."
+  ],
+  "fields": [
+    {
+      "id": "modo",
+      "label": "Variables conocidas",
+      "type": "select",
+      "required": true,
+      "default": "VI",
+      "options": [
+        {
+          "value": "VI",
+          "label": "Voltaje y Corriente (V, I)"
+        },
+        {
+          "value": "IR",
+          "label": "Corriente y Resistencia (I, R)"
+        },
+        {
+          "value": "VR",
+          "label": "Voltaje y Resistencia (V, R)"
+        }
+      ]
+    },
+    {
+      "id": "valor1",
+      "label": "Primer valor",
+      "type": "number",
+      "placeholder": "220",
+      "min": 0,
+      "step": 0.001,
+      "required": true,
+      "help": "V en volts, I en amperes, R en ohms"
+    },
+    {
+      "id": "valor2",
+      "label": "Segundo valor",
+      "type": "number",
+      "placeholder": "5",
+      "min": 0,
+      "step": 0.001,
+      "required": true
+    },
+    {
+      "id": "horasPorDia",
+      "label": "Horas de uso por día",
+      "type": "number",
+      "placeholder": "8",
+      "min": 0,
+      "max": 24,
+      "step": 0.5,
+      "default": 8,
+      "required": false,
+      "help": "Para estimar consumo mensual y costo"
+    },
+    {
+      "id": "tarifaKwh",
+      "label": "Tarifa de electricidad ($ por kWh)",
+      "type": "number",
+      "placeholder": "50",
+      "min": 0,
+      "step": 0.01,
+      "default": 50,
+      "required": false,
+      "help": "Ej: AR ~$50-100/kWh, MX ~$3 MXN, US ~$0.15 USD"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "potenciaWatts",
+      "label": "Potencia",
+      "format": "number",
+      "suffix": "W",
+      "primary": true
+    },
+    {
+      "id": "potenciaKw",
+      "label": "Potencia en kW",
+      "format": "number",
+      "suffix": "kW"
+    },
+    {
+      "id": "voltaje",
+      "label": "Voltaje",
+      "format": "number",
+      "suffix": "V"
+    },
+    {
+      "id": "corriente",
+      "label": "Corriente",
+      "format": "number",
+      "suffix": "A"
+    },
+    {
+      "id": "resistencia",
+      "label": "Resistencia",
+      "format": "number",
+      "suffix": "Ω"
+    },
+    {
+      "id": "consumoDiario",
+      "label": "Consumo diario",
+      "format": "number",
+      "suffix": "kWh/día"
+    },
+    {
+      "id": "consumoMensual",
+      "label": "Consumo mensual",
+      "format": "number",
+      "suffix": "kWh/mes"
+    },
+    {
+      "id": "costoMensual",
+      "label": "Costo mensual estimado",
+      "format": "currency"
+    },
+    {
+      "id": "formulaAplicada",
+      "label": "Fórmula aplicada"
+    },
+    {
+      "id": "resumen",
+      "label": "Interpretación"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: aire acondicionado 220 V que consume 5 A",
+    "steps": [
+      "Voltaje de red residencial AR: **220 V**.",
+      "Corriente del aire acondicionado medida con pinza amperométrica: **5 A**.",
+      "Aplicamos **P = V × I** = 220 × 5 = **1.100 W = 1.1 kW**.",
+      "Si funciona 8 h/día: consumo diario = 1.1 × 8 = **8.8 kWh/día**.",
+      "Consumo mensual (30 días): 8.8 × 30 = **264 kWh/mes**.",
+      "Con tarifa de $80/kWh AR: **264 × 80 = $21.120/mes**."
+    ],
+    "result": "El aire consume 1.1 kW y cuesta ~$21.120 mensual si se usa 8h/día."
+  },
+  "explanation": "## Las 3 fórmulas equivalentes\n\nLa potencia eléctrica se puede calcular de tres formas equivalentes — todas derivadas de la **Ley de Ohm** (V = I × R):\n\n| Variables conocidas | Fórmula | Cuándo usarla |\n|---|---|---|\n| V e I | **P = V × I** | La más directa — medís con voltímetro + amperímetro |\n| I y R | **P = I² × R** | Cuando conocés la resistencia y la corriente que pasa |\n| V y R | **P = V² / R** | Cuando conocés voltaje y resistencia del componente |\n\nLas tres dan el mismo resultado. Ejemplo: 12 V × 2 A = 24 W = (2)² × 6 = 24 W = (12)² / 6 = 24 W.\n\n## Potencia activa, aparente y reactiva (AC)\n\nEn **corriente alterna (AC)** con cargas inductivas o capacitivas (motores, heladeras, lámparas fluorescentes), aparecen 3 potencias:\n\n- **Potencia Activa (P)** = V × I × cos(φ) — en watts (W). La que realmente hace trabajo útil.\n- **Potencia Aparente (S)** = V × I — en volt-amperes (VA). Lo que ve la red eléctrica.\n- **Potencia Reactiva (Q)** = V × I × sen(φ) — en VAR. Energía que 'va y viene' sin trabajo útil.\n\nRelación: **S² = P² + Q²** (triángulo de potencias).\n\n**Factor de potencia (cos φ)** = P/S. Valores típicos:\n- Calefactor/heladera pura: cos φ = 1 (100%)\n- Heladera moderna: cos φ = 0.85-0.95\n- Motor industrial sin corrección: cos φ = 0.7-0.8\n- Luz fluorescente tubular vieja: cos φ = 0.5-0.6\n\nCuando cos φ < 0.95, la empresa eléctrica cobra **energía reactiva** a usuarios industriales. En residencial no suele haber penalización.\n\n## Unidades y conversiones\n\n| Unidad | Abrev. | Equivalencia |\n|---|---|---|\n| Watt | W | Unidad SI base |\n| Kilowatt | kW | 1.000 W |\n| Megawatt | MW | 1.000.000 W |\n| Horsepower | HP | 746 W (mecánico) |\n| Caballo de vapor | CV | 735.5 W (métrico) |\n| Watt-hora | Wh | energía, 1 W × 1 h |\n| Kilowatt-hora | kWh | 1.000 Wh (cómo te factura la eléctrica) |\n\n**Ejemplo**: un motor de 1 HP = **746 W**. Si trabaja 8 h, consume 0.746 × 8 = **5.97 kWh**.\n\n## Tarifa eléctrica por país (referencia 2026)\n\n| País | Tarifa residencial aprox | Notas |\n|---|---|---|\n| Argentina | $50-120/kWh | Segmentada por consumo (N1/N2/N3) |\n| México | $3-5 MXN/kWh | Tarifa DAC si >3000 kWh/2 meses |\n| Chile | $160-200 CLP/kWh | Sube en zonas aisladas |\n| Colombia | $650-900 COP/kWh | Estratos 1-6 con subsidios |\n| Perú | S/ 0.60-0.80/kWh | Similar a Chile |\n| Estados Unidos | USD 0.13-0.25/kWh | Muy variable por estado |\n| España | €0.15-0.25/kWh | Con hora valle más barata |\n\n## Tabla rápida: consumo típico de electrodomésticos\n\n| Aparato | Potencia típica | Uso diario | kWh/mes | Costo/mes (AR @$80/kWh) |\n|---|---|---|---|---|\n| Heladera no-frost | 300-500 W (on/off) | 24 h (~30% ciclo) | 70-100 | $5.600-$8.000 |\n| Aire split frío 3000F | 1.100-1.500 W | 6 h verano | 200-270 | $16.000-$21.600 |\n| Termotanque eléctrico | 1.500 W | 3-4 h | 135-180 | $10.800-$14.400 |\n| TV LED 55\" | 120 W | 5 h | 18 | $1.440 |\n| PC gaming | 500 W | 6 h | 90 | $7.200 |\n| Lámpara LED 10W | 10 W | 5 h | 1.5 | $120 |\n| Lámpara incandescente 60W | 60 W | 5 h | 9 | $720 |\n| Microondas 1.000W | 1.000 W | 0.25 h | 7.5 | $600 |\n\n## Cómo medir potencia en tu casa\n\n1. **Pinza amperométrica** sobre el cable (mide corriente sin desconectar nada). Potencia = V × I × PF estimado.\n2. **Medidor enchufable** (enchufe + aparato a medir). Da kWh acumulado directo.\n3. **Lectura del medidor general**: apagar todo menos el aparato → tomar lectura 15 min → calcular kWh × 4 = kW.\n4. **Datasheet del fabricante**: útil pero no siempre representa consumo real (factor de uso, stand-by).\n\n## Stand-by — el ladrón silencioso\n\nAparatos apagados pero enchufados consumen **1-15 W 24/7** (vampire load):\n\n- TV apagada: 1-5 W → 0.7-3.6 kWh/mes\n- Cargador sin conectar: 0.1-0.5 W\n- Microondas (display): 2-5 W\n- Decodificador TV: 10-25 W\n\nDesconectar o usar zapatillas con switch ahorra hasta **5-10%** de la factura mensual.",
+  "faq": [
+    {
+      "q": "¿Cuál es la fórmula de potencia eléctrica?",
+      "a": "En DC o AC resistiva: **P = V × I** (potencia = voltaje × corriente). Es equivalente a **P = I² × R** o **P = V² / R** si conocés la resistencia. En AC con cargas inductivas/capacitivas se agrega el factor de potencia: **P = V × I × cos(φ)**."
+    },
+    {
+      "q": "¿Qué diferencia hay entre watts (W) y VA (volt-amperes)?",
+      "a": "**Watts (W)** = potencia activa, la que realmente hace trabajo útil. **VA** = potencia aparente, lo que ve la red. Para cargas resistivas puras (calefactor) son iguales. Para cargas inductivas (motores), VA > W y la diferencia es la potencia reactiva (VAR). El factor de potencia cos(φ) = W/VA."
+    },
+    {
+      "q": "¿Cómo convierto watts a kWh mensuales?",
+      "a": "kWh/mes = (watts × horas/día × 30) / 1000. Ejemplo: un aparato de 100 W usado 8 h/día durante 30 días = (100 × 8 × 30) / 1000 = **24 kWh/mes**."
+    },
+    {
+      "q": "¿1 HP cuántos watts son?",
+      "a": "**1 HP mecánico = 745.7 W** (la unidad que se usa en motores de USA/UK). **1 CV métrico = 735.5 W** (usado en Europa y algunos países LATAM). En cálculos rápidos: 1 HP ≈ 750 W, 1 CV ≈ 735 W. Un motor de 1 HP real genera 746 W mecánicos; la potencia eléctrica consumida es mayor porque incluye pérdidas: Potencia eléctrica ≈ HP / eficiencia_motor (0.75-0.90)."
+    },
+    {
+      "q": "¿Cómo sé el factor de potencia de mi electrodoméstico?",
+      "a": "El dato está en la **placa del aparato** (etiqueta con 'cos φ' o 'PF'). Valores típicos: heladera moderna 0.85-0.95, lavarropas 0.7-0.9, motor de bomba 0.6-0.8, LED/TV 0.5-0.9. Para residencial no afecta tu factura (se mide solo P), pero sí afecta el correcto dimensionamiento de cables y disyuntores."
+    },
+    {
+      "q": "¿Por qué mi aire dice '3000 frigorías' si busco watts?",
+      "a": "**Frigorías** es una unidad de **capacidad térmica**, no potencia eléctrica. 1 frigoría/h = 1.163 W térmico. Un split 3000 FC entrega **3000 × 1.163 = 3.490 W térmicos** pero **consume solo 1.000-1.200 W eléctricos** (porque el COP — coeficiente de performance — está entre 2.5 y 4). La cifra 3000FC es lo que 'enfría', no lo que 'consume'."
+    },
+    {
+      "q": "¿Por qué una resistencia se calienta?",
+      "a": "Toda la potencia eléctrica que pasa por una resistencia se transforma en **calor** (efecto Joule): P = I² × R. Por eso las resistencias se calientan, los cables eléctricos también (aunque menos por tener R baja), y por eso hay que dimensionar la R según la potencia que va a disipar. Una R de ¼ W que disipa 0.5 W se quema rápido."
+    },
+    {
+      "q": "¿Qué es un kilowatt-hora (kWh)?",
+      "a": "**1 kWh = 1.000 watts durante 1 hora.** Es unidad de **energía**, no de potencia. Un aparato de 1.000 W (1 kW) funcionando 1 hora consume 1 kWh. Un aparato de 100 W durante 10 horas también = 1 kWh. La empresa eléctrica te factura kWh × tarifa."
+    }
+  ],
+  "sources": [
+    {
+      "name": "IEC — International Electrotechnical Commission",
+      "url": "https://www.iec.ch"
+    },
+    {
+      "name": "Secretaría de Energía Argentina",
+      "url": "https://www.argentina.gob.ar/economia/energia"
+    },
+    {
+      "name": "U.S. Energy Information Administration",
+      "url": "https://www.eia.gov"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ley-ohm-voltaje-corriente-resistencia",
+    "calculadora-resistencia-led-serie-paralelo",
+    "calculadora-consumo-electrico-kwh-factura-luz",
+    "calculadora-factor-potencia-corregir"
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-18",
+    "updateType": "manual",
+    "notes": "Fórmula física fija, no requiere actualización de data externa"
+  }
+}

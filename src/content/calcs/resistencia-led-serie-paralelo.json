@@ -1,0 +1,213 @@
+{
+  "slug": "calculadora-resistencia-led-serie-paralelo",
+  "title": "Calculadora Resistencia LED 2026 — Limitadora | Hacé Cuentas",
+  "h1": "Calculadora de resistencia limitadora para LED",
+  "description": "Calculá la resistencia limitadora correcta para un LED según voltaje de fuente, caída del LED e intensidad. Devuelve valor exacto y valor comercial E12/E24 más cercano, con potencia disipada y calor generado.",
+  "category": "electronica",
+  "audience": "global",
+  "icon": "💡",
+  "formulaId": "resistencia-led-serie-paralelo",
+  "seoKeywords": [
+    "resistencia para led",
+    "limitar corriente led",
+    "como calcular resistencia led",
+    "led resistor calculator",
+    "resistencia led 12v",
+    "resistencia led 5v",
+    "resistencia led 9v",
+    "potencia resistencia led",
+    "led en serie",
+    "led en paralelo"
+  ],
+  "intro": "Un **LED** (diodo emisor de luz) es un componente no-óhmico: su corriente crece exponencialmente con el voltaje. Sin un limitador de corriente, el LED se destruye en milisegundos al superar sus 20-30 mA nominales. La **resistencia limitadora** en serie absorbe el excedente de voltaje y limita la corriente al valor seguro. Esta calculadora resuelve la fórmula: `R = (V_fuente − V_LED) / I_LED`, y además calcula la potencia disipada, el valor comercial E12 más cercano, el margen de seguridad y si se requiere resistencia de mayor potencia (¼ W, ½ W, 1 W).",
+  "keyTakeaway": "Fórmula: **R = (V_fuente − V_LED) / I_LED**. Para LED rojo 2 V @ 20 mA con fuente 9 V → **R = 350 Ω**, valor comercial **330 Ω**. Potencia = (V_fuente − V_LED) × I_LED. Elegí resistencia con **2× la potencia calculada** para durabilidad.",
+  "useCases": [
+    "Conectar un LED simple a una fuente DC (5 V, 9 V, 12 V, 24 V, USB, batería).",
+    "Armar strings de LEDs en serie o paralelo con el valor óptimo de resistencia por rama.",
+    "Diseñar indicadores LED para microcontroladores Arduino, ESP32, Raspberry Pi Pico.",
+    "Dimensionar resistencias para tiras LED SMD 3528 o 5050 de 12 V.",
+    "Calcular resistencia para LEDs de alta potencia (1 W, 3 W, 10 W) con driver lineal básico.",
+    "Elegir el valor comercial E12 más cercano al cálculo exacto.",
+    "Verificar que la resistencia no se sobrecalienta según su potencia nominal."
+  ],
+  "fields": [
+    {
+      "id": "vFuente",
+      "label": "Voltaje de fuente (V)",
+      "type": "number",
+      "placeholder": "9",
+      "min": 1,
+      "max": 500,
+      "step": 0.1,
+      "required": true,
+      "help": "Batería, USB, fuente switching, etc."
+    },
+    {
+      "id": "vLed",
+      "label": "Caída de tensión del LED (Vf)",
+      "type": "number",
+      "placeholder": "2",
+      "min": 0.5,
+      "max": 12,
+      "step": 0.1,
+      "required": true,
+      "help": "Rojo ~2V, Verde ~2.2V, Azul/Blanco ~3.2V, UV ~3.4V. Ver datasheet."
+    },
+    {
+      "id": "iLed",
+      "label": "Corriente del LED (mA)",
+      "type": "number",
+      "placeholder": "20",
+      "min": 1,
+      "max": 5000,
+      "step": 1,
+      "required": true,
+      "help": "Estándar 20 mA. LEDs de potencia: 350/700/1000 mA."
+    },
+    {
+      "id": "cantidad",
+      "label": "Cantidad de LEDs",
+      "type": "number",
+      "placeholder": "1",
+      "min": 1,
+      "max": 100,
+      "step": 1,
+      "default": 1,
+      "required": true
+    },
+    {
+      "id": "conexion",
+      "label": "Conexión",
+      "type": "select",
+      "required": true,
+      "default": "serie",
+      "options": [
+        {
+          "value": "serie",
+          "label": "En serie (misma corriente, voltajes se suman)"
+        },
+        {
+          "value": "paralelo",
+          "label": "En paralelo (mismo voltaje, corrientes se suman)"
+        }
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "id": "resistenciaExacta",
+      "label": "Resistencia exacta",
+      "format": "number",
+      "suffix": "Ω",
+      "primary": true
+    },
+    {
+      "id": "resistenciaE12",
+      "label": "Valor comercial más cercano (E12)"
+    },
+    {
+      "id": "potenciaDisipada",
+      "label": "Potencia disipada en R",
+      "format": "number",
+      "suffix": "W"
+    },
+    {
+      "id": "potenciaResistencia",
+      "label": "Resistencia recomendada (con margen)"
+    },
+    {
+      "id": "voltajeTotal",
+      "label": "Voltaje total usado por LEDs",
+      "format": "number",
+      "suffix": "V"
+    },
+    {
+      "id": "corrienteTotal",
+      "label": "Corriente total del circuito",
+      "format": "number",
+      "suffix": "A"
+    },
+    {
+      "id": "resumen",
+      "label": "Interpretación"
+    },
+    {
+      "id": "advertencia",
+      "label": "Advertencias de seguridad"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: 3 LEDs rojos en serie con fuente de 12 V",
+    "steps": [
+      "3 LEDs rojos en serie, cada uno con Vf = 2 V e I = 20 mA.",
+      "Voltaje total consumido por LEDs: **3 × 2 V = 6 V**.",
+      "Voltaje a absorber por la resistencia: **12 − 6 = 6 V**.",
+      "Corriente del string (misma para todos los LEDs en serie): **20 mA**.",
+      "**R = 6 V / 0.020 A = 300 Ω**.",
+      "Valor comercial E12 más cercano: **330 Ω** (siempre redondear hacia arriba para proteger el LED).",
+      "Potencia en R: **P = 6 × 0.020 = 0.12 W**. Usar resistencia de **¼ W (0.25 W)** o superior."
+    ],
+    "result": "R = 330 Ω, ¼ W. Los 3 LEDs consumen 6V × 20mA = 120 mW en total, más 120 mW en la resistencia."
+  },
+  "explanation": "## Por qué un LED necesita resistencia limitadora\n\nLos LEDs son **diodos semiconductores**. A diferencia de una resistencia óhmica, su curva V-I es **exponencial**: cuando el voltaje directo (Vf) supera el umbral, la corriente se dispara sin límite. Con 2.1 V el LED consume 20 mA; con 2.5 V puede consumir 500 mA y morir en microsegundos.\n\nLa resistencia en serie:\n\n1. Absorbe la diferencia entre V_fuente y Vf del LED.\n2. Limita la corriente a un valor seguro según la fórmula `I = (V_f − V_LED) / R`.\n3. Estabiliza el punto de trabajo del LED.\n\n## La fórmula\n\n```\nR = (V_fuente − V_LED) / I_LED\n```\n\nDonde:\n- **V_fuente** = voltaje de la batería/fuente (V)\n- **V_LED** = caída de tensión directa del LED (V)\n- **I_LED** = corriente deseada (A, no mA)\n\nEjemplo rápido: LED blanco (Vf = 3.2 V) a 20 mA con USB 5 V → R = (5 − 3.2) / 0.020 = **90 Ω**. Valor comercial: **100 Ω**.\n\n## Tabla de referencia rápida (LED estándar @ 20 mA)\n\n| Fuente | LED rojo (2 V) | LED verde (2.2 V) | LED azul/blanco (3.2 V) | LED UV (3.4 V) |\n|---|---|---|---|---|\n| 3.3 V | 65 Ω → 68 Ω | 55 Ω → 56 Ω | 5 Ω (no requiere) | No funciona |\n| 5 V | 150 Ω | 140 Ω → 150 Ω | 90 Ω → 100 Ω | 80 Ω → 82 Ω |\n| 9 V | 350 Ω → 330 Ω | 340 Ω → 330 Ω | 290 Ω → 300 Ω | 280 Ω → 300 Ω |\n| 12 V | 500 Ω → 470 Ω | 490 Ω → 470 Ω | 440 Ω → 470 Ω | 430 Ω → 470 Ω |\n| 24 V | 1100 Ω → 1 kΩ | 1090 Ω → 1 kΩ | 1040 Ω → 1 kΩ | 1030 Ω → 1 kΩ |\n\n## LEDs en serie vs. paralelo\n\n### En serie\n- **Misma corriente** para todos, **voltajes se suman**.\n- Ventaja: una sola resistencia limita toda la string.\n- Limitación: V_fuente debe ser > suma de Vf.\n- Ejemplo: 3 LEDs rojos (2 V c/u) en serie = 6 V. Con fuente 12 V, R absorbe 6 V.\n\n### En paralelo\n- **Mismo voltaje**, **corrientes se suman**.\n- Regla de oro: **una resistencia por rama**. Nunca una resistencia común para ramas paralelas.\n- Por qué: las Vf varían ±5% entre LEDs del mismo lote. Con una sola R común, un LED consume más corriente y se quema primero, luego los demás fallan en cadena.\n\n### Combinación serie-paralelo\nPara tiras de muchos LEDs, usar grupos de LEDs en serie y múltiples grupos en paralelo. Cada rama tiene su propia R limitadora.\n\n## Calcular la potencia de la resistencia\n\nLa resistencia disipa energía como calor: **P_R = (V_fuente − V_LED_total) × I_LED**.\n\n| Potencia calculada | Resistencia a usar | Margen seguridad |\n|---|---|---|\n| < 0.1 W | ¼ W (0.25 W) | 2.5× |\n| 0.1 – 0.2 W | ¼ W o ½ W | 1.3 – 2.5× |\n| 0.2 – 0.4 W | ½ W | 1.3 – 2.5× |\n| 0.4 – 0.8 W | 1 W | 1.3 – 2.5× |\n| > 1 W | 2 W o más (cerámica) | 1.5× mínimo |\n\n**Regla práctica**: multiplicar la potencia calculada por **2** y elegir el valor comercial más cercano arriba. Esto protege contra picos de voltaje, ambientes cálidos y envejecimiento del componente.\n\n## Valores comerciales (serie E12)\n\nLas resistencias comerciales más fáciles de conseguir son de la serie **E12**, 12 valores por década:\n\n`10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82`\n\nSe multiplican por potencias de 10: entonces tenés 100 Ω, 120 Ω, 150 Ω, ... 1 kΩ, 1.2 kΩ, 1.5 kΩ, ... 10 kΩ, 12 kΩ, ...\n\nCuando tu cálculo da un valor intermedio (por ejemplo 350 Ω), **elegí el valor comercial INMEDIATAMENTE SUPERIOR** (330 Ω está cerca pero protege menos; 390 Ω es más seguro).\n\n## Errores comunes al calcular\n\n1. **Usar mA en lugar de A**: R = 7 / 20 = 0.35 Ω (mal). Correcto: R = 7 / 0.020 = 350 Ω.\n2. **Olvidar la caída del LED**: R = 12 / 0.020 = 600 Ω. Sobrepasa la R y el LED quedará poco brillante. Correcto: R = (12 − 2) / 0.020 = 500 Ω.\n3. **Usar una sola R para LEDs en paralelo**: desbalancea corrientes y arruina los LEDs.\n4. **No considerar potencia**: usar ⅛ W cuando la cuenta da 0.5 W → se quema la resistencia.\n5. **Olvidar que Vf varía con la temperatura y el color**: un LED blanco a 5 °C puede tener Vf 3.5 V, no 3.2 V.\n\n## LEDs de alta potencia (1 W, 3 W, 10 W)\n\nLos LEDs de potencia (STAR MCPCB) consumen 350, 700 o 1000 mA. Con una sola resistencia, la pérdida es enorme: un LED de 1 W a 350 mA con fuente de 12 V requiere R = (12 − 3.2) / 0.35 = 25 Ω, **disipando 3 W en la resistencia** — esto es inaceptable.\n\nPara esos casos usar:\n- **Drivers lineales** (LM317, LM350).\n- **Drivers buck/boost** (eficiencia 80-95%).\n- **PWM con MOSFET** para dimmer de alta potencia.",
+  "faq": [
+    {
+      "q": "¿Puedo conectar un LED directo a una batería sin resistencia?",
+      "a": "**No, se quema en segundos.** Incluso si la batería entrega un voltaje 'parecido' al Vf del LED (ej: moneda 3V CR2032 y LED rojo 2V), la corriente puede superar 100 mA y destruir el LED. La excepción son LEDs de 5mm tipo 'keychain' con resistencia interna, pero ni siquiera esos duran mucho."
+    },
+    {
+      "q": "¿Qué pasa si uso una resistencia más grande que el cálculo?",
+      "a": "El LED se enciende **más tenue** porque recibe menos corriente. No hay riesgo para el componente. Si el cálculo da 330 Ω y usás 470 Ω, el LED funciona pero con ~60% del brillo máximo. Para LEDs indicadores donde no necesitás brillo máximo, es común usar **2-3× el valor calculado** para ahorrar energía y extender vida útil."
+    },
+    {
+      "q": "¿Qué pasa si uso una resistencia más chica que el cálculo?",
+      "a": "La corriente supera el valor seguro y el LED puede quemarse. A corto plazo, brilla más pero la vida útil cae drásticamente (un LED 20 mA puede durar 50.000 h a 20 mA, pero solo 1.000 h a 30 mA). A largo plazo, recalentamiento permanente, cambio de color, y eventual falla total."
+    },
+    {
+      "q": "¿Puedo usar PWM en lugar de resistencia?",
+      "a": "Sí, pero **solo en combinación con una resistencia limitadora**. PWM (Pulse Width Modulation) controla el brillo promedio cambiando el ciclo de trabajo, pero durante los pulsos 'ON' la corriente aún debe estar limitada por una resistencia o driver. Usar PWM sin limitador quema el LED al instante."
+    },
+    {
+      "q": "¿Cómo conecto varios LEDs del mismo color?",
+      "a": "**Serie**: si V_fuente ≥ suma de Vf. Ejemplo: 3 LEDs rojos (6 V total) con fuente 12V → R absorbe 6 V. **Paralelo**: usar una R por rama (nunca una R común), porque los LEDs no son idénticos en Vf. Si mezclás colores, **siempre paralelo con R por rama** (los Vf son muy distintos)."
+    },
+    {
+      "q": "¿Qué Vf usar si no conozco el datasheet?",
+      "a": "Valores típicos: **rojo 1.8-2.2 V**, **amarillo 2.1 V**, **verde 2.0-3.5 V** (los 'súper brillantes' tienen Vf alto), **azul 3.0-3.3 V**, **blanco 3.0-3.3 V**, **UV 3.4-4.0 V**, **IR 1.2-1.6 V**. Si no estás seguro, usá 2 V para rojo/amarillo/verde standard y 3.3 V para azul/blanco. Es mejor sobrestimar Vf (resulta en R levemente menor, LED más brillante pero aún seguro)."
+    },
+    {
+      "q": "¿Los LEDs SMD de tiras 12V ya traen resistencia?",
+      "a": "**Sí**. Las tiras LED de 12V / 24V (3528, 5050, 2835, WS2812B sin-direccionables) vienen con resistencias integradas cada 3 LEDs (para 12V) o cada 6 LEDs (para 24V). Podés conectarlas directo a una fuente DC del voltaje correcto, SIN agregar resistencia. Pero verificá que tu fuente dé los amperes que necesita la tira (5 m × 60 LEDs/m × 60 mA/LED ≈ 15 A en 5050)."
+    },
+    {
+      "q": "¿Qué es la serie E12 de resistencias?",
+      "a": "Es el conjunto estándar de valores comerciales: **10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82** multiplicado por potencias de 10 (×1, ×10, ×100, etc.). Entonces existen 100 Ω, 120 Ω, 150 Ω, 330 Ω, 470 Ω, 1 kΩ, 2.2 kΩ, etc. Cuando tu cálculo da un valor intermedio (ej: 350 Ω), elegí el más cercano por arriba (390 Ω) para proteger el LED."
+    }
+  ],
+  "sources": [
+    {
+      "name": "All About Circuits — LED Current Limiting Resistor",
+      "url": "https://www.allaboutcircuits.com/technical-articles/led-basics-resistor-current-limiting/"
+    },
+    {
+      "name": "Digi-Key — Resistor Selection Guide",
+      "url": "https://www.digikey.com/en/articles/resistors"
+    },
+    {
+      "name": "LEDSupply — LED Calculator Reference",
+      "url": "https://www.ledsupply.com/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ley-ohm-voltaje-corriente-resistencia",
+    "calculadora-potencia-electrica-p-vi",
+    "calculadora-resistencia-codigo-colores-4-5-bandas",
+    "calculadora-divisor-voltaje-resistencias"
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-18",
+    "updateType": "manual",
+    "notes": "Fórmula física fija, no requiere actualización de data externa"
+  }
+}

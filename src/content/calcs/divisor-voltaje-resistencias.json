@@ -1,0 +1,233 @@
+{
+  "slug": "calculadora-divisor-voltaje-resistencias",
+  "title": "Calculadora Divisor de Voltaje 2026 — R1, R2, Vout | Hacé Cuentas",
+  "h1": "Calculadora de divisor de voltaje (2 resistencias)",
+  "description": "Calculá Vout, R1 o R2 en un divisor de voltaje simple de 2 resistencias. Fórmula: Vout = Vin × R2/(R1+R2). Incluye corriente del divisor, potencia disipada en cada R, y efecto de carga conectada.",
+  "category": "electronica",
+  "audience": "global",
+  "icon": "📉",
+  "formulaId": "divisor-voltaje-resistencias",
+  "seoKeywords": [
+    "divisor de voltaje",
+    "divisor de tension",
+    "voltage divider",
+    "Vout R1 R2",
+    "calcular divisor voltaje",
+    "reducir voltaje con resistencias",
+    "5v a 3.3v",
+    "12v a 5v divisor",
+    "ADC microcontrolador voltaje",
+    "impedancia entrada"
+  ],
+  "intro": "Un **divisor de voltaje** es la forma más simple de reducir un voltaje con dos resistencias en serie: `Vout = Vin × R2/(R1+R2)`. Se usa para **adaptar niveles lógicos** (5V→3.3V en Arduino/ESP32), **medir voltajes altos** con un ADC de microcontrolador, **polarizar bases de transistores** o **generar referencias**. Esta calculadora resuelve cualquier variable (Vout, R1 o R2) dado las otras 2 conocidas, y agrega **corriente del divisor**, **potencia disipada en cada resistencia**, y **efecto de la carga** conectada a Vout.",
+  "keyTakeaway": "Fórmula básica: **Vout = Vin × R2 / (R1 + R2)**. Corriente del divisor: **I = Vin / (R1 + R2)**. Regla práctica: elegí R1 + R2 para que I sea 10× menor que la corriente del circuito de carga (evita efecto de carga). Para ADC Arduino: R1 + R2 entre 10 kΩ y 100 kΩ.",
+  "useCases": [
+    "Adaptar niveles lógicos 5V → 3.3V para conectar Arduino a ESP32 o Raspberry Pi.",
+    "Leer una batería de 12V con un ADC de microcontrolador (máx 3.3V o 5V).",
+    "Generar una tensión de referencia para un comparador o amplificador.",
+    "Polarizar la base de un transistor NPN en modo amplificador.",
+    "Dividir un voltaje desconocido para medirlo con un multímetro de rango limitado.",
+    "Reducir señal de audio para entrada de micrófono (line-in a mic-in).",
+    "Diseñar un circuito atenuador para radiofrecuencia o prueba de equipos."
+  ],
+  "fields": [
+    {
+      "id": "modo",
+      "label": "Qué querés calcular",
+      "type": "select",
+      "required": true,
+      "default": "vout",
+      "options": [
+        {
+          "value": "vout",
+          "label": "Vout (conozco Vin, R1, R2)"
+        },
+        {
+          "value": "r1",
+          "label": "R1 (conozco Vin, Vout, R2)"
+        },
+        {
+          "value": "r2",
+          "label": "R2 (conozco Vin, Vout, R1)"
+        }
+      ]
+    },
+    {
+      "id": "vin",
+      "label": "Voltaje de entrada Vin (V)",
+      "type": "number",
+      "placeholder": "12",
+      "min": 0.1,
+      "max": 1000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "vout",
+      "label": "Voltaje de salida Vout (V)",
+      "type": "number",
+      "placeholder": "5",
+      "min": 0,
+      "step": 0.01,
+      "required": false,
+      "help": "Solo si calculás R1 o R2"
+    },
+    {
+      "id": "r1",
+      "label": "R1 — resistencia superior (Ω)",
+      "type": "number",
+      "placeholder": "10000",
+      "min": 0.1,
+      "step": 1,
+      "required": false,
+      "help": "Usá ohms (1k = 1000, 10k = 10000)"
+    },
+    {
+      "id": "r2",
+      "label": "R2 — resistencia inferior (Ω)",
+      "type": "number",
+      "placeholder": "10000",
+      "min": 0.1,
+      "step": 1,
+      "required": false,
+      "help": "Usá ohms"
+    },
+    {
+      "id": "rCarga",
+      "label": "R de carga conectada a Vout (opcional)",
+      "type": "number",
+      "placeholder": "100000",
+      "min": 0,
+      "step": 1,
+      "required": false,
+      "help": "Impedancia del circuito que lee Vout (ADC = ~100 kΩ). Dejá 0 si no aplica."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "vout",
+      "label": "Vout",
+      "format": "number",
+      "suffix": "V",
+      "primary": true
+    },
+    {
+      "id": "r1Calc",
+      "label": "R1",
+      "format": "number",
+      "suffix": "Ω"
+    },
+    {
+      "id": "r2Calc",
+      "label": "R2",
+      "format": "number",
+      "suffix": "Ω"
+    },
+    {
+      "id": "corriente",
+      "label": "Corriente del divisor",
+      "format": "number",
+      "suffix": "mA"
+    },
+    {
+      "id": "potenciaR1",
+      "label": "Potencia disipada en R1",
+      "format": "number",
+      "suffix": "mW"
+    },
+    {
+      "id": "potenciaR2",
+      "label": "Potencia disipada en R2",
+      "format": "number",
+      "suffix": "mW"
+    },
+    {
+      "id": "voutConCarga",
+      "label": "Vout real con carga",
+      "format": "number",
+      "suffix": "V"
+    },
+    {
+      "id": "errorCarga",
+      "label": "Error por efecto de carga",
+      "format": "percentage"
+    },
+    {
+      "id": "resumen",
+      "label": "Interpretación"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: adaptar 12V a 3.3V para un ESP32",
+    "steps": [
+      "Tenemos una **batería de 12V** y queremos medir su voltaje con el **ADC del ESP32 (0-3.3V)**.",
+      "Relación: Vout/Vin = 3.3/12 = **0.275**. Entonces R2/(R1+R2) = 0.275 → R1/R2 = (1/0.275) − 1 = **2.64**.",
+      "Elegimos R2 = 10 kΩ → **R1 = 26.4 kΩ** (comercial: 27 kΩ).",
+      "Corriente del divisor: I = 12 / (27.000 + 10.000) = **0.324 mA** (aceptable, ~baja pérdida).",
+      "Potencia en R1: P = I² × R = (0.000324)² × 27.000 = **2.84 mW** (cabe en ¼ W).",
+      "Potencia en R2: P = (0.000324)² × 10.000 = **1.05 mW**."
+    ],
+    "result": "R1 = 27 kΩ, R2 = 10 kΩ. Vout real ≈ 3.24 V (cerca de 3.3V, seguro para ADC)."
+  },
+  "explanation": "## La fórmula\n\n```\n     Vin ───┬─── R1 ───┬─── Vout ───(carga)\n             │           │\n             │           R2\n             │           │\n             └───────────┴─── GND\n```\n\nPor **Ley de Ohm** aplicada al divisor en serie:\n\n```\nVout = Vin × R2 / (R1 + R2)\n```\n\nCorrespondientemente:\n\n- **R1 = R2 × (Vin − Vout) / Vout**\n- **R2 = R1 × Vout / (Vin − Vout)**\n- **I = Vin / (R1 + R2)** (corriente del divisor)\n- **P_R1 = I² × R1**, **P_R2 = I² × R2** (potencia disipada en cada R)\n\n## Efecto de carga (load effect)\n\nLa fórmula básica asume que **no hay carga conectada** a Vout (impedancia infinita). En la realidad, todo circuito conectado consume algo de corriente. El efecto:\n\n```\nVout_real = Vin × (R2 || R_carga) / (R1 + R2 || R_carga)\n```\n\nDonde `R2 || R_carga = (R2 × R_carga) / (R2 + R_carga)` (paralelo).\n\n**Regla del 10×**: la suma (R1 + R2) debe ser **al menos 10 veces menor** que la impedancia de entrada del circuito que lee Vout. De lo contrario el divisor se 'carga' y Vout cae.\n\nEjemplos:\n\n| Uso | Impedancia entrada típica | R1 + R2 máximo |\n|---|---|---|\n| ADC Arduino (10-bit) | ~10 MΩ | 1 MΩ |\n| ADC ESP32 (12-bit) | ~1 MΩ | 100 kΩ |\n| Amplificador operacional | >1 MΩ | 100 kΩ |\n| Base de transistor BJT | ~1-10 kΩ | 100-1000 Ω |\n| Entrada de oscilador/lógica | variable | depende |\n\n## Ventajas y limitaciones\n\n### Ventajas\n\n- **Ultra simple**: 2 componentes, sin componentes activos.\n- **Pasivo**: no consume corriente extra.\n- **Barato**: resistencias cuestan centavos.\n- **Preciso** si las R son de tolerancia 1% o mejor.\n\n### Limitaciones\n\n- **No puede dar corriente**: el divisor solo provee una referencia de voltaje. Para alimentar carga de corriente (motor, lámpara, etc.), necesitás un **regulador** (LM317, LM7805, switching).\n- **Eficiencia baja**: la potencia disipada en R1 se pierde como calor. Para voltajes altos con cargas significativas, usar regulador switching (eficiencia 85-95%).\n- **Dependencia de Vin**: si Vin cambia, Vout cambia proporcionalmente. Para referencia estable, usar **referencia de voltaje** (TL431, LM4040).\n- **Efecto de temperatura**: las R comunes tienen coeficiente de temperatura ±100 ppm/°C. Para precisión, usar R de precisión 25 ppm/°C.\n\n## Corriente del divisor — tradeoff\n\n| R1 + R2 | Corriente divisor (Vin=12V) | Pérdida potencia | Uso |\n|---|---|---|---|\n| 1 kΩ | 12 mA | 144 mW | Alta potencia, poca precisión |\n| 10 kΩ | 1.2 mA | 14.4 mW | Uso típico |\n| 100 kΩ | 120 µA | 1.4 mW | Bajo consumo (battery-powered) |\n| 1 MΩ | 12 µA | 144 µW | Ultra bajo consumo (efecto de carga significativo) |\n| 10 MΩ | 1.2 µA | 14.4 µW | Problemas de ruido y carga |\n\n**Sweet spot**: 10 kΩ a 100 kΩ para aplicaciones estándar.\n\n## Divisor con 3+ resistencias (taps múltiples)\n\nSe puede agregar más resistencias para sacar múltiples salidas. Ejemplo con 3 R:\n\n```\nVin ──R1──(Vout1)──R2──(Vout2)──R3── GND\n```\n\n- Vout1 = Vin × (R2 + R3) / (R1 + R2 + R3)\n- Vout2 = Vin × R3 / (R1 + R2 + R3)\n\nÚtil para amplificadores multi-etapa o referencias escalonadas.\n\n## Trucos y casos especiales\n\n- **Divisor con potenciómetro**: un pot conectado como divisor variable. Girando el eje, Vout cambia linealmente de 0 a Vin.\n- **Divisor resistivo + capacitor (filtro paso-bajo)**: agrega un capacitor entre Vout y GND → filtro RC con corte en fc = 1/(2π·Req·C) donde Req = R1||R2.\n- **Divisor compensado**: para medir voltajes de frecuencia alta (osciloscopio), las resistencias generan un zero con las capacidades parásitas. Se agregan capacitores en paralelo a las R para compensar.\n\n## Aplicaciones típicas en microcontroladores\n\n### Leer batería con Arduino\n\nVin 0-9V, ADC 0-5V. Usar R1 = 10 kΩ, R2 = 5 kΩ (o 6.8 kΩ comercial). Vout = Vin × 5/(10+5) = Vin × 0.333.\nLectura: Vin_real = analogRead × (5/1024) × (1/0.333) × factor_calibracion.\n\n### Leer sensor de temperatura NTC\n\nThermistor NTC 10 kΩ + R fija 10 kΩ → divisor que varía con temperatura. Arduino mide Vout, convierte a R_NTC, luego a temperatura usando ecuación Steinhart-Hart.\n\n### Polarizar base de transistor\n\nR1 desde Vcc a base, R2 desde base a GND. Determinan el punto de operación del transistor. Regla: I_divisor = 10× I_base = 10 × Ic/β.",
+  "faq": [
+    {
+      "q": "¿Un divisor de voltaje puede alimentar un LED o motor?",
+      "a": "**No.** El divisor solo da una referencia de voltaje, no corriente. Si conectás un LED o motor (consume corriente), 'carga' el divisor y Vout se desploma. Para alimentar componentes con corriente, usá un **regulador** (LM7805 para fijo, LM317 para ajustable, buck converter para alta eficiencia)."
+    },
+    {
+      "q": "¿Por qué mi Vout es menor al calculado cuando conecto la carga?",
+      "a": "Es el **efecto de carga**. El circuito conectado a Vout tiene una impedancia finita que queda en paralelo con R2, reduciendo la resistencia efectiva y por lo tanto Vout. Solución: disminuir R1 + R2 (por ejemplo, de 1 MΩ a 10 kΩ) para que la impedancia del divisor sea 10× menor que la de carga."
+    },
+    {
+      "q": "¿Qué valores de resistencia conviene usar?",
+      "a": "Depende del uso. **Regla general 10-100 kΩ**: bajo consumo, poca pérdida, efecto de carga mínimo para ADCs. Para circuitos de potencia (polarización de transistores que manejan corriente): 1-10 kΩ. Para ultra bajo consumo (battery powered con sleep modes): 100 kΩ a 1 MΩ. Evitá valores < 100 Ω (consumo alto) y > 10 MΩ (sensible a ruido)."
+    },
+    {
+      "q": "¿Cómo adapto 5V a 3.3V para ESP32?",
+      "a": "Con un divisor R1 = 1.7 kΩ + R2 = 3.3 kΩ. Fórmula: Vout = 5 × 3.3/(1.7+3.3) = **3.3 V**. Valores comerciales: **R1 = 1.8 kΩ + R2 = 3.3 kΩ** (Vout ≈ 3.24 V, aceptable). Pero para comunicación bidireccional (I2C, SPI) usá un **level shifter** con MOSFETs o circuito dedicado (TXB0108, BSS138), no divisor."
+    },
+    {
+      "q": "¿Cuánta potencia disipa un divisor?",
+      "a": "**P_total = Vin² / (R1 + R2)**. Ejemplos: 12V con R1+R2 = 10 kΩ → 14.4 mW (despreciable). 12V con R1+R2 = 100 Ω → 1.44 W (¡alta! requiere R de al menos 2 W). 220V (red) con 100 kΩ → 484 mW. En potencias altas, es más eficiente usar un regulador switching."
+    },
+    {
+      "q": "¿Los valores de R1 y R2 importan individualmente, o solo su relación?",
+      "a": "Para el **Vout**, solo importa la relación R2/(R1+R2). Pero para **efecto de carga, corriente del divisor, potencia disipada y costo**, sí importan los valores absolutos. R1 = 10 Ω + R2 = 20 Ω tiene el mismo Vout que R1 = 10 kΩ + R2 = 20 kΩ, pero la primera versión quema 1000× más potencia."
+    },
+    {
+      "q": "¿Qué tolerancia de resistencia elijo?",
+      "a": "Para uso general: **5% (banda plateada)** es suficiente. Para ADCs de precisión, referencias o instrumental: **1% (banda marrón)** da 5× mejor precisión. Para calibración o metrología: **0.1% (tolerancia muy alta)**, más caras pero necesarias. Para temperatura variable: resistencias de coeficiente térmico bajo (25 ppm/°C o mejor)."
+    },
+    {
+      "q": "¿Puedo usar el divisor con AC?",
+      "a": "Sí, funciona igual en AC **si las resistencias son puras** (sin componente inductivo/capacitivo). La relación Vout/Vin es la misma que en DC. Pero si querés dividir una señal de alta frecuencia (>100 kHz), las capacidades parásitas afectan el comportamiento — hay que compensar con capacitores en paralelo a las R. Para audio/RF de baja frecuencia, no hay problema."
+    }
+  ],
+  "sources": [
+    {
+      "name": "All About Circuits — Voltage Dividers",
+      "url": "https://www.allaboutcircuits.com/textbook/direct-current/chpt-6/voltage-divider-circuits/"
+    },
+    {
+      "name": "SparkFun — Voltage Dividers Tutorial",
+      "url": "https://learn.sparkfun.com/tutorials/voltage-dividers/all"
+    },
+    {
+      "name": "Analog Devices — Voltage Divider Calculator",
+      "url": "https://www.analog.com"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ley-ohm-voltaje-corriente-resistencia",
+    "calculadora-resistencia-led-serie-paralelo",
+    "calculadora-potencia-electrica-p-vi",
+    "calculadora-resistencia-codigo-colores-4-5-bandas"
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-18",
+    "updateType": "manual",
+    "notes": "Fórmula física fija, no requiere actualización de data externa"
+  }
+}
