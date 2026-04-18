@@ -1,6 +1,19 @@
 ---
 import CookieConsent from '../components/CookieConsent.astro';
 
+// Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
+// Cada latin-NNN.css trae ~150 bytes de CSS + 1 woff2 (~17 KB).
+// Total: ~100 KB de fuentes servidas desde el mismo dominio, con font-display: swap.
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/inter/latin-500.css';
+import '@fontsource/inter/latin-600.css';
+import '@fontsource/inter/latin-700.css';
+import '@fontsource/inter/latin-800.css';
+import '@fontsource/jetbrains-mono/latin-500.css';
+// Preload para fonts arriba-del-fold (body 400 + headings 700). Vite les da hash correcto.
+import interFont400Url from '@fontsource/inter/files/inter-latin-400-normal.woff2?url';
+import interFont700Url from '@fontsource/inter/files/inter-latin-700-normal.woff2?url';
+
 export interface Props {
   title: string;
   description: string;
@@ -152,16 +165,10 @@ const globalSchema = {
     <!-- Schema.org específico de página -->
     {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
 
-    <!-- Fonts — preload CSS para evitar render-blocking -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" /></noscript>
+    <!-- Fuentes self-hosted — preload de los weights más críticos (above-the-fold).
+         Los otros (500/600/800) los descubre el browser al parsear CSS. -->
+    <link rel="preload" href={interFont400Url} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={interFont700Url} as="font" type="font/woff2" crossorigin />
 
     <!-- Preconnect CDN externo (Chart.js, KaTeX) -->
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />

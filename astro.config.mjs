@@ -12,6 +12,10 @@ export default defineConfig({
   trailingSlash: 'never',
   build: {
     format: 'file',
+    // Inline CSS en el HTML para eliminar render-blocking (mobile FCP).
+    // 'always' = todos los stylesheets de page van inline. Tradeoff: HTML pesa más
+    // (+30-40 KB en home) pero 0 roundtrips extra en mobile 3G/4G.
+    inlineStylesheets: 'always',
   },
   compressHTML: true,
   integrations: [],
