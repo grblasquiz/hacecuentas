@@ -1528,6 +1528,34 @@ import { amplificadorWattsParlantes } from './amplificador-watts-parlantes';
 import { consumoHeladeraAnualKwh } from './consumo-heladera-anual-kwh';
 import { temperaturaDisipadorResistenciaTermica } from './temperatura-disipador-resistencia-termica';
 import { pcbAnchoTraceCorriente } from './pcb-ancho-trace-corriente';
+import { velocidadCaidaLibreTiempo } from './velocidad-caida-libre-tiempo';
+import { distanciaCaidaLibreAltura } from './distancia-caida-libre-altura';
+import { fuerzaFriccionCoeficiente } from './fuerza-friccion-coeficiente';
+import { momentoAngularRotacion } from './momento-angular-rotacion';
+import { energiaCineticaEc } from './energia-cinetica-ec';
+import { trabajoMecanicoFuerzaDistancia } from './trabajo-mecanico-fuerza-distancia';
+import { presionHidrostaticaProfundidad } from './presion-hidrostatica-profundidad';
+import { empujeArquimedesVolumen } from './empuje-arquimedes-volumen';
+import { resorteLeyHookeConstante } from './resorte-ley-hooke-constante';
+import { efectoDopplerVelocidadFrecuencia } from './efecto-doppler-velocidad-frecuencia';
+import { phConcentracionHPlus } from './ph-concentracion-h-plus';
+import { pohConcentracionOh } from './poh-concentracion-oh';
+import { dilucionConcentracionC1v1C2v2 } from './dilucion-concentracion-c1v1-c2v2';
+import { molesMasaFormulaMolecular } from './moles-masa-formula-molecular';
+import { gasIdealPvNrt } from './gas-ideal-pv-nrt';
+import { calorEspecificoDeltaT } from './calor-especifico-delta-t';
+import { energiaFotonesFrecuenciaLongitudOnda } from './energia-fotones-frecuencia-longitud-onda';
+import { anguloRefraccionSnell } from './angulo-refraccion-snell';
+import { distanciaFocalLenteDelgada } from './distancia-focal-lente-delgada';
+import { paralajeDistanciaEstrellaParsec } from './paralaje-distancia-estrella-parsec';
+import { redshiftVelocidadRadial } from './redshift-velocidad-radial';
+import { desintegracionRadioactivaVidaMedia } from './desintegracion-radioactiva-vida-media';
+import { ecuacionesCinematicasMruMrua } from './ecuaciones-cinematicas-mru-mrua';
+import { presionParcialDalton } from './presion-parcial-dalton';
+import { entropiaCambioFase } from './entropia-cambio-fase';
+import { eficienciaCarnotTermodinamica } from './eficiencia-carnot-termodinamica';
+import { efectoInvernaderoCo2Ppm } from './efecto-invernadero-co2-ppm';
+import { escalaRichterMagnitudEnergia } from './escala-richter-magnitud-energia';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3055,4 +3083,32 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'consumo-heladera-anual-kwh': consumoHeladeraAnualKwh,
   'temperatura-disipador-resistencia-termica': temperaturaDisipadorResistenciaTermica,
   'pcb-ancho-trace-corriente': pcbAnchoTraceCorriente,
+  'velocidad-caida-libre-tiempo': velocidadCaidaLibreTiempo,
+  'distancia-caida-libre-altura': distanciaCaidaLibreAltura,
+  'fuerza-friccion-coeficiente': fuerzaFriccionCoeficiente,
+  'momento-angular-rotacion': momentoAngularRotacion,
+  'energia-cinetica-ec': energiaCineticaEc,
+  'trabajo-mecanico-fuerza-distancia': trabajoMecanicoFuerzaDistancia,
+  'presion-hidrostatica-profundidad': presionHidrostaticaProfundidad,
+  'empuje-arquimedes-volumen': empujeArquimedesVolumen,
+  'resorte-ley-hooke-constante': resorteLeyHookeConstante,
+  'efecto-doppler-velocidad-frecuencia': efectoDopplerVelocidadFrecuencia,
+  'ph-concentracion-h-plus': phConcentracionHPlus,
+  'poh-concentracion-oh': pohConcentracionOh,
+  'dilucion-concentracion-c1v1-c2v2': dilucionConcentracionC1v1C2v2,
+  'moles-masa-formula-molecular': molesMasaFormulaMolecular,
+  'gas-ideal-pv-nrt': gasIdealPvNrt,
+  'calor-especifico-delta-t': calorEspecificoDeltaT,
+  'energia-fotones-frecuencia-longitud-onda': energiaFotonesFrecuenciaLongitudOnda,
+  'angulo-refraccion-snell': anguloRefraccionSnell,
+  'distancia-focal-lente-delgada': distanciaFocalLenteDelgada,
+  'paralaje-distancia-estrella-parsec': paralajeDistanciaEstrellaParsec,
+  'redshift-velocidad-radial': redshiftVelocidadRadial,
+  'desintegracion-radioactiva-vida-media': desintegracionRadioactivaVidaMedia,
+  'ecuaciones-cinematicas-mru-mrua': ecuacionesCinematicasMruMrua,
+  'presion-parcial-dalton': presionParcialDalton,
+  'entropia-cambio-fase': entropiaCambioFase,
+  'eficiencia-carnot-termodinamica': eficienciaCarnotTermodinamica,
+  'efecto-invernadero-co2-ppm': efectoInvernaderoCo2Ppm,
+  'escala-richter-magnitud-energia': escalaRichterMagnitudEnergia,
 };
