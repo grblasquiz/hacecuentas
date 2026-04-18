@@ -1644,6 +1644,36 @@ import { caloriasBoxeoMmaHora } from './calorias-boxeo-mma-hora';
 import { caloriasSurfKitesurfHora } from './calorias-surf-kitesurf-hora';
 import { gelEnergeticoCarreraCuantos } from './gel-energetico-carrera-cuantos';
 import { descansoPostMaratonRegla1DiaKm } from './descanso-post-maraton-regla-1-dia-km';
+import { ecuacionCuadraticaRaicesDiscriminante } from './ecuacion-cuadratica-raices-discriminante';
+import { sistemaEcuaciones2x2Cramer } from './sistema-ecuaciones-2x2-cramer';
+import { distanciaDosPuntosPlanoCartesiano } from './distancia-dos-puntos-plano-cartesiano';
+import { teoremaPitagorasHipotenusaCateto } from './teorema-pitagoras-hipotenusa-cateto';
+import { areaPerimetroCirculoRadio } from './area-perimetro-circulo-radio';
+import { areaTrianguloHeronTresLados } from './area-triangulo-heron-tres-lados';
+import { volumenSuperficieEsferaRadio } from './volumen-superficie-esfera-radio';
+import { volumenCilindroRadioAltura } from './volumen-cilindro-radio-altura';
+import { volumenConoRadioAltura } from './volumen-cono-radio-altura';
+import { progresionAritmeticaSumaTermino } from './progresion-aritmetica-suma-termino';
+import { progresionGeometricaSumaTermino } from './progresion-geometrica-suma-termino';
+import { factorialNumeroN } from './factorial-numero-n';
+import { combinacionesNTomadosKCnk } from './combinaciones-n-tomados-k-cnk';
+import { permutacionesNTomadosKPnk } from './permutaciones-n-tomados-k-pnk';
+import { logaritmoBaseCualquieraNumero } from './logaritmo-base-cualquiera-numero';
+import { mcdMcmDosNumerosEnteros } from './mcd-mcm-dos-numeros-enteros';
+import { conversionBaseDecimalBinarioHexa } from './conversion-base-decimal-binario-hexa';
+import { porcentajeDeNumeroCalculadora } from './porcentaje-de-numero-calculadora';
+import { reglaDeTresSimpleDirectaInversa } from './regla-de-tres-simple-directa-inversa';
+import { interesSimpleCapitalTiempoTasa } from './interes-simple-capital-tiempo-tasa';
+import { derivadaPolinomioCoeficientes } from './derivada-polinomio-coeficientes';
+import { integralIndefinidaPolinomioCoefs } from './integral-indefinida-polinomio-coefs';
+import { determinanteInversaMatriz2x2 } from './determinante-inversa-matriz-2x2';
+import { mediaMedianaModaRangoEstadistica } from './media-mediana-moda-rango-estadistica';
+import { desvioEstandarVarianzaConjunto } from './desvio-estandar-varianza-conjunto';
+import { regresionLinealMinimosCuadrados } from './regresion-lineal-minimos-cuadrados';
+import { probabilidadBinomialEnsayosExitos } from './probabilidad-binomial-ensayos-exitos';
+import { conversionGradosRadianesGradianes } from './conversion-grados-radianes-gradianes';
+import { senoCosenoTangenteAnguloTriangulo } from './seno-coseno-tangente-angulo-triangulo';
+import { conversionCelsiusFahrenheitKelvin } from './conversion-celsius-fahrenheit-kelvin';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3287,4 +3317,34 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calorias-surf-kitesurf-hora': caloriasSurfKitesurfHora,
   'gel-energetico-carrera-cuantos': gelEnergeticoCarreraCuantos,
   'descanso-post-maraton-regla-1-dia-km': descansoPostMaratonRegla1DiaKm,
+  'ecuacion-cuadratica-raices-discriminante': ecuacionCuadraticaRaicesDiscriminante,
+  'sistema-ecuaciones-2x2-cramer': sistemaEcuaciones2x2Cramer,
+  'distancia-dos-puntos-plano-cartesiano': distanciaDosPuntosPlanoCartesiano,
+  'teorema-pitagoras-hipotenusa-cateto': teoremaPitagorasHipotenusaCateto,
+  'area-perimetro-circulo-radio': areaPerimetroCirculoRadio,
+  'area-triangulo-heron-tres-lados': areaTrianguloHeronTresLados,
+  'volumen-superficie-esfera-radio': volumenSuperficieEsferaRadio,
+  'volumen-cilindro-radio-altura': volumenCilindroRadioAltura,
+  'volumen-cono-radio-altura': volumenConoRadioAltura,
+  'progresion-aritmetica-suma-termino': progresionAritmeticaSumaTermino,
+  'progresion-geometrica-suma-termino': progresionGeometricaSumaTermino,
+  'factorial-numero-n': factorialNumeroN,
+  'combinaciones-n-tomados-k-cnk': combinacionesNTomadosKCnk,
+  'permutaciones-n-tomados-k-pnk': permutacionesNTomadosKPnk,
+  'logaritmo-base-cualquiera-numero': logaritmoBaseCualquieraNumero,
+  'mcd-mcm-dos-numeros-enteros': mcdMcmDosNumerosEnteros,
+  'conversion-base-decimal-binario-hexa': conversionBaseDecimalBinarioHexa,
+  'porcentaje-de-numero-calculadora': porcentajeDeNumeroCalculadora,
+  'regla-de-tres-simple-directa-inversa': reglaDeTresSimpleDirectaInversa,
+  'interes-simple-capital-tiempo-tasa': interesSimpleCapitalTiempoTasa,
+  'derivada-polinomio-coeficientes': derivadaPolinomioCoeficientes,
+  'integral-indefinida-polinomio-coefs': integralIndefinidaPolinomioCoefs,
+  'determinante-inversa-matriz-2x2': determinanteInversaMatriz2x2,
+  'media-mediana-moda-rango-estadistica': mediaMedianaModaRangoEstadistica,
+  'desvio-estandar-varianza-conjunto': desvioEstandarVarianzaConjunto,
+  'regresion-lineal-minimos-cuadrados': regresionLinealMinimosCuadrados,
+  'probabilidad-binomial-ensayos-exitos': probabilidadBinomialEnsayosExitos,
+  'conversion-grados-radianes-gradianes': conversionGradosRadianesGradianes,
+  'seno-coseno-tangente-angulo-triangulo': senoCosenoTangenteAnguloTriangulo,
+  'conversion-celsius-fahrenheit-kelvin': conversionCelsiusFahrenheitKelvin,
 };
