@@ -97,7 +97,7 @@ const schemaFaq = {
       <div class="fx-status" id="status">
         <span class="dot" id="status-dot"></span>
         <span id="status-text">Cargando cotizaciones…</span>
-        <button id="refresh" class="btn-refresh" aria-label="Actualizar cotizaciones">↻ Actualizar</button>
+        <span class="auto-note">· se actualiza cada hora automáticamente</span>
       </div>
     </header>
 
@@ -265,20 +265,7 @@ const schemaFaq = {
   }
   .fx-status .dot.ok { background: var(--success); box-shadow: 0 0 0 4px var(--success-soft); }
   .fx-status .dot.err { background: var(--danger); box-shadow: 0 0 0 4px var(--danger-soft); }
-  .btn-refresh {
-    margin-left: .5rem;
-    background: var(--accent);
-    color: #fff;
-    border: 0;
-    padding: .4rem .9rem;
-    border-radius: 999px;
-    cursor: pointer;
-    font-size: .8rem;
-    font-weight: 600;
-    transition: background .15s, transform .1s;
-  }
-  .btn-refresh:hover { background: var(--accent-hover); }
-  .btn-refresh:active { transform: scale(.96); }
+  .auto-note { color: var(--text-subtle); font-size: .78rem; font-style: italic; }
 
   /* =====================================================
      CONVERTER CARD (la estrella)
@@ -292,20 +279,20 @@ const schemaFaq = {
     box-shadow: var(--shadow-md);
     position: relative;
   }
-  .converter::before {
-    content: '💱';
-    position: absolute;
-    top: -1.2rem;
-    left: 1.5rem;
-    background: var(--accent);
-    color: #fff;
-    font-size: 1.4rem;
-    width: 2.4rem; height: 2.4rem;
-    display: grid; place-items: center;
-    border-radius: 50%;
-    box-shadow: var(--shadow-md);
+  .converter h2 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: .6rem;
   }
-  .converter h2 { margin: 0 0 1.5rem .25rem; font-size: 1.35rem; font-weight: 700; color: var(--text); }
+  .converter h2::before {
+    content: '💱';
+    font-size: 1.75rem;
+    display: inline-block;
+  }
 
   .conv-grid {
     display: grid;
@@ -688,8 +675,9 @@ const schemaFaq = {
   // ==========================================================
   //  CACHE HELPERS (localStorage 15 min)
   // ==========================================================
-  const CACHE_MIN = 15;
+  const CACHE_MIN = 60;
   const CACHE_MS = CACHE_MIN * 60 * 1000;
+  const AUTO_REFRESH_MS = 60 * 60 * 1000;  // 1 hora
 
   interface Cached<T> { ts: number; data: T; }
 
@@ -1182,7 +1170,6 @@ const schemaFaq = {
     [fromEl.value, toEl.value] = [toEl.value, fromEl.value];
     renderConverter();
   });
-  document.getElementById('refresh')!.addEventListener('click', () => load(true));
   document.getElementById('intl-toggle')!.addEventListener('click', () => {
     INTL_EXPANDED = !INTL_EXPANDED;
     renderIntlTable();
@@ -1193,7 +1180,25 @@ const schemaFaq = {
   });
 
   // ==========================================================
-  //  INIT
+  //  INIT + AUTO-REFRESH (cada hora)
   // ==========================================================
   load(false);
+
+  // Re-fetch automático cada 1 hora mientras la pestaña esté abierta.
+  // Si el user vuelve después de días, load(false) leerá cache expirado y
+  // fetcheará las cotizaciones frescas igual (CACHE_MS = 60 min).
+  setInterval(() => {
+    console.log('[fx] auto-refresh (1h)');
+    load(true);
+  }, AUTO_REFRESH_MS);
+
+  // Bonus: si el tab vuelve al foco después de >1h sin actividad, refrescar.
+  let lastLoad = Date.now();
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && Date.now() - lastLoad > AUTO_REFRESH_MS) {
+      console.log('[fx] visibility refresh');
+      load(true);
+      lastLoad = Date.now();
+    }
+  });
 </script>

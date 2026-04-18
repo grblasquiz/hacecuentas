@@ -1,13 +1,10 @@
 import type { APIRoute } from 'astro';
-import { statSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+
+// Force static generation at build time
+export const prerender = true;
 
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const calcs = Object.values(calcModules).map((m: any) => m.default || m);
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const calcsDir = join(__dirname, '..', 'content', 'calcs');
 
 interface CalcWithDate {
   calc: any;
@@ -26,20 +23,14 @@ function escapeXML(s: string): string {
 export const GET: APIRoute = () => {
   const site = 'https://hacecuentas.com';
 
-  // Combinar calcs con su mtime real para ordenar por más reciente
+  // Ordenar por lastReviewed (si existe) o dataUpdate.lastUpdated, fallback hoy.
   const withDates: CalcWithDate[] = calcs
     .map((c: any) => {
-      try {
-        const filename = `${c.formulaId || c.slug}.json`;
-        const stat = statSync(join(calcsDir, filename));
-        // Si tiene lastReviewed declarado, ese pisa al mtime
-        const dateStr = c.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(c.lastReviewed)
-          ? c.lastReviewed + 'T00:00:00Z'
-          : stat.mtime.toISOString();
-        return { calc: c, mtime: new Date(dateStr) };
-      } catch {
-        return { calc: c, mtime: new Date() };
-      }
+      const dateStr =
+        (c.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(c.lastReviewed) ? c.lastReviewed : null) ||
+        (c.dataUpdate?.lastUpdated && /^\d{4}-\d{2}-\d{2}$/.test(c.dataUpdate.lastUpdated) ? c.dataUpdate.lastUpdated : null) ||
+        new Date().toISOString().slice(0, 10);
+      return { calc: c, mtime: new Date(dateStr + 'T00:00:00Z') };
     })
     .sort((a, b) => b.mtime.getTime() - a.mtime.getTime())
     .slice(0, 30);
