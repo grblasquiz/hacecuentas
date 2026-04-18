@@ -108,9 +108,17 @@ const schemaFaq = {
           <label for="from-amount">Monto</label>
           <input id="from-amount" type="text" inputmode="decimal" value="100" autocomplete="off" aria-label="Monto a convertir (editable)" />
           <span class="edit-hint">Tocá para editar</span>
-          <select id="from-currency" class="select-coin">
-            <option value="USD_BLUE">🇦🇷 USD Blue (AR)</option>
-          </select>
+          <div class="coin-picker" data-picker="from">
+            <button class="picker-btn" id="from-currency-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="picker-label">🇦🇷 USD Blue</span>
+              <span class="picker-chev">▾</span>
+            </button>
+            <div class="picker-panel" hidden>
+              <input type="text" class="picker-search" placeholder="Buscar: blue, euro, yen, BRL..." autocomplete="off" />
+              <div class="picker-list" role="listbox"></div>
+            </div>
+          </div>
+          <input type="hidden" id="from-currency" value="USD_BLUE" />
         </div>
 
         <button id="swap" class="swap-btn" aria-label="Invertir monedas">⇄</button>
@@ -118,9 +126,17 @@ const schemaFaq = {
         <div class="conv-side">
           <label for="to-amount">Equivale a</label>
           <input id="to-amount" type="text" inputmode="decimal" readonly />
-          <select id="to-currency" class="select-coin">
-            <option value="ARS">🇦🇷 ARS (Peso)</option>
-          </select>
+          <div class="coin-picker" data-picker="to">
+            <button class="picker-btn" id="to-currency-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="picker-label">🇦🇷 ARS (Peso)</span>
+              <span class="picker-chev">▾</span>
+            </button>
+            <div class="picker-panel" hidden>
+              <input type="text" class="picker-search" placeholder="Buscar: peso, USD, euro..." autocomplete="off" />
+              <div class="picker-list" role="listbox"></div>
+            </div>
+          </div>
+          <input type="hidden" id="to-currency" value="ARS" />
         </div>
       </div>
       <p class="rate-line" id="rate-line">—</p>
@@ -358,8 +374,17 @@ const schemaFaq = {
     margin-top: -.3rem;
   }
   .conv-side .edit-hint::before { content: '✏️'; font-size: .85rem; }
-  .select-coin {
-    padding: .55rem .7rem;
+  /* =====================================================
+     COIN PICKER (reemplaza <select> nativo por búsqueda)
+     ===================================================== */
+  .coin-picker { position: relative; }
+  .picker-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    width: 100%;
+    padding: .6rem .75rem;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-sm);
     background: var(--bg-card);
@@ -367,13 +392,101 @@ const schemaFaq = {
     font-size: .92rem;
     font-weight: 500;
     cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right .6rem center;
-    padding-right: 1.8rem;
+    transition: all .15s;
   }
-  .select-coin:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .picker-btn:hover { border-color: var(--accent); }
+  .picker-btn[aria-expanded="true"] {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .picker-label {
+    flex: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .picker-chev {
+    color: var(--text-subtle);
+    font-size: .75rem;
+    transition: transform .15s;
+  }
+  .picker-btn[aria-expanded="true"] .picker-chev { transform: rotate(180deg); }
+
+  .picker-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: pickerFade .12s ease-out;
+  }
+  .picker-search {
+    width: 100%;
+    padding: .7rem 1rem .7rem 2.5rem;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat .85rem center;
+    font-size: .9rem;
+    color: var(--text);
+  }
+  .picker-search:focus { outline: none; background-color: var(--bg); }
+
+  .picker-list {
+    max-height: 280px;
+    overflow-y: auto;
+    padding: .3rem 0;
+    scrollbar-width: thin;
+  }
+  .picker-group {
+    padding: .45rem .8rem .2rem;
+    font-size: .68rem;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+    background: var(--bg-card);
+    z-index: 1;
+  }
+  .picker-item {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .55rem .85rem;
+    cursor: pointer;
+    font-size: .9rem;
+    color: var(--text);
+    border-left: 3px solid transparent;
+    transition: background .1s;
+  }
+  .picker-item:hover,
+  .picker-item.active {
+    background: var(--accent-soft);
+    border-left-color: var(--accent);
+  }
+  .picker-item.selected {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-weight: 600;
+  }
+  .picker-item .code { margin-left: auto; font-size: .75rem; color: var(--text-subtle); font-family: var(--font-mono); }
+  .picker-empty {
+    padding: 1.5rem;
+    text-align: center;
+    color: var(--text-subtle);
+    font-size: .85rem;
+  }
+  @keyframes pickerFade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   .swap-btn {
     background: var(--bg-card);
     border: 2px solid var(--border);
@@ -1029,25 +1142,40 @@ const schemaFaq = {
   // ==========================================================
   //  CONVERTER
   // ==========================================================
-  function populateSelects() {
-    const selects = [document.getElementById('from-currency'), document.getElementById('to-currency')] as HTMLSelectElement[];
-    const optGroups: string[] = [];
+  // Lista unificada de opciones para el picker
+  interface CoinOption { value: string; label: string; code: string; group: string; searchText: string; }
+  let COIN_OPTIONS: CoinOption[] = [];
 
-    // AR group
+  function buildCoinOptions() {
+    COIN_OPTIONS = [];
+
+    // Grupo AR
     const arKeys = ['USD_OFICIAL','USD_BLUE','USD_MEP','USD_CCL','USD_TARJETA','USD_CRIPTO','USD_MAYORISTA','EUR_AR','BRL_AR','CLP_AR','UYU_AR'].filter(k => STATE.arsPerUnit[k]);
-    if (arKeys.length) {
-      const items = arKeys.map(k => `<option value="${k}">${STATE.arsPerUnit[k].flag} ${STATE.arsPerUnit[k].label}</option>`).join('');
-      optGroups.push(`<optgroup label="🇦🇷 Argentina (vs ARS)">${items}</optgroup>`);
+    for (const k of arKeys) {
+      const q = STATE.arsPerUnit[k];
+      const code = k.startsWith('USD_') ? k.replace('USD_','').toLowerCase() : k.replace('_AR','');
+      COIN_OPTIONS.push({
+        value: k,
+        label: `${q.flag} ${q.label}`,
+        code: code.toUpperCase(),
+        group: '🇦🇷 Argentina (vs peso argentino)',
+        searchText: `${q.label} ${code} ar argentina blue oficial mep ccl tarjeta cripto mayorista`.toLowerCase(),
+      });
     }
 
     // ARS base
-    optGroups.push(`<optgroup label="Peso argentino"><option value="ARS">🇦🇷 ARS (Peso argentino)</option></optgroup>`);
+    COIN_OPTIONS.push({
+      value: 'ARS',
+      label: '🇦🇷 ARS (Peso argentino)',
+      code: 'ARS',
+      group: 'Peso argentino',
+      searchText: 'ars peso argentino argentina',
+    });
 
-    // Intl group: TODAS las monedas que devuelva la API, ordenadas alfabéticamente
-    const allIntl = Object.keys(STATE.intlPerUsd).filter(k => k !== 'ARS'); // ARS ya está en AR
+    // Intl
+    const allIntl = Object.keys(STATE.intlPerUsd).filter(k => k !== 'ARS');
     if (!allIntl.includes('USD')) allIntl.unshift('USD');
     allIntl.sort((a, b) => {
-      // USD y top monedas primero
       const tops = ['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'CHF', 'BRL', 'MXN'];
       const ai = tops.indexOf(a), bi = tops.indexOf(b);
       if (ai !== -1 && bi !== -1) return ai - bi;
@@ -1055,18 +1183,101 @@ const schemaFaq = {
       if (bi !== -1) return 1;
       return (INTL_NAMES[a] || a).localeCompare(INTL_NAMES[b] || b, 'es');
     });
-    const intlItems = allIntl.map(k => `<option value="INTL_${k}">${INTL_NAMES[k] || k + ' (' + k + ')'}</option>`).join('');
-    optGroups.push(`<optgroup label="🌍 Internacional (${allIntl.length} monedas, base USD)">${intlItems}</optgroup>`);
+    for (const k of allIntl) {
+      const name = INTL_NAMES[k] || k;
+      COIN_OPTIONS.push({
+        value: `INTL_${k}`,
+        label: name,
+        code: k,
+        group: `🌍 Internacional (${allIntl.length} monedas)`,
+        searchText: `${name} ${k}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+      });
+    }
+  }
 
-    const html = optGroups.join('');
-    const fromSaved = selects[0].value;
-    const toSaved = selects[1].value;
-    selects[0].innerHTML = html;
-    selects[1].innerHTML = html;
+  function findOption(value: string): CoinOption | undefined {
+    return COIN_OPTIONS.find(o => o.value === value);
+  }
 
-    // Set defaults or restore
-    selects[0].value = STATE.arsPerUnit[fromSaved] || fromSaved.startsWith('INTL_') || fromSaved === 'ARS' ? fromSaved : 'USD_BLUE';
-    selects[1].value = STATE.arsPerUnit[toSaved] || toSaved.startsWith('INTL_') || toSaved === 'ARS' ? toSaved : 'ARS';
+  function updatePickerLabel(which: 'from' | 'to') {
+    const hidden = document.getElementById(`${which}-currency`) as HTMLInputElement;
+    const labelEl = document.querySelector(`[data-picker="${which}"] .picker-label`)!;
+    const opt = findOption(hidden.value);
+    labelEl.textContent = opt ? opt.label : hidden.value;
+  }
+
+  function renderPickerList(which: 'from' | 'to', query = '') {
+    const listEl = document.querySelector(`[data-picker="${which}"] .picker-list`)!;
+    const hidden = document.getElementById(`${which}-currency`) as HTMLInputElement;
+    const q = query.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const filtered = q
+      ? COIN_OPTIONS.filter(o => o.searchText.includes(q) || o.code.toLowerCase().includes(q))
+      : COIN_OPTIONS;
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = `<div class="picker-empty">Sin resultados para "${query}"</div>`;
+      return;
+    }
+
+    // Agrupar
+    const html: string[] = [];
+    let currentGroup = '';
+    for (const opt of filtered) {
+      if (opt.group !== currentGroup) {
+        currentGroup = opt.group;
+        html.push(`<div class="picker-group">${currentGroup}</div>`);
+      }
+      const isSelected = opt.value === hidden.value;
+      html.push(`
+        <div class="picker-item ${isSelected ? 'selected' : ''}" data-value="${opt.value}" role="option" aria-selected="${isSelected}">
+          <span>${opt.label}</span>
+          <span class="code">${opt.code}</span>
+        </div>
+      `);
+    }
+    listEl.innerHTML = html.join('');
+  }
+
+  function openPicker(which: 'from' | 'to') {
+    // Cerrar el otro si está abierto
+    closePicker(which === 'from' ? 'to' : 'from');
+    const btn = document.getElementById(`${which}-currency-btn`)!;
+    const panel = document.querySelector(`[data-picker="${which}"] .picker-panel`) as HTMLElement;
+    const search = panel.querySelector('.picker-search') as HTMLInputElement;
+    btn.setAttribute('aria-expanded', 'true');
+    panel.hidden = false;
+    search.value = '';
+    renderPickerList(which, '');
+    setTimeout(() => search.focus(), 30);
+  }
+
+  function closePicker(which: 'from' | 'to') {
+    const btn = document.getElementById(`${which}-currency-btn`);
+    const panel = document.querySelector(`[data-picker="${which}"] .picker-panel`) as HTMLElement | null;
+    if (btn && panel) {
+      btn.setAttribute('aria-expanded', 'false');
+      panel.hidden = true;
+    }
+  }
+
+  function setPickerValue(which: 'from' | 'to', value: string) {
+    const hidden = document.getElementById(`${which}-currency`) as HTMLInputElement;
+    hidden.value = value;
+    updatePickerLabel(which);
+    closePicker(which);
+    renderConverter();
+  }
+
+  function populatePickers() {
+    buildCoinOptions();
+    // Validar que los valores actuales sigan siendo válidos; si no, reset
+    (['from','to'] as const).forEach((which) => {
+      const hidden = document.getElementById(`${which}-currency`) as HTMLInputElement;
+      if (!findOption(hidden.value)) {
+        hidden.value = which === 'from' ? 'USD_BLUE' : 'ARS';
+      }
+      updatePickerLabel(which);
+    });
   }
 
   // Convert X units of "from" to "to"
@@ -1154,7 +1365,7 @@ const schemaFaq = {
   function renderAll() {
     renderArTable();
     renderIntlTable();
-    populateSelects();
+    populatePickers();
     renderConverter();
   }
 
@@ -1162,13 +1373,68 @@ const schemaFaq = {
   //  EVENTS
   // ==========================================================
   document.getElementById('from-amount')!.addEventListener('input', renderConverter);
-  document.getElementById('from-currency')!.addEventListener('change', renderConverter);
-  document.getElementById('to-currency')!.addEventListener('change', renderConverter);
   document.getElementById('swap')!.addEventListener('click', () => {
-    const fromEl = document.getElementById('from-currency') as HTMLSelectElement;
-    const toEl = document.getElementById('to-currency') as HTMLSelectElement;
+    const fromEl = document.getElementById('from-currency') as HTMLInputElement;
+    const toEl = document.getElementById('to-currency') as HTMLInputElement;
     [fromEl.value, toEl.value] = [toEl.value, fromEl.value];
+    updatePickerLabel('from');
+    updatePickerLabel('to');
     renderConverter();
+  });
+
+  // =======================
+  //  COIN PICKER EVENTS
+  // =======================
+  (['from','to'] as const).forEach((which) => {
+    const btn = document.getElementById(`${which}-currency-btn`)!;
+    const panel = document.querySelector(`[data-picker="${which}"] .picker-panel`) as HTMLElement;
+    const search = panel.querySelector('.picker-search') as HTMLInputElement;
+    const list = panel.querySelector('.picker-list') as HTMLElement;
+
+    btn.addEventListener('click', () => {
+      const isOpen = btn.getAttribute('aria-expanded') === 'true';
+      if (isOpen) closePicker(which); else openPicker(which);
+    });
+
+    search.addEventListener('input', () => renderPickerList(which, search.value));
+
+    search.addEventListener('keydown', (e) => {
+      const items = Array.from(list.querySelectorAll<HTMLElement>('.picker-item'));
+      let activeIdx = items.findIndex((i) => i.classList.contains('active'));
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIdx = Math.min(activeIdx + 1, items.length - 1);
+        items.forEach((it, i) => it.classList.toggle('active', i === activeIdx));
+        items[activeIdx]?.scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIdx = Math.max(activeIdx - 1, 0);
+        items.forEach((it, i) => it.classList.toggle('active', i === activeIdx));
+        items[activeIdx]?.scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const target = activeIdx >= 0 ? items[activeIdx] : items[0];
+        if (target) setPickerValue(which, target.dataset.value!);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closePicker(which);
+        btn.focus();
+      }
+    });
+
+    list.addEventListener('click', (e) => {
+      const item = (e.target as HTMLElement).closest('.picker-item') as HTMLElement | null;
+      if (item?.dataset.value) setPickerValue(which, item.dataset.value);
+    });
+  });
+
+  // Click fuera de picker → cerrar
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.coin-picker')) {
+      closePicker('from');
+      closePicker('to');
+    }
   });
   document.getElementById('intl-toggle')!.addEventListener('click', () => {
     INTL_EXPANDED = !INTL_EXPANDED;
