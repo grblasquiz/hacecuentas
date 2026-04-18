@@ -1479,7 +1479,22 @@ const formatFreshnessDate = (iso: string): string => {
 </style>
 
 <script>
-  import { formulas } from '../lib/formulas/index';
+  // Lazy loading por fórmula — Vite genera 1 chunk por archivo (.ts), cargado on-demand.
+  // Reemplaza el import eager del 'index' que metía las 1.500 fórmulas en el bundle principal.
+  const formulaLoaders = import.meta.glob<any>('../lib/formulas/*.ts');
+  const formulaCache = new Map<string, Function>();
+
+  async function loadFormula(formulaId: string): Promise<Function | null> {
+    if (formulaCache.has(formulaId)) return formulaCache.get(formulaId)!;
+    const loader = formulaLoaders[`../lib/formulas/${formulaId}.ts`];
+    if (!loader) return null;
+    const mod: any = await loader();
+    // Encontrar la función exportada (cualquier export de tipo function)
+    const fnKey = Object.keys(mod).find((k) => typeof mod[k] === 'function');
+    if (!fnKey) return null;
+    formulaCache.set(formulaId, mod[fnKey]);
+    return mod[fnKey];
+  }
 
   // ── Chart.js lazy loader (singleton) ─────────────────────────
   const CHART_CDN = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js';
@@ -1914,16 +1929,17 @@ const formatFreshnessDate = (iso: string): string => {
     const results = container.querySelector<HTMLElement>('.calc-results')!;
     const errorBox = container.querySelector<HTMLElement>('.calc-error')!;
     const submitBtn = form.querySelector<HTMLButtonElement>('.btn-primary')!;
-    const formula = (formulas as any)[formulaId];
+    // Pre-cargar fórmula en background (chunk separado, no bloquea render)
+    let formulaRef: Function | null = null;
+    const formulaReady = loadFormula(formulaId).then((f) => {
+      formulaRef = f;
+      if (!f) console.error(`Fórmula no encontrada: ${formulaId}`);
+      return f;
+    });
     const chartWrap = container.querySelector<HTMLElement>('[data-chart-wrap]');
     const chartCanvas = container.querySelector<HTMLCanvasElement>('[data-chart-canvas]');
     let chartInstance: any = null;
     let lastChartSpec: any = null;
-
-    if (!formula) {
-      console.error(`Fórmula no encontrada: ${formulaId}`);
-      return;
-    }
 
     // Live thousand-formatting on inputs marked data-format="thousands"
     form.querySelectorAll<HTMLInputElement>('input[data-format="thousands"]').forEach((inp) => {
@@ -1970,7 +1986,7 @@ const formatFreshnessDate = (iso: string): string => {
       submitBtn.disabled = true;
 
       // Run formula — wrapped in setTimeout so spinner paints
-      setTimeout(() => {
+      setTimeout(async () => {
         try {
           const data = new FormData(form);
           const inputs: Record<string, string | number> = {};
@@ -1985,6 +2001,11 @@ const formatFreshnessDate = (iso: string): string => {
             }
           });
 
+          // Asegurar que la fórmula esté cargada (primer submit puede esperar el chunk)
+          const formula = formulaRef ?? (await formulaReady);
+          if (!formula) {
+            throw new Error(`Fórmula no disponible: ${formulaId}`);
+          }
           const output = formula(inputs);
           container.querySelectorAll<HTMLElement>('[data-output]').forEach((el) => {
             const outId = el.dataset.output!;
