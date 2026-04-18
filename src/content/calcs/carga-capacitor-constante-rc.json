@@ -1,0 +1,201 @@
+{
+  "title": "Calculadora capacitor) 2026 | Hacé Cuentas",
+  "h1": "Calculadora de constante RC (carga/descarga de capacitor)",
+  "description": "Calculá la constante τ=RC y el voltaje del capacitor en cualquier instante durante carga o descarga. Incluye tiempos para 63%, 95% y 99%.",
+  "category": "electronica",
+  "audience": "global",
+  "icon": "⚡",
+  "formulaId": "carga-capacitor-constante-rc",
+  "intro": "Cuando un capacitor se carga a través de una resistencia, su voltaje crece exponencialmente: V(t) = V₀·(1 − e^(−t/τ)) con τ = R·C. En 1τ llega al 63%, en 3τ al 95% y en 5τ al 99%.",
+  "keyTakeaway": "**τ = R × C**. Carga: V(t) = V₀·(1 − e^(−t/τ)). Descarga: V(t) = V₀·e^(−t/τ). Regla: **5τ = completo**. Para 1 MΩ + 1 µF → τ = 1 s.",
+  "useCases": [
+    "Diseño y análisis de circuitos que involucran calculadora de constante rc (carga/descarga de capacitor)",
+    "Validar cálculos teóricos antes de montar el circuito",
+    "Enseñanza de electrónica básica y avanzada",
+    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
+    "Troubleshooting de circuitos existentes"
+  ],
+  "fields": [
+    {
+      "id": "r",
+      "label": "Resistencia R (Ω)",
+      "type": "number",
+      "required": true,
+      "placeholder": "1000",
+      "min": 0.001,
+      "step": 0.01
+    },
+    {
+      "id": "c",
+      "label": "Capacitancia C",
+      "type": "number",
+      "required": true,
+      "placeholder": "1",
+      "min": 1e-06,
+      "step": 1e-06
+    },
+    {
+      "id": "unidadC",
+      "label": "Unidad C",
+      "type": "select",
+      "required": true,
+      "default": "uF",
+      "options": [
+        {
+          "value": "pF",
+          "label": "pF"
+        },
+        {
+          "value": "nF",
+          "label": "nF"
+        },
+        {
+          "value": "uF",
+          "label": "µF"
+        },
+        {
+          "value": "mF",
+          "label": "mF"
+        },
+        {
+          "value": "F",
+          "label": "F"
+        }
+      ]
+    },
+    {
+      "id": "vFuente",
+      "label": "Voltaje fuente (V)",
+      "type": "number",
+      "required": false,
+      "placeholder": "5",
+      "default": 5,
+      "min": 0
+    },
+    {
+      "id": "tInstante",
+      "label": "Tiempo (s)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0.001",
+      "min": 0,
+      "step": 0.0001
+    },
+    {
+      "id": "modo",
+      "label": "Modo",
+      "type": "select",
+      "required": true,
+      "default": "carga",
+      "options": [
+        {
+          "value": "carga",
+          "label": "Carga"
+        },
+        {
+          "value": "descarga",
+          "label": "Descarga"
+        }
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "id": "tau",
+      "label": "τ (constante tiempo)",
+      "primary": true
+    },
+    {
+      "id": "t63",
+      "label": "1τ (63%)"
+    },
+    {
+      "id": "t95",
+      "label": "3τ (95%)"
+    },
+    {
+      "id": "t99",
+      "label": "5τ (>99%)"
+    },
+    {
+      "id": "voltajeInstante",
+      "label": "V(t)"
+    },
+    {
+      "id": "porcentaje",
+      "label": "% del final"
+    },
+    {
+      "id": "resumen",
+      "label": "Interpretación"
+    }
+  ],
+  "example": {
+    "title": "R=10kΩ, C=100µF, V=12V, t=1s",
+    "steps": [
+      "τ = 10k × 100µF = 1 s",
+      "En t=1s (1τ): V = 12×(1 − e⁻¹) = 7.58 V (63%)",
+      "Tiempo 95% = 3 s",
+      "Tiempo 99% = 5 s"
+    ],
+    "result": "V(1s) = 7.58 V, carga completa en 5 s"
+  },
+  "explanation": "## Ecuaciones\n\n**Carga**: V(t) = V_fuente × (1 − e^(−t/τ))\n\n**Descarga**: V(t) = V_inicial × e^(−t/τ)\n\nDonde τ = R × C (segundos).\n\n## Porcentajes\n\n| τ | % |\n|---|---|\n| 1τ | 63% |\n| 2τ | 86% |\n| 3τ | 95% |\n| 5τ | 99% |\n\n## Aplicaciones\n\n- **Debouncing**: τ=10-50 ms\n- **Filtro RC**: fc = 1/(2π·τ)\n- **555 monoestable**: pulso = 1.1·RC",
+  "faq": [
+    {
+      "q": "¿Qué es la constante RC?",
+      "a": "τ = R × C (segundos). Indica cuánto tarda el capacitor en llegar al 63% del valor final."
+    },
+    {
+      "q": "¿Por qué 63%?",
+      "a": "Es el resultado natural de V(τ) = V₀(1 − e⁻¹) = V₀ × 0.632. No arbitrario."
+    },
+    {
+      "q": "¿Cuándo considero completo?",
+      "a": "5τ = 99.3% es suficiente. Para precisión extrema: 7τ = 99.9%."
+    },
+    {
+      "q": "¿Si R es muy chica?",
+      "a": "τ baja, carga casi instantánea. Cuidado con picos de corriente inrush."
+    },
+    {
+      "q": "¿Con otra carga conectada?",
+      "a": "Vfinal ya no es Vfuente sino el divisor resultante. Recalcular Vfinal con Ley Ohm."
+    },
+    {
+      "q": "¿Vale para capacitores polarizados?",
+      "a": "Sí, pero respetá la polaridad — voltaje inverso destruye electrolíticos."
+    },
+    {
+      "q": "¿Cómo calculo C para τ específico?",
+      "a": "C = τ / R. Ejemplo: τ=1s con R=10k → C=100µF."
+    }
+  ],
+  "sources": [
+    {
+      "name": "All About Circuits — Electronics Textbook",
+      "url": "https://www.allaboutcircuits.com"
+    },
+    {
+      "name": "IEEE Standards Association",
+      "url": "https://standards.ieee.org"
+    },
+    {
+      "name": "Electronics Tutorials",
+      "url": "https://www.electronics-tutorials.ws"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ley-ohm-voltaje-corriente-resistencia",
+    "calculadora-potencia-electrica-p-vi",
+    "calculadora-resistencia-led-serie-paralelo",
+    "calculadora-divisor-voltaje-resistencias"
+  ],
+  "slug": "calculadora-carga-capacitor-constante-rc",
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-18",
+    "updateType": "manual",
+    "notes": "Fórmula fija, no requiere actualización de data externa"
+  }
+}

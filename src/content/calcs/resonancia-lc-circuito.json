@@ -1,0 +1,184 @@
+{
+  "title": "Calculadora Calculadora de frecuencia de resonancia LC 2026 | Hacé Cuentas",
+  "h1": "Calculadora de frecuencia de resonancia LC",
+  "description": "Calculá la frecuencia de resonancia f = 1/(2π√LC) de un circuito LC serie o paralelo. Incluye impedancia a la resonancia y factor Q.",
+  "category": "electronica",
+  "audience": "global",
+  "icon": "⚡",
+  "formulaId": "resonancia-lc-circuito",
+  "intro": "La **frecuencia de resonancia** de un circuito LC es donde la reactancia inductiva iguala la capacitiva (XL = XC). En ese punto la energía oscila entre L y C sin pérdidas. Se usa en osciladores, filtros pasabanda y sintonizadores de radio.",
+  "keyTakeaway": "**f = 1/(2π√(L×C))**. Para L=1 µH + C=1 nF → f = 5.03 MHz. En serie: impedancia MÍNIMA en resonancia. En paralelo: impedancia MÁXIMA.",
+  "useCases": [
+    "Diseño y análisis de circuitos que involucran calculadora de frecuencia de resonancia lc",
+    "Validar cálculos teóricos antes de montar el circuito",
+    "Enseñanza de electrónica básica y avanzada",
+    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
+    "Troubleshooting de circuitos existentes"
+  ],
+  "fields": [
+    {
+      "id": "l",
+      "label": "Inductancia L",
+      "type": "number",
+      "required": true,
+      "placeholder": "1",
+      "min": 1e-06
+    },
+    {
+      "id": "unidadL",
+      "label": "Unidad L",
+      "type": "select",
+      "required": true,
+      "default": "uH",
+      "options": [
+        {
+          "value": "nH",
+          "label": "nH"
+        },
+        {
+          "value": "uH",
+          "label": "µH"
+        },
+        {
+          "value": "mH",
+          "label": "mH"
+        },
+        {
+          "value": "H",
+          "label": "H"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "label": "Capacitancia C",
+      "type": "number",
+      "required": true,
+      "placeholder": "1",
+      "min": 1e-06
+    },
+    {
+      "id": "unidadC",
+      "label": "Unidad C",
+      "type": "select",
+      "required": true,
+      "default": "nF",
+      "options": [
+        {
+          "value": "pF",
+          "label": "pF"
+        },
+        {
+          "value": "nF",
+          "label": "nF"
+        },
+        {
+          "value": "uF",
+          "label": "µF"
+        }
+      ]
+    },
+    {
+      "id": "r",
+      "label": "R total (opcional, para Q)",
+      "type": "number",
+      "required": false,
+      "placeholder": "10",
+      "min": 0
+    }
+  ],
+  "outputs": [
+    {
+      "id": "fResonancia",
+      "label": "Frecuencia de resonancia",
+      "primary": true
+    },
+    {
+      "id": "angFrec",
+      "label": "ω = 2πf"
+    },
+    {
+      "id": "xL",
+      "label": "XL a fr"
+    },
+    {
+      "id": "xC",
+      "label": "XC a fr"
+    },
+    {
+      "id": "q",
+      "label": "Factor Q (si R)"
+    },
+    {
+      "id": "resumen",
+      "label": "Interpretación"
+    }
+  ],
+  "example": {
+    "title": "L=10 µH, C=100 pF",
+    "steps": [
+      "f = 1/(2π√(10e-6 × 100e-12))",
+      "= 1/(2π × 3.16e-8)",
+      "= **5.03 MHz**"
+    ],
+    "result": "Resonancia a 5.03 MHz — banda FM baja."
+  },
+  "explanation": "## Fórmula\n\n```\nf_r = 1 / (2π × √(L × C))\nω_r = 2π × f_r = 1 / √(L × C)\n```\n\n## Serie vs paralelo\n\n| | Serie | Paralelo |\n|---|---|---|\n| Impedancia en fr | MÍNIMA (=R) | MÁXIMA (=L/(RC)) |\n| Corriente | MÁXIMA | MÍNIMA |\n| Uso | Filtro pasabanda | Filtro rechazabanda |\n\n## Factor Q\n\n**Q = 1/R × √(L/C)**. Alto Q = filtro selectivo. Q típico: osciladores 50-500, cristales 10.000-100.000.\n\n## Aplicaciones\n\n- Sintonizador AM/FM\n- Osciladores Colpitts/Hartley\n- Transferencia inalámbrica de energía (Qi)",
+  "faq": [
+    {
+      "q": "¿Cómo funciona en radio?",
+      "a": "Cada estación tiene su frecuencia. Ajustando L o C (generalmente C variable), coincidís con una estación y la circulación selectiva maximiza esa señal."
+    },
+    {
+      "q": "¿Serie o paralelo?",
+      "a": "Depende de la aplicación. Serie para filtros pasabanda. Paralelo para notch filter o tanque de oscilador."
+    },
+    {
+      "q": "¿Qué es Q alto?",
+      "a": "Selectividad. Q alto = pico resonante estrecho, rechaza bien frecuencias vecinas. Típico radio: Q=100 suficiente; cristales Q>10,000."
+    },
+    {
+      "q": "¿Qué afecta la frecuencia real?",
+      "a": "Capacidad parásita del inductor, resistencia del alambre, tolerancia de L y C (±10-20% típica). En radiofrecuencia, importante compensar."
+    },
+    {
+      "q": "¿Cómo calculo si sé la frecuencia deseada?",
+      "a": "Elegí L o C libremente: C = 1/((2πf)²×L). Ejemplo: f=10 MHz con L=1µH → C = 253 pF."
+    },
+    {
+      "q": "¿Y si hay resistencia?",
+      "a": "Reduce el Q y ensancha el pico. Inductores reales tienen R ~0.1-10 Ω dependiendo del calibre y número de vueltas."
+    },
+    {
+      "q": "¿Qué son RLC?",
+      "a": "LC con resistencia agregada. R determina Q y amortiguamiento. Si R es muy alta, el circuito no resuena (sobreamortiguado)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "All About Circuits — Electronics Textbook",
+      "url": "https://www.allaboutcircuits.com"
+    },
+    {
+      "name": "IEEE Standards Association",
+      "url": "https://standards.ieee.org"
+    },
+    {
+      "name": "Electronics Tutorials",
+      "url": "https://www.electronics-tutorials.ws"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ley-ohm-voltaje-corriente-resistencia",
+    "calculadora-potencia-electrica-p-vi",
+    "calculadora-resistencia-led-serie-paralelo",
+    "calculadora-divisor-voltaje-resistencias"
+  ],
+  "slug": "calculadora-resonancia-lc-circuito",
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-18",
+    "updateType": "manual",
+    "notes": "Fórmula fija, no requiere actualización de data externa"
+  }
+}

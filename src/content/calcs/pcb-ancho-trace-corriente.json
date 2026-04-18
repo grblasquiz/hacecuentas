@@ -1,0 +1,135 @@
+{
+  "title": "Calculadora (IPC-2221) 2026 | Hacé Cuentas",
+  "h1": "Calculadora de ancho de trace PCB por corriente (IPC-2221)",
+  "description": "Calculá el ancho mínimo de una pista (trace) de PCB según IPC-2221, para conducir una corriente con limite de elevación térmica (10-20°C).",
+  "category": "electronica",
+  "audience": "global",
+  "icon": "⚡",
+  "formulaId": "pcb-ancho-trace-corriente",
+  "intro": "Calculadora de ancho de trace PCB por corriente (IPC-2221) — cálculos técnicos con fórmulas estándar de la electrónica.",
+  "keyTakeaway": "**W (mil) = [I / (k × ΔT^0.44)]^(1/0.725)**. k=0.048 interno, 0.024 externo. Ej: 1A externo con ΔT=10°C → 10 mil (0.25 mm).",
+  "useCases": [
+    "Diseño y análisis de circuitos que involucran calculadora de ancho de trace pcb por corriente (ipc-2221)",
+    "Validar cálculos teóricos antes de montar el circuito",
+    "Enseñanza de electrónica básica y avanzada",
+    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
+    "Troubleshooting de circuitos existentes"
+  ],
+  "fields": [
+    {
+      "id": "corriente",
+      "label": "Corriente (A)",
+      "type": "number",
+      "required": true,
+      "placeholder": "1"
+    },
+    {
+      "id": "espesorCu",
+      "label": "Espesor de cobre (oz)",
+      "type": "number",
+      "required": true,
+      "placeholder": "1",
+      "default": 1,
+      "step": 0.5
+    },
+    {
+      "id": "ubicacion",
+      "label": "Ubicación pista",
+      "type": "select",
+      "required": true,
+      "default": "externa",
+      "options": [
+        {
+          "value": "externa",
+          "label": "Externa (top/bottom)"
+        },
+        {
+          "value": "interna",
+          "label": "Interna (inner layers)"
+        }
+      ]
+    },
+    {
+      "id": "deltaTemp",
+      "label": "Elevación temperatura máx (°C)",
+      "type": "number",
+      "required": true,
+      "placeholder": "10",
+      "default": 10
+    }
+  ],
+  "outputs": [
+    {
+      "id": "anchoMin",
+      "label": "Ancho mínimo",
+      "primary": true
+    },
+    {
+      "id": "anchoMil",
+      "label": "Ancho (mil)"
+    },
+    {
+      "id": "resumen",
+      "label": "Interpretación"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo",
+    "steps": [
+      "I=1A, Cu 1oz, externa, ΔT=10°C",
+      "Fórmula IPC → ancho = ~10 mil",
+      "Equivale a 0.254 mm"
+    ],
+    "result": "Ancho mínimo 0.25 mm (10 mil)"
+  },
+  "explanation": "## Fórmula IPC-2221\n\n```\nArea = [ I / (k × ΔT^0.44) ]^(1/0.725)\nW = Area / (t × 1.378)  // mil\n```\n\nDonde:\n- k = 0.048 traces internas, 0.024 externas\n- ΔT: elevación térmica deseada (°C)\n- t: espesor cobre (oz)\n\n## Guía rápida (Cu 1oz, externo, ΔT=10°C)\n\n| Corriente | Ancho mínimo |\n|---|---|\n| 0.5 A | 6 mil (0.15 mm) |\n| 1 A | 10 mil (0.25 mm) |\n| 2 A | 18 mil (0.46 mm) |\n| 5 A | 45 mil (1.14 mm) |\n| 10 A | 90 mil (2.28 mm) |\n\n## Recomendaciones\n\n- Agregá 20% de margen para envejecimiento\n- Pistas internas requieren ~1.5× el ancho de externas\n- Considerá vias y stitching para alta corriente",
+  "faq": [
+    {
+      "q": "¿Qué es IPC-2221?",
+      "a": "Estándar internacional de diseño PCB. Define reglas para ancho de pistas, spacing, tolerancias térmicas."
+    },
+    {
+      "q": "¿ΔT de cuanto?",
+      "a": "10°C conservador (elevación sobre ambiente). 20°C si aceptás calentamiento moderado. 30°C límite absoluto."
+    },
+    {
+      "q": "¿Cu 1oz vs 2oz?",
+      "a": "1oz (35 µm) estándar. 2oz (70 µm) para alta corriente. 2oz duplica la capacidad de corriente vs 1oz."
+    },
+    {
+      "q": "¿Interna vs externa?",
+      "a": "Pistas internas disipan peor calor (sandwich). Necesitan ~1.5× el ancho."
+    },
+    {
+      "q": "¿Vias para corriente?",
+      "a": "Cada via soporta ~0.5-1 A según diámetro. Para alta corriente usar stitching (múltiples vias en paralelo)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "All About Circuits — Electronics Textbook",
+      "url": "https://www.allaboutcircuits.com"
+    },
+    {
+      "name": "IEEE Standards Association",
+      "url": "https://standards.ieee.org"
+    },
+    {
+      "name": "Electronics Tutorials",
+      "url": "https://www.electronics-tutorials.ws"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ley-ohm-voltaje-corriente-resistencia",
+    "calculadora-potencia-electrica-p-vi",
+    "calculadora-resistencia-led-serie-paralelo",
+    "calculadora-divisor-voltaje-resistencias"
+  ],
+  "slug": "calculadora-pcb-ancho-trace-corriente",
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-18",
+    "updateType": "manual",
+    "notes": "Fórmula fija, no requiere actualización de data externa"
+  }
+}

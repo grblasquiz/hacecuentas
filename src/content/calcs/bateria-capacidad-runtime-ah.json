@@ -1,0 +1,134 @@
+{
+  "title": "Calculadora Calculadora de autonomía de batería (Ah / runtime) 2026 | Hacé Cuentas",
+  "h1": "Calculadora de autonomía de batería (Ah / runtime)",
+  "description": "Calculá cuántas horas dura una batería según capacidad (Ah) y consumo (A o W). Considera eficiencia de descarga y profundidad DoD máxima recomendada.",
+  "category": "electronica",
+  "audience": "global",
+  "icon": "⚡",
+  "formulaId": "bateria-capacidad-runtime-ah",
+  "intro": "Calculadora de autonomía de batería (Ah / runtime) — cálculos técnicos con fórmulas estándar de la electrónica.",
+  "keyTakeaway": "**t = (Ah × V × η × DoD) / P_consumo**. Para batería 100Ah/12V al 80% DoD con carga 100W → 9.6 horas. Plomo-ácido: DoD ≤ 50%. LiFePO4: DoD ≤ 80%.",
+  "useCases": [
+    "Diseño y análisis de circuitos que involucran calculadora de autonomía de batería (ah / runtime)",
+    "Validar cálculos teóricos antes de montar el circuito",
+    "Enseñanza de electrónica básica y avanzada",
+    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
+    "Troubleshooting de circuitos existentes"
+  ],
+  "fields": [
+    {
+      "id": "ah",
+      "label": "Capacidad batería (Ah)",
+      "type": "number",
+      "required": true,
+      "placeholder": "100"
+    },
+    {
+      "id": "v",
+      "label": "Voltaje batería (V)",
+      "type": "number",
+      "required": true,
+      "placeholder": "12",
+      "default": 12
+    },
+    {
+      "id": "consumo",
+      "label": "Consumo (W)",
+      "type": "number",
+      "required": true,
+      "placeholder": "100"
+    },
+    {
+      "id": "dod",
+      "label": "Profundidad descarga máxima (%)",
+      "type": "number",
+      "required": true,
+      "placeholder": "80",
+      "default": 80,
+      "min": 10,
+      "max": 100
+    },
+    {
+      "id": "eficiencia",
+      "label": "Eficiencia (%)",
+      "type": "number",
+      "required": false,
+      "placeholder": "95",
+      "default": 95
+    }
+  ],
+  "outputs": [
+    {
+      "id": "horas",
+      "label": "Autonomía",
+      "primary": true
+    },
+    {
+      "id": "wh",
+      "label": "Energía útil"
+    },
+    {
+      "id": "resumen",
+      "label": "Interpretación"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo",
+    "steps": [
+      "Ah=100, V=12, W=100, DoD=80%, η=95%",
+      "Energía útil = 100 × 12 × 0.8 × 0.95 = 912 Wh",
+      "Runtime = 912 / 100 = 9.12 h"
+    ],
+    "result": "Batería 100Ah 12V alimenta 100W durante 9.1 horas"
+  },
+  "explanation": "## DoD máximo por química\n\n| Tipo | DoD máx | Ciclos típicos |\n|---|---|---|\n| Plomo ácido sellada (AGM) | 50% | 400-800 |\n| Plomo ácido ciclo profundo | 70% | 600-1200 |\n| Li-ion (18650, 21700) | 80% | 500-1000 |\n| LiFePO4 | 80-90% | 2000-5000 |\n| Gel | 50-60% | 500-1000 |\n\n## Regla \"descarga C/20\"\n\nLa capacidad nominal (ej 100Ah) asume descarga en 20 h (5 A constante). A corrientes más altas, la capacidad efectiva cae (\"efecto Peukert\"): una batería 100Ah entregando 50A dura ~1h (no 2h).\n\n## Recomendaciones\n\n- Solar off-grid: LiFePO4 es el estándar actual\n- UPS: Plomo ácido AGM (descarga corta, rara)\n- Backup: Gel o LiFePO4 según budget",
+  "faq": [
+    {
+      "q": "¿Por qué no usar 100% DoD?",
+      "a": "Descargar totalmente acorta vida útil drásticamente. Plomo totalmente descargado puede sulfatarse y perder capacidad permanente."
+    },
+    {
+      "q": "¿Litio reemplaza plomo?",
+      "a": "Cada vez más. LiFePO4 cuesta 2-3× más pero dura 5-10× más y pesa 40% menos. Solar y náutico está migrando a Li."
+    },
+    {
+      "q": "¿Cómo calculo con cargas variables?",
+      "a": "Suma los Wh de cada carga (W × horas) y dividí por la energía útil total de la batería. Para flujo de cargas simula hora por hora."
+    },
+    {
+      "q": "¿Pierdo capacidad con el tiempo?",
+      "a": "Sí. Li-ion pierde ~2-3%/año + por ciclo. LiFePO4 pierde 1-2%/año. Plomo 5-10%/año según uso."
+    },
+    {
+      "q": "¿Efecto Peukert?",
+      "a": "Descargas rápidas reducen capacidad efectiva. Relevante si descargás en <10h. Para horas largas no afecta mucho."
+    }
+  ],
+  "sources": [
+    {
+      "name": "All About Circuits — Electronics Textbook",
+      "url": "https://www.allaboutcircuits.com"
+    },
+    {
+      "name": "IEEE Standards Association",
+      "url": "https://standards.ieee.org"
+    },
+    {
+      "name": "Electronics Tutorials",
+      "url": "https://www.electronics-tutorials.ws"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ley-ohm-voltaje-corriente-resistencia",
+    "calculadora-potencia-electrica-p-vi",
+    "calculadora-resistencia-led-serie-paralelo",
+    "calculadora-divisor-voltaje-resistencias"
+  ],
+  "slug": "calculadora-bateria-capacidad-runtime-ah",
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-18",
+    "updateType": "manual",
+    "notes": "Fórmula fija, no requiere actualización de data externa"
+  }
+}

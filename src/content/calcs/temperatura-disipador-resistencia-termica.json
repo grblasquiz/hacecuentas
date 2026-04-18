@@ -1,0 +1,144 @@
+{
+  "title": "Calculadora térmico 2026 | Hacé Cuentas",
+  "h1": "Calculadora de temperatura de unión en disipador térmico",
+  "description": "Calculá la temperatura final de un semiconductor (Tj) con disipador, según potencia disipada y resistencias térmicas (θJC + θCS + θSA).",
+  "category": "electronica",
+  "audience": "global",
+  "icon": "⚡",
+  "formulaId": "temperatura-disipador-resistencia-termica",
+  "intro": "Calculadora de temperatura de unión en disipador térmico — cálculos técnicos con fórmulas estándar de la electrónica.",
+  "keyTakeaway": "**Tj = Ta + P × (θJC + θCS + θSA)**. Tj máx típica 125-150°C. Con 1W y θ_total=10°C/W a 25°C ambiente → Tj = 35°C.",
+  "useCases": [
+    "Diseño y análisis de circuitos que involucran calculadora de temperatura de unión en disipador térmico",
+    "Validar cálculos teóricos antes de montar el circuito",
+    "Enseñanza de electrónica básica y avanzada",
+    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
+    "Troubleshooting de circuitos existentes"
+  ],
+  "fields": [
+    {
+      "id": "potenciaDisipada",
+      "label": "Potencia disipada (W)",
+      "type": "number",
+      "required": true,
+      "placeholder": "5"
+    },
+    {
+      "id": "ambiente",
+      "label": "Temperatura ambiente (°C)",
+      "type": "number",
+      "required": true,
+      "placeholder": "25",
+      "default": 25
+    },
+    {
+      "id": "thetaJC",
+      "label": "θJC unión-carcasa (°C/W)",
+      "type": "number",
+      "required": true,
+      "placeholder": "2",
+      "default": 2,
+      "step": 0.1
+    },
+    {
+      "id": "thetaCS",
+      "label": "θCS carcasa-disipador (°C/W)",
+      "type": "number",
+      "required": true,
+      "placeholder": "0.5",
+      "default": 0.5,
+      "step": 0.1
+    },
+    {
+      "id": "thetaSA",
+      "label": "θSA disipador-ambiente (°C/W)",
+      "type": "number",
+      "required": true,
+      "placeholder": "3",
+      "default": 3,
+      "step": 0.1
+    },
+    {
+      "id": "tjMax",
+      "label": "Tj máxima componente (°C)",
+      "type": "number",
+      "required": false,
+      "placeholder": "125",
+      "default": 125
+    }
+  ],
+  "outputs": [
+    {
+      "id": "tj",
+      "label": "Temperatura de unión",
+      "primary": true
+    },
+    {
+      "id": "margenSeguridad",
+      "label": "Margen hasta Tj máx"
+    },
+    {
+      "id": "resumen",
+      "label": "Interpretación"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo",
+    "steps": [
+      "P=5W, Ta=25°C, θJC=2, θCS=0.5, θSA=3 (total 5.5°C/W)",
+      "Tj = 25 + 5×5.5 = 52.5°C",
+      "Margen vs 125°C: 72.5°C ✓ cómodo"
+    ],
+    "result": "Tj = 52.5°C, margen 72.5°C (seguro)"
+  },
+  "explanation": "## Regla térmica básica\n\n```\nTj = Ta + P × θ_total\nθ_total = θJC + θCS + θSA\n```\n\n- Tj: temperatura de unión del semiconductor\n- Ta: temperatura ambiente\n- θJC: entre unión y carcasa (datasheet)\n- θCS: entre carcasa y disipador (0.3-1 con pasta)\n- θSA: entre disipador y ambiente (ficha del disipador)\n\n## Elegir disipador\n\nRequerido: θSA_max = (Tj_max − Ta) / P − θJC − θCS\n\nEjemplo: 10W, Tj_max=100°C, Ta=40°C, θJC=1, θCS=0.5:\nθSA_max = (100−40)/10 − 1 − 0.5 = 4.5°C/W\n\nElegí disipador con θSA ≤ 4.5°C/W.",
+  "faq": [
+    {
+      "q": "¿Por qué importa Tj?",
+      "a": "Sobrepasar Tj max quema el componente permanentemente. Operar cerca del límite acorta vida útil (regla: cada 10°C sobre TJ_max = vida a la mitad)."
+    },
+    {
+      "q": "¿Pasta térmica es importante?",
+      "a": "Muy importante. Sin pasta: θCS ~2-5. Con pasta: 0.3-1. Reduce resistencia 3-10×."
+    },
+    {
+      "q": "¿Ventilador ayuda?",
+      "a": "Sí. Disipador con forzado aire: θSA se reduce 2-4× vs convección natural. TEC (peltier): θSA efectiva negativa."
+    },
+    {
+      "q": "¿Qué semiconductores más dissipación?",
+      "a": "Power MOSFETs, reguladores lineales, amplificadores clase A/B, drivers de motor, IGBTs. CPUs/GPUs caso aparte."
+    },
+    {
+      "q": "¿Por qué no usar disipador grande?",
+      "a": "Más caro, más grande, más peso. Ajustá al requerido + margen 30%."
+    }
+  ],
+  "sources": [
+    {
+      "name": "All About Circuits — Electronics Textbook",
+      "url": "https://www.allaboutcircuits.com"
+    },
+    {
+      "name": "IEEE Standards Association",
+      "url": "https://standards.ieee.org"
+    },
+    {
+      "name": "Electronics Tutorials",
+      "url": "https://www.electronics-tutorials.ws"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ley-ohm-voltaje-corriente-resistencia",
+    "calculadora-potencia-electrica-p-vi",
+    "calculadora-resistencia-led-serie-paralelo",
+    "calculadora-divisor-voltaje-resistencias"
+  ],
+  "slug": "calculadora-temperatura-disipador-resistencia-termica",
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-18",
+    "updateType": "manual",
+    "notes": "Fórmula fija, no requiere actualización de data externa"
+  }
+}

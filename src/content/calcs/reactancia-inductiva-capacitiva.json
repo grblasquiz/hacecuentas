@@ -1,0 +1,151 @@
+{
+  "title": "Calculadora (XC) 2026 | Hacé Cuentas",
+  "h1": "Calculadora de reactancia inductiva (XL) y capacitiva (XC)",
+  "description": "Calculá la reactancia inductiva XL = 2πfL y capacitiva XC = 1/(2πfC) de bobinas y capacitores a cualquier frecuencia. Comparativa y visualización.",
+  "category": "electronica",
+  "audience": "global",
+  "icon": "⚡",
+  "formulaId": "reactancia-inductiva-capacitiva",
+  "intro": "La **reactancia** es la oposición al paso de corriente alterna que presentan inductores (XL) y capacitores (XC). XL aumenta con frecuencia, XC disminuye. Se mide en ohms como una resistencia, pero introduce desfase 90°.",
+  "keyTakeaway": "**XL = 2π × f × L** (crece con f). **XC = 1/(2π × f × C)** (decrece con f). A f=0 (DC): inductor = cortocircuito, capacitor = circuito abierto.",
+  "useCases": [
+    "Diseño y análisis de circuitos que involucran calculadora de reactancia inductiva (xl) y capacitiva (xc)",
+    "Validar cálculos teóricos antes de montar el circuito",
+    "Enseñanza de electrónica básica y avanzada",
+    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
+    "Troubleshooting de circuitos existentes"
+  ],
+  "fields": [
+    {
+      "id": "modo",
+      "label": "Tipo",
+      "type": "select",
+      "required": true,
+      "default": "ambas",
+      "options": [
+        {
+          "value": "XL",
+          "label": "Solo XL (inductor)"
+        },
+        {
+          "value": "XC",
+          "label": "Solo XC (capacitor)"
+        },
+        {
+          "value": "ambas",
+          "label": "Ambas"
+        }
+      ]
+    },
+    {
+      "id": "f",
+      "label": "Frecuencia (Hz)",
+      "type": "number",
+      "required": true,
+      "placeholder": "1000",
+      "min": 1e-06
+    },
+    {
+      "id": "l",
+      "label": "Inductancia (mH)",
+      "type": "number",
+      "required": false,
+      "placeholder": "10",
+      "min": 0
+    },
+    {
+      "id": "c",
+      "label": "Capacitancia (µF)",
+      "type": "number",
+      "required": false,
+      "placeholder": "1",
+      "min": 0
+    }
+  ],
+  "outputs": [
+    {
+      "id": "xL",
+      "label": "Reactancia inductiva",
+      "primary": true
+    },
+    {
+      "id": "xC",
+      "label": "Reactancia capacitiva"
+    },
+    {
+      "id": "ratio",
+      "label": "XL/XC"
+    },
+    {
+      "id": "resumen",
+      "label": "Interpretación"
+    }
+  ],
+  "example": {
+    "title": "L=10 mH, C=1 µF, f=1 kHz",
+    "steps": [
+      "XL = 2π × 1000 × 0.01 = 62.8 Ω",
+      "XC = 1/(2π × 1000 × 1e-6) = 159 Ω",
+      "A esta f, el capacitor bloquea más que el inductor"
+    ],
+    "result": "XL=62.8 Ω, XC=159 Ω. Circuito domina capacitivamente."
+  },
+  "explanation": "## Fórmulas\n\n```\nXL = 2π × f × L     (reactancia inductiva)\nXC = 1 / (2π × f × C)  (reactancia capacitiva)\n```\n\nAmbas en ohms.\n\n## Comportamiento con frecuencia\n\n| f | XL | XC | Notas |\n|---|---|---|---|\n| DC (0 Hz) | 0 (corto) | ∞ (abierto) | Inductor conduce, cap bloquea |\n| Baja f | Bajo | Alto | Capacitor domina |\n| Alta f | Alto | Bajo | Inductor domina |\n| Resonancia | XL = XC | iguales | Anulación mutua |\n\n## Uso\n\n- **Separación DC/AC**: capacitor bloquea DC, pasa AC\n- **Choke inductivo**: bloquea AC alta frecuencia, pasa DC\n- **Filtros LC**: combinación para resonancia o rechazo",
+  "faq": [
+    {
+      "q": "¿Diferencia con resistencia?",
+      "a": "La resistencia disipa energía como calor. La reactancia almacena energía en campo magnético (L) o eléctrico (C). No disipa — devuelve en cada ciclo."
+    },
+    {
+      "q": "¿XL en DC?",
+      "a": "Cero (cortocircuito). Un inductor en DC estable solo tiene la resistencia del alambre."
+    },
+    {
+      "q": "¿XC en DC?",
+      "a": "Infinita (circuito abierto). El capacitor se carga y bloquea el paso de corriente continua."
+    },
+    {
+      "q": "¿Es la impedancia?",
+      "a": "Z = R + jX (resistencia + reactancia compleja). Para inductor puro: Z = jXL. Para capacitor: Z = −jXC."
+    },
+    {
+      "q": "¿Por qué desfase?",
+      "a": "En inductor: corriente atrasa 90° al voltaje. En capacitor: corriente adelanta 90°. Energía va y viene cíclicamente."
+    },
+    {
+      "q": "¿Qué pasa en resonancia?",
+      "a": "XL = XC en magnitud pero opuestas en signo. Se cancelan y la impedancia queda solo R (serie) o muy alta (paralelo)."
+    },
+    {
+      "q": "¿Cómo mido en la práctica?",
+      "a": "Medidor RLC específico o usando generador + osciloscopio para medir corriente/voltaje y calcular Z=V/I."
+    }
+  ],
+  "sources": [
+    {
+      "name": "All About Circuits — Electronics Textbook",
+      "url": "https://www.allaboutcircuits.com"
+    },
+    {
+      "name": "IEEE Standards Association",
+      "url": "https://standards.ieee.org"
+    },
+    {
+      "name": "Electronics Tutorials",
+      "url": "https://www.electronics-tutorials.ws"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ley-ohm-voltaje-corriente-resistencia",
+    "calculadora-potencia-electrica-p-vi",
+    "calculadora-resistencia-led-serie-paralelo",
+    "calculadora-divisor-voltaje-resistencias"
+  ],
+  "slug": "calculadora-reactancia-inductiva-capacitiva",
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-18",
+    "updateType": "manual",
+    "notes": "Fórmula fija, no requiere actualización de data externa"
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "title": "Calculadora pasa-bajos/altos 2026 | Hacé Cuentas",
+  "h1": "Calculadora de frecuencia de corte filtro RC pasa-bajos/altos",
+  "description": "Calculá la frecuencia de corte fc = 1/(2π·R·C) de un filtro RC pasa-bajos o pasa-altos. Incluye atenuación en varias frecuencias y ganancia en dB.",
+  "category": "electronica",
+  "audience": "global",
+  "icon": "⚡",
+  "formulaId": "frecuencia-corte-filtro-rc",
+  "intro": "Un filtro RC es el más simple para atenuar frecuencias. **Pasa-bajos**: deja pasar <fc, atenúa >fc. **Pasa-altos**: lo inverso. La frecuencia de corte fc = 1/(2π·RC) es donde la ganancia cae 3 dB (≈ 70.7% de la amplitud).",
+  "keyTakeaway": "**fc = 1/(2π × R × C)**. Para R=10kΩ y C=100nF → fc = 159 Hz. A fc: -3 dB. Cada década arriba/abajo: -20 dB/década.",
+  "useCases": [
+    "Diseño y análisis de circuitos que involucran calculadora de frecuencia de corte filtro rc pasa-bajos/altos",
+    "Validar cálculos teóricos antes de montar el circuito",
+    "Enseñanza de electrónica básica y avanzada",
+    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
+    "Troubleshooting de circuitos existentes"
+  ],
+  "fields": [
+    {
+      "id": "r",
+      "label": "R (Ω)",
+      "type": "number",
+      "required": true,
+      "placeholder": "10000",
+      "min": 0.001
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "type": "number",
+      "required": true,
+      "placeholder": "100",
+      "min": 1e-06
+    },
+    {
+      "id": "unidadC",
+      "label": "Unidad C",
+      "type": "select",
+      "required": true,
+      "default": "nF",
+      "options": [
+        {
+          "value": "pF",
+          "label": "pF"
+        },
+        {
+          "value": "nF",
+          "label": "nF"
+        },
+        {
+          "value": "uF",
+          "label": "µF"
+        }
+      ]
+    },
+    {
+      "id": "tipo",
+      "label": "Tipo",
+      "type": "select",
+      "required": true,
+      "default": "pasa-bajos",
+      "options": [
+        {
+          "value": "pasa-bajos",
+          "label": "Pasa-bajos"
+        },
+        {
+          "value": "pasa-altos",
+          "label": "Pasa-altos"
+        }
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "id": "fc",
+      "label": "Frecuencia corte (fc)",
+      "primary": true
+    },
+    {
+      "id": "fc2",
+      "label": "fc × 2"
+    },
+    {
+      "id": "fc10",
+      "label": "fc × 10"
+    },
+    {
+      "id": "fc100",
+      "label": "fc × 100"
+    },
+    {
+      "id": "atenuacionEnFc",
+      "label": "Atenuación en fc"
+    },
+    {
+      "id": "resumen",
+      "label": "Interpretación"
+    }
+  ],
+  "example": {
+    "title": "R=10kΩ, C=100nF pasa-bajos",
+    "steps": [
+      "fc = 1/(2π × 10000 × 100e-9)",
+      "fc = 159 Hz",
+      "A 1.6 kHz (10× fc): -20 dB (10%)",
+      "A 16 kHz (100× fc): -40 dB (1%)"
+    ],
+    "result": "fc = 159 Hz. Atenúa alta frecuencia 20 dB/década."
+  },
+  "explanation": "## Fórmula\n\n```\nfc = 1 / (2π × R × C)\n```\n\n## Pasa-bajos vs pasa-altos\n\n| Tipo | <fc | fc | >fc |\n|---|---|---|---|\n| Pasa-bajos | 0 dB | -3 dB | -20 dB/dec |\n| Pasa-altos | -20 dB/dec | -3 dB | 0 dB |\n\n## Aplicaciones\n\n- **Audio**: elimina ruido >20 kHz\n- **Anti-aliasing ADC**: fc = fs/2 (Nyquist)\n- **Sensor smoothing**: fc = 1-10 Hz\n- **Debouncing**: fc ≈ 100 Hz",
+  "faq": [
+    {
+      "q": "¿Qué significa -3 dB en fc?",
+      "a": "Es donde la amplitud cae a 70.7% del valor original (70.7% = 10^(−3/20)). Es el punto 'half-power'."
+    },
+    {
+      "q": "¿Por qué 20 dB/década?",
+      "a": "Es la pendiente asintótica de un filtro de primer orden. Cada década (×10 en frecuencia) atenúa 20 dB más."
+    },
+    {
+      "q": "¿Cómo obtener mayor atenuación?",
+      "a": "Cascada de filtros (2º, 3º orden). Cada orden agrega 20 dB/década adicional."
+    },
+    {
+      "q": "¿Impacta la impedancia?",
+      "a": "Sí — el filtro RC tiene impedancia de salida ≈ R. Para cargar con otra etapa, usar buffer op-amp."
+    },
+    {
+      "q": "¿Vale para señal DC?",
+      "a": "No, el filtro solo filtra componentes AC. DC pasa por el filtro pasa-bajos con 0 dB (sin atenuación)."
+    },
+    {
+      "q": "¿Cómo calcular C para fc deseada?",
+      "a": "C = 1/(2π × R × fc). Para fc=100 Hz y R=10k: C = 159 nF."
+    },
+    {
+      "q": "¿fc del filtro pasa-altos?",
+      "a": "Misma fórmula. La diferencia es qué banda se atenúa. Circuito: C en serie + R a tierra (en lugar de R serie + C a tierra del pasa-bajos)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "All About Circuits — Electronics Textbook",
+      "url": "https://www.allaboutcircuits.com"
+    },
+    {
+      "name": "IEEE Standards Association",
+      "url": "https://standards.ieee.org"
+    },
+    {
+      "name": "Electronics Tutorials",
+      "url": "https://www.electronics-tutorials.ws"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ley-ohm-voltaje-corriente-resistencia",
+    "calculadora-potencia-electrica-p-vi",
+    "calculadora-resistencia-led-serie-paralelo",
+    "calculadora-divisor-voltaje-resistencias"
+  ],
+  "slug": "calculadora-frecuencia-corte-filtro-rc",
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-18",
+    "updateType": "manual",
+    "notes": "Fórmula fija, no requiere actualización de data externa"
+  }
+}

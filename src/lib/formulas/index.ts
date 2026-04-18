@@ -1502,6 +1502,32 @@ import { youtubeSuscriptoresPara1000 } from './youtube-suscriptores-para-1000';
 import { youtubeWatchTimeHorasSubir } from './youtube-watch-time-horas-subir';
 import { zincDiarioNecesidad } from './zinc-diario-necesidad';
 
+import { resistenciaCodigoColores45Bandas } from './resistencia-codigo-colores-4-5-bandas';
+import { cargaCapacitorConstanteRc } from './carga-capacitor-constante-rc';
+import { frecuenciaCorteFiltroRc } from './frecuencia-corte-filtro-rc';
+import { resonanciaLcCircuito } from './resonancia-lc-circuito';
+import { reactanciaInductivaCapacitiva } from './reactancia-inductiva-capacitiva';
+import { impedanciaCircuitoRlc } from './impedancia-circuito-rlc';
+import { factorPotenciaCorregir } from './factor-potencia-corregir';
+import { transformadorRelacionVueltas } from './transformador-relacion-vueltas';
+import { fuenteDcWattsAmperaje } from './fuente-dc-watts-amperaje';
+import { bateriaCapacidadRuntimeAh } from './bateria-capacidad-runtime-ah';
+import { panelSolarKwhDimensionar } from './panel-solar-kwh-dimensionar';
+import { inversorSolarPotencia } from './inversor-solar-potencia';
+import { bancoBateriasSolarDiasAutonomia } from './banco-baterias-solar-dias-autonomia';
+import { motorDcRpmVoltaje } from './motor-dc-rpm-voltaje';
+import { servoPwmAngulo } from './servo-pwm-angulo';
+import { stepperPasosGrado } from './stepper-pasos-grado';
+import { velocidadUsbTransferenciaArchivo } from './velocidad-usb-transferencia-archivo';
+import { cableAwgAmperajeSeccion } from './cable-awg-amperaje-seccion';
+import { caidaTensionCableDistancia } from './caida-tension-cable-distancia';
+import { consumoPcComponentesWatts } from './consumo-pc-componentes-watts';
+import { upsAutonomiaPotenciaCarga } from './ups-autonomia-potencia-carga';
+import { dbSplDistancia } from './db-spl-distancia';
+import { amplificadorWattsParlantes } from './amplificador-watts-parlantes';
+import { consumoHeladeraAnualKwh } from './consumo-heladera-anual-kwh';
+import { temperaturaDisipadorResistenciaTermica } from './temperatura-disipador-resistencia-termica';
+import { pcbAnchoTraceCorriente } from './pcb-ancho-trace-corriente';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3003,4 +3029,30 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'youtube-suscriptores-para-1000': youtubeSuscriptoresPara1000,
   'youtube-watch-time-horas-subir': youtubeWatchTimeHorasSubir,
   'zinc-diario-necesidad': zincDiarioNecesidad,
+  'resistencia-codigo-colores-4-5-bandas': resistenciaCodigoColores45Bandas,
+  'carga-capacitor-constante-rc': cargaCapacitorConstanteRc,
+  'frecuencia-corte-filtro-rc': frecuenciaCorteFiltroRc,
+  'resonancia-lc-circuito': resonanciaLcCircuito,
+  'reactancia-inductiva-capacitiva': reactanciaInductivaCapacitiva,
+  'impedancia-circuito-rlc': impedanciaCircuitoRlc,
+  'factor-potencia-corregir': factorPotenciaCorregir,
+  'transformador-relacion-vueltas': transformadorRelacionVueltas,
+  'fuente-dc-watts-amperaje': fuenteDcWattsAmperaje,
+  'bateria-capacidad-runtime-ah': bateriaCapacidadRuntimeAh,
+  'panel-solar-kwh-dimensionar': panelSolarKwhDimensionar,
+  'inversor-solar-potencia': inversorSolarPotencia,
+  'banco-baterias-solar-dias-autonomia': bancoBateriasSolarDiasAutonomia,
+  'motor-dc-rpm-voltaje': motorDcRpmVoltaje,
+  'servo-pwm-angulo': servoPwmAngulo,
+  'stepper-pasos-grado': stepperPasosGrado,
+  'velocidad-usb-transferencia-archivo': velocidadUsbTransferenciaArchivo,
+  'cable-awg-amperaje-seccion': cableAwgAmperajeSeccion,
+  'caida-tension-cable-distancia': caidaTensionCableDistancia,
+  'consumo-pc-componentes-watts': consumoPcComponentesWatts,
+  'ups-autonomia-potencia-carga': upsAutonomiaPotenciaCarga,
+  'db-spl-distancia': dbSplDistancia,
+  'amplificador-watts-parlantes': amplificadorWattsParlantes,
+  'consumo-heladera-anual-kwh': consumoHeladeraAnualKwh,
+  'temperatura-disipador-resistencia-termica': temperaturaDisipadorResistenciaTermica,
+  'pcb-ancho-trace-corriente': pcbAnchoTraceCorriente,
 };
