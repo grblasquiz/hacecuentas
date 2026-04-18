@@ -1615,6 +1615,35 @@ import { canoAguaDiametroCaudal } from './cano-agua-diametro-caudal';
 import { calderaKwM2Calefaccion } from './caldera-kw-m2-calefaccion';
 import { aireAcondicionadoBtuSplit } from './aire-acondicionado-btu-split';
 import { ventilacionCfmAmbiente } from './ventilacion-cfm-ambiente';
+import { planEntrenamiento5kSemanas } from './plan-entrenamiento-5k-semanas';
+import { planEntrenamiento10kSemanas } from './plan-entrenamiento-10k-semanas';
+import { planEntrenamiento21kSemiMaratonSemanas } from './plan-entrenamiento-21k-semi-maraton-semanas';
+import { planEntrenamientoMaraton42kSemanas } from './plan-entrenamiento-maraton-42k-semanas';
+import { paceObjetivoMaratonTiempo } from './pace-objetivo-maraton-tiempo';
+import { zonasEntrenamientoFcMax } from './zonas-entrenamiento-fc-max';
+import { ftpCyclingWatts } from './ftp-cycling-watts';
+import { zonasPotenciaCiclismoWattsKg } from './zonas-potencia-ciclismo-watts-kg';
+import { criticalPowerCp } from './critical-power-cp';
+import { vlaMaxMaximoLactatoEstadoEstable } from './vla-max-maximo-lactato-estado-estable';
+import { ritmoCiclismoWattsVelocidadAero } from './ritmo-ciclismo-watts-velocidad-aero';
+import { velocidadNatacionPace100m } from './velocidad-natacion-pace-100m';
+import { swolfNatacionIndice } from './swolf-natacion-indice';
+import { tiempoDescansoEjercicioIntensidad } from './tiempo-descanso-ejercicio-intensidad';
+import { frecuenciaEntrenamientoGrupoMuscular } from './frecuencia-entrenamiento-grupo-muscular';
+import { rmPesoMuertoEstimador } from './1rm-peso-muerto-estimador';
+import { rmPressBancaEstimador } from './1rm-press-banca-estimador';
+import { rmSentadillaEstimador } from './1rm-sentadilla-estimador';
+import { volumenSemanalSeriesGrupoMuscular } from './volumen-semanal-series-grupo-muscular';
+import { caloriasDeportivasBebidaIsotonica } from './calorias-deportivas-bebida-isotonica';
+import { cargaSemanalRunningRegla10 } from './carga-semanal-running-regla-10';
+import { proyeccion10kDesde5kRiegel } from './proyeccion-10k-desde-5k-riegel';
+import { proyeccion21kDesde10kCameron } from './proyeccion-21k-desde-10k-cameron';
+import { caloriasGymPesasHora } from './calorias-gym-pesas-hora';
+import { caloriasEscaladaRockHora } from './calorias-escalada-rock-hora';
+import { caloriasBoxeoMmaHora } from './calorias-boxeo-mma-hora';
+import { caloriasSurfKitesurfHora } from './calorias-surf-kitesurf-hora';
+import { gelEnergeticoCarreraCuantos } from './gel-energetico-carrera-cuantos';
+import { descansoPostMaratonRegla1DiaKm } from './descanso-post-maraton-regla-1-dia-km';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3229,4 +3258,33 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'caldera-kw-m2-calefaccion': calderaKwM2Calefaccion,
   'aire-acondicionado-btu-split': aireAcondicionadoBtuSplit,
   'ventilacion-cfm-ambiente': ventilacionCfmAmbiente,
+  'plan-entrenamiento-5k-semanas': planEntrenamiento5kSemanas,
+  'plan-entrenamiento-10k-semanas': planEntrenamiento10kSemanas,
+  'plan-entrenamiento-21k-semi-maraton-semanas': planEntrenamiento21kSemiMaratonSemanas,
+  'plan-entrenamiento-maraton-42k-semanas': planEntrenamientoMaraton42kSemanas,
+  'pace-objetivo-maraton-tiempo': paceObjetivoMaratonTiempo,
+  'zonas-entrenamiento-fc-max': zonasEntrenamientoFcMax,
+  'ftp-cycling-watts': ftpCyclingWatts,
+  'zonas-potencia-ciclismo-watts-kg': zonasPotenciaCiclismoWattsKg,
+  'critical-power-cp': criticalPowerCp,
+  'vla-max-maximo-lactato-estado-estable': vlaMaxMaximoLactatoEstadoEstable,
+  'ritmo-ciclismo-watts-velocidad-aero': ritmoCiclismoWattsVelocidadAero,
+  'velocidad-natacion-pace-100m': velocidadNatacionPace100m,
+  'swolf-natacion-indice': swolfNatacionIndice,
+  'tiempo-descanso-ejercicio-intensidad': tiempoDescansoEjercicioIntensidad,
+  'frecuencia-entrenamiento-grupo-muscular': frecuenciaEntrenamientoGrupoMuscular,
+  '1rm-peso-muerto-estimador': rmPesoMuertoEstimador,
+  '1rm-press-banca-estimador': rmPressBancaEstimador,
+  '1rm-sentadilla-estimador': rmSentadillaEstimador,
+  'volumen-semanal-series-grupo-muscular': volumenSemanalSeriesGrupoMuscular,
+  'calorias-deportivas-bebida-isotonica': caloriasDeportivasBebidaIsotonica,
+  'carga-semanal-running-regla-10': cargaSemanalRunningRegla10,
+  'proyeccion-10k-desde-5k-riegel': proyeccion10kDesde5kRiegel,
+  'proyeccion-21k-desde-10k-cameron': proyeccion21kDesde10kCameron,
+  'calorias-gym-pesas-hora': caloriasGymPesasHora,
+  'calorias-escalada-rock-hora': caloriasEscaladaRockHora,
+  'calorias-boxeo-mma-hora': caloriasBoxeoMmaHora,
+  'calorias-surf-kitesurf-hora': caloriasSurfKitesurfHora,
+  'gel-energetico-carrera-cuantos': gelEnergeticoCarreraCuantos,
+  'descanso-post-maraton-regla-1-dia-km': descansoPostMaratonRegla1DiaKm,
 };
