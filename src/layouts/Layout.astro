@@ -10,9 +10,11 @@ import '@fontsource/inter/latin-600.css';
 import '@fontsource/inter/latin-700.css';
 import '@fontsource/inter/latin-800.css';
 import '@fontsource/jetbrains-mono/latin-500.css';
-// Preload para fonts arriba-del-fold (body 400 + headings 700). Vite les da hash correcto.
+// Preload para fonts arriba-del-fold. Vite les da hash correcto.
+// 400 = body | 700 = headings secundarios | 800 = H1 hero (LCP en home)
 import interFont400Url from '@fontsource/inter/files/inter-latin-400-normal.woff2?url';
 import interFont700Url from '@fontsource/inter/files/inter-latin-700-normal.woff2?url';
+import interFont800Url from '@fontsource/inter/files/inter-latin-800-normal.woff2?url';
 
 export interface Props {
   title: string;
@@ -165,10 +167,11 @@ const globalSchema = {
     <!-- Schema.org específico de página -->
     {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
 
-    <!-- Fuentes self-hosted — preload de los weights más críticos (above-the-fold).
-         Los otros (500/600/800) los descubre el browser al parsear CSS. -->
+    <!-- Fuentes self-hosted — preload de los weights arriba-del-fold.
+         400 = body, 700 = subheadings, 800 = H1 hero (elemento LCP en home). -->
     <link rel="preload" href={interFont400Url} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={interFont700Url} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={interFont800Url} as="font" type="font/woff2" crossorigin />
 
     <!-- Preconnect CDN externo (Chart.js, KaTeX) -->
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
