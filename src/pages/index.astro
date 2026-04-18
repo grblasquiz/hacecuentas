@@ -412,6 +412,9 @@ const schema = {
 </Layout>
 
 <script is:inline>
+  // Wrapper: defer non-critical scripts a idle callback para reducir TBT
+  (window.requestIdleCallback || function (fn) { return setTimeout(fn, 1); })(function () {
+
   // Hero search button → abre el modal de search del header
   document.getElementById('hero-search-btn')?.addEventListener('click', function () {
     var openBtn = document.getElementById('open-search');
@@ -502,11 +505,13 @@ const schema = {
     // Cleanup if navigated away (SPA)
     document.addEventListener('astro:before-swap', function () { clearInterval(interval); });
   })();
+
+  }); // end requestIdleCallback
 </script>
 
 <script define:vars={{ countryCalcData }}>
-  // [4] Country detection — "Para vos" section
-  (function () {
+  // [4] Country detection — "Para vos" section (deferred — no crítico)
+  (window.requestIdleCallback || function (fn) { return setTimeout(fn, 1); })(function () {
     var COUNTRY_NAMES = { AR: 'Argentina', MX: 'México', CO: 'Colombia', PE: 'Perú' };
     var COUNTRY_FLAGS = { AR: '\u{1F1E6}\u{1F1F7}', MX: '\u{1F1F2}\u{1F1FD}', CO: '\u{1F1E8}\u{1F1F4}', PE: '\u{1F1F5}\u{1F1EA}' };
     var LANG_MAP = { 'es-AR': 'AR', 'es-MX': 'MX', 'es-CO': 'CO', 'es-PE': 'PE' };
@@ -568,7 +573,7 @@ const schema = {
     if (detected) {
       renderSection(detected);
     }
-  })();
+  });
 </script>
 
 <style>

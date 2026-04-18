@@ -249,25 +249,23 @@ const globalSchema = {
     <CookieConsent />
 
     <!-- Service Worker — solo en producción y si el browser lo soporta -->
+    <!-- SW registration + print-header date: diferidos a idle para no bloquear TBT -->
     <script is:inline>
-      if ('serviceWorker' in navigator && location.protocol === 'https:') {
-        window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/sw.js').catch(function () {
-            /* silencioso: el sitio funciona sin SW */
-          });
+      (function () {
+        var deferFn = window.requestIdleCallback || function (fn) { return setTimeout(fn, 1); };
+        deferFn(function () {
+          // Service Worker
+          if ('serviceWorker' in navigator && location.protocol === 'https:') {
+            navigator.serviceWorker.register('/sw.js').catch(function () {});
+          }
+          // Print header date
+          var ph = document.querySelector('.print-header');
+          if (ph) {
+            var d = new Date();
+            var fecha = d.toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });
+            ph.textContent = 'Resultado de calculadora — hacecuentas.com — ' + fecha;
+          }
         });
-      }
-    </script>
-
-    <!-- Inject current date into print header -->
-    <script is:inline>
-      (function() {
-        var ph = document.querySelector('.print-header');
-        if (ph) {
-          var d = new Date();
-          var fecha = d.toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });
-          ph.textContent = 'Resultado de calculadora — hacecuentas.com — ' + fecha;
-        }
       })();
     </script>
 
