@@ -1,0 +1,322 @@
+#!/usr/bin/env node
+/**
+ * expand-thin-content.mjs
+ *
+ * Expande explanation de las 5 calcs genuinely thin con contenido técnico
+ * específico por dominio (no genérico). Cada calc tiene un bloque
+ * hand-crafted con tablas benchmarks, errores comunes, tips.
+ */
+
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+const CALCS_DIR = join(process.cwd(), 'src', 'content', 'calcs');
+const WRITE = process.argv.includes('--write');
+
+const EXPANSIONS = {
+  'calculadora-roi-ad-spend-amazon-ppc': `
+
+## Cómo interpretar ACoS vs TACoS
+
+**ACoS** (Advertising Cost of Sale) mide la eficiencia de la campaña PPC en aislamiento. Un ACoS bajo no siempre es bueno: si tu break-even es 35% y tu ACoS es 15%, estás dejando ventas en la mesa por no ser lo suficientemente agresivo.
+
+**TACoS** (Total ACoS) mide el impacto del PPC sobre el negocio total. TACoS bajando con el tiempo = tu PPC está generando ventas orgánicas (rank juice). TACoS subiendo = tu producto depende más de ads.
+
+## Errores comunes
+
+1. **Optimizar solo ACoS**: dejás plata en la mesa por aversión a ACoS altos. Si tu ACoS target es 20% pero break-even es 40%, podés subir bids hasta 35% ACoS y aún ser rentable.
+2. **Ignorar search term report**: la mayoría del desperdicio viene de match types broad/phrase con keywords irrelevantes. Revisar weekly y convertir a exact o negativizar.
+3. **No separar launch de maturity**: una campaña en launch (ranking phase) debería tolerar 40-60% ACoS por 4-8 semanas. Mezclarlo con campañas maduras distorsiona métricas.
+4. **Bid estratégicamente en branded**: bidear en tu propia marca es barato y defensivo (brand defense ACoS 5-15% típico), pero ayuda a "capturar" tráfico que sería orgánico igual.
+
+## Palancas de optimización
+
+| Palanca | Impacto ACoS | Cuándo usar |
+|---|---|---|
+| Pausar keywords >50% ACoS | -5 a -15 puntos | Si no están en ranking phase |
+| Bajar bids 10-20% | -2 a -5 puntos | En keywords con conversión aceptable pero costo alto |
+| Agregar negative keywords | -5 a -20 puntos | Search term report con >30% gasto en términos irrelevantes |
+| Subir bid en top converters | +0 a +5 ACoS | Para ganar más impression share sin perder rentabilidad |
+| Mejorar conversion rate del listing | -10 a -40 puntos | Imagen, bullets, A+ content — más barato que bidear más |
+
+## Cuándo NO aplicar este cálculo
+
+- **Productos estacionales con inventario limitado**: si el producto se va a agotar igual, tu ACoS objetivo debería ser cerca del break-even o incluso por encima temporalmente.
+- **Nuevos SKUs en ranking phase**: los primeros 4-8 semanas el objetivo es BSR, no rentabilidad. Un ACoS de 60-80% puede ser aceptable.
+- **Defensa de marca**: bidear en tu propia marca tiene un piso técnico — no lo compares con categorías competitivas.
+`,
+
+  'calculadora-roi-ad-spend-facebook-meta': `
+
+## Factores que afectan tu ROAS real
+
+### Attribution window y iOS
+
+Desde iOS 14.5 (abril 2021), Meta perdió ~30% de la visibilidad de conversiones atribuidas. Tu ROAS reportado en el ads manager es **subestimado**: la realidad suele ser 15-40% mayor.
+
+**Cómo ajustar**:
+- Corré incrementality tests trimestrales (campañas holdout)
+- Compará reported ROAS con actual customer LTV (first-party data)
+- Usá CAPI (Conversion API) para recuperar ~50% de la data perdida
+
+### Frequency y creative fatigue
+
+**Regla 3-7-30**:
+- Frequency < 3: audiencia fría, necesita más exposure
+- Frequency 3-7: sweet spot
+- Frequency > 7/30 días: creative fatigue — CTR cae, CPM sube, ROAS se degrada
+
+**Solución**: rotación de creatives cada 2-4 semanas. Si tu account hace > $10k/mes, producir 3-5 variants nuevos por mes es mandatory.
+
+### CBO vs ABO
+
+| Estrategia | Cuándo usar | ROAS típico |
+|---|---|---|
+| **CBO** (campaign budget opt.) | Test de múltiples ad sets | Meta distribuye presupuesto automáticamente |
+| **ABO** (ad set budget opt.) | Control granular, audiencias discretas | Mejor para audiencias de alta intención |
+
+CBO es default desde 2020. Pasar a ABO solo si tenés data concreta de que Meta distribuye mal.
+
+## Errores de cálculo típicos
+
+1. **Incluir shipping en revenue**: si calcular ROAS con revenue que incluye shipping costs, inflás el número. Usá **net revenue** (revenue − shipping − tax).
+2. **No considerar return rate**: ROAS de e-commerce suele reportarse gross. Si tu return rate es 20%, tu ROAS real es ROAS × 0.8.
+3. **Mezclar prospecting con remarketing**: remarketing siempre tendrá ROAS >3x más alto. Calculalos separado.
+
+## Benchmark realista por vertical
+
+| Vertical | ROAS prospecting | ROAS remarketing | CPA bueno |
+|---|---|---|---|
+| E-commerce fashion | 1.5-2.5× | 4-7× | USD 30-60 |
+| SaaS B2B | 0.5-1.5× LTV/12 | 2-4× | USD 100-400 |
+| Cursos/infoproductos | 2-4× | 5-10× | USD 20-80 |
+| Salud/belleza | 2-3× | 4-8× | USD 25-50 |
+| Real estate lead gen | 0.3-0.8× (lead value) | — | USD 8-30 por lead |
+`,
+
+  'calculadora-ltv-lifetime-value-suscripcion': `
+
+## Variantes de LTV — cuándo usar cuál
+
+### LTV simple (el que calcula esta calc)
+```
+LTV = ARPU × margin% / churn%
+```
+Asume: churn constante, ARPU constante. **Funciona bien para early-stage SaaS con datos limitados.**
+
+### LTV con descuento (NPV)
+```
+LTV = Σ (ARPU × margin × retention_month_t) / (1+r)^t
+```
+Donde `r` es tu discount rate (10-15% SaaS típico). **Más preciso pero requiere proyección por cohorte.**
+
+### LTV cohort-based (el real)
+En vez de promedio, segmentás clientes por fecha de alta y calculás LTV real de cohortes antiguas. Es el **único LTV que no se puede hackear con marketing promises**.
+
+## Cohort analysis — por qué importa
+
+El LTV promedio oculta un insight crítico: los clientes de enero pueden comportarse distinto de los de junio. Cohort analysis te permite:
+
+- **Detectar cohort decay**: si los clientes nuevos tienen peor churn que los viejos, algo en tu producto o acquisition se rompió.
+- **Medir expansion revenue**: si una cohort de $100 ARPU inicial llega a $150 ARPU al mes 12, tenés expansion revenue (negative churn).
+- **Payback preciso por canal**: cohort por acquisition channel te dice qué canales traen LTV real vs LTV prometido.
+
+## Negative churn — el santo grial
+
+Cuando el **expansion revenue** (upgrades, cross-sell, additional seats) supera al churn, tu cohort gana valor con el tiempo. SaaS world-class:
+
+| Status | Net Revenue Retention |
+|---|---|
+| Bueno | 100-110% |
+| Muy bueno | 110-125% |
+| World-class | >125% (Snowflake, Datadog) |
+
+Si tu NRR es >100%, el LTV calculado con la fórmula simple **subestima drásticamente** el valor real.
+
+## LTV/CAC — qué significa cada ratio
+
+| LTV/CAC | Significado | Acción |
+|---|---|---|
+| < 1 | Perdés plata con cada cliente | Corregir urgente o matar el segmento |
+| 1-3 | Break-even zone, payback lento | Optimizar onboarding, reducir churn |
+| 3-5 | Saludable, escalable | Invertir más en acquisition |
+| > 5 | Sub-utilizás tu eficiencia | Crecer más agresivo |
+| > 10 | Probablemente sub-inviertes en acquisition | Podés pagar más por cliente |
+
+## Errores comunes
+
+1. **Usar churn logo en lugar de churn revenue**: perdés 10 clientes pequeños o 1 enterprise — impact en revenue muy distinto.
+2. **Calcular LTV sin margen**: LTV bruto es gross revenue × retention. Para decisiones de acquisition, usá siempre LTV contribution margin (después de COGS).
+3. **Promediar cohortes muy distintas**: año 1 vs año 3 tienen churn y ARPU muy distintos. Segmentar.
+4. **Ignorar tiempo al payback**: LTV/CAC de 5 con payback de 36 meses no es lo mismo que LTV/CAC de 3 con payback de 12 meses.
+`,
+
+  'calculadora-costo-hora-disenador-grafico': `
+
+## Cómo ajustar tu rate por specialización
+
+Los rates base cambian dramáticamente por **nicho de especialización**:
+
+| Nicho | Multiplicador vs general |
+|---|---|
+| Motion design / After Effects | 1.3× – 1.8× |
+| UI/UX specialized | 1.5× – 2.5× |
+| Branding/identidad completa | 1.4× – 2.0× |
+| Ilustración editorial | 1.2× – 1.6× |
+| Packaging/envases | 1.3× – 1.8× |
+| Social media genérico | 0.7× – 0.9× |
+| Edición de fotos básica | 0.5× – 0.7× |
+
+## Hourly vs flat rate vs retainer
+
+| Modelo | Cuándo usar | Margen típico |
+|---|---|---|
+| **Hourly** | Scope incierto, cliente nuevo, projects <40h | Rate × horas |
+| **Flat/project** | Scope claro, experiencia en el tipo | Rate × (horas × 1.3) — colchón por scope creep |
+| **Retainer** | Cliente recurrente, volume predictible | 10-20% descuento vs hourly, pago mensual fijo |
+
+**Regla del 30%**: si vas a dar flat rate, estimá horas realistas y sumá 30% de buffer. Las sorpresas siempre son negativas.
+
+## Client size premium
+
+Un mismo trabajo cambia de precio según el tamaño del cliente:
+
+| Client | Multiplicador |
+|---|---|
+| Startup < 10 employees | 0.7× – 1.0× |
+| SMB 10-200 | 1.0× |
+| Mid-market 200-5000 | 1.3× – 1.8× |
+| Enterprise/Fortune 1000 | 2.0× – 4.0× |
+
+No es injusto: enterprise tiene procurement, rounds de feedback, NDAs, compliance. El trabajo es literalmente distinto.
+
+## Costos ocultos para considerar
+
+Tu rate **neto** debe cubrir además de tu tiempo:
+
+- **Fondo de retiro**: 10-15% (no hay empleador que aporte)
+- **Salud/Obra social**: USD 100-400/mes según país
+- **Impuestos**: 15-45% según jurisdicción (monotributo, ISR, auto-empleo)
+- **Software/licencias**: Adobe CC, Figma, fonts, stock = USD 100-300/mes
+- **Equipo**: iPad Pro, tablet Wacom, monitor 4K — amortizado
+- **Tiempo no billable**: admin, marketing, prospecting = 20-40% del mes
+- **Vacaciones y enfermedad**: 4-6 semanas/año no trabajadas
+
+**Regla práctica**: tu rate neto debe ser 2× el rate "deseado" bruto para cubrir todo esto.
+
+## Errores comunes de pricing
+
+1. **Rate bajo por inseguridad inicial**: empezar con rates muy bajos te ancla. Es más fácil subir para clientes nuevos que subir para clientes existentes.
+2. **No tener rate sheet**: cada negociación desde cero gasta energía. Ten un PDF con tiers.
+3. **Subcobrar revisiones**: define "2 rondas incluidas, cada ronda adicional = X horas".
+4. **Cobrar por hora trabajos creativos**: cliente quiere resultado, no reloj. Flat rate o value-based es mejor.
+`,
+
+  'calculadora-comision-ebay-venta': `
+
+## Fee structure detallada (USA, 2026)
+
+eBay cobra 4 tipos de fees distintos — el total suele ser **12-18% del precio de venta** final.
+
+### 1. Insertion fee (listing fee)
+
+- **Free**: primeros 250 listados/mes con cuenta standard
+- **USD 0.35**: listados adicionales (auction o fixed price)
+- **USD 0.05-0.15**: categorías especiales (vehículos, real estate)
+
+### 2. Final Value Fee (la comisión principal)
+
+| Categoría | FVF % | Cap |
+|---|---|---|
+| Standard (casi todo) | 13.25% | USD 750 |
+| Electronics & accessories | 12.35% | USD 750 |
+| Clothing, Shoes, Handbags | 15% | USD 750 |
+| Books, DVDs, Music, Games | 14.6% | USD 750 |
+| Motors (vehicles) | 10% | USD 250 |
+| Bullion/Coins/Stamps | 9.0% | USD 750 |
+
+Incluye shipping cost en el FVF calculation.
+
+### 3. Fixed per-order fee
+
+USD 0.30 por orden (desde 2023). Para sellers con volumen alto esto suma.
+
+### 4. Payment processing
+
+eBay Managed Payments (mandatory desde 2021):
+- **USA**: 2.9% + USD 0.30 por transacción
+- **Internacional**: 4.4% + fee fijo variable por país
+
+Este fee se cobra ANTES del FVF.
+
+## Promoted Listings — ¿vale la pena?
+
+Los sellers que activan **Promoted Listings Standard** pagan un fee ad valorem extra (2-12%) pero obtienen:
+- Visibilidad en search top (4 slots arriba + 4 abajo)
+- 36% de impression share adicional en promedio
+- 25-40% más sales (según eBay's own data)
+
+**Cuándo conviene**:
+- Productos con margen >30% después de fees
+- Categorías competitivas (electronics, fashion)
+- Inventario slow-moving
+
+**Cuándo NO conviene**:
+- Productos únicos/rare (compradores te encuentran igual)
+- Margen <25% (no queda rentabilidad)
+- Categorías con fee ya alto (clothing 15% + PL 8% = 23%, insostenible)
+
+## Store subscription — tipping point
+
+| Tier | Fee mensual | Listings free | Ahorro en FVF |
+|---|---|---|---|
+| Starter | USD 7.95 | 250 | Mismo FVF |
+| Basic | USD 27.95 | 1.000 | -0.5 puntos FVF |
+| Premium | USD 74.95 | 10.000 | -1.0 puntos FVF |
+| Anchor | USD 349.95 | 100.000 | -2.0 puntos FVF |
+
+**Tipping point para subir de Starter a Basic**: ~15-20 orders/mes o >$1.500/mes revenue.
+
+## Top Rated Seller discount
+
+Si mantenés ≥95% de feedback positivo + <0.5% defect rate + shipping on time:
+- **-10% del FVF** (ej. 13.25% → 11.925%)
+- Seal de "Top Rated Plus" en listings (mejora conversión ~15%)
+
+Es literal dinero en la mesa para sellers con volumen.
+
+## Errores típicos de cálculo
+
+1. **Olvidar fee fijo de USD 0.30**: para orders <USD 20, esto es 1.5-3% extra no obvio.
+2. **Ignorar currency conversion fee**: ventas internacionales tienen 3-4% adicional si payout en USD.
+3. **No restar costo de envío cuando se vende con free shipping**: si incluís shipping en precio, tu "ingreso" real es precio − cost of shipping.
+4. **Comparar con Amazon sin ajustar**: Amazon tiene FBA fees + referral fee (8-15%) — típicamente 15-20% total vs eBay 12-18%. Pero Amazon convierte 3-5× mejor.
+`,
+};
+
+const files = readdirSync(CALCS_DIR).filter((f) => f.endsWith('.json'));
+let expanded = 0;
+const samples = [];
+
+for (const f of files) {
+  const path = join(CALCS_DIR, f);
+  const data = JSON.parse(readFileSync(path, 'utf8'));
+  const slug = data.slug;
+  if (!EXPANSIONS[slug]) continue;
+
+  const before = (data.explanation || '').length;
+  data.explanation = (data.explanation || '').trimEnd() + '\n' + EXPANSIONS[slug];
+  expanded++;
+
+  samples.push({ file: f, slug, before, after: data.explanation.length });
+
+  if (WRITE) writeFileSync(path, JSON.stringify(data, null, 2) + '\n');
+}
+
+console.log(`\n=== RESUMEN ===`);
+console.log(`Calcs expandidas: ${expanded} / ${Object.keys(EXPANSIONS).length} objetivo`);
+for (const s of samples) {
+  console.log(`  /${s.slug}: ${s.before} → ${s.after} chars (+${s.after - s.before})`);
+}
+if (!WRITE) console.log('\n⚠️  DRY-RUN. Corré con --write.');
+else console.log('\n✅ Cambios aplicados.');
