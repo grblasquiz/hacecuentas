@@ -1,16 +1,9 @@
 ---
 const currentPath = Astro.url.pathname;
 const isActive = (path: string) => currentPath.startsWith(path);
-
-// Cargar calcs para el search dropdown
-const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
-const calcs = Object.values(calcModules).map((m: any) => m.default || m).map((c: any) => ({
-  slug: c.slug,
-  h1: c.h1,
-  icon: c.icon,
-  description: c.description,
-  category: c.category,
-}));
+// NOTA: el array de calcs ya NO se inlinea en cada página.
+// Se sirve como /search-index.json (ver src/pages/search-index.json.ts)
+// y se fetchea lazy al abrir el modal de search. -90% HTML weight.
 ---
 
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -97,7 +90,7 @@ const calcs = Object.values(calcModules).map((m: any) => m.default || m).map((c:
   </div>
 </div>
 
-<script define:vars={{ calcs }}>
+<script>
   // Theme toggle
   const themeToggle = document.getElementById('theme-toggle');
   const applyTheme = (theme) => {
@@ -121,19 +114,39 @@ const calcs = Object.values(calcModules).map((m: any) => m.default || m).map((c:
     else { mobile.removeAttribute('hidden'); mToggle.setAttribute('aria-expanded', 'true'); }
   });
 
-  // Search modal
+  // Search modal — calcs se carga lazy al primer open (no inlinea en HTML)
   const modal = document.getElementById('search-modal');
   const openBtn = document.getElementById('open-search');
   const input = document.getElementById('search-input');
   const results = document.getElementById('search-results');
   let currentIndex = -1;
+  let calcs = null;                 // se popula al primer openModal
+  let calcsPromise = null;
+
+  async function ensureCalcs() {
+    if (calcs) return calcs;
+    if (!calcsPromise) {
+      calcsPromise = fetch('/search-index.json', { cache: 'force-cache' })
+        .then((r) => r.ok ? r.json() : [])
+        .catch(() => []);
+    }
+    calcs = await calcsPromise;
+    return calcs;
+  }
+  // Prefetch on hover/focus of the search button (free perf — before modal opens)
+  openBtn?.addEventListener('mouseenter', ensureCalcs, { once: true });
+  openBtn?.addEventListener('focus', ensureCalcs, { once: true });
 
   const categoryLabels = { finanzas: 'Finanzas', negocios: 'Negocios', negocio: 'Negocios', salud: 'Salud', marketing: 'Marketing', deportes: 'Deportes', viajes: 'Viajes', vida: 'Vida', mascotas: 'Mascotas', matematica: 'Matemática', construccion: 'Construcción', cocina: 'Cocina' };
   const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-  const openModal = () => {
+  const openModal = async () => {
     modal.hidden = false;
     setTimeout(() => input?.focus(), 30);
+    if (!calcs) {
+      results.innerHTML = '<div class="no-results">Cargando...</div>';
+      await ensureCalcs();
+    }
     renderResults('');
   };
   const closeModal = () => {
@@ -146,6 +159,10 @@ const calcs = Object.values(calcModules).map((m: any) => m.default || m).map((c:
   modal.addEventListener('click', (e) => { if (e.target.dataset.close !== undefined) closeModal(); });
 
   function renderResults(q) {
+    if (!calcs) {
+      results.innerHTML = '<div class="no-results">Cargando...</div>';
+      return;
+    }
     const query = norm(q);
     const matches = query
       ? calcs.filter((c) => norm(`${c.h1} ${c.description} ${c.slug}`).includes(query)).slice(0, 8)

@@ -1,0 +1,23 @@
+import type { APIRoute } from 'astro';
+
+// Endpoint estático: genera /search-index.json en build time.
+// Se carga lazy desde Header.astro al abrir el modal de search,
+// evitando inlinear ~444 KB de JSON en cada una de las 3.234 páginas.
+
+const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const calcs = Object.values(calcModules).map((m: any) => m.default || m).map((c: any) => ({
+  slug: c.slug,
+  h1: c.h1,
+  icon: c.icon,
+  description: c.description,
+  category: c.category,
+}));
+
+export const GET: APIRoute = () => {
+  return new Response(JSON.stringify(calcs), {
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600, must-revalidate',
+    },
+  });
+};
