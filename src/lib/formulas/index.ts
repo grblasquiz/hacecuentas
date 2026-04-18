@@ -1556,6 +1556,26 @@ import { entropiaCambioFase } from './entropia-cambio-fase';
 import { eficienciaCarnotTermodinamica } from './eficiencia-carnot-termodinamica';
 import { efectoInvernaderoCo2Ppm } from './efecto-invernadero-co2-ppm';
 import { escalaRichterMagnitudEnergia } from './escala-richter-magnitud-energia';
+import { huellaCarbonoAlimentacionSemanal } from './huella-carbono-alimentacion-semanal';
+import { huellaCarbonoRopaArmarioAnual } from './huella-carbono-ropa-armario-anual';
+import { huellaCarbonoStreamingVideoHoras } from './huella-carbono-streaming-video-horas';
+import { huellaCarbonoMascotaAnual } from './huella-carbono-mascota-anual';
+import { huellaCarbonoTrabajoRemotoVsOficina } from './huella-carbono-trabajo-remoto-vs-oficina';
+import { compensacionCo2ArbolesVuelo } from './compensacion-co2-arboles-vuelo';
+import { ahorroEnergiaModoOscuroPantalla } from './ahorro-energia-modo-oscuro-pantalla';
+import { ahorroAguaDuchasCortasMes } from './ahorro-agua-duchas-cortas-mes';
+import { compostajeVolumenResiduos } from './compostaje-volumen-residuos';
+import { reciclajeBotellasAhorroCo2 } from './reciclaje-botellas-ahorro-co2';
+import { papelAhorradoImpresionDobleCara } from './papel-ahorrado-impresion-doble-cara';
+import { energiaElectrodomesticoEtiquetaEficiencia } from './energia-electrodomestico-etiqueta-eficiencia';
+import { combustibleAutoViajeEmisiones } from './combustible-auto-viaje-emisiones';
+import { consumoBicicletaVsAutoAnual } from './consumo-bicicleta-vs-auto-anual';
+import { huellaCarbonoBodaEvento } from './huella-carbono-boda-evento';
+import { ahorroCo2CargadorDesenchufar } from './ahorro-co2-cargador-desenchufar';
+import { emisionesEnviarEmailAdjuntos } from './emisiones-enviar-email-adjuntos';
+import { biodegradacionResiduoTiempo } from './biodegradacion-residuo-tiempo';
+import { luzNaturalAhorroIluminacion } from './luz-natural-ahorro-iluminacion';
+import { lluviaCaptacionTechoM3Anual } from './lluvia-captacion-techo-m3-anual';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3111,4 +3131,24 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'eficiencia-carnot-termodinamica': eficienciaCarnotTermodinamica,
   'efecto-invernadero-co2-ppm': efectoInvernaderoCo2Ppm,
   'escala-richter-magnitud-energia': escalaRichterMagnitudEnergia,
+  'huella-carbono-alimentacion-semanal': huellaCarbonoAlimentacionSemanal,
+  'huella-carbono-ropa-armario-anual': huellaCarbonoRopaArmarioAnual,
+  'huella-carbono-streaming-video-horas': huellaCarbonoStreamingVideoHoras,
+  'huella-carbono-mascota-anual': huellaCarbonoMascotaAnual,
+  'huella-carbono-trabajo-remoto-vs-oficina': huellaCarbonoTrabajoRemotoVsOficina,
+  'compensacion-co2-arboles-vuelo': compensacionCo2ArbolesVuelo,
+  'ahorro-energia-modo-oscuro-pantalla': ahorroEnergiaModoOscuroPantalla,
+  'ahorro-agua-duchas-cortas-mes': ahorroAguaDuchasCortasMes,
+  'compostaje-volumen-residuos': compostajeVolumenResiduos,
+  'reciclaje-botellas-ahorro-co2': reciclajeBotellasAhorroCo2,
+  'papel-ahorrado-impresion-doble-cara': papelAhorradoImpresionDobleCara,
+  'energia-electrodomestico-etiqueta-eficiencia': energiaElectrodomesticoEtiquetaEficiencia,
+  'combustible-auto-viaje-emisiones': combustibleAutoViajeEmisiones,
+  'consumo-bicicleta-vs-auto-anual': consumoBicicletaVsAutoAnual,
+  'huella-carbono-boda-evento': huellaCarbonoBodaEvento,
+  'ahorro-co2-cargador-desenchufar': ahorroCo2CargadorDesenchufar,
+  'emisiones-enviar-email-adjuntos': emisionesEnviarEmailAdjuntos,
+  'biodegradacion-residuo-tiempo': biodegradacionResiduoTiempo,
+  'luz-natural-ahorro-iluminacion': luzNaturalAhorroIluminacion,
+  'lluvia-captacion-techo-m3-anual': lluviaCaptacionTechoM3Anual,
 };
