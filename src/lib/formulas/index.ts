@@ -1734,6 +1734,66 @@ import { capacidadCargaCamionetaPesoUtil } from './capacidad-carga-camioneta-pes
 import { tiempoViajeAutoDistanciaVelocidadParadas } from './tiempo-viaje-auto-distancia-velocidad-paradas';
 import { suspensionAlturaLibrePisoAuto } from './suspension-altura-libre-piso-auto';
 import { circunferenciaRuedaVelocimetroExacto } from './circunferencia-rueda-velocimetro-exacto';
+import { fechaProbablePartoUltimaMenstruacion } from './fecha-probable-parto-ultima-menstruacion';
+import { semanasGestacionHoyBebeTrimestre } from './semanas-gestacion-hoy-bebe-trimestre';
+import { ventanaFertilOvulacionCicloMujer } from './ventana-fertil-ovulacion-ciclo-mujer';
+import { percentilPesoBebeOmsEdadMeses } from './percentil-peso-bebe-oms-edad-meses';
+import { costoTotalCriarHijo18Anios } from './costo-total-criar-hijo-18-anios';
+import { pañalesPorDiaMesBebeEdad } from './pañales-por-dia-mes-bebe-edad';
+import { onzasBiberonPesoBebeDia } from './onzas-biberon-peso-bebe-dia';
+import { mesadaPorEdadHijoSemanalMensual } from './mesada-por-edad-hijo-semanal-mensual';
+import { vacunasFaltantesBebeEdadMeses } from './vacunas-faltantes-bebe-edad-meses';
+import { edadIngresoEscolarPrimariaJardin } from './edad-ingreso-escolar-primaria-jardin';
+import { ahorroUniversidadHijo18AniosCuota } from './ahorro-universidad-hijo-18-anios-cuota';
+import { tiempoPantallaRecomendadoHijoEdad } from './tiempo-pantalla-recomendado-hijo-edad';
+import { dosisPediatricaMgPorKgMedicamento } from './dosis-pediatrica-mg-por-kg-medicamento';
+import { costoFiestaCumpleanosInfantilInvitados } from './costo-fiesta-cumpleanos-infantil-invitados';
+import { diasLicenciaMaternidadPaternidadPais } from './dias-licencia-maternidad-paternidad-pais';
+import { diasMinimosTestEmbarazoPositivo } from './dias-minimos-test-embarazo-positivo';
+import { alturaAdultaHijoFormulaPadres } from './altura-adulta-hijo-formula-padres';
+import { horasSuenoHijoEdadRecomendadas } from './horas-sueno-hijo-edad-recomendadas';
+import { aumentoPesoEmbarazoImcSemana } from './aumento-peso-embarazo-imc-semana';
+import { hitosDesarrolloBebeEdadMeses } from './hitos-desarrollo-bebe-edad-meses';
+import { frecuenciaDesparasitarFamiliaTipos } from './frecuencia-desparasitar-familia-tipos';
+import { kilosEquipajeViajeBebeDias } from './kilos-equipaje-viaje-bebe-dias';
+import { numeroCuidadoresFiestaInfantilEdad } from './numero-cuidadores-fiesta-infantil-edad';
+import { gastoInicioEscolarUtilesUniformeMes } from './gasto-inicio-escolar-utiles-uniforme-mes';
+import { edadConversarTemasDificilesHijo } from './edad-conversar-temas-dificiles-hijo';
+import { actividadesExtraNinosPorSemanaMaximo } from './actividades-extra-ninos-por-semana-maximo';
+import { horasParejaCalidadSemanalRelacion } from './horas-pareja-calidad-semanal-relacion';
+import { costoEmanciparseHijoSueldoAlquiler } from './costo-emanciparse-hijo-sueldo-alquiler';
+import { tiempoProcesoAdopcionArgentinaAnios } from './tiempo-proceso-adopcion-argentina-anios';
+import { etapasDueloPerdidaFamiliarMeses } from './etapas-duelo-perdida-familiar-meses';
+import { horasEstudioIdiomaFluidezFsi } from './horas-estudio-idioma-fluidez-fsi';
+import { vocabularioNivelMcerA1C2Palabras } from './vocabulario-nivel-mcer-a1-c2-palabras';
+import { planEstudioIdiomaMinutosDiaObjetivo } from './plan-estudio-idioma-minutos-dia-objetivo';
+import { librosLeerIdiomaNivelAnio } from './libros-leer-idioma-nivel-anio';
+import { equivalenciaToeflIeltsCambridgeMcer } from './equivalencia-toefl-ielts-cambridge-mcer';
+import { ankiFlashcardsDiaAprenderPalabras } from './anki-flashcards-dia-aprender-palabras';
+import { horasPeliculasSerieInmersionIdioma } from './horas-peliculas-serie-inmersion-idioma';
+import { tiempoPronunciacionNativaPracticaDiaria } from './tiempo-pronunciacion-nativa-practica-diaria';
+import { velocidadLecturaIdiomaPalabrasMinuto } from './velocidad-lectura-idioma-palabras-minuto';
+import { conversacionIntercambioIdiomaHorasSemana } from './conversacion-intercambio-idioma-horas-semana';
+import { repasoSrsDiasProximoCard } from './repaso-srs-dias-proximo-card';
+import { cognadosIdiomaPorcentajeEspanolAyuda } from './cognados-idioma-porcentaje-espanol-ayuda';
+import { acentoExtranjeroScorePracticaHoras } from './acento-extranjero-score-practica-horas';
+import { costoMensualAprenderIdiomaOpciones } from './costo-mensual-aprender-idioma-opciones';
+import { edadOptimaAprenderIdiomaNinosAdultos } from './edad-optima-aprender-idioma-ninos-adultos';
+import { diasPreparacionExamenOficialIdioma } from './dias-preparacion-examen-oficial-idioma';
+import { peliculasSinSubtitulosHorasIdioma } from './peliculas-sin-subtitulos-horas-idioma';
+import { podcastsAprenderIdiomaMinutosDiarios } from './podcasts-aprender-idioma-minutos-diarios';
+import { nivelesDeleDalfGoetheHskEquivalencia } from './niveles-dele-dalf-goethe-hsk-equivalencia';
+import { dictadoVelocidadPalabrasEscucharIdioma } from './dictado-velocidad-palabras-escuchar-idioma';
+import { ensayosSemanalesMejorarWritingIdioma } from './ensayos-semanales-mejorar-writing-idioma';
+import { idiomasMasUtilesProfesionInternacional } from './idiomas-mas-utiles-profesion-internacional';
+import { variantesIdiomaEspanolPortuguesInglesRegiones } from './variantes-idioma-espanol-portugues-ingles-regiones';
+import { horasSemanalesMantenerNivelIdioma } from './horas-semanales-mantener-nivel-idioma';
+import { velocidadTraduccionPalabrasHoraProfesional } from './velocidad-traduccion-palabras-hora-profesional';
+import { clasesSemanalesItalkiOnlineFrecuencia } from './clases-semanales-italki-online-frecuencia';
+import { duolingoStreakProgresionDiariaIdioma } from './duolingo-streak-progresion-diaria-idioma';
+import { horasCaligrafiaChinoKanjiPractica } from './horas-caligrafia-chino-kanji-practica';
+import { cancionesIdiomaAprenderLyricsMemoria } from './canciones-idioma-aprender-lyrics-memoria';
+import { appsIdiomaEfectividadComparacionNivel } from './apps-idioma-efectividad-comparacion-nivel';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3467,4 +3527,64 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tiempo-viaje-auto-distancia-velocidad-paradas': tiempoViajeAutoDistanciaVelocidadParadas,
   'suspension-altura-libre-piso-auto': suspensionAlturaLibrePisoAuto,
   'circunferencia-rueda-velocimetro-exacto': circunferenciaRuedaVelocimetroExacto,
+  'fecha-probable-parto-ultima-menstruacion': fechaProbablePartoUltimaMenstruacion,
+  'semanas-gestacion-hoy-bebe-trimestre': semanasGestacionHoyBebeTrimestre,
+  'ventana-fertil-ovulacion-ciclo-mujer': ventanaFertilOvulacionCicloMujer,
+  'percentil-peso-bebe-oms-edad-meses': percentilPesoBebeOmsEdadMeses,
+  'costo-total-criar-hijo-18-anios': costoTotalCriarHijo18Anios,
+  'pañales-por-dia-mes-bebe-edad': pañalesPorDiaMesBebeEdad,
+  'onzas-biberon-peso-bebe-dia': onzasBiberonPesoBebeDia,
+  'mesada-por-edad-hijo-semanal-mensual': mesadaPorEdadHijoSemanalMensual,
+  'vacunas-faltantes-bebe-edad-meses': vacunasFaltantesBebeEdadMeses,
+  'edad-ingreso-escolar-primaria-jardin': edadIngresoEscolarPrimariaJardin,
+  'ahorro-universidad-hijo-18-anios-cuota': ahorroUniversidadHijo18AniosCuota,
+  'tiempo-pantalla-recomendado-hijo-edad': tiempoPantallaRecomendadoHijoEdad,
+  'dosis-pediatrica-mg-por-kg-medicamento': dosisPediatricaMgPorKgMedicamento,
+  'costo-fiesta-cumpleanos-infantil-invitados': costoFiestaCumpleanosInfantilInvitados,
+  'dias-licencia-maternidad-paternidad-pais': diasLicenciaMaternidadPaternidadPais,
+  'dias-minimos-test-embarazo-positivo': diasMinimosTestEmbarazoPositivo,
+  'altura-adulta-hijo-formula-padres': alturaAdultaHijoFormulaPadres,
+  'horas-sueno-hijo-edad-recomendadas': horasSuenoHijoEdadRecomendadas,
+  'aumento-peso-embarazo-imc-semana': aumentoPesoEmbarazoImcSemana,
+  'hitos-desarrollo-bebe-edad-meses': hitosDesarrolloBebeEdadMeses,
+  'frecuencia-desparasitar-familia-tipos': frecuenciaDesparasitarFamiliaTipos,
+  'kilos-equipaje-viaje-bebe-dias': kilosEquipajeViajeBebeDias,
+  'numero-cuidadores-fiesta-infantil-edad': numeroCuidadoresFiestaInfantilEdad,
+  'gasto-inicio-escolar-utiles-uniforme-mes': gastoInicioEscolarUtilesUniformeMes,
+  'edad-conversar-temas-dificiles-hijo': edadConversarTemasDificilesHijo,
+  'actividades-extra-ninos-por-semana-maximo': actividadesExtraNinosPorSemanaMaximo,
+  'horas-pareja-calidad-semanal-relacion': horasParejaCalidadSemanalRelacion,
+  'costo-emanciparse-hijo-sueldo-alquiler': costoEmanciparseHijoSueldoAlquiler,
+  'tiempo-proceso-adopcion-argentina-anios': tiempoProcesoAdopcionArgentinaAnios,
+  'etapas-duelo-perdida-familiar-meses': etapasDueloPerdidaFamiliarMeses,
+  'horas-estudio-idioma-fluidez-fsi': horasEstudioIdiomaFluidezFsi,
+  'vocabulario-nivel-mcer-a1-c2-palabras': vocabularioNivelMcerA1C2Palabras,
+  'plan-estudio-idioma-minutos-dia-objetivo': planEstudioIdiomaMinutosDiaObjetivo,
+  'libros-leer-idioma-nivel-anio': librosLeerIdiomaNivelAnio,
+  'equivalencia-toefl-ielts-cambridge-mcer': equivalenciaToeflIeltsCambridgeMcer,
+  'anki-flashcards-dia-aprender-palabras': ankiFlashcardsDiaAprenderPalabras,
+  'horas-peliculas-serie-inmersion-idioma': horasPeliculasSerieInmersionIdioma,
+  'tiempo-pronunciacion-nativa-practica-diaria': tiempoPronunciacionNativaPracticaDiaria,
+  'velocidad-lectura-idioma-palabras-minuto': velocidadLecturaIdiomaPalabrasMinuto,
+  'conversacion-intercambio-idioma-horas-semana': conversacionIntercambioIdiomaHorasSemana,
+  'repaso-srs-dias-proximo-card': repasoSrsDiasProximoCard,
+  'cognados-idioma-porcentaje-espanol-ayuda': cognadosIdiomaPorcentajeEspanolAyuda,
+  'acento-extranjero-score-practica-horas': acentoExtranjeroScorePracticaHoras,
+  'costo-mensual-aprender-idioma-opciones': costoMensualAprenderIdiomaOpciones,
+  'edad-optima-aprender-idioma-ninos-adultos': edadOptimaAprenderIdiomaNinosAdultos,
+  'dias-preparacion-examen-oficial-idioma': diasPreparacionExamenOficialIdioma,
+  'peliculas-sin-subtitulos-horas-idioma': peliculasSinSubtitulosHorasIdioma,
+  'podcasts-aprender-idioma-minutos-diarios': podcastsAprenderIdiomaMinutosDiarios,
+  'niveles-dele-dalf-goethe-hsk-equivalencia': nivelesDeleDalfGoetheHskEquivalencia,
+  'dictado-velocidad-palabras-escuchar-idioma': dictadoVelocidadPalabrasEscucharIdioma,
+  'ensayos-semanales-mejorar-writing-idioma': ensayosSemanalesMejorarWritingIdioma,
+  'idiomas-mas-utiles-profesion-internacional': idiomasMasUtilesProfesionInternacional,
+  'variantes-idioma-espanol-portugues-ingles-regiones': variantesIdiomaEspanolPortuguesInglesRegiones,
+  'horas-semanales-mantener-nivel-idioma': horasSemanalesMantenerNivelIdioma,
+  'velocidad-traduccion-palabras-hora-profesional': velocidadTraduccionPalabrasHoraProfesional,
+  'clases-semanales-italki-online-frecuencia': clasesSemanalesItalkiOnlineFrecuencia,
+  'duolingo-streak-progresion-diaria-idioma': duolingoStreakProgresionDiariaIdioma,
+  'horas-caligrafia-chino-kanji-practica': horasCaligrafiaChinoKanjiPractica,
+  'canciones-idioma-aprender-lyrics-memoria': cancionesIdiomaAprenderLyricsMemoria,
+  'apps-idioma-efectividad-comparacion-nivel': appsIdiomaEfectividadComparacionNivel,
 };
