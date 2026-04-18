@@ -1674,6 +1674,36 @@ import { probabilidadBinomialEnsayosExitos } from './probabilidad-binomial-ensay
 import { conversionGradosRadianesGradianes } from './conversion-grados-radianes-gradianes';
 import { senoCosenoTangenteAnguloTriangulo } from './seno-coseno-tangente-angulo-triangulo';
 import { conversionCelsiusFahrenheitKelvin } from './conversion-celsius-fahrenheit-kelvin';
+import { tiempoDescargaArchivoAnchoBanda } from './tiempo-descarga-archivo-ancho-banda';
+import { almacenamientoVideoBitrateDuracion } from './almacenamiento-video-bitrate-duracion';
+import { fpsFluidezVideoJuego } from './fps-fluidez-video-juego';
+import { dpiPppImpresionResolucion } from './dpi-ppp-impresion-resolucion';
+import { ramRecomendadaUsoComputadora } from './ram-recomendada-uso-computadora';
+import { autonomiaBateriaDispositivoMah } from './autonomia-bateria-dispositivo-mah';
+import { consumoWattsPcGamerFuente } from './consumo-watts-pc-gamer-fuente';
+import { tiempoCrackearPasswordLongitud } from './tiempo-crackear-password-longitud';
+import { tasaCompresionArchivoZip } from './tasa-compresion-archivo-zip';
+import { autonomiaUpsTiempoRespaldoServidor } from './autonomia-ups-tiempo-respaldo-servidor';
+import { subnettingMascaraRedCidr } from './subnetting-mascara-red-cidr';
+import { raidCapacidadDiscosRedundancia } from './raid-capacidad-discos-redundancia';
+import { categoriaCableEthernetVelocidadDistancia } from './categoria-cable-ethernet-velocidad-distancia';
+import { wifiCanalOptimo245Ghz } from './wifi-canal-optimo-24-5-ghz';
+import { conversionBytesKbMbGbTb } from './conversion-bytes-kb-mb-gb-tb';
+import { hashesBcryptCostoTiempoCracking } from './hashes-bcrypt-costo-tiempo-cracking';
+import { rateLimitApiRpmRps } from './rate-limit-api-rpm-rps';
+import { uptimeServidorNueveNuevesMinutos } from './uptime-servidor-nueve-nueves-minutos';
+import { complejidadAlgoritmicaBigOIteraciones } from './complejidad-algoritmica-big-o-iteraciones';
+import { costoServidorCloudAwsEc2Mensual } from './costo-servidor-cloud-aws-ec2-mensual';
+import { jpgCalidadTamanoWebOptimizacion } from './jpg-calidad-tamano-web-optimizacion';
+import { tamanoRepoGitCommitsBranches } from './tamano-repo-git-commits-branches';
+import { costoTokensApiOpenaiClaudeMensual } from './costo-tokens-api-openai-claude-mensual';
+import { ttlDnsRegistroCachePropagacion } from './ttl-dns-registro-cache-propagacion';
+import { lineasCodigoProyectoComplejidadKloc } from './lineas-codigo-proyecto-complejidad-kloc';
+import { imagenDockerCapasPesoMb } from './imagen-docker-capas-peso-mb';
+import { consumoElectronicaHogarWattsMensual } from './consumo-electronica-hogar-watts-mensual';
+import { densidadPixelesPantallaPpiRetina } from './densidad-pixeles-pantalla-ppi-retina';
+import { tiempoCargaPaginaWebMetricas } from './tiempo-carga-pagina-web-metricas';
+import { conexionesDbPoolMaxConcurrentes } from './conexiones-db-pool-max-concurrentes';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3347,4 +3377,34 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'conversion-grados-radianes-gradianes': conversionGradosRadianesGradianes,
   'seno-coseno-tangente-angulo-triangulo': senoCosenoTangenteAnguloTriangulo,
   'conversion-celsius-fahrenheit-kelvin': conversionCelsiusFahrenheitKelvin,
+  'tiempo-descarga-archivo-ancho-banda': tiempoDescargaArchivoAnchoBanda,
+  'almacenamiento-video-bitrate-duracion': almacenamientoVideoBitrateDuracion,
+  'fps-fluidez-video-juego': fpsFluidezVideoJuego,
+  'dpi-ppp-impresion-resolucion': dpiPppImpresionResolucion,
+  'ram-recomendada-uso-computadora': ramRecomendadaUsoComputadora,
+  'autonomia-bateria-dispositivo-mah': autonomiaBateriaDispositivoMah,
+  'consumo-watts-pc-gamer-fuente': consumoWattsPcGamerFuente,
+  'tiempo-crackear-password-longitud': tiempoCrackearPasswordLongitud,
+  'tasa-compresion-archivo-zip': tasaCompresionArchivoZip,
+  'autonomia-ups-tiempo-respaldo-servidor': autonomiaUpsTiempoRespaldoServidor,
+  'subnetting-mascara-red-cidr': subnettingMascaraRedCidr,
+  'raid-capacidad-discos-redundancia': raidCapacidadDiscosRedundancia,
+  'categoria-cable-ethernet-velocidad-distancia': categoriaCableEthernetVelocidadDistancia,
+  'wifi-canal-optimo-24-5-ghz': wifiCanalOptimo245Ghz,
+  'conversion-bytes-kb-mb-gb-tb': conversionBytesKbMbGbTb,
+  'hashes-bcrypt-costo-tiempo-cracking': hashesBcryptCostoTiempoCracking,
+  'rate-limit-api-rpm-rps': rateLimitApiRpmRps,
+  'uptime-servidor-nueve-nueves-minutos': uptimeServidorNueveNuevesMinutos,
+  'complejidad-algoritmica-big-o-iteraciones': complejidadAlgoritmicaBigOIteraciones,
+  'costo-servidor-cloud-aws-ec2-mensual': costoServidorCloudAwsEc2Mensual,
+  'jpg-calidad-tamano-web-optimizacion': jpgCalidadTamanoWebOptimizacion,
+  'tamano-repo-git-commits-branches': tamanoRepoGitCommitsBranches,
+  'costo-tokens-api-openai-claude-mensual': costoTokensApiOpenaiClaudeMensual,
+  'ttl-dns-registro-cache-propagacion': ttlDnsRegistroCachePropagacion,
+  'lineas-codigo-proyecto-complejidad-kloc': lineasCodigoProyectoComplejidadKloc,
+  'imagen-docker-capas-peso-mb': imagenDockerCapasPesoMb,
+  'consumo-electronica-hogar-watts-mensual': consumoElectronicaHogarWattsMensual,
+  'densidad-pixeles-pantalla-ppi-retina': densidadPixelesPantallaPpiRetina,
+  'tiempo-carga-pagina-web-metricas': tiempoCargaPaginaWebMetricas,
+  'conexiones-db-pool-max-concurrentes': conexionesDbPoolMaxConcurrentes,
 };
