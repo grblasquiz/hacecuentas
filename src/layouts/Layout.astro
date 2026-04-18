@@ -211,31 +211,9 @@ const globalSchema = {
         gtag('event', 'conversion_event_default', {});
       }
     </script>
-    <!-- gtag.js LAZY load — se carga al primer interacción del user o tras 3.5s.
-         Ahorra ~247 KB de JS en initial load (LCP/FCP mobile). Los gtag() que
-         se llaman antes del load se encolan en window.dataLayer y se procesan
-         cuando el script termina de cargar. -->
-    <script is:inline>
-      (function () {
-        var loaded = false;
-        function loadGtag() {
-          if (loaded) return; loaded = true;
-          var s1 = document.createElement('script');
-          s1.src = 'https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2';
-          s1.async = true;
-          document.head.appendChild(s1);
-          var s2 = document.createElement('script');
-          s2.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18096606872';
-          s2.async = true;
-          document.head.appendChild(s2);
-        }
-        var events = ['scroll', 'click', 'keydown', 'touchstart', 'mousemove'];
-        var opts = { once: true, passive: true, capture: true };
-        events.forEach(function (e) { window.addEventListener(e, loadGtag, opts); });
-        // Fallback: si el user no interactúa en 3.5s, cargar igual (bounce tracking)
-        setTimeout(loadGtag, 3500);
-      })();
-    </script>
+    <!-- gtag.js scripts movidos al final del <body> — ver antes de </body>.
+         Esto asegura que Ads/GA disparen pageview en TODAS las visitas (incluyendo
+         bounces rápidos <3s) sin bloquear render (async + al final del body). -->
   </head>
   <body>
     <!-- Print-only header (hidden on screen, visible when printing) -->
@@ -677,5 +655,11 @@ const globalSchema = {
         }
       }
     </style>
+
+    <!-- gtag.js al final del body: async + después del contenido visible, no bloquea
+         FCP/LCP. Se ejecuta en cuanto descarga — asegura pageview en todas las
+         visitas, incluyendo bounces rápidos (<3s) desde Google Ads. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18096606872"></script>
   </body>
 </html>
