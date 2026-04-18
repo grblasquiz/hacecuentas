@@ -1,0 +1,718 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+// Force static generation
+export const prerender = true;
+
+const title = 'Cotización Cripto en Vivo — Bitcoin, Ethereum, USDT en Tiempo Real | Hacé Cuentas';
+const description = 'Precio de Bitcoin, Ethereum, Solana, USDT y 100+ criptomonedas en vivo. Conversor BTC, ETH, SOL a dólar, euro, peso argentino. Actualización cada 30 segundos.';
+
+// Fetch inicial de top cryptos server-side (para SEO + primer render rápido)
+interface CoinGeckoCoin {
+  id: string;
+  symbol: string;
+  name: string;
+  image: string;
+  current_price: number;
+  market_cap: number;
+  price_change_percentage_24h: number;
+}
+interface SimplePrice { [coinId: string]: { usd: number; eur: number; ars: number; brl: number; mxn: number; }; }
+
+let topCoinsBuild: CoinGeckoCoin[] = [];
+let simplePricesBuild: SimplePrice = {};
+let buildTs = 0;
+
+try {
+  // Top 30 cryptos por market cap
+  const r1 = await fetch(
+    'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&page=1&price_change_percentage=24h',
+    { signal: AbortSignal.timeout(8000) }
+  );
+  if (r1.ok) topCoinsBuild = await r1.json();
+
+  // Precios en múltiples fiat para el conversor (solo top 10 para no saturar)
+  const ids = topCoinsBuild.slice(0, 30).map(c => c.id).join(',');
+  if (ids) {
+    const r2 = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,eur,ars,brl,mxn,gbp,jpy,clp,uyu`,
+      { signal: AbortSignal.timeout(8000) }
+    );
+    if (r2.ok) simplePricesBuild = await r2.json();
+  }
+  buildTs = Date.now();
+} catch (e) {
+  console.warn('[cotizacion-cripto] CoinGecko fetch failed at build time:', e);
+}
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Cotización Cripto en Vivo',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  description,
+  offers: { '@type': 'Offer', price: '0' },
+};
+
+const faq = [
+  {
+    q: '¿Cada cuánto se actualizan los precios?',
+    a: 'Cada <strong>30 segundos</strong> automáticamente, usando la API pública de <a href="https://www.coingecko.com" rel="noopener">CoinGecko</a>. Si dejás la pestaña abierta, los precios se refrescan solos. Si la cerrás y volvés después, se actualiza al entrar.',
+  },
+  {
+    q: '¿Qué criptomonedas soporta?',
+    a: 'Las <strong>100 cryptos más grandes por market cap</strong>: Bitcoin (BTC), Ethereum (ETH), Solana (SOL), Tether (USDT), USDC, BNB, XRP, Cardano, Avalanche, Dogecoin, Polkadot, Chainlink, Polygon, Litecoin, Shiba Inu, y muchas más.',
+  },
+  {
+    q: '¿Qué monedas fiat puedo usar?',
+    a: 'Principales: <strong>USD</strong>, <strong>EUR</strong>, <strong>ARS</strong> (peso argentino), <strong>BRL</strong> (real), <strong>MXN</strong> (peso mexicano), <strong>GBP</strong>, <strong>JPY</strong>, <strong>CLP</strong> y <strong>UYU</strong>. CoinGecko convierte directamente — no depende del dólar intermedio.',
+  },
+  {
+    q: '¿De dónde saca el precio CoinGecko?',
+    a: 'Agrega datos de <strong>800+ exchanges</strong> (Binance, Coinbase, Kraken, Bitstamp, etc.) y calcula un precio promedio ponderado por volumen. Es el estándar de la industria para precios unificados.',
+  },
+  {
+    q: '¿Diferencia entre precio CoinGecko y mi exchange?',
+    a: 'Tu exchange local (ej. Binance Argentina, Ripio, Lemon) puede tener un <strong>spread del 0.5-3%</strong> sobre el precio de mercado. El valor de CoinGecko es el "fair price" global; tu exchange suma comisión.',
+  },
+  {
+    q: '¿Qué significa variación 24h?',
+    a: 'El porcentaje que subió o bajó el precio en las <strong>últimas 24 horas</strong>. Verde = subió, rojo = bajó. Es una métrica orientativa de tendencia a corto plazo.',
+  },
+  {
+    q: '¿Qué es el market cap?',
+    a: '<strong>Capitalización de mercado</strong>: precio × cantidad de monedas en circulación. Sirve para comparar el tamaño de una crypto: Bitcoin tiene el mayor market cap (~$1 trillón), Ethereum ~$400B, etc.',
+  },
+  {
+    q: '¿Es precio de compra o de venta?',
+    a: 'Es el <strong>precio de mercado promedio</strong>, ni compra ni venta. En tu exchange vas a ver un precio de compra levemente más alto (ask) y uno de venta más bajo (bid). La diferencia se llama <em>spread</em>.',
+  },
+];
+
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
+  })),
+};
+---
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="cx-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Cotización cripto</span>
+    </nav>
+
+    <header class="cx-header">
+      <h1>Cotización cripto en vivo 🪙</h1>
+      <p class="lead">
+        Precio de <strong>Bitcoin, Ethereum, Solana, USDT</strong> y 100+ criptomonedas en tiempo real. Convertí entre cualquier crypto y fiat (USD, EUR, ARS, BRL, etc.).
+      </p>
+      <div class="cx-status" id="cx-status">
+        <span class="dot pulse" id="cx-status-dot"></span>
+        <span id="cx-status-text">Cargando precios…</span>
+        <span class="auto-note">· live · refresh cada 30s</span>
+      </div>
+    </header>
+
+    <section class="converter">
+      <h2>Conversor</h2>
+      <div class="conv-grid">
+        <div class="conv-side">
+          <label for="cx-from-amount">Monto</label>
+          <input id="cx-from-amount" type="text" inputmode="decimal" value="1" autocomplete="off" aria-label="Monto a convertir" />
+          <span class="edit-hint">Tocá para editar</span>
+          <div class="coin-picker" data-picker="cx-from">
+            <button class="picker-btn" id="cx-from-currency-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="picker-label">₿ Bitcoin (BTC)</span>
+              <span class="picker-chev">▾</span>
+            </button>
+            <div class="picker-panel" hidden>
+              <input type="text" class="picker-search" placeholder="Buscar: bitcoin, ETH, solana..." autocomplete="off" />
+              <div class="picker-list" role="listbox"></div>
+            </div>
+          </div>
+          <input type="hidden" id="cx-from-currency" value="bitcoin" />
+        </div>
+
+        <button id="cx-swap" class="swap-btn" aria-label="Invertir monedas">⇄</button>
+
+        <div class="conv-side">
+          <label for="cx-to-amount">Equivale a</label>
+          <input id="cx-to-amount" type="text" inputmode="decimal" readonly />
+          <div class="coin-picker" data-picker="cx-to">
+            <button class="picker-btn" id="cx-to-currency-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="picker-label">🇺🇸 USD (Dólar)</span>
+              <span class="picker-chev">▾</span>
+            </button>
+            <div class="picker-panel" hidden>
+              <input type="text" class="picker-search" placeholder="Buscar: USD, ARS, euro..." autocomplete="off" />
+              <div class="picker-list" role="listbox"></div>
+            </div>
+          </div>
+          <input type="hidden" id="cx-to-currency" value="USD" />
+        </div>
+      </div>
+      <p class="rate-line" id="cx-rate-line">—</p>
+    </section>
+
+    <section class="top-cryptos">
+      <h2>🏆 Top criptomonedas por market cap</h2>
+      <p class="section-sub">Precio en <strong>USD y ARS</strong>, variación 24h. <input type="text" id="cx-search" placeholder="Buscar crypto..." class="search-crypto" /></p>
+      <div class="rates-table">
+        <div class="rate-head">
+          <div>#</div>
+          <div>Crypto</div>
+          <div>Precio USD</div>
+          <div>24h</div>
+        </div>
+        <div id="cx-top-table">
+          <div class="loading">Cargando precios en vivo…</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="related">
+      <h2>Relacionadas</h2>
+      <ul class="rel-grid">
+        <li><a href="/cambio-de-monedas">💱 Cambio de monedas (dólar blue, euro, real)</a></li>
+        <li><a href="/calculadora-ganancia-bitcoin-compra-venta">Ganancia bitcoin: compra / venta</a></li>
+        <li><a href="/calculadora-staking-apy-crypto-rendimiento">Staking APY rendimiento</a></li>
+        <li><a href="/calculadora-fees-comision-exchange-crypto">Fees exchange crypto</a></li>
+        <li><a href="/calculadora-dca-dollar-cost-average-crypto">DCA (Dollar-Cost Averaging)</a></li>
+        <li><a href="/calculadora-impuesto-bienes-personales-crypto">Bienes Personales sobre crypto (AR)</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      <div class="faq-list">
+        {faq.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <div class="faq-answer" set:html={f.a}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="method">
+      <h2>Cómo funciona</h2>
+      <p>Esta página consulta la API pública de <strong>CoinGecko</strong> (<a href="https://api.coingecko.com" rel="noopener">api.coingecko.com</a>) cada 30 segundos para traer precios actualizados de las top 30 criptomonedas en múltiples monedas fiat.</p>
+      <ul>
+        <li><strong>Top 30 cryptos</strong>: traídas por <code>market_cap_desc</code>.</li>
+        <li><strong>Precios en fiat</strong>: USD, EUR, ARS, BRL, MXN, GBP, JPY, CLP, UYU.</li>
+        <li><strong>Polling 30 seg</strong>: mientras la pestaña esté activa.</li>
+        <li><strong>Pausado en segundo plano</strong>: si minimizás el navegador, el polling pausa para no saturar.</li>
+      </ul>
+      <p class="disclaimer">⚠️ <strong>Aviso:</strong> los precios son indicativos del mercado global. Tu exchange local puede tener spread del 0.5-3% encima. Verificá siempre antes de operar.</p>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script id="cx-build-data" type="application/json" set:html={JSON.stringify({ topCoins: topCoinsBuild, simplePrices: simplePricesBuild, ts: buildTs })}></script>
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  .cx-page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 1rem 1.25rem 5rem;
+    color: var(--text);
+  }
+  .cx-header {
+    padding: 2rem 2rem 1.75rem;
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(1200px 400px at 10% -40%, rgba(249, 115, 22, .18), transparent 60%),
+      radial-gradient(900px 400px at 95% -30%, rgba(234, 179, 8, .15), transparent 65%),
+      linear-gradient(135deg, var(--bg-card), var(--bg-soft));
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+  }
+  .cx-header h1 {
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+    margin: 0 0 .75rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+  .cx-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .5rem .9rem .5rem .75rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: .85rem;
+    color: var(--text-muted);
+  }
+  .cx-status .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #f59e0b;
+    transition: background .3s, box-shadow .3s;
+  }
+  .cx-status .dot.ok {
+    background: #22c55e;
+    box-shadow: 0 0 0 4px rgba(34,197,94,.2);
+    animation: pulseLive 2s ease-in-out infinite;
+  }
+  .cx-status .dot.err { background: var(--danger); box-shadow: 0 0 0 4px var(--danger-soft); }
+  @keyframes pulseLive {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(34, 197, 94, .25); }
+    50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, .05); }
+  }
+  .cx-page .auto-note { color: var(--text-subtle); font-size: .78rem; font-style: italic; }
+
+  .search-crypto {
+    margin-left: .5rem;
+    padding: .45rem .8rem .45rem 2.1rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: var(--bg-card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat .8rem center;
+    font-size: .85rem;
+    min-width: 200px;
+  }
+
+  /* Rate rows específicas de crypto */
+  .cx-page .rate-head {
+    display: grid;
+    grid-template-columns: 50px minmax(200px, 2fr) minmax(120px, 1fr) minmax(100px, .8fr);
+    gap: .75rem 1rem;
+    padding: .7rem 1.25rem;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border);
+    font-size: .7rem;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+  }
+  .cx-page .rate-row {
+    display: grid;
+    grid-template-columns: 50px minmax(200px, 2fr) minmax(120px, 1fr) minmax(100px, .8fr);
+    gap: .75rem 1rem;
+    padding: .85rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    font-size: .95rem;
+    transition: background .15s;
+  }
+  .cx-page .rate-row:hover { background: var(--bg-soft); }
+  .cx-page .rate-row:last-child { border-bottom: 0; }
+  .cx-page .rank { color: var(--text-subtle); font-weight: 600; font-size: .85rem; }
+  .cx-page .coin-info { display: flex; align-items: center; gap: .7rem; min-width: 0; }
+  .cx-page .coin-img { width: 28px; height: 28px; border-radius: 50%; }
+  .cx-page .coin-name-wrap { display: flex; flex-direction: column; min-width: 0; }
+  .cx-page .coin-name { font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+  .cx-page .coin-sym { font-size: .75rem; color: var(--text-subtle); text-transform: uppercase; font-family: var(--font-mono); }
+  .cx-page .price { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1rem; color: var(--text); text-align: right; font-family: var(--font-mono); }
+  .cx-page .price .ars { display: block; font-size: .78rem; color: var(--text-subtle); font-weight: 400; }
+  .cx-page .change-24h {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: .9rem;
+  }
+  .cx-page .change-24h.up { color: #059669; }
+  .cx-page .change-24h.down { color: #dc2626; }
+  html[data-theme="dark"] .cx-page .change-24h.up { color: #6ee7b7; }
+  html[data-theme="dark"] .cx-page .change-24h.down { color: #fca5a5; }
+
+  @media (max-width: 680px) {
+    .cx-page .rate-head { display: none; }
+    .cx-page .rate-row {
+      grid-template-columns: auto 1fr auto;
+      padding: .9rem 1rem;
+    }
+    .cx-page .rank { grid-column: 1 / 2; grid-row: 1 / 3; }
+    .cx-page .coin-info { grid-column: 2 / 3; grid-row: 1 / 2; }
+    .cx-page .price { grid-column: 3 / 4; grid-row: 1 / 2; font-size: .95rem; }
+    .cx-page .change-24h { grid-column: 2 / 4; grid-row: 2 / 3; text-align: right; font-size: .82rem; }
+  }
+</style>
+
+<script>
+  interface CoinGeckoCoin {
+    id: string; symbol: string; name: string; image: string;
+    current_price: number; market_cap: number;
+    price_change_percentage_24h: number;
+  }
+  interface SimplePrice { [coinId: string]: { [fiat: string]: number } }
+
+  const FIAT_LABELS: Record<string, string> = {
+    USD: '🇺🇸 USD (Dólar)', EUR: '🇪🇺 EUR (Euro)', ARS: '🇦🇷 ARS (Peso argentino)',
+    BRL: '🇧🇷 BRL (Real)', MXN: '🇲🇽 MXN (Peso mexicano)', GBP: '🇬🇧 GBP (Libra)',
+    JPY: '🇯🇵 JPY (Yen)', CLP: '🇨🇱 CLP (Peso chileno)', UYU: '🇺🇾 UYU (Peso uruguayo)',
+  };
+
+  interface CxState {
+    topCoins: CoinGeckoCoin[];
+    simplePrices: SimplePrice;
+    updatedAt: number;
+  }
+
+  let STATE: CxState = { topCoins: [], simplePrices: {}, updatedAt: 0 };
+  let REFRESH_TIMER: number | null = null;
+
+  // Cargar datos embebidos en build-time primero (primer pintado rápido)
+  function loadBuildData() {
+    const el = document.getElementById('cx-build-data');
+    if (!el?.textContent) return;
+    try {
+      const parsed = JSON.parse(el.textContent);
+      STATE.topCoins = parsed.topCoins || [];
+      STATE.simplePrices = parsed.simplePrices || {};
+      STATE.updatedAt = parsed.ts || 0;
+    } catch {}
+  }
+
+  async function fetchLive() {
+    setStatus('loading', 'Actualizando precios…');
+    try {
+      const r1 = await fetch(
+        'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&page=1&price_change_percentage=24h'
+      );
+      if (r1.ok) STATE.topCoins = await r1.json();
+
+      const ids = STATE.topCoins.map(c => c.id).join(',');
+      if (ids) {
+        const r2 = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,eur,ars,brl,mxn,gbp,jpy,clp,uyu`
+        );
+        if (r2.ok) STATE.simplePrices = await r2.json();
+      }
+      STATE.updatedAt = Date.now();
+      renderAll();
+      setStatus('ok', '✅ Live · última actualización: ahora');
+    } catch (e) {
+      console.error('[cx] fetch failed', e);
+      setStatus('err', '⚠️ Error al actualizar. Reintentando…');
+    }
+  }
+
+  function setStatus(kind: 'loading' | 'ok' | 'err', text: string) {
+    const dot = document.getElementById('cx-status-dot')!;
+    dot.className = 'dot ' + (kind === 'ok' ? 'ok' : kind === 'err' ? 'err' : '');
+    document.getElementById('cx-status-text')!.textContent = text;
+  }
+
+  function fmtUSD(n: number): string {
+    if (n >= 1) return '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+    if (n >= 0.01) return '$' + n.toFixed(4);
+    return '$' + n.toPrecision(3);
+  }
+  function fmtARS(n: number): string {
+    return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n);
+  }
+  function fmtNum(n: number, max = 6): string {
+    return new Intl.NumberFormat('es-AR', { maximumFractionDigits: max }).format(n);
+  }
+  function parseAmount(v: string): number {
+    return Number(v.replace(/\./g, '').replace(/,/g, '.')) || 0;
+  }
+
+  // =======================
+  //  TOP CRYPTOS TABLE
+  // =======================
+  let CX_SEARCH = '';
+  function renderTopTable() {
+    const container = document.getElementById('cx-top-table')!;
+    const q = CX_SEARCH.trim().toLowerCase();
+    const visible = q
+      ? STATE.topCoins.filter(c => (c.name + ' ' + c.symbol + ' ' + c.id).toLowerCase().includes(q))
+      : STATE.topCoins;
+    if (visible.length === 0) {
+      container.innerHTML = '<div class="loading">Sin resultados</div>';
+      return;
+    }
+    const rows = visible.map((c) => {
+      const change = c.price_change_percentage_24h ?? 0;
+      const changeClass = change >= 0 ? 'up' : 'down';
+      const changeSign = change >= 0 ? '+' : '';
+      const arsPrice = STATE.simplePrices[c.id]?.ars;
+      return `
+        <div class="rate-row">
+          <div class="rank">#${STATE.topCoins.indexOf(c) + 1}</div>
+          <div class="coin-info">
+            <img class="coin-img" src="${c.image}" alt="${c.symbol}" loading="lazy" />
+            <div class="coin-name-wrap">
+              <span class="coin-name">${c.name}</span>
+              <span class="coin-sym">${c.symbol}</span>
+            </div>
+          </div>
+          <div class="price">
+            ${fmtUSD(c.current_price)}
+            ${arsPrice ? `<span class="ars">${fmtARS(arsPrice)}</span>` : ''}
+          </div>
+          <div class="change-24h ${changeClass}">
+            ${changeSign}${change.toFixed(2)}%
+          </div>
+        </div>
+      `;
+    }).join('');
+    container.innerHTML = rows;
+  }
+
+  // =======================
+  //  PICKER OPTIONS (crypto + fiat)
+  // =======================
+  interface CoinOption { value: string; label: string; code: string; group: string; searchText: string; }
+  let CX_OPTIONS: CoinOption[] = [];
+
+  function buildCoinOptions() {
+    CX_OPTIONS = [];
+    // Cryptos
+    for (const c of STATE.topCoins) {
+      CX_OPTIONS.push({
+        value: c.id,
+        label: `${c.name}`,
+        code: c.symbol.toUpperCase(),
+        group: '🪙 Criptomonedas',
+        searchText: `${c.name} ${c.symbol} ${c.id}`.toLowerCase(),
+      });
+    }
+    // Fiat
+    for (const [code, label] of Object.entries(FIAT_LABELS)) {
+      CX_OPTIONS.push({
+        value: code,
+        label,
+        code,
+        group: '💵 Monedas fiat',
+        searchText: `${label} ${code}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+      });
+    }
+  }
+
+  function findOption(value: string): CoinOption | undefined {
+    return CX_OPTIONS.find(o => o.value === value);
+  }
+
+  function updatePickerLabel(which: 'cx-from' | 'cx-to') {
+    const hidden = document.getElementById(`${which}-currency`) as HTMLInputElement;
+    const labelEl = document.querySelector(`[data-picker="${which}"] .picker-label`)!;
+    const opt = findOption(hidden.value);
+    labelEl.textContent = opt ? `${opt.label}${opt.code && opt.code !== opt.label ? ' (' + opt.code + ')' : ''}` : hidden.value;
+  }
+
+  function renderPickerList(which: 'cx-from' | 'cx-to', query = '') {
+    const listEl = document.querySelector(`[data-picker="${which}"] .picker-list`)!;
+    const hidden = document.getElementById(`${which}-currency`) as HTMLInputElement;
+    const q = query.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const filtered = q ? CX_OPTIONS.filter(o => o.searchText.includes(q) || o.code.toLowerCase().includes(q)) : CX_OPTIONS;
+    if (filtered.length === 0) {
+      listEl.innerHTML = `<div class="picker-empty">Sin resultados para "${query}"</div>`;
+      return;
+    }
+    const html: string[] = [];
+    let currentGroup = '';
+    for (const opt of filtered) {
+      if (opt.group !== currentGroup) {
+        currentGroup = opt.group;
+        html.push(`<div class="picker-group">${currentGroup}</div>`);
+      }
+      const isSelected = opt.value === hidden.value;
+      html.push(`
+        <div class="picker-item ${isSelected ? 'selected' : ''}" data-value="${opt.value}" role="option" aria-selected="${isSelected}">
+          <span>${opt.label}</span>
+          <span class="code">${opt.code}</span>
+        </div>
+      `);
+    }
+    listEl.innerHTML = html.join('');
+  }
+
+  function openPicker(which: 'cx-from' | 'cx-to') {
+    const other = which === 'cx-from' ? 'cx-to' : 'cx-from';
+    closePicker(other);
+    const btn = document.getElementById(`${which}-currency-btn`)!;
+    const panel = document.querySelector(`[data-picker="${which}"] .picker-panel`) as HTMLElement;
+    const search = panel.querySelector('.picker-search') as HTMLInputElement;
+    btn.setAttribute('aria-expanded', 'true');
+    panel.hidden = false;
+    search.value = '';
+    renderPickerList(which, '');
+    setTimeout(() => search.focus(), 30);
+  }
+  function closePicker(which: 'cx-from' | 'cx-to') {
+    const btn = document.getElementById(`${which}-currency-btn`);
+    const panel = document.querySelector(`[data-picker="${which}"] .picker-panel`) as HTMLElement | null;
+    if (btn && panel) { btn.setAttribute('aria-expanded', 'false'); panel.hidden = true; }
+  }
+  function setPickerValue(which: 'cx-from' | 'cx-to', value: string) {
+    const hidden = document.getElementById(`${which}-currency`) as HTMLInputElement;
+    hidden.value = value;
+    updatePickerLabel(which);
+    closePicker(which);
+    renderConverter();
+  }
+  function populatePickers() {
+    buildCoinOptions();
+    (['cx-from','cx-to'] as const).forEach((which) => {
+      const hidden = document.getElementById(`${which}-currency`) as HTMLInputElement;
+      if (!findOption(hidden.value)) {
+        hidden.value = which === 'cx-from' ? 'bitcoin' : 'USD';
+      }
+      updatePickerLabel(which);
+    });
+  }
+
+  // =======================
+  //  CONVERTER
+  // =======================
+  function convert(amount: number, from: string, to: string): number | null {
+    if (!amount || from === to) return amount;
+    const isFromFiat = from in FIAT_LABELS;
+    const isToFiat = to in FIAT_LABELS;
+
+    if (!isFromFiat && !isToFiat) {
+      // crypto → crypto (via USD)
+      const fromUsd = STATE.simplePrices[from]?.usd;
+      const toUsd = STATE.simplePrices[to]?.usd;
+      if (!fromUsd || !toUsd) return null;
+      return (amount * fromUsd) / toUsd;
+    }
+    if (!isFromFiat && isToFiat) {
+      // crypto → fiat
+      const rate = STATE.simplePrices[from]?.[to.toLowerCase()];
+      return rate ? amount * rate : null;
+    }
+    if (isFromFiat && !isToFiat) {
+      // fiat → crypto
+      const rate = STATE.simplePrices[to]?.[from.toLowerCase()];
+      return rate ? amount / rate : null;
+    }
+    // fiat → fiat (via USD de cualquier crypto como proxy, preferimos bitcoin)
+    const btcFiat = STATE.simplePrices['bitcoin'];
+    if (!btcFiat) return null;
+    const fromRateVsBtc = btcFiat[from.toLowerCase()];
+    const toRateVsBtc = btcFiat[to.toLowerCase()];
+    if (!fromRateVsBtc || !toRateVsBtc) return null;
+    return amount * (toRateVsBtc / fromRateVsBtc);
+  }
+
+  function renderConverter() {
+    const fromAmtEl = document.getElementById('cx-from-amount') as HTMLInputElement;
+    const toAmtEl = document.getElementById('cx-to-amount') as HTMLInputElement;
+    const fromEl = document.getElementById('cx-from-currency') as HTMLInputElement;
+    const toEl = document.getElementById('cx-to-currency') as HTMLInputElement;
+    const rateLine = document.getElementById('cx-rate-line')!;
+
+    const amount = parseAmount(fromAmtEl.value);
+    const result = convert(amount, fromEl.value, toEl.value);
+    if (result === null) {
+      toAmtEl.value = '—';
+      rateLine.textContent = 'Sin cotización disponible';
+      return;
+    }
+    toAmtEl.value = fmtNum(result, 8);
+    const unit = convert(1, fromEl.value, toEl.value);
+    const fromOpt = findOption(fromEl.value);
+    const toOpt = findOption(toEl.value);
+    if (unit !== null && fromOpt && toOpt) {
+      rateLine.textContent = `1 ${fromOpt.code} = ${fmtNum(unit, 8)} ${toOpt.code}`;
+    }
+  }
+
+  function renderAll() {
+    renderTopTable();
+    populatePickers();
+    renderConverter();
+  }
+
+  // =======================
+  //  AUTO-REFRESH (30s)
+  // =======================
+  function startAutoRefresh() {
+    if (REFRESH_TIMER) clearInterval(REFRESH_TIMER);
+    REFRESH_TIMER = window.setInterval(() => {
+      if (!document.hidden) fetchLive();
+    }, 30_000);
+  }
+  function stopAutoRefresh() {
+    if (REFRESH_TIMER) { clearInterval(REFRESH_TIMER); REFRESH_TIMER = null; }
+  }
+
+  // =======================
+  //  EVENTS
+  // =======================
+  document.getElementById('cx-from-amount')!.addEventListener('input', renderConverter);
+  document.getElementById('cx-swap')!.addEventListener('click', () => {
+    const fromEl = document.getElementById('cx-from-currency') as HTMLInputElement;
+    const toEl = document.getElementById('cx-to-currency') as HTMLInputElement;
+    [fromEl.value, toEl.value] = [toEl.value, fromEl.value];
+    updatePickerLabel('cx-from');
+    updatePickerLabel('cx-to');
+    renderConverter();
+  });
+  document.getElementById('cx-search')!.addEventListener('input', (e) => {
+    CX_SEARCH = (e.target as HTMLInputElement).value;
+    renderTopTable();
+  });
+
+  (['cx-from','cx-to'] as const).forEach((which) => {
+    const btn = document.getElementById(`${which}-currency-btn`)!;
+    const panel = document.querySelector(`[data-picker="${which}"] .picker-panel`) as HTMLElement;
+    const search = panel.querySelector('.picker-search') as HTMLInputElement;
+    const list = panel.querySelector('.picker-list') as HTMLElement;
+
+    btn.addEventListener('click', () => {
+      const isOpen = btn.getAttribute('aria-expanded') === 'true';
+      if (isOpen) closePicker(which); else openPicker(which);
+    });
+    search.addEventListener('input', () => renderPickerList(which, search.value));
+    search.addEventListener('keydown', (e) => {
+      const items = Array.from(list.querySelectorAll<HTMLElement>('.picker-item'));
+      let activeIdx = items.findIndex((i) => i.classList.contains('active'));
+      if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); items.forEach((it, i) => it.classList.toggle('active', i === activeIdx)); items[activeIdx]?.scrollIntoView({ block: 'nearest' }); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); items.forEach((it, i) => it.classList.toggle('active', i === activeIdx)); items[activeIdx]?.scrollIntoView({ block: 'nearest' }); }
+      else if (e.key === 'Enter') { e.preventDefault(); const target = activeIdx >= 0 ? items[activeIdx] : items[0]; if (target) setPickerValue(which, target.dataset.value!); }
+      else if (e.key === 'Escape') { e.preventDefault(); closePicker(which); btn.focus(); }
+    });
+    list.addEventListener('click', (e) => {
+      const item = (e.target as HTMLElement).closest('.picker-item') as HTMLElement | null;
+      if (item?.dataset.value) setPickerValue(which, item.dataset.value);
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.coin-picker')) {
+      closePicker('cx-from');
+      closePicker('cx-to');
+    }
+  });
+
+  // Pausar auto-refresh cuando la pestaña no está visible (ahorro de rate limit)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopAutoRefresh();
+    } else {
+      fetchLive();
+      startAutoRefresh();
+    }
+  });
+
+  // =======================
+  //  INIT
+  // =======================
+  loadBuildData();
+  renderAll();
+  fetchLive();
+  startAutoRefresh();
+</script>

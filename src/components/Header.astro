@@ -20,6 +20,10 @@ const isActive = (path: string) => currentPath.startsWith(path);
         <span class="live-dot"></span>
         Cambio de monedas
       </a>
+      <a href="/cotizacion-cripto" class={`cripto-live ${isActive('/cotizacion-cripto') ? 'active' : ''}`} title="Cotización cripto en vivo">
+        <span class="live-dot"></span>
+        Cripto
+      </a>
       <a href="/categoria/finanzas" class={isActive('/categoria/finanzas') ? 'active' : ''}>Finanzas</a>
       <a href="/categoria/marketing" class={isActive('/categoria/marketing') ? 'active' : ''}>Marketing</a>
       <a href="/categoria/salud" class={isActive('/categoria/salud') ? 'active' : ''}>Salud</a>
@@ -59,6 +63,7 @@ const isActive = (path: string) => currentPath.startsWith(path);
 
   <div class="mobile-nav" id="mobile-nav" hidden>
     <a href="/cambio-de-monedas" class="dolar-live-mobile">💱 Cambio de monedas <span class="live-dot"></span></a>
+    <a href="/cotizacion-cripto" class="cripto-live-mobile">🪙 Cotización cripto <span class="live-dot orange"></span></a>
     <a href="/categoria/finanzas">💰 Finanzas</a>
     <a href="/categoria/negocios">🏢 Negocios</a>
     <a href="/categoria/marketing">📈 Marketing</a>
@@ -345,6 +350,56 @@ const isActive = (path: string) => currentPath.startsWith(path);
     animation: pulseLive 2s ease-in-out infinite;
     display: inline-block;
     flex-shrink: 0;
+  }
+
+  /* Botón "Cripto" destacado (naranja para diferenciar del verde de monedas) */
+  nav a.cripto-live {
+    color: #c2410c;
+    background: #fed7aa;
+    border: 1px solid #fb923c;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-weight: 600;
+    margin-right: .25rem;
+  }
+  nav a.cripto-live:hover { background: #fdba74; border-color: #f97316; color: #7c2d12; }
+  nav a.cripto-live.active { background: #fb923c; color: #7c2d12; }
+  :global([data-theme="dark"]) nav a.cripto-live {
+    color: #fdba74;
+    background: rgba(249, 115, 22, .15);
+    border-color: rgba(249, 115, 22, .4);
+  }
+  :global([data-theme="dark"]) nav a.cripto-live:hover {
+    background: rgba(249, 115, 22, .25);
+    color: #fed7aa;
+  }
+  nav a.cripto-live .live-dot,
+  .mobile-nav a.cripto-live-mobile .live-dot.orange {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f97316;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, .2);
+    animation: pulseCripto 2s ease-in-out infinite;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .mobile-nav a.cripto-live-mobile {
+    color: #c2410c;
+    background: #fed7aa;
+    border-radius: var(--radius-sm);
+    border-bottom: none !important;
+    margin-bottom: .25rem;
+    font-weight: 600;
+  }
+  :global([data-theme="dark"]) .mobile-nav a.cripto-live-mobile {
+    color: #fdba74;
+    background: rgba(249, 115, 22, .15);
+  }
+  @keyframes pulseCripto {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(249, 115, 22, .2); }
+    50% { box-shadow: 0 0 0 6px rgba(249, 115, 22, .05); }
   }
   .mobile-nav a.dolar-live-mobile {
     color: #15803d;
