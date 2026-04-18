@@ -9,6 +9,17 @@
 /*
   Cache-Control: public, max-age=0, must-revalidate
   CDN-Cache-Control: no-store
+  # Seguridad: protección contra clickjacking, sniffing y leaks
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  # Bloquea APIs que no usamos (protege si hay compromise client-side)
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()
+  # HSTS: fuerza HTTPS en browser por 2 años (incluye subdominios, preload-ready)
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  # CSP: whitelist explícito de orígenes permitidos. 'unsafe-inline' para style e
+  # inline scripts (astro genera muchos). Si migramos a CSP con nonce, eliminar.
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'self'
 
 # Service worker: NUNCA cachear el script, así las actualizaciones bajan inmediato.
 /sw.js

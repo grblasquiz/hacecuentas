@@ -158,6 +158,13 @@ const isActive = (path: string) => currentPath.startsWith(path);
   openBtn?.addEventListener('click', openModal);
   modal.addEventListener('click', (e) => { if (e.target.dataset.close !== undefined) closeModal(); });
 
+  // XSS protection: escapar cualquier string antes de pegarlo en innerHTML
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
   function renderResults(q) {
     if (!calcs) {
       results.innerHTML = '<div class="no-results">Cargando...</div>';
@@ -168,15 +175,16 @@ const isActive = (path: string) => currentPath.startsWith(path);
       ? calcs.filter((c) => norm(`${c.h1} ${c.description} ${c.slug}`).includes(query)).slice(0, 8)
       : calcs.slice(0, 6);
     if (matches.length === 0) {
-      results.innerHTML = `<div class="no-results">Sin resultados para "<strong>${q}</strong>"</div>`;
+      // Escapar query para prevenir XSS: user puede pegar '<img src=x onerror=...>'
+      results.innerHTML = `<div class="no-results">Sin resultados para "<strong>${escapeHtml(q)}</strong>"</div>`;
       return;
     }
     results.innerHTML = matches.map((c, i) => `
-      <a href="/${c.slug}" class="result-item" data-index="${i}">
-        <span class="result-icon">${c.icon}</span>
+      <a href="/${escapeHtml(c.slug)}" class="result-item" data-index="${i}">
+        <span class="result-icon">${escapeHtml(c.icon || '')}</span>
         <span class="result-body">
-          <span class="result-title">${c.h1}</span>
-          <span class="result-cat">${categoryLabels[c.category] || c.category}</span>
+          <span class="result-title">${escapeHtml(c.h1)}</span>
+          <span class="result-cat">${escapeHtml(categoryLabels[c.category] || c.category || '')}</span>
         </span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>

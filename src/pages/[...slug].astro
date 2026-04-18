@@ -24,6 +24,21 @@ const enCalcModules = import.meta.glob<any>('../content/calcs-en/*.json', { eage
 const enCalcs = Object.values(enCalcModules).map((m: any) => m.default || m);
 
 // Markdown simple → HTML
+// Escape HTML antes de inyectar en templates. Defense-in-depth por si un JSON
+// contribuido externamente contiene <script> o eventos inline.
+function escHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+}
+// Escape para atributos href — solo permite protocolos seguros
+function safeUrl(u: string): string {
+  const trimmed = u.trim();
+  // Permitir solo http(s), mailto, tel, anchors y relative paths
+  if (/^(https?:|mailto:|tel:|#|\/)/i.test(trimmed)) {
+    return escHtml(trimmed);
+  }
+  return '#'; // bloquear javascript:, data:, etc.
+}
+
 function md(text: string): string {
   // Process markdown tables as blocks first (header + separator + data rows → <table>)
   text = text.replace(
@@ -32,19 +47,19 @@ function md(text: string): string {
       const hCells = headerLine.slice(1, -1).split('|').map((s: string) => s.trim());
       const rows = bodyBlock.split('\n').filter(Boolean).map((row: string) => {
         const cells = row.slice(1, -1).split('|').map((s: string) => s.trim());
-        return '<tr>' + cells.map((c: string) => `<td>${c}</td>`).join('') + '</tr>';
+        return '<tr>' + cells.map((c: string) => `<td>${escHtml(c)}</td>`).join('') + '</tr>';
       });
-      return '<table><thead><tr>' + hCells.map((c: string) => `<th>${c}</th>`).join('') + '</tr></thead><tbody>' + rows.join('') + '</tbody></table>';
+      return '<table><thead><tr>' + hCells.map((c: string) => `<th>${escHtml(c)}</th>`).join('') + '</tr></thead><tbody>' + rows.join('') + '</tbody></table>';
     }
   );
   return text
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" rel="noopener">$1</a>')
-    .replace(/^\- (.+)$/gm, '<li>$1</li>')
+    .replace(/^### (.+)$/gm, (_, c) => `<h3>${escHtml(c)}</h3>`)
+    .replace(/^## (.+)$/gm, (_, c) => `<h2>${escHtml(c)}</h2>`)
+    .replace(/\*\*(.+?)\*\*/g, (_, c) => `<strong>${escHtml(c)}</strong>`)
+    .replace(/\*(.+?)\*/g, (_, c) => `<em>${escHtml(c)}</em>`)
+    .replace(/`([^`]+)`/g, (_, c) => `<code>${escHtml(c)}</code>`)
+    .replace(/\[(.+?)\]\((.+?)\)/g, (_, label, href) => `<a href="${safeUrl(href)}" rel="noopener">${escHtml(label)}</a>`)
+    .replace(/^\- (.+)$/gm, (_, c) => `<li>${escHtml(c)}</li>`)
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>');
 }
@@ -53,10 +68,10 @@ function md(text: string): string {
 // (no genera <p>, <h2>, <li>, <br>; solo bold, em, code, links).
 function mdInline(text: string): string {
   return text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" rel="noopener">$1</a>');
+    .replace(/\*\*(.+?)\*\*/g, (_, c) => `<strong>${escHtml(c)}</strong>`)
+    .replace(/\*(.+?)\*/g, (_, c) => `<em>${escHtml(c)}</em>`)
+    .replace(/`([^`]+)`/g, (_, c) => `<code>${escHtml(c)}</code>`)
+    .replace(/\[(.+?)\]\((.+?)\)/g, (_, label, href) => `<a href="${safeUrl(href)}" rel="noopener">${escHtml(label)}</a>`);
 }
 
 const categoryLabels: Record<string, string> = {
