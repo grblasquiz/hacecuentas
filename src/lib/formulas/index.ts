@@ -1595,6 +1595,26 @@ import { mulchingEspesorCantidad } from './mulching-espesor-cantidad';
 import { germinacionTiempoTemperatura } from './germinacion-tiempo-temperatura';
 import { cantidadPlantasSetoMetros } from './cantidad-plantas-seto-metros';
 import { hidroponiaNutrientesEcPpm } from './hidroponia-nutrientes-ec-ppm';
+import { zapataCorridaM3Hormigon } from './zapata-corrida-m3-hormigon';
+import { zapataAisladaColumnas } from './zapata-aislada-columnas';
+import { vigaHormigonHBDimensiones } from './viga-hormigon-h-b-dimensiones';
+import { aceroKgM2Losa } from './acero-kg-m2-losa';
+import { escaleraHuellaContrahuellaLeyBlondel } from './escalera-huella-contrahuella-ley-blondel';
+import { pinturaLitrosM2Manos } from './pintura-litros-m2-manos';
+import { impermeabilizanteTechoKgM2 } from './impermeabilizante-techo-kg-m2';
+import { aislacionTermicaKMinimoZona } from './aislacion-termica-k-minimo-zona';
+import { membranaAsfalticaRollos } from './membrana-asfaltica-rollos';
+import { paredLadrillosMetrosM2 } from './pared-ladrillos-metros-m2';
+import { revoqueGruesoM3M2 } from './revoque-grueso-m3-m2';
+import { ceramicosM2Cajas } from './ceramicos-m2-cajas';
+import { zocaloMetrosLineal } from './zocalo-metros-lineal';
+import { rejillaTrampaDesague } from './rejilla-trampa-desague';
+import { tanqueAguaLitrosPersonas } from './tanque-agua-litros-personas';
+import { bombeoCisternaTanqueWatts } from './bombeo-cisterna-tanque-watts';
+import { canoAguaDiametroCaudal } from './cano-agua-diametro-caudal';
+import { calderaKwM2Calefaccion } from './caldera-kw-m2-calefaccion';
+import { aireAcondicionadoBtuSplit } from './aire-acondicionado-btu-split';
+import { ventilacionCfmAmbiente } from './ventilacion-cfm-ambiente';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3189,4 +3209,24 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'germinacion-tiempo-temperatura': germinacionTiempoTemperatura,
   'cantidad-plantas-seto-metros': cantidadPlantasSetoMetros,
   'hidroponia-nutrientes-ec-ppm': hidroponiaNutrientesEcPpm,
+  'zapata-corrida-m3-hormigon': zapataCorridaM3Hormigon,
+  'zapata-aislada-columnas': zapataAisladaColumnas,
+  'viga-hormigon-h-b-dimensiones': vigaHormigonHBDimensiones,
+  'acero-kg-m2-losa': aceroKgM2Losa,
+  'escalera-huella-contrahuella-ley-blondel': escaleraHuellaContrahuellaLeyBlondel,
+  'pintura-litros-m2-manos': pinturaLitrosM2Manos,
+  'impermeabilizante-techo-kg-m2': impermeabilizanteTechoKgM2,
+  'aislacion-termica-k-minimo-zona': aislacionTermicaKMinimoZona,
+  'membrana-asfaltica-rollos': membranaAsfalticaRollos,
+  'pared-ladrillos-metros-m2': paredLadrillosMetrosM2,
+  'revoque-grueso-m3-m2': revoqueGruesoM3M2,
+  'ceramicos-m2-cajas': ceramicosM2Cajas,
+  'zocalo-metros-lineal': zocaloMetrosLineal,
+  'rejilla-trampa-desague': rejillaTrampaDesague,
+  'tanque-agua-litros-personas': tanqueAguaLitrosPersonas,
+  'bombeo-cisterna-tanque-watts': bombeoCisternaTanqueWatts,
+  'cano-agua-diametro-caudal': canoAguaDiametroCaudal,
+  'caldera-kw-m2-calefaccion': calderaKwM2Calefaccion,
+  'aire-acondicionado-btu-split': aireAcondicionadoBtuSplit,
+  'ventilacion-cfm-ambiente': ventilacionCfmAmbiente,
 };
