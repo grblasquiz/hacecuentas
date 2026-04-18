@@ -10,11 +10,13 @@
  * Tarda ~500ms para 225 calcs.
  */
 
-import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 
 const CALCS_DIR = join(process.cwd(), 'src/content/calcs');
 const OUTPUT_FILE = join(process.cwd(), 'src/lib/related-auto.json');
+const CACHE_HASH_FILE = join(process.cwd(), 'src/lib/related-auto.hash');
 const TOP_K = 6;
 
 // Stopwords españolas + términos genéricos del dominio (no discriminan entre calcs)
@@ -108,11 +110,34 @@ function cosineSimilarity(
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
+function hashCalcsInputs(files: string[]): string {
+  // Hash basado en el contenido raw de todos los JSONs + path (si cambia el nombre de un slug, invalida cache).
+  // Usamos SHA-1 por velocidad; no necesitamos crypto-grade.
+  const hash = createHash('sha1');
+  for (const f of files.sort()) {
+    hash.update(f);
+    hash.update(readFileSync(join(CALCS_DIR, f), 'utf8'));
+  }
+  return hash.digest('hex');
+}
+
 function main() {
   const started = Date.now();
 
   // Leer todas las calcs
   const files = readdirSync(CALCS_DIR).filter((f) => f.endsWith('.json'));
+
+  // Cache check: si el hash de los inputs no cambió y el output existe, skip compute.
+  // Esto hace que builds repetidos que no tocan calcs/ sean instantáneos.
+  const inputHash = hashCalcsInputs(files);
+  if (existsSync(CACHE_HASH_FILE) && existsSync(OUTPUT_FILE)) {
+    const cachedHash = readFileSync(CACHE_HASH_FILE, 'utf8').trim();
+    if (cachedHash === inputHash) {
+      console.log(`[related-auto] cache HIT (hash: ${inputHash.slice(0, 10)}) — skip compute in ${Date.now() - started}ms`);
+      return;
+    }
+  }
+
   const calcs: Calc[] = files.map((f) => JSON.parse(readFileSync(join(CALCS_DIR, f), 'utf8')));
 
   // Tokenizar cada una
@@ -169,11 +194,12 @@ function main() {
     related[c.slug] = scores.slice(0, TOP_K).map((s) => s.slug);
   }
 
-  // Guardar
+  // Guardar resultado + hash (para cache en próximas corridas)
   writeFileSync(OUTPUT_FILE, JSON.stringify(related, null, 2));
+  writeFileSync(CACHE_HASH_FILE, inputHash);
 
   const elapsed = Date.now() - started;
-  console.log(`[related-auto] ${calcs.length} calcs → ${OUTPUT_FILE} (${elapsed}ms)`);
+  console.log(`[related-auto] ${calcs.length} calcs → ${OUTPUT_FILE} (${elapsed}ms, cache MISS — hash: ${inputHash.slice(0, 10)})`);
 }
 
 main();
