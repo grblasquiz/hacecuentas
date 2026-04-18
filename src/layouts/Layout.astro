@@ -173,13 +173,10 @@ const globalSchema = {
     <link rel="preload" href={interFont700Url} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={interFont800Url} as="font" type="font/woff2" crossorigin />
 
-    <!-- Preconnect CDN externo (Chart.js, KaTeX) -->
+    <!-- Preconnect solo a origins que se usan en todo page view. cdn.jsdelivr.net
+         sólo se usa en calcs con Chart.js (lazy load) — ahí dns-prefetch es suficiente. -->
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-
-    <!-- Preconnect Google Tag Manager (gtag.js, Google Ads) -->
     <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
 
     <!-- Google Consent Mode v2 — default 'denied' hasta que el usuario decida (GDPR/AdSense compliant) -->
     <script is:inline>
@@ -214,16 +211,30 @@ const globalSchema = {
         gtag('event', 'conversion_event_default', {});
       }
     </script>
-    <!-- Google tag (gtag.js) — un solo script cubre GA4 + Google Ads (ambos IDs se configuran arriba con gtag('config', ...)) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
-    <!-- Google tag (gtag.js) -->
-    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=AW-18096606872"></script>
+    <!-- gtag.js LAZY load — se carga al primer interacción del user o tras 3.5s.
+         Ahorra ~247 KB de JS en initial load (LCP/FCP mobile). Los gtag() que
+         se llaman antes del load se encolan en window.dataLayer y se procesan
+         cuando el script termina de cargar. -->
     <script is:inline>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'AW-18096606872');
+      (function () {
+        var loaded = false;
+        function loadGtag() {
+          if (loaded) return; loaded = true;
+          var s1 = document.createElement('script');
+          s1.src = 'https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2';
+          s1.async = true;
+          document.head.appendChild(s1);
+          var s2 = document.createElement('script');
+          s2.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18096606872';
+          s2.async = true;
+          document.head.appendChild(s2);
+        }
+        var events = ['scroll', 'click', 'keydown', 'touchstart', 'mousemove'];
+        var opts = { once: true, passive: true, capture: true };
+        events.forEach(function (e) { window.addEventListener(e, loadGtag, opts); });
+        // Fallback: si el user no interactúa en 3.5s, cargar igual (bounce tracking)
+        setTimeout(loadGtag, 3500);
+      })();
     </script>
   </head>
   <body>
