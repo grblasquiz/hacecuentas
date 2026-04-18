@@ -6,6 +6,21 @@ import Footer from '../components/Footer.astro';
 const title = 'Cambio de Monedas Hoy — Dólar Blue, Euro, Real en Vivo | Hacé Cuentas';
 const description = 'Cotizaciones en vivo de dólar blue, oficial, MEP, CCL, tarjeta, cripto, euro, real y 150+ monedas. Convertí entre cualquier divisa al tipo de cambio actualizado.';
 
+// Fetch server-side (build-time) para evitar problema de CSP con open.er-api.com client-side.
+// Las cotizaciones AR siguen cargando client-side desde dolarapi.com (permitido en CSP).
+let intlBuildRates: Record<string, number> = {};
+let intlBuildTs: number = 0;
+try {
+  const r = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(8000) });
+  if (r.ok) {
+    const d = await r.json() as { rates: Record<string, number>; time_last_update_unix: number };
+    intlBuildRates = d.rates || {};
+    intlBuildTs = (d.time_last_update_unix || Math.floor(Date.now() / 1000)) * 1000;
+  }
+} catch (e) {
+  console.warn('[cambio-de-monedas] fetch intl failed at build time:', e);
+}
+
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
@@ -164,6 +179,7 @@ const schemaFaq = {
   </article>
 
   <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script id="fx-intl-build" type="application/json" set:html={JSON.stringify({ rates: intlBuildRates, ts: intlBuildTs })}></script>
   <Footer slot="footer" />
 </Layout>
 
@@ -301,13 +317,38 @@ const schemaFaq = {
   }
 
   async function fetchIntl(): Promise<IntlRates> {
+    // 1) Intentar cache local reciente (si el user forzó refresh via dolarapi pero intl no)
     const cached = getCache<IntlRates>('fx_intl');
     if (cached) return cached;
-    const res = await fetch('https://open.er-api.com/v6/latest/USD');
-    if (!res.ok) throw new Error('Error exchangerate');
-    const data = (await res.json()) as IntlRates;
-    setCache('fx_intl', data);
-    return data;
+
+    // 2) Leer datos embebidos en build-time (evita problema de CSP client-side)
+    const buildEl = document.getElementById('fx-intl-build');
+    if (buildEl && buildEl.textContent) {
+      try {
+        const parsed = JSON.parse(buildEl.textContent) as { rates: Record<string, number>; ts: number };
+        if (parsed.rates && Object.keys(parsed.rates).length > 10) {
+          const data: IntlRates = {
+            base_code: 'USD',
+            rates: parsed.rates,
+            time_last_update_unix: Math.floor(parsed.ts / 1000),
+          };
+          setCache('fx_intl', data);
+          return data;
+        }
+      } catch (e) { console.warn('build-intl parse error', e); }
+    }
+
+    // 3) Fallback: intentar fetch directo (puede bloquearse por CSP, pero probamos)
+    try {
+      const res = await fetch('https://open.er-api.com/v6/latest/USD');
+      if (!res.ok) throw new Error('Error exchangerate');
+      const data = (await res.json()) as IntlRates;
+      setCache('fx_intl', data);
+      return data;
+    } catch (e) {
+      // Devolver vacío si todo falla
+      return { base_code: 'USD', rates: {}, time_last_update_unix: 0 };
+    }
   }
 
   function clearCache() {
