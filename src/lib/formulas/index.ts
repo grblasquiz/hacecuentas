@@ -1576,6 +1576,25 @@ import { emisionesEnviarEmailAdjuntos } from './emisiones-enviar-email-adjuntos'
 import { biodegradacionResiduoTiempo } from './biodegradacion-residuo-tiempo';
 import { luzNaturalAhorroIluminacion } from './luz-natural-ahorro-iluminacion';
 import { lluviaCaptacionTechoM3Anual } from './lluvia-captacion-techo-m3-anual';
+import { tierraCanteroM3Litros } from './tierra-cantero-m3-litros';
+import { semillasPorM2Huerta } from './semillas-por-m2-huerta';
+import { aguaRiegoPlantasDia } from './agua-riego-plantas-dia';
+import { compostTiempoMaduracion } from './compost-tiempo-maduracion';
+import { calendarioSiembraHemisferioSur } from './calendario-siembra-hemisferio-sur';
+import { calendarioSiembraHemisferioNorte } from './calendario-siembra-hemisferio-norte';
+import { cantidadCespedSemillasKgM2 } from './cantidad-cesped-semillas-kg-m2';
+import { podarRosalCuandoFecha } from './podar-rosal-cuando-fecha';
+import { macetasTamanoPlanta } from './macetas-tamano-planta';
+import { luzSolarHorasPlanta } from './luz-solar-horas-planta';
+import { phSueloCorreccionCalcio } from './ph-suelo-correccion-calcio';
+import { drenajeGravaMaceta } from './drenaje-grava-maceta';
+import { zonaUsdaClima } from './zona-usda-clima';
+import { distanciaEntrePlantasHuerto } from './distancia-entre-plantas-huerto';
+import { cosechaEsperadaHuertaKg } from './cosecha-esperada-huerta-kg';
+import { mulchingEspesorCantidad } from './mulching-espesor-cantidad';
+import { germinacionTiempoTemperatura } from './germinacion-tiempo-temperatura';
+import { cantidadPlantasSetoMetros } from './cantidad-plantas-seto-metros';
+import { hidroponiaNutrientesEcPpm } from './hidroponia-nutrientes-ec-ppm';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3151,4 +3170,23 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'biodegradacion-residuo-tiempo': biodegradacionResiduoTiempo,
   'luz-natural-ahorro-iluminacion': luzNaturalAhorroIluminacion,
   'lluvia-captacion-techo-m3-anual': lluviaCaptacionTechoM3Anual,
+  'tierra-cantero-m3-litros': tierraCanteroM3Litros,
+  'semillas-por-m2-huerta': semillasPorM2Huerta,
+  'agua-riego-plantas-dia': aguaRiegoPlantasDia,
+  'compost-tiempo-maduracion': compostTiempoMaduracion,
+  'calendario-siembra-hemisferio-sur': calendarioSiembraHemisferioSur,
+  'calendario-siembra-hemisferio-norte': calendarioSiembraHemisferioNorte,
+  'cantidad-cesped-semillas-kg-m2': cantidadCespedSemillasKgM2,
+  'podar-rosal-cuando-fecha': podarRosalCuandoFecha,
+  'macetas-tamano-planta': macetasTamanoPlanta,
+  'luz-solar-horas-planta': luzSolarHorasPlanta,
+  'ph-suelo-correccion-calcio': phSueloCorreccionCalcio,
+  'drenaje-grava-maceta': drenajeGravaMaceta,
+  'zona-usda-clima': zonaUsdaClima,
+  'distancia-entre-plantas-huerto': distanciaEntrePlantasHuerto,
+  'cosecha-esperada-huerta-kg': cosechaEsperadaHuertaKg,
+  'mulching-espesor-cantidad': mulchingEspesorCantidad,
+  'germinacion-tiempo-temperatura': germinacionTiempoTemperatura,
+  'cantidad-plantas-seto-metros': cantidadPlantasSetoMetros,
+  'hidroponia-nutrientes-ec-ppm': hidroponiaNutrientesEcPpm,
 };
