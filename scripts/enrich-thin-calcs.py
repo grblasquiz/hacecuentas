@@ -104,14 +104,107 @@ SUBTYPE_KEYWORDS = {
     "viaje": ["maletas-peso", "equipaje-peso", "cantidad-ropa-viaje", "jet-lag", "presupuesto-mochilero",
               "hotel-precio-noches", "visa-turismo", "seguro-viaje", "itinerario-ciudades",
               "gasolina-viaje", "autovia-peajes", "zona-horaria", "carry-on-liquidos"],
+    "idioma": ["idioma-", "aprender-idioma", "traduccion-", "duolingo", "idiomas-", "-idioma-",
+               "horas-ingles", "vocabulario-", "mcer-", "fsi-", "flashcards-idioma",
+               "anki-idioma", "podcasts-idioma", "peliculas-sin-subtitulos", "canciones-idioma",
+               "cognados-", "acento-extranjero", "apps-idioma", "dictado-velocidad",
+               "ensayos-semanales", "caligrafia-chino", "plan-estudio-idioma", "horas-caligrafia"],
+    "automotor": ["auto-", "-auto", "moto-", "-moto", "neumatico", "motor", "combustible-auto",
+                  "velocidad-auto", "cilindrada-", "hp-kw", "bateria-auto", "aceite-motor",
+                  "correa-distribucion", "seguro-auto", "patente-auto", "rpm-", "octanaje",
+                  "ciclomotor-"],
+    "medio_ambiente": ["huella-carbono", "co2-", "-co2", "efecto-invernadero", "compensacion-co2",
+                       "ahorro-co2", "emisiones-", "reciclaje-", "compost", "agua-ahorro",
+                       "energia-solar", "panel-solar-autoconsumo", "aerogenerador-",
+                       "cargador-desenchufar", "lluvia-captacion", "bolsas-plasticas", "papel-ahorrado",
+                       "biodiversidad-", "zona-usda"],
+    "fisica_ciencia": ["velocidad-caida", "aceleracion-", "fuerza-", "energia-cinetica", "energia-potencial",
+                       "volumen-cono", "volumen-esfera", "volumen-cilindro", "trabajo-mecanico",
+                       "ley-hooke", "ley-ohm", "impedancia-", "resistencia-", "tension-",
+                       "efecto-doppler", "gas-ideal", "empuje-arquimedes", "presion-hidrostatica",
+                       "calor-especifico", "desintegracion-radioactiva", "momento-angular",
+                       "entropia-", "eficiencia-carnot", "energia-fotones", "dilucion-"],
+    "deportes_entrenamiento": ["1rm-", "plan-entrenamiento", "pace-", "pace-objetivo", "fc-zonas",
+                               "zonas-entrenamiento", "ftp-", "power-zones", "critical-power",
+                               "mlss-", "pace-100m", "swolf-", "tiempo-descanso-ejercicio",
+                               "frecuencia-entrenamiento", "volumen-semanal-series",
+                               "isotonica-", "carga-semanal-running", "proyeccion-10k",
+                               "proyeccion-21k", "calorias-gym", "calorias-escalada",
+                               "calorias-boxeo", "calorias-surf", "gel-energetico",
+                               "descanso-post-maraton", "maraton-", "ciclismo-aero",
+                               "riegel-", "cameron-"],
+    "salud_familia": ["costo-total-criar-hijo", "costo-criar", "panales-por-dia", "onzas-biberon",
+                       "mesada-por-edad", "vacunas-faltantes", "edad-ingreso-escolar",
+                       "ahorro-universidad-hijo", "tiempo-pantalla", "dosis-pediatrica",
+                       "costo-fiesta-cumpleanos", "dias-licencia-maternidad", "fiestas-cumple",
+                       "altura-adulta-hijo", "horas-sueno-hijo", "aumento-peso-embarazo",
+                       "hitos-desarrollo", "frecuencia-desparasitar", "kilos-equipaje-viaje-bebe",
+                       "numero-cuidadores", "gasto-inicio-escolar", "edad-conversar",
+                       "actividades-extra-ninos", "horas-pareja", "costo-emanciparse",
+                       "tiempo-proceso-adopcion", "etapas-duelo"],
+    "electronica": ["resistencia-led", "potencia-electrica", "divisor-voltaje", "cable-awg",
+                    "caida-tension", "consumo-electrodomestico", "transformador-",
+                    "codigo-colores-resistencia", "watts-amperios", "impedancia-circuito",
+                    "servo-pwm", "adaptador-enchufe", "ups-autonomia", "consumo-watts-pc"],
+    "cocina_especifica": ["pizza-porcion", "sushi-", "achura-", "torta-porcion", "empanadas",
+                          "receta-escalar", "marinado-", "horneo-", "hamburguesas"],
+    "construccion_obra": ["zapata-", "columna-", "viga-", "escalera-", "techos-",
+                          "losa-", "pared-", "contrapiso-", "zocalo-", "canaletas",
+                          "machihembrado", "acero-kg-m2", "yeso-cielorraso", "revestimiento-",
+                          "aislacion-", "ladrillos-hueco", "corte-optimo", "carpinteria-"],
+    "jardineria": ["jardin-", "jardines-", "huerta-", "huerto-", "sembrar-", "germinacion-",
+                   "fertilizante-", "semillas-", "plantas-", "cesped-semillas", "riego-",
+                   "compostaje-volumen", "arbol-", "macetas-", "hidroponia-", "luz-solar-",
+                   "lombrices-"],
+    "tecnologia": ["dns-ttl", "subnetting-", "raid-", "wifi-", "cable-ethernet", "consumo-watts-pc",
+                   "dpi-ppp", "fps-fluidez", "tiempo-descarga", "almacenamiento-video",
+                   "ancho-banda", "api-tokens", "bcrypt-", "rate-limit-api", "uptime-",
+                   "big-o", "cloud-ec2", "jpg-calidad", "tasa-compresion", "ram-", "bateria-",
+                   "hashes-", "imagen-docker", "lineas-codigo", "tiempo-crackear",
+                   "conexiones-db", "tamano-repo-git"],
+    "matematica_escolar": ["ecuacion-cuadratica", "sistema-ecuaciones", "distancia-dos-puntos",
+                           "teorema-pitagoras", "area-", "perimetro-", "derivada-", "integral-",
+                           "determinante-", "matriz-", "factorial-", "combinaciones-",
+                           "permutaciones-", "logaritmo-", "mcd-mcm", "conversion-base",
+                           "porcentaje-", "regla-de-tres", "progresion-aritmetica",
+                           "progresion-geometrica", "desvio-estandar", "regresion-lineal",
+                           "probabilidad-binomial", "estadistica-", "mediana-moda",
+                           "conversion-grados-radianes", "seno-coseno", "celsius-fahrenheit",
+                           "trigonometria-"],
 }
 
 
-def detect_subtype(slug):
+CATEGORY_FALLBACK = {
+    "finanzas": "finanzas_univ",
+    "salud": "salud_universal",
+    "familia": "salud_familia",
+    "deportes": "deportes_entrenamiento",
+    "ciencia": "fisica_ciencia",
+    "electronica": "electronica",
+    "construccion": "construccion_obra",
+    "automotor": "automotor",
+    "idiomas": "idioma",
+    "tecnologia": "tecnologia",
+    "matematica": "matematica_escolar",
+    "medio-ambiente": "medio_ambiente",
+    "jardineria": "jardineria",
+    "cocina": "cocina_especifica",
+    "mascotas": "mascotas_univ",
+    "viajes": "viaje",
+    "negocios": "negocios_profesional",
+    "educacion": "educacion",
+    "marketing": "negocios_profesional",
+}
+
+
+def detect_subtype(slug, category=None):
     for subtype, keywords in SUBTYPE_KEYWORDS.items():
         for kw in keywords:
             if kw in slug:
                 return subtype
+    # Fallback to category
+    if category and category in CATEGORY_FALLBACK:
+        return CATEGORY_FALLBACK[category]
     return "generic"
 
 
@@ -205,6 +298,72 @@ SOURCES_BY_SUBTYPE = {
         {"name": "IATA - International Air Transport Association", "url": "https://www.iata.org/"},
         {"name": "OMT - Organización Mundial del Turismo", "url": "https://www.unwto.org/es"},
         {"name": "Cancillería Argentina - Información para viajar", "url": "https://www.cancilleria.gob.ar/"},
+    ],
+    "idioma": [
+        {"name": "FSI - Foreign Service Institute (horas de aprendizaje)", "url": "https://www.state.gov/foreign-service-institute/"},
+        {"name": "MCER - Marco Común Europeo de Referencia", "url": "https://www.coe.int/es/web/common-european-framework-reference-languages"},
+        {"name": "Instituto Cervantes - Niveles y exámenes", "url": "https://www.cervantes.es/"},
+    ],
+    "automotor": [
+        {"name": "DNRPA - Registros Propiedad Automotor", "url": "https://www.dnrpa.gov.ar/"},
+        {"name": "ANSV - Agencia Nacional de Seguridad Vial", "url": "https://www.argentina.gob.ar/seguridadvial"},
+        {"name": "ACA - Automóvil Club Argentino", "url": "https://www.aca.org.ar/"},
+    ],
+    "medio_ambiente": [
+        {"name": "EPA - US Environmental Protection Agency", "url": "https://www.epa.gov/es"},
+        {"name": "IPCC - Panel Intergubernamental sobre Cambio Climático", "url": "https://www.ipcc.ch/languages-2/spanish/"},
+        {"name": "Ministerio de Ambiente Argentina", "url": "https://www.argentina.gob.ar/ambiente"},
+    ],
+    "fisica_ciencia": [
+        {"name": "NIST - National Institute of Standards and Technology", "url": "https://www.nist.gov/"},
+        {"name": "CODATA - Comité de Datos Científicos", "url": "https://www.codata.org/"},
+        {"name": "Britannica - Enciclopedia científica", "url": "https://www.britannica.com/"},
+    ],
+    "deportes_entrenamiento": [
+        {"name": "ACSM - American College of Sports Medicine", "url": "https://www.acsm.org/"},
+        {"name": "ISSN - International Society of Sports Nutrition", "url": "https://www.sportsnutritionsociety.org/"},
+        {"name": "NSCA - National Strength and Conditioning Association", "url": "https://www.nsca.com/"},
+    ],
+    "salud_familia": [
+        {"name": "AAP - American Academy of Pediatrics", "url": "https://www.aap.org/"},
+        {"name": "UNICEF - Salud materno-infantil", "url": "https://www.unicef.org/es"},
+        {"name": "SAP - Sociedad Argentina de Pediatría", "url": "https://www.sap.org.ar/"},
+    ],
+    "electronica": [
+        {"name": "IEEE - Institute of Electrical and Electronics Engineers", "url": "https://www.ieee.org/"},
+        {"name": "IEC - International Electrotechnical Commission", "url": "https://www.iec.ch/"},
+        {"name": "IRAM - Normas electrotécnicas argentinas", "url": "https://www.iram.org.ar/"},
+    ],
+    "cocina_especifica": [
+        {"name": "Consejo Argentino sobre Seguridad Alimentaria", "url": "https://www.argentina.gob.ar/salud/alimentacion-saludable"},
+        {"name": "Chef Guides - Cocina profesional", "url": "https://www.chefguide.com/"},
+        {"name": "Cocineros Argentinos", "url": "https://cocinerosargentinos.com/"},
+    ],
+    "construccion_obra": [
+        {"name": "Cámara Argentina de la Construcción", "url": "https://www.camarco.org.ar/"},
+        {"name": "Instituto del Cemento Portland Argentino", "url": "https://www.icpa.org.ar/"},
+        {"name": "IRAM - Normas de construcción", "url": "https://www.iram.org.ar/"},
+    ],
+    "jardineria": [
+        {"name": "INTA - Instituto Nacional de Tecnología Agropecuaria", "url": "https://www.argentina.gob.ar/inta"},
+        {"name": "USDA - Guías de jardinería", "url": "https://www.usda.gov/topics/farming"},
+        {"name": "Jardín Botánico - Recursos hortícolas", "url": "https://jardinbotanico.buenosaires.gob.ar/"},
+    ],
+    "tecnologia": [
+        {"name": "MDN Web Docs - Desarrollo web", "url": "https://developer.mozilla.org/es/"},
+        {"name": "W3C - Estándares de internet", "url": "https://www.w3.org/"},
+        {"name": "IETF - Internet Engineering Task Force", "url": "https://www.ietf.org/"},
+    ],
+    "matematica_escolar": [
+        {"name": "Khan Academy - Matemáticas", "url": "https://es.khanacademy.org/math"},
+        {"name": "Wolfram MathWorld - Referencia matemática", "url": "https://mathworld.wolfram.com/"},
+        {"name": "Ministerio de Educación - Currículum matemática", "url": "https://www.argentina.gob.ar/educacion"},
+    ],
+    "negocios_profesional": [
+        {"name": "Harvard Business Review - Estrategia y gestión", "url": "https://hbr.org/"},
+        {"name": "SEMrush - Research de mercado", "url": "https://www.semrush.com/"},
+        {"name": "Upwork / Fiverr - Benchmarks freelance", "url": "https://www.upwork.com/"},
+        {"name": "Stack Overflow Developer Survey - Salarios IT", "url": "https://survey.stackoverflow.co/"},
     ],
     "generic": [
         {"name": "Hacé Cuentas - Metodología", "url": "https://hacecuentas.com/metodologia"},
@@ -320,6 +479,19 @@ def build_explanation(slug, h1, desc, category, subtype, fields_info):
         "fecha_cuanto_falta": f"Los **cálculos de tiempo y fechas** usan el calendario gregoriano (1582) adoptado universalmente. Días hábiles, feriados y vencimientos varían por país.",
         "relacion_vida": f"Los **cálculos de relaciones y vida social** se basan en investigaciones (Gottman Institute, Dunbar). Son orientativos — cada relación es única.",
         "viaje": f"Los **viajes internacionales** requieren planificación: visas, equipaje, presupuesto, seguros. Regulaciones IATA, OACI y cada país tienen normas específicas.",
+        "idioma": f"**Aprender un idioma** es un esfuerzo sostenido de cientos de horas. La ciencia cognitiva (Ebbinghaus, spaced repetition) + inmersión + práctica activa son los pilares demostrados por FSI y Cambridge.",
+        "automotor": f"Los **cálculos automotrices** son esenciales para dueños de autos, motos y otros vehículos: rendimiento de combustible, costos de mantenimiento, presión de neumáticos, conversiones de potencia, tiempos de amortización.",
+        "medio_ambiente": f"El **medio ambiente** es un tema clave del siglo XXI. Medir tu impacto (CO₂, agua, residuos) y reducirlo con acciones concretas es responsabilidad individual y colectiva.",
+        "fisica_ciencia": f"La **física aplicada** resuelve problemas cotidianos: desde la caída libre hasta la electricidad del hogar. Fórmulas validadas en experimentos durante siglos.",
+        "deportes_entrenamiento": f"El **entrenamiento deportivo** combina ciencia (fisiología, biomecánica) y práctica. Las zonas de intensidad, carga progresiva, descanso y nutrición forman el sistema completo.",
+        "salud_familia": f"La **familia y crianza** involucran salud, economía, educación. Cada etapa tiene hitos, gastos y decisiones específicas.",
+        "electronica": f"La **electrónica** se rige por leyes de Ohm, Kirchhoff, Faraday. Aplicar fórmulas evita errores costosos y fallos eléctricos.",
+        "cocina_especifica": f"La **cocina con precisión** mejora resultados. Porciones, escalado de recetas, tiempos de cocción siguen patrones predictibles.",
+        "construccion_obra": f"La **construcción** requiere cálculos técnicos: hormigón, acero, ladrillos, revoques, impermeabilización. IRAM y CAC estandarizan procesos.",
+        "jardineria": f"La **jardinería/huerta** combina agronomía, botánica y clima. INTA publica guías locales para Argentina.",
+        "tecnologia": f"Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.",
+        "matematica_escolar": f"Las **matemáticas** son herramientas universales: álgebra, geometría, cálculo, estadística. Aplicadas en ingeniería, ciencia, finanzas, vida cotidiana.",
+        "negocios_profesional": f"Los **cálculos de negocios, marketing y freelance** son esenciales para emprendedores y profesionales independientes: precios por hora, CAC, LTV, márgenes, ROI, proyecciones. Decisiones data-driven basadas en benchmarks del sector.",
         "generic": f"Esta calculadora aplica la fórmula estándar internacional para el cálculo requerido. Los valores se actualizan periódicamente.",
     }
 
@@ -488,6 +660,19 @@ def build_intro(h1, desc, subtype, category):
         "fecha_cuanto_falta": f"Los cálculos de tiempo y fechas son esenciales para planificar eventos, deadlines y metas. Considerar feriados, días hábiles y husos horarios evita sorpresas. ",
         "relacion_vida": f"Las relaciones humanas siguen patrones estudiados por la psicología social. Entenderlos te ayuda a tomar mejores decisiones personales. ",
         "viaje": f"Planificar viajes bien te ahorra tiempo, dinero y dolores de cabeza. Visas, equipaje, presupuesto y seguros son los 4 ejes críticos. ",
+        "idioma": f"Aprender un idioma requiere horas de exposición dosificada. Según FSI, para hispanohablantes: italiano/portugués ~600h, inglés/francés ~900h, alemán ~1100h, árabe/chino ~2200h. Estrategia: consistencia > intensidad. ",
+        "automotor": f"El mantenimiento y operación eficiente del auto implican cálculos de consumo, potencia, presión, torque y rendimiento. Aplicar las fórmulas correctas evita sobreconsumo y daños mecánicos. ",
+        "medio_ambiente": f"La huella de carbono mide el impacto ambiental de actividades humanas. Conocer tus emisiones de CO₂ te permite reducirlas con acciones concretas (transporte, energía, consumo, alimentación). ",
+        "fisica_ciencia": f"Las leyes físicas son universales y deterministas. Conocer las fórmulas te permite resolver problemas de movimiento, energía, fuerzas, ondas, termodinámica y electromagnetismo aplicados a la vida real. ",
+        "deportes_entrenamiento": f"El entrenamiento deportivo se basa en principios fisiológicos (adaptación, supercompensación, especificidad). Las zonas de intensidad, la carga semanal y la recuperación son pilares del rendimiento. ",
+        "salud_familia": f"La crianza y bienestar familiar requieren planificación en múltiples dimensiones: salud, economía, educación, tiempo de calidad. Cada etapa (embarazo, bebé, niñez, adolescencia) tiene hitos y gastos específicos. ",
+        "electronica": f"La electrónica básica se rige por leyes de Ohm, Kirchhoff y principios de semiconductores. Cálculos de resistencia, potencia, voltaje y amperaje son la base para diseñar y mantener circuitos. ",
+        "cocina_especifica": f"La cocina exitosa combina técnica, proporciones y tiempo. Las recetas usan cantidades por porción; escalar requiere conversiones precisas para mantener el balance de sabor y textura. ",
+        "construccion_obra": f"Construir o refaccionar requiere cálculos precisos: cantidad de materiales, dosificación de hormigón, rendimiento por m², costos unitarios. Errores típicos generan sobrantes, faltantes o fallas estructurales. ",
+        "jardineria": f"La jardinería y huerta exitosa combina conocimiento del clima, suelo, especies y calendario de siembra. Los cálculos de superficie, cantidad de plantas y riego son fundamentales para la planificación. ",
+        "tecnologia": f"Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. ",
+        "matematica_escolar": f"Las matemáticas escolares y universitarias se apoyan en fórmulas estándar validadas internacionalmente. Álgebra, geometría, cálculo, estadística y trigonometría son las áreas más consultadas. ",
+        "negocios_profesional": f"Los negocios y profesionales independientes dependen de cálculos precisos: costos por hora, margen de ganancia, CAC, LTV, ROI, break-even. Benchmarks del sector y data-driven thinking son clave para decisiones rentables. ",
         "generic": f"Esta calculadora te ayuda con un cálculo específico aplicando las fórmulas y referencias más usadas. ",
     }
 
@@ -528,7 +713,7 @@ def enrich_calc(path):
     desc = d.get("description", "")
     category = d.get("category", "generic")
 
-    subtype = detect_subtype(slug)
+    subtype = detect_subtype(slug, category)
 
     # Expand explanation
     d["explanation"] = build_explanation(slug, h1, desc, category, subtype, d.get("fields", []))
@@ -550,24 +735,38 @@ def enrich_calc(path):
 
 
 def main():
+    import sys
+    only_generic = "--only-generic" in sys.argv
     all_calcs = list(CALCS_DIR.glob("*.json"))
     thin_calcs = []
     for f in all_calcs:
         try:
             d = json.loads(f.read_text())
-            if len(d.get("explanation", "")) < 800:
-                thin_calcs.append(f)
+            exp = d.get("explanation", "")
+            intro = d.get("intro", "")
+            if only_generic:
+                # Re-procesar solo las que quedaron como generic previamente
+                if ("Esta calculadora aplica la fórmula estándar internacional" in exp or
+                    "Esta calculadora te ayuda con un cálculo específico" in intro):
+                    thin_calcs.append(f)
+            else:
+                if len(exp) < 800:
+                    thin_calcs.append(f)
         except:
             pass
 
-    print(f"Encontradas {len(thin_calcs)} calcs thin")
+    print(f"Encontradas {len(thin_calcs)} calcs a enriquecer")
 
     enriched = 0
     by_subtype = defaultdict(int)
 
     for f in thin_calcs:
-        slug = f.stem
-        subtype = detect_subtype(slug)
+        try:
+            d = json.loads(f.read_text())
+            category = d.get("category", "")
+        except:
+            category = ""
+        subtype = detect_subtype(f.stem, category)
         by_subtype[subtype] += 1
         if enrich_calc(f):
             enriched += 1
