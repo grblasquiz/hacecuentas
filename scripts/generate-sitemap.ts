@@ -184,17 +184,40 @@ for (const c of calcs as any[]) {
   (byCat[cat] ||= []).push(c);
 }
 
+// Keywords de calcs con data frecuentemente actualizada (daily changefreq + prio 0.95)
+const DAILY_KEYWORDS = ['dolar', 'plazo-fijo', 'inflacion', 'uva', 'cripto', 'bitcoin', 'euro', 'bcra'];
+// Calcs nuevas/recientes (creadas en últimos 60 días) se marcan con priority alta + weekly
+const NEW_DAYS = 60;
+
+function getPriorityAndFreq(slug: string, filePath: string, buildDate: string): { priority: string; changefreq: string } {
+  if (topSlugs.has(slug)) return { priority: '0.9', changefreq: 'weekly' };
+  if (DAILY_KEYWORDS.some(k => slug.includes(k))) return { priority: '0.95', changefreq: 'daily' };
+
+  // Calcs recientes = prioridad 0.8
+  try {
+    const { statSync } = require('node:fs');
+    const mtime = statSync(filePath).mtime;
+    const daysOld = (Date.now() - mtime.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysOld < NEW_DAYS) return { priority: '0.8', changefreq: 'weekly' };
+  } catch {}
+  return { priority: '0.7', changefreq: 'monthly' };
+}
+
 for (const [cat, items] of Object.entries(byCat).sort()) {
   const urls: Url[] = [
     // Categoría misma
     { loc: `${site}/categoria/${cat}`, priority: '0.8', changefreq: 'weekly', lastmod: buildDate },
     // Calcs de esa categoría
-    ...items.map((c: any) => ({
-      loc: `${site}/${c.slug}`,
-      priority: topSlugs.has(c.slug) ? '0.9' : '0.7',
-      changefreq: 'weekly',
-      lastmod: getLastMod(join(CALCS_DIR, `${c.formulaId || c.slug}.json`), buildDate),
-    })),
+    ...items.map((c: any) => {
+      const filePath = join(CALCS_DIR, `${c.formulaId || c.slug}.json`);
+      const pf = getPriorityAndFreq(c.slug, filePath, buildDate);
+      return {
+        loc: `${site}/${c.slug}`,
+        priority: pf.priority,
+        changefreq: pf.changefreq,
+        lastmod: getLastMod(filePath, buildDate),
+      };
+    }),
   ];
   sitemaps.push({ name: `sitemap-calcs-${cat}.xml`, urls });
 }

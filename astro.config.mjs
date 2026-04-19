@@ -15,10 +15,10 @@ export default defineConfig({
 
   build: {
     format: 'file',
-    // Inline CSS en el HTML para eliminar render-blocking (mobile FCP).
-    // 'always' = todos los stylesheets de page van inline. Tradeoff: HTML pesa más
-    // (+30-40 KB en home) pero 0 roundtrips extra en mobile 3G/4G.
-    inlineStylesheets: 'always',
+    // Inline solo CSS crítico (chico). El CSS grande se externaliza con caché propio,
+    // reduciendo HTML de 150KB → ~80KB (mejor LCP en mobile, 3G y de paso cachea entre pages).
+    // 'auto' ~ 4KB threshold: Astro decide inline vs external.
+    inlineStylesheets: 'auto',
   },
 
   compressHTML: true,
