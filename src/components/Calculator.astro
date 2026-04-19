@@ -58,6 +58,18 @@ export interface CalcConfig {
     primary?: boolean;
     suffix?: string;
   }[];
+  interactive?: {
+    sliders: Array<{
+      fieldId: string;
+      min: number;
+      max: number;
+      step: number;
+      label: string;
+      format?: 'currency' | 'number' | 'percentage';
+      prefix?: string;
+      suffix?: string;
+    }>;
+  };
 }
 
 export interface Props {
@@ -321,6 +333,30 @@ const formatFreshnessDate = (iso: string): string => {
     <div class="chart-wrap" data-chart-wrap hidden>
       <canvas data-chart-canvas role="img" aria-label="Gráfico del resultado"></canvas>
     </div>
+
+    {config.interactive && config.interactive.sliders && config.interactive.sliders.length > 0 && (
+      <div class="what-if" data-what-if hidden>
+        <div class="what-if-head">
+          <span class="what-if-badge">🎚️ ¿Qué pasa si...?</span>
+          <span class="what-if-hint">Movelo y mirá cómo cambia todo</span>
+        </div>
+        <div class="what-if-sliders">
+          {config.interactive.sliders.map((s) => (
+            <div class="what-if-slider" data-what-if-slider data-field={s.fieldId} data-format={s.format || 'number'} data-prefix={s.prefix || ''} data-suffix={s.suffix || ''}>
+              <div class="what-if-row">
+                <label>{s.label}</label>
+                <span class="what-if-value" data-slider-value>—</span>
+              </div>
+              <input type="range" min={s.min} max={s.max} step={s.step} data-slider-input aria-label={s.label} />
+              <div class="what-if-range">
+                <span>{s.prefix || ''}{s.min}{s.suffix || ''}</span>
+                <span>{s.prefix || ''}{s.max}{s.suffix || ''}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
 
     {disclaimer && (
       <div class="inline-disclaimer" role="note">
@@ -990,6 +1026,56 @@ const formatFreshnessDate = (iso: string): string => {
   @media (max-width: 640px) {
     .chart-wrap canvas { height: 240px !important; }
     .chart-wrap { padding: 0.625rem; }
+  }
+
+  /* What-if interactive sliders */
+  .what-if {
+    margin-top: 1rem;
+    padding: 1rem 1.125rem 1.125rem;
+    background: linear-gradient(135deg, rgba(37,99,235,0.06), rgba(37,99,235,0.02));
+    border: 1px solid rgba(37,99,235,0.22);
+    border-radius: var(--radius-sm);
+  }
+  :root[data-theme="dark"] .what-if {
+    background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(96,165,250,0.03));
+    border-color: rgba(96,165,250,0.25);
+  }
+  .what-if[hidden] { display: none; }
+  .what-if-head {
+    display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap;
+    margin-bottom: 0.875rem;
+  }
+  .what-if-badge {
+    font-weight: 700; font-size: 0.9375rem; color: var(--accent-strong);
+  }
+  .what-if-hint {
+    font-size: 0.8125rem; color: var(--muted);
+  }
+  .what-if-sliders {
+    display: grid; gap: 0.875rem;
+  }
+  .what-if-slider {
+    display: grid; gap: 0.375rem;
+  }
+  .what-if-row {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem;
+  }
+  .what-if-row label {
+    font-size: 0.8125rem; font-weight: 600; color: var(--text);
+  }
+  .what-if-value {
+    font-variant-numeric: tabular-nums; font-weight: 700;
+    color: var(--accent-strong); font-size: 0.9375rem;
+  }
+  .what-if-slider input[type=range] {
+    width: 100%; margin: 0;
+    accent-color: var(--accent);
+    height: 6px;
+  }
+  .what-if-range {
+    display: flex; justify-content: space-between;
+    font-size: 0.6875rem; color: var(--muted);
+    font-variant-numeric: tabular-nums;
   }
 
   /* Disclaimer inline */
@@ -1940,6 +2026,107 @@ const formatFreshnessDate = (iso: string): string => {
     const chartCanvas = container.querySelector<HTMLCanvasElement>('[data-chart-canvas]');
     let chartInstance: any = null;
     let lastChartSpec: any = null;
+    let whatIfInitialized = false;
+    const whatIfEl = container.querySelector<HTMLElement>('[data-what-if]');
+
+    // Formatear valor de slider según format/prefix/suffix
+    function formatSliderValue(n: number, fmt: string, prefix: string, suffix: string): string {
+      if (fmt === 'currency') {
+        return prefix + Math.round(n).toLocaleString('es-AR') + suffix;
+      }
+      if (fmt === 'percentage') {
+        return prefix + (n % 1 === 0 ? n.toString() : n.toFixed(2)) + (suffix || '%');
+      }
+      return prefix + (n % 1 === 0 ? n.toString() : n.toFixed(2)) + suffix;
+    }
+
+    // Lee el valor actual de un input del form (respetando thousands)
+    function getFormFieldValue(fieldId: string): number {
+      const el = form.querySelector<HTMLInputElement>(`[name="${fieldId}"]`);
+      if (!el) return NaN;
+      const raw = el.value || (el as HTMLInputElement).placeholder || '';
+      if (el.dataset.format === 'thousands' && raw) return parseThousands(raw);
+      const n = Number(raw);
+      return isNaN(n) ? NaN : n;
+    }
+
+    // Corre la fórmula con overrides desde sliders y actualiza outputs + chart (sin side effects)
+    let whatIfTimer: any = null;
+    function runWhatIfNow(overrides: Record<string, number>) {
+      if (!formulaRef) return;
+      const inputs: Record<string, string | number> = {};
+      const data = new FormData(form);
+      data.forEach((v, k) => {
+        const el = form.querySelector<HTMLInputElement>(`[name="${k}"]`);
+        let raw = v as string;
+        if (el?.dataset.format === 'thousands' && raw) {
+          inputs[k] = parseThousands(raw);
+        } else {
+          const num = Number(raw);
+          inputs[k] = !isNaN(num) && raw !== '' ? num : raw;
+        }
+      });
+      Object.assign(inputs, overrides);
+      let output: any;
+      try { output = formulaRef(inputs); } catch { return; }
+      // Actualizar outputs (sin animar — cambios son rápidos)
+      container.querySelectorAll<HTMLElement>('[data-output]').forEach((el) => {
+        const outId = el.dataset.output!;
+        const fmt = el.dataset.format!;
+        const suf = el.dataset.suffix || '';
+        const val = output[outId];
+        const valueEl = el.querySelector<HTMLElement>('[data-value]')!;
+        valueEl.textContent = formatValue(val, fmt, suf);
+      });
+      // Actualizar chart (si corresponde)
+      if (output._chart && chartWrap && chartCanvas && (window as any).Chart) {
+        lastChartSpec = output._chart;
+        chartWrap.hidden = false;
+        chartInstance = renderChart((window as any).Chart, chartCanvas, output._chart, chartInstance);
+      }
+    }
+
+    function scheduleWhatIf(overrides: Record<string, number>) {
+      if (whatIfTimer) clearTimeout(whatIfTimer);
+      whatIfTimer = setTimeout(() => runWhatIfNow(overrides), 40);
+    }
+
+    // Inicializa sliders con los valores actuales del form tras el primer cálculo
+    function initWhatIf() {
+      if (whatIfInitialized || !whatIfEl) return;
+      whatIfInitialized = true;
+      const sliders = whatIfEl.querySelectorAll<HTMLElement>('[data-what-if-slider]');
+      sliders.forEach((sliderEl) => {
+        const fieldId = sliderEl.dataset.field!;
+        const fmt = sliderEl.dataset.format || 'number';
+        const prefix = sliderEl.dataset.prefix || '';
+        const suffix = sliderEl.dataset.suffix || '';
+        const input = sliderEl.querySelector<HTMLInputElement>('[data-slider-input]')!;
+        const valueEl = sliderEl.querySelector<HTMLElement>('[data-slider-value]')!;
+        const curVal = getFormFieldValue(fieldId);
+        const clamp = (v: number) => Math.max(Number(input.min), Math.min(Number(input.max), v));
+        if (!isNaN(curVal)) input.value = String(clamp(curVal));
+        valueEl.textContent = formatSliderValue(Number(input.value), fmt, prefix, suffix);
+        input.addEventListener('input', () => {
+          const v = Number(input.value);
+          valueEl.textContent = formatSliderValue(v, fmt, prefix, suffix);
+          // Recolectar TODOS los sliders para aplicar como overrides coherentes
+          const overrides: Record<string, number> = {};
+          whatIfEl.querySelectorAll<HTMLElement>('[data-what-if-slider]').forEach((s) => {
+            const fid = s.dataset.field!;
+            const i = s.querySelector<HTMLInputElement>('[data-slider-input]')!;
+            overrides[fid] = Number(i.value);
+          });
+          scheduleWhatIf(overrides);
+          // Sync con el input original del form (para que al guardar link sea coherente)
+          const formEl = form.querySelector<HTMLInputElement>(`[name="${fieldId}"]`);
+          if (formEl) {
+            if (formEl.dataset.format === 'thousands') formEl.value = formatThousands(String(v));
+            else formEl.value = String(v);
+          }
+        });
+      });
+    }
 
     // Live thousand-formatting on inputs marked data-format="thousands"
     form.querySelectorAll<HTMLInputElement>('input[data-format="thousands"]').forEach((inp) => {
@@ -2041,6 +2228,12 @@ const formatFreshnessDate = (iso: string): string => {
             chartWrap.hidden = true;
             if (chartInstance) { try { chartInstance.destroy(); } catch {} chartInstance = null; }
             lastChartSpec = null;
+          }
+
+          // Sliders "¿qué pasa si...?" — mostrar + inicializar tras primer cálculo
+          if (whatIfEl) {
+            whatIfEl.hidden = false;
+            initWhatIf();
           }
 
           // GA4 event + Google Ads conversion
