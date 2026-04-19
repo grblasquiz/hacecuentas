@@ -1,0 +1,35 @@
+name: Refresh lastReviewed (weekly)
+
+# Actualiza `lastReviewed` en calcs de datos frecuentes (dólar, inflación, UVA, cripto)
+# para que Google lea contenido "fresco" y mejorar ranking en keywords temporales.
+# Corre todos los lunes a las 08:00 UTC.
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run freshness script
+        run: python3 scripts/refresh-live-data-dates.py
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/content/calcs/
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(freshness): refresh lastReviewed para calcs con data frecuente"
+            git push
+          fi
