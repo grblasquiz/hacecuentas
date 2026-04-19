@@ -1794,6 +1794,26 @@ import { duolingoStreakProgresionDiariaIdioma } from './duolingo-streak-progresi
 import { horasCaligrafiaChinoKanjiPractica } from './horas-caligrafia-chino-kanji-practica';
 import { cancionesIdiomaAprenderLyricsMemoria } from './canciones-idioma-aprender-lyrics-memoria';
 import { appsIdiomaEfectividadComparacionNivel } from './apps-idioma-efectividad-comparacion-nivel';
+import { sueldoUomMetalurgicoBasicoNeto } from './sueldo-uom-metalurgico-basico-neto';
+import { sueldoEmpleadosComercioCct13075 } from './sueldo-empleados-comercio-cct-130-75';
+import { sueldoUocraConstruccionBasicoNeto } from './sueldo-uocra-construccion-basico-neto';
+import { sueldoDocenteArgentinaCargoAntiguedad } from './sueldo-docente-argentina-cargo-antiguedad';
+import { sueldoEmpleadaDomesticaHorasRetiro } from './sueldo-empleada-domestica-horas-retiro';
+import { sueldoSmataMecanicoAutomotorBasico } from './sueldo-smata-mecanico-automotor-basico';
+import { sueldoEmpleadoPublicoNacionalSinepAgrupamiento } from './sueldo-empleado-publico-nacional-sinep-agrupamiento';
+import { sueldoBancarioBcoNacionProvincia } from './sueldo-bancario-bco-nacion-provincia';
+import { sueldoCamioneroFedcamBasicoAdicionales } from './sueldo-camionero-fedcam-basico-adicionales';
+import { sueldoGastronomicoUthgraMozoCocinero } from './sueldo-gastronomico-uthgra-mozo-cocinero';
+import { sueldoChoferColectivoUtaUrbano } from './sueldo-chofer-colectivo-uta-urbano';
+import { sueldoPoliciaFederalGradoAntiguedad } from './sueldo-policia-federal-grado-antiguedad';
+import { sueldoEnfermeroHospitalPublicoCategoria } from './sueldo-enfermero-hospital-publico-categoria';
+import { sueldoAeronauticoPilotoAzafataTripulante } from './sueldo-aeronautico-piloto-azafata-tripulante';
+import { sueldoMunicipalEmpleadoBuenosAiresCategoria } from './sueldo-municipal-empleado-buenos-aires-categoria';
+import { sueldoMilitarFfaaSuboficialOficial } from './sueldo-militar-ffaa-suboficial-oficial';
+import { sueldoAbogadoRelacionDependenciaEstudio } from './sueldo-abogado-relacion-dependencia-estudio';
+import { sueldoMedicoResidenteHospitalPublico } from './sueldo-medico-residente-hospital-publico';
+import { sueldoProgramadorDesarrolladorArgentinaSeniority } from './sueldo-programador-desarrollador-argentina-seniority';
+import { sueldoPanaderoBasicoFeriadoNocturno } from './sueldo-panadero-basico-feriado-nocturno';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3587,4 +3607,24 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'horas-caligrafia-chino-kanji-practica': horasCaligrafiaChinoKanjiPractica,
   'canciones-idioma-aprender-lyrics-memoria': cancionesIdiomaAprenderLyricsMemoria,
   'apps-idioma-efectividad-comparacion-nivel': appsIdiomaEfectividadComparacionNivel,
+  'sueldo-uom-metalurgico-basico-neto': sueldoUomMetalurgicoBasicoNeto,
+  'sueldo-empleados-comercio-cct-130-75': sueldoEmpleadosComercioCct13075,
+  'sueldo-uocra-construccion-basico-neto': sueldoUocraConstruccionBasicoNeto,
+  'sueldo-docente-argentina-cargo-antiguedad': sueldoDocenteArgentinaCargoAntiguedad,
+  'sueldo-empleada-domestica-horas-retiro': sueldoEmpleadaDomesticaHorasRetiro,
+  'sueldo-smata-mecanico-automotor-basico': sueldoSmataMecanicoAutomotorBasico,
+  'sueldo-empleado-publico-nacional-sinep-agrupamiento': sueldoEmpleadoPublicoNacionalSinepAgrupamiento,
+  'sueldo-bancario-bco-nacion-provincia': sueldoBancarioBcoNacionProvincia,
+  'sueldo-camionero-fedcam-basico-adicionales': sueldoCamioneroFedcamBasicoAdicionales,
+  'sueldo-gastronomico-uthgra-mozo-cocinero': sueldoGastronomicoUthgraMozoCocinero,
+  'sueldo-chofer-colectivo-uta-urbano': sueldoChoferColectivoUtaUrbano,
+  'sueldo-policia-federal-grado-antiguedad': sueldoPoliciaFederalGradoAntiguedad,
+  'sueldo-enfermero-hospital-publico-categoria': sueldoEnfermeroHospitalPublicoCategoria,
+  'sueldo-aeronautico-piloto-azafata-tripulante': sueldoAeronauticoPilotoAzafataTripulante,
+  'sueldo-municipal-empleado-buenos-aires-categoria': sueldoMunicipalEmpleadoBuenosAiresCategoria,
+  'sueldo-militar-ffaa-suboficial-oficial': sueldoMilitarFfaaSuboficialOficial,
+  'sueldo-abogado-relacion-dependencia-estudio': sueldoAbogadoRelacionDependenciaEstudio,
+  'sueldo-medico-residente-hospital-publico': sueldoMedicoResidenteHospitalPublico,
+  'sueldo-programador-desarrollador-argentina-seniority': sueldoProgramadorDesarrolladorArgentinaSeniority,
+  'sueldo-panadero-basico-feriado-nocturno': sueldoPanaderoBasicoFeriadoNocturno,
 };
