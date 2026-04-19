@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
+import { CATEGORY_TO_GUIDE, GUIDE_TITLES, SIBLING_CATEGORIES, CATEGORY_TITLES, CATEGORY_ICONS } from '../../lib/category-guide-map';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
@@ -1095,6 +1096,13 @@ El consumo se mide en **kilovatios-hora (kWh)**: potencia del aparato (en watts)
 
 const m = meta[cat] || meta.finanzas;
 
+// Interlinking: guía pilar del tema + categorías hermanas
+const pillarSlug = CATEGORY_TO_GUIDE[cat];
+const pillarTitle = pillarSlug ? GUIDE_TITLES[pillarSlug] : null;
+const siblings = (SIBLING_CATEGORIES[cat] || []).filter(
+  (sc: string) => typeof sc === 'string' && CATEGORY_TITLES[sc]
+);
+
 // Schemas combinados: CollectionPage + BreadcrumbList + FAQPage
 const schemaCollection = {
   '@type': 'CollectionPage',
@@ -1183,6 +1191,18 @@ function md(text: string): string {
       </div>
     </div>
   </header>
+
+  {pillarSlug && pillarTitle && (
+    <aside class="pillar-cta">
+      <div class="pillar-cta-icon" aria-hidden="true">📘</div>
+      <div class="pillar-cta-body">
+        <span class="pillar-cta-eyebrow">Guía completa</span>
+        <strong>{pillarTitle}</strong>
+        <span class="pillar-cta-desc">Contexto, conceptos clave y cómo usar las calculadoras de {m.label.toLowerCase()}.</span>
+      </div>
+      <a class="pillar-cta-btn" href={`/guia/${pillarSlug}`}>Leer guía →</a>
+    </aside>
+  )}
 
   <div class="cat-toolbar">
     <label class="search-wrap" for={`cat-filter-${cat}`}>
@@ -1294,9 +1314,25 @@ function md(text: string): string {
     </section>
   )}
 
+  {siblings.length > 0 && (
+    <section class="cat-siblings">
+      <h2>Categorías relacionadas</h2>
+      <div class="sib-grid">
+        {siblings.map((sc: string) => (
+          <a href={`/categoria/${sc}`} class="sib-card">
+            <span class="sib-icon">{CATEGORY_ICONS[sc] || '🧮'}</span>
+            <span class="sib-name">{CATEGORY_TITLES[sc] || sc}</span>
+            <span class="sib-arrow" aria-hidden="true">→</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
   <aside class="cta-back">
     <p>¿Buscás otra categoría?</p>
     <a href="/" class="btn-ghost">Ver todas las calculadoras →</a>
+    <a href="/guias" class="btn-ghost-alt">📘 Ver todas las guías</a>
   </aside>
 
   <Footer slot="footer" />
@@ -1610,8 +1646,86 @@ function md(text: string): string {
     transition: all 0.15s;
   }
   .btn-ghost:hover { background: var(--accent); color: var(--bg); }
+  .btn-ghost-alt {
+    display: inline-flex;
+    margin-left: 0.5rem;
+    padding: 0.625rem 1.125rem;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .btn-ghost-alt:hover { background: var(--bg-soft); color: var(--accent); }
+
+  /* Pillar CTA (link a guía pilar del tema) */
+  .pillar-cta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    margin: 0 0 1.25rem;
+    background: linear-gradient(135deg, rgba(37,99,235,0.07), rgba(37,99,235,0.02));
+    border: 1px solid rgba(37,99,235,0.25);
+    border-radius: var(--radius);
+    flex-wrap: wrap;
+  }
+  :root[data-theme="dark"] .pillar-cta {
+    background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(96,165,250,0.03));
+    border-color: rgba(96,165,250,0.28);
+  }
+  .pillar-cta-icon { font-size: 1.8rem; }
+  .pillar-cta-body { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 0.15rem; }
+  .pillar-cta-eyebrow {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--accent-strong); font-weight: 700;
+  }
+  .pillar-cta-body strong { font-size: 1.0625rem; color: var(--text); font-weight: 700; }
+  .pillar-cta-desc { color: var(--text-muted); font-size: 0.875rem; }
+  .pillar-cta-btn {
+    padding: 0.5rem 1rem; border-radius: var(--radius-sm);
+    background: var(--accent); color: var(--bg);
+    font-weight: 600; font-size: 0.9375rem; text-decoration: none;
+    white-space: nowrap;
+  }
+  .pillar-cta-btn:hover { background: var(--accent-strong); }
+
+  /* Categorías hermanas */
+  .cat-siblings {
+    margin: 2.5rem 0 1rem;
+  }
+  .cat-siblings h2 {
+    font-size: 1.25rem; margin: 0 0 1rem; color: var(--text); font-weight: 700;
+  }
+  .sib-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.6rem;
+  }
+  .sib-card {
+    display: flex; align-items: center; gap: 0.7rem;
+    padding: 0.85rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text); text-decoration: none;
+    transition: all 0.15s;
+  }
+  .sib-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+  .sib-icon { font-size: 1.3rem; }
+  .sib-name { font-weight: 600; font-size: 0.9375rem; flex: 1; }
+  .sib-arrow { color: var(--accent); font-weight: 700; }
 
   @media (max-width: 640px) {
     .seo-content { padding: 1.5rem 1.25rem; }
+    .pillar-cta { padding: 0.875rem 1rem; }
+    .pillar-cta-btn { width: 100%; text-align: center; }
   }
 </style>

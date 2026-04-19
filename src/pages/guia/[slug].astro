@@ -3,25 +3,32 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { md } from '../../lib/markdown';
+import { GUIDE_TO_CATEGORIES, CATEGORY_TITLES, CATEGORY_ICONS, GUIDE_TITLES } from '../../lib/category-guide-map';
 
 export async function getStaticPaths() {
   const guias = import.meta.glob<any>('../../content/guias/*.json', { eager: true });
   const calcs = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
   const allCalcs = Object.values(calcs).map((m: any) => m.default || m);
+  const allGuides = Object.values(guias).map((m: any) => m.default || m);
 
   return Object.values(guias).map((mod: any) => {
     const g = mod.default || mod;
     // Resolver calcs referenciadas en cada sección
     const calcMap = new Map(allCalcs.map((c: any) => [c.slug, c]));
+    // Otras guías (siblings) para interlinking
+    const otherGuides = allGuides
+      .filter((og: any) => og.slug !== g.slug)
+      .map((og: any) => ({ slug: og.slug, h1: og.h1, icon: og.icon }));
     return {
       params: { slug: g.slug },
-      props: { guia: g, calcMap: Array.from(calcMap.entries()) },
+      props: { guia: g, calcMap: Array.from(calcMap.entries()), otherGuides },
     };
   });
 }
 
-const { guia, calcMap } = Astro.props;
+const { guia, calcMap, otherGuides } = Astro.props;
 const calcLookup = new Map(calcMap);
+const relatedCategories = GUIDE_TO_CATEGORIES[guia.slug] || [];
 
 const schema = {
   '@context': 'https://schema.org',
@@ -52,7 +59,7 @@ const schema = {
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
         { '@type': 'ListItem', position: 2, name: 'Guías', item: 'https://hacecuentas.com/guias' },
-        { '@type': 'ListItem', position: 3, name: guia.h1 },
+        { '@type': 'ListItem', position: 3, name: guia.h1, item: `https://hacecuentas.com/guia/${guia.slug}` },
       ],
     },
     {
@@ -72,6 +79,8 @@ const schema = {
   <article class="pillar-page">
     <nav class="breadcrumbs" aria-label="Ruta de navegación">
       <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/guias">Guías</a>
       <span class="sep" aria-hidden="true">/</span>
       <span class="current">{guia.h1}</span>
     </nav>
@@ -140,6 +149,36 @@ const schema = {
           <li><a href={s.url} rel="noopener nofollow" target="_blank">{s.name}</a></li>
         ))}
       </ul>
+    </section>
+
+    {relatedCategories.length > 0 && (
+      <section class="pillar-section related-cats">
+        <h2>Explorá calculadoras por categoría</h2>
+        <div class="cats-grid">
+          {relatedCategories.map((cat: string) => (
+            <a href={`/categoria/${cat}`} class="cat-card">
+              <span class="cat-icon">{CATEGORY_ICONS[cat] || '🧮'}</span>
+              <span class="cat-name">{CATEGORY_TITLES[cat] || cat}</span>
+              <span class="cat-arrow" aria-hidden="true">→</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <section class="pillar-section other-guides">
+      <h2>Otras guías útiles</h2>
+      <div class="guides-grid">
+        {otherGuides.map((og: any) => (
+          <a href={`/guia/${og.slug}`} class="guide-card">
+            <span class="guide-icon">{og.icon}</span>
+            <span class="guide-name">{og.h1}</span>
+          </a>
+        ))}
+      </div>
+      <p class="guides-index-link">
+        <a href="/guias">Ver todas las guías →</a>
+      </p>
     </section>
   </article>
 
@@ -347,6 +386,52 @@ const schema = {
     font-size: .92rem;
   }
   .sources li a:hover { background: var(--accent-soft); }
+
+  /* Related categories + other guides */
+  .related-cats .cats-grid,
+  .other-guides .guides-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: .6rem;
+  }
+  .cat-card {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .85rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    text-decoration: none;
+    transition: all .15s;
+  }
+  .cat-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+  .cat-icon { font-size: 1.4rem; }
+  .cat-name { font-weight: 600; font-size: .95rem; flex: 1; }
+  .cat-arrow { color: var(--accent); font-weight: 700; }
+  .guide-card {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .75rem .95rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    text-decoration: none;
+    font-size: .92rem;
+    transition: all .15s;
+  }
+  .guide-card:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+  .guide-icon { font-size: 1.2rem; }
+  .guide-name { font-weight: 600; }
+  .guides-index-link { margin-top: 1rem; text-align: center; }
+  .guides-index-link a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .guides-index-link a:hover { text-decoration: underline; }
 
   @media (max-width: 680px) {
     .pillar-page { padding: .5rem .8rem 4rem; }

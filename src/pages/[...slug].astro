@@ -6,6 +6,7 @@ import Calculator from '../components/Calculator.astro';
 import RelatedCalcs from '../components/RelatedCalcs.astro';
 import ScrollToTop from '../components/ScrollToTop.astro';
 import { md, mdInline } from '../lib/markdown';
+import { CATEGORY_TO_GUIDE, GUIDE_TITLES } from '../lib/category-guide-map';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
@@ -234,6 +235,11 @@ const useCases: string[] = calc.useCases || [];
 const example: { title?: string; steps?: string[]; result?: string } | null = calc.example || null;
 const keyTakeaway: string = calc.keyTakeaway || '';
 const relatedSlugs: string[] = calc.relatedSlugs || [];
+
+// Guía pilar del tema (para link contextual de SEO)
+// Se puede override con `calc.guideSlug`, si no, se deduce por categoría.
+const pillarGuideSlug: string | null = calc.guideSlug || CATEGORY_TO_GUIDE[calc.category] || null;
+const pillarGuideTitle: string | null = pillarGuideSlug ? GUIDE_TITLES[pillarGuideSlug] : null;
 
 // Lookup para related links dentro del contenido
 const allCalcsModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
@@ -507,6 +513,18 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
         )}
 
         <RelatedCalcs currentSlug={calc.slug} category={calc.category} limit={4} manualSlugs={relatedSlugs} />
+
+        {pillarGuideSlug && pillarGuideTitle && (
+          <aside class="guide-link-cta">
+            <span class="guide-link-icon" aria-hidden="true">📘</span>
+            <div class="guide-link-body">
+              <span class="guide-link-eyebrow">¿Querés entender más a fondo?</span>
+              <strong>Leé la guía: {pillarGuideTitle}</strong>
+              <span class="guide-link-desc">Contexto, conceptos y cómo combinar calculadoras del tema.</span>
+            </div>
+            <a href={`/guia/${pillarGuideSlug}`} class="guide-link-btn">Abrir guía →</a>
+          </aside>
+        )}
 
         <aside class="cta-back">
           <p>¿Buscabas otra calculadora?</p>
@@ -1288,6 +1306,40 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
   }
 
   /* CTA back */
+  .guide-link-cta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, rgba(37,99,235,0.07), rgba(37,99,235,0.02));
+    border: 1px solid rgba(37,99,235,0.25);
+    border-radius: var(--radius);
+    flex-wrap: wrap;
+  }
+  :root[data-theme="dark"] .guide-link-cta {
+    background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(96,165,250,0.03));
+    border-color: rgba(96,165,250,0.28);
+  }
+  .guide-link-icon { font-size: 1.8rem; flex-shrink: 0; }
+  .guide-link-body { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 0.15rem; }
+  .guide-link-eyebrow {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--accent-strong); font-weight: 700;
+  }
+  .guide-link-body strong { font-size: 1.0625rem; color: var(--text); font-weight: 700; }
+  .guide-link-desc { color: var(--text-muted); font-size: 0.875rem; }
+  .guide-link-btn {
+    padding: 0.5rem 1rem; border-radius: var(--radius-sm);
+    background: var(--accent); color: var(--bg);
+    font-weight: 600; font-size: 0.9375rem; text-decoration: none;
+    white-space: nowrap;
+  }
+  .guide-link-btn:hover { background: var(--accent-strong); }
+  @media (max-width: 640px) {
+    .guide-link-btn { width: 100%; text-align: center; }
+  }
+
   .cta-back {
     margin-top: 3.5rem;
     padding: 1.75rem;
