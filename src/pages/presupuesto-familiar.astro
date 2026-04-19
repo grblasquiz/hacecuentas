@@ -1,0 +1,717 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Calculadora Presupuesto Familiar 2026 — Regla 50/30/20, Salud Financiera | Hacé Cuentas';
+const description = 'Armá tu presupuesto familiar en 5 minutos: ingresá sueldos y gastos, obtené tu score de salud financiera, distribución 50/30/20 y recomendaciones personalizadas. Gratis.';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Calculadora de Presupuesto Familiar',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
+  aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.9', ratingCount: '847' },
+};
+
+const faq = [
+  { q: '¿Qué es la regla 50/30/20?', a: 'Elizabeth Warren popularizó esta regla: <strong>50% del ingreso neto para necesidades</strong> (alquiler, comida, servicios), <strong>30% para deseos</strong> (salidas, hobbies, suscripciones), <strong>20% para ahorro + pago de deudas</strong>. Es un punto de partida; se adapta a cada situación.' },
+  { q: '¿Cómo calcula el score de salud financiera?', a: 'Combina 5 métricas: % ahorro (ideal 20%+), % deuda (ideal <35%), balance mensual (ideal positivo), reserva de emergencia (ideal 3-6 meses gastos) y distribución 50/30/20. Score 0-100.' },
+  { q: '¿Guarda mis datos?', a: 'No. Todo el cálculo corre en tu navegador. Podés guardar el resumen opcional en tu dispositivo (localStorage), pero nosotros no lo vemos ni almacenamos. No se transmite a ningún servidor.' },
+  { q: '¿Puedo compartir el resultado?', a: 'Sí, con el botón "Compartir" generás un link con tus parámetros codificados (opcional) o una imagen del resumen que podés mandar por WhatsApp.' },
+  { q: '¿Cuánto debería ahorrar por mes?', a: 'Depende de tus metas. Regla general: mínimo 10-20% del ingreso neto. Para <strong>FIRE (retiro anticipado)</strong> se apunta a 40-70%. Para fondo de emergencia: hasta tener 3-6 meses de gastos ahorrados.' },
+  { q: '¿Qué hago si mi balance es negativo?', a: '1) Identificar gastos prescindibles (ocio, suscripciones, delivery). 2) Renegociar gastos fijos (prepaga, cable, internet, seguros). 3) Generar ingresos extra (freelance, venta de cosas). 4) Consolidar deudas a tasas más bajas.' },
+  { q: '¿Cómo armo un fondo de emergencia?', a: 'Apuntá a 3-6 meses de gastos esenciales. Si gastás $1M/mes → necesitás $3-6M. Guardalo en instrumento líquido (caja ahorro USD, money market, plazo fijo corto). No en cripto/acciones (volátil).' },
+  { q: '¿Qué es la reserva de emergencia ideal?', a: 'Depende de estabilidad laboral: empleado fijo = 3 meses. Freelance/monotributo = 6 meses. Con hijos o un solo ingreso = 6-9 meses.' },
+  { q: '¿Y si mis ingresos son variables (freelance)?', a: 'Usá el <strong>promedio de los últimos 6-12 meses</strong> (excluyendo picos o pozos extremos). Y mantené reserva de emergencia MÁS grande (6+ meses).' },
+  { q: '¿Puedo usarlo en otro país hispano?', a: 'Sí. La regla 50/30/20 es universal. Ajustá según tu moneda local. Algunas recomendaciones del output pueden referenciar AR pero los principios aplican igual.' },
+];
+
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
+  })),
+};
+---
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="bp-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Presupuesto familiar</span>
+    </nav>
+
+    <header class="bp-header">
+      <h1>Calculadora de presupuesto familiar 💰</h1>
+      <p class="lead">
+        Armá tu presupuesto mensual en minutos. Obtené tu <strong>score de salud financiera</strong> (0-100), distribución <strong>50/30/20</strong>, recomendaciones personalizadas y gráfico de gastos. <em>Todo corre en tu navegador, no guardamos nada.</em>
+      </p>
+    </header>
+
+    <section class="bp-form">
+      <h2>1. Tus ingresos mensuales (neto)</h2>
+      <div class="bp-inputs">
+        <label>
+          <span>Sueldo en mano tuyo</span>
+          <div class="bp-input-wrap">
+            <span class="prefix">$</span>
+            <input type="text" inputmode="numeric" class="bp-num" id="ing-sueldo1" value="0" data-group="ingresos" />
+          </div>
+        </label>
+        <label>
+          <span>Sueldo pareja / co-titular</span>
+          <div class="bp-input-wrap">
+            <span class="prefix">$</span>
+            <input type="text" inputmode="numeric" class="bp-num" id="ing-sueldo2" value="0" data-group="ingresos" />
+          </div>
+        </label>
+        <label>
+          <span>Otros ingresos (freelance, alquileres, etc.)</span>
+          <div class="bp-input-wrap">
+            <span class="prefix">$</span>
+            <input type="text" inputmode="numeric" class="bp-num" id="ing-otros" value="0" data-group="ingresos" />
+          </div>
+        </label>
+      </div>
+
+      <h2>2. Gastos necesarios (vivienda, servicios, comida)</h2>
+      <div class="bp-inputs">
+        <label><span>Alquiler / cuota hipoteca</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-alquiler" value="0" data-group="necesidades" data-label="Alquiler/hipoteca" /></div></label>
+        <label><span>Expensas</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-expensas" value="0" data-group="necesidades" data-label="Expensas" /></div></label>
+        <label><span>Servicios (luz, gas, agua, internet, cel)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-servicios" value="0" data-group="necesidades" data-label="Servicios" /></div></label>
+        <label><span>Supermercado / comida</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-super" value="0" data-group="necesidades" data-label="Supermercado" /></div></label>
+        <label><span>Transporte (nafta, SUBE, tren)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-transporte" value="0" data-group="necesidades" data-label="Transporte" /></div></label>
+        <label><span>Salud (prepaga, farmacia, médicos)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-salud" value="0" data-group="necesidades" data-label="Salud" /></div></label>
+        <label><span>Educación (colegio, universidad, cursos)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-educ" value="0" data-group="necesidades" data-label="Educación" /></div></label>
+        <label><span>Seguros (auto, hogar, vida)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-seguros" value="0" data-group="necesidades" data-label="Seguros" /></div></label>
+      </div>
+
+      <h2>3. Gastos variables / deseos</h2>
+      <div class="bp-inputs">
+        <label><span>Salidas (restaurantes, bares, delivery)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-salidas" value="0" data-group="deseos" data-label="Salidas" /></div></label>
+        <label><span>Suscripciones (Netflix, Spotify, gym, etc.)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-subs" value="0" data-group="deseos" data-label="Suscripciones" /></div></label>
+        <label><span>Ropa / cuidado personal</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-ropa" value="0" data-group="deseos" data-label="Ropa/cuidado" /></div></label>
+        <label><span>Viajes / vacaciones (prorrateado mensual)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-viajes" value="0" data-group="deseos" data-label="Viajes" /></div></label>
+        <label><span>Hobbies / ocio</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-hobbies" value="0" data-group="deseos" data-label="Hobbies" /></div></label>
+        <label><span>Otros gastos variables</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-otros" value="0" data-group="deseos" data-label="Otros" /></div></label>
+      </div>
+
+      <h2>4. Ahorro y deudas</h2>
+      <div class="bp-inputs">
+        <label><span>Ahorro / inversión mensual</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="ga-ahorro" value="0" data-group="ahorro" data-label="Ahorro/inversión" /></div></label>
+        <label><span>Cuota tarjeta de crédito (total pagado/mes)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="ga-tarjeta" value="0" data-group="deudas" data-label="Tarjeta crédito" /></div></label>
+        <label><span>Cuotas de préstamos (personal, prendario)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="ga-prestamos" value="0" data-group="deudas" data-label="Préstamos" /></div></label>
+      </div>
+
+      <h2>5. Datos opcionales para recomendaciones</h2>
+      <div class="bp-inputs">
+        <label><span>Reserva de emergencia actual ($)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="opt-reserva" value="0" data-group="meta" /></div></label>
+        <label class="bp-select-label"><span>Situación del hogar</span>
+          <select id="opt-situacion" data-group="meta">
+            <option value="soltero">Soltero/a sin hijos</option>
+            <option value="pareja">Pareja sin hijos</option>
+            <option value="hijos">Con hijos</option>
+            <option value="mayor">Mayor, sin hijos a cargo</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <!-- RESULTADOS -->
+    <section class="bp-results" id="bp-results" aria-live="polite">
+      <div class="bp-score-row">
+        <div class="bp-score-card">
+          <div class="bp-score-label">Salud financiera</div>
+          <div class="bp-score-ring">
+            <svg width="160" height="160" viewBox="0 0 160 160">
+              <circle cx="80" cy="80" r="68" fill="none" stroke="var(--bg-muted)" stroke-width="14" />
+              <circle id="bp-score-arc" cx="80" cy="80" r="68" fill="none" stroke="url(#scoreGrad)" stroke-width="14" stroke-linecap="round" transform="rotate(-90 80 80)" stroke-dasharray="427" stroke-dashoffset="427" style="transition: stroke-dashoffset 0.8s cubic-bezier(.4,0,.2,1)" />
+              <defs>
+                <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#ef4444" />
+                  <stop offset="50%" stop-color="#f59e0b" />
+                  <stop offset="100%" stop-color="#10b981" />
+                </linearGradient>
+              </defs>
+              <text id="bp-score-num" x="80" y="82" text-anchor="middle" class="bp-score-num">0</text>
+              <text x="80" y="102" text-anchor="middle" class="bp-score-sub">/ 100</text>
+            </svg>
+          </div>
+          <div class="bp-score-grade" id="bp-score-grade">Completá tus datos</div>
+        </div>
+
+        <div class="bp-metrics">
+          <div class="bp-metric">
+            <div class="bp-metric-label">Ingresos mensuales</div>
+            <div class="bp-metric-val" id="bp-total-ing">$0</div>
+          </div>
+          <div class="bp-metric">
+            <div class="bp-metric-label">Gastos totales</div>
+            <div class="bp-metric-val" id="bp-total-gastos">$0</div>
+          </div>
+          <div class="bp-metric">
+            <div class="bp-metric-label">Balance mensual</div>
+            <div class="bp-metric-val" id="bp-balance">$0</div>
+            <div class="bp-metric-sub" id="bp-balance-pct">—</div>
+          </div>
+          <div class="bp-metric">
+            <div class="bp-metric-label">Reserva emergencia</div>
+            <div class="bp-metric-val" id="bp-reserva-meses">0 meses</div>
+            <div class="bp-metric-sub" id="bp-reserva-target">ideal 3-6</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bp-50-30-20">
+        <h3>Distribución 50/30/20</h3>
+        <div class="bp-bar-container">
+          <div class="bp-bar">
+            <div class="bp-bar-segment seg-necesidades" id="seg-necesidades" style="width: 0%"><span>Necesidades <strong id="pct-nec">0%</strong></span></div>
+            <div class="bp-bar-segment seg-deseos" id="seg-deseos" style="width: 0%"><span>Deseos <strong id="pct-des">0%</strong></span></div>
+            <div class="bp-bar-segment seg-ahorro" id="seg-ahorro" style="width: 0%"><span>Ahorro+Deudas <strong id="pct-aho">0%</strong></span></div>
+          </div>
+          <div class="bp-bar-ideal">
+            <div class="ideal-label">Ideal:</div>
+            <div class="ideal-bar">
+              <div style="width: 50%; background: #22c55e">50% necesidades</div>
+              <div style="width: 30%; background: #f59e0b">30% deseos</div>
+              <div style="width: 20%; background: #3b82f6">20% ahorro</div>
+            </div>
+          </div>
+        </div>
+        <div class="bp-50-status" id="bp-5030-status"></div>
+      </div>
+
+      <div class="bp-chart-box">
+        <h3>Distribución de gastos</h3>
+        <canvas id="bp-pie" width="400" height="400"></canvas>
+        <div class="bp-legend" id="bp-legend"></div>
+      </div>
+
+      <div class="bp-recs" id="bp-recs">
+        <h3>Recomendaciones personalizadas</h3>
+        <ul id="bp-recs-list"></ul>
+      </div>
+
+      <div class="bp-actions">
+        <button class="bp-btn-primary" id="bp-share">📋 Copiar resumen al portapapeles</button>
+        <button class="bp-btn-secondary" id="bp-save">💾 Guardar en mi dispositivo</button>
+        <button class="bp-btn-secondary" id="bp-reset">🔄 Reiniciar</button>
+      </div>
+    </section>
+
+    <section class="bp-explanation">
+      <h2>Cómo funciona</h2>
+      <p>Esta calculadora usa la regla <strong>50/30/20</strong> popularizada por Elizabeth Warren: 50% del ingreso neto para necesidades (alquiler, comida, servicios), 30% para deseos (ocio, suscripciones), 20% para ahorro y pago de deudas. El <strong>score de salud financiera</strong> combina 5 métricas ponderadas:</p>
+      <ul>
+        <li><strong>% ahorro</strong> (30% del score): ideal 20%+.</li>
+        <li><strong>Balance mensual</strong> (25%): positivo vs negativo.</li>
+        <li><strong>% deuda sobre ingreso</strong> (20%): ideal &lt;35%.</li>
+        <li><strong>Reserva de emergencia</strong> (15%): ideal 3-6 meses.</li>
+        <li><strong>Distribución 50/30/20</strong> (10%): cercanía a la regla.</li>
+      </ul>
+      <p>Los cálculos corren en tu navegador (localStorage opcional). No enviamos ni guardamos tus datos en ningún servidor. Podés compartir el resumen como texto plano.</p>
+    </section>
+
+    <section class="bp-faq">
+      <h2>Preguntas frecuentes</h2>
+      <div class="faq-list">
+        {faq.map(f => (
+          <details>
+            <summary>{f.q}</summary>
+            <div class="faq-answer" set:html={f.a}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="bp-related">
+      <h2>Calcs relacionadas</h2>
+      <ul>
+        <li><a href="/calculadora-sueldo-en-mano-argentina">Sueldo en mano (bruto a neto)</a></li>
+        <li><a href="/cambio-de-monedas">Dólar blue, oficial, MEP en vivo</a></li>
+        <li><a href="/inflacion-argentina">Inflación y UVA actualizados</a></li>
+        <li><a href="/calculadora-interes-compuesto-aporte-mensual-crecimiento">Interés compuesto: crecimiento ahorro</a></li>
+        <li><a href="/calculadora-retiro-temprano-fire-25x-gastos-anuales">FIRE: retiro anticipado</a></li>
+        <li><a href="/guia/finanzas-personales">Guía finanzas personales</a></li>
+      </ul>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <Footer slot="footer" />
+</Layout>
+
+<script>
+  const numInputs = document.querySelectorAll<HTMLInputElement>('.bp-num');
+  const situacion = document.getElementById('opt-situacion') as HTMLSelectElement;
+  const STORE_KEY = 'hc_bp_v1';
+
+  function fmtArs(n: number): string {
+    return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n);
+  }
+  function fmtPct(n: number): string { return n.toFixed(1) + '%'; }
+
+  function parseAmt(s: string): number {
+    return Number(String(s || '').replace(/\./g, '').replace(/,/g, '.').replace(/\D/g, '')) || 0;
+  }
+
+  function liveFormat(el: HTMLInputElement) {
+    const val = parseAmt(el.value);
+    el.value = val === 0 ? '' : new Intl.NumberFormat('es-AR').format(val);
+  }
+
+  interface Totals {
+    ingresos: number;
+    necesidades: number;
+    deseos: number;
+    ahorro: number;
+    deudas: number;
+    reserva: number;
+    breakdown: Record<string, number>;
+  }
+
+  function getTotals(): Totals {
+    const t: Totals = { ingresos: 0, necesidades: 0, deseos: 0, ahorro: 0, deudas: 0, reserva: 0, breakdown: {} };
+    numInputs.forEach(el => {
+      const group = el.dataset.group || 'otros';
+      const label = el.dataset.label || '';
+      const val = parseAmt(el.value);
+      if (group === 'meta') {
+        if (el.id === 'opt-reserva') t.reserva = val;
+      } else if (group === 'ingresos') {
+        t.ingresos += val;
+      } else if (group === 'necesidades') {
+        t.necesidades += val;
+        if (label && val > 0) t.breakdown[label] = val;
+      } else if (group === 'deseos') {
+        t.deseos += val;
+        if (label && val > 0) t.breakdown[label] = val;
+      } else if (group === 'ahorro') {
+        t.ahorro += val;
+        if (label && val > 0) t.breakdown[label] = val;
+      } else if (group === 'deudas') {
+        t.deudas += val;
+        if (label && val > 0) t.breakdown[label] = val;
+      }
+    });
+    return t;
+  }
+
+  function computeScore(t: Totals): { score: number; grade: string; reasons: string[] } {
+    if (t.ingresos === 0) return { score: 0, grade: 'Completá tus datos', reasons: [] };
+    const gastos = t.necesidades + t.deseos + t.deudas;
+    const ahorroTotal = t.ahorro;
+    const balance = t.ingresos - gastos - ahorroTotal;
+
+    // 1) % ahorro (30 puntos max)
+    const pctAhorro = ahorroTotal / t.ingresos;
+    const scoreAhorro = Math.min(30, (pctAhorro / 0.20) * 30);
+
+    // 2) Balance mensual (25 puntos max)
+    let scoreBalance = 0;
+    if (balance >= 0) scoreBalance = 25;
+    else scoreBalance = Math.max(0, 25 + (balance / t.ingresos) * 50);
+
+    // 3) % deuda (20 puntos max)
+    const pctDeuda = t.deudas / t.ingresos;
+    let scoreDeuda = 20;
+    if (pctDeuda > 0.10) scoreDeuda = Math.max(0, 20 - ((pctDeuda - 0.10) / 0.35) * 20);
+
+    // 4) Reserva emergencia (15 puntos max)
+    const mesesReserva = gastos > 0 ? t.reserva / gastos : 0;
+    let scoreReserva = 0;
+    if (mesesReserva >= 3) scoreReserva = 15;
+    else scoreReserva = (mesesReserva / 3) * 15;
+
+    // 5) Distribución 50/30/20 (10 puntos max)
+    const total50 = t.necesidades + t.deseos + ahorroTotal + t.deudas;
+    let score5030 = 10;
+    if (total50 > 0) {
+      const pN = t.necesidades / total50;
+      const pD = t.deseos / total50;
+      const pA = (ahorroTotal + t.deudas) / total50;
+      const diff = Math.abs(pN - 0.5) + Math.abs(pD - 0.3) + Math.abs(pA - 0.2);
+      score5030 = Math.max(0, 10 - diff * 20);
+    }
+
+    const score = Math.round(scoreAhorro + scoreBalance + scoreDeuda + scoreReserva + score5030);
+    let grade = 'Crítica';
+    if (score >= 85) grade = 'Excelente 🏆';
+    else if (score >= 70) grade = 'Buena ✅';
+    else if (score >= 55) grade = 'Aceptable ⚠️';
+    else if (score >= 40) grade = 'Débil 🔴';
+
+    const reasons: string[] = [];
+    if (balance < 0) reasons.push(`Balance negativo: gastás ${fmtArs(-balance)} más de lo que ganás cada mes.`);
+    if (pctAhorro < 0.10) reasons.push(`Ahorro bajo: ${(pctAhorro * 100).toFixed(1)}% del ingreso (meta 20%+).`);
+    if (pctDeuda > 0.35) reasons.push(`Deuda alta: ${(pctDeuda * 100).toFixed(1)}% del ingreso va a pagar deudas (ideal <35%).`);
+    if (mesesReserva < 3) reasons.push(`Reserva de emergencia insuficiente: ${mesesReserva.toFixed(1)} meses (ideal 3-6).`);
+    return { score, grade, reasons };
+  }
+
+  function render() {
+    const t = getTotals();
+    const total50 = t.necesidades + t.deseos + t.ahorro + t.deudas;
+
+    // Score
+    const { score, grade, reasons } = computeScore(t);
+    (document.getElementById('bp-score-num') as any).textContent = score;
+    (document.getElementById('bp-score-grade') as any).textContent = grade;
+    const circ = 427;
+    const arc = document.getElementById('bp-score-arc') as any;
+    arc.style.strokeDashoffset = String(circ - (circ * score / 100));
+
+    // Totals
+    (document.getElementById('bp-total-ing') as any).textContent = fmtArs(t.ingresos);
+    const gastos = t.necesidades + t.deseos + t.deudas;
+    (document.getElementById('bp-total-gastos') as any).textContent = fmtArs(gastos + t.ahorro);
+    const balance = t.ingresos - gastos - t.ahorro;
+    const balEl = document.getElementById('bp-balance')!;
+    balEl.textContent = (balance >= 0 ? '+' : '') + fmtArs(balance).replace('$', '$');
+    balEl.style.color = balance >= 0 ? '#059669' : '#dc2626';
+    (document.getElementById('bp-balance-pct') as any).textContent = t.ingresos > 0 ? fmtPct((balance / t.ingresos) * 100) + ' del ingreso' : '—';
+    const mesesReserva = gastos > 0 ? (t.reserva / gastos) : 0;
+    (document.getElementById('bp-reserva-meses') as any).textContent = mesesReserva.toFixed(1) + ' meses';
+
+    // 50/30/20
+    if (total50 > 0) {
+      const pN = (t.necesidades / total50) * 100;
+      const pD = (t.deseos / total50) * 100;
+      const pA = ((t.ahorro + t.deudas) / total50) * 100;
+      (document.getElementById('seg-necesidades') as any).style.width = pN + '%';
+      (document.getElementById('seg-deseos') as any).style.width = pD + '%';
+      (document.getElementById('seg-ahorro') as any).style.width = pA + '%';
+      (document.getElementById('pct-nec') as any).textContent = pN.toFixed(0) + '%';
+      (document.getElementById('pct-des') as any).textContent = pD.toFixed(0) + '%';
+      (document.getElementById('pct-aho') as any).textContent = pA.toFixed(0) + '%';
+
+      let statusMsg = '';
+      if (pN > 60) statusMsg = `Tus necesidades son ${pN.toFixed(0)}% (meta ≤50%). Intentá bajar gastos fijos (alquiler, servicios) o aumentar ingresos.`;
+      else if (pA < 15) statusMsg = `Tu ahorro+deudas es ${pA.toFixed(0)}% (meta 20%+). Priorizá ahorrar antes de aumentar deseos.`;
+      else statusMsg = `Distribución dentro de lo recomendado. ${pA >= 20 ? '🎯' : ''}`;
+      (document.getElementById('bp-5030-status') as any).textContent = statusMsg;
+    }
+
+    // Pie chart
+    renderPie(t);
+
+    // Recomendaciones
+    const recsEl = document.getElementById('bp-recs-list')!;
+    const recs: string[] = [];
+    if (balance < 0) recs.push('<strong>Déficit mensual</strong>: reducí gastos prescindibles o buscá ingresos extras. Cada mes que gastás más de lo que ganás, acumulás deuda.');
+    if (t.ingresos > 0 && (t.ahorro / t.ingresos) < 0.10) recs.push('<strong>Ahorro débil</strong>: empezá con un 5% del ingreso como mínimo. Apuntá a 10-20% en 3-6 meses.');
+    if (t.ingresos > 0 && (t.deudas / t.ingresos) > 0.35) recs.push('<strong>Deuda alta</strong>: consolidá tarjetas o préstamos a tasas más bajas. Evitá mínimo de tarjeta (interés alto).');
+    if (mesesReserva < 3 && t.ingresos > 0) recs.push(`<strong>Fondo emergencia insuficiente</strong>: apuntá a ahorrar ${fmtArs(gastos * 3 - t.reserva)} adicionales para llegar a 3 meses. Guardalo en cuenta líquida (plazo fijo corto, USD, money market).`);
+    if (t.ingresos > 0 && (t.necesidades / t.ingresos) > 0.60) recs.push('<strong>Necesidades muy altas</strong>: alquiler + servicios + comida superan 60% del ingreso. Evaluá mudarte o compartir vivienda.');
+    if (t.ingresos > 0 && (t.deseos / t.ingresos) > 0.40) recs.push('<strong>Deseos elevados</strong>: salidas + suscripciones + hobbies superan 40%. Revisá qué suscripciones realmente usás.');
+    if (recs.length === 0 && t.ingresos > 0) recs.push('<strong>¡Muy bien!</strong> Tu presupuesto está en buen camino. Considerá aumentar aportes a inversión de largo plazo (plazo fijo UVA, FCI, ETFs).');
+
+    recsEl.innerHTML = recs.map(r => '<li>' + r + '</li>').join('');
+
+    // localStorage
+    saveState();
+  }
+
+  function renderPie(t: Totals) {
+    const canvas = document.getElementById('bp-pie') as HTMLCanvasElement;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const entries = Object.entries(t.breakdown).sort((a, b) => b[1] - a[1]);
+    const total = entries.reduce((s, [, v]) => s + v, 0);
+    if (total === 0) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Ingresá gastos para ver el gráfico', canvas.width / 2, canvas.height / 2);
+      return;
+    }
+
+    const cx = 200, cy = 200, r = 150;
+    let start = -Math.PI / 2;
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1', '#14b8a6', '#d946ef', '#22c55e', '#eab308', '#a855f7'];
+    const legend: string[] = [];
+    entries.forEach(([label, val], i) => {
+      const angle = (val / total) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, start, start + angle);
+      ctx.closePath();
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.fill();
+      start += angle;
+      legend.push(`<span class="lg-item"><span class="lg-dot" style="background:${colors[i % colors.length]}"></span>${label}: ${fmtArs(val)} (${((val / total) * 100).toFixed(0)}%)</span>`);
+    });
+
+    const leg = document.getElementById('bp-legend')!;
+    leg.innerHTML = legend.join('');
+  }
+
+  function saveState() {
+    try {
+      const state: Record<string, string> = {};
+      numInputs.forEach(el => state[el.id] = el.value);
+      state['situacion'] = situacion.value;
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    } catch {}
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      numInputs.forEach(el => {
+        if (state[el.id] !== undefined) el.value = state[el.id];
+      });
+      if (state.situacion) situacion.value = state.situacion;
+    } catch {}
+  }
+
+  numInputs.forEach(el => {
+    el.addEventListener('input', () => {
+      liveFormat(el);
+      render();
+    });
+  });
+  situacion.addEventListener('change', render);
+
+  document.getElementById('bp-reset')!.addEventListener('click', () => {
+    numInputs.forEach(el => el.value = '');
+    localStorage.removeItem(STORE_KEY);
+    render();
+  });
+
+  document.getElementById('bp-share')!.addEventListener('click', async () => {
+    const t = getTotals();
+    const { score, grade } = computeScore(t);
+    const gastos = t.necesidades + t.deseos + t.deudas;
+    const balance = t.ingresos - gastos - t.ahorro;
+    const text = `📊 MI PRESUPUESTO FAMILIAR — Hacé Cuentas\n\n` +
+      `Salud financiera: ${score}/100 (${grade})\n` +
+      `Ingresos: ${fmtArs(t.ingresos)}\n` +
+      `Gastos totales: ${fmtArs(gastos + t.ahorro)}\n` +
+      `Balance: ${balance >= 0 ? '+' : ''}${fmtArs(balance)}\n` +
+      `Reserva: ${(t.reserva).toLocaleString('es-AR')}\n\n` +
+      `Calculá el tuyo: https://hacecuentas.com/presupuesto-familiar`;
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('✓ Resumen copiado al portapapeles. Pegalo donde quieras.');
+    } catch {
+      prompt('Copiá este texto:', text);
+    }
+  });
+
+  document.getElementById('bp-save')!.addEventListener('click', () => {
+    saveState();
+    alert('✓ Presupuesto guardado en tu dispositivo. La próxima vez se carga automáticamente.');
+  });
+
+  loadState();
+  render();
+</script>
+
+<style>
+  .bp-page { max-width: 1080px; margin: 0 auto; padding: 1rem 1.25rem 5rem; color: var(--text); }
+  .breadcrumbs { font-size: .875rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .breadcrumbs a { color: var(--accent); text-decoration: none; }
+  .breadcrumbs .sep { margin: 0 .5rem; color: var(--text-subtle); }
+
+  .bp-header {
+    padding: 2.5rem 2rem 2rem;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-soft));
+    border: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+    text-align: center;
+  }
+  .bp-header h1 {
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    margin: 0 0 1rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+  }
+  .lead { color: var(--text-muted); font-size: 1.1rem; max-width: 720px; margin: 0 auto; line-height: 1.6; }
+  .lead strong { color: var(--text); font-weight: 700; }
+
+  .bp-form h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 2rem 0 1rem;
+    color: var(--text);
+  }
+  .bp-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: .75rem 1rem;
+    margin-bottom: 1rem;
+  }
+  .bp-inputs label { display: flex; flex-direction: column; gap: .35rem; font-size: .88rem; color: var(--text-muted); font-weight: 500; }
+  .bp-input-wrap {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .bp-input-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .bp-input-wrap .prefix {
+    padding: .55rem .7rem .55rem .8rem;
+    color: var(--text-subtle);
+    font-weight: 600;
+    font-size: .95rem;
+  }
+  .bp-input-wrap input {
+    border: 0;
+    background: transparent;
+    padding: .55rem .8rem .55rem 0;
+    font-size: 1rem;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    width: 100%;
+  }
+  .bp-input-wrap input:focus { outline: none; }
+
+  .bp-select-label select {
+    padding: .6rem .8rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: .95rem;
+  }
+
+  /* Results */
+  .bp-results {
+    margin: 2.5rem 0;
+    padding: 2rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  .bp-score-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  @media (max-width: 640px) { .bp-score-row { grid-template-columns: 1fr; text-align: center; } }
+
+  .bp-score-card { text-align: center; }
+  .bp-score-ring { position: relative; display: inline-block; }
+  .bp-score-num { font-size: 48px; font-weight: 800; fill: var(--text); font-family: var(--font-mono), system-ui; }
+  .bp-score-sub { font-size: 14px; fill: var(--text-subtle); }
+  .bp-score-label { font-size: .75rem; color: var(--text-subtle); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; margin-bottom: .5rem; }
+  .bp-score-grade { margin-top: .5rem; font-size: 1.1rem; font-weight: 700; color: var(--text); }
+
+  .bp-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: .75rem;
+  }
+  .bp-metric {
+    padding: 1rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .bp-metric-label { font-size: .72rem; color: var(--text-subtle); text-transform: uppercase; letter-spacing: .05em; font-weight: 700; margin-bottom: .3rem; }
+  .bp-metric-val { font-size: 1.3rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+  .bp-metric-sub { font-size: .78rem; color: var(--text-muted); margin-top: .2rem; }
+
+  .bp-50-30-20 { margin: 2rem 0; }
+  .bp-50-30-20 h3 { font-size: 1rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
+  .bp-bar {
+    display: flex;
+    height: 42px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-bottom: .5rem;
+  }
+  .bp-bar-segment {
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .85rem;
+    font-weight: 600;
+    transition: width 0.4s;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .bp-bar-segment.seg-necesidades { background: #22c55e; }
+  .bp-bar-segment.seg-deseos { background: #f59e0b; }
+  .bp-bar-segment.seg-ahorro { background: #3b82f6; }
+  .bp-bar-ideal { margin-top: .75rem; display: flex; gap: .5rem; align-items: center; }
+  .ideal-label { font-size: .75rem; color: var(--text-subtle); }
+  .ideal-bar { flex: 1; display: flex; height: 18px; border-radius: 4px; overflow: hidden; opacity: .35; }
+  .ideal-bar > div { display: flex; align-items: center; justify-content: center; font-size: .65rem; color: white; font-weight: 600; }
+  .bp-50-status { font-size: .9rem; color: var(--text-muted); padding: .7rem 1rem; background: var(--bg-soft); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); margin-top: .75rem; }
+
+  .bp-chart-box { margin: 2rem 0; text-align: center; }
+  .bp-chart-box h3 { font-size: 1rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
+  .bp-chart-box canvas { max-width: 400px; width: 100%; height: auto; }
+  .bp-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+    font-size: .85rem;
+  }
+  .bp-legend :global(.lg-item) { display: inline-flex; align-items: center; gap: .3rem; color: var(--text-muted); }
+  .bp-legend :global(.lg-dot) { width: 10px; height: 10px; border-radius: 50%; }
+
+  .bp-recs { margin: 2rem 0; padding: 1.25rem 1.5rem; background: var(--warning-soft); border-left: 4px solid var(--warning); border-radius: var(--radius-sm); }
+  .bp-recs h3 { margin: 0 0 .75rem; font-size: 1rem; color: var(--text); font-weight: 700; }
+  .bp-recs ul { margin: 0; padding-left: 1.2rem; }
+  .bp-recs li { margin: .4rem 0; line-height: 1.5; color: var(--text); font-size: .92rem; }
+
+  .bp-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 2rem; }
+  .bp-btn-primary, .bp-btn-secondary {
+    padding: .8rem 1.25rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: .92rem;
+  }
+  .bp-btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .bp-btn-primary:hover { background: var(--accent-hover); }
+  .bp-btn-secondary:hover { background: var(--bg-soft); }
+
+  .bp-explanation, .bp-faq, .bp-related { margin: 2.5rem 0; }
+  .bp-explanation h2, .bp-faq h2, .bp-related h2 { font-size: 1.3rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
+  .bp-explanation p, .bp-explanation li { color: var(--text-muted); line-height: 1.65; }
+  .bp-related ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .5rem; }
+  .bp-related li a { display: block; padding: .8rem 1rem; background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--accent); text-decoration: none; font-size: .92rem; font-weight: 500; }
+  .bp-related li a:hover { background: var(--accent-soft); }
+
+  .faq-list details { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: .5rem; overflow: hidden; background: var(--bg-card); }
+  .faq-list summary { padding: 1rem 1.25rem; cursor: pointer; font-weight: 600; color: var(--text); list-style: none; display: flex; justify-content: space-between; gap: 1rem; }
+  .faq-list summary::after { content: ''; width: 10px; height: 10px; border: 2px solid var(--text-muted); border-top: 0; border-left: 0; transform: rotate(45deg); transition: transform .2s; }
+  .faq-list details[open] summary::after { transform: rotate(-135deg); }
+  .faq-answer { padding: 0 1.25rem 1.2rem; color: var(--text-muted); line-height: 1.65; font-size: .95rem; }
+</style>

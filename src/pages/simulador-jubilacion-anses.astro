@@ -1,0 +1,536 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Simulador de Jubilación ANSES 2026 — Calculá tu Haber Jubilatorio | Hacé Cuentas';
+const description = 'Simulador de jubilación ANSES: ingresá edad, años de aportes y sueldo actual → obtené tu haber jubilatorio proyectado, si cumplís requisitos y años que te faltan. Gratis.';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Simulador de Jubilación ANSES',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
+};
+
+const faq = [
+  { q: '¿Cuántos años de aportes necesito para jubilarme?', a: 'En el régimen general: <strong>30 años de aportes</strong>. Hay excepciones: moratorias vigentes (plan de pago en cuotas), jubilaciones anticipadas con 25 años y más edad, régimen especial docente (25 años), etc.' },
+  { q: '¿Qué edad necesito?', a: '<strong>60 años mujer, 65 años hombre</strong>. Con la reforma jubilatoria se igualó en varios países hispanos. En AR sigue esa diferencia por género.' },
+  { q: '¿Cómo se calcula el haber jubilatorio?', a: 'Fórmula simplificada: (Promedio de los mejores 120 aportes actualizados) × 1.5% × años de aportes. Tope máximo: 8 veces jubilación mínima. Tope mínimo: jubilación mínima + bono.' },
+  { q: '¿Qué es la PUAM?', a: 'Pensión Universal Adulto Mayor: para mayores de 65 años (ambos sexos) que <strong>NO tienen 30 años de aportes</strong>. Paga el 80% de la jubilación mínima. No incompatible con empleo formal.' },
+  { q: '¿Puedo jubilarme antes de los 60/65?', a: 'Jubilación por invalidez, régimen especial (docente, minero, policial), retiro voluntario en empresa privada. Cada caso tiene requisitos específicos.' },
+  { q: '¿Cuánto actualiza la jubilación?', a: 'Por <strong>movilidad IPC mensual</strong> desde 2024 (antes por fórmula semestral). Se actualiza en boletín oficial. Bonos adicionales se suman según contexto.' },
+  { q: '¿Si trabajo en negro cuenta?', a: 'No directamente. Pero podés "reconocer" años por ley de moratoria vigente (si está). Pagás un plan en cuotas por esos años no aportados.' },
+  { q: '¿Qué es el RIPTE?', a: 'Remuneraciones Imponibles Promedio de los Trabajadores Estables. Se usa para actualizar el valor de los aportes viejos al momento de jubilación.' },
+  { q: '¿Puedo jubilarme y seguir trabajando?', a: 'Sí, en el régimen general. Pero los aportes que sigás haciendo <strong>no aumentan tu jubilación</strong>. En ciertos regímenes especiales hay incompatibilidad.' },
+  { q: '¿Cómo puedo aumentar mi futura jubilación?', a: '1) Seguir aportando más años (+30 años suma). 2) Maximizar sueldo los últimos años (entra en promedio). 3) Aportar a SIPA voluntariamente si tenés períodos en negro. 4) Complementar con ahorro/inversión propia (plazo fijo UVA, FCI, ETFs).' },
+];
+
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
+  })),
+};
+---
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="sj-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Simulador de jubilación</span>
+    </nav>
+
+    <header class="sj-header">
+      <h1>Simulador de jubilación ANSES 👴</h1>
+      <p class="lead">
+        Ingresá tu edad, años de aportes y sueldo actual → obtené tu <strong>haber jubilatorio proyectado</strong>, años que te faltan y recomendaciones para mejorar. Basado en la ley argentina vigente 2026.
+      </p>
+    </header>
+
+    <section class="sj-form">
+      <div class="sj-inputs">
+        <label>
+          <span>Sexo (afecta edad de retiro)</span>
+          <select id="sj-sexo">
+            <option value="mujer">Mujer (jubilación a los 60)</option>
+            <option value="hombre">Hombre (jubilación a los 65)</option>
+          </select>
+        </label>
+        <label>
+          <span>Edad actual</span>
+          <input type="number" id="sj-edad" min="18" max="80" value="40" />
+        </label>
+        <label>
+          <span>Años de aportes acumulados</span>
+          <input type="number" id="sj-aportes" min="0" max="50" value="15" />
+        </label>
+        <label>
+          <span>Sueldo bruto mensual actual</span>
+          <div class="sj-input-wrap">
+            <span class="prefix">$</span>
+            <input type="text" inputmode="numeric" id="sj-sueldo" value="1.500.000" />
+          </div>
+        </label>
+        <label>
+          <span>Aumento salarial anual esperado</span>
+          <div class="sj-input-wrap">
+            <input type="number" id="sj-aumento" value="3" min="0" max="50" />
+            <span class="suffix">% anual real</span>
+          </div>
+        </label>
+        <label>
+          <span>Régimen</span>
+          <select id="sj-regimen">
+            <option value="general">General (60/65 años, 30 aportes)</option>
+            <option value="docente">Docente (25 años de aportes)</option>
+            <option value="puam">PUAM (65+ sin 30 aportes)</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="sj-results" aria-live="polite">
+      <div class="sj-main-result">
+        <div class="sj-result-card">
+          <div class="sj-result-label">Haber jubilatorio estimado</div>
+          <div class="sj-result-value" id="sj-haber">$0</div>
+          <div class="sj-result-sub" id="sj-haber-sub">—</div>
+        </div>
+        <div class="sj-result-card">
+          <div class="sj-result-label">Edad de jubilación</div>
+          <div class="sj-result-value" id="sj-edad-jub">—</div>
+          <div class="sj-result-sub" id="sj-anos-faltan">—</div>
+        </div>
+        <div class="sj-result-card">
+          <div class="sj-result-label">Años de aportes al jubilarte</div>
+          <div class="sj-result-value" id="sj-aportes-total">—</div>
+          <div class="sj-result-sub" id="sj-aportes-status">—</div>
+        </div>
+      </div>
+
+      <div class="sj-feasible" id="sj-feasible">
+        <h3 id="sj-feasible-title">Completá los datos</h3>
+        <p id="sj-feasible-text">—</p>
+      </div>
+
+      <div class="sj-comparison">
+        <h3>Comparación con referencias ANSES 2026</h3>
+        <table class="sj-table">
+          <thead>
+            <tr><th>Referencia</th><th>Monto estimado 2026</th><th>Tu proyección</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Jubilación mínima + bono</td><td>$360.000</td><td id="sj-vs-min">—</td></tr>
+            <tr><td>Jubilación promedio</td><td>$620.000</td><td id="sj-vs-med">—</td></tr>
+            <tr><td>Jubilación máxima</td><td>$1.950.000</td><td id="sj-vs-max">—</td></tr>
+            <tr><td>PUAM (80% mínima)</td><td>$232.000</td><td id="sj-vs-puam">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sj-recs" id="sj-recs">
+        <h3>Recomendaciones personalizadas</h3>
+        <ul id="sj-recs-list"></ul>
+      </div>
+
+      <div class="sj-timeline">
+        <h3>Proyección año a año</h3>
+        <canvas id="sj-chart" width="600" height="280"></canvas>
+      </div>
+    </section>
+
+    <section class="sj-explanation">
+      <h2>Cómo se calcula la jubilación en Argentina</h2>
+      <p>La <strong>fórmula de cálculo jubilatorio</strong> del régimen general (ANSES) considera:</p>
+      <ul>
+        <li><strong>PBU</strong> (Prestación Básica Universal): monto fijo por año cumplido (~$40k base 2026).</li>
+        <li><strong>PC</strong> (Prestación Compensatoria): 1.5% × años aportados antes 1994 × mejor promedio 120 aportes actualizados.</li>
+        <li><strong>PAP</strong> (Prestación Adicional por Permanencia): 1.5% × años aportados desde 1994 × mejor promedio 120 aportes actualizados.</li>
+        <li><strong>Tope máximo</strong>: 8 veces la jubilación mínima (~$2.3M con bono).</li>
+        <li><strong>Tope mínimo</strong>: jubilación mínima + bono (~$360k).</li>
+      </ul>
+      <p>Esta calculadora usa una <strong>fórmula simplificada</strong>: sueldo actualizado por inflación y aumentos, multiplicado por (años de aportes × 1.5%), limitado por tope máximo/mínimo. Orientativo; para cálculo exacto consultá <a href="https://www.anses.gob.ar/" rel="noopener">ANSES</a>.</p>
+    </section>
+
+    <section class="sj-faq">
+      <h2>Preguntas frecuentes</h2>
+      <div class="faq-list">
+        {faq.map(f => (
+          <details>
+            <summary>{f.q}</summary>
+            <div class="faq-answer" set:html={f.a}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="sj-related">
+      <h2>Calcs relacionadas</h2>
+      <ul>
+        <li><a href="/calculadora-jubilacion-anses-monto-minimo-maxima-2026">Jubilación mínima y máxima 2026</a></li>
+        <li><a href="/calculadora-jubilacion-pua-prestacion-universal-adulto-mayor">PUAM: Pensión Universal Adulto Mayor</a></li>
+        <li><a href="/calculadora-pension-viudez-porcentaje-conyuge">Pensión por viudez</a></li>
+        <li><a href="/calculadora-pami-prestaciones-monto-copago-2026">PAMI: prestaciones y copago</a></li>
+        <li><a href="/calculadora-retiro-temprano-fire-25x-gastos-anuales">FIRE: retiro anticipado</a></li>
+        <li><a href="/guia/subsidios-anses-2026">Guía completa de subsidios ANSES</a></li>
+      </ul>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <Footer slot="footer" />
+</Layout>
+
+<script>
+  const sexoEl = document.getElementById('sj-sexo') as HTMLSelectElement;
+  const edadEl = document.getElementById('sj-edad') as HTMLInputElement;
+  const aportesEl = document.getElementById('sj-aportes') as HTMLInputElement;
+  const sueldoEl = document.getElementById('sj-sueldo') as HTMLInputElement;
+  const aumentoEl = document.getElementById('sj-aumento') as HTMLInputElement;
+  const regimenEl = document.getElementById('sj-regimen') as HTMLSelectElement;
+
+  const JUB_MIN = 290000;
+  const BONO = 70000;
+  const JUB_MAX = 1950000;
+
+  function fmtArs(n: number): string {
+    return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n);
+  }
+
+  function parseAmt(s: string): number {
+    return Number(String(s || '').replace(/\./g, '').replace(/,/g, '.').replace(/\D/g, '')) || 0;
+  }
+
+  sueldoEl.addEventListener('input', () => {
+    const val = parseAmt(sueldoEl.value);
+    sueldoEl.value = val === 0 ? '' : new Intl.NumberFormat('es-AR').format(val);
+    render();
+  });
+
+  function compute() {
+    const sexo = sexoEl.value;
+    const edad = Number(edadEl.value) || 0;
+    const aportes = Number(aportesEl.value) || 0;
+    const sueldo = parseAmt(sueldoEl.value);
+    const aumento = Number(aumentoEl.value) || 0;
+    const regimen = regimenEl.value;
+
+    let edadJub = sexo === 'hombre' ? 65 : 60;
+    let aportesReq = 30;
+    if (regimen === 'docente') { aportesReq = 25; }
+    if (regimen === 'puam') { edadJub = 65; aportesReq = 0; }
+
+    const anosFaltan = Math.max(0, edadJub - edad);
+    const aportesAlJubilar = aportes + anosFaltan;
+    const cumpleAportes = aportesAlJubilar >= aportesReq;
+
+    // Sueldo al momento de jubilación (con aumentos anuales reales)
+    const sueldoJub = sueldo * Math.pow(1 + aumento / 100, anosFaltan);
+
+    // Haber estimado (fórmula simplificada)
+    let haber: number;
+    if (regimen === 'puam') {
+      haber = JUB_MIN * 0.80;
+    } else if (!cumpleAportes) {
+      haber = 0;
+    } else {
+      // 1.5% por cada año × sueldo actualizado
+      haber = sueldoJub * 0.015 * aportesAlJubilar;
+      // Aplicar topes
+      haber = Math.max(JUB_MIN + BONO, Math.min(haber, JUB_MAX));
+    }
+
+    return {
+      edad, edadJub, anosFaltan, aportes, aportesAlJubilar, cumpleAportes,
+      aportesReq, sueldoJub, haber, regimen, sexo,
+    };
+  }
+
+  function render() {
+    const r = compute();
+
+    (document.getElementById('sj-haber') as any).textContent = r.haber > 0 ? fmtArs(r.haber) : '—';
+    (document.getElementById('sj-haber-sub') as any).textContent = r.haber > 0
+      ? `${(r.haber / JUB_MIN).toFixed(1)}× jubilación mínima`
+      : 'No cumple requisitos';
+    (document.getElementById('sj-edad-jub') as any).textContent = r.edadJub + ' años';
+    (document.getElementById('sj-anos-faltan') as any).textContent =
+      r.anosFaltan === 0 ? '¡Ya podés jubilarte!' : `Faltan ${r.anosFaltan} años`;
+    (document.getElementById('sj-aportes-total') as any).textContent = r.aportesAlJubilar + ' años';
+    (document.getElementById('sj-aportes-status') as any).textContent =
+      r.cumpleAportes ? `Cumple (req ${r.aportesReq})` : `Te faltan ${r.aportesReq - r.aportesAlJubilar} años`;
+
+    // Feasibility
+    const feasibleTitle = document.getElementById('sj-feasible-title')!;
+    const feasibleText = document.getElementById('sj-feasible-text')!;
+    const feasibleEl = document.getElementById('sj-feasible')!;
+    if (r.regimen === 'puam') {
+      feasibleTitle.textContent = '✓ Accedés a PUAM';
+      feasibleText.textContent = `A los 65 años, sin importar años de aportes, podrás acceder a la PUAM: ~${fmtArs(JUB_MIN * 0.8)}/mes.`;
+      feasibleEl.className = 'sj-feasible ok';
+    } else if (r.cumpleAportes) {
+      feasibleTitle.textContent = '✓ Vas a jubilarte en tiempo';
+      feasibleText.textContent = `Al cumplir ${r.edadJub} años tendrás ${r.aportesAlJubilar} años de aportes (${r.aportesReq} requeridos). Vas a jubilarte por el régimen ${r.regimen}.`;
+      feasibleEl.className = 'sj-feasible ok';
+    } else {
+      feasibleTitle.textContent = '⚠️ No cumplirías requisitos sin ajustes';
+      feasibleText.textContent = `Al cumplir ${r.edadJub} años solo tendrías ${r.aportesAlJubilar} años de aportes. Necesitás ${r.aportesReq}. Opciones: 1) Aportar más años (empleo formal o monotributo con SIPA). 2) Moratoria vigente (si ANSES la habilita). 3) Esperar a los 65 y acceder a PUAM.`;
+      feasibleEl.className = 'sj-feasible warning';
+    }
+
+    // Comparación
+    (document.getElementById('sj-vs-min') as any).textContent = r.haber > 0 ? `${(r.haber / (JUB_MIN + BONO)).toFixed(2)}x` : '—';
+    (document.getElementById('sj-vs-med') as any).textContent = r.haber > 0 ? `${(r.haber / 620000).toFixed(2)}x` : '—';
+    (document.getElementById('sj-vs-max') as any).textContent = r.haber > 0 ? `${(r.haber / JUB_MAX).toFixed(2)}x` : '—';
+    (document.getElementById('sj-vs-puam') as any).textContent = `${(Math.max(0, r.haber) / (JUB_MIN * 0.8)).toFixed(2)}x`;
+
+    // Recomendaciones
+    const recs: string[] = [];
+    if (!r.cumpleAportes && r.regimen !== 'puam') {
+      recs.push(`<strong>Completá aportes</strong>: te faltan ${r.aportesReq - r.aportesAlJubilar} años. Si podés, pasá a empleo formal o monotributo (SIPA) ya mismo.`);
+    }
+    if (r.haber > 0 && r.haber <= (JUB_MIN + BONO) * 1.1) {
+      recs.push(`<strong>Jubilación baja</strong>: tu proyección está cerca del mínimo. Para subir: maximizá tus últimos años de aportes (mejor sueldo entra al promedio) + aportá voluntariamente + complementá con ahorro propio.`);
+    }
+    if (r.haber > 0 && r.haber < r.sueldoJub * 0.5) {
+      recs.push(`<strong>Tasa de reemplazo baja</strong>: la jubilación será menos del 50% de tu sueldo. Diferencial promedio Argentina: ~40-60%. Planificar ahorro complementario (plazo fijo UVA, FCI, ETFs) es crítico.`);
+    }
+    if (r.anosFaltan > 10) {
+      const montoRetiroFire = r.sueldoJub * 12 * 25;
+      recs.push(`<strong>Retiro anticipado (FIRE)</strong>: con ${r.anosFaltan} años por delante podés construir un portafolio de ~${fmtArs(montoRetiroFire)} (regla 25x) y retirarte antes. Ver <a href="/calculadora-retiro-temprano-fire-25x-gastos-anuales">calc FIRE</a>.`);
+    }
+    if (r.anosFaltan <= 5 && r.haber > 0) {
+      recs.push(`<strong>Últimos años críticos</strong>: el cálculo toma el mejor promedio de 120 meses de aportes. Maximizá tu sueldo bruto los próximos años (promoción, cambio a mejor puesto) — impacta directo en tu jubilación.`);
+    }
+    if (recs.length === 0) {
+      recs.push('Tu situación jubilatoria se ve bien. Mantené los aportes al día y considerá complementar con ahorro personal.');
+    }
+
+    const list = document.getElementById('sj-recs-list')!;
+    list.innerHTML = recs.map(r => '<li>' + r + '</li>').join('');
+
+    renderChart(r);
+  }
+
+  function renderChart(r: any) {
+    const canvas = document.getElementById('sj-chart') as HTMLCanvasElement;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    if (r.anosFaltan === 0) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Ya estás en edad jubilatoria', W / 2, H / 2);
+      return;
+    }
+
+    // Proyección sueldo y jubilación proyectada año a año
+    const data: { edad: number; sueldo: number; haberSi: number }[] = [];
+    const aum = Number(aumentoEl.value) / 100;
+    const sueldoActual = parseAmt(sueldoEl.value);
+    for (let y = 0; y <= r.anosFaltan; y++) {
+      const sueldoY = sueldoActual * Math.pow(1 + aum, y);
+      const aportesY = r.aportes + y;
+      const haberY = aportesY >= r.aportesReq ? Math.max(JUB_MIN + BONO, Math.min(sueldoY * 0.015 * aportesY, JUB_MAX)) : 0;
+      data.push({ edad: r.edad + y, sueldo: sueldoY, haberSi: haberY });
+    }
+
+    const margin = { t: 20, r: 20, b: 40, l: 70 };
+    const iw = W - margin.l - margin.r;
+    const ih = H - margin.t - margin.b;
+    const maxY = Math.max(...data.map(d => d.sueldo));
+
+    // Ejes
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(margin.l, margin.t); ctx.lineTo(margin.l, margin.t + ih); ctx.lineTo(margin.l + iw, margin.t + ih); ctx.stroke();
+
+    // Labels Y
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px system-ui';
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const v = (maxY / 4) * i;
+      const y = margin.t + ih - (i / 4) * ih;
+      ctx.fillText(fmtArs(v), margin.l - 5, y + 3);
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.beginPath(); ctx.moveTo(margin.l, y); ctx.lineTo(margin.l + iw, y); ctx.stroke();
+    }
+
+    // Línea sueldo
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    data.forEach((d, i) => {
+      const x = margin.l + (i / (data.length - 1)) * iw;
+      const y = margin.t + ih - (d.sueldo / maxY) * ih;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // Línea haber
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    data.forEach((d, i) => {
+      const x = margin.l + (i / (data.length - 1)) * iw;
+      const y = margin.t + ih - (d.haberSi / maxY) * ih;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Labels X
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'center';
+    [0, Math.floor(data.length / 2), data.length - 1].forEach(i => {
+      const x = margin.l + (i / (data.length - 1)) * iw;
+      ctx.fillText(`${data[i].edad}a`, x, margin.t + ih + 18);
+    });
+
+    // Leyenda
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillRect(margin.l + 10, margin.t + 10, 20, 3);
+    ctx.fillStyle = '#475569';
+    ctx.fillText('Sueldo proyectado', margin.l + 40, margin.t + 14);
+
+    ctx.strokeStyle = '#10b981';
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(margin.l + 200, margin.t + 12);
+    ctx.lineTo(margin.l + 220, margin.t + 12);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillText('Haber jubilatorio si me jubilo ahí', margin.l + 225, margin.t + 14);
+  }
+
+  sexoEl.addEventListener('change', render);
+  edadEl.addEventListener('input', render);
+  aportesEl.addEventListener('input', render);
+  aumentoEl.addEventListener('input', render);
+  regimenEl.addEventListener('change', render);
+
+  render();
+</script>
+
+<style>
+  .sj-page { max-width: 980px; margin: 0 auto; padding: 1rem 1.25rem 5rem; color: var(--text); }
+  .breadcrumbs { font-size: .875rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .breadcrumbs a { color: var(--accent); text-decoration: none; }
+  .breadcrumbs .sep { margin: 0 .5rem; color: var(--text-subtle); }
+
+  .sj-header {
+    padding: 2.5rem 2rem 2rem;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, rgba(59,130,246,.08), var(--bg-soft));
+    border: 1px solid var(--border);
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  .sj-header h1 { font-size: clamp(2rem, 5vw, 2.6rem); margin: 0 0 .75rem; font-weight: 800; letter-spacing: -.02em; }
+  .lead { color: var(--text-muted); font-size: 1.05rem; max-width: 720px; margin: 0 auto; line-height: 1.6; }
+  .lead strong { color: var(--text); font-weight: 700; }
+
+  .sj-form { margin: 2rem 0; }
+  .sj-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+  .sj-inputs label { display: flex; flex-direction: column; gap: .4rem; font-size: .9rem; color: var(--text-muted); font-weight: 500; }
+  .sj-inputs input, .sj-inputs select {
+    padding: .65rem .85rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: 1rem;
+  }
+  .sj-inputs input:focus, .sj-inputs select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .sj-input-wrap {
+    display: flex;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+  }
+  .sj-input-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .sj-input-wrap .prefix { padding: .65rem .7rem .65rem .8rem; color: var(--text-subtle); font-weight: 600; }
+  .sj-input-wrap .suffix { padding: .65rem .8rem; color: var(--text-subtle); font-size: .85rem; }
+  .sj-input-wrap input { border: 0; background: transparent; padding: .65rem .85rem .65rem 0; font-size: 1rem; color: var(--text); width: 100%; }
+  .sj-input-wrap input:focus { outline: none; }
+
+  .sj-results { margin: 2rem 0; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+  .sj-main-result {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .sj-result-card {
+    padding: 1.25rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-align: center;
+  }
+  .sj-result-label { font-size: .72rem; color: var(--text-subtle); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-bottom: .4rem; }
+  .sj-result-value { font-size: 1.8rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .sj-result-sub { margin-top: .3rem; font-size: .82rem; color: var(--text-muted); }
+
+  .sj-feasible { padding: 1.25rem 1.5rem; border-radius: var(--radius-sm); margin-bottom: 2rem; border-left: 4px solid var(--accent); background: var(--bg-soft); }
+  .sj-feasible.ok { border-color: #10b981; background: rgba(16,185,129,.07); }
+  .sj-feasible.warning { border-color: #f59e0b; background: rgba(245,158,11,.08); }
+  .sj-feasible h3 { margin: 0 0 .5rem; font-size: 1.1rem; color: var(--text); font-weight: 700; }
+  .sj-feasible p { margin: 0; color: var(--text); line-height: 1.55; font-size: .95rem; }
+
+  .sj-comparison { margin-bottom: 2rem; }
+  .sj-comparison h3 { font-size: 1rem; margin: 0 0 .75rem; color: var(--text); font-weight: 700; }
+  .sj-table { width: 100%; border-collapse: collapse; background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .sj-table th, .sj-table td { padding: .7rem 1rem; text-align: left; font-size: .92rem; border-bottom: 1px solid var(--border); }
+  .sj-table th { background: var(--bg-muted); font-weight: 700; color: var(--text); font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
+  .sj-table tbody tr:last-child td { border-bottom: 0; }
+
+  .sj-recs { margin-bottom: 2rem; padding: 1.25rem 1.5rem; background: var(--warning-soft); border-left: 4px solid var(--warning); border-radius: var(--radius-sm); }
+  .sj-recs h3 { margin: 0 0 .75rem; font-size: 1rem; color: var(--text); font-weight: 700; }
+  .sj-recs ul { margin: 0; padding-left: 1.2rem; }
+  .sj-recs li { margin: .4rem 0; line-height: 1.55; color: var(--text); font-size: .92rem; }
+  .sj-recs a { color: var(--accent); }
+
+  .sj-timeline h3 { font-size: 1rem; margin: 0 0 .75rem; color: var(--text); font-weight: 700; }
+  .sj-timeline canvas { width: 100%; max-width: 600px; height: auto; background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+
+  .sj-explanation, .sj-faq, .sj-related { margin: 2.5rem 0; }
+  .sj-explanation h2, .sj-faq h2, .sj-related h2 { font-size: 1.3rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
+  .sj-explanation p, .sj-explanation li { color: var(--text-muted); line-height: 1.65; }
+  .sj-explanation a { color: var(--accent); }
+  .sj-related ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .5rem; }
+  .sj-related li a { display: block; padding: .8rem 1rem; background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--accent); text-decoration: none; font-size: .92rem; font-weight: 500; }
+  .sj-related li a:hover { background: var(--accent-soft); }
+
+  .faq-list details { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: .5rem; overflow: hidden; background: var(--bg-card); }
+  .faq-list summary { padding: 1rem 1.25rem; cursor: pointer; font-weight: 600; color: var(--text); list-style: none; display: flex; justify-content: space-between; gap: 1rem; }
+  .faq-list summary::after { content: ''; width: 10px; height: 10px; border: 2px solid var(--text-muted); border-top: 0; border-left: 0; transform: rotate(45deg); transition: transform .2s; }
+  .faq-list details[open] summary::after { transform: rotate(-135deg); }
+  .faq-answer { padding: 0 1.25rem 1.2rem; color: var(--text-muted); line-height: 1.65; font-size: .95rem; }
+</style>

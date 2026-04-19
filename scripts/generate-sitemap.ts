@@ -153,6 +153,8 @@ sitemaps.push({
     { loc: `${site}/cambio-de-monedas`, priority: '0.95', changefreq: 'hourly', lastmod: buildDate },
     { loc: `${site}/cotizacion-cripto`, priority: '0.95', changefreq: 'hourly', lastmod: buildDate },
     { loc: `${site}/inflacion-argentina`, priority: '0.9', changefreq: 'daily', lastmod: buildDate },
+    { loc: `${site}/presupuesto-familiar`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
+    { loc: `${site}/simulador-jubilacion-anses`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
     { loc: `${site}/guias`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
     { loc: `${site}/guia/sueldos-argentina-2026`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
     { loc: `${site}/guia/impuestos-argentina-2026`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
