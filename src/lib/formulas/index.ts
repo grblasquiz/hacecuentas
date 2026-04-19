@@ -1993,6 +1993,206 @@ import { cuantoFaltaAguinaldoJunioDiciembre } from './cuanto-falta-aguinaldo-jun
 import { cuantoFaltaDiaMadrePadreArgentina } from './cuanto-falta-dia-madre-padre-argentina';
 import { diasHabilesMesActualFeriados } from './dias-habiles-mes-actual-feriados';
 import { fechaExactaSumarRestarDiasHabiles } from './fecha-exacta-sumar-restar-dias-habiles';
+import { caloriasHuevoRevueltoFritoCocido } from './calorias-huevo-revuelto-frito-cocido';
+import { caloriasPanBlancoIntegralPorcion } from './calorias-pan-blanco-integral-porcion';
+import { caloriasArrozBlancoIntegralCocido } from './calorias-arroz-blanco-integral-cocido';
+import { caloriasPaltaAguacateCompletaMitad } from './calorias-palta-aguacate-completa-mitad';
+import { caloriasPizzaMuzzarellaPorcion } from './calorias-pizza-muzzarella-porcion';
+import { caloriasHamburguesaCaseraComercial } from './calorias-hamburguesa-casera-comercial';
+import { aguaDiariaLitrosNecesariosEjercicioClima } from './agua-diaria-litros-necesarios-ejercicio-clima';
+import { ritmoCardiacoMaximoEdadFormula } from './ritmo-cardiaco-maximo-edad-formula';
+import { tmbBasalHarrisBenedictMetabolismo } from './tmb-basal-harris-benedict-metabolismo';
+import { horasSuenoNecesariasEdadAdulto } from './horas-sueno-necesarias-edad-adulto';
+import { caloriasCervezaVinoFernetWhiskey } from './calorias-cerveza-vino-fernet-whiskey';
+import { cafeinaDiariaTazasCafeTopeSeguro } from './cafeina-diaria-tazas-cafe-tope-seguro';
+import { pasosDiariosRecomendadosCaminarSalud } from './pasos-diarios-recomendados-caminar-salud';
+import { caloriasEnsaladaCesarCompletaIngredientes } from './calorias-ensalada-cesar-completa-ingredientes';
+import { indiceCinturaCaderaSaludCardiovascular } from './indice-cintura-cadera-salud-cardiovascular';
+import { perimetroAbdominalRiesgoCardiovascular } from './perimetro-abdominal-riesgo-cardiovascular';
+import { ingestaSodioDiariaMgSalHipertension } from './ingesta-sodio-diaria-mg-sal-hipertension';
+import { azucaresAnadidosDiariosOmsMgGramos } from './azucares-anadidos-diarios-oms-mg-gramos';
+import { fibraDieteticaRecomendadaDiariaEdad } from './fibra-dietetica-recomendada-diaria-edad';
+import { vitaminaDDosisSolDiariaEdad } from './vitamina-d-dosis-sol-diaria-edad';
+import { hierroDiarioHombreMujerEmbarazo } from './hierro-diario-hombre-mujer-embarazo';
+import { calcioDiarioEdadLactanciaMenopausia } from './calcio-diario-edad-lactancia-menopausia';
+import { omega3DosisDiariaDhaEpa } from './omega-3-dosis-diaria-dha-epa';
+import { probioticoDosisUfcDiariaBebeAdulto } from './probiotico-dosis-ufc-diaria-bebe-adulto';
+import { pulsoArterialOximetriaSaturacionNormal } from './pulso-arterial-oximetria-saturacion-normal';
+import { presionArterialTablaNormalHipertension } from './presion-arterial-tabla-normal-hipertension';
+import { glucemiaAyunasDiabetesValoresNormales } from './glucemia-ayunas-diabetes-valores-normales';
+import { colesterolTotalLdlHdlValoresDeseables } from './colesterol-total-ldl-hdl-valores-deseables';
+import { trigliceridosValoresNormalesRiesgo } from './trigliceridos-valores-normales-riesgo';
+import { hemoglobinaGlicosiladaA1cDiabetes } from './hemoglobina-glicosilada-a1c-diabetes';
+import { caloriasQuemadasNadarEstiloLibrePecho } from './calorias-quemadas-nadar-estilo-libre-pecho';
+import { caloriasQuemadasBicicletaDistanciaPendiente } from './calorias-quemadas-bicicleta-distancia-pendiente';
+import { caloriasYogaPilatesHoraSesion } from './calorias-yoga-pilates-hora-sesion';
+import { caloriasSexoRelacionIntimaDuracion } from './calorias-sexo-relacion-intima-duracion';
+import { tiempoDigestionAlimentosEstomago } from './tiempo-digestion-alimentos-estomago';
+import { imcAdultosMayoresEdadTabla } from './imc-adultos-mayores-edad-tabla';
+import { pesoIdealFormulaLorentzDevine } from './peso-ideal-formula-lorentz-devine';
+import { grasaSubcutaneaVisceralTotalDiferencia } from './grasa-subcutanea-visceral-total-diferencia';
+import { hidratacionEjercicioElectrolitosIsotonica } from './hidratacion-ejercicio-electrolitos-isotonica';
+import { ayunoIntermitenteBeneficiosCalorias204 } from './ayuno-intermitente-beneficios-calorias-20-4';
+import { interesCompuestoAporteMensualCrecimiento } from './interes-compuesto-aporte-mensual-crecimiento';
+import { retiroTempranoFire25xGastosAnuales } from './retiro-temprano-fire-25x-gastos-anuales';
+import { safeWithdrawalRate4PorcientoRetiros } from './safe-withdrawal-rate-4-porciento-retiros';
+import { dcaDollarCostAveragingAccionesCripto } from './dca-dollar-cost-averaging-acciones-cripto';
+import { costeOportunidadDecisionInversion } from './coste-oportunidad-decision-inversion';
+import { valorTiempoDineroPresenteFuturo } from './valor-tiempo-dinero-presente-futuro';
+import { anualidadPerpetuidadFormulaPagos } from './anualidad-perpetuidad-formula-pagos';
+import { tasaFisherNominalRealInflacion } from './tasa-fisher-nominal-real-inflacion';
+import { prestamoHipotecarioFijoVariableComparativa } from './prestamo-hipotecario-fijo-variable-comparativa';
+import { refinanciacionHipotecaBreakEvenMes } from './refinanciacion-hipoteca-break-even-mes';
+import { prepagoHipotecaReduccionPlazoCuota } from './prepago-hipoteca-reduccion-plazo-cuota';
+import { planAhorroMetaFuturaViajeAuto } from './plan-ahorro-meta-futura-viaje-auto';
+import { inversionLumpSumVsDcaHistorico } from './inversion-lump-sum-vs-dca-historico';
+import { portafolio6040AccionesBonosRendimiento } from './portafolio-60-40-acciones-bonos-rendimiento';
+import { 3FundPortfolioBogleheadsDistribucion } from './3-fund-portfolio-bogleheads-distribucion';
+import { portafolioAllWeatherDalioAssetAllocation } from './portafolio-all-weather-dalio-asset-allocation';
+import { riskParityPortfolioAsignacionVolatilidad } from './risk-parity-portfolio-asignacion-volatilidad';
+import { drawdownMaximoAceptableInversor } from './drawdown-maximo-aceptable-inversor';
+import { volatilidadDesviacionEstandarRetornos } from './volatilidad-desviacion-estandar-retornos';
+import { correlacionActivosDiversificacionPortfolio } from './correlacion-activos-diversificacion-portfolio';
+import { regla72DuplicarCapitalAnos } from './regla-72-duplicar-capital-anos';
+import { regla114TriplicarCapitalTasa } from './regla-114-triplicar-capital-tasa';
+import { millonarioAhorrandoMensualAnosLlegar } from './millonario-ahorrando-mensual-anos-llegar';
+import { ahorroPrimerCasaDownPaymentMeta } from './ahorro-primer-casa-down-payment-meta';
+import { precioAccionObjetivoGananciaPorcentual } from './precio-accion-objetivo-ganancia-porcentual';
+import { comisionesBrokerIdaVueltaGananciaMinima } from './comisiones-broker-ida-vuelta-ganancia-minima';
+import { spreadBidAskCosteOcultoTrading } from './spread-bid-ask-coste-oculto-trading';
+import { impuestoGananciaCapitalVentaAccion } from './impuesto-ganancia-capital-venta-accion';
+import { etfVsMutualFundComparativaCostos } from './etf-vs-mutual-fund-comparativa-costos';
+import { rebalanceoPortfolioFrecuenciaUmbral } from './rebalanceo-portfolio-frecuencia-umbral';
+import { taxLossHarvestingOptimizacionFiscal } from './tax-loss-harvesting-optimizacion-fiscal';
+import { assetLocationRothIraTaxableBonds } from './asset-location-roth-ira-taxable-bonds';
+import { ira401kContributionLimitTopeAnual } from './ira-401k-contribution-limit-tope-anual';
+import { hsaFsaCuentasGastosSaludAhorro } from './hsa-fsa-cuentas-gastos-salud-ahorro';
+import { 529PlanAhorroEducacionHijoUniversidad } from './529-plan-ahorro-educacion-hijo-universidad';
+import { annuityAnnuityJubilacionPagoFijo } from './annuity-annuity-jubilacion-pago-fijo';
+import { socialSecurityOptimizationEdadClaim } from './social-security-optimization-edad-claim';
+import { pensionDefinedBenefitVsContribution } from './pension-defined-benefit-vs-contribution';
+import { lifetimeValueClienteLtvRetention } from './lifetime-value-cliente-ltv-retention';
+import { cacPaybackPeriodStartupUnitario } from './cac-payback-period-startup-unitario';
+import { porcionesArrozPorPersonaGuarnicion } from './porciones-arroz-por-persona-guarnicion';
+import { porcionesPastaSecaPersonaHambre } from './porciones-pasta-seca-persona-hambre';
+import { porcionesCarneAsadoParrillaPersona } from './porciones-carne-asado-parrilla-persona';
+import { porcionesSushiPorPersonaPromedio } from './porciones-sushi-por-persona-promedio';
+import { cantidadEmpanadasPorInvitadoEvento } from './cantidad-empanadas-por-invitado-evento';
+import { cantidadHamburguesasParrillaCumpleanos } from './cantidad-hamburguesas-parrilla-cumpleanos';
+import { cantidadPizzasPorInvitadosPizzeria } from './cantidad-pizzas-por-invitados-pizzeria';
+import { conversionCupsGramosHarinaAzucarAceite } from './conversion-cups-gramos-harina-azucar-aceite';
+import { conversionCucharaditasGramosEspeciasSal } from './conversion-cucharaditas-gramos-especias-sal';
+import { equivalenciaHuevosTamanoGramosClaras } from './equivalencia-huevos-tamano-gramos-claras';
+import { conversionTemperaturasHornoGasElectrico } from './conversion-temperaturas-horno-gas-electrico';
+import { tiemposCoccionVerdurasAlVaporHervido } from './tiempos-coccion-verduras-al-vapor-hervido';
+import { porcionesTortaCumpleanosInvitadosTamano } from './porciones-torta-cumpleanos-invitados-tamano';
+import { masaPizzaCaseraGramosInvitados } from './masa-pizza-casera-gramos-invitados';
+import { leudadoPanLevaduraTiempoTemperatura } from './leudado-pan-levadura-tiempo-temperatura';
+import { cafeMolidoTazaMetodoPreparacion } from './cafe-molido-taza-metodo-preparacion';
+import { hieloCubosNecesariosFiestaInvitados } from './hielo-cubos-necesarios-fiesta-invitados';
+import { bebidasEventoCervezaVinoRefrescoCalculadora } from './bebidas-evento-cerveza-vino-refresco-calculadora';
+import { kilosChocolateCaseroBombonesReceta } from './kilos-chocolate-casero-bombones-receta';
+import { ingredientesBudinVainillaCaseroAdaptar } from './ingredientes-budin-vainilla-casero-adaptar';
+import { pinturaParedesLitrosPorMetrosCuadrados } from './pintura-paredes-litros-por-metros-cuadrados';
+import { azulejosBaldosasMetrosCuadradosCantidad } from './azulejos-baldosas-metros-cuadrados-cantidad';
+import { pinturaMueblesBarnizLataCobertura } from './pintura-muebles-barniz-lata-cobertura';
+import { calderaPotenciaKwAmbienteMetros } from './caldera-potencia-kw-ambiente-metros';
+import { aireAcondicionadoFrigoriasBtuHabitacion } from './aire-acondicionado-frigorias-btu-habitacion';
+import { cortinasMedirTelaVentanaAnchotelaje } from './cortinas-medir-tela-ventana-anchotelaje';
+import { cableElectricoSeccionAmperajeDistancia } from './cable-electrico-seccion-amperaje-distancia';
+import { cerramientoPerimetroCasaLadrillosCosto } from './cerramiento-perimetro-casa-ladrillos-costo';
+import { jardineraTierraM3PorSuperficie } from './jardinera-tierra-m3-por-superficie';
+import { pastoSemillaKgM2CespedSembrar } from './pasto-semilla-kg-m2-cesped-sembrar';
+import { panelSolarKwConsumoHogarAutoconsumo } from './panel-solar-kw-consumo-hogar-autoconsumo';
+import { calefonTermotanqueLitrosPersonas } from './calefon-termotanque-litros-personas';
+import { maderaTerrazaMetrosCuadradosTablas } from './madera-terraza-metros-cuadrados-tablas';
+import { cantidadLadrillosMetroCuadradoPared } from './cantidad-ladrillos-metro-cuadrado-pared';
+import { cementoArenaHormigonRecetaMetroCubico } from './cemento-arena-hormigon-receta-metro-cubico';
+import { tableroMelaminaCortesAprovechamiento } from './tablero-melamina-cortes-aprovechamiento';
+import { bisagrasTornillosPuertaVentanaCantidad } from './bisagras-tornillos-puerta-ventana-cantidad';
+import { pegamentoCeramicasBolsasM2Area } from './pegamento-ceramicas-bolsas-m2-area';
+import { juntasPastinaRejuntadoCeramicosKg } from './juntas-pastina-rejuntado-ceramicos-kg';
+import { perfilAluminioMetrosLinealesVentana } from './perfil-aluminio-metros-lineales-ventana';
+import { promedioPonderadoMateriasCreditosUniversidad } from './promedio-ponderado-materias-creditos-universidad';
+import { notaMinimaAprobarFinalParcialPromedio } from './nota-minima-aprobar-final-parcial-promedio';
+import { gpaPromedioAmericanoEscala40 } from './gpa-promedio-americano-escala-4-0';
+import { tiempoEstudioExamenDificultadPaginas } from './tiempo-estudio-examen-dificultad-paginas';
+import { leerRapidoPalabrasPorMinutoTiempoLibro } from './leer-rapido-palabras-por-minuto-tiempo-libro';
+import { curvaOlvidoEbbinghausRepasosProgramados } from './curva-olvido-ebbinghaus-repasos-programados';
+import { tecnicaPomodoroBloquesDescansoOptimo } from './tecnica-pomodoro-bloques-descanso-optimo';
+import { tiempoLeerLibroPaginasVelocidad } from './tiempo-leer-libro-paginas-velocidad';
+import { horasPractica10000MaestriaGladwell } from './horas-practica-10000-maestria-gladwell';
+import { inglesNivelMcerHorasEstudioFsi } from './ingles-nivel-mcer-horas-estudio-fsi';
+import { vocabularioPalabrasActivasNivelIdioma } from './vocabulario-palabras-activas-nivel-idioma';
+import { ankiTarjetasDiariasMemorizacionVocabulario } from './anki-tarjetas-diarias-memorizacion-vocabulario';
+import { horasMaestriaCurvaAprendizaje8020 } from './horas-maestria-curva-aprendizaje-80-20';
+import { presupuestoEstudiarExteriorUniversidad } from './presupuesto-estudiar-exterior-universidad';
+import { becaPromedioMinimoRequisitoUniversidades } from './beca-promedio-minimo-requisito-universidades';
+import { duolingoTiempoDiaNivelMcerProgreso } from './duolingo-tiempo-dia-nivel-mcer-progreso';
+import { flashcardsCantidadDiariosMetaRetencion } from './flashcards-cantidad-diarios-meta-retencion';
+import { leerMesLibrosMetaAnualReto } from './leer-mes-libros-meta-anual-reto';
+import { resumenCapituloLibroMetodoCornell } from './resumen-capitulo-libro-metodo-cornell';
+import { speedReadingEjerciciosMesesMejora } from './speed-reading-ejercicios-meses-mejora';
+import { pomodoroSesionesDiaProductividadHoras } from './pomodoro-sesiones-dia-productividad-horas';
+import { deepWorkCalNewportHorasMaximoDiario } from './deep-work-cal-newport-horas-maximo-diario';
+import { gettingThingsDoneGtdInboxTareas } from './getting-things-done-gtd-inbox-tareas';
+import { timeBlockingCalendarHorasProductividad } from './time-blocking-calendar-horas-productividad';
+import { eisenhowerMatrizUrgenteImportanteTareas } from './eisenhower-matriz-urgente-importante-tareas';
+import { regla2MinutosDecisionTareaInmediata } from './regla-2-minutos-decision-tarea-inmediata';
+import { okrObjetivosResultadosClaveTrimestre } from './okr-objetivos-resultados-clave-trimestre';
+import { smartGoalsObjetivosMetodologiaMeta } from './smart-goals-objetivos-metodologia-meta';
+import { kanbanWipLimitCantidadTareasColumna } from './kanban-wip-limit-cantidad-tareas-columna';
+import { scrumSprintVelocityStoryPoints } from './scrum-sprint-velocity-story-points';
+import { tiempoReunionesCostoHorasEmpresa } from './tiempo-reuniones-costo-horas-empresa';
+import { emailGestionInboxZeroTiempoDedicado } from './email-gestion-inbox-zero-tiempo-dedicado';
+import { tareasLotesBatchingContextSwitching } from './tareas-lotes-batching-context-switching';
+import { horasPicoProductividadCronobiologiaChrono } from './horas-pico-productividad-cronobiologia-chrono';
+import { lecturaVelocidadPalabrasMinutoTest } from './lectura-velocidad-palabras-minuto-test';
+import { digitalMinimalismRedesTiempoPantalla } from './digital-minimalism-redes-tiempo-pantalla';
+import { multitaskingPerdidaProductividadSwitching } from './multitasking-perdida-productividad-switching';
+import { energyManagementVsTimeManagement } from './energy-management-vs-time-management';
+import { weeklyReviewGtdAllenTiempo6090min } from './weekly-review-gtd-allen-tiempo-60-90min';
+import { reglaNumeroDunbar150ContactosRed } from './regla-numero-dunbar-150-contactos-red';
+import { comidaPerroGramosAdultoSeniorPesos } from './comida-perro-gramos-adulto-senior-pesos';
+import { comidaGatoGramosPesoIdealRacion } from './comida-gato-gramos-peso-ideal-racion';
+import { edadGatoHumanoFormulaAnos } from './edad-gato-humano-formula-anos';
+import { edadPerroHumanoRazaTamano } from './edad-perro-humano-raza-tamano';
+import { pelajeCaidaPerroTemporadaCepillar } from './pelaje-caida-perro-temporada-cepillar';
+import { vacunasPerroCachorroAdultoCalendario } from './vacunas-perro-cachorro-adulto-calendario';
+import { vacunasGatoTripleLeucemiaRabia } from './vacunas-gato-triple-leucemia-rabia';
+import { peceraLitrosPecesCantidadM2 } from './pecera-litros-peces-cantidad-m2';
+import { tortugaAguaDietaPesoEdad } from './tortuga-agua-dieta-peso-edad';
+import { conejoComidaHenoPesoEdad } from './conejo-comida-heno-peso-edad';
+import { loroPeriquitoSemillasFrutasSemana } from './loro-periquito-semillas-frutas-semana';
+import { huronFerretDietaProteinaAnimal } from './huron-ferret-dieta-proteina-animal';
+import { cobayoVitaminaCDosisDiaria } from './cobayo-vitamina-c-dosis-diaria';
+import { paseosPerroMinutosRazaEnergia } from './paseos-perro-minutos-raza-energia';
+import { castracionPerraGataEdadIdeal } from './castracion-perra-gata-edad-ideal';
+import { compatibilidadParejaSignosZodiacales } from './compatibilidad-pareja-signos-zodiacales';
+import { tiempoSuperarRupturaRelacionMeses } from './tiempo-superar-ruptura-relacion-meses';
+import { darTiempoRelacionAntesVivirJuntos } from './dar-tiempo-relacion-antes-vivir-juntos';
+import { cuantoGastarRegaloNoviaAniversario } from './cuanto-gastar-regalo-novia-aniversario';
+import { bodaPresupuestoInvitadosEstimacion } from './boda-presupuesto-invitados-estimacion';
+import { reglaAmistadNumeroDunbarCirculos } from './regla-amistad-numero-dunbar-circulos';
+import { tiempoCalidadHijosPadresMadresMinutos } from './tiempo-calidad-hijos-padres-madres-minutos';
+import { horasDormirParejaDiscusionImpacto } from './horas-dormir-pareja-discusion-impacto';
+import { dineroSuegraSuegroCuantoFamiliaAyuda } from './dinero-suegra-suegro-cuanto-familia-ayuda';
+import { ahorroLunaMielMesesDestinoPresupuesto } from './ahorro-luna-miel-meses-destino-presupuesto';
+import { cumpleanosInvitadosGastarTortaRegalos } from './cumpleanos-invitados-gastar-torta-regalos';
+import { ritmoLlamadasMensajesAmorDistancia } from './ritmo-llamadas-mensajes-amor-distancia';
+import { maletasPesoAerolineasLowCostPremium } from './maletas-peso-aerolineas-low-cost-premium';
+import { equipajePesoSobrepesoCostePorKilo } from './equipaje-peso-sobrepeso-coste-por-kilo';
+import { cantidadRopaViajeDiasClima } from './cantidad-ropa-viaje-dias-clima';
+import { jetLagRecuperacionHorasDiferenciaDias } from './jet-lag-recuperacion-horas-diferencia-dias';
+import { presupuestoMochileroBackpackerDiaPais } from './presupuesto-mochilero-backpacker-dia-pais';
+import { hotelPrecioNochesVsAirbnbComparativa } from './hotel-precio-noches-vs-airbnb-comparativa';
+import { visaTurismoPaisesCostoTiempo } from './visa-turismo-paises-costo-tiempo';
+import { seguroViajeCosteDuracionEdadCobertura } from './seguro-viaje-coste-duracion-edad-cobertura';
+import { itinerarioCiudadesDiasOptimoPorCiudad } from './itinerario-ciudades-dias-optimo-por-ciudad';
+import { gasolinaViajeCarreteraDistanciaAuto } from './gasolina-viaje-carretera-distancia-auto';
+import { autoviaPeajesArgentinaRuta2Ruta3 } from './autovia-peajes-argentina-ruta-2-ruta-3';
+import { zonaHorariaDiferenciaCiudadesConvertir } from './zona-horaria-diferencia-ciudades-convertir';
+import { carryOnLiquidos100MlReglasAeropuerto } from './carry-on-liquidos-100-ml-reglas-aeropuerto';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3985,4 +4185,204 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuanto-falta-dia-madre-padre-argentina': cuantoFaltaDiaMadrePadreArgentina,
   'dias-habiles-mes-actual-feriados': diasHabilesMesActualFeriados,
   'fecha-exacta-sumar-restar-dias-habiles': fechaExactaSumarRestarDiasHabiles,
+  'calorias-huevo-revuelto-frito-cocido': caloriasHuevoRevueltoFritoCocido,
+  'calorias-pan-blanco-integral-porcion': caloriasPanBlancoIntegralPorcion,
+  'calorias-arroz-blanco-integral-cocido': caloriasArrozBlancoIntegralCocido,
+  'calorias-palta-aguacate-completa-mitad': caloriasPaltaAguacateCompletaMitad,
+  'calorias-pizza-muzzarella-porcion': caloriasPizzaMuzzarellaPorcion,
+  'calorias-hamburguesa-casera-comercial': caloriasHamburguesaCaseraComercial,
+  'agua-diaria-litros-necesarios-ejercicio-clima': aguaDiariaLitrosNecesariosEjercicioClima,
+  'ritmo-cardiaco-maximo-edad-formula': ritmoCardiacoMaximoEdadFormula,
+  'tmb-basal-harris-benedict-metabolismo': tmbBasalHarrisBenedictMetabolismo,
+  'horas-sueno-necesarias-edad-adulto': horasSuenoNecesariasEdadAdulto,
+  'calorias-cerveza-vino-fernet-whiskey': caloriasCervezaVinoFernetWhiskey,
+  'cafeina-diaria-tazas-cafe-tope-seguro': cafeinaDiariaTazasCafeTopeSeguro,
+  'pasos-diarios-recomendados-caminar-salud': pasosDiariosRecomendadosCaminarSalud,
+  'calorias-ensalada-cesar-completa-ingredientes': caloriasEnsaladaCesarCompletaIngredientes,
+  'indice-cintura-cadera-salud-cardiovascular': indiceCinturaCaderaSaludCardiovascular,
+  'perimetro-abdominal-riesgo-cardiovascular': perimetroAbdominalRiesgoCardiovascular,
+  'ingesta-sodio-diaria-mg-sal-hipertension': ingestaSodioDiariaMgSalHipertension,
+  'azucares-anadidos-diarios-oms-mg-gramos': azucaresAnadidosDiariosOmsMgGramos,
+  'fibra-dietetica-recomendada-diaria-edad': fibraDieteticaRecomendadaDiariaEdad,
+  'vitamina-d-dosis-sol-diaria-edad': vitaminaDDosisSolDiariaEdad,
+  'hierro-diario-hombre-mujer-embarazo': hierroDiarioHombreMujerEmbarazo,
+  'calcio-diario-edad-lactancia-menopausia': calcioDiarioEdadLactanciaMenopausia,
+  'omega-3-dosis-diaria-dha-epa': omega3DosisDiariaDhaEpa,
+  'probiotico-dosis-ufc-diaria-bebe-adulto': probioticoDosisUfcDiariaBebeAdulto,
+  'pulso-arterial-oximetria-saturacion-normal': pulsoArterialOximetriaSaturacionNormal,
+  'presion-arterial-tabla-normal-hipertension': presionArterialTablaNormalHipertension,
+  'glucemia-ayunas-diabetes-valores-normales': glucemiaAyunasDiabetesValoresNormales,
+  'colesterol-total-ldl-hdl-valores-deseables': colesterolTotalLdlHdlValoresDeseables,
+  'trigliceridos-valores-normales-riesgo': trigliceridosValoresNormalesRiesgo,
+  'hemoglobina-glicosilada-a1c-diabetes': hemoglobinaGlicosiladaA1cDiabetes,
+  'calorias-quemadas-nadar-estilo-libre-pecho': caloriasQuemadasNadarEstiloLibrePecho,
+  'calorias-quemadas-bicicleta-distancia-pendiente': caloriasQuemadasBicicletaDistanciaPendiente,
+  'calorias-yoga-pilates-hora-sesion': caloriasYogaPilatesHoraSesion,
+  'calorias-sexo-relacion-intima-duracion': caloriasSexoRelacionIntimaDuracion,
+  'tiempo-digestion-alimentos-estomago': tiempoDigestionAlimentosEstomago,
+  'imc-adultos-mayores-edad-tabla': imcAdultosMayoresEdadTabla,
+  'peso-ideal-formula-lorentz-devine': pesoIdealFormulaLorentzDevine,
+  'grasa-subcutanea-visceral-total-diferencia': grasaSubcutaneaVisceralTotalDiferencia,
+  'hidratacion-ejercicio-electrolitos-isotonica': hidratacionEjercicioElectrolitosIsotonica,
+  'ayuno-intermitente-beneficios-calorias-20-4': ayunoIntermitenteBeneficiosCalorias204,
+  'interes-compuesto-aporte-mensual-crecimiento': interesCompuestoAporteMensualCrecimiento,
+  'retiro-temprano-fire-25x-gastos-anuales': retiroTempranoFire25xGastosAnuales,
+  'safe-withdrawal-rate-4-porciento-retiros': safeWithdrawalRate4PorcientoRetiros,
+  'dca-dollar-cost-averaging-acciones-cripto': dcaDollarCostAveragingAccionesCripto,
+  'coste-oportunidad-decision-inversion': costeOportunidadDecisionInversion,
+  'valor-tiempo-dinero-presente-futuro': valorTiempoDineroPresenteFuturo,
+  'anualidad-perpetuidad-formula-pagos': anualidadPerpetuidadFormulaPagos,
+  'tasa-fisher-nominal-real-inflacion': tasaFisherNominalRealInflacion,
+  'prestamo-hipotecario-fijo-variable-comparativa': prestamoHipotecarioFijoVariableComparativa,
+  'refinanciacion-hipoteca-break-even-mes': refinanciacionHipotecaBreakEvenMes,
+  'prepago-hipoteca-reduccion-plazo-cuota': prepagoHipotecaReduccionPlazoCuota,
+  'plan-ahorro-meta-futura-viaje-auto': planAhorroMetaFuturaViajeAuto,
+  'inversion-lump-sum-vs-dca-historico': inversionLumpSumVsDcaHistorico,
+  'portafolio-60-40-acciones-bonos-rendimiento': portafolio6040AccionesBonosRendimiento,
+  '3-fund-portfolio-bogleheads-distribucion': 3FundPortfolioBogleheadsDistribucion,
+  'portafolio-all-weather-dalio-asset-allocation': portafolioAllWeatherDalioAssetAllocation,
+  'risk-parity-portfolio-asignacion-volatilidad': riskParityPortfolioAsignacionVolatilidad,
+  'drawdown-maximo-aceptable-inversor': drawdownMaximoAceptableInversor,
+  'volatilidad-desviacion-estandar-retornos': volatilidadDesviacionEstandarRetornos,
+  'correlacion-activos-diversificacion-portfolio': correlacionActivosDiversificacionPortfolio,
+  'regla-72-duplicar-capital-anos': regla72DuplicarCapitalAnos,
+  'regla-114-triplicar-capital-tasa': regla114TriplicarCapitalTasa,
+  'millonario-ahorrando-mensual-anos-llegar': millonarioAhorrandoMensualAnosLlegar,
+  'ahorro-primer-casa-down-payment-meta': ahorroPrimerCasaDownPaymentMeta,
+  'precio-accion-objetivo-ganancia-porcentual': precioAccionObjetivoGananciaPorcentual,
+  'comisiones-broker-ida-vuelta-ganancia-minima': comisionesBrokerIdaVueltaGananciaMinima,
+  'spread-bid-ask-coste-oculto-trading': spreadBidAskCosteOcultoTrading,
+  'impuesto-ganancia-capital-venta-accion': impuestoGananciaCapitalVentaAccion,
+  'etf-vs-mutual-fund-comparativa-costos': etfVsMutualFundComparativaCostos,
+  'rebalanceo-portfolio-frecuencia-umbral': rebalanceoPortfolioFrecuenciaUmbral,
+  'tax-loss-harvesting-optimizacion-fiscal': taxLossHarvestingOptimizacionFiscal,
+  'asset-location-roth-ira-taxable-bonds': assetLocationRothIraTaxableBonds,
+  'ira-401k-contribution-limit-tope-anual': ira401kContributionLimitTopeAnual,
+  'hsa-fsa-cuentas-gastos-salud-ahorro': hsaFsaCuentasGastosSaludAhorro,
+  '529-plan-ahorro-educacion-hijo-universidad': 529PlanAhorroEducacionHijoUniversidad,
+  'annuity-annuity-jubilacion-pago-fijo': annuityAnnuityJubilacionPagoFijo,
+  'social-security-optimization-edad-claim': socialSecurityOptimizationEdadClaim,
+  'pension-defined-benefit-vs-contribution': pensionDefinedBenefitVsContribution,
+  'lifetime-value-cliente-ltv-retention': lifetimeValueClienteLtvRetention,
+  'cac-payback-period-startup-unitario': cacPaybackPeriodStartupUnitario,
+  'porciones-arroz-por-persona-guarnicion': porcionesArrozPorPersonaGuarnicion,
+  'porciones-pasta-seca-persona-hambre': porcionesPastaSecaPersonaHambre,
+  'porciones-carne-asado-parrilla-persona': porcionesCarneAsadoParrillaPersona,
+  'porciones-sushi-por-persona-promedio': porcionesSushiPorPersonaPromedio,
+  'cantidad-empanadas-por-invitado-evento': cantidadEmpanadasPorInvitadoEvento,
+  'cantidad-hamburguesas-parrilla-cumpleanos': cantidadHamburguesasParrillaCumpleanos,
+  'cantidad-pizzas-por-invitados-pizzeria': cantidadPizzasPorInvitadosPizzeria,
+  'conversion-cups-gramos-harina-azucar-aceite': conversionCupsGramosHarinaAzucarAceite,
+  'conversion-cucharaditas-gramos-especias-sal': conversionCucharaditasGramosEspeciasSal,
+  'equivalencia-huevos-tamano-gramos-claras': equivalenciaHuevosTamanoGramosClaras,
+  'conversion-temperaturas-horno-gas-electrico': conversionTemperaturasHornoGasElectrico,
+  'tiempos-coccion-verduras-al-vapor-hervido': tiemposCoccionVerdurasAlVaporHervido,
+  'porciones-torta-cumpleanos-invitados-tamano': porcionesTortaCumpleanosInvitadosTamano,
+  'masa-pizza-casera-gramos-invitados': masaPizzaCaseraGramosInvitados,
+  'leudado-pan-levadura-tiempo-temperatura': leudadoPanLevaduraTiempoTemperatura,
+  'cafe-molido-taza-metodo-preparacion': cafeMolidoTazaMetodoPreparacion,
+  'hielo-cubos-necesarios-fiesta-invitados': hieloCubosNecesariosFiestaInvitados,
+  'bebidas-evento-cerveza-vino-refresco-calculadora': bebidasEventoCervezaVinoRefrescoCalculadora,
+  'kilos-chocolate-casero-bombones-receta': kilosChocolateCaseroBombonesReceta,
+  'ingredientes-budin-vainilla-casero-adaptar': ingredientesBudinVainillaCaseroAdaptar,
+  'pintura-paredes-litros-por-metros-cuadrados': pinturaParedesLitrosPorMetrosCuadrados,
+  'azulejos-baldosas-metros-cuadrados-cantidad': azulejosBaldosasMetrosCuadradosCantidad,
+  'pintura-muebles-barniz-lata-cobertura': pinturaMueblesBarnizLataCobertura,
+  'caldera-potencia-kw-ambiente-metros': calderaPotenciaKwAmbienteMetros,
+  'aire-acondicionado-frigorias-btu-habitacion': aireAcondicionadoFrigoriasBtuHabitacion,
+  'cortinas-medir-tela-ventana-anchotelaje': cortinasMedirTelaVentanaAnchotelaje,
+  'cable-electrico-seccion-amperaje-distancia': cableElectricoSeccionAmperajeDistancia,
+  'cerramiento-perimetro-casa-ladrillos-costo': cerramientoPerimetroCasaLadrillosCosto,
+  'jardinera-tierra-m3-por-superficie': jardineraTierraM3PorSuperficie,
+  'pasto-semilla-kg-m2-cesped-sembrar': pastoSemillaKgM2CespedSembrar,
+  'panel-solar-kw-consumo-hogar-autoconsumo': panelSolarKwConsumoHogarAutoconsumo,
+  'calefon-termotanque-litros-personas': calefonTermotanqueLitrosPersonas,
+  'madera-terraza-metros-cuadrados-tablas': maderaTerrazaMetrosCuadradosTablas,
+  'cantidad-ladrillos-metro-cuadrado-pared': cantidadLadrillosMetroCuadradoPared,
+  'cemento-arena-hormigon-receta-metro-cubico': cementoArenaHormigonRecetaMetroCubico,
+  'tablero-melamina-cortes-aprovechamiento': tableroMelaminaCortesAprovechamiento,
+  'bisagras-tornillos-puerta-ventana-cantidad': bisagrasTornillosPuertaVentanaCantidad,
+  'pegamento-ceramicas-bolsas-m2-area': pegamentoCeramicasBolsasM2Area,
+  'juntas-pastina-rejuntado-ceramicos-kg': juntasPastinaRejuntadoCeramicosKg,
+  'perfil-aluminio-metros-lineales-ventana': perfilAluminioMetrosLinealesVentana,
+  'promedio-ponderado-materias-creditos-universidad': promedioPonderadoMateriasCreditosUniversidad,
+  'nota-minima-aprobar-final-parcial-promedio': notaMinimaAprobarFinalParcialPromedio,
+  'gpa-promedio-americano-escala-4-0': gpaPromedioAmericanoEscala40,
+  'tiempo-estudio-examen-dificultad-paginas': tiempoEstudioExamenDificultadPaginas,
+  'leer-rapido-palabras-por-minuto-tiempo-libro': leerRapidoPalabrasPorMinutoTiempoLibro,
+  'curva-olvido-ebbinghaus-repasos-programados': curvaOlvidoEbbinghausRepasosProgramados,
+  'tecnica-pomodoro-bloques-descanso-optimo': tecnicaPomodoroBloquesDescansoOptimo,
+  'tiempo-leer-libro-paginas-velocidad': tiempoLeerLibroPaginasVelocidad,
+  'horas-practica-10000-maestria-gladwell': horasPractica10000MaestriaGladwell,
+  'ingles-nivel-mcer-horas-estudio-fsi': inglesNivelMcerHorasEstudioFsi,
+  'vocabulario-palabras-activas-nivel-idioma': vocabularioPalabrasActivasNivelIdioma,
+  'anki-tarjetas-diarias-memorizacion-vocabulario': ankiTarjetasDiariasMemorizacionVocabulario,
+  'horas-maestria-curva-aprendizaje-80-20': horasMaestriaCurvaAprendizaje8020,
+  'presupuesto-estudiar-exterior-universidad': presupuestoEstudiarExteriorUniversidad,
+  'beca-promedio-minimo-requisito-universidades': becaPromedioMinimoRequisitoUniversidades,
+  'duolingo-tiempo-dia-nivel-mcer-progreso': duolingoTiempoDiaNivelMcerProgreso,
+  'flashcards-cantidad-diarios-meta-retencion': flashcardsCantidadDiariosMetaRetencion,
+  'leer-mes-libros-meta-anual-reto': leerMesLibrosMetaAnualReto,
+  'resumen-capitulo-libro-metodo-cornell': resumenCapituloLibroMetodoCornell,
+  'speed-reading-ejercicios-meses-mejora': speedReadingEjerciciosMesesMejora,
+  'pomodoro-sesiones-dia-productividad-horas': pomodoroSesionesDiaProductividadHoras,
+  'deep-work-cal-newport-horas-maximo-diario': deepWorkCalNewportHorasMaximoDiario,
+  'getting-things-done-gtd-inbox-tareas': gettingThingsDoneGtdInboxTareas,
+  'time-blocking-calendar-horas-productividad': timeBlockingCalendarHorasProductividad,
+  'eisenhower-matriz-urgente-importante-tareas': eisenhowerMatrizUrgenteImportanteTareas,
+  'regla-2-minutos-decision-tarea-inmediata': regla2MinutosDecisionTareaInmediata,
+  'okr-objetivos-resultados-clave-trimestre': okrObjetivosResultadosClaveTrimestre,
+  'smart-goals-objetivos-metodologia-meta': smartGoalsObjetivosMetodologiaMeta,
+  'kanban-wip-limit-cantidad-tareas-columna': kanbanWipLimitCantidadTareasColumna,
+  'scrum-sprint-velocity-story-points': scrumSprintVelocityStoryPoints,
+  'tiempo-reuniones-costo-horas-empresa': tiempoReunionesCostoHorasEmpresa,
+  'email-gestion-inbox-zero-tiempo-dedicado': emailGestionInboxZeroTiempoDedicado,
+  'tareas-lotes-batching-context-switching': tareasLotesBatchingContextSwitching,
+  'horas-pico-productividad-cronobiologia-chrono': horasPicoProductividadCronobiologiaChrono,
+  'lectura-velocidad-palabras-minuto-test': lecturaVelocidadPalabrasMinutoTest,
+  'digital-minimalism-redes-tiempo-pantalla': digitalMinimalismRedesTiempoPantalla,
+  'multitasking-perdida-productividad-switching': multitaskingPerdidaProductividadSwitching,
+  'energy-management-vs-time-management': energyManagementVsTimeManagement,
+  'weekly-review-gtd-allen-tiempo-60-90min': weeklyReviewGtdAllenTiempo6090min,
+  'regla-numero-dunbar-150-contactos-red': reglaNumeroDunbar150ContactosRed,
+  'comida-perro-gramos-adulto-senior-pesos': comidaPerroGramosAdultoSeniorPesos,
+  'comida-gato-gramos-peso-ideal-racion': comidaGatoGramosPesoIdealRacion,
+  'edad-gato-humano-formula-anos': edadGatoHumanoFormulaAnos,
+  'edad-perro-humano-raza-tamano': edadPerroHumanoRazaTamano,
+  'pelaje-caida-perro-temporada-cepillar': pelajeCaidaPerroTemporadaCepillar,
+  'vacunas-perro-cachorro-adulto-calendario': vacunasPerroCachorroAdultoCalendario,
+  'vacunas-gato-triple-leucemia-rabia': vacunasGatoTripleLeucemiaRabia,
+  'pecera-litros-peces-cantidad-m2': peceraLitrosPecesCantidadM2,
+  'tortuga-agua-dieta-peso-edad': tortugaAguaDietaPesoEdad,
+  'conejo-comida-heno-peso-edad': conejoComidaHenoPesoEdad,
+  'loro-periquito-semillas-frutas-semana': loroPeriquitoSemillasFrutasSemana,
+  'huron-ferret-dieta-proteina-animal': huronFerretDietaProteinaAnimal,
+  'cobayo-vitamina-c-dosis-diaria': cobayoVitaminaCDosisDiaria,
+  'paseos-perro-minutos-raza-energia': paseosPerroMinutosRazaEnergia,
+  'castracion-perra-gata-edad-ideal': castracionPerraGataEdadIdeal,
+  'compatibilidad-pareja-signos-zodiacales': compatibilidadParejaSignosZodiacales,
+  'tiempo-superar-ruptura-relacion-meses': tiempoSuperarRupturaRelacionMeses,
+  'dar-tiempo-relacion-antes-vivir-juntos': darTiempoRelacionAntesVivirJuntos,
+  'cuanto-gastar-regalo-novia-aniversario': cuantoGastarRegaloNoviaAniversario,
+  'boda-presupuesto-invitados-estimacion': bodaPresupuestoInvitadosEstimacion,
+  'regla-amistad-numero-dunbar-circulos': reglaAmistadNumeroDunbarCirculos,
+  'tiempo-calidad-hijos-padres-madres-minutos': tiempoCalidadHijosPadresMadresMinutos,
+  'horas-dormir-pareja-discusion-impacto': horasDormirParejaDiscusionImpacto,
+  'dinero-suegra-suegro-cuanto-familia-ayuda': dineroSuegraSuegroCuantoFamiliaAyuda,
+  'ahorro-luna-miel-meses-destino-presupuesto': ahorroLunaMielMesesDestinoPresupuesto,
+  'cumpleanos-invitados-gastar-torta-regalos': cumpleanosInvitadosGastarTortaRegalos,
+  'ritmo-llamadas-mensajes-amor-distancia': ritmoLlamadasMensajesAmorDistancia,
+  'maletas-peso-aerolineas-low-cost-premium': maletasPesoAerolineasLowCostPremium,
+  'equipaje-peso-sobrepeso-coste-por-kilo': equipajePesoSobrepesoCostePorKilo,
+  'cantidad-ropa-viaje-dias-clima': cantidadRopaViajeDiasClima,
+  'jet-lag-recuperacion-horas-diferencia-dias': jetLagRecuperacionHorasDiferenciaDias,
+  'presupuesto-mochilero-backpacker-dia-pais': presupuestoMochileroBackpackerDiaPais,
+  'hotel-precio-noches-vs-airbnb-comparativa': hotelPrecioNochesVsAirbnbComparativa,
+  'visa-turismo-paises-costo-tiempo': visaTurismoPaisesCostoTiempo,
+  'seguro-viaje-coste-duracion-edad-cobertura': seguroViajeCosteDuracionEdadCobertura,
+  'itinerario-ciudades-dias-optimo-por-ciudad': itinerarioCiudadesDiasOptimoPorCiudad,
+  'gasolina-viaje-carretera-distancia-auto': gasolinaViajeCarreteraDistanciaAuto,
+  'autovia-peajes-argentina-ruta-2-ruta-3': autoviaPeajesArgentinaRuta2Ruta3,
+  'zona-horaria-diferencia-ciudades-convertir': zonaHorariaDiferenciaCiudadesConvertir,
+  'carry-on-liquidos-100-ml-reglas-aeropuerto': carryOnLiquidos100MlReglasAeropuerto,
 };
