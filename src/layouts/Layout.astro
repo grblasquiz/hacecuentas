@@ -178,21 +178,32 @@ const globalSchema = {
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
     <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
 
-    <!-- Google Consent Mode v2 — default 'denied' hasta que el usuario decida (GDPR/AdSense compliant) -->
+    <!-- Google Consent Mode v2
+         Default 'granted' para analytics (Argentina/LATAM no requiere opt-in bajo Ley 25.326).
+         ad_storage denied por default por compliance AdSense/UE; user lo activa via banner.
+         url_passthrough + ads_data_redaction permiten pings cookieless cuando el user rechaza.
+         wait_for_update aumentado a 2000ms para no perder sesiones con banners lentos. -->
     <script is:inline>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('consent', 'default', {
+        analytics_storage: 'granted',
+        functionality_storage: 'granted',
+        security_storage: 'granted',
         ad_storage: 'denied',
         ad_user_data: 'denied',
         ad_personalization: 'denied',
-        analytics_storage: 'denied',
-        functionality_storage: 'granted',
-        security_storage: 'granted',
-        wait_for_update: 500
+        wait_for_update: 2000
       });
+      gtag('set', 'url_passthrough', true);
+      gtag('set', 'ads_data_redaction', true);
       gtag('js', new Date());
-      gtag('config', 'G-789KMTKWX2', { anonymize_ip: true });
+      // send_page_view true (default) + anonymize_ip. Config explícito para debug.
+      gtag('config', 'G-789KMTKWX2', {
+        anonymize_ip: true,
+        send_page_view: true,
+        transport_type: 'beacon',
+      });
       gtag('config', 'AW-18096606872');
       function gtagSendEvent(url) {
         var callback = function () {
