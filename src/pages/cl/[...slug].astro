@@ -1,0 +1,1293 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Calculator from '../../components/Calculator.astro';
+import RelatedCalcs from '../../components/RelatedCalcs.astro';
+import ScrollToTop from '../../components/ScrollToTop.astro';
+
+export async function getStaticPaths() {
+  const calcs = import.meta.glob<any>('../../content/calcs-cl/*.json', { eager: true });
+  return Object.values(calcs).map((mod: any) => {
+    const c = mod.default || mod;
+    return {
+      params: { slug: c.slug },
+      props: { calc: c },
+    };
+  });
+}
+
+const { calc } = Astro.props;
+
+// Markdown simple → HTML
+function md(text: string): string {
+  // Process markdown tables as blocks first (header + separator + data rows → <table>)
+  text = text.replace(
+    /^(\|.+\|)\n(\|[-:| ]+\|)\n((?:\|.+\|\n?)*\|.+\|)/gm,
+    (_match: string, headerLine: string, _sep: string, bodyBlock: string) => {
+      const hCells = headerLine.slice(1, -1).split('|').map((s: string) => s.trim());
+      const rows = bodyBlock.split('\n').filter(Boolean).map((row: string) => {
+        const cells = row.slice(1, -1).split('|').map((s: string) => s.trim());
+        return '<tr>' + cells.map((c: string) => `<td>${c}</td>`).join('') + '</tr>';
+      });
+      return '<table><thead><tr>' + hCells.map((c: string) => `<th>${c}</th>`).join('') + '</tr></thead><tbody>' + rows.join('') + '</tbody></table>';
+    }
+  );
+  return text
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" rel="noopener">$1</a>')
+    .replace(/^\- (.+)$/gm, '<li>$1</li>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+}
+
+// Markdown inline-only — for fields that live inside a <p> or other inline element
+// (no <p>, <h2>, <li>, <br>; only bold, em, code, links).
+function mdInline(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" rel="noopener">$1</a>');
+}
+
+const categoryLabels: Record<string, string> = {
+  finanzas: 'Finanzas',
+  negocios: 'Negocios',
+  negocio: 'Negocios',
+  salud: 'Salud',
+  marketing: 'Marketing',
+  deportes: 'Deportes',
+  viajes: 'Viajes',
+  vida: 'Vida cotidiana',
+  mascotas: 'Mascotas',
+  matematica: 'Matemáticas',
+  construccion: 'Construcción',
+  cocina: 'Cocina',
+  educacion: 'Educación',
+  automotor: 'Automotriz',
+  tecnologia: 'Tecnología',
+  'medio-ambiente': 'Medio Ambiente',
+  electronica: 'Electrónica',
+};
+
+// dateModified = lastReviewed from JSON > mtime > build date
+let dateModified: string;
+let lastReviewedLabel: string;
+// OG image: if /public/og/{slug}.png exists use it, else fallback to default
+let ogImage = '/og-default.png';
+try {
+  const { statSync, existsSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const cwd = process.cwd();
+  const filePath = join(cwd, 'src', 'content', 'calcs-cl', `${calc.formulaId || calc.slug}.json`);
+  const ogPath = join(cwd, 'public', 'og', `${calc.slug}.png`);
+  if (existsSync(ogPath)) ogImage = `/og/${calc.slug}.png`;
+  if (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
+    dateModified = new Date(calc.lastReviewed + 'T00:00:00Z').toISOString();
+  } else {
+    dateModified = statSync(filePath).mtime.toISOString();
+  }
+} catch {
+  dateModified = new Date().toISOString();
+}
+lastReviewedLabel = new Date(dateModified).toLocaleDateString('es-MX', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+const datePublished = '2025-09-01T00:00:00Z';
+
+// audience: 'MX' (México-specific) o 'global' (aplica a cualquier país).
+const audience: 'MX' | 'global' = calc.audience === 'MX' ? 'MX' : 'global';
+
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: calc.h1,
+  description: calc.description,
+  totalTime: 'PT1M',
+  inLanguage: 'es-MX',
+  step: calc.fields.map((f: any, i: number) => ({
+    '@type': 'HowToStep',
+    position: i + 1,
+    name: f.label,
+    text: f.help || `Enter ${f.label.toLowerCase()}`,
+  })),
+};
+
+const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: calc.faq.map((f: any) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: f.a,
+    },
+  })),
+} : null;
+
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/mx/' },
+    { '@type': 'ListItem', position: 2, name: categoryLabels[calc.category] || calc.category, item: 'https://hacecuentas.com/mx/' },
+    { '@type': 'ListItem', position: 3, name: calc.h1 },
+  ],
+};
+
+// SoftwareApplication + WebApplication
+const schemaApp = {
+  '@context': 'https://schema.org',
+  '@type': ['SoftwareApplication', 'WebApplication'],
+  name: calc.h1,
+  description: calc.description,
+  url: `https://hacecuentas.com/mx/${calc.slug}`,
+  mainEntityOfPage: `https://hacecuentas.com/mx/${calc.slug}`,
+  applicationCategory: 'UtilitiesApplication',
+  applicationSubCategory: 'Calculator',
+  operatingSystem: 'Any (Web)',
+  browserRequirements: 'Requires JavaScript. Requires HTML5.',
+  inLanguage: 'es-MX',
+  isAccessibleForFree: true,
+  datePublished,
+  dateModified,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Hacé Cuentas',
+    url: 'https://hacecuentas.com',
+  },
+};
+
+// Article schema for YMYL categories
+const isYMYL = ['finanzas', 'salud', 'negocios', 'mascotas'].includes(calc.category);
+const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 1500)) ? {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: calc.h1,
+  description: calc.description,
+  url: `https://hacecuentas.com/mx/${calc.slug}`,
+  mainEntityOfPage: `https://hacecuentas.com/mx/${calc.slug}`,
+  inLanguage: 'es-MX',
+  datePublished,
+  dateModified,
+  author: {
+    '@type': 'Organization',
+    name: 'Equipo Hacé Cuentas',
+    url: 'https://hacecuentas.com/politica-editorial',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Hacé Cuentas',
+    url: 'https://hacecuentas.com',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://hacecuentas.com/og-default.png',
+    },
+  },
+  about: categoryLabels[calc.category] || calc.category,
+  isAccessibleForFree: true,
+  citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+} : null;
+
+const schemaGraph: any[] = [schemaHowTo, schemaBreadcrumb, schemaApp];
+if (schemaFAQ) schemaGraph.push(schemaFAQ);
+if (schemaArticle) schemaGraph.push(schemaArticle);
+const schema = { '@context': 'https://schema.org', '@graph': schemaGraph };
+
+const updated = lastReviewedLabel;
+
+// Reading time: ~250 palabras/minuto en español
+const wordCount = calc.explanation ? calc.explanation.split(/\s+/).length : 0;
+const readingMin = Math.max(1, Math.round(wordCount / 250));
+
+// Optional SEO fields
+const sources: Array<{ name: string; url?: string }> = calc.sources || [];
+const useCases: string[] = calc.useCases || [];
+const example: { title?: string; steps?: string[]; result?: string } | null = calc.example || null;
+const keyTakeaway: string = calc.keyTakeaway || '';
+const relatedSlugs: string[] = calc.relatedSlugs || [];
+
+// Lookup for related links — cargar calcs mexicanas
+const allCalcsModules = import.meta.glob<any>('../../content/calcs-cl/*.json', { eager: true });
+const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
+const relatedContextual = relatedSlugs
+  .map((s) => allCalcs.find((c) => c.slug === s))
+  .filter(Boolean);
+
+// TOC: top-level rendered sections (in order of appearance)
+const tocSections: Array<{ id: string; label: string }> = [
+  { id: 'calculator', label: 'Calculator' },
+];
+if (keyTakeaway) tocSections.push({ id: 'summary', label: 'In a nutshell' });
+if (useCases.length > 0) tocSections.push({ id: 'when-to-use', label: 'When to use' });
+if (example && example.steps) tocSections.push({ id: 'example', label: 'Step-by-step example' });
+if (calc.explanation) tocSections.push({ id: 'how-it-works', label: 'How it works' });
+if (calc.faq && calc.faq.length > 0) tocSections.push({ id: 'faq', label: 'FAQ' });
+if (sources.length > 0) tocSections.push({ id: 'sources', label: 'Sources' });
+
+// Heuristic LaTeX detection in explanation (to conditionally load KaTeX)
+const hasMath = calc.explanation && /(\$[^$\n]+\$|\\frac|\\sqrt|\\sum|\\times|\\cdot)/.test(calc.explanation);
+
+// Pre-filled subject for "Report error"
+const reportSubject = encodeURIComponent(`Error in /mx/${calc.slug}`);
+const reportBody = encodeURIComponent(
+  `Hi Equipo Hacé Cuentas,\n\nI found an error in the calculator "${calc.h1}":\n\nURL: https://hacecuentas.com/mx/${calc.slug}\nInput data: \nExpected result: \nActual result: \nSource / reference: \n\nThank you.`
+);
+
+// hreflang: link to Spanish equivalent via esSlug
+const esSlug = calc.esSlug;
+const hreflangTags = esSlug ? [
+  { lang: 'es', href: `https://hacecuentas.com/${esSlug}` },
+  { lang: 'es', href: `https://hacecuentas.com/mx/${calc.slug}` },
+  { lang: 'x-default', href: `https://hacecuentas.com/${esSlug}` },
+] : undefined;
+---
+
+<Layout
+  title={calc.title}
+  description={calc.description}
+  schema={schema}
+  image={ogImage}
+  lang="es"
+  hreflang={hreflangTags}
+>
+  <Header slot="header" />
+
+  <article class="calc-page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/mx/">Home</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span>{categoryLabels[calc.category] || calc.category}</span>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">{calc.h1}</span>
+    </nav>
+
+    <header class="calc-header">
+      <div class="header-left">
+        <span class="icon-wrap" aria-hidden="true">{calc.icon}</span>
+        <div>
+          <div class="eyebrow">{categoryLabels[calc.category] || calc.category}</div>
+          <h1>{calc.h1}{audience === 'AR' && <span class="ar-badge-h1" title="Argentina-specific" aria-label="Argentina-specific">🇦🇷</span>}</h1>
+        </div>
+      </div>
+    </header>
+
+    <div class="calc-layout">
+      {tocSections.length > 2 && (
+        <aside class="toc" aria-label="Table of contents">
+          <div class="toc-title">On this page</div>
+          <ol class="toc-list">
+            {tocSections.map((s) => (
+              <li><a href={`#${s.id}`} data-toc-link={s.id}>{s.label}</a></li>
+            ))}
+          </ol>
+        </aside>
+      )}
+
+      <div class="calc-main">
+        <section id="calculator">
+          <Calculator config={calc} lang="es" />
+        </section>
+
+        <div class="calc-actions" id="calc-actions">
+          <div class="ca-feedback" data-state="ask">
+            <span class="ca-q">Was this calculator helpful?</span>
+            <div class="ca-buttons">
+              <button type="button" class="ca-vote" data-vote="up" aria-label="Yes, it was helpful">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7"/></svg>
+                Yes
+              </button>
+              <button type="button" class="ca-vote" data-vote="down" aria-label="Not helpful">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H17"/></svg>
+                No
+              </button>
+            </div>
+          </div>
+          <div class="ca-tools">
+            <button type="button" class="ca-tool" id="ca-share" data-url={`https://hacecuentas.com/mx/${calc.slug}`} data-title={calc.h1}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Share
+            </button>
+            <a class="ca-tool" href={`mailto:errores@hacecuentas.com?subject=${reportSubject}&body=${reportBody}`}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+              Report error
+            </a>
+          </div>
+        </div>
+
+        <p class="intro" set:html={mdInline(calc.intro)}></p>
+
+        {audience === 'AR' && (
+          <aside class="audience-notice" role="note" aria-label="Audience notice for this calculator">
+            <span class="an-flag" aria-hidden="true">🇦🇷</span>
+            <div class="an-body">
+              <strong>Argentina-specific calculator.</strong>
+              The laws, tax brackets, and values used are those in effect in Argentina (AFIP/ARCA, BCRA, ANSES). They do not apply to other countries.
+            </div>
+          </aside>
+        )}
+
+        <div class="meta">
+          <span class="meta-item" title={`Last reviewed: ${updated} · Equipo Hacé Cuentas`}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Last reviewed: <strong>{updated}</strong>
+          </span>
+          <span class="meta-item meta-reviewer">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            Verified by <a href="/politica-editorial">Equipo Hacé Cuentas</a>
+          </span>
+          {sources.length > 0 && (
+            <span class="meta-item">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Source: {sources.map((s) => s.name).join(', ')}
+            </span>
+          )}
+          {sources.length === 0 && (
+            <span class="meta-item">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Formula explained
+            </span>
+          )}
+          <span class="meta-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            100% private
+          </span>
+        </div>
+
+        {keyTakeaway && (
+          <aside id="summary" class="key-takeaway" aria-label="Quick summary">
+            <div class="kt-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </div>
+            <div><strong>In a nutshell:</strong> <span set:html={md(keyTakeaway)} /></div>
+          </aside>
+        )}
+
+        {useCases.length > 0 && (
+          <section id="when-to-use" class="use-cases" aria-labelledby="use-cases-heading">
+            <h2 id="use-cases-heading">When to use this calculator</h2>
+            <ul>
+              {useCases.map((u: string) => (
+                <li set:html={md(u)} />
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {example && example.steps && (
+          <section id="example" class="example" aria-labelledby="example-heading">
+            <h2 id="example-heading">{example.title || 'Step-by-step example'}</h2>
+            <ol class="example-steps">
+              {example.steps.map((s: string) => <li set:html={md(s)} />)}
+            </ol>
+            {example.result && (
+              <div class="example-result"><strong>Result:</strong> <span set:html={md(example.result)} /></div>
+            )}
+          </section>
+        )}
+
+        {calc.explanation && (
+          <section id="how-it-works" class="explanation" data-has-math={hasMath ? 'true' : 'false'}>
+            <div class="explanation-header">
+              <h2 class="explanation-title">How it works</h2>
+              <span class="reading-time">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                {readingMin} min read
+              </span>
+            </div>
+            <Fragment set:html={`<p>${md(calc.explanation)}</p>`} />
+          </section>
+        )}
+
+        {calc.faq && calc.faq.length > 0 && (
+          <section id="faq" class="faq">
+            <h2>Frequently asked questions</h2>
+            <div class="faq-list">
+              {calc.faq.map((f: any) => (
+                <details>
+                  <summary>
+                    <span>{f.q}</span>
+                    <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </summary>
+                  <div set:html={`<p>${md(f.a)}</p>`} />
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {sources.length > 0 && (
+          <section id="sources" class="sources-box" aria-labelledby="sources-heading">
+            <h2 id="sources-heading">Sources and references</h2>
+            <ul>
+              {sources.map((s: any) => (
+                <li>
+                  {s.url
+                    ? <a href={s.url} target="_blank" rel="noopener nofollow">{s.name}</a>
+                    : <span>{s.name}</span>
+                  }
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {relatedContextual.length > 0 && (
+          <section class="also-see" aria-labelledby="also-heading">
+            <h2 id="also-heading">You may also find useful</h2>
+            <div class="also-grid">
+              {relatedContextual.map((c: any) => (
+                <a href={`/mx/${c.slug}`} class="also-card">
+                  <span class="also-icon" aria-hidden="true">{c.icon}</span>
+                  <span class="also-body">
+                    <span class="also-title">{c.h1}</span>
+                    <span class="also-desc">{c.description}</span>
+                  </span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <RelatedCalcs currentSlug={calc.slug} category={calc.category} limit={4} manualSlugs={relatedSlugs} />
+
+        <aside class="cta-back">
+          <p>Looking for a different calculator?</p>
+          <a href="/mx/" class="btn-ghost">See all calculators &rarr;</a>
+          <p class="cta-suggest">Can't find what you need? <a href="mailto:ideas@hacecuentas.com?subject=Calculator idea&body=I'd like Hacé Cuentas to have a calculator for...">Request a new calculator &rarr;</a></p>
+        </aside>
+      </div>
+    </div>
+  </article>
+
+  {hasMath && (
+    <Fragment>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous" />
+      <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+      <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.querySelector('#how-it-works'), {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\\\(',right:'\\\\)',display:false},{left:'\\\\[',right:'\\\\]',display:true}], throwOnError:false});"></script>
+    </Fragment>
+  )}
+
+  <script is:inline>
+    (function () {
+      // Thumbs feedback
+      var feedback = document.querySelector('.ca-feedback');
+      if (feedback) {
+        var slug = window.location.pathname;
+        var key = 'hc-vote-' + slug;
+        var prev = null;
+        try { prev = localStorage.getItem(key); } catch (e) {}
+        if (prev === 'up' || prev === 'down') {
+          renderThanks(prev);
+        }
+        feedback.querySelectorAll('.ca-vote').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var v = btn.getAttribute('data-vote');
+            try { localStorage.setItem(key, v); } catch (e) {}
+            renderThanks(v);
+            if (typeof window.gtag === 'function') {
+              window.gtag('event', 'calc_feedback', { value: v, slug: slug });
+            }
+          });
+        });
+        function renderThanks(v) {
+          if (v === 'up') {
+            feedback.setAttribute('data-state', 'thanks');
+            feedback.innerHTML = '<span class="ca-msg">Thanks for your feedback!</span>';
+          } else {
+            feedback.setAttribute('data-state', 'sorry');
+            feedback.innerHTML = '<span class="ca-msg">Thanks. What\'s missing or wrong? <a href="mailto:errores@hacecuentas.com?subject=Improvement for ' + encodeURIComponent(slug) + '">Let us know by email</a>.</span>';
+          }
+        }
+      }
+
+      // Share
+      var shareBtn = document.getElementById('ca-share');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', async function () {
+          var url = shareBtn.getAttribute('data-url');
+          var title = shareBtn.getAttribute('data-title');
+          if (navigator.share) {
+            try { await navigator.share({ title: title, url: url }); } catch (e) {}
+          } else if (navigator.clipboard) {
+            try {
+              await navigator.clipboard.writeText(url);
+              var orig = shareBtn.innerHTML;
+              shareBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+              setTimeout(function () { shareBtn.innerHTML = orig; }, 2000);
+            } catch (e) {}
+          }
+        });
+      }
+
+      // TOC scrollspy
+      var tocLinks = document.querySelectorAll('[data-toc-link]');
+      if (tocLinks.length > 0 && 'IntersectionObserver' in window) {
+        var sections = Array.from(tocLinks).map(function (l) {
+          return document.getElementById(l.getAttribute('data-toc-link'));
+        }).filter(Boolean);
+        var observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              tocLinks.forEach(function (l) { l.classList.remove('active'); });
+              var match = document.querySelector('[data-toc-link="' + entry.target.id + '"]');
+              if (match) match.classList.add('active');
+            }
+          });
+        }, { rootMargin: '-80px 0px -60% 0px' });
+        sections.forEach(function (s) { observer.observe(s); });
+      }
+
+      // Floating recalculate FAB (mobile only)
+      var fab = document.getElementById('fab-recalc');
+      if (fab && window.innerWidth < 1100) {
+        var calcSection = document.getElementById('calculator');
+        if (calcSection) {
+          var resultsEl = calcSection.querySelector('.calc-results');
+          var calcObs = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              if (resultsEl && !resultsEl.hidden && !entry.isIntersecting) {
+                fab.hidden = false;
+              } else {
+                fab.hidden = true;
+              }
+            });
+          }, { threshold: 0 });
+          calcObs.observe(calcSection);
+          fab.addEventListener('click', function () {
+            calcSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        }
+      }
+    })();
+  </script>
+
+  <!-- Floating recalculate (mobile only, post-result) -->
+  <div class="fab-recalc" id="fab-recalc" hidden aria-label="Recalculate">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+    Recalculate
+  </div>
+
+  <ScrollToTop />
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .calc-page {
+    max-width: 780px;
+    margin: 0 auto;
+  }
+
+  /* Breadcrumbs */
+  .breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    margin-bottom: 1.75rem;
+  }
+
+  .breadcrumbs a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .breadcrumbs a:hover {
+    color: var(--accent);
+  }
+
+  .breadcrumbs .sep {
+    color: var(--border-strong);
+  }
+
+  .breadcrumbs .current {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* Header */
+  .calc-header {
+    margin-bottom: 2rem;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .icon-wrap {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    background: var(--accent-soft);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+  }
+
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.25rem;
+  }
+
+  .calc-header h1 {
+    margin: 0;
+    font-size: clamp(1.625rem, 3.5vw, 2.25rem);
+    line-height: 1.15;
+  }
+
+  .intro {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+
+  /* Badge AR en H1 */
+  .ar-badge-h1 {
+    display: inline-block;
+    margin-left: 0.4em;
+    font-size: 0.7em;
+    vertical-align: 0.15em;
+    line-height: 1;
+  }
+
+  /* Audience notice */
+  .audience-notice {
+    display: flex;
+    gap: 0.875rem;
+    align-items: flex-start;
+    margin: 0.75rem 0 1.25rem;
+    padding: 0.875rem 1.125rem;
+    background: var(--warning-soft);
+    border-left: 3px solid var(--warning);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+  .audience-notice .an-flag {
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+  .audience-notice .an-body { color: var(--text-muted); }
+  .audience-notice strong {
+    display: block;
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 0.125rem;
+  }
+
+  .meta-reviewer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .meta-reviewer a:hover { text-decoration: underline; }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    font-weight: 500;
+  }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 3rem;
+    padding: 2rem 2.25rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .explanation-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .explanation-title {
+    margin: 0;
+    font-size: 1.375rem;
+    font-weight: 700;
+  }
+
+  .reading-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .explanation :global(h2) {
+    margin-top: 0;
+    font-size: 1.375rem;
+  }
+
+  .explanation :global(h3) {
+    margin: 1.75rem 0 0.5rem;
+    font-size: 1.0625rem;
+  }
+
+  .explanation :global(p) {
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    line-height: 1.7;
+  }
+
+  .explanation :global(strong) {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .explanation :global(code) {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 0.125rem 0.375rem;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.8125em;
+    color: var(--accent-strong);
+  }
+
+  .explanation :global(ul),
+  .explanation :global(ol) {
+    margin-left: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .explanation :global(li) {
+    margin-bottom: 0.375rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+  }
+
+  .explanation :global(table) {
+    border-collapse: collapse;
+    margin: 1rem 0;
+    width: 100%;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .explanation :global(th) {
+    padding: 0.625rem 0.875rem;
+    border-bottom: 2px solid var(--border);
+    color: var(--text);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .explanation :global(td) {
+    padding: 0.625rem 0.875rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+  }
+
+  .explanation :global(tr:last-child td) {
+    border-bottom: none;
+  }
+
+  .explanation :global(a) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* FAQ */
+  .faq {
+    margin-top: 3rem;
+  }
+
+  .faq h2 {
+    margin-bottom: 1.25rem;
+    font-size: 1.5rem;
+  }
+
+  .faq-list {
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  .faq details {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 0.15s;
+  }
+
+  .faq details:hover {
+    border-color: var(--border-strong);
+  }
+
+  .faq details[open] {
+    border-color: var(--accent);
+    background: var(--bg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .faq summary {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text);
+    list-style: none;
+  }
+
+  .faq summary::-webkit-details-marker { display: none; }
+
+  .faq .chev {
+    color: var(--text-subtle);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .faq details[open] .chev {
+    transform: rotate(180deg);
+    color: var(--accent);
+  }
+
+  .faq details p {
+    color: var(--text-muted);
+    padding: 0 1.25rem 1.125rem;
+    margin: 0;
+    line-height: 1.65;
+    font-size: 0.9375rem;
+  }
+
+  /* Key takeaway */
+  .key-takeaway {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    margin-top: 2rem;
+    padding: 1rem 1.25rem;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+  .key-takeaway .kt-icon { color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+  .key-takeaway strong { color: var(--accent-strong); }
+
+  /* Use cases */
+  .use-cases {
+    margin-top: 2.5rem;
+    padding: 1.75rem 2rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .use-cases h2 {
+    margin: 0 0 0.875rem;
+    font-size: 1.25rem;
+  }
+  .use-cases ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .use-cases li {
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 0.375rem;
+  }
+
+  /* Example */
+  .example {
+    margin-top: 2.5rem;
+    padding: 1.75rem 2rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .example h2 { margin: 0 0 1rem; font-size: 1.25rem; }
+  .example-steps {
+    margin: 0 0 1rem;
+    padding-left: 1.25rem;
+    counter-reset: step;
+  }
+  .example-steps li {
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 0.5rem;
+  }
+  .example-steps li :global(code), .example-steps :global(code) {
+    background: var(--bg-muted);
+    padding: 0.0625rem 0.375rem;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    color: var(--accent-strong);
+  }
+  .example-result {
+    padding: 0.75rem 1rem;
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.9375rem;
+  }
+  .example-result strong { color: var(--accent-strong); }
+
+  /* Sources */
+  .sources-box {
+    margin-top: 2.5rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .sources-box h2 {
+    margin: 0 0 0.625rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .sources-box ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .sources-box li {
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    font-size: 0.9375rem;
+  }
+  .sources-box a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .sources-box a:hover { text-decoration: underline; }
+
+  /* Related contextual */
+  .also-see {
+    margin-top: 3rem;
+  }
+  .also-see h2 {
+    font-size: 1.25rem;
+    margin: 0 0 1rem;
+  }
+  .also-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.75rem;
+  }
+  .also-card {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .also-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+  }
+  .also-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+  }
+  .also-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.125rem; }
+  .also-title { font-weight: 600; font-size: 0.9375rem; line-height: 1.3; }
+  .also-desc { font-size: 0.75rem; color: var(--text-subtle); line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* CTA back */
+  .cta-back {
+    margin-top: 3.5rem;
+    padding: 1.75rem;
+    background: var(--accent-soft);
+    border: 1px solid #dbeafe;
+    border-radius: var(--radius-lg);
+    text-align: center;
+  }
+
+  .cta-back p {
+    margin: 0 0 0.75rem;
+    color: var(--accent-strong);
+    font-weight: 500;
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.625rem 1.125rem;
+    background: var(--bg);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+
+  .btn-ghost:hover {
+    background: var(--accent);
+    color: var(--bg);
+    text-decoration: none;
+  }
+
+  /* Layout with sticky sidebar TOC */
+  .calc-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+  }
+  .calc-main { min-width: 0; }
+
+  @media (min-width: 1100px) {
+    .calc-page { max-width: 1080px; }
+    .calc-layout { grid-template-columns: 220px minmax(0, 1fr); align-items: flex-start; }
+    .toc {
+      position: sticky;
+      top: 90px;
+      align-self: flex-start;
+      max-height: calc(100vh - 110px);
+      overflow-y: auto;
+    }
+  }
+
+  .toc {
+    padding: 1rem 1.125rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .toc-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.625rem;
+  }
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  .toc-list a {
+    display: block;
+    padding: 0.375rem 0.625rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    transition: background 0.12s, color 0.12s;
+    border-left: 2px solid transparent;
+  }
+  .toc-list a:hover { background: var(--bg); color: var(--text); }
+  .toc-list a.active {
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
+
+  @media (max-width: 1099px) {
+    .toc { display: none; }
+  }
+
+  /* Calc actions: thumbs + share + report */
+  .calc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding: 0.875rem 1.125rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .ca-feedback {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex-wrap: wrap;
+  }
+  .ca-q { font-size: 0.875rem; color: var(--text-muted); font-weight: 500; }
+  .ca-msg { font-size: 0.875rem; color: var(--text-muted); }
+  .ca-msg a { color: var(--accent); text-decoration: underline; }
+  .ca-buttons { display: inline-flex; gap: 0.375rem; }
+  .ca-vote {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+    padding: 0.375rem 0.75rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .ca-vote:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .ca-tools { display: inline-flex; gap: 0.375rem; flex-wrap: wrap; }
+  .ca-tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+    padding: 0.375rem 0.75rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .ca-tool:hover {
+    border-color: var(--text-subtle);
+    color: var(--text);
+    background: var(--bg-soft);
+  }
+
+  /* KaTeX overrides */
+  .explanation :global(.katex-display) {
+    margin: 1rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+  }
+  .explanation :global(.katex) {
+    font-size: 1em;
+  }
+
+  @media (max-width: 640px) {
+    .explanation { padding: 1.5rem 1.25rem; }
+    .header-left { flex-direction: row; }
+    .icon-wrap { width: 48px; height: 48px; font-size: 1.5rem; }
+    .calc-actions { flex-direction: column; align-items: stretch; }
+    .ca-feedback, .ca-tools { justify-content: center; }
+  }
+
+  .fab-recalc {
+    display: none;
+  }
+  @media (max-width: 1099px) {
+    .fab-recalc {
+      display: none;
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      z-index: 50;
+      padding: 0.625rem 1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .fab-recalc:not([hidden]) {
+      display: inline-flex;
+    }
+    .fab-recalc:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+    }
+  }
+
+  .cta-suggest {
+    margin: 0.75rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+  .cta-suggest a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 500;
+  }
+</style>

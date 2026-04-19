@@ -1,0 +1,504 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+export const prerender = true;
+
+const title = 'Inflación Argentina Hoy — Mensual, Interanual, UVA en Vivo | Hacé Cuentas';
+const description = 'Inflación en Argentina hoy: dato mensual del INDEC, interanual, histórico 12 meses y valor UVA actualizado. Fuente oficial + comparación con tasas de plazo fijo.';
+
+interface DataPoint { fecha: string; valor: number; }
+interface PlazoFijoBanco { entidad: string; logo: string; tnaClientes: number; }
+
+// Fetch build-time — fallback graceful si falla
+let inflacionMensual: DataPoint[] = [];
+let inflacionInteranual: DataPoint[] = [];
+let uva: DataPoint[] = [];
+let plazoFijo: PlazoFijoBanco[] = [];
+let buildTs = 0;
+
+try {
+  const [rInf, rInfIa, rUva, rPf] = await Promise.all([
+    fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion', { signal: AbortSignal.timeout(8000) }),
+    fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacionInteranual', { signal: AbortSignal.timeout(8000) }),
+    fetch('https://api.argentinadatos.com/v1/finanzas/indices/uva', { signal: AbortSignal.timeout(8000) }),
+    fetch('https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo', { signal: AbortSignal.timeout(8000) }),
+  ]);
+  if (rInf.ok) inflacionMensual = await rInf.json();
+  if (rInfIa.ok) inflacionInteranual = await rInfIa.json();
+  if (rUva.ok) uva = await rUva.json();
+  if (rPf.ok) plazoFijo = await rPf.json();
+  buildTs = Date.now();
+} catch (e) {
+  console.warn('[inflacion] fetch failed at build:', e);
+}
+
+// Extraer últimos datos
+const lastMensual = inflacionMensual[inflacionMensual.length - 1];
+const lastInteranual = inflacionInteranual[inflacionInteranual.length - 1];
+const lastUva = uva[uva.length - 1];
+const last12 = inflacionMensual.slice(-12).reverse();
+
+// Acumulado 12 meses (compuesto)
+let acum12 = 1;
+for (const m of inflacionMensual.slice(-12)) acum12 *= (1 + m.valor / 100);
+const acum12Pct = ((acum12 - 1) * 100);
+
+// TNA promedio plazo fijo (solo los que tienen dato)
+const tnaValidas = plazoFijo.map(b => b.tnaClientes).filter((x): x is number => typeof x === 'number' && x > 0);
+const tnaAvg = tnaValidas.length ? (tnaValidas.reduce((a, b) => a + b, 0) / tnaValidas.length * 100) : 0;
+const tnaMejor = tnaValidas.length ? Math.max(...tnaValidas) * 100 : 0;
+const tnaPeor = tnaValidas.length ? Math.min(...tnaValidas) * 100 : 0;
+
+// Ordenar plazo fijo descendente
+const plazoFijoOrdenado = [...plazoFijo]
+  .filter(b => b.tnaClientes && b.tnaClientes > 0)
+  .sort((a, b) => b.tnaClientes - a.tnaClientes);
+
+// Formateo mes humano
+function mesHumano(fecha: string): string {
+  const d = new Date(fecha + 'T00:00:00Z');
+  return d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Inflación Argentina — Datos en vivo',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  description,
+  offers: { '@type': 'Offer', price: '0' },
+};
+
+const faq = [
+  {
+    q: '¿De dónde salen los datos?',
+    a: 'Los datos de <strong>inflación</strong> (mensual e interanual) vienen del <a href="https://www.indec.gob.ar" rel="noopener">INDEC</a>, el organismo oficial de estadísticas de Argentina. El valor <strong>UVA</strong> (Unidad de Valor Adquisitivo) lo publica el <a href="https://www.bcra.gob.ar" rel="noopener">BCRA</a> diariamente. Las <strong>tasas de plazo fijo</strong> son las que cada banco reporta al BCRA. Todo se consume vía <a href="https://argentinadatos.com" rel="noopener">ArgentinaDatos</a>.',
+  },
+  {
+    q: '¿Qué es la inflación interanual?',
+    a: 'Es la variación de precios en los <strong>últimos 12 meses</strong>. Mientras la inflación mensual mide cuánto subieron los precios en un mes, la interanual muestra cuánto subieron comparado con el mismo mes del año anterior. Es la métrica más usada para comparar entre países o épocas.',
+  },
+  {
+    q: '¿Qué es la UVA?',
+    a: '<strong>Unidad de Valor Adquisitivo</strong>: un índice creado en 2016 que se actualiza diariamente según el CER (Coeficiente de Estabilización de Referencia), ligado al IPC. Se usa en créditos hipotecarios UVA, plazos fijos UVA y algunos alquileres. Si la UVA sube 5% en un mes, tu deuda o ahorro también.',
+  },
+  {
+    q: '¿Qué es la inflación acumulada?',
+    a: 'La suma <em>compuesta</em> de las inflaciones mensuales en un período. Por ejemplo, si los últimos 12 meses fueron 3%, 2%, 4%, etc., se componen (no se suman): <em>(1+0.03) × (1+0.02) × (1+0.04) − 1</em>. Por eso acumulada anual ≠ interanual (diferencia por base móvil).',
+  },
+  {
+    q: '¿Por qué la tasa de plazo fijo está por debajo de la inflación?',
+    a: 'En períodos de <strong>tasas reales negativas</strong>, el BCRA mantiene la TNA por debajo del ritmo inflacionario para reducir costos fiscales o fomentar el consumo. Resultado: tu plazo fijo en pesos <strong>pierde poder de compra</strong>. Alternativas: UVA, dólar MEP, FCI money market agresivos.',
+  },
+  {
+    q: '¿Cuándo sale el próximo dato de inflación?',
+    a: 'El INDEC publica el dato de inflación <strong>el 14 de cada mes</strong> (dato del mes anterior). Ejemplo: el 14 de marzo se publica la inflación de febrero. Si cae fin de semana o feriado, se corre al día hábil siguiente.',
+  },
+  {
+    q: '¿Cómo se compara con otros países?',
+    a: 'Argentina 2025-2026 tuvo inflación anual entre <strong>25% y 35%</strong>, muy por encima del promedio global (~3-5%). Chile, Perú y Uruguay típicamente cierran año con 3-6%. La hiperinflación técnica arranca en 50% mensual (que Argentina no alcanzó pero sí rozó picos altos).',
+  },
+  {
+    q: '¿Por qué hay diferencia entre inflación BCRA y mi supermercado?',
+    a: 'El IPC del INDEC promedia una canasta de <strong>~300 productos</strong> y 39 regiones. Tu super pesa diferente: si comprás más carne/verdura (rubros con alta volatilidad) vas a percibir más inflación que el promedio. También depende del estilo de vida (alquilar, transporte público vs auto, etc.).',
+  },
+];
+
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
+  })),
+};
+---
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="inf-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Inflación Argentina</span>
+    </nav>
+
+    <header class="inf-header">
+      <h1>Inflación Argentina hoy 📊</h1>
+      <p class="lead">
+        Datos en vivo del INDEC y el BCRA: <strong>inflación mensual e interanual</strong>, valor <strong>UVA</strong>, y <strong>tasas de plazo fijo</strong> para compararla con tus ahorros.
+      </p>
+    </header>
+
+    <section class="stat-grid">
+      <div class="stat-card mensual">
+        <div class="stat-label">Inflación mensual</div>
+        <div class="stat-value">{lastMensual ? `${lastMensual.valor.toFixed(1)}%` : '—'}</div>
+        <div class="stat-sub">{lastMensual ? mesHumano(lastMensual.fecha) : 'sin datos'}</div>
+      </div>
+      <div class="stat-card interanual">
+        <div class="stat-label">Inflación interanual</div>
+        <div class="stat-value">{lastInteranual ? `${lastInteranual.valor.toFixed(1)}%` : '—'}</div>
+        <div class="stat-sub">últimos 12 meses · {lastInteranual ? mesHumano(lastInteranual.fecha) : '—'}</div>
+      </div>
+      <div class="stat-card acumulada">
+        <div class="stat-label">Acumulada 12 meses</div>
+        <div class="stat-value">{acum12Pct.toFixed(1)}%</div>
+        <div class="stat-sub">compuesta mes a mes</div>
+      </div>
+      <div class="stat-card uva">
+        <div class="stat-label">UVA</div>
+        <div class="stat-value">${lastUva ? lastUva.valor.toFixed(2) : '—'}</div>
+        <div class="stat-sub">valor hoy · {lastUva ? new Date(lastUva.fecha).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : '—'}</div>
+      </div>
+      <div class="stat-card tasa">
+        <div class="stat-label">TNA plazo fijo promedio</div>
+        <div class="stat-value">{tnaAvg.toFixed(1)}%</div>
+        <div class="stat-sub">{tnaValidas.length} bancos · mejor: {tnaMejor.toFixed(1)}%</div>
+      </div>
+      <div class="stat-card gap">
+        <div class="stat-label">Brecha tasa vs inflación</div>
+        <div class="stat-value">{lastInteranual ? ((tnaAvg - lastInteranual.valor)).toFixed(1) : '—'}pts</div>
+        <div class="stat-sub">{lastInteranual && tnaAvg < lastInteranual.valor ? '⚠️ tasa real negativa' : '✓ tasa real positiva'}</div>
+      </div>
+    </section>
+
+    <section class="histo">
+      <h2>📈 Últimos 12 meses</h2>
+      <div class="rates-table">
+        <div class="rate-head">
+          <div>Mes</div>
+          <div>Inflación mensual</div>
+          <div>Inflación interanual</div>
+        </div>
+        {last12.map((m) => {
+          const ia = inflacionInteranual.find(x => x.fecha.slice(0, 7) === m.fecha.slice(0, 7));
+          return (
+            <div class="rate-row">
+              <div class="mes">{mesHumano(m.fecha)}</div>
+              <div class="val">{m.valor.toFixed(1)}%</div>
+              <div class="val ia">{ia ? ia.valor.toFixed(1) + '%' : '—'}</div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
+    <section class="bancos">
+      <h2>🏦 Tasas de plazo fijo por banco (30 días)</h2>
+      <p class="section-sub">TNA para clientes · ordenados de mayor a menor. <a href="/comparador-plazo-fijo">Ver comparador detallado →</a></p>
+      <div class="rates-table">
+        <div class="rate-head">
+          <div>Banco</div>
+          <div>TNA</div>
+          <div>Rinde 30 días</div>
+          <div>Vs. inflación</div>
+        </div>
+        {plazoFijoOrdenado.slice(0, 15).map((b) => {
+          const tna = b.tnaClientes * 100;
+          const rinde30 = (tna / 12).toFixed(2);
+          const diff = lastInteranual ? (tna - lastInteranual.valor) : 0;
+          const diffClass = diff >= 0 ? 'up' : 'down';
+          return (
+            <div class="rate-row">
+              <div class="banco-nombre">{b.entidad.replace(/^BANCO /, '').replace(/ S\.?A\.?$/, '')}</div>
+              <div class="val">{tna.toFixed(2)}%</div>
+              <div class="val">{rinde30}%</div>
+              <div class={`val ${diffClass}`}>{diff >= 0 ? '+' : ''}{diff.toFixed(1)}pts</div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
+    <section class="related">
+      <h2>Relacionadas</h2>
+      <ul class="rel-grid">
+        <li><a href="/comparador-plazo-fijo">Comparador plazo fijo (todos los bancos)</a></li>
+        <li><a href="/cambio-de-monedas">Dólar blue, oficial, MEP, CCL en vivo</a></li>
+        <li><a href="/calculadora-actualizacion-inflacion-ipc">Actualizar monto por inflación (IPC)</a></li>
+        <li><a href="/calculadora-actualizacion-alquiler-icl">Actualizar alquiler por ICL</a></li>
+        <li><a href="/calculadora-hipoteca-uva-cuota-mensual">Hipoteca UVA: cuota mensual</a></li>
+        <li><a href="/calculadora-plazo-fijo-uva">Plazo fijo UVA vs tradicional</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      <div class="faq-list">
+        {faq.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <div class="faq-answer" set:html={f.a}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="method">
+      <h2>Fuentes</h2>
+      <ul>
+        <li><strong>INDEC</strong> (Instituto Nacional de Estadística y Censos): inflación mensual e interanual oficial.</li>
+        <li><strong>BCRA</strong> (Banco Central de la República Argentina): valor UVA y tasas de referencia.</li>
+        <li><strong>ArgentinaDatos</strong>: agregador open-source que consume los feeds oficiales.</li>
+      </ul>
+      <p class="disclaimer">⚠️ Los datos se actualizan cuando los publica el INDEC (14 de cada mes para inflación) y el BCRA (diariamente para UVA). Los valores mostrados son del último build del sitio.</p>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  .inf-page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 1rem 1.25rem 5rem;
+    color: var(--text);
+  }
+  .inf-page .breadcrumbs { font-size: .875rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .inf-page .breadcrumbs a { color: var(--accent); text-decoration: none; }
+  .inf-page .breadcrumbs a:hover { text-decoration: underline; }
+  .inf-page .breadcrumbs .sep { margin: 0 .5rem; color: var(--text-subtle); }
+  .inf-page .lead { color: var(--text-muted); font-size: 1.1rem; margin: 0 0 1.5rem; line-height: 1.6; max-width: 780px; }
+  .inf-page .lead strong { color: var(--text); font-weight: 700; }
+
+  .inf-header {
+    padding: 2rem 2rem 1.75rem;
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(1200px 400px at 10% -40%, rgba(220, 38, 38, .15), transparent 60%),
+      radial-gradient(900px 400px at 95% -30%, rgba(234, 179, 8, .12), transparent 65%),
+      linear-gradient(135deg, var(--bg-card), var(--bg-soft));
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+  }
+  .inf-header h1 {
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+    margin: 0 0 .75rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin: 0 0 2.5rem;
+  }
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.25rem 1.1rem;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .stat-card.mensual::before { background: #dc2626; }
+  .stat-card.interanual::before { background: #ea580c; }
+  .stat-card.acumulada::before { background: #f59e0b; }
+  .stat-card.uva::before { background: #8b5cf6; }
+  .stat-card.tasa::before { background: #059669; }
+  .stat-card.gap::before { background: #0284c7; }
+  .stat-label {
+    font-size: .72rem;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+    margin-bottom: .25rem;
+  }
+  .stat-value {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono), system-ui;
+    letter-spacing: -.03em;
+    line-height: 1.1;
+  }
+  .stat-sub {
+    margin-top: .3rem;
+    font-size: .82rem;
+    color: var(--text-muted);
+  }
+
+  .inf-page .histo, .inf-page .bancos { margin: 2.5rem 0; }
+  .inf-page .histo h2, .inf-page .bancos h2 {
+    font-size: 1.3rem; margin: 0 0 .5rem; font-weight: 700; color: var(--text);
+  }
+  .inf-page .section-sub {
+    color: var(--text-muted); font-size: .92rem; margin: 0 0 1.25rem;
+  }
+  .inf-page .section-sub a { color: var(--accent); }
+  .inf-page .rates-table {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .inf-page .histo .rate-head,
+  .inf-page .histo .rate-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 1rem;
+    padding: .85rem 1.25rem;
+    align-items: center;
+  }
+  .inf-page .bancos .rate-head,
+  .inf-page .bancos .rate-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 1rem;
+    padding: .85rem 1.25rem;
+    align-items: center;
+  }
+  .inf-page .rate-head {
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border);
+    font-size: .7rem;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+  }
+  .inf-page .rate-row {
+    border-bottom: 1px solid var(--border);
+    font-size: .95rem;
+  }
+  .inf-page .rate-row:last-child { border-bottom: 0; }
+  .inf-page .rate-row:hover { background: var(--bg-soft); }
+  .inf-page .mes { font-weight: 500; text-transform: capitalize; }
+  .inf-page .val {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-family: var(--font-mono), system-ui;
+    text-align: right;
+  }
+  .inf-page .val.up { color: #059669; }
+  .inf-page .val.down { color: #dc2626; }
+  html[data-theme="dark"] .inf-page .val.up { color: #6ee7b7; }
+  html[data-theme="dark"] .inf-page .val.down { color: #fca5a5; }
+  .inf-page .banco-nombre {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inf-page .related { margin: 3rem 0; }
+  .inf-page .related h2 { font-size: 1.3rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
+  .inf-page .rel-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: .75rem;
+  }
+  .inf-page .rel-grid li a {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .9rem 1.1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: .92rem;
+    transition: all .15s;
+  }
+  .inf-page .rel-grid li a::before { content: '→'; color: var(--text-subtle); }
+  .inf-page .rel-grid li a:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+  .inf-page .faq { margin: 3rem 0; }
+  .inf-page .faq h2 { font-size: 1.4rem; margin: 0 0 1.25rem; color: var(--text); font-weight: 700; }
+  .inf-page .faq-list details {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: .5rem;
+    overflow: hidden;
+    background: var(--bg-card);
+  }
+  .inf-page .faq-list summary {
+    padding: 1.1rem 1.25rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text);
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .inf-page .faq-list summary::after {
+    content: '';
+    width: 10px; height: 10px;
+    border: 2px solid var(--text-muted);
+    border-top: 0; border-left: 0;
+    transform: rotate(45deg);
+    transition: transform .2s;
+  }
+  .inf-page .faq-list details[open] summary::after { transform: rotate(-135deg); }
+  .inf-page .faq-answer { padding: 0 1.25rem 1.2rem; color: var(--text-muted); line-height: 1.65; font-size: .95rem; }
+  .inf-page .faq-answer a { color: var(--accent); }
+
+  .inf-page .method {
+    margin: 3rem 0;
+    padding: 1.75rem 2rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    line-height: 1.65;
+    color: var(--text-muted);
+  }
+  .inf-page .method h2 { margin: 0 0 1rem; color: var(--text); font-size: 1.25rem; font-weight: 700; }
+  .inf-page .method ul { padding-left: 1.25rem; margin: 0 0 1rem; }
+  .inf-page .method li { margin: .6rem 0; }
+  .inf-page .method strong { color: var(--text); font-weight: 600; }
+  .inf-page .disclaimer {
+    margin-top: 1.2rem;
+    font-size: .88rem;
+    padding: .9rem 1.1rem;
+    background: var(--warning-soft);
+    border-left: 3px solid var(--warning);
+    border-radius: var(--radius-sm);
+  }
+
+  @media (max-width: 680px) {
+    .inf-page { padding: .5rem .8rem 4rem; }
+    .inf-header { padding: 1.5rem 1.25rem; }
+    .stat-value { font-size: 1.85rem; }
+    .inf-page .bancos .rate-head,
+    .inf-page .bancos .rate-row {
+      grid-template-columns: 1fr auto;
+      gap: .3rem 1rem;
+    }
+    .inf-page .bancos .banco-nombre { grid-column: 1 / 3; grid-row: 1; }
+    .inf-page .bancos .val:nth-child(2) { grid-column: 1; grid-row: 2; text-align: left; font-size: .85rem; color: var(--text-muted); }
+    .inf-page .bancos .val:nth-child(2)::before { content: 'TNA: '; }
+    .inf-page .bancos .val:nth-child(3) { grid-column: 1; grid-row: 2; text-align: right; margin-left: auto; font-size: .85rem; color: var(--text-muted); }
+    .inf-page .bancos .val:nth-child(3)::before { content: '30d: '; }
+    .inf-page .bancos .val:nth-child(4) { grid-column: 2; grid-row: 1; }
+    .inf-page .bancos .rate-head { display: none; }
+  }
+</style>

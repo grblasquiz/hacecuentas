@@ -29,6 +29,9 @@ const ROOT = resolve(__dirname, '..');
 const CALCS_DIR = join(ROOT, 'src', 'content', 'calcs');
 const CALCS_EN_DIR = join(ROOT, 'src', 'content', 'calcs-en');
 const CALCS_MX_DIR = join(ROOT, 'src', 'content', 'calcs-mx');
+const CALCS_ES_DIR = join(ROOT, 'src', 'content', 'calcs-es');
+const CALCS_CO_DIR = join(ROOT, 'src', 'content', 'calcs-co');
+const CALCS_CL_DIR = join(ROOT, 'src', 'content', 'calcs-cl');
 const BLOG_DIR = join(ROOT, 'src', 'content', 'blog');
 const TABLAS_DIR = join(ROOT, 'src', 'content', 'tablas');
 const COMPARACIONES_DIR = join(ROOT, 'src', 'content', 'comparaciones');
@@ -95,6 +98,9 @@ ${sitemaps.map((s) => `  <sitemap>
 const calcs = readJSONs(CALCS_DIR);
 const calcsEn = readJSONs(CALCS_EN_DIR);
 const calcsMx = readJSONs(CALCS_MX_DIR);
+const calcsEs = readJSONs(CALCS_ES_DIR);
+const calcsCo = readJSONs(CALCS_CO_DIR);
+const calcsCl = readJSONs(CALCS_CL_DIR);
 const blogPosts = readJSONs(BLOG_DIR);
 const tablas = readJSONs(TABLAS_DIR);
 const comparaciones = readJSONs(COMPARACIONES_DIR);
@@ -146,6 +152,7 @@ sitemaps.push({
     { loc: `${site}/valores-bcra`, priority: '0.85', changefreq: 'daily', lastmod: buildDate },
     { loc: `${site}/cambio-de-monedas`, priority: '0.95', changefreq: 'hourly', lastmod: buildDate },
     { loc: `${site}/cotizacion-cripto`, priority: '0.95', changefreq: 'hourly', lastmod: buildDate },
+    { loc: `${site}/inflacion-argentina`, priority: '0.9', changefreq: 'daily', lastmod: buildDate },
     { loc: `${site}/embeber`, priority: '0.6', changefreq: 'monthly', lastmod: buildDate },
     { loc: `${site}/sobre-nosotros`, priority: '0.5', changefreq: 'yearly', lastmod: buildDate },
     { loc: `${site}/privacidad`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
@@ -208,6 +215,29 @@ if (calcsMx.length > 0) {
       })),
     ],
   });
+}
+
+// 3c. Calcs España, Colombia, Chile
+const intlLocales: { calcs: any[]; locale: string }[] = [
+  { calcs: calcsEs, locale: 'es' },
+  { calcs: calcsCo, locale: 'co' },
+  { calcs: calcsCl, locale: 'cl' },
+];
+for (const { calcs: cs, locale } of intlLocales) {
+  if (cs.length > 0) {
+    sitemaps.push({
+      name: `sitemap-${locale}.xml`,
+      urls: [
+        { loc: `${site}/${locale}/`, priority: '0.8', changefreq: 'weekly', lastmod: buildDate },
+        ...(cs as any[]).map((c: any) => ({
+          loc: `${site}/${locale}/${c.slug}`,
+          priority: '0.7',
+          changefreq: 'monthly',
+          lastmod: buildDate,
+        })),
+      ],
+    });
+  }
 }
 
 // 4. Blog
