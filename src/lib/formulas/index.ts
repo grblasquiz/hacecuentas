@@ -2047,7 +2047,7 @@ import { prepagoHipotecaReduccionPlazoCuota } from './prepago-hipoteca-reduccion
 import { planAhorroMetaFuturaViajeAuto } from './plan-ahorro-meta-futura-viaje-auto';
 import { inversionLumpSumVsDcaHistorico } from './inversion-lump-sum-vs-dca-historico';
 import { portafolio6040AccionesBonosRendimiento } from './portafolio-60-40-acciones-bonos-rendimiento';
-import { 3FundPortfolioBogleheadsDistribucion } from './3-fund-portfolio-bogleheads-distribucion';
+import { fundPortfolioBogleheadsDistribucion } from './3-fund-portfolio-bogleheads-distribucion';
 import { portafolioAllWeatherDalioAssetAllocation } from './portafolio-all-weather-dalio-asset-allocation';
 import { riskParityPortfolioAsignacionVolatilidad } from './risk-parity-portfolio-asignacion-volatilidad';
 import { drawdownMaximoAceptableInversor } from './drawdown-maximo-aceptable-inversor';
@@ -2067,7 +2067,7 @@ import { taxLossHarvestingOptimizacionFiscal } from './tax-loss-harvesting-optim
 import { assetLocationRothIraTaxableBonds } from './asset-location-roth-ira-taxable-bonds';
 import { ira401kContributionLimitTopeAnual } from './ira-401k-contribution-limit-tope-anual';
 import { hsaFsaCuentasGastosSaludAhorro } from './hsa-fsa-cuentas-gastos-salud-ahorro';
-import { 529PlanAhorroEducacionHijoUniversidad } from './529-plan-ahorro-educacion-hijo-universidad';
+import { plan529AhorroEducacionHijoUniversidad } from './529-plan-ahorro-educacion-hijo-universidad';
 import { annuityAnnuityJubilacionPagoFijo } from './annuity-annuity-jubilacion-pago-fijo';
 import { socialSecurityOptimizationEdadClaim } from './social-security-optimization-edad-claim';
 import { pensionDefinedBenefitVsContribution } from './pension-defined-benefit-vs-contribution';
@@ -4239,7 +4239,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'plan-ahorro-meta-futura-viaje-auto': planAhorroMetaFuturaViajeAuto,
   'inversion-lump-sum-vs-dca-historico': inversionLumpSumVsDcaHistorico,
   'portafolio-60-40-acciones-bonos-rendimiento': portafolio6040AccionesBonosRendimiento,
-  '3-fund-portfolio-bogleheads-distribucion': 3FundPortfolioBogleheadsDistribucion,
+  '3-fund-portfolio-bogleheads-distribucion': fundPortfolioBogleheadsDistribucion,
   'portafolio-all-weather-dalio-asset-allocation': portafolioAllWeatherDalioAssetAllocation,
   'risk-parity-portfolio-asignacion-volatilidad': riskParityPortfolioAsignacionVolatilidad,
   'drawdown-maximo-aceptable-inversor': drawdownMaximoAceptableInversor,
@@ -4259,7 +4259,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'asset-location-roth-ira-taxable-bonds': assetLocationRothIraTaxableBonds,
   'ira-401k-contribution-limit-tope-anual': ira401kContributionLimitTopeAnual,
   'hsa-fsa-cuentas-gastos-salud-ahorro': hsaFsaCuentasGastosSaludAhorro,
-  '529-plan-ahorro-educacion-hijo-universidad': 529PlanAhorroEducacionHijoUniversidad,
+  '529-plan-ahorro-educacion-hijo-universidad': plan529AhorroEducacionHijoUniversidad,
   'annuity-annuity-jubilacion-pago-fijo': annuityAnnuityJubilacionPagoFijo,
   'social-security-optimization-edad-claim': socialSecurityOptimizationEdadClaim,
   'pension-defined-benefit-vs-contribution': pensionDefinedBenefitVsContribution,
