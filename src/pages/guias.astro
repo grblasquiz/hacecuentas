@@ -1,0 +1,136 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const guiasModules = import.meta.glob<any>('../content/guias/*.json', { eager: true });
+const guias = Object.values(guiasModules).map((m: any) => m.default || m);
+
+const title = 'Guías Completas de Cálculo y Finanzas — Hacé Cuentas';
+const description = 'Guías completas: sueldos Argentina, impuestos, subsidios ANSES, finanzas personales, salud, embarazo, construcción, matemáticas, productividad, cocina. Con 500+ calculadoras.';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Guías Hacé Cuentas',
+  description,
+  url: 'https://hacecuentas.com/guias',
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: guias.map((g: any, i: number) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: g.h1,
+      url: `https://hacecuentas.com/guia/${g.slug}`,
+    })),
+  },
+};
+---
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <main class="guias-index">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep">/</span>
+      <span>Guías</span>
+    </nav>
+
+    <header class="guias-header">
+      <h1>Guías completas Hacé Cuentas</h1>
+      <p class="lead">
+        Guías temáticas con todo lo que necesitás saber + calculadoras específicas para cada caso.
+        Material actualizado 2026, revisado por el equipo editorial.
+      </p>
+    </header>
+
+    <div class="guias-grid">
+      {guias.map((g: any) => (
+        <a href={`/guia/${g.slug}`} class="guia-card">
+          <span class="guia-icon">{g.icon}</span>
+          <h2 class="guia-title">{g.h1}</h2>
+          <p class="guia-desc">{g.description}</p>
+          <span class="guia-cta">Leer guía →</span>
+        </a>
+      ))}
+    </div>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .guias-index { max-width: 1080px; margin: 0 auto; padding: 1rem 1.25rem 5rem; color: var(--text); }
+  .breadcrumbs { font-size: .875rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .breadcrumbs a { color: var(--accent); text-decoration: none; }
+  .breadcrumbs .sep { margin: 0 .5rem; color: var(--text-subtle); }
+
+  .guias-header { text-align: center; margin: 2rem 0 3rem; }
+  .guias-header h1 {
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    margin: 0 0 1rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+  }
+  .lead { color: var(--text-muted); font-size: 1.1rem; max-width: 640px; margin: 0 auto; line-height: 1.65; }
+
+  .guias-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.25rem;
+  }
+  .guia-card {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    padding: 2rem 1.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    color: var(--text);
+    text-decoration: none;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .guia-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), #06b6d4);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .guia-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  .guia-card:hover::before { opacity: 1; }
+
+  .guia-icon {
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+  .guia-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.3;
+  }
+  .guia-desc {
+    color: var(--text-muted);
+    font-size: .92rem;
+    line-height: 1.55;
+    margin: 0;
+    flex: 1;
+  }
+  .guia-cta {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: .95rem;
+    margin-top: .5rem;
+  }
+</style>

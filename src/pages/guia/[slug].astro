@@ -1,0 +1,356 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { md } from '../../lib/markdown';
+
+export async function getStaticPaths() {
+  const guias = import.meta.glob<any>('../../content/guias/*.json', { eager: true });
+  const calcs = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+  const allCalcs = Object.values(calcs).map((m: any) => m.default || m);
+
+  return Object.values(guias).map((mod: any) => {
+    const g = mod.default || mod;
+    // Resolver calcs referenciadas en cada sección
+    const calcMap = new Map(allCalcs.map((c: any) => [c.slug, c]));
+    return {
+      params: { slug: g.slug },
+      props: { guia: g, calcMap: Array.from(calcMap.entries()) },
+    };
+  });
+}
+
+const { guia, calcMap } = Astro.props;
+const calcLookup = new Map(calcMap);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Article',
+      headline: guia.h1,
+      description: guia.description,
+      url: `https://hacecuentas.com/guia/${guia.slug}`,
+      mainEntityOfPage: `https://hacecuentas.com/guia/${guia.slug}`,
+      inLanguage: 'es-AR',
+      datePublished: '2026-04-19T00:00:00Z',
+      dateModified: new Date().toISOString(),
+      author: {
+        '@type': 'Organization',
+        name: 'Equipo Hacé Cuentas',
+        url: 'https://hacecuentas.com/politica-editorial',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Hacé Cuentas',
+        url: 'https://hacecuentas.com',
+        logo: { '@type': 'ImageObject', url: 'https://hacecuentas.com/og-default.png' },
+      },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Guías', item: 'https://hacecuentas.com/guias' },
+        { '@type': 'ListItem', position: 3, name: guia.h1 },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: guia.faq.map((f: any) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+  ],
+};
+---
+<Layout title={guia.title} description={guia.description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="pillar-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">{guia.h1}</span>
+    </nav>
+
+    <header class="pillar-header">
+      <span class="pillar-icon">{guia.icon}</span>
+      <h1>{guia.h1}</h1>
+      <p class="lead" set:html={md(guia.intro)}></p>
+      <div class="pillar-meta">
+        <span>Revisado por el <a href="/politica-editorial">Equipo Hacé Cuentas</a></span>
+        <span>·</span>
+        <span>Última actualización: {new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+      </div>
+    </header>
+
+    <aside class="toc">
+      <h2>Contenidos</h2>
+      <ul>
+        {guia.sections.map((s: any, i: number) => (
+          <li><a href={`#sec-${i}`}>{s.heading}</a></li>
+        ))}
+        <li><a href="#faq">Preguntas frecuentes</a></li>
+      </ul>
+    </aside>
+
+    {guia.sections.map((s: any, i: number) => (
+      <section class="pillar-section" id={`sec-${i}`}>
+        <h2>{s.heading}</h2>
+        <div class="section-content" set:html={`<p>${md(s.content)}</p>`}></div>
+        {s.calcs && s.calcs.length > 0 && (
+          <div class="calcs-grid">
+            {s.calcs.map((slug: string) => {
+              const c: any = calcLookup.get(slug);
+              if (!c) return null;
+              return (
+                <a href={`/${c.slug}`} class="calc-card">
+                  <span class="calc-icon">{c.icon || '🧮'}</span>
+                  <div>
+                    <span class="calc-title">{c.h1}</span>
+                    <span class="calc-desc">{(c.description || '').slice(0, 100)}...</span>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    ))}
+
+    <section class="pillar-section" id="faq">
+      <h2>Preguntas frecuentes</h2>
+      <div class="faq-list">
+        {guia.faq.map((f: any) => (
+          <details>
+            <summary>{f.q}</summary>
+            <div class="faq-answer" set:html={md(f.a)}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="pillar-section" id="sources">
+      <h2>Fuentes y referencias</h2>
+      <ul class="sources">
+        {guia.sources.map((s: any) => (
+          <li><a href={s.url} rel="noopener nofollow" target="_blank">{s.name}</a></li>
+        ))}
+      </ul>
+    </section>
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  .pillar-page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 1rem 1.25rem 5rem;
+    color: var(--text);
+  }
+  .pillar-page .breadcrumbs { font-size: .875rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .pillar-page .breadcrumbs a { color: var(--accent); text-decoration: none; }
+  .pillar-page .breadcrumbs .sep { margin: 0 .5rem; color: var(--text-subtle); }
+
+  .pillar-header {
+    padding: 2.5rem 2rem 2rem;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-soft));
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2.5rem;
+    text-align: center;
+  }
+  .pillar-icon {
+    display: block;
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+  }
+  .pillar-header h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin: 0 0 1.25rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+  .pillar-page .lead {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin: 0 auto 1.5rem;
+    line-height: 1.65;
+    max-width: 780px;
+    text-align: left;
+  }
+  .pillar-page .lead strong { color: var(--text); font-weight: 600; }
+  .pillar-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .5rem;
+    font-size: .85rem;
+    color: var(--text-subtle);
+  }
+  .pillar-meta a { color: var(--accent); text-decoration: none; }
+  .pillar-meta a:hover { text-decoration: underline; }
+
+  .toc {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin: 0 0 3rem;
+  }
+  .toc h2 {
+    font-size: 1rem;
+    margin: 0 0 .75rem;
+    color: var(--text);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .toc ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: .25rem .75rem;
+  }
+  .toc li a {
+    display: block;
+    padding: .35rem .5rem;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: .92rem;
+    border-radius: 4px;
+  }
+  .toc li a:hover { background: var(--accent-soft); }
+
+  .pillar-section { margin: 0 0 3rem; scroll-margin-top: 80px; }
+  .pillar-section h2 {
+    font-size: 1.6rem;
+    margin: 0 0 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -.01em;
+  }
+  .pillar-page .section-content {
+    color: var(--text);
+    line-height: 1.75;
+    font-size: 1.02rem;
+  }
+  .pillar-page .section-content p { margin: 0 0 1em; }
+  .pillar-page .section-content ul, .pillar-page .section-content ol { padding-left: 1.25rem; margin: 0 0 1em; }
+  .pillar-page .section-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .pillar-page .section-content th {
+    background: var(--bg-soft);
+    padding: .7rem .9rem;
+    text-align: left;
+    font-weight: 700;
+    font-size: .88rem;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+  .pillar-page .section-content td {
+    padding: .7rem .9rem;
+    border-bottom: 1px solid var(--border);
+    font-size: .92rem;
+  }
+  .pillar-page .section-content tr:last-child td { border-bottom: 0; }
+
+  .calcs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: .75rem;
+    margin-top: 1.5rem;
+  }
+  .calc-card {
+    display: flex;
+    gap: .75rem;
+    padding: .9rem 1.1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    text-decoration: none;
+    transition: all .15s;
+    align-items: flex-start;
+  }
+  .calc-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+  }
+  .calc-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .calc-card > div { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+  .calc-title { font-weight: 600; color: var(--text); font-size: .95rem; line-height: 1.3; }
+  .calc-desc { font-size: .8rem; color: var(--text-subtle); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+  .faq-list details {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: .5rem;
+    overflow: hidden;
+    background: var(--bg-card);
+  }
+  .faq-list summary {
+    padding: 1.1rem 1.25rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text);
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .faq-list summary::after {
+    content: '';
+    width: 10px; height: 10px;
+    border: 2px solid var(--text-muted);
+    border-top: 0; border-left: 0;
+    transform: rotate(45deg);
+    transition: transform .2s;
+  }
+  .faq-list details[open] summary::after { transform: rotate(-135deg); }
+  .pillar-page .faq-answer { padding: 0 1.25rem 1.2rem; color: var(--text-muted); line-height: 1.65; font-size: .95rem; }
+
+  .sources {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: .5rem;
+  }
+  .sources li a {
+    display: block;
+    padding: .75rem 1rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--accent);
+    text-decoration: none;
+    font-size: .92rem;
+  }
+  .sources li a:hover { background: var(--accent-soft); }
+
+  @media (max-width: 680px) {
+    .pillar-page { padding: .5rem .8rem 4rem; }
+    .pillar-header { padding: 1.5rem 1.25rem; }
+    .toc ul { grid-template-columns: 1fr; }
+  }
+</style>
