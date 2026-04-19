@@ -1814,6 +1814,185 @@ import { sueldoAbogadoRelacionDependenciaEstudio } from './sueldo-abogado-relaci
 import { sueldoMedicoResidenteHospitalPublico } from './sueldo-medico-residente-hospital-publico';
 import { sueldoProgramadorDesarrolladorArgentinaSeniority } from './sueldo-programador-desarrollador-argentina-seniority';
 import { sueldoPanaderoBasicoFeriadoNocturno } from './sueldo-panadero-basico-feriado-nocturno';
+import { gananciasTramosEmpleadoMensual2026 } from './ganancias-tramos-empleado-mensual-2026';
+import { monotributoCuota2026TodasCategorias } from './monotributo-cuota-2026-todas-categorias';
+import { ivaSaldoFavorContraRi } from './iva-saldo-favor-contra-ri';
+import { bienesPersonalesTramosAlicuota2026 } from './bienes-personales-tramos-alicuota-2026';
+import { autonomosCategoriaMonto2026 } from './autonomos-categoria-monto-2026';
+import { sellosCompraInmuebleCabaPba } from './sellos-compra-inmueble-caba-pba';
+import { ingresosBrutosConvenioMultilateralJurisdicciones } from './ingresos-brutos-convenio-multilateral-jurisdicciones';
+import { deduccionAlquilerGanancias40Porciento } from './deduccion-alquiler-ganancias-40-porciento';
+import { deduccionFamiliaConyugeHijoGanancias } from './deduccion-familia-conyuge-hijo-ganancias';
+import { deduccionPrepagaMedicinaGanancias } from './deduccion-prepaga-medicina-ganancias';
+import { patenteAutoValorProvinciaAlicuota } from './patente-auto-valor-provincia-alicuota';
+import { ablCabaValuacionFiscalVivienda } from './abl-caba-valuacion-fiscal-vivienda';
+import { inmobiliarioProvincialPbaTramos } from './inmobiliario-provincial-pba-tramos';
+import { retencionGananciasSiradigTrabajador } from './retencion-ganancias-siradig-trabajador';
+import { impuestoPaulistaIibbInfluencerRedes } from './impuesto-paulista-iibb-influencer-redes';
+import { gananciasAguinaldoSacRetencion } from './ganancias-aguinaldo-sac-retencion';
+import { retencionRg2616ProveedorMonotributo } from './retencion-rg2616-proveedor-monotributo';
+import { interesesResarcitoriosPunitoriosAfip } from './intereses-resarcitorios-punitorios-afip';
+import { percepcionDolarTarjetaImpuestoPais } from './percepcion-dolar-tarjeta-impuesto-pais';
+import { cuartaCategoriaEmpleadoEmpresaArgentina } from './cuarta-categoria-empleado-empresa-argentina';
+import { auhAsignacionUniversalHijoMonto2026 } from './auh-asignacion-universal-hijo-monto-2026';
+import { asignacionFamiliarEmpleadoRegistradoAnses } from './asignacion-familiar-empleado-registrado-anses';
+import { tarjetaAlimentarMontoHijos2026 } from './tarjeta-alimentar-monto-hijos-2026';
+import { progresarBecaMontoRequisitos2026 } from './progresar-beca-monto-requisitos-2026';
+import { jubilacionAnsesMontoMinimoMaxima2026 } from './jubilacion-anses-monto-minimo-maxima-2026';
+import { ifeIngresoFamiliarEmergenciaHistoria } from './ife-ingreso-familiar-emergencia-historia';
+import { asignacionDesempleoSeguroPrestacionAnses } from './asignacion-desempleo-seguro-prestacion-anses';
+import { asignacionNacimientoMatrimonioAdopcion } from './asignacion-nacimiento-matrimonio-adopcion';
+import { potenciarTrabajoProgramaVigente } from './potenciar-trabajo-programa-vigente';
+import { pamiPrestacionesMontoCopago2026 } from './pami-prestaciones-monto-copago-2026';
+import { becasManuelBelgranoMonto } from './becas-manuel-belgrano-monto';
+import { ayudaEscolarAnualAsignacion } from './ayuda-escolar-anual-asignacion';
+import { pensionViudezPorcentajeConyuge } from './pension-viudez-porcentaje-conyuge';
+import { asignacionDiscapacidadPensionado } from './asignacion-discapacidad-pensionado';
+import { becasJuanmarinPrimariasSecundarias } from './becas-juanmarin-primarias-secundarias';
+import { ansesComplementoLecheMaternidad } from './anses-complemento-leche-maternidad';
+import { prestamoAnsesJubiladoArgentaMonto } from './prestamo-anses-jubilado-argenta-monto';
+import { jubilacionPuaPrestacionUniversalAdultoMayor } from './jubilacion-pua-prestacion-universal-adulto-mayor';
+import { monotributoSocialBeneficioExencion } from './monotributo-social-beneficio-exencion';
+import { costoEscrituraInmueblePorcentajeValor } from './costo-escritura-inmueble-porcentaje-valor';
+import { costoTransferenciaAuto0kmUsado } from './costo-transferencia-auto-0km-usado';
+import { vtvCostoProvincia2026 } from './vtv-costo-provincia-2026';
+import { licenciaConducirCostoCategoriaB1A } from './licencia-conducir-costo-categoria-b1-a';
+import { registroDnrpaAuto0kmArancel } from './registro-dnrpa-auto-0km-arancel';
+import { dniPasaporteCostoTramiteArgentina } from './dni-pasaporte-costo-tramite-argentina';
+import { matrimonioCivilCostoTramiteArgentina } from './matrimonio-civil-costo-tramite-argentina';
+import { divorcioExpressCostoArgentinaHonorarios } from './divorcio-express-costo-argentina-honorarios';
+import { sucesionCostoHonorariosAbogadoInmueble } from './sucesion-costo-honorarios-abogado-inmueble';
+import { certificadoAntecedentesPenalesCosto } from './certificado-antecedentes-penales-costo';
+import { certificadoLibreDeudaAutoCosto } from './certificado-libre-deuda-auto-costo';
+import { patenteCiclomotorMotoArgentinaCosto } from './patente-ciclomotor-moto-argentina-costo';
+import { dniExtranjeroResidenciaCostoMigraciones } from './dni-extranjero-residencia-costo-migraciones';
+import { visaTurismoUsaEeUuCostoB1B2 } from './visa-turismo-usa-ee-uu-costo-b1-b2';
+import { ciudadaniaItalianaArgentinaCostoTramite } from './ciudadania-italiana-argentina-costo-tramite';
+import { monotributoAltaAfipTramiteZero } from './monotributo-alta-afip-tramite-zero';
+import { facturaElectronicaAfipPrimeraVez } from './factura-electronica-afip-primera-vez';
+import { titularidadCaratularAutoTrasladarProvincia } from './titularidad-caratular-auto-trasladar-provincia';
+import { libretaSanitariaCostoHueriaFood } from './libreta-sanitaria-costo-hueria-food';
+import { bajaAutoDesarmeChatarraFinVida } from './baja-auto-desarme-chatarra-fin-vida';
+import { actualizacionAlquilerIclBcraMensual } from './actualizacion-alquiler-icl-bcra-mensual';
+import { expensasDepartamentoCalcularM2Categoria } from './expensas-departamento-calcular-m2-categoria';
+import { contratoAlquiler2AniosVs3Anios } from './contrato-alquiler-2-anios-vs-3-anios';
+import { seguroCaucionAlquilerCostoMensual } from './seguro-caucion-alquiler-costo-mensual';
+import { depositosAlquilerCuantosMesesDevolucion } from './depositos-alquiler-cuantos-meses-devolucion';
+import { comisionInmobiliariaAlquilerCabaPba } from './comision-inmobiliaria-alquiler-caba-pba';
+import { ablExpensasQuienPagaInquilinoPropietario } from './abl-expensas-quien-paga-inquilino-propietario';
+import { aumentoAlquilerTrimestralCuatrimestralSemestral } from './aumento-alquiler-trimestral-cuatrimestral-semestral';
+import { desalojoCausaPlazosHonorariosJuicio } from './desalojo-causa-plazos-honorarios-juicio';
+import { alquilerTemporalAirbnbGananciaNeta } from './alquiler-temporal-airbnb-ganancia-neta';
+import { contratoLocacionEnDolaresUsdPesificacion } from './contrato-locacion-en-dolares-usd-pesificacion';
+import { alquilerConOpcionACompraLeasingInmueble } from './alquiler-con-opcion-a-compra-leasing-inmueble';
+import { rentabilidadAlquilerInmuebleCabaNetoBruto } from './rentabilidad-alquiler-inmueble-caba-neto-bruto';
+import { cuotaCreditoHipotecarioUvaBancoNacion } from './cuota-credito-hipotecario-uva-banco-nacion';
+import { gastosEscriturarViviendaPrimeraCasa } from './gastos-escriturar-vivienda-primera-casa';
+import { fideicomisoConstruccionAporteCuotas } from './fideicomiso-construccion-aporte-cuotas';
+import { impuestoTransferenciaItuItiInmueble } from './impuesto-transferencia-itu-iti-inmueble';
+import { mudanzaCostoFleteCamionetaKmCaja } from './mudanza-costo-flete-camioneta-km-caja';
+import { fechaProbablePartoCalcularSemanas } from './fecha-probable-parto-calcular-semanas';
+import { calendarioEcografiasEmbarazoSemanas } from './calendario-ecografias-embarazo-semanas';
+import { pesoIdealEmbarazoImcPrevio } from './peso-ideal-embarazo-imc-previo';
+import { caloriasEmbarazoExtraTrimestre } from './calorias-embarazo-extra-trimestre';
+import { ovulacionDiaFertilCicloRegular } from './ovulacion-dia-fertil-ciclo-regular';
+import { cantidadPanalesBebePorMesEdad } from './cantidad-panales-bebe-por-mes-edad';
+import { lecheFormulaBiberonCantidadPesoBebe } from './leche-formula-biberon-cantidad-peso-bebe';
+import { tiempoSuenoBebeHorasEdad } from './tiempo-sueno-bebe-horas-edad';
+import { percentilEstaturaPesoBebeOms } from './percentil-estatura-peso-bebe-oms';
+import { vacunaCalendarioNacionalAnses } from './vacuna-calendario-nacional-anses';
+import { aumentoAlturaAdolescentePrediccion } from './aumento-altura-adolescente-prediccion';
+import { edadGestacionalCorregidaPrematuro } from './edad-gestacional-corregida-prematuro';
+import { cantidadComidaSolidaBebeEdad } from './cantidad-comida-solida-bebe-edad';
+import { biberonesNecesariosPrimeraInfancia } from './biberones-necesarios-primera-infancia';
+import { canastaBasicaHogarInecGastoMensual } from './canasta-basica-hogar-inec-gasto-mensual';
+import { fertilidadTiempoConcepcionEdadMujer } from './fertilidad-tiempo-concepcion-edad-mujer';
+import { pesoSaludableAdolescenteImcJuvenil } from './peso-saludable-adolescente-imc-juvenil';
+import { gastoUniversidadHijoEstimacionAnual } from './gasto-universidad-hijo-estimacion-anual';
+import { cuantosJuguetesNinoEdadDesarrollo } from './cuantos-juguetes-nino-edad-desarrollo';
+import { ahorroEducacionHijoPlanColegioUniversidad } from './ahorro-educacion-hijo-plan-colegio-universidad';
+import { macrosDietaKetoCetogenicaCalculadora } from './macros-dieta-keto-cetogenica-calculadora';
+import { deficitCaloricoPerderPesoSemana } from './deficit-calorico-perder-peso-semana';
+import { aguaIngestaDiariaPesoActividad } from './agua-ingesta-diaria-peso-actividad';
+import { proteinaDiariaFisicoculturismoGanarMusculo } from './proteina-diaria-fisicoculturismo-ganar-musculo';
+import { caloriasQuemadasRunningKmPeso } from './calorias-quemadas-running-km-peso';
+import { vo2maxPredecirCarreraCooper12min } from './vo2max-predecir-carrera-cooper-12min';
+import { frecuenciaCardiacaZonasEntrenamientoKarvonen } from './frecuencia-cardiaca-zonas-entrenamiento-karvonen';
+import { porcentajeGrasaCorporalFormulaNavy } from './porcentaje-grasa-corporal-formula-navy';
+import { indiceGlucemicoCargaAlimentoPorcion } from './indice-glucemico-carga-alimento-porcion';
+import { tdeeCalculadoraMifflinStJeor } from './tdee-calculadora-mifflin-st-jeor';
+import { macrosVeganoProteinaVegetalFuentes } from './macros-vegano-proteina-vegetal-fuentes';
+import { cicloCarbohidratosDietaCuttingBulking } from './ciclo-carbohidratos-dieta-cutting-bulking';
+import { ayunoIntermitente168Calorias } from './ayuno-intermitente-16-8-calorias';
+import { creatinaDosisPesoCargaMantenimiento } from './creatina-dosis-peso-carga-mantenimiento';
+import { wheyProteinDosisDiariaScoop } from './whey-protein-dosis-diaria-scoop';
+import { colacionesIntermediasCaloriasSaludables } from './colaciones-intermedias-calorias-saludables';
+import { alcoholCaloriasCervezaVinoFernet } from './alcohol-calorias-cerveza-vino-fernet';
+import { dietaMediterraneaPlanSemanalKcal } from './dieta-mediterranea-plan-semanal-kcal';
+import { suplementosDeportivosStackPrincipiante } from './suplementos-deportivos-stack-principiante';
+import { conversionKiloLibraLbKgExacto } from './conversion-kilo-libra-lb-kg-exacto';
+import { conversionMetroPieFeetExacto } from './conversion-metro-pie-feet-exacto';
+import { conversionMillaKilometroIdaVuelta } from './conversion-milla-kilometro-ida-vuelta';
+import { conversionGalonLitroUsUk } from './conversion-galon-litro-us-uk';
+import { conversionOnzaGramoCocina } from './conversion-onza-gramo-cocina';
+import { conversionFahrenheitCelsiusClima } from './conversion-fahrenheit-celsius-clima';
+import { conversionTazaGramosHarinaAzucar } from './conversion-taza-gramos-harina-azucar';
+import { conversionCucharadaMlGramosRecetas } from './conversion-cucharada-ml-gramos-recetas';
+import { conversionLitroKgAguaLeche } from './conversion-litro-kg-agua-leche';
+import { conversionPulgadaCentimetroScreen } from './conversion-pulgada-centimetro-screen';
+import { conversionMetroCuadradoHectareaAcre } from './conversion-metro-cuadrado-hectarea-acre';
+import { conversionTiempoSegundosMinutosHoras } from './conversion-tiempo-segundos-minutos-horas';
+import { conversionKwhWattsUsoElectrodoméstico } from './conversion-kwh-watts-uso-electrodoméstico';
+import { conversionMbpsMbDescargaArchivo } from './conversion-mbps-mb-descarga-archivo';
+import { conversionNudosMphKmhViento } from './conversion-nudos-mph-kmh-viento';
+import { conversionBarPsiKpaPresionNeumaticos } from './conversion-bar-psi-kpa-presion-neumaticos';
+import { conversionCandelasLumensLuminosidadLed } from './conversion-candelas-lumens-luminosidad-led';
+import { conversionDecibelesRuidoEjemplos } from './conversion-decibeles-ruido-ejemplos';
+import { conversionBtuKcalAireAcondicionado } from './conversion-btu-kcal-aire-acondicionado';
+import { conversionPpmMgLQuimicaAgua } from './conversion-ppm-mg-l-quimica-agua';
+import { conversionRadianesGradosAngulo } from './conversion-radianes-grados-angulo';
+import { conversionPieCuadradoMetroBienesRaices } from './conversion-pie-cuadrado-metro-bienes-raices';
+import { conversionQuintalToneladaKgAgro } from './conversion-quintal-tonelada-kg-agro';
+import { prestamoPersonalGaliciaVsSantanderCuota } from './prestamo-personal-galicia-vs-santander-cuota';
+import { tarjetaCreditoPagoMinimoIntereses } from './tarjeta-credito-pago-minimo-intereses';
+import { plazoFijoGananciaNetaAnual } from './plazo-fijo-ganancia-neta-anual';
+import { cedearsRatioConversionAppleMicrosoft } from './cedears-ratio-conversion-apple-microsoft';
+import { dolarMepPasoAPasoCostoOperacion } from './dolar-mep-paso-a-paso-costo-operacion';
+import { criptomonedasGananciaImpuestoAfip } from './criptomonedas-ganancia-impuesto-afip';
+import { stockOptionsVestingTechStartup } from './stock-options-vesting-tech-startup';
+import { fondoComunInversionMoneyMarketRendimiento } from './fondo-comun-inversion-money-market-rendimiento';
+import { bonosAl30Al35Al41RendimientoAnual } from './bonos-al30-al35-al41-rendimiento-anual';
+import { portfolioEtfDiversificadoBogleheads } from './portfolio-etf-diversificado-bogleheads';
+import { presupuesto503020FamiliarSueldo } from './presupuesto-50-30-20-familiar-sueldo';
+import { fondoEmergenciaMesesGastosCuanto } from './fondo-emergencia-meses-gastos-cuanto';
+import { independenciaFinancieraFireMovimiento } from './independencia-financiera-fire-movimiento';
+import { rolIra401kArgentinoEquivalente } from './rol-ira-401k-argentino-equivalente';
+import { ahorroCompuestoTiempoDuplicarRegla72 } from './ahorro-compuesto-tiempo-duplicar-regla-72';
+import { creditoPrendarioMotoBicicletaCuota } from './credito-prendario-moto-bicicleta-cuota';
+import { inversionDolarizadaCocosBalanzRendimiento } from './inversion-dolarizada-cocos-balanz-rendimiento';
+import { cuentasComitenteAlycComisiones } from './cuentas-comitente-alyc-comisiones';
+import { ppfAhorroRetiroArcaModeloBrasil } from './ppf-ahorro-retiro-arca-modelo-brasil';
+import { copomTasaReferenciaBancoCentralImpacto } from './copom-tasa-referencia-banco-central-impacto';
+import { cuantoFaltaJubilarseJubilacionEdadAportes } from './cuanto-falta-jubilarse-jubilacion-edad-aportes';
+import { cuantosDiasVacacionesLaboralesAntiguedad } from './cuantos-dias-vacaciones-laborales-antiguedad';
+import { cuantoFaltaFinCursoEscolarMarzo } from './cuanto-falta-fin-curso-escolar-marzo';
+import { cuantoFaltaVeranoEneroFebrero } from './cuanto-falta-verano-enero-febrero';
+import { cuantoFaltaMundialFifa20262030 } from './cuanto-falta-mundial-fifa-2026-2030';
+import { cuantoFaltaNavidadAnoNuevo } from './cuanto-falta-navidad-ano-nuevo';
+import { cuantoFaltaCumpleanosFechaEspecifica } from './cuanto-falta-cumpleanos-fecha-especifica';
+import { cuantoFaltaEleccionPresidencial2027 } from './cuanto-falta-eleccion-presidencial-2027';
+import { cuantoFaltaOlimpiadasParis2028LosAngeles } from './cuanto-falta-olimpiadas-paris-2028-los-angeles';
+import { diasEntreFechasLaboralesHabilesCorridos } from './dias-entre-fechas-laborales-habiles-corridos';
+import { edadExactaAnosMesesDiasSegundos } from './edad-exacta-anos-meses-dias-segundos';
+import { cuantosDiasVividoPersonaFechaNacimiento } from './cuantos-dias-vivido-persona-fecha-nacimiento';
+import { cuantosFeriadosRestanAnoArgentina } from './cuantos-feriados-restan-ano-argentina';
+import { cuantoFaltaBlackFridayCyberMonday } from './cuanto-falta-black-friday-cyber-monday';
+import { cuantoFaltaVencTarjetaCreditoMes } from './cuanto-falta-venc-tarjeta-credito-mes';
+import { cuantoFaltaPagoMonotributoIngreso } from './cuanto-falta-pago-monotributo-ingreso';
+import { cuantoFaltaAguinaldoJunioDiciembre } from './cuanto-falta-aguinaldo-junio-diciembre';
+import { cuantoFaltaDiaMadrePadreArgentina } from './cuanto-falta-dia-madre-padre-argentina';
+import { diasHabilesMesActualFeriados } from './dias-habiles-mes-actual-feriados';
+import { fechaExactaSumarRestarDiasHabiles } from './fecha-exacta-sumar-restar-dias-habiles';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -3627,4 +3806,183 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sueldo-medico-residente-hospital-publico': sueldoMedicoResidenteHospitalPublico,
   'sueldo-programador-desarrollador-argentina-seniority': sueldoProgramadorDesarrolladorArgentinaSeniority,
   'sueldo-panadero-basico-feriado-nocturno': sueldoPanaderoBasicoFeriadoNocturno,
+  'ganancias-tramos-empleado-mensual-2026': gananciasTramosEmpleadoMensual2026,
+  'monotributo-cuota-2026-todas-categorias': monotributoCuota2026TodasCategorias,
+  'iva-saldo-favor-contra-ri': ivaSaldoFavorContraRi,
+  'bienes-personales-tramos-alicuota-2026': bienesPersonalesTramosAlicuota2026,
+  'autonomos-categoria-monto-2026': autonomosCategoriaMonto2026,
+  'sellos-compra-inmueble-caba-pba': sellosCompraInmuebleCabaPba,
+  'ingresos-brutos-convenio-multilateral-jurisdicciones': ingresosBrutosConvenioMultilateralJurisdicciones,
+  'deduccion-alquiler-ganancias-40-porciento': deduccionAlquilerGanancias40Porciento,
+  'deduccion-familia-conyuge-hijo-ganancias': deduccionFamiliaConyugeHijoGanancias,
+  'deduccion-prepaga-medicina-ganancias': deduccionPrepagaMedicinaGanancias,
+  'patente-auto-valor-provincia-alicuota': patenteAutoValorProvinciaAlicuota,
+  'abl-caba-valuacion-fiscal-vivienda': ablCabaValuacionFiscalVivienda,
+  'inmobiliario-provincial-pba-tramos': inmobiliarioProvincialPbaTramos,
+  'retencion-ganancias-siradig-trabajador': retencionGananciasSiradigTrabajador,
+  'impuesto-paulista-iibb-influencer-redes': impuestoPaulistaIibbInfluencerRedes,
+  'ganancias-aguinaldo-sac-retencion': gananciasAguinaldoSacRetencion,
+  'retencion-rg2616-proveedor-monotributo': retencionRg2616ProveedorMonotributo,
+  'intereses-resarcitorios-punitorios-afip': interesesResarcitoriosPunitoriosAfip,
+  'percepcion-dolar-tarjeta-impuesto-pais': percepcionDolarTarjetaImpuestoPais,
+  'cuarta-categoria-empleado-empresa-argentina': cuartaCategoriaEmpleadoEmpresaArgentina,
+  'auh-asignacion-universal-hijo-monto-2026': auhAsignacionUniversalHijoMonto2026,
+  'asignacion-familiar-empleado-registrado-anses': asignacionFamiliarEmpleadoRegistradoAnses,
+  'tarjeta-alimentar-monto-hijos-2026': tarjetaAlimentarMontoHijos2026,
+  'progresar-beca-monto-requisitos-2026': progresarBecaMontoRequisitos2026,
+  'jubilacion-anses-monto-minimo-maxima-2026': jubilacionAnsesMontoMinimoMaxima2026,
+  'ife-ingreso-familiar-emergencia-historia': ifeIngresoFamiliarEmergenciaHistoria,
+  'asignacion-desempleo-seguro-prestacion-anses': asignacionDesempleoSeguroPrestacionAnses,
+  'asignacion-nacimiento-matrimonio-adopcion': asignacionNacimientoMatrimonioAdopcion,
+  'potenciar-trabajo-programa-vigente': potenciarTrabajoProgramaVigente,
+  'pami-prestaciones-monto-copago-2026': pamiPrestacionesMontoCopago2026,
+  'becas-manuel-belgrano-monto': becasManuelBelgranoMonto,
+  'ayuda-escolar-anual-asignacion': ayudaEscolarAnualAsignacion,
+  'pension-viudez-porcentaje-conyuge': pensionViudezPorcentajeConyuge,
+  'asignacion-discapacidad-pensionado': asignacionDiscapacidadPensionado,
+  'becas-juanmarin-primarias-secundarias': becasJuanmarinPrimariasSecundarias,
+  'anses-complemento-leche-maternidad': ansesComplementoLecheMaternidad,
+  'prestamo-anses-jubilado-argenta-monto': prestamoAnsesJubiladoArgentaMonto,
+  'jubilacion-pua-prestacion-universal-adulto-mayor': jubilacionPuaPrestacionUniversalAdultoMayor,
+  'monotributo-social-beneficio-exencion': monotributoSocialBeneficioExencion,
+  'costo-escritura-inmueble-porcentaje-valor': costoEscrituraInmueblePorcentajeValor,
+  'costo-transferencia-auto-0km-usado': costoTransferenciaAuto0kmUsado,
+  'vtv-costo-provincia-2026': vtvCostoProvincia2026,
+  'licencia-conducir-costo-categoria-b1-a': licenciaConducirCostoCategoriaB1A,
+  'registro-dnrpa-auto-0km-arancel': registroDnrpaAuto0kmArancel,
+  'dni-pasaporte-costo-tramite-argentina': dniPasaporteCostoTramiteArgentina,
+  'matrimonio-civil-costo-tramite-argentina': matrimonioCivilCostoTramiteArgentina,
+  'divorcio-express-costo-argentina-honorarios': divorcioExpressCostoArgentinaHonorarios,
+  'sucesion-costo-honorarios-abogado-inmueble': sucesionCostoHonorariosAbogadoInmueble,
+  'certificado-antecedentes-penales-costo': certificadoAntecedentesPenalesCosto,
+  'certificado-libre-deuda-auto-costo': certificadoLibreDeudaAutoCosto,
+  'patente-ciclomotor-moto-argentina-costo': patenteCiclomotorMotoArgentinaCosto,
+  'dni-extranjero-residencia-costo-migraciones': dniExtranjeroResidenciaCostoMigraciones,
+  'visa-turismo-usa-ee-uu-costo-b1-b2': visaTurismoUsaEeUuCostoB1B2,
+  'ciudadania-italiana-argentina-costo-tramite': ciudadaniaItalianaArgentinaCostoTramite,
+  'monotributo-alta-afip-tramite-zero': monotributoAltaAfipTramiteZero,
+  'factura-electronica-afip-primera-vez': facturaElectronicaAfipPrimeraVez,
+  'titularidad-caratular-auto-trasladar-provincia': titularidadCaratularAutoTrasladarProvincia,
+  'libreta-sanitaria-costo-hueria-food': libretaSanitariaCostoHueriaFood,
+  'baja-auto-desarme-chatarra-fin-vida': bajaAutoDesarmeChatarraFinVida,
+  'actualizacion-alquiler-icl-bcra-mensual': actualizacionAlquilerIclBcraMensual,
+  'expensas-departamento-calcular-m2-categoria': expensasDepartamentoCalcularM2Categoria,
+  'contrato-alquiler-2-anios-vs-3-anios': contratoAlquiler2AniosVs3Anios,
+  'seguro-caucion-alquiler-costo-mensual': seguroCaucionAlquilerCostoMensual,
+  'depositos-alquiler-cuantos-meses-devolucion': depositosAlquilerCuantosMesesDevolucion,
+  'comision-inmobiliaria-alquiler-caba-pba': comisionInmobiliariaAlquilerCabaPba,
+  'abl-expensas-quien-paga-inquilino-propietario': ablExpensasQuienPagaInquilinoPropietario,
+  'aumento-alquiler-trimestral-cuatrimestral-semestral': aumentoAlquilerTrimestralCuatrimestralSemestral,
+  'desalojo-causa-plazos-honorarios-juicio': desalojoCausaPlazosHonorariosJuicio,
+  'alquiler-temporal-airbnb-ganancia-neta': alquilerTemporalAirbnbGananciaNeta,
+  'contrato-locacion-en-dolares-usd-pesificacion': contratoLocacionEnDolaresUsdPesificacion,
+  'alquiler-con-opcion-a-compra-leasing-inmueble': alquilerConOpcionACompraLeasingInmueble,
+  'rentabilidad-alquiler-inmueble-caba-neto-bruto': rentabilidadAlquilerInmuebleCabaNetoBruto,
+  'cuota-credito-hipotecario-uva-banco-nacion': cuotaCreditoHipotecarioUvaBancoNacion,
+  'gastos-escriturar-vivienda-primera-casa': gastosEscriturarViviendaPrimeraCasa,
+  'fideicomiso-construccion-aporte-cuotas': fideicomisoConstruccionAporteCuotas,
+  'impuesto-transferencia-itu-iti-inmueble': impuestoTransferenciaItuItiInmueble,
+  'mudanza-costo-flete-camioneta-km-caja': mudanzaCostoFleteCamionetaKmCaja,
+  'fecha-probable-parto-calcular-semanas': fechaProbablePartoCalcularSemanas,
+  'calendario-ecografias-embarazo-semanas': calendarioEcografiasEmbarazoSemanas,
+  'peso-ideal-embarazo-imc-previo': pesoIdealEmbarazoImcPrevio,
+  'calorias-embarazo-extra-trimestre': caloriasEmbarazoExtraTrimestre,
+  'ovulacion-dia-fertil-ciclo-regular': ovulacionDiaFertilCicloRegular,
+  'cantidad-panales-bebe-por-mes-edad': cantidadPanalesBebePorMesEdad,
+  'leche-formula-biberon-cantidad-peso-bebe': lecheFormulaBiberonCantidadPesoBebe,
+  'tiempo-sueno-bebe-horas-edad': tiempoSuenoBebeHorasEdad,
+  'percentil-estatura-peso-bebe-oms': percentilEstaturaPesoBebeOms,
+  'vacuna-calendario-nacional-anses': vacunaCalendarioNacionalAnses,
+  'aumento-altura-adolescente-prediccion': aumentoAlturaAdolescentePrediccion,
+  'edad-gestacional-corregida-prematuro': edadGestacionalCorregidaPrematuro,
+  'cantidad-comida-solida-bebe-edad': cantidadComidaSolidaBebeEdad,
+  'biberones-necesarios-primera-infancia': biberonesNecesariosPrimeraInfancia,
+  'canasta-basica-hogar-inec-gasto-mensual': canastaBasicaHogarInecGastoMensual,
+  'fertilidad-tiempo-concepcion-edad-mujer': fertilidadTiempoConcepcionEdadMujer,
+  'peso-saludable-adolescente-imc-juvenil': pesoSaludableAdolescenteImcJuvenil,
+  'gasto-universidad-hijo-estimacion-anual': gastoUniversidadHijoEstimacionAnual,
+  'cuantos-juguetes-nino-edad-desarrollo': cuantosJuguetesNinoEdadDesarrollo,
+  'ahorro-educacion-hijo-plan-colegio-universidad': ahorroEducacionHijoPlanColegioUniversidad,
+  'macros-dieta-keto-cetogenica-calculadora': macrosDietaKetoCetogenicaCalculadora,
+  'deficit-calorico-perder-peso-semana': deficitCaloricoPerderPesoSemana,
+  'agua-ingesta-diaria-peso-actividad': aguaIngestaDiariaPesoActividad,
+  'proteina-diaria-fisicoculturismo-ganar-musculo': proteinaDiariaFisicoculturismoGanarMusculo,
+  'calorias-quemadas-running-km-peso': caloriasQuemadasRunningKmPeso,
+  'vo2max-predecir-carrera-cooper-12min': vo2maxPredecirCarreraCooper12min,
+  'frecuencia-cardiaca-zonas-entrenamiento-karvonen': frecuenciaCardiacaZonasEntrenamientoKarvonen,
+  'porcentaje-grasa-corporal-formula-navy': porcentajeGrasaCorporalFormulaNavy,
+  'indice-glucemico-carga-alimento-porcion': indiceGlucemicoCargaAlimentoPorcion,
+  'tdee-calculadora-mifflin-st-jeor': tdeeCalculadoraMifflinStJeor,
+  'macros-vegano-proteina-vegetal-fuentes': macrosVeganoProteinaVegetalFuentes,
+  'ciclo-carbohidratos-dieta-cutting-bulking': cicloCarbohidratosDietaCuttingBulking,
+  'ayuno-intermitente-16-8-calorias': ayunoIntermitente168Calorias,
+  'creatina-dosis-peso-carga-mantenimiento': creatinaDosisPesoCargaMantenimiento,
+  'whey-protein-dosis-diaria-scoop': wheyProteinDosisDiariaScoop,
+  'colaciones-intermedias-calorias-saludables': colacionesIntermediasCaloriasSaludables,
+  'alcohol-calorias-cerveza-vino-fernet': alcoholCaloriasCervezaVinoFernet,
+  'dieta-mediterranea-plan-semanal-kcal': dietaMediterraneaPlanSemanalKcal,
+  'suplementos-deportivos-stack-principiante': suplementosDeportivosStackPrincipiante,
+  'conversion-kilo-libra-lb-kg-exacto': conversionKiloLibraLbKgExacto,
+  'conversion-metro-pie-feet-exacto': conversionMetroPieFeetExacto,
+  'conversion-milla-kilometro-ida-vuelta': conversionMillaKilometroIdaVuelta,
+  'conversion-galon-litro-us-uk': conversionGalonLitroUsUk,
+  'conversion-onza-gramo-cocina': conversionOnzaGramoCocina,
+  'conversion-fahrenheit-celsius-clima': conversionFahrenheitCelsiusClima,
+  'conversion-taza-gramos-harina-azucar': conversionTazaGramosHarinaAzucar,
+  'conversion-cucharada-ml-gramos-recetas': conversionCucharadaMlGramosRecetas,
+  'conversion-litro-kg-agua-leche': conversionLitroKgAguaLeche,
+  'conversion-pulgada-centimetro-screen': conversionPulgadaCentimetroScreen,
+  'conversion-metro-cuadrado-hectarea-acre': conversionMetroCuadradoHectareaAcre,
+  'conversion-tiempo-segundos-minutos-horas': conversionTiempoSegundosMinutosHoras,
+  'conversion-kwh-watts-uso-electrodoméstico': conversionKwhWattsUsoElectrodoméstico,
+  'conversion-mbps-mb-descarga-archivo': conversionMbpsMbDescargaArchivo,
+  'conversion-nudos-mph-kmh-viento': conversionNudosMphKmhViento,
+  'conversion-bar-psi-kpa-presion-neumaticos': conversionBarPsiKpaPresionNeumaticos,
+  'conversion-candelas-lumens-luminosidad-led': conversionCandelasLumensLuminosidadLed,
+  'conversion-decibeles-ruido-ejemplos': conversionDecibelesRuidoEjemplos,
+  'conversion-btu-kcal-aire-acondicionado': conversionBtuKcalAireAcondicionado,
+  'conversion-ppm-mg-l-quimica-agua': conversionPpmMgLQuimicaAgua,
+  'conversion-radianes-grados-angulo': conversionRadianesGradosAngulo,
+  'conversion-pie-cuadrado-metro-bienes-raices': conversionPieCuadradoMetroBienesRaices,
+  'conversion-quintal-tonelada-kg-agro': conversionQuintalToneladaKgAgro,
+  'prestamo-personal-galicia-vs-santander-cuota': prestamoPersonalGaliciaVsSantanderCuota,
+  'tarjeta-credito-pago-minimo-intereses': tarjetaCreditoPagoMinimoIntereses,
+  'plazo-fijo-ganancia-neta-anual': plazoFijoGananciaNetaAnual,
+  'cedears-ratio-conversion-apple-microsoft': cedearsRatioConversionAppleMicrosoft,
+  'dolar-mep-paso-a-paso-costo-operacion': dolarMepPasoAPasoCostoOperacion,
+  'criptomonedas-ganancia-impuesto-afip': criptomonedasGananciaImpuestoAfip,
+  'stock-options-vesting-tech-startup': stockOptionsVestingTechStartup,
+  'fondo-comun-inversion-money-market-rendimiento': fondoComunInversionMoneyMarketRendimiento,
+  'bonos-al30-al35-al41-rendimiento-anual': bonosAl30Al35Al41RendimientoAnual,
+  'portfolio-etf-diversificado-bogleheads': portfolioEtfDiversificadoBogleheads,
+  'presupuesto-50-30-20-familiar-sueldo': presupuesto503020FamiliarSueldo,
+  'fondo-emergencia-meses-gastos-cuanto': fondoEmergenciaMesesGastosCuanto,
+  'independencia-financiera-fire-movimiento': independenciaFinancieraFireMovimiento,
+  'rol-ira-401k-argentino-equivalente': rolIra401kArgentinoEquivalente,
+  'ahorro-compuesto-tiempo-duplicar-regla-72': ahorroCompuestoTiempoDuplicarRegla72,
+  'credito-prendario-moto-bicicleta-cuota': creditoPrendarioMotoBicicletaCuota,
+  'inversion-dolarizada-cocos-balanz-rendimiento': inversionDolarizadaCocosBalanzRendimiento,
+  'cuentas-comitente-alyc-comisiones': cuentasComitenteAlycComisiones,
+  'ppf-ahorro-retiro-arca-modelo-brasil': ppfAhorroRetiroArcaModeloBrasil,
+  'copom-tasa-referencia-banco-central-impacto': copomTasaReferenciaBancoCentralImpacto,
+  'cuanto-falta-jubilarse-jubilacion-edad-aportes': cuantoFaltaJubilarseJubilacionEdadAportes,
+  'cuantos-dias-vacaciones-laborales-antiguedad': cuantosDiasVacacionesLaboralesAntiguedad,
+  'cuanto-falta-fin-curso-escolar-marzo': cuantoFaltaFinCursoEscolarMarzo,
+  'cuanto-falta-verano-enero-febrero': cuantoFaltaVeranoEneroFebrero,
+  'cuanto-falta-mundial-fifa-2026-2030': cuantoFaltaMundialFifa20262030,
+  'cuanto-falta-navidad-ano-nuevo': cuantoFaltaNavidadAnoNuevo,
+  'cuanto-falta-cumpleanos-fecha-especifica': cuantoFaltaCumpleanosFechaEspecifica,
+  'cuanto-falta-eleccion-presidencial-2027': cuantoFaltaEleccionPresidencial2027,
+  'cuanto-falta-olimpiadas-paris-2028-los-angeles': cuantoFaltaOlimpiadasParis2028LosAngeles,
+  'dias-entre-fechas-laborales-habiles-corridos': diasEntreFechasLaboralesHabilesCorridos,
+  'edad-exacta-anos-meses-dias-segundos': edadExactaAnosMesesDiasSegundos,
+  'cuantos-dias-vivido-persona-fecha-nacimiento': cuantosDiasVividoPersonaFechaNacimiento,
+  'cuantos-feriados-restan-ano-argentina': cuantosFeriadosRestanAnoArgentina,
+  'cuanto-falta-black-friday-cyber-monday': cuantoFaltaBlackFridayCyberMonday,
+  'cuanto-falta-venc-tarjeta-credito-mes': cuantoFaltaVencTarjetaCreditoMes,
+  'cuanto-falta-pago-monotributo-ingreso': cuantoFaltaPagoMonotributoIngreso,
+  'cuanto-falta-aguinaldo-junio-diciembre': cuantoFaltaAguinaldoJunioDiciembre,
+  'cuanto-falta-dia-madre-padre-argentina': cuantoFaltaDiaMadrePadreArgentina,
+  'dias-habiles-mes-actual-feriados': diasHabilesMesActualFeriados,
+  'fecha-exacta-sumar-restar-dias-habiles': fechaExactaSumarRestarDiasHabiles,
 };
