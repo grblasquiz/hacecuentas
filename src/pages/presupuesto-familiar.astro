@@ -6,15 +6,29 @@ import Footer from '../components/Footer.astro';
 const title = 'Calculadora Presupuesto Familiar 2026 — Regla 50/30/20, Salud Financiera | Hacé Cuentas';
 const description = 'Armá tu presupuesto familiar en 5 minutos: ingresá sueldos y gastos, obtené tu score de salud financiera, distribución 50/30/20 y recomendaciones personalizadas. Gratis.';
 
-const schema = {
-  '@context': 'https://schema.org',
+const schemaApp = {
   '@type': 'WebApplication',
   name: 'Calculadora de Presupuesto Familiar',
   applicationCategory: 'FinanceApplication',
   operatingSystem: 'Web',
+  url: 'https://hacecuentas.com/presupuesto-familiar',
   description,
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
   aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.9', ratingCount: '847' },
+  // Speakable para voice search (Alexa/Google Assistant)
+  speakable: {
+    '@type': 'SpeakableSpecification',
+    cssSelector: ['h1', '.lead', '[data-score-label]', '[data-score-value]'],
+  },
+};
+
+const schemaBreadcrumb = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Finanzas', item: 'https://hacecuentas.com/categoria/finanzas' },
+    { '@type': 'ListItem', position: 3, name: 'Presupuesto familiar', item: 'https://hacecuentas.com/presupuesto-familiar' },
+  ],
 };
 
 const faq = [
@@ -31,7 +45,6 @@ const faq = [
 ];
 
 const schemaFaq = {
-  '@context': 'https://schema.org',
   '@type': 'FAQPage',
   mainEntity: faq.map(f => ({
     '@type': 'Question',
@@ -39,8 +52,13 @@ const schemaFaq = {
     acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
   })),
 };
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [schemaApp, schemaBreadcrumb, schemaFaq],
+};
 ---
-<Layout title={title} description={description} schema={schema}>
+<Layout title={title} description={description} image="/og/presupuesto-familiar.png" schema={schema}>
   <Header slot="header" />
 
   <article class="bp-page">
@@ -249,7 +267,6 @@ const schemaFaq = {
     </section>
   </article>
 
-  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
   <Footer slot="footer" />
 </Layout>
 

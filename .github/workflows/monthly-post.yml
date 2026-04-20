@@ -1,0 +1,36 @@
+name: Monthly data-driven post
+
+# Genera post mensual automático con data fresca (dólar, inflación, plazo fijo).
+# Crea el post el 1er lunes de cada mes, commit + push → deploy automático.
+# Si el post ya existe para ese mes, el script lo sobrescribe con data actualizada.
+
+on:
+  schedule:
+    # 1er lunes de cada mes, 11:00 UTC (8am ART)
+    - cron: '0 11 1-7 * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate monthly post
+        run: python3 scripts/generate-monthly-post.py
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/content/blog/
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            MONTH=$(date +"%B %Y")
+            git commit -m "content(blog): informe financiero mensual — $MONTH"
+            git push
+          fi

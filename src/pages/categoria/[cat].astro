@@ -1104,6 +1104,25 @@ const siblings = (SIBLING_CATEGORIES[cat] || []).filter(
 );
 
 // Schemas combinados: CollectionPage + BreadcrumbList + FAQPage
+// ItemList top-level (standalone) — Google lo prefiere así para rich results
+// en lugar de embebido en CollectionPage. Incluye imagen + descripción por item.
+const schemaItemList = {
+  '@type': 'ItemList',
+  '@id': `https://hacecuentas.com/categoria/${cat}#itemlist`,
+  name: `Calculadoras de ${m.label}`,
+  description: m.desc,
+  numberOfItems: calcs.length,
+  itemListOrder: 'https://schema.org/ItemListOrderAscending',
+  itemListElement: calcs.map((c: any, i: number) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    url: `https://hacecuentas.com/${c.slug}`,
+    name: c.h1,
+    description: c.description,
+    image: 'https://hacecuentas.com/og-default.png',
+  })),
+};
+
 const schemaCollection = {
   '@type': 'CollectionPage',
   '@id': `https://hacecuentas.com/categoria/${cat}`,
@@ -1111,15 +1130,7 @@ const schemaCollection = {
   description: m.desc,
   url: `https://hacecuentas.com/categoria/${cat}`,
   inLanguage: 'es-AR',
-  mainEntity: {
-    '@type': 'ItemList',
-    itemListElement: calcs.map((c, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name: c.h1,
-      url: `https://hacecuentas.com/${c.slug}`,
-    })),
-  },
+  mainEntity: { '@id': `https://hacecuentas.com/categoria/${cat}#itemlist` },
 };
 
 const schemaBreadcrumb = {
@@ -1142,7 +1153,7 @@ const schemaFAQ = m.faq.length > 0 ? {
   })),
 } : null;
 
-const graph: any[] = [schemaCollection, schemaBreadcrumb];
+const graph: any[] = [schemaCollection, schemaItemList, schemaBreadcrumb];
 if (schemaFAQ) graph.push(schemaFAQ);
 const schema = { '@context': 'https://schema.org', '@graph': graph };
 
@@ -1165,7 +1176,7 @@ function md(text: string): string {
 }
 ---
 
-<Layout title={m.title} description={m.desc} schema={schema}>
+<Layout title={m.title} description={m.desc} image={`/og/categoria-${cat}.png`} schema={schema}>
   <Header slot="header" />
 
   <nav class="breadcrumbs" aria-label="Ruta de navegación">

@@ -6,14 +6,27 @@ import Footer from '../components/Footer.astro';
 const title = 'Simulador de Jubilación ANSES 2026 — Calculá tu Haber Jubilatorio | Hacé Cuentas';
 const description = 'Simulador de jubilación ANSES: ingresá edad, años de aportes y sueldo actual → obtené tu haber jubilatorio proyectado, si cumplís requisitos y años que te faltan. Gratis.';
 
-const schema = {
-  '@context': 'https://schema.org',
+const schemaApp = {
   '@type': 'WebApplication',
   name: 'Simulador de Jubilación ANSES',
   applicationCategory: 'FinanceApplication',
   operatingSystem: 'Web',
+  url: 'https://hacecuentas.com/simulador-jubilacion-anses',
   description,
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
+  speakable: {
+    '@type': 'SpeakableSpecification',
+    cssSelector: ['h1', '.lead', '[data-haber-estimado]'],
+  },
+};
+
+const schemaBreadcrumb = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Finanzas', item: 'https://hacecuentas.com/categoria/finanzas' },
+    { '@type': 'ListItem', position: 3, name: 'Simulador jubilación ANSES', item: 'https://hacecuentas.com/simulador-jubilacion-anses' },
+  ],
 };
 
 const faq = [
@@ -30,7 +43,6 @@ const faq = [
 ];
 
 const schemaFaq = {
-  '@context': 'https://schema.org',
   '@type': 'FAQPage',
   mainEntity: faq.map(f => ({
     '@type': 'Question',
@@ -38,8 +50,13 @@ const schemaFaq = {
     acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
   })),
 };
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [schemaApp, schemaBreadcrumb, schemaFaq],
+};
 ---
-<Layout title={title} description={description} schema={schema}>
+<Layout title={title} description={description} image="/og/simulador-jubilacion-anses.png" schema={schema}>
   <Header slot="header" />
 
   <article class="sj-page">
@@ -188,7 +205,6 @@ const schemaFaq = {
     </section>
   </article>
 
-  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
   <Footer slot="footer" />
 </Layout>
 
