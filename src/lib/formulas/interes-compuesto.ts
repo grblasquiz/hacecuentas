@@ -41,7 +41,18 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
 
   const totalAportado = capital + aporte * n;
   const gananciaIntereses = valorFinal - totalAportado;
-  const rendimiento = ((gananciaIntereses / totalAportado) * 100).toFixed(2);
+  // Formato amigable: para rendimientos grandes, expresar como multiplicador ×N
+  // en vez de porcentaje con miles de dígitos ("x346" es más intuitivo que "34485%").
+  const rendimientoPct = (gananciaIntereses / totalAportado) * 100;
+  const multiplicador = valorFinal / totalAportado;
+  let rendimientoLabel: string;
+  if (rendimientoPct >= 1000) {
+    rendimientoLabel = `×${multiplicador.toFixed(1)} tu capital (${Math.round(rendimientoPct).toLocaleString('es-AR')}%)`;
+  } else if (rendimientoPct >= 100) {
+    rendimientoLabel = `${Math.round(rendimientoPct)}% (×${multiplicador.toFixed(2)})`;
+  } else {
+    rendimientoLabel = `${rendimientoPct.toFixed(2)}%`;
+  }
 
   // Serie anual: capital acumulado y aportes acumulados (sin rendimiento)
   const labels = Array.from({ length: anios + 1 }, (_, k) => `Año ${k}`);
@@ -82,7 +93,7 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
     valorFinal: Math.round(valorFinal),
     totalAportado: Math.round(totalAportado),
     gananciaIntereses: Math.round(gananciaIntereses),
-    rendimiento: `${rendimiento}% total`,
+    rendimiento: rendimientoLabel,
     tasaMensual: `${(i * 100).toFixed(2)}%`,
     _chart: chart,
   };

@@ -172,15 +172,64 @@ const isActive = (path: string) => currentPath.startsWith(path);
     }[c]));
   }
 
+  // Top picks curados para mostrar cuando no hay query (en vez de alfabético).
+  // Mix de finanzas + salud + matemática para variedad temática.
+  const DEFAULT_TOP_SLUGS = [
+    'sueldo-en-mano-argentina',
+    'calculadora-aguinaldo-sac',
+    'calculadora-imc',
+    'calculadora-interes-compuesto',
+    'calculadora-porcentajes',
+    'calculadora-plazo-fijo',
+  ];
+  function pickDefault(allCalcs) {
+    const bySlug = new Map(allCalcs.map(function (c) { return [c.slug, c]; }));
+    const picks = [];
+    DEFAULT_TOP_SLUGS.forEach(function (s) {
+      const c = bySlug.get(s);
+      if (c) picks.push(c);
+    });
+    // Padding si alguno no existe
+    if (picks.length < 6) {
+      for (const c of allCalcs) {
+        if (picks.length >= 6) break;
+        if (!DEFAULT_TOP_SLUGS.includes(c.slug)) picks.push(c);
+      }
+    }
+    return picks.slice(0, 6);
+  }
+
   function renderResults(q) {
     if (!calcs) {
       results.innerHTML = '<div class="no-results">Cargando...</div>';
       return;
     }
     const query = norm(q);
-    const matches = query
-      ? calcs.filter((c) => norm(`${c.h1} ${c.description} ${c.slug}`).includes(query)).slice(0, 8)
-      : calcs.slice(0, 6);
+    let matches;
+    if (query) {
+      // Score cada calc y ordenar:
+      // +100 si el título empieza con la query
+      // +50 si el título contiene la query
+      // +10 si el slug/descripción contiene la query
+      // +15 si audience === 'AR' (boost para usuarios argentinos)
+      const scored = [];
+      for (const c of calcs) {
+        const title = norm(c.h1 || '');
+        const slug = norm(c.slug || '');
+        const desc = norm(c.description || '');
+        let score = 0;
+        if (title.startsWith(query)) score += 100;
+        else if (title.includes(query)) score += 50;
+        if (slug.includes(query) || desc.includes(query)) score += 10;
+        if (score === 0) continue;
+        if (c.audience === 'AR') score += 15;
+        scored.push({ c: c, score: score });
+      }
+      scored.sort(function (a, b) { return b.score - a.score; });
+      matches = scored.slice(0, 8).map(function (x) { return x.c; });
+    } else {
+      matches = pickDefault(calcs);
+    }
     if (matches.length === 0) {
       // Escapar query para prevenir XSS: user puede pegar '<img src=x onerror=...>'
       results.innerHTML = `<div class="no-results">Sin resultados para "<strong>${escapeHtml(q)}</strong>"</div>`;
