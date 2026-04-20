@@ -96,20 +96,33 @@ const t = lang === 'en' ? {
   disclaimer: '', dataUpdated: 'Datos actualizados',
 };
 
-// Disclaimers inline por calculadora sensible
+// Disclaimers inline por calculadora sensible (override específico).
+// El fallback por categoría aplica a CUALQUIER calc de finanzas/salud/etc.
 const disclaimers: Record<string, string> = {
   'sueldo-en-mano-argentina': 'Cálculo aproximado según escala del impuesto a las ganancias 2026. Consultá con tu empleador o contador para tu caso específico.',
-  'calculadora-aguinaldo-sac': 'El aguinaldo se calcula sobre la mejor remuneración del semestre (Ley 27.073).',
-  'calculadora-monotributo-2026': 'Los montos son de AFIP/ARCA 2026. Pueden actualizarse semestralmente. Consultá arca.gob.ar para confirmar.',
-  'calculadora-cuota-prestamo': 'Cálculo ilustrativo de cuota francesa. La CFT real puede diferir por seguros, gastos e impuestos.',
+  'calculadora-aguinaldo-sac': 'El aguinaldo se calcula sobre la mejor remuneración del semestre (Ley 27.073). Para liquidación final, consultá a tu contador.',
+  'calculadora-monotributo-2026': 'Los montos son de ARCA (ex-AFIP) 2026. Pueden actualizarse semestralmente. Consultá arca.gob.ar para confirmar o hablá con tu contador.',
+  'calculadora-cuota-prestamo': 'Cálculo ilustrativo de cuota francesa. La CFT real puede diferir por seguros, gastos e impuestos. Consultá al banco antes de firmar.',
   'calculadora-imc': 'El IMC es orientativo. No reemplaza una consulta médica. Factores como masa muscular afectan el resultado.',
-  'calculadora-calorias-diarias-tdee': 'Estimación basada en fórmula Mifflin-St Jeor. Consultá a un nutricionista para planes específicos.',
+  'calculadora-calorias-diarias-tdee': 'Estimación basada en fórmula Mifflin-St Jeor. Consultá a un nutricionista matriculado para planes específicos.',
   'calculadora-embarazo': 'Cálculo por regla de Naegele. La fecha real puede variar ±2 semanas. Consultá a tu obstetra.',
   'calculadora-ovulacion-dias-fertiles': 'Estimación estadística. Consultá a un ginecólogo si buscás o evitás un embarazo.',
-  'calculadora-interes-compuesto': 'Cálculo ilustrativo. Las inversiones reales pueden variar según mercado, comisiones e impuestos.',
+  'calculadora-interes-compuesto': 'Cálculo ilustrativo. No constituye asesoramiento en inversión (Ley 26.831 / RG CNV 840/2020). Las inversiones reales varían según mercado, comisiones e impuestos.',
 };
 
-const disclaimer = disclaimers[config.slug];
+// Fallback por categoría — cubre YMYL (finanzas, salud, negocios) aunque la
+// calc específica no tenga disclaimer individual definido.
+const categoryDisclaimers: Record<string, string> = {
+  finanzas: 'Herramienta educativa. No constituye asesoramiento en inversión (Ley 26.831 / RG CNV 840/2020). Consultá a un contador o asesor financiero matriculado antes de tomar decisiones.',
+  negocios: 'Cálculo ilustrativo. No constituye asesoramiento contable ni financiero. Consultá a un contador público para tu caso específico.',
+  salud: 'Resultado orientativo. No reemplaza el diagnóstico ni el tratamiento médico. Consultá con un profesional de la salud matriculado.',
+  deportes: 'Estimación genérica. Consultá con un profesional del deporte o médico deportólogo para planes personalizados.',
+  familia: 'Información general. Para decisiones de salud, fertilidad o crianza consultá con profesionales matriculados.',
+  mascotas: 'Orientativo. Consultá con veterinario matriculado para el estado de salud de tu mascota.',
+  construccion: 'Estimación. Los proyectos constructivos requieren cálculo estructural profesional y dirección técnica.',
+};
+
+const disclaimer = disclaimers[config.slug] || categoryDisclaimers[config.category] || '';
 
 const basicFields = config.fields.filter((f) => !f.advanced);
 const advancedFields = config.fields.filter((f) => f.advanced);

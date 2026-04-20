@@ -273,8 +273,31 @@ const pageSchema = {
           </nav>
         )}
 
+        <!-- Disclaimer pre-content para posts YMYL (finanzas, salud, etc.) -->
+        {['finanzas', 'negocios', 'salud', 'familia'].includes(post.category) && (
+          <aside class="post-disclaimer" role="note">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <p>
+              <strong>Información educativa, no asesoramiento profesional.</strong> Este artículo es contenido periodístico basado en fuentes públicas. No constituye asesoramiento {post.category === 'salud' ? 'médico' : 'financiero en inversión (Ley 26.831, RG CNV 840/2020) ni contable'}. Para decisiones importantes consultá con un/a {post.category === 'salud' ? 'profesional de la salud matriculado/a' : 'contador/a o asesor/a financiero/a matriculado/a'}. <a href="/aviso-legal">Leer aviso legal</a>.
+            </p>
+          </aside>
+        )}
+
         <!-- Article body -->
         <div class="article-body prose" set:html={contentWithIds} />
+
+        <!-- Disclaimer post-content en YMYL -->
+        {['finanzas', 'negocios'].includes(post.category) && (
+          <aside class="post-disclaimer-bottom" role="note">
+            <p>
+              <strong>📌 Recordá:</strong> Hacé Cuentas no es un asesor financiero registrado ante la CNV. Este contenido es educativo y no sustituye el consejo profesional. Las decisiones de inversión implican riesgo de pérdida de capital y deben tomarse consultando con un profesional matriculado.
+            </p>
+          </aside>
+        )}
 
         <!-- Related calcs section -->
         {relatedCalcs.length > 0 && (
@@ -591,6 +614,44 @@ const pageSchema = {
       margin-bottom: 0.5rem;
     }
   }
+
+  /* ── YMYL Disclaimer ─────────────────────────────────────────────────────── */
+  .post-disclaimer {
+    display: flex;
+    gap: 0.875rem;
+    align-items: flex-start;
+    margin: 0 0 2rem;
+    padding: 1rem 1.25rem;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-left: 4px solid #f59e0b;
+    border-radius: var(--radius-sm);
+    color: #78350f;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+  .post-disclaimer svg { flex-shrink: 0; color: #d97706; margin-top: 3px; }
+  .post-disclaimer p { margin: 0; }
+  .post-disclaimer a { color: #92400e; font-weight: 600; }
+  :root[data-theme="dark"] .post-disclaimer {
+    background: rgba(180, 83, 9, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fde68a;
+  }
+  :root[data-theme="dark"] .post-disclaimer a { color: #fbbf24; }
+
+  .post-disclaimer-bottom {
+    margin: 2.5rem 0 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+  .post-disclaimer-bottom p { margin: 0; }
 
   /* ── Prose / Article body ───────────────────────────────────────────────── */
   .prose {
