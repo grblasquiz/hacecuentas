@@ -345,6 +345,12 @@ const formatFreshnessDate = (iso: string): string => {
 
     <div class="chart-wrap" data-chart-wrap hidden>
       <canvas data-chart-canvas role="img" aria-label="Gráfico del resultado"></canvas>
+      <button type="button" class="chart-download-btn" data-chart-download aria-label="Descargar gráfico como imagen" title="Descargar como PNG">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span>PNG</span>
+      </button>
     </div>
 
     {config.interactive && config.interactive.sliders && config.interactive.sliders.length > 0 && (
@@ -1030,6 +1036,29 @@ const formatFreshnessDate = (iso: string): string => {
     position: relative;
   }
   .chart-wrap[hidden] { display: none; }
+  .chart-download-btn {
+    position: absolute;
+    top: 0.625rem;
+    right: 0.625rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.3rem 0.55rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    z-index: 2;
+  }
+  .chart-download-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--bg);
+  }
   .chart-wrap canvas {
     display: block;
     width: 100% !important;
@@ -1837,12 +1866,93 @@ const formatFreshnessDate = (iso: string): string => {
       },
     };
 
+    // Auto-annotations: para line charts con dataset principal, marca el punto
+    // donde el valor se duplica respecto al valor inicial (hito "duplicación").
+    const autoAnnotations: Array<{ x: number; label: string }> = [];
+    if (!isBar && datasets.length >= 1) {
+      const mainData = datasets[0].data as number[];
+      if (mainData && mainData.length > 2 && typeof mainData[0] === 'number' && mainData[0] > 0) {
+        const initial = mainData[0];
+        // Punto donde se duplica
+        const doubleIdx = mainData.findIndex((v) => v >= initial * 2);
+        if (doubleIdx > 0) {
+          autoAnnotations.push({
+            x: doubleIdx,
+            label: `×2 en ${spec.data.labels[doubleIdx] || doubleIdx}`,
+          });
+        }
+        // Punto donde se multiplica por 5 (para plazos largos)
+        const fiveIdx = mainData.findIndex((v) => v >= initial * 5);
+        if (fiveIdx > 0 && fiveIdx !== doubleIdx) {
+          autoAnnotations.push({
+            x: fiveIdx,
+            label: `×5 en ${spec.data.labels[fiveIdx] || fiveIdx}`,
+          });
+        }
+      }
+    }
+    // Permitir annotations custom desde la fórmula (spec.annotations)
+    const customAnns: Array<{ x: number; label: string }> = Array.isArray(spec.annotations) ? spec.annotations : [];
+    (options.plugins as any).chartAnnotations = {
+      annotations: [...customAnns, ...autoAnnotations],
+      color: col.accent,
+      textColor: col.text,
+      bg: col.isDark ? '#0f172a' : '#ffffff',
+    };
+
     return new Chart(canvas, {
       type: isBar ? 'bar' : 'line',
       data: { labels: spec.data.labels, datasets },
       options,
+      plugins: [chartAnnotationsPlugin],
     });
   }
+
+  // Plugin: dibuja annotations (marker vertical + label) en puntos específicos del chart
+  const chartAnnotationsPlugin = {
+    id: 'chartAnnotations',
+    afterDatasetsDraw(chart: any, _args: any, opts: any) {
+      if (!opts || !Array.isArray(opts.annotations) || opts.annotations.length === 0) return;
+      const { ctx, chartArea, scales } = chart;
+      const xScale = scales.x;
+      const yScale = scales.y;
+      if (!xScale || !yScale) return;
+      ctx.save();
+      for (const ann of opts.annotations) {
+        const xPx = xScale.getPixelForValue(ann.x);
+        if (xPx < chartArea.left || xPx > chartArea.right) continue;
+        // Línea vertical punteada
+        ctx.strokeStyle = opts.color;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(xPx, chartArea.top);
+        ctx.lineTo(xPx, chartArea.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Label box
+        const label = String(ann.label || '');
+        ctx.font = '600 10px system-ui, sans-serif';
+        const tw = ctx.measureText(label).width;
+        const padX = 6, padY = 3;
+        const boxW = tw + padX * 2;
+        const boxH = 16 + padY * 2;
+        const boxX = Math.max(chartArea.left, Math.min(chartArea.right - boxW, xPx - boxW / 2));
+        const boxY = chartArea.top + 4;
+        ctx.fillStyle = opts.bg;
+        ctx.strokeStyle = opts.color;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(boxX, boxY, boxW, boxH, 4);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = opts.textColor;
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, boxX + padX, boxY + boxH / 2);
+      }
+      ctx.restore();
+    },
+  };
 
   // Plugin: dibuja un marker vertical sobre un gráfico "scale"
   const markerAnnotationPlugin = {
@@ -2037,10 +2147,44 @@ const formatFreshnessDate = (iso: string): string => {
     });
     const chartWrap = container.querySelector<HTMLElement>('[data-chart-wrap]');
     const chartCanvas = container.querySelector<HTMLCanvasElement>('[data-chart-canvas]');
+    const chartDownloadBtn = container.querySelector<HTMLButtonElement>('[data-chart-download]');
     let chartInstance: any = null;
     let lastChartSpec: any = null;
     let whatIfInitialized = false;
     const whatIfEl = container.querySelector<HTMLElement>('[data-what-if]');
+
+    // Chart download → PNG standalone.
+    // Genera imagen 2x con fondo blanco (para WhatsApp/Twitter que NO soportan transparencia bien).
+    if (chartDownloadBtn) {
+      chartDownloadBtn.addEventListener('click', () => {
+        if (!chartInstance || !chartCanvas) return;
+        try {
+          // Canvas temporal con fondo blanco
+          const w = chartCanvas.width;
+          const h = chartCanvas.height;
+          const tmp = document.createElement('canvas');
+          tmp.width = w; tmp.height = h;
+          const ctx = tmp.getContext('2d')!;
+          ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#0f172a' : '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(chartCanvas, 0, 0);
+          // Watermark sutil
+          ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#64748b' : '#94a3b8';
+          ctx.font = '12px system-ui, sans-serif';
+          ctx.fillText('hacecuentas.com', w - 130, h - 10);
+          // Download
+          const a = document.createElement('a');
+          a.download = `${slug}-grafico.png`;
+          a.href = tmp.toDataURL('image/png');
+          a.click();
+          if (typeof (window as any).gtag === 'function') {
+            (window as any).gtag('event', 'chart_download', { calc_slug: slug });
+          }
+        } catch (e) {
+          console.warn('[Calculator] chart download failed:', e);
+        }
+      });
+    }
 
     // Formatear valor de slider según format/prefix/suffix
     function formatSliderValue(n: number, fmt: string, prefix: string, suffix: string): string {
