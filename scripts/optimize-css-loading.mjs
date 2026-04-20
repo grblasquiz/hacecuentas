@@ -34,6 +34,43 @@ const DEFER_PATTERNS = [
   /Footer\.[A-Za-z0-9_-]+\.css/,
 ];
 
+// Inline CSS de ruta específica si pesa menos que este umbral (en KB).
+// Elimina render-blocking para Speed Index sin inflar HTML masivamente.
+// Target: CSS específicos per-page (<8KB). Componentes grandes (Calculator 28K,
+// Footer 24K) NO se inlinean.
+const INLINE_THRESHOLD_KB = 8;
+
+// Pattern de archivos CSS candidatos a inline (per-page CSS):
+// - index@_@astro.*.css
+// - *@_@astro.*.css (page-specific)
+const INLINE_PATTERNS = [
+  /[a-zA-Z0-9_-]+@_@astro\.[A-Za-z0-9_-]+\.css/,
+];
+
+// Leer CSS file desde dist/client/_astro (lookup absoluto)
+const cssCache = new Map();
+function readCssFile(href) {
+  if (cssCache.has(href)) return cssCache.get(href);
+  // href es /_astro/xxx.css
+  const fpath = join('dist/client', href.startsWith('/') ? href.slice(1) : href);
+  try {
+    const content = readFileSync(fpath, 'utf8');
+    cssCache.set(href, content);
+    return content;
+  } catch {
+    return null;
+  }
+}
+
+function shouldInline(href) {
+  const isMatchedPattern = INLINE_PATTERNS.some((p) => p.test(href));
+  if (!isMatchedPattern) return false;
+  const content = readCssFile(href);
+  if (!content) return false;
+  const kb = Buffer.byteLength(content, 'utf8') / 1024;
+  return kb <= INLINE_THRESHOLD_KB;
+}
+
 function walk(dir) {
   const out = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -49,48 +86,66 @@ function shouldDefer(href) {
 }
 
 function transformLink(match, attrs, href) {
-  if (!shouldDefer(href)) return match;
-  // Técnica preload + swap a stylesheet + noscript fallback
-  return (
-    `<link rel="preload" href="${href}" as="style" onload="this.onload=null;this.rel='stylesheet'">` +
-    `<noscript><link rel="stylesheet" href="${href}"></noscript>`
-  );
+  // 1. CSS chico específico de ruta → INLINE (elimina render-blocking)
+  if (shouldInline(href)) {
+    const content = readCssFile(href);
+    if (content) {
+      // Minificado básico: eliminar comments + whitespace redundante
+      const min = content.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim();
+      return `<style>${min}</style>`;
+    }
+  }
+  // 2. CSS below-fold → DEFER con preload + swap
+  if (shouldDefer(href)) {
+    return (
+      `<link rel="preload" href="${href}" as="style" onload="this.onload=null;this.rel='stylesheet'">` +
+      `<noscript><link rel="stylesheet" href="${href}"></noscript>`
+    );
+  }
+  return match;
 }
 
 let filesProcessed = 0;
 let linksDeferred = 0;
-let bytesSaved = 0;
+let linksInlined = 0;
+
+function replaceInHtml(html) {
+  let modified = html;
+  let deferred = 0;
+  let inlined = 0;
+  const replaceFn = (m, _a, _b, href) => {
+    if (shouldInline(href)) { inlined++; return transformLink(m, '', href); }
+    if (shouldDefer(href)) { deferred++; return transformLink(m, '', href); }
+    return m;
+  };
+  modified = modified.replace(
+    /<link\s+([^>]*?)rel=['"]stylesheet['"]\s+([^>]*?)href=['"]([^'"]+)['"]([^>]*?)\/?>/g,
+    replaceFn,
+  );
+  modified = modified.replace(
+    /<link\s+([^>]*?)href=['"]([^'"]+)['"]\s+([^>]*?)rel=['"]stylesheet['"]([^>]*?)\/?>/g,
+    (m, _a, href) => {
+      if (shouldInline(href)) { inlined++; return transformLink(m, '', href); }
+      if (shouldDefer(href)) { deferred++; return transformLink(m, '', href); }
+      return m;
+    },
+  );
+  return { modified, deferred, inlined };
+}
 
 const files = walk(DIST);
 for (const f of files) {
   const html = readFileSync(f, 'utf8');
-  let modified = html;
-  let count = 0;
-  modified = modified.replace(
-    /<link\s+([^>]*?)rel=['"]stylesheet['"]\s+([^>]*?)href=['"]([^'"]+)['"]([^>]*?)\/?>/g,
-    (m, _a, _b, href) => {
-      const newTag = transformLink(m, '', href);
-      if (newTag !== m) count++;
-      return newTag;
-    },
-  );
-  // También el orden inverso: href antes que rel
-  modified = modified.replace(
-    /<link\s+([^>]*?)href=['"]([^'"]+)['"]\s+([^>]*?)rel=['"]stylesheet['"]([^>]*?)\/?>/g,
-    (m, _a, href) => {
-      const newTag = transformLink(m, '', href);
-      if (newTag !== m) count++;
-      return newTag;
-    },
-  );
-  if (count > 0) {
+  const { modified, deferred, inlined } = replaceInHtml(html);
+  if (deferred > 0 || inlined > 0) {
     writeFileSync(f, modified);
     filesProcessed++;
-    linksDeferred += count;
-    bytesSaved += Math.round((modified.length - html.length) / 1024);
+    linksDeferred += deferred;
+    linksInlined += inlined;
   }
 }
 
 console.log(`✓ CSS loading optimized:`);
 console.log(`  Files processed: ${filesProcessed}`);
-console.log(`  Links deferred: ${linksDeferred}`);
+console.log(`  Links inlined (<${INLINE_THRESHOLD_KB}KB route-specific): ${linksInlined}`);
+console.log(`  Links deferred (below-fold Footer): ${linksDeferred}`);
