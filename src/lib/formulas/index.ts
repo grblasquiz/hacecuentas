@@ -2193,6 +2193,203 @@ import { gasolinaViajeCarreteraDistanciaAuto } from './gasolina-viaje-carretera-
 import { autoviaPeajesArgentinaRuta2Ruta3 } from './autovia-peajes-argentina-ruta-2-ruta-3';
 import { zonaHorariaDiferenciaCiudadesConvertir } from './zona-horaria-diferencia-ciudades-convertir';
 import { carryOnLiquidos100MlReglasAeropuerto } from './carry-on-liquidos-100-ml-reglas-aeropuerto';
+import { ganancias4taCategoria2026 } from './ganancias-4ta-categoria-2026';
+import { bonosGlobalesAl30Gd30Rendimiento } from './bonos-globales-al30-gd30-rendimiento';
+import { ripteActualizacionJubilatoriaSueldo } from './ripte-actualizacion-jubilatoria-sueldo';
+import { cedearDividendYield2026 } from './cedear-dividend-yield-2026';
+import { dolarSojaExportadorDiferencia } from './dolar-soja-exportador-diferencia';
+import { leliqLebacRendimientoBcra } from './leliq-lebac-rendimiento-bcra';
+import { salarioMinimo2026Comparativa } from './salario-minimo-2026-comparativa';
+import { asignacionFamiliarHijoAnsesTramo } from './asignacion-familiar-hijo-anses-tramo';
+import { reintegroIvaComprasTarjetaDebito } from './reintegro-iva-compras-tarjeta-debito';
+import { cftPrestamoPersonalComparativa } from './cft-prestamo-personal-comparativa';
+import { uvaHipotecaVsInflacionRiesgo } from './uva-hipoteca-vs-inflacion-riesgo';
+import { tasaPoliticaMonetariaTpmRendimiento } from './tasa-politica-monetaria-tpm-rendimiento';
+import { impuestoPaisPercepcionDolarTarjeta } from './impuesto-pais-percepcion-dolar-tarjeta';
+import { bienesPersonalesMinimoNoImponible2026 } from './bienes-personales-minimo-no-imponible-2026';
+import { autonomosCategorias2026Aportes } from './autonomos-categorias-2026-aportes';
+import { haberMinimoJubilatorio2026BonoTotal } from './haber-minimo-jubilatorio-2026-bono-total';
+import { bonusAnualMarcoFiscalNeto } from './bonus-anual-marco-fiscal-neto';
+import { costoLaboralTotalEmpleadorCargas } from './costo-laboral-total-empleador-cargas';
+import { iibbConvenioMultilateralCoeficientes } from './iibb-convenio-multilateral-coeficientes';
+import { rentaFinancieraCedularPersonas } from './renta-financiera-cedular-personas';
+import { arbaSellosInmobiliariosPbaCompraventa } from './arba-sellos-inmobiliarios-pba-compraventa';
+import { retencionAfipCuitRegimenGeneral } from './retencion-afip-cuit-regimen-general';
+import { cajaSeguridadBancoComparativaMensual } from './caja-seguridad-banco-comparativa-mensual';
+import { fondoDesempleoAnsesMontoTiempo } from './fondo-desempleo-anses-monto-tiempo';
+import { diasVacacionesGanadasAntiguedadLct } from './dias-vacaciones-ganadas-antiguedad-lct';
+import { cuotaAlimentosPorcentajeSueldoHijo } from './cuota-alimentos-porcentaje-sueldo-hijo';
+import { sucesionesCostoTotalArgentinaAbogado } from './sucesiones-costo-total-argentina-abogado';
+import { valorPresenteBonoCuponZeroTir } from './valor-presente-bono-cupon-zero-tir';
+import { duracionModificadaBonoRiesgoTasa } from './duracion-modificada-bono-riesgo-tasa';
+import { spreadTasasArbitrajeBancosPlazoFijo } from './spread-tasas-arbitraje-bancos-plazo-fijo';
+import { bitcoinHalving2028Proyeccion } from './bitcoin-halving-2028-proyeccion';
+import { stakingEthereumRendimientoApy } from './staking-ethereum-rendimiento-apy';
+import { apyDefiAaveCompound } from './apy-defi-aave-compound';
+import { impuestoCriptoArgentinaDeclaracionAnual } from './impuesto-cripto-argentina-declaracion-anual';
+import { coldWalletVsHotWalletRiesgo } from './cold-wallet-vs-hot-wallet-riesgo';
+import { usdtVsUsdcComisionExchange } from './usdt-vs-usdc-comision-exchange';
+import { leverageTradingLiquidacionPrecio } from './leverage-trading-liquidacion-precio';
+import { pnlFuturosLongShortPerpetual } from './pnl-futuros-long-short-perpetual';
+import { gasFeeEthereumTransaccionSwap } from './gas-fee-ethereum-transaccion-swap';
+import { yieldFarmingImpermanentLossPool } from './yield-farming-impermanent-loss-pool';
+import { bridgeFeeCriptoCrosschainCosto } from './bridge-fee-cripto-crosschain-costo';
+import { nftRoyaltyCreatorSecondaryMarket } from './nft-royalty-creator-secondary-market';
+import { dcaBitcoinHistoricoRentabilidad } from './dca-bitcoin-historico-rentabilidad';
+import { mineriaBitcoinArgentinaRentable } from './mineria-bitcoin-argentina-rentable';
+import { saldoCriptoValorMonedaLocalMulti } from './saldo-cripto-valor-moneda-local-multi';
+import { fundingRatePerpetualBitcoinCosto } from './funding-rate-perpetual-bitcoin-costo';
+import { backtestEstrategiaTradingSharpeRatio } from './backtest-estrategia-trading-sharpe-ratio';
+import { correlacionBtcNasdaqSp500Matriz } from './correlacion-btc-nasdaq-sp500-matriz';
+import { portfolio6040CriptoTradicionalAlloc } from './portfolio-60-40-cripto-tradicional-alloc';
+import { airdropValorHistoricoTokensQualifying } from './airdrop-valor-historico-tokens-qualifying';
+import { a1cHemoglobinaGlicosiladaDiabetes } from './a1c-hemoglobina-glicosilada-diabetes';
+import { presionArterialClasificacionOms } from './presion-arterial-clasificacion-oms';
+import { dosisIbuprofenoParacetamolPesoNino } from './dosis-ibuprofeno-paracetamol-peso-nino';
+import { cicloSuenoRemNoRem90min } from './ciclo-sueno-rem-no-rem-90min';
+import { fertilidadAmhReservaOvaricaEdad } from './fertilidad-amh-reserva-ovarica-edad';
+import { testosteronaNivelesNormalesEdadHombre } from './testosterona-niveles-normales-edad-hombre';
+import { estrogenoProgesteronaFaseMenstrual } from './estrogeno-progesterona-fase-menstrual';
+import { fshLhMenopausiaPerimenopausiaEdad } from './fsh-lh-menopausia-perimenopausia-edad';
+import { espermogramaValoresNormalesOms2021 } from './espermograma-valores-normales-oms-2021';
+import { rcpCompresionesBlsCprRitmo } from './rcp-compresiones-bls-cpr-ritmo';
+import { chokingHeimlichEdadManiobra } from './choking-heimlich-edad-maniobra';
+import { epinefrinaDosisPesoAnafilaxia } from './epinefrina-dosis-peso-anafilaxia';
+import { saturacionOxigenoSpo2AltitudNormal } from './saturacion-oxigeno-spo2-altitud-normal';
+import { gfrFiltradoGlomerularCkdEpi } from './gfr-filtrado-glomerular-ckd-epi';
+import { calcioDietaDiariaOsteoporosisMujer } from './calcio-dieta-diaria-osteoporosis-mujer';
+import { hierroFerritinaAnemiaDiagnostico } from './hierro-ferritina-anemia-diagnostico';
+import { vitaminaB12DosisVeganoMensual } from './vitamina-b12-dosis-vegano-mensual';
+import { magnesioDosisDeficienciaSintomas } from './magnesio-dosis-deficiencia-sintomas';
+import { zincDosisInmunidadHombreMujerEdad } from './zinc-dosis-inmunidad-hombre-mujer-edad';
+import { electrolitosAtletaSudorReposicion } from './electrolitos-atleta-sudor-reposicion';
+import { hidratacionClimaCalurosoActividadDiaria } from './hidratacion-clima-caluroso-actividad-diaria';
+import { masaGrasaVsMasaMagraComposicion } from './masa-grasa-vs-masa-magra-composicion';
+import { melatoninaDosisSuenoEdad } from './melatonina-dosis-sueno-edad';
+import { cafeinaDosisSeguraDiariaPeso } from './cafeina-dosis-segura-diaria-peso';
+import { creatinaCargaMantenimientoPeso } from './creatina-carga-mantenimiento-peso';
+import { rpeRirSeriesEntrenamientoPorcentaje } from './rpe-rir-series-entrenamiento-porcentaje';
+import { volumenSemanalHipertrofiaMusculoSeries } from './volumen-semanal-hipertrofia-musculo-series';
+import { macrosRecompCutBulkLeanCalorias } from './macros-recomp-cut-bulk-lean-calorias';
+import { padelRankingPuntosAptAapSubir } from './padel-ranking-puntos-apt-aap-subir';
+import { eloAjedrezGanadoPerdidoVariacion } from './elo-ajedrez-ganado-perdido-variacion';
+import { spfProteccionSolarMinutosPiel } from './spf-proteccion-solar-minutos-piel';
+import { wattsCiclismoFtpUmbralTest } from './watts-ciclismo-ftp-umbral-test';
+import { paceNatacion100mRitmo } from './pace-natacion-100m-ritmo';
+import { crossfitFranBenchmarkTiempoRx } from './crossfit-fran-benchmark-tiempo-rx';
+import { boxeoCaloriasQuemadasRoundsPeso } from './boxeo-calorias-quemadas-rounds-peso';
+import { yogaCaloriasEstiloVinyasaHatha } from './yoga-calorias-estilo-vinyasa-hatha';
+import { pilatesReformerFrecuenciaIdealSemana } from './pilates-reformer-frecuencia-ideal-semana';
+import { maratonPaceGoalTimeSplitKilometro } from './maraton-pace-goal-time-split-kilometro';
+import { trailRunningDesnivelRitmoAjustado } from './trail-running-desnivel-ritmo-ajustado';
+import { rugbyHandicapPuntosDescensoPromedio } from './rugby-handicap-puntos-descenso-promedio';
+import { expensasConsorcioDistribucionProporcionalM2 } from './expensas-consorcio-distribucion-proporcional-m2';
+import { ablCabaValuacionFiscalActualizada2026 } from './abl-caba-valuacion-fiscal-actualizada-2026';
+import { serviciosHogarLuzGasAguaMensualEstimado } from './servicios-hogar-luz-gas-agua-mensual-estimado';
+import { mudanzaPrecioKilometrosM3Cuadro } from './mudanza-precio-kilometros-m3-cuadro';
+import { internetFibraCableModemComparativaMbps } from './internet-fibra-cable-modem-comparativa-mbps';
+import { electricidadTarifaSocialSubsidioN1N2 } from './electricidad-tarifa-social-subsidio-n1-n2';
+import { gasNaturalSubsidioZonasFriasPatagonia } from './gas-natural-subsidio-zonas-frias-patagonia';
+import { deliveryPropinaPorcentajeAppSugerida } from './delivery-propina-porcentaje-app-sugerida';
+import { uberDidiCabifyComparativaCiudad } from './uber-didi-cabify-comparativa-ciudad';
+import { subteColectivoSubeTarifa2026Mensual } from './subte-colectivo-sube-tarifa-2026-mensual';
+import { estacionamientoMedidoHoraCabaZona } from './estacionamiento-medido-hora-caba-zona';
+import { peajeAutopistaBairesLaPlataCosto } from './peaje-autopista-baires-la-plata-costo';
+import { combustibleGncInstalacionAmortizacionAuto } from './combustible-gnc-instalacion-amortizacion-auto';
+import { vtvCostoProvincias2026 } from './vtv-costo-provincias-2026';
+import { patenteMotoProvincias2026Alicuota } from './patente-moto-provincias-2026-alicuota';
+import { seguroAutoComparativaCoberturaTipo } from './seguro-auto-comparativa-cobertura-tipo';
+import { estampilladoSelladoInmueblePbaCaba2026 } from './estampillado-sellado-inmueble-pba-caba-2026';
+import { alquilerTemporalVsTradicionalRendimientoNeto } from './alquiler-temporal-vs-tradicional-rendimiento-neto';
+import { jardinRiegoLitrosPlantasClimaSemana } from './jardin-riego-litros-plantas-clima-semana';
+import { piletaCloroLitrosVolumenDosificacion } from './pileta-cloro-litros-volumen-dosificacion';
+import { aireAcondicionadoFrigoriasM2Ambiente } from './aire-acondicionado-frigorias-m2-ambiente';
+import { calefactorTiroBalanceadoKcalM2Invierno } from './calefactor-tiro-balanceado-kcal-m2-invierno';
+import { heladeraInverterVsNoInverterConsumoAhorro } from './heladera-inverter-vs-no-inverter-consumo-ahorro';
+import { limpiezaHogarTiempoMetrosFrecuenciaTotal } from './limpieza-hogar-tiempo-metros-frecuencia-total';
+import { presupuestoViajeEuropa30DiasTotal } from './presupuesto-viaje-europa-30-dias-total';
+import { workingHolidayAustraliaCostoAno } from './working-holiday-australia-costo-ano';
+import { emigrarEspanaPresupuestoInicial6meses } from './emigrar-espana-presupuesto-inicial-6meses';
+import { visaEtaCanadaArgentinosRequisitos } from './visa-eta-canada-argentinos-requisitos';
+import { pasajeAereoMillasVsPesosCanjear } from './pasaje-aereo-millas-vs-pesos-canjear';
+import { hotelVsAirbnbVsHostelNocheComparativa } from './hotel-vs-airbnb-vs-hostel-noche-comparativa';
+import { seguroViajeDiasContinenteEdadCotizador } from './seguro-viaje-dias-continente-edad-cotizador';
+import { millajeFrecuenteAerolineasArgentinasProgramas } from './millaje-frecuente-aerolineas-argentinas-programas';
+import { jetLagZonasHorariasAdaptacionDias } from './jet-lag-zonas-horarias-adaptacion-dias';
+import { equipajeManoBodegaPesoVolumenAerolinea } from './equipaje-mano-bodega-peso-volumen-aerolinea';
+import { propinaPaisPorcentajeCostumbreCultural } from './propina-pais-porcentaje-costumbre-cultural';
+import { tarjetaPrepagaViajeComisionesTipo } from './tarjeta-prepaga-viaje-comisiones-tipo';
+import { impuestoPaisPasajeAvionInternacional } from './impuesto-pais-pasaje-avion-internacional';
+import { reintegroIvaTuristasExtranjerosArgentina } from './reintegro-iva-turistas-extranjeros-argentina';
+import { tarifaFreelanceDolarExperienciaHora } from './tarifa-freelance-dolar-experiencia-hora';
+import { impuestosFreelanceUsaArgentinaDoble } from './impuestos-freelance-usa-argentina-doble';
+import { upworkFreelancerComisionNetaArgentina } from './upwork-freelancer-comision-neta-argentina';
+import { horasFacturablesEmpleadoVsFreelanceComparativa } from './horas-facturables-empleado-vs-freelance-comparativa';
+import { sueldoDolarizadoVsPesosArgentinaComparativa } from './sueldo-dolarizado-vs-pesos-argentina-comparativa';
+import { visaNomadaDigitalPortugalEspana } from './visa-nomada-digital-portugal-espana';
+import { productividadPomodoroSesionesDiaEfectivas } from './productividad-pomodoro-sesiones-dia-efectivas';
+import { reunionesCostoTiempoPersonasEmpresa } from './reuniones-costo-tiempo-personas-empresa';
+import { burnoutIndiceCargaLaboralTestMbi } from './burnout-indice-carga-laboral-test-mbi';
+import { tiempoAprenderIdiomaHorasSemanaNivel } from './tiempo-aprender-idioma-horas-semana-nivel';
+import { estimadorSueldoProgramadorStackArgentina } from './estimador-sueldo-programador-stack-argentina';
+import { cofundadorEquitySplitStartupJusto } from './cofundador-equity-split-startup-justo';
+import { capTableStartupDilutionSerieA } from './cap-table-startup-dilution-serie-a';
+import { runwayStartupCashBurnRateMeses } from './runway-startup-cash-burn-rate-meses';
+import { cbcUbaMateriasRegularidadRequisitos } from './cbc-uba-materias-regularidad-requisitos';
+import { ingresoMedicinaPuntajeCbcUba2026 } from './ingreso-medicina-puntaje-cbc-uba-2026';
+import { ubaXxiNotaFinalPromedio } from './uba-xxi-nota-final-promedio';
+import { notaPromedioBachilleratoSecundarioMaterias } from './nota-promedio-bachillerato-secundario-materias';
+import { creditoUniversitarioProgresarMonto2026 } from './credito-universitario-progresar-monto-2026';
+import { itbaUtdtCostoCarreraAnualPrivada } from './itba-utdt-costo-carrera-anual-privada';
+import { mbaRoiRetornoInversionArgentinaEvaluacion } from './mba-roi-retorno-inversion-argentina-evaluacion';
+import { inglesNivelesCambridgeDuolingoTiempoConversion } from './ingles-niveles-cambridge-duolingo-tiempo-conversion';
+import { satIeltsToeflEquivalenciasPuntajeConvertidor } from './sat-ielts-toefl-equivalencias-puntaje-convertidor';
+import { tesisPalabrasTiempoNecesarioElaboracion } from './tesis-palabras-tiempo-necesario-elaboracion';
+import { vocabularioIdiomaPalabrasNivelConocido } from './vocabulario-idioma-palabras-nivel-conocido';
+import { lecturaVelocidadPaginasHoraWpm } from './lectura-velocidad-paginas-hora-wpm';
+import { memorizacionSpacedRepetitionAnkiCardsDia } from './memorizacion-spaced-repetition-anki-cards-dia';
+import { concursoDocentePuntajeAntecedentesBaires } from './concurso-docente-puntaje-antecedentes-baires';
+import { ingresoColegioPrivadoCuotaAnualCaba } from './ingreso-colegio-privado-cuota-anual-caba';
+import { ayunoIntermitente168VentanaHorario } from './ayuno-intermitente-16-8-ventana-horario';
+import { ketoMacrosCetogenicaDeficitCompleto } from './keto-macros-cetogenica-deficit-completo';
+import { celiacoGlutenAlimentosPpmSinTacc } from './celiaco-gluten-alimentos-ppm-sin-tacc';
+import { veganaProteinaCompletaCombinacionAminoacidos } from './vegana-proteina-completa-combinacion-aminoacidos';
+import { dietaMediterraneaAdherenciaScoreTest } from './dieta-mediterranea-adherencia-score-test';
+import { dashHipertensionSodioDiarioTabla } from './dash-hipertension-sodio-diario-tabla';
+import { fodmapAlimentosIntoleranciaSiiTabla } from './fodmap-alimentos-intolerancia-sii-tabla';
+import { dietaHipocaloricaDeficitSaludableMensual } from './dieta-hipocalorica-deficit-saludable-mensual';
+import { resetMetabolismoPlateauDietaEstrategia } from './reset-metabolismo-plateau-dieta-estrategia';
+import { aguaCafeTeHidratacionRealMitos } from './agua-cafe-te-hidratacion-real-mitos';
+import { crecimientoPercentilEdadAlturaPesoOms } from './crecimiento-percentil-edad-altura-peso-oms';
+import { calendarioVacunasBebeArgentina2026Completo } from './calendario-vacunas-bebe-argentina-2026-completo';
+import { formulaInfantilBiberonEdadMlDia } from './formula-infantil-biberon-edad-ml-dia';
+import { horasSuenoBebePorEdadTablaRecomendada } from './horas-sueno-bebe-por-edad-tabla-recomendada';
+import { introduccionAlimentosBlwEdadEtapa6meses } from './introduccion-alimentos-blw-edad-etapa-6meses';
+import { horasPantallaEdadOmsRecomendadoNino } from './horas-pantalla-edad-oms-recomendado-nino';
+import { mesadaSemanalHijoEdadSugeridaMonto } from './mesada-semanal-hijo-edad-sugerida-monto';
+import { panalesMensualBebeTallaCambiosDia } from './panales-mensual-bebe-talla-cambios-dia';
+import { guarderiaJardinMaternalCostoCabaMensual } from './guarderia-jardin-maternal-costo-caba-mensual';
+import { adolescenteEstaturaFinalPrediccionEdadHuesos } from './adolescente-estatura-final-prediccion-edad-huesos';
+import { pensionAlimentariaHijoPorcentajeSueldoDetallada } from './pension-alimentaria-hijo-porcentaje-sueldo-detallada';
+import { divorcioLiquidacionBienesGanancialesCosto } from './divorcio-liquidacion-bienes-gananciales-costo';
+import { embarazadaAumentoPesoSemanaImcPrevio } from './embarazada-aumento-peso-semana-imc-previo';
+import { fertilidadIntentosIvfFivEdadCostoArgentina } from './fertilidad-intentos-ivf-fiv-edad-costo-argentina';
+import { maternidadLicenciaSueldoAnsesDuracion } from './maternidad-licencia-sueldo-anses-duracion';
+import { tokensOpenaiGptCostoUsoMensual } from './tokens-openai-gpt-costo-uso-mensual';
+import { claudeGeminiTokensComparativaPrecioUso } from './claude-gemini-tokens-comparativa-precio-uso';
+import { midjourneyStableDiffusionCreditsMensual } from './midjourney-stable-diffusion-credits-mensual';
+import { streamerGananciasTwitchYoutubeViewersAfiliacion } from './streamer-ganancias-twitch-youtube-viewers-afiliacion';
+import { youtubeIngresosCpmSuscriptoresViewsMonetizacion } from './youtube-ingresos-cpm-suscriptores-views-monetizacion';
+import { tiktokCreatorFundViewsIngresosArgentina } from './tiktok-creator-fund-views-ingresos-argentina';
+import { gamingFpsComponentesPcArmarPresupuesto } from './gaming-fps-componentes-pc-armar-presupuesto';
+import { bandwidthStreamingBitrateResolucionYoutube } from './bandwidth-streaming-bitrate-resolucion-youtube';
+import { cloudAwsGcpAzureEc2MesOndemand } from './cloud-aws-gcp-azure-ec2-mes-ondemand';
+import { vpnMejorArgentinaPrecioVelocidadComparativa } from './vpn-mejor-argentina-precio-velocidad-comparativa';
+import { costoAnualMascotaPerroGatoArCompleto } from './costo-anual-mascota-perro-gato-ar-completo';
+import { envejecerMascotaHumanoTablaRazaTamano } from './envejecer-mascota-humano-tabla-raza-tamano';
+import { autoUsadoValorDepreciacionAnosAntiguedad } from './auto-usado-valor-depreciacion-anos-antiguedad';
+import { leasingVsCreditoAutoComparativaCompleta } from './leasing-vs-credito-auto-comparativa-completa';
+import { propiedadTasacionM2BarrioCabaPromedio } from './propiedad-tasacion-m2-barrio-caba-promedio';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -4385,4 +4582,201 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'autovia-peajes-argentina-ruta-2-ruta-3': autoviaPeajesArgentinaRuta2Ruta3,
   'zona-horaria-diferencia-ciudades-convertir': zonaHorariaDiferenciaCiudadesConvertir,
   'carry-on-liquidos-100-ml-reglas-aeropuerto': carryOnLiquidos100MlReglasAeropuerto,
+  'ganancias-4ta-categoria-2026': ganancias4taCategoria2026,
+  'bonos-globales-al30-gd30-rendimiento': bonosGlobalesAl30Gd30Rendimiento,
+  'ripte-actualizacion-jubilatoria-sueldo': ripteActualizacionJubilatoriaSueldo,
+  'cedear-dividend-yield-2026': cedearDividendYield2026,
+  'dolar-soja-exportador-diferencia': dolarSojaExportadorDiferencia,
+  'leliq-lebac-rendimiento-bcra': leliqLebacRendimientoBcra,
+  'salario-minimo-2026-comparativa': salarioMinimo2026Comparativa,
+  'asignacion-familiar-hijo-anses-tramo': asignacionFamiliarHijoAnsesTramo,
+  'reintegro-iva-compras-tarjeta-debito': reintegroIvaComprasTarjetaDebito,
+  'cft-prestamo-personal-comparativa': cftPrestamoPersonalComparativa,
+  'uva-hipoteca-vs-inflacion-riesgo': uvaHipotecaVsInflacionRiesgo,
+  'tasa-politica-monetaria-tpm-rendimiento': tasaPoliticaMonetariaTpmRendimiento,
+  'impuesto-pais-percepcion-dolar-tarjeta': impuestoPaisPercepcionDolarTarjeta,
+  'bienes-personales-minimo-no-imponible-2026': bienesPersonalesMinimoNoImponible2026,
+  'autonomos-categorias-2026-aportes': autonomosCategorias2026Aportes,
+  'haber-minimo-jubilatorio-2026-bono-total': haberMinimoJubilatorio2026BonoTotal,
+  'bonus-anual-marco-fiscal-neto': bonusAnualMarcoFiscalNeto,
+  'costo-laboral-total-empleador-cargas': costoLaboralTotalEmpleadorCargas,
+  'iibb-convenio-multilateral-coeficientes': iibbConvenioMultilateralCoeficientes,
+  'renta-financiera-cedular-personas': rentaFinancieraCedularPersonas,
+  'arba-sellos-inmobiliarios-pba-compraventa': arbaSellosInmobiliariosPbaCompraventa,
+  'retencion-afip-cuit-regimen-general': retencionAfipCuitRegimenGeneral,
+  'caja-seguridad-banco-comparativa-mensual': cajaSeguridadBancoComparativaMensual,
+  'fondo-desempleo-anses-monto-tiempo': fondoDesempleoAnsesMontoTiempo,
+  'dias-vacaciones-ganadas-antiguedad-lct': diasVacacionesGanadasAntiguedadLct,
+  'cuota-alimentos-porcentaje-sueldo-hijo': cuotaAlimentosPorcentajeSueldoHijo,
+  'sucesiones-costo-total-argentina-abogado': sucesionesCostoTotalArgentinaAbogado,
+  'valor-presente-bono-cupon-zero-tir': valorPresenteBonoCuponZeroTir,
+  'duracion-modificada-bono-riesgo-tasa': duracionModificadaBonoRiesgoTasa,
+  'spread-tasas-arbitraje-bancos-plazo-fijo': spreadTasasArbitrajeBancosPlazoFijo,
+  'bitcoin-halving-2028-proyeccion': bitcoinHalving2028Proyeccion,
+  'staking-ethereum-rendimiento-apy': stakingEthereumRendimientoApy,
+  'apy-defi-aave-compound': apyDefiAaveCompound,
+  'impuesto-cripto-argentina-declaracion-anual': impuestoCriptoArgentinaDeclaracionAnual,
+  'cold-wallet-vs-hot-wallet-riesgo': coldWalletVsHotWalletRiesgo,
+  'usdt-vs-usdc-comision-exchange': usdtVsUsdcComisionExchange,
+  'leverage-trading-liquidacion-precio': leverageTradingLiquidacionPrecio,
+  'pnl-futuros-long-short-perpetual': pnlFuturosLongShortPerpetual,
+  'gas-fee-ethereum-transaccion-swap': gasFeeEthereumTransaccionSwap,
+  'yield-farming-impermanent-loss-pool': yieldFarmingImpermanentLossPool,
+  'bridge-fee-cripto-crosschain-costo': bridgeFeeCriptoCrosschainCosto,
+  'nft-royalty-creator-secondary-market': nftRoyaltyCreatorSecondaryMarket,
+  'dca-bitcoin-historico-rentabilidad': dcaBitcoinHistoricoRentabilidad,
+  'mineria-bitcoin-argentina-rentable': mineriaBitcoinArgentinaRentable,
+  'saldo-cripto-valor-moneda-local-multi': saldoCriptoValorMonedaLocalMulti,
+  'funding-rate-perpetual-bitcoin-costo': fundingRatePerpetualBitcoinCosto,
+  'backtest-estrategia-trading-sharpe-ratio': backtestEstrategiaTradingSharpeRatio,
+  'correlacion-btc-nasdaq-sp500-matriz': correlacionBtcNasdaqSp500Matriz,
+  'portfolio-60-40-cripto-tradicional-alloc': portfolio6040CriptoTradicionalAlloc,
+  'airdrop-valor-historico-tokens-qualifying': airdropValorHistoricoTokensQualifying,
+  'a1c-hemoglobina-glicosilada-diabetes': a1cHemoglobinaGlicosiladaDiabetes,
+  'presion-arterial-clasificacion-oms': presionArterialClasificacionOms,
+  'dosis-ibuprofeno-paracetamol-peso-nino': dosisIbuprofenoParacetamolPesoNino,
+  'ciclo-sueno-rem-no-rem-90min': cicloSuenoRemNoRem90min,
+  'fertilidad-amh-reserva-ovarica-edad': fertilidadAmhReservaOvaricaEdad,
+  'testosterona-niveles-normales-edad-hombre': testosteronaNivelesNormalesEdadHombre,
+  'estrogeno-progesterona-fase-menstrual': estrogenoProgesteronaFaseMenstrual,
+  'fsh-lh-menopausia-perimenopausia-edad': fshLhMenopausiaPerimenopausiaEdad,
+  'espermograma-valores-normales-oms-2021': espermogramaValoresNormalesOms2021,
+  'rcp-compresiones-bls-cpr-ritmo': rcpCompresionesBlsCprRitmo,
+  'choking-heimlich-edad-maniobra': chokingHeimlichEdadManiobra,
+  'epinefrina-dosis-peso-anafilaxia': epinefrinaDosisPesoAnafilaxia,
+  'saturacion-oxigeno-spo2-altitud-normal': saturacionOxigenoSpo2AltitudNormal,
+  'gfr-filtrado-glomerular-ckd-epi': gfrFiltradoGlomerularCkdEpi,
+  'calcio-dieta-diaria-osteoporosis-mujer': calcioDietaDiariaOsteoporosisMujer,
+  'hierro-ferritina-anemia-diagnostico': hierroFerritinaAnemiaDiagnostico,
+  'vitamina-b12-dosis-vegano-mensual': vitaminaB12DosisVeganoMensual,
+  'magnesio-dosis-deficiencia-sintomas': magnesioDosisDeficienciaSintomas,
+  'zinc-dosis-inmunidad-hombre-mujer-edad': zincDosisInmunidadHombreMujerEdad,
+  'electrolitos-atleta-sudor-reposicion': electrolitosAtletaSudorReposicion,
+  'hidratacion-clima-caluroso-actividad-diaria': hidratacionClimaCalurosoActividadDiaria,
+  'masa-grasa-vs-masa-magra-composicion': masaGrasaVsMasaMagraComposicion,
+  'melatonina-dosis-sueno-edad': melatoninaDosisSuenoEdad,
+  'cafeina-dosis-segura-diaria-peso': cafeinaDosisSeguraDiariaPeso,
+  'creatina-carga-mantenimiento-peso': creatinaCargaMantenimientoPeso,
+  'rpe-rir-series-entrenamiento-porcentaje': rpeRirSeriesEntrenamientoPorcentaje,
+  'volumen-semanal-hipertrofia-musculo-series': volumenSemanalHipertrofiaMusculoSeries,
+  'macros-recomp-cut-bulk-lean-calorias': macrosRecompCutBulkLeanCalorias,
+  'padel-ranking-puntos-apt-aap-subir': padelRankingPuntosAptAapSubir,
+  'elo-ajedrez-ganado-perdido-variacion': eloAjedrezGanadoPerdidoVariacion,
+  'spf-proteccion-solar-minutos-piel': spfProteccionSolarMinutosPiel,
+  'watts-ciclismo-ftp-umbral-test': wattsCiclismoFtpUmbralTest,
+  'pace-natacion-100m-ritmo': paceNatacion100mRitmo,
+  'crossfit-fran-benchmark-tiempo-rx': crossfitFranBenchmarkTiempoRx,
+  'boxeo-calorias-quemadas-rounds-peso': boxeoCaloriasQuemadasRoundsPeso,
+  'yoga-calorias-estilo-vinyasa-hatha': yogaCaloriasEstiloVinyasaHatha,
+  'pilates-reformer-frecuencia-ideal-semana': pilatesReformerFrecuenciaIdealSemana,
+  'maraton-pace-goal-time-split-kilometro': maratonPaceGoalTimeSplitKilometro,
+  'trail-running-desnivel-ritmo-ajustado': trailRunningDesnivelRitmoAjustado,
+  'rugby-handicap-puntos-descenso-promedio': rugbyHandicapPuntosDescensoPromedio,
+  'expensas-consorcio-distribucion-proporcional-m2': expensasConsorcioDistribucionProporcionalM2,
+  'abl-caba-valuacion-fiscal-actualizada-2026': ablCabaValuacionFiscalActualizada2026,
+  'servicios-hogar-luz-gas-agua-mensual-estimado': serviciosHogarLuzGasAguaMensualEstimado,
+  'mudanza-precio-kilometros-m3-cuadro': mudanzaPrecioKilometrosM3Cuadro,
+  'internet-fibra-cable-modem-comparativa-mbps': internetFibraCableModemComparativaMbps,
+  'electricidad-tarifa-social-subsidio-n1-n2': electricidadTarifaSocialSubsidioN1N2,
+  'gas-natural-subsidio-zonas-frias-patagonia': gasNaturalSubsidioZonasFriasPatagonia,
+  'delivery-propina-porcentaje-app-sugerida': deliveryPropinaPorcentajeAppSugerida,
+  'uber-didi-cabify-comparativa-ciudad': uberDidiCabifyComparativaCiudad,
+  'subte-colectivo-sube-tarifa-2026-mensual': subteColectivoSubeTarifa2026Mensual,
+  'estacionamiento-medido-hora-caba-zona': estacionamientoMedidoHoraCabaZona,
+  'peaje-autopista-baires-la-plata-costo': peajeAutopistaBairesLaPlataCosto,
+  'combustible-gnc-instalacion-amortizacion-auto': combustibleGncInstalacionAmortizacionAuto,
+  'vtv-costo-provincias-2026': vtvCostoProvincias2026,
+  'patente-moto-provincias-2026-alicuota': patenteMotoProvincias2026Alicuota,
+  'seguro-auto-comparativa-cobertura-tipo': seguroAutoComparativaCoberturaTipo,
+  'estampillado-sellado-inmueble-pba-caba-2026': estampilladoSelladoInmueblePbaCaba2026,
+  'alquiler-temporal-vs-tradicional-rendimiento-neto': alquilerTemporalVsTradicionalRendimientoNeto,
+  'jardin-riego-litros-plantas-clima-semana': jardinRiegoLitrosPlantasClimaSemana,
+  'pileta-cloro-litros-volumen-dosificacion': piletaCloroLitrosVolumenDosificacion,
+  'aire-acondicionado-frigorias-m2-ambiente': aireAcondicionadoFrigoriasM2Ambiente,
+  'calefactor-tiro-balanceado-kcal-m2-invierno': calefactorTiroBalanceadoKcalM2Invierno,
+  'heladera-inverter-vs-no-inverter-consumo-ahorro': heladeraInverterVsNoInverterConsumoAhorro,
+  'limpieza-hogar-tiempo-metros-frecuencia-total': limpiezaHogarTiempoMetrosFrecuenciaTotal,
+  'presupuesto-viaje-europa-30-dias-total': presupuestoViajeEuropa30DiasTotal,
+  'working-holiday-australia-costo-ano': workingHolidayAustraliaCostoAno,
+  'emigrar-espana-presupuesto-inicial-6meses': emigrarEspanaPresupuestoInicial6meses,
+  'visa-eta-canada-argentinos-requisitos': visaEtaCanadaArgentinosRequisitos,
+  'pasaje-aereo-millas-vs-pesos-canjear': pasajeAereoMillasVsPesosCanjear,
+  'hotel-vs-airbnb-vs-hostel-noche-comparativa': hotelVsAirbnbVsHostelNocheComparativa,
+  'seguro-viaje-dias-continente-edad-cotizador': seguroViajeDiasContinenteEdadCotizador,
+  'millaje-frecuente-aerolineas-argentinas-programas': millajeFrecuenteAerolineasArgentinasProgramas,
+  'jet-lag-zonas-horarias-adaptacion-dias': jetLagZonasHorariasAdaptacionDias,
+  'equipaje-mano-bodega-peso-volumen-aerolinea': equipajeManoBodegaPesoVolumenAerolinea,
+  'propina-pais-porcentaje-costumbre-cultural': propinaPaisPorcentajeCostumbreCultural,
+  'tarjeta-prepaga-viaje-comisiones-tipo': tarjetaPrepagaViajeComisionesTipo,
+  'impuesto-pais-pasaje-avion-internacional': impuestoPaisPasajeAvionInternacional,
+  'reintegro-iva-turistas-extranjeros-argentina': reintegroIvaTuristasExtranjerosArgentina,
+  'tarifa-freelance-dolar-experiencia-hora': tarifaFreelanceDolarExperienciaHora,
+  'impuestos-freelance-usa-argentina-doble': impuestosFreelanceUsaArgentinaDoble,
+  'upwork-freelancer-comision-neta-argentina': upworkFreelancerComisionNetaArgentina,
+  'horas-facturables-empleado-vs-freelance-comparativa': horasFacturablesEmpleadoVsFreelanceComparativa,
+  'sueldo-dolarizado-vs-pesos-argentina-comparativa': sueldoDolarizadoVsPesosArgentinaComparativa,
+  'visa-nomada-digital-portugal-espana': visaNomadaDigitalPortugalEspana,
+  'productividad-pomodoro-sesiones-dia-efectivas': productividadPomodoroSesionesDiaEfectivas,
+  'reuniones-costo-tiempo-personas-empresa': reunionesCostoTiempoPersonasEmpresa,
+  'burnout-indice-carga-laboral-test-mbi': burnoutIndiceCargaLaboralTestMbi,
+  'tiempo-aprender-idioma-horas-semana-nivel': tiempoAprenderIdiomaHorasSemanaNivel,
+  'estimador-sueldo-programador-stack-argentina': estimadorSueldoProgramadorStackArgentina,
+  'cofundador-equity-split-startup-justo': cofundadorEquitySplitStartupJusto,
+  'cap-table-startup-dilution-serie-a': capTableStartupDilutionSerieA,
+  'runway-startup-cash-burn-rate-meses': runwayStartupCashBurnRateMeses,
+  'cbc-uba-materias-regularidad-requisitos': cbcUbaMateriasRegularidadRequisitos,
+  'ingreso-medicina-puntaje-cbc-uba-2026': ingresoMedicinaPuntajeCbcUba2026,
+  'uba-xxi-nota-final-promedio': ubaXxiNotaFinalPromedio,
+  'nota-promedio-bachillerato-secundario-materias': notaPromedioBachilleratoSecundarioMaterias,
+  'credito-universitario-progresar-monto-2026': creditoUniversitarioProgresarMonto2026,
+  'itba-utdt-costo-carrera-anual-privada': itbaUtdtCostoCarreraAnualPrivada,
+  'mba-roi-retorno-inversion-argentina-evaluacion': mbaRoiRetornoInversionArgentinaEvaluacion,
+  'ingles-niveles-cambridge-duolingo-tiempo-conversion': inglesNivelesCambridgeDuolingoTiempoConversion,
+  'sat-ielts-toefl-equivalencias-puntaje-convertidor': satIeltsToeflEquivalenciasPuntajeConvertidor,
+  'tesis-palabras-tiempo-necesario-elaboracion': tesisPalabrasTiempoNecesarioElaboracion,
+  'vocabulario-idioma-palabras-nivel-conocido': vocabularioIdiomaPalabrasNivelConocido,
+  'lectura-velocidad-paginas-hora-wpm': lecturaVelocidadPaginasHoraWpm,
+  'memorizacion-spaced-repetition-anki-cards-dia': memorizacionSpacedRepetitionAnkiCardsDia,
+  'concurso-docente-puntaje-antecedentes-baires': concursoDocentePuntajeAntecedentesBaires,
+  'ingreso-colegio-privado-cuota-anual-caba': ingresoColegioPrivadoCuotaAnualCaba,
+  'ayuno-intermitente-16-8-ventana-horario': ayunoIntermitente168VentanaHorario,
+  'keto-macros-cetogenica-deficit-completo': ketoMacrosCetogenicaDeficitCompleto,
+  'celiaco-gluten-alimentos-ppm-sin-tacc': celiacoGlutenAlimentosPpmSinTacc,
+  'vegana-proteina-completa-combinacion-aminoacidos': veganaProteinaCompletaCombinacionAminoacidos,
+  'dieta-mediterranea-adherencia-score-test': dietaMediterraneaAdherenciaScoreTest,
+  'dash-hipertension-sodio-diario-tabla': dashHipertensionSodioDiarioTabla,
+  'fodmap-alimentos-intolerancia-sii-tabla': fodmapAlimentosIntoleranciaSiiTabla,
+  'dieta-hipocalorica-deficit-saludable-mensual': dietaHipocaloricaDeficitSaludableMensual,
+  'reset-metabolismo-plateau-dieta-estrategia': resetMetabolismoPlateauDietaEstrategia,
+  'agua-cafe-te-hidratacion-real-mitos': aguaCafeTeHidratacionRealMitos,
+  'crecimiento-percentil-edad-altura-peso-oms': crecimientoPercentilEdadAlturaPesoOms,
+  'calendario-vacunas-bebe-argentina-2026-completo': calendarioVacunasBebeArgentina2026Completo,
+  'formula-infantil-biberon-edad-ml-dia': formulaInfantilBiberonEdadMlDia,
+  'horas-sueno-bebe-por-edad-tabla-recomendada': horasSuenoBebePorEdadTablaRecomendada,
+  'introduccion-alimentos-blw-edad-etapa-6meses': introduccionAlimentosBlwEdadEtapa6meses,
+  'horas-pantalla-edad-oms-recomendado-nino': horasPantallaEdadOmsRecomendadoNino,
+  'mesada-semanal-hijo-edad-sugerida-monto': mesadaSemanalHijoEdadSugeridaMonto,
+  'panales-mensual-bebe-talla-cambios-dia': panalesMensualBebeTallaCambiosDia,
+  'guarderia-jardin-maternal-costo-caba-mensual': guarderiaJardinMaternalCostoCabaMensual,
+  'adolescente-estatura-final-prediccion-edad-huesos': adolescenteEstaturaFinalPrediccionEdadHuesos,
+  'pension-alimentaria-hijo-porcentaje-sueldo-detallada': pensionAlimentariaHijoPorcentajeSueldoDetallada,
+  'divorcio-liquidacion-bienes-gananciales-costo': divorcioLiquidacionBienesGanancialesCosto,
+  'embarazada-aumento-peso-semana-imc-previo': embarazadaAumentoPesoSemanaImcPrevio,
+  'fertilidad-intentos-ivf-fiv-edad-costo-argentina': fertilidadIntentosIvfFivEdadCostoArgentina,
+  'maternidad-licencia-sueldo-anses-duracion': maternidadLicenciaSueldoAnsesDuracion,
+  'tokens-openai-gpt-costo-uso-mensual': tokensOpenaiGptCostoUsoMensual,
+  'claude-gemini-tokens-comparativa-precio-uso': claudeGeminiTokensComparativaPrecioUso,
+  'midjourney-stable-diffusion-credits-mensual': midjourneyStableDiffusionCreditsMensual,
+  'streamer-ganancias-twitch-youtube-viewers-afiliacion': streamerGananciasTwitchYoutubeViewersAfiliacion,
+  'youtube-ingresos-cpm-suscriptores-views-monetizacion': youtubeIngresosCpmSuscriptoresViewsMonetizacion,
+  'tiktok-creator-fund-views-ingresos-argentina': tiktokCreatorFundViewsIngresosArgentina,
+  'gaming-fps-componentes-pc-armar-presupuesto': gamingFpsComponentesPcArmarPresupuesto,
+  'bandwidth-streaming-bitrate-resolucion-youtube': bandwidthStreamingBitrateResolucionYoutube,
+  'cloud-aws-gcp-azure-ec2-mes-ondemand': cloudAwsGcpAzureEc2MesOndemand,
+  'vpn-mejor-argentina-precio-velocidad-comparativa': vpnMejorArgentinaPrecioVelocidadComparativa,
+  'costo-anual-mascota-perro-gato-ar-completo': costoAnualMascotaPerroGatoArCompleto,
+  'envejecer-mascota-humano-tabla-raza-tamano': envejecerMascotaHumanoTablaRazaTamano,
+  'auto-usado-valor-depreciacion-anos-antiguedad': autoUsadoValorDepreciacionAnosAntiguedad,
+  'leasing-vs-credito-auto-comparativa-completa': leasingVsCreditoAutoComparativaCompleta,
+  'propiedad-tasacion-m2-barrio-caba-promedio': propiedadTasacionM2BarrioCabaPromedio,
 };
