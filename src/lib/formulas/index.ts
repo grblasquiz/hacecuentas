@@ -2390,6 +2390,7 @@ import { envejecerMascotaHumanoTablaRazaTamano } from './envejecer-mascota-human
 import { autoUsadoValorDepreciacionAnosAntiguedad } from './auto-usado-valor-depreciacion-anos-antiguedad';
 import { leasingVsCreditoAutoComparativaCompleta } from './leasing-vs-credito-auto-comparativa-completa';
 import { propiedadTasacionM2BarrioCabaPromedio } from './propiedad-tasacion-m2-barrio-caba-promedio';
+import { zapatillaUsaEuropaConversion } from './zapatilla-usa-europa-conversion';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
