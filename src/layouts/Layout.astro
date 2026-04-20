@@ -197,10 +197,13 @@ const globalSchema = {
          el critical path, reduciendo LCP P75 de 3.6s → ~2.5s en mobile. -->
     <link rel="preload" href={interFont800Url} as="font" type="font/woff2" crossorigin />
 
-    <!-- Preconnect solo a origins que se usan en todo page view. cdn.jsdelivr.net
-         sólo se usa en calcs con Chart.js (lazy load) — ahí dns-prefetch es suficiente. -->
+    <!-- Preconnect: establece conexión (DNS + TCP + TLS) antes de que se necesite.
+         Googletagmanager se pide en ~todos los page views (Partytown lo carga en
+         worker). cdn.jsdelivr solo en calcs que usan Chart.js, dns-prefetch alcanza. -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
-    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+    <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+    <link rel="dns-prefetch" href="https://static.cloudflareinsights.com" />
 
     <!-- Google Consent Mode v2
          Default 'granted' para analytics (Argentina/LATAM no requiere opt-in bajo Ley 25.326).

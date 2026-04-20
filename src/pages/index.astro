@@ -437,6 +437,40 @@ const schema = {
 
   <ScrollToTop />
   <Footer slot="footer" />
+
+  <!-- Prefetch inteligente: en requestIdleCallback (no interfiere con render crítico)
+       precargamos el HTML de las 6 calcs más visitadas. Si el user clickea una,
+       carga instantánea desde cache. No usamos prefetchAll de Astro porque eso
+       dispararía cientos de requests inútiles. -->
+  <script is:inline>
+    (function () {
+      var topUrls = [
+        '/sueldo-en-mano-argentina',
+        '/calculadora-aguinaldo-sac',
+        '/calculadora-imc',
+        '/calculadora-interes-compuesto',
+        '/calculadora-porcentajes',
+        '/calculadora-plazo-fijo',
+      ];
+      function schedule(cb) {
+        if ('requestIdleCallback' in window) window.requestIdleCallback(cb, { timeout: 3000 });
+        else setTimeout(cb, 2000);
+      }
+      function prefetch(url) {
+        try {
+          var l = document.createElement('link');
+          l.rel = 'prefetch'; l.href = url; l.as = 'document';
+          document.head.appendChild(l);
+        } catch (e) {}
+      }
+      schedule(function () {
+        // Save-Data o slow-2g: no prefetch
+        var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (conn && (conn.saveData || /2g/.test(conn.effectiveType))) return;
+        topUrls.forEach(prefetch);
+      });
+    })();
+  </script>
 </Layout>
 
 <script is:inline>

@@ -149,3 +149,33 @@ console.log(`✓ CSS loading optimized:`);
 console.log(`  Files processed: ${filesProcessed}`);
 console.log(`  Links inlined (<${INLINE_THRESHOLD_KB}KB route-specific): ${linksInlined}`);
 console.log(`  Links deferred (below-fold Footer): ${linksDeferred}`);
+
+// ────────────────────────────────────────────────────────────
+// STEP 3: Eliminar CSS huérfanos (archivos que ningún HTML referencia
+// tras el inline+defer). Son CSS que quedaron sin uso post-optimización.
+// ────────────────────────────────────────────────────────────
+import { unlinkSync, existsSync } from 'node:fs';
+
+const ASTRO_DIR = join(DIST, '_astro');
+const allCssFiles = existsSync(ASTRO_DIR)
+  ? readdirSync(ASTRO_DIR).filter((f) => f.endsWith('.css')).map((f) => join(ASTRO_DIR, f))
+  : [];
+
+// Relee todos los HTMLs ahora modificados
+const allHtmls = walk(DIST).map((f) => readFileSync(f, 'utf8')).join('\n');
+
+let orphansRemoved = 0;
+let orphanKb = 0;
+for (const cssFile of allCssFiles) {
+  const basename = cssFile.split('/').pop();
+  // Si ningún HTML referencia este archivo, es huérfano
+  if (!allHtmls.includes(basename)) {
+    try {
+      const kb = statSync(cssFile).size / 1024;
+      unlinkSync(cssFile);
+      orphansRemoved++;
+      orphanKb += kb;
+    } catch {}
+  }
+}
+console.log(`  Orphan CSS removed: ${orphansRemoved} files (${orphanKb.toFixed(1)} KB)`);
