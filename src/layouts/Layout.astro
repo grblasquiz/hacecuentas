@@ -691,10 +691,11 @@ const globalSchema = {
       }
     </style>
 
-    <!-- gtag.js al final del body: async + después del contenido visible, no bloquea
-         FCP/LCP. Se ejecuta en cuanto descarga — asegura pageview en todas las
-         visitas, incluyendo bounces rápidos (<3s) desde Google Ads. -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18096606872"></script>
+    <!-- gtag.js en Web Worker vía Partytown.
+         Antes: async scripts costaban 1292ms CPU main thread (PageSpeed).
+         Ahora: Partytown los ejecuta en un web worker → ~0ms main thread.
+         Los eventos gtag() del hilo principal se forwardean al worker. -->
+    <script type="text/partytown" src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
+    <script type="text/partytown" src="https://www.googletagmanager.com/gtag/js?id=AW-18096606872"></script>
   </body>
 </html>
