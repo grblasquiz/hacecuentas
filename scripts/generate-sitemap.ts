@@ -69,6 +69,27 @@ function getLastMod(filepath: string, fallback: string): string {
   } catch { return fallback; }
 }
 
+/**
+ * Prioriza campos editoriales (lastReviewed / dataUpdate.lastUpdated) sobre mtime
+ * del filesystem. Esto evita que cambios masivos (enrichment batch) hagan parecer
+ * que todo el sitio cambió el mismo día — Google detecta eso como sospechoso.
+ *
+ * Orden de preferencia:
+ *   1. calc.lastReviewed (revisión editorial explícita)
+ *   2. calc.dataUpdate.lastUpdated (solo para calcs con data externa)
+ *   3. mtime del filesystem
+ *   4. fallback (buildDate)
+ */
+function getCalcLastMod(calc: any, filepath: string, fallback: string): string {
+  if (calc?.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
+    return calc.lastReviewed;
+  }
+  if (calc?.dataUpdate?.lastUpdated && /^\d{4}-\d{2}-\d{2}$/.test(calc.dataUpdate.lastUpdated)) {
+    return calc.dataUpdate.lastUpdated;
+  }
+  return getLastMod(filepath, fallback);
+}
+
 function urlsetXml(urls: Url[]): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -141,6 +162,87 @@ const topSlugs = new Set([
 // --------------------------------------------------------------------------
 
 const sitemaps: Array<{ name: string; urls: Url[] }> = [];
+
+// 0. Priority sitemap: las ~60 URLs top (home, guías, categorías, calcs estrella).
+// Este se declara PRIMERO en el index para que Google lo lea/crawle antes que el resto.
+// Crawl budget argument: cuando el sitemap inicial es chico y relevante, Google
+// asigna crawl budget a esas URLs preferentemente.
+const priorityUrls: Url[] = [
+  // Home + hubs
+  { loc: `${site}/`, priority: '1.0', changefreq: 'daily', lastmod: buildDate },
+  { loc: `${site}/guias`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
+  { loc: `${site}/buscar`, priority: '0.85', changefreq: 'monthly', lastmod: buildDate },
+  { loc: `${site}/cambio-de-monedas`, priority: '0.95', changefreq: 'hourly', lastmod: buildDate },
+  { loc: `${site}/cotizacion-cripto`, priority: '0.95', changefreq: 'hourly', lastmod: buildDate },
+  { loc: `${site}/inflacion-argentina`, priority: '0.95', changefreq: 'daily', lastmod: buildDate },
+  { loc: `${site}/presupuesto-familiar`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
+  { loc: `${site}/simulador-jubilacion-anses`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
+  { loc: `${site}/comparador-plazo-fijo`, priority: '0.9', changefreq: 'daily', lastmod: buildDate },
+  { loc: `${site}/valores-bcra`, priority: '0.9', changefreq: 'daily', lastmod: buildDate },
+  // 10 guías pilares
+  { loc: `${site}/guia/finanzas-personales`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
+  { loc: `${site}/guia/sueldos-argentina-2026`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
+  { loc: `${site}/guia/impuestos-argentina-2026`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
+  { loc: `${site}/guia/subsidios-anses-2026`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
+  { loc: `${site}/guia/salud-nutricion-fitness`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
+  { loc: `${site}/guia/embarazo-y-bebe`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
+  { loc: `${site}/guia/construccion-diy-hogar`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
+  { loc: `${site}/guia/matematicas-ciencias`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
+  { loc: `${site}/guia/productividad-aprendizaje`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
+  { loc: `${site}/guia/cocina-medidas-recetas`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
+];
+// Top categorías (las más grandes)
+for (const cat of ['finanzas', 'vida', 'salud', 'educacion', 'mascotas', 'matematica', 'cocina', 'deportes', 'tecnologia', 'viajes', 'construccion', 'marketing', 'negocios', 'ciencia', 'automotor', 'familia', 'idiomas', 'jardineria', 'electronica', 'entretenimiento']) {
+  priorityUrls.push({ loc: `${site}/categoria/${cat}`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate });
+}
+// Top calcs estrella verificadas (slugs reales — chequear con dist/ si agregás)
+const topPrioritySlugs = [
+  'sueldo-en-mano-argentina',
+  'calculadora-aguinaldo-sac',
+  'calculadora-indemnizacion-despido',
+  'calculadora-imc',
+  'calculadora-cuota-prestamo',
+  'calculadora-interes-compuesto',
+  'calculadora-monotributo-2026',
+  'calculadora-plazo-fijo',
+  'calculadora-embarazo',
+  'calculadora-calorias-diarias-tdee',
+  'calculadora-ovulacion-dias-fertiles',
+  'calculadora-regla-de-tres-simple',
+  'calculadora-porcentajes',
+  'calculadora-edad-exacta',
+  'conversor-dolar-euro-pesos-argentinos',
+  'calculadora-fecha-probable-parto',
+  'calculadora-pintura-por-m2-litros-latas',
+  'calculadora-ladrillos-por-m2-construccion',
+  'calculadora-cemento-arena-hormigon-receta-metro-cubico',
+  'calculadora-factorial-combinatoria-permutaciones',
+  'calculadora-propina-dividir-cuenta',
+  'calculadora-black-friday-descuento-real',
+  'calculadora-iva-incluido-neto-discriminar',
+  'calculadora-fire-retiro-temprano',
+  'calculadora-inflacion-acumulada-periodo',
+  'calculadora-grasa-corporal-pliegues',
+  'calculadora-macros-distribucion-proteina-carbos-grasas',
+  'calculadora-ciclo-menstrual',
+  'calculadora-retencion-ganancias-rg-830',
+  'calculadora-impuesto-ganancias-sueldo',
+  'calculadora-descenso-futbol-argentino-promedios',
+];
+const calcBySlug = new Map((calcs as any[]).map((c: any) => [c.slug, c]));
+for (const slug of topPrioritySlugs) {
+  const c = calcBySlug.get(slug);
+  if (!c) continue;
+  const fp = join(CALCS_DIR, `${c.formulaId || c.slug}.json`);
+  priorityUrls.push({
+    loc: `${site}/${slug}`,
+    priority: '0.9',
+    changefreq: 'weekly',
+    lastmod: getCalcLastMod(c, fp, buildDate),
+  });
+}
+
+sitemaps.push({ name: 'sitemap-priority.xml', urls: priorityUrls });
 
 // 1. Core: home + institucionales + páginas top
 sitemaps.push({
@@ -217,7 +319,7 @@ for (const [cat, items] of Object.entries(byCat).sort()) {
         loc: `${site}/${c.slug}`,
         priority: pf.priority,
         changefreq: pf.changefreq,
-        lastmod: getLastMod(filePath, buildDate),
+        lastmod: getCalcLastMod(c, filePath, buildDate),
       };
     }),
   ];

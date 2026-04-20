@@ -1,0 +1,31 @@
+name: IndexNow push (post-deploy)
+
+# Pushea URLs al IndexNow API (Bing + Yandex) después de cada push a main.
+# Bing crawlea más rápido que Google y sus señales a veces disparan crawls de Google.
+# También genera tráfico directo desde Bing.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'astro.config.mjs'
+  workflow_dispatch:
+
+jobs:
+  push-to-indexnow:
+    runs-on: ubuntu-latest
+    # Espera 3 min para que Cloudflare termine el deploy antes de notificar a Bing
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Wait for CF Pages deploy
+        run: sleep 180
+
+      - name: Push priority URLs to IndexNow
+        run: python3 scripts/indexnow-push.py
+
+      - name: Push all URLs (every push)
+        run: python3 scripts/indexnow-push.py --all
