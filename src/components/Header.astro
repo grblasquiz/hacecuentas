@@ -186,18 +186,25 @@ const isActive = (path: string) => currentPath.startsWith(path);
       results.innerHTML = `<div class="no-results">Sin resultados para "<strong>${escapeHtml(q)}</strong>"</div>`;
       return;
     }
-    results.innerHTML = matches.map((c, i) => `
-      <a href="/${escapeHtml(c.slug)}" class="result-item" data-index="${i}">
-        <span class="result-icon">${escapeHtml(c.icon || '')}</span>
-        <span class="result-body">
-          <span class="result-title">${escapeHtml(c.h1)}</span>
-          <span class="result-cat">${escapeHtml(categoryLabels[c.category] || c.category || '')}</span>
-        </span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-        </svg>
-      </a>
-    `).join('');
+    // Nota: usamos concatenación en lugar de template literals para evitar que
+    // Googlebot vea `href="/${...}"` en el HTML estático y lo trate como URL real.
+    // Antes: una URL literal `http://hacecuentas.com/${c.slug}` apareció como 404
+    // en Search Console porque Google parseó el template sin ejecutar el JS.
+    const arrow = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+    results.innerHTML = matches.map(function (c, i) {
+      var slug = escapeHtml(c.slug);
+      var icon = escapeHtml(c.icon || '');
+      var title = escapeHtml(c.h1);
+      var cat = escapeHtml(categoryLabels[c.category] || c.category || '');
+      return '<a href="' + '/' + slug + '" class="result-item" data-index="' + i + '">'
+        + '<span class="result-icon">' + icon + '</span>'
+        + '<span class="result-body">'
+        + '<span class="result-title">' + title + '</span>'
+        + '<span class="result-cat">' + cat + '</span>'
+        + '</span>'
+        + arrow
+        + '</a>';
+    }).join('');
     currentIndex = -1;
   }
 
