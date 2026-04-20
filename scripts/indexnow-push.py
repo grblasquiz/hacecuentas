@@ -11,10 +11,22 @@ Uso:
   python3 scripts/indexnow-push.py /url1 /url2  # pushea URLs específicas
 """
 import json
+import os
+import ssl
 import sys
 import urllib.request
 from pathlib import Path
 from xml.etree import ElementTree as ET
+
+# Contexto SSL que cae a certifi si existe (macOS local sin cert chain puede fallar)
+try:
+    import certifi
+    _ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+except Exception:
+    _ssl_ctx = ssl.create_default_context()
+    if os.environ.get('INDEXNOW_INSECURE_SSL') == '1':
+        _ssl_ctx.check_hostname = False
+        _ssl_ctx.verify_mode = ssl.CERT_NONE
 
 KEY = '79ef29dd0b79075ac90d508e94114642'
 KEY_LOCATION = f'https://hacecuentas.com/{KEY}.txt'
@@ -48,7 +60,7 @@ def push(urls: list) -> bool:
         method='POST',
     )
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with urllib.request.urlopen(req, timeout=20, context=_ssl_ctx) as resp:
             status = resp.status
             body = resp.read().decode('utf-8', errors='ignore')
     except Exception as e:
