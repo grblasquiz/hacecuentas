@@ -1,0 +1,213 @@
+---
+/**
+ * Gauge visual del progreso del embarazo (0-40+ semanas).
+ * Se monta debajo del Calculator de embarazo. Lee el output "detalle"
+ * del Calculator, extrae la semana y trimestre, y dibuja:
+ *  - Barra horizontal con los 3 trimestres coloreados (ACOG: 1º 0-13.6, 2º 14-27.6, 3º 28-40).
+ *  - Zona de "a término" (37-42) y "postérmino" (≥42) al final.
+ *  - Marcador ▼ en la semana actual.
+ *  - Hitos obstétricos posicionados en la barra (8-12 eco, 20 scan, 28 diabetes, etc.).
+ */
+---
+
+<section id="gauge-embarazo" class="gauge-preg" aria-label="Progreso visual del embarazo" hidden>
+  <div class="gauge-preg-head">
+    <h2 class="gauge-preg-title">Tu progreso en la línea del embarazo</h2>
+    <p class="gauge-preg-sub" data-preg-sub>—</p>
+  </div>
+  <div class="gauge-preg-track" aria-hidden="true">
+    <!-- 3 trimestres + borde "a término" -->
+    <div class="preg-seg preg-seg-t1" style="flex: 14;" data-label="1º trim">
+      <span class="preg-seg-label">1º trimestre</span>
+    </div>
+    <div class="preg-seg preg-seg-t2" style="flex: 14;" data-label="2º trim">
+      <span class="preg-seg-label">2º trimestre</span>
+    </div>
+    <div class="preg-seg preg-seg-t3" style="flex: 9;" data-label="3º trim">
+      <span class="preg-seg-label">3º trimestre</span>
+    </div>
+    <div class="preg-seg preg-seg-termino" style="flex: 5;" data-label="A término">
+      <span class="preg-seg-label">A término</span>
+    </div>
+    <!-- marcador semana actual -->
+    <div class="preg-marker" data-preg-marker style="left: 0%;">
+      <span class="preg-marker-arrow" aria-hidden="true">▼</span>
+      <span class="preg-marker-label" data-preg-marker-label>Sem 0</span>
+    </div>
+    <!-- hitos obstétricos (dots en la barra) -->
+    <div class="preg-hitos" aria-hidden="true">
+      <div class="preg-hito" style="left: 25%;" title="Semana 10: primera ecografía"></div>
+      <div class="preg-hito" style="left: 50%;" title="Semana 20: scan morfológico"></div>
+      <div class="preg-hito" style="left: 62.5%;" title="Semana 25: O'Sullivan"></div>
+      <div class="preg-hito" style="left: 70%;" title="Semana 28: vacuna dTpa"></div>
+      <div class="preg-hito" style="left: 87.5%;" title="Semana 35: cultivo EGB"></div>
+    </div>
+  </div>
+  <div class="gauge-preg-scale" aria-hidden="true">
+    <span style="left: 0%;">0</span>
+    <span style="left: 25%;">10</span>
+    <span style="left: 35%;">14</span>
+    <span style="left: 50%;">20</span>
+    <span style="left: 70%;">28</span>
+    <span style="left: 92.5%;">37</span>
+    <span style="left: 100%;">40</span>
+  </div>
+  <div class="gauge-preg-next" data-preg-next>—</div>
+</section>
+
+<script is:inline>
+  (function () {
+    var section = document.getElementById('gauge-embarazo');
+    if (!section) return;
+    var marker = section.querySelector('[data-preg-marker]');
+    var markerLabel = section.querySelector('[data-preg-marker-label]');
+    var sub = section.querySelector('[data-preg-sub]');
+    var next = section.querySelector('[data-preg-next]');
+
+    function extract(txt) {
+      if (!txt) return null;
+      // detalle: "FUM: ... | Semana 13+3 | Trimestre 1 (ACOG) | FPP: ... | Progreso 33.6% | Días restantes: 186."
+      var semMatch = txt.match(/Semana\s+(\d+)\+(\d+)/i);
+      var trimMatch = txt.match(/Trimestre\s+(\d)/i);
+      var progMatch = txt.match(/Progreso\s+([\d.]+)%/i);
+      var fppMatch = txt.match(/FPP:\s*([^|]+?)\s*\|/i);
+      if (!semMatch) return null;
+      return {
+        sem: parseInt(semMatch[1], 10),
+        diasExtra: parseInt(semMatch[2], 10),
+        trim: trimMatch ? parseInt(trimMatch[1], 10) : 1,
+        progreso: progMatch ? parseFloat(progMatch[1]) : 0,
+        fpp: fppMatch ? fppMatch[1].trim() : '',
+      };
+    }
+
+    function update() {
+      var detalleEl = document.querySelector('[data-output="detalle"] .result-value');
+      var proxEl = document.querySelector('[data-output="proximoControl"] .result-value');
+      if (!detalleEl) return;
+      var data = extract(detalleEl.textContent || '');
+      if (!data) { section.hidden = true; return; }
+      section.hidden = false;
+      // Posicion: 0..40 sem → 0..100% del track. Capea a 100.
+      // Cada semana = 2.5% del ancho. Dias extras: 0.357% por día.
+      var pct = Math.min(100, Math.max(0, (data.sem + data.diasExtra / 7) * 2.5));
+      marker.style.left = pct + '%';
+      markerLabel.textContent = 'Sem ' + data.sem + '+' + data.diasExtra;
+      var trimText = ['', '1º trimestre', '2º trimestre', '3º trimestre'][data.trim] || '';
+      sub.textContent = trimText + (data.fpp ? ' · FPP: ' + data.fpp : '');
+      if (proxEl) {
+        next.textContent = '📅 ' + (proxEl.textContent || '').trim();
+      } else {
+        next.textContent = '';
+      }
+    }
+
+    function startObserving() {
+      var container = document.querySelector('.calc-result, .calc-container, main');
+      if (!container) { setTimeout(startObserving, 200); return; }
+      var obs = new MutationObserver(update);
+      obs.observe(container, { childList: true, subtree: true, characterData: true });
+      update();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startObserving);
+    } else {
+      startObserving();
+    }
+  })();
+</script>
+
+<style is:global>
+  .gauge-preg {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-soft) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.04);
+  }
+  .gauge-preg[hidden] { display: none; }
+  .gauge-preg .gauge-preg-head { margin-bottom: 1rem; text-align: center; }
+  .gauge-preg .gauge-preg-title {
+    margin: 0 0 0.25rem; font-size: 1.125rem; font-weight: 800;
+    color: var(--text); letter-spacing: -0.01em;
+  }
+  .gauge-preg .gauge-preg-sub {
+    margin: 0; font-size: 0.9375rem; color: var(--text-muted); font-weight: 600;
+  }
+  .gauge-preg .gauge-preg-track {
+    position: relative; display: flex; height: 42px;
+    border-radius: 999px; overflow: visible;
+    margin: 2rem 0 0.75rem;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .gauge-preg .preg-seg {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6875rem; font-weight: 700; color: #fff;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    padding: 0 0.5rem;
+  }
+  .gauge-preg .preg-seg:first-child { border-radius: 999px 0 0 999px; }
+  .gauge-preg .preg-seg:last-child { border-radius: 0 999px 999px 0; }
+  .gauge-preg .preg-seg-t1 { background: linear-gradient(180deg, #f9a8d4 0%, #ec4899 100%); }
+  .gauge-preg .preg-seg-t2 { background: linear-gradient(180deg, #a78bfa 0%, #8b5cf6 100%); }
+  .gauge-preg .preg-seg-t3 { background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%); }
+  .gauge-preg .preg-seg-termino { background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%); }
+  .gauge-preg .preg-seg-label { text-shadow: 0 1px 1px rgba(0,0,0,0.15); }
+  .gauge-preg .preg-marker {
+    position: absolute; top: -1.75rem;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center;
+    z-index: 3;
+    transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .gauge-preg .preg-marker-arrow {
+    font-size: 1.125rem; color: var(--text); line-height: 1;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+  }
+  .gauge-preg .preg-marker-label {
+    margin-top: -0.125rem;
+    font-size: 0.75rem; font-weight: 800; color: var(--text);
+    background: var(--bg-card);
+    padding: 0.125rem 0.5rem; border-radius: 999px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    white-space: nowrap;
+  }
+  .gauge-preg .preg-hitos {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+  }
+  .gauge-preg .preg-hito {
+    position: absolute; top: 50%; transform: translate(-50%, -50%);
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.85);
+    box-shadow: 0 0 0 1.5px rgba(0,0,0,0.25);
+    pointer-events: auto;
+    cursor: help;
+  }
+  .gauge-preg .gauge-preg-scale {
+    position: relative; height: 1rem;
+    font-size: 0.6875rem; color: var(--text-muted);
+    font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .gauge-preg .gauge-preg-scale span {
+    position: absolute; transform: translateX(-50%);
+  }
+  .gauge-preg .gauge-preg-next {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-soft);
+    border-left: 4px solid #ec4899;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    color: var(--text);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  @media (max-width: 520px) {
+    .gauge-preg { padding: 1rem; }
+    .gauge-preg .preg-seg-label { font-size: 0.625rem; }
+  }
+</style>
