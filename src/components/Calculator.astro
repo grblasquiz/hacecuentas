@@ -167,7 +167,7 @@ const formatFreshnessDate = (iso: string): string => {
 };
 ---
 
-<div class="calc-container" data-slug={config.slug} data-formula={config.formulaId} data-auto-calculate={(config as any).autoCalculate ? 'true' : 'false'}>
+<div class="calc-container" data-slug={config.slug} data-formula={config.formulaId} data-auto-calculate={(config as any).autoCalculate ? 'true' : 'false'} data-lang={lang}>
   <div class="calc-card-header">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <rect x="4" y="2" width="16" height="20" rx="2"/>
@@ -2053,24 +2053,146 @@ const formatFreshnessDate = (iso: string): string => {
     requestAnimationFrame(step);
   }
 
+  // Lang del calc (inyectado vía data-lang="en" | "es" en .calc-container).
+  // Leído una sola vez para evitar múltiples querys al DOM.
+  const CALC_LANG: 'es' | 'en' = (document.querySelector('.calc-container') as HTMLElement | null)?.dataset?.lang === 'en' ? 'en' : 'es';
+  const NUM_LOCALE = CALC_LANG === 'en' ? 'en-US' : 'es-AR';
+  const NUM_CURRENCY = CALC_LANG === 'en' ? 'USD' : 'ARS';
+
+  // i18n layer runtime para outputs de texto (sólo para lang='en').
+  // Copia de src/lib/i18n-outputs.ts — duplicamos aquí para no bundlear módulo
+  // externo en el script inline (Astro bundlea cada <script> independientemente).
+  const I18N_REGEX_RULES: Array<[RegExp, string]> = [
+    [/\b(\d+(?:[-–]\d+)?)\s+horas?\s+totales?\s+\(([^)]+)\)/gi, '$1 total hours ($2)'],
+    [/\b(\d+(?:[-–]\d+)?)\s+horas?\s+totales?/gi, '$1 total hours'],
+    [/\b(\d+(?:[-–]\d+)?)\s+nocturnas?\b/gi, '$1 nighttime'],
+    [/\b(\d+(?:[-–]\d+)?)\s+diurnas?\b/gi, '$1 daytime'],
+    [/\bsiestas?\s+irregulares?\b/gi, 'irregular naps'],
+    [/\b(\d+(?:[-–]\d+)?|algunas|muchas)\s+siestas?\b/gi, '$1 naps'],
+    [/\bsin\s+siestas?\b/gi, 'no naps'],
+    [/\bsiesta\s+opcional\b/gi, 'optional nap'],
+    [/\bpor\s+día\b/gi, 'per day'],
+    [/\bpor\s+semana\b/gi, 'per week'],
+    [/\bpor\s+mes\b/gi, 'per month'],
+    [/\bpor\s+año\b/gi, 'per year'],
+    [/\bpor\s+hora\b/gi, 'per hour'],
+    [/\bpor\s+persona\b/gi, 'per person'],
+    [/\bpor\s+kg\b/gi, 'per kg'],
+    [/\bpor\s+porción\b/gi, 'per serving'],
+    [/\bpor\s+comida\b/gi, 'per meal'],
+    [/\b(\d+(?:[.,]\d+)?(?:[-–]\d+(?:[.,]\d+)?)?)\s+años?\b/gi, '$1 years'],
+    [/\b(\d+(?:[.,]\d+)?(?:[-–]\d+(?:[.,]\d+)?)?)\s+meses?\b/gi, '$1 months'],
+    [/\b(\d+(?:[.,]\d+)?(?:[-–]\d+(?:[.,]\d+)?)?)\s+semanas?\b/gi, '$1 weeks'],
+    [/\b(\d+(?:[.,]\d+)?(?:[-–]\d+(?:[.,]\d+)?)?)\s+días?\b/gi, '$1 days'],
+    [/\b(\d+(?:[.,]\d+)?(?:[-–]\d+(?:[.,]\d+)?)?)\s+horas?\b/gi, '$1 hours'],
+    [/\b(\d+(?:[.,]\d+)?(?:[-–]\d+(?:[.,]\d+)?)?)\s+minutos?\b/gi, '$1 minutes'],
+    [/\b(\d+(?:[.,]\d+)?(?:[-–]\d+(?:[.,]\d+)?)?)\s+segundos?\b/gi, '$1 seconds'],
+    [/\b(\d+(?:[.,]\d+)?(?:[-–]\d+(?:[.,]\d+)?)?)\s+veces\b/gi, '$1 times'],
+    [/\b(\d+(?:[-–]\d+)?)\s+personas?\b/gi, '$1 people'],
+    [/\b(\d+(?:[-–]\d+)?)\s+adultos?\b/gi, '$1 adults'],
+    [/\b(\d+(?:[-–]\d+)?)\s+niños?\b/gi, '$1 children'],
+    [/\b(\d+(?:[-–]\d+)?)\s+hijos?\b/gi, '$1 children'],
+    [/\b(\d+(?:[-–]\d+)?)\s+bebés?\b/gi, '$1 babies'],
+    [/\b(\d+(?:[-–]\d+)?)\s+invitados?\b/gi, '$1 guests'],
+    [/\bmuy\s+alto\b/gi, 'very high'],
+    [/\bmuy\s+bajo\b/gi, 'very low'],
+    [/\bmuy\s+intenso\b/gi, 'very intense'],
+    [/\bmoderad[oa]\b/gi, 'moderate'],
+    [/\bintenso\b/gi, 'intense'],
+    [/\bligero\b/gi, 'light'],
+    [/\bsedentario\b/gi, 'sedentary'],
+    [/\b(\d+(?:-\d+)?)x\/semana\b/gi, '$1x/week'],
+    [/\b(\d+(?:-\d+)?)x\/mes\b/gi, '$1x/month'],
+    [/\b(\d+(?:-\d+)?)x\/día\b/gi, '$1x/day'],
+    [/\bmayor\s+a\b/gi, 'greater than'],
+    [/\bmenor\s+a\b/gi, 'less than'],
+    [/\bentre\s+(\d+)\s+y\s+(\d+)/gi, 'between $1 and $2'],
+    [/\brecién\s+nacido\b/gi, 'newborn'],
+    [/\bembarazo\b/gi, 'pregnancy'],
+    [/\bembarazada\b/gi, 'pregnant'],
+    [/\bpost-?parto\b/gi, 'postpartum'],
+    [/\blactancia\b/gi, 'breastfeeding'],
+    [/\bmenopausia\b/gi, 'menopause'],
+    [/\bovulación\b/gi, 'ovulation'],
+    [/\bmenstrua(?:ción|l)\b/gi, 'menstruation'],
+    [/\bliberación\s+sostenida\b/gi, 'sustained release'],
+    [/\bliberación\s+inmediata\b/gi, 'immediate release'],
+    [/\bantes\s+del\s+sueño\b/gi, 'before sleep'],
+    [/\bantes\s+de\s+dormir\b/gi, 'before bed'],
+    [/\bal\s+despertar\b/gi, 'upon waking'],
+    [/\bdosis\s+máxima\b/gi, 'maximum dose'],
+    [/\bdosis\s+mínima\b/gi, 'minimum dose'],
+    [/\bdosis\s+recomendada\b/gi, 'recommended dose'],
+    [/\bde\s+músculo\b/gi, 'of muscle'],
+    [/\bganancia\s+muscular\b/gi, 'muscle gain'],
+    [/\bpérdida\s+de\s+grasa\b/gi, 'fat loss'],
+    [/\bfuerza\s+máxima\b/gi, 'max strength'],
+    [/\bresistencia\b/gi, 'endurance'],
+    [/\bhipertrofia\b/gi, 'hypertrophy'],
+    [/\baceptable\b/gi, 'acceptable'],
+    [/\bsaludable\b/gi, 'healthy'],
+    [/\brecomendable\b/gi, 'recommended'],
+    [/\brecomendad[oa]\b/gi, 'recommended'],
+    [/\bno\s+recomendad[oa]\b/gi, 'not recommended'],
+    [/\bnecesario\b/gi, 'necessary'],
+    [/\bopcional\b/gi, 'optional'],
+    [/\bimportante\b/gi, 'important'],
+    [/\burgente\b/gi, 'urgent'],
+    [/\bgrave\b/gi, 'serious'],
+    [/\bleve\b/gi, 'mild'],
+    [/\bmínim[oa]\b/gi, 'minimum'],
+    [/\bmáxim[oa]\b/gi, 'maximum'],
+    [/\bdiari[oa]\b/gi, 'daily'],
+    [/\bsemanal\b/gi, 'weekly'],
+    [/\bmensual\b/gi, 'monthly'],
+    [/\banual\b/gi, 'annual'],
+    [/\s+o\s+más\b/gi, ' or more'],
+    [/\s+o\s+menos\b/gi, ' or less'],
+    [/\bmás\s+de\b/gi, 'more than'],
+    [/\bmenos\s+de\b/gi, 'less than'],
+    [/\bdesde\s+(\d+)\s+años?\b/gi, 'from $1 years'],
+    [/\bhasta\s+(\d+)\s+años?\b/gi, 'up to $1 years'],
+    [/\bventana\s+fértil\b/gi, 'fertile window'],
+    [/\bventana\s+de\s+vigilia\b/gi, 'wake window'],
+    [/\bventana\s+vigilia\b/gi, 'wake window'],
+    [/\bg\/día\b/gi, 'g/day'],
+    [/\bmg\/día\b/gi, 'mg/day'],
+    [/\bml\/día\b/gi, 'ml/day'],
+    [/\bkg\/mes\b/gi, 'kg/month'],
+    [/\bkg\/semana\b/gi, 'kg/week'],
+    [/\bg\/kg\/día\b/gi, 'g/kg/day'],
+    [/\bmg\/kg\/día\b/gi, 'mg/kg/day'],
+    [/\bml\/kg\/día\b/gi, 'ml/kg/day'],
+    [/¿/g, ''],
+    [/¡/g, ''],
+  ];
+
+  function translateOutputStr(s: string): string {
+    if (CALC_LANG !== 'en' || !s) return s;
+    let out = s;
+    for (const [re, repl] of I18N_REGEX_RULES) out = out.replace(re, repl);
+    return out;
+  }
+
   function formatValue(value: number | string, format: string, suffix = ''): string {
     if (value === null || value === undefined || value === '') return '—';
     let formatted: string;
     if (format === 'currency') {
-      formatted = new Intl.NumberFormat('es-AR', {
+      formatted = new Intl.NumberFormat(NUM_LOCALE, {
         style: 'currency',
-        currency: 'ARS',
+        currency: NUM_CURRENCY,
         maximumFractionDigits: 0,
       }).format(Number(value));
     } else if (format === 'number') {
-      formatted = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(Number(value));
+      formatted = new Intl.NumberFormat(NUM_LOCALE, { maximumFractionDigits: 2 }).format(Number(value));
     } else if (format === 'percentage') {
       formatted = `${Number(value).toFixed(2)}%`;
     } else if (format === 'date') {
       const d = new Date(value);
-      formatted = d.toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+      formatted = d.toLocaleDateString(NUM_LOCALE, { day: '2-digit', month: 'long', year: 'numeric' });
     } else {
-      formatted = String(value);
+      // format === 'text' o similar: aplicar traducción i18n
+      formatted = translateOutputStr(String(value));
     }
     return suffix ? `${formatted} ${suffix}` : formatted;
   }
