@@ -39,7 +39,10 @@ const DESC_SOL: Record<string, string> = {
 };
 
 export function cartaNatalBasica(i: Inputs): Outputs {
-  const d = new Date(i.fechaNacimiento);
+  const parts = String(i.fechaNacimiento || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mmx, ddx] = parts;
+  const d = new Date(yy, mmx - 1, ddx);
   if (isNaN(d.getTime())) throw new Error('Ingresá una fecha válida');
   const hora = Number(i.horaNacimiento);
   if (isNaN(hora) || hora < 0 || hora > 23) throw new Error('Hora inválida');

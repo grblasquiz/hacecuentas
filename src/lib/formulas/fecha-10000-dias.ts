@@ -1,7 +1,10 @@
 export interface Inputs { fechaNacimiento: string; }
 export interface Outputs { fecha10000: string; fecha20000: string; fecha30000: string; diasVividos: number; mensaje: string; }
 export function fecha10000Dias(i: Inputs): Outputs {
-  const nac = new Date(i.fechaNacimiento);
+  const parts = String(i.fechaNacimiento || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const nac = new Date(yy, mm - 1, dd);
   const hoy = new Date();
   if (isNaN(nac.getTime())) throw new Error('Ingresá una fecha válida');
   const diasVividos = Math.floor((hoy.getTime() - nac.getTime()) / 86400000);

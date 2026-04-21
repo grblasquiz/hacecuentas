@@ -18,8 +18,12 @@ export interface Outputs {
 }
 
 export function plazoTesisDeadline(i: Inputs): Outputs {
-  const fechaInicio = new Date(String(i.fechaInicio));
-  const fechaEntrega = new Date(String(i.fechaEntrega));
+  const partsIni = String(i.fechaInicio || '').split('-').map(Number);
+  if (partsIni.length !== 3 || partsIni.some(isNaN)) throw new Error('Fecha de inicio inválida');
+  const fechaInicio = new Date(partsIni[0], partsIni[1] - 1, partsIni[2]);
+  const partsEnt = String(i.fechaEntrega || '').split('-').map(Number);
+  if (partsEnt.length !== 3 || partsEnt.some(isNaN)) throw new Error('Fecha de entrega inválida');
+  const fechaEntrega = new Date(partsEnt[0], partsEnt[1] - 1, partsEnt[2]);
   const palabrasObj = Number(i.palabrasObjetivo) || 20000;
   const palabrasEscritas = Number(i.palabrasEscritas) || 0;
 

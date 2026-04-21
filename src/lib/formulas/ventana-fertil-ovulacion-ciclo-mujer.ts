@@ -3,7 +3,11 @@ export interface Outputs { [k: string]: string | number; }
 export function ventanaFertilOvulacionCicloMujer(i: Inputs): Outputs {
   const f=String(i.ultimaRegla||''); const c=Number(i.cicloDias)||28;
   if (!f) return { ovulacion:'—', ventana:'—', proxRegla:'—', resumen:'Ingresá fecha.' };
-  const d=new Date(f+'T00:00:00'); if (isNaN(d.getTime())) return { ovulacion:'—', ventana:'—', proxRegla:'—', resumen:'Fecha inválida.' };
+  const parts=f.split('-').map(Number);
+  if (parts.length!==3 || parts.some(isNaN)) return { ovulacion:'—', ventana:'—', proxRegla:'—', resumen:'Fecha inválida.' };
+  const [yy,mm,dd]=parts;
+  const d=new Date(yy,mm-1,dd);
+  if (isNaN(d.getTime())) return { ovulacion:'—', ventana:'—', proxRegla:'—', resumen:'Fecha inválida.' };
   const ovu=new Date(d.getTime()+(c-14)*86400000);
   const vIni=new Date(ovu.getTime()-5*86400000);
   const vFin=new Date(ovu.getTime()+1*86400000);

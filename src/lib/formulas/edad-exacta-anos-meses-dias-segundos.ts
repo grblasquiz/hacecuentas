@@ -6,7 +6,10 @@ export function edadExactaAnosMesesDiasSegundos(i: Inputs): Outputs {
     const hoy=new Date();
     return { resultado:hoy.toISOString().slice(0,10), resumen:'Ingresá una fecha.' };
   }
-  const d=new Date(f+'T00:00:00');
+  const parts=f.split('-').map(Number);
+  if (parts.length!==3 || parts.some(isNaN)) return { resultado:'—', resumen:'Fecha inválida.' };
+  const [yy,mm,dd]=parts;
+  const d=new Date(yy,mm-1,dd);
   if (isNaN(d.getTime())) return { resultado:'—', resumen:'Fecha inválida.' };
   const hoy=new Date();
   const diff=Math.floor((d.getTime()-hoy.getTime())/86400000);

@@ -35,7 +35,10 @@ export function licenciaPorMaternidadPaternidadDias(
 
   if (!fechaStr) throw new Error('Ingresá la fecha probable de parto');
 
-  const fechaParto = new Date(fechaStr + 'T12:00:00');
+  const parts = String(fechaStr).split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Fecha de parto inválida');
+  const [yy, mm, dd] = parts;
+  const fechaParto = new Date(yy, mm - 1, dd);
   if (isNaN(fechaParto.getTime())) throw new Error('Fecha de parto inválida');
 
   let diasTotales = 0;
