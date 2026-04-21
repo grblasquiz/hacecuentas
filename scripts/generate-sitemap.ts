@@ -91,6 +91,27 @@ function getCalcLastMod(calc: any, filepath: string, fallback: string): string {
   return getLastMod(filepath, fallback);
 }
 
+/**
+ * Para páginas estáticas (home, legales, guías) devuelve el mtime del archivo
+ * .astro correspondiente. Si no existe, cae al fallback. Esto evita que TODAS
+ * las páginas estables aparezcan cambiadas el día del build, que es una señal
+ * negativa para Google (baja confianza en el sitemap).
+ */
+function getPageLastMod(pagePath: string, fallback: string): string {
+  // pagePath ej: '/privacidad' → src/pages/privacidad.astro
+  const pagesDir = join(ROOT, 'src', 'pages');
+  const slug = pagePath.replace(/^\/|\/$/g, '') || 'index';
+  const candidates = [
+    join(pagesDir, `${slug}.astro`),
+    join(pagesDir, slug, 'index.astro'),
+  ];
+  for (const c of candidates) {
+    const d = getLastMod(c, '');
+    if (d) return d;
+  }
+  return fallback;
+}
+
 function urlsetXml(urls: Url[]): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -169,33 +190,39 @@ const sitemaps: Array<{ name: string; urls: Url[] }> = [];
 // Este se declara PRIMERO en el index para que Google lo lea/crawle antes que el resto.
 // Crawl budget argument: cuando el sitemap inicial es chico y relevante, Google
 // asigna crawl budget a esas URLs preferentemente.
+// Mismo criterio que sitemap-core: dinámicas=buildDate, estables=mtime de pagina.
+const prio = (path: string, priority: string, changefreq: string, dynamic = false): Url => ({
+  loc: `${site}${path}`,
+  priority,
+  changefreq,
+  lastmod: dynamic ? buildDate : getPageLastMod(path, buildDate),
+});
 const priorityUrls: Url[] = [
-  // Home + hubs
-  { loc: `${site}/`, priority: '1.0', changefreq: 'daily', lastmod: buildDate },
-  { loc: `${site}/guias`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/buscar`, priority: '0.85', changefreq: 'monthly', lastmod: buildDate },
-  { loc: `${site}/cambio-de-monedas`, priority: '0.95', changefreq: 'hourly', lastmod: buildDate },
-  { loc: `${site}/cotizacion-cripto`, priority: '0.95', changefreq: 'hourly', lastmod: buildDate },
-  { loc: `${site}/inflacion-argentina`, priority: '0.95', changefreq: 'daily', lastmod: buildDate },
-  { loc: `${site}/presupuesto-familiar`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/simulador-jubilacion-anses`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/comparador-plazo-fijo`, priority: '0.9', changefreq: 'daily', lastmod: buildDate },
-  { loc: `${site}/valores-bcra`, priority: '0.9', changefreq: 'daily', lastmod: buildDate },
-  // 10 guías pilares
-  { loc: `${site}/guia/finanzas-personales`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/guia/sueldos-argentina-2026`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/guia/impuestos-argentina-2026`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/guia/subsidios-anses-2026`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/guia/salud-nutricion-fitness`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/guia/embarazo-y-bebe`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/guia/construccion-diy-hogar`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/guia/matematicas-ciencias`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/guia/productividad-aprendizaje`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
-  { loc: `${site}/guia/cocina-medidas-recetas`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
+  prio('/',                                  '1.0',  'daily',  true),
+  prio('/guias',                             '0.95', 'weekly'),
+  prio('/buscar',                            '0.85', 'monthly'),
+  prio('/cambio-de-monedas',                 '0.95', 'hourly', true),
+  prio('/cotizacion-cripto',                 '0.95', 'hourly', true),
+  prio('/inflacion-argentina',               '0.95', 'daily',  true),
+  prio('/presupuesto-familiar',              '0.95', 'weekly'),
+  prio('/simulador-jubilacion-anses',        '0.95', 'weekly'),
+  prio('/comparador-plazo-fijo',             '0.9',  'daily',  true),
+  prio('/valores-bcra',                      '0.9',  'daily',  true),
+  // 10 guías pilares (estables)
+  prio('/guia/finanzas-personales',          '0.9',  'weekly'),
+  prio('/guia/sueldos-argentina-2026',       '0.9',  'weekly'),
+  prio('/guia/impuestos-argentina-2026',     '0.9',  'weekly'),
+  prio('/guia/subsidios-anses-2026',         '0.9',  'weekly'),
+  prio('/guia/salud-nutricion-fitness',      '0.9',  'weekly'),
+  prio('/guia/embarazo-y-bebe',              '0.9',  'weekly'),
+  prio('/guia/construccion-diy-hogar',       '0.9',  'weekly'),
+  prio('/guia/matematicas-ciencias',         '0.9',  'weekly'),
+  prio('/guia/productividad-aprendizaje',    '0.9',  'weekly'),
+  prio('/guia/cocina-medidas-recetas',       '0.9',  'weekly'),
 ];
-// Top categorías (las más grandes)
+// Top categorías (las más grandes) — estable salvo deploys del template de categoría
 for (const cat of ['finanzas', 'vida', 'salud', 'educacion', 'mascotas', 'matematica', 'cocina', 'deportes', 'tecnologia', 'viajes', 'construccion', 'marketing', 'negocios', 'ciencia', 'automotor', 'familia', 'idiomas', 'jardineria', 'electronica', 'entretenimiento']) {
-  priorityUrls.push({ loc: `${site}/categoria/${cat}`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate });
+  priorityUrls.push(prio(`/categoria/${cat}`, '0.85', 'weekly'));
 }
 // Top calcs estrella verificadas (slugs reales — chequear con dist/ si agregás)
 const topPrioritySlugs = [
@@ -247,42 +274,52 @@ for (const slug of topPrioritySlugs) {
 sitemaps.push({ name: 'sitemap-priority.xml', urls: priorityUrls });
 
 // 1. Core: home + institucionales + páginas top
+// lastmod: páginas genuinamente dinámicas (home, dólar, bcra, cripto, inflación,
+// plazo-fijo) usan buildDate porque sus datos cambian a diario. Las estables
+// (legales, guías, páginas "about") usan mtime del .astro — así no parecen
+// haber cambiado todo el día y Google no pierde confianza en el sitemap.
+const core = (path: string, priority: string, changefreq: string, dynamic = false): Url => ({
+  loc: `${site}${path}`,
+  priority,
+  changefreq,
+  lastmod: dynamic ? buildDate : getPageLastMod(path, buildDate),
+});
 sitemaps.push({
   name: 'sitemap-core.xml',
   urls: [
-    { loc: `${site}/`, priority: '1.0', changefreq: 'daily', lastmod: buildDate },
-    { loc: `${site}/buscar`, priority: '0.7', changefreq: 'monthly', lastmod: buildDate },
-    { loc: `${site}/comparador-plazo-fijo`, priority: '0.85', changefreq: 'daily', lastmod: buildDate },
-    { loc: `${site}/valores-bcra`, priority: '0.85', changefreq: 'daily', lastmod: buildDate },
-    { loc: `${site}/cambio-de-monedas`, priority: '0.95', changefreq: 'hourly', lastmod: buildDate },
-    { loc: `${site}/cotizacion-cripto`, priority: '0.95', changefreq: 'hourly', lastmod: buildDate },
-    { loc: `${site}/inflacion-argentina`, priority: '0.9', changefreq: 'daily', lastmod: buildDate },
-    { loc: `${site}/presupuesto-familiar`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/simulador-jubilacion-anses`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/tracker-embarazo-semana-a-semana`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/cuanto-falta-para-Navidad-2026`, priority: '0.9', changefreq: 'daily', lastmod: buildDate },
-    { loc: `${site}/guias`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/guia/sueldos-argentina-2026`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/guia/impuestos-argentina-2026`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/guia/subsidios-anses-2026`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/guia/finanzas-personales`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/guia/salud-nutricion-fitness`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/guia/embarazo-y-bebe`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/guia/construccion-diy-hogar`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/guia/matematicas-ciencias`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/guia/productividad-aprendizaje`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/guia/cocina-medidas-recetas`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
-    { loc: `${site}/embeber`, priority: '0.6', changefreq: 'monthly', lastmod: buildDate },
-    { loc: `${site}/sobre-nosotros`, priority: '0.5', changefreq: 'yearly', lastmod: buildDate },
-    { loc: `${site}/privacidad`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
-    { loc: `${site}/cookies`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
-    { loc: `${site}/terminos`, priority: '0.3', changefreq: 'yearly', lastmod: buildDate },
-    { loc: `${site}/aviso-legal`, priority: '0.5', changefreq: 'yearly', lastmod: buildDate },
-    { loc: `${site}/politica-editorial`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
-    { loc: `${site}/metodologia`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
-    { loc: `${site}/contacto`, priority: '0.4', changefreq: 'yearly', lastmod: buildDate },
-    { loc: `${site}/glosario`, priority: '0.5', changefreq: 'monthly', lastmod: buildDate },
-    { loc: `${site}/blog`, priority: '0.7', changefreq: 'weekly', lastmod: buildDate },
+    core('/',                                    '1.0',  'daily',   true),
+    core('/buscar',                              '0.7',  'monthly'),
+    core('/comparador-plazo-fijo',               '0.85', 'daily',   true),
+    core('/valores-bcra',                        '0.85', 'daily',   true),
+    core('/cambio-de-monedas',                   '0.95', 'hourly',  true),
+    core('/cotizacion-cripto',                   '0.95', 'hourly',  true),
+    core('/inflacion-argentina',                 '0.9',  'daily',   true),
+    core('/presupuesto-familiar',                '0.95', 'weekly'),
+    core('/simulador-jubilacion-anses',          '0.95', 'weekly'),
+    core('/tracker-embarazo-semana-a-semana',    '0.95', 'weekly'),
+    core('/cuanto-falta-para-Navidad-2026',      '0.9',  'daily',   true),
+    core('/guias',                               '0.9',  'weekly'),
+    core('/guia/sueldos-argentina-2026',         '0.85', 'weekly'),
+    core('/guia/impuestos-argentina-2026',       '0.85', 'weekly'),
+    core('/guia/subsidios-anses-2026',           '0.85', 'weekly'),
+    core('/guia/finanzas-personales',            '0.85', 'weekly'),
+    core('/guia/salud-nutricion-fitness',        '0.85', 'weekly'),
+    core('/guia/embarazo-y-bebe',                '0.85', 'weekly'),
+    core('/guia/construccion-diy-hogar',         '0.85', 'weekly'),
+    core('/guia/matematicas-ciencias',           '0.85', 'weekly'),
+    core('/guia/productividad-aprendizaje',      '0.85', 'weekly'),
+    core('/guia/cocina-medidas-recetas',         '0.85', 'weekly'),
+    core('/embeber',                             '0.6',  'monthly'),
+    core('/sobre-nosotros',                      '0.5',  'yearly'),
+    core('/privacidad',                          '0.3',  'yearly'),
+    core('/cookies',                             '0.3',  'yearly'),
+    core('/terminos',                            '0.3',  'yearly'),
+    core('/aviso-legal',                         '0.5',  'yearly'),
+    core('/politica-editorial',                  '0.5',  'monthly'),
+    core('/metodologia',                         '0.5',  'monthly'),
+    core('/contacto',                            '0.4',  'yearly'),
+    core('/glosario',                            '0.5',  'monthly'),
+    core('/blog',                                '0.7',  'weekly'),
   ],
 });
 
@@ -331,73 +368,31 @@ for (const [cat, items] of Object.entries(byCat).sort()) {
   sitemaps.push({ name: `sitemap-calcs-${cat}.xml`, urls });
 }
 
-// 3. Calcs inglés
-if (calcsEn.length > 0) {
-  sitemaps.push({
-    name: 'sitemap-en.xml',
-    urls: (calcsEn as any[]).map((c: any) => ({
-      loc: `${site}/en/${c.slug}`,
+// 3. Calcs por locale (EN, PT, MX, ES, CO, CL).
+// lastmod usa mtime del archivo JSON correspondiente para no reportar buildDate
+// uniforme. Cada locale tiene su directorio src/content/calcs-<locale>/.
+function sitemapForLocale(cs: any[], locale: string, dir: string, withIndex: boolean): { name: string; urls: Url[] } {
+  const urls: Url[] = withIndex
+    ? [{ loc: `${site}/${locale}/`, priority: '0.8', changefreq: 'weekly', lastmod: buildDate }]
+    : [];
+  for (const c of cs) {
+    const fp = join(dir, `${c.formulaId || c.slug}.json`);
+    urls.push({
+      loc: `${site}/${locale}/${c.slug}`,
       priority: '0.7',
       changefreq: 'monthly',
-      lastmod: buildDate,
-    })),
-  });
-}
-
-// 3a. Calcs português
-if (calcsPt.length > 0) {
-  sitemaps.push({
-    name: 'sitemap-pt.xml',
-    urls: [
-      { loc: `${site}/pt/`, priority: '0.8', changefreq: 'weekly', lastmod: buildDate },
-      ...(calcsPt as any[]).map((c: any) => ({
-        loc: `${site}/pt/${c.slug}`,
-        priority: '0.7',
-        changefreq: 'monthly',
-        lastmod: buildDate,
-      })),
-    ],
-  });
-}
-
-// 3b. Calcs México
-if (calcsMx.length > 0) {
-  sitemaps.push({
-    name: 'sitemap-mx.xml',
-    urls: [
-      { loc: `${site}/mx/`, priority: '0.8', changefreq: 'weekly', lastmod: buildDate },
-      ...(calcsMx as any[]).map((c: any) => ({
-        loc: `${site}/mx/${c.slug}`,
-        priority: '0.7',
-        changefreq: 'monthly',
-        lastmod: buildDate,
-      })),
-    ],
-  });
-}
-
-// 3c. Calcs España, Colombia, Chile
-const intlLocales: { calcs: any[]; locale: string }[] = [
-  { calcs: calcsEs, locale: 'es' },
-  { calcs: calcsCo, locale: 'co' },
-  { calcs: calcsCl, locale: 'cl' },
-];
-for (const { calcs: cs, locale } of intlLocales) {
-  if (cs.length > 0) {
-    sitemaps.push({
-      name: `sitemap-${locale}.xml`,
-      urls: [
-        { loc: `${site}/${locale}/`, priority: '0.8', changefreq: 'weekly', lastmod: buildDate },
-        ...(cs as any[]).map((c: any) => ({
-          loc: `${site}/${locale}/${c.slug}`,
-          priority: '0.7',
-          changefreq: 'monthly',
-          lastmod: buildDate,
-        })),
-      ],
+      lastmod: getCalcLastMod(c, fp, buildDate),
     });
   }
+  return { name: `sitemap-${locale}.xml`, urls };
 }
+
+if (calcsEn.length > 0) sitemaps.push(sitemapForLocale(calcsEn, 'en', CALCS_EN_DIR, false));
+if (calcsPt.length > 0) sitemaps.push(sitemapForLocale(calcsPt, 'pt', CALCS_PT_DIR, true));
+if (calcsMx.length > 0) sitemaps.push(sitemapForLocale(calcsMx, 'mx', CALCS_MX_DIR, true));
+if (calcsEs.length > 0) sitemaps.push(sitemapForLocale(calcsEs, 'es', CALCS_ES_DIR, true));
+if (calcsCo.length > 0) sitemaps.push(sitemapForLocale(calcsCo, 'co', CALCS_CO_DIR, true));
+if (calcsCl.length > 0) sitemaps.push(sitemapForLocale(calcsCl, 'cl', CALCS_CL_DIR, true));
 
 // 4. Blog
 if (blogPosts.length > 0) {
@@ -412,55 +407,49 @@ if (blogPosts.length > 0) {
   });
 }
 
-// 5. Comparaciones
+// 5. Comparaciones, tablas, glosario — mtime del JSON (no del build)
+function sitemapForContent(items: any[], dir: string, pathPrefix: string, priority: string): Url[] {
+  return items.map((it: any) => {
+    const fp = join(dir, `${it.slug}.json`);
+    return {
+      loc: `${site}/${pathPrefix}/${it.slug}`,
+      priority,
+      changefreq: 'monthly',
+      lastmod: getLastMod(fp, buildDate),
+    };
+  });
+}
+
 if (comparaciones.length > 0) {
-  sitemaps.push({
-    name: 'sitemap-comparaciones.xml',
-    urls: (comparaciones as any[]).map((c: any) => ({
-      loc: `${site}/comparar/${c.slug}`,
-      priority: '0.7',
-      changefreq: 'monthly',
-      lastmod: buildDate,
-    })),
-  });
+  sitemaps.push({ name: 'sitemap-comparaciones.xml', urls: sitemapForContent(comparaciones, COMPARACIONES_DIR, 'comparar', '0.7') });
 }
-
-// 6. Tablas de referencia
 if (tablas.length > 0) {
-  sitemaps.push({
-    name: 'sitemap-tablas.xml',
-    urls: (tablas as any[]).map((t: any) => ({
-      loc: `${site}/tabla/${t.slug}`,
-      priority: '0.7',
-      changefreq: 'monthly',
-      lastmod: buildDate,
-    })),
-  });
+  sitemaps.push({ name: 'sitemap-tablas.xml', urls: sitemapForContent(tablas, TABLAS_DIR, 'tabla', '0.7') });
 }
-
-// 7. Glosario
 if (glosarioTerms.length > 0) {
-  sitemaps.push({
-    name: 'sitemap-glosario.xml',
-    urls: (glosarioTerms as any[]).map((t: any) => ({
-      loc: `${site}/glosario/${t.slug}`,
-      priority: '0.6',
-      changefreq: 'monthly',
-      lastmod: buildDate,
-    })),
-  });
+  sitemaps.push({ name: 'sitemap-glosario.xml', urls: sitemapForContent(glosarioTerms, GLOSARIO_DIR, 'glosario', '0.6') });
 }
 
-// 8. Argentina provincial
+// 8. Argentina provincial — lastmod del JSON de la calc
 const argUrls: Url[] = [];
 for (const calc of argCalcs as any[]) {
+  // Buscar el archivo JSON en argentina/ que corresponda
+  const argFile = safeReadDir(ARGENTINA_DIR).find(f => {
+    if (f === 'provincias.json') return false;
+    try {
+      const c = JSON.parse(readFileSync(join(ARGENTINA_DIR, f), 'utf8'));
+      return c.calcSlug === calc.calcSlug;
+    } catch { return false; }
+  });
+  const fp = argFile ? join(ARGENTINA_DIR, argFile) : '';
+  const mtime = getLastMod(fp, buildDate);
   for (const p of provincias) {
     if (calc.provinceData && calc.provinceData[p.slug]) {
       argUrls.push({
         loc: `${site}/argentina/${p.slug}/${calc.calcSlug}`,
         priority: '0.6',
         changefreq: 'monthly',
-        lastmod: buildDate,
+        lastmod: mtime,
       });
     }
   }
