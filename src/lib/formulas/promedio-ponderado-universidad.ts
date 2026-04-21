@@ -20,8 +20,9 @@ export function promedioPonderadoUniversidad(i: Inputs): Outputs {
     throw new Error('Ingresá los créditos de cada materia');
   }
 
-  const notasArray = i.notas.split(',').map((n) => parseFloat(n.trim())).filter((n) => !isNaN(n));
-  const creditosArray = i.creditos.split(',').map((n) => parseFloat(n.trim())).filter((n) => !isNaN(n));
+  // Separador: ; o espacio (coma se reserva como decimal AR: "7,5" -> 7.5)
+  const notasArray = i.notas.split(/[;\s]+/).filter((s) => s).map((n) => parseFloat(n.trim().replace(',', '.'))).filter((n) => !isNaN(n));
+  const creditosArray = i.creditos.split(/[;\s]+/).filter((s) => s).map((n) => parseFloat(n.trim().replace(',', '.'))).filter((n) => !isNaN(n));
 
   if (notasArray.length === 0) {
     throw new Error('No se encontraron notas válidas.');

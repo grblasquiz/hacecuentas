@@ -18,6 +18,17 @@ export function probabilidadDropLoot(i: Inputs): Outputs {
   if (!dr || dr <= 0 || dr > 1) throw new Error('Ingresá un drop rate válido (0.001% - 100%)');
   if (!n || n < 1) throw new Error('Ingresá al menos 1 intento');
 
+  // Short-circuit: drop rate 100% → siempre se obtiene en 1 intento
+  if (dr >= 1) {
+    return {
+      probAlMenosUno: 100,
+      intentos50: 1,
+      intentos90: 1,
+      intentos99: 1,
+      mensaje: `Con 100% de drop rate, obtenés el ítem garantizado en 1 intento.`,
+    };
+  }
+
   // P(at least 1) = 1 - (1 - dr)^n
   const probAlMenosUno = (1 - Math.pow(1 - dr, n)) * 100;
 

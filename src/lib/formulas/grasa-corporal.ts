@@ -23,6 +23,8 @@ export function grasaCorporal(i: Inputs): Outputs {
   if (!cuello || cuello <= 0) throw new Error('Ingresá cuello');
   if (!cintura || cintura <= 0) throw new Error('Ingresá cintura');
   if (sexo === 'f' && !cadera) throw new Error('Ingresá cadera');
+  if (sexo !== 'f' && cintura <= cuello) throw new Error('La cintura debe ser mayor al cuello');
+  if (sexo === 'f' && (cintura + cadera) <= cuello) throw new Error('La suma de cintura + cadera debe ser mayor al cuello');
 
   // US Navy formula
   let pct = 0;

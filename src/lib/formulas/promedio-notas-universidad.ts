@@ -17,13 +17,15 @@ export function promedioNotasUniversidad(i: Inputs): Outputs {
     throw new Error('Ingresá al menos una nota para calcular el promedio');
   }
 
+  // Separador: ; o espacio (coma se reserva como decimal AR: "7,5" -> 7.5)
   const notasArray = i.notas
-    .split(',')
-    .map((n) => parseFloat(n.trim()))
+    .split(/[;\s]+/)
+    .filter((s) => s)
+    .map((n) => parseFloat(n.trim().replace(',', '.')))
     .filter((n) => !isNaN(n));
 
   if (notasArray.length === 0) {
-    throw new Error('No se encontraron notas válidas. Ingresá números separados por coma.');
+    throw new Error('No se encontraron notas válidas. Ingresá números separados por punto y coma o espacio (ej: 7,5; 8; 9,2).');
   }
 
   for (const nota of notasArray) {

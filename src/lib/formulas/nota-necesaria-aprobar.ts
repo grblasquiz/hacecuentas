@@ -28,9 +28,11 @@ export function notaNecesariaAprobar(i: Inputs): Outputs {
     throw new Error('El promedio deseado debe estar entre 1 y 10');
   }
 
+  // Separador: ; o espacio (coma se reserva como decimal AR: "7,5" -> 7.5)
   const notasArray = i.notasActuales
-    .split(',')
-    .map((n) => parseFloat(n.trim()))
+    .split(/[;\s]+/)
+    .filter((s) => s)
+    .map((n) => parseFloat(n.trim().replace(',', '.')))
     .filter((n) => !isNaN(n));
 
   if (notasArray.length === 0) {

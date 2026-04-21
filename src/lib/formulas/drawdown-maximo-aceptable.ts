@@ -5,7 +5,7 @@ export function drawdownMaximoAceptable(i: Inputs): Outputs {
   const ini = Number(i.capitalInicial); const act = Number(i.capitalActual);
   const ret = Number(i.retornoMensualPromedio);
   if (!ini || ini <= 0) throw new Error('Ingresá capital inicial');
-  if (!act || act < 0) throw new Error('Ingresá capital actual');
+  if (!act || act <= 0) throw new Error('Ingresá capital actual');
   if (act > ini) throw new Error('El capital actual no debería superar el inicial (sin drawdown)');
   if (!ret || ret <= 0) throw new Error('Ingresá retorno mensual (%)');
   const dd = (ini - act) / ini;
