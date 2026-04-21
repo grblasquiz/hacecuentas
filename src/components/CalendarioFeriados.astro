@@ -110,6 +110,7 @@ const FERIADOS = [
       grid.innerHTML = html;
 
       // Lista feriados
+      const tipoNice = { 'inamovible': 'Inamovible', 'trasladable': 'Trasladable', 'no-laborable': 'No laborable' };
       if (feriadosMes.length === 0) {
         listEl.innerHTML = '<p class="cal-empty-list">🔹 No hay feriados este mes</p>';
       } else {
@@ -120,14 +121,16 @@ const FERIADOS = [
           return `<div class="cal-feriado-item dot-${f.tipo.replace('-','')}">
             <span class="cal-feriado-date">${dow} ${parts[2]}</span>
             <span class="cal-feriado-name">${f.nombre}</span>
-            <span class="cal-feriado-tipo">${f.tipo}</span>
+            <span class="cal-feriado-tipo">${tipoNice[f.tipo] || f.tipo}</span>
           </div>`;
         }).join('');
       }
 
-      // Highlight mes btn
+      // Highlight mes btn + dot si tiene feriados
       document.querySelectorAll('.cal-month-btn').forEach(b => {
-        b.classList.toggle('is-active', parseInt(b.dataset.month, 10) === currentMonth);
+        const mIdx = parseInt(b.dataset.month, 10);
+        b.classList.toggle('is-active', mIdx === currentMonth);
+        b.classList.toggle('has-feriado-dot', feriadosDelMes(mIdx).length > 0);
       });
     }
 
@@ -152,160 +155,241 @@ const FERIADOS = [
   })();
 </script>
 
-<style>
+<style is:global>
+  /* is:global con scope manual por .feriados-calendar: las cells del calendario
+     se generan vía innerHTML en el script inline, y el CSS scoped de Astro
+     (data-astro-cid-XXX) no aplica a DOM inyectado por JS. Prefijar todos los
+     selectores con .feriados-calendar evita clashes globales. */
   .feriados-calendar {
     margin-top: 2rem;
-    padding: 1.25rem;
-    background: var(--bg-card);
+    padding: 1.5rem;
+    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-soft) 100%);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.04);
   }
-  .cal-head {
+  .feriados-calendar .cal-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
   }
-  .cal-title {
+  .feriados-calendar .cal-title {
     margin: 0;
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: 1.375rem;
+    font-weight: 800;
     color: var(--text);
     text-align: center;
     flex: 1;
+    letter-spacing: -0.01em;
   }
-  .cal-nav {
-    width: 36px; height: 36px;
-    background: var(--bg); border: 1px solid var(--border);
-    border-radius: 50%; cursor: pointer; font-size: 1.125rem;
+  .feriados-calendar .cal-nav {
+    width: 40px; height: 40px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 50%; cursor: pointer; font-size: 1.25rem;
     color: var(--text); display: inline-flex; align-items: center; justify-content: center;
-    transition: all 0.15s;
+    transition: all 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
   }
-  .cal-nav:hover { border-color: var(--accent); color: var(--accent); }
+  .feriados-calendar .cal-nav:hover {
+    border-color: var(--accent); color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
 
-  .cal-legend {
+  .feriados-calendar .cal-legend {
     display: flex; flex-wrap: wrap; gap: 1rem;
     font-size: 0.75rem; color: var(--text-muted);
-    margin-bottom: 0.875rem; padding-bottom: 0.875rem;
-    border-bottom: 1px solid var(--border);
+    margin-bottom: 1rem; padding-bottom: 1rem;
+    border-bottom: 1px dashed var(--border);
   }
-  .cal-legend span { display: inline-flex; align-items: center; gap: 0.375rem; }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-  .dot-inamovible { background: #ef4444; }
-  .dot-trasladable { background: #f59e0b; }
-  .dot-nolaborable { background: #6366f1; }
-  .dot-today { background: var(--accent); }
+  .feriados-calendar .cal-legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .feriados-calendar .legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 2px rgba(255,255,255,0.4) inset; }
+  .feriados-calendar .dot-inamovible { background: #ef4444; }
+  .feriados-calendar .dot-trasladable { background: #f59e0b; }
+  .feriados-calendar .dot-nolaborable { background: #6366f1; }
+  .feriados-calendar .dot-today { background: var(--accent); }
 
-  .cal-weekdays, .cal-grid {
+  .feriados-calendar .cal-weekdays,
+  .feriados-calendar .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 3px;
+    gap: 4px;
   }
-  .cal-weekdays {
-    margin-bottom: 4px;
+  .feriados-calendar .cal-weekdays {
+    margin-bottom: 6px;
   }
-  .cal-weekdays span {
+  .feriados-calendar .cal-weekdays span {
     text-align: center;
     font-size: 0.6875rem;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.375rem 0;
+    letter-spacing: 0.08em;
+    padding: 0.5rem 0;
   }
-  .cal-cell {
+  .feriados-calendar .cal-cell {
     position: relative;
     aspect-ratio: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: var(--bg-soft);
-    border-radius: 6px;
-    font-size: 0.875rem;
+    background: var(--bg-card);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 0.9375rem;
     color: var(--text);
-    min-height: 40px;
+    min-height: 44px;
+    font-weight: 500;
+    transition: transform 0.12s, box-shadow 0.12s;
   }
-  .cal-cell.cal-empty { background: transparent; }
-  .cal-cell.is-weekend { background: var(--bg); color: var(--text-muted); }
-  .cal-cell.has-feriado.dot-inamovible { background: rgba(239, 68, 68, 0.15); color: #dc2626; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.3); }
-  .cal-cell.has-feriado.dot-trasladable { background: rgba(245, 158, 11, 0.15); color: #d97706; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.3); }
-  .cal-cell.has-feriado.dot-nolaborable { background: rgba(99, 102, 241, 0.15); color: #4f46e5; font-weight: 700; border: 1px solid rgba(99, 102, 241, 0.3); }
-  .cal-cell.is-today {
+  .feriados-calendar .cal-cell.cal-empty { background: transparent; }
+  .feriados-calendar .cal-cell.is-weekend:not(.has-feriado) {
+    background: var(--bg-soft);
+    color: var(--text-muted);
+  }
+  .feriados-calendar .cal-cell.has-feriado {
+    cursor: help;
+    font-weight: 800;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .feriados-calendar .cal-cell.has-feriado:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+  .feriados-calendar .cal-cell.has-feriado.dot-inamovible {
+    background: linear-gradient(180deg, rgba(239, 68, 68, 0.18) 0%, rgba(239, 68, 68, 0.08) 100%);
+    color: #b91c1c;
+    border-color: rgba(239, 68, 68, 0.35);
+  }
+  .feriados-calendar .cal-cell.has-feriado.dot-trasladable {
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.08) 100%);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.35);
+  }
+  .feriados-calendar .cal-cell.has-feriado.dot-nolaborable {
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0.08) 100%);
+    color: #4338ca;
+    border-color: rgba(99, 102, 241, 0.35);
+  }
+  .feriados-calendar .cal-cell.is-today {
     outline: 2px solid var(--accent);
-    outline-offset: 1px;
-    font-weight: 700;
+    outline-offset: 2px;
+    font-weight: 800;
   }
-  :root[data-theme="dark"] .cal-cell.has-feriado.dot-inamovible { color: #fca5a5; }
-  :root[data-theme="dark"] .cal-cell.has-feriado.dot-trasladable { color: #fcd34d; }
-  :root[data-theme="dark"] .cal-cell.has-feriado.dot-nolaborable { color: #a5b4fc; }
+  :root[data-theme="dark"] .feriados-calendar .cal-cell.has-feriado.dot-inamovible { color: #fca5a5; }
+  :root[data-theme="dark"] .feriados-calendar .cal-cell.has-feriado.dot-trasladable { color: #fcd34d; }
+  :root[data-theme="dark"] .feriados-calendar .cal-cell.has-feriado.dot-nolaborable { color: #a5b4fc; }
 
-  .cal-daynum { line-height: 1; }
-  .cal-feriado-mark { position: absolute; bottom: 3px; font-size: 1rem; line-height: 0; }
+  .feriados-calendar .cal-daynum { line-height: 1; font-variant-numeric: tabular-nums; }
+  .feriados-calendar .cal-feriado-mark {
+    position: absolute;
+    bottom: 4px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.85;
+  }
 
-  .cal-feriados-list {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
+  .feriados-calendar .cal-feriados-list {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px dashed var(--border);
     display: grid;
     gap: 0.5rem;
   }
-  .cal-feriado-item {
+  .feriados-calendar .cal-feriado-item {
     display: grid;
     grid-template-columns: auto 1fr auto;
-    gap: 0.75rem;
+    gap: 0.875rem;
     align-items: center;
-    padding: 0.625rem 0.875rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-card);
+    border-left: 4px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.9375rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    transition: transform 0.12s;
+  }
+  .feriados-calendar .cal-feriado-item:hover {
+    transform: translateX(2px);
+  }
+  .feriados-calendar .cal-feriado-item.dot-inamovible { border-left-color: #ef4444; }
+  .feriados-calendar .cal-feriado-item.dot-trasladable { border-left-color: #f59e0b; }
+  .feriados-calendar .cal-feriado-item.dot-nolaborable { border-left-color: #6366f1; }
+  .feriados-calendar .cal-feriado-date {
+    font-weight: 700;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    min-width: 3.5rem;
+  }
+  .feriados-calendar .cal-feriado-name { font-weight: 700; color: var(--text); }
+  .feriados-calendar .cal-feriado-tipo {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
     background: var(--bg-soft);
-    border-left: 3px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 0.875rem;
+    border-radius: 999px;
   }
-  .cal-feriado-item.dot-inamovible { border-left-color: #ef4444; }
-  .cal-feriado-item.dot-trasladable { border-left-color: #f59e0b; }
-  .cal-feriado-item.dot-nolaborable { border-left-color: #6366f1; }
-  .cal-feriado-date { font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-  .cal-feriado-name { font-weight: 600; color: var(--text); }
-  .cal-feriado-tipo {
-    font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase;
-    letter-spacing: 0.05em; padding: 0.15rem 0.5rem;
-    background: var(--bg-card); border-radius: 999px;
+  .feriados-calendar .cal-empty-list {
+    margin: 0; color: var(--text-muted);
+    font-size: 0.9375rem; text-align: center; padding: 1.25rem;
+    background: var(--bg-soft); border-radius: 10px;
   }
-  .cal-empty-list { margin: 0; color: var(--text-muted); font-size: 0.875rem; text-align: center; padding: 1rem; }
 
-  .cal-quick-jump {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
+  .feriados-calendar .cal-quick-jump {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px dashed var(--border);
   }
-  .cal-quick-jump > span {
-    font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;
-    letter-spacing: 0.05em; font-weight: 600; margin-bottom: 0.5rem; display: block;
+  .feriados-calendar .cal-quick-jump > span {
+    font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.08em; font-weight: 700; margin-bottom: 0.625rem; display: block;
   }
-  .cal-months {
+  .feriados-calendar .cal-months {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 0.25rem;
+    gap: 0.375rem;
   }
-  .cal-month-btn {
-    padding: 0.4rem 0.25rem;
-    background: var(--bg-soft);
+  .feriados-calendar .cal-month-btn {
+    padding: 0.5rem 0.25rem;
+    background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: 8px;
     color: var(--text-muted);
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
   }
-  .cal-month-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .cal-month-btn.is-active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .feriados-calendar .cal-month-btn:hover {
+    border-color: var(--accent); color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .feriados-calendar .cal-month-btn.is-active {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  }
+  .feriados-calendar .cal-month-btn.has-feriado-dot::after {
+    content: '';
+    display: inline-block;
+    width: 5px; height: 5px;
+    margin-left: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.5;
+    vertical-align: middle;
+  }
 
   @media (max-width: 520px) {
-    .cal-months { grid-template-columns: repeat(4, 1fr); }
-    .cal-cell { min-height: 36px; font-size: 0.75rem; }
-    .cal-feriado-item { grid-template-columns: auto 1fr; }
-    .cal-feriado-item .cal-feriado-tipo { grid-column: 1 / -1; justify-self: start; }
+    .feriados-calendar { padding: 1rem; }
+    .feriados-calendar .cal-months { grid-template-columns: repeat(4, 1fr); }
+    .feriados-calendar .cal-cell { min-height: 40px; font-size: 0.8125rem; }
+    .feriados-calendar .cal-feriado-item { grid-template-columns: auto 1fr; }
+    .feriados-calendar .cal-feriado-item .cal-feriado-tipo { grid-column: 1 / -1; justify-self: start; }
   }
 </style>
