@@ -74,7 +74,7 @@ export interface CalcConfig {
 
 export interface Props {
   config: CalcConfig;
-  lang?: 'es' | 'en';
+  lang?: 'es' | 'en' | 'pt';
 }
 
 const { config, lang = 'es' } = Astro.props;
@@ -82,50 +82,84 @@ const { config, lang = 'es' } = Astro.props;
 // Cargar traducciones de strings de output por formulaId (solo para lang=en).
 // El JSON se genera con scripts/translate-formula-strings.py (Haiku 4.5).
 import formulaStringsI18n from '../lib/formula-strings-i18n.json';
-const outputTranslations = lang === 'en' ? ((formulaStringsI18n as any)[config.formulaId] || {}) : {};
-const t = lang === 'en' ? {
-  calculator: 'Calculator', badge: 'Free · Private', calculate: 'Calculate',
-  showAdvanced: 'Show advanced', hideAdvanced: 'Hide advanced',
-  embed: 'Embed on your site', embedHint: 'Free — copy the code and paste it on your website',
-  share: 'Share:', copyResult: 'Copy result', copyLink: 'Copy link with data',
-  newCalc: 'New calculation', helpful: 'Was this calculation helpful?',
-  yes: 'Yes', no: 'No', feedback: 'Tell us (optional, 500 chars)', send: 'Send',
-  disclaimer: '', dataUpdated: 'Data updated',
-  recentCalcs: 'Your recent calculations', clear: 'Clear', clearHistory: 'Clear history',
-  sourceLabel: 'Source', advancedOptions: 'Advanced options', calculating: 'Calculating...',
-  emptyText: 'Your result will appear here', emptySub: 'Fill in the fields and tap',
-  resultBadge: 'Result', chartAriaLabel: 'Result chart', downloadPng: 'Download chart as PNG',
-  whatIfBadge: '🎚️ What if...?', whatIfHint: 'Move and see how everything changes',
-  emailHeading: 'Get this result by email', emailPlaceholder: 'you@email.com',
-  emailNote: 'Free. No spam. Just your result.',
-  emailSuccess: 'Saved. You will receive your results by email soon.',
-  shareWhatsApp: 'Share on WhatsApp', shareReset: 'Start new calculation',
-  sharePrint: 'Open print dialog (save as PDF)',
-  yesAria: 'Yes, helpful', noAria: 'No, not helpful',
-  embedButtonTitle: 'Copy the code to embed this calc on your site',
-  copyLinkTitle: 'Copy a link that pre-loads the data and re-runs the calculation',
-} : {
-  calculator: 'Calculadora', badge: 'Gratis · Privada', calculate: 'Calcular',
-  showAdvanced: 'Mostrar avanzados', hideAdvanced: 'Ocultar avanzados',
-  embed: 'Embeber en tu sitio', embedHint: 'Gratis — copiá el código y pegalo en tu web',
-  share: 'Compartir:', copyResult: 'Copiar resultado', copyLink: 'Copiar link con datos',
-  newCalc: 'Nuevo cálculo', helpful: '¿Te sirvió este cálculo?',
-  yes: 'Sí', no: 'No', feedback: 'Contanos (opcional, 500 chars)', send: 'Enviar',
-  disclaimer: '', dataUpdated: 'Datos actualizados',
-  recentCalcs: 'Tus últimos cálculos', clear: 'Limpiar', clearHistory: 'Borrar historial',
-  sourceLabel: 'Fuente', advancedOptions: 'Opciones avanzadas', calculating: 'Calculando...',
-  emptyText: 'Tu resultado va a aparecer acá', emptySub: 'Completá los datos y tocá',
-  resultBadge: 'Resultado', chartAriaLabel: 'Gráfico del resultado', downloadPng: 'Descargar gráfico como imagen',
-  whatIfBadge: '🎚️ ¿Qué pasa si...?', whatIfHint: 'Movelo y mirá cómo cambia todo',
-  emailHeading: 'Recibí este resultado por email', emailPlaceholder: 'tu@email.com',
-  emailNote: 'Gratis. Sin spam. Solo tu resultado.',
-  emailSuccess: 'Guardado. Próximamente vas a recibir tus resultados por email.',
-  shareWhatsApp: 'Compartir por WhatsApp', shareReset: 'Nuevo cálculo',
-  sharePrint: 'Abre el diálogo de imprimir (podés guardarlo como PDF)',
-  yesAria: 'Sí, me sirvió', noAria: 'No, no me sirvió',
-  embedButtonTitle: 'Copiá el código para embeber esta calc en tu sitio',
-  copyLinkTitle: 'Copia un link que, al abrirlo, precarga los datos y vuelve a calcular',
+// Para PT usamos otro dict separado cuando exista
+let formulaStringsI18nPt: any = {};
+try { formulaStringsI18nPt = (await import('../lib/formula-strings-i18n-pt.json')).default; } catch {}
+
+const outputTranslations =
+  lang === 'en' ? ((formulaStringsI18n as any)[config.formulaId] || {}) :
+  lang === 'pt' ? ((formulaStringsI18nPt as any)[config.formulaId] || {}) :
+  {};
+
+const translations = {
+  en: {
+    calculator: 'Calculator', badge: 'Free · Private', calculate: 'Calculate',
+    showAdvanced: 'Show advanced', hideAdvanced: 'Hide advanced',
+    embed: 'Embed on your site', embedHint: 'Free — copy the code and paste it on your website',
+    share: 'Share:', copyResult: 'Copy result', copyLink: 'Copy link with data',
+    newCalc: 'New calculation', helpful: 'Was this calculation helpful?',
+    yes: 'Yes', no: 'No', feedback: 'Tell us (optional, 500 chars)', send: 'Send',
+    disclaimer: '', dataUpdated: 'Data updated',
+    recentCalcs: 'Your recent calculations', clear: 'Clear', clearHistory: 'Clear history',
+    sourceLabel: 'Source', advancedOptions: 'Advanced options', calculating: 'Calculating...',
+    emptyText: 'Your result will appear here', emptySub: 'Fill in the fields and tap',
+    resultBadge: 'Result', chartAriaLabel: 'Result chart', downloadPng: 'Download chart as PNG',
+    whatIfBadge: '🎚️ What if...?', whatIfHint: 'Move and see how everything changes',
+    emailHeading: 'Get this result by email', emailPlaceholder: 'you@email.com',
+    emailNote: 'Free. No spam. Just your result.',
+    emailSuccess: 'Saved. You will receive your results by email soon.',
+    shareWhatsApp: 'Share on WhatsApp', shareReset: 'Start new calculation',
+    sharePrint: 'Open print dialog (save as PDF)',
+    yesAria: 'Yes, helpful', noAria: 'No, not helpful',
+    embedButtonTitle: 'Copy the code to embed this calc on your site',
+    copyLinkTitle: 'Copy a link that pre-loads the data and re-runs the calculation',
+  },
+  pt: {
+    calculator: 'Calculadora', badge: 'Grátis · Privado', calculate: 'Calcular',
+    showAdvanced: 'Mostrar avançados', hideAdvanced: 'Ocultar avançados',
+    embed: 'Incorporar no seu site', embedHint: 'Grátis — copie o código e cole no seu site',
+    share: 'Compartilhar:', copyResult: 'Copiar resultado', copyLink: 'Copiar link com dados',
+    newCalc: 'Novo cálculo', helpful: 'Este cálculo foi útil?',
+    yes: 'Sim', no: 'Não', feedback: 'Conte para nós (opcional, 500 caracteres)', send: 'Enviar',
+    disclaimer: '', dataUpdated: 'Dados atualizados',
+    recentCalcs: 'Seus últimos cálculos', clear: 'Limpar', clearHistory: 'Apagar histórico',
+    sourceLabel: 'Fonte', advancedOptions: 'Opções avançadas', calculating: 'Calculando...',
+    emptyText: 'Seu resultado vai aparecer aqui', emptySub: 'Preencha os campos e toque em',
+    resultBadge: 'Resultado', chartAriaLabel: 'Gráfico do resultado', downloadPng: 'Baixar gráfico como PNG',
+    whatIfBadge: '🎚️ E se...?', whatIfHint: 'Mova e veja como tudo muda',
+    emailHeading: 'Receba este resultado por e-mail', emailPlaceholder: 'voce@email.com',
+    emailNote: 'Grátis. Sem spam. Apenas seu resultado.',
+    emailSuccess: 'Salvo. Você vai receber seus resultados por e-mail em breve.',
+    shareWhatsApp: 'Compartilhar no WhatsApp', shareReset: 'Novo cálculo',
+    sharePrint: 'Abrir caixa de impressão (salvar como PDF)',
+    yesAria: 'Sim, foi útil', noAria: 'Não foi útil',
+    embedButtonTitle: 'Copie o código para incorporar esta calc no seu site',
+    copyLinkTitle: 'Copia um link que pré-carrega os dados e recalcula ao abrir',
+  },
+  es: {
+    calculator: 'Calculadora', badge: 'Gratis · Privada', calculate: 'Calcular',
+    showAdvanced: 'Mostrar avanzados', hideAdvanced: 'Ocultar avanzados',
+    embed: 'Embeber en tu sitio', embedHint: 'Gratis — copiá el código y pegalo en tu web',
+    share: 'Compartir:', copyResult: 'Copiar resultado', copyLink: 'Copiar link con datos',
+    newCalc: 'Nuevo cálculo', helpful: '¿Te sirvió este cálculo?',
+    yes: 'Sí', no: 'No', feedback: 'Contanos (opcional, 500 chars)', send: 'Enviar',
+    disclaimer: '', dataUpdated: 'Datos actualizados',
+    recentCalcs: 'Tus últimos cálculos', clear: 'Limpiar', clearHistory: 'Borrar historial',
+    sourceLabel: 'Fuente', advancedOptions: 'Opciones avanzadas', calculating: 'Calculando...',
+    emptyText: 'Tu resultado va a aparecer acá', emptySub: 'Completá los datos y tocá',
+    resultBadge: 'Resultado', chartAriaLabel: 'Gráfico del resultado', downloadPng: 'Descargar gráfico como imagen',
+    whatIfBadge: '🎚️ ¿Qué pasa si...?', whatIfHint: 'Movelo y mirá cómo cambia todo',
+    emailHeading: 'Recibí este resultado por email', emailPlaceholder: 'tu@email.com',
+    emailNote: 'Gratis. Sin spam. Solo tu resultado.',
+    emailSuccess: 'Guardado. Próximamente vas a recibir tus resultados por email.',
+    shareWhatsApp: 'Compartir por WhatsApp', shareReset: 'Nuevo cálculo',
+    sharePrint: 'Abre el diálogo de imprimir (podés guardarlo como PDF)',
+    yesAria: 'Sí, me sirvió', noAria: 'No, no me sirvió',
+    embedButtonTitle: 'Copiá el código para embeber esta calc en tu sitio',
+    copyLinkTitle: 'Copia un link que, al abrirlo, precarga los datos y vuelve a calcular',
+  },
 };
+const t = translations[lang as keyof typeof translations] || translations.es;
 
 // Disclaimers inline por calculadora sensible (override específico).
 // El fallback por categoría aplica a CUALQUIER calc de finanzas/salud/etc.
@@ -153,8 +187,8 @@ const categoryDisclaimers: Record<string, string> = {
   construccion: 'Estimación. Los proyectos constructivos requieren cálculo estructural profesional y dirección técnica.',
 };
 
-// Los disclaimers de AR (leyes argentinas, ARCA, etc) no aplican a audiencia global — ocultar en /en/
-const disclaimer = lang === 'en' ? '' : (disclaimers[config.slug] || categoryDisclaimers[config.category] || '');
+// Los disclaimers de AR (leyes argentinas, ARCA, etc) no aplican a audiencia global — ocultar en /en/ y /pt/
+const disclaimer = (lang === 'en' || lang === 'pt') ? '' : (disclaimers[config.slug] || categoryDisclaimers[config.category] || '');
 
 const basicFields = config.fields.filter((f) => !f.advanced);
 const advancedFields = config.fields.filter((f) => f.advanced);
@@ -2060,15 +2094,16 @@ const formatFreshnessDate = (iso: string): string => {
 
   // Lang del calc (inyectado vía data-lang="en" | "es" en .calc-container).
   // Leído una sola vez para evitar múltiples querys al DOM.
-  const CALC_LANG: 'es' | 'en' = (document.querySelector('.calc-container') as HTMLElement | null)?.dataset?.lang === 'en' ? 'en' : 'es';
-  const NUM_LOCALE = CALC_LANG === 'en' ? 'en-US' : 'es-AR';
-  const NUM_CURRENCY = CALC_LANG === 'en' ? 'USD' : 'ARS';
+  const _rawLang = (document.querySelector('.calc-container') as HTMLElement | null)?.dataset?.lang;
+  const CALC_LANG: 'es' | 'en' | 'pt' = _rawLang === 'en' ? 'en' : _rawLang === 'pt' ? 'pt' : 'es';
+  const NUM_LOCALE = CALC_LANG === 'en' ? 'en-US' : CALC_LANG === 'pt' ? 'pt-BR' : 'es-AR';
+  const NUM_CURRENCY = CALC_LANG === 'en' ? 'USD' : CALC_LANG === 'pt' ? 'BRL' : 'ARS';
 
   // Dict de traducciones ES→EN por-fórmula, generado build-time con Haiku (scripts/translate-formula-strings.py).
   // Lookup exacto: si el output string existe en el dict, se usa su traducción (calidad nativa).
   // Sino, fallback al regex layer de más abajo.
   const CALC_TRANSLATIONS: Record<string, string> = (() => {
-    if (CALC_LANG !== 'en') return {};
+    if (CALC_LANG === 'es') return {};
     try {
       const raw = (document.querySelector('.calc-container') as HTMLElement | null)?.dataset?.translations;
       return raw ? JSON.parse(raw) : {};
@@ -2184,14 +2219,16 @@ const formatFreshnessDate = (iso: string): string => {
   ];
 
   function translateOutputStr(s: string): string {
-    if (CALC_LANG !== 'en' || !s) return s;
+    if (CALC_LANG === 'es' || !s) return s;
     // 1. Lookup exacto en dict por-fórmula (traducciones Haiku-generadas, calidad nativa)
     if (CALC_TRANSLATIONS[s]) return CALC_TRANSLATIONS[s];
-    // 2. Fallback: regex layer para strings no cubiertos por el dict (outputs dinámicos
-    //    que incluyen números variables no enumerados en el dict)
-    let out = s;
-    for (const [re, repl] of I18N_REGEX_RULES) out = out.replace(re, repl);
-    return out;
+    // 2. Fallback regex solo para EN (el dict PT debería cubrir ~95%, sin regex EN-centric)
+    if (CALC_LANG === 'en') {
+      let out = s;
+      for (const [re, repl] of I18N_REGEX_RULES) out = out.replace(re, repl);
+      return out;
+    }
+    return s;
   }
 
   function formatValue(value: number | string, format: string, suffix = ''): string {
@@ -2208,7 +2245,15 @@ const formatFreshnessDate = (iso: string): string => {
     } else if (format === 'percentage') {
       formatted = `${Number(value).toFixed(2)}%`;
     } else if (format === 'date') {
-      const d = new Date(value);
+      // Parse manual de 'YYYY-MM-DD' para evitar el bug UTC clásico:
+      // new Date('2027-01-10') se parsea como UTC medianoche; en zonas al
+      // oeste de UTC (AR=-3) retrocede y muestra "9 de enero". Construyendo
+      // con (y, m-1, d) se crea en local time y la fecha se mantiene.
+      const strVal = String(value);
+      const ymd = strVal.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      const d = ymd
+        ? new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]))
+        : new Date(value);
       formatted = d.toLocaleDateString(NUM_LOCALE, { day: '2-digit', month: 'long', year: 'numeric' });
     } else {
       // format === 'text' o similar: aplicar traducción i18n
