@@ -1,4 +1,6 @@
-/** IMC pediátrico con percentil aproximado (2-18 años) */
+/** IMC pediátrico con percentil exacto CDC 2000 (LMS) — 2-20 años */
+import { LMS_MALE, LMS_FEMALE } from './_cdc-bmi-lms';
+
 export interface Inputs {
   peso: number;
   altura: number;
@@ -10,6 +12,56 @@ export interface Outputs {
   percentilAprox: string;
   clasificacion: string;
   detalle: string;
+}
+
+// CDF de la normal estándar — aproximación Abramowitz & Stegun 26.2.17 (error < 7.5e-8).
+// Usada para convertir Z-score → percentil.
+function normalCdf(z: number): number {
+  if (z > 8) return 1;
+  if (z < -8) return 0;
+  const b1 = 0.319381530;
+  const b2 = -0.356563782;
+  const b3 = 1.781477937;
+  const b4 = -1.821255978;
+  const b5 = 1.330274429;
+  const p = 0.2316419;
+  const c = 0.39894228;
+  const absZ = Math.abs(z);
+  const t = 1.0 / (1.0 + p * absZ);
+  const phi = c * Math.exp(-absZ * absZ / 2.0) *
+    (t * (b1 + t * (b2 + t * (b3 + t * (b4 + t * b5)))));
+  return z >= 0 ? 1 - phi : phi;
+}
+
+// Interpolación lineal en los arrays CDC (ordenados por edadMeses ascendente).
+// Busca las 2 filas que rodean la edad y devuelve L/M/S interpolados.
+function lookupLMS(
+  table: ReadonlyArray<readonly [number, number, number, number]>,
+  edadMeses: number,
+): { L: number; M: number; S: number } {
+  const minAge = table[0][0];
+  const maxAge = table[table.length - 1][0];
+  const clamped = Math.max(minAge, Math.min(maxAge, edadMeses));
+  // Binary search — las tablas están ordenadas.
+  let lo = 0;
+  let hi = table.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (table[mid][0] < clamped) lo = mid + 1;
+    else hi = mid;
+  }
+  if (table[lo][0] === clamped || lo === 0) {
+    const [, L, M, S] = table[lo];
+    return { L, M, S };
+  }
+  const [aLo, Llo, Mlo, Slo] = table[lo - 1];
+  const [aHi, Lhi, Mhi, Shi] = table[lo];
+  const frac = (clamped - aLo) / (aHi - aLo);
+  return {
+    L: Llo + frac * (Lhi - Llo),
+    M: Mlo + frac * (Mhi - Mlo),
+    S: Slo + frac * (Shi - Slo),
+  };
 }
 
 export function indiceMasaCorporalPediatrico(i: Inputs): Outputs {
@@ -24,94 +76,43 @@ export function indiceMasaCorporalPediatrico(i: Inputs): Outputs {
 
   const alturaM = altura / 100;
   const imc = peso / (alturaM * alturaM);
+  const edadMeses = edadAnios * 12;
 
-  // Valores medianos aproximados de IMC por edad (CDC/OMS)
-  // Formato: [p5, p10, p25, p50, p75, p85, p95]
-  const tablaM: Record<number, number[]> = {
-    2: [14.5, 15.0, 15.6, 16.5, 17.3, 17.8, 18.5],
-    3: [14.0, 14.5, 15.0, 15.8, 16.5, 17.0, 17.8],
-    4: [13.8, 14.2, 14.8, 15.5, 16.3, 16.8, 17.6],
-    5: [13.6, 14.0, 14.5, 15.3, 16.1, 16.6, 17.5],
-    6: [13.5, 13.9, 14.5, 15.3, 16.2, 16.8, 18.0],
-    7: [13.6, 14.0, 14.6, 15.5, 16.5, 17.2, 18.6],
-    8: [13.8, 14.2, 14.9, 15.8, 17.0, 17.8, 19.5],
-    9: [14.0, 14.5, 15.2, 16.2, 17.5, 18.4, 20.4],
-    10: [14.3, 14.8, 15.6, 16.6, 18.0, 19.0, 21.4],
-    11: [14.7, 15.2, 16.0, 17.1, 18.6, 19.7, 22.2],
-    12: [15.2, 15.7, 16.5, 17.6, 19.2, 20.4, 23.0],
-    13: [15.7, 16.2, 17.0, 18.2, 19.8, 21.0, 23.6],
-    14: [16.2, 16.8, 17.6, 18.8, 20.4, 21.7, 24.2],
-    15: [16.8, 17.3, 18.1, 19.4, 21.0, 22.3, 24.7],
-    16: [17.3, 17.8, 18.7, 20.0, 21.5, 22.8, 25.1],
-    17: [17.7, 18.3, 19.2, 20.5, 22.0, 23.3, 25.5],
-    18: [18.0, 18.6, 19.5, 21.0, 22.5, 23.8, 26.0],
-  };
-  const tablaF: Record<number, number[]> = {
-    2: [14.2, 14.7, 15.3, 16.3, 17.1, 17.6, 18.3],
-    3: [13.8, 14.2, 14.8, 15.6, 16.4, 16.9, 17.7],
-    4: [13.5, 13.9, 14.5, 15.3, 16.2, 16.7, 17.6],
-    5: [13.3, 13.7, 14.3, 15.1, 16.0, 16.6, 17.7],
-    6: [13.2, 13.6, 14.3, 15.2, 16.2, 16.9, 18.2],
-    7: [13.3, 13.8, 14.5, 15.4, 16.5, 17.3, 18.8],
-    8: [13.5, 14.0, 14.7, 15.7, 17.0, 17.9, 19.6],
-    9: [13.8, 14.3, 15.1, 16.2, 17.5, 18.5, 20.5],
-    10: [14.2, 14.7, 15.5, 16.6, 18.1, 19.2, 21.3],
-    11: [14.6, 15.2, 16.0, 17.2, 18.8, 19.9, 22.1],
-    12: [15.1, 15.7, 16.6, 17.8, 19.4, 20.6, 22.8],
-    13: [15.6, 16.2, 17.1, 18.4, 20.0, 21.3, 23.4],
-    14: [16.1, 16.7, 17.6, 19.0, 20.5, 21.8, 24.0],
-    15: [16.5, 17.1, 18.0, 19.4, 20.9, 22.2, 24.4],
-    16: [16.8, 17.4, 18.4, 19.8, 21.3, 22.6, 24.7],
-    17: [17.0, 17.7, 18.6, 20.1, 21.6, 22.9, 25.0],
-    18: [17.2, 17.9, 18.8, 20.3, 21.8, 23.2, 25.2],
-  };
+  const tabla = sexo === 'f' ? LMS_FEMALE : LMS_MALE;
+  const { L, M, S } = lookupLMS(tabla, edadMeses);
 
-  const tabla = sexo === 'f' ? tablaF : tablaM;
-  // Interpolación lineal entre edades enteras. Sin esto, un niño de 8.49 años
-  // vs 8.50 años usa tablas distintas y puede saltar de "sobrepeso" a "obesidad"
-  // por un cambio de 0.01 años — lo que es un bug de clasificación.
-  const edadClamp = Math.min(18, Math.max(2, edadAnios));
-  const edadLo = Math.floor(edadClamp);
-  const edadHi = Math.min(18, edadLo + 1);
-  const frac = edadClamp - edadLo;
-  const pctLo = tabla[edadLo];
-  const pctHi = tabla[edadHi];
-  const percentiles = pctLo.map((v, idx) => v + frac * (pctHi[idx] - v));
-  // [p5, p10, p25, p50, p75, p85, p95]
+  // Fórmula LMS estándar (CDC / OMS): transforma IMC a Z-score.
+  // L = 0 usa log (caso límite), L ≠ 0 usa transformación Box-Cox.
+  const z = Math.abs(L) < 1e-9
+    ? Math.log(imc / M) / S
+    : (Math.pow(imc / M, L) - 1) / (L * S);
+  const percentilExacto = normalCdf(z) * 100;
 
-  let percentilAprox: string;
+  // Clasificación CDC estándar: <5 bajo, 5 a <85 normal, 85 a <95 sobrepeso, ≥95 obesidad.
   let clasificacion: string;
+  let percentilAprox: string;
+  const pRound = Math.round(percentilExacto * 10) / 10;
 
-  if (imc < percentiles[0]) {
-    percentilAprox = '< percentil 5';
+  if (percentilExacto < 5) {
     clasificacion = 'Bajo peso';
-  } else if (imc < percentiles[1]) {
-    percentilAprox = 'percentil 5-10';
-    clasificacion = 'Peso normal (rango bajo)';
-  } else if (imc < percentiles[2]) {
-    percentilAprox = 'percentil 10-25';
-    clasificacion = 'Peso normal';
-  } else if (imc < percentiles[3]) {
-    percentilAprox = 'percentil 25-50';
-    clasificacion = 'Peso normal';
-  } else if (imc < percentiles[4]) {
-    percentilAprox = 'percentil 50-75';
-    clasificacion = 'Peso normal';
-  } else if (imc < percentiles[5]) {
-    percentilAprox = 'percentil 75-85';
-    clasificacion = 'Peso normal (rango alto)';
-  } else if (imc < percentiles[6]) {
-    percentilAprox = 'percentil 85-95';
+    percentilAprox = `percentil ${pRound} (< P5)`;
+  } else if (percentilExacto < 85) {
+    clasificacion = percentilExacto < 25 ? 'Peso normal (rango bajo)'
+      : percentilExacto < 75 ? 'Peso normal'
+      : 'Peso normal (rango alto)';
+    percentilAprox = `percentil ${pRound}`;
+  } else if (percentilExacto < 95) {
     clasificacion = 'Sobrepeso';
+    percentilAprox = `percentil ${pRound} (P85-P95)`;
   } else {
-    percentilAprox = '≥ percentil 95';
     clasificacion = 'Obesidad';
+    percentilAprox = `percentil ${pRound} (≥ P95)`;
   }
 
   const detalle =
     `IMC: ${imc.toFixed(1)} kg/m² | Edad: ${edadAnios} años | Sexo: ${sexo === 'f' ? 'Femenino' : 'Masculino'} | ` +
-    `${percentilAprox} | Clasificación: ${clasificacion}. ` +
-    `Valores de referencia CDC/OMS interpolados para ${edadClamp.toFixed(1)} años.`;
+    `Z-score: ${z.toFixed(2)} | ${percentilAprox} | Clasificación: ${clasificacion}. ` +
+    `Tablas LMS oficiales CDC 2000 (bmiagerev).`;
 
   return {
     imc: Number(imc.toFixed(1)),
