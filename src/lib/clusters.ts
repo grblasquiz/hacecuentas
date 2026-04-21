@@ -44,6 +44,24 @@ export const CLUSTERS: Record<string, Cluster> = {
       { slug: 'comparador-plazo-fijo', label: 'Plazo fijo', icon: '💰' },
     ],
   },
+  pesoPerros: {
+    id: 'pesoPerros',
+    title: 'Peso ideal por raza de perro',
+    items: [
+      { slug: 'calculadora-peso-ideal-beagle', label: 'Beagle', icon: '🐶' },
+      { slug: 'calculadora-peso-ideal-bulldog-frances', label: 'Bulldog francés', icon: '🐕' },
+      { slug: 'calculadora-peso-ideal-golden-retriever', label: 'Golden retriever', icon: '🐕‍🦺' },
+      { slug: 'calculadora-peso-ideal-labrador-retriever', label: 'Labrador', icon: '🦮' },
+      { slug: 'calculadora-peso-ideal-pastor-aleman', label: 'Pastor alemán', icon: '🐺' },
+      { slug: 'calculadora-peso-ideal-husky-siberiano', label: 'Husky siberiano', icon: '🐕' },
+      { slug: 'calculadora-peso-ideal-pitbull', label: 'Pitbull', icon: '🐕' },
+      { slug: 'calculadora-peso-ideal-rottweiler', label: 'Rottweiler', icon: '🐕' },
+      { slug: 'calculadora-peso-ideal-chihuahua', label: 'Chihuahua', icon: '🐕' },
+      { slug: 'calculadora-peso-ideal-boxer', label: 'Boxer', icon: '🐕' },
+      { slug: 'calculadora-peso-ideal-caniche-poodle', label: 'Caniche', icon: '🐩' },
+      { slug: 'calculadora-peso-ideal-dachshund-salchicha', label: 'Salchicha', icon: '🐕' },
+    ],
+  },
 };
 
 /** Busca cluster al que pertenece un slug. */

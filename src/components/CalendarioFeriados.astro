@@ -1,0 +1,311 @@
+---
+/**
+ * Calendario interactivo de feriados 2026 Argentina.
+ * Se inyecta debajo de la calc de feriados. Navegación por mes.
+ */
+const FERIADOS = [
+  { fecha: '2026-01-01', nombre: 'Año Nuevo', tipo: 'inamovible' },
+  { fecha: '2026-02-16', nombre: 'Carnaval', tipo: 'trasladable' },
+  { fecha: '2026-02-17', nombre: 'Carnaval', tipo: 'trasladable' },
+  { fecha: '2026-03-24', nombre: 'Día de la Memoria', tipo: 'inamovible' },
+  { fecha: '2026-04-02', nombre: 'Día del Veterano (Malvinas)', tipo: 'inamovible' },
+  { fecha: '2026-04-03', nombre: 'Viernes Santo', tipo: 'inamovible' },
+  { fecha: '2026-05-01', nombre: 'Día del Trabajador', tipo: 'inamovible' },
+  { fecha: '2026-05-25', nombre: 'Revolución de Mayo', tipo: 'inamovible' },
+  { fecha: '2026-06-15', nombre: 'Paso a la Inmortalidad Gral. Güemes', tipo: 'trasladable' },
+  { fecha: '2026-06-20', nombre: 'Paso a la Inmortalidad Gral. Belgrano', tipo: 'inamovible' },
+  { fecha: '2026-07-09', nombre: 'Día de la Independencia', tipo: 'inamovible' },
+  { fecha: '2026-08-17', nombre: 'Paso a la Inmortalidad Gral. San Martín', tipo: 'trasladable' },
+  { fecha: '2026-10-12', nombre: 'Día del Respeto a la Diversidad Cultural', tipo: 'trasladable' },
+  { fecha: '2026-11-20', nombre: 'Día de la Soberanía Nacional', tipo: 'trasladable' },
+  { fecha: '2026-12-08', nombre: 'Inmaculada Concepción de María', tipo: 'no-laborable' },
+  { fecha: '2026-12-25', nombre: 'Navidad', tipo: 'inamovible' },
+];
+---
+
+<section class="feriados-calendar" aria-label="Calendario interactivo de feriados 2026">
+  <div class="cal-head">
+    <button type="button" id="cal-prev" class="cal-nav" aria-label="Mes anterior">←</button>
+    <h2 id="cal-title" class="cal-title">—</h2>
+    <button type="button" id="cal-next" class="cal-nav" aria-label="Mes siguiente">→</button>
+  </div>
+
+  <div class="cal-legend">
+    <span><span class="legend-dot dot-inamovible"></span>Inamovible</span>
+    <span><span class="legend-dot dot-trasladable"></span>Trasladable</span>
+    <span><span class="legend-dot dot-nolaborable"></span>No laborable</span>
+    <span><span class="legend-dot dot-today"></span>Hoy</span>
+  </div>
+
+  <div class="cal-weekdays" aria-hidden="true">
+    <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+  </div>
+
+  <div id="cal-grid" class="cal-grid" role="grid" aria-label="Días del mes"></div>
+
+  <div id="cal-feriados-list" class="cal-feriados-list" aria-label="Feriados del mes"></div>
+
+  <div class="cal-quick-jump">
+    <span>Ir a mes:</span>
+    <div class="cal-months" role="tablist">
+      <button type="button" data-month="0" class="cal-month-btn">Ene</button>
+      <button type="button" data-month="1" class="cal-month-btn">Feb</button>
+      <button type="button" data-month="2" class="cal-month-btn">Mar</button>
+      <button type="button" data-month="3" class="cal-month-btn">Abr</button>
+      <button type="button" data-month="4" class="cal-month-btn">May</button>
+      <button type="button" data-month="5" class="cal-month-btn">Jun</button>
+      <button type="button" data-month="6" class="cal-month-btn">Jul</button>
+      <button type="button" data-month="7" class="cal-month-btn">Ago</button>
+      <button type="button" data-month="8" class="cal-month-btn">Sep</button>
+      <button type="button" data-month="9" class="cal-month-btn">Oct</button>
+      <button type="button" data-month="10" class="cal-month-btn">Nov</button>
+      <button type="button" data-month="11" class="cal-month-btn">Dic</button>
+    </div>
+  </div>
+</section>
+
+<script is:inline define:vars={{ feriados: FERIADOS }}>
+  (function () {
+    const YEAR = 2026;
+    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const grid = document.getElementById('cal-grid');
+    const title = document.getElementById('cal-title');
+    const listEl = document.getElementById('cal-feriados-list');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    // Start month: si estamos en 2026, el mes actual; sino enero
+    let currentMonth = today.getFullYear() === YEAR ? today.getMonth() : 0;
+
+    function feriadosDelMes(m) {
+      return feriados.filter(f => parseInt(f.fecha.split('-')[1], 10) - 1 === m);
+    }
+
+    function render() {
+      title.textContent = `${MESES[currentMonth]} ${YEAR}`;
+      // Calcular primer día lunes=0
+      const first = new Date(YEAR, currentMonth, 1);
+      const jsDow = first.getDay(); // 0=dom
+      const startOffset = (jsDow + 6) % 7; // lunes=0
+      const lastDay = new Date(YEAR, currentMonth + 1, 0).getDate();
+      const feriadosMes = feriadosDelMes(currentMonth);
+      const feriadosSet = {};
+      feriadosMes.forEach(f => { feriadosSet[parseInt(f.fecha.split('-')[2], 10)] = f; });
+
+      // Build grid
+      let html = '';
+      for (let i = 0; i < startOffset; i++) html += '<div class="cal-cell cal-empty"></div>';
+      for (let d = 1; d <= lastDay; d++) {
+        const date = new Date(YEAR, currentMonth, d);
+        const dow = date.getDay(); // 0=dom
+        const isWeekend = dow === 0 || dow === 6;
+        const feriado = feriadosSet[d];
+        const isToday = date.getTime() === today.getTime();
+        let cls = 'cal-cell';
+        if (feriado) cls += ' has-feriado dot-' + feriado.tipo.replace('-', '');
+        if (isWeekend) cls += ' is-weekend';
+        if (isToday) cls += ' is-today';
+        const tooltip = feriado ? feriado.nombre : '';
+        html += `<div class="${cls}" role="gridcell" ${tooltip ? `title="${tooltip}"` : ''}><span class="cal-daynum">${d}</span>${feriado ? `<span class="cal-feriado-mark" aria-hidden="true">•</span>` : ''}</div>`;
+      }
+      grid.innerHTML = html;
+
+      // Lista feriados
+      if (feriadosMes.length === 0) {
+        listEl.innerHTML = '<p class="cal-empty-list">🔹 No hay feriados este mes</p>';
+      } else {
+        listEl.innerHTML = feriadosMes.map(f => {
+          const parts = f.fecha.split('-').map(Number);
+          const d = new Date(parts[0], parts[1] - 1, parts[2]);
+          const dow = ['dom','lun','mar','mié','jue','vie','sáb'][d.getDay()];
+          return `<div class="cal-feriado-item dot-${f.tipo.replace('-','')}">
+            <span class="cal-feriado-date">${dow} ${parts[2]}</span>
+            <span class="cal-feriado-name">${f.nombre}</span>
+            <span class="cal-feriado-tipo">${f.tipo}</span>
+          </div>`;
+        }).join('');
+      }
+
+      // Highlight mes btn
+      document.querySelectorAll('.cal-month-btn').forEach(b => {
+        b.classList.toggle('is-active', parseInt(b.dataset.month, 10) === currentMonth);
+      });
+    }
+
+    document.getElementById('cal-prev').addEventListener('click', () => {
+      currentMonth = (currentMonth + 11) % 12;
+      render();
+    });
+    document.getElementById('cal-next').addEventListener('click', () => {
+      currentMonth = (currentMonth + 1) % 12;
+      render();
+    });
+    document.querySelectorAll('.cal-month-btn').forEach(b => {
+      b.addEventListener('click', () => { currentMonth = parseInt(b.dataset.month, 10); render(); });
+    });
+    // Keyboard: left/right arrows cambian mes
+    grid.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') { currentMonth = (currentMonth + 11) % 12; render(); }
+      if (e.key === 'ArrowRight') { currentMonth = (currentMonth + 1) % 12; render(); }
+    });
+
+    render();
+  })();
+</script>
+
+<style>
+  .feriados-calendar {
+    margin-top: 2rem;
+    padding: 1.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .cal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    flex: 1;
+  }
+  .cal-nav {
+    width: 36px; height: 36px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 50%; cursor: pointer; font-size: 1.125rem;
+    color: var(--text); display: inline-flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .cal-nav:hover { border-color: var(--accent); color: var(--accent); }
+
+  .cal-legend {
+    display: flex; flex-wrap: wrap; gap: 1rem;
+    font-size: 0.75rem; color: var(--text-muted);
+    margin-bottom: 0.875rem; padding-bottom: 0.875rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .cal-legend span { display: inline-flex; align-items: center; gap: 0.375rem; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot-inamovible { background: #ef4444; }
+  .dot-trasladable { background: #f59e0b; }
+  .dot-nolaborable { background: #6366f1; }
+  .dot-today { background: var(--accent); }
+
+  .cal-weekdays, .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+  }
+  .cal-weekdays {
+    margin-bottom: 4px;
+  }
+  .cal-weekdays span {
+    text-align: center;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.375rem 0;
+  }
+  .cal-cell {
+    position: relative;
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-soft);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: var(--text);
+    min-height: 40px;
+  }
+  .cal-cell.cal-empty { background: transparent; }
+  .cal-cell.is-weekend { background: var(--bg); color: var(--text-muted); }
+  .cal-cell.has-feriado.dot-inamovible { background: rgba(239, 68, 68, 0.15); color: #dc2626; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.3); }
+  .cal-cell.has-feriado.dot-trasladable { background: rgba(245, 158, 11, 0.15); color: #d97706; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.3); }
+  .cal-cell.has-feriado.dot-nolaborable { background: rgba(99, 102, 241, 0.15); color: #4f46e5; font-weight: 700; border: 1px solid rgba(99, 102, 241, 0.3); }
+  .cal-cell.is-today {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    font-weight: 700;
+  }
+  :root[data-theme="dark"] .cal-cell.has-feriado.dot-inamovible { color: #fca5a5; }
+  :root[data-theme="dark"] .cal-cell.has-feriado.dot-trasladable { color: #fcd34d; }
+  :root[data-theme="dark"] .cal-cell.has-feriado.dot-nolaborable { color: #a5b4fc; }
+
+  .cal-daynum { line-height: 1; }
+  .cal-feriado-mark { position: absolute; bottom: 3px; font-size: 1rem; line-height: 0; }
+
+  .cal-feriados-list {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    display: grid;
+    gap: 0.5rem;
+  }
+  .cal-feriado-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.625rem 0.875rem;
+    background: var(--bg-soft);
+    border-left: 3px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+  }
+  .cal-feriado-item.dot-inamovible { border-left-color: #ef4444; }
+  .cal-feriado-item.dot-trasladable { border-left-color: #f59e0b; }
+  .cal-feriado-item.dot-nolaborable { border-left-color: #6366f1; }
+  .cal-feriado-date { font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .cal-feriado-name { font-weight: 600; color: var(--text); }
+  .cal-feriado-tipo {
+    font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.05em; padding: 0.15rem 0.5rem;
+    background: var(--bg-card); border-radius: 999px;
+  }
+  .cal-empty-list { margin: 0; color: var(--text-muted); font-size: 0.875rem; text-align: center; padding: 1rem; }
+
+  .cal-quick-jump {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .cal-quick-jump > span {
+    font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.05em; font-weight: 600; margin-bottom: 0.5rem; display: block;
+  }
+  .cal-months {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.25rem;
+  }
+  .cal-month-btn {
+    padding: 0.4rem 0.25rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .cal-month-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .cal-month-btn.is-active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  @media (max-width: 520px) {
+    .cal-months { grid-template-columns: repeat(4, 1fr); }
+    .cal-cell { min-height: 36px; font-size: 0.75rem; }
+    .cal-feriado-item { grid-template-columns: auto 1fr; }
+    .cal-feriado-item .cal-feriado-tipo { grid-column: 1 / -1; justify-self: start; }
+  }
+</style>

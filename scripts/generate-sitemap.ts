@@ -258,6 +258,7 @@ sitemaps.push({
     { loc: `${site}/presupuesto-familiar`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
     { loc: `${site}/simulador-jubilacion-anses`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
     { loc: `${site}/tracker-embarazo-semana-a-semana`, priority: '0.95', changefreq: 'weekly', lastmod: buildDate },
+    { loc: `${site}/cuanto-falta-para-navidad-2026`, priority: '0.9', changefreq: 'daily', lastmod: buildDate },
     { loc: `${site}/guias`, priority: '0.9', changefreq: 'weekly', lastmod: buildDate },
     { loc: `${site}/guia/sueldos-argentina-2026`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
     { loc: `${site}/guia/impuestos-argentina-2026`, priority: '0.85', changefreq: 'weekly', lastmod: buildDate },
