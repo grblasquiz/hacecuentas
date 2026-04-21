@@ -694,11 +694,11 @@ const globalSchema = {
       }
     </style>
 
-    <!-- gtag.js en Web Worker vía Partytown.
-         Antes: async scripts costaban 1292ms CPU main thread (PageSpeed).
-         Ahora: Partytown los ejecuta en un web worker → ~0ms main thread.
-         Los eventos gtag() del hilo principal se forwardean al worker. -->
-    <script type="text/partytown" src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
-    <script type="text/partytown" src="https://www.googletagmanager.com/gtag/js?id=AW-18096606872"></script>
+    <!-- gtag.js async en main thread.
+         NIVEL 1: analytics SIEMPRE tiene que andar. Partytown falla en inits raros y
+         rompe el tracking sin warning. Volvimos a carga directa async (battle-tested).
+         Costo: ~100ms TBT. Beneficio: GA4/Ads nunca pierden sesión por falla de worker. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18096606872"></script>
   </body>
 </html>
