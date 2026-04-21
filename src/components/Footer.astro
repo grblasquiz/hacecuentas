@@ -1,26 +1,69 @@
 ---
+export interface Props { lang?: 'es' | 'en'; }
+const { lang = 'es' } = Astro.props;
 const year = new Date().getFullYear();
+const isEn = lang === 'en';
 ---
 
-<footer class="site-footer">
+<footer class="site-footer" data-lang={lang}>
   <div class="footer-grid">
     <div class="col col-brand">
       <div class="brand">
         <img class="brand-mark" src="/logo-64.png" srcset="/logo-64.png 1x, /logo-128.png 2x" alt="" width="32" height="32" decoding="async" aria-hidden="true" />
         <span class="brand-name">Hacé Cuentas</span>
       </div>
-      <p class="tagline">
-        Calculadoras online gratuitas y precisas en español para todo
-        el mundo hispanohablante. Incluye cobertura para Argentina <span aria-hidden="true">🇦🇷</span>.
-      </p>
+      {isEn ? (
+        <p class="tagline">
+          Free, accurate online calculators for everyday questions — finance, health, cooking, math and more. Fast, private, no signup required.
+        </p>
+      ) : (
+        <p class="tagline">
+          Calculadoras online gratuitas y precisas en español para todo
+          el mundo hispanohablante. Incluye cobertura para Argentina <span aria-hidden="true">🇦🇷</span>.
+        </p>
+      )}
       <div class="badges">
-        <span class="badge"><span class="dot"></span>Sin registro</span>
-        <span class="badge"><span class="dot"></span>100% gratuito</span>
-        <span class="badge"><span class="dot"></span>Datos privados</span>
+        <span class="badge"><span class="dot"></span>{isEn ? 'No signup' : 'Sin registro'}</span>
+        <span class="badge"><span class="dot"></span>{isEn ? '100% free' : '100% gratuito'}</span>
+        <span class="badge"><span class="dot"></span>{isEn ? 'Private data' : 'Datos privados'}</span>
       </div>
     </div>
 
-    <div class="col">
+    {isEn && (
+      <>
+        <div class="col">
+          <h3>Finance</h3>
+          <a href="/en/compound-interest-calculator">Compound interest</a>
+          <a href="/en/simple-interest-calculator">Simple interest</a>
+          <a href="/en/loan-payment-calculator">Loan payment</a>
+          <a href="/en/rule-of-72-calculator">Rule of 72</a>
+          <a href="/en/vat-tax-calculator">VAT / Tax</a>
+          <a href="/en/tip-calculator">Tip & bill split</a>
+          <a href="/en/profit-margin-calculator">Profit margin</a>
+        </div>
+        <div class="col">
+          <h3>Health & Fitness</h3>
+          <a href="/en/bmi-calculator">BMI</a>
+          <a href="/en/tdee-calorie-calculator">TDEE calories</a>
+          <a href="/en/basal-metabolic-rate-calculator">BMR</a>
+          <a href="/en/body-fat-calculator">Body fat</a>
+          <a href="/en/pregnancy-due-date-calculator">Pregnancy due date</a>
+          <a href="/en/ovulation-calculator">Ovulation</a>
+          <a href="/en/running-pace-calculator">Running pace</a>
+        </div>
+        <div class="col">
+          <h3>Math & Everyday</h3>
+          <a href="/en/percentage-calculator">Percentages</a>
+          <a href="/en/average-calculator">Average & median</a>
+          <a href="/en/rule-of-three-calculator">Rule of three</a>
+          <a href="/en/exact-age-calculator">Exact age</a>
+          <a href="/en/date-difference-calculator">Date difference</a>
+          <a href="/en/cups-to-grams-converter">Cups to grams</a>
+          <a href="/en/split-travel-expenses">Split travel expenses</a>
+        </div>
+      </>
+    )}
+    {!isEn && (<div class="col">
       <h3>Finanzas</h3>
       <a href="/sueldo-en-mano-argentina">Sueldo en mano</a>
       <a href="/calculadora-indemnizacion-despido">Indemnización</a>
@@ -30,8 +73,9 @@ const year = new Date().getFullYear();
       <a href="/calculadora-monotributo-2026">Monotributo 2026</a>
       <a href="/calculadora-impuesto-ganancias-sueldo">Ganancias sueldo</a>
       <a href="/categoria/finanzas" class="see-more">Ver todas →</a>
-    </div>
+    </div>)}
 
+    {!isEn && (<>
     <div class="col">
       <h3>Negocios & Marketing</h3>
       <a href="/calculadora-margen-ganancia-markup">Margen de ganancia</a>
@@ -108,6 +152,20 @@ const year = new Date().getFullYear();
       <a href="/cookies">Cookies</a>
       <button type="button" class="cookie-config-btn" id="footer-cookie-config">⚙️ Configurar cookies</button>
     </div>
+    </>)}
+    {isEn && (
+      <div class="col">
+        <h3>Site</h3>
+        <a href="/en">All calculators</a>
+        <a href="/">🇦🇷 Spanish version</a>
+        <a href="/sobre-nosotros">About us</a>
+        <a href="/contacto">Contact</a>
+        <a href="/terminos">Terms of use</a>
+        <a href="/privacidad">Privacy</a>
+        <a href="/cookies">Cookies</a>
+        <button type="button" class="cookie-config-btn" id="footer-cookie-config">⚙️ Cookie settings</button>
+      </div>
+    )}
   </div>
 
   <script is:inline>
@@ -126,27 +184,40 @@ const year = new Date().getFullYear();
         <line x1="12" y1="8" x2="12.01" y2="8"/>
       </svg>
     </div>
-    <p>
-      <strong>Aviso legal:</strong> Hacé Cuentas provee herramientas matemáticas y contenido
-      <em>educativo</em>. <strong>No somos asesores financieros, contadores, médicos ni abogados.</strong>
-      El contenido financiero <strong>no constituye asesoramiento en inversión</strong> según
-      Ley 26.831 y RG CNV 840/2020. Para decisiones importantes (inversiones, trámites
-      ARCA/ANSES, tratamientos médicos, cuestiones legales) consultá con un/a profesional
-      matriculado/a. Las calculadoras marcadas con <span aria-hidden="true">🇦🇷</span> aplican
-      solo a Argentina. Leé el <a href="/aviso-legal">aviso legal completo</a>.
-    </p>
+    {isEn ? (
+      <p>
+        <strong>Disclaimer:</strong> Hacé Cuentas provides mathematical tools and
+        <em>educational</em> content. <strong>We are not financial advisors, accountants, doctors, or lawyers.</strong>
+        For important decisions (investments, medical treatments, legal matters), consult a licensed professional.
+        Results are estimates — accuracy depends on inputs. Read the <a href="/aviso-legal">full disclaimer</a>.
+      </p>
+    ) : (
+      <p>
+        <strong>Aviso legal:</strong> Hacé Cuentas provee herramientas matemáticas y contenido
+        <em>educativo</em>. <strong>No somos asesores financieros, contadores, médicos ni abogados.</strong>
+        El contenido financiero <strong>no constituye asesoramiento en inversión</strong> según
+        Ley 26.831 y RG CNV 840/2020. Para decisiones importantes (inversiones, trámites
+        ARCA/ANSES, tratamientos médicos, cuestiones legales) consultá con un/a profesional
+        matriculado/a. Las calculadoras marcadas con <span aria-hidden="true">🇦🇷</span> aplican
+        solo a Argentina. Leé el <a href="/aviso-legal">aviso legal completo</a>.
+      </p>
+    )}
   </div>
 
   <div class="bottom">
-    <p>© {year} Hacé Cuentas. Para todo el mundo hispanohablante <span aria-hidden="true">🌎</span></p>
+    {isEn ? (
+      <p>© {year} Hacé Cuentas. Free calculators for the world <span aria-hidden="true">🌎</span></p>
+    ) : (
+      <p>© {year} Hacé Cuentas. Para todo el mundo hispanohablante <span aria-hidden="true">🌎</span></p>
+    )}
     <p class="bottom-links">
-      <a href="/terminos">Términos</a>
+      <a href="/terminos">{isEn ? 'Terms' : 'Términos'}</a>
       <span aria-hidden="true">·</span>
-      <a href="/privacidad">Privacidad</a>
+      <a href="/privacidad">{isEn ? 'Privacy' : 'Privacidad'}</a>
       <span aria-hidden="true">·</span>
-      <a href="/contacto">Contacto</a>
+      <a href="/contacto">{isEn ? 'Contact' : 'Contacto'}</a>
       <span aria-hidden="true">·</span>
-      <a href="/sitemap.xml">Sitemap</a>
+      <a href={isEn ? '/sitemap-en.xml' : '/sitemap.xml'}>Sitemap</a>
     </p>
   </div>
 </footer>
