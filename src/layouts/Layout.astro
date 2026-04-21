@@ -64,18 +64,11 @@ const globalSchema = {
       name: 'Hacé Cuentas',
       url: siteUrl,
       logo: `${siteUrl}/logo.png`,
-      description: 'Calculadoras online gratuitas para todo el mundo hispanohablante, con cobertura específica para Argentina.',
+      description: lang === 'en'
+        ? 'Free online calculators covering finance, health, cooking, math and more — no signup, private, fast.'
+        : 'Calculadoras online gratuitas para todo el mundo hispanohablante, con cobertura específica para Argentina.',
       sameAs: [
         'https://github.com/grblasquiz/hacecuentas',
-        // Agregar cuando se creen los perfiles (ver docs/backlinks/submission-kit.md Tier 6):
-        // 'https://twitter.com/hacecuentas',
-        // 'https://www.linkedin.com/company/hacecuentas',
-        // 'https://www.facebook.com/hacecuentas',
-        // 'https://medium.com/@hacecuentas',
-        // 'https://dev.to/hacecuentas',
-        // 'https://hacecuentas.hashnode.dev',
-        // 'https://www.youtube.com/@hacecuentas',
-        // 'https://www.instagram.com/hacecuentas',
       ],
     },
     {
@@ -84,16 +77,35 @@ const globalSchema = {
       url: siteUrl,
       name: 'Hacé Cuentas',
       publisher: { '@id': `${siteUrl}/#organization` },
-      inLanguage: ['es', 'es-AR', 'es-419'],
+      inLanguage: lang === 'en' ? ['en', 'en-US'] : ['es', 'es-AR', 'es-419'],
       potentialAction: {
         '@type': 'SearchAction',
-        target: `${siteUrl}/buscar?q={search_term_string}`,
+        target: lang === 'en' ? `${siteUrl}/en?q={search_term_string}` : `${siteUrl}/buscar?q={search_term_string}`,
         'query-input': 'required name=search_term_string',
       },
     },
     // SiteNavigationElement: ayuda a Google a entender el menú principal
     // y a generar sitelinks en SERP debajo del resultado principal del brand.
-    {
+    lang === 'en' ? {
+      '@type': 'SiteNavigationElement',
+      '@id': `${siteUrl}/en/#nav`,
+      name: [
+        'All calculators', 'Finance', 'Health & Fitness', 'Math', 'Cooking',
+        'Sports', 'Pets', 'Family', 'Home & Construction', 'Tech',
+      ],
+      url: [
+        `${siteUrl}/en`,
+        `${siteUrl}/en/compound-interest-calculator`,
+        `${siteUrl}/en/bmi-calculator`,
+        `${siteUrl}/en/percentage-calculator`,
+        `${siteUrl}/en/cups-to-grams-converter`,
+        `${siteUrl}/en/running-pace-calculator`,
+        `${siteUrl}/en/cat-age-to-human-years`,
+        `${siteUrl}/en/pregnancy-due-date-calculator`,
+        `${siteUrl}/en/ceramic-tile-calculator`,
+        `${siteUrl}/en/claude-gemini-tokens-pricing-comparison`,
+      ],
+    } : {
       '@type': 'SiteNavigationElement',
       '@id': `${siteUrl}/#nav`,
       name: [
@@ -261,7 +273,7 @@ const globalSchema = {
   </head>
   <body>
     <!-- Print-only header (hidden on screen, visible when printing) -->
-    <div class="print-header" aria-hidden="true">Resultado de calculadora — hacecuentas.com</div>
+    <div class="print-header" aria-hidden="true">{lang === 'en' ? 'Calculator result — hacecuentas.com' : 'Resultado de calculadora — hacecuentas.com'}</div>
 
     <slot name="header" />
     <main>
@@ -280,12 +292,15 @@ const globalSchema = {
           if ('serviceWorker' in navigator && location.protocol === 'https:') {
             navigator.serviceWorker.register('/sw.js').catch(function () {});
           }
-          // Print header date
+          // Print header date (lang-aware via html lang attr)
           var ph = document.querySelector('.print-header');
           if (ph) {
             var d = new Date();
-            var fecha = d.toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });
-            ph.textContent = 'Resultado de calculadora — hacecuentas.com — ' + fecha;
+            var isEn = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
+            var locale = isEn ? 'en-US' : 'es-AR';
+            var fecha = d.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+            var label = isEn ? 'Calculator result' : 'Resultado de calculadora';
+            ph.textContent = label + ' — hacecuentas.com — ' + fecha;
           }
         });
       })();

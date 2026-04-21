@@ -6,13 +6,19 @@ export interface Props {
   category: string;
   limit?: number;
   manualSlugs?: string[]; // override manual desde el JSON de la calc (relatedSlugs)
+  lang?: 'es' | 'en';
 }
 
-const { currentSlug, category, limit = 4, manualSlugs = [] } = Astro.props;
+const { currentSlug, category, limit = 4, manualSlugs = [], lang = 'es' } = Astro.props;
 
-const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+// Load from calcs-en for lang=en, calcs (ES) for lang=es
+const esModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const enModules = import.meta.glob<any>('../content/calcs-en/*.json', { eager: true });
+const calcModules = lang === 'en' ? enModules : esModules;
 const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
 const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+
+const linkPrefix = lang === 'en' ? '/en/' : '/';
 
 // 1. Slugs manuales (si los definió el autor en el JSON) tienen prioridad
 const manual = manualSlugs
@@ -60,7 +66,7 @@ if (related.length < limit) {
   }
 }
 
-const categoryLabels: Record<string, string> = {
+const categoryLabelsEs: Record<string, string> = {
   finanzas: 'Finanzas',
   negocios: 'Negocios',
   negocio: 'Negocios',
@@ -74,17 +80,31 @@ const categoryLabels: Record<string, string> = {
   construccion: 'Construcción',
   cocina: 'Cocina',
 };
+
+const categoryLabelsEn: Record<string, string> = {
+  finanzas: 'Finance', negocios: 'Business', negocio: 'Business', salud: 'Health',
+  marketing: 'Marketing', deportes: 'Sports', viajes: 'Travel', vida: 'Daily Life',
+  mascotas: 'Pets', matematica: 'Math', construccion: 'Construction', cocina: 'Cooking',
+  tecnologia: 'Technology', ciencia: 'Science', educacion: 'Education',
+  familia: 'Family', automotor: 'Automotive', jardineria: 'Gardening',
+  'medio-ambiente': 'Environment', electronica: 'Electronics', entretenimiento: 'Entertainment',
+};
+
+const categoryLabels = lang === 'en' ? categoryLabelsEn : categoryLabelsEs;
+const headerTitle = lang === 'en' ? 'Related calculators' : 'Calculadoras relacionadas';
+const seeAllLabel = lang === 'en' ? 'See all →' : 'Ver todas →';
+const seeAllHref = lang === 'en' ? '/en' : '/';
 ---
 
 {related.length > 0 && (
   <section class="related">
     <div class="related-header">
-      <h2>Calculadoras relacionadas</h2>
-      <a href="/" class="see-all">Ver todas →</a>
+      <h2>{headerTitle}</h2>
+      <a href={seeAllHref} class="see-all">{seeAllLabel}</a>
     </div>
     <div class="related-grid">
       {related.map((c: any) => (
-        <a href={`/${c.slug}`} class="related-card">
+        <a href={`${linkPrefix}${c.slug}`} class="related-card">
           <div class="related-icon">{c.icon}</div>
           <div class="related-body">
             <div class="related-cat">{categoryLabels[c.category] || c.category}</div>
