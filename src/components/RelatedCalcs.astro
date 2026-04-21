@@ -6,19 +6,20 @@ export interface Props {
   category: string;
   limit?: number;
   manualSlugs?: string[]; // override manual desde el JSON de la calc (relatedSlugs)
-  lang?: 'es' | 'en';
+  lang?: 'es' | 'en' | 'pt';
 }
 
 const { currentSlug, category, limit = 4, manualSlugs = [], lang = 'es' } = Astro.props;
 
-// Load from calcs-en for lang=en, calcs (ES) for lang=es
+// Load calcs by lang
 const esModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const enModules = import.meta.glob<any>('../content/calcs-en/*.json', { eager: true });
-const calcModules = lang === 'en' ? enModules : esModules;
+const ptModules = import.meta.glob<any>('../content/calcs-pt/*.json', { eager: true });
+const calcModules = lang === 'en' ? enModules : lang === 'pt' ? ptModules : esModules;
 const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
 const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
 
-const linkPrefix = lang === 'en' ? '/en/' : '/';
+const linkPrefix = lang === 'en' ? '/en/' : lang === 'pt' ? '/pt/' : '/';
 
 // 1. Slugs manuales (si los definió el autor en el JSON) tienen prioridad
 const manual = manualSlugs
@@ -90,10 +91,19 @@ const categoryLabelsEn: Record<string, string> = {
   'medio-ambiente': 'Environment', electronica: 'Electronics', entretenimiento: 'Entertainment',
 };
 
-const categoryLabels = lang === 'en' ? categoryLabelsEn : categoryLabelsEs;
-const headerTitle = lang === 'en' ? 'Related calculators' : 'Calculadoras relacionadas';
-const seeAllLabel = lang === 'en' ? 'See all →' : 'Ver todas →';
-const seeAllHref = lang === 'en' ? '/en' : '/';
+const categoryLabelsPt: Record<string, string> = {
+  finanzas: 'Finanças', negocios: 'Negócios', negocio: 'Negócios', salud: 'Saúde',
+  marketing: 'Marketing', deportes: 'Esportes', viajes: 'Viagens', vida: 'Dia a Dia',
+  mascotas: 'Animais', matematica: 'Matemática', construccion: 'Construção', cocina: 'Culinária',
+  tecnologia: 'Tecnologia', ciencia: 'Ciência', educacion: 'Educação',
+  familia: 'Família', automotor: 'Automotivo', jardineria: 'Jardinagem',
+  'medio-ambiente': 'Meio Ambiente', electronica: 'Eletrônica', entretenimiento: 'Entretenimento',
+};
+
+const categoryLabels = lang === 'en' ? categoryLabelsEn : lang === 'pt' ? categoryLabelsPt : categoryLabelsEs;
+const headerTitle = lang === 'en' ? 'Related calculators' : lang === 'pt' ? 'Calculadoras relacionadas' : 'Calculadoras relacionadas';
+const seeAllLabel = lang === 'en' ? 'See all →' : lang === 'pt' ? 'Ver todas →' : 'Ver todas →';
+const seeAllHref = lang === 'en' ? '/en' : lang === 'pt' ? '/pt' : '/';
 ---
 
 {related.length > 0 && (

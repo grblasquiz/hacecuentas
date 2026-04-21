@@ -1,8 +1,9 @@
 ---
-export interface Props { lang?: 'es' | 'en'; }
+export interface Props { lang?: 'es' | 'en' | 'pt'; }
 const { lang = 'es' } = Astro.props;
 const year = new Date().getFullYear();
 const isEn = lang === 'en';
+const isPt = lang === 'pt';
 ---
 
 <footer class="site-footer" data-lang={lang}>
@@ -16,6 +17,10 @@ const isEn = lang === 'en';
         <p class="tagline">
           Free, accurate online calculators for everyday questions — finance, health, cooking, math and more. Fast, private, no signup required.
         </p>
+      ) : isPt ? (
+        <p class="tagline">
+          Calculadoras online gratuitas e precisas para o seu dia a dia — finanças, saúde, cozinha, matemática e mais. Rápidas, privadas, sem cadastro.
+        </p>
       ) : (
         <p class="tagline">
           Calculadoras online gratuitas y precisas en español para todo
@@ -23,12 +28,28 @@ const isEn = lang === 'en';
         </p>
       )}
       <div class="badges">
-        <span class="badge"><span class="dot"></span>{isEn ? 'No signup' : 'Sin registro'}</span>
-        <span class="badge"><span class="dot"></span>{isEn ? '100% free' : '100% gratuito'}</span>
-        <span class="badge"><span class="dot"></span>{isEn ? 'Private data' : 'Datos privados'}</span>
+        <span class="badge"><span class="dot"></span>{isEn ? 'No signup' : isPt ? 'Sem cadastro' : 'Sin registro'}</span>
+        <span class="badge"><span class="dot"></span>{isEn ? '100% free' : isPt ? '100% grátis' : '100% gratuito'}</span>
+        <span class="badge"><span class="dot"></span>{isEn ? 'Private data' : isPt ? 'Dados privados' : 'Datos privados'}</span>
       </div>
     </div>
 
+    {isPt && (
+      <>
+        <div class="col">
+          <h3>Finanças</h3>
+          <a href="/pt/">Ver todas as calculadoras →</a>
+        </div>
+        <div class="col">
+          <h3>Saúde & Fitness</h3>
+          <a href="/pt/">Ver todas as calculadoras →</a>
+        </div>
+        <div class="col">
+          <h3>Matemática</h3>
+          <a href="/pt/">Ver todas as calculadoras →</a>
+        </div>
+      </>
+    )}
     {isEn && (
       <>
         <div class="col">
@@ -122,7 +143,7 @@ const isEn = lang === 'en';
         </div>
       </>
     )}
-    {!isEn && (<div class="col">
+    {!isEn && !isPt && (<div class="col">
       <h3>Finanzas</h3>
       <a href="/sueldo-en-mano-argentina">Sueldo en mano</a>
       <a href="/calculadora-indemnizacion-despido">Indemnización</a>
@@ -134,7 +155,7 @@ const isEn = lang === 'en';
       <a href="/categoria/finanzas" class="see-more">Ver todas →</a>
     </div>)}
 
-    {!isEn && (<>
+    {!isEn && !isPt && (<>
     <div class="col">
       <h3>Negocios & Marketing</h3>
       <a href="/calculadora-margen-ganancia-markup">Margen de ganancia</a>
@@ -212,6 +233,21 @@ const isEn = lang === 'en';
       <button type="button" class="cookie-config-btn" id="footer-cookie-config">⚙️ Configurar cookies</button>
     </div>
     </>)}
+    {isPt && (
+      <div class="col">
+        <h3>Site</h3>
+        <a href="/pt">Todas as calculadoras</a>
+        <a href="/">🇦🇷 Versão em espanhol</a>
+        <a href="/en">🇬🇧 English version</a>
+        <a href="/sobre-nosotros">Sobre nós</a>
+        <a href="/contacto">Contato</a>
+        <a href="/sitemap.xml">Sitemap</a>
+        <a href="/terminos">Termos de uso</a>
+        <a href="/privacidad">Privacidade</a>
+        <a href="/cookies">Cookies</a>
+        <button type="button" class="cookie-config-btn" id="footer-cookie-config">⚙️ Configurar cookies</button>
+      </div>
+    )}
     {isEn && (
       <>
         <div class="col">
@@ -272,6 +308,13 @@ const isEn = lang === 'en';
         For important decisions (investments, medical treatments, legal matters), consult a licensed professional.
         Results are estimates — accuracy depends on inputs. Read the <a href="/aviso-legal">full disclaimer</a>.
       </p>
+    ) : isPt ? (
+      <p>
+        <strong>Aviso legal:</strong> Hacé Cuentas oferece ferramentas matemáticas e conteúdo
+        <em>educativo</em>. <strong>Não somos consultores financeiros, contadores, médicos ou advogados.</strong>
+        Para decisões importantes (investimentos, tratamentos médicos, questões legais), consulte um profissional habilitado.
+        Os resultados são estimativas — a precisão depende dos valores informados. Leia o <a href="/aviso-legal">aviso legal completo</a>.
+      </p>
     ) : (
       <p>
         <strong>Aviso legal:</strong> Hacé Cuentas provee herramientas matemáticas y contenido
@@ -288,17 +331,19 @@ const isEn = lang === 'en';
   <div class="bottom">
     {isEn ? (
       <p>© {year} Hacé Cuentas. Free calculators for the world <span aria-hidden="true">🌎</span></p>
+    ) : isPt ? (
+      <p>© {year} Hacé Cuentas. Calculadoras grátis para o mundo <span aria-hidden="true">🌎</span></p>
     ) : (
       <p>© {year} Hacé Cuentas. Para todo el mundo hispanohablante <span aria-hidden="true">🌎</span></p>
     )}
     <p class="bottom-links">
-      <a href="/terminos">{isEn ? 'Terms' : 'Términos'}</a>
+      <a href="/terminos">{isEn ? 'Terms' : isPt ? 'Termos' : 'Términos'}</a>
       <span aria-hidden="true">·</span>
-      <a href="/privacidad">{isEn ? 'Privacy' : 'Privacidad'}</a>
+      <a href="/privacidad">{isEn ? 'Privacy' : isPt ? 'Privacidade' : 'Privacidad'}</a>
       <span aria-hidden="true">·</span>
-      <a href="/contacto">{isEn ? 'Contact' : 'Contacto'}</a>
+      <a href="/contacto">{isEn ? 'Contact' : isPt ? 'Contato' : 'Contacto'}</a>
       <span aria-hidden="true">·</span>
-      <a href={isEn ? '/sitemap-en.xml' : '/sitemap.xml'}>Sitemap</a>
+      <a href={isEn ? '/sitemap-en.xml' : isPt ? '/sitemap-pt.xml' : '/sitemap.xml'}>Sitemap</a>
     </p>
   </div>
 </footer>

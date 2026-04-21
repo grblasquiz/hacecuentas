@@ -208,11 +208,15 @@ const reportBody = encodeURIComponent(
   `Hi Hacé Cuentas Team,\n\nI found an error in the calculator "${calc.h1}":\n\nURL: https://hacecuentas.com/en/${calc.slug}\nInput data: \nExpected result: \nActual result: \nSource / reference: \n\nThank you.`
 );
 
-// hreflang: link to Spanish equivalent via esSlug
+// hreflang: link to ES + PT equivalents via esSlug (check if PT version exists)
 const esSlug = calc.esSlug;
+// Check if this calc has a PT version (lookup by esSlug in calcs-pt)
+const ptModulesHreflang = import.meta.glob<any>('../../content/calcs-pt/*.json', { eager: true });
+const ptCalc: any = Object.values(ptModulesHreflang).map((m: any) => m.default || m).find((c: any) => c.esSlug === esSlug);
 const hreflangTags = esSlug ? [
   { lang: 'es', href: `https://hacecuentas.com/${esSlug}` },
   { lang: 'en', href: `https://hacecuentas.com/en/${calc.slug}` },
+  ...(ptCalc ? [{ lang: 'pt', href: `https://hacecuentas.com/pt/${ptCalc.slug}` }] : []),
   { lang: 'x-default', href: `https://hacecuentas.com/${esSlug}` },
 ] : undefined;
 ---

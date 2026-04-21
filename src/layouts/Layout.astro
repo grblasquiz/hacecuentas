@@ -23,7 +23,7 @@ export interface Props {
   schema?: object;
   image?: string;
   audience?: 'AR' | 'global'; // 'AR' = calculadora/página específica de Argentina; default 'global'
-  lang?: 'es' | 'en';
+  lang?: 'es' | 'en' | 'pt';
   hreflang?: Array<{lang: string, href: string}>;
   noindex?: boolean;
 }
@@ -50,9 +50,9 @@ const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
 // Para EN: 'en' + en_US.
 // Para AR-only: es-AR fuerte (Google la prioriza para usuarios argentinos).
 // Para globales: es genérico + alternate es-AR/es-419 (es-419 = español Latinoamérica).
-const htmlLang = lang === 'en' ? 'en' : audience === 'AR' ? 'es-AR' : 'es';
-const ogLocale = lang === 'en' ? 'en_US' : audience === 'AR' ? 'es_AR' : 'es_419';
-const schemaLang = lang === 'en' ? 'en' : audience === 'AR' ? 'es-AR' : 'es';
+const htmlLang = lang === 'en' ? 'en' : lang === 'pt' ? 'pt-BR' : audience === 'AR' ? 'es-AR' : 'es';
+const ogLocale = lang === 'en' ? 'en_US' : lang === 'pt' ? 'pt_BR' : audience === 'AR' ? 'es_AR' : 'es_419';
+const schemaLang = lang === 'en' ? 'en' : lang === 'pt' ? 'pt-BR' : audience === 'AR' ? 'es-AR' : 'es';
 
 // Schema.org WebSite + Organization global (siempre presente)
 const globalSchema = {
@@ -66,6 +66,8 @@ const globalSchema = {
       logo: `${siteUrl}/logo.png`,
       description: lang === 'en'
         ? 'Free online calculators covering finance, health, cooking, math and more — no signup, private, fast.'
+        : lang === 'pt'
+        ? 'Calculadoras online grátis de finanças, saúde, cozinha, matemática e mais — sem cadastro, privadas, rápidas.'
         : 'Calculadoras online gratuitas para todo el mundo hispanohablante, con cobertura específica para Argentina.',
       sameAs: [
         'https://github.com/grblasquiz/hacecuentas',
@@ -77,10 +79,10 @@ const globalSchema = {
       url: siteUrl,
       name: 'Hacé Cuentas',
       publisher: { '@id': `${siteUrl}/#organization` },
-      inLanguage: lang === 'en' ? ['en', 'en-US'] : ['es', 'es-AR', 'es-419'],
+      inLanguage: lang === 'en' ? ['en', 'en-US'] : lang === 'pt' ? ['pt', 'pt-BR', 'pt-PT'] : ['es', 'es-AR', 'es-419'],
       potentialAction: {
         '@type': 'SearchAction',
-        target: lang === 'en' ? `${siteUrl}/en?q={search_term_string}` : `${siteUrl}/buscar?q={search_term_string}`,
+        target: lang === 'en' ? `${siteUrl}/en?q={search_term_string}` : lang === 'pt' ? `${siteUrl}/pt?q={search_term_string}` : `${siteUrl}/buscar?q={search_term_string}`,
         'query-input': 'required name=search_term_string',
       },
     },
@@ -104,6 +106,25 @@ const globalSchema = {
         `${siteUrl}/en/pregnancy-due-date-calculator`,
         `${siteUrl}/en/ceramic-tile-calculator`,
         `${siteUrl}/en/claude-gemini-tokens-pricing-comparison`,
+      ],
+    } : lang === 'pt' ? {
+      '@type': 'SiteNavigationElement',
+      '@id': `${siteUrl}/pt/#nav`,
+      name: [
+        'Todas as calculadoras', 'Finanças', 'Saúde e Fitness', 'Matemática',
+        'Culinária', 'Esportes', 'Animais', 'Família', 'Construção', 'Tecnologia',
+      ],
+      url: [
+        `${siteUrl}/pt`,
+        `${siteUrl}/pt`,
+        `${siteUrl}/pt`,
+        `${siteUrl}/pt`,
+        `${siteUrl}/pt`,
+        `${siteUrl}/pt`,
+        `${siteUrl}/pt`,
+        `${siteUrl}/pt`,
+        `${siteUrl}/pt`,
+        `${siteUrl}/pt`,
       ],
     } : {
       '@type': 'SiteNavigationElement',
@@ -273,7 +294,7 @@ const globalSchema = {
   </head>
   <body>
     <!-- Print-only header (hidden on screen, visible when printing) -->
-    <div class="print-header" aria-hidden="true">{lang === 'en' ? 'Calculator result — hacecuentas.com' : 'Resultado de calculadora — hacecuentas.com'}</div>
+    <div class="print-header" aria-hidden="true">{lang === 'en' ? 'Calculator result — hacecuentas.com' : lang === 'pt' ? 'Resultado da calculadora — hacecuentas.com' : 'Resultado de calculadora — hacecuentas.com'}</div>
 
     <slot name="header" />
     <main>
@@ -296,10 +317,12 @@ const globalSchema = {
           var ph = document.querySelector('.print-header');
           if (ph) {
             var d = new Date();
-            var isEn = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
-            var locale = isEn ? 'en-US' : 'es-AR';
+            var htmlLang = (document.documentElement.lang || '').toLowerCase();
+            var isEn = htmlLang.indexOf('en') === 0;
+            var isPt = htmlLang.indexOf('pt') === 0;
+            var locale = isEn ? 'en-US' : isPt ? 'pt-BR' : 'es-AR';
             var fecha = d.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
-            var label = isEn ? 'Calculator result' : 'Resultado de calculadora';
+            var label = isEn ? 'Calculator result' : isPt ? 'Resultado da calculadora' : 'Resultado de calculadora';
             ph.textContent = label + ' — hacecuentas.com — ' + fecha;
           }
         });

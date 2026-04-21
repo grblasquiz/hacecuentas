@@ -29,6 +29,8 @@ const { calc } = Astro.props;
 // Cargar calcs de otros locales para hreflang bidireccional
 const enCalcModules = import.meta.glob<any>('../content/calcs-en/*.json', { eager: true });
 const enCalcs = Object.values(enCalcModules).map((m: any) => m.default || m);
+const ptCalcModules = import.meta.glob<any>('../content/calcs-pt/*.json', { eager: true });
+const ptCalcs = Object.values(ptCalcModules).map((m: any) => m.default || m);
 const mxCalcModules = import.meta.glob<any>('../content/calcs-mx/*.json', { eager: true });
 const mxCalcs = Object.values(mxCalcModules).map((m: any) => m.default || m);
 const esCalcModules = import.meta.glob<any>('../content/calcs-es/*.json', { eager: true });
@@ -285,6 +287,7 @@ const reportBody = encodeURIComponent(
 
 // hreflang bidireccional: detectar versiones en otros locales por slug similar o matching explícito
 const enVersion = enCalcs.find((c: any) => c.esSlug === calc.slug);
+const ptVersion = ptCalcs.find((c: any) => c.esSlug === calc.slug);
 const mxVersion = mxCalcs.find((c: any) => c.esSlug === calc.slug || (c.slug && c.slug.replace('calculadora-','') === calc.slug.replace('calculadora-','')));
 const esVersion = esCalcs.find((c: any) => c.esSlug === calc.slug || (c.slug && c.slug.replace('calculadora-','') === calc.slug.replace('calculadora-','')));
 
@@ -292,6 +295,7 @@ const alternates: Array<{ lang: string; href: string }> = [
   { lang: 'es-AR', href: `https://hacecuentas.com/${calc.slug}` },
 ];
 if (enVersion) alternates.push({ lang: 'en', href: `https://hacecuentas.com/en/${enVersion.slug}` });
+if (ptVersion) alternates.push({ lang: 'pt', href: `https://hacecuentas.com/pt/${ptVersion.slug}` });
 if (mxVersion) alternates.push({ lang: 'es-MX', href: `https://hacecuentas.com/mx/${mxVersion.slug}` });
 if (esVersion) alternates.push({ lang: 'es-ES', href: `https://hacecuentas.com/es/${esVersion.slug}` });
 alternates.push({ lang: 'x-default', href: `https://hacecuentas.com/${calc.slug}` });

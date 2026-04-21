@@ -28,6 +28,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const CALCS_DIR = join(ROOT, 'src', 'content', 'calcs');
 const CALCS_EN_DIR = join(ROOT, 'src', 'content', 'calcs-en');
+const CALCS_PT_DIR = join(ROOT, 'src', 'content', 'calcs-pt');
 const CALCS_MX_DIR = join(ROOT, 'src', 'content', 'calcs-mx');
 const CALCS_ES_DIR = join(ROOT, 'src', 'content', 'calcs-es');
 const CALCS_CO_DIR = join(ROOT, 'src', 'content', 'calcs-co');
@@ -118,6 +119,7 @@ ${sitemaps.map((s) => `  <sitemap>
 
 const calcs = readJSONs(CALCS_DIR);
 const calcsEn = readJSONs(CALCS_EN_DIR);
+const calcsPt = readJSONs(CALCS_PT_DIR);
 const calcsMx = readJSONs(CALCS_MX_DIR);
 const calcsEs = readJSONs(CALCS_ES_DIR);
 const calcsCo = readJSONs(CALCS_CO_DIR);
@@ -339,6 +341,22 @@ if (calcsEn.length > 0) {
       changefreq: 'monthly',
       lastmod: buildDate,
     })),
+  });
+}
+
+// 3a. Calcs português
+if (calcsPt.length > 0) {
+  sitemaps.push({
+    name: 'sitemap-pt.xml',
+    urls: [
+      { loc: `${site}/pt/`, priority: '0.8', changefreq: 'weekly', lastmod: buildDate },
+      ...(calcsPt as any[]).map((c: any) => ({
+        loc: `${site}/pt/${c.slug}`,
+        priority: '0.7',
+        changefreq: 'monthly',
+        lastmod: buildDate,
+      })),
+    ],
   });
 }
 

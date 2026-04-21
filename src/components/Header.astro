@@ -1,5 +1,5 @@
 ---
-export interface Props { lang?: 'es' | 'en'; }
+export interface Props { lang?: 'es' | 'en' | 'pt'; }
 const { lang = 'es' } = Astro.props;
 const currentPath = Astro.url.pathname;
 const isActive = (path: string) => currentPath.startsWith(path);
@@ -7,52 +7,43 @@ const isActive = (path: string) => currentPath.startsWith(path);
 // Se sirve como /search-index.json (ver src/pages/search-index.json.ts)
 // y se fetchea lazy al abrir el modal de search. -90% HTML weight.
 
-const t = lang === 'en' ? {
-  skip: 'Skip to content',
-  logoAria: 'Hacé Cuentas — Home',
-  navAria: 'Main navigation',
-  allCalcs: 'All calculators',
-  popular: 'Popular',
-  categoriesHealth: 'Health',
-  categoriesFinance: 'Finance',
-  categoriesMath: 'Math',
-  categoriesCooking: 'Cooking',
-  categoriesSports: 'Sports',
-  searchAria: 'Search calculator',
-  searchTitle: 'Search (⌘K)',
-  searchLabel: 'Search',
-  themeAria: 'Toggle theme',
-  themeTitle: 'Toggle light/dark theme',
-  menuAria: 'Open menu',
-  mobileAll: '🔍 All calculators',
-  mobilePopular: '⭐ Popular',
-} : {
-  skip: 'Saltar al contenido',
-  logoAria: 'Hacé Cuentas — Inicio',
-  navAria: 'Navegación principal',
-  allCalcs: 'Cambio de monedas',
-  popular: 'Cripto',
-  searchAria: 'Buscar calculadora',
-  searchTitle: 'Buscar (⌘K)',
-  searchLabel: 'Buscar',
-  themeAria: 'Cambiar tema',
-  themeTitle: 'Cambiar tema claro/oscuro',
-  menuAria: 'Abrir menú',
+const translations = {
+  en: {
+    skip: 'Skip to content', logoAria: 'Hacé Cuentas — Home',
+    navAria: 'Main navigation', allCalcs: 'All calculators',
+    searchAria: 'Search calculator', searchTitle: 'Search (⌘K)', searchLabel: 'Search',
+    themeAria: 'Toggle theme', themeTitle: 'Toggle light/dark theme', menuAria: 'Open menu',
+  },
+  pt: {
+    skip: 'Pular para o conteúdo', logoAria: 'Hacé Cuentas — Início',
+    navAria: 'Navegação principal', allCalcs: 'Todas as calculadoras',
+    searchAria: 'Buscar calculadora', searchTitle: 'Buscar (⌘K)', searchLabel: 'Buscar',
+    themeAria: 'Alternar tema', themeTitle: 'Alternar tema claro/escuro', menuAria: 'Abrir menu',
+  },
+  es: {
+    skip: 'Saltar al contenido', logoAria: 'Hacé Cuentas — Inicio',
+    navAria: 'Navegación principal', allCalcs: 'Cambio de monedas',
+    searchAria: 'Buscar calculadora', searchTitle: 'Buscar (⌘K)', searchLabel: 'Buscar',
+    themeAria: 'Cambiar tema', themeTitle: 'Cambiar tema claro/oscuro', menuAria: 'Abrir menú',
+  },
 };
+const t = translations[lang as keyof typeof translations] || translations.es;
+const isIntl = lang === 'en' || lang === 'pt';
+const intlHome = lang === 'en' ? '/en' : '/pt';
 ---
 
 <a href="#main" class="skip-link">{t.skip}</a>
 
 <header class="site-header" data-lang={lang}>
   <div class="header-container">
-    <a href={lang === 'en' ? '/en' : '/'} class="logo" aria-label={t.logoAria}>
+    <a href={isIntl ? intlHome : '/'} class="logo" aria-label={t.logoAria}>
       <img class="logo-mark" src="/logo-64.png" srcset="/logo-64.png 1x, /logo-128.png 2x" alt="" width="32" height="32" decoding="async" fetchpriority="high" aria-hidden="true" />
       <span class="logo-text">Hacé Cuentas</span>
     </a>
 
-    {lang === 'en' ? (
+    {isIntl ? (
       <nav aria-label={t.navAria}>
-        <a href="/en" class={currentPath === '/en' || currentPath === '/en/' ? 'active' : ''}>All calculators</a>
+        <a href={intlHome} class={currentPath === intlHome || currentPath === `${intlHome}/` ? 'active' : ''}>{t.allCalcs}</a>
       </nav>
     ) : (
       <nav aria-label={t.navAria}>
@@ -98,10 +89,10 @@ const t = lang === 'en' ? {
     </div>
   </div>
 
-  {lang === 'en' ? (
+  {isIntl ? (
     <div class="mobile-nav" id="mobile-nav" hidden>
-      <a href="/en">🔍 All calculators</a>
-      <a href="/en#popular">⭐ Popular</a>
+      <a href={intlHome}>🔍 {t.allCalcs}</a>
+      <a href={`${intlHome}#popular`}>⭐ {lang === 'pt' ? 'Populares' : 'Popular'}</a>
     </div>
   ) : (
     <div class="mobile-nav" id="mobile-nav" hidden>
@@ -125,7 +116,7 @@ const t = lang === 'en' ? {
 </header>
 
 <!-- Search Modal -->
-<div class="search-modal" id="search-modal" hidden role="dialog" aria-modal="true" aria-label={lang === 'en' ? 'Calculator search' : 'Buscador de calculadoras'} data-lang={lang}>
+<div class="search-modal" id="search-modal" hidden role="dialog" aria-modal="true" aria-label={lang === 'en' ? 'Calculator search' : lang === 'pt' ? 'Busca de calculadoras' : 'Buscador de calculadoras'} data-lang={lang}>
   <div class="search-backdrop" data-close></div>
   <div class="search-panel">
     <div class="search-input-wrap">
@@ -133,14 +124,14 @@ const t = lang === 'en' ? {
         <circle cx="11" cy="11" r="8"/>
         <line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <input id="search-input" type="search" placeholder={lang === 'en' ? 'Search calculator...' : 'Buscar calculadora...'} autocomplete="off" />
+      <input id="search-input" type="search" placeholder={lang === 'en' ? 'Search calculator...' : lang === 'pt' ? 'Buscar calculadora...' : 'Buscar calculadora...'} autocomplete="off" />
       <kbd class="kbd">ESC</kbd>
     </div>
     <div class="search-results" id="search-results"></div>
     <div class="search-footer">
-      <span><kbd>↑</kbd><kbd>↓</kbd> {lang === 'en' ? 'navigate' : 'navegar'}</span>
-      <span><kbd>↵</kbd> {lang === 'en' ? 'open' : 'abrir'}</span>
-      <a href={lang === 'en' ? '/en' : '/buscar'}>{lang === 'en' ? 'See all →' : 'Ver todas →'}</a>
+      <span><kbd>↑</kbd><kbd>↓</kbd> {lang === 'en' ? 'navigate' : lang === 'pt' ? 'navegar' : 'navegar'}</span>
+      <span><kbd>↵</kbd> {lang === 'en' ? 'open' : lang === 'pt' ? 'abrir' : 'abrir'}</span>
+      <a href={lang === 'en' ? '/en' : lang === 'pt' ? '/pt' : '/buscar'}>{lang === 'en' ? 'See all →' : lang === 'pt' ? 'Ver todas →' : 'Ver todas →'}</a>
     </div>
   </div>
 </div>
@@ -195,9 +186,11 @@ const t = lang === 'en' ? {
   const categoryLabels = { finanzas: 'Finanzas', negocios: 'Negocios', negocio: 'Negocios', salud: 'Salud', marketing: 'Marketing', deportes: 'Deportes', viajes: 'Viajes', vida: 'Vida', mascotas: 'Mascotas', matematica: 'Matemática', construccion: 'Construcción', cocina: 'Cocina' };
   const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-  const isEn = modal?.dataset?.lang === 'en';
-  const i18n = isEn
+  const searchLang = modal?.dataset?.lang;
+  const i18n = searchLang === 'en'
     ? { loading: 'Loading...', noResults: 'No results for' }
+    : searchLang === 'pt'
+    ? { loading: 'Carregando...', noResults: 'Sem resultados para' }
     : { loading: 'Cargando...', noResults: 'Sin resultados para' };
 
   const openModal = async () => {

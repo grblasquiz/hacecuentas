@@ -1,0 +1,453 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ScrollToTop from '../../components/ScrollToTop.astro';
+
+// Load all English calculators
+const calcModules = import.meta.glob<any>('../../content/calcs-pt/*.json', { eager: true });
+const calcs = Object.values(calcModules).map((m: any) => m.default || m);
+
+// Group by category
+const byCategory: Record<string, any[]> = {};
+calcs.forEach((c) => {
+  if (!byCategory[c.category]) byCategory[c.category] = [];
+  byCategory[c.category].push(c);
+});
+
+// Portuguese-friendly category metadata
+const categoryMeta: Record<string, { label: string; desc: string; color: string; icon: string }> = {
+  finanzas:        { label: 'Finanças',      desc: 'Salário, rescisão, empréstimos, impostos, juros compostos.', color: '#2563eb', icon: '💰' },
+  salud:           { label: 'Saúde',         desc: 'IMC, calorias, gordura corporal, gravidez, fitness.',        color: '#16a34a', icon: '❤️' },
+  negocios:        { label: 'Negócios',      desc: 'Margens, impostos, markup, ponto de equilíbrio, preços.',    color: '#7c3aed', icon: '📊' },
+  marketing:       { label: 'Marketing',     desc: 'CTR, CPC, ROAS, CAC, LTV, MRR, churn.',                     color: '#e11d48', icon: '📈' },
+  vida:            { label: 'Dia a Dia',     desc: 'Idade, datas, percentuais, regra de três, conversores.',     color: '#d97706', icon: '🗓️' },
+  deportes:        { label: 'Esportes',      desc: 'Pace, 1RM, calorias, corrida, treino de força.',             color: '#65a30d', icon: '🏃' },
+  viajes:          { label: 'Viagens',       desc: 'Custos de combustível, orçamentos, divisão de despesas.',    color: '#0891b2', icon: '✈️' },
+  construccion:    { label: 'Construção',    desc: 'Tijolos, cimento, tinta, estimativas de piso.',              color: '#b45309', icon: '🧱' },
+  cocina:          { label: 'Culinária',     desc: 'Xícaras em gramas, ajuste de receitas, conversões.',         color: '#ea580c', icon: '🍳' },
+  mascotas:        { label: 'Animais',       desc: 'Idade de cão/gato, alimentação, dose por peso.',             color: '#db2777', icon: '🐕' },
+  matematica:      { label: 'Matemática',    desc: 'Média, Pitágoras, quadrática, fatorial, MDC.',               color: '#0d9488', icon: '🧮' },
+  educacion:       { label: 'Educação',      desc: 'Notas, médias, créditos, bolsas.',                          color: '#8b5cf6', icon: '🎓' },
+  automotor:       { label: 'Automotivo',    desc: 'Consumo, seguro, taxas de registro.',                        color: '#6366f1', icon: '🚗' },
+  tecnologia:      { label: 'Tecnologia',    desc: 'Armazenamento, largura de banda, bateria, FPS, nuvem.',      color: '#06b6d4', icon: '💻' },
+  'medio-ambiente':{ label: 'Meio Ambiente', desc: 'Pegada de carbono, reciclagem, água, energia solar.',        color: '#22c55e', icon: '🌱' },
+  electronica:     { label: 'Eletrônica',   desc: 'Lei de Ohm, resistores, consumo em kWh, circuitos.',         color: '#f59e0b', icon: '⚡' },
+  familia:         { label: 'Família',       desc: 'Criação de filhos, pensão, mesada, fraldas.',                color: '#f472b6', icon: '👨‍👩‍👧' },
+  ciencia:         { label: 'Ciência',       desc: 'Física, química, astronomia, biologia.',                    color: '#0ea5e9', icon: '🔬' },
+  jardineria:      { label: 'Jardinagem',   desc: 'Sementes, poda, compostagem, solo.',                         color: '#84cc16', icon: '🌿' },
+};
+
+// Show categories that have at least one PT calc, in a sensible order
+const categoryOrder = ['finanzas', 'salud', 'negocios', 'marketing', 'vida', 'deportes', 'viajes',
+  'construccion', 'cocina', 'mascotas', 'matematica', 'educacion', 'automotor', 'tecnologia',
+  'medio-ambiente', 'electronica', 'familia', 'ciencia', 'jardineria'];
+
+const activeCategories = categoryOrder.filter((cat) => byCategory[cat] && byCategory[cat].length > 0);
+
+const totalCalcs = calcs.length;
+
+// Schema.org
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': ['CollectionPage', 'WebPage'],
+      '@id': 'https://hacecuentas.com/pt/#webpage',
+      url: 'https://hacecuentas.com/pt/',
+      name: 'Calculadoras Online Grátis — Hacé Cuentas',
+      description: 'Diretório de calculadoras online grátis para finanças, saúde, matemática, negócios e mais. Precisas, privadas e sem cadastro.',
+      inLanguage: 'pt-BR',
+      isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+      breadcrumb: { '@id': 'https://hacecuentas.com/pt/#breadcrumb' },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': 'https://hacecuentas.com/pt/#breadcrumb',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Hacé Cuentas', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Calculadoras em Português', item: 'https://hacecuentas.com/pt/' },
+      ],
+    },
+    {
+      '@type': 'ItemList',
+      name: 'Calculadoras Online Grátis',
+      description: `${totalCalcs} calculadoras online grátis para finanças, saúde, matemática, negócios, esportes e mais.`,
+      numberOfItems: totalCalcs,
+      itemListElement: calcs.map((c, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: c.h1,
+        url: `https://hacecuentas.com/pt/${c.slug}`,
+        description: c.description,
+      })),
+    },
+  ],
+};
+
+const hreflangTags = [
+  { lang: 'pt',        href: 'https://hacecuentas.com/pt/' },
+  { lang: 'en',        href: 'https://hacecuentas.com/en/' },
+  { lang: 'es',        href: 'https://hacecuentas.com/' },
+  { lang: 'x-default', href: 'https://hacecuentas.com/' },
+];
+---
+
+<Layout
+  title="Calculadoras Online Grátis — Hacé Cuentas"
+  description="Calculadoras online grátis para finanças, saúde, matemática, negócios, esportes e dia a dia. Fórmulas precisas, resultados na hora, 100% privado. Sem cadastro."
+  lang="pt"
+  hreflang={hreflangTags}
+  schema={schema}
+>
+  <Header slot="header" lang="pt" />
+
+  <div class="en-index">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-badge">Calculadoras em Português</div>
+        <h1>Calculadoras Online Grátis</h1>
+        <p class="hero-sub">Precisas, privadas e fáceis de usar. Sem cadastro necessário.</p>
+        <div class="hero-stats">
+          <span class="stat">
+            <strong>{totalCalcs}</strong> calculadoras
+          </span>
+          <span class="stat-sep" aria-hidden="true">·</span>
+          <span class="stat">
+            <strong>{activeCategories.length}</strong> categorias
+          </span>
+          <span class="stat-sep" aria-hidden="true">·</span>
+          <span class="stat">
+            <strong>100%</strong> grátis e privado
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Hacé Cuentas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Calculadoras em Português</span>
+    </nav>
+
+    <!-- Calculator grid grouped by category -->
+    <div class="categories">
+      {activeCategories.map((catKey) => {
+        const meta = categoryMeta[catKey];
+        const catCalcs = byCategory[catKey];
+        return (
+          <section class="category-section" aria-labelledby={`cat-${catKey}`}>
+            <div class="cat-header">
+              <span class="cat-icon" aria-hidden="true" style={`background: ${meta?.color}18`}>
+                {meta?.icon ?? '📁'}
+              </span>
+              <div class="cat-meta">
+                <h2 id={`cat-${catKey}`} class="cat-label">{meta?.label ?? catKey}</h2>
+                {meta?.desc && <p class="cat-desc">{meta.desc}</p>}
+              </div>
+            </div>
+
+            <div class="calc-grid">
+              {catCalcs.map((calc) => (
+                <a href={`/pt/${calc.slug}`} class="calc-card">
+                  <span class="card-icon" aria-hidden="true">{calc.icon}</span>
+                  <div class="card-body">
+                    <span class="card-title">{calc.h1}</span>
+                    <span class="card-desc">{calc.description}</span>
+                  </div>
+                  <span
+                    class="card-badge"
+                    style={`background:${meta?.color}18; color:${meta?.color}`}
+                  >
+                    {meta?.label ?? catKey}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+
+    <!-- Footer CTA -->
+    <aside class="cta-footer" aria-label="Mais calculadoras">
+      <p class="cta-text">Procurando mais?</p>
+      <p class="cta-sub">
+        Visite nosso site completo em espanhol com 3000+ calculadoras —
+        incluindo ferramentas específicas da Argentina para impostos, salários e mais.
+      </p>
+      <a href="/" class="cta-link">Ver calculadoras em espanhol &rarr;</a>
+    </aside>
+
+  </div>
+
+  <ScrollToTop />
+  <Footer slot="footer" lang="pt" />
+</Layout>
+
+<style>
+  .en-index {
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    text-align: center;
+    padding: 3rem 1rem 2.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+  }
+
+  .hero-inner {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    padding: 0.3rem 0.875rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-bottom: 1.25rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    letter-spacing: -0.03em;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero-sub {
+    font-size: 1.0625rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+    color: var(--text-subtle);
+  }
+
+  .stat strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .stat-sep {
+    color: var(--border-strong);
+  }
+
+  /* ── Breadcrumbs ── */
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    margin-bottom: 2rem;
+  }
+
+  .breadcrumbs a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .breadcrumbs a:hover { color: var(--accent); }
+
+  .breadcrumbs .sep { color: var(--border-strong); }
+
+  .breadcrumbs .current {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* ── Category sections ── */
+  .categories {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .category-section {}
+
+  .cat-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .cat-icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.375rem;
+  }
+
+  .cat-meta { flex: 1; min-width: 0; }
+
+  .cat-label {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.1875rem;
+    line-height: 1.25;
+  }
+
+  .cat-desc {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-subtle);
+    line-height: 1.45;
+  }
+
+  /* ── Calculator grid ── */
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  @media (max-width: 900px) {
+    .calc-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 560px) {
+    .calc-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Calc card ── */
+  .calc-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 1.125rem 0.875rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  }
+
+  .calc-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .card-icon {
+    flex-shrink: 0;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3125rem;
+  }
+
+  .card-title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    line-height: 1.3;
+    color: var(--text);
+  }
+
+  .card-desc {
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-badge {
+    align-self: flex-start;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    margin-top: auto;
+  }
+
+  /* ── CTA footer ── */
+  .cta-footer {
+    margin-top: 4rem;
+    padding: 2rem 2.25rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+  }
+
+  .cta-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  .cta-sub {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .cta-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.625rem 1.375rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.15s;
+  }
+
+  .cta-link:hover {
+    background: var(--accent-hover);
+    color: #fff;
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+
+  /* ── Responsive tweaks ── */
+  @media (max-width: 640px) {
+    .hero { padding: 2rem 0.75rem 2rem; }
+    .cta-footer { padding: 1.5rem 1.25rem; }
+    .cat-header { align-items: center; }
+  }
+</style>
