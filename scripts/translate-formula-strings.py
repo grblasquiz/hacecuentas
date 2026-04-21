@@ -77,13 +77,16 @@ def extract_es_strings(ts_content):
     for s in strings:
         s = s.strip()
         if len(s) < 2: continue
-        # Skip obvious code artifacts
-        if any(x in s for x in ['=>', '===', '++', '//', '$ {', '\\n']): continue
+        # Skip obvious code artifacts + template literal fragments
+        if any(x in s for x in ['=>', '===', '++', '//', '$ {', '${', '\\n', '`', '?.', '!==', '==', '&&', '||']): continue
+        if any(c in s for c in ['{', '}']): continue  # brace indicates template literal fragment
         if s.startswith('http') or s.startswith('/'): continue
         # Skip numeric/unit only (no letters)
         if not re.search(r'[a-zA-ZáéíóúñÁÉÍÓÚÑ]', s): continue
         # Skip single English words (these are often ids/keys)
         if re.match(r'^[a-zA-Z_]+$', s): continue
+        # Skip strings that look like partial code (start/end mid-expression)
+        if s.startswith(')') or s.endswith('?') or s.endswith('('): continue
         if not spanish_indicator.search(s):
             continue
         es_strings.add(s)
