@@ -2022,46 +2022,6 @@ import { pesoIdealFormulaLorentzDevine } from './peso-ideal-formula-lorentz-devi
 import { grasaSubcutaneaVisceralTotalDiferencia } from './grasa-subcutanea-visceral-total-diferencia';
 import { hidratacionEjercicioElectrolitosIsotonica } from './hidratacion-ejercicio-electrolitos-isotonica';
 import { ayunoIntermitenteBeneficiosCalorias204 } from './ayuno-intermitente-beneficios-calorias-20-4';
-import { interesCompuestoAporteMensualCrecimiento } from './interes-compuesto-aporte-mensual-crecimiento';
-import { retiroTempranoFire25xGastosAnuales } from './retiro-temprano-fire-25x-gastos-anuales';
-import { safeWithdrawalRate4PorcientoRetiros } from './safe-withdrawal-rate-4-porciento-retiros';
-import { dcaDollarCostAveragingAccionesCripto } from './dca-dollar-cost-averaging-acciones-cripto';
-import { costeOportunidadDecisionInversion } from './coste-oportunidad-decision-inversion';
-import { valorTiempoDineroPresenteFuturo } from './valor-tiempo-dinero-presente-futuro';
-import { anualidadPerpetuidadFormulaPagos } from './anualidad-perpetuidad-formula-pagos';
-import { tasaFisherNominalRealInflacion } from './tasa-fisher-nominal-real-inflacion';
-import { prestamoHipotecarioFijoVariableComparativa } from './prestamo-hipotecario-fijo-variable-comparativa';
-import { refinanciacionHipotecaBreakEvenMes } from './refinanciacion-hipoteca-break-even-mes';
-import { prepagoHipotecaReduccionPlazoCuota } from './prepago-hipoteca-reduccion-plazo-cuota';
-import { planAhorroMetaFuturaViajeAuto } from './plan-ahorro-meta-futura-viaje-auto';
-import { inversionLumpSumVsDcaHistorico } from './inversion-lump-sum-vs-dca-historico';
-import { portafolio6040AccionesBonosRendimiento } from './portafolio-60-40-acciones-bonos-rendimiento';
-import { fundPortfolioBogleheadsDistribucion } from './3-fund-portfolio-bogleheads-distribucion';
-import { portafolioAllWeatherDalioAssetAllocation } from './portafolio-all-weather-dalio-asset-allocation';
-import { riskParityPortfolioAsignacionVolatilidad } from './risk-parity-portfolio-asignacion-volatilidad';
-import { drawdownMaximoAceptableInversor } from './drawdown-maximo-aceptable-inversor';
-import { volatilidadDesviacionEstandarRetornos } from './volatilidad-desviacion-estandar-retornos';
-import { correlacionActivosDiversificacionPortfolio } from './correlacion-activos-diversificacion-portfolio';
-import { regla72DuplicarCapitalAnos } from './regla-72-duplicar-capital-anos';
-import { regla114TriplicarCapitalTasa } from './regla-114-triplicar-capital-tasa';
-import { millonarioAhorrandoMensualAnosLlegar } from './millonario-ahorrando-mensual-anos-llegar';
-import { ahorroPrimerCasaDownPaymentMeta } from './ahorro-primer-casa-down-payment-meta';
-import { precioAccionObjetivoGananciaPorcentual } from './precio-accion-objetivo-ganancia-porcentual';
-import { comisionesBrokerIdaVueltaGananciaMinima } from './comisiones-broker-ida-vuelta-ganancia-minima';
-import { spreadBidAskCosteOcultoTrading } from './spread-bid-ask-coste-oculto-trading';
-import { impuestoGananciaCapitalVentaAccion } from './impuesto-ganancia-capital-venta-accion';
-import { etfVsMutualFundComparativaCostos } from './etf-vs-mutual-fund-comparativa-costos';
-import { rebalanceoPortfolioFrecuenciaUmbral } from './rebalanceo-portfolio-frecuencia-umbral';
-import { taxLossHarvestingOptimizacionFiscal } from './tax-loss-harvesting-optimizacion-fiscal';
-import { assetLocationRothIraTaxableBonds } from './asset-location-roth-ira-taxable-bonds';
-import { ira401kContributionLimitTopeAnual } from './ira-401k-contribution-limit-tope-anual';
-import { hsaFsaCuentasGastosSaludAhorro } from './hsa-fsa-cuentas-gastos-salud-ahorro';
-import { plan529AhorroEducacionHijoUniversidad } from './529-plan-ahorro-educacion-hijo-universidad';
-import { annuityAnnuityJubilacionPagoFijo } from './annuity-annuity-jubilacion-pago-fijo';
-import { socialSecurityOptimizationEdadClaim } from './social-security-optimization-edad-claim';
-import { pensionDefinedBenefitVsContribution } from './pension-defined-benefit-vs-contribution';
-import { lifetimeValueClienteLtvRetention } from './lifetime-value-cliente-ltv-retention';
-import { cacPaybackPeriodStartupUnitario } from './cac-payback-period-startup-unitario';
 import { porcionesArrozPorPersonaGuarnicion } from './porciones-arroz-por-persona-guarnicion';
 import { porcionesPastaSecaPersonaHambre } from './porciones-pasta-seca-persona-hambre';
 import { porcionesCarneAsadoParrillaPersona } from './porciones-carne-asado-parrilla-persona';
@@ -4501,46 +4461,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'grasa-subcutanea-visceral-total-diferencia': grasaSubcutaneaVisceralTotalDiferencia,
   'hidratacion-ejercicio-electrolitos-isotonica': hidratacionEjercicioElectrolitosIsotonica,
   'ayuno-intermitente-beneficios-calorias-20-4': ayunoIntermitenteBeneficiosCalorias204,
-  'interes-compuesto-aporte-mensual-crecimiento': interesCompuestoAporteMensualCrecimiento,
-  'retiro-temprano-fire-25x-gastos-anuales': retiroTempranoFire25xGastosAnuales,
-  'safe-withdrawal-rate-4-porciento-retiros': safeWithdrawalRate4PorcientoRetiros,
-  'dca-dollar-cost-averaging-acciones-cripto': dcaDollarCostAveragingAccionesCripto,
-  'coste-oportunidad-decision-inversion': costeOportunidadDecisionInversion,
-  'valor-tiempo-dinero-presente-futuro': valorTiempoDineroPresenteFuturo,
-  'anualidad-perpetuidad-formula-pagos': anualidadPerpetuidadFormulaPagos,
-  'tasa-fisher-nominal-real-inflacion': tasaFisherNominalRealInflacion,
-  'prestamo-hipotecario-fijo-variable-comparativa': prestamoHipotecarioFijoVariableComparativa,
-  'refinanciacion-hipoteca-break-even-mes': refinanciacionHipotecaBreakEvenMes,
-  'prepago-hipoteca-reduccion-plazo-cuota': prepagoHipotecaReduccionPlazoCuota,
-  'plan-ahorro-meta-futura-viaje-auto': planAhorroMetaFuturaViajeAuto,
-  'inversion-lump-sum-vs-dca-historico': inversionLumpSumVsDcaHistorico,
-  'portafolio-60-40-acciones-bonos-rendimiento': portafolio6040AccionesBonosRendimiento,
-  '3-fund-portfolio-bogleheads-distribucion': fundPortfolioBogleheadsDistribucion,
-  'portafolio-all-weather-dalio-asset-allocation': portafolioAllWeatherDalioAssetAllocation,
-  'risk-parity-portfolio-asignacion-volatilidad': riskParityPortfolioAsignacionVolatilidad,
-  'drawdown-maximo-aceptable-inversor': drawdownMaximoAceptableInversor,
-  'volatilidad-desviacion-estandar-retornos': volatilidadDesviacionEstandarRetornos,
-  'correlacion-activos-diversificacion-portfolio': correlacionActivosDiversificacionPortfolio,
-  'regla-72-duplicar-capital-anos': regla72DuplicarCapitalAnos,
-  'regla-114-triplicar-capital-tasa': regla114TriplicarCapitalTasa,
-  'millonario-ahorrando-mensual-anos-llegar': millonarioAhorrandoMensualAnosLlegar,
-  'ahorro-primer-casa-down-payment-meta': ahorroPrimerCasaDownPaymentMeta,
-  'precio-accion-objetivo-ganancia-porcentual': precioAccionObjetivoGananciaPorcentual,
-  'comisiones-broker-ida-vuelta-ganancia-minima': comisionesBrokerIdaVueltaGananciaMinima,
-  'spread-bid-ask-coste-oculto-trading': spreadBidAskCosteOcultoTrading,
-  'impuesto-ganancia-capital-venta-accion': impuestoGananciaCapitalVentaAccion,
-  'etf-vs-mutual-fund-comparativa-costos': etfVsMutualFundComparativaCostos,
-  'rebalanceo-portfolio-frecuencia-umbral': rebalanceoPortfolioFrecuenciaUmbral,
-  'tax-loss-harvesting-optimizacion-fiscal': taxLossHarvestingOptimizacionFiscal,
-  'asset-location-roth-ira-taxable-bonds': assetLocationRothIraTaxableBonds,
-  'ira-401k-contribution-limit-tope-anual': ira401kContributionLimitTopeAnual,
-  'hsa-fsa-cuentas-gastos-salud-ahorro': hsaFsaCuentasGastosSaludAhorro,
-  '529-plan-ahorro-educacion-hijo-universidad': plan529AhorroEducacionHijoUniversidad,
-  'annuity-annuity-jubilacion-pago-fijo': annuityAnnuityJubilacionPagoFijo,
-  'social-security-optimization-edad-claim': socialSecurityOptimizationEdadClaim,
-  'pension-defined-benefit-vs-contribution': pensionDefinedBenefitVsContribution,
-  'lifetime-value-cliente-ltv-retention': lifetimeValueClienteLtvRetention,
-  'cac-payback-period-startup-unitario': cacPaybackPeriodStartupUnitario,
   'porciones-arroz-por-persona-guarnicion': porcionesArrozPorPersonaGuarnicion,
   'porciones-pasta-seca-persona-hambre': porcionesPastaSecaPersonaHambre,
   'porciones-carne-asado-parrilla-persona': porcionesCarneAsadoParrillaPersona,
