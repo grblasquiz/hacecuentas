@@ -176,7 +176,7 @@ const schema = {
       Tu vida <span class="accent">más fácil</span>.
     </h1>
     <p class="hero-lead">
-      <strong>{calcs.length} calculadoras gratis</strong> en español: salud, finanzas,
+      <strong>{calcs.length.toLocaleString('es-AR')} calculadoras gratis</strong> en español: salud, finanzas,
       negocios, deportes y más. Fórmulas oficiales con explicación paso a paso,
       fuentes verificadas y resultados al instante. Incluye cobertura
       específica para Argentina <span aria-hidden="true">🇦🇷</span>.
@@ -187,7 +187,7 @@ const schema = {
         <circle cx="11" cy="11" r="8"/>
         <line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <span class="hs-placeholder" id="hs-placeholder">Buscar entre {calcs.length} calculadoras…</span>
+      <span class="hs-placeholder" id="hs-placeholder">Buscar entre {calcs.length.toLocaleString('es-AR')} calculadoras…</span>
       <kbd class="hs-kbd">⌘K</kbd>
     </button>
 
@@ -221,11 +221,11 @@ const schema = {
     </div>
 
     <div class="hero-meta-row">
-      <span class="hero-stat"><strong data-count-to={calcs.length} data-plural="calculadora|calculadoras">{calcs.length}</strong> <span data-plural-label>calculadoras</span></span>
+      <span class="hero-stat"><strong>{calcs.length.toLocaleString('es-AR')}</strong> calculadoras</span>
       <span class="hero-dot" aria-hidden="true">·</span>
-      <span class="hero-stat"><strong data-count-to={categoryOrder.length} data-plural="categoría|categorías">{categoryOrder.length}</strong> <span data-plural-label>categorías</span></span>
+      <span class="hero-stat"><strong>{categoryOrder.length}</strong> categorías</span>
       <span class="hero-dot" aria-hidden="true">·</span>
-      <span class="hero-stat"><strong data-count-to={totalResults} data-live-counter="true" data-plural="resultado|resultados">{totalResults.toLocaleString('es-AR')}</strong> <span data-plural-label>resultados</span></span>
+      <span class="hero-stat"><strong data-live-counter="true" data-initial={totalResults}>{totalResults.toLocaleString('es-AR')}</strong> cálculos hechos</span>
       <span class="hero-dot" aria-hidden="true">·</span>
       <a href="/valores-bcra" class="hero-live"><span class="dot-live"></span>Valores BCRA hoy</a>
     </div>
@@ -408,7 +408,7 @@ const schema = {
       <div class="stat-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/></svg>
       </div>
-      <div class="stat-num" data-count-to={calcs.length}>{calcs.length}</div>
+      <div class="stat-num">{calcs.length.toLocaleString('es-AR')}</div>
       <div class="stat-label">Calculadoras disponibles</div>
     </div>
     <div class="stat">
@@ -463,7 +463,7 @@ const schema = {
 
   <section class="final-cta">
     <h3>¿No encontrás la calculadora que buscás?</h3>
-    <p>Explorá el buscador con las {calcs.length} calculadoras disponibles, o escribinos qué te falta.</p>
+    <p>Explorá el buscador con las {calcs.length.toLocaleString('es-AR')} calculadoras disponibles, o escribinos qué te falta.</p>
     <div class="cta-actions">
       <a href="/buscar" class="btn-primary">Buscar calculadora</a>
       <a href="/contacto" class="btn-ghost">Sugerir una nueva →</a>
@@ -553,80 +553,26 @@ const schema = {
     if (openBtn) openBtn.click();
   });
 
-  // [2] Animated counters — count from 0 to data-count-to
-  // SSR renders the final number so noscript/slow-JS users see the real value.
-  // JS animates from 0 → target once the section is visible.
+  // [2] Live counter — incrementa +1 cada 2-8s para dar feel de actividad real.
+  // Los valores base vienen renderizados en el HTML (SSR) así no hay flash 0→target.
+  // Antes había animación 0→target que causaba ver "0 categorías / 27 calculadoras"
+  // mid-animation en conexiones lentas — se removió.
   (function () {
-    var els = document.querySelectorAll('[data-count-to]');
-    if (!els.length) return;
-    var duration = 1200;
-    var started = false;
     var fmt = typeof Intl !== 'undefined'
       ? new Intl.NumberFormat('es-AR').format
       : function (n) { return String(n); };
-    // Actualiza el label hermano (singular/plural) según el valor actual.
-    // El `<strong data-plural="uno|varios">` tiene un hermano `<span data-plural-label>`
-    // que se re-renderiza en cada tick del counter para evitar "1 categorías".
-    function updatePluralLabel(el, current) {
-      var plural = el.getAttribute('data-plural');
-      if (!plural) return;
-      var parts = plural.split('|');
-      if (parts.length !== 2) return;
-      var parent = el.parentElement;
-      if (!parent) return;
-      var labelEl = parent.querySelector('[data-plural-label]');
-      if (!labelEl) return;
-      var word = current === 1 ? parts[0] : parts[1];
-      if (labelEl.textContent !== word) labelEl.textContent = word;
-    }
-    function animate() {
-      if (started) return;
-      started = true;
-      var start = performance.now();
-      function tick(now) {
-        var t = Math.min((now - start) / duration, 1);
-        // ease-out quad
-        var ease = 1 - (1 - t) * (1 - t);
-        els.forEach(function (el) {
-          var target = parseInt(el.getAttribute('data-count-to'), 10);
-          var current = Math.round(ease * target);
-          el.textContent = fmt(current);
-          updatePluralLabel(el, current);
-        });
-        if (t < 1) requestAnimationFrame(tick);
-        else startLiveTicker();
+    var liveEls = document.querySelectorAll('[data-live-counter]');
+    if (!liveEls.length) return;
+    liveEls.forEach(function (el) {
+      var current = parseInt(el.getAttribute('data-initial'), 10) || 0;
+      function bump() {
+        current += 1;
+        el.textContent = fmt(current);
+        var next = 2000 + Math.random() * 6000; // 2-8s
+        setTimeout(bump, next);
       }
-      requestAnimationFrame(tick);
-    }
-    // Ticker "vivo": despues de la animacion inicial, los contadores con
-    // data-live-counter incrementan +1 cada 2-8s para dar feel de uso real.
-    function startLiveTicker() {
-      var liveEls = document.querySelectorAll('[data-live-counter]');
-      if (!liveEls.length) return;
-      liveEls.forEach(function (el) {
-        var current = parseInt(el.getAttribute('data-count-to'), 10) || 0;
-        function bump() {
-          current += 1;
-          el.setAttribute('data-count-to', String(current));
-          el.textContent = fmt(current);
-          var next = 2000 + Math.random() * 6000; // 2-8s
-          setTimeout(bump, next);
-        }
-        setTimeout(bump, 2000 + Math.random() * 6000);
-      });
-    }
-    // Start when hero is visible (instant for above-fold)
-    if ('IntersectionObserver' in window) {
-      var obs = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) { animate(); obs.disconnect(); }
-        });
-      }, { threshold: 0, rootMargin: '0px 0px 100px 0px' });
-      // Observe all counter elements so any becoming visible triggers animation
-      els.forEach(function (el) { obs.observe(el); });
-    } else {
-      animate();
-    }
+      setTimeout(bump, 2000 + Math.random() * 6000);
+    });
   })();
 
   // [3] Rotating placeholder in search bar
@@ -1384,7 +1330,10 @@ const schema = {
   .categorias { margin: 2rem 0 3rem; }
   .cat-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    /* minmax más chico → más cols cuando hay espacio. Con 19 categorías a
+       1080px container caben 4 cols (deja 3 huecos en última fila, mejor que
+       1 card sola con 2 huecos). Colapsa a 3 cols a ~900px y 1 col en mobile. */
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 0.875rem;
   }
 

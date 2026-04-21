@@ -2465,8 +2465,10 @@ const formatFreshnessDate = (iso: string): string => {
             const counterEl = container.querySelector<HTMLElement>('[data-calc-counter]');
             if (counterEl) {
               const total = Object.values(counts).reduce((a, b) => a + b, 0);
-              counterEl.textContent = `\u{1F525} ${total.toLocaleString('es-AR')} cálculos realizados`;
-              counterEl.style.display = 'block';
+              if (total >= 3) {
+                counterEl.textContent = `\u{1F525} Llevás ${total.toLocaleString('es-AR')} cálculos en este dispositivo`;
+                counterEl.style.display = 'block';
+              }
             }
           } catch {}
         } catch (err: any) {
@@ -2709,13 +2711,16 @@ const formatFreshnessDate = (iso: string): string => {
     }
 
     // ── Mostrar contador existente al cargar ──────────────────
+    // Threshold: recién desde el 3er cálculo. Con 1-2 cálculos se lee como
+    // social proof flojo ("sólo 1 cálculo realizado") cuando en realidad es
+    // un contador per-device (localStorage). A partir de 3 tiene sentido.
     try {
       const counts: Record<string, number> = JSON.parse(localStorage.getItem('hc_calc_count') || '{}');
       const total = Object.values(counts).reduce((a, b) => a + b, 0);
-      if (total > 0) {
+      if (total >= 3) {
         const counterEl = container.querySelector<HTMLElement>('[data-calc-counter]');
         if (counterEl) {
-          counterEl.textContent = `\u{1F525} ${total.toLocaleString('es-AR')} cálculos realizados`;
+          counterEl.textContent = `\u{1F525} Llevás ${total.toLocaleString('es-AR')} cálculos en este dispositivo`;
           counterEl.style.display = 'block';
         }
       }
