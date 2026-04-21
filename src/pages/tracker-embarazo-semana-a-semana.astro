@@ -1,0 +1,393 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ClusterHub from '../components/ClusterHub.astro';
+import { CLUSTERS } from '../lib/clusters';
+
+const title = 'Tracker de embarazo semana a semana 2026 | Hacé Cuentas';
+const description = 'Seguí tu embarazo semana a semana: desarrollo del bebé, cambios en tu cuerpo, hitos de cada semana, fecha de parto y calendario de controles. Gratis.';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebApplication',
+      name: 'Tracker de embarazo semana a semana',
+      applicationCategory: 'HealthApplication',
+      operatingSystem: 'Web',
+      url: 'https://hacecuentas.com/tracker-embarazo-semana-a-semana',
+      description,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Familia', item: 'https://hacecuentas.com/categoria/familia' },
+        { '@type': 'ListItem', position: 3, name: 'Tracker embarazo' },
+      ],
+    },
+  ],
+};
+
+// 40 semanas con milestones clave (basado en ACOG + Mayo Clinic)
+const WEEKS = [
+  { n: 1, fase: 'Preconcepción', bebe: 'Técnicamente no estás embarazada — el cálculo inicia desde tu FUM.', mama: 'Puede haber síntomas pre-menstruales normales.', size: 'microscópico' },
+  { n: 2, fase: 'Ovulación', bebe: 'Ovulación y fecundación probable. El óvulo se encuentra con el espermatozoide.', mama: 'Podés notar flujo cervical más elástico.', size: 'microscópico' },
+  { n: 3, fase: 'Implantación', bebe: 'El blastocisto se implanta en el útero. Comienza el embarazo.', mama: 'Posible sangrado leve de implantación.', size: 'punta de lápiz' },
+  { n: 4, fase: '1er trimestre', bebe: 'Se forma el saco gestacional. ~2 mm.', mama: 'Primera falta menstrual. Test de embarazo positivo.', size: 'semilla de amapola' },
+  { n: 5, fase: '1er trimestre', bebe: 'Empieza el corazón primitivo. Tubo neural en formación.', mama: 'Náuseas matinales, senos sensibles, fatiga.', size: 'semilla de sésamo' },
+  { n: 6, fase: '1er trimestre', bebe: 'Latidos cardíacos detectables por ecografía. Brotes de brazos y piernas.', mama: 'Síntomas más marcados. Primer control recomendado.', size: 'lenteja' },
+  { n: 7, fase: '1er trimestre', bebe: '10 mm. Se forman los rasgos faciales primitivos.', mama: 'Útero tamaño naranja chica. Cansancio extremo.', size: 'arándano' },
+  { n: 8, fase: '1er trimestre', bebe: '1.5 cm. Todos los órganos principales están formándose.', mama: 'Senos crecen hasta 1 talla. Micción frecuente.', size: 'frambuesa' },
+  { n: 9, fase: '1er trimestre', bebe: '2 cm. Deja de ser embrión, ahora es feto.', mama: 'Ecografía primera detallada típica entre 8-12 semanas.', size: 'uva' },
+  { n: 10, fase: '1er trimestre', bebe: '3 cm. Dedos definidos. Órganos vitales funcionando.', mama: 'Síntomas pueden comenzar a disminuir.', size: 'fresa' },
+  { n: 11, fase: '1er trimestre', bebe: '4 cm. Puede tragar líquido amniótico.', mama: 'Posible alivio de náuseas. Ecografía translucencia nucal.', size: 'lima' },
+  { n: 12, fase: '1er trimestre', bebe: '5 cm, 15 g. Genitales diferenciándose.', mama: 'Fin primer trimestre. Riesgo de pérdida baja significativamente.', size: 'ciruela' },
+  { n: 13, fase: '2do trimestre', bebe: '7 cm. Huellas dactilares formadas.', mama: 'Energía vuelve. Náuseas típicamente terminan.', size: 'durazno' },
+  { n: 14, fase: '2do trimestre', bebe: '9 cm, 40 g. Puede mover ojos y hacer gestos.', mama: 'Posible línea oscura en abdomen (linea nigra).', size: 'limón' },
+  { n: 15, fase: '2do trimestre', bebe: '10 cm. Esqueleto desarrollándose.', mama: 'Comienza a notarse la panza.', size: 'manzana' },
+  { n: 16, fase: '2do trimestre', bebe: '12 cm, 100 g. Puede responder a sonidos.', mama: 'Primeros movimientos perceptibles.', size: 'palta' },
+  { n: 17, fase: '2do trimestre', bebe: '13 cm. Forma grasa corporal.', mama: 'Panza más visible. Consultar por dolor ligamentos.', size: 'nabo' },
+  { n: 18, fase: '2do trimestre', bebe: '14 cm, 200 g. Se mueve notoriamente.', mama: 'Eco morfológica detallada entre 18-22 semanas.', size: 'pimentón' },
+  { n: 19, fase: '2do trimestre', bebe: '15 cm. Vérnix caseosa cubre la piel.', mama: 'Posibles patadas más frecuentes.', size: 'mango' },
+  { n: 20, fase: '2do trimestre', bebe: '16 cm, 300 g. MITAD del embarazo. Sexo visible en eco.', mama: 'Ecografía detallada estructural. ¡Sabés el sexo!', size: 'banana' },
+  { n: 21, fase: '2do trimestre', bebe: '18 cm. Activa fase de sueño/vigilia.', mama: 'Panza crece más rápido. Estrías posibles.', size: 'zanahoria' },
+  { n: 22, fase: '2do trimestre', bebe: '19 cm, 400 g. Cejas y pestañas visibles.', mama: 'Ombligo puede salir. Braxton Hicks posible.', size: 'espagueti' },
+  { n: 23, fase: '2do trimestre', bebe: '20 cm, 500 g. Viable con cuidados neonatales.', mama: 'Panza prominente. Dolor ciático posible.', size: 'pomelo' },
+  { n: 24, fase: '2do trimestre', bebe: '21 cm, 600 g. Límite de viabilidad con NICU.', mama: 'Curva glucémica para diabetes gestacional.', size: 'maíz' },
+  { n: 25, fase: '2do trimestre', bebe: '22 cm, 700 g. Pulmones formándose.', mama: 'Aumento de peso más notorio.', size: 'coliflor' },
+  { n: 26, fase: '2do trimestre', bebe: '23 cm, 850 g. Abre los ojos.', mama: 'Clases de preparto pueden empezar.', size: 'cebollín grande' },
+  { n: 27, fase: '2do trimestre', bebe: '24 cm, 1000 g. Reconoce voces familiares.', mama: 'Último mes del 2do trimestre.', size: 'coliflor grande' },
+  { n: 28, fase: '3er trimestre', bebe: '25 cm, 1100 g. Cerebro en rápido crecimiento.', mama: '3er trimestre. Controles más frecuentes.', size: 'berenjena' },
+  { n: 29, fase: '3er trimestre', bebe: '26 cm, 1250 g. Huesos endureciéndose.', mama: 'Posibles dolores espalda/pelvis.', size: 'calabaza chica' },
+  { n: 30, fase: '3er trimestre', bebe: '27 cm, 1400 g. Líquido amniótico máximo.', mama: 'Preparar bolso de maternidad.', size: 'repollo' },
+  { n: 31, fase: '3er trimestre', bebe: '28 cm, 1600 g. Puede dar patadas fuertes.', mama: 'Descargas vaginales aumentan.', size: 'coco' },
+  { n: 32, fase: '3er trimestre', bebe: '29 cm, 1800 g. Se coloca cabeza abajo.', mama: 'Respiración puede ser difícil (presión diafragma).', size: 'zapallito coreano' },
+  { n: 33, fase: '3er trimestre', bebe: '30 cm, 2000 g. Piel menos arrugada.', mama: 'Hinchazón común en pies y manos.', size: 'ananá' },
+  { n: 34, fase: '3er trimestre', bebe: '31 cm, 2200 g. Uñas definidas.', mama: 'Fecha probable parto se acerca.', size: 'melón pequeño' },
+  { n: 35, fase: '3er trimestre', bebe: '32 cm, 2400 g. Sistema inmune listo.', mama: 'Eco 35 semanas verifica posición.', size: 'melón mediano' },
+  { n: 36, fase: '3er trimestre', bebe: '33 cm, 2600 g. Considerado a término temprano.', mama: 'Controles semanales.', size: 'lechuga romana' },
+  { n: 37, fase: 'A término temprano', bebe: '34 cm, 2800 g. Respiración casi madura.', mama: 'Preparate mentalmente para el parto en cualquier momento.', size: 'acelga' },
+  { n: 38, fase: 'A término', bebe: '35 cm, 3000 g. A término completo.', mama: 'Dilación cervical comienza.', size: 'calabaza' },
+  { n: 39, fase: 'A término', bebe: '36 cm, 3200 g. Parto muy probable.', mama: 'Contracciones más frecuentes.', size: 'sandía chica' },
+  { n: 40, fase: 'Fecha probable parto', bebe: '36-40 cm, 3300-3500 g. Bebé a término.', mama: 'Fecha probable parto. 50% nace esta semana.', size: 'sandía' },
+];
+---
+
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="tracker-page">
+    <nav class="breadcrumbs" aria-label="Ruta">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/familia">Familia</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Tracker embarazo</span>
+    </nav>
+
+    <header class="tracker-header">
+      <span class="hero-emoji" aria-hidden="true">🤰</span>
+      <h1>Tracker de embarazo semana a semana</h1>
+      <p class="lead">Ingresá tu <strong>fecha de última menstruación (FUM)</strong> y seguí tu embarazo día a día: desarrollo del bebé, cambios en tu cuerpo, hitos clínicos importantes y cuántos días te quedan hasta el parto.</p>
+    </header>
+
+    <ClusterHub cluster={CLUSTERS.embarazo} currentSlug="tracker-embarazo-semana-a-semana" />
+
+    <section class="tracker-input-section">
+      <label class="tracker-label" for="fum">
+        <span>📅 Ingresá tu FUM</span>
+        <span class="help-wrap">
+          <span class="help" tabindex="0" aria-describedby="fum-tip">?</span>
+          <span class="help-tip" id="fum-tip" role="tooltip">Fecha del primer día de tu última menstruación. La semana 1 se cuenta desde ahí.</span>
+        </span>
+      </label>
+      <input type="date" id="fum" class="tracker-fum-input" />
+      <button type="button" id="tracker-today-btn" class="btn-ghost-alt">Empezar desde hoy (aprox 6 semanas)</button>
+    </section>
+
+    <section class="tracker-status" id="tracker-status" hidden>
+      <div class="status-card">
+        <div class="status-main">
+          <span class="status-emoji" id="status-emoji">🌱</span>
+          <div class="status-text">
+            <strong id="status-week">Semana —</strong>
+            <span id="status-days">— días de gestación</span>
+          </div>
+        </div>
+        <div class="status-meta">
+          <div class="meta-item">
+            <span class="meta-label">Fecha probable parto</span>
+            <span class="meta-value" id="status-fpp">—</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Días hasta el parto</span>
+            <span class="meta-value" id="status-days-left">—</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Trimestre</span>
+            <span class="meta-value" id="status-trimester">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+        <div class="progress-labels"><span>Semana 1</span><span>Semana 20</span><span>Semana 40</span></div>
+      </div>
+    </section>
+
+    <section class="weeks-grid" id="weeks-grid" aria-label="Todas las semanas">
+      {WEEKS.map((w) => (
+        <details class="week-card" data-week={w.n}>
+          <summary>
+            <span class="week-num">S{w.n}</span>
+            <span class="week-fase">{w.fase}</span>
+            <span class="week-size">{w.size}</span>
+          </summary>
+          <div class="week-body">
+            <div class="week-section">
+              <h3>👶 Tu bebé</h3>
+              <p>{w.bebe}</p>
+            </div>
+            <div class="week-section">
+              <h3>🤱 Tu cuerpo</h3>
+              <p>{w.mama}</p>
+            </div>
+          </div>
+        </details>
+      ))}
+    </section>
+
+    <aside class="tracker-tools">
+      <h2>Herramientas relacionadas</h2>
+      <div class="tools-grid">
+        <a href="/calculadora-embarazo" class="tool-card">
+          <span class="tool-icon">🤰</span>
+          <span class="tool-label">Calcular semana exacta</span>
+        </a>
+        <a href="/calculadora-fecha-probable-parto-ultima-menstruacion" class="tool-card">
+          <span class="tool-icon">📅</span>
+          <span class="tool-label">Fecha probable parto</span>
+        </a>
+        <a href="/calculadora-aumento-peso-embarazo-imc-semana" class="tool-card">
+          <span class="tool-icon">⚖️</span>
+          <span class="tool-label">Aumento de peso esperado</span>
+        </a>
+        <a href="/calculadora-calorias-embarazo-trimestre" class="tool-card">
+          <span class="tool-icon">🍎</span>
+          <span class="tool-label">Calorías extra por trimestre</span>
+        </a>
+        <a href="/calendario-ecografias-embarazo-semanas" class="tool-card">
+          <span class="tool-icon">📋</span>
+          <span class="tool-label">Calendario de ecografías</span>
+        </a>
+        <a href="/calculadora-yodo-diario-embarazo" class="tool-card">
+          <span class="tool-icon">💊</span>
+          <span class="tool-label">Yodo y vitaminas</span>
+        </a>
+      </div>
+    </aside>
+
+    <section class="tracker-disclaimer">
+      <p><strong>Importante:</strong> Este tracker es informativo y no reemplaza controles médicos. Cada embarazo es único. Consultá regularmente con tu obstetra. Las medidas son promedios — tu bebé puede variar normalmente.</p>
+    </section>
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const fumInput = document.getElementById('fum');
+    const statusEl = document.getElementById('tracker-status');
+    const weekEl = document.getElementById('status-week');
+    const daysEl = document.getElementById('status-days');
+    const fppEl = document.getElementById('status-fpp');
+    const daysLeftEl = document.getElementById('status-days-left');
+    const trimesterEl = document.getElementById('status-trimester');
+    const emojiEl = document.getElementById('status-emoji');
+    const progressBar = document.getElementById('progress-bar');
+    const weeksGrid = document.getElementById('weeks-grid');
+    const todayBtn = document.getElementById('tracker-today-btn');
+
+    function fmtDate(d) {
+      return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function calc() {
+      const fumStr = fumInput.value;
+      if (!fumStr) return;
+      const fum = new Date(fumStr + 'T00:00:00');
+      if (isNaN(fum.getTime())) return;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const diffMs = today - fum;
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) {
+        alert('La fecha no puede ser futura.');
+        return;
+      }
+      const weeks = Math.floor(diffDays / 7);
+      const extraDays = diffDays % 7;
+      const fpp = new Date(fum.getTime() + 280 * 24 * 60 * 60 * 1000);
+      const daysLeft = Math.ceil((fpp - today) / (1000 * 60 * 60 * 24));
+
+      let trimester = '—';
+      let emoji = '🌱';
+      if (weeks < 14) { trimester = '1er trimestre'; emoji = '🌱'; }
+      else if (weeks < 28) { trimester = '2do trimestre'; emoji = '🤰'; }
+      else if (weeks < 42) { trimester = '3er trimestre'; emoji = '👶'; }
+      else { trimester = 'Post término'; emoji = '⏳'; }
+
+      weekEl.textContent = `Semana ${weeks}`;
+      daysEl.textContent = `${diffDays} días de gestación (+${extraDays}d)`;
+      fppEl.textContent = fmtDate(fpp);
+      daysLeftEl.textContent = daysLeft > 0 ? `${daysLeft} días` : daysLeft === 0 ? 'Hoy!' : `Pasó hace ${Math.abs(daysLeft)}d`;
+      trimesterEl.textContent = trimester;
+      emojiEl.textContent = emoji;
+      statusEl.hidden = false;
+
+      const pct = Math.min(100, Math.max(0, (weeks / 40) * 100));
+      progressBar.style.width = pct + '%';
+
+      // Resaltar semana actual + abrir el detalle
+      document.querySelectorAll('.week-card').forEach((card) => {
+        const w = parseInt(card.getAttribute('data-week'), 10);
+        card.classList.toggle('is-current', w === weeks);
+        card.classList.toggle('is-past', w < weeks);
+        card.classList.toggle('is-future', w > weeks);
+        if (w === weeks) {
+          card.open = true;
+          setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+        }
+      });
+
+      // Persist
+      try { localStorage.setItem('hc-tracker-fum', fumStr); } catch (e) {}
+    }
+
+    fumInput.addEventListener('change', calc);
+    todayBtn.addEventListener('click', () => {
+      const today = new Date();
+      // 6 semanas = 42 días atrás
+      const approxFum = new Date(today.getTime() - 42 * 86400000);
+      fumInput.value = approxFum.toISOString().slice(0, 10);
+      calc();
+    });
+
+    // Restore from localStorage
+    try {
+      const saved = localStorage.getItem('hc-tracker-fum');
+      if (saved) {
+        fumInput.value = saved;
+        calc();
+      }
+    } catch (e) {}
+  })();
+</script>
+
+<style>
+  .tracker-page { max-width: 960px; margin: 0 auto; padding: 1rem 1.25rem 5rem; color: var(--text); }
+  .breadcrumbs { font-size: .875rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .breadcrumbs a { color: var(--accent); text-decoration: none; }
+  .breadcrumbs .sep { margin: 0 .5rem; color: var(--text-subtle); }
+
+  .tracker-header { text-align: center; margin-bottom: 2rem; padding: 2rem 1rem; background: linear-gradient(135deg, rgba(236,72,153,.08), rgba(236,72,153,.02)); border-radius: var(--radius-lg); }
+  .hero-emoji { font-size: 3rem; }
+  .tracker-header h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); margin: .5rem 0 1rem; }
+  .tracker-header .lead { color: var(--text-muted); max-width: 640px; margin: 0 auto; }
+
+  .tracker-input-section {
+    display: flex; flex-wrap: wrap; gap: .75rem; align-items: flex-end;
+    padding: 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 1.5rem;
+  }
+  .tracker-label { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: .375rem; font-weight: 600; font-size: .9375rem; }
+  .tracker-label .help-wrap { position: relative; display: inline; }
+  .tracker-label .help { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:var(--bg-muted); color:var(--text-muted); font-size:.7rem; font-weight:700; cursor:help; }
+  .tracker-label .help-tip { position:absolute; bottom:calc(100% + 4px); left:0; width:max-content; max-width:220px; padding:.4rem .6rem; background:var(--text); color:var(--bg); font-size:.7rem; border-radius:4px; opacity:0; pointer-events:none; transition:opacity .15s; }
+  .tracker-label .help:hover + .help-tip, .tracker-label .help:focus + .help-tip { opacity: 1; }
+  .tracker-fum-input {
+    padding: .625rem .875rem; font-size: 1rem; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); background: var(--bg); color: var(--text);
+  }
+  .btn-ghost-alt {
+    padding: .625rem 1rem; background: var(--bg); color: var(--accent);
+    border: 1px solid var(--accent); border-radius: var(--radius-sm); cursor: pointer;
+    font-weight: 600; font-size: .875rem;
+  }
+  .btn-ghost-alt:hover { background: var(--accent); color: #fff; }
+
+  .tracker-status[hidden] { display: none; }
+  .status-card {
+    padding: 1.25rem; background: linear-gradient(135deg, rgba(236,72,153,.08), rgba(236,72,153,.03));
+    border: 1px solid rgba(236,72,153,.25); border-radius: var(--radius); margin-bottom: 1rem;
+  }
+  .status-main { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+  .status-emoji { font-size: 3rem; }
+  .status-text { display: flex; flex-direction: column; }
+  .status-text strong { font-size: 1.5rem; color: var(--text); font-weight: 800; }
+  .status-text span { color: var(--text-muted); font-size: .9375rem; }
+  .status-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .75rem; }
+  .meta-item { display: flex; flex-direction: column; padding: .75rem; background: var(--bg-card); border-radius: var(--radius-sm); }
+  .meta-label { font-size: .75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+  .meta-value { font-size: 1.125rem; font-weight: 700; color: var(--text); margin-top: .125rem; }
+
+  .progress-wrap { margin: 1rem 0 2rem; }
+  .progress-bar {
+    height: 10px; background: linear-gradient(90deg, #ec4899, #f472b6); border-radius: 999px;
+    width: 0%; transition: width .6s ease-out;
+    box-shadow: 0 0 12px rgba(236,72,153,.4);
+  }
+  .progress-wrap::before {
+    content: ''; display: block; height: 10px; background: var(--bg-muted);
+    border-radius: 999px; margin-bottom: -10px;
+  }
+  .progress-labels { display: flex; justify-content: space-between; font-size: .75rem; color: var(--text-muted); margin-top: .5rem; }
+
+  .weeks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: .5rem; margin: 2rem 0; }
+  .week-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); overflow: hidden; transition: all .2s ease-out;
+  }
+  .week-card[open] { border-color: var(--accent-soft); }
+  .week-card.is-current {
+    border-color: #ec4899; border-width: 2px;
+    box-shadow: 0 4px 16px rgba(236,72,153,.2);
+  }
+  .week-card.is-past { opacity: 0.65; }
+  .week-card summary {
+    cursor: pointer; padding: .875rem 1rem;
+    display: flex; align-items: center; gap: .625rem;
+    list-style: none; font-size: .9375rem;
+  }
+  .week-card summary::-webkit-details-marker { display: none; }
+  .week-num { font-weight: 800; color: var(--accent); min-width: 32px; }
+  .week-fase { flex: 1; color: var(--text); font-weight: 600; }
+  .week-size { font-size: .75rem; color: var(--text-muted); font-style: italic; }
+  .week-body { padding: 0 1rem 1rem; display: grid; gap: .75rem; }
+  .week-section h3 { margin: 0 0 .25rem; font-size: .9375rem; color: var(--text); }
+  .week-section p { margin: 0; color: var(--text-muted); line-height: 1.5; font-size: .875rem; }
+
+  .tracker-tools { margin: 3rem 0 2rem; padding: 1.5rem; background: var(--bg-soft); border-radius: var(--radius); }
+  .tracker-tools h2 { margin: 0 0 1rem; font-size: 1.125rem; }
+  .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .625rem; }
+  .tool-card {
+    display: flex; align-items: center; gap: .625rem; padding: .75rem 1rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text); text-decoration: none; transition: all .15s; font-size: .875rem; font-weight: 600;
+  }
+  .tool-card:hover { border-color: #ec4899; color: #ec4899; text-decoration: none; transform: translateY(-1px); }
+  .tool-icon { font-size: 1.25rem; }
+
+  .tracker-disclaimer { margin-top: 2rem; padding: 1rem 1.25rem; background: #fffbeb; border: 1px solid #fde68a; border-left: 3px solid #f59e0b; border-radius: var(--radius-sm); color: #78350f; font-size: .8125rem; }
+  :root[data-theme="dark"] .tracker-disclaimer { background: rgba(180,83,9,.15); border-color: rgba(245,158,11,.4); color: #fde68a; }
+  .tracker-disclaimer p { margin: 0; }
+
+  @media (max-width: 640px) {
+    .tracker-header { padding: 1.5rem 1rem; }
+    .tracker-input-section { flex-direction: column; align-items: stretch; }
+    .status-main { flex-direction: column; text-align: center; }
+  }
+</style>

@@ -4,7 +4,9 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Calculator from '../components/Calculator.astro';
 import RelatedCalcs from '../components/RelatedCalcs.astro';
+import ClusterHub from '../components/ClusterHub.astro';
 import ScrollToTop from '../components/ScrollToTop.astro';
+import { findClusterForSlug } from '../lib/clusters';
 import { md, mdInline } from '../lib/markdown';
 import { CATEGORY_TO_GUIDE, GUIDE_TITLES } from '../lib/category-guide-map';
 
@@ -241,11 +243,15 @@ const useCases: string[] = calc.useCases || [];
 const example: { title?: string; steps?: string[]; result?: string } | null = calc.example || null;
 const keyTakeaway: string = calc.keyTakeaway || '';
 const relatedSlugs: string[] = calc.relatedSlugs || [];
+const downloads: Array<{ label: string; href: string; description?: string }> = calc.downloads || [];
 
 // Guía pilar del tema (para link contextual de SEO)
 // Se puede override con `calc.guideSlug`, si no, se deduce por categoría.
 const pillarGuideSlug: string | null = calc.guideSlug || CATEGORY_TO_GUIDE[calc.category] || null;
 const pillarGuideTitle: string | null = pillarGuideSlug ? GUIDE_TITLES[pillarGuideSlug] : null;
+
+// Cluster al que pertenece esta calc (embarazo, dólar, etc.)
+const cluster = findClusterForSlug(calc.slug);
 
 // Lookup para related links dentro del contenido
 const allCalcsModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
@@ -332,9 +338,28 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
       )}
 
       <div class="calc-main">
+        {cluster && <ClusterHub cluster={cluster} currentSlug={calc.slug} />}
+
         <section id="calculadora">
           <Calculator config={calc} />
         </section>
+
+        {downloads.length > 0 && (
+          <aside class="calc-downloads" aria-label="Descargas">
+            <div class="calc-downloads-head">
+              <span class="calc-downloads-icon" aria-hidden="true">⬇️</span>
+              <strong>Llevate esto contigo</strong>
+            </div>
+            <div class="calc-downloads-list">
+              {downloads.map((d) => (
+                <a href={d.href} download class="calc-download-item">
+                  <span class="calc-download-label">{d.label}</span>
+                  {d.description && <span class="calc-download-desc">{d.description}</span>}
+                </a>
+              ))}
+            </div>
+          </aside>
+        )}
 
         <div class="calc-actions" id="calc-actions">
           <div class="ca-feedback" data-state="ask">
@@ -1319,6 +1344,56 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
   }
 
   /* CTA back */
+  .calc-downloads {
+    margin: 1.5rem 0 2rem;
+    padding: 1rem 1.125rem;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.06), rgba(14, 165, 233, 0.02));
+    border: 1px solid rgba(14, 165, 233, 0.25);
+    border-radius: var(--radius);
+  }
+  :root[data-theme="dark"] .calc-downloads {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(56, 189, 248, 0.03));
+    border-color: rgba(56, 189, 248, 0.28);
+  }
+  .calc-downloads-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+  }
+  .calc-downloads-icon { font-size: 1.125rem; }
+  .calc-downloads-list {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .calc-download-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    text-decoration: none;
+    transition: all 0.15s ease-out;
+  }
+  .calc-download-item:hover {
+    border-color: #0ea5e9;
+    background: rgba(14, 165, 233, 0.05);
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+  .calc-download-label {
+    font-weight: 600;
+    font-size: 0.9375rem;
+  }
+  .calc-download-desc {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
   .guide-link-cta {
     display: flex;
     align-items: center;

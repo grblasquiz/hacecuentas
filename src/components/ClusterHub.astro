@@ -1,0 +1,100 @@
+---
+/**
+ * ClusterHub: barra horizontal con las calcs del cluster al que pertenece
+ * la calc actual. Se renderiza arriba del form para cross-linking agresivo.
+ */
+import type { Cluster } from '../lib/clusters';
+
+interface Props {
+  cluster: Cluster;
+  currentSlug: string;
+}
+
+const { cluster, currentSlug } = Astro.props;
+const items = cluster.items.filter((it) => it.slug !== currentSlug);
+---
+
+<aside class="cluster-hub" aria-label={cluster.title}>
+  <div class="cluster-hub-head">
+    <span class="cluster-hub-title">{cluster.title}</span>
+    <span class="cluster-hub-hint">Herramientas relacionadas ↓</span>
+  </div>
+  <div class="cluster-hub-scroll">
+    {items.map((it) => (
+      <a href={`/${it.slug}`} class="cluster-chip">
+        <span class="cluster-chip-icon" aria-hidden="true">{it.icon}</span>
+        <span class="cluster-chip-label">{it.label}</span>
+      </a>
+    ))}
+  </div>
+</aside>
+
+<style>
+  .cluster-hub {
+    margin: 1rem 0 1.5rem;
+    padding: 0.875rem 1rem;
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.06), rgba(236, 72, 153, 0.02));
+    border: 1px solid rgba(236, 72, 153, 0.2);
+    border-radius: var(--radius);
+  }
+  :root[data-theme="dark"] .cluster-hub {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(236, 72, 153, 0.03));
+    border-color: rgba(236, 72, 153, 0.25);
+  }
+  .cluster-hub-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.625rem;
+  }
+  .cluster-hub-title {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: var(--text);
+  }
+  .cluster-hub-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .cluster-hub-scroll {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cluster-hub-scroll::-webkit-scrollbar { height: 4px; }
+  .cluster-hub-scroll::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.3);
+    border-radius: 2px;
+  }
+  .cluster-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.85rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.15s ease-out;
+    flex-shrink: 0;
+  }
+  .cluster-chip:hover {
+    border-color: #ec4899;
+    color: #ec4899;
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+  .cluster-chip-icon {
+    font-size: 1rem;
+    line-height: 1;
+  }
+</style>

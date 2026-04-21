@@ -140,7 +140,7 @@ const formatFreshnessDate = (iso: string): string => {
 };
 ---
 
-<div class="calc-container" data-slug={config.slug} data-formula={config.formulaId}>
+<div class="calc-container" data-slug={config.slug} data-formula={config.formulaId} data-auto-calculate={(config as any).autoCalculate ? 'true' : 'false'}>
   <div class="calc-card-header">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <rect x="4" y="2" width="16" height="20" rx="2"/>
@@ -2317,6 +2317,18 @@ const formatFreshnessDate = (iso: string): string => {
       const allRequiredFilled = requiredEls.every((el) => el.value.trim() !== '');
       if (filled > 0 && allRequiredFilled) {
         setTimeout(() => form.requestSubmit(), 120);
+      }
+    }
+
+    // Auto-calcular al cargar si el JSON tiene autoCalculate: true y todos los
+    // required tienen default o placeholder válido. Útil para calcs-dashboard
+    // como "Feriados 2026" donde queremos mostrar resultado inmediato.
+    if (container.dataset.autoCalculate === 'true') {
+      const reqs = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[required]'));
+      const allOk = reqs.every((el) => el.value.trim() !== '');
+      if (allOk && urlParams.size === 0) {
+        // Esperar a que la fórmula cargue
+        setTimeout(() => form.requestSubmit(), 150);
       }
     }
 
