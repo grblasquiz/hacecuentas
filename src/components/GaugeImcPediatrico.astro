@@ -1,0 +1,250 @@
+---
+/**
+ * Gauge visual del percentil IMC pediátrico.
+ * Se monta debajo del Calculator de IMC pediátrico. Observa el output primario
+ * (IMC), lee el detalle (que trae Z-score + percentil), y dibuja:
+ *   - Una barra horizontal con los 4 rangos coloreados (Bajo / Normal / Sobrepeso / Obesidad).
+ *   - Un marcador (▼) en la posición del percentil del niño.
+ *   - Z-score y percentil exacto.
+ *   - Línea de referencia P50 (mediana).
+ *
+ * CSS is:global con scope manual — la visualización es client-only y el
+ * scoped CSS de Astro no aplica a DOM inyectado dinámicamente.
+ */
+---
+
+<section id="gauge-imc-pediatrico" class="gauge-imc" aria-label="Gauge visual del percentil IMC" hidden>
+  <div class="gauge-head">
+    <h2 class="gauge-title">Dónde cae en la curva de crecimiento</h2>
+    <p class="gauge-sub" data-gauge-sub>—</p>
+  </div>
+  <div class="gauge-track" aria-hidden="true">
+    <div class="gauge-seg gauge-seg-low" style="flex: 5;" data-label="Bajo peso">
+      <span class="gauge-seg-label">&lt;P5</span>
+    </div>
+    <div class="gauge-seg gauge-seg-normal" style="flex: 80;" data-label="Peso normal">
+      <span class="gauge-seg-label">Peso normal (P5–P85)</span>
+    </div>
+    <div class="gauge-seg gauge-seg-over" style="flex: 10;" data-label="Sobrepeso">
+      <span class="gauge-seg-label">Sobrepeso</span>
+    </div>
+    <div class="gauge-seg gauge-seg-obese" style="flex: 5;" data-label="Obesidad">
+      <span class="gauge-seg-label">Obesidad</span>
+    </div>
+    <div class="gauge-marker" data-gauge-marker style="left: 50%;">
+      <span class="gauge-marker-arrow" aria-hidden="true">▼</span>
+      <span class="gauge-marker-label" data-gauge-marker-label>—</span>
+    </div>
+    <!-- Línea de referencia P50 (mediana) -->
+    <div class="gauge-p50" aria-hidden="true"></div>
+  </div>
+  <div class="gauge-scale" aria-hidden="true">
+    <span style="left: 0%;">P0</span>
+    <span style="left: 5%;">P5</span>
+    <span style="left: 50%;">P50</span>
+    <span style="left: 85%;">P85</span>
+    <span style="left: 95%;">P95</span>
+    <span style="left: 100%;">P100</span>
+  </div>
+  <div class="gauge-zscore" data-gauge-zscore>—</div>
+  <p class="gauge-note">
+    💡 El percentil compara a tu hijo con una población de referencia de la misma edad y sexo (tablas CDC 2000). Un percentil del 75 significa que su IMC es mayor que el del 75% de los niños de su misma edad y sexo — no significa sobrepeso.
+  </p>
+</section>
+
+<script is:inline>
+  (function () {
+    var section = document.getElementById('gauge-imc-pediatrico');
+    if (!section) return;
+    var marker = section.querySelector('[data-gauge-marker]');
+    var markerLabel = section.querySelector('[data-gauge-marker-label]');
+    var sub = section.querySelector('[data-gauge-sub]');
+    var zEl = section.querySelector('[data-gauge-zscore]');
+
+    // Extrae percentil y Z-score del texto del output "detalle".
+    // Formato esperado: "IMC: 17.1 kg/m² | Edad: 8 años | Sexo: Masculino | Z-score: 0.70 | percentil 75.7 | Clasificación: Peso normal (rango alto). ..."
+    function extractFromDetalle(txt) {
+      if (!txt) return null;
+      var pctMatch = txt.match(/percentil\s+([\d.]+)/i);
+      var zMatch = txt.match(/Z-score:\s*(-?[\d.]+)/i);
+      var claseMatch = txt.match(/Clasificación:\s*([^.]+)/i);
+      if (!pctMatch) return null;
+      return {
+        percentil: parseFloat(pctMatch[1]),
+        z: zMatch ? parseFloat(zMatch[1]) : null,
+        clasificacion: claseMatch ? claseMatch[1].trim() : '',
+      };
+    }
+
+    function update() {
+      // Busca el elemento del output "detalle" del Calculator.
+      // Estructura Calculator.astro: <div data-output="detalle">...<div class="result-value">TEXTO</div></div>
+      var detalleEl = document.querySelector('[data-output="detalle"] .result-value');
+      if (!detalleEl) return;
+      var txt = detalleEl.textContent || '';
+      var data = extractFromDetalle(txt);
+      if (!data) {
+        section.hidden = true;
+        return;
+      }
+      section.hidden = false;
+      // Position marker: clamp entre 1 y 99 para que siempre se vea.
+      var pos = Math.max(1, Math.min(99, data.percentil));
+      marker.style.left = pos + '%';
+      markerLabel.textContent = 'P' + data.percentil.toFixed(1);
+      sub.textContent = data.clasificacion || '';
+      if (data.z !== null) {
+        var zSign = data.z >= 0 ? '+' : '';
+        zEl.textContent = 'Z-score: ' + zSign + data.z.toFixed(2) + ' desvíos estándar respecto de la mediana (P50).';
+      } else {
+        zEl.textContent = '';
+      }
+    }
+
+    // Observar cambios en el output con MutationObserver.
+    var observer = new MutationObserver(function () { update(); });
+    // Intentar encontrar el container del resultado — puede aparecer después.
+    function startObserving() {
+      var container = document.querySelector('.calc-result, .calc-container, main');
+      if (!container) {
+        setTimeout(startObserving, 200);
+        return;
+      }
+      observer.observe(container, { childList: true, subtree: true, characterData: true });
+      update();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startObserving);
+    } else {
+      startObserving();
+    }
+  })();
+</script>
+
+<style is:global>
+  .gauge-imc {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-soft) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.04);
+  }
+  .gauge-imc[hidden] { display: none; }
+  .gauge-imc .gauge-head { margin-bottom: 1rem; text-align: center; }
+  .gauge-imc .gauge-title {
+    margin: 0 0 0.25rem;
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .gauge-imc .gauge-sub {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .gauge-imc .gauge-track {
+    position: relative;
+    display: flex;
+    height: 42px;
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 2rem 0 0.75rem;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+  }
+  .gauge-imc .gauge-seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 0.5rem;
+  }
+  .gauge-imc .gauge-seg-low { background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%); }
+  .gauge-imc .gauge-seg-normal { background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%); }
+  .gauge-imc .gauge-seg-over { background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%); }
+  .gauge-imc .gauge-seg-obese { background: linear-gradient(180deg, #f87171 0%, #dc2626 100%); }
+  .gauge-imc .gauge-seg-label {
+    text-shadow: 0 1px 1px rgba(0,0,0,0.15);
+  }
+  .gauge-imc .gauge-marker {
+    position: absolute;
+    top: -1.75rem;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+    transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .gauge-imc .gauge-marker-arrow {
+    font-size: 1.125rem;
+    color: var(--text);
+    line-height: 1;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+  }
+  .gauge-imc .gauge-marker-label {
+    margin-top: -0.125rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text);
+    background: var(--bg-card);
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    white-space: nowrap;
+  }
+  .gauge-imc .gauge-p50 {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    width: 2px;
+    background: rgba(255,255,255,0.55);
+    border-left: 1px dashed rgba(0,0,0,0.2);
+    pointer-events: none;
+  }
+  .gauge-imc .gauge-scale {
+    position: relative;
+    height: 1rem;
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .gauge-imc .gauge-scale span {
+    position: absolute;
+    transform: translateX(-50%);
+  }
+  .gauge-imc .gauge-zscore {
+    margin-top: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    background: var(--bg-soft);
+    border-radius: 10px;
+    font-size: 0.8125rem;
+    color: var(--text);
+    font-weight: 600;
+    text-align: center;
+  }
+  .gauge-imc .gauge-note {
+    margin: 0.75rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    padding: 0.625rem 0.875rem;
+    background: var(--bg-soft);
+    border-radius: 8px;
+  }
+  @media (max-width: 520px) {
+    .gauge-imc { padding: 1rem; }
+    .gauge-imc .gauge-seg-label { display: none; }
+  }
+</style>
