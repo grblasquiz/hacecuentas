@@ -67,7 +67,23 @@
 
 <script is:inline>
 (function () {
-  var STORAGE_KEY = 'hc-consent-v1';
+  // v2: bump de versión para invalidar preferencias viejas. Usuarios que alguna vez
+  // clickearon "Rechazar" con v1 quedaban con analytics_storage=denied para siempre,
+  // pisando el default granted del Consent Mode. Con v2 los re-preguntamos (sólo en
+  // países que requieren consent — ver REQUIRES_CONSENT abajo). Los que no contestan
+  // mantienen el default granted y se trackean normal.
+  var STORAGE_KEY = 'hc-consent-v2';
+  // EEA (27 UE) + EEA extra (IS, LI, NO) + UK + Suiza. Fuera de esta lista el banner
+  // no se muestra y no se dispara ningún consent update, así que prevalece el default
+  // granted del Layout (Argentina/LATAM no requieren opt-in bajo Ley 25.326 y LGPD).
+  // Cuando llegue AdSense: reemplazar este component por Google Funding Choices
+  // (certificado IAB TCF v2.2).
+  var REQUIRES_CONSENT = new Set([
+    'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT',
+    'LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE',
+    'IS','LI','NO','GB','CH'
+  ]);
+
   var banner = document.getElementById('hc-cookie-banner');
   var modal = document.getElementById('hc-cookie-modal');
   var chkAnalytics = document.getElementById('hc-cm-analytics');
@@ -98,7 +114,7 @@
         analytics: !!prefs.analytics,
         ads: !!prefs.ads,
         ts: Date.now(),
-        v: 1,
+        v: 2,
       }));
     } catch (e) {}
     applyConsent(prefs);
@@ -150,17 +166,37 @@
     if (e.key === 'Escape' && !modal.hidden) hideModal();
   });
 
-  // Exponer función para que el footer pueda re-abrir
+  // Exponer función para que el footer pueda re-abrir (desde cualquier país).
+  // Si un usuario de AR quiere ver el banner manualmente, puede abrir desde el footer.
   window.hcOpenCookieSettings = function () { showModal(); };
 
-  // Boot: aplicar preferencia guardada o mostrar banner
-  var saved = readPrefs();
-  if (saved) {
-    applyConsent(saved);
-  } else {
-    // Pequeño delay para que no compita con la primera pintada
-    setTimeout(showBanner, 300);
-  }
+  // Limpiar clave v1 vieja (usuarios legacy con analytics:false quedaban silenciados).
+  try { localStorage.removeItem('hc-consent-v1'); } catch (e) {}
+
+  // Boot: detectar país vía Cloudflare trace (gratis, sin config). Sólo aplicar
+  // consent update / mostrar banner si el país está en REQUIRES_CONSENT. Fuera
+  // de ahí el default del Layout ('granted' para analytics, 'denied' para ads)
+  // prevalece y no perdemos tracking por rechazos accidentales.
+  fetch('/cdn-cgi/trace', { cache: 'no-store' })
+    .then(function (r) { return r.text(); })
+    .then(function (txt) {
+      var m = txt.match(/loc=([A-Z]{2})/);
+      var country = m ? m[1] : null;
+      if (!country || !REQUIRES_CONSENT.has(country)) return; // no-op en AR/LATAM/US/etc
+      var saved = readPrefs();
+      if (saved) {
+        applyConsent(saved);
+      } else {
+        setTimeout(showBanner, 300);
+      }
+    })
+    .catch(function () {
+      // Si /cdn-cgi/trace falla (ej. bloqueo de red): fail-safe mostrando el banner
+      // si no hay preferencia guardada. Mejor preguntar de más que violar GDPR.
+      var saved = readPrefs();
+      if (saved) applyConsent(saved);
+      else setTimeout(showBanner, 300);
+    });
 })();
 </script>
 
