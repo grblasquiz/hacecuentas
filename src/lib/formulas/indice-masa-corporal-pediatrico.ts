@@ -67,8 +67,16 @@ export function indiceMasaCorporalPediatrico(i: Inputs): Outputs {
   };
 
   const tabla = sexo === 'f' ? tablaF : tablaM;
-  const edadRedondeada = Math.min(18, Math.max(2, Math.round(edadAnios)));
-  const percentiles = tabla[edadRedondeada] || tabla[8];
+  // Interpolación lineal entre edades enteras. Sin esto, un niño de 8.49 años
+  // vs 8.50 años usa tablas distintas y puede saltar de "sobrepeso" a "obesidad"
+  // por un cambio de 0.01 años — lo que es un bug de clasificación.
+  const edadClamp = Math.min(18, Math.max(2, edadAnios));
+  const edadLo = Math.floor(edadClamp);
+  const edadHi = Math.min(18, edadLo + 1);
+  const frac = edadClamp - edadLo;
+  const pctLo = tabla[edadLo];
+  const pctHi = tabla[edadHi];
+  const percentiles = pctLo.map((v, idx) => v + frac * (pctHi[idx] - v));
   // [p5, p10, p25, p50, p75, p85, p95]
 
   let percentilAprox: string;
@@ -103,7 +111,7 @@ export function indiceMasaCorporalPediatrico(i: Inputs): Outputs {
   const detalle =
     `IMC: ${imc.toFixed(1)} kg/m² | Edad: ${edadAnios} años | Sexo: ${sexo === 'f' ? 'Femenino' : 'Masculino'} | ` +
     `${percentilAprox} | Clasificación: ${clasificacion}. ` +
-    `Valores de referencia CDC/OMS para ${edadRedondeada} años.`;
+    `Valores de referencia CDC/OMS interpolados para ${edadClamp.toFixed(1)} años.`;
 
   return {
     imc: Number(imc.toFixed(1)),

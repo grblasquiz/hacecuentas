@@ -16,6 +16,7 @@ import { bmr } from '../src/lib/formulas/bmr';
 import { caloriasTDEE } from '../src/lib/formulas/calorias-tdee';
 import { pesoIdeal } from '../src/lib/formulas/peso-ideal';
 import { hidratacionEjercicio } from '../src/lib/formulas/hidratacion-ejercicio';
+import { indiceMasaCorporalPediatrico } from '../src/lib/formulas/indice-masa-corporal-pediatrico';
 
 // --- Fechas (las del bug UTC que cazamos) ---
 import { edadExacta } from '../src/lib/formulas/edad-exacta';
@@ -80,6 +81,64 @@ describe('imc (OMS)', () => {
 
   it('peso 0 → error', () => {
     expect(() => imc({ peso: 0, altura: 170 })).toThrow();
+  });
+});
+
+describe('indiceMasaCorporalPediatrico (CDC/OMS)', () => {
+  // Ejemplo del JSON del calc: niño 8y, 28kg, 128cm → IMC 17.1, P75-85, peso normal alto.
+  it('ejemplo JSON: niño 8y, 28kg, 128cm → IMC 17.1, P75-85', () => {
+    const r = indiceMasaCorporalPediatrico({ peso: 28, altura: 128, edadAnios: 8, sexo: 'm' });
+    expect(r.imc).toBeCloseTo(17.1, 1);
+    expect(r.percentilAprox).toMatch(/75-85/);
+    expect(r.clasificacion).toMatch(/Peso normal/);
+  });
+
+  it('IMC bajo: niño 5y, 14kg, 110cm → bajo peso (<P5)', () => {
+    // IMC = 14 / 1.21 = 11.57, muy por debajo de P5=13.6 → bajo peso.
+    const r = indiceMasaCorporalPediatrico({ peso: 14, altura: 110, edadAnios: 5, sexo: 'm' });
+    expect(r.imc).toBeCloseTo(11.6, 1);
+    expect(r.clasificacion).toBe('Bajo peso');
+  });
+
+  it('IMC obesidad: niña 10y, 55kg, 135cm → obesidad (≥P95)', () => {
+    // IMC = 55 / 1.8225 = 30.2, muy por encima de P95=21.3 (niñas 10y).
+    const r = indiceMasaCorporalPediatrico({ peso: 55, altura: 135, edadAnios: 10, sexo: 'f' });
+    expect(r.imc).toBeCloseTo(30.2, 1);
+    expect(r.clasificacion).toBe('Obesidad');
+  });
+
+  it('interpolación: 8.5y vs 8.4y no debe saltar de clasificación por 0.1 años', () => {
+    // Antes del fix: 8.49 usa tabla 8 (P95=19.5), 8.50 usa tabla 9 (P95=20.4).
+    // Un niño con IMC 20.0 saltaba de "Obesidad" a "Sobrepeso" por 0.01 años.
+    // Con interpolación lineal, a 8.5y P95 ≈ (19.5+20.4)/2 = 19.95 — el borde
+    // se mueve suave, no hay saltos bruscos por cruzar medio año.
+    const r1 = indiceMasaCorporalPediatrico({ peso: 32.77, altura: 128, edadAnios: 8.49, sexo: 'm' });
+    const r2 = indiceMasaCorporalPediatrico({ peso: 32.77, altura: 128, edadAnios: 8.50, sexo: 'm' });
+    expect(r1.imc).toBeCloseTo(20.0, 1);
+    expect(r2.imc).toBeCloseTo(20.0, 1);
+    // Ambas versiones deben dar la MISMA clasificación (no salto abrupto).
+    expect(r1.clasificacion).toBe(r2.clasificacion);
+  });
+
+  it('diferencia por sexo: mismo peso/altura/edad, sexos distintos → percentiles distintos', () => {
+    const m = indiceMasaCorporalPediatrico({ peso: 40, altura: 135, edadAnios: 10, sexo: 'm' });
+    const f = indiceMasaCorporalPediatrico({ peso: 40, altura: 135, edadAnios: 10, sexo: 'f' });
+    // Mismo IMC (21.95) pero diferentes tablas de percentiles.
+    expect(m.imc).toBeCloseTo(f.imc, 1);
+    // En niños P95=21.4, en niñas P95=21.3 a 10y — ambos cerca pero distintos.
+    // El test asegura que la bifurcación por sexo existe, no los valores exactos.
+    expect(m.detalle).toMatch(/Masculino/);
+    expect(f.detalle).toMatch(/Femenino/);
+  });
+
+  it('rechaza edad fuera de rango (2-18 años)', () => {
+    expect(() => indiceMasaCorporalPediatrico({ peso: 10, altura: 80, edadAnios: 1, sexo: 'm' })).toThrow();
+    expect(() => indiceMasaCorporalPediatrico({ peso: 70, altura: 170, edadAnios: 20, sexo: 'm' })).toThrow();
+  });
+
+  it('rechaza peso/altura inválidos', () => {
+    expect(() => indiceMasaCorporalPediatrico({ peso: 0, altura: 120, edadAnios: 8, sexo: 'm' })).toThrow();
+    expect(() => indiceMasaCorporalPediatrico({ peso: 25, altura: 0, edadAnios: 8, sexo: 'm' })).toThrow();
   });
 });
 
