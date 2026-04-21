@@ -78,6 +78,11 @@ export interface Props {
 }
 
 const { config, lang = 'es' } = Astro.props;
+
+// Cargar traducciones de strings de output por formulaId (solo para lang=en).
+// El JSON se genera con scripts/translate-formula-strings.py (Haiku 4.5).
+import formulaStringsI18n from '../lib/formula-strings-i18n.json';
+const outputTranslations = lang === 'en' ? ((formulaStringsI18n as any)[config.formulaId] || {}) : {};
 const t = lang === 'en' ? {
   calculator: 'Calculator', badge: 'Free · Private', calculate: 'Calculate',
   showAdvanced: 'Show advanced', hideAdvanced: 'Hide advanced',
@@ -167,7 +172,7 @@ const formatFreshnessDate = (iso: string): string => {
 };
 ---
 
-<div class="calc-container" data-slug={config.slug} data-formula={config.formulaId} data-auto-calculate={(config as any).autoCalculate ? 'true' : 'false'} data-lang={lang}>
+<div class="calc-container" data-slug={config.slug} data-formula={config.formulaId} data-auto-calculate={(config as any).autoCalculate ? 'true' : 'false'} data-lang={lang} data-translations={JSON.stringify(outputTranslations)}>
   <div class="calc-card-header">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <rect x="4" y="2" width="16" height="20" rx="2"/>
@@ -2059,6 +2064,17 @@ const formatFreshnessDate = (iso: string): string => {
   const NUM_LOCALE = CALC_LANG === 'en' ? 'en-US' : 'es-AR';
   const NUM_CURRENCY = CALC_LANG === 'en' ? 'USD' : 'ARS';
 
+  // Dict de traducciones ES→EN por-fórmula, generado build-time con Haiku (scripts/translate-formula-strings.py).
+  // Lookup exacto: si el output string existe en el dict, se usa su traducción (calidad nativa).
+  // Sino, fallback al regex layer de más abajo.
+  const CALC_TRANSLATIONS: Record<string, string> = (() => {
+    if (CALC_LANG !== 'en') return {};
+    try {
+      const raw = (document.querySelector('.calc-container') as HTMLElement | null)?.dataset?.translations;
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  })();
+
   // i18n layer runtime para outputs de texto (sólo para lang='en').
   // Copia de src/lib/i18n-outputs.ts — duplicamos aquí para no bundlear módulo
   // externo en el script inline (Astro bundlea cada <script> independientemente).
@@ -2169,6 +2185,10 @@ const formatFreshnessDate = (iso: string): string => {
 
   function translateOutputStr(s: string): string {
     if (CALC_LANG !== 'en' || !s) return s;
+    // 1. Lookup exacto en dict por-fórmula (traducciones Haiku-generadas, calidad nativa)
+    if (CALC_TRANSLATIONS[s]) return CALC_TRANSLATIONS[s];
+    // 2. Fallback: regex layer para strings no cubiertos por el dict (outputs dinámicos
+    //    que incluyen números variables no enumerados en el dict)
     let out = s;
     for (const [re, repl] of I18N_REGEX_RULES) out = out.replace(re, repl);
     return out;
