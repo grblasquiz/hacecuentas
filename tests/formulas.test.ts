@@ -17,6 +17,7 @@ import { caloriasTDEE } from '../src/lib/formulas/calorias-tdee';
 import { pesoIdeal } from '../src/lib/formulas/peso-ideal';
 import { hidratacionEjercicio } from '../src/lib/formulas/hidratacion-ejercicio';
 import { indiceMasaCorporalPediatrico } from '../src/lib/formulas/indice-masa-corporal-pediatrico';
+import { alquilerIcl } from '../src/lib/formulas/alquiler-icl';
 
 // --- Fechas (las del bug UTC que cazamos) ---
 import { edadExacta } from '../src/lib/formulas/edad-exacta';
@@ -81,6 +82,48 @@ describe('imc (OMS)', () => {
 
   it('peso 0 → error', () => {
     expect(() => imc({ peso: 0, altura: 170 })).toThrow();
+  });
+});
+
+describe('alquilerIcl (ICL BCRA - Ley 27.551)', () => {
+  it('ejemplo JSON: $300k × 2.5030 → $750.900, +$450.900, +150.3%', () => {
+    const r = alquilerIcl({ valorActual: 300000, coeficienteICL: 2.5030 });
+    expect(r.valorActualizado).toBe(750900);
+    expect(r.incremento).toBe(450900);
+    expect(r.aumentoPorcentual).toBeCloseTo(150.30, 2);
+  });
+
+  it('FAQ: $400k × 1.7283 → $691.320, +72.83%', () => {
+    const r = alquilerIcl({ valorActual: 400000, coeficienteICL: 1.7283 });
+    expect(r.valorActualizado).toBe(691320);
+    expect(r.aumentoPorcentual).toBeCloseTo(72.83, 2);
+  });
+
+  it('coef 1.0 (sin cambio): devuelve mismo valor, aumento 0', () => {
+    const r = alquilerIcl({ valorActual: 500000, coeficienteICL: 1.0 });
+    expect(r.valorActualizado).toBe(500000);
+    expect(r.incremento).toBe(0);
+    expect(r.aumentoPorcentual).toBe(0);
+  });
+
+  it('rechaza valor negativo o 0', () => {
+    expect(() => alquilerIcl({ valorActual: 0, coeficienteICL: 1.5 })).toThrow();
+    expect(() => alquilerIcl({ valorActual: -100, coeficienteICL: 1.5 })).toThrow();
+  });
+
+  it('rechaza coeficiente fuera de rango razonable (guard UX)', () => {
+    // Usuario pone tasa mensual (ej 0.05 = "5%") en vez de ratio.
+    expect(() => alquilerIcl({ valorActual: 300000, coeficienteICL: 0.05 })).toThrow(/fuera de rango/);
+    // Usuario pone el ICL bruto del BCRA (ej 85.234) en vez del ratio.
+    expect(() => alquilerIcl({ valorActual: 300000, coeficienteICL: 85 })).toThrow(/fuera de rango/);
+  });
+
+  it('redondea en pesos (sin centavos) — $301.500 × 1.7934', () => {
+    const r = alquilerIcl({ valorActual: 301500, coeficienteICL: 1.7934 });
+    // 301500 × 1.7934 = 540.710,1 → 540710
+    expect(r.valorActualizado).toBe(540710);
+    expect(Number.isInteger(r.valorActualizado)).toBe(true);
+    expect(Number.isInteger(r.incremento)).toBe(true);
   });
 });
 
