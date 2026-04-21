@@ -33,6 +33,7 @@ export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudic
     fechaHasta = new Date(yH, mH - 1, dH);
   } else {
     fechaHasta = new Date();
+    fechaHasta.setHours(0, 0, 0, 0);
   }
 
   if (!capital || capital <= 0) throw new Error('Ingresá el capital de la deuda');
@@ -41,7 +42,7 @@ export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudic
   if (fechaDesde > fechaHasta) throw new Error('La fecha desde no puede ser posterior a la fecha hasta');
 
   const diffMs = fechaHasta.getTime() - fechaDesde.getTime();
-  const diasTranscurridos = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diasTranscurridos = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
   // Interés simple: Capital × (tasa/365) × días
   const tasaDiaria = tasaAnual / 100 / 365;

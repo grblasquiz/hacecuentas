@@ -8,10 +8,11 @@ export function biorhythm(i: Inputs): Outputs {
   const [yy, mm, dd] = parts;
   const nac = new Date(yy, mm - 1, dd);
   const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
   if (isNaN(nac.getTime())) throw new Error('Ingresá una fecha válida');
   if (nac > hoy) throw new Error('La fecha debe ser anterior a hoy');
 
-  const dias = Math.floor((hoy.getTime() - nac.getTime()) / 86400000);
+  const dias = Math.round((hoy.getTime() - nac.getTime()) / 86400000);
   const fisico = Math.round(Math.sin(2 * Math.PI * dias / 23) * 100);
   const emocional = Math.round(Math.sin(2 * Math.PI * dias / 28) * 100);
   const intelectual = Math.round(Math.sin(2 * Math.PI * dias / 33) * 100);

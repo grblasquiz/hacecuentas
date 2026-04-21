@@ -34,6 +34,7 @@ export function antiguedadLaboral(inputs: AntiguedadLaboralInputs): AntiguedadLa
     fechaCalculo = new Date(yC, mC - 1, dC);
   } else {
     fechaCalculo = new Date();
+    fechaCalculo.setHours(0, 0, 0, 0);
   }
 
   if (isNaN(fechaIngreso.getTime())) {
@@ -45,7 +46,7 @@ export function antiguedadLaboral(inputs: AntiguedadLaboralInputs): AntiguedadLa
 
   // Diferencia en días totales
   const diffMs = fechaCalculo.getTime() - fechaIngreso.getTime();
-  const totalDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const totalDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
   // Descomponer en años, meses, días
   let anios = fechaCalculo.getFullYear() - fechaIngreso.getFullYear();

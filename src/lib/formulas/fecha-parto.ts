@@ -22,7 +22,8 @@ export function fechaParto(i: Inputs): Outputs {
   fpp.setDate(fpp.getDate() + 280);
 
   const hoy = new Date();
-  const diasTranscurridos = Math.floor((hoy.getTime() - fecha.getTime()) / (1000 * 60 * 60 * 24));
+  hoy.setHours(0, 0, 0, 0);
+  const diasTranscurridos = Math.round((hoy.getTime() - fecha.getTime()) / (1000 * 60 * 60 * 24));
   const semanas = Math.floor(diasTranscurridos / 7);
   const dias = diasTranscurridos % 7;
 

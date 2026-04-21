@@ -27,6 +27,7 @@ export function diasVacacionesLey(inputs: DiasVacacionesLeyInputs): DiasVacacion
   }
 
   const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
   // La antigüedad para vacaciones se calcula al 31/12 del año en curso
   const finAnio = new Date(hoy.getFullYear(), 11, 31);
   const diffMs = finAnio.getTime() - fechaIngreso.getTime();
@@ -60,7 +61,7 @@ export function diasVacacionesLey(inputs: DiasVacacionesLeyInputs): DiasVacacion
   } else {
     // Proporcional: 1 día por cada 20 días hábiles trabajados
     // Estimamos días hábiles trabajados desde ingreso
-    const diffDias = Math.floor((hoy.getTime() - fechaIngreso.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDias = Math.round((hoy.getTime() - fechaIngreso.getTime()) / (1000 * 60 * 60 * 24));
     const diasHabiles = Math.floor(diffDias * 5 / 7); // aprox
     diasVacaciones = Math.max(1, Math.floor(diasHabiles / 20));
     tipo = 'Vacaciones proporcionales (1 día cada 20 días hábiles)';

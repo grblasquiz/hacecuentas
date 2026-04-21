@@ -8,13 +8,14 @@ export function aniversarioPareja(i: Inputs): Outputs {
   const [yy, mm, dd] = parts;
   const inicio = new Date(yy, mm - 1, dd);
   const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
   if (isNaN(inicio.getTime())) throw new Error('Ingresá una fecha válida');
   if (inicio > hoy) throw new Error('La fecha debe ser anterior a hoy');
 
   const diffMs = hoy.getTime() - inicio.getTime();
-  const totalDias = Math.floor(diffMs / 86400000);
+  const totalDias = Math.round(diffMs / 86400000);
   const totalSemanas = Math.floor(totalDias / 7);
-  const totalHoras = Math.floor(diffMs / 3600000);
+  const totalHoras = totalDias * 24;
   const finesDeSemana = totalSemanas;
 
   // Calc years, months, days

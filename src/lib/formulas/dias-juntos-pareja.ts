@@ -8,13 +8,14 @@ export function diasJuntosPareja(i: Inputs): Outputs {
   const [yy, mm, dd] = parts;
   const inicio = new Date(yy, mm - 1, dd);
   const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
   if (isNaN(inicio.getTime())) throw new Error('Ingresá una fecha válida');
   if (inicio > hoy) throw new Error('La fecha debe ser anterior a hoy');
 
   const diffMs = hoy.getTime() - inicio.getTime();
-  const dias = Math.floor(diffMs / 86400000);
-  const horas = Math.floor(diffMs / 3600000);
-  const minutos = Math.floor(diffMs / 60000);
+  const dias = Math.round(diffMs / 86400000);
+  const horas = dias * 24;
+  const minutos = dias * 24 * 60;
 
   const hitosArr = [100, 200, 365, 500, 730, 1000, 1500, 2000, 3000, 5000, 10000];
   const hitosTexto = hitosArr.map(h => {

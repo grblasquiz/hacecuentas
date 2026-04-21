@@ -26,7 +26,8 @@ export function gestacionPerra(inputs: GestacionPerraInputs): GestacionPerraOutp
   rangoMax.setDate(rangoMax.getDate() + 68);
 
   const hoy = new Date();
-  const diasTranscurridos = Math.floor((hoy.getTime() - fechaMonta.getTime()) / (1000 * 60 * 60 * 24));
+  hoy.setHours(0, 0, 0, 0);
+  const diasTranscurridos = Math.round((hoy.getTime() - fechaMonta.getTime()) / (1000 * 60 * 60 * 24));
   const semana = Math.floor(diasTranscurridos / 7) + 1;
   const diasRestantes = DIAS_GESTACION - diasTranscurridos;
 

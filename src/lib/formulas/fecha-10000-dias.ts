@@ -6,8 +6,9 @@ export function fecha10000Dias(i: Inputs): Outputs {
   const [yy, mm, dd] = parts;
   const nac = new Date(yy, mm - 1, dd);
   const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
   if (isNaN(nac.getTime())) throw new Error('Ingresá una fecha válida');
-  const diasVividos = Math.floor((hoy.getTime() - nac.getTime()) / 86400000);
+  const diasVividos = Math.round((hoy.getTime() - nac.getTime()) / 86400000);
   function fechaHito(d: number): string {
     const f = new Date(nac.getTime() + d * 86400000);
     const pasado = f <= hoy;

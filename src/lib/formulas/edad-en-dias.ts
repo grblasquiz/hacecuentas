@@ -6,9 +6,10 @@ export function edadEnDias(i: Inputs): Outputs {
   const [yy, mm, dd] = parts;
   const nac = new Date(yy, mm - 1, dd);
   const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
   if (isNaN(nac.getTime())) throw new Error('Ingresá una fecha válida');
   if (nac > hoy) throw new Error('La fecha debe ser anterior a hoy');
-  const dias = Math.floor((hoy.getTime() - nac.getTime()) / 86400000);
+  const dias = Math.round((hoy.getTime() - nac.getTime()) / 86400000);
   const hitosArr = [1000,5000,10000,15000,20000,25000,30000];
   const hitos = hitosArr.map(h => {
     if (dias >= h) {

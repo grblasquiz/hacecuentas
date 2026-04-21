@@ -17,8 +17,10 @@ export function diaNacimientoSemana(i: Inputs): Outputs {
   const d = new Date(yy, mm - 1, dd);
   if (isNaN(d.getTime())) throw new Error('Ingresá una fecha válida');
   const dia = DIAS[d.getDay()];
-  let proxAnio = new Date().getFullYear();
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  let proxAnio = hoy.getFullYear();
   let prox = new Date(proxAnio, d.getMonth(), d.getDate());
-  if (prox <= new Date()) { proxAnio++; prox = new Date(proxAnio, d.getMonth(), d.getDate()); }
+  if (prox <= hoy) { proxAnio++; prox = new Date(proxAnio, d.getMonth(), d.getDate()); }
   return { diaSemana: dia, significado: SIGS[dia] || '', proximoCumpleDia: `${DIAS[prox.getDay()]} ${prox.toLocaleDateString('es-AR')}` };
 }
