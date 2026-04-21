@@ -209,7 +209,8 @@ const globalSchema = {
          Default 'granted' para analytics (Argentina/LATAM no requiere opt-in bajo Ley 25.326).
          ad_storage denied por default por compliance AdSense/UE; user lo activa via banner.
          url_passthrough + ads_data_redaction permiten pings cookieless cuando el user rechaza.
-         wait_for_update aumentado a 2000ms para no perder sesiones con banners lentos. -->
+         wait_for_update bajado a 500ms — con analytics_storage granted default no
+         necesitamos esperar tanto; 2000ms hacía perder sesiones cortas. -->
     <script is:inline>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -220,7 +221,7 @@ const globalSchema = {
         ad_storage: 'denied',
         ad_user_data: 'denied',
         ad_personalization: 'denied',
-        wait_for_update: 2000
+        wait_for_update: 500
       });
       gtag('set', 'url_passthrough', true);
       gtag('set', 'ads_data_redaction', true);
@@ -249,9 +250,14 @@ const globalSchema = {
         gtag('event', 'conversion_event_default', {});
       }
     </script>
-    <!-- gtag.js scripts movidos al final del <body> — ver antes de </body>.
-         Esto asegura que Ads/GA disparen pageview en TODAS las visitas (incluyendo
-         bounces rápidos <3s) sin bloquear render (async + al final del body). -->
+    <!-- gtag.js async en <head>. NIVEL 1: el fetch tiene que arrancar ASAP.
+         Antes estaba al final del <body> para "no bloquear render", pero async
+         no bloquea render desde ninguna posición — y al final del body el request
+         recién salía después de parsear todo el DOM, perdiendo pageviews en sesiones
+         cortas (bounce <2s, clicks rápidos). Con async en head la red arranca
+         inmediato y el inline de arriba ya dejó el pageview encolado en dataLayer. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18096606872"></script>
   </head>
   <body>
     <!-- Print-only header (hidden on screen, visible when printing) -->
@@ -693,12 +699,5 @@ const globalSchema = {
         }
       }
     </style>
-
-    <!-- gtag.js async en main thread.
-         NIVEL 1: analytics SIEMPRE tiene que andar. Partytown falla en inits raros y
-         rompe el tracking sin warning. Volvimos a carga directa async (battle-tested).
-         Costo: ~100ms TBT. Beneficio: GA4/Ads nunca pierden sesión por falla de worker. -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18096606872"></script>
   </body>
 </html>
