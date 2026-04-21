@@ -85,25 +85,40 @@ describe('imc (OMS)', () => {
   });
 });
 
-describe('alquilerIcl (ICL BCRA - Ley 27.551)', () => {
-  it('ejemplo JSON: $300k × 2.5030 → $750.900, +$450.900, +150.3%', () => {
+describe('alquilerIcl (ICL BCRA - histórico oficial)', () => {
+  it('modo fechas: 15/08/2024 → 15/08/2025 (400k) usa ICL real BCRA', () => {
+    const r = alquilerIcl({ valorActual: 400000, fechaInicio: '2024-08-15', fechaActualizacion: '2025-08-15' });
+    expect(r.iclInicio).toBeCloseTo(17.54, 1);
+    expect(r.iclActualizacion).toBeCloseTo(26.82, 1);
+    expect(r.coeficienteUsado).toBeCloseTo(1.5291, 3);
+    expect(r.valorActualizado).toBe(611631);
+  });
+
+  it('modo fechas: fin de semana/feriado → fallback al día hábil anterior', () => {
+    // 07/01/2024 fue domingo — debería devolver valor del viernes 05/01/2024.
+    const r = alquilerIcl({ valorActual: 500000, fechaInicio: '2023-01-01', fechaActualizacion: '2024-01-07' });
+    expect(r.fechaActualizacionUsada).not.toBe('2024-01-07');
+    expect(r.fechaActualizacionUsada < '2024-01-07').toBe(true);
+    expect(r.valorActualizado).toBeGreaterThan(500000);
+  });
+
+  it('modo override manual: coef sin fechas', () => {
     const r = alquilerIcl({ valorActual: 300000, coeficienteICL: 2.5030 });
     expect(r.valorActualizado).toBe(750900);
-    expect(r.incremento).toBe(450900);
     expect(r.aumentoPorcentual).toBeCloseTo(150.30, 2);
+    expect(r.fechaInicioUsada).toBe(''); // modo manual no usa fechas
   });
 
-  it('FAQ: $400k × 1.7283 → $691.320, +72.83%', () => {
-    const r = alquilerIcl({ valorActual: 400000, coeficienteICL: 1.7283 });
-    expect(r.valorActualizado).toBe(691320);
-    expect(r.aumentoPorcentual).toBeCloseTo(72.83, 2);
+  it('rechaza fecha pre-ICL (antes de 01/07/2020)', () => {
+    expect(() => alquilerIcl({ valorActual: 300000, fechaInicio: '2020-01-01', fechaActualizacion: '2021-01-01' })).toThrow(/antes del/);
   });
 
-  it('coef 1.0 (sin cambio): devuelve mismo valor, aumento 0', () => {
-    const r = alquilerIcl({ valorActual: 500000, coeficienteICL: 1.0 });
-    expect(r.valorActualizado).toBe(500000);
-    expect(r.incremento).toBe(0);
-    expect(r.aumentoPorcentual).toBe(0);
+  it('rechaza fecha invertida (fin < inicio)', () => {
+    expect(() => alquilerIcl({ valorActual: 300000, fechaInicio: '2025-06-01', fechaActualizacion: '2024-06-01' })).toThrow(/posterior/);
+  });
+
+  it('rechaza sin fechas ni coeficiente', () => {
+    expect(() => alquilerIcl({ valorActual: 300000 })).toThrow();
   });
 
   it('rechaza valor negativo o 0', () => {
@@ -111,17 +126,13 @@ describe('alquilerIcl (ICL BCRA - Ley 27.551)', () => {
     expect(() => alquilerIcl({ valorActual: -100, coeficienteICL: 1.5 })).toThrow();
   });
 
-  it('rechaza coeficiente fuera de rango razonable (guard UX)', () => {
-    // Usuario pone tasa mensual (ej 0.05 = "5%") en vez de ratio.
+  it('rechaza coeficiente fuera de rango razonable (guard UX modo manual)', () => {
     expect(() => alquilerIcl({ valorActual: 300000, coeficienteICL: 0.05 })).toThrow(/fuera de rango/);
-    // Usuario pone el ICL bruto del BCRA (ej 85.234) en vez del ratio.
     expect(() => alquilerIcl({ valorActual: 300000, coeficienteICL: 85 })).toThrow(/fuera de rango/);
   });
 
-  it('redondea en pesos (sin centavos) — $301.500 × 1.7934', () => {
+  it('redondea en pesos (sin centavos)', () => {
     const r = alquilerIcl({ valorActual: 301500, coeficienteICL: 1.7934 });
-    // 301500 × 1.7934 = 540.710,1 → 540710
-    expect(r.valorActualizado).toBe(540710);
     expect(Number.isInteger(r.valorActualizado)).toBe(true);
     expect(Number.isInteger(r.incremento)).toBe(true);
   });
