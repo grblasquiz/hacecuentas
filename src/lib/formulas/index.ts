@@ -1936,18 +1936,7 @@ import { conversionMillaKilometroIdaVuelta } from './conversion-milla-kilometro-
 import { conversionGalonLitroUsUk } from './conversion-galon-litro-us-uk';
 import { conversionOnzaGramoCocina } from './conversion-onza-gramo-cocina';
 import { conversionFahrenheitCelsiusClima } from './conversion-fahrenheit-celsius-clima';
-import { conversionTazaGramosHarinaAzucar } from './conversion-taza-gramos-harina-azucar';
-import { conversionCucharadaMlGramosRecetas } from './conversion-cucharada-ml-gramos-recetas';
-import { conversionLitroKgAguaLeche } from './conversion-litro-kg-agua-leche';
 import { conversionPulgadaCentimetroScreen } from './conversion-pulgada-centimetro-screen';
-import { conversionMetroCuadradoHectareaAcre } from './conversion-metro-cuadrado-hectarea-acre';
-import { conversionTiempoSegundosMinutosHoras } from './conversion-tiempo-segundos-minutos-horas';
-import { conversionKwhWattsUsoElectrodoméstico } from './conversion-kwh-watts-uso-electrodoméstico';
-import { conversionMbpsMbDescargaArchivo } from './conversion-mbps-mb-descarga-archivo';
-import { conversionNudosMphKmhViento } from './conversion-nudos-mph-kmh-viento';
-import { conversionBarPsiKpaPresionNeumaticos } from './conversion-bar-psi-kpa-presion-neumaticos';
-import { conversionCandelasLumensLuminosidadLed } from './conversion-candelas-lumens-luminosidad-led';
-import { conversionDecibelesRuidoEjemplos } from './conversion-decibeles-ruido-ejemplos';
 import { conversionBtuKcalAireAcondicionado } from './conversion-btu-kcal-aire-acondicionado';
 import { conversionPpmMgLQuimicaAgua } from './conversion-ppm-mg-l-quimica-agua';
 import { conversionRadianesGradosAngulo } from './conversion-radianes-grados-angulo';
@@ -2391,6 +2380,106 @@ import { autoUsadoValorDepreciacionAnosAntiguedad } from './auto-usado-valor-dep
 import { leasingVsCreditoAutoComparativaCompleta } from './leasing-vs-credito-auto-comparativa-completa';
 import { propiedadTasacionM2BarrioCabaPromedio } from './propiedad-tasacion-m2-barrio-caba-promedio';
 import { zapatillaUsaEuropaConversion } from './zapatilla-usa-europa-conversion';
+import { conversorPiesAMetros } from './conversor-pies-a-metros';
+import { conversorMetrosAPies } from './conversor-metros-a-pies';
+import { conversorPulgadasACentimetros } from './conversor-pulgadas-a-centimetros';
+import { conversorCentimetrosAPulgadas } from './conversor-centimetros-a-pulgadas';
+import { conversorMillasAKilometros } from './conversor-millas-a-kilometros';
+import { conversorKilometrosAMillas } from './conversor-kilometros-a-millas';
+import { conversorYardasAMetros } from './conversor-yardas-a-metros';
+import { conversorMetrosAYardas } from './conversor-metros-a-yardas';
+import { conversorMillasNauticasAKilometros } from './conversor-millas-nauticas-a-kilometros';
+import { conversorAnosLuzAKilometros } from './conversor-anos-luz-a-kilometros';
+import { conversorMilimetrosAPulgadas } from './conversor-milimetros-a-pulgadas';
+import { conversorPulgadasAMilimetros } from './conversor-pulgadas-a-milimetros';
+import { conversorMicrometrosAMilimetros } from './conversor-micrometros-a-milimetros';
+import { conversorLeguasAKilometros } from './conversor-leguas-a-kilometros';
+import { conversorPiesAPulgadas } from './conversor-pies-a-pulgadas';
+import { conversorVarasAMetros } from './conversor-varas-a-metros';
+import { conversorCuadrasAMetros } from './conversor-cuadras-a-metros';
+import { conversorBrazasAMetros } from './conversor-brazas-a-metros';
+import { conversorLibrasAKilogramos } from './conversor-libras-a-kilogramos';
+import { conversorKilogramosALibras } from './conversor-kilogramos-a-libras';
+import { conversorOnzasAGramos } from './conversor-onzas-a-gramos';
+import { conversorGramosAOnzas } from './conversor-gramos-a-onzas';
+import { conversorToneladasAKilogramos } from './conversor-toneladas-a-kilogramos';
+import { conversorStonesAKilogramos } from './conversor-stones-a-kilogramos';
+import { conversorQuilatesAGramos } from './conversor-quilates-a-gramos';
+import { conversorMiligramosAGramos } from './conversor-miligramos-a-gramos';
+import { conversorLibrasAOnzas } from './conversor-libras-a-onzas';
+import { conversorToneladasCortasAToneladasMetricas } from './conversor-toneladas-cortas-a-toneladas-metricas';
+import { conversorArrobasAKilogramos } from './conversor-arrobas-a-kilogramos';
+import { conversorKilogramosAGramos } from './conversor-kilogramos-a-gramos';
+import { conversorCelsiusAFahrenheit } from './conversor-celsius-a-fahrenheit';
+import { conversorFahrenheitACelsius } from './conversor-fahrenheit-a-celsius';
+import { conversorCelsiusAKelvin } from './conversor-celsius-a-kelvin';
+import { conversorKelvinACelsius } from './conversor-kelvin-a-celsius';
+import { conversorFahrenheitAKelvin } from './conversor-fahrenheit-a-kelvin';
+import { conversorGalonesALitros } from './conversor-galones-a-litros';
+import { conversorLitrosAGalones } from './conversor-litros-a-galones';
+import { conversorOnzasLiquidasAMililitros } from './conversor-onzas-liquidas-a-mililitros';
+import { conversorTazasAMililitros } from './conversor-tazas-a-mililitros';
+import { conversorCucharadasAMililitros } from './conversor-cucharadas-a-mililitros';
+import { conversorCucharaditasAMililitros } from './conversor-cucharaditas-a-mililitros';
+import { conversorPintasALitros } from './conversor-pintas-a-litros';
+import { conversorCuartosALitros } from './conversor-cuartos-a-litros';
+import { conversorBarrilesALitros } from './conversor-barriles-a-litros';
+import { conversorMetrosCubicosALitros } from './conversor-metros-cubicos-a-litros';
+import { conversorPiesCubicosAMetrosCubicos } from './conversor-pies-cubicos-a-metros-cubicos';
+import { conversorHectareasAMetrosCuadrados } from './conversor-hectareas-a-metros-cuadrados';
+import { conversorAcresAHectareas } from './conversor-acres-a-hectareas';
+import { conversorMetrosCuadradosAPiesCuadrados } from './conversor-metros-cuadrados-a-pies-cuadrados';
+import { conversorPiesCuadradosAMetrosCuadrados } from './conversor-pies-cuadrados-a-metros-cuadrados';
+import { conversorKilometrosCuadradosAMillasCuadradas } from './conversor-kilometros-cuadrados-a-millas-cuadradas';
+import { conversorManzanasAHectareas } from './conversor-manzanas-a-hectareas';
+import { conversorPulgadasCuadradasACentimetrosCuadrados } from './conversor-pulgadas-cuadradas-a-centimetros-cuadrados';
+import { conversorAcresAMetrosCuadrados } from './conversor-acres-a-metros-cuadrados';
+import { conversorKmhAMph } from './conversor-kmh-a-mph';
+import { conversorMphAKmh } from './conversor-mph-a-kmh';
+import { conversorNudosAKmh } from './conversor-nudos-a-kmh';
+import { conversorMsAKmh } from './conversor-ms-a-kmh';
+import { conversorKmhAMs } from './conversor-kmh-a-ms';
+import { conversorMachAKmh } from './conversor-mach-a-kmh';
+import { conversorMinutosASegundos } from './conversor-minutos-a-segundos';
+import { conversorHorasAMinutos } from './conversor-horas-a-minutos';
+import { conversorDiasAHoras } from './conversor-dias-a-horas';
+import { conversorSemanasADias } from './conversor-semanas-a-dias';
+import { conversorAnosADias } from './conversor-anos-a-dias';
+import { conversorMesesASemanas } from './conversor-meses-a-semanas';
+import { conversorMilisegundosASegundos } from './conversor-milisegundos-a-segundos';
+import { conversorMbAGb } from './conversor-mb-a-gb';
+import { conversorGbATb } from './conversor-gb-a-tb';
+import { conversorKbAMb } from './conversor-kb-a-mb';
+import { conversorBitsABytes } from './conversor-bits-a-bytes';
+import { conversorMbpsAMbS } from './conversor-mbps-a-mb-s';
+import { conversorGbAMb } from './conversor-gb-a-mb';
+import { conversorBytesAKilobytes } from './conversor-bytes-a-kilobytes';
+import { conversorTbAGb } from './conversor-tb-a-gb';
+import { conversorPixelesAPulgadasDpi } from './conversor-pixeles-a-pulgadas-dpi';
+import { conversorCaloriasAJoules } from './conversor-calorias-a-joules';
+import { conversorJoulesACalorias } from './conversor-joules-a-calorias';
+import { conversorKwhAJoules } from './conversor-kwh-a-joules';
+import { conversorHpAKw } from './conversor-hp-a-kw';
+import { conversorKwAHp } from './conversor-kw-a-hp';
+import { conversorBtuAJoules } from './conversor-btu-a-joules';
+import { conversorKwhACalorias } from './conversor-kwh-a-calorias';
+import { conversorPsiABar } from './conversor-psi-a-bar';
+import { conversorBarAPsi } from './conversor-bar-a-psi';
+import { conversorAtmosferasAPascales } from './conversor-atmosferas-a-pascales';
+import { conversorMmhgAKpa } from './conversor-mmhg-a-kpa';
+import { conversorGradosARadianes } from './conversor-grados-a-radianes';
+import { conversorRadianesAGrados } from './conversor-radianes-a-grados';
+import { conversorGradosAGradianes } from './conversor-grados-a-gradianes';
+import { conversorLibrasAGramos } from './conversor-libras-a-gramos';
+import { conversorFahrenheitACelsiusHorno } from './conversor-fahrenheit-a-celsius-horno';
+import { conversorGramosATazasCocina } from './conversor-gramos-a-tazas-cocina';
+import { conversorLadrillosPorMetroCuadrado } from './conversor-ladrillos-por-metro-cuadrado';
+import { conversorBolsasCementoPorMetroCubico } from './conversor-bolsas-cemento-por-metro-cubico';
+import { conversorLitrosPinturaPorMetroCuadrado } from './conversor-litros-pintura-por-metro-cuadrado';
+import { conversorPieTablaAMetroCubico } from './conversor-pie-tabla-a-metro-cubico';
+import { conversorMetrosLinealesAMetrosCuadrados } from './conversor-metros-lineales-a-metros-cuadrados';
+import { conversorTallesRopaUsArEu } from './conversor-talles-ropa-us-ar-eu';
+import { conversorTallesCalzadoUsArEu } from './conversor-talles-calzado-us-ar-eu';
 export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-peso-maximo': rmPesoMaximo,
   'a1c-glucosa': a1cGlucosa,
@@ -4326,18 +4415,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'conversion-galon-litro-us-uk': conversionGalonLitroUsUk,
   'conversion-onza-gramo-cocina': conversionOnzaGramoCocina,
   'conversion-fahrenheit-celsius-clima': conversionFahrenheitCelsiusClima,
-  'conversion-taza-gramos-harina-azucar': conversionTazaGramosHarinaAzucar,
-  'conversion-cucharada-ml-gramos-recetas': conversionCucharadaMlGramosRecetas,
-  'conversion-litro-kg-agua-leche': conversionLitroKgAguaLeche,
   'conversion-pulgada-centimetro-screen': conversionPulgadaCentimetroScreen,
-  'conversion-metro-cuadrado-hectarea-acre': conversionMetroCuadradoHectareaAcre,
-  'conversion-tiempo-segundos-minutos-horas': conversionTiempoSegundosMinutosHoras,
-  'conversion-kwh-watts-uso-electrodoméstico': conversionKwhWattsUsoElectrodoméstico,
-  'conversion-mbps-mb-descarga-archivo': conversionMbpsMbDescargaArchivo,
-  'conversion-nudos-mph-kmh-viento': conversionNudosMphKmhViento,
-  'conversion-bar-psi-kpa-presion-neumaticos': conversionBarPsiKpaPresionNeumaticos,
-  'conversion-candelas-lumens-luminosidad-led': conversionCandelasLumensLuminosidadLed,
-  'conversion-decibeles-ruido-ejemplos': conversionDecibelesRuidoEjemplos,
   'conversion-btu-kcal-aire-acondicionado': conversionBtuKcalAireAcondicionado,
   'conversion-ppm-mg-l-quimica-agua': conversionPpmMgLQuimicaAgua,
   'conversion-radianes-grados-angulo': conversionRadianesGradosAngulo,
