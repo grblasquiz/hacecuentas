@@ -240,6 +240,59 @@ const schema = {
     </div>
   </section>
 
+  <section class="categorias" aria-labelledby="categorias-heading">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow eyebrow-inline">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          Explorá por categoría
+        </span>
+        <h2 id="categorias-heading">Todas las categorías</h2>
+      </div>
+      <a href="/buscar" class="see-all">Ver todas →</a>
+    </div>
+    <div class="cat-grid">
+      {categoryOrder.filter(cat => byCategory[cat]?.length).map((cat) => {
+        const meta = categoryMeta[cat];
+        const top = getTopCalcs(cat);
+        const count = byCategory[cat].length;
+        return (
+          <div class="cat-card" style={`--cat-color: ${meta.color}`}>
+            <a href={`/categoria/${cat}`} class="cat-head">
+              <div class="cat-icon" aria-hidden="true">{meta.icon}</div>
+              <div class="cat-titles">
+                <div class="cat-name">{meta.label}</div>
+                <div class="cat-count">{count} calculadoras</div>
+              </div>
+              <svg class="cat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
+            <p class="cat-desc">{meta.desc}</p>
+            <ul class="cat-list">
+              {top.map((c: any) => (
+                <li>
+                  <a href={`/${c.slug}`} class="cat-item">
+                    <span class="cat-item-icon">{c.icon}</span>
+                    <span class="cat-item-name">
+                      {c.h1}
+                      {c.audience === 'AR' && (
+                        <span class="ar-badge" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>
+                      )}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <a href={`/categoria/${cat}`} class="cat-see-all">Ver las {count} →</a>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+
   <section class="destacados" aria-labelledby="destacados-heading">
     <div class="section-header">
       <div>
@@ -349,58 +402,6 @@ const schema = {
     </div>
   </section>
 
-  <section class="categorias" aria-labelledby="categorias-heading">
-    <div class="section-header">
-      <div>
-        <span class="eyebrow eyebrow-inline">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-          </svg>
-          Explorá por categoría
-        </span>
-        <h2 id="categorias-heading">Todas las categorías</h2>
-      </div>
-      <a href="/buscar" class="see-all">Ver todas →</a>
-    </div>
-    <div class="cat-grid">
-      {categoryOrder.filter(cat => byCategory[cat]?.length).map((cat) => {
-        const meta = categoryMeta[cat];
-        const top = getTopCalcs(cat);
-        const count = byCategory[cat].length;
-        return (
-          <div class="cat-card" style={`--cat-color: ${meta.color}`}>
-            <a href={`/categoria/${cat}`} class="cat-head">
-              <div class="cat-icon" aria-hidden="true">{meta.icon}</div>
-              <div class="cat-titles">
-                <div class="cat-name">{meta.label}</div>
-                <div class="cat-count">{count} calculadoras</div>
-              </div>
-              <svg class="cat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-              </svg>
-            </a>
-            <p class="cat-desc">{meta.desc}</p>
-            <ul class="cat-list">
-              {top.map((c: any) => (
-                <li>
-                  <a href={`/${c.slug}`} class="cat-item">
-                    <span class="cat-item-icon">{c.icon}</span>
-                    <span class="cat-item-name">
-                      {c.h1}
-                      {c.audience === 'AR' && (
-                        <span class="ar-badge" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>
-                      )}
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <a href={`/categoria/${cat}`} class="cat-see-all">Ver las {count} →</a>
-          </div>
-        );
-      })}
-    </div>
-  </section>
 
   <section class="stats">
     <div class="stat">
