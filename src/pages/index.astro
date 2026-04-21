@@ -27,7 +27,7 @@ const categoryMeta: Record<string, { label: string; desc: string; color: string;
   construccion: { label: 'Construcción', desc: 'Ladrillos, cemento, pintura, pisos cerámicos.', color: '#b45309', icon: '🧱' },
   cocina: { label: 'Cocina', desc: 'Tazas a gramos, ajustar receta, tiempo de cocción.', color: '#ea580c', icon: '🍳' },
   mascotas: { label: 'Mascotas', desc: 'Edad perro/gato, alimentación, dosis por peso.', color: '#db2777', icon: '🐕' },
-  matematica: { label: 'Matemática', desc: 'Promedio, Pitágoras, cuadrática, factorial, MCD.', color: '#0d9488', icon: '🧮' },
+  matematica: { label: 'Matemática', desc: 'Conversores (pies, libras, litros), Pitágoras, promedios, ecuaciones.', color: '#0d9488', icon: '🧮' },
   educacion: { label: 'Educación', desc: 'Notas, promedios, créditos, becas, tiempo de tesis.', color: '#8b5cf6', icon: '🎓' },
   automotor: { label: 'Automotor', desc: 'Consumo, patente, seguro, VTV, nafta vs GNC.', color: '#6366f1', icon: '🚗' },
   tecnologia: { label: 'Tecnología', desc: 'Almacenamiento, velocidad, batería, FPS, cloud.', color: '#06b6d4', icon: '💻' },
@@ -50,17 +50,17 @@ const topPerCategory: Record<string, string[]> = {
   vida: ['calculadora-edad-exacta', 'calculadora-porcentajes', 'calculadora-regla-de-tres-simple'],
   deportes: ['calculadora-pace-ritmo-running', 'calculadora-1rm-peso-maximo-levantamiento', 'calculadora-calorias-quemadas-deporte'],
   viajes: ['calculadora-combustible-viaje-auto', 'calculadora-dividir-gastos-viaje-amigos', 'calculadora-propina-por-pais-viaje'],
-  construccion: ['calculadora-ladrillos-por-m2-construccion', 'calculadora-pintura-por-m2-litros-latas', 'calculadora-costo-m2-construccion-argentina'],
-  cocina: ['conversor-tazas-gramos-cocina-recetas', 'calculadora-multiplicar-dividir-receta-porciones', 'calculadora-tiempo-temperatura-coccion-carne'],
+  construccion: ['calculadora-conversor-ladrillos-por-metro-cuadrado', 'calculadora-conversor-bolsas-cemento-por-metro-cubico', 'calculadora-conversor-litros-pintura-por-metro-cuadrado'],
+  cocina: ['calculadora-conversor-tazas-a-mililitros', 'calculadora-conversor-gramos-a-tazas-cocina', 'calculadora-conversor-fahrenheit-a-celsius-horno'],
   mascotas: ['calculadora-edad-perro-anos-humanos', 'calculadora-edad-gato-anos-humanos', 'calculadora-alimento-diario-perro'],
-  matematica: ['calculadora-teorema-pitagoras-hipotenusa-cateto', 'calculadora-promedio-mediana-moda-estadistica', 'calculadora-ecuacion-cuadratica-formula-resolvente'],
+  matematica: ['calculadora-conversor-pies-a-metros', 'calculadora-conversor-celsius-a-fahrenheit', 'calculadora-teorema-pitagoras-hipotenusa-cateto'],
   educacion: ['calculadora-promedio-ponderado-universidad', 'calculadora-nota-necesaria-aprobar', 'calculadora-costo-universidad-privada-cuota'],
   automotor: ['calculadora-costo-por-kilometro-auto', 'calculadora-comparar-nafta-vs-gnc-ahorro', 'calculadora-patente-auto-provincia'],
-  tecnologia: ['calculadora-velocidad-internet-mbps-real', 'calculadora-duracion-bateria-mah-consumo', 'calculadora-almacenamiento-bytes-kb-mb-gb-tb'],
+  tecnologia: ['calculadora-conversor-mbps-a-mb-s', 'calculadora-conversor-gb-a-tb', 'calculadora-velocidad-internet-mbps-real'],
   'medio-ambiente': ['calculadora-huella-carbono-auto-anual', 'calculadora-ahorro-energia-solar-paneles', 'calculadora-arboles-compensar-co2-huella'],
   electronica: ['calculadora-ley-ohm-voltaje-corriente-resistencia', 'calculadora-consumo-electrico-aparato-kwh-mes', 'calculadora-resistencia-led-voltaje-caida'],
   entretenimiento: ['calculadora-sensibilidad-mouse-dpi-juego', 'calculadora-engagement-rate-instagram', 'calculadora-probabilidad-loteria-premio'],
-  ciencia: ['calculadora-energia-cinetica-joules', 'calculadora-ley-gases-ideales', 'calculadora-peso-en-otro-planeta'],
+  ciencia: ['calculadora-conversor-celsius-a-kelvin', 'calculadora-conversor-calorias-a-joules', 'calculadora-energia-cinetica-joules'],
   jardineria: ['calculadora-riego-goteo-litros', 'calculadora-tierra-maceta-litros', 'calculadora-fertilizante-npk-dosis'],
 };
 
@@ -237,6 +237,13 @@ const schema = {
         <h3>Comparador de plazo fijo</h3>
         <p>Galicia, Santander, BBVA, Macro, Nación, Provincia e ICBC lado a lado. Ingresá capital y días, ves el ganador.</p>
         <span class="feature-cta">Comparar bancos →</span>
+      </a>
+      <a href="/buscar?q=conversor" class="feature-card feature-conv">
+        <div class="feature-badge">Nuevo</div>
+        <div class="feature-icon">📐</div>
+        <h3>100 conversores nuevos</h3>
+        <p>Pies a metros, Celsius a Fahrenheit, libras a kilos, galones a litros y 96 más. Factores exactos y ejemplos reales.</p>
+        <span class="feature-cta">Ver todos los conversores →</span>
       </a>
     </div>
   </section>
@@ -964,6 +971,12 @@ const schema = {
     background: linear-gradient(135deg, rgba(22, 163, 74, 0.08), rgba(22, 163, 74, 0.03));
     border-color: rgba(22, 163, 74, 0.25);
   }
+  .feature-conv {
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.08), rgba(13, 148, 136, 0.03));
+    border-color: rgba(13, 148, 136, 0.25);
+  }
+  .feature-conv .feature-badge { background: #0d9488; }
+  .feature-conv .feature-cta { color: #0d9488; }
 
   /* Shimmer effect — subtle border glow, not overlay */
   .feature-card::after {
