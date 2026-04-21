@@ -2373,6 +2373,9 @@ const formatFreshnessDate = (iso: string): string => {
         }
       });
       Object.assign(inputs, overrides);
+      // Inyectar lang como input especial: las fórmulas pueden leerlo como i.__lang
+      // para devolver strings en EN cuando aplique. Fórmulas que no lo usan lo ignoran.
+      (inputs as any).__lang = CALC_LANG;
       let output: any;
       try { output = formulaRef(inputs); } catch { return; }
       // Actualizar outputs (sin animar — cambios son rápidos)
@@ -2511,6 +2514,7 @@ const formatFreshnessDate = (iso: string): string => {
           if (!formula) {
             throw new Error(`Fórmula no disponible: ${formulaId}`);
           }
+          (inputs as any).__lang = CALC_LANG;
           const output = formula(inputs);
           container.querySelectorAll<HTMLElement>('[data-output]').forEach((el) => {
             const outId = el.dataset.output!;

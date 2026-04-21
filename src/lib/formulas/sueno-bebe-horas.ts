@@ -1,5 +1,5 @@
 /** Horas de sueño recomendadas por edad del bebé */
-export interface Inputs { edadBebeSueno: string; }
+export interface Inputs { edadBebeSueno: string; __lang?: 'es' | 'en'; }
 export interface Outputs { horasTotales: string; siestas: string; ventanaVigilia: string; tips: string; }
 
 const data: Record<string, { horas: string; siestas: string; vigilia: string; tips: string }> = {
@@ -14,8 +14,21 @@ const data: Record<string, { horas: string; siestas: string; vigilia: string; ti
   '36': { horas: '11-13 horas totales (10-12 nocturnas, siesta opcional)', siestas: '0-1 siesta (muchos la dejan entre 3 y 5 años)', vigilia: '6+ horas', tips: 'Si deja la siesta, puede necesitar acostarse más temprano. Limitá pantallas antes de dormir.' },
 };
 
+const dataEn: Record<string, { horas: string; siestas: string; vigilia: string; tips: string }> = {
+  '0': { horas: '16-17 total hours (8-9 nighttime + irregular naps)', siestas: '4-5 irregular naps per day', vigilia: '45-60 minutes', tips: 'No routine is possible yet. Sleep when the baby sleeps. The chaos is normal.' },
+  '1': { horas: '15-16 total hours (9-10 nighttime + 3-4 naps)', siestas: '3-4 naps per day (30 min to 2 hours)', vigilia: '1-1.5 hours', tips: 'Start a gentle nighttime routine. Differentiate day (light, noise) from night (dark, calm).' },
+  '3': { horas: '14-15 total hours (10-11 nighttime + 2-3 naps)', siestas: '2-3 naps per day (45 min to 2 hours)', vigilia: '1.5-2.5 hours', tips: 'The 4-month sleep regression is normal. A great time to teach self-soothing.' },
+  '6': { horas: '14-15 total hours (10-11 nighttime + 2-3 naps)', siestas: '2-3 naps (the third starts to drop)', vigilia: '2-3 hours', tips: 'Many babies can now sleep 6-8 hours straight. Solid foods can help.' },
+  '9': { horas: '13-14 total hours (10-12 nighttime + 2 naps)', siestas: '2 naps (morning + afternoon)', vigilia: '2.5-3.5 hours', tips: 'Separation anxiety can affect sleep. A transition object (small blanket) can help.' },
+  '12': { horas: '13-14 total hours (11-12 nighttime + 1-2 naps)', siestas: '1-2 naps (transitioning from 2 to 1)', vigilia: '3-4.5 hours', tips: 'If dropping to 1 nap, schedule it after lunch. The transition may take weeks.' },
+  '18': { horas: '12-14 total hours (11-12 nighttime + 1 nap)', siestas: '1 nap after lunch (1-2.5 hours)', vigilia: '4.5-5.5 hours', tips: 'Nightmares and nighttime fears can appear. A predictable routine is key.' },
+  '24': { horas: '12-13 total hours (10-12 nighttime + 0-1 nap)', siestas: '0-1 nap (some start dropping it)', vigilia: '5-6 hours', tips: 'Transition to a bed may be needed. Set clear bedtime limits.' },
+  '36': { horas: '11-13 total hours (10-12 nighttime, optional nap)', siestas: '0-1 nap (many drop it between 3 and 5 years)', vigilia: '6+ hours', tips: 'If dropping the nap, an earlier bedtime may help. Limit screens before bed.' },
+};
+
 export function suenoBebe(i: Inputs): Outputs {
   const edad = String(i.edadBebeSueno || '0');
-  const d = data[edad] || data['0'];
+  const src = i.__lang === 'en' ? dataEn : data;
+  const d = src[edad] || src['0'];
   return { horasTotales: d.horas, siestas: d.siestas, ventanaVigilia: d.vigilia, tips: d.tips };
 }
