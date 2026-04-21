@@ -2406,12 +2406,37 @@ const formatFreshnessDate = (iso: string): string => {
           }
 
           // GA4 event + Google Ads conversion
+          // IMPORTANTE: el evento 'conversion_event_default' tiene que estar
+          // marcado como 'evento clave' en GA4 (Admin → Eventos) y como
+          // conversión en Google Ads (Tools → Conversions → crear acción con
+          // ese nombre). Sin eso, se registra como evento normal, no conversión.
           if (typeof (window as any).gtag === 'function') {
             (window as any).gtag('event', 'calculator_used', {
               calc_slug: slug,
               formula_id: formulaId,
             });
-            (window as any).gtag('event', 'conversion_event_default');
+            // Evento de conversión con value + currency (requerido por Google Ads
+            // para que la conversion action tenga valor atribuible).
+            (window as any).gtag('event', 'conversion_event_default', {
+              calc_slug: slug,
+              value: 1.0,
+              currency: 'ARS',
+            });
+          } else {
+            // Fallback: si gtag no cargó aún, encolar en dataLayer directo.
+            // gtag.js lo procesará al cargar.
+            (window as any).dataLayer = (window as any).dataLayer || [];
+            (window as any).dataLayer.push({
+              event: 'calculator_used',
+              calc_slug: slug,
+              formula_id: formulaId,
+            });
+            (window as any).dataLayer.push({
+              event: 'conversion_event_default',
+              calc_slug: slug,
+              value: 1.0,
+              currency: 'ARS',
+            });
           }
 
           // Guardar en historial (localStorage) — solo si la primary existe

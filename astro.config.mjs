@@ -2,7 +2,10 @@
 import { defineConfig } from 'astro/config';
 
 import cloudflare from '@astrojs/cloudflare';
-import partytown from '@astrojs/partytown';
+// NOTE: Partytown removido 2026-04-22. Bloqueaba events de conversión de
+// Google Ads (gtag no generaba network requests al collect endpoint).
+// Volvemos a async scripts — más CPU main thread pero tracking 100% funcional.
+// import partytown from '@astrojs/partytown';
 
 // NOTE: astro-compressor removido. Cloudflare Pages comprime automáticamente
 // en el edge (gzip + brotli) → la compresión local era redundante y causaba
@@ -23,17 +26,7 @@ export default defineConfig({
   },
 
   compressHTML: true,
-  integrations: [
-    // Partytown: mueve scripts de terceros (GA, gtag, GTM) a un web worker.
-    // PageSpeed reportaba 1292ms de CPU solo en GTM tags. Con Partytown: ~0ms
-    // en main thread (el worker hace todo).
-    partytown({
-      config: {
-        forward: ['gtag', 'dataLayer.push'],
-        debug: false,
-      },
-    }),
-  ],
+  integrations: [],
 
   // Prefetch on hover: acelera navegación entre calcs sin inflar el payload inicial.
   // "hover" = prefetch cuando el usuario hoverea un link interno (default en Astro v4+).
