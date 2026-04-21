@@ -3,7 +3,10 @@ export interface Inputs { fumCiclo: string; duracionCicloM: number; duracionSang
 export interface Outputs { proximaMenstruacion: string; ovulacionEstimada: string; fasesActuales: string; proximosTresCiclos: string; }
 
 export function cicloMenstrual(i: Inputs): Outputs {
-  const fum = new Date(i.fumCiclo + 'T00:00:00');
+  const parts = String(i.fumCiclo || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const fum = new Date(yy, mm - 1, dd);
   if (isNaN(fum.getTime())) throw new Error('Ingresá una fecha válida');
   const ciclo = Number(i.duracionCicloM) || 28;
   const sangrado = Number(i.duracionSangrado) || 5;

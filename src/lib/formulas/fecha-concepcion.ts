@@ -15,7 +15,10 @@ export function fechaConcepcion(i: Inputs): Outputs {
 
   if (!fechaStr) throw new Error('Ingresá una fecha');
 
-  const fecha = new Date(fechaStr + 'T00:00:00');
+  const parts = String(fechaStr || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Fecha inválida');
+  const [yy, mm, dd] = parts;
+  const fecha = new Date(yy, mm - 1, dd);
   if (isNaN(fecha.getTime())) throw new Error('Fecha inválida');
 
   let concepcion: Date;

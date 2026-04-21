@@ -3,7 +3,10 @@ export interface Inputs { fechaNacimiento: string; }
 export interface Outputs { semanas: number; dias: number; horas: number; proximoHito: string; mensaje: string; }
 
 export function edadEnSemanas(i: Inputs): Outputs {
-  const nacimiento = new Date(i.fechaNacimiento + 'T00:00:00');
+  const parts = String(i.fechaNacimiento || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const nacimiento = new Date(yy, mm - 1, dd);
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
   if (isNaN(nacimiento.getTime())) throw new Error('Ingresá una fecha válida');

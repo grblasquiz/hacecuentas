@@ -3,7 +3,10 @@ export interface Inputs { fechaInicio: string; }
 export interface Outputs { dias: number; horas: number; minutos: number; hitos: string; }
 
 export function diasJuntosPareja(i: Inputs): Outputs {
-  const inicio = new Date(i.fechaInicio + 'T00:00:00');
+  const parts = String(i.fechaInicio || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const inicio = new Date(yy, mm - 1, dd);
   const hoy = new Date();
   if (isNaN(inicio.getTime())) throw new Error('Ingresá una fecha válida');
   if (inicio > hoy) throw new Error('La fecha debe ser anterior a hoy');

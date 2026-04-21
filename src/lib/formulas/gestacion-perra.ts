@@ -10,16 +10,19 @@ function fmtDate(d: Date): string {
 }
 
 export function gestacionPerra(inputs: GestacionPerraInputs): GestacionPerraOutputs {
-  const fechaMonta = new Date(inputs.fechaMonta + 'T00:00:00');
+  const parts = String(inputs.fechaMonta || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá la fecha de monta');
+  const [yy, mm, dd] = parts;
+  const fechaMonta = new Date(yy, mm - 1, dd);
   if (isNaN(fechaMonta.getTime())) throw new Error('Ingresá la fecha de monta');
 
   const DIAS_GESTACION = 63;
-  const fechaParto = new Date(fechaMonta + 'T00:00:00');
+  const fechaParto = new Date(fechaMonta.getTime());
   fechaParto.setDate(fechaParto.getDate() + DIAS_GESTACION);
 
-  const rangoMin = new Date(fechaMonta + 'T00:00:00');
+  const rangoMin = new Date(fechaMonta.getTime());
   rangoMin.setDate(rangoMin.getDate() + 58);
-  const rangoMax = new Date(fechaMonta + 'T00:00:00');
+  const rangoMax = new Date(fechaMonta.getTime());
   rangoMax.setDate(rangoMax.getDate() + 68);
 
   const hoy = new Date();

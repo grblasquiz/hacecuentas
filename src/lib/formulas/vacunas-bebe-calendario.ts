@@ -16,7 +16,10 @@ const esquema = [
 ];
 
 export function vacunasBebe(i: Inputs): Outputs {
-  const nac = new Date(i.fechaNacimiento + 'T00:00:00');
+  const parts = String(i.fechaNacimiento || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha de nacimiento válida');
+  const [yy, mm, dd] = parts;
+  const nac = new Date(yy, mm - 1, dd);
   if (isNaN(nac.getTime())) throw new Error('Ingresá una fecha de nacimiento válida');
 
   const hoy = new Date();

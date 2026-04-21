@@ -3,7 +3,10 @@ export interface Inputs { fecha1: string; fecha2: string; }
 export interface Outputs { compatibilidad: number; numVida1: number; numVida2: number; mensaje: string; }
 
 function lifeNumber(dateStr: string): number {
-  const d = new Date(dateStr + 'T00:00:00');
+  const parts = String(dateStr || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Fecha inválida');
+  const [yy, mm, dd] = parts;
+  const d = new Date(yy, mm - 1, dd);
   if (isNaN(d.getTime())) throw new Error('Fecha inválida');
   const digits = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
   let sum = digits.split('').reduce((a,b) => a + Number(b), 0);

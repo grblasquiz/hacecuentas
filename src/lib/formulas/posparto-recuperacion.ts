@@ -3,7 +3,10 @@ export interface Inputs { fechaParto: string; tipoParto: string; }
 export interface Outputs { semanaPosparto: string; queEsperar: string; ejercicio: string; proximoHito: string; }
 
 export function pospartoRecuperacion(i: Inputs): Outputs {
-  const parto = new Date(i.fechaParto + 'T00:00:00');
+  const parts = String(i.fechaParto || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha de parto válida');
+  const [yy, mm, dd] = parts;
+  const parto = new Date(yy, mm - 1, dd);
   if (isNaN(parto.getTime())) throw new Error('Ingresá una fecha de parto válida');
   const tipo = String(i.tipoParto);
   const hoy = new Date(); hoy.setHours(0, 0, 0, 0);

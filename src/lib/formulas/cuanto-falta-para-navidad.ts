@@ -3,7 +3,10 @@ export interface Inputs { fechaHoy: string; }
 export interface Outputs { diasFaltan: number; semanas: number; horas: number; diaNavidad: string; mensaje: string; }
 
 export function cuantoFaltaParaNavidad(i: Inputs): Outputs {
-  const hoy = new Date(i.fechaHoy + 'T00:00:00');
+  const parts = String(i.fechaHoy || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const hoy = new Date(yy, mm - 1, dd);
   if (isNaN(hoy.getTime())) throw new Error('Ingresá una fecha válida');
 
   const year = hoy.getMonth() === 11 && hoy.getDate() > 25 ? hoy.getFullYear() + 1 : hoy.getFullYear();

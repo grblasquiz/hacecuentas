@@ -38,7 +38,10 @@ export function ovulacion(inputs: OvulacionInputs): OvulacionOutputs {
     throw new Error('El largo del ciclo debe estar entre 21 y 40 días');
   }
 
-  const fum = new Date(inputs.fum + 'T00:00:00');
+  const parts = String(inputs.fum || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Fecha inválida');
+  const [yy, mm, dd] = parts;
+  const fum = new Date(yy, mm - 1, dd);
   if (isNaN(fum.getTime())) throw new Error('Fecha inválida');
 
   const hoy = new Date();

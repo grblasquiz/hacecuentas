@@ -3,7 +3,10 @@ export interface Inputs { fumTest: string; duracionCicloTest: number; }
 export interface Outputs { testSangre: string; testOrina: string; ovulacionEstimada: string; nota: string; }
 
 export function testEmbarazoCuando(i: Inputs): Outputs {
-  const fum = new Date(i.fumTest + 'T00:00:00');
+  const parts = String(i.fumTest || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const fum = new Date(yy, mm - 1, dd);
   if (isNaN(fum.getTime())) throw new Error('Ingresá una fecha válida');
   const ciclo = Number(i.duracionCicloTest) || 28;
 

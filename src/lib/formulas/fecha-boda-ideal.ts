@@ -34,7 +34,8 @@ export function fechaBodaIdeal(i: Inputs): Outputs {
 
       // Feriados
       const cercaFeriado = FERIADOS_2026.some(fer => {
-        const fd = new Date(fer + 'T00:00:00');
+        const pp = fer.split('-').map(Number);
+        const fd = new Date(pp[0], pp[1] - 1, pp[2]);
         return Math.abs(f.getTime() - fd.getTime()) <= 2 * 86400000;
       });
       if (cercaFeriado) { score -= 20; nota += 'Cerca de feriado. '; }

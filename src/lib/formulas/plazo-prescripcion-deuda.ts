@@ -35,7 +35,12 @@ function formatDate(d: Date): string {
 
 export function plazoPrescripcionDeuda(inputs: PlazoPrescripcionInputs): PlazoPrescripcionOutputs {
   const tipo = inputs.tipoDeuda || 'generica';
-  const fecha = new Date(inputs.fechaUltimoPago + 'T00:00:00');
+  const parts = String(inputs.fechaUltimoPago || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) {
+    throw new Error('Ingresá una fecha válida');
+  }
+  const [yy, mm, dd] = parts;
+  const fecha = new Date(yy, mm - 1, dd);
 
   if (isNaN(fecha.getTime())) {
     throw new Error('Ingresá una fecha válida');

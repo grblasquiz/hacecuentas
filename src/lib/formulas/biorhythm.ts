@@ -3,7 +3,10 @@ export interface Inputs { fechaNacimiento: string; }
 export interface Outputs { fisico: number; emocional: number; intelectual: number; mensaje: string; }
 
 export function biorhythm(i: Inputs): Outputs {
-  const nac = new Date(i.fechaNacimiento + 'T00:00:00');
+  const parts = String(i.fechaNacimiento || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const nac = new Date(yy, mm - 1, dd);
   const hoy = new Date();
   if (isNaN(nac.getTime())) throw new Error('Ingresá una fecha válida');
   if (nac > hoy) throw new Error('La fecha debe ser anterior a hoy');

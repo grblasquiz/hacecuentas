@@ -11,7 +11,10 @@ const SIGS: Record<string,string> = {
   'Sábado':'Trabajador/a incansable — persona dedicada, responsable y con ética de esfuerzo.'
 };
 export function diaNacimientoSemana(i: Inputs): Outputs {
-  const d = new Date(i.fechaNacimiento + 'T00:00:00');
+  const parts = String(i.fechaNacimiento || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const d = new Date(yy, mm - 1, dd);
   if (isNaN(d.getTime())) throw new Error('Ingresá una fecha válida');
   const dia = DIAS[d.getDay()];
   let proxAnio = new Date().getFullYear();

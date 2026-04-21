@@ -17,8 +17,24 @@ export interface AntiguedadLaboralOutputs {
 }
 
 export function antiguedadLaboral(inputs: AntiguedadLaboralInputs): AntiguedadLaboralOutputs {
-  const fechaIngreso = new Date(inputs.fechaIngreso + 'T00:00:00');
-  const fechaCalculo = inputs.fechaCalculo ? new Date(inputs.fechaCalculo + 'T00:00:00') : new Date();
+  const partsIng = String(inputs.fechaIngreso || '').split('-').map(Number);
+  if (partsIng.length !== 3 || partsIng.some(isNaN)) {
+    throw new Error('Ingresá una fecha de ingreso válida');
+  }
+  const [yI, mI, dI] = partsIng;
+  const fechaIngreso = new Date(yI, mI - 1, dI);
+
+  let fechaCalculo: Date;
+  if (inputs.fechaCalculo) {
+    const partsCalc = String(inputs.fechaCalculo).split('-').map(Number);
+    if (partsCalc.length !== 3 || partsCalc.some(isNaN)) {
+      throw new Error('Ingresá una fecha de cálculo válida');
+    }
+    const [yC, mC, dC] = partsCalc;
+    fechaCalculo = new Date(yC, mC - 1, dC);
+  } else {
+    fechaCalculo = new Date();
+  }
 
   if (isNaN(fechaIngreso.getTime())) {
     throw new Error('Ingresá una fecha de ingreso válida');

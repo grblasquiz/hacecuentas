@@ -30,7 +30,12 @@ function addDays(date: Date, days: number): Date {
 }
 
 export function licenciaMaternidadPaternidad(inputs: LicenciaMatPatInputs): LicenciaMatPatOutputs {
-  const fechaParto = new Date(inputs.fechaParto + 'T00:00:00');
+  const parts = String(inputs.fechaParto || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) {
+    throw new Error('Ingresá una fecha probable de parto válida');
+  }
+  const [yy, mm, dd] = parts;
+  const fechaParto = new Date(yy, mm - 1, dd);
   if (isNaN(fechaParto.getTime())) {
     throw new Error('Ingresá una fecha probable de parto válida');
   }

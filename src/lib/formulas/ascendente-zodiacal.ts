@@ -31,7 +31,10 @@ const ASC_DESC: Record<string, string> = {
 };
 
 export function ascendenteZodiacal(i: Inputs): Outputs {
-  const d = new Date(i.fechaNacimiento + 'T00:00:00');
+  const parts = String(i.fechaNacimiento || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const d = new Date(yy, mm - 1, dd);
   if (isNaN(d.getTime())) throw new Error('Ingresá una fecha válida');
   const hora = Number(i.horaNacimiento);
   if (isNaN(hora) || hora < 0 || hora > 23) throw new Error('Ingresá una hora válida (0-23)');

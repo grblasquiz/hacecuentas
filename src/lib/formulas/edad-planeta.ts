@@ -6,7 +6,10 @@ const PLANETAS:{nombre:string;periodo:number}[] = [
   {nombre:'Urano',periodo:84.01},{nombre:'Neptuno',periodo:164.8},{nombre:'Plutón',periodo:247.9}
 ];
 export function edadPlaneta(i: Inputs): Outputs {
-  const nac = new Date(i.fechaNacimiento + 'T00:00:00');
+  const parts = String(i.fechaNacimiento || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const nac = new Date(yy, mm - 1, dd);
   const hoy = new Date();
   if (isNaN(nac.getTime())) throw new Error('Ingresá una fecha válida');
   const edadTierra = (hoy.getTime() - nac.getTime()) / (365.25 * 86400000);

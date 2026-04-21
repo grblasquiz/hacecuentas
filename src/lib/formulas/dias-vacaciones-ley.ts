@@ -16,7 +16,12 @@ export interface DiasVacacionesLeyOutputs {
 }
 
 export function diasVacacionesLey(inputs: DiasVacacionesLeyInputs): DiasVacacionesLeyOutputs {
-  const fechaIngreso = new Date(inputs.fechaIngreso + 'T00:00:00');
+  const parts = String(inputs.fechaIngreso || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) {
+    throw new Error('Ingresá una fecha de ingreso válida');
+  }
+  const [yy, mm, dd] = parts;
+  const fechaIngreso = new Date(yy, mm - 1, dd);
   if (isNaN(fechaIngreso.getTime())) {
     throw new Error('Ingresá una fecha de ingreso válida');
   }

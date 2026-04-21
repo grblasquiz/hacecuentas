@@ -3,7 +3,10 @@ export interface Inputs { fechaNacPrem: string; semanasGestPrem: number; }
 export interface Outputs { edadCronologica: string; edadCorregida: string; semanasPrematurez: string; nota: string; }
 
 export function edadCorregidaPrematuro(i: Inputs): Outputs {
-  const nac = new Date(i.fechaNacPrem + 'T00:00:00');
+  const parts = String(i.fechaNacPrem || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha de nacimiento válida');
+  const [yy, mm, dd] = parts;
+  const nac = new Date(yy, mm - 1, dd);
   if (isNaN(nac.getTime())) throw new Error('Ingresá una fecha de nacimiento válida');
   const semGest = Math.round(Number(i.semanasGestPrem));
   if (semGest < 22 || semGest > 36) throw new Error('Ingresá semanas de gestación entre 22 y 36');

@@ -17,7 +17,10 @@ export function gestacionAnimal(i: Inputs): Outputs {
 
   if (!fechaStr) throw new Error('Ingresá la fecha de cruza');
 
-  const fechaCruza = new Date(fechaStr + 'T00:00:00');
+  const parts = String(fechaStr || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Fecha inválida');
+  const [yy, mm, dd] = parts;
+  const fechaCruza = new Date(yy, mm - 1, dd);
   if (isNaN(fechaCruza.getTime())) throw new Error('Fecha inválida');
 
   // Duración gestacional por especie

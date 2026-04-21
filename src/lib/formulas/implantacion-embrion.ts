@@ -3,7 +3,10 @@ export interface Inputs { fechaReferencia: string; tipoCalculo?: string; }
 export interface Outputs { ventanaImplantacion: string; diaMasProbable: string; primerTestConfiable: string; sintomas: string; }
 
 export function implantacionEmbrion(i: Inputs): Outputs {
-  const ref = new Date(i.fechaReferencia + 'T00:00:00');
+  const parts = String(i.fechaReferencia || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const ref = new Date(yy, mm - 1, dd);
   if (isNaN(ref.getTime())) throw new Error('Ingresá una fecha válida');
   const tipo = String(i.tipoCalculo || 'ovulacion');
   const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;

@@ -20,7 +20,12 @@ export function embarazo(inputs: EmbarazoInputs): EmbarazoOutputs {
     throw new Error('Ingresá la fecha de tu última menstruación');
   }
 
-  const fum = new Date(inputs.fum + 'T00:00:00');
+  const parts = String(inputs.fum || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) {
+    throw new Error('Fecha inválida');
+  }
+  const [yy, mm, dd] = parts;
+  const fum = new Date(yy, mm - 1, dd);
   if (isNaN(fum.getTime())) {
     throw new Error('Fecha inválida');
   }

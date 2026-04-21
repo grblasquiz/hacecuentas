@@ -5,7 +5,10 @@ export interface Outputs { ventanaFertil: string; inicioVentana: string; finVent
 export function periodoFertilIrregular(i: Inputs): Outputs {
   const corto = Number(i.cicloMasCorto);
   const largo = Number(i.cicloMasLargo);
-  const fum = new Date(i.fumIrreg + 'T00:00:00');
+  const parts = String(i.fumIrreg || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const fum = new Date(yy, mm - 1, dd);
   if (isNaN(fum.getTime())) throw new Error('Ingresá una fecha válida');
   if (corto < 18 || corto > 40) throw new Error('Ciclo más corto: entre 18 y 40 días');
   if (largo < 24 || largo > 50) throw new Error('Ciclo más largo: entre 24 y 50 días');

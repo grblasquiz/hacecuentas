@@ -21,7 +21,10 @@ export function cuentaRegresivaFecha(inputs: CuentaRegresivaFechaInputs): Cuenta
   const fechaStr = inputs.fechaObjetivo;
   if (!fechaStr) throw new Error('Ingresá una fecha objetivo');
 
-  const destino = new Date(fechaStr + 'T00:00:00');
+  const parts = String(fechaStr || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('La fecha ingresada no es válida');
+  const [yy, mm, dd] = parts;
+  const destino = new Date(yy, mm - 1, dd);
   if (isNaN(destino.getTime())) throw new Error('La fecha ingresada no es válida');
 
   const hoy = new Date();

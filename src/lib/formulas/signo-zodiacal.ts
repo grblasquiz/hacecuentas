@@ -19,7 +19,10 @@ const SIGNOS = [
 ];
 
 export function signoZodiacal(i: Inputs): Outputs {
-  const d = new Date(i.fechaNacimiento + 'T00:00:00');
+  const parts = String(i.fechaNacimiento || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  const [yy, mm, dd] = parts;
+  const d = new Date(yy, mm - 1, dd);
   if (isNaN(d.getTime())) throw new Error('Ingresá una fecha válida');
   const m = d.getMonth() + 1;
   const day = d.getDate();

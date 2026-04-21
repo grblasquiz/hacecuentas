@@ -11,7 +11,10 @@ export interface Outputs {
 export function fechaParto(i: Inputs): Outputs {
   const fum = i.fechaUltimaMenstruacion;
   if (!fum) throw new Error('Ingresá la fecha de última menstruación');
-  const fecha = new Date(fum + 'T00:00:00');
+  const parts = String(fum || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Fecha inválida');
+  const [yy, mm, dd] = parts;
+  const fecha = new Date(yy, mm - 1, dd);
   if (isNaN(fecha.getTime())) throw new Error('Fecha inválida');
 
   // Naegele: FUM + 280 días (40 semanas). Clonamos sin +'T' (bug NaN en Date).

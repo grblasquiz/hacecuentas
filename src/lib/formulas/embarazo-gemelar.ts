@@ -3,7 +3,10 @@ export interface Inputs { fum: string; tipoGemelar?: string; semanaActual?: numb
 export interface Outputs { fppGemelar: string; pesoEstimado: string; controles: string; riesgos: string; }
 
 export function embarazoGemelar(i: Inputs): Outputs {
-  const fum = new Date(i.fum + 'T00:00:00');
+  const parts = String(i.fum || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una FUM válida');
+  const [yy, mm, dd] = parts;
+  const fum = new Date(yy, mm - 1, dd);
   if (isNaN(fum.getTime())) throw new Error('Ingresá una FUM válida');
   const tipo = String(i.tipoGemelar || 'no-se');
   const sem = Number(i.semanaActual) || 0;

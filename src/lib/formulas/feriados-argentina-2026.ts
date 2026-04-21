@@ -46,8 +46,13 @@ const MESES = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio
 
 const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
+function parseLocal(s: string): Date {
+  const p = String(s || '').split('-').map(Number);
+  return new Date(p[0], p[1] - 1, p[2]);
+}
+
 function formatFecha(fechaStr: string): string {
-  const d = new Date(fechaStr + 'T00:00:00');
+  const d = parseLocal(fechaStr);
   const dia = d.getDate();
   const mes = MESES[d.getMonth() + 1];
   const dow = DIAS_SEMANA[d.getDay()];
@@ -85,7 +90,7 @@ export function feriadosArgentina2026(inputs: FeriadosArgentina2026Inputs): Feri
   hoy.setHours(0, 0, 0, 0);
 
   const futuros = FERIADOS_2026.filter(f => {
-    const d = new Date(f.fecha + 'T00:00:00');
+    const d = parseLocal(f.fecha);
     return d >= hoy;
   });
 
@@ -94,7 +99,7 @@ export function feriadosArgentina2026(inputs: FeriadosArgentina2026Inputs): Feri
 
   if (futuros.length > 0) {
     const prox = futuros[0];
-    const proxDate = new Date(prox.fecha + 'T00:00:00');
+    const proxDate = parseLocal(prox.fecha);
     diasHastaProximo = Math.ceil((proxDate.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
     proximoFeriado = `${prox.nombre} — ${formatFecha(prox.fecha)}`;
     if (diasHastaProximo === 0) {

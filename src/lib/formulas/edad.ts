@@ -19,7 +19,10 @@ export interface EdadOutputs {
 export function edad(inputs: EdadInputs): EdadOutputs {
   if (!inputs.fechaNacimiento) throw new Error('Ingresá tu fecha de nacimiento');
 
-  const nacimiento = new Date(inputs.fechaNacimiento + 'T00:00:00');
+  const parts = String(inputs.fechaNacimiento || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Fecha inválida');
+  const [yy, mm, dd] = parts;
+  const nacimiento = new Date(yy, mm - 1, dd);
   if (isNaN(nacimiento.getTime())) throw new Error('Fecha inválida');
 
   const hoy = new Date();
