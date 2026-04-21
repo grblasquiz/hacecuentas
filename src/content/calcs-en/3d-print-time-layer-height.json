@@ -1,0 +1,172 @@
+{
+  "slug": "3d-print-time-layer-height",
+  "esSlug": "calculadora-tiempo-impresion-3d-layer",
+  "title": "3D Print Time Calculator by Layer Height 2026 | Hacé Cuentas",
+  "h1": "3D Print Time Calculator by Layer Height",
+  "description": "Estimate 3D print time using model height, layer height, print speed, and layer area. Get accurate hours for FDM printing. Free calculator.",
+  "category": "tecnologia",
+  "icon": "🖨️",
+  "formulaId": "tiempo-impresion-3d-layer",
+  "audience": "global",
+  "seoKeywords": [
+    "3d print time calculator",
+    "layer height calculator",
+    "fdm printing speed",
+    "how long does 3d printing take",
+    "print time estimator",
+    "3d printer layer height",
+    "print speed mm/s",
+    "3d printing time estimate",
+    "ender 3 print time",
+    "nozzle width layer height",
+    "fast 3d printing",
+    "layer height quality"
+  ],
+  "intro": "Before hitting print on a 3D model, you need to know: how long will this take? Can I run it overnight? This calculator estimates total print time by combining model height (mm), layer height (0.08–0.32 mm), print speed (mm/s), and average layer area (cm²). It's essential when balancing quality vs. speed: lower layer heights improve smooth curves but multiply print time; higher layers accelerate prototypes. Default values (0.2 mm, 60 mm/s) are the sweet spot for Ender 3, Prusa MK4, Bambu A1, and similar machines. For fast CoreXY printers (Bambu X1C, Voron), you can push 150–300 mm/s realistically.",
+  "keyTakeaway": "A **100 mm tall model with 0.2 mm layer height and 60 mm/s** takes approximately **6–8 hours** depending on geometry. Doubling layer height cuts time by 40–50% but reduces surface quality.",
+  "useCases": [
+    "You want to know if a print can finish overnight while you sleep.",
+    "You're comparing 0.2 mm vs 0.12 mm layer heights to choose quality vs. speed.",
+    "You're quoting jobs and need to estimate machine hours.",
+    "You're deciding if a fast CoreXY printer is worth the investment.",
+    "You're planning a batch of serial prints and need timing."
+  ],
+  "fields": [
+    {
+      "id": "altura",
+      "label": "Total model height",
+      "type": "number",
+      "placeholder": "100",
+      "min": 1,
+      "max": 500,
+      "step": 1,
+      "required": true,
+      "suffix": "mm",
+      "help": "Height in millimeters."
+    },
+    {
+      "id": "layer",
+      "label": "Layer height",
+      "type": "number",
+      "placeholder": "0.2",
+      "min": 0.04,
+      "max": 0.4,
+      "step": 0.01,
+      "required": true,
+      "suffix": "mm"
+    },
+    {
+      "id": "velocidad",
+      "label": "Average print speed",
+      "type": "number",
+      "placeholder": "60",
+      "min": 20,
+      "max": 500,
+      "step": 5,
+      "required": true,
+      "suffix": "mm/s"
+    },
+    {
+      "id": "areaCapa",
+      "label": "Average layer area",
+      "type": "number",
+      "placeholder": "25",
+      "min": 0.5,
+      "max": 1000,
+      "step": 0.5,
+      "required": true,
+      "suffix": "cm²"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-17",
+    "source": null,
+    "sourceUrl": null,
+    "updateType": "manual",
+    "notes": "Industry-standard formulas for the proposed calculation."
+  },
+  "outputs": [
+    {
+      "id": "horas",
+      "label": "Estimated time (hours)",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "tiempoFormato",
+      "label": "Formatted time",
+      "format": "text"
+    },
+    {
+      "id": "capas",
+      "label": "Number of layers",
+      "format": "number"
+    },
+    {
+      "id": "segundosPorCapa",
+      "label": "Seconds per layer",
+      "format": "number"
+    }
+  ],
+  "example": {
+    "title": "100 mm figure, 0.2 mm layer, 60 mm/s, 25 cm²/layer",
+    "steps": [
+      "**Layers**: 100 ÷ 0.2 = **500**.",
+      "**Extrusion per layer**: 2,500 mm² ÷ (0.4 × 0.2) = 31,250 mm.",
+      "**Time per layer**: 31,250 ÷ 60 × 0.38 factor ≈ 198 s.",
+      "**Total**: 500 × 198 ≈ **99,000 s ≈ 27.5 hours**."
+    ],
+    "result": "With 25 cm² average area, the print takes ~27 hours. If you reduce to 10 cm² (slender figure): ~11 hours."
+  },
+  "explanation": "## Formula\n\n```\nLayers = Height ÷ Layer_height\nExtrusion_per_layer = Area_mm² ÷ (nozzle_width × layer)\nTime_per_layer = (Extrusion_per_layer ÷ speed) × efficiency_factor\nTotal = Layers × Time_per_layer\n```\n\nTypical efficiency factor: 0.30–0.40. Printers accelerate/decelerate, retract, and travel between moves.\n\n## Layer height: time vs. quality\n\n| Layer height | Time multiplier | Quality | Best for |\n|---|---|---|---|\n| 0.08 mm | 2.5× | Excellent | Miniatures |\n| 0.12 mm | 1.7× | Very high | Detailed figures |\n| 0.16 mm | 1.25× | High | Fine details |\n| 0.20 mm | 1× ✅ | Good | General-purpose |\n| 0.28 mm | 0.7× | Medium | Functional parts |\n| 0.32 mm | 0.6× | Low | Fast prototypes |\n\n## Real print speeds by printer\n\n| Printer | Real speed |\n|---|---|\n| Ender 3 (stock) | 40–60 mm/s |\n| Ender 3 + Klipper | 100–150 mm/s |\n| Prusa MK4 | 200 mm/s |\n| Bambu A1/P1S | 200–300 mm/s |\n| Bambu X1C | 300–500 mm/s |\n| Voron 2.4 | 250–400 mm/s |\n\n## Variables not included\n\n- **Cooling**: 100% fan speed may enforce a minimum layer time.\n- **Supports**: Typically add 15–30% to total time.\n- **Multi-color**: 60–180 seconds per filament change.\n- **Warm-up**: 2–5 minutes for PLA, 10–15 minutes for ABS.\n\nFor total print cost, see [3D print cost calculator](/3d-print-cost-calculator) and [3D service hourly rate calculator](/3d-printing-service-hourly-rate).",
+  "faq": [
+    {
+      "q": "Why does my 3D printer take longer than this calculator estimates?",
+      "a": "Retractions, travels, direction changes, and minimum cooling add 20–50% to actual print time."
+    },
+    {
+      "q": "What's the minimum layer height for good detail?",
+      "a": "0.08–0.12 mm produces excellent detail. Most general-purpose prints use 0.16–0.20 mm."
+    },
+    {
+      "q": "Does lower layer height always improve print quality?",
+      "a": "Yes for curves and smooth slopes (reduces visible 'stair-stepping'). Flat vertical surfaces show minimal difference."
+    },
+    {
+      "q": "How does faster print speed affect quality?",
+      "a": "Speeds above 150 mm/s reduce time but require excellent tuning. Stock machines print best at 40–60 mm/s for consistent results."
+    },
+    {
+      "q": "Can I use 0.4 mm layer height with a 0.4 mm nozzle?",
+      "a": "Yes, with larger nozzles (0.6–0.8 mm). Produces big functional parts 3–4× faster but with rougher finish."
+    },
+    {
+      "q": "How much faster is Klipper firmware?",
+      "a": "Significantly: input shaping and pressure advance let an Ender 3 reach 150 mm/s without quality loss—3× faster than stock."
+    },
+    {
+      "q": "How does resin printing (SLA/MSLA) compare in speed?",
+      "a": "Resin printing time is independent of part size: each layer cures in 2–4 seconds. A 100 mm part at 0.05 mm layers = 2,000 layers × 3 sec ≈ 100 minutes."
+    },
+    {
+      "q": "Does bed warm-up time count toward total print time?",
+      "a": "Pre-heating (2–5 minutes for PLA, 10–15 for ABS) happens before printing starts and isn't included in layer calculations."
+    },
+    {
+      "q": "What's the fastest realistic print speed for an Ender 3?",
+      "a": "Stock: 40–60 mm/s. With Klipper and tuning: 100–150 mm/s. Most users stay at 80–120 mm/s for reliability."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Cura Manual",
+      "url": "https://ultimaker.com/"
+    },
+    {
+      "name": "Prusa - Layer Height",
+      "url": "https://help.prusa3d.com/"
+    }
+  ],
+  "relatedSlugs": []
+}
