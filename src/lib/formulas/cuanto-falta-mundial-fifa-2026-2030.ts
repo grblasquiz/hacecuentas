@@ -12,6 +12,7 @@ export function cuantoFaltaMundialFifa20262030(i: Inputs): Outputs {
   const d=new Date(yy,mm-1,dd);
   if (isNaN(d.getTime())) return { resultado:'—', resumen:'Fecha inválida.' };
   const hoy=new Date();
-  const diff=Math.floor((d.getTime()-hoy.getTime())/86400000);
+  hoy.setHours(0,0,0,0);
+  const diff=Math.round((d.getTime()-hoy.getTime())/86400000);
   return { resultado:diff+' días', resumen:`Entre hoy y ${f}: ${diff} días.` };
 }
