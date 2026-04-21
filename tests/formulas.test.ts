@@ -18,6 +18,7 @@ import { pesoIdeal } from '../src/lib/formulas/peso-ideal';
 import { hidratacionEjercicio } from '../src/lib/formulas/hidratacion-ejercicio';
 import { indiceMasaCorporalPediatrico } from '../src/lib/formulas/indice-masa-corporal-pediatrico';
 import { alquilerIcl } from '../src/lib/formulas/alquiler-icl';
+import { pesoIdealBebeMesPercentil } from '../src/lib/formulas/peso-ideal-bebe-mes-percentil';
 
 // --- Fechas (las del bug UTC que cazamos) ---
 import { edadExacta } from '../src/lib/formulas/edad-exacta';
@@ -82,6 +83,49 @@ describe('imc (OMS)', () => {
 
   it('peso 0 → error', () => {
     expect(() => imc({ peso: 0, altura: 170 })).toThrow();
+  });
+});
+
+describe('pesoIdealBebeMesPercentil (OMS LMS 2006)', () => {
+  it('ejemplo JSON: varón 6m 7.8kg → mediana 7.93, P≈43.8', () => {
+    const r = pesoIdealBebeMesPercentil({ edadMeses: 6, sexo: 'm', pesoActual: 7.8 });
+    expect(r.pesoMediana).toBeCloseTo(7.93, 1);
+    expect(r.percentilBebe).toMatch(/Percentil\s+43/);
+    expect(r.percentilBebe).toMatch(/Normal/);
+  });
+
+  it('niña 12m 9.0kg → P≈52 Normal', () => {
+    const r = pesoIdealBebeMesPercentil({ edadMeses: 12, sexo: 'f', pesoActual: 9.0 });
+    expect(r.pesoMediana).toBeCloseTo(8.95, 1);
+    expect(r.percentilBebe).toMatch(/Normal/);
+  });
+
+  it('extendido a 60m (5 años): niña 60m 18.2kg → Normal', () => {
+    const r = pesoIdealBebeMesPercentil({ edadMeses: 60, sexo: 'f', pesoActual: 18.2 });
+    expect(r.pesoMediana).toBeGreaterThan(17);
+    expect(r.pesoMediana).toBeLessThan(19);
+    expect(r.percentilBebe).toMatch(/Normal/);
+  });
+
+  it('interpolación por día: 6.49m y 6.50m con mismo peso NO deben saltar de categoría', () => {
+    const a = pesoIdealBebeMesPercentil({ edadMeses: 6.49, sexo: 'm', pesoActual: 10.0 });
+    const b = pesoIdealBebeMesPercentil({ edadMeses: 6.50, sexo: 'm', pesoActual: 10.0 });
+    // Antes del LMS: a="> p97 Consultá pediatra", b="p85-97 Rango alto" — salto.
+    // Ahora: percentil continuo, misma categoría.
+    const pctA = parseFloat(a.percentilBebe.match(/[\d.]+/)?.[0] || '0');
+    const pctB = parseFloat(b.percentilBebe.match(/[\d.]+/)?.[0] || '0');
+    expect(Math.abs(pctA - pctB)).toBeLessThan(0.1);
+  });
+
+  it('sin peso: solo referencia, percentilBebe = "No ingresaste..."', () => {
+    const r = pesoIdealBebeMesPercentil({ edadMeses: 6, sexo: 'm' });
+    expect(r.percentilBebe).toMatch(/No ingresaste/);
+    expect(r.pesoMediana).toBeCloseTo(7.93, 1);
+  });
+
+  it('rechaza edad > 60m o negativa', () => {
+    expect(() => pesoIdealBebeMesPercentil({ edadMeses: 61, sexo: 'm' })).toThrow();
+    expect(() => pesoIdealBebeMesPercentil({ edadMeses: -1, sexo: 'm' })).toThrow();
   });
 });
 

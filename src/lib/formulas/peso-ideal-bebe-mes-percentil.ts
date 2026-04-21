@@ -1,4 +1,6 @@
-/** Peso de referencia del bebé por mes y percentil — OMS 2006 */
+/** Peso-para-edad pediátrico — OMS Child Growth Standards 2006 (LMS oficial). */
+import { WFA_BOYS_L, WFA_BOYS_M, WFA_BOYS_S, WFA_GIRLS_L, WFA_GIRLS_M, WFA_GIRLS_S, WFA_MAX_DAYS } from './_oms-wfa-lms';
+
 export interface Inputs {
   edadMeses: number;
   sexo: string;
@@ -11,95 +13,119 @@ export interface Outputs {
   detalle: string;
 }
 
+// Días por mes promedio (gregoriano): 365.25 / 12 = 30.4375.
+const DIAS_POR_MES = 30.4375;
+
+// Normal CDF — aproximación Abramowitz & Stegun 26.2.17 (error < 7.5e-8).
+function normalCdf(z: number): number {
+  if (z > 8) return 1;
+  if (z < -8) return 0;
+  const b1 = 0.319381530, b2 = -0.356563782, b3 = 1.781477937, b4 = -1.821255978, b5 = 1.330274429;
+  const p = 0.2316419, c = 0.39894228;
+  const az = Math.abs(z);
+  const t = 1 / (1 + p * az);
+  const phi = c * Math.exp(-az * az / 2) * (t * (b1 + t * (b2 + t * (b3 + t * (b4 + t * b5)))));
+  return z >= 0 ? 1 - phi : phi;
+}
+
+/** Inverso aproximado de la normal — Beasley-Springer-Moro para p ∈ (0,1). */
+function inverseNormal(p: number): number {
+  if (p <= 0) return -8;
+  if (p >= 1) return 8;
+  // Rational approximation (Beasley-Springer 1977).
+  const a = [-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00];
+  const b = [-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02, 6.680131188771972e+01, -1.328068155288572e+01];
+  const cc = [-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
+  const dd = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00, 3.754408661907416e+00];
+  const pLow = 0.02425, pHigh = 1 - pLow;
+  let q: number, r: number;
+  if (p < pLow) {
+    q = Math.sqrt(-2 * Math.log(p));
+    return (((((cc[0] * q + cc[1]) * q + cc[2]) * q + cc[3]) * q + cc[4]) * q + cc[5]) / ((((dd[0] * q + dd[1]) * q + dd[2]) * q + dd[3]) * q + 1);
+  }
+  if (p <= pHigh) {
+    q = p - 0.5;
+    r = q * q;
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q /
+           (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+  }
+  q = Math.sqrt(-2 * Math.log(1 - p));
+  return -(((((cc[0] * q + cc[1]) * q + cc[2]) * q + cc[3]) * q + cc[4]) * q + cc[5]) / ((((dd[0] * q + dd[1]) * q + dd[2]) * q + dd[3]) * q + 1);
+}
+
+/** Busca L, M, S interpolando entre días enteros del array. Day es float ≥ 0. */
+function lookupLMS(sexo: string, dayFloat: number): { L: number; M: number; S: number } {
+  const d = Math.max(0, Math.min(WFA_MAX_DAYS, dayFloat));
+  const arrL = sexo === 'f' ? WFA_GIRLS_L : WFA_BOYS_L;
+  const arrM = sexo === 'f' ? WFA_GIRLS_M : WFA_BOYS_M;
+  const arrS = sexo === 'f' ? WFA_GIRLS_S : WFA_BOYS_S;
+  const lo = Math.floor(d);
+  const hi = Math.min(WFA_MAX_DAYS, lo + 1);
+  const frac = d - lo;
+  return {
+    L: arrL[lo] + frac * (arrL[hi] - arrL[lo]),
+    M: arrM[lo] + frac * (arrM[hi] - arrM[lo]),
+    S: arrS[lo] + frac * (arrS[hi] - arrS[lo]),
+  };
+}
+
+/** Peso en kg correspondiente a un percentil dado, según LMS OMS. */
+function weightAtPercentile(L: number, M: number, S: number, pct: number): number {
+  const z = inverseNormal(pct / 100);
+  if (Math.abs(L) < 1e-9) return M * Math.exp(S * z);
+  return M * Math.pow(1 + L * S * z, 1 / L);
+}
+
 export function pesoIdealBebeMesPercentil(i: Inputs): Outputs {
-  const mes = Math.round(Number(i.edadMeses));
+  const mes = Number(i.edadMeses);
   const sexo = String(i.sexo || 'm');
   const pesoActual = Number(i.pesoActual) || 0;
 
-  if (mes < 0 || mes > 24) throw new Error('La edad debe estar entre 0 y 24 meses');
+  if (!isFinite(mes) || mes < 0 || mes > 60) {
+    throw new Error('La edad debe estar entre 0 y 60 meses (5 años)');
+  }
+  if (pesoActual < 0) throw new Error('El peso no puede ser negativo');
 
-  // Tablas OMS simplificadas: [p3, p15, p50, p85, p97]
-  const varones: Record<number, number[]> = {
-    0: [2.5, 2.9, 3.3, 3.9, 4.4],
-    1: [3.4, 3.9, 4.5, 5.1, 5.8],
-    2: [4.3, 4.9, 5.6, 6.3, 7.1],
-    3: [5.0, 5.7, 6.4, 7.2, 8.0],
-    4: [5.6, 6.2, 7.0, 7.8, 8.7],
-    5: [6.0, 6.7, 7.5, 8.4, 9.3],
-    6: [6.4, 7.1, 7.9, 8.8, 9.8],
-    7: [6.7, 7.4, 8.3, 9.2, 10.3],
-    8: [6.9, 7.7, 8.6, 9.6, 10.7],
-    9: [7.1, 7.9, 8.9, 9.9, 10.9],
-    10: [7.4, 8.2, 9.2, 10.2, 11.4],
-    11: [7.6, 8.4, 9.4, 10.5, 11.7],
-    12: [7.7, 8.6, 9.6, 10.8, 12.0],
-    13: [7.9, 8.8, 9.9, 11.0, 12.3],
-    14: [8.1, 9.0, 10.1, 11.3, 12.6],
-    15: [8.3, 9.2, 10.3, 11.5, 12.8],
-    16: [8.4, 9.4, 10.5, 11.7, 13.1],
-    17: [8.6, 9.6, 10.7, 12.0, 13.4],
-    18: [8.8, 9.8, 10.9, 12.2, 13.7],
-    19: [9.0, 10.0, 11.1, 12.5, 13.9],
-    20: [9.1, 10.1, 11.3, 12.7, 14.2],
-    21: [9.3, 10.3, 11.5, 12.9, 14.5],
-    22: [9.5, 10.5, 11.8, 13.2, 14.7],
-    23: [9.7, 10.7, 12.0, 13.4, 15.0],
-    24: [9.7, 10.8, 12.2, 13.6, 15.3],
-  };
+  const dayFloat = mes * DIAS_POR_MES;
+  const { L, M, S } = lookupLMS(sexo, dayFloat);
 
-  const mujeres: Record<number, number[]> = {
-    0: [2.4, 2.8, 3.2, 3.7, 4.2],
-    1: [3.2, 3.6, 4.2, 4.8, 5.5],
-    2: [3.9, 4.5, 5.1, 5.8, 6.6],
-    3: [4.5, 5.2, 5.8, 6.6, 7.5],
-    4: [5.0, 5.7, 6.4, 7.3, 8.2],
-    5: [5.4, 6.1, 6.9, 7.8, 8.8],
-    6: [5.7, 6.5, 7.3, 8.2, 9.3],
-    7: [6.0, 6.8, 7.6, 8.6, 9.8],
-    8: [6.3, 7.0, 7.9, 9.0, 10.2],
-    9: [6.5, 7.3, 8.2, 9.3, 10.5],
-    10: [6.7, 7.5, 8.5, 9.6, 10.9],
-    11: [6.9, 7.7, 8.7, 9.9, 11.2],
-    12: [7.0, 7.9, 8.9, 10.1, 11.5],
-    13: [7.2, 8.1, 9.2, 10.4, 11.8],
-    14: [7.4, 8.3, 9.4, 10.6, 12.1],
-    15: [7.6, 8.5, 9.6, 10.9, 12.4],
-    16: [7.7, 8.7, 9.8, 11.1, 12.6],
-    17: [7.9, 8.9, 10.0, 11.4, 12.9],
-    18: [8.1, 9.1, 10.2, 11.6, 13.2],
-    19: [8.2, 9.2, 10.4, 11.8, 13.5],
-    20: [8.4, 9.4, 10.6, 12.1, 13.7],
-    21: [8.6, 9.6, 10.9, 12.3, 14.0],
-    22: [8.7, 9.8, 11.1, 12.5, 14.3],
-    23: [8.9, 10.0, 11.3, 12.8, 14.6],
-    24: [9.0, 10.2, 11.5, 13.0, 14.8],
-  };
+  const p3 = weightAtPercentile(L, M, S, 3);
+  const p15 = weightAtPercentile(L, M, S, 15);
+  const p50 = M; // por definición LMS, M es la mediana.
+  const p85 = weightAtPercentile(L, M, S, 85);
+  const p97 = weightAtPercentile(L, M, S, 97);
 
-  const tabla = sexo === 'f' ? mujeres : varones;
-  const p = tabla[mes];
-  if (!p) throw new Error('Edad fuera de rango');
-
-  const pesoMediana = p[2]; // p50
-  const rangoNormal = `${p[1].toFixed(1)} – ${p[3].toFixed(1)} kg (p15–p85)`;
+  const pesoMediana = Number(p50.toFixed(2));
+  const rangoNormal = `${p15.toFixed(2)} – ${p85.toFixed(2)} kg (p15–p85)`;
 
   let percentilBebe = 'No ingresaste el peso actual';
   if (pesoActual > 0) {
-    if (pesoActual < p[0]) percentilBebe = '< percentil 3 — Consultá al pediatra';
-    else if (pesoActual < p[1]) percentilBebe = 'Percentil 3-15 — Rango bajo';
-    else if (pesoActual < p[2]) percentilBebe = 'Percentil 15-50 — Normal';
-    else if (pesoActual < p[3]) percentilBebe = 'Percentil 50-85 — Normal';
-    else if (pesoActual < p[4]) percentilBebe = 'Percentil 85-97 — Rango alto';
-    else percentilBebe = '> percentil 97 — Consultá al pediatra';
+    // Z-score exacto del bebé.
+    const z = Math.abs(L) < 1e-9
+      ? Math.log(pesoActual / M) / S
+      : (Math.pow(pesoActual / M, L) - 1) / (L * S);
+    const percentil = normalCdf(z) * 100;
+    const pRound = Math.round(percentil * 10) / 10;
+
+    let label: string;
+    if (percentil < 3) label = 'Bajo peso — Consultá al pediatra';
+    else if (percentil < 15) label = 'Rango bajo — Vigilar';
+    else if (percentil < 85) label = 'Normal';
+    else if (percentil < 97) label = 'Rango alto — Vigilar';
+    else label = 'Peso elevado — Consultá al pediatra';
+
+    percentilBebe = `Percentil ${pRound} — ${label}`;
   }
 
   const sexoLabel = sexo === 'f' ? 'niña' : 'niño';
+  const mesLabel = Number.isInteger(mes) ? `${mes}` : mes.toFixed(1);
   const detalle =
-    `${sexoLabel} de ${mes} meses | ` +
-    `Mediana (p50): ${pesoMediana} kg | ` +
-    `Rango p15-p85: ${rangoNormal} | ` +
-    `Rango p3-p97: ${p[0].toFixed(1)} – ${p[4].toFixed(1)} kg` +
+    `${sexoLabel} de ${mesLabel} meses | ` +
+    `Mediana (p50): ${p50.toFixed(2)} kg | ` +
+    `Rango p15-p85: ${p15.toFixed(2)}–${p85.toFixed(2)} kg | ` +
+    `Rango p3-p97: ${p3.toFixed(2)}–${p97.toFixed(2)} kg` +
     (pesoActual > 0 ? ` | Peso actual: ${pesoActual} kg → ${percentilBebe}` : '') +
-    '. Tablas OMS 2006.';
+    '. Tablas LMS oficiales OMS Child Growth Standards 2006.';
 
   return {
     pesoMediana,
