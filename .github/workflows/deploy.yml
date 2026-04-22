@@ -38,6 +38,18 @@ jobs:
       - name: Build
         run: npm run build
 
+      # El adapter @astrojs/cloudflare genera DOS configs en el build:
+      #   1. dist/server/wrangler.json  ← la que queremos usar (workingDirectory)
+      #   2. .wrangler/deploy/config.json  ← "deploy config" apuntando a 1
+      # Wrangler ve las dos con base paths distintos y aborta con:
+      #   "Found both a user configuration file at \"wrangler.json\"
+      #    and a deploy configuration file at \"../../.wrangler/deploy/config.json\".
+      #    But these do not share the same base path..."
+      # Eliminamos el deploy config para que wrangler use solo el wrangler.json
+      # de dist/server/.
+      - name: Remove stale .wrangler/deploy/config.json
+        run: rm -rf .wrangler/deploy
+
       # Diagnóstico pre-deploy: verifica que el token CF es válido y lista
       # los scopes/permission groups. Si la próxima step falla por 10000
       # (auth) esto deja un rastro claro en el log sin exponer el secret.
