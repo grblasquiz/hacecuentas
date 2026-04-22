@@ -5,11 +5,13 @@
  */
 export const prerender = false;
 
-import { getD1FromLocals } from '../lib/api-utils';
+import { getEnv } from '../lib/api-utils';
 
 const url = new URL(Astro.request.url);
 const providedKey = url.searchParams.get('k') || '';
-const env = (Astro.locals as any).runtime?.env || {};
+// Astro v6: env vars / bindings van por el módulo virtual cloudflare:workers
+// (no `Astro.locals.runtime.env` — se removió).
+const env = getEnv();
 const expectedKey = env.ADMIN_PASSCODE || '';
 const authorized = expectedKey && providedKey === expectedKey;
 
@@ -18,7 +20,7 @@ let voteSummary: any[] = [];
 let errorReports: any[] = [];
 let dbError = '';
 
-const db = getD1FromLocals(Astro.locals);
+const db = env.DB;
 
 if (authorized && db) {
   try {

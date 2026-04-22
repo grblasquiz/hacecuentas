@@ -5,10 +5,35 @@
  * tiene `output: 'server'`.
  */
 
-/** Acceso tipado al D1 binding desde el context Astro + CF runtime. */
-export function getD1FromLocals(locals: any): D1Database | null {
-  const env = locals?.runtime?.env;
-  return env?.DB || null;
+// Astro v6 removió `Astro.locals.runtime.env`. Ahora los bindings se
+// leen via `import { env } from "cloudflare:workers"` — módulo virtual
+// que Cloudflare provee en runtime del Worker.
+import { env as cfEnv } from 'cloudflare:workers';
+
+/**
+ * Env tipado con los bindings de wrangler.jsonc.
+ * Si agregás un binding nuevo, extendé esta interface.
+ */
+export interface CfEnv {
+  DB: D1Database;
+  ASSETS: Fetcher;
+  SESSION?: KVNamespace;
+  IMAGES?: unknown;
+  ADMIN_PASSCODE?: string;
+}
+
+/** Acceso tipado al env del Worker (D1, KV, secrets). */
+export function getEnv(): CfEnv {
+  return cfEnv as unknown as CfEnv;
+}
+
+/**
+ * @deprecated Astro v6: usar `getEnv().DB`.
+ * Se mantiene la firma para no romper call-sites existentes.
+ */
+export function getD1FromLocals(_locals?: unknown): D1Database | null {
+  const db = (cfEnv as any)?.DB as D1Database | undefined;
+  return db || null;
 }
 
 export function json(body: unknown, init: ResponseInit = {}): Response {
