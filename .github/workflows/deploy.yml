@@ -18,6 +18,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0 trae toda la historia del repo. La necesita
+          # scripts/generate-sitemap.ts para usar `git log` como fuente
+          # de `lastmod` por archivo — sino el mtime del checkout es
+          # uniforme y el sitemap reporta "todo cambió hoy" (mala señal
+          # para Google crawl budget).
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4

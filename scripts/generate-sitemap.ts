@@ -21,8 +21,9 @@
  */
 
 import { readFileSync, writeFileSync, statSync, readdirSync } from 'node:fs';
-import { join, resolve, dirname } from 'node:path';
+import { join, resolve, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -64,8 +65,56 @@ function readJSONs(dir: string): any[] {
     .filter(Boolean);
 }
 
+/**
+ * Cache de timestamps git por archivo — evita N llamadas a git por cada build.
+ * Se popula en build-time con `git log --format=%ct --name-only` (una sola llamada).
+ */
+let gitMtimeCache: Map<string, number> | null = null;
+
+function loadGitMtimes(): Map<string, number> {
+  if (gitMtimeCache) return gitMtimeCache;
+  gitMtimeCache = new Map();
+  try {
+    // Formato: timestamp seguido de archivos tocados en ese commit.
+    // Procesamos de más reciente a más viejo, y solo guardamos la PRIMERA vez
+    // que vemos cada archivo → ese es su último commit.
+    const out = execSync('git log --format="%ct" --name-only', {
+      cwd: ROOT,
+      encoding: 'utf8',
+      maxBuffer: 100 * 1024 * 1024,
+    });
+    let currentTs = 0;
+    for (const line of out.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      if (/^\d+$/.test(trimmed)) {
+        currentTs = parseInt(trimmed, 10);
+      } else if (currentTs && !gitMtimeCache.has(trimmed)) {
+        gitMtimeCache.set(trimmed, currentTs);
+      }
+    }
+  } catch (err) {
+    console.warn('[sitemap] git log falló, cae a mtime:', (err as Error).message);
+  }
+  return gitMtimeCache;
+}
+
+/**
+ * Devuelve el timestamp del último commit que tocó el archivo, como YYYY-MM-DD.
+ * Fallback a mtime del FS si git no está disponible (ej. fuera de un repo).
+ *
+ * En CI (GitHub Actions), el mtime de los archivos es el momento del checkout,
+ * no el momento del último commit — por eso mtime solo no sirve. git log sí.
+ */
 function getLastMod(filepath: string, fallback: string): string {
   try {
+    const rel = relative(ROOT, filepath).replace(/\\/g, '/');
+    const ts = loadGitMtimes().get(rel);
+    if (ts) {
+      return new Date(ts * 1000).toISOString().split('T')[0];
+    }
+    // Fallback: mtime (útil para archivos recién creados todavía no commiteados
+    // o en entornos sin git).
     return statSync(filepath).mtime.toISOString().split('T')[0];
   } catch { return fallback; }
 }
