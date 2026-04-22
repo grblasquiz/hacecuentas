@@ -1,21 +1,13 @@
 /**
  * POST /api/vote
- * Guarda un voto 👍/👎 por calculadora.
- *
  * Body: { slug: string, vote: 'up' | 'down' }
  */
-import type { APIRoute } from 'astro';
-import { getD1, getClientIP, hashIP, json, sanitizeText } from '../../lib/api-utils';
+import { Env, json, sanitizeText, getClientIP, hashIP, parseBody } from '../_utils';
 
-export const prerender = false;
-
-export const POST: APIRoute = async (context) => {
-  let body: Record<string, unknown> = {};
-  try {
-    body = await context.request.json();
-  } catch {
-    return json({ error: 'Body inválido' }, { status: 400 });
-  }
+export const onRequestPost: PagesFunction<Env> = async (context) => {
+  let body: Record<string, unknown>;
+  try { body = await parseBody(context.request); }
+  catch { return json({ error: 'Body inválido' }, { status: 400 }); }
 
   const slug = sanitizeText(body.slug, 200);
   const vote = String(body.vote || '').toLowerCase();
@@ -27,12 +19,11 @@ export const POST: APIRoute = async (context) => {
     return json({ error: 'Vote debe ser "up" o "down"' }, { status: 400 });
   }
 
-  const db = getD1(context);
   const ipH = hashIP(getClientIP(context.request));
   const ua = (context.request.headers.get('user-agent') || '').slice(0, 200);
 
   try {
-    await db
+    await context.env.DB
       .prepare(
         `INSERT INTO calc_votes (slug, vote, created_at, user_agent, ip_hash)
          VALUES (?, ?, ?, ?, ?)`,
@@ -44,4 +35,8 @@ export const POST: APIRoute = async (context) => {
     console.error('vote insert failed:', err);
     return json({ error: 'No se pudo registrar el voto.' }, { status: 500 });
   }
+};
+
+export const onRequest: PagesFunction<Env> = async () => {
+  return json({ error: 'Usar POST' }, { status: 405, headers: { allow: 'POST' } });
 };

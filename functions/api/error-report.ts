@@ -1,23 +1,13 @@
 /**
  * POST /api/error-report
- * Guarda un reporte de error/mejora sobre una calculadora.
- *
  * Body: { slug: string, message: string, email?: string }
  */
-import type { APIRoute } from 'astro';
-import {
-  getD1, getClientIP, hashIP, json, sanitizeText, isValidEmail,
-} from '../../lib/api-utils';
+import { Env, json, sanitizeText, isValidEmail, getClientIP, hashIP, parseBody } from '../_utils';
 
-export const prerender = false;
-
-export const POST: APIRoute = async (context) => {
-  let body: Record<string, unknown> = {};
-  try {
-    body = await context.request.json();
-  } catch {
-    return json({ error: 'Body inválido' }, { status: 400 });
-  }
+export const onRequestPost: PagesFunction<Env> = async (context) => {
+  let body: Record<string, unknown>;
+  try { body = await parseBody(context.request); }
+  catch { return json({ error: 'Body inválido' }, { status: 400 }); }
 
   const slug = sanitizeText(body.slug, 200);
   const message = sanitizeText(body.message, 2000);
@@ -29,17 +19,15 @@ export const POST: APIRoute = async (context) => {
   if (!message || message.length < 5) {
     return json({ error: 'Contanos un poco más qué está mal (mín 5 caracteres).' }, { status: 400 });
   }
-  // Email es opcional; si viene, validamos.
   if (email && !isValidEmail(email)) {
     return json({ error: 'Email inválido (dejalo vacío si no querés dar mail).' }, { status: 400 });
   }
 
-  const db = getD1(context);
   const ipH = hashIP(getClientIP(context.request));
   const ua = (context.request.headers.get('user-agent') || '').slice(0, 200);
 
   try {
-    await db
+    await context.env.DB
       .prepare(
         `INSERT INTO error_reports
          (slug, message, email, created_at, user_agent, ip_hash)
@@ -52,4 +40,8 @@ export const POST: APIRoute = async (context) => {
     console.error('error-report insert failed:', err);
     return json({ error: 'No se pudo enviar el reporte, intentá en un rato.' }, { status: 500 });
   }
+};
+
+export const onRequest: PagesFunction<Env> = async () => {
+  return json({ error: 'Usar POST' }, { status: 405, headers: { allow: 'POST' } });
 };
