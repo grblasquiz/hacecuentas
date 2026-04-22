@@ -13,21 +13,26 @@ export interface Outputs {
   tipo: string;
 }
 
-// Costos orientativos Argentina 2026 en USD/m² (CAC, CPIC estimaciones)
+// Costos orientativos Argentina 2026 en USD/m² (fuente: CAC, CPIC, índice ICCo).
+// Valores base referencia CABA/GBA sur. Revisar semestralmente: CAC publica
+// cada mes un índice que se puede contrastar para validar rangos.
 const TIPOS: Record<string, { nombre: string; usd: number }> = {
-  economico: { nombre: 'Económico (vivienda social, campo)', usd: 600 },
-  estandar: { nombre: 'Estándar (casa media urbana)', usd: 900 },
-  medio: { nombre: 'Casa media (clase media, GBA/CABA)', usd: 1200 },
-  alto: { nombre: 'Casa de alta categoría (country, barrio cerrado)', usd: 1800 },
-  premium: { nombre: 'Premium (alta gama, mármol, domótica)', usd: 2800 },
-  ampliacion: { nombre: 'Ampliación sobre obra existente', usd: 700 },
-  reforma: { nombre: 'Reforma integral (con estructura)', usd: 500 },
-  dpto_estandar: { nombre: 'Departamento torre estándar', usd: 1100 },
-  dpto_premium: { nombre: 'Departamento premium (Puerto Madero)', usd: 2200 },
-  galpon: { nombre: 'Galpón industrial tipo', usd: 450 },
+  economico: { nombre: 'Económico (vivienda social, campo)', usd: 800 },
+  estandar: { nombre: 'Estándar (casa media urbana)', usd: 1000 },
+  medio: { nombre: 'Casa media (clase media, GBA/CABA)', usd: 1300 },
+  alto: { nombre: 'Casa de alta categoría (country, barrio cerrado)', usd: 1900 },
+  premium: { nombre: 'Premium (alta gama, mármol, domótica)', usd: 2900 },
+  ampliacion: { nombre: 'Ampliación sobre obra existente', usd: 800 },
+  reforma: { nombre: 'Reforma integral (con estructura)', usd: 600 },
+  dpto_estandar: { nombre: 'Departamento torre estándar', usd: 1200 },
+  dpto_premium: { nombre: 'Departamento premium (Puerto Madero)', usd: 2300 },
+  galpon: { nombre: 'Galpón industrial tipo', usd: 500 },
 };
 
-// Ajuste por provincia
+// Ajuste por provincia/zona. Factores 2026 basados en distancia a mayoristas,
+// costos logísticos y exigencias climáticas/estructurales locales.
+// Patagonia austral (TDF, Santa Cruz) + norte andino (Jujuy, Salta) tienen
+// recargos por transporte + aislamiento térmico/sísmico obligatorio.
 const AJUSTE: Record<string, number> = {
   caba: 1.25,
   gba_norte: 1.15,
@@ -35,7 +40,11 @@ const AJUSTE: Record<string, number> = {
   cordoba: 0.95,
   rosario: 0.95,
   mendoza: 0.90,
-  interior: 0.85,
+  'la-pampa': 0.92,                 // llanura accesible, logística intermedia
+  patagonia_norte: 1.10,            // Neuquén, Río Negro, Chubut — aislamiento + costos
+  patagonia_austral: 1.35,          // Santa Cruz — logística austral
+  'tierra-del-fuego': 1.40,         // TDF: +40% por aislamiento sísmico+térmico obligatorio, logística marítima
+  interior: 0.88,                   // default interior (era 0.85, ajustado)
 };
 
 export function costoM2Construccion(i: Inputs): Outputs {
