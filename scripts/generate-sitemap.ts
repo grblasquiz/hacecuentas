@@ -20,7 +20,7 @@
  * Usage: npm run sitemap (también corre en prebuild)
  */
 
-import { readFileSync, writeFileSync, statSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, statSync, readdirSync, existsSync } from 'node:fs';
 import { join, resolve, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
@@ -141,7 +141,22 @@ function getCalcLastMod(calc: any, filepath: string, fallback: string): string {
   if (calc?.dataUpdate?.lastUpdated && /^\d{4}-\d{2}-\d{2}$/.test(calc.dataUpdate.lastUpdated)) {
     candidates.push(calc.dataUpdate.lastUpdated);
   }
-  const mtime = getLastMod(filepath, '');
+  // Resolver el archivo real del calc. Convención histórica mixta en el repo:
+  // ~1800 calcs se nombran por `formulaId`, ~600 por `slug`, ~14 por otra cosa.
+  // El caller pasa el path construido con formulaId||slug; si no existe, probamos
+  // el otro formato. Sin esto, 611 calcs pierden la señal de mtime y caen al
+  // dataUpdate.lastUpdated (fecha vieja) → sitemap les reporta fecha anterior
+  // a la real y Google no ve el cambio.
+  let resolved = filepath;
+  if (!existsSync(resolved)) {
+    const bySlug = join(CALCS_DIR, `${calc?.slug}.json`);
+    if (existsSync(bySlug)) resolved = bySlug;
+    else if (calc?.formulaId) {
+      const byFormula = join(CALCS_DIR, `${calc.formulaId}.json`);
+      if (existsSync(byFormula)) resolved = byFormula;
+    }
+  }
+  const mtime = existsSync(resolved) ? getLastMod(resolved, '') : '';
   if (mtime) candidates.push(mtime);
   if (candidates.length === 0) return fallback;
   return candidates.sort().at(-1)!;
