@@ -2623,20 +2623,21 @@ const formatFreshnessDate = (iso: string): string => {
             initWhatIf();
           }
 
-          // GA4 event + Google Ads conversion
-          // IMPORTANTE: el evento 'conversion_event_default' tiene que estar
-          // marcado como 'evento clave' en GA4 (Admin → Eventos) y como
-          // conversión en Google Ads (Tools → Conversions → crear acción con
-          // ese nombre). Sin eso, se registra como evento normal, no conversión.
+          // GA4 event + Google Ads conversion (un solo evento consolidado).
+          //
+          // Antes disparábamos 2 eventos (calculator_used + conversion_event_default)
+          // pero el nombre con prefijo "conversion_*" recibe tratamiento especial
+          // por el tag de Google Ads y no se veía en la lista de eventos GA4,
+          // lo que bloqueaba la importación como conversión en Ads.
+          //
+          // Ahora es un solo evento `calculator_used` con value + currency,
+          // que sí aparece en GA4 → se puede marcar como "evento clave" allá
+          // → se importa como conversión en Google Ads (Tools → Conversions →
+          // Import → Google Analytics 4 → seleccionar calculator_used → Primary).
           if (typeof (window as any).gtag === 'function') {
             (window as any).gtag('event', 'calculator_used', {
               calc_slug: slug,
               formula_id: formulaId,
-            });
-            // Evento de conversión con value + currency (requerido por Google Ads
-            // para que la conversion action tenga valor atribuible).
-            (window as any).gtag('event', 'conversion_event_default', {
-              calc_slug: slug,
               value: 1.0,
               currency: 'ARS',
             });
@@ -2648,10 +2649,6 @@ const formatFreshnessDate = (iso: string): string => {
               event: 'calculator_used',
               calc_slug: slug,
               formula_id: formulaId,
-            });
-            (window as any).dataLayer.push({
-              event: 'conversion_event_default',
-              calc_slug: slug,
               value: 1.0,
               currency: 'ARS',
             });
