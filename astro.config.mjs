@@ -14,7 +14,13 @@ import cloudflare from '@astrojs/cloudflare';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://hacecuentas.com',
-  output: 'static',
+  // output: 'server' permite mixed mode — las pages con `prerender: true` (o con
+  // getStaticPaths) se prerenderizan; las demás (como /api/* con prerender:false)
+  // quedan como SSR ejecutándose en el Worker generado por el adapter CF.
+  // Nota: si tocás esto, asegurate que TODAS las pages estáticas tengan
+  // `export const prerender = true` o un getStaticPaths. Sin eso se renderean
+  // dinámicamente cada request, ahorrando cache.
+  output: 'server',
   trailingSlash: 'never',
 
   build: {

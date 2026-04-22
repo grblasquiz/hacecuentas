@@ -1,11 +1,14 @@
 /**
- * Utils compartidos para Cloudflare Pages Functions.
- * NO depende de Astro — corre directo en el runtime Workers.
+ * Utils compartidos para las API routes Astro.
+ * Los endpoints con `prerender: false` corren como SSR en el Worker
+ * generado por el adapter @astrojs/cloudflare cuando el astro.config
+ * tiene `output: 'server'`.
  */
 
-export interface Env {
-  DB: D1Database;
-  ADMIN_PASSCODE?: string;
+/** Acceso tipado al D1 binding desde el context Astro + CF runtime. */
+export function getD1FromLocals(locals: any): D1Database | null {
+  const env = locals?.runtime?.env;
+  return env?.DB || null;
 }
 
 export function json(body: unknown, init: ResponseInit = {}): Response {
