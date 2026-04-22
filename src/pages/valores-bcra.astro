@@ -51,13 +51,16 @@ const fmtDate = (s: string) => {
 
 const buildDate = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
 
-// Tarjetas dólar en orden deseado
-const dolarCards: { key: string; label: string; hint: string }[] = [
+// Tarjetas dólar en orden deseado.
+// Nota sobre dólar tarjeta: el Impuesto PAIS (30%) se dejó vencer el 22/12/2024.
+// Desde entonces el recargo es sólo la percepción Ganancias/Bienes Personales del 30%.
+// Antes de tocar este hint verificar última normativa AFIP vigente.
+const dolarCards: { key: string; label: string; hint: string; isTaxed?: boolean }[] = [
   { key: 'oficial', label: 'Dólar Oficial', hint: 'Cotización mayorista del BCRA' },
   { key: 'blue', label: 'Dólar Blue', hint: 'Paralelo informal (Parque Lezama, arbolitos)' },
   { key: 'bolsa', label: 'Dólar MEP', hint: 'MEP / Bolsa: AL30 en pesos vs AL30 en USD' },
   { key: 'contadoconliqui', label: 'Dólar CCL', hint: 'Contado con liqui: para girar al exterior' },
-  { key: 'tarjeta', label: 'Dólar Tarjeta', hint: 'Oficial + 30% PAIS + 45% Ganancias' },
+  { key: 'tarjeta', label: 'Dólar Tarjeta', hint: 'Oficial + 30% percepción Ganancias (PAIS derogado dic 2024)', isTaxed: true },
   { key: 'cripto', label: 'Dólar Cripto', hint: 'USDT promedio en exchanges' },
 ];
 
@@ -94,12 +97,19 @@ const schema = {
           const d = dolarMap[c.key];
           const venta = d?.venta;
           const brecha = venta && dolarMap.oficial?.venta ? ((venta / dolarMap.oficial.venta - 1) * 100).toFixed(1) : null;
+          // Brecha cambiaria sólo tiene sentido para dólares de mercado (blue/MEP/CCL/cripto),
+          // no para el tarjeta — ese "+30%" es el impuesto, no una brecha.
+          const showBrecha = brecha && c.key !== 'oficial' && !c.isTaxed;
+          const showTaxBadge = c.isTaxed && brecha;
           return (
             <div class="card">
               <div class="card-head">
                 <span class="card-label">{c.label}</span>
-                {brecha && c.key !== 'oficial' && (
+                {showBrecha && (
                   <span class="badge">+{brecha}%</span>
+                )}
+                {showTaxBadge && (
+                  <span class="badge badge-tax" title="Recargo por percepción Ganancias, no brecha cambiaria">+{brecha}% impuesto</span>
                 )}
               </div>
               <div class="card-value">
@@ -154,16 +164,20 @@ const schema = {
 
     <!-- SECCIÓN PLAZO FIJO / TASAS -->
     <section class="dash-section">
-      <h2>🏦 Plazo fijo: TNA por banco (abril 2026)</h2>
+      <h2>🏦 Plazo fijo: TNA por banco ({new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })})</h2>
       <div class="tna-grid">
         {[
-          { b: 'Nación', tna: 35 },
-          { b: 'Santander', tna: 36 },
-          { b: 'BBVA', tna: 37 },
-          { b: 'Galicia', tna: 38 },
-          { b: 'Provincia', tna: 38 },
-          { b: 'Macro', tna: 39 },
-          { b: 'ICBC', tna: 40 },
+          { b: 'Hipotecario', tna: 22.5 },
+          { b: 'Macro', tna: 21.5 },
+          { b: 'Provincia', tna: 21.5 },
+          { b: 'BBVA', tna: 20.5 },
+          { b: 'ICBC', tna: 19.75 },
+          { b: 'Credicoop', tna: 19.5 },
+          { b: 'Nación', tna: 19 },
+          { b: 'Ciudad', tna: 19 },
+          { b: 'Galicia', tna: 18.25 },
+          { b: 'Patagonia', tna: 18 },
+          { b: 'Santander', tna: 16.5 },
         ].map((x) => (
           <div class="tna-card">
             <div class="tna-bank">{x.b}</div>
@@ -289,6 +303,13 @@ const schema = {
     font-weight: 700;
     padding: 0.125rem 0.5rem;
     border-radius: 999px;
+  }
+  /* Impuesto (tarjeta) vs brecha cambiaria (blue/mep/ccl): colores distintos
+     para que el usuario no confunda el recargo fiscal con una brecha de mercado. */
+  .badge-tax {
+    background: var(--warning-soft, rgba(245, 158, 11, 0.14));
+    color: var(--warning, #b45309);
+    cursor: help;
   }
 
   .card-value {

@@ -4,7 +4,9 @@ export interface Outputs { kwhMes: number; costoMes: number; kwhAnual: number; c
 
 export function consumoElectrodomesticoKwh(i: Inputs): Outputs {
   const w = Number(i.watts); const h = Number(i.horasDia); const d = Number(i.diasMes);
-  const costo = Number(i.costoKwh) || 150;
+  // Default abril 2026: EDENOR sin subsidio $115/kWh (tarifa simple, sin impuestos)
+  // El usuario puede ingresar su propio valor desde la factura.
+  const costo = Number(i.costoKwh) || 115;
   if (!w || w <= 0) throw new Error('Ingresá la potencia en watts');
   if (!h || h <= 0) throw new Error('Ingresá las horas de uso');
   const kwhMes = (w * h * d) / 1000;

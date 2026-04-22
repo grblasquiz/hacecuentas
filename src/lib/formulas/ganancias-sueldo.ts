@@ -10,7 +10,8 @@
 
 import {
   MNI_MENSUAL_BASE,
-  INCREMENTO_POR_FAMILIAR,
+  INCREMENTO_CONYUGE_MENSUAL,
+  INCREMENTO_HIJO_MENSUAL,
   aplicarEscalaMensual,
 } from './_ganancias-escala';
 
@@ -59,9 +60,11 @@ export function gananciasSueldo(inputs: GananciasSueldoInputs): GananciasSueldoO
   const aportesMensuales = brutoMensual * 0.17;
   const netoDeAportesMensual = brutoMensual - aportesMensuales;
 
-  // Familiares a cargo (cónyuge + hijos)
-  const cantidadFamiliares = (conyuge ? 1 : 0) + hijos;
-  const deduccionFamiliaresMensual = cantidadFamiliares * INCREMENTO_POR_FAMILIAR;
+  // Familiares a cargo: ARCA diferencia cónyuge (~$404k/mes) de hijo (~$204k/mes).
+  // Antes el código los igualaba — ahora aplica el valor exacto de cada uno.
+  const deduccionConyugeMensual = conyuge ? INCREMENTO_CONYUGE_MENSUAL : 0;
+  const deduccionHijosMensual = hijos * INCREMENTO_HIJO_MENSUAL;
+  const deduccionFamiliaresMensual = deduccionConyugeMensual + deduccionHijosMensual;
 
   // Deducciones mensuales totales
   const mniTotalMensual = MNI_MENSUAL_BASE + deduccionFamiliaresMensual + otrasMensuales;

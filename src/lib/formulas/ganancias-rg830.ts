@@ -1,22 +1,26 @@
 /**
- * Calculadora de Retenciones de Ganancias RG 830/2000 AFIP/ARCA
+ * Calculadora de Retenciones de Ganancias RG 830 — Anexo VIII ARCA
  *
- * Retención sobre pagos a proveedores personas humanas o jurídicas.
- * El agente de retención (pagador) retiene al momento del pago.
+ * Retención sobre pagos a proveedores personas humanas o jurídicas. El agente
+ * de retención (pagador) retiene al momento del pago.
  *
- * Valores Anexo VIII (aprox 2026, actualizados por última RG de ARCA).
- * Para validación oficial, consultar https://servicioscf.afip.gob.ar/calc-rg830/
+ * IMPORTANTE sobre los valores 2026:
+ * Los MNI y tramos de escala del Anexo VIII NO se actualizan desde la
+ * RG 5423/2023. ARCA los mantiene congelados pese a la inflación acumulada,
+ * lo que hace que casi cualquier pago a proveedores caiga bajo retención.
+ * Por eso los valores de abajo lucen "ridículamente bajos" — son los oficiales.
+ * Fuente: https://biblioteca.afip.gob.ar/search/query/adjunto.aspx?p=t:RAG%7Cn:830%7Co:3%7Ca:2000%7Cd:A8_RG5423.pdf
  *
  * Fórmula:
  *   monto_acumulado = pago_actual + pagos_anteriores_mes
  *   base_retencion = max(0, monto_acumulado - MNI)
- *   retencion_total = base × alicuota (con escala para profesionales)
+ *   retencion_total = base × alícuota (o escala para honorarios/profesionales)
  *   retencion_a_pagar = retencion_total - retenciones_anteriores
- *   Mínimo operativo: $240 para inscriptos en servicios, $1020 para no inscriptos en alquileres
+ *   Mínimo operativo: $240 (general) o $1.020 (alquileres inmuebles urbanos no inscriptos)
  */
 
 export interface GananciasRG830Inputs {
-  concepto: string; // código del concepto
+  concepto: string; // slug del concepto
   condicion: string; // 'inscripto' | 'no-inscripto'
   montoPago: number; // neto de IVA
   pagosAnteriores: number; // acumulado del mes
@@ -25,97 +29,123 @@ export interface GananciasRG830Inputs {
 
 interface ConceptoConfig {
   nombre: string;
+  codigo: string;
   mniInscripto: number;
-  alicuotaInscripto: number; // en %
-  alicuotaNoInscripto: number; // en %
-  escalaProgresiva?: boolean;
+  /** Si tiene alícuota fija, va acá. Si usa escala, queda 0 y se marca escalaTipo. */
+  alicuotaInscripto: number;
+  alicuotaNoInscripto: number;
+  /** Qué escala progresiva aplicar: 'general' (cód 25/116/124/110) o 'profesionales' (cód 119). */
+  escalaTipo?: 'general' | 'profesionales';
 }
 
-// Valores aproximados 2026 — consultar simulador AFIP para casos precisos
+// Valores oficiales Anexo VIII RG 830 (últimos publicados por RG 5423/2023).
+// Vigentes en 2026 — ARCA no los actualizó.
 const conceptos: Record<string, ConceptoConfig> = {
   'honorarios-profesionales': {
-    nombre: 'Honorarios profesionales (cód. 119)',
-    mniInscripto: 160000,
-    alicuotaInscripto: 10, // promedio de la escala progresiva (aprox)
+    nombre: 'Honorarios profesionales, profesiones liberales, oficios (cód. 119)',
+    codigo: '119',
+    mniInscripto: 160_000,
+    alicuotaInscripto: 0,
     alicuotaNoInscripto: 28,
-    escalaProgresiva: true,
+    escalaTipo: 'profesionales',
   },
   'locacion-obras-servicios': {
-    nombre: 'Locación obras y servicios no personales (cód. 111/112)',
-    mniInscripto: 293000,
+    nombre: 'Locación obras y servicios no personales (cód. 94)',
+    codigo: '94',
+    mniInscripto: 67_170,
     alicuotaInscripto: 2,
     alicuotaNoInscripto: 28,
   },
   'alquileres-urbanos': {
-    nombre: 'Alquiler de inmuebles urbanos (cód. 128)',
-    mniInscripto: 193000,
+    nombre: 'Alquiler de inmuebles urbanos (cód. 31)',
+    codigo: '31',
+    mniInscripto: 11_200,
     alicuotaInscripto: 6,
     alicuotaNoInscripto: 28,
   },
   'alquileres-rurales': {
-    nombre: 'Alquiler de inmuebles rurales (cód. 129)',
-    mniInscripto: 193000,
+    nombre: 'Alquiler de inmuebles rurales (cód. 32)',
+    codigo: '32',
+    mniInscripto: 11_200,
     alicuotaInscripto: 6,
     alicuotaNoInscripto: 28,
   },
   comisiones: {
-    nombre: 'Comisiones / Intermediación (cód. 127)',
-    mniInscripto: 293000,
-    alicuotaInscripto: 2,
+    nombre: 'Comisiones / intermediación (cód. 25)',
+    codigo: '25',
+    mniInscripto: 16_830,
+    alicuotaInscripto: 0,
     alicuotaNoInscripto: 28,
+    escalaTipo: 'general',
   },
   intereses: {
-    nombre: 'Intereses (cód. 131)',
-    mniInscripto: 44000,
+    nombre: 'Intereses no financieros (cód. 21)',
+    codigo: '21',
+    mniInscripto: 7_870,
     alicuotaInscripto: 6,
     alicuotaNoInscripto: 28,
   },
   'enajenacion-bienes': {
-    nombre: 'Enajenación de bienes muebles (cód. 114)',
-    mniInscripto: 224000,
+    nombre: 'Enajenación de bienes muebles y bienes de cambio (cód. 78)',
+    codigo: '78',
+    mniInscripto: 224_000,
     alicuotaInscripto: 2,
     alicuotaNoInscripto: 10,
   },
   transporte: {
-    nombre: 'Transporte de cargas (cód. 125)',
-    mniInscripto: 293000,
+    nombre: 'Transporte de cargas (cód. 95)',
+    codigo: '95',
+    mniInscripto: 67_170,
     alicuotaInscripto: 0.25,
     alicuotaNoInscripto: 28,
   },
 };
 
 /**
- * Escala progresiva para honorarios profesionales (cód. 119).
- * Basada en RG 5423/2023 y ajustes periódicos de ARCA.
- * Tramos: { desde, hasta, fijo, alicuota }. Último tramo usa hasta=Infinity.
- * Mantenido por scripts/update-data/fetchers/ganancias-rg830.ts.
+ * Escala general Anexo VIII (cód. 25, 110, 116/124). Valores absolutos pequeños
+ * porque NO se actualizan desde la RG 5423/2023.
  */
-interface TramoProfesionales {
+interface TramoEscala {
   desde: number;
   hasta: number;
   fijo: number;
   alicuota: number;
 }
-const ESCALA_PROFESIONALES: TramoProfesionales[] = [
-  { desde: 0,           hasta: 1_300_000,  fijo: 0,          alicuota: 0.05 },
-  { desde: 1_300_000,   hasta: 2_600_000,  fijo: 65_000,     alicuota: 0.09 },
-  { desde: 2_600_000,   hasta: 3_900_000,  fijo: 182_000,    alicuota: 0.12 },
-  { desde: 3_900_000,   hasta: 5_200_000,  fijo: 338_000,    alicuota: 0.15 },
-  { desde: 5_200_000,   hasta: 6_500_000,  fijo: 533_000,    alicuota: 0.19 },
-  { desde: 6_500_000,   hasta: 13_000_000, fijo: 780_000,    alicuota: 0.23 },
-  { desde: 13_000_000,  hasta: 26_000_000, fijo: 2_275_000,  alicuota: 0.27 },
-  { desde: 26_000_000,  hasta: Infinity,   fijo: 5_785_000,  alicuota: 0.31 },
+const ESCALA_GENERAL: TramoEscala[] = [
+  { desde: 0,       hasta: 8_000,  fijo: 0,       alicuota: 0.05 },
+  { desde: 8_000,   hasta: 16_000, fijo: 400,     alicuota: 0.09 },
+  { desde: 16_000,  hasta: 24_000, fijo: 1_120,   alicuota: 0.12 },
+  { desde: 24_000,  hasta: 32_000, fijo: 2_080,   alicuota: 0.15 },
+  { desde: 32_000,  hasta: 48_000, fijo: 3_280,   alicuota: 0.19 },
+  { desde: 48_000,  hasta: 64_000, fijo: 6_320,   alicuota: 0.23 },
+  { desde: 64_000,  hasta: 96_000, fijo: 10_000,  alicuota: 0.27 },
+  { desde: 96_000,  hasta: Infinity, fijo: 18_640, alicuota: 0.31 },
 ];
 
-function calcularEscalaProfesionales(baseExcedente: number): number {
-  if (baseExcedente <= 0) return 0;
-  for (const tramo of ESCALA_PROFESIONALES) {
-    if (baseExcedente <= tramo.hasta) {
-      return tramo.fijo + (baseExcedente - tramo.desde) * tramo.alicuota;
+/**
+ * Escala específica código 119 (profesiones liberales, oficios).
+ * Valores oficiales Anexo VIII RG 830 vía RG 5423/2023.
+ */
+const ESCALA_PROFESIONALES: TramoEscala[] = [
+  { desde: 0,        hasta: 71_000,  fijo: 0,        alicuota: 0.05 },
+  { desde: 71_000,   hasta: 142_000, fijo: 3_550,    alicuota: 0.09 },
+  { desde: 142_000,  hasta: 213_000, fijo: 9_940,    alicuota: 0.12 },
+  { desde: 213_000,  hasta: 284_000, fijo: 18_460,   alicuota: 0.15 },
+  { desde: 284_000,  hasta: 426_000, fijo: 29_110,   alicuota: 0.19 },
+  { desde: 426_000,  hasta: 568_000, fijo: 56_090,   alicuota: 0.23 },
+  { desde: 568_000,  hasta: 852_000, fijo: 88_750,   alicuota: 0.27 },
+  { desde: 852_000,  hasta: Infinity, fijo: 165_430, alicuota: 0.31 },
+];
+
+function aplicarEscala(base: number, escala: TramoEscala[]): number {
+  if (base <= 0) return 0;
+  for (const tramo of escala) {
+    if (base <= tramo.hasta) {
+      return tramo.fijo + (base - tramo.desde) * tramo.alicuota;
     }
   }
-  const last = ESCALA_PROFESIONALES[ESCALA_PROFESIONALES.length - 1];
-  return last.fijo + (baseExcedente - last.desde) * last.alicuota;
+  const last = escala[escala.length - 1];
+  return last.fijo + (base - last.desde) * last.alicuota;
 }
 
 export interface GananciasRG830Outputs {
@@ -144,7 +174,7 @@ export function gananciasRG830(inputs: GananciasRG830Inputs): GananciasRG830Outp
 
   const montoAcumulado = pago + anteriores;
 
-  // Para no inscriptos, el MNI es $0 (retienen desde el primer peso)
+  // No inscriptos no tienen MNI (retienen desde el primer peso)
   const mniAplicado = condicion === 'inscripto' ? cfg.mniInscripto : 0;
   const baseRetencion = Math.max(0, montoAcumulado - mniAplicado);
 
@@ -152,9 +182,12 @@ export function gananciasRG830(inputs: GananciasRG830Inputs): GananciasRG830Outp
   let alicuotaAplicada = '';
 
   if (condicion === 'inscripto') {
-    if (cfg.escalaProgresiva) {
-      retencionTotal = calcularEscalaProfesionales(baseRetencion);
-      alicuotaAplicada = 'Escala progresiva (5% a 31%)';
+    if (cfg.escalaTipo === 'profesionales') {
+      retencionTotal = aplicarEscala(baseRetencion, ESCALA_PROFESIONALES);
+      alicuotaAplicada = 'Escala específica cód. 119 (5% a 31%)';
+    } else if (cfg.escalaTipo === 'general') {
+      retencionTotal = aplicarEscala(baseRetencion, ESCALA_GENERAL);
+      alicuotaAplicada = 'Escala general Anexo VIII (5% a 31%)';
     } else {
       retencionTotal = baseRetencion * (cfg.alicuotaInscripto / 100);
       alicuotaAplicada = `${cfg.alicuotaInscripto}%`;
@@ -166,9 +199,9 @@ export function gananciasRG830(inputs: GananciasRG830Inputs): GananciasRG830Outp
 
   const retencionEstePago = Math.max(0, retencionTotal - retPrev);
 
-  // Mínimo operativo: $240 ($1020 para alquileres no inscriptos)
+  // Mínimo operativo: $240 general; $1.020 alquileres inmuebles urbanos no inscriptos
   const minimoOperativo =
-    concepto.startsWith('alquileres') && condicion === 'no-inscripto' ? 1020 : 240;
+    cfg.codigo === '31' && condicion === 'no-inscripto' ? 1020 : 240;
 
   let aplicoMinimo = false;
   let retencionFinal = retencionEstePago;

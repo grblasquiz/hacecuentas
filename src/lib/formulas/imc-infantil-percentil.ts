@@ -36,9 +36,26 @@ export function imcInfantilPercentil(i: Inputs): Outputs {
 
   const tabla = sexo === 'f' ? imcMujer : imcVaron;
   const edades = Object.keys(tabla).map(Number).sort((a, b) => a - b);
-  let closest = edades[0];
-  for (const e of edades) { if (e <= edad) closest = e; }
-  const [p5, p50, p85, p97] = tabla[closest];
+  // Interpolación lineal entre edades. Antes el código usaba la edad menor más
+  // cercana (ej. 13 años → usaba tabla de 12), perdiendo granularidad. Ahora
+  // si edad cae entre dos edades tabuladas, interpolamos los percentiles.
+  let lower = edades[0];
+  let upper = edades[edades.length - 1];
+  for (let k = 0; k < edades.length; k++) {
+    if (edades[k] <= edad) lower = edades[k];
+    if (edades[k] >= edad) { upper = edades[k]; break; }
+  }
+  const interp = (a: number, b: number): number => {
+    if (upper === lower) return a;
+    const t = (edad - lower) / (upper - lower);
+    return a + (b - a) * t;
+  };
+  const low = tabla[lower];
+  const up = tabla[upper];
+  const p5  = interp(low[0], up[0]);
+  const p50 = interp(low[1], up[1]);
+  const p85 = interp(low[2], up[2]);
+  const p97 = interp(low[3], up[3]);
 
   let percentil = '';
   let clasificacion = '';
