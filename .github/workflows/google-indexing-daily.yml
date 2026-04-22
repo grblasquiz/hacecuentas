@@ -1,0 +1,83 @@
+name: Google Indexing API (daily push)
+
+# Pushea 200 URLs/día al Google Indexing API (quota diaria del proyecto GCP).
+# El script tiene dedupe de 7 días, así que no repite URLs recién enviadas —
+# toma las 200 URLs del sitemap que hace más tiempo no se pushean (cola FIFO
+# implícita por el state file).
+#
+# Para que corra necesita el secret GCP_INDEXING_CREDS (JSON del Service Account
+# con rol "Owner" en GSC). Si el secret no está, el job falla rápido con mensaje
+# claro — no rompe nada.
+
+on:
+  schedule:
+    # Todos los días a las 09:00 UTC (06:00 AR) — horario bajo de deploys
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Modo de ejecución'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all       # todas las URLs del sitemap (default, respeta dedupe + quota)
+          - priority  # solo URLs del sitemap-priority (top 60-80)
+
+jobs:
+  google-indexing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install google-auth google-api-python-client
+
+      - name: Restore state file
+        uses: actions/cache@v4
+        with:
+          path: scripts/.indexing-api-state.json
+          key: google-indexing-state-${{ github.run_id }}
+          restore-keys: |
+            google-indexing-state-
+
+      - name: Write GCP credentials
+        env:
+          GCP_CREDS: ${{ secrets.GCP_INDEXING_CREDS }}
+        run: |
+          if [ -z "$GCP_CREDS" ]; then
+            echo "::error::Falta el secret GCP_INDEXING_CREDS. Agregalo en Settings → Secrets → Actions."
+            exit 1
+          fi
+          mkdir -p /tmp/gcp
+          echo "$GCP_CREDS" > /tmp/gcp/creds.json
+          chmod 600 /tmp/gcp/creds.json
+
+      - name: Push URLs to Google Indexing API
+        env:
+          GOOGLE_INDEXING_CREDS: /tmp/gcp/creds.json
+          GOOGLE_INDEXING_HOST: https://hacecuentas.com
+          GOOGLE_INDEXING_LIMIT: '200'
+        run: |
+          MODE="${{ github.event.inputs.mode || 'all' }}"
+          if [ "$MODE" = "priority" ]; then
+            python3 scripts/google-indexing-api.py
+          else
+            python3 scripts/google-indexing-api.py --all
+          fi
+
+      - name: Save state file
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: scripts/.indexing-api-state.json
+          key: google-indexing-state-${{ github.run_id }}
+
+      # El state file está en .gitignore — persistencia entre runs vía
+      # actions/cache arriba, no vía commit al repo.
