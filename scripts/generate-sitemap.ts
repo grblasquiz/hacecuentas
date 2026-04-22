@@ -71,24 +71,31 @@ function getLastMod(filepath: string, fallback: string): string {
 }
 
 /**
- * Prioriza campos editoriales (lastReviewed / dataUpdate.lastUpdated) sobre mtime
- * del filesystem. Esto evita que cambios masivos (enrichment batch) hagan parecer
- * que todo el sitio cambió el mismo día — Google detecta eso como sospechoso.
+ * Combina campos editoriales y mtime del filesystem: gana el MÁS RECIENTE.
  *
- * Orden de preferencia:
- *   1. calc.lastReviewed (revisión editorial explícita)
- *   2. calc.dataUpdate.lastUpdated (solo para calcs con data externa)
- *   3. mtime del filesystem
- *   4. fallback (buildDate)
+ * Fuentes:
+ *   - calc.lastReviewed (revisión editorial explícita)
+ *   - calc.dataUpdate.lastUpdated (data externa refrescada)
+ *   - mtime del archivo JSON (edit real al contenido)
+ *
+ * El mtime vale porque el JSON del calc no se regenera en cada build — sólo
+ * cambia cuando un humano o script lo edita. Si editás una fórmula sin tocar
+ * lastReviewed, mtime lo captura igual. Si actualizás data externa y bumpeás
+ * lastUpdated, eso gana. Si el build no tocó el JSON, mtime queda quieto y
+ * Google no re-crawlea al pedo.
  */
 function getCalcLastMod(calc: any, filepath: string, fallback: string): string {
+  const candidates: string[] = [];
   if (calc?.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
-    return calc.lastReviewed;
+    candidates.push(calc.lastReviewed);
   }
   if (calc?.dataUpdate?.lastUpdated && /^\d{4}-\d{2}-\d{2}$/.test(calc.dataUpdate.lastUpdated)) {
-    return calc.dataUpdate.lastUpdated;
+    candidates.push(calc.dataUpdate.lastUpdated);
   }
-  return getLastMod(filepath, fallback);
+  const mtime = getLastMod(filepath, '');
+  if (mtime) candidates.push(mtime);
+  if (candidates.length === 0) return fallback;
+  return candidates.sort().at(-1)!;
 }
 
 /**
@@ -110,6 +117,20 @@ function getPageLastMod(pagePath: string, fallback: string): string {
     if (d) return d;
   }
   return fallback;
+}
+
+/**
+ * Devuelve el lastmod máximo (más reciente) de un set de URLs.
+ * Se usa para el sitemap index y para índices de categoría/locale —
+ * así el lastmod refleja "el cambio más reciente adentro", no la fecha del build.
+ * Si Google ve que el index cambió pero el 99% de URLs adentro no, pierde confianza.
+ */
+function maxLastmod(urls: Url[], fallback: string): string {
+  let best = '';
+  for (const u of urls) {
+    if (u.lastmod && u.lastmod > best) best = u.lastmod;
+  }
+  return best || fallback;
 }
 
 function urlsetXml(urls: Url[]): string {
@@ -350,40 +371,54 @@ function getPriorityAndFreq(slug: string, filePath: string, buildDate: string): 
 }
 
 for (const [cat, items] of Object.entries(byCat).sort()) {
-  const urls: Url[] = [
-    // Categoría misma
-    { loc: `${site}/categoria/${cat}`, priority: '0.8', changefreq: 'weekly', lastmod: buildDate },
-    // Calcs de esa categoría
-    ...items.map((c: any) => {
-      const filePath = join(CALCS_DIR, `${c.formulaId || c.slug}.json`);
-      const pf = getPriorityAndFreq(c.slug, filePath, buildDate);
-      return {
-        loc: `${site}/${c.slug}`,
-        priority: pf.priority,
-        changefreq: pf.changefreq,
-        lastmod: getCalcLastMod(c, filePath, buildDate),
-      };
-    }),
-  ];
-  sitemaps.push({ name: `sitemap-calcs-${cat}.xml`, urls });
+  // Calcs primero para poder derivar el lastmod de la categoría a partir de ellas
+  const calcUrls: Url[] = items.map((c: any) => {
+    const filePath = join(CALCS_DIR, `${c.formulaId || c.slug}.json`);
+    const pf = getPriorityAndFreq(c.slug, filePath, buildDate);
+    return {
+      loc: `${site}/${c.slug}`,
+      priority: pf.priority,
+      changefreq: pf.changefreq,
+      lastmod: getCalcLastMod(c, filePath, buildDate),
+    };
+  });
+  // La página de categoría hereda el lastmod de su calc más reciente — así
+  // "agregaste una calc de finanzas hoy" mueve /categoria/finanzas, pero
+  // "no tocaste finanzas en 3 meses" deja el lastmod quieto.
+  const catUrl: Url = {
+    loc: `${site}/categoria/${cat}`,
+    priority: '0.8',
+    changefreq: 'weekly',
+    lastmod: maxLastmod(calcUrls, buildDate),
+  };
+  sitemaps.push({ name: `sitemap-calcs-${cat}.xml`, urls: [catUrl, ...calcUrls] });
 }
 
 // 3. Calcs por locale (EN, PT, MX, ES, CO, CL).
 // lastmod usa mtime del archivo JSON correspondiente para no reportar buildDate
 // uniforme. Cada locale tiene su directorio src/content/calcs-<locale>/.
 function sitemapForLocale(cs: any[], locale: string, dir: string, withIndex: boolean): { name: string; urls: Url[] } {
-  const urls: Url[] = withIndex
-    ? [{ loc: `${site}/${locale}/`, priority: '0.8', changefreq: 'weekly', lastmod: buildDate }]
-    : [];
-  for (const c of cs) {
+  const calcUrls: Url[] = cs.map((c) => {
     const fp = join(dir, `${c.formulaId || c.slug}.json`);
-    urls.push({
+    return {
       loc: `${site}/${locale}/${c.slug}`,
       priority: '0.7',
       changefreq: 'monthly',
       lastmod: getCalcLastMod(c, fp, buildDate),
-    });
-  }
+    };
+  });
+  // Home del locale hereda el lastmod del cambio más reciente del locale.
+  const urls: Url[] = withIndex
+    ? [
+        {
+          loc: `${site}/${locale}/`,
+          priority: '0.8',
+          changefreq: 'weekly',
+          lastmod: maxLastmod(calcUrls, buildDate),
+        },
+        ...calcUrls,
+      ]
+    : calcUrls;
   return { name: `sitemap-${locale}.xml`, urls };
 }
 
@@ -468,9 +503,13 @@ for (const s of sitemaps) {
   totalUrls += s.urls.length;
 }
 
-// Index principal
+// Index principal. El lastmod de cada entry del index es el máximo de las URLs
+// adentro de ese sitemap — si "sitemap-calcs-finanzas" no cambió, Google no
+// va a re-crawlear ese sitemap. Antes esto era `buildDate` constante, lo que
+// hacía que Google re-fetcheara todos los sub-sitemaps en cada deploy aunque
+// el contenido fuera idéntico.
 const indexContent = indexXml(
-  sitemaps.map((s) => ({ loc: `${site}/${s.name}`, lastmod: buildDate }))
+  sitemaps.map((s) => ({ loc: `${site}/${s.name}`, lastmod: maxLastmod(s.urls, buildDate) }))
 );
 writeFileSync(join(PUBLIC_DIR, 'sitemap.xml'), indexContent, 'utf8');
 
