@@ -282,10 +282,10 @@ const hreflangTags = esSlug ? [
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
               Share
             </button>
-            <a class="ca-tool" href={`mailto:errores@hacecuentas.com?subject=${reportSubject}&body=${reportBody}`}>
+            <button type="button" class="ca-tool" onclick="document.querySelector('.ca-feedback .ca-vote[data-vote=&quot;down&quot;]').click(); document.querySelector('.ca-feedback').scrollIntoView({behavior:'smooth',block:'center'});">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
               Report error
-            </a>
+            </button>
           </div>
         </div>
 
@@ -462,6 +462,15 @@ const hreflangTags = esSlug ? [
             if (typeof window.gtag === 'function') {
               window.gtag('event', 'calc_feedback', { value: v, slug: slug });
             }
+            // D1 vía API (fire-and-forget)
+            try {
+              fetch('/api/vote', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ slug: slug, vote: v }),
+                keepalive: true,
+              }).catch(function () {});
+            } catch (e) {}
           });
         });
         function renderThanks(v) {
@@ -470,7 +479,45 @@ const hreflangTags = esSlug ? [
             feedback.innerHTML = '<span class="ca-msg">Thanks for your feedback!</span>';
           } else {
             feedback.setAttribute('data-state', 'sorry');
-            feedback.innerHTML = '<span class="ca-msg">Thanks. What\'s missing or wrong? <a href="mailto:errores@hacecuentas.com?subject=Improvement for ' + encodeURIComponent(slug) + '">Let us know by email</a>.</span>';
+            feedback.innerHTML =
+              '<span class="ca-msg">Thanks. What’s missing or wrong? Tell us:</span>' +
+              '<form class="ca-err-form" id="ca-err-form">' +
+              '  <textarea name="message" required placeholder="Ex: the formula returns X but should be Y" rows="3" maxlength="2000"></textarea>' +
+              '  <input type="email" name="email" placeholder="Your email (optional)" />' +
+              '  <button type="submit">Send</button>' +
+              '  <p class="ca-err-msg" hidden></p>' +
+              '</form>';
+            var form = document.getElementById('ca-err-form');
+            var emsg = form.querySelector('.ca-err-msg');
+            form.addEventListener('submit', async function (e) {
+              e.preventDefault();
+              var fd = new FormData(form);
+              var btn2 = form.querySelector('button');
+              btn2.disabled = true;
+              emsg.hidden = false;
+              emsg.textContent = 'Sending…';
+              try {
+                var res = await fetch('/api/error-report', {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify({
+                    slug: slug,
+                    message: String(fd.get('message') || ''),
+                    email: String(fd.get('email') || ''),
+                  }),
+                });
+                if (res.ok) {
+                  feedback.innerHTML = '<span class="ca-msg">Thanks! We got your report.</span>';
+                } else {
+                  var j = await res.json().catch(function () { return {}; });
+                  emsg.textContent = j.error || 'Could not send. Try again later.';
+                  btn2.disabled = false;
+                }
+              } catch (err) {
+                emsg.textContent = 'Network error.';
+                btn2.disabled = false;
+              }
+            });
           }
         }
       }

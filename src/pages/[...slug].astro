@@ -619,7 +619,7 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
 
   <script is:inline>
     (function () {
-      // Thumbs feedback
+      // Thumbs feedback — guarda en D1 vía /api/vote + GA4.
       var feedback = document.querySelector('.ca-feedback');
       if (feedback) {
         var slug = window.location.pathname;
@@ -634,10 +634,19 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             var v = btn.getAttribute('data-vote');
             try { localStorage.setItem(key, v); } catch (e) {}
             renderThanks(v);
-            // GA4 (si está cargado)
+            // GA4
             if (typeof window.gtag === 'function') {
               window.gtag('event', 'calc_feedback', { value: v, slug: slug });
             }
+            // D1 vía API (fire-and-forget, no bloqueamos UX si falla)
+            try {
+              fetch('/api/vote', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ slug: slug, vote: v }),
+                keepalive: true,
+              }).catch(function () {});
+            } catch (e) {}
           });
         });
         function renderThanks(v) {
@@ -645,8 +654,47 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             feedback.setAttribute('data-state', 'thanks');
             feedback.innerHTML = '<span class="ca-msg">¡Gracias por tu voto! 🙌</span>';
           } else {
+            // Para 👎 mostramos un form inline en vez de mailto (que no llegaba a nadie).
             feedback.setAttribute('data-state', 'sorry');
-            feedback.innerHTML = '<span class="ca-msg">Gracias. ¿Qué falta o está mal? <a href="mailto:errores@hacecuentas.com?subject=Mejora en ' + encodeURIComponent(slug) + '">Decinos por mail</a>.</span>';
+            feedback.innerHTML =
+              '<span class="ca-msg">Gracias. ¿Qué falta o está mal? Contanos:</span>' +
+              '<form class="ca-err-form" id="ca-err-form">' +
+              '  <textarea name="message" required placeholder="Ej: la fórmula devuelve X pero debería ser Y" rows="3" maxlength="2000"></textarea>' +
+              '  <input type="email" name="email" placeholder="Tu email (opcional, para responderte)" />' +
+              '  <button type="submit">Enviar</button>' +
+              '  <p class="ca-err-msg" hidden></p>' +
+              '</form>';
+            var form = document.getElementById('ca-err-form');
+            var emsg = form.querySelector('.ca-err-msg');
+            form.addEventListener('submit', async function (e) {
+              e.preventDefault();
+              var fd = new FormData(form);
+              var btn2 = form.querySelector('button');
+              btn2.disabled = true;
+              emsg.hidden = false;
+              emsg.textContent = 'Enviando…';
+              try {
+                var res = await fetch('/api/error-report', {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify({
+                    slug: slug,
+                    message: String(fd.get('message') || ''),
+                    email: String(fd.get('email') || ''),
+                  }),
+                });
+                if (res.ok) {
+                  feedback.innerHTML = '<span class="ca-msg">¡Gracias! Ya recibimos tu reporte y lo revisamos.</span>';
+                } else {
+                  var j = await res.json().catch(function () { return {}; });
+                  emsg.textContent = j.error || 'No se pudo enviar. Probá más tarde.';
+                  btn2.disabled = false;
+                }
+              } catch (err) {
+                emsg.textContent = 'Error de red.';
+                btn2.disabled = false;
+              }
+            });
           }
         }
       }

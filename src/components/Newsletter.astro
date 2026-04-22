@@ -1,7 +1,8 @@
 ---
-// Sign-up de newsletter. Como aún no hay provider configurado,
-// el form abre un mailto a contacto@hacecuentas.com.
-// Cuando configuremos Buttondown/ConvertKit/etc., reemplazar el handler.
+// Sign-up de newsletter. POST a /api/newsletter que guarda en D1.
+// Sin cliente de mail, sin mailto — el email queda directo en la DB.
+// Para mandar el newsletter cuando haya volumen, exportar la tabla o
+// integrar con Buttondown/ConvertKit más adelante.
 ---
 
 <section class="newsletter" aria-labelledby="news-heading">
@@ -40,25 +41,45 @@
       var form = document.getElementById('hc-newsletter-form');
       var msg = document.getElementById('hc-news-msg');
       if (!form) return;
-      form.addEventListener('submit', function (e) {
+      form.addEventListener('submit', async function (e) {
         e.preventDefault();
         var input = form.querySelector('input[type="email"]');
         var email = input ? input.value.trim() : '';
+        var btn = form.querySelector('button[type="submit"]');
         if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
           msg.hidden = false;
           msg.textContent = 'Ingresá un email válido.';
           msg.className = 'news-msg news-msg-err';
           return;
         }
-        // Sin backend: abrir mailto con el email pre-llenado
-        var subject = encodeURIComponent('Suscripción newsletter Hacé Cuentas');
-        var body = encodeURIComponent('Quiero suscribirme al newsletter desde: ' + email);
-        window.location.href = 'mailto:contacto@hacecuentas.com?subject=' + subject + '&body=' + body;
+        // Bloquear doble-click mientras enviamos
+        if (btn) btn.disabled = true;
         msg.hidden = false;
-        msg.textContent = '¡Gracias! Te abrimos el mail para confirmar la suscripción.';
-        msg.className = 'news-msg news-msg-ok';
-        if (typeof window.gtag === 'function') {
-          window.gtag('event', 'newsletter_signup', { method: 'mailto' });
+        msg.textContent = 'Guardando…';
+        msg.className = 'news-msg';
+        try {
+          var res = await fetch('/api/newsletter', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ email: email, source: 'footer' }),
+          });
+          if (res.ok) {
+            msg.textContent = '¡Listo! Quedás suscripto. Te escribiremos cuando tengamos algo nuevo.';
+            msg.className = 'news-msg news-msg-ok';
+            if (input) input.value = '';
+            if (typeof window.gtag === 'function') {
+              window.gtag('event', 'newsletter_signup', { method: 'api' });
+            }
+          } else {
+            var j = await res.json().catch(function () { return {}; });
+            msg.textContent = j.error || 'No se pudo guardar, intentá en un rato.';
+            msg.className = 'news-msg news-msg-err';
+          }
+        } catch (err) {
+          msg.textContent = 'Error de red. Revisá tu conexión.';
+          msg.className = 'news-msg news-msg-err';
+        } finally {
+          if (btn) btn.disabled = false;
         }
       });
     });

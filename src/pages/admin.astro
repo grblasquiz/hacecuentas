@@ -1,0 +1,173 @@
+---
+/**
+ * Panel admin básico. Acceso con passcode vía query `?k=<passcode>`.
+ * El passcode vive en el secret `ADMIN_PASSCODE` de Cloudflare Pages.
+ *
+ * Setear con:
+ *   npx wrangler pages secret put ADMIN_PASSCODE --project-name=hacecuentas
+ *
+ * URL de acceso ejemplo: https://hacecuentas.com/admin?k=tu-passcode-aca
+ *
+ * No-indexable, no compartible fuera de la URL con la key.
+ */
+export const prerender = false;
+
+const url = new URL(Astro.request.url);
+const providedKey = url.searchParams.get('k') || '';
+const env = (Astro.locals as any).runtime?.env || {};
+const expectedKey = env.ADMIN_PASSCODE || '';
+const authorized = expectedKey && providedKey === expectedKey;
+
+// Data que vamos a mostrar si está autorizado
+let newsletterSubs: Array<{ email: string; created_at: number; source: string; referer: string }> = [];
+let voteSummary: Array<{ slug: string; upvotes: number; downvotes: number; total: number; last_vote_at: number }> = [];
+let errorReports: Array<{ id: number; slug: string; message: string; email: string | null; created_at: number; status: string }> = [];
+let dbError = '';
+
+if (authorized && env.DB) {
+  try {
+    const subs = await env.DB
+      .prepare('SELECT email, created_at, source, referer FROM newsletter_subs ORDER BY created_at DESC LIMIT 100')
+      .all();
+    newsletterSubs = (subs.results as any[]) || [];
+
+    const votes = await env.DB
+      .prepare('SELECT slug, upvotes, downvotes, total, last_vote_at FROM calc_votes_summary ORDER BY total DESC LIMIT 50')
+      .all();
+    voteSummary = (votes.results as any[]) || [];
+
+    const errors = await env.DB
+      .prepare('SELECT id, slug, message, email, created_at, status FROM error_reports ORDER BY created_at DESC LIMIT 100')
+      .all();
+    errorReports = (errors.results as any[]) || [];
+  } catch (err: any) {
+    dbError = String(err?.message || err);
+  }
+}
+
+function fmtDate(ts: number): string {
+  if (!ts) return '—';
+  try {
+    return new Date(ts).toLocaleString('es-AR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  } catch { return String(ts); }
+}
+---
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Admin — Hacé Cuentas</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 1100px; padding: 0 1rem; color: #1a202c; }
+      h1 { font-size: 1.25rem; margin-bottom: 1.5rem; }
+      h2 { font-size: 1rem; margin: 2rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid #e2e8f0; }
+      table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; margin-bottom: 1rem; }
+      th, td { text-align: left; padding: 0.5rem 0.625rem; border-bottom: 1px solid #edf2f7; vertical-align: top; }
+      th { background: #f7fafc; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+      .muted { color: #718096; font-size: 0.75rem; }
+      .err { background: #fff5f5; color: #c53030; padding: 0.75rem 1rem; border-radius: 4px; border-left: 3px solid #c53030; margin: 1rem 0; font-size: 0.875rem; }
+      .empty { color: #a0aec0; font-style: italic; padding: 1rem 0.625rem; }
+      .unauth { text-align: center; padding: 4rem 1rem; color: #718096; }
+      code { background: #f7fafc; padding: 0.125rem 0.375rem; border-radius: 3px; font-size: 0.875rem; }
+      .stat { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+      .stat-up { background: #c6f6d5; color: #22543d; }
+      .stat-down { background: #fed7d7; color: #742a2a; }
+      .status-new { background: #fef3c7; color: #92400e; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 600; }
+      .slug { color: #3182ce; text-decoration: none; }
+      .slug:hover { text-decoration: underline; }
+      .message-cell { max-width: 400px; word-wrap: break-word; }
+    </style>
+  </head>
+  <body>
+    {!authorized && (
+      <div class="unauth">
+        <h1>Admin — Hacé Cuentas</h1>
+        <p>Acceso restringido. Pasá la key en el query string: <code>/admin?k=TU_PASSCODE</code></p>
+      </div>
+    )}
+
+    {authorized && (
+      <>
+        <h1>Panel Admin · Hacé Cuentas</h1>
+
+        {dbError && (
+          <div class="err">
+            <strong>Error accediendo a D1:</strong> {dbError}
+            <br/><span class="muted">Verificar que el binding <code>DB</code> está configurado en wrangler.jsonc y que la DB fue creada.</span>
+          </div>
+        )}
+
+        {!dbError && !env.DB && (
+          <div class="err">
+            <strong>D1 no configurado.</strong> Crear la database con <code>npx wrangler d1 create hacecuentas-forms</code> y actualizar <code>wrangler.jsonc</code>.
+          </div>
+        )}
+
+        <h2>📧 Newsletter subs (últimas 100)</h2>
+        {newsletterSubs.length === 0 ? (
+          <div class="empty">Sin suscripciones todavía.</div>
+        ) : (
+          <table>
+            <thead><tr><th>Email</th><th>Fecha</th><th>Origen</th><th>Desde</th></tr></thead>
+            <tbody>
+              {newsletterSubs.map((s) => (
+                <tr>
+                  <td><code>{s.email}</code></td>
+                  <td class="muted">{fmtDate(s.created_at)}</td>
+                  <td class="muted">{s.source}</td>
+                  <td class="muted">{s.referer ? new URL(s.referer, 'https://hacecuentas.com').pathname : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <h2>👍👎 Votos por calculadora (top 50)</h2>
+        {voteSummary.length === 0 ? (
+          <div class="empty">Sin votos todavía.</div>
+        ) : (
+          <table>
+            <thead><tr><th>Calculadora</th><th>👍</th><th>👎</th><th>Total</th><th>% positivo</th><th>Último</th></tr></thead>
+            <tbody>
+              {voteSummary.map((v) => (
+                <tr>
+                  <td><a class="slug" href={v.slug} target="_blank">{v.slug}</a></td>
+                  <td><span class="stat stat-up">{v.upvotes}</span></td>
+                  <td><span class="stat stat-down">{v.downvotes}</span></td>
+                  <td>{v.total}</td>
+                  <td>{v.total ? Math.round((v.upvotes / v.total) * 100) : 0}%</td>
+                  <td class="muted">{fmtDate(v.last_vote_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <h2>🐛 Reportes de error/mejora (últimos 100)</h2>
+        {errorReports.length === 0 ? (
+          <div class="empty">Sin reportes todavía.</div>
+        ) : (
+          <table>
+            <thead><tr><th>Calc</th><th>Mensaje</th><th>Email</th><th>Fecha</th><th>Estado</th></tr></thead>
+            <tbody>
+              {errorReports.map((e) => (
+                <tr>
+                  <td><a class="slug" href={e.slug} target="_blank">{e.slug}</a></td>
+                  <td class="message-cell">{e.message}</td>
+                  <td class="muted">{e.email || '—'}</td>
+                  <td class="muted">{fmtDate(e.created_at)}</td>
+                  <td><span class="status-new">{e.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </>
+    )}
+  </body>
+</html>
