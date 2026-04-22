@@ -1,0 +1,118 @@
+{
+  "slug": "calculadora-hipoteca-uva-bbva-argentina",
+  "title": "Hipoteca UVA BBVA Argentina — Calculadora 2026 | Hacé Cuentas",
+  "h1": "Calculadora de hipoteca UVA BBVA Argentina",
+  "description": "Calculá la cuota de tu hipoteca UVA BBVA 2026: tasa 4.5% + UVA, seguros y CFT. Estimá cuota inicial en pesos al instante.",
+  "category": "finanzas",
+  "icon": "🏠",
+  "formulaId": "hipoteca-uva-bbva",
+  "audience": "ar",
+  "seoKeywords": [
+    "hipoteca UVA BBVA",
+    "credito hipotecario BBVA",
+    "cuota UVA BBVA",
+    "BBVA prestamo vivienda",
+    "hipoteca UVA 2026",
+    "tasa UVA BBVA",
+    "CFT hipoteca BBVA",
+    "seguro vida hipoteca BBVA",
+    "simulador BBVA hipoteca"
+  ],
+  "intro": "BBVA Argentina reactivó en 2024-2025 su línea de **crédito hipotecario UVA** con una tasa competitiva cercana al **4.5% anual + UVA**. La UVA (Unidad de Valor Adquisitivo) se actualiza diariamente por inflación (CER), por lo que tu **capital nominal en pesos crece**, pero la cuota como porcentaje de tus ingresos se mantiene si tus ingresos siguen a la inflación. BBVA exige **seguro de vida sobre saldo deudor** (obligatorio, contratado con su compañía vinculada) y **seguro de incendio** sobre el inmueble. El CFT (Costo Financiero Total) UVA suele rondar 6.5–7% anual + UVA, incluyendo seguros y gastos administrativos. Esta calculadora estima tu **cuota inicial en pesos** para comparar contra tu flujo mensual.",
+  "keyTakeaway": "Hipoteca BBVA UVA 2026: **tasa ~4.5% + UVA**, sistema francés sobre capital en UVAs, seguros BBVA obligatorios, CFT total ~6.5%. Cuota inicial = cuota pura + seguros. Se ajusta mensualmente por UVA.",
+  "useCases": [
+    "Comparás el crédito UVA de BBVA contra Santander, Ciudad y Nación antes de decidir.",
+    "Estás por firmar la reserva y querés estimar la cuota inicial para planificar tu mes.",
+    "Querés validar que el banco te ofrezca la tasa publicada (a veces varían por segmento).",
+    "Analizás si tu relación cuota/ingreso entra en el límite del 25%.",
+    "Planificás precancelaciones y querés saber cómo afecta el capital en UVAs."
+  ],
+  "fields": [
+    { "id": "monto", "label": "Monto del préstamo", "type": "number", "prefix": "$", "placeholder": "80000000", "min": 0, "step": 100000, "required": true, "help": "Monto solicitado al banco en pesos (no valor de la propiedad)." },
+    { "id": "plazoAnios", "label": "Plazo (años)", "type": "number", "placeholder": "20", "min": 5, "max": 30, "step": 1, "required": true },
+    { "id": "tna", "label": "TNA UVA (%)", "type": "number", "placeholder": "4.5", "min": 0, "max": 15, "step": 0.25, "required": true, "help": "Tasa BBVA UVA vigente. Abril 2026 ~4.5%." },
+    { "id": "uvaActual", "label": "Valor UVA actual", "type": "number", "prefix": "$", "placeholder": "1400", "min": 1, "step": 1, "required": true, "help": "Valor UVA publicado por BCRA. Abril 2026 ~$1.400." }
+  ],
+  "outputs": [
+    { "id": "cuotaInicial", "label": "Cuota inicial (con seguros)", "format": "currency", "primary": true },
+    { "id": "cuotaPura", "label": "Cuota pura (sin seguros)", "format": "currency" },
+    { "id": "seguros", "label": "Seguros mensuales", "format": "currency" },
+    { "id": "cftUvaAprox", "label": "CFT UVA aproximado", "format": "text" },
+    { "id": "capitalUvas", "label": "Capital en UVAs", "format": "text" },
+    { "id": "totalAproxPagado", "label": "Total aprox. a pagar (sin CER)", "format": "currency" },
+    { "id": "resumen", "label": "Resumen", "format": "text" }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-22",
+    "source": "BBVA Argentina — línea hipotecaria UVA",
+    "sourceUrl": "https://www.bbva.com.ar/personas/productos/prestamos/credito-hipotecario.html",
+    "updateType": "manual",
+    "notes": "Tasas y valor UVA de referencia abril 2026. Verificá en la web de BBVA antes de firmar."
+  },
+  "example": {
+    "title": "Ejemplo: $80M a 20 años, tasa 4.5%",
+    "steps": [
+      "Monto: $80.000.000. UVA: $1.400 → 57.143 UVAs.",
+      "Plazo: 20 años × 12 = 240 cuotas. Tasa mensual: 4.5%/12 = 0.375%.",
+      "Cuota pura en UVAs (sistema francés): ~362 UVAs/mes → $506.730/mes.",
+      "Seguro vida: $80M × 0.04% = $32.000. Seguro incendio: $16.000.",
+      "Cuota total: ~$554.730/mes."
+    ],
+    "result": "**Cuota inicial ≈ $554.730**. Se ajusta mensualmente por UVA. Sueldo requerido: ~$2.22M (25%)."
+  },
+  "explanation": "## Cómo se calcula\n\nLa hipoteca UVA BBVA funciona con el **sistema francés sobre capital expresado en UVAs**:\n\n1. El monto pedido se convierte a **UVAs** usando el valor del día (`UVAs = monto / UVA_hoy`).\n2. Se calcula la **cuota pura en UVAs** con la fórmula de amortización francesa usando la TNA BBVA + plazo.\n3. Cada mes se **convierte la cuota en UVAs a pesos** usando el valor UVA vigente ese día.\n4. Se le suma **seguro de vida sobre saldo deudor** y **seguro de incendio**.\n\n```\ncuota_uvas = capital_uvas × (i × (1+i)^n) / ((1+i)^n − 1)\ncuota_pesos_mes = cuota_uvas × UVA_del_mes\ncuota_total = cuota_pesos_mes + seguros\n```\n\n## Tabla 2026 — hipoteca BBVA UVA\n\n| Monto | Plazo | Cuota inicial aprox | Ingreso req. (25%) |\n|---|---|---|---|\n| $40M | 15 años | ~$320.000 | ~$1.28M |\n| $80M | 20 años | ~$555.000 | ~$2.22M |\n| $120M | 20 años | ~$830.000 | ~$3.32M |\n| $200M | 30 años | ~$1.250.000 | ~$5.00M |\n\n## Casos especiales BBVA\n\n- **Clientes BBVA**: posible bonificación 0.25–0.5% en la tasa según scoring.\n- **Seguro de vida**: es **obligatorio contratar con BBVA Seguros** (no podés traer el tuyo). Costo ~0.04%/mes sobre saldo.\n- **Tope relación cuota/ingreso**: BBVA exige que la cuota no supere el **25% del ingreso neto demostrable**.\n- **Valor máximo del inmueble**: el préstamo cubre hasta 75% del valor de tasación (LTV).\n- **Pre-cancelación**: sin costo pasados los primeros 12 meses; antes, penalidad 4% sobre capital precancelado.\n\n## Fuentes\n\n- BBVA Argentina — línea hipotecaria UVA.\n- BCRA — valor UVA diario y regulación crediticia.\n- Ley 25.065 (tarjeta y crédito al consumo).\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Tasas de referencia; verificá siempre con BBVA antes de firmar. Los valores UVA los publica el BCRA diariamente.\n\n**Disclaimer:** Esta calculadora es orientativa. Para decisiones de endeudamiento hipotecario consultá con tu asesor financiero o directamente con el banco.\n",
+  "faq": [
+    {
+      "q": "¿Cuánto está la tasa UVA BBVA en 2026?",
+      "a": "BBVA ofrece hipoteca UVA a **~4.5% anual + UVA** en abril 2026. Clientes con cuenta sueldo o scoring alto pueden obtener bonificaciones de 0.25–0.5 puntos. Verificá la tasa vigente en [bbva.com.ar](https://www.bbva.com.ar) antes de solicitar."
+    },
+    {
+      "q": "¿El seguro de vida de BBVA es obligatorio?",
+      "a": "Sí. BBVA exige **contratar el seguro de vida con BBVA Seguros** (compañía vinculada). No podés traer una póliza externa como en otros bancos (ej: Ciudad o Nación aceptan traslado). El costo es ~0.04% mensual sobre el saldo de deuda."
+    },
+    {
+      "q": "¿Cuánto tengo que ganar para calificar?",
+      "a": "BBVA exige que la **cuota no supere el 25% de tu ingreso neto demostrable**. Para una cuota de $555.000 necesitás ingresos netos de ~$2.22M. Se pueden sumar ingresos del cónyuge o codeudor familiar directo."
+    },
+    {
+      "q": "¿Qué pasa si sube mucho la inflación?",
+      "a": "La UVA **sigue a la inflación** (CER), entonces tu capital nominal en pesos crece. La cuota sube proporcionalmente. Si tu sueldo también sigue la inflación, la **relación cuota/ingreso se mantiene**. Si tu sueldo se atrasa frente a inflación, la cuota se vuelve más pesada. Hay proyectos de ley con topes, pero **actualmente no hay cap legal** sobre UVA."
+    },
+    {
+      "q": "¿Puedo precancelar sin costo?",
+      "a": "Sí después de los **primeros 12 meses**. Durante el primer año, BBVA cobra una penalidad del **4% sobre el capital precancelado**. Precancelar reduce el plazo o la cuota (podés elegir). Se recomienda precancelar en meses con aguinaldo o bonos."
+    },
+    {
+      "q": "¿Qué LTV máximo ofrece BBVA?",
+      "a": "**75% del valor de tasación** del inmueble (Loan-To-Value). El 25% restante es tu aporte (ahorro más gastos de escritura). En inmuebles premium o zonas no consolidadas puede bajar a 65-70%."
+    },
+    {
+      "q": "¿Se puede usar para vivienda única o también segunda propiedad?",
+      "a": "BBVA ofrece la línea principalmente para **vivienda única y permanente**. Para segunda propiedad o inversión pueden aplicar tasas diferentes (más altas) y LTV menor (50-60%). Confirmá con el oficial de cuenta."
+    },
+    {
+      "q": "¿Cómo se compara con Santander y Ciudad?",
+      "a": "BBVA 4.5%, Santander ~4.75%, Ciudad ~3.5% (Procrear con subsidio). BBVA es competitivo pero **obliga seguro propio**, mientras que Ciudad y Nación permiten seguros de terceros. Podés usar la [calculadora Santander](/calculadora-hipoteca-uva-santander-argentina) y [Ciudad Procrear](/calculadora-hipoteca-banco-ciudad-procrear) para comparar."
+    }
+  ],
+  "sources": [
+    { "name": "BBVA Argentina — Crédito hipotecario", "url": "https://www.bbva.com.ar/personas/productos/prestamos/credito-hipotecario.html" },
+    { "name": "BCRA — Valor UVA diario", "url": "https://www.bcra.gob.ar/PublicacionesEstadisticas/Principales_variables_datos.asp" },
+    { "name": "INDEC — IPC (base CER)", "url": "https://www.indec.gob.ar" },
+    { "name": "BBVA Seguros — pólizas vida e incendio", "url": "https://www.bbvaseguros.com.ar" }
+  ],
+  "relatedSlugs": [
+    "calculadora-hipoteca-uva-santander-argentina",
+    "calculadora-hipoteca-banco-ciudad-procrear",
+    "calculadora-cuota-credito-hipotecario-uva-banco-nacion",
+    "calculadora-capacidad-credito-hipotecario"
+  ],
+  "howToSteps": [
+    { "name": "Monto del préstamo", "text": "Ingresá el monto que vas a pedir (no el valor del inmueble)." },
+    { "name": "Plazo y tasa", "text": "Indicá plazo en años y TNA BBVA vigente (~4.5%)." },
+    { "name": "UVA actual", "text": "Cargá el valor UVA del día (BCRA)." },
+    { "name": "Revisá cuota", "text": "Compará contra tu ingreso (cuota ≤ 25%)." }
+  ],
+  "lastReviewed": "2026-04-22"
+}
