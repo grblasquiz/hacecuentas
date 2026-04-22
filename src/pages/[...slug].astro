@@ -104,6 +104,29 @@ const datePublished = '2025-09-01T00:00:00Z';
 const audience: 'AR' | 'global' = calc.audience === 'AR' ? 'AR' : 'global';
 const schemaLang = audience === 'AR' ? 'es-AR' : 'es';
 
+/**
+ * Description "safe" para schemas structured data. Google Rich Results exige
+ * longitud mínima (~50 chars) en varios tipos (Dataset, SoftwareApplication,
+ * Article); descriptions cortas caen como "La longitud de cadena del campo
+ * description no es válida" en Search Console.
+ *
+ * Estrategia: partir de calc.description, y si es corta completar con h1,
+ * keyTakeaway y category label — contenido real, no padding artificial.
+ * Cap a 500 chars para no inflar el HTML innecesariamente.
+ */
+function buildSchemaDescription(c: any): string {
+  const base = (c.description || '').trim();
+  if (base.length >= 50) return base.slice(0, 500);
+  const parts = [base];
+  if (c.h1) parts.push(c.h1);
+  if (c.keyTakeaway) parts.push(String(c.keyTakeaway).replace(/\*\*/g, ''));
+  const catLabel = categoryLabels[c.category] || c.category;
+  if (catLabel) parts.push(`Categoría: ${catLabel}.`);
+  const merged = parts.filter(Boolean).join(' — ').trim();
+  return (merged.length >= 50 ? merged : `${merged} Calculadora gratis, sin registro, resultado inmediato.`).slice(0, 500);
+}
+const schemaDescription = buildSchemaDescription(calc);
+
 const howToSteps = calc.howToSteps && calc.howToSteps.length > 0
   ? calc.howToSteps
   : calc.fields.map((f: any) => ({
@@ -115,7 +138,7 @@ const schemaHowTo = {
   '@context': 'https://schema.org',
   '@type': 'HowTo',
   name: `Cómo usar la ${calc.h1}`,
-  description: calc.description,
+  description: schemaDescription,
   totalTime: 'PT1M',
   inLanguage: schemaLang,
   step: howToSteps.map((s: any, i: number) => ({
@@ -155,7 +178,7 @@ const schemaApp = {
   '@context': 'https://schema.org',
   '@type': ['SoftwareApplication', 'WebApplication'],
   name: calc.h1,
-  description: calc.description,
+  description: schemaDescription,
   url: `https://hacecuentas.com/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/${calc.slug}`,
   applicationCategory: 'UtilitiesApplication',
@@ -186,7 +209,7 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: calc.h1,
-  description: calc.description,
+  description: schemaDescription,
   url: `https://hacecuentas.com/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/${calc.slug}`,
   inLanguage: schemaLang,
@@ -221,7 +244,7 @@ if (hasTable) {
   schemaGraph.push({
     '@type': 'Dataset',
     name: `${calc.h1} — Datos y tablas de referencia`,
-    description: calc.description,
+    description: schemaDescription,
     url: `https://hacecuentas.com/${calc.slug}`,
     inLanguage: schemaLang,
     creator: {
