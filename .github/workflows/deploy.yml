@@ -48,18 +48,34 @@ jobs:
           CF_ACCT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -e
-          if [ -z "$CF_TOKEN" ]; then echo "ERROR: CLOUDFLARE_API_TOKEN vacío"; exit 1; fi
-          if [ -z "$CF_ACCT" ]; then echo "ERROR: CLOUDFLARE_ACCOUNT_ID vacío"; exit 1; fi
-          echo "token len: ${#CF_TOKEN} | account id len: ${#CF_ACCT}"
+          if [ -z "$CF_TOKEN" ]; then echo "ERROR: CLOUDFLARE_API_TOKEN vacío en GH Secrets"; exit 1; fi
+          if [ -z "$CF_ACCT" ]; then echo "ERROR: CLOUDFLARE_ACCOUNT_ID vacío en GH Secrets"; exit 1; fi
+
+          # Whitespace/newline check — copy-paste al GH Secret UI suele dejar \n al final.
+          CLEAN_TOKEN=$(printf '%s' "$CF_TOKEN" | tr -d '[:space:]')
+          if [ "${#CLEAN_TOKEN}" != "${#CF_TOKEN}" ]; then
+            echo "ERROR: CLOUDFLARE_API_TOKEN contiene whitespace/newlines (${#CF_TOKEN} → ${#CLEAN_TOKEN})"
+            echo "Re-pegar el token en GH → Settings → Secrets sin saltos de línea."
+            exit 1
+          fi
+          echo "OK token len: ${#CF_TOKEN} | account id len: ${#CF_ACCT}"
+
           echo "--- /user/tokens/verify ---"
-          curl -sS "https://api.cloudflare.com/client/v4/user/tokens/verify" \
-            -H "Authorization: Bearer $CF_TOKEN" \
-            | python3 -c "import sys,json; d=json.load(sys.stdin); r=d.get('result',{}); print('token id:',r.get('id','?'),'status:',r.get('status','?'),'ok:',d.get('success'))" || true
-          echo "--- probe: GET /accounts/\$CF_ACCT/workers/scripts ---"
-          curl -sS -o /tmp/cf-probe.json -w "HTTP %{http_code}\n" \
+          VERIFY=$(curl -sS "https://api.cloudflare.com/client/v4/user/tokens/verify" -H "Authorization: Bearer $CF_TOKEN")
+          echo "$VERIFY" | python3 -c "import sys,json; d=json.load(sys.stdin); r=d.get('result',{}); ok=d.get('success'); print('token id:',r.get('id','?'),'status:',r.get('status','?'),'ok:',ok); sys.exit(0 if ok else 1)"
+
+          echo "--- probe Workers Scripts: GET /accounts/\$CF_ACCT/workers/scripts ---"
+          PROBE_HTTP=$(curl -sS -o /tmp/cf-probe.json -w "%{http_code}" \
             "https://api.cloudflare.com/client/v4/accounts/$CF_ACCT/workers/scripts" \
-            -H "Authorization: Bearer $CF_TOKEN" || true
-          python3 -c "import json; d=json.load(open('/tmp/cf-probe.json')); print('success:',d.get('success'),'errors:',d.get('errors'))" || cat /tmp/cf-probe.json
+            -H "Authorization: Bearer $CF_TOKEN")
+          echo "HTTP $PROBE_HTTP"
+          python3 -c "import json,sys; d=json.load(open('/tmp/cf-probe.json')); print('success:',d.get('success'),'errors:',d.get('errors')); sys.exit(0 if d.get('success') else 1)"
+
+          echo "--- probe KV: GET /accounts/\$CF_ACCT/storage/kv/namespaces ---"
+          curl -sS -o /tmp/kv-probe.json -w "HTTP %{http_code}\n" \
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCT/storage/kv/namespaces" \
+            -H "Authorization: Bearer $CF_TOKEN"
+          python3 -c "import json; d=json.load(open('/tmp/kv-probe.json')); print('success:',d.get('success'),'errors:',d.get('errors'))" || true
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
