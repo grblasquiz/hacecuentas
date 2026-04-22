@@ -37,10 +37,11 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           # Con output:'server' el adapter @astrojs/cloudflare genera un
-          # wrangler.json propio en dist/server/ con entrypoint correcto,
-          # assets dir apuntando a dist/client y todos los bindings.
-          # Hay que usar ESE config para deploy, no el root wrangler.jsonc.
-          command: deploy --config dist/server/wrangler.json
+          # wrangler.json en dist/server/ con paths relativos a ese dir
+          # (main: entry.mjs, assets: ../client). Por eso corremos wrangler
+          # DESDE dist/server/ — sino los paths no resuelven.
+          workingDirectory: dist/server
+          command: deploy
 
       - name: Purge Cloudflare cache
         env:
