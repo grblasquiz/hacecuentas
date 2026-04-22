@@ -270,6 +270,7 @@ import { cuotaAlimentariaHijos } from './cuota-alimentaria-hijos';
 import { cuotaSindicalDescuentoSueldo } from './cuota-sindical-descuento-sueldo';
 import { cuotasCreditoMercado } from './cuotas-credito-mercado';
 import { cuotasSinInteresPrecio } from './cuotas-sin-interes-precio';
+import { cupsToGramsConverter } from './cups-to-grams-converter';
 import { customerEffortScoreCes } from './customer-effort-score-ces';
 import { decibeliosDistanciaSonido } from './decibelios-distancia-sonido';
 import { deckMaderaTablastornillos } from './deck-madera-tablas-tornillos';
@@ -318,6 +319,7 @@ import { dividendosYieldAnual } from './dividendos-yield-anual';
 import { dividirCuentaAmigos } from './dividir-cuenta-amigos';
 import { divisionBienesDivorcio } from './division-bienes-divorcio';
 import { divisorTensionResistivo } from './divisor-tension-resistivo';
+import { domingosAdvientoNavidad } from './domingos-adviento-navidad';
 import { dolarAR } from './dolar-ar';
 import { dolarBlueVsOficialBrecha } from './dolar-blue-vs-oficial-brecha';
 import { dollarCostAveragingCripto } from './dollar-cost-averaging-cripto';
@@ -967,6 +969,7 @@ import { valorIntrinsecoDcf } from './valor-intrinseco-dcf';
 import { valorMillasViajeroFrecuente } from './valor-millas-viajero-frecuente';
 import { valorPaginaVistaRpm } from './valor-pagina-vista-rpm';
 import { valorPresenteNetoVpn } from './valor-presente-neto-vpn';
+import { valuacionFiscalAutomotorProvincia } from './valuacion-fiscal-automotor-provincia';
 import { valuacionStartupMetodoBerkus } from './valuacion-startup-metodo-berkus';
 import { vectorSumaRestaMagnitud } from './vector-suma-resta-magnitud';
 import { velocidadCarrera } from './velocidad-carrera';
@@ -1341,7 +1344,6 @@ import { martiniVermouthRatio } from './martini-vermouth-ratio';
 import { mashWaterRatioGrist } from './mash-water-ratio-grist';
 import { masitasDulcesPorInvitadoCasamiento } from './masitas-dulces-por-invitado-casamiento';
 import { mejorEpocaClimaDestino } from './mejor-epoca-clima-destino';
-import { mercadolibreComisionVenta } from './mercadolibre-comision-venta';
 import { meserosNecesariosInvitados } from './meseros-necesarios-invitados';
 import { mesesPrepararIelts } from './meses-preparar-ielts';
 import { metodoFeynmanTiempo } from './metodo-feynman-tiempo';
@@ -2710,6 +2712,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuota-sindical-descuento-sueldo': cuotaSindicalDescuentoSueldo,
   'cuotas-credito-mercado': cuotasCreditoMercado,
   'cuotas-sin-interes-precio': cuotasSinInteresPrecio,
+  'cups-to-grams-converter': cupsToGramsConverter,
   'customer-effort-score-ces': customerEffortScoreCes,
   'decibelios-distancia-sonido': decibeliosDistanciaSonido,
   'deck-madera-tablas-tornillos': deckMaderaTablastornillos,
@@ -2758,6 +2761,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'dividir-cuenta-amigos': dividirCuentaAmigos,
   'division-bienes-divorcio': divisionBienesDivorcio,
   'divisor-tension-resistivo': divisorTensionResistivo,
+  'domingos-adviento-navidad': domingosAdvientoNavidad,
   'dolar-ar': dolarAR,
   'dolar-blue-vs-oficial-brecha': dolarBlueVsOficialBrecha,
   'dollar-cost-averaging-cripto': dollarCostAveragingCripto,
@@ -3407,6 +3411,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'valor-millas-viajero-frecuente': valorMillasViajeroFrecuente,
   'valor-pagina-vista-rpm': valorPaginaVistaRpm,
   'valor-presente-neto-vpn': valorPresenteNetoVpn,
+  'valuacion-fiscal-automotor-provincia': valuacionFiscalAutomotorProvincia,
   'valuacion-startup-metodo-berkus': valuacionStartupMetodoBerkus,
   'vector-suma-resta-magnitud': vectorSumaRestaMagnitud,
   'velocidad-carrera': velocidadCarrera,
@@ -3781,7 +3786,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'mash-water-ratio-grist': mashWaterRatioGrist,
   'masitas-dulces-por-invitado-casamiento': masitasDulcesPorInvitadoCasamiento,
   'mejor-epoca-clima-destino': mejorEpocaClimaDestino,
-  'mercadolibre-comision-venta': mercadolibreComisionVenta,
   'meseros-necesarios-invitados': meserosNecesariosInvitados,
   'meses-preparar-ielts': mesesPrepararIelts,
   'metodo-feynman-tiempo': metodoFeynmanTiempo,
