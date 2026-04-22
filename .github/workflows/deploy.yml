@@ -38,6 +38,29 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Diagnóstico pre-deploy: verifica que el token CF es válido y lista
+      # los scopes/permission groups. Si la próxima step falla por 10000
+      # (auth) esto deja un rastro claro en el log sin exponer el secret.
+      # Imprimimos solo metadatos (id, status, scopes) — nunca el token.
+      - name: Verify Cloudflare token
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -e
+          if [ -z "$CF_TOKEN" ]; then echo "ERROR: CLOUDFLARE_API_TOKEN vacío"; exit 1; fi
+          if [ -z "$CF_ACCT" ]; then echo "ERROR: CLOUDFLARE_ACCOUNT_ID vacío"; exit 1; fi
+          echo "token len: ${#CF_TOKEN} | account id len: ${#CF_ACCT}"
+          echo "--- /user/tokens/verify ---"
+          curl -sS "https://api.cloudflare.com/client/v4/user/tokens/verify" \
+            -H "Authorization: Bearer $CF_TOKEN" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); r=d.get('result',{}); print('token id:',r.get('id','?'),'status:',r.get('status','?'),'ok:',d.get('success'))" || true
+          echo "--- probe: GET /accounts/\$CF_ACCT/workers/scripts ---"
+          curl -sS -o /tmp/cf-probe.json -w "HTTP %{http_code}\n" \
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCT/workers/scripts" \
+            -H "Authorization: Bearer $CF_TOKEN" || true
+          python3 -c "import json; d=json.load(open('/tmp/cf-probe.json')); print('success:',d.get('success'),'errors:',d.get('errors'))" || cat /tmp/cf-probe.json
+
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
