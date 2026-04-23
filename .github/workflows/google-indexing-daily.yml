@@ -70,6 +70,14 @@ jobs:
           GOOGLE_INDEXING_LIMIT: '200'
         run: |
           MODE="${{ github.event.inputs.mode || 'all' }}"
+          # Priority queue: si hay scripts/indexing-priority-queue.txt con URLs,
+          # lo procesamos primero (respeta dedupe de 7 días + quota). Sirve para
+          # forzar submission inmediato de calcs recién deployadas antes que el
+          # sitemap las mezcle con el lote general.
+          if [ -f scripts/indexing-priority-queue.txt ] && [ -s scripts/indexing-priority-queue.txt ]; then
+            echo "::notice::Priority queue detected, processing first."
+            python3 scripts/google-indexing-api.py --from-file scripts/indexing-priority-queue.txt
+          fi
           if [ "$MODE" = "priority" ]; then
             python3 scripts/google-indexing-api.py
           else

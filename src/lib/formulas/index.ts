@@ -147,7 +147,6 @@ import { arenaRellenoTerrenoM3 } from './arena-relleno-terreno-m3';
 import { arenaSanitariaGatoKgMes } from './arena-sanitaria-gato-kg-mes';
 import { arrozAguaProporcion } from './arroz-agua-proporcion';
 import { asadoPorInvitadoKgCarne } from './asado-por-invitado-kg-carne';
-import { ascendenteZodiacal } from './ascendente-zodiacal';
 import { asignacionDesempleoSeguroPrestacionAnses } from './asignacion-desempleo-seguro-prestacion-anses';
 import { asignacionDiscapacidadPensionado } from './asignacion-discapacidad-pensionado';
 import { asignacionFamiliarEmpleadoRegistradoAnses } from './asignacion-familiar-empleado-registrado-anses';
@@ -449,9 +448,6 @@ import { compararNaftaVsGncAhorro } from './comparar-nafta-vs-gnc-ahorro';
 import { comparativaRemesasProveedores } from './comparativa-remesas-proveedores';
 import { compasTiempoPulso } from './compas-tiempo-pulso';
 import { compatibilidadNombres } from './compatibilidad-nombres';
-import { compatibilidadNumerologica } from './compatibilidad-numerologica';
-import { compatibilidadParejaSignosZodiacales } from './compatibilidad-pareja-signos-zodiacales';
-import { compatibilidadSignos } from './compatibilidad-signos';
 import { compensacionCo2ArbolesVuelo } from './compensacion-co2-arboles-vuelo';
 import { complejidadAlgoritmicaBigOIteraciones } from './complejidad-algoritmica-big-o-iteraciones';
 import { compostProporcionCarbonoNitrogeno } from './compost-proporcion-carbono-nitrogeno';
@@ -968,7 +964,6 @@ import { electricidadCableAmperaje } from './electricidad-cable-amperaje';
 import { electricidadTarifaSocialSubsidioN1N2 } from './electricidad-tarifa-social-subsidio-n1-n2';
 import { electrolitosAtletaSudorReposicion } from './electrolitos-atleta-sudor-reposicion';
 import { electrolitosPrePostEntreno } from './electrolitos-pre-post-entreno';
-import { elementoZodiacal } from './elemento-zodiacal';
 import { eloAjedrezGanadoPerdidoVariacion } from './elo-ajedrez-ganado-perdido-variacion';
 import { emailGestionInboxZeroTiempoDedicado } from './email-gestion-inbox-zero-tiempo-dedicado';
 import { emailMarketingIngresoLista } from './email-marketing-ingreso-lista';
@@ -1673,7 +1668,6 @@ import { nozzleLayerHeight3d } from './nozzle-layer-height-3d';
 import { nps } from './nps';
 import { numeroCuidadoresFiestaInfantilEdad } from './numero-cuidadores-fiesta-infantil-edad';
 import { numeroOxidacionElemento } from './numero-oxidacion-elemento';
-import { numerologiaNombre } from './numerologia-nombre';
 import { numerosPrimos } from './numeros-primos';
 import { numerosRomanosConversor } from './numeros-romanos-conversor';
 import { ojalesDistanciaBotonesCamisa } from './ojales-distancia-botones-camisa';
@@ -2179,8 +2173,6 @@ import { sexoBebeTablaChina } from './sexo-bebe-tabla-china';
 import { shareOfVoiceMarketing } from './share-of-voice-marketing';
 import { sharpeRatioPortafolio } from './sharpe-ratio-portafolio';
 import { siembraCalendarioArgentina } from './siembra-calendario-argentina';
-import { signoChino } from './signo-chino';
-import { signoZodiacal } from './signo-zodiacal';
 import { sillasMesasInvitados } from './sillas-mesas-invitados';
 import { simplesAnexoI } from './simples-anexo-i';
 import { simplesAnexoII } from './simples-anexo-ii';
@@ -2743,7 +2735,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'arena-sanitaria-gato-kg-mes': arenaSanitariaGatoKgMes,
   'arroz-agua-proporcion': arrozAguaProporcion,
   'asado-por-invitado-kg-carne': asadoPorInvitadoKgCarne,
-  'ascendente-zodiacal': ascendenteZodiacal,
   'asignacion-desempleo-seguro-prestacion-anses': asignacionDesempleoSeguroPrestacionAnses,
   'asignacion-discapacidad-pensionado': asignacionDiscapacidadPensionado,
   'asignacion-familiar-empleado-registrado-anses': asignacionFamiliarEmpleadoRegistradoAnses,
@@ -3045,9 +3036,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'comparativa-remesas-proveedores': comparativaRemesasProveedores,
   'compas-tiempo-pulso': compasTiempoPulso,
   'compatibilidad-nombres': compatibilidadNombres,
-  'compatibilidad-numerologica': compatibilidadNumerologica,
-  'compatibilidad-pareja-signos-zodiacales': compatibilidadParejaSignosZodiacales,
-  'compatibilidad-signos': compatibilidadSignos,
   'compensacion-co2-arboles-vuelo': compensacionCo2ArbolesVuelo,
   'complejidad-algoritmica-big-o-iteraciones': complejidadAlgoritmicaBigOIteraciones,
   'compost-proporcion-carbono-nitrogeno': compostProporcionCarbonoNitrogeno,
@@ -3564,7 +3552,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'electricidad-tarifa-social-subsidio-n1-n2': electricidadTarifaSocialSubsidioN1N2,
   'electrolitos-atleta-sudor-reposicion': electrolitosAtletaSudorReposicion,
   'electrolitos-pre-post-entreno': electrolitosPrePostEntreno,
-  'elemento-zodiacal': elementoZodiacal,
   'elo-ajedrez-ganado-perdido-variacion': eloAjedrezGanadoPerdidoVariacion,
   'email-gestion-inbox-zero-tiempo-dedicado': emailGestionInboxZeroTiempoDedicado,
   'email-marketing-ingreso-lista': emailMarketingIngresoLista,
@@ -4269,7 +4256,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'nps': nps,
   'numero-cuidadores-fiesta-infantil-edad': numeroCuidadoresFiestaInfantilEdad,
   'numero-oxidacion-elemento': numeroOxidacionElemento,
-  'numerologia-nombre': numerologiaNombre,
   'numeros-primos': numerosPrimos,
   'numeros-romanos-conversor': numerosRomanosConversor,
   'ojales-distancia-botones-camisa': ojalesDistanciaBotonesCamisa,
@@ -4775,8 +4761,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'share-of-voice-marketing': shareOfVoiceMarketing,
   'sharpe-ratio-portafolio': sharpeRatioPortafolio,
   'siembra-calendario-argentina': siembraCalendarioArgentina,
-  'signo-chino': signoChino,
-  'signo-zodiacal': signoZodiacal,
   'sillas-mesas-invitados': sillasMesasInvitados,
   'simples-anexo-i': simplesAnexoI,
   'simples-anexo-ii': simplesAnexoII,
