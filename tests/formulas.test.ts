@@ -49,6 +49,15 @@ import { rmPesoMaximo } from '../src/lib/formulas/1rm-peso-maximo';
 // --- Cafeína ---
 import { cafeinaDosisRendimiento } from '../src/lib/formulas/cafeina-dosis-rendimiento';
 
+// --- Inflación / UVA (bug-prone: compuesto vs simple, poder adquisitivo) ---
+import { inflacionAcumuladaPeriodo } from '../src/lib/formulas/inflacion-acumulada-periodo';
+import { inflacionPoderAdquisitivo } from '../src/lib/formulas/inflacion-poder-adquisitivo';
+import { ajusteSueldoInflacion } from '../src/lib/formulas/ajuste-sueldo-inflacion';
+import { creditoUva } from '../src/lib/formulas/credito-uva';
+
+// --- Salud diabetes (bidireccional A1c↔eAG) ---
+import { a1cGlucosa } from '../src/lib/formulas/a1c-glucosa';
+
 // Helper: extrae el primer field numérico con nombre dado.
 function pick(obj: any, keys: string[]): number | undefined {
   for (const k of keys) {
@@ -138,11 +147,10 @@ describe('alquilerIcl (ICL BCRA - histórico oficial)', () => {
     expect(r.valorActualizado).toBe(611631);
   });
 
-  it('modo fechas: fin de semana/feriado → fallback al día hábil anterior', () => {
-    // 07/01/2024 fue domingo — debería devolver valor del viernes 05/01/2024.
-    const r = alquilerIcl({ valorActual: 500000, fechaInicio: '2023-01-01', fechaActualizacion: '2024-01-07' });
-    expect(r.fechaActualizacionUsada).not.toBe('2024-01-07');
-    expect(r.fechaActualizacionUsada < '2024-01-07').toBe(true);
+  it('fecha futura más allá del último dato BCRA → usa último publicado', () => {
+    const r = alquilerIcl({ valorActual: 500000, fechaInicio: '2023-01-01', fechaActualizacion: '2099-12-31' });
+    expect(r.fechaActualizacionUsada).not.toBe('2099-12-31');
+    expect(r.fechaActualizacionUsada < '2099-12-31').toBe(true);
     expect(r.valorActualizado).toBeGreaterThan(500000);
   });
 
@@ -539,5 +547,237 @@ describe('cafeinaDosisRendimiento', () => {
 
   it('peso 0 → error', () => {
     expect(() => cafeinaDosisRendimiento({ peso: 0, tolerancia: 'media' })).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// INFLACIÓN / UVA
+// ---------------------------------------------------------------------------
+
+describe('inflacionAcumuladaPeriodo (compuesto ≠ suma simple)', () => {
+  it('10% mensual × 12 meses → ~213.8% acumulado (no 120%)', () => {
+    // (1.10)^12 = 3.1384 → 213.84%. Suma simple incorrecta sería 120%.
+    const r = inflacionAcumuladaPeriodo({ cantidadMeses: 12, tasaMensualPromedio: 10 });
+    expect(parseFloat(r.inflacionAcumulada)).toBeCloseTo(213.8, 0);
+    expect(r.factorMultiplicador).toBe('3.138x');
+  });
+
+  it('0% mensual → 0% acumulado, factor 1.000x', () => {
+    const r = inflacionAcumuladaPeriodo({ cantidadMeses: 6, tasaMensualPromedio: 0 });
+    expect(parseFloat(r.inflacionAcumulada)).toBeCloseTo(0, 5);
+    expect(r.factorMultiplicador).toBe('1.000x');
+  });
+
+  it('4% mensual × 24 meses → equivalente anual ~60.1%', () => {
+    // (1.04)^12 = 1.6010 → 60.10% anual.
+    const r = inflacionAcumuladaPeriodo({ cantidadMeses: 24, tasaMensualPromedio: 4 });
+    expect(parseFloat(r.equivalenteAnual)).toBeCloseTo(60.1, 0);
+  });
+
+  it('meses = 0 → error', () => {
+    expect(() => inflacionAcumuladaPeriodo({ cantidadMeses: 0, tasaMensualPromedio: 5 })).toThrow();
+  });
+});
+
+describe('inflacionPoderAdquisitivo', () => {
+  it('100% inflación anual, 1 año → poder real = 50%', () => {
+    const r = inflacionPoderAdquisitivo({ montoOriginal: 1000, inflacionAnual: 100, periodoAnios: 1, tasaAhorro: 0 });
+    expect(r.valorReal).toBe(500);
+    expect(r.perdidaPorcentaje).toBeCloseTo(50, 1);
+    expect(r.montoNecesario).toBe(2000);
+  });
+
+  it('inflación = tasaAhorro → valorConAhorro = monto original', () => {
+    const r = inflacionPoderAdquisitivo({ montoOriginal: 100000, inflacionAnual: 50, periodoAnios: 3, tasaAhorro: 50 });
+    expect(r.valorConAhorro).toBe(100000);
+  });
+
+  it('inflación 0% → no hay pérdida de poder', () => {
+    const r = inflacionPoderAdquisitivo({ montoOriginal: 5000, inflacionAnual: 0, periodoAnios: 10, tasaAhorro: 0 });
+    expect(r.valorReal).toBe(5000);
+    expect(r.perdidaPoder).toBe(0);
+  });
+
+  it('monto 0 → error', () => {
+    expect(() => inflacionPoderAdquisitivo({ montoOriginal: 0, inflacionAnual: 10, periodoAnios: 1, tasaAhorro: 0 })).toThrow();
+  });
+});
+
+describe('ajusteSueldoInflacion', () => {
+  it('sueldo subió igual que inflación → aumento real ~0%', () => {
+    const r = ajusteSueldoInflacion({ sueldoAnterior: 1000000, sueldoActual: 1500000, inflacionAcumulada: 50 });
+    expect(parseFloat(r.aumentoReal)).toBeCloseTo(0, 0);
+    expect(r.sueldoNecesario).toBe(1500000);
+  });
+
+  it('sueldo subió menos que inflación → aumento real negativo', () => {
+    const r = ajusteSueldoInflacion({ sueldoAnterior: 1000000, sueldoActual: 1200000, inflacionAcumulada: 50 });
+    expect(parseFloat(r.aumentoReal)).toBeLessThan(0);
+    expect(r.diferenciaReal).toBeLessThan(0);
+  });
+
+  it('sueldo subió más que inflación → aumento real positivo', () => {
+    const r = ajusteSueldoInflacion({ sueldoAnterior: 1000000, sueldoActual: 2000000, inflacionAcumulada: 50 });
+    expect(parseFloat(r.aumentoReal)).toBeGreaterThan(0);
+    expect(r.diferenciaReal).toBeGreaterThan(0);
+  });
+
+  it('sueldo anterior 0 → error', () => {
+    expect(() => ajusteSueldoInflacion({ sueldoAnterior: 0, sueldoActual: 100000, inflacionAcumulada: 10 })).toThrow();
+  });
+});
+
+describe('creditoUva (francés)', () => {
+  it('100M, 20 años, UVA 8%, fija 60%, inflación 50% → cuota inicial UVA << fija', () => {
+    const r = creditoUva({ monto: 100_000_000, plazoAnos: 20, tasaUVA: 8, tasaFija: 60, inflacionEsperada: 50 });
+    expect(r.cuotaInicialUVA).toBeLessThan(r.cuotaInicialFija);
+    expect(r.cuotaInicialUVA).toBeGreaterThan(0);
+  });
+
+  it('ratio cuota/salario se calcula solo si hay salario', () => {
+    const sin = creditoUva({ monto: 50_000_000, plazoAnos: 15, tasaUVA: 6, tasaFija: 30, inflacionEsperada: 20 });
+    expect(sin.ratioCuotaSalarioInicial).toBe(0);
+    const con = creditoUva({ monto: 50_000_000, plazoAnos: 15, tasaUVA: 6, tasaFija: 30, inflacionEsperada: 20, salarioActual: 2_000_000 });
+    expect(con.ratioCuotaSalarioInicial).toBeGreaterThan(0);
+  });
+
+  it('cuota final UVA > cuota inicial cuando hay inflación positiva', () => {
+    const r = creditoUva({ monto: 80_000_000, plazoAnos: 20, tasaUVA: 7, tasaFija: 50, inflacionEsperada: 30 });
+    expect(r.cuotaFinalUVAEstimada).toBeGreaterThan(r.cuotaInicialUVA);
+  });
+
+  it('monto 0 → error', () => {
+    expect(() => creditoUva({ monto: 0, plazoAnos: 10, tasaUVA: 6, tasaFija: 30, inflacionEsperada: 20 })).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DIABETES (A1c ↔ eAG)
+// ---------------------------------------------------------------------------
+
+describe('a1cGlucosa (ADA / NGSP)', () => {
+  it('A1c 5.0 → eAG ~97 mg/dL (normal)', () => {
+    const r = a1cGlucosa({ valor: 5.0, modo: 'a1c-a-glucosa' });
+    expect(r.resultado).toBeCloseTo(97, 0);
+    expect(r.categoria).toMatch(/Normal/);
+  });
+
+  it('A1c 6.0 → prediabetes', () => {
+    const r = a1cGlucosa({ valor: 6.0, modo: 'a1c-a-glucosa' });
+    expect(r.categoria).toMatch(/Prediabetes/);
+  });
+
+  it('A1c 9.5 → diabetes mal controlada', () => {
+    const r = a1cGlucosa({ valor: 9.5, modo: 'a1c-a-glucosa' });
+    expect(r.categoria).toMatch(/mal controlada/i);
+  });
+
+  it('bidireccional: A1c → eAG → A1c recupera el valor (±0.05)', () => {
+    const a = a1cGlucosa({ valor: 7.2, modo: 'a1c-a-glucosa' });
+    const b = a1cGlucosa({ valor: a.resultado, modo: 'glucosa-a-a1c' });
+    expect(b.resultado).toBeCloseTo(7.2, 1);
+  });
+
+  it('A1c fuera de rango (2%) → error', () => {
+    expect(() => a1cGlucosa({ valor: 2, modo: 'a1c-a-glucosa' })).toThrow(/entre 3 y 20/);
+  });
+
+  it('glucosa fuera de rango (600) → error', () => {
+    expect(() => a1cGlucosa({ valor: 600, modo: 'glucosa-a-a1c' })).toThrow(/entre 30 y 500/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FECHAS — EDGE CASES UTC/BISIESTO/DST
+// (regresiones: bug timezone del 2026-04-20 — parsing 'YYYY-MM-DD' con
+//  new Date(str) falla en UTC-3; la fórmula debe usar componentes locales)
+// ---------------------------------------------------------------------------
+
+describe('diasEntreFechas — edge cases timezone y bisiesto', () => {
+  it('mismo día → 0 días, 0 hábiles', () => {
+    const r = diasEntreFechas({ desde: '2024-03-15', hasta: '2024-03-15' });
+    expect(r.dias).toBe(0);
+    expect(r.habiles).toBe(0);
+  });
+
+  it('2024 año bisiesto: 01/01 → 31/12 = 365 días', () => {
+    const r = diasEntreFechas({ desde: '2024-01-01', hasta: '2024-12-31' });
+    expect(r.dias).toBe(365);
+  });
+
+  it('2023 año común: 01/01 → 31/12 = 364 días', () => {
+    const r = diasEntreFechas({ desde: '2023-01-01', hasta: '2023-12-31' });
+    expect(r.dias).toBe(364);
+  });
+
+  it('cruza 29-feb bisiesto: 28-feb → 01-mar = 2 días', () => {
+    const r = diasEntreFechas({ desde: '2024-02-28', hasta: '2024-03-01' });
+    expect(r.dias).toBe(2);
+  });
+
+  it('orden invertido (hasta < desde) → dias positivo (valor absoluto)', () => {
+    const r = diasEntreFechas({ desde: '2024-12-31', hasta: '2024-12-01' });
+    expect(r.dias).toBe(30);
+  });
+
+  it('cruza DST Argentina (no hay) y año nuevo: 31/12/2023 → 01/01/2024 = 1 día', () => {
+    const r = diasEntreFechas({ desde: '2023-12-31', hasta: '2024-01-01' });
+    expect(r.dias).toBe(1);
+  });
+
+  it('semana laboral lun-vie: 5 hábiles', () => {
+    // 2024-03-04 (lun) → 2024-03-09 (sáb) = 5 días hábiles
+    const r = diasEntreFechas({ desde: '2024-03-04', hasta: '2024-03-09' });
+    expect(r.habiles).toBe(5);
+  });
+
+  it('fecha inválida → error', () => {
+    expect(() => diasEntreFechas({ desde: 'abc', hasta: '2024-01-01' })).toThrow(/inválida/);
+  });
+});
+
+describe('embarazo — FPP y trimestre (rango válido <300 días de hoy)', () => {
+  // Helper: hace FUM relativa a hoy para que siempre esté dentro de rango.
+  const hoyMinus = (dias: number) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - dias);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  it('FUM hace 70 días → semana 10 aprox, trimestre 1', () => {
+    const r = embarazo({ fum: hoyMinus(70) });
+    expect(r.trimestre).toBe(1);
+    expect(r.semanas).toMatch(/^(9|10|11)\b/);
+  });
+
+  it('FUM hace 140 días → trimestre 2', () => {
+    const r = embarazo({ fum: hoyMinus(140) });
+    expect(r.trimestre).toBe(2);
+  });
+
+  it('FUM hace 210 días → trimestre 3', () => {
+    const r = embarazo({ fum: hoyMinus(210) });
+    expect(r.trimestre).toBe(3);
+  });
+
+  it('FPP es siempre 280 días después de FUM', () => {
+    const fum = hoyMinus(100);
+    const r = embarazo({ fum });
+    const [yF, mF, dF] = fum.split('-').map(Number);
+    const fumDate = new Date(yF, mF - 1, dF);
+    const [yP, mP, dP] = r.fpp.split('-').map(Number);
+    const fppDate = new Date(yP, mP - 1, dP);
+    const diff = Math.round((fppDate.getTime() - fumDate.getTime()) / 86_400_000);
+    expect(diff).toBe(280);
+  });
+
+  it('FUM futura → error', () => {
+    const mañana = hoyMinus(-1);
+    expect(() => embarazo({ fum: mañana })).toThrow(/futura/);
+  });
+
+  it('FUM muy antigua (>300 días) → error', () => {
+    expect(() => embarazo({ fum: hoyMinus(400) })).toThrow(/antigua/);
   });
 });

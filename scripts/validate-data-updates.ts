@@ -75,6 +75,33 @@ function main() {
   }
 
   console.log(`[validate-data-updates] ✓ ${files.length} calcs OK`);
+
+  // Warning (non-blocking): calcs con <7 FAQs. La regla de producto (CLAUDE.md)
+  // pide mínimo 7 FAQs por calc para cobertura SEO decente. No rompemos el
+  // build con las legacy; listamos para que el editor vea el backlog.
+  const FAQ_MIN = 7;
+  const lowFaq: Array<{ slug: string; count: number }> = [];
+  for (const f of files) {
+    const slug = f.replace(/\.json$/, '');
+    try {
+      const calc = JSON.parse(readFileSync(join(CALCS_DIR, f), 'utf8'));
+      const raw = calc.faqs ?? calc.faq;
+      const arr = Array.isArray(raw) ? raw : raw && typeof raw === 'object' ? Object.values(raw) : [];
+      if (arr.length < FAQ_MIN) lowFaq.push({ slug, count: arr.length });
+    } catch {
+      // ya reportado arriba como JSON inválido.
+    }
+  }
+
+  if (lowFaq.length > 0) {
+    const byCount = new Map<number, number>();
+    for (const { count } of lowFaq) byCount.set(count, (byCount.get(count) ?? 0) + 1);
+    const dist = [...byCount.entries()].sort((a, b) => a[0] - b[0]).map(([c, n]) => `${n}×${c}`).join(', ');
+    console.warn(`[validate-data-updates] ⚠ ${lowFaq.length} calcs con <${FAQ_MIN} FAQs (distribución: ${dist}). Top 10:`);
+    for (const { slug, count } of lowFaq.sort((a, b) => a.count - b.count).slice(0, 10)) {
+      console.warn(`    ${count} FAQs → ${slug}`);
+    }
+  }
 }
 
 main();
