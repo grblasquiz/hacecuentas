@@ -6,6 +6,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Calculator from '../components/Calculator.astro';
 import RelatedCalcs from '../components/RelatedCalcs.astro';
+import ogManifest from '../lib/og-manifest.json';
 import ClusterHub from '../components/ClusterHub.astro';
 import CalendarioFeriados from '../components/CalendarioFeriados.astro';
 import GaugeImcPediatrico from '../components/GaugeImcPediatrico.astro';
@@ -77,22 +78,19 @@ const categoryLabels: Record<string, string> = {
 // dateModified = lastReviewed del JSON > mtime del archivo > build date
 let dateModified: string;
 let lastReviewedLabel: string;
-// OG image: si existe /public/og/{slug}.png usamos esa, sino fallback al default.
+// OG image: se usa /og/{slug}.png si la slug figura en el manifest generado
+// en pre-build (scripts/generate-og-manifest.ts). Fallback al default.
+// No podemos usar fs directo acá porque con output:'server' el frontmatter
+// corre en el runtime Cloudflare Workers (que no tiene node:fs).
 let ogImage = '/og-default.png';
-try {
-  const { statSync, existsSync } = await import('node:fs');
-  const { join } = await import('node:path');
-  const cwd = process.cwd();
-  const filePath = join(cwd, 'src', 'content', 'calcs', `${calc.formulaId || calc.slug}.json`);
-  const ogPath = join(cwd, 'public', 'og', `${calc.slug}.png`);
-  if (existsSync(ogPath)) ogImage = `/og/${calc.slug}.png`;
-  // Si el JSON declara lastReviewed (YYYY-MM-DD), tiene precedencia
-  if (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
-    dateModified = new Date(calc.lastReviewed + 'T00:00:00Z').toISOString();
-  } else {
-    dateModified = statSync(filePath).mtime.toISOString();
-  }
-} catch {
+if ((ogManifest as Record<string, boolean>)[calc.slug]) {
+  ogImage = `/og/${calc.slug}.png`;
+}
+
+// dateModified: de calc.lastReviewed si declarado, sino build date
+if (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
+  dateModified = new Date(calc.lastReviewed + 'T00:00:00Z').toISOString();
+} else {
   dateModified = new Date().toISOString();
 }
 lastReviewedLabel = new Date(dateModified).toLocaleDateString('es-AR', {

@@ -190,7 +190,14 @@ const globalSchema = {
 
     <title>{title}</title>
     <meta name="description" content={description} />
-    {noindex && <meta name="robots" content="noindex, follow" />}
+    {/* Robots: max-image-preview:large habilita que Google Discover use
+         nuestras OG images en full-width cards del feed Android/Chrome.
+         Sin este tag, Discover limita los thumbnails o los omite. Es la
+         señal #1 para optar-in a Discover según los docs de Google. */}
+    {noindex
+      ? <meta name="robots" content="noindex, follow" />
+      : <meta name="robots" content="max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    }
     <link rel="canonical" href={fullCanonical} />
     {hreflang ? (
       hreflang.map(h => <link rel="alternate" hreflang={h.lang} href={h.href} />)
