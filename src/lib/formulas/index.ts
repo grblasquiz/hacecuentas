@@ -1676,7 +1676,6 @@ import { oldFashionedCantidadInvitados } from './old-fashioned-cantidad-invitado
 import { omega36Ratio } from './omega-3-6-ratio';
 import { omega3DosisDiariaDhaEpa } from './omega-3-dosis-diaria-dha-epa';
 import { ondaLongitudFrecuenciaVelocidad } from './onda-longitud-frecuencia-velocidad';
-import { onlyfansIngresoSuscriptores } from './onlyfans-ingreso-suscriptores';
 import { onzasBiberonPesoBebeDia } from './onzas-biberon-peso-bebe-dia';
 import { openRate } from './open-rate';
 import { ordenKondoTiempoEstimado } from './orden-kondo-tiempo-estimado';
@@ -4264,7 +4263,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'omega-3-6-ratio': omega36Ratio,
   'omega-3-dosis-diaria-dha-epa': omega3DosisDiariaDhaEpa,
   'onda-longitud-frecuencia-velocidad': ondaLongitudFrecuenciaVelocidad,
-  'onlyfans-ingreso-suscriptores': onlyfansIngresoSuscriptores,
   'onzas-biberon-peso-bebe-dia': onzasBiberonPesoBebeDia,
   'open-rate': openRate,
   'orden-kondo-tiempo-estimado': ordenKondoTiempoEstimado,
