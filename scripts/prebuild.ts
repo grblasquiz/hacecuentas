@@ -57,8 +57,11 @@ function run(t: Task): Promise<void> {
 async function main() {
   const t0 = Date.now();
 
-  console.log('[prebuild] fase 1: validate:data');
-  await run(task('validate', 'validate-data-updates'));
+  console.log('[prebuild] fase 1: validate:data + regenerate-formula-index');
+  await Promise.all([
+    run(task('validate', 'validate-data-updates')),
+    run(task('formula-index', 'regenerate-formula-index')),
+  ]);
 
   console.log('[prebuild] fase 2: related, og, sitemap, stamp-sw (paralelo)');
   await Promise.all([

@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-04-16
+// Generated: 2026-04-23
 
 import { rmPesoMaximo } from './1rm-peso-maximo';
 import { rmPesoMuertoEstimador } from './1rm-peso-muerto-estimador';
