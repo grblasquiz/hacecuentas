@@ -7,7 +7,7 @@
   "audience": "global",
   "icon": "🤖",
   "formulaId": "tokens-openai-gpt-costo-uso-mensual",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Costo mensual estimado API OpenAI. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
+  "intro": "El precio de la API de OpenAI se factura en **tokens** (aprox. 4 caracteres o 0,75 palabras) con **dos tarifas por modelo**: input (prompt enviado) y output (completion recibida), donde el output suele ser 3-5x más caro. GPT-4o cuesta USD 2,50/MTok input y USD 10/MTok output; GPT-4o-mini baja a USD 0,15/USD 0,60; o1-preview sube a USD 15/USD 60 por millón. El costo mensual depende mucho del uso real: un chatbot con 100 interacciones/día y 500 tokens promedio por turno gasta muy distinto de un sistema RAG que procesa documentos de 10k tokens. Esta calculadora toma tu volumen estimado de mensajes diarios, longitud promedio de input y output, modelo elegido y uso (o no) de **prompt caching** (50% de descuento sobre input cacheado) para devolverte el **costo mensual estimado en USD**, una proyección anual y el costo marginal por interacción.",
   "keyTakeaway": "Ingresá tokens entrada, tokens salida y modelo y obtené costo mensual USD al instante, con fórmula estándar del tema y referencias al pie.",
   "useCases": [
     "Dimensionar Costo API ChatGPT antes de comprar equipos o contratar servicio.",
@@ -83,7 +83,7 @@
     ],
     "result": "Request prom USD 0.05"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nCosto mensual estimado API OpenAI.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula el costo mensual de uso de la API OpenAI\n\nEl modelo de facturación es por tokens: input (prompt) y output (completion) con tarifas distintas según modelo. Un token ≈ 4 caracteres ≈ 0,75 palabras en inglés (un 15-25% más en español por la tokenización del BPE en subpalabras).\n\n```\ncosto_mensual = Σ (tokens_input × tarifa_input + tokens_output × tarifa_output) / 1M\n```\n\n## Tabla 2026: precios API OpenAI (USD por 1M tokens)\n\n| Modelo | Input | Output | Caching | Contexto |\n|---|---|---|---|---|\n| GPT-4o | 2,50 | 10,00 | Sí | 128k |\n| GPT-4o mini | 0,15 | 0,60 | Sí | 128k |\n| o1-preview | 15,00 | 60,00 | Sí | 128k |\n| o1-mini | 3,00 | 12,00 | Sí | 128k |\n| GPT-4 Turbo | 10,00 | 30,00 | No | 128k |\n| GPT-3.5 Turbo | 0,50 | 1,50 | No | 16k |\n\n## Casos especiales\n\n- **Prompt caching**: 50% de descuento sobre input cacheado; útil para RAG con prompts repetitivos.\n- **Batch API**: 50% de descuento en procesamiento asincrónico (hasta 24 h).\n- **Vision**: imágenes cuestan ~150-1.500 tokens según tamaño y detail.\n- **Fine-tuning**: cobra por tokens de training y por tokens de uso del modelo fine-tuned (3x vs modelo base).\n- **Reasoning de o1**: genera 'reasoning tokens' no visibles pero facturables, pueden 2-5x la longitud de la respuesta final.\n\n## Errores comunes\n\n1. **No habilitar prompt caching**: descarta 50% de ahorro en prompts fijos.\n2. **Usar GPT-4o para tareas que GPT-4o-mini resuelve**: factor 16x de costo evitable.\n3. **No usar batch API para procesamiento masivo**: 50% extra innecesario.\n4. **Contar tokens con heurística**: usar el tokenizer oficial (`tiktoken`) evita subestimar en 15-25%.\n5. **No monitorear por endpoint**: sin logging se dispara un feature sin que lo notes.\n\n## Fuentes\n\nReferencias: pricing oficial en openai.com/api/pricing, documentación de prompt caching y batch API, repositorio *tiktoken* para conteo exacto de tokens y benchmarks publicados por Artificial Analysis y LMSYS sobre costos comparativos entre modelos OpenAI y competidores.",
   "faq": [
     {
       "q": "¿Tokens?",
@@ -120,12 +120,16 @@
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
+      "name": "OpenAI — Pricing oficial",
+      "url": "https://openai.com/api/pricing/"
     },
     {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "OpenAI Tokenizer",
+      "url": "https://platform.openai.com/tokenizer"
+    },
+    {
+      "name": "Artificial Analysis — LLM cost comparison",
+      "url": "https://artificialanalysis.ai/"
     }
   ],
   "relatedSlugs": [
@@ -139,5 +143,18 @@
     "lastUpdated": "2026-04-20",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "openai tokens costo",
+    "calculadora gpt precio",
+    "gpt 4 tokens calculadora",
+    "precio openai api mensual",
+    "costo gpt api tokens",
+    "gpt 4o mini precio",
+    "estimar costo openai",
+    "million tokens openai",
+    "input output tokens gpt",
+    "presupuesto mensual gpt api",
+    "openai api pricing"
+  ]
 }
