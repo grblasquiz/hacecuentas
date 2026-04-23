@@ -135,18 +135,133 @@ const DAILY_GROWTH = 420;        // promedio diario de cálculos realizados en e
 const daysSinceLaunch = Math.floor((Date.now() - LAUNCH_DATE.getTime()) / 86_400_000);
 const totalResults = BASE_RESULTS + (daysSinceLaunch * DAILY_GROWTH);
 
+// Schema combinado: WebSite + FAQPage.
+// FAQPage en home es EL caballo de batalla para featured snippets / answer
+// boxes en SERP: Google toma estas preguntas-respuestas y las muestra como
+// rich results en búsquedas genéricas ("qué es hacé cuentas", "cómo calcular
+// aguinaldo", "cómo funciona monotributo"). Las 12 preguntas elegidas
+// cubren queries de alto volumen que detectamos en GSC.
 const schema = {
   '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: 'Hacé Cuentas',
-  url: 'https://hacecuentas.com',
-  description: 'Calculadoras online gratuitas en español para todo el mundo hispanohablante',
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: 'https://hacecuentas.com/buscar?q={search_term_string}',
-    'query-input': 'required name=search_term_string',
-  },
-  inLanguage: ['es', 'es-AR', 'es-419'],
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': 'https://hacecuentas.com/#website',
+      name: 'Hacé Cuentas',
+      url: 'https://hacecuentas.com',
+      description: 'Calculadoras online gratuitas en español para todo el mundo hispanohablante',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://hacecuentas.com/buscar?q={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+      inLanguage: ['es', 'es-AR', 'es-419'],
+      publisher: { '@id': 'https://hacecuentas.com/#organization' },
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': 'https://hacecuentas.com/#faq',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: '¿Qué es Hacé Cuentas?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Hacé Cuentas es un sitio argentino de 3.700+ calculadoras online gratuitas en español, inglés y portugués. Cubre finanzas personales, impuestos, salud, construcción, deportes y vida cotidiana, con foco específico en Argentina (ARCA, ANSES, BCRA) y cobertura para todo el mundo hispanohablante, Brasil y Portugal. Todas las calculadoras son gratuitas, sin registro y corren 100% en el navegador.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Las calculadoras de Hacé Cuentas son gratis?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Sí, todas las 3.700+ calculadoras son 100% gratis y sin registro. No hay muro de pago, suscripción ni versión premium. El sitio se financia con publicidad display de Google AdSense, sin patrocinios ocultos ni afiliados enmascarados. Los cálculos se ejecutan en tu propio navegador: tus datos no viajan a ningún servidor.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Cómo calculo mi sueldo en mano en Argentina?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Restá al sueldo bruto los aportes obligatorios (jubilación 11% + obra social 3% + PAMI 3% = 17%) y, si corresponde, el Impuesto a las Ganancias según la escala vigente. Usá la calculadora de sueldo en mano Argentina para obtener el neto exacto aplicando la escala ARCA 2026 y los descuentos de CCT correspondientes.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Cómo se calcula el aguinaldo SAC en 2026?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'El aguinaldo (SAC) equivale al 50% de la mejor remuneración mensual del semestre, proporcional a los meses efectivamente trabajados. Fórmula: (mejor sueldo bruto / 12) × meses trabajados, con retención del 17% (jubilación + obra social + PAMI) y, si supera el MNI de Ganancias, retención adicional prorrateada. Se paga en dos cuotas: hasta el 30 de junio y hasta el 18 de diciembre (Ley 27.073).',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Qué calculadoras hay para Brasil?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Hacé Cuentas tiene 100+ calculadoras en portugués brasileiro (PT-BR): FGTS saque-aniversário e saque-rescisão, rescisão CLT (4 cenários), salário líquido INSS+IRRF 2026, 13º salário, férias + 1/3, aposentadoria INSS (todas las regras de transição pós-reforma 2019), MEI DAS mensal, Simples Nacional Anexos I a V con fator R, IRPF declaração completa, ITBI por ciudad, CDB/LCI/Tesouro Direto, IPVA por estado y más.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Cómo funcionan los descuentos de Ganancias 2026?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'El Impuesto a las Ganancias 2026 aplica una escala progresiva de 9 tramos (5% a 35%) según el ingreso gravado anual. Se descuentan primero aportes jubilatorios (11%), obra social (3%) y PAMI (3%), después el MNI mensual de $1.931.926 (enero-junio 2026) + incrementos por cónyuge ($404.330) y por hijo ($203.905). El remanente se compara contra la escala y se retiene proporcionalmente cada mes en el recibo de sueldo.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Puedo embeber una calculadora de Hacé Cuentas en mi sitio?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Sí, cualquiera de las 3.700+ calculadoras se puede embedar gratis en blogs, medios, consultorios y sitios educativos. Basta con copiar un iframe de una línea (formato: https://hacecuentas.com/embed/<slug>) con atribución automática en el footer. No requiere aprobación previa. Ver instrucciones completas en hacecuentas.com/embeber.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Cómo sé si los datos fiscales están actualizados?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Cada calculadora tiene un bloque "Actualizado" con la fecha de última revisión y el link a la fuente oficial (ARCA, ANSES, BCRA, INDEC, Ministerio de Trabajo). Los valores que cambian periódicamente (escalas, alícuotas, IPREM, salario mínimo) se revisan cuando se publica la normativa oficial. En caso de detectar desactualización, reportalo con el botón "Reportar error" al pie de cada calc.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Qué es el Monotributo y cómo recategorizarme?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'El Monotributo es un régimen simplificado de ARCA (ex-AFIP) que unifica impuesto a las ganancias, IVA, aportes jubilatorios y obra social en un único pago mensual. Tiene 11 categorías (A a K) según facturación, superficie, energía y alquiler. La recategorización es cuatrimestral (enero, mayo y septiembre) evaluando los últimos 12 meses. Si te excedés del tope H o K sin recategorizar, podés ser excluido y pasar a Responsable Inscripto.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Cómo se calculan las semanas de embarazo?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Las semanas de embarazo se cuentan desde el primer día de tu última menstruación (LMP), siguiendo la regla de Naegele estándar de ACOG. La fórmula: semanas actuales = (hoy − LMP) / 7, con fecha probable de parto (EDD) = LMP + 280 días. El embarazo dura 40 semanas en promedio; el rango normal a término es 37 a 42 semanas. Para dating más preciso, una ecografía de primer trimestre (semanas 6-12) es la referencia estándar.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Cómo elegir entre plazo fijo UVA, tasa fija o dólar?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Depende de la expectativa de inflación vs devaluación. Plazo fijo UVA ajusta por CER/IPC + tasa residual (~1-2%): gana cuando hay alta inflación. Plazo fijo tasa fija: TNA fija ~30-40%: gana si la inflación baja rápido. Dólar MEP/Blue: gana si se acelera la devaluación, pero implica riesgo cambiario y costos de operación. La decisión óptima cambia mes a mes con los datos del BCRA e INDEC.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Hacé Cuentas guarda mis datos?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'No. Todos los cálculos se ejecutan en tu navegador (JavaScript local), sin enviar datos a ningún servidor. No pedimos registro, no hay cookies de seguimiento personal, y no vendemos ni compartimos información. Las únicas cookies son las necesarias para funcionamiento del sitio y las de publicidad (Google AdSense con Consent Mode v2 GDPR). Ver política de privacidad completa en hacecuentas.com/privacidad.',
+          },
+        },
+      ],
+    },
+  ],
+  publisher: { '@id': 'https://hacecuentas.com/#organization' },
 };
 ---
 
