@@ -1,0 +1,148 @@
+{
+  "slug": "calculadora-probabilidad-lluvia-24h-presion-humedad-tendencia",
+  "title": "Probabilidad de Lluvia 24h por Presión y Humedad 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Probabilidad de Lluvia en 24 horas",
+  "description": "Estimá la probabilidad de lluvia en las próximas 24 h a partir de presión atmosférica, humedad relativa y tendencia barométrica. Meteorología casera.",
+  "category": "clima",
+  "icon": "🌧️",
+  "formulaId": "probabilidad-lluvia-24h",
+  "audience": "global",
+  "seoKeywords": [
+    "probabilidad de lluvia calculadora",
+    "va a llover pronostico casero",
+    "presion atmosferica lluvia",
+    "humedad relativa lluvia",
+    "tendencia barometrica",
+    "baja presion lluvia",
+    "pronostico por barometro",
+    "predecir lluvia sin internet"
+  ],
+  "intro": "Antes de que existieran los modelos numéricos de NOAA, la gente predecía el clima con un barómetro: **presión bajando + humedad alta = lluvia probable**. Esta calculadora aplica esa heurística clásica combinando presión, humedad relativa y tendencia barométrica de las últimas 3-6 horas para estimar la probabilidad de lluvia en las próximas 24 horas.",
+  "keyTakeaway": "Presión < 1000 hPa y bajando + humedad > 80 % → ~70-80 % de probabilidad de lluvia. Presión > 1020 hPa y subiendo + humedad < 50 % → tiempo estable casi garantizado.",
+  "useCases": [
+    "Planificar asados, eventos al aire libre y salidas de camping.",
+    "Pronóstico de bolsillo en zonas sin cobertura de internet (montaña, mar).",
+    "Enseñar meteorología básica a chicos con un barómetro casero.",
+    "Agricultura: decidir si regar o si va a llover.",
+    "Navegación deportiva: evaluar riesgo de tormenta.",
+    "Backup cuando el pronóstico oficial no está disponible."
+  ],
+  "fields": [
+    {
+      "id": "presion",
+      "label": "Presión atmosférica actual",
+      "type": "number",
+      "placeholder": "1010",
+      "min": 950,
+      "max": 1040,
+      "step": 0.1,
+      "required": true,
+      "suffix": " hPa",
+      "help": "La del barómetro (reducida a nivel del mar)."
+    },
+    {
+      "id": "humedad",
+      "label": "Humedad relativa",
+      "type": "number",
+      "placeholder": "70",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "required": true,
+      "suffix": " %",
+      "help": "La medida por un higrómetro o que marca tu estación meteo."
+    },
+    {
+      "id": "tendencia",
+      "label": "Tendencia barométrica (últimas 3-6 h)",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "bajando-rapido", "label": "Bajando rápido (−3 hPa o más)" },
+        { "value": "bajando", "label": "Bajando lento (−1 a −3 hPa)" },
+        { "value": "estable", "label": "Estable (±1 hPa)" },
+        { "value": "subiendo", "label": "Subiendo lento (+1 a +3 hPa)" },
+        { "value": "subiendo-rapido", "label": "Subiendo rápido (+3 hPa o más)" }
+      ],
+      "help": "Compará la presión actual con la de hace 3-6 horas."
+    }
+  ],
+  "outputs": [
+    { "id": "probabilidad", "label": "Probabilidad de lluvia 24 h", "format": "text", "primary": true },
+    { "id": "nivelRiesgo", "label": "Nivel de riesgo", "format": "text" },
+    { "id": "pronostico", "label": "Pronóstico esperado", "format": "text" },
+    { "id": "recomendacion", "label": "Recomendación", "format": "text" }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-23",
+    "source": "NOAA National Weather Service — Barometric Pressure and Weather",
+    "sourceUrl": "https://www.weather.gov/",
+    "updateType": "manual"
+  },
+  "example": {
+    "title": "Ejemplo: tarde de otoño en la costa",
+    "steps": [
+      "**Presión**: 998 hPa.",
+      "**Humedad**: 88 %.",
+      "**Tendencia**: bajando rápido (−4 hPa en 4 h).",
+      "**Base**: presión <1000 → 65 %.",
+      "**Tendencia**: bajando rápido → +25 %.",
+      "**Humedad**: ≥85 % → +10 %.",
+      "**Total**: ~95 % (acotado al 95 %)."
+    ],
+    "result": "Muy alta probabilidad de lluvia, probable tormenta si sigue cayendo la presión. Reprogramar actividades al aire libre."
+  },
+  "explanation": "## Cómo se calcula\n\nLa calculadora combina tres reglas clásicas del pronóstico de barómetro:\n\n1. **Nivel de presión base**: cuanto más baja, más probabilidad. Tabla simplificada (P en hPa → probabilidad base):\n\n| Presión | Prob. base |\n|---|---|\n| < 995 | 65 % |\n| 995–1005 | 50 % |\n| 1005–1013 | 35 % |\n| 1013–1020 | 20 % |\n| > 1020 | 10 % |\n\n2. **Tendencia barométrica** (últimas 3-6 h): bajando rápido suma 25 %, subiendo rápido resta 18 %.\n\n3. **Humedad relativa**: >90 % suma 18 %, >80 % suma 10 %, <40 % resta 10 %.\n\nLa probabilidad final se acota entre 0 % y 95 %.\n\n## Fórmulas físicas\n\n- **Ley de Dalton**: la humedad relativa es el cociente P_vapor / P_saturación. Cerca del 100 % se forma condensación.\n- **Convergencia en bajas**: en centros de baja presión, el aire asciende, se enfría adiabáticamente y condensa → nubes y lluvia.\n- **Divergencia en altas**: en centros de alta presión, el aire desciende, se calienta y se disuelven las nubes → cielo despejado.\n- **Tendencia**: una caída rápida de presión suele indicar aproximación de un frente o vaguada.\n\n## Casos especiales\n\n- **Tormentas de verano**: la presión puede ser normal pero la convección local disparar tormentas (este método no las detecta bien).\n- **Sudestada (Río de la Plata)**: presión no tan baja pero viento persistente del SE → lluvia prolongada.\n- **Zonas tropicales**: la presión varía menos; hay que ponderar más la humedad y el ITCZ.\n- **Alta presión con humedad alta**: posible niebla matinal, no lluvia.\n\n## Fuentes\n\n- NOAA National Weather Service.\n- WMO — Manual on Synoptic Analysis and Forecasting.\n- SMN Argentina — Servicio Meteorológico Nacional.",
+  "faq": [
+    {
+      "q": "¿Esto reemplaza al pronóstico del servicio meteorológico?",
+      "a": "No. Los modelos numéricos (GFS, ECMWF, WRF) usan datos globales de satélites, radares y miles de estaciones; esta calculadora es una **heurística local** útil como complemento o cuando no tenés internet. Para decisiones importantes, siempre revisá el pronóstico oficial."
+    },
+    {
+      "q": "¿Cómo mido la tendencia barométrica si no tengo estación?",
+      "a": "La mayoría de los smartphones traen barómetro (apps como Barometer & Altimeter). Anotá la presión al mediodía y de nuevo 3-6 horas después. La diferencia te da la tendencia. También podés usar webs como meteored o weather.com que muestran la evolución de presión."
+    },
+    {
+      "q": "¿Por qué la humedad sola no alcanza?",
+      "a": "Porque podés tener 100 % de humedad y no llover (niebla pura) o 60 % y llover (tormenta convectiva). Lo importante es que haya aire **ascendiendo**, y eso lo indica la caída de presión, no la humedad por sí sola."
+    },
+    {
+      "q": "¿Funciona igual en los dos hemisferios?",
+      "a": "Sí, la física es la misma. Cambian los sistemas típicos (borrascas del Atlántico Norte vs ciclones del Pacífico Sur), pero el principio ‘baja presión + humedad = lluvia’ es universal."
+    },
+    {
+      "q": "¿Qué significa una presión ‘normal’?",
+      "a": "Al nivel del mar, la presión estándar es 1013.25 hPa. Valores entre 1005 y 1020 hPa se consideran normales. Por debajo de 995 hPa es baja pronunciada (asociada a frentes activos). Por encima de 1025 hPa es alta (anticiclón estable)."
+    },
+    {
+      "q": "¿El viento influye?",
+      "a": "Sí, mucho: un cambio brusco de dirección de viento suele acompañar el paso de un frente. Si ves viento rotando del norte al sur con caída de presión, casi seguro llueve en horas. Esta calculadora no pide viento por simplicidad pero es un indicador extra útil."
+    },
+    {
+      "q": "¿Por qué los refranes de abuelos sobre lluvia funcionan?",
+      "a": "Porque se basan en observaciones empíricas de siglos. ‘Cuando el cielo está aborregado, al tercer día está mojado’ describe un cirrocúmulo que anuncia un frente cálido. ‘Aureola en la luna = lluvia’ describe cirros finos típicos de aproximación de frente. Esta calculadora es la versión numérica de esos refranes."
+    },
+    {
+      "q": "¿Qué precisión tiene?",
+      "a": "Acierta entre 65 % y 75 % de las veces en meteorología de latitudes medias, según estudios de barómetros aneroides. Menos en zonas tropicales y montañosas. Es buena heurística, no ciencia dura."
+    }
+  ],
+  "sources": [
+    { "name": "NOAA National Weather Service", "url": "https://www.weather.gov/" },
+    { "name": "WMO — Guide to Meteorological Instruments (CIMO Guide)", "url": "https://community.wmo.int/activity-areas/imop/wmo-no-8" },
+    { "name": "Servicio Meteorológico Nacional Argentina", "url": "https://www.smn.gob.ar/" }
+  ],
+  "relatedSlugs": [
+    "calculadora-presion-atmosferica-altitud-barometrica",
+    "calculadora-probabilidad-helada-matinal-temp-humedad-cielo",
+    "calculadora-densidad-aire-temperatura-humedad-altitud-aviacion",
+    "calculadora-velocidad-sonido-segun-temperatura-aire"
+  ],
+  "howToSteps": [
+    { "name": "Cargá la presión actual", "text": "En hPa, reducida a nivel del mar (así lo dan las apps y noticieros)." },
+    { "name": "Cargá la humedad relativa", "text": "El dato del higrómetro, o de cualquier servicio meteo en tiempo real." },
+    { "name": "Indicá la tendencia", "text": "Compará la presión actual con la de hace 3-6 horas y elegí la opción." },
+    { "name": "Leé la probabilidad", "text": "Te devuelve un porcentaje, una categoría y una recomendación concreta." }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "slug": "calculadora-presion-atmosferica-altitud-barometrica",
+  "title": "Calculadora de Presión Atmosférica según Altitud 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Presión Atmosférica según Altitud (Fórmula Barométrica)",
+  "description": "Calculá la presión atmosférica a cualquier altitud con la fórmula barométrica ICAO. Útil para aviación, montañismo, meteorología y experimentos.",
+  "category": "ciencia",
+  "icon": "🎈",
+  "formulaId": "presion-atmosferica-altitud",
+  "audience": "global",
+  "seoKeywords": [
+    "presion atmosferica segun altitud",
+    "formula barometrica calculadora",
+    "presion aire en montaña",
+    "presion a 3000 metros",
+    "icao atmosfera estandar",
+    "hPa segun altitud",
+    "mmHg segun altura",
+    "calculadora presion barometrica",
+    "como varia presion con altura"
+  ],
+  "intro": "La presión atmosférica **cae con la altitud** de forma exponencial suave. La fórmula barométrica estándar de la **ICAO** (Organización de Aviación Civil Internacional) modela esta caída con `P(h) = 1013.25 × (1 − 0.0065·h / 288.15)^5.255` hPa. A 5500 m la presión es aproximadamente la mitad que al nivel del mar.",
+  "keyTakeaway": "Al nivel del mar hay ~1013 hPa. A 1000 m bajás a 899 hPa (~89%). A 3000 m quedan 701 hPa (~69%). A 8848 m (Everest) sólo 314 hPa (~31%).",
+  "useCases": [
+    "Planificar aclimatación y riesgo de mal de altura en trekking y montañismo.",
+    "Aviación general: cálculo de altitud presión e interpretación de altímetros.",
+    "Cocina de altura: estimar temperatura de ebullición del agua.",
+    "Experimentos de física en la escuela (globos, barómetros).",
+    "Calibración de barómetros caseros.",
+    "Cálculos de rendimiento de motores atmosféricos y turbinas."
+  ],
+  "fields": [
+    {
+      "id": "altitud",
+      "label": "Altitud sobre el nivel del mar",
+      "type": "number",
+      "placeholder": "2500",
+      "min": -500,
+      "max": 20000,
+      "step": 1,
+      "required": true,
+      "suffix": " m",
+      "help": "Hasta 11000 m la fórmula es exacta. Más arriba queda aproximada (troposfera)."
+    },
+    {
+      "id": "presionMar",
+      "label": "Presión al nivel del mar (opcional, default 1013.25)",
+      "type": "number",
+      "placeholder": "1013.25",
+      "min": 950,
+      "max": 1050,
+      "step": 0.01,
+      "required": false,
+      "suffix": " hPa",
+      "help": "Cambiala si querés usar la presión real del día (dato QNH en aviación)."
+    }
+  ],
+  "outputs": [
+    { "id": "presion", "label": "Presión atmosférica", "format": "text", "primary": true },
+    { "id": "presionMmHg", "label": "Presión en mmHg", "format": "text" },
+    { "id": "porcentajeVsMar", "label": "Porcentaje vs nivel del mar", "format": "text" },
+    { "id": "temperaturaEstandar", "label": "Temperatura estándar ISA a esa altitud", "format": "text" },
+    { "id": "categoria", "label": "Categoría de altura", "format": "text" }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-23",
+    "source": "ICAO Standard Atmosphere (Doc 7488)",
+    "sourceUrl": "https://www.icao.int/publications/pages/publication.aspx?docnum=7488",
+    "updateType": "manual"
+  },
+  "example": {
+    "title": "Ejemplo: presión en La Paz (Bolivia), 3650 m",
+    "steps": [
+      "**Altitud**: 3650 m.",
+      "**P0**: 1013.25 hPa (estándar).",
+      "**Argumento**: 1 − (0.0065 × 3650) / 288.15 = 0.9177.",
+      "**Elevado a 5.255**: 0.9177^5.255 ≈ 0.643.",
+      "**Presión**: 1013.25 × 0.643 ≈ **651 hPa**.",
+      "**En mmHg**: 651 × 0.750 ≈ 488 mmHg."
+    ],
+    "result": "La Paz tiene ~651 hPa, un 64% de la presión al nivel del mar. Por eso el agua hierve a ~88 °C y el mal de altura es frecuente en recién llegados."
+  },
+  "explanation": "## Cómo se calcula\n\nLa atmósfera estándar ICAO modela la troposfera con una temperatura que decae linealmente con la altura: `T(h) = T0 − L·h`, donde `T0 = 288.15 K` y `L = 0.0065 K/m`. Integrando la ecuación hidrostática `dP/dh = −ρg` con aire ideal se obtiene:\n\n```\nP(h) = P0 × (1 − L·h / T0)^(g·M / (R·L))\n```\n\nDonde el exponente `g·M / (R·L) ≈ 5.2559`. Con P0 = 1013.25 hPa, queda la forma clásica:\n\n```\nP(h) = 1013.25 × (1 − 0.0065·h / 288.15)^5.255\n```\n\n## Fórmulas físicas\n\n- **Ecuación hidrostática**: `dP/dh = −ρ·g`.\n- **Gas ideal**: `P = ρ·R·T/M`.\n- **Gradiente térmico estándar (lapse rate)**: 6.5 °C/km en la troposfera.\n- **Tropopausa**: a ~11 km, la temperatura se estabiliza en −56.5 °C y la fórmula cambia de forma a exponencial pura.\n\n## Casos especiales\n\n- **Mar Muerto (−430 m)**: P ≈ 1067 hPa (mayor presión habitable del planeta).\n- **Mount Everest (8848 m)**: P ≈ 314 hPa, apenas 31 % — necesita oxígeno suplementario.\n- **Altitud de crucero de aviones comerciales (10000-12000 m)**: 200-270 hPa. La cabina se presuriza a equivalente 1800-2400 m.\n- **Día de baja presión** (tormenta): P0 puede bajar a 970 hPa; usalo como input si querés precisión operativa.\n\n## Fuentes\n\n- ICAO Doc 7488 — Standard Atmosphere.\n- U.S. Standard Atmosphere 1976 (NASA TM-X-74335).\n- NOAA — National Weather Service Aviation Weather.",
+  "faq": [
+    {
+      "q": "¿Por qué cae la presión al subir?",
+      "a": "Porque la presión en un punto es el peso del aire que está por encima. A mayor altitud, hay menos aire por encima tuyo, por lo tanto menos peso. La caída es exponencial porque el aire es compresible: cerca del suelo hay más masa por metro cúbico que en altura."
+    },
+    {
+      "q": "¿A qué altura la presión se reduce a la mitad?",
+      "a": "Aproximadamente a **5500 m** la presión baja a ~500 hPa, la mitad del valor al nivel del mar. Es una altura característica conocida como ‘altura de escala ajustada’."
+    },
+    {
+      "q": "¿La fórmula ICAO sirve siempre?",
+      "a": "Sí hasta 11 km (tropopausa). Más arriba hay que usar otra capa (estratosfera baja), donde la temperatura es constante y la fórmula se vuelve exponencial pura. Para uso doméstico, trekking y aviación general, la forma estándar alcanza."
+    },
+    {
+      "q": "¿Cómo afecta esto al agua hirviendo?",
+      "a": "El agua hierve cuando su presión de vapor iguala la presión atmosférica. Por eso en altura hierve antes: a 1013 hPa a 100 °C, a 800 hPa a ~94 °C, a 550 hPa (4500 m) a ~84 °C. Cocinar pastas y legumbres toma más tiempo en altura."
+    },
+    {
+      "q": "¿Qué es la altitud de presión que usan los aviones?",
+      "a": "Es la altitud leída en el altímetro cuando se lo calibra a 1013.25 hPa (QNE). Se usa sobre una altitud de transición (18000 ft en USA, 3000-10000 ft en otros) para que todos los aviones usen la misma referencia y no choquen entre sí."
+    },
+    {
+      "q": "¿Por qué hay mal de altura?",
+      "a": "Al bajar la presión, baja también la **presión parcial de oxígeno** (21 % de la presión total). A 3500 m tenés ~14 kPa de O₂ frente a 21 kPa al mar → saturación arterial cae del 98 % al ~90 %. El cuerpo compensa hiperventilando y aumentando glóbulos rojos en 1-2 semanas."
+    },
+    {
+      "q": "¿En bajo nivel del mar (Mar Muerto, Mina Kola) qué pasa?",
+      "a": "La fórmula funciona igual. A −430 m la presión sube a ~1068 hPa, un 5 % más. En minas profundas (−2000 m) llegás a ~1270 hPa y el aire está comprimido; se usan compensadores para evitar embolias."
+    },
+    {
+      "q": "¿Cómo se relaciona hPa con mmHg y atmósferas?",
+      "a": "1 atmósfera estándar = 1013.25 hPa = 760 mmHg = 29.92 inHg = 101325 Pa. Para convertir de hPa a mmHg multiplicá por 0.7501."
+    }
+  ],
+  "sources": [
+    { "name": "ICAO Doc 7488 — Standard Atmosphere" },
+    { "name": "NASA TM-X-74335 — U.S. Standard Atmosphere 1976" },
+    { "name": "NOAA — Aviation Weather", "url": "https://www.aviationweather.gov/" }
+  ],
+  "relatedSlugs": [
+    "calculadora-densidad-aire-temperatura-humedad-altitud-aviacion",
+    "calculadora-velocidad-sonido-segun-temperatura-aire",
+    "calculadora-probabilidad-lluvia-24h-presion-humedad-tendencia",
+    "calculadora-horas-luz-dia-fecha-latitud"
+  ],
+  "howToSteps": [
+    { "name": "Ingresá la altitud", "text": "En metros sobre el nivel del mar. Usá valores negativos si estás bajo el nivel (ej. Mar Muerto: −430)." },
+    { "name": "Opcional: presión al nivel del mar", "text": "Dejala en 1013.25 para atmósfera estándar, o usá el QNH del día si lo tenés." },
+    { "name": "Calculá", "text": "Obtenés la presión en hPa y mmHg, el porcentaje vs. el mar y la temperatura estándar ISA." },
+    { "name": "Interpretá la categoría", "text": "Te dice si estás en rango normal, altitud media o gran altura (con riesgo de mal de altura)." }
+  ]
+}

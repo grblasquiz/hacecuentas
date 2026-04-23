@@ -1,0 +1,130 @@
+{
+  "slug": "calculadora-horas-luz-dia-fecha-latitud",
+  "title": "Calculadora de Horas de Luz según Fecha y Latitud 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Horas de Luz según Fecha y Latitud",
+  "description": "Calculá cuántas horas de luz solar hay en cualquier lugar del mundo según fecha y latitud. Fórmula astronómica exacta con declinación solar.",
+  "category": "astronomia",
+  "icon": "🌞",
+  "formulaId": "horas-luz-dia-fecha-latitud",
+  "audience": "global",
+  "seoKeywords": [
+    "horas de luz por dia",
+    "horas de sol segun latitud",
+    "duracion del dia calculadora",
+    "cuantas horas de luz solar hay hoy",
+    "daylight hours calculator",
+    "declinacion solar formula",
+    "horas de dia solsticio",
+    "horas de dia equinoccio",
+    "cuanto dura el dia en mi ciudad"
+  ],
+  "intro": "Ingresá una **fecha** y una **latitud** y obtené las horas de luz solar de ese día en cualquier punto del planeta. Se usa la fórmula astronómica `daylight = 24/π × acos(−tan(φ)·tan(δ))`, donde `φ` es la latitud y `δ` la declinación solar del día. En los polos, en solsticios, el resultado puede ser 24 h (sol de medianoche) o 0 h (noche polar).",
+  "keyTakeaway": "En el ecuador el día dura ~12 h todo el año. Cerca de los 60° de latitud, en verano llega a 18 h y en invierno baja a 6 h. En los polos alterna entre 24 h y 0 h según solsticios.",
+  "useCases": [
+    "Planificar viajes fotográficos o astronómicos según horas de luz.",
+    "Dimensionar paneles solares según horas de irradiación máxima.",
+    "Organizar actividades agrícolas (cosechas, siembras, fotoperíodo de plantas).",
+    "Estudiar patrones circadianos y jet lag en viajes a latitudes altas.",
+    "Tareas escolares de astronomía y geografía.",
+    "Calcular el sol de medianoche en Escandinavia o Alaska."
+  ],
+  "fields": [
+    {
+      "id": "fecha",
+      "label": "Fecha",
+      "type": "date",
+      "required": true,
+      "help": "Cualquier fecha del año (YYYY-MM-DD)."
+    },
+    {
+      "id": "latitud",
+      "label": "Latitud (grados decimales, + Norte, − Sur)",
+      "type": "number",
+      "placeholder": "-34.6",
+      "min": -90,
+      "max": 90,
+      "step": 0.01,
+      "required": true,
+      "suffix": "°",
+      "help": "Ej: Buenos Aires -34.6, Madrid 40.4, Ushuaia -54.8, Oslo 59.9."
+    }
+  ],
+  "outputs": [
+    { "id": "horasLuz", "label": "Horas de luz del día", "format": "text", "primary": true },
+    { "id": "declinacionSolar", "label": "Declinación solar", "format": "text" },
+    { "id": "diaDelAnio", "label": "Día del año", "format": "text" },
+    { "id": "categoria", "label": "Categoría astronómica", "format": "text" },
+    { "id": "comentario", "label": "Comentario", "format": "text" }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-23",
+    "source": "NOAA Earth System Research Laboratory — Solar Calculation",
+    "sourceUrl": "https://gml.noaa.gov/grad/solcalc/calcdetails.html",
+    "updateType": "manual"
+  },
+  "example": {
+    "title": "Ejemplo: horas de luz en Buenos Aires el 21 de diciembre",
+    "steps": [
+      "**Latitud**: −34.6° (Buenos Aires).",
+      "**Día del año N**: 355 (solsticio de verano austral).",
+      "**Declinación solar δ**: 23.45° × sin(360°/365 × (355 + 284)) ≈ −23.4°.",
+      "**Argumento del acos**: −tan(−34.6°) × tan(−23.4°) ≈ −0.298.",
+      "**Horas de luz**: 24/π × acos(−0.298) ≈ **14.27 h**.",
+      "El 21 de junio (invierno austral) ese mismo cálculo da ~9.85 h."
+    ],
+    "result": "Buenos Aires en el solsticio de diciembre tiene aprox. 14 h 16 min de luz solar."
+  },
+  "explanation": "## Cómo se calcula\n\nLa duración del día depende de dos ángulos: la **latitud geográfica φ** del observador y la **declinación solar δ**, que es el ángulo entre los rayos del Sol y el plano ecuatorial. La declinación varía entre +23.45° (solsticio de junio) y −23.45° (solsticio de diciembre), pasando por 0° en los equinoccios.\n\n```\ndaylight = (24 / π) × acos(−tan(φ) · tan(δ))\nδ ≈ 23.45° × sin((360°/365) × (N + 284))\n```\n\nDonde **N** es el día del año (1 a 365).\n\n## Fórmulas físicas/astronómicas\n\n- **Declinación solar (Cooper, 1969)**: aproximación con error <1°.\n- **Ecuación horaria del ocaso H**: cos(H) = −tan(φ)·tan(δ). El ángulo horario se convierte a horas dividiendo por 15°/h y se duplica para obtener duración día.\n- **Refracción atmosférica**: añade ~4-8 min al día total (no incluida en la fórmula pura).\n- **Crepúsculo civil**: comienza cuando el Sol está a 6° bajo el horizonte (agrega ~25-40 min a la luminosidad útil).\n\n## Casos especiales\n\n- **Ecuador (φ=0)**: cos(H) = 0 siempre → H = 90° → día = 12 h exacto todo el año.\n- **Círculo polar ártico (66.5° N) en solsticio de junio**: el argumento supera 1 → sol de medianoche (24 h de luz).\n- **Círculo polar antártico en solsticio de junio**: noche polar (0 h de luz).\n- **Equinoccios (21 marzo / 22 septiembre)**: δ ≈ 0 → ~12 h en todas las latitudes.\n\n## Fuentes\n\n- NOAA ESRL Solar Calculator\n- Cooper, P.I. (1969). \"The absorption of solar radiation in solar stills\"\n- Meeus, J. *Astronomical Algorithms* (2ª ed., 1998)",
+  "faq": [
+    {
+      "q": "¿Por qué en el ecuador el día siempre dura 12 horas?",
+      "a": "Porque en latitud 0° tan(φ) = 0, así que el argumento del arco coseno es 0 independientemente de la declinación. El Sol sale y se pone a 90° del meridiano siempre, dando 12 h exactas (más un plus por refracción)."
+    },
+    {
+      "q": "¿Qué día del año tiene más horas de luz en el hemisferio sur?",
+      "a": "El solsticio de diciembre (alrededor del 21–22 de diciembre), cuando el Sol alcanza su declinación más negativa (−23.45°). Cuanto más alejado del ecuador, más largo el día ese 21 de diciembre."
+    },
+    {
+      "q": "¿La fórmula incluye la refracción atmosférica?",
+      "a": "No. La fórmula da el ángulo geométrico del centro del Sol respecto al horizonte. La refracción atmosférica y el diámetro solar agregan aproximadamente 4 a 8 minutos adicionales al día total real."
+    },
+    {
+      "q": "¿Cómo sé mi latitud exacta?",
+      "a": "Google Maps: click derecho sobre tu ciudad y copiá el primer número (latitud en grados decimales). Buenos Aires −34.6, Madrid 40.4, Ciudad de México 19.4, Ushuaia −54.8."
+    },
+    {
+      "q": "¿Qué pasa en el círculo polar ártico en junio?",
+      "a": "Si la latitud supera 66.5°, el argumento −tan(φ)·tan(δ) queda ≤ −1 y el arco coseno no está definido físicamente. Interpretamos eso como sol continuo las 24 horas (sol de medianoche)."
+    },
+    {
+      "q": "¿Para qué sirve conocer las horas de luz?",
+      "a": "Para fotovoltaica (dimensionar paneles solares), agronomía (fotoperíodo crítico para soja, papa, flores de día largo/corto), turismo, fotografía, ciclismo de ruta, aviación VFR y estudios de cronobiología."
+    },
+    {
+      "q": "¿El horario de verano afecta las horas de luz?",
+      "a": "No. Es un cambio en el reloj civil, no en la astronomía. El Sol sigue saliendo y poniéndose según las mismas ecuaciones. Lo que cambia es a qué hora marca el reloj esos eventos."
+    },
+    {
+      "q": "¿Qué precisión tiene esta calculadora?",
+      "a": "Aproximadamente ±2 minutos comparado con efemérides precisas (como las de NOAA o USNO). La aproximación de Cooper para δ introduce el mayor error. Para navegación astronómica usá efemérides oficiales."
+    }
+  ],
+  "sources": [
+    { "name": "NOAA ESRL — Solar Position Calculator", "url": "https://gml.noaa.gov/grad/solcalc/" },
+    { "name": "U.S. Naval Observatory — Astronomical Applications", "url": "https://aa.usno.navy.mil/" },
+    { "name": "Meeus, J. (1998). Astronomical Algorithms, 2nd ed." }
+  ],
+  "relatedSlugs": [
+    "calculadora-retraso-amanecer-atardecer-minutos-dia",
+    "calculadora-fase-lunar-actual-proxima-luna-llena",
+    "calculadora-regla-500-astrofotografia-estrellas",
+    "horas-luz-solar-planta"
+  ],
+  "howToSteps": [
+    { "name": "Elegí la fecha", "text": "Cualquier fecha del calendario. Probá solsticios (21 de junio y 21 de diciembre) para ver los extremos." },
+    { "name": "Cargá la latitud", "text": "Usá signo positivo para el hemisferio norte y negativo para el sur. Tres decimales bastan." },
+    { "name": "Hacé click en Calcular", "text": "Obtendrás horas de luz, declinación solar y categoría astronómica del día." },
+    { "name": "Comparalo con otra latitud", "text": "Cambiá la latitud para ver cómo crece la diferencia hacia los polos." }
+  ]
+}

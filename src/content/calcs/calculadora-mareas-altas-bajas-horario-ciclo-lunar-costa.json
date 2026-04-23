@@ -1,0 +1,135 @@
+{
+  "slug": "calculadora-mareas-altas-bajas-horario-ciclo-lunar-costa",
+  "title": "Calculadora de Mareas (Pleamar/Bajamar) en Puertos AR 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Mareas (Pleamar y Bajamar) en Puertos Argentinos",
+  "description": "Estimá la próxima pleamar y bajamar en Mar del Plata, Puerto Madryn, Ushuaia, Bahía Blanca y Quequén según fecha y ciclo lunar.",
+  "category": "astronomia",
+  "icon": "🌊",
+  "formulaId": "mareas-ciclo-lunar-costa",
+  "audience": "global",
+  "seoKeywords": [
+    "calculadora mareas argentina",
+    "pleamar bajamar mar del plata",
+    "mareas puerto madryn hoy",
+    "mareas ushuaia canal beagle",
+    "mareas bahia blanca",
+    "ciclo semidiurno mareas",
+    "altura marea calculadora",
+    "tabla mareas argentina shn",
+    "marea viva marea muerta"
+  ],
+  "intro": "Las mareas en Argentina son **semidiurnas** (dos pleamares y dos bajamares por día, cada ~12 h 25 min). La amplitud depende fuertemente del puerto: en **Puerto Madryn** llega a 4 m, en **Mar del Plata** a 1.5 m, en **Ushuaia** a 2 m. Esta calculadora te da la próxima pleamar, la próxima bajamar y la altura estimada para seis puertos argentinos.",
+  "keyTakeaway": "Las mareas más grandes (mareas vivas) ocurren en luna nueva y llena; las más chicas (mareas muertas) en los cuartos. El valor es estimativo: para navegación y pesca deportiva usá las tablas oficiales del SHN (shn.gob.ar).",
+  "useCases": [
+    "Pesca deportiva en costa: las capturas cambian con la marea.",
+    "Surf y kitesurf: elegir marea adecuada para cada spot.",
+    "Paseos y kayak en zonas con mucha amplitud (Golfo Nuevo, Bahía Blanca).",
+    "Fotografía de paisaje costero (rocas al descubierto, luz + marea).",
+    "Navegación deportiva pequeña embarcación.",
+    "Educación: entender el ciclo lunar y mareas vivas/muertas."
+  ],
+  "fields": [
+    {
+      "id": "puerto",
+      "label": "Puerto o localidad",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "mar-del-plata", "label": "Mar del Plata (atlántica media)" },
+        { "value": "puerto-madryn", "label": "Puerto Madryn (Golfo Nuevo)" },
+        { "value": "ushuaia", "label": "Ushuaia (Canal Beagle)" },
+        { "value": "bahia-blanca", "label": "Bahía Blanca (estuario)" },
+        { "value": "quequen", "label": "Quequén / Necochea" },
+        { "value": "rosario", "label": "Rosario (río Paraná)" }
+      ],
+      "help": "Cada puerto tiene amplitud típica distinta."
+    },
+    {
+      "id": "fechaHora",
+      "label": "Fecha y hora (local)",
+      "type": "datetime-local",
+      "required": true,
+      "help": "La calc toma la hora como UTC aproximada."
+    }
+  ],
+  "outputs": [
+    { "id": "proximaPleamar", "label": "Próxima pleamar", "format": "text", "primary": true },
+    { "id": "proximaBajamar", "label": "Próxima bajamar", "format": "text" },
+    { "id": "alturaPleamarAprox", "label": "Altura estimada de pleamar", "format": "text" },
+    { "id": "alturaBajamarAprox", "label": "Altura estimada de bajamar", "format": "text" },
+    { "id": "tipoMareaHoy", "label": "Tipo de marea hoy", "format": "text" },
+    { "id": "advertencia", "label": "Advertencia", "format": "text" }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-23",
+    "source": "Servicio de Hidrografía Naval (SHN-AR) + IHO — International Hydrographic Organization",
+    "sourceUrl": "https://www.hidro.gov.ar/",
+    "updateType": "manual"
+  },
+  "example": {
+    "title": "Ejemplo: Puerto Madryn en luna llena",
+    "steps": [
+      "**Puerto**: Puerto Madryn (amplitud típica 4 m).",
+      "**Fecha**: coincidente con luna llena.",
+      "**Factor de sicigia**: +30 % → amplitud efectiva 5.2 m.",
+      "**Nivel medio**: 2.5 m sobre datum.",
+      "**Pleamar estimada**: 5.1 m.",
+      "**Bajamar estimada**: −0.1 m (casi al cero).",
+      "**Ciclo**: pleamar y bajamar se repiten cada ~12 h 25 min."
+    ],
+    "result": "En luna llena/nueva, Puerto Madryn puede tener amplitudes superiores a 5 m: la playa gana cientos de metros en bajamar. Ideal para caminatas, pero peligroso si dejás el auto abajo."
+  },
+  "explanation": "## Cómo se calcula\n\nEl modelo combina:\n\n1. **Ciclo semidiurno M2** (lunar principal): las pleamares se repiten cada **12 h 25.2 min** (12.4206 horas).\n2. **Offset por puerto**: cada costa tiene un retraso respecto al paso lunar superior en Greenwich. Ejemplo: Mar del Plata ~0.5 h, Puerto Madryn ~2.2 h, Ushuaia ~−1 h.\n3. **Factor de sicigia**: en luna nueva/llena, la amplitud aumenta ~30 % (marea viva); en cuartos, disminuye ~30 % (marea muerta).\n\n```\nfactor_sicigia = 1 + 0.3 × cos( (edad_min / (Tsinodico/4)) × (π/2) )\n```\n\ndonde edad_min es la distancia angular al hito lunar más cercano.\n\n## Fórmulas físicas/astronómicas\n\n- **Teoría del equilibrio de mareas (Newton, 1687)**: la Luna genera dos lóbulos gravitacionales opuestos sobre la Tierra. Al rotar el planeta, cada punto costero pasa por dos pleamares diarias.\n- **Componentes armónicas**: la marea real es suma de 100+ componentes (M2, S2, K1, O1, N2, etc.). El SHN usa ~60 para sus tablas. Esta calc sólo modela M2 y la modulación sinódica (~S2 aprox).\n- **Mareas vivas y muertas**: sicigia (Sol+Luna alineados) amplifica; cuadratura (90°) reduce.\n- **Puerto Madryn / Golfo Nuevo**: amplitud alta porque el golfo actúa como resonador (frecuencia propia cercana a la M2).\n- **Bahía Blanca / Ría de Bahía Blanca**: estuario angosto → efecto embudo y amplitud elevada.\n\n## Casos especiales\n\n- **Rosario sobre el Paraná**: el régimen **no es oceánico**. Domina el caudal fluvial (que varía por estacionalidad) y la sudestada. Los valores son muy referenciales.\n- **Canal Beagle (Ushuaia)**: amplitud moderada, pero con corrientes fuertes en bocas y canales laterales.\n- **Tormentas con viento en onshore**: pueden sumar 0.5-1.5 m a la pleamar (storm surge). El caso más célebre en AR: sudestada en el Río de la Plata.\n- **Bore tidal (macareos)**: en bocas estrechas con mucha amplitud, la pleamar puede entrar como ola visible. No ocurre en Argentina pero sí en el Amazonas y en la bahía de Fundy (Canadá).\n\n## Precisión y advertencia\n\nEsta calc es una **estimación de bolsillo**: error de ±30 a ±90 min en horario y ±0.5 m en altura. **Para navegación real, pesca embarcada y operaciones portuarias, usá siempre las tablas del SHN (shn.gob.ar)**, que resuelven las 60+ componentes armónicas por puerto.\n\n## Fuentes\n\n- Servicio de Hidrografía Naval (SHN), Armada Argentina.\n- IHO — International Hydrographic Organization.\n- NOAA Tide Predictions — para metodología.",
+  "faq": [
+    {
+      "q": "¿Por qué hay dos pleamares por día?",
+      "a": "Porque la Luna genera dos abultamientos opuestos en el océano: uno del lado que mira a la Luna (atracción gravitacional más fuerte que el promedio) y otro del lado opuesto (atracción más débil, el agua queda ‘atrás’). Al rotar la Tierra, cada punto costero pasa por los dos abultamientos a lo largo de 24 h 50 min."
+    },
+    {
+      "q": "¿Por qué las mareas son distintas cada día?",
+      "a": "Porque la Luna no pasa exactamente cada 24 h sobre el mismo meridiano: se corre ~50 minutos cada día (la Luna avanza en su órbita). Por eso la pleamar es ~50 min más tarde cada día. Además, el Sol aporta su propia marea (componente S2) que se superpone, creando mareas vivas y muertas."
+    },
+    {
+      "q": "¿Qué es una marea viva?",
+      "a": "La marea **viva** (o de sicigia) ocurre cuando Sol, Tierra y Luna están alineados (en luna nueva o llena). Las dos fuerzas se suman y la amplitud es máxima. La marea **muerta** (de cuadratura) ocurre en los cuartos, cuando Sol y Luna tiran desde ángulos de 90° y se cancelan parcialmente."
+    },
+    {
+      "q": "¿Por qué en Puerto Madryn la marea es tan grande?",
+      "a": "Porque el **Golfo Nuevo** tiene una geometría que lo hace casi resonar con la frecuencia M2 de la marea lunar. Esa resonancia amplifica la amplitud. El mismo efecto ocurre en la Bahía de Fundy (Canadá), con las mareas más grandes del mundo (16 m)."
+    },
+    {
+      "q": "¿La sudestada afecta las mareas?",
+      "a": "Sí y mucho, especialmente en el Río de la Plata y costa bonaerense. Un viento del sudeste sostenido puede **elevar** la pleamar 1-2 m sobre la predicción astronómica (storm surge). En 1940 y 1989 hubo inundaciones severas en Buenos Aires por esa causa."
+    },
+    {
+      "q": "¿Por qué Ushuaia tiene menos amplitud que Madryn?",
+      "a": "Porque el Canal Beagle está protegido por la geometría de la Tierra del Fuego y el estrecho de Le Maire, que disipan la onda de marea. Además, la latitud muy alta reduce la componente declinacional de la Luna. Resultado: amplitud ~2 m en Ushuaia vs ~4 m en Puerto Madryn."
+    },
+    {
+      "q": "¿Puedo usar esta calculadora para navegar?",
+      "a": "**No para navegación real**. Los errores de ±30-90 min son inaceptables para entrar/salir de puerto, pescar embarcado o planear derrota. Usá siempre las **tablas oficiales del SHN (shn.gob.ar)** o apps certificadas (Navionics, Imray). Esta calc es didáctica, para entender el principio."
+    },
+    {
+      "q": "¿Por qué Rosario aparece en la lista si es río?",
+      "a": "Para aclarar que **no** tiene mareas oceánicas clásicas. El Paraná sí tiene una onda de marea remontada desde el Río de la Plata, pero su régimen está dominado por caudal fluvial, estacionalidad y viento. Incluimos la opción para que quien busque ‘mareas Rosario’ no use un modelo inadecuado."
+    }
+  ],
+  "sources": [
+    { "name": "Servicio de Hidrografía Naval (SHN) Argentina", "url": "https://www.hidro.gov.ar/" },
+    { "name": "IHO — International Hydrographic Organization", "url": "https://iho.int/" },
+    { "name": "NOAA Tide Predictions — metodología", "url": "https://tidesandcurrents.noaa.gov/" }
+  ],
+  "relatedSlugs": [
+    "calculadora-fase-lunar-actual-proxima-luna-llena",
+    "calculadora-horas-luz-dia-fecha-latitud",
+    "calculadora-presion-atmosferica-altitud-barometrica",
+    "calculadora-probabilidad-lluvia-24h-presion-humedad-tendencia"
+  ],
+  "howToSteps": [
+    { "name": "Elegí el puerto", "text": "Seis opciones argentinas, cada una con su amplitud típica." },
+    { "name": "Ingresá fecha y hora", "text": "La hora desde la cual buscás la próxima pleamar y bajamar." },
+    { "name": "Leé el resultado", "text": "Horas estimadas de próxima pleamar y bajamar, alturas aproximadas y tipo de marea." },
+    { "name": "Para operar real, usá SHN", "text": "Esta calc es didáctica. Para navegación/pesca real, consultá las tablas oficiales del SHN." }
+  ]
+}

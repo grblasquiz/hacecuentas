@@ -1,0 +1,226 @@
+{
+  "slug": "calculadora-grados-dia-calefaccion-refrigeracion-hdd-cdd-consumo",
+  "title": "Calculadora Grados-Día HDD y CDD (Calefacción y AC) 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Grados-Día de Calefacción (HDD) y Refrigeración (CDD)",
+  "description": "🌡️ Grados-día HDD (base 18°C) y CDD (base 24°C) para estimar consumo de gas o electricidad por clima. Estándar ASHRAE.",
+  "category": "hogar",
+  "icon": "🌡️",
+  "formulaId": "grados-dia-hdd-cdd",
+  "audience": "global",
+  "seoKeywords": [
+    "grados dia calefaccion",
+    "HDD CDD calculadora",
+    "heating degree days calculadora",
+    "cooling degree days calculadora",
+    "consumo gas calefaccion clima",
+    "consumo aire acondicionado clima",
+    "ashrae grados dia",
+    "estimar boleta gas invierno",
+    "consumo kWh AC verano",
+    "base 18 C calefaccion"
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-23",
+    "source": "ASHRAE Standard / NOAA / ISO 15927",
+    "sourceUrl": null,
+    "updateType": "manual"
+  },
+  "intro": "Los **grados-día** son un índice internacional para estimar cuánta energía necesita un edificio para mantenerse confortable. **HDD (Heating Degree Days)** = Σ max(18 − T_media_diaria, 0): suma los grados que faltan para llegar a 18 °C cada día del período. **CDD (Cooling Degree Days)** = Σ max(T_media − 24, 0): suma los grados por encima de 24 °C que hay que enfriar. Las bases 18 °C y 24 °C vienen de **ASHRAE** y representan el rango en el que un edificio promedio no necesita climatización. Son el estándar para comparar clima entre ciudades, estimar facturas de gas/electricidad antes de mudarte y dimensionar sistemas HVAC. Esta calculadora te deja ingresar la temperatura media del período y los días, más (opcional) un consumo por grado-día para estimar gas en m³ o electricidad en kWh.",
+  "keyTakeaway": "**HDD base 18 °C** y **CDD base 24 °C** (ASHRAE). Buenos Aires típica: ~1 400 HDD/año y ~400 CDD/año. Berlín: 3 200 HDD/año.",
+  "useCases": [
+    "Estimar factura de gas en invierno antes de que llegue.",
+    "Comparar costo energético entre dos ciudades antes de mudarte.",
+    "Dimensionar una caldera o equipo de AC según clima local.",
+    "Analizar si un mes fue más caluroso/frío de lo normal.",
+    "Proyectar ahorro de poner aislación térmica (reducción de HDD efectivos).",
+    "Ajustar presupuesto familiar según HDD/CDD históricos del mes."
+  ],
+  "fields": [
+    {
+      "id": "tempMediaDiaria",
+      "label": "Temperatura media diaria del período",
+      "type": "number",
+      "suffix": "°C",
+      "placeholder": "10",
+      "min": -50,
+      "max": 60,
+      "step": 0.1,
+      "required": true,
+      "help": "Promedio de T_max y T_min o dato del servicio meteorológico."
+    },
+    {
+      "id": "diasPeriodo",
+      "label": "Días del período",
+      "type": "number",
+      "suffix": "días",
+      "placeholder": "30",
+      "min": 1,
+      "max": 366,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "baseHDD",
+      "label": "Base HDD",
+      "type": "number",
+      "suffix": "°C",
+      "placeholder": "18",
+      "min": 10,
+      "max": 25,
+      "step": 0.5,
+      "required": false,
+      "help": "Default ASHRAE: 18 °C. Algunos países usan 15.5 °C."
+    },
+    {
+      "id": "baseCDD",
+      "label": "Base CDD",
+      "type": "number",
+      "suffix": "°C",
+      "placeholder": "24",
+      "min": 18,
+      "max": 30,
+      "step": 0.5,
+      "required": false,
+      "help": "Default ASHRAE: 24 °C."
+    },
+    {
+      "id": "consumoPorHDD",
+      "label": "Consumo por HDD (opcional)",
+      "type": "number",
+      "placeholder": "0.15",
+      "min": 0,
+      "max": 10,
+      "step": 0.01,
+      "required": false,
+      "help": "Ej.: 0.15 m³ de gas por HDD para casa 80 m² bien aislada."
+    },
+    {
+      "id": "consumoPorCDD",
+      "label": "Consumo por CDD (opcional)",
+      "type": "number",
+      "placeholder": "0.6",
+      "min": 0,
+      "max": 10,
+      "step": 0.01,
+      "required": false,
+      "help": "Ej.: 0.6 kWh eléctricos por CDD para AC split 3 000 frigorías."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "hdd",
+      "label": "HDD del período",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "cdd",
+      "label": "CDD del período",
+      "format": "text"
+    },
+    {
+      "id": "consumoCalefaccion",
+      "label": "Consumo de calefacción estimado",
+      "format": "text"
+    },
+    {
+      "id": "consumoRefrigeracion",
+      "label": "Consumo de refrigeración estimado",
+      "format": "text"
+    },
+    {
+      "id": "interpretacion",
+      "label": "Interpretación",
+      "format": "text"
+    },
+    {
+      "id": "mensaje",
+      "label": "Resumen",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: julio en Buenos Aires — T media 10 °C, 30 días",
+    "steps": [
+      "**HDD/día**: max(18 − 10, 0) = **8**.",
+      "**HDD total**: 8 × 30 = **240 HDD**.",
+      "**CDD/día**: max(10 − 24, 0) = 0 (no hay refrigeración en invierno).",
+      "Con **consumo 0.15 m³ gas/HDD**: 240 × 0.15 = **36 m³ de gas** estimados el mes."
+    ],
+    "result": "**240 HDD** y **0 CDD**. Consumo estimado: 36 m³ de gas natural."
+  },
+  "explanation": "## Cómo se calcula\n\n- **HDD día** = max(base_HDD − T_media_diaria, 0). Default base 18 °C (ASHRAE).\n- **CDD día** = max(T_media_diaria − base_CDD, 0). Default base 24 °C.\n- **HDD mensual/anual** = suma de los HDD de cada día del período.\n\nPara una estimación rápida con temperatura media constante:\n\n- `HDD = max(base − T_media, 0) × días`\n- `CDD = max(T_media − base, 0) × días`\n\nMás preciso: sumar día a día con datos reales del servicio meteorológico.\n\n## Valores de referencia\n\n**HDD anual típico (base 18 °C):**\n\n| Ciudad | HDD/año | Comentario |\n|---|---|---|\n| Miami | ~200 | Apenas calefacción |\n| Buenos Aires | ~1 400 | Invierno moderado |\n| Madrid | ~2 100 | Invierno seco frío |\n| Berlín | ~3 200 | Invierno largo |\n| Montreal | ~4 500 | Invierno muy frío |\n| Moscú | ~4 800 | Invierno extremo |\n\n**CDD anual típico (base 24 °C):**\n\n| Ciudad | CDD/año |\n|---|---|\n| Buenos Aires | ~300-500 |\n| Madrid | ~250 |\n| Bangkok | ~2 600 |\n| Dubái | ~3 200 |\n\n## Casos especiales\n\n- **Base distinta**: Reino Unido usa 15.5 °C; EE.UU. tradicional 65 °F (18.3 °C); Canadá a veces 17 °C.\n- **Grados-hora**: refinamiento con datos horarios en lugar de media diaria, más preciso.\n- **Aislación térmica**: un edificio mal aislado puede gastar 0.25 m³/HDD mientras uno certificado gasta 0.08 m³/HDD — diferencia del triple.\n- **Bomba de calor**: en climas templados, COP 3-4 convierte 1 kWh eléctrico en 3-4 kWh térmicos; HDD × 0.25 = kWh eléctricos aprox.\n- **Consumo mixto**: una vivienda moderna suele tener HDD dominante; comercios con mucha iluminación, CDD dominante.\n\n## Fuentes\n\n- ASHRAE Handbook — Fundamentals, Chapter 14 (Climatic Design).\n- NOAA NCEI — Heating & Cooling Degree Days dataset.\n- ISO 15927-6 — Hygrothermal performance / degree days.\n- SMN Argentina — Servicios climáticos para energía.\n\n## Revisión editorial\n\nRevisado por el equipo editorial de Hacé Cuentas. Metodología alineada a ASHRAE y NOAA.\n\n**Disclaimer:** Los consumos específicos por HDD/CDD dependen de aislación, sistema, uso y tarifa. Son órdenes de magnitud.\n",
+  "faq": [
+    {
+      "q": "¿Qué son los grados-día?",
+      "a": "Un índice que suma cuántos grados debajo (o encima) de una temperatura base hubo en un período. Mide la 'demanda climática' de calefacción o refrigeración."
+    },
+    {
+      "q": "¿Por qué base 18 °C para calefacción y 24 °C para AC?",
+      "a": "Son las bases ASHRAE que representan el rango en el que un edificio promedio no necesita climatización: por debajo de 18 °C prende la calefacción, por encima de 24 °C prende el AC."
+    },
+    {
+      "q": "¿Cuántos HDD tiene Buenos Aires?",
+      "a": "Alrededor de 1 400 al año con base 18 °C. Comparable a Madrid o Roma. Los meses de junio y julio concentran el 45% del total anual."
+    },
+    {
+      "q": "¿Cómo convierto HDD a m³ de gas?",
+      "a": "Multiplicá por el coeficiente de consumo específico de tu vivienda. Una casa bien aislada de 80 m²: ~0.10-0.15 m³/HDD. Mal aislada: 0.25-0.35 m³/HDD. Pedí tu coeficiente real dividiendo consumo mensual por HDD del mes."
+    },
+    {
+      "q": "¿Y a kWh eléctricos para AC?",
+      "a": "Un split 3 000 frigorías bien seleccionado consume ~0.5-0.7 kWh por CDD en vivienda estándar. Con aislación pobre, hasta 1.2 kWh/CDD."
+    },
+    {
+      "q": "¿Se pueden usar datos diarios reales?",
+      "a": "Sí, es lo más preciso. Sumá día a día `max(base − T_media_dia, 0)`. El SMN o NOAA publica T_media histórica."
+    },
+    {
+      "q": "¿Para qué me sirve el HDD si no soy ingeniero?",
+      "a": "Para comparar años (¿este invierno fue peor?), comparar ciudades antes de mudarte, evaluar si una mejora de aislación vale la pena y anticipar facturas."
+    },
+    {
+      "q": "¿Hay una base universal?",
+      "a": "No. La más común es 18 °C / 65 °F, pero Reino Unido usa 15.5 °C, Rusia 20 °C y algunos manuales 17 °C. Elegí la base y mantenela para comparar."
+    }
+  ],
+  "sources": [
+    {
+      "name": "ASHRAE Handbook — Fundamentals",
+      "url": "https://www.ashrae.org/technical-resources/ashrae-handbook"
+    },
+    {
+      "name": "NOAA NCEI — Degree Days",
+      "url": "https://www.noaa.gov/"
+    },
+    {
+      "name": "SMN Argentina — Servicios climáticos",
+      "url": "https://www.smn.gob.ar/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-calefaccion-watts-kcal-ambiente",
+    "caldera-kw-m2-calefaccion",
+    "calefaccion-btu-ambiente",
+    "costo-calefaccion-invierno"
+  ],
+  "howToSteps": [
+    {
+      "name": "Conseguí la temperatura media del período",
+      "text": "SMN, NOAA o promedio de máxima y mínima del mes."
+    },
+    {
+      "name": "Ingresá días del período",
+      "text": "Usualmente 30 para un mes típico, 365 para un año."
+    },
+    {
+      "name": "Opcional: tu consumo específico",
+      "text": "Dividí m³ de gas del mes por HDD del mes. Guardalo para futuros cálculos."
+    },
+    {
+      "name": "Calculá HDD/CDD",
+      "text": "Y estimá consumo esperado para el próximo período."
+    }
+  ]
+}

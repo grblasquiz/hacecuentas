@@ -1,0 +1,144 @@
+{
+  "slug": "calculadora-densidad-aire-temperatura-humedad-altitud-aviacion",
+  "title": "Densidad del Aire por Temp, Humedad y Altitud 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Densidad del Aire (Temperatura + Humedad + Altitud)",
+  "description": "Calculá la densidad del aire (ρ) con temperatura, humedad y altitud. Útil para aviación, motores, balística, natación y ciclismo.",
+  "category": "ciencia",
+  "icon": "🎈",
+  "formulaId": "densidad-aire-temp-humedad-altitud",
+  "audience": "global",
+  "seoKeywords": [
+    "densidad del aire calculadora",
+    "density altitude calculator",
+    "rho aire aviacion",
+    "densidad aire humedad",
+    "1.225 kg m3 aire",
+    "densidad aire motor",
+    "altitud densidad aviacion",
+    "aire seco vs humedo densidad"
+  ],
+  "intro": "La densidad del aire **ρ** depende de presión, temperatura y humedad. La fórmula es `ρ = P_d/(R_d·T) + P_v/(R_v·T)`, donde P_d y P_v son las presiones parciales de aire seco y vapor. Al nivel del mar, 15 °C y aire seco da **1.225 kg/m³**. Con aire caliente, húmedo o en altura, la densidad puede bajar hasta 0.8 kg/m³ o menos.",
+  "keyTakeaway": "La densidad estándar es 1.225 kg/m³. En Denver en verano (1600 m, 35 °C, 50 % RH) baja a ~0.98 kg/m³ — un 20 % menos de masa por metro cúbico. Por eso despegan aviones con menos carga útil en verano.",
+  "useCases": [
+    "Aviación: calcular altitud de densidad y performance de despegue.",
+    "Motores atmosféricos: estimar potencia disponible (autos, motos sin turbo).",
+    "Ciclismo y running: ajustar pacing por altitud y temperatura.",
+    "Balística deportiva: corregir trayectoria por densidad real.",
+    "Natación abierta: estimar empuje diferencial aire vs agua.",
+    "Ingeniería HVAC y aerogeneradores: calcular potencia de ventiladores."
+  ],
+  "fields": [
+    {
+      "id": "temperatura",
+      "label": "Temperatura del aire",
+      "type": "number",
+      "placeholder": "20",
+      "min": -60,
+      "max": 60,
+      "step": 0.1,
+      "required": true,
+      "suffix": " °C"
+    },
+    {
+      "id": "humedad",
+      "label": "Humedad relativa",
+      "type": "number",
+      "placeholder": "50",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "required": true,
+      "suffix": " %"
+    },
+    {
+      "id": "altitud",
+      "label": "Altitud sobre el nivel del mar",
+      "type": "number",
+      "placeholder": "0",
+      "min": -500,
+      "max": 15000,
+      "step": 1,
+      "required": true,
+      "suffix": " m"
+    }
+  ],
+  "outputs": [
+    { "id": "densidad", "label": "Densidad del aire", "format": "text", "primary": true },
+    { "id": "densidadRelativa", "label": "Densidad relativa (vs estándar)", "format": "text" },
+    { "id": "presion", "label": "Presión atmosférica en ese punto", "format": "text" },
+    { "id": "densityAltitude", "label": "Altitud de densidad (pilots)", "format": "text" },
+    { "id": "comentario", "label": "Impacto práctico", "format": "text" }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-23",
+    "source": "NASA — U.S. Standard Atmosphere 1976 + CIPM 2007 humid air formula",
+    "sourceUrl": "https://www.nasa.gov/",
+    "updateType": "manual"
+  },
+  "example": {
+    "title": "Ejemplo: despegue en La Rioja (429 m) un día caluroso",
+    "steps": [
+      "**Temperatura**: 38 °C.",
+      "**Humedad**: 40 %.",
+      "**Altitud**: 429 m.",
+      "**Presión**: 1013.25 × (1 − 0.0065·429/288.15)^5.255 ≈ 963 hPa.",
+      "**Presión de saturación a 38 °C**: 66.3 hPa → P_v = 0.4 × 66.3 = 26.5 hPa.",
+      "**ρ ≈ 1.055 kg/m³** (86 % del estándar).",
+      "**Altitud de densidad**: ~1700 m equivalentes."
+    ],
+    "result": "La avioneta percibe como si volara en aire de 1700 m: menos empuje, pista de despegue más larga, menos carga paga útil. Por eso los pilotos consultan Density Altitude antes de cada despegue en verano."
+  },
+  "explanation": "## Cómo se calcula\n\nEl aire es una mezcla de aire seco y vapor de agua. Cada uno tiene su constante de gas:\n\n- **Aire seco**: R_d = 287.058 J/(kg·K)\n- **Vapor**: R_v = 461.495 J/(kg·K)\n\nLa densidad total es la suma de las contribuciones parciales:\n\n```\nρ = P_d / (R_d · T) + P_v / (R_v · T)\n```\n\nDonde:\n- T es la temperatura en Kelvin.\n- P total se estima con la fórmula barométrica ICAO a la altitud dada.\n- P_v = HR × P_saturación(T), con P_saturación aproximada con Tetens:\n\n```\nP_sat(T) = 6.1078 · exp(17.27·T / (T + 237.3))   (hPa, T en °C)\n```\n\n## Fórmulas físicas\n\n- **Gas ideal**: PV = nRT → ρ = P·M/(R·T).\n- **Aire húmedo < aire seco**: porque M_vapor = 18 < M_aire_seco = 29. Cada molécula de agua ‘pesa menos’.\n- **Altitud de densidad**: altitud ISA equivalente que tendría la densidad calculada. Regla gruesa: DA ≈ altitud_presión + 120 × (T_real − T_ISA). La calc usa la forma exacta con ρ(z).\n- **ISA estándar**: 15 °C al mar, lapse 6.5 °C/km, 0 % humedad.\n\n## Casos especiales\n\n- **Día frío seco al nivel del mar**: ρ puede superar 1.30 kg/m³ (mejor rendimiento motor/ala).\n- **Día cálido húmedo en altura (Córdoba, verano)**: ρ cae a 1.05 kg/m³.\n- **Altiplano peruano (4000 m, 10 °C)**: ρ ≈ 0.80 kg/m³ (65 % del estándar).\n- **Aeropuerto de Denver (Colorado, 1655 m)**: DA frecuente de 2500 m en verano.\n\n## Fuentes\n\n- NASA — U.S. Standard Atmosphere 1976.\n- CIPM (2007) — formula for humid air density.\n- FAA Pilot's Handbook — Chapter 11: Aircraft Performance.",
+  "faq": [
+    {
+      "q": "¿Por qué el aire húmedo es menos denso que el seco?",
+      "a": "Contraintuitivo pero real. Una molécula de agua (masa molar 18) pesa menos que una de N₂ (28) o O₂ (32). En el aire húmedo, parte de las moléculas son agua; por el principio de Avogadro (mismo volumen, misma cantidad de moléculas a misma T y P), el aire húmedo tiene menos masa total por m³."
+    },
+    {
+      "q": "¿Qué es la altitud de densidad (density altitude)?",
+      "a": "Es la altitud ISA equivalente que tendría la atmósfera actual si fuera estándar (15 °C al nivel del mar, aire seco). Es el parámetro que usan los pilotos para estimar performance: más alta la DA, peor rendimiento del avión (menos sustentación, menos empuje de hélice, más carrera de despegue)."
+    },
+    {
+      "q": "¿Cuánta diferencia hay entre invierno y verano al nivel del mar?",
+      "a": "Al nivel del mar: 0 °C aire seco da 1.293 kg/m³; 30 °C al 70 % humedad da 1.164 kg/m³. Casi un 10 % menos de densidad en un día veraniego húmedo. Impacto real en aviación, automovilismo y running competitivo."
+    },
+    {
+      "q": "¿Por qué los corredores baten récords en aire denso?",
+      "a": "Porque la resistencia del aire es proporcional a ρ·v². Menos densidad = menos resistencia. Los maratones de altura (Ciudad de México) son más rápidos en el tramo plano por eso, aunque el problema del oxígeno compensa. Los récords mundiales de 100 m suelen hacerse con viento a favor y clima cálido seco."
+    },
+    {
+      "q": "¿Cómo afecta a los motores de auto o moto?",
+      "a": "Motores atmosféricos (sin turbo): pierden potencia proporcional a la densidad. En Bariloche (850 m) un motor pierde ~10 %; en La Paz (3650 m) pierde ~35 %. Los turbocompresores compensan comprimiendo el aire antes de entrar al cilindro."
+    },
+    {
+      "q": "¿Cuál es la densidad del aire en un avión comercial?",
+      "a": "A 11 000 m (típica altitud de crucero), la densidad es ~0.36 kg/m³, apenas 30 % del valor al nivel del mar. Por eso los aviones vuelan rápido allí: la resistencia es baja. La cabina va presurizada a equivalente de 1800-2400 m."
+    },
+    {
+      "q": "¿Influye la contaminación del aire?",
+      "a": "Levemente. CO₂ (M=44) es más pesado que el aire, así que aire con mucho CO₂ es más denso. Pero en concentraciones reales (400-500 ppm) el cambio es <0.1 %, despreciable para aviación o deportes."
+    },
+    {
+      "q": "¿Cómo se relaciona densidad con portancia aerodinámica?",
+      "a": "Portancia L = ½·ρ·v²·S·CL. La mitad del producto con ρ hace que, a igual velocidad, un avión en DA de 3000 m genere un 23 % menos de portancia que al nivel del mar. Por eso la velocidad de despegue aumenta en altura o con calor."
+    }
+  ],
+  "sources": [
+    { "name": "NASA — U.S. Standard Atmosphere 1976", "url": "https://ntrs.nasa.gov/citations/19770009539" },
+    { "name": "CIPM (2007) — Revised formula for density of moist air", "url": "https://www.bipm.org/" },
+    { "name": "FAA — Pilot's Handbook of Aeronautical Knowledge", "url": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/phak" }
+  ],
+  "relatedSlugs": [
+    "calculadora-presion-atmosferica-altitud-barometrica",
+    "calculadora-velocidad-sonido-segun-temperatura-aire",
+    "calculadora-probabilidad-lluvia-24h-presion-humedad-tendencia",
+    "calculadora-horas-luz-dia-fecha-latitud"
+  ],
+  "howToSteps": [
+    { "name": "Ingresá temperatura y humedad", "text": "Los valores del momento o del momento planeado de la actividad." },
+    { "name": "Ingresá la altitud", "text": "De la pista de aterrizaje, la ciudad o el punto de interés." },
+    { "name": "Calculá", "text": "Obtenés ρ, la densidad relativa al estándar, la presión del aire y la altitud de densidad." },
+    { "name": "Interpretá el impacto", "text": "Te explica qué significa para motores, alas y performance deportiva." }
+  ]
+}

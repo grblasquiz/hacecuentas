@@ -1,0 +1,128 @@
+{
+  "slug": "calculadora-depreciacion-valor-jugador-edad",
+  "title": "Depreciación valor jugador por edad — Curva de valor fútbol 2026 | Hacé Cuentas",
+  "h1": "Calculadora de depreciación del valor de un futbolista según edad",
+  "description": "Proyectá el valor futuro de un jugador según su edad y posición. Pico 26-28 años, caída 10-15%/año post-30.",
+  "category": "deportes",
+  "icon": "📉",
+  "formulaId": "depreciacion-valor-jugador-edad",
+  "audience": "global",
+  "seoKeywords": [
+    "depreciacion valor jugador",
+    "curva edad futbolista",
+    "valor Transfermarkt por edad",
+    "peak edad futbol",
+    "valor jugador 30 años",
+    "scout valoracion edad",
+    "amortizacion pase edad",
+    "CIES football observatory"
+  ],
+  "intro": "El **valor de mercado de un futbolista** sigue una **curva por edad** bien documentada por estudios del **CIES Football Observatory** y **Transfermarkt**. El **pico de valor** se da entre los **26 y 28 años** (25-28 para delanteros, 27-30 para defensores, 28-32 para arqueros). Antes del pico el valor crece con cada temporada; después del pico **cae entre 10% y 15% por año** de forma acelerada. A los 33-34 años, la mayoría de los jugadores valen **menos del 40%** de su pico, salvo excepciones (Modrić, Cristiano Ronaldo, Messi, Pepe). Esta calculadora proyecta el valor futuro o pasado en función de la edad objetivo.",
+  "keyTakeaway": "Pico 26-28 años. Post-pico: caída 10-15%/año. Arqueros duran más (pico 28-32). Delanteros caen más rápido. A los 33 años la mayoría vale <40% del pico.",
+  "useCases": [
+    "Scout de club proyecta el valor futuro de un canterano.",
+    "Club vendedor estima el valor del jugador en 2 años para planear la venta.",
+    "Agente FIFA negocia el timing óptimo para una transferencia.",
+    "Analista financiero de un fondo de inversión deportivo evalúa ROI.",
+    "Estudiante de economía del deporte analiza curva de edad.",
+    "Director deportivo presupuesta renovaciones y salidas en el mediano plazo."
+  ],
+  "fields": [
+    { "id": "valorActualEur", "label": "Valor actual de mercado (EUR)", "type": "number", "placeholder": "50000000", "min": 100000, "step": 500000, "required": true },
+    { "id": "edadActual", "label": "Edad actual del jugador", "type": "number", "placeholder": "24", "min": 15, "max": 45, "step": 1, "required": true },
+    { "id": "edadObjetivo", "label": "Edad a proyectar", "type": "number", "placeholder": "30", "min": 15, "max": 45, "step": 1, "required": true },
+    {
+      "id": "posicion",
+      "label": "Posición del jugador",
+      "type": "select",
+      "options": [
+        { "value": "arquero", "label": "Arquero" },
+        { "value": "defensor", "label": "Defensor" },
+        { "value": "mediocampista", "label": "Mediocampista" },
+        { "value": "delantero", "label": "Delantero" }
+      ],
+      "default": "mediocampista",
+      "required": true
+    }
+  ],
+  "outputs": [
+    { "id": "valorProyectado", "label": "Valor proyectado", "format": "currency", "suffix": "EUR", "primary": true },
+    { "id": "depreciacionTotal", "label": "Depreciación/apreciación total", "format": "currency", "suffix": "EUR" },
+    { "id": "depreciacionAnualPromedio", "label": "Cambio promedio por año", "format": "currency", "suffix": "EUR" },
+    { "id": "curvaAplicada", "label": "Curva por posición", "format": "text" }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-23",
+    "source": "CIES Football Observatory + Transfermarkt + estudios académicos de valoración de jugadores",
+    "sourceUrl": "https://www.football-observatory.com/",
+    "updateType": "manual",
+    "notes": "La curva se basa en estudios públicos del CIES y análisis agregado de Transfermarkt. Casos individuales pueden desviarse fuertemente (lesiones, figuras históricas, cambios de liga)."
+  },
+  "example": {
+    "title": "Ejemplo: mediocampista de €50M a los 24 años, proyección a los 30",
+    "steps": [
+      "Valor actual: €50.000.000 a los 24 años.",
+      "Posición: mediocampista (pico 26-29).",
+      "De 24 a pico: valor crece ~24%.",
+      "De pico 29 a 30 años (1 año post-pico): -13%.",
+      "Factor neto: ajuste por curva.",
+      "Valor proyectado a los 30: ~€54M."
+    ],
+    "result": "**Valor proyectado a los 30: €54M (leve apreciación acumulada con pico intermedio)**."
+  },
+  "explanation": "## Cómo se calcula\n\n```\nvalor_proyectado = valor_actual × (factor_edad_objetivo / factor_edad_actual)\n\nfactor_edad(edad, posición):\n  si edad < pico_mín → 1 − (pico_mín − edad) × tasa_juvenil\n  si edad en rango pico → 1\n  si edad > pico_máx → (1 − tasa_post_pico)^(edad − pico_máx)\n```\n\n## Curva por posición\n\n| Posición | Pico (años) | Caída post-pico | Crecimiento pre-pico |\n|---|---|---|---|\n| Arquero | 28–32 | 8%/año | 8%/año |\n| Defensor | 27–30 | 12%/año | 10%/año |\n| Mediocampista | 26–29 | 13%/año | 12%/año |\n| Delantero | 25–28 | 15%/año | 12%/año |\n\n## Casos especiales\n\n- **Élite mundial** (Messi, Cristiano Ronaldo, Modrić, Lewandowski, Pepe): la curva no los describe bien. Mantienen valores altos más allá de los 35 años por rendimiento extraordinario.\n- **Lesiones graves**: cortan la curva abruptamente. Un mediocampista con lesión de ligamento cruzado pierde ~30% de valor de mercado al momento de la lesión.\n- **Cambio de liga**: subir a Premier puede **aumentar** el valor aunque el jugador envejezca. Bajar a Arabia Saudí / Turquía suele acelerar la caída.\n- **Arqueros**: son la excepción. Manuel Neuer, Thibaut Courtois, Gianluigi Donnarumma mantienen valores altos hasta 33-34 años. A los 35 todavía juegan en top.\n- **Delanteros**: los que pierden velocidad a los 30 caen más rápido; los que evolucionan a \"9 de área\" (Lewandowski, Suárez) retienen valor más tiempo.\n- **Canteranos explosivos** (Yamal, Endrick, Güler, Huijsen): aprecian muy rápido antes del pico (valor puede **multiplicarse por 5-10** en 2-3 años).\n\n## Estudios de referencia\n\n- **CIES Football Observatory** — modelos econométricos de valoración que incluyen edad como variable principal.\n- **Transfermarkt** — valores históricos de los últimos 15 años permiten ver la curva real de cada jugador.\n- **Gerrard, Dobson (2000)** — paper académico pionero sobre curva de edad en fútbol.\n\n## Fuentes\n\n- CIES Football Observatory (Neuchâtel, Suiza).\n- Transfermarkt.\n- \"The Market for Association Football Players\" — Dobson & Gerrard, 2000.\n- KPMG Football Benchmark.\n\n**Revisado por el equipo editorial de Hacé Cuentas.**\n",
+  "faq": [
+    {
+      "q": "¿A qué edad un futbolista alcanza su pico de valor?",
+      "a": "Según estudios del **CIES Football Observatory**, el pico de valor se da entre los **26 y 28 años** para la mayoría de los jugadores. **Arqueros** alcanzan pico más tarde (28–32). **Delanteros** más temprano (25–28) porque dependen más de explosividad. **Defensores centrales** lo alcanzan alrededor de los 27–30 años, compensando experiencia con velocidad decreciente."
+    },
+    {
+      "q": "¿Por qué los delanteros se deprecian más rápido que los arqueros?",
+      "a": "Porque su **valor depende de atributos físicos** (velocidad, explosividad, velocidad de reacción) que caen con la edad. Los arqueros dependen más de **lectura de juego, reflejos y técnica**, que se mantienen o mejoran con experiencia. Un arquero de 33 años es \"veterano experimentado\"; un delantero de 33 años ya está en fase descendente."
+    },
+    {
+      "q": "¿Cómo impacta una lesión grave en el valor?",
+      "a": "Lesiones graves (ligamento cruzado anterior, fractura de metatarso, tendón de Aquiles) suelen **bajar el valor 25-35%** de inmediato. Parte se recupera si el jugador vuelve al nivel previo dentro de 12-18 meses, pero **nunca al 100%**. Los clubes aplican descuento de riesgo permanente post-lesión grave."
+    },
+    {
+      "q": "¿La calculadora aplica a jugadoras de fútbol femenino?",
+      "a": "Parcialmente. Las curvas de fútbol femenino son **levemente diferentes** (el pico tiende a ser similar, pero el valor absoluto de mercado es mucho menor). Transfermarkt valora mujeres y hombres en escalas separadas. Los porcentajes de depreciación por año son comparables, pero los valores absolutos no."
+    },
+    {
+      "q": "¿Qué pasa con figuras como Messi o Cristiano Ronaldo?",
+      "a": "Las **figuras excepcionales rompen la curva**. Messi mantiene valor de mercado alto a los 38 años (Transfermarkt €20M+) y Cristiano Ronaldo en Arabia Saudí a los 40 todavía genera fichajes millonarios. Estos casos son **outliers estadísticos** que no deben generalizarse al scouting estándar. Modrić a los 38 aún valía €10M en Real Madrid."
+    },
+    {
+      "q": "¿Los canteranos pueden multiplicar su valor?",
+      "a": "Sí. Jugadores como **Lamine Yamal** (Barcelona), **Endrick** (Real Madrid ex-Palmeiras), **Arda Güler** (Real Madrid), **Julián Álvarez** (Atlético Madrid ex-River) **multiplicaron su valor por 5-10×** entre los 17 y 21 años. La curva pre-pico aplica muy fuerte en jugadores con potencial elite, especialmente en LaLiga/Premier. River Plate vendió a Julián Álvarez a €21M; su valor hoy supera los €80M."
+    },
+    {
+      "q": "¿Las ligas destino cambian la curva?",
+      "a": "Sí, considerablemente. Subir a **Premier League, LaLiga o Bundesliga** eleva el valor aunque el jugador envejezca. Bajar a **Saudi Pro League, MLS, Turkish Süper Lig o Ligue 1 secundaria** acelera la depreciación. Un mediocampista de 32 años que va de Serie A a Saudí pierde ~30% de valor automático."
+    },
+    {
+      "q": "¿Transfermarkt actualiza valores automáticamente con la edad?",
+      "a": "No. Transfermarkt actualiza valores **2-3 veces al año** con criterio editorial que incluye: rendimiento reciente, minutos jugados, edad, comparables del mercado, estado del contrato y situación del club. La edad pesa, pero no es automática — puede quedar estancada si el jugador sigue rindiendo igual a los 31 que a los 27."
+    }
+  ],
+  "sources": [
+    { "name": "CIES Football Observatory", "url": "https://www.football-observatory.com/" },
+    { "name": "Transfermarkt", "url": "https://www.transfermarkt.com/" },
+    { "name": "KPMG Football Benchmark", "url": "https://www.footballbenchmark.com/" },
+    { "name": "FIFA TMS — Transfer Matching System", "url": "https://www.fifa.com/legal/football-regulatory/transfer-matching-system" }
+  ],
+  "relatedSlugs": [
+    "calculadora-clausula-rescision-valor-mercado-jugador",
+    "calculadora-amortizacion-pase-contabilidad-fifa-5-anos",
+    "calculadora-comision-representante-fifa-pase-jugador",
+    "calculadora-sueldo-promedio-top-5-ligas-futbolista"
+  ],
+  "howToSteps": [
+    { "name": "Valor actual", "text": "Tomá el valor Transfermarkt actual en euros." },
+    { "name": "Edades", "text": "Ingresá la edad actual y la edad objetivo para la proyección." },
+    { "name": "Posición", "text": "Elegí arquero, defensor, mediocampista o delantero." },
+    { "name": "Interpretación", "text": "Comparar con el precio de venta pactado y decidir timing óptimo." }
+  ],
+  "lastReviewed": "2026-04-23"
+}

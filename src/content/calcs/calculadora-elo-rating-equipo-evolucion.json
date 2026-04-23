@@ -1,0 +1,232 @@
+{
+  "slug": "calculadora-elo-rating-equipo-evolucion",
+  "title": "ELO rating de equipo — Evolución 2026 | Hacé Cuentas",
+  "h1": "ELO rating de un equipo — evolución por partido",
+  "description": "Análisis estadístico del rating ELO: cálculo del nuevo rating tras un partido usando K=20 y ventaja de localía +100.",
+  "category": "deportes",
+  "icon": "📊",
+  "formulaId": "elo-rating-futbol",
+  "audience": "global",
+  "seoKeywords": [
+    "elo rating futbol",
+    "elo rating equipo",
+    "calculadora elo",
+    "club elo",
+    "ranking elo futbol",
+    "nuevo rating elo partido",
+    "formula elo k20",
+    "ventaja localia elo",
+    "estadisticas avanzadas futbol",
+    "elo fifa ranking"
+  ],
+  "intro": "El **sistema ELO** es el método estadístico más usado para rankear equipos y jugadores por fuerza relativa. Nacido en ajedrez (Arpad Elo, 1960s), se adaptó al fútbol por sitios como **ClubElo** y **EloRatings.net**: cada equipo tiene un rating (número típicamente entre 1200 y 2100) que sube o baja tras cada partido según **el resultado** y **la fuerza del rival**. Ganar a un equipo mucho más fuerte sube más rating; perder con un rival menor baja más. El factor K = 20 en fútbol (vs K = 10-30 en ajedrez) determina cuán sensible es el rating a resultados individuales. También se aplica una **ventaja de localía** de +100 puntos al equipo local. Esta calculadora replica el modelo público: útil para entender por qué Real Madrid (ClubElo ~2050) está por encima de Bayern (~1980), o cómo Arsenal subió +30 puntos tras vencer a Liverpool.",
+  "keyTakeaway": "**K = 20** en fútbol. Ventaja localía = **+100 rating**. Fórmula: `nuevo_elo = actual + K × (resultado - esperado)`. Los equipos top mundo rondan **2000-2100**.",
+  "useCases": [
+    "Calcular cuánto sube/baja el ELO tras un partido concreto.",
+    "Entender por qué ganar de visitante suma más que de local.",
+    "Proyectar el ELO de tu equipo si gana los próximos 3 partidos.",
+    "Comparar ELO de dos equipos antes de un clásico (Real Madrid vs Barcelona, Boca vs River, Inter vs Juventus).",
+    "Enseñar a fanáticos cómo funcionan los rankings estadísticos modernos."
+  ],
+  "fields": [
+    {
+      "id": "ratingActual",
+      "label": "Rating ELO actual",
+      "type": "number",
+      "placeholder": "1800",
+      "min": 1000,
+      "max": 2200,
+      "step": 1,
+      "help": "Rating ELO actual del equipo. Top mundo: 2000-2100. Medio: 1600-1800."
+    },
+    {
+      "id": "ratingRival",
+      "label": "Rating ELO del rival",
+      "type": "number",
+      "placeholder": "1900",
+      "min": 1000,
+      "max": 2200,
+      "step": 1
+    },
+    {
+      "id": "resultado",
+      "label": "Resultado del partido",
+      "type": "select",
+      "default": "victoria",
+      "options": [
+        {
+          "value": "victoria",
+          "label": "Victoria"
+        },
+        {
+          "value": "empate",
+          "label": "Empate"
+        },
+        {
+          "value": "derrota",
+          "label": "Derrota"
+        }
+      ]
+    },
+    {
+      "id": "localia",
+      "label": "Localía",
+      "type": "select",
+      "default": "local",
+      "options": [
+        {
+          "value": "local",
+          "label": "Local (+100 ventaja)"
+        },
+        {
+          "value": "visitante",
+          "label": "Visitante (-100)"
+        },
+        {
+          "value": "neutral",
+          "label": "Campo neutral"
+        }
+      ]
+    },
+    {
+      "id": "kFactor",
+      "label": "Factor K (sensibilidad)",
+      "type": "number",
+      "placeholder": "20",
+      "min": 10,
+      "max": 60,
+      "step": 1,
+      "help": "K=20 estándar ClubElo. K=30 para torneos internacionales (FIFA)."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-23",
+    "source": "ClubElo — metodología pública",
+    "sourceUrl": "http://clubelo.com/System",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "nuevoRating",
+      "label": "Nuevo rating ELO",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "variacion",
+      "label": "Variación",
+      "format": "text"
+    },
+    {
+      "id": "probabilidadVictoria",
+      "label": "Probabilidad victoria esperada",
+      "format": "text"
+    },
+    {
+      "id": "ratingAjustadoConLocalia",
+      "label": "Rating ajustado con localía",
+      "format": "number"
+    },
+    {
+      "id": "tier",
+      "label": "Tier",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: Arsenal (1950) vence a Liverpool (2000) de local",
+    "steps": [
+      "**Rating actual Arsenal**: 1950.",
+      "**Rating rival Liverpool**: 2000.",
+      "**Localía**: local → Arsenal ajustado 1950 + 100 = **2050**.",
+      "**Esperado**: 1 / (1 + 10^((2000-2050)/400)) = 0.571 (57% probabilidad).",
+      "**Resultado**: victoria → s = 1.",
+      "**Delta**: 20 × (1 - 0.571) = **+8.6 pts**.",
+      "**Nuevo ELO Arsenal**: 1950 + 8.6 = **~1959**."
+    ],
+    "result": "Arsenal vence a Liverpool en casa y sube a 1959 ELO (+8.6). Aunque era favorito por localía, suma porque el rival era más fuerte en ELO base."
+  },
+  "explanation": "## Cómo se calcula\n\n```\nAjuste localía: ratingAjustado = ratingActual ± 100\nEsperado: E = 1 / (1 + 10^((ratingRival - ratingAjustado) / 400))\nResultado: S = 1 (victoria), 0.5 (empate), 0 (derrota)\nDelta: ΔR = K × (S - E)\nNuevo rating: ratingNuevo = ratingActual + ΔR\n```\n\n## Parámetros clave\n\n| Parámetro | Valor |\n|---|---|\n| K fútbol (ClubElo) | 20 |\n| K internacional (FIFA) | 30-60 (según torneo) |\n| Ventaja localía | +100 |\n| Divisor (scale) | 400 |\n\n## Tiers aproximados de rating\n\n| Rating ELO | Tier |\n|---|---|\n| 2000-2100 | Elite mundial (top 5 clubes) |\n| 1900-2000 | Candidato Champions |\n| 1800-1900 | Clasificación europea |\n| 1700-1800 | Liga competitiva |\n| 1600-1700 | Nivel medio |\n| <1600 | Nivel bajo / ascensos |\n\n## Top ELO ejemplos (estimaciones)\n\n| Equipo | ELO aproximado |\n|---|---|\n| Real Madrid | ~2050 |\n| Bayern Munich | ~1985 |\n| Liverpool | ~1975 |\n| Arsenal | ~1960 |\n| Barcelona | ~1950 |\n| PSG | ~1940 |\n| Inter | ~1920 |\n| Juventus | ~1880 |\n| Atlético Madrid | ~1875 |\n| Napoli | ~1840 |\n\n## Interpretación del resultado esperado\n\n| Diferencia ELO | Probabilidad del mayor |\n|---|---|\n| 0 | 50% |\n| 100 | 64% |\n| 200 | 76% |\n| 400 | 91% |\n| 600 | 97% |\n\nLa **localía (+100 rating)** no es universal. En ligas europeas vale 100 pts; en Champions League baja a ~80; en clásicos regionales (Boca vs River, Real Madrid vs Barcelona) sube a ~110-120.\n\n## Diferencia con ELO de ajedrez\n\n| Aspecto | Ajedrez | Fútbol |\n|---|---|---|\n| K estándar | 10-32 | 20 |\n| Empate | Posible (0.5) | Frecuente (0.5) |\n| Ventaja localía | Ajedrez: ninguna | +100 en liga |\n| Frecuencia partidos | Alta | 1-2 por semana |\n\n## Limitaciones del modelo\n\n- **No incorpora diferencia de goles**. Ganar 1-0 o 5-0 da el mismo delta en ELO clásico. **FIFA Elo** sí ajusta por margen de goles.\n- **No considera forma reciente** (lesiones, rotación, carga Champions).\n- **Regresión a la media**: equipos con 5 victorias seguidas tienen ELO 'inflado' que puede corregir en los siguientes partidos.\n- La **ventaja localía no es constante** entre competiciones.\n\n**Análisis estadístico educativo, no constituye recomendación de apuestas**. ELO rating es método analítico para rankings deportivos.\n\n## Fuentes\n\n- ClubElo.com — metodología.\n- EloRatings.net — selecciones.\n- Arpad Elo — The Rating of Chess Players (1978).\n\n## Related\n\n- [ELO ajedrez](/calculadora-elo-ajedrez-ganado-perdido-variacion)\n- [Poisson goles partido](/calculadora-poisson-goles-esperados-partido)\n- [xG por remate](/calculadora-xg-expected-goals-por-remate)",
+  "faq": [
+    {
+      "q": "¿Qué es el sistema ELO en fútbol?",
+      "a": "Es un **rating numérico de fuerza relativa** de equipos, originado en ajedrez y adaptado al fútbol por ClubElo y EloRatings.net. Cada equipo tiene un número (1200-2100) que sube con victorias y baja con derrotas, ajustado por la fuerza del rival. Ganar a un top suma más que ganar a uno débil."
+    },
+    {
+      "q": "¿Por qué K = 20 en fútbol?",
+      "a": "**K regula cuán sensible es el rating** a resultados individuales. En fútbol se usa K = 20 porque los partidos son frecuentes (50+ por temporada): K más alto generaría oscilaciones excesivas. FIFA usa K = 30-60 para torneos internacionales porque hay menos partidos (Mundial: 7 máx). En ajedrez varía: K = 10 (masters), K = 32 (principiantes)."
+    },
+    {
+      "q": "¿Cómo funciona la ventaja de localía?",
+      "a": "**+100 puntos al equipo local** en el cálculo del resultado esperado. Un equipo con ELO 1850 jugando en casa rinde como 1950 para ese partido. Visitante se le resta 100. Campo neutral (finales de Champions, Mundial) no se ajusta. La ventaja proviene del análisis empírico: históricamente el local gana ~55-60% de sus partidos en liga."
+    },
+    {
+      "q": "¿Qué ELO tiene Real Madrid?",
+      "a": "Típicamente **~2000-2070** según ClubElo en los últimos 5 años. Ha tocado 2090 post-Champions. PSG, Liverpool y Arsenal han llegado también a esos niveles. El récord histórico en ClubElo es Barcelona 2011-12 con ~2130 — considerada la 'mejor temporada de un club' medida por ELO."
+    },
+    {
+      "q": "¿Cuánto se mueve el ELO en un partido típico?",
+      "a": "**±5-15 puntos** en la mayoría de partidos de liga (K=20, rivales de fuerza similar). Extremos: **+18** si ganás de visitante a un equipo muy superior; **-18** si perdés de local con un equipo muy inferior. Empates entre rivales similares mueven 0 pts."
+    },
+    {
+      "q": "¿Esta fórmula predice el resultado de un partido?",
+      "a": "**Da una probabilidad**, no una predicción. ELO 1950 vs ELO 1800 (150 pts diferencia) = 70% probabilidad de que gane el mayor. Pero el 30% restante es real: las sorpresas del fútbol son parte del modelo. ELO es **descriptivo** (rankea fuerza histórica), no determinista."
+    },
+    {
+      "q": "¿Cómo se relaciona con xG y Poisson?",
+      "a": "Son **métricas complementarias**. ELO mide fuerza histórica (resultados). xG mide calidad de ocasiones en un partido concreto. Poisson modela goles por partido dada una tasa esperada. Analistas profesionales combinan las 3: ELO para rating base, xG para performance reciente, Poisson para proyectar resultado futuro."
+    },
+    {
+      "q": "¿Sirve para apostar?",
+      "a": "**Esta calculadora no es para apostar**. ELO es un **método analítico** de ranking deportivo usado en scouting, medios y periodismo estadístico. Las casas de apuestas tienen modelos propios más complejos que incluyen lesiones, mercado, ELO, xG y decenas de variables. **Análisis estadístico educativo, no constituye recomendación de apuestas** deportivas."
+    }
+  ],
+  "sources": [
+    {
+      "name": "ClubElo — metodología",
+      "url": "http://clubelo.com/System",
+      "publisher": "ClubElo"
+    },
+    {
+      "name": "EloRatings.net — selecciones",
+      "url": "https://www.eloratings.net/about",
+      "publisher": "Elo Ratings"
+    },
+    {
+      "name": "FIFA World Ranking procedure",
+      "url": "https://inside.fifa.com/fifa-world-ranking/procedure",
+      "publisher": "FIFA"
+    },
+    {
+      "name": "FBref — historical ratings",
+      "url": "https://fbref.com/",
+      "publisher": "Sports Reference"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-elo-ajedrez-ganado-perdido-variacion",
+    "calculadora-poisson-goles-esperados-partido",
+    "calculadora-xg-expected-goals-por-remate",
+    "calculadora-goles-por-90-minutos-g90",
+    "calculadora-fantasy-premier-league-valoracion-once"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá el ELO actual y del rival",
+      "text": "Tu rating actual y el del oponente (escala 1200-2100)."
+    },
+    {
+      "name": "Elegí el resultado",
+      "text": "Victoria, empate o derrota."
+    },
+    {
+      "name": "Ingresá la localía",
+      "text": "Local (+100), visitante (-100) o neutral."
+    },
+    {
+      "name": "Calculá el nuevo rating",
+      "text": "La calculadora te devuelve el delta y el rating resultante."
+    }
+  ]
+}

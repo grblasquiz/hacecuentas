@@ -1,0 +1,176 @@
+{
+  "slug": "calculadora-humedad-absoluta-relativa-confort",
+  "title": "Calculadora de Humedad Absoluta y Relativa 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Humedad Absoluta ↔ Relativa + Confort",
+  "description": "💧 Convertí humedad relativa (%) a humedad absoluta (g/m³) con temperatura. Incluye zona de confort ASHRAE (30-50% ideal).",
+  "category": "clima",
+  "icon": "💧",
+  "formulaId": "humedad-absoluta-relativa",
+  "audience": "global",
+  "seoKeywords": [
+    "humedad absoluta",
+    "humedad relativa calculadora",
+    "gramos por metro cubico aire",
+    "convertir humedad relativa absoluta",
+    "zona de confort ashrae",
+    "humedad ideal casa",
+    "humedad y salud",
+    "deshumidificador calcular",
+    "humedad moho ambiente",
+    "humedad aire interior"
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-23",
+    "source": "ASHRAE Standard 55 / WMO",
+    "sourceUrl": null,
+    "updateType": "manual"
+  },
+  "intro": "La **humedad relativa** (%) mide cuán cerca está el aire de la saturación, pero depende de la temperatura: el mismo 60% a 10 °C tiene mucho menos agua que a 30 °C. La **humedad absoluta** (gramos de vapor por m³ de aire) es la cantidad real de agua en el aire, independiente de la temperatura, y es lo que siente un deshumidificador o un higrómetro industrial. Esta calculadora convierte HR% a g/m³ usando la presión de vapor de saturación de Magnus y la ley de gases ideales: `AH = 216.7 · (HR/100 · es) / (T+273.15)`. Además devuelve la **zona de confort ASHRAE**: 30-50% es óptimo, <30% reseca mucosas y favorece electricidad estática, >60% es incómodo y >70% prolongado genera moho, ácaros y daño a muebles.",
+  "keyTakeaway": "Rango ideal en casa: **30-50% HR** (ASHRAE 55). Por debajo reseca; por encima de 60% es incómodo; >70% = moho.",
+  "useCases": [
+    "Evaluar si tu casa está en zona de confort sin higrómetro industrial.",
+    "Dimensionar un deshumidificador según litros de agua por m³.",
+    "Comparar clima entre ciudades: 80% en Buenos Aires es muy distinto a 80% en Mendoza.",
+    "Chequear condiciones para guardar instrumentos, libros o bodega de vinos.",
+    "Entender por qué en invierno con calefacción sentís la piel seca aunque afuera esté húmedo.",
+    "Definir si conviene ventilar o cerrar la casa según humedad exterior vs interior."
+  ],
+  "fields": [
+    {
+      "id": "temperatura",
+      "label": "Temperatura",
+      "type": "number",
+      "suffix": "°C",
+      "placeholder": "22",
+      "min": -40,
+      "max": 60,
+      "step": 0.1,
+      "required": true,
+      "help": "Temperatura del aire en el ambiente medido."
+    },
+    {
+      "id": "humedadRelativa",
+      "label": "Humedad relativa",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "55",
+      "min": 1,
+      "max": 100,
+      "step": 1,
+      "required": true,
+      "help": "Porcentaje medido con higrómetro o reportado por el pronóstico."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "humedadAbsoluta",
+      "label": "Humedad absoluta",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "zonaConfort",
+      "label": "Zona de confort",
+      "format": "text"
+    },
+    {
+      "id": "categoria",
+      "label": "Categoría",
+      "format": "text"
+    },
+    {
+      "id": "recomendacion",
+      "label": "Recomendación",
+      "format": "text"
+    },
+    {
+      "id": "mensaje",
+      "label": "Resumen",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: 22 °C con 55% HR",
+    "steps": [
+      "**Presión de vapor de saturación** es = 6.112 · exp(17.625 × 22 / (22 + 243.04)) ≈ **26.43 hPa**.",
+      "**Presión de vapor actual** e = 0.55 × 26.43 ≈ **14.54 hPa**.",
+      "**Humedad absoluta** AH = 216.7 × 14.54 / (22 + 273.15) ≈ **10.7 g/m³**.",
+      "55% está en la **zona de confort** ASHRAE (30-50% ideal, hasta 60% aceptable)."
+    ],
+    "result": "Humedad absoluta: **10.7 g/m³**, zona aceptable-ideal. Sensación agradable."
+  },
+  "explanation": "## Cómo se calcula\n\nLa humedad absoluta se obtiene a partir de la presión de vapor:\n\n1. `es (hPa) = 6.112 · exp(17.625·T / (T + 243.04))` — presión de vapor de saturación.\n2. `e = (HR/100) · es` — presión de vapor actual.\n3. `AH = 216.7 · e / (T + 273.15)` — gramos por metro cúbico.\n\nLa constante 216.7 viene de la ecuación de estado del vapor de agua (`M/R` con M = 18.016 g/mol y R = 8.314 J/mol·K).\n\n## Valores de referencia\n\n| HR (%) | Interpretación | Zona |\n|---|---|---|\n| < 30 | Aire muy seco, estática, piel tirante | Fuera de confort |\n| 30 – 50 | **Ideal ASHRAE 55** | Confort óptimo |\n| 50 – 60 | Aceptable | Confort |\n| 60 – 70 | Incómodo, pegajoso | Fuera de confort |\n| > 70 | Riesgo de moho y ácaros | Peligro |\n\nEn **g/m³** como referencia a 22 °C:\n- 6 g/m³ ≈ 30% HR (límite inferior).\n- 10 g/m³ ≈ 50% HR (óptimo).\n- 12 g/m³ ≈ 60% HR.\n- 15+ g/m³ = ambiente húmedo.\n\n## Casos especiales\n\n- **Invierno con calefacción**: el aire frío exterior tiene poca agua (ej. 5 °C y 80% = 5.5 g/m³). Al calentarlo a 22 °C dentro, la HR cae a ~28% y reseca todo.\n- **Sótanos y baños**: suelen estar > 65% HR. Ventilación o deshumidificador antes de que aparezca moho.\n- **Guardar vinos**: rango ideal 60-75% HR para corchos sin secar.\n- **Guitarras y maderas**: 45-55% HR estable. Fluctuaciones grandes rompen el sellado.\n\n## Fuentes\n\n- ASHRAE Standard 55 — Thermal Environmental Conditions for Human Occupancy.\n- WMO / OMM — Guide to Meteorological Instruments (humedad).\n- EPA — Mold and Moisture (humedad y salud respiratoria).\n\n## Revisión editorial\n\nRevisado por el equipo editorial de Hacé Cuentas. Valores contrastados con ASHRAE, EPA y WMO.\n\n**Disclaimer:** Para uso industrial o de laboratorio, medí con higrómetro calibrado y considerá la presión atmosférica local.\n",
+  "faq": [
+    {
+      "q": "¿Cuál es la diferencia entre humedad absoluta y relativa?",
+      "a": "La relativa (%) dice cuán saturado está el aire; la absoluta (g/m³) dice cuánta agua hay realmente. La absoluta no cambia si calentás o enfriás el aire cerrado."
+    },
+    {
+      "q": "¿Cuál es la humedad ideal en casa?",
+      "a": "Entre 30% y 50% según ASHRAE 55. Es el rango que minimiza virus respiratorios, moho, ácaros y sensación de aire pesado."
+    },
+    {
+      "q": "¿Por qué en invierno el aire se seca tanto adentro?",
+      "a": "El aire frío de afuera tiene poca agua absoluta. Al calentarlo, la HR baja y la piel, la garganta y los ojos se resecan. Por eso se usan humidificadores en invierno."
+    },
+    {
+      "q": "¿A partir de qué humedad sale moho?",
+      "a": "Sostenido por encima de 65-70% en superficies frías (paredes exteriores, sótanos, baños sin ventilar). Bajar humedad y ventilar son las primeras medidas."
+    },
+    {
+      "q": "¿Cómo convierto HR a g/m³ mentalmente?",
+      "a": "Regla gruesa a 20-25 °C: `g/m³ ≈ HR% / 5`. Ej.: 50% ≈ 10 g/m³; 80% ≈ 16 g/m³. Para cálculos serios usá la fórmula de arriba."
+    },
+    {
+      "q": "¿El aire acondicionado baja la humedad?",
+      "a": "Sí. Al enfriar, el agua condensa en el serpentín y se drena. Por eso sale agua del split. Un deshumidificador explícito lo hace de forma más eficiente si ese es el objetivo."
+    },
+    {
+      "q": "¿Cuánta agua puede sacar un deshumidificador?",
+      "a": "Depende de volumen y condiciones. Un equipo de 10-12 L/día es típico para un ambiente de 30-40 m² en clima húmedo. Calculá carga con humedad absoluta inicial vs objetivo."
+    },
+    {
+      "q": "¿Sirve abrir ventanas cuando afuera hay más humedad?",
+      "a": "Si la humedad absoluta exterior es MAYOR que la interior, ventilar la empeora. En días de niebla o lluvia prolongada conviene cerrar; deshumidificar adentro."
+    }
+  ],
+  "sources": [
+    {
+      "name": "ASHRAE Standard 55 — Thermal Comfort",
+      "url": "https://www.ashrae.org/technical-resources/bookstore/standard-55"
+    },
+    {
+      "name": "EPA — Mold and Moisture",
+      "url": "https://www.epa.gov/mold"
+    },
+    {
+      "name": "WMO — CIMO Guide (humidity measurement)",
+      "url": "https://public.wmo.int/en/programmes/global-observing-system/cimo-guide"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-punto-de-rocio-dew-point-temperatura-humedad",
+    "humedad-ideal-ambiente",
+    "calculadora-hidratacion-clima-calor",
+    "calculadora-tiempo-secado-ropa-aire-libre-horas"
+  ],
+  "howToSteps": [
+    {
+      "name": "Medí la temperatura",
+      "text": "Con termómetro o del pronóstico actual del lugar."
+    },
+    {
+      "name": "Medí la humedad relativa",
+      "text": "Ideal con higrómetro (los de $10 USD ya son decentes)."
+    },
+    {
+      "name": "Calculá",
+      "text": "Obtené g/m³ y la categoría de confort."
+    },
+    {
+      "name": "Actuá según la zona",
+      "text": "Ventilar, humidificar o deshumidificar según el resultado."
+    }
+  ]
+}

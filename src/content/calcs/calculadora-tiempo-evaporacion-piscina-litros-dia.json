@@ -1,0 +1,198 @@
+{
+  "slug": "calculadora-tiempo-evaporacion-piscina-litros-dia",
+  "title": "Calculadora de Evaporación de Piscina (L/día) 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Evaporación de Piscina en Litros por Día",
+  "description": "💧 Litros/día que evapora tu pileta según temperatura, humedad, viento y m². Fórmula Penman simplificada adaptada a piscinas.",
+  "category": "hogar",
+  "icon": "💧",
+  "formulaId": "evaporacion-piscina-litros-dia",
+  "audience": "global",
+  "seoKeywords": [
+    "evaporacion piscina litros",
+    "cuanta agua evapora pileta verano",
+    "formula penman piscina",
+    "perdida de agua piscina por evaporacion",
+    "cobertor piscina ahorro agua",
+    "baja el nivel de la pileta",
+    "humedad viento evaporacion pool",
+    "agua piscina evaporacion dia",
+    "calculadora evaporacion pileta",
+    "penman simplificada piscina"
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-23",
+    "source": "Penman 1948 / ASCE Standardized Evapotranspiration / Rohwer",
+    "sourceUrl": null,
+    "updateType": "manual"
+  },
+  "intro": "Una piscina pierde agua por **evaporación** aunque no haya nadie usándola. Los factores clave son: temperatura del aire, humedad relativa (cuanto más seco el aire, más evapora), velocidad del viento (barre la capa húmeda sobre la superficie) y la superficie expuesta en m². Una **pileta típica de 32 m² en Argentina pierde entre 3 y 10 mm/día** en verano, lo que equivale a 100-320 L/día — suficiente para que notes que baja 1-3 cm por semana si no tiene cobertor. Esta calculadora usa una **fórmula Penman simplificada** estilo Rohwer: estima mm/día a partir de la presión de vapor de saturación (ecuación de Tetens) y un coeficiente de viento, y los convierte a litros multiplicando por la superficie. Incluye proyecciones semanal y mensual para dimensionar reposición, evaluar ahorro con cobertor (~90% de reducción) y anticipar costo en factura de agua.",
+  "keyTakeaway": "Piscina sin cobertor en verano pierde **3-10 mm/día** por evaporación. Un cobertor térmico reduce ~90% esa pérdida.",
+  "useCases": [
+    "Estimar cuánta agua vas a agregar por semana en verano.",
+    "Calcular el ahorro real de poner cobertor (térmico o manta solar).",
+    "Dimensionar reposición automática (float/ballcock).",
+    "Evaluar costo de agua de reposición en zonas con tarifa por m³.",
+    "Entender por qué la pileta baja más en días secos y ventosos que en días calurosos pero húmedos.",
+    "Planificar mantenimiento químico: al reponer agua se diluyen el cloro y estabilizador."
+  ],
+  "fields": [
+    {
+      "id": "temperatura",
+      "label": "Temperatura del aire",
+      "type": "number",
+      "suffix": "°C",
+      "placeholder": "30",
+      "min": -10,
+      "max": 50,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "humedad",
+      "label": "Humedad relativa",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "55",
+      "min": 1,
+      "max": 100,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "vientoKmh",
+      "label": "Viento promedio",
+      "type": "number",
+      "suffix": "km/h",
+      "placeholder": "12",
+      "min": 0,
+      "max": 150,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "superficie",
+      "label": "Superficie de la pileta",
+      "type": "number",
+      "suffix": "m²",
+      "placeholder": "32",
+      "min": 1,
+      "max": 5000,
+      "step": 0.5,
+      "required": true,
+      "help": "Largo × ancho (en rectangular) o superficie visible desde arriba."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "litrosDia",
+      "label": "Litros evaporados por día",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "mmDia",
+      "label": "mm/día",
+      "format": "text"
+    },
+    {
+      "id": "litrosSemana",
+      "label": "Litros por semana",
+      "format": "text"
+    },
+    {
+      "id": "litrosMes",
+      "label": "Litros por mes",
+      "format": "text"
+    },
+    {
+      "id": "mensaje",
+      "label": "Resumen",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: pileta 32 m², 30 °C, 55% HR, viento 12 km/h",
+    "steps": [
+      "**Presión de vapor saturación (kPa)**: es = 0.6108 · exp(17.27·30/(30+237.3)) ≈ **4.24 kPa**.",
+      "**Presión de vapor actual**: ea = 4.24 × 0.55 ≈ **2.33 kPa**.",
+      "**Viento m/s**: 12/3.6 = 3.33 m/s → coef. viento = 2.2 + 1.5×3.33 ≈ **7.2**.",
+      "**Evaporación**: 7.2 × (4.24 − 2.33) ≈ **13.7 mm/día** (clima seco ventoso).",
+      "**Litros**: 13.7 × 32 ≈ **438 L/día**, ~3 060 L/semana."
+    ],
+    "result": "~**438 L/día** (≈ 13 mm). Con cobertor térmico: ~44 L/día (90% menos)."
+  },
+  "explanation": "## Cómo se calcula\n\nLa calculadora usa una versión simplificada de Penman/Rohwer adaptada a superficies de agua:\n\n1. **Presión de vapor de saturación** (kPa): `es = 0.6108 · exp(17.27·T / (T + 237.3))` (Tetens).\n2. **Presión de vapor actual**: `ea = es · HR/100`.\n3. **Evaporación (mm/día)**: `E = (2.2 + 1.5·v) · (es − ea)` donde `v` = viento en m/s.\n4. **Litros/día**: `E × m²` (porque 1 mm × 1 m² = 1 L).\n\nEs un modelo empírico, no tan preciso como Penman-Monteith completo, pero suficientemente fiel para piscinas residenciales (±20%).\n\n## Valores de referencia\n\n| Condición | mm/día típico |\n|---|---|\n| Invierno templado, baja radiación | 1 – 2 mm |\n| Primavera/otoño moderado | 2 – 4 mm |\n| Verano húmedo (Buenos Aires/NEA) | 4 – 7 mm |\n| Verano seco y ventoso (Mendoza/Patagonia) | 6 – 12 mm |\n| Desierto extremo | 12 – 20 mm |\n\nEn una pileta de 32 m² eso equivale a 30-640 L/día.\n\n## Casos especiales\n\n- **Cobertor térmico o manta solar**: reduce evaporación 85-95%, además conserva temperatura.\n- **Piscina climatizada**: el agua caliente evapora mucho más; el cobertor es casi obligatorio para eficiencia energética.\n- **Piletas elevadas sin reparo**: ventosas, evaporan más que piletas en nivel.\n- **Horario nocturno**: se pierde menos por evaporación pero más por radiación térmica si no hay cobertor.\n- **Confusión con fuga**: si la pérdida supera los 15-20 mm/día en clima no extremo, probablemente hay **pérdida física**, no solo evaporación.\n\n## Fuentes\n\n- Penman H. L. (1948) — Natural evaporation from open water.\n- Rohwer C. (1931) — Evaporation from free water surfaces.\n- ASCE Standardized Reference Evapotranspiration Equation.\n\n## Revisión editorial\n\nRevisado por el equipo editorial de Hacé Cuentas. Fórmula contrastada con manuales de piscina y climatología.\n\n**Disclaimer:** Valores orientativos. Para auditoría de consumo real, medí nivel durante 48 h con cobertor puesto (evaporación ≈ 0) y sin cobertor; la diferencia da la evaporación real de tu entorno.\n",
+  "faq": [
+    {
+      "q": "¿Cuánto baja una pileta por día en verano?",
+      "a": "En Argentina típicamente 3-8 mm/día (1-3 cm por semana). Zonas más secas y ventosas llegan a 10+ mm/día."
+    },
+    {
+      "q": "¿El viento afecta mucho?",
+      "a": "Muchísimo. Duplicar el viento puede duplicar la evaporación a igualdad de temperatura y humedad: por eso en Patagonia las piletas bajan más que en Misiones aunque haga menos calor."
+    },
+    {
+      "q": "¿Cuánto ahorra un cobertor?",
+      "a": "Entre 85% y 95%. Es la inversión más rentable para una piscina: paga el costo en una o dos temporadas en agua y en gas/electricidad si climatizás."
+    },
+    {
+      "q": "¿Cómo sé si es evaporación o pérdida por caño roto?",
+      "a": "Prueba del balde: llená un balde hasta el borde, poné dentro de la pileta con la misma agua. Si el nivel del balde y la pileta bajan igual → es evaporación. Si la pileta baja más → hay pérdida física."
+    },
+    {
+      "q": "¿La evaporación también saca cloro?",
+      "a": "El agua evaporada sale sola, pero al reponer con agua nueva diluís químicos. Hay que rebalancear cloro, pH y estabilizador después de repones significativas."
+    },
+    {
+      "q": "¿La pileta climatizada evapora más?",
+      "a": "Sí, mucho más. A 28 °C del agua con 25 °C de aire puede duplicar la tasa. El cobertor térmico se vuelve imprescindible."
+    },
+    {
+      "q": "¿Qué superficie uso en el cálculo?",
+      "a": "La superficie visible desde arriba (largo × ancho en rectangular). No la superficie sumergida total de las paredes; solo la lámina superior de agua."
+    },
+    {
+      "q": "¿Se evapora de noche?",
+      "a": "Sí, aunque menos. Con viento nocturno y baja humedad puede evaporar 30-50% del ritmo diurno. El cobertor trabaja las 24 h."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Penman (1948) — Natural evaporation",
+      "url": "https://www.fao.org/3/X0490E/x0490e06.htm"
+    },
+    {
+      "name": "ASCE Standardized Reference Evapotranspiration",
+      "url": "https://ascelibrary.org/"
+    },
+    {
+      "name": "FAO — Evapotranspiration guidelines",
+      "url": "https://www.fao.org/3/X0490E/x0490e00.htm"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-captacion-agua-lluvia-m2-techo-litros",
+    "calculadora-velocidad-viento-beaufort-escala-0-12",
+    "jardin-riego-litros-plantas-clima-semana",
+    "agua-consumo-hogar-ahorro"
+  ],
+  "howToSteps": [
+    {
+      "name": "Medí la superficie",
+      "text": "Largo × ancho en metros. Para piletas curvas, aproximá área."
+    },
+    {
+      "name": "Ingresá condiciones típicas",
+      "text": "Temperatura, humedad y viento promedio del mes."
+    },
+    {
+      "name": "Calculá",
+      "text": "Obtenés litros/día, semana y mes."
+    },
+    {
+      "name": "Compará con y sin cobertor",
+      "text": "Reducí el resultado al 10-15% si tenés cobertor."
+    }
+  ]
+}

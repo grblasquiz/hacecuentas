@@ -1,0 +1,141 @@
+{
+  "slug": "calculadora-poisson-goles-esperados-partido",
+  "title": "Poisson — Goles esperados por partido 2026 | Hacé Cuentas",
+  "h1": "Distribución de Poisson — Goles esperados por partido",
+  "description": "Modelo estadístico Poisson para goles esperados: probabilidades de 1X2, marcador 0-0, over 2.5 y BTTS. Análisis educativo.",
+  "category": "deportes",
+  "icon": "📊",
+  "formulaId": "poisson-goles-partido",
+  "audience": "global",
+  "seoKeywords": [
+    "poisson futbol",
+    "distribucion poisson goles",
+    "modelo poisson partido",
+    "goles esperados partido",
+    "probabilidad marcador futbol",
+    "estadistica futbol poisson",
+    "modelo matematico goles",
+    "poisson 1x2",
+    "poisson over 2.5",
+    "poisson btts"
+  ],
+  "intro": "La **distribución de Poisson** es el modelo estadístico más común para analizar goles en un partido de fútbol. Dado un **promedio de goles esperados** (λ, lambda) para cada equipo, la fórmula calcula la probabilidad de cada marcador exacto. Es la base de muchos modelos cuantitativos usados en analítica deportiva (FiveThirtyEight, Infogol, Kickdex) desde que **Maher (1982)** y **Dixon-Coles (1997)** formalizaron el enfoque. Por ejemplo: si Liverpool tiene λ = 1.8 goles esperados vs Arsenal con λ = 1.2, la calculadora retorna las probabilidades de 0-0, 1-0, 1-1, 2-1, etc., además de 1X2 (gana local/empate/gana visitante), Over 2.5 goles, y BTTS (ambos marcan). Es un **modelo educativo**: asume independencia entre goles y distribución estable, suposiciones que Dixon-Coles refinaron para corregir la sub-estimación de empates 0-0 y 1-1.",
+  "keyTakeaway": "**Poisson**: P(k goles) = e^-λ × λ^k / k!. Con λ = 1.5 local y λ = 1.2 visitante: local gana ~45%, empate 27%, visitante 28%. Marcador más frecuente en fútbol: **1-1 o 1-0**.",
+  "useCases": [
+    "Estimar el marcador más probable de un partido.",
+    "Calcular P(0-0), P(1-0), P(2-1) dados los goles esperados.",
+    "Comparar estructura de partidos: equipos ofensivos (λ 2+ each) vs cerrados (λ 0.8).",
+    "Entender por qué los empates ocurren más seguido que lo que Poisson puro predice.",
+    "Analizar paridad entre equipos antes de un clásico Real Madrid vs Barcelona o Inter vs Juventus."
+  ],
+  "fields": [
+    {
+      "id": "golesEsperadosLocal",
+      "label": "Goles esperados local (λ)",
+      "type": "number",
+      "placeholder": "1.5",
+      "min": 0.1,
+      "max": 5,
+      "step": 0.1,
+      "help": "Promedio esperado de goles del local. En top 5 ligas: 1.3-2.0 típico."
+    },
+    {
+      "id": "golesEsperadosVisitante",
+      "label": "Goles esperados visitante (λ)",
+      "type": "number",
+      "placeholder": "1.2",
+      "min": 0.1,
+      "max": 5,
+      "step": 0.1,
+      "help": "Promedio esperado de goles del visitante. Típico: 0.9-1.4."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-23",
+    "source": "Maher 1982, Dixon-Coles 1997, modelo Poisson estándar",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Poisson_distribution",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {"id": "probabilidadLocalGana", "label": "Probabilidad gana local", "format": "text", "primary": true},
+    {"id": "probabilidadEmpate", "label": "Probabilidad empate", "format": "text"},
+    {"id": "probabilidadVisitanteGana", "label": "Probabilidad gana visitante", "format": "text"},
+    {"id": "probabilidadOver25", "label": "Probabilidad Over 2.5 goles", "format": "text"},
+    {"id": "probabilidadBTTS", "label": "Probabilidad ambos marcan", "format": "text"},
+    {"id": "marcadorMasProbable", "label": "Marcador más probable", "format": "text"},
+    {"id": "probabilidad00", "label": "P(0-0)", "format": "text"},
+    {"id": "probabilidad10", "label": "P(1-0)", "format": "text"},
+    {"id": "probabilidad20", "label": "P(2-0)", "format": "text"},
+    {"id": "probabilidad11", "label": "P(1-1)", "format": "text"},
+    {"id": "probabilidad21", "label": "P(2-1)", "format": "text"},
+    {"id": "notaEducativa", "label": "Nota", "format": "text"}
+  ],
+  "example": {
+    "title": "Ejemplo: Liverpool (λ=1.8) vs Arsenal (λ=1.2)",
+    "steps": [
+      "**λ local**: 1.8, **λ visitante**: 1.2.",
+      "**P(0-0)** = e^-1.8 × e^-1.2 = 0.165 × 0.301 = **5.0%**.",
+      "**P(1-0)** = 0.165 × 1.8 × 0.301 = **8.9%**.",
+      "**P(2-1)** = 0.238 × 0.181 = **4.3%**.",
+      "**P(gana local)** (suma todas gL>gV) ≈ **51%**.",
+      "**P(empate)** ≈ **24%**, **P(gana visitante)** ≈ **25%**.",
+      "**Over 2.5 goles** ≈ **62%**.",
+      "**Ambos marcan (BTTS)** ≈ **74%**."
+    ],
+    "result": "Liverpool es favorito 51% vs Arsenal 25%. Marcador más probable 1-1 o 2-1. Alto BTTS porque los dos equipos tienen λ > 1."
+  },
+  "explanation": "## Cómo se calcula\n\n### Fórmula Poisson\n\n```\nP(X = k) = e^-λ × λ^k / k!\n```\n\nDonde λ es el **promedio esperado** y k es el número de goles. Se asume **independencia**: goles de local no afectan goles de visitante.\n\n### Probabilidad de cada marcador\n\n```\nP(local=gL, visitante=gV) = P(gL|λ_local) × P(gV|λ_visitante)\n```\n\nPara 1X2 se suman todas las combinaciones:\n- Gana local: Σ P(gL, gV) para gL > gV.\n- Empate: Σ P(gL, gV) para gL = gV.\n- Gana visitante: Σ P(gL, gV) para gL < gV.\n\n## Cómo estimar λ\n\n### Promedio histórico\nλ = (promedio goles marcados en casa por local) × (factor defensivo visitante / media liga).\n\n### Basado en xG\nλ = xG acumulado por 90 min del equipo en últimos 8-10 partidos.\n\n### Top 5 ligas 2024-25 — λ promedio:\n- **Premier League**: local 1.65, visitante 1.35. Total ~3.0.\n- **LaLiga**: 1.50 / 1.20. Total ~2.7.\n- **Serie A**: 1.55 / 1.25. Total ~2.8.\n- **Bundesliga**: 1.70 / 1.45. Total ~3.15.\n- **Ligue 1**: 1.55 / 1.30. Total ~2.85.\n\n## Probabilidades típicas\n\n### Partido equilibrado λ = 1.4 / 1.2\n- Gana local: 42%, empate 28%, gana visitante 30%.\n- 0-0: 7%, 1-1: 16%, 2-1: 8%.\n\n### Partido con favorito claro λ = 2.2 / 0.9\n- Gana local: 63%, empate 20%, gana visitante 17%.\n- 2-0: 11%, 2-1: 10%, 1-0: 8%.\n\n### Partido defensivo λ = 1.0 / 0.8\n- Gana local: 38%, empate 31%, gana visitante 31%.\n- 0-0: 17%, 1-0: 13%, 1-1: 14%.\n\n## Limitaciones conocidas\n\n### Sub-estimación de 0-0 y 1-1\nPoisson puro tiende a subestimar empates bajos. **Dixon-Coles (1997)** introduce un factor τ para corregir probabilidades de 0-0, 1-0, 0-1 y 1-1.\n\n### Independencia irreal\nCuando un equipo mete 1-0, el rival suele atacar más (no independiente). Los modelos modernos usan **covariadas dinámicas**.\n\n### Parámetros fijos\nλ asume condiciones estables. No captura efectos de roja, lesiones durante el partido, o cambios tácticos en halftime.\n\n## Modelos que superan a Poisson\n\n- **Dixon-Coles**: añade dependencia de marcadores bajos.\n- **Bivariate Poisson**: modela correlación entre goles.\n- **Weibull count models**: alternativa para simular goles.\n- **Zero-inflated Poisson**: ajusta el exceso de 0-0.\n\n**Análisis estadístico educativo, no constituye recomendación de apuestas**. El modelo Poisson es herramienta analítica; las casas de apuestas usan modelos más sofisticados con decenas de variables. Esta calculadora no reemplaza asesoramiento sobre apuestas ni pretende dar valor de pronóstico — sólo ilustra cómo funciona el modelo estadístico.\n\n## Fuentes\n\n- Maher (1982) 'Modelling association football scores'.\n- Dixon & Coles (1997) 'Modelling Association Football Scores and Inefficiencies in the Football Betting Market'.\n- FBref, Opta — λ estimados por equipo.\n\n## Related\n\n- [ELO rating fútbol](/calculadora-elo-rating-equipo-evolucion)\n- [xG por remate](/calculadora-xg-expected-goals-por-remate)\n- [Goles por 90 min](/calculadora-goles-por-90-minutos-g90)",
+  "faq": [
+    {
+      "q": "¿Qué es la distribución de Poisson y por qué se usa en fútbol?",
+      "a": "**Poisson** es una distribución estadística que modela la **cantidad de eventos en un intervalo fijo** dado un promedio esperado. Se aplica al fútbol porque los goles son 'eventos raros' durante un partido: la fórmula P(k) = e^-λ × λ^k / k! describe bien qué tan seguido un equipo mete 0, 1, 2, 3 goles dada su tasa esperada. Maher 1982 fue el primero en formalizarlo."
+    },
+    {
+      "q": "¿Qué es lambda (λ) en el modelo?",
+      "a": "**λ (lambda)** es el **promedio esperado de goles** del equipo en ese partido. Se estima a partir de: (1) goles marcados históricos, (2) xG acumulado en últimos 10 partidos, (3) ajuste por fortaleza del rival. Típicamente: 1.3-2.0 para local, 0.9-1.4 para visitante en top 5 ligas europeas."
+    },
+    {
+      "q": "¿Cuál es el marcador más frecuente en fútbol?",
+      "a": "**1-0 y 1-1** se alternan como más frecuentes según λ. En partidos con λ ~1.4/1.2 (promedio Premier League), **1-1 es típicamente 14-16%**, **1-0 y 0-1** rondan 10-12% cada uno. **0-0** ocurre ~7-10%. Marcadores altos (3+) bajan rápido: 3-2 es solo ~3%."
+    },
+    {
+      "q": "¿Por qué Poisson subestima empates 0-0?",
+      "a": "Porque **asume independencia entre goles de local y visitante**, cuando en realidad hay efectos tácticos: un 0-0 pasado el minuto 70 hace que ambos equipos jueguen más defensivo, generando más 0-0 y 1-1 de lo predicho. Dixon-Coles (1997) ajusta con un parámetro τ que corrige este sesgo."
+    },
+    {
+      "q": "¿Cómo calculo Over 2.5 goles con Poisson?",
+      "a": "**Suma de probabilidades** P(gL + gV > 2): se itera por todas las combinaciones (gL, gV) y se suman las que dan 3+ goles totales. Con λ local 1.5 y λ visitante 1.2, Over 2.5 ≈ 55-58%. Ligas con promedio alto (Bundesliga) tienen Over 2.5 ~60%; ligas defensivas (Serie A histórica) ~50%."
+    },
+    {
+      "q": "¿Y BTTS (ambos equipos marcan)?",
+      "a": "**BTTS** = P(gL ≥ 1 y gV ≥ 1) = [1 - P(gL=0)] × [1 - P(gV=0)]. Con λ = 1.5 local y 1.2 visitante: BTTS ≈ (1 - 0.22) × (1 - 0.30) = **55%**. Sube si ambos equipos tienen λ > 1.5 (partidos abiertos), baja con λ < 1 (partidos cerrados)."
+    },
+    {
+      "q": "¿Este modelo reemplaza al de las casas de apuestas?",
+      "a": "**No**. Las casas usan modelos mucho más complejos con **30-50 variables**: xG ajustado, forma reciente, ventaja localía variable por liga, cargas físicas (Champions), lesiones, mercado, etc. Poisson puro es el **punto de partida académico**. La calculadora te permite entender el concepto base, no compite con modelos profesionales."
+    },
+    {
+      "q": "¿Esto es una calculadora de apuestas?",
+      "a": "**No**. Es una **herramienta de análisis estadístico educativo** para entender el modelo Poisson aplicado al fútbol. Muestra cómo se calculan probabilidades de marcador dado un λ esperado. **No constituye recomendación de apuestas deportivas**: el modelo es ilustrativo y las suposiciones (independencia, parámetros fijos) no se cumplen perfectamente en partidos reales."
+    }
+  ],
+  "sources": [
+    {"name": "Dixon & Coles 1997 paper", "url": "https://www.math.unipd.it/~aiolli/corsi/1213/aa/Dixon-Coles.pdf", "publisher": "JRSS"},
+    {"name": "Maher 1982 — Modelling football scores", "url": "https://en.wikipedia.org/wiki/Poisson_distribution", "publisher": "Statistica Neerlandica"},
+    {"name": "FBref — goles por liga", "url": "https://fbref.com/", "publisher": "Sports Reference"},
+    {"name": "Opta Analyst — modelos estadísticos", "url": "https://www.optaanalyst.com/", "publisher": "Opta"}
+  ],
+  "relatedSlugs": [
+    "calculadora-elo-rating-equipo-evolucion",
+    "calculadora-xg-expected-goals-por-remate",
+    "calculadora-xa-expected-assists-pase-clave",
+    "calculadora-goles-por-90-minutos-g90",
+    "calculadora-fantasy-premier-league-valoracion-once"
+  ],
+  "howToSteps": [
+    {"name": "Estimá λ del local", "text": "Ingresá los goles esperados del equipo local (promedio 1.3-2.0 top ligas)."},
+    {"name": "Estimá λ del visitante", "text": "Ingresá los goles esperados del visitante (promedio 0.9-1.4)."},
+    {"name": "Calculá las probabilidades", "text": "La calculadora te devuelve 1X2, Over 2.5, BTTS y los marcadores más probables."}
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "slug": "calculadora-probabilidad-helada-matinal-temp-humedad-cielo",
+  "title": "Probabilidad de Helada Matinal: Temp + Humedad + Cielo 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Probabilidad de Helada Matinal",
+  "description": "Estimá el riesgo de helada al amanecer con temp mínima pronosticada, humedad y cielo. Útil para agricultura, jardines y protección de cultivos.",
+  "category": "clima",
+  "icon": "❄️",
+  "formulaId": "probabilidad-helada-matinal",
+  "audience": "global",
+  "seoKeywords": [
+    "probabilidad helada calculadora",
+    "riesgo de helada hoy",
+    "helada negra vs helada blanca",
+    "temperatura minima helada",
+    "cielo despejado helada",
+    "como predecir helada",
+    "proteger cultivos helada",
+    "enfriamiento radiativo helada"
+  ],
+  "intro": "La helada matinal aparece por **enfriamiento radiativo nocturno**: el suelo pierde calor al cielo en noches despejadas, viento calmo y humedad moderada. Con **temperatura mínima ≤3 °C + cielo despejado + viento calmo** el riesgo supera el 80 %. Esta calculadora estima la probabilidad cruzando esas variables.",
+  "keyTakeaway": "Tres condiciones disparan helada: **temp mín ≤3 °C**, **cielo despejado** (sin nubes que retengan el calor) y **viento calmo** (que no mezcle el aire). Si las tres coinciden, el suelo puede estar 3-5 °C más frío que el aire a 2 m.",
+  "useCases": [
+    "Proteger huertas y cultivos sensibles (tomate, papa, citrus, vid).",
+    "Decidir riego por aspersión antiheladas en cítricos y olivares.",
+    "Alerta temprana para escarcha en rutas y vidrios de autos.",
+    "Proteger cañerías expuestas contra congelamiento.",
+    "Planificar cosecha y poda en frutales.",
+    "Campamentos y excursiones en montaña (riesgo hipotermia)."
+  ],
+  "fields": [
+    {
+      "id": "tempMin",
+      "label": "Temperatura mínima pronosticada (a 2 m)",
+      "type": "number",
+      "placeholder": "2",
+      "min": -40,
+      "max": 40,
+      "step": 0.1,
+      "required": true,
+      "suffix": " °C",
+      "help": "La que da el servicio meteo para el amanecer."
+    },
+    {
+      "id": "humedad",
+      "label": "Humedad relativa al anochecer",
+      "type": "number",
+      "placeholder": "75",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "required": true,
+      "suffix": " %",
+      "help": "Con humedad alta tenés helada blanca; con baja humedad y temp similar, helada negra (más dañina)."
+    },
+    {
+      "id": "cielo",
+      "label": "Condición del cielo",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "despejado", "label": "Despejado (sin nubes)" },
+        { "value": "parcial", "label": "Parcialmente nublado" },
+        { "value": "cubierto", "label": "Cubierto / nublado total" }
+      ],
+      "help": "Las nubes actúan como manta: reducen la pérdida radiativa y bajan el riesgo."
+    },
+    {
+      "id": "viento",
+      "label": "Viento nocturno",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "calmo", "label": "Calmo (< 5 km/h)" },
+        { "value": "leve", "label": "Leve (5-15 km/h)" },
+        { "value": "moderado", "label": "Moderado (15-30 km/h)" },
+        { "value": "fuerte", "label": "Fuerte (> 30 km/h)" }
+      ],
+      "help": "El viento mezcla aire y reduce la inversión térmica, disminuyendo el riesgo."
+    }
+  ],
+  "outputs": [
+    { "id": "probabilidad", "label": "Probabilidad de helada", "format": "text", "primary": true },
+    { "id": "nivelRiesgo", "label": "Nivel de riesgo", "format": "text" },
+    { "id": "tipoHelada", "label": "Tipo de helada esperada", "format": "text" },
+    { "id": "recomendacion", "label": "Recomendación", "format": "text" }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-23",
+    "source": "FAO — Frost Protection: Fundamentals, Practice and Economics",
+    "sourceUrl": "https://www.fao.org/3/y7223e/y7223e00.htm",
+    "updateType": "manual"
+  },
+  "example": {
+    "title": "Ejemplo: quinta en Mendoza, mediados de julio",
+    "steps": [
+      "**Temp mínima pronosticada**: 2 °C.",
+      "**Humedad al anochecer**: 60 %.",
+      "**Cielo**: despejado.",
+      "**Viento**: calmo.",
+      "**Base por temperatura**: 65 %.",
+      "**Ajuste cielo despejado**: +12 %.",
+      "**Ajuste viento calmo**: +8 %.",
+      "**Total**: ~85 % (helada muy probable)."
+    ],
+    "result": "Probabilidad muy alta de helada blanca con escarcha. Recomendación: cubrir parrales con media sombra y activar riego preventivo por aspersión."
+  },
+  "explanation": "## Cómo se calcula\n\nCombinamos cuatro variables con una lógica empírica basada en guías agrometeorológicas de la FAO:\n\n1. **Temperatura mínima pronosticada a 2 m**: es el mejor predictor individual. A 2 °C el suelo ya puede bajar a 0 °C o menos. Tabla base:\n\n| Temp mín | Probabilidad base |\n|---|---|\n| ≤ −2 °C | 95 % |\n| ≤ 0 °C | 85 % |\n| ≤ 2 °C | 65 % |\n| ≤ 4 °C | 35 % |\n| ≤ 6 °C | 15 % |\n| > 6 °C | 3 % |\n\n2. **Cielo**: despejado +12 %, parcial 0, cubierto −22 %.\n\n3. **Viento**: calmo +8 %, leve 0, moderado −10 %, fuerte −18 %.\n\n4. **Humedad**: ≥85 % suma 4 % (favorece escarcha); con humedad baja y temp ≤3 °C suma 2 % (helada negra probable).\n\nLa probabilidad se acota entre 0 y 98 %.\n\n## Fórmulas físicas\n\n- **Balance radiativo nocturno**: la superficie pierde radiación de onda larga hacia el cielo. Con cielo despejado la pérdida es máxima; con nubes bajas, las nubes reemiten y la pérdida neta cae a la mitad.\n- **Inversión térmica**: en noches de viento calmo, el aire cercano al suelo se enfría y queda por debajo del aire a 10 m. Esa capa fría es donde las plantas sufren.\n- **Punto de rocío y helada**: si Td > 0 °C y T cae a Td, se forma rocío. Si Td ≤ 0 °C y T cae a Td, se forma escarcha (helada blanca). Si Td < 0 °C y T < Td, se congela sin depósito visible: **helada negra**, más dañina porque congela tejidos sin aviso.\n\n## Casos especiales\n\n- **Helada advectiva**: con viento frío persistente (no radiativa). Esta calculadora subestima ese tipo.\n- **Heladas tardías de primavera**: con cultivos en floración, incluso 0 °C por 30 min destruye el año. El riego por aspersión protege hasta −4 °C porque el agua al congelarse libera calor latente (80 cal/g).\n- **Zonas bajas / fondos de valle**: el aire frío es denso y se acumula allí. Sumá 5-10 % de probabilidad si tu parcela está en depresión.\n- **Cielo con niebla densa**: comportamiento similar al cubierto (bloquea pérdida radiativa).\n\n## Fuentes\n\n- FAO (2005) *Frost Protection: Fundamentals, Practice and Economics* — Snyder & Melo-Abreu.\n- WMO — Guide to Agricultural Meteorological Practices.\n- INTA Argentina — Publicaciones de heladas agrícolas.",
+  "faq": [
+    {
+      "q": "¿Cuál es la diferencia entre helada blanca y helada negra?",
+      "a": "La **helada blanca** (escarcha) aparece cuando el punto de rocío y la temperatura son ≤ 0 °C y hay suficiente humedad: el vapor se deposita directamente como hielo. La **helada negra** ocurre con humedad baja: la temperatura baja sin formación de escarcha, pero los tejidos vegetales igual se congelan. Es la peor porque no hay aviso visible."
+    },
+    {
+      "q": "¿Por qué las nubes evitan la helada?",
+      "a": "Porque actúan como una ‘manta’ térmica. El suelo emite radiación infrarroja hacia el cielo; con nubes bajas esa radiación es absorbida y reemitida hacia abajo, reduciendo la pérdida neta. En noches cubiertas la superficie puede mantenerse 5 °C más cálida que en noches despejadas."
+    },
+    {
+      "q": "¿El viento ayuda o perjudica?",
+      "a": "En noches de helada radiativa, el **viento leve ayuda** porque mezcla el aire frío cercano al suelo con el aire más cálido en altura, rompiendo la inversión térmica. Por eso los frutales usan ‘ventiladores antiheladas’ (torres con hélice). Pero viento fuerte con aire frío advectivo sí empeora el frío."
+    },
+    {
+      "q": "¿A qué temperatura pronosticada me empiezo a preocupar?",
+      "a": "Regla práctica: si el pronóstico a 2 m es ≤ 3 °C y la noche se espera despejada y calma, hay riesgo significativo de helada. A 2 °C el suelo puede bajar a 0 °C; a 0 °C el suelo puede bajar a −2 °C. El termómetro de 2 m siempre subestima el frío del suelo."
+    },
+    {
+      "q": "¿El riego por aspersión realmente protege?",
+      "a": "Sí, sorprende pero es física pura. Al congelarse, el agua libera 80 cal/g de calor latente de fusión. Si rociás continuamente, la planta queda recubierta de una capa de hielo a 0 °C (que es más cálido que el aire a −4 °C). Hay que mantener el riego hasta que suba la temperatura y se derrita."
+    },
+    {
+      "q": "¿Por qué mi termómetro del jardín marca menos que el pronóstico?",
+      "a": "Por dos razones: (1) los pronósticos dan la temperatura a **2 m** sobre suelo con césped, y tu termómetro puede estar expuesto a superficies que irradian más calor; (2) el aire frío se estanca en zonas bajas, así que si estás en una depresión podés tener 2-3 °C menos que la estación meteo más cercana."
+    },
+    {
+      "q": "¿Cuánto tiempo a 0 °C daña un cultivo?",
+      "a": "Depende del cultivo y su estado. Lechuga y espinaca toleran −4 °C por horas. Tomate muere a 0 °C en 20 min. Vid en brotación aguanta −1 °C; en floración, −0.5 °C es letal. Los frutales en plena floración son lo más vulnerable; de ahí los torreones antiheladas en quintas."
+    },
+    {
+      "q": "¿Qué tan precisa es esta calculadora?",
+      "a": "Da una estimación de bolsillo útil para decidir si lanzar medidas preventivas. Para decisiones críticas (hectáreas de vid, citrus comerciales) conviene complementar con el pronóstico específico de heladas del servicio meteo y sensores locales en microclima."
+    }
+  ],
+  "sources": [
+    { "name": "FAO (2005) — Frost Protection: Fundamentals, Practice and Economics", "url": "https://www.fao.org/3/y7223e/y7223e00.htm" },
+    { "name": "WMO — Guide to Agricultural Meteorological Practices", "url": "https://community.wmo.int/" },
+    { "name": "INTA Argentina — Heladas Agrometeorológicas", "url": "https://www.argentina.gob.ar/inta" }
+  ],
+  "relatedSlugs": [
+    "calculadora-probabilidad-lluvia-24h-presion-humedad-tendencia",
+    "calculadora-presion-atmosferica-altitud-barometrica",
+    "calculadora-densidad-aire-temperatura-humedad-altitud-aviacion",
+    "horas-luz-solar-planta"
+  ],
+  "howToSteps": [
+    { "name": "Cargá la temperatura mínima pronosticada", "text": "En grados Celsius, tal como la da el servicio meteorológico para el amanecer." },
+    { "name": "Cargá humedad y cielo", "text": "La humedad relativa al anochecer y la condición del cielo esperada." },
+    { "name": "Indicá el viento", "text": "Calmo (<5 km/h) es el peor escenario para helada radiativa." },
+    { "name": "Leé la recomendación", "text": "Te sugiere si cubrir cultivos, regar por aspersión o no hacer nada." }
+  ]
+}

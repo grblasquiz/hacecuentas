@@ -1,0 +1,221 @@
+{
+  "slug": "calculadora-xa-expected-assists-pase-clave",
+  "title": "xA (Expected Assists) por pase clave 2026 | Hacé Cuentas",
+  "h1": "Expected Assists (xA) de un pase clave",
+  "description": "Análisis estadístico del xA de un pase: zona de origen y tipo (filtrado, centro, raso). Modelo educativo inspirado en Opta.",
+  "category": "deportes",
+  "icon": "📊",
+  "formulaId": "xa-expected-assists",
+  "audience": "global",
+  "seoKeywords": [
+    "xa expected assists",
+    "xa calculadora",
+    "expected assists futbol",
+    "xa por pase",
+    "pase clave xa",
+    "estadisticas avanzadas futbol",
+    "xa opta",
+    "metrica xa futbol",
+    "playmaker xa",
+    "xa filtrado centro"
+  ],
+  "intro": "**xA (Expected Assists)** es la métrica hermana de xG: mide la **probabilidad de que un pase termine siendo asistencia de gol**. Se calcula tomando el pase clave y estimando el xG del remate que generó. Si un mediocampista tira un pase filtrado al área que deja al delantero con xG = 0.35, el pasador recibe **xA = 0.35** por ese pase. xA permite evaluar **playmakers puros** (De Bruyne en Napoli, Ødegaard en Arsenal, Messi en Inter Miami, Valverde en Real Madrid, Luis Diaz en Liverpool) separados de los goleadores. La calculadora usa un modelo simplificado basado en **zona de origen del pase** (área chica, área grande, banda, tres cuartos) y **tipo de pase** (filtrado, centro aéreo, centro raso, corto). Es análisis estadístico educativo para entender por qué un centro desde la banda genera menos xA que un pase filtrado frontal, y por qué los playmakers modernos se miden por xA por 90.",
+  "keyTakeaway": "**Pase filtrado desde área chica ~0.45 xA** (el mayor). Centro aéreo desde banda **~0.10 xA**. Pase desde mediocampo **~0.04 xA**. Playmakers top acumulan **0.35+ xA/90**.",
+  "useCases": [
+    "Entender la calidad objetiva de una asistencia.",
+    "Comparar mediocampistas creativos: De Bruyne vs Ødegaard vs Luis Diaz.",
+    "Evaluar si un playmaker está bien o tiene mala suerte con sus remates convertidos.",
+    "Analizar por qué un equipo crea pocas asistencias pese a tener la pelota.",
+    "Enseñar xA a fanáticos que ya conocen xG."
+  ],
+  "fields": [
+    {
+      "id": "zona",
+      "label": "Zona de origen del pase",
+      "type": "select",
+      "default": "area-grande",
+      "options": [
+        {
+          "value": "area-chica",
+          "label": "Área chica (5-6 m del arco)"
+        },
+        {
+          "value": "area-grande",
+          "label": "Área grande (hasta 16.5 m)"
+        },
+        {
+          "value": "banda-lateral",
+          "label": "Banda lateral (frente al área)"
+        },
+        {
+          "value": "tres-cuartos",
+          "label": "Tres cuartos (20-30 m)"
+        },
+        {
+          "value": "mediocampo",
+          "label": "Mediocampo (centro)"
+        },
+        {
+          "value": "campo-propio",
+          "label": "Campo propio"
+        }
+      ]
+    },
+    {
+      "id": "tipo",
+      "label": "Tipo de pase",
+      "type": "select",
+      "default": "centro",
+      "options": [
+        {
+          "value": "filtrado",
+          "label": "Filtrado / al hueco"
+        },
+        {
+          "value": "centro",
+          "label": "Centro aéreo"
+        },
+        {
+          "value": "raso",
+          "label": "Centro raso / atrás"
+        },
+        {
+          "value": "corto",
+          "label": "Pase corto"
+        },
+        {
+          "value": "largo",
+          "label": "Pase largo"
+        }
+      ]
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-23",
+    "source": "Modelo educativo inspirado en Opta / FBref",
+    "sourceUrl": "https://www.optaanalyst.com/articles/what-are-expected-assists-xa/",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "xa",
+      "label": "xA del pase",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "probabilidadGolReceptor",
+      "label": "Probabilidad gol del receptor",
+      "format": "text"
+    },
+    {
+      "id": "zonaMostrada",
+      "label": "Zona",
+      "format": "text"
+    },
+    {
+      "id": "tipoMostrado",
+      "label": "Tipo de pase",
+      "format": "text"
+    },
+    {
+      "id": "categoria",
+      "label": "Categoría",
+      "format": "text"
+    },
+    {
+      "id": "interpretacion",
+      "label": "Interpretación",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: pase filtrado desde área grande",
+    "steps": [
+      "**Zona**: área grande (frontal del área).",
+      "**Tipo**: filtrado al hueco.",
+      "**Modelo**: base 0.22 × multiplicador filtrado 1.3 = **0.286**.",
+      "**xA** ≈ 0.29 (29% de que termine en gol)."
+    ],
+    "result": "Un pase filtrado desde el área grande genera xA ≈ 0.29 — pase clave de alta calidad, típico de mediocampistas ofensivos como Ødegaard o Valverde."
+  },
+  "explanation": "## Cómo se calcula\n\n```\nxA = baseZona × multiplicadorTipo\n```\n\n### Base por zona del pase\n\n| Zona | xA base |\n|---|---|\n| Área chica | 0.35 |\n| Área grande | 0.22 |\n| Banda lateral | 0.10 |\n| Tres cuartos | 0.08 |\n| Mediocampo | 0.04 |\n| Campo propio | 0.015 |\n\n### Multiplicador por tipo\n\n| Tipo | Multiplicador |\n|---|---|\n| Filtrado al hueco | 1.3 |\n| Centro raso / atrás | 1.15 |\n| Centro aéreo | 1.0 |\n| Pase corto | 0.8 |\n| Pase largo | 0.7 |\n\n## Interpretación\n\n- **xA ≥ 0.30**: pase de gol clarísimo (pase filtrado en área chica).\n- **xA 0.15-0.30**: pase clave top.\n- **xA 0.07-0.15**: pase clave medio (centro desde banda).\n- **xA 0.03-0.07**: pase con potencial.\n- **xA < 0.03**: pase de baja peligrosidad, aunque genere un remate.\n\n## Top playmakers xA/90 históricos (top 5 ligas)\n\n| Jugador (temporada) | Equipo | xA/90 |\n|---|---|---|\n| De Bruyne 19-20 | (Premier) | 0.53 |\n| Messi Barcelona | Barcelona | 0.50 |\n| Ødegaard 24-25 | Arsenal | 0.35 |\n| Bruno Fernandes | (top 5 liga) | 0.32 |\n| Bellingham 23-24 | Real Madrid | 0.30 |\n\n## Diferencias xA vs Assists reales\n\n- **Assist** requiere que el compañero **convierta** el remate. Si pasás un pase con xG 0.8 y el delantero lo falla, **xA = 0.8 pero 0 asistencias reales**.\n- **Overperforming** (asistencias > xA): delanteros finalizando mejor de lo esperado — o buena suerte.\n- **Underperforming** (asistencias < xA): delanteros fallando ocasiones claras — típicamente se corrige con regresión a la media.\n\n## Casos de uso\n\n### 1. Scouting de playmakers\nClubes como Liverpool o Real Madrid fichan mediocampistas por xA consistente, no por asistencias totales (que dependen de finalizadores).\n\n### 2. Fantasy Premier League y LaLiga\nJugadores con xA alto sostenido son **compras seguras**: sus asistencias van a llegar aunque la racha puntual sea mala.\n\n### 3. Análisis táctico\nUn equipo con **xA < xG** crea más ocasiones por individualidades que por construcción colectiva. Ajuste táctico.\n\n## Limitaciones\n\n- Modelo simplificado con 2 variables. Opta usa **20+ features** (velocidad del balón, presión, número de defensores, tipo de recepción).\n- No distingue **asistencia de penal ganado** vs **pase clave previo**.\n- No considera **quién recibe el pase** (finalizador top vs medio de área).\n\n**Análisis estadístico educativo, no constituye recomendación de apuestas**. xA es métrica analítica deportiva.\n\n## Fuentes\n\n- Opta Analyst — explicación xA.\n- FBref — tablas xA top 5 ligas.\n- StatsBomb — open data metodología.\n- Understat — xA por jugador.\n\n## Related\n\n- [xG Expected Goals](/calculadora-xg-expected-goals-por-remate)\n- [Asistencias por 90](/calculadora-asistencias-por-90-a90)\n- [Goles por 90](/calculadora-goles-por-90-minutos-g90)",
+  "faq": [
+    {
+      "q": "¿Cuál es la diferencia entre xA y asistencia?",
+      "a": "**Asistencia** es binaria: se registra sólo si el compañero convierte el remate. **xA (Expected Assists)** es la probabilidad esperada de asistencia: mide la calidad del pase clave sin importar si el remate termina en gol. Un pase filtrado con xA = 0.5 que el delantero falla suma **0 asistencias pero 0.5 xA**."
+    },
+    {
+      "q": "¿Un centro desde la banda siempre tiene xA bajo?",
+      "a": "**Generalmente sí**: los centros aéreos desde banda tienen xA promedio 0.08-0.12 porque el cabezazo resultante tiene xG bajo (~0.10-0.15). Sin embargo, los **centros rasos o retrasados** desde el fondo tienen xA más alto (0.12-0.20) porque generan remates con pie de primer toque, más eficientes."
+    },
+    {
+      "q": "¿Qué pase genera el xA más alto?",
+      "a": "**Pase filtrado o asistencia de primer toque dentro del área chica**, porque el receptor queda mano a mano con xG 0.5-0.7. Otro muy alto: **centro raso atrás** a la zona del penalti donde un delantero remata con pie de primera. xA de 0.30-0.50 son valores top."
+    },
+    {
+      "q": "¿Cómo se compara con xG?",
+      "a": "**xG** mide la calidad del remate (lado del finalizador). **xA** mide la calidad del pase previo (lado del creador). **xG = xA** del pase previo al remate, siempre que ese remate haya sido precedido por un pase clave. Son **métricas complementarias**: un partido puede analizarse con xG (ocasiones) y xA (construcción)."
+    },
+    {
+      "q": "¿Quién tiene el xA más alto de la historia?",
+      "a": "**Kevin De Bruyne** lideró xA/90 varias temporadas, con picos de 0.53. Messi durante su etapa en Barcelona registró xA/90 en torno a 0.50. Ødegaard (Arsenal), Bruno Fernandes y Bellingham (Real Madrid) están entre los top actuales con 0.30-0.40 xA/90 sostenido."
+    },
+    {
+      "q": "¿El xA predice las asistencias futuras?",
+      "a": "**Sí, con regresión a la media**. Si un jugador tiene **xA de 0.4 pero 5 asistencias en 20 partidos**, suele corregir a 8-9 asistencias si sostiene el xA. Al revés: **xA de 0.15 con 10 asistencias** tiende a bajar — es suerte del finalizador, no sostenible."
+    },
+    {
+      "q": "¿Este modelo es el oficial de Opta?",
+      "a": "**No**. Es un modelo educativo que replica la **intuición del xA** con 2 variables simples (zona + tipo). Opta, StatsBomb y FBref usan modelos con 20+ features entrenados sobre millones de pases. Los números aproximan el concepto, no son valores oficiales."
+    },
+    {
+      "q": "¿Sirve para apostar?",
+      "a": "**Esta calculadora no es para apostar**. xA es una métrica **analítica** del fútbol moderno, usada en scouting, coaching, Fantasy Football y análisis deportivo. Las casas de apuestas usan modelos propios más complejos. **Análisis estadístico educativo, no constituye recomendación de apuestas** deportivas."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Opta Analyst — xA explicado",
+      "url": "https://www.optaanalyst.com/articles/what-are-expected-assists-xa/",
+      "publisher": "Opta"
+    },
+    {
+      "name": "FBref — xA top 5 ligas",
+      "url": "https://fbref.com/en/",
+      "publisher": "Sports Reference"
+    },
+    {
+      "name": "Understat — xA por jugador",
+      "url": "https://understat.com/",
+      "publisher": "Understat"
+    },
+    {
+      "name": "StatsBomb — metodología",
+      "url": "https://statsbomb.com/",
+      "publisher": "StatsBomb"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-xg-expected-goals-por-remate",
+    "calculadora-asistencias-por-90-a90",
+    "calculadora-goles-por-90-minutos-g90",
+    "calculadora-porcentaje-pases-completados-top-5-ligas",
+    "calculadora-poisson-goles-esperados-partido"
+  ],
+  "howToSteps": [
+    {
+      "name": "Elegí la zona del pase",
+      "text": "Área chica, área grande, banda, tres cuartos, mediocampo o campo propio."
+    },
+    {
+      "name": "Elegí el tipo de pase",
+      "text": "Filtrado, centro aéreo, centro raso, corto o largo."
+    },
+    {
+      "name": "Calculá el xA",
+      "text": "La calculadora te devuelve el xA (0-1) y la categoría del pase."
+    }
+  ]
+}
