@@ -1,0 +1,227 @@
+---
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+
+export async function getStaticPaths() {
+  const provinciasMod = await import('../../../content/argentina/provincias.json');
+  const provincias: any[] = provinciasMod.default || (provinciasMod as any);
+
+  const calcModules = import.meta.glob<any>('../../../content/argentina/*.json', { eager: true });
+  const calcs: any[] = Object.entries(calcModules)
+    .map(([, mod]) => mod.default || mod)
+    .filter((c: any) => c.calcSlug);
+
+  return provincias.map((prov: any) => {
+    const provCalcs = calcs.filter((c: any) => c.provinceData && c.provinceData[prov.slug]);
+    return {
+      params: { provincia: prov.slug },
+      props: { provincia: prov, calcs: provCalcs },
+    };
+  });
+}
+
+const { provincia, calcs } = Astro.props;
+
+const siteUrl = 'https://hacecuentas.com';
+const pageUrl = `${siteUrl}/argentina/${provincia.slug}`;
+
+const title = `${provincia.nombre} — Calculadoras e impuestos provinciales 2026 | Hacé Cuentas`;
+const description = `Calculadoras específicas para ${provincia.nombre}: Ingresos Brutos, patente automotor, impuesto inmobiliario, sellos y costo m² de construcción. Con alícuotas oficiales 2026.`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      '@id': `${pageUrl}#collectionpage`,
+      name: title,
+      url: pageUrl,
+      description,
+      inLanguage: 'es-AR',
+      isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+      about: provincia.nombre,
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Argentina', item: 'https://hacecuentas.com/argentina' },
+        { '@type': 'ListItem', position: 3, name: provincia.nombre },
+      ],
+    },
+    {
+      '@type': 'ItemList',
+      name: `Calculadoras de ${provincia.nombre}`,
+      numberOfItems: calcs.length,
+      itemListElement: calcs.map((c: any, i: number) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: c.title || c.calcSlug,
+        url: `${pageUrl}/${c.calcSlug}`,
+      })),
+    },
+  ],
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical={`/argentina/${provincia.slug}`}
+  schema={schema}
+  audience="AR"
+>
+  <Header slot="header" />
+
+  <article class="prov-hub">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Inicio</a> › <a href="/argentina">Argentina</a> › <span>{provincia.nombre}</span>
+    </nav>
+
+    <h1>{provincia.nombre} — Calculadoras e impuestos provinciales 2026</h1>
+
+    <p class="lead">
+      Calculadoras específicas para <strong>{provincia.nombre}</strong> con los valores,
+      alícuotas y parámetros oficiales 2026. Incluye <strong>Ingresos Brutos</strong>,
+      <strong>patente automotor</strong>, <strong>impuesto inmobiliario</strong>,
+      <strong>impuesto de sellos</strong> y <strong>costo del m² de construcción</strong>.
+      Actualizadas cuando cambia la normativa provincial.
+    </p>
+
+    <h2>Datos clave de {provincia.nombre}</h2>
+    <ul class="info-list">
+      <li><strong>Capital</strong>: {provincia.capital || '—'}</li>
+      <li><strong>Código</strong>: {provincia.codigo || provincia.slug.toUpperCase()}</li>
+      <li><strong>Organismo fiscal</strong>: {provincia.agencia || 'Agencia provincial de recaudación'}</li>
+      {provincia.sitioOficial && <li><strong>Sitio oficial</strong>: <a href={provincia.sitioOficial} rel="nofollow" target="_blank">{provincia.sitioOficial.replace(/^https?:\/\//, '')}</a></li>}
+    </ul>
+
+    <h2>Calculadoras disponibles para {provincia.nombre}</h2>
+
+    {calcs.length === 0 ? (
+      <p class="empty-msg">
+        Todavía no tenemos calculadoras específicas para {provincia.nombre} cargadas en el sistema.
+        Podés ver las <a href="/categoria/impuestos">calculadoras fiscales generales</a> o
+        <a href="/contacto"> sugerirnos una</a>.
+      </p>
+    ) : (
+      <ul class="calcs-grid">
+        {calcs.map((c: any) => (
+          <li class="calc-card">
+            <a href={`/argentina/${provincia.slug}/${c.calcSlug}`}>
+              <h3>{c.title || c.calcSlug}</h3>
+              <p>{c.description || `Calculadora específica de ${provincia.nombre} con alícuotas oficiales.`}</p>
+              <span class="arrow">→</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <h2>Calculadoras nacionales relacionadas</h2>
+    <p>
+      Además de las específicas de {provincia.nombre}, estas calculadoras aplican a toda
+      Argentina y suelen combinarse con las provinciales:
+    </p>
+    <ul class="national-list">
+      <li><a href="/sueldo-en-mano-argentina">Sueldo en mano Argentina</a> — neto a partir del bruto</li>
+      <li><a href="/calculadora-aguinaldo-sac">Calculadora de aguinaldo (SAC)</a></li>
+      <li><a href="/calculadora-monotributo-2026">Monotributo 2026 — categoría</a></li>
+      <li><a href="/calculadora-impuesto-ganancias-sueldo">Impuesto a las Ganancias</a></li>
+      <li><a href={`/calculadora-valuacion-fiscal-automotor-${provincia.slug}`}>
+        Valuación fiscal automotor {provincia.nombre}
+      </a></li>
+    </ul>
+
+    <h2>Cómo usamos estas calculadoras</h2>
+    <p>
+      Las alícuotas y parámetros provinciales cambian cada año (o incluso varias veces por año
+      si hay modificaciones normativas). Cada calculadora de <strong>{provincia.nombre}</strong>
+      cita la fuente oficial en la sección "Fuentes" al pie y se revisa periódicamente.
+    </p>
+    <p>
+      Para consultas específicas de liquidación tributaria, facturación electrónica o planes
+      de pago con la agencia fiscal provincial, consultá directamente con un contador
+      matriculado o con el organismo oficial. Las calculadoras de Hacé Cuentas son
+      <em>orientativas</em> y sirven como referencia inicial.
+    </p>
+
+    <p class="contact-cta">
+      ¿Falta alguna calculadora específica de {provincia.nombre}? <a href="/contacto">Avisanos</a>
+      o abrí un <a href="https://github.com/grblasquiz/hacecuentas/issues" rel="noopener" target="_blank">issue en GitHub</a>.
+    </p>
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .prov-hub {
+    max-width: 780px;
+    margin: 2rem auto 4rem;
+    padding: 0 1.25rem;
+    line-height: 1.7;
+  }
+  .breadcrumb { font-size: 0.85rem; color: var(--color-muted, #666); margin-bottom: 1rem; }
+  .breadcrumb a { color: var(--color-accent, #2563eb); }
+  .prov-hub h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); margin: 0 0 1rem; }
+  .prov-hub h2 { margin-top: 2.2rem; font-size: 1.4rem; }
+  .prov-hub h3 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+  .lead { font-size: 1.1rem; margin-bottom: 1.5rem; }
+  .info-list, .national-list { padding-left: 1.25rem; }
+  .info-list li, .national-list li { margin-bottom: 0.4rem; }
+  .calcs-grid {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+  .calc-card {
+    border: 1px solid rgba(128, 128, 128, 0.25);
+    border-radius: 8px;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .calc-card:hover { border-color: var(--color-accent, #2563eb); transform: translateY(-2px); }
+  .calc-card a {
+    display: block;
+    padding: 1rem 1.1rem 1rem 1.1rem;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+  }
+  .calc-card p {
+    font-size: 0.9rem;
+    color: var(--color-muted, #555);
+    margin: 0;
+  }
+  .calc-card .arrow {
+    position: absolute;
+    right: 1rem;
+    bottom: 0.8rem;
+    color: var(--color-accent, #2563eb);
+    font-size: 1.2rem;
+  }
+  .empty-msg {
+    background: rgba(128, 128, 128, 0.08);
+    padding: 1rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+  }
+  .contact-cta {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(128, 128, 128, 0.2);
+    font-size: 0.92rem;
+    color: var(--color-muted, #555);
+  }
+  .prov-hub a {
+    color: var(--color-accent, #2563eb);
+    text-decoration: underline;
+  }
+  .calc-card a { text-decoration: none; }
+</style>
