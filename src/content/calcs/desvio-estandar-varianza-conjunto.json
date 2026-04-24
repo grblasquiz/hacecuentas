@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "📉",
   "formulaId": "desvio-estandar-varianza-conjunto",
-  "intro": "Las matemáticas escolares y universitarias se apoyan en fórmulas estándar validadas internacionalmente. Álgebra, geometría, cálculo, estadística y trigonometría son las áreas más consultadas. σ y σ² (muestral y poblacional) · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá datos y tipo y obtené desvío al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "La varianza (σ²) mide cuánto se dispersan los datos respecto a su media, y el desvío estándar (σ) es su raíz cuadrada, con las mismas unidades que los datos. La fórmula poblacional divide por N (cuando tenés todos los datos), la muestral por n−1 (corrección de Bessel, cuando tenés una muestra y querés estimar la población). Esta calculadora acepta una lista de números separados por coma, calcula media, varianza y desvío, y muestra la distinción entre poblacional y muestral. Útil en control de calidad, análisis de notas, pruebas de laboratorio, finanzas (volatilidad de retornos) y estadística descriptiva.",
+  "keyTakeaway": "**σ² = Σ(xᵢ−μ)²/N** (poblacional) o **s² = Σ(xᵢ−x̄)²/(n−1)** (muestral). σ = √σ². Si datos están en cm, σ también está en cm.",
   "useCases": [
-    "Resolver desvío estándar y varianza rápido sin margen de error de cuenta a mano.",
-    "Verificar un resultado de examen, tarea o ejercicio de libro.",
-    "Usar la fórmula estándar sin tener que recordarla de memoria.",
-    "Explicar un procedimiento mostrando el paso a paso con valores."
+    "Sos docente y querés medir la dispersión de notas en un parcial: media 7, σ=2 indica clase homogénea; σ=4 indica polarización.",
+    "Trabajás en control de calidad y medís diámetros de 30 piezas; necesitás verificar si σ < tolerancia de especificación (ej: 0.05 mm).",
+    "Estás haciendo trading y calculás la volatilidad (σ anualizada de retornos diarios) para dimensionar posiciones con riesgo constante.",
+    "Rendís Probabilidad y Estadística I y necesitás chequear que tu cálculo de σ para el dataset {2,4,4,4,5,5,7,9} da exactamente 2.0."
   ],
   "fields": [
     {
@@ -68,53 +68,53 @@
     ],
     "result": "σ=2"
   },
-  "explanation": "Las **matemáticas** son herramientas universales: álgebra, geometría, cálculo, estadística. Aplicadas en ingeniería, ciencia, finanzas, vida cotidiana.\n\n## Cómo se calcula\n\nσ y σ² (muestral y poblacional) · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\n**Paso 1 — media:** μ = (x₁ + x₂ + ... + xₙ)/N\n\n**Paso 2 — desvíos al cuadrado:** (xᵢ − μ)² para cada dato\n\n**Paso 3 — varianza:**\n- **Poblacional:** σ² = Σ(xᵢ − μ)² / N\n- **Muestral:** s² = Σ(xᵢ − x̄)² / (n − 1)\n\n**Paso 4 — desvío estándar:** σ = √σ² (misma unidad que los datos)\n\nEjemplo con {2,4,4,4,5,5,7,9} poblacional: μ = 40/8 = 5. Desvíos²: 9, 1, 1, 1, 0, 0, 4, 16 → Σ = 32. σ² = 32/8 = 4. **σ = 2**.\n\n## Tabla de referencia — regla empírica (distribución normal)\n\n| Rango | % de datos | Nombre |\n|---|---|---|\n| μ ± 1σ | 68.27% | Una desviación |\n| μ ± 2σ | 95.45% | Dos desviaciones |\n| μ ± 3σ | 99.73% | Tres desviaciones (six sigma ≈ 4.5σ → 3.4 defectos/millón) |\n| μ ± 1.96σ | 95% | IC 95% clásico |\n| μ ± 2.58σ | 99% | IC 99% |\n\n**Coeficiente de variación:** CV = σ/μ × 100%. CV < 10% baja dispersión; 10-30% moderada; > 30% alta.\n\n## Casos típicos\n\n**Caso 1 — Notas de parcial:** {4,5,6,7,8,9,10,6,7,8}. Media = 7. σ muestral: calculás Σ(xᵢ−7)² = 34, s² = 34/9 ≈ 3.78, s ≈ **1.94**. Clase con dispersión moderada.\n\n**Caso 2 — Control de calidad:** 10 piezas con diámetros cerca de 50 mm. Si σ = 0.03 mm y tolerancia = ±0.1 mm (Cp = tolerancia/(6σ) = 0.2/0.18 ≈ 1.11), el proceso es capaz pero justo.\n\n**Caso 3 — Volatilidad financiera:** retornos diarios de S&P 500 tienen σ ≈ 1%. Anualizada: σ_anual = σ_diario × √252 ≈ 15.9%. Se usa para opciones (Black-Scholes) y VaR.\n\n## Errores comunes\n\n- **Usar N cuando tenés muestra:** dividir por n en vez de n−1 subestima el desvío poblacional (sesgo). Si tu dataset es una muestra de una población mayor, usá n−1.\n- **Olvidar la raíz cuadrada:** la varianza tiene unidades² (ej: cm²), el desvío tiene unidades (cm). Confundirlos invalida interpretaciones.\n- **Calcular σ con datos muy dispersos sin limpiar outliers:** un solo outlier cambia drásticamente σ. Chequeá primero con boxplot o usá desviación absoluta mediana (MAD) si hay atípicos.\n- **Comparar σ de datasets con medias muy distintas:** un σ=5 es enorme si μ=10 (CV=50%) pero trivial si μ=1000 (CV=0.5%). Usá CV para comparar dispersiones relativas.\n\n## Calculadoras relacionadas\n\n- [Promedio, mediana y moda](/calculadora-promedio-mediana-moda-estadistica) — medidas de tendencia central, complementarias al desvío.\n- [Percentil de un dato](/calculadora-percentil-dato) — posición relativa en distribución.\n- [Factorial de n](/calculadora-factorial-numero-n) — base para combinatoria y distribuciones discretas.",
   "faq": [
     {
-      "q": "¿Muestral?",
-      "a": "Divide por n-1 (Bessel correction)."
+      "q": "¿Cuándo uso poblacional (N) vs muestral (n−1)?",
+      "a": "Poblacional cuando tenés TODOS los datos (ej: notas de TODOS los alumnos del curso). Muestral cuando tenés una subparte y querés estimar la población total (ej: 30 productos de una producción de 10.000). La división por n−1 (corrección de Bessel) corrige el sesgo de subestimación."
     },
     {
-      "q": "¿Poblacional?",
-      "a": "Divide por N (completo)."
+      "q": "¿Por qué muestral divide por n−1 y no por n?",
+      "a": "Porque al usar la media muestral x̄ (y no la poblacional μ, que es desconocida), los datos están 'más cerca' de x̄ que de μ, lo que subestima la dispersión real. Dividir por n−1 corrige ese sesgo (demostración: E[s²] = σ² cuando se usa n−1)."
     },
     {
-      "q": "¿CV?",
-      "a": "σ/μ·100 — compara dispersión."
+      "q": "¿Qué dice la regla 68-95-99.7?",
+      "a": "En una distribución normal (curva de Gauss): 68.27% de los datos caen en μ±1σ, 95.45% en μ±2σ, 99.73% en μ±3σ. Si tus datos NO son normales (asimétricos, con outliers), esta regla no aplica; usá Chebyshev (al menos 1−1/k² en μ±kσ)."
     },
     {
-      "q": "¿68-95-99?",
-      "a": "Normal: 68% en ±1σ, 95% en ±2σ."
+      "q": "¿Qué es el coeficiente de variación (CV)?",
+      "a": "CV = σ/μ × 100%. Mide dispersión relativa (sin unidades), útil para comparar datasets con distintas escalas. Ej: altura (σ=5cm, μ=170cm → CV=2.9%) vs salario (σ=$500k, μ=$1M → CV=50%). Salarios dispersan mucho más."
     },
     {
-      "q": "¿Z-score?",
-      "a": "(x-μ)/σ."
+      "q": "¿Qué es el z-score y cómo se calcula?",
+      "a": "z = (x − μ)/σ. Mide cuántos desvíos estándar está un dato respecto de la media. z=0 es el promedio, z=±1 está en el 68% central, |z|>2 es inusual, |z|>3 muy inusual (outlier candidate)."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿La varianza puede ser negativa?",
+      "a": "No, nunca. Es una suma de cuadrados dividida por un número positivo, siempre σ² ≥ 0. σ² = 0 solo si todos los datos son idénticos (dispersión cero). Si obtenés negativa, hay error de cálculo o de signo."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Cómo afectan los outliers al desvío estándar?",
+      "a": "Mucho, porque los desvíos se elevan al cuadrado. Un outlier de 3σ contribuye 9 veces más que uno de 1σ. Un solo dato extremo puede duplicar σ. Alternativas robustas: desviación absoluta mediana (MAD) o rango intercuartílico (IQR)."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué diferencia hay entre varianza y desvío estándar?",
+      "a": "La varianza está en unidades² (ej: cm², pesos²) y el desvío en unidades simples (cm, pesos). Para interpretar con los datos originales usá σ; para cálculos matemáticos (ANOVA, propagación de errores) suele convenir σ²."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "NIST/SEMATECH e-Handbook of Statistical Methods — Measures of dispersion",
+      "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda356.htm"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "Wolfram MathWorld — Standard Deviation",
+      "url": "https://mathworld.wolfram.com/StandardDeviation.html"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Wolfram MathWorld — Variance",
+      "url": "https://mathworld.wolfram.com/Variance.html"
     }
   ],
   "relatedSlugs": [
@@ -128,5 +128,10 @@
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "desvio estandar varianza conjunto",
+    "desvío estándar y varianza",
+    "calculadora desvío estándar y varianza 2026"
+  ]
 }

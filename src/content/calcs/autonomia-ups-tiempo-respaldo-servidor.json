@@ -7,13 +7,14 @@
   "audience": "global",
   "icon": "🔌",
   "formulaId": "autonomia-ups-tiempo-respaldo-servidor",
-  "intro": "El mantenimiento y operación eficiente del auto implican cálculos de consumo, potencia, presión, torque y rendimiento. Aplicar las fórmulas correctas evita sobreconsumo y daños mecánicos. Minutos de respaldo según carga y VA · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá capacidad ups y carga y obtené minutos al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "La autonomía de un UPS (SAI, Sistema de Alimentación Ininterrumpida) depende de la capacidad de su batería (VA o Wh) y la carga conectada. Una regla aproximada: un UPS 1.500 VA (900 W) al 20% de carga (180 W) dura ~45 min; al 50% (450 W) ~15 min; al 100% ~4 min. Se usa para proteger servidores, PCs, routers, modems y cámaras frente a cortes eléctricos, con tiempo suficiente para apagar controladamente o esperar a que arranque un generador.",
+  "keyTakeaway": "**Minutos ≈ (VA × FP × 60 × eficiencia) / (carga_W × 60)** simplificado: ~(VA × 0.6) / carga_W × 60. 1.500 VA / 300 W → ~12-18 min. Bajar carga = autonomía exponencialmente mayor.",
   "useCases": [
-    "Dimensionar autonomía UPS antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Dimensionar un UPS nuevo para servidor, NAS o home office antes de comprarlo.",
+    "Estimar cuánto tiempo podés sostener el modem+router+notebook durante un corte.",
+    "Calcular si tu UPS actual sigue sirviendo o se le está muriendo la batería.",
+    "Ajustar el tiempo de shutdown automático (NUT/apcupsd) para que se apague antes de quedarse sin batería.",
+    "Comparar UPS de distintas marcas (APC, CDP, Tripp-Lite, PowerMust) usando los W reales."
   ],
   "fields": [
     {
@@ -49,56 +50,66 @@
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: UPS 1.500 VA con carga de 300 W",
     "steps": [
-      "1500 VA, 300 W",
-      "~12 min"
+      "**Capacidad**: 1.500 VA (equivale a 900 W reales con FP 0.6).",
+      "**Carga**: 300 W (servidor pyme + switch + modem).",
+      "**Utilización**: 300/900 = 33% — rango óptimo de eficiencia.",
+      "**Cálculo**: (1.500 × 30) / 300 = **~15 minutos**."
     ],
-    "result": "~12 min"
+    "result": "Autonomía estimada: **~15 minutos**. Configurá shutdown automático a los 10 min para dejar margen de 5 min."
   },
-  "explanation": "Los **cálculos automotrices** son esenciales para dueños de autos, motos y otros vehículos: rendimiento de combustible, costos de mantenimiento, presión de neumáticos, conversiones de potencia, tiempos de amortización.\n\n## Cómo se calcula\n\nMinutos de respaldo según carga y VA · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa autonomía real de un UPS se calcula convirtiendo la capacidad de la batería a watts-hora (Wh) y dividiéndola por la carga:\n\n**Minutos = (Vbat × Ah × FactorPotencia × EficienciaInversor × 60) / Carga_W**\n\nSimplificación práctica para UPS domésticos/pymes:\n\n**Minutos ≈ (VA × 0.6 × 0.85 × 60) / Carga_W ≈ (VA × 30) / Carga_W**\n\nDonde:\n- **VA** = capacidad aparente del UPS (lo que dice la etiqueta).\n- **0.6** = factor de potencia típico (los UPS especifican VA, pero solo entregan ~60% como watts reales).\n- **0.85** = eficiencia del inversor AC→DC→AC.\n- **Carga_W** = consumo real conectado.\n\nAdemás las baterías **no descargan linealmente**: a altas cargas (>70%) la autonomía cae por Ley de Peukert (t = C/I^k, con k≈1.1-1.3 para plomo-ácido). Por eso 50% de carga NO da exactamente el doble que 100%.\n\n## Tabla de referencia\n\n| UPS | Carga | Autonomía aprox | Uso típico |\n|---|---|---|---|\n| 600 VA / 360 W | 60 W (17%) | ~30 min | Router + modem |\n| 600 VA / 360 W | 180 W (50%) | ~10 min | PC básica |\n| 1.000 VA / 600 W | 150 W (25%) | ~24 min | NAS hogareño |\n| 1.500 VA / 900 W | 300 W (33%) | ~15 min | Servidor pyme |\n| 1.500 VA / 900 W | 700 W (78%) | ~4 min | Torre + 2 monitores |\n| 3.000 VA / 2.700 W | 1.000 W (37%) | ~27 min | Rack pequeño |\n| 3.000 VA / 2.700 W | 2.500 W (93%) | ~3 min | Full rack |\n\n## Casos típicos\n\n- **Home office — APC Back-UPS 650VA con PC 180W + modem 10W**: carga 190W, autonomía ≈ (650×30)/190 = **~10 min**. Suficiente para guardar trabajo y apagar ordenadamente.\n- **Servidor pyme — CDP UPR1008 1KVA con servidor 250W**: autonomía ≈ (1000×30)/250 = **~12 min**. Se configura shutdown automático a los 8 min (margen 4 min).\n- **Rack con 2 servidores + switch — 3KVA online con 1.800W**: autonomía ≈ (3000×30)/1800 = **~5 min**. Se agrega banco de baterías externo para llegar a 30 min.\n\n## Errores comunes\n\n1. **Confundir VA con W**: un UPS de 1.500 VA **no entrega 1.500 W**, entrega ~900 W (FP 0.6). Si conectás 1.200 W a un UPS 1.500 VA, sobrecarga y se apaga.\n2. **Ignorar el factor de potencia real de las cargas**: fuentes switching de PC tienen FP 0.5-0.7, motores 0.3-0.6. Sumá los W reales, no los VA de las fuentes.\n3. **No considerar la edad de la batería**: batería SLA de 3+ años pierde 30-50% de capacidad. Un UPS 1.500 VA con batería vieja rinde como uno de 750 VA.\n4. **Olvidar el arranque (inrush)**: motores, láseres y fuentes grandes pueden demandar 3-5× su consumo nominal por 1-2 segundos al arrancar. El UPS debe poder entregar ese pico.\n5. **No configurar shutdown automático**: sin daemon (NUT, apcupsd, WinPowerPanel) el UPS se descarga 100% y el servidor se apaga violentamente. Corrupción de datos garantizada.\n\n## Calculadoras relacionadas\n\n- [Calculadora de autonomía de batería (mAh)](/calc/calculadora-autonomia-bateria-dispositivo-mah) — para dispositivos móviles.\n- [Calculadora UPS por potencia](/calc/calculadora-ups-autonomia-potencia-carga) — dimensionar UPS desde cero.\n- [Calculadora de costo de servidor en la nube](/calc/calculadora-costo-cloud-servidor-mensual) — alternativa a UPS físico.",
   "faq": [
     {
-      "q": "¿VA vs W?",
-      "a": "W = real, VA = aparente. PF típico 0.6-0.9."
+      "q": "¿Qué diferencia hay entre VA y W en un UPS?",
+      "a": "**VA (volt-amperios)** es potencia *aparente*, **W (watts)** es potencia *real*. La relación es **W = VA × Factor de Potencia**. En UPS domésticos/pyme el FP es típicamente **0.6** (algunos modernos llegan a 0.9). Por eso un UPS 1.500 VA entrega solo ~900 W. Siempre sumá los W reales de tus equipos, no los VA de sus fuentes."
     },
     {
-      "q": "¿Línea interactiva?",
-      "a": "Corrige voltaje sin usar batería en microcortes."
+      "q": "¿Qué tipo de UPS conviene: standby, línea interactiva u online?",
+      "a": "**Standby (offline)**: más barato, solo conmuta cuando hay corte. Ideal para PC hogar (<$80k). **Línea interactiva**: regula voltaje sin tirar de batería en micro-caídas. Estándar para oficinas y servidores chicos. **Online (doble conversión)**: convierte AC→DC→AC permanentemente, cero milisegundos de corte. Obligatorio para racks, equipos médicos o cargas sensibles."
     },
     {
-      "q": "¿Online?",
-      "a": "Convierte AC→DC→AC siempre; mejor protección."
+      "q": "¿Cuánto dura la batería de un UPS?",
+      "a": "Las baterías **SLA (plomo-ácido selladas)** duran **3-5 años** en uso normal. A partir del año 2 pierden capacidad gradual (test mensual de APC recomendado). Factores que acortan vida: temperatura >25°C, descargas profundas, ciclos frecuentes. Una batería vieja puede dar solo 30% de la autonomía original."
     },
     {
-      "q": "¿Cuándo reemplazar?",
-      "a": "Baterías 3-5 años típicos."
+      "q": "¿Cuánta autonomía necesito para un servidor?",
+      "a": "Mínimo **5-10 minutos** si solo necesitás shutdown controlado. Si tenés generador, **suficiente para que arranque** (típicamente 30-60 seg). Si dependés solo del UPS por cortes largos, **30-60 minutos** con banco de baterías externo. Regla: autonomía_UPS = tiempo_shutdown + margen 3× para tranquilidad."
     },
     {
-      "q": "¿Servidor?",
-      "a": "Apagar controladamente con daemon NUT/apcupsd."
+      "q": "¿Cómo configuro el shutdown automático?",
+      "a": "En Linux: **NUT (Network UPS Tools)** con `apt install nut` + config en `/etc/nut/`. En servidores APC: **apcupsd** con trigger a X% de batería restante. Windows: **WinPowerPanel** (CDP) o **PowerChute** (APC). Configurá shutdown cuando quede 20-30% de batería para dejar margen."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Puedo conectar impresoras láser o microondas al UPS?",
+      "a": "**No**. Las impresoras láser consumen 1.200-1.500 W al calentar el fusor, y los microondas 1.000-1.500 W. Esto sobrecarga cualquier UPS hogareño. Conectalos directo a la pared o usá un UPS online ≥3 KVA dedicado. Lo mismo vale para aires acondicionados y herramientas eléctricas."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Qué es el factor de Peukert y por qué importa?",
+      "a": "Es la relación no lineal entre corriente de descarga y capacidad real: **t = C/I^k** con k=1.1-1.3 para plomo-ácido. A carga alta la batería entrega **menos que el proporcional**. Por eso 100% de carga NO da exactamente la mitad del tiempo que 50%. Regla práctica: restar 20-30% a la autonomía teórica cuando la carga supera el 70%."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Sirve el UPS para rayos y sobretensiones?",
+      "a": "Parcialmente. Los UPS tienen MOV (varistores) que absorben picos hasta ~500 J. Para protección contra rayos directos necesitás **DPS (descargadores de sobretensión) tipo 1+2** en el tablero principal. El UPS es la última línea, no la primera."
+    },
+    {
+      "q": "¿El UPS consume electricidad cuando no hay corte?",
+      "a": "Sí. **Standby**: 3-10 W. **Línea interactiva**: 10-30 W. **Online**: 30-100 W (por doble conversión). En un UPS 1.500 VA online, eso son ~720 kWh/año, aprox $30.000/año al costo residencial argentino 2026."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
+      "name": "APC - UPS Sizing Guide",
+      "url": "https://www.apc.com/us/en/faqs/FA159102/"
     },
     {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "Schneider Electric - White Paper 15: Understanding Power Factor",
+      "url": "https://www.se.com/ww/en/download/document/SPD_SADE-5TNQYM_EN/"
+    },
+    {
+      "name": "Network UPS Tools (NUT) - Documentation",
+      "url": "https://networkupstools.org/docs/user-manual.chunked/index.html"
     }
   ],
   "relatedSlugs": [
@@ -112,5 +123,10 @@
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "autonomia ups tiempo respaldo servidor",
+    "calculadora autonomía ups 2026",
+    "autonomía ups"
+  ]
 }

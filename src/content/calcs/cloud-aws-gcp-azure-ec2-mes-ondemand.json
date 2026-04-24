@@ -7,13 +7,14 @@
   "audience": "global",
   "icon": "☁️",
   "formulaId": "cloud-aws-gcp-azure-ec2-mes-ondemand",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Costo aproximado EC2 AWS on-demand. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá tipo y región y obtené costo mensual USD al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "El costo on-demand de una instancia EC2 de AWS se calcula como **precio_por_hora × 730 h/mes** (promedio de horas en un mes). En **us-east-1 (N. Virginia, la región más barata)**, una **t3.micro** cuesta ~USD 0.0104/h = **USD 7.6/mes**; una **m5.large** (2 vCPU, 8 GB) ~USD 0.096/h = **USD 70/mes**; una **r5.2xlarge** (8 vCPU, 64 GB) ~USD 0.504/h = **USD 368/mes**. En **sa-east-1 (São Paulo)** los precios son 30-40% más caros. Esta calculadora estima costo mensual on-demand según tipo y región, útil para presupuestar infraestructura antes de lanzarla.",
+  "keyTakeaway": "**costo_mes (USD) = precio_hora × 730**. São Paulo = **~1.3-1.4×** us-east-1. Reserved Instances ahorran 30-75%, Spot hasta 90%.",
   "useCases": [
-    "Dimensionar AWS EC2 mensual antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Vas a levantar una app SaaS y querés estimar el costo de infraestructura antes del MVP.",
+    "Comparás si conviene AWS us-east-1 (más barato) vs sa-east-1 (menos latencia para clientes argentinos).",
+    "Evaluás migrar de VPS tradicional (Linode, DigitalOcean) a AWS y necesitás costo equivalente.",
+    "Dimensionás un ambiente de staging 24/7 y querés saber cuánto te va a sangrar la AWS.",
+    "Justificás ante el CFO por qué el bill de AWS tiene esa magnitud."
   ],
   "fields": [
     {
@@ -90,39 +91,39 @@
     ],
     "result": "2 vCPU 4GB"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nCosto aproximado EC2 AWS on-demand.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl precio on-demand de EC2 es **por segundo** (mínimo 60 seg) desde 2017. Para estimar costo mensual se usa el promedio:\n\n```\nHoras_mes = 730.5  (= 365.25 días × 24 / 12)\nCosto_mes (USD) = precio_por_hora × 730.5\n\nFactor por región (relativo a us-east-1):\n  us-east-1 (N. Virginia):   1.00 (más barato)\n  us-west-2 (Oregón):        1.00\n  eu-west-1 (Irlanda):       1.10\n  eu-central-1 (Frankfurt):  1.15\n  ap-southeast-1 (Singapur): 1.20\n  sa-east-1 (São Paulo):     1.35\n  ap-south-1 (Mumbai):       1.10\n```\n\n**Nota**: el costo de EC2 **solo** es la instancia. No incluye: EBS (storage), tráfico de salida (data transfer out), load balancer, snapshots, IPs elásticas sin uso, RDS, S3. En apps reales, EC2 suele ser **30-50%** del bill total.\n\n## Tabla de referencia: instancias más usadas (us-east-1, precios mayo 2026)\n\n| Tipo | vCPU | RAM | USD/hora | USD/mes | Uso típico |\n|---|---|---|---|---|---|\n| t3.nano | 2 | 0.5 GB | 0.0052 | 3.80 | Bot, micro servicio |\n| t3.micro | 2 | 1 GB | 0.0104 | 7.60 | Free tier, dev |\n| t3.small | 2 | 2 GB | 0.0208 | 15.20 | Staging, Wordpress |\n| t3.medium | 2 | 4 GB | 0.0416 | 30.40 | Small app |\n| t3.large | 2 | 8 GB | 0.0832 | 60.80 | API mediana |\n| m5.large | 2 | 8 GB | 0.096 | 70.08 | Balanced prod |\n| m5.xlarge | 4 | 16 GB | 0.192 | 140.16 | Prod moderada |\n| c5.xlarge | 4 | 8 GB | 0.170 | 124.10 | CPU-intensive |\n| c5.2xlarge | 8 | 16 GB | 0.340 | 248.20 | Compute pesado |\n| r5.large | 2 | 16 GB | 0.126 | 91.98 | Memory cache |\n| r5.2xlarge | 8 | 64 GB | 0.504 | 367.92 | Database, analytics |\n| g4dn.xlarge | 4 | 16 GB + GPU | 0.526 | 383.98 | ML inferencia |\n| p4d.24xlarge | 96 | 1152 GB + 8 GPU | 32.77 | 23,922 | Training ML masivo |\n\n## Modalidades de compra y descuentos típicos\n\n| Modalidad | Descuento vs on-demand | Compromiso | Ideal para |\n|---|---|---|---|\n| On-demand | 0% | Ninguno | Dev, cargas variables |\n| Savings Plans (1 año) | ~40% | Gasto mensual fijo | Prod estable |\n| Savings Plans (3 años) | ~60% | Gasto mensual fijo | Prod a largo plazo |\n| Reserved Instances (1 año) | 30-40% | Instancia fija 1 año | Backend legacy |\n| Reserved Instances (3 años, all upfront) | 60-75% | Pago anticipado 3 años | Grandes empresas |\n| Spot Instances | Hasta 90% | AWS puede matarlas | Batch, ML, CI |\n\n## Casos típicos\n\n**Caso 1: MVP SaaS con 100 usuarios activos**\n- 1 × t3.medium (app) + 1 × t3.small (DB) + 100 GB EBS + ALB básico.\n- Costo mensual on-demand: **USD 30 + 15 + 10 + 20 = ~USD 75/mes**.\n- Con Savings Plan 1 año: ~USD 50/mes.\n\n**Caso 2: Startup con 10k MAU, 3 AZs, app Rails**\n- 3 × m5.large (HA) + RDS db.m5.large + ElastiCache + ALB + CloudFront.\n- On-demand: ~USD 800/mes. Con SP 1 año: **~USD 550/mes**.\n\n**Caso 3: Batch ML training diario 4 horas**\n- 1 × p3.2xlarge ($3.06/h) × 4 h × 30 días = USD 367/mes on-demand.\n- Con Spot Instances (70% descuento): **~USD 110/mes**.\n\n**Caso 4: Cliente argentino que debe respetar data residency**\n- Forzado a sa-east-1. Para la misma app que en us-east-1, **+35%** = si en Virginia gasta USD 500, en São Paulo **USD 675/mes**.\n\n## Errores comunes\n\n- **Dejar instancias stopped sin terminar**: stopped no se paga, pero el **EBS attached sí se paga** (USD 0.10/GB/mes). Una instancia con 500 GB stopped = USD 50/mes sin uso.\n- **Olvidar el costo del data transfer out**: USD 0.09/GB en us-east-1 tras el primer TB. Una app con 10 TB/mes de egress paga **USD 900 extra**.\n- **Usar m5 cuando alcanza t3**: las T family tienen créditos CPU burst. Para cargas con uso promedio <20% CPU, t3.large es ~40% más barato que m5.large.\n- **Sobredimensionar en lugar de autoescalar**: una instancia m5.4xlarge 24/7 cuando 1 m5.large alcanza el 90% del tiempo es tirar plata. Usar **Auto Scaling Groups** con min/max razonables.\n- **Ignorar Savings Plans**: si tenés >USD 100/mes en EC2 estable, NO tener SP es regalarle a AWS 30-40% del bill.\n- **Elegir sa-east-1 sin justificación**: si tus usuarios están en LATAM pero la app tolera 150 ms de latencia, **us-east-1 ahorra 35%**. Sólo justificar SP si data residency o latencia <80 ms es crítica.\n\n## Calculadoras relacionadas\n\n- [Costo servidor cloud AWS EC2 mensual (detalle)](/calculadora-costo-servidor-cloud-aws-ec2-mensual)\n- [Costo cloud servidor mensual genérico](/calculadora-costo-cloud-servidor-mensual)\n- [Consumo electrónica hogar watts mensual](/calculadora-consumo-electronica-hogar-watts-mensual)\n- [Midjourney / Stable Diffusion credits mensual](/calculadora-midjourney-stable-diffusion-credits-mensual)",
   "faq": [
     {
-      "q": "¿t3.micro?",
-      "a": "Free tier primer año. Luego USD 10/mes."
+      "q": "¿Cuál es la instancia EC2 más barata para un proyecto chico?",
+      "a": "**t3.nano** (USD 3.8/mes en us-east-1) o **t4g.nano** con ARM (USD 3.0/mes, ~25% más barata que x86). Para desarrollo básico con 0.5 GB RAM: suficiente para un bot de Telegram, un cron job o un sitio estático con Nginx. Para Wordpress mínimo: t3.small (USD 15/mes) con 2 GB RAM."
     },
     {
-      "q": "¿t3.medium?",
-      "a": "USD 30/mes. Apps small."
+      "q": "¿Conviene más AWS, GCP o Azure para una startup argentina?",
+      "a": "**Precios parecidos (±10%)** entre los 3. Diferencias: **AWS** tiene más servicios y free tier (12 meses), la mayor comunidad. **GCP** sobresale en BigQuery, Kubernetes (GKE) y tiene networking superior. **Azure** integra con Office 365, AD y SQL Server. Para la mayoría: **AWS us-east-1** por inercia y ecosistema. Para heavy BigData: GCP. Para empresas con stack Microsoft: Azure."
     },
     {
-      "q": "¿m5.large?",
-      "a": "USD 70/mes. 2 CPU 8 GB."
+      "q": "¿Qué es el Free Tier de AWS y qué incluye?",
+      "a": "**12 meses gratis** desde crear la cuenta: 750 h/mes de **t2.micro o t3.micro** (1 instancia Linux corriendo todo el mes), 30 GB EBS, 5 GB S3, 15 GB data transfer out, RDS db.t2.micro, Lambda 1M requests/mes. Excelente para learning/MVP. **Ojo**: si te pasás un GB o una hora fuera del free tier, bill te llega sin aviso."
     },
     {
-      "q": "¿c5.xlarge?",
-      "a": "USD 130/mes. CPU-optimized."
+      "q": "¿Qué diferencia hay entre on-demand, reserved y spot?",
+      "a": "**On-demand**: pagás por hora/seg usada, sin compromiso. **Reserved (RI) o Savings Plans**: te comprometés 1-3 años a un nivel de uso → 30-75% descuento. **Spot**: AWS te vende capacidad sobrante a 60-90% descuento, **pero puede terminar tu instancia con 2 min de aviso**. Uso ideal de spot: batch jobs, CI/CD runners, ML training con checkpoints."
     },
     {
-      "q": "¿r5.2xlarge?",
-      "a": "USD 340/mes. Memory-optimized."
+      "q": "¿Por qué AWS en São Paulo es más cara que en Virginia?",
+      "a": "**Factores**: impuestos locales (ICMS en Brasil), costo de electricidad más alto, menor economía de escala (región más chica), costos de operación del datacenter. Resultado: **sa-east-1 cuesta ~35% más** que us-east-1 para mismas instancias. Si tu app no necesita latencia <80 ms con usuarios argentinos, us-east-1 es la elección económica."
     },
     {
-      "q": "¿Reserved?",
-      "a": "30-75% descuento si 1-3 años commit."
+      "q": "¿Cómo puedo reducir el bill de AWS 30-50% sin cambiar funcionalidad?",
+      "a": "**Acciones rápidas**: (1) Savings Plans para uso estable, (2) Terminar EBS no adjunto y snapshots viejos, (3) CloudFront para imágenes/static (reduce data out), (4) S3 Intelligent-Tiering, (5) Apagar instancias dev/staging fuera de horario (Lambda + CloudWatch Events), (6) Right-sizing: AWS Compute Optimizer recomienda instancias más chicas, (7) Migrar a Graviton (ARM): 20-25% más barato."
     },
     {
-      "q": "¿Spot?",
-      "a": "Hasta 90% descuento para cargas interrumpibles."
+      "q": "¿Qué es el data transfer out y por qué puede ser tan caro?",
+      "a": "Datos saliendo de AWS hacia internet: **USD 0.09/GB** tras el primer GB gratis (us-east-1). Una app con 10 TB/mes de salida = **USD 900/mes solo en transfer**. Reducirlo: usar **CloudFront** (CDN, USD 0.085/GB pero caché cercano), **compresión gzip/brotli**, restringir regiones, usar **S3 Transfer Acceleration** solo cuando necesario."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Qué tipo de instancia elegir: general, compute, memory o GPU?",
+      "a": "**General (M family)**: ratio equilibrado vCPU/RAM. Default para web apps. **Compute (C family)**: doble vCPU por RAM, para encoding, batch processing, HPC. **Memory (R family)**: cuatro veces más RAM que vCPU, para DB in-memory (Redis, ElasticSearch), analytics. **GPU (G/P family)**: solo para ML, rendering 3D, transcoding video. En dudas, arrancar con M family y ajustar."
     }
   ],
   "sources": [
@@ -146,5 +147,10 @@
     "lastUpdated": "2026-04-20",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "aws ec2 mensual",
+    "calculadora aws ec2 mensual 2026",
+    "cloud aws gcp azure ec2 mes ondemand"
+  ]
 }

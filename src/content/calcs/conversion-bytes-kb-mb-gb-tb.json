@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "💽",
   "formulaId": "conversion-bytes-kb-mb-gb-tb",
-  "intro": "La tecnología moderna tiene specs medibles: consumo, ancho de banda, rendimiento. Esta calculadora te da el cálculo de conversión bytes/KB/MB/GB/TB según valor, desde, a y sistema. Devuelve resultado junto con contexto para interpretar el valor. El cálculo corre en tu navegador: no guardamos tus datos, no requiere registro y es gratis.",
-  "keyTakeaway": "Ingresá valor, desde y a y obtené resultado al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "Hay dos sistemas para convertir múltiplos de bytes: **binario** (1 KB = 1.024 B, usado por Windows, RAM, RAID) y **decimal** (1 KB = 1.000 B, usado por fabricantes de discos y SSD, redes y telcos). Esta diferencia explica por qué un disco de '1 TB' muestra solo 931 GiB en Windows: el fabricante lo vendió como 10^12 bytes (1 TB decimal) y el sistema operativo lo lee en binario (1 TiB = 2^40). Esta calculadora soporta ambos sistemas y es clave para saber exactamente cuánto ocupa un archivo, una base de datos o un backup.",
+  "keyTakeaway": "**Binario: 1 KB = 1.024 B; 1 MB = 1.024 KB. Decimal: 1 KB = 1.000 B; 1 MB = 1.000 KB**. Un disco '1 TB' decimal = 931,3 GiB binarios.",
   "useCases": [
-    "Dimensionar conversión bytes/KB/MB/GB/TB antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Comprás disco externo 'Seagate 2TB' y Windows muestra 1,81 TiB: entender por qué.",
+    "Planear un backup de 500.000 fotos de 4 MB cada una: ¿cuántos GB son en total?",
+    "Estimar el ancho de banda real: si tu ISP dice '100 Mbps', ¿cuántos MB/s son?",
+    "Optimizar costos cloud: si S3 te cobra por GB, saber exactamente cuánto estás subiendo."
   ],
   "fields": [
     {
@@ -119,49 +119,53 @@
     ],
     "result": "1024"
   },
-  "explanation": "Las **conversiones de unidades** son la base de ciencia, ingeniería y vida cotidiana. Sistema métrico (SI) es estándar global. EE.UU. y algunos territorios mantienen sistema imperial.\n\n## Cómo se calcula\n\nConvierte entre múltiplos de bytes · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\n**Sistema binario (IEC 80000-13)** — potencias de 1.024 = 2^10:\n- 1 KiB = 1.024 B\n- 1 MiB = 1.024 KiB = 1.048.576 B (~10^6)\n- 1 GiB = 1.024 MiB = 1.073.741.824 B (~10^9)\n- 1 TiB = 1.024 GiB = 1,0995 × 10^12 B\n\n**Sistema decimal (SI)** — potencias de 1.000:\n- 1 KB = 1.000 B\n- 1 MB = 1.000.000 B\n- 1 GB = 1.000.000.000 B\n- 1 TB = 10^12 B\n\n**Conversión general**: valor × (factor_desde / factor_a).\n\nEjemplo: 1 GB (decimal) = 10^9 B = 10^9 / 2^30 = **0,931 GiB** (binario).\n\n## Tabla de referencia\n\n| Nombre común | Binario (IEC) | Equivalente decimal |\n|---|---|---|\n| 1 KB | 1.024 B | 1.000 B |\n| 1 MB | 1,048 × 1 MB dec | 1.000.000 B |\n| 1 GB | 1,073 GB dec | 1.000.000.000 B |\n| 1 TB | 1,099 TB dec | 10^12 B |\n| Disco 1 TB | = 931,3 GiB | = 1 TB exacto |\n| RAM 16 GB | = 16 GiB | = 17,18 GB |\n| Internet 100 Mbps | 12,5 MB/s binario | 12,5 MB/s decimal |\n\n## Casos típicos\n\n- **SSD 500 GB → espacio real**: 500 × 10^9 / 2^30 = **465,66 GiB** visible en Windows.\n- **Foto RAW 40 MB × 1.000 fotos**: 40 GB (o 37,25 GiB binario).\n- **Películas 4K (15 GB c/u), disco de 4 TB**: 3.725 GiB / 15 GiB ≈ **248 películas**.\n- **Video de 1 hora a 10 Mbps**: 10 Mbps × 3.600 s / 8 = 4.500 MB = **4,5 GB**.\n\n## Errores comunes\n\n- **Confundir bit (b) con byte (B)**: 1 B = 8 b. Una conexión de 100 Mbps transfiere 12,5 MB/s, no 100.\n- **Creer que 'el disco viene con capacidad falsa'**: no, está bien medido en decimal. El OS lo muestra en binario y por eso parece 'menos'.\n- **Usar el prefijo incorrecto en docs**: IEC estandarizó Ki, Mi, Gi (binarios) desde 1998. SI siempre fue decimal. Mezclar genera errores de 2-10%.\n- **Ignorar metadata y formato**: un archivo de '100 MB' en disco ocupa más por sector size (4 KB), atributos y cluster overhead.\n\n## Calculadoras relacionadas\n\n- [Almacenamiento bytes KB MB GB TB](/calculadora-almacenamiento-bytes-kb-mb-gb-tb)\n- [Ancho de banda y descarga tiempo](/calculadora-ancho-banda-descarga-tiempo)\n- [Conversión de bases numéricas](/calculadora-conversion-base-decimal-binario-hexa)",
   "faq": [
     {
-      "q": "¿KiB/MiB?",
-      "a": "Nombres oficiales binarios (KB decimal)."
+      "q": "¿Por qué mi disco de 1 TB muestra 931 GB?",
+      "a": "El fabricante lo vende como 1 TB = 10^12 bytes (decimal, SI). Windows/macOS muestran su tamaño en TiB/GiB (binario): 10^12 / 2^40 = 0,909 TiB = 931,3 GiB. No falta espacio, es la unidad de medida que cambia."
     },
     {
-      "q": "¿Por qué diferencia?",
-      "a": "Fabricantes usan decimal; SO muestra binario."
+      "q": "¿Qué son KiB, MiB, GiB?",
+      "a": "Son los prefijos binarios oficiales (IEC 80000-13, 1998). Ki = 2^10 = 1.024, Mi = 2^20, Gi = 2^30. Evitan la ambigüedad de KB/MB/GB. Linux y muchos docs técnicos los usan; Windows dice 'GB' pero internamente son GiB."
     },
     {
-      "q": "¿Disco 1TB?",
-      "a": "~931 GiB reales."
+      "q": "¿Qué usan los fabricantes de hardware?",
+      "a": "Discos y SSD: decimal (1 TB = 10^12 B). Tarjetas SD: decimal. Pendrives: decimal. RAM: binario (16 GB = 16 GiB). Redes (Mbps/Gbps): decimal. Archivos en OS: binario. Es por esto que la 'misma' cantidad se ve distinta."
     },
     {
-      "q": "¿Binario ISO?",
-      "a": "Prefijos Ki, Mi, Gi desde 1998."
+      "q": "¿Bit y byte son lo mismo?",
+      "a": "No. 1 byte (B) = 8 bits (b). Mayúscula B = byte, minúscula b = bit. Una conexión 100 Mbps = 100 megabits por segundo = 12,5 MB/s (megabytes). Los proveedores de internet miden en bits porque los números son más grandes."
     },
     {
-      "q": "¿Bit vs byte?",
-      "a": "B mayúscula = byte, b = bit. 1B = 8b."
+      "q": "¿Qué es un nibble?",
+      "a": "Medio byte (4 bits). Equivale exactamente a 1 dígito hexadecimal. No se usa comúnmente en specs comerciales pero sí en programación de bajo nivel."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cuánto ocupa una película típica?",
+      "a": "Película HD 1080p: 2-4 GB (compresión H.264). 4K HDR: 15-30 GB. 4K sin comprimir (BluRay): 50-60 GB. Película en Netflix streaming 4K: ~7 GB/hora por el códec AV1."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Cómo calculo tamaño de backup?",
+      "a": "Suma tamaños reales + ~10% de overhead por metadata. Si vas a comprimir (zip, tar.gz), multiplica por 0,4-0,7 (texto comprime 70%, imágenes/videos casi nada). Para cloud/S3 considerar también tiers y egreso."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué es un yottabyte?",
+      "a": "10^24 bytes = 1.000 ZB = 1.000.000 EB. Nombre jerárquico: KB < MB < GB < TB < PB (peta, 10^15) < EB (exa) < ZB (zetta) < YB (yotta). La humanidad ha generado ~150 zettabytes de datos (2025)."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
+      "name": "IEC 80000-13 — Quantities and units: Information science",
+      "url": "https://www.iec.ch/publications/80000-13"
     },
     {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "NIST — Prefixes for binary multiples",
+      "url": "https://physics.nist.gov/cuu/Units/binary.html"
+    },
+    {
+      "name": "IEEE — Standards for Information Technology",
+      "url": "https://standards.ieee.org"
     }
   ],
   "relatedSlugs": [
@@ -175,5 +179,10 @@
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "conversión bytes/kb/mb/gb/tb",
+    "calculadora conversión bytes/kb/mb/gb/tb 2026",
+    "conversion bytes kb mb gb tb"
+  ]
 }

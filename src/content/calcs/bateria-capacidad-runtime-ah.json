@@ -6,14 +6,14 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "bateria-capacidad-runtime-ah",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Calculá cuántas horas dura una batería según capacidad (Ah) y consumo (A o W). Considera eficiencia de descarga y profundidad DoD máxima recomendada. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
+  "intro": "Para saber cuántas horas te dura una batería con una carga determinada, usá la fórmula: **t = (Ah × V × DoD × η) / W_consumo**. Ejemplo: batería 100 Ah a 12V, LiFePO4 (DoD 80%, η 95%), alimentando un inversor de 100 W → 9,1 horas. Útil para dimensionar sistemas solares, UPS, casa rodante, camping o autonomía de proyectos Arduino/ESP32.",
   "keyTakeaway": "**t = (Ah × V × η × DoD) / P_consumo**. Para batería 100Ah/12V al 80% DoD con carga 100W → 9.6 horas. Plomo-ácido: DoD ≤ 50%. LiFePO4: DoD ≤ 80%.",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de autonomía de batería (ah / runtime)",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Calcular cuántas horas te dura la batería auxiliar del motorhome o casa rodante con la heladera prendida.",
+    "Dimensionar una batería de respaldo (UPS casero) para el modem+router durante cortes de luz.",
+    "Estimar autonomía de un sistema de cámaras de seguridad alimentadas por batería solar.",
+    "Proyectar un proyecto ESP32/Arduino con sensores y saber cuántos días funciona sin recargar.",
+    "Comparar si conviene una batería 12V 100Ah plomo AGM (barata) o LiFePO4 (dura 5× más)."
   ],
   "fields": [
     {
@@ -83,7 +83,7 @@
     ],
     "result": "Batería 100Ah 12V alimenta 100W durante 9.1 horas"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nCalculá cuántas horas dura una batería según capacidad (Ah) y consumo (A o W). Considera eficiencia de descarga y profundidad DoD máxima recomendada.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa fórmula fundamental de autonomía (runtime) de una batería es:\n\n**t_horas = (Ah × V × DoD × η) / P_consumo_W**\n\nDonde:\n- **Ah**: capacidad nominal de la batería (amperios-hora).\n- **V**: voltaje nominal (12V, 24V, 48V).\n- **DoD (Depth of Discharge)**: profundidad máxima de descarga permitida en fracción (0.5 = 50%, 0.8 = 80%).\n- **η (eta)**: eficiencia del sistema (inversor + cables + pérdidas). Típico 0.85-0.95.\n- **P_consumo_W**: potencia que está consumiendo la carga en watts.\n\n### Versión alternativa (si la carga está en amperios)\n\n**t_horas = (Ah × DoD × η) / I_consumo_A**\n\n### Factor Peukert (cargas altas)\n\nA cargas de descarga rápidas, la capacidad real disminuye según la **Ley de Peukert**:\n\n**t_real = C / I^k**\n\nDonde **k = 1.1-1.3 en plomo-ácido**, **k ≈ 1.0 en LiFePO4** (prácticamente no afecta). Por eso las baterías de litio son mejores para cargas altas.\n\n## Tabla de referencia\n\n### Profundidad de descarga segura por tipo\n\n| Tipo de batería | DoD recomendado | Ciclos a ese DoD |\n|---|---|---|\n| Plomo-ácido inundada (auto) | 30-50% | 300-500 |\n| AGM / Gel | 50-60% | 800-1.500 |\n| LiFePO4 | 80-90% | 3.000-8.000 |\n| Litio-ion (NMC / laptop) | 80% | 1.000-3.000 |\n| Níquel-Cadmio (obsoleta) | 80% | 1.500-2.000 |\n\n### Autonomía típica (batería 100 Ah @ 12V)\n\n| Carga | Plomo DoD 50% | LiFePO4 DoD 80% |\n|---|---|---|\n| 50 W | 11,4 h | 18,2 h |\n| 100 W | 5,7 h | 9,1 h |\n| 200 W | 2,8 h | 4,5 h |\n| 500 W | 1,1 h | 1,8 h |\n| 1.000 W | 0,5 h (daño) | 0,9 h |\n\n## Casos típicos\n\n- **Heladera 12V motorhome (consumo 50W promedio, batería 100Ah AGM DoD 50%)**: t = (100×12×0.5×0.95)/50 = **11,4 horas**. Si la heladera tiene compresor que prende 1/3 del tiempo, autonomía real ~**34 horas** = 1,5 días sin sol.\n- **Respaldo modem+router (consumo 20W, batería 12V 7Ah plomo)**: t = (7×12×0.5×0.95)/20 = **2 horas** — típico para microcortes. Para más, pasar a 18Ah o UPS.\n- **Arduino con sensores IoT (consumo 100 mW promedio, batería LiPo 2000 mAh 3.7V DoD 80%)**: 2×3.7×0.8/0.1 = **59 horas = 2,5 días**. Con deep-sleep se estira a semanas.\n- **Notebook gaming (100W promedio, batería 80Wh DoD 80%)**: (80×0.8)/100 = **0,64 horas = 38 min**. Típico para juegos modernos.\n\n## Errores comunes\n\n1. **Asumir DoD 100%**: vaciar una batería por completo acorta su vida de forma dramática. Plomo al 100% puede sulfatarse en 1 ciclo. Siempre respetar el DoD recomendado.\n2. **Confundir Ah con Wh**: una batería 100Ah 12V = **1.200 Wh**. Otra 100Ah 48V = **4.800 Wh** (4× más energía). Para comparar, siempre usá watt-hora.\n3. **Ignorar la temperatura**: a 0°C una batería plomo entrega 80% de capacidad, a -20°C solo 50%. En Patagonia o camping invernal hay que sobredimensionar.\n4. **Olvidar pérdidas del inversor**: un inversor típico 12V→220V tiene **85-92% de eficiencia**. Multiplicá siempre por η.\n5. **No medir consumo real**: usá pinza amperométrica. Los equipos suelen consumir **30-50% menos** que lo que dice la etiqueta nominal (que es pico).\n6. **Baterías envejecidas**: después de 500 ciclos la capacidad real cae 20-30%. Recalculá con la **capacidad actual**, no la nominal nueva.\n\n## Calculadoras relacionadas\n\n- [Calculadora Ley de Ohm](/calc/calculadora-ley-ohm-voltaje-corriente-resistencia) — V=I×R básica.\n- [Calculadora de potencia eléctrica P=V×I](/calc/calculadora-potencia-electrica-p-vi) — medí tu consumo.\n- [Calculadora de banco de baterías solar](/calc/calculadora-banco-baterias-solar-dias-autonomia) — para sistemas off-grid.\n- [Calculadora de autonomía UPS](/calc/calculadora-autonomia-ups-tiempo-respaldo-servidor) — servidores y equipos críticos.",
   "faq": [
     {
       "q": "¿Por qué no usar 100% DoD?",
@@ -102,34 +102,54 @@
       "a": "Sí. Li-ion pierde ~2-3%/año + por ciclo. LiFePO4 pierde 1-2%/año. Plomo 5-10%/año según uso."
     },
     {
-      "q": "¿Efecto Peukert?",
-      "a": "Descargas rápidas reducen capacidad efectiva. Relevante si descargás en <10h. Para horas largas no afecta mucho."
+      "q": "¿Qué es el efecto Peukert y cuándo importa?",
+      "a": "Es la relación no lineal entre corriente y capacidad real: **t = C / I^k**. En plomo-ácido k=1.1-1.3; a descargas rápidas (<10h) la capacidad cae 20-40%. En LiFePO4 k≈1.0, apenas se nota. Si descargás una batería plomo 100Ah en 1 hora (100A), en realidad entrega solo ~70Ah."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cuánto dura una batería en años?",
+      "a": "**Plomo-ácido auto**: 3-5 años. **AGM/Gel**: 5-7 años. **LiFePO4**: 10-15 años (3.000-8.000 ciclos al 80% DoD). **Litio-ion notebook**: 2-4 años (300-1.000 ciclos). La temperatura es el segundo factor más importante: cada 10°C arriba de 25°C, la vida se reduce a la mitad."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Cómo convierto Ah a Wh?",
+      "a": "**Wh = Ah × V**. Ejemplo: 100 Ah × 12V = **1.200 Wh = 1,2 kWh**. Para comparar baterías de distinto voltaje, usá siempre Wh. Una 'powerbank 20.000 mAh 5V' tiene solo 100 Wh (20 × 5). Una 'powerstation 1000 Wh' tiene 10× más energía."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Puedo cargar mi notebook con una batería 12V?",
+      "a": "No directamente. Necesitás un **inversor 12V→220V** (90% eficiencia) y el cargador del notebook (85% eficiencia). Pérdida total 23%. Alternativa moderna: powerstations tipo Jackery/EcoFlow con salida USB-C PD 100W directa a la notebook (eficiencia 95%)."
+    },
+    {
+      "q": "¿Qué batería conviene para un sistema solar casero chico?",
+      "a": "Para consumos <3 kWh/día: **LiFePO4 12V 100Ah** (1,2 kWh útil al 80% DoD). Precio AR 2026: USD 400-600. Para consumos 3-10 kWh/día: **LiFePO4 48V modular** (Pylontech, EcoFlow). Plomo AGM solo si presupuesto muy ajustado."
+    },
+    {
+      "q": "¿Por qué mi batería nueva rinde menos de lo que dice?",
+      "a": "Posibles causas: (1) **Temperatura fría** (pierde 20% a 0°C), (2) **descarga rápida** (Peukert), (3) **eficiencia del inversor** no contemplada, (4) **carga incompleta** (no llegó al 100% antes de descargar). Revisá con multímetro en bornes la tensión real a carga y sin carga."
+    },
+    {
+      "q": "¿Cuánto pesa una batería 100Ah 12V?",
+      "a": "**Plomo-ácido inundada**: 28-32 kg. **AGM**: 25-30 kg. **Gel**: 27-30 kg. **LiFePO4**: 11-13 kg (60% menos). Para motorhome, náutica y proyectos móviles, el peso de litio se paga solo en consumo de combustible ahorrado."
+    },
+    {
+      "q": "¿Se puede usar la batería del auto para un inversor casero?",
+      "a": "**Solo para emergencias cortas** (<1h). Las baterías de arranque (SLI) no están diseñadas para ciclo profundo — se destruyen en 20-50 descargas profundas. Para uso diario, usá **batería de ciclo profundo (AGM/Gel/LiFePO4)**, no SLI."
+    },
+    {
+      "q": "¿Cómo calculo la autonomía con varias cargas distintas?",
+      "a": "Sumá los Wh de cada carga (W × horas de uso). Total Wh consumo ≤ Wh útiles batería. Ejemplo: luces LED 20W × 5h = 100 Wh + notebook 60W × 3h = 180 Wh + ventilador 40W × 2h = 80 Wh → **360 Wh/día**. Batería 100Ah 12V LiFePO4 @ 80% DoD = 960 Wh útiles → autonomía **2,6 días**."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "Battery University - Depth of Discharge",
+      "url": "https://batteryuniversity.com/article/bu-501a-discharge-characteristics-of-li-ion"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
+      "name": "Peukert's Law - Victron Energy Whitepaper",
+      "url": "https://www.victronenergy.com/upload/documents/White-paper-Peukert's-law.pdf"
     },
     {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "IEEE 1188 - Maintenance Practices for VRLA Batteries",
+      "url": "https://standards.ieee.org/ieee/1188/10581/"
     }
   ],
   "relatedSlugs": [
@@ -144,5 +164,10 @@
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "calculadora calculadora de autonomía de batería (ah / runtim…",
+    "bateria capacidad runtime ah",
+    "calculadora de autonomía de batería (ah / runtime)"
+  ]
 }

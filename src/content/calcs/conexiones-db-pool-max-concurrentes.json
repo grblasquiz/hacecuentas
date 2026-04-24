@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "🗄️",
   "formulaId": "conexiones-db-pool-max-concurrentes",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Tamaño recomendado de pool según cores y carga · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá cores db y carga y obtené pool min al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "La fórmula clásica de HikariCP y el benchmark histórico de PostgreSQL indican que el pool óptimo de conexiones a DB es **cores × 2 + spindles** (para OLTP típico), no más. Más conexiones no aumentan throughput: causan context switching, contención en latches y se vuelven contraproducentes a partir de 4× cores. Esta calculadora toma los cores del servidor de DB y el perfil de carga (baja/media/alta) para devolverte pool mínimo y máximo recomendado, más consejo sobre si necesitás pooler externo (PgBouncer/ProxySQL).",
+  "keyTakeaway": "**Pool óptimo = cores × 2** (OLTP, PostgreSQL). Ejemplo: 8 cores = 16 conexiones. Más de 4×cores suele empeorar el throughput por contención.",
   "useCases": [
-    "Dimensionar pool DB conexiones max antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Configurás HikariCP/pg-pool en una API Node/Java y no sabés qué poner en maxPoolSize.",
+    "Tu RDS t3.large (2 vCPU) está al 100% de conexiones y la app devuelve 'too many clients already'.",
+    "Estás migrando de Rails ActiveRecord pool=25 a Postgres y viendo si PgBouncer transaction mode te salva.",
+    "Dimensionar el pool inicial en una serverless (Lambda/Cloud Run) que puede escalar a 1000 instancias."
   ],
   "fields": [
     {
@@ -73,49 +73,53 @@
     ],
     "result": "16"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nTamaño recomendado de pool según cores y carga · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nFórmula base (HikariCP, PgTune, docs de PostgreSQL):\n\n**Pool = (cores × 2) + discos efectivos**\n\nPara SSD (caso 99% de producción 2026), los discos efectivos = 1, por lo que la regla práctica es:\n\n- **Carga baja (API interna, dashboard)**: cores × 1,5 a cores × 2\n- **Carga media (ecommerce, CRUD típico)**: cores × 2 a cores × 3\n- **Carga alta (high-write OLTP)**: cores × 3 a cores × 4 (requiere pooler externo)\n\nPara Postgres hay un límite duro por parámetro `max_connections` (default 100). A partir de ~500 conexiones simultáneas se vuelve muy ineficiente: usar **PgBouncer** en modo transaction.\n\n## Tabla de referencia\n\n| Servidor | Cores | Pool baja | Pool media | Pool alta | Notas |\n|---|---|---|---|---|---|\n| RDS db.t3.medium | 2 vCPU | 3-4 | 4-6 | 6-8 | Cuidado con CPU credits |\n| RDS db.m5.large | 2 | 4 | 6 | 8 | Ideal base |\n| RDS db.m5.xlarge | 4 | 6-8 | 8-12 | 12-16 | Apps de tamaño medio |\n| RDS db.m5.4xlarge | 16 | 24 | 32-48 | 48-64 | Requiere PgBouncer arriba |\n| Aurora Serverless v2 | variable | auto | auto | + PgBouncer | RDS Proxy recomendado |\n\nMySQL InnoDB escala mejor que Postgres hasta 500+ conexiones sin pooler. SQL Server tiene pooling interno.\n\n## Casos típicos\n\n- **API Node.js con 4 instancias, DB 4 cores**: pool por instancia = 2 (total 8, dentro de cores × 2).\n- **Rails monolito, 10 Puma workers × 5 threads, DB 8 cores**: 50 conexiones totales; supera cores × 2 = 16. Solución: agregar PgBouncer transaction mode, reducir workers o subir a 16 cores.\n- **Lambda con Aurora PostgreSQL**: sin RDS Proxy, cada invocación abre conexión y satura. Con Proxy, múltiples Lambdas comparten pool del proxy (50-200 conexiones reales).\n\n## Errores comunes\n\n- **Más conexiones = más throughput**: falso. El benchmark 'About Pool Sizing' de HikariCP muestra que Postgres hace MÁS TPS con 10 conexiones que con 50 en 10 cores.\n- **No considerar long-running queries**: una query lenta en el pool bloquea un slot por minutos. Usar `statement_timeout` y monitorear pg_stat_activity.\n- **Abrir una conexión por request**: cost de handshake TLS + auth es 5-50 ms. Usar siempre pool persistente.\n- **Olvidar el `idle_in_transaction_session_timeout`**: transacciones abiertas sin commit bloquean locks y dejan conexiones inútiles ocupando el pool.\n\n## Calculadoras relacionadas\n\n- [Big O de algoritmos](/calculadora-complejidad-algoritmica-big-o-iteraciones)\n- [Ancho de banda y tiempo de descarga](/calculadora-ancho-banda-descarga-tiempo)\n- [Conversión bytes KB MB GB TB](/calculadora-conversion-bytes-kb-mb-gb-tb)",
   "faq": [
     {
-      "q": "¿Fórmula PostgreSQL?",
-      "a": "≈ cores × 2 para OLTP."
+      "q": "¿Cuál es la fórmula óptima de pool para PostgreSQL?",
+      "a": "Según HikariCP y los tests de PostgreSQL wiki: pool = (cores × 2) + discos efectivos. Para SSD, discos=1. Un servidor de 8 cores debería tener pool de ~17 conexiones por aplicación, no 100."
     },
     {
-      "q": "¿Saturación?",
-      "a": "Más conexiones no = más throughput."
+      "q": "¿Por qué más conexiones no dan más throughput?",
+      "a": "Porque Postgres usa un proceso por conexión (shared_buffers contention), y el OS hace context switching costoso. El benchmark clásico muestra que con 8 cores, 10 conexiones dan más TPS que 50. A partir de cores × 4 el throughput baja."
     },
     {
-      "q": "¿PgBouncer?",
-      "a": "Pooler externo multiplica capacidad."
+      "q": "¿Cuándo necesito PgBouncer o ProxySQL?",
+      "a": "Cuando el total de conexiones de tus apps supera cores × 4 del DB, o cuando tenés workloads serverless (Lambda, Cloud Run) que pueden abrir miles de conexiones. Modo transaction reduce 10-100× la cantidad real en DB."
     },
     {
-      "q": "¿Timeout?",
-      "a": "connectTimeout y queryTimeout esenciales."
+      "q": "¿Qué timeouts debo configurar?",
+      "a": "connectTimeout (5-10 s para no bloquear al arrancar), socketTimeout/queryTimeout (30-60 s según queries), idleTimeout (10 min, libera slots inútiles), y maxLifetime (30 min, fuerza reciclado para evitar leaks)."
     },
     {
-      "q": "¿Idle?",
-      "a": "Cerrar conexiones ociosas libera recursos."
+      "q": "¿Sirve pool mínimo > 0 o pool 'burstable'?",
+      "a": "Pool mínimo fijo evita latencia de abrir conexión al primer request (5-50 ms TLS+auth). Para APIs latency-sensitive, minIdle = 20-30% del max. Para cargas irregulares con costos bajos, minIdle=0 y dejar que crezca."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Qué diferencia hay entre pool en Node.js vs Java?",
+      "a": "Node es single-threaded: 1 pool por proceso con 10-20 conexiones es lo habitual. Java con 200 threads puede tener 1 conexión por thread (malo), por eso se usa HikariCP con 10-20. Regla: dimensionar por cores de DB, no por threads de app."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Cuántas conexiones tolera Postgres?",
+      "a": "Default max_connections=100. Cada una consume ~10 MB de RAM. Con 16 GB podés subir a 500-800 pero con pérdida de rendimiento. Arriba de 500 conviene siempre usar PgBouncer transaction mode (maneja 10k+ clientes con 50 conexiones DB)."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿RDS Proxy o PgBouncer?",
+      "a": "RDS Proxy: managed por AWS, ideal para Lambda+Aurora, facturado por hora. PgBouncer: self-hosted, más control, gratis, menor overhead. Para cargas serverless AWS, RDS Proxy. Para ECS/EKS con control sobre infra, PgBouncer."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
+      "name": "HikariCP — About Pool Sizing",
+      "url": "https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing"
     },
     {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "PostgreSQL wiki — Number of Database Connections",
+      "url": "https://wiki.postgresql.org/wiki/Number_Of_Database_Connections"
+    },
+    {
+      "name": "AWS — RDS Proxy documentation",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy.html"
     }
   ],
   "relatedSlugs": [
@@ -129,5 +133,10 @@
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "conexiones db pool max concurrentes",
+    "pool db conexiones max",
+    "calculadora pool db conexiones max 2026"
+  ]
 }

@@ -6,14 +6,14 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "cable-awg-amperaje-seccion",
-  "intro": "La electrónica básica se rige por leyes de Ohm, Kirchhoff y principios de semiconductores. Cálculos de resistencia, potencia, voltaje y amperaje son la base para diseñar y mantener circuitos. Determiná el AWG (American Wire Gauge) adecuado según corriente a conducir. Incluye diámetro, sección mm² y pérdida por metro. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "AWG estándar: 14=15A, 12=20A, 10=30A, 8=40A, 6=55A. Cada 3 AWG = doble sección. Cada 6 AWG = doble diámetro.",
+  "intro": "El calibre de cable necesario para conducir una corriente depende del amperaje, la temperatura del aislante y el tipo de instalación. La norma AWG (American Wire Gauge) define secciones estándar: cada 3 AWG la sección se duplica (AWG 14 = 2.08 mm², AWG 11 ≈ 4.16 mm²). Usar calibre insuficiente causa calentamiento, degradación del aislante y riesgo de incendio. Esta calculadora te devuelve el AWG y la sección en mm² recomendada según la corriente y el tipo de instalación (general 75°C, potencia 90°C, residencial IRAM 2183).",
+  "keyTakeaway": "**AWG 14 ≤ 15A · AWG 12 ≤ 20A · AWG 10 ≤ 30A · AWG 8 ≤ 40A · AWG 6 ≤ 55A** (aire libre, 75°C). Cada 3 números AWG más bajo = doble sección.",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de sección de cable awg por amperaje",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Estás armando el tablero de una casa nueva y querés saber qué sección usar para el circuito de tomas generales (20 A).",
+    "Tenés que alimentar un aire acondicionado de 3000 W y no sabés si 2.5 mm² alcanza.",
+    "Diseñás una batería 48V para bici eléctrica con descarga de 30 A y necesitás el cable correcto.",
+    "Proyecto Arduino con tira LED que consume 5 A a 12 V y querés el cable mínimo sin sobrecalentamiento.",
+    "Verificás si el electricista puso cable adecuado (4 mm² en línea de horno 25 A)."
   ],
   "fields": [
     {
@@ -73,7 +73,7 @@
     ],
     "result": "AWG 14 = 2.08 mm² (1.63 mm de diámetro)"
   },
-  "explanation": "La **electrónica** se rige por leyes de Ohm, Kirchhoff, Faraday. Aplicar fórmulas evita errores costosos y fallos eléctricos.\n\n## Cómo se calcula\n\nDeterminá el AWG (American Wire Gauge) adecuado según corriente a conducir. Incluye diámetro, sección mm² y pérdida por metro · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa sección del cable se determina por la corriente máxima admisible (ampacity), regulada por NEC NFPA 70 (EE.UU.) y por IRAM 2183 (Argentina). La relación AWG ↔ mm² sigue:\n\n```\nSección (mm²) ≈ 0.012668 × 92^((36 - AWG) / 19.5)\n```\n\nY la corriente admisible depende del aislante y de si el cable va al aire libre o dentro de caño:\n\n- Aislante **THW (75°C)**: uso general, casas viejas.\n- Aislante **THHN/XLPE (90°C)**: mayor temperatura, uso industrial y en potencia.\n- Norma **IRAM 2183** (Argentina): cables residenciales con tabla propia ligeramente más conservadora.\n\n## Tabla de referencia: AWG, mm² y corriente máxima\n\n| AWG | Diámetro (mm) | Sección (mm²) | I máx 75°C | I máx 90°C |\n|---|---|---|---|---|\n| 18 | 1.024 | 0.823 | 10 A | 14 A |\n| 16 | 1.291 | 1.31 | 13 A | 18 A |\n| 14 | 1.628 | 2.08 | 15 A | 25 A |\n| 12 | 2.053 | 3.31 | 20 A | 30 A |\n| 10 | 2.588 | 5.26 | 30 A | 40 A |\n| 8 | 3.264 | 8.37 | 40 A | 55 A |\n| 6 | 4.115 | 13.3 | 55 A | 75 A |\n| 4 | 5.189 | 21.2 | 70 A | 95 A |\n| 2 | 6.544 | 33.6 | 95 A | 130 A |\n\n## Casos típicos\n\n**Toma de uso general (20 A, IRAM)**: cable **2.5 mm²** (≈ AWG 14-13). Térmica 20 A.\n\n**Horno eléctrico 3500 W a 220 V**: I = 16 A. Cable **2.5 mm²** para IRAM. Térmica 20 A.\n\n**Aire acondicionado 3000 frigorías (≈ 1400 W)**: corriente arranque ~12 A, régimen ~7 A. Cable **2.5 mm²**, térmica 16 A curva C.\n\n**Anafe eléctrico 5000 W**: I = 23 A → cable **4 mm²** y térmica 25 A.\n\n## Errores comunes\n\n- **No considerar caída de tensión en tramos largos**: con 20 m o más, la resistencia del cable hace caer el voltaje >3%. Regla: por cada 10 m adicionales, subir 1 calibre (ej: AWG 12 → AWG 10).\n- **Usar cable subdimensionado 'porque entra en la térmica'**: la térmica protege el cable, no al revés. Si el cable es chico y la térmica es grande, el cable se quema antes de que salte.\n- **Confundir sección nominal con efectiva**: algunos cables chinos miden menos de lo que dicen. Comprar marca certificada IRAM.\n- **Aluminio = cobre**: el aluminio conduce ~60% del cobre. Para la misma corriente, subir **2 calibres AWG** (AWG 12 cobre = AWG 10 aluminio).\n\n## Calculadoras relacionadas\n\n- [Ley de Ohm](/calculadora-ley-ohm-voltaje-corriente-resistencia)\n- [Potencia eléctrica P=VI](/calculadora-potencia-electrica-p-vi)\n- [Caída de tensión en cable](/calculadora-caida-tension-cable-distancia)\n- [Resistencia LED serie/paralelo](/calculadora-resistencia-led-serie-paralelo)",
   "faq": [
     {
       "q": "¿Por qué AWG 12 para 20A?",
@@ -96,30 +96,26 @@
       "a": "Similar para baja frecuencia (<60Hz). Alta frecuencia: efecto skin obliga a cable multifilar o trenzado Litz."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Qué cable pongo para una línea de horno en Argentina?",
+      "a": "Horno hasta 3500 W (16 A): cable **2.5 mm²** + térmica 20 A. Horno 5000 W o anafe (23 A): **4 mm²** + térmica 25 A. Siempre en línea dedicada según IRAM 2183."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Cada cuánto sube el calibre por tramo largo?",
+      "a": "Para mantener caída de tensión <3%, cada **10-15 m** adicionales conviene subir 1 calibre. Para 220V con 20 m y carga 20 A, pasar de 2.5 mm² a 4 mm²."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Por qué un cable de 2.5 mm² no soporta lo mismo en aire que en caño?",
+      "a": "Dentro de caño la disipación de calor es peor. IRAM 2183 tabla A: cable 2.5 mm² = **20 A al aire libre**, pero solo **15-18 A agrupado dentro de caño**. Siempre verificar el factor de corrección por agrupamiento."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "NEC NFPA 70 — National Electrical Code (ampacity tables)",
+      "url": "https://www.nfpa.org/codes-and-standards/all-codes-and-standards/list-of-codes-and-standards/detail?code=70"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "IRAM 2183 — Cables para instalaciones residenciales",
+      "url": "https://www.iram.org.ar"
     }
   ],
   "relatedSlugs": [
@@ -134,5 +130,10 @@
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "calculadora de sección de cable awg por amperaje",
+    "calculadora calculadora de sección de cable awg por amperaje…",
+    "cable awg amperaje seccion"
+  ]
 }

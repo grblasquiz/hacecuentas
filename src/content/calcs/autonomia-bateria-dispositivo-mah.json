@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "🔋",
   "formulaId": "autonomia-bateria-dispositivo-mah",
-  "intro": "El mantenimiento y operación eficiente del auto implican cálculos de consumo, potencia, presión, torque y rendimiento. Aplicar las fórmulas correctas evita sobreconsumo y daños mecánicos. Horas estimadas de uso según capacidad y consumo · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá capacidad y consumo y obtené horas al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "La autonomía de una batería se calcula dividiendo capacidad (mAh) entre consumo (mA): una batería de 3.000 mAh con un dispositivo que consume 200 mA dura 15 horas (teóricamente). En la práctica hay pérdidas por eficiencia del convertidor DC-DC (típicamente 80-90% rendimiento) y por la descarga no lineal del litio. Útil para dimensionar power banks, proyectos IoT, drones, GoPros y cualquier dispositivo portátil.",
+  "keyTakeaway": "**Horas = mAh / mA** (ideal). Real: multiplicá por 0.80-0.90 (eficiencia). 3.000 mAh / 200 mA × 0.85 ≈ 12.75 h.",
   "useCases": [
-    "Dimensionar autonomía de batería (mAh) antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Calcular cuánto dura una GoPro con su batería de 1.720 mAh grabando 4K a 1.300 mA promedio.",
+    "Dimensionar la batería LiPo para un proyecto Arduino/ESP32 que debe durar 72 h en campo.",
+    "Comparar cuántas cargas da un power bank de 20.000 mAh a tu iPhone de 3.687 mAh.",
+    "Evaluar si un drone con batería 2.200 mAh y consumo 18 A alcanza para un vuelo de 15 minutos."
   ],
   "fields": [
     {
@@ -56,39 +56,39 @@
     ],
     "result": "15h"
   },
-  "explanation": "Los **cálculos automotrices** son esenciales para dueños de autos, motos y otros vehículos: rendimiento de combustible, costos de mantenimiento, presión de neumáticos, conversiones de potencia, tiempos de amortización.\n\n## Cómo se calcula\n\nHoras estimadas de uso según capacidad y consumo · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "La autonomía real depende de capacidad, consumo, voltaje, temperatura y eficiencia del sistema.\n\n## Cómo se calcula\n\n```\nHoras_ideales = capacidad_mAh / consumo_mA\nHoras_reales  = Horas_ideales × eficiencia\n\neficiencia típica: 0.80-0.90 (20% pérdidas en DC-DC, LDOs)\n\nEnergía: Wh = mAh × V / 1000\n```\n\n## Tabla de consumos típicos\n\n| Dispositivo | Batería | Consumo | Autonomía ideal |\n|---|---|---|---|\n| Smartphone idle | 4.000 mAh | 20-50 mA | 80-200 h |\n| Smartphone uso | 4.000 mAh | 300-600 mA | 7-13 h |\n| Smartwatch | 300 mAh | 2-5 mA | 60-150 h |\n| Notebook SSD | 50 Wh @ 11V (~4.500 mAh) | 1-2 A | 4-8 h |\n| GoPro 4K | 1.720 mAh | 1.300 mA | 1.3 h |\n| Drone DJI Mini | 2.250 mAh | 9.000 mA | 0.25 h (15 min) |\n| Arduino uno + módulo | 2.000 mAh | 20-200 mA | 10-100 h |\n| ESP32 idle | 2.000 mAh | 0.01-0.5 mA (deep sleep) | meses |\n| LED 5mm | 1.000 mAh | 20 mA | 50 h |\n\n## Casos típicos\n\n- **Power bank 10.000 mAh al iPhone 15 (3.349 mAh)**: 10.000 × 0.65 (eff) ≈ 2 cargas completas.\n- **Arduino uno alimentado por batería AA 2.500 mAh consumiendo 50 mA**: 50 h = ~2 días.\n- **ESP32 con deep sleep 0.01 mA + 200 mA @ 1 min/h**: batería 18650 (2.500 mAh) dura ~2 meses.\n\n## Errores comunes\n\n- **Ignorar la eficiencia del convertidor**: un power bank 10.000 mAh no entrega 10.000 mAh a 5V USB, sino ~6.500-7.000 (por conversión 3.7V→5V).\n- **Usar consumo de pico como promedio**: un motor consume mucho en arranque y poco en régimen. Usá el promedio ponderado.\n- **No considerar temperatura**: a 0°C la capacidad real cae 20-40% vs 20°C.\n- **Asumir descarga lineal al 100%**: el litio no debe bajar del 10-15% SOC; la autonomía útil es ~85-90% de la nominal.\n\n## Calculadoras relacionadas\n\n- [Duración batería mAh/consumo](/calculadora-duracion-bateria-mah-consumo)\n- [Carga batería tiempo Amp](/calculadora-carga-bateria-tiempo-amp)\n- [Autonomía UPS servidor](/calculadora-autonomia-ups-tiempo-respaldo-servidor)",
   "faq": [
     {
-      "q": "¿Wh?",
-      "a": "Wh = mAh × V / 1000."
+      "q": "¿Cómo convierto mAh a Wh?",
+      "a": "Wh = mAh × V / 1000. Ejemplo: batería LiPo 2.500 mAh a 3.7V → 9.25 Wh. Es útil para comparar baterías de distinto voltaje y para regulaciones aéreas (<100 Wh en cabina, IATA)."
     },
     {
-      "q": "¿Ciclos?",
-      "a": "500-1000 típicos hasta 80% salud."
+      "q": "¿Cuántos ciclos dura una batería de litio?",
+      "a": "LiPo: 300-500 ciclos al 80% de capacidad original. Li-ion 18650: 500-1.000 ciclos. LiFePO4: 2.000-5.000 ciclos (más estable). Samsung/LG premium alcanzan 800+ ciclos. Dejar al 100% o al 0% mucho tiempo acelera el envejecimiento."
     },
     {
-      "q": "¿Temperatura?",
-      "a": "Frío reduce hasta 30%."
+      "q": "¿Cuánto baja la autonomía con el frío?",
+      "a": "A 0°C: capacidad real ~70-75% de la nominal. A −20°C: ~50%. Por eso un iPhone se apaga en la nieve pese a marcar 30%. En verano (>40°C) también cae pero por daño estructural a largo plazo."
     },
     {
-      "q": "¿Carga rápida?",
-      "a": "Mayor calor, menos ciclos."
+      "q": "¿Carga rápida daña la batería?",
+      "a": "Sí, acelera la degradación: más calor, más estrés iónico. Tests Battery University: carga 0.5C (3.000 mAh en 2 h) alcanza 1.000 ciclos; carga 2C (mismo en 30 min) solo 350-500 ciclos. Usá carga rápida solo cuando necesites."
     },
     {
-      "q": "¿20-80%?",
-      "a": "Mejor rango para vida útil."
+      "q": "¿Por qué un power bank 10.000 mAh no carga 3 veces mi celular 3.000 mAh?",
+      "a": "Conversión de voltaje: la batería interna es 3.7V, el USB necesita 5V. La conversión tiene 65-75% eficiencia. 10.000 mAh × (3.7/5) × 0.85 ≈ 6.290 mAh útiles. Eso da ~2 cargas de 3.000 mAh."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Qué es el efecto Peukert?",
+      "a": "En baterías (sobre todo plomo-ácido), a mayor corriente de descarga, menor capacidad real. Una batería 100 Ah a 10 A dura 10 h; a 50 A dura solo 1.5 h en vez de 2. En litio es mucho menos pronunciado, pero existe."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Conviene dejar la batería cargando toda la noche?",
+      "a": "Los cargadores modernos cortan al 100% y no sobrecargan. Pero mantener al 100% prolongado degrada. iOS/Android tienen \"carga optimizada\" que aprenden tus hábitos y frenan al 80% hasta cerca del despertar."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué rango de carga da mayor vida útil?",
+      "a": "20-80% es el sweet spot. Bajar del 20% y subir del 80% estresa más las celdas. Si cargás entre 30-70% conseguís 1.500-2.000 ciclos vs 500 ciclos de cargas 0-100% completas (Battery University Lab Test, 2020)."
     }
   ],
   "sources": [
@@ -112,5 +112,10 @@
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "calculadora autonomía de batería 2026",
+    "autonomía de batería (mah)",
+    "autonomia bateria dispositivo mah"
+  ]
 }

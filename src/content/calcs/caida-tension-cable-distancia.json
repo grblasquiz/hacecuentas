@@ -6,14 +6,14 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "caida-tension-cable-distancia",
-  "intro": "Las leyes físicas son universales y deterministas. Conocer las fórmulas te permite resolver problemas de movimiento, energía, fuerzas, ondas, termodinámica y electromagnetismo aplicados a la vida real. Calculá la caída de tensión ΔV en un cable eléctrico según material, sección, distancia y corriente. Recomendación de aceptar <3% en residencial, <5% total. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
+  "intro": "Todo cable eléctrico tiene resistencia propia. Cuando por él circula corriente, una parte del voltaje se pierde en forma de calor: es la caída de tensión (ΔV). La fórmula monofásica es ΔV = 2 × ρ × L × I / S, donde ρ es la resistividad del material (cobre 0.0172 Ω·mm²/m, aluminio 0.0282), L la distancia en metros de un sentido, I la corriente en amperes y S la sección en mm². Norma IRAM e IEC recomiendan límite **3% en circuitos residenciales** y **5% total** hasta el punto de consumo — más allá, los motores pierden potencia, las lámparas parpadean y los equipos electrónicos fallan.",
   "keyTakeaway": "**ΔV = 2 × ρ × L × I / S** (ida y vuelta). ρ cobre = 0.0172, aluminio = 0.0282 Ω·mm²/m. Para 220V: 3% = 6.6V máximo.",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de caída de tensión en cable por distancia",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Tirás cable desde el tablero hasta el galpón (35 m) y querés saber si 2.5 mm² alcanza para 20 A sin caída excesiva.",
+    "Estás pasando electricidad a una casa de fin de semana lejos del poste y necesitás dimensionar sección para 80 m.",
+    "El bombeo de la pileta pierde potencia y sospechás que la caída en la línea es mayor a 5%.",
+    "Armás una instalación solar de 48V con paneles a 15 m del regulador y querés <2% de caída.",
+    "Vas a poner un aire acondicionado en un ambiente lejano (40 m del tablero) y querés elegir entre 4 mm² o 6 mm²."
   ],
   "fields": [
     {
@@ -91,7 +91,7 @@
     ],
     "result": "Caída 6.19 V (2.81%), aceptable para residencial"
   },
-  "explanation": "La **física aplicada** resuelve problemas cotidianos: desde la caída libre hasta la electricidad del hogar. Fórmulas validadas en experimentos durante siglos.\n\n## Cómo se calcula\n\nCalculá la caída de tensión ΔV en un cable eléctrico según material, sección, distancia y corriente. Recomendación de aceptar <3% en residencial, <5% total.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa caída de tensión en un conductor se deduce de la Ley de Ohm aplicada a la resistencia del cable:\n\n```\nMonofásica:   ΔV = 2 × ρ × L × I / S\nTrifásica:    ΔV = √3 × ρ × L × I / S\n\nDonde:\n  ρ = resistividad (Ω·mm²/m)\n       Cobre:    0.0172 (a 20°C), 0.0225 (a 70°C)\n       Aluminio: 0.0282 (a 20°C), 0.0355 (a 70°C)\n  L = longitud del conductor en UN sentido (m)\n  I = corriente (A)\n  S = sección del conductor (mm²)\n```\n\nEl factor 2 en monofásico es porque la corriente recorre ida y vuelta. El porcentaje se calcula: **% = (ΔV / V nominal) × 100**.\n\n## Tabla de referencia: límites normativos\n\n| Tramo | Límite IRAM 2281 / IEC 60364 |\n|---|---|\n| Iluminación residencial | 3% |\n| Fuerza motriz residencial (tomas) | 5% |\n| Instalaciones industriales | 5-8% |\n| Sistemas solares fotovoltaicos DC | 1-2% (crítico para MPPT) |\n| Audio/video 12V | 3% máximo |\n\n## Casos típicos\n\n**Caso 1: Toma de fuerza en galpón a 30 m del tablero, 15 A, cable 2.5 mm² cobre, 220 V**\n- ΔV = 2 × 0.0172 × 30 × 15 / 2.5 = **6.19 V** = 2.81% → Aceptable (<5%).\n\n**Caso 2: Mismo galpón pero con 25 A (aire + herramientas), 40 m, 4 mm², 220V**\n- ΔV = 2 × 0.0172 × 40 × 25 / 4 = **8.6 V** = 3.91% → Aceptable.\n\n**Caso 3: Casa de fin de semana, poste a 80 m, consumo 30 A, 220 V, 10 mm² cobre**\n- ΔV = 2 × 0.0172 × 80 × 30 / 10 = **8.26 V** = 3.75% → OK con 10 mm². Con 6 mm² daría 13.8 V = 6.25% → excesivo.\n\n## Errores comunes\n\n- **Olvidar el factor 2 en monofásico**: el cable va y vuelve — si usás L sin ×2, subestimás la caída al 50%.\n- **Usar resistividad fría siempre**: a plena carga el cable se calienta a 70-90°C y la resistividad sube ~30%. Para cálculos de régimen, usar ρ a 70°C.\n- **Confundir distancia con perímetro**: L es la distancia en línea recta del cable tendido, no el contorno del cuarto.\n- **No considerar armónicos en cargas no lineales**: electrónicos (fuentes switching, LEDs, variadores) generan armónicos que aumentan pérdidas. Para esos casos sumar 10-20% a la caída calculada.\n\n## Calculadoras relacionadas\n\n- [Sección AWG por amperaje](/calculadora-cable-awg-amperaje-seccion)\n- [Ley de Ohm](/calculadora-ley-ohm-voltaje-corriente-resistencia)\n- [Potencia eléctrica P=VI](/calculadora-potencia-electrica-p-vi)\n- [Resistencia LED serie/paralelo](/calculadora-resistencia-led-serie-paralelo)",
   "faq": [
     {
       "q": "¿Por qué 3% es el límite?",
@@ -114,30 +114,26 @@
       "a": "Sí, misma fórmula. En AC de baja frecuencia también aplica."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cómo calculo para 380V trifásico?",
+      "a": "Fórmula trifásica: **ΔV = √3 × ρ × L × I / S**. Para 380V, el 3% son 11.4V, el 5% son 19V. La trifásica tiene ~15% menos caída que la monofásica para misma carga."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Para corriente continua cambia la fórmula?",
+      "a": "No. Para DC aplica **ΔV = 2 × ρ × L × I / S** igual que monofásica AC. En sistemas solares a 48V DC, el 2% son solo 0.96V — por eso los paneles piden secciones grandes aunque la corriente parezca baja."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Y si tengo más del 5% de caída?",
+      "a": "Opciones: (1) aumentar sección al siguiente calibre IRAM (2.5 → 4 → 6 → 10 mm²), (2) dividir en 2 líneas separadas, (3) acercar el tablero, (4) pasar de monofásica a trifásica si hay trifásica disponible."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "IEC 60364 — Installations électriques basse tension",
+      "url": "https://webstore.iec.ch/publication/60479"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "IRAM 2281 — Sistemas de cables eléctricos",
+      "url": "https://www.iram.org.ar"
     }
   ],
   "relatedSlugs": [
@@ -152,5 +148,10 @@
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "caida tension cable distancia",
+    "calculadora calculadora de caída de tensión en cable por dis…",
+    "calculadora de caída de tensión en cable por distancia"
+  ]
 }

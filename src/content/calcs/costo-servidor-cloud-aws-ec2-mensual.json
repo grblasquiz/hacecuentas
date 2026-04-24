@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "☁️",
   "formulaId": "costo-servidor-cloud-aws-ec2-mensual",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Calcula costo mensual de instancia cloud · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá precio/hora, horas/día y días/mes y obtené costo mensual al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "El costo mensual de una instancia cloud (AWS EC2, GCP Compute, Azure VM) se calcula multiplicando el precio/hora on-demand por las horas de uso real. Una t3.micro en AWS cuesta ~USD 0.0104/h (USD 7.5/mes si está 24/7), una c5.large USD 0.085/h (USD 61/mes), una m5.xlarge USD 0.192/h (USD 140/mes). Reservar 1-3 años baja 40-72% el precio, y Spot/Preemptible llega a 70-90% off pero puede interrumpirse. No confundir con costo total: sumá storage EBS, egress y load balancer.",
+  "keyTakeaway": "**Costo mensual = precio/h × horas/día × días/mes**. EC2 t3.micro USD 7.5/mes 24/7, c5.large USD 61, m5.xlarge USD 140. Reserved Instance 1 año: -40%, 3 años: -60%. Spot: hasta -90%.",
   "useCases": [
-    "Dimensionar costo EC2/cloud mensual antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Estás dimensionando un servidor para una API y querés saber si m5.xlarge 24/7 entra en presupuesto.",
+    "Comparás AWS on-demand vs. reserved para un workload estable de producción que va a estar prendido todo el año.",
+    "Evaluás si apagar las instancias de dev/staging fuera de horario (12h × 22d) ahorra suficiente para justificar el trabajo.",
+    "Estás armando el pitch para migrar de on-prem a cloud y necesitás el OPEX mensual proyectado."
   ],
   "fields": [
     {
@@ -71,49 +71,49 @@
     ],
     "result": "$72"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nCalcula costo mensual de instancia cloud · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\n**Costo mensual = Precio/hora × Horas/día × Días activos/mes**.\n\nAWS, GCP y Azure facturan por segundo (mínimo 60 seg en EC2). La instancia debe estar encendida; detenida no paga compute pero sí storage EBS. Los precios varían por región (us-east-1 suele ser el más barato).\n\n## Tabla de referencia AWS EC2 on-demand (us-east-1, 2026)\n\n- **t3.micro** (2 vCPU, 1 GB RAM): USD 0.0104/h → USD 7.59/mes 24/7.\n- **t3.medium** (2 vCPU, 4 GB): USD 0.0416/h → USD 30.37/mes.\n- **c5.large** (2 vCPU, 4 GB, optimizada CPU): USD 0.085/h → USD 62.05/mes.\n- **m5.xlarge** (4 vCPU, 16 GB): USD 0.192/h → USD 140.16/mes.\n- **r5.2xlarge** (8 vCPU, 64 GB RAM): USD 0.504/h → USD 367.92/mes.\n- **g4dn.xlarge** (GPU NVIDIA T4): USD 0.526/h → USD 384/mes.\n- **GCP e2-medium** equivalente: USD 0.0335/h.\n- **Azure B2s**: USD 0.0416/h.\n\n## Casos típicos\n\n- Blog WordPress con t3.micro 24/7 + RDS t3.micro: ~USD 25/mes total (incluye DB y storage).\n- API en producción con m5.xlarge 24/7 + ALB + 50 GB EBS: USD 140 + 16 + 5 = **USD 161/mes** on-demand. Reserved 1 año: USD 97/mes.\n- Dev environment c5.large 8h × 22 días: 0.085 × 176 h = **USD 15/mes** (vs. USD 62 si quedara 24/7). Apagar ahorra 76%.\n\n## Errores comunes\n\n- **Olvidar egress**: tráfico de salida cuesta USD 0.09/GB en AWS (primer TB). 500 GB/mes = USD 45 extra invisible.\n- **No incluir EBS**: storage gp3 USD 0.08/GB/mes. 100 GB = USD 8 que no aparece en el precio de la instancia.\n- **Dejar Elastic IPs sin usar**: EIP no asociado = USD 0.005/h = USD 3.60/mes por IP.\n- **Subestimar NAT Gateway**: USD 0.045/h + USD 0.045/GB procesado = USD 32/mes fijo + tráfico. Puede ser el 20-30% de la factura.\n- **Pagar on-demand workloads estables**: si corre 24/7 todo el año, reserved 1 año ahorra 40% garantizado.\n\n## Calculadoras relacionadas\n\n- [Comparador AWS/GCP/Azure EC2](/calculadoras/calculadora-cloud-aws-gcp-azure-ec2-mes-ondemand)\n- [Costo tokens API OpenAI/Claude](/calculadoras/calculadora-costo-tokens-api-openai-claude-mensual)\n- [Costo cloud servidor mensual (genérico)](/calculadoras/calculadora-costo-cloud-servidor-mensual)",
   "faq": [
     {
-      "q": "¿On-demand vs reserved?",
-      "a": "Reservado 1-3 años, 30-70% descuento."
+      "q": "¿Cuánto ahorra una Reserved Instance vs on-demand?",
+      "a": "1 año no upfront: ~40% off. 1 año all upfront: ~44%. 3 años no upfront: ~55%. 3 años all upfront: 62-72%. Savings Plans Compute dan 40-66% con más flexibilidad."
     },
     {
-      "q": "¿Spot?",
-      "a": "Hasta 90% descuento pero interrumpible."
+      "q": "¿Qué son las Spot Instances y cuándo usarlas?",
+      "a": "Capacidad sobrante de AWS hasta -90% del on-demand. AWS puede terminarlas con 2 min de aviso. Ideal para batch jobs, rendering, CI/CD, data processing. NO para producción con SLA."
     },
     {
-      "q": "¿Data transfer?",
-      "a": "Out: $0.09/GB; in gratis."
+      "q": "¿Cuánto cuesta el tráfico de salida (egress)?",
+      "a": "AWS us-east-1 a internet: primeros 10 TB USD 0.09/GB, siguientes 40 TB USD 0.085, hasta 150 TB USD 0.07. Tráfico entrante (in) es gratis. Entre AZs USD 0.01/GB por dirección."
     },
     {
-      "q": "¿Egress?",
-      "a": "Descarga paga, principal costo oculto."
+      "q": "¿Cómo calcula exacto AWS Pricing Calculator?",
+      "a": "En calculator.aws podés configurar instancia + EBS + snapshots + data transfer + load balancer y te da el costo mensual desglosado. Es la fuente oficial para quotes."
     },
     {
-      "q": "¿Calculadora?",
-      "a": "AWS Pricing Calculator oficial."
+      "q": "¿Conviene apagar instancias de dev/staging?",
+      "a": "Sí, mucho. Apagar 8 h/día × 5 días/sem = corre 40 h/sem vs. 168 h/sem. Ahorro 76%. Usá Instance Scheduler o Lambda con EventBridge para automatizar."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Qué es más barato: AWS, GCP o Azure?",
+      "a": "Para compute similar: GCP es 5-10% más barato que AWS en on-demand. Azure compite con descuentos enterprise. GCP sustained-use discount es automático. AWS Reserved compite con Committed Use Discount de GCP."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Cómo bajar la factura AWS en 30 días?",
+      "a": "1) Right-sizing con Compute Optimizer. 2) Comprar Savings Plans para baseline estable. 3) Eliminar EIPs y snapshots huérfanos. 4) Usar gp3 en vez de gp2 (-20%). 5) Apagar dev fuera de horario."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Esta calc incluye storage y red?",
+      "a": "No, solo compute por hora. Sumá aparte EBS (USD 0.08/GB/mes gp3), snapshots (USD 0.05/GB), egress (USD 0.09/GB) y NAT/ALB si usás."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
+      "name": "AWS EC2 Pricing",
+      "url": "https://aws.amazon.com/ec2/pricing/on-demand/"
     },
     {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "AWS Pricing Calculator",
+      "url": "https://calculator.aws"
     }
   ],
   "relatedSlugs": [
@@ -127,5 +127,10 @@
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "costo ec2/cloud mensual",
+    "costo servidor cloud aws ec2 mensual",
+    "calculadora costo ec2/cloud mensual 2026"
+  ]
 }

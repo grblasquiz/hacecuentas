@@ -7,13 +7,14 @@
   "audience": "global",
   "icon": "📺",
   "formulaId": "bandwidth-streaming-bitrate-resolucion-youtube",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Bitrate recomendado por resolución. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá resolución y plataforma y obtené bitrate recomendado al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "Antes de hacer streaming en YouTube, Twitch o Kick, tenés que saber el bitrate correcto según tu resolución. La fórmula simplificada: **Bitrate_Mbps ≈ (ancho × alto × fps × 0.1) / 1.000.000** para H.264. Ejemplo: 1080p 60fps → **6 Mbps**. Tu upload de internet debe ser **≥1,5× el bitrate** por overhead de protocolos. En Argentina con fibra 300/30 Mbps, podés streamear hasta 1440p 60fps sin problema.",
+  "keyTakeaway": "Fórmula: **Bitrate = (Ancho × Alto × FPS × BPP) / 1.000.000** en Mbps, donde BPP ≈ 0.1 (H.264) o 0.07 (H.265). **Upload mínimo = 1.5× Bitrate** por overhead. 1080p60 en YouTube = **6 Mbps** recomendado.",
   "useCases": [
-    "Dimensionar bitrate streaming antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Configurar OBS/Streamlabs para hacer un stream en YouTube Live con la mejor calidad posible.",
+    "Dimensionar el plan de internet necesario para streamear en Twitch sin buffering.",
+    "Decidir entre 720p60 (ancho banda bajo) y 1080p30 (más nitidez estática) según tu conexión.",
+    "Calcular el consumo de datos mensual para planes móviles 4G/5G con datos limitados.",
+    "Evaluar si tu upload actual (fibra, cablemodem, ADSL) soporta streaming en 4K HDR."
   ],
   "fields": [
     {
@@ -84,56 +85,68 @@
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: streaming 1080p 60fps a YouTube Live",
     "steps": [
-      "1080p 60 YouTube",
-      "6 Mbps"
+      "**Resolución**: 1920×1080 (1080p)",
+      "**FPS**: 60",
+      "**Codec**: H.264 (BPP 0.1)",
+      "**Bitrate**: (1920×1080×60×0.1)/1.000.000 = **12,4 Mbps** teórico",
+      "**YouTube recomendado**: 4,5-9 Mbps (usan compresión adicional) → usar **6 Mbps**",
+      "**Upload mínimo**: 6 × 1.5 = **9 Mbps**"
     ],
-    "result": "H.264/H.265"
+    "result": "Configurá OBS en **6.000 kbps**. Tu upload debe ser ≥9 Mbps estables."
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nBitrate recomendado por resolución.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa fórmula base del bitrate de video es:\n\n**Bitrate_Mbps = (Ancho × Alto × FPS × BitsPorPíxel) / 1.000.000**\n\nDonde **BitsPorPíxel (BPP)** depende del codec:\n- **H.264 (AVC)**: 0.10 — estándar universal, máxima compatibilidad.\n- **H.265 (HEVC)**: 0.07 — 30% más eficiente pero mayor CPU.\n- **AV1**: 0.05 — más eficiente aún, pocos encoders soportan live.\n- **VP9**: 0.08 — YouTube lo usa internamente para VoD.\n\nEn la práctica, YouTube/Twitch/Kick tienen **bitrates recomendados** ya optimizados para cada resolución y fps, que balancean calidad vs. buffering del viewer.\n\n### Regla del upload\n\n**Upload_mínimo = Bitrate × 1.5** (overhead de TCP/RTMP + retransmisiones + picos).\n\n## Tabla de referencia\n\n### Bitrates recomendados por plataforma (2026)\n\n| Resolución | FPS | YouTube Live | Twitch | Kick | Upload mín |\n|---|---|---|---|---|---|\n| 720p | 30 | 1.5-4 Mbps | 2.5-4 Mbps | 3-5 Mbps | 5 Mbps |\n| 720p | 60 | 2.25-6 Mbps | 3.5-5 Mbps | 4-6 Mbps | 8 Mbps |\n| 1080p | 30 | 3-6 Mbps | 3-6 Mbps | 5-8 Mbps | 10 Mbps |\n| 1080p | 60 | 4.5-9 Mbps | 6 Mbps (cap) | 6-10 Mbps | 12 Mbps |\n| 1440p | 30 | 6-13 Mbps | 9 Mbps | 12 Mbps | 15 Mbps |\n| 1440p | 60 | 9-18 Mbps | 9 Mbps (cap) | 15 Mbps | 25 Mbps |\n| 4K | 30 | 13-34 Mbps | 16 Mbps (cap) | 20 Mbps | 40 Mbps |\n| 4K | 60 | 20-51 Mbps | 16 Mbps (cap) | 25 Mbps | 65 Mbps |\n\n### Internet típico en Argentina 2026\n\n| Plan | Download | Upload | Streaming máximo |\n|---|---|---|---|\n| ADSL 20 Mbps | 20 | 2 | 720p30 (con riesgo) |\n| Cablemodem 100 Mbps | 100 | 5 | 720p60 / 1080p30 |\n| Fibra 300/30 Mbps | 300 | 30 | 1080p60 sobrado, 1440p60 OK |\n| Fibra 500/50 Mbps | 500 | 50 | 1440p60 cómodo |\n| Fibra 1 Gbps simétrica | 1000 | 1000 | 4K60 sin problema |\n\n## Casos típicos\n\n- **Streamer hobby en YouTube 1080p30**: bitrate 4.500 kbps, upload necesario ~7 Mbps. Un plan cablemodem Flow/Fibertel 100/5 está **en el límite**, si hay fluctuación se cae. Recomendado pasar a fibra 300/30.\n- **Gaming en Twitch 1080p60**: cap de Twitch es **6 Mbps** para no afiliados (aunque ahora permite más a socios). OBS: 6.000 kbps CBR, upload ≥9 Mbps. Fibra 300/30 funciona perfecto.\n- **Stream 4K60 profesional en Kick**: 25 Mbps bitrate, upload ≥40 Mbps. Requiere **fibra simétrica 500/500 o 1 Gbps**. GPU: mínimo RTX 3060 con NVENC para H.264 4K60.\n\n## Errores comunes\n\n1. **Streamear al bitrate máximo sin tener upload**: si tu upload es 5 Mbps y configurás 8 Mbps, se cae o el stream tiene dropped frames constantes. Probá con speedtest.net antes.\n2. **Usar upload del speedtest como bitrate máximo**: el speedtest mide pico, no sostenido. Usá **50-60% del upload medido** para el stream (el resto queda para Discord, navegador, etc).\n3. **H.265 en live sin soporte**: Twitch/YouTube aceptan H.264 principalmente. H.265 solo en VoD, y AV1 recién empieza en 2026 en YouTube Live beta.\n4. **Keyframe interval mal configurado**: YouTube/Twitch quieren **keyframe cada 2 segundos** (GOP=120 a 60fps). Si ponés más, hay problemas de latencia y VODs.\n5. **CBR vs VBR en live**: siempre **CBR** (bitrate constante) para streaming. VBR puede hacer spikes que saturan tu upload.\n6. **Olvidar el audio**: sumá **160 kbps** (estéreo AAC) al bitrate total. A 1080p60 con 6 Mbps video, total es 6.16 Mbps.\n\n## Calculadoras relacionadas\n\n- [Calculadora de almacenamiento de video](/calc/calculadora-almacenamiento-video-bitrate-duracion) — cuánto pesa un video según bitrate y duración.\n- [Calculadora de consumo de datos móviles](/calc/calculadora-consumo-datos-moviles-streaming) — para streamear desde 4G/5G.\n- [Calculadora de resolución de pantalla PPI](/calc/calculadora-resolucion-pantalla-ppi-densidad) — elegí el monitor correcto.",
   "faq": [
     {
-      "q": "¿720p?",
-      "a": "2.5-4 Mbps."
+      "q": "¿Qué bitrate uso para streamear en 1080p 60fps en YouTube?",
+      "a": "YouTube recomienda **4.500-9.000 kbps** (4,5-9 Mbps) para 1080p60 con H.264. Punto medio recomendado: **6.000 kbps CBR**. Si tenés buen upload (>12 Mbps estables), podés subir a 9.000 kbps para mayor nitidez en escenas con mucho movimiento (gaming)."
     },
     {
-      "q": "¿1080p 30?",
-      "a": "3-6 Mbps."
+      "q": "¿Cuál es el bitrate máximo permitido en Twitch?",
+      "a": "**6.000 kbps** para usuarios standard (y 8.000 kbps en beta para algunos). Twitch aplica un cap duro: más arriba el stream es rechazado. Partners/afiliados top tienen permitido hasta 8.500 kbps. YouTube y Kick no tienen cap similar y aceptan hasta 51.000 kbps para 4K60."
     },
     {
-      "q": "¿1080p 60?",
-      "a": "4.5-9 Mbps."
+      "q": "¿Cuánto upload de internet necesito para streamear 1080p 60fps?",
+      "a": "**Mínimo 9 Mbps de upload estables** (6 Mbps stream × 1.5 overhead). En Argentina 2026, plan recomendado: **fibra 300/30 Mbps** (Fibertel, Telecentro, Personal Flow). Plan 100/5 cablemodem NO alcanza. Test antes con speedtest.net en horario pico (21-23hs)."
     },
     {
-      "q": "¿1440p?",
-      "a": "6-13 Mbps."
+      "q": "¿Es mejor 1080p 30fps o 720p 60fps?",
+      "a": "**Gaming/deportes → 720p60** (movimiento fluido es clave). **Charlas/tutoriales/podcast → 1080p30** (resolución se nota más, movimiento bajo). Ambos usan bitrate similar (3-6 Mbps). En escala de recomendados, 720p60 se ve 'más profesional' para gaming, 1080p30 para talking head."
     },
     {
-      "q": "¿4K?",
-      "a": "13-51 Mbps."
+      "q": "¿Qué codec uso: H.264 o H.265?",
+      "a": "**H.264** para streaming live (universal, todos los encoders y plataformas). **H.265 (HEVC)** para VoD y archivo (30% menos tamaño con misma calidad). YouTube soporta H.265 solo en upload offline. AV1 empieza en 2026 pero requiere GPU moderna (RTX 4000+ o AMD RX 7000+)."
     },
     {
-      "q": "¿Upload?",
-      "a": "Siempre 1.5x bitrate (overhead protocolos)."
+      "q": "¿Cuánto consume mi plan 4G/5G en 1 hora de Netflix?",
+      "a": "**480p (SD)**: 1 GB/h. **720p (HD)**: 3 GB/h. **1080p (Full HD)**: 5-7 GB/h. **4K HDR**: 12-20 GB/h. Un plan 4G con 10 GB/mes dura **~2 horas de Netflix 1080p**. Netflix tiene modo 'ahorro de datos' que baja a 0,3 GB/h (calidad SD)."
     },
     {
-      "q": "¿H.265?",
-      "a": "Mejor compresión pero pocos softwares soportan streaming."
+      "q": "¿Qué es el factor 'keyframe interval' y cómo lo configuro?",
+      "a": "Es cada cuánto se envía un fotograma completo (vs diferencial). YouTube/Twitch requieren **keyframe cada 2 segundos** (GOP=120 a 60fps, GOP=60 a 30fps). Si es mayor, hay problemas de buffering al cambiar de stream y los VODs quedan rotos. En OBS: Configuración → Output → Keyframe Interval = 2."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿CBR o VBR para streaming en vivo?",
+      "a": "**SIEMPRE CBR** (Constant Bitrate) en live. VBR hace spikes que pueden saturar tu upload y causar buffering al viewer. CBR usa ancho de banda predecible = stream estable. VBR solo para VoD y grabaciones locales."
+    },
+    {
+      "q": "¿Cuánto consumo de datos genera 1 hora de stream en Twitch?",
+      "a": "Depende del bitrate de subida (streamer) y bajada (viewer). **Streamer a 1080p60 6 Mbps**: 2,7 GB/hora de upload. **Viewer mirando 1080p 6 Mbps**: 2,7 GB/hora de download. Con chat + Discord sumale 10%. Para 8h de stream/día: ~22 GB/día, **660 GB/mes** (chequeá límites de tu ISP)."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
+      "name": "YouTube Live Streaming - Bitrate Recomendado",
+      "url": "https://support.google.com/youtube/answer/2853702"
     },
     {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "Twitch Broadcast Guidelines",
+      "url": "https://help.twitch.tv/s/article/broadcasting-guidelines"
+    },
+    {
+      "name": "OBS Project - Settings Guide",
+      "url": "https://obsproject.com/kb/general-performance-and-encoding-issues"
     }
   ],
   "relatedSlugs": [
@@ -147,5 +160,10 @@
     "lastUpdated": "2026-04-20",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "bandwidth streaming bitrate resolucion youtube",
+    "bitrate streaming",
+    "calculadora bitrate streaming 2026"
+  ]
 }

@@ -6,14 +6,14 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "carga-capacitor-constante-rc",
-  "intro": "La electrónica básica se rige por leyes de Ohm, Kirchhoff y principios de semiconductores. Cálculos de resistencia, potencia, voltaje y amperaje son la base para diseñar y mantener circuitos. Calculá la constante τ=RC y el voltaje del capacitor en cualquier instante durante carga o descarga. Incluye tiempos para 63%, 95% y 99%. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
+  "intro": "Un circuito RC (resistencia + capacitor) tiene una dinámica exponencial: al aplicar voltaje el capacitor no carga instantáneamente sino siguiendo V(t) = V₀ × (1 − e^(−t/τ)), donde τ = R × C es la constante de tiempo en segundos. Tras 1τ carga al 63%, 3τ al 95%, 5τ al 99.3% (se considera completo). Esta calculadora toma R y C y devuelve τ, los tiempos característicos y el voltaje en un instante específico — útil para diseñar timers, filtros pasa-bajos, debouncing de pulsadores y snubbers.",
   "keyTakeaway": "**τ = R × C**. Carga: V(t) = V₀·(1 − e^(−t/τ)). Descarga: V(t) = V₀·e^(−t/τ). Regla: **5τ = completo**. Para 1 MΩ + 1 µF → τ = 1 s.",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de constante rc (carga/descarga de capacitor)",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Diseñás un circuito debounce para un pulsador mecánico (R=10k, C=100nF, τ=1ms).",
+    "Calculás el tiempo hasta que un flash de cámara se recarga (R=100k, C=100µF).",
+    "Ajustás el filtro pasa-bajos RC de la salida de un Arduino para generar PWM suavizado.",
+    "Proyecto 555 astable y necesitás τ para calcular la frecuencia de oscilación.",
+    "Estudiás para un examen de Física II sobre circuitos transitorios RC."
   ],
   "fields": [
     {
@@ -140,7 +140,7 @@
     ],
     "result": "V(1s) = 7.58 V, carga completa en 5 s"
   },
-  "explanation": "La **electrónica** se rige por leyes de Ohm, Kirchhoff, Faraday. Aplicar fórmulas evita errores costosos y fallos eléctricos.\n\n## Cómo se calcula\n\nCalculá la constante τ=RC y el voltaje del capacitor en cualquier instante durante carga o descarga. Incluye tiempos para 63%, 95% y 99% · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa dinámica de un capacitor en un circuito RC sigue una ecuación diferencial de primer orden resolvible exponencialmente:\n\n```\nConstante de tiempo:  τ = R × C  (segundos)\n\nCarga:      V(t) = V_fuente × (1 − e^(−t/τ))\nDescarga:   V(t) = V_inicial × e^(−t/τ)\n\nHitos temporales:\n  1τ → 63.2% del valor final\n  2τ → 86.5%\n  3τ → 95.0%\n  4τ → 98.2%\n  5τ → 99.3% (considerado completo en ingeniería)\n  7τ → 99.9% (precisión alta)\n```\n\n**Unidades**: si R en ohms y C en farads, τ en segundos. Para escalas pequeñas: kΩ × µF = ms; kΩ × nF = µs; MΩ × pF = µs.\n\n## Tabla de referencia: τ para combinaciones típicas\n\n| R | C | τ | Uso típico |\n|---|---|---|---|\n| 1 kΩ | 1 nF | 1 µs | Filtros de alta frecuencia |\n| 10 kΩ | 100 nF | 1 ms | Debounce pulsador |\n| 10 kΩ | 1 µF | 10 ms | Integradores |\n| 100 kΩ | 10 µF | 1 s | Temporizadores lentos |\n| 1 MΩ | 100 µF | 100 s | Retardos largos |\n| 1 Ω | 1000 µF (1 mF) | 1 ms | Fuentes de poder (ripple) |\n\n## Casos típicos\n\n**Caso 1: Debounce de pulsador. R=10k, C=100 nF**\n- τ = 10000 × 100e−9 = **1 ms**\n- 5τ = 5 ms → el capacitor carga estable en 5 ms, filtrando los rebotes mecánicos (típico 1-2 ms).\n\n**Caso 2: Flash de cámara. R=100k, C=100 µF, V=300 V**\n- τ = 100000 × 100e−6 = 10 s\n- 5τ = 50 s → tarda 50 segundos en recargarse al 99%. Explica por qué los flashes toman 10-30 s para estar listos.\n\n**Caso 3: Filtro anti-alias audio. R=1 k, C=10 nF**\n- τ = 10 µs → fc = 1/(2πτ) = **15.9 kHz** (corte sobre banda audible).\n\n## Errores comunes\n\n- **Confundir τ con tiempo de carga completo**: τ es solo el 63%. Para 'cargado completo' se considera **5τ** (99.3%).\n- **Olvidar el tiempo en descarga**: la fórmula de descarga es exponencial pura (no hay 1 − e^−t). En descarga, V(τ) = 37% del inicial.\n- **Carga con resistencia muy baja (R → 0)**: τ tiende a 0 pero aparecen picos altos de corriente de carga (inrush). Usar siempre un resistor de limitación.\n- **Ignorar la ESR del capacitor**: los electrolíticos tienen ESR (resistencia serie equivalente) que se suma a R. Para 1 F supercapacitor, ESR ~0.1 Ω es significativa.\n\n## Calculadoras relacionadas\n\n- [Ley de Ohm](/calculadora-ley-ohm-voltaje-corriente-resistencia)\n- [Potencia eléctrica P=VI](/calculadora-potencia-electrica-p-vi)\n- [Resistencia LED serie/paralelo](/calculadora-resistencia-led-serie-paralelo)\n- [Divisor de voltaje](/calculadora-divisor-voltaje-resistencias)",
   "faq": [
     {
       "q": "¿Qué es la constante RC?",
@@ -177,16 +177,12 @@
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "MIT OpenCourseWare 6.002 — Circuits and Electronics: RC Transients",
+      "url": "https://ocw.mit.edu/courses/6-002-circuits-and-electronics-spring-2007/"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "All About Circuits — Capacitor Charging and Discharging",
+      "url": "https://www.allaboutcircuits.com/textbook/direct-current/chpt-16/"
     }
   ],
   "relatedSlugs": [
@@ -201,5 +197,10 @@
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "calculadora capacitor) 2026",
+    "carga capacitor constante rc",
+    "calculadora de constante rc (carga/descarga de capacitor)"
+  ]
 }

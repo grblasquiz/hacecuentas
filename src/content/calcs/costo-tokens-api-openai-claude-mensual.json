@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "🤖",
   "formulaId": "costo-tokens-api-openai-claude-mensual",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Estimación mensual de costo LLM · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá tokens in/llamada, tokens out y llamadas/día y obtené costo diario al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "El costo de usar APIs de LLMs (Claude, GPT, Gemini) se factura por tokens, donde 1 token ≈ 0.75 palabras en inglés y ~0.5 palabras en español. Los modelos cobran distinto por tokens de entrada (input, el prompt) y salida (output, la respuesta). Precios 2026: Claude Sonnet 4 USD 3/MTok in y USD 15/MTok out, GPT-4o USD 2.50/MTok in y USD 10/MTok out, Gemini 1.5 Pro USD 1.25/MTok in y USD 5/MTok out. Modelos chicos (Haiku, GPT-4o-mini) son 10-30x más baratos.",
+  "keyTakeaway": "**Costo = (tokens_in × precio_in + tokens_out × precio_out) × llamadas**. Claude Sonnet USD 3/15 por MTok (in/out), GPT-4o USD 2.5/10, Haiku USD 0.80/4, GPT-4o-mini USD 0.15/0.60. Prompt caching baja 90% el input.",
   "useCases": [
-    "Dimensionar costo API LLM por tokens antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Estás por lanzar un chatbot con 5.000 conversaciones/día y querés saber si la cuenta mensual es viable.",
+    "Comparás Claude Sonnet vs. GPT-4o vs. Haiku para elegir el modelo con mejor relación precio/calidad.",
+    "Tu app RAG procesa 10k tokens por query y querés proyectar el costo mensual a escala de 1.000 usuarios.",
+    "Estás evaluando si prompt caching (Claude) o Batch API (50% off) justifica el refactor del código."
   ],
   "fields": [
     {
@@ -84,49 +84,49 @@
     ],
     "result": "~$30/día"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nEstimación mensual de costo LLM · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\n**Costo por llamada = (tokens_in / 1M × precio_in) + (tokens_out / 1M × precio_out)**. Multiplicá por llamadas/día × 30 para el mensual.\n\n1 token ≈ 4 caracteres en inglés, ~3 en español. Un prompt de 500 palabras ES ≈ 900-1.100 tokens. Una respuesta de 300 palabras ≈ 500-600 tokens.\n\n## Tabla de precios (USD por millón de tokens, 2026)\n\n| Modelo | Input | Output | Cache read |\n|---|---|---|---|\n| Claude Opus 4 | 15.00 | 75.00 | 1.50 |\n| Claude Sonnet 4 | 3.00 | 15.00 | 0.30 |\n| Claude Haiku 4 | 0.80 | 4.00 | 0.08 |\n| GPT-4o | 2.50 | 10.00 | 1.25 |\n| GPT-4o-mini | 0.15 | 0.60 | 0.075 |\n| Gemini 1.5 Pro | 1.25 | 5.00 | 0.3125 |\n| Gemini 1.5 Flash | 0.075 | 0.30 | 0.01875 |\n\nBatch API: típicamente 50% off. Prompt caching en Claude: 90% off en reads repetidos.\n\n## Casos típicos\n\n- **Chatbot customer support con Claude Sonnet, 1.000 convos/día, 2.000 in + 500 out por convo**: (2.000×3 + 500×15) / 1M × 1.000 × 30 = USD 405/mes.\n- **Asistente RAG con Haiku, 10.000 queries/día, 5.000 in + 300 out**: (5.000×0.8 + 300×4) / 1M × 10.000 × 30 = USD 1.560/mes.\n- **GPT-4o-mini clasificador, 100.000 llamadas/día, 800 in + 100 out**: (800×0.15 + 100×0.60) / 1M × 100k × 30 = USD 540/mes.\n- Con prompt caching (Claude Sonnet): mismo chatbot con 90% cache hit → USD 405 → ~**USD 70/mes**.\n\n## Errores comunes\n\n- **Confundir tokens con palabras**: \"calculadora\" son ~3 tokens en ES, no 1. Siempre usá tokenizer real (tiktoken para OpenAI, anthropic-tokenizer).\n- **No contar system prompt**: el system + history se recontabiliza en cada llamada. Si el system son 1.500 tokens, multiplicá por cada call.\n- **Subestimar output en chat largo**: cada turno manda todo el historial como input. Conversación de 10 turnos → último call manda 10x tokens.\n- **Ignorar prompt caching**: si repetís el mismo system prompt >1.000 veces/día, caching baja el input 90%. Ahorro enorme.\n- **Pagar Opus para tareas simples**: Haiku es 18x más barato y sobra para clasificación, extracción, resumen corto.\n\n## Calculadoras relacionadas\n\n- [Comparador Claude vs Gemini por tokens](/calculadoras/calculadora-claude-gemini-tokens-comparativa-precio-uso)\n- [Tokens OpenAI GPT: costo de uso](/calculadoras/calculadora-tokens-openai-gpt-costo-uso-mensual)\n- [Costo servidor cloud mensual](/calculadoras/calculadora-costo-cloud-servidor-mensual)",
   "faq": [
     {
-      "q": "¿Precio real?",
-      "a": "Claude Sonnet $3/M in, $15/M out (2024)."
+      "q": "¿Cuál es el precio actual de Claude y GPT?",
+      "a": "Claude Sonnet 4: USD 3 in / USD 15 out por millón de tokens. Opus 4: USD 15 / 75. Haiku 4: USD 0.80 / 4. GPT-4o: USD 2.50 / 10. GPT-4o-mini: USD 0.15 / 0.60. Precios oficiales 2026."
     },
     {
-      "q": "¿Reducir?",
-      "a": "Cache prompts, RAG acotado, modelos más chicos."
+      "q": "¿Cómo bajar el costo de la API?",
+      "a": "1) Usar modelos chicos (Haiku, 4o-mini) donde alcance. 2) Prompt caching (Claude, -90% input cache). 3) Batch API (-50%). 4) RAG acotado con top-k chico. 5) Comprimir system prompts. 6) Cerrar el output con max_tokens."
     },
     {
-      "q": "¿Batch?",
-      "a": "Algunos ofrecen 50% descuento batch."
+      "q": "¿Qué es Batch API y cuánto ahorra?",
+      "a": "OpenAI Batch API y Anthropic Message Batches procesan en hasta 24h con 50% de descuento. Ideal para evaluaciones, data enrichment, generación masiva no interactiva."
     },
     {
-      "q": "¿Streaming?",
-      "a": "Mismo costo, mejor UX."
+      "q": "¿Streaming cuesta más caro?",
+      "a": "No, mismo precio. Streaming sirve para mejorar UX (token-by-token en vez de esperar toda la respuesta). No cambia facturación."
     },
     {
-      "q": "¿Free tier?",
-      "a": "Claude y OpenAI tienen cuotas gratis limitadas."
+      "q": "¿Hay tier gratis para desarrollar?",
+      "a": "Gemini API tiene free tier (60 req/min en Flash). OpenAI da USD 5 de crédito a cuentas nuevas. Anthropic no tiene free tier API pero Claude.ai web es gratis con límites."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cómo contar tokens exacto antes de mandar?",
+      "a": "OpenAI: `tiktoken` con encoding cl100k_base (GPT-4) o o200k_base (GPT-4o). Anthropic: tokenizer oficial anthropic-tokenizer o endpoint /messages/count_tokens. Gemini: `count_tokens()` del SDK."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Prompt caching sirve para mi caso?",
+      "a": "Sí si repetís el mismo system prompt + documentos >2 veces en 5 min (ventana cache Claude). System de 10k tokens con cache: de USD 30 → USD 3 por 1.000 calls. Habilitar con `cache_control` en el block."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Cuántos tokens entra en un prompt?",
+      "a": "Context window 2026: Claude 200k (1M beta), GPT-4o 128k, Gemini 1.5 Pro 2M. Pero pagás por tokens enviados, no por capacidad. Mandar 1M tokens siempre es caro aunque entre."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
+      "name": "Anthropic API Pricing",
+      "url": "https://www.anthropic.com/pricing"
     },
     {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "OpenAI Pricing",
+      "url": "https://openai.com/api/pricing/"
     }
   ],
   "relatedSlugs": [
@@ -140,5 +140,10 @@
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "calculadora costo api llm por tokens 2026",
+    "costo api llm por tokens",
+    "costo tokens api openai claude mensual"
+  ]
 }

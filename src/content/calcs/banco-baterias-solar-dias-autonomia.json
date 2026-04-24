@@ -6,14 +6,14 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "banco-baterias-solar-dias-autonomia",
-  "intro": "El mantenimiento y operación eficiente del auto implican cálculos de consumo, potencia, presión, torque y rendimiento. Aplicar las fórmulas correctas evita sobreconsumo y daños mecánicos. Calculá la capacidad en Ah del banco de baterías solar según consumo diario, días de autonomía y voltaje del banco. Considera DoD y eficiencia. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
+  "intro": "Para un sistema solar off-grid confiable tenés que dimensionar bien el banco de baterías. La fórmula: **Ah = (kWh_día × días_autonomía × 1000) / (V_banco × DoD × η)**. Ejemplo: una casa que consume 5 kWh/día, 3 días de autonomía, banco 48V, LiFePO4 (DoD 80%), eficiencia 90% → **434 Ah** (20,8 kWh). En Argentina, zonas con alta nubosidad (Litoral, CABA) requieren 3-5 días de autonomía.",
   "keyTakeaway": "**Ah = (kWh_día × días) / (V × DoD × η)**. Off-grid AR: 3-5 días autonomía típico. LiFePO4 80% DoD. Plomo 50% DoD.",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de banco de baterías solar (días autonomía)",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Dimensionar el banco de baterías de una casa off-grid en el campo argentino (Córdoba, Patagonia, Litoral).",
+    "Calcular autonomía para un sistema híbrido con respaldo ante cortes de luz frecuentes.",
+    "Proyectar una casa rodante o motorhome con heladera, luces LED y inversor para notebook.",
+    "Diseñar sistema solar para tambo, galpón rural o bombeo de agua.",
+    "Comparar costo-beneficio entre plomo-ácido AGM (barato) y LiFePO4 (caro pero durable)."
   ],
   "fields": [
     {
@@ -85,7 +85,7 @@
     ],
     "result": "Banco de 434Ah a 48V (≈ 20.8 kWh) cubre 3 días"
   },
-  "explanation": "Los **cálculos automotrices** son esenciales para dueños de autos, motos y otros vehículos: rendimiento de combustible, costos de mantenimiento, presión de neumáticos, conversiones de potencia, tiempos de amortización.\n\n## Cómo se calcula\n\nCalculá la capacidad en Ah del banco de baterías solar según consumo diario, días de autonomía y voltaje del banco. Considera DoD y eficiencia.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa fórmula completa para dimensionar un banco de baterías solar es:\n\n**Ah = (kWh_día × días_autonomía × 1000) / (V_banco × DoD × η_inversor × η_baterías)**\n\nDonde:\n- **kWh_día**: consumo eléctrico diario real (medí con pinza amperométrica o sumá los consumos).\n- **días_autonomía**: cuántos días sin sol debe soportar (2-3 zona soleada, 4-5 zona nublada/invierno).\n- **V_banco**: voltaje del banco (12 V sistemas chicos, 24 V medianos, **48 V recomendado para ≥3 kWh/día**).\n- **DoD (Depth of Discharge)**: profundidad máxima permitida. Plomo-ácido 50%, LiFePO4 80-90%, Litio-ion 90%.\n- **η**: eficiencia global (inversor 92-95% + baterías 85-95% en ciclo completo).\n\nEn versión simplificada (η=0.9):\n\n**Ah ≈ (kWh_día × días) × 1.11 / (V × DoD)**\n\n## Tabla de referencia\n\n### Días de autonomía recomendados por región (Argentina)\n\n| Región | HSP (horas sol pico) | Días autonomía |\n|---|---|---|\n| NOA (Salta, Jujuy) | 6-7 | 2-3 |\n| Cuyo (Mendoza, San Juan) | 6-6,5 | 2-3 |\n| Pampa (Córdoba, BA) | 5-5,5 | 3-4 |\n| Litoral (Corrientes, Misiones) | 4,5-5 | 4-5 |\n| Patagonia (Río Negro, Neuquén) | 4-5 | 4-5 |\n| Tierra del Fuego | 3-4 | 5-7 |\n\n### Tipos de baterías y DoD\n\n| Tipo | DoD máx | Ciclos | Vida | Costo USD/kWh |\n|---|---|---|---|---|\n| Plomo-ácido inundada | 30-40% | 500-1.000 | 3-5 a | 120-180 |\n| AGM / Gel | 50% | 800-1.500 | 5-7 a | 200-300 |\n| LiFePO4 | 80-90% | 5.000-8.000 | 10-15 a | 400-600 |\n| Litio-ion (NMC) | 80-90% | 3.000-5.000 | 8-10 a | 350-500 |\n\n## Casos típicos\n\n- **Cabaña fin de semana (1,5 kWh/día, 2 días, 12V AGM, DoD 50%)**: Ah = 1500×2 / (12×0.5×0.9) = **556 Ah @ 12V** = 4 baterías AGM 150 Ah en paralelo. Costo AR 2026: ~USD 800.\n- **Casa off-grid familia tipo (5 kWh/día, 3 días, 48V LiFePO4, DoD 80%)**: Ah = 5000×3 / (48×0.8×0.9) = **434 Ah @ 48V** = 20,8 kWh. Con baterías modulares Pylontech/EcoFlow: 4 módulos de 5 kWh. Costo: USD 8.000-12.000.\n- **Campo rural con bomba de agua (3 kWh/día, 4 días, 24V AGM, DoD 50%)**: Ah = 3000×4 / (24×0.5×0.9) = **1.111 Ah @ 24V**. Muy pesado → conviene pasarse a 48V.\n\n## Errores comunes\n\n1. **Usar DoD 100%**: ninguna batería se descarga al 100%. Plomo al 30-50%, Litio al 80-90%. Descargar más destruye la batería en meses.\n2. **Confundir Ah con kWh**: 100 Ah @ 12V = 1,2 kWh. 100 Ah @ 48V = 4,8 kWh. Siempre especificá el voltaje del banco.\n3. **No contar la eficiencia del inversor**: cargar desde la batería pasa por el inversor (92-95%). Si usás el número bruto, te quedás corto 5-10%.\n4. **Baterías en paralelo sin igualar**: si ponés 4 baterías en paralelo con distinta edad/estado, la peor arrastra al resto y la vida útil cae 50%. Siempre banco nuevo todo junto.\n5. **Olvidar la temperatura**: baterías a -10°C pierden 20-30% de capacidad. En Patagonia/invierno dimensioná con margen térmico.\n6. **No incluir días de autonomía**: sin autonomía dependés 100% del sol diario. Tres días nublados te dejan sin luz.\n\n## Calculadoras relacionadas\n\n- [Calculadora Ley de Ohm](/calc/calculadora-ley-ohm-voltaje-corriente-resistencia) — básico para dimensionar cables.\n- [Calculadora de potencia eléctrica P=V×I](/calc/calculadora-potencia-electrica-p-vi) — sumá tus consumos.\n- [Calculadora de paneles solares](/calc/calculadora-paneles-solares-kwp-consumo) — dimensionar la generación.",
   "faq": [
     {
       "q": "¿Cuántos días de autonomía?",
@@ -104,34 +104,54 @@
       "a": "Más caro pero durable. Baterías con menos ciclos profundos duran más años."
     },
     {
-      "q": "¿Cuánto cuesta en AR?",
-      "a": "LiFePO4 48V 200Ah ≈ USD 1800-2500. Plomo AGM 48V 200Ah ≈ USD 800-1200."
+      "q": "¿Cuánto cuesta un banco de baterías en Argentina 2026?",
+      "a": "**LiFePO4 48V 200Ah (9,6 kWh)**: USD 1.800-2.500 (marcas Pylontech, EcoFlow, Trojan). **Plomo AGM 48V 200Ah**: USD 800-1.200 pero dura 1/4. Costo por kWh real entregado durante vida útil: LiFePO4 0,10 USD/kWh, AGM 0,25 USD/kWh → LiFePO4 gana largo plazo."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cómo mido mi consumo diario real (kWh/día)?",
+      "a": "**Opción 1**: pinza amperométrica con registro (tipo UNI-T UT230B) durante 1 semana. **Opción 2**: sumar manualmente: heladera 1,5 kWh/día + 5 lámparas LED × 5h × 10W = 0,25 kWh + TV 0,3 kWh + etc. **Opción 3**: mirar factura EDENOR/EDESUR y dividir consumo bimestral por 60."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Por qué 48V es mejor que 12V para sistemas grandes?",
+      "a": "Con la misma potencia, **48V usa 4× menos corriente** que 12V (P = V × I). Menos corriente significa: cables más finos y baratos (AWG 6 vs AWG 2/0), menos pérdidas I²R, inversor más eficiente, protecciones más baratas. Regla: sistemas <1 kW → 12V OK, 1-3 kW → 24V, >3 kW → 48V obligatorio."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿LiFePO4 o plomo-ácido AGM?",
+      "a": "**LiFePO4** gana en casi todo: 5.000-8.000 ciclos vs 800-1.500, DoD 80-90% vs 50%, 40% más liviano, 10-15 años vs 3-7. AGM solo gana en **costo inicial** (50-60% más barato). Si podés pagar LiFePO4, es mejor inversión largo plazo. AGM tiene sentido solo para bajo uso ocasional o presupuesto muy ajustado."
+    },
+    {
+      "q": "¿Qué pasa si los días reales de sol son menos que los proyectados?",
+      "a": "Tu banco se descarga **por debajo del DoD seguro**. En LiFePO4 no pasa nada grave si es ocasional; el BMS corta la descarga al 10-20%. En plomo-ácido **daño permanente**: cada descarga profunda acorta ciclos exponencialmente. Por eso conviene sobredimensionar 20-30% y sumar días de autonomía."
+    },
+    {
+      "q": "¿Cuántos paneles solares necesito para cargar el banco?",
+      "a": "**Potencia_paneles_Wp = kWh_día × 1.000 / HSP / η_carga**. Con 5 kWh/día, HSP=5h, η=0.85: **1.176 Wp** ≈ 3 paneles de 400 Wp. La relación típica es **1 Wp de panel por cada 1-1,5 Wh de batería** para cargar en 1 día solar. Sobredimensioná 20% por nubes parciales."
+    },
+    {
+      "q": "¿Cómo conectar baterías en serie vs paralelo?",
+      "a": "**Serie** suma voltajes (4× 12V = 48V) manteniendo Ah. **Paralelo** suma Ah (2× 200Ah = 400Ah) manteniendo V. Para 48V LiFePO4 200Ah se combinan ambos: 16 celdas 3,2V en serie (para 48V nominal 51,2V real) y varias strings en paralelo para más Ah."
+    },
+    {
+      "q": "¿Puedo mezclar baterías nuevas con viejas?",
+      "a": "**No**. En paralelo, la batería vieja (mayor resistencia interna) tira de la nueva y ambas se degradan. Siempre banco **del mismo lote, edad y química**. Si una falla antes, reemplazá el banco completo o aislá el string."
+    },
+    {
+      "q": "¿Necesito permiso para instalar solar off-grid en Argentina?",
+      "a": "**Off-grid (sin inyección a red)**: no necesitás permiso de la distribuidora, pero sí habilitación municipal de obra si hay construcción nueva. **On-grid (con inyección)**: sí, bajo Ley 27.424 de **Generación Distribuida**. EDENOR/EDESUR aprueban medidor bidireccional en 30-60 días."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "NREL - Battery Sizing for Off-Grid PV Systems",
+      "url": "https://www.nrel.gov/solar/"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
+      "name": "Ley 27.424 - Régimen de Fomento a la Generación Distribuida (Argentina)",
+      "url": "https://www.argentina.gob.ar/energia/energia-electrica/energias-renovables/generacion-distribuida"
     },
     {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Home Power Magazine - Solar Battery Sizing Guide",
+      "url": "https://www.homepower.com/"
     }
   ],
   "relatedSlugs": [
@@ -146,5 +166,10 @@
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa"
-  }
+  },
+  "seoKeywords": [
+    "calculadora de banco de baterías solar (días autonomía)",
+    "banco baterias solar dias autonomia",
+    "calculadora calculadora de banco de baterías solar (días aut…"
+  ]
 }
