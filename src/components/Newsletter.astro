@@ -24,6 +24,8 @@
         placeholder="tu@email.com"
         required
         autocomplete="email"
+        aria-describedby="hc-news-msg"
+        aria-invalid="false"
       />
       <button type="submit" class="news-btn">
         Suscribirme
@@ -31,7 +33,7 @@
           <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
         </svg>
       </button>
-      <p class="news-msg" id="hc-news-msg" hidden></p>
+      <p class="news-msg" id="hc-news-msg" role="status" aria-live="polite" hidden></p>
     </form>
   </div>
 
@@ -50,10 +52,12 @@
           msg.hidden = false;
           msg.textContent = 'Ingresá un email válido.';
           msg.className = 'news-msg news-msg-err';
+          if (input) input.setAttribute('aria-invalid', 'true');
           return;
         }
         // Bloquear doble-click mientras enviamos
         if (btn) btn.disabled = true;
+        if (input) input.setAttribute('aria-invalid', 'false');
         msg.hidden = false;
         msg.textContent = 'Guardando…';
         msg.className = 'news-msg';
@@ -74,10 +78,12 @@
             var j = await res.json().catch(function () { return {}; });
             msg.textContent = j.error || 'No se pudo guardar, intentá en un rato.';
             msg.className = 'news-msg news-msg-err';
+            if (input) input.setAttribute('aria-invalid', 'true');
           }
         } catch (err) {
           msg.textContent = 'Error de red. Revisá tu conexión.';
           msg.className = 'news-msg news-msg-err';
+          if (input) input.setAttribute('aria-invalid', 'true');
         } finally {
           if (btn) btn.disabled = false;
         }

@@ -1678,6 +1678,25 @@ const formatFreshnessDate = (iso: string): string => {
   const formulaLoaders = import.meta.glob<any>('../lib/formulas/*.ts');
   const formulaCache = new Map<string, Function>();
 
+  // Session ID para correlacionar funnel en GA4 (calculator_used → share → …).
+  // GA4 ya tiene su session_id interno, pero no es accesible desde el cliente
+  // para joins custom en BigQuery/Looker. Generamos uno propio persistido en
+  // sessionStorage (misma pestaña/sesión, se limpia al cerrar).
+  function hcSessionId(): string {
+    try {
+      const KEY = 'hc_sid';
+      let sid = sessionStorage.getItem(KEY);
+      if (!sid) {
+        sid = (crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
+        sessionStorage.setItem(KEY, sid);
+      }
+      return sid;
+    } catch {
+      // sessionStorage bloqueado (Safari private mode, etc.) — devolver id volátil
+      return `v-${Date.now().toString(36)}`;
+    }
+  }
+
   async function loadFormula(formulaId: string): Promise<Function | null> {
     if (formulaCache.has(formulaId)) return formulaCache.get(formulaId)!;
     const loader = formulaLoaders[`../lib/formulas/${formulaId}.ts`];
@@ -2634,10 +2653,12 @@ const formatFreshnessDate = (iso: string): string => {
           // que sí aparece en GA4 → se puede marcar como "evento clave" allá
           // → se importa como conversión en Google Ads (Tools → Conversions →
           // Import → Google Analytics 4 → seleccionar calculator_used → Primary).
+          const sid = hcSessionId();
           if (typeof (window as any).gtag === 'function') {
             (window as any).gtag('event', 'calculator_used', {
               calc_slug: slug,
               formula_id: formulaId,
+              session_id: sid,
               value: 1.0,
               currency: 'ARS',
             });
@@ -2649,6 +2670,7 @@ const formatFreshnessDate = (iso: string): string => {
               event: 'calculator_used',
               calc_slug: slug,
               formula_id: formulaId,
+              session_id: sid,
               value: 1.0,
               currency: 'ARS',
             });
