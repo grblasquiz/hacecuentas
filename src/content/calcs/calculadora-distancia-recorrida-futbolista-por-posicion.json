@@ -35,12 +35,30 @@
       "type": "select",
       "default": "mediocampista",
       "options": [
-        { "value": "arquero", "label": "Arquero / portero" },
-        { "value": "defensor-central", "label": "Defensor central" },
-        { "value": "lateral", "label": "Lateral / carrilero" },
-        { "value": "mediocampista", "label": "Mediocampista central" },
-        { "value": "volante-externo", "label": "Volante externo / extremo" },
-        { "value": "delantero", "label": "Delantero centro" }
+        {
+          "value": "arquero",
+          "label": "Arquero / portero"
+        },
+        {
+          "value": "defensor-central",
+          "label": "Defensor central"
+        },
+        {
+          "value": "lateral",
+          "label": "Lateral / carrilero"
+        },
+        {
+          "value": "mediocampista",
+          "label": "Mediocampista central"
+        },
+        {
+          "value": "volante-externo",
+          "label": "Volante externo / extremo"
+        },
+        {
+          "value": "delantero",
+          "label": "Delantero centro"
+        }
       ]
     },
     {
@@ -53,7 +71,7 @@
       "max": 150,
       "step": 1,
       "default": 90,
-      "help": "Minutos efectivos en cancha (incluye prórroga si corresponde)."
+      "help": "Minutos efectivos en cancha. Partido estándar 90. Con prórroga 120. Si te cambiaron antes, poné los minutos reales jugados."
     },
     {
       "id": "nivel",
@@ -61,18 +79,54 @@
       "type": "select",
       "default": "elite",
       "options": [
-        { "value": "elite", "label": "Élite / profesional (top 5 ligas)" },
-        { "value": "amateur", "label": "Amateur / regional (-20% aprox)" }
-      ]
+        {
+          "value": "elite",
+          "label": "Élite / profesional (top 5 ligas)"
+        },
+        {
+          "value": "amateur",
+          "label": "Amateur / regional (-20% aprox)"
+        }
+      ],
+      "help": "Élite: profesional top 5 ligas (Premier, LaLiga, Bundes, Serie A, Ligue 1) — referencia: **10-12 km/partido**. Amateur/regional: ~20% menos distancia total por menor ritmo e intensidad."
     }
   ],
   "outputs": [
-    { "id": "distanciaKm", "label": "Distancia estimada", "format": "number", "primary": true, "suffix": " km" },
-    { "id": "rangoMin", "label": "Rango mínimo", "format": "number", "suffix": " km" },
-    { "id": "rangoMax", "label": "Rango máximo", "format": "number", "suffix": " km" },
-    { "id": "highIntensityKm", "label": "Km a alta intensidad (>19.8 km/h)", "format": "number", "suffix": " km" },
-    { "id": "posicionNombre", "label": "Posición", "format": "text" },
-    { "id": "detalle", "label": "Detalle", "format": "text" }
+    {
+      "id": "distanciaKm",
+      "label": "Distancia estimada",
+      "format": "number",
+      "primary": true,
+      "suffix": " km"
+    },
+    {
+      "id": "rangoMin",
+      "label": "Rango mínimo",
+      "format": "number",
+      "suffix": " km"
+    },
+    {
+      "id": "rangoMax",
+      "label": "Rango máximo",
+      "format": "number",
+      "suffix": " km"
+    },
+    {
+      "id": "highIntensityKm",
+      "label": "Km a alta intensidad (>19.8 km/h)",
+      "format": "number",
+      "suffix": " km"
+    },
+    {
+      "id": "posicionNombre",
+      "label": "Posición",
+      "format": "text"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle",
+      "format": "text"
+    }
   ],
   "dataUpdate": {
     "frequency": "yearly",
@@ -95,20 +149,60 @@
   },
   "explanation": "## Cómo se calcula\n\n```\ndistancia_km = km_por_90min_posicion × (minutos / 90) × factor_nivel\n```\n\nPor posición (FIFA + estudios GPS top 5 ligas):\n\n| Posición | Km/90 min (élite) | HI running % |\n|---|---|---|\n| Arquero | 3.0 - 5.0 | ~3% |\n| Defensor central | 9.0 - 10.0 | 8% |\n| Lateral / carrilero | 10.0 - 11.5 | 12% |\n| Mediocampista central | 11.0 - 13.0 | 11% |\n| Volante externo / extremo | 10.5 - 12.0 | 14% |\n| Delantero centro | 9.0 - 10.5 | 13% |\n\nEl amateur recorre ~**80%** del valor élite por menor VO2max y tempo de juego.\n\n## Benchmarks elite\n\n- **N'Golo Kanté** (Chelsea/Al-Ittihad): promedio histórico de **12.5 km/partido** — referente box-to-box.\n- **Luka Modrić** (Real Madrid): **12-13 km/partido** aún pasados los 35 años.\n- **Delanteros puros** como Haaland: **9.5-10.5 km** con alta participación en sprints cortos.\n- **Laterales modernos** (Alphonso Davies, Achraf Hakimi): **11-12 km** con más sprints que volantes centrales.\n- **Arqueros modernos** (Alisson, Ter Stegen): más km por salidas altas y juego con los pies (4-5 km) vs arqueros clásicos (3 km).\n\n## Casos especiales\n\n- **Prórroga (120 min)**: sumar ~30% extra — un mediocampista puede llegar a **16-17 km** totales.\n- **Cancha reducida (F7, F8)**: recorrido baja a 5-7 km pero con mayor intensidad por metro.\n- **Altitud** (>2000 m): distancia cae ~5-10% por limitación aeróbica.\n- **Presión alta (gegenpressing)**: aumenta HI running 15-20% vs estilo posicional puro.\n- **Jugador suplente (30 min)**: proporcional a tiempo jugado, pero con más %HI (entra fresco a apretar).\n\n## Fuentes\n\n- **FIFA Technical Report World Cup 2022**: promedios por puesto con sistema EPTS.\n- **Compendium of Physical Activities (Ainsworth 2024)**: valores MET y referencia fisiológica.\n- **Premier League Performance Data**: GPS players público 2023/24.\n- Bangsbo (2006), *The physical demands of soccer*, Journal of Sports Sciences.",
   "faq": [
-    { "q": "¿Por qué el mediocampista corre más?", "a": "Porque **cubre ataque y defensa**: debe llegar al área rival a terminar jugadas y volver rápido a contener. Es el puesto con mayor **transición ida-y-vuelta**, por eso acumula 11-13 km en 90 min. Además, a diferencia del lateral, su zona de influencia es amplia en ambos sentidos y se involucra en la presión, construcción y finalización." },
-    { "q": "¿Los arqueros modernos corren más que los clásicos?", "a": "**Sí, bastante**. Un arquero del estilo Alisson o Ter Stegen, que juega como líbero con los pies y realiza salidas altas, puede llegar a **5 km por partido**. Un arquero clásico que se queda en el área cubre apenas 3 km. La diferencia está en cuántas veces sale del área y cuánto participa en la construcción." },
-    { "q": "¿Cuánto de eso es realmente a alta intensidad?", "a": "Solo **8-14%** de la distancia total se recorre a **>19.8 km/h** (HI running). El resto es trote, caminata y desplazamiento moderado. Los **sprints puros** (>24 km/h) suman apenas **200-400 metros por partido**. Parece poco, pero son los metros que deciden jugadas." },
-    { "q": "¿Los amateurs recorren la misma distancia?", "a": "**No — en promedio recorren ~80%** de un profesional. Un mediocampista amateur con buen estado físico puede estar en **8-10 km**, no 12. Las razones: menor VO2max, tempo de juego más pausado, más paradas, y menos eficiencia en transiciones. Los amateurs también suelen tener más caminata y menos HI running (3-5% vs 11%)." },
-    { "q": "¿Cómo mido mi distancia real?", "a": "Con un **GPS pod** específico (Catapult, STATSports, Playr) o un reloj deportivo con deporte 'fútbol' (Garmin, Polar, Apple Watch). Los relojes dan estimación razonable (error ±5%) pero no separan HI running. Los GPS pod profesionales cuestan USD 200-400 y dan métricas de nivel equipo." },
-    { "q": "¿Influye el calor en la distancia?", "a": "**Mucho**. A **>32°C** con humedad alta, la distancia total cae **10-15%** y el HI running hasta 20%. El cuerpo redirige flujo sanguíneo a la piel para enfriarse, reduciendo aporte muscular. Por eso se implementaron los **'cooling breaks'** oficiales en FIFA desde 2014 (Mundial Brasil)." },
-    { "q": "¿Cuánto corre un juvenil (Sub 15-17)?", "a": "Un **Sub-17 de academia top** recorre **9-11 km/partido** (70-85% de su versión adulta). A Sub-15 baja a **7-9 km** por menor desarrollo aeróbico y partidos de 70-80 min. La distancia a alta intensidad es **proporcionalmente menor**: el techo de velocidad madura entre los 19-23 años." },
-    { "q": "¿Sirve correr mucho para ser mejor futbolista?", "a": "**Corrir mucho es condición necesaria pero NO suficiente**. Sin lectura de juego, técnica y toma de decisión, los km no sirven. Un mediocampista de 11 km con **mala selección de carreras** vale menos que uno de 9 km con **carreras inteligentes**. Los datos GPS siempre se cruzan con video y expected metrics (xT, PPDA, etc)." }
+    {
+      "q": "¿Por qué el mediocampista corre más?",
+      "a": "Porque **cubre ataque y defensa**: debe llegar al área rival a terminar jugadas y volver rápido a contener. Es el puesto con mayor **transición ida-y-vuelta**, por eso acumula 11-13 km en 90 min. Además, a diferencia del lateral, su zona de influencia es amplia en ambos sentidos y se involucra en la presión, construcción y finalización."
+    },
+    {
+      "q": "¿Los arqueros modernos corren más que los clásicos?",
+      "a": "**Sí, bastante**. Un arquero del estilo Alisson o Ter Stegen, que juega como líbero con los pies y realiza salidas altas, puede llegar a **5 km por partido**. Un arquero clásico que se queda en el área cubre apenas 3 km. La diferencia está en cuántas veces sale del área y cuánto participa en la construcción."
+    },
+    {
+      "q": "¿Cuánto de eso es realmente a alta intensidad?",
+      "a": "Solo **8-14%** de la distancia total se recorre a **>19.8 km/h** (HI running). El resto es trote, caminata y desplazamiento moderado. Los **sprints puros** (>24 km/h) suman apenas **200-400 metros por partido**. Parece poco, pero son los metros que deciden jugadas."
+    },
+    {
+      "q": "¿Los amateurs recorren la misma distancia?",
+      "a": "**No — en promedio recorren ~80%** de un profesional. Un mediocampista amateur con buen estado físico puede estar en **8-10 km**, no 12. Las razones: menor VO2max, tempo de juego más pausado, más paradas, y menos eficiencia en transiciones. Los amateurs también suelen tener más caminata y menos HI running (3-5% vs 11%)."
+    },
+    {
+      "q": "¿Cómo mido mi distancia real?",
+      "a": "Con un **GPS pod** específico (Catapult, STATSports, Playr) o un reloj deportivo con deporte 'fútbol' (Garmin, Polar, Apple Watch). Los relojes dan estimación razonable (error ±5%) pero no separan HI running. Los GPS pod profesionales cuestan USD 200-400 y dan métricas de nivel equipo."
+    },
+    {
+      "q": "¿Influye el calor en la distancia?",
+      "a": "**Mucho**. A **>32°C** con humedad alta, la distancia total cae **10-15%** y el HI running hasta 20%. El cuerpo redirige flujo sanguíneo a la piel para enfriarse, reduciendo aporte muscular. Por eso se implementaron los **'cooling breaks'** oficiales en FIFA desde 2014 (Mundial Brasil)."
+    },
+    {
+      "q": "¿Cuánto corre un juvenil (Sub 15-17)?",
+      "a": "Un **Sub-17 de academia top** recorre **9-11 km/partido** (70-85% de su versión adulta). A Sub-15 baja a **7-9 km** por menor desarrollo aeróbico y partidos de 70-80 min. La distancia a alta intensidad es **proporcionalmente menor**: el techo de velocidad madura entre los 19-23 años."
+    },
+    {
+      "q": "¿Sirve correr mucho para ser mejor futbolista?",
+      "a": "**Corrir mucho es condición necesaria pero NO suficiente**. Sin lectura de juego, técnica y toma de decisión, los km no sirven. Un mediocampista de 11 km con **mala selección de carreras** vale menos que uno de 9 km con **carreras inteligentes**. Los datos GPS siempre se cruzan con video y expected metrics (xT, PPDA, etc)."
+    }
   ],
   "sources": [
-    { "name": "FIFA Technical Reports", "url": "https://inside.fifa.com/technical/football-analysis", "publisher": "FIFA" },
-    { "name": "Compendium of Physical Activities (2024)", "url": "https://pacompendium.com/", "publisher": "Arizona State University" },
-    { "name": "Bangsbo — Physical demands of soccer", "url": "https://pubmed.ncbi.nlm.nih.gov/16608840/", "publisher": "PubMed / JSS" },
-    { "name": "Premier League Performance Data", "url": "https://www.premierleague.com/stats", "publisher": "Premier League" }
+    {
+      "name": "FIFA Technical Reports",
+      "url": "https://inside.fifa.com/technical/football-analysis",
+      "publisher": "FIFA"
+    },
+    {
+      "name": "Compendium of Physical Activities (2024)",
+      "url": "https://pacompendium.com/",
+      "publisher": "Arizona State University"
+    },
+    {
+      "name": "Bangsbo — Physical demands of soccer",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/16608840/",
+      "publisher": "PubMed / JSS"
+    },
+    {
+      "name": "Premier League Performance Data",
+      "url": "https://www.premierleague.com/stats",
+      "publisher": "Premier League"
+    }
   ],
   "relatedSlugs": [
     "distancia-recorrida-futbol-jugador",
@@ -118,9 +212,21 @@
     "calculadora-frecuencia-cardiaca-zonas-entrenamiento-futbolista"
   ],
   "howToSteps": [
-    { "name": "Elegí la posición táctica", "text": "Seleccioná en el desplegable la posición que te corresponde: arquero, defensor, lateral, mediocampista, volante externo o delantero." },
-    { "name": "Ingresá los minutos jugados", "text": "Escribí los minutos en cancha (90 estándar, o más si hubo prórroga, o menos si entraste de suplente)." },
-    { "name": "Seleccioná el nivel", "text": "Elegí 'élite' si jugás en categoría profesional o 'amateur' para divisiones regionales — ajusta el rango un 20%." },
-    { "name": "Revisá el resultado", "text": "La calculadora te devuelve distancia promedio, rango y kilómetros a alta intensidad." }
+    {
+      "name": "Elegí la posición táctica",
+      "text": "Seleccioná en el desplegable la posición que te corresponde: arquero, defensor, lateral, mediocampista, volante externo o delantero."
+    },
+    {
+      "name": "Ingresá los minutos jugados",
+      "text": "Escribí los minutos en cancha (90 estándar, o más si hubo prórroga, o menos si entraste de suplente)."
+    },
+    {
+      "name": "Seleccioná el nivel",
+      "text": "Elegí 'élite' si jugás en categoría profesional o 'amateur' para divisiones regionales — ajusta el rango un 20%."
+    },
+    {
+      "name": "Revisá el resultado",
+      "text": "La calculadora te devuelve distancia promedio, rango y kilómetros a alta intensidad."
+    }
   ]
 }
