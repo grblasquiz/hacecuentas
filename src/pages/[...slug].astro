@@ -356,6 +356,16 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
       </div>
     </header>
 
+    {(enVersion || ptVersion || mxVersion || esVersion) && (
+      <nav class="lang-switch" aria-label="Versiones en otros idiomas">
+        <span class="lang-label">También disponible en:</span>
+        {ptVersion && <a class="lang-pill" href={`/pt/${ptVersion.slug}`} hreflang="pt" lang="pt"><span aria-hidden="true">🇧🇷</span> Português</a>}
+        {enVersion && <a class="lang-pill" href={`/en/${enVersion.slug}`} hreflang="en" lang="en"><span aria-hidden="true">🇺🇸</span> English</a>}
+        {mxVersion && <a class="lang-pill" href={`/mx/${mxVersion.slug}`} hreflang="es-MX" lang="es-MX"><span aria-hidden="true">🇲🇽</span> México</a>}
+        {esVersion && <a class="lang-pill" href={`/es/${esVersion.slug}`} hreflang="es-ES" lang="es-ES"><span aria-hidden="true">🇪🇸</span> España</a>}
+      </nav>
+    )}
+
     <div class="calc-layout">
       {tocSections.length > 2 && (
         <aside class="toc" aria-label="Índice del artículo">
@@ -886,6 +896,44 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
     font-size: 0.7em;
     vertical-align: 0.15em;
     line-height: 1;
+  }
+
+  /* Lang switcher — visible ES→PT/EN/MX/ES: mueve "link juice" interno y
+     da descubrimiento al usuario. Aparece sólo si existe versión en otros
+     locales. */
+  .lang-switch {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: -0.75rem 0 1.25rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-soft, #f8fafc);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: var(--radius-sm, 6px);
+    font-size: 0.8125rem;
+  }
+  .lang-switch .lang-label {
+    color: var(--text-muted, #64748b);
+    font-weight: 500;
+  }
+  .lang-switch .lang-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.625rem;
+    color: var(--text, #0f172a);
+    background: var(--bg, #fff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: border-color .15s, transform .15s;
+  }
+  .lang-switch .lang-pill:hover {
+    border-color: var(--accent, #2563eb);
+    color: var(--accent, #2563eb);
+    transform: translateY(-1px);
   }
 
   /* Audience notice — banda visual para calculadoras AR-only */
