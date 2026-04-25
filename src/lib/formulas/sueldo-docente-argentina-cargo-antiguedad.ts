@@ -6,7 +6,10 @@ export function sueldoDocenteArgentinaCargoAntiguedad(i: Inputs): Outputs {
   const antig = Number(i.antiguedad) || 0;
   const cargas = Number(i.cargas) || 0;
   const conyuge = Number(i.conyuge) || 0;
-  const basico = 1_050_000;
+  // Piso nacional docente 2026 — $500.000 (Decreto marzo 2026, maestro de grado
+  // jornada simple sin antigüedad). Fuente: lanacion.com.ar/politica/el-gobierno-fijo-el-nuevo-salario-minimo-docente
+  // Básicos provinciales pueden ser mayores (ej. BsAs ~$900k+).
+  const basico = 500_000;
   const plusAntig = basico * 0.1 * antig;
   const bruto = basico + plusAntig;
   const jubilacion = bruto * 0.11;

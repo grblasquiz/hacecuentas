@@ -6,7 +6,9 @@ export function sueldoGastronomicoUthgraMozoCocinero(i: Inputs): Outputs {
   const antig = Number(i.antiguedad) || 0;
   const cargas = Number(i.cargas) || 0;
   const conyuge = Number(i.conyuge) || 0;
-  const basico = 970_000;
+  // Básico Mozo de Primera (Cat D tramo 1) junio 2026 según acuerdo UTHGRA-FEHGRA
+  // CCT 389/04 homologado abril 2026. Fuente: calcularsueldo.com.ar/paritarias/14416
+  const basico = 990_000;
   const plusAntig = basico * 0.01 * antig;
   const bruto = basico + plusAntig;
   const jubilacion = bruto * 0.11;
