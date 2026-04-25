@@ -18,14 +18,15 @@
     "convertir decimal a binario",
     "calculadora binario"
   ],
-  "intro": "Necesitás **convertir un número binario a decimal** (o viceversa)? Ingresá un número en cualquier sistema (binario, decimal, hexadecimal, octal) y obtené la conversión a todos los demás al instante.",
-  "keyTakeaway": "**Binario (base 2) usa solo 0 y 1. Decimal (base 10) usa 0-9. Hexadecimal (base 16) usa 0-9 y A-F. Octal (base 8) usa 0-7.** Son formas distintas de representar el mismo número.",
+  "intro": "El Conversor Binario ↔ Decimal ↔ Hexadecimal te permite transformar números entre los tres sistemas de numeración más usados en informática y electrónica. El sistema binario (base 2) usa solo dígitos 0 y 1, y es el lenguaje nativo de cualquier procesador. El decimal (base 10) es el sistema cotidiano. El hexadecimal (base 16) usa dígitos del 0 al 9 más las letras A–F, y es fundamental para representar colores, direcciones de memoria y valores RGB. La fórmula base para convertir binario a decimal es sumar cada dígito multiplicado por su potencia de 2 correspondiente: 1010₂ = 1×2³ + 0×2² + 1×2¹ + 0×2⁰ = 10₁₀. Usás esta calculadora cuando programás en bajo nivel, diseñás circuitos digitales, trabajás con paletas de colores en CSS/HTML, depurás código en assembler o simplemente estudiás sistemas digitales.",
+  "keyTakeaway": "**Binario → Decimal: N = dₙ×2ⁿ + … + d₁×2¹ + d₀×2⁰** — Ejemplo real: 11111111₂ = 255₁₀ = FF₁₆ (máximo valor de un byte de 8 bits).",
   "useCases": [
-    "Necesitás convertir binario a decimal para un ejercicio.",
-    "Estás programando y necesitás ver un número en hexadecimal.",
-    "Querés entender cómo funciona el sistema binario.",
-    "Necesitás convertir direcciones IP o colores en hex.",
-    "Estás estudiando sistemas numéricos para informática."
+    "Determinar el valor decimal de una dirección IP o máscara de subred expresada en binario (ej: 11000000.10101000.00000001.00000001 = 192.168.1.1).",
+    "Convertir colores HTML/CSS escritos en hexadecimal a sus componentes RGB decimales y binarios: #FF5733 → R:255 G:87 B:51.",
+    "Estudiar para materias de Arquitectura de Computadoras, Sistemas Digitales o Electrónica Digital en universidades y terciarios técnicos argentinos.",
+    "Programar microcontroladores (Arduino, PIC, STM32) donde los registros de control se configuran en binario o hexadecimal.",
+    "Verificar resultados de operaciones de bitmask y flags en desarrollo de software (AND, OR, XOR sobre valores binarios).",
+    "Interpretar volcados de memoria (memory dumps) en hexadecimal al hacer debugging o ingeniería inversa de software."
   ],
   "fields": [
     {
@@ -107,41 +108,53 @@
     ],
     "result": "1010 (binario) = **10** (decimal) = **A** (hex) = **12** (octal)."
   },
-  "explanation": "## Sistemas numéricos: Binario, Decimal, Hexadecimal y Octal\n\n### ¿Qué es un sistema numérico?\n\nUn sistema numérico es una forma de representar cantidades usando un conjunto de símbolos. El **decimal** usa 10 símbolos (0-9), el **binario** usa 2 (0,1), el **hexadecimal** usa 16 (0-9, A-F) y el **octal** usa 8 (0-7).\n\n### Binario (Base 2)\n\nEs el lenguaje de las computadoras. Cada dígito se llama **bit**. 8 bits = 1 byte.\n\n| Decimal | Binario | Decimal | Binario |\n|---|---|---|---|\n| 0 | 0 | 8 | 1000 |\n| 1 | 1 | 9 | 1001 |\n| 2 | 10 | 10 | 1010 |\n| 3 | 11 | 16 | 10000 |\n| 4 | 100 | 32 | 100000 |\n| 5 | 101 | 64 | 1000000 |\n| 6 | 110 | 128 | 10000000 |\n| 7 | 111 | 255 | 11111111 |\n\n### Cómo convertir binario a decimal\n\nCada posición vale una potencia de 2 (de derecha a izquierda): 2⁰=1, 2¹=2, 2²=4, 2³=8...\n\n**Ejemplo**: 1101 = 1×8 + 1×4 + 0×2 + 1×1 = **13**\n\n### Hexadecimal (Base 16)\n\nUsa dígitos extra: A=10, B=11, C=12, D=13, E=14, F=15. Cada dígito hex equivale a 4 bits.\n\n| Hex | Decimal | Binario |\n|---|---|---|\n| A | 10 | 1010 |\n| B | 11 | 1011 |\n| F | 15 | 1111 |\n| FF | 255 | 11111111 |\n| 1A | 26 | 11010 |\n\n### ¿Para qué se usa cada uno?\n\n| Sistema | Uso principal |\n|---|---|\n| **Binario** | Hardware, compuertas lógicas, bits |\n| **Decimal** | Uso cotidiano, matemática |\n| **Hexadecimal** | Colores CSS, direcciones de memoria, programación |\n| **Octal** | Permisos Unix (chmod 755) |\n\n### Tabla de potencias de 2\n\n2¹=2, 2²=4, 2³=8, 2⁴=16, 2⁵=32, 2⁶=64, 2⁷=128, 2⁸=256, 2¹⁰=1024, 2¹⁶=65536, 2³²=4.294.967.296.\n\n### Calculadoras relacionadas\n\n- [Conversor de colores HEX-RGB](/calculadora-codigo-color-hex-rgb) — hexadecimal aplicado a colores.\n- [Conversor KB-MB-GB](/calculadora-tamano-archivo-conversor) — unidades basadas en potencias de 2.\n- [Números romanos](/calculadora-numeros-romanos-conversor) — otro sistema numérico antiguo.",
+  "explanation": "## Cómo se calcula\n\nLos tres sistemas comparten la misma lógica posicional: cada dígito tiene un valor que depende de su posición (potencia de la base).\n\n### Binario → Decimal\nMultiplicás cada bit por 2 elevado a su posición (de derecha a izquierda, empezando en 0), y sumás todos los resultados:\n\n```\nDecimal = d(n-1)×2^(n-1) + d(n-2)×2^(n-2) + ... + d1×2^1 + d0×2^0\n\nEjemplo: 1011₂\n= 1×2³ + 0×2² + 1×2¹ + 1×2⁰\n= 8  +  0  +  2  +  1\n= 11₁₀\n```\n\n### Decimal → Binario\nDividís el número por 2 sucesivamente y anotás los restos de abajo hacia arriba:\n\n```\n13 ÷ 2 = 6  resto 1  ← bit menos significativo\n 6 ÷ 2 = 3  resto 0\n 3 ÷ 2 = 1  resto 1\n 1 ÷ 2 = 0  resto 1  ← bit más significativo\nResultado: 1101₂\n```\n\n### Decimal → Hexadecimal\nDividís por 16 y reemplazás restos 10–15 con A–F:\n\n```\n254 ÷ 16 = 15  resto 14 → E\n 15 ÷ 16 =  0  resto 15 → F\nResultado: FE₁₆\n```\n\n### Hexadecimal → Binario (conversión directa)\nCada dígito hex equivale exactamente a 4 bits (nibble). No hace falta pasar por decimal:\n\n```\nA   = 1010\nF   = 1111\nAF₁₆ = 1010 1111₂\n```\n\n---\n\n## Tabla de referencia\n\n| Decimal | Binario   | Hexadecimal | Octal |\n|---------|-----------|-------------|-------|\n| 0       | 0000      | 0           | 0     |\n| 1       | 0001      | 1           | 1     |\n| 2       | 0010      | 2           | 2     |\n| 4       | 0100      | 4           | 4     |\n| 8       | 1000      | 8           | 10    |\n| 10      | 1010      | A           | 12    |\n| 15      | 1111      | F           | 17    |\n| 16      | 0001 0000 | 10          | 20    |\n| 32      | 0010 0000 | 20          | 40    |\n| 64      | 0100 0000 | 40          | 100   |\n| 128     | 1000 0000 | 80          | 200   |\n| 255     | 1111 1111 | FF          | 377   |\n| 256     | 0001 0000 0000 | 100    | 400   |\n| 1024    | 0100 0000 0000 | 400    | 2000  |\n| 65535   | 1111 1111 1111 1111 | FFFF | 177777 |\n\n> 💡 **Referencia clave para informática:** 255 = FF = máximo de 1 byte (8 bits). 65535 = FFFF = máximo de 2 bytes (16 bits). 4294967295 = FFFFFFFF = máximo de 4 bytes (32 bits).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Máscara de subred /24\nEn redes, la máscara 255.255.255.0 en binario es:\n```\n11111111.11111111.11111111.00000000\n```\nLos primeros 24 bits en 1 indican la parte de red; los últimos 8 bits en 0 indican el rango de hosts. Convertido a hex: FF.FF.FF.00.\n\n### Caso 2 — Color CSS #1A2B3C\nDesglose en componentes RGB:\n```\n1A₁₆ → R = 1×16 + 10 = 26₁₀  = 0001 1010₂\n2B₁₆ → G = 2×16 + 11 = 43₁₀  = 0010 1011₂\n3C₁₆ → B = 3×16 + 12 = 60₁₀  = 0011 1100₂\n```\nResultado: rgb(26, 43, 60) — un azul oscuro marino.\n\n### Caso 3 — Registro de control de un microcontrolador\nUn registro de 8 bits para habilitar interrupciones vale 0b00110101 en código Arduino:\n```\n0011 0101₂ = 53₁₀ = 35₁₆\nBits activos: posiciones 0, 2, 4, 5 (contando desde 0 a la derecha)\n```\nUsar el valor hex 0x35 en el código fuente es más legible que 53 o el binario completo.\n\n---\n\n## Errores comunes\n\n1. **Confundir el bit más significativo (MSB) con el menos significativo (LSB):** La posición 0 siempre va a la derecha (dígito menos significativo). Empezar a contar desde la izquierda lleva a resultados completamente erróneos.\n\n2. **Olvidar los ceros a la izquierda en hex→binario:** Cada dígito hex SIEMPRE ocupa 4 bits. El dígito `3` no es `11`; es `0011`. Ignorar esto rompe la representación de registros y máscaras.\n\n3. **Mezclar octal con binario:** El sistema octal (base 8) no es lo mismo que el binario. En lenguajes como C/C++, un literal que empieza con `0` (ej: `013`) es octal (= 11 decimal), no decimal.\n\n4. **Asumir que hex es case-sensitive:** `FF`, `ff` y `Ff` representan exactamente el mismo valor (255). Sin embargo, en contextos de programación algunos lenguajes distinguen prefijos: `0xFF` (C/Java) vs `#FF` (CSS) vs `&HFF` (Visual Basic).\n\n5. **No considerar el signo en binario con complemento a dos:** El número binario `1111 1111` puede ser 255 (sin signo) o −1 (con signo, complemento a dos en 8 bits). La calculadora trabaja con enteros sin signo; para negativos hay que especificar el sistema de representación.\n\n---\n\n## Calculadoras relacionadas\n\n- [Conversor de Código de Color HEX y RGB](/calculadora-codigo-color-hex-rgb) — Convertí colores entre hexadecimal, RGB y HSL directamente.\n- [Conversor de Tamaño de Archivo](/calculadora-tamano-archivo-conversor) — Pasá entre bytes, kilobytes, megabytes y gigabytes (potencias de 2).\n- [Conversor de Números Romanos](/calculadora-numeros-romanos-conversor) — Otro sistema de numeración no posicional para contrastar conceptos.\n- [Conversor Celsius ↔ Fahrenheit](/conversor-celsius-fahrenheit-temperatura) — Practicá conversiones de otro tipo con fórmulas directas.",
   "faq": [
     {
-      "q": "¿Cómo convierto binario a decimal?",
-      "a": "Multiplicá cada dígito por su potencia de 2 (de derecha a izquierda) y sumá. **1010** = 1×8 + 0×4 + 1×2 + 0×1 = 10."
+      "q": "¿Cuántos bits necesito para representar un número decimal dado?",
+      "a": "La cantidad de bits necesarios es ⌈log₂(N+1)⌉. Para N=255 necesitás 8 bits; para N=1023 necesitás 10 bits; para N=65535 necesitás 16 bits. La fórmula general es: bits = piso(log₂(N)) + 1. Por ejemplo, el número 200 requiere piso(log₂(200)) + 1 = 7 + 1 = 8 bits."
     },
     {
-      "q": "¿Cómo convierto decimal a binario?",
-      "a": "Dividí sucesivamente por 2 y anotá los restos de abajo hacia arriba. **10** ÷ 2 = 5 resto 0, 5 ÷ 2 = 2 resto 1, 2 ÷ 2 = 1 resto 0, 1 ÷ 2 = 0 resto 1 → **1010**."
+      "q": "¿Qué diferencia hay entre binario sin signo y complemento a dos?",
+      "a": "En binario sin signo, 8 bits representan valores de 0 a 255. En complemento a dos (el estándar para enteros con signo en computadoras), el bit más significativo indica el signo: 0111 1111 = +127 y 1000 0000 = −128. Por eso un `int8_t` en C va de −128 a 127, mientras que un `uint8_t` va de 0 a 255. Esta calculadora usa representación sin signo."
     },
     {
-      "q": "¿Qué es un bit y un byte?",
-      "a": "Un **bit** es un dígito binario (0 o 1). Un **byte** = 8 bits, puede representar valores del 0 al 255."
+      "q": "¿Por qué los programadores prefieren hexadecimal sobre binario?",
+      "a": "Porque 1 dígito hex representa exactamente 4 bits (nibble), haciendo que 2 dígitos hex = 1 byte. Escribir `0xFF` es mucho más compacto y legible que `11111111`. Además, la conversión hex↔binario es instantánea sin necesidad de aritmética: cada dígito se traduce de forma independiente. Un número de 32 bits ocupa 8 dígitos hex vs 32 dígitos binarios."
     },
     {
-      "q": "¿Por qué las computadoras usan binario?",
-      "a": "Porque los circuitos electrónicos trabajan con dos estados: **encendido (1) y apagado (0)**. Es el sistema más simple para hardware digital."
+      "q": "¿Cómo se representan números con coma (decimales/fraccionarios) en binario?",
+      "a": "Se usa notación de punto fijo o punto flotante (estándar IEEE 754). Para la parte fraccionaria, cada posición a la derecha del punto binario vale 2⁻¹=0.5, 2⁻²=0.25, 2⁻³=0.125, etc. Así, 0.101₂ = 0.5 + 0.125 = 0.625₁₀. El estándar IEEE 754 de 32 bits (float) divide los bits en signo (1), exponente (8) y mantisa (23)."
     },
     {
-      "q": "¿Qué significa 0xFF en programación?",
-      "a": "Es **255 en hexadecimal** (15×16 + 15 = 255). El prefijo 0x indica que es hexadecimal."
+      "q": "¿Los colores hexadecimales en CSS tienen algún límite de valor?",
+      "a": "Sí. Cada canal RGB (rojo, verde, azul) se representa con 2 dígitos hex, es decir, 1 byte por canal. El valor mínimo es 00₁₆ = 0₁₀ y el máximo es FF₁₆ = 255₁₀. Un color como #FFFFFF (blanco) tiene los tres canales al máximo. El estándar CSS Color Level 4 también admite notación `color(display-p3 ...)` con valores >1.0, pero el formato #RRGGBB clásico siempre queda entre 0 y 255 por canal."
     },
     {
-      "q": "¿Para qué sirve el sistema octal?",
-      "a": "Se usa principalmente en **permisos de archivos en Linux/Unix**. chmod 755 significa: dueño rwx(7), grupo rx(5), otros rx(5)."
+      "q": "¿Qué es un nibble y para qué sirve?",
+      "a": "Un nibble es un grupo de 4 bits, la mitad de un byte. Vale entre 0000₂ (0₁₀) y 1111₂ (15₁₀ = F₁₆). Es exactamente lo que representa un dígito hexadecimal. Los nibbles son útiles en electrónica para representar dígitos BCD (Binary-Coded Decimal), en displays de 7 segmentos y en protocolos como I²C donde los datos se agrupan en medio bytes."
     },
     {
-      "q": "¿Cuál es el número más grande en 8 bits?",
-      "a": "**255** (11111111 en binario, FF en hexadecimal). Con 8 bits se representan 256 valores (0 a 255)."
+      "q": "¿Cómo funciona el sistema hexadecimal en las direcciones MAC de red?",
+      "a": "Una dirección MAC tiene 48 bits, representados como 6 grupos de 2 dígitos hex separados por dos puntos o guiones. Ejemplo: `A4:C3:F0:85:AC:22`. Cada grupo es 1 byte (8 bits). Los primeros 3 bytes (24 bits) identifican al fabricante (OUI, Organizationally Unique Identifier) y los últimos 3 son el identificador único del dispositivo, según el estándar IEEE 802."
+    },
+    {
+      "q": "¿En qué contextos se usa el sistema octal hoy en día?",
+      "a": "El octal (base 8) se usa principalmente en permisos de archivos en sistemas Unix/Linux. El comando `chmod 755` asigna: propietario = 7 (rwx = 111₂), grupo = 5 (r-x = 101₂), otros = 5. También aparece en algunos protocolos de comunicación serial y en lenguajes como C, donde los literales con cero inicial son octales (ej: `int x = 017;` equivale a 15 en decimal)."
     }
   ],
   "sources": [
     {
-      "name": "Sistema de numeración - Wikipedia",
-      "url": "https://es.wikipedia.org/wiki/Sistema_de_numeración"
+      "name": "Wikipedia ES — Sistema binario",
+      "url": "https://es.wikipedia.org/wiki/Sistema_binario"
+    },
+    {
+      "name": "Wikipedia ES — Sistema hexadecimal",
+      "url": "https://es.wikipedia.org/wiki/Sistema_hexadecimal"
+    },
+    {
+      "name": "Wikipedia ES — Complemento a dos",
+      "url": "https://es.wikipedia.org/wiki/Complemento_a_dos"
     }
   ],
   "relatedSlugs": [

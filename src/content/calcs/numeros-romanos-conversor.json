@@ -17,14 +17,15 @@
     "número romano 2026",
     "conversor romano"
   ],
-  "intro": "Los **números romanos** se usan en relojes, capítulos de libros, siglos, eventos y más. Este conversor te permite pasar de **decimal a romano** o de **romano a decimal** al instante.",
-  "keyTakeaway": "**I=1, V=5, X=10, L=50, C=100, D=500, M=1000.** Los romanos van del 1 al 3999 (no existe el cero). Se restan cuando un símbolo menor va antes de uno mayor (IV=4, IX=9).",
+  "intro": "Los números romanos son un sistema de numeración posicional-aditivo originado en la antigua Roma, que usa siete letras mayúsculas del alfabeto latino: I (1), V (5), X (10), L (50), C (100), D (500) y M (1000). La conversión de decimal a romano se basa en descomponer el número en potencias decrecientes y aplicar reglas de adición y sustracción. Se usa cotidianamente en relojes analógicos, capítulos de libros, siglos históricos, superbowls, versiones de software, nombres de papas y reyes, y en créditos de películas. Por ejemplo, el año 2026 se escribe MMXXVI: MM (2000) + XX (20) + VI (6).",
+  "keyTakeaway": "**Decimal → Romano: descomponés el número en bloques (M=1000, CM=900, D=500, CD=400, C=100, XC=90, L=50, XL=40, X=10, IX=9, V=5, IV=4, I=1) y concatenás las letras de mayor a menor. Ejemplo: 1999 = MCMXCIX.**",
   "useCases": [
-    "Necesitás escribir un número en romano para un trabajo o diseño.",
-    "Querés saber qué número representa un romano que viste.",
-    "Estás estudiando y necesitás practicar con romanos.",
-    "Querés saber cómo se escribe el año actual en romano.",
-    "Necesitás romanos para un tatuaje, evento o título."
+    "Saber cómo escribir el año actual (2026 = MMXXVI) para inscripciones, diplomas o tatuajes.",
+    "Leer la numeración de capítulos en enciclopedias, tomos legales o la Biblia (ej.: Capítulo XIV = 14).",
+    "Interpretar los créditos de películas o series donde el año de producción aparece en romano (ej.: MMXXV = 2025).",
+    "Convertir números de siglos para textos académicos o históricos (ej.: siglo XXI, siglo XIX = 1800s).",
+    "Descifrar la carátula de un reloj analógico que usa IV en lugar del 4 convencional.",
+    "Nombrar correctamente ediciones o versiones de eventos deportivos como los Juegos Olímpicos París 2024 = MMXXIV o el Super Bowl LVIII."
   ],
   "fields": [
     {
@@ -84,41 +85,45 @@
     ],
     "result": "2026 en números romanos es **MMXXVI**."
   },
-  "explanation": "## Cómo funcionan los números romanos\n\n### Símbolos básicos\n\n| Símbolo | Valor |\n|---|---|\n| **I** | 1 |\n| **V** | 5 |\n| **X** | 10 |\n| **L** | 50 |\n| **C** | 100 |\n| **D** | 500 |\n| **M** | 1000 |\n\n### Reglas\n\n1. **Suma**: símbolos iguales o decrecientes se suman: III=3, XV=15, MC=1100.\n2. **Resta**: un símbolo menor ANTES de uno mayor se resta: IV=4, IX=9, XL=40, XC=90, CD=400, CM=900.\n3. **Máximo 3 repeticiones**: no se repite un símbolo más de 3 veces seguidas (III sí, IIII no → se usa IV).\n4. **Rango**: del 1 al 3999 (no existe el cero ni números negativos).\n\n### Años comunes en romano\n\n| Año | Romano |\n|---|---|\n| 2000 | MM |\n| 2020 | MMXX |\n| 2024 | MMXXIV |\n| 2025 | MMXXV |\n| 2026 | MMXXVI |\n| 2030 | MMXXX |\n| 2050 | MML |\n| 2100 | MMC |\n\n### Dónde se usan hoy\n\n- **Siglos**: siglo XXI\n- **Reyes y papas**: Carlos III, Francisco I\n- **Capítulos y tomos**: Capítulo IV\n- **Relojes**: los relojes clásicos usan IIII en vez de IV\n- **Eventos**: Super Bowl LVIII, Olimpiadas\n- **Tatuajes**: fechas de nacimiento\n\n### Calculadoras relacionadas\n\n- [Conversor binario-decimal](/calculadora-conversor-binario-decimal) — otro sistema numérico.\n- [Letra del DNI](/calculadora-letra-dni-argentina) — otro algoritmo con números.",
+  "explanation": "## Cómo se calcula\n\nLa conversión decimal → romano usa un algoritmo **greedy** (voraz): se toma el mayor valor romano posible, se resta del número, y se repite hasta llegar a 0. Los 13 símbolos clave (incluyendo los 6 sustractivos) son:\n\n```\nTabla de valores:\nM   = 1000\nCM  =  900\nD   =  500\nCD  =  400\nC   =  100\nXC  =   90\nL   =   50\nXL  =   40\nX   =   10\nIX  =    9\nV   =    5\nIV  =    4\nI   =    1\n\nAlgoritmo:\nentrada: n (entero, 1 ≤ n ≤ 3999)\nresultado = \"\"\npara cada (valor, símbolo) en la tabla de mayor a menor:\n    mientras n >= valor:\n        resultado += símbolo\n        n -= valor\nretornar resultado\n\nEjemplo: n = 2026\n2026 >= 1000 → resultado = \"M\",    n = 1026\n1026 >= 1000 → resultado = \"MM\",   n =   26\n  26 <  900  → (saltar CM, D, CD, C, XC, L, XL)\n  26 >= 10   → resultado = \"MMX\",  n =   16\n  16 >= 10   → resultado = \"MMXX\", n =    6\n   6 <  10   → (saltar IX)\n   6 >= 5    → resultado = \"MMXXV\",n =    1\n   1 >= 1    → resultado = \"MMXXVI\"n =    0\n→ MMXXVI ✓\n```\n\nLa conversión inversa (romano → decimal) recorre la cadena de izquierda a derecha: si el valor del símbolo actual es **menor** que el siguiente, se **resta**; si es **igual o mayor**, se **suma**.\n\n```\nEjemplo inverso: MCMXCIX\nM   = 1000 (siguiente C=100 < M → suma)   acum = 1000\nC   =  100 (siguiente M=1000 > C → resta)  acum =  900\nM   = 1000 (siguiente X=10 < M → suma)     acum = 1900\nX   =   10 (siguiente C=100 > X → resta)   acum = 1890\nC   =  100 (siguiente I=1 < C → suma)      acum = 1990\nI   =    1 (siguiente X=10 > I → resta)    acum = 1989\nX   =   10 (fin → suma)                    acum = 1999\n→ 1999 ✓\n```\n\n---\n\n## Tabla de referencia\n\n| Decimal | Romano   | Decimal | Romano   |\n|---------|----------|---------|----------|\n| 1       | I        | 50      | L        |\n| 2       | II       | 90      | XC       |\n| 3       | III      | 100     | C        |\n| 4       | IV       | 400     | CD       |\n| 5       | V        | 500     | D        |\n| 6       | VI       | 900     | CM       |\n| 9       | IX       | 1000    | M        |\n| 10      | X        | 1999    | MCMXCIX  |\n| 14      | XIV      | 2000    | MM       |\n| 20      | XX       | 2024    | MMXXIV   |\n| 40      | XL       | 2025    | MMXXV    |\n| 49      | XLIX     | 2026    | MMXXVI   |\n\n**Años históricos frecuentes:**\n\n| Año | Romano     | Significado                        |\n|-----|------------|------------------------------------|\n| 476 | CDLXXVI    | Caída del Imperio Romano Occidental|\n| 1492| MCDXCII    | Llegada de Colón a América         |\n| 1776| MDCCLXXVI  | Independencia de EE.UU.            |\n| 1816| MDCCCXVI   | Independencia Argentina            |\n| 1994| MCMXCIV    | Argentina, Copa del Mundo USA 94   |\n| 2001| MMI        | Inicio del siglo XXI               |\n\n---\n\n## Casos típicos\n\n**Caso 1 — El año actual (2026)**\n2026 = 2000 + 20 + 6 = MM + XX + VI = **MMXXVI**\nÚtil para diplomas, actas notariales, portadas de tesis universitarias y tatuajes conmemorativos.\n\n**Caso 2 — Un número con muchas sustracciones (1999)**\n1999 = 1000 + 900 + 90 + 9 = M + CM + XC + IX = **MCMXCIX**\nEste es uno de los números que más confusión genera porque tiene tres pares sustractivos seguidos.\n\n**Caso 3 — Número límite del sistema clásico (3999)**\n3999 = 3000 + 900 + 90 + 9 = MMM + CM + XC + IX = **MMMCMXCIX**\nEl sistema romano clásico sin notación especial llega hasta 3999 (cuatro M estarían fuera de norma estándar). Para números ≥ 4000 se usaban barras sobre las letras (*vinculum*), pero esa notación no es de uso cotidiano.\n\n---\n\n## Errores comunes\n\n1. **Repetir V, L o D más de una vez**: V, L y D NO se repiten. El 10 es X (no VV), el 100 es C (no LL), el 1000 es M (no DD). Solo I, X, C y M pueden repetirse, y como máximo 3 veces seguidas.\n\n2. **Sustracción inválida**: solo se puede restar I de V y X; X de L y C; C de D y M. Escribir IL (49 incorrecto) o VX es un error grave — lo correcto es XLIX.\n\n3. **Más de un símbolo sustractivo**: no se puede escribir IIX para 8; lo correcto es VIII. La regla es un único símbolo por sustracción.\n\n4. **Confundir IV con IIII**: en relojes analógicos muchas marcas usan IIII (forma arcaica) por razones de simetría visual con el VIII del lado opuesto, pero en escritura estándar el 4 siempre es IV.\n\n5. **Intentar escribir el 0 en romano**: el sistema romano **no tiene cero**. El concepto de cero llegó a Europa a través del sistema indo-arábigo. Si tu cálculo da 0, no tiene representación romana.\n\n6. **Números mayores a 3999**: el sistema estándar no representa 4000 o más sin notación extendida (*vinculum* o apostrophus). Esta calculadora opera en el rango 1–3999.\n\n---\n\n## Calculadoras relacionadas\n\n- [Conversor Binario ↔ Decimal](/calculadora-conversor-binario-decimal) — convertí números entre base 2 y base 10.\n- [Calculadora Letra del DNI Argentino](/calculadora-letra-dni-argentina) — calculá el dígito verificador de tu documento.\n- [Conversor Celsius ↔ Fahrenheit](/conversor-celsius-fahrenheit-temperatura) — pasá temperaturas entre escalas.\n- [Conversor Kilogramos ↔ Libras y Onzas](/conversor-kilogramos-libras-onzas) — convertí pesos entre sistemas métrico e imperial.\n",
   "faq": [
     {
-      "q": "¿Cómo se escribe 2026 en números romanos?",
-      "a": "**MMXXVI** (MM=2000 + XX=20 + VI=6)."
+      "q": "¿Hasta qué número llega el sistema romano estándar?",
+      "a": "El sistema romano clásico llega hasta **3999 (MMMCMXCIX)**. El límite existe porque la letra M (1000) puede repetirse como máximo 3 veces seguidas según las reglas estándar. Para representar 4000 o más, los romanos usaban el *vinculum* (una barra horizontal sobre la letra que multiplicaba su valor por 1000), pero esa notación no es de uso cotidiano moderno."
     },
     {
-      "q": "¿Existe el cero en números romanos?",
-      "a": "No. Los romanos no tenían símbolo para el cero. El sistema empieza en 1 (I)."
+      "q": "¿Por qué los relojes usan IIII en vez de IV para el 4?",
+      "a": "Es una convención estética y funcional que data del siglo XIV. Usar IIII genera simetría visual con el VIII (8) en el lado opuesto del reloj. Además, con IIII el cuadrante usa exactamente el mismo número de I, V y X (cuatro de cada uno), lo que facilitaba la fundición de los tipos. El reloj del Big Ben en Londres usa IIII, al igual que la mayoría de relojes de lujo suizos."
     },
     {
-      "q": "¿Cuál es el número romano más grande?",
-      "a": "Con los símbolos estándar, **3999 = MMMCMXCIX**. Para números mayores se usaban barras superiores (vinculum)."
+      "q": "¿Cuál es el número romano más largo que existe dentro del rango 1–3999?",
+      "a": "El número **3888 = MMMDCCCLXXXVIII** con 15 caracteres es el más largo posible en el sistema estándar. Le sigue 2888 = MMDCCCLXXXVIII (14 caracteres). En el extremo opuesto, el más corto de todos es I (1) con un solo carácter, y le siguen V, X, L, C, D y M, cada uno con un carácter."
     },
     {
-      "q": "¿Por qué los relojes usan IIII en vez de IV?",
-      "a": "Es tradición relojera. Se cree que es por simetría visual con el VIII del otro lado del reloj."
+      "q": "¿Qué años importantes de Argentina se escriben en romano?",
+      "a": "Algunos hitos: **1816 = MDCCCXVI** (Declaración de Independencia), **1853 = MDCCCLIII** (primera Constitución Nacional), **1978 = MCMLXXVIII** (Mundial de fútbol), **1994 = MCMXCIV** (reforma constitucional y Mundial USA), **2001 = MMI** (crisis económica). Los documentos notariales y actas judiciales en Argentina frecuentemente expresan el año en letras o romano."
     },
     {
-      "q": "¿Cómo se restan los números romanos?",
-      "a": "Un símbolo menor ANTES de uno mayor se resta: **IV**=4 (5-1), **IX**=9 (10-1), **XL**=40 (50-10), **XC**=90, **CD**=400, **CM**=900."
+      "q": "¿Los números romanos tienen algún estándar ISO o IRAM?",
+      "a": "No existe una norma ISO ni IRAM específica para números romanos como sistema de numeración general. Sin embargo, la norma **ISO 2145** regula el uso de números romanos en la numeración de secciones de documentos (ej.: I, II, III para secciones principales). El IRAM no posee una norma equivalente publicada para este sistema, aunque sus manuales de estilo para documentación técnica recomiendan usar números arábigos en tablas y romano solo para títulos de secciones."
     },
     {
-      "q": "¿Se pueden sumar números romanos directamente?",
-      "a": "Sí, simplemente concatenando y simplificando: VI + IV = VIIV → simplificado = X."
+      "q": "¿Cómo se leen los siglos en romano y por qué el siglo XXI empieza en 2001?",
+      "a": "El siglo XXI comprende los años 2001–2100 porque no existió el año 0 en el calendario gregoriano: se pasó directamente del año 1 a.C. al año 1 d.C. Por eso el primer siglo duró del 1 al 100, el segundo del 101 al 200, y así sucesivamente. El siglo XX fue 1901–2000 y el XXI comenzó el **1 de enero de 2001 = I/I/MMI**. Esta es una fuente frecuente de confusión en el cambio de milenio."
     },
     {
-      "q": "¿Cuándo se usan números romanos hoy?",
-      "a": "En siglos (XXI), reyes/papas, capítulos de libros, eventos deportivos, relojes y diseño."
+      "q": "¿Se puede usar minúscula en números romanos?",
+      "a": "Sí, es válido. Las minúsculas (i, v, x, l, c, d, m) se usan frecuentemente para numerar páginas preliminares de libros (prólogo, índice), para subdivisiones en esquemas jurídicos y académicos, y en algunos contextos tipográficos. El valor numérico es idéntico: **xiv = XIV = 14**. La convención mayúscula es más formal y más común en la mayoría de contextos."
+    },
+    {
+      "q": "¿Por qué el año 1999 (MCMXCIX) se escribe así y no MXMIX o MCMIC?",
+      "a": "Las reglas prohíben formas como MXMIX o MCMIC porque la sustracción solo es válida cuando el símbolo menor **precede directamente** al símbolo del que se resta, y solo pueden usarse los pares canónicos: IV, IX, XL, XC, CD, CM. No se puede restar X de M directamente (XM no existe), ni C de I (CI tiene otro significado: 101). Por eso 1999 se descompone como M (1000) + CM (900) + XC (90) + IX (9) = **MCMXCIX**."
     }
   ],
   "sources": [
     {
-      "name": "Sistema de numeración romano",
-      "url": "https://es.wikipedia.org/wiki/Numeración_romana"
+      "name": "Wikipedia en español — Numeración romana",
+      "url": "https://es.wikipedia.org/wiki/Numeraci%C3%B3n_romana"
     }
   ],
   "relatedSlugs": [

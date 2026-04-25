@@ -18,14 +18,15 @@
     "dado online",
     "lanzar moneda virtual"
   ],
-  "intro": "Necesitás un **número al azar**? Tirá un dado virtual, lanzá una moneda o generá números aleatorios en cualquier rango. Ideal para juegos, sorteos, decisiones y estadística.",
-  "keyTakeaway": "**Este generador usa Math.random() para crear números pseudoaleatorios uniformes.** Cada resultado tiene la misma probabilidad. Podés tirar dados de 6, 12 o 20 caras, lanzar monedas o elegir cualquier rango.",
+  "intro": "Esta herramienta te permite tirar dados virtuales o generar números aleatorios dentro de un rango personalizado, de forma instantánea y sin sesgos. Podés simular un dado clásico de 6 caras, un dado de 20 caras (D20 de rol), o definir cualquier mínimo y máximo que necesités. La generación usa el algoritmo de enteros pseudoaleatorios uniformes: cada número dentro del rango tiene exactamente la misma probabilidad de salir, calculada como P(x) = 1 / (máximo − mínimo + 1). Ideal para juegos de mesa, sorteos, decisiones al azar, estadística y programación.",
+  "keyTakeaway": "Para un dado de 6 caras, **P(cualquier cara) = 1/6 ≈ 16,67%**; para un rango [mín, máx] con N tiradas, **promedio esperado = (mínimo + máximo) / 2** y **suma esperada = N × (mínimo + máximo) / 2**.",
   "useCases": [
-    "Necesitás tirar un dado para un juego de mesa.",
-    "Querés lanzar una moneda para decidir algo.",
-    "Estás haciendo un sorteo y necesitás un número al azar.",
-    "Querés generar múltiples números aleatorios.",
-    "Necesitás un generador rápido para D&D u otros juegos de rol."
+    "Tirar 2 dados de 6 caras para un juego de mesa como el Estanciero o el Monopoly y sumar el resultado para mover fichas.",
+    "Sortear un número entre 1 y 100 para elegir al ganador de un concurso o rifa entre participantes numerados.",
+    "Generar 5 números entre 1 y 45 para armar una quiniela o combinación de lotería de forma aleatoria.",
+    "Simular tiradas de dados de 20 caras (D20) para juegos de rol como Dungeons & Dragons o Pathfinder.",
+    "Decidir al azar quién empieza en un juego de cartas, quién paga la cuenta o quién realiza una tarea entre un grupo de personas.",
+    "Crear sets de datos aleatorios para practicar estadística, probabilidad o probar algoritmos de programación."
   ],
   "fields": [
     {
@@ -125,41 +126,45 @@
     ],
     "result": "3 dados de 6 caras: **4, 2, 6** (suma: 12, promedio: 4)."
   },
-  "explanation": "## Cómo funciona un generador de números aleatorios\n\n### Números pseudoaleatorios\n\nLas computadoras no generan números *verdaderamente* aleatorios. Usan algoritmos que producen secuencias de **números pseudoaleatorios** que parecen aleatorios y tienen distribución uniforme.\n\n### Distribución uniforme\n\nCada número en el rango tiene **exactamente la misma probabilidad** de salir. En un dado de 6 caras, cada cara tiene probabilidad 1/6 (16,67%).\n\n### Probabilidades por tipo\n\n| Tipo | Rango | Probabilidad por resultado |\n|---|---|---|\n| **Dado 6** | 1-6 | 16,67% |\n| **Dado 12** | 1-12 | 8,33% |\n| **Dado 20** | 1-20 | 5% |\n| **Moneda** | Cara/Cruz | 50% |\n| **Rango 1-100** | 1-100 | 1% |\n\n### Dados en juegos de rol\n\nEn **Dungeons & Dragons** y otros RPGs se usan dados especiales:\n- **d4**: tetraedro (4 caras)\n- **d6**: cubo clásico (6 caras)\n- **d8**: octaedro (8 caras)\n- **d10**: decaedro (10 caras)\n- **d12**: dodecaedro (12 caras)\n- **d20**: icosaedro (20 caras) — el más icónico\n- **d100**: [percentil](/calculadora-percentil-estatura-peso-bebe-oms) (dos d10)\n\n### Ley de los grandes números\n\nSi tirás un dado muchas veces, el promedio se acerca al valor teórico. Para un d6: (1+2+3+4+5+6)/6 = **3,5**. Con 1.000 tiradas, el promedio estará muy cerca de 3,5.\n\n### Usos prácticos\n\n- **Sorteos**: elegir un ganador al azar.\n- **Juegos**: tirar dados virtuales cuando no tenés físicos.\n- **Decisiones**: cara o cruz para decidir.\n- **Estadística**: generar datos de muestra.\n- **Programación**: testing con datos aleatorios.\n\n### Calculadoras relacionadas\n\n- [Conversor binario-decimal](/calculadora-conversor-binario-decimal) — cómo las computadoras representan números.\n- [Números romanos](/calculadora-numeros-romanos-conversor) — otro sistema numérico.",
+  "explanation": "## Cómo se calcula\n\nLa generación de un número aleatorio entero uniforme dentro de un rango cerrado [mínimo, máximo] sigue esta fórmula:\n\n```\nresultado = floor(random() × (máximo − mínimo + 1)) + mínimo\n\ndonde:\n  random()     → número pseudoaleatorio en [0, 1) con distribución uniforme\n  floor()      → parte entera (redondeo hacia abajo)\n  (máx−mín+1) → cantidad total de valores posibles\n\nPara N tiradas:\n  suma    = resultado_1 + resultado_2 + ... + resultado_N\n  promedio = suma / N\n\nProbabilidad de cada valor:\n  P(x) = 1 / (máximo − mínimo + 1)\n```\n\nPor ejemplo, para un dado de 6 caras: P(cualquier número) = 1/6 ≈ 16,67%. Para un rango del 1 al 100: P(cualquier número) = 1/100 = 1%.\n\n---\n\n## Tabla de referencia\n\n| Tipo de dado / rango | Rango | Valores posibles | P(cada valor) | Promedio esperado | Uso típico |\n|---|---|---|---|---|---|\n| Dado estándar (D6) | 1–6 | 6 | 16,67% | 3,5 | Juegos de mesa, Estanciero |\n| Dado de 4 caras (D4) | 1–4 | 4 | 25,00% | 2,5 | Juegos de rol (RPG) |\n| Dado de 8 caras (D8) | 1–8 | 8 | 12,50% | 4,5 | Dungeons & Dragons |\n| Dado de 10 caras (D10) | 1–10 | 10 | 10,00% | 5,5 | Juegos de rol avanzados |\n| Dado de 12 caras (D12) | 1–12 | 12 | 8,33% | 6,5 | D&D, daño de armas |\n| Dado de 20 caras (D20) | 1–20 | 20 | 5,00% | 10,5 | D&D, chequeos de habilidad |\n| Dado de 100 (D100 / percentil) | 1–100 | 100 | 1,00% | 50,5 | Tablas de encuentros RPG |\n| Rango lotería Quini 6 | 1–46 | 46 | 2,17% | 23,5 | Loterías argentinas |\n| Moneda (cara/ceca) | 0–1 | 2 | 50,00% | 0,5 | Decisiones binarias |\n| Personalizado genérico | mín–máx | máx−mín+1 | 1/(máx−mín+1) | (mín+máx)/2 | Sorteos a medida |\n\n---\n\n## Casos típicos\n\n**Caso 1 – Juego de mesa (Estanciero)**\nTirás 2 dados de 6 caras. Los resultados son 4 y 6. Suma = 10 casilleros para avanzar. La probabilidad de sacar exactamente 10 con 2D6 es 3/36 ≈ 8,33% (combinaciones: 4+6, 5+5, 6+4). El resultado más probable con 2D6 es 7, con probabilidad 6/36 ≈ 16,67%.\n\n**Caso 2 – Sorteo de rifa**\nTenés 50 participantes numerados del 1 al 50. Configurás mínimo=1, máximo=50, cantidad=1. P(ganar) = 1/50 = 2%. Si querés sortear 3 premios distintos, necesitás 3 tiradas asegurándote de no repetir el mismo número.\n\n**Caso 3 – D20 en Dungeons & Dragons**\nNecesitás superar una Clase de Armadura (CA) 15. Tirás 1D20 y obtenés 17. Como 17 ≥ 15, el ataque conecta. La probabilidad de sacar ≥15 en un D20 es 6/20 = 30%. Con ventaja (tirás 2D20 y tomás el mayor), la probabilidad sube a: 1 − (14/20)² = 1 − 0,49 = 51%.\n\n---\n\n## Errores comunes\n\n1. **Confundir \"aleatorio\" con \"sin repetición\"**: un generador uniforme puede repetir valores entre tiradas. Si necesitás números únicos (como en una rifa sin reposición), debés descartar los repetidos manualmente o usar la opción específica de números sin repetición.\n\n2. **Esperar que el promedio sea exacto en pocas tiradas**: la ley de los grandes números dice que el promedio de las tiradas se acerca al valor esperado recién con muchas repeticiones. Con solo 5 tiradas de un D6, es completamente normal obtener un promedio de 2 o de 6, muy lejos del 3,5 teórico.\n\n3. **Usar el mínimo mayor que el máximo**: si configurás mínimo=10 y máximo=5, el rango es inválido. El mínimo siempre debe ser menor o igual al máximo; si son iguales, el único resultado posible es ese número.\n\n4. **Creer que un dado virtual \"recuerda\" los resultados anteriores**: cada tirada es un evento independiente. Que hayan salido 5 seises seguidos no aumenta ni reduce la probabilidad del próximo resultado; sigue siendo 1/6 para cualquier cara. Esto se llama falacia del jugador.\n\n5. **Tomar el resultado de una sola tirada como representativo**: para estadísticas confiables, necesitás al menos 30 tiradas (por el teorema del límite central). Con N=1, cualquier resultado es igualmente válido e igualmente poco informativo.\n\n---\n\n## Calculadoras relacionadas\n\n- [Conversor Binario a Decimal](/calculadora-conversor-binario-decimal) — si los números generados los necesitás trabajar en base 2 o base 16.\n- [Conversor de Números Romanos](/calculadora-numeros-romanos-conversor) — para transformar el resultado de tus tiradas al sistema romano (útil en juegos de ambientación histórica).\n- [Generador de Código QR](/calculadora-generador-qr) — podés convertir tu número sorteado en un QR para compartirlo fácilmente.\n- [Generador de Nombre Élfico](/calculadora-nombre-elfo) — combinalo con tus dados D20 para armar tu personaje de rol completo.",
   "faq": [
     {
-      "q": "¿Los números son realmente aleatorios?",
-      "a": "Son **pseudoaleatorios**: generados por un algoritmo que produce secuencias estadísticamente uniformes. Para usos cotidianos (juegos, sorteos) son perfectamente válidos."
+      "q": "¿Los números generados son verdaderamente aleatorios?",
+      "a": "Son pseudoaleatorios: la computadora usa algoritmos matemáticos (como el Mersenne Twister o la función Math.random() de JavaScript) que producen secuencias estadísticamente indistinguibles del azar real. Para usos cotidianos como juegos, sorteos o decisiones, son completamente válidos. Solo aplicaciones criptográficas o científicas críticas requieren generadores de entropía de hardware (TRNG)."
     },
     {
-      "q": "¿Puedo usarlo para un sorteo oficial?",
-      "a": "Para sorteos informales sí. Para sorteos oficiales con requisitos legales, se necesitan generadores certificados."
+      "q": "¿Qué probabilidad tengo de sacar un número específico con un dado de 6?",
+      "a": "Exactamente 1/6 ≈ 16,67% para cualquier valor del 1 al 6. Si tirás 2 dados y querés la suma exacta, la probabilidad varía: 7 es la más probable (6/36 ≈ 16,67%), mientras que 2 o 12 tienen solo 1/36 ≈ 2,78% de probabilidad cada uno. La distribución de la suma de 2D6 sigue una distribución triangular."
     },
     {
-      "q": "¿Cada tirada es independiente?",
-      "a": "Sí. Cada número generado es **independiente** de los anteriores. Que salga un 6 no hace más o menos probable que salga otro 6."
+      "q": "¿Cuántas tiradas necesito para que el promedio se acerque al valor esperado?",
+      "a": "Según la Ley de los Grandes Números, con más tiradas el promedio empírico converge al teórico. Para un D6 (promedio esperado: 3,5), con 30 tiradas ya deberías ver un promedio cercano a 3,5 ± 0,5. Con 100 tiradas, la desviación estándar del promedio es solo σ/√100 = 1,71/10 ≈ 0,17, lo que da resultados muy estables."
     },
     {
-      "q": "¿Qué es un D20?",
-      "a": "Es un **dado de 20 caras** (icosaedro) usado en juegos de rol como Dungeons & Dragons. Genera números del 1 al 20."
+      "q": "¿Cómo simulo el lanzamiento de una moneda?",
+      "a": "Configurá mínimo=0 y máximo=1, con cantidad=1. El 0 representa ceca (cruz) y el 1 representa cara. Cada resultado tiene exactamente 50% de probabilidad. Si querés saber cuántas caras salen en 10 lanzamientos, configurá cantidad=10 y contás los '1'. La distribución esperada sigue una distribución binomial B(10, 0,5)."
     },
     {
-      "q": "¿Puedo tirar varios dados a la vez?",
-      "a": "Sí. Configurá la cantidad de tiradas (hasta 20) y obtendrás todos los resultados con su suma y promedio."
+      "q": "¿Para qué sirve la suma total cuando tiro varios dados?",
+      "a": "La suma es clave en juegos de mesa y rol: en el Estanciero, la suma de 2D6 determina los casilleros a avanzar (máximo posible: 12). En D&D, el daño de un arma como una espada larga se calcula como 1D8, pero un golpe crítico tira 2D8. La suma total también permite hacer sorteos ponderados: mayor suma = mayor prioridad en una lista."
     },
     {
-      "q": "¿Cuál es la probabilidad de sacar un número específico?",
-      "a": "Es 1 dividido el total de opciones. En un dado de 6: 1/6 = 16,67%. En rango 1-100: 1/100 = 1%."
+      "q": "¿Puedo usar esta calculadora para armar números de lotería?",
+      "a": "Sí. Para el Quini 6 argentino (operado por Lotería Nacional), necesitás 6 números distintos del 1 al 46. Configurá mínimo=1, máximo=46, cantidad=6 y descartá los repetidos. Para la Lotería de la Ciudad o Provincia de Buenos Aires, los rangos varían por modalidad. Recordá que la probabilidad de acertar los 6 números es 1/9.366.819 ≈ 0,0000107%."
     },
     {
-      "q": "¿La moneda está equilibrada?",
-      "a": "Sí. La probabilidad de Cara y Cruz es exactamente **50/50** en cada lanzamiento."
+      "q": "¿Qué es la falacia del jugador y por qué me afecta al tirar dados?",
+      "a": "Es la creencia errónea de que los resultados anteriores influyen en los futuros. Si un D6 sacó 6 cinco veces seguidas, muchas personas creen que 'ya no puede salir otro 6', pero la probabilidad sigue siendo 1/6 = 16,67% para cada cara en cada tirada independiente. Cada lanzamiento no tiene memoria; los eventos son estadísticamente independientes entre sí."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre generar números con y sin reposición?",
+      "a": "Con reposición (el modo estándar de esta calculadora), un número puede repetirse: si pedís 3 números del 1 al 6, podrías obtener 3, 3, 5. Sin reposición, una vez que sale un número no puede volver a elegirse: ideal para rifas o sorteos donde cada participante puede ganar solo una vez. Para sorteos sin repetición, tirá de a una y descartá manualmente los resultados ya obtenidos."
     }
   ],
   "sources": [
     {
-      "name": "MDN - Math.random()",
-      "url": "https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Math/random"
+      "name": "Wikipedia ES – Generador de números pseudoaleatorios",
+      "url": "https://es.wikipedia.org/wiki/Generador_de_n%C3%BAmeros_pseudoaleatorios"
     }
   ],
   "relatedSlugs": [

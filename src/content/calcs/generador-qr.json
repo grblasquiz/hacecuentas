@@ -18,14 +18,15 @@
     "crear qr online",
     "qr para whatsapp"
   ],
-  "intro": "Necesitás crear un **código QR** rápido? Ingresá una URL, número de WhatsApp, email, red WiFi o cualquier texto y generá tu QR al instante. Gratis y sin registro.",
-  "keyTakeaway": "**Un código QR codifica texto en un patrón de cuadraditos escaneables.** Puede contener URLs, contactos, WiFi, emails y más. Este generador crea QR al instante para cualquier contenido.",
+  "intro": "Un código QR (Quick Response) es una matriz bidimensional de módulos binarios (píxeles blancos y negros) capaz de codificar hasta 4.296 caracteres alfanuméricos o 7.089 dígitos numéricos. Se usa para compartir URLs, datos de contacto, Wi-Fi, pagos con CBU/alias, textos, números de WhatsApp y más, de forma que cualquier cámara de celular lo lea en segundos. Esta herramienta genera el QR al instante: ingresás el tipo de contenido y el texto, y obtenés la imagen lista para descargar o compartir.",
+  "keyTakeaway": "Un QR codifica datos según el estándar ISO/IEC 18004. **Para WhatsApp usá `https://wa.me/5491155551234`; para Wi-Fi usá `WIFI:T:WPA;S:MiRed;P:MiClave;;`; para URL directa pegás el enlace completo con `https://`.**",
   "useCases": [
-    "Querés compartir tu WhatsApp con un QR.",
-    "Necesitás un QR para el WiFi de tu negocio.",
-    "Estás haciendo tarjetas con un QR a tu web.",
-    "Querés un QR para un email de contacto.",
-    "Necesitás un QR con texto personalizado."
+    "Compartir el número de WhatsApp del negocio en una tarjeta personal o cartel de local para que los clientes inicien un chat sin guardar el número.",
+    "Incluir el QR del menú de un restaurante en la mesa para que los comensales lo lean con el celular y accedan al menú digital.",
+    "Generar un QR con los datos de red Wi-Fi (SSID + contraseña) para que invitados se conecten sin tener que escribir la clave.",
+    "Poner un QR con el CBU o alias de Mercado Pago / banco en una factura o presupuesto para que el cliente pague escaneando.",
+    "Crear un QR con el link de una encuesta de Google Forms o un formulario de RRHH para repartir en un evento o capacitación.",
+    "Codificar una tarjeta de contacto (formato vCard) con nombre, teléfono, empresa y mail para entregar en reuniones de negocios."
   ],
   "fields": [
     {
@@ -121,41 +122,53 @@
     ],
     "result": "Se genera un código QR que al escanearlo abre un **chat de WhatsApp** con el número +5491155551234."
   },
-  "explanation": "## Qué es un código QR\n\nQR significa **Quick Response** (respuesta rápida). Es un código de barras bidimensional inventado en 1994 por Denso Wave (Japón) para rastrear piezas automotrices. Hoy se usa en todo: pagos, menús, entradas, WiFi y más.\n\n### Cómo funciona\n\nUn QR codifica texto en un patrón de **módulos** (cuadraditos blancos y negros). Cualquier cámara de celular puede leerlo y decodificar el contenido.\n\n### Tipos de contenido\n\n| Tipo | Formato | Acción al escanear |\n|---|---|---|\n| **URL** | https://... | Abre el navegador |\n| **WhatsApp** | wa.me/número | Abre chat de WhatsApp |\n| **Email** | mailto:dir@mail.com | Abre app de correo |\n| **Teléfono** | tel:+549... | Inicia llamada |\n| **WiFi** | WIFI:T:WPA;S:red;P:clave;; | Conecta a la red |\n| **Texto** | Texto libre | Muestra el texto |\n\n### Capacidad de un QR\n\nUn código QR estándar puede almacenar:\n- **Numérico**: hasta 7.089 dígitos\n- **Alfanumérico**: hasta 4.296 caracteres\n- **Binario**: hasta 2.953 bytes\n\n### Consejos para mejores QR\n\n1. **Contenido corto** → QR más simple → escaneo más rápido.\n2. **Contraste alto**: negro sobre blanco funciona mejor.\n3. **Tamaño mínimo**: 2×2 cm para escaneo cómodo.\n4. **Probá siempre**: escaneá tu QR antes de imprimirlo.\n5. **URLs cortas**: usá acortadores para URLs largas.\n\n### QR estático vs dinámico\n\n- **Estático**: el contenido está fijo en el QR. No se puede cambiar después.\n- **Dinámico**: el QR apunta a un enlace intermedio que podés redirigir. Requiere un servicio pago.\n\nEste generador crea QR **estáticos** gratuitos.\n\n### Calculadoras relacionadas\n\n- [Conversor binario-decimal](/calculadora-conversor-binario-decimal) — otro sistema de codificación.\n- [Conversor de colores HEX-RGB](/calculadora-codigo-color-hex-rgb) — colores en diferentes formatos.",
+  "explanation": "## Cómo se calcula\n\nUn código QR no usa una fórmula matemática clásica sino un proceso de codificación definido por el estándar **ISO/IEC 18004:2015**. Los pasos son:\n\n```\n1. Elegir modo de codificación:\n   - Numérico       → hasta 7.089 dígitos\n   - Alfanumérico   → hasta 4.296 chars (A-Z, 0-9, $, %, *, +, -, ., /, :, espacio)\n   - Binario/Byte   → hasta 2.953 bytes (UTF-8, URLs, etc.)\n   - Kanji          → hasta 1.817 caracteres\n\n2. Elegir nivel de corrección de errores:\n   - L (Low)     →  7 % de módulos recuperables\n   - M (Medium)  → 15 % de módulos recuperables  ← default recomendado\n   - Q (Quarter) → 25 % de módulos recuperables\n   - H (High)    → 30 % de módulos recuperables  ← usar si el QR puede ensuciarse\n\n3. Calcular versión (tamaño de la matriz):\n   - Versión 1  →  21×21 módulos  (hasta 41 chars numéricos en nivel L)\n   - Versión 10 →  57×57 módulos\n   - Versión 40 → 177×177 módulos (máximo estándar)\n\n4. Codificar datos + bits de corrección Reed-Solomon\n5. Aplicar máscara de patrón (8 posibles, se elige la que minimiza irregularidades)\n6. Renderizar la matriz como imagen PNG/SVG\n```\n\nPara **WhatsApp** el contenido debe ser:\n```\nhttps://wa.me/549XXXXXXXXXX\n```\n(con código de país 54 y código de área sin el 0, sin el 15)\n\nPara **Wi-Fi**:\n```\nWIFI:T:WPA;S:NombreDeRed;P:ContraseñaWifi;;\n```\n\nPara **vCard** (contacto):\n```\nBEGIN:VCARD\nVERSION:3.0\nFN:Juan Pérez\nTEL:+5491155551234\nEMAIL:juan@ejemplo.com\nEND:VCARD\n```\n\n---\n\n## Tabla de referencia\n\n| Tipo de contenido | Formato a ingresar | Ejemplo real |\n|---|---|---|\n| URL / Sitio web | `https://...` | `https://hacecuentas.com` |\n| WhatsApp | `https://wa.me/549XXXXXXXXXX` | `https://wa.me/5491155551234` |\n| Wi-Fi WPA | `WIFI:T:WPA;S:Red;P:Clave;;` | `WIFI:T:WPA;S:CasaDeJuan;P:mipass123;;` |\n| Wi-Fi abierta | `WIFI:T:nopass;S:Red;;;` | `WIFI:T:nopass;S:LibrePublico;;;` |\n| Texto libre | Cualquier texto | `Escaneame para ganar un descuento` |\n| Correo electrónico | `mailto:email@dominio.com` | `mailto:ventas@empresa.com.ar` |\n| Teléfono (llamada) | `tel:+549XXXXXXXXXX` | `tel:+5491144445555` |\n| SMS | `smsto:+549XXXXXXXXXX:Mensaje` | `smsto:+5491144445555:Hola, consulto por el precio` |\n| CBU / Pago | URL de link de pago | `https://mpago.la/xxxxx` |\n| vCard (contacto) | Bloque BEGIN:VCARD ... END:VCARD | (ver sección anterior) |\n| Ubicación GPS | `geo:LAT,LON` | `geo:-34.6037,-58.3816` |\n\n---\n\n## Tamaño recomendado según uso\n\n| Uso | Tamaño mínimo recomendado | Observaciones |\n|---|---|---|\n| Pantalla / redes sociales | 200 × 200 px | Suficiente para pantallas Full HD |\n| Impresión hoja A4 | 300 × 300 px (≥ 3 cm físico) | A 300 DPI: 3 cm = 354 px |\n| Tarjeta personal | 250 × 250 px | Imprimir a mínimo 2 cm × 2 cm |\n| Cartel / vidriera | 500 × 500 px o más | A mayor distancia de lectura, mayor tamaño |\n| Banner / lona impresa | 1000 × 1000 px | Permitir zona quieta (quiet zone) de 4 módulos |\n\n---\n\n## Casos típicos\n\n**Caso 1 — WhatsApp de un negocio**\nUn kiosco quiere que los clientes le escriban por WhatsApp. El dueño ingresa tipo \"WhatsApp\" y número `+5491155551234`. El generador crea el QR con la URL `https://wa.me/5491155551234`. Al escanearlo, el celular abre WhatsApp directo al chat con ese número, sin necesidad de guardarlo en la agenda.\n\n**Caso 2 — Red Wi-Fi para una confitería**\nLa confitería tiene una red `CafeLaPaz` con contraseña `cafepaz2024` bajo protocolo WPA2. Se ingresa `WIFI:T:WPA;S:CafeLaPaz;P:cafepaz2024;;`. Al escanear el QR desde un celular Android 10+ o iOS 11+, el dispositivo se conecta automáticamente a la red sin tipear la contraseña.\n\n**Caso 3 — Cobro con QR (Mercado Pago / Alias)**\nUn profesional independiente genera el link de cobro desde la app de Mercado Pago (`https://mpago.la/xxxxxx`) y lo convierte en QR. Lo pega en su factura o presupuesto PDF. El cliente escanea y paga directamente desde cualquier billetera virtual sin necesidad de tener la misma app.\n\n---\n\n## Errores comunes\n\n1. **Número de WhatsApp sin código de país o con el 0/15**: `+541155551234` o `+5491555551234` son incorrectos para `wa.me`. El formato correcto es `549` (54 = Argentina, 9 = móvil) seguido de los 8 dígitos locales: `+5491155551234`.\n\n2. **URL sin `https://`**: Muchos lectores no interpretan `hacecuentas.com` como una URL; siempre incluir el protocolo completo `https://hacecuentas.com`.\n\n3. **QR demasiado pequeño para impresión**: Usar un QR de 150 px en una hoja A4 lo hace difícil de leer. La regla práctica es que el QR impreso mida al menos **2 cm × 2 cm** y que exista un margen blanco (quiet zone) de 4 módulos alrededor.\n\n4. **Contraseña Wi-Fi con caracteres especiales sin escapar**: Si la contraseña contiene `;`, `,`, `\"` o `\\`, deben escaparse con `\\` antes del carácter. Ejemplo: contraseña `mi;clave` → `WIFI:T:WPA;S:Red;P:mi\\;clave;;`.\n\n5. **Acortar URLs dinámicas que caducan**: Usar links de Bitly o UTM con fecha de expiración hace que el QR impreso en material físico quede inútil. Preferir URLs permanentes o el link directo al dominio propio.\n\n6. **Texto con tildes o eñes en modo alfanumérico**: El modo alfanumérico del estándar QR no incluye vocales acentuadas ni ñ. Para texto en español con tildes, el generador debe usar modo Byte/UTF-8; si no lo hace, los caracteres se corrompen.\n\n---\n\n## Calculadoras relacionadas\n\n- [Conversor Binario a Decimal](/calculadora-conversor-binario-decimal) — entendé cómo los datos se representan en 0s y 1s, la base de cualquier código QR.\n- [Código de Color HEX a RGB](/calculadora-codigo-color-hex-rgb) — si querés personalizar el color de tu QR, convertí tu color de marca a valores exactos.\n- [Generador de Nombre Élfico](/calculadora-nombre-elfo) — generá textos creativos para codificar en tu QR.\n- [Generador de Nombre Rapper](/calculadora-nombre-rapper) — otro generador divertido para incluir textos únicos en tus QR.\n",
   "faq": [
     {
-      "q": "¿El código QR generado es gratis?",
-      "a": "Sí. Este generador crea códigos QR **estáticos gratuitos** sin límite de uso ni marca de agua."
+      "q": "¿El QR que genero tiene fecha de vencimiento?",
+      "a": "No, los QR estáticos no vencen nunca por sí solos: son simplemente una representación visual de un texto. Lo que puede «vencer» es el contenido que codifican: si la URL que pusiste deja de existir o el link de pago caduca, el QR va a dejar de funcionar. Un QR con un link permanente (como tu dominio propio o un número de WhatsApp) es válido de por vida."
     },
     {
-      "q": "¿El QR tiene vencimiento?",
-      "a": "No. Un QR estático **nunca vence** porque el contenido está codificado en la imagen misma."
+      "q": "¿Cuál es el formato correcto para el número de WhatsApp en Argentina?",
+      "a": "El formato es `https://wa.me/549XXXXXXXX`. El prefijo 54 es el código de país de Argentina; el 9 indica número móvil (obligatorio para wa.me); después van los 8 dígitos locales sin el 0 de área ni el 15. Ejemplo: si el número es (011) 15-5555-1234, el link correcto es `https://wa.me/5491155551234`."
     },
     {
-      "q": "¿Cómo hago un QR para mi WiFi?",
-      "a": "Seleccioná tipo \"WiFi\" e ingresá: **NombreDeRed,contraseña** (separado por coma). Al escanear, conecta automáticamente."
+      "q": "¿Qué nivel de corrección de errores debo elegir?",
+      "a": "El nivel **M (15%)** es el recomendado para la mayoría de los usos digitales. Si el QR va a imprimirse en superficies que pueden ensuciarse, rayarse o doblarse (como packaging, remeras o carteles en exteriores), elegí nivel **H (30%)**, que recupera hasta el 30 % de módulos dañados a costa de un QR visualmente más denso. El estándar que define estos niveles es ISO/IEC 18004:2015."
     },
     {
-      "q": "¿Puedo personalizar el color del QR?",
-      "a": "Esta herramienta genera QR estándar blanco y negro. Para colores personalizados necesitás una app dedicada."
+      "q": "¿Puedo personalizar el color del QR (fondo blanco, módulos de otro color)?",
+      "a": "Sí, siempre que exista suficiente contraste. El estándar recomienda un ratio de contraste mínimo de 3:1 entre los módulos oscuros y el fondo claro. Nunca invertir los colores (fondo oscuro con módulos blancos) porque la mayoría de los lectores esperan módulos oscuros sobre fondo claro. Si usás un color de marca, verificá que sea más oscuro que el fondo."
     },
     {
-      "q": "¿Qué tamaño debería usar?",
-      "a": "**300px** es ideal para pantalla. Para imprimir, usá 500px. El mínimo para escaneo cómodo es 2×2 cm impreso."
+      "q": "¿Cuántos caracteres puede guardar un código QR?",
+      "a": "Depende del modo y la versión. En el máximo (versión 40, nivel L): **7.089 dígitos numéricos**, **4.296 caracteres alfanuméricos** o **2.953 bytes** en modo binario/UTF-8. Para uso cotidiano (URLs cortas, números de teléfono, textos breves) estás muy lejos del límite. Una URL típica de 60 chars usa menos del 2 % de la capacidad máxima."
     },
     {
-      "q": "¿Puedo poner un QR en mi tarjeta personal?",
-      "a": "Sí. Generá un QR con tu URL, WhatsApp o vCard y agregalo a la tarjeta. Asegurate de que sea mínimo 2×2 cm."
+      "q": "¿Los iPhones y Android leen los QR sin app adicional?",
+      "a": "Sí. Desde **iOS 11** (2017), la app Cámara nativa del iPhone lee QR directamente. En **Android**, la lectura nativa está disponible desde Android 8 (Oreo) en adelante a través de Google Lens integrado en la cámara. Para versiones anteriores se necesita una app lectora como QR & Barcode Scanner. La red Wi-Fi también se conecta automáticamente desde Android 10+ e iOS 11+."
     },
     {
-      "q": "¿Los QR funcionan sin internet?",
-      "a": "El QR en sí se escanea **sin internet**. Pero si el contenido es una URL, necesitás conexión para abrir la página."
+      "q": "¿Qué tamaño en píxeles debo usar para imprimir el QR en una tarjeta personal?",
+      "a": "Para impresión en tarjeta personal (donde el QR suele medir unos 2-3 cm físicos) recomendamos **300 × 300 px como mínimo**. A 300 DPI (resolución estándar de impresión de calidad), 300 px equivalen a exactamente 2,54 cm. Si querés el QR más grande en la tarjeta (3 cm), usá 354 px. Exportar en PNG sin compresión garantiza bordes nítidos."
+    },
+    {
+      "q": "¿Los pagos con QR en Argentina usan algún estándar particular?",
+      "a": "Sí. El **BCRA (Banco Central de la República Argentina)** estableció mediante la Comunicación A 6885 y sucesivas el estándar de **QR interoperable** para pagos, basado en el formato EMVCo QR Code Specification. Desde 2022, todas las billeteras virtuales y bancos habilitados en Argentina deben leer el QR de cualquier otro proveedor. El formato incluye campos como monto, moneda (032 = ARS), CUIT del cobrador y referencia de la transacción."
+    },
+    {
+      "q": "¿Hay diferencia entre un QR estático y uno dinámico?",
+      "a": "Sí. Un QR **estático** (como el que genera esta calculadora) codifica el contenido directamente: si querés cambiarlo, tenés que generar e imprimir uno nuevo. Un QR **dinámico** codifica una URL corta intermediaria (ej: `https://qr.co/abc123`) que redirige al destino real, el cual puede editarse desde un panel sin reimprimir el QR. Los dinámicos suelen ser de pago y tienen estadísticas de escaneos; los estáticos son gratuitos e ilimitados."
     }
   ],
   "sources": [
     {
-      "name": "ISO/IEC 18004 - QR Code",
-      "url": "https://www.iso.org/standard/62021.html"
+      "name": "BCRA — Comunicaciones sobre pagos con QR interoperable (Sección Medios de Pago)",
+      "url": "https://www.bcra.gob.ar/MediosPago/Pagos_QR.asp"
+    },
+    {
+      "name": "Wikipedia ES — Código QR (estándar ISO/IEC 18004, capacidades y modos)",
+      "url": "https://es.wikipedia.org/wiki/C%C3%B3digo_QR"
     }
   ],
   "relatedSlugs": [

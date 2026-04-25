@@ -17,14 +17,15 @@
     "convertir color",
     "tabla colores hex"
   ],
-  "intro": "Necesitás convertir un color entre **HEX, RGB y HSL**? Ingresá el valor en cualquier formato y esta calculadora te devuelve los otros dos al instante. Ideal para diseño web, gráfico y desarrollo.",
-  "keyTakeaway": "**HEX es base 16 (#FF5733), RGB es rojo-verde-azul (255,87,51), HSL es tono-saturación-luminosidad (14°,100%,60%).** Los tres representan el mismo color.",
+  "intro": "El conversor de colores HEX ↔ RGB ↔ HSL te permite transformar cualquier código de color entre los tres sistemas más usados en diseño web y desarrollo de software. HEX es una representación hexadecimal de 6 dígitos (ej: #FF5733), RGB expresa cada canal —Rojo, Verde y Azul— en valores del 0 al 255, y HSL describe el color en términos de Tono (Hue, 0°–360°), Saturación (0%–100%) y Luminosidad (0%–100%). Se usa al escribir CSS, configurar paletas en Figma o Adobe, calibrar pantallas y garantizar accesibilidad visual (contraste WCAG).",
+  "keyTakeaway": "**HEX → RGB**: R=HH₁, G=HH₂, B=HH₃ (pares hexadecimales a decimal). **RGB → HSL**: H=arctan(canal dominante), S=(max−min)/(1−|2L−1|), L=(max+min)/2. Ejemplo real: #FF5733 = RGB(255, 87, 51) = HSL(11°, 100%, 60%).",
   "useCases": [
-    "Tenés un código HEX y necesitás el RGB.",
-    "Estás programando CSS y necesitás convertir formatos.",
-    "Querés entender qué color representa un código HEX.",
-    "Necesitás ajustar la saturación o luminosidad de un color.",
-    "Estás diseñando y necesitás la paleta en diferentes formatos."
+    "Diseñador web que necesita convertir el color de marca corporativa de HEX a RGB para usarlo en propiedades CSS y variables de Sass/SCSS.",
+    "Desarrollador front-end que trabaja con Canvas o WebGL y necesita valores RGB normalizados (0.0–1.0) a partir de un código HEX provisto por el equipo de diseño.",
+    "Diseñador UX que ajusta paletas de color en Figma o Adobe XD y necesita verificar que el tono HSL cumpla con las pautas de contraste WCAG 2.1 (ratio mínimo 4.5:1 para texto normal).",
+    "Fotógrafo o retocador digital que necesita replicar un color exacto entre distintos programas (Lightroom usa HSL, Photoshop acepta RGB y HEX) sin pérdida de precisión.",
+    "Estudiante de programación que aprende a manipular colores en Python, JavaScript o Processing y necesita entender la equivalencia entre los tres modelos para usar funciones como rgb() o hsl() en CSS.",
+    "Fabricante o impresor que recibe un código HEX del cliente y necesita convertirlo a RGB para verificar reproducibilidad en pantallas sRGB antes de derivar a perfil CMYK."
   ],
   "fields": [
     {
@@ -107,41 +108,53 @@
     ],
     "result": "#FF5733 = **RGB(255, 87, 51)** = **HSL(11°, 100%, 60%)**."
   },
-  "explanation": "## Sistemas de color: HEX, RGB y HSL\n\n### HEX (Hexadecimal)\n\nFormato: `#RRGGBB` donde cada par es un valor hexadecimal (00-FF).\n- `#000000` = negro\n- `#FFFFFF` = blanco\n- `#FF0000` = rojo puro\n\n### RGB (Red, Green, Blue)\n\nFormato: `rgb(R, G, B)` donde cada valor va de 0 a 255.\n- `rgb(0, 0, 0)` = negro\n- `rgb(255, 255, 255)` = blanco\n- `rgb(255, 0, 0)` = rojo puro\n\n### HSL (Hue, Saturation, Lightness)\n\nFormato: `hsl(H, S%, L%)` donde H es el tono (0-360°), S la saturación (0-100%) y L la luminosidad (0-100%).\n- `hsl(0, 100%, 50%)` = rojo puro\n- `hsl(0, 0%, 0%)` = negro\n- `hsl(0, 0%, 100%)` = blanco\n\n### Cuándo usar cada uno\n\n| Formato | Mejor para |\n|---|---|\n| **HEX** | CSS, diseño web, comunicar colores |\n| **RGB** | Programación, manipulación de píxeles |\n| **HSL** | Ajustar tono, saturación o brillo |\n\n### Colores comunes\n\n| Color | HEX | RGB |\n|---|---|---|\n| Rojo | #FF0000 | 255, 0, 0 |\n| Verde | #00FF00 | 0, 255, 0 |\n| Azul | #0000FF | 0, 0, 255 |\n| Amarillo | #FFFF00 | 255, 255, 0 |\n| Naranja | #FF8C00 | 255, 140, 0 |\n| Negro | #000000 | 0, 0, 0 |\n| Blanco | #FFFFFF | 255, 255, 255 |\n\n### Calculadoras relacionadas\n\n- [Conversor binario-decimal](/calculadora-conversor-binario-decimal) — otro sistema numérico.",
+  "explanation": "## Cómo se calcula\n\nLos tres sistemas representan el mismo color desde perspectivas distintas. Las conversiones son exactas (sin pérdida de información) cuando se trabaja en espacio sRGB.\n\n### HEX → RGB\n\nUn código HEX tiene la forma `#RRGGBB`. Cada par de dígitos hexadecimales se convierte a decimal:\n\n```\nR = parseInt(\"RR\", 16)   // primeros 2 dígitos\nG = parseInt(\"GG\", 16)   // dígitos 3-4\nB = parseInt(\"BB\", 16)   // dígitos 5-6\n\nEjemplo: #FF5733\nR = parseInt(\"FF\", 16) = 255\nG = parseInt(\"57\", 16) = 87\nB = parseInt(\"33\", 16) = 51\n```\n\n### RGB → HEX\n\n```\nHEX = \"#\" + toHex(R) + toHex(G) + toHex(B)\ndonde toHex(n) = n.toString(16).padStart(2, \"0\").toUpperCase()\n\nEjemplo: RGB(255, 87, 51)\nHEX = \"#\" + \"FF\" + \"57\" + \"33\" = \"#FF5733\"\n```\n\n### RGB → HSL\n\n```\n// Normalizar a rango [0, 1]\nr = R / 255\ng = G / 255\nb = B / 255\n\nmax = Math.max(r, g, b)\nmin = Math.min(r, g, b)\ndelta = max - min\n\n// Luminosidad\nL = (max + min) / 2\n\n// Saturación\nif (delta === 0):\n    S = 0\nelse:\n    S = delta / (1 - Math.abs(2 * L - 1))\n\n// Tono (Hue)\nif (delta === 0):\n    H = 0\nelse if (max === r):\n    H = 60 * (((g - b) / delta) % 6)\nelse if (max === g):\n    H = 60 * (((b - r) / delta) + 2)\nelse:\n    H = 60 * (((r - g) / delta) + 4)\n\nif (H < 0): H += 360\n\n// Ejemplo: RGB(255, 87, 51)\nr=1.000, g=0.341, b=0.200\nmax=1.000, min=0.200, delta=0.800\nL = (1.000 + 0.200) / 2 = 0.600 → 60%\nS = 0.800 / (1 - |2×0.6 - 1|) = 0.800/0.800 = 1.000 → 100%\nH = 60 × ((0.341 - 0.200) / 0.800 % 6) = 60 × 0.176 ≈ 11°\nResultado: HSL(11°, 100%, 60%)\n```\n\n### HSL → RGB\n\n```\nC = (1 - |2L - 1|) × S        // Chroma\nX = C × (1 - |(H/60) mod 2 - 1|)\nm = L - C/2\n\nSegún sector de H (0°–360° dividido en 6 sectores de 60°):\nH ∈ [0°,60°)  → (R',G',B') = (C, X, 0)\nH ∈ [60°,120°)→ (R',G',B') = (X, C, 0)\nH ∈ [120°,180°)→(R',G',B') = (0, C, X)\nH ∈ [180°,240°)→(R',G',B') = (0, X, C)\nH ∈ [240°,300°)→(R',G',B') = (X, 0, C)\nH ∈ [300°,360°)→(R',G',B') = (C, 0, X)\n\nR = (R' + m) × 255\nG = (G' + m) × 255\nB = (B' + m) × 255\n```\n\n---\n\n## Tabla de referencia\n\nColores web estándar con sus tres representaciones equivalentes:\n\n| Color          | HEX     | RGB              | HSL                  | CSS name    |\n|----------------|---------|------------------|----------------------|-------------|\n| Rojo puro      | #FF0000 | rgb(255, 0, 0)   | hsl(0°, 100%, 50%)   | red         |\n| Verde lima     | #00FF00 | rgb(0, 255, 0)   | hsl(120°, 100%, 50%) | lime        |\n| Azul puro      | #0000FF | rgb(0, 0, 255)   | hsl(240°, 100%, 50%) | blue        |\n| Blanco         | #FFFFFF | rgb(255,255,255) | hsl(0°, 0%, 100%)    | white       |\n| Negro          | #000000 | rgb(0, 0, 0)     | hsl(0°, 0%, 0%)      | black       |\n| Naranja-rojo   | #FF5733 | rgb(255, 87, 51) | hsl(11°, 100%, 60%)  | —           |\n| Amarillo       | #FFFF00 | rgb(255,255, 0)  | hsl(60°, 100%, 50%)  | yellow      |\n| Cian           | #00FFFF | rgb(0, 255,255)  | hsl(180°, 100%, 50%) | cyan/aqua   |\n| Magenta        | #FF00FF | rgb(255, 0,255)  | hsl(300°, 100%, 50%) | magenta/fuchsia|\n| Gris medio     | #808080 | rgb(128,128,128) | hsl(0°, 0%, 50%)     | gray        |\n| Azul marino    | #003087 | rgb(0, 48,135)   | hsl(216°, 100%, 26%) | —           |\n| Verde esmeralda| #50C878 | rgb(80,200,120)  | hsl(140°, 52%, 55%)  | —           |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Color de marca a CSS completo\nUna agencia recibe el color corporativo de su cliente como `#1A73E8` (el azul de Google). Necesita usarlo en CSS con ambas notaciones:\n\n```\nHEX: #1A73E8\nRGB: R=parseInt(\"1A\",16)=26, G=parseInt(\"73\",16)=115, B=parseInt(\"E8\",16)=232\n→ rgb(26, 115, 232)\n\nHSL: r=0.102, g=0.451, b=0.910\nmax=0.910 (b), min=0.102, delta=0.808\nL=(0.910+0.102)/2 = 0.506 → 50.6%\nS=0.808/(1-|2×0.506-1|) = 0.808/0.988 ≈ 0.818 → 81.8%\nH=60×((0.102-0.451)/0.808+4) = 60×(3.568) ≈ 214°\n→ hsl(214°, 82%, 51%)\n\nCSS: color: #1A73E8;  ó  color: rgb(26, 115, 232);  ó  color: hsl(214, 82%, 51%);\n```\n\n### Caso 2 — Ajuste de luminosidad en HSL\nUn diseñador tiene `hsl(214°, 82%, 51%)` y necesita una versión más clara (fondo de tarjeta) y una más oscura (hover). Solo modifica L:\n\n```\nVersión clara (fondo):  hsl(214°, 82%, 90%) → #C5DCFA\nVersión original:       hsl(214°, 82%, 51%) → #1A73E8\nVersión oscura (hover): hsl(214°, 82%, 35%) → #104D9E\n```\nHSL es el único modelo donde esto se hace cambiando **un solo parámetro** sin recalcular nada.\n\n### Caso 3 — Verificación de contraste WCAG\nEl estándar WCAG 2.1 exige contraste mínimo 4.5:1 entre texto y fondo. La luminancia relativa se calcula a partir de los valores RGB linealizados:\n\n```\nPara #FF5733 (RGB 255,87,51):\nR_lin = (255/255)^2.2 = 1.000\nG_lin = (87/255)^2.2  ≈ 0.098\nB_lin = (51/255)^2.2  ≈ 0.031\nL_rel = 0.2126×R + 0.7152×G + 0.0722×B\nL_rel = 0.2126×1 + 0.7152×0.098 + 0.0722×0.031 ≈ 0.284\n\nContraste con blanco (#FFF, L=1.0):\nRatio = (1.0 + 0.05) / (0.284 + 0.05) = 3.14:1  → NO pasa WCAG AA para texto normal\nContraste con negro (#000, L=0.0):\nRatio = (0.284 + 0.05) / (0.0 + 0.05) = 6.68:1  → SÍ pasa WCAG AA ✓\n```\n\n---\n\n## Errores comunes\n\n1. **Confundir HEX corto con HEX largo**: `#F53` es válido en CSS y equivale a `#FF5533`, NO a `#F05030`. Cada dígito se duplica: `#RGB` → `#RRGGBB`.\n\n2. **Olvidar el signo `#` en CSS**: `color: FF5733` es inválido. El navegador lo ignora silenciosamente. Siempre escribir `color: #FF5733`.\n\n3. **Usar HSL con H fuera de rango**: Si el cálculo da H negativo (ej: −10°), hay que sumar 360°. H=−10° y H=350° son el mismo color (violeta-rojo), pero solo 350° es válido en CSS `hsl()`.\n\n4. **Asumir que RGB(128,128,128) es 50% luminosidad perceptual**: No lo es. El ojo humano percibe el verde como mucho más brillante que el rojo o azul. La luminancia relativa de gris medio es 0.216, no 0.5. Para diseño accesible hay que usar la fórmula WCAG, no el promedio simple.\n\n5. **Mezclar espacios de color**: RGB en sRGB ≠ RGB en Display P3 o AdobeRGB. Un `#FF0000` en sRGB se ve diferente en un monitor con gamut extendido si no se gestiona el perfil de color. Los navegadores modernos (Chrome 112+) soportan `color(display-p3 1 0 0)` como alternativa.\n\n6. **Redondear mal en HSL→RGB**: Si S=0 (color acromático), H es indefinido y debe tratarse como 0°. No aplicar la fórmula general sin verificar este caso especial, ya que puede dar NaN o resultados incorrectos.\n\n---\n\n## Calculadoras relacionadas\n\n- [Conversor de Binario a Decimal](/calculadora-conversor-binario-decimal) — para entender la base de la notación hexadecimal (HEX es base 16, igual que binario es base 2).\n- [Conversor de Celsius a Fahrenheit](/conversor-celsius-fahrenheit-temperatura) — otro conversor de unidades con fórmula directa, útil para entender transformaciones lineales.\n- [Conversor de Kilogramos a Libras y Onzas](/conversor-kilogramos-libras-onzas) — conversión entre sistemas de medida, similar a la lógica de mapeo entre modelos de color.\n- [Conversor de Números Romanos](/calculadora-numeros-romanos-conversor) — convierte entre sistemas numéricos distintos, como HEX convierte entre base 16 y base 10.",
   "faq": [
     {
-      "q": "¿Cómo convierto HEX a RGB?",
-      "a": "Cada par de caracteres HEX representa un canal: **#FF5733** → R=FF(255), G=57(87), B=33(51) → RGB(255, 87, 51)."
+      "q": "¿Cuál es la diferencia entre HEX, RGB y HSL? ¿Cuándo conviene usar cada uno?",
+      "a": "Los tres representan exactamente el mismo color en pantalla sRGB, pero desde ángulos distintos. **HEX** es el formato estándar en HTML/CSS por su compacidad (#FF5733). **RGB** es ideal cuando se trabaja con código (canvas, WebGL, Python Pillow) porque los valores numéricos son fácilmente manipulables. **HSL** es el preferido para diseño porque permite ajustar brillo o saturación cambiando un solo valor sin afectar el tono: `hsl(214°, 82%, 50%)` se oscurece simplemente bajando el tercer parámetro a `30%`."
     },
     {
-      "q": "¿Qué significa #FFFFFF?",
-      "a": "Es el color **blanco**. Cada canal (R, G, B) está al máximo (255). #000000 es negro (todo en cero)."
+      "q": "¿Por qué el valor de Hue en HSL va de 0° a 360°? ¿Qué representa cada sector?",
+      "a": "El Hue representa la posición en la rueda de color, que es circular (por eso los grados). Los sectores principales son: 0°=rojo, 60°=amarillo, 120°=verde, 180°=cian, 240°=azul, 300°=magenta, y 360°=rojo nuevamente (idéntico a 0°). Esta disposición sigue el modelo de color de Munsell y es adoptada por CSS Color Level 4. Por eso colores complementarios siempre están a 180° de distancia: azul (240°) y naranja (60°)."
     },
     {
-      "q": "¿Para qué sirve HSL?",
-      "a": "HSL es más intuitivo para **ajustar colores**: cambiar solo el tono, hacer más claro/oscuro (luminosidad) o más/menos saturado."
+      "q": "¿Los colores HEX distinguen mayúsculas de minúsculas? ¿#ff5733 es igual a #FF5733?",
+      "a": "Sí, son exactamente iguales. El estándar hexadecimal no distingue mayúsculas (case-insensitive). Los navegadores aceptan `#ff5733`, `#FF5733` y `#Ff5733` como el mismo color. Sin embargo, la convención en CSS y herramientas de diseño es usar **mayúsculas** para mejor legibilidad. Algunos linters y formateadores como Prettier convierten automáticamente a minúsculas según configuración del proyecto."
     },
     {
-      "q": "¿Puedo usar estos formatos en CSS?",
-      "a": "Sí. CSS acepta los tres: `color: #FF5733;`, `color: rgb(255,87,51);`, `color: hsl(11,100%,60%);`."
+      "q": "¿Qué es el canal alfa y cómo se agrega a HEX y RGB?",
+      "a": "El canal alfa representa la **opacidad** del color (0=transparente, 1=opaco). En CSS moderno se puede incluir directamente: en HEX se agrega un par hexadecimal extra → `#FF573380` (80 hex = 50% opacidad). En RGB se usa la función `rgba(255, 87, 51, 0.5)` o la notación moderna `rgb(255 87 51 / 50%)`. En HSL: `hsla(11°, 100%, 60%, 0.5)`. El soporte para HEX de 8 dígitos está disponible en todos los navegadores modernos desde 2017."
     },
     {
-      "q": "¿Cuántos colores se pueden representar en HEX?",
-      "a": "**16.777.216** colores (256 × 256 × 256), que es el estándar de \"color verdadero\" (24 bits)."
+      "q": "¿Por qué a veces el color que veo en pantalla no coincide con el que imprime la impresora?",
+      "a": "Porque las pantallas usan el modelo **aditivo RGB** (mezcla de luz) y las impresoras el modelo **sustractivo CMYK** (mezcla de tintas). No existe una conversión matemática directa perfecta entre ambos, ya que el gamut (rango de colores reproducibles) de cada medio es distinto. Por ejemplo, el naranja vibrante #FF5733 no tiene equivalente exacto en CMYK estándar. Para impresión profesional se requiere un perfil ICC y software como Adobe InDesign o GIMP con gestión de color habilitada."
     },
     {
-      "q": "¿Qué es la transparencia (alfa)?",
-      "a": "Se agrega un 4to valor: RGBA(255,87,51,0.5) o #FF573380. Va de 0 (transparente) a 1/FF (opaco)."
+      "q": "¿Cuántos colores distintos se pueden representar con HEX de 6 dígitos?",
+      "a": "Exactamente **16.777.216 colores** (256³ = 256×256×256), ya que cada canal (R, G, B) tiene 256 valores posibles (de 00 a FF en hexadecimal, es decir de 0 a 255 en decimal). Esto se denomina color de **24 bits** o \"True Color\". En HEX corto de 3 dígitos (#RGB) solo se pueden representar 4.096 colores (16³), que son un subconjunto exacto de los 24 bits donde cada canal tiene el mismo dígito repetido."
     },
     {
-      "q": "¿HEX acepta minúsculas?",
-      "a": "Sí. #ff5733 es igual que #FF5733. Es case-insensitive."
+      "q": "¿Qué es el contraste WCAG y cómo se calcula a partir de los valores RGB?",
+      "a": "WCAG (Web Content Accessibility Guidelines) define el **ratio de contraste** entre dos colores para garantizar legibilidad. La fórmula es: `ratio = (L1 + 0.05) / (L2 + 0.05)` donde L1 es la luminancia relativa del color más claro. La luminancia se calcula linealizando cada canal RGB: si el valor normalizado (0–1) es ≤0.04045, se divide por 12.92; si no, `((valor+0.055)/1.055)^2.4`. Luego `L = 0.2126×R + 0.7152×G + 0.0722×B`. WCAG AA exige ratio ≥4.5:1 para texto normal y ≥3:1 para texto grande (18pt+)."
+    },
+    {
+      "q": "¿Cómo se convierte un HEX de 3 dígitos como #F53 al formato completo de 6 dígitos?",
+      "a": "Cada dígito se duplica: `#RGB` → `#RRGGBB`. Entonces `#F53` → `#FF5533`. Esto NO es lo mismo que agregar un cero: `#F53` ≠ `#F05030`. Es una convención CSS que existe desde HTML 3.2 para ahorrar caracteres. Los 4.096 colores representables en formato corto son exactamente aquellos en los que R, G y B tienen el mismo dígito hexadecimal repetido (ej: 00, 11, 22, ..., FF). La herramienta realiza esta expansión automáticamente antes de procesar la conversión."
     }
   ],
   "sources": [
     {
-      "name": "W3C CSS Color Module",
-      "url": "https://www.w3.org/TR/css-color-4/"
+      "name": "Wikipedia ES — Modelo de color RGB",
+      "url": "https://es.wikipedia.org/wiki/RGB"
+    },
+    {
+      "name": "Wikipedia ES — Modelo de color HSL y HSV",
+      "url": "https://es.wikipedia.org/wiki/Modelo_de_color_HSV"
+    },
+    {
+      "name": "Wikipedia ES — Representación hexadecimal de colores web",
+      "url": "https://es.wikipedia.org/wiki/Colores_web"
     }
   ],
   "relatedSlugs": [

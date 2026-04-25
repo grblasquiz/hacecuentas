@@ -18,14 +18,14 @@
     "tabla kb mb gb tb",
     "cuantos gb tiene un tb"
   ],
-  "intro": "Necesitás saber **cuántos MB son 1 GB**? O convertir entre KB, MB, GB y TB? Ingresá el valor y la unidad, y esta calculadora te muestra la conversión a todas las unidades al instante.",
-  "keyTakeaway": "**1 KB = 1.024 Bytes, 1 MB = 1.024 KB, 1 GB = 1.024 MB, 1 TB = 1.024 GB.** Cada unidad es 1.024 veces la anterior (sistema binario, que usan los sistemas operativos).",
+  "intro": "El **Conversor de Tamaño de Archivos** te permite transformar entre todas las unidades digitales de almacenamiento: Bytes, Kilobytes (KB), Megabytes (MB), Gigabytes (GB), Terabytes (TB) y más. La fórmula base es dividir o multiplicar por **1.024** (potencias de 2) al moverse entre unidades contiguas del sistema binario. Se usa cuando necesitás comparar el peso de archivos, calcular cuántos entran en un disco, estimar tiempos de descarga o configurar límites de subida en sistemas web.",
+  "keyTakeaway": "La conversión binaria estándar es **1 GB = 1.024 MB = 1.048.576 KB = 1.073.741.824 Bytes**. Para pasar de una unidad mayor a menor, multiplicás por 1.024; para pasar de menor a mayor, dividís por 1.024.",
   "useCases": [
-    "Querés saber cuánto espacio ocupa un archivo en otra unidad.",
-    "Necesitás convertir MB a GB para saber si entra en tu disco.",
-    "Estás comparando planes de internet o almacenamiento.",
-    "Querés entender cuántas fotos entran en X GB.",
-    "Necesitás la tabla de equivalencias para un trabajo o estudio."
+    "Verificar si un video de 1,4 GB entra en un pendrive de 2 GB con otros archivos ya guardados.",
+    "Calcular cuántas fotos de 4 MB caben en una tarjeta SD de 32 GB (aprox. 8.192 fotos).",
+    "Configurar el límite máximo de subida de archivos en un formulario web (por ejemplo, 10 MB = 10.485.760 Bytes).",
+    "Comparar el tamaño de un backup de base de datos expresado en MB con la capacidad disponible del servidor en GB.",
+    "Estimar el consumo de datos móviles al descargar una app de 350 MB teniendo un plan con 5 GB de datos."
   ],
   "fields": [
     {
@@ -140,41 +140,49 @@
     ],
     "result": "500 MB = **0,4883 GB** (o 512.000 KB)."
   },
-  "explanation": "## Unidades de almacenamiento digital\n\n### Tabla de equivalencias\n\n| Unidad | Equivalencia | Bytes |\n|---|---|---|\n| **1 KB** | 1.024 Bytes | 1.024 |\n| **1 MB** | 1.024 KB | 1.048.576 |\n| **1 GB** | 1.024 MB | 1.073.741.824 |\n| **1 TB** | 1.024 GB | 1.099.511.627.776 |\n\n### ¿Por qué 1.024 y no 1.000?\n\nLas computadoras trabajan en **base 2** (binario). 2^10 = 1.024, que es la potencia de 2 más cercana a 1.000. Por eso cada unidad es 1.024 veces la anterior, no 1.000.\n\n**Ojo**: algunos fabricantes de discos usan base 10 (1 GB = 1.000 MB). Por eso un disco de \"500 GB\" muestra ~465 GB en Windows.\n\n### Binario vs decimal\n\n| Sistema | 1 KB | 1 MB | 1 GB |\n|---|---|---|---|\n| **Binario** (SO) | 1.024 B | 1.048.576 B | 1.073.741.824 B |\n| **Decimal** (fabricantes) | 1.000 B | 1.000.000 B | 1.000.000.000 B |\n\nEste conversor usa el sistema **binario** (el que usa tu sistema operativo).\n\n### Tamaños típicos\n\n| Contenido | Tamaño aproximado |\n|---|---|\n| Mensaje de texto | 1-5 KB |\n| Email sin adjuntos | 50-100 KB |\n| Foto de celular | 3-8 MB |\n| Canción MP3 | 3-5 MB |\n| Película HD | 4-8 GB |\n| Película 4K | 15-30 GB |\n| Windows 11 | ~64 GB |\n| Juego AAA moderno | 50-150 GB |\n\n### Cuántas fotos entran\n\n| Almacenamiento | Fotos (5 MB c/u) | Videos 1 min (100 MB) |\n|---|---|---|\n| 16 GB | ~3.200 | ~160 |\n| 64 GB | ~12.800 | ~640 |\n| 128 GB | ~25.600 | ~1.280 |\n| 256 GB | ~51.200 | ~2.560 |\n\n### Calculadoras relacionadas\n\n- [Conversor binario-decimal](/calculadora-conversor-binario-decimal) — entendé el sistema binario.\n- [Conversor de colores HEX-RGB](/calculadora-codigo-color-hex-rgb) — otra conversión digital.",
+  "explanation": "## Cómo se calcula\n\nLa conversión de tamaño de archivos se basa en el **sistema binario (base 2)**, donde cada unidad es 2¹⁰ = 1.024 veces la anterior. Esto es lo que define el estándar IEC 80000-13 (adoptado también por NIST).\n\n```\n# Fórmula general\nValor_destino = Valor_origen × (1.024 ^ diferencia_de_niveles)\n\n# Si bajás de nivel (p. ej. GB → MB): multiplicás por 1.024\n# Si subís de nivel (p. ej. MB → GB): dividís por 1.024\n\nEjemplos directos:\n  500 MB → GB  = 500 ÷ 1.024              = 0,4883 GB\n  500 MB → KB  = 500 × 1.024              = 512.000 KB\n  500 MB → B   = 500 × 1.024 × 1.024     = 524.288.000 Bytes\n  2 GB   → MB  = 2   × 1.024             = 2.048 MB\n  1 TB   → GB  = 1   × 1.024             = 1.024 GB\n```\n\n> ⚠️ **Atención**: los fabricantes de discos duros y SSDs suelen usar el sistema **decimal (base 10)**, donde 1 GB = 1.000.000.000 Bytes. Por eso un disco de \"1 TB\" aparece como ~931 GB en Windows (que usa base 2). La diferencia es del ~7,4%.\n\n---\n\n## Tabla de referencia\n\n| Unidad | Símbolo | Valor en Bytes (base 2) | Valor en Bytes (base 10) |\n|---|---|---|---|\n| Byte | B | 1 | 1 |\n| Kilobyte | KB | 1.024 | 1.000 |\n| Megabyte | MB | 1.048.576 | 1.000.000 |\n| Gigabyte | GB | 1.073.741.824 | 1.000.000.000 |\n| Terabyte | TB | 1.099.511.627.776 | 1.000.000.000.000 |\n| Petabyte | PB | 1.125.899.906.842.624 | 1.000.000.000.000.000 |\n| Kibibyte | KiB | 1.024 (exacto, IEC) | — |\n| Mebibyte | MiB | 1.048.576 (exacto, IEC) | — |\n| Gibibyte | GiB | 1.073.741.824 (exacto, IEC) | — |\n\n> Los prefijos **Ki, Mi, Gi** (kibibyte, mebibyte, gibibyte) son la notación IEC para referirse sin ambigüedad a la base 2. Windows usa \"GB\" pero en realidad muestra GiB; macOS desde 2009 usa base 10 (GB decimal).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Video Full HD para edición\nUn archivo de video RAW de **12.500 MB** necesita pasar a GB para saber si entra en un disco de 16 GB:\n```\n12.500 MB ÷ 1.024 = 12,207 GB → No entra en un disco de 16 GB (base 2) ni en uno de 16 GB (base 10 = 14,9 GiB reales)\n```\n\n### Caso 2 — Límite de adjunto de email\nGmail permite adjuntos de **25 MB**. ¿Cuántos bytes son exactamente?\n```\n25 MB × 1.024 × 1.024 = 26.214.400 Bytes\n```\nUn programador que configura un servidor de correo debe setear `upload_max_filesize = 26214400` en PHP (en bytes).\n\n### Caso 3 — Capacidad real de un pendrive de 64 GB\nUn pendrive \"de 64 GB\" usa base 10 del fabricante:\n```\n64.000.000.000 Bytes ÷ 1.073.741.824 = 59,6 GiB\n```\nPor eso Windows lo muestra como ~59,6 GB: tiene 7% menos espacio del que indica la caja.\n\n---\n\n## Errores comunes\n\n1. **Confundir bits con bytes**: Las velocidades de internet se miden en **megabits por segundo (Mbps)**, no megabytes. Para descargar 1 MB necesitás 8 Mb de datos. Un plan de 100 Mbps descarga un archivo de 100 MB en ~8 segundos, no en 1.\n\n2. **Usar base 10 para calcular capacidad real**: Si calculás cuántos archivos caben en un disco usando 1 GB = 1.000 MB, vas a sobreestimar la capacidad. Siempre usá 1 GB = 1.024 MB para cálculos de archivos en sistemas operativos (Windows/Linux).\n\n3. **Redondear demasiado pronto**: Convertir 500 MB a GB como \"0,5 GB\" parece razonable, pero el valor correcto es 0,4883 GB. En bases de datos o scripts esa diferencia acumulada puede causar errores de almacenamiento.\n\n4. **No distinguir KB decimal de KiB binario**: En el contexto de redes (DNS, HTTP headers), 1 KB suele significar 1.000 Bytes. En el contexto de sistemas de archivos, 1 KB = 1.024 Bytes. Usarlos indistintamente genera bugs difíciles de rastrear.\n\n5. **Asumir que macOS y Windows miden igual**: macOS desde Snow Leopard (2009) muestra los tamaños en GB decimales (base 10). Windows los muestra en GiB binarios pero los llama \"GB\". Un archivo de 1 GB en macOS aparece como 0,931 GB en Windows.\n\n---\n\n## Calculadoras relacionadas\n\n- [Conversor Binario a Decimal](/calculadora-conversor-binario-decimal) — Para entender cómo funcionan las potencias de 2 detrás de las unidades de almacenamiento.\n- [Calculadora de Código de Color HEX a RGB](/calculadora-codigo-color-hex-rgb) — Otro conversor de sistemas numéricos aplicado al diseño digital.\n- [Conversor de Temperatura Celsius a Fahrenheit](/conversor-celsius-fahrenheit-temperatura) — Conversiones entre unidades con fórmulas directas, similar en lógica.\n- [Calculadora de Tamaño de Colchón Ideal](/calculadora-tamano-colchon-ideal-medidas) — Conversiones de medidas físicas para el hogar.",
   "faq": [
     {
-      "q": "¿Cuántos MB tiene 1 GB?",
-      "a": "**1.024 MB** (sistema binario, que usa tu sistema operativo). En sistema decimal (fabricantes de discos) son 1.000 MB."
+      "q": "¿Por qué 1 GB no es exactamente 1.000 MB?",
+      "a": "Porque el sistema binario usa base 2: 1 GB = 2³⁰ Bytes = 1.073.741.824 Bytes, mientras que 1.000 MB en base 10 = 1.000.000.000 Bytes. La diferencia es de 73.741.824 Bytes (~7%). El estándar IEC 80000-13 creó los prefijos 'gibi' (GiB) para la base 2 y reservó 'giga' (GB) para base 10, aunque en la práctica la mayoría de los sistemas operativos y usuarios siguen mezclando ambas notaciones."
     },
     {
-      "q": "¿Cuántos GB tiene 1 TB?",
-      "a": "**1.024 GB** en sistema binario. Un TB es aproximadamente 1 billón de bytes."
+      "q": "¿Cuánto ocupa realmente un disco duro de 1 TB en Windows?",
+      "a": "Un disco de '1 TB' según el fabricante tiene 1.000.000.000.000 Bytes en base 10. Windows (que usa base 2) lo muestra como 1.000.000.000.000 ÷ 1.099.511.627.776 ≈ **909,5 GB**. Es decir, perdés aproximadamente el 9% de la capacidad nominal. Esto no es un defecto: es la diferencia entre el sistema decimal del fabricante y el binario del sistema operativo."
     },
     {
-      "q": "¿Por qué mi disco de 1 TB muestra menos?",
-      "a": "Los fabricantes usan base 10 (1 TB = 1.000 GB), pero tu SO usa base 2 (1 TB = 1.024 GB). Un disco de \"1 TB\" muestra ~931 GB."
+      "q": "¿Qué diferencia hay entre MB (megabyte) y Mb (megabit)?",
+      "a": "1 Byte = 8 bits, por lo tanto 1 MB = 8 Mb. Las velocidades de conexión a internet (como '100 Mbps' de fibra óptica) se expresan en **megabits por segundo**, no megabytes. Para calcular cuánto tardás en descargar un archivo de 700 MB con una conexión de 100 Mbps: 700 MB × 8 = 5.600 Mb ÷ 100 Mbps = **56 segundos** (sin contar overhead de protocolo)."
     },
     {
-      "q": "¿Cuál es la diferencia entre MB y Mb?",
-      "a": "**MB** (mayúscula) = Megabytes (almacenamiento). **Mb** (minúscula) = Megabits (velocidad de internet). 1 MB = 8 Mb."
+      "q": "¿Cuántas fotos de alta resolución entran en una tarjeta SD de 128 GB?",
+      "a": "Depende del formato: una foto JPEG de cámara semiprofesional pesa entre 8 y 15 MB; en RAW puede pesar 25-50 MB. Tomando un promedio de 12 MB por JPEG: 128 GB reales en base 2 = 131.072 MB ÷ 12 MB = aprox. **10.922 fotos**. En RAW de 35 MB serían unas 3.745 fotos. Siempre considerá que el sistema de archivos ocupa ~1-2% adicional."
     },
     {
-      "q": "¿Qué viene después de TB?",
-      "a": "**PB** (Petabyte) = 1.024 TB, **EB** (Exabyte) = 1.024 PB, **ZB** (Zettabyte) = 1.024 EB, **YB** (Yottabyte) = 1.024 ZB."
+      "q": "¿Qué son KiB, MiB y GiB y cuándo los uso?",
+      "a": "Son los prefijos binarios definidos por la IEC (International Electrotechnical Commission) en 1998 para eliminar la ambigüedad: **1 KiB = 1.024 Bytes exactos**, 1 MiB = 1.048.576 Bytes, 1 GiB = 1.073.741.824 Bytes. Se usan principalmente en documentación técnica, sistemas Linux (como `df -h` con flag `--si`), y especificaciones de memoria RAM. En el habla cotidiana y en Argentina se sigue usando KB/MB/GB con el significado binario."
     },
     {
-      "q": "¿100 MB de internet son lo mismo que 100 MB de archivo?",
-      "a": "No. Internet se mide en Mega**bits** (Mb), archivos en Mega**bytes** (MB). 100 Mb de internet = 12,5 MB/s de descarga."
+      "q": "¿Cómo calculo el tiempo de descarga de un archivo según mi velocidad de internet?",
+      "a": "La fórmula es: **Tiempo (s) = Tamaño del archivo (Mb) ÷ Velocidad de conexión (Mbps)**. Recordá convertir el archivo a megabits multiplicando los MB por 8. Ejemplo: descargar una película de 4 GB con fibra de 300 Mbps → 4 GB = 4.096 MB × 8 = 32.768 Mb ÷ 300 Mbps ≈ **109 segundos** (~1 minuto 49 segundos). En la práctica sumá un 10-20% por overhead de red."
     },
     {
-      "q": "¿Cuántas fotos entran en 1 GB?",
-      "a": "Depende de la resolución. Con fotos de 5 MB (celular promedio), entran unas **200 fotos** en 1 GB."
+      "q": "¿Por qué los pendrives y tarjetas SD siempre tienen menos espacio del que dice la caja?",
+      "a": "Por dos razones: (1) el fabricante usa base 10 (1 GB = 1.000.000.000 Bytes), mientras el sistema operativo usa base 2 (1 GiB = 1.073.741.824 Bytes), lo que ya representa ~7% menos. (2) El sistema de archivos (FAT32, exFAT, NTFS) reserva espacio para su propia estructura de índices y sectores de arranque, sumando otro 1-3% de pérdida. Un pendrive de '32 GB' típicamente muestra **29,4-29,8 GB** disponibles en Windows."
+    },
+    {
+      "q": "¿Cuánto pesa un email típico y cuántos entran en 1 GB de casilla?",
+      "a": "Un email de texto plano pesa entre 20 y 50 KB. Con imágenes incrustadas puede llegar a 500 KB. Un email con un PDF adjunto promedio (2 MB) puede pesar 2,5 MB total. Tomando un promedio de 75 KB por email (combinando texto y con adjuntos): 1 GB = 1.048.576 KB ÷ 75 KB ≈ **13.981 emails**. Gmail ofrece 15 GB gratuitos, lo que alcanza para unos 200.000 emails promedio."
     }
   ],
   "sources": [
     {
-      "name": "IEC 80000-13 - Prefijos binarios",
-      "url": "https://www.iso.org/standard/31898.html"
+      "name": "NIST – Prefixes for Binary Multiples (IEC 80000-13)",
+      "url": "https://www.nist.gov/pml/owm/metric-si-prefixes"
+    },
+    {
+      "name": "Wikipedia ES – Byte (unidades de almacenamiento digital)",
+      "url": "https://es.wikipedia.org/wiki/Byte"
     }
   ],
   "relatedSlugs": [

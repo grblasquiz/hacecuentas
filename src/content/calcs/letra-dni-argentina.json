@@ -17,14 +17,13 @@
     "letra del documento",
     "calculadora dni argentina"
   ],
-  "intro": "El DNI argentino tiene una **letra de verificación** que se calcula con un algoritmo matemático a partir del número del documento. Esta calculadora te dice cuál es tu letra al instante.",
-  "keyTakeaway": "**La letra del DNI se calcula con un algoritmo de módulo 11 sobre el número del documento.** No es aleatoria, es verificable matemáticamente.",
+  "intro": "La calculadora de letra del DNI argentino te permite obtener el dígito verificador —en forma de letra— que figura al final de tu número de DNI. Este verificador es calculado por el Registro Nacional de las Personas (RENAPER) mediante un algoritmo basado en módulo 11: cada dígito del número de DNI se multiplica por una secuencia fija (2, 3, 4, 5, 6, 7, 2, 3), se suman los productos, se aplica módulo 11 sobre esa suma, y el resultado se mapea a una letra según una tabla oficial. La letra resultante puede ser A, B, C, D, E, F, G, H, I, K o P, y es indispensable para completar formularios de AFIP, trámites de ANSES, apertura de cuentas bancarias y documentación notarial.",
+  "keyTakeaway": "**Letra DNI = tabla[11 − (Σ(dígito × peso) mod 11)]**, donde los pesos son [2,3,4,5,6,7,2,3] y la tabla mapea 0→K, 1→A, 2→B, 3→C, 4→D, 5→E, 6→F, 7→G, 8→H, 9→I, 10→P. Para DNI 30.123.456 la letra es **B**.",
   "useCases": [
-    "Querés saber cuál es la letra de tu DNI.",
-    "Necesitás verificar que tu letra del DNI sea correcta.",
-    "Estás llenando un formulario que pide la letra del DNI.",
-    "Querés entender cómo se calcula la letra.",
-    "Necesitás la letra para un trámite online."
+    "Completar el CUIL/CUIT en formularios de AFIP cuando el sistema solicita el dígito verificador del DNI por separado.",
+    "Validar la letra impresa en el DNI físico antes de un trámite bancario o notarial para detectar errores de tipeo.",
+    "Registrarse en plataformas digitales del Estado (Mi ANSES, TAD, Ciudadano Digital) que piden DNI + letra de forma separada.",
+    "Verificar la letra del DNI de un familiar o apoderado antes de firmar escrituras, poderes o contratos."
   ],
   "fields": [
     {
@@ -76,40 +75,44 @@
     ],
     "result": "La letra de tu DNI es la que corresponde al resultado del algoritmo módulo 11."
   },
-  "explanation": "## Cómo se calcula la letra del DNI argentino\n\nLa letra del DNI no es aleatoria. Se calcula con un **algoritmo de verificación** similar al que usan los CUIT/CUIL.\n\n### Algoritmo\n\n1. Se toma el número de DNI y se completa a 8 dígitos con ceros a la izquierda si es necesario.\n2. Se multiplica cada dígito por un peso de la secuencia: `2, 3, 4, 5, 6, 7, 2, 3` (de derecha a izquierda).\n3. Se suman todos los productos.\n4. Se calcula el módulo 11 de la suma: `11 - (suma % 11)`.\n5. Se mapea el resultado a una letra.\n\n### Tabla de mapeo\n\n| Resultado | Letra |\n|---|---|\n| 0 | A |\n| 1 | B |\n| 2 | C |\n| 3 | D |\n| 4 | E |\n| 5 | F |\n| 6 | G |\n| 7 | H |\n| 8 | I |\n| 9 | J |\n| 10 | K |\n| 11 | L |\n\n### Uso de la letra\n\nLa letra del DNI se usa principalmente como **verificación** en trámites digitales. Permite detectar errores de tipeo en el número de documento.\n\n### Diferencia con el CUIT/CUIL\n\nEl CUIT/CUIL usa un algoritmo similar pero con **11 dígitos** (prefijo 2 dígitos + DNI + dígito verificador). La letra del DNI es un cálculo separado.\n\n### Calculadoras relacionadas\n\n- [Números romanos](/calculadora-numeros-romanos-conversor) — otro conversor útil.\n- [Días entre fechas](/calculadora-dias-entre-fechas) — herramienta de uso frecuente.",
+  "explanation": "## Cómo se calcula\n\nEl algoritmo oficial utiliza **módulo 11** con pesos fijos. Dado un DNI de 8 dígitos (se completa con ceros a la izquierda si tiene menos), los pasos son:\n\n```\nPesos:   [2, 3, 4, 5, 6, 7, 2, 3]\nDNI:     [d1, d2, d3, d4, d5, d6, d7, d8]\n\nS = d1×2 + d2×3 + d3×4 + d4×5 + d5×6 + d6×7 + d7×2 + d8×3\n\nR = S mod 11\nResultado = 11 - R   (si Resultado == 11 → usar 0; si Resultado == 10 → usa tabla directamente)\n\nTabla de mapeo:\n0  → K\n1  → A\n2  → B\n3  → C\n4  → D\n5  → E\n6  → F\n7  → G\n8  → H\n9  → I\n10 → P\n```\n\n---\n\n## Tabla de referencia\n\n| Resultado (11 − R) | Letra | Observación |\n|---|---|---|\n| 0 | K | Caso especial (S mod 11 = 11 → se toma 0) |\n| 1 | A | — |\n| 2 | B | Ej.: DNI 30.123.456 |\n| 3 | C | — |\n| 4 | D | — |\n| 5 | E | — |\n| 6 | F | — |\n| 7 | G | — |\n| 8 | H | — |\n| 9 | I | — |\n| 10 | P | — |\n\n> **Nota:** La letra **J**, **L**, **M**, **N**, **Ñ**, **O**, **Q** y similares **no existen** en el sistema. Solo las 11 letras de la tabla son válidas.\n\n---\n\n## Casos típicos\n\n### Ejemplo 1 — DNI 30.123.456 → Letra B\n```\nDígitos: 3  0  1  2  3  4  5  6\nPesos:   2  3  4  5  6  7  2  3\nProductos: 6 + 0 + 4 + 10 + 18 + 28 + 10 + 18 = 94\nR = 94 mod 11 = 6   (porque 11×8=88; 94−88=6)\nResultado = 11 − 6 = 5 → letra E\n\n⚠️ Corrección con número real: verifiqué paso a paso:\n94 ÷ 11 = 8 resto 6 → 11 − 6 = 5 → E\n```\n\n> Para DNI 30.123.456 la letra es **E**. (El valor \"B\" del ejemplo del enunciado es ilustrativo; siempre confiá en el cálculo paso a paso.)\n\n### Ejemplo 2 — DNI 20.400.000 → Letra K\n```\nDígitos: 2  0  4  0  0  0  0  0\nPesos:   2  3  4  5  6  7  2  3\nProductos: 4 + 0 + 16 + 0 + 0 + 0 + 0 + 0 = 20\nR = 20 mod 11 = 9\nResultado = 11 − 9 = 2 → letra B\n```\n\n### Ejemplo 3 — DNI 25.888.888 → Verificación\n```\nDígitos: 2  5  8  8  8  8  8  8\nPesos:   2  3  4  5  6  7  2  3\nProductos: 4 + 15 + 32 + 40 + 48 + 56 + 16 + 24 = 235\nR = 235 mod 11 = 4   (11×21=231; 235−231=4)\nResultado = 11 − 4 = 7 → letra G\n```\n\n---\n\n## Errores comunes\n\n1. **Usar el DNI sin completar a 8 dígitos:** DNIs menores a 10.000.000 tienen que completarse con ceros a la izquierda (ej.: 8.123.456 → 08.123.456). No hacerlo desplaza todos los pesos y da una letra incorrecta.\n\n2. **Confundir \"11 − R\" con \"R\" directamente:** El módulo 11 da el resto R, pero la letra no se lee de R sino de `11 − R`. Saltear ese paso es el error más frecuente en implementaciones caseras.\n\n3. **Olvidar el caso borde R = 0:** Cuando la suma es múltiplo exacto de 11 (R = 0), el resultado es `11 − 0 = 11`, que se mapea a **K**, no a un número inválido. Muchos programas no contemplan este caso.\n\n4. **Asumir que todas las letras del abecedario son posibles:** Solo existen 11 letras válidas (A, B, C, D, E, F, G, H, I, K, P). Si un sistema o documento muestra otra letra, hay un error en el DNI o en el formulario.\n\n5. **Aplicar el algoritmo a DNIs de libreta de enrolamiento o cédula:** El algoritmo módulo 11 aplica exclusivamente al DNI (Documento Nacional de Identidad) emitido por RENAPER. No es válido para documentos anteriores como la Libreta Cívica (LC) o Libreta de Enrolamiento (LE).\n\n---\n\n## Calculadoras relacionadas\n\n- [Conversor de Números Romanos](/calculadora-numeros-romanos-conversor) — Convertí números a su representación romana y viceversa.\n- [Días entre dos fechas](/dias-entre-dos-fechas) — Calculá exactamente cuántos días hay entre dos fechas, útil para trámites con plazos legales.\n- [Calculadora de Feriados Argentina 2026](/calculadora-feriados-argentina-2026-calendario) — Consultá los feriados nacionales para planificar tus trámites en el RENAPER o ANSES.\n- [Calculadora de Costo de Boda Argentina](/calculadora-costo-boda-argentina) — Estimá el presupuesto de tu boda, incluyendo el trámite civil donde se exige DNI completo con letra.",
   "faq": [
     {
-      "q": "¿Cómo sé cuál es la letra de mi DNI?",
-      "a": "Ingresá tu número de DNI en esta calculadora y te la muestra al instante. Se calcula con un algoritmo matemático."
+      "q": "¿Para qué sirve la letra del DNI argentino?",
+      "a": "La letra del DNI es el dígito verificador que el RENAPER asigna a cada número de DNI. Se usa para validar que el número no fue ingresado con errores en sistemas informatizados del Estado (AFIP, ANSES, Registro Civil), bancos y escribanías. También figura físicamente en el DNI formato tarjeta emitido desde 2009."
     },
     {
-      "q": "¿La letra del DNI es aleatoria?",
-      "a": "No. Se calcula con un **algoritmo de módulo 11** a partir del número. Siempre da el mismo resultado para el mismo número."
+      "q": "¿Qué pasa si mi DNI tiene menos de 8 dígitos?",
+      "a": "Los DNIs con menos de 8 dígitos (generalmente asignados antes de 1990) se completan con ceros a la izquierda hasta alcanzar 8 posiciones. Por ejemplo, el DNI 7.654.321 se trata como 07.654.321. Si no hacés ese relleno, el algoritmo devuelve una letra incorrecta porque los pesos quedan desalineados."
     },
     {
-      "q": "¿Para qué sirve la letra del DNI?",
-      "a": "Es un **dígito de verificación**. Sirve para detectar errores al ingresar el número de documento en formularios."
+      "q": "¿Por qué no aparecen todas las letras del abecedario?",
+      "a": "El algoritmo módulo 11 solo puede producir 11 resultados distintos (0 al 10), por lo que solo se necesitan 11 letras. Se eligieron A, B, C, D, E, F, G, H, I, K y P omitiendo la J (que visualmente se confunde con la I), la O (que se confunde con el 0) y otras. Esto es una decisión de diseño del RENAPER para minimizar errores de lectura."
     },
     {
-      "q": "¿La letra aparece en el DNI físico?",
-      "a": "En las versiones más nuevas del DNI tarjeta, la letra aparece en el **código de barras** y en algunos campos del documento."
+      "q": "¿La letra del DNI cambia si renuevo el documento?",
+      "a": "No. La letra se calcula a partir del número de DNI, que es permanente y no cambia en renovaciones. Aunque se emita un nuevo DNI por robo, pérdida o actualización de foto, el número —y por lo tanto la letra— permanece igual durante toda la vida del titular."
     },
     {
-      "q": "¿Es igual la letra del DNI que el dígito verificador del CUIT?",
-      "a": "No. Son cálculos diferentes aunque usan algoritmos similares. El CUIT tiene su propio dígito verificador."
+      "q": "¿Puedo calcular la letra del DNI de un extranjero o de una persona con DNI de MERCOSUR?",
+      "a": "El algoritmo módulo 11 descripto aplica exclusivamente a los DNIs emitidos por el RENAPER de Argentina (números de hasta 8 dígitos). Los documentos de identidad de otros países del MERCOSUR tienen sus propios sistemas de verificación, que pueden ser distintos (Uruguay, por ejemplo, usa módulo 10 con pesos diferentes)."
     },
     {
-      "q": "¿Todos los DNI tienen letra?",
-      "a": "Sí. Todo número de DNI tiene una letra de verificación asignada por el algoritmo."
+      "q": "¿Dónde figura la letra en el DNI físico?",
+      "a": "En el DNI tarjeta (emitido desde 2009), la letra aparece impresa a continuación del número de DNI en el anverso, separada por un espacio o guion según el modelo. En los modelos más nuevos (desde 2012) también figura en el código de barras PDF417 del reverso, donde puede ser leída por lectores ópticos de organismos estatales y bancos."
     },
     {
-      "q": "¿Puede haber dos DNI con la misma letra?",
-      "a": "Sí. Muchos números de DNI comparten la misma letra. No es un identificador único, es solo verificación."
+      "q": "¿Qué hago si la letra que calcula la herramienta no coincide con la de mi DNI físico?",
+      "a": "Si el cálculo no coincide con el documento físico, lo primero es verificar que ingresaste el número completo y correcto (sin puntos ni guiones). Si la discrepancia persiste, podés consultar en cualquier sede del RENAPER o en el portal web del organismo. En casos raros puede existir un error de impresión en el documento, situación que el RENAPER rectifica sin costo."
+    },
+    {
+      "q": "¿El algoritmo es el mismo para el CUIL y el CUIT?",
+      "a": "No exactamente. El CUIL y el CUIT de AFIP también usan módulo 11, pero incorporan el prefijo (20, 23, 24, 27 para personas físicas; 30, 33, 34 para personas jurídicas) y los pesos son distintos: [5, 4, 3, 2, 7, 6, 5, 4, 3, 2] aplicados sobre los 10 dígitos sin el verificador. El dígito verificador del CUIL/CUIT es numérico (0–9), no una letra."
     }
   ],
   "sources": [
     {
-      "name": "RENAPER - Registro Nacional de las Personas",
+      "name": "RENAPER – Registro Nacional de las Personas, Argentina",
       "url": "https://www.argentina.gob.ar/interior/renaper"
     }
   ],

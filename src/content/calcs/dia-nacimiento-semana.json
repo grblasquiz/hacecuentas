@@ -16,14 +16,15 @@
     "dia semana por fecha",
     "que dia fue mi nacimiento"
   ],
-  "intro": "¿Sabés qué día de la semana naciste? Hay un poema inglés que dice: *'Monday's child is fair of face...'*. Descubrí tu día y lo que la tradición popular dice de las personas nacidas ese día.",
-  "keyTakeaway": "El día de la semana de tu nacimiento tiene un **significado en la tradición popular** anglosajona y en varias culturas. Es un dato curioso divertido.",
+  "intro": "Esta calculadora determiná exactamente el día de la semana en que naciste ingresando tu fecha de nacimiento. Usa el **Algoritmo de Zeller** (o la fórmula de Tomohiko Sakamoto) para convertir cualquier fecha gregoriana en su día de la semana correspondiente, con validez desde el 15 de octubre de 1582 (inicio del calendario gregoriano). Además de revelar tu día, muestra el significado tradicional según la rima infantil anglosajona *\"Monday's Child\"* (siglo XIX) y calcula en qué día de la semana caerá tu próximo cumpleaños. Es ideal para curiosidad personal, tradiciones culturales, astrología popular y planificación de celebraciones.",
+  "keyTakeaway": "El día de la semana de cualquier fecha se obtiene con la **Fórmula de Zeller: h = (q + ⌊13(m+1)/5⌋ + K + ⌊K/4⌋ + ⌊J/4⌋ − 2J) mod 7**, donde h=0 es sábado, h=1 domingo… Por ejemplo, el 15/08/1990 da miércoles.",
   "useCases": [
-    "Querés saber qué día de la semana naciste.",
-    "Buscás un dato curioso para compartir.",
-    "Querés saber en qué día caerá tu próximo cumpleaños.",
-    "Estás investigando fechas históricas.",
-    "Querés verificar el día de nacimiento de alguien famoso."
+    "Averiguar en qué día de la semana naciste para compartirlo en redes sociales o en reuniones familiares.",
+    "Saber en qué día cae tu próximo cumpleaños para organizar festejos, reservar un restaurante o pedir el día libre en el trabajo.",
+    "Consultar el significado tradicional de tu día de nacimiento según la rima 'Monday's Child' para juegos de personalidad o cartas de presentación creativas.",
+    "Calcular el día de nacimiento de hijos, padres o abuelos a partir de documentos históricos donde solo figura la fecha.",
+    "Verificar si una fecha especial (boda, graduación, primer trabajo) cayó en un día laborable o fin de semana.",
+    "Usar el dato del día de nacimiento como dato extra en lecturas de numerología o astrología popular."
   ],
   "fields": [
     {
@@ -69,35 +70,39 @@
     ],
     "result": "Naciste un **miércoles**. Según la tradición: persona profunda, sensible y reflexiva."
   },
-  "explanation": "## El Poema de los Días\n\nEl poema *'Monday's Child'* es una rima infantil inglesa de 1838:\n\n> Monday's child is fair of face,\n> Tuesday's child is full of grace,\n> Wednesday's child is full of woe,\n> Thursday's child has far to go,\n> Friday's child is loving and giving,\n> Saturday's child works hard for a living,\n> And the child born on the Sabbath day,\n> Is bonny and blithe and good and gay.\n\n### Traducción adaptada\n\n| Día | Inglés | Significado |\n|---|---|---|\n| Lunes | Fair of face | Belleza, atractivo |\n| Martes | Full of grace | Gracia, elegancia |\n| Miércoles | Full of woe | Profundidad, sensibilidad |\n| Jueves | Far to go | Ambición, largo camino |\n| Viernes | Loving and giving | Amor, generosidad |\n| Sábado | Works hard | Trabajo duro, dedicación |\n| Domingo | Bonny and blithe | Alegría, bondad |\n\n## Cómo se calcula\n\nSe usa el **algoritmo de Zeller** o la función nativa de fecha del lenguaje de programación. Es un cálculo determinístico: cada fecha tiene un solo día de la semana posible.\n\n## Dato curioso\n\nEl 29 de febrero es el día de nacimiento más raro. Las personas nacidas ese día celebran su cumpleaños 'real' cada 4 años. En los años no bisiestos, la mayoría festeja el 28/02 o el 1/03.",
+  "explanation": "## Cómo se calcula\n\nEl método más preciso para determinar el día de la semana de una fecha gregoriana es la **Congruencia de Zeller**, publicada por Christian Zeller en 1882:\n\n```\nh = (q + ⌊13(m+1)/5⌋ + K + ⌊K/4⌋ + ⌊J/4⌋ − 2J) mod 7\n```\n\nDonde:\n- `q` = día del mes\n- `m` = mes (enero=13 y febrero=14 del año ANTERIOR; marzo=3, abril=4, … diciembre=12)\n- `K` = año del siglo (año mod 100)\n- `J` = siglo (⌊año/100⌋)\n- `h` = 0→sábado, 1→domingo, 2→lunes, 3→martes, 4→miércoles, 5→jueves, 6→viernes\n\n**Ejemplo paso a paso — 15/08/1990:**\n```\nq = 15, m = 8, año = 1990\nK = 90, J = 19\nh = (15 + ⌊13×9/5⌋ + 90 + ⌊90/4⌋ + ⌊19/4⌋ − 2×19) mod 7\nh = (15 + 23 + 90 + 22 + 4 − 38) mod 7\nh = 116 mod 7 = 4  →  Miércoles ✓\n```\n\nUna alternativa más sencilla de implementar en código es la **Fórmula de Tomohiko Sakamoto (1993)**:\n```python\ndef dia_semana(y, m, d):\n    t = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4]\n    if m < 3:\n        y -= 1\n    return (y + y//4 - y//100 + y//400 + t[m-1] + d) % 7\n# 0=domingo, 1=lunes, ..., 6=sábado\n```\n\n---\n\n## Tabla de referencia\n\nSignificados tradicionales según la rima *\"Monday's Child\"* (siglo XIX, folclore anglosajón):\n\n| Día        | Rima original (inglés)                        | Significado tradicional                         |\n|------------|-----------------------------------------------|-------------------------------------------------|\n| **Lunes**    | *Monday's child is fair of face*            | Atractivo/a, encantador/a, don social           |\n| **Martes**   | *Tuesday's child is full of grace*          | Elegante, ágil, con gracia natural              |\n| **Miércoles**| *Wednesday's child is full of woe*          | Profundo/a, sensible, reflexivo/a               |\n| **Jueves**   | *Thursday's child has far to go*            | Ambicioso/a, viajero/a, espíritu aventurero     |\n| **Viernes**  | *Friday's child is loving and giving*       | Generoso/a, afectuoso/a, empático/a             |\n| **Sábado**   | *Saturday's child works hard for a living*  | Trabajador/a, perseverante, práctico/a          |\n| **Domingo**  | *Sunday's child is bonny and blithe*        | Alegre, afortunado/a, optimista                 |\n\n> **Nota:** Estos significados son folclore cultural, no ciencia. Su valor es lúdico y simbólico.\n\n---\n\n## Casos típicos\n\n**Caso 1 — Fecha histórica reciente: 15/08/1990**\n- q=15, m=8, año=1990 → h=4 → **Miércoles**\n- Significado: persona profunda, sensible y reflexiva (*Wednesday's child is full of woe*)\n- Próximo cumpleaños (2025): 15/08/2025 → **Viernes**\n\n**Caso 2 — Fecha clásica argentina: 09/07/1816 (Independencia)**\n- Aplicando Zeller con año=1816, m=7, q=9\n- h = (9 + ⌊13×8/5⌋ + 16 + 4 + 4 − 36) mod 7 = (9+20+16+4+4−36) mod 7 = 17 mod 7 = 3 → **Martes**\n- La Argentina declaró su independencia un **martes**.\n\n**Caso 3 — Año bisiesto: 29/02/2000**\n- Febrero en año bisiesto es válido. m→14, año→1999 (para Zeller)\n- K=99, J=19\n- h = (29 + ⌊13×15/5⌋ + 99 + 24 + 4 − 38) mod 7 = (29+39+99+24+4−38) mod 7 = 157 mod 7 = 3 → **Martes**\n- Las personas nacidas el 29/02 celebran su \"cumple exacto\" solo cada 4 años.\n\n---\n\n## Errores comunes\n\n1. **Tratar enero y febrero como mes 1 y 2 del año actual:** En la fórmula de Zeller, enero=13 y febrero=14 del año *anterior*. No hacerlo produce un día incorrecto.\n\n2. **Ignorar la reforma gregoriana:** Fechas anteriores al 15/10/1582 pertenecen al calendario juliano, que tiene distinto ciclo de bisiestos. Aplicar Zeller gregoriano a esas fechas da resultados erróneos.\n\n3. **Confundir el módulo negativo:** En algunos lenguajes de programación, `-3 mod 7` da `-3` en vez de `4`. Siempre usá `((h % 7) + 7) % 7` para garantizar un resultado positivo.\n\n4. **Olvidar los años bisiestos al calcular el próximo cumpleaños:** Si naciste el 29/02, tu próximo cumpleaños \"exacto\" es en el siguiente año divisible por 4 (y que no sea divisible por 100, salvo que también lo sea por 400).\n\n5. **Asumir que el resultado numérico de h es universal:** Cada fórmula usa una numeración distinta. En Zeller h=0 es sábado; en Sakamoto retorna=0 es domingo. Siempre verificá la convención del algoritmo que usás.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora: ¿Qué día de la semana fue?](/calculadora-que-dia-de-la-semana) — Para cualquier fecha, no solo tu nacimiento.\n- [Calculadora de Piedra de Nacimiento](/calculadora-piedra-nacimiento) — Descubrí la gema asociada a tu mes de nacimiento.\n- [Calculadora de Porcentajes](/calculadora-porcentajes) — Útil para calcular qué fracción del año llevás vivida.\n- [Calculadora de Aniversario de Pareja](/calculadora-aniversario-pareja) — Averiguá en qué día cae vuestro próximo aniversario.\n",
   "faq": [
     {
-      "q": "¿Cómo sé qué día de la semana nací?",
-      "a": "Ingresá tu **fecha de nacimiento** y la calculadora te dice automáticamente el día de la semana: lunes, martes, miércoles, etc."
+      "q": "¿Qué fórmula usa la calculadora para determinar el día de la semana?",
+      "a": "Usa la **Congruencia de Zeller** (1882), un algoritmo matemático que convierte cualquier fecha del calendario gregoriano en un número del 0 al 6 correspondiente a cada día. Es el mismo método empleado en sistemas informáticos y calendarios perpetuos. Para fechas desde 1582 en adelante, su precisión es del 100%."
     },
     {
-      "q": "¿El significado del día tiene base real?",
-      "a": "Es una **tradición popular** (poema inglés de 1838), no ciencia. Es entretenimiento y un dato curioso para compartir."
+      "q": "¿Los significados del día de nacimiento tienen algún fundamento científico?",
+      "a": "No, son folclore cultural. Provienen de la rima infantil *'Monday's Child'*, documentada por primera vez en el libro *Traditions of Devonshire* de A.E. Bray (1838, Inglaterra). No existe evidencia científica que relacione el día de nacimiento con la personalidad. Su valor es puramente lúdico, similar a los signos del zodíaco."
     },
     {
-      "q": "¿En qué día cae mi próximo cumpleaños?",
-      "a": "La calculadora también te muestra en qué día de la semana cae tu **próximo cumpleaños**. Si cae en fin de semana, ideal para festejar."
+      "q": "¿Qué pasa si nací el 29 de febrero? ¿Cuándo cae mi próximo cumpleaños?",
+      "a": "Las personas nacidas el 29/02 (solo existe en años bisiestos) tienen cumpleaños exacto cada 4 años. Los años intermedios, muchos eligen festejar el 28/02 o el 01/03. El próximo año bisiesto tras 2024 será 2028. Para determinar si un año es bisiesto: debe ser divisible por 4, excepto los centenarios que solo son bisiestos si son divisibles por 400 (ej: 2000 sí, 1900 no)."
     },
     {
-      "q": "¿Puedo calcular el día de cualquier fecha?",
-      "a": "Sí, funciona con **cualquier fecha** desde el año 1900 en adelante. Podés calcular el día de eventos históricos, cumpleaños famosos, etc."
+      "q": "¿La calculadora funciona para fechas anteriores a 1900?",
+      "a": "Sí, siempre que sean posteriores al 15/10/1582, fecha en que el Papa Gregorio XIII estableció el calendario gregoriano que usamos hoy. Para fechas anteriores a esa reforma (por ejemplo, el 04/10/1582 o antes), el calendario vigente era el juliano, que tiene diferente sistema de años bisiestos y produciría resultados distintos."
     },
     {
-      "q": "¿Los días de la semana afectan la personalidad?",
-      "a": "No hay evidencia científica. Pero es interesante que **más bebés nacen entre martes y viernes** (por cesáreas programadas) que en fines de semana, cuando hay menos personal en hospitales."
+      "q": "¿Cuántos días de la semana han sido los más comunes para nacer en Argentina?",
+      "a": "Según datos del INDEC sobre estadísticas vitales, los martes y miércoles concentran históricamente mayor cantidad de nacimientos en Argentina, ya que muchas inducciones y cesáreas programadas se realizan en días hábiles. Los domingos y sábados registran la menor cantidad de nacimientos programados, aunque los partos espontáneos se distribuyen más uniformemente."
     },
     {
-      "q": "¿Qué día de la semana nacen más bebés?",
-      "a": "En Argentina y la mayoría de los países, **martes y miércoles** son los días con más nacimientos, seguidos de jueves. Los fines de semana tienen menos nacimientos por la programación médica."
+      "q": "¿Cómo calculo manualmente en qué día cae mi próximo cumpleaños?",
+      "a": "Cada año común (no bisiesto) tu cumpleaños avanza 1 día de la semana. Cada año bisiesto, avanza 2 días. Ejemplo: si en 2024 (bisiesto) tu cumpleaños cayó lunes, en 2025 cae miércoles (+2 por el bisiesto). En 2026 caerá jueves (+1). Así podés calcular los próximos años sin necesidad de una calculadora."
     },
     {
-      "q": "¿Qué pasa si nací un 29 de febrero?",
-      "a": "Naciste en año **bisiesto**. Tu cumpleaños 'real' cae cada 4 años. En años no bisiestos, la mayoría festeja el 28/02 o el 1/03."
+      "q": "¿Existe alguna celebridad argentina nacida un día específico y famosa por eso?",
+      "a": "El dato del día de la semana no suele ser parte de la biografía oficial, pero puede calcularse. Por ejemplo, el **25/05/1810** (Revolución de Mayo) fue un **viernes**; el **9/07/1816** (Independencia) fue un **martes**. Diego Maradona nació el 30/10/1960, que fue un **domingo** — lo cual encaja con el significado tradicional: 'alegre y afortunado'."
+    },
+    {
+      "q": "¿El día de la semana en que nací influye en el signo del zodíaco o en la numerología?",
+      "a": "En astrología occidental, el signo zodiacal depende del mes y día del año, no del día de la semana, por lo que no hay influencia directa. En numerología tradicional, el 'número del destino' se calcula sumando los dígitos de la fecha completa (dd+mm+aaaa). El día de la semana se usa más en sistemas como el folclore *Monday's Child* o en algunas tradiciones de astrología védica (Jyotisha) donde cada día de la semana tiene un planeta regente."
     }
   ],
   "howToSteps": [
@@ -116,12 +121,16 @@
   ],
   "sources": [
     {
-      "name": "Wolfram MathWorld — Zeller's Congruence",
-      "url": "https://mathworld.wolfram.com/ZellersCongruence.html"
+      "name": "INDEC – Estadísticas Vitales: Información Básica (nacimientos por día)",
+      "url": "https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-2-27"
     },
     {
-      "name": "CDC — Births by day of week (EE.UU.)",
-      "url": "https://www.cdc.gov/nchs/data/nvsr/nvsr72/nvsr72-01.pdf"
+      "name": "Wikipedia ES – Congruencia de Zeller",
+      "url": "https://es.wikipedia.org/wiki/Congruencia_de_Zeller"
+    },
+    {
+      "name": "Wikipedia ES – Calendario Gregoriano",
+      "url": "https://es.wikipedia.org/wiki/Calendario_gregoriano"
     }
   ],
   "relatedSlugs": [
