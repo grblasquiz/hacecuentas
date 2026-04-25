@@ -450,7 +450,6 @@ import { comisionAmazonFbaProducto } from './comision-amazon-fba-producto';
 import { comisionEbayVenta } from './comision-ebay-venta';
 import { comisionEtsyVentaHandmade } from './comision-etsy-venta-handmade';
 import { comisionInmobiliariaAlquilerCabaPba } from './comision-inmobiliaria-alquiler-caba-pba';
-import { comisionMercadolibreVenta } from './comision-mercadolibre-venta';
 import { comisionRepresentanteFifa } from './comision-representante-fifa';
 import { comisionUberEatsGlovoRider } from './comision-uber-eats-glovo-rider';
 import { comisionVenta } from './comision-venta';
@@ -1027,7 +1026,6 @@ import { ensayosSemanalesMejorarWritingIdioma } from './ensayos-semanales-mejora
 import { entalpiaReaccionHess } from './entalpia-reaccion-hess';
 import { entropiaCambioFase } from './entropia-cambio-fase';
 import { envejecerMascotaHumanoTablaRazaTamano } from './envejecer-mascota-humano-tabla-raza-tamano';
-import { envioFlexVsColectaMercadolibre } from './envio-flex-vs-colecta-mercadolibre';
 import { epinefrinaDosisPesoAnafilaxia } from './epinefrina-dosis-peso-anafilaxia';
 import { equipajeExtraCostoAerolinea } from './equipaje-extra-costo-aerolinea';
 import { equipajeManoBodegaPesoVolumenAerolinea } from './equipaje-mano-bodega-peso-volumen-aerolinea';
@@ -3155,7 +3153,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'comision-ebay-venta': comisionEbayVenta,
   'comision-etsy-venta-handmade': comisionEtsyVentaHandmade,
   'comision-inmobiliaria-alquiler-caba-pba': comisionInmobiliariaAlquilerCabaPba,
-  'comision-mercadolibre-venta': comisionMercadolibreVenta,
   'comision-representante-fifa': comisionRepresentanteFifa,
   'comision-uber-eats-glovo-rider': comisionUberEatsGlovoRider,
   'comision-venta': comisionVenta,
@@ -3732,7 +3729,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'entalpia-reaccion-hess': entalpiaReaccionHess,
   'entropia-cambio-fase': entropiaCambioFase,
   'envejecer-mascota-humano-tabla-raza-tamano': envejecerMascotaHumanoTablaRazaTamano,
-  'envio-flex-vs-colecta-mercadolibre': envioFlexVsColectaMercadolibre,
   'epinefrina-dosis-peso-anafilaxia': epinefrinaDosisPesoAnafilaxia,
   'equipaje-extra-costo-aerolinea': equipajeExtraCostoAerolinea,
   'equipaje-mano-bodega-peso-volumen-aerolinea': equipajeManoBodegaPesoVolumenAerolinea,
