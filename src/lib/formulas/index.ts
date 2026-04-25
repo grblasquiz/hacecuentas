@@ -968,7 +968,6 @@ import { edadGatoHumano } from './edad-gato-humano';
 import { edadGatoHumanoFormulaAnos } from './edad-gato-humano-formula-anos';
 import { edadGestacionalCorregidaPrematuro } from './edad-gestacional-corregida-prematuro';
 import { edadHamster } from './edad-hamster';
-import { edadHumanaConejo } from './edad-humana-conejo';
 import { edadHumanaPorRazaPerro } from './edad-humana-por-raza-perro';
 import { edadHumanaTortuga } from './edad-humana-tortuga';
 import { edadIdealPareja } from './edad-ideal-pareja';
@@ -3671,7 +3670,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'edad-gato-humano-formula-anos': edadGatoHumanoFormulaAnos,
   'edad-gestacional-corregida-prematuro': edadGestacionalCorregidaPrematuro,
   'edad-hamster': edadHamster,
-  'edad-humana-conejo': edadHumanaConejo,
   'edad-humana-por-raza-perro': edadHumanaPorRazaPerro,
   'edad-humana-tortuga': edadHumanaTortuga,
   'edad-ideal-pareja': edadIdealPareja,
