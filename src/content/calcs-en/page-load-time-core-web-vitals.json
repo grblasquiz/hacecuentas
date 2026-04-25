@@ -9,14 +9,14 @@
   "formulaId": "tiempo-carga-pagina-web-metricas",
   "audience": "global",
   "relatedSlugs": [],
-  "intro": "Technical calculations for IT and web development are critical: latency, bandwidth, uptime SLA, cloud costs, algorithmic complexity. Smart calculations prevent infrastructure over-provisioning. Evaluate LCP/FID/CLS metrics and averages · Free and fast. Values are current as of 2026 and reviewed periodically to keep you up to date.",
-  "keyTakeaway": "Formula: **Google thresholds**. Direct application with your input values. Evaluate LCP/FID/CLS and generate performance summary.",
+  "intro": "Core Web Vitals are Google's standardized metrics for measuring real-world user experience on the web, introduced as ranking signals in May 2021. This calculator evaluates your three Core Web Vitals scores — **LCP (Largest Contentful Paint)**, **FID (First Input Delay)**, and **CLS (Cumulative Layout Shift)** — and instantly classifies each as Good, Needs Improvement, or Poor based on Google's official thresholds. Use it to audit any page before deploying a site, after a redesign, or while troubleshooting SEO performance drops tied to the Page Experience signal.",
+  "keyTakeaway": "A page passes Core Web Vitals when **LCP ≤ 2,500 ms**, **FID ≤ 100 ms**, and **CLS ≤ 0.1** — all three must score \"Good\" at the 75th percentile of real user data to receive Google's full Page Experience ranking benefit.",
   "useCases": [
-    "Technical calculations for web page load time (Core Web Vitals)",
-    "Students and IT professionals",
-    "Validate theoretical results before implementing",
-    "Teaching and learning web performance concepts",
-    "Quick reference during projects"
+    "Diagnosing why a landing page dropped in Google Search rankings after a site update — checking if LCP degraded beyond the 2,500 ms threshold.",
+    "Validating that a new e-commerce product page meets Core Web Vitals standards before a major product launch to avoid SEO penalties.",
+    "Comparing page performance across mobile vs. desktop by running separate LCP, FID, and CLS values from Chrome UX Report field data.",
+    "Auditing a third-party blog post embed or ad injection that may be causing unexpected CLS score spikes above the 0.25 'Poor' threshold.",
+    "Preparing a monthly web performance report for stakeholders, translating raw millisecond values and unitless CLS scores into clear Good/Needs Improvement/Poor ratings."
   ],
   "fields": [
     {
@@ -71,53 +71,65 @@
     ],
     "result": "LCP Good"
   },
-  "explanation": "Technical calculators for IT: latency, storage, uptime SLA, cloud costs. Decisions that scale.\n\n## How It's Calculated\n\nEvaluates LCP/FID/CLS metrics and average · Free and fast.\n\nThis calculator applies the formula with your input values, checking typical ranges and alerting when values seem unreasonable.\n\n## Final Notes\n\nThis calculation is a reference guide only. For critical decisions (financial, medical, legal), consult a specialized professional. Values are current as of 2026 and reviewed periodically.",
+  "explanation": "## How It's Calculated\n\nCore Web Vitals are not computed with a single aggregate formula — each metric has its own measurement definition and pass/fail thresholds applied at the **75th percentile** of page loads for a given URL (field data) or against fixed cutoffs (lab data). This calculator applies the official Google/W3C thresholds directly:\n\n```\nLCP Classification:\n  if LCP_ms ≤ 2500          → \"Good\"\n  if 2500 < LCP_ms ≤ 4000   → \"Needs Improvement\"\n  if LCP_ms > 4000           → \"Poor\"\n\nFID Classification:\n  if FID_ms ≤ 100            → \"Good\"\n  if 100 < FID_ms ≤ 300      → \"Needs Improvement\"\n  if FID_ms > 300            → \"Poor\"\n\nCLS Classification:\n  if CLS ≤ 0.1               → \"Good\"\n  if 0.1 < CLS ≤ 0.25        → \"Needs Improvement\"\n  if CLS > 0.25              → \"Poor\"\n\nOverall Pass:\n  ALL three metrics = \"Good\"  → Page passes Core Web Vitals\n  ANY metric ≠ \"Good\"         → Page fails Core Web Vitals\n```\n\n**LCP** (Largest Contentful Paint) measures how long it takes for the largest visible element in the viewport — typically a hero image, a `<video>` poster, or a large block of text — to fully render. It is a loading performance metric defined by the W3C Largest Contentful Paint API.\n\n**FID** (First Input Delay) measures the delay between the first user interaction (click, tap, key press) and when the browser actually begins processing the event handler. It captures main-thread blockage caused by JavaScript execution. *(Note: Google began replacing FID with INP — Interaction to Next Paint — as the official standard in March 2024, but FID remains a widely reported field metric.)*\n\n**CLS** (Cumulative Layout Shift) is a unitless score measuring the total amount of unexpected visual instability during a page's entire lifespan. It is calculated as:\n\n```\nCLS = Σ (impact_fraction × distance_fraction)\n```\n\nWhere `impact_fraction` is the proportion of the viewport affected by the shifting element, and `distance_fraction` is the largest distance any element moved relative to the viewport height/width.\n\n---\n\n## Reference Table\n\n| Metric | Good | Needs Improvement | Poor | Unit |\n|---|---|---|---|---|\n| **LCP** | ≤ 2,500 ms | 2,501 – 4,000 ms | > 4,000 ms | milliseconds |\n| **FID** | ≤ 100 ms | 101 – 300 ms | > 300 ms | milliseconds |\n| **CLS** | ≤ 0.10 | 0.11 – 0.25 | > 0.25 | unitless score |\n| **INP** *(new, 2024)* | ≤ 200 ms | 201 – 500 ms | > 500 ms | milliseconds |\n| **TTFB** *(diagnostic)* | ≤ 800 ms | 801 – 1,800 ms | > 1,800 ms | milliseconds |\n| **FCP** *(diagnostic)* | ≤ 1,800 ms | 1,801 – 3,000 ms | > 3,000 ms | milliseconds |\n\n*Source: web.dev / Google Search Central, official Core Web Vitals thresholds (updated 2024).*\n\n---\n\n## Typical Cases\n\n**Example 1 — Passing page (all Good):**\n- LCP = 2,000 ms → ✅ Good (≤ 2,500 ms)\n- FID = 80 ms → ✅ Good (≤ 100 ms)\n- CLS = 0.05 → ✅ Good (≤ 0.10)\n- **Result:** Page passes all Core Web Vitals. Full Page Experience benefit applies.\n\n**Example 2 — One failing metric:**\n- LCP = 3,200 ms → ⚠️ Needs Improvement (2,501–4,000 ms)\n- FID = 60 ms → ✅ Good\n- CLS = 0.08 → ✅ Good\n- **Result:** Page fails Core Web Vitals overall. Priority fix: optimize LCP (compress hero image, use a CDN, preload the LCP resource with `<link rel=\"preload\">`).\n\n**Example 3 — Heavy JavaScript + unstable layout:**\n- LCP = 5,100 ms → ❌ Poor (> 4,000 ms)\n- FID = 420 ms → ❌ Poor (> 300 ms)\n- CLS = 0.31 → ❌ Poor (> 0.25)\n- **Result:** Page fails all three metrics. Common causes: render-blocking scripts, no explicit dimensions on images/ads (`width` and `height` attributes missing), no server-side rendering.\n\n---\n\n## Common Errors\n\n1. **Confusing lab data with field data.** Tools like Lighthouse run in a controlled environment (simulated throttling) and produce lab scores. Google uses **field data** (Chrome UX Report, 75th percentile) for ranking. A Lighthouse LCP of 1,800 ms does not guarantee a field LCP below 2,500 ms under real mobile network conditions.\n\n2. **Measuring CLS only on initial load.** CLS accumulates throughout the entire page session. Interactions like accordion expansions, infinite scroll, cookie banners appearing after load, or late-loading fonts can all contribute CLS after the initial render — and all count toward the score.\n\n3. **Ignoring the 75th-percentile rule.** Google does not use median (50th percentile) values. Even if 74% of your users experience a Good LCP, if the 75th-percentile user sees 2,600 ms, your page is classified as \"Needs Improvement.\" You must optimize for the slower portion of your audience.\n\n4. **Treating FID and INP as interchangeable.** FID only captures the *first* interaction delay and ignores subsequent interactions (e.g., clicking filters on a search page). INP, which replaced FID as an official Core Web Vital in March 2024, measures the worst-case interaction delay across the entire session. A page with FID = 50 ms can still fail INP if a later JavaScript-heavy interaction takes 600 ms.\n\n5. **Missing image dimensions causing CLS.** One of the most common CLS causes is images without explicit `width` and `height` HTML attributes. The browser cannot reserve space for them before they load, so the layout shifts when the image appears. Always set dimensions on `<img>` tags.\n\n---\n\n## Related Calculators\n\nSince no related slugs are configured for this calculator, explore other tools in the technology category on Hacé Cuentas for more web performance and digital productivity calculators.",
   "faq": [
     {
-      "q": "What is LCP and what's a good score?",
-      "a": "LCP (Largest Contentful Paint) measures loading performance. A good score is under 2.5 seconds."
+      "q": "What are Core Web Vitals and why do they matter for SEO?",
+      "a": "Core Web Vitals are three user-experience metrics — LCP, FID, and CLS — that Google officially incorporated into its Page Experience ranking signal starting June 2021. Pages that pass all three thresholds at the 75th percentile of field data receive a positive ranking signal. While not the dominant ranking factor, Google has confirmed they serve as a tiebreaker between pages of comparable content quality, and failing scores can suppress performance in competitive SERPs."
     },
     {
-      "q": "What is First Input Delay (FID)?",
-      "a": "FID measures how quickly the browser responds to user input. A good score is under 100ms. Note: INP replaced FID in 2024 with a good threshold of under 200ms."
+      "q": "What is a good LCP score and how do I improve it?",
+      "a": "A good LCP is ≤ 2,500 ms. The most impactful improvements are: (1) preloading the LCP resource with `<link rel=\"preload\" as=\"image\">`, (2) serving images in modern formats like WebP or AVIF (typically 25–50% smaller than JPEG), (3) using a CDN to reduce Time to First Byte (TTFB), and (4) removing render-blocking CSS/JS. Google's own data shows that optimizing TTFB alone — aiming for ≤ 800 ms — often accounts for 40–60% of LCP improvement."
     },
     {
-      "q": "What does CLS mean in web performance?",
-      "a": "CLS (Cumulative Layout Shift) measures unexpected layout changes during page load. A good score is under 0.1."
+      "q": "What is a good CLS score and what causes layout shifts?",
+      "a": "A good CLS is ≤ 0.10 (unitless). The most frequent causes are: images and iframes without explicit `width`/`height` attributes, web fonts causing FOUT (Flash of Unstyled Text) that shifts surrounding text, dynamically injected content (ads, banners, cookie notices) that pushes existing content down, and CSS animations that alter layout-triggering properties. Chrome DevTools' Layout Shift Regions feature highlights exactly which elements are shifting and by how much."
     },
     {
-      "q": "What are Core Web Vitals?",
-      "a": "Core Web Vitals are Google's metrics measuring real-world page experience: loading speed (LCP), interactivity (FID/INP), and visual stability (CLS)."
+      "q": "Did Google replace FID with INP? Do I still need to track FID?",
+      "a": "Yes. Google officially replaced FID with INP (Interaction to Next Paint) as a Core Web Vital on March 12, 2024. INP captures the full interaction latency — from user input through the next frame paint — across all interactions in a session, making it far more comprehensive than FID. The INP threshold for 'Good' is ≤ 200 ms. You should still track FID if you use historical Chrome UX Report data for trend analysis, but new optimization efforts should target INP."
     },
     {
-      "q": "How can I improve Core Web Vitals?",
-      "a": "Image optimization, resource preloading, code splitting, lazy loading, minimizing JavaScript, and reducing render-blocking resources."
+      "q": "How does Google measure Core Web Vitals — from my Lighthouse score or from real users?",
+      "a": "Google uses **field data** collected from real Chrome users via the Chrome UX Report (CrUX), not Lighthouse lab scores. CrUX data is aggregated over a 28-day rolling window and evaluated at the **75th percentile** of page loads. Lighthouse scores are useful for diagnosing specific issues in a controlled environment, but they are not what Google uses for ranking. A page needs sufficient real-user traffic to appear in CrUX; low-traffic pages may show 'Insufficient Data' in Google Search Console."
     },
     {
-      "q": "Is this calculator free to use?",
-      "a": "Yes, all our calculators are completely free with no registration required."
+      "q": "What tools can I use to measure LCP, FID, and CLS?",
+      "a": "For **lab data**: Google Lighthouse (Chrome DevTools, PageSpeed Insights, or CLI), WebPageTest.org. For **field data**: Google Search Console's Core Web Vitals report (free, URL-level data from CrUX), PageSpeed Insights (shows both lab + field data), the CrUX Dashboard (Data Studio), and the `web-vitals` JavaScript library for real-user monitoring (RUM) in your own analytics pipeline. Chrome DevTools' Performance panel also visualizes LCP and CLS directly in the timeline."
     },
     {
-      "q": "Are the calculator results accurate?",
-      "a": "Results are for reference. We use internationally validated formulas. For critical decisions, consult a professional."
+      "q": "Can a page pass Core Web Vitals if only two out of three metrics are Good?",
+      "a": "No. Google's assessment requires **all three metrics** to score 'Good' at the 75th percentile for a page to be classified as passing Core Web Vitals. If even one metric falls into 'Needs Improvement' or 'Poor,' the entire page is considered failing. In Google Search Console, the Core Web Vitals report will mark the URL as 'Poor' even if only the CLS score exceeds 0.10 while LCP and FID are excellent."
     },
     {
-      "q": "Do you store my data?",
-      "a": "No. All calculations happen in your browser. We never send data to any server."
+      "q": "What's the difference between FCP and LCP — aren't they both about loading?",
+      "a": "Both measure loading, but they capture different moments. **FCP (First Contentful Paint)** marks when the *first* pixel of any content (text, image, SVG) renders — it tells you when the page stops looking blank. **LCP** marks when the *largest* visible element finishes loading — it better represents when the page feels 'ready' to the user. FCP is a diagnostic metric; LCP is the official Core Web Vital. A page can have a fast FCP (1,000 ms) but a slow LCP (4,500 ms) if a hero image loads much later than the initial text."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "Google Search Central — Core Web Vitals documentation",
+      "url": "https://developers.google.com/search/docs/appearance/core-web-vitals"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "web.dev — Defining Core Web Vitals thresholds",
+      "url": "https://web.dev/articles/defining-core-web-vitals-thresholds"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "web.dev — LCP (Largest Contentful Paint)",
+      "url": "https://web.dev/articles/lcp"
+    },
+    {
+      "name": "web.dev — CLS (Cumulative Layout Shift)",
+      "url": "https://web.dev/articles/cls"
+    },
+    {
+      "name": "web.dev — INP (Interaction to Next Paint) replaces FID",
+      "url": "https://web.dev/blog/inp-cwv-march-12"
+    },
+    {
+      "name": "Wikipedia — Core Web Vitals",
+      "url": "https://en.wikipedia.org/wiki/Core_Web_Vitals"
     }
   ],
   "dataUpdate": {

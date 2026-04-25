@@ -7,13 +7,14 @@
   "audience": "global",
   "icon": "⏱️",
   "formulaId": "rate-limit-api-rpm-rps",
-  "intro": "El mantenimiento y operación eficiente del auto implican cálculos de consumo, potencia, presión, torque y rendimiento. Aplicar las fórmulas correctas evita sobreconsumo y daños mecánicos. Convierte entre RPM/RPS/RPD y calcula carga · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá valor y unidad y obtené RPS al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "La calculadora de Rate Limit API convierte entre las tres unidades estándar de límite de tasa en APIs REST y WebSockets: **RPS** (Requests Per Second), **RPM** (Requests Per Minute) y **RPD** (Requests Per Day). Permite saber exactamente cuántas peticiones podés hacer por segundo si tu plan dice \"60 RPM\", o cuántos días tardarías en agotar una cuota diaria a una tasa determinada. Se usa en integración con APIs de terceros (OpenAI, Twitter/X, Google Maps, Stripe, MercadoPago), diseño de backends propios y configuración de gateways como NGINX o AWS API Gateway. La fórmula base es: **RPS = RPM ÷ 60 = RPD ÷ 86 400**.",
+  "keyTakeaway": "**RPS = RPM ÷ 60 = RPD ÷ 86 400** → 60 RPM equivale a 1 RPS y a 86 400 RPD; 1 000 RPM equivale a ~16,67 RPS y a 1 440 000 RPD.",
   "useCases": [
-    "Dimensionar rate limit API (RPM/RPS) antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Verificar si tu plan gratuito de OpenAI (3 RPM en GPT-4) alcanza para un chatbot que recibe 1 consulta cada 20 segundos.",
+    "Configurar el parámetro `limit_req_zone` en NGINX para aceptar exactamente 500 RPM sin rechazar tráfico legítimo.",
+    "Comparar planes de MercadoPago API (600 RPM en producción vs. 60 RPM en sandbox) antes de hacer el go-live de un e-commerce.",
+    "Calcular cuántos workers paralelos podés lanzar respetando un rate limit de 10 RPS de la API de Google Maps Platform.",
+    "Diseñar un sistema de retry con backoff exponencial sabiendo que tu cuota de RPD es 100 000 y el tráfico pico llega a las 14 hs."
   ],
   "fields": [
     {
@@ -77,49 +78,45 @@
     ],
     "result": "1 RPS"
   },
-  "explanation": "Los **cálculos automotrices** son esenciales para dueños de autos, motos y otros vehículos: rendimiento de combustible, costos de mantenimiento, presión de neumáticos, conversiones de potencia, tiempos de amortización.\n\n## Cómo se calcula\n\nConvierte entre RPM/RPS/RPD y calcula carga · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLas conversiones entre unidades de rate limit son divisiones y multiplicaciones exactas basadas en los segundos de cada período:\n\n```\n# Conversiones exactas\nRPS  = valor_RPM  / 60\nRPS  = valor_RPD  / 86400\n\nRPM  = valor_RPS  * 60\nRPM  = valor_RPD  / 1440\n\nRPD  = valor_RPS  * 86400\nRPD  = valor_RPM  * 1440\n\n# Ejemplo: 60 RPM\nRPS = 60 / 60        = 1.0000 RPS\nRPD = 60 * 1440      = 86 400 RPD\n\n# Ejemplo: 500 RPS\nRPM = 500 * 60       = 30 000 RPM\nRPD = 500 * 86400    = 43 200 000 RPD\n```\n\n> **Nota de precisión:** RPD = RPM × 1 440 (minutos/día = 24 × 60). RPD = RPS × 86 400 (segundos/día = 24 × 3 600).\n\n---\n\n## Tabla de referencia\n\nValores típicos de rate limits de APIs populares en 2025:\n\n| API / Servicio           | Plan          | Límite publicado | En RPS       | En RPD         |\n|--------------------------|---------------|------------------|--------------|----------------|\n| OpenAI GPT-4o (free)     | Free tier     | 3 RPM            | 0.05 RPS     | 4 320 RPD      |\n| OpenAI GPT-4o (Tier 1)   | Pago básico   | 500 RPM          | 8.33 RPS     | 720 000 RPD    |\n| OpenAI GPT-3.5 (Tier 1)  | Pago básico   | 3 500 RPM        | 58.33 RPS    | 5 040 000 RPD  |\n| Google Maps Platform      | Pay-as-you-go | 3 000 RPM        | 50 RPS       | 4 320 000 RPD  |\n| MercadoPago API (sandbox) | Sandbox       | 60 RPM           | 1 RPS        | 86 400 RPD     |\n| MercadoPago API (prod.)   | Producción    | 600 RPM          | 10 RPS       | 864 000 RPD    |\n| Twitter/X API v2 (free)   | Free          | 1 500 RPM (app)  | 25 RPS       | 2 160 000 RPD  |\n| Stripe API                | Live mode     | 100 RPS          | 100 RPS      | 8 640 000 RPD  |\n| GitHub REST API           | Authenticated | 5 000 RPH        | 1.39 RPS     | 120 000 RPD    |\n| NGINX `limit_req` típico  | Config propia | 10 RPS (r/s)     | 10 RPS       | 864 000 RPD    |\n\n> RPH = Requests Per Hour (÷ 3 600 para convertir a RPS).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Chatbot con GPT-4o en plan gratuito\nUn estudiante quiere un bot de Telegram usando GPT-4o free tier (**3 RPM**).\n\n```\nRPS = 3 / 60 = 0.05 RPS\n```\n\nEsto significa que solo puede hacer **1 consulta cada 20 segundos**. Si el bot recibe 5 mensajes simultáneos, 4 quedarán en cola o recibirán error 429. La solución es implementar un queue con delay mínimo de 20 s entre llamadas, o upgradearse al Tier 1 (500 RPM = 8,33 RPS).\n\n### Caso 2 — E-commerce con MercadoPago\nUn e-commerce recibe 800 órdenes/hora en Black Friday. El endpoint de payments tiene límite de **600 RPM** en producción.\n\n```\nRPS_disponible = 600 / 60 = 10 RPS\nDemanda_pico   = 800 / 3600 = 0.22 RPS\nMargen          = 10 / 0.22 = 45x  ✓ sobra margen\n```\n\nIncluso en el pico más exigente, el límite no se alcanza. Sin embargo, si un worker mal configurado hace polling cada 100 ms (10 RPS solo), consume toda la cuota.\n\n### Caso 3 — Configurar NGINX como API Gateway\nNecesitás limitar un microservicio interno a **1 200 RPM**:\n\n```\nRPS = 1200 / 60 = 20 RPS\n\n# nginx.conf\nlimit_req_zone $binary_remote_addr zone=api:10m rate=20r/s;\nlimit_req zone=api burst=40 nodelay;\n```\n\nEl parámetro `burst=40` permite absorber picos de hasta el doble del rate durante 2 segundos sin devolver 503.\n\n---\n\n## Errores comunes\n\n1. **Confundir RPM de API con RPM de motor:** El contexto importa. En tecnología, RPM siempre es *Requests Per Minute*, no revoluciones. Si copiás un valor de documentación de hardware, verificá las unidades.\n\n2. **Ignorar el límite por token/usuario vs. límite global:** Muchas APIs (OpenAI, GitHub) tienen rate limits *por API key* Y *por IP*. Escalar horizontalmente con múltiples workers bajo la misma key NO multiplica el límite.\n\n3. **No contemplar retries en el cálculo:** Si tu sistema hace retry automático ante error 429 con 3 intentos, el consumo real de RPS puede triplicarse en escenarios de saturación, generando un loop de saturación.\n\n4. **Asumir que el límite es parejo en el tiempo:** Algunos proveedores usan **ventanas deslizantes** (sliding window) y otros usan **ventanas fijas** (fixed window). En ventana fija, podés gastar 60 RPM en los primeros 5 segundos y quedar bloqueado los 55 restantes.\n\n5. **Olvidar convertir RPH a RPS/RPM:** La API de GitHub usa *Requests Per Hour* (5 000 RPH). Dividir por 60 da RPM (83,3), no RPS. El error de conversión puede hacer que configures un cliente 60 veces más restrictivo de lo necesario.\n\n6. **No sumar los endpoints:** Si tu app llama a `/users` y a `/orders` de la misma API, ambos endpoints comparten la cuota global. No importa que cada endpoint parezca \"lento\"; la suma de todos los calls cuenta contra el mismo límite.\n\n---\n\n## Calculadoras relacionadas\n\nOtras herramientas técnicas que podés combinar con esta:\n\n- [Calculadora de ganancia de amplificador operacional](/calculadora-amplificador-operacional-ganancia) — útil para diseño de hardware embebido que genera señales de control hacia una API.\n- [Calculadora de distancia hiperfocal de lente](/calculadora-distancia-hiperfocal-lente) — para sistemas de visión artificial que envían imágenes a una API de procesamiento con rate limit.\n- [Calculadora de filamento 3D necesario para un modelo](/calculadora-filamento-3d-necesario-modelo) — en impresoras conectadas a APIs de slicing en la nube con límites de llamadas.\n- [Calculadora de hilo de bordado para un diseño](/calculadora-hilo-bordado-diseno) — para máquinas de bordado CNC que usan APIs de diseño con cuotas por request.",
   "faq": [
     {
-      "q": "¿Burst?",
-      "a": "Rate limit típico permite picos cortos."
+      "q": "¿Qué diferencia hay entre rate limit y throttling?",
+      "a": "El **rate limit** es el techo máximo de requests permitidos en un período (ej.: 100 RPM). El **throttling** es el mecanismo activo que ralentiza o cola requests cuando se supera ese techo, en lugar de rechazarlos directamente con error 429. Algunos providers hacen throttling suave (agregan latencia) antes de llegar al corte duro del rate limit."
     },
     {
-      "q": "¿Backoff?",
-      "a": "Si 429, espera exponencial (1s, 2s, 4s...)."
+      "q": "¿Qué significa el error HTTP 429 y cómo manejarlo?",
+      "a": "El código **429 Too Many Requests** indica que superaste el rate limit. La respuesta generalmente incluye el header `Retry-After` (en segundos) o `X-RateLimit-Reset` (timestamp Unix). La práctica recomendada es implementar **backoff exponencial**: esperar 1 s, luego 2 s, luego 4 s, con un máximo de 3-5 reintentos antes de loguear el error y abandonar."
     },
     {
-      "q": "¿Distribuido?",
-      "a": "Rate per user vs global."
+      "q": "¿Cómo convierto Requests Per Hour (RPH) que usa GitHub a RPS?",
+      "a": "Dividís por 3 600 (segundos en una hora): **RPS = RPH ÷ 3 600**. La API autenticada de GitHub permite 5 000 RPH → 5 000 ÷ 3 600 ≈ **1,39 RPS** ó 83,3 RPM. Sin autenticación el límite baja a 60 RPH = 0,017 RPS, prácticamente 1 request por minuto."
     },
     {
-      "q": "¿Caché?",
-      "a": "Reduce llamadas repetidas a misma URL."
+      "q": "¿Cuál es la diferencia entre ventana fija y ventana deslizante en rate limiting?",
+      "a": "En **ventana fija** (fixed window), el contador se resetea cada X segundos exactos (ej.: cada minuto en punto). Podés gastar 60 requests entre los segundos 59 y 61 sin violar la regla formalmente, pero en la práctica se ven 120 requests en 2 segundos. En **ventana deslizante** (sliding window), el sistema mide siempre los últimos X segundos desde *ahora*, distribuyendo el tráfico de forma más pareja y segura."
     },
     {
-      "q": "¿Batching?",
-      "a": "Agrupa operaciones en 1 request."
+      "q": "¿Cómo configuro rate limiting en NGINX para 500 RPM?",
+      "a": "Convertís a RPS: 500 ÷ 60 ≈ 8,33 r/s. NGINX acepta decimales en la directiva `rate`: `limit_req_zone $binary_remote_addr zone=miapi:10m rate=8r/s;`. Para mayor precisión podés usar `rate=500r/m` (NGINX 1.17+). Agregá `burst=20` para absorber picos cortos sin devolver 503 inmediatamente."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Los rate limits de las APIs gratuitas de IA como OpenAI son suficientes para producción?",
+      "a": "En general, **no**. El tier gratuito de OpenAI GPT-4o es de 3 RPM (1 request cada 20 s) y 200 RPD. Para una app con más de 3 usuarios simultáneos ya resulta insuficiente. El Tier 1 pago sube a 500 RPM (8,33 RPS), y el Tier 5 llega a 10 000 RPM. Para producción real se recomienda al menos Tier 2 (5 000 RPM)."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Cómo afectan los rate limits al diseño de una arquitectura de microservicios?",
+      "a": "Cuando varios microservicios comparten una API key, el rate limit se consume entre todos. La solución es usar un **API Gateway centralizado** (Kong, AWS API Gateway, NGINX) que actúe como único cliente externo y distribuya internamente. Así manejás una sola cuota de forma coordinada, evitando que un servicio hambriento deje sin requests a los demás."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué es el concepto de 'burst' en rate limiting y cómo calcularlo?",
+      "a": "El **burst** es la cantidad de requests adicionales que podés hacer momentáneamente por encima del rate sostenido sin recibir error. Se calcula como: `burst = RPS × segundos_de_tolerancia`. Si tu rate es 10 RPS y querés tolerar picos de 3 segundos, `burst = 30`. En NGINX esto se configura con `burst=30 nodelay` para procesar sin delay adicional, o sin `nodelay` para espaciarlos."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
-    },
-    {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "NGINX Documentation – limit_req_zone (nginx.org)",
+      "url": "https://nginx.org/en/docs/http/ngx_http_limit_req_module.html"
     }
   ],
   "relatedSlugs": [

@@ -5,14 +5,16 @@
   "category": "electronica",
   "icon": "⚡",
   "formulaId": "servo-pwm-angulo",
-  "intro": "Basic electronics is governed by Ohm's Law, Kirchhoff's Laws, and semiconductor principles. Calculations of resistance, power, voltage, and current are the foundation for designing and maintaining circuits. Calculate servo output angle from PWM pulse width. Standard: 1ms = 0°, 1.5ms = 90°, 2ms = 180°. Free and fast. Values are current as of 2026 and reviewed regularly to keep you updated.",
-  "keyTakeaway": "Standard servo: pulses 1–2 ms every 20 ms (50 Hz). **Angle = (pulse − 1) × 180**. Pulse 1.5ms = center 90°.",
+  "intro": "A servo PWM angle calculator converts a PWM (Pulse Width Modulation) pulse width — measured in milliseconds — into a physical rotation angle for hobby and industrial servo motors. The standard RC servo protocol uses a 50 Hz signal (20 ms period) where a pulse between 1.0 ms and 2.0 ms commands the servo horn from 0° to its maximum range (typically 90°, 180°, or 270°). The core formula is: **Angle = ((Pulse − Pulse_min) / (Pulse_max − Pulse_min)) × Range°**. Use this calculator when writing microcontroller code (Arduino, Raspberry Pi), calibrating ESCs, debugging servo jitter, or mapping analog inputs to servo positions in robotics and RC projects.",
+  "keyTakeaway": "**Angle = ((Pulse_ms − 1.0) / (2.0 − 1.0)) × Range°** — e.g., 1.5 ms on a 180° servo = ((1.5−1.0)/1.0)×180 = **90° (dead center)**.",
   "useCases": [
-    "Circuit design and analysis involving servo angle PWM calculation",
-    "Validate theoretical calculations before building the circuit",
-    "Teaching basic and advanced electronics",
-    "Estimate parameters for microcontroller projects (Arduino, ESP32, STM32)",
-    "Troubleshooting existing circuits"
+    "Writing Arduino/Raspberry Pi firmware: converting a joystick ADC reading (0–1023) to a PWM pulse width and verifying the expected servo angle before deploying to hardware.",
+    "Robotics arm calibration: confirming that each joint servo receives the correct pulse to reach a target angle (e.g., elbow at 45° requires 1.25 ms on a standard 180° servo).",
+    "RC aircraft/drone setup: mapping aileron, elevator, and rudder trim values (expressed in μs) to exact control surface deflection angles to prevent over-travel damage.",
+    "Pan-tilt camera gimbal programming: calculating pulse widths for both axes so the camera sweeps from −90° to +90° smoothly without hitting mechanical stops.",
+    "Servo ESC calibration: verifying endpoint pulses (1.0 ms = full reverse, 1.5 ms = neutral, 2.0 ms = full forward) on a brushless motor electronic speed controller.",
+    "3D printer / CNC filament cutter: converting a G-code angle parameter into a servo pulse duration to cut filament at a precise angle.",
+    "Educational electronics labs: teaching students the relationship between duty cycle, pulse width, and mechanical output in PWM-controlled actuators."
   ],
   "fields": [
     {
@@ -58,53 +60,49 @@
     ],
     "result": "Pulse 1.5ms = 90° (center)"
   },
-  "explanation": "**Electronics** is governed by Ohm's Law, Kirchhoff's Laws, and Faraday's Law. Applying formulas prevents costly errors and electrical failures.\n\n## How It's Calculated\n\nCalculate servo output angle from PWM pulse width. Standard: 1ms = 0°, 1.5ms = 90°, 2ms = 180°. Free and instant.\n\nThis calculator applies the formula with your input values, checking typical ranges and alerting you to unreasonable values.\n\n## Final Notes\n\nThis calculation is a reference guide only. For critical decisions (financial, medical, legal), consult with a specialized professional. Values are current as of 2026 and reviewed regularly.",
+  "explanation": "## How It's Calculated\n\nThe standard RC servo protocol (defined by the original Futaba/JR convention and adopted universally) uses a **fixed 50 Hz refresh rate** (20 ms frame). The position of the servo horn is determined solely by the **high-pulse duration** within that frame — not by the duty cycle percentage alone.\n\n```\n// Core formula\nAngle (°) = ((Pulse_ms - Pulse_min) / (Pulse_max - Pulse_min)) × Range°\n\n// Where standard defaults are:\nPulse_min = 1.0 ms   // corresponds to 0°\nPulse_max = 2.0 ms   // corresponds to Range°\nPulse_mid = 1.5 ms   // corresponds to Range° / 2 (center)\n\n// Pulse width in microseconds (μs) — used in Arduino's writeMicroseconds():\nPulse_μs = Pulse_ms × 1000\nAngle = ((Pulse_μs - 1000) / 1000) × Range°\n\n// Inverse — angle to pulse:\nPulse_ms = Pulse_min + (Angle / Range°) × (Pulse_max - Pulse_min)\n```\n\n**Duty cycle** is a secondary derived value:\n```\nDuty_cycle (%) = (Pulse_ms / 20 ms) × 100\n// At 1.5 ms: (1.5 / 20) × 100 = 7.5 %\n```\n\n---\n\n## Reference Table\n\nStandard pulse-to-angle mapping for the three most common servo ranges at default endpoints (1.0 ms – 2.0 ms):\n\n| Pulse Width (ms) | Pulse (μs) | 90° Servo | 180° Servo | 270° Servo | Duty Cycle |\n|:---:|:---:|:---:|:---:|:---:|:---:|\n| 1.000 | 1000 | 0° | 0° | 0° | 5.00 % |\n| 1.125 | 1125 | 11.25° | 22.5° | 33.75° | 5.63 % |\n| 1.250 | 1250 | 22.5° | 45° | 67.5° | 6.25 % |\n| 1.375 | 1375 | 33.75° | 67.5° | 101.25° | 6.88 % |\n| 1.500 | 1500 | 45° | 90° | 135° | 7.50 % |\n| 1.625 | 1625 | 56.25° | 112.5° | 168.75° | 8.13 % |\n| 1.750 | 1750 | 67.5° | 135° | 202.5° | 8.75 % |\n| 1.875 | 1875 | 78.75° | 157.5° | 236.25° | 9.38 % |\n| 2.000 | 2000 | 90° | 180° | 270° | 10.00 % |\n\n> ⚠️ Many digital servos accept extended ranges: **0.5 ms – 2.5 ms** (common on Hitec, Savöx). Always check your datasheet before sending pulses outside 1.0–2.0 ms.\n\n---\n\n## Typical Cases\n\n**Case 1 — Standard 180° servo at center (1.5 ms)**\nA Tower Pro MG996R commanded with `servo.writeMicroseconds(1500)` on Arduino:\n- Angle = ((1.5 − 1.0) / (2.0 − 1.0)) × 180° = **90°**\n- Duty cycle = 1.5 / 20 = 7.5 %\n- The horn sits at dead center; this is the calibration reference point.\n\n**Case 2 — Extended-range servo (0.5 ms – 2.5 ms, 270° travel)**\nA Hitec HS-785HB winch servo with extended endpoints:\n- Pulse = 0.5 ms → 0° (full CCW)\n- Pulse = 1.5 ms → ((1.5 − 0.5) / (2.5 − 0.5)) × 270° = (1.0 / 2.0) × 270° = **135° (center)**\n- Pulse = 2.5 ms → 270° (full CW)\n- Using default 1.0–2.0 ms range on this servo only uses 135° of its 270° travel.\n\n**Case 3 — Arduino `servo.write(angle)` vs. `writeMicroseconds(μs)`**\nThe Arduino Servo library internally maps `write(45)` on a 180° servo to approximately 1250 μs:\n- Pulse_μs = 1000 + (45 / 180) × 1000 = 1000 + 250 = **1250 μs = 1.25 ms**\n- Verify: Angle = ((1.25 − 1.0) / 1.0) × 180° = 0.25 × 180° = **45° ✓**\n\n---\n\n## Common Errors\n\n1. **Confusing duty cycle % with pulse width ms** — A 7.5 % duty cycle at 50 Hz is 1.5 ms, but if someone accidentally programs a 7.5 ms pulse (37.5 % duty), the servo receives a signal outside its valid range (typically 1–2 ms) and stalls or burns out its internal driver.\n\n2. **Using the wrong frame period** — RC servos operate at 50 Hz (20 ms frames). Some digital servos accept up to 333 Hz (3 ms frames). If you send a 50 Hz formula-derived duty cycle to a 333 Hz frame, the calculated pulse width will be 6.67× too short, causing the servo to go limp or snap to one endpoint.\n\n3. **Ignoring datasheet endpoint variations** — Not all servos use 1.0–2.0 ms. Budget servos often clip at 1.1–1.9 ms (only 160° of a labeled \"180°\" servo), while premium servos extend to 0.5–2.5 ms. Assuming 1.0–2.0 ms universally causes 10–25% angle error.\n\n4. **Sending pulses outside the mechanical stop range** — Commanding a 180° servo with 0.5 ms (below its minimum) forces the motor to stall against the mechanical stop, drawing 500–1000 mA continuously and overheating the motor winding within seconds.\n\n5. **Forgetting to account for servo horn offset** — Even at the mathematically correct pulse, a horn mounted off-center by one spline tooth introduces a fixed angular offset (typically ±9–18° depending on spline count: 24-spline = 15° increments, 25-spline = 14.4°). The formula gives electrical angle, not mechanical angle if the horn isn't zeroed.\n\n6. **Integer truncation in microcontroller code** — Using integer arithmetic: `int pulse = (angle / 180) * 1000 + 1000;` with angle = 45 yields `(45/180)` = 0 in integer math → pulse = 1000 μs → **0° instead of 45°**. Always cast to float first.\n\n---\n\n## Related Calculators\n\n- [Duty Cycle Calculator](/duty-cycle) — Convert pulse width and period to duty cycle percentage and back.\n- [Frequency & Period Calculator](/frecuencia-periodo) — Confirm your 50 Hz servo frame period or compute PWM frequency from clock prescalers.\n- [Ohm's Law Calculator](/ley-de-ohm) — Size the current-limiting resistor or power supply for your servo driver circuit.\n- [Unit Converter: Time](/conversor-tiempo) — Convert between ms, μs, and ns when reading oscilloscope measurements of PWM signals.\n",
   "faq": [
     {
-      "q": "What PWM frequency should I use for servos?",
-      "a": "Standard servos use 50 Hz. Modern digital servos respond better at 200–300 Hz for improved response time."
+      "q": "What is the standard PWM pulse range for RC servos?",
+      "a": "The universally accepted standard is **1.0 ms to 2.0 ms** at a 50 Hz refresh rate (20 ms frame period), with 1.5 ms as the center/neutral position. This convention originated with the Futaba and JR RC radio systems and has been adopted by virtually all analog hobby servos. Some manufacturers use a wider range of 0.5–2.5 ms for extended travel; always verify in the datasheet."
     },
     {
-      "q": "Why do servos use 50 Hz?",
-      "a": "Historical convention from the first servos. Modern digital servos perform better at higher frequencies like 200–300 Hz."
+      "q": "Why does the Arduino Servo library sometimes not reach the full 180°?",
+      "a": "The Arduino `Servo.write(angle)` function maps 0–180° to approximately 544–2400 μs by default — not the strict 1000–2000 μs range. If your servo's mechanical range only corresponds to 1000–2000 μs, the library's wider mapping causes it to hit the mechanical stop before sending 0° or 180°. Fix this by using `servo.attach(pin, 1000, 2000)` to explicitly set min/max microseconds, or use `writeMicroseconds()` directly with your calculated pulse."
     },
     {
-      "q": "Can I use extended pulse widths to get more than 180°?",
-      "a": "Some servos accept 0.5–2.5 ms pulses to cover 270° or more. Always check your servo's datasheet for supported range."
+      "q": "What's the difference between an analog and a digital servo regarding PWM?",
+      "a": "Both analog and digital servos receive the same 1.0–2.0 ms PWM position command signal. The difference is internal: analog servos read the incoming pulse directly to drive the motor, while digital servos sample the pulse and then drive the motor with an internal PWM at 300–400 Hz, delivering faster response and higher holding torque. Digital servos can also accept command updates at higher rates (up to 333 Hz) compared to the analog standard of 50 Hz."
     },
     {
-      "q": "How do I control servos with Arduino?",
-      "a": "Use the Servo.h library. The servo.write(degrees) command handles PWM automatically."
+      "q": "How do I calculate the pulse width needed for a specific angle?",
+      "a": "Use the inverse formula: **Pulse_ms = Pulse_min + (Angle / Range°) × (Pulse_max − Pulse_min)**. Example: to command 60° on a 180° servo with standard endpoints — Pulse = 1.0 + (60/180) × (2.0−1.0) = 1.0 + 0.333 = **1.333 ms (1333 μs)**. In Arduino code: `int us = 1000 + (float(angle) / 180.0) * 1000;` then `servo.writeMicroseconds(us);`."
     },
     {
-      "q": "What's the difference between torque and speed?",
-      "a": "Datasheets list torque in kg·cm and speed in sec/60°. A 20 kg·cm servo is industrial-grade; 1–3 kg·cm is hobby-grade."
+      "q": "Can I use this formula for continuous rotation servos?",
+      "a": "No. Continuous rotation (CR) servos have had their internal feedback pot removed or bypassed, so the PWM pulse no longer maps to an angle — it maps to **speed and direction**: 1.5 ms = stop, 1.0 ms = full speed one direction, 2.0 ms = full speed the other. The angle formula is physically meaningless for CR servos. Use a tachometer or encoder if you need to track rotation on a CR servo."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all our calculators are completely free with no registration required."
+      "q": "What happens if I send a pulse wider than 2.0 ms to a standard servo?",
+      "a": "The servo will attempt to rotate beyond its mechanical end-stop, stalling its DC motor against the physical limit. A stalled hobby servo typically draws **500 mA to over 1 A** (vs. ~5–10 mA at no load), which can overheat the motor windings, strip plastic gears, and burn the H-bridge driver IC within seconds. Most quality servos have a built-in mechanical stop at the limit of travel, but sustained stall current causes thermal damage. Never command a pulse outside the servo's rated range."
     },
     {
-      "q": "How accurate are the results?",
-      "a": "Results are approximate guides. We use internationally validated standard formulas. For critical applications, consult a professional."
+      "q": "How accurate is the linear PWM-to-angle relationship in practice?",
+      "a": "The relationship is **approximately linear** across the middle 60–70% of travel but can show up to ±3–5° of non-linearity near the endpoints due to the potentiometer taper curve inside the servo's feedback mechanism. High-quality servos (e.g., Savöx, Hitec Karbonite series) use linear-taper pots or contactless magnetic encoders to achieve ±1° linearity across full range. For precision applications (robotic surgery, antenna trackers), calibrate the actual angle at 5+ reference pulses and build a lookup table instead of relying solely on the formula."
     },
     {
-      "q": "Is my data stored or shared?",
-      "a": "No. All calculations run in your browser. We never send data to any server."
+      "q": "What oscilloscope settings should I use to verify my servo PWM signal?",
+      "a": "Set the time base to **5 ms/div** (so the full 20 ms frame fits in ~4 divisions), trigger on rising edge, and set vertical scale to 3.3 V/div or 5 V/div depending on your logic level. The high pulse (1.0–2.0 ms) should be clearly visible. Use the oscilloscope's cursors to measure the pulse width directly in μs — divide by 1000 to get ms and plug into the formula. A 1.5 ms pulse should appear as 1500 μs wide at logic HIGH, followed by 18.5 ms at logic LOW."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "NIST – Digital Control of Physical Systems (PWM fundamentals)",
+      "url": "https://www.nist.gov/publications/digital-control-physical-systems"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Wikipedia – Servo control (RC servo PWM protocol)",
+      "url": "https://en.wikipedia.org/wiki/Servo_control"
     }
   ],
   "slug": "servo-pwm-angle",

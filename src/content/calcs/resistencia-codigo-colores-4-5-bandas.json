@@ -6,14 +6,14 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "resistencia-codigo-colores-4-5-bandas",
-  "intro": "Las leyes físicas son universales y deterministas. Conocer las fórmulas te permite resolver problemas de movimiento, energía, fuerzas, ondas, termodinámica y electromagnetismo aplicados a la vida real. Decodificá el valor de una resistencia por sus bandas de colores (4 o 5 bandas). Valor nominal, tolerancia, mínimo y máximo. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Colores dígitos: Negro=0, Marrón=1, Rojo=2, Naranja=3, Amarillo=4, Verde=5, Azul=6, Violeta=7, Gris=8, Blanco=9. Tolerancia dorado=±5%, plateado=±10%, marrón=±1%.",
+  "intro": "La calculadora de resistencia por código de colores te permite determinar el valor óhmico exacto de una resistencia a partir de las bandas de color pintadas en su cuerpo. El estándar IEC 60062 define este sistema: cada color representa un dígito (0–9), un multiplicador (×1 a ×10⁹) y una tolerancia (±1% a ±20%). Para una resistencia de 4 bandas, la fórmula es Valor = (d1×10 + d2) × multiplicador; para 5 bandas, Valor = (d1×100 + d2×10 + d3) × multiplicador. Se usa en electrónica analógica, reparación de placas, armado de circuitos y selección de componentes pasivos.",
+  "keyTakeaway": "**Valor (4 bandas) = (Banda1×10 + Banda2) × Multiplicador ± Tolerancia%** — Ejemplo: Rojo-Rojo-Marrón-Dorado → (2×10+2)×10 = **220 Ω ±5%** (rango: 209–231 Ω)",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de resistencia por código de colores",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Verificar el valor de una resistencia sin multímetro, leyendo directamente las bandas de color con la calculadora para confirmar que el componente es el correcto antes de soldar en una placa.",
+    "Seleccionar la resistencia limitadora adecuada para un LED: con la calculadora obtenés el valor exacto y su rango de tolerancia para asegurarte de que la corriente no supere los 20 mA típicos del LED.",
+    "Controlar el stock de un taller de electrónica: identificar rápidamente resistencias mezcladas en cajones sin etiqueta, ingresando las bandas para obtener el valor nominal y la serie E a la que pertenecen.",
+    "Armar un divisor de tensión con valores de resistencia precisos: calculás el valor nominal y los rangos mínimo/máximo para evaluar el error máximo en la tensión de salida del divisor.",
+    "Estudiar electrónica básica y practicar la lectura del código de colores como parte de la preparación para exámenes de tecnicatura o ingeniería electrónica."
   ],
   "fields": [
     {
@@ -309,53 +309,45 @@
     ],
     "result": "220 Ω ± 5% (209-231 Ω)"
   },
-  "explanation": "La **física aplicada** resuelve problemas cotidianos: desde la caída libre hasta la electricidad del hogar. Fórmulas validadas en experimentos durante siglos.\n\n## Cómo se calcula\n\nDecodificá el valor de una resistencia por sus bandas de colores (4 o 5 bandas). Valor nominal, tolerancia, mínimo y máximo · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl valor de una resistencia con código de colores se obtiene combinando los dígitos de las bandas significativas con el multiplicador, y luego se aplica la tolerancia para obtener el rango admisible.\n\n**Resistencia de 4 bandas:**\n```\nValor (Ω) = (Banda1 × 10 + Banda2) × Multiplicador\nMínimo    = Valor × (1 − Tolerancia/100)\nMáximo    = Valor × (1 + Tolerancia/100)\n```\n\n**Resistencia de 5 bandas:**\n```\nValor (Ω) = (Banda1 × 100 + Banda2 × 10 + Banda3) × Multiplicador\nMínimo    = Valor × (1 − Tolerancia/100)\nMáximo    = Valor × (1 + Tolerancia/100)\n```\n\n---\n\n## Tabla de referencia\n\n### Dígitos y multiplicadores por color (IEC 60062)\n\n| Color     | Dígito | Multiplicador | Tolerancia |\n|-----------|--------|---------------|------------|\n| Negro     | 0      | ×1            | —          |\n| Marrón    | 1      | ×10           | ±1%        |\n| Rojo      | 2      | ×100          | ±2%        |\n| Naranja   | 3      | ×1.000        | —          |\n| Amarillo  | 4      | ×10.000       | —          |\n| Verde     | 5      | ×100.000      | ±0,5%      |\n| Azul      | 6      | ×1.000.000    | ±0,25%     |\n| Violeta   | 7      | ×10.000.000   | ±0,1%      |\n| Gris      | 8      | ×100.000.000  | ±0,05%     |\n| Blanco    | 9      | —             | —          |\n| Dorado    | —      | ×0,1          | ±5%        |\n| Plateado  | —      | ×0,01         | ±10%       |\n| Sin banda | —      | —             | ±20%       |\n\n> **Nota:** Los colores Marrón, Rojo, Verde, Azul, Violeta y Gris aparecen tanto como dígito/multiplicador como tolerancia (usos en resistencias de precisión de 5 bandas).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Resistencia de 4 bandas: Rojo-Rojo-Marrón-Dorado\n```\nDígitos:       2, 2\nMultiplicador: ×10 (Marrón)\nTolerancia:    ±5% (Dorado)\n\nValor   = (2×10 + 2) × 10 = 220 Ω\nMínimo  = 220 × (1 − 0,05) = 209 Ω\nMáximo  = 220 × (1 + 0,05) = 231 Ω\n```\nEsta es una de las resistencias más comunes en circuitos de LEDs con fuente de 12 V.\n\n### Caso 2 — Resistencia de 4 bandas: Naranja-Naranja-Naranja-Dorado\n```\nDígitos:       3, 3\nMultiplicador: ×1.000 (Naranja)\nTolerancia:    ±5% (Dorado)\n\nValor   = (3×10 + 3) × 1.000 = 33.000 Ω = 33 kΩ\nMínimo  = 33.000 × 0,95 = 31.350 Ω\nMáximo  = 33.000 × 1,05 = 34.650 Ω\n```\nValor típico de pull-up/pull-down en entradas digitales.\n\n### Caso 3 — Resistencia de 5 bandas (precisión): Rojo-Violeta-Verde-Marrón-Marrón\n```\nDígitos:       2, 7, 5\nMultiplicador: ×10 (Marrón)\nTolerancia:    ±1% (Marrón)\n\nValor   = (2×100 + 7×10 + 5) × 10 = 275 × 10 = 2.750 Ω = 2,75 kΩ\nMínimo  = 2.750 × 0,99 = 2.722,5 Ω\nMáximo  = 2.750 × 1,01 = 2.777,5 Ω\n```\nResistencias de 5 bandas con tolerancia ±1% o menor pertenecen a la serie E96 y se usan en instrumentación de precisión.\n\n---\n\n## Errores comunes\n\n1. **Leer las bandas en sentido contrario:** Las resistencias se leen de izquierda a derecha, empezando por la banda más cercana a uno de los extremos. La banda de tolerancia (dorado, plateado o marrón) siempre va al final. Invertir el orden da un valor completamente diferente —por ejemplo, Dorado-Marrón-Rojo-Rojo leído al revés da 220 Ω, pero leído al derecho daría un valor erróneo.\n\n2. **Confundir dorado (×0,1) con amarillo (dígito 4) como multiplicador:** El dorado **solo** aparece en la posición de multiplicador o tolerancia, nunca como dígito. Su valor multiplicador es ×0,1 (para resistencias de fracción de ohm, como 2,2 Ω = Rojo-Rojo-Dorado-Dorado).\n\n3. **Ignorar la tolerancia al dimensionar circuitos:** Una resistencia de 1 kΩ ±10% puede medir entre 900 Ω y 1.100 Ω. En divisores de tensión o filtros RC esto puede modificar la frecuencia de corte hasta un 10%, lo que en audio o comunicaciones es crítico.\n\n4. **Confundir resistencias de 4 y 5 bandas:** Una resistencia de 5 bandas con la banda de tolerancia marrón (±1%) puede confundirse con una de 4 bandas si no se identifica correctamente cuál es la banda final. La distancia física entre la última banda y el cuerpo de la resistencia suele ser mayor para la tolerancia.\n\n5. **Aplicar la fórmula de 4 bandas a una resistencia de 5 bandas:** Esto produce un error de un orden de magnitud. Por ejemplo, Verde-Azul-Negro-Naranja-Marrón (5 bandas) = 560.000 Ω = 560 kΩ ±1%; si se leyera como 4 bandas, el resultado sería 56 × 1.000 = 56 kΩ, un error de 10×.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de Ley de Ohm (V, I, R)](/calculadora-ley-ohm-voltaje-corriente-resistencia) — Calculá tensión, corriente o resistencia con cualquier valor obtenido aquí.\n- [Calculadora de potencia eléctrica (P = V·I)](/calculadora-potencia-electrica-p-vi) — Determiná la potencia disipada por la resistencia para elegir el wattaje correcto (1/4 W, 1/2 W, 1 W, etc.).\n- [Calculadora de resistencia para LED](/calculadora-resistencia-led-serie-paralelo) — Usá el valor de tu resistencia para verificar que limita correctamente la corriente del LED.\n- [Calculadora de divisor de voltaje](/calculadora-divisor-voltaje-resistencias) — Diseñá divisores resistivos teniendo en cuenta la tolerancia real de cada componente.\n",
   "faq": [
     {
-      "q": "¿Cómo sé si es 4 o 5 bandas?",
-      "a": "Contá las bandas. 4 bandas = tolerancia ±5% o ±10% (general). 5 bandas = precisión ±1% o mejor."
+      "q": "¿Cómo sé para qué lado leer las bandas de una resistencia?",
+      "a": "La banda de tolerancia (dorado ±5%, plateado ±10% o marrón ±1%) siempre es la última y generalmente está más separada del resto. Empezás a leer desde el extremo opuesto a esa banda. Si la resistencia tiene bandas simétricas y no podés determinar el sentido, medí con multímetro para confirmar."
     },
     {
-      "q": "¿Desde qué lado leo?",
-      "a": "Orientá la banda de tolerancia (dorada o plateada) a la DERECHA. Leé izquierda a derecha."
+      "q": "¿Qué diferencia hay entre una resistencia de 4 y una de 5 bandas?",
+      "a": "Las de 4 bandas tienen 2 dígitos significativos + multiplicador + tolerancia, con precisión típica de ±5% o ±10% (series E12 y E24). Las de 5 bandas tienen 3 dígitos + multiplicador + tolerancia, lo que permite valores de la serie E96 con precisión de ±1% o menos, usadas en instrumentación y circuitos de alta precisión."
     },
     {
-      "q": "¿Y si no tiene 4ta banda?",
-      "a": "Sin banda de tolerancia = ±20% (resistencias antiguas). Muy raro hoy."
+      "q": "¿Qué es la serie E y para qué sirve?",
+      "a": "Las series E (E6, E12, E24, E48, E96, E192) son conjuntos normalizados de valores de resistencia definidos por IEC 60063. La serie E12 tiene 12 valores por década (ej.: 10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82 Ω y sus múltiplos). Garantizan que al aplicar la tolerancia, los rangos de dos valores consecutivos se toquen sin solaparse, cubriendo toda la escala sin huecos ni redundancias."
     },
     {
-      "q": "¿Por qué 5 bandas son más caras?",
-      "a": "Tolerancia ±1% requiere fabricación más controlada. 5% vale $5, 1% $15, 0.1% $100 en AR."
+      "q": "¿Cómo calculo la potencia que debe soportar una resistencia?",
+      "a": "Usás la fórmula P = I² × R o equivalentemente P = V² / R (Ley de Joule). Por ejemplo, una resistencia de 220 Ω con 12 V disipa P = 12² / 220 ≈ 0,65 W, por lo que necesitás un componente de al menos 1 W de potencia nominal. Las resistencias estándar de carbón son de 1/4 W (0,25 W) y 1/2 W (0,5 W)."
     },
     {
-      "q": "¿Sirve para SMD?",
-      "a": "No. Las SMD usan código numérico (3-4 dígitos): 103=10kΩ, 4R7=4.7Ω."
+      "q": "¿Qué significa la tolerancia en la práctica?",
+      "a": "La tolerancia es el margen de error garantizado por el fabricante respecto al valor nominal. Una resistencia de 1 kΩ ±5% puede medir entre 950 Ω y 1.050 Ω y seguir siendo un componente válido. En circuitos críticos (filtros activos, osciladores, amplificadores de precisión) se usan tolerancias de ±1% o ±0,1% para minimizar la desviación del comportamiento del circuito."
     },
     {
-      "q": "¿Colores gastados?",
-      "a": "Medí con multímetro en modo Ω — más confiable que interpretar colores dudosos."
+      "q": "¿Puedo leer resistencias SMD (para montaje superficial) con este sistema?",
+      "a": "No. Las resistencias SMD no usan código de colores sino un código numérico impreso en el cuerpo: en el sistema de 3 dígitos, los dos primeros son dígitos significativos y el tercero es el exponente de 10 (ej.: '472' = 47 × 10² = 4.700 Ω). Las SMD de precisión usan el sistema EIA-96 con un código alfanumérico de 4 caracteres definido por IEC 60062."
     },
     {
-      "q": "¿Qué es la 6ta banda?",
-      "a": "Coeficiente térmico (ppm/°C): marrón=100, rojo=50, naranja=15, azul=10. Solo en precisión."
+      "q": "¿Qué hago si los colores de las bandas son difíciles de distinguir (rojo/naranja, marrón/negro)?",
+      "a": "Lo más confiable es medir directamente con un multímetro en modo resistencia (Ω). Otra opción es revisar el color bajo luz natural o con lupa, ya que la iluminación artificial puede distorsionar la percepción. El color rojo es más vivo y cálido que el naranja; el marrón tiene tonalidad más oscura y terrosa que el negro puro."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Las resistencias de precisión con banda marrón de tolerancia se leen igual que las de 4 bandas?",
+      "a": "No. En una resistencia de 4 bandas con banda marrón de tolerancia (±1%), las primeras tres bandas son los dos dígitos y el multiplicador, igual que siempre. Pero en una de 5 bandas, el marrón puede aparecer tanto como tercer dígito significativo como en la posición de tolerancia. Siempre contá el total de bandas antes de aplicar la fórmula correcta."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
-    },
-    {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Wikipedia ES — Código de colores de resistencias (IEC 60062)",
+      "url": "https://es.wikipedia.org/wiki/Código_de_colores_de_resistencias"
     }
   ],
   "relatedSlugs": [

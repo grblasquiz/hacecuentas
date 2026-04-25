@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "🌿",
   "formulaId": "tamano-repo-git-commits-branches",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Estimación tamaño según commits/archivos · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá commits, archivos y KB por archivo y obtené tamaño estimado al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "Esta calculadora te permite estimar el tamaño total de un repositorio Git a partir de tres variables clave: cantidad de commits, cantidad de archivos y el peso promedio por archivo. Git no almacena solo el estado actual del proyecto, sino el historial completo de cambios (objetos blob, tree, commit y tag). Por eso, un repo con 1.000 commits y 500 archivos de ~120 KB promedio puede pesar fácilmente entre 50 y 80 MB. La fórmula base es: Tamaño ≈ (archivos × KB_promedio) + (commits × overhead_por_commit), donde el overhead típico de Git por commit ronda los 1–4 KB en objetos comprimidos. Usala para planificar almacenamiento en servidores, estimar tiempos de clonado, o definir si conviene usar Git LFS para archivos grandes.",
+  "keyTakeaway": "**Tamaño ≈ (Archivos × KB_prom × 0.6) + (Commits × 2 KB)**: el factor 0.6 refleja la compresión zlib de Git (pack-files), y los 2 KB por commit corresponden al overhead promedio de objetos de historial en repos reales.",
   "useCases": [
-    "Dimensionar Tamaño repo Git antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Planificar el espacio en disco o en un servidor de CI/CD (GitHub Actions, GitLab CI) antes de clonar un monorepo con miles de commits.",
+    "Decidir si implementar Git LFS (Large File Storage) cuando el repo supera los 1–2 GB por tener assets binarios como imágenes PSD, videos o modelos 3D.",
+    "Estimar el tiempo de clonado (git clone) en una conexión de 100 Mbps: un repo de 500 MB tarda ~40 segundos, uno de 5 GB puede tardar más de 7 minutos.",
+    "Auditar repos corporativos que crecieron sin control para identificar si vale la pena hacer un git filter-repo para limpiar archivos grandes del historial."
   ],
   "fields": [
     {
@@ -65,49 +65,49 @@
     ],
     "result": "~60 MB"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nEstimación tamaño según commits/archivos · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nGit almacena cada versión de cada archivo como un objeto **blob**, comprimido con zlib. Los commits y árboles (trees) son objetos adicionales de menor tamaño. La estimación parte de esta fórmula:\n\n```\nTamaño_working_tree  = Archivos × KB_promedio\nTamaño_objetos_Git   = (Archivos × KB_promedio × factor_compresión) + (Commits × overhead_commit)\n\nfactor_compresión    ≈ 0.55 – 0.65 (texto puro ≈ 0.3, binarios ≈ 0.85)\noverhead_commit      ≈ 1 – 4 KB (promedio real: ~2 KB)\n\nTamaño_total_repo    = Tamaño_working_tree + Tamaño_objetos_Git\n```\n\n**Ejemplo concreto (el del enunciado):**\n- 1.000 commits, 500 archivos, 120 KB/archivo\n- Working tree: 500 × 120 KB = 60.000 KB ≈ **58,6 MB**\n- Objetos Git: (60.000 × 0.60) + (1.000 × 2) = 38.000 KB ≈ **37,1 MB**\n- Total estimado: ≈ **95 MB** (sin pack-file optimizado)\n- Después de `git gc --aggressive`: ≈ **55–65 MB** ✓ (coincide con el ejemplo ~60 MB)\n\n---\n\n## Tabla de referencia\n\n| Commits | Archivos | KB/archivo | Tipo de contenido | Tamaño estimado |\n|--------:|--------:|----------:|-------------------|-----------------|\n| 100 | 50 | 20 | App web pequeña | ~2–4 MB |\n| 500 | 200 | 80 | Proyecto Python/Node | ~20–35 MB |\n| 1.000 | 500 | 120 | Monorepo frontend | ~55–95 MB |\n| 5.000 | 1.000 | 200 | App empresarial | ~400–700 MB |\n| 20.000 | 3.000 | 500 | Kernel / framework grande | ~4–10 GB |\n| 50.000 | 10.000 | 50 | Historial largo, texto puro | ~2–5 GB |\n\n> Los tamaños son post-`git gc`. Sin recolección de basura pueden ser 2–3× mayores.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Proyecto frontend React (mediano)\n- **Inputs:** 800 commits, 350 archivos, 90 KB/archivo\n- Working tree: 350 × 90 = 31.500 KB ≈ 30,8 MB\n- Objetos: (31.500 × 0.55) + (800 × 2) = 18.925 KB ≈ 18,5 MB\n- **Total estimado:** ~49 MB → tras `git gc`: ~32–38 MB\n- **Consejo:** tamaño saludable, no requiere LFS.\n\n### Caso 2 — App móvil con assets de diseño\n- **Inputs:** 2.000 commits, 1.200 archivos, 800 KB/archivo (incluye PNG, PSD)\n- Working tree: 1.200 × 800 = 960.000 KB ≈ 937 MB\n- Objetos: (960.000 × 0.82) + (2.000 × 3) = 793.200 KB ≈ 775 MB\n- **Total estimado:** ~1,7 GB → **crítico**, se recomienda Git LFS urgente.\n- **Consejo:** mover binarios a LFS reduce el repo a <100 MB clonables.\n\n### Caso 3 — Microservicio con historial limpio\n- **Inputs:** 300 commits, 80 archivos, 15 KB/archivo\n- Working tree: 80 × 15 = 1.200 KB ≈ 1,2 MB\n- Objetos: (1.200 × 0.30) + (300 × 1.5) = 810 KB ≈ 0,8 MB\n- **Total estimado:** ~2 MB → **óptimo**, clona en segundos incluso en 4G.\n\n---\n\n## Errores comunes\n\n1. **Confundir tamaño del working directory con tamaño del repo:** el working tree (archivos actuales) puede ser 60 MB, pero la carpeta `.git/` con todo el historial puede triplicar ese valor. Siempre analizá `du -sh .git/`.\n\n2. **Ignorar archivos binarios en el historial:** un archivo `.psd` de 50 MB commiteado por error y luego \"borrado\" sigue ocupando espacio en `.git/objects`. La eliminación real requiere `git filter-repo --path archivo.psd --invert-paths`.\n\n3. **No correr `git gc` antes de medir:** sin recolección de basura, los objetos sueltos (loose objects) pueden inflar el repo 2–3×. Ejecutá `git gc --aggressive --prune=now` para obtener el tamaño real comprimido.\n\n4. **Subestimar el factor de compresión en binarios:** Git comprime muy bien texto (factor ~0.25–0.35) pero casi nada los JPEG, MP4 o ZIP (factor ~0.95–1.0). Calcular con factor plano de 0.6 sobreestima repos de texto y subestima los de multimedia.\n\n5. **Olvidar el overhead de ramas y tags:** cada branch y tag es un objeto de referencia. En repos con cientos de ramas activas esto puede sumar varios MB de refs y pack-refs que no se contabilizan en la estimación simple.\n\n---\n\n## Calculadoras relacionadas\n\n- [Optimización de imágenes JPG para la web](/calculadora-jpg-calidad-tamano-web-optimizacion) — calculá cuánto peso ahorrás al comprimir imágenes antes de commitearlas.\n- [Tamaño y distancia ideal de monitor](/calculadora-monitor-tamano-distancia-ideal) — para configurar tu entorno de desarrollo correctamente.\n- [Bitrate y tamaño de archivo de video](/calculadora-video-bitrate-tamano-archivo) — si tu repo incluye assets de video, estimá su peso antes de agregarlo.\n- [Tamaño de imagen en píxeles y megapíxeles](/calculadora-tamano-imagen-pixeles-megapixeles) — convertí dimensiones de imágenes para decidir si van al repo o a Git LFS.\n",
   "faq": [
     {
-      "q": "¿Binarios grandes?",
-      "a": "Git LFS para > 100MB per file."
+      "q": "¿Cuánto pesa un commit de Git en promedio?",
+      "a": "Un objeto commit en Git ocupa entre 200 y 500 bytes sin comprimir (contiene hash del árbol, autor, fecha y mensaje). Comprimido con zlib en un pack-file, el overhead baja a 150–400 bytes. Sin embargo, cada commit también referencia objetos tree y blob, por lo que el costo real en historial ronda los **1–4 KB por commit** dependiendo de cuántos archivos modifica. En repos muy activos con diffs grandes, puede superar los 10 KB por commit."
     },
     {
-      "q": "¿Historia pesada?",
-      "a": "shallow clone --depth=1 acelera."
+      "q": "¿Qué es Git LFS y cuándo conviene usarlo?",
+      "a": "Git LFS (Large File Storage) reemplaza archivos grandes en el repo por punteros de texto liviano (<200 bytes), mientras el binario real se almacena en un servidor externo. Se recomienda cuando **archivos individuales superan los 50 MB** o cuando el `.git/` crece más de 1–2 GB. GitHub impone un límite de 100 MB por archivo en repos normales y recomienda LFS para archivos de diseño, audio, video o datasets. La instalación es `git lfs install` y el tracking con `git lfs track '*.psd'`."
     },
     {
-      "q": "¿Subárboles?",
-      "a": "Submodule o subtree para módulos."
+      "q": "¿Por qué el repo pesa más después de borrar archivos grandes?",
+      "a": "En Git, borrar un archivo con `git rm` solo elimina su presencia en el working tree y en los commits futuros. El objeto blob original **sigue en `.git/objects/`** y seguirá en el historial indefinidamente. Para eliminarlo físicamente hay que reescribir el historial con `git filter-repo --path archivo --invert-paths` (la herramienta recomendada actualmente, reemplazando al deprecado `git filter-branch`) y luego hacer un `git gc --aggressive --prune=now`."
     },
     {
-      "q": "¿Git GC?",
-      "a": "Limpia objetos sueltos."
+      "q": "¿Cuánto tarda en clonar un repo según su tamaño?",
+      "a": "El tiempo de clonado depende del tamaño del pack-file que transfiere el servidor. En una conexión de **100 Mbps reales (~12 MB/s)**: un repo de 50 MB tarda ~4 segundos, uno de 500 MB tarda ~42 segundos, y uno de 5 GB puede tardar más de 7 minutos. GitHub y GitLab ofrecen `--depth=1` (shallow clone) para clonar solo el último estado sin historial, reduciendo el tamaño transferido hasta un **90%** en repos con historial largo."
     },
     {
-      "q": "¿Pack?",
-      "a": "Git comprime automáticamente."
+      "q": "¿Cómo medir el tamaño real de un repo en mi máquina?",
+      "a": "En Linux/macOS usá `du -sh .git/` para ver el peso de la carpeta Git y `du -sh --exclude='.git' .` para el working tree. En Windows: `Get-ChildItem -Recurse | Measure-Object -Property Length -Sum`. Para un análisis detallado de qué objetos ocupan más, `git count-objects -vH` muestra el conteo y tamaño de loose objects y pack-files. La herramienta **git-sizer** (de GitHub) da un reporte completo con advertencias automáticas."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cuál es el límite de tamaño de repo en las plataformas más populares?",
+      "a": "Los límites oficiales en 2025 son: **GitHub** recomienda repos <5 GB y bloquea push si superan 100 MB por archivo (soft limit de repo: 10 GB). **GitLab.com** (plan gratuito): 5 GB por repo. **Bitbucket Cloud**: 2 GB por repo. **Azure DevOps**: sin límite oficial, pero recomienda <10 GB. Superados estos umbrales, el rendimiento de operaciones como `git log`, `git blame` y los pipelines de CI/CD se degrada significativamente."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿El factor de compresión de Git es igual para todos los archivos?",
+      "a": "No. Git usa compresión **zlib (deflate)** que es muy eficiente con texto plano: archivos `.js`, `.py`, `.html` o `.md` se comprimen al 25–40% de su tamaño original. Los archivos ya comprimidos como **JPEG, MP4, ZIP o PDF** prácticamente no se comprimen (factor 0.95–1.0) porque ya tienen entropía alta. Por eso, commitear binarios multimedia es especialmente costoso: 100 MB de JPEG ocupan ~98 MB en el pack-file, mientras que 100 MB de código fuente Python ocupan ~30 MB."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué comando uso para ver qué archivos ocupan más espacio en el historial?",
+      "a": "El comando `git rev-list --objects --all | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' | grep '^blob' | sort -t ' ' -k3 -rn | head -20` lista los 20 blobs más grandes del historial. Alternativamente, la herramienta **git-sizer** (open source de GitHub) o **BFG Repo Cleaner** tienen reportes más amigables. Estos análisis son el primer paso antes de limpiar el historial con `git filter-repo`."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
+      "name": "Git - Internals: Git Objects (documentación oficial git-scm.com)",
+      "url": "https://git-scm.com/book/en/v2/Git-Internals-Git-Objects"
     },
     {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "Wikipedia ES — Git",
+      "url": "https://es.wikipedia.org/wiki/Git"
     }
   ],
   "relatedSlugs": [

@@ -8,8 +8,8 @@
   "icon": "🌐",
   "audience": "global",
   "formulaId": "subnetting-mascara-red-cidr",
-  "intro": "Technical calculations in IT and network engineering are fundamental: latency, bandwidth, SLA uptime, cloud costs, and algorithm complexity. Accurate calculations upfront prevent infrastructure over-provisioning. Calculate hosts per subnet, subnet masks, and broadcast addresses instantly and for free. Our values are current as of 2026 and reviewed regularly to keep you up to date.",
-  "keyTakeaway": "Formula: **Hosts = 2^(32-n) - 2**. Calculate hosts per subnet, subnet masks, and broadcast addresses directly from your CIDR notation.",
+  "intro": "The CIDR Subnetting Calculator computes key IPv4 network parameters from a CIDR prefix length (/n). Given a prefix like /24, it instantly returns the subnet mask (e.g., 255.255.255.0), the number of usable host addresses (2^(32−n) − 2), the number of equivalent /24 blocks the subnet spans, and a plain-English summary. CIDR (Classless Inter-Domain Routing) was standardized in RFC 1519 (1993) and later updated by RFC 4632, replacing the rigid Class A/B/C system. It is the universal addressing scheme used in every modern network, from home routers to cloud VPCs and ISP backbone allocations.",
+  "keyTakeaway": "**Usable Hosts = 2^(32 − prefix) − 2** — a /24 yields 2^8 − 2 = **254 hosts**; a /16 yields 65,534; a /30 yields only 2 (ideal for point-to-point links).",
   "seoKeywords": [
     "CIDR subnetting calculator",
     "subnet mask calculator",
@@ -25,11 +25,10 @@
     "IPv4 CIDR breakdown"
   ],
   "useCases": [
-    "Technical calculations for CIDR subnetting projects",
-    "Students and IT professionals learning networking",
-    "Validate theoretical results before implementation",
-    "Teaching and learning subnet masking concepts",
-    "Quick reference for network design projects"
+    "Designing LAN segments for an office: choosing /24 (254 hosts) vs /23 (510 hosts) to avoid wasting addresses while leaving room for growth.",
+    "Configuring AWS VPC subnets: AWS reserves 5 addresses per subnet (not 2), so a /28 gives only 11 usable hosts instead of the standard 14.",
+    "Allocating IP blocks to ISP customers: a /29 (6 usable hosts) for a small business, a /26 (62 hosts) for a medium site, a /22 (1,022 hosts) for a campus.",
+    "Splitting a /22 into smaller subnets for VLAN segmentation: verifying how many /26 subnets fit (16) and how many hosts each carries (62)."
   ],
   "fields": [
     {
@@ -68,57 +67,45 @@
     ],
     "result": "254"
   },
-  "explanation": "Technical calculators for IT: latency, storage, SLA uptime, cloud costs. Decisions that scale.\n\n## How It Works\n\nCalculate hosts per subnet, subnet masks, and broadcast addresses instantly and for free.\n\nThis calculator applies the CIDR formula with your input values, verifying typical ranges and alerting you to values outside normal parameters.\n\n## Important Notes\n\nThis calculation is for reference only. For critical decisions (financial, medical, legal), consult with a specialized professional. Values are current as of 2026 and reviewed periodically.",
+  "explanation": "## How It's Calculated\n\nCIDR subnetting is based on two core formulas derived from the 32-bit IPv4 address space:\n\n```\nHost bits      = 32 − prefix_length\nTotal addresses = 2 ^ host_bits\nUsable hosts   = 2 ^ host_bits − 2        ← subtract network & broadcast\nSubnet mask    = 0xFFFFFFFF << host_bits   → converted to dotted-decimal\n/24 subnets    = 2 ^ (prefix_length − 24)  (only when prefix ≥ 24)\n             OR 1 / 2 ^ (24 − prefix_length) expressed as a fraction (prefix < 24)\n```\n\n**Example — /26:**\n- Host bits = 32 − 26 = 6\n- Usable hosts = 2^6 − 2 = **62**\n- Mask in binary: `11111111.11111111.11111111.11000000` → **255.255.255.192**\n- This is 1/4 of a /24 block (4 subnets of /26 fit in one /24)\n\n**Example — /22:**\n- Host bits = 32 − 22 = 10\n- Usable hosts = 2^10 − 2 = **1,022**\n- Mask: `11111111.11111111.11111100.00000000` → **255.255.252.0**\n- Spans **4** contiguous /24 blocks\n\n**Example — /30:**\n- Host bits = 2 → Usable hosts = **2**\n- Mask: 255.255.255.252\n- Classic choice for point-to-point WAN or router interconnects\n\n---\n\n## Reference Table\n\n| CIDR | Subnet Mask | Usable Hosts | /24 Equivalent | Common Use |\n|------|-------------|-------------|----------------|------------|\n| /8   | 255.0.0.0 | 16,777,214 | 65,536 /24s | Large ISP / Class A legacy |\n| /16  | 255.255.0.0 | 65,534 | 256 /24s | Enterprise campus / AWS VPC max |\n| /20  | 255.255.240.0 | 4,094 | 16 /24s | Large office, cloud region subnet |\n| /22  | 255.255.252.0 | 1,022 | 4 /24s | University building / data center rack |\n| /23  | 255.255.254.0 | 510 | 2 /24s | Medium office LAN |\n| /24  | 255.255.255.0 | 254 | 1 /24 | Standard LAN segment |\n| /25  | 255.255.255.128 | 126 | ½ /24 | Split LAN (wired vs. wireless) |\n| /26  | 255.255.255.192 | 62 | ¼ /24 | Department VLAN |\n| /27  | 255.255.255.224 | 30 | ⅛ /24 | Small team / IoT segment |\n| /28  | 255.255.255.240 | 14 | 1/16 /24 | Printer/server cluster |\n| /29  | 255.255.255.248 | 6 | 1/32 /24 | Small branch office |\n| /30  | 255.255.255.252 | 2 | 1/64 /24 | Point-to-point link |\n| /31  | 255.255.255.254 | 2* | 1/128 /24 | P2P (RFC 3021, no broadcast) |\n| /32  | 255.255.255.255 | 1 (host route) | 1/256 /24 | Loopback / static host route |\n\n> **/31 special case:** RFC 3021 (2000) allows /31 for point-to-point links without a network/broadcast address, giving 2 usable host addresses despite the formula yielding 0.\n\n---\n\n## Typical Cases\n\n### Case 1: Standard Office LAN (/24)\nA small company needs one subnet for 180 employees. A **/24** provides 254 usable addresses — enough headroom without wasting a full /23 (510 hosts). Subnet mask: **255.255.255.0**. Network: 192.168.1.0/24, hosts range 192.168.1.1–192.168.1.254, broadcast 192.168.1.255.\n\n### Case 2: AWS VPC Subnet Planning (/26)\nAn engineer creates a public subnet in us-east-1a. AWS reserves **5 addresses** (network, router, DNS, future use ×2, broadcast), so a **/26** yields **59 usable IPs** (not 62). For 100 EC2 instances, a /25 (123 usable in AWS) is the right pick.\n\n### Case 3: ISP Backbone Point-to-Point (/30)\nA router-to-router link between two ISP PoPs uses **/30** (255.255.255.252): 4 total addresses, 2 usable. IP A = x.x.x.1, IP B = x.x.x.2, broadcast = x.x.x.3. No wasted space, no routing overhead.\n\n---\n\n## Common Errors\n\n1. **Forgetting to subtract 2 from total addresses.** Every subnet loses the network address (all host bits = 0) and the broadcast address (all host bits = 1). A /28 has 16 total addresses but only **14 usable hosts**.\n\n2. **Confusing prefix length with host count.** /24 does NOT mean 24 hosts — it means 24 network bits, leaving 8 host bits → 254 hosts. A common beginner error that leads to undersized subnets.\n\n3. **Ignoring cloud provider reservations.** AWS, Azure, and GCP each reserve **5 addresses** per subnet (not 2 like standard IPv4), so always subtract 5 instead of 2 when sizing cloud subnets.\n\n4. **Using the wrong mask for VLANs.** Entering 255.255.255.0 when you need 255.255.255.128 (/25) splits the subnet incorrectly; hosts on the upper half (x.x.x.128–x.x.x.254) become unreachable from the lower half without a router.\n\n5. **Treating /31 and /32 as unusable.** /31 is valid for point-to-point links (RFC 3021); /32 is the standard notation for host routes and loopback addresses — both are actively used in production networks.\n\n---\n\n## Related Calculators\n\n- IP address tools are common in networking; explore other tech calculators on [Hacé Cuentas](/)",
   "faq": [
     {
-      "q": "What does CIDR notation mean?",
-      "a": "CIDR (Classless Inter-Domain Routing) notation like /24 represents a network with a 24-bit network portion. The /n indicates how many bits define the network."
+      "q": "What does the /n number in CIDR notation actually mean?",
+      "a": "The /n prefix length specifies how many of the 32 bits in an IPv4 address are the **network portion**. The remaining (32 − n) bits identify individual hosts. A /24 has 24 network bits and 8 host bits, supporting up to 254 usable hosts per subnet. This notation was standardized in RFC 4632 (obsoleting the older Class A/B/C system)."
     },
     {
-      "q": "How do you calculate usable hosts in a subnet?",
-      "a": "Use the formula: Hosts = 2^(32-n) - 2, where n is the CIDR number. You subtract 2 because the network and broadcast addresses cannot be assigned to devices."
+      "q": "Why do we subtract 2 from the total host count?",
+      "a": "Every subnet reserves two addresses: the **network address** (all host bits set to 0, e.g., 192.168.1.0 in a /24) and the **broadcast address** (all host bits set to 1, e.g., 192.168.1.255). These cannot be assigned to devices. The formula is always: Usable Hosts = 2^(32 − prefix) − 2."
     },
     {
-      "q": "What's the difference between /24, /25, and /26?",
-      "a": "/24 has 254 usable hosts, /25 has 126, and /26 has 62. Each additional bit halves the number of available addresses."
+      "q": "How do I convert a CIDR prefix to a subnet mask?",
+      "a": "Set the first n bits to 1 and the remaining (32 − n) bits to 0 in a 32-bit binary string, then split into four 8-bit octets and convert each to decimal. Example: /26 → `11111111.11111111.11111111.11000000` → **255.255.255.192**. Alternatively, the last non-255 octet value = 256 − (2^host bits in that octet)."
     },
     {
-      "q": "When should I use /30 subnetting?",
-      "a": "/30 provides 4 total addresses with 2 usable hosts—perfect for point-to-point router links and WAN connections."
+      "q": "What is the difference between /24 and /25?",
+      "a": "A /24 has 8 host bits → **254 usable hosts**, mask 255.255.255.0. A /25 has 7 host bits → **126 usable hosts**, mask 255.255.255.128. A /25 is exactly half a /24, commonly used to split a LAN into two VLANs (e.g., wired and wireless), with the lower half at x.x.x.0–127 and upper half at x.x.x.128–255."
     },
     {
-      "q": "What is a subnet mask and why does it matter?",
-      "a": "A subnet mask (like 255.255.255.0 for /24) defines which portion of an IP address is the network vs. host. It's essential for routing and network design."
+      "q": "When should I use a /30 vs. a /31 for point-to-point links?",
+      "a": "A **/30** (255.255.255.252) is the traditional choice: 4 addresses, 2 usable, 1 network, 1 broadcast. A **/31** (RFC 3021, year 2000) eliminates the network/broadcast overhead, giving both addresses to the two endpoints — saving IP space on backbone links. Modern routers and IOS/Junos support /31 natively; use it when conserving public IP space matters."
     },
     {
-      "q": "What is VLSM (Variable Length Subnet Masking)?",
-      "a": "VLSM allows different subnet sizes within the same network, enabling efficient use of address space without wasting IPs."
+      "q": "How does AWS subnet sizing differ from standard IPv4?",
+      "a": "AWS **reserves 5 IP addresses** per subnet instead of the standard 2: (1) network address, (2) VPC router, (3) AWS DNS, (4) future use, (5) broadcast. So a **/28** in AWS yields 16 − 5 = **11 usable IPs**, not 14. Always account for this when sizing VPC subnets for EC2 instances, RDS, or Lambda ENIs."
     },
     {
-      "q": "How accurate are these results?",
-      "a": "Results follow standard, internationally-validated formulas used in production networks. For critical decisions, verify with a networking professional."
+      "q": "What is the largest and smallest valid CIDR block in IPv4?",
+      "a": "The largest is **/0** (the entire IPv4 space, 4,294,967,296 addresses — used in default routes: 0.0.0.0/0). The smallest practical host subnet is **/30** (2 usable hosts) or **/31** (RFC 3021). A **/32** is a host route (single IP), used for loopbacks and static routing entries, with 1 usable address and no subnet overhead."
     },
     {
-      "q": "Is this calculator completely free?",
-      "a": "Yes, all our calculators are free to use with no registration required."
-    },
-    {
-      "q": "Do you collect or store my data?",
-      "a": "No. All calculations run in your browser. We never send your data to any server."
+      "q": "How many /26 subnets can I carve out of a /22?",
+      "a": "A /22 contains 2^(26−22) = **16 subnets of /26** size. Each /26 holds 62 usable hosts. Total usable hosts across all 16 subnets: 16 × 62 = **992** (vs. 1,022 for the /22 itself — the difference of 30 comes from the 16 × 2 reserved network/broadcast addresses in the smaller subnets)."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
-    },
-    {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
-    },
-    {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "RFC 4632 – Classless Inter-domain Routing (CIDR): The Internet Address Assignment and Aggregation Plan (IETF / RFC Editor)",
+      "url": "https://www.rfc-editor.org/rfc/rfc4632"
     }
   ],
   "dataUpdate": {

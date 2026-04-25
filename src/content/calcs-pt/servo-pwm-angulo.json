@@ -23,14 +23,14 @@
     "servo 50 hz",
     "pwm 1ms 2ms ângulo"
   ],
-  "intro": "A eletrônica básica se rege por leis de Ohm, Kirchhoff e princípios de semicondutores. Cálculos de resistência, potência, tensão e amperagem são a base para projetar e manter circuitos. Calcule o ângulo de saída do servo conforme a largura do pulso PWM. Padrão: 1ms = 0°, 1,5ms = 90°, 2ms = 180°. Rápido e gratuito. Os valores estão atualizados para 2026 e são revisados periodicamente.",
-  "keyTakeaway": "Servo padrão: pulsos de 1-2 ms a cada 20 ms (50 Hz). **Ângulo = (pulso − 1) × 180**. Pulso 1,5ms = centro 90°.",
+  "intro": "Esta calculadora converte a largura de pulso PWM (em milissegundos) no ângulo correspondente de um servomotor RC. A fórmula central é **Ângulo = (pulso − 1,0) × (faixa / 1,0)**, onde o pulso varia tipicamente de 1,0 ms (posição mínima) a 2,0 ms (posição máxima), com 1,5 ms representando o centro exato. Utilizada em robótica, aeromodelismo, automação e projetos com Arduino/Raspberry Pi, permite calcular com precisão a posição angular sem necessidade de testes físicos iterativos.",
+  "keyTakeaway": "**Ângulo = (pulso_ms − 1,0) × faixa_graus** — Ex.: pulso de 1,75 ms em servo de 180° → (1,75 − 1,0) × 180 = **135°**",
   "useCases": [
-    "Projeto e análise de circuitos com calculadora de ângulo servo por pulso PWM",
-    "Validar cálculos teóricos antes de montar o circuito",
-    "Ensino de eletrônica básica e avançada",
-    "Estimar parâmetros para projetos com microcontroladores (Arduino, ESP32, STM32)",
-    "Solução de problemas em circuitos existentes"
+    "Configurar a posição neutra de um aileron ou profundor em aeromodelos RC, garantindo que o pulso de 1,5 ms corresponda exatamente a 0° de deflexão.",
+    "Programar movimentos precisos de braço robótico com Arduino, calculando os valores de pulso PWM para cada junta antes de escrever o código.",
+    "Calibrar o ângulo de direção de um carrinho RC ou robô de seguidor de linha, determinando os pulsos de corte máximo esquerdo e direito.",
+    "Verificar a linearidade de um servomotor em bancada, mapeando pulsos de 1,0 ms a 2,0 ms em passos de 0,1 ms e conferindo se os ângulos resultantes são uniformemente distribuídos.",
+    "Adaptar servos de faixa 270° (como o MG996R em modo estendido) para projetos de câmera pan-tilt, calculando o pulso exato para cada ângulo de enquadramento desejado."
   ],
   "fields": [
     {
@@ -76,57 +76,45 @@
     ],
     "result": "Pulso 1,5ms = 90° (centro)"
   },
-  "explanation": "A **eletrônica** se rege por leis de Ohm, Kirchhoff, Faraday. Aplicar fórmulas evita erros custosos e falhas elétricas.\n\n## Como se calcula\n\nCalcule o ângulo de saída do servo conforme a largura do pulso PWM. Padrão: 1ms = 0°, 1,5ms = 90°, 2ms = 180°. Rápido e gratuito.\n\nEsta calculadora aplica a fórmula com os valores que você insere, verificando faixas típicas e alertando para valores fora do razoável.\n\n## Notas finais\n\nEste cálculo é uma referência orientativa. Para decisões críticas (financeiras, médicas, legais), consulte um profissional especializado. Os valores estão atualizados para 2026 e são revisados periodicamente.",
+  "explanation": "## Como se calcula\n\nA relação entre largura de pulso PWM e ângulo de um servomotor é **linear** dentro da faixa de operação. A fórmula geral é:\n\n```\nÂngulo (°) = (pulso_ms − pulso_min_ms) / (pulso_max_ms − pulso_min_ms) × faixa_°\n\nSimplificado para padrão RC (1,0–2,0 ms):\nÂngulo (°) = (pulso_ms − 1,0) × faixa_°\n\nInversa (pulso a partir do ângulo desejado):\npulso_ms = (ângulo / faixa_°) + 1,0\n\nPorcentagem da faixa:\n% = (pulso_ms − 1,0) / 1,0 × 100\n```\n\n> **Frequência do sinal PWM:** sermos RC operam com período de **20 ms (50 Hz)**. O pulso ativo ocupa de 1,0 ms a 2,0 ms desse período; o restante é nível baixo. Microcontroladores como o Arduino usam `Servo.writeMicroseconds(valor)` onde o valor está entre **1000 µs e 2000 µs**.\n\n---\n\n## Tabela de referência\n\nValores padronizados para servo de **180°** (padrão RC mais comum):\n\n| Pulso (ms) | Pulso (µs) | Ângulo (°) | % da Faixa | Posição          |\n|:----------:|:----------:|:----------:|:----------:|:----------------:|\n| 1,00       | 1000       | 0°         | 0%         | Mínimo           |\n| 1,10       | 1100       | 18°        | 10%        | —                |\n| 1,25       | 1250       | 45°        | 25%        | ¼ da faixa       |\n| 1,50       | 1500       | 90°        | 50%        | **Centro exato** |\n| 1,75       | 1750       | 135°       | 75%        | ¾ da faixa       |\n| 1,90       | 1900       | 162°       | 90%        | —                |\n| 2,00       | 2000       | 180°       | 100%       | Máximo           |\n\nPara servo de **270°** (ex.: MG996R modo estendido, DS3218):\n\n| Pulso (ms) | Ângulo (°) | Posição          |\n|:----------:|:----------:|:----------------:|\n| 1,00       | 0°         | Mínimo           |\n| 1,50       | 135°       | Centro           |\n| 2,00       | 270°       | Máximo           |\n\nPara servo de **90°** (mini-servos de aeromodelo):\n\n| Pulso (ms) | Ângulo (°) | Posição          |\n|:----------:|:----------:|:----------------:|\n| 1,00       | 0°         | Mínimo           |\n| 1,50       | 45°        | Centro           |\n| 2,00       | 90°        | Máximo           |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Arduino controlando servo de leme em barco RC\nUm servo de **180°** é usado para controlar o leme. O código envia pulso de **1,3 ms**:\n```\nÂngulo = (1,3 − 1,0) × 180 = 0,3 × 180 = 54°\n% da faixa = 0,3 / 1,0 × 100 = 30%\n```\nO leme está a 54° do batente esquerdo, ou seja, 36° à esquerda do centro (90°).\n\n### Caso 2 — Câmera pan-tilt com servo de 270°\nPara apontar a câmera a **180°** em um servo de faixa 270°:\n```\npulso = (180 / 270) + 1,0 = 0,667 + 1,0 = 1,667 ms (≈ 1667 µs)\n```\nNo Arduino: `servo.writeMicroseconds(1667);`\n\n### Caso 3 — Verificação de linearidade em bancada\nTestando servo com pulsos de 1,0 ms a 2,0 ms em passos de 0,25 ms, faixa de 180°:\n- 1,00 ms → 0° ✓\n- 1,25 ms → 45° ✓\n- 1,50 ms → 90° ✓\n- 1,75 ms → 135° ✓\n- 2,00 ms → 180° ✓\n\nSe o servo mecânico marcar 88° no pulso de 1,50 ms, há **erro de 2°** indicando descalibração ou folga mecânica.\n\n---\n\n## Erros comuns\n\n1. **Confundir µs com ms:** A biblioteca `Servo.h` do Arduino usa `write()` em graus (0–180) ou `writeMicroseconds()` em µs (1000–2000). Usar `writeMicroseconds(1.5)` — com ponto flutuante — resulta em valor truncado para 1 µs, travando o servo na posição mínima.\n\n2. **Assumir que todos os servos operam de 1,0 ms a 2,0 ms:** Alguns servos de alta performance (ex.: Futaba S3003) operam de **0,9 ms a 2,1 ms**, dando faixa real de 200 µs a mais. Usar a fórmula padrão causa erro angular de até ~18° nos extremos.\n\n3. **Ignorar a tensão de alimentação:** Servos MG995/MG996R especificados para **4,8 V a 6,0 V** respondem de forma diferente fora dessa faixa. A posição angular pode variar até 5° com queda de tensão, pois o torque diminui e a resistência mecânica vence o sinal.\n\n4. **Calcular ângulo absoluto em vez de relativo ao centro:** Em aeromodelismo, deflexão de superfície é medida em relação ao centro (±graus), não em relação ao mínimo. Um pulso de 1,75 ms em servo de 180° dá **ângulo absoluto = 135°**, mas **deflexão = +45° em relação ao centro (90°)**.\n\n5. **Não respeitar o período de 20 ms (50 Hz):** Gerar pulsos PWM com frequência diferente (ex.: 60 Hz ou 100 Hz) pode danificar servos analógicos ou causar comportamento errático. Servos digitais suportam até 330 Hz, mas apenas se especificado pelo fabricante.\n\n---\n\n## Calculadoras relacionadas\n\nEsta é a calculadora principal de servo PWM. Para projetos de eletrônica e automação, confira outras ferramentas da categoria no site.\n",
   "faq": [
     {
-      "q": "O que é PWM em um servo?",
-      "a": "PWM (Modulação por Largura de Pulso) controla o ângulo do servo pela duração do pulso elétrico. Pulsos mais longos resultam em ângulos maiores."
+      "q": "Qual é a largura de pulso padrão para o centro de um servo RC?",
+      "a": "O padrão da indústria RC define **1,5 ms (1500 µs)** como posição central para servos de qualquer faixa. Esse valor foi estabelecido pelo protocolo PWM de aeromodelismo desenvolvido na década de 1970 e é seguido pela esmagadora maioria dos fabricantes (Hitec, Futaba, Tower Pro, JR). Servos fora desse padrão geralmente declaram explicitamente o pulso de centro no datasheet."
     },
     {
-      "q": "Por que o padrão é 50 Hz?",
-      "a": "Convenção histórica dos primeiros servos. Servos digitais modernos aceitam até 300 Hz para melhor resposta e precisão."
+      "q": "Por que o sinal PWM para servos usa frequência de 50 Hz e não outra?",
+      "a": "O período de 20 ms (50 Hz) foi definido pelos primeiros sistemas de rádio controle analógicos, que precisavam de tempo suficiente para multiplexar vários canais em sequência. Servos analógicos **atualizam sua posição a cada pulso recebido (50 vezes por segundo)**, velocidade suficiente para controle suave. Servos digitais modernos (ex.: Hitec D-series) podem operar a 333 Hz para resposta mais rápida, mas **servos analógicos ligados a 333 Hz podem superaquecer** pela ativação contínua do circuito de controle."
     },
     {
-      "q": "Como usar com Arduino?",
-      "a": "Use a biblioteca Servo.h. A função servo.write(graus) controla o PWM automaticamente sem necessidade de cálculos manuais."
+      "q": "Como converter o resultado desta calculadora para uso no Arduino?",
+      "a": "Com a biblioteca `Servo.h`, use `servo.writeMicroseconds(valor_us)` onde `valor_us = pulso_ms × 1000`. Para ângulo direto, `servo.write(angulo)` funciona para faixa de 0–180°, mas internamente o Arduino mapeia esse valor para 544–2400 µs (não o padrão 1000–2000 µs). Para maior precisão, **sempre use `writeMicroseconds()`** com o valor calculado. Exemplo: pulso de 1,75 ms → `servo.writeMicroseconds(1750)`."
     },
     {
-      "q": "Posso usar 0,5-2,5 ms para mais de 180°?",
-      "a": "Alguns servos aceitam 0,5-2,5 ms para cobrir 270° ou mais. Sempre verifique o datasheet do seu modelo."
+      "q": "O que acontece se eu enviar um pulso menor que 1,0 ms ou maior que 2,0 ms?",
+      "a": "A maioria dos servos possui **batentes mecânicos** que impedem o movimento além da faixa nominal. Enviar pulsos fora da janela (ex.: 0,5 ms ou 2,5 ms) força o motor a pressionar contra o batente, causando **aquecimento excessivo, consumo de corrente elevado (podendo chegar a 1–2 A) e desgaste prematuro das engrenagens**. Servos de plástico podem travar em segundos. Sempre limite o sinal ao intervalo 1,0–2,0 ms, ou ao intervalo especificado no datasheet do modelo."
     },
     {
-      "q": "O que é um servo digital?",
-      "a": "Servos digitais usam microcontrolador interno e respondem melhor a frequências PWM de 200-300 Hz, não apenas 50 Hz."
+      "q": "A relação pulso × ângulo é sempre linear?",
+      "a": "**Idealmente sim**, mas na prática existe uma pequena não-linearidade mecânica nas extremidades da faixa (últimos e primeiros 5–10°), causada pela geometria das engrenagens e pelo sistema de feedback potenciométrico. Para aplicações de robótica de precisão, é recomendável fazer uma **curva de calibração real** medindo o ângulo com um goniômetro digital em 9–10 pontos de pulso. Servos digitais de alta qualidade (ex.: Dynamixel, Hitec HSB-9380TH) possuem linearidade de ±0,5° em toda a faixa."
     },
     {
-      "q": "Como interpretar torque e velocidade?",
-      "a": "O datasheet especifica kg·cm (torque) e seg/60° (velocidade). Servo 20 kg·cm é industrial; 1-3 kg·cm é hobby."
+      "q": "Quais são as faixas de ângulo mais comuns nos servos disponíveis no mercado?",
+      "a": "Os modelos mais encontrados são: **90°** (mini-servos de aeromodelo, lemes de barco); **180°** (padrão RC, mais comum em Arduino e robótica educacional); **270°** (servos de câmera pan-tilt e braços robóticos, ex.: MG996R modo estendido, DS3218); e **360°** (servos de rotação contínua, onde o pulso controla **velocidade e direção**, não posição — 1,5 ms = parado, <1,5 ms = sentido anti-horário, >1,5 ms = sentido horário). A faixa sempre deve ser confirmada no datasheet do fabricante."
     },
     {
-      "q": "Como saber a faixa do meu servo?",
-      "a": "A maioria dos servos padrão tem faixa de 180°. Servos com faixa estendida podem chegar a 270° ou mais. Consulte o datasheet."
+      "q": "Como calcular o pulso necessário para um ângulo específico (cálculo inverso)?",
+      "a": "A fórmula inversa é: **pulso_ms = (ângulo_desejado / faixa_total) + 1,0**. Exemplo: quero posicionar um servo de 270° em 200° → pulso = (200 / 270) + 1,0 = 0,741 + 1,0 = **1,741 ms (1741 µs)**. No Arduino: `servo.writeMicroseconds(1741)`. Essa fórmula assume pulso_min = 1,0 ms e pulso_max = 2,0 ms; ajuste os valores base caso o datasheet do seu servo indique limites diferentes (ex.: 0,9 ms – 2,1 ms)."
     },
     {
-      "q": "Os resultados são precisos?",
-      "a": "São orientativos. Usamos fórmulas padrão validadas internacionalmente. Para casos críticos, consulte um profissional."
-    },
-    {
-      "q": "Meus dados estão sendo salvos?",
-      "a": "Não. Os cálculos rodam no seu navegador. Nenhum dado é enviado para servidores."
+      "q": "Servos de rotação contínua funcionam igual na fórmula?",
+      "a": "**Não.** Servos de rotação contínua (continuous rotation servos) têm o potenciômetro interno substituído por um divisor de tensão fixo, eliminando o feedback de posição. Nesses modelos, o pulso controla **velocidade angular**: 1,5 ms = parado, 1,0 ms = velocidade máxima em um sentido, 2,0 ms = velocidade máxima no sentido oposto. A fórmula desta calculadora **não se aplica** a eles; use-os apenas para controle de velocidade em rodas de robôs seguidores de linha ou esteiras."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
-    },
-    {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Wikipedia PT – Servomecanismo: princípio de funcionamento e sinal PWM",
+      "url": "https://pt.wikipedia.org/wiki/Servomotor"
     }
   ],
   "dataUpdate": {

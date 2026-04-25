@@ -5,14 +5,14 @@
   "category": "electronica",
   "icon": "⚡",
   "formulaId": "stepper-pasos-grado",
-  "intro": "A eletrônica básica é regida pelas leis de Ohm, Kirchhoff e princípios de semicondutores. Cálculos de resistência, potência, voltagem e amperagem são a base para projetar e manter circuitos. Calcule os passos por grau e por revolução de um motor stepper de acordo com o ângulo de passo (step angle). Com microstepping. Os valores estão atualizados para 2026 e são revisados periodicamente para mantê-lo informado.",
-  "keyTakeaway": "**Passos/rev = 360° / step_angle**. Típico 1,8° = 200 passos/rev. Microstepping 1/16 = 3200 microsteps/rev.",
+  "intro": "Esta calculadora determina a quantidade de passos por revolução e passos por grau de um motor de passo (stepper motor), considerando o ângulo nativo por passo e o modo de microstepping configurado no driver. A fórmula central é: **Passos/rev = (360° ÷ ângulo_por_passo) × fator_microstep**. Motores stepper são usados em impressoras 3D, CNCs, plotters e robótica onde precisão de movimento angular é essencial. O ângulo padrão de mercado é 1,8°/passo (motor NEMA 17/23), gerando 200 passos/rev em modo full-step, e até 3200 passos/rev com microstepping 1/16.",
+  "keyTakeaway": "**Passos/rev = (360 ÷ ângulo_por_passo) × fator_microstep** — ex.: motor 1,8° com 1/16 microstepping = (360 ÷ 1,8) × 16 = **3200 passos/revolução**, equivalente a 8,89 passos por grau.",
   "useCases": [
-    "Projeto e análise de circuitos que envolvem a calculadora de passos por grau do motor stepper",
-    "Validar cálculos teóricos antes de montar o circuito",
-    "Ensino de eletrônica básica e avançada",
-    "Estimar parâmetros para projetos de microcontroladores (Arduino, ESP32, STM32)",
-    "Solução de problemas em circuitos existentes"
+    "Configurar os parâmetros steps/mm no firmware Marlin ou Klipper de uma impressora 3D com motor NEMA 17 de 1,8°/passo e driver TMC2209 em 1/16 microstepping.",
+    "Calibrar o avanço por passo de um eixo CNC router com fuso trapezoidal de 8 mm de passo, motor 1,8° e driver A4988 em 1/8 microstepping.",
+    "Calcular a resolução angular de um braço robótico articulado onde cada grau de rotação precisa ser subdividido em frações menores para movimentos suaves.",
+    "Verificar a compatibilidade entre a resolução do encoder e os microsteps de um motor 0,9°/passo (NEMA 23 de alta resolução) em aplicações de mesa giratória de precisão.",
+    "Dimensionar o microstepping necessário para atingir resolução mínima de 0,01° em um sistema de posicionamento óptico com motor stepper padrão de 1,8°/passo."
   ],
   "fields": [
     {
@@ -82,53 +82,45 @@
     ],
     "result": "3200 microsteps/rev, 8,89 passos/grau"
   },
-  "explanation": "A **eletrônica** é regida pelas leis de Ohm, Kirchhoff, Faraday. Aplicar fórmulas evita erros custosos e falhas elétricas.\n\n## Como se calcula\n\nCalcule os passos por grau e por revolução de um motor stepper de acordo com o ângulo de passo (step angle). Com microstepping. Rápido e gratuito.\n\nEsta calculadora aplica a fórmula com os valores que você inserir, verificando intervalos típicos e alertando para valores fora do razoável.\n\n## Notas finais\n\nEste cálculo é uma referência orientativa. Para decisões críticas (financeiras, médicas, legais), consulte um profissional especializado. Os valores estão atualizados para 2026 e são revisados periodicamente.",
+  "explanation": "## Como se calcula\n\nO cálculo parte de dois parâmetros físicos: o **ângulo nativo por passo** do motor (gravado na plaquinha ou datasheet) e o **fator de microstepping** configurado no driver de potência.\n\n```\nPassos por revolução = (360 ÷ ângulo_por_passo) × fator_microstep\n\nPassos por grau      = Passos_por_revolução ÷ 360\n\nGraus por passo      = 360 ÷ Passos_por_revolução\n```\n\n**Exemplo completo — motor NEMA 17 padrão:**\n- Ângulo/passo = 1,8°\n- Microstepping = 1/16\n- Passos/rev = (360 ÷ 1,8) × 16 = 200 × 16 = **3200 passos/revolução**\n- Passos/grau = 3200 ÷ 360 = **8,889 passos/grau**\n- Graus/passo = 360 ÷ 3200 = **0,1125°/passo**\n\n---\n\n## Tabela de referência\n\n| Ângulo/passo | Full-step (1/1) | 1/2 step | 1/4 step | 1/8 step | 1/16 step | 1/32 step |\n|---|---|---|---|---|---|---|\n| **0,9°** (alta res.) | 400 | 800 | 1 600 | 3 200 | 6 400 | 12 800 |\n| **1,8°** (padrão NEMA 17/23) | 200 | 400 | 800 | 1 600 | 3 200 | 6 400 |\n| **3,6°** (motor econômico) | 100 | 200 | 400 | 800 | 1 600 | 3 200 |\n| **7,5°** (motor de relutância) | 48 | 96 | 192 | 384 | 768 | 1 536 |\n| **15°** (motor unipolar simples) | 24 | 48 | 96 | 192 | 384 | 768 |\n\n> Drivers comuns: A4988 (máx. 1/16), DRV8825 (máx. 1/32), TMC2208/TMC2209 (máx. 1/256), TMC5160 (máx. 1/256).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Impressora 3D (eixo Z com fuso T8)\n- Motor: NEMA 17, 1,8°/passo → 200 passos/rev (full-step)\n- Driver: TMC2209 em 1/16 → 3 200 passos/rev\n- Fuso T8: avanço de 8 mm por revolução\n- **steps/mm = 3200 ÷ 8 = 400 passos/mm**\n- Resolução teórica: 1 ÷ 400 = **0,0025 mm por microstep**\n\n### Caso 2 — Mesa giratória de fotografia\n- Motor: NEMA 23, 0,9°/passo → 400 passos/rev (full-step)\n- Driver: DRV8825 em 1/32 → 12 800 passos/rev\n- Resolução angular: 360 ÷ 12 800 = **0,028125°/passo** (~1,69 arcminutos)\n- Para girar exatamente 90°: 12 800 × (90 ÷ 360) = **3 200 passos**\n\n### Caso 3 — CNC com eixo rotativo (4º eixo)\n- Motor: 1,8°/passo, driver A4988 em 1/8 → 1 600 passos/rev\n- Para gravar texto em cilindro com 360 posições angulares:\n- Intervalo entre posições: 1 600 ÷ 360 = **4,44 passos/posição** (arredonda para 4 ou 5)\n- Erro acumulado por volta: (4,44 − 4) × 360 = **158,4 passos ≈ 35,6°** → requer 1/16 para fechar sem erro perceptível\n\n---\n\n## Erros comuns\n\n1. **Confundir ângulo/passo com passos/revolução**: O valor \"200\" é passos/revolução, não o ângulo. O ângulo correspondente é 1,8° (= 360 ÷ 200). Inserir 200 no campo de ângulo gera resultado completamente errado.\n\n2. **Ignorar o fator de microstepping do driver**: Muitos drivers (como A4988) têm pinos MS1/MS2/MS3 que definem o modo. Se o firmware assume 1/16 mas os pinos estão em 1/8, todos os movimentos serão o dobro do esperado — erro frequente em montagens de impressoras 3D.\n\n3. **Achar que microstepping aumenta o torque**: Na prática, o microstepping **reduz o torque de retenção** entre passos (chega a cair ~30% em 1/16). Não é recomendável usar 1/32 ou 1/64 em eixos com carga elevada sem verificar o torque residual no datasheet do driver.\n\n4. **Usar ângulo de passo errado para motores de 5 fases**: Motores Vexta/Oriental de 5 fases têm ângulo padrão de **0,72°/passo** (500 passos/rev), muito diferente do 1,8° habitual. Usar a fórmula com 1,8° resulta em calibração 2,5× errada.\n\n5. **Não considerar o backlash mecânico**: A resolução calculada é **teórica**. Em sistemas com engrenagens ou fusos desgastados, o backlash (folga) pode ser de 0,1–0,5 mm, sobrepondo qualquer ganho de resolução do microstepping.\n\n---\n\n## Calculadoras relacionadas\n\nPara aprofundar o dimensionamento do seu sistema de movimento, confira também:\n- [Calculadora de Velocidade de Motor DC](/calculadora-velocidade-motor-dc)\n- [Calculadora de Torque de Motor](/calculadora-torque-motor)\n- [Calculadora de Conversão de Unidades de Ângulo](/calculadora-conversao-angulo)\n- [Calculadora de RPM e Frequência](/calculadora-rpm-frequencia)\n",
   "faq": [
     {
-      "q": "O que é microstepping?",
-      "a": "O driver divide cada passo em sub-passos eletrônicos modulando a corrente. 1/16 = 16 microsteps por passo físico."
+      "q": "Qual é o ângulo por passo mais comum em motores stepper?",
+      "a": "O ângulo de **1,8° por passo** é o padrão dominante no mercado, presente na esmagadora maioria dos motores NEMA 17 e NEMA 23 usados em impressoras 3D, CNCs e automação industrial. Isso equivale a 200 passos por revolução em modo full-step. Motores de alta resolução utilizam **0,9°/passo** (400 passos/rev), e motores de instrumentação específicos podem ter 7,5° ou 15°."
     },
     {
-      "q": "Perco torque com microstepping?",
-      "a": "Sim. O torque cai ~30% com 1/16 vs full step. Para aplicações exigentes, use half-step (compromisso)."
+      "q": "O microstepping melhora de fato a precisão do posicionamento?",
+      "a": "O microstepping melhora principalmente a **suavidade do movimento** e reduz a ressonância mecânica, mas o ganho real de precisão é limitado. Nos microsteps intermediários, o rotor não se posiciona perfeitamente nas frações angulares teóricas — o erro de posição pode chegar a **±5% do passo completo** dependendo da carga. Para aplicações que exigem precisão absoluta acima de 1/8, recomenda-se usar encoder de realimentação (sistema closed-loop)."
     },
     {
-      "q": "Stepper ou servo: quando usar cada um?",
-      "a": "Stepper: simples, aberto, preciso. Servo: malha fechada com encoder, mais rápido, mais caro."
+      "q": "Como calcular os steps/mm para uma impressora 3D com fuso T8?",
+      "a": "Use a fórmula: **steps/mm = (passos/rev) ÷ (avanço do fuso em mm)**. Para motor 1,8° com 1/16 microstepping (3200 passos/rev) e fuso T8 Lead 8mm: steps/mm = 3200 ÷ 8 = **400 passos/mm**. Para fuso T8 Lead 2mm: 3200 ÷ 2 = **1600 passos/mm**. Este valor é inserido no parâmetro `Z_STEPS_PER_MM` no Marlin ou `rotation_distance` no Klipper."
     },
     {
-      "q": "Qual a diferença entre NEMA 17 e NEMA 23?",
-      "a": "NEMA 17 (4,2cm): 30-70 oz·in, leve. NEMA 23 (5,7cm): 180-420 oz·in, mais torque."
+      "q": "Qual driver stepper suporta o maior microstepping?",
+      "a": "Os drivers da família **Trinamic TMC** (TMC2209, TMC5160, TMC2130) suportam até **1/256 microstepping**, gerando 51.200 passos/rev com motor de 1,8°. O A4988 da Allegro suporta até 1/16 (3200 passos/rev) e o DRV8825 da Texas Instruments até 1/32 (6400 passos/rev). A escolha deve equilibrar resolução desejada, frequência máxima de pulsos do controlador (pulsos/s = velocidade × steps/mm) e torque necessário."
     },
     {
-      "q": "O motor stepper pode perder passos?",
-      "a": "Sim, se a carga exceder o torque disponível. Por isso em CNC usa-se margem de 40%+."
+      "q": "Motor de 0,9°/passo vale o custo extra em relação ao de 1,8°?",
+      "a": "Depende da aplicação. Motores de 0,9°/passo custam tipicamente **30–50% mais** que os de 1,8° equivalentes, mas oferecem o dobro de passos (400 vs. 200 em full-step) e, mais importante, **menor ressonância em velocidades médias** (entre 300–800 RPM), zona problemática para motores de 1,8°. Em impressoras 3D de alta qualidade (ex.: Prusa MK4, Bambu Lab) são cada vez mais usados no eixo de extrusão direto para maior controle de fluxo."
     },
     {
-      "q": "Como ligar um motor stepper no Arduino?",
-      "a": "Use um driver como A4988 ou DRV8825. Conecte STEP e DIR aos pinos do Arduino, e alimente o driver conforme especificações."
+      "q": "Por que o torque cai com microstepping elevado?",
+      "a": "Em modo full-step, a corrente nas bobinas gera o **torque máximo de retenção** (holding torque). Em 1/2 step, o torque cai para ~70,7% (fator √2/2). Em 1/16, cai para ~19,5% do torque nominal em alguns pontos do ciclo. Isso ocorre porque o seno da fração angular de corrente diminui progressivamente. O **torque de detent** (sem corrente) permanece igual, mas o torque dinâmico disponível é significativamente reduzido — fator crítico ao dimensionar motores para cargas com atrito ou gravidade."
     },
     {
-      "q": "Qual é a máxima velocidade de um stepper?",
-      "a": "Depende do torque-velocidade. Típico: até 1000-2000 RPM em carga mínima. Acima disso, o torque cai rapidamente."
+      "q": "Como converter passos para milímetros em um eixo com correia GT2?",
+      "a": "Para eixo com correia GT2 (passo 2 mm) e polia de 20 dentes: perímetro efetivo = 20 × 2 mm = **40 mm por revolução**. Com motor 1,8° e 1/16 microstepping (3200 passos/rev): **steps/mm = 3200 ÷ 40 = 80 passos/mm**. Com polia de 16 dentes (comum em eixos XY de impressoras CoreXY): 16 × 2 = 32 mm/rev → 3200 ÷ 32 = **100 passos/mm** — valor padrão para a maioria das impressoras Voron e HyperCube."
     },
     {
-      "q": "Por que o stepper vibra em alta velocidade?",
-      "a": "Ressonância mecânica e pulsos de corrente discretos causam vibrações. Microstepping reduz isso. Aumentar frequência acima de 10kHz ajuda."
+      "q": "Existe norma ou padrão técnico que define os ângulos de passo dos stepper motors?",
+      "a": "Sim. A norma **IEC 60034-1** regula motores elétricos em geral, mas os ângulos de passo padrão para motores de passo híbridos (os mais comuns) seguem principalmente o padrão **NEMA (National Electrical Manufacturers Association)** dos EUA, que define também as dimensões mecânicas (NEMA 17 = flange 42,3 mm, NEMA 23 = 57,15 mm). O ângulo de 1,8°/passo se tornou padrão de mercado por razões de compromisso entre resolução, torque e custo de fabricação do rotor com 50 dentes por polo."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
-    },
-    {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Wikipedia PT – Motor de passo",
+      "url": "https://pt.wikipedia.org/wiki/Motor_de_passo"
     }
   ],
   "slug": "stepper-passos-grau",

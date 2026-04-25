@@ -7,13 +7,14 @@
   "audience": "global",
   "icon": "💪",
   "formulaId": "ritmo-ciclismo-watts-velocidad-aero",
-  "intro": "El entrenamiento deportivo se basa en principios fisiológicos (adaptación, supercompensación, especificidad). Las zonas de intensidad, la carga semanal y la recuperación son pilares del rendimiento. Velocidad ciclista dado watts y aerodinámica · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá watts, peso total kg y cda y obtené velocidad al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "Esta calculadora resuelve la ecuación aerodinámica completa del ciclismo en terreno plano: dado un valor de potencia en Watts, el peso total del sistema (ciclista + bicicleta) en kg, el coeficiente de arrastre aerodinámico (CdA en m²) y el coeficiente de resistencia a la rodadura (Crr), calcula la velocidad resultante en km/h. La fórmula central es el balance de potencia P = Faero·v + Frr·v, donde la resistencia aerodinámica domina a velocidades superiores a ~20 km/h. Se usa para planificar tiempos de entrenamiento, simular contrarrelojes y evaluar el impacto de mejoras de equipamiento como un casco aero o un cambio de posición en la bici.",
+  "keyTakeaway": "**P = (0.5 · ρ · CdA · v³) + (Crr · m · g · v)**: con 200 W, 80 kg, CdA 0.30 m² y Crr 0.004, la velocidad resultante es ≈ 32 km/h en llano a nivel del mar.",
   "useCases": [
-    "Resolver rápido una duda sobre watts → velocidad en ciclismo plano sin papel y lápiz.",
-    "Comparar escenarios o alternativas con números concretos.",
-    "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Planificar el ritmo objetivo en una prueba de fondo o gran fondo: sabiendo los watts sostenibles (FTP) y el CdA medido en túnel de viento o estimado, el ciclista calcula a qué velocidad promedio puede terminar 180 km de Ironman.",
+    "Cuantificar la ganancia real de un casco aero: comparar velocidad con CdA 0.32 m² (casco ciclista convencional) vs. CdA 0.27 m² (casco aero TT) manteniendo 250 W constantes.",
+    "Evaluar el efecto de perder o ganar peso en el equipo: un cuadro de carbono que ahorra 800 g reduce marginalmente Crr y peso, pero en llano el impacto es menor al 0.5 km/h versus reducir CdA.",
+    "Simular la velocidad de un ciclista amateur (150 W, 75 kg, CdA 0.38 m²) en posición hoods para ajustar la planificación nutricional y de hidratación por horas en ruta.",
+    "Preparar una estrategia de pace para una crono de 40 km: calcular cuántos watts extra se necesitan para bajar de 60 min dado el CdA medido con método aero de campo (Chung method)."
   ],
   "fields": [
     {
@@ -73,53 +74,53 @@
     ],
     "result": "~32 km/h"
   },
-  "explanation": "El **entrenamiento deportivo** combina ciencia (fisiología, biomecánica) y práctica. Las zonas de intensidad, carga progresiva, descanso y nutrición forman el sistema completo.\n\n## Cómo se calcula\n\nVelocidad ciclista dado watts y aerodinámica · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa velocidad en ciclismo plano se obtiene resolviendo el balance de potencias. La potencia entregada al sistema debe igualar la suma de la resistencia aerodinámica y la resistencia a la rodadura (en llano se ignoran la resistencia gravitacional y la aceleración en estado estacionario):\n\n```\nP = F_aero · v + F_rr · v\n\nDonde:\n  F_aero = 0.5 · ρ · CdA · v²   [N]\n  F_rr   = Crr · m · g           [N]\n\nExpandido:\n  P = (0.5 · ρ · CdA · v³) + (Crr · m · g · v)\n\nVariables:\n  P   = potencia neta en la rueda trasera [W]\n  ρ   = densidad del aire ≈ 1.225 kg/m³ (nivel del mar, 15 °C, ICAO)\n  CdA = coeficiente de arrastre × área frontal [m²]\n  v   = velocidad [m/s]  →  multiplicar × 3.6 para obtener km/h\n  Crr = coeficiente de resistencia rodadura (adimensional)\n  m   = masa total ciclista + bici [kg]\n  g   = 9.80665 m/s²\n```\n\nEsta ecuación cúbica en `v` no tiene solución analítica directa limpia, por lo que se resuelve numéricamente (bisección o Newton-Raphson convergiendo en < 10 iteraciones con tolerancia 0.001 m/s).\n\n---\n\n## Tabla de referencia\n\n### CdA típicos por posición y equipamiento\n\n| Posición / Equipo | CdA (m²) | Notas |\n|---|---|---|\n| MTB / posición erguida | 0.55 – 0.65 | Manubrio recto, maillot holgado |\n| Ruta – posición hoods | 0.36 – 0.42 | Manos en cuernos, espalda semi-plana |\n| Ruta – posición drops | 0.30 – 0.36 | Espalda plana, codos adentro |\n| Aero road bike – drops | 0.25 – 0.32 | Cuadro aero, casco estándar |\n| TT / triatlón – extensiones | 0.20 – 0.28 | Posición agresiva, casco TT |\n| TT profesional UCI optimizado | 0.17 – 0.22 | Túnel de viento, skin suit premium |\n\n### Crr típicos por tipo de superficie y cubierta\n\n| Superficie / Cubierta | Crr | Ejemplo |\n|---|---|---|\n| Asfalto pulido, tubular clínico 25 mm | 0.002 – 0.003 | Velódromo, crono |\n| Asfalto bueno, cubierta clincher 25-28 mm | 0.003 – 0.005 | Ruta estándar Argentina |\n| Asfalto deteriorado / adoquín | 0.005 – 0.008 | Calles urbanas Bs. As. |\n| Gravel compacto | 0.008 – 0.015 | Dirt road / ripio duro |\n| Pasto / tierra blanda | 0.015 – 0.030 | Cross, off-road |\n\n### Velocidades resultantes con distintas potencias (80 kg, CdA 0.32, Crr 0.004)\n\n| Potencia (W) | Velocidad (km/h) | Nivel de referencia |\n|---|---|---|\n| 100 W | ≈ 24.1 | Ciclista urbano recreativo |\n| 150 W | ≈ 28.3 | Amateur entrenado |\n| 200 W | ≈ 31.8 | Amateur competitivo |\n| 250 W | ≈ 35.0 | Cat. 4–3 federado |\n| 300 W | ≈ 37.8 | Cat. 2–1 / semi-profesional |\n| 400 W | ≈ 43.0 | Profesional WorldTour |\n\n---\n\n## Casos típicos\n\n### Caso 1 – Amateur preparando un gran fondo de 160 km\n- **Datos:** 220 W (FTP ~240 W, pace al 90%), peso total 82 kg, posición drops en ruta aero → CdA 0.30 m², Crr 0.004 (asfalto bueno)\n- **Resultado:** v ≈ **33.5 km/h** → tiempo estimado ≈ 4 h 46 min\n- **Interpretación:** Si mejora postura y logra CdA 0.26 m² (casco aero + extensiones), la velocidad sube a ≈ 35.8 km/h → ahorra ~18 minutos sin tocar watts.\n\n### Caso 2 – Triatleta en segmento de 90 km (Ironman 70.3)\n- **Datos:** 185 W, peso 75 kg (incluye bici TT de 8 kg), CdA 0.24 m², Crr 0.003 (tubeless 25 mm bien inflado)\n- **Resultado:** v ≈ **36.4 km/h** → tiempo ≈ 2 h 28 min en el segmento ciclista\n- **Interpretación:** Subir a 200 W (+15 W) daría ≈ 37.2 km/h, ahorrando ~5 min, pero a costo energético que puede pagar en la corrida.\n\n### Caso 3 – Comparación de posiciones en un ciclista de 70 kg / 180 W\n| Posición | CdA | Velocidad |\n|---|---|---|\n| Hoods relajado | 0.42 m² | 28.1 km/h |\n| Drops compacto | 0.33 m² | 31.2 km/h |\n| TT con extensiones | 0.24 m² | 34.8 km/h |\n\nEl cambio de hoods a TT con los **mismos watts** equivale a +6.7 km/h, o sea, ahorrar ~18 W para ir a la misma velocidad.\n\n---\n\n## Errores comunes\n\n1. **Usar la potencia del medidor sin descontar pérdidas mecánicas:** Los medidores de potencia en bielas o pedales miden potencia antes del tren de transmisión. La pérdida mecánica típica de una cadena limpia es 1–3 %, y puede llegar al 5 % con cadena sucia. Siempre usá la potencia real a la rueda (o aplicá un factor de eficiencia de ~0.97–0.98).\n\n2. **Ignorar la densidad del aire según altitud:** A 2 500 m s.n.m. (como en algunas rutas cordilleranas de Argentina), ρ cae a ≈ 0.94 kg/m³ (vs. 1.225 al nivel del mar). Esto reduce la resistencia aero en ≈ 23 % y aumenta la velocidad resultante hasta 2–3 km/h con los mismos watts.\n\n3. **Subestimar el CdA propio:** Muchos ciclistas asumen posición drops con CdA 0.30 m² cuando en realidad, sin un fit profesional, están más cerca de 0.38–0.42 m². Esto lleva a estimaciones de velocidad hasta 3–4 km/h más altas que la realidad.\n\n4. **Confundir masa con solo el peso del ciclista:** La masa `m` en la fórmula del Crr debe incluir al ciclista + ropa + bidones + bicicleta completa. Omitir la bici (típicamente 7–10 kg en ruta) genera errores de ≈ 0.1–0.3 km/h en la componente de rodadura.\n\n5. **Aplicar la fórmula en terreno con pendiente sin agregar la componente gravitacional:** En tramos con gradiente, hay que sumar `m · g · sin(θ) · v` al lado derecho. Una pendiente de apenas 1 % duplica la resistencia gravitacional vs. la de rodadura en un ciclista de 80 kg.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora velocidad ciclismo por watts y kg](/calculadora-velocidad-ciclismo-watts-kg) – versión simplificada con w/kg\n- [Calculadora zonas de potencia por FTP](/calculadora-zonas-potencia-ciclismo-watts-kg) – para conocer a qué zona pertenecen tus watts\n- [Test FTP y umbral de potencia](/calculadora-watts-ciclismo-ftp-umbral-test) – calculá tu FTP desde test de 20 min o rampa\n- [Calculadora FTP ciclismo](/calculadora-ftp-cycling-watts) – herramienta complementaria de FTP y potencias objetivo\n",
   "faq": [
     {
-      "q": "¿Posición aero?",
-      "a": "Drops CdA ~0.3. TT pos CdA ~0.22. Urbano 0.5."
+      "q": "¿Qué es el CdA y cómo puedo estimarlo sin túnel de viento?",
+      "a": "El CdA (coeficiente de arrastre × área frontal) es el parámetro aerodinámico clave del ciclista. Se puede estimar con el **método Chung (virtual elevation)**: rodás en un tramo de asfalto plano y conocido, grabás velocidad y potencia con un GPS + medidor de potencia, y usás software como BestBikeSplit o la hoja de cálculo original de Robert Chung para ajustar el CdA que mejor reproduce tu velocidad real. La precisión es de ±0.01–0.02 m², suficiente para tomar decisiones prácticas. Valores típicos sin medición: 0.38–0.42 m² en posición hoods, 0.30–0.34 m² en drops."
     },
     {
-      "q": "¿Rolling resistance?",
-      "a": "Crr clinchers 0.004-0.006. Tubulares < 0.003."
+      "q": "¿Cuánto cambia la velocidad si bajo 5 kg de peso corporal?",
+      "a": "En terreno **completamente plano**, el peso afecta solo la componente de rodadura (Crr × m × g). Bajando 5 kg en un sistema de 80 kg (6.25 % menos masa), con Crr 0.004, la reducción de F_rr es de ≈ 0.2 N. A 30 km/h, eso equivale a menos de **0.3 km/h** de ganancia. El peso importa mucho más en subidas: en una rampa del 6 %, 5 kg menos equivalen a ahorrar ≈ 30 W para mantener la misma velocidad."
     },
     {
-      "q": "¿Viento?",
-      "a": "Aumenta o reduce velocidad efectiva directamente."
+      "q": "¿Por qué la resistencia aerodinámica crece al cubo de la velocidad?",
+      "a": "Porque la fuerza de arrastre es proporcional a v² (presión dinámica), y la potencia necesaria para vencer esa fuerza es P = F × v, lo que da v³. Eso significa que duplicar la velocidad (de 25 a 50 km/h) requiere **8 veces más potencia** solo en la componente aero. Por eso a partir de 25–30 km/h, la aerodinámica domina completamente sobre la rodadura y cualquier mejora de posición tiene impacto enorme."
     },
     {
-      "q": "¿Pendiente?",
-      "a": "Agrega m·g·sin(θ) al equilibrio."
+      "q": "¿Qué densidad del aire usa la calculadora y en qué situaciones debo cambiarla?",
+      "a": "Por defecto se usa ρ = 1.225 kg/m³ (atmósfera estándar ICAO: nivel del mar, 15 °C, 1013.25 hPa). Debería ajustarse en tres casos principales: (1) altitud elevada (en Mendoza capital a ~750 m, ρ ≈ 1.14 kg/m³; en un col de montaña a 2500 m, ρ ≈ 0.94 kg/m³); (2) temperaturas extremas (a 35 °C al nivel del mar, ρ ≈ 1.17 kg/m³); (3) días de baja presión atmosférica, que reducen levemente ρ. La fórmula es ρ = 1.225 × (P_atm / 1013.25) × (288.15 / (T_K))."
     },
     {
-      "q": "¿Pico velocidad?",
-      "a": "Esprint tipo 1000W brevemente: 55-60 km/h."
+      "q": "¿Cuál es el Crr recomendado para rutas argentinas típicas?",
+      "a": "Para asfalto argentino en buen estado (rutas nacionales como RN 7 o RN 40 en tramos mantenidos) con cubiertas clincher 25–28 mm bien infladas, Crr 0.004–0.005 es un valor representativo. En calles de Buenos Aires con adoquines o bacheo frecuente, 0.006–0.008 es más realista. Con cubierta tubeless a presión optimizada (más baja, mejor absorción), Crr puede bajar a 0.003. La diferencia entre Crr 0.003 y 0.006 a 200 W representa ≈ 0.5–0.8 km/h."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿La calculadora sirve para ciclismo indoor (rodillo / smarttrainer)?",
+      "a": "En rodillo, la resistencia aerodinámica es prácticamente cero (no hay desplazamiento de aire). Por eso **no aplica la misma fórmula**: el rodillo simula la potencia necesaria para una velocidad virtual según su propio modelo interno (Wahoo, Tacx y otros usan la misma ecuación del ciclismo pero con parámetros fijos de CdA y Crr). Para entrenamiento en rodillo lo relevante es la potencia absoluta y las zonas de entrenamiento, no la velocidad en km/h."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Cómo afecta el viento en contra o a favor al resultado?",
+      "a": "El viento modifica la **velocidad relativa del aire** sobre el ciclista. Con viento en contra de 20 km/h, si el ciclista va a 30 km/h, la velocidad relativa es 50 km/h, lo que cuadruplica la resistencia aero respecto de condiciones calmas. Para incorporarlo a la fórmula, reemplazá v en la componente aero por (v + v_viento) pero mantené v en la componente de rodadura: P = 0.5 · ρ · CdA · (v + v_viento)² · v + Crr · m · g · v."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué diferencia hay entre esta calculadora y simplemente dividir distancia por tiempo?",
+      "a": "Dividir distancia por tiempo da la velocidad **media observada**, que ya incluye todos los efectos (aero, rodadura, pendientes, fatigas, semáforos). Esta calculadora hace la predicción **prospectiva**: dado un nivel de potencia sostenible y unas características del sistema, predice a qué velocidad debería moverse en llano. Es una herramienta de planificación, no de análisis post-actividad. Es especialmente útil para comparar escenarios de equipamiento o posición antes de invertir dinero."
     }
   ],
   "sources": [
     {
-      "name": "ISSN — International Society of Sports Nutrition",
-      "url": "https://www.sportsnutritionsociety.org"
+      "name": "American College of Sports Medicine (ACSM) – Guidelines for Exercise Testing and Prescription",
+      "url": "https://www.acsm.org/education-resources/books/guidelines-exercise-testing-prescription"
     },
     {
-      "name": "ACSM — American College of Sports Medicine",
-      "url": "https://www.acsm.org"
+      "name": "NIST – International Standard Atmosphere (densidad del aire a distintas altitudes)",
+      "url": "https://www.nist.gov/system/files/documents/calibrations/NIST-HB44-2020.pdf"
     },
     {
-      "name": "NSCA — National Strength and Conditioning Association",
-      "url": "https://www.nsca.com"
+      "name": "Wikipedia ES – Resistencia aerodinámica en ciclismo",
+      "url": "https://es.wikipedia.org/wiki/Aerodin%C3%A1mica_en_el_ciclismo"
     }
   ],
   "relatedSlugs": [

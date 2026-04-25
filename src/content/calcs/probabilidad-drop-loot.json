@@ -13,14 +13,15 @@
     "drop chance calculator",
     "farmeo loot probabilidad"
   ],
-  "intro": "Ese item tiene **1% de drop rate** y ya lo intentaste 50 veces sin suerte. ¿Es mala suerte o es normal? La respuesta está en la **distribución binomial**: con 1% de drop, después de 50 intentos tenés solo **39.5% de haberlo obtenido**. Esta calculadora te dice la probabilidad real de conseguir al menos un drop en N intentos, y cuántos intentos necesitás para tener el 50%, 75% o 90% de probabilidad.",
-  "keyTakeaway": "**Prob(al menos 1 drop) = 1 - (1 - dropRate)^intentos.** Con 1% de drop necesitás **69 intentos** para 50% de chance y **230 intentos** para 90%.",
+  "intro": "Esta calculadora te permite saber cuál es la probabilidad real de obtener al menos un ítem especial (drop, loot, recompensa) en videojuegos según el drop rate declarado y la cantidad de intentos que realizás. La fórmula central es **P(al menos 1) = 1 − (1 − p)ⁿ**, donde *p* es el drop rate por intento y *n* la cantidad de kills, cofres o tiradas. Es esencial para cualquier jugador que quiera saber cuántas horas realmente necesita farmear antes de conseguir ese ítem legendario o montura rara.",
+  "keyTakeaway": "Con un **drop rate del 1%, necesitás 69 intentos para tener 50% de chance, 230 para el 90% y 458 para el 99%**, usando **n = log(1 − P_objetivo) / log(1 − p)**.",
   "useCases": [
-    "Querés saber si tu racha sin drops es normal o si hay un bug.",
-    "Planificás cuántas horas de farmeo necesitás para un item raro.",
-    "Comparás la eficiencia de farmear un boss vs otro.",
-    "Calculás si vale la pena seguir intentando o cambiar de estrategia.",
-    "Querés mostrarle a tu amigo que su suerte es matemáticamente normal."
+    "Farmear un boss en World of Warcraft con 0,1% de chance de drop de montura y calcular cuántos resets semanales necesitás.",
+    "Calcular la probabilidad de conseguir una skin legendaria en un sistema de loot boxes con 0,6% de drop rate tras 100 aperturas.",
+    "Estimar cuántos kills de enemigos necesitás en Path of Exile para dropear una divination card específica con 0,05% de chance.",
+    "Verificar si un drop rate anunciado en un juego gacha (como Genshin Impact con 0,6% en personajes 5★) es consistente con tu experiencia real de pulls.",
+    "Planificar la cantidad de intentos en un juego de cartas coleccionables digitales para completar un set con ítems de baja probabilidad.",
+    "Comparar distintos drop rates (0,1% vs 1% vs 5%) para decidir qué boss o actividad farmear según el tiempo disponible."
   ],
   "fields": [
     {
@@ -84,32 +85,36 @@
   },
   "faq": [
     {
-      "q": "¿Por qué 100 intentos con 1% de drop no da 100%?",
-      "a": "Porque la probabilidad no se suma linealmente. Cada intento es independiente. 100 intentos con 1% dan **63.4%** de chance, no 100%."
+      "q": "¿Qué significa exactamente un drop rate de 1%?",
+      "a": "Significa que en cada intento individual tenés una probabilidad de 1 en 100 de obtener el ítem. NO garantiza que en 100 intentos lo vas a conseguir: la probabilidad acumulada en 100 intentos es 63,4%, no 100%. El 36,6% restante son jugadores que hacen 100 intentos y no lo obtienen."
     },
     {
-      "q": "¿Cuántos intentos para tener 50% de chance?",
-      "a": "La fórmula es **ln(0.5) / ln(1 - dropRate)**. Con 1% de drop son **69 intentos**, con 0.1% son **693 intentos**."
+      "q": "¿Por qué necesito más de 100 intentos para tener el 90% de chance con un drop rate de 1%?",
+      "a": "Porque la fórmula es exponencial: P = 1 − 0,99ⁿ. Para alcanzar el 90% necesitás que 0,99ⁿ < 0,10, lo que da n > log(0,10)/log(0,99) ≈ 230 intentos. Es contraintuitivo pero matemáticamente correcto: a mayor exigencia de certeza, los intentos necesarios crecen de forma no lineal."
     },
     {
-      "q": "¿Existe la 'pity' mechanic?",
-      "a": "Sí, muchos juegos modernos garantizan el drop después de N intentos (Genshin Impact, etc.). Esta calculadora calcula la probabilidad pura sin pity."
+      "q": "¿Qué es el sistema 'pity' y cómo cambia los cálculos?",
+      "a": "El pity es un mecanismo que garantiza el ítem especial tras un número máximo de intentos fallidos. En Genshin Impact, el hard pity es en el pull 90 para personajes 5★. Esto modifica la distribución de probabilidad ya que los intentos dejan de ser independientes: la probabilidad condicional aumenta progresivamente desde el pull 74 (soft pity) en adelante, haciendo que la fórmula estándar subestime la probabilidad real."
     },
     {
-      "q": "¿Mi racha sin drops es normal?",
-      "a": "Si la probabilidad muestra >20% de no obtenerlo en tus intentos, es perfectamente normal. Solo preocupate si estás por debajo del 1-5%."
+      "q": "¿La fórmula aplica igual para loot boxes de juegos de consola que para drops de PC?",
+      "a": "Sí, la matemática es idéntica siempre que los intentos sean independientes y la probabilidad por intento sea constante. Lo que varía es si el juego usa pseudo-random distribution (PRD), pity, o tablas de loot con exclusividad (si dropea A, no puede dropear B). En esos casos la fórmula simple es una aproximación y los resultados exactos requieren conocer el sistema interno del juego."
     },
     {
-      "q": "¿Los drops son realmente aleatorios?",
-      "a": "En la mayoría de juegos sí, usan generadores pseudoaleatorios. Algunos juegos usan **pseudo-random distribution (PRD)** que ajusta la probabilidad después de rachas malas."
+      "q": "¿Cómo calculo la probabilidad de conseguir EXACTAMENTE un drop en n intentos?",
+      "a": "Para eso usás la distribución binomial: P(X = k) = C(n,k) × pᵏ × (1−p)ⁿ⁻ᵏ. Por ejemplo, con p = 0,01, n = 100 y k = 1: P(X=1) = C(100,1) × 0,01¹ × 0,99⁹⁹ = 100 × 0,01 × 0,3697 ≈ 36,97%. Para eso te conviene usar nuestra [calculadora de probabilidad binomial](/calculadora-probabilidad-binomial)."
     },
     {
-      "q": "¿Cómo convierto drop rate fraccionario?",
-      "a": "Si un item dropea '1 de cada 512', el drop rate es **1/512 = 0.195%**. Ingresá 0.195 en la calculadora."
+      "q": "¿Los drop rates que aparecen en wikis como Wowhead o la wiki de Genshin son confiables?",
+      "a": "Son estimaciones estadísticas basadas en miles de reportes de la comunidad. Tienen buen nivel de precisión para drop rates que han sido farmeados masivamente (como monturas de WoW con millones de intentos registrados), pero pueden tener margen de error del 0,01% al 0,05% en ítems menos farmeados. Los datos oficiales los publican pocos juegos; Genshin Impact y Pokémon GO son excepciones que publican tasas certificadas en sus términos."
     },
     {
-      "q": "¿Sirve para gacha/loot boxes?",
-      "a": "Sí, si conocés la probabilidad real del item que querés. En Argentina, las empresas deben publicar las probabilidades según regulaciones de consumidor."
+      "q": "¿La 'mala suerte' acumulada (bad luck protection) es lo mismo que el pity?",
+      "a": "Son similares pero distintos. El pity es un contador duro/suave que garantiza el ítem en un número máximo de intentos. La bad luck protection es una mecánica que incrementa gradualmente la probabilidad por intento después de varios fallos consecutivos, sin garantizar un tope fijo. Path of Exile y algunos loot en Diablo 4 usan variantes de bad luck protection. En ambos casos, la fórmula estándar de drops independientes deja de ser exacta."
+    },
+    {
+      "q": "¿Cuántos intentos necesito para estar '99% seguro' de conseguir un ítem con 0,01% de chance?",
+      "a": "Con p = 0,0001 (0,01%), la fórmula da n = log(0,01)/log(0,9999) ≈ 46.051 intentos. Si ese ítem requiere matar un boss que lleva 5 minutos, estás hablando de 3.838 horas de farming solo para tener el 99% de probabilidad. Es el tipo de ítem que en la práctica suele conseguirse antes por comercio entre jugadores que por drop directo."
     }
   ],
   "howToSteps": [
@@ -130,7 +135,7 @@
       "text": "Usá los valores de 50%, 90% y 99% para saber cuántos intentos más necesitás."
     }
   ],
-  "explanation": "## Probabilidad de drop acumulada\n\nEse item que buscás tiene **1% de drop rate** y ya lo intentaste 50 veces sin suerte. ¿Mala suerte o normal? La respuesta está en la **probabilidad complementaria**: **P(al menos 1 drop en n intentos) = 1 - (1-p)^n**.\n\n## Tabla de intentos necesarios para cada probabilidad\n\n| Drop rate | 50% chance | 90% chance | 99% chance |\n|---|---|---|---|\n| 1% | 69 | 230 | 459 |\n| 2% | 34 | 114 | 228 |\n| 5% | 14 | 45 | 90 |\n| 10% | 7 | 22 | 44 |\n| 20% | 4 | 11 | 21 |\n| 50% | 1 | 4 | 7 |\n\n## La fórmula mágica\n\nPara hallar los intentos necesarios para una probabilidad P:\n\n**n = log(1 - P) / log(1 - drop_rate)**\n\nEjemplo para 50% chance con 1% drop: log(0.5) / log(0.99) ≈ **69 intentos**.\n\n## Cuándo usar y errores comunes\n\n- **\"Pity timer\"** (garantía después de X fallas) rompe la fórmula: los juegos modernos suelen tener protección.\n- **Bad luck protection**: algunos drops suben la probabilidad con cada falla.\n- **No aplica si el drop es por cooldown semanal**: la fórmula supone intentos independientes.\n- Basada en la [distribución binomial](/calculadora-probabilidad-binomial): esta calculadora es el caso particular de \"al menos 1 éxito\".",
+  "explanation": "## Cómo se calcula\n\nLa probabilidad de obtener **al menos un drop** en *n* intentos independientes se calcula con la distribución geométrica acumulada, usando el complemento de la probabilidad de no obtener nunca el ítem:\n\n```\nP(al menos 1 en n intentos) = 1 − (1 − p)ⁿ\n\nDonde:\n  p = drop rate por intento (en decimal, ej: 1% → 0.01)\n  n = cantidad de intentos (kills, aperturas, tiradas)\n\nPara calcular cuántos intentos necesitás para alcanzar una probabilidad objetivo P_obj:\n  n = log(1 − P_obj) / log(1 − p)\n\nEjemplos concretos:\n  → p = 0.01, P_obj = 50%:  n = log(0.5) / log(0.99)  = 69 intentos\n  → p = 0.01, P_obj = 90%:  n = log(0.1) / log(0.99)  = 230 intentos\n  → p = 0.01, P_obj = 99%:  n = log(0.01) / log(0.99) = 458 intentos\n```\n\n> **Nota clave:** cada intento es **independiente**. Que hayas hecho 500 intentos sin éxito no aumenta la probabilidad del intento 501. Este fenómeno se llama \"falacia del jugador\" y es uno de los errores más comunes en el farming.\n\n---\n\n## Tabla de referencia\n\nIntentos necesarios según drop rate y probabilidad objetivo deseada:\n\n| Drop Rate | Para 50% chance | Para 90% chance | Para 99% chance |\n|-----------|:--------------:|:--------------:|:--------------:|\n| 50%       | 1              | 4              | 7              |\n| 25%       | 3              | 8              | 16             |\n| 10%       | 7              | 22             | 44             |\n| 5%        | 14             | 45             | 90             |\n| 2%        | 35             | 114            | 228            |\n| 1%        | 69             | 230            | 458            |\n| 0,6%      | 115            | 383            | 766            |\n| 0,1%      | 693            | 2.302          | 4.603          |\n| 0,01%     | 6.931          | 23.026         | 46.051         |\n\n> *0,6% es el drop rate oficial de personajes 5★ en Genshin Impact (antes del sistema pity). El 0,1% es típico de monturas raras en WoW Classic.*\n\n---\n\n## Casos típicos\n\n### Caso 1 — Montura rara en WoW (drop rate 0,1%)\nUn jugador quiere la Invincible's Reins del Lich King, con un drop rate de aproximadamente **0,1% (p = 0.001)**. Para tener solo un **50% de chance**, necesita **693 intentos** (el boss solo es farmeable 1 vez por semana, lo que equivale a **más de 13 años** de farming semanal ininterrumpido). Para llegar al 90% de probabilidad necesita **2.302 resets** (~44 años). Esto explica por qué esta montura es considerada un símbolo de status extremo.\n\n### Caso 2 — Loot box con skin legendaria (drop rate 0,6%)\nUn juego de battle royale tiene una skin legendaria con **0,6% de drop rate** por caja. Si un jugador abre **100 cajas**, su probabilidad es:\n`P = 1 − (1 − 0.006)¹⁰⁰ = 1 − 0.994¹⁰⁰ = 1 − 0.5476 = 45,2%`\nEs decir, con 100 cajas todavía tiene **menos del 50% de chance**. Para superar el 90% necesita **383 cajas**, y para el 99% necesita **766 cajas**.\n\n### Caso 3 — Gacha con sistema pity (drop rate 0,6% + pity en 90 pulls)\nEn Genshin Impact, el drop rate base es 0,6%, pero el sistema **pity garantiza** un 5★ en el pull 90 como máximo (soft pity empieza en pull 74). Sin pity, la probabilidad acumulada en 90 pulls sería: `1 − (1 − 0.006)⁹⁰ ≈ 41,8%`. El sistema pity existe precisamente porque sin él la mayoría de los jugadores no conseguiría personajes legendarios en un margen razonable de intentos.\n\n---\n\n## Errores comunes\n\n1. **Confundir drop rate con drop chance garantizada:** Un drop rate de 1% NO significa que en 100 intentos seguro lo obtenés. Significa que tenés un 63,4% de probabilidad. El 36,6% restante corresponde a jugadores que hacen 100 intentos y no lo obtienen.\n\n2. **Caer en la falacia del jugador (Gambler's Fallacy):** Creer que \"ya debería caer\" porque llevan muchos intentos sin éxito. En drops independientes, cada intento tiene exactamente la misma probabilidad que el anterior, sin importar el historial. La única excepción son los sistemas con **pity** explícito (como Genshin Impact).\n\n3. **Aplicar la fórmula sin convertir el porcentaje a decimal:** Si el drop rate es 1%, en la fórmula debés usar p = **0,01**, no p = 1. Usar p = 1 daría P = 1 − (1−1)ⁿ = 100% en un intento, lo cual es absurdo.\n\n4. **Suponer que los intentos son independientes cuando no lo son:** Algunos juegos usan sistemas de **pseudo-random distribution (PRD)**, como Dota 2, donde la probabilidad aumenta con cada fallo consecutivo hasta que ocurre el evento. En esos casos esta fórmula no aplica directamente.\n\n5. **Ignorar el drop rate real vs. el declarado:** Muchos juegos no publican sus tasas oficialmente o las actualizan entre parches. Los datos de wikis de comunidad (como Fandom o Wowhead) se basan en muestras estadísticas de miles de jugadores y pueden diferir del valor interno del juego.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de Probabilidad Binomial](/calculadora-probabilidad-binomial) — Para analizar exactamente *k* éxitos en *n* intentos (no solo \"al menos uno\").\n- [Calculadora de Costo de Gaming por Hora](/calculadora-costo-gaming-por-hora) — Calculá cuánto te cuesta en tiempo o dinero un ítem según las horas de farming necesarias.\n- [Calculadora de Decibelios y Distancia de Sonido](/calculadora-decibelios-distancia-sonido) — Útil para configurar audio de gaming y streaming.\n- [Calculadora de Engagement Rate en Instagram](/calculadora-engagement-rate-instagram) — Para streamers y creadores de contenido que quieran medir el impacto de sus posts de gaming.\n",
   "example": {
     "title": "Ejemplo real: Item con 1% de drop rate, 100 intentos",
     "steps": [
@@ -147,5 +152,19 @@
     "calculadora-costo-gaming-por-hora",
     "calculadora-decibelios-distancia-sonido",
     "calculadora-engagement-rate-instagram"
+  ],
+  "sources": [
+    {
+      "name": "Wikipedia ES — Distribución geométrica",
+      "url": "https://es.wikipedia.org/wiki/Distribuci%C3%B3n_geom%C3%A9trica"
+    },
+    {
+      "name": "Wikipedia ES — Falacia del jugador",
+      "url": "https://es.wikipedia.org/wiki/Falacia_del_jugador"
+    },
+    {
+      "name": "Wikipedia ES — Distribución binomial",
+      "url": "https://es.wikipedia.org/wiki/Distribuci%C3%B3n_binomial"
+    }
   ]
 }

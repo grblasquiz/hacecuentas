@@ -20,14 +20,14 @@
     "rate limit units",
     "rps rpm converter"
   ],
-  "intro": "Efficient API management requires understanding rate limits, throughput, and load calculations. Converting between requests per minute (RPM), requests per second (RPS), requests per hour (RPH), and requests per day (RPD) helps prevent rate limit errors and service degradation. Free and fast conversions. All values are current as of 2026 and reviewed regularly to keep you up to date.",
-  "keyTakeaway": "Formula: **RPM ÷ 60 = RPS**. Direct calculation with your input values. Convert between RPM, RPS, RPH, and RPD instantly.",
+  "intro": "An API rate limit defines how many HTTP requests a client can make to a server within a specific time window. This calculator converts between the three most common rate-limit units: **Requests per Second (RPS)**, **Requests per Minute (RPM)**, and **Requests per Day (RPD)**. Use it when integrating with third-party APIs (OpenAI, Twitter/X, Stripe, GitHub, etc.) that publish limits in one unit while your code needs another. For example, OpenAI's free tier publishes limits in RPM, but your retry logic needs RPS to set backoff intervals correctly. The core conversion is: RPS = RPM ÷ 60 = RPD ÷ 86,400.",
+  "keyTakeaway": "**RPS = RPM ÷ 60 = RPD ÷ 86,400** — e.g., 60 RPM = 1.0 RPS = 86,400 RPD; 500 RPM ≈ 8.33 RPS = 720,000 RPD.",
   "useCases": [
-    "API rate limit calculations and conversions for developers",
-    "Software engineers and backend developers managing API quotas",
-    "Validate theoretical rate limit thresholds before implementation",
-    "Learning and understanding API rate limiting concepts",
-    "Quick reference during API development and integration projects"
+    "Setting the correct Thread.sleep() or asyncio delay in a polling loop so your app never exceeds a third-party API's published RPM quota",
+    "Calculating how many parallel workers or goroutines you can spin up before hitting a per-key RPS ceiling on services like Google Maps or Stripe",
+    "Estimating daily API budget consumption (RPD) against a monthly request quota to avoid overage charges on pay-per-use APIs like OpenAI or AWS",
+    "Configuring Nginx's limit_req_zone or an API Gateway throttling policy—both require a RPS (requests/second) value—when your SLA is documented in RPM",
+    "Debugging 429 Too Many Requests errors by converting the Retry-After header value and the published rate limit to a common unit for comparison"
   ],
   "fields": [
     {
@@ -91,53 +91,53 @@
     ],
     "result": "1 RPS"
   },
-  "explanation": "API rate limiting is essential for protecting backend services, managing traffic, and preventing abuse. Rate limits are commonly expressed in requests per minute (RPM), requests per second (RPS), requests per hour (RPH), or requests per day (RPD).\n\n## How to Calculate\n\nThis calculator converts between different rate limit units and helps you understand API throughput. Enter a value and its unit to instantly see equivalent rates across all common units.\n\n## Final Notes\n\nThis calculator is for reference only. For critical decisions (SLA agreements, production infrastructure), consult with a systems architect or cloud engineer. Values are current as of 2026.",
+  "explanation": "## How It's Calculated\n\nAll three units describe the same throughput, just over different time windows. The conversions are exact and linear:\n\n```\n# Given an input value V in unit U:\n\nIf U = RPS:\n  RPS = V\n  RPM = V × 60\n  RPD = V × 86,400        # 60 s × 60 min × 24 h = 86,400 s/day\n\nIf U = RPM:\n  RPS = V ÷ 60\n  RPM = V\n  RPD = V × 1,440         # 60 min × 24 h = 1,440 min/day\n\nIf U = RPD:\n  RPS = V ÷ 86,400\n  RPM = V ÷ 1,440\n  RPD = V\n```\n\n**Minimum inter-request delay** (useful for throttling loops):\n\n```\ndelay_seconds = 1 / RPS          # e.g., 1 RPS → 1.0 s between calls\ndelay_ms      = 1000 / RPS       # e.g., 10 RPS → 100 ms between calls\n```\n\n---\n\n## Reference Table\n\nReal-world rate limits published by major API providers (as of 2024–2025):\n\n| API / Provider | Tier / Plan | Published Limit | RPS equiv. | RPD equiv. |\n|---|---|---|---|---|\n| OpenAI GPT-4o | Free (Tier 1) | 500 RPM | 8.33 RPS | 720,000 RPD |\n| OpenAI GPT-4o | Tier 2 | 5,000 RPM | 83.3 RPS | 7,200,000 RPD |\n| OpenAI Whisper | Tier 1 | 50 RPM | 0.83 RPS | 72,000 RPD |\n| GitHub REST API | Authenticated | 5,000 RPH | 1.39 RPS | 120,000 RPD |\n| GitHub REST API | Unauthenticated | 60 RPH | 0.017 RPS | 1,440 RPD |\n| Google Maps JS | Standard | 100 RPS | 100 RPS | 8,640,000 RPD |\n| Twitter/X API v2 | Free | 1,500 RPM (read) | 25 RPS | 2,160,000 RPD |\n| Stripe API | Live mode | 100 RPS | 100 RPS | 8,640,000 RPD |\n| Stripe API | Test mode | 25 RPS | 25 RPS | 2,160,000 RPD |\n| Twilio REST | Default | 100 RPS | 100 RPS | 8,640,000 RPD |\n\n> RPH (Requests per Hour) = RPM ÷ 60 × 1h. GitHub publishes limits in RPH; divide by 3,600 for RPS.\n\n---\n\n## Typical Cases\n\n### Case 1 — OpenAI free tier integration (500 RPM)\nYour chatbot uses the GPT-4o free tier: **500 RPM limit**.  \n- RPS = 500 ÷ 60 ≈ **8.33 RPS**  \n- Minimum safe delay between calls = 1 ÷ 8.33 ≈ **120 ms**  \n- RPD = 500 × 1,440 = **720,000 requests/day**  \nIf your app makes 1 request per user page load and expects 10,000 daily active users with an average of 5 pages each = 50,000 daily requests — well within the 720,000 RPD budget, but you still need the 120 ms delay to avoid bursting.\n\n### Case 2 — GitHub unauthenticated scraper (60 RPH)\nGitHub's unauthenticated limit is 60 RPH.  \n- RPM = 60 ÷ 60 = **1 RPM**  \n- RPS = 1 ÷ 60 ≈ **0.0167 RPS**  \n- Delay = 1 ÷ 0.0167 = **60 seconds per request**  \nSimply adding a personal access token bumps this to 5,000 RPH (83.3 RPM, 1.39 RPS, 16× faster).\n\n### Case 3 — Nginx rate limiting for an internal API (120 RPM target)\nYour internal microservice SLA says \"max 120 RPM per user.\"  \n- RPS = 120 ÷ 60 = **2 RPS**  \n- Nginx config: `limit_req_zone $binary_remote_addr zone=api:10m rate=2r/s;`  \n- `burst=10 nodelay` allows short spikes of up to 10 extra requests before the 429 kicks in.\n\n---\n\n## Common Mistakes\n\n1. **Treating RPM as RPS** — The most frequent bug. A 60 RPM limit is only **1 RPS**, not 60. Setting a 1-second loop that fires 60 requests in the first second will immediately trigger a 429.\n2. **Ignoring burst vs. sustained limits** — Many APIs (e.g., Stripe) allow short bursts above the stated RPS but enforce the limit over a sliding window. A sustained 100 RPS over 10 seconds will be blocked even if each individual second looks fine on average.\n3. **Using floor division for RPS** — Calculating `60 RPM ÷ 60 = 1 RPS` is fine, but `61 RPM ÷ 60 = 1 RPS` loses the fractional part. Always use floating-point division; the true value is **1.0167 RPS** (delay ≈ 983 ms).\n4. **Forgetting that RPD limits are calendar-day windows** — A 1,000 RPD quota resets at midnight UTC (or the API's local timezone), not 24 hours after your first call. Sending all 1,000 requests at 11:55 PM leaves you with zero quota for the next 5 minutes.\n5. **Not accounting for concurrent threads multiplying the rate** — If you run 4 parallel threads each making 1 RPS, your effective rate is **4 RPS** against the API's shared per-key limit.\n\n---\n\n## Related Calculators\n\nThere are no related calculators configured for this tool yet. Check back soon for links to bandwidth and latency calculators on hacecuentas.com.",
   "faq": [
     {
-      "q": "What is a burst allowance in rate limiting?",
-      "a": "A burst allowance lets APIs accept short spikes above the standard rate limit, useful for handling sudden traffic."
+      "q": "What is the difference between RPS, RPM, and RPD?",
+      "a": "All three measure the same thing—API request throughput—over different time windows. RPS (Requests per Second) is used in low-latency systems and server configs like Nginx. RPM (Requests per Minute) is the most common unit in API documentation (OpenAI, Stripe). RPD (Requests per Day) governs quota-based billing windows. The relationships are exact: 1 RPS = 60 RPM = 86,400 RPD."
     },
     {
-      "q": "What should I do when I hit a 429 status code?",
-      "a": "Implement exponential backoff: wait 1 second, then 2 seconds, then 4 seconds, etc., before retrying your request."
+      "q": "Why does a 60 RPM limit mean I must wait 1 second between requests?",
+      "a": "60 RPM ÷ 60 seconds = 1.0 RPS, which means exactly one request is allowed per second on average. Sending two requests within the same second exhausts two seconds' worth of quota simultaneously, triggering a 429 Too Many Requests response. The safe inter-request delay is always 1 ÷ RPS seconds — in this case, 1.0 s."
     },
     {
-      "q": "What's the difference between per-user and global rate limits?",
-      "a": "Per-user limits apply to individual API keys or users; global limits apply to your entire application's total requests."
+      "q": "How do I convert Requests per Hour (RPH) to RPS?",
+      "a": "Divide by 3,600 (the number of seconds in one hour). For example, GitHub's authenticated limit of 5,000 RPH = 5,000 ÷ 3,600 ≈ 1.39 RPS, meaning a safe delay of about 720 ms between requests. To get RPM from RPH, divide by 60: 5,000 RPH ÷ 60 = 83.33 RPM."
     },
     {
-      "q": "How can I reduce the number of API calls?",
-      "a": "Use response caching to avoid repeated requests to the same endpoint with unchanged data."
+      "q": "What HTTP status code indicates a rate limit has been exceeded?",
+      "a": "RFC 6585 standardized HTTP 429 Too Many Requests for rate limit violations. The response typically includes a Retry-After header (in seconds) or X-RateLimit-Reset (UNIX timestamp). Some older APIs incorrectly return 503 Service Unavailable or 403 Forbidden instead, so always check the API's documentation."
     },
     {
-      "q": "Can I batch multiple API requests together?",
-      "a": "Yes, group multiple operations into single requests when the API supports batch operations to stay under rate limits."
+      "q": "How do I configure Nginx to enforce a rate limit of 500 RPM per IP?",
+      "a": "Convert 500 RPM to RPS first: 500 ÷ 60 ≈ 8.33 RPS. Then use Nginx's limit_req module: `limit_req_zone $binary_remote_addr zone=myapi:10m rate=8r/s;` and apply `limit_req zone=myapi burst=20 nodelay;` in your location block. The burst parameter absorbs short spikes (up to 20 extra requests) without immediately returning 429."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all our calculators are completely free and require no account or signup."
+      "q": "Does running multiple API keys multiply my effective rate limit?",
+      "a": "Yes, if each key has an independent per-key limit. For example, if one OpenAI API key has a 500 RPM limit, using 4 keys in round-robin gives you an effective 2,000 RPM (33.3 RPS) throughput. However, some providers enforce organization-level or IP-level caps in addition to per-key limits, so check the API's terms of service before key-pooling."
     },
     {
-      "q": "Are the results accurate?",
-      "a": "Results are reference-only using standard formulas. For production decisions, consult a systems engineer or architect."
+      "q": "What is a sliding window vs. a fixed window rate limit, and does it affect conversion?",
+      "a": "The conversion math (RPS ↔ RPM ↔ RPD) is the same regardless of window type. However, behavior differs: a fixed window resets at a fixed clock interval (e.g., every minute at :00), so you can burst twice the limit across a reset boundary. A sliding window tracks the last N seconds continuously, enforcing a stricter sustained rate. Most modern APIs (Stripe, OpenAI) use sliding windows — plan your delays accordingly."
     },
     {
-      "q": "Is my data saved?",
-      "a": "No. All calculations happen in your browser. We don't send any data to our servers."
+      "q": "How many requests can I make per day on a 1 RPS limit?",
+      "a": "1 RPS × 60 s/min × 60 min/h × 24 h/day = **86,400 RPD**. This is a hard mathematical ceiling assuming 100% uptime with no gaps. In practice, network latency, retries, and downtime reduce effective throughput to 70–90% of the theoretical maximum, so real-world sustained throughput for a 1 RPS limit is typically 60,000–78,000 requests/day."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "IETF RFC 6585 – Additional HTTP Status Codes (429 Too Many Requests)",
+      "url": "https://datatracker.ietf.org/doc/html/rfc6585"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "NIST SP 800-204A – Building Secure Microservices-based Applications (API throttling guidance)",
+      "url": "https://csrc.nist.gov/publications/detail/sp/800-204a/final"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Wikipedia – Rate limiting",
+      "url": "https://en.wikipedia.org/wiki/Rate_limiting"
     }
   ],
   "dataUpdate": {

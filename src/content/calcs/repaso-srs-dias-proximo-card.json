@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "🔁",
   "formulaId": "repaso-srs-dias-proximo-card",
-  "intro": "Aprender un idioma requiere horas de exposición dosificada. Según FSI, para hispanohablantes: italiano/portugués ~600h, inglés/francés ~900h, alemán ~1100h, árabe/chino ~2200h. Estrategia: consistencia > intensidad. Cuándo revisar card según SM-2 · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá última, e-factor y intervalo actual y obtené próximo repaso al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "La calculadora de SRS (Spaced Repetition System) te permite saber exactamente cuándo tenés que repasar una tarjeta (flashcard) según el algoritmo SM-2, el sistema detrás de Anki, SuperMemo y la mayoría de las apps de memorización espaciada. Ingresás la fecha del último repaso, el E-Factor (factor de facilidad, entre 1.3 y 2.5) y el intervalo actual en días, y obtenés la fecha exacta del próximo repaso junto con el nuevo intervalo calculado. Se usa para planificar el estudio de vocabulario de idiomas, fórmulas, fechas históricas o cualquier dato que necesite retención a largo plazo.",
+  "keyTakeaway": "**Próximo intervalo = Intervalo actual × E-Factor** (SM-2). Con EF=2.5 e intervalo de 6 días, el siguiente repaso es en **15 días**. El EF mínimo es **1.3** y el máximo **2.5**.",
   "useCases": [
-    "Resolver rápido una duda sobre SRS: próxima revisión sin papel y lápiz.",
-    "Comparar escenarios o alternativas con números concretos.",
-    "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Estudiante de inglés que usa Anki quiere saber en cuántos días debe revisar una tarjeta de vocabulario con E-Factor 2.1 e intervalo actual de 10 días.",
+    "Persona preparando el DELE o el Cambridge que necesita planificar sus repasos de semanas antes del examen sin depender de la app.",
+    "Usuario de Duolingo o Babbel que lleva su propio sistema manual de tarjetas y quiere calcular el próximo repaso sin instalar Anki.",
+    "Docente de idiomas que diseña un calendario de repasos para sus alumnos basado en el algoritmo SM-2 con intervalos progresivos."
   ],
   "fields": [
     {
@@ -65,49 +65,45 @@
     ],
     "result": "3 días"
   },
-  "explanation": "**Aprender un idioma** es un esfuerzo sostenido de cientos de horas. La ciencia cognitiva (Ebbinghaus, spaced repetition) + inmersión + práctica activa son los pilares demostrados por FSI y Cambridge.\n\n## Cómo se calcula\n\nCuándo revisar card según SM-2 · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl algoritmo **SM-2** (SuperMemo 2), desarrollado por Piotr Woźniak en 1987, es el núcleo de prácticamente todos los sistemas de repetición espaciada modernos. La fórmula para calcular el próximo intervalo es:\n\n```\n// Intervalo según SM-2\nSi repetición == 1:  nuevo_intervalo = 1\nSi repetición == 2:  nuevo_intervalo = 6\nSi repetición >= 3:  nuevo_intervalo = round(intervalo_actual × EF)\n\n// Actualización del E-Factor después de cada respuesta\nnuevo_EF = EF + (0.1 − (5 − calidad) × (0.08 + (5 − calidad) × 0.02))\n\n// Restricción: EF nunca puede bajar de 1.3\nnuevo_EF = max(1.3, nuevo_EF)\n\n// Fecha del próximo repaso\nproximo_repaso = fecha_ultimo_repaso + nuevo_intervalo (en días)\n```\n\nDonde **calidad** es la nota que le das a tu respuesta (0 a 5): 0 = fallo total, 3 = correcto con esfuerzo, 5 = perfecto sin dudar.\n\n---\n\n## Tabla de referencia\n\nLa siguiente tabla muestra cómo crece el intervalo a lo largo de las repeticiones con un E-Factor estable de **2.5** (el máximo, para una tarjeta \"fácil\"):\n\n| Repetición | Intervalo (días) | Fecha aprox. desde inicio |\n|-----------|-----------------|--------------------------|\n| 1         | 1               | Día 1                    |\n| 2         | 6               | Día 7                    |\n| 3         | 15              | Día 22                   |\n| 4         | 38              | Día 60                   |\n| 5         | 94              | Día 154                  |\n| 6         | 235             | Día 389 (~13 meses)      |\n| 7         | 588             | Día 977 (~2.7 años)      |\n\nCon un E-Factor de **1.3** (tarjeta muy difícil), los intervalos crecen mucho más lento: 1 → 6 → 8 → 10 → 13 → 17 días...\n\n---\n\n## Casos típicos\n\n**Caso 1 – Vocabulario nuevo en inglés (EF=2.5, intervalo=1)**\nUna tarjeta recién aprendida empieza con intervalo 1 (primer repaso al día siguiente). En el segundo repaso, el intervalo es fijo: 6 días. Desde el tercer repaso en adelante: `6 × 2.5 = 15 días`. Si la última revisión fue el 1 de enero, el próximo repaso es el **16 de enero**.\n\n**Caso 2 – Tarjeta difícil de kanji (EF=1.4, intervalo=10)**\nUn estudiante de japonés tiene una tarjeta con EF bajo porque la falla seguido. Nuevo intervalo: `round(10 × 1.4) = 14 días`. Si la vio el 5 de marzo, el próximo repaso es el **19 de marzo**. Sin SRS, probablemente la repasaría a diario sin necesidad.\n\n**Caso 3 – Repaso mensual de vocabulario avanzado (EF=2.3, intervalo=30)**\nUn estudiante de francés en nivel B2 tiene palabras bien consolidadas. Nuevo intervalo: `round(30 × 2.3) = 69 días`. Casi **2 meses y medio** sin necesidad de repasar esa palabra, liberando tiempo para vocabulario nuevo.\n\n---\n\n## Errores comunes\n\n1. **Confundir EF con dificultad subjetiva**: El EF no lo ponés vos a mano; lo calcula el algoritmo según tus calificaciones (0-5). Muchos usuarios lo editan manualmente y rompen el sistema.\n\n2. **Calificar siempre con 5 para \"avanzar más rápido\"**: Si calificás todo como perfecto aunque dudes, el EF sube a 2.5 y los intervalos se vuelven tan largos que empezás a olvidar. El sistema funciona solo si calificás honestamente.\n\n3. **Usar el intervalo en semanas o meses en vez de días**: La fórmula SM-2 trabaja exclusivamente en **días enteros**. Convertir a semanas antes de multiplicar genera fechas incorrectas.\n\n4. **Reiniciar el intervalo a 1 cuando se falla una tarjeta sin actualizar el EF**: Al fallar (calidad < 3), SM-2 reinicia el intervalo a 1 día, pero también **baja el EF**. Si solo reiniciás el intervalo sin actualizar el EF, la tarjeta nunca se marca como difícil y vuelve a aparecer con intervalos muy largos demasiado pronto.\n\n5. **Mezclar el algoritmo SM-2 con SM-18**: Anki usa una variante del SM-2 con modificaciones propias (FSRS en versiones recientes). Los intervalos calculados acá siguen el SM-2 clásico, que puede diferir levemente de lo que muestra Anki moderno.\n\n---\n\n## Calculadoras relacionadas\n\n- [Días de preparación para examen oficial de idioma](/calculadora-dias-preparacion-examen-oficial-idioma)\n- [Vocabulario por nivel MCER (A1–C2)](/calculadora-vocabulario-nivel-mcer-a1-c2-palabras)\n- [Comparación de efectividad de apps de idioma](/calculadora-apps-idioma-efectividad-comparacion-nivel)\n- [Clases semanales en iTalki: frecuencia óptima](/calculadora-clases-semanales-italki-online-frecuencia)\n",
   "faq": [
     {
-      "q": "¿SM-2?",
-      "a": "Algoritmo de SuperMemo."
+      "q": "¿Qué es el E-Factor y cuál es su rango válido?",
+      "a": "El E-Factor (factor de facilidad) es un número entre **1.3 y 2.5** que representa qué tan fácil es recordar una tarjeta. Empieza en 2.5 para todas las tarjetas nuevas y baja cada vez que la respondés mal o con dificultad. El mínimo es 1.3: aunque falles muchas veces, el algoritmo no deja que baje más para evitar intervalos de 0 días."
     },
     {
-      "q": "¿E-Factor?",
-      "a": "Dificultad de tarjeta (1.3-2.5)."
+      "q": "¿Qué pasa si fallo una tarjeta? ¿Vuelve a cero?",
+      "a": "Sí, pero solo parcialmente. Si calificás con menos de 3 (fallo), el intervalo vuelve a **1 día** y tenés que reaprender la tarjeta. Sin embargo, el EF también se actualiza a la baja: con calidad 0, el EF baja aproximadamente **0.34 puntos**. Una tarjeta con EF=2.5 fallada tres veces seguidas quedaría cerca de EF=1.7, mostrándose con mucha más frecuencia."
     },
     {
-      "q": "¿Intervalos?",
-      "a": "1 día, 6, 6×EF..."
+      "q": "¿Cuántas tarjetas nuevas por día es razonable para no colapsar la cola de repasos?",
+      "a": "La recomendación general de la comunidad de Anki es entre **10 y 20 tarjetas nuevas por día**. Con 20 tarjetas nuevas diarias y un EF promedio de 2.1, en 3 meses podés acumular una cola de repasos de entre 100 y 150 tarjetas por día. Para idiomas, estudios del ámbito SRS sugieren que aprender las **2.000 palabras más frecuentes** de un idioma cubre aproximadamente el 80% del vocabulario cotidiano."
     },
     {
-      "q": "¿Anki?",
-      "a": "Implementa SM-2 modificado."
+      "q": "¿El algoritmo SM-2 es el mismo que usa Anki?",
+      "a": "Anki históricamente usó una variante modificada del SM-2, pero desde 2022 incorporó el algoritmo **FSRS (Free Spaced Repetition Scheduler)**, que usa machine learning para predecir el olvido de forma más precisa. Esta calculadora implementa el **SM-2 clásico**, que sigue siendo válido y es el estándar de referencia para entender cómo funciona cualquier sistema SRS."
     },
     {
-      "q": "¿Lapsos?",
-      "a": "Reset intervalo pero conserva EF."
+      "q": "¿Con qué calidad debo calificar mis respuestas para un aprendizaje óptimo?",
+      "a": "La escala SM-2 va de 0 a 5: **0-1** = fallo total o casi total, **2** = fallo con pista, **3** = correcto con mucho esfuerzo, **4** = correcto con pequeña duda, **5** = perfecto e instantáneo. Para mantener el EF estable alrededor de 2.1–2.3 (el rango óptimo), necesitás calificar la mayoría de tus respuestas con **4**. Calificar siempre con 5 infla los intervalos y aumenta el olvido."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cuánto vocabulario necesito para hablar fluidamente un idioma y cómo me ayuda SRS a llegar?",
+      "a": "Según estudios de lingüística aplicada citados por el Marco Común Europeo de Referencia (MCER), el nivel B2 requiere aproximadamente **4.000 a 5.000 palabras** en uso activo. Con SRS y 15 tarjetas nuevas por día, alcanzás esa cantidad en **267 a 334 días** de estudio continuo. La ventaja del SRS es que no repasás lo que ya sabés: solo lo que estás por olvidar."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Puedo usar esta calculadora para materias que no son idiomas?",
+      "a": "Totalmente. El algoritmo SM-2 es universal: se usa para medicina (memorizar fármacos, síntomas), derecho (artículos del código), historia, geografía y cualquier disciplina que requiera retención de datos. La única condición es que la unidad de conocimiento sea **discreta y verificable** (saber o no saber), que es exactamente lo que modelan las flashcards."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué diferencia hay entre intervalo 0 e intervalo 1 en SM-2?",
+      "a": "En SM-2 el intervalo mínimo es **1 día**: eso significa que el próximo repaso es al día siguiente. El intervalo 0 no existe en el modelo clásico; si una tarjeta se falla repetidamente en la misma sesión, se repite dentro de esa sesión (intervalo intra-sesión), pero para el cálculo del próximo día siempre se usa mínimo 1. Algunas implementaciones como Anki permiten configurar un intervalo de reaprendizaje de horas, que es una extensión del estándar."
     }
   ],
   "sources": [
     {
-      "name": "Marco Común Europeo de Referencia (MCER)",
-      "url": "https://www.coe.int/en/web/common-european-framework-reference-languages"
-    },
-    {
-      "name": "Instituto Cervantes",
-      "url": "https://www.cervantes.es"
+      "name": "Wikipedia ES – Repetición espaciada",
+      "url": "https://es.wikipedia.org/wiki/Repetici%C3%B3n_espaciada"
     }
   ],
   "relatedSlugs": [

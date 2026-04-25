@@ -7,13 +7,14 @@
   "audience": "global",
   "icon": "🐳",
   "formulaId": "imagen-docker-capas-peso-mb",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Tamaño estimado de imagen Docker según base · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá base y deps mb y obtené tamaño total al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "Esta calculadora te permite estimar el **tamaño total de una imagen Docker** sumando el peso de la imagen base y el de las dependencias o capas adicionales que instalás durante el build. En Docker, cada instrucción `RUN`, `COPY` o `ADD` en el Dockerfile genera una capa inmutable que se apila sobre la anterior. El tamaño final de la imagen es la suma del peso comprimido de todas esas capas. Elegir correctamente la imagen base (Alpine ~5 MB, Debian Slim ~80 MB, Ubuntu ~77 MB, Node oficial ~900 MB) puede significar la diferencia entre desplegar contenedores en segundos o en minutos, con un impacto directo en costos de almacenamiento en registros como Docker Hub, Amazon ECR o GitHub Container Registry.",
+  "keyTakeaway": "**Tamaño total ≈ Imagen base + Σ Capas de dependencias**. Ejemplo real: Alpine (5 MB) + Node.js compilado desde fuente (~45 MB) = ~50 MB vs. imagen `node:20` oficial = ~900 MB. Usar multi-stage builds puede reducir el tamaño hasta un **90%**.",
   "useCases": [
-    "Dimensionar Imagen Docker (capas/tamaño) antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Estimá cuánto espacio va a ocupar tu imagen antes de hacer el push a Docker Hub o Amazon ECR, para planificar costos de almacenamiento.",
+    "Compará distintas imágenes base (Alpine vs. Debian Slim vs. Ubuntu) para elegir la más liviana que cubra tus necesidades de runtime.",
+    "Calculá el ahorro en tamaño al migrar de una imagen monolítica a un multi-stage build, separando la etapa de compilación de la de producción.",
+    "Estimá el tiempo de pull de una imagen en un pipeline de CI/CD según su peso total, para identificar cuellos de botella en deployments automáticos.",
+    "Planificá la capacidad de almacenamiento en un registro privado (Harbor, Nexus, ECR) según la cantidad de imágenes y sus tamaños proyectados."
   ],
   "fields": [
     {
@@ -73,49 +74,45 @@
     ],
     "result": "~55 MB"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nTamaño estimado de imagen Docker según base · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl tamaño de una imagen Docker es la suma de todas sus capas (layers). Cada capa es inmutable y se identifica por su hash SHA-256. El tamaño que muestra `docker images` es el tamaño **descomprimido** (en disco), mientras que el tamaño de transferencia (push/pull) es el **comprimido** (aprox. 40-60% del original).\n\n```\nTamaño total (disco) = Σ Peso de cada capa\n\nTamaño transferencia ≈ Tamaño total × 0.45  (ratio de compresión típico gzip)\n\nCapas = Base layer + RUN layer 1 + RUN layer 2 + ... + COPY layer N\n```\n\nCon multi-stage build:\n```\nTamaño final = Solo capas del stage final (sin herramientas de compilación)\nAhorro = Tamaño single-stage − Tamaño multi-stage\n```\n\n## Tabla de referencia\n\n| Imagen base           | Tamaño disco | Tamaño comprimido | Sistema base        | Uso típico                     |\n|-----------------------|:------------:|:-----------------:|---------------------|-------------------------------|\n| `scratch`             | 0 MB         | 0 MB              | Vacío               | Binarios Go estáticos          |\n| `alpine:3.19`         | ~7 MB        | ~3 MB             | Alpine Linux / musl | Microservicios, CLIs           |\n| `debian:12-slim`      | ~80 MB       | ~30 MB            | Debian / glibc      | Apps Python, Ruby              |\n| `ubuntu:24.04`        | ~77 MB       | ~29 MB            | Ubuntu / glibc      | General purpose                |\n| `node:20-alpine`      | ~130 MB      | ~51 MB            | Alpine + Node.js    | Apps Node.js livianas          |\n| `node:20`             | ~1.1 GB      | ~430 MB           | Debian + Node.js    | Node.js con todas las libs     |\n| `python:3.12-slim`    | ~130 MB      | ~50 MB            | Debian Slim + Python| Apps Python                    |\n| `python:3.12`         | ~1.0 GB      | ~390 MB           | Debian + Python     | Python con compiladores        |\n| `openjdk:21-slim`     | ~250 MB      | ~95 MB            | Debian Slim + JDK   | Apps Java                      |\n| `golang:1.22-alpine`  | ~250 MB      | ~100 MB           | Alpine + Go toolchain| Solo para build stage          |\n\n## Casos típicos\n\n### Caso 1: API Node.js sin optimización vs. con Alpine\n\n**Sin optimizar:**\n- Base: `node:20` → 1.1 GB\n- `npm install` (producción) → +150 MB\n- Código fuente (COPY) → +5 MB\n- **Total: ~1.255 GB** 🔴\n\n**Con Alpine + multi-stage:**\n- Stage 1 (build): `node:20-alpine` → 130 MB + deps dev → descartado\n- Stage 2 (prod): `node:20-alpine` → 130 MB + solo `node_modules` prod (50 MB) + código (5 MB)\n- **Total: ~185 MB** ✅ → **Reducción del 85%**\n\n---\n\n### Caso 2: Binario Go con `scratch`\n\n```dockerfile\n# Stage 1: compilación\nFROM golang:1.22-alpine AS builder\nWORKDIR /app\nCOPY . .\nRUN go build -o api .\n\n# Stage 2: imagen final\nFROM scratch\nCOPY --from=builder /app/api /api\nENTRYPOINT [\"/api\"]\n```\n- Build stage: 250 MB (descartado)\n- **Imagen final: ~8 MB** (solo el binario estático) ✅\n\n---\n\n### Caso 3: App Python con dependencias ML (sin optimizar)\n\n- Base: `python:3.12` → 1.0 GB\n- `pip install pandas numpy scikit-learn` → +600 MB\n- Código y modelos → +200 MB\n- **Total: ~1.8 GB** 🔴 → Considerar `python:3.12-slim` + solo dependencias necesarias → **~550 MB**\n\n## Errores comunes\n\n1. **Usar la imagen base completa cuando existe `-slim` o `-alpine`**: `node:20` ocupa 1.1 GB vs. `node:20-alpine` con 130 MB. Siempre evaluá si la versión slim/alpine cubre tu caso.\n\n2. **Instalar dependencias de build en la imagen final**: Herramientas como `gcc`, `make`, `git` o `build-essential` son necesarias para compilar, pero no para correr la app. Usá multi-stage builds para descartarlas.\n\n3. **Cada `RUN` que instala Y borra paquetes en comandos separados**: Si hacés `RUN apt-get install -y curl` y luego en otro `RUN` hacés `rm -rf /var/lib/apt/lists/*`, la primera capa YA guardó el caché de apt. Todo debe ir en un solo `RUN` encadenado con `&&`.\n\n4. **Copiar todo el contexto con `COPY . .` sin `.dockerignore`**: Incluir carpetas como `node_modules/`, `.git/`, `dist/` o archivos de log puede agregar cientos de MB innecesarios. Siempre definí un archivo `.dockerignore`.\n\n5. **No usar `--no-cache` o `--no-install-recommends` en apt**: `apt-get install -y paquete` sin `--no-install-recommends` instala dependencias recomendadas que pueden sumar 50-200 MB extras. Usá `apt-get install -y --no-install-recommends paquete && rm -rf /var/lib/apt/lists/*`.\n\n6. **Ignorar el orden de las capas para aprovechar la caché**: Docker cachea por capa. Si ponés `COPY . .` antes de `RUN npm install`, cualquier cambio en el código invalida la caché de npm. Lo correcto es: `COPY package*.json ./` → `RUN npm install` → `COPY . .`.\n\n## Calculadoras relacionadas\n\n- [Calculadora de tamaño de imagen en píxeles y megapíxeles](/calculadora-tamano-imagen-pixeles-megapixeles) — Útil para estimar el peso de assets gráficos que incluís en tu imagen Docker.\n- [Calculadora de optimización JPG: calidad y tamaño para web](/calculadora-jpg-calidad-tamano-web-optimizacion) — Reducí el tamaño de imágenes estáticas antes de copiarlas al contenedor.\n- [Calculadora de peso de filamento PLA/ABS/PETG por volumen](/calculadora-peso-pla-abs-petg-volumen) — Otro ejemplo de cálculo de peso/volumen en manufactura digital.\n- [Calculadora de tamaño de monitor y distancia ideal](/calculadora-monitor-tamano-distancia-ideal) — Para configurar tu entorno de desarrollo donde corrés Docker.",
   "faq": [
     {
-      "q": "¿Multi-stage?",
-      "a": "Build en una imagen, copia a slim."
+      "q": "¿Cuál es la diferencia entre el tamaño en disco y el tamaño de transferencia de una imagen Docker?",
+      "a": "El tamaño que muestra `docker images` es el tamaño **descomprimido en disco**, que es la suma de todas las capas extraídas. El tamaño de transferencia (lo que se descarga al hacer `docker pull`) es el tamaño **comprimido con gzip**, que típicamente representa entre el 40% y el 60% del tamaño en disco. Por ejemplo, una imagen de 500 MB en disco generalmente pesa unos 200-225 MB en el registro."
     },
     {
-      "q": "¿Por qué Alpine?",
-      "a": "musl libc, glibc compat issues a veces."
+      "q": "¿Por qué Alpine Linux es tan popular como imagen base para producción?",
+      "a": "Alpine Linux usa **musl libc** en lugar de glibc y el shell **BusyBox**, lo que le permite tener un tamaño base de apenas ~5-7 MB vs. ~77-80 MB de Ubuntu o Debian. Además, su gestor de paquetes `apk` es muy eficiente. La contrapartida es que algunas librerías compiladas para glibc no funcionan directamente en Alpine, por lo que hay que verificar compatibilidad, especialmente en aplicaciones Python con extensiones C o Java."
     },
     {
-      "q": "¿Distroless?",
-      "a": "Sin shell, más seguro, menor attack surface."
+      "q": "¿Qué es un multi-stage build y cuánto puede reducir el tamaño de una imagen?",
+      "a": "Un multi-stage build usa múltiples instrucciones `FROM` en un solo Dockerfile: las etapas anteriores se usan para compilar y las finales solo copian los artefactos necesarios. En la práctica, puede reducir el tamaño entre un **70% y 95%**. Un ejemplo típico: una app Go pasa de ~800 MB (imagen con toolchain) a ~10 MB (binario estático en `scratch`). Para Node.js, de ~1.2 GB a ~180 MB."
     },
     {
-      "q": "¿.dockerignore?",
-      "a": "Crítico para no copiar basura."
+      "q": "¿Cómo puedo ver el peso exacto de cada capa de mi imagen Docker?",
+      "a": "Usá el comando `docker history <imagen>` que muestra el tamaño de cada capa y la instrucción que la creó. Para un análisis más visual y detallado, la herramienta open-source **Dive** (github.com/wagoodman/dive) permite inspeccionar capa por capa, ver qué archivos agrega cada instrucción y detectar desperdicios. También podés usar `docker inspect <imagen>` para ver los metadatos completos en JSON."
     },
     {
-      "q": "¿Scan?",
-      "a": "Trivy, Snyk detectan CVEs en imagen."
+      "q": "¿Las capas se comparten entre imágenes en el mismo host Docker?",
+      "a": "Sí, esa es una de las grandes ventajas del sistema de capas. Si tenés 5 imágenes basadas en `node:20-alpine`, la capa de Alpine y la de Node se almacenan **una sola vez** en el sistema de archivos del host (usando overlay2 por defecto). Docker identifica cada capa por su hash SHA-256, y si dos imágenes comparten una capa con el mismo hash, no la duplica. Esto ahorra espacio significativo en servidores con muchos contenedores."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cuánto espacio libre necesito tener en el host para correr Docker sin problemas?",
+      "a": "Docker recomienda al menos **10 GB de espacio libre** para un uso básico. En producción, el espacio depende de cuántas imágenes y contenedores mantenés activos. Docker almacena todo en `/var/lib/docker` por defecto. Podés limpiar recursos no usados con `docker system prune -a` (elimina imágenes sin usar, contenedores detenidos, redes y caché de build). Ejecutalo periódicamente para recuperar espacio, especialmente en pipelines de CI/CD."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Existe un límite de capas en una imagen Docker?",
+      "a": "Docker con el driver de almacenamiento **overlay2** (el default en Linux moderno) soporta hasta **128 capas** por imagen. En la práctica rara vez se llega a ese límite, pero es una razón más para consolidar comandos `RUN` con `&&` en lugar de usar un `RUN` separado por cada comando. Cada `RUN`, `COPY` y `ADD` crea una nueva capa, así que un Dockerfile mal estructurado puede acumular decenas de capas innecesarias."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Cómo afecta el tamaño de la imagen al tiempo de deployment en Kubernetes o en servicios cloud?",
+      "a": "Directamente: una imagen de 1 GB tarda entre 30 segundos y 3 minutos en descargarse según el ancho de banda del nodo (típicamente 1-10 Gbps en cloud). Esto impacta en el **tiempo de arranque de pods** y en la velocidad de autoscaling. En servicios como AWS ECS o GKE, imágenes más pequeñas también reducen costos de transferencia de datos desde ECR o GCR. La recomendación general es apuntar a imágenes de producción **por debajo de los 200 MB** siempre que sea posible."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
-    },
-    {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "Docker Documentation – Best practices for writing Dockerfiles",
+      "url": "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/"
     }
   ],
   "relatedSlugs": [

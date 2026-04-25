@@ -15,47 +15,173 @@
     "cuanto pagar hipoteca",
     "euribor 2026"
   ],
-  "intro": "En España la mayoría de hipotecas usan **sistema francés** (cuota mensual fija en su revisión) con **interés variable** (Euribor + diferencial del banco, revisado anual o semestralmente), **fijo** o **mixto** (fijo los primeros años, variable después). Esta calculadora te da la cuota mensual y el total pagado.",
-  "keyTakeaway": "Cuota ≈ capital × (i · (1+i)^n) / ((1+i)^n − 1), donde i = TIN/12 y n = meses. **Variable** con Euribor ~3-4% + diferencial 0.5-1%. **Fijo** ~3-4.5% estable. **Mixto**: los primeros 5-10 años a fijo.",
+  "intro": "Esta calculadora te permite conocer la cuota mensual de tu hipoteca en España según el importe solicitado, el plazo de amortización y el tipo de interés aplicado (fijo, variable referenciado al Euríbor o mixto). Utiliza el sistema de amortización francés —el estándar en España—, donde la cuota es constante pero la proporción entre intereses y capital varía a lo largo del tiempo. La fórmula base es: **Cuota = C × [r(1+r)ⁿ] / [(1+r)ⁿ − 1]**, donde C es el capital prestado, r el tipo mensual (TIN/12) y n el número de cuotas. Imprescindible para comparar ofertas bancarias antes de firmar ante notario.",
+  "keyTakeaway": "Con el método francés: **Cuota = 200.000 € × [0,003958 × (1,003958)³⁰⁰] / [(1,003958)³⁰⁰ − 1] ≈ 1.002 €/mes** (TIN 4,75 %, 25 años). El total abonado supera los 300.510 €, lo que implica pagar más de 100.000 € solo en intereses.",
   "useCases": [
-    "Vas a firmar una hipoteca: cuánta cuota mensual soportás con tu sueldo.",
-    "Comparás bancos: Santander, BBVA, CaixaBank, Sabadell, ING con distintos diferenciales.",
-    "Subida del Euribor: cómo afecta tu cuota si tenés hipoteca variable.",
-    "Decisión variable vs fija: calcular ambas para ver cuál te conviene.",
-    "Plazo: 25 años vs 30 años cambian la cuota y el total pagado."
+    "Comparar la cuota mensual de una hipoteca variable (Euríbor + diferencial) frente a una fija antes de acudir al banco.",
+    "Calcular el impacto de una subida del Euríbor en tu cuota actual cuando se acerca la revisión anual.",
+    "Estimar cuánto capital quedará pendiente tras 5 años para decidir si conviene amortizar anticipadamente.",
+    "Evaluar si es preferible ampliar el plazo de 20 a 30 años para reducir la cuota mensual y ajustarse al límite del 35 % de endeudamiento recomendado por el Banco de España.",
+    "Simular una hipoteca mixta con tipo fijo los primeros 5 años y variable el resto, calculando ambas fases por separado."
   ],
   "fields": [
-    { "key": "capital", "label": "Importe del préstamo", "type": "number", "unit": "€", "placeholder": "200000" },
-    { "key": "tin", "label": "TIN (Tipo de Interés Nominal)", "type": "number", "unit": "%", "placeholder": "3.5" },
-    { "key": "anios", "label": "Plazo", "type": "number", "unit": "años", "placeholder": "25" },
-    { "key": "tipo", "label": "Tipo de interés", "type": "select", "options": [{ "value": "fija", "label": "Fija" }, { "value": "variable", "label": "Variable (Euribor+diferencial)" }, { "value": "mixta", "label": "Mixta" }] }
+    {
+      "key": "capital",
+      "label": "Importe del préstamo",
+      "type": "number",
+      "unit": "€",
+      "placeholder": "200000"
+    },
+    {
+      "key": "tin",
+      "label": "TIN (Tipo de Interés Nominal)",
+      "type": "number",
+      "unit": "%",
+      "placeholder": "3.5"
+    },
+    {
+      "key": "anios",
+      "label": "Plazo",
+      "type": "number",
+      "unit": "años",
+      "placeholder": "25"
+    },
+    {
+      "key": "tipo",
+      "label": "Tipo de interés",
+      "type": "select",
+      "options": [
+        {
+          "value": "fija",
+          "label": "Fija"
+        },
+        {
+          "value": "variable",
+          "label": "Variable (Euribor+diferencial)"
+        },
+        {
+          "value": "mixta",
+          "label": "Mixta"
+        }
+      ]
+    }
   ],
   "outputs": [
-    { "key": "cuota", "label": "Cuota mensual", "format": "currency-eur" },
-    { "key": "total", "label": "Total a pagar", "format": "currency-eur" },
-    { "key": "intereses", "label": "Total intereses", "format": "currency-eur" },
-    { "key": "resumen", "label": "Resumen", "format": "text" }
+    {
+      "key": "cuota",
+      "label": "Cuota mensual",
+      "format": "currency-eur"
+    },
+    {
+      "key": "total",
+      "label": "Total a pagar",
+      "format": "currency-eur"
+    },
+    {
+      "key": "intereses",
+      "label": "Total intereses",
+      "format": "currency-eur"
+    },
+    {
+      "key": "resumen",
+      "label": "Resumen",
+      "format": "text"
+    }
   ],
   "example": {
     "inputs": "€200.000 · 3.5% · 25 años",
     "result": "~€1.002/mes · total €300.510"
   },
   "faqs": [
-    { "q": "¿Qué es el Euribor?", "a": "Euro Interbank Offered Rate: la tasa a la que los bancos europeos se prestan dinero entre sí. Se publica diariamente. El Euribor 12 meses es el más usado en hipotecas variables." },
-    { "q": "¿Diferencial típico?", "a": "Banco añade al Euribor: 0.4% (muy bueno) a 1.2% (malo). Depende del perfil crediticio y vinculación (nómina, seguro, tarjetas)." },
-    { "q": "¿TAE vs TIN?", "a": "TIN es solo el interés. TAE incluye comisiones de apertura, mantenimiento, etc. Comparar por TAE." },
-    { "q": "¿Revisión anual o semestral?", "a": "Variable: revisión del Euribor anual o cada 6 meses. Si sube, la cuota sube." },
-    { "q": "¿Cuánto de entrada?", "a": "Banco suele financiar ~80% del valor. Necesitás el 20% + 10% de gastos (ITP, notaría, tasación, gestoría)." },
-    { "q": "¿Amortización anticipada?", "a": "Comisión típica 0.25-0.5%. Reducís plazo o cuota. Fiscalmente deducible el primer tramo si la hipoteca es anterior a 2013." },
-    { "q": "¿Y si sube el Euribor?", "a": "Cada punto de Euribor = +~€60/mes por cada €100k de hipoteca a 25 años. Haz la simulación para tu caso." }
+    {
+      "q": "¿Qué es el Euribor?",
+      "a": "Euro Interbank Offered Rate: la tasa a la que los bancos europeos se prestan dinero entre sí. Se publica diariamente. El Euribor 12 meses es el más usado en hipotecas variables."
+    },
+    {
+      "q": "¿Diferencial típico?",
+      "a": "Banco añade al Euribor: 0.4% (muy bueno) a 1.2% (malo). Depende del perfil crediticio y vinculación (nómina, seguro, tarjetas)."
+    },
+    {
+      "q": "¿TAE vs TIN?",
+      "a": "TIN es solo el interés. TAE incluye comisiones de apertura, mantenimiento, etc. Comparar por TAE."
+    },
+    {
+      "q": "¿Revisión anual o semestral?",
+      "a": "Variable: revisión del Euribor anual o cada 6 meses. Si sube, la cuota sube."
+    },
+    {
+      "q": "¿Cuánto de entrada?",
+      "a": "Banco suele financiar ~80% del valor. Necesitás el 20% + 10% de gastos (ITP, notaría, tasación, gestoría)."
+    },
+    {
+      "q": "¿Amortización anticipada?",
+      "a": "Comisión típica 0.25-0.5%. Reducís plazo o cuota. Fiscalmente deducible el primer tramo si la hipoteca es anterior a 2013."
+    },
+    {
+      "q": "¿Y si sube el Euribor?",
+      "a": "Cada punto de Euribor = +~€60/mes por cada €100k de hipoteca a 25 años. Haz la simulación para tu caso."
+    }
   ],
   "sources": [
-    { "label": "Banco de España - Euribor", "url": "https://www.bde.es" },
-    { "label": "INE - Precio vivienda", "url": "https://www.ine.es" }
+    {
+      "name": "Banco de España — Tipos de interés hipotecario y Euríbor (Boletín Estadístico)",
+      "url": "https://www.bde.es/webbde/es/estadis/infoest/tipos/tipos.html"
+    },
+    {
+      "name": "Ley 5/2019 de Contratos de Crédito Inmobiliario — BOE",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2019-3814"
+    },
+    {
+      "name": "Banco de España — Informe de Estabilidad Financiera, otoño 2024",
+      "url": "https://www.bde.es/wbe/es/publicaciones/analisis-economico-investigacion/informes-estabilidad-financiera/"
+    },
+    {
+      "name": "INE — Estadística de hipotecas (datos mensuales)",
+      "url": "https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&cid=1254736170236&menu=ultiDatos&idp=1254735576757"
+    }
   ],
   "dataUpdate": {
     "frequency": "monthly",
     "lastUpdated": "2026-04-18",
     "updateType": "manual"
-  }
+  },
+  "explanation": "## Cómo se calcula\n\nEl sistema de amortización **francés** (cuota constante) es el empleado de forma casi universal en las hipotecas españolas. La fórmula exacta es:\n\n```\nCuota mensual (C) = P × [r × (1 + r)ⁿ] / [(1 + r)ⁿ − 1]\n\nDonde:\n  P = capital prestado (importe del préstamo)\n  r = tipo de interés mensual = TIN / 12 / 100\n  n = número total de cuotas = plazo en años × 12\n```\n\n**Ejemplo paso a paso** con P = 200.000 €, TIN = 4,75 %, plazo = 25 años:\n- r = 4,75 / 12 / 100 = 0,003958\n- n = 25 × 12 = 300\n- (1 + r)ⁿ = (1,003958)³⁰⁰ ≈ 3,2444\n- Cuota = 200.000 × [0,003958 × 3,2444] / [3,2444 − 1]\n- Cuota = 200.000 × 0,012839 / 2,2444 ≈ **1.002 €/mes**\n- Total pagado = 1.002 × 300 = **300.600 €**\n- Total intereses = 300.600 − 200.000 = **100.600 €**\n\nPara hipotecas **variables**, el TIN se recalcula en cada revisión (habitualmente anual) como:\n```\nTIN revisado = Euríbor 12 meses (mes anterior) + Diferencial del banco\n```\n\n---\n\n## Tabla de referencia\n\n### Cuota mensual aproximada según importe, plazo y TIN (amortización francesa, €)\n\n| Importe | TIN 3,00 % · 20 años | TIN 3,00 % · 30 años | TIN 4,75 % · 20 años | TIN 4,75 % · 30 años |\n|---|---|---|---|---|\n| 100.000 € | 555 € | 422 € | 648 € | 522 € |\n| 150.000 € | 832 € | 632 € | 972 € | 782 € |\n| 200.000 € | 1.109 € | 843 € | 1.296 € | 1.043 € |\n| 250.000 € | 1.387 € | 1.054 € | 1.620 € | 1.304 € |\n| 300.000 € | 1.664 € | 1.265 € | 1.944 € | 1.565 € |\n\n### Evolución del Euríbor a 12 meses (media mensual, datos Banco de España)\n\n| Período | Euríbor 12M (%) |\n|---|---|\n| Enero 2022 | −0,477 |\n| Enero 2023 | 3,337 |\n| Enero 2024 | 3,609 |\n| Abril 2025 | 2,396 |\n\n> **Nota:** El diferencial medio en hipotecas variables nuevas en España ronda los 0,60–0,90 puntos porcentuales según el Banco de España (Boletín Estadístico, 2024).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Hipoteca variable con revisión al alza\nUna familia contrató en 2020 una hipoteca de 180.000 € a 25 años con Euríbor + 0,89 %. En 2020, el Euríbor era −0,50 %, así que el TIN era 0,39 % y la cuota, **695 €/mes**. En la revisión de enero 2023 (Euríbor = 3,34 %), el TIN pasó a 4,23 % y la cuota subió a **979 €/mes**, un incremento de **+284 €/mes** (41 % más).\n\n### Caso 2 — Hipoteca fija frente a variable en 2025\nCon un capital de 200.000 € a 25 años, una entidad ofrece fija al 3,20 % (cuota: **965 €/mes**) o variable al Euríbor + 0,75 % (TIN actual ≈ 3,15 %; cuota inicial: **959 €/mes**). La diferencia es de solo 6 €/mes, pero la fija elimina el riesgo de subidas futuras del Euríbor.\n\n### Caso 3 — Amortización anticipada parcial\nTras 10 años de una hipoteca de 250.000 € a 30 años al 3,50 % (cuota: **1.123 €/mes**), el capital pendiente es de aproximadamente **196.000 €**. Si se amortizan 20.000 € de golpe, el capital baja a 176.000 € y la nueva cuota —manteniendo el plazo restante— desciende a **1.009 €/mes**, ahorrando **114 €/mes** durante los 20 años restantes, es decir, **27.360 € en total**.\n\n---\n\n## Errores comunes\n\n1. **Confundir TIN con TAE.** El TIN es el tipo nominal que entra en la fórmula de la cuota; la TAE incluye comisiones, gastos y la frecuencia de pagos. Para calcular la cuota mensual exacta siempre se usa el TIN. Usar la TAE sobreestimaría la cuota.\n\n2. **No dividir el TIN entre 12.** La fórmula requiere el tipo mensual (r = TIN/12/100). Introducir directamente el TIN anual dispara el resultado hasta cifras absurdas.\n\n3. **Ignorar el capital pendiente al comparar plazos.** Ampliar el plazo de 20 a 30 años reduce la cuota, pero el total de intereses pagados puede aumentar más de un 50 %. Por ejemplo, con 200.000 € al 3 %: en 20 años pagas ~26.600 € de intereses; en 30 años, ~43.300 €.\n\n4. **Asumir que la cuota mensual incluye el seguro de hogar y de vida.** Los bancos suelen condicionar el diferencial a la contratación de seguros vinculados. Esos costes no forman parte de la cuota hipotecaria pero sí de la TAE y del desembolso real mensual.\n\n5. **No tener en cuenta los gastos de constitución.** Desde la Ley 5/2019 de Contratos de Crédito Inmobiliario, el banco asume notaría, gestoría, registro e IAJD. Al comprador solo le corresponde la tasación y la copia de la escritura. Olvidar la tasación (300–600 €) al calcular el presupuesto inicial es un error frecuente.\n\n---\n\n## Calculadoras relacionadas\n\nPróximamente encontrarás en Hacé Cuentas España calculadoras complementarias para profundizar en tu análisis hipotecario.",
+  "faq": [
+    {
+      "q": "¿Qué es el Euríbor y cómo afecta a mi cuota mensual?",
+      "a": "El Euríbor (Euro Interbank Offered Rate) es el tipo al que los grandes bancos europeos se prestan dinero entre sí. El Euríbor a 12 meses es el índice de referencia oficial para la mayoría de hipotecas variables en España. Tu entidad lo consulta en la fecha de revisión (normalmente anual) y recalcula la cuota sumando tu diferencial pactado. Si el Euríbor sube 1 punto, en una hipoteca de 200.000 € a 25 años la cuota puede encarecerse entre 90 y 120 € mensuales dependiendo del capital pendiente."
+    },
+    {
+      "q": "¿Qué diferencia hay entre TIN y TAE en una hipoteca?",
+      "a": "El TIN (Tipo de Interés Nominal) es el porcentaje puro que el banco cobra por prestarte dinero; es el que entra directamente en la fórmula de la cuota mensual. La TAE (Tasa Anual Equivalente) incorpora además las comisiones, los gastos periódicos y la frecuencia de liquidación, por lo que siempre es igual o superior al TIN. La Ley 5/2019 obliga a los bancos a informar de la TAE en toda publicidad de crédito hipotecario. Para comparar ofertas a largo plazo, la TAE es el indicador más representativo del coste total."
+    },
+    {
+      "q": "¿Cuánto recomienda el Banco de España que represente la cuota sobre los ingresos?",
+      "a": "El Banco de España aconseja que el esfuerzo hipotecario no supere el 30-35 % de los ingresos netos del hogar. Por ejemplo, con unos ingresos familiares de 3.000 €/mes, la cuota máxima recomendada sería de 900-1.050 €. Superar ese umbral incrementa significativamente el riesgo de impago ante una subida de tipos o una reducción de ingresos, como advierte el informe de Estabilidad Financiera del Banco de España (2024)."
+    },
+    {
+      "q": "¿Qué gastos de hipoteca corren por cuenta del banco desde la Ley 5/2019?",
+      "a": "Desde la entrada en vigor de la Ley 5/2019 de Contratos de Crédito Inmobiliario (LCCI), el banco debe abonar los gastos de notaría de la escritura hipotecaria, gestoría, registro de la propiedad e Impuesto de Actos Jurídicos Documentados (IAJD). El comprador solo asume el coste de la tasación (habitualmente entre 300 € y 600 €) y, si lo desea, una copia simple de la escritura. Esta ley supuso un ahorro medio de entre 1.000 y 2.000 € para el prestatario."
+    },
+    {
+      "q": "¿Cómo funciona la amortización anticipada y qué comisión puede cobrar el banco?",
+      "a": "Amortizar anticipadamente reduce el capital pendiente, lo que disminuye la carga de intereses futuros. La LCCI 5/2019 limita la comisión por amortización anticipada: en hipotecas variables, el banco puede cobrar un máximo del 0,25 % durante los primeros 3 años o del 0,15 % durante los primeros 5 años (a elección de la entidad); a partir de ese momento, es gratuita. En hipotecas fijas, el límite es del 2 % los primeros 10 años y del 1,5 % a partir del año 11. Conviene calcular si el ahorro en intereses supera la comisión antes de amortizar."
+    },
+    {
+      "q": "¿Qué es una hipoteca mixta y cuándo conviene contratarla?",
+      "a": "Una hipoteca mixta aplica un tipo fijo durante un período inicial (habitualmente 3, 5 o 10 años) y a continuación pasa a ser variable (Euríbor + diferencial). Es una opción intermedia que ofrece estabilidad al principio —cuando el riesgo de subidas es más difícil de absorber— y potencial ahorro si el Euríbor baja en el largo plazo. Conviene especialmente si prevés vender o amortizar el inmueble antes de que termine el tramo fijo, o si esperas que los tipos bajen en el medio plazo."
+    },
+    {
+      "q": "¿Con qué loan-to-value (LTV) financian los bancos en España y qué impacto tiene en la cuota?",
+      "a": "Los bancos españoles financian en general hasta el 80 % del valor de tasación (LTV del 80 %) para primera vivienda, lo que significa que el comprador debe aportar al menos el 20 % de entrada más los gastos de compraventa (ITP o IVA + AJD, entre el 8 y el 12 % según la comunidad autónoma). Un LTV inferior al 80 % puede mejorar el diferencial ofrecido y, por tanto, reducir la cuota mensual. Superar el 80 % de LTV suele requerir garantías adicionales o implica condiciones menos ventajosas."
+    },
+    {
+      "q": "¿Cómo calculo el capital pendiente de mi hipoteca en un momento dado?",
+      "a": "El capital pendiente tras k cuotas pagadas se obtiene con la fórmula: **Capital pendiente = P × [(1+r)ⁿ − (1+r)ᵏ] / [(1+r)ⁿ − 1]**, donde P es el capital inicial, r el tipo mensual, n el total de cuotas y k las cuotas ya abonadas. Por ejemplo, en una hipoteca de 200.000 € al 4,75 % a 25 años, tras 5 años (60 cuotas) el capital pendiente es de aproximadamente 176.000 €, ya que en los primeros años casi el 80 % de cada cuota se destina a intereses y solo el 20 % a amortizar capital."
+    },
+    {
+      "q": "¿Qué información obligatoria debe entregarme el banco antes de firmar la hipoteca?",
+      "a": "La LCCI 5/2019 exige que el banco entregue la Ficha Europea de Información Normalizada (FEIN), la Ficha de Advertencias Estandarizadas (FiAE), una simulación de cuotas ante posibles variaciones del índice de referencia y el borrador del contrato con al menos 10 días naturales de antelación a la firma. Además, el notario debe citar al prestatario para verificar que ha comprendido los términos antes de la firma, en una sesión sin presencia del banco."
+    }
+  ]
 }

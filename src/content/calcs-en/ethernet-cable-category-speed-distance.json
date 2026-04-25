@@ -8,14 +8,13 @@
   "icon": "📡",
   "formulaId": "categoria-cable-ethernet-velocidad-distancia",
   "audience": "global",
-  "intro": "Technical calculations are fundamental in IT and development: latency, bandwidth, SLA uptime, cloud costs, algorithm complexity. Accurate initial calculations prevent over-provisioning infrastructure. Find maximum speed and distance for each Ethernet category. Free and fast. Values updated to 2026 and reviewed periodically to keep you current.",
-  "keyTakeaway": "Formula: **Standard reference table**. Direct application using input values. Maximum speed and distance per Ethernet category.",
+  "intro": "Ethernet cable categories (Cat 5e, Cat 6, Cat 6A, Cat 7, Cat 8) define the maximum data transmission speed, signal frequency (MHz), and maximum segment length a cable can reliably support. Each category is governed by TIA/EIA-568 and ISO/IEC 11801 standards. For example, Cat 6 handles up to 1 Gbps at 100 m and 10 Gbps at 55 m, operating at 250 MHz, while Cat 8 reaches 40 Gbps over 30 m at 2000 MHz. Use this calculator to instantly look up the certified specs for any Ethernet cable category you're installing or purchasing.",
+  "keyTakeaway": "**Throughput is limited by the weakest link: cable category, switch port speed, and run length all apply simultaneously.** Cat 6A at 500 MHz delivers 10 Gbps up to 100 m; Cat 8 at 2000 MHz delivers 25–40 Gbps but only up to 30 m.",
   "useCases": [
-    "Technical calculations related to Ethernet cable categories",
-    "Students and IT professionals",
-    "Validate theoretical results before applying them",
-    "Teaching and learning networking concepts",
-    "Quick reference for network projects"
+    "Planning a home lab or office network and deciding whether to pull Cat 6 or Cat 6A through walls before drywall is closed",
+    "Upgrading a data center top-of-rack switch to 25 GbE or 40 GbE and verifying that existing Cat 8 patch cables meet the 30 m distance limit",
+    "Troubleshooting a 10 Gbps link that drops to 1 Gbps and suspecting the installed Cat 6 run exceeds the 55 m 10G limit",
+    "Purchasing bulk cable for a warehouse or school and confirming that Cat 5e is sufficient for 1 Gbps PoE access points at 80 m runs"
   ],
   "seoKeywords": [
     "ethernet cable calculator",
@@ -89,53 +88,61 @@
     ],
     "result": "1 Gbps"
   },
-  "explanation": "**Technical calculators** for IT: latency, storage, SLA uptime, cloud costs. Decisions that scale.\n\n## How It's Calculated\n\nMaximum speed and distance per Ethernet category · free and fast.\n\nThis calculator applies the formula using your input values, verifying typical ranges and alerting you to unreasonable values.\n\n## Final Notes\n\nThis calculation is a reference guide. For critical decisions (financial, medical, legal), consult with a specialized professional. Values are updated to 2026 and reviewed periodically.",
+  "explanation": "## How It's Calculated\n\nEthernet cable categories are not calculated with a single arithmetic formula — they are **defined by published IEEE 802.3 and TIA-568 standards**. The calculator performs a lookup against a specification table keyed on cable category. The key relationships to understand are:\n\n```\nMax Throughput = f(Category, Run Length)\n\nCat 5e  → 1 Gbps  @ ≤100 m  |  100 MHz\nCat 6   → 1 Gbps  @ ≤100 m  |  250 MHz\n         10 Gbps  @ ≤55  m  |  250 MHz\nCat 6A  → 10 Gbps @ ≤100 m  |  500 MHz\nCat 7   → 10 Gbps @ ≤100 m  |  600 MHz  (GG45/TERA connector)\nCat 7A  → 10 Gbps @ ≤100 m  |  1000 MHz\nCat 8.1 → 25 Gbps @ ≤30  m  |  2000 MHz (RJ45 compatible)\nCat 8.2 → 40 Gbps @ ≤30  m  |  2000 MHz (GG45/TERA connector)\n```\n\nSignal attenuation increases with frequency and distance. Higher-category cables use tighter pair twists, better shielding (STP/SFTP), and higher-grade dielectric insulation to reduce crosstalk (NEXT, FEXT) at higher MHz, which is why they can sustain higher bit rates.\n\n---\n\n## Reference Table\n\n| Category | Max Speed | Max Distance (at max speed) | Frequency | Shielding | Standard |\n|---|---|---|---|---|---|\n| Cat 5e | 1 Gbps | 100 m (328 ft) | 100 MHz | UTP/STP | TIA-568-C.2 |\n| Cat 6 | 1 Gbps / **10 Gbps** | 100 m / **55 m** | 250 MHz | UTP/STP | TIA-568-C.2 |\n| Cat 6A | 10 Gbps | 100 m (328 ft) | 500 MHz | UTP/F-UTP | TIA-568-C.2 |\n| Cat 7 | 10 Gbps | 100 m (328 ft) | 600 MHz | S/FTP | ISO/IEC 11801 |\n| Cat 7A | 10 Gbps | 100 m (328 ft) | 1000 MHz | S/FTP | ISO/IEC 11801 |\n| Cat 8.1 | 25 Gbps | 30 m (98 ft) | 2000 MHz | U/FTP or F/FTP | ANSI/TIA-568-C.2-1 |\n| Cat 8.2 | 40 Gbps | 30 m (98 ft) | 2000 MHz | S/FTP | ISO/IEC 11801-1 |\n\n> **Note:** The 100 m channel limit includes up to 90 m of permanent link + 10 m of patch cables per TIA-568.\n\n---\n\n## Typical Use Cases with Real Numbers\n\n**Example 1 — Office renovation, Cat 6 vs Cat 6A:**\nAn IT manager needs 10 Gbps to 24 desktop switches 85 m from the IDF closet. Cat 6 supports 10 Gbps only to 55 m — this run **fails**. Cat 6A supports 10 Gbps to 100 m — this run **passes** with 15 m of headroom. The cost delta is roughly $0.15–$0.25/ft more for Cat 6A bulk cable, or ~$180 extra for a 24-port drop scenario.\n\n**Example 2 — Home lab patch panel, Cat 8:**\nA home lab user wants 25 GbE between a server and a switch 3 m apart. Cat 8.1 patch cables at 2000 MHz are rated for 25–40 Gbps up to 30 m. At 3 m, performance is well within spec. Cat 8 patch cables cost ~$15–$30 for a 3 ft version (vs ~$5 for Cat 6A), making them practical for short server-room hops.\n\n**Example 3 — Legacy 10/100 Mbps infrastructure:**\nA small retail store has Cat 5e runs averaging 60 m to PoE IP cameras (802.3af, max 15.4 W). Cat 5e handles 1 Gbps at 100 m and supports 802.3af PoE without issue. Upgrading to Cat 6 would offer no practical benefit in this scenario.\n\n---\n\n## Common Mistakes\n\n1. **Assuming Cat 6 always delivers 10 Gbps:** Cat 6 is only rated for 10GBASE-T up to 55 m. Runs longer than 55 m fall back to 1 Gbps. Many installers miss this because the cable tests \"pass\" at Cat 6 but the switch negotiates at 1G.\n\n2. **Confusing Cat 7 with RJ45 compatibility:** Cat 7 uses GG45 or TERA connectors natively. Cat 7 cables terminated with RJ45 plugs are technically non-standard and may only be certified to Cat 6A performance — the \"Cat 7\" label on RJ45 retail cables is often a marketing claim.\n\n3. **Ignoring the patch cable budget:** TIA-568 allows 100 m *channel* length = 90 m permanent link + 10 m combined patch cables. Using 5 m patch cables on both ends leaves only 80 m for in-wall cabling — a mistake in large floors.\n\n4. **Buying Cat 8 for long runs:** Cat 8 is limited to 30 m. Installers who buy Cat 8 expecting better performance over 60 m runs will see link failures or fallback to lower speeds. For long runs, Cat 6A is the correct 10 Gbps solution.\n\n5. **Overlooking alien crosstalk (AXT) with Cat 6 in conduit:** When multiple Cat 6 cables are bundled tightly in conduit, alien crosstalk can reduce the effective 10 Gbps range below 55 m. Cat 6A's shielding or larger diameter UTP design specifically addresses AXT.\n\n---\n\n## Related Calculators\n\nSince no related slugs were provided for this calculator, explore other tools on Hacé Cuentas for networking, technology, and engineering calculations.\n",
   "faq": [
     {
-      "q": "What Ethernet cable do I need for home use?",
-      "a": "Cat 6 is sufficient for up to 1 Gbps at 100m, which covers most residential needs."
+      "q": "What is the maximum distance for Cat 6 at 10 Gbps?",
+      "a": "Cat 6 is certified for 10GBASE-T (10 Gbps) only up to **55 meters** (180 ft). Beyond 55 m and up to 100 m, Cat 6 drops to a maximum of 1 Gbps (1000BASE-T). This limit is defined in IEEE 802.3an and TIA-568-C.2. If you need 10 Gbps beyond 55 m, you must use Cat 6A or higher."
     },
     {
-      "q": "Which cable supports 10 Gbps?",
-      "a": "Cat 6a and above support 10 Gbps up to 100m. Cat 6 only reaches 37m at 10 Gbps speeds."
+      "q": "Is Cat 7 better than Cat 6A for home use?",
+      "a": "For most homes and offices, Cat 6A is the better practical choice. Cat 7 operates at 600 MHz vs Cat 6A's 500 MHz, but Cat 7's native connectors (GG45/TERA) are not RJ45 compatible. Retail Cat 7 cables with RJ45 plugs are not officially certified by TIA standards and may only perform at Cat 6A levels. Cat 6A with RJ45 is the highest TIA-certified UTP category and supports 10 Gbps to 100 m."
     },
     {
-      "q": "Should I use shielded Ethernet cables?",
-      "a": "Shielded twisted pair (STP) cables are recommended in environments with electromagnetic interference."
+      "q": "Can I run 2.5 Gbps or 5 Gbps over Cat 5e?",
+      "a": "Yes. IEEE 802.3bz (ratified 2016) defines **2.5GBASE-T** (2.5 Gbps) over Cat 5e up to 100 m, and **5GBASE-T** (5 Gbps) over Cat 6 up to 100 m. This was designed specifically to allow multi-gigabit Wi-Fi 6/6E backhaul over existing Cat 5e infrastructure without rewiring. Many modern switches and access points support 2.5G auto-negotiation on Cat 5e."
     },
     {
-      "q": "What about fiber optic cables?",
-      "a": "Consider fiber optic for distances beyond 100m or when you need very high speeds."
+      "q": "What does the MHz (frequency) rating on an Ethernet cable mean?",
+      "a": "The MHz rating indicates the bandwidth of the cable — the range of frequencies it can reliably carry with acceptable signal loss and crosstalk. Cat 5e is rated to 100 MHz, Cat 6 to 250 MHz, Cat 6A to 500 MHz, and Cat 8 to 2000 MHz. Higher MHz allows higher data rates because more bits can be encoded per second using advanced modulation schemes like 4D-PAM5 (used in Gigabit Ethernet) and PAM-16 (used in 10GBASE-T)."
     },
     {
-      "q": "Do all cables support PoE (Power over Ethernet)?",
-      "a": "Yes, all categories support PoE. For high wattage applications, Cat 6 and above is recommended."
+      "q": "Does the cable category affect Power over Ethernet (PoE) performance?",
+      "a": "Yes, indirectly. Higher PoE standards generate more heat from DC resistance losses. IEEE 802.3bt (PoE++) delivers up to **90 W** over all four pairs. TIA-568-C.2-1 and IEEE 802.3bt recommend Cat 6A or higher for high-power PoE because its lower DC resistance (≤9.38 Ω/100m per conductor) and larger conductor gauge (typically 23 AWG vs Cat 5e's 24 AWG) reduce voltage drop and heat buildup in bundled cable runs."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all our calculators are free with no account or registration required."
+      "q": "What is the difference between UTP, STP, F/UTP, and S/FTP shielding?",
+      "a": "**UTP** (Unshielded Twisted Pair) has no foil or braid — used in Cat 5e/6/6A. **F/UTP** (Foil over UTP) adds an overall foil shield around all pairs — common in Cat 6A FTP. **S/FTP** (Braided shield + foil per pair) is the most protected, used in Cat 7 and Cat 8.2. Shielding reduces alien crosstalk and EMI susceptibility but requires proper grounding — an ungrounded shield can actually *worsen* noise pickup."
     },
     {
-      "q": "How accurate are these results?",
-      "a": "Results are reference guides using internationally validated standards. For critical applications, consult a professional."
+      "q": "How do I know if my existing cable is actually Cat 6 or Cat 6A?",
+      "a": "Check the **printing on the cable jacket** — legitimate Cat 6A cables will print 'CAT6A,' 'CAT 6A,' 'ANSI/TIA-568-C.2,' or 'ISO/IEC 11801 Category 6A' along the length of the cable. Cat 6A cables are also physically larger (~7–8 mm diameter vs ~6 mm for Cat 6) due to pair separators that control alien crosstalk. A cable tester like a Fluke DSX CableAnalyzer can certify the cable to the exact TIA standard."
     },
     {
-      "q": "Do you store my data?",
-      "a": "No. All calculations run in your browser. We don't send any data to external servers."
+      "q": "Can Cat 8 replace fiber optic cable in data centers?",
+      "a": "Cat 8 is designed as a **short-reach copper alternative to fiber** for top-of-rack (ToR) data center links, supporting 25 Gbps (Cat 8.1) and 40 Gbps (Cat 8.2) up to 30 m. For runs beyond 30 m, or wherever latency and EMI immunity matter most, OM4/OM5 multimode fiber (up to 400 Gbps over 150 m) remains superior. ANSI/TIA-568-C.2-1 (2016) formally introduced Cat 8 specifically for this data center use case."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "ANSI/TIA-568 Commercial Building Telecommunications Cabling Standard – TIA (Telecommunications Industry Association)",
+      "url": "https://tiaonline.org/what-we-do/standards/tia-568/"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "IEEE 802.3an-2006: 10GBASE-T Standard (10 Gbps over twisted pair) – IEEE",
+      "url": "https://standards.ieee.org/ieee/802.3an/1713/"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "IEEE 802.3bz-2016: 2.5G and 5GBASE-T Standard – IEEE",
+      "url": "https://standards.ieee.org/ieee/802.3bz/5575/"
+    },
+    {
+      "name": "NIST SP 500-291: NIST Cloud Computing Standards Roadmap (networking infrastructure context) – NIST",
+      "url": "https://www.nist.gov/publications/nist-cloud-computing-standards-roadmap"
+    },
+    {
+      "name": "ISO/IEC 11801: Information Technology – Generic Cabling for Customer Premises – ISO",
+      "url": "https://www.iso.org/standard/76295.html"
     }
   ],
   "dataUpdate": {

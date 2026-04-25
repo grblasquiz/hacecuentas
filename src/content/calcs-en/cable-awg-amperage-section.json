@@ -5,14 +5,14 @@
   "category": "electronica",
   "icon": "⚡",
   "formulaId": "cable-awg-amperaje-seccion",
-  "intro": "Basic electronics is governed by Ohm's Law, Kirchhoff's Laws, and Faraday's Law. Calculating resistance, power, voltage, and amperage is essential for designing and maintaining circuits. Determine the correct AWG (American Wire Gauge) based on the current you need to carry. This includes diameter, cross-section in mm², and voltage drop per meter. Values are current as of 2026 and are reviewed periodically to keep you up to date.",
-  "keyTakeaway": "Standard AWG: 14=15A, 12=20A, 10=30A, 8=40A, 6=55A. Every 3 AWG = double cross-section. Every 6 AWG = double diameter.",
+  "intro": "The AWG (American Wire Gauge) Wire Size Calculator determines the correct wire gauge for a given current load and installation type. AWG is an inverse logarithmic scale: the higher the gauge number, the thinner the wire. The cross-sectional area in mm² is calculated from the AWG number using the formula A = 0.012668 × 92^((36−AWG)/19.5). For a 15 A general household circuit, the NEC (National Electrical Code) mandates a minimum of AWG 14 (2.08 mm²). Choosing undersized wire causes resistive heating, insulation damage, and fire hazards, while oversizing wastes money. This calculator applies NEC 310 ampacity tables and the standard 80% derating rule for continuous loads.",
+  "keyTakeaway": "**Cross-section (mm²) = 0.012668 × 92^((36 − AWG) / 19.5)** — e.g., AWG 12 = 3.31 mm², AWG 10 = 5.26 mm². For continuous loads, derate to **80%** of the wire's rated ampacity (NEC 210.19).",
   "useCases": [
-    "Circuit design and analysis involving AWG wire gauge sizing",
-    "Validate theoretical calculations before building a circuit",
-    "Teaching basic and advanced electronics",
-    "Estimate parameters for microcontroller projects (Arduino, ESP32, STM32)",
-    "Troubleshooting existing circuits"
+    "Sizing residential branch circuits: determining AWG 14 (15 A) or AWG 12 (20 A) wire for kitchen outlets per NEC 210.52.",
+    "Selecting wire gauge for a 240 V electric dryer circuit drawing 30 A, requiring AWG 10 at minimum.",
+    "Engineering solar panel wiring: calculating the correct gauge for a 40 A DC string combiner run of 50 ft to avoid >2% voltage drop.",
+    "Automotive wiring: choosing the right AWG for a 60 A alternator output cable accounting for higher ambient temperature derating.",
+    "Industrial motor feeder sizing: applying NEC 430.22 to select wire for a 20 HP, 230 V single-phase motor with 125% continuous load factor."
   ],
   "seoKeywords": [
     "AWG calculator",
@@ -86,57 +86,53 @@
     ],
     "result": "AWG 14 = 2.08 mm² (1.63 mm diameter)"
   },
-  "explanation": "**Electronics** is governed by Ohm's Law, Kirchhoff's Laws, and Faraday's Law. Applying formulas prevents costly errors and electrical failures.\n\n## How It's Calculated\n\nDetermine the correct AWG (American Wire Gauge) based on the current you need to carry. This includes diameter, cross-section in mm², and voltage drop per meter. This calculator applies the formula with your input values, verifying typical ranges and alerting you to unusual values.\n\n## Final Notes\n\nThis calculation is a reference only. For critical decisions (financial, medical, legal), consult with a qualified professional. Values are current as of 2026 and reviewed periodically.",
+  "explanation": "## How It Is Calculated\n\nThe AWG scale is defined by two anchor points: AWG 0000 (4/0) = 0.46 inches diameter and AWG 36 = 0.005 inches diameter, with 39 steps in between. Every 6 gauge steps, the cross-sectional area halves (or doubles going down).\n\n### Core Formula — AWG to Physical Dimensions\n\n```\nDiameter (inches) = 0.005 × 92^((36 − AWG) / 39)\nDiameter (mm)     = 25.4 × Diameter (inches)\nArea (mm²)        = π/4 × Diameter(mm)²\n               OR = 0.012668 × 92^((36 − AWG) / 19.5)\n```\n\n### Ampacity Derating for Continuous Loads (NEC 210.19 / 310.15)\n\n```\nAdjusted Ampacity = Rated Ampacity × Temperature Correction Factor × Conduit Fill Factor\nFor continuous loads (≥3 hours): Required Ampacity = Load (A) × 1.25\n```\n\nExample: A 15 A continuous load requires a conductor rated for at least **18.75 A**, so AWG 12 (20 A rated) is selected, not AWG 14 (15 A rated).\n\n---\n\n## Reference Table\n\n| AWG | Diameter (mm) | Area (mm²) | Max Ampacity 60°C* | Max Ampacity 75°C* | Max Ampacity 90°C* | Typical Use |\n|-----|--------------|------------|--------------------|--------------------|--------------------|-----------------------|\n| 18  | 1.02         | 0.82       | 7 A                | 10 A               | 14 A               | Low-voltage lighting  |\n| 16  | 1.29         | 1.31       | 10 A               | 13 A               | 18 A               | Extension cords       |\n| 14  | 1.63         | 2.08       | 15 A               | 20 A               | 25 A               | 15 A branch circuits  |\n| 12  | 2.05         | 3.31       | 20 A               | 25 A               | 30 A               | 20 A kitchen circuits |\n| 10  | 2.59         | 5.26       | 30 A               | 35 A               | 40 A               | Dryers, A/C units     |\n| 8   | 3.26         | 8.37       | 40 A               | 50 A               | 55 A               | Ranges, EV chargers   |\n| 6   | 4.11         | 13.30      | 55 A               | 65 A               | 75 A               | 60 A subpanels        |\n| 4   | 5.19         | 21.15      | 70 A               | 85 A               | 95 A               | Large HVAC feeders    |\n| 2   | 6.54         | 33.62      | 95 A               | 115 A              | 130 A              | 100 A service entry   |\n| 1/0 | 8.25        | 53.48      | 125 A              | 150 A              | 170 A              | 150 A service entry   |\n| 2/0 | 9.27        | 67.43      | 145 A              | 175 A              | 195 A              | 200 A service panels  |\n\n*Single conductor in free air, copper, per NEC Table 310.15(B)(16) and 310.15(B)(17).*\n\n---\n\n## Typical Cases\n\n### Case 1 — Standard 15 A Household Circuit\nA general-purpose bedroom circuit carries 15 A non-continuous load at 120 V. Using NEC Table 310.15(B)(16), 60°C column (the standard for most residential devices): **AWG 14** is rated 15 A exactly. Cross-section = 2.08 mm², diameter = 1.63 mm. The breaker must be ≤15 A to protect this wire.\n\n### Case 2 — 30 A Electric Dryer (240 V)\nThe dryer nameplate reads 24 A running current. Applying 125% for continuous loads: 24 × 1.25 = **30 A required ampacity**. From the 75°C column: **AWG 10** (35 A rated) satisfies this. Area = 5.26 mm², diameter = 2.59 mm. A 30 A double-pole breaker is used.\n\n### Case 3 — 40 A Solar Combiner Run (DC, 50 ft)\nString current = 32 A. For a 2% voltage drop limit at 48 V DC over 50 ft (100 ft round trip), using: `AWG = 4.75 × log10(Imax × L × 2 / ΔV)` the result points to **AWG 8** (8.37 mm²). Ampacity at 90°C also checks out at 55 A, comfortably above the 40 A OCPD.\n\n---\n\n## Common Errors\n\n1. **Ignoring the continuous load rule (×1.25):** Many users size wire for the peak current rather than 125% of the continuous load. NEC 210.19(A) is mandatory — a 16 A continuous load needs AWG 12 (20 A), not AWG 14 (15 A).\n\n2. **Mixing temperature ratings:** Using the 90°C ampacity column when the breaker or device terminals are only rated for 60°C or 75°C. NEC 110.14(C) requires you to use the *lowest* temperature rating in the circuit — typically 60°C for 100 A or less.\n\n3. **Forgetting conduit fill derating:** Running 4 or more current-carrying conductors in a single conduit requires ampacity derating (NEC 310.15(C)(1)): 4–6 conductors = 80%, 7–9 = 70%, 10–20 = 50%. Ignoring this is a leading cause of nuisance tripping and overheated wiring.\n\n4. **Confusing AWG with metric (mm²) cross-sections:** AWG 14 ≠ 1.5 mm² (European standard). AWG 14 = 2.08 mm², which is *between* the IEC 1.5 mm² and 2.5 mm² sizes. Direct substitution without checking ampacity tables can result in undersized circuits.\n\n5. **Overlooking voltage drop on long runs:** Ampacity tables guarantee the wire won't overheat, but they don't guarantee acceptable voltage regulation. For runs over 100 ft at 120 V, calculate voltage drop separately using `ΔV = (2 × L × I × R) / 1000` where R is in ohms per 1000 ft (e.g., AWG 12 copper = 1.588 Ω/1000 ft).",
   "faq": [
     {
-      "q": "What AWG wire do I need for 20 amps?",
-      "a": "AWG 12 is required due to thermal limits of the insulation. Higher currents generate more heat (I²R losses). Exceeding the limit degrades the insulation."
+      "q": "What does AWG stand for, and why does a larger number mean a thinner wire?",
+      "a": "AWG stands for American Wire Gauge, a standardized system dating to 1857. The numbering is based on the number of drawing dies needed to produce the wire: more draws = thinner wire = higher number. AWG 4/0 (the thickest common size) has a diameter of 11.68 mm, while AWG 36 measures only 0.127 mm. Every increase of 6 AWG numbers halves the cross-sectional area."
     },
     {
-      "q": "Does cable length affect the wire gauge I need?",
-      "a": "For long runs (>20 meters), account for voltage drop. You may need to go up one gauge size. Voltage drop = 2 × I × R × L."
+      "q": "How does the NEC 80% rule affect wire sizing for continuous loads?",
+      "a": "Per NEC 210.19(A)(1) and 215.2(A)(1), any load expected to operate continuously for 3 hours or more must be calculated at 125% (i.e., the conductor must carry 125% of the load current). Equivalently, you may think of it as the wire being limited to 80% of its rated ampacity for continuous loads. For example, a 16 A continuous load requires a conductor rated at 20 A minimum, which means AWG 12, not AWG 14."
     },
     {
-      "q": "What's the difference between AWG and mm²?",
-      "a": "AWG is the American standard; mm² is used in Europe and South America. Approximately: mm² = 53/AWG^1.12 for typical values."
+      "q": "What is the difference between AWG 14 and 1.5 mm² wire? Can I substitute them?",
+      "a": "They are NOT interchangeable. AWG 14 has a cross-section of 2.08 mm², which is significantly larger than the European IEC 1.5 mm² standard (diameter 1.38 mm vs. 1.63 mm). The closest metric equivalent to AWG 14 is 2.5 mm². Substituting 1.5 mm² for AWG 14 in a 15 A circuit would result in an undersized conductor that violates NEC requirements and creates a fire risk."
     },
     {
-      "q": "Should I use copper or aluminum wire?",
-      "a": "Copper is the standard. Aluminum conducts about 60% as well, so you'd need to go down 2 AWG sizes for aluminum in the same application."
+      "q": "Does the ampacity change for aluminum wire vs. copper wire?",
+      "a": "Yes, significantly. Aluminum has about 61% the conductivity of copper, so aluminum wire must be sized approximately 2 AWG sizes larger to carry the same current safely. For example, AWG 12 copper is rated 20 A (75°C), while AWG 12 aluminum is rated only 15 A. For a 20 A circuit with aluminum, you'd need AWG 10 aluminum. Aluminum wiring also requires anti-oxidant compound and CO/ALR-rated devices per NEC 310.106(B)."
     },
     {
-      "q": "Is the calculation the same for DC and AC?",
-      "a": "Yes, for low frequencies (<60 Hz). At higher frequencies, skin effect requires multi-strand or Litz wire."
+      "q": "How does temperature affect wire ampacity, and when does it matter?",
+      "a": "Higher ambient temperatures reduce a conductor's ability to dissipate heat, requiring derating. NEC Table 310.15(B)(1) provides correction factors: at 40°C ambient (104°F), a 75°C-rated conductor is derated to 88% of its tabulated ampacity; at 50°C (122°F) it drops to 75%. This is critical in attics, engine compartments, and outdoor conduit runs in hot climates. Always check the ambient temperature at the installation location."
     },
     {
-      "q": "What happens if I use wire that's too small?",
-      "a": "Undersized wire overheats, risking fire and circuit failure. Always follow the calculated size or go larger."
+      "q": "What AWG wire is required for a 20 A, 120 V kitchen small-appliance circuit?",
+      "a": "NEC 210.11(C)(1) mandates at least two 20 A small-appliance branch circuits for kitchen counter receptacles. These circuits require a minimum of **AWG 12 copper** (rated 20 A at 60°C) protected by a 20 A breaker. AWG 14 is explicitly prohibited on 20 A circuits. The wire must be 12/2 NM-B (or 12/2 with ground in conduit) for a standard 120 V circuit."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all our calculators are free with no registration required."
+      "q": "How do I calculate voltage drop for a long wire run, and which AWG compensates for it?",
+      "a": "Voltage drop is calculated as **ΔV = (2 × L × I × R_per_ft)**, where L is one-way length in feet and R_per_ft is the resistance per foot of the conductor. AWG 12 copper = 0.001588 Ω/ft; AWG 10 = 0.000999 Ω/ft. For a 100 ft run at 15 A on AWG 12: ΔV = 2 × 100 × 15 × 0.001588 = **4.76 V** (~4% of 120 V). To stay under the NEC-recommended 3%, you'd upsize to AWG 10 (ΔV ≈ 3.0 V, or 2.5%)."
     },
     {
-      "q": "How accurate are these results?",
-      "a": "They're based on internationally validated standard formulas. Results are reference-quality; for critical applications, consult a professional."
-    },
-    {
-      "q": "Do you save my data?",
-      "a": "No. All calculations run in your browser. We don't send any data to our servers."
+      "q": "Can I use the same AWG wire for both AC and DC circuits?",
+      "a": "The physical wire is the same, but ampacity ratings and code requirements differ. NEC Article 690 (Solar PV) and Article 625 (EV charging) have specific rules for DC circuits. DC arcing is more severe than AC arcing (it does not self-extinguish at zero crossing), so OCPD (overcurrent protection device) ratings and wire insulation voltage ratings must be verified separately. The same AWG 10 used on a 30 A AC dryer circuit can be used on a 30 A DC solar string, but the breaker and conduit/raceway requirements may differ."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "NIST – American Wire Gauge (AWG) Standard, Handbook 100",
+      "url": "https://www.nist.gov/system/files/documents/calibrations/hb100-2019.pdf"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
+      "name": "NFPA 70 – National Electrical Code (NEC), Article 310: Conductors for General Wiring",
+      "url": "https://www.nfpa.org/codes-and-standards/nfpa-70-standard-development/70"
     },
     {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Wikipedia – American Wire Gauge",
+      "url": "https://en.wikipedia.org/wiki/American_wire_gauge"
     }
   ],
   "slug": "cable-awg-amperage-section",

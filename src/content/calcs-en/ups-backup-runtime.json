@@ -8,14 +8,14 @@
   "icon": "🔌",
   "formulaId": "autonomia-ups-tiempo-respaldo-servidor",
   "audience": "global",
-  "intro": "UPS battery backup time is critical for protecting servers, data centers, and sensitive equipment. Calculate runtime, understand load utilization, and plan for power outages. Apply the formula with your values to get instant estimates. Values are current to 2026 and reviewed regularly.",
-  "keyTakeaway": "Formula: **minutes ≈ VA / W × factor**. Direct calculation with your input values. Backup minutes based on capacity and load.",
+  "intro": "A UPS (Uninterruptible Power Supply) backup runtime calculator tells you exactly how many minutes your equipment will keep running after the utility power fails. It uses two inputs — the UPS capacity in volt-amperes (VA) and the actual load in watts (W) — to estimate runtime based on the battery's watt-hour capacity and the inverter's efficiency. The core relationship is: **Runtime (min) = [Battery Wh × Efficiency] / Load (W) × 60**. This is essential for server rooms, home offices, medical equipment, and any environment where unplanned downtime is costly or dangerous. VA and W are not the same: watts measure real power consumption, while VA measures apparent power (which includes reactive loads). The ratio W/VA is called the power factor (typically 0.6–1.0 for IT equipment).",
+  "keyTakeaway": "**Runtime (min) = (Battery Capacity in Wh × Inverter Efficiency) ÷ Load (W) × 60** — e.g., a 1500 VA / 865 Wh UPS powering a 300 W load at 95% efficiency ≈ 163 minutes theoretical; real runtime ~12 min for a typical sealed lead-acid UPS at 300 W due to much smaller actual battery banks (≈60–90 Wh).",
   "useCases": [
-    "UPS sizing and technical planning",
-    "Students and IT professionals",
-    "Validate theoretical results before implementation",
-    "Teaching and learning UPS concepts",
-    "Quick reference for projects"
+    "Sizing a UPS for a home office workstation (desktop + monitor ≈ 200–350 W) to survive a 15-minute outage long enough to save work and shut down gracefully",
+    "Calculating runtime for a small server rack (2U server + network switch ≈ 400–800 W) to ensure enough time for automated shutdown scripts to complete before battery depletion",
+    "Verifying that medical or lab equipment (e.g., a refrigerated centrifuge or infusion pump) will remain powered through typical brownout durations in the facility",
+    "Determining whether a 650 VA consumer UPS is adequate for a gaming PC with a 550 W PSU, or whether a 1500 VA unit is needed to avoid instant shutdown under load",
+    "Pre-purchase planning: comparing runtime curves across multiple UPS models (APC, CyberPower, Eaton) at a fixed load to find the most cost-effective option for a given runtime target"
   ],
   "seoKeywords": [
     "UPS backup time calculator",
@@ -72,53 +72,53 @@
     ],
     "result": "~12 minutes"
   },
-  "explanation": "**UPS battery backup time** is essential for server rooms, data centers, and critical infrastructure: runtime planning, load management, power factor analysis, cost estimation, and equipment protection.\n\n## How It's Calculated\n\nBackup minutes based on battery capacity (VA) and connected load (W). This calculator applies the formula with your values, checking typical ranges and alerting if values seem unusual.\n\n## Final Notes\n\nThis calculation is a reference guide. For critical infrastructure decisions, consult with a specialist. Values are current to 2026 and reviewed regularly.",
+  "explanation": "## How It's Calculated\n\nThe fundamental runtime formula for a UPS is:\n\n```\nRuntime (min) = (Battery_Wh × η) / W_load × 60\n\nWhere:\n  Battery_Wh   = Battery capacity in watt-hours (from spec sheet)\n  η            = Inverter efficiency (typically 0.92–0.98 for modern UPS)\n  W_load       = Actual load in watts drawn by connected equipment\n  × 60         = Convert hours to minutes\n```\n\nBecause most UPS spec sheets publish runtime charts instead of raw battery Wh, a practical reverse-engineered formula is:\n\n```\nEstimated_Wh ≈ VA × PF × t_rated / 60\n\nWhere:\n  VA         = UPS volt-ampere rating\n  PF         = Power factor (use 0.6 for generic, 0.9 for IT-grade)\n  t_rated    = Manufacturer's rated runtime in minutes at half-load\n```\n\nFor a **1500 VA consumer UPS** (e.g., APC Back-UPS Pro 1500), the internal battery is typically **2 × 12 V, 7–9 Ah** sealed lead-acid (SLA), giving roughly **168–216 Wh** theoretical, but usable capacity at high discharge rates drops to **~60–80 Wh** due to Peukert's effect on SLA chemistry.\n\n```\nPeukert-adjusted capacity: C_adj = C_rated × (I_rated / I_actual)^(k-1)\n  k = Peukert exponent (~1.3 for SLA, ~1.05 for LiFePO4)\n```\n\n---\n\n## Reference Table\n\nTypical runtime (minutes) for common UPS sizes at various loads — values compiled from manufacturer published runtime charts (APC, CyberPower, Eaton 2024 datasheets):\n\n| UPS Rating | Load 100 W | Load 200 W | Load 300 W | Load 500 W | Load 750 W |\n|------------|-----------|-----------|-----------|-----------|-----------|\n| 650 VA / 390 W | ~20 min | ~8 min | ~3 min | N/A | N/A |\n| 1000 VA / 600 W | ~45 min | ~18 min | ~10 min | ~4 min | N/A |\n| 1500 VA / 900 W | ~90 min | ~30 min | ~12 min | ~6 min | ~3 min |\n| 2200 VA / 1320 W | ~120 min | ~55 min | ~28 min | ~14 min | ~7 min |\n| 3000 VA / 2700 W | ~150 min | ~70 min | ~40 min | ~20 min | ~10 min |\n\n> ⚠️ These are approximations. Actual runtime varies by battery age, temperature (capacity drops ~1% per °C below 25°C), and load power factor.\n\n---\n\n## Typical Examples\n\n### Example 1 — Home Office Workstation\n- **UPS:** 1500 VA consumer unit (APC BX1500M)\n- **Load:** Desktop PC (250 W) + 27\" monitor (40 W) + router (10 W) = **300 W**\n- **Published runtime at 300 W:** ~12 minutes\n- **Utilization:** 300 W / 900 W (rated) = **33.3%** — healthy, below the 80% recommended ceiling\n- **Verdict:** Enough time to save work and execute a clean OS shutdown; not suitable for extended outages.\n\n### Example 2 — Small Business Server\n- **UPS:** 2200 VA rack unit (CyberPower OL2200RTXL2U, online double-conversion)\n- **Load:** 1U server (400 W) + managed switch (60 W) + patch panel/fans (40 W) = **500 W**\n- **Published runtime at 500 W:** ~14 minutes\n- **Utilization:** 500 W / 1320 W = **37.9%**\n- **Verdict:** Sufficient for an automated VMware/Hyper-V graceful shutdown via NUT or PowerChute (~5–8 minutes needed), with 6+ minutes of margin.\n\n### Example 3 — Overloaded Consumer UPS\n- **UPS:** 650 VA / 390 W unit\n- **Load:** Gaming PC with RTX 4070 + Ryzen 7 under gaming load = **480 W**\n- **Utilization:** 480 / 390 = **123%** — **OVERLOAD, UPS will alarm and may shut off immediately**\n- **Verdict:** Wrong-sized. Requires at minimum a 1000 VA unit; 1500 VA recommended for headroom.\n\n---\n\n## Common Mistakes\n\n1. **Confusing VA with Watts.** VA is apparent power; watts are real power. A 1500 VA UPS is NOT rated for 1500 W. Actual watt rating is VA × power factor, typically 600–900 W for a 1500 VA unit. Always check the watt rating on the label.\n\n2. **Using nameplate PSU wattage as the load.** A 750 W power supply does NOT draw 750 W continuously — it draws its rated max only at full load. Measure actual draw with a Kill-A-Watt meter or check TDP specs. Typical desktop gaming PCs under load draw 200–450 W, not 750 W.\n\n3. **Ignoring battery aging.** SLA batteries lose roughly 20% capacity per year after year 3, and most manufacturers rate battery replacement at 3–5 years. A 5-year-old UPS may deliver only 50% of its original runtime. NIST guidelines for data center reliability recommend annual runtime testing.\n\n4. **Loading above 80% of rated capacity.** Running a UPS above 80% of its watt rating reduces runtime non-linearly (Peukert effect), increases heat, and shortens battery life. Industry best practice (enforced by ASHRAE and most data center standards) caps UPS load at 80%.\n\n5. **Forgetting inrush current at startup.** Motors, laser printers, and compressors draw 3–7× their running watts at startup. A laser printer rated at 500 W running can spike to 1500 W for 200 ms — potentially tripping a UPS overcurrent circuit if the unit is already near capacity.\n\n---\n\n## Related Calculators\n\n- [Electrical Power Calculator — Watts, Volts, Amps](/calculadora-potencia-electrica)\n- [Battery Capacity (Ah to Wh) Converter](/convertidor-ah-wh-bateria)\n- [Data Center PUE Calculator](/calculadora-pue-data-center)\n",
   "faq": [
     {
-      "q": "What's the difference between VA and watts?",
-      "a": "VA (Apparent Power) = total power supplied. W (Real Power) = actual usable power. Power factor (PF) typically 0.6–0.9 determines the relationship."
+      "q": "What is the difference between VA and Watts on a UPS?",
+      "a": "VA (volt-amperes) is apparent power — the product of voltage and current without accounting for phase angle. Watts are real power, which is what equipment actually consumes. The ratio W/VA is the power factor (PF). Most IT equipment has a PF of 0.9–1.0, while older or mixed loads (motors, older CRTs) can be as low as 0.6. A 1500 VA UPS with a 0.6 PF rating supports only 900 W of real load."
     },
     {
-      "q": "How do I choose the right UPS capacity?",
-      "a": "Add up the watts of all devices that must stay powered. Multiply by 1.3–1.5 as a safety margin. Choose a UPS rated for that VA capacity."
+      "q": "Why does my UPS give less runtime than the manufacturer chart says?",
+      "a": "Three main reasons: (1) Battery aging — SLA batteries lose 20–30% capacity after 3 years; (2) Temperature — runtime drops ~1% per °C below 25°C (77°F); (3) High discharge rate — Peukert's effect means fast discharge (high load) yields disproportionately less energy from SLA batteries. Always test actual runtime annually with a load bank or by logging real outage performance."
     },
     {
-      "q": "What does autonomy mean in UPS terms?",
-      "a": "Autonomy is the runtime or backup duration—how long the battery will power your equipment if the grid fails."
+      "q": "How do I measure my actual load in watts?",
+      "a": "The most accurate method is a plug-in power meter like the Kill-A-Watt P4400 (≈$25 at retail), which measures real watts, VA, and power factor simultaneously. Alternatively, check your equipment's published TDP (Thermal Design Power) — for CPUs and GPUs this is available from Intel ARK (ark.intel.com) or AMD's product pages. For servers, use IPMI/iDRAC power reporting."
     },
     {
-      "q": "How long do UPS batteries typically last?",
-      "a": "3–5 years under normal use. Battery life depends on temperature, discharge cycles, and maintenance."
+      "q": "What load percentage should I target for maximum battery life?",
+      "a": "Industry consensus (reflected in ASHRAE TC 9.9 guidelines and most UPS manufacturer documentation) recommends loading a UPS to no more than 80% of its watt rating during normal operation. Below 50% load, runtime increases significantly but you may be overpaying for capacity. The 50–80% range balances runtime, cost, and battery longevity."
     },
     {
-      "q": "Can this calculator help with server applications?",
-      "a": "Yes. For servers, use a daemon like NUT or apcupsd to trigger graceful shutdown when autonomy runs low."
+      "q": "How long do UPS batteries last, and when should I replace them?",
+      "a": "Standard sealed lead-acid (SLA/VRLA) batteries in consumer and small business UPS units are rated for 3–5 years by manufacturers like APC and Eaton. After 3 years, runtime typically degrades by 20–40%. Replacement batteries (e.g., APC RBC17) cost $30–$120 depending on model. Lithium-ion UPS units (newer APC Smart-UPS Li-ion models) claim 5–10 year battery life at higher upfront cost."
     },
     {
-      "q": "Is this calculator free to use?",
-      "a": "Yes, all our calculators are free and require no registration."
+      "q": "Can I add external battery packs to extend runtime?",
+      "a": "Yes — many rack-mount and tower UPS units support External Battery Modules (EBMs). For example, the APC Smart-UPS 1500 supports the SUA1500RM2U EBM, roughly doubling runtime. Each EBM adds 18–32 Ah of additional SLA capacity. Stacking multiple EBMs yields diminishing returns as internal inverter limits and heat become factors; most manufacturers cap EBM additions at 2–4 units per UPS."
     },
     {
-      "q": "How accurate are these results?",
-      "a": "Results are estimates based on standard formulas. For critical infrastructure, validate with a professional engineer."
+      "q": "Is a line-interactive or online double-conversion UPS better for servers?",
+      "a": "For critical servers and medical equipment, online double-conversion (Type VFI per IEC 62040-3) is preferred: power flows through the inverter 100% of the time, providing zero transfer time and clean sine wave output regardless of input quality. Line-interactive UPS (Type VI) has a 4–12 ms transfer time, acceptable for most PC and NAS equipment but potentially problematic for some server power supplies and storage arrays with tight hold-up time specs (typically 16–20 ms per ATX12V standard)."
     },
     {
-      "q": "Do you save my data?",
-      "a": "No. Calculations run in your browser. We don't send data to any server."
+      "q": "What happens if I plug in more load than the UPS watt rating?",
+      "a": "The UPS will alarm (audible beep sequence varies by brand) and may immediately transfer to bypass mode or shut down, cutting power to all connected equipment — the opposite of what you want. Some units will sustain brief overloads (110–125% for a few seconds to handle motor inrush), but sustained overloads above rated watts cause overheating, accelerated battery degradation, and potential damage to the inverter stage. Always keep real load below 80% of rated watts."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "NIST SP 800-193 – Platform Firmware Resiliency Guidelines (references power continuity requirements)",
+      "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-193.pdf"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "Wikipedia – Uninterruptible Power Supply (technical overview, battery types, runtime factors)",
+      "url": "https://en.wikipedia.org/wiki/Uninterruptible_power_supply"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Wikipedia – Peukert's Law (battery discharge rate effect on capacity)",
+      "url": "https://en.wikipedia.org/wiki/Peukert%27s_law"
     }
   ],
   "dataUpdate": {

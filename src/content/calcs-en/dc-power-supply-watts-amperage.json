@@ -5,14 +5,14 @@
   "category": "electronica",
   "icon": "⚡",
   "formulaId": "fuente-dc-watts-amperaje",
-  "intro": "Electronics fundamentals are governed by Ohm's Law, Kirchhoff's Laws, and semiconductor principles. Calculate the power (W) and amperage (A) your DC power supply must deliver based on connected loads—total consumption plus a 25% safety margin. Values are current as of 2026 and reviewed periodically to keep you up to date.",
-  "keyTakeaway": "**P_total = Σ loads**. **I = P/V**. Rule: choose a supply at **1.3× P_total** for margin. 12V supply with 30W total → use 40W.",
+  "intro": "This calculator determines the **recommended wattage and amperage** for a DC power supply given your circuit's total load and a safety margin. It applies Ohm's Law (P = V × I) in reverse: knowing total power draw (W) and rail voltage (V), it computes required current (A), then scales that figure by a safety factor (typically 1.2–1.5×) to prevent thermal stress, voltage sag, and premature failure. Use it whenever you're selecting a wall adapter, bench supply, or embedded regulator for electronics projects, LED strips, 3D printers, routers, Raspberry Pi clusters, or any DC-powered system.",
+  "keyTakeaway": "**Recommended Wattage = Total Load (W) × Safety Factor; Recommended Amperage = Recommended Wattage ÷ Voltage (V).** Example: 30W load at 12V × 1.3 margin → 39W / 12V = **3.25A → choose a standard 12V 4A (48W) supply**.",
   "useCases": [
-    "Circuit design and analysis involving DC power supply sizing",
-    "Validate theoretical calculations before building your circuit",
-    "Teaching basic and advanced electronics",
-    "Estimate parameters for microcontroller projects (Arduino, ESP32, STM32)",
-    "Troubleshooting existing circuits"
+    "Sizing a 12V power supply for a custom LED strip installation (e.g., 5m of 14.4W/m LED strips = 72W load → 72 × 1.25 = 90W → choose 12V 8A/96W adapter)",
+    "Selecting a 5V USB-C power brick for a Raspberry Pi 4 cluster drawing up to 15W under full CPU load, plus a 5W hat, totaling 20W → 20 × 1.3 = 26W → choose 5V 6A (30W) supply",
+    "Choosing a 24V PSU for a desktop 3D printer with a 200W heated bed, 40W hotend, and 30W stepper drivers (270W total) → 270 × 1.2 = 324W → choose 24V 15A (360W) supply",
+    "Powering a network rack with a router (18W), a managed switch (12W), and a NAS (35W) from a single 12V DC rail (65W total) → 65 × 1.3 = 84.5W → choose 12V 8A (96W) supply",
+    "Dimensioning a 5V regulated supply for an Arduino Mega with three servo motors at 1A each stall current plus 0.5A for the board (3.5A × 5V = 17.5W) → 17.5 × 1.25 = 21.9W → choose 5V 5A (25W) adapter"
   ],
   "fields": [
     {
@@ -72,61 +72,61 @@
     ],
     "result": "12V 4A (48W) power supply with adequate margin"
   },
-  "explanation": "**Electronics** fundamentals follow Ohm's Law, Kirchhoff's Laws, and Faraday's principles. Applying formulas prevents costly errors and electrical failures.\n\n## How It's Calculated\n\nCalculate the power (W) and amperage (A) your DC power supply must deliver based on connected loads—total consumption plus a 25% safety margin.\n\nThis calculator applies the formula with your entered values, checking typical ranges and alerting when values fall outside reasonable bounds.\n\n## Final Notes\n\nThis calculation is a reference guide only. For critical decisions (financial, medical, legal), consult with a specialized professional. Values are current as of 2026 and reviewed periodically.",
+  "explanation": "## How It's Calculated\n\nThe calculator is built on **Ohm's Law** and the fundamental DC power equation:\n\n```\nP = V × I          →  I = P / V\n\nStep 1 — Recommended wattage:\n  P_recommended = P_load × safety_factor\n\nStep 2 — Recommended amperage:\n  I_recommended = P_recommended / V\n\nStep 3 — Minimum amperage (no margin):\n  I_minimum = P_load / V\n\nExample (12V rail, 30W load, 1.3 safety factor):\n  P_recommended = 30 × 1.3 = 39 W\n  I_recommended = 39 / 12  = 3.25 A  → choose next standard: 4 A (48 W)\n  I_minimum     = 30 / 12  = 2.50 A\n```\n\nThe **safety factor** accounts for: efficiency losses in the supply itself (typically 80–92%), current inrush at startup, load fluctuations, component aging, and thermal derating at elevated ambient temperatures. NIST and IEC 61558 both recommend operating linear and switching PSUs at no more than 70–80% of rated continuous output.\n\n---\n\n## Reference Table — Common DC Rails & Standard Supply Ratings\n\n| Voltage | Typical Application | Common Standard Ratings |\n|---------|--------------------|-----------------------|\n| 3.3 V | MCU logic, IoT sensors | 3.3V 2A (6.6W), 3.3V 5A (16.5W) |\n| 5 V | Arduino, Raspberry Pi, USB hubs | 5V 2A (10W), 5V 3A (15W), 5V 5A (25W), 5V 10A (50W) |\n| 9 V | Small routers, audio pedals | 9V 1A (9W), 9V 2A (18W), 9V 3A (27W) |\n| 12 V | LED strips, CCTV, NAS, fans | 12V 2A (24W), 12V 5A (60W), 12V 8A (96W), 12V 10A (120W), 12V 20A (240W) |\n| 19 V | Laptop chargers, some SBCs | 19V 3.42A (65W), 19V 4.74A (90W), 19V 6.32A (120W) |\n| 24 V | 3D printers, CNC, industrial | 24V 5A (120W), 24V 10A (240W), 24V 15A (360W), 24V 20A (480W) |\n| 48 V | PoE switches, telecom, e-bikes | 48V 2A (96W), 48V 5A (240W), 48V 10A (480W) |\n\n> **Rule of thumb:** Always pick the **next available standard rating above** your calculated I_recommended. Running a PSU at exactly its rated maximum accelerates aging and voids most warranties.\n\n---\n\n## Typical Cases\n\n### Case 1 — LED Strip Installation (12V)\n- Strip spec: 14.4 W/m × 5 m = **72 W total load**\n- Safety factor: 1.25 (LED loads are relatively stable)\n- P_recommended = 72 × 1.25 = **90 W**\n- I_recommended = 90 / 12 = **7.5 A**\n- Next standard rating: **12V 8A (96W)** ✓\n\n### Case 2 — 3D Printer (24V, Creality Ender-style)\n- Heated bed: 200W | Hotend heater: 40W | Stepper drivers + fans: 30W → **Total: 270W**\n- Safety factor: 1.2 (switching loads with firmware PWM control)\n- P_recommended = 270 × 1.2 = **324 W**\n- I_recommended = 324 / 24 = **13.5 A**\n- Next standard rating: **24V 15A (360W)** ✓\n\n### Case 3 — Raspberry Pi 4 Cluster (5V, 4 nodes)\n- Per node: 5W idle, 7.5W load, USB peripherals 2.5W → 10W/node × 4 = **40W**\n- Safety factor: 1.3 (bursty CPU workloads)\n- P_recommended = 40 × 1.3 = **52 W**\n- I_recommended = 52 / 5 = **10.4 A**\n- Next standard rating: **5V 12A (60W)** with a powered USB hub distribution ✓\n\n---\n\n## Common Mistakes\n\n1. **Ignoring the PSU's own efficiency loss.** A 90W-rated adapter that is only 82% efficient actually draws ~110W from the wall and may only reliably deliver 90W *under ideal conditions*. Always check the efficiency label (80 PLUS Bronze = ≥82%, Gold = ≥87%, Platinum = ≥90%).\n\n2. **Confusing peak (inrush) current with steady-state current.** Motors, solenoids, and capacitive loads can draw 3–10× their rated current at startup. Size for inrush, not steady-state only, or add a soft-start circuit.\n\n3. **Adding up milliamp specs from datasheets at different voltages.** A device that draws 500mA at 5V and another at 12V cannot be simply added — convert everything to watts first (P = V × I), sum the watts, then size your single-rail supply.\n\n4. **Using a safety factor below 1.2.** Operating any switching PSU above 80% continuous load reduces MTBF (Mean Time Between Failures). The NIST Handbook 44 and most PSU datasheets explicitly state derating curves; at 100% load and 40°C ambient, output current can drop 20–30%.\n\n5. **Neglecting wire gauge and voltage drop.** Even a correctly sized PSU can starve your load if the wire run is long. At 12V, a 5-meter run of 22AWG wire carrying 5A drops ~1.7V — that's 14% of rail voltage. Use the AWG voltage-drop formula: V_drop = 2 × L × I × R_per_meter.\n\n6. **Assuming all \"12V 5A\" adapters are equal.** Unregulated wall warts can sag 15–30% under load; regulated switching supplies maintain output within ±2–5%. Always verify the label says \"regulated\" or check the spec sheet.\n\n---\n\n## Related Calculators\n\n- [Ohm's Law Calculator](/ley-de-ohm)\n- [Voltage Divider Calculator](/divisor-de-tension)\n- [Wire Gauge & Current Capacity Calculator](/calibre-cable-corriente)\n- [LED Resistor Calculator](/resistencia-led)\n- [Battery Life & Capacity Calculator](/duracion-bateria)",
   "faq": [
     {
-      "q": "Why not use 100% of the power supply capacity?",
-      "a": "Operating at 100% generates excessive heat, drastically shortening the power supply's lifespan. 70–80% capacity is the sweet spot between cost and durability."
+      "q": "What safety factor should I use?",
+      "a": "For stable resistive loads (heaters, incandescent bulbs), 1.2 is sufficient. For mixed or switching loads (motors, LED drivers, computers), use 1.25–1.3. For highly variable or inductive loads (solenoids, relays, large motors), use 1.4–1.5. NIST and IEC 61558 guidelines recommend keeping continuous PSU load at or below 70–80% of rated output, which corresponds to a factor of 1.25–1.43."
     },
     {
-      "q": "Can I use a larger power supply than needed?",
-      "a": "It won't hurt. The power supply only delivers the current the load demands. If the price difference is small, buying a larger unit is often a good choice."
+      "q": "Why must I convert everything to watts before summing loads?",
+      "a": "Because watts (P = V × I) are the only additive unit across different voltage rails. Adding amperes from different voltages is meaningless: a 2A draw at 5V (10W) and a 2A draw at 12V (24W) total 34W, not 4A of anything. Always convert each device's consumption to watts, sum those, then divide by your supply voltage to get the required current."
     },
     {
-      "q": "Should I use a 1.5× or 2× safety factor?",
-      "a": "Use 2× for loads with inrush currents (motors, large capacitors). For stable resistive loads, 1.3–1.5× is usually sufficient."
+      "q": "What is the difference between regulated and unregulated power supplies?",
+      "a": "A regulated supply uses feedback circuitry (linear regulator or switching controller) to hold output voltage within ±2–5% under varying load. An unregulated supply's output voltage sags proportionally with load current — commonly 15–30% below the no-load rating at full load. For digital electronics (microcontrollers, single-board computers, LED drivers), always use a regulated supply."
     },
     {
-      "q": "What's the difference between watts and VA?",
-      "a": "Watts (W) = real power actually consumed. VA = apparent power (rated load of the supply). In DC: W ≈ VA. In AC with power factor < 1: W < VA."
+      "q": "How does ambient temperature affect my power supply's output?",
+      "a": "Switching PSUs are thermally derated above a specified ambient temperature (typically 40–50°C). A 100W supply rated at 40°C may only deliver 70–80W at 60°C ambient. This is especially relevant in enclosed enclosures or outdoor installations in hot climates. Always add 10–15% extra margin if the supply will operate above 40°C, or choose a supply with active cooling."
     },
     {
-      "q": "Should I choose a switching or linear power supply?",
-      "a": "Switching supplies are better for ~90% of applications (more efficient, lighter). Linear is only needed for high-end audio or precision lab work."
+      "q": "Can I run multiple devices from one power supply in parallel?",
+      "a": "Yes, as long as the total current draw does not exceed the PSU's rated output and all devices share the same voltage rail. Use a properly rated terminal block or distribution board. Never simply twist wires together for high-current connections; each branch should be individually fused to protect against short-circuit currents. The PSU sees only the total combined current, regardless of how many loads are connected."
     },
     {
-      "q": "How do I know if my power supply is undersized?",
-      "a": "Undersized supplies may cause voltage sag, circuit failures, or even shutdown. Always include the safety margin—it's cheap insurance."
+      "q": "What wire gauge should I use for the current my supply will deliver?",
+      "a": "The NEC (National Electrical Code) and AWG standards define ampacity: 22AWG handles ~0.9A, 20AWG ~1.5A, 18AWG ~2.3A, 16AWG ~3.7A, 14AWG ~5.9A, 12AWG ~9.3A, and 10AWG ~15A for chassis wiring at 60°C insulation rating. For DC runs longer than 2 meters, also calculate voltage drop (V_drop = 2 × L(m) × I(A) × resistance_per_meter) and upsize the gauge to keep drop below 3% of rail voltage."
     },
     {
-      "q": "How do I calculate amperage from watts?",
-      "a": "Use Ohm's Law: Amperage = Power (W) ÷ Voltage (V). For example, 30W ÷ 12V = 2.5A minimum."
+      "q": "Is a 12V 10A supply the same as a 12V 5A supply run at half load?",
+      "a": "Electrically, a 12V 10A supply running a 5A load is perfectly fine — PSUs can operate anywhere from 0% to 100% of rated current. In fact, many switching PSUs achieve peak efficiency at 50–80% load. A larger supply may run cooler, last longer, and provide headroom for future load additions. The only downsides are slightly higher cost and physical size."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all our calculators are free and require no registration."
+      "q": "What does the minimum amperage output (no safety margin) represent?",
+      "a": "The minimum amperage (I_min = P_load / V) is the theoretical current your loads require under steady-state conditions with zero margin. It represents the absolute floor — a PSU rated exactly at this value would run at 100% capacity, risking thermal shutdown, accelerated aging, and voltage sag under any transient load spike. It is shown for reference only; always select a supply at or above the recommended (derated) amperage value."
     },
     {
-      "q": "Are the results accurate?",
-      "a": "Results are reference-level estimates using industry-standard formulas validated internationally. For critical applications, consult a professional."
-    },
-    {
-      "q": "Do you store my data?",
-      "a": "No. Calculations run in your browser. We don't send data to any server."
+      "q": "Do power supplies consume power when nothing is connected (no-load power)?",
+      "a": "Yes. Most switching power supplies draw 0.1–0.5W at no load due to their internal control circuitry, even with zero output current. The US Department of Energy's energy efficiency standards (10 CFR Part 430) regulate no-load power for external power supplies sold in the US: products must consume ≤0.5W (≤49W rated) to ≤0.5W (≥250W rated). This is relevant for always-on wall adapters that are permanently plugged in."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "NIST Handbook 44 — Specifications, Tolerances, and Other Technical Requirements",
+      "url": "https://www.nist.gov/pml/weights-and-measures/publications/nist-handbooks/handbook-44"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
+      "name": "U.S. Department of Energy — Energy Efficiency Standards for External Power Supplies (10 CFR Part 430)",
+      "url": "https://www.energy.gov/eere/buildings/external-power-supplies"
     },
     {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Wikipedia — Switched-mode power supply",
+      "url": "https://en.wikipedia.org/wiki/Switched-mode_power_supply"
+    },
+    {
+      "name": "Wikipedia — Ohm's Law",
+      "url": "https://en.wikipedia.org/wiki/Ohm%27s_law"
     }
   ],
   "slug": "dc-power-supply-watts-amperage",

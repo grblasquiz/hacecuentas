@@ -22,14 +22,14 @@
     "preço computação em nuvem",
     "AWS cálculo despesa mensal"
   ],
-  "intro": "Os cálculos técnicos em TI e desenvolvimento são fundamentais: latência, largura de banda, uptime SLA, custos em nuvem, complexidade algorítmica. Um bom cálculo inicial evita superdimensionar a infraestrutura. Custo aproximado EC2 AWS sob demanda. Os valores estão atualizados para 2026 e são revisados periodicamente para mantê-lo informado.",
-  "keyTakeaway": "Fórmula: **preço/hora × 720 hrs**. Aplicação direta com os valores de entrada. Custo aproximado EC2 AWS sob demanda.",
+  "intro": "Esta calculadora estima o **custo mensal de instâncias AWS EC2 sob demanda (On-Demand)** em dólares americanos (USD), com base no tipo de instância e na região AWS selecionados. O modelo de precificação On-Demand cobra por hora de uso sem compromisso antecipado: **Custo Mensal ≈ Preço/hora × 730 horas** (média de horas em um mês). Por exemplo, uma instância t3.medium na região us-east-1 custa USD 0,0416/hora, resultando em ~USD 30,37/mês. Ideal para orçar workloads de desenvolvimento, aplicações web, APIs e microsserviços na nuvem AWS sem contratos de longo prazo.",
+  "keyTakeaway": "**Custo Mensal (USD) = Preço On-Demand por hora × 730 h/mês** — ex.: t3.medium us-east-1 = USD 0,0416 × 730 = ~USD 30,37/mês; t3.large = ~USD 60,74/mês.",
   "useCases": [
-    "Cálculos técnicos relacionados a AWS EC2 mensal",
-    "Estudantes e profissionais da área",
-    "Validar resultados teóricos antes de aplicá-los",
-    "Ensino e aprendizagem do conceito",
-    "Referência rápida em projetos"
+    "Estimar o custo mensal de um servidor de aplicação Node.js ou Python rodando 24/7 em uma instância t3.medium antes de provisionar na AWS.",
+    "Comparar o gasto entre regiões (us-east-1 vs sa-east-1 São Paulo) para decidir onde hospedar um sistema com requisitos de latência para o Brasil.",
+    "Calcular o custo de um ambiente de desenvolvimento/staging que usa instâncias t3.small ligadas apenas em horário comercial (8h/dia × 22 dias = 176 h/mês).",
+    "Orçar a migração de um servidor on-premises para EC2, projetando o TCO (Total Cost of Ownership) mensal e anual com instâncias da família m6i ou c6i.",
+    "Dimensionar o custo de um cluster de processamento de dados com instâncias c5.xlarge para batch jobs periódicos, calculando horas efetivas de uso."
   ],
   "fields": [
     {
@@ -106,57 +106,45 @@
     ],
     "result": "2 vCPU 4GB"
   },
-  "explanation": "As **calculadoras técnicas** para TI: latência, armazenamento, uptime SLA, custos em nuvem. Decisões que escalam com a infraestrutura.\n\n## Como se calcula\n\nCusto aproximado EC2 AWS sob demanda.\n\nEsta calculadora aplica a fórmula com os valores que você inserir, verificando intervalos típicos e alertando quando valores estão fora do razoável.\n\n## Notas finais\n\nEste cálculo é uma referência orientativa. Para decisões críticas (financeiras, médicas, legais), consulte um profissional especializado. Os valores estão atualizados para 2026 e são revisados periodicamente.",
+  "explanation": "## Como se calcula\n\nO custo On-Demand do AWS EC2 é baseado em **faturamento por hora** (ou por segundo para instâncias Linux, com mínimo de 60 segundos). A fórmula principal é:\n\n```\nCusto Mensal (USD) = Preço_On_Demand_por_hora (USD/h) × Horas_de_uso_no_mês\n\n# Mês completo (24/7):\nHoras = 730  →  t3.medium us-east-1: 0,0416 × 730 = USD 30,37\n\n# Ambiente dev (8h/dia, 22 dias úteis):\nHoras = 176  →  t3.medium us-east-1: 0,0416 × 176 = USD 7,32\n\n# Custo anual estimado (On-Demand, 24/7):\nCusto Anual = Custo Mensal × 12\n```\n\n> **Nota:** Os preços variam por região, sistema operacional (Linux é mais barato que Windows) e geração da instância. Todos os valores abaixo são para **Linux, On-Demand, us-east-1 (N. Virginia)** — referência de preços AWS 2025/2026.\n\n---\n\n## Tabela de referência\n\nPreços On-Demand AWS EC2 — Linux — us-east-1 (N. Virginia) — 2025/2026:\n\n| Instância   | vCPU | RAM (GB) | USD/hora | USD/mês (730h) | Uso típico                    |\n|-------------|------|----------|----------|----------------|-------------------------------|\n| t3.nano     | 2    | 0,5      | 0,0052   | 3,80           | Microserviços, testes         |\n| t3.micro    | 2    | 1        | 0,0104   | 7,59           | Ambientes dev leves           |\n| t3.small    | 2    | 2        | 0,0208   | 15,18          | Aplicações pequenas           |\n| t3.medium   | 2    | 4        | 0,0416   | 30,37          | APIs, Node.js, Django         |\n| t3.large    | 2    | 8        | 0,0832   | 60,74          | Aplicações web com tráfego    |\n| t3.xlarge   | 4    | 16       | 0,1664   | 121,47         | Workloads médios              |\n| t3.2xlarge  | 8    | 32       | 0,3328   | 242,94         | Processamento intensivo       |\n| m6i.large   | 2    | 8        | 0,096    | 70,08          | Uso geral balanceado          |\n| m6i.xlarge  | 4    | 16       | 0,192    | 140,16         | Apps de médio porte           |\n| m6i.2xlarge | 8    | 32       | 0,384    | 280,32         | Bancos de dados, ERP          |\n| c6i.large   | 2    | 4        | 0,085    | 62,05          | Compute-intensive, compilação |\n| c6i.xlarge  | 4    | 8        | 0,17     | 124,10         | Renderização, ML inferência   |\n| r6i.large   | 2    | 16       | 0,126    | 91,98          | Cache, bancos in-memory       |\n| r6i.xlarge  | 4    | 32       | 0,252    | 183,96         | Big data, Redis em produção   |\n\n**Multiplicador por região (relativo a us-east-1 = 1,00):**\n\n| Região AWS         | Código         | Fator de preço |\n|--------------------|----------------|----------------|\n| N. Virginia (EUA)  | us-east-1      | 1,00 (base)    |\n| Ohio (EUA)         | us-east-2      | 1,00           |\n| Oregon (EUA)       | us-west-2      | 1,00           |\n| São Paulo (Brasil) | sa-east-1      | ~1,50          |\n| Europa (Irlanda)   | eu-west-1      | ~1,12          |\n| Tóquio (Japão)     | ap-northeast-1 | ~1,17          |\n| Sydney (Austrália) | ap-southeast-2 | ~1,19          |\n\n> Ex.: t3.medium em sa-east-1 = USD 0,0416 × 1,50 × 730 ≈ **USD 45,55/mês**\n\n---\n\n## Casos típicos\n\n### Caso 1 — Startup com API REST em produção\nUma startup hospeda sua API Node.js em uma instância **t3.medium** na região **us-east-1**, rodando 24/7.\n- Preço: USD 0,0416/h × 730h = **USD 30,37/mês** (~R$ 182/mês com câmbio de R$ 6,00)\n- Para redundância (2 instâncias atrás de um Load Balancer): **USD 60,74/mês** só em EC2 (sem contar ALB, transferência de dados, etc.)\n\n### Caso 2 — Ambiente de desenvolvimento no Brasil\nTime de desenvolvimento que usa uma **t3.large em sa-east-1** somente em horário comercial (8h/dia, 22 dias úteis = 176 horas/mês).\n- Preço sa-east-1 t3.large: ~USD 0,1248/h\n- Custo: USD 0,1248 × 176 = **USD 21,97/mês** — vs USD 91,10/mês se ficasse 24/7 ligada.\n- **Economia com agendamento:** ~76% de redução de custo.\n\n### Caso 3 — Batch de processamento com c6i.xlarge\nPipeline de dados que roda 6 horas por dia, todos os dias do mês (180 horas/mês) em uma **c6i.xlarge** em us-east-1.\n- Preço: USD 0,17/h × 180h = **USD 30,60/mês**\n- Se ficasse 24/7: USD 0,17 × 730 = USD 124,10/mês. Economia real com spot ou schedule: mais de 75%.\n\n---\n\n## Erros comuns\n\n1. **Usar 720 horas fixas no cálculo** — A AWS usa **730 horas/mês** como média padrão (365 dias × 24h ÷ 12 meses). Usar 720 gera uma diferença de ~1,4% no custo estimado.\n\n2. **Ignorar o multiplicador de região** — Muitos times calculam com preços de us-east-1 mas provisionam em sa-east-1 (São Paulo), que é ~50% mais caro. Isso pode dobrar surpresas na fatura.\n\n3. **Esquecer custos adjacentes ao EC2** — O custo da instância é apenas parte da fatura AWS. Transferência de dados saindo (egress) custa a partir de USD 0,09/GB, volumes EBS (armazenamento) cobram separado (~USD 0,08/GB-mês para gp3), e Elastic IPs têm custo quando não associados.\n\n4. **Confundir On-Demand com Reserved Instances ou Savings Plans** — On-Demand é o mais caro. Uma Reserved Instance de 1 ano (All Upfront) para t3.medium em us-east-1 custa ~USD 18,25/mês, uma economia de ~40% vs On-Demand (USD 30,37). O cálculo desta calculadora é **exclusivamente On-Demand**.\n\n5. **Não considerar o sistema operacional** — Instâncias Windows custam em média **2–3× mais** que Linux para a mesma família/tamanho. Uma t3.medium Windows em us-east-1 custa ~USD 0,0752/h (vs USD 0,0416/h Linux) = ~USD 54,90/mês.\n\n6. **Assumir que instâncias \"burstáveis\" (t3, t4g) são sempre mais baratas** — Instâncias da família T usam créditos de CPU. Sob carga contínua de CPU alta, o desempenho é limitado e pode ser necessário ativar \"unlimited mode\", adicionando custos extras por vCPU-hora excedente.\n\n---\n\n## Calculadoras relacionadas\n\nEsta calculadora faz parte do ecossistema de ferramentas de tecnologia e custos do Hacé Cuentas. Explore também outras ferramentas disponíveis no site para complementar seu planejamento financeiro e tecnológico.",
   "faq": [
     {
-      "q": "Quanto custa a instância t3.micro?",
-      "a": "Free tier no primeiro ano. Depois USD 10/mês."
+      "q": "Quantas horas a AWS considera em um mês para o cálculo de custo?",
+      "a": "A AWS utiliza **730 horas por mês** como padrão (365 dias × 24 horas ÷ 12 meses = 730 h). Esse valor aparece explicitamente na calculadora oficial da AWS Pricing Calculator. Portanto, uma instância ligada 24/7 durante um mês completo acumula 730 horas de cobrança, não 720."
     },
     {
-      "q": "Qual o preço de t3.medium?",
-      "a": "USD 30/mês. Ideal para aplicações pequenas."
+      "q": "Quanto custa uma instância t3.medium por mês na região de São Paulo (sa-east-1)?",
+      "a": "Em sa-east-1, o preço On-Demand de uma t3.medium Linux é aproximadamente **USD 0,0624/hora**, resultando em ~**USD 45,55/mês** (730h). Isso é cerca de 50% mais caro que a mesma instância em us-east-1 (USD 30,37/mês). A região de São Paulo é historicamente uma das mais caras da AWS globalmente, em parte por impostos e custos de infraestrutura local no Brasil."
     },
     {
-      "q": "Qual o custo de m5.large?",
-      "a": "USD 70/mês. 2 vCPU e 8 GB RAM."
+      "q": "Qual a diferença entre On-Demand, Reserved Instance e Savings Plans?",
+      "a": "**On-Demand** não exige compromisso, é o mais caro (paga por hora usada). **Reserved Instances (RI)** exigem compromisso de 1 ou 3 anos e oferecem desconto de 30% a 60%. **Savings Plans** são mais flexíveis que RI, com desconto similar (~40–60%) mas aplicável a diferentes tipos de instância. Para um t3.medium 24/7 por 1 ano: On-Demand ~USD 364/ano vs RI 1 ano ~USD 219/ano — economia de ~40%."
     },
     {
-      "q": "Preço de c5.xlarge?",
-      "a": "USD 130/mês. Otimizado para CPU."
+      "q": "Instâncias Spot são mais baratas? Quando usá-las?",
+      "a": "Sim. As **instâncias Spot** usam capacidade ociosa da AWS com descontos de **60% a 90%** em relação ao preço On-Demand, mas podem ser interrompidas com aviso de 2 minutos quando a AWS precisar da capacidade. São ideais para workloads tolerantes a falhas: processamento batch, treinamento de ML, renderização, testes de carga. Para servidores de produção com estado (bancos de dados, APIs críticas), o On-Demand ou Reserved é mais adequado."
     },
     {
-      "q": "Quanto custa r5.2xlarge?",
-      "a": "USD 340/mês. Otimizado para memória."
+      "q": "O que são instâncias da família t3 e quando escolher m6i ou c6i?",
+      "a": "A família **t3** são instâncias de propósito geral 'burstáveis': ótimas para cargas intermitentes (CPU baixa na maior parte do tempo, com picos). A família **m6i** oferece desempenho consistente de CPU/RAM, ideal para aplicações web e bancos de dados em produção. A **c6i** tem maior proporção de CPU por RAM (compute-optimized), boa para compilação, processamento de vídeo e inferência de ML. Para uma API com tráfego previsível e constante, m6i.large (USD 70/mês) é mais confiável que t3.large (USD 60/mês), apesar do preço levemente maior."
     },
     {
-      "q": "Instâncias reservadas compensa?",
-      "a": "Sim, 30-75% desconto para 1-3 anos."
+      "q": "O armazenamento EBS está incluído no preço da instância EC2?",
+      "a": "**Não.** O volume EBS (disco da instância) é cobrado separadamente. O volume padrão gp3 custa **USD 0,08/GB-mês** em us-east-1. Uma instância com 30 GB de disco EBS adiciona USD 2,40/mês ao custo. Para sa-east-1 (São Paulo), o gp3 custa ~USD 0,096/GB-mês. Além do EBS, snapshots de backup também têm custo adicional (~USD 0,05/GB-mês em us-east-1)."
     },
     {
-      "q": "Como economizar com Spot?",
-      "a": "Até 90% desconto para cargas interrupíveis."
+      "q": "Como reduzir o custo do EC2 em ambientes de desenvolvimento?",
+      "a": "As principais estratégias são: (1) **Agendar desligamento automático** fora do horário comercial — ligar 8h/dia em dias úteis reduz o uso de 730h para ~176h/mês, economizando ~76%. (2) Usar **instâncias Spot** para ambientes de dev tolerantes a interrupções. (3) **Rightsize** — verificar com AWS Cost Explorer se a instância está superprovisionada (ex.: CPU média <5% sugere downgrade para t3.small). (4) Usar **AWS Free Tier**: t2.micro ou t3.micro têm 750h/mês gratuitas nos primeiros 12 meses de conta."
     },
     {
-      "q": "Essa calculadora é realmente grátis?",
-      "a": "Sim, gratuita e sem necessidade de registro."
-    },
-    {
-      "q": "Como calcular o custo total mensal?",
-      "a": "Multiplique o preço por hora por 720 horas (média de horas no mês)."
+      "q": "Qual é o impacto do câmbio BRL/USD no custo real em reais?",
+      "a": "Como a AWS cobra em USD, o custo em reais flutua com o câmbio. Com um t3.medium em us-east-1 a USD 30,37/mês: a R$ 5,00/USD = **R$ 151,85/mês**; a R$ 6,00/USD = **R$ 182,22/mês**; a R$ 6,50/USD = **R$ 197,41/mês**. Para empresas que faturam em BRL, a variação cambial pode impactar significativamente o orçamento de infraestrutura. Contratos de Reserved Instance pagos antecipadamente em USD fixam o custo em dólar, mas não eliminam o risco cambial."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
-    },
-    {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
-    },
-    {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "AWS EC2 On-Demand Pricing (Documentação Oficial Amazon Web Services)",
+      "url": "https://aws.amazon.com/ec2/pricing/on-demand/"
     }
   ],
   "dataUpdate": {

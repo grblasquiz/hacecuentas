@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "🔒",
   "formulaId": "hashes-bcrypt-costo-tiempo-cracking",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Costo 2^n afecta tiempo per hash · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá cost y obtené hash/seg aprox al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "bcrypt es una función de hashing de contraseñas diseñada por Niels Provos y David Mazières en 1999, basada en el cifrado Blowfish. Su característica más importante es el **factor de costo (cost factor)**, un parámetro que controla cuántas iteraciones de expansión de clave se ejecutan: el tiempo de cómputo se duplica con cada incremento de 1 en el costo. La fórmula base es `iteraciones = 2^cost`, lo que significa que cost=10 implica 1.024 iteraciones y cost=14 implica 16.384 iteraciones. Se usa para proteger contraseñas almacenadas en bases de datos, impidiendo ataques de fuerza bruta mediante el encarecimiento deliberado del cómputo. Esta calculadora te muestra cuántos hashes por segundo puede generar tu servidor y cuánto tiempo tardaría un atacante en crackear una contraseña con hardware moderno.",
+  "keyTakeaway": "**`iteraciones = 2^cost` → cost=12 ≈ 4.096 iteraciones ≈ 100 ms por hash en hardware típico (2025); mínimo recomendado: cost=10 para apps web, cost=12 para sistemas críticos.**",
   "useCases": [
-    "Dimensionar bcrypt: costo vs tiempo antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Configurar el cost factor de bcrypt en un sistema de login para que cada autenticación tome ~100 ms, frenando ataques de diccionario sin afectar la experiencia del usuario.",
+    "Estimar cuánto tiempo tardaría una GPU RTX 4090 (circa 184.000 hashes/seg en MD5 vs ~2.700 hashes/seg en bcrypt cost=10) en crackear una contraseña robada de una base de datos.",
+    "Comparar el costo computacional de bcrypt cost=10 vs cost=14 para decidir el balance entre seguridad y carga de CPU en un servidor de autenticación con 500 usuarios concurrentes.",
+    "Auditar la configuración de seguridad de una aplicación web existente y determinar si el cost factor usado en producción sigue siendo adecuado frente a hardware más moderno disponible en 2025–2026."
   ],
   "fields": [
     {
@@ -53,49 +53,45 @@
     ],
     "result": "~100 ms"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nCosto 2^n afecta tiempo per hash · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl tiempo de cómputo de un hash bcrypt escala de forma exponencial con el cost factor. La relación fundamental es:\n\n```\niteraciones = 2^cost\n\ntiempo_hash ≈ tiempo_base × 2^(cost - cost_base)\n\nhashes_por_segundo = 1 / tiempo_hash_en_segundos\n```\n\n**Ejemplo concreto:** Si en tu servidor cost=10 tarda 65 ms (≈ 15 hashes/seg), entonces:\n- cost=12 → 65 ms × 2^(12-10) = 65 × 4 = **260 ms** (≈ 3,8 hashes/seg)\n- cost=14 → 65 ms × 2^(14-10) = 65 × 16 = **1.040 ms** (≈ 0,96 hashes/seg)\n\nEl **tiempo de cracking** de un atacante con hardware dedicado se estima así:\n\n```\ntiempo_cracking = tamaño_espacio_contraseña / hashes_por_segundo_atacante\n\ntamaño_espacio = caracteres_posibles ^ longitud\n\nEjemplo 8 chars alfanuméricos: 62^8 ≈ 218.340.105.584.896 combinaciones\n```\n\n---\n\n## Tabla de referencia\n\n| Cost | Iteraciones | Tiempo aprox. (CPU moderna) | Hashes/seg CPU | Hashes/seg GPU RTX 4090 | Tiempo cracking 8 chars (GPU) |\n|------|------------|----------------------------|---------------|------------------------|-------------------------------|\n| 8    | 256        | ~6 ms                      | ~167          | ~12.800                | ~198 días                     |\n| 10   | 1.024      | ~25 ms                     | ~40           | ~3.200                 | ~2,2 años                     |\n| 11   | 2.048      | ~50 ms                     | ~20           | ~1.600                 | ~4,3 años                     |\n| **12**   | **4.096**  | **~100 ms**                | **~10**       | **~800**               | **~8,7 años**                 |\n| 13   | 8.192      | ~200 ms                    | ~5            | ~400                   | ~17,4 años                    |\n| 14   | 16.384     | ~400 ms                    | ~2,5          | ~200                   | ~34,8 años                    |\n| 16   | 65.536     | ~1.600 ms                  | ~0,6          | ~50                    | ~138 años                     |\n\n> **Nota:** Los valores de GPU corresponden a ataques offline con hashcat sobre hardware 2024–2025. El espacio estimado es contraseña de 8 caracteres alfanuméricos (62 chars posibles).\n\n---\n\n## Casos típicos\n\n### Caso 1 — App web con login de usuarios (cost=12)\nUn servidor con CPU de 4 núcleos (tipo AWS t3.medium) genera aproximadamente **10 hashes/seg por núcleo** con cost=12. Con 500 usuarios que inician sesión en el pico del día (distribuidos en 60 segundos), necesitás procesar ~8 hashes/seg, lo cual cabe cómodamente. Un atacante con RTX 4090 que roba la base de datos puede intentar **~800 hashes/seg**, tardando estadísticamente **~8,7 años** en crackear una contraseña de 8 caracteres alfanuméricos. Cost=12 es el **mínimo recomendado por OWASP para 2025**.\n\n### Caso 2 — Sistema de salud o bancario (cost=14)\nPara datos sensibles, cost=14 sube el tiempo por hash a ~400 ms. Esto reduce los intentos de un atacante GPU a ~200 hashes/seg, extendiendo el cracking a **~35 años** para una contraseña de 8 caracteres. El impacto en UX es aceptable si los logins no son masivamente concurrentes: un servidor puede autenticar ~150 usuarios/minuto por núcleo.\n\n### Caso 3 — Contraseña débil (cost=12, 6 chars numéricos)\nCon cost=12 y una contraseña de solo 6 dígitos (10^6 = 1.000.000 combinaciones), un atacante GPU tarda: `1.000.000 / 800 = 1.250 segundos ≈ 21 minutos`. Esto demuestra que **el cost factor no salva contraseñas cortas**: la longitud y complejidad de la contraseña sigue siendo crítica.\n\n---\n\n## Errores comunes\n\n1. **Usar cost=4 o cost=6 en producción** → Valores usados en tests/benchmarks, pero en producción permiten millones de intentos por hora incluso en CPU. Nunca usar cost < 10 en sistemas reales.\n\n2. **Confundir \"rondas\" con \"iteraciones\"** → En bcrypt, el parámetro que se configura se llama \"work factor\" o \"cost\", no \"rondas\" directamente. Las rondas internas son siempre 64; el cost controla la expansión de clave (2^cost veces).\n\n3. **Comparar bcrypt con MD5 o SHA-256 en contexto de contraseñas** → MD5 y SHA-256 son hashes de propósito general, diseñados para ser rápidos. Una GPU puede calcular **>10.000 millones de hashes MD5/seg**, haciendo inútil cualquier contraseña corta. bcrypt es deliberadamente lento.\n\n4. **No actualizar el cost factor con el paso del tiempo** → La recomendación es que el hash de una contraseña tarde al menos 100 ms. A medida que el hardware se vuelve más potente, el cost debe incrementarse. Un sistema que usaba cost=10 en 2015 debería haber migrado a cost=12 o más para 2025.\n\n5. **Hashear la contraseña antes de pasarla a bcrypt** → bcrypt tiene un límite interno de **72 bytes**. Si pre-hasheás con SHA-256 (salida binaria de 32 bytes) para sortear el límite, recordá usar la representación hexadecimal o base64 para no introducir bytes nulos que truncan el input.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de ancho de banda y tiempo de descarga](/calculadora-ancho-banda-descarga-tiempo) — útil para estimar cuánto tarda transferir una base de datos de hashes en un escenario de ataque.\n- [Calculadora de costo de servidor cloud mensual](/calculadora-costo-cloud-servidor-mensual) — calculá el costo de CPU adicional que implica subir el cost factor en producción.\n- [Calculadora de tiempo de carga de batería](/calculadora-carga-bateria-tiempo-amp) — si implementás bcrypt en dispositivos embebidos o móviles, el consumo energético extra del cost factor puede afectar la batería.\n- [Calculadora de costo de impresión 3D por pieza](/calculadora-costo-impresion-3d-pieza) — ejemplo de otra calculadora de costos computacionales iterativos en hardware dedicado.",
   "faq": [
     {
-      "q": "¿Por qué lento?",
-      "a": "Resistencia ataque fuerza bruta."
+      "q": "¿Qué cost factor de bcrypt se recomienda usar en 2025–2026?",
+      "a": "OWASP recomienda que el hash de una contraseña tarde al menos 100 ms en el servidor de producción. Esto equivale aproximadamente a **cost=12** en hardware de CPU moderno (2024–2025). Para sistemas con datos sensibles (salud, finanzas), se recomienda cost=13 o cost=14. El valor mínimo aceptable para cualquier sistema en producción es cost=10."
     },
     {
-      "q": "¿Cost balance?",
-      "a": "12 estándar 2024; ajusta a ~250ms login."
+      "q": "¿Por qué bcrypt es más seguro que SHA-256 para contraseñas?",
+      "a": "SHA-256 es un hash rápido: una GPU RTX 4090 puede calcular más de 20.000 millones de hashes SHA-256 por segundo, lo que permite crackear contraseñas de 8 caracteres en segundos. bcrypt con cost=12 reduce esa velocidad a ~800 hashes/seg en la misma GPU, haciendo el ataque ~25 millones de veces más lento. bcrypt fue diseñado específicamente para ser costoso computacionalmente y resistir mejoras de hardware."
     },
     {
-      "q": "¿Argon2?",
-      "a": "Más moderno, resistente GPU/ASIC."
+      "q": "¿Qué pasa si subo el cost factor en mi aplicación existente?",
+      "a": "bcrypt es compatible hacia adelante: podés cambiar el cost factor en cualquier momento. Las contraseñas ya hasheadas con el cost anterior siguen siendo válidas (el cost está embebido en el hash). La migración ocurre naturalmente: la próxima vez que cada usuario inicia sesión y su contraseña es verificada, podés re-hashear con el nuevo cost y reemplazar el hash almacenado."
     },
     {
-      "q": "¿Salt?",
-      "a": "bcrypt incluye automático (16 bytes)."
+      "q": "¿bcrypt tiene algún límite técnico en la longitud de la contraseña?",
+      "a": "Sí. La implementación estándar de bcrypt tiene un **límite de 72 bytes**. Contraseñas más largas son truncadas silenciosamente. Esto significa que dos contraseñas que comparten los primeros 72 bytes producen el mismo hash. Para contraseñas más largas, se recomienda pre-hashear con SHA-256 (usando la salida en hexadecimal o base64) antes de pasarla a bcrypt, o bien usar Argon2id que no tiene este límite."
     },
     {
-      "q": "¿Upgrade cost?",
-      "a": "Re-hashear al login cuando user entra."
+      "q": "¿Qué diferencia hay entre bcrypt, scrypt y Argon2?",
+      "a": "Los tres son algoritmos de hashing de contraseñas con costo ajustable. **bcrypt** (1999) solo ajusta CPU. **scrypt** (2009) agrega costo de memoria, dificultando el uso de GPUs/ASICs. **Argon2id** (ganador de la Password Hashing Competition 2015) es el más moderno: ajusta CPU, memoria y paralelismo simultáneamente. OWASP recomienda Argon2id como primera opción en sistemas nuevos, bcrypt como alternativa probada."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cómo afecta el cost factor al rendimiento de mi servidor bajo carga?",
+      "a": "Con cost=12 (~100 ms/hash), un núcleo de CPU puede procesar ~10 logins/seg. En un servidor de 4 núcleos, eso es ~40 logins/seg o ~2.400 logins/minuto. Si tu sistema tiene picos mayores, podés usar una cola de autenticación asíncrona o escalar horizontalmente. Aumentar de cost=12 a cost=14 cuadruplica el tiempo de cómputo, reduciendo la capacidad a ~600 logins/minuto por servidor de 4 núcleos."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿El salt en bcrypt lo tengo que generar yo manualmente?",
+      "a": "No. bcrypt genera automáticamente un **salt aleatorio de 128 bits (16 bytes)** cada vez que se crea un hash. Este salt queda embebido en el string resultante (que tiene formato `$2b$cost$salt+hash`). Esto garantiza que dos contraseñas idénticas produzcan hashes distintos, eliminando el riesgo de ataques con tablas rainbow. Nunca reutilizés salts ni los generés manualmente salvo que uses una librería de muy bajo nivel."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Cuánto tiempo tardaría crackear mi contraseña si alguien roba la base de datos?",
+      "a": "Depende de la longitud y complejidad de la contraseña y del cost factor. Con cost=12 y una GPU RTX 4090 (~800 hashes/seg): una contraseña de 6 dígitos se crackea en ~21 minutos; una de 8 caracteres alfanuméricos en ~8,7 años; una de 10 caracteres con símbolos (espacio de ~95 chars) en más de 1 millón de años. La longitud de la contraseña es el factor más determinante."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
-    },
-    {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "Wikipedia ES — bcrypt",
+      "url": "https://es.wikipedia.org/wiki/Bcrypt"
     }
   ],
   "relatedSlugs": [

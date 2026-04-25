@@ -7,14 +7,13 @@
   "category": "tecnologia",
   "icon": "🤖",
   "formulaId": "tokens-openai-gpt-costo-uso-mensual",
-  "intro": "Technical calculations for IT and software development are essential: latency, bandwidth, uptime SLA, cloud costs, algorithmic complexity. Accurate initial estimates prevent overprovisioning infrastructure. Get your estimated monthly ChatGPT API costs instantly. Our pricing reflects 2026 rates and is updated regularly to keep you current.",
-  "keyTakeaway": "Formula: **tokens × price per model**. Direct calculation from your input values. Get your estimated monthly ChatGPT API costs.",
+  "intro": "The ChatGPT API Cost Calculator estimates your monthly OpenAI API bill based on token consumption and model selection. OpenAI charges separately for **input tokens** (your prompts + context) and **output tokens** (model-generated responses), billed per million tokens (MTok). For example, GPT-4o costs $2.50/MTok input and $10.00/MTok output as of mid-2025. Use this calculator when budgeting AI features in SaaS products, estimating costs for chatbot deployments, or comparing model tiers before committing to a production architecture.",
+  "keyTakeaway": "**Monthly Cost = (Input MTok × Input Price/MTok) + (Output MTok × Output Price/MTok)** — e.g., 10M input + 5M output on GPT-4o = (10 × $2.50) + (5 × $10.00) = $25 + $50 = **$75/month**.",
   "useCases": [
-    "Technical calculations related to ChatGPT API costs",
-    "Students and IT professionals",
-    "Validate theoretical estimates before deployment",
-    "Teaching and learning API pricing concepts",
-    "Quick reference for budgeting projects"
+    "Budgeting a customer support chatbot that handles 50,000 conversations/month on GPT-4o mini, estimating whether costs stay under a $200/month ceiling.",
+    "Comparing GPT-4o vs. GPT-4o mini vs. GPT-3.5-turbo to decide which model meets quality requirements at the lowest per-request cost for a high-volume classification pipeline.",
+    "Projecting annual API spend for a Series A startup pitching an AI writing assistant, using token-per-user benchmarks to build a unit-economics model.",
+    "Auditing an existing production app's monthly OpenAI invoice by reverse-engineering average tokens per request from total token counts in the usage dashboard."
   ],
   "fields": [
     {
@@ -84,53 +83,49 @@
     ],
     "result": "Average request USD 0.05"
   },
-  "explanation": "**Technical calculators** for IT: latency, storage, uptime SLA, cloud costs. Decisions that scale.\n\n## How it's calculated\n\nEstimated monthly OpenAI API costs.\n\nThis calculator applies the formula using your input values, checking typical ranges and alerting you to unrealistic values.\n\n## Final notes\n\nThis calculation is an informational reference. For critical decisions (financial, medical, legal), consult with a qualified professional. Pricing reflects 2026 rates and is reviewed regularly.",
+  "explanation": "## How It's Calculated\n\nOpenAI bills API usage in **millions of tokens (MTok)**. The total monthly cost is the sum of input and output token charges:\n\n```\nMonthly Cost ($) =\n  (Input_Tokens_M  × Input_Price_per_MTok)\n+ (Output_Tokens_M × Output_Price_per_MTok)\n\nCost per Request ($) =\n  Monthly Cost / Number_of_Requests\n\nTokens per Request (avg) =\n  (Total_Input_Tokens + Total_Output_Tokens) / Number_of_Requests\n```\n\n**Token estimation rule of thumb:** 1 token ≈ 4 characters of English text, or roughly ¾ of a word. A 750-word page ≈ 1,000 tokens. A typical ChatGPT-style exchange (200-word prompt + 300-word reply) ≈ ~650 tokens total.\n\n---\n\n## Reference Table — OpenAI API Prices (2025)\n\n| Model | Input ($/MTok) | Output ($/MTok) | Context Window | Best For |\n|---|---|---|---|---|\n| **GPT-4.1** | $2.00 | $8.00 | 1M tokens | Complex reasoning, long docs |\n| **GPT-4.1 mini** | $0.40 | $1.60 | 1M tokens | Balanced cost/quality |\n| **GPT-4.1 nano** | $0.10 | $0.40 | 1M tokens | High-volume, simple tasks |\n| **GPT-4o** | $2.50 | $10.00 | 128K tokens | Multimodal, vision tasks |\n| **GPT-4o mini** | $0.15 | $0.60 | 128K tokens | Cost-sensitive production |\n| **o3** | $10.00 | $40.00 | 200K tokens | Advanced multi-step reasoning |\n| **o4-mini** | $1.10 | $4.40 | 200K tokens | Efficient reasoning |\n| **GPT-3.5 Turbo** | $0.50 | $1.50 | 16K tokens | Legacy/budget workloads |\n\n> Prices reflect OpenAI's public API pricing page as of May 2025. Batch API offers a 50% discount for async workloads with up to 24-hour turnaround.\n\n---\n\n## Typical Use Cases — Worked Examples\n\n### Example 1 — Customer Support Bot (GPT-4o, Mid-Volume)\n- **Volume:** 50,000 conversations/month\n- **Avg tokens/conversation:** 200 input + 100 output = 300 tokens\n- **Total:** 10M input tokens, 5M output tokens\n- **Cost:** (10 × $2.50) + (5 × $10.00) = $25 + $50 = **$75/month**\n- **Cost per conversation:** $75 / 50,000 = **$0.0015**\n\n### Example 2 — Document Summarization Pipeline (GPT-4.1, High Input)\n- **Volume:** 20,000 documents/month, avg 2,000-word doc + 200-word summary\n- **Avg tokens:** ~2,700 input + ~270 output\n- **Total:** 54M input tokens, 5.4M output tokens\n- **Cost:** (54 × $2.00) + (5.4 × $8.00) = $108 + $43.20 = **$151.20/month**\n- **Cost per document:** $151.20 / 20,000 = **$0.0076**\n\n### Example 3 — High-Volume Classification (GPT-4.1 nano, Very High Volume)\n- **Volume:** 2,000,000 classifications/month, avg 50 input + 10 output tokens\n- **Total:** 100M input tokens, 20M output tokens\n- **Cost:** (100 × $0.10) + (20 × $0.40) = $10 + $8 = **$18/month**\n- **Cost per classification:** $18 / 2,000,000 = **$0.000009** (~$0.001 per 100)\n\n---\n\n## Common Mistakes\n\n1. **Forgetting the system prompt in input tokens** — System prompts are counted as input tokens on *every single request*. A 500-token system prompt across 1M requests = 500M extra input tokens, adding $125 on GPT-4o alone.\n\n2. **Ignoring conversation history (context window accumulation)** — In multi-turn chatbots, the full conversation history is re-sent with every message. A 10-turn conversation doesn't cost 10× one turn; it costs roughly 1+2+3+...+10 = 55× one turn's worth of input tokens.\n\n3. **Confusing MTok pricing with per-token pricing** — OpenAI lists prices per **million** tokens. $2.50/MTok = $0.0000025 per token. Misreading this by 1,000,000× is a classic budgeting error.\n\n4. **Not accounting for output token variability** — Output tokens are non-deterministic. Setting `max_tokens` too high doesn't mean you'll always generate that many, but failing to set it means runaway outputs can spike costs. Always benchmark real p50/p95 output lengths.\n\n5. **Overlooking the Batch API discount** — For non-real-time workloads (analytics, batch summarization, embeddings), the Batch API cuts costs by 50%. A $500/month pipeline becomes $250/month with no code changes beyond switching endpoints.\n\n6. **Underestimating embedding costs at scale** — If using `text-embedding-3-small` ($0.02/MTok) for RAG pipelines, indexing 100M tokens = $2, but *querying* 10M tokens/day × 30 days = 300M tokens = $6/month just for retrieval embeddings.\n\n---\n\n## Related Calculators\n\n- [Compound Interest Calculator](/calculadora-interes-compuesto) — Project how reinvested API-cost savings grow over time\n- [Salary Calculator](/calculadora-salario) — Compare AI API costs against the equivalent engineer hours\n- [Unit Price Calculator](/calculadora-precio-unitario) — Break down per-API-call costs across product tiers\n",
   "faq": [
     {
-      "q": "How many characters equal one token?",
-      "a": "Approximately 4 characters per token. 1,000 tokens ≈ 750 words."
+      "q": "What exactly is a token in OpenAI's API?",
+      "a": "A token is OpenAI's basic unit of text processing, roughly equivalent to 4 characters or ¾ of an English word. The word \"ChatGPT\" is 2 tokens; \"unbelievable\" is 3 tokens. You can verify exact counts using OpenAI's Tokenizer tool (platform.openai.com/tokenizer). Non-English languages are often less efficient — Chinese or Arabic characters can consume 2–4 tokens per character."
     },
     {
-      "q": "How much does GPT-4 Turbo cost?",
-      "a": "$10 per million input tokens, $30 per million output tokens."
+      "q": "How do I estimate my token usage before going live?",
+      "a": "Use OpenAI's tokenizer library (`tiktoken` for Python) to count tokens in your actual prompts and expected outputs. Run a representative sample of 100–500 real-use-case inputs, measure p50 and p95 token counts, then multiply by your expected monthly request volume. Add 10–20% buffer for outliers. OpenAI's usage dashboard also logs historical token consumption once you're in production."
     },
     {
-      "q": "What is GPT-4o pricing?",
-      "a": "$5 per million input tokens, $15 per million output tokens (more cost-effective)."
+      "q": "What is the Batch API and how much does it save?",
+      "a": "OpenAI's Batch API processes requests asynchronously with up to a 24-hour turnaround window, in exchange for a **50% discount** on all token costs. For example, GPT-4o input drops from $2.50 to $1.25/MTok. It's ideal for nightly analytics runs, bulk document processing, or any workflow where real-time response isn't required. Results are returned via file download rather than streaming."
     },
     {
-      "q": "How much does GPT-3.5 Turbo cost?",
-      "a": "$0.50 per million input tokens, $1.50 per million output tokens."
+      "q": "Does the context window size affect cost?",
+      "a": "Yes, critically. The context window is the maximum number of tokens a model can process in a single request (input + output combined). GPT-4o supports 128K tokens; GPT-4.1 supports 1M tokens. Larger contexts cost more because every token in the context is billed as input. A 100K-token document sent to GPT-4.1 at $2.00/MTok costs $0.20 per call — scale that to 10,000 calls and you're at $2,000 in input costs alone."
     },
     {
-      "q": "How can I reduce API costs?",
-      "a": "Prompt caching reduces input token costs by 50% for repeated prompts."
+      "q": "Which model is the best value for a production chatbot?",
+      "a": "For most production chatbots, **GPT-4o mini** ($0.15 input / $0.60 output per MTok) or **GPT-4.1 mini** ($0.40 / $1.60) offer the best cost-quality balance. GPT-4o mini is ~16× cheaper than GPT-4o on input tokens while handling the vast majority of conversational tasks competently. Reserve GPT-4o or GPT-4.1 for complex reasoning tasks where quality measurably matters."
     },
     {
-      "q": "What is the Batch API discount?",
-      "a": "50% discount on async batch processing."
+      "q": "Are there free tier or rate limits I should know about?",
+      "a": "OpenAI offers a free tier for new accounts with $5 in credit (subject to change). Production usage requires a paid account. Rate limits vary by tier: Tier 1 (after $5 spend) allows 500 RPM on GPT-4o; Tier 4 ($250+ spend) allows 10,000 RPM. Rate limits are separate from cost — hitting a rate limit doesn't increase your bill, but it does cause 429 errors that your app must handle with exponential backoff."
     },
     {
-      "q": "What are alternatives to OpenAI?",
-      "a": "Claude (Anthropic), Gemini (Google), Llama (local)."
+      "q": "How do I reduce my OpenAI API bill in production?",
+      "a": "Six proven strategies: (1) **Prompt compression** — remove redundant words from system prompts; (2) **Model routing** — use GPT-4.1 nano for simple intents, escalate to GPT-4o only when needed; (3) **Caching** — semantic caching identical or near-identical queries can cut costs 30–60% for FAQ-style bots; (4) **Batch API** — use for non-real-time workloads to get 50% off; (5) **Short system prompts** — every token is re-sent on every turn; (6) **Set `max_tokens`** — cap runaway outputs to your realistic p95 length."
     },
     {
-      "q": "Is this calculator free to use?",
-      "a": "Yes, all our calculators are free and require no account."
+      "q": "What's the difference between input and output tokens in terms of cost?",
+      "a": "Output tokens consistently cost more than input tokens — typically **4× more** across OpenAI's model lineup (e.g., GPT-4o: $2.50 input vs. $10.00 output per MTok). This reflects the autoregressive generation cost: the model must run a full forward pass for every output token generated, while input tokens are processed in parallel. This asymmetry means that applications with verbose outputs (long essays, detailed code) will have proportionally higher costs than terse classifiers."
+    },
+    {
+      "q": "How does prompt caching work and how much does it save?",
+      "a": "OpenAI's **prompt caching** automatically discounts repeated prefix tokens (system prompts, few-shot examples) that appear identically across requests. Cached input tokens are charged at 50% of the standard input price (e.g., GPT-4o cached input = $1.25/MTok). Caching is automatic for prompts ≥1,024 tokens with a static prefix. This is especially valuable for RAG systems where the same large context document is queried repeatedly within a session."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
-    },
-    {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
-    },
-    {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "OpenAI API Pricing — platform.openai.com",
+      "url": "https://platform.openai.com/docs/pricing"
     }
   ],
   "seoKeywords": [

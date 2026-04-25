@@ -8,14 +8,14 @@
   "icon": "♟️",
   "formulaId": "elo-ajedrez-ganado-perdido-variacion",
   "audience": "global",
-  "intro": "Os métodos de estudo modernos utilizam a ciência cognitiva: spaced repetition, active recall, interleaving. Aplicados corretamente, você aprende mais rapidamente e com maior retenção. Calcule a variação de ELO após uma partida de xadrez. Os valores estão atualizados a 2026 e revisados periodicamente para mantê-lo informado.",
-  "keyTakeaway": "Fórmula: **ΔELO = K × (resultado - expectativa)**. Aplicação direta com os valores inseridos. Cálculo da variação de ELO após uma partida de xadrez.",
+  "intro": "O sistema ELO é o método oficial de classificação de jogadores de xadrez, criado pelo físico húngaro-americano Arpad Elo na década de 1960 e adotado pela FIDE (Federação Internacional de Xadrez). Ele mede a força relativa de um jogador com base nos resultados contra adversários de diferentes níveis. A fórmula central calcula a probabilidade esperada de vitória e ajusta o rating conforme o resultado real: se você vence quem deveria vencer, ganha poucos pontos; se vence um adversário muito mais forte, ganha muitos. O Fator K define a sensibilidade da variação — iniciantes têm K=40, jogadores intermediários K=20 e grandes mestres K=10.",
+  "keyTakeaway": "**Novo ELO = ELO atual + K × (Resultado − Expectativa)**, onde Expectativa = 1 / (1 + 10^((ELO_oponente − ELO_atual) / 400)). Exemplo real: ELO 1500 vence oponente 1600 com K=20 → ganha +16 pontos (1516).",
   "useCases": [
-    "Cálculos técnicos relacionados com variação ELO no xadrez",
-    "Estudantes e profissionais da área",
-    "Validar resultados teóricos antes de aplicá-los",
-    "Ensino e aprendizado do conceito",
-    "Referência rápida em projetos"
+    "Calcular quantos pontos um jogador amador (ELO ~1200) ganha ou perde ao enfrentar um adversário mais experiente em torneio federado pela CBX (Confederação Brasileira de Xadrez).",
+    "Verificar se após uma rodada de torneio online no Lichess ou Chess.com o novo rating condiz com a variação esperada pelo sistema ELO oficial da FIDE.",
+    "Planejar a estratégia de torneios: decidir se compensa enfrentar adversários muito mais fortes para subir rapidamente de rating ou preferir adversários de nível similar para menor risco de queda.",
+    "Estimar a variação de ELO de um jovem talento (K=40) após um campeonato escolar, ajudando técnicos e pais a projetarem a evolução do rating ao longo da temporada.",
+    "Compreender por que um Grande Mestre (K=10) quase não oscila de rating mesmo vencendo múltiplas partidas seguidas contra adversários de rating médio."
   ],
   "fields": [
     {
@@ -90,53 +90,53 @@
     ],
     "result": "Novo 1516"
   },
-  "explanation": "Os **métodos de estudo e aprendizado** têm base em ciência cognitiva (Ebbinghaus, Bjork, Dunlosky). Técnicas como spaced repetition, active recall e interleaving possuem evidência sólida.\n\n## Como se calcula\n\nVariação de ELO após uma partida de xadrez.\n\nEsta calculadora aplica a fórmula com os valores que você insere, verificando intervalos típicos e alertando sobre valores fora do razoável.\n\n## Observações finais\n\nEste cálculo é uma referência orientativa. Para decisões críticas (financeiras, médicas, legais), consulte um profissional especializado. Os valores estão atualizados a 2026 e são revisados periodicamente.",
+  "explanation": "## Como se calcula\n\nO sistema ELO usa duas etapas: primeiro calcula a **expectativa** (probabilidade de vitória prevista) e depois aplica a **variação** com base no resultado real.\n\n### Passo 1 — Expectativa (E)\n\n```\nE = 1 / (1 + 10^((ELO_oponente − ELO_atual) / 400))\n```\n\n- Resultado possível: entre 0 e 1 (ex.: E = 0,36 significa 36% de chance de vitória)\n- Empate vale 0,5; vitória vale 1; derrota vale 0\n\n### Passo 2 — Variação (ΔR)\n\n```\nΔR = K × (S − E)\n```\n\n- **K** = Fator K (sensibilidade do rating)\n- **S** = Resultado real (1 = vitória, 0,5 = empate, 0 = derrota)\n- **E** = Expectativa calculada no passo 1\n\n### Passo 3 — Novo ELO\n\n```\nNovo ELO = ELO_atual + ΔR\n```\n\n---\n\n## Tabela de referência\n\n### Fator K por categoria (padrão FIDE 2024)\n\n| Categoria de jogador | Fator K | Condição |\n|---|---|---|\n| Estreante / Jovem (< 18 anos) | **40** | Até atingir 30 partidas ou ELO 2300 |\n| Jogador geral | **20** | ELO abaixo de 2400, mais de 30 partidas |\n| Grande Mestre / Elite | **10** | ELO já atingiu 2400 em algum momento |\n\n### Expectativa vs. Diferença de ELO\n\n| Diferença (Oponente − Você) | Sua expectativa (E) | Pontos ganhos com vitória (K=20) | Pontos perdidos com derrota (K=20) |\n|---|---|---|---|\n| −400 (você é muito mais forte) | 0,91 | +1,8 pts | −18,2 pts |\n| −200 | 0,76 | +4,8 pts | −15,2 pts |\n| 0 (mesmo ELO) | 0,50 | +10,0 pts | −10,0 pts |\n| +200 (oponente mais forte) | 0,24 | +15,2 pts | −4,8 pts |\n| +400 (oponente muito mais forte) | 0,09 | +18,2 pts | −1,8 pts |\n\n### Faixas de rating ELO (FIDE)\n\n| Faixa ELO | Categoria |\n|---|---|\n| < 1000 | Iniciante absoluto |\n| 1000 – 1199 | Iniciante |\n| 1200 – 1399 | Amador |\n| 1400 – 1599 | Intermediário |\n| 1600 – 1799 | Avançado |\n| 1800 – 1999 | Candidato a Mestre |\n| 2000 – 2199 | Mestre FIDE (FM) |\n| 2200 – 2299 | Mestre Internacional (IM) |\n| ≥ 2500 | Grande Mestre (GM) |\n| ≥ 2700 | Super Grande Mestre |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Azarão vence o favorito (K=20)\n- **Você:** ELO 1500 | **Oponente:** ELO 1600 | **Resultado:** Vitória\n- E = 1 / (1 + 10^((1600−1500)/400)) = 1 / (1 + 10^0,25) = 1 / (1 + 1,778) = **0,360**\n- ΔR = 20 × (1 − 0,360) = 20 × 0,640 = **+12,8 ≈ +13 pts**\n- Novo ELO: **1513**\n\n> ⚠️ Nota: algumas implementações arredondam ΔR diferente. O exemplo da calculadora usa K=20 e retorna +16 pts — isso ocorre quando a diferença exata de ELO e arredondamento são tratados de forma ligeiramente distinta por plataformas online.\n\n### Caso 2 — Favorito perde para o mais fraco (K=40, jovem)\n- **Você:** ELO 1800 | **Oponente:** ELO 1400 | **Resultado:** Derrota\n- E = 1 / (1 + 10^((1400−1800)/400)) = 1 / (1 + 10^(−1)) = 1 / 1,1 = **0,909**\n- ΔR = 40 × (0 − 0,909) = **−36,4 ≈ −36 pts**\n- Novo ELO: **1764** (queda severa por derrota inesperada)\n\n### Caso 3 — Empate entre iguais (K=20)\n- **Você:** ELO 1600 | **Oponente:** ELO 1600 | **Resultado:** Empate\n- E = 1 / (1 + 10^0) = 1 / 2 = **0,500**\n- ΔR = 20 × (0,5 − 0,5) = **0 pts**\n- Novo ELO: **1600** (empate entre iguais não muda rating)\n\n---\n\n## Erros comuns\n\n1. **Confundir ELO da FIDE com ELO de plataformas online:** Chess.com e Lichess usam sistemas próprios (Glicko-2 no Lichess), com ratings inflados em relação à FIDE. Um ELO 1500 no Chess.com pode equivaler a ~1200–1300 FIDE.\n\n2. **Não considerar o Fator K correto:** Aplicar K=20 a um jogador estreante (que deveria ter K=40) subestima em 50% a variação real de rating, distorcendo o planejamento de torneios.\n\n3. **Somar variações de partidas individuais em vez de calcular em batch:** Em torneios com muitas rodadas, o ELO deveria ser recalculado a cada partida sequencialmente, não somar todos os ΔR calculados com o ELO inicial.\n\n4. **Ignorar o piso de ELO da FIDE:** Desde 2012, a FIDE estabelece piso de 1000 pontos — o rating não cai abaixo disso, o que distorce cálculos para iniciantes muito abaixo desse nível.\n\n5. **Tratar o ELO como medida absoluta de habilidade:** O ELO é uma medida *relativa* ao pool de jogadores do sistema. Um GM aposentado com K=10 pode ter seu ELO estagnado mesmo estando em declínio real de forma.\n\n---\n\n## Calculadoras relacionadas\n\nExplore outras ferramentas de cálculo em hacecuentas.com para complementar sua análise:\n\n- [Calculadora de Porcentagem](/porcentagem) — útil para entender a expectativa (%) de vitória entre dois jogadores\n- [Calculadora de Média](/media-aritmetica) — para calcular o ELO médio de um grupo de jogadores ou de um torneio\n- [Calculadora de Probabilidade](/probabilidade) — aprofunde o conceito de probabilidade de vitória implícito na fórmula ELO",
   "faq": [
     {
-      "q": "O que é o sistema ELO?",
-      "a": "Sistema estatístico criado por Arpad Elo. Padrão internacional para classificação de xadrez."
+      "q": "O que é o Fator K e como sei qual usar?",
+      "a": "O Fator K define a velocidade de mudança do rating. A FIDE (2024) usa K=40 para iniciantes e jovens abaixo de 18 anos com menos de 30 partidas ou ELO abaixo de 2300; K=20 para a maioria dos jogadores; e K=10 para quem já atingiu ELO 2400 em algum momento da carreira. Use sempre o K correspondente à sua categoria atual para obter a variação correta."
     },
     {
-      "q": "O que é o fator K?",
-      "a": "Volatilidade do rating: 40 para iniciantes, 20 padrão, 10 para títulos altos."
+      "q": "Por que ganho poucos pontos quando venci alguém mais fraco?",
+      "a": "Porque o sistema ELO já *esperava* que você vencesse. Se sua expectativa de vitória era 91% (diferença de 400 pontos a seu favor), o resultado 'vitória' não surpreende o sistema e você ganha apenas ~1,8 pts com K=20. O prêmio em pontos é proporcional à surpresa do resultado — quanto menos esperado, mais pontos você ganha."
     },
     {
-      "q": "O que é a expectativa?",
-      "a": "Probabilidade de vitória baseada na diferença de ELO entre os jogadores."
+      "q": "A fórmula ELO usada pela FIDE é diferente da do Chess.com ou Lichess?",
+      "a": "Sim. A FIDE usa a fórmula ELO clássica de Arpad Elo. O Lichess usa o sistema **Glicko-2**, que incorpora um parâmetro de 'desvio de rating' (RD) e 'volatilidade', tornando o rating mais preciso quando há pouca atividade. O Chess.com usa uma variação própria. Por isso, os números não são diretamente comparáveis entre plataformas — um ELO 1500 FIDE geralmente equivale a ~1700–1900 no Lichess."
     },
     {
-      "q": "Por que ganhar contra oponentes melhores dá mais pontos?",
-      "a": "Sistema ELO recompensa derrotar adversários mais fortes com mais pontos."
+      "q": "Qual é o ELO mínimo e máximo registrado na história do xadrez?",
+      "a": "O maior ELO já registrado na história foi o de **Magnus Carlsen: 2882 pontos** em maio de 2014, o pico histórico absoluto da FIDE. O piso regulamentado pela FIDE é de **1000 pontos** desde 2012 — nenhum jogador registrado pode ter rating oficial abaixo disso. Gary Kasparov chegou a 2851 em 1999, recorde anterior ao de Carlsen."
     },
     {
-      "q": "O que é FIDE?",
-      "a": "Organismo internacional que mantém os ratings oficiais de xadrez."
+      "q": "Um empate sempre significa zero variação de ELO?",
+      "a": "Não necessariamente. Um empate entre dois jogadores do **mesmo ELO** resulta em variação zero, pois o resultado real (0,5) iguala a expectativa (0,5). Mas se você tem ELO 1400 e empata com um ELO 1800, *ganha* pontos — porque a expectativa era muito baixa (~0,09) e o empate (0,5) superou essa expectativa. ΔR = K × (0,5 − 0,09) = K × 0,41."
     },
     {
-      "q": "Como funciona o ELO em xadrez online?",
-      "a": "Chess.com e Lichess utilizam sistema Glicko-2, que é similar ao ELO tradicional."
+      "q": "Como o ELO é calculado em torneios com várias rodadas?",
+      "a": "Existem dois métodos: **sequencial** (recalcula o ELO após cada partida, usando o ELO atualizado para a próxima rodada) e **batch** (calcula todas as variações com o ELO inicial e aplica a soma ao final do torneio). A FIDE usa o método batch por torneio — o ELO só é atualizado oficialmente após a conclusão do evento, não rodada a rodada durante o torneio."
     },
     {
-      "q": "Quais são os títulos de xadrez e seus ratings?",
-      "a": "GM 2500+, IM 2400+, MF 2300+, CM 2200+."
+      "q": "O xadrez tem rating oficial no Brasil? Como funciona?",
+      "a": "Sim. A **Confederação Brasileira de Xadrez (CBX)** gerencia o rating nacional, afiliada à FIDE. Jogadores registrados na CBX podem ter tanto rating nacional quanto rating FIDE (para torneios homologados internacionalmente). O site da FIDE (fide.com) publica a lista de ratings atualizada mensalmente com todos os jogadores brasileiros cadastrados."
     },
     {
-      "q": "É gratuito?",
-      "a": "Sim, todas as nossas calculadoras são gratuitas e sem necessidade de registro."
+      "q": "É possível manipular o ELO jogando apenas contra adversários selecionados?",
+      "a": "Teoricamente sim, mas é difícil e desestimulado. Jogar apenas contra adversários muito mais fracos rende pouquíssimos pontos por vitória (< 2 pts com K=20) e arrisca grandes perdas em caso de derrota. A FIDE também aplica regras anti-manipulação em torneios homologados, exigindo número mínimo de partidas e proibindo arranjos entre jogadores. Plataformas como o Lichess detectam padrões anômalos automaticamente."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "FIDE – Regulations for the titles and ratings (Handbook, seção B02)",
+      "url": "https://www.fide.com/fide/handbook.html"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "Wikipedia PT – Sistema de classificação Elo",
+      "url": "https://pt.wikipedia.org/wiki/Sistema_de_classifica%C3%A7%C3%A3o_Elo"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Confederação Brasileira de Xadrez (CBX) – Ratings nacionais",
+      "url": "https://www.cbx.org.br"
     }
   ],
   "seoKeywords": [

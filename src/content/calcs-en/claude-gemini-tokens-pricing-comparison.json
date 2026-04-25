@@ -8,14 +8,14 @@
   "icon": "🧠",
   "audience": "global",
   "formulaId": "claude-gemini-tokens-comparativa-precio-uso",
-  "intro": "Technical calculations in AI development are critical: API costs, token usage, model selection, deployment decisions. Choosing the right AI model upfront saves engineering time and cloud spend. Compare Claude vs Gemini vs OpenAI with current 2026 pricing—regularly updated to keep you informed.",
-  "keyTakeaway": "Formula: **$X per M tokens**. Direct calculation. Compare total monthly costs by model and token volume.",
+  "intro": "This calculator compares the real token-based pricing of Anthropic's Claude models versus Google's Gemini models, letting you estimate your exact monthly API cost based on input and output token volume. Token pricing works on a per-million-token (MTok) basis: **Cost = (Input Tokens in M × Input Price/MTok) + (Output Tokens in M × Output Price/MTok)**. Use this tool when choosing an LLM for production workloads, budgeting API spend, or comparing cost-efficiency across context window sizes — Claude 3.5 Sonnet costs $3/MTok input vs. Gemini 1.5 Pro at $3.50/MTok input, but context length, output pricing, and batch discounts shift the real-world winner significantly.",
+  "keyTakeaway": "**Monthly Cost = (Input_M × $/MTok_in) + (Output_M × $/MTok_out)** — e.g., 10M input + 5M output on Claude Sonnet 3.5 = (10 × $3.00) + (5 × $15.00) = **$105/month**; same volume on Gemini 1.5 Pro = (10 × $3.50) + (5 × $10.50) = **$87.50/month**.",
   "useCases": [
-    "Calculating monthly AI API costs for projects",
-    "Developers choosing between Claude, Gemini, and OpenAI",
-    "Validating pricing assumptions before production deployment",
-    "Learning about token economics and model capabilities",
-    "Quick reference for budget planning and cost ROI"
+    "Estimating monthly API spend for a customer support chatbot processing ~10M input tokens and ~3M output tokens per month before committing to a model.",
+    "Comparing cost-per-query between Claude Haiku 3.5 and Gemini 1.5 Flash for a high-volume document classification pipeline running 500M tokens/month.",
+    "Evaluating whether Claude Sonnet's 200k token context window justifies its higher price versus Gemini 1.5 Pro's 2M token context for long-document summarization tasks.",
+    "Benchmarking total quarterly LLM infrastructure cost for a SaaS startup to include in a Series A financial model, breaking down input vs. output token ratios.",
+    "Deciding between Claude Opus 4 and Gemini Ultra 1.5 for a low-volume but high-stakes legal document analysis use case where context depth matters more than price."
   ],
   "fields": [
     {
@@ -89,53 +89,49 @@
     ],
     "result": "200k token context window"
   },
-  "explanation": "**Technical calculations for AI:** token costs, context windows, model selection. Decisions that scale.\n\n## How It Works\n\nThis calculator applies pricing formulas with your input values, comparing total monthly costs and capabilities across Claude, Gemini, and OpenAI models. It helps you understand API spending based on your token usage patterns.\n\n## Final Notes\n\nThis calculation is for reference purposes. For critical decisions (technical, financial), consult with a specialist. Prices are current as of 2026 and reviewed regularly.",
+  "explanation": "## How It's Calculated\n\nToken pricing is linear and additive. Every API provider bills input and output tokens at separate per-million-token (MTok) rates. The formula is:\n\n```\nMonthly Cost (USD) =\n  (Input_Tokens_Millions × Input_Price_per_MTok)\n+ (Output_Tokens_Millions × Output_Price_per_MTok)\n```\n\n**Example — Claude Sonnet 3.5:**\n```\nInput:  10M tokens × $3.00/MTok  = $30.00\nOutput:  5M tokens × $15.00/MTok = $75.00\nTotal:                             $105.00/month\n```\n\n**Example — Gemini 1.5 Pro (≤128k context tier):**\n```\nInput:  10M tokens × $3.50/MTok  = $35.00\nOutput:  5M tokens × $10.50/MTok = $52.50\nTotal:                             $87.50/month\n```\n\nNote: Gemini 1.5 Pro has a **tiered pricing model** — prompts exceeding 128k tokens are billed at $7.00/MTok input and $21.00/MTok output, which can more than double costs for long-context workloads.\n\n---\n\n## Reference Table\n\n| Model | Input $/MTok | Output $/MTok | Max Context | Batch Discount |\n|---|---|---|---|---|\n| Claude Haiku 3.5 | $0.80 | $4.00 | 200k tokens | 50% off |\n| Claude Sonnet 3.5 | $3.00 | $15.00 | 200k tokens | 50% off |\n| Claude Opus 4 | $15.00 | $75.00 | 200k tokens | 50% off |\n| Gemini 1.5 Flash | $0.075 | $0.30 | 1M tokens | — |\n| Gemini 1.5 Flash (>128k) | $0.15 | $0.60 | 1M tokens | — |\n| Gemini 1.5 Pro (≤128k) | $3.50 | $10.50 | 2M tokens | — |\n| Gemini 1.5 Pro (>128k) | $7.00 | $21.00 | 2M tokens | — |\n| Gemini 2.0 Flash | $0.10 | $0.40 | 1M tokens | — |\n| Gemini Ultra 1.5 | Contact sales | Contact sales | 2M tokens | — |\n\n*Prices reflect publicly listed API rates as of mid-2025. Always verify at official pricing pages before budgeting.*\n\n---\n\n## Typical Use Cases with Real Numbers\n\n**Case 1 — High-volume, short-context chatbot:**\nA customer support bot handles 100,000 conversations/month, averaging 500 input tokens and 300 output tokens each. Total: 50M input + 30M output tokens.\n- Claude Haiku 3.5: (50 × $0.80) + (30 × $4.00) = **$40 + $120 = $160/month**\n- Gemini 1.5 Flash: (50 × $0.075) + (30 × $0.30) = **$3.75 + $9 = $12.75/month**\n→ **Gemini 1.5 Flash wins by 12.5×** for short-context, high-volume tasks.\n\n**Case 2 — Long-document legal analysis (150k tokens per prompt):**\nA law firm processes 500 contracts/month, each requiring a 150k-token context (above Gemini's 128k standard tier).\n- Claude Sonnet 3.5 (200k context, flat pricing): (75M × $3.00) + (10M × $15.00) = $225 + $150 = **$375/month**\n- Gemini 1.5 Pro (>128k tier): (75M × $7.00) + (10M × $21.00) = $525 + $210 = **$735/month**\n→ **Claude wins by ~2×** once Gemini's long-context surcharge kicks in.\n\n**Case 3 — Moderate RAG pipeline:**\nA RAG app runs 5M input + 2M output tokens/month.\n- Claude Sonnet 3.5: $15 + $30 = **$45/month**\n- Gemini 1.5 Pro (≤128k): $17.50 + $21 = **$38.50/month**\n→ **Gemini 1.5 Pro slightly cheaper** at moderate, short-context volumes.\n\n---\n\n## Common Mistakes\n\n1. **Ignoring the input/output ratio asymmetry.** Output tokens are always 3–5× more expensive than input tokens. Developers who optimize prompts to be shorter but get longer completions often *increase* costs, not decrease them. Always calculate both sides of the equation separately.\n\n2. **Not accounting for Gemini's 128k context tier break.** Gemini 1.5 Pro's price literally doubles for prompts over 128k tokens. Many users assume a flat rate and are blindsided by invoices 2× larger than projected when their RAG context windows grow.\n\n3. **Forgetting Claude's 50% Batch API discount.** Anthropic's Batch API (for asynchronous, non-real-time workloads) cuts all Claude prices in half. A pipeline that doesn't require real-time responses should always use Batch: Claude Sonnet 3.5 drops from $3.00 to **$1.50/MTok input**.\n\n4. **Comparing context window size without checking pricing tiers.** Gemini 1.5 Pro's 2M token context sounds superior to Claude's 200k — but using that full context costs $7/MTok input vs. Claude's flat $3/MTok. The \"bigger\" context window can be 2–4× more expensive per token.\n\n5. **Using token counts from one model to estimate another.** Tokenization differs between providers. The same text that produces 1,000 tokens in Claude's tokenizer (based on BPE similar to GPT-4) may produce 900–1,100 tokens in Gemini's SentencePiece tokenizer. Always test with actual payloads.\n\n---\n\n## Related Calculators\n\n- Explore more AI cost tools and technology calculators at [hacecuentas.com](/)",
   "faq": [
     {
-      "q": "What's the difference between Claude and Gemini?",
-      "a": "Claude (Anthropic) excels at long-form reasoning, writing, and complex analysis. Gemini (Google) is strong in multimodal tasks like image and video understanding."
+      "q": "Which model is cheaper overall: Claude or Gemini?",
+      "a": "It depends entirely on your use case. For high-volume, short-context tasks (under 128k tokens), Gemini 1.5 Flash is dramatically cheaper — roughly $0.075/MTok input vs. Claude Haiku's $0.80/MTok. However, for long-context workloads exceeding 128k tokens, Claude Sonnet 3.5 at a flat $3.00/MTok often beats Gemini 1.5 Pro's $7.00/MTok surcharge tier. There is no single winner — always calculate both with your actual token ratios."
     },
     {
-      "q": "What's the context window and why does it matter?",
-      "a": "The context window is the maximum amount of text a model can process at once. Larger windows support longer conversations and documents. Claude Sonnet: 200k tokens, Gemini Pro: 2M tokens, GPT-4o: 128k tokens."
+      "q": "How do I estimate my monthly token usage before I start?",
+      "a": "A practical rule of thumb: 1 million tokens ≈ 750,000 words ≈ roughly 3,000–4,000 average-length web pages. For a chatbot averaging 800 tokens/conversation at 10,000 conversations/month, that's 8M tokens/month. Use Anthropic's tokenizer tool (console.anthropic.com) or Google's Vertex AI token counter to get exact counts from sample prompts before extrapolating to monthly volume."
     },
     {
-      "q": "How much does Claude Sonnet cost?",
-      "a": "Claude Sonnet pricing (2026): $3/M input tokens, $15/M output tokens."
+      "q": "What is Anthropic's Batch API and how much does it save?",
+      "a": "Anthropic's Message Batches API processes requests asynchronously (results returned within 24 hours) at exactly 50% of standard pricing. Claude Sonnet 3.5 drops from $3.00/$15.00 per MTok (input/output) to $1.50/$7.50. For any non-real-time workload — nightly data enrichment, document processing pipelines, bulk classification — this halves your Claude bill with zero change to output quality."
     },
     {
-      "q": "What's the price difference between Claude Sonnet and Opus?",
-      "a": "Claude Opus is more capable but pricier (2026): $15/M input tokens, $75/M output tokens vs. Sonnet's $3/$15."
+      "q": "Does Gemini 1.5 Pro really cost double for prompts over 128k tokens?",
+      "a": "Yes. Google's official pricing for Gemini 1.5 Pro has two explicit tiers: prompts up to 128,000 tokens are billed at $3.50/MTok input and $10.50/MTok output; prompts exceeding 128,000 tokens jump to $7.00/MTok input and $21.00/MTok output — exactly double. This makes Gemini 1.5 Pro significantly more expensive than Claude for long-context document tasks, despite its larger 2M context window."
     },
     {
-      "q": "How is Gemini Pro priced?",
-      "a": "Gemini Pro pricing (2026): $3.50/M input tokens, $10.50/M output tokens."
+      "q": "Are output tokens really more expensive than input tokens?",
+      "a": "Yes, universally across all major LLM providers. The reason is computational: generating output tokens requires sequential autoregressive decoding (one token at a time), while input tokens are processed in parallel via the attention mechanism. As a result, output tokens are typically 3–5× pricier. Claude Sonnet 3.5 charges $3.00/MTok input but $15.00/MTok output (5× ratio). Gemini 1.5 Pro charges $3.50 input vs. $10.50 output (3× ratio). Minimizing output verbosity through system-prompt instructions can yield significant savings."
     },
     {
-      "q": "How do I choose the right model for my project?",
-      "a": "Choose Claude for reasoning and writing tasks, Gemini for multimodal work (images/video), GPT-4o for balanced general-purpose performance. Use this calculator to compare costs for your expected token volume."
+      "q": "How does Claude's 200k token context window compare to Gemini's 1M–2M?",
+      "a": "Gemini 1.5 Flash supports up to 1M tokens and Gemini 1.5 Pro up to 2M tokens, both larger than Claude's 200k limit. However, Claude's context window is priced at a flat rate regardless of how much of it you use, while Gemini's longer contexts trigger the expensive >128k tier. For most real-world use cases — even complex legal documents or code repositories — 200k tokens (roughly 150,000 words) is sufficient, and Claude's flat pricing makes it cost-competitive for those tasks."
     },
     {
-      "q": "Are there free AI model alternatives?",
-      "a": "Yes. Llama 3 via Groq and Mistral offer free tiers with rate limits. Google also provides free tier access to Gemini with limitations."
+      "q": "Is there a free tier for either Claude or Gemini?",
+      "a": "Yes. Google offers Gemini 1.5 Flash and Gemini 2.0 Flash free via Google AI Studio with rate limits (e.g., 15 requests/minute, 1M tokens/minute, 1,500 requests/day as of mid-2025). Anthropic offers a limited free tier through Claude.ai for individual users, but the API itself has no perpetual free tier — only a trial credit (typically $5) for new accounts. For production workloads, both require paid API plans."
     },
     {
-      "q": "Is this calculator free to use?",
-      "a": "Yes, all Hacé Cuentas calculators are completely free with no registration or payment required."
+      "q": "Does the tokenizer difference between Claude and Gemini affect my cost estimates?",
+      "a": "Yes, and it's often overlooked. Claude uses a byte-pair encoding (BPE) tokenizer similar to GPT-4, while Gemini uses a SentencePiece unigram tokenizer. For the same English text, the token count can differ by 5–15%. Code, non-Latin scripts, and special characters tend to show larger discrepancies. Always benchmark your actual prompt/response pairs with each model's tokenizer tool before finalizing budget projections — a 10% tokenizer difference on 100M tokens/month equals millions of tokens in billing delta."
+    },
+    {
+      "q": "Which model should I choose for a cost-sensitive RAG (retrieval-augmented generation) application?",
+      "a": "For RAG with context chunks under 128k tokens and high query volume, Gemini 1.5 Flash at $0.075/MTok input is the clear cost winner — roughly 10× cheaper than Claude Haiku and 40× cheaper than Claude Sonnet. If your RAG pipeline requires context windows above 128k (e.g., entire document sets), Claude Sonnet 3.5's flat $3.00/MTok input outperforms Gemini 1.5 Pro's $7.00/MTok long-context surcharge. Match your average context size to the pricing tier break before deciding."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
-    },
-    {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
-    },
-    {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Wikipedia – Large language model (token pricing methodology)",
+      "url": "https://en.wikipedia.org/wiki/Large_language_model"
     }
   ],
   "dataUpdate": {

@@ -20,14 +20,15 @@
     "how many kills for drop",
     "probability farming guide"
   ],
-  "intro": "That item has a **1% drop rate** and you've tried 50 times with no luck. Bad RNG or just normal variance? The answer lies in **binomial distribution**: with 1% drop rate, after 50 attempts you have only **39.5% chance** of getting it. This calculator tells you the real probability of getting at least one drop in N attempts, and how many attempts you need for 50%, 75%, or 90% odds.",
-  "keyTakeaway": "**Prob(at least 1 drop) = 1 - (1 - dropRate)^attempts.** With 1% drop rate you need **69 attempts** for 50% odds and **230 attempts** for 90%.",
+  "intro": "The Drop & Loot Probability Calculator tells you the real mathematical likelihood of obtaining a rare item across multiple attempts — whether you're farming a boss in an MMO, opening cases in a shooter, or hunting a legendary in an action RPG. It uses the **complementary geometric probability formula**: P(at least 1 drop) = 1 − (1 − p)ⁿ, where p is the drop rate per attempt and n is the number of attempts. For example, a 1% drop rate does NOT guarantee a drop in 100 tries — your actual probability is only 63.4%. This calculator also computes the exact number of attempts needed to hit 50%, 90%, and 99% confidence thresholds, so you can set realistic farming goals instead of grinding blindly.",
+  "keyTakeaway": "**P(at least 1 drop) = 1 − (1 − p)ⁿ** — A 1% drop rate needs **69 kills for 50% confidence**, 230 kills for 90%, and 459 kills for 99%. Drop rates are NOT guaranteed windows; they are independent probabilities per attempt.",
   "useCases": [
-    "Check if your unlucky streak is normal or if something's broken in the game.",
-    "Plan how many hours of farming you need for that rare item.",
-    "Compare farming efficiency between different bosses or methods.",
-    "Decide whether to keep grinding or switch farming strategies.",
-    "Explain to your friend why their bad luck is mathematically normal."
+    "Calculating how many boss kills you need in World of Warcraft, Final Fantasy XIV, or Path of Exile to have a 90% chance of obtaining a specific rare mount or unique item with a known drop rate (e.g., 0.1% from a raid boss).",
+    "Estimating the expected number of case openings in CS2 or Fortnite to reach a target probability for an ultra-rare skin, given published drop rates from official item shop disclosures.",
+    "Planning a farming session in Pokémon games to find a shiny (base rate 1/4096 ≈ 0.0244%) and determining how many encounters guarantee a 50% or 99% chance of encountering one without the Shiny Charm.",
+    "Verifying whether a gacha game's advertised SSR rate (e.g., 0.6% per pull in many JP mobile games) is fair by computing the median number of pulls needed and comparing against pity system thresholds.",
+    "Determining the number of Minecraft dungeon chests you need to loot for a 95% chance of finding a specific enchanted book with a known loot-table probability.",
+    "Analyzing the fairness of randomized loot boxes in any title against FTC or international gaming authority disclosure requirements by modeling cumulative drop probability."
   ],
   "fields": [
     {
@@ -92,39 +93,43 @@
   },
   "faq": [
     {
-      "q": "How many attempts do I need for a guaranteed drop?",
-      "a": "There's no guaranteed drop with pure probability. With 1% drop rate, 69 attempts gives 50% odds, 230 attempts gives 90% odds, and 459 attempts gives 99% odds. Many modern games use 'pity' mechanics for actual guarantees."
+      "q": "Why doesn't a 1% drop rate guarantee a drop in 100 attempts?",
+      "a": "Because each attempt is an independent event — they don't accumulate or \"fill up\" toward a guaranteed outcome. The correct probability is P = 1 − (0.99)¹⁰⁰ = 63.4%. You'd need 459 attempts to reach even 99% confidence. This is a core property of the geometric probability distribution."
     },
     {
-      "q": "Why doesn't 100 attempts with 1% drop equal 100% chance?",
-      "a": "Probability doesn't stack linearly. Each attempt is independent. 100 attempts with 1% drop gives only **63.4%** chance, not 100%. Use the formula: P = 1 - (1 - dropRate)^attempts."
+      "q": "What is the formula for the number of attempts needed to reach a target probability?",
+      "a": "Use the inverse formula: **n = log(1 − T) / log(1 − p)**, where T is your target probability (e.g., 0.90 for 90%) and p is the drop rate. For a 0.1% drop rate and 90% target: n = log(0.10) / log(0.999) ≈ 2,302 attempts. This formula uses natural log or any consistent log base."
     },
     {
-      "q": "What's the formula to calculate drop probability?",
-      "a": "**P(at least 1 drop) = 1 - (1 - dropRate)^attempts.** To find attempts needed for a target probability P: **attempts = log(1 - P) / log(1 - dropRate).**"
+      "q": "What is the difference between mean and median attempts for a drop?",
+      "a": "The **mean** (average) number of attempts is 1/p. For a 1% rate, that's 100 attempts. The **median** is log(0.5) / log(1 − p) ≈ 69 attempts for a 1% rate. This means 50% of players get the drop before 69 kills — so if you're at 150 kills without a drop, you've been unlucky but you're not in an impossible situation."
     },
     {
-      "q": "How do I convert fractional odds to a drop rate?",
-      "a": "If an item drops '1 in 512', the drop rate is **1 ÷ 512 = 0.195%.** Enter 0.195 in the calculator. For 1 in 100, that's 1%."
+      "q": "Are drop rates in games required to be disclosed by law?",
+      "a": "In several jurisdictions, yes. Belgium and the Netherlands classify randomized loot boxes as gambling subject to gaming law. China mandates disclosure of drop rates for all paid randomized items under a 2017 regulation. In the US, the FTC has investigated loot box practices, and Apple/Google app stores require disclosure of item odds for paid randomized rewards as of 2017 and 2016 respectively."
     },
     {
-      "q": "Is my unlucky streak actually unlucky?",
-      "a": "If the calculator shows >20% probability of failing your attempts, you're just experiencing normal variance—it happens. Only worry if the odds are below 1-5%."
+      "q": "How does the Gambler's Fallacy apply to loot drops?",
+      "a": "The Gambler's Fallacy is the false belief that past failures increase future probability. For independent drops (each attempt has the same fixed rate), this is mathematically wrong. Going 200 kills without a 1% drop is unlucky (~13.4% chance), but attempt 201 still has exactly 1% probability — not higher. The only exception is games with true pity mechanics that explicitly increase rates after failures."
     },
     {
-      "q": "Do games actually use true random drop rates?",
-      "a": "Most use pseudorandom generators, yes. But many modern games (Genshin Impact, Diablo, etc.) use **pseudo-random distribution** or 'bad luck protection' that increases odds after unlucky streaks."
+      "q": "How does a pity system change the probability calculation?",
+      "a": "Pity systems modify the effective probability curve by guaranteeing or boosting drop rates after a threshold. For example, if a game guarantees a drop at 100 attempts, the true P(at least 1 drop in 100 tries) becomes 100%, not the 63.4% calculated from the base rate alone. Soft-pity systems (like Genshin Impact's increased rate after pull 74) require a weighted sum model, not the simple geometric formula."
     },
     {
-      "q": "Does this calculator work for gacha and loot boxes?",
-      "a": "Yes, if you know the actual pull rate. In the US and many countries, games must publish real odds. Use this to see how many pulls you'd need for a target rarity."
+      "q": "What is the probability of getting zero drops after a long farm streak?",
+      "a": "P(zero drops in n attempts) = (1 − p)ⁿ. For a 1% drop rate over 100 kills, that's 0.99¹⁰⁰ = **36.6%**. Over 300 kills it drops to 5.0%, and over 459 kills it's just 1.0%. These \"dry streaks\" are common — roughly 1 in 3 players farming a 1% item for 100 attempts will walk away empty-handed."
     },
     {
-      "q": "What's a pity system and how does it affect probability?",
-      "a": "Pity guarantees the desired item after a certain number of attempts (e.g., guaranteed 5-star in Genshin after 90 pulls). This breaks the pure probability formula—pity guarantees override statistical chance."
+      "q": "Does farming multiple characters or accounts simultaneously improve individual drop odds?",
+      "a": "No — each character or account run is still an independent Bernoulli trial with the same drop rate p. Running 5 accounts simultaneously gives you 5 independent attempts per boss cycle, equivalent to 5n total attempts, which does increase your *total* probability pool — but each individual attempt still has probability p. The combined probability across all accounts is: P = 1 − (1 − p)^(n × accounts)."
+    },
+    {
+      "q": "How do I calculate the probability of getting exactly k drops in n attempts (not just at least one)?",
+      "a": "Use the **Binomial distribution**: P(exactly k drops) = C(n, k) × pᵏ × (1 − p)^(n−k), where C(n,k) is the binomial coefficient n!/(k!(n−k)!). For example, P(exactly 2 drops in 100 attempts at 1% rate) = C(100,2) × 0.01² × 0.99⁹⁸ ≈ 4,950 × 0.0001 × 0.3660 ≈ **18.5%**."
     }
   ],
-  "explanation": "## Cumulative Drop Probability\n\nThat item you're hunting has a **1% drop rate** and you've tried 50 times with no luck. Bad RNG or just normal variance? The answer lies in **complementary probability**: **P(at least 1 drop in n attempts) = 1 - (1-p)^n**.\n\nThis is the core formula for all farming questions. It shows that even with decent odds per attempt, you need a surprising number of attempts to guarantee high overall odds.\n\n## Attempts Needed for Each Probability Level\n\n| Drop Rate | 50% Odds | 90% Odds | 99% Odds |\n|---|---|---|---|\n| 1% | 69 | 230 | 459 |\n| 2% | 34 | 114 | 228 |\n| 5% | 14 | 45 | 90 |\n| 10% | 7 | 22 | 44 |\n| 20% | 4 | 11 | 21 |\n| 50% | 1 | 4 | 7 |\n\nNotice how low drop rates demand far more attempts. A 0.1% drop requires 693 attempts just for 50% odds!\n\n## The Magic Formula\n\nTo find the attempts needed for a target probability P:\n\n**n = log(1 - P) / log(1 - dropRate)**\n\nExample: 50% odds with 1% drop rate:\n- log(0.5) / log(0.99) ≈ **69 attempts**\n\nExample: 90% odds with 0.5% drop rate:\n- log(0.1) / log(0.995) ≈ **462 attempts**\n\n## When This Formula Works (And When It Doesn't)\n\n**Assumes:** Every attempt is independent with the same probability.\n\n**Breaks when:**\n- **Pity timer**: Game guarantees a drop after X failures (common in gacha games)\n- **Bad luck protection**: Drop odds increase after each failure\n- **Cooldown drops**: Item only drops weekly or monthly (not independent per attempt)\n- **Weighted pools**: Different items with different rates (use multinomial instead)\n\nFor more on the underlying probability concepts, explore binomial distribution theory.",
+  "explanation": "## How It's Calculated\n\nThe core model treats each attempt as a **Bernoulli trial** — an independent event with a fixed success probability `p` (the drop rate). The probability of getting **at least one** success in `n` attempts is derived from the complement of getting *zero* drops every single time:\n\n```\nP(at least 1 drop) = 1 − (1 − p)^n\n\nWhere:\n  p = drop rate per attempt (e.g., 0.01 for 1%)\n  n = number of attempts / kills / pulls\n\nAttempts needed for a target probability T:\n  n = log(1 − T) / log(1 − p)\n\nExamples:\n  50% confidence → n = log(0.5) / log(1 − p)\n  90% confidence → n = log(0.1) / log(1 − p)\n  99% confidence → n = log(0.01) / log(1 − p)\n```\n\nThis is the **geometric distribution** cumulative distribution function (CDF). Each attempt is independent — previous failures do NOT increase future odds. The \"gambler's fallacy\" is the mistaken belief that they do.\n\n---\n\n## Reference Table\n\nAttempts needed to reach 50%, 90%, and 99% probability for common drop rates found in real games:\n\n| Drop Rate (p) | Real Example | 50% Attempts | 90% Attempts | 99% Attempts |\n|---|---|---|---|---|\n| 25% (1/4) | Pokémon common item | 2 | 8 | 16 |\n| 10% (1/10) | Minecraft mob loot | 7 | 22 | 44 |\n| 5% (1/20) | FFXIV rare crafting mat | 14 | 45 | 90 |\n| 1% (1/100) | WoW rare mount | 69 | 230 | 459 |\n| 0.5% (1/200) | Many gacha SSR rates | 139 | 460 | 919 |\n| 0.3% (1/333) | CS2 rare item grade | 231 | 767 | 1,532 |\n| 0.1% (1/1,000) | WoW Invincible mount | 693 | 2,302 | 4,603 |\n| 0.0244% (1/4,096) | Pokémon Shiny (base) | 2,839 | 9,430 | 18,861 |\n\n*Note: Pity systems in gacha games set hard caps that alter these raw probabilities.*\n\n---\n\n## Typical Use Cases with Concrete Numbers\n\n### Example 1 — WoW Rare Mount (1% Drop Rate)\nYou're farming Kael'thas in Tempest Keep for the Ashes of Al'ar mount, widely reported at approximately 1% drop rate.\n- After **100 kills**: P = 1 − 0.99¹⁰⁰ = **63.4%**\n- After **230 kills**: P = 1 − 0.99²³⁰ = **90.0%**\n- After **459 kills**: P = 1 − 0.99⁴⁵⁹ = **99.0%**\n- On average (mean of geometric distribution = 1/p), you'd expect a drop every **100 kills** — but the median is only **69 kills**.\n\n### Example 2 — Gacha SSR Pull (0.6% Drop Rate)\nA mobile gacha game advertises a 0.6% SSR rate per pull. You have 100 pulls saved.\n- P(at least 1 SSR in 100 pulls) = 1 − 0.994¹⁰⁰ = **45.1%** — less than a coin flip.\n- You need **115 pulls** for 50% confidence, **383 pulls** for 90%, **765 pulls** for 99%.\n- Many games add a **pity system at 90 pulls** that guarantees one SSR — this dramatically changes the effective probability curve.\n\n### Example 3 — Pokémon Shiny Hunting (1/4,096 rate, no Shiny Charm)\nThe base shiny encounter rate in modern Pokémon games (Gen VI+) is 1/4,096 ≈ 0.0244%.\n- After **1,000 encounters**: P = 1 − (4095/4096)¹⁰⁰⁰ = **21.7%**\n- After **2,839 encounters**: P ≈ **50.0%** (median)\n- After **9,430 encounters**: P ≈ **90.0%**\n- With the **Shiny Charm** (rate becomes 3/4,096), just ~946 encounters give 50% odds.\n\n---\n\n## Common Mistakes\n\n1. **Confusing drop rate with guaranteed frequency** — A 10% drop rate does NOT mean you get a drop every 10 kills. It means each kill independently has a 10% chance. You can go 30 kills without a drop (~4.2% probability of that happening, frustrating but real).\n\n2. **Falling for the Gambler's Fallacy** — \"I've done 90 kills without a drop, so I'm due.\" Each attempt has the exact same probability regardless of history. Past failures do not \"charge up\" future probability for independent events.\n\n3. **Using linear math instead of geometric** — Multiplying: \"1% × 100 attempts = 100% guaranteed\" is **completely wrong**. The correct answer is 63.4%, not 100%. Linear addition of probabilities only works for mutually exclusive events without replacement.\n\n4. **Ignoring rate boosts and modifiers** — Many games apply hidden multipliers (e.g., Magic Find in Diablo, Shiny Charm in Pokémon, Research in Pokémon GO). Always use the *modified* rate in the formula, not the base rate, or results will be significantly off.\n\n5. **Mistaking mean for median** — The **mean** (expected value) of the geometric distribution is 1/p. For a 1% rate, the mean is 100 attempts. But the **median** is only 69 attempts — meaning half of all players will have obtained the drop before 100 kills. These are very different statistics.\n\n6. **Overlooking pity/soft-pity systems** — Gacha games often have escalating probabilities after a threshold (e.g., Genshin Impact's soft pity starting at 74 pulls). Applying the base formula without accounting for pity significantly underestimates true probability in those systems.\n\n---\n\n## Related Calculators\n\n- [Percentage Calculator](/porcentaje)\n- [Statistics & Probability Calculator](/estadistica)\n- [Random Number Generator](/numero-aleatorio)\n",
   "example": {
     "title": "Real Example: 1% Drop Rate Over 100 Attempts",
     "steps": [
@@ -135,5 +140,23 @@
       "**For 90% odds**: n = log(0.1) / log(0.99) = **230 attempts**"
     ],
     "result": "With 1% drop rate over 100 attempts, you have a 63.4% chance of getting at least one drop. If you want 90% confidence, plan for around 230 attempts."
-  }
+  },
+  "sources": [
+    {
+      "name": "Wikipedia — Geometric Distribution (Mathematics of independent trials and CDF)",
+      "url": "https://en.wikipedia.org/wiki/Geometric_distribution"
+    },
+    {
+      "name": "Wikipedia — Bernoulli Trial (Foundation of independent probability events)",
+      "url": "https://en.wikipedia.org/wiki/Bernoulli_trial"
+    },
+    {
+      "name": "Wikipedia — Gambler's Fallacy",
+      "url": "https://en.wikipedia.org/wiki/Gambler%27s_fallacy"
+    },
+    {
+      "name": "NIST/SEMATECH e-Handbook of Statistical Methods — Geometric Distribution",
+      "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda366.htm"
+    }
+  ]
 }

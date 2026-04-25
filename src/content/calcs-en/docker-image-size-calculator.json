@@ -8,14 +8,14 @@
   "icon": "🐳",
   "audience": "global",
   "formulaId": "imagen-docker-capas-peso-mb",
-  "intro": "Technical calculations in IT and software development are critical: latency, bandwidth, uptime SLA, cloud costs, algorithmic complexity. Accurate initial sizing prevents infrastructure over-provisioning. Estimate your Docker image size by base OS — free and fast. Values updated for 2026 and reviewed regularly to keep you current.",
-  "keyTakeaway": "Formula: **Base + app + dependencies**. Direct application with your input values. Get estimated Docker image size by base OS.",
+  "intro": "A Docker image is a read-only, layered filesystem snapshot used to run containers. Its final size is the **sum of all layers**: the base OS layer, runtime dependencies, application code, configuration files, and any cached build artifacts. Image size directly impacts pull time, registry storage costs, container startup latency, and attack surface. This calculator quantifies your total image footprint given a base OS choice and added dependency weight (in MB), then surfaces actionable optimization tips. The core formula is: **Total Size ≈ Base OS (MB) + Dependencies (MB) + Overhead (~5–15 MB)**. Use it when designing Dockerfiles, auditing CI/CD pipelines, or comparing base image strategies (scratch vs. Alpine vs. Debian Slim vs. Ubuntu).",
+  "keyTakeaway": "**Total Image Size = Base OS MB + Dependencies MB + Layer Overhead (≈5–15 MB)** — switching from Ubuntu (~77 MB) to Alpine (~7 MB) as your base OS saves ~70 MB before a single dependency is added.",
   "useCases": [
-    "Technical calculations for Docker image size and layers",
-    "Students and IT professionals",
-    "Validate theoretical results before implementation",
-    "Teaching and learning Docker concepts",
-    "Quick reference in projects and deployments"
+    "Choosing between Alpine Linux (~7 MB), Debian Slim (~74 MB), and Ubuntu (~77 MB) as a base image before writing a Dockerfile for a Node.js microservice.",
+    "Auditing an existing production image that has ballooned past 1 GB to identify which layer (OS, runtime, app code, or dev dependencies) contributes the most weight.",
+    "Estimating registry storage costs on Docker Hub or Amazon ECR when deploying 50+ microservices that each pull a fresh image on every CI/CD run.",
+    "Comparing multi-stage build strategies to verify that the final production stage drops build-time tools (gcc, make, npm cache) and meets a target size budget under 100 MB.",
+    "Planning Kubernetes node disk quotas by forecasting total image storage when multiple pods share an image cache on the same node."
   ],
   "fields": [
     {
@@ -75,53 +75,57 @@
     ],
     "result": "~55 MB"
   },
-  "explanation": "**Technical calculators** for IT: latency, storage, uptime SLA, cloud costs. Decisions that scale.\n\n## How It's Calculated\n\nEstimated Docker image size based on your chosen base OS. This calculator applies the formula with your inputs, checking typical ranges and alerting you to unusual values.\n\n## Final Notes\n\nThis calculation is a reference guide. For critical decisions (financial, medical, legal), consult a qualified professional. Values are current as of 2026 and reviewed regularly.",
+  "explanation": "## How It's Calculated\n\nDocker images are composed of stacked, **content-addressable layers** stored in the registry and assembled at runtime via a Union Filesystem (OverlayFS). Each `RUN`, `COPY`, and `ADD` instruction in a Dockerfile creates a new layer. The total uncompressed image size is:\n\n```\nTotal Size (MB) = Base OS (MB)\n               + Σ Dependency Layers (MB)\n               + App Code Layer (MB)\n               + Config / ENV Layer (MB)\n               + Layer Metadata Overhead (≈5–15 MB)\n```\n\n**Compressed (registry) size** is typically **40–60 % of the uncompressed size** for most language runtimes, because gzip compression is applied per-layer on push/pull.\n\n```\nRegistry Size (MB) ≈ Total Size (MB) × 0.45   (rough average)\n```\n\n> **Important:** When you `RUN apt-get install && rm -rf /var/lib/apt/lists/*` in a *single* chained command, deleted files are never written to a layer. If you split them into two `RUN` instructions, the deleted files still occupy space in the intermediate layer — a classic Docker gotcha.\n\n---\n\n## Reference Table\n\nCommon base images (uncompressed `docker image inspect` size, June 2025 data from Docker Hub official images):\n\n| Base Image | Tag | Uncompressed Size | Compressed (Pull) | Default Shell |\n|---|---|---|---|---|\n| `scratch` | — | 0 MB | 0 MB | None |\n| `alpine` | 3.20 | ~7.8 MB | ~3.2 MB | `/bin/sh` (busybox) |\n| `debian` | slim-bookworm | ~74 MB | ~29 MB | `/bin/bash` |\n| `ubuntu` | 24.04 | ~77 MB | ~29 MB | `/bin/bash` |\n| `python` | 3.12-alpine | ~52 MB | ~20 MB | `/bin/sh` |\n| `python` | 3.12-slim | ~130 MB | ~50 MB | `/bin/bash` |\n| `node` | 22-alpine | ~135 MB | ~52 MB | `/bin/sh` |\n| `node` | 22-slim | ~235 MB | ~90 MB | `/bin/bash` |\n| `openjdk` | 21-alpine | ~185 MB | ~72 MB | `/bin/sh` |\n| `golang` | 1.22-alpine | ~240 MB | ~95 MB | `/bin/sh` |\n\n---\n\n## Typical Cases\n\n### Case 1 — Minimal REST API (Go, multi-stage)\n- **Builder stage:** `golang:1.22-alpine` (240 MB) + source + modules (~80 MB) = **~320 MB** (discarded)\n- **Final stage:** `scratch` (0 MB) + compiled binary (~12 MB) = **~12 MB total**\n- Registry compressed pull: ~5 MB\n\n### Case 2 — Node.js Microservice (no multi-stage)\n- Base: `node:22-alpine` = 135 MB\n- `npm install --production` (node_modules): ~110 MB\n- App source code: ~2 MB\n- **Total: ~247 MB** (compressed ~108 MB)\n- Optimization: add `.dockerignore` to exclude `node_modules` on host, and prune devDependencies → can drop to ~160 MB\n\n### Case 3 — Python ML Service (naive build)\n- Base: `python:3.12` (full Debian) = ~1,020 MB\n- `pip install torch torchvision` = ~2,100 MB\n- **Total: ~3,120 MB** — typical bloated ML image\n- Fix: use `python:3.12-slim` + `--no-cache-dir` + multi-stage → realistic target **~900 MB**\n\n---\n\n## Common Mistakes\n\n1. **Installing dev tools in the final stage** — compilers (`gcc`, `g++`), `curl`, `wget`, and `git` left in the final image add 50–200 MB and increase CVE exposure. Use multi-stage builds: install build tools in a `builder` stage and `COPY --from=builder` only the artifact.\n\n2. **Splitting `RUN` cleanup into a separate instruction** — running `RUN apt-get install -y curl` then `RUN rm -rf /var/lib/apt/lists/*` in separate lines does *not* remove the files from the layer that created them. Always chain: `RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*`.\n\n3. **Ignoring `.dockerignore`** — without a `.dockerignore` file, `COPY . .` sends the entire build context (including `.git/`, `node_modules/`, `__pycache__/`, test fixtures) to the Docker daemon, bloating the image and busting layer caches unnecessarily.\n\n4. **Using the full base image instead of `-slim` or `-alpine` variants** — `python:3.12` is ~1,020 MB vs. `python:3.12-slim` at ~130 MB. For most production workloads, the slim variant is sufficient and reduces the attack surface dramatically.\n\n5. **Not pinning image tags** — using `FROM node:latest` can silently pull a larger image on the next build if the upstream maintainer ships a new major version with a heavier layer set. Always pin to a specific digest or version tag.\n\n6. **Overlooking layer ordering** — placing frequently changing instructions (`COPY . .`) before slow, stable ones (`RUN npm install`) invalidates the cache for all subsequent layers on every build, forcing Docker to re-download and re-install dependencies even if they haven't changed.\n\n---\n\n## Related Calculators\n\n- [Disk Storage Unit Converter](/disk-storage-converter)\n- [Bandwidth & Download Time Calculator](/bandwidth-download-time-calculator)\n- [Cloud Storage Cost Estimator](/cloud-storage-cost-estimator)\n",
   "faq": [
     {
-      "q": "What's the best Docker base image size?",
-      "a": "Alpine is smallest (~5 MB), but glibc compatibility issues can occur. Debian slim offers a middle ground at ~70 MB with better compatibility. Distroless (~20 MB) is most secure with minimal attack surface but lacks a shell."
+      "q": "What is the actual size of the Alpine Linux base image in 2025?",
+      "a": "The official `alpine:3.20` image has an uncompressed size of approximately **7.8 MB** and a compressed (registry pull) size of roughly **3.2 MB**. This makes it the most popular lightweight base for production containers. It uses musl libc and BusyBox instead of glibc and GNU coreutils, which is why it's so small — but be aware that some Python packages with C extensions require glibc and may fail or behave differently on Alpine."
     },
     {
-      "q": "What are multi-stage Docker builds?",
-      "a": "Build your app in one image, then copy only artifacts to a slim base. This dramatically reduces final image size by excluding build tools and dependencies."
+      "q": "How does Docker calculate image size when layers are shared between images?",
+      "a": "Docker uses **content-addressable storage**: each layer is identified by a SHA-256 digest. If two images share the same base layer (e.g., both start from `alpine:3.20`), that layer is stored **once** on disk and counted once in `docker system df`. The `docker image ls` command shows each image's full logical size, which can be misleading — `docker system df` gives the true disk usage after deduplication. Shared layers are never double-counted in storage."
     },
     {
-      "q": "When should I use Distroless images?",
-      "a": "Distroless images contain only your app and runtime—no shell or package manager. They're more secure and lighter, but harder to debug. Best for production workloads."
+      "q": "What is the difference between compressed and uncompressed image size?",
+      "a": "The **uncompressed size** (shown by `docker image inspect`) is what the container runtime unpacks into the container's filesystem — this is the size that matters for container startup and node disk usage. The **compressed size** (shown in Docker Hub and during `docker pull`) is the gzip-compressed layer size transmitted over the network, typically **40–60 % smaller**. For example, `node:22-alpine` is ~135 MB uncompressed but pulls as ~52 MB compressed."
     },
     {
-      "q": "Why does .dockerignore matter?",
-      "a": "Without .dockerignore, Docker copies unnecessary files into your image, bloating its size. Always exclude node_modules, .git, test files, and other artifacts."
+      "q": "How many layers can a Docker image have, and does layer count affect performance?",
+      "a": "Docker imposes a **maximum of 127 layers** per image (a UnionFS constraint). In practice, images with more than 30–40 layers see measurable overhead during container startup because OverlayFS must merge each layer sequentially. Each `RUN`, `COPY`, and `ADD` instruction adds one layer. Use `&&` chaining in `RUN` commands and `COPY --chown` to minimize layer count. `docker image history <image>` shows exactly how many layers your image has and the size contributed by each."
     },
     {
-      "q": "How do I scan Docker images for vulnerabilities?",
-      "a": "Use tools like Trivy or Snyk to detect CVEs in your images. Many can integrate into your CI/CD pipeline for automatic scanning on every build."
+      "q": "Does image size affect Kubernetes pod startup time?",
+      "a": "Yes, significantly. Kubernetes pulls images on nodes that don't have them cached. A **1 GB image** on a node with 100 Mbps pull bandwidth takes ~80 seconds to pull, while a **50 MB image** takes ~4 seconds. This directly delays pod readiness during scale-out events or node restarts. Using image pre-pulling (`imagePullPolicy: IfNotPresent`) and keeping images under 200 MB are recommended practices for latency-sensitive production workloads."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all our calculators are completely free and require no signup."
+      "q": "What is a multi-stage build and how much space can it save?",
+      "a": "A **multi-stage build** uses multiple `FROM` instructions in one Dockerfile. Early stages install build tools and compile code; the final stage copies only the output artifact into a minimal base image. The intermediate stages are discarded and never pushed to the registry. For a Go application, a single-stage build might produce a **~300 MB image** (golang base + source), while a multi-stage build with a `scratch` or `alpine` final stage produces a **~10–15 MB image** — a reduction of over 95 %."
     },
     {
-      "q": "How accurate are the estimates?",
-      "a": "These are approximate sizes based on standard base images. Actual sizes may vary slightly based on your specific dependencies and configuration. For critical decisions, always test with real images."
+      "q": "How do I inspect what's inside each layer and which layer is the largest?",
+      "a": "Run `docker image history --no-trunc <image>` to see each layer's size and the command that created it. For deeper analysis, tools like **Dive** (open-source CLI, github.com/wagoodman/dive) let you browse the filesystem diff of every layer interactively. `docker system df -v` shows total disk usage by image, container, and volume. For registry-side analysis, tools like `crane` (from Google's `go-containerregistry`) can inspect manifests without pulling the full image."
     },
     {
-      "q": "Does this tool store my data?",
-      "a": "No. All calculations happen in your browser. We don't send any data to servers."
+      "q": "What's the recommended maximum Docker image size for production?",
+      "a": "There is no universal official standard, but widely adopted industry targets are: **under 100 MB** for stateless microservices and APIs, **under 500 MB** for language runtimes with libraries (Node.js, Python), and **under 2 GB** for ML inference services. Google's distroless images (e.g., `gcr.io/distroless/base`) average **~20 MB** and are a benchmark for minimal production images. Keeping images small reduces CVE exposure, lowers registry egress costs, and improves CI/CD throughput."
+    },
+    {
+      "q": "Does adding an environment variable (ENV) or label (LABEL) increase image size?",
+      "a": "Yes, but only negligibly. Each `ENV` and `LABEL` instruction creates a new layer that stores only the image manifest metadata — typically **a few hundred bytes to a few kilobytes**. The practical impact on image size is negligible (< 0.01 MB). However, they still add to the layer count (max 127), so it is good practice to group multiple `ENV` variables in a single instruction: `ENV KEY1=val1 KEY2=val2` rather than two separate `ENV` instructions."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "Docker Official Documentation — Dockerfile Best Practices",
+      "url": "https://docs.docker.com/build/building/best-practices/"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "Wikipedia — Docker (software)",
+      "url": "https://en.wikipedia.org/wiki/Docker_(software)"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "NIST SP 800-190 — Application Container Security Guide",
+      "url": "https://doi.org/10.6028/NIST.SP.800-190"
     }
   ],
   "dataUpdate": {

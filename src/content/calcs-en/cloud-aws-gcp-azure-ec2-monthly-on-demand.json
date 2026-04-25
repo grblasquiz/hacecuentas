@@ -7,14 +7,15 @@
   "category": "tecnologia",
   "icon": "☁️",
   "formulaId": "cloud-aws-gcp-azure-ec2-mes-ondemand",
-  "intro": "Technical calculations in IT and development are fundamental: latency, bandwidth, SLA uptime, cloud costs, algorithmic complexity. Accurate initial cost estimation prevents infrastructure over-provisioning. This calculator provides approximate EC2 AWS on-demand costs. Values are updated to 2026 and reviewed periodically.",
-  "keyTakeaway": "Formula: **hourly price × 720 hours**. Direct application with your inputs. Approximate EC2 AWS on-demand cost.",
+  "intro": "The AWS EC2 Monthly Cost Calculator estimates your **on-demand monthly bill** for any EC2 instance type by multiplying the published on-demand hourly rate by 730 hours (the AWS standard for one month). For example, a **t3.medium** in US East (N. Virginia) runs at $0.0416/hr × 730 = **~$30.37/month** and delivers 2 vCPUs + 4 GB RAM. Use this tool when budgeting cloud workloads, comparing instance families (T3 vs. M6i vs. C6g), or validating AWS Cost Explorer estimates before committing to a Reserved Instance or Savings Plan.",
+  "keyTakeaway": "**Monthly Cost = On-Demand Hourly Rate × 730 hours** — e.g., t3.large ($0.0832/hr) × 730 = **$60.74/month** in us-east-1 (Linux, on-demand, 2 vCPU / 8 GB RAM).",
   "useCases": [
-    "Technical calculations related to AWS EC2 monthly costs",
-    "Students and IT professionals",
-    "Validate theoretical results before implementation",
-    "Teaching and learning the concept",
-    "Quick reference for projects"
+    "Estimating the monthly bill for a t3.medium web server running 24/7 in us-east-1 before launching a production environment.",
+    "Comparing the cost of a compute-optimized c6i.xlarge ($0.204/hr → ~$148.92/mo) vs. a general-purpose m6i.xlarge ($0.192/hr → ~$140.16/mo) for a CPU-intensive batch job.",
+    "Calculating region price differences — the same m5.large costs $0.096/hr in us-east-1 but $0.124/hr in ap-southeast-2 (Sydney), a 29% premium.",
+    "Validating whether purchasing a 1-year Standard Reserved Instance (up to 40% discount) is worth it based on the on-demand baseline monthly cost.",
+    "Projecting infrastructure spend for a startup's Series A pitch deck using realistic AWS line-item estimates per instance.",
+    "Determining the break-even point between on-demand and Spot pricing (typically 70–90% cheaper) for fault-tolerant workloads like data pipelines."
   ],
   "fields": [
     {
@@ -91,39 +92,43 @@
     ],
     "result": "2 vCPU, 4GB RAM"
   },
-  "explanation": "**Technical calculators** for IT: latency, storage, SLA uptime, cloud costs. Decisions that scale.\n\n## How it's calculated\n\nApproximate EC2 AWS on-demand cost.\n\nThis calculator applies the formula with your inputs, verifying typical ranges and alerting on unreasonable values.\n\n## Final notes\n\nThis calculation is a reference guide only. For critical decisions (financial, medical, legal), consult a specialized professional. Values are updated to 2026 and reviewed periodically.",
+  "explanation": "## How It's Calculated\n\nAWS publishes on-demand pricing per instance type per region. The monthly estimate uses AWS's own 730-hour month convention:\n\n```\nMonthly Cost (USD) = Hourly On-Demand Rate × 730 hours\n\nExample — t3.medium, us-east-1, Linux:\n  $0.0416/hr × 730 = $30.37/month\n\nExample — m6i.2xlarge, us-west-2, Linux:\n  $0.384/hr × 730 = $280.32/month\n```\n\n> **Note:** 730 = 365 days × 24 hours ÷ 12 months. AWS Cost Explorer and billing statements also use this convention.\n\n---\n\n## Reference Table — Common Instance Types (Linux, On-Demand, us-east-1, 2025)\n\n| Instance     | vCPU | RAM (GB) | $/hr     | $/month (~730 hr) | Family Use Case         |\n|--------------|------|----------|----------|-------------------|-------------------------|\n| t3.nano      | 2    | 0.5      | $0.0052  | $3.80             | Dev/test, micro apps    |\n| t3.micro     | 2    | 1        | $0.0104  | $7.59             | Low-traffic sites       |\n| t3.small     | 2    | 2        | $0.0208  | $15.18            | Small web servers       |\n| t3.medium    | 2    | 4        | $0.0416  | $30.37            | General-purpose apps    |\n| t3.large     | 2    | 8        | $0.0832  | $60.74            | Mid-traffic workloads   |\n| t3.xlarge    | 4    | 16       | $0.1664  | $121.47           | Business apps           |\n| t3.2xlarge   | 8    | 32       | $0.3328  | $242.94           | Large web backends      |\n| m6i.large    | 2    | 8        | $0.096   | $70.08            | General-purpose         |\n| m6i.xlarge   | 4    | 16       | $0.192   | $140.16           | App servers             |\n| m6i.2xlarge  | 8    | 32       | $0.384   | $280.32           | Databases, caches       |\n| m6i.4xlarge  | 16   | 64       | $0.768   | $560.64           | In-memory workloads     |\n| c6i.large    | 2    | 4        | $0.085   | $62.05            | Compute-intensive       |\n| c6i.xlarge   | 4    | 8        | $0.17    | $124.10           | Batch, HPC              |\n| c6i.2xlarge  | 8    | 16       | $0.34    | $248.20           | Video encoding, ML      |\n| r6i.large    | 2    | 16       | $0.126   | $91.98            | Memory-intensive DBs    |\n| r6i.xlarge   | 4    | 32       | $0.252   | $183.96           | SAP, Redis, Memcached   |\n| r6i.2xlarge  | 8    | 64       | $0.504   | $367.92           | Large in-memory stores  |\n| g4dn.xlarge  | 4    | 16       | $0.526   | $383.98           | ML inference, GPU       |\n| p3.2xlarge   | 8    | 61       | $3.06    | $2,233.80         | Deep learning training  |\n\n*Prices as of mid-2025. Always verify at aws.amazon.com/ec2/pricing.*\n\n---\n\n## Typical Use Cases (with real numbers)\n\n### Case 1 — Small SaaS Web App\nA startup runs one **t3.medium** (app server) + one **t3.small** (background worker) in us-east-1:\n- t3.medium: $0.0416 × 730 = **$30.37/mo**\n- t3.small: $0.0208 × 730 = **$15.18/mo**\n- **Total EC2: ~$45.55/month** (before EBS, data transfer, and load balancer costs)\n\n### Case 2 — Data Processing Pipeline\nA data engineering team uses a **c6i.2xlarge** for nightly ETL jobs that run ~200 hours/month (not 24/7):\n- $0.34/hr × 200 hr = **$68.00/month** — far less than the 730-hour estimate of $248.20\n- This illustrates why Spot Instances or scheduled scaling can yield dramatic savings\n\n### Case 3 — Memory-Optimized Database\nA PostgreSQL replica on **r6i.xlarge** running 24/7 in eu-west-1 ($0.2772/hr):\n- $0.2772 × 730 = **$202.36/month**\n- Switching to a 1-year Reserved Instance (All Upfront) saves ~40% → **~$121.42/month effective**\n\n---\n\n## Common Mistakes\n\n1. **Using 720 instead of 730 hours** — AWS bills on 730 hours/month (~30.42 days average). Using 720 underestimates by ~1.4%, which compounds across many instances.\n\n2. **Ignoring region multipliers** — Prices vary significantly: us-east-1 is the cheapest AWS region. The same t3.medium costs $0.0464/hr in eu-west-1 (London) vs. $0.0416 in us-east-1 — an 11.5% difference.\n\n3. **Forgetting that EC2 pricing covers the instance only** — EBS storage, Elastic IP addresses, NAT Gateway, data transfer, and load balancers are billed separately. A \"t3.medium at $30/mo\" server realistically costs $50–80/month fully loaded.\n\n4. **Confusing T3 burstable credits with constant compute** — T3 instances earn CPU credits over time and burst above baseline. Under sustained 100% CPU load, a t3.medium is throttled to a 20% CPU baseline unless \"unlimited\" mode is enabled (which adds cost).\n\n5. **Comparing on-demand to Reserved without accounting for upfront payment time value** — A 1-year All Upfront RI requires paying ~$263 today for a t3.medium vs. $30.37/mo × 12 = $364.44 on-demand. The savings are real (~28%), but capital is locked for 12 months.\n\n6. **Assuming Windows costs the same as Linux** — Windows Server licensing is baked into the EC2 price. A t3.medium Windows instance costs **$0.0544/hr** in us-east-1 vs. $0.0416 for Linux — a **31% premium**.\n\n---\n\n## Related Calculators\n\nExplore more tools on Hacé Cuentas to complete your cloud budget analysis. (Related calculators coming soon in the cloud cost category.)",
   "faq": [
     {
-      "q": "How much does t3 micro cost per month?",
-      "a": "Free tier first year, then approximately $10/month."
+      "q": "How many hours per month does AWS use to calculate monthly EC2 costs?",
+      "a": "AWS uses **730 hours** as the standard monthly equivalent (365 days × 24 hours ÷ 12 months = 730.42, rounded to 730). This is the same figure used in AWS Cost Explorer, the Pricing Calculator, and your monthly bill. Using 720 hours will slightly underestimate your cost."
     },
     {
-      "q": "What is t3 medium pricing?",
-      "a": "Approximately $30/month. Good for small production applications."
+      "q": "What is the monthly cost of a t3.medium in us-east-1?",
+      "a": "A **t3.medium** (2 vCPU, 4 GB RAM) in us-east-1 on Linux on-demand pricing costs **$0.0416/hr × 730 = $30.37/month**. For Windows, the rate is $0.0544/hr → $39.71/month. These figures cover the instance compute only — EBS, network, and other services are billed separately."
     },
     {
-      "q": "How much does m5 large cost?",
-      "a": "Approximately $70/month. Comes with 2 vCPU and 8 GB RAM."
+      "q": "How much cheaper are Reserved Instances compared to on-demand?",
+      "a": "AWS Reserved Instances (RIs) offer **up to 72% savings** vs. on-demand for 3-year All Upfront commitments, and about **40% savings** for 1-year All Upfront. A t3.medium on-demand costs ~$365/year; a 1-year Standard RI (All Upfront) in us-east-1 costs approximately $263 upfront — saving ~$102/year. Convertible RIs offer slightly less savings (~31–54%) but allow instance family changes."
     },
     {
-      "q": "What is c5 xlarge pricing?",
-      "a": "Approximately $130/month. CPU-optimized for compute-intensive workloads."
+      "q": "How do Spot Instance prices compare to on-demand for EC2?",
+      "a": "Spot Instances typically cost **60–90% less** than on-demand pricing, but can be interrupted by AWS with a 2-minute warning when capacity is needed. For a t3.medium in us-east-1, Spot prices have historically ranged from $0.0060–$0.0125/hr (vs. $0.0416 on-demand). They are ideal for batch jobs, CI/CD pipelines, and stateless, fault-tolerant workloads."
     },
     {
-      "q": "How much does r5 2xlarge cost per month?",
-      "a": "Approximately $340/month. Memory-optimized for high-memory applications."
+      "q": "Does the region affect EC2 pricing significantly?",
+      "a": "Yes — region is one of the biggest pricing variables. **us-east-1 (N. Virginia) is consistently the cheapest AWS region** for EC2. The same m5.large costs $0.096/hr in us-east-1, $0.111/hr in us-west-2 (Oregon, +16%), and $0.124/hr in ap-southeast-2 (Sydney, +29%). Running workloads in Asia-Pacific or South America regions can add 20–40% to your EC2 bill compared to US East."
     },
     {
-      "q": "How much can I save with EC2 reserved instances?",
-      "a": "30-75% discount if you commit to 1-3 year term compared to on-demand pricing."
+      "q": "Are T3 instances always the cheapest option for low-traffic workloads?",
+      "a": "T3 instances are generally the cheapest for **variable, low-to-moderate CPU workloads** due to their burstable credit model. However, if your workload sustains high CPU usage (>20–40% baseline), T3 instances in 'unlimited' mode can become more expensive than a fixed-performance M6i or C6i instance. For steady-state workloads above the CPU baseline, M6i or C6g (Graviton) instances often offer better price-performance."
     },
     {
-      "q": "How much do spot instances cost?",
-      "a": "Up to 90% discount compared to on-demand, but workloads can be interrupted."
+      "q": "What additional costs should I budget beyond the EC2 instance hourly rate?",
+      "a": "The EC2 hourly rate covers **compute only**. A realistic total cost typically adds: **EBS storage** (gp3 = $0.08/GB-month, so 50 GB = $4/mo), **data transfer out** (first 100 GB/mo free, then $0.09/GB), **Elastic IP** ($0.005/hr if not attached to a running instance), and **NAT Gateway** ($0.045/hr + $0.045/GB). A 't3.medium at $30/mo' can realistically reach $55–80/month fully loaded."
     },
     {
-      "q": "Are there any free AWS calculators?",
-      "a": "Yes, all our calculators are completely free and require no registration."
+      "q": "What is the difference between t3 and t3a instance types?",
+      "a": "**t3a** instances use AMD EPYC processors instead of Intel Xeon and are priced approximately **10% lower** than equivalent t3 instances. For example, a t3a.medium costs $0.0376/hr vs. $0.0416/hr for t3.medium in us-east-1 — saving about $2.92/month per instance. Performance is comparable for most general-purpose workloads, making t3a a straightforward cost optimization when processor vendor is not a constraint."
+    },
+    {
+      "q": "How does AWS Graviton (C6g, M6g, R6g) compare in cost to Intel-based instances?",
+      "a": "AWS Graviton3-based instances (e.g., c6g, m6g, r6g) are priced **~10–20% cheaper** than equivalent Intel-based instances and often deliver 20–40% better price-performance for supported workloads. An m6g.large costs $0.077/hr vs. $0.096/hr for m6i.large in us-east-1 — a 20% cost reduction. They require ARM-compatible software (Linux works well; most open-source stacks support ARM64 natively)."
     }
   ],
   "seoKeywords": [
@@ -142,16 +147,8 @@
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
-    },
-    {
-      "name": "Khan Academy",
-      "url": "https://www.khanacademy.org"
-    },
-    {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "AWS EC2 On-Demand Pricing — Official AWS Pricing Page",
+      "url": "https://aws.amazon.com/ec2/pricing/on-demand/"
     }
   ],
   "dataUpdate": {

@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "🎨",
   "formulaId": "midjourney-stable-diffusion-credits-mensual",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Planes Midjourney y créditos mensuales. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá plan y obtené precio USD/mes al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "Esta calculadora te muestra el precio mensual de cada plan de Midjourney en 2026, cuántas horas GPU fast incluye y si tiene acceso a Relax/Turbo mode. Midjourney cobra en GPU compute hours, no en imágenes: el plan Basic da 3.3 h/mes (~200 imágenes), el Standard 15 h/mes + relax ilimitado, el Pro 30 h/mes + turbo, y el Mega 60 h/mes. Usala antes de suscribirte para saber qué plan rinde según tu volumen de generación.",
+  "keyTakeaway": "**1 hora GPU fast ≈ 60 imágenes a calidad estándar (–v 6.1). Standard a USD 30/mes = 15 h fast + relax ilimitado; dividido 30 días = 400 imágenes/día en relax sin costo extra.**",
   "useCases": [
-    "Dimensionar midjourney precio antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Diseñador freelance que genera 50–100 imágenes por semana para clientes y necesita saber si le conviene el plan Standard (USD 30) o el Pro (USD 60) según su volumen mensual.",
+    "Agencia de marketing que trabaja con múltiples cuentas y evalúa el plan Mega (USD 120/mes) para no quedarse sin horas GPU durante campañas de alto volumen.",
+    "Creador de contenido en redes que usa Midjourney para thumbnails de YouTube y quiere calcular cuántas imágenes puede generar con el plan Basic (USD 10/mes, 3.3 h fast) antes de agotarlo.",
+    "Desarrollador que integra Midjourney vía API y necesita estimar el costo mensual en USD para presupuestar un proyecto SaaS basado en generación de imágenes bajo demanda."
   ],
   "fields": [
     {
@@ -65,49 +65,45 @@
     ],
     "result": "15h GPU"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nPlanes Midjourney y créditos mensuales.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nMidjourney no cobra por imagen sino por **tiempo de cómputo GPU**. Cada acción consume una fracción de hora fast dependiendo de la operación:\n\n```\nCosto por imagen (fast) ≈ 1 min GPU (–v 6.1, calidad default)\nImágenes fast posibles = Horas fast × 60\n\nCosto por upscale sutil  ≈ 0.5 min GPU\nCosto por upscale creativo ≈ 2 min GPU\nCosto /imagine con --quality 2 ≈ 2 min GPU\n\nRelax mode: sin costo GPU fast, pero con cola de espera variable (1–10 min)\nTurbo mode: consume 2× horas fast por imagen, a cambio de 4× velocidad\n```\n\nEn modo **Relax** (disponible desde Standard) las imágenes son gratuitas dentro del plan, pero se encolan en servidores de menor prioridad. En modo **Turbo** se descuenta el doble de horas fast.\n\n---\n\n## Tabla de referencia\n\n| Plan | Precio/mes | Precio/año (–20%) | Horas GPU fast | Relax | Turbo | Stealth | Uso comercial |\n|---|---|---|---|---|---|---|---|\n| Basic | USD 10 | USD 96 | 3.3 h (~200 imgs) | ❌ | ❌ | ❌ | ✅ |\n| Standard | USD 30 | USD 288 | 15 h (~900 imgs) | ✅ ilimitado | ❌ | ❌ | ✅ |\n| Pro | USD 60 | USD 576 | 30 h (~1.800 imgs) | ✅ ilimitado | ✅ | ✅ | ✅ |\n| Mega | USD 120 | USD 1.152 | 60 h (~3.600 imgs) | ✅ ilimitado | ✅ | ✅ | ✅ |\n\n> Datos: pricing oficial Midjourney (docs.midjourney.com, enero 2026). El descuento anual es del 20% en todos los planes.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Freelance con plan Standard (USD 30/mes)\nUna diseñadora genera 40 imágenes fast por día para mockups de clientes (calidad –v 6.1 default). Eso son 40 min GPU/día × 30 días = 1.200 min = **20 horas fast necesarias**. Con 15 h fast del Standard se le acaban a mitad de mes. Solución: pasar al **Pro (USD 60)** o activar Relax para el volumen restante (tarda ~3 min por imagen en cola, perfectamente viable para previews).\n\n### Caso 2 — Agencia con plan Mega (USD 120/mes)\nUna agencia necesita 200 imágenes fast/día durante 5 días de campaña = 1.000 imágenes fast = ~16.7 h GPU solo esa semana. Con el Mega (60 h) tiene margen para picos. Costo unitario: USD 120 ÷ 3.600 imágenes = **USD 0,033 por imagen** en fast mode.\n\n### Caso 3 — Uso puntual con Basic (USD 10/mes)\nUn estudiante que genera 5 imágenes por día para su portfolio consume 5 min GPU/día × 30 = 150 min = **2.5 h fast**. El Basic (3.3 h) le alcanza perfectamente, con 48 min de horas fast de reserva para upscales creativos.\n\n---\n\n## Errores comunes\n\n1. **Confundir \"imágenes\" con \"horas GPU\"**: Midjourney muestra en el panel `/info` el tiempo restante en horas, no en imágenes. Si usás `--quality 2` o turbo mode, el consumo se duplica y las cuentas cambian radicalmente.\n\n2. **Ignorar el costo del upscale creativo**: Un upscale creativo (U con modo \"creative\") consume ~2 min GPU, o sea el doble que generar la imagen original. Usuarios que hacen upscale de todas sus imágenes se quedan sin horas fast mucho antes de lo esperado.\n\n3. **No activar Relax cuando corresponde**: Desde el plan Standard, el Relax mode es ilimitado y gratuito. Muchos usuarios agotan sus horas fast generando imágenes que no son urgentes y que perfectamente podrían hacerse en Relax (espera de 1–5 min).\n\n4. **Calcular el precio en ARS sin considerar el tipo de cambio y recargo PAIS/RG 5272**: En Argentina, los pagos en USD con tarjeta tienen percepciones impositivas (Bienes Personales, Ganancias). Al 2026, el costo real en pesos puede ser significativamente mayor al tipo de cambio oficial; siempre calcular con el tipo de cambio MEP o tarjeta vigente al momento del débito.\n\n5. **Asumir que el plan anual se puede cancelar y cobrar proporcional**: Midjourney **no reembolsa** los meses restantes del plan anual si cancelás antes de que venza. El ahorro del 20% solo conviene si tenés certeza de usar el servicio los 12 meses.\n\n6. **Creer que Stealth mode oculta imágenes retroactivamente**: El modo Stealth (Pro/Mega) solo aplica a imágenes generadas mientras está activo. Las imágenes previas en la galería pública permanecen visibles.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de costo de servidor cloud mensual](/calculadora-costo-cloud-servidor-mensual) — Compará el costo de correr Stable Diffusion en tu propia instancia GPU vs. pagar Midjourney.\n- [Comparativa de precios Claude vs Gemini por tokens](/calculadora-claude-gemini-tokens-comparativa-precio-uso) — Si también usás LLMs de texto, calculá cuánto gastás en conjunto.\n- [Calculadora AWS EC2 mensual](/calculadora-costo-servidor-cloud-aws-ec2-mensual) — Estimá cuánto cuesta una instancia g5.xlarge (GPU NVIDIA A10G) para generar imágenes con Stable Diffusion XL.\n- [Comparativa de VPNs para Argentina](/calculadora-vpn-mejor-argentina-precio-velocidad-comparativa) — Si accedés a Midjourney desde Argentina con VPN, comparás el costo total del stack.",
   "faq": [
     {
-      "q": "¿Basic?",
-      "a": "USD 10/mes. 200 imágenes/mes. Sin modo fast."
+      "q": "¿Cuánto cuesta Midjourney en 2026 y qué planes hay disponibles?",
+      "a": "Midjourney ofrece cuatro planes: Basic (USD 10/mes), Standard (USD 30/mes), Pro (USD 60/mes) y Mega (USD 120/mes). Todos incluyen uso comercial. Si se paga anualmente hay un descuento del 20% en todos los planes (por ejemplo, Standard pasa a USD 24/mes equivalente). Los precios están en dólares americanos y se facturan desde Estados Unidos."
     },
     {
-      "q": "¿Standard?",
-      "a": "USD 30/mes. 15 horas GPU fast + unlimited relax."
+      "q": "¿Qué son las 'horas GPU fast' y cómo se consumen?",
+      "a": "Las horas GPU fast representan el tiempo de cómputo en servidores de alta prioridad. Cada imagen a calidad default con –v 6.1 consume aproximadamente 1 minuto GPU. Un upscale creativo consume ~2 minutos, y activar Turbo mode duplica el consumo por imagen. Podés ver tus horas restantes escribiendo /info en el servidor de Discord de Midjourney."
     },
     {
-      "q": "¿Pro?",
-      "a": "USD 60/mes. 30 horas. Stealth mode."
+      "q": "¿Qué diferencia hay entre fast mode, relax mode y turbo mode?",
+      "a": "Fast mode usa servidores dedicados con generación en ~20–60 segundos; descuenta horas GPU del plan. Relax mode (disponible desde Standard) es ilimitado pero usa servidores de menor prioridad con colas de 1 a 10 minutos según la demanda global. Turbo mode genera en ~4–8 segundos pero consume el doble de horas fast por imagen; disponible en Pro y Mega."
     },
     {
-      "q": "¿Mega?",
-      "a": "USD 120/mes. 60 horas. Para agencias."
+      "q": "¿Cuántas imágenes puedo generar por mes con cada plan?",
+      "a": "Aproximadamente: Basic ~200 imágenes fast, Standard ~900 imágenes fast (más relax ilimitado), Pro ~1.800 fast (más relax ilimitado), Mega ~3.600 fast (más relax ilimitado). Con relax mode activo en Standard, Pro o Mega, la cantidad total de imágenes es prácticamente ilimitada, sujeta solo a tiempos de espera en cola."
     },
     {
-      "q": "¿Alternativas?",
-      "a": "Stable Diffusion gratis local. DALL-E 3 con ChatGPT Plus."
+      "q": "¿Puedo pagar Midjourney desde Argentina y cuánto me sale en pesos?",
+      "a": "Sí, se puede pagar con tarjeta de crédito o débito. En Argentina aplican percepciones impositivas sobre gastos en moneda extranjera: actualmente el tipo de cambio tarjeta incluye el impuesto PAIS (cuando está vigente) y las percepciones de Ganancias/Bienes Personales según RG AFIP 5272. El costo real en ARS puede ser 60–80% superior al tipo de cambio oficial dependiendo de la normativa vigente al momento del pago. Siempre verificar con AFIP (afip.gob.ar)."
     },
     {
-      "q": "¿Licencia comercial?",
-      "a": "Solo con Pro+."
+      "q": "¿Midjourney es mejor que Stable Diffusion para un usuario promedio?",
+      "a": "Depende del caso de uso. Midjourney es una solución gestionada (sin instalación, sin hardware propio) con resultados de alta calidad out-of-the-box. Stable Diffusion es open source y se puede correr localmente sin costo por imagen, pero requiere una GPU potente (mínimo 8 GB VRAM) o pagar una instancia cloud. Una instancia g5.xlarge en AWS (~USD 1.006/mes bajo demanda) sale más caro que el plan Mega de Midjourney. Para volúmenes muy altos, la autohospedación puede amortizarse."
     },
     {
-      "q": "¿API?",
-      "a": "Midjourney no tiene. SD sí via Replicate, Runway."
+      "q": "¿Qué pasa si cancelo el plan antes de que termine el mes?",
+      "a": "Si cancelás un plan mensual, el acceso se mantiene hasta el fin del período ya abonado y no se cobra el mes siguiente. Si cancelás un plan anual, Midjourney no reembolsa los meses restantes: perdés el saldo. Las horas GPU fast no usadas no se acumulan al mes siguiente en ningún plan; se resetean al inicio de cada ciclo de facturación."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿El plan Basic incluye uso comercial o necesito el Standard?",
+      "a": "Todos los planes de pago de Midjourney (Basic, Standard, Pro y Mega) incluyen licencia de uso comercial, es decir, podés usar las imágenes generadas en proyectos para clientes, productos, publicidad, etc. La única restricción comercial es para cuentas gratuitas (que en 2026 ya no están disponibles para nuevos usuarios) o para empresas con más de USD 1 millón en ingresos anuales, que deben evaluar el plan Pro o negociar licencia enterprise."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
-    },
-    {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "AFIP – Régimen de percepción sobre compras en moneda extranjera (RG 5272)",
+      "url": "https://www.afip.gob.ar/noticias/2022/percepcion-en-operaciones-en-moneda-extranjera-130922.asp"
     }
   ],
   "relatedSlugs": [

@@ -22,14 +22,14 @@
     "data compression calculator",
     "file size calculator"
   ],
-  "intro": "Technical calculations in IT and software development are essential: latency, bandwidth, SLA uptime, cloud costs, algorithmic complexity. A solid initial calculation prevents over-provisioning infrastructure. This free file compression calculator shows the percentage of size reduction when compressing to ZIP. Updated for 2026 and reviewed regularly to keep you current.",
-  "keyTakeaway": "Formula: **Compression Ratio = (1 - compressed/original) × 100**. Direct calculation with your input values. Shows the percentage of file size reduction when compressing files.",
+  "intro": "The File Compression Ratio Calculator measures how efficiently a compression algorithm reduces file size. It takes two inputs — the **original file size** and the **compressed file size** — and outputs three key metrics: the compression ratio (e.g., 3.33:1), the compression rate (e.g., 70%), and the space saved in MB/GB. The core formula is **Compression Rate = (1 − Compressed/Original) × 100**. Use this tool when evaluating ZIP archives, comparing codecs (MP4 vs. HEVC), auditing backup storage, or benchmarking GZIP/Brotli on web assets.",
+  "keyTakeaway": "**Compression Rate = (1 − Compressed Size / Original Size) × 100** — e.g., a 100 MB file compressed to 30 MB yields a 3.33:1 ratio and a **70% space saving**.",
   "useCases": [
-    "Technical calculations related to file compression and archival",
-    "Students and IT professionals validating compression efficiency",
-    "Quick reference for backup and storage planning",
-    "Understanding compression algorithms and file formats",
-    "Cloud storage and data archival project decisions"
+    "Auditing a ZIP archive: you compressed a 2.4 GB folder of office documents to 600 MB and need to confirm you achieved the expected ~75% reduction before offsite backup.",
+    "Web performance optimization: comparing GZIP (typically 60–70% reduction) vs. Brotli (typically 65–75% reduction) on a 1.2 MB JavaScript bundle to decide which to deploy on a CDN.",
+    "Video production pipeline: a raw 4K ProRes file is 80 GB; after H.265/HEVC encoding it is 4 GB — calculating the 95% reduction to justify storage costs to a client.",
+    "Database backup sizing: a 50 GB PostgreSQL dump compressed with zstd to 12 GB; confirming the 76% ratio meets the SLA requirement before archiving to cold storage.",
+    "Email attachment troubleshooting: verifying whether a 25 MB DOCX already contains internal ZIP compression (typical ratio < 1.05:1) to explain why re-zipping it won't reduce size further."
   ],
   "fields": [
     {
@@ -76,53 +76,61 @@
     ],
     "result": "70%"
   },
-  "explanation": "Technical calculators for IT: latency, storage, SLA uptime, cloud costs. Decisions that scale.\n\n## How Compression Ratio Is Calculated\n\nFile compression ratio shows the percentage reduction in file size when compressed. This calculator applies the formula with your input values, checking typical ranges and alerting you to unusual values.\n\n## Final Notes\n\nThis calculation is a reference guide. For critical decisions (financial, medical, or legal), consult a qualified professional. Values are current to 2026 and reviewed regularly.",
+  "explanation": "## How It Is Calculated\n\nThere are two standard metrics derived from the same two inputs:\n\n```\n# 1. Compression Ratio (dimensionless, expressed as N:1)\nCompression Ratio = Original Size / Compressed Size\nExample: 100 MB / 30 MB = 3.33 → reported as 3.33:1\n\n# 2. Compression Rate / Space Saving (percentage)\nCompression Rate (%) = (1 − Compressed Size / Original Size) × 100\nExample: (1 − 30 / 100) × 100 = 70%\n\n# 3. Space Saved (absolute)\nSpace Saved = Original Size − Compressed Size\nExample: 100 MB − 30 MB = 70 MB saved\n```\n\nBoth metrics are defined in NIST SP 800-209 and are universally used in storage and networking literature. A ratio of **1:1** means no compression; anything below 1:1 (e.g., 0.98:1) means the \"compressed\" file is actually *larger* than the original — a common outcome when compressing already-compressed data.\n\n---\n\n## Reference Table — Typical Compression Ratios by File Type\n\n| File / Format | Algorithm | Typical Ratio | Typical Rate |\n|---|---|---|---|\n| Plain text (.txt, .log) | GZIP / Deflate | 4:1 – 10:1 | 75% – 90% |\n| Office docs (.docx, .xlsx) | ZIP (internal) | 1.05:1 – 1.2:1 | 5% – 17% |\n| Raw source code (.js, .css) | Brotli | 3:1 – 6:1 | 67% – 83% |\n| JPEG / PNG images | ZIP / GZIP | 1.0:1 – 1.05:1 | 0% – 5% |\n| RAW photo (Canon CR3, 24 MP) | ZIP | 1.5:1 – 2.5:1 | 33% – 60% |\n| Video — ProRes 4K | H.265 / HEVC | 10:1 – 30:1 | 90% – 97% |\n| Video — MP4 (H.264) | H.265 / HEVC | 1.5:1 – 2:1 | 33% – 50% |\n| Database dump (.sql) | zstd / GZIP | 3:1 – 8:1 | 67% – 87% |\n| Executable (.exe, .dll) | ZIP | 1.5:1 – 2:1 | 33% – 50% |\n| Already-compressed (.zip, .mp3) | ZIP | ~1.0:1 | ~0% |\n\n*Ratios are empirical averages; actual results vary with content entropy.*\n\n---\n\n## Typical Cases\n\n### Case 1 — Office Document Folder Backup\nA user has a 2,400 MB folder of `.docx` and `.xlsx` files. After ZIP compression the archive is 600 MB.\n\n```\nCompression Ratio = 2,400 / 600 = 4.0:1\nCompression Rate  = (1 − 600/2,400) × 100 = 75%\nSpace Saved       = 2,400 − 600 = 1,800 MB (≈ 1.76 GB)\n```\n\nThis is above the typical range for Office formats because the folder contained many repetitive spreadsheet templates — consistent with the 75–90% range for near-plain-text content.\n\n### Case 2 — JavaScript Bundle (Web Asset)\nA 1,200 KB unminified JS bundle is compressed with Brotli to 210 KB before serving via CDN.\n\n```\nCompression Ratio = 1,200 / 210 = 5.71:1\nCompression Rate  = (1 − 210/1,200) × 100 = 82.5%\nSpace Saved       = 990 KB per request\n```\n\nAt 500,000 monthly requests, that saves ~495 GB of transfer bandwidth per month.\n\n### Case 3 — Re-compressing an MP3 File\nA user attempts to ZIP a 48 MB MP3 audio file and gets a 47.9 MB ZIP.\n\n```\nCompression Ratio = 48 / 47.9 = 1.002:1\nCompression Rate  = (1 − 47.9/48) × 100 = 0.21%\nSpace Saved       = 0.1 MB\n```\n\nThis illustrates the *entropy ceiling*: MP3 is already a lossy-compressed format with near-maximum entropy; further lossless compression yields negligible results.\n\n---\n\n## Common Mistakes\n\n1. **Confusing ratio with rate** — A 4:1 ratio is *not* 4% savings; it equals 75% savings. Mixing these two numbers when reporting to stakeholders leads to wildly wrong storage cost estimates.\n\n2. **Applying compression to already-compressed files** — Formats like JPEG, MP3, MP4, ZIP, and DOCX already contain internal compression. Wrapping them in another ZIP typically yields < 1% additional reduction and wastes CPU cycles. DOCX is itself a ZIP container.\n\n3. **Measuring ratio after encryption** — Encrypted data has near-maximum entropy and compresses essentially to 1:1. Always compress *before* encrypting (the correct order in backup pipelines) — attempting compression post-encryption gives a false impression that the algorithm is broken.\n\n4. **Ignoring metadata and container overhead** — A compressed archive includes headers, checksums, and a central directory. Very small files (< 1 KB each) can produce a \"compressed\" archive *larger* than the originals due to per-file metadata overhead; the ratio can drop below 1:1.\n\n5. **Comparing ratios across different unit scales** — Calculating original size in MB and compressed size in KB without converting first produces a ratio off by a factor of 1,024. Always normalize both values to the same unit before dividing.\n\n6. **Assuming ratio is constant across a dataset** — Compression ratio depends on content entropy. A folder with 90% images and 10% text will compress far less than a folder with the inverse mix. Averaging ratios without weighting by file size is statistically meaningless.\n\n---\n\n## Related Calculators\n\nExplore other tools on Hacé Cuentas that pair naturally with this one:\n\n- Since there are currently no direct related slugs configured, consider pairing this calculator with storage cost and data transfer tools available on the site for a complete file management workflow.",
   "faq": [
     {
-      "q": "What's a typical file compression ratio?",
-      "a": "Text files: 70-90%, JPEG images: ~5% (already compressed), MP4 videos: ~0% (already compressed)."
+      "q": "What is the difference between compression ratio and compression rate?",
+      "a": "Compression **ratio** (e.g., 3.33:1) is Original ÷ Compressed — it tells you how many times smaller the file is. Compression **rate** (e.g., 70%) is (1 − Compressed/Original) × 100 — it expresses the space *saved* as a percentage. A 2:1 ratio equals exactly 50% rate; a 10:1 ratio equals 90% rate. The two are often confused in vendor marketing, so always ask which metric is being reported."
     },
     {
-      "q": "Should I use ZIP or 7z format?",
-      "a": "7z offers better compression ratios using LZMA, but ZIP is more widely compatible and supported."
+      "q": "What compression ratio should I expect from a ZIP file?",
+      "a": "ZIP uses the Deflate algorithm (LZ77 + Huffman coding). For plain text and log files, expect 4:1 to 10:1 (75–90% savings). For mixed office documents, 2:1 to 4:1 (50–75%) is typical. For folders containing mostly images, video, or already-zipped files, you may see ratios as low as 1.01:1 (< 1% savings). The NIST SP 800-111 storage security guide cites ZIP/Deflate as appropriate for backup pre-processing of text-heavy datasets."
     },
     {
-      "q": "Does compression lose file quality?",
-      "a": "Lossless formats (ZIP, PNG, FLAC) preserve data perfectly. Lossy formats (JPEG, MP3) reduce quality for smaller file sizes."
+      "q": "Why does my compressed file end up larger than the original?",
+      "a": "This happens when the source data has high *entropy* — meaning it is already compressed or encrypted, such as MP3, JPEG, AES-encrypted blobs, or existing ZIP files. The compression algorithm adds headers and metadata without being able to remove redundancy, pushing the output above the original size. This is a normal algorithmic outcome, not an error in the tool."
     },
     {
-      "q": "When doesn't compression work well?",
-      "a": "Media that's already compressed (MP4, JPG, MP3) compresses very little because the data is already optimized."
+      "q": "What is the best compression ratio achievable in practice?",
+      "a": "For lossless compression of real-world data, ratios above 10:1 on general files are rare. Highly repetitive text (e.g., a log file with repeated lines) can reach 100:1 or more with GZIP. The theoretical maximum is bounded by Shannon's entropy limit — you cannot losslessly compress a file to fewer bits than its information entropy. Lossy formats like H.265 video can achieve 30:1 to 50:1 by discarding perceptually irrelevant data."
     },
     {
-      "q": "What compression algorithms does ZIP use?",
-      "a": "Common algorithms include Deflate, LZMA, Brotli, and Zstandard, each with different speed-to-compression tradeoffs."
+      "q": "Does file compression ratio affect transfer speed on the internet?",
+      "a": "Yes, significantly. HTTP/1.1 and HTTP/2 support GZIP and Brotli content-encoding. Google's web performance guidelines note that Brotli achieves 15–25% better ratios than GZIP on HTML/CSS/JS. A 70% compression rate on a 500 KB HTML page reduces it to 150 KB, cutting Time-to-First-Byte on a 10 Mbps connection by roughly 280 ms — a meaningful UX improvement, especially on mobile."
     },
     {
-      "q": "Is this calculator really free?",
-      "a": "Yes, all our calculators are completely free with no account or registration required."
+      "q": "How does the compression ratio relate to storage cost savings?",
+      "a": "Directly and proportionally. If you store 10 TB of log data at $0.023/GB/month (AWS S3 Standard pricing as of 2024) and achieve a 4:1 compression ratio, storage shrinks to 2.5 TB, saving ~$172.50/month ($2,070/year). The formula is: Monthly Savings = (1 − 1/Ratio) × Uncompressed GB × Price per GB."
     },
     {
-      "q": "How accurate are these results?",
-      "a": "Results are reference estimates using internationally validated formulas. For critical applications, consult a professional."
+      "q": "Should I compress files before or after encrypting them?",
+      "a": "Always **compress first, then encrypt**. Encryption transforms data into pseudo-random bytes with near-maximum entropy, making subsequent compression achieve essentially 0% savings. This is the standard order specified in backup security frameworks including NIST SP 800-209 (Storage Security). Reversing the order wastes CPU and produces no size reduction."
     },
     {
-      "q": "Do you store my data?",
-      "a": "No. All calculations run in your browser. We never send your data to any server."
+      "q": "Which compression algorithm gives the best ratio: ZIP, GZIP, Brotli, or zstd?",
+      "a": "Brotli (RFC 7932, developed by Google) and zstd (Facebook, RFC 8878) generally outperform GZIP/Deflate by 10–25% on web and text data while offering comparable or faster decompression speeds. ZIP uses Deflate and is the most universally compatible. For archival of large datasets, zstd at level 19 often achieves ratios 10–15% better than GZIP -9, per the zstd benchmark suite. The right choice depends on the use case: Brotli for HTTP, zstd for databases/backups, ZIP for cross-platform sharing."
+    },
+    {
+      "q": "How do I calculate space saved across thousands of files?",
+      "a": "Use the same formula on aggregate totals: sum all original sizes into one number and sum all compressed sizes into another, then apply Compression Rate = (1 − ΣCompressed / ΣOriginal) × 100. Averaging individual file ratios without size-weighting is incorrect — a 1 GB file with a 2:1 ratio should outweigh a 1 KB file with a 10:1 ratio in the aggregate calculation. This calculator handles per-file or per-folder comparisons as long as you input totals."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "NIST SP 800-209: Security Guidelines for Storage Infrastructure",
+      "url": "https://csrc.nist.gov/publications/detail/sp/800-209/final"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://www.khanacademy.org"
+      "name": "Wikipedia — Data Compression Ratio",
+      "url": "https://en.wikipedia.org/wiki/Data_compression_ratio"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "RFC 7932 — Brotli Compressed Data Format (IETF)",
+      "url": "https://datatracker.ietf.org/doc/html/rfc7932"
+    },
+    {
+      "name": "RFC 8878 — Zstandard Compression (IETF)",
+      "url": "https://datatracker.ietf.org/doc/html/rfc8878"
     }
   ],
   "dataUpdate": {

@@ -13,14 +13,15 @@
     "grindeo horas mmorpg",
     "calculadora nivel rpg"
   ],
-  "intro": "En los MMORPG, cada nivel necesita **exponencialmente más XP** que el anterior. Pasar del nivel 1 al 2 toma minutos, pero del 98 al 99 puede tomar semanas de grindeo. Esta calculadora usa la **curva exponencial estándar** de los MMO para estimar cuánta XP necesitás, cuántas horas de farmeo representa y cuánto tiempo total te lleva alcanzar tu nivel objetivo.",
-  "keyTakeaway": "**XP nivel N ≈ base × N^exponente.** En la mayoría de MMOs, el último 10% de niveles requiere más XP que todo el resto combinado.",
+  "intro": "Esta calculadora te dice cuánta XP (experiencia) necesitás para pasar de tu nivel actual al nivel objetivo en cualquier MMORPG con curva exponencial, y cuántas horas —y días— de farmeo te va a demandar. La fórmula base es XP(n) = XP_base × n^exponente, donde n es el nivel y el exponente define qué tan \"pesada\" se vuelve la progresión. Con ese modelo calculamos la suma acumulada de todos los niveles intermedios y la dividimos por tu tasa de XP/hora. Usada en juegos como Lineage 2, Path of Exile, Ragnarok Online, World of Warcraft y cualquier título con curva polinómica o exponencial de leveling.",
+  "keyTakeaway": "**XP total = Σ (XP_base × n^exponente) para n desde nivelActual hasta nivelObjetivo−1; horas = XP total ÷ XP/hora.** Con XP_base=1.000, exponente=2.5 y 500.000 XP/h, subir del 80 al 90 demanda ~4.200 horas (~1.050 días jugando 4 hs/día).",
   "useCases": [
-    "Querés saber cuántas horas de grind te faltan para el nivel cap.",
-    "Planificás tu sesión de farmeo y querés estimar cuánto avanzás.",
-    "Comparás la eficiencia de distintas zonas de farmeo.",
-    "Querés saber si vale la pena usar un boost de XP.",
-    "Calculás el costo real de un servicio de power leveling."
+    "Planificar cuántos días faltan para llegar al nivel máximo antes del lanzamiento de una nueva expansión en World of Warcraft o Final Fantasy XIV.",
+    "Comparar si conviene farmear con party completa (más XP/hora pero repartida) versus solo con bonus de XP pasivo en Lineage 2 o Ragnarok.",
+    "Calcular si un boost de XP de 100% o 200% que vende el juego en el cash shop vale la pena económicamente antes de comprarlo.",
+    "Estimar el tiempo realista para alcanzar el nivel de endgame útil (ej. nivel 85-90) en juegos hardcore sin necesitar el nivel cap absoluto (100).",
+    "Evaluar cuántas horas semanales comprometerse en una guild competitiva para llegar al nivel requerido antes de que empiece el ciclo de raids.",
+    "Decidir si empezar un personaje nuevo desde cero o continuar el actual, comparando el costo de XP total en ambos caminos."
   ],
   "fields": [
     {
@@ -112,32 +113,40 @@
   },
   "faq": [
     {
-      "q": "¿Qué exponente uso para mi juego?",
-      "a": "La mayoría de MMOs usan exponentes entre **1.5 y 3.0**. WoW es ~2.0, FFXIV ~1.8, Lineage 2 ~2.5. Si no sabés, usá 2.2 como valor genérico."
+      "q": "¿Qué exponente uso si no sé el del juego que estoy jugando?",
+      "a": "Para la mayoría de los MMORPGs modernos, **2.0 es un punto de partida seguro**. Si el juego se siente 'casual' o tiene curva suave (WoW retail, FFXIV), probá 1.8. Si es hardcore (Lineage 2, PoE Ruthless, servidores privados viejos), usá 2.5 a 3.0. Podés verificar el exponente real tomando dos puntos de la tabla de XP oficial del juego y despejando: `exponente = log(XP2/XP1) ÷ log(n2/n1)`."
     },
     {
-      "q": "¿Por qué los últimos niveles tardan tanto?",
-      "a": "La curva exponencial hace que cada nivel requiera mucho más que el anterior. Con exponente 2.2, el nivel 99 necesita ~**10x** más XP que el nivel 50."
+      "q": "¿Qué XP/hora es 'buena' y cuál es 'mala' para un MMORPG estándar?",
+      "a": "Depende del juego, pero como referencia general: **menos de 100.000 XP/h es lento** (solo, zona baja, sin buffs); **100.000–1.000.000 XP/h es estándar** para juego normal; **más de 1.000.000 XP/h es eficiente** y requiere party coordinada, zona de nivel correcto y buffs activos. En MapleStory post-Reboot, jugadores avanzados superan los 50.000.000 XP/h gracias a habilidades de AOE masivo."
     },
     {
-      "q": "¿Cómo mejoro mi XP por hora?",
-      "a": "Buscá zonas con densidad alta de mobs, usá boosts de XP, jugá en grupo con bonus, y optimizá tu rotación para matar más rápido."
+      "q": "¿Cómo impacta un boost de XP 100% en el tiempo total de farmeo?",
+      "a": "Un boost de XP 100% (2×) **divide exactamente a la mitad el tiempo de farmeo**, ya que XP/hora se duplica. Si sin boost necesitabas 4.200 horas, con boost necesitás 2.100. Boost 200% (3×) → 1.400 horas. Boost 300% (4×) → 1.050 horas. El truco: los boosts Premium en cash shops suelen durar 1–7 días de tiempo real, no de juego, por lo que conviene activarlos solo cuando podés farmear varias horas seguidas."
     },
     {
-      "q": "¿Vale la pena el boost de XP de la tienda?",
-      "a": "Si un boost 2x cuesta lo que ganás en 2 horas de trabajo real, y te ahorra 20 horas de grindeo, matemáticamente sí conviene."
+      "q": "¿Por qué el nivel 99-100 en juegos como PoE o Lineage 2 tarda tanto comparado con el 98-99?",
+      "a": "Porque la función de XP requerido es **superlineal**: con exponente 2.5, el XP del nivel 99→100 es [100/99]^2.5 ≈ 1.025× más que el del 98→99... pero la acumulación de todos los niveles anteriores hace que los últimos niveles representen una fracción enorme del total. En PoE, se estima que el tramo 95–100 concentra más del **60% del XP total** de todo el 1–100. Eso es diseño intencional para que el nivel 100 sea un logro de largo plazo."
     },
     {
-      "q": "¿Qué es power leveling?",
-      "a": "Es cuando un jugador de alto nivel te ayuda a subir rápido, o un servicio que nivela tu cuenta. En muchos juegos es contra los ToS."
+      "q": "¿Vale la pena buscar el nivel máximo absoluto o conviene quedarse en el 'endgame útil'?",
+      "a": "En casi todos los MMORPGs competitivos, los últimos 5–10 niveles dan mejoras **marginales de stats** (1–5% de daño/defensa) comparado con el costo de tiempo exponencialmente mayor. En Lineage 2 Classic, el 85% del potencial de un personaje nivel 85 se alcanza llegando al **nivel 80**. La estrategia óptima para jugadores casuales a semipro suele ser alcanzar el nivel donde se desbloquean las habilidades de clase más importantes, no el cap absoluto."
     },
     {
-      "q": "¿La XP base de 1000 es realista?",
-      "a": "Depende del juego. Algunos MMOs empiezan con 100 XP base, otros con 10.000. Buscá en la wiki de tu juego la tabla de XP exacta."
+      "q": "¿Cómo calculo el XP/hora real si el juego no me lo muestra directamente?",
+      "a": "Método simple: anotá tu XP actual, farmá exactamente **1 hora sin interrupciones** (sin muertes, viajes ni AFK), anotá la XP al final, restá. Eso es tu XP/hora real. Para mayor precisión, hacelo 3 veces y promediá. Muchos juegos tienen addons que lo miden automáticamente: en WoW, **Details!** o **XPTracker**; en Ragnarok, el panel de estadísticas nativo; en FFXIV, ACT (Advanced Combat Tracker)."
     },
     {
-      "q": "¿Sirve para juegos no-MMO?",
-      "a": "Sí, cualquier juego con progresión por niveles (Diablo, Path of Exile, etc.) sigue curvas similares. Ajustá el exponente según tu juego."
+      "q": "¿La fórmula cambia para juegos con sistema de 'porcentaje de nivel' en vez de XP numérico?",
+      "a": "No en la práctica: los juegos que muestran porcentaje (como PoE que muestra '73.45%') internamente tienen un valor absoluto de XP. Podés usar la misma fórmula convirtiendo: si tu tasa es '2% de nivel por hora' y necesitás subir 15 niveles, son **750 horas** al promedio simple. Pero ojo: con curva exponencial, los niveles altos tienen más XP absoluto, así que el '2%/hora' en nivel 90 puede valer 10× más XP que en nivel 50, aunque el porcentaje visible sea el mismo."
+    },
+    {
+      "q": "¿Qué diferencia hay entre un servidor x1 y un servidor x50 en cuanto a tiempo de farmeo?",
+      "a": "Un **multiplicador de servidor** actúa directamente sobre el XP ganado por mob/quest, es equivalente a multiplicar tu XP/hora por ese factor. En un servidor x50, lo que normalmente tomaría 4.200 horas se reduce a **84 horas** (4.200 ÷ 50). Los servidores privados de Lineage 2 o Ragnarok varían entre x1 (oficial) hasta x9999 (servidores 'express' donde llegás al cap en pocas horas). El exponente de la curva no cambia; solo cambia cuán rápido la recorrés."
+    },
+    {
+      "q": "¿Cómo afecta jugar en party versus solo al XP total recibido?",
+      "a": "En la mayoría de los MMORPGs, el XP se **divide entre los miembros de la party** pero con un bonus grupal que compensa parcialmente. En Lineage 2, una party de 9 da un bonus de hasta **+300%** al XP base del mob, por lo que cada miembro puede recibir más XP que solo si la coordinación es buena. En WoW, el bonus de partido es menor (~10–15%), por lo que la eficiencia individual de XP puede bajar. La clave: el bonus grupal debe superar la penalización de división para que la party sea rentable."
     }
   ],
   "howToSteps": [
@@ -158,7 +167,7 @@
       "text": "Revisá las horas de grindeo y los días que te va a tomar."
     }
   ],
-  "explanation": "## La curva exponencial de experiencia\n\nLa mayoría de MMORPG usan una fórmula de tipo:\n\n```\nXP necesaria para nivel N = base × N^exponente\n```\n\nEl **exponente** controla cuán rápido crece el requisito. Valores típicos:\n\n| Juego | Exponente aprox. | Curva |\n|---|---|---|\n| World of Warcraft | 2.0 | Suave |\n| Final Fantasy XIV | 1.8 | Muy suave |\n| Guild Wars 2 | 2.2 | Media |\n| Path of Exile | 2.5 | Pronunciada |\n| Lineage 2 | 2.5-2.8 | Muy pronunciada |\n| Ragnarok | 3.0 | Grindeo extremo |\n\nEl motivo del diseño: los últimos niveles deben requerir más tiempo para que el máximo se sienta como un logro. Con exponente 2.2, **pasar del nivel 99 al 100 toma más tiempo que del 1 al 50 combinado**.\n\n## Ejemplo de curva (base 1.000, exponente 2.2)\n\n| Nivel | XP requerida (nivel solo) | XP acumulada total |\n|---|---|---|\n| 1→2 | 1.000 | 1.000 |\n| 5→6 | 34.000 | 74.000 |\n| 10→11 | 158.000 | 520.000 |\n| 25→26 | 1.680.000 | 14.000.000 |\n| 50→51 | 10.000.000 | 190.000.000 |\n| 75→76 | 30.200.000 | 830.000.000 |\n| 99→100 | 61.900.000 | 2.200.000.000 |\n\n**Observación**: subir del 99 al 100 solo requiere casi el 3% del total de XP acumulada. Pero ese 3% es mayor que toda la XP del 1 al 50 (190 M).\n\n## XP por hora típica según método\n\n| Método | XP/hora relativo | Eficiencia |\n|---|---|---|\n| Quest solo | 1.0x (baseline) | Media |\n| Quest en grupo | 1.3x | Alta |\n| Mob grinding solo | 0.8x | Baja |\n| Mob grinding grupo | 1.5x | Alta |\n| Dungeon party optimizado | 2.0x | Muy alta |\n| Con buff de XP 2x | 2.0x | - |\n| Evento XP doble | 2.0x | - |\n| Boost comprado 3x | 3.0x | Máxima |\n| Power leveling por mid-level | 5.0x | Extrema (costoso) |\n\n## Cómo maximizar XP/hora\n\n1. **Party optimizado**: 3-5 jugadores cubren roles (tank, healer, 2-3 DPS). Mata mobs más rápido que solo.\n2. **Zona densa**: buscá zonas con respawn rápido y mobs de tu nivel o +2.\n3. **Quest chains**: las cadenas de quests dan XP acumulada alta, no quest sueltas.\n4. **Eventos de XP**: algunos juegos tienen 2x XP los fines de semana. Esperá y aprovechá.\n5. **Buffs alimenticios/consumibles**: pueden agregar 10-20% extra.\n6. **Rested bonus**: en WoW, no jugar acumula \"rested\" para XP doble al volver.\n\n## Cuándo conviene power leveling o boost\n\nMatemática simple: si tu hora de trabajo vale más que lo que cobra el servicio / horas ahorradas, vale la pena.\n\nEjemplo: boost de USD 30 que te sube 10 niveles en 10 horas (ahorrando 40 horas de grindeo propio). Si tu hora vale más de USD 0.75 y no disfrutás el grindeo, conviene. Matemáticamente es casi siempre rentable, pero **nada es como el gusto personal** de subir un char solo.\n\n## Riesgos del power leveling\n\n- **Ban permanente**: muchos juegos lo prohíben en ToS. Revisá antes.\n- **Cuenta hackeada**: entregar password a desconocidos es riesgoso. Preferir services que jueguen \"contigo\" online.\n- **No aprendés el juego**: llegas al endgame sin saber rotation, mecánicas o dungeons. Terminás troleado por otros.\n- **Menor disfrute**: llegar al tope sin proceso puede reducir la longevidad del juego para vos.\n\n## Cuándo usar / Errores comunes\n\n- **Farmear en la zona equivocada**: mobs verdes (muy por abajo de tu nivel) dan poca XP. Siempre apuntá a mobs amarillos/rojos (tu nivel o +1/+2).\n- **No hacer quests**: las quests suelen dar 5-10x más XP por minuto que grindeo puro.\n- **Gastar plata en XP boost siendo F2P**: si jugás gratis 2 horas/día, un boost se desperdicia.\n- **Ignorar bonus de descanso**: muchos juegos dan XP doble las primeras horas después de un break. Maximizá eso.\n\nPara otros cálculos de gaming, podés mirar la [calculadora de DPS](/calculadora-dps-damage-per-second) o la [calculadora de FPS ideal según Hz del monitor](/calculadora-fps-ideal-monitor-hz).",
+  "explanation": "## Cómo se calcula\n\nLa curva de experiencia de la mayoría de los MMORPGs sigue un modelo **polinómico-exponencial**: el XP necesario para pasar del nivel `n` al `n+1` crece según una potencia del nivel actual.\n\n```\nXP_para_nivel(n) = XP_base × n^exponente\n\nXP_total = Σ XP_base × n^exponente\n           para n = nivelActual hasta nivelObjetivo - 1\n\nHoras de farmeo = XP_total ÷ XP_por_hora\n\nDías de farmeo  = Horas de farmeo ÷ horas_por_día\n```\n\n**Parámetros clave:**\n- `XP_base`: XP que cuesta subir el primer nivel (nivel 1 → 2). En Ragnarok clásico son ~100 XP; en Lineage 2 Classic puede ser 68.000 XP.\n- `exponente`: define la \"dureza\" de la curva. Un exponente de 1.5 es suave (juegos casuales); 2.5 es estándar hardcore; 3.0 es extremo (algunos servidores privados de L2).\n- `XP_por_hora`: depende del área, build, party y boosts activos. Una party eficiente en L2 puede rendir 2.000.000–10.000.000 XP/h; un jugador solo en zona media, 100.000–500.000 XP/h.\n\n---\n\n## Tabla de referencia\n\n| Juego | Nivel máximo | Exponente aprox. | XP/hora solo (zona media) | XP/hora party top |\n|---|---|---|---|---|\n| Lineage 2 Classic | 85 | 2.5 – 3.0 | 200.000 – 600.000 | 3.000.000 – 8.000.000 |\n| Ragnarok Online | 99 / 175 | 1.8 – 2.2 | 50.000 – 300.000 | 500.000 – 2.000.000 |\n| World of Warcraft (retail) | 80 | 1.5 – 2.0 | 500.000 – 2.000.000 | 2.000.000 – 5.000.000 |\n| Path of Exile (Ruthless) | 100 | 2.8 – 3.0 | 10.000 – 80.000 | 200.000 – 800.000 |\n| Final Fantasy XIV | 100 | 1.8 – 2.2 | 400.000 – 1.500.000 | 1.500.000 – 4.000.000 |\n| MapleStory (post-Reboot) | 300 | 1.6 – 2.4 | 1.000.000 – 50.000.000 | N/A (solo-heavy) |\n\n> Los valores de exponente son aproximaciones inversas ingeniería de las tablas de XP oficiales. Cada servidor puede tener multiplicadores propios (x1, x3, x50, etc.).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Lineage 2 hardcore, del 80 al 90\n\n- **Parámetros**: XP_base = 1.000, exponente = 2.5, XP/hora = 500.000\n- **XP nivel 80→81**: 1.000 × 80^2.5 = 1.000 × 572.756 = **572.756.000 XP**\n- **XP nivel 89→90**: 1.000 × 89^2.5 ≈ 1.000 × 747.668 = **747.668.000 XP**\n- **XP total niveles 80–89**: suma aproximada ≈ **2.100.000.000 XP**\n- **Horas**: 2.100.000.000 ÷ 500.000 = **4.200 horas**\n- **Días a 4 hs/día**: 4.200 ÷ 4 = **1.050 días (~2.9 años)**\n- **Con boost 2×**: 2.100.000.000 ÷ 1.000.000 = 2.100 horas → **525 días**\n\n### Caso 2 — WoW retail, leveling relajado del 1 al 80\n\n- **Parámetros**: XP_base = 500, exponente = 1.8, XP/hora = 800.000\n- **XP total estimada del 1 al 80**: ~180.000.000 XP\n- **Horas**: 180.000.000 ÷ 800.000 = **225 horas**\n- **Días a 2 hs/día**: 225 ÷ 2 = **112 días (~3.7 meses)** — ritmo casual muy accesible.\n\n### Caso 3 — Path of Exile Ruthless, del 95 al 100\n\n- **Parámetros**: XP_base = 800, exponente = 2.9, XP/hora = 50.000\n- **XP niveles 95–99**: suma ≈ **8.500.000.000 XP**\n- **Horas**: 8.500.000.000 ÷ 50.000 = **170.000 horas** ← no es un error\n- **Realidad**: en PoE Ruthless, el nivel 100 es prácticamente simbólico; la comunidad lo considera un \"logro de vida\", no un objetivo funcional.\n\n---\n\n## Errores comunes\n\n1. **Usar XP/hora de zona nueva sin tener el equipo adecuado**: la tasa de XP/hora depende de tu daño y supervivencia. Llegar a una zona de nivel 85+ sin gear correcto puede reducir tu XP/h a la mitad o menos por las muertes y el tiempo muerto.\n\n2. **No descontar el XP de muerte (death penalty)**: juegos como Lineage 2 Classic te quitan entre 1% y 4% del XP del nivel al morir. En niveles altos eso puede representar 500.000.000 XP perdidos por una sola muerte descuidada.\n\n3. **Asumir que el exponente es igual en todos los rangos de nivel**: muchos juegos usan exponentes distintos por tramos (ej. niveles 1–60 más suave, 61–85 más duro). Usar un exponente fijo para todo el rango puede subestimar hasta un 40% el XP total real.\n\n4. **No considerar el tiempo de downtime (recover, buffs, viajes)**: el XP/hora \"bruto\" del tooltip del juego o del log es siempre mayor al real. Los tiempos de viaje al spawn, rebuffeo, comer, esperar que llegue la party, etc., reducen el XP/hora efectivo entre un 15% y 35%.\n\n5. **Ignorar el cap de XP por sesión o por evento**: algunos juegos (como BDO o MapleStory) tienen caps de XP diarios o por sesión durante eventos. Planear sin saberlos te da estimaciones irreales.\n\n6. **Confundir XP de mob con XP de quest**: en WoW o FFXIV, las quests pueden dar el equivalente a horas de farmeo de mobs en un solo entregable. Si calculás solo con XP de grind ignorando quests, sobreestimás el tiempo enormemente.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de Costo de Gaming por Hora](/calculadora-costo-gaming-por-hora) — Sabé cuánto te cuesta cada hora que le metés al juego (hardware, internet, electricidad, suscripción).\n- [Calculadora de Engagement Rate de Instagram](/calculadora-engagement-rate-instagram) — Si streameas tu progreso, medí si tu contenido de leveling engancha a la audiencia.\n- [Calculadora de Tarifa Estimada para Influencers](/calculadora-influencer-tarifa-estimada) — ¿Tu grind se convierte en contenido rentable? Calculá cuánto cobrar.\n- [Calculadora de Decibelios por Distancia de Sonido](/calculadora-decibelios-distancia-sonido) — Para optimizar tu setup de audio de gaming sin molestar a los vecinos a las 3 AM del farmeo.",
   "example": {
     "title": "Ejemplo real: Subir del nivel 80 al 90 en un MMO estilo PoE",
     "steps": [
@@ -176,5 +185,11 @@
     "calculadora-decibelios-distancia-sonido",
     "calculadora-engagement-rate-instagram",
     "calculadora-influencer-tarifa-estimada"
+  ],
+  "sources": [
+    {
+      "name": "Wikipedia ES — Rol multijugador masivo en línea (MMORPG)",
+      "url": "https://es.wikipedia.org/wiki/MMORPG"
+    }
   ]
 }

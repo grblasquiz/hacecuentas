@@ -7,13 +7,14 @@
   "audience": "global",
   "icon": "🖥️",
   "formulaId": "uptime-servidor-nueve-nueves-minutos",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Minutos de downtime permitidos según SLA · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá SLA % y obtené downtime anual al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "El **SLA (Service Level Agreement) de uptime** expresa el porcentaje del tiempo en que un servidor o servicio permanece operativo durante un período dado. La métrica se representa popularmente como \"nueves\": un SLA del 99% tiene dos nueves, 99,9% tiene tres nueves y así sucesivamente. La fórmula base es: **Downtime = (1 − SLA%) × período total en minutos**. Por ejemplo, para 99,99% anual: (1 − 0,9999) × 525.600 min/año = 52,56 minutos de caída permitida. Esta calculadora convierte cualquier porcentaje de SLA en tiempo concreto de downtime anual, mensual y diario, permitiendo comparar ofertas de hosting, cloud y datacenter con datos reales.",
+  "keyTakeaway": "**Downtime permitido = (1 − SLA/100) × minutos del período** — Un SLA de 99,9% tolera hasta **525,6 min/año** (≈8,7 hs); uno de 99,999% solo **5,26 min/año**.",
   "useCases": [
-    "Dimensionar SLA uptime (nueves) antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Evaluar si el SLA ofrecido por un proveedor de hosting o cloud (AWS, GCP, Azure) cubre las necesidades de disponibilidad de una aplicación de e-commerce que no puede tolerar más de 1 hora de caída anual.",
+    "Calcular cuántos minutos de downtime mensual admite un SLA del 99,95% para redactar o auditar un contrato de servicios de datacenter o colocación.",
+    "Determinar el nivel de SLA mínimo requerido para un sistema de facturación electrónica ante AFIP, donde las ventanas de mantenimiento deben planificarse sin superar el umbral contractual.",
+    "Comparar distintos niveles de nueves (99,9% vs 99,99% vs 99,999%) al momento de seleccionar una plataforma de infraestructura para un sistema hospitalario o financiero con criticidad alta.",
+    "Auditar internamente si un servidor on-premise cumplió el SLA comprometido con el área de negocio, convirtiendo los minutos de caída registrados en el mes a porcentaje de disponibilidad."
   ],
   "fields": [
     {
@@ -70,49 +71,45 @@
     ],
     "result": "52.6 min"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nMinutos de downtime permitidos según SLA · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl tiempo de downtime permitido se obtiene a partir del porcentaje de SLA y la cantidad de minutos del período analizado:\n\n```\nDowntime (min) = (1 − SLA / 100) × Minutos_del_período\n\nMinutos por año   = 365 × 24 × 60 = 525.600 min\nMinutos por mes   = 525.600 / 12  =  43.800 min  (mes promedio de 30,44 días)\nMinutos por día   =  24 × 60      =   1.440 min\n\nEjemplo — SLA 99,99%:\n  Anual   = (1 − 0,9999) × 525.600 =  52,56 min\n  Mensual = (1 − 0,9999) ×  43.800 =   4,38 min\n  Diario  = (1 − 0,9999) ×   1.440 =   0,1440 min ≈ 8,64 seg\n```\n\n> **Nota:** la industria usa exactamente 365 días (525.600 min) para cálculos anuales. Algunos contratos SLA usan 30 días fijos por mes (43.200 min); verificá el contrato antes de comparar.\n\n---\n\n## Tabla de referencia\n\n| Nivel (\"nueves\") | SLA %      | Downtime anual    | Downtime mensual | Downtime diario   |\n|-----------------|------------|-------------------|------------------|-------------------|\n| Dos nueves      | 99%        | 5.256 min (87,6 hs) | 438 min (7,3 hs) | 14,4 min          |\n| Dos nueves y medio | 99,5%   | 2.628 min (43,8 hs) | 219 min (3,65 hs)| 7,2 min           |\n| Tres nueves     | 99,9%      | 525,6 min (8,76 hs) | 43,8 min         | 1,44 min (86 seg) |\n| Tres nueves y medio | 99,95% | 262,8 min (4,38 hs) | 21,9 min         | 43,2 seg          |\n| Cuatro nueves   | 99,99%     | 52,56 min           | 4,38 min         | 8,64 seg          |\n| Cuatro nueves y medio | 99,995% | 26,28 min        | 2,19 min         | 4,32 seg          |\n| Cinco nueves    | 99,999%    | 5,256 min (5 min 15 seg) | 26,28 seg   | 0,864 seg         |\n| Seis nueves     | 99,9999%   | 31,5 seg            | 2,63 seg         | 0,0864 seg        |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Hosting compartido (SLA 99,9%)\nUn proveedor de hosting ofrece 99,9% de uptime. Eso equivale a **525,6 minutos (casi 8 horas 46 minutos) de caída anual permitida**. Si tu tienda online genera $200 USD/hora en ventas, ese SLA admite pérdidas potenciales de hasta $1.752 USD/año solo por downtime contractualmente aceptable. Para e-commerce de volumen medio, este nivel suele ser insuficiente.\n\n### Caso 2 — Cloud enterprise (SLA 99,99%)\nAWS EC2 en configuración Multi-AZ garantiza típicamente 99,99%. Eso son **52,56 minutos/año** de caída permitida, distribuidos en ~4,38 min/mes. Es el mínimo recomendado para aplicaciones de negocio críticas. Si en un mes ocurrió 1 corte de 30 minutos, ya se consumió el 685% del downtime mensual permitido, y el proveedor debe emitir crédito según contrato SLA.\n\n### Caso 3 — Sistema crítico hospitalario (SLA 99,999%)\nLos sistemas de historia clínica electrónica o monitoreo de pacientes suelen exigir cinco nueves: **5,26 minutos de downtime anual** (menos de 26 segundos por mes). Alcanzar este nivel requiere redundancia total: múltiples datacenter, failover automático en <1 segundo, UPS + generador, y equipos de guardia 24/7.\n\n---\n\n## Errores comunes\n\n1. **Confundir \"disponibilidad\" con \"tiempo de respuesta\":** Un SLA de uptime del 99,99% garantiza que el servidor *responde*, no que lo hace en <200 ms. El rendimiento (latencia, throughput) se cubre con métricas de SLA distintas (tiempo de respuesta, percentil P99).\n\n2. **Usar 30 días fijos para el cálculo mensual cuando el contrato dice 365 días:** La diferencia importa. Con 30 días fijos, el downtime mensual del 99,9% es 43,2 min; con mes promedio de 30,44 días, es 43,8 min. Pequeña diferencia que puede generar disputas de crédito.\n\n3. **No distinguir entre downtime planificado y no planificado:** Muchos contratos de SLA excluyen las ventanas de mantenimiento programado del cómputo de caída. Antes de reclamar un crédito, revisá si el corte fue notificado con anticipación mínima (generalmente 48–72 hs).\n\n4. **Asumir que cinco nueves es el máximo posible:** Existen SLAs de seis nueves (99,9999%) en industrias como telecomunicaciones o finanzas de alta frecuencia, con downtime anual de apenas 31,5 segundos. Son extremadamente costosos y raramente necesarios fuera de infraestructura crítica de misión.\n\n5. **No contabilizar el downtime acumulado en el período:** Un SLA mensual no \"resetea\" el impacto anual. Si en enero cayó 10 minutos y el SLA anual es 99,99% (52,56 min/año), ya consumiste el 19% del presupuesto de caída anual en el primer mes.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de costo de servidor cloud mensual](/calculadora-costo-cloud-servidor-mensual)\n- [Calculadora de uptime: porcentaje a minutos de caída](/calculadora-uptime-porcentaje-minutos-caida)\n- [Calculadora de autonomía de UPS (tiempo de respaldo)](/calculadora-autonomia-ups-tiempo-respaldo-servidor)\n- [Calculadora de costo de servidor cloud AWS EC2 mensual](/calculadora-costo-servidor-cloud-aws-ec2-mensual)\n",
   "faq": [
     {
-      "q": "¿Cinco nueves?",
-      "a": "5.26 min/año: infra de banca/telco."
+      "q": "¿Qué significa exactamente un SLA de 99,9% y cuántas horas de caída tolera por año?",
+      "a": "Un SLA del 99,9% (tres nueves) significa que el servicio puede estar no disponible hasta el 0,1% del tiempo anual. En minutos concretos: 0,001 × 525.600 = **525,6 minutos, equivalentes a 8 horas y 46 minutos de downtime anual permitido**. En promedio, eso es 43,8 minutos por mes o 1,44 minutos por día. Es el nivel más común en hosting compartido y VPS económicos."
     },
     {
-      "q": "¿SLA vs SLO?",
-      "a": "SLA contractual, SLO objetivo interno."
+      "q": "¿Cuántos minutos tiene un año para este cálculo?",
+      "a": "La convención estándar de la industria usa **365 días × 24 horas × 60 minutos = 525.600 minutos por año**. No se usan años bisiestos (366 días = 527.040 min) salvo que el contrato lo especifique. Para cálculos mensuales, el mes promedio equivale a 525.600 / 12 = 43.800 minutos. Algunos proveedores usan 30 días fijos (43.200 min); revisá tu contrato para evitar sorpresas en los créditos."
     },
     {
-      "q": "¿Error budget?",
-      "a": "1-SLO: tiempo para experimentar sin violar SLA."
+      "q": "¿Desde qué SLA se considera una infraestructura \"de alta disponibilidad\" (HA)?",
+      "a": "En la industria IT, el umbral mínimo para considerar una arquitectura de **alta disponibilidad (High Availability)** es **99,99% (cuatro nueves)**, lo que equivale a 52,56 minutos de downtime anual. Por debajo de ese valor se habla de disponibilidad estándar. Los sistemas de misión crítica (banca, salud, telecomunicaciones) suelen exigir 99,999% o más, con arquitecturas de redundancia activa-activa en múltiples zonas geográficas."
     },
     {
-      "q": "¿Alcanzar?",
-      "a": "Redundancia, multi-región, failover."
+      "q": "¿Qué pasa si el proveedor no cumple el SLA? ¿Tengo derecho a crédito o devolución?",
+      "a": "Sí, pero el mecanismo depende del contrato. La mayoría de los proveedores cloud (AWS, GCP, Azure) ofrecen **créditos de servicio proporcionales al tiempo de caída excedido**, típicamente entre el 10% y el 30% de la factura mensual según el incumplimiento. Estos créditos deben solicitarse activamente dentro de un plazo (usualmente 30 días post-incidente). No suelen implicar devolución de dinero, sino descuento en facturas futuras. Revisá el SLA específico del servicio contratado."
     },
     {
-      "q": "¿Cloud?",
-      "a": "AWS 99.99% con múltiples AZ."
+      "q": "¿Cómo se mide el uptime real de mi servidor para compararlo con el SLA contratado?",
+      "a": "El uptime real se mide con herramientas de monitoreo externo (como UptimeRobot, Pingdom, Datadog o soluciones open source como Uptime Kuma) que realizan chequeos HTTP/TCP desde ubicaciones externas cada 1 a 5 minutos. El **porcentaje de disponibilidad = (minutos UP / total minutos del período) × 100**. Para auditar el SLA, el monitoreo debe ser externo al proveedor; el uptime reportado por el propio proveedor puede excluir ciertos tipos de incidentes."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿El downtime de mantenimiento programado cuenta dentro del SLA?",
+      "a": "Depende del contrato. La mayoría de los SLAs de proveedores cloud **excluyen explícitamente el mantenimiento planificado** si fue notificado con anticipación suficiente (generalmente entre 48 y 72 horas). Sin embargo, en contratos corporativos negociados, el downtime de mantenimiento puede incluirse en el cómputo total. Si el proveedor hace mantenimiento sin aviso previo y el servicio cae, sí debería contabilizarse como downtime no planificado y reclamarse el crédito correspondiente."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Qué nivel de SLA necesito para un sistema de facturación electrónica con AFIP en Argentina?",
+      "a": "AFIP no establece en su normativa un SLA mínimo obligatorio para los contribuyentes, pero la resolución general RG 2291 y el sistema de **Factura Electrónica** contemplan contingencias: si el WebService de AFIP no está disponible, la empresa puede emitir comprobantes en modo contingencia por hasta **24 horas**. Para evitar incumplimientos, se recomienda que la infraestructura propia que se conecta al WebService de AFIP tenga al menos **99,9% de uptime** (525 min/año de margen), con alertas automáticas ante caídas."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Cinco nueves es realmente alcanzable? ¿Qué infraestructura se necesita?",
+      "a": "Sí, es alcanzable pero costoso. Cinco nueves (99,999%) implica **máximo 5,26 minutos de downtime anual**. Para lograrlo se requiere: redundancia activa-activa en al menos dos datacenters geográficamente separados, failover automático con tiempo de conmutación menor a 30 segundos, alimentación eléctrica redundante (UPS + generadores con ATS automático), acuerdos de soporte 24/7 con tiempo de respuesta < 15 minutos, y procesos de deployment sin interrupción (blue-green o canary deployments). Grandes bancos, exchanges de criptomonedas y operadores de telecomunicaciones son los casos más comunes."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
-    },
-    {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "Wikipedia ES — Acuerdo de nivel de servicio (SLA)",
+      "url": "https://es.wikipedia.org/wiki/Acuerdo_de_nivel_de_servicio"
     }
   ],
   "relatedSlugs": [

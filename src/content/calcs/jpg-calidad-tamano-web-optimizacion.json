@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "🖼️",
   "formulaId": "jpg-calidad-tamano-web-optimizacion",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Tamaño aproximado según calidad % JPG · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá megapixels y calidad y obtené tamaño estimado al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "Esta calculadora estimá el tamaño en kilobytes de una imagen JPG según su resolución en megapíxeles y el nivel de calidad de compresión elegido (1–100). La fórmula base parte de que cada píxel ocupa 3 bytes en RGB sin comprimir; el codec JPEG aplica compresión DCT con ratio típico entre 10:1 y 20:1 según la calidad. Para 2 MP al 85% de calidad el archivo resultante ronda los 300 KB: es el punto dulce que equilibra nitidez y peso para la web.",
+  "keyTakeaway": "**Tamaño (KB) ≈ (Megapíxeles × 1 000 000 × 3) ÷ Factor_compresión ÷ 1024**, donde Factor_compresión va de ~3,5 (calidad 95) a ~25 (calidad 50). A 85% de calidad el factor típico es ≈10, dando ~300 KB para una imagen de 2 MP.",
   "useCases": [
-    "Dimensionar JPG calidad vs tamaño antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Optimizar fotos de producto para una tienda online (Mercado Libre o Tienda Nube) donde el límite recomendado es 500 KB por imagen para no penalizar el tiempo de carga.",
+    "Dimensionar el almacenamiento de un sistema de gestión de imóviles: estimar cuántos GB ocuparán 800 fotos de propiedades a 12 MP con calidad 80.",
+    "Decidir la calidad de exportación en Lightroom o Photoshop para que las imágenes de un blog no superen los 150 KB sin pérdida visible de detalle.",
+    "Calcular el ahorro de transferencia al servir imágenes WebP vs JPG en un sitio con 50 000 visitas/mes, partiendo del tamaño JPG estimado como referencia."
   ],
   "fields": [
     {
@@ -56,49 +56,45 @@
     ],
     "result": "~300 KB"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nTamaño aproximado según calidad % JPG · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl tamaño de un archivo JPG depende de dos variables: la **cantidad de píxeles** (resolución) y el **ratio de compresión** que determina el nivel de calidad.\n\n```\nPíxeles_totales = Megapíxeles × 1 000 000\nBytes_sin_comprimir = Píxeles_totales × 3          # 3 canales: R, G, B (8 bits c/u)\nFactor_compresión   = f(calidad)                   # ver tabla abajo\nBytes_JPG           = Bytes_sin_comprimir ÷ Factor_compresión\nTamaño_KB           = Bytes_JPG ÷ 1024\n```\n\nEl **factor de compresión** no es lineal. La siguiente función aproximada es la más usada en implementaciones de referencia (libjpeg):\n\n```\nFactor ≈ 3.0 + (100 - calidad) × 0.22    # válido para calidad entre 40 y 98\n```\n\nEjemplo: calidad = 85 → Factor ≈ 3.0 + 15 × 0.22 = **6.3**\nTamaño (2 MP) = (2 000 000 × 3) ÷ 6.3 ÷ 1024 ≈ **293 KB** ✓\n\n> Nota: este modelo asume una imagen de contenido fotográfico típico (escena natural o retrato). Imágenes con grandes zonas de color plano comprimen más; capturas de pantalla con texto comprimen menos.\n\n---\n\n## Tabla de referencia\n\n| Calidad JPG | Factor compresión aprox. | 2 MP (KB) | 8 MP (KB) | 12 MP (KB) | 24 MP (KB) | Uso recomendado |\n|:-----------:|:------------------------:|:---------:|:---------:|:----------:|:----------:|:----------------|\n| 95          | 3,5                      | 527       | 2 109     | 3 164      | 6 328      | Archivo profesional / retoque |\n| 90          | 5,2                      | 355       | 1 420     | 2 130      | 4 259      | Impresión de alta calidad |\n| 85          | 6,3                      | 293       | 1 172     | 1 758      | 3 516      | **Web de calidad / portafolios** |\n| 80          | 7,6                      | 243       | 972       | 1 459      | 2 917      | Tiendas online, blogs |\n| 75          | 9,0                      | 205       | 820       | 1 230      | 2 461      | Redes sociales |\n| 70          | 10,5                     | 176       | 703       | 1 055      | 2 109      | Thumbnails / previews |\n| 60          | 13,2                     | 140       | 559       | 838        | 1 676      | Banners livianos |\n| 50          | 17,0                     | 108       | 434       | 651        | 1 302      | Mínima calidad aceptable |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Foto de producto para Mercado Libre (12 MP, calidad 80)\nUna foto tomada con un celular de gama media (Motorola G84, 12 MP) exportada al 80%:\n\n```\nTamaño ≈ (12 000 000 × 3) ÷ 7.6 ÷ 1024 ≈ 1 460 KB (≈ 1,4 MB)\n```\n\nEsto supera el límite recomendado de 500 KB. La solución es redimensionar a **3 MP** (2048 × 1536 px) antes de exportar:\n\n```\n(3 000 000 × 3) ÷ 7.6 ÷ 1024 ≈ 365 KB ✓\n```\n\n### Caso 2 — Galería de inmuebles (800 fotos a 8 MP, calidad 85)\nEstimación de almacenamiento:\n\n```\n800 fotos × 1 172 KB = 937 600 KB ≈ 916 MB ≈ 0,9 GB\n```\n\nBajando a calidad 75 y redimensionando a 4 MP se ahorra un 60%:\n\n```\n800 × (4 000 000 × 3 ÷ 9.0 ÷ 1024) = 800 × 122 KB ≈ 97 MB\n```\n\n### Caso 3 — Blog de viajes (1 foto hero a 2 MP, calidad 85)\nResultado de referencia de la calculadora: **~300 KB**. Google PageSpeed recomienda ≤200 KB para imágenes above-the-fold; bajar a calidad 75 (≈205 KB) o usar WebP (ahorro adicional de 25–35%) da cumplimiento.\n\n---\n\n## Errores comunes\n\n1. **Confundir \"calidad 100\" con \"sin pérdida\"**: JPG es siempre con pérdida (lossy). Calidad 100 solo reduce al mínimo los artefactos DCT, pero el archivo no es idéntico al original. Para sin pérdida, usá PNG o WebP lossless.\n\n2. **Estimar tamaño solo por resolución**: dos fotos de 12 MP pueden pesar 800 KB y 3 MB según el contenido. Una imagen de cielo nublado comprime mucho más que una con follaje denso. La tabla de referencia usa un factor promedio fotográfico.\n\n3. **Olvidar los metadatos EXIF**: los datos EXIF (GPS, cámara, lente, fecha) pueden sumar entre 20 KB y 80 KB al archivo. Muchas herramientas los conservan y el peso real supera la estimación. Usá `exiftool -all= imagen.jpg` para eliminarlos antes de subir a la web.\n\n4. **Recomprimir un JPG ya comprimido**: cada re-exportación a JPG acumula pérdida. Si ya tenés un JPG al 80% y lo volvés a exportar al 80%, la pérdida es acumulativa, no idempotente. Siempre trabajá desde el RAW o el TIFF original.\n\n5. **Ignorar el subsampling de crominancia**: a calidades ≤75 la mayoría de los encoders activan subsampling 4:2:0 (reducen resolución de color), lo que genera bordes de colores difuminados visible en texto sobre fondos de color. Para capturas con texto, no bajés de calidad 85.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora tamaño de imagen en píxeles y megapíxeles](/calculadora-tamano-imagen-pixeles-megapixeles) — convertí resolución a MP y entendé la relación con el peso.\n- [Calculadora video bitrate y tamaño de archivo](/calculadora-video-bitrate-tamano-archivo) — el mismo principio de compresión aplicado a video H.264/H.265.\n- [Calculadora tamaño de repositorio Git](/calculadora-tamano-repo-git-commits-branches) — estimá cuánto pesará tu repo si incluís imágenes en el historial.\n- [Calculadora tamaño de monitor y distancia ideal](/calculadora-monitor-tamano-distancia-ideal) — calculá a qué distancia se ve tu imagen JPG sin pixelación.\n",
   "faq": [
     {
-      "q": "¿Calidad 85?",
-      "a": "Sweet spot: casi indistinguible, 50% menos que 100."
+      "q": "¿Cuál es la mejor calidad JPG para subir imágenes a la web?",
+      "a": "El rango **80–85%** es el estándar de la industria: conserva la mayor parte del detalle perceptible (la pérdida es casi invisible al ojo humano) y reduce el peso entre un 40% y 60% respecto a calidad 95. Google PageSpeed Insights recomienda que las imágenes no superen los 200 KB para recursos above-the-fold. Para una foto de 2 MP, calidad 80 da ~243 KB, que cumple ese criterio."
     },
     {
-      "q": "¿WebP?",
-      "a": "~25-35% menor que JPG similar calidad."
+      "q": "¿Por qué mi imagen JPG pesa más de lo que calcula la herramienta?",
+      "a": "Hay tres causas principales: (1) **metadatos EXIF** que pueden sumar hasta 80 KB (GPS, modelo de cámara, perfil ICC de color); (2) **contenido de alta frecuencia** como follaje, telas o ruido ISO que el codec comprime peor que el promedio fotográfico; (3) **thumbnail embebido** que algunos programas insertan automáticamente. Eliminá EXIF con herramientas como ExifTool y la diferencia puede ser de hasta un 15%."
     },
     {
-      "q": "¿AVIF?",
-      "a": "Mejor aún, soporte 90%+ navegadores 2024."
+      "q": "¿JPG o WebP conviene más para una tienda online en 2026?",
+      "a": "WebP ofrece una reducción de tamaño del **25–35% con la misma calidad visual** que JPG, según datos de Google. En 2026 el soporte de WebP en navegadores es universal (Chrome, Firefox, Safari, Edge). Sin embargo, JPG sigue siendo necesario como fallback para dispositivos viejos y para imágenes destinadas a impresión. La estrategia recomendada es servir WebP con `<picture>` y JPG como fallback."
     },
     {
-      "q": "¿PNG?",
-      "a": "Sin pérdida, pesado; solo para gráficos/transparencia."
+      "q": "¿Qué son los 'artefactos de compresión' y a partir de qué calidad aparecen?",
+      "a": "Son distorsiones visuales causadas por el algoritmo DCT (Transformada Discreta del Coseno) de JPEG: se manifiestan como bloques de 8×8 píxeles visibles, bordes dentados o manchas de color en zonas de gradiente suave. Se vuelven perceptibles a partir de **calidad 70 o menos** en imágenes con detalles finos. En imágenes con texto o gráficos lineales, los artefactos son visibles incluso a calidad 80; en esos casos preferí PNG."
     },
     {
-      "q": "¿Progressive?",
-      "a": "Carga en pases, mejora UX percibida."
+      "q": "¿Cómo calculo cuántas fotos JPG entran en 1 GB de almacenamiento?",
+      "a": "Dividí la capacidad por el tamaño estimado por foto. Ejemplo: fotos de 8 MP al 85% ≈ 1 172 KB cada una. **1 GB ÷ 1 172 KB ≈ 873 fotos**. Para 12 MP al 80% (≈1 459 KB): 1 073 741 824 bytes ÷ 1 494 016 bytes ≈ **718 fotos**. La calculadora de esta página hace ese cálculo por vos ingresando los MP y la calidad deseada."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Qué diferencia hay entre la calidad JPG en Photoshop y la escala 1–100?",
+      "a": "Photoshop usa una escala de **0 a 12** (o 0–100 en 'Exportar para Web') que se mapea de forma no lineal a la escala 0–100 de libjpeg. Photoshop 'Calidad 10' ≈ escala 85–90 de libjpeg. Lightroom exporta directamente en escala 0–100 compatible con libjpeg. GIMP y la mayoría de herramientas CLI usan la escala 0–100. Al comparar tamaños, es importante saber qué escala usa tu programa."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Por qué una captura de pantalla JPG pesa más que una foto de paisaje al mismo megapixelaje?",
+      "a": "JPEG está optimizado para **imágenes fotográficas naturales** con transiciones suaves de color. Una captura de pantalla tiene bordes nítidos, texto con alto contraste y colores planos que generan muchas frecuencias altas en la transformada DCT, obligando al codec a guardar más datos. Una captura de 2 MP al 85% puede pesar el doble que una foto equivalente. Para capturas de pantalla, PNG comprime mejor sin pérdida."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué impacto tiene el tamaño de las imágenes JPG en el SEO de un sitio?",
+      "a": "Google usa el **Core Web Vitals** (en particular LCP — Largest Contentful Paint) como factor de ranking desde 2021. Imágenes pesadas son la causa #1 de LCP lento. Una imagen hero de 3 MB puede llevar el LCP a más de 4 segundos, zona 'Pobre', mientras que la misma imagen optimizada a 200–300 KB puede dar un LCP de 1,5–2 s, zona 'Buena'. Google Search Console reporta estos valores de forma gratuita para cualquier sitio."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
-    },
-    {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "Wikipedia ES — JPEG (algoritmo de compresión, DCT y niveles de calidad)",
+      "url": "https://es.wikipedia.org/wiki/JPEG"
     }
   ],
   "relatedSlugs": [

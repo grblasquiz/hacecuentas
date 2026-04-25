@@ -16,14 +16,14 @@
     "desglose iva factura",
     "base imponible iva"
   ],
-  "intro": "El **IVA en España** tiene tres tipos vigentes: **21%** general (bienes y servicios ordinarios), **10%** reducido (alimentación, transporte, hostelería, entradas a espectáculos) y **4%** superreducido (pan, leche, huevos, frutas, verduras, libros, medicamentos). Esta calculadora permite **sumar IVA** a una base imponible o **extraerlo** de un precio con IVA incluido, con desglose completo.",
-  "keyTakeaway": "IVA general **21%**, reducido **10%** (comida/hostelería), superreducido **4%** (productos básicos). La base imponible es el precio sin IVA.",
+  "intro": "La calculadora de IVA de España te permite calcular el Impuesto sobre el Valor Añadido en sus tres tipos vigentes: el tipo general del 21 %, el tipo reducido del 10 % y el tipo superreducido del 4 %. Puedes partir de una base imponible (precio sin IVA) para obtener el total a pagar, o bien desgravar el IVA incluido en un precio final para conocer la base neta. Regulado por la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido (LIVA), es el principal impuesto indirecto del sistema tributario español y se liquida trimestralmente ante la Agencia Tributaria (AEAT) mediante el modelo 303.",
+  "keyTakeaway": "**Total con IVA = Base imponible × (1 + tipo/100)** — Ejemplo real: base €100 con tipo general → €100 × 1,21 = **€121**. Para desgravar: **Base = Precio final ÷ (1 + tipo/100)** → €121 ÷ 1,21 = **€100**.",
   "useCases": [
-    "Emites una factura como autónomo: calculas el IVA 21% a sumar al precio neto.",
-    "Compras con ticket de IVA incluido: desglosas cuánto es base y cuánto IVA.",
-    "Gestionas un comercio con productos de 21%, 10% y 4%: desgloses por tipo.",
-    "Hoteles y restaurantes: el IVA aplicable es el 10% reducido (no 21%).",
-    "Para declaración trimestral (modelo 303): total IVA repercutido menos soportado."
+    "Autónomo que emite una factura de servicios de consultoría (tipo general 21 %) y necesita desglosar base imponible, cuota de IVA y total a cobrar al cliente.",
+    "Consumidor particular que compra un electrodoméstico con precio final de €363 y quiere saber cuánto IVA está pagando realmente para comparar ofertas entre tiendas.",
+    "Empresario de hostelería que adquiere alimentos frescos (tipo superreducido 4 %) y productos de limpieza (tipo general 21 %) y debe calcular el IVA soportado deducible antes de presentar el modelo 303.",
+    "Promotora inmobiliaria que vende viviendas de protección oficial (VPO) sujetas al tipo reducido del 10 % y necesita calcular la cuota de IVA repercutida en cada escritura de compraventa.",
+    "Gestor contable que recibe una factura extranjera sin IVA y debe calcular el importe de la operación asimilada a efectos de autorepercusión en el régimen de inversión del sujeto pasivo."
   ],
   "fields": [
     {
@@ -38,9 +38,18 @@
       "label": "Tipo de IVA",
       "type": "select",
       "options": [
-        { "value": "21", "label": "21% general" },
-        { "value": "10", "label": "10% reducido" },
-        { "value": "4", "label": "4% superreducido" }
+        {
+          "value": "21",
+          "label": "21% general"
+        },
+        {
+          "value": "10",
+          "label": "10% reducido"
+        },
+        {
+          "value": "4",
+          "label": "4% superreducido"
+        }
       ]
     },
     {
@@ -48,37 +57,129 @@
       "label": "Cálculo",
       "type": "select",
       "options": [
-        { "value": "sumar", "label": "Sumar IVA al neto" },
-        { "value": "extraer", "label": "Extraer IVA del total" }
+        {
+          "value": "sumar",
+          "label": "Sumar IVA al neto"
+        },
+        {
+          "value": "extraer",
+          "label": "Extraer IVA del total"
+        }
       ]
     }
   ],
   "outputs": [
-    { "key": "base", "label": "Base imponible", "format": "currency-eur" },
-    { "key": "iva", "label": "IVA", "format": "currency-eur" },
-    { "key": "total", "label": "Total con IVA", "format": "currency-eur" },
-    { "key": "resumen", "label": "Resumen", "format": "text" }
+    {
+      "key": "base",
+      "label": "Base imponible",
+      "format": "currency-eur"
+    },
+    {
+      "key": "iva",
+      "label": "IVA",
+      "format": "currency-eur"
+    },
+    {
+      "key": "total",
+      "label": "Total con IVA",
+      "format": "currency-eur"
+    },
+    {
+      "key": "resumen",
+      "label": "Resumen",
+      "format": "text"
+    }
   ],
   "example": {
     "inputs": "€100 sumar IVA 21%",
     "result": "Base €100 + IVA €21 = Total €121"
   },
   "faqs": [
-    { "q": "¿Cuándo aplica el 10%?", "a": "Hostelería, transporte de viajeros, alimentos no básicos, entradas a cine/teatro, servicios funerarios, plantas ornamentales." },
-    { "q": "¿Y el 4%?", "a": "Pan, harina, leche, queso, huevos, frutas, verduras, legumbres, libros, periódicos, medicamentos, vehículos para minusválidos." },
-    { "q": "¿IVA cero?", "a": "Existió temporalmente en 2023-2024 sobre ciertos alimentos básicos. En 2026 no aplica salvo excepciones puntuales." },
-    { "q": "¿Recargo de equivalencia?", "a": "Régimen especial para minoristas: el proveedor le cobra IVA + recargo (5.2%, 1.4% o 0.5% según tipo) y el minorista no presenta 303." },
-    { "q": "¿IVA intracomunitario?", "a": "Operaciones B2B UE: factura sin IVA (inversión del sujeto pasivo). Requiere VIES activo." },
-    { "q": "¿Autónomo a cliente particular?", "a": "Factura con IVA 21% (o el tipo que corresponda)." },
-    { "q": "¿Canarias, Ceuta, Melilla?", "a": "No aplica IVA: en Canarias rige IGIC (7% general), en Ceuta/Melilla IPSI." }
+    {
+      "q": "¿Cuándo aplica el 10%?",
+      "a": "Hostelería, transporte de viajeros, alimentos no básicos, entradas a cine/teatro, servicios funerarios, plantas ornamentales."
+    },
+    {
+      "q": "¿Y el 4%?",
+      "a": "Pan, harina, leche, queso, huevos, frutas, verduras, legumbres, libros, periódicos, medicamentos, vehículos para minusválidos."
+    },
+    {
+      "q": "¿IVA cero?",
+      "a": "Existió temporalmente en 2023-2024 sobre ciertos alimentos básicos. En 2026 no aplica salvo excepciones puntuales."
+    },
+    {
+      "q": "¿Recargo de equivalencia?",
+      "a": "Régimen especial para minoristas: el proveedor le cobra IVA + recargo (5.2%, 1.4% o 0.5% según tipo) y el minorista no presenta 303."
+    },
+    {
+      "q": "¿IVA intracomunitario?",
+      "a": "Operaciones B2B UE: factura sin IVA (inversión del sujeto pasivo). Requiere VIES activo."
+    },
+    {
+      "q": "¿Autónomo a cliente particular?",
+      "a": "Factura con IVA 21% (o el tipo que corresponda)."
+    },
+    {
+      "q": "¿Canarias, Ceuta, Melilla?",
+      "a": "No aplica IVA: en Canarias rige IGIC (7% general), en Ceuta/Melilla IPSI."
+    }
   ],
   "sources": [
-    { "label": "Agencia Tributaria - Tipos de IVA", "url": "https://sede.agenciatributaria.gob.es" },
-    { "label": "Ley 37/1992 del IVA", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" }
+    {
+      "name": "AEAT — Ley 37/1992 del IVA (texto consolidado)",
+      "url": "https://www.agenciatributaria.es/AEAT.internet/Inicio/Ayuda/Modelos__Procedimientos_y_Servicios/Ayuda_modelo_303/Informacion_general_y_cumplimentacion/Informacion_general_y_cumplimentacion.shtml"
+    },
+    {
+      "name": "AEAT — Tipos impositivos del IVA en España",
+      "url": "https://www.agenciatributaria.es/AEAT.internet/Inicio/Ayuda/Modelos__Procedimientos_y_Servicios/Ayuda_P_G01/Informacion_general/El_IVA__tipos_impositivos.shtml"
+    },
+    {
+      "name": "BOE — Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740"
+    },
+    {
+      "name": "Wikipedia ES — Impuesto sobre el Valor Añadido (España)",
+      "url": "https://es.wikipedia.org/wiki/Impuesto_sobre_el_valor_a%C3%B1adido_(Espa%C3%B1a)"
+    }
   ],
   "dataUpdate": {
     "frequency": "yearly",
     "lastUpdated": "2026-04-18",
     "updateType": "manual"
-  }
+  },
+  "explanation": "## Cómo se calcula\n\nEl IVA es un impuesto proporcional que se aplica sobre la **base imponible** (precio neto del bien o servicio). Existen tres operaciones habituales:\n\n```\n# 1. Añadir IVA a una base imponible\nTotal con IVA = Base imponible × (1 + tipo_IVA / 100)\nCuota IVA     = Base imponible × (tipo_IVA / 100)\n\n# 2. Desgravar (discriminar) el IVA incluido en un precio final\nBase imponible = Precio final ÷ (1 + tipo_IVA / 100)\nCuota IVA      = Precio final − Base imponible\n\n# Ejemplo con tipo general (21 %):\nBase = 100 €  →  Cuota = 100 × 0,21 = 21 €  →  Total = 121 €\nPrecio final 121 €  →  Base = 121 ÷ 1,21 = 100 €  →  Cuota = 121 − 100 = 21 €\n```\n\n---\n\n## Tabla de referencia\n\nLos tipos de IVA en España están fijados en el artículo 90 y 91 de la Ley 37/1992 (LIVA). A continuación, los bienes y servicios más habituales clasificados por tipo:\n\n| Tipo | Porcentaje | Ejemplos de bienes y servicios |\n|---|---|---|\n| **General** | 21 % | Electrónica, ropa, vehículos, servicios profesionales (consultoría, publicidad, abogacía), telecomunicaciones, alcohol, tabaco |\n| **Reducido** | 10 % | Alimentos elaborados, hostelería y restauración, transporte de viajeros, viviendas nuevas de uso habitual (no VPO), entradas a espectáculos, flores y plantas ornamentales |\n| **Superreducido** | 4 % | Pan, harinas panificables, leche, quesos, huevos, frutas y verduras frescas, libros y periódicos impresos, medicamentos para uso humano, viviendas de protección oficial (VPO) |\n| **Exento** | 0 % | Servicios médicos y sanitarios, educación reglada, servicios financieros y seguros, operaciones intracomunitarias sujetas a reglas especiales |\n\n> **Nota:** Tras la Ley 7/2024 (Presupuestos y medidas fiscales), el tipo del aceite de oliva recuperó el 10 % en 2025 tras el período de tipos reducidos de emergencia por inflación. Consulta siempre la AEAT para novedades vigentes en 2026.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Factura de servicios profesionales (21 %)\nUn diseñador gráfico autónomo factura un proyecto por €2.500 netos:\n- **Base imponible:** €2.500,00\n- **Cuota IVA (21 %):** €2.500 × 0,21 = **€525,00**\n- **Total factura:** €2.500 + €525 = **€3.025,00**\n\nEn la declaración trimestral (modelo 303), el autónomo ingresará €525 a la AEAT, restando el IVA soportado en sus compras.\n\n### Caso 2 — Compra de vivienda nueva (10 %)\nUna familia adquiere un piso de obra nueva por un precio total de €220.000 (IVA incluido):\n- **Base imponible:** €220.000 ÷ 1,10 = **€200.000,00**\n- **Cuota IVA (10 %):** €220.000 − €200.000 = **€20.000,00**\n\nSi la vivienda fuera VPO, el tipo aplicable sería el 4 %, lo que reduciría la cuota a €8.461,54 sobre la misma base.\n\n### Caso 3 — Ticket de supermercado mixto (4 % y 21 %)\nUn ticket incluye leche (€1,20 con IVA al 4 %) y detergente (€3,63 con IVA al 21 %):\n- **Leche:** Base = €1,20 ÷ 1,04 = €1,154 → Cuota = €0,046\n- **Detergente:** Base = €3,63 ÷ 1,21 = €3,00 → Cuota = €0,63\n- **Total IVA pagado:** €0,046 + €0,63 = **€0,676**\n\n---\n\n## Errores comunes\n\n1. **Aplicar el porcentaje directamente sobre el precio final para desgravar.** Error frecuente: calcular el 21 % de €121 da €25,41, no €21. La fórmula correcta es dividir entre (1 + tipo), nunca multiplicar el precio final por el tipo.\n\n2. **Confundir el tipo aplicable al bien o servicio.** Un servicio de catering puede llevar al 10 %, pero si se factura como «asesoramiento nutricional» podría discutirse el tipo. La clasificación incorrecta es una de las causas más comunes de actas de inspección de la AEAT.\n\n3. **No aplicar el recargo de equivalencia en comercio minorista.** Los comerciantes minoristas en régimen especial de recargo de equivalencia deben añadir al tipo de IVA el recargo correspondiente: 5,2 % adicional al 21 %, 1,4 % al 10 % y 0,5 % al 4 %.\n\n4. **Deducir el IVA de gastos no afectos a la actividad.** El IVA soportado en bienes o servicios de uso personal no es deducible. Para vehículos de empresa, la presunción de afectación parcial es del 50 % salvo prueba en contrario (art. 95 LIVA).\n\n5. **Olvidar que las exportaciones y entregas intracomunitarias están exentas con derecho a deducción (tipo 0 %).** Facturar con IVA a un cliente europeo con NIF intracomunitario válido es un error que obliga a rectificar la factura mediante factura rectificativa.\n\n---\n\n## Calculadoras relacionadas\n\nAunque no hay slugs relacionados configurados en esta calculadora, en Hacé Cuentas encontrarás herramientas complementarias para gestionar tu fiscalidad:\n\n- Calculadora de IRPF para autónomos\n- Calculadora de retención en factura (modelo 111)\n- Calculadora de recargo de equivalencia",
+  "faq": [
+    {
+      "q": "¿Cuáles son los tipos de IVA vigentes en España en 2026?",
+      "a": "En España hay tres tipos de IVA regulados en la Ley 37/1992 (LIVA): el **tipo general del 21 %**, que se aplica a la mayoría de bienes y servicios; el **tipo reducido del 10 %**, para alimentos elaborados, hostelería y viviendas nuevas; y el **tipo superreducido del 4 %**, para productos de primera necesidad como pan, leche, frutas, verduras, libros impresos y medicamentos. Además, ciertas operaciones (sanidad, educación, exportaciones) están **exentas** de IVA, lo que no es lo mismo que tipo 0 %."
+    },
+    {
+      "q": "¿Cómo se calcula el IVA incluido en un precio cuando ya está incorporado al total?",
+      "a": "Para extraer el IVA de un precio que ya lo incluye se usa la fórmula: **Base imponible = Precio final ÷ (1 + tipo/100)**. Por ejemplo, un artículo que cuesta €242 con IVA al 21 %: Base = €242 ÷ 1,21 = **€200**; Cuota IVA = €242 − €200 = **€42**. El error más habitual es calcular el 21 % sobre €242 directamente, lo que daría un resultado incorrecto de €50,82."
+    },
+    {
+      "q": "¿Qué diferencia hay entre IVA exento e IVA al 0 %?",
+      "a": "Son conceptos distintos con consecuencias muy relevantes. Una **exención** (art. 20 LIVA) significa que no se repercute IVA al cliente, pero tampoco se puede deducir el IVA soportado en los costes de la actividad. El **tipo 0 %** (que en España técnicamente no existe como tipo general, aunque sí hubo aplicaciones temporales durante la crisis inflacionaria de 2022-2024) permite no cobrar IVA al cliente manteniendo la deducción del IVA soportado. Las exportaciones y entregas intracomunitarias son operaciones **exentas con derecho a deducción**, un caso especial."
+    },
+    {
+      "q": "¿Cuándo hay que presentar el IVA ante la AEAT y con qué modelos?",
+      "a": "La mayoría de autónomos y pymes presentan el **modelo 303** trimestralmente: en abril (1T), julio (2T), octubre (3T) y enero del año siguiente (4T). Las grandes empresas (facturación >6.010.121,04 €) están obligadas a presentarlo mensualmente mediante el **SII (Suministro Inmediato de Información)**. Además, existe el modelo 390, que es el resumen anual de IVA, y el modelo 349 para operaciones intracomunitarias. Los plazos exactos los publica la AEAT en su calendario del contribuyente."
+    },
+    {
+      "q": "¿Un autónomo en módulos (estimación objetiva) tiene que declarar IVA?",
+      "a": "Sí. El régimen de módulos o estimación objetiva del IRPF es independiente del régimen de IVA. La mayoría de autónomos en módulos tributan en el **régimen simplificado de IVA**, en el que la cuota a ingresar se calcula mediante índices y módulos fijados por la AEAT, no por las facturas reales. Sin embargo, determinadas actividades en módulos pueden acogerse al **recargo de equivalencia** si son comerciantes minoristas. La elección del régimen de IVA se realiza en el modelo 036 o 037 al darse de alta en Hacienda."
+    },
+    {
+      "q": "¿Qué es el recargo de equivalencia y cuándo se aplica?",
+      "a": "El **recargo de equivalencia** es un régimen especial de IVA obligatorio para comerciantes minoristas personas físicas que no transforman los productos que venden. El proveedor les factura con un recargo adicional sobre el tipo de IVA correspondiente: **5,2 % adicional** al tipo general (21 % + 5,2 % = 26,2 %); **1,4 %** al tipo reducido (10 % + 1,4 %); y **0,5 %** al superreducido (4 % + 0,5 %). A cambio, estos comerciantes no presentan declaraciones de IVA ni deducen el IVA soportado. Está regulado en los artículos 148-163 de la LIVA."
+    },
+    {
+      "q": "¿Las Islas Canarias, Ceuta y Melilla aplican el mismo IVA que la Península?",
+      "a": "No. Las **Islas Canarias** tienen su propio impuesto indirecto: el **IGIC (Impuesto General Indirecto Canario)**, con un tipo general del 7 % y tipos reducidos del 0 %, 3 % y 9,5 %, regulado por la Ley 20/1991. **Ceuta y Melilla** aplican el **IPSI (Impuesto sobre la Producción, los Servicios y la Importación)**, con tipos que van del 0,5 % al 10 % según el bien o servicio. Por tanto, una empresa peninsular que vende a Canarias realiza una exportación a efectos de IVA y no repercute IVA peninsular."
+    },
+    {
+      "q": "¿Puede un particular recuperar el IVA de una compra en España?",
+      "a": "Los particulares residentes en la UE no pueden recuperar el IVA de sus compras en España, ya que ese impuesto es el destino final del consumo. Sin embargo, los **viajeros residentes fuera de la UE** pueden solicitar la devolución del IVA en compras superiores a **90,15 €** en un mismo establecimiento mediante el sistema Tax Free (formulario 030.1), validado en la aduana antes de abandonar el territorio comunitario. Para empresas y autónomos de otros países de la UE, la devolución se solicita a través del **modelo 360** de la AEAT."
+    }
+  ]
 }

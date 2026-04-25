@@ -9,14 +9,15 @@
   "formulaId": "uptime-servidor-nueve-nueves-minutos",
   "audience": "global",
   "relatedSlugs": [],
-  "intro": "Technical calculations in IT and web infrastructure are essential: latency, bandwidth, uptime SLA, cloud costs, algorithm complexity. Accurate initial planning prevents overprovisioning. Calculate allowed downtime minutes by SLA percentages. Free and instant. Values updated for 2026, reviewed regularly to keep you current.",
-  "keyTakeaway": "Formula: **Downtime (minutes/year) = (1 − SLA%/100) × 525,600**. Directly apply with your SLA percentage. See how many minutes of downtime are allowed per year.",
+  "intro": "An SLA (Service Level Agreement) uptime calculator converts a percentage uptime commitment—such as 99.9% or 99.999%—into concrete allowed downtime in minutes and seconds per year, month, week, and day. The core formula is: **Allowed Downtime = (1 − Uptime%) × Period Duration**. For example, 99.99% uptime over a 365-day year leaves just 52.6 minutes of tolerated outage annually. IT teams, cloud architects, and procurement managers use this tool to evaluate vendor SLAs, design redundancy targets, calculate penalty triggers, and benchmark infrastructure reliability against industry norms like AWS, Google Cloud, and Azure.",
+  "keyTakeaway": "**Allowed Downtime = (1 − SLA%) × 525,600 min/year** — at 99.9% that's 525.6 min/yr; at 99.999% (\"five nines\") only 5.26 min/yr.",
   "useCases": [
-    "Infrastructure planning and uptime calculations",
-    "Students and IT professionals learning SLA concepts",
-    "Validate theoretical results before implementation",
-    "Teaching and learning SLA uptime basics",
-    "Quick reference for project planning"
+    "Evaluating a cloud vendor's SLA (e.g., AWS EC2 99.99%) to determine if 52.6 min/year of outage is acceptable for a payment processing system that loses $15,000/min during downtime.",
+    "Designing a high-availability architecture and deciding whether to invest in a warm standby (targeting 99.95%) vs. an active-active multi-region setup (targeting 99.999%).",
+    "Calculating SLA penalty windows in a contract negotiation: confirming that a 99.9% SLA allows up to 8.77 hours/year before breach credits are triggered.",
+    "Comparing tiered hosting plans (shared at 99.5% vs. dedicated at 99.99%) to quantify the difference in annual allowed downtime: 43.8 hours vs. 52.6 minutes.",
+    "Benchmarking a company's historical uptime logs against contracted SLA levels to determine if the provider owes service credits for the past quarter.",
+    "Setting internal OKRs for a DevOps team: converting a reliability target of 99.95% into a concrete monthly budget of 21.9 minutes of allowed incidents."
   ],
   "fields": [
     {
@@ -73,53 +74,57 @@
     ],
     "result": "52.6 minutes"
   },
-  "explanation": "Technical calculators for IT infrastructure: latency, storage, uptime SLA, cloud costs. Decisions that scale.\n\n## How It's Calculated\n\nAllowed downtime minutes by SLA percentage. This calculator applies the standard formula, checking ranges and alerting if values seem unusual.\n\n## Final Notes\n\nThis is a reference tool. For critical decisions (financial, medical, legal), consult a qualified professional. Values are updated for 2026 and reviewed regularly.",
+  "explanation": "## How It's Calculated\n\nThe fundamental formula uses the complement of the uptime percentage applied to the total minutes in a given period:\n\n```\nAllowed Downtime = (1 − Uptime_Fraction) × Period_Minutes\n\nWhere:\n  Uptime_Fraction = SLA% / 100\n  Year  = 365 days × 24 h × 60 min = 525,600 minutes\n  Month = 525,600 / 12             =  43,800 minutes  (30.44-day average)\n  Week  = 7 × 24 × 60             =  10,080 minutes\n  Day   = 24 × 60                 =   1,440 minutes\n\nExample — 99.99% SLA:\n  Annual  = (1 − 0.9999) × 525,600 = 0.0001 × 525,600 = 52.56 min\n  Monthly = (1 − 0.9999) × 43,800  = 4.38 min\n  Daily   = (1 − 0.9999) × 1,440   = 0.144 min ≈ 8.6 seconds\n```\n\nNote: some providers use a 30-day month (43,200 min) for contractual calculations. Always check the SLA document's definition of \"month.\"\n\n---\n\n## Reference Table\n\n| SLA Level | \"Nines\" | Annual Downtime | Monthly Downtime | Weekly Downtime | Daily Downtime |\n|-----------|---------|-----------------|------------------|-----------------|----------------|\n| 90%       | One nine | 36.5 days       | 3.05 days        | 16.8 hours      | 2.4 hours      |\n| 95%       | —        | 18.25 days      | 1.52 days        | 8.4 hours       | 1.2 hours      |\n| 99%       | Two nines | 3.65 days      | 7.26 hours       | 1.68 hours      | 14.4 min       |\n| 99.5%     | —        | 1.83 days       | 3.65 hours       | 50.4 min        | 7.2 min        |\n| 99.9%     | Three nines | 8.77 hours  | 43.8 min         | 10.08 min       | 1.44 min       |\n| 99.95%    | —        | 4.38 hours      | 21.9 min         | 5.04 min        | 43.2 sec       |\n| 99.99%    | Four nines | 52.6 min     | 4.38 min         | 1.01 min        | 8.6 sec        |\n| 99.999%   | Five nines | 5.26 min     | 26.3 sec         | 6.05 sec        | 0.86 sec       |\n| 99.9999%  | Six nines | 31.5 sec      | 2.63 sec         | 0.6 sec         | 0.086 sec      |\n\n---\n\n## Typical Use Cases with Real Numbers\n\n**Case 1 — E-commerce checkout (99.99% SLA)**\nAn online retailer processes $8,000/minute in sales. Their CDN provider offers a 99.99% SLA. Annual allowed downtime = 52.6 minutes. Worst-case annual revenue exposure = 52.6 × $8,000 = **$420,800**. The team decides to add a failover CDN to effectively achieve 99.999% combined uptime.\n\n**Case 2 — Hospital EMR system (99.9% SLA)**\nA regional hospital's electronic medical records vendor guarantees 99.9% uptime. That allows 8.77 hours/year of downtime. Regulatory guidance from HHS recommends contingency plans for any outage exceeding 8 hours—meaning this SLA sits right at a compliance boundary and likely requires a manual downtime procedure policy.\n\n**Case 3 — SaaS startup evaluating tiers**\nA startup chooses between a $200/mo shared plan (99.5% SLA = 1.83 days/year downtime) and a $800/mo dedicated plan (99.99% SLA = 52.6 min/year). Their app generates $500/hour in revenue. At 99.5%, expected annual revenue loss = 43.8 h × $500 = $21,900—far exceeding the $7,200/year price difference for the upgrade.\n\n---\n\n## Common Errors\n\n1. **Confusing uptime % with availability %** — Some vendors quote \"network uptime\" (physical link up) separately from \"service availability\" (requests served successfully). A server can be \"up\" while a service is unreachable. Always clarify which metric the SLA covers.\n\n2. **Using a 30-day month instead of the calendar average** — A 30-day month = 43,200 min; the calendar average is 43,800 min. This 1.4% difference can shift monthly downtime budgets by tens of seconds at five-nines levels, which matters in automated credit calculations.\n\n3. **Multiplying nines instead of adding them** — Two independent systems each at 99.9% uptime do NOT yield 99.9% × 99.9% = 99.8%. In a series dependency (both must be up), combined availability = product of individual availabilities (99.8001%). In parallel/redundant setups, unavailability multiplies: 0.001 × 0.001 = 0.000001, yielding 99.9999%.\n\n4. **Ignoring planned maintenance windows** — Many SLAs exclude scheduled maintenance from downtime calculations. A provider may guarantee 99.9% excluding a weekly 2-hour maintenance window, which could effectively mean 99.2% real availability. Always check exclusion clauses.\n\n5. **Treating SLA credits as full compensation** — Standard cloud SLA credits (e.g., AWS offers 10–30% monthly fee credit) rarely cover actual revenue loss. At 99.9% SLA, AWS's maximum credit is 30% of the monthly bill—not 30% of your business revenue lost during the outage.\n\n---\n\n## Related Calculators\n\n- [Percentage Calculator](/calculadora-porcentaje)\n- [Time Unit Converter](/conversor-tiempo)\n- [ROI Calculator](/calculadora-roi)\n",
   "faq": [
     {
-      "q": "What does five nines (99.999%) uptime mean?",
-      "a": "5.26 minutes of allowed downtime per year. Required for banking and telecom infrastructure."
+      "q": "What does '99.9%' uptime actually mean in hours per year?",
+      "a": "99.9% uptime allows (1 − 0.999) × 8,760 hours = **8.76 hours of downtime per year**, or about 43.8 minutes per month. It is often called 'three nines' and is the baseline SLA for most mid-tier cloud and SaaS providers. Consumer-grade hosting frequently sits at 99.5% or lower."
     },
     {
-      "q": "What's the difference between SLA and SLO?",
-      "a": "SLA is a contractual commitment, SLO is an internal performance objective."
+      "q": "How do I calculate combined uptime for two services in series?",
+      "a": "Multiply the individual uptime fractions: Combined Availability = A₁ × A₂. Two services each at 99.9% in series yield 0.999 × 0.999 = **99.8001% availability** (roughly double the downtime). This is critical for microservices architectures—a chain of 10 services each at 99.9% produces only ~99.0% combined availability."
     },
     {
-      "q": "What is an error budget?",
-      "a": "Error budget = 1 − SLO%. It's the time you can fail without breaking your SLA."
+      "q": "What is the difference between SLA, SLO, and SLI?",
+      "a": "An **SLI (Service Level Indicator)** is the measured metric (e.g., request success rate). An **SLO (Service Level Objective)** is the internal target (e.g., 99.95% success rate). An **SLA (Service Level Agreement)** is the contractual commitment with penalties for breach. Google's SRE Book recommends setting internal SLOs 0.1–0.5% stricter than public SLAs to provide a safety buffer."
     },
     {
-      "q": "How can I achieve higher uptime?",
-      "a": "Use redundancy, multi-region deployment, and automatic failover systems."
+      "q": "Does AWS guarantee 99.99% uptime for all its services?",
+      "a": "No—AWS SLAs vary by service. EC2 and S3 offer 99.99% regional SLAs; AWS Lambda offers 99.95%; Route 53 offers 100% (with credits for any downtime). Availability Zone failures are typically excluded. Full SLA terms are published at aws.amazon.com/legal/service-level-agreements."
     },
     {
-      "q": "What's AWS uptime SLA?",
-      "a": "AWS offers 99.99% uptime with multiple availability zones in most regions."
+      "q": "What is 'five nines' uptime and who typically achieves it?",
+      "a": "'Five nines' means **99.999% uptime**, allowing only 5.26 minutes of downtime per year (about 26 seconds/month). It is the standard target for telecommunications carrier-grade networks, financial trading platforms, and 911 emergency systems. Achieving it requires active-active redundancy, automated failover under 30 seconds, and rigorous chaos engineering practices."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all calculators on Hacé Cuentas are free with no registration required."
+      "q": "How do SLA credits work when a provider misses the guaranteed uptime?",
+      "a": "Most cloud providers issue **service credits as a percentage of the monthly bill**—not cash or actual loss compensation. For example, if a provider misses a 99.9% SLA (allowing 43.8 min/month) and actual downtime is 2 hours, the credit might be 10–25% of the monthly fee. AWS EC2's SLA credit is 10% for availability between 99.0–99.99%, and 30% for below 99.0%. Credits must usually be claimed within 30 days."
     },
     {
-      "q": "Are the results accurate?",
-      "a": "Results are reference-based using internationally validated standard formulas. For critical cases, consult a professional."
+      "q": "Is planned maintenance excluded from SLA downtime calculations?",
+      "a": "In most commercial SLAs, **yes**—scheduled maintenance windows are explicitly excluded from downtime calculations. Providers must typically give 48–72 hours advance notice for planned windows to qualify for exclusion. Always read the 'Exclusions' section of an SLA; for some providers, maintenance windows can amount to several hours per month, materially reducing effective availability."
     },
     {
-      "q": "Do you store my data?",
-      "a": "No. All calculations run in your browser. We don't send any data to our servers."
+      "q": "What uptime SLA should I require for a mission-critical business application?",
+      "a": "NIST SP 800-34 (Contingency Planning Guide for Federal Information Systems) and industry practice suggest: **non-critical systems** → 99.5% (1.83 days/year); **business-critical** → 99.9–99.99% (8.77 hours to 52 min/year); **life-safety or financial systems** → 99.999%+ (5 min/year). The right level depends on your RTO (Recovery Time Objective) and the cost of downtime per minute."
+    },
+    {
+      "q": "How do I convert a weekly downtime budget into an annual SLA percentage?",
+      "a": "Reverse the formula: SLA% = (1 − Weekly_Downtime_min / 10,080) × 100. For example, if you can tolerate 30 minutes/week of downtime: SLA% = (1 − 30/10,080) × 100 = **99.7024%**. This is useful when an operations team has an internal reliability target expressed in time rather than percentage."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "NIST SP 800-34 Rev. 1 – Contingency Planning Guide for Federal Information Systems",
+      "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "Wikipedia – High Availability (Nines terminology and uptime table)",
+      "url": "https://en.wikipedia.org/wiki/High_availability"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "AWS Service Level Agreements",
+      "url": "https://aws.amazon.com/legal/service-level-agreements/"
     }
   ],
   "dataUpdate": {

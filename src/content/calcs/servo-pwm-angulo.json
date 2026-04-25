@@ -6,14 +6,14 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "servo-pwm-angulo",
-  "intro": "La electrónica básica se rige por leyes de Ohm, Kirchhoff y principios de semiconductores. Cálculos de resistencia, potencia, voltaje y amperaje son la base para diseñar y mantener circuitos. Calculá el ángulo de salida de un servo según el ancho de pulso PWM. Estándar: 1ms = 0°, 1.5ms = 90°, 2ms = 180° · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Servo estándar: pulsos de 1-2 ms cada 20 ms (50 Hz). **Ángulo = (pulso − 1) × 180**. Pulso 1.5ms = centro 90°.",
+  "intro": "Un servo motor de RC o robótica recibe una señal PWM (Modulación por Ancho de Pulso) donde el **ancho del pulso**, medido en milisegundos, determina directamente el ángulo de posición del eje. El estándar universal define que un pulso de **1,0 ms** corresponde a 0°, uno de **1,5 ms** al centro (90° en un servo de 180°), y uno de **2,0 ms** al máximo (180°). Esta calculadora convierte cualquier ancho de pulso en el ángulo resultante según el rango configurado del servo (90°, 180° o 270°), usando la interpolación lineal entre los extremos del rango.",
+  "keyTakeaway": "**Ángulo = (Pulso_ms − 1,0) × Rango_° / 1,0** → Ejemplo real: pulso 1,75 ms en servo de 180° → (1,75 − 1,0) × 180 / 1,0 = **135°**",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de ángulo servo por pulso pwm",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Calibrar el punto central (1,5 ms) de un servo en un brazo robótico antes de montar la estructura mecánica, para evitar tensiones en engranajes.",
+    "Verificar que la señal PWM generada por un microcontrolador Arduino o ESP32 produce el ángulo correcto en un servo de dirección para un vehículo RC.",
+    "Determinar el pulso exacto necesario para posicionar un servo de cámara gimbal en un ángulo específico de paneo o tilt durante el diseño del firmware.",
+    "Diagnosticar por qué un servo de 270° no llega a su posición máxima, comparando el pulso generado contra el rango teórico esperado para ese modelo.",
+    "Convertir valores de un mapa de pulsos documentados en un datasheet (en µs) a ángulos para programar una secuencia de movimientos en un robot educativo."
   ],
   "fields": [
     {
@@ -59,53 +59,45 @@
     ],
     "result": "Pulso 1.5ms = 90° (centro)"
   },
-  "explanation": "La **electrónica** se rige por leyes de Ohm, Kirchhoff, Faraday. Aplicar fórmulas evita errores costosos y fallos eléctricos.\n\n## Cómo se calcula\n\nCalculá el ángulo de salida de un servo según el ancho de pulso PWM. Estándar: 1ms = 0°, 1.5ms = 90°, 2ms = 180° · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa relación entre ancho de pulso PWM y ángulo de un servo es **lineal**. El rango de pulso estándar va de **1,0 ms** (mínimo) a **2,0 ms** (máximo), con un span total de 1,0 ms. La fórmula general es:\n\n```\nÁngulo = (Pulso_ms − Pulso_min) × Rango_° / (Pulso_max − Pulso_min)\n\nDonde:\n  Pulso_ms  = ancho de pulso ingresado (ms)\n  Pulso_min = 1,0 ms  (posición 0°)\n  Pulso_max = 2,0 ms  (posición máxima)\n  Rango_°   = rango mecánico del servo (ej: 90, 180, 270)\n\n% del rango = (Pulso_ms − 1,0) / 1,0 × 100\n\nEjemplo numérico:\n  Pulso = 1,5 ms, Rango = 180°\n  Ángulo = (1,5 − 1,0) × 180 / 1,0 = 0,5 × 180 = 90°\n  % rango = 0,5 / 1,0 × 100 = 50%\n```\n\nLa señal PWM completa tiene un período de **20 ms** (50 Hz), pero solo el ancho del pulso activo (1–2 ms) determina la posición. El resto del período (18–19 ms) permanece en bajo.\n\n---\n\n## Tabla de referencia\n\nValores estándar para los tres rangos de servo más comunes:\n\n| Pulso (ms) | µs equivalente | Servo 90° | Servo 180° | Servo 270° | Posición |\n|:----------:|:--------------:|:---------:|:----------:|:----------:|:--------:|\n| 1,00       | 1000           | 0°        | 0°         | 0°         | Mínimo   |\n| 1,25       | 1250           | 22,5°     | 45°        | 67,5°      | 25%      |\n| 1,50       | 1500           | 45°       | 90°        | 135°       | Centro   |\n| 1,75       | 1750           | 67,5°     | 135°       | 202,5°     | 75%      |\n| 2,00       | 2000           | 90°       | 180°       | 270°       | Máximo   |\n\n> **Nota:** Muchos servos de bajo costo aceptan pulsos extendidos de 0,5 ms a 2,5 ms. En esos casos, el rango mecánico puede ser mayor, pero forzarlos fuera del rango nominal daña los engranajes.\n\n---\n\n## Casos típicos\n\n**Caso 1 – Servo de timón en modelo RC (180°)**\nUn receptor RC genera un pulso de 1,3 ms para girar el timón a la izquierda.\n`Ángulo = (1,3 − 1,0) × 180 / 1,0 = 0,3 × 180 = 54°`\nEl timón se desvía 54° desde el centro mecánico (que sería 90°). Si el neutro real es 1,5 ms = 90°, la deflexión respecto al centro es de 90° − 54° = **36° hacia la izquierda**.\n\n**Caso 2 – Brazo robótico con servo de 270°**\nEl firmware envía 1,667 ms para posicionar una articulación.\n`Ángulo = (1,667 − 1,0) × 270 / 1,0 = 0,667 × 270 ≈ 180°`\nLa articulación queda exactamente en el punto medio del rango de 270°, es decir, en posición neutral vertical para ese diseño.\n\n**Caso 3 – Servo de 90° como actuador de válvula**\nUn sistema de riego automatizado requiere abrir la válvula al 75%. El pulso necesario es:\n`Pulso = 1,0 + (75/100) × 1,0 = 1,75 ms → 67,5°`\nSe programa el timer del microcontrolador para generar exactamente 1750 µs de pulso activo dentro del período de 20 ms.\n\n---\n\n## Errores comunes\n\n1. **Confundir período PWM con ancho de pulso.** El período completo es 20 ms (50 Hz), pero la posición depende solo de los 1–2 ms de pulso activo. Usar el período entero en la fórmula da resultados completamente erróneos.\n\n2. **Asumir que todos los servos usan exactamente 1,0–2,0 ms.** Servos digitales de alta gama (como los Futaba S-Bus o Hitec) a veces usan 0,8–2,2 ms o 0,9–2,1 ms. Siempre verificar el datasheet del modelo específico.\n\n3. **No calibrar el punto cero mecánico.** Aunque 1,5 ms es el centro eléctrico estándar, el cero mecánico del servo puede estar desfasado ±5° por tolerancias de fabricación. Sin calibración software, el brazo nunca queda recto aunque el pulso sea correcto.\n\n4. **Usar la fórmula de 180° para un servo de 270° sin ajustar el rango.** El error resultante escala linealmente: a 2,0 ms, el servo debería estar en 270° pero la fórmula incorrecta diría 180°, un error de **90°** que puede trabar o romper la mecánica.\n\n5. **Ignorar el tiempo de respuesta del servo.** Cambiar el pulso muy rápido (cada ciclo de 20 ms) en servos lentos (velocidad típica: 0,1 s/60° a 6V) genera vibración. La calculadora da el ángulo de destino, no el de posición instantánea.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de Ley de Ohm – Voltaje, Corriente y Resistencia](/calculadora-ley-ohm-voltaje-corriente-resistencia)\n- [Calculadora de Potencia Eléctrica (P = V·I)](/calculadora-potencia-electrica-p-vi)\n- [Calculadora de Resistencia para LED en serie y paralelo](/calculadora-resistencia-led-serie-paralelo)\n- [Calculadora de Divisor de Voltaje con Resistencias](/calculadora-divisor-voltaje-resistencias)\n",
   "faq": [
     {
-      "q": "¿Frecuencia PWM?",
-      "a": "50 Hz para servos estándar. Servos digitales modernos aceptan hasta 300 Hz para mejor respuesta."
+      "q": "¿Cuál es la frecuencia estándar de la señal PWM para servos?",
+      "a": "La frecuencia estándar para servos analógicos es **50 Hz**, lo que equivale a un período de 20 ms. Los servos digitales modernos pueden operar a 100–333 Hz, reduciendo la latencia de respuesta, pero la relación pulso-ángulo (1–2 ms) se mantiene igual en la mayoría de los casos. Usar una frecuencia mayor en un servo analógico puede sobrecalentar su etapa de control."
     },
     {
-      "q": "¿Por qué 50 Hz y no más?",
-      "a": "Convención histórica de los primeros servos. Los digitales modernos responden mejor a 200-300 Hz."
+      "q": "¿Qué pasa si envío un pulso fuera del rango 1,0–2,0 ms?",
+      "a": "El servo intentará ir más allá de su límite mecánico, lo que hace que el motor quede forzando contra el tope interno. Esto calienta las bobinas, desgasta engranajes y puede quemar el circuito de control en minutos. Algunos servos tienen protección por límite de corriente, pero la mayoría de los modelos económicos no. Limitar siempre los pulsos entre 1,0 ms y 2,0 ms en el firmware."
     },
     {
-      "q": "¿Rango extendido?",
-      "a": "Algunos servos aceptan 0.5-2.5 ms para cubrir 270° o más. Verificá datasheet."
+      "q": "¿Cómo genero un pulso de 1,5 ms exacto con Arduino?",
+      "a": "Con la librería Servo de Arduino se usa `servo.writeMicroseconds(1500)`, que genera 1500 µs = 1,5 ms. También se puede usar `servo.write(90)` para un servo de 180°, ya que la librería mapea internamente 0°→544 µs y 180°→2400 µs por defecto (valores que difieren del estándar 1000–2000 µs, por eso es mejor usar `writeMicroseconds` para mayor precisión)."
     },
     {
-      "q": "¿Con Arduino?",
-      "a": "Usá library Servo.h. servo.write(grados) maneja el PWM automáticamente."
+      "q": "¿Un servo de 180° y uno de 270° reciben la misma señal?",
+      "a": "Sí, ambos reciben el mismo rango de pulsos (1,0–2,0 ms a 50 Hz). La diferencia está en el mecanismo interno: el servo de 270° simplemente tiene un mayor recorrido físico permitido. Un pulso de 2,0 ms moverá el eje a 180° en el primero y a 270° en el segundo. Intercambiarlos sin ajustar el firmware puede trabar la mecánica o dejar partes del rango inutilizadas."
     },
     {
-      "q": "¿Torque vs velocidad?",
-      "a": "Datasheet especifica kg·cm (torque) y sec/60° (velocidad). Servo 20 kg·cm es industrial, 1-3 kg·cm es hobby."
+      "q": "¿Qué voltaje de alimentación necesita un servo típico?",
+      "a": "Los servos estándar de hobby operan entre **4,8 V y 6,0 V**. A 4,8 V el torque y velocidad son menores (ej: MG995 → 9,4 kg·cm a 4,8V vs 11 kg·cm a 6V). Los servos digitales de alto rendimiento pueden llegar a 7,4 V. La señal PWM de control viaja por un cable separado y puede ser de 3,3 V o 5 V; los servos modernos aceptan ambos niveles lógicos, pero conviene verificar el datasheet."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Qué diferencia hay entre un servo analógico y uno digital?",
+      "a": "Un servo **analógico** lee la señal PWM una vez por período (cada 20 ms) y ajusta el motor con esa información. Un servo **digital** usa un microcontrolador interno que procesa la señal a 300–400 Hz, entregando correcciones más frecuentes al motor. Resultado: el digital tiene mayor torque de arranque, menos zumbido en posición estática y respuesta más rápida, pero consume más corriente en reposo. La fórmula de pulso a ángulo es idéntica en ambos."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Por qué mi servo vibra aunque el pulso sea estable?",
+      "a": "Las causas más comunes son: (1) **ruido eléctrico** en la línea de alimentación que perturba el oscilador interno; se soluciona con un capacitor de 100–470 µF entre VCC y GND cerca del servo. (2) **Carga mecánica excesiva** que el PID interno del servo no puede estabilizar. (3) **Resolución insuficiente** del timer del microcontrolador: si el timer tiene pasos de 4 µs, el servo oscila entre dos posiciones adyacentes. Usar timers de 16 bits a 1 MHz de resolución (pasos de 1 µs) elimina este problema."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Cómo sé el rango exacto de pulsos de mi servo si no tengo el datasheet?",
+      "a": "El método empírico seguro es ir aumentando el pulso de a **10 µs** desde 1500 µs hacia ambos lados, observando cuándo el servo deja de moverse o empieza a forzar. Ese valor es el límite real del modelo. Típicamente los servos Futaba van de 900–2100 µs, los Tower Pro MG995 de 1000–2000 µs, y los Hitec de 900–2100 µs. Registrar esos límites y usarlos como `Pulso_min` y `Pulso_max` en la fórmula para mayor precisión."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
-    },
-    {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Wikipedia ES – Modulación por ancho de pulso (PWM)",
+      "url": "https://es.wikipedia.org/wiki/Modulaci%C3%B3n_por_ancho_de_pulsos"
     }
   ],
   "relatedSlugs": [

@@ -7,14 +7,13 @@
   "category": "tecnologia",
   "icon": "☁️",
   "formulaId": "costo-servidor-cloud-aws-ec2-mensual",
-  "intro": "Technical calculations in IT and cloud development are essential: latency, bandwidth, uptime SLA, cloud costs, algorithmic complexity. Solid initial planning prevents infrastructure overprovisioning. Calculate your AWS EC2 instance monthly costs instantly and free. Pricing data is current as of 2026 and reviewed regularly to keep you informed.",
-  "keyTakeaway": "Formula: **Monthly Cost = Price/hour × 730 hours/month**. Direct application with your inputs. Calculate your AWS EC2 instance monthly costs instantly.",
+  "intro": "This calculator estimates your monthly and annual AWS EC2 instance costs based on the on-demand hourly price, daily usage hours, and active days per month. The core formula is: **Monthly Cost = Price/hr × Hours/day × Days/month**. For example, a `t3.medium` at $0.0416/hr running 24/7 costs roughly $30/month on-demand. Use this tool when budgeting cloud infrastructure, comparing instance families, or evaluating whether a 1-year or 3-year Reserved Instance (RI) commitment — which saves up to 40–60% — makes financial sense for your workload.",
+  "keyTakeaway": "**Monthly Cost = Hourly Rate × Hours/Day × Days/Month** — e.g., a `c6i.xlarge` at $0.17/hr × 24 hrs × 30 days = **$122.40/month** on-demand; switching to a 1-yr Standard RI drops it to ~$73.44/month (~40% savings).",
   "useCases": [
-    "AWS EC2 and cloud computing cost analysis",
-    "Students and IT professionals",
-    "Verify theoretical calculations before deployment",
-    "Teaching and learning cloud cost concepts",
-    "Quick reference for cloud infrastructure projects"
+    "Calculating the monthly bill for a production web server running 24/7 on a `t3.large` ($0.0832/hr) before committing to a Reserved Instance",
+    "Estimating costs for a nightly batch-processing job that runs only 6 hours/day on a `c6i.2xlarge` ($0.34/hr) to justify spot instance usage",
+    "Comparing total annual spend across three instance types (t3, m6i, c6i) to right-size a staging environment and cut cloud spend by 30%+",
+    "Building a startup's 12-month infrastructure budget forecast by projecting EC2 costs across dev, staging, and production tiers before a Series A pitch"
   ],
   "fields": [
     {
@@ -72,53 +71,45 @@
     ],
     "result": "$72"
   },
-  "explanation": "Technical calculators for IT: latency, storage, uptime SLA, cloud costs. Calculations that scale.\n\n## How it's calculated\n\nCalculate your AWS EC2 instance monthly costs instantly and free.\n\nThis calculator applies the formula with your input values, checking typical ranges and alerting you if values fall outside reasonable parameters.\n\n## Final notes\n\nThis calculation is a reference estimate only. For critical decisions (financial, medical, legal), consult a specialized professional. Pricing data is current as of 2026 and reviewed regularly.",
+  "explanation": "## How It's Calculated\n\nThe fundamental formula powering this calculator is:\n\n```\nMonthly Cost ($) = Hourly Price ($/hr) × Hours per Day (hr/day) × Days per Month (days/mo)\nAnnual Cost ($)  = Monthly Cost × 12\nReserved Saving  = Monthly Cost × 0.40   // 1-year Standard RI average discount\nRI Monthly Cost  = Monthly Cost × 0.60\n```\n\nAWS bills EC2 in **per-second increments** (with a 60-second minimum), but for monthly budgeting purposes, the hourly × hours × days model is the industry-standard approximation and matches AWS Cost Explorer projections within <1% for always-on workloads.\n\n---\n\n## Reference Table — Common EC2 On-Demand Prices (us-east-1, Linux, 2025)\n\n| Instance Type | vCPU | RAM (GB) | On-Demand ($/hr) | 30-day 24/7 Cost | 1-yr RI ($/hr) | Monthly RI Cost |\n|---|---|---|---|---|---|---|\n| t3.micro | 2 | 1 | $0.0104 | $7.49 | $0.0063 | $4.54 |\n| t3.small | 2 | 2 | $0.0208 | $14.98 | $0.0126 | $9.07 |\n| t3.medium | 2 | 4 | $0.0416 | $29.95 | $0.0252 | $18.14 |\n| t3.large | 2 | 8 | $0.0832 | $59.90 | $0.0504 | $36.29 |\n| t3.xlarge | 4 | 16 | $0.1664 | $119.81 | $0.1008 | $72.58 |\n| m6i.large | 2 | 8 | $0.096 | $69.12 | $0.058 | $41.76 |\n| m6i.xlarge | 4 | 16 | $0.192 | $138.24 | $0.116 | $83.52 |\n| m6i.2xlarge | 8 | 32 | $0.384 | $276.48 | $0.232 | $167.04 |\n| c6i.xlarge | 4 | 8 | $0.17 | $122.40 | $0.102 | $73.44 |\n| c6i.2xlarge | 8 | 16 | $0.34 | $244.80 | $0.204 | $146.88 |\n| r6i.large | 2 | 16 | $0.126 | $90.72 | $0.076 | $54.72 |\n| r6i.xlarge | 4 | 32 | $0.252 | $181.44 | $0.151 | $108.72 |\n\n> Prices reflect us-east-1 (N. Virginia) Linux on-demand rates. Windows adds ~$0.012–$0.20/hr depending on instance size. Prices vary by region — eu-west-1 is typically 10–15% higher.\n\n---\n\n## Typical Use Cases with Real Numbers\n\n### Example 1 — Always-On Web Server\nA startup runs a `t3.large` as their main application server 24 hours/day for a full 30-day month:\n\n```\n$0.0832/hr × 24 hr/day × 30 days = $59.90/month  (on-demand)\n$59.90 × 12 = $718.80/year  (on-demand)\n1-yr Standard RI annual upfront: ~$435  (~39% savings)\n```\n\nBreak-even vs. on-demand: month 1 (upfront RI pays for itself within the first year by definition).\n\n### Example 2 — Nightly Batch Job\nA data team runs a `c6i.2xlarge` ($0.34/hr) for 6 hours/night, every day of the month:\n\n```\n$0.34/hr × 6 hr/day × 30 days = $61.20/month\n```\n\nBecause the instance runs only 25% of the day, a Spot Instance (typically 60–90% cheaper than on-demand) would cost ~$6–$24/month — a much better fit than an RI commitment.\n\n### Example 3 — Right-Sizing Comparison\nA team is running a `m6i.2xlarge` ($0.384/hr, 24/7) but CPU utilization averages 15%. Downsizing to `m6i.large` ($0.096/hr):\n\n```\nm6i.2xlarge: $0.384 × 24 × 30 = $276.48/month\nm6i.large:   $0.096 × 24 × 30 = $69.12/month\nMonthly savings: $207.36  |  Annual savings: $2,488.32\n```\n\n---\n\n## Common Mistakes\n\n1. **Forgetting data transfer costs**: EC2 compute is just one line item. Outbound data transfer costs $0.09/GB (first 10 TB/month). A server pushing 5 TB/month adds $450 — often larger than the compute bill itself.\n\n2. **Using on-demand pricing for always-on workloads**: Running an instance 24/7 for 12+ months and not purchasing Reserved Instances wastes 40–60% of compute budget. AWS's own Cost Optimization Hub flags this automatically.\n\n3. **Comparing across regions without adjusting price**: The same `m6i.large` costs $0.096/hr in us-east-1 but $0.114/hr in ap-southeast-1 (~19% more). Multi-region budgets must use region-specific pricing from the AWS Pricing API.\n\n4. **Ignoring EBS storage costs**: A 100 GB gp3 EBS volume adds $8/month on top of compute — easy to overlook when an instance has multiple attached volumes.\n\n5. **Treating the 40% RI discount as fixed**: The actual discount ranges from ~20% (convertible, 1-year, no upfront) to ~62% (standard, 3-year, all upfront). This calculator uses 40% as the conservative 1-year Standard RI average for Linux in us-east-1.\n\n6. **Not accounting for Savings Plans**: EC2 Instance Savings Plans offer similar discounts to RIs (up to 72% vs. on-demand) with more flexibility — they apply to any instance in a family regardless of size or OS.",
   "faq": [
     {
-      "q": "What's the difference between AWS EC2 on-demand and reserved instances?",
-      "a": "On-demand instances are billed hourly with no commitment; reserved instances require a 1-3 year commitment but offer 30-70% discounts."
+      "q": "How does AWS actually charge for EC2 — by the hour or by the second?",
+      "a": "AWS bills EC2 in **per-second increments** with a 60-second minimum for Linux instances. This means a job that runs for 90 seconds costs the same as 90 seconds, not a full hour. However, for monthly budget planning, multiplying the hourly rate by hours used is accurate within <1% for workloads running more than a few minutes per session."
     },
     {
-      "q": "What are AWS spot instances?",
-      "a": "Spot instances are spare capacity offered at up to 90% discount, but AWS can interrupt them with 2 minutes notice."
+      "q": "What is a Reserved Instance and how much does it really save?",
+      "a": "A Reserved Instance (RI) is a 1- or 3-year billing commitment to a specific instance type and region in exchange for a discount on the hourly rate. For a 1-year Standard RI with no upfront payment on a Linux instance in us-east-1, discounts average **~36–40%** off on-demand. A 3-year all-upfront Standard RI can save up to **62%**. You can purchase RIs through the AWS Management Console or Marketplace."
     },
     {
-      "q": "How is AWS EC2 data transfer charged?",
-      "a": "Outbound data transfer costs $0.09/GB; inbound transfer is free."
+      "q": "What's the difference between Reserved Instances and Savings Plans?",
+      "a": "Savings Plans (launched 2019) offer similar or greater discounts (up to 66% for Compute Savings Plans, up to 72% for EC2 Instance Savings Plans) but apply more flexibly — a Compute Savings Plan covers any EC2 instance regardless of family, size, region, or OS. RIs are locked to a specific instance type and region. AWS recommends Savings Plans for most new workloads due to their flexibility."
     },
     {
-      "q": "What is egress and why is it a hidden cost?",
-      "a": "Egress refers to outbound data transfer from AWS. It's often the biggest hidden cost in cloud infrastructure."
+      "q": "Why does the same instance type cost different amounts in different AWS regions?",
+      "a": "AWS prices vary by region based on local electricity costs, data center operating expenses, real estate, and taxes. us-east-1 (N. Virginia) is consistently the cheapest region. eu-west-1 (Ireland) runs ~10–15% higher, ap-southeast-1 (Singapore) ~15–20% higher, and ap-east-1 (Hong Kong) can be 30%+ more expensive than us-east-1 for the same instance type."
     },
     {
-      "q": "What is the official AWS Pricing Calculator?",
-      "a": "AWS Pricing Calculator is the official tool from Amazon for estimating cloud costs across all AWS services."
+      "q": "Are there additional costs beyond the EC2 hourly compute price?",
+      "a": "Yes — the compute price is often just 50–70% of your total EC2-related bill. Common additional charges include: **EBS storage** ($0.08–$0.10/GB-month for gp3), **data transfer out** ($0.09/GB for first 10 TB/month), **Elastic IP addresses** ($0.005/hr when not attached to a running instance), **NAT Gateway** ($0.045/hr + $0.045/GB processed), and **load balancer** hours. Always model these alongside compute."
     },
     {
-      "q": "Is this calculator free to use?",
-      "a": "Yes, all our calculators are completely free and require no registration."
+      "q": "How do Spot Instances compare in cost to on-demand pricing?",
+      "a": "Spot Instances use spare AWS capacity and can be **60–90% cheaper** than on-demand prices, but AWS can reclaim them with a 2-minute warning. For example, a `c6i.xlarge` on-demand costs $0.17/hr ($122.40/month 24/7); a Spot price for the same instance in us-east-1 has historically averaged around $0.05–$0.07/hr (~$36–$50/month). Spot is ideal for fault-tolerant batch jobs, CI/CD pipelines, and stateless web tiers."
     },
     {
-      "q": "How accurate are the results?",
-      "a": "Results are estimative. We use internationally validated formulas. For critical cases, consult a professional."
+      "q": "How accurate is the 40% Reserved Instance savings figure used in this calculator?",
+      "a": "The **40% figure** is a conservative approximation for a **1-year Standard RI, no-upfront, Linux, us-east-1**. Actual discounts range from ~20% (1-year Convertible, no upfront) to ~62% (3-year Standard, all upfront). The exact discount depends on instance family, payment option, term length, operating system, and region. Always verify current RI pricing directly in the AWS Pricing Calculator at calculator.aws before making a commitment."
     },
     {
-      "q": "Do you store my calculation data?",
-      "a": "No. All calculations happen in your browser. We never send data to any server."
+      "q": "What instance type should I start with for a basic web application?",
+      "a": "AWS and the broader cloud community recommend starting with the **t3.medium** (2 vCPU, 4 GB RAM, $0.0416/hr ≈ $30/month 24/7) for small web apps or APIs. It supports CPU bursting, so it handles traffic spikes gracefully at a low base cost. If your app consistently pegs CPU above 40%, graduate to an `m6i.large` (2 vCPU, 8 GB RAM, $0.096/hr ≈ $69/month) for a fixed performance baseline without burst credits."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
-    },
-    {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
-    },
-    {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "AWS EC2 On-Demand Pricing — Official AWS Pricing Page",
+      "url": "https://aws.amazon.com/ec2/pricing/on-demand/"
     }
   ],
   "dataUpdate": {

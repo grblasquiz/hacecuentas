@@ -8,14 +8,13 @@
   "icon": "∫",
   "formulaId": "integral-indefinida-polinomio-coefs",
   "audience": "global",
-  "intro": "High school and university mathematics rely on internationally validated standard formulas. Algebra, geometry, calculus, statistics, and trigonometry are the most commonly studied areas. Integrate polynomials using the power rule—fast and free. Our content is current as of 2026 and reviewed regularly to keep you up to date.",
-  "keyTakeaway": "Formula: **∫x^n dx = x^(n+1)/(n+1) + C**. Apply directly to your polynomial coefficients to find its indefinite integral using the power rule.",
+  "intro": "The Polynomial Integral Calculator computes the **indefinite integral (antiderivative)** of any polynomial in seconds. Given a polynomial P(x) = aₙxⁿ + aₙ₋₁xⁿ⁻¹ + … + a₁x + a₀, its indefinite integral is ∫P(x)dx = aₙxⁿ⁺¹/(n+1) + aₙ₋₁xⁿ/(n) + … + a₁x²/2 + a₀x + C, where C is the constant of integration. You provide the coefficients from highest to lowest degree (e.g., \"3,0,-2,1\" for 3x³−2x+1), and the tool returns the full antiderivative expression. Used daily in calculus courses, physics (finding position from velocity), and engineering (computing areas under polynomial curves).",
+  "keyTakeaway": "**∫(aₙxⁿ)dx = aₙ · xⁿ⁺¹/(n+1) + C** — e.g., ∫(3x²+2x+5)dx = x³+x²+5x+C. Each term's exponent increases by 1 and the coefficient is divided by the new exponent. Always append +C.",
   "useCases": [
-    "Technical calculations involving polynomial integrals",
-    "Students and professionals in mathematics and engineering",
-    "Verify theoretical results before applying them in practice",
-    "Teaching and learning polynomial integration concepts",
-    "Quick reference during coursework or projects"
+    "Finding the position function s(t) from a velocity polynomial v(t) in kinematics — e.g., integrating v(t)=6t²−4t+1 to get s(t)=2t³−2t²+t+C.",
+    "Computing the exact area under a polynomial curve between two bounds using the Fundamental Theorem of Calculus after finding the antiderivative.",
+    "Solving initial-value problems in differential equations where the right-hand side is a polynomial, such as y'=4x³−3x+7, requiring y=x⁴−(3/2)x²+7x+C.",
+    "Determining total revenue or total cost functions in economics when the marginal cost/revenue function is expressed as a polynomial of output quantity q."
   ],
   "fields": [
     {
@@ -44,39 +43,39 @@
     ],
     "result": "x²+x+C"
   },
-  "explanation": "**Mathematics** is a universal tool: algebra, geometry, calculus, and statistics are applied across engineering, science, finance, and everyday life.\n\n## How It Works\n\nThis calculator applies the power rule of integration to polynomial coefficients. Simply enter your coefficients in descending order of degree, and we'll compute the indefinite integral instantly and free.\n\nThe calculator processes your input against the standard integration formula, checks for typical ranges, and alerts you if values seem unusual.\n\n## Important Notes\n\nThis calculation is provided for reference purposes. For critical decisions (financial, medical, legal), consult with a qualified professional. Our information is current as of 2026 and reviewed regularly to ensure accuracy.",
+  "explanation": "## How It's Calculated\n\nThe **Power Rule for Integration** is the core formula. For every term aₙxⁿ (where n ≠ −1):\n\n```\n∫aₙxⁿ dx = aₙ · xⁿ⁺¹ / (n+1) + C\n```\n\nFor a full polynomial with coefficients entered from highest to lowest degree:\n\n```\nInput:  [c_n, c_{n-1}, ..., c_1, c_0]   (length = n+1 terms)\n\nFor each index i (0-based from left), the degree of that term is:\n    degree(i) = n - i      where n = len(coefficients) - 1\n\nIntegrated coefficient:\n    new_coef(i) = c_i / (degree(i) + 1)\n\nNew degree:\n    new_degree(i) = degree(i) + 1\n\nResult: sum of all new_coef(i) · x^new_degree(i)  +  C\n```\n\n**Worked example — input \"2,1\" (polynomial 2x+1):**\n- Term 0: coef=2, degree=1 → integrated: 2/2 · x² = x²\n- Term 1: coef=1, degree=0 → integrated: 1/1 · x¹ = x\n- Result: **x² + x + C** ✓\n\n---\n\n## Reference Table\n\nThe table below shows the power rule applied to common monomial terms:\n\n| Term f(x) | Degree n | ∫f(x)dx | Notes |\n|-----------|----------|---------|-------|\n| 7 | 0 | 7x + C | Constant rule |\n| 3x | 1 | (3/2)x² + C | |\n| x² | 2 | x³/3 + C | |\n| −4x³ | 3 | −x⁴ + C | |\n| 5x⁴ | 4 | x⁵ + C | |\n| 2x⁵ | 5 | (1/3)x⁶ + C | |\n| −x⁶ | 6 | −x⁷/7 + C | |\n| ax^n | n | a·x^(n+1)/(n+1) + C | General rule; n ≠ −1 |\n| 0 | — | C | Zero polynomial |\n\n> **Note:** The rule n ≠ −1 matters! For x⁻¹ = 1/x, the integral is ln|x|+C — not handled by this polynomial calculator.\n\n---\n\n## Typical Cases\n\n### Case 1 — Quadratic polynomial: 3x²+2x+5\n- Coefficients entered: **3, 2, 5**\n- Term 3x² → 3x³/3 = **x³**\n- Term 2x  → 2x²/2 = **x²**\n- Term 5   → 5x¹/1 = **5x**\n- **∫(3x²+2x+5)dx = x³ + x² + 5x + C**\n\n### Case 2 — Cubic with a zero middle term: 4x³+0x²−3x+1\n- Coefficients entered: **4, 0, −3, 1**\n- 4x³ → x⁴ | 0x² → 0 | −3x → −(3/2)x² | 1 → x\n- **∫(4x³−3x+1)dx = x⁴ − (3/2)x² + x + C**\n\n### Case 3 — Velocity to position (physics)\n- Velocity: v(t) = 6t² − 10t + 2 → Coefficients: **6, −10, 2**\n- ∫v(t)dt = 6t³/3 − 10t²/2 + 2t = **2t³ − 5t² + 2t + C**\n- With initial condition s(0)=4 → C=4, so **s(t)=2t³−5t²+2t+4**\n\n---\n\n## Common Errors\n\n1. **Forgetting to include +C** — The indefinite integral of a polynomial is a *family* of functions differing by a constant. Omitting C loses all particular solutions and is marked wrong on every calculus exam.\n\n2. **Entering coefficients in the wrong order** — This calculator expects coefficients from *highest to lowest* degree. Entering \"1,2\" gives x²+2x+C (for x+2), not 2x²+x+C (for 2x+1). Always double-check the degree ordering.\n\n3. **Mishandling zero coefficients** — If your polynomial is 5x³−7, it still has an x² and an x term with coefficient 0. You must enter **5, 0, 0, −7**, not just \"5, −7\", otherwise the degree mapping breaks entirely.\n\n4. **Dividing coefficient before raising the exponent** — A common hand-calculation slip: students divide by the *old* exponent n instead of the *new* exponent n+1. Always increment first, then divide. For 6x², the integral is 6x³/3 = 2x³, NOT 6x²/2 = 3x².\n\n5. **Using this tool for non-polynomial integrands** — Terms like √x (= x^(1/2)), 1/x (= x⁻¹), or eˣ are not polynomials. The power rule applies to x^(1/2) → (2/3)x^(3/2), but 1/x requires the logarithm rule, and eˣ stays eˣ. This calculator is designed exclusively for integer-degree polynomial terms.\n\n---\n\n## Related Calculators\n\nExplore other calculus and algebra tools on Hacé Cuentas:\n\n- Derivative Calculator — apply the reverse Power Rule to check your antiderivative\n- Definite Integral Calculator — plug in bounds [a,b] to compute the exact numeric area\n- Quadratic Formula Calculator — solve ax²+bx+c=0 using the discriminant\n- Linear Equation Solver — handle first-degree algebraic expressions step by step\n",
   "faq": [
     {
-      "q": "What is the power rule for integration?",
-      "a": "∫x^n dx = x^(n+1)/(n+1) + C. Apply this formula to each term of your polynomial."
+      "q": "What is the Power Rule for Integration, and why does it work?",
+      "a": "The Power Rule states ∫xⁿ dx = xⁿ⁺¹/(n+1) + C for any n ≠ −1. It works because differentiation and integration are inverse operations: d/dx[xⁿ⁺¹/(n+1)] = (n+1)xⁿ/(n+1) = xⁿ, confirming the antiderivative is correct. This is a direct consequence of the Fundamental Theorem of Calculus."
     },
     {
-      "q": "Why do we always add C?",
-      "a": "C is the constant of integration, representing all possible antiderivatives of your function."
+      "q": "Why do I always add '+C' to an indefinite integral?",
+      "a": "Because the derivative of any constant is 0, infinitely many functions share the same derivative. For example, d/dx[x²+3] = d/dx[x²−100] = 2x. Without +C, you'd be claiming one specific antiderivative rather than the entire family. In applied problems, C is pinned down by an initial or boundary condition (e.g., position at t=0)."
     },
     {
-      "q": "What's an indefinite integral?",
-      "a": "An antiderivative without bounds—it includes the constant C and represents a family of functions."
+      "q": "How do I enter a polynomial that has missing (zero) terms?",
+      "a": "You must include a 0 for every missing degree between the highest and lowest. For example, x⁴−9 has no x³, x², or x terms, so enter '1, 0, 0, 0, −9'. Skipping zeros shifts all degree assignments and produces a completely wrong integral. The rule: number of coefficients entered = highest degree + 1."
     },
     {
-      "q": "How do I integrate a polynomial?",
-      "a": "Apply the power rule to each term separately, then combine them and add C."
+      "q": "Can this calculator handle negative or fractional exponents?",
+      "a": "No — the tool is designed strictly for polynomials with non-negative integer exponents. For fractional exponents like x^(1/2) the power rule still technically applies (∫x^(1/2)dx = (2/3)x^(3/2)+C), but must be computed separately. For x⁻¹ = 1/x, the integral is ln|x|+C, which requires a completely different rule and is out of scope."
     },
     {
-      "q": "What about integration by parts?",
-      "a": "∫u·dv = uv - ∫v·du. Use this when you have products of functions."
+      "q": "How do I use the result to compute a definite integral (a specific numeric area)?",
+      "a": "Once you have the antiderivative F(x), apply the Fundamental Theorem of Calculus: ∫[a to b] P(x)dx = F(b) − F(a). For example, ∫[0 to 2](3x²+2x+5)dx = [x³+x²+5x] from 0 to 2 = (8+4+10) − 0 = 22. The +C cancels out in the subtraction, so it doesn't affect definite integrals."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all our calculators are free and don't require registration."
+      "q": "How can I verify that my computed antiderivative is correct?",
+      "a": "Differentiate the result. If F(x) is your antiderivative, then F'(x) must equal the original polynomial P(x) exactly. Use the Power Rule for derivatives: d/dx[xⁿ] = n·xⁿ⁻¹. For instance, if ∫(2x+1)dx = x²+x+C, then d/dx[x²+x+C] = 2x+1 ✓. This differentiation check catches every arithmetic mistake."
     },
     {
-      "q": "Are the results accurate?",
-      "a": "We use standard validated formulas. For critical applications, verify with a specialist."
+      "q": "What is the integral of a constant (degree-0 polynomial), like ∫7 dx?",
+      "a": "A constant 'a' is treated as a·x⁰, so the power rule gives a·x¹/1 = ax. Thus ∫7 dx = 7x+C. Geometrically, this makes sense: the area under the horizontal line y=7 from 0 to b is a rectangle with area 7b, matching 7x evaluated at x=b."
     },
     {
-      "q": "Do you save my data?",
-      "a": "No. All calculations happen in your browser—nothing is sent to our servers."
+      "q": "How does polynomial integration appear in real-world physics problems?",
+      "a": "In kinematics, if acceleration is a polynomial a(t), integrating gives velocity v(t)=∫a(t)dt, and integrating again gives position s(t)=∫v(t)dt. For example, constant acceleration a=9.8 m/s² (free fall) integrates to v(t)=9.8t+v₀ and then to s(t)=4.9t²+v₀t+s₀, the classic projectile equation used in every introductory physics course."
     }
   ],
   "seoKeywords": [
@@ -95,16 +94,16 @@
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "Wikipedia – Antiderivative (Integration)",
+      "url": "https://en.wikipedia.org/wiki/Antiderivative"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "Wikipedia – Power Rule",
+      "url": "https://en.wikipedia.org/wiki/Power_rule"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "NIST Digital Library of Mathematical Functions – Indefinite Integrals",
+      "url": "https://dlmf.nist.gov/1.4"
     }
   ],
   "dataUpdate": {

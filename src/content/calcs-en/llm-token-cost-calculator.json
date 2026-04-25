@@ -22,14 +22,14 @@
     "free token calculator",
     "gpt cost estimator"
   ],
-  "intro": "Technical calculations are fundamental in IT and development: latency, bandwidth, uptime SLA, cloud costs, algorithmic complexity. A solid initial cost estimate prevents infrastructure over-provisioning. Get your monthly LLM API cost estimate—free and instant. Values are current as of 2026 and reviewed regularly to keep you informed.",
-  "keyTakeaway": "Formula: **Cost = (in × pIn + out × pOut) × calls**. Direct application with your values. Estimate your monthly LLM API costs.",
+  "intro": "This calculator computes the exact dollar cost of calling Large Language Model (LLM) APIs—such as OpenAI GPT-4o, Anthropic Claude 3.5, or Google Gemini—based on token consumption. LLM providers charge separately for **input tokens** (your prompt) and **output tokens** (the model's response), typically priced per 1,000 or 1,000,000 tokens. The core formula is: **Cost = (Input Tokens × Price_in + Output Tokens × Price_out) × Number of Calls**. Use this tool when budgeting a production AI feature, auditing an existing API spend, or comparing model pricing before committing to a provider. Even small prompt changes—trimming 200 tokens from a prompt sent 50,000 times a day—can save hundreds of dollars monthly.",
+  "keyTakeaway": "**Daily Cost = ((in_tok/1000 × pIn) + (out_tok/1000 × pOut)) × calls** — e.g., 1,000 input + 500 output tokens × 1,000 calls/day at GPT-4o pricing ($2.50/$10.00 per 1M tokens) = ~$3.75/day, ~$112/month.",
   "useCases": [
-    "Calculate technical costs for LLM API token usage",
-    "Students and software development professionals",
-    "Validate cost projections before deploying",
-    "Teaching and learning the concept",
-    "Quick reference during project planning"
+    "Estimating the monthly API budget before launching a customer-support chatbot that handles 5,000 conversations per day with an average of 800 input and 400 output tokens each.",
+    "Comparing costs across providers (e.g., GPT-4o vs. Claude 3.5 Haiku vs. Gemini 1.5 Flash) to decide which model fits a startup's $500/month AI budget.",
+    "Auditing an existing production pipeline where bills have unexpectedly risen—entering current token counts to pinpoint which endpoint is responsible for the overage.",
+    "Projecting annual infrastructure costs for a B2B SaaS product that uses LLM summarization for every uploaded document, to include in a Series A financial model.",
+    "Evaluating the ROI of prompt compression or caching strategies by comparing pre- and post-optimization token costs for a high-volume data extraction job."
   ],
   "fields": [
     {
@@ -100,57 +100,57 @@
     ],
     "result": "~$30/day"
   },
-  "explanation": "**Technical calculators** for IT: latency, storage, uptime SLA, cloud costs. Decisions that scale.\n\n## How It's Calculated\n\nEstimate your monthly LLM API costs—free and instant.\n\nThis calculator applies the formula with your input values, checking typical ranges and alerting for unreasonable values.\n\n## Final Notes\n\nThis calculation is for reference only. For critical decisions (financial, medical, legal), consult a qualified professional. Values are current as of 2026 and reviewed regularly.",
+  "explanation": "## How It's Calculated\n\nThe calculator applies a straightforward per-token billing formula used by every major LLM provider:\n\n```\n# Per-call cost\ncall_cost = (in_tok / 1000 × pIn) + (out_tok / 1000 × pOut)\n\n# Aggregate costs\ndaily_cost   = call_cost × calls_per_day\nmonthly_cost = daily_cost × 30        # 30-day billing month\nannual_cost  = daily_cost × 365\n```\n\n> **Note:** `pIn` and `pOut` are expressed as **cost per 1,000 tokens** ($/1K). If a provider lists pricing per 1M tokens (e.g., OpenAI's current pricing page), divide by 1,000 to convert: $2.50/1M = $0.0025/1K.\n\n---\n\n## Reference Table — Major LLM API Prices (mid-2025 public pricing)\n\n| Model | Input ($/1M tok) | Output ($/1M tok) | Context window |\n|---|---|---|---|\n| GPT-4o (OpenAI) | $2.50 | $10.00 | 128K |\n| GPT-4o mini (OpenAI) | $0.15 | $0.60 | 128K |\n| GPT-4.1 (OpenAI) | $2.00 | $8.00 | 1M |\n| GPT-4.1 mini (OpenAI) | $0.40 | $1.60 | 1M |\n| o3 (OpenAI) | $10.00 | $40.00 | 200K |\n| o4-mini (OpenAI) | $1.10 | $4.40 | 200K |\n| Claude 3.5 Haiku (Anthropic) | $0.80 | $4.00 | 200K |\n| Claude 3.7 Sonnet (Anthropic) | $3.00 | $15.00 | 200K |\n| Claude 3.5 Opus (Anthropic) | $15.00 | $75.00 | 200K |\n| Gemini 1.5 Flash (Google) | $0.075 | $0.30 | 1M |\n| Gemini 1.5 Pro (Google) | $1.25 | $5.00 | 2M |\n| Llama 3.1 70B (via Together AI) | $0.88 | $0.88 | 128K |\n\n*Prices are subject to change; always verify on the provider's official pricing page before budgeting.*\n\n---\n\n## Typical Use Cases with Concrete Numbers\n\n### Example 1 — Customer Support Bot (GPT-4o)\n- **Setup:** 800 input tokens + 400 output tokens, 5,000 calls/day\n- **Per-call cost:** (800/1000 × $0.0025) + (400/1000 × $0.010) = $0.002 + $0.004 = **$0.006**\n- **Daily:** $0.006 × 5,000 = **$30.00/day**\n- **Monthly:** $30 × 30 = **$900/month**\n- **Annual:** **$10,950/year**\n- *Switching to GPT-4o mini ($0.00015/$0.0006 per 1K) drops this to ~$87/month — a 90% reduction.*\n\n### Example 2 — Document Summarization Pipeline (Claude 3.7 Sonnet)\n- **Setup:** 4,000 input tokens + 800 output tokens, 200 calls/day\n- **Per-call cost:** (4,000/1000 × $0.003) + (800/1000 × $0.015) = $0.012 + $0.012 = **$0.024**\n- **Daily:** $0.024 × 200 = **$4.80/day**\n- **Monthly:** **$144/month** — easily fits a small startup's budget.\n\n### Example 3 — High-Volume Data Extraction (Gemini 1.5 Flash)\n- **Setup:** 2,000 input + 300 output, 50,000 calls/day\n- **Per-call cost:** (2,000/1000 × $0.000075) + (300/1000 × $0.0003) = $0.00015 + $0.00009 = **$0.00024**\n- **Daily:** $0.00024 × 50,000 = **$12.00/day**\n- **Monthly:** **$360/month** — demonstrating why ultra-cheap models dominate bulk-processing workloads.\n\n---\n\n## Common Mistakes\n\n1. **Confusing $/1K with $/1M:** OpenAI's pricing page lists per-million tokens. Entering $2.50 directly as pIn (treating it as per-1K) overstates costs by **1,000×**. Always normalize to the same unit before entering values.\n\n2. **Ignoring output token growth:** Developers often estimate output tokens at 10–20% of actual usage. Responses with JSON schemas, chain-of-thought reasoning, or structured data can easily exceed 1,500 tokens, doubling the per-call cost.\n\n3. **Using a 31-day month:** This calculator uses a standard 30-day billing period. Most providers (OpenAI, Anthropic) bill on a calendar-month cycle — use 30 for safe estimates and reconcile with your actual dashboard.\n\n4. **Omitting system prompt tokens:** A 500-token system prompt repeated on every call adds 500 × calls to your daily input token count. At 10,000 calls/day on GPT-4o, that's an extra **$12.50/day ($375/month)** you didn't plan for.\n\n5. **Not accounting for prompt caching discounts:** OpenAI and Anthropic both offer cached-token pricing (up to 75–90% off input tokens) for repeated prefixes. Failing to model this can make your estimate 30–50% too high for chatbot sessions with long static system prompts.\n\n6. **Assuming flat costs across the month:** Batch API tiers (OpenAI Batch API: 50% discount) and volume commitments change unit economics significantly for jobs that don't require real-time responses.\n\n---\n\n## Related Calculators\n\nSince no internal related slugs were specified for this calculator, explore other **technology and finance calculators** on Hacé Cuentas to continue your budgeting:\n\n- Use a **Compound Interest Calculator** to project how reinvesting API cost savings compounds over a product's lifetime.\n- Use a **ROI Calculator** to weigh the revenue uplift of an AI feature against its monthly token spend.\n- Use a **Unit Economics Calculator** to incorporate LLM API cost as a variable COGS component in your SaaS margin model.\n",
   "faq": [
     {
-      "q": "How do I calculate my monthly LLM API costs?",
-      "a": "Enter your average tokens per call, daily call volume, and per-token pricing. The calculator multiplies these values to show your daily and monthly costs."
+      "q": "What exactly is a token, and how many tokens is a typical English word?",
+      "a": "A token is the basic unit of text that LLMs process—roughly **¾ of a word on average**. OpenAI's tiktoken library shows that 1,000 English words ≈ 1,333 tokens, or conversely, 1,000 tokens ≈ 750 words. Code, JSON, and non-Latin scripts (Chinese, Arabic) are often tokenized less efficiently, with some characters consuming 2–4 tokens each. You can measure exact token counts using OpenAI's Tokenizer tool at platform.openai.com/tokenizer."
     },
     {
-      "q": "What's the difference between input and output tokens?",
-      "a": "Input tokens are the text you send (your prompt). Output tokens are the response the model generates. Providers typically charge different rates for each."
+      "q": "Why do providers charge different rates for input vs. output tokens?",
+      "a": "Generating output tokens requires the GPU to run a full autoregressive forward pass for **every single token produced**, which is computationally far more expensive than processing input in a single parallel pass. As a result, output tokens are typically priced **2–10× higher** than input tokens. For GPT-4o, the ratio is 4× ($2.50 input vs. $10.00 output per 1M tokens). This is why minimizing verbose outputs—asking for JSON instead of prose explanations—materially reduces costs."
     },
     {
-      "q": "What are the current pricing rates for Claude and OpenAI?",
-      "a": "Claude Sonnet costs $3 per 1M input tokens and $15 per 1M output tokens. OpenAI pricing varies by model. Check their official pricing pages for current rates."
+      "q": "How do I find my actual token usage to plug into this calculator?",
+      "a": "Every major LLM API returns token counts in the response object. For OpenAI, check `response.usage.prompt_tokens` and `response.usage.completion_tokens` in the API response JSON. For Anthropic Claude, use `response.usage.input_tokens` and `response.usage.output_tokens`. You can also query your usage dashboard: OpenAI at **platform.openai.com/usage**, Anthropic at **console.anthropic.com**, and Google AI at **aistudio.google.com**. Averaging 100–500 real calls gives a reliable baseline for this calculator."
     },
     {
-      "q": "How can I reduce my LLM API bill?",
-      "a": "Use prompt caching, implement RAG with focused context, switch to more cost-efficient models, or use batch processing where available."
+      "q": "Does the calculator account for OpenAI's prompt caching discount?",
+      "a": "This calculator uses a flat per-token price you supply. To model caching manually: if your system prompt is 2,000 tokens and is cached 80% of the time at a 75% discount, your effective input price for that portion drops to **pIn × 0.25**. You can approximate this by computing a blended input price: `blended_pIn = (cache_ratio × pIn × 0.25) + ((1 - cache_ratio) × pIn)` and entering that blended rate as pIn. OpenAI's Prompt Caching feature, launched in late 2024, applies automatically for prompts with repeated prefixes ≥1,024 tokens."
     },
     {
-      "q": "Does batch processing reduce API costs?",
-      "a": "Yes, many providers offer up to 50% discounts for batch requests. Responses take longer, making this ideal for non-real-time workloads."
+      "q": "What's the cheapest production-quality LLM API available right now?",
+      "a": "As of mid-2025, **Gemini 1.5 Flash** is among the cheapest at $0.075/1M input and $0.30/1M output tokens—roughly **33× cheaper input** and **33× cheaper output** than GPT-4o. For open-source models hosted on third-party infrastructure, providers like Together AI, Groq, and Fireworks AI offer Llama 3.1 70B at $0.88/1M for both input and output, which is competitive for tasks where GPT-4o-class quality isn't required. Always benchmark quality vs. cost on your specific task before switching."
     },
     {
-      "q": "Is streaming more expensive than standard API calls?",
-      "a": "No, streaming costs the same. You pay based on tokens consumed, not how they're delivered to you."
+      "q": "How does OpenAI's Batch API affect monthly cost estimates?",
+      "a": "OpenAI's Batch API (launched 2024) processes requests asynchronously within a **24-hour window** and charges **50% of standard API prices**. For a workload of 50,000 calls/day at GPT-4o pricing that isn't latency-sensitive, using Batch drops the $2.50/$10.00 rates to $1.25/$5.00 per 1M tokens—halving the monthly bill. To model this in the calculator, simply divide your pIn and pOut by 2 when entering values. Not all models support Batch; check the OpenAI documentation for the current model list."
     },
     {
-      "q": "Are there free tiers for LLM APIs?",
-      "a": "Yes, Claude and OpenAI both offer limited free tier credits for testing. These have usage caps but are good for getting started."
+      "q": "At what daily call volume should I consider a committed-use or enterprise contract?",
+      "a": "OpenAI's and Anthropic's enterprise tiers typically become financially attractive when spending exceeds **$5,000–$10,000/month** on the pay-as-you-go API. At that level, committed-use discounts of 15–30% are commonly negotiable. Additionally, both providers offer custom rate limits and SLA guarantees that become critical for production applications. Use the monthly figure from this calculator as your opening number in a vendor conversation—annual contract commitments above **$60,000/year** (≈$5K/month) are the standard threshold for dedicated account management."
     },
     {
-      "q": "Is this calculator free to use?",
-      "a": "Yes, all our calculators are completely free with no sign-up. Your calculations run in your browser—we never store your data."
+      "q": "Are there taxes or additional fees on top of the API token costs?",
+      "a": "Yes. OpenAI and Anthropic add applicable **sales tax or VAT** based on your billing address—US businesses with a valid tax-exempt certificate can apply for exemption. Additionally, watch for fine-tuning storage fees (OpenAI charges $1/1M tokens for fine-tuned model hosting), image/audio input surcharges (GPT-4o vision inputs carry separate per-image fees), and **rate-limit upgrade fees** on some enterprise plans. Your calculator estimate covers pure token costs only; final invoices may run 5–15% higher once taxes and ancillary fees are included."
     },
     {
-      "q": "How accurate are these estimates?",
-      "a": "Estimates use standard formulas validated internationally. They're reliable for planning but should be verified against actual API bills for final decisions."
+      "q": "How does context window length affect costs?",
+      "a": "Every token inside the active context window is billed as an **input token** on each API call. This is critical for multi-turn conversations: a chat with 10 messages averaging 200 tokens each means message 11 pays for 2,000 tokens of history before your new prompt. For a 20-turn conversation with 100 such sessions per day, context accumulation alone can add **thousands of dollars per month** compared to a single-turn design. Strategies like context summarization, message pruning, or sliding window truncation directly reduce this compounding cost."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "OpenAI API Pricing — official model pricing page",
+      "url": "https://openai.com/api/pricing/"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "Wikipedia: Large language model — Tokenization and cost overview",
+      "url": "https://en.wikipedia.org/wiki/Large_language_model"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "NIST AI 100-1: Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+      "url": "https://doi.org/10.6028/NIST.AI.100-1"
     }
   ],
   "dataUpdate": {

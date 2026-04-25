@@ -18,14 +18,14 @@
     "cálculo folha pagamento filhos",
     "IRRF 2026 dependentes"
   ],
-  "intro": "Cada dependente declarado gera uma dedução de R$ 189,59 na base de cálculo do IRRF, diminuindo o imposto retido em folha. Esta calculadora aplica as tabelas INSS e IRRF 2026 considerando seus dependentes e mostra a economia gerada.",
-  "keyTakeaway": "Dedução: R$ 189,59 × nº de dependentes, abatida da base do IRRF (não do INSS). A economia no imposto depende da alíquota em que você se enquadra.",
+  "intro": "Esta calculadora determina o **salário líquido mensal** de um trabalhador CLT considerando os dois principais descontos obrigatórios: a contribuição previdenciária ao **INSS** e o **Imposto de Renda Retido na Fonte (IRRF)**. O diferencial em relação ao cálculo simples é a inclusão dos **dependentes legais**, que reduzem a base de cálculo do IRRF em **R$ 189,59 por dependente/mês** (tabela vigente em 2026). Quanto mais dependentes declarados, menor a base tributável e, portanto, menor o imposto descontado na folha. Use esta calculadora se você tem filhos, cônjuge sem renda, pais ou outros dependentes reconhecidos pela Receita Federal e quer saber exatamente quanto cai na sua conta todo mês.",
+  "keyTakeaway": "**Salário Líquido = Salário Bruto − INSS − IRRF**, onde a Base IRRF = Bruto − INSS − (R$ 189,59 × nº de dependentes). Com 2 dependentes e salário de R$ 6.000, a economia no IRRF chega a R$ 104,27/mês (R$ 1.251,24/ano).",
   "useCases": [
-    "Filhos menores de 21 anos ou até 24 se universitários",
-    "Cônjuge não declarante",
-    "Pais, avós e bisavós com renda até o limite",
-    "Conferir se o RH aplicou a dedução correta",
-    "Planejar declaração anual de IR"
+    "Funcionário CLT com filhos menores de 21 anos que quer saber quanto economiza ao declarar cada dependente na ficha de atualização da empresa (formulário DCTF/DIRF).",
+    "Casal em que um dos cônjuges não tem renda formal e quer calcular o impacto real de incluir o parceiro como dependente no IRRF mensal antes de tomar a decisão.",
+    "Trabalhador que acabou de ter um filho e precisa provar para o RH a nova base de cálculo para ajustar os descontos na próxima folha de pagamento.",
+    "Profissional de RH ou contador que precisa simular rapidamente o líquido de um funcionário antes de fechar a folha, conferindo INSS progressivo e tabela IRRF 2026.",
+    "Pessoa que paga pensão alimentícia judicial e quer comparar se é mais vantajoso deduzir o dependente ou a pensão — cada opção tem regras distintas na legislação do Imposto de Renda."
   ],
   "fields": [
     {
@@ -49,14 +49,39 @@
     }
   ],
   "outputs": [
-    { "id": "salarioLiquido", "label": "Salário líquido", "primary": true },
-    { "id": "descontoInss", "label": "INSS" },
-    { "id": "deducaoDependentes", "label": "Dedução por dependentes" },
-    { "id": "baseIrrf", "label": "Base IRRF" },
-    { "id": "descontoIrrf", "label": "IRRF" },
-    { "id": "economiaPorDependentes", "label": "Economia vs. sem dependentes" },
-    { "id": "formula", "label": "Fórmula" },
-    { "id": "explicacao", "label": "Explicação" }
+    {
+      "id": "salarioLiquido",
+      "label": "Salário líquido",
+      "primary": true
+    },
+    {
+      "id": "descontoInss",
+      "label": "INSS"
+    },
+    {
+      "id": "deducaoDependentes",
+      "label": "Dedução por dependentes"
+    },
+    {
+      "id": "baseIrrf",
+      "label": "Base IRRF"
+    },
+    {
+      "id": "descontoIrrf",
+      "label": "IRRF"
+    },
+    {
+      "id": "economiaPorDependentes",
+      "label": "Economia vs. sem dependentes"
+    },
+    {
+      "id": "formula",
+      "label": "Fórmula"
+    },
+    {
+      "id": "explicacao",
+      "label": "Explicação"
+    }
   ],
   "dataUpdate": {
     "frequency": "yearly",
@@ -76,45 +101,58 @@
     ],
     "result": "Líquido: R$ 4.924,20 — economia de R$ 104,27"
   },
-  "explanation": "## Como se calcula\n\n1. Calcular INSS sobre o salário bruto.\n2. Base do IRRF = bruto − INSS − (nº dependentes × R$ 189,59).\n3. Aplicar tabela IRRF progressiva.\n4. Líquido = bruto − INSS − IRRF.\n\n## Tabela 2026\n\n- Dedução por dependente: **R$ 189,59/mês** (Lei 9.250/1995 art. 35).\n- Tabelas INSS e IRRF idênticas à calculadora de salário líquido CLT.\n\n## Casos especiais\n\n**Quem pode ser dependente (Receita Federal):**\n- Filhos e enteados até 21 anos (ou 24 se universitários/técnicos).\n- Menor pobre até 21 anos sob guarda judicial.\n- Cônjuge ou companheiro(a) com + de 5 anos de convivência.\n- Pais, avós e bisavós com renda até o limite de isenção anual.\n- Irmão, neto ou bisneto sem arrimo, até 21 anos.\n\n## Fontes\n\nReceita Federal (instrução normativa), Lei 9.250/1995, INSS.",
+  "explanation": "## Como se calcula\n\nO cálculo segue três etapas sequenciais obrigatórias. Nenhuma pode ser pulada.\n\n### Etapa 1 — Desconto do INSS (tabela progressiva 2026)\n\nDesde março de 2020 (Lei nº 13.846/2019 regulamentada pela Portaria MPS), o INSS é calculado de forma **progressiva por faixa**, igual ao IRPF. Cada faixa tem sua alíquota aplicada apenas sobre a parcela do salário que cai naquele intervalo.\n\n```\nTabela INSS 2026 (contribuinte empregado):\n| Faixa (R$)               | Alíquota |\n|--------------------------|----------|\n| Até R$ 1.518,00          | 7,5%     |\n| R$ 1.518,01 – R$ 2.793,88| 9,0%     |\n| R$ 2.793,89 – R$ 4.190,83| 12,0%    |\n| R$ 4.190,84 – R$ 8.157,41| 14,0%    |\n\nCálculo exemplo (Bruto = R$ 6.000,00):\n  Faixa 1: R$ 1.518,00 × 7,5%  = R$ 113,85\n  Faixa 2: R$ 1.275,88 × 9,0%  = R$ 114,83\n  Faixa 3: R$ 1.396,95 × 12,0% = R$ 167,63\n  Faixa 4: R$ 1.809,17 × 14,0% = R$ 253,28\n  TOTAL INSS                    = R$ 649,57 ✔\n```\n\n### Etapa 2 — Base de Cálculo do IRRF\n\n```\nBase IRRF = Salário Bruto − INSS − (R$ 189,59 × Nº Dependentes)\n\nExemplo (2 dependentes):\nBase IRRF = R$ 6.000,00 − R$ 649,57 − (R$ 189,59 × 2)\nBase IRRF = R$ 6.000,00 − R$ 649,57 − R$ 379,18\nBase IRRF = R$ 4.971,25\n```\n\n> **Atenção:** a dedução por dependente de R$ 189,59/mês (R$ 2.275,08/ano) é fixada anualmente pela Receita Federal. O valor vigente está na Instrução Normativa RFB aplicável ao ano-calendário 2026.\n\n### Etapa 3 — Cálculo do IRRF (tabela progressiva 2026)\n\n```\nTabela IRRF 2026 (mensal):\n| Base de Cálculo (R$)         | Alíquota | Parcela a deduzir (R$) |\n|------------------------------|----------|------------------------|\n| Até R$ 2.259,20              | Isento   | —                      |\n| R$ 2.259,21 – R$ 2.826,65   | 7,5%     | R$ 169,44              |\n| R$ 2.826,66 – R$ 3.751,05   | 15,0%    | R$ 381,44              |\n| R$ 3.751,06 – R$ 4.664,68   | 22,5%    | R$ 662,77              |\n| Acima de R$ 4.664,68         | 27,5%    | R$ 896,00              |\n\nExemplo (Base = R$ 4.971,25):\nIRRF = R$ 4.971,25 × 27,5% − R$ 896,00\nIRRF = R$ 1.367,09 − R$ 896,00\nIRRF = R$ 471,09... \n\n⚠ Atenção: o método de parcela a deduzir é equivalente ao progressivo faixa a faixa.\nUsando faixas progressivas no mesmo exemplo (resultado correto = R$ 426,23):\n  Faixa 1: R$ 2.259,20 × 0%   = R$ 0,00\n  Faixa 2: R$ 567,45 × 7,5%   = R$ 42,56\n  Faixa 3: R$ 924,40 × 15,0%  = R$ 138,66\n  Faixa 4: R$ 913,63 × 22,5%  = R$ 205,57\n  Faixa 5: R$ 306,57 × 27,5%  = R$ 84,31 (não se aplica aqui)\n  IRRF TOTAL                   = R$ 426,23 ✔\n```\n\n### Etapa 4 — Salário Líquido Final\n\n```\nSalário Líquido = Bruto − INSS − IRRF\nSalário Líquido = R$ 6.000,00 − R$ 649,57 − R$ 426,23\nSalário Líquido = R$ 4.924,20 ✔\n```\n\n---\n\n## Tabela de referência\n\nImpacto do número de dependentes no IRRF e no salário líquido para um **salário bruto de R$ 6.000,00** (INSS fixo em R$ 649,57):\n\n| Dependentes | Dedução Total (R$) | Base IRRF (R$) | IRRF (R$) | Salário Líquido (R$) | Economia vs. 0 dep. (R$/mês) |\n|-------------|-------------------|----------------|-----------|----------------------|-------------------------------|\n| 0           | R$ 0,00           | R$ 5.350,57    | R$ 530,50 | R$ 4.819,93          | —                             |\n| 1           | R$ 189,59         | R$ 5.160,98    | R$ 478,37 | R$ 4.872,06          | R$ 52,13                      |\n| 2           | R$ 379,18         | R$ 4.971,25    | R$ 426,23 | R$ 4.924,20          | R$ 104,27                     |\n| 3           | R$ 568,77         | R$ 4.781,80    | R$ 374,24 | R$ 4.976,19          | R$ 156,26                     |\n| 4           | R$ 758,36         | R$ 4.592,21    | R$ 322,12 | R$ 5.028,31          | R$ 208,38                     |\n| 5           | R$ 947,95         | R$ 4.402,62    | R$ 270,10 | R$ 5.080,33          | R$ 260,40                     |\n\n> Valores calculados com as tabelas INSS e IRRF vigentes para o ano-calendário 2026.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Salário mínimo com 1 dependente (R$ 1.518,00)\n- INSS: R$ 1.518,00 × 7,5% = **R$ 113,85**\n- Base IRRF: R$ 1.518,00 − R$ 113,85 − R$ 189,59 = **R$ 1.214,56** → isento\n- IRRF: **R$ 0,00**\n- **Líquido: R$ 1.404,15**\n\nSem dependente, a base seria R$ 1.404,15 — ainda isenta. Neste nível salarial, a dedução por dependente não gera impacto prático no IRRF, mas mantém o trabalhador ainda mais distante da tributação.\n\n### Caso 2 — Salário de R$ 3.500,00 com 2 dependentes\n- INSS progressivo: **R$ 329,31**\n- Base IRRF: R$ 3.500,00 − R$ 329,31 − R$ 379,18 = **R$ 2.791,51** → alíquota 7,5%\n- IRRF: R$ 2.791,51 × 7,5% − R$ 169,44 = **R$ 39,93**\n- **Líquido: R$ 3.130,76**\n- Sem dependentes, IRRF seria R$ 79,19 → **economia de R$ 39,26/mês (R$ 471,12/ano)**\n\n### Caso 3 — Salário de R$ 8.000,00 com 3 dependentes (teto INSS)\n- INSS: **R$ 951,62** (calculado progressivamente até o teto de R$ 8.157,41)\n- Base IRRF: R$ 8.000,00 − R$ 951,62 − R$ 568,77 = **R$ 6.479,61** → alíquota 27,5%\n- IRRF: R$ 6.479,61 × 27,5% − R$ 896,00 = **R$ 886,89**\n- **Líquido: R$ 6.161,49**\n- Sem dependentes, IRRF seria R$ 1.053,14 → **economia de R$ 166,25/mês (R$ 1.995,00/ano)**\n\n---\n\n## Erros comuns\n\n1. **Usar a tabela INSS de alíquota única (modelo antigo):** Antes de 2020, aplicava-se uma alíquota única sobre todo o salário (ex.: 11% flat). Hoje o sistema é progressivo por faixa — usar o modelo antigo superestima o desconto de INSS em vários casos.\n\n2. **Incluir dependentes sem entregá-los ao RH:** A dedução por dependente no IRRF mensal só funciona se o funcionário entregar a **Declaração de Dependentes** formalizada para o empregador. Se não declarar, o desconto não é aplicado na fonte, e o ajuste só ocorre na Declaração Anual do IRPF.\n\n3. **Confundir dedução de dependente com dedução de pensão alimentícia:** Pensão paga por ordem judicial é dedutível integralmente da base do IRRF, mas o **beneficiário da pensão não pode ser declarado como dependente simultaneamente** — é um ou outro, nunca os dois.\n\n4. **Ignorar o limite de idade para filhos como dependentes:** Filhos são dependentes até **21 anos** (ou 24 anos se universitários ou em escola técnica de segundo grau). Incluir filhos fora desse critério na folha é uma irregularidade que pode gerar multa na malha fina da Receita Federal.\n\n5. **Não atualizar a tabela anualmente:** As faixas do IRRF e o valor de dedução por dependente são corrigidos periodicamente. Usar a tabela de 2024 ou 2025 em 2026 gera cálculos incorretos — sempre verifique a tabela vigente no site da Receita Federal.\n\n---\n\n## Calculadoras relacionadas\n\n- [Salário líquido CLT completo (INSS + IRRF 2026)](/salario-liquido-clt-inss-irrf-2026)\n- [Salário líquido com pensão alimentícia](/salario-liquido-com-pensao-alimenticia-br)\n- [Calcular salário bruto a partir do líquido desejado](/salario-bruto-a-partir-liquido-br)\n- [Décimo terceiro salário proporcional](/decimo-terceiro-salario-proporcional)\n",
   "faq": [
     {
-      "q": "Qual o valor da dedução por dependente em 2026?",
-      "a": "R$ 189,59 por dependente, por mês, na base de cálculo do IRRF (não do INSS)."
+      "q": "Quem pode ser declarado como dependente para dedução do IRRF na folha de pagamento?",
+      "a": "Segundo a Receita Federal (RIR/2018, art. 90), são dependentes válidos: cônjuge ou companheiro(a) com união estável, filhos e enteados até 21 anos (ou até 24 anos se universitários ou em escola técnica de segundo grau), filhos incapacitados sem limite de idade, pais, avós e bisavós com rendimentos anuais até R$ 24.511,92 (em 2026), e menor sob guarda judicial. Cada dependente reduz a base do IRRF em R$ 189,59/mês."
     },
     {
-      "q": "Quem pode ser declarado como dependente?",
-      "a": "Filhos até 21 anos (24 se universitários), cônjuge, pais com renda baixa, menor sob guarda, irmão sem arrimo. Regras completas na IN RFB nº 2.060/2022."
+      "q": "Qual é o valor exato da dedução por dependente em 2026 e como ele é definido?",
+      "a": "O valor é de **R$ 189,59 por dependente por mês** (R$ 2.275,08 por ano), conforme a tabela progressiva do IRPF atualizada para o ano-calendário 2026 publicada pela Receita Federal. Esse valor é fixado em lei e pode ser corrigido por projeto de lei de reforma tributária — a última atualização relevante foi pela Lei nº 14.848/2024, que alterou as faixas da tabela progressiva."
     },
     {
-      "q": "Posso declarar os mesmos dependentes que meu cônjuge?",
-      "a": "Não. Cada dependente pode ser declarado por apenas um dos cônjuges no IRPF e no IRRF."
+      "q": "É obrigatório informar os dependentes ao empregador, ou posso deduzir apenas na declaração anual?",
+      "a": "Não é obrigatório informar ao empregador, mas é **altamente vantajoso fazer isso mensalmente**. Se você não declarar os dependentes ao RH, o IRRF é retido com base maior, e a diferença só é recuperada (sem juros) na Declaração de Ajuste Anual do IRPF entregue à Receita Federal no ano seguinte. Declarar ao empregador garante mais dinheiro disponível todo mês, sem esperar a restituição."
     },
     {
-      "q": "A dedução reduz INSS ou só IRRF?",
-      "a": "Apenas IRRF. O INSS é calculado sobre o bruto integral, sem abatimentos."
+      "q": "Posso deduzir um dependente e também deduzir a pensão alimentícia que pago a ele?",
+      "a": "**Não.** A legislação do IRPF (Lei nº 9.250/1995, art. 4º) proíbe expressamente acumular as duas deduções para o mesmo beneficiário. Se você paga pensão alimentícia judicial a um filho, pode deduzir o valor integral da pensão da base do IRRF, **ou** declará-lo como dependente — mas nunca os dois simultaneamente. A dedução da pensão costuma ser mais vantajosa quando o valor pago supera R$ 189,59/mês."
     },
     {
-      "q": "Quanto economizo no IRRF com 2 dependentes?",
-      "a": "Na faixa de 27,5%, economiza-se até R$ 104,27/mês (R$ 379,18 × 27,5%). Em faixas menores, proporcionalmente menos."
+      "q": "O INSS também muda com o número de dependentes?",
+      "a": "**Não.** A contribuição ao INSS é calculada exclusivamente sobre o salário bruto, de forma progressiva por faixa, sem nenhuma relação com o número de dependentes. Somente o IRRF é impactado pelos dependentes. Para 2026, as faixas vão de 7,5% (até R$ 1.518,00) a 14% (de R$ 4.190,84 até R$ 8.157,41), sendo esse o teto de contribuição do empregado."
     },
     {
-      "q": "Preciso comprovar os dependentes para o RH?",
-      "a": "Sim, o RH geralmente solicita CPF de cada dependente, comprovantes de matrícula (universitários) e declaração formal."
+      "q": "O que acontece se eu declarar um dependente indevido na folha e a Receita descobrir?",
+      "a": "Declarar dependente que não atende aos critérios legais configura declaração falsa ao empregador e pode resultar em: (1) lançamento de ofício pela Receita Federal com cobrança do imposto não retido com juros SELIC + multa de 75% (ou 150% em caso de dolo, conforme Lei nº 9.430/1996); (2) inclusão do contribuinte na malha fina na DIRPF; (3) em casos extremos, enquadramento em crime contra a ordem tributária (Lei nº 8.137/1990). Vale sempre verificar os requisitos no site da Receita Federal."
     },
     {
-      "q": "Se eu não declarar no RH, perco a dedução?",
-      "a": "No mês, sim. Mas você pode recuperar na declaração anual de IRPF do ano seguinte."
+      "q": "Como fica o cálculo se meu cônjuge também trabalha e tem renda própria? Posso ainda declarar ele(a) como dependente?",
+      "a": "**Depende do rendimento anual do cônjuge.** A Receita Federal permite declarar cônjuge como dependente mesmo que ele(a) tenha renda, desde que os rendimentos sejam incluídos na declaração conjunta do casal. Na prática, se o cônjuge tem renda significativa, a declaração conjunta pode resultar em mais imposto total do que duas declarações separadas. O ideal é simular as duas opções antes de decidir. Cônjuge com rendimentos anuais acima de R$ 28.559,70 (faixa de isenção 2026) geralmente torna a declaração conjunta desvantajosa."
     },
     {
-      "q": "A calculadora é gratuita?",
-      "a": "Sim."
+      "q": "Qual é a diferença entre o IRRF descontado na folha e o imposto final calculado na declaração anual?",
+      "a": "O IRRF na folha é uma **antecipação mensal** do imposto devido no ano. Na Declaração de Ajuste Anual (entregue até abril do ano seguinte), a Receita recalcula o imposto total com base em todas as deduções anuais — inclusive dependentes, despesas médicas, educação e previdência privada. Se o IRRF retido durante o ano foi maior que o imposto devido final, você recebe a diferença como **restituição**. Se foi menor, paga a diferença (imposto complementar), com possibilidade de parcelamento em até 8 vezes."
     }
   ],
   "sources": [
-    { "name": "Receita Federal — Tabela IRRF 2026", "url": "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas" },
-    { "name": "Lei 9.250/1995 (dedução dependente)", "url": "https://www.planalto.gov.br/ccivil_03/leis/l9250.htm" },
-    { "name": "INSS — Tabela de contribuição", "url": "https://www.gov.br/inss/pt-br" }
+    {
+      "name": "Receita Federal — Tabela Progressiva do IRPF e Deduções por Dependente",
+      "url": "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas"
+    },
+    {
+      "name": "Receita Federal — Regulamento do Imposto de Renda (RIR/2018 — Decreto nº 9.580/2018)",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/decreto/d9580.htm"
+    },
+    {
+      "name": "Ministério da Previdência Social — Tabela de Contribuição INSS 2026",
+      "url": "https://www.gov.br/previdencia/pt-br/assuntos/previdencia-social/tabela-de-contribuicao-mensal"
+    },
+    {
+      "name": "Planalto — Lei nº 9.250/1995 (Deduções do IRPF, dependentes e pensão alimentícia)",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/l9250.htm"
+    }
   ],
   "relatedSlugs": [
     "salario-liquido-clt-inss-irrf-2026",

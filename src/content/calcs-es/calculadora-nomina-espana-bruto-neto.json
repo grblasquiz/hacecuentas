@@ -15,46 +15,183 @@
     "seguridad social trabajador",
     "sueldo madrid cataluña"
   ],
-  "intro": "El salario **bruto anual** que aparece en tu contrato se convierte en **neto** tras descontar IRPF (Impuesto sobre la Renta de Personas Físicas) y cotización a la Seguridad Social. Esta calculadora aplica los **tramos IRPF 2026** y las **bases de cotización** vigentes para darte una estimación realista del neto mensual que cobrás.",
-  "keyTakeaway": "Descuentos en nómina ~25-35% del bruto típicamente: **6.35% Seguridad Social** del trabajador + **IRPF** progresivo (19% al 47% según tramo). Las CCAA ajustan la parte autonómica del IRPF.",
+  "intro": "Esta calculadora convierte tu salario bruto anual en el neto real que recibirás en tu cuenta cada mes, aplicando las deducciones obligatorias vigentes en España para 2026: la retención de IRPF (Impuesto sobre la Renta de las Personas Físicas) y las cotizaciones a la Seguridad Social a cargo del trabajador. El resultado varía según el número de pagas (12 o 14) y tu situación personal (soltero/a, casado/a, con hijos). Por ejemplo, un bruto de 30.000 €/año con 14 pagas y sin hijos equivale aproximadamente a 1.820 €/mes netos.",
+  "keyTakeaway": "**Neto = Bruto anual − Cotizaciones SS (≈6,47%) − Retención IRPF (19%–45% según tramo) → dividido entre 12 o 14 pagas**. Para 2026, el tipo mínimo de IRPF es 19% y el máximo, 47%.",
   "useCases": [
-    "Te ofrecen un puesto con salario bruto X €: quieres saber cuánto te queda neto al mes.",
-    "Comparás dos ofertas en distintas CCAA (Madrid vs Cataluña): ajusta IRPF autonómico.",
-    "Tu empresa te sube el bruto y necesitás saber cuánto se lleva Hacienda.",
-    "Preparás presupuesto familiar: bruto anual / 12 no es igual al neto mensual."
+    "Comparar dos ofertas de empleo con distintos salarios brutos para saber cuál deja más dinero en mano cada mes.",
+    "Negociar una subida salarial y calcular cuánto subirá realmente el neto después de impuestos y cotizaciones.",
+    "Planificar el presupuesto familiar mensual conociendo el neto exacto con 14 pagas frente a 12 pagas ordinarias.",
+    "Comprobar si una retención de IRPF aplicada por la empresa en la nómina es correcta o está siendo sobre-retenida.",
+    "Estimar el impacto fiscal de pasar de contrato a tiempo parcial a jornada completa sobre el salario mensual neto."
   ],
   "fields": [
-    { "key": "brutoAnual", "label": "Salario bruto anual", "type": "number", "unit": "€", "placeholder": "30000" },
-    { "key": "pagas", "label": "Número de pagas", "type": "select", "options": [{ "value": "14", "label": "14 pagas (con extras)" }, { "value": "12", "label": "12 pagas (prorrateadas)" }] },
-    { "key": "situacion", "label": "Situación personal", "type": "select", "options": [{ "value": "soltero", "label": "Soltero/a sin hijos" }, { "value": "casado", "label": "Casado/a declaración conjunta" }, { "value": "hijos1", "label": "Con 1 hijo a cargo" }, { "value": "hijos2", "label": "Con 2+ hijos" }] }
+    {
+      "key": "brutoAnual",
+      "label": "Salario bruto anual",
+      "type": "number",
+      "unit": "€",
+      "placeholder": "30000"
+    },
+    {
+      "key": "pagas",
+      "label": "Número de pagas",
+      "type": "select",
+      "options": [
+        {
+          "value": "14",
+          "label": "14 pagas (con extras)"
+        },
+        {
+          "value": "12",
+          "label": "12 pagas (prorrateadas)"
+        }
+      ]
+    },
+    {
+      "key": "situacion",
+      "label": "Situación personal",
+      "type": "select",
+      "options": [
+        {
+          "value": "soltero",
+          "label": "Soltero/a sin hijos"
+        },
+        {
+          "value": "casado",
+          "label": "Casado/a declaración conjunta"
+        },
+        {
+          "value": "hijos1",
+          "label": "Con 1 hijo a cargo"
+        },
+        {
+          "value": "hijos2",
+          "label": "Con 2+ hijos"
+        }
+      ]
+    }
   ],
   "outputs": [
-    { "key": "netoAnual", "label": "Neto anual", "format": "currency-eur" },
-    { "key": "netoMensual", "label": "Neto mensual", "format": "currency-eur" },
-    { "key": "irpf", "label": "IRPF total", "format": "currency-eur" },
-    { "key": "ss", "label": "Seguridad Social", "format": "currency-eur" },
-    { "key": "resumen", "label": "Interpretación", "format": "text" }
+    {
+      "key": "netoAnual",
+      "label": "Neto anual",
+      "format": "currency-eur"
+    },
+    {
+      "key": "netoMensual",
+      "label": "Neto mensual",
+      "format": "currency-eur"
+    },
+    {
+      "key": "irpf",
+      "label": "IRPF total",
+      "format": "currency-eur"
+    },
+    {
+      "key": "ss",
+      "label": "Seguridad Social",
+      "format": "currency-eur"
+    },
+    {
+      "key": "resumen",
+      "label": "Interpretación",
+      "format": "text"
+    }
   ],
   "example": {
     "inputs": "€30.000 bruto, 14 pagas, soltero",
     "result": "~€1.820/mes neto"
   },
   "faqs": [
-    { "q": "¿Tramos IRPF 2026?", "a": "Estatal + autonómica. Aprox. 19% hasta €12.450, 24% hasta €20.200, 30% hasta €35.200, 37% hasta €60.000, 45% hasta €300.000, 47% más de €300.000. Cada CCAA ajusta el tramo autonómico." },
-    { "q": "¿Seguridad Social trabajador?", "a": "6.35% total: 4.70% contingencias comunes + 1.55% desempleo + 0.10% formación." },
-    { "q": "¿Y la Seguridad Social de la empresa?", "a": "~30% adicional (a cargo del empleador, no sale de tu bruto)." },
-    { "q": "¿14 pagas o 12?", "a": "14 = salario mensual + pagas extras junio/diciembre. 12 = extras prorrateadas en cada mensualidad." },
-    { "q": "¿Por qué cambia el IRPF entre CCAA?", "a": "Madrid tiene tramo autonómico más bajo que Cataluña. Diferencia ~2-4% según tramo." },
-    { "q": "¿Beneficios por hijos?", "a": "Mínimo por descendientes: €2.400 por el 1er hijo, €2.700 por el 2º, €4.000 por el 3º, €4.500 por el 4º y siguientes." },
-    { "q": "¿Finiquito cuando me voy?", "a": "Incluye días trabajados del mes, extras proporcionales, vacaciones no disfrutadas e indemnización si aplica." }
+    {
+      "q": "¿Tramos IRPF 2026?",
+      "a": "Estatal + autonómica. Aprox. 19% hasta €12.450, 24% hasta €20.200, 30% hasta €35.200, 37% hasta €60.000, 45% hasta €300.000, 47% más de €300.000. Cada CCAA ajusta el tramo autonómico."
+    },
+    {
+      "q": "¿Seguridad Social trabajador?",
+      "a": "6.35% total: 4.70% contingencias comunes + 1.55% desempleo + 0.10% formación."
+    },
+    {
+      "q": "¿Y la Seguridad Social de la empresa?",
+      "a": "~30% adicional (a cargo del empleador, no sale de tu bruto)."
+    },
+    {
+      "q": "¿14 pagas o 12?",
+      "a": "14 = salario mensual + pagas extras junio/diciembre. 12 = extras prorrateadas en cada mensualidad."
+    },
+    {
+      "q": "¿Por qué cambia el IRPF entre CCAA?",
+      "a": "Madrid tiene tramo autonómico más bajo que Cataluña. Diferencia ~2-4% según tramo."
+    },
+    {
+      "q": "¿Beneficios por hijos?",
+      "a": "Mínimo por descendientes: €2.400 por el 1er hijo, €2.700 por el 2º, €4.000 por el 3º, €4.500 por el 4º y siguientes."
+    },
+    {
+      "q": "¿Finiquito cuando me voy?",
+      "a": "Incluye días trabajados del mes, extras proporcionales, vacaciones no disfrutadas e indemnización si aplica."
+    }
   ],
   "sources": [
-    { "label": "Agencia Tributaria - IRPF", "url": "https://sede.agenciatributaria.gob.es" },
-    { "label": "Seguridad Social - Bases de cotización", "url": "https://www.seg-social.es" }
+    {
+      "name": "AEAT – Retenciones sobre rendimientos del trabajo (IRPF)",
+      "url": "https://www.agenciatributaria.es/AEAT.internet/Inicio/Ayuda/Manuales__Folletos_y_Videos/Manuales_de_ayuda_a_la_presentacion/Ejercicio_2024/Manual_de_IRPF_2024/5__Rendimientos_del_trabajo/5_6__Retenciones_e_ingresos_a_cuenta/5_6_1__Retenciones_sobre_rendimientos_del_trabajo.shtml"
+    },
+    {
+      "name": "SEPE – Salario Mínimo Interprofesional (SMI)",
+      "url": "https://www.sepe.es/HomeSepe/que-es-el-sepe/comunicacion-institucional/publicaciones/publicaciones-oficiales/listado-de-publicaciones/salario-minimo-interprofesional.html"
+    },
+    {
+      "name": "Seguridad Social – Tipos de cotización 2025",
+      "url": "https://www.seg-social.es/wps/portal/wss/internet/Trabajadores/CotizacionRecaudacionTrabajadores/10721"
+    },
+    {
+      "name": "BOE – Ley 35/2006 del IRPF (escala general de gravamen)",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+    }
   ],
   "dataUpdate": {
     "frequency": "yearly",
     "lastUpdated": "2026-04-18",
     "updateType": "manual"
-  }
+  },
+  "explanation": "\n## Cómo se calcula\n\nEl salario neto se obtiene restando al bruto anual dos conceptos obligatorios: las **cotizaciones a la Seguridad Social** a cargo del empleado y la **retención de IRPF**.\n\n```\nNeto anual = Bruto anual\n           − Cotizaciones SS trabajador\n           − Retención IRPF\n\nCotizaciones SS = Bruto anual × 6,47 %\n  Desglose (2026):\n    · Contingencias comunes:  4,70 %\n    · Desempleo:              1,55 %\n    · Formación profesional:  0,10 %\n    · Mecanismo Equidad Intergeneracional (MEI): 0,12 %\n  Total trabajador:           6,47 %\n\nBase IRPF = Bruto anual − Cotizaciones SS − Mínimo personal (5.550 €)\n            − Reducción por rendimientos del trabajo (variable)\nRetención IRPF = Aplicar tarifa progresiva estatal + autonómica sobre Base IRPF\n\nNeto mensual (14 pagas) = Neto anual / 14\nNeto mensual (12 pagas) = Neto anual / 12\n```\n\n> **Nota:** La retención de IRPF que figura en la nómina es una estimación que la empresa realiza para que, al hacer la declaración de la renta, el resultado sea lo más próximo a cero posible.\n\n---\n\n## Tabla de referencia\n\nTramos IRPF estatales vigentes (escala general, Art. 63 LIRPF):\n\n| Base liquidable (€/año) | Tipo marginal estatal | Tipo autonómica media* | Tipo conjunto aprox. |\n|------------------------|----------------------|------------------------|----------------------|\n| 0 – 12.450             | 9,50 %               | 9,50 %                 | **19,00 %**          |\n| 12.450 – 20.200        | 12,00 %              | 12,00 %                | **24,00 %**          |\n| 20.200 – 35.200        | 15,00 %              | 15,00 %                | **30,00 %**          |\n| 35.200 – 60.000        | 18,50 %              | 18,50 %                | **37,00 %**          |\n| 60.000 – 300.000       | 22,50 %              | 22,50 %                | **45,00 %**          |\n| > 300.000              | 24,50 %              | 22,50 %                | **47,00 %**          |\n\n*Tipo autonómico orientativo (media nacional). Cada CCAA aplica su propia tarifa.\n\nCotizaciones SS trabajador 2026:\n\n| Concepto                              | Tipo    |\n|---------------------------------------|---------|\n| Contingencias comunes                 | 4,70 %  |\n| Desempleo (contrato indefinido)       | 1,55 %  |\n| Formación profesional                 | 0,10 %  |\n| MEI (Mecanismo Equidad Intergeneracional) | 0,12 % |\n| **Total trabajador**                  | **6,47 %** |\n\n---\n\n## Casos típicos\n\n### Caso 1 · Salario bruto 30.000 €/año · 14 pagas · Soltero/a sin hijos\n\n| Concepto                        | Importe anual |\n|----------------------------------|---------------|\n| Bruto anual                      | 30.000,00 €   |\n| − SS trabajador (6,47 %)         | −1.941,00 €   |\n| − Reducción rendim. del trabajo  | −2.000,00 €   |\n| − Mínimo personal                | −5.550,00 €   |\n| = Base liquidable IRPF           | 20.509,00 €   |\n| Cuota IRPF aprox. (tipo efectivo ~17 %) | −5.100,00 € |\n| **Neto anual**                   | **22.959,00 €** |\n| **Neto por paga (÷14)**          | **≈ 1.640 €** |\n\n### Caso 2 · Salario bruto 45.000 €/año · 12 pagas · Casado/a, 2 hijos\n\n| Concepto                        | Importe anual |\n|----------------------------------|---------------|\n| Bruto anual                      | 45.000,00 €   |\n| − SS trabajador (6,47 %)         | −2.911,50 €   |\n| − Mínimo personal + familiar     | −10.550,00 €  |\n| − Reducción rendim. del trabajo  | −2.000,00 €   |\n| = Base liquidable IRPF           | 29.538,50 €   |\n| Cuota IRPF aprox. (tipo efectivo ~18 %) | −8.100,00 € |\n| **Neto anual**                   | **33.988,50 €** |\n| **Neto mensual (÷12)**           | **≈ 2.832 €** |\n\n### Caso 3 · Salario mínimo interprofesional (SMI 2025: 1.184 €/mes × 14 pagas = 16.576 €/año)\n\n| Concepto                        | Importe anual |\n|----------------------------------|---------------|\n| Bruto anual                      | 16.576,00 €   |\n| − SS trabajador (6,47 %)         | −1.072,47 €   |\n| Base liquidable (con reducciones)| < 12.450 €    |\n| Cuota IRPF (tipo efectivo ~5 %)  | −827,00 €     |\n| **Neto anual**                   | **≈ 14.676 €** |\n| **Neto por paga (÷14)**          | **≈ 1.048 €** |\n\n---\n\n## Errores comunes\n\n1. **Confundir tipo marginal con tipo efectivo.** El 37 % aplica solo a la parte de renta que supera 35.200 €, no a toda la base. El tipo efectivo real suele ser 10-15 puntos inferior al marginal.\n\n2. **Olvidar las cotizaciones de Seguridad Social al calcular la retención de IRPF.** La base sobre la que se aplica el IRPF ya descuenta las cuotas SS, por lo que el ahorro fiscal es doble: menos cuota SS y menor base imponible.\n\n3. **Usar tablas de IRPF del año anterior.** Los tramos se actualizan anualmente (a veces por deflactación autonómica). Usar tipos de 2024 en 2026 puede generar diferencias de hasta el 2-3 % en la retención.\n\n4. **Ignorar la tarifa autonómica.** El IRPF tiene componente estatal y autonómica. Un mismo bruto tributa de forma diferente en Madrid (tipo máximo 43,5 %) que en Cataluña (tipo máximo 50 %) o Andalucía (tipo máximo 44,9 %).\n\n5. **Calcular el neto mensual dividiendo por 14 siendo el bruto de 12 pagas.** Si el convenio colectivo prorratea las pagas extra en las 12 mensualidades, la base de cotización mensual es mayor y la retención mensual también lo es.\n\n---\n\n## Calculadoras relacionadas\n\nPróximamente encontrarás en Hacé Cuentas España herramientas complementarias para seguir planificando tus finanzas personales.\n",
+  "faq": [
+    {
+      "q": "¿Qué porcentaje de IRPF me retienen si gano 30.000 € brutos al año?",
+      "a": "Con 30.000 € brutos, situación de soltero/a y sin hijos, el tipo de retención orientativo ronda el 15-17 % efectivo sobre el bruto (unos 4.500-5.100 € anuales). El tipo marginal llega al 30 % en ese tramo, pero solo sobre la parte de base que supera los 20.200 €. La empresa calcula la retención exacta según el modelo 145 que cumplimentas al inicio del contrato."
+    },
+    {
+      "q": "¿Cuánto me descuentan de Seguridad Social en la nómina?",
+      "a": "En 2026, el trabajador cotiza un total del 6,47 % de su salario bruto: 4,70 % por contingencias comunes, 1,55 % por desempleo, 0,10 % por formación profesional y 0,12 % por el Mecanismo de Equidad Intergeneracional (MEI). Por ejemplo, con 2.000 € brutos/mes se descuentan aproximadamente 129,40 € en concepto de SS del trabajador."
+    },
+    {
+      "q": "¿Es mejor cobrar en 12 pagas o en 14 pagas?",
+      "a": "El neto anual total es el mismo en ambos casos; la diferencia es el calendario de cobro. Con 14 pagas recibes dos extras en junio y diciembre de menor importe unitario, lo que facilita la planificación de gastos estacionales. Con 12 pagas prorrateas las extras en cada mensualidad, obteniendo cuotas mensuales más altas pero sin 'pico' extra. La retención de IRPF mensual es proporcionalmente idéntica en ambos escenarios."
+    },
+    {
+      "q": "¿Cómo afecta tener hijos al IRPF que me retienen?",
+      "a": "Cada hijo menor de 25 años que conviva contigo y no tenga rentas superiores a 8.000 €/año genera un mínimo familiar de 2.400 € por el primero, 2.700 € por el segundo, 4.000 € por el tercero y 4.500 € por el cuarto y siguientes (Art. 58 LIRPF). Ese importe reduce la base liquidable, bajando el tipo efectivo de IRPF entre 2 y 5 puntos porcentuales según el salario."
+    },
+    {
+      "q": "¿Cuál es el salario mínimo en España en 2025/2026?",
+      "a": "El SMI vigente desde 2024 es de 1.134 €/mes en 14 pagas (15.876 €/año). Para 2025 el Gobierno aprobó una subida hasta 1.184 €/mes en 14 pagas (16.576 €/año). La cifra definitiva para 2026 está pendiente de negociación con los agentes sociales. El SMI lo fija el Gobierno mediante Real Decreto, consultable en el BOE y en la web del SEPE."
+    },
+    {
+      "q": "¿Qué es el modelo 145 y para qué sirve?",
+      "a": "El modelo 145 es la comunicación de datos al pagador (tu empresa) para que calcule correctamente tu retención de IRPF. En él declaras tu situación personal y familiar: estado civil, número de hijos, si tienes alguna discapacidad reconocida o si pagas pensión compensatoria. Si no lo entregas, la empresa aplica el tipo máximo legal como si fueras soltero/a sin cargas. Debes actualizarlo si cambia tu situación a lo largo del año."
+    },
+    {
+      "q": "¿Por qué el tipo de IRPF varía según la comunidad autónoma?",
+      "a": "El IRPF en España está cedido parcialmente a las CCAA: el 50 % de la recaudación y la gestión de la tarifa autonómica. Cada comunidad puede aprobar su propia escala de tipos, deducciones adicionales y mínimos ampliados. Así, el tipo máximo conjunto oscila entre el 43,5 % en Madrid y el 54 % en Cataluña o Extremadura para rentas superiores a 300.000 €. Para rentas medias (25.000-40.000 €) la diferencia entre CCAA es de 1-3 puntos porcentuales."
+    },
+    {
+      "q": "¿Qué ocurre si la empresa me retiene más IRPF del que me corresponde?",
+      "a": "Al presentar la declaración de la renta (modelo 100, campaña abril-junio del año siguiente), Hacienda calcula tu cuota íntegra real. Si la retención acumulada durante el año supera la cuota, el resultado es 'a devolver' y la AEAT te reembolsa la diferencia, habitualmente en un plazo de 6 meses desde la presentación. Puedes solicitar a tu empresa que reduzca el tipo de retención a lo largo del año presentando una nueva comunicación modelo 145."
+    },
+    {
+      "q": "¿Cómo se calcula la base de cotización a la Seguridad Social?",
+      "a": "La base de cotización mensual es el salario bruto mensual incluyendo prorrata de pagas extras, complementos salariales y horas extraordinarias, con un tope máximo de 4.909,50 €/mes en 2025 (la cifra exacta para 2026 la fija la Ley de Presupuestos Generales o el RD de cotizaciones). Si tu bruto supera ese tope, cotizas sobre el máximo y el exceso no genera mayor cuota de SS, aunque sí tributa íntegramente por IRPF."
+    }
+  ]
 }

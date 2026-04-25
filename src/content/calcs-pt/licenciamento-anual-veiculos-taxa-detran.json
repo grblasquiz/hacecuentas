@@ -19,14 +19,13 @@
     "custo emplacamento",
     "licenciamento atrasado"
   ],
-  "intro": "Todos os anos o proprietário de veículo precisa fazer o **licenciamento anual** — sem ele é impossível circular legalmente. O valor total é a soma de: **taxa CRLV** (Certificado de Registro e Licenciamento, cobrada pelo Detran), **DPVAT** (quando vigente) e o **IPVA do ano**. Em SP, a taxa CRLV 2026 está em torno de R$ 150-170. Esta calculadora soma todos os custos para você saber quanto gastará para regularizar seu veículo.",
-  "keyTakeaway": "**Licenciamento total = Taxa CRLV + DPVAT (se aplicável) + IPVA + Multas pendentes**. O CRLV digital é obrigatório para circular.",
+  "intro": "O licenciamento anual de veículos no Brasil é obrigatório para todos os proprietários e reúne três cobranças distintas: a **taxa do CRLV** (Certificado de Registro e Licenciamento de Veículo), o **DPVAT** (Seguro Obrigatório de Danos Pessoais) e o **IPVA** (Imposto sobre a Propriedade de Veículos Automotores). Sem o licenciamento em dia, o veículo está sujeito a apreensão, multa de R$ 293,47 (infração gravíssima, 7 pontos na CNH) e impedimento de circulação. Esta calculadora soma todas as parcelas do licenciamento 2026 — incluindo multas pendentes que bloqueiam a emissão do CRLV — e entrega o custo total real a pagar.",
+  "keyTakeaway": "**Total Licenciamento = Taxa CRLV (varia por estado: R$ 65 a R$ 226) + DPVAT (R$ 0 em 2026, suspenso) + IPVA (alíquota × valor venal) + Multas pendentes**. Em SP com IPVA de R$ 2.000 e CRLV de R$ 160, o total é **R$ 2.160**.",
   "useCases": [
-    "Você vai licenciar o veículo e quer saber o valor total.",
-    "Comprou carro usado e precisa regularizar a documentação.",
-    "Vai pagar licenciamento atrasado com multas pendentes.",
-    "Está simulando custo anual total do veículo.",
-    "Quer comparar custos entre estados antes de transferir."
+    "Calcular o custo total do licenciamento 2026 antes do vencimento para evitar juros e multa por atraso no IPVA (0,33% ao dia + multa de 20%)",
+    "Planejar o orçamento familiar anual incluindo CRLV + IPVA de um ou mais veículos, comparando o custo entre estados como SP, RJ e MG",
+    "Verificar se multas de trânsito pendentes no CPF ou CNPJ impedirão a emissão do novo CRLV e estimar o valor total a regularizar",
+    "Conferir se o DPVAT está sendo cobrado indevidamente na guia, já que o seguro está suspenso desde 2020 e a cobrança não deveria aparecer em 2026"
   ],
   "fields": [
     {
@@ -76,8 +75,17 @@
     }
   ],
   "outputs": [
-    { "id": "totalLicenciamento", "label": "Total a pagar", "format": "currency", "primary": true },
-    { "id": "somaTaxas", "label": "Taxas (CRLV + DPVAT)", "format": "currency" }
+    {
+      "id": "totalLicenciamento",
+      "label": "Total a pagar",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "somaTaxas",
+      "label": "Taxas (CRLV + DPVAT)",
+      "format": "currency"
+    }
   ],
   "example": {
     "title": "Exemplo: automóvel em SP com IPVA de R$ 2.000",
@@ -90,46 +98,62 @@
     ],
     "result": "Custo total do licenciamento 2026: **R$ 2.160**."
   },
-  "explanation": "## Como se calcula\n\nO licenciamento anual é a soma de vários itens:\n\n```\nTotal = Taxa CRLV + DPVAT + IPVA + Multas pendentes\n```\n\n## Tabela de taxas CRLV 2026 (referência)\n\n| Estado | Taxa CRLV aproximada |\n|---|---|\n| SP | R$ 160,00 |\n| RJ | R$ 230,00 |\n| MG | R$ 100,00 |\n| PR | R$ 125,00 |\n| RS | R$ 190,00 |\n\n## Elegibilidade para circular\n\n- CRLV **digital** emitido e válido (aplicativo Carteira Digital de Trânsito).\n- IPVA, seguro e multas quitadas até a data-limite.\n- Inspeção veicular em estados que exigem (quando aplicável).\n\n## Fontes\n\n- Detran de cada estado.\n- Senatran (Secretaria Nacional de Trânsito).\n- Receita Federal (DPVAT).",
+  "explanation": "## Como se calcula\n\nO custo total do licenciamento anual é a soma de até quatro componentes:\n\n```\nTotal Licenciamento = Taxa_CRLV + DPVAT + IPVA + Multas_Pendentes\n```\n\nCada parcela segue regras próprias:\n\n- **Taxa CRLV**: fixada por cada DETRAN estadual, varia de R$ 65 (alguns estados do Norte) a R$ 226 (SP, dependendo da categoria). Em 2026, SP cobra R$ 160 para automóveis de passeio.\n- **DPVAT**: suspenso pela MP 904/2019 desde 2020. O valor em 2026 é **R$ 0** para a maioria dos veículos. Nenhuma cobrança deve aparecer na guia.\n- **IPVA**: calculado como `Alíquota_Estadual × Valor_Venal_do_Veículo`. O valor venal é apurado pelo DETRAN/SEFAZ de cada estado com base em tabelas da FIPE ou próprias.\n- **Multas pendentes**: débitos de infrações vinculados ao CPF do proprietário ou à placa do veículo bloqueiam a emissão do CRLV. O valor varia conforme infração e incluem correção monetária.\n\n**Exemplo completo (SP 2026):**\n```\nTaxa CRLV SP    = R$   160,00\nDPVAT           = R$     0,00  (suspenso)\nIPVA (4% × 50.000) = R$ 2.000,00\nMultas          = R$     0,00\n─────────────────────────────\nTOTAL           = R$ 2.160,00\n```\n\n---\n\n## Tabela de referência\n\n### Taxa CRLV por estado (2025/2026 — valores de referência)\n\n| Estado | Taxa CRLV (automóvel) | Alíquota IPVA (automóvel) | Vencimento base IPVA |\n|---|---|---|---|\n| SP | R$ 160,00 | 4,0% | Jan–Mar (por final de placa) |\n| RJ | R$ 226,00 | 4,0% | Jan–Dez (cota única ou parcelado) |\n| MG | R$ 133,73 | 4,0% | Jan–Mar (por final de placa) |\n| RS | R$ 119,44 | 3,0% | Jan–Mar |\n| PR | R$  99,00 | 3,5% | Jan–Mar |\n| BA | R$  88,00 | 3,5% | Jan–Mar |\n| GO | R$ 105,00 | 3,5% | Jan–Mar |\n| PE | R$  79,00 | 3,0% | Jan–Abr |\n| AM | R$  65,00 | 3,0% | Jan–Mar |\n| DF | R$ 180,00 | 4,0% (gasolina/diesel) | Jan–Mar |\n\n> Valores aproximados; consulte sempre o DETRAN do seu estado para o valor exato vigente em 2026.\n\n### Multas de trânsito: valores de referência (CTB 2024)\n\n| Gravidade | Valor base | Pontos CNH | Exemplos |\n|---|---|---|---|\n| Leve | R$ 88,38 | 3 | Usar buzina indevidamente |\n| Média | R$ 130,16 | 4 | Estacionar em local proibido |\n| Grave | R$ 195,23 | 5 | Avançar sinal vermelho |\n| Gravíssima | R$ 293,47 | 7 | Ultrapassar velocidade em 50% |\n| Gravíssima × 3 | R$ 880,41 | 7 | Embriaguez ao volante |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Automóvel popular em São Paulo (valor venal R$ 40.000)\n```\nIPVA = 4% × R$ 40.000   = R$ 1.600,00\nTaxa CRLV SP             = R$   160,00\nDPVAT                    = R$     0,00\nMultas                   = R$     0,00\n─────────────────────────────────────\nTOTAL                    = R$ 1.760,00\n```\nPagando IPVA em cota única até janeiro, SP oferece desconto de até **3%**: economia de R$ 48,00 → total real de R$ 1.712,00.\n\n### Caso 2 — SUV no Rio de Janeiro (valor venal R$ 120.000)\n```\nIPVA = 4% × R$ 120.000  = R$ 4.800,00\nTaxa CRLV RJ             = R$   226,00\nDPVAT                    = R$     0,00\nMulta grave pendente     = R$   195,23\n─────────────────────────────────────\nTOTAL                    = R$ 5.221,23\n```\nSem quitar a multa, o DETRAN-RJ não emite o novo CRLV. O veículo circula irregularmente.\n\n### Caso 3 — Moto 150 cc em Minas Gerais (valor venal R$ 8.000)\n```\nIPVA MG (1% motos até 125 cc → 2% acima) = 2% × R$ 8.000 = R$ 160,00\nTaxa CRLV MG             = R$   133,73\nDPVAT                    = R$     0,00\nMultas                   = R$     0,00\n─────────────────────────────────────\nTOTAL                    = R$   293,73\n```\nMotos têm alíquota de IPVA diferenciada em vários estados — consulte sempre a tabela específica para motos.\n\n---\n\n## Erros comuns\n\n1. **Calcular o IPVA sobre o preço de compra em vez do valor venal oficial**: o valor venal é definido pelo estado (tabela FIPE ou própria) e pode ser diferente do preço pago. Use o demonstrativo do DETRAN/SEFAZ.\n\n2. **Esquecer multas vinculadas ao CPF e não à placa**: multas de outros veículos registrados no mesmo CPF podem bloquear o licenciamento. Consulte o portal do SENATRAN/DETRAN antes de calcular.\n\n3. **Somar DPVAT ao total em 2026**: o seguro DPVAT está suspenso desde 2020. Se a guia apresentar cobrança de DPVAT, há erro no sistema — não pague sem verificar com o DETRAN.\n\n4. **Ignorar o desconto de cota única do IPVA**: a maioria dos estados oferece desconto de 3% a 5% para pagamento à vista em janeiro/fevereiro. Não considerar esse desconto superestima o custo total.\n\n5. **Confundir CRLV com ATPV-e**: o CRLV-e digital (emitido pelo app) tem validade igual ao físico. Não é necessário pagar taxa extra para obter o digital — a taxa é única.\n\n6. **Aplicar a alíquota de automóvel a camionetes/utilitários**: vários estados diferenciam alíquotas por tipo de carroceria e combustível. Caminhonetes flex podem ter alíquota maior que sedãs.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de IPVA São Paulo (4%)](/ipva-sao-paulo-tabela-4-porcento-autos)\n- [Calculadora de IPVA Rio de Janeiro (4%)](/ipva-rio-de-janeiro-4-porcento-autos)\n- [Calculadora de IPVA Minas Gerais (4%)](/ipva-minas-gerais-4-porcento-autos)",
   "faq": [
     {
-      "q": "Qual o custo do licenciamento 2026 em SP?",
-      "a": "Taxa CRLV de aproximadamente R$ 160 + IPVA + multas. Sem multas nem DPVAT, o valor fica em torno de IPVA + R$ 160."
+      "q": "O DPVAT voltou a ser cobrado em 2026?",
+      "a": "Não. O DPVAT foi suspenso pela Medida Provisória 904/2019, confirmado pelo STF, e até a data de referência desta calculadora (2026) não há previsão de reativação pelo Congresso Nacional. O campo deve ser preenchido com R$ 0. Se sua guia apresentar cobrança de DPVAT, questione imediatamente no DETRAN do seu estado antes de efetuar qualquer pagamento."
     },
     {
-      "q": "O DPVAT está sendo cobrado em 2026?",
-      "a": "O DPVAT ficou suspenso em anos recentes, mas pode ser retomado com novo modelo. Verifique o boleto oficial do Detran do seu estado."
+      "q": "O que acontece se eu não fizer o licenciamento no prazo?",
+      "a": "Circular com licenciamento vencido é infração gravíssima (Art. 230, V do CTB): multa de R$ 293,47 e 7 pontos na CNH. Além disso, o veículo pode ser apreendido e só é liberado após regularização. O IPVA pago em atraso também acumula multa de 20% + juros de 0,33% ao dia (juros Selic, dependendo do estado)."
     },
     {
-      "q": "Posso circular com o CRLV digital?",
-      "a": "Sim, o CRLV digital é aceito em todo o país via app Carteira Digital de Trânsito (Senatran)."
+      "q": "Como descubro o valor venal do meu veículo para calcular o IPVA?",
+      "a": "Cada estado publica a tabela de valores venais no site da Secretaria da Fazenda (SEFAZ) ou do DETRAN. Em SP, consulte o portal da SEFAZ-SP informando o Renavam. Em geral, o valor venal é baseado na tabela FIPE de outubro/novembro do ano anterior e pode ser menor que o preço de mercado atual do veículo."
     },
     {
-      "q": "O que acontece se eu circular sem licenciar?",
-      "a": "Infração gravíssima (7 pontos), multa de R$ 293,47 e o veículo pode ser apreendido/recolhido para pátio."
+      "q": "Posso parcelar o IPVA e o CRLV?",
+      "a": "O IPVA pode ser parcelado em até 5 vezes em estados como SP e RJ, mas perde-se o desconto de cota única (3% a 5%). A taxa do CRLV (DETRAN) geralmente é paga em cota única no momento do licenciamento. Multas pendentes também precisam ser quitadas integralmente antes da emissão do novo CRLV."
     },
     {
-      "q": "Posso parcelar o licenciamento?",
-      "a": "A taxa CRLV geralmente é paga à vista, mas o IPVA pode ser parcelado em até 3x na maioria dos estados."
+      "q": "Veículo isento de IPVA ainda precisa pagar a taxa do CRLV?",
+      "a": "Sim. A isenção de IPVA (concedida a veículos com mais de 20 anos em alguns estados, táxis, deficientes físicos, entre outros) não elimina a taxa do CRLV cobrada pelo DETRAN. As duas cobranças são independentes — a isenção do imposto estadual não afeta a taxa administrativa de licenciamento."
     },
     {
-      "q": "Quando vence o licenciamento?",
-      "a": "Cada estado define o calendário pelo final da placa. Em SP, por exemplo, vence entre abril e setembro conforme o último número da placa."
+      "q": "Qual é a diferença entre o CRLV e o CRV?",
+      "a": "O CRV (Certificado de Registro de Veículo) é o documento de propriedade, emitido uma única vez no registro do veículo e transferido nas mudanças de dono. O CRLV (Certificado de Registro e Licenciamento de Veículo) é o documento anual de circulação — prova que o veículo está regularizado no ano vigente. São documentos distintos e a taxa anual refere-se exclusivamente ao CRLV."
     },
     {
-      "q": "É preciso fazer vistoria todo ano?",
-      "a": "Depende do estado. SP e RJ não exigem vistoria anual para veículos particulares. Táxis e ônibus têm exigência própria."
+      "q": "Tenho multas de outro veículo no meu CPF. Elas bloqueiam o licenciamento do meu carro atual?",
+      "a": "Sim, em grande parte dos estados. Multas vinculadas ao CPF do proprietário — independentemente de qual veículo as gerou — podem bloquear a emissão do CRLV de todos os veículos registrados naquele CPF. Consulte o portal do Detran do seu estado ou o SENATRAN (gov.br/senatran) antes de tentar licenciar, pois a quitação das multas é pré-requisito."
     },
     {
-      "q": "Como emito o CRLV digital 2026?",
-      "a": "Após pagar o licenciamento, acesse o app Carteira Digital de Trânsito ou site do Detran do seu estado para baixar o CRLV em PDF."
+      "q": "Veículos elétricos e híbridos têm desconto no IPVA?",
+      "a": "Vários estados concedem isenção parcial ou total de IPVA para elétricos e híbridos como política de incentivo. Em SP, veículos elétricos têm alíquota de 0% (isentos). Em MG, há redução de 50% para híbridos. No RJ, elétricos puros são isentos. Como cada estado define sua própria legislação, consulte a SEFAZ do seu estado para saber a alíquota exata aplicável ao seu modelo em 2026."
     }
   ],
   "sources": [
-    { "name": "Detran-SP", "url": "https://www.detran.sp.gov.br" },
-    { "name": "Detran-RJ", "url": "https://www.detran.rj.gov.br" },
-    { "name": "Detran-MG", "url": "https://www.mg.gov.br/servicos/detran" },
-    { "name": "Senatran — Carteira Digital", "url": "https://www.gov.br/pt-br/servicos/obter-a-carteira-digital-de-transito" }
+    {
+      "name": "DETRAN-SP – Taxas e Serviços 2025/2026",
+      "url": "https://www.detran.sp.gov.br/wps/portal/portaldetran/cidadao/veiculo/licenciamento"
+    },
+    {
+      "name": "SEFAZ-SP – Consulta IPVA 2025",
+      "url": "https://www.fazenda.sp.gov.br/ipva/"
+    },
+    {
+      "name": "SENATRAN / DENATRAN – Infrações e Multas (CTB)",
+      "url": "https://www.gov.br/senatran/pt-br"
+    },
+    {
+      "name": "STF – Suspensão do DPVAT (ADPF 640)",
+      "url": "https://portal.stf.jus.br/processos/detalhe.asp?incidente=5847919"
+    },
+    {
+      "name": "IBGE – Frota de Veículos no Brasil",
+      "url": "https://www.ibge.gov.br/explica/codigos-e-indicadores/frota-de-veiculos.php"
+    }
   ],
   "relatedSlugs": [
     "ipva-sao-paulo-tabela-4-porcento-autos",
@@ -137,9 +161,18 @@
     "ipva-minas-gerais-4-porcento-autos"
   ],
   "howToSteps": [
-    { "name": "Consulte a taxa do seu Detran", "text": "Acesse o site do Detran estadual e veja o valor atualizado da taxa CRLV." },
-    { "name": "Some com IPVA e DPVAT", "text": "Insira os valores do IPVA anual e DPVAT (se cobrado)." },
-    { "name": "Inclua multas pendentes", "text": "Adicione multas atrasadas — elas bloqueiam o licenciamento." }
+    {
+      "name": "Consulte a taxa do seu Detran",
+      "text": "Acesse o site do Detran estadual e veja o valor atualizado da taxa CRLV."
+    },
+    {
+      "name": "Some com IPVA e DPVAT",
+      "text": "Insira os valores do IPVA anual e DPVAT (se cobrado)."
+    },
+    {
+      "name": "Inclua multas pendentes",
+      "text": "Adicione multas atrasadas — elas bloqueiam o licenciamento."
+    }
   ],
   "dataUpdate": {
     "frequency": "yearly",

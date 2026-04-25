@@ -23,14 +23,14 @@
     "email sustainability calculator",
     "digital carbon footprint"
   ],
-  "intro": "Carbon footprint measures the environmental impact of human activities. Understanding your CO₂ emissions allows you to reduce them through concrete actions (transportation, energy, consumption, food). Estimate g CO₂ per email based on whether it has large attachments—free and fast. Values are current to 2026 and reviewed regularly to keep you informed.",
-  "keyTakeaway": "Formula: **g_CO₂ = 4g (text) or 50g (with large attachment)**. Direct application with your input values. Estimate CO₂ emissions from emails based on attachment size.",
+  "intro": "Every email you send has a measurable carbon cost. A standard text-only email generates roughly **4 g of CO₂e**, while an email with a large attachment (1–10 MB) produces about **50 g CO₂e** — and a spam email still costs ~0.3 g. These figures come from lifecycle analyses that account for data-center energy, network transmission, and end-user device power draw. The calculator uses your daily email volume and attachment rate to estimate your personal or organizational annual email carbon footprint in kg CO₂e, helping you identify where digital communication habits drive real-world emissions.",
+  "keyTakeaway": "**Daily CO₂ (g) = (Emails/day × (1 − attachment%)) × 4 g + (Emails/day × attachment%) × 50 g** — e.g., 100 emails/day at 20% with attachments = 1,320 g/day ≈ **482 kg CO₂/year**, roughly the same as driving a gasoline car ~1,200 miles.",
   "useCases": [
-    "Technical calculations related to email emissions (text vs. attachments)",
-    "Students and professionals in environmental and sustainability fields",
-    "Validate theoretical results before implementation",
-    "Teaching and learning about carbon footprint concepts",
-    "Quick reference for sustainability projects"
+    "A remote software team wants to quantify the carbon impact of their internal email culture before switching to a chat-based tool like Slack.",
+    "An HR department sends daily newsletters with PDF attachments to 500 employees and needs to report digital emissions for a corporate sustainability audit.",
+    "A freelancer tracking their personal carbon footprint wants to include digital habits alongside travel and energy use in a carbon offset plan.",
+    "A university IT department is evaluating whether migrating large file transfers from email attachments to a cloud storage link reduces their annual CO₂ output.",
+    "A marketing agency sends 300 campaign emails per day with image-heavy attachments and needs to benchmark digital vs. print emissions for a client ESG report."
   ],
   "fields": [
     {
@@ -78,53 +78,65 @@
     ],
     "result": "1.3 kg/day = 482 kg/year"
   },
-  "explanation": "The **environment** is a key issue of the 21st century. Measuring your impact (CO₂, water, waste) and reducing it through concrete actions is both an individual and collective responsibility.\n\n## How It's Calculated\n\nThis calculator applies the formula with the values you enter, checking typical ranges and alerting you to unreasonable values.\n\n## Final Notes\n\nThis calculation is a reference estimate only. For critical decisions (financial, medical, legal), consult with a specialized professional. Values are current to 2026 and reviewed regularly.",
+  "explanation": "## How It's Calculated\n\nThe formula applies emission factors per email type, then scales to an annual figure:\n\n```\n# Step 1 — Split email volume by type\ntext_emails   = emails_per_day × (1 - attachment_pct / 100)\nattach_emails = emails_per_day × (attachment_pct / 100)\n\n# Step 2 — Apply emission factors (g CO₂e per email)\nFACTOR_TEXT       = 4    # g CO₂e — standard text/HTML email\nFACTOR_ATTACHMENT = 50   # g CO₂e — email with 1–5 MB attachment\n\n# Step 3 — Daily total\ng_co2_day = (text_emails × FACTOR_TEXT) + (attach_emails × FACTOR_ATTACHMENT)\n\n# Step 4 — Annual total (365 days)\nkg_co2_year = (g_co2_day × 365) / 1000\n```\n\nThese emission factors are drawn from lifecycle energy analyses of email, which account for three segments: **data-center processing and storage** (~35% of total), **network transmission** (~25%), and **end-user device energy** (~40%). The 50 g figure for attachments assumes a typical 1–5 MB file, consistent with values reported by carbon literacy researchers and widely cited in digital sustainability literature.\n\n---\n\n## Reference Table\n\n| Email Type | Emission Factor | Annual Impact (1 email/day) | Notes |\n|---|---|---|---|\n| Spam (filtered) | ~0.3 g CO₂e | ~0.1 kg/year | Never read; server still processes |\n| Text-only / plain HTML | ~4 g CO₂e | ~1.5 kg/year | Standard business email |\n| With small attachment (<1 MB) | ~20 g CO₂e | ~7.3 kg/year | Small PDF, image |\n| With large attachment (1–5 MB) | ~50 g CO₂e | ~18.3 kg/year | Deck, spreadsheet, HD photo |\n| With very large attachment (>5 MB) | ~350 g CO₂e | ~127.8 kg/year | Video, raw design files |\n| Long email chain (10+ replies) | ~50 g CO₂e | ~18.3 kg/year | Cumulative storage & processing |\n\n*CO₂e = CO₂ equivalent, includes CH₄ and N₂O from energy generation mix.*\n\n---\n\n## Typical Use Cases with Real Numbers\n\n### Example 1 — Office Worker (100 emails/day, 20% with attachments)\n- Text emails: 80 × 4 g = **320 g**\n- Attachment emails: 20 × 50 g = **1,000 g**\n- **Daily total: 1,320 g → Annual: 481.8 kg CO₂e**\n- Context: Equivalent to approximately 1,200 miles driven in an average US gasoline passenger car (~0.40 kg CO₂/mile per EPA estimates).\n\n### Example 2 — Marketing Team (300 emails/day, 60% with attachments)\n- Text emails: 120 × 4 g = **480 g**\n- Attachment emails: 180 × 50 g = **9,000 g**\n- **Daily total: 9,480 g → Annual: 3,460 kg CO₂e (3.46 metric tons)**\n- Context: Comparable to a round-trip transatlantic flight (New York–London ≈ ~1.6 metric tons CO₂ per passenger), more than doubled.\n\n### Example 3 — Solo Freelancer (30 emails/day, 5% with attachments)\n- Text emails: 28.5 × 4 g = **114 g**\n- Attachment emails: 1.5 × 50 g = **75 g**\n- **Daily total: 189 g → Annual: 69 kg CO₂e**\n- Context: Modest but non-trivial — equivalent to leaving a 60W incandescent bulb on for ~1,150 hours.\n\n---\n\n## Common Mistakes\n\n1. **Assuming unsent or deleted emails have zero footprint.** Emails stored in Drafts or Trash still consume data-center storage energy. Servers replicate and back up data continuously regardless of whether the email was ever opened.\n\n2. **Ignoring the recipient side.** The 4 g and 50 g factors include energy consumed by the *recipient's* device to open and read the email. Sending to a distribution list of 200 people multiplies the footprint by 200.\n\n3. **Treating cloud links as zero-emission alternatives.** While sharing a Google Drive or OneDrive link instead of an attachment *does* reduce per-email emissions significantly (~4 g instead of 50 g for the email itself), streaming or downloading the file from cloud storage still generates emissions — though typically far lower due to infrastructure efficiency at scale.\n\n4. **Using calendar days instead of working days.** Many users send emails only on weekdays (~261 days/year). Using 365 days inflates the annual estimate by ~40%. This calculator uses 365 for a worst-case/conservative estimate — adjust mentally if your usage is weekday-only.\n\n5. **Ignoring email retention policies.** Emails stored for 5+ years in corporate archives accumulate storage emissions year over year. A 1 MB email stored for 5 years adds an ongoing tail of CO₂ beyond the initial send event.\n\n---\n\n## Related Calculators\n\nSince this calculator focuses on digital carbon footprints, you may also find value in broader environmental tools on Hacé Cuentas. Explore additional sustainability calculators in the [medio-ambiente](/medio-ambiente) category to measure other aspects of your carbon footprint and environmental impact.",
   "faq": [
     {
-      "q": "How much CO₂ does sending an email produce?",
-      "a": "A text-only email produces about 4g CO₂, while one with a large attachment produces around 50g CO₂. This depends on server energy, network transmission, and device power consumption."
+      "q": "Where do the 4 g and 50 g CO₂e emission factors come from?",
+      "a": "These figures originate from lifecycle energy analyses of internet communications infrastructure. The 4 g value for a standard email and 50 g for an email with a typical attachment (1–5 MB) have been cited extensively in digital sustainability research and carbon literacy frameworks. They account for data-center processing (~35%), network transmission (~25%), and end-user device consumption (~40%). Exact values can vary by country energy grid mix — the US grid being somewhat more carbon-intensive than, say, Norway's hydropower-dominant grid."
     },
     {
-      "q": "Why do emails have a carbon footprint?",
-      "a": "Emails require energy from data center servers, network infrastructure, and your device. Larger files (with attachments) require more energy to transmit and store."
+      "q": "Does the carbon footprint change depending on who hosts my email (Gmail, Outlook, etc.)?",
+      "a": "Yes, modestly. Major providers like Google (Gmail) and Microsoft (Outlook) have committed to operating on 100% renewable energy or purchasing renewable energy certificates (RECs), which can reduce the data-center portion of emissions significantly. However, network transmission and end-user device energy are outside their control. In practice, switching providers has a smaller impact than reducing email volume or attachment size. The emission factors used here represent a global average baseline."
     },
     {
-      "q": "How much does a large attachment increase email emissions?",
-      "a": "A large attachment can increase emissions by up to 12x compared to a text-only email. Compression and shared links (like Drive or Dropbox) significantly reduce the impact."
+      "q": "How much CO₂ does the average American generate from email per year?",
+      "a": "The average US office worker sends and receives roughly 120 emails per day (Radicati Group estimates). Assuming ~15% include attachments, that yields approximately (102 × 4) + (18 × 50) = 408 + 900 = 1,308 g/day, or about **477 kg CO₂e/year per person**. For context, the EPA estimates the average US passenger vehicle emits about 4.6 metric tons of CO₂ per year, so email alone represents roughly 10% of that."
     },
     {
-      "q": "How can I reduce email carbon emissions?",
-      "a": "Use shared links instead of attachments, compress files, remove image signatures, unsubscribe from newsletters you don't read, and clean up old emails regularly."
+      "q": "Is spam email a significant source of carbon emissions?",
+      "a": "Spam is individually tiny (~0.3 g CO₂e per message) but enormous in aggregate. Estimates suggest that globally, spam accounts for roughly 80% of all email traffic — that's approximately 280 billion spam messages per day. Even at 0.3 g each, that's around 84,000 metric tons of CO₂e *per day* globally from spam alone. Spam filters at major providers help, but processing and briefly storing spam before filtering it still consumes energy."
     },
     {
-      "q": "Does deleting old emails reduce my carbon footprint?",
-      "a": "Yes. Each GB stored produces about 0.01 kg CO₂/year. Cleaning up 100 GB saves roughly 1 kg CO₂ annually."
+      "q": "What's the single most effective way to reduce my email carbon footprint?",
+      "a": "Eliminating large attachments has the highest leverage. Replacing a 5 MB PDF attachment with a cloud storage link reduces the per-email footprint from ~50 g to ~4 g — a 92% reduction for that email. Other high-impact actions include: unsubscribing from newsletters you don't read (reducing storage), setting shorter email retention policies at the organizational level, and using direct messaging tools for internal communication instead of reply-all email chains."
     },
     {
-      "q": "What's the environmental impact of Teams or Slack vs. email?",
-      "a": "Messaging apps can be similar or lower in emissions than email. Discord is more efficient due to reduced redundancy compared to traditional email systems."
+      "q": "Does sending an email to more recipients multiply the carbon footprint?",
+      "a": "Yes, linearly. Each recipient's mail server must store a copy, and each recipient's device consumes energy to download and render the message. Sending a 50 g attachment email to 20 people generates roughly 20 × 50 g = **1,000 g (1 kg) CO₂e** for a single send action. This is why mass-marketing emails and large distribution lists carry a disproportionate environmental cost compared to one-on-one correspondence."
     },
     {
-      "q": "Are the results accurate?",
-      "a": "The results are estimates. We use internationally validated formulas. For critical cases, consult a sustainability professional."
+      "q": "How does email carbon compare to other everyday digital activities?",
+      "a": "For scale: streaming one hour of HD video generates approximately 36 g CO₂e (per IEA 2022 estimates); a Google search is roughly 0.2–0.3 g CO₂e; a text-only email is ~4 g; a video call hour is ~150–1,000 g depending on resolution and device. Email is relatively low-impact per message, but the sheer volume (over 300 billion emails sent daily worldwide) makes the aggregate footprint substantial — estimated at tens of millions of metric tons of CO₂e annually."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all our calculators are completely free and require no account or registration."
+      "q": "Do weekends and holidays affect my annual email emissions calculation?",
+      "a": "They do if your email habits are strictly work-based. The calculator uses 365 days for a conservative, maximum-scenario estimate. If you only email on US business days (~261 days/year after removing weekends and federal holidays per the OPM calendar), multiply your daily figure by 261 instead of 365 — that reduces the annual total by about 28.5%. For personal email users active 7 days a week, 365 days is the correct multiplier."
+    },
+    {
+      "q": "Can organizations get credit for reducing email emissions in carbon offset programs?",
+      "a": "Not directly through mainstream carbon offset standards (like Gold Standard or Verra VCS) as of 2025, because digital emissions are typically included within a company's Scope 2 (purchased energy) or Scope 3 (value chain) inventory under the GHG Protocol Corporate Standard — not traded as discrete offsets. However, reducing email emissions does lower your Scope 3 reported footprint, which is increasingly required for large organizations reporting under SEC climate disclosure rules and international frameworks like TCFD."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "U.S. EPA — Greenhouse Gas Emissions from a Typical Passenger Vehicle",
+      "url": "https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://www.khanacademy.org"
+      "name": "U.S. EPA — Greenhouse Gas Equivalencies Calculator",
+      "url": "https://www.epa.gov/energy/greenhouse-gas-equivalencies-calculator"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "IEA — The carbon footprint of streaming video: fact-checking the headlines (2020)",
+      "url": "https://www.iea.org/commentaries/the-carbon-footprint-of-streaming-video-fact-checking-the-headlines"
+    },
+    {
+      "name": "U.S. Department of Energy — Data Centers and Servers Energy Use",
+      "url": "https://www.energy.gov/eere/buildings/data-centers-and-servers"
+    },
+    {
+      "name": "Wikipedia — Carbon footprint of the internet",
+      "url": "https://en.wikipedia.org/wiki/Carbon_footprint_of_the_internet"
     }
   ],
   "dataUpdate": {

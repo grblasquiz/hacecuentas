@@ -7,13 +7,14 @@
   "audience": "global",
   "icon": "🍞",
   "formulaId": "leudado-pan-levadura-tiempo-temperatura",
-  "intro": "La precisión en la cocina hace la diferencia entre una receta que sale bien y una que falla. Esta calculadora te da el cálculo de leudado pan levadura tiempo. Devuelve resultado junto con contexto para interpretar el valor. El cálculo corre en tu navegador: no guardamos tus datos, no requiere registro y es gratis.",
-  "keyTakeaway": "Esta calculadora te devuelve resultado con un cálculo directo, sin registro.",
+  "intro": "La calculadora de leudado de pan con levadura te ayuda a estimar el tiempo de fermentación según la temperatura ambiente y la cantidad de levadura usada. El leudado es el proceso en que Saccharomyces cerevisiae consume azúcares de la harina y libera CO₂, haciendo que la masa crezca. La regla práctica fundamental es que por cada 10 °C de aumento en la temperatura, la velocidad de fermentación se duplica (Q10 ≈ 2). Con 25 g de levadura fresca cada 1 kg de harina a 25 °C, el primer leudado dura aproximadamente 60–90 min; a 18 °C puede llegar a 2–3 horas. Conocer estos tiempos evita masas sobrefementadas (colapso del gluten) o subfementadas (miga apelmazada).",
+  "keyTakeaway": "**Tiempo ≈ Tiempo_base × 2^((T_base − T_actual) / 10)** — Ejemplo: si a 25 °C tarda 60 min, a 15 °C tardará 60 × 2^((25−15)/10) = 60 × 2 = 120 min con la misma dosis de levadura.",
   "useCases": [
-    "Resolver rápido una duda sobre leudado pan levadura tiempo sin papel y lápiz.",
-    "Comparar escenarios o alternativas con números concretos.",
-    "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Ajustar el tiempo de levado en invierno cuando la cocina baja a 15–18 °C y la masa tarda el doble que en verano.",
+    "Planificar un leudado en frío (heladera a 4 °C) de 8 a 12 horas para panes de fermentación lenta con más sabor.",
+    "Reducir la dosis de levadura para una fermentación lenta nocturna a temperatura ambiente sin que la masa sobrefermente.",
+    "Calcular si la masa estará lista antes de una fecha de entrega en una panadería artesanal con distintas temperaturas de obrador.",
+    "Adaptar recetas extranjeras que asumen 22 °C a las condiciones de una cocina argentina en verano (30–35 °C) donde el tiempo se reduce a menos de 40 min."
   ],
   "fields": [
     {
@@ -52,49 +53,49 @@
     ],
     "result": "Resultado"
   },
-  "explanation": "Las **medidas en cocina** siguen estándares internacionales (sistema métrico + tradiciones culinarias regionales). Las recetas suelen usar tazas, cucharadas y gramos según origen. Conocer las equivalencias es clave.\n\n## Cómo se calcula\n\nCon levadura fresca: 1h 25°C doblar volumen. Seca: más lenta · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl tiempo de leudado depende de tres variables: temperatura (T), cantidad de levadura (L en % sobre harina, denominado «porcentaje de panadero») y fuerza de la harina (W). La fórmula simplificada basada en el coeficiente de temperatura Q10 es:\n\n```\nT_lev = T_base × 2^((T_base_temp − T_actual) / 10)\n\nDonde:\n  T_base      = tiempo de referencia a T_base_temp (minutos)\n  T_base_temp = temperatura de referencia, típicamente 25 °C\n  T_actual    = temperatura real del ambiente o de la masa (°C)\n\nAjuste por dosis de levadura (regla del panadero):\n  T_lev_ajustado = T_lev × (L_ref / L_real)\n\nDonde:\n  L_ref = dosis de referencia (ej. 2 % levadura fresca)\n  L_real = dosis real utilizada\n```\n\nEjemplo práctico: masa a 18 °C con 1 % de levadura fresca, referencia 90 min a 25 °C con 2 %:\n- Ajuste de temperatura: 90 × 2^((25−18)/10) = 90 × 1,62 ≈ 146 min\n- Ajuste de levadura: 146 × (2/1) = 292 min ≈ 4 h 52 min\n\n---\n\n## Tabla de referencia\n\nTiempos orientativos para el **primer leudado** con **2 % de levadura fresca** (20 g/kg de harina), harina 000 estándar (W 130–160):\n\n| Temperatura (°C) | Tiempo aproximado | Condición típica |\n|---|---|---|\n| 4 °C | 8 – 12 h | Fermentación en frío (heladera) |\n| 10 °C | 4 – 6 h | Invierno sin calefacción |\n| 15 °C | 2 h 30 min – 3 h | Cocina fría de invierno |\n| 18 °C | 1 h 45 min – 2 h 30 min | Temperatura de confort baja |\n| 22 °C | 1 h 15 min – 1 h 45 min | Temperatura ideal estándar |\n| 25 °C | 60 – 90 min | Cocina templada de primavera |\n| 30 °C | 35 – 50 min | Verano en Buenos Aires |\n| 35 °C | 20 – 30 min | Verano caluroso / cerca del horno |\n| 40 °C | 10 – 15 min | Límite superior (riesgo de muerte de levadura) |\n| ≥ 50 °C | — | Levadura inactiva/muerta |\n\n> **Nota**: la levadura seca activa equivale a ~40–50 % del peso de levadura fresca; la levadura instantánea, al 33 %.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Pan casero en verano porteño (32 °C)\nUna receta estándar pide 90 min a 25 °C con 2 % de levadura fresca. En un departamento de Buenos Aires en enero a 32 °C:\n- T_lev = 90 × 2^((25−32)/10) = 90 × 2^(−0,7) = 90 × 0,616 ≈ 55 min\n- Recomendación: revisar la masa a los 45 min para no pasarse.\n\n### Caso 2 — Fermentación lenta nocturna (heladera, 4 °C, 0,5 % levadura)\nEl panadero quiere que la masa esté lista en 10 h. ¿Qué dosis usar?\n- Tiempo base a 25 °C con 2 %: 90 min → a 4 °C: 90 × 2^((25−4)/10) = 90 × 4,29 ≈ 386 min ≈ 6,4 h con 2 %\n- Para llegar a 10 h: L_real = 2 % × (6,4 h / 10 h) = 1,28 % ≈ 13 g/kg de harina\n\n### Caso 3 — Segundo leudado (apresto) de marraquetas\nEl segundo leudado es más corto porque el gluten ya está relajado. A 24 °C se estima 45–60 min. A 16 °C (panadería fría de madrugada): 45 × 2^((24−16)/10) = 45 × 1,74 ≈ 78 min.\n\n---\n\n## Errores comunes\n\n1. **Usar agua caliente (>40 °C) para activar la levadura**: por encima de 40 °C la actividad cae drásticamente; por encima de 50 °C la levadura muere. El agua debe estar a 35–38 °C como máximo.\n2. **Ignorar la temperatura de la harina y el bol**: en invierno, la harina guardada a 10 °C baja la temperatura final de la masa aunque el agua esté tibia. La temperatura real de la masa es el promedio ponderado de todos los ingredientes.\n3. **Medir el leudado solo por tiempo y no por volumen**: la regla «que duplique el volumen» es más fiable que el reloj. Una masa con mucha azúcar o grasa tarda más aunque la temperatura sea correcta.\n4. **No corregir la dosis al cambiar de levadura fresca a seca**: 10 g de levadura seca activa ≠ 10 g de levadura fresca. La equivalencia es: 1 g levadura instantánea = 3 g levadura fresca = 1,33 g levadura seca activa.\n5. **Sobrefermentación por no hacer el «test del dedo»**: hundir el dedo 1 cm en la masa; si vuelve lentamente está a punto, si no vuelve está sobrefermentada, si vuelve enseguida le falta tiempo.\n\n---\n\n## Calculadoras relacionadas\n\n- [Tiempo de fermentación de masa por temperatura](/calculadora-tiempo-fermentacion-masa-temperatura)\n- [Fermentación de kombucha según tiempo y temperatura](/calculadora-kombucha-fermentacion-tiempo)\n- [Tiempo de descongelado de alimentos por peso](/calculadora-tiempo-descongelado-alimentos-peso)\n- [Temperatura del aceite para fritura y punto de humo](/calculadora-temperatura-aceite-fritura-punto-humo)\n",
   "faq": [
     {
-      "q": "¿Cómo se calcula?",
-      "a": "La calculadora aplica la fórmula estándar del tema (Leudado pan levadura tiempo) y los valores los ingresás vos. El resultado es orientativo; para decisiones importantes consultá con un profesional del área."
+      "q": "¿A qué temperatura muere la levadura de pan?",
+      "a": "La actividad de Saccharomyces cerevisiae cae bruscamente por encima de 40 °C y la levadura muere de forma irreversible entre 50 °C y 60 °C. Por eso nunca debés usar agua más caliente que 38–40 °C al preparar la masa. En la heladera (4 °C), la levadura no muere pero queda en estado de latencia casi completa, lo que permite fermentaciones largas de 8 a 24 horas."
     },
     {
-      "q": "¿Precisión?",
-      "a": "Resultado práctico ±5-10% según productos/variables."
+      "q": "¿Cuánta levadura fresca se usa por kilo de harina para un pan común?",
+      "a": "La proporción estándar en panadería artesanal argentina es de 20–25 g de levadura fresca por kilo de harina (2–2,5 %), lo que da un primer leudado de 60–90 min a 24–26 °C. Para fermentaciones lentas o panes de masa madre enriquecida, la dosis puede bajar a 5–10 g/kg (0,5–1 %) y el tiempo aumenta proporcionalmente."
     },
     {
-      "q": "¿Referencias?",
-      "a": "Recetas clásicas, manuales DIY internacionales."
+      "q": "¿Qué diferencia hay entre levadura fresca, seca activa e instantánea?",
+      "a": "La levadura fresca tiene ~70 % de agua; la seca activa, ~8 %; la instantánea, ~5 % y además tiene emulsionantes. La equivalencia práctica es: 1 g de levadura instantánea = 1,33 g de levadura seca activa = 3 g de levadura fresca. Usar la misma dosis en gramos de distintos tipos puede resultar en masas con el doble o el triple de fermentación respecto a lo esperado."
     },
     {
-      "q": "¿Hispanohablante?",
-      "a": "Aplicable a México, España, Argentina, Chile, Colombia y todos los países hispanos."
+      "q": "¿Qué pasa si la masa leudó de más (sobrefermentó)?",
+      "a": "Cuando la masa sobrefermentó, el gluten se debilitó por exceso de ácidos producidos por la levadura: la masa se vuelve pegajosa, huele a alcohol fuerte y al hornearla no sube bien o colapsa. Si el exceso es leve, desgasificar (desgasado) y dejar fermentar un poco más puede salvarla. Si ya colapsó, lo mejor es usarla en recetas que no requieran estructura, como focaccia o grisines."
     },
     {
-      "q": "¿Actualizado?",
-      "a": "2026."
+      "q": "¿Por qué el pan leuda más rápido en verano y más lento en invierno?",
+      "a": "Porque la velocidad de las reacciones bioquímicas de la levadura sigue aproximadamente la ley de Van't Hoff: cada 10 °C de aumento duplica la velocidad (Q10 ≈ 2). En Buenos Aires, la temperatura interior en verano puede superar los 30 °C y en invierno bajar a 15–18 °C, lo que implica que el mismo pan tarda entre 2 y 3 veces más en invierno. Ajustar la cantidad de levadura o el tiempo es imprescindible para resultados consistentes."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Puedo dejar la masa en la heladera toda la noche?",
+      "a": "Sí, y es una técnica muy recomendada llamada «fermentación en frío». A 4 °C la levadura trabaja muy despacio, permitiendo desarrollar más sabor gracias a la producción de ácidos orgánicos y compuestos aromáticos. Con 2 % de levadura fresca la masa puede sobrefermentar en 12 h; lo ideal es reducir la dosis a 0,5–1 % (5–10 g/kg) para una fermentación nocturna de 8 a 12 horas."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Cómo influye la sal en el tiempo de leudado?",
+      "a": "La sal inhibe directamente la actividad de la levadura al afectar su equilibrio osmótico. La dosis estándar de sal es 2 % sobre harina (20 g/kg); si se duplica a 4 %, el leudado puede extenderse un 20–30 % más. Por eso en panadería siempre se mezcla la sal por separado de la levadura al comienzo del amasado, nunca en contacto directo, para no matar las células de levadura por deshidratación osmótica."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿El azúcar acelera o frena el leudado?",
+      "a": "En pequeñas cantidades (1–5 % sobre harina), el azúcar es un sustrato que la levadura metaboliza rápidamente, acelerando levemente el leudado. Pero por encima del 10–15 % (como en masas dulces tipo pan de Pascua o brioche), el efecto osmótico es similar al de la sal y frena la fermentación. Las masas muy ricas en azúcar pueden requerir el doble de tiempo o una dosis mayor de levadura para levar correctamente."
     }
   ],
   "sources": [
     {
-      "name": "USDA FoodData Central",
-      "url": "https://fdc.nal.usda.gov"
+      "name": "INTI – Instituto Nacional de Tecnología Industrial: Fichas Técnicas de Panificación",
+      "url": "https://www.inti.gob.ar"
     },
     {
-      "name": "FAO — Organización para la Alimentación",
-      "url": "https://www.fao.org"
+      "name": "Wikipedia ES – Levadura (Saccharomyces cerevisiae): Bioquímica de la fermentación",
+      "url": "https://es.wikipedia.org/wiki/Saccharomyces_cerevisiae"
     }
   ],
   "relatedSlugs": [

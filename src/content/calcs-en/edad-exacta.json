@@ -19,14 +19,15 @@
     "my exact age",
     "calculate age by birthdate"
   ],
-  "intro": "How many years, months, days, and hours old are you exactly? Beyond a rounded 'I'm 30,' this calculator gives you your **precise age instantly**: full years, months, days, hours, and even minutes lived.",
-  "keyTakeaway": "Your age is not just a round number. This calculator shows you down to the **minutes lived** — ideal for fun facts and milestone celebrations.",
+  "intro": "The Exact Age Calculator computes your precise age in years, months, days, hours, and minutes from your date of birth to today. Unlike a simple subtraction of years, it applies the full Gregorian calendar algorithm — accounting for leap years (366-day years divisible by 4, except century years not divisible by 400) and variable month lengths — so every unit is exact. Use it whenever you need a legally precise age (for ID verification, insurance enrollment, or medical screening eligibility) or simply want to know how many days and hours of life you've accumulated so far.",
+  "keyTakeaway": "**Exact Age = (Today − Birthdate) broken into years → remaining months → remaining days → ×24 for hours → ×60 for minutes**, with leap-year correction applied at each step. Example: born 06/15/1990 → on 04/16/2026 = **35 years, 10 months, 1 day = 13,089 days = 314,136 hours**.",
   "useCases": [
-    "You want to know your exact age today.",
-    "You need to calculate someone's age for paperwork.",
-    "You want to surprise someone with a precise birthday fact.",
-    "You're preparing a speech or post with interesting data.",
-    "You need an age in days for another calculation."
+    "Verifying Medicare or Social Security eligibility, which requires exact knowledge of whether you have reached age 65 or 62 by a specific enrollment date.",
+    "Checking whether a child qualifies for a youth sports league or school grade cutoff, where districts enforce a birthdate deadline to the exact day.",
+    "Calculating a newborn's or premature infant's corrected gestational age in days for pediatric developmental milestone tracking per AAP guidelines.",
+    "Determining life-insurance premium tier transitions, since many carriers change rates on the exact policy anniversary that coincides with an age milestone (e.g., turning 30, 40, or 50).",
+    "Computing exact age for passport or visa applications where authorities require age in completed years and days remaining to the next birthday.",
+    "Personal milestones: finding out the precise moment you hit 10,000 days alive (roughly age 27 years and 4.5 months) or 1 billion seconds (≈31.69 years)."
   ],
   "fields": [
     {
@@ -74,35 +75,39 @@
     ],
     "result": "You are exactly **35 years, 10 months, and 1 day old**. That's **13,089 days** or over **849,600 hours** lived."
   },
-  "explanation": "## How Exact Age Is Calculated\n\nThe calculator subtracts the birthdate from the current date and breaks it down into:\n\n- **Full years**: cycles of 365/366 days.\n- **Additional months**: complete months after the last birthday.\n- **Remaining days**: stray days.\n- **Hours and minutes**: multiplying from the total days.\n\n### Fun Facts by Age\n\n| Age | Days Lived | Hours |\n|---|---|---|\n| 1 year | 365 | 8,760 |\n| 10 years | 3,652 | 87,648 |\n| 20 years | 7,305 | 175,320 |\n| 30 years | 10,957 | 262,968 |\n| 40 years | 14,610 | 350,640 |\n| 50 years | 18,262 | 438,288 |\n| 75 years | 27,393 | 657,432 |\n| 100 years | 36,524 | 876,576 |\n\n### Days-Lived Milestones\n\n- **10,000 days**: ~27 years 5 months\n- **20,000 days**: ~54 years 9 months\n- **25,000 days**: ~68 years 5 months\n- **30,000 days**: ~82 years 1 month\n\n## Leap Years\n\nThe calculator correctly handles leap years. If you were born on February 29, your 'official' birthday is counted as 02/28 or 03/01 in non-leap years.\n\n## Tip: Your Age in Other Formats\n\nYou can surprise people by saying 'I'm 11,000 days old' instead of '30 years old.' It's a great fact for social media — same time, different perception.",
+  "explanation": "## How It's Calculated\n\nThe calculator uses the **Gregorian calendar difference algorithm** in three cascading steps:\n\n```\nStep 1 — Full years elapsed:\n  Y = year(Today) − year(Birth)\n  IF month(Today) < month(Birth)\n    OR (month(Today) == month(Birth) AND day(Today) < day(Birth)):\n      Y = Y − 1\n\nStep 2 — Remaining months:\n  M = month(Today) − month(Birth)          [adjust +12 if negative]\n  IF day(Today) < day(Birth): M = M − 1   [borrow one month]\n\nStep 3 — Remaining days:\n  D = day(Today) − day(Birth)\n  IF negative: D += days_in_previous_month(Today)\n\nStep 4 — Total days lived (cross-check):\n  TotalDays = date_diff(Today, Birth) in days   ← counts every leap day\n\nStep 5 — Hours / Minutes:\n  TotalHours   = TotalDays × 24\n  TotalMinutes = TotalDays × 1440\n```\n\n**Leap year rule (Gregorian):** A year is a leap year if `(year % 4 == 0 AND year % 100 ≠ 0) OR year % 400 == 0`. Between 1990 and 2026 the leap years are: 1992, 1996, 2000, 2004, 2008, 2012, 2016, 2020, 2024 — **9 extra days** added to the raw year-count subtraction.\n\n---\n\n## Reference Table\n\n| Age milestone | Approx. total days | Approx. total hours | Approx. total minutes |\n|---|---|---|---|\n| 1 year | 365 – 366 | 8,760 – 8,784 | 525,600 – 527,040 |\n| 5 years | 1,826 – 1,827 | 43,824 – 43,848 | 2,629,440 – 2,630,880 |\n| 10 years | 3,652 – 3,653 | 87,648 – 87,672 | 5,258,880 – 5,260,320 |\n| 18 years | 6,570 – 6,575 | 157,680 – 157,800 | 9,460,800 – 9,468,000 |\n| 21 years | 7,670 – 7,671 | 184,080 – 184,104 | 11,044,800 – 11,046,240 |\n| 25 years | 9,131 – 9,132 | 219,144 – 219,168 | 13,148,640 – 13,150,080 |\n| 30 years | 10,957 – 10,958 | 262,968 – 262,992 | 15,778,080 – 15,779,520 |\n| 40 years | 14,610 – 14,611 | 350,640 – 350,664 | 21,038,400 – 21,039,840 |\n| 50 years | 18,262 – 18,264 | 438,288 – 438,336 | 26,297,280 – 26,300,160 |\n| 65 years | 23,741 – 23,743 | 569,784 – 569,832 | 34,187,040 – 34,189,920 |\n| 1 billion seconds | ~31.69 years | ~11,574 days | 1,000,000,000 seconds |\n\n*Ranges reflect variability in the number of leap years depending on the exact birth date.*\n\n---\n\n## Typical Cases\n\n### Case 1 — From the calculator example\n- **Birthdate:** June 15, 1990 | **Reference date:** April 16, 2026\n- Years elapsed: 2026 − 1990 = 36, but April 16 < June 15 → subtract 1 → **35 years**\n- Months: April (4) − June (6) = −2 + 12 = 10, but day 16 > day 15 → stays **10 months**\n- Days: 16 − 15 = **1 day**\n- Total days: `date_diff(2026-04-16, 1990-06-15)` = **13,089 days** (includes 9 leap days)\n- Total hours: 13,089 × 24 = **314,136 hours**\n\n### Case 2 — Birthday today\n- **Birthdate:** March 3, 1985 | **Reference date:** March 3, 2026\n- Result: exactly **41 years, 0 months, 0 days** — 14,976 days — 359,424 hours.\n- Note: the \"next birthday\" counter resets to 365 or 366 days.\n\n### Case 3 — Leap-day birthday\n- **Birthdate:** February 29, 2000 | **Reference date:** March 1, 2026\n- 2026 is not a leap year, so the legal birthday is treated as **February 28** in non-leap years (varies by jurisdiction; some use March 1).\n- Age: **26 years, 0 months, 1 day** on March 1, 2026.\n- Total days: 9,497 days (includes 7 Feb-29 occurrences: 2004, 2008, 2012, 2016, 2020, 2024 — 6 leap days after birth through 2026-03-01).\n\n---\n\n## Common Errors\n\n1. **Ignoring leap years in hour/minute totals.** Multiplying 365 × 24 × years omits leap days entirely. A 36-year-old born in 1990 has lived through 9 leap years, adding 216 extra hours vs. a naive calculation.\n\n2. **Off-by-one on the birthday itself.** Many calculators subtract dates and count the birth day as \"day 1,\" adding an extra day. The correct convention (ISO 8601 / civil law): the birthday counts as day 0 of life; day 1 begins the following calendar day.\n\n3. **Wrong month-borrow logic.** When the current day-of-month is less than the birth day-of-month, you must borrow the correct number of days for the *previous* month — not always 30. For example, borrowing into February of a non-leap year gives only 28 days.\n\n4. **Using age in completed years only for medical thresholds.** The CDC and NIH age eligibility criteria for vaccines and screenings (e.g., colonoscopy at 45, shingles vaccine at 50) count age in **completed years on the date of service**, not the nearest birthday, so an exact day count matters.\n\n5. **Time-zone confusion for hour/minute outputs.** The number of hours lived changes depending on whether \"today\" is evaluated in the user's local time zone vs. UTC. A person born at 11 PM EST and checking at 6 AM the next day (UTC) may see a one-hour discrepancy.\n\n---\n\n## Related Calculators\n\nSince no internal related slugs were provided, explore other date and time tools on the site to complement your age calculation — such as date-difference calculators, countdown timers, and retirement-age planners.",
   "faq": [
     {
-      "q": "How do I calculate my exact age?",
-      "a": "Enter your **date of birth** and the calculator subtracts it from today's date. You get exact years, months, days, hours, and minutes."
+      "q": "How exactly does the calculator handle leap years?",
+      "a": "Every February 29 that falls between your birthdate and today is counted as a full extra day in the total-days tally. Between 1990 and 2026 there are 9 leap years (1992–2024), adding 9 extra days to the raw difference. The Gregorian rule: a year is a leap year if divisible by 4, except century years must also be divisible by 400 (so 1900 was NOT a leap year, but 2000 was)."
     },
     {
-      "q": "Does it count leap years?",
-      "a": "Yes, the calculator correctly handles **February 29** and leap years in the total day count."
+      "q": "What age does the law consider 'exact' for Social Security retirement benefits?",
+      "a": "The Social Security Administration (SSA) determines eligibility by the month you reach a milestone age, not the exact day. Full Retirement Age (FRA) is 67 for anyone born after 1960. Early benefits begin the first full month you are 62; the SSA counts you as 62 on the day *before* your 62nd birthday if born on the 1st of a month, per their operating policy."
     },
     {
-      "q": "How many days does a 30-year-old have?",
-      "a": "Approximately **10,957 days** (including leap years). That's more than **262,000 hours**."
+      "q": "Why might my age in days differ by 1 from another calculator?",
+      "a": "The most common cause is the 'day 0 vs. day 1' convention. Some calculators count your birth day as the first day of life (so you are '1 day old' the moment you're born), while the standard civil/ISO convention starts counting after midnight following birth (making you '1 day old' the day after). This calculator uses the civil convention: birth = day 0."
     },
     {
-      "q": "When do I turn 10,000 days old?",
-      "a": "At about 27 years and 5 months. Enter your date of birth and check 'Days lived' — hitting 10,000 is a cool milestone to celebrate."
+      "q": "At what exact age in days does a child reach the developmental milestones tracked by the CDC?",
+      "a": "The CDC's 'Learn the Signs. Act Early.' program tracks milestones at 2, 4, 6, 9, 12, 18, 24, 30, 36, 48, and 60 months of age — that is, at exactly 61, 122, 183, 274, 365, 548, 730, 912, 1,096, 1,461, and 1,826 days respectively (adjusted for leap years in the birth year). Pediatricians use corrected gestational age for premature infants."
     },
     {
-      "q": "Can I use it to calculate someone else's age?",
-      "a": "Yes, you can enter **any date of birth**. It works for calculating the age of family members, friends, pets, etc."
+      "q": "How many days old is a person when they turn 18, 21, and 65?",
+      "a": "The exact count depends on how many leap years fall in the interval: at 18 years it ranges from 6,570 to 6,575 days; at 21 years, 7,670–7,671 days; at 65 years, 23,741–23,743 days. The higher end applies when more Feb-29 dates fall within the span."
     },
     {
-      "q": "Why is my age in days more impactful than in years?",
-      "a": "Because **large numbers** create more psychological impact. '11,000 days' sounds much bigger than '30 years' — same time, different perception."
+      "q": "What is the '1 billion seconds old' milestone and when does it occur?",
+      "a": "One billion seconds equals 1,000,000,000 ÷ 31,557,600 (seconds per Julian year) ≈ **31 years, 251 days** (roughly age 31 years and 8 months). The exact calendar date varies by birthdate and leap-year count. It is a popular personal milestone because it equates to roughly 11,574 days or ~277,778 hours of life."
     },
     {
-      "q": "Can I know how many hours I've slept in my life?",
-      "a": "Approximation: an adult sleeps ~8 hours/day. Multiply your days lived by 8 and you get an estimate. With 10,000 days lived, you've slept ~80,000 hours (~9 years)."
+      "q": "Does the calculator account for Daylight Saving Time when computing hours lived?",
+      "a": "The total-hours figure is based on calendar-day counts multiplied by 24 — it does not adjust for DST clock changes. In practice, the US observes DST changes twice a year (gaining/losing 1 hour each), netting to zero over a full year, so for multi-year spans the cumulative DST error is negligible (≤1 hour over any 12-month cycle)."
+    },
+    {
+      "q": "How is 'days until next birthday' calculated?",
+      "a": "The calculator sets the next birthday to the same month and day as your birthdate in the current or following year, whichever is future. It then subtracts today's date. If your birthday is February 29 and the next occurrence is in a non-leap year, it defaults to February 28 (the convention used in most US states and by the SSA). In 2026, the next Feb-29 falls in 2028."
     }
   ],
   "howToSteps": [
@@ -117,6 +122,24 @@
     {
       "name": "Review the results",
       "text": "Review your age broken down into years, months, days, hours, and minutes."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Social Security Administration — Age Requirements for Benefits",
+      "url": "https://www.ssa.gov/benefits/retirement/planner/agereduction.html"
+    },
+    {
+      "name": "CDC — Milestone Moments (Learn the Signs. Act Early.)",
+      "url": "https://www.cdc.gov/ncbddd/actearly/milestones/index.html"
+    },
+    {
+      "name": "NIST — Gregorian Calendar and Leap Year Definition",
+      "url": "https://www.nist.gov/pml/time-and-frequency-division/popular-links/time-frequency-z/time-and-frequency-z-g"
+    },
+    {
+      "name": "Wikipedia — Gregorian Calendar (Leap Year Algorithm)",
+      "url": "https://en.wikipedia.org/wiki/Gregorian_calendar"
     }
   ]
 }

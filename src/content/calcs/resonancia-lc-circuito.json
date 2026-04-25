@@ -6,14 +6,14 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "resonancia-lc-circuito",
-  "intro": "La electrónica básica se rige por leyes de Ohm, Kirchhoff y principios de semiconductores. Cálculos de resistencia, potencia, voltaje y amperaje son la base para diseñar y mantener circuitos. Calculá la frecuencia de resonancia f = 1/(2π√LC) de un circuito LC serie o paralelo. Incluye impedancia a la resonancia y factor Q. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "**f = 1/(2π√(L×C))**. Para L=1 µH + C=1 nF → f = 5.03 MHz. En serie: impedancia MÍNIMA en resonancia. En paralelo: impedancia MÁXIMA.",
+  "intro": "La calculadora de frecuencia de resonancia LC te permite encontrar la frecuencia exacta a la que un circuito LC (bobina + capacitor) entra en resonancia, es decir, cuando la reactancia inductiva XL iguala a la reactancia capacitiva XC. La fórmula central es f = 1 / (2π√(LC)), donde L es la inductancia en henrios y C la capacitancia en faradios. Este fenómeno se usa en sintonizadores de radio AM/FM, filtros de frecuencia, osciladores, transmisores y antenas. Conocer fr es esencial para diseñar circuitos que seleccionen o rechacen una frecuencia específica sin consumir energía extra en el componente reactivo.",
+  "keyTakeaway": "La frecuencia de resonancia se calcula como **f = 1 / (2π × √(L × C))**, por ejemplo con L=10 µH y C=100 pF se obtiene **fr ≈ 5,03 MHz** (banda FM baja). En resonancia, XL = XC y la impedancia del circuito serie es mínima (solo R).",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de frecuencia de resonancia lc",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Diseñar el circuito sintonizador de una radio AM/FM: ajustando C variable se elige la estación cuya portadora coincide con fr.",
+    "Calcular el tanque LC de un oscilador de cristal o Colpitts para generar señales de reloj en microcontroladores y transmisores.",
+    "Dimensionar un filtro notch (rechaza-banda) en amplificadores de audio para eliminar la interferencia de 50 Hz de la red eléctrica.",
+    "Determinar la frecuencia de resonancia de una antena de cuadro magnético (loop antenna) para recepción de señales HF/LW.",
+    "Verificar que los componentes de un inversor o fuente switching no generen resonancias parásitas que dañen transistores de potencia."
   ],
   "fields": [
     {
@@ -123,53 +123,53 @@
     ],
     "result": "Resonancia a 5.03 MHz — banda FM baja."
   },
-  "explanation": "La **electrónica** se rige por leyes de Ohm, Kirchhoff, Faraday. Aplicar fórmulas evita errores costosos y fallos eléctricos.\n\n## Cómo se calcula\n\nCalculá la frecuencia de resonancia f = 1/(2π√LC) de un circuito LC serie o paralelo. Incluye impedancia a la resonancia y factor Q · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa frecuencia de resonancia angular y lineal de un circuito LC se obtienen con:\n\n```\n# Frecuencia angular (rad/s)\nω₀ = 1 / √(L × C)\n\n# Frecuencia de resonancia (Hz)\nfr = 1 / (2π × √(L × C))\n\n# Reactancia inductiva en fr\nXL = 2π × fr × L      [Ω]\n\n# Reactancia capacitiva en fr\nXC = 1 / (2π × fr × C)  [Ω]\n\n# Factor de calidad Q (requiere R total del circuito)\nQ = (1/R) × √(L/C)     → circuito paralelo\nQ = (1/R) × √(L/C)     → circuito serie: Q = ω₀L / R\n\n# Ancho de banda\nBW = fr / Q            [Hz]\n```\n\n> **Importante:** L debe estar en **henrios (H)** y C en **faradios (F)** antes de operar. 1 µH = 1×10⁻⁶ H; 1 pF = 1×10⁻¹² F.\n\n---\n\n## Tabla de referencia\n\nValores típicos de circuitos LC reales por aplicación:\n\n| Aplicación            | L típica     | C típica      | fr resultante  | Banda          |\n|-----------------------|-------------|---------------|----------------|----------------|\n| Radio AM (portadora)  | 250 µH      | 200 pF        | ≈ 712 kHz      | AM (530–1700 kHz) |\n| Radio FM (portadora)  | 0,1 µH      | 1 pF          | ≈ 503 MHz*     | FM (87–108 MHz) |\n| Radio FM (sintonía)   | 10 µH       | 100 pF        | ≈ 5,03 MHz     | FM baja / SW   |\n| Oscilador HF          | 1 µH        | 10 pF         | ≈ 50,3 MHz     | VHF bajo       |\n| Filtro audio 50 Hz    | 1 H         | 10 µF         | ≈ 50,3 Hz      | Red eléctrica  |\n| Inversor switching    | 100 µH      | 10 nF         | ≈ 159 kHz      | Fuentes PWM    |\n| Antena loop MW        | 500 µH      | 100 pF        | ≈ 712 kHz      | Onda media     |\n\n*Con C=1 pF se obtiene ~503 MHz; para 100 MHz exactos usar C ≈ 2,5 pF con L=1 µH.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Sintonizador de radio AM casero\nUn circuito tanque con **L = 250 µH** y **C = 200 pF**:\n\n```\nfr = 1 / (2π × √(250×10⁻⁶ × 200×10⁻¹²))\n   = 1 / (2π × √(5×10⁻¹⁴))\n   = 1 / (2π × 2,236×10⁻⁷)\n   = 1 / (1,405×10⁻⁶)\n   ≈ 712 kHz  ✓ (LR11 Radio Nacional 710 kHz, Buenos Aires)\n```\nCon R de bobina = 5 Ω → Q = (1/5)×√(250µH/200pF) = (1/5)×1118 ≈ **224** → BW ≈ 3,2 kHz.\n\n### Caso 2 — Ejemplo del enunciado (FM baja / shortwave)\n**L = 10 µH**, **C = 100 pF**:\n\n```\nfr = 1 / (2π × √(10×10⁻⁶ × 100×10⁻¹²))\n   = 1 / (2π × √(10⁻¹⁵))\n   = 1 / (2π × 3,162×10⁻⁸)\n   = 1 / (1,987×10⁻⁷)\n   ≈ 5,03 MHz\nXL = XC = 2π × 5,03×10⁶ × 10×10⁻⁶ ≈ 316 Ω\n```\n\n### Caso 3 — Filtro notch para eliminar 50 Hz de red\nSe quiere rechazar exactamente **50 Hz** con un capacitor de **10 µF**:\n\n```\nL = 1 / ((2π × fr)² × C)\n  = 1 / ((2π × 50)² × 10×10⁻⁶)\n  = 1 / (98.696 × 10⁻⁵)\n  ≈ 1,013 H  → usar bobina de ~1 H\n```\n\n---\n\n## Errores comunes\n\n1. **No convertir unidades antes de calcular:** Ingresar \"10\" creyendo que está en µH cuando la fórmula necesita henrios. Siempre multiplicar: 10 µH = 10×10⁻⁶ H. Un error de factor 10⁶ desplaza fr en un factor de 1000.\n\n2. **Confundir circuito serie con paralelo:** Ambos tienen la misma fr en componentes ideales, pero con pérdidas (R ≠ 0) la frecuencia de máxima amplitud del paralelo es ligeramente diferente: fr_paralelo = (1/2π)×√(1/LC − R²/L²). Para Q > 10 la diferencia es despreciable (<0,5%), pero en Q bajos importa.\n\n3. **Ignorar la resistencia parásita (ESR) del capacitor y DCR de la bobina:** Estos valores reales reducen Q y ensanchan el BW. Una bobina de 10 µH de ferrita puede tener DCR de 0,5–2 Ω, lo que reduce Q de \"infinito ideal\" a valores de 50–200 en la práctica.\n\n4. **Creer que en resonancia la impedancia es cero siempre:** Solo ocurre en el circuito **serie**. En el circuito **paralelo** (tanque), la impedancia es **máxima** (= Q²×R), lo que es justamente útil en amplificadores de RF sintonizados.\n\n5. **Usar valores nominales sin tolerar variaciones:** Un capacitor de 100 pF con tolerancia ±5% puede estar entre 95–105 pF, desplazando fr hasta ±2,5%. En diseño crítico usar componentes C0G/NP0 (±30 ppm/°C) o ajuste fino con capacitor variable (trimmer).\n\n---\n\n## Calculadoras relacionadas\n\n- [Ley de Ohm — Voltaje, Corriente y Resistencia](/calculadora-ley-ohm-voltaje-corriente-resistencia): calculá la caída de tensión en la resistencia parásita del circuito LC.\n- [Potencia eléctrica P = V×I](/calculadora-potencia-electrica-p-vi): determiná la potencia disipada en R a la frecuencia de resonancia.\n- [Resistencia de LED en serie y paralelo](/calculadora-resistencia-led-serie-paralelo): útil para proteger indicadores en etapas de osciladores.\n- [Divisor de voltaje con resistencias](/calculadora-divisor-voltaje-resistencias): calculá la red de polarización de transistores en amplificadores LC sintonizados.\n",
   "faq": [
     {
-      "q": "¿Cómo funciona en radio?",
-      "a": "Cada estación tiene su frecuencia. Ajustando L o C (generalmente C variable), coincidís con una estación y la circulación selectiva maximiza esa señal."
+      "q": "¿Qué pasa exactamente en un circuito LC cuando llega a la frecuencia de resonancia?",
+      "a": "En resonancia, la reactancia inductiva XL = 2πfL se iguala a la reactancia capacitiva XC = 1/(2πfC), y se cancelan entre sí. En un circuito serie, la impedancia total cae al mínimo absoluto (solo queda la resistencia R), por lo que la corriente es máxima. En un circuito paralelo (tanque), ocurre lo opuesto: la impedancia es máxima. La energía oscila entre el campo magnético de la bobina y el campo eléctrico del capacitor sin consumirse (en componentes ideales)."
     },
     {
-      "q": "¿Serie o paralelo?",
-      "a": "Depende de la aplicación. Serie para filtros pasabanda. Paralelo para notch filter o tanque de oscilador."
+      "q": "¿Cómo afecta la resistencia R al factor de calidad Q y al ancho de banda?",
+      "a": "El factor Q = ω₀L / R (serie) cuantifica cuán 'selectivo' es el circuito. Con L=10 µH, C=100 pF y R=1 Ω: Q = (2π×5,03×10⁶×10×10⁻⁶)/1 ≈ 316, y el ancho de banda BW = fr/Q ≈ 15,9 kHz. Si R sube a 10 Ω, Q cae a ~31 y BW se ensancha a ~162 kHz. Q alto = filtro selectivo y estrecho; Q bajo = filtro ancho y poco selectivo."
     },
     {
-      "q": "¿Qué es Q alto?",
-      "a": "Selectividad. Q alto = pico resonante estrecho, rechaza bien frecuencias vecinas. Típico radio: Q=100 suficiente; cristales Q>10,000."
+      "q": "¿Cuál es la diferencia entre circuito LC serie y paralelo?",
+      "a": "Ambos resuenan a la misma fr = 1/(2π√LC) con componentes ideales. La diferencia clave está en la impedancia: el circuito **serie** tiene impedancia mínima en fr (máxima corriente, útil como filtro pasa-banda en serie con la carga), mientras que el **paralelo** tiene impedancia máxima en fr (mínima corriente desde la fuente, útil como carga sintonizada en amplificadores de RF o como filtro rechaza-banda en paralelo con la señal)."
     },
     {
-      "q": "¿Qué afecta la frecuencia real?",
-      "a": "Capacidad parásita del inductor, resistencia del alambre, tolerancia de L y C (±10-20% típica). En radiofrecuencia, importante compensar."
+      "q": "¿Qué unidades debo ingresar y cómo convierto µH, mH, pF, nF?",
+      "a": "La fórmula f = 1/(2π√LC) requiere L en **henrios (H)** y C en **faradios (F)**. Conversiones: 1 mH = 10⁻³ H; 1 µH = 10⁻⁶ H; 1 nH = 10⁻⁹ H. Para capacitores: 1 µF = 10⁻⁶ F; 1 nF = 10⁻⁹ F; 1 pF = 10⁻¹² F. Ejemplo: L=470 nH = 470×10⁻⁹ H y C=22 pF = 22×10⁻¹² F → fr = 1/(2π×√(470×10⁻⁹ × 22×10⁻¹²)) ≈ 49,6 MHz."
     },
     {
-      "q": "¿Cómo calculo si sé la frecuencia deseada?",
-      "a": "Elegí L o C libremente: C = 1/((2πf)²×L). Ejemplo: f=10 MHz con L=1µH → C = 253 pF."
+      "q": "¿Cómo elijo L y C para una frecuencia de resonancia específica?",
+      "a": "Despejando la fórmula: si fijás C, entonces L = 1/((2πfr)²×C), y viceversa. Para fr=100 MHz con C=10 pF: L = 1/((2π×10⁸)²×10⁻¹¹) = 1/(3,948×10¹⁶×10⁻¹¹) ≈ 253 nH. En la práctica, primero elegís el capacitor disponible (fijo o trimmer) y calculás L, o usás una bobina calculada y ajustás con un capacitor variable para compensar tolerancias de fabricación."
     },
     {
-      "q": "¿Y si hay resistencia?",
-      "a": "Reduce el Q y ensancha el pico. Inductores reales tienen R ~0.1-10 Ω dependiendo del calibre y número de vueltas."
+      "q": "¿Por qué en RF se prefieren capacitores C0G/NP0 y núcleos de aire para las bobinas?",
+      "a": "Los capacitores C0G/NP0 tienen coeficiente de temperatura ±30 ppm/°C, versus ±15% en X7R. Un capacitor de 100 pF X7R puede variar hasta 15 pF con el calor, desplazando fr varios cientos de kHz. Las bobinas de aire no tienen núcleo ferroso que sature o varíe su permeabilidad con la frecuencia, manteniendo L estable. Para circuitos críticos (osciladores, filtros de telemetría) esta estabilidad es indispensable."
     },
     {
-      "q": "¿Qué son RLC?",
-      "a": "LC con resistencia agregada. R determina Q y amortiguamiento. Si R es muy alta, el circuito no resuena (sobreamortiguado)."
+      "q": "¿Qué es la impedancia característica Z₀ de un circuito LC y para qué sirve?",
+      "a": "Z₀ = √(L/C) se llama impedancia característica del tanque LC y se mide en ohmios. Para L=10 µH y C=100 pF: Z₀ = √(10×10⁻⁶ / 100×10⁻¹²) = √(10⁵) ≈ 316 Ω. Sirve para calcular Q (Q = Z₀/R en serie) y para diseñar redes de adaptación de impedancia entre etapas de RF. También determina los voltajes e corrientes pico en resonancia: V_C = I×XC = I×Z₀ (en el capacitor) puede ser mucho mayor que la tensión de entrada."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Los circuitos LC reales tienen la misma fr que los ideales?",
+      "a": "No exactamente. Con pérdidas, la frecuencia de resonancia del circuito paralelo real es fr_real = (1/2π)×√(1/LC − R²/L²). Para Q=10, la diferencia respecto al ideal es de (1/(2Q²))×100% ≈ 0,5%. Para Q=5 sube al 2%. En diseño práctico con Q>20 se usa la fórmula simplificada sin error apreciable, pero en bobinas de bajo Q (ferrita saturada, frecuencias bajas) el ajuste es necesario."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "Wikipedia ES — Circuito LC: definición, fórmula de resonancia y factor de calidad",
+      "url": "https://es.wikipedia.org/wiki/Circuito_LC"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
+      "name": "Wikipedia ES — Frecuencia de resonancia en sistemas oscilantes",
+      "url": "https://es.wikipedia.org/wiki/Resonancia"
     },
     {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "INTI — Metrología eléctrica y patrones de impedancia (capacitancia e inductancia)",
+      "url": "https://www.inti.gob.ar/areas/electrica/metrologia-electrica"
     }
   ],
   "relatedSlugs": [

@@ -6,14 +6,14 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "fuente-dc-watts-amperaje",
-  "intro": "La electrónica básica se rige por leyes de Ohm, Kirchhoff y principios de semiconductores. Cálculos de resistencia, potencia, voltaje y amperaje son la base para diseñar y mantener circuitos. Calculá la potencia (W) y amperaje (A) que debe entregar tu fuente DC según cargas conectadas. Suma de consumos + margen de seguridad del 25%. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "**P_total = Σ cargas**. **I = P/V**. Regla: elegí fuente con **1.3× P_total** de margen. Fuente 12V con 30W total → usar de 40W.",
+  "intro": "Calculá la potencia (watts) y el amperaje necesarios para elegir una fuente de alimentación DC que aguante todos tus consumos sin sobrecalentarse ni fallar. La fórmula base es **P_fuente = ΣW × factor de seguridad** e **I = P_fuente ÷ V**. Se usa al diseñar circuitos con Arduino, Raspberry Pi, tiras LED, motores DC, impresoras 3D o cualquier proyecto electrónico donde la fuente tiene que proveer corriente continua estable a un voltaje fijo (tipicamente 3.3 V, 5 V, 12 V o 24 V). Aplicar un factor de seguridad entre 1.2 y 1.5 evita que la fuente trabaje al límite, lo que prolonga su vida útil y reduce el riesgo de apagones o daños por sobrecarga.",
+  "keyTakeaway": "**P_fuente (W) = Σ Consumos (W) × Factor de seguridad** → **I_fuente (A) = P_fuente ÷ V**. Ejemplo real: 30 W de carga a 12 V con factor 1.3 → fuente de 39 W mínimo → 3.25 A → se elige comercialmente una fuente 12V 4A (48W).",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de fuente dc — watts y amperaje necesarios",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Dimensionar la fuente de una impresora 3D (hotend ~40W + cama caliente ~120W + motores ~30W = 190W totales, se necesita fuente 12V o 24V de al menos 250W).",
+    "Elegir la fuente para una tira LED RGB de 5 metros a 12V: cada metro consume ~14.4W → 72W totales → con factor 1.3 → fuente 12V 8A (96W) mínima.",
+    "Alimentar un sistema de vigilancia con 4 cámaras IP POE de 12V/1A cada una + DVR de 12V/3A → 7A totales → fuente 12V 10A con factor de seguridad.",
+    "Seleccionar la fuente de un proyecto Arduino con sensores, módulo GSM y servomotores: calcular cada consumo individual y sumarlos antes de comprar la fuente.",
+    "Diseñar la alimentación de un amplificador de audio en rack que consume 2A en reposo y picos de 8A: la fuente debe soportar la corriente pico sin caídas de tensión."
   ],
   "fields": [
     {
@@ -74,53 +74,45 @@
     ],
     "result": "Fuente 12V 4A (48W) con margen adecuado"
   },
-  "explanation": "La **electrónica** se rige por leyes de Ohm, Kirchhoff, Faraday. Aplicar fórmulas evita errores costosos y fallos eléctricos.\n\n## Cómo se calcula\n\nCalculá la potencia (W) y amperaje (A) que debe entregar tu fuente DC según cargas conectadas. Suma de consumos + margen de seguridad del 25%.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl cálculo de una fuente DC parte de sumar todos los consumos de las cargas conectadas y aplicar un margen de seguridad para que la fuente nunca trabaje al 100% de su capacidad nominal.\n\n```\n// PASO 1: Sumar todos los consumos\nP_total = W₁ + W₂ + W₃ + ... + Wₙ   [Watts]\n\n// PASO 2: Aplicar factor de seguridad (recomendado: 1.2 a 1.5)\nP_fuente = P_total × factor            [Watts]\n\n// PASO 3: Calcular corriente necesaria\nI_fuente = P_fuente ÷ V               [Amperes]\n\n// PASO 4: Corriente mínima absoluta (sin margen)\nI_minima = P_total ÷ V                [Amperes]\n\n// Ejemplo: 30 W de carga, 12 V, factor 1.3\nP_fuente = 30 × 1.3 = 39 W\nI_fuente = 39 ÷ 12 = 3.25 A → elegir fuente comercial 12V 4A (48W)\n```\n\nEl **factor de seguridad** refleja que las fuentes reales degradan su capacidad con la temperatura, el envejecimiento de los capacitores y las variaciones de la red eléctrica. Operar una fuente al 70-80% de su capacidad máxima es la práctica estándar en electrónica de potencia.\n\n---\n\n## Tabla de referencia\n\n### Voltajes DC más comunes y aplicaciones típicas\n\n| Voltaje | Aplicación típica | Factor recomendado | Corriente típica |\n|---|---|---|---|\n| 3.3 V | Microcontroladores (ESP32, STM32) | 1.25 | 0.5 – 2 A |\n| 5 V | Arduino, Raspberry Pi, USB hubs | 1.25 – 1.3 | 1 – 5 A |\n| 5 V | Tiras LED WS2812B (1 m, 60 LEDs) | 1.3 | ~3.6 A máx. |\n| 12 V | Tiras LED, routers, DVR, ventiladores | 1.3 | 1 – 20 A |\n| 12 V | Impresora 3D (hotend + cama) | 1.4 | 15 – 30 A |\n| 19 V | Notebooks / laptops | 1.2 | 3.4 – 6.3 A |\n| 24 V | Impresoras 3D industriales, CNC | 1.3 – 1.4 | 10 – 30 A |\n| 48 V | Sistemas POE (switches), telefonía IP | 1.25 | 0.5 – 2 A |\n\n### Consumos de referencia de componentes comunes\n\n| Componente | Voltaje | Consumo típico |\n|---|---|---|\n| Arduino Uno (sin shields) | 5 V | ~250 mA (1.25 W) |\n| Raspberry Pi 4 (carga media) | 5 V | ~1.2 A (6 W) |\n| ESP32 (WiFi activo) | 3.3 V | ~240 mA (0.8 W) |\n| Módulo GSM SIM800L (pico TX) | 4.2 V | hasta 2 A (8.4 W) |\n| Servo SG90 (bajo carga) | 5 V | ~650 mA (3.25 W) |\n| Motor NEMA 17 (impresora 3D) | 12 V | ~1.5 A por motor (18 W) |\n| Cámara IP domo (12V) | 12 V | ~500 mA (6 W) |\n| Tira LED 5050, 60 LED/m | 12 V | 14.4 W/m |\n| Ventilador 120mm case | 12 V | 0.1 – 0.3 A (1.2 – 3.6 W) |\n| Hotend impresora 3D | 12 / 24 V | 30 – 40 W |\n| Cama caliente 200×200mm | 12 V | 120 – 150 W |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Proyecto Arduino con periféricos\nUn sistema de control domótico tiene: Arduino Mega (500mA@5V = 2.5W) + pantalla LCD 20×4 con retroiluminación (250mA@5V = 1.25W) + 3 servomotores SG90 en carga (~650mA c/u @5V = 9.75W) + módulo relay de 8 canales (180mA@5V = 0.9W).\n\n- P_total = 2.5 + 1.25 + 9.75 + 0.9 = **14.4 W**\n- P_fuente = 14.4 × 1.3 = **18.72 W**\n- I_fuente = 18.72 ÷ 5 = **3.74 A**\n- 👉 Se elige una fuente **5V 5A (25W)** — la siguiente medida comercial estándar.\n\n### Caso 2 — Tira LED de 5 metros a 12V\nTira LED 5050 RGB, densidad 60 LED/m, consumo 14.4W/m × 5m = 72W totales.\n\n- P_fuente = 72 × 1.3 = **93.6 W**\n- I_fuente = 93.6 ÷ 12 = **7.8 A**\n- 👉 Se elige una fuente **12V 10A (120W)** — ampliamente disponible en el mercado local.\n- **Nota:** Para tiras >3m se recomienda inyectar alimentación por ambos extremos para evitar caída de tensión.\n\n### Caso 3 — Impresora 3D con fuente 12V\nComponentes: hotend 40W + cama caliente 120W + 4 motores NEMA17 a 18W c/u (72W) + placa electrónica 10W + ventiladores 5W.\n\n- P_total = 40 + 120 + 72 + 10 + 5 = **247 W**\n- P_fuente = 247 × 1.4 = **345.8 W**\n- I_fuente = 345.8 ÷ 12 = **28.8 A**\n- 👉 Se elige una fuente **12V 30A (360W)** — estándar en impresoras tipo Creality Ender 3.\n\n---\n\n## Errores comunes\n\n1. **No sumar los consumos en picos de arranque:** Los motores y solenoides pueden consumir 3 a 6 veces su corriente nominal durante el arranque. Si dimensionás solo con consumo nominal, la fuente entra en protección o se daña.\n\n2. **Ignorar el factor de seguridad:** Operar una fuente al 100% de su capacidad continua acelera la degradación de sus capacitores electrolíticos (vida útil a 85°C es ~2000h; a 70°C se duplica). Sin margen, la fuente falla prematuramente.\n\n3. **Confundir potencia con corriente al comprar:** Una fuente \"12V 5A\" entrega 60W máximos. Si tu carga necesita 70W, no alcanza aunque el vendedor diga que \"está bien\". Siempre verificá watts, no solo amperes.\n\n4. **Subestimar la caída de tensión en el cableado:** Con cables finos y corrientes altas (>5A), la resistencia del cableado genera caídas de voltaje (Ley de Ohm: V_caida = I × R_cable). Un cable de 1mm² a 5A en 1m cae ~0.1V, pero a 10A cae ~0.2V por metro.\n\n5. **Mezclar cargas AC y DC en el mismo cálculo:** Las fuentes DC conmutadas (switching) trabajan con cargas resistivas e inductivas DC. Mezclar conceptos de potencia activa/reactiva de AC introduce errores graves en el dimensionamiento.\n\n6. **No considerar la temperatura ambiente:** Una fuente con derating térmico puede entregar el 80% de su potencia nominal a 40°C y solo el 60% a 50°C. En ambientes calurosos (talleres, exteriores), sobredimensionala aún más.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora Ley de Ohm — Voltaje, Corriente y Resistencia](/calculadora-ley-ohm-voltaje-corriente-resistencia): para calcular resistencias y corrientes en circuitos DC.\n- [Calculadora de Potencia Eléctrica (P = V×I)](/calculadora-potencia-electrica-p-vi): para verificar consumos individuales de cada componente.\n- [Calculadora de Resistencia para LED en Serie y Paralelo](/calculadora-resistencia-led-serie-paralelo): si parte de tu carga son LEDs con resistencias limitadoras.\n- [Calculadora de Divisor de Voltaje con Resistencias](/calculadora-divisor-voltaje-resistencias): para adaptar tensiones de tu fuente a distintas etapas del circuito.",
   "faq": [
     {
-      "q": "¿Por qué no usar 100% de la fuente?",
-      "a": "Calor. Operar al 100% acorta vida útil drásticamente. 70-80% es el sweet spot entre costo y durabilidad."
+      "q": "¿Qué factor de seguridad debo usar para una fuente DC de uso general?",
+      "a": "El estándar de la industria electrónica recomienda operar las fuentes conmutadas (switching) al 70-80% de su capacidad máxima, lo que equivale a un factor de seguridad de **1.25 a 1.43**. Para uso doméstico o educativo (Arduino, Raspberry Pi) usá 1.25–1.3. Para sistemas industriales o con motores, usá 1.4–1.5. El margen compensa la degradación térmica, los picos de arranque y el envejecimiento del capacitor bulk."
     },
     {
-      "q": "¿Fuente más grande de la que necesito?",
-      "a": "No hace daño. La fuente entrega solo la corriente que la carga demanda. Comprá la más grande si la diferencia de precio es chica."
+      "q": "¿Por qué la fuente se calienta mucho si la corriente calculada no supera su límite nominal?",
+      "a": "Las fuentes conmutadas tienen una eficiencia real del 80–92%, lo que significa que parte de la energía se disipa como calor incluso dentro del límite nominal. Además, si la fuente trabaja cercana al 100% de su capacidad de forma continua, los MOSFETs y el transformador saturan su disipación. Un ventilador interno tapado por polvo o mala ventilación del gabinete agrava el problema. Revisá que la fuente tenga circulación de aire libre y que no supere el 80% de su potencia nominal."
     },
     {
-      "q": "¿Factor de 1.5 o 2?",
-      "a": "Para cargas con picos de inrush (motores, capacitores grandes): 2x. Para cargas resistivas estables: 1.3-1.5 alcanza."
+      "q": "¿Cómo sumo los consumos si algunos componentes vienen en mA y otros en W?",
+      "a": "Convertí todo a watts antes de sumar. La fórmula es **W = V × A** (o equivalentemente, **W = V × mA ÷ 1000**). Ejemplo: un módulo que consume 500 mA a 5V = 5 × 0.5 = 2.5W. Un servo que consume 650 mA a 5V = 5 × 0.65 = 3.25W. Sumá todos los watts resultantes y recién aplicá el factor de seguridad. Nunca sumes amperes de distintos voltajes directamente, eso da valores incorrectos."
     },
     {
-      "q": "¿Diferencia entre W y VA?",
-      "a": "W = potencia activa (lo que realmente consume). VA = potencia aparente (la carga nominal de la fuente). En DC: W ≈ VA. En AC con cos(φ)<1: W < VA."
+      "q": "¿Qué pasa si la fuente tiene más watts de los necesarios? ¿Es un problema?",
+      "a": "No, sobredimensionar la fuente es perfectamente válido y en muchos casos deseable. Una fuente de 12V 10A alimentando una carga de 12V 3A trabaja al 30% de su capacidad, con temperaturas bajas y larga vida útil. Lo que SÍ puede ser un problema es usar una fuente de muy baja calidad con potencia nominal inflada (fuentes sin certificación), ya que declaran 10A pero solo entregan 5A de forma estable. Buscá fuentes con certificación **CE**, **UL** o con marca IRAM en el contexto argentino."
     },
     {
-      "q": "¿Fuente switching o lineal?",
-      "a": "Switching para 90% de los casos (más eficiente, más liviano). Lineal solo para audio analógico de alta gama o labs de precisión."
+      "q": "¿Cómo calculo el amperaje si tengo cargas a distintos voltajes (ejemplo: 5V y 12V juntas)?",
+      "a": "Si tu fuente es de un solo voltaje (por ejemplo 12V), y partes de los componentes necesitan 5V, esos componentes pasan por un regulador o convertidor DC-DC que tiene su propia eficiencia (~85-90%). Calculá la potencia total en watts de todas las cargas (sin importar el voltaje de cada una), sumá las pérdidas del convertidor, y luego dividí por el voltaje de la fuente principal. Ejemplo: 10W@5V a través de un convertidor buck al 88% de eficiencia → la fuente 12V debe proveer 10÷0.88 = 11.36W → I = 11.36÷12 = 0.95A solo para esa rama."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Qué diferencia hay entre una fuente lineal y una fuente conmutada (switching) para elegir el amperaje?",
+      "a": "Las fuentes **lineales** (como los reguladores 7812, LM317) tienen eficiencia baja (40–60%) y disipan el exceso como calor. Son ideales para baja corriente (<1A) y cuando necesitás muy poco ruido eléctrico (audio, RF). Las fuentes **conmutadas** tienen eficiencia del 80–92%, soportan alta corriente (1–30A o más) y son las estándar en proyectos modernos. El cálculo de watts y amperaje se aplica igual en ambos casos, pero en fuentes lineales el calor disipado es mayor: **P_disipada = (V_entrada − V_salida) × I**."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Qué corriente mínima necesita una fuente para no dañarse con cargas muy pequeñas?",
+      "a": "Muchas fuentes conmutadas de calidad requieren una **corriente mínima de carga** (mínimo del 10–20% de su capacidad nominal) para mantener la regulación estable. Una fuente 12V 10A que alimenta solo 100mA puede oscilar o generar ruido. Revisá el datasheet de tu fuente; si no lo indica, las fuentes industriales tipo Meanwell especifican 'minimum load' explícitamente (típicamente 0–0.5A). En fuentes económicas sin datasheet, usá resistencias de carga dummy si el consumo real es muy bajo."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Cómo sé si la fuente que compré realmente entrega los amperes que dice en la etiqueta?",
+      "a": "Podés medirlo con un multímetro en modo amperímetro en serie con una carga conocida (por ejemplo una resistencia de potencia). Un método más práctico: conectá una carga controlada (resistencia calculada con la Ley de Ohm: R = V ÷ I_esperada) y medí el voltaje de salida. Si el voltaje cae más del 5% respecto al nominal bajo carga, la fuente no entrega los amperes prometidos. Las fuentes de marcas reconocidas con certificación CE o UL suelen cumplir sus especificaciones; las genéricas sin certificación frecuentemente mienten en un 30–50% de su potencia nominal real."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
-    },
-    {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "IRAM — Instituto Argentino de Normalización y Certificación (normas de seguridad eléctrica, equipos de alimentación)",
+      "url": "https://www.iram.org.ar"
     }
   ],
   "relatedSlugs": [

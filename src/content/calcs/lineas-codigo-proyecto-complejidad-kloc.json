@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "📝",
   "formulaId": "lineas-codigo-proyecto-complejidad-kloc",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Métrica de tamaño basada en líneas de código · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá líneas código y obtené KLOC al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "La calculadora de complejidad por KLOC (Kilo Lines of Code, es decir, miles de líneas de código) te permite medir el tamaño de un proyecto de software y estimar el esfuerzo de desarrollo necesario. KLOC = LOC ÷ 1000. Con ese valor, modelos como COCOMO I (Boehm, 1981) estiman el esfuerzo en meses/persona: para proyectos orgánicos, Esfuerzo = 2.4 × KLOC^1.05. Usás esta métrica cuando tenés que comparar tamaños de bases de código, justificar recursos ante un cliente o aplicar modelos de estimación estándar de la industria.",
+  "keyTakeaway": "**KLOC = LOC ÷ 1000** y con COCOMO básico (modo orgánico): **Esfuerzo (meses·persona) = 2.4 × KLOC^1.05** — un proyecto de 50 KLOC demanda ≈ 152 meses·persona.",
   "useCases": [
-    "Dimensionar complejidad proyecto (KLOC) antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Estimar cuántos meses·persona llevará desarrollar un sistema de gestión empresarial de 80 KLOC antes de presentar el presupuesto al cliente.",
+    "Clasificar una base de código heredada (legacy) para decidir si conviene refactorizarla o reescribirla desde cero, usando la categoría de complejidad.",
+    "Comparar la productividad de dos equipos de desarrollo midiendo cuántos KLOC entregaron por sprint en proyectos del mismo rango de tamaño.",
+    "Aplicar la métrica KLOC como insumo para modelos de estimación de defectos: la industria reporta entre 1 y 25 bugs por KLOC según el tipo de proyecto."
   ],
   "fields": [
     {
@@ -52,49 +52,45 @@
     ],
     "result": "50 KLOC"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nMétrica de tamaño basada en líneas de código · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa métrica base es simple: dividís la cantidad total de líneas de código fuente (LOC) por 1000 para obtener KLOC.\n\n```\nKLOC = LOC ÷ 1000\n\nEjemplo: 50 000 LOC ÷ 1000 = 50 KLOC\n```\n\nA partir del valor KLOC, el modelo **COCOMO I Básico** (Constructive Cost Model, Barry Boehm 1981) estima el esfuerzo según el tipo de proyecto:\n\n```\nModo Orgánico    → Esfuerzo = 2.4  × KLOC^1.05  (equipos pequeños, baja complejidad)\nModo Semi-acoplado → Esfuerzo = 3.0 × KLOC^1.12  (sistemas intermedios)\nModo Embebido    → Esfuerzo = 3.6  × KLOC^1.20  (tiempo real, restricciones duras)\n\nTiempo desarrollo = 2.5 × Esfuerzo^0.38  (en meses calendario)\n```\n\nDonde el esfuerzo resultante está expresado en **meses·persona** (persona-month, PM).\n\n---\n\n## Tabla de referencia\n\n| Rango KLOC | Categoría | Modo COCOMO recomendado | Esfuerzo típico (orgánico) | Ejemplos reales |\n|---|---|---|---|---|\n| < 2 KLOC | Trivial / Script | Orgánico | < 5 PM | Script de automatización, plugin simple |\n| 2 – 8 KLOC | Pequeño | Orgánico | 5 – 25 PM | App mobile MVP, microservicio |\n| 8 – 32 KLOC | Mediano | Orgánico / Semi | 25 – 115 PM | Sistema de facturación, CRM básico |\n| 32 – 128 KLOC | Grande | Semi-acoplado | 115 – 550 PM | ERP mediano, plataforma e-commerce |\n| 128 – 512 KLOC | Muy grande | Embebido / Semi | 550 – 2800 PM | Sistema bancario core, OS embebido |\n| > 512 KLOC | Masivo | Embebido | > 2800 PM | Sistema operativo, suite ofimática |\n\n> **Referencia de densidad de bugs:** proyectos comerciales típicos registran entre **1 y 25 defectos por KLOC** antes del testing; con buenas prácticas (TDD, code review), ese número baja a **0.1 – 1 bug/KLOC** en producción (dato: estudio de Capers Jones, *Software Engineering Best Practices*, 2010).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Sistema de gestión de turnos (8 500 LOC)\n```\nKLOC = 8 500 ÷ 1 000 = 8.5 KLOC  → Categoría: Mediano\nEsfuerzo (orgánico) = 2.4 × 8.5^1.05 = 2.4 × 9.54 ≈ 22.9 PM\nTiempo calendario  = 2.5 × 22.9^0.38 ≈ 2.5 × 3.97 ≈ 9.9 meses\n```\nUn equipo de 3 personas lo entrega en aproximadamente **10 meses**.\n\n### Caso 2 — Plataforma e-commerce (50 000 LOC)\n```\nKLOC = 50 000 ÷ 1 000 = 50 KLOC  → Categoría: Grande\nEsfuerzo (semi) = 3.0 × 50^1.12 = 3.0 × 84.4 ≈ 253 PM\nTiempo calendario = 2.5 × 253^0.38 ≈ 2.5 × 8.0 ≈ 20 meses\n```\nCon un equipo de 12 personas, el plazo estimado es **~21 meses**.\n\n### Caso 3 — Microservicio de autenticación (1 200 LOC)\n```\nKLOC = 1 200 ÷ 1 000 = 1.2 KLOC  → Categoría: Trivial\nEsfuerzo (orgánico) = 2.4 × 1.2^1.05 = 2.4 × 1.22 ≈ 2.9 PM\nTiempo calendario  = 2.5 × 2.9^0.38 ≈ 2.5 × 1.65 ≈ 4.1 meses\n```\nUn desarrollador senior puede entregarlo en **~4 meses** trabajando en paralelo con otras tareas.\n\n---\n\n## Errores comunes\n\n1. **Contar líneas en blanco y comentarios:** KLOC debe medirse sobre **líneas de código fuente lógicas** (SLOC), excluyendo comentarios y líneas vacías. Incluirlas infla el número hasta un 30 % y sobrestima el esfuerzo.\n\n2. **Usar el mismo modo COCOMO para todo:** aplicar el modo Orgánico a un sistema embebido (firmware de dispositivo médico, por ejemplo) subestima el esfuerzo real en un factor de 2× a 3×. El modo debe elegirse según el tipo de proyecto.\n\n3. **Equiparar LOC entre lenguajes:** 1 KLOC en C equivale a más trabajo que 1 KLOC en Python. La tabla de ratios de Capers Jones indica que Python necesita ~5× menos líneas que C para la misma funcionalidad. Para comparaciones entre lenguajes, usá **puntos de función** (Function Points) o convertí todo a un lenguaje de referencia.\n\n4. **Ignorar el código generado automáticamente:** los frameworks modernos (Angular, Spring Boot, Rails) generan miles de líneas de scaffolding. Contarlas como código propio del proyecto distorsiona completamente la métrica; hay que excluir el código auto-generado o marcarlo explícitamente.\n\n5. **Tomar COCOMO como una promesa:** el modelo da una estimación estadística con un margen de error reconocido del ±20 % para proyectos bien caracterizados y hasta ±50 % en fases tempranas. Nunca usarlo como cifra contractual fija sin ajustes.\n\n---\n\n## Calculadoras relacionadas\n\n- [Estimación de líneas de código por módulo](/calculadora-codigo-lineas-estimacion-proyecto)\n- [Complejidad algorítmica Big-O e iteraciones](/calculadora-complejidad-algoritmica-big-o-iteraciones)\n- [Ganancia de amplificador operacional](/calculadora-amplificador-operacional-ganancia)\n- [Distancia hiperfocal de lente](/calculadora-distancia-hiperfocal-lente)\n",
   "faq": [
     {
-      "q": "¿COCOMO?",
-      "a": "PM = 2.4 × KLOC^1.05 (proyecto orgánico)."
+      "q": "¿Qué es exactamente un KLOC y cómo se diferencia de LOC?",
+      "a": "LOC (Lines of Code) es la cantidad absoluta de líneas de código fuente. KLOC es simplemente LOC dividido por 1000, una unidad de escala para manejar proyectos grandes sin números de seis cifras. Por ejemplo, 75 000 LOC = 75 KLOC. En la industria también existe MLOC (millones de líneas): el kernel de Linux supera los 27 MLOC."
     },
     {
-      "q": "¿Métrica imperfecta?",
-      "a": "Líneas ≠ calidad. Complementa con función points."
+      "q": "¿El modelo COCOMO sigue siendo válido en 2026 con metodologías ágiles?",
+      "a": "COCOMO I (1981) y COCOMO II (2000) siguen siendo referencias académicas y de benchmarking, pero no reemplazan la planificación ágil por sprints. Su valor hoy es orientativo: te da un orden de magnitud del esfuerzo total antes de descomponer en historias de usuario. Para proyectos ágiles, muchos equipos usan COCOMO II con los factores de escala actualizados disponibles en el USC COCOMO II Model Definition Manual (University of Southern California, 2000)."
     },
     {
-      "q": "¿Lenguaje?",
-      "a": "Python más denso que Java."
+      "q": "¿Cuántas líneas de código tienen los proyectos de software más conocidos?",
+      "a": "Como referencia: el kernel Linux tiene ~27 millones de LOC (27 000 KLOC); Windows NT 3.1 tenía ~4–5 MLOC; Google tiene estimados de más de 2 000 MLOC en su monorepo. En el ámbito empresarial argentino, un sistema ERP mediano suele ubicarse entre 200 y 800 KLOC. Estos datos provienen de estudios de Information Week y el análisis de repositorios públicos."
     },
     {
-      "q": "¿Test?",
-      "a": "Incluir o no según contexto."
+      "q": "¿Cómo afecta el lenguaje de programación a la métrica KLOC?",
+      "a": "Significativamente. Según la tabla de niveles de lenguajes de Capers Jones, para implementar la misma funcionalidad necesitás aproximadamente: Assembler 320 LOC, C 128 LOC, Java 53 LOC, Python 32 LOC, SQL 12 LOC. Comparar KLOC entre lenguajes sin normalizar lleva a conclusiones erróneas sobre productividad o complejidad."
     },
     {
-      "q": "¿Comentarios?",
-      "a": "cloc los separa."
+      "q": "¿Qué herramientas se usan para contar KLOC en proyectos reales?",
+      "a": "Las herramientas más usadas son: **cloc** (Count Lines of Code, open source, disponible en GitHub), **SonarQube** (análisis estático con dashboard de métricas, muy usado en empresas), **tokei** (alternativa en Rust, muy rápida), y **SLOCCOUNT** de David Wheeler. Todas ellas excluyen comentarios y líneas en blanco por defecto, dando el SLOC real."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cuál es la densidad de bugs esperada según el tamaño del proyecto?",
+      "a": "La industria reporta rangos amplios: software sin testing intensivo puede tener entre 15 y 50 defectos por KLOC durante el desarrollo; software comercial lanzado al mercado presenta entre 1 y 7 bugs/KLOC; software de alta confiabilidad (aeronáutico, médico) apunta a menos de 0.1 bugs/KLOC. Estos datos provienen del estudio de Capers Jones *Applied Software Measurement* (3ª edición, 2008)."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Por qué hay diferencia entre el esfuerzo estimado y el tiempo calendario?",
+      "a": "Porque el esfuerzo total (en meses·persona, PM) se distribuye entre los miembros del equipo, pero no de forma perfectamente lineal. La Ley de Brooks indica que agregar más personas a un proyecto tarde lo retrasa, no lo acelera. COCOMO separa ambas cosas: el esfuerzo total puede ser 100 PM, pero con un equipo de 10 personas el calendario no baja a 10 meses porque hay overhead de coordinación, revisiones y dependencias entre tareas."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Existe alguna regulación o estándar argentino para medir el tamaño del software?",
+      "a": "En Argentina no existe una normativa específica de IRAM para métricas de tamaño de software al momento de esta publicación. Sin embargo, organismos públicos nacionales que contratan desarrollo de software suelen requerir estimaciones basadas en **Puntos de Función** (Function Points, ISO/IEC 20926:2009) o KLOC como documentación del alcance técnico en los pliegos licitatorios del sistema de contrataciones del Estado (plataforma COMPR.AR)."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
-    },
-    {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "Wikipedia ES – COCOMO (modelo de estimación de software)",
+      "url": "https://es.wikipedia.org/wiki/COCOMO"
     }
   ],
   "relatedSlugs": [

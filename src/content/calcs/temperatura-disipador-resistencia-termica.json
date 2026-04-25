@@ -6,14 +6,13 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "temperatura-disipador-resistencia-termica",
-  "intro": "Las leyes físicas son universales y deterministas. Conocer las fórmulas te permite resolver problemas de movimiento, energía, fuerzas, ondas, termodinámica y electromagnetismo aplicados a la vida real. Calculá la temperatura final de un semiconductor (Tj) con disipador, según potencia disipada y resistencias térmicas (θJC + θCS + θSA). Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "**Tj = Ta + P × (θJC + θCS + θSA)**. Tj máx típica 125-150°C. Con 1W y θ_total=10°C/W a 25°C ambiente → Tj = 35°C.",
+  "intro": "Esta calculadora determina la temperatura de unión (Tj) de un componente semiconductor —transistor, MOSFET, diodo, CI de potencia— montado sobre un disipador térmico. Usa el modelo de red térmica en serie: **Tj = Ta + P × (θJC + θCS + θSA)**, donde P es la potencia disipada en watts y cada θ es una resistencia térmica en °C/W. Es fundamental en diseño electrónico para garantizar que Tj no supere el límite del datasheet (típicamente 125 °C o 150 °C), evitando degradación acelerada, falla por fatiga térmica o destrucción inmediata del componente.",
+  "keyTakeaway": "**Tj = Ta + P × (θJC + θCS + θSA)** — Ejemplo real: P=5 W, Ta=25 °C, θtotal=5,5 °C/W → Tj = 52,5 °C. Con Tj_máx=125 °C, el margen de seguridad es **72,5 °C**, lo que indica operación muy segura.",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de temperatura de unión en disipador térmico",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Diseñar la etapa de potencia de una fuente conmutada (SMPS) con un MOSFET IRF540N (θJC=0,88 °C/W, Tj_máx=175 °C) para verificar que no supere el límite a plena carga de 20 W.",
+    "Elegir el disipador adecuado (θSA) para un regulador lineal LM338 que disipa 8 W en un gabinete electrónico industrial donde la temperatura ambiente puede llegar a 50 °C.",
+    "Calcular el margen térmico de un puente rectificador de 10 A en un variador de frecuencia antes de aprobar el diseño en producción.",
+    "Evaluar si la pasta térmica (θCS) actual de un amplificador de audio clase AB con transistores TIP35C es suficiente o si conviene reemplazarla para bajar la temperatura de unión."
   ],
   "fields": [
     {
@@ -94,53 +93,49 @@
     ],
     "result": "Tj = 52.5°C, margen 72.5°C (seguro)"
   },
-  "explanation": "La **física aplicada** resuelve problemas cotidianos: desde la caída libre hasta la electricidad del hogar. Fórmulas validadas en experimentos durante siglos.\n\n## Cómo se calcula\n\nCalculá la temperatura final de un semiconductor (Tj) con disipador, según potencia disipada y resistencias térmicas (θJC + θCS + θSA) · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "\n## Cómo se calcula\n\nLa temperatura de unión se obtiene modelando la cadena térmica como una red de resistencias en serie, análoga a la Ley de Ohm: la potencia disipada (P) es la \"corriente\", la temperatura es el \"voltaje\" y cada θ es una \"resistencia\".\n\n```\nTj = Ta + P × (θJC + θCS + θSA)\n\nDonde:\n  Tj   = Temperatura de unión del semiconductor (°C)\n  Ta   = Temperatura ambiente (°C)\n  P    = Potencia disipada en el componente (W)\n  θJC  = Resistencia térmica unión–carcasa (°C/W)  → datasheet del componente\n  θCS  = Resistencia térmica carcasa–disipador (°C/W) → pasta/aislador térmico\n  θSA  = Resistencia térmica disipador–ambiente (°C/W) → datasheet del disipador\n\nMargen de seguridad = Tj_máx − Tj\n```\n\n> **Regla práctica:** Diseñar para que Tj ≤ 0,75 × Tj_máx (derating del 25 %) prolonga significativamente la vida útil del componente. Con Tj_máx = 125 °C, el objetivo de diseño es Tj ≤ 93,75 °C.\n\n---\n\n## Tabla de referencia\n\n### θJC típicos de componentes comunes\n\n| Componente        | Encapsulado | θJC (°C/W) | Tj_máx (°C) |\n|-------------------|-------------|------------|-------------|\n| LM7805 (regulador)| TO-220      | 5,0        | 125         |\n| LM338 (regulador) | TO-220      | 2,3        | 125         |\n| IRF540N (MOSFET)  | TO-220      | 0,88       | 175         |\n| TIP35C (NPN)      | TO-218      | 0,83       | 150         |\n| IRFP250 (MOSFET)  | TO-247      | 0,50       | 175         |\n| MBR1045 (diodo)   | TO-220AC    | 2,0        | 175         |\n| STM32 (µC, típico)| LQFP-64     | 38,0       | 125         |\n\n### θCS según interfaz carcasa–disipador\n\n| Interfaz                              | θCS (°C/W) |\n|---------------------------------------|------------|\n| Contacto seco (sin nada)              | 1,5 – 3,0  |\n| Pasta térmica genérica (silicona)     | 0,5 – 1,0  |\n| Pasta térmica calidad (p. ej. MX-4)  | 0,1 – 0,3  |\n| Aislador mica + pasta                 | 0,4 – 1,2  |\n| Almohadilla grafito (Bergquist GP3000)| 0,15 – 0,4 |\n| Sin aislante, pasta calidad           | 0,05 – 0,15|\n\n### θSA de disipadores de aluminio típicos\n\n| Tamaño disipador (aprox.)     | Convección natural θSA |\n|-------------------------------|------------------------|\n| Pequeño (50×50×15 mm)         | 8 – 12 °C/W            |\n| Mediano (80×60×25 mm)         | 4 – 6 °C/W             |\n| Grande (120×100×40 mm)        | 2 – 3 °C/W             |\n| Perfil extruido 150×150 mm    | 1,0 – 1,5 °C/W         |\n| Con ventilador forzado (12 V) | 0,3 – 1,0 °C/W         |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Regulador LM7805 alimentando 5 V / 1 A desde 12 V\n- **P** = (Vin − Vout) × I = (12 − 5) × 1 = **7 W**\n- **Ta** = 40 °C (gabinete cerrado en verano), **θJC** = 5,0, **θCS** = 0,5 (pasta), **θSA** = 5,0 (disipador mediano)\n- **Tj** = 40 + 7 × (5,0 + 0,5 + 5,0) = 40 + 7 × 10,5 = **113,5 °C**\n- Tj_máx = 125 °C → Margen solo **11,5 °C** ⚠️ — Se recomienda disipador más grande (θSA ≤ 3 °C/W) o reducir Vin.\n\n### Caso 2 — MOSFET IRF540N en fuente conmutada 20 W\n- **P** = 20 W (caso pésimo), **Ta** = 25 °C, **θJC** = 0,88, **θCS** = 0,2 (pasta calidad), **θSA** = 3,0\n- **Tj** = 25 + 20 × (0,88 + 0,20 + 3,0) = 25 + 20 × 4,08 = **106,6 °C**\n- Tj_máx = 175 °C → Margen **68,4 °C** ✅ — Operación segura.\n\n### Caso 3 — Ejemplo de la calculadora (P=5 W, θtotal=5,5 °C/W)\n- **Tj** = 25 + 5 × 5,5 = **52,5 °C**, margen = 125 − 52,5 = **72,5 °C** ✅ muy cómodo.\n\n---\n\n## Errores comunes\n\n1. **Usar θJA en lugar de θJC:** El datasheet a veces lista θJA (unión–ambiente, sin disipador). Usarlo en la fórmula suma térmicas dobles y da resultados erróneos. Siempre usar θJC para diseños con disipador externo.\n\n2. **Ignorar el θCS:** Muchos diseñadores asumen θCS ≈ 0 cuando no hay aislante. El contacto seco metal-aluminio tiene típicamente 2–3 °C/W, lo que puede significar 15–30 °C extra a 10 W.\n\n3. **No aplicar derating:** Diseñar justo en el límite de Tj_máx (por ejemplo Tj=124 °C con límite 125 °C) ignora que la resistencia térmica real varía ±20% según el apriete, envejecimiento de la pasta y variaciones de lote. La norma práctica es no superar el 75% de Tj_máx.\n\n4. **Confundir potencia total con potencia disipada:** En un MOSFET, la potencia disipada en conducción es P = Ids² × Rds(on), no la potencia de carga. A 10 A y Rds(on)=0,077 Ω (IRF540N a 25 °C), P = 100 × 0,077 = **7,7 W**, no 10 × Vds_total.\n\n5. **No considerar el aumento de Rds(on) con la temperatura:** El Rds(on) de un MOSFET puede duplicarse entre 25 °C y 150 °C, aumentando la potencia disipada en caliente. El cálculo debe iterarse o usar el valor a temperatura de operación estimada.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de Ley de Ohm — Voltaje, Corriente y Resistencia](/calculadora-ley-ohm-voltaje-corriente-resistencia)\n- [Calculadora de Potencia Eléctrica (P = V·I)](/calculadora-potencia-electrica-p-vi)\n- [Calculadora de Resistencia para LED (serie y paralelo)](/calculadora-resistencia-led-serie-paralelo)\n- [Calculadora de Divisor de Voltaje con Resistencias](/calculadora-divisor-voltaje-resistencias)\n",
   "faq": [
     {
-      "q": "¿Por qué importa Tj?",
-      "a": "Sobrepasar Tj max quema el componente permanentemente. Operar cerca del límite acorta vida útil (regla: cada 10°C sobre TJ_max = vida a la mitad)."
+      "q": "¿Qué diferencia hay entre θJC, θCS y θSA?",
+      "a": "Son los tres eslabones de la cadena térmica en serie. **θJC** (unión–carcasa) es una propiedad fija del semiconductor, publicada en el datasheet. **θCS** (carcasa–disipador) depende de la interfaz: sin pasta puede llegar a 3 °C/W, con pasta de calidad baja a 0,1–0,3 °C/W. **θSA** (disipador–ambiente) depende del tamaño y flujo de aire del disipador. La suma de los tres es la resistencia térmica total que multiplica la potencia para dar el sobrecalentamiento sobre la temperatura ambiente."
     },
     {
-      "q": "¿Pasta térmica es importante?",
-      "a": "Muy importante. Sin pasta: θCS ~2-5. Con pasta: 0.3-1. Reduce resistencia 3-10×."
+      "q": "¿Cuál es la temperatura de unión máxima típica de los semiconductores?",
+      "a": "La mayoría de los semiconductores de silicio tienen Tj_máx entre **125 °C y 175 °C** según el proceso de fabricación. Los transistores bipolares (BJT) y diodos estándar suelen ser 150 °C; los MOSFETs de potencia modernos llegan a 175 °C. Los circuitos integrados de señal pequeña tienen límites menores, de 125 °C. Los dispositivos de carburo de silicio (SiC) pueden superar 200 °C. Este dato siempre debe verificarse en el datasheet del fabricante."
     },
     {
-      "q": "¿Ventilador ayuda?",
-      "a": "Sí. Disipador con forzado aire: θSA se reduce 2-4× vs convección natural. TEC (peltier): θSA efectiva negativa."
+      "q": "¿Por qué se recomienda hacer derating al 75% de Tj_máx?",
+      "a": "Operar cerca del límite absoluto implica que cualquier variación de temperatura ambiente, degradación de la pasta térmica con el tiempo o fluctuación de carga puede superarlo. El estándar de la industria electrónica (MIL-HDBK-217, muy usado en diseño profesional) establece que por cada 10 °C de reducción en la temperatura de operación, la tasa de fallas se reduce aproximadamente a la mitad (Ley de Arrhenius). Diseñar para Tj ≤ 0,75 × Tj_máx extiende significativamente la vida útil del componente."
     },
     {
-      "q": "¿Qué semiconductores más dissipación?",
-      "a": "Power MOSFETs, reguladores lineales, amplificadores clase A/B, drivers de motor, IGBTs. CPUs/GPUs caso aparte."
+      "q": "¿Cómo elijo el disipador correcto si ya sé la potencia disipada?",
+      "a": "Despejás θSA de la fórmula: **θSA = (Tj_objetivo − Ta) / P − θJC − θCS**. Por ejemplo, si querés Tj ≤ 100 °C, Ta = 40 °C, P = 10 W, θJC = 1,0, θCS = 0,5: θSA = (100 − 40) / 10 − 1,0 − 0,5 = 6 − 1,5 = **4,5 °C/W**. Buscás en catálogos un disipador con θSA ≤ 4,5 °C/W (convección natural). Un perfil de aluminio extruido de 100×80×30 mm típicamente cumple ese requisito."
     },
     {
-      "q": "¿Por qué no usar disipador grande?",
-      "a": "Más caro, más grande, más peso. Ajustá al requerido + margen 30%."
+      "q": "¿Qué pasa si monto el componente sin pasta térmica?",
+      "a": "El contacto metálico directo (carcasa TO-220 sobre aluminio) tiene muchas microrugosidades que atrapan aire, elevando θCS a **1,5–3,0 °C/W**. A 10 W eso representa 15–30 °C extra en la unión. La pasta térmica rellena esas cavidades: una pasta genérica de silicona baja θCS a ~0,8 °C/W; una pasta de calidad (base óxido de zinc o aluminio, como la MX-4) la lleva a 0,1–0,3 °C/W. En componentes que disipan más de 3 W nunca debe omitirse."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿La fórmula es válida para componentes SMD como un SOT-223 o D2PAK?",
+      "a": "Sí, la fórmula es válida, pero los encapsulados SMD disipan principalmente por la **placa de circuito impreso (PCB)**, no por un disipador externo. En ese caso, θSA se reemplaza por θPA (pad–ambiente), que depende del área de cobre, número de capas, vías térmicas y el propio substrato FR4. Un SOT-223 sobre 1 cm² de cobre en FR4 tiene θPA ≈ 60–80 °C/W; con un plano de cobre optimizado y vías puede bajar a 20–30 °C/W. Los datasheets de TI, ON Semi o ST incluyen curvas de θJA versus área de cobre para facilitarlo."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Cómo afecta la altitud a la disipación térmica del disipador?",
+      "a": "A mayor altitud, la densidad del aire disminuye, lo que reduce la convección natural. A 2.000 m snm (como gran parte de la Ciudad de Buenos Aires no, pero sí Mendoza o Córdoba serrana), la eficiencia de convección cae aproximadamente un **10–15%** respecto al nivel del mar, lo que equivale a multiplicar θSA efectivo por ~1,1–1,2. En equipos industriales que operan en zonas de altura, esto debe considerarse en el diseño térmico o compensarse con ventilación forzada."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Cuándo conviene usar un aislante de mica versus no aislar?",
+      "a": "Cuando la carcasa del componente está eléctricamente conectada a un nodo de tensión (por ejemplo, en un TO-220 el pin colector/drenador suele ser la pestaña metálica), y el disipador está conectado a chasis o masa, **es obligatorio aislar** para evitar cortocircuitos o riesgo eléctrico. El aislante de mica añade ~0,5–1,0 °C/W; las almohadillas de alúmina (BeO, pero tóxico) o nitruro de aluminio (AlN) son mejores opciones modernas con θCS de 0,2–0,4 °C/W. Si la pestaña es masa/tierra y el chasis también, se puede prescindir del aislante y mejorar la disipación."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "Wikipedia ES — Resistencia térmica (electrónica)",
+      "url": "https://es.wikipedia.org/wiki/Resistencia_t%C3%A9rmica_(electr%C3%B3nica)"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "IRAM — Normas de seguridad eléctrica y térmica",
+      "url": "https://www.iram.org.ar"
     }
   ],
   "relatedSlugs": [

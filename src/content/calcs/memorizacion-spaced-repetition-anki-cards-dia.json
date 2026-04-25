@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "🧠",
   "formulaId": "memorizacion-spaced-repetition-anki-cards-dia",
-  "intro": "Los métodos de estudio modernos aprovechan la ciencia cognitiva: spaced repetition, active recall, interleaving. Aplicados correctamente, aprendés más rápido y con mayor retención. Cantidad de cards Anki según objetivo. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá cards total deck y semanas para completar y obtené cards nuevas/día al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "La calculadora de repetición espaciada Anki te ayuda a planificar cuántas cards nuevas introducir por día para completar un mazo en un plazo definido, y estima cuántas revisiones diarias máximas vas a enfrentar. Usá la fórmula base: **Cards nuevas/día = Cards totales ÷ (Semanas × 7)**. Por ejemplo, 1000 cards en 12 semanas = ~12 cards nuevas/día, pero con el factor de revisiones acumuladas del algoritmo SM-2 de Anki, podés llegar a revisar hasta 120 tarjetas/día en el pico. Fundamental para estudiar vocabulario de idiomas, medicina, derecho o cualquier materia con alto volumen de contenido a retener a largo plazo.",
+  "keyTakeaway": "**Cards nuevas/día = Cards totales ÷ (Semanas × 7)** — con factor de revisión SM-2: Revisiones máx/día ≈ Cards nuevas/día × 10 en el pico (semana 3-5).",
   "useCases": [
-    "Resolver rápido una duda sobre anki repetición sin papel y lápiz.",
-    "Comparar escenarios o alternativas con números concretos.",
-    "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Estudiar vocabulario para un examen DELE o TOEFL con un mazo de 2000 palabras en 16 semanas, calculando las cards nuevas diarias sin saturar las revisiones.",
+    "Preparar el ingreso a medicina o el MIR con mazos de más de 5000 cards de anatomía y farmacología, distribuyendo la carga semanal de forma sostenible.",
+    "Aprender kanjis con el mazo Jalup o RTK (2200 kanjis) organizando el ritmo diario para terminar antes de un viaje o examen de japonés.",
+    "Gestionar un mazo de oposiciones (abogacía, contaduría, notariado) de 3000 cards en 20 semanas, anticipando los picos de revisión para no colapsar la rutina."
   ],
   "fields": [
     {
@@ -58,53 +58,45 @@
     ],
     "result": "~120/día revisiones"
   },
-  "explanation": "Los **métodos de estudio y aprendizaje** tienen base en ciencia cognitiva (Ebbinghaus, Bjork, Dunlosky). Técnicas como spaced repetition, active recall y interleaving tienen evidencia sólida.\n\n## Cómo se calcula\n\nCantidad de cards Anki según objetivo.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl algoritmo central de Anki es **SM-2** (SuperMemo 2), desarrollado por Piotr Woźniak. La calculadora usa dos fórmulas clave:\n\n```\n// Paso 1: Cards nuevas por día\ncardsNuevasDia = Math.round(cardsMeta / (semanasObjetivo * 7))\n\n// Paso 2: Revisiones diarias máximas estimadas (pico semana 3–5)\n// Factor empírico SM-2: cada card nueva genera ~8–10 revisiones\n// acumuladas en los primeros 30 días\nrevisionesDiaMax = cardsNuevasDia * 10\n\n// Paso 3: Carga total de revisiones estimada al mes\ncargaMensual = cardsNuevasDia * 30 * 3.5  // promedio de repeticiones/card/mes\n```\n\nEl factor multiplicador (×10) surge del comportamiento del algoritmo SM-2: una card nueva pasa por los intervalos 1d → 3d → 8d → 21d → 60d… Las revisiones de todas las cards introducidas se solapan en el pico entre la semana 3 y 5. Este es el momento crítico donde los estudiantes suelen abandonar Anki por sentirlo \"incontrolable\".\n\n---\n\n## Tabla de referencia\n\n| Cards totales | Semanas | Cards nuevas/día | Revisiones máx/día | Dificultad estimada |\n|:---:|:---:|:---:|:---:|:---|\n| 500 | 8 | 9 | ~90 | Manejable (30–45 min) |\n| 1.000 | 12 | 12 | ~120 | Moderada (45–60 min) |\n| 2.000 | 16 | 18 | ~180 | Exigente (60–90 min) |\n| 3.000 | 20 | 21 | ~210 | Muy exigente (90–120 min) |\n| 5.000 | 26 | 27 | ~270 | Elite / tiempo completo |\n| 10.000 | 52 | 20 | ~200 | Sostenible si es el único estudio |\n\n> **Referencia de tiempo:** Anki procesa ~100–150 revisiones/hora para un usuario entrenado. Un principiante puede tardar el doble.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Vocabulario inglés (TOEFL)\nUn estudiante tiene un mazo de **1000 cards** de vocabulario académico y quiere terminarlo en **12 semanas** antes de rendir el TOEFL.\n\n- Cards nuevas/día: `1000 ÷ (12 × 7) = 11,9` → **12 cards/día**\n- Revisiones pico (semana 4): `12 × 10 = 120 revisiones/día`\n- Tiempo estimado diario en pico: ~60–70 minutos\n- **Observación:** Ritmo moderado y sostenible. Recomendado empezar 2 semanas antes de lo planeado para tener margen de días perdidos.\n\n### Caso 2 — Anatomía para ingreso a medicina\nEl mazo \"Anatomy Anki\" tiene **4500 cards**. El estudiante tiene **30 semanas**.\n\n- Cards nuevas/día: `4500 ÷ (30 × 7) = 21,4` → **21 cards/día**\n- Revisiones pico: `21 × 10 = 210 revisiones/día`\n- Tiempo diario en pico: ~90–120 minutos\n- **Observación:** Nivel exigente. Se recomienda no superar 20 cards nuevas/día y extender el plazo a 32–34 semanas para mantener la retención >85%.\n\n### Caso 3 — Kanjis japoneses (RTK 2200)\nMazo **Remembering The Kanji** con 2200 cards en **24 semanas**.\n\n- Cards nuevas/día: `2200 ÷ (24 × 7) = 13,09` → **13 cards/día**\n- Revisiones pico: `13 × 10 = 130 revisiones/día`\n- **Observación:** Ritmo clásico recomendado por la comunidad Jalup/RTK. Mantener el streak diario es más importante que el número de cards nuevas.\n\n---\n\n## Errores comunes\n\n1. **Saltear días y \"recuperar\" con el doble de cards nuevas al día siguiente.** Esto dispara las revisiones futuras de forma exponencial. El algoritmo SM-2 no perdona: cada card salteada se reagenda y se acumula. Lo correcto es reducir las cards nuevas a 0 ese día y solo hacer las revisiones pendientes.\n\n2. **Configurar \"nuevas cards ilimitadas\" en los settings de Anki.** Por defecto Anki tiene un límite de 20 cards nuevas/día por razón. Si lo eliminás sin un plan, podés tener 400+ revisiones/día en semanas. Siempre configurá el límite en función del cálculo previo.\n\n3. **Confundir \"cards\" con \"notas\".** Una nota en Anki puede generar 2, 3 o más cards (por ejemplo, anverso+reverso, cloze múltiple). Si tenés 500 notas con cloze de 3 blancos, son 1500 cards reales. Siempre revisá el contador de cards en **Browse → Cards**.\n\n4. **Ignorar el \"ease factor\" (factor de facilidad).** Anki arranca con un ease del 250%. Si apretás \"Difícil\" repetidamente, el ease baja al mínimo (~130%) y esa card va a aparecer con mucha más frecuencia de lo normal, inflando las revisiones. Esto se llama \"ease hell\" y se corrige con el add-on **Reset Ease** o con la política de no usar el botón \"Difícil\" en exceso.\n\n5. **No considerar los días perdidos en el cálculo de semanas.** Un plan de 12 semanas con realismo debería asumir al menos 8–10 días sin Anki (fines de semana, viajes, enfermedad). Añadí siempre un colchón del 15% al plazo total.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de tarjetas diarias para memorización y vocabulario](/calculadora-anki-tarjetas-diarias-memorizacion-vocabulario)\n- [Calculadora de intervalos de repetición espaciada Anki](/calculadora-repeticion-espaciada-anki-intervalos)\n- [Calculadora de flashcards por día](/calculadora-flashcards-por-dia)\n- [Calculadora de sesiones Pomodoro por día](/calculadora-productividad-pomodoro-sesiones-dia-efectivas)\n",
   "faq": [
     {
-      "q": "¿SRS?",
-      "a": "Spaced Repetition System. Intervalos crecientes."
+      "q": "¿Cuántas cards nuevas por día es el límite recomendado para no quemarse?",
+      "a": "La comunidad de Anki y estudios de carga cognitiva sugieren un máximo de **20 cards nuevas/día** para la mayoría de los usuarios. Superar ese umbral sin experiencia previa genera picos de revisión de 200+ tarjetas/día en semanas, lo que lleva al abandono. Usuarios avanzados (estudiantes de medicina a tiempo completo) pueden sostener 30–50 cards nuevas/día con sesiones de 2–3 horas diarias."
     },
     {
-      "q": "¿Algoritmo?",
-      "a": "SM-2 de Piotr Wozniak."
+      "q": "¿Por qué las revisiones diarias máximas son 10 veces las cards nuevas?",
+      "a": "El algoritmo SM-2 programa cada card nueva para revisión al día 1, 3, 8, 21 y 60 aproximadamente. En las primeras 4–5 semanas, las revisiones de todas las cards introducidas se acumulan simultáneamente. Empíricamente, el pico de revisiones es de 8 a 12 veces la cantidad de cards nuevas diarias. El factor ×10 es el valor conservador más citado en foros como r/Anki y la documentación de AnkiDroid."
     },
     {
-      "q": "¿Cards/día?",
-      "a": "10-30 nuevas típico sostenible."
+      "q": "¿Qué pasa si un día no hago Anki? ¿Se pierde el progreso?",
+      "a": "El progreso (intervalos) no se pierde, pero las cards vencidas se acumulan en la cola de revisiones. Si saltás 3 días con 15 cards nuevas/día activas, podés encontrarte con 180–200 revisiones pendientes al volver. Lo recomendado es configurar un límite máximo de revisiones por día (ej: 150) para evitar sesiones agotadoras y hacer las restantes al día siguiente."
     },
     {
-      "q": "¿Tiempo?",
-      "a": "~30-45 min/día con 15-20 nuevas."
+      "q": "¿La calculadora sirve para cualquier tipo de mazo o solo vocabulario?",
+      "a": "Sirve para cualquier mazo: vocabulario de idiomas, anatomía, farmacología, historia, derecho, código de programación, etc. La única variable que cambia es el **ease promedio** del mazo: mazos de conceptos abstractos o complejos tienden a tener ease más bajo (más revisiones) que mazos de vocabulario con imagen+sonido, donde la retención es mayor."
     },
     {
-      "q": "¿Idiomas?",
-      "a": "Excelente para vocabulario."
+      "q": "¿Cuál es la diferencia entre el algoritmo SM-2 original y el FSRS que usa Anki moderno?",
+      "a": "SM-2 (1987, Woźniak) calcula los intervalos en base al ease factor y la calificación dada. **FSRS** (Free Spaced Repetition Scheduler, 2022) es el algoritmo moderno de Anki que usa un modelo de memoria basado en *stability* y *difficulty* individuales por card, logrando retención objetivo configurable (por defecto 90%). FSRS reduce entre un 15 y 25% la carga de revisiones vs. SM-2 manteniendo la misma retención, según benchmarks del repositorio oficial open-source en GitHub."
     },
     {
-      "q": "¿Medicina?",
-      "a": "Muy usado MCAT, USMLE."
+      "q": "¿Cómo afecta la dificultad del mazo a las revisiones estimadas?",
+      "a": "Mazos con cards muy difíciles (ease promedio <200%) pueden duplicar las revisiones estimadas respecto a mazos estándar. Por ejemplo, un mazo de kanji avanzado o terminología médica en latín puede tener un ease promedio de 170–190%, lo que significa que las cards vuelven con mucha más frecuencia. En esos casos, el factor de revisión real puede ser ×13 o ×15 en lugar de ×10. Revisá el ease promedio de tu mazo en **Stats → Card Ease**."
     },
     {
-      "q": "¿Mobile?",
-      "a": "Anki Mobile iOS pago, Android gratis."
+      "q": "¿Cuánto tiempo lleva hacer 100 revisiones en Anki?",
+      "a": "Un usuario con experiencia puede procesar 100–150 revisiones por hora (40–60 segundos por card promedio). Un principiante tarda 2–3 minutos por card en mazos complejos, lo que puede extender 100 revisiones a 3–4 horas. La velocidad mejora notablemente con la práctica y con cards bien diseñadas (una idea por card, regla de **minimum information principle** de Woźniak)."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Conviene hacer todas las revisiones juntas o en varias sesiones al día?",
+      "a": "La evidencia en psicología del aprendizaje (ver *Ebbinghaus forgetting curve*) sugiere que **múltiples sesiones cortas** (2–3 sesiones de 20–30 min) son más efectivas que una sola sesión larga para la consolidación en memoria a largo plazo. En la práctica, hacer revisiones por la mañana y por la noche mejora la retención en un 10–15% respecto a una única sesión, especialmente para mazos de idiomas."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
-    },
-    {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
-    },
-    {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Wikipedia ES — Repetición espaciada",
+      "url": "https://es.wikipedia.org/wiki/Repetici%C3%B3n_espaciada"
     }
   ],
   "relatedSlugs": [

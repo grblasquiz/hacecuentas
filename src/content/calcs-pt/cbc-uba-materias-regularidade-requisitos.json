@@ -7,14 +7,14 @@
   "category": "educacion",
   "icon": "📚",
   "formulaId": "cbc-uba-materias-regularidad-requisitos",
-  "intro": "Os métodos de estudo modernos aproveitam a ciência cognitiva: spaced repetition, active recall e interleaving. Aplicados corretamente, você aprende mais rápido e com maior retenção. Compreenda os requisitos de regularidade CBC UBA. Os valores estão atualizados para 2026 e revisados periodicamente para mantê-lo informado.",
-  "keyTakeaway": "Fórmula: **assistência + parciais**. Aplicação direta com os valores que você insere. Requisitos de regularidade CBC UBA.",
+  "intro": "A Calculadora de Regularidade do CBC (Ciclo Básico Común) da UBA (Universidad de Buenos Aires) determina se um estudante está **regular**, **livre** ou **reprovado** em uma matéria, com base na porcentagem de presença e nas notas dos dois parciais. No CBC, cada matéria exige mínimo de **75% de presença** nas aulas e nota mínima de **4 (quatro)** em cada parcial (ou recuperatório). Estudantes com média entre 4 e 6 nos parciais ficam regulares e devem fazer prova final; quem tira 7 ou mais em ambos fica **livre** (aprovado sem final). Esta calculadora é essencial para quem cursa o CBC presencialmente ou à distância e quer saber exatamente o que precisa para passar de ano.",
+  "keyTakeaway": "**Livre (aprovado): presença ≥ 75% E média dos parciais ≥ 7. Regular (faz final): presença ≥ 75% E média ≥ 4 e < 7. Reprovado: presença < 75% OU algum parcial < 4 (sem recuperatório).**",
   "useCases": [
-    "Cálculos técnicos relacionados à regularidade CBC UBA",
-    "Estudantes e profissionais da área",
-    "Validar resultados teóricos antes de aplicá-los",
-    "Ensino e aprendizagem do conceito",
-    "Referência rápida em projetos"
+    "Verificar se você ficou 'livre' (aprovado direto) ou precisa fazer a prova final após os dois parciais do CBC.",
+    "Saber se a sua porcentagem de faltas ainda permite continuar na matéria antes de faltar mais uma aula.",
+    "Calcular a nota mínima que precisa tirar no segundo parcial para não precisar fazer a prova final.",
+    "Conferir se é possível recuperar a regularidade após um parcial abaixo de 4, usando o recuperatório disponível.",
+    "Planejar a estratégia de estudo no final do quadrimestre sabendo exatamente em qual situação (livre, regular ou reprovado) você se encontra."
   ],
   "fields": [
     {
@@ -69,53 +69,49 @@
     ],
     "result": "Prova final"
   },
-  "explanation": "Os **métodos de estudo e aprendizagem** têm base em ciência cognitiva (Ebbinghaus, Bjork, Dunlosky). Técnicas como spaced repetition, active recall e interleaving têm evidência sólida.\n\n## Como se calcula\n\nRequisitos de regularidade CBC UBA.\n\nEsta calculadora aplica a fórmula com os valores que você insere, verificando faixas típicas e alertando sobre valores fora do razoável.\n\n## Notas finais\n\nEste cálculo é uma referência orientativa. Para decisões críticas (financeiras, médicas, legais), consulte um profissional especializado. Os valores estão atualizados para 2026 e revisados periodicamente.",
+  "explanation": "## Como se calcula\n\nA condição de regularidade no CBC da UBA segue três critérios cumulativos: **presença**, **notas dos parciais** e **média final entre parciais**.\n\n```\n// Passo 1 — Verificar presença\npresença_ok = (assistência_% >= 75)\n\n// Passo 2 — Verificar aprovação em cada parcial (nota mínima: 4)\n// Cada parcial pode ser recuperado UMA vez; vale a melhor nota\nparcial1_ok = (nota_parcial1 >= 4)\nparcial2_ok = (nota_parcial2 >= 4)\n\n// Passo 3 — Calcular média dos parciais\nmédia = (nota_parcial1 + nota_parcial2) / 2\n\n// Passo 4 — Determinar situação\nSE presença_ok = FALSO\n  → REPROVADO por faltas (perdeu a regularidade)\nSE parcial1_ok = FALSO OU parcial2_ok = FALSO\n  → REPROVADO (não cumpriu mínimo em algum parcial)\nSE média >= 7\n  → LIVRE (aprovado, não precisa de prova final)\nSE média >= 4 E média < 7\n  → REGULAR (deve fazer prova final; nota final = média entre média_parciais e prova_final)\n```\n\n> **Nota final (para quem faz prova final):**\n> `Nota Final = (Média dos Parciais + Nota da Prova Final) / 2`\n> Mínimo para aprovação na prova final: **4 pontos**.\n\n---\n\n## Tabela de referência\n\n| Presença | Parcial 1 | Parcial 2 | Situação | Precisa de final? |\n|---|---|---|---|---|\n| ≥ 75% | ≥ 7 | ≥ 7 | **Livre** | ❌ Não |\n| ≥ 75% | ≥ 4 | ≥ 4 | **Regular** (média 4–6,9) | ✅ Sim |\n| ≥ 75% | ≥ 4 | ≥ 4 | **Regular** (média exatamente 7) | ❌ Não |\n| ≥ 75% | < 4 | qualquer | **Reprovado** (sem recuperar) | — |\n| < 75% | qualquer | qualquer | **Reprovado** por faltas | — |\n| ≥ 75% | recuperou ≥ 4 | ≥ 4 | **Regular** | ✅ Sim |\n\n> As notas vão de **1 a 10** na UBA. Não existe nota decimal oficial nos parciais — arredonda-se para o inteiro mais próximo conforme critério do professor.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Estudante que fica Livre\n- **Presença:** 80% ✅\n- **Parcial 1:** 8 | **Parcial 2:** 7\n- **Média:** (8 + 7) / 2 = **7,5**\n- **Situação: LIVRE** — aprovado diretamente, sem prova final.\n\n### Caso 2 — Estudante Regular com necessidade de Final\n- **Presença:** 76% ✅\n- **Parcial 1:** 6 | **Parcial 2:** 7\n- **Média:** (6 + 7) / 2 = **6,5**\n- **Situação: REGULAR** — deve fazer prova final.\n- Se tirar **6** na final: Nota Final = (6,5 + 6) / 2 = **6,25** → Aprovado ✅\n\n### Caso 3 — Estudante que perde a regularidade por faltas\n- **Presença:** 68% ❌ (abaixo de 75%)\n- **Parcial 1:** 9 | **Parcial 2:** 8\n- **Situação: REPROVADO** — independentemente das notas, a falta de presença reprova automaticamente. Deve cursar a matéria novamente no próximo quadrimestre.\n\n---\n\n## Erros comuns\n\n1. **Confundir \"regular\" com \"aprovado\":** No CBC, estar regular significa apenas que você tem direito à prova final — não que passou. Muitos estudantes relaxam após garantir a regularidade e reprovam na final.\n\n2. **Não contabilizar as aulas de recuperatório como presença obrigatória:** A presença nos recuperatórios de parcial **não compensa** as faltas nas aulas regulares. O percentual de 75% é calculado sobre o total de aulas da matéria, não sobre as avaliações.\n\n3. **Calcular a média como simples soma das duas notas:** A média é `(P1 + P2) / 2`, e não a soma. Errar este cálculo leva a crer que está livre quando na verdade precisa de final.\n\n4. **Ignorar o limite de recuperatórios:** Cada parcial tem **apenas um recuperatório**. Se reprovar no parcial E no recuperatório, está reprovado na matéria — não há terceira chance.\n\n5. **Supor que nota 7 exata na média garante \"livre\" automaticamente:** Depende do regulamento da sede e do professor — em algumas sedes do CBC, o arredondamento pode não ser aplicado, e 6,9 não vira 7. Sempre confirme com o professor ou o departamento.\n\n---\n\n## Calculadoras relacionadas\n\nComo não há slugs relacionados disponíveis no momento, recomendamos explorar outras calculadoras de educação em [Hacé Cuentas](/) para média ponderada, porcentagem de presença e planejamento de notas.\n",
   "faq": [
     {
-      "q": "O que é regularidade?",
-      "a": "Ter no mínimo 75% de assistência e aprovar os parciais."
+      "q": "O que significa estar 'livre' no CBC da UBA?",
+      "a": "Estar 'livre' significa que você foi aprovado diretamente na matéria, sem precisar fazer a prova final. Isso acontece quando sua presença é igual ou superior a 75% E a média dos dois parciais é igual ou maior que 7 (numa escala de 1 a 10). É a situação mais favorável para o estudante do CBC."
     },
     {
-      "q": "Como aprovar os parciais?",
-      "a": "Nota ≥4 nos dois parciais. Média não é calculada."
+      "q": "Qual é a nota mínima para passar em cada parcial do CBC?",
+      "a": "A nota mínima exigida em cada parcial é **4 (quatro)** na escala de 1 a 10. Caso o estudante tire menos de 4, ele tem direito a um recuperatório para aquele parcial. Se reprovar também no recuperatório, está automaticamente reprovado na matéria, independentemente da nota do outro parcial ou da presença."
     },
     {
-      "q": "E se reprovar um parcial?",
-      "a": "Você pode fazer uma prova recuperatória."
+      "q": "Como funciona o cálculo da nota final para quem faz a prova final?",
+      "a": "A nota final é calculada como a **média aritmética simples entre a média dos dois parciais e a nota da prova final**: `Nota Final = (Média dos Parciais + Nota Final) / 2`. O mínimo para aprovação é 4 nessa nota final. Por exemplo, se sua média de parciais é 5,5 e tira 6 na final: (5,5 + 6) / 2 = 5,75 → Aprovado."
     },
     {
-      "q": "O que é a prova final?",
-      "a": "Última etapa. Presencial. Avalia toda a matéria."
+      "q": "O que acontece se eu faltar mais de 25% das aulas?",
+      "a": "Se sua presença cair abaixo de 75%, você perde a regularidade na matéria e é considerado **reprovado por faltas**, independentemente das notas que tirou nos parciais — mesmo que sejam 10. Deverá cursar a matéria novamente no próximo quadrimestre letivo do CBC."
     },
     {
-      "q": "Quantas matérias tem o CBC?",
-      "a": "6 matérias (4 obrigatórias + 2 orientadas à carreira)."
+      "q": "Posso recuperar os dois parciais se reprovar em ambos?",
+      "a": "Sim, desde que sejam parciais diferentes. Cada parcial tem direito a **um único recuperatório**. Portanto, é possível fazer o recuperatório do Parcial 1 e o recuperatório do Parcial 2. No entanto, se reprovar tanto no parcial quanto no seu recuperatório correspondente, não há mais oportunidade para aquela avaliação — fica reprovado."
     },
     {
-      "q": "Quanto tempo dura o CBC?",
-      "a": "1 ano em tempo integral. 1-2 anos em tempo parcial."
+      "q": "A presença nas aulas do recuperatório conta para o percentual de 75%?",
+      "a": "Não. A presença mínima de 75% é calculada sobre o total de **aulas regulares** da matéria no quadrimestre. As datas de recuperatório são avaliações, não aulas, portanto não entram no cômputo de presença. Faltar às aulas regulares para estudar em casa e só aparecer nos recuperatórios não resolve o problema de presença."
     },
     {
-      "q": "É necessário comprovar idioma?",
-      "a": "Sim. Inglês intermediário é obrigatório para algumas carreiras."
+      "q": "Quantas matérias do CBC preciso aprovar para ingressar numa carreira da UBA?",
+      "a": "Depende da carreira escolhida. O CBC é composto por **6 matérias** no total: 2 comuns a todas as carreiras (Pensamiento Científico e Introducción al Conocimiento de la Sociedad y el Estado) e 4 específicas conforme a área. Para ingressar na maioria das carreiras, é necessário ter aprovado **todas as 6 matérias** do CBC. Algumas faculdades permitem início com matérias pendentes, mas com restrições."
     },
     {
-      "q": "A calculadora é gratuita?",
-      "a": "Sim, todas as nossas calculadoras são grátis e sem registro."
+      "q": "O sistema de regularidade do CBC é o mesmo em todas as sedes da UBA?",
+      "a": "Os critérios gerais (75% de presença, nota mínima 4 por parcial, média 7 para livre) são estabelecidos pela **resolução do Rectorado da UBA** e valem para todas as sedes (Ciudad Universitaria, Paternal, Drago, etc.). No entanto, alguns detalhes de implementação — como o sistema de arredondamento de notas — podem variar conforme a sede e o professor. Recomenda-se sempre consultar o programa da matéria."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "UBA — Universidad de Buenos Aires: Ciclo Básico Común (CBC)",
+      "url": "https://www.uba.ar/contenido/181"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
-    },
-    {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Wikipedia PT — Universidade de Buenos Aires",
+      "url": "https://pt.wikipedia.org/wiki/Universidade_de_Buenos_Aires"
     }
   ],
   "dataUpdate": {

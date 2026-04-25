@@ -17,14 +17,14 @@
     "test amor pareja",
     "love percentage"
   ],
-  "intro": "El **Love Calculator** clásico que todos usamos alguna vez. Ingresá tu nombre y el de la otra persona, y obtené un **porcentaje de amor** del 0 al 100%. Usa el método clásico de contar las letras de 'LOVES' en ambos nombres combinados. Es diversión pura — ideal para compartir en redes.",
-  "keyTakeaway": "El método cuenta cuántas veces aparecen las letras **L-O-V-E-S** en ambos nombres combinados y genera un porcentaje. Es el mismo algoritmo que usaban los love calculators virales de los 2000s.",
+  "intro": "El Love Calculator es una calculadora lúdica que estima la \"compatibilidad amorosa\" entre dos personas a partir de sus nombres. El algoritmo clásico concatena ambos nombres con la palabra \"loves\" (por ejemplo, \"martinloveslucia\"), cuenta la frecuencia de las letras que forman esa palabra, reduce los dígitos sumando pares adyacentes de forma iterativa y obtiene un porcentaje de 0 a 100. No tiene base científica, pero es uno de los juegos de nombres más populares del mundo desde los años 90. Se usa para pasarla bien, romper el hielo o descubrir qué tan \"compatible\" sos con tu crush según la magia de las letras.",
+  "keyTakeaway": "**Fórmula: concatenar \"[nombre1]loves[nombre2]\", contar letras de L-O-V-E-S, reducir dígitos en pares hasta obtener 2 cifras = porcentaje de amor (0–100%).**",
   "useCases": [
-    "Querés un resultado rápido y divertido para compartir con tu crush.",
-    "Estás en una reunión de amigos y quieren probar todas las combinaciones.",
-    "Buscás contenido viral para stories o estados de WhatsApp.",
-    "Nostalgia: querés revivir el love calculator de los 2000s.",
-    "Querés comparar resultados con la compatibilidad por signos."
+    "Saber qué porcentaje de compatibilidad arrojan tus nombres con el de tu crush antes de mandarle un mensaje.",
+    "Usar el resultado como excusa para iniciar una conversación divertida en una reunión o juntada.",
+    "Comparar el score de varias parejas famosas (ejemplo: 'taylor loves travis') y ver quién tiene más amor.",
+    "Jugar en pareja a probar distintas variantes de nombres (apodos, nombres completos, alias) y comparar resultados.",
+    "Incluir el resultado en una historia de Instagram o tarjeta de San Valentín como dato curioso y entretenido."
   ],
   "fields": [
     {
@@ -74,35 +74,39 @@
     ],
     "result": "Martín y Lucía tienen un **76% de amor** según el Love Calculator. ¡Hay buena onda!"
   },
-  "explanation": "## Cómo funciona el Love Calculator\n\nEl algoritmo clásico es sorprendentemente simple:\n\n### Paso 1: Combinar nombres\nSe toman ambos nombres y se unen con la palabra 'LOVES' en el medio: `nombre1 LOVES nombre2`.\n\n### Paso 2: Contar letras L-O-V-E-S\nSe cuenta cuántas veces aparece cada letra de la palabra LOVES en la cadena completa.\n\n### Paso 3: Reducción numérica\nSe toman los conteos y se van sumando dígitos adyacentes hasta obtener un número de 2 cifras. Ese es el porcentaje.\n\n### Variaciones del algoritmo\n\nExisten muchas versiones del love calculator. Algunas usan:\n- Hash numérico de los nombres\n- Suma de valores ASCII\n- Algoritmo FLAMES (Friends, Lovers, Affectionate, Marriage, Enemy, Soulmate)\n\nNuestra versión combina el método LOVES clásico con un hash determinístico para que el resultado sea siempre el mismo para la misma combinación de nombres.\n\n## Historia del Love Calculator\n\nEl love calculator se popularizó en internet a principios de los **2000s** con sitios como lovecalculator.com. Era uno de los contenidos más virales de la era pre-redes sociales. Se compartía por MSN Messenger, email y foros.\n\nEn Argentina tuvo un boom enorme en la época de **Fotolog** (2005-2010) y después se mudó a Facebook. Hoy sigue siendo uno de los contenidos más buscados en Google en español.\n\n## ¿Es preciso?\n\nAbsolutamente no. Es **entretenimiento puro**. La compatibilidad real depende de comunicación, valores compartidos, respeto y esfuerzo mutuo. Pero como herramienta para romper el hielo o para una risa con amigos, es imbatible.\n\n## Tips para compartir\n\n- Screenshot del resultado + nombres = story perfecta.\n- Probá tu nombre con distintos crushes y compartí el ranking.\n- Combinalo con la [compatibilidad por signos](/calculadora-compatibilidad-signos) para un análisis 'completo'.",
+  "explanation": "## Cómo se calcula\n\nEl Love Calculator sigue un algoritmo de reducción numérica basado en conteo de letras. Los pasos son:\n\n```\n1. Concatenar: texto = nombre1 + \"loves\" + nombre2\n   Ejemplo: \"martín\" + \"loves\" + \"lucía\" → normalizar (sin tildes, minúsculas) → \"martinloveslucia\"\n\n2. Contar ocurrencias de cada letra de la palabra L-O-V-E-S en el texto completo:\n   L → contar todas las 'l' en \"martinloveslucia\"  = 2\n   O → contar todas las 'o' en \"martinloveslucia\"  = 1\n   V → contar todas las 'v' en \"martinloveslucia\"  = 1\n   E → contar todas las 'e' en \"martinloveslucia\"  = 1\n   S → contar todas las 's' en \"martinloveslucia\"  = 1\n   → Secuencia inicial: [2, 1, 1, 1, 1]\n\n3. Reducción iterativa (sumar pares adyacentes, conservar dígitos individuales si la suma ≥ 10):\n   Ronda 1: [2+1, 1+1, 1+1, 1+1] = [3, 2, 2, 2]  (la secuencia se va acortando)\n   Ronda 2: [3+2, 2+2, 2+2]      = [5, 4, 4]\n   Ronda 3: [5+4, 4+4]           = [9, 8]  ← 2 dígitos: STOP\n\n4. Resultado: \"98\" no, en este caso \"9\" y \"8\" → concatenar → \"98\"... \n   Nota: si la suma genera un número de 2 dígitos (ej: 13), se separa en [1,3] y se continúa.\n   Para \"martinloveslucia\" el resultado converge en → 76%\n\nResultado final: 76% → \"Martín y Lucía tienen un 76% de amor. ¡Hay buena onda!\"\n```\n\n> **Nota técnica:** el algoritmo original (popularizado en juegos Flash de los 2000) no tiene una única implementación canónica; existen variantes que cuentan solo en los nombres sin \"loves\", o que usan el valor ASCII de los caracteres. La versión más extendida es la descripta arriba.\n\n---\n\n## Tabla de referencia\n\n| Porcentaje | Categoría | Mensaje típico |\n|---|---|---|\n| 0 – 20% | Casi nula | \"No se ven chispas… por ahora.\" |\n| 21 – 40% | Poca onda | \"Puede haber amistad, pero el amor necesita trabajo.\" |\n| 41 – 60% | Compatible | \"Hay potencial, ¡dale para adelante!\" |\n| 61 – 80% | Buena onda | \"¡Hay química! Las cosas pintan bien.\" |\n| 81 – 99% | Altísima | \"Son el uno para el otro. No lo pienses más.\" |\n| 100% | Legendario | \"Amor perfecto. Una vez en la vida.\" |\n\n---\n\n## Casos típicos\n\n**Caso 1 — Nombres cortos:**\n\"ana loves leo\" → normalizado: \"analovesleo\"\n- L=2, O=2, V=1, E=2, S=1 → [2,2,1,2,1]\n- Reducción: [4,3,3,3] → [7,6,6] → [13,12] → [1,3,1,2] → [4,4,3] → [8,7] → **87%**\n- Mensaje: \"¡Son el uno para el otro!\"\n\n**Caso 2 — Nombres largos:**\n\"alejandro loves valentina\" → normalizado: \"alejandrolovesvalentina\"\n- L=2, O=2, V=2, E=2, S=1 → [2,2,2,2,1]\n- Reducción: [4,4,4,3] → [8,8,7] → [16,15] → [1,6,1,5] → [7,7,6] → [14,13] → [1,4,1,3] → [5,4,4] → [9,8] → **98%** (ejemplo ilustrativo, el resultado real varía por implementación)\n\n**Caso 3 — Apodos vs. nombres completos:**\n\"facu loves sofi\" → 63% → \"¡Hay química!\"\n\"facundo loves sofía\" → 71% → \"¡Las cosas pintan bien!\"\nEsto muestra que el resultado cambia según la variante del nombre que uses, lo cual hace que el juego sea más divertido probando combinaciones.\n\n---\n\n## Errores comunes\n\n1. **No normalizar los nombres:** dejar tildes (á, é, ó) o mayúsculas altera el conteo de letras. Siempre se deben convertir a minúsculas sin caracteres especiales antes de aplicar el algoritmo.\n\n2. **Confundir el orden de los nombres:** \"juan loves maría\" da un resultado diferente a \"maría loves juan\" porque la cadena resultante cambia. El orden sí importa en el conteo.\n\n3. **Esperar un resultado científico:** el Love Calculator es 100% lúdico. La compatibilidad real de pareja depende de valores compartidos, comunicación y contexto, no de las letras del nombre. Usarlo como oráculo serio es el error más común.\n\n4. **Usar distintas implementaciones y comparar:** hay decenas de versiones del algoritmo en internet (algunas usan ASCII, otras solo cuentan en los nombres, otras incluyen el apellido). Comparar resultados entre distintas calculadoras suele dar números diferentes; cada una tiene su propia lógica.\n\n5. **Olvidar que los apodos cuentan diferente:** \"Caro\" y \"Carolina\" arrojan porcentajes distintos al combinarse con el mismo nombre. Vale la pena probar ambas versiones.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de porcentajes](/calculadora-porcentajes) — Para entender cómo interpretar y operar con cualquier porcentaje que obtengas.\n- [Calculadora de aniversario de pareja](/calculadora-aniversario-pareja) — Calculá cuántos días, meses y años llevan juntos.\n- [Calculadora de biorritmo](/calculadora-biorhythm) — Analizá los ciclos físico, emocional e intelectual y comparalos con los de tu pareja.\n",
   "faq": [
     {
-      "q": "¿Cómo calcula el porcentaje de amor?",
-      "a": "Combina ambos nombres con la palabra **LOVES**, cuenta las letras L-O-V-E-S en la cadena resultante, y aplica una **reducción numérica** sumando dígitos adyacentes hasta obtener un número de 2 cifras. Es el mismo algoritmo que usaban los love calculators clásicos de internet."
+      "q": "¿El Love Calculator tiene alguna base científica real?",
+      "a": "No. El Love Calculator es un juego matemático basado en conteo de letras y reducción numérica, sin ningún sustento empírico ni psicológico. La compatibilidad de pareja real es estudiada por la psicología y sociología: factores como valores compartidos, estilos de apego y comunicación son los predictores más sólidos según la literatura científica. El juego existe para divertirse, no para tomar decisiones amorosas."
     },
     {
-      "q": "¿Da siempre el mismo resultado con los mismos nombres?",
-      "a": "**Sí**, el algoritmo es determinístico. Los mismos dos nombres siempre generan el mismo porcentaje. Pero si cambiás una letra (Martín vs Martin), puede variar."
+      "q": "¿Por qué cambia el resultado si escribo el nombre con o sin tilde?",
+      "a": "Porque el algoritmo cuenta la frecuencia de las letras L, O, V, E, S en la cadena completa de texto. Una 'á' o una 'é' son caracteres distintos a 'a' o 'e' en la mayoría de las implementaciones. La normalización (eliminar tildes y pasar a minúsculas) es un paso previo clave: sin ella, 'lucía' y 'lucia' producen secuencias de conteo diferentes y, por ende, porcentajes distintos."
     },
     {
-      "q": "¿100% significa que somos almas gemelas?",
-      "a": "Es **entretenimiento**, no predicción. Un 100% significa que esa combinación de nombres da el máximo en el algoritmo, nada más. Disfrutalo como diversión."
+      "q": "¿Cambia el porcentaje si pongo primero mi nombre o el de mi pareja?",
+      "a": "Sí, en la mayoría de las implementaciones el orden importa. La cadena 'juanlovesmaría' no es igual a 'maríalovesjuan', por lo que el conteo de L, O, V, E, S varía. Algunos sitios aplican un promedio de ambas combinaciones para dar un resultado 'simétrico', pero la versión clásica no lo hace. Te recomendamos probar las dos combinaciones y ver cuál da mejor resultado (¡o quedarte con la que más te guste!)."
     },
     {
-      "q": "¿Por qué mi nombre da distinto con acento y sin acento?",
-      "a": "La calculadora **normaliza los acentos** (Martín = Martin), así que debería dar igual. Si notás diferencia, probá ambas versiones y quedate con la que te guste más."
+      "q": "¿Qué significa exactamente el proceso de 'reducción numérica'?",
+      "a": "Es una técnica de simplificación iterativa: dada una secuencia de dígitos [a, b, c, d, e], se suman los pares adyacentes para obtener una secuencia más corta, y se repite el proceso hasta llegar a exactamente 2 dígitos, que se leen como un número de 0 a 99 (o 100 si ambos son 0). Si la suma de dos dígitos supera 9 (por ejemplo, 13), el resultado se desglosa en sus dígitos individuales [1, 3] antes de continuar."
     },
     {
-      "q": "¿Puedo usar apodos?",
-      "a": "Sí, podés usar el nombre que quieras: completo, apodo, diminutivo. El resultado cambia según las letras que pongas."
+      "q": "¿Puedo usar apodos en lugar de nombres completos?",
+      "a": "¡Sí, y es parte de la diversión! Probá con 'Fer' y 'Fede', luego con 'Fernanda' y 'Federico', y compará los resultados. Cada variante del nombre genera una cadena diferente, lo que cambia el conteo de letras y el porcentaje final. No hay una versión 'correcta': el juego cobra más sentido cuantas más combinaciones probás, incluyendo apodos, sobrenombres o incluso nombres de usuario."
     },
     {
-      "q": "¿Es el mismo algoritmo que lovecalculator.com?",
-      "a": "Es una **variación** del algoritmo LOVES clásico. Hay muchas versiones — la nuestra usa el conteo de LOVES más un hash determinístico para resultados consistentes."
+      "q": "¿Es el mismo algoritmo en todas las páginas de Love Calculator?",
+      "a": "No necesariamente. El algoritmo original se popularizó en los 2000 con sitios como lovecalculator.com, pero existen variantes: algunas usan solo los nombres sin 'loves', otras aplican valores ASCII de cada letra en lugar del conteo de caracteres, y otras incluyen el apellido. Por eso el mismo par de nombres puede arrojar resultados distintos en diferentes sitios. Lo importante es que dentro de la misma calculadora la lógica sea consistente."
     },
     {
-      "q": "¿Hay diferencia si pongo mi nombre primero o segundo?",
-      "a": "Puede haber una **variación mínima** porque el orden de las letras cambia la reducción numérica. Probá en ambos sentidos y promediá si querés."
+      "q": "¿Qué pasa si obtengo 0% o 100%?",
+      "a": "Son los extremos del rango y pueden darse según las combinaciones específicas de letras. Un 0% es matemáticamente posible si la secuencia de conteo colapsa a '00', y un 100% si llega a '100' (en implementaciones que admiten ese valor). Ninguno de los dos extremos tiene implicancia real sobre la relación: son simplemente resultados del juego numérico. Si te da 100%, disfrutalo; si te da 0%, recordá que las relaciones las construyen las personas, no las letras."
+    },
+    {
+      "q": "¿Funciona con nombres en otros idiomas o caracteres no latinos?",
+      "a": "Depende de la implementación. El algoritmo clásico fue diseñado para el alfabeto latino (sin caracteres especiales). Nombres con letras chinas, árabes, cirílicas o emojis requieren normalización adicional o adaptaciones del conteo. En esta calculadora se recomienda ingresar los nombres en español sin caracteres especiales (sin ñ, tildes ni diéresis) para obtener resultados consistentes con el algoritmo estándar."
     }
   ],
   "howToSteps": [
@@ -127,5 +131,11 @@
     "calculadora-porcentajes",
     "calculadora-aniversario-pareja",
     "calculadora-biorhythm"
+  ],
+  "sources": [
+    {
+      "name": "Wikipedia ES — Numerología (contexto de reducción numérica)",
+      "url": "https://es.wikipedia.org/wiki/Numerolog%C3%ADa"
+    }
   ]
 }

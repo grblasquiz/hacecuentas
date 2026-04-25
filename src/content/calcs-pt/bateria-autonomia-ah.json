@@ -19,14 +19,14 @@
     "bateria chumbo-ácido DoD",
     "runtime bateria"
   ],
-  "intro": "Os cálculos técnicos em eletrônica e sistemas embarcados são fundamentais: autonomia de bateria, eficiência de descarga, tempo de funcionamento, profundidade de descarga segura. Um bom cálculo inicial evita superdimensionar ou subdimensionar sua bateria. Calcule quantas horas sua bateria dura segundo capacidade (Ah) e consumo (A ou W). Considera eficiência de descarga e profundidade DoD máxima recomendada. Os valores estão atualizados para 2026 e são revisados periodicamente para mantê-lo informado.",
-  "keyTakeaway": "**t = (Ah × V × η × DoD) / P_consumo**. Para bateria 100Ah/12V a 80% DoD com carga 100W → 9,6 horas. Chumbo-ácido: DoD ≤ 50%. LiFePO4: DoD ≤ 80%.",
+  "intro": "Esta calculadora determina por quantas horas uma bateria consegue alimentar um equipamento elétrico, levando em conta a capacidade real disponível. A fórmula central é: **Autonomia (h) = [Ah × V × DoD × η] / W**, onde Ah é a capacidade nominal, V a voltagem, DoD a profundidade de descarga máxima (ex.: 80% para baterias chumbo-ácido), η a eficiência do inversor ou sistema, e W o consumo do equipamento. Usada em projetos de energia solar off-grid, nobreaks (UPS), veículos elétricos, sistemas de telecomunicações e equipamentos médicos portáteis, a calculadora evita superdimensionamento ou subdimensionamento de bancos de baterias.",
+  "keyTakeaway": "**Autonomia (h) = (Ah × V × DoD × η) ÷ W** — Ex.: bateria 100 Ah / 12 V, DoD 80%, η 95%, carga 100 W → **(100 × 12 × 0,80 × 0,95) ÷ 100 = 9,12 horas** de operação contínua.",
   "useCases": [
-    "Design e análise de circuitos envolvendo cálculo de autonomia de bateria (Ah / runtime)",
-    "Validar cálculos teóricos antes de montar o circuito",
-    "Ensino de eletrônica básica e avançada",
-    "Estimar parâmetros para projetos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Dimensionar o banco de baterias de um sistema solar off-grid residencial para suportar a noite toda sem recarga (ex.: 4 × 200 Ah / 12 V para 500 W de carga).",
+    "Calcular a autonomia de um nobreak (UPS) que protege servidores de 800 W com bateria selada de 7 Ah / 12 V durante uma queda de energia.",
+    "Estimar quantas horas uma cadeira de rodas elétrica com bateria de 60 Ah / 24 V consegue operar antes de precisar ser recarregada.",
+    "Planejar a autonomia de um barco elétrico ou veículo de golf com banco de baterias de tração de 200 Ah / 48 V e motor de 1.500 W.",
+    "Verificar se a bateria estacionária de uma torre de celular (48 V / 500 Ah) aguenta 8 horas sem rede elétrica com consumo médio de 2.000 W."
   ],
   "fields": [
     {
@@ -96,53 +96,53 @@
     ],
     "result": "Bateria 100Ah 12V alimenta 100W durante 9,1 horas"
   },
-  "explanation": "As **calculadoras técnicas** para eletrônica e sistemas embarcados: autonomia de bateria, eficiência de descarga, tempo de funcionamento, profundidade de descarga. Decisões que escalam.\n\n## Como se calcula\n\nCalcule quantas horas sua bateria dura segundo capacidade (Ah) e consumo (A ou W). Considera eficiência de descarga e profundidade DoD máxima recomendada.\n\nEsta calculadora aplica a fórmula com os valores que você insere, verificando faixas típicas e alertando ante valores fora do razoável.\n\n## Notas finais\n\nEste cálculo é uma referência orientativa. Para decisões críticas (financeiras, médicas, legais), consulte um profissional especializado. Os valores estão atualizados para 2026 e são revisados periodicamente.",
+  "explanation": "## Como se calcula\n\nA autonomia de uma bateria depende não apenas da capacidade nominal (Ah), mas também da voltagem do banco, da profundidade de descarga permitida (DoD) e da eficiência do sistema de conversão (inversor ou regulador).\n\n**Fórmula completa:**\n\n```\nEnergia útil (Wh) = Ah × V × DoD × η\n\nAutonomia (h)     = Energia útil (Wh) ÷ Consumo (W)\n```\n\n**Passo a passo com o exemplo padrão:**\n\n```\nEntrada:  Ah = 100, V = 12 V, W = 100 W, DoD = 80% = 0,80, η = 95% = 0,95\n\nPasso 1 – Energia nominal:  100 Ah × 12 V = 1.200 Wh\nPasso 2 – Energia útil:     1.200 Wh × 0,80 × 0,95 = 912 Wh\nPasso 3 – Autonomia:        912 Wh ÷ 100 W = 9,12 horas ≈ 9 h 07 min\n```\n\n> **Nota:** multiplicar Ah × V converte ampere-hora em watt-hora (Wh), que é a unidade de energia. A partir daí, dividir por potência (W) resulta diretamente em tempo (h).\n\n---\n\n## Tabela de referência\n\n### DoD recomendado por tecnologia de bateria\n\n| Tecnologia | DoD máximo recomendado | Ciclos estimados (nesse DoD) | Aplicação típica |\n|---|---|---|---|\n| Chumbo-ácido selada (VRLA/AGM) | 50 % | 300 – 500 ciclos | Nobreaks, alarmes |\n| Chumbo-ácido líquida (inundada) | 50 – 60 % | 500 – 800 ciclos | Solar off-grid básico |\n| Lítio Ferro Fosfato (LiFePO₄) | 80 – 90 % | 2.000 – 6.000 ciclos | Solar, veículos, armazenamento |\n| Lítio íon (NMC / NCA) | 80 % | 500 – 1.500 ciclos | Portáteis, e-bikes |\n| Gel (VRLA Gel) | 60 – 70 % | 400 – 700 ciclos | Telecom, UPS críticos |\n| Níquel-Metal Hidreto (NiMH) | 70 – 80 % | 500 – 1.000 ciclos | Eletrônicos portáteis |\n\n### Eficiência típica de inversores\n\n| Tipo de inversor | Eficiência típica (η) |\n|---|---|\n| Inversor senoidal puro (qualidade) | 90 – 96 % |\n| Inversor onda modificada | 85 – 92 % |\n| Conversor DC-DC (buck/boost) | 88 – 97 % |\n| Sem inversor (carga DC direta) | 99 – 100 % |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Sistema solar off-grid noturno (residência simples)\n- **Banco:** 4 × 150 Ah / 12 V em série-paralelo → banco 24 V / 300 Ah\n- **Carga noturna:** iluminação LED + TV + carregadores ≈ 300 W\n- **DoD:** 50 % (AGM) | **η:** 93 % (inversor senoidal)\n- Energia útil = 300 Ah × 24 V × 0,50 × 0,93 = **3.348 Wh**\n- Autonomia = 3.348 ÷ 300 = **11,16 h** → cobre a noite inteira ✅\n\n### Caso 2 — Nobreak de servidor\n- **Bateria:** 2 × 9 Ah / 12 V em série → 24 V / 9 Ah (UPS típico 500 VA)\n- **Carga:** servidor de entrada + switch ≈ 200 W\n- **DoD:** 80 % (VRLA pode ir até 80 % em emergência) | **η:** 90 %\n- Energia útil = 9 × 24 × 0,80 × 0,90 = **155,5 Wh**\n- Autonomia = 155,5 ÷ 200 = **0,78 h ≈ 47 minutos** (suficiente para shutdown seguro)\n\n### Caso 3 — E-bike urbana\n- **Bateria:** 1 × 15 Ah / 48 V (LiFePO₄)\n- **Motor:** 500 W nominal (consumo médio real ≈ 350 W em cidade)\n- **DoD:** 85 % | **η:** 95 % (controlador BLDC)\n- Energia útil = 15 × 48 × 0,85 × 0,95 = **580,2 Wh**\n- Autonomia = 580,2 ÷ 350 = **1,66 h** → a ~25 km/h = **≈ 41 km de autonomia real**\n\n---\n\n## Erros comuns\n\n1. **Usar 100 % de DoD:** Descarregar completamente uma bateria chumbo-ácido pode destruí-la em poucos ciclos. Sempre aplique o DoD do fabricante (tipicamente 50 % para AGM/gel).\n\n2. **Ignorar a eficiência do inversor:** Um sistema sem considerar η superestima a autonomia em 5–15 %. Um inversor de onda modificada barato pode ter η = 85 %, consumindo energia extra até em repouso.\n\n3. **Confundir Ah com Wh:** A capacidade em Ah sozinha não diz nada sobre energia sem conhecer a voltagem. Uma bateria de 100 Ah / 12 V tem 1.200 Wh; uma de 100 Ah / 48 V tem 4.800 Wh — quatro vezes mais energia.\n\n4. **Não considerar a taxa de descarga (efeito Peukert):** Baterias chumbo-ácido entregam menos capacidade útil quando descarregadas rapidamente. A capacidade nominal geralmente é medida a C/20 (descarga em 20 horas); a C/5, a capacidade real pode cair 20–30 %.\n\n5. **Desconsiderar perdas por temperatura:** Abaixo de 0 °C, baterias chumbo-ácido perdem até 50 % da capacidade; LiFePO₄ perde ~20 % a -10 °C. Em instalações externas no Sul do Brasil (inverno), isso é crítico.\n\n6. **Somar potência nominal dos equipamentos sem fator de carga:** Equipamentos raramente operam na potência máxima o tempo todo. Use a potência média real medida com um medidor de consumo (wattímetro) para resultados precisos.\n\n---\n\n## Calculadoras relacionadas\n\nPor enquanto não há calculadoras relacionadas cadastradas neste site para este tema. Consulte as demais categorias de **Eletrônica** disponíveis em hacecuentas.com para ferramentas complementares.\n",
   "faq": [
     {
-      "q": "Por que não usar 100% de profundidade de descarga?",
-      "a": "Descarregar completamente diminui a vida útil drasticamente. Uma bateria de chumbo-ácido totalmente descarregada pode sulfatar e perder capacidade permanentemente."
+      "q": "Qual é a diferença entre Ah e Wh na prática?",
+      "a": "Ampere-hora (Ah) mede a carga elétrica armazenada, mas não informa a energia disponível sem saber a voltagem. Watt-hora (Wh) = Ah × V e representa a energia real. Uma bateria de 100 Ah a 12 V tem 1.200 Wh; a mesma capacidade em Ah a 48 V tem 4.800 Wh — quatro vezes mais energia. Para calcular autonomia, sempre trabalhe em Wh."
     },
     {
-      "q": "Lítio substitui chumbo-ácido?",
-      "a": "Cada vez mais. LiFePO4 custa 2-3× mais mas dura 5-10× mais e pesa 40% menos. Energia solar e náutica estão migrando para lítio."
+      "q": "O que é DoD (Profundidade de Descarga) e por que não posso usar 100%?",
+      "a": "DoD (Depth of Discharge) é o percentual da capacidade que você efetivamente usa antes de recarregar. Usar 100 % em baterias chumbo-ácido causa sulfatação das placas e reduz drasticamente a vida útil — de centenas para dezenas de ciclos. O recomendado para AGM/gel é 50 %, para LiFePO₄ até 80–90 %. Respeitar o DoD pode multiplicar a vida útil por 3 a 10 vezes."
     },
     {
-      "q": "Como calculo com cargas variáveis?",
-      "a": "Some os Wh de cada carga (W × horas) e divida pela energia útil total da bateria. Para fluxo contínuo de cargas, simule hora por hora."
+      "q": "Como a temperatura afeta a autonomia da bateria?",
+      "a": "Baterias chumbo-ácido perdem cerca de 1 % de capacidade por grau Celsius abaixo de 25 °C, chegando a -50 % a 0 °C. Baterias LiFePO₄ são mais estáveis, mas perdem ~10–20 % a -10 °C. No verão do Nordeste brasileiro (>40 °C), o calor acelera a degradação interna e pode reduzir a vida útil em 30–50 % se a bateria não tiver ventilação adequada."
     },
     {
-      "q": "Perco capacidade com o tempo?",
-      "a": "Sim. Li-ion perde ~2-3%/ano além do desgaste por ciclo. LiFePO4 perde 1-2%/ano. Chumbo-ácido 5-10%/ano conforme uso."
+      "q": "O que é o efeito Peukert e quando ele importa?",
+      "a": "O efeito Peukert descreve como baterias chumbo-ácido entregam menos capacidade quando descarregadas em alta corrente. A capacidade nominal (C20) é medida descarregando em 20 horas; descargando em 5 horas (C5), a capacidade real pode ser 20–30 % menor. Para cargas pesadas e contínuas, aplique o expoente de Peukert (tipicamente 1,1–1,3 para chumbo-ácido) para calcular a autonomia real com maior precisão."
     },
     {
-      "q": "O que é o efeito Peukert?",
-      "a": "Descargas rápidas reduzem a capacidade efetiva. Relevante se descarrega em <10h. Para tempos longos de descarga não afeta muito."
+      "q": "Qual tecnologia de bateria tem melhor custo-benefício para sistemas solares off-grid no Brasil?",
+      "a": "Para instalações residenciais de pequeno porte, as baterias estacionárias chumbo-ácido inundadas ainda dominam pelo menor custo inicial (R$ 400–800 por unidade 150 Ah/12 V). Já para sistemas maiores ou onde o espaço e o peso são limitantes, as LiFePO₄ têm custo por ciclo menor: com 3.000 ciclos a 80 % DoD contra 500 ciclos a 50 % DoD das AGM, o custo por kWh ciclado pode ser 2–3× menor a longo prazo."
     },
     {
-      "q": "É gratuito?",
-      "a": "Sim, todas as nossas calculadoras são gratuitas e não requerem registro."
+      "q": "Como medir o consumo real (W) dos meus equipamentos para usar na calculadora?",
+      "a": "O método mais preciso é usar um medidor de consumo (wattímetro) como o Poupador Plus ou similares, disponíveis por R$ 30–80. A etiqueta do equipamento indica a potência máxima, mas a média real pode ser 30–60 % menor (ex.: geladeira de 150 W consome ~60–70 W em média porque o compressor não liga o tempo todo). Para cálculos de autonomia, use sempre a potência média medida, não a nominal."
     },
     {
-      "q": "Os resultados são precisos?",
-      "a": "São orientativos. Usamos fórmulas padrão validadas internacionalmente. Para casos críticos consulte um profissional."
+      "q": "Qual a eficiência que devo usar para um inversor de energia solar típico?",
+      "a": "Inversores grid-tie ou híbridos de qualidade (ex.: Growatt, Deye, Fronius) operam com eficiência de pico de 93–97 %. Para cálculos conservadores de autonomia, use η = 90–93 % para inversores senoidais puros comuns e η = 85–88 % para inversores de onda modificada. Se a carga é DC direta (ex.: iluminação 12 V alimentada direto da bateria), use η ≈ 99 % pois não há conversão de tensão."
     },
     {
-      "q": "Guardam meus dados?",
-      "a": "Não. Os cálculos são feitos no seu navegador. Não enviamos dados para nenhum servidor."
+      "q": "Como calcular a autonomia com múltiplas baterias em série e paralelo?",
+      "a": "Baterias em **série** somam as voltagens mantendo o Ah: 2 × 12 V / 100 Ah → banco de 24 V / 100 Ah (2.400 Wh). Em **paralelo** somam os Ah mantendo a voltagem: 2 × 12 V / 100 Ah → banco de 12 V / 200 Ah (2.400 Wh). Em ambos os casos, a energia total (Wh) é a mesma. Aplique a fórmula normalmente com os valores resultantes do banco completo: Autonomia = (Ah_banco × V_banco × DoD × η) ÷ W."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "Wikipedia PT — Bateria elétrica (Profundidade de descarga e vida útil)",
+      "url": "https://pt.wikipedia.org/wiki/Bateria_el%C3%A9trica"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
+      "name": "Wikipedia PT — Watt-hora (conversão de unidades de energia)",
+      "url": "https://pt.wikipedia.org/wiki/Watt-hora"
     },
     {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "INMETRO — Programa Brasileiro de Etiquetagem (eficiência energética de equipamentos)",
+      "url": "https://www.gov.br/inmetro/pt-br/assuntos/avaliacao-da-conformidade/programa-brasileiro-de-etiquetagem"
     }
   ],
   "slug": "bateria-autonomia-ah",

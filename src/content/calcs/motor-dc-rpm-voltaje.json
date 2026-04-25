@@ -6,14 +6,14 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "motor-dc-rpm-voltaje",
-  "intro": "El mantenimiento y operación eficiente del auto implican cálculos de consumo, potencia, presión, torque y rendimiento. Aplicar las fórmulas correctas evita sobreconsumo y daños mecánicos. Calculá las RPM de un motor DC según voltaje aplicado y constante Kv (RPM por volt). Sin carga: RPM = V × Kv. Con carga cae proporcional al torque. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "**RPM = V × Kv** (sin carga). Bajo carga la velocidad cae. Kv típico: 2000-10000 para motores RC, 50-300 para industriales.",
+  "intro": "La calculadora de RPM de motor DC por voltaje te permite estimar las revoluciones por minuto (RPM) de un motor de corriente continua conociendo su constante Kv (RPM/V) y el voltaje aplicado. La fórmula base es RPM = Kv × V, donde Kv indica cuántas RPM produce el motor por cada voltio sin carga. Es una herramienta clave para makers, robótica, drones y proyectos de electrónica, ya que permite dimensionar motores correctamente antes de armar un circuito o elegir una hélice. Con carga, las RPM reales caen proporcionalmente a la resistencia interna y la corriente demandada.",
+  "keyTakeaway": "**RPM = Kv × V** — por ejemplo, un motor Kv=1000 a 12 V gira a **12.000 RPM sin carga**; con 20% de carga cae a ~**9.600 RPM** (reducción ~proporcional a la carga mecánica aplicada).",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de rpm de motor dc por voltaje (kv)",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Elegir un motor brushless para un dron FPV: con Kv=2300 y batería 3S (11,1 V) se obtienen ~25.530 RPM sin carga, permitiendo seleccionar la hélice correcta.",
+    "Calcular la velocidad de ruedas en un robot de competencia: con Kv=500 y 9 V se logran 4.500 RPM, que convertidas con la relación de engranaje determinan la velocidad lineal del robot.",
+    "Verificar la velocidad de un ventilador de refrigeración 12 V con Kv=300 para saber si supera las 3.600 RPM mínimas requeridas por un sistema de cooling.",
+    "Estimar la caída de RPM bajo carga en una impresora 3D con motor DC: a 24 V y Kv=150, las RPM nominales son 3.600 pero con 30% de carga caen a ~2.520 RPM, afectando la calidad de impresión.",
+    "Dimensionar la fuente de alimentación para un torno CNC de hobby, calculando el voltaje necesario para mantener las RPM objetivo bajo carga constante."
   ],
   "fields": [
     {
@@ -67,53 +67,45 @@
     ],
     "result": "12000 RPM sin carga, ~9600 RPM con 20% de carga"
   },
-  "explanation": "Los **cálculos automotrices** son esenciales para dueños de autos, motos y otros vehículos: rendimiento de combustible, costos de mantenimiento, presión de neumáticos, conversiones de potencia, tiempos de amortización.\n\n## Cómo se calcula\n\nCalculá las RPM de un motor DC según voltaje aplicado y constante Kv (RPM por volt). Sin carga: RPM = V × Kv. Con carga cae proporcional al torque.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa constante **Kv** (no confundir con kilovoltios) es una especificación del fabricante del motor y expresa cuántas RPM entrega el motor por cada voltio aplicado **sin carga mecánica**. La fórmula fundamental es:\n\n```\nRPM_sin_carga = Kv × V\n\nDonde:\n  Kv  = constante del motor en RPM/V (dato de fabricante)\n  V   = voltaje aplicado en voltios (V)\n\nCon carga aplicada (ajuste empírico lineal):\n  RPM_con_carga = RPM_sin_carga × (1 - carga% / 100) × eficiencia_aprox\n\nModelo simplificado usado en esta calculadora:\n  RPM_con_carga = Kv × V × (1 - carga / 100)\n\nEjemplo:\n  Kv = 1000 RPM/V, V = 12 V, carga = 20%\n  RPM_sin_carga = 1000 × 12 = 12.000 RPM\n  RPM_con_carga = 12.000 × (1 - 0,20) = 9.600 RPM\n\nConversión a RPS (revoluciones por segundo):\n  RPS = RPM / 60\n  RPS = 9.600 / 60 = 160 RPS\n```\n\n> **Nota técnica:** el modelo lineal de carga es una aproximación. En la realidad, la caída de RPM bajo carga depende de la resistencia interna del bobinado (Rm), la corriente de carga (I) y la back-EMF. El modelo exacto es: RPM_real = (V - I × Rm) × Kv. Sin embargo, para estimaciones de diseño, el modelo simplificado tiene un error inferior al 10% para cargas moderadas (< 50%).\n\n---\n\n## Tabla de referencia\n\n| Tipo de motor | Kv típico (RPM/V) | Voltaje típico | RPM sin carga típicas | Aplicación común |\n|---|---|---|---|---|\n| Brushless dron micro | 2.000 – 4.000 | 3,7 V (1S) | 7.400 – 14.800 | Whoop / micro FPV |\n| Brushless dron 5\" | 1.700 – 2.500 | 14,8 V (4S) | 25.160 – 37.000 | FPV racing |\n| Brushless longboard | 150 – 250 | 36 V | 5.400 – 9.000 | Monopatín eléctrico |\n| Motor DC hobby (brushed) | 300 – 800 | 6 – 12 V | 1.800 – 9.600 | Robótica / autos RC |\n| Motor DC industrial | 50 – 150 | 24 – 48 V | 1.200 – 7.200 | Automatización / CNC |\n| Motor DC ventilador PC | 200 – 400 | 12 V | 2.400 – 4.800 | Cooling electrónico |\n| Motor DC bomba agua | 80 – 200 | 12 – 24 V | 960 – 4.800 | Riego / hidroponia |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Motor brushless para dron FPV 5 pulgadas\n- **Motor:** Kv = 2.300 RPM/V, batería 4S (14,8 V nominal)\n- **Sin carga:** 2.300 × 14,8 = **34.040 RPM**\n- **Con hélice (carga estimada 35%):** 34.040 × 0,65 = **22.126 RPM** en vuelo real\n- **RPS:** 22.126 / 60 ≈ 369 RPS\n- **Conclusión:** dentro del rango operativo para hélices de 5×4,3×3 pulgadas.\n\n### Caso 2 — Robot de competencia con motor 12 V\n- **Motor:** Kv = 500 RPM/V, 9 V alimentación, carga 25%\n- **Sin carga:** 500 × 9 = **4.500 RPM**\n- **Con carga:** 4.500 × 0,75 = **3.375 RPM**\n- **Con reductora 1:10:** velocidad en rueda = 337,5 RPM → si el radio de rueda es 3 cm → velocidad lineal ≈ 1,06 m/s\n- **Conclusión:** adecuado para categoría minisumo de 30 × 30 cm.\n\n### Caso 3 — Ventilador de refrigeración 12 V\n- **Motor:** Kv = 300 RPM/V, 12 V, carga 10% (ventilador liviano)\n- **Sin carga:** 300 × 12 = **3.600 RPM**\n- **Con carga:** 3.600 × 0,90 = **3.240 RPM**\n- **Conclusión:** supera el umbral mínimo de 3.000 RPM para disipación efectiva en gabinetes ATX estándar.\n\n---\n\n## Errores comunes\n\n1. **Confundir Kv con kV (kilovoltios):** la constante Kv del motor es adimensional en \"RPM por voltio\" y no tiene ninguna relación con los kilovoltios de tensión. Escribirla en mayúscula (KV) también puede generar confusión; el estándar en la industria de motores brushless es \"Kv\".\n\n2. **Usar el voltaje nominal de la batería en lugar del voltaje real:** una LiPo 3S tiene nominalmente 11,1 V pero llega a 12,6 V a plena carga. Calcular siempre con el voltaje de operación real o usar el promedio de descarga (~11,4 V) para estimar RPM en vuelo sostenido.\n\n3. **Ignorar la caída de RPM bajo carga:** muchos diseñadores novatos toman las RPM sin carga como las RPM operativas. Bajo carga real (hélice, rueda, bomba), la caída puede ser del 20 al 40%. Siempre aplicar el factor de carga estimado.\n\n4. **No considerar la temperatura:** a mayor temperatura del bobinado, aumenta la resistencia interna del motor (Rm) y caen las RPM reales. A 80 °C el cobre tiene ~30% más resistencia que a 25 °C, lo que reduce las RPM bajo carga de forma significativa en sesiones largas.\n\n5. **Aplicar la fórmula a motores paso a paso (stepper):** los steppers no tienen constante Kv; sus RPM dependen de la frecuencia de pulsos del driver, no del voltaje directamente. Esta calculadora aplica únicamente a motores DC brushed y brushless con constante Kv especificada.\n\n---\n\n## Calculadoras relacionadas\n\n- [Ley de Ohm — Voltaje, Corriente y Resistencia](/calculadora-ley-ohm-voltaje-corriente-resistencia): calculá la corriente que consume el motor conociendo la resistencia de bobinado.\n- [Potencia eléctrica P = V × I](/calculadora-potencia-electrica-p-vi): estimá la potencia consumida por el motor a distintas cargas.\n- [Resistencia LED en serie y paralelo](/calculadora-resistencia-led-serie-paralelo): útil para diseñar indicadores visuales en tu circuito de control de motor.\n- [Divisor de voltaje con resistencias](/calculadora-divisor-voltaje-resistencias): dimensioná el circuito de feedback de voltaje para el controlador del motor DC.",
   "faq": [
     {
-      "q": "¿Qué es Kv?",
-      "a": "Constante de velocidad del motor, en RPM por volt. Si aplicás 1V el motor gira Kv RPM sin carga."
+      "q": "¿Qué es exactamente la constante Kv de un motor y dónde la encuentro?",
+      "a": "Kv es la constante de velocidad del motor, expresada en RPM por voltio (RPM/V). Indica cuántas revoluciones por minuto gira el motor por cada voltio aplicado en condición de vacío (sin carga mecánica). La encontrás en la hoja de datos (datasheet) del fabricante, en la caja del motor o en la descripción de producto de tiendas como RCTimer, Hobbyking o similares. Para motores de uso industrial también puede aparecer como 'velocidad específica en vacío'."
     },
     {
-      "q": "¿Y con carga?",
-      "a": "La velocidad baja linealmente con el torque. A plena carga (stall): RPM=0 y corriente máxima."
+      "q": "¿Por qué las RPM reales son menores que las que calcula la fórmula?",
+      "a": "La fórmula RPM = Kv × V da las RPM en vacío absoluto (sin ninguna carga). En la práctica, toda carga mecánica (hélice, rueda, carga de torsión) genera una corriente I que produce una caída de tensión I × Rm en la resistencia interna del bobinado, reduciendo la tensión efectiva disponible para generar movimiento. La caída típica va del 15% al 40% según la carga. El modelo simplificado de esta calculadora aproxima esa reducción de forma lineal con el porcentaje de carga ingresado."
     },
     {
-      "q": "¿Reemplaza la especificación de corriente?",
-      "a": "No. Kv es independiente de la corriente. Corriente depende del torque demandado por la carga."
+      "q": "¿Cuál es la diferencia entre un motor brushed y uno brushless en cuanto a Kv?",
+      "a": "Ambos tipos tienen constante Kv, pero los brushless suelen tener valores más altos y mayor eficiencia (85–95%) porque eliminan las pérdidas por rozamiento de las escobillas (brushes), que en motores brushed pueden reducir la eficiencia a 70–80%. Un motor brushless de Kv=1000 entregará más RPM reales bajo carga que uno brushed con el mismo Kv nominal, porque su resistencia interna efectiva es menor y la caída de back-EMF es más controlada."
     },
     {
-      "q": "¿Motor brushless vs brushed?",
-      "a": "Brushless mucho más eficiente (>90%) y durable. Brushed más barato pero las escobillas se desgastan."
+      "q": "¿Puedo controlar las RPM variando el voltaje con un PWM?",
+      "a": "Sí, es la forma más común de control. Un PWM (Pulse Width Modulation) al 50% sobre 12 V equivale a aplicar ~6 V promedio al motor, resultando en aproximadamente la mitad de las RPM máximas. Los ESC (Electronic Speed Controllers) para drones usan exactamente este principio. Sin embargo, a duty cycles muy bajos (<15%) el motor puede no arrancar por la inercia inicial; para ese caso se recomienda un arranque suave (soft start) programado en el driver."
     },
     {
-      "q": "¿PWM afecta Kv?",
-      "a": "PWM cambia el voltaje promedio. Si duty cycle 50% en 12V, el motor ve 6V efectivos y gira la mitad."
+      "q": "¿Cómo afecta la altitud a las RPM de un motor DC?",
+      "a": "Para motores DC eléctricos, la altitud no afecta directamente las RPM ya que la energía proviene de la electricidad, no de la combustión. Sin embargo, en aplicaciones con hélices (drones), a mayor altitud el aire es menos denso, la resistencia aerodinámica disminuye y el motor puede girar más rápido bajo la misma carga eléctrica. Esto puede llevar a sobre-velocidades y sobrecalentamiento si el ESC no está bien configurado. Es un dato importante para operaciones en zonas como la Puna argentina (> 3.500 m s.n.m.)."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cuántos voltios máximo puedo aplicar a un motor sin dañarlo?",
+      "a": "El voltaje máximo está determinado por el aislamiento del bobinado y los rodamientos del motor; el fabricante lo indica como 'tensión máxima' o 'Vmax'. Superarlo genera calor excesivo, degradación del esmalte del bobinado y falla prematura de los rodamientos. En motores brushless para drones, el voltaje máximo suele indicarse en número de celdas LiPo soportadas (ej: '3-6S' = 11,1 V a 22,2 V). Nunca superar ese rango aunque la fórmula indique RPM posibles: el límite es térmico y mecánico, no solo eléctrico."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Cómo convierto RPM a velocidad lineal en ruedas o hélices?",
+      "a": "Para ruedas: Velocidad lineal (m/s) = (RPM / 60) × 2π × radio_rueda(m). Por ejemplo, 3.000 RPM con rueda de 4 cm de radio → (3000/60) × 2π × 0,04 ≈ 12,6 m/s. Para hélices de drones, la relación es más compleja porque interviene el paso (pitch) y la densidad del aire, pero como regla práctica: empuje (gramos) ≈ RPM² × diámetro_hélice³ × constante_empírica del fabricante. Para cálculos de potencia eléctrica del motor, usá la [calculadora de potencia eléctrica](/calculadora-potencia-electrica-p-vi)."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿La constante Kv cambia con el uso o el desgaste del motor?",
+      "a": "En motores brushless, Kv es prácticamente constante durante toda la vida útil ya que depende del diseño del estátor y del rotor (número de polos y vueltas del bobinado). En motores brushed, el desgaste de las escobillas aumenta la resistencia de contacto, lo que reduce las RPM reales bajo carga aunque la Kv teórica no cambie. Si un motor brushed viejo gira notablemente más lento que el cálculo indica, es señal de que las escobillas requieren reemplazo."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
-    },
-    {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Wikipedia ES — Motor de corriente continua: principio de funcionamiento y constante de velocidad",
+      "url": "https://es.wikipedia.org/wiki/Motor_de_corriente_continua"
     }
   ],
   "relatedSlugs": [

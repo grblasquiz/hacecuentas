@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "🌐",
   "formulaId": "tiempo-carga-pagina-web-metricas",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Evalúa LCP/FID/CLS y promedio · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá LCP ms, FID ms y CLS y obtené LCP al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "Los **Core Web Vitals** son las tres métricas oficiales de Google para medir la experiencia de carga y usabilidad de una página web: **LCP** (Largest Contentful Paint), **FID** (First Input Delay) y **CLS** (Cumulative Layout Shift). Esta calculadora te permite ingresar los valores medidos de tu sitio y obtener una evaluación inmediata según los umbrales definidos por Google en 2024-2026. El LCP mide en milisegundos cuándo aparece el elemento visual más grande de la página; el FID mide el tiempo de respuesta al primer input del usuario; y el CLS es un puntaje adimensional que cuantifica cuánto se mueve el contenido visualmente durante la carga. Usada por desarrolladores web, SEOs y equipos de producto para diagnosticar problemas de rendimiento y priorizar optimizaciones.",
+  "keyTakeaway": "Google clasifica tu página como **\"Bueno\"** si: **LCP ≤ 2500 ms**, **FID ≤ 100 ms** y **CLS ≤ 0.1**. Superar cualquiera de esos umbrales implica penalización en el ranking de búsqueda.",
   "useCases": [
-    "Dimensionar Tiempo carga web (Core Web Vitals) antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Un desarrollador frontend optimizó imágenes y quiere saber si el LCP bajó de 4200 ms a 2000 ms y ya entra en zona 'Bueno'.",
+    "Un SEO técnico audita una tienda online antes del lanzamiento y verifica que el CLS de 0.05 no penaliza el posicionamiento.",
+    "Un equipo de producto compara el FID de la versión mobile (95 ms) vs desktop (40 ms) para priorizar refactors de JavaScript.",
+    "Un agencia de marketing revisa los Core Web Vitals de un cliente después de migrar a un nuevo hosting para confirmar que no empeoró el ranking de Google."
   ],
   "fields": [
     {
@@ -68,49 +68,45 @@
     ],
     "result": "LCP Bien"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nEvalúa LCP/FID/CLS y promedio · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLos Core Web Vitals no se \"calculan\" con una fórmula aritmética, sino que cada métrica se **mide en el navegador** y luego se evalúa contra umbrales fijos definidos por Google. La lógica de clasificación es:\n\n```\n// LCP (Largest Contentful Paint) — en milisegundos\nsi LCP ≤ 2500       → \"Bueno\"\nsi 2500 < LCP ≤ 4000 → \"Necesita mejoras\"\nsi LCP > 4000        → \"Deficiente\"\n\n// FID (First Input Delay) — en milisegundos\nsi FID ≤ 100        → \"Bueno\"\nsi 100 < FID ≤ 300  → \"Necesita mejoras\"\nsi FID > 300        → \"Deficiente\"\n\n// CLS (Cumulative Layout Shift) — adimensional, 0 a 1\nsi CLS ≤ 0.1        → \"Bueno\"\nsi 0.1 < CLS ≤ 0.25 → \"Necesita mejoras\"\nsi CLS > 0.25        → \"Deficiente\"\n\n// Resumen global\nsi las 3 métricas son \"Bueno\" → \"✅ Pasa Core Web Vitals\"\nsi alguna es \"Necesita mejoras\" → \"⚠️ Mejorable\"\nsi alguna es \"Deficiente\"      → \"❌ No pasa Core Web Vitals\"\n```\n\nEl **LCP** se obtiene con la API `PerformanceObserver` observando entradas de tipo `largest-contentful-paint`. El **FID** se mide con `PerformanceEventTiming` (primer evento de input). El **CLS** acumula los `layout-shift` que ocurren sin interacción del usuario en ventanas de 5 segundos.\n\n---\n\n## Tabla de referencia\n\n| Métrica | Bueno | Necesita mejoras | Deficiente | Peso en ranking |\n|---|---|---|---|---|\n| LCP (ms) | ≤ 2 500 | 2 501 – 4 000 | > 4 000 | Alto |\n| FID (ms) | ≤ 100 | 101 – 300 | > 300 | Medio |\n| CLS (score) | ≤ 0.10 | 0.11 – 0.25 | > 0.25 | Alto |\n| INP (ms) * | ≤ 200 | 201 – 500 | > 500 | Alto (reemplaza FID) |\n\n> ⚠️ *Google reemplazó FID por **INP (Interaction to Next Paint)** en marzo 2024 como métrica oficial de Core Web Vitals. Sin embargo, FID sigue siendo útil como diagnóstico y muchas herramientas lo reportan. Esta calculadora incluye FID por compatibilidad con datos históricos y herramientas legacy.\n\n---\n\n## Casos típicos\n\n### Caso 1 — E-commerce con buen rendimiento\nUn sitio de ventas mide: LCP = 2 000 ms, FID = 80 ms, CLS = 0.05.\n- LCP 2 000 ≤ 2 500 → **Bueno**\n- FID 80 ≤ 100 → **Bueno**\n- CLS 0.05 ≤ 0.10 → **Bueno**\n- **Resultado: ✅ Pasa Core Web Vitals** — el sitio no sufre penalización de ranking.\n\n### Caso 2 — Blog con imágenes no optimizadas\nUn blog mide: LCP = 5 200 ms, FID = 60 ms, CLS = 0.18.\n- LCP 5 200 > 4 000 → **Deficiente**\n- FID 60 ≤ 100 → **Bueno**\n- CLS 0.18 entre 0.11 y 0.25 → **Necesita mejoras**\n- **Resultado: ❌ No pasa Core Web Vitals** — necesita optimizar imágenes hero y estabilizar el layout (probablemente anuncios sin dimensiones fijas).\n\n### Caso 3 — Landing page con JavaScript pesado\nLCP = 3 100 ms, FID = 250 ms, CLS = 0.08.\n- LCP → **Necesita mejoras** (entre 2 500 y 4 000)\n- FID → **Necesita mejoras** (entre 100 y 300)\n- CLS → **Bueno**\n- **Resultado: ⚠️ Mejorable** — el JavaScript de terceros (chat, analytics, A/B testing) bloquea el hilo principal. Diferir scripts no críticos reduciría tanto el LCP como el FID.\n\n---\n\n## Errores comunes\n\n1. **Confundir LCP con FCP (First Contentful Paint):** FCP mide cuándo aparece *cualquier* contenido; LCP mide el *elemento más grande*. Un FCP de 800 ms no garantiza un buen LCP si la imagen hero tarda 4 segundos.\n\n2. **Medir solo en laboratorio (Lighthouse) y no en campo (CrUX):** Lighthouse corre en condiciones controladas. Google usa datos reales de Chrome (CrUX) para el ranking. Un sitio puede verse \"verde\" en Lighthouse y tener un CLS de 0.3 en usuarios reales por anuncios que cargan tarde.\n\n3. **Ignorar las dimensiones de imágenes y anuncios para el CLS:** El error más frecuente de CLS es no reservar espacio para imágenes (`width`/`height` en HTML) ni para bloques de publicidad. Un banner de 250 px que aparece sin espacio reservado puede empujar todo el contenido y generar un CLS de 0.3+.\n\n4. **Medir FID con página sin interacción real:** Si el tester no hace clic durante la medición, FID no se registra. Muchos reportes muestran FID = 0 ms porque nadie interactuó, no porque el sitio sea rápido.\n\n5. **No segmentar por dispositivo:** El LCP mobile puede ser 3× peor que desktop. Google indexa mobile-first, así que un LCP de 2 000 ms en desktop con un LCP de 5 500 ms en mobile resulta en **Deficiente** para el ranking.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de tiempo de descarga por ancho de banda](/calculadora-ancho-banda-descarga-tiempo) — estimá cuánto tarda en bajar un recurso según tu conexión, útil para entender el impacto en LCP.\n- [Calculadora de carga de batería y tiempo](/calculadora-carga-bateria-tiempo-amp) — analizá el consumo energético de scripts pesados en dispositivos mobile.\n- [Calculadora de FPS para stop motion](/calculadora-stop-motion-fps-tiempo) — relacionada con la percepción de fluidez visual en animaciones web.\n- [Calculadora de tiempo de exposición y panning](/calculadora-tiempo-exposicion-panning) — para entender métricas de tiempo en contextos de captura visual.\n",
   "faq": [
     {
-      "q": "¿LCP?",
-      "a": "Largest Contentful Paint. <2.5s bien."
+      "q": "¿Qué diferencia hay entre LCP y FCP?",
+      "a": "El FCP (First Contentful Paint) mide cuándo aparece el **primer** píxel de contenido (texto, imagen o SVG) en la pantalla. El LCP mide cuándo se renderiza el elemento visual **más grande** visible en el viewport, que suele ser la imagen hero o el H1 principal. Un FCP de 800 ms es excelente, pero si la imagen principal tarda 4 500 ms en cargar, el LCP será Deficiente y el sitio será penalizado igual."
     },
     {
-      "q": "¿FID?",
-      "a": "First Input Delay. <100ms bien."
+      "q": "¿Google reemplazó el FID? ¿Tengo que preocuparme por INP?",
+      "a": "Sí. En marzo de 2024, Google reemplazó oficialmente el FID por **INP (Interaction to Next Paint)** como métrica de Core Web Vitals. El umbral de INP es: ≤ 200 ms = Bueno, 201–500 ms = Necesita mejoras, > 500 ms = Deficiente. FID solo medía el primer input; INP mide la latencia de **todas** las interacciones. Si tu sitio tiene animaciones pesadas o componentes reactivos complejos, priorizá optimizar el INP."
     },
     {
-      "q": "¿CLS?",
-      "a": "Cumulative Layout Shift. <0.1 bien."
+      "q": "¿Cómo afectan los Core Web Vitals al SEO real?",
+      "a": "Google incorporó los Core Web Vitals como señal de ranking en junio de 2021 mediante el **Page Experience Update**. No es el factor más importante (el contenido relevante sigue siendo prioritario), pero actúa como desempate: entre dos páginas con contenido similar, la que pasa los CWV tiene ventaja. En nichos competitivos, pasar de Deficiente a Bueno puede implicar subidas de 5–15% en posiciones orgánicas según estudios de Searchmetrics y Sistrix."
     },
     {
-      "q": "¿INP?",
-      "a": "Remplaza FID en 2024, <200ms bien."
+      "q": "¿Qué herramientas uso para medir LCP, FID y CLS?",
+      "a": "Las herramientas más confiables son: **Google PageSpeed Insights** (datos de laboratorio + campo CrUX, gratis), **Chrome DevTools → pestaña Performance** (laboratorio), **Search Console → informe Core Web Vitals** (datos de campo de usuarios reales, el más importante para SEO), y **WebPageTest.org** para análisis avanzado con filmstrips. Para monitoreo continuo: Vercel Analytics, Datadog RUM o New Relic Browser."
     },
     {
-      "q": "¿Optimizar?",
-      "a": "Image optim, preload, code split."
+      "q": "¿Por qué mi LCP es bueno en Lighthouse pero malo en Search Console?",
+      "a": "Lighthouse corre en condiciones de laboratorio: red simulada 4G lenta, CPU throttling 4×, sin caché, sin anuncios, sin scripts de usuario real. Search Console usa datos **CrUX** (Chrome User Experience Report): miles de usuarios reales con distintos dispositivos, conexiones y comportamientos. Los anuncios de terceros, los A/B tests y los scripts de analytics que no aparecen en Lighthouse degradan el LCP real. Siempre priorizá los datos de Search Console para decisiones de SEO."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cómo bajo el CLS sin cambiar el diseño del sitio?",
+      "a": "Las acciones de mayor impacto sin rediseñar son: (1) agregar atributos `width` y `height` explícitos en todas las etiquetas `<img>` — esto reserva el espacio antes de que cargue la imagen; (2) usar `min-height` en contenedores de anuncios y embeds; (3) aplicar `font-display: optional` o `swap` en fuentes web para evitar reflows por cambio de tipografía; (4) no insertar contenido dinámico encima del contenido visible sin que el usuario lo haya solicitado."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Los Core Web Vitals se miden igual en mobile y desktop?",
+      "a": "Los umbrales son los **mismos** para mobile y desktop, pero Google evalúa ambos por separado en Search Console. Como Google usa indexación **mobile-first**, los datos de dispositivos móviles tienen mayor peso para el ranking. En la práctica, el LCP mobile suele ser 2–4× mayor que en desktop por la latencia de redes celulares y la menor potencia de CPU. Si tenés que elegir dónde optimizar primero, siempre empezá por mobile."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué puntaje de CLS es aceptable para un sitio con muchos anuncios?",
+      "a": "El umbral de Google es estricto: **CLS ≤ 0.1** para ser Bueno, sin excepciones por tipo de sitio. Un sitio con banners de publicidad dinámicos frecuentemente tiene CLS de 0.3–0.6 si no se reserva espacio. La solución más efectiva es usar `position: sticky` o contenedores con `height` fija para los slots publicitarios. Redes como Google Ad Manager permiten configurar tamaños fijos de slot que el navegador puede reservar antes de que cargue el anuncio."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
-    },
-    {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "Google Developers – Core Web Vitals (documentación oficial)",
+      "url": "https://web.dev/articles/vitals"
     }
   ],
   "relatedSlugs": [

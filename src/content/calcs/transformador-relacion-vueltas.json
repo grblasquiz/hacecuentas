@@ -6,14 +6,14 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "transformador-relacion-vueltas",
-  "intro": "La electrónica básica se rige por leyes de Ohm, Kirchhoff y principios de semiconductores. Cálculos de resistencia, potencia, voltaje y amperaje son la base para diseñar y mantener circuitos. Calculá la relación de vueltas, voltaje secundario, corriente secundaria o potencia de un transformador ideal. N1/N2 = V1/V2 = I2/I1. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "**N1/N2 = V1/V2 = I2/I1**. Potencia: P1 = P2 en ideal. Relación 10:1 baja 220V a 22V y aumenta corriente 10×.",
+  "intro": "Un transformador es un dispositivo electromagnético que transfiere energía eléctrica entre dos circuitos mediante inducción, cambiando el nivel de tensión (y en sentido inverso, la corriente). La **relación de vueltas** N1/N2 es el parámetro fundamental: si el primario tiene N1 espiras y el secundario N2, la tensión secundaria es V2 = V1 × (N2/N1) y la corriente secundaria es I2 = I1 × (N1/N2). Esta calculadora resuelve cualquier combinación de V1, N1, N2 e I1 para obtener V2, I2 y la potencia del transformador ideal (P = V1×I1 = V2×I2). Se usa en fuentes de alimentación, transformadores de distribución, adaptadores y diseño de fuentes lineales.",
+  "keyTakeaway": "La relación de vueltas determina todo: **V2 = V1 × (N2/N1)** e **I2 = I1 × (N1/N2)**; en un transformador ideal la potencia se conserva: **P = V1·I1 = V2·I2** (ej.: 220 V × 2 A = 22 V × 20 A = 440 W).",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de transformador — relación vueltas n1/n2",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Diseñar una fuente lineal que convierte 220 V de red a 12 V o 24 V para alimentar circuitos electrónicos de baja tensión.",
+    "Verificar si un transformador de distribución de 13,2 kV/220 V cumple con la relación de vueltas esperada antes de su puesta en servicio.",
+    "Calcular la corriente en el devanado primario de un transformador de aislación 1:1 cuando se conoce la carga del secundario, para dimensionar el fusible de protección.",
+    "Seleccionar el transformador adecuado para un amplificador de audio de válvulas que requiere 300 V B+ y 6,3 V para los filamentos desde una red de 220 V.",
+    "Determinar la relación de transformación de un transformador de corriente (TC) para medir altas corrientes de forma segura con instrumentos de 5 A de fondo de escala."
   ],
   "fields": [
     {
@@ -99,53 +99,45 @@
     ],
     "result": "Transformador reductor 10:1 entrega 22 V a 20 A del secundario"
   },
-  "explanation": "La **electrónica** se rige por leyes de Ohm, Kirchhoff, Faraday. Aplicar fórmulas evita errores costosos y fallos eléctricos.\n\n## Cómo se calcula\n\nCalculá la relación de vueltas, voltaje secundario, corriente secundaria o potencia de un transformador ideal. N1/N2 = V1/V2 = I2/I1 · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl transformador ideal se rige por tres ecuaciones derivadas de la ley de Faraday y la conservación de energía:\n\n```\nRelación de vueltas:   a = N1 / N2\n\nTensión secundaria:    V2 = V1 × (N2 / N1)  =  V1 / a\n\nCorriente secundaria:  I2 = I1 × (N1 / N2)  =  I1 × a\n\nPotencia (ideal):      P = V1 × I1  =  V2 × I2   [W]\n```\n\nEn la práctica, los transformadores reales tienen un rendimiento η < 100 % por pérdidas en el cobre (resistencia de los devanados) y pérdidas en el hierro (histéresis y corrientes de Foucault). La eficiencia típica de un transformador bien diseñado es del 95 % al 99 %.\n\n```\nP_salida = P_entrada × η\nV2_real ≈ V2_ideal × √η   (aproximación con carga nominal)\n```\n\n---\n\n## Tabla de referencia\n\nA continuación se muestran relaciones de vueltas típicas para aplicaciones comunes con entrada de **220 V (red argentina)**:\n\n| Aplicación                        | V1 (V) | V2 (V) | Relación N1/N2 | I1 típica | I2 típica |\n|-----------------------------------|--------|--------|----------------|-----------|-----------|\n| Fuente para electrónica (5 V)     | 220    | 5      | 44 : 1         | 0,23 A    | 10 A      |\n| Fuente para electrónica (12 V)    | 220    | 12     | 18,3 : 1       | 0,55 A    | 10 A      |\n| Fuente para electrónica (24 V)    | 220    | 24     | 9,2 : 1        | 0,55 A    | 5 A       |\n| Cargador de batería (48 V)        | 220    | 48     | 4,6 : 1        | 0,45 A    | 2 A       |\n| Aislación galvánica 1:1           | 220    | 220    | 1 : 1          | igual     | igual     |\n| Distribución MT/BT (13,2 kV)      | 13200  | 220    | 60 : 1         | variable  | variable  |\n| Transformador de corriente (TC)   | —      | —      | 200 : 5 (ej.) | 200 A     | 5 A       |\n| Amplificador de audio (válvulas)  | 220    | 300+6,3| múltiple       | 0,5 A     | variable  |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Fuente lineal de laboratorio 220 V → 22 V, 20 A\n- **Datos:** V1 = 220 V, N1 = 1000, N2 = 100, I1 = 2 A\n- **Relación:** a = 1000/100 = **10:1**\n- **Tensión secundaria:** V2 = 220 × (100/1000) = **22 V**\n- **Corriente secundaria:** I2 = 2 × (1000/100) = **20 A**\n- **Potencia:** P = 220 × 2 = 22 × 20 = **440 W**\n- Conclusión: transformador reductor; el secundario entrega más corriente a menor tensión.\n\n### Caso 2 — Transformador elevador para transmisión 220 V → 2200 V\n- **Datos:** V1 = 220 V, N1 = 100, N2 = 1000, I1 = 10 A\n- **Relación:** a = 100/1000 = **1:10** (elevador)\n- **Tensión secundaria:** V2 = 220 × 10 = **2200 V**\n- **Corriente secundaria:** I2 = 10 / 10 = **1 A**\n- **Potencia:** P = 220 × 10 = 2200 × 1 = **2200 W**\n\n### Caso 3 — Transformador de aislación 1:1 con carga de 500 W\n- **Datos:** V1 = 220 V, N1 = N2 = 500, I1 = 500/220 ≈ 2,27 A\n- **Relación:** 1:1 — la tensión no cambia, pero el circuito queda aislado galvánicamente de la red.\n- **V2 = 220 V, I2 = 2,27 A, P = 500 W**\n- Uso: instalaciones médicas, laboratorios y equipos de medición donde se requiere flotante de tierra.\n\n---\n\n## Errores comunes\n\n1. **Confundir la relación de vueltas con la relación inversa de corrientes.** Si a = N1/N2 = 10, la corriente secundaria es 10× mayor (I2 = I1 × a), no menor. Muchos calculan I2 = I1 / a por error.\n\n2. **Ignorar la tensión en vacío vs. con carga.** La tensión secundaria medida sin carga (V2_vacío) siempre es mayor que con carga nominal, porque la caída en la resistencia del devanado no existe. En transformadores de pequeña potencia esta diferencia puede ser del 10–15 %.\n\n3. **Asumir que la potencia de entrada es igual a la de salida en todos los casos.** Solo en el transformador ideal P_entrada = P_salida. En la práctica, hay que dividir por el rendimiento: si se necesitan 440 W en el secundario y η = 0,95, el primario consume 440/0,95 ≈ 463 W.\n\n4. **Aplicar estas fórmulas a transformadores de corriente continua.** Un transformador solo funciona con corriente alterna (AC). En DC la inducción es nula y el devanado se comporta como una resistencia pura (con riesgo de quemarse).\n\n5. **Olvidar el núcleo magnético al escalar potencia.** Duplicar la potencia no implica solo duplicar el número de vueltas o el calibre del hilo; el núcleo de hierro (en cm²) debe crecer también, ya que la densidad de flujo máxima (B_max) en acero silicio es típicamente 1,2–1,5 T.\n\n---\n\n## Calculadoras relacionadas\n\n- [Ley de Ohm — Voltaje, Corriente y Resistencia](/calculadora-ley-ohm-voltaje-corriente-resistencia)\n- [Potencia Eléctrica P = V·I](/calculadora-potencia-electrica-p-vi)\n- [Resistencia de LED en serie y paralelo](/calculadora-resistencia-led-serie-paralelo)\n- [Divisor de voltaje con resistencias](/calculadora-divisor-voltaje-resistencias)\n",
   "faq": [
     {
-      "q": "¿Funciona con DC?",
-      "a": "No. Los transformadores solo funcionan con AC por ser el campo magnético variable el que induce voltaje en el secundario."
+      "q": "¿Qué es la relación de vueltas de un transformador y cómo afecta a la tensión?",
+      "a": "La relación de vueltas a = N1/N2 determina en qué proporción se transforma la tensión: V2 = V1 × (N2/N1). Si N1 > N2, el transformador es reductor (V2 < V1); si N1 < N2, es elevador (V2 > V1). Por ejemplo, con N1=1000 y N2=50, a=20 y V2 = 220/20 = 11 V. Esta relación también define la transformación de impedancias: Z1 = Z2 × a²."
     },
     {
-      "q": "¿Qué pasa si conecto mal V1?",
-      "a": "Un transformador en 110V conectado a 220V se quema por exceso de flujo magnético en el núcleo. Respeta tensiones nominales."
+      "q": "¿Por qué la corriente se comporta de forma inversa a la tensión?",
+      "a": "Por la conservación de energía (potencia aparente constante en el ideal): P = V1·I1 = V2·I2. Si la tensión baja en proporción N2/N1, la corriente sube en proporción N1/N2. En el ejemplo clásico, un transformador 10:1 que entrega 22 V con 20 A fue alimentado con 220 V a solo 2 A. Esto es lo que permite transmitir energía a alta tensión y baja corriente (menos pérdidas en línea)."
     },
     {
-      "q": "¿Puede ir al revés?",
-      "a": "Sí. Un step-down puede trabajar como step-up si conectás al secundario con voltaje bajo y saca amplificado del primario. Pero respetá límites de corriente."
+      "q": "¿Cuál es la eficiencia típica de un transformador real?",
+      "a": "Los transformadores de distribución de potencia media y alta tienen eficiencias del 97 % al 99,5 %. Los transformadores toroidales de uso doméstico o de laboratorio alcanzan 95–98 %. Los transformadores tipo EI de pequeña potencia (< 50 VA) pueden tener eficiencias de solo 80–90 %. Las pérdidas se dividen en pérdidas en el hierro (constantes, ocurren aunque no haya carga) y pérdidas en el cobre (proporcionales al cuadrado de la corriente)."
     },
     {
-      "q": "¿Por qué hay 1:1?",
-      "a": "Aislación galvánica: separa eléctricamente dos circuitos por razones de seguridad. Muy usado en equipos médicos y reparación."
+      "q": "¿Un transformador funciona con corriente continua (DC)?",
+      "a": "No. El principio de funcionamiento del transformador se basa en la variación del flujo magnético, que solo ocurre con corriente alterna (AC). Si se aplica DC al primario, el flujo es constante, no hay FEM inducida en el secundario y la única limitación es la resistencia óhmica del devanado, lo que causa un consumo de corriente muy elevado que puede quemar el transformador en segundos. Para convertir niveles de tensión DC se usan convertidores DC-DC (buck, boost, flyback)."
     },
     {
-      "q": "¿Diferencia con autotransformador?",
-      "a": "Autotrafo usa una sola bobina con tap. Más chico/barato pero no da aislación galvánica."
+      "q": "¿Qué significa 'transformador de aislación' y cuándo se usa?",
+      "a": "Un transformador de aislación tiene relación 1:1 (N1 = N2), por lo que V2 = V1 y no transforma la tensión. Su función es romper la continuidad galvánica entre la red y el circuito secundario, eliminando el riesgo de descarga eléctrica a tierra. Es obligatorio en áreas médicas (quirófanos, UTI) según normas IEC 60364-7-710 y se usa también en laboratorios de electrónica para trabajar con equipos sin riesgo de cortocircuito a tierra."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cómo calculo el número de vueltas necesarias para un transformador casero?",
+      "a": "Se usa la fórmula de diseño: N = (V × 10⁸) / (4,44 × f × B_max × A_núcleo), donde f es la frecuencia (50 Hz en Argentina), B_max es la densidad de flujo del núcleo (≈ 1,2 T para acero silicio estándar) y A_núcleo es la sección del núcleo en cm². Por ejemplo, para un primario de 220 V con un núcleo de 10 cm²: N1 = (220 × 10⁸) / (4,44 × 50 × 1,2 × 10) ≈ 825 vueltas. Luego N2 = N1 × (V2/V1)."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Qué es un transformador de corriente (TC) y cómo se usa en medición?",
+      "a": "Un transformador de corriente (TC) tiene el conductor de alta corriente como primario (generalmente una sola vuelta o el propio cable) y un secundario que entrega una corriente normalizada, típicamente 5 A o 1 A, proporcional a la corriente primaria. Un TC 200/5 A tiene relación a = 200/5 = 40 y convierte hasta 200 A primarios en 5 A medibles con un amperímetro estándar. Es fundamental en instalaciones eléctricas industriales y de media tensión para protección y medición."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué pasa si conecto el secundario de un transformador en vacío?",
+      "a": "En vacío (sin carga en el secundario), el primario consume una pequeña corriente de magnetización, típicamente el 1–5 % de la corriente nominal. La tensión en el secundario estará presente y será levemente mayor que la nominal (sin caída por resistencia de devanado). No hay riesgo para el transformador al operar en vacío por tiempo indefinido, ya que las pérdidas son solo las del hierro (constantes y bajas). Sí puede haber riesgo si se cortocircuita el secundario sin protección."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
-    },
-    {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Wikipedia ES — Transformador eléctrico: principio de funcionamiento y ecuaciones",
+      "url": "https://es.wikipedia.org/wiki/Transformador"
     }
   ],
   "relatedSlugs": [

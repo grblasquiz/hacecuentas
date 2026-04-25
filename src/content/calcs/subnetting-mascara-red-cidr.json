@@ -7,13 +7,14 @@
   "audience": "global",
   "icon": "🌐",
   "formulaId": "subnetting-mascara-red-cidr",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Hosts por subred, máscara, broadcast de /n · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá CIDR /n y obtené hosts útiles al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "La calculadora de Subnetting CIDR te permite determinar instantáneamente cuántos hosts útiles tiene una subred, cuál es su máscara en notación decimal punteada y cuántas subredes de ese tamaño entran en un bloque /24. CIDR (Classless Inter-Domain Routing) usa la notación /n donde n indica cuántos bits son parte del prefijo de red: los restantes (32 − n) son bits de host. La fórmula clave es **Hosts útiles = 2^(32−n) − 2** (se restan la dirección de red y la de broadcast). Se usa al diseñar redes LAN, configurar routers y firewalls, planificar segmentación de VLANs o calcular rangos de IPs disponibles en infraestructura cloud (AWS VPC, Azure VNet).",
+  "keyTakeaway": "**Hosts útiles = 2^(32 − n) − 2**: para /24 → 254 hosts, para /25 → 126, para /26 → 62, para /30 → 2 (enlaces punto a punto).",
   "useCases": [
-    "Dimensionar subnetting CIDR antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Diseñar la segmentación de una red corporativa dividiéndola en departamentos: Ventas /26 (62 hosts), Administración /27 (30 hosts) y Servidores /28 (14 hosts), todo dentro del bloque 192.168.1.0/24.",
+    "Configurar un enlace punto a punto entre dos routers usando /30, que provee exactamente 2 hosts útiles y evita el desperdicio de IPs que generaría un /29 o superior.",
+    "Planificar subredes en una VPC de AWS o Azure VNet donde cada microservicio o tier (frontend, backend, base de datos) recibe su propio bloque CIDR para aplicar security groups por segmento.",
+    "Calcular cuántas subredes /28 (16 IPs, 14 hosts útiles) entran dentro de un /24 asignado por el ISP para una PyME, y verificar que alcanzan para todos los pisos del edificio.",
+    "Determinar la máscara decimal punteada a ingresar en el panel de configuración de un switch administrable o en el archivo /etc/network/interfaces de un servidor Linux."
   ],
   "fields": [
     {
@@ -52,49 +53,49 @@
     ],
     "result": "254"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nHosts por subred, máscara, broadcast de /n · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl estándar CIDR (RFC 4632) define que una dirección IPv4 de 32 bits se divide en **prefijo de red** (n bits) y **porción de host** (32 − n bits).\n\n```\nBits de host    = 32 − n\nTotal IPs       = 2^(32 − n)\nHosts útiles    = 2^(32 − n) − 2\nMáscara decimal = 32 bits con los primeros n en \"1\" y el resto en \"0\"\nSubredes en /24 = 2^(n − 24)   [solo válido cuando n ≥ 24]\n```\n\n**Ejemplo /26:**\n- Bits de host = 32 − 26 = 6\n- Total IPs = 2^6 = 64\n- Hosts útiles = 64 − 2 = **62**\n- Máscara: `11111111.11111111.11111111.11000000` → **255.255.255.192**\n- Subredes en /24: 2^(26−24) = **4**\n\n---\n\n## Tabla de referencia\n\n| CIDR | Máscara           | Total IPs | Hosts útiles | Subredes en /24 | Uso típico                  |\n|------|-------------------|-----------|--------------|------------------|-----------------------------|\n| /24  | 255.255.255.0     | 256       | 254          | 1                | Red LAN estándar de oficina |\n| /25  | 255.255.255.128   | 128       | 126          | 2                | División en 2 segmentos     |\n| /26  | 255.255.255.192   | 64        | 62           | 4                | Departamentos medianos      |\n| /27  | 255.255.255.224   | 32        | 30           | 8                | Grupos pequeños (~30 PCs)   |\n| /28  | 255.255.255.240   | 16        | 14           | 16               | Sucursales o pisos pequeños |\n| /29  | 255.255.255.248   | 8         | 6            | 32               | Servidores o DMZ chica      |\n| /30  | 255.255.255.252   | 4         | 2            | 64               | Enlace punto a punto        |\n| /32  | 255.255.255.255   | 1         | 0*           | 256              | Host route / loopback       |\n\n> **/32** se usa para rutas de host específico, no para asignar hosts en la forma tradicional.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Red de oficina con 3 departamentos dentro de 192.168.10.0/24\n\nUna empresa necesita separar Finanzas (≤30 hosts), IT (≤60 hosts) y Producción (≤120 hosts):\n\n| Departamento | Subred                  | CIDR | Hosts disponibles |\n|--------------|-------------------------|------|-------------------|\n| Producción   | 192.168.10.0            | /25  | 126               |\n| IT           | 192.168.10.128          | /26  | 62                |\n| Finanzas     | 192.168.10.192          | /27  | 30                |\n| Reserva      | 192.168.10.224          | /27  | 30                |\n\nTodo el espacio /24 queda distribuido sin solapamiento.\n\n### Caso 2 — Enlace WAN punto a punto\n\nPara conectar dos routers de borde se asigna `10.0.0.0/30`:\n- Dirección de red: `10.0.0.0`\n- Router A: `10.0.0.1`\n- Router B: `10.0.0.2`\n- Broadcast: `10.0.0.3`\n\nSolo 2 hosts útiles; usar /29 desperdiciaría 4 IPs innecesariamente.\n\n### Caso 3 — VPC en AWS con subnetting por tier\n\nUn bloque `10.0.0.0/16` se divide:\n- `10.0.1.0/24` → Capa pública (load balancers): 254 hosts\n- `10.0.2.0/24` → Capa de aplicación: 254 hosts\n- `10.0.3.0/28` → Base de datos (solo 3 instancias RDS): 14 hosts disponibles, mínimo desperdicio\n\n---\n\n## Errores comunes\n\n1. **Olvidar restar 2 al total de IPs.** La dirección de red (todos los bits de host en 0) y la de broadcast (todos en 1) no son asignables. Un /28 tiene 16 IPs pero solo **14 hosts útiles**.\n\n2. **Confundir la máscara con el prefijo.** `/24` es la notación CIDR; `255.255.255.0` es la máscara decimal. Son equivalentes pero no intercambiables en todos los campos de configuración: algunos sistemas operativos esperan la máscara decimal y otros aceptan solo el prefijo CIDR.\n\n3. **Intentar subdividir un /24 en rangos no alineados a potencias de 2.** Las subredes deben empezar en múltiplos de su tamaño de bloque. Por ejemplo, un /26 empieza en .0, .64, .128 o .192 — nunca en .100.\n\n4. **Usar /31 sin considerar el contexto.** El RFC 3021 permite /31 para enlaces punto a punto (2 IPs, 0 broadcast, 0 red), pero muchos dispositivos legacy no lo soportan. En ese escenario, /30 es la opción más segura y portable.\n\n5. **Calcular subredes en /24 para prefijos menores a /24.** La fórmula `2^(n−24)` solo es válida para n ≥ 24. Para un /22 (que contiene 4 bloques /24), el razonamiento es inverso.\n\n---\n\n## Calculadoras relacionadas\n\nSi estás diseñando o analizando una red completa, estas herramientas te van a complementar:\n\n- [Calculadora de tiempo de transferencia de archivos por red LAN](/calculadora-transferencia-archivo-red-lan-tiempo) — estimá cuánto tarda en copiarse un archivo según el ancho de banda disponible en tu subred.\n- [Calculadora de ganancia de amplificador operacional](/calculadora-amplificador-operacional-ganancia) — útil al diseñar la electrónica de interfaces de red o señales analógicas en sistemas embebidos conectados en red.\n- [Calculadora de distancia hiperfocal de lente](/calculadora-distancia-hiperfocal-lente) — para sistemas de videovigilancia IP donde el cálculo óptico se complementa con el diseño de la red de cámaras.\n- [Calculadora de filamento 3D necesario para un modelo](/calculadora-filamento-3d-necesario-modelo) — cuando imprimís carcasas o racks para equipamiento de red diseñados en casa.\n",
   "faq": [
     {
-      "q": "¿Cuándo /30?",
-      "a": "4 direcciones, 2 útiles: enlaces punto-a-punto."
+      "q": "¿Qué diferencia hay entre /24 y 255.255.255.0?",
+      "a": "Son exactamente lo mismo expresado de forma distinta. La notación CIDR /24 indica que los primeros 24 bits son el prefijo de red; al escribirlos como máscara decimal resulta 11111111.11111111.11111111.00000000, que es 255.255.255.0. Ambos se usan indistintamente según el sistema: Linux y Cisco IOS aceptan CIDR; Windows Server a veces requiere la máscara decimal en algunos campos de configuración GUI."
     },
     {
-      "q": "¿VLSM?",
-      "a": "Subnetting de longitud variable."
+      "q": "¿Por qué se restan 2 al total de direcciones IP de una subred?",
+      "a": "En toda subred IPv4 convencional (RFC 950), la primera dirección (todos los bits de host en 0) identifica la **red** y no puede asignarse a ningún dispositivo. La última dirección (todos los bits de host en 1) es el **broadcast**, que se usa para enviar paquetes a todos los hosts del segmento. Por eso un /28 con 16 IPs totales solo tiene 14 asignables a hosts reales."
     },
     {
-      "q": "¿IPv6?",
-      "a": "Más abundante: /64 típico per LAN."
+      "q": "¿Para qué sirve un /30 y cuándo conviene usarlo?",
+      "a": "El /30 provee exactamente **2 hosts útiles** (4 IPs − 2 reservadas) y es el prefijo más pequeño recomendado para enlaces punto a punto entre routers (WAN, uplinks entre switches de core). Usar /29 o mayor en ese contexto desperdiciaría IPs; usar /31 puede generar incompatibilidades con hardware antiguo que no implementa el RFC 3021. Es la opción estándar en entornos Cisco, MikroTik y Juniper para interconexión de equipos."
     },
     {
-      "q": "¿Broadcast?",
-      "a": "Última IP de la subred."
+      "q": "¿Cuántas subredes /28 entran en un bloque /24?",
+      "a": "Usando la fórmula `2^(28−24) = 2^4 = **16 subredes /28**` dentro de un /24. Cada una tiene 16 IPs y 14 hosts útiles. Esto es útil, por ejemplo, en un edificio con 16 pisos donde cada piso tiene ≤14 dispositivos, y el ISP asignó un único /24 a la empresa."
     },
     {
-      "q": "¿Gateway?",
-      "a": "Típicamente .1 o .254."
+      "q": "¿Qué es CIDR y por qué reemplazó al sistema de clases A, B, C?",
+      "a": "CIDR (Classless Inter-Domain Routing) fue definido en el **RFC 4632** (2006, actualización del RFC 1519 de 1993) para resolver el agotamiento del espacio IPv4 que generaba el sistema de clases. Antes, una red Clase C forzaba exactamente /24 (254 hosts), lo que desperdiciaba IPs si solo necesitabas 10. CIDR permite prefijos de cualquier longitud (/n), optimizando la asignación de bloques y reduciendo las tablas de enrutamiento global mediante la agregación de rutas (supernetting)."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cómo afecta el CIDR a la seguridad de la red?",
+      "a": "Segmentar la red con subredes más pequeñas (principio de **least privilege networking**) limita el alcance de un broadcast storm o un ataque de ARP spoofing al segmento afectado. Por ejemplo, separar los dispositivos IoT en una /28 independiente evita que puedan comunicarse directamente con los servidores en otra subred sin pasar por un firewall. Las ACLs y los security groups de cloud (AWS, Azure) trabajan nativamente con bloques CIDR para definir reglas de tráfico permitido."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿IPv6 también usa notación CIDR?",
+      "a": "Sí. En IPv6 la notación es idéntica (/n) pero sobre 128 bits en lugar de 32. El prefijo estándar para una red doméstica o de empresa es **/64**, que deja 64 bits para hosts — suficiente para 2^64 ≈ 18,4 × 10^18 direcciones por subred. Los ISPs típicamente asignan bloques /48 o /56 a los clientes. La calculadora actual está orientada a IPv4, pero la lógica de bits de prefijo/host es la misma."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué pasa si dos subredes se solapan en una tabla de ruteo?",
+      "a": "Si configurás rutas solapadas (por ejemplo, 192.168.1.0/24 y 192.168.1.0/26 apuntando a interfaces distintas), los routers aplican la regla de **longest prefix match**: el prefijo más específico (más largo) tiene prioridad. Así, el tráfico hacia 192.168.1.10 usaría la ruta /26 (más específica) y el resto del /24 usaría la ruta general. Esto es intencional en diseños avanzados, pero un error de configuración puede generar bucles o tráfico encaminado al gateway incorrecto."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
+      "name": "RFC 4632 — Classless Inter-domain Routing (CIDR): The Internet Address Assignment and Aggregation Plan (IETF)",
+      "url": "https://www.rfc-editor.org/rfc/rfc4632"
     },
     {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "Wikipedia ES — Classless Inter-Domain Routing",
+      "url": "https://es.wikipedia.org/wiki/Classless_Inter-Domain_Routing"
     }
   ],
   "relatedSlugs": [

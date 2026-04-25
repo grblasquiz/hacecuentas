@@ -5,14 +5,13 @@
   "category": "electronica",
   "icon": "⚡",
   "formulaId": "velocidad-usb-transferencia-archivo",
-  "intro": "A eletrônica básica é regida pelas leis de Ohm, Kirchhoff e princípios de semicondutores. Os cálculos de resistência, potência, voltagem e amperagem são a base para projetar e manter circuitos. Calcule o tempo de transferência USB 2.0/3.0/3.1/3.2/4.0 para um arquivo de tamanho determinado. Consideramos a velocidade real (~70% da teórica). Os valores estão atualizados para 2026 e são revisados periodicamente para mantê-lo informado.",
-  "keyTakeaway": "**t = tamanho / velocidade_real**. USB 2.0: ~35 MB/s real (480 Mbps). USB 3.0: ~400 MB/s. USB 4: ~4 GB/s. A velocidade real é 70% da teórica.",
+  "intro": "Esta calculadora estima o **tempo necessário para transferir um arquivo via USB**, levando em conta o tamanho do arquivo em GB e a versão do padrão USB utilizado. A fórmula central é: **Tempo (s) = Tamanho do arquivo (MB) ÷ Velocidade real (MB/s)**. A velocidade real praticada é tipicamente entre 40% e 60% da velocidade teórica máxima do padrão, devido a overhead de protocolo, latência do controlador e limitações do armazenamento. Use esta calculadora ao planejar backups, transferências de mídia em alta resolução, migrações de dados entre dispositivos ou ao comparar versões USB antes de comprar um hub ou pen drive.",
+  "keyTakeaway": "**Tempo (s) = Tamanho (MB) ÷ Velocidade real (MB/s)** — Ex.: 10 GB via USB 3.0 (velocidade real ~400 MB/s) = 10.000 MB ÷ 400 MB/s ≈ **25 segundos**. USB 2.0 levaria o mesmo arquivo em ~200 s (velocidade real ~50 MB/s).",
   "useCases": [
-    "Design e análise de circuitos que envolvem calculadora de tempo de transferência por USB",
-    "Validar cálculos teóricos antes de montar o circuito",
-    "Ensino de eletrônica básica e avançada",
-    "Estimar parâmetros para projetos de microcontroladores (Arduino, ESP32, STM32)",
-    "Resolução de problemas em circuitos existentes"
+    "Fazer backup de 500 GB de fotos e vídeos de um HD externo para outro via USB 3.1, estimando se a transferência termina antes de uma viagem.",
+    "Avaliar quanto tempo levará para copiar um projeto de vídeo 4K de 80 GB de uma câmera para um notebook usando USB-C (USB 3.2 Gen 2).",
+    "Comparar o tempo de transferência entre usar um pen drive USB 2.0 antigo versus um USB 3.0 moderno ao copiar arquivos de instalação de software (~8 GB).",
+    "Dimensionar o tempo de migração de dados de um SSD externo (1 TB) para um novo computador usando Thunderbolt 3 / USB4, calculando a janela de tempo necessária."
   ],
   "fields": [
     {
@@ -76,61 +75,45 @@
     ],
     "result": "10 GB leva ~25 segundos por USB 3.0"
   },
-  "explanation": "A **eletrônica** é regida pelas leis de Ohm, Kirchhoff, Faraday. Aplicar fórmulas evita erros custosos e falhas elétricas.\n\n## Como é calculado\n\nCalcule o tempo de transferência USB 2.0/3.0/3.1/3.2/4.0 para um arquivo de tamanho determinado. Consideramos a velocidade real (~70% da teórica).\n\nEsta calculadora aplica a fórmula com os valores que você inserir, verificando intervalos típicos e alertando para valores fora do razoável.\n\n## Notas finais\n\nEste cálculo é uma referência orientativa. Para decisões críticas (financeiras, médicas, legais), consulte um profissional especializado. Os valores estão atualizados para 2026 e são revisados periodicamente.",
+  "explanation": "## Como se calcula\n\nO tempo de transferência depende do tamanho do arquivo e da **velocidade real efetiva** do padrão USB. A velocidade real é sempre menor que a velocidade teórica máxima (especificação do padrão), pois há perda por overhead de protocolo, encoding 8b/10b ou 128b/132b, latência do controlador e velocidade de leitura/escrita do próprio dispositivo de armazenamento.\n\n```\nTempo (s) = Tamanho do arquivo (MB) / Velocidade real (MB/s)\n\nOnde:\n  Tamanho (MB)        = Tamanho (GB) × 1024\n  Velocidade real     = Velocidade teórica × Fator de eficiência (≈ 40–60%)\n```\n\n**Exemplo prático:**\n- Arquivo: 10 GB → 10 × 1024 = 10.240 MB\n- Padrão: USB 3.0 → Velocidade teórica: 5 Gbps = 625 MB/s → Velocidade real ≈ 400 MB/s\n- Tempo = 10.240 MB ÷ 400 MB/s = **~25,6 segundos**\n\n---\n\n## Tabela de referência\n\n| Versão USB         | Nome Comercial      | Vel. Teórica | Vel. Teórica (MB/s) | Vel. Real Típica (MB/s) | Fator Eficiência |\n|--------------------|---------------------|:------------:|:-------------------:|:-----------------------:|:----------------:|\n| USB 1.1            | USB Full-Speed      | 12 Mbps      | 1,5 MB/s            | 1,0 MB/s                | ~67%             |\n| USB 2.0            | USB High-Speed      | 480 Mbps     | 60 MB/s             | 25–45 MB/s              | ~50–75%          |\n| USB 3.0 / 3.1 Gen1 | USB SuperSpeed      | 5 Gbps       | 625 MB/s            | 300–450 MB/s            | ~50–70%          |\n| USB 3.1 Gen 2      | USB SuperSpeed+     | 10 Gbps      | 1.250 MB/s          | 700–900 MB/s            | ~60–70%          |\n| USB 3.2 Gen 2×2    | USB SuperSpeed 20G  | 20 Gbps      | 2.500 MB/s          | 1.500–2.000 MB/s        | ~60–80%          |\n| USB4 Gen 3×2       | USB4 40G            | 40 Gbps      | 5.000 MB/s          | 3.000–4.000 MB/s        | ~60–80%          |\n| Thunderbolt 3/4    | TB3 / TB4           | 40 Gbps      | 5.000 MB/s          | 2.500–3.800 MB/s        | ~50–75%          |\n\n> Velocidades reais variam também conforme o dispositivo de armazenamento (ex.: pen drive com flash lento pode limitar a 30 MB/s mesmo em porta USB 3.0).\n\n---\n\n## Casos típicos\n\n**Caso 1 – Pen drive USB 2.0, arquivo de 8 GB**\n- Tamanho: 8.192 MB\n- Velocidade real: 35 MB/s (USB 2.0 típico)\n- Tempo = 8.192 ÷ 35 ≈ **234 segundos (~3 min 54 s)**\n\n**Caso 2 – HD externo USB 3.0, backup de 500 GB**\n- Tamanho: 512.000 MB\n- Velocidade real: 120 MB/s (limitado pela leitura mecânica do HD, não pelo USB)\n- Tempo = 512.000 ÷ 120 ≈ **4.267 segundos (~71 minutos)**\n- Nota: o gargalo aqui é o HD (leitura ~120 MB/s), não o USB 3.0 (que suporta até 450 MB/s).\n\n**Caso 3 – SSD externo USB 3.2 Gen 2, migração de 1 TB**\n- Tamanho: 1.048.576 MB\n- Velocidade real: 850 MB/s\n- Tempo = 1.048.576 ÷ 850 ≈ **1.234 segundos (~20 minutos)**\n\n---\n\n## Erros comuns\n\n1. **Confundir bits com bytes:** A velocidade USB é anunciada em Gbps (gigabits por segundo). Para converter para MB/s, divida por 8. USB 3.0 = 5 Gbps ÷ 8 = 625 MB/s teórico — não 5.000 MB/s.\n\n2. **Ignorar o gargalo do dispositivo:** Uma porta USB 3.0 suporta até 625 MB/s, mas um HD mecânico lê a ~100–150 MB/s. A velocidade real será sempre limitada pelo componente mais lento da cadeia.\n\n3. **Assumir que USB 3.0 = 10× mais rápido que USB 2.0 na prática:** Teoricamente a razão é ~10×, mas na prática com pen drives baratos a diferença pode ser de apenas 2–3×, pois o flash interno do pen drive é o gargalo.\n\n4. **Não considerar o overhead de protocolo:** O encoding 8b/10b (usado no USB 3.0) consome 20% da banda teórica imediatamente, antes de qualquer outra perda. O USB 3.1 Gen 2 usa 128b/132b, com overhead de apenas ~3%.\n\n5. **Usar a versão do cabo em vez da versão da porta:** Um cabo USB 3.0 ligado a uma porta USB 2.0 vai operar na velocidade USB 2.0. Sempre verifique a versão da porta no computador (geralmente identificada pela cor azul para USB 3.0).\n\n---\n\n## Calculadoras relacionadas\n\nNo momento não há calculadoras relacionadas disponíveis no catálogo. Explore as demais ferramentas em [Hacé Cuentas](/) para conversões, cálculos de rede e eletrônica.",
   "faq": [
     {
-      "q": "Por que a velocidade real é menor que a velocidade teórica?",
-      "a": "O overhead do protocolo, controle de fluxo, CRC e codificação 8b/10b ou 128b/132b reduzem a velocidade. Aproximadamente 70% do teórico é alcançado na prática."
+      "q": "Qual é a diferença entre USB 3.0, USB 3.1 e USB 3.2?",
+      "a": "Todos fazem parte da mesma família 'USB SuperSpeed', renomeada pelo USB Implementers Forum (USB-IF). USB 3.0 é o mesmo que USB 3.1 Gen 1 e USB 3.2 Gen 1×1 — todos com 5 Gbps teóricos. USB 3.1 Gen 2 = USB 3.2 Gen 2×1 = 10 Gbps. USB 3.2 Gen 2×2 usa dois canais simultâneos para atingir 20 Gbps. A confusão de nomes é intencional pelos fabricantes — sempre verifique os Gbps reais."
     },
     {
-      "q": "USB-C é o mesmo que USB 4?",
-      "a": "Não. USB-C é apenas o conector físico. USB 4 é o protocolo de comunicação, 30 vezes mais rápido que USB 2.0."
+      "q": "Por que a velocidade real é menor que a velocidade teórica do USB?",
+      "a": "Existem três causas principais: (1) **Overhead de protocolo** — o USB 3.0 usa encoding 8b/10b, que consome 20% da banda só para sincronização; (2) **Latência do controlador** — o chipset do dispositivo introduz pausas; (3) **Limitação do storage** — pen drives baratos têm flash NAND com escrita de 10–30 MB/s, independente da versão USB. Na prática, espera-se 50–70% da velocidade teórica em condições ideais."
     },
     {
-      "q": "Qual é a diferença entre Thunderbolt e USB 4?",
-      "a": "TB3/TB4 e USB 4 são compatíveis a 40 Gbps, mas Thunderbolt tem certificação mais rigorosa."
+      "q": "Como identifico a versão USB da minha porta?",
+      "a": "No Windows, acesse o Gerenciador de Dispositivos > Controladores USB e veja a descrição. Portas USB 3.x costumam ser identificadas pela cor **azul** internamente, enquanto USB 2.0 são pretas ou brancas. Em Macs, vá em 'Sobre este Mac > Relatório do Sistema > USB'. O conector USB-C não indica automaticamente a versão — pode ser USB 2.0 a USB4, dependendo do hardware."
     },
     {
-      "q": "A qualidade do cabo afeta a velocidade?",
-      "a": "Muito. Um cabo USB-C barato pode ser apenas USB 2.0 internamente. Procure por certificação 'USB-IF Certified' ou 'Thunderbolt 3'."
+      "q": "Um cabo USB influencia a velocidade de transferência?",
+      "a": "Sim, diretamente. Um cabo USB 2.0 limita qualquer transferência a 480 Mbps mesmo que a porta e o dispositivo sejam USB 3.0. Cabos USB 3.x têm mais fios internos (9 fios vs. 4 no USB 2.0) para suportar o SuperSpeed. Para USB 3.2 Gen 2×2 e USB4, o cabo certificado é obrigatório — cabos genéricos podem causar quedas de velocidade ou falha de conexão."
     },
     {
-      "q": "Quanto tempo leva para transferir 100 GB por USB 3.0?",
-      "a": "Aproximadamente 4 minutos e 10 segundos. Em USB 3.1, cerca de 2 minutos. Em USB 4, menos de 15 segundos."
+      "q": "Qual é a velocidade máxima real que posso esperar de um pen drive USB 3.0 moderno?",
+      "a": "A maioria dos pen drives USB 3.0 de mercado (marcas como SanDisk Ultra, Kingston DataTraveler) alcança **80–150 MB/s de leitura** e **30–80 MB/s de escrita**, muito abaixo dos 625 MB/s teóricos. Modelos premium (ex.: SanDisk Extreme Pro) chegam a **420 MB/s de leitura**. Para velocidades próximas ao máximo do USB 3.0, utilize SSDs externos com enclosure USB 3.0/3.1."
     },
     {
-      "q": "A calculadora é gratuita?",
-      "a": "Sim, todas as nossas calculadoras são gratuitas e não requerem registro."
+      "q": "Transferência de 1 TB leva quanto tempo por USB 3.0 versus USB 2.0?",
+      "a": "Com velocidade real de 400 MB/s (USB 3.0 + SSD externo): 1.048.576 MB ÷ 400 = **~2.621 s (~44 minutos)**. Com USB 2.0 a 40 MB/s: 1.048.576 ÷ 40 = **~26.214 s (~7 horas e 17 minutos)**. A diferença prática é de ~10×, confirmando a vantagem do USB 3.0 para grandes volumes de dados."
     },
     {
-      "q": "Os resultados são precisos?",
-      "a": "São orientativos. Usamos fórmulas padronizadas validadas internacionalmente. Para casos críticos, consulte um profissional."
+      "q": "O USB4 é compatível com dispositivos USB 3.0 e 2.0 mais antigos?",
+      "a": "Sim. O USB4 é retrocompatível com USB 3.2, USB 3.1, USB 3.0 e USB 2.0. Ao conectar um dispositivo USB 2.0 em uma porta USB4, a transferência ocorrerá na velocidade USB 2.0 (até 480 Mbps). O USB4 também é compatível com Thunderbolt 3 e 4 em termos de conector (USB-C), mas não necessariamente em protocolo — verifique as especificações do fabricante."
     },
     {
-      "q": "Vocês armazenam meus dados?",
-      "a": "Não. Os cálculos são realizados no seu navegador. Não enviamos dados para nenhum servidor."
-    },
-    {
-      "q": "Funciona para USB Tipo-C?",
-      "a": "Sim. O tipo de conector (USB-A, USB-B, USB-C) não afeta a velocidade. O que importa é a versão do protocolo (USB 2.0, 3.0, 4.0, etc)."
-    },
-    {
-      "q": "Posso usar em dispositivos móveis?",
-      "a": "Sim, funciona em qualquer navegador — PC, tablet ou smartphone."
+      "q": "Por que meu HD externo é mais lento que a porta USB 3.0 mesmo conectado corretamente?",
+      "a": "HDs mecânicos (HDD) têm velocidade de leitura sequencial de **80–200 MB/s** por limitações físicas das bandejas magnéticas, independentemente da interface USB. A porta USB 3.0 suporta até ~450 MB/s reais, portanto o gargalo é sempre o HD. Para aproveitar o USB 3.0 ao máximo, utilize SSDs externos, que chegam a **400–900 MB/s** dependendo do modelo."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
-    },
-    {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "USB Implementers Forum – USB 3.2 Specification (Wikipedia PT)",
+      "url": "https://pt.wikipedia.org/wiki/USB"
     }
   ],
   "slug": "velocidade-usb-transferencia-arquivo",

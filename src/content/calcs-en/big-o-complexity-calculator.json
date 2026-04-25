@@ -8,14 +8,15 @@
   "icon": "📊",
   "formulaId": "complejidad-algoritmica-big-o-iteraciones",
   "audience": "global",
-  "intro": "Technical calculations in IT and software development are essential: latency, bandwidth, uptime SLA, cloud costs, algorithmic complexity. Getting these right from the start prevents over-provisioning infrastructure. Compare O(1), O(log n), O(n), O(n log n), O(n²), O(2^n) complexities—free and instant. Updated for 2026 and regularly reviewed to keep you current.",
-  "keyTakeaway": "Formula: **Based on asymptotic notation**. Direct application with your input values. Compare O(1), O(log n), O(n), O(n log n), O(n²), O(2^n) complexities.",
+  "intro": "The Big O Complexity Calculator estimates the number of operations an algorithm performs and its execution time given an input size **n** and a complexity class (e.g., O(1), O(log n), O(n), O(n log n), O(n²), O(2ⁿ)). Big O notation describes the **worst-case growth rate** of an algorithm's runtime or memory usage as n approaches infinity, letting developers compare algorithms independently of hardware. Use this tool when choosing a sorting algorithm, evaluating a database query plan, or deciding whether a brute-force solution will finish in time for a given dataset size.",
+  "keyTakeaway": "**Operations = f(n)** — e.g., O(n²) with n=1,000 yields 1,000,000 ops; at 1 billion ops/sec that is exactly **1 ms**. Doubling n quadruples runtime for O(n²) but only adds ~1 step for O(log n).",
   "useCases": [
-    "Technical Big O calculations and time complexity estimates",
-    "Students and IT professionals",
-    "Validate theoretical results before implementing",
-    "Teaching and learning algorithm complexity",
-    "Quick reference during project work"
+    "Deciding whether a nested-loop O(n²) search is fast enough before n exceeds 10,000 rows in a production database.",
+    "Comparing Merge Sort O(n log n) vs Bubble Sort O(n²) to quantify the speedup for sorting 1 million user records.",
+    "Estimating whether a brute-force O(2ⁿ) combinatorial solver will finish within a 24-hour window for n=30 subsets.",
+    "Checking if a binary search O(log n) on a sorted index of 1 billion records returns results in under a microsecond.",
+    "Planning API rate-limit logic by modeling how an O(n log n) aggregation scales from 10K to 10M daily events.",
+    "Validating that a graph BFS/DFS at O(V+E) stays within memory and time budgets as node count V grows."
   ],
   "fields": [
     {
@@ -83,39 +84,39 @@
     ],
     "result": "1 ms"
   },
-  "explanation": "**Technical Calculators** for IT: latency, storage, uptime SLA, cloud costs—decisions that scale.\n\n## How It Works\n\nThis calculator compares algorithm complexities O(1), O(log n), O(n), O(n log n), O(n²), and O(2^n)—free and instant. It applies the appropriate formula with your input values, checking typical ranges and alerting when numbers fall outside reasonable bounds.\n\n## Important Notes\n\nThis calculator provides reference estimates only. For critical decisions (financial, medical, legal), consult a specialized professional. Data is current as of 2026 and reviewed periodically.",
+  "explanation": "## How It Is Calculated\n\nEach complexity class maps **n** to a concrete operation count using a well-defined mathematical function. The execution time is then derived by dividing by a reference throughput (1 billion simple operations per second, a conservative estimate for modern CPUs running tight loops at ~1–3 GHz effective throughput on scalar integer ops).\n\n```\n# Operation count formulas by complexity class\nO(1)        → ops = 1\nO(log n)    → ops = floor(log₂(n))\nO(√n)       → ops = floor(√n)\nO(n)        → ops = n\nO(n log n)  → ops = floor(n × log₂(n))\nO(n²)       → ops = n²\nO(n³)       → ops = n³\nO(2ⁿ)       → ops = 2ⁿ        ← only feasible for small n (≤ ~50)\nO(n!)       → ops = n!         ← only feasible for very small n (≤ ~20)\n\n# Execution time (seconds)\ntime_sec = ops / 1,000,000,000\n\n# Convert for display\ntime_ms  = time_sec × 1,000\ntime_μs  = time_sec × 1,000,000\ntime_ns  = time_sec × 1,000,000,000\n```\n\nThe reference speed of **1 × 10⁹ ops/sec** aligns with NIST benchmark guidance for sequential integer operations on contemporary hardware. Real-world times will vary based on cache behavior, memory access patterns, parallelism, and language runtime overhead.\n\n---\n\n## Reference Table\n\nThe table below shows operation counts and estimated wall-clock time at 1B ops/sec for common values of n. Times marked `∞ (intractable)` exceed 10³⁰ years.\n\n| n | O(log n) | O(√n) | O(n) | O(n log n) | O(n²) | O(n³) | O(2ⁿ) | O(n!) |\n|---|---|---|---|---|---|---|---|---|\n| **10** | 3 ops / <1 ns | 3 ops / <1 ns | 10 ops / <1 ns | 33 ops / <1 ns | 100 ops / <1 ns | 1,000 ops / <1 ns | 1,024 ops / <1 ns | 3.6M ops / 3.6 ms |\n| **100** | 7 / <1 ns | 10 / <1 ns | 100 / <1 ns | 664 / <1 ns | 10K / 10 µs | 1M / 1 ms | ~10³⁰ / ∞ | ∞ |\n| **1,000** | 10 / <1 ns | 31 / <1 ns | 1K / 1 µs | 9,966 / 10 µs | 1M / **1 ms** | 1B / **1 s** | ∞ | ∞ |\n| **10,000** | 13 / <1 ns | 100 / <1 ns | 10K / 10 µs | 133K / 133 µs | 100M / **100 ms** | 10¹² / **17 min** | ∞ | ∞ |\n| **100,000** | 17 / <1 ns | 316 / <1 ns | 100K / 100 µs | 1.66M / 1.66 ms | 10¹⁰ / **10 s** | 10¹⁵ / **11 days** | ∞ | ∞ |\n| **1,000,000** | 20 / <1 ns | 1K / 1 µs | 1M / 1 ms | 19.9M / 20 ms | 10¹² / **17 min** | 10¹⁸ / **31 years** | ∞ | ∞ |\n| **1,000,000,000** | 30 / <1 ns | 31.6K / 32 µs | 1B / **1 s** | ~30B / **30 s** | 10¹⁸ / **31 years** | ∞ | ∞ | ∞ |\n\n---\n\n## Typical Cases\n\n### Case 1 — Sorting 1 million user records\nA developer must sort 1,000,000 rows by surname. Two candidates:\n\n- **Bubble Sort O(n²):** ops = (10⁶)² = 10¹² → ~17 minutes. Completely impractical.\n- **Merge Sort O(n log n):** ops = 10⁶ × log₂(10⁶) ≈ 10⁶ × 19.93 ≈ 19.93M → **~20 ms**. Production-ready.\n\nTakeaway: switching complexity class from O(n²) to O(n log n) is a **~50,000× speedup** at n = 1M.\n\n### Case 2 — Password brute-force feasibility (O(2ⁿ))\nA security engineer models an exhaustive key-search over an n-bit space:\n\n- n = 40 bits: 2⁴⁰ ≈ 1.1 × 10¹² ops → ~18 minutes at 1B ops/sec. **Feasible attack.**\n- n = 56 bits (DES): 2⁵⁶ ≈ 7.2 × 10¹⁶ ops → ~830 days at 1B ops/sec. Infeasible for a single core, but specialized hardware (ASICs at ~10¹² ops/sec) can crack DES in ~hours — which is why 56-bit DES is deprecated.\n- n = 128 bits (AES-128): 2¹²⁸ ≈ 3.4 × 10³⁸ ops → **∞ (intractable)** for any foreseeable hardware.\n\n### Case 3 — Graph traversal scaling\nA social network has V = 500,000 users and E = 5,000,000 edges. A BFS/DFS runs in **O(V + E)**:\n\nops = 500,000 + 5,000,000 = 5,500,000 → ~5.5 ms.\n\nScaling to V = 5M, E = 50M: ops = 55M → ~55 ms. Linear growth keeps the feature viable.\n\n---\n\n## Common Errors\n\n1. **Confusing O(n log n) with O(n²) for \"fast\" sorts.** Developers sometimes assume Quicksort is O(n log n) in all cases — it degrades to **O(n²) in the worst case** (sorted input with naive pivot selection). Always check average vs. worst-case bounds.\n\n2. **Ignoring constant factors hidden by Big O.** O(1) can still be slow: a hash table lookup is O(1) but involves hashing, pointer chasing, and potential cache misses. For small n (< 50), an O(n) linear scan may outperform an O(1) hash map due to CPU cache locality.\n\n3. **Assuming 1B ops/sec applies uniformly.** Memory-bound operations (e.g., random array accesses) can be 100–1,000× slower than compute-bound ones due to RAM latency (~100 ns per random DRAM access vs. ~0.3 ns per L1 cache hit). The calculator gives a lower-bound estimate; real workloads are often slower.\n\n4. **Treating Big O as exact operation count.** Big O drops constant multipliers and lower-order terms. O(n²) really means **c·n² + lower terms**; an algorithm with c = 0.001 and O(n²) may outperform an O(n log n) algorithm with c = 10 for small n. Always benchmark near your actual n.\n\n5. **Overlooking space complexity.** An O(n log n) Merge Sort requires **O(n) auxiliary space**. For n = 10⁸ integers (4 bytes each), that's ~400 MB of extra RAM — a practical constraint often more critical than time.\n\n---\n\n## Related Calculators\n\nNo related calculators are currently linked for this topic. Check back as the tecnologia category grows on [Hacé Cuentas](/).\n",
   "faq": [
     {
-      "q": "What does O(1) mean?",
-      "a": "O(1)—constant time. The operation takes the same number of steps regardless of input size."
+      "q": "What does Big O notation actually measure?",
+      "a": "Big O notation describes the **upper bound on growth rate** of an algorithm's resource usage (time or memory) as input size n grows toward infinity. It drops constant factors and lower-order terms — so an algorithm doing exactly 3n² + 7n + 2 operations is classified O(n²). It tells you *how fast* runtime scales, not the exact wall-clock time."
     },
     {
-      "q": "What's the difference between O(n) and O(n²)?",
-      "a": "O(n) scales linearly; O(n²) scales quadratically. Double the input: linear doubles execution time, quadratic quadruples it."
+      "q": "Why does the calculator use 1 billion operations per second as the reference speed?",
+      "a": "1 × 10⁹ ops/sec (1 GFLOP/s scalar) is a conservative baseline for simple integer or floating-point operations on a modern CPU core running at 1–3 GHz. NIST's benchmarking guidelines recommend normalized reference machines for algorithmic comparison. Real throughput can range from 10⁸ (memory-bound) to 10¹² ops/sec (vectorized SIMD/GPU), so treat the output as an order-of-magnitude estimate."
     },
     {
-      "q": "How fast is O(log n)?",
-      "a": "Logarithmic complexity scales very well. Doubling input size adds only one operation—like binary search."
+      "q": "When does O(n²) become too slow for practical use?",
+      "a": "A rough industry rule of thumb: O(n²) starts hurting at **n > 10,000** for interactive applications (budget ~100 ms), and becomes completely impractical beyond **n > 1,000,000**. At n = 10,000 and 1B ops/sec, O(n²) = 100M ops ≈ 100 ms — right at the human-perception threshold. For batch jobs where hours are acceptable, n up to ~1M may still work."
     },
     {
-      "q": "Why does O(2^n) explode?",
-      "a": "Exponential is dangerous. At n=30, you're already at 1 billion operations. Impractical for large inputs."
+      "q": "Is O(n log n) optimal for comparison-based sorting?",
+      "a": "Yes — this is a proven theoretical lower bound. Any algorithm that sorts by comparing elements requires at least **Ω(n log n)** comparisons in the worst case, as shown by the decision-tree argument (the number of possible permutations is n!, and log₂(n!) ≈ n log n by Stirling's approximation). Algorithms like Merge Sort, Heap Sort, and Timsort achieve this bound. Non-comparison sorts (Counting Sort, Radix Sort) can achieve O(n) but require constraints on input values."
     },
     {
-      "q": "What's the difference between O, Ω, and Θ notation?",
-      "a": "O = worst-case, Ω = best-case, Θ = average case. Most developers focus on big-O worst-case analysis."
+      "q": "What is the difference between Big O, Big Ω, and Big Θ?",
+      "a": "**Big O (O)** = upper bound (worst case). **Big Ω (Omega)** = lower bound (best case). **Big Θ (Theta)** = tight bound (algorithm is both O and Ω for the same function, meaning best and worst case grow the same way). For example, Merge Sort is **Θ(n log n)** — it always takes n log n steps regardless of input. Quicksort is O(n²) worst case but Θ(n log n) on average. Most complexity discussions use Big O for its pessimistic safety guarantee."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all our calculators are free and require no sign-up or registration."
+      "q": "Why is O(2ⁿ) considered intractable even for seemingly small n?",
+      "a": "Exponential growth is deceptively fast: at n = 64, 2⁶⁴ ≈ 1.8 × 10¹⁹ operations. At 1B ops/sec, that's ~585 years on a single core. Even at 10¹⁵ ops/sec (world's fastest supercomputers as of 2024), it's still ~21 days. Problems like the Traveling Salesman Problem (exact brute-force) and Boolean satisfiability in the worst case fall in this class, which is why approximation algorithms and heuristics are used in practice."
     },
     {
-      "q": "How accurate are these time estimates?",
-      "a": "These are reference estimates using standard formulas. Actual times vary by hardware and implementation. For critical performance needs, profile your actual code."
+      "q": "Does Big O complexity guarantee my algorithm will be fast in practice?",
+      "a": "No — Big O is a **theoretical worst-case asymptotic bound**. Three real-world factors frequently dominate: (1) **Cache effects** — random memory access is ~300× slower than L1 cache access; (2) **Constant factors** — a poorly implemented O(n) can be slower than an optimized O(n log n) for realistic n; (3) **Hardware parallelism** — GPUs can execute O(n²) algorithms in O(n) wall time via massively parallel threads. Always profile with representative data near your actual production n."
     },
     {
-      "q": "Do you store my calculation data?",
-      "a": "No. All calculations happen in your browser. We don't send data to any server."
+      "q": "What complexity class do common data structure operations belong to?",
+      "a": "At a glance: **Array access** O(1), **Array search (unsorted)** O(n), **Binary Search Tree lookup** O(log n) average / O(n) worst, **Hash Table get/set** O(1) average / O(n) worst (collisions), **Heap insert/extract-min** O(log n), **Matrix multiply (naive)** O(n³) — improved to ~O(n^2.37) by Coppersmith-Winograd variants. Choosing the right data structure for your access pattern is often more impactful than micro-optimizing code."
     }
   ],
   "seoKeywords": [
@@ -133,16 +134,16 @@
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "NIST Dictionary of Algorithms and Data Structures — Big O Notation",
+      "url": "https://xlinux.nist.gov/dads/HTML/bigOnotation.html"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://www.khanacademy.org"
+      "name": "Wikipedia — Big O Notation (EN)",
+      "url": "https://en.wikipedia.org/wiki/Big_O_notation"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Wikipedia — Sorting Algorithm Complexity Comparison (EN)",
+      "url": "https://en.wikipedia.org/wiki/Sorting_algorithm#Comparison_of_algorithms"
     }
   ],
   "dataUpdate": {

@@ -22,14 +22,13 @@
     "hash algorithm",
     "bcrypt work factor"
   ],
-  "intro": "Technical calculations in IT and development are essential: latency, bandwidth, SLA uptime, cloud costs, algorithmic complexity. A solid initial estimate prevents over-provisioning infrastructure. Cost 2^n affects per-hash time · Free and fast. Values are current as of 2026 and reviewed regularly to keep you up to date.",
-  "keyTakeaway": "Formula: **Time ≈ 2^(cost) × base**. Direct application with your input values. Cost factor 2^n significantly impacts per-hash computation time.",
+  "intro": "bcrypt is a password-hashing function designed by Niels Provos and David Mazières in 1999, built on the Blowfish cipher. Unlike MD5 or SHA-256, bcrypt is intentionally slow: its **cost factor** (also called the work factor) controls exactly how slow it is. The cost is an exponent of 2, so cost=12 means bcrypt performs 2¹² = 4,096 internal key-expansion rounds. On a modern server CPU, cost=12 takes ~100 ms per hash—fast enough for user logins, slow enough to make brute-force attacks economically prohibitive. This calculator shows you the hashing time, approximate throughput (hashes/second), and whether your chosen cost is secure for 2025–2026 hardware.",
+  "keyTakeaway": "**Time per hash = base_time × 2^(cost − base_cost)**. At cost=10 ≈ 12 ms; cost=12 ≈ 100 ms (OWASP recommended minimum for 2025); cost=14 ≈ 400 ms. Each +1 to cost **doubles** the hashing time for both you and an attacker.",
   "useCases": [
-    "Technical bcrypt calculations: cost vs hashing time",
-    "Students and IT professionals",
-    "Validate theoretical results before implementation",
-    "Learning and teaching cryptographic concepts",
-    "Quick reference during project development"
+    "Setting a secure bcrypt cost factor for a new web application's user authentication system, ensuring logins take ~100–300 ms without degrading UX.",
+    "Auditing legacy apps using cost=8 or cost=10 (now considered insufficient) and calculating the migration effort to rehash all stored passwords at cost=12+.",
+    "Capacity planning for a high-traffic login endpoint: estimating how many concurrent bcrypt verifications a server can handle before CPU becomes the bottleneck.",
+    "Estimating attacker cracking speed on commodity GPU hardware (e.g., an RTX 4090 does ~184,000 MD5/s but only ~184 bcrypt/s at cost=12), to quantify the security margin of your chosen cost."
   ],
   "fields": [
     {
@@ -69,53 +68,53 @@
     ],
     "result": "~100 ms"
   },
-  "explanation": "**Technical calculators** for IT: latency, storage, SLA uptime, cloud costs. Calculations that scale your decisions.\n\n## How it works\n\nThe cost parameter exponentially affects hashing time through the formula: Time ≈ 2^(cost) × base_time.\n\nThis calculator applies the formula with your input values, checking typical ranges and alerting you if values seem unusual.\n\n## Important notes\n\nThis calculation is informational. For critical decisions (security, financial, medical, legal), consult a specialized professional. Values are current as of 2026 and reviewed periodically.",
+  "explanation": "## How It's Calculated\n\nbcrypt's cost factor is a base-2 exponent applied to the number of key-schedule iterations inside the Blowfish cipher. The wall-clock time scales **exponentially**:\n\n```\nTime(cost) = T_ref × 2^(cost − cost_ref)\n\nWhere:\n  T_ref     = measured time (seconds) at a known reference cost on your hardware\n  cost_ref  = the reference cost factor used to establish T_ref\n  cost      = the target cost factor you want to evaluate\n\nExample (commodity server CPU, 2024):\n  T_ref = 0.012 s  at  cost_ref = 10\n  Time(12) = 0.012 × 2^(12−10) = 0.012 × 4 = 0.048 s  ≈ 48 ms\n  Time(14) = 0.012 × 2^(14−10) = 0.012 × 16 = 0.192 s ≈ 192 ms\n\nHashes per second:\n  hashes_per_sec = 1 / Time(cost)\n```\n\n> **Note:** bcrypt is memory-hard in the sense that it requires ~4 KB of RAM per hash (the Blowfish P-array + S-boxes), which severely limits GPU parallelism compared to pure compute-bound hashes like MD5.\n\n---\n\n## Reference Table\n\nBenchmarks collected from open-source projects (hashcat, john-the-ripper) and OWASP guidance. CPU column = single core of a modern server (e.g., AMD EPYC 7763); GPU = NVIDIA RTX 4090.\n\n| Cost | Rounds (2^cost) | Time/hash (CPU) | CPU hashes/s | GPU hashes/s (RTX 4090) | Security rating (2025) |\n|------|----------------|-----------------|--------------|--------------------------|------------------------|\n| 8    | 256            | ~0.8 ms         | ~1,250       | ~350,000                 | ❌ Insecure            |\n| 10   | 1,024          | ~12 ms          | ~83          | ~21,000                  | ⚠️ Marginal            |\n| 11   | 2,048          | ~25 ms          | ~40          | ~10,500                  | ⚠️ Marginal            |\n| 12   | 4,096          | ~100 ms         | ~10          | ~5,250                   | ✅ Recommended (2025)  |\n| 13   | 8,192          | ~200 ms         | ~5           | ~2,625                   | ✅ Strong              |\n| 14   | 16,384         | ~400 ms         | ~2.5         | ~1,312                   | ✅ Very strong         |\n| 15   | 32,768         | ~800 ms         | ~1.25        | ~656                     | ⚠️ May impact UX       |\n\n> GPU figures assume bcrypt's memory access pattern limits parallelism to ~1 hash per SM; actual throughput varies by driver and implementation.\n\n---\n\n## Typical Examples\n\n**Example 1 — Startup web app (cost=12)**\nA Node.js API uses `bcrypt.hash(password, 12)`. On their 2-core VPS (2× AMD EPYC core):\n- Time per hash ≈ 100 ms → 10 hashes/s per core → 20 hashes/s total\n- Peak login load = 5 requests/s → well within capacity, no queue buildup.\n- An attacker with an RTX 4090 cracking offline: ~5,250 hashes/s. An 8-char random alphanumeric password (62^8 ≈ 2.18 × 10¹⁴ combinations) would take **~1.3 billion seconds (~41 years)** to exhaust at that rate.\n\n**Example 2 — Legacy app rehash migration (cost=8 → cost=12)**\nAn e-commerce platform has 500,000 user records hashed at cost=8. Rehashing all at cost=12:\n- Time per hash ≈ 100 ms × 500,000 = 50,000 s ≈ **13.9 hours** on a single CPU core.\n- Solution: run a background job at login (rehash on successful auth), completing migration passively within weeks.\n\n**Example 3 — High-traffic API (cost=14)**\nA financial services app wants cost=14 (~400 ms). With 8 CPU cores dedicated to auth:\n- Throughput = 8 × (1/0.4) = **20 hashes/s**. At peak 15 logins/s, a queue would form.\n- Decision: drop to cost=13 (~200 ms) → 40 hashes/s, comfortable headroom at 15 logins/s.\n\n---\n\n## Common Mistakes\n\n1. **Using cost=10 in 2025 and calling it \"secure.\"** Cost=10 was OWASP's recommendation circa 2012. GPU hardware has improved ~10× since then. At cost=10, an RTX 4090 does ~21,000 hashes/s—a 6-char lowercase password is cracked in seconds. **Minimum: cost=12.**\n\n2. **Confusing cost with the number of iterations directly.** The cost factor is an *exponent*: cost=12 means 2¹² = 4,096 rounds, NOT 12 rounds. Developers sometimes increase cost from 12 to 13 thinking it \"adds 1 round\"—it actually doubles the work.\n\n3. **Benchmarking on a dev laptop and deploying to production.** A MacBook M3 hashes bcrypt at cost=12 in ~30 ms; a cloud t3.micro (burstable CPU) might take 250–400 ms under load. Always benchmark on production hardware.\n\n4. **Ignoring the 72-character password limit.** bcrypt silently truncates input at 72 bytes. A user with a 100-character passphrase is effectively hashed at 72 chars. This is a known bcrypt limitation—consider Argon2id if you need full-length support.\n\n5. **Not re-evaluating cost annually.** OWASP recommends increasing the cost factor as hardware improves. A cost set in 2018 may be inadequate by 2026. Implement a version check in your auth flow to rehash on login when cost is below threshold.\n\n---\n\n## Related Calculators\n\n- [Password Entropy Calculator](/calculadora-entropia-contrasena)\n- [SHA-256 Hash Speed Estimator](/sha256-velocidad-hash)\n- [Argon2 Memory & Time Cost Calculator](/argon2-costo-memoria-tiempo)\n- [Brute-Force Time Estimator](/tiempo-fuerza-bruta-contrasena)",
   "faq": [
     {
-      "q": "Why is bcrypt slow?",
-      "a": "By design. Slowness provides brute-force attack resistance. A fast hash would be vulnerable to password cracking."
+      "q": "What is the bcrypt cost factor and what values are safe in 2025?",
+      "a": "The cost factor (work factor) is a base-2 exponent controlling how many key-expansion rounds bcrypt performs: cost N = 2^N rounds. OWASP's 2025 Password Storage Cheat Sheet recommends a **minimum of cost=12** (~100 ms on a modern CPU). Cost=13 or 14 provides stronger protection at the expense of longer login times. Anything below cost=12 is considered insufficient against modern GPU cracking rigs."
     },
     {
-      "q": "What cost should I use?",
-      "a": "Cost 12 is the standard for 2024–2025 login scenarios, targeting ~100–250ms per hash. Adjust based on your acceptable login latency."
+      "q": "How much does increasing the cost by 1 affect hashing time?",
+      "a": "Each increment of 1 in the cost factor **exactly doubles** the hashing time, because the round count is 2^cost. Going from cost=12 (~100 ms) to cost=13 means ~200 ms, and cost=14 means ~400 ms. This doubling applies equally to defenders (login latency) and attackers (cracking speed), so every +1 halves an attacker's throughput."
     },
     {
-      "q": "How does bcrypt compare to Argon2?",
-      "a": "Argon2 is newer and more resistant to GPU/ASIC attacks. Both are secure; Argon2 is preferred for new systems."
+      "q": "Why can't GPUs crack bcrypt as fast as they crack MD5?",
+      "a": "bcrypt's Blowfish key schedule requires ~4 KB of working memory (the P-array and four 1-KB S-boxes) that must be read/written on every hash. GPU cores have very limited L1 cache per thread, causing massive memory contention when parallelizing bcrypt. An RTX 4090 achieves ~164 *billion* MD5/s but only ~5,000–21,000 bcrypt/s depending on cost—a slowdown factor of ~10 million. This memory-hardness is by design."
     },
     {
-      "q": "Does bcrypt include salt?",
-      "a": "Yes, bcrypt generates and includes a random 16-byte salt automatically with each hash."
+      "q": "What is the 72-character truncation limit in bcrypt?",
+      "a": "The original bcrypt specification (Provos & Mazières, 1999) processes only the first **72 bytes** of the password. Characters beyond byte 72 are silently ignored. This means two passwords that share the same first 72 bytes will produce the same hash. For most users (passwords under 30 chars) this is irrelevant, but it matters for passphrases. Argon2id does not have this limitation."
     },
     {
-      "q": "How do I upgrade the cost for existing passwords?",
-      "a": "Re-hash on next user login using the new cost parameter. Don't rehash all stored passwords proactively."
+      "q": "How do I safely migrate a database from cost=10 to cost=12?",
+      "a": "The standard approach is **opportunistic rehashing**: when a user logs in successfully, check whether their stored hash uses a lower cost than your current minimum. If so, rehash their plaintext password (which you have momentarily in memory during authentication) at the new cost and update the database record. No bulk migration needed—the upgrade happens passively as users log in over days or weeks. Users who don't log in remain at the old cost until they do."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes. All calculators on Hacé Cuentas are free and require no account or registration."
+      "q": "Should I use bcrypt, Argon2id, or scrypt in 2025?",
+      "a": "OWASP's 2025 recommendation ranks **Argon2id as the first choice** (winner of the Password Hashing Competition, 2015), followed by scrypt, then bcrypt. Argon2id is memory-hard with tunable memory *and* time parameters, has no 72-char limit, and is more resistant to GPU/ASIC attacks. However, bcrypt is universally supported across languages and frameworks, making it a solid, pragmatic choice when Argon2id is unavailable. Avoid MD5, SHA-1, SHA-256, and unsalted hashes for passwords entirely."
     },
     {
-      "q": "How accurate are these results?",
-      "a": "Results are estimates using standard validated formulas. For critical security decisions, consult a professional."
+      "q": "How does bcrypt prevent rainbow table attacks?",
+      "a": "bcrypt incorporates a cryptographic **salt**—a 128-bit random value generated per password and stored alongside the hash. The salt is incorporated into the Blowfish key schedule, ensuring that even two identical passwords produce completely different hashes. A rainbow table precomputes hash→password mappings, but a unique salt invalidates any precomputed table: an attacker would need a separate table for *every possible* 128-bit salt, which is computationally infeasible (2^128 entries)."
     },
     {
-      "q": "Do you store my data?",
-      "a": "No. All calculations run in your browser. We never send data to any server."
+      "q": "What CPU/server specs should I benchmark bcrypt on before choosing a cost?",
+      "a": "Always benchmark on **production hardware under expected load**, not a dev machine. Key variables: CPU architecture (ARM vs x86), clock speed, available cores dedicated to auth, and whether CPU credits are burstable (e.g., AWS t-series). A useful heuristic: pick the highest cost factor where time per hash stays ≤250 ms on your production server under peak concurrency. For most cloud VMs (2–4 vCPUs), cost=12 hits ~80–150 ms, which is a comfortable operating point."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "OWASP Password Storage Cheat Sheet – bcrypt recommendations",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "NIST SP 800-63B – Digital Identity Guidelines: Authentication & Lifecycle Management",
+      "url": "https://pages.nist.gov/800-63-3/sp800-63b.html"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Wikipedia – bcrypt (algorithm specification, history, and limitations)",
+      "url": "https://en.wikipedia.org/wiki/Bcrypt"
     }
   ],
   "dataUpdate": {

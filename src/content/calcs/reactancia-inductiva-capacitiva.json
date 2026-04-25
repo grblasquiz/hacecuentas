@@ -6,14 +6,14 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "reactancia-inductiva-capacitiva",
-  "intro": "La electrónica básica se rige por leyes de Ohm, Kirchhoff y principios de semiconductores. Cálculos de resistencia, potencia, voltaje y amperaje son la base para diseñar y mantener circuitos. Calculá la reactancia inductiva XL = 2πfL y capacitiva XC = 1/(2πfC) de bobinas y capacitores a cualquier frecuencia. Comparativa y visualización. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "**XL = 2π × f × L** (crece con f). **XC = 1/(2π × f × C)** (decrece con f). A f=0 (DC): inductor = cortocircuito, capacitor = circuito abierto.",
+  "intro": "La reactancia es la oposición que presenta un componente reactivo (bobina o capacitor) al paso de corriente alterna. A diferencia de la resistencia, la reactancia depende de la frecuencia de la señal. La reactancia inductiva (XL) aumenta con la frecuencia según **XL = 2π × f × L**, mientras que la reactancia capacitiva (XC) disminuye con la frecuencia según **XC = 1 / (2π × f × C)**. Ambas se expresan en ohmios (Ω). Esta calculadora es esencial en el diseño de filtros, osciladores LC, fuentes switching y análisis de circuitos de corriente alterna.",
+  "keyTakeaway": "**XL = 2π·f·L** (Ω) y **XC = 1/(2π·f·C)** (Ω). En resonancia XL = XC → f₀ = 1/(2π·√(L·C)). Ejemplo real: L=10 mH, C=1 µF → f₀ ≈ 1591 Hz.",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de reactancia inductiva (xl) y capacitiva (xc)",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Diseñar un filtro pasa-bajos o pasa-altos para audio, eligiendo L y C para que XC o XL dominen en la frecuencia de corte deseada.",
+    "Calcular la frecuencia de resonancia de un circuito LC en un receptor de radio AM/FM para sintonizar una estación específica.",
+    "Dimensionar el banco de capacitores en una instalación eléctrica industrial para compensar la reactancia inductiva de motores y mejorar el factor de potencia.",
+    "Verificar si una bobina de choque (inductor) en una fuente switching bloquea efectivamente el ripple de alta frecuencia (ej. 50 kHz) mientras deja pasar la corriente de DC.",
+    "Determinar el comportamiento de un parlante crossover pasivo, calculando qué reactancia presenta la bobina serie y el capacitor en paralelo a 3 kHz para dividir graves y agudos."
   ],
   "fields": [
     {
@@ -90,53 +90,45 @@
     ],
     "result": "XL=62.8 Ω, XC=159 Ω. Circuito domina capacitivamente."
   },
-  "explanation": "La **electrónica** se rige por leyes de Ohm, Kirchhoff, Faraday. Aplicar fórmulas evita errores costosos y fallos eléctricos.\n\n## Cómo se calcula\n\nCalculá la reactancia inductiva XL = 2πfL y capacitiva XC = 1/(2πfC) de bobinas y capacitores a cualquier frecuencia. Comparativa y visualización.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLas fórmulas fundamentales de la reactancia provienen de las ecuaciones diferenciales de los componentes pasivos en régimen sinusoidal (análisis fasorial):\n\n```\n# Reactancia Inductiva\nXL = 2 × π × f × L\n\n# Reactancia Capacitiva\nXC = 1 / (2 × π × f × C)\n\n# Ratio\nratio = XL / XC\n\n# Frecuencia de resonancia (cuando XL = XC)\nf₀ = 1 / (2 × π × √(L × C))\n\nDonde:\n  f  = frecuencia en Hz\n  L  = inductancia en Henrios (H)   [1 mH = 0.001 H]\n  C  = capacitancia en Faradios (F) [1 µF = 0.000001 F]\n  XL, XC = reactancia en Ohmios (Ω)\n```\n\n> **Nota:** Tanto XL como XC son magnitudes siempre positivas. En el plano complejo de la impedancia, XL se representa como +jXL (parte imaginaria positiva) y XC como −jXC (parte imaginaria negativa).\n\n---\n\n## Tabla de referencia\n\nValores típicos de XL y XC para componentes comunes a distintas frecuencias:\n\n| Frecuencia | L = 10 mH (XL) | L = 100 mH (XL) | C = 10 µF (XC) | C = 1 µF (XC) | C = 100 nF (XC) |\n|------------|----------------|-----------------|----------------|----------------|-----------------|\n| 50 Hz      | 3,14 Ω         | 31,4 Ω          | 318 Ω          | 3 183 Ω        | 31 831 Ω        |\n| 1 kHz      | 62,8 Ω         | 628 Ω           | 15,9 Ω         | 159 Ω          | 1 592 Ω         |\n| 10 kHz     | 628 Ω          | 6 283 Ω         | 1,59 Ω         | 15,9 Ω         | 159 Ω           |\n| 100 kHz    | 6 283 Ω        | 62 832 Ω        | 0,159 Ω        | 1,59 Ω         | 15,9 Ω          |\n| 1 MHz      | 62 832 Ω       | —               | 0,016 Ω        | 0,159 Ω        | 1,59 Ω          |\n\n**Referencia rápida de componentes y frecuencias de resonancia:**\n\n| L        | C        | f₀ resonancia |\n|----------|----------|---------------|\n| 10 mH    | 100 µF   | 159 Hz        |\n| 10 mH    | 1 µF     | 1 592 Hz      |\n| 1 mH     | 100 nF   | 15 915 Hz     |\n| 100 µH   | 10 nF    | 159 kHz       |\n| 10 µH    | 1 nF     | 1,59 MHz      |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Ejemplo del enunciado (f = 1 kHz, L = 10 mH, C = 1 µF)\n```\nXL = 2π × 1000 × 0,010  = 62,8 Ω\nXC = 1 / (2π × 1000 × 0,000001) = 159,2 Ω\nratio = 62,8 / 159,2 = 0,39\n```\n**Interpretación:** XC > XL → el circuito tiene comportamiento **capacitivo dominante** a 1 kHz. La impedancia total (si son serie) es de naturaleza capacitiva.\n\n### Caso 2 — Red eléctrica industrial (f = 50 Hz, L = 100 mH, motor trifásico)\n```\nXL = 2π × 50 × 0,100 = 31,4 Ω\n```\nUn motor con esta inductancia presenta una reactancia de 31,4 Ω. Si la tensión de fase es 220 V, la corriente reactiva sería I = 220 / 31,4 ≈ **7 A reactivos** que no realiza trabajo útil → necesitás capacitores para compensar.\n\n### Caso 3 — Filtro crossover para parlantes a 3 kHz (f = 3 kHz, L = 0,5 mH, C = 5,6 µF)\n```\nXL = 2π × 3000 × 0,0005 = 9,42 Ω   (bobina en serie, filtra agudos del woofer)\nXC = 1 / (2π × 3000 × 0,0000056) = 9,47 Ω   (capacitor en serie, filtra graves del tweeter)\n```\nXL ≈ XC ≈ 9,4 Ω → estamos exactamente en la **frecuencia de corte** del crossover de 2 vías. Perfecto diseño simétrico.\n\n---\n\n## Errores comunes\n\n1. **Olvidar convertir las unidades antes de calcular.** Si ingresás L en milihenrios (mH) sin dividir por 1000, el resultado de XL será 1000 veces mayor al real. Siempre convertí a H y F antes de aplicar la fórmula.\n\n2. **Confundir reactancia con impedancia.** La impedancia Z de un circuito RLC serie es Z = √(R² + (XL − XC)²). La reactancia es solo la parte imaginaria; no es la oposición total al circuito.\n\n3. **Asumir que XC \"bloquea\" DC perfectamente de forma instantánea.** Un capacitor ideal sí bloquea DC en estado estacionario, pero durante el transitorio inicial conduce corriente de carga. El modelo de XC = 1/(2πfC) solo es válido en régimen sinusoidal permanente.\n\n4. **Ignorar la frecuencia de auto-resonancia (SRF) de los componentes reales.** Todo inductor real tiene capacidad parásita y todo capacitor real tiene inductancia parásita. Por encima de la SRF, un \"inductor\" se comporta como capacitor y viceversa. Los datasheets siempre especifican la SRF.\n\n5. **Calcular XL/XC y concluir sobre resonancia sin verificar f₀.** El ratio XL/XC = 1 solo ocurre en f₀ = 1/(2π√LC). Si encontrás ratio ≈ 1 a una frecuencia que no es f₀, revisá los cálculos.\n\n---\n\n## Calculadoras relacionadas\n\nPara un análisis completo de circuitos eléctricos y electrónicos, también podés usar:\n\n- [Calculadora de Ley de Ohm (V, I, R)](/calculadora-ley-ohm-voltaje-corriente-resistencia) — para calcular tensión, corriente y resistencia en CC y CA.\n- [Calculadora de Potencia Eléctrica (P = V·I)](/calculadora-potencia-electrica-p-vi) — para determinar la potencia activa, reactiva y aparente de un circuito.\n- [Calculadora de Resistencia para LED en serie/paralelo](/calculadora-resistencia-led-serie-paralelo) — útil cuando diseñás la etapa de alimentación del circuito.\n- [Calculadora de Divisor de Voltaje con Resistencias](/calculadora-divisor-voltaje-resistencias) — para diseñar redes de polarización que acompañan a filtros reactivos.",
   "faq": [
     {
-      "q": "¿Diferencia con resistencia?",
-      "a": "La resistencia disipa energía como calor. La reactancia almacena energía en campo magnético (L) o eléctrico (C). No disipa — devuelve en cada ciclo."
+      "q": "¿Cuál es la diferencia entre reactancia e impedancia?",
+      "a": "La reactancia (X) es la oposición de un componente puramente reactivo (bobina o capacitor) al paso de corriente alterna, expresada en Ω. La impedancia (Z) es la oposición total del circuito, incluyendo resistencia y reactancia: Z = √(R² + (XL − XC)²). Un circuito con R=10 Ω, XL=20 Ω y XC=5 Ω tiene Z = √(10² + 15²) ≈ 18 Ω, no 35 Ω."
     },
     {
-      "q": "¿XL en DC?",
-      "a": "Cero (cortocircuito). Un inductor en DC estable solo tiene la resistencia del alambre."
+      "q": "¿Por qué XL aumenta con la frecuencia y XC disminuye?",
+      "a": "Un inductor se opone a los cambios de corriente (di/dt). A mayor frecuencia, la corriente cambia más rápido, y el inductor opone más resistencia → XL = 2πfL crece con f. Un capacitor, en cambio, se opone a los cambios de tensión; a mayor frecuencia se recarga más seguido y le resulta más fácil dejar pasar la corriente → XC = 1/(2πfC) decrece con f. Es el comportamiento dual clásico de estos componentes."
     },
     {
-      "q": "¿XC en DC?",
-      "a": "Infinita (circuito abierto). El capacitor se carga y bloquea el paso de corriente continua."
+      "q": "¿Qué pasa exactamente en la frecuencia de resonancia?",
+      "a": "En f₀ = 1/(2π√LC), se cumple XL = XC y las reactancias se cancelan mutuamente. En un circuito RLC serie, la impedancia cae a su mínimo valor (solo la resistencia R), la corriente es máxima y el factor de potencia es 1 (cos φ = 1). En un circuito RLC paralelo ocurre lo contrario: la impedancia sube al máximo. Este fenómeno se usa en sintonizadores de radio, filtros notch y osciladores."
     },
     {
-      "q": "¿Es la impedancia?",
-      "a": "Z = R + jX (resistencia + reactancia compleja). Para inductor puro: Z = jXL. Para capacitor: Z = −jXC."
+      "q": "¿Cómo afecta la reactancia capacitiva al factor de potencia en instalaciones industriales?",
+      "a": "Los motores eléctricos y transformadores son cargas inductivas (XL dominante), lo que genera un desfasaje de corriente que rezaga a la tensión, reduciendo el factor de potencia (cos φ < 1). La norma argentina permite un cos φ mínimo de 0,85 antes de aplicar penalizaciones tarifarias. Instalando bancos de capacitores en paralelo, su XC compensa la XL de las cargas inductivas, acercando cos φ a 1 y reduciendo la factura eléctrica."
     },
     {
-      "q": "¿Por qué desfase?",
-      "a": "En inductor: corriente atrasa 90° al voltaje. En capacitor: corriente adelanta 90°. Energía va y viene cíclicamente."
+      "q": "¿La fórmula XC = 1/(2πfC) es válida para cualquier tipo de señal?",
+      "a": "No. Las fórmulas XL = 2πfL y XC = 1/(2πfC) son válidas únicamente para señales sinusoidales puras en régimen permanente (análisis fasorial). Para señales cuadradas, triangulares o transitorios, se debe usar la transformada de Fourier para descomponer la señal en sus armónicos y calcular la reactancia para cada componente frecuencial por separado, o bien resolver las ecuaciones diferenciales en el dominio del tiempo."
     },
     {
-      "q": "¿Qué pasa en resonancia?",
-      "a": "XL = XC en magnitud pero opuestas en signo. Se cancelan y la impedancia queda solo R (serie) o muy alta (paralelo)."
+      "q": "¿Cómo se mide la reactancia de un componente real en el laboratorio?",
+      "a": "Con un analizador de impedancias (LCR meter) se aplica una señal sinusoidal de frecuencia conocida al componente y se mide la magnitud y fase de la impedancia resultante. Instrumentos como el HIOKI IM3523 o el de bajo costo DE-5000 permiten medir L, C, R, XL, XC, Q y tan δ a frecuencias entre 100 Hz y 100 kHz. Alternativamente, con un osciloscopio de dos canales y una resistencia de referencia en serie podés medir el desfasaje y calcular la reactancia manualmente."
     },
     {
-      "q": "¿Cómo mido en la práctica?",
-      "a": "Medidor RLC específico o usando generador + osciloscopio para medir corriente/voltaje y calcular Z=V/I."
+      "q": "¿Qué es el factor Q y cómo se relaciona con la reactancia?",
+      "a": "El factor de calidad Q indica cuán 'selectivo' o 'puro' es un componente reactivo. Para un inductor: Q = XL / R_serie = (2πfL) / R. Para un capacitor: Q = XC / R_serie = 1 / (2πfC·R). Un inductor con XL = 100 Ω y resistencia de bobinado R = 5 Ω tiene Q = 20. Cuanto mayor el Q, más estrecha es la banda de paso del filtro o mayor la amplificación en resonancia. Componentes de alta calidad para RF tienen Q > 100."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cómo incide la temperatura en los valores de L y C, y por ende en la reactancia?",
+      "a": "La inductancia varía poco con la temperatura en núcleos de aire, pero en núcleos ferrosos la permeabilidad magnética cambia con T, modificando L hasta un ±10% en el rango de −25 °C a +85 °C. Los capacitores cerámicos clase X7R tienen variación de capacitancia de ±15% en ese rango; los clase C0G/NP0 varían solo ±30 ppm/°C. Esto afecta directamente f₀ = 1/(2π√LC) en osciladores de precisión, donde se usan capacitores NP0 y compensación térmica activa para mantener la frecuencia estable."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
-    },
-    {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Wikipedia ES — Reactancia eléctrica",
+      "url": "https://es.wikipedia.org/wiki/Reactancia_el%C3%A9ctrica"
     }
   ],
   "relatedSlugs": [

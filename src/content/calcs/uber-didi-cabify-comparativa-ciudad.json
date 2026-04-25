@@ -7,13 +7,13 @@
   "audience": "global",
   "icon": "🚗",
   "formulaId": "uber-didi-cabify-comparativa-ciudad",
-  "intro": "Esta calculadora te ayuda con un cálculo específico aplicando las fórmulas y referencias más usadas. Precio estimado apps de transporte. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá km, minutos y hora pico y obtené uber al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "Compará el precio estimado de un viaje en Uber, DiDi y Cabify en Argentina según la distancia en kilómetros, los minutos de duración y si es hora pico o no. Cada plataforma aplica una tarifa base + costo por km + costo por minuto, con un mínimo de viaje y recargos en horas pico. En Buenos Aires (2025-2026), Uber arranca en ~$1.400 base + $430/km + $38/min; DiDi es típicamente un 10-15% más barato; Cabify compite en rangos similares a Uber pero con categorías premium. Esta calculadora te muestra los tres precios en simultáneo para que elijas la opción más conveniente antes de pedir el auto.",
+  "keyTakeaway": "**Precio estimado = Tarifa base + ($/km × distancia) + ($/min × duración) × recargo pico** — En un viaje de 10 km / 20 min sin pico, DiDi suele costar ~10% menos que Uber y ~5% menos que Cabify.",
   "useCases": [
-    "Tener un dato concreto sobre Uber vs DiDi vs Cabify para un trámite o decisión cotidiana.",
-    "Comparar opciones (monto, lugar, modalidad) con números claros.",
-    "Chequear si un valor que te dieron cuadra con lo estándar.",
-    "Planificar gastos o tiempos familiares con data real, no estimaciones a ojo."
+    "Decidir qué app abrís primero antes de un viaje al trabajo o a una reunión, para ahorrar entre $500 y $2.000 por trayecto.",
+    "Comparar el costo de ir al aeropuerto de Ezeiza (≈ 40 km desde CABA) en las tres plataformas, donde la diferencia puede superar $3.000.",
+    "Estimar el gasto mensual en viajes si usás ridesharing todos los días hábiles en lugar de tener auto propio.",
+    "Saber si conviene pedir un viaje durante hora pico (07:00–09:30 y 17:30–20:00) o esperar 15 minutos para evitar el recargo de hasta 2× la tarifa base."
   ],
   "fields": [
     {
@@ -81,53 +81,45 @@
     ],
     "result": "DiDi suele ser más barato"
   },
-  "explanation": "Esta calculadora aplica la fórmula estándar internacional para el cálculo requerido. Los valores se actualizan periódicamente.\n\n## Cómo se calcula\n\nPrecio estimado apps de transporte.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nCada plataforma usa un modelo de tarifa dinámica (surge pricing) basado en tres componentes fijos más un multiplicador de demanda:\n\n```\nPrecio = max(Tarifa_mínima, Tarifa_base + (Costo_km × km) + (Costo_min × min)) × Multiplicador_pico\n```\n\nDonde:\n- **Tarifa_mínima**: precio mínimo garantizado por viaje (aunque sea muy corto)\n- **Tarifa_base**: cargo de arranque al confirmar el viaje\n- **Costo_km**: tarifa por kilómetro recorrido\n- **Costo_min**: tarifa por minuto de duración total del viaje\n- **Multiplicador_pico**: 1.0 fuera de pico, 1.2–2.5× en hora pico según demanda\n\n---\n\n## Tabla de referencia\n\nTarifas orientativas en Buenos Aires / GBA (enero 2026, categoría estándar UberX / DiDi Express / Cabify):\n\n| Componente        | Uber (UberX)   | DiDi (Express) | Cabify (Cabify) |\n|-------------------|---------------|----------------|-----------------|\n| Tarifa base       | $1.400         | $1.200         | $1.450          |\n| Costo por km      | $430           | $380           | $440            |\n| Costo por minuto  | $38            | $32            | $40             |\n| Tarifa mínima     | $2.200         | $1.900         | $2.300          |\n| Recargo hora pico | ×1.2 – ×2.0   | ×1.2 – ×1.8   | ×1.1 – ×1.9    |\n| Recargo lluvia    | ×1.3 – ×2.5   | ×1.3 – ×2.2   | ×1.2 – ×2.0    |\n\n> ⚠️ Estos valores son estimaciones orientativas basadas en capturas de pantalla de usuarios en AMBA (enero 2026). Las apps ajustan tarifas frecuentemente sin aviso previo.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Viaje corto sin pico: Palermo → Recoleta (3 km, 10 min)\n```\nUber:   $1.400 + ($430 × 3) + ($38 × 10) = $1.400 + $1.290 + $380 = $3.070\nDiDi:   $1.200 + ($380 × 3) + ($32 × 10) = $1.200 + $1.140 + $320 = $2.660\nCabify: $1.450 + ($440 × 3) + ($40 × 10) = $1.450 + $1.320 + $400 = $3.170\n```\n**DiDi ahorra ~$410 vs Uber y ~$510 vs Cabify.**\n\n### Caso 2 — Viaje medio sin pico: Caballito → Microcentro (10 km, 20 min)\n```\nUber:   $1.400 + ($430 × 10) + ($38 × 20) = $1.400 + $4.300 + $760 = $6.460\nDiDi:   $1.200 + ($380 × 10) + ($32 × 20) = $1.200 + $3.800 + $640 = $5.640\nCabify: $1.450 + ($440 × 10) + ($40 × 20) = $1.450 + $4.400 + $800 = $6.650\n```\n**DiDi ahorra ~$820 vs Uber y ~$1.010 vs Cabify.**\n\n### Caso 3 — Viaje largo con recargo pico ×1.5: CABA → Ezeiza (40 km, 45 min)\n```\nUber base:   $1.400 + ($430 × 40) + ($38 × 45) = $1.400 + $17.200 + $1.710 = $20.310 × 1.5 = $30.465\nDiDi base:   $1.200 + ($380 × 40) + ($32 × 45) = $1.200 + $15.200 + $1.440 = $17.840 × 1.5 = $26.760\nCabify base: $1.450 + ($440 × 40) + ($40 × 45) = $1.450 + $17.600 + $1.800 = $20.850 × 1.5 = $31.275\n```\n**En un viaje largo a Ezeiza con pico, DiDi puede ahorrar ~$3.700 frente a Uber.**\n\n---\n\n## Errores comunes\n\n1. **Ignorar el multiplicador de demanda en tiempo real**: las tarifas que muestra la app al abrir son dinámicas. Si hay muchos pedidos simultáneos (lluvia, partido, hora pico), el precio puede duplicarse respecto a la estimación base. Siempre confirmá el precio que te muestra la app *antes* de confirmar el viaje.\n\n2. **Comparar categorías distintas**: Uber tiene UberX, Uber Comfort y Uber Black; DiDi tiene Express y DiDi Plus; Cabify tiene Cabify y Cabify Van. Comparar UberX con Cabify Van es comparar productos distintos, con diferencias de precio de hasta 80%.\n\n3. **Asumir que el km facturado = km del mapa**: las apps calculan el recorrido real GPS, que puede incluir desvíos por tráfico, cortes o decisión del conductor. Un viaje de 10 km en línea recta puede terminar siendo 13 km facturados.\n\n4. **No considerar propinas ni cargos adicionales**: DiDi y Uber aplican propina opcional desde la app, pero en algunos casos la app la pre-selecciona. Revisá antes de pagar. Además, ciertos viajes tienen \"cargo por limpieza\" o \"cargo por cancelación\" que no aparecen en la estimación inicial.\n\n5. **Olvidar los descuentos y cupones activos**: DiDi especialmente es agresivo con códigos de descuento para nuevos usuarios y promociones semanales (30-50% off primeros viajes). Antes de decidir solo por precio base, chequeá si tenés un cupón disponible en cada app.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de velocidad promedio en trayecto urbano](/calculadora-velocidad-promedio-trayecto-ciudad) — Calculá cuánto tardás en promedio según distancia y condiciones de tráfico.\n- [Calculadora de porcentajes](/calculadora-porcentajes) — Útil para estimar el ahorro porcentual entre plataformas o calcular propinas.\n- [Comparativa de seguros de auto](/calculadora-seguro-auto-comparativa-cobertura-tipo) — Si estás evaluando tener auto propio vs. usar ridesharing, comparar el costo del seguro es clave.\n- [Calculadora de aniversario](/calculadora-aniversario-pareja) — ¿Planeás una salida especial? Estimá el costo del viaje de ida y vuelta antes de la noche.\n",
   "faq": [
     {
-      "q": "¿Más barato?",
-      "a": "DiDi generalmente el más barato en AR."
+      "q": "¿Por qué DiDi casi siempre sale más barato que Uber y Cabify?",
+      "a": "DiDi ingresó al mercado argentino en 2019 con una estrategia de penetración agresiva: tarifas base y por km más bajas para ganar cuota de mercado frente a Uber, que ya operaba desde 2016. Además, DiDi suele aplicar menores multiplicadores de demanda en hora pico (máximo ×1.8 vs. ×2.0–2.5 de Uber). La diferencia promedio ronda el 10–15% en viajes estándar en AMBA."
     },
     {
-      "q": "¿Cabify?",
-      "a": "Apunta más alto: conductores profesionales."
+      "q": "¿Qué es la tarifa dinámica (surge pricing) y cómo afecta el precio final?",
+      "a": "La tarifa dinámica es un multiplicador que se aplica cuando la demanda supera la oferta de conductores disponibles. En horas pico (07:00–09:30 y 17:30–20:00), días de lluvia intensa o eventos masivos, el multiplicador puede ir de ×1.2 hasta ×2.5. Esto significa que un viaje de $6.000 en condiciones normales puede costar $15.000 en el peor escenario. Uber muestra el multiplicador activo antes de confirmar; DiDi y Cabify lo incluyen en el precio estimado visible."
     },
     {
-      "q": "¿Surge pricing?",
-      "a": "Tarifa dinámica hora pico o alta demanda."
+      "q": "¿Las tarifas son iguales en todo el país o varían por ciudad?",
+      "a": "Varían significativamente por ciudad. Buenos Aires/GBA tiene las tarifas más altas del país por el costo operativo y la demanda. Córdoba y Rosario tienen tarifas base un 15–25% menores que CABA. Ciudades más pequeñas donde DiDi o Cabify no operan (solo Uber en algunas) pueden tener tarifas distintas al no existir competencia directa. Siempre consultá el precio estimado directamente en la app para tu ciudad."
     },
     {
-      "q": "¿Pago?",
-      "a": "Efectivo, tarjeta, MercadoPago, Apple/Google Pay."
+      "q": "¿Cuánto se lleva cada plataforma de comisión y cómo impacta eso en el servicio?",
+      "a": "Uber cobra al conductor entre 20% y 25% de comisión por viaje; DiDi cobra entre 15% y 20%; Cabify entre 20% y 23%. Tarifas de comisión más bajas de DiDi implican que los conductores retienen más por viaje, lo que —en teoría— atrae más choferes a la plataforma y reduce tiempos de espera. Sin embargo, la experiencia real varía mucho por zona y momento del día."
     },
     {
-      "q": "¿Seguridad?",
-      "a": "Todas tienen rastreo, compartir viaje."
+      "q": "¿Cómo se calcula el tiempo estimado de llegada (ETA) que muestra la app?",
+      "a": "El ETA se basa en la distancia entre el conductor más cercano disponible y tu ubicación, dividida por la velocidad promedio esperada según el tráfico en tiempo real (las apps usan datos de Google Maps o HERE Maps). No es un valor fijo: puede cambiar entre que lo ves y que el conductor arranca. En hora pico, el ETA real suele ser 20–40% mayor al estimado inicial."
     },
     {
-      "q": "¿Taxi vs app?",
-      "a": "Taxi tarifa fija. App puede ser más barato o caro."
+      "q": "¿Uber, DiDi y Cabify son legales en Argentina?",
+      "a": "La situación legal varía por municipio. En la Ciudad Autónoma de Buenos Aires, las tres plataformas operan en un marco de tolerancia pero sin regulación específica aprobada (el proyecto de ley de 2016 fue vetado). En la Provincia de Buenos Aires, varios municipios permiten su operación mediante habilitaciones municipales propias. En Córdoba capital, Uber opera bajo ordenanza desde 2023. Recomendamos consultar la normativa vigente en tu municipio, ya que puede cambiar."
     },
     {
-      "q": "¿Propina?",
-      "a": "Opcional en todas. Conductores aprecian."
+      "q": "¿Conviene usar ridesharing todos los días versus tener auto propio en Argentina?",
+      "a": "Depende del uso. Un auto promedio en Argentina tiene un costo total mensual (cuota, seguro, patente, nafta, mantenimiento, cochera) de entre $350.000 y $600.000/mes (datos 2025-2026). Si hacés menos de 400–500 km mensuales en viajes cortos urbanos, el ridesharing puede ser más económico. Para distancias mayores o uso diario intensivo, el auto propio suele amortizarse mejor. La [calculadora de seguro de auto](/calculadora-seguro-auto-comparativa-cobertura-tipo) puede ayudarte a estimar ese componente."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Por qué el precio final difiere del estimado que mostraba la app al pedir el viaje?",
+      "a": "Las apps muestran un precio estimado basado en la ruta sugerida, el tráfico en ese instante y el multiplicador de demanda en ese momento. El precio final puede diferir porque: (1) el conductor tomó una ruta más larga, (2) el multiplicador cambió entre que pediste y que terminó el viaje, (3) hubo tiempo de espera en el punto de recogida que se sumó a los minutos, o (4) se aplicó un cargo adicional (peaje, limpieza, cancelación parcial). Uber Fare Estimator y DiDi muestran rangos min-max por esto."
     }
   ],
   "sources": [
     {
-      "name": "INDEC — Canasta Básica y precios Argentina",
-      "url": "https://www.indec.gob.ar"
-    },
-    {
-      "name": "OCU — Organización de Consumidores y Usuarios",
-      "url": "https://www.ocu.org"
-    },
-    {
-      "name": "Ministerio de Justicia Argentina",
-      "url": "https://www.argentina.gob.ar/justicia"
+      "name": "INDEC — Índice de Precios al Consumidor (IPC), componente transporte",
+      "url": "https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31"
     }
   ],
   "relatedSlugs": [

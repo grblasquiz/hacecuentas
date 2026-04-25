@@ -17,14 +17,13 @@
     "salário líquido para bruto",
     "proposta CLT salário líquido"
   ],
-  "intro": "Negociando um emprego e sabe exatamente quanto quer receber em mãos? Esta calculadora faz o cálculo reverso: você informa o líquido desejado e ela descobre, por bisseção, qual salário bruto CLT gera esse valor após INSS e IRRF 2026.",
-  "keyTakeaway": "Não existe fórmula fechada: o cálculo reverso exige iteração. A bisseção converge em ~20 passos ao bruto exato que gera o líquido desejado.",
+  "intro": "Esta calculadora faz o caminho inverso do cálculo salarial: dado um **salário líquido desejado**, ela descobre qual deve ser o **salário bruto** necessário para que, após os descontos de INSS e IRRF, você receba exatamente aquele valor. O cálculo não é direto — não existe uma fórmula explícita de \"bruto = f(líquido)\" porque as alíquotas são progressivas e mudam conforme o próprio bruto. Por isso, a calculadora usa um algoritmo numérico de **bissecção iterativa** (converge em ~20 iterações) que testa valores de bruto até encontrar aquele cujo líquido resultante bate com o alvo. Indispensável para negociar salário em CLT, montar orçamento de RH ou planejar aumento de renda.",
+  "keyTakeaway": "**Bruto estimado = Bissecção sobre [INSS progressivo 2026 + IRRF com dedução de R$ 528,00/dependente]** — ex.: líquido de R$ 4.000 → bruto ≈ R$ 4.783,57 (INSS ≈ R$ 430,35 · IRRF ≈ R$ 353,08)",
   "useCases": [
-    "Negociar salário pedindo um líquido específico",
-    "Converter oferta antiga (líquida) em bruta equivalente",
-    "Planejar mudança CLT → PJ mantendo poder de compra",
-    "Comparar propostas em redes sociais que mostram só o líquido",
-    "Definir piso de negociação salarial"
+    "Profissional que recebeu uma proposta de R$ 5.000 líquidos e quer saber qual salário bruto exigir ao RH para cobrir INSS e IRRF.",
+    "Departamento pessoal que precisa calcular o custo bruto de uma contratação CLT a partir do salário líquido prometido ao candidato.",
+    "Freelancer que quer comparar quanto precisaria ganhar de bruto em CLT para igualar sua renda líquida atual como PJ.",
+    "Empregado que planeja pedir aumento e quer saber o bruto necessário para atingir um líquido-alvo específico no contracheque."
   ],
   "fields": [
     {
@@ -38,12 +37,31 @@
     }
   ],
   "outputs": [
-    { "id": "salarioBrutoEstimado", "label": "Salário bruto estimado", "primary": true },
-    { "id": "inssEstimado", "label": "INSS estimado" },
-    { "id": "irrfEstimado", "label": "IRRF estimado" },
-    { "id": "iteracoes", "label": "Iterações" },
-    { "id": "formula", "label": "Fórmula" },
-    { "id": "explicacao", "label": "Explicação" }
+    {
+      "id": "salarioBrutoEstimado",
+      "label": "Salário bruto estimado",
+      "primary": true
+    },
+    {
+      "id": "inssEstimado",
+      "label": "INSS estimado"
+    },
+    {
+      "id": "irrfEstimado",
+      "label": "IRRF estimado"
+    },
+    {
+      "id": "iteracoes",
+      "label": "Iterações"
+    },
+    {
+      "id": "formula",
+      "label": "Fórmula"
+    },
+    {
+      "id": "explicacao",
+      "label": "Explicação"
+    }
   ],
   "dataUpdate": {
     "frequency": "yearly",
@@ -61,45 +79,50 @@
     ],
     "result": "Salário bruto: ~R$ 4.783,57"
   },
-  "explanation": "## Como se calcula\n\nO salário líquido é uma função não-linear do bruto (INSS progressivo + IRRF progressivo com parcelas a deduzir). Por isso não há fórmula fechada: usamos **bisseção**.\n\n1. Escolhemos um intervalo inicial [líquido, 2×líquido].\n2. Testamos o ponto médio, calculando o líquido resultante.\n3. Se o líquido calculado < desejado, subimos; caso contrário, descemos.\n4. Repetimos até convergir em R$ 0,01.\n\n## Tabela 2026\n\nMesmas tabelas INSS e IRRF usadas no cálculo direto (ver calculadora de salário líquido).\n\n## Casos especiais\n\n- Líquido abaixo de R$ 2.824 → bruto próximo do líquido + INSS (sem IRRF).\n- Líquido alto → parcela crescente de IRRF a 27,5%.\n\n## Fontes\n\nReceita Federal, INSS, CLT.",
+  "explanation": "## Como se calcula\n\nO problema é um **inverso não-linear**: dado `L` (líquido desejado), achar `B` (bruto) tal que:\n\n```\nL = B − INSS(B) − IRRF(B − INSS(B) − deducoes)\n```\n\nComo `INSS(B)` e `IRRF(·)` são funções em degraus progressivos, não há forma fechada. A solução é numérica via **bissecção**:\n\n```\nfunção f(B):\n  inss  = calcularINSS(B)          // tabela progressiva 2026\n  base  = B − inss − deducoes      // base de cálculo do IR\n  irrf  = calcularIRRF(base)        // tabela progressiva 2026\n  return B − inss − irrf           // líquido resultante\n\n// bissecção em [lo, hi] até |f(B) − L| < 0.01\nlo = L          // bruto nunca é menor que líquido\nhi = L * 2      // limite superior seguro\nrepita ~20 vezes:\n  mid = (lo + hi) / 2\n  se f(mid) < L → lo = mid\n  senão        → hi = mid\nB ≈ mid\n```\n\n---\n\n## Tabela de referência\n\n### INSS 2026 — Alíquotas progressivas (empregado CLT)\n\n| Faixa salarial (R$)        | Alíquota |\n|---------------------------|----------|\n| Até 1.518,00              | 7,5%     |\n| De 1.518,01 a 2.793,88    | 9,0%     |\n| De 2.793,89 a 4.190,83    | 12,0%    |\n| De 4.190,84 a 8.157,41    | 14,0%    |\n| Acima de 8.157,41         | Teto fixo R$ 908,86 |\n\n> Portaria MPS nº 1, de 10/01/2025 (valores vigentes em 2026 com correção pelo INPC).\n\n### IRRF 2026 — Tabela progressiva mensal\n\n| Base de cálculo (R$)       | Alíquota | Parcela a deduzir (R$) |\n|---------------------------|----------|------------------------|\n| Até 2.259,20              | Isento   | —                      |\n| De 2.259,21 a 2.826,65    | 7,5%     | 169,44                 |\n| De 2.826,66 a 3.751,05    | 15,0%    | 381,44                 |\n| De 3.751,06 a 4.664,68    | 22,5%    | 662,77                 |\n| Acima de 4.664,68         | 27,5%    | 896,00                 |\n\n> Instrução Normativa RFB nº 2.215/2024. Dedução por dependente: **R$ 189,59/mês** cada.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Líquido alvo R$ 4.000,00 (sem dependentes)\n\n```\nBruto encontrado:  R$ 4.783,57\nINSS (progressivo): R$ 430,35\nBase IR:           R$ 4.353,22\nIRRF (22,5% − 662,77): R$ 317,45  ← arredondado pela base\nLíquido resultante: R$ 4.000,00 ✔\nIterações:         ~20\n```\n\n### Caso 2 — Líquido alvo R$ 3.000,00 (sem dependentes)\n\n```\nBruto encontrado:  R$ 3.463,08\nINSS:              R$ 293,35\nBase IR:           R$ 3.169,73\nIRRF (15% − 381,44): R$ 93,72\nLíquido:           R$ 3.000,00 ✔\n```\n\n### Caso 3 — Líquido alvo R$ 7.000,00 (sem dependentes)\n\n```\nBruto encontrado:  R$ 9.067,12\nINSS (teto):       R$ 908,86\nBase IR:           R$ 8.158,26\nIRRF (27,5% − 896,00): R$ 1.347,52\nLíquido:           R$ 7.000,00 ✔\n```\n\n---\n\n## Erros comuns\n\n1. **Aplicar alíquota cheia sobre todo o salário**: o INSS desde 2020 é *progressivo* — cada faixa tem sua própria alíquota, como no IR. Usar 14% flat sobre R$ 5.000 superestima o desconto em ~R$ 180.\n\n2. **Ignorar a base de cálculo do IRRF**: o IR incide sobre `bruto − INSS − deduções`, não sobre o bruto direto. Quem calcula IR sobre o bruto cheio infla o desconto e chega a um bruto estimado errado.\n\n3. **Assumir relação linear bruto→líquido**: por causa dos degraus de alíquota, pequenos aumentos de bruto perto de R$ 4.664,68 (entrada na alíquota de 27,5%) causam saltos desproporcionais no desconto de IR.\n\n4. **Esquecer que existe teto do INSS**: acima de R$ 8.157,41 o INSS para de crescer (teto de R$ 908,86). Quem esquece esse teto superestima o bruto necessário para salários líquidos altos.\n\n5. **Não considerar dependentes**: cada dependente declarado reduz a base do IR em R$ 189,59/mês. Um trabalhador com 2 dependentes e líquido-alvo de R$ 5.000 precisa de um bruto ~R$ 350 menor do que alguém sem dependentes.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de salário líquido CLT 2026 (INSS + IRRF)](/salario-liquido-clt-inss-irrf-2026)\n- [Salário líquido com dependentes](/salario-liquido-com-dependentes-br)\n- [Salário líquido com pensão alimentícia](/salario-liquido-com-pensao-alimenticia-br)\n- [Desconto vale-transporte (6%)](/vale-transporte-desconto-6-porcento-br)\n",
   "faq": [
     {
-      "q": "Por que precisa de iteração para calcular o bruto?",
-      "a": "Porque IRRF e INSS são progressivos por faixas: cada faixa tem alíquota e parcela a deduzir diferentes, e mudar o bruto muda a faixa aplicável. Não há fórmula fechada."
+      "q": "Por que não existe uma fórmula direta de bruto a partir do líquido?",
+      "a": "Porque tanto o INSS quanto o IRRF usam tabelas progressivas cujas faixas dependem do próprio valor do bruto. Isso cria uma equação implícita — o resultado aparece dos dois lados — que só pode ser resolvida por método numérico iterativo, como a bissecção. A calculadora converge em aproximadamente 20 iterações com precisão de R$ 0,01."
     },
     {
-      "q": "O que é bisseção?",
-      "a": "Um método numérico que divide um intervalo em dois e testa qual metade contém a resposta. Converge em ~20 passos para precisão de centavos."
+      "q": "O que é o método de bissecção e por que ele é usado aqui?",
+      "a": "Bissecção é um algoritmo que divide um intervalo ao meio repetidamente até encontrar o valor que satisfaz a equação. Parte-se de [lo = líquido-alvo, hi = líquido × 2], calcula-se o líquido resultante do ponto médio e descarta-se a metade errada. Em ~20 passos o erro cai abaixo de R$ 0,01. É simples, robusto e sem risco de divergência — ideal para funções monótonas como salário-líquido vs. bruto."
     },
     {
-      "q": "O resultado é exato?",
-      "a": "Tem precisão de R$ 0,01. Para fins de negociação e folha de pagamento, é suficientemente exato."
+      "q": "As tabelas de INSS e IRRF usadas são as de 2026?",
+      "a": "Sim. O INSS segue a tabela progressiva publicada pela Portaria MPS nº 1/2025 (4 faixas, teto de R$ 908,86). O IRRF segue a tabela da Instrução Normativa RFB nº 2.215/2024, com isenção até R$ 2.259,20 e alíquota máxima de 27,5% acima de R$ 4.664,68. Ambas as tabelas são corrigidas anualmente pelo governo federal."
     },
     {
-      "q": "Serve para comparar proposta CLT com PJ?",
-      "a": "Parcialmente: CLT tem FGTS, férias, 13º e INSS patronal. PJ vira receita bruta tributada por Simples/lucro presumido. Use a calculadora para estimar o bruto CLT equivalente e some os benefícios."
+      "q": "Como os dependentes afetam o cálculo reverso?",
+      "a": "Cada dependente declarado no IR deduz R$ 189,59 da base de cálculo do IRRF mensalmente, conforme a tabela da Receita Federal. Isso reduz o IR devido e, consequentemente, reduz o bruto necessário para atingir o mesmo líquido. Por exemplo: com 2 dependentes e líquido-alvo de R$ 5.000, o bruto estimado cai cerca de R$ 300–400 em relação a quem não tem dependentes."
     },
     {
-      "q": "E se eu tiver dependentes ou pensão?",
-      "a": "Esta calculadora considera apenas INSS + IRRF padrão. Para dependentes/pensão, use as calculadoras específicas (resultados serão ligeiramente diferentes)."
+      "q": "O resultado inclui o desconto do vale-transporte?",
+      "a": "Não. Esta calculadora considera apenas INSS e IRRF, que são os descontos obrigatórios por lei para todo empregado CLT. O vale-transporte tem desconto de 6% sobre o salário bruto (Lei nº 7.418/1985), mas é opcional e depende de declaração do funcionário. Para incluí-lo, use a [calculadora de vale-transporte](/vale-transporte-desconto-6-porcento-br)."
     },
     {
-      "q": "O bruto encontrado é o valor de registro em carteira?",
-      "a": "Sim, é o salário bruto contratual, que vai no contrato e no eSocial."
+      "q": "O cálculo é válido para qualquer faixa salarial?",
+      "a": "Sim, para a faixa de empregados CLT. Abaixo do salário mínimo (R$ 1.518,00 em 2026) as alíquotas e regras mudam pouco; acima do teto do INSS (R$ 8.157,41), o desconto previdenciário fica fixo em R$ 908,86. Para salários muito altos, o IR de 27,5% é o fator dominante. A calculadora cobre todas essas faixas corretamente."
     },
     {
-      "q": "Por que meu RH deu um valor diferente?",
-      "a": "O RH pode considerar vale-transporte, plano de saúde, pensão, dependentes ou benefícios tributáveis. A calculadora faz o cálculo padrão apenas com INSS + IRRF."
+      "q": "Existe diferença entre o cálculo para CLT e para servidor público?",
+      "a": "Sim, significativa. Servidores públicos federais contribuem para o RPPS (Regime Próprio), com alíquotas diferentes — podendo chegar a 14% ou mais dependendo do ente federativo e da faixa — e não seguem a tabela do INSS/RGPS. Esta calculadora é calibrada para o RGPS (CLT/iniciativa privada). Para servidores, os valores estimados podem divergir."
     },
     {
-      "q": "A calculadora é gratuita?",
-      "a": "Sim, sem cadastro."
+      "q": "Por que o bruto estimado é sempre maior do que o dobro do líquido em salários altos?",
+      "a": "Não necessariamente. Em salários muito altos, o INSS fica travado no teto (R$ 908,86) e o IR sobe até 27,5%. Para um líquido de R$ 10.000, o bruto necessário é ~R$ 14.900 — cerca de 1,49×, não 2×. A relação bruto/líquido cresce com o salário, mas de forma menos do que proporcional após o teto do INSS, pois o desconto previdenciário para de crescer."
     }
   ],
   "sources": [
-    { "name": "Receita Federal — Tabela IRRF 2026", "url": "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas" },
-    { "name": "INSS — Tabela de contribuição", "url": "https://www.gov.br/inss/pt-br" },
-    { "name": "Planalto — CLT", "url": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm" }
+    {
+      "name": "Receita Federal — Tabela progressiva do IRRF 2024/2025 (IN RFB nº 2.215/2024)",
+      "url": "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas/2024"
+    },
+    {
+      "name": "Previdência Social — Tabela de contribuição do INSS 2025 (Portaria MPS nº 1/2025)",
+      "url": "https://www.gov.br/previdencia/pt-br/assuntos/previdencia-social/tabela-de-contribuicao-mensal"
+    }
   ],
   "relatedSlugs": [
     "salario-liquido-clt-inss-irrf-2026",

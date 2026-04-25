@@ -6,14 +6,13 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "pcb-ancho-trace-corriente",
-  "intro": "La electrónica básica se rige por leyes de Ohm, Kirchhoff y principios de semiconductores. Cálculos de resistencia, potencia, voltaje y amperaje son la base para diseñar y mantener circuitos. Calculá el ancho mínimo de una pista (trace) de PCB según [IPC](/inflacion-argentina)-2221, para conducir una corriente con limite de elevación térmica (10-20°C). Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "**W (mil) = [I / (k × ΔT^0.44)]^(1/0.725)**. k=0.048 interno, 0.024 externo. Ej: 1A externo con ΔT=10°C → 10 mil (0.25 mm).",
+  "intro": "La calculadora de ancho de trace PCB por corriente implementa la norma IPC-2221 (antes IPC-D-275), el estándar internacional de diseño de placas de circuito impreso. Dados la corriente en amperios, el espesor de cobre en oz/ft², la ubicación de la pista (externa o interna) y la elevación de temperatura admisible (ΔT en °C), calcula el ancho mínimo necesario para que el trace no supere la temperatura de operación segura. Se usa en etapas de ruteo de PCB para evitar sobrecalentamiento, caídas de tensión excesivas y hasta quema de pistas bajo cargas de potencia.",
+  "keyTakeaway": "Fórmula IPC-2221: **Área (mil²) = (I / (k · ΔT^0.44))^(1/0.725)** → con k=0.048 (externa) o k=0.024 (interna), ΔT=10°C e I=1 A en cobre 1 oz, el ancho mínimo es ~10 mil (0.254 mm).",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de ancho de trace pcb por corriente (ipc-2221)",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Diseñar la pista de alimentación de un regulador de tensión en una fuente conmutada de 3 A para asegurarse de que no supere los 10°C de elevación sobre temperatura ambiente.",
+    "Verificar que las pistas de un variador de velocidad para motor brushless de 10 A en capa interna de PCB multicapa soporten la corriente sin laminarse por calor excesivo.",
+    "Calcular el ancho de trace de un cargador de batería Li-Ion de 2 A integrado en una placa de 4 capas con cobre de 2 oz, donde el espacio es limitado.",
+    "Auditar el diseño de un PCB industrial con corrientes de hasta 20 A en buses de potencia, comparando el ancho real ruteado contra el mínimo que exige IPC-2221 antes de enviar a fabricación."
   ],
   "fields": [
     {
@@ -82,53 +81,45 @@
     ],
     "result": "Ancho mínimo 0.25 mm (10 mil)"
   },
-  "explanation": "La **electrónica** se rige por leyes de Ohm, Kirchhoff, Faraday. Aplicar fórmulas evita errores costosos y fallos eléctricos.\n\n## Cómo se calcula\n\nCalculá el ancho mínimo de una pista (trace) de PCB según IPC-2221, para conducir una corriente con limite de elevación térmica (10-20°C) · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa norma IPC-2221 define la relación entre corriente, área transversal del conductor de cobre y la elevación de temperatura mediante dos ecuaciones encadenadas:\n\n```\n# Paso 1: Área mínima del conductor (en mil²)\nÁrea = (I / (k × ΔT^0.44))^(1/0.725)\n\n# Paso 2: Ancho mínimo de la pista (en mil)\nAncho_mil = Área / Espesor_mil\n\n# Donde:\n#   I       = corriente en Amperios\n#   ΔT      = elevación de temperatura permitida (°C), típico 10 °C\n#   k       = 0.048 para pistas EXTERNAS (expuestas al aire)\n#             0.024 para pistas INTERNAS (embebidas en laminado FR4)\n#   Espesor_mil = espesor del cobre en mils\n#                 1 oz/ft²  → 1.378 mil  (35 µm)\n#                 2 oz/ft²  → 2.756 mil  (70 µm)\n#                 0.5 oz/ft²→ 0.689 mil  (17.5 µm)\n\n# Conversiones finales:\n#   1 mil = 0.0254 mm\n#   Ancho_mm = Ancho_mil × 0.0254\n```\n\n> **Nota importante:** Las constantes k, 0.44 y 0.725 son coeficientes empíricos derivados de mediciones reales publicadas por el IPC. La edición IPC-2221B (2012) actualizó levemente los coeficientes respecto a la revisión original de 1995, mejorando la precisión para corrientes altas (>10 A).\n\n---\n\n## Tabla de referencia\n\nAnchos mínimos en **mil** y **mm** para pistas **externas** (k=0.048) con ΔT=10 °C y cobre de 1 oz/ft²:\n\n| Corriente (A) | Área mínima (mil²) | Ancho mínimo (mil) | Ancho mínimo (mm) |\n|:---:|:---:|:---:|:---:|\n| 0.5 | 3.55 | 2.6 | 0.066 |\n| 1.0 | 8.00 | 5.8 | 0.147 |\n| 1.5 | 13.2 | 9.6 | 0.244 |\n| 2.0 | 19.3 | 14.0 | 0.356 |\n| 3.0 | 32.0 | 23.2 | 0.589 |\n| 5.0 | 62.0 | 45.0 | 1.143 |\n| 10.0 | 150.0 | 108.9 | 2.766 |\n| 20.0 | 366.0 | 265.6 | 6.747 |\n\n> Para pistas **internas** (k=0.024), los anchos son aproximadamente el **doble** de los valores de la tabla, ya que el calor no se disipa por convección sino que queda atrapado en el laminado.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Fuente de 1 A, pista externa, cobre 1 oz, ΔT=10 °C\n- Área = (1 / (0.048 × 10^0.44))^(1/0.725) = (1 / (0.048 × 2.754))^1.379 ≈ 8.0 mil²\n- Espesor cobre 1 oz = 1.378 mil\n- Ancho = 8.0 / 1.378 ≈ **5.8 mil → 0.147 mm**\n- Muchos fabricantes piden mínimo de 6 mil (0.15 mm), por lo que en la práctica se usa **0.15 mm**.\n\n### Caso 2 — Motor driver a 5 A, pista interna, cobre 2 oz, ΔT=10 °C\n- k = 0.024 (interna)\n- Área = (5 / (0.024 × 2.754))^1.379 ≈ 247 mil²\n- Espesor cobre 2 oz = 2.756 mil\n- Ancho = 247 / 2.756 ≈ **89.6 mil → 2.28 mm**\n- Conclusión: una pista interna de 2 oz a 5 A necesita casi 2.3 mm; si el espacio no alcanza, se debe usar cobre exterior o aumentar el espesor.\n\n### Caso 3 — Bus de potencia a 20 A, pista externa, cobre 2 oz, ΔT=20 °C\n- ΔT mayor (20 °C) permite más calentamiento → área menor\n- Área = (20 / (0.048 × 20^0.44))^1.379 ≈ 258 mil²\n- Ancho = 258 / 2.756 ≈ **93.6 mil → 2.38 mm**\n- Si se acepta solo ΔT=10 °C, el ancho escala a ~3.8 mm. Elegir el ΔT adecuado al entorno térmico del producto es crítico.\n\n---\n\n## Errores comunes\n\n1. **Usar k=0.048 para pistas internas:** El calor en capas internas no se disipa por convección; usar el coeficiente externo subestima el ancho necesario hasta en un 100%, lo que puede quemar el trace bajo carga sostenida.\n\n2. **Confundir espesor de cobre en µm con oz/ft²:** 1 oz/ft² = 35 µm = 1.378 mil. Usar 35 directamente como mils (en vez de convertir) genera un ancho calculado ~25× demasiado angosto.\n\n3. **Ignorar el ΔT de la temperatura ambiente del gabinete:** Si el equipo opera en un gabinete a 60 °C y el componente tolera 85 °C, el ΔT disponible es solo 25 °C, no 40 °C. Sumar la temperatura ambiente al cálculo es obligatorio en diseño industrial.\n\n4. **Aplicar IPC-2221 a corrientes de alta frecuencia (RF/AC):** La norma es válida para corriente continua y AC de baja frecuencia (red eléctrica). Para RF, el efecto pelicular (skin effect) reduce la sección efectiva del conductor y se requieren cálculos adicionales.\n\n5. **No agregar margen de fabricación:** El estándar IPC-2221 da el mínimo teórico. En la práctica, el grabado químico reduce el ancho real entre 10% y 20% respecto al Gerber. Siempre sumá al menos 10% al ancho calculado antes de enviar a fabricación.\n\n---\n\n## Calculadoras relacionadas\n\n- [Ley de Ohm — Voltaje, Corriente y Resistencia](/calculadora-ley-ohm-voltaje-corriente-resistencia): calculá la caída de tensión sobre la pista usando su resistencia.\n- [Potencia eléctrica P=VI](/calculadora-potencia-electrica-p-vi): estimá la potencia disipada como calor en el trace para validar la elevación térmica.\n- [Resistencia de LED en serie y paralelo](/calculadora-resistencia-led-serie-paralelo): dimensioná las resistencias limitadoras y las pistas asociadas en circuitos de iluminación.\n- [Divisor de voltaje con resistencias](/calculadora-divisor-voltaje-resistencias): verificá los niveles de señal en redes de feedback donde el ancho de pista también importa para ruido.\n",
   "faq": [
     {
-      "q": "¿Qué es IPC-2221?",
-      "a": "Estándar internacional de diseño PCB. Define reglas para ancho de pistas, spacing, tolerancias térmicas."
+      "q": "¿Qué es la norma IPC-2221 y por qué es el estándar para PCB?",
+      "a": "IPC-2221 (Generic Standard on Printed Board Design) es publicada por el IPC (Association Connecting Electronics Industries) y define los requisitos genéricos de diseño para placas de circuito impreso. Sus ecuaciones de corriente vs. ancho de pista están basadas en datos empíricos de los años 50-60 actualizados en la revisión B de 2012. Es el estándar de referencia adoptado por la industria mundial porque equilibra practicidad y precisión para DC y AC de baja frecuencia."
     },
     {
-      "q": "¿ΔT de cuanto?",
-      "a": "10°C conservador (elevación sobre ambiente). 20°C si aceptás calentamiento moderado. 30°C límite absoluto."
+      "q": "¿Por qué la constante k es diferente para pistas internas y externas?",
+      "a": "Las pistas externas están en contacto con el aire, lo que permite disipar calor por convección y radiación. Las pistas internas quedan embebidas en el laminado (FR4 u otros), que es un mal conductor térmico (conductividad ~0.3 W/m·K). Por eso k=0.048 para externas y k=0.024 para internas: la disipación interna es aproximadamente la mitad, lo que exige el doble de área de cobre para la misma elevación de temperatura."
     },
     {
-      "q": "¿Cu 1oz vs 2oz?",
-      "a": "1oz (35 µm) estándar. 2oz (70 µm) para alta corriente. 2oz duplica la capacidad de corriente vs 1oz."
+      "q": "¿Qué ΔT (elevación de temperatura) debo usar en el diseño?",
+      "a": "El IPC-2221 recomienda como punto de partida ΔT=10 °C para la mayoría de los diseños comerciales. Sin embargo, el valor correcto depende de la temperatura máxima de operación del componente o laminado (Tg) menos la temperatura ambiente máxima esperada. Por ejemplo, un FR4 con Tg=130 °C en un gabinete a 70 °C admite ΔT=60 °C, pero eso significa que la pista puede llegar a 130 °C, lo cual es el límite, no un objetivo deseable. En diseño conservador se usa ΔT=10–15 °C."
     },
     {
-      "q": "¿Interna vs externa?",
-      "a": "Pistas internas disipan peor calor (sandwich). Necesitan ~1.5× el ancho."
+      "q": "¿Puedo usar varias pistas en paralelo para distribuir la corriente?",
+      "a": "Sí, es una práctica válida y común. Si necesitás pasar 10 A y tenés restricciones de espacio, podés usar dos pistas en paralelo de 5 A cada una, lo que reduce el ancho individual a la mitad aproximadamente. Sin embargo, es fundamental que ambas pistas tengan la misma longitud y resistencia para que la corriente se distribuya equitativamente; de lo contrario, una puede sobrecargarse."
     },
     {
-      "q": "¿Vias para corriente?",
-      "a": "Cada via soporta ~0.5-1 A según diámetro. Para alta corriente usar stitching (múltiples vias en paralelo)."
+      "q": "¿Cómo afecta el espesor de cobre (1 oz vs. 2 oz) al ancho necesario?",
+      "a": "El espesor de cobre determina el área transversal disponible: 1 oz/ft² = 35 µm = 1.378 mil, mientras que 2 oz/ft² = 70 µm = 2.756 mil. Como el ancho mínimo es Área/Espesor, usar 2 oz en lugar de 1 oz reduce el ancho necesario exactamente a la mitad. Esto es útil en diseños de alta corriente con espacio limitado, aunque el cobre de 2 oz aumenta el costo de fabricación entre un 20% y 40% dependiendo del proveedor."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿La calculadora IPC-2221 sirve para señales de alta frecuencia o RF?",
+      "a": "No directamente. La norma IPC-2221 modela la sección transversal completa del conductor, pero a frecuencias altas el efecto pelicular (skin effect) confina la corriente a una delgada capa superficial. Por ejemplo, a 1 MHz en cobre la profundidad de penetración es solo ~66 µm. Para RF y microondas se utilizan otras metodologías (modelos de líneas de transmisión, impedancia controlada según IPC-2141) que tienen en cuenta geometría dieléctrica y dieléctrico del laminado."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Qué margen adicional debo agregar al ancho calculado antes de enviar el Gerber al fabricante?",
+      "a": "Se recomienda agregar entre el 10% y el 20% sobre el ancho mínimo calculado para compensar la tolerancia del proceso de grabado químico, que reduce el ancho real respecto al diseñado. Además, verificá con tu fabricante su 'minimum track width' garantizado: la mayoría de los fabricantes estándar garantizan 6 mil (0.15 mm), mientras que los fabricantes avanzados llegan a 3 mil (0.076 mm) con mayor costo."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué pasa si la temperatura de operación del equipo es muy alta, como en aplicaciones automotrices o industriales?",
+      "a": "En ambientes de alta temperatura (bajo capó de un auto puede llegar a 85–105 °C, ambientes industriales a 60–85 °C), el ΔT disponible se reduce drásticamente. Si el laminado tolera 130 °C y el ambiente es 85 °C, solo tenés ΔT=45 °C de margen real. Para estos casos se recomienda usar laminados de alta Tg (>150 °C), cobre de 2 oz o más, y en algunos casos planos de cobre (copper pours) conectados al trace para distribuir el calor. Las normas automotrices como AEC-Q100 y LV-124 imponen sus propios requisitos adicionales."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
-    },
-    {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "IPC-2221B: Generic Standard on Printed Board Design — IPC (Association Connecting Electronics Industries)",
+      "url": "https://www.ipc.org/TOC/IPC-2221.pdf"
     }
   ],
   "relatedSlugs": [

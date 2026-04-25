@@ -22,14 +22,13 @@
     "CBC requirements calculator",
     "regularidad UBA calculator"
   ],
-  "intro": "Modern study methods leverage cognitive science principles like spaced repetition, active recall, and interleaving for faster learning and better retention. This calculator helps UBA CBC students verify their academic standing based on attendance and exam scores. Requirements are current for 2026 and reviewed regularly to keep you informed.",
-  "keyTakeaway": "Formula: **attendance + exam scores**. Enter your values to check your academic standing. UBA CBC requirements for 2026.",
+  "intro": "The UBA CBC (Ciclo Básico Común) Academic Standing Calculator determines whether a student at the Universidad de Buenos Aires achieves \"Regular\" or \"Free\" (libre) standing in a subject based on two key requirements: minimum attendance percentage and minimum exam scores on both midterm exams (parciales). Under UBA's CBC regulations, a student must attend at least 75% of classes AND score 4 or higher on each midterm (on a 1–10 scale) to hold Regular standing. Regular students are eligible to sit the final exam; students who fall below either threshold are classified as Free (libre) and must pass a more demanding comprehensive final exam. This calculator computes your average midterm score and instantly classifies your academic standing so you know exactly where you stand before the final exam period.",
+  "keyTakeaway": "**Regular standing requires: Attendance ≥ 75% AND Exam 1 ≥ 4 AND Exam 2 ≥ 4. Average = (Exam1 + Exam2) / 2. Scores of 7–10 may grant direct promotion (promoción directa) in some CBC courses without a final exam.**",
   "useCases": [
-    "Verify academic standing status for CBC courses",
-    "UBA students and education professionals",
-    "Validate theoretical calculations before applying",
-    "Teaching and learning the concept",
-    "Quick reference for course requirements"
+    "A first-year student with 75% attendance and scores of 6 and 7 needs to know if they qualify as Regular or must take the harder libre final exam.",
+    "A student who missed several classes due to illness wants to calculate the exact attendance percentage needed to avoid losing Regular standing before the semester ends.",
+    "A student who scored 3 on Exam 1 and 8 on Exam 2 wants to understand whether a high second score can compensate for a failing first score under UBA CBC rules.",
+    "A student aiming for direct promotion (promoción directa) wants to verify if their average of 7 or above, combined with full attendance, meets the threshold to skip the final exam entirely in eligible subjects."
   ],
   "fields": [
     {
@@ -84,53 +83,45 @@
     ],
     "result": "Final exam required"
   },
-  "explanation": "**Study methods and learning techniques** are rooted in cognitive science (Ebbinghaus, Bjork, Dunlosky). Techniques like spaced repetition, active recall, and interleaving have strong empirical support.\n\n## How It Works\n\nUBA CBC requires minimum attendance and passing scores on exams to maintain regular status. This calculator applies the formula with your values, checking typical ranges and alerting if values fall outside reasonable bounds.\n\n## Important Notes\n\nThis calculation is a reference tool only. For critical decisions (academic, financial, or legal), consult with a qualified professional. Values are current for 2026 and reviewed regularly.",
+  "explanation": "## How It Is Calculated\n\nThe UBA CBC uses a two-condition gate system. **Both** conditions must be met simultaneously for Regular standing. Failing either one results in Free (libre) classification regardless of how well you performed on the other.\n\n```\n# Condition 1 – Attendance\nattendance_ok = (attendance_pct >= 75)\n\n# Condition 2 – Minimum score on EACH exam (scale 1–10)\nexams_ok = (exam1_score >= 4) AND (exam2_score >= 4)\n\n# Academic Standing\nif attendance_ok AND exams_ok:\n    standing = \"Regular\"\nelse:\n    standing = \"Free (Libre)\"\n\n# Average midterm score\naverage = (exam1_score + exam2_score) / 2\n\n# Promotion check (subject-dependent)\nif standing == \"Regular\" AND average >= 7 AND attendance_pct >= 75:\n    note = \"Eligible for Direct Promotion (check with your department)\"\n```\n\n> **Scale note:** UBA grades run 1–10. A score of 4 is the minimum passing grade. A score of 7 or above is considered \"distinguished\" and unlocks promotion in courses that offer it.\n\n---\n\n## Reference Table\n\n| Attendance % | Exam 1 | Exam 2 | Average | Standing | Note |\n|---|---|---|---|---|---|\n| 80% | 6 | 7 | 6.5 | ✅ Regular | Final exam required |\n| 75% | 4 | 5 | 4.5 | ✅ Regular | Minimum threshold met |\n| 75% | 6 | 7 | 6.5 | ✅ Regular | Final exam required |\n| 75% | 8 | 9 | 8.5 | ✅ Regular | Check direct promotion |\n| 74% | 8 | 9 | 8.5 | ❌ Free (Libre) | Attendance too low |\n| 80% | 3 | 8 | 5.5 | ❌ Free (Libre) | Exam 1 below 4 |\n| 80% | 4 | 3 | 3.5 | ❌ Free (Libre) | Exam 2 below 4 |\n| 60% | 5 | 6 | 5.5 | ❌ Free (Libre) | Attendance too low |\n| 100% | 7 | 8 | 7.5 | ✅ Regular | Likely direct promotion |\n\n---\n\n## Typical Cases\n\n### Case 1 – Exactly on the Edge (from the calculator example)\n**Inputs:** 75% attendance, Exam 1 = 6, Exam 2 = 7  \n**Calculation:** Attendance ≥ 75% ✅ | Exam 1 ≥ 4 ✅ | Exam 2 ≥ 4 ✅  \n**Average:** (6 + 7) / 2 = **6.5**  \n**Standing:** Regular — Final exam required (average 6.5 is below the 7.0 threshold for direct promotion).\n\n### Case 2 – One Exam Failure Ruins Everything\n**Inputs:** 90% attendance, Exam 1 = 3, Exam 2 = 9  \n**Calculation:** Attendance ≥ 75% ✅ | Exam 1 = 3 < 4 ❌  \n**Average:** (3 + 9) / 2 = 6.0 (irrelevant — standing is already lost)  \n**Standing:** Free (Libre). The student must take a comprehensive libre final covering all course content with a higher difficulty bar.\n\n### Case 3 – Direct Promotion Candidate\n**Inputs:** 85% attendance, Exam 1 = 8, Exam 2 = 7  \n**Calculation:** Attendance ≥ 75% ✅ | Both exams ≥ 4 ✅  \n**Average:** (8 + 7) / 2 = **7.5**  \n**Standing:** Regular + Average ≥ 7 → **Eligible for Direct Promotion** in courses that offer it. The student should confirm with their professor since not all CBC subjects grant this benefit automatically.\n\n---\n\n## Common Mistakes\n\n1. **Assuming the average can compensate for a failed exam.** UBA CBC rules require each individual exam to be ≥ 4. A score of 3 on Exam 1 and 10 on Exam 2 gives an average of 6.5, but the student is still classified as Free (libre). There is no compensatory averaging between parciales.\n\n2. **Confusing 75% as a soft guideline.** The 75% attendance floor is a hard regulatory cutoff set by UBA's Ciclo Básico Común secretariat. Missing one extra class in a course with 20 sessions can be the difference between 75% and 70%, costing you Regular standing.\n\n3. **Thinking \"Regular\" means you passed the course.** Regular standing only means you are *eligible* to take the final exam. You must still pass the final (score ≥ 4) to pass the subject. Regular students who fail or skip the final lose their regular status after a defined number of exam calls (turnos).\n\n4. **Misunderstanding the Direct Promotion threshold.** Not every CBC subject offers direct promotion (promoción directa). Even with an average of 8.0, if the course does not offer the modality, the student must still sit a final exam. Always verify the course's plan de estudios or ask the chair (cátedra).\n\n5. **Counting makeup exams (recuperatorios) incorrectly.** If your institution or cátedra offers a recuperatorio for a failed parcial, the score that replaces it is the recuperatorio score — not an average of both attempts. Using the wrong score in the formula will give you an incorrect standing classification.\n\n---\n\n## Related Calculators\n\nSince there are no related slugs configured for this calculator, explore other academic and education tools on Hacé Cuentas to help manage your university planning.\n",
   "faq": [
     {
-      "q": "What is academic standing at UBA?",
-      "a": "Academic standing (regularidad) is your official status as a CBC student. You maintain regular status with 75% minimum attendance and passing exam scores."
+      "q": "What is the minimum attendance required to achieve Regular standing at UBA CBC?",
+      "a": "Students must attend at least **75%** of scheduled classes. For a course with 20 class sessions, that means attending a minimum of 15. Missing 6 or more sessions automatically results in Free (libre) classification, regardless of exam scores. Some cátedras may set a stricter internal threshold, so always check the course syllabus."
     },
     {
-      "q": "What exam scores do I need?",
-      "a": "Each exam (parcial) must score at least 4 out of 10 to pass. Your overall average is calculated from both exams."
+      "q": "What is the minimum passing score for each midterm exam (parcial) at UBA CBC?",
+      "a": "Each individual midterm must be scored **4 or higher** on UBA's 1–10 grading scale. There is no cross-exam compensation: a score of 3 on Exam 1 and 10 on Exam 2 still results in Free standing. The minimum score of 4 is defined across all UBA faculties as the entry threshold for Regular classification."
     },
     {
-      "q": "Can I retake exams if I fail?",
-      "a": "Yes, if you fail one exam, you can take a makeup exam (recuperatorio). If you fail both, you'll need to retake the course."
+      "q": "What is the difference between Regular and Free (libre) standing at UBA?",
+      "a": "A **Regular** student takes a standard final exam covering the course material with a passing threshold of 4/10. A **Free (libre)** student must pass a more comprehensive oral or written final exam — often covering the entire syllabus at once — which is graded at a higher difficulty level and typically has a lower pass rate. Free status is a significant disadvantage academically."
     },
     {
-      "q": "What is the final exam?",
-      "a": "The final exam is your last assessment. It's in-person and covers all course material. You must maintain regular status to be eligible."
+      "q": "What is Direct Promotion (promoción directa) and how does it work at CBC?",
+      "a": "Direct Promotion allows a Regular student with a midterm average of **7 or higher** (and ≥75% attendance) to pass the course without sitting a final exam. The final grade is the average of the two parciales. However, not every CBC subject offers this modality — it depends on the specific cátedra (chair) and course. Always confirm with your professor or the departmental secretariat before assuming you qualify."
     },
     {
-      "q": "What is the CBC at UBA?",
-      "a": "The CBC (Common Basic Cycle) is the foundational program required for most UBA undergraduate degrees. It typically includes 6 courses: 4 mandatory and 2 electives aligned with your major."
+      "q": "If I have a makeup exam (recuperatorio), which score is used to calculate my standing?",
+      "a": "If your cátedra offers a recuperatorio (makeup midterm), the score recorded is the recuperatorio result, which **replaces** the original failed exam score. You do not average the two attempts. Only the replacement score counts toward your standing calculation. Confirm your cátedra's policy, as not all CBC chairs offer recuperatorios for both parciales."
     },
     {
-      "q": "How long does the CBC take?",
-      "a": "The CBC typically takes 1 year if you study full-time, or 1-2 years if studying part-time while working."
+      "q": "Can I lose my Regular standing after I earn it?",
+      "a": "Yes. In the Argentine university system, Regular standing is **valid for a limited number of exam calls (turnos)**. At UBA, Regular status typically lasts for a set number of exam periods (often 3 exam calls across regular and extraordinary sessions). If a Regular student fails to sit or pass the final within those calls, they lose their Regular status and must retake the course from the beginning to earn it again."
     },
     {
-      "q": "Is English required for UBA CBC?",
-      "a": "Many careers require intermediate English proficiency. Check your specific degree program for language requirements."
+      "q": "Is UBA CBC attendance tracked differently for theoretical (teórica) vs. practical (práctica) classes?",
+      "a": "In most CBC subjects, attendance is tracked **separately** for theoretical (teórica) and practical (práctica) class types, and the 75% rule applies independently to each. Missing primarily practical classes can cause you to fail the attendance requirement for practicals even if your theoretical attendance is perfect. Always check which class types are mandatory in your specific subject's regulations."
     },
     {
-      "q": "Are all the calculators on this site free?",
-      "a": "Yes, all our calculators are completely free and require no registration."
+      "q": "What score scale does UBA use and what do the numbers mean in practice?",
+      "a": "UBA uses a **1–10 integer scale**: 1–3 = Insufficient (reprobado), 4–6 = Sufficient/Good (aprobado), 7–8 = Distinguished (notable), 9–10 = Outstanding (sobresaliente). The minimum passing grade is 4 in all cases. For graduate-level programs the threshold for maintaining enrollment can be 6 or higher, but at the CBC undergraduate entry level, 4 is the standard floor."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
-    },
-    {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
-    },
-    {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Universidad de Buenos Aires – Ciclo Básico Común Official Site",
+      "url": "https://www.uba.ar/contenido/15"
     }
   ],
   "dataUpdate": {

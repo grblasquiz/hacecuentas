@@ -7,13 +7,14 @@
   "audience": "global",
   "icon": "📶",
   "formulaId": "wifi-canal-optimo-24-5-ghz",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Guía para seleccionar canal · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá banda y obtené canales recomendados al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "Esta calculadora te ayuda a elegir el canal WiFi óptimo según la banda que usás (2.4 GHz o 5 GHz), para minimizar la interferencia con otras redes y maximizar el rendimiento de tu conexión inalámbrica. La banda de 2.4 GHz tiene 13 canales en Argentina (según norma ITU-R), pero solo 3 son no solapados: 1, 6 y 11. La banda de 5 GHz ofrece hasta 24 canales no solapados de 20 MHz, con mucho menos congestión. Elegir el canal equivocado puede reducir tu velocidad hasta un 80% en entornos con muchas redes vecinas.",
+  "keyTakeaway": "En 2.4 GHz usá siempre los canales **1, 6 u 11** (únicos 3 no solapados); en 5 GHz preferí canales **UNII-1 (36, 40, 44, 48)** para mayor compatibilidad y menor latencia.",
   "useCases": [
-    "Dimensionar wiFi: canal óptimo 2.4/5 GHz antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Vivís en un edificio de departamentos con 10+ redes WiFi vecinas y tu conexión se corta o va lenta en horas pico.",
+    "Tenés una PyME o consultorio y necesitás garantizar estabilidad para videollamadas y pagos con POS.",
+    "Configurás un router nuevo o cambias el firmware (OpenWrt, DD-WRT) y querés asignar el canal manualmente.",
+    "Tenés dispositivos IoT (smart TV, cámaras, bocinas) que saturan la banda 2.4 GHz y querés migrar equipos al 5 GHz.",
+    "Notás caídas de velocidad en horarios nocturnos cuando los vecinos usan más el WiFi y querés diagnosticar la causa."
   ],
   "fields": [
     {
@@ -57,49 +58,53 @@
     ],
     "result": "1,6,11"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nGuía para seleccionar canal · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl canal óptimo no surge de una fórmula matemática única, sino de la combinación de dos factores: **ancho de banda de cada canal** y **solapamiento entre canales adyacentes**.\n\n```\nSolapamiento (MHz) = Ancho_canal - |canal_A - canal_B| × separación_por_canal\n\nBanda 2.4 GHz: cada canal ocupa 22 MHz, separación entre canales = 5 MHz\n→ Canales sin solapamiento: deben estar separados ≥ 5 posiciones\n→ Canal 1 (2412 MHz), Canal 6 (2437 MHz), Canal 11 (2462 MHz)\n→ Separación real entre C1 y C6: (6-1)×5 = 25 MHz ✓ sin solape\n\nBanda 5 GHz: canales de 20 MHz, separación = 20 MHz (numeración de a 4)\n→ Canales no solapados de 20 MHz: 36,40,44,48,52,56,60,64,100,104...\n→ Canales de 40 MHz (bond): 38,46,54,62 (pares de 2 canales de 20 MHz)\n→ Canales de 80 MHz (bond): 42,58,106,122,138,155\n```\n\n---\n\n## Tabla de referencia\n\n### Banda 2.4 GHz — Canales disponibles en Argentina\n\n| Canal | Frecuencia central | Rango ocupado | Solapamiento con vecinos | Recomendado |\n|-------|--------------------|---------------|--------------------------|-------------|\n| 1     | 2412 MHz           | 2401–2423 MHz | Solo con 2,3,4,5         | ✅ Sí        |\n| 2     | 2417 MHz           | 2406–2428 MHz | 1,3,4,5,6                | ❌ No        |\n| 3     | 2422 MHz           | 2411–2433 MHz | 1,2,4,5,6,7              | ❌ No        |\n| 4     | 2427 MHz           | 2416–2438 MHz | 1–8                      | ❌ No        |\n| 5     | 2432 MHz           | 2421–2443 MHz | 1–9                      | ❌ No        |\n| 6     | 2437 MHz           | 2426–2448 MHz | Solo con 2–10 (no 1,11)  | ✅ Sí        |\n| 7     | 2442 MHz           | 2431–2453 MHz | 2–11                     | ❌ No        |\n| 8     | 2447 MHz           | 2436–2458 MHz | 3–12                     | ❌ No        |\n| 9     | 2452 MHz           | 2441–2463 MHz | 4–13                     | ❌ No        |\n| 10    | 2457 MHz           | 2446–2468 MHz | 5–13                     | ❌ No        |\n| 11    | 2462 MHz           | 2451–2473 MHz | Solo con 7–13 (no 1,6)   | ✅ Sí        |\n| 12    | 2467 MHz           | 2456–2478 MHz | 7–13                     | ⚠️ Limitado  |\n| 13    | 2472 MHz           | 2461–2483 MHz | 8–13                     | ⚠️ Limitado  |\n\n> Los canales 12 y 13 están habilitados en Argentina pero muchos dispositivos de origen norteamericano no los soportan.\n\n---\n\n### Banda 5 GHz — Grupos de canales (UNII)\n\n| Grupo   | Canales (20 MHz)         | Rango de frecuencia    | Potencia máxima | DFS requerido | Recomendado      |\n|---------|--------------------------|------------------------|-----------------|---------------|------------------|\n| UNII-1  | 36, 40, 44, 48           | 5150–5250 MHz          | 200 mW (23 dBm) | ❌ No          | ✅ Mejor opción   |\n| UNII-2A | 52, 56, 60, 64           | 5250–5350 MHz          | 200 mW          | ✅ Sí          | ⚠️ Puede pausar  |\n| UNII-2C | 100,104,108,112,116,132… | 5470–5725 MHz          | 1000 mW         | ✅ Sí          | ⚠️ Solo routers  |\n| UNII-3  | 149, 153, 157, 161, 165  | 5725–5850 MHz          | 800 mW          | ❌ No          | ✅ Segunda opción |\n\n> **DFS (Dynamic Frequency Selection):** el router debe ceder el canal si detecta radar (aeropuertos, meteorología). Esto puede causar desconexiones de 1–10 segundos.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Edificio de departamentos (2.4 GHz congestionada)\nCon un escáner WiFi (ej. WiFi Analyzer para Android) detectás 12 redes: 5 en canal 6, 3 en canal 1, 2 en canal 11 y 2 en canales intermedios (3 y 8, que generan interferencia cruzada). La decisión correcta es **canal 11**, ya que tiene la menor cantidad de redes no solapadas activas. Evitás el canal 6 porque tiene 5 redes compitiendo directamente.\n\n### Caso 2 — Casa con WiFi 5 GHz y dispositivos modernos\nTenés un router WiFi 6 (802.11ax) y querés configurar la banda de 5 GHz. Elegís **canal 36 con ancho de 80 MHz** (bond de canales 36+40+44+48). Esto te da hasta 600 Mbps reales en IEEE 802.11ac/ax sin riesgo de DFS. Si tenés varios dispositivos legacy (2013–2017), restringís a 40 MHz para mayor compatibilidad.\n\n### Caso 3 — Router en oficina con videollamadas\nEn una oficina con 8 computadoras haciendo Zoom, el ancho de canal importa tanto como el número. En 5 GHz, canal 149 (UNII-3, sin DFS) con 40 MHz garantiza estabilidad sin pausas por detección de radar. La latencia promedio baja de 18 ms a 6 ms vs. usar un canal con DFS activo en horario laboral.\n\n---\n\n## Errores comunes\n\n1. **Usar \"automático\" en el router para siempre**: El modo auto elige el canal al reiniciar el equipo, pero no lo cambia si la red vecina migra al mismo canal. Revisá manualmente cada 3–6 meses o cuando notes caídas.\n\n2. **Elegir canal 6 en 2.4 GHz por default**: Es el canal más usado en Argentina (viene preconfigurado en muchos routers de ISPs como Fibertel/Claro y Personal). Paradójicamente, suele ser el más congestionado. Escaneá antes de decidir.\n\n3. **Usar canales intermedios en 2.4 GHz (ej: canal 3, 5, 8)**: Aunque parezca que \"evitás a los demás\", los canales intermedios solapan con varios vecinos a la vez, generando interferencia cruzada que es peor que la co-canal directa. Siempre 1, 6 u 11.\n\n4. **Ignorar el DFS en 5 GHz para entornos críticos**: Si usás canal 52–64 o 100–140 cerca de un aeropuerto o estación meteorológica, el router puede soltar el canal sin aviso. En hospitales, clínicas o estudios de grabación, esto es inaceptable. Usá UNII-1 o UNII-3.\n\n5. **Configurar ancho de canal de 40 MHz en 2.4 GHz en zonas densas**: Aunque 40 MHz duplica el throughput teórico, en un entorno con 10+ redes vecinas genera más interferencia de la que resuelve. En edificios, mantené 20 MHz en 2.4 GHz.\n\n6. **Comparar velocidad sin considerar la distancia**: A 1 metro del router, cualquier canal da buena señal. El canal óptimo se nota principalmente a 10–15 metros o a través de paredes, donde la interferencia co-canal reduce el SNR (relación señal/ruido) y el equipo baja de modulación (de 256-QAM a 64-QAM o menos), cayendo la velocidad hasta un 60%.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de configuración óptima de Patreon Tiers](/calculadora-patreon-tiers-setup-optimo) — optimizá los niveles de tu comunidad online como optimizás tu red.\n- [Calculadora de repaso óptimo para examen](/calculadora-repaso-optimo-examen) — aplicá la misma lógica de optimización a tu estudio.\n- [Calculadora de ganancia de amplificador operacional](/calculadora-amplificador-operacional-ganancia) — si te interesa la electrónica detrás de las señales, este es el siguiente paso.\n- [Calculadora de distancia hiperfocal de lente](/calculadora-distancia-hiperfocal-lente) — otro cálculo técnico de optimización para fotógrafos y makers.\n",
   "faq": [
     {
-      "q": "¿Por qué 1/6/11?",
-      "a": "Únicos sin solapamiento en 2.4 GHz."
+      "q": "¿Por qué en 2.4 GHz solo hay 3 canales útiles si hay 13 disponibles?",
+      "a": "Porque cada canal en 2.4 GHz ocupa 22 MHz de ancho, pero los canales están separados apenas 5 MHz entre sí. Esto significa que dos canales adyacentes (ej: 1 y 2) comparten 17 MHz de espectro y se interfieren mutuamente. Para que dos canales no se solapen en absoluto necesitás una separación de al menos 5 posiciones (5×5=25 MHz > 22 MHz). Los únicos tres grupos que cumplen eso en el espectro disponible son: canal 1 (2412 MHz), canal 6 (2437 MHz) y canal 11 (2462 MHz). Todo el resto genera interferencia cruzada."
     },
     {
-      "q": "¿5 GHz?",
-      "a": "19+ canales no solapados; DFS requiere radar check."
+      "q": "¿Qué es DFS y por qué me afecta en la banda de 5 GHz?",
+      "a": "DFS (Dynamic Frequency Selection) es un mecanismo obligatorio por regulación de la ITU-R para que los routers WiFi cedan el canal si detectan señales de radar militar, aeronáutico o meteorológico en las bandas UNII-2A (52–64) y UNII-2C (100–140). Cuando el router detecta radar, debe cambiar de canal en menos de 10 segundos, lo que provoca una desconexión breve de todos los dispositivos. En Argentina, las zonas cercanas a aeropuertos (Ezeiza, Aeroparque, Córdoba) o bases meteorológicas del SMN pueden activar DFS con frecuencia."
     },
     {
-      "q": "¿Ancho 160 MHz?",
-      "a": "Rápido pero ruido y menos canales."
+      "q": "¿Vale la pena usar 5 GHz si el router está en otro cuarto?",
+      "a": "Depende del tipo de obstáculos. La señal de 5 GHz tiene mayor atenuación en paredes de hormigón armado o ladrillo macizo (pierde ~15–20 dB extra vs. 2.4 GHz), pero en paredes de durlock o madera la diferencia es mínima. Como regla práctica: si hay más de 2 paredes sólidas entre el router y el dispositivo, 2.4 GHz puede dar mejor cobertura práctica aunque menor velocidad teórica. Con una sola pared de mampostería liviana, 5 GHz sigue siendo mejor opción en velocidad real."
     },
     {
-      "q": "¿WiFi 6E?",
-      "a": "6 GHz, limpio, requiere clientes compatibles."
+      "q": "¿Cómo sé qué canales están usando mis vecinos en Argentina?",
+      "a": "Podés usar apps gratuitas como **WiFi Analyzer** (Android, gratuita en Play Store) o **NetSpot** (Windows/Mac, versión free) para escanear el espectro y ver un mapa de canales con la potencia de cada red. En Windows también podés abrir una terminal y escribir `netsh wlan show networks mode=bssid` para listar redes y canales. Se recomienda hacer el escaneo en el mismo lugar donde usás el equipo (no junto al router) y en horario pico (21–23 hs en días de semana)."
     },
     {
-      "q": "¿App?",
-      "a": "Wifi Analyzer (Android) ayuda a elegir."
+      "q": "¿Qué ancho de canal conviene configurar: 20, 40 u 80 MHz?",
+      "a": "En **2.4 GHz**, usá siempre **20 MHz** en entornos con otras redes (edificios, barrios densamente poblados); 40 MHz solo en casas aisladas donde no haya interferencia. En **5 GHz**, podés usar **40 MHz** para compatibilidad con dispositivos de 2013–2018, o **80 MHz** para equipos WiFi 5/6 modernos que soporten 802.11ac/ax: esto eleva el throughput teórico de ~450 Mbps a ~1300 Mbps. Los 160 MHz (WiFi 6) solo son útiles si el cliente también los soporta y no hay redes vecinas en 5 GHz."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Los routers de los ISPs argentinos vienen bien configurados de fábrica?",
+      "a": "En general, no. Los routers entregados por proveedores como Fibertel (Claro), Personal Flow y Telecentro suelen venir con canal automático o canal 6 fijo en 2.4 GHz, que es el más congestionado por ser el default universal. Muchos tampoco activan la banda de 5 GHz correctamente o la nombran igual que la de 2.4 GHz, confundiendo a los dispositivos. Se recomienda acceder al panel de administración (generalmente en 192.168.0.1 o 192.168.1.1) y configurar los canales manualmente según el resultado del escáner."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿WiFi 6 (802.11ax) cambia la lógica de selección de canal?",
+      "a": "En gran parte, no: los canales físicos disponibles son los mismos. Lo que WiFi 6 agrega es **OFDMA** (Orthogonal Frequency Division Multiple Access), que permite dividir un canal en subportadoras y atender múltiples dispositivos simultáneamente, reduciendo la congestión intra-canal. Además incorpora **BSS Coloring**, una etiqueta que permite a los routers distinguir transmisiones propias de las de vecinos en el mismo canal, reduciendo la espera innecesaria. Aun así, en entornos muy congestionados seguís necesitando elegir el canal con menor actividad."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Hay regulación oficial en Argentina sobre los canales WiFi permitidos?",
+      "a": "Sí. La **ENACOM** (Ente Nacional de Comunicaciones) regula el uso del espectro radioeléctrico en Argentina. Para la banda de 2.4 GHz (2400–2483.5 MHz) se permiten los canales 1 al 13, con una potencia máxima de 100 mW PIRE (20 dBm) para uso libre en interiores bajo la Resolución ENACOM N° 1523/2018. Para 5 GHz, los límites varían según el subbanda (UNII-1 a UNII-3), en línea con las recomendaciones ITU-R SM.1538. Los canales 12 y 13 están habilitados pero no son obligatorios para dispositivos certificados bajo estándares norteamericanos (FCC)."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
+      "name": "ITU-R — Recomendación SM.1538: Uso del espectro para sistemas RLAN (WiFi) en bandas 2.4 y 5 GHz",
+      "url": "https://www.itu.int/rec/R-REC-SM.1538/es"
     },
     {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "Wikipedia ES — IEEE 802.11: estándares WiFi, canales y frecuencias",
+      "url": "https://es.wikipedia.org/wiki/IEEE_802.11"
+    },
+    {
+      "name": "ENACOM Argentina — Resolución 1523/2018: equipos de radiocomunicaciones de corto alcance",
+      "url": "https://www.enacom.gob.ar/resoluciones/resolucion-1523-2018_n3078"
     }
   ],
   "relatedSlugs": [

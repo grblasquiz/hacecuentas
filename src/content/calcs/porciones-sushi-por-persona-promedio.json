@@ -7,13 +7,14 @@
   "audience": "global",
   "icon": "🍣",
   "formulaId": "porciones-sushi-por-persona-promedio",
-  "intro": "La precisión en la cocina hace la diferencia entre una receta que sale bien y una que falla. Esta calculadora te da el cálculo de sushi por persona según cantidad de personas, tipo de comida, cantidad de niños y precio por pieza. Devuelve piezas totales a pedir junto con contexto para interpretar el valor. El cálculo corre en tu navegador: no guardamos tus datos, no requiere registro y es gratis.",
-  "keyTakeaway": "Ingresá cantidad de personas, tipo de comida y cantidad de niños y obtené piezas totales a pedir al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "Esta calculadora te dice exactamente cuántas piezas de sushi pedir según la cantidad de comensales, si hay nenes en la mesa y el nivel de hambre del grupo. La regla de oro del sushi es **8 a 12 piezas por adulto** en una comida completa (almuerzo o cena principal), o 4 a 6 piezas si es entrada o picada. Un roll estándar trae 8 piezas, así que la calculadora también te devuelve cuántos rolls pedirte para no quedarte corto ni tirar comida. Si ingresás el precio por pieza, te calcula el gasto total estimado en pesos.",
+  "keyTakeaway": "**Piezas = (adultos × 10) + (niños × 5)** como punto de partida para una cena completa; dividí por 8 para saber cuántos rolls pedir. Ejemplo: 4 adultos y 2 nenes → (4×10)+(2×5) = 50 piezas ≈ 7 rolls.",
   "useCases": [
-    "Resolver rápido una duda sobre sushi por persona sin papel y lápiz.",
-    "Comparar escenarios o alternativas con números concretos.",
-    "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Calcular cuántos rolls pedir en un delivery de sushi para una noche de cumpleaños en casa con adultos y chicos",
+    "Estimar el presupuesto total antes de hacer el pedido online y que no te explote la tarjeta",
+    "Organizar una reunión de oficina donde el sushi es la comida principal y tenés que cuadrar porciones para 15 personas",
+    "Planificar una picada de entrada con sushi antes de un asado para que nadie llegue con hambre a la carne",
+    "Comparar el costo por persona entre distintos restaurantes de sushi de tu zona ingresando el precio por pieza de cada uno"
   ],
   "fields": [
     {
@@ -97,49 +98,49 @@
     ],
     "result": "Resultado"
   },
-  "explanation": "Las **medidas en cocina** siguen estándares internacionales (sistema métrico + tradiciones culinarias regionales). Las recetas suelen usar tazas, cucharadas y gramos según origen. Conocer las equivalencias es clave.\n\n## Cómo se calcula\n\nSushi: 10-12 piezas o 2-3 rolls por persona promedio · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa calculadora usa tres variables para determinar las piezas totales: cantidad de adultos, cantidad de niños y el nivel de hambre (entrada, comida completa o muy hambrientos).\n\n```\n// Fórmula base\npiezas_adulto  = nivelHambre === \"entrada\"    ? 5\n               : nivelHambre === \"normal\"     ? 10\n               : nivelHambre === \"mucho\"      ? 14\n               : 10  // default\n\npiezas_nino    = Math.round(piezas_adulto * 0.5)\n\nadultos        = personas - ninos\n\npiezasTotales  = (adultos × piezas_adulto) + (ninos × piezas_nino)\n\nrollsEquivalentes = Math.ceil(piezasTotales / 8)   // un roll = 8 piezas\n\ncostoEstimado  = piezasTotales × precioPorPieza    // solo si se ingresó precio\n```\n\n> **Nota:** Los rolls se redondean hacia arriba porque los restaurantes venden el roll completo, nunca medio roll.\n\n---\n\n## Tabla de referencia\n\n| Situación | Piezas por adulto | Piezas por niño (<12 años) | Rolls por adulto |\n|---|---|---|---|\n| Entrada / picada previa | 4 – 6 | 2 – 3 | ½ roll |\n| Almuerzo o cena normal | 8 – 12 | 4 – 6 | 1 – 1,5 rolls |\n| Cena con mucho hambre | 12 – 16 | 6 – 8 | 1,5 – 2 rolls |\n| Solo rolls gruesos (uramaki) | 6 – 8 | 3 – 4 | 1 roll |\n| Solo nigiri o sashimi | 10 – 14 piezas | 5 – 7 piezas | — |\n\n**Referencia de tamaños de roll más comunes en Argentina:**\n| Tipo de roll | Piezas por roll | Calorías aprox. por pieza |\n|---|---|---|\n| California roll (8 pzs) | 8 | 40 – 50 kcal |\n| Futomaki (6 pzs) | 6 | 55 – 70 kcal |\n| Uramaki clásico (8 pzs) | 8 | 50 – 65 kcal |\n| Nigiri (1 pieza) | 1 | 45 – 60 kcal |\n| Temaki (cono) | 1 | 80 – 120 kcal |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Cumpleaños familiar (6 adultos + 3 nenes, cena completa)\n- Adultos: 6 × 10 = 60 piezas\n- Niños: 3 × 5 = 15 piezas\n- **Total: 75 piezas → 10 rolls** (Math.ceil(75/8) = 10)\n- Si la pieza sale $900 ARS → costo estimado: **$67.500**\n\n### Caso 2 — Entrada de sushi antes del asado (8 adultos, entrada liviana)\n- Adultos: 8 × 5 = 40 piezas\n- **Total: 40 piezas → 5 rolls**\n- Con precio de $850/pieza → costo estimado: **$34.000**\n\n### Caso 3 — Almuerzo de oficina (12 adultos, hambre normal)\n- Adultos: 12 × 10 = 120 piezas\n- **Total: 120 piezas → 15 rolls**\n- Con precio de $950/pieza → costo estimado: **$114.000**\n\n---\n\n## Errores comunes\n\n1. **No contar los nenes como \"medio adulto\":** Muchos piden la misma cantidad para todos y sobra muchísimo. Un chico de 8 años come, en promedio, la mitad que un adulto.\n\n2. **Olvidar que los rolls se venden enteros:** Si la fórmula da 9 piezas, necesitás 2 rolls (16 piezas), no 1,125 rolls. Siempre redondá hacia arriba al pedir.\n\n3. **No considerar si el sushi es la única comida o hay otras cosas:** Si hay papas fritas, ensalada o postre, bajá 2-3 piezas por adulto. Si es sushi y nada más, subí 1-2 piezas extra.\n\n4. **Mezclar nigiri con rolls sin ajustar:** El nigiri es una sola pieza grande; el estándar de \"10 piezas por adulto\" aplica a rolls de 8 piezas. Si pedís solo nigiri, 8 piezas ya es una buena porción adulta.\n\n5. **Subestimar a los comensales \"sushiholics\":** Si en el grupo hay fanáticos declarados del sushi, usá el nivel \"mucho hambre\" (14 piezas/adulto) aunque no sea una cena principal.\n\n---\n\n## Calculadoras relacionadas\n\nPara completar tu planificación de comidas, también podés usar:\n\n- [Calculadora de porciones de arroz por persona](/calculadora-porciones-arroz-por-persona-guarnicion) — si preparás arroz de acompañamiento o hacés sushi casero.\n- [Calculadora de carne para asado por persona](/calculadora-porciones-carne-asado-parrilla-persona) — ideal si el sushi es la entrada y después viene la parrilla.\n- [Calculadora de pasta seca por persona](/calculadora-porciones-pasta-seca-persona-hambre) — para cuando la reunión mezcla opciones y necesitás calcular todo junto.\n- [Calculadora de carne para asado en kg](/calculadora-carne-asado-kg-por-persona) — para saber exactamente cuántos kilos comprar si el sushi va de aperitivo antes del asado.",
   "faq": [
     {
-      "q": "¿Cómo se calcula?",
-      "a": "La calculadora aplica la fórmula estándar del tema (Sushi por persona) y los valores los ingresás vos. El resultado es orientativo; para decisiones importantes consultá con un profesional del área."
+      "q": "¿Cuántas piezas de sushi por persona se recomiendan para una cena completa?",
+      "a": "El estándar internacional más aceptado es entre 8 y 12 piezas por adulto para una cena completa, lo que equivale a 1 o 1,5 rolls de 8 piezas. En Argentina, la mayoría de los restaurantes de sushi sugieren en su menú pedir entre 2 y 3 rolls por persona para una cena sin otro plato de fondo. Si hay mucha variedad de tipos (nigiri, maki, temaki), 10 piezas mixtas es un punto de partida seguro."
     },
     {
-      "q": "¿Precisión?",
-      "a": "Resultado práctico ±5-10% según productos/variables."
+      "q": "¿Cuántas piezas come un niño en promedio?",
+      "a": "Un niño de entre 5 y 12 años suele comer entre 4 y 6 piezas por comida, aproximadamente la mitad que un adulto. Los más chicos (menores de 5) raramente superan las 3 piezas. Tené en cuenta que los nenes suelen preferir piezas suaves como el California roll (sin pescado crudo) y evitan los sabores intensos como el sashimi o el wasabi."
     },
     {
-      "q": "¿Referencias?",
-      "a": "Recetas clásicas, manuales DIY internacionales."
+      "q": "¿El sushi engorda mucho? ¿Cuántas calorías tiene un roll?",
+      "a": "Un roll estándar de 8 piezas (tipo California o uramaki) aporta entre 300 y 500 kcal en total, lo que da unas 40 a 65 kcal por pieza. El nigiri ronda las 45-60 kcal por unidad. Los rolls más calóricos son los que llevan mayonesa, queso crema o tempura frito, que pueden llegar a 80-100 kcal por pieza. Para una cena de 10 piezas, estás entre 400 y 700 kcal según el tipo."
     },
     {
-      "q": "¿Hispanohablante?",
-      "a": "Aplicable a México, España, Argentina, Chile, Colombia y todos los países hispanos."
+      "q": "¿Cuántos rolls pido si somos 4 personas para una noche de película en casa?",
+      "a": "Para 4 adultos en una cena relajada de película, con el sushi como comida principal, calculá 10 piezas por persona = 40 piezas en total, que equivalen a 5 rolls de 8 piezas. Si además picoteás otras cosas (papas, empanadas), con 3 o 4 rolls alcanza. Para no fallar, siempre pedí un roll extra de colchón y listo."
     },
     {
-      "q": "¿Actualizado?",
-      "a": "2026."
+      "q": "¿Qué diferencia hay entre pedir por pieza o por roll?",
+      "a": "En Argentina, la mayoría de los restaurantes y apps de delivery venden el sushi por roll completo (generalmente de 6 u 8 piezas), aunque algunos locales premium permiten pedir por pieza individual. Cuando calculás con esta herramienta, el resultado te da las piezas totales y los rolls equivalentes, así podés trasladar directamente el número al menú del local, ya sea que venda por pieza o por roll."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cómo calculo el costo total del pedido antes de hacerlo?",
+      "a": "Ingresá el precio por pieza que figura en el menú del local (o dividí el precio del roll por 8 para obtener el precio unitario por pieza). La calculadora multiplica las piezas totales por ese valor y te da el costo estimado en pesos. Recordá sumar el costo de delivery si pedís a domicilio, que en muchas apps de Argentina oscila entre $1.500 y $4.000 ARS según la zona y la plataforma."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿El sushi crudo es seguro para embarazadas o personas con defensas bajas?",
+      "a": "La Organización Mundial de la Salud (OMS) recomienda que las mujeres embarazadas, adultos mayores y personas inmunocomprometidas eviten el pescado crudo, ya que puede contener bacterias como Listeria o parásitos como Anisakis. Para esos casos, el sushi vegetariano (pepino, palta, zanahoria) o los rolls con ingredientes cocidos (langostino tempura, cangrejo cocido) son opciones seguras que también pueden calcularse con esta herramienta."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Cuánto tiempo antes del evento debo hacer el pedido de sushi?",
+      "a": "Los restaurantes de sushi en Argentina suelen tener tiempos de entrega de 45 a 90 minutos en horario pico (viernes y sábado noche). Para eventos de más de 8 personas, lo ideal es coordinar el pedido con al menos 24 horas de anticipación o reservar en el local. El sushi no se puede preparar con mucha antelación porque el arroz se endurece y el pescado pierde frescura; lo ideal es consumirlo en menos de 2 horas desde la preparación."
     }
   ],
   "sources": [
     {
-      "name": "USDA FoodData Central",
-      "url": "https://fdc.nal.usda.gov"
+      "name": "OMS — Inocuidad de los alimentos: pescado y mariscos crudos",
+      "url": "https://www.who.int/es/news-room/fact-sheets/detail/food-safety"
     },
     {
-      "name": "FAO — Organización para la Alimentación",
-      "url": "https://www.fao.org"
+      "name": "Wikipedia ES — Sushi",
+      "url": "https://es.wikipedia.org/wiki/Sushi"
     }
   ],
   "relatedSlugs": [

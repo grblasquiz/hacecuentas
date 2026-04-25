@@ -19,14 +19,14 @@
     "exercise heart zones",
     "training bpm calculator"
   ],
-  "intro": "**Heart rate zones** let you train at the right intensity for your goal: burn fat, improve aerobic endurance, or raise your VO2max. This calculator uses the **Karvonen formula** (based on heart rate reserve) and the **Tanaka equation (2001)** for max HR, which is more accurate than the outdated '220 − age.' You need to know your **resting HR** (measure it when you wake up, before getting out of bed).",
-  "keyTakeaway": "**Max HR (Tanaka)**: `208 - 0.7 × age`. **Karvonen**: `target HR = resting HR + % × (max HR − resting HR)`. For a 30-year-old adult with resting HR 65 bpm: fat-burning zone = **137–151 bpm**, cardio zone = **151–165 bpm**.",
+  "intro": "The Karvonen Heart Rate Zones Calculator computes your personalized training zones using the **Karvonen formula**, which factors in both your age-predicted maximum heart rate and your resting heart rate (RHR) to derive your **Heart Rate Reserve (HRR)**. Unlike simpler methods that use only max HR percentages, Karvonen anchors each zone to your individual cardiovascular fitness baseline, making the zones far more accurate. Max HR is estimated using the **Tanaka formula**: `208 − 0.7 × age`, then zones are calculated as `RHR + (HRR × intensity%)`. Use this calculator before any structured endurance, fat-loss, or cardio training program.",
+  "keyTakeaway": "**Zone target HR = Resting HR + (Heart Rate Reserve × Zone%) where HRR = Max HR − Resting HR and Max HR = 208 − 0.7 × Age (Tanaka, 2001)**. For a 40-year-old with RHR 60 bpm: Max HR = 180, HRR = 120, Zone 2 = 132–144 bpm.",
   "useCases": [
-    "You train with a watch/HR strap and want to know what zone you're in.",
-    "You want to optimize your training to burn fat (zone 2).",
-    "You're preparing for a race and need to define paces by HR zone.",
-    "Your cardiologist told you not to exceed a certain HR and you need to calculate the limit.",
-    "You're a coach and need to program intensity by zones for your clients."
+    "Endurance runners planning a 5K/10K training block who need to keep easy runs truly aerobic (Zone 2) to build mitochondrial density without overtraining.",
+    "Cyclists doing structured interval work who must hit Zone 4 (lactate threshold, 80–90% HRR) and need precise bpm targets rather than generic percentages.",
+    "Overweight adults starting a cardio program who want to maximize fat oxidation by staying in Zone 2 (60–70% HRR), where fat contributes ~50% of fuel at moderate intensities.",
+    "Cardiac rehabilitation patients or older athletes (50+) whose resting HR is elevated (70–80 bpm), making raw-percentage HR zones dangerously inaccurate without HRR correction.",
+    "Triathletes periodizing a full season who assign each workout phase (base, build, peak) to specific Karvonen zones for precise physiological adaptation targeting."
   ],
   "fields": [
     {
@@ -134,35 +134,39 @@
     ],
     "result": "Max HR: **187 bpm**. Fat-burning zone: **138–150 bpm**. Cardio zone: **150–163 bpm**."
   },
-  "explanation": "## The 5 Training Zones\n\n| Zone | % Reserve | Feeling | Main goal |\n|---|---|---|---|\n| Z1 (50–60%) | Very easy | Can chat freely | Active recovery |\n| Z2 (60–70%) | Easy | Comfortable conversation | Aerobic base, fat burning |\n| Z3 (70–80%) | Moderate | Short phrases | Aerobic endurance |\n| Z4 (80–90%) | Hard | Only single words | Anaerobic threshold, speed |\n| Z5 (90–100%) | Maximum | Can't talk | VO2max, max power |\n\n## Karvonen Formula\n\n```\nTarget HR = resting HR + percentage × (max HR − resting HR)\n```\n\nIt's more accurate than using only a % of max HR because it accounts for your **fitness level** (represented by resting HR). An athlete with 45 bpm resting has different zones than a sedentary person with 80 bpm.\n\n## Max HR: Tanaka vs. 220 − age\n\nThe old `220 − age` formula overestimates for young people and underestimates for older adults. **Tanaka et al. (2001)** proposed:\n```\nMax HR = 208 − 0.7 × age\n```\nValidated with 18,712 participants, it's more accurate across all ages.\n\n## How to Measure Your Resting HR\n\n1. **Upon waking**, before getting out of bed.\n2. Lying face up, relaxed.\n3. Measure for **60 seconds** (or 15 sec × 4).\n4. Do it **3–5 days in a row** and take the average.\n5. Don't measure after caffeine, alcohol, or poor sleep.\n\n## Resting HR and Fitness Level\n\n| Resting HR | Level |\n|---|---|\n| < 50 bpm | Athlete |\n| 50–59 | Very good |\n| 60–69 | Good |\n| 70–79 | Average |\n| 80–89 | Below average |\n| 90+ | Consult a doctor |\n\n## How Much to Train in Each Zone\n\nFor most recreational athletes, the recommended distribution is **80/20**:\n- **80% of time** in Zone 1–2 (aerobic base).\n- **20% of time** in Zone 4–5 (intervals, tempo).",
+  "explanation": "## How It's Calculated\n\nThe Karvonen method uses three sequential steps:\n\n```\nStep 1 — Max HR (Tanaka formula, 2001):\n  HRmax = 208 − (0.7 × Age)\n\nStep 2 — Heart Rate Reserve (HRR):\n  HRR = HRmax − Resting HR (RHR)\n\nStep 3 — Zone boundaries:\n  Zone Lower Bound = RHR + (HRR × lower_intensity)\n  Zone Upper Bound = RHR + (HRR × upper_intensity)\n```\n\n**Why Tanaka instead of the old \"220 − age\"?**\nTanaka et al. (2001) meta-analyzed 351 studies (18,712 subjects) and showed `220 − age` systematically underestimates max HR in people over 40 and overestimates it in young adults. Tanaka's `208 − 0.7 × age` has a standard error of ±7 bpm.\n\n---\n\n## Reference Table — 5 Karvonen Training Zones\n\n| Zone | Name | HRR % | Primary Fuel | Perceived Effort (RPE 1–10) | Typical Use |\n|------|-------------------------------|-----------|-------------------|-----------------------------|------------------------|\n| 1 | Active Recovery | 50–60% | Fat (~65%) | 2–3 (very light) | Warm-up, cool-down, recovery days |\n| 2 | Aerobic / Fat-Burn | 60–70% | Fat (~50%) | 3–4 (light-moderate) | Base building, long slow distance |\n| 3 | Aerobic Threshold / Cardio | 70–80% | Mixed fat+carb | 5–6 (moderate-hard) | General fitness, tempo runs |\n| 4 | Lactate Threshold | 80–90% | Carb dominant | 7–8 (hard) | Race pace, threshold intervals |\n| 5 | VO₂max / Anaerobic | 90–100% | Carb (~95%) | 9–10 (maximal) | Sprint intervals, peak efforts |\n\n*Fuel percentages are approximate; crossover point varies with individual fitness level.*\n\n---\n\n## Typical Case Examples\n\n### Example 1 — 30-year-old, RHR 65 bpm (from calculator example)\n- **Max HR**: `208 − 0.7 × 30` = **187 bpm**\n- **HRR**: `187 − 65` = **122 bpm**\n- Zone 1 (50–60%): `65 + 0.50×122` to `65 + 0.60×122` = **126–138 bpm**\n- Zone 2 (60–70%): `65 + 0.60×122` to `65 + 0.70×122` = **138–150 bpm**\n- Zone 3 (70–80%): `65 + 0.70×122` to `65 + 0.80×122` = **150–163 bpm**\n- Zone 4 (80–90%): `65 + 0.80×122` to `65 + 0.90×122` = **163–175 bpm**\n- Zone 5 (90–100%): `65 + 0.90×122` to `187` = **175–187 bpm**\n\n### Example 2 — 50-year-old, RHR 72 bpm (deconditioned adult)\n- **Max HR**: `208 − 0.7 × 50` = **173 bpm**\n- **HRR**: `173 − 72` = **101 bpm**\n- Zone 2 (60–70%): `72 + 0.60×101` to `72 + 0.70×101` = **133–143 bpm**\n- Zone 4 (80–90%): `72 + 0.80×101` to `72 + 0.90×101` = **153–163 bpm**\n\n**Note**: If this person used \"220 − age\" (170 bpm) with a flat 70% = 119 bpm, they'd miss their true fat-burn zone by ~14 bpm — a meaningful error.\n\n### Example 3 — 25-year-old trained athlete, RHR 48 bpm\n- **Max HR**: `208 − 0.7 × 25` = **190.5 ≈ 191 bpm**\n- **HRR**: `191 − 48` = **143 bpm**\n- Zone 2 (60–70%): `48 + 0.60×143` to `48 + 0.70×143` = **134–148 bpm**\n- Zone 5 (90–100%): `48 + 0.90×143` to `191` = **177–191 bpm**\n\nThe athlete's low RHR pushes Zone 2 lower in absolute bpm than for the 30-year-old, despite a higher max HR — exactly why Karvonen outperforms flat-percentage methods.\n\n---\n\n## Common Errors\n\n1. **Using \"220 − age\" as max HR**: This 1970s formula was never derived from a clinical study. Tanaka's formula is more accurate, especially for adults over 35. Error can reach ±10 bpm in middle-aged populations.\n\n2. **Measuring resting HR after activity**: RHR must be taken after at least 5 minutes of rest, ideally first thing in the morning before getting out of bed. An RHR measured post-exercise can be 10–20 bpm too high, compressing all zones incorrectly.\n\n3. **Confusing HRR% with HR%**: Zone 2 at \"70% of max HR\" is NOT the same as \"70% HRR.\" For a 40-year-old with RHR 60: 70% of max HR (180) = 126 bpm, but 70% HRR = 60 + 0.70×120 = **144 bpm** — an 18 bpm difference that places the person in an entirely different training stimulus.\n\n4. **Ignoring day-to-day RHR variation**: RHR fluctuates with sleep quality, hydration, stress, and illness. A single RHR reading taken after poor sleep can be 5–10 bpm elevated. Use a 7-day morning average for best accuracy.\n\n5. **Applying zones without a lactate or VO₂max test**: Karvonen zones are statistically valid population estimates. Elite athletes should validate them with direct lactate threshold testing, as individual crossover points can deviate significantly from formula predictions.\n\n---\n\n## Related Calculators\n\nNo related calculators are currently linked for this formula. Check back as the Hacé Cuentas sports library grows.\n",
   "faq": [
     {
-      "q": "What is the fat-burning zone?",
-      "a": "**Zone 2 (60–70% of heart rate reserve)**. At this intensity the body burns a higher proportion of fat as fuel. However, for **total fat loss**, what matters most is the **total caloric deficit**, not the zone."
+      "q": "What is the Karvonen formula and who developed it?",
+      "a": "The Karvonen formula was developed by Finnish physician Martti Karvonen in 1957 and published in the *Annals of Medicine and Experimental Biology of Finland*. It defines training intensity as a percentage of Heart Rate Reserve (HRR = Max HR − Resting HR), then adds resting HR back: `Target HR = RHR + (HRR × intensity%)`. This anchoring to resting HR makes it individualized — two people with the same max HR but different resting HRs will have different zone boundaries."
     },
     {
-      "q": "Is the 220 − age formula accurate?",
-      "a": "Not very. It has a ±10–12 bpm error. The **Tanaka formula (208 − 0.7 × age)** is more accurate. Still, the gold standard is a **stress test** with a cardiologist."
+      "q": "Why is the Tanaka formula (208 − 0.7 × age) used instead of 220 − age?",
+      "a": "Tanaka et al. (2001) published a meta-analysis in the *Journal of the American College of Cardiology* covering 351 studies and 18,712 subjects. They found `220 − age` overestimates max HR in younger adults and underestimates it in older adults (40+), with cumulative error exceeding 10 bpm by age 55. The Tanaka equation `208 − 0.7 × age` has a standard error of ±7.7 bpm and is now the standard in exercise science literature."
     },
     {
-      "q": "How do I measure my resting heart rate?",
-      "a": "Upon waking, before getting out of bed, measure your pulse for 60 seconds. Do it 3–5 days and average. Skip measuring if you slept poorly or drank alcohol."
+      "q": "How do I measure my resting heart rate accurately?",
+      "a": "The CDC and American Heart Association recommend measuring RHR first thing in the morning, before getting out of bed, after at least 5 minutes of quiet rest. Place two fingers on the radial artery (wrist) or carotid artery (neck) and count beats for 60 seconds. A healthy adult RHR is 60–100 bpm; trained athletes often measure 40–60 bpm. For maximum accuracy, average readings across 5–7 consecutive mornings."
     },
     {
-      "q": "Is training always in a high zone better?",
-      "a": "No. The **80/20** distribution (80% low zone, 20% high zone) is used by most elite athletes. Always training high leads to overtraining and injuries."
+      "q": "What heart rate zone burns the most fat?",
+      "a": "Zone 2 (60–70% HRR) maximizes the *proportion* of fat used as fuel — studies show fat contributes approximately 50–65% of energy expenditure at this intensity. However, total caloric burn is lower than at higher intensities. For weight loss, a combination of Zone 2 (volume) and Zone 4 (EPOC-inducing intervals) is most effective. The NIH and ACSM recommend at least 150 min/week of moderate-intensity exercise (roughly Zone 2–3) for health benefits."
     },
     {
-      "q": "Does it work if I take blood pressure medication?",
-      "a": "**Beta-blockers** significantly reduce max HR. If you take this medication, the calculated zones will be incorrect. Consult your cardiologist for personalized zones."
+      "q": "Is Zone 4 (80–90% HRR) the lactate threshold?",
+      "a": "Zone 4 closely approximates the lactate threshold for most people, but it's not identical. Lactate threshold (LT) is the exercise intensity where blood lactate accumulates faster than it's cleared, typically around 85% of max HR in trained individuals. Karvonen Zone 4 (80–90% HRR) brackets this range statistically. For precise LT identification, a graded exercise test with blood lactate sampling is required — something sports physiology labs and some sports medicine clinics offer."
     },
     {
-      "q": "Is it normal for my HR to spike quickly?",
-      "a": "If your HR rises very quickly with little effort and your resting HR is >80 bpm, it can indicate **low aerobic fitness** or **dehydration**. If persistent with symptoms, consult a cardiologist."
+      "q": "How do medications like beta-blockers affect these calculations?",
+      "a": "Beta-blockers (e.g., metoprolol, atenolol) significantly reduce both resting and maximum heart rate — sometimes lowering max HR by 20–30 bpm. If you take beta-blockers, age-predicted max HR formulas become unreliable. The American College of Sports Medicine recommends using RPE (Rate of Perceived Exertion) scales (e.g., Borg 6–20 scale) as a primary guide, and if HR zones are needed, they should be derived from a medically supervised exercise stress test rather than a formula."
     },
     {
-      "q": "Do smartwatches measure zones well?",
-      "a": "Optical wrist sensors have ±5% error at steady state but fail during exercises with lots of arm movement. **Chest straps** (Polar H10, Garmin HRM) are more accurate."
+      "q": "How often should I recalculate my training zones?",
+      "a": "Since the Tanaka formula uses only age and RHR, you should recalculate: (1) every year as you age, since max HR decreases ~0.7 bpm/year; (2) after significant fitness changes — RHR often drops 5–10 bpm after 8–12 weeks of consistent aerobic training; (3) after illness, long breaks, or major lifestyle changes. Endurance athletes may see RHR drop from 70 to 55 bpm after a full training season, shifting all zone boundaries by ~7–10 bpm."
+    },
+    {
+      "q": "Can I use this calculator for high-intensity interval training (HIIT)?",
+      "a": "Yes. Zone 4 (80–90% HRR) and Zone 5 (90–100% HRR) directly correspond to HIIT work intervals. The ACSM and NIH's National Heart, Lung, and Blood Institute (NHLBI) recognize that alternating Zone 4–5 work intervals (20–60 seconds) with Zone 1–2 recovery (equal or longer duration) improves VO₂max more efficiently than steady-state cardio alone. Using your Karvonen Zone 5 upper bound as your sprint target is more precise than using a flat '90% of 220−age' estimate."
     }
   ],
   "howToSteps": [
@@ -181,6 +185,24 @@
     {
       "name": "Use the zones in training",
       "text": "Configure your watch or HR strap with these zones to train at the right intensity."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Tanaka H, Monahan KD, Seals DR — Age-predicted maximal heart rate revisited, Journal of the American College of Cardiology, 2001",
+      "url": "https://www.jacc.org/doi/10.1016/S0735-1097%2800%2901054-8"
+    },
+    {
+      "name": "NIH — Physical Activity Guidelines for Americans (HHS/NIH)",
+      "url": "https://www.nih.gov/health-information/physical-activity"
+    },
+    {
+      "name": "CDC — How much physical activity do adults need?",
+      "url": "https://www.cdc.gov/physicalactivity/basics/adults/index.htm"
+    },
+    {
+      "name": "Wikipedia — Heart rate reserve (Karvonen method)",
+      "url": "https://en.wikipedia.org/wiki/Heart_rate_reserve"
     }
   ]
 }

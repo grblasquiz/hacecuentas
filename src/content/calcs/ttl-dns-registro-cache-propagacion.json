@@ -7,13 +7,15 @@
   "audience": "global",
   "icon": "🌐",
   "formulaId": "ttl-dns-registro-cache-propagacion",
-  "intro": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica. Un buen cálculo inicial evita sobredimensionar infraestructura. Tiempo hasta propagar cambio DNS · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá TTL seg y obtené propagación típica al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "El TTL (Time To Live) de un registro DNS define, en segundos, cuánto tiempo los servidores recursivos y navegadores almacenan en caché una respuesta DNS antes de volver a consultarla al servidor autoritativo. Si configurás un TTL de 3600, significa que cualquier resolver del mundo puede servir esa respuesta cacheada durante exactamente 1 hora sin re-consultar tu zona. Esto impacta directamente en cuánto tarda un cambio de IP, de servidor de correo o de CNAME en propagarse globalmente. Un TTL bajo acelera la propagación pero aumenta la carga en tus nameservers; uno alto reduce consultas pero prolonga el tiempo en que un cambio incorrecto queda \"pegado\" en la red.",
+  "keyTakeaway": "**Tiempo de propagación máximo ≈ TTL actual (seg) / 3600 horas**. Ejemplo: TTL 86400 → hasta **24 horas** de propagación; TTL 300 → solo **5 minutos**. Bajá el TTL a 300 s al menos **48 h antes** de un cambio crítico.",
   "useCases": [
-    "Dimensionar TTL DNS y propagación antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Migrar un sitio web a un nuevo servidor o IP: reducir el TTL 48 h antes asegura que el corte sea mínimo y los usuarios vean la nueva dirección en minutos.",
+    "Configurar un registro MX para cambiar de proveedor de correo (ej.: migración a Google Workspace o Zoho): un TTL bajo evita que emails queden encolados en el servidor viejo.",
+    "Implementar failover o balanceo de carga con múltiples registros A: TTL de 60–120 s permite que los resolvers detecten cambios de disponibilidad casi en tiempo real.",
+    "Diagnosticar por qué un dominio recién delegado no resuelve en ciertas regiones del mundo: el TTL del registro NS y del glue record determinan el tiempo de convergencia global.",
+    "Planificar el lanzamiento de una campaña de marketing con cambio de landing page: controlar el TTL garantiza que todos los usuarios lleguen al sitio correcto desde el primer minuto.",
+    "Auditar la configuración de zonas DNS para detectar TTLs excesivamente altos (>86400 s) que dificultan la respuesta ante incidentes de seguridad como secuestro de dominio."
   ],
   "fields": [
     {
@@ -48,49 +50,57 @@
     ],
     "result": "~1h"
   },
-  "explanation": "Las **calculadoras técnicas** para IT: latencia, almacenamiento, uptime SLA, costos cloud. Decisiones que escalan.\n\n## Cómo se calcula\n\nTiempo hasta propagar cambio DNS · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nEl TTL no se \"calcula\" con una fórmula aritmética única, sino que es un parámetro que vos configurás en tu zona DNS y que los resolvers decrementan con el paso del tiempo. Sin embargo, la relación entre TTL y propagación sí es determinística:\n\n```\nTiempo máximo de propagación (h) = TTL_actual (s) ÷ 3600\n\nTiempo restante en caché (s) = TTL_original (s) − (tiempo_transcurrido_desde_la_consulta (s))\n\nConsultas estimadas por día a tu NS = (Usuarios_diarios × Consultas_por_sesión) ÷ TTL (s) × 86400\n```\n\n**Ejemplo concreto:**\n- TTL configurado: 3600 s (1 hora)\n- Un resolver consultó el registro a las 10:00 h\n- A las 10:45 h el TTL residual en ese resolver = 3600 − 2700 = **900 s** (15 min restantes)\n- Si cambiás la IP a las 10:30 h, ese resolver seguirá apuntando a la IP vieja hasta las 11:00 h\n\n---\n\n## Tabla de referencia\n\n| TTL (segundos) | Equivalencia | Propagación típica | Uso recomendado |\n|---|---|---|---|\n| 60 | 1 minuto | 1–5 min | Failover activo, pruebas en producción |\n| 300 | 5 minutos | 5–15 min | Pre-migración (bajar 48 h antes del cambio) |\n| 900 | 15 minutos | 15–30 min | Entornos dinámicos, CDN con cambios frecuentes |\n| 3600 | 1 hora | 1–4 horas | Operación normal de la mayoría de sitios |\n| 14400 | 4 horas | 4–12 horas | Zonas estables con tráfico moderado |\n| 43200 | 12 horas | 12–24 horas | Dominios de baja criticidad |\n| 86400 | 24 horas | 24–48 horas | Registros muy estables (NS raíz, glue records) |\n| 604800 | 7 días | Hasta 7 días | **NO recomendado** para registros editables |\n\n> 📌 **Nota:** Los resolvers de ISP y algunos resolvers públicos (como los de ciertos proveedores en Argentina) pueden ignorar el TTL mínimo y almacenar respuestas por tiempos mayores. RFC 1035 establece el TTL como un valor máximo, no como un tiempo garantizado.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Migración de hosting con tiempo de corte mínimo\nUna empresa tiene su sitio en un VPS con IP 190.5.1.10 y TTL 86400. Quiere migrar a 190.5.1.99.\n\n- **Día 1 (48 h antes):** Bajar TTL a 300 s → los resolvers actualizan en 5 min\n- **Día 3 (hora cero):** Cambiar el registro A a 190.5.1.99\n- **Resultado:** En ≤5 min el 95% de los resolvers sirve la nueva IP\n- **Sin esta técnica:** Con TTL 86400, usuarios podrían ver el sitio viejo hasta **24 horas** después\n\n### Caso 2 — Registro MX con TTL incorrecto\nUn dominio tiene su registro MX con TTL 604800 (7 días). Al cambiar de proveedor de correo, los emails enviados desde servidores que cachearon el MX viejo siguen intentando entregar en el servidor anterior durante hasta 7 días, generando rebotes o pérdida de correos.\n\n### Caso 3 — Monitoreo de TTL residual para diagnóstico\nUn administrador nota que `dig @8.8.8.8 ejemplo.com A` devuelve TTL 127 mientras que `dig @1.1.1.1 ejemplo.com A` devuelve TTL 3421. Esto indica que el resolver de Google consultó el registro hace 3600−127 = **3473 s** (≈58 min) y el de Cloudflare lo consultó hace apenas 3600−3421 = **179 s** (≈3 min). Ambos son correctos: simplemente cachearon en momentos distintos.\n\n---\n\n## Errores comunes\n\n1. **Cambiar la IP sin bajar el TTL primero:** El error más frecuente. Si tu TTL es 86400 y cambiás el registro A sin reducirlo antes, el 100% de los resolvers que ya tienen la respuesta en caché seguirán apuntando a la IP vieja hasta un día completo. La solución: bajar el TTL 24–48 h antes del cambio.\n\n2. **Confundir \"propagación de DNS\" con \"tiempo de registro\":** La propagación DNS no es un proceso centralizado que \"sale desde los root servers\". Cada resolver del mundo consulta cuando su caché expira. No existe una \"ola de propagación\": es una expiración distribuida y asincrónica.\n\n3. **Dejar el TTL bajo luego de la migración:** Un TTL de 60 s en producción permanente genera una cantidad innecesaria de consultas a tus nameservers autoritativos. Una vez estabilizado el cambio, volvé a valores de 3600–14400 s.\n\n4. **Aplicar TTL muy alto a registros TXT de SPF/DKIM:** Si necesitás rotar claves DKIM o ajustar políticas SPF, un TTL de 86400 prolonga la ventana en que servidores de correo usan la clave vieja, pudiendo causar fallos de autenticación transitoria.\n\n5. **No verificar el TTL del SOA (negative TTL):** El registro SOA define el TTL para respuestas NXDOMAIN (dominio no existente). Un SOA con negative TTL de 3600 hace que la \"no existencia\" de un subdominio quede cacheada 1 hora, retrasando la detección de nuevos subdominios recién creados.\n\n6. **Asumir que todos los resolvers respetan el TTL mínimo:** Algunos resolvers de ISPs argentinos y de otras regiones aplican un TTL mínimo de 60–300 s independientemente de lo que configure la zona. Esto puede hacer que respuestas con TTL 10 s duren hasta 5 min en esos resolvers.\n\n---\n\n## Calculadoras relacionadas\n\nSi trabajás en infraestructura digital y necesitás más herramientas de cálculo técnico, estas calculadoras te pueden ser útiles:\n\n- [Calculadora de ganancia de amplificador operacional](/calculadora-amplificador-operacional-ganancia) — útil para diseño de circuitos en hardware de redes\n- [Calculadora de distancia hiperfocal de lente](/calculadora-distancia-hiperfocal-lente) — para proyectos de óptica y fotografía técnica\n- [Calculadora de filamento 3D necesario para un modelo](/calculadora-filamento-3d-necesario-modelo) — estimá material para impresión de carcasas o racks\n- [Calculadora de hilo de bordado para un diseño](/calculadora-hilo-bordado-diseno) — herramienta de estimación para proyectos creativos\n",
   "faq": [
     {
-      "q": "¿TTL bajo?",
-      "a": "300 (5min) si planeas cambios."
+      "q": "¿Qué valor de TTL se recomienda para una operación normal de un sitio web?",
+      "a": "Para la mayoría de los sitios en operación estable, un TTL de **3600 segundos (1 hora)** es el valor estándar recomendado. Equilibra bien la carga en tus nameservers con la capacidad de propagación razonablemente rápida. Para sitios de alta disponibilidad con cambios frecuentes, valores de 300–900 s son más apropiados."
     },
     {
-      "q": "¿TTL alto?",
-      "a": "86400 (24h) reduce consultas DNS."
+      "q": "¿Cuánto tiempo tarda realmente en propagarse un cambio de DNS a nivel global?",
+      "a": "El tiempo de propagación máximo teórico es igual al TTL configurado al momento del cambio. En la práctica, el **95% de los resolvers** actualiza dentro de 1,5× el TTL. Sin embargo, algunos ISPs —especialmente en regiones con infraestructura más antigua— pueden demorar hasta 2× el TTL. Con TTL 3600, esperá entre 1 y 4 horas para propagación global completa."
     },
     {
-      "q": "¿ISP cache?",
-      "a": "Puede ignorar TTL. Flush si urge."
+      "q": "¿Por qué el `dig` me muestra un TTL distinto cada vez que lo ejecuto?",
+      "a": "Porque el TTL que devuelve `dig` es el **TTL residual** en el resolver consultado, no el TTL configurado en tu zona. Cada segundo que pasa, el resolver decrementa ese valor en 1. Si ejecutás `dig @8.8.8.8 tudominio.com A` dos veces con 30 segundos de diferencia, el segundo resultado mostrará un TTL aproximadamente 30 unidades menor. Cuando llega a 0, el resolver hace una nueva consulta autoritativa."
     },
     {
-      "q": "¿CDN?",
-      "a": "Cambios vía API, no DNS generalmente."
+      "q": "¿Cuánto tiempo antes de una migración debo bajar el TTL?",
+      "a": "La regla profesional es bajar el TTL **al menos 2× el TTL actual** antes del cambio. Si tu TTL actual es 86400 (24 h), debés bajarlo a 300 s al menos **48 horas antes** del cambio, para que todos los resolvers que ya cachearon el valor anterior lo renueven y empiecen a usar el TTL bajo. Solo así la migración efectiva tardará minutos y no horas."
     },
     {
-      "q": "¿Anycast?",
-      "a": "Cloudflare, Route53 minimizan latencia."
+      "q": "¿Qué es el TTL del registro SOA y para qué sirve?",
+      "a": "El registro SOA (Start of Authority) contiene el **negative TTL** (campo `MINIMUM`), que define cuánto tiempo los resolvers almacenan en caché las respuestas negativas (NXDOMAIN, es decir, dominios o subdominios que no existen). Según **RFC 2308**, este valor no debería superar los 3600 s (1 hora). Un negative TTL muy alto retrasa la detección de subdominios recién creados."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Los registros NS deben tener TTL alto o bajo?",
+      "a": "Los registros NS (nameservers) deberían tener TTL **alto: entre 86400 y 172800 segundos** (1–2 días). Cambiar los nameservers de un dominio es una operación infrecuente y crítica; un TTL alto reduce la carga en los servidores raíz y TLD. Además, los glue records asociados a los NS suelen ser gestionados por el registrar y pueden tener políticas propias de TTL."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Existe un TTL mínimo o máximo según los estándares de internet?",
+      "a": "El **RFC 1035** define el TTL como un entero de 32 bits sin signo, lo que da un máximo teórico de **2.147.483.647 segundos** (~68 años), aunque en la práctica los registrars y paneles de DNS limitan el máximo a **86400 s** (24 horas) o **604800 s** (7 días). No hay un mínimo obligatorio por RFC, pero muchos resolvers aplican un mínimo de facto de **30–60 segundos**, ignorando TTLs menores."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Cómo afecta el TTL al rendimiento y costo de mi infraestructura DNS?",
+      "a": "Un TTL bajo incrementa directamente la cantidad de consultas que reciben tus nameservers autoritativos. Con TTL 60 s y 100.000 usuarios únicos diarios, tus NS podrían recibir ~1,67 millones de consultas/día solo para ese registro. Con TTL 3600, ese número baja a ~28.000 consultas/día. Servicios de DNS gestionado como Route 53 o Cloudflare cobran por volumen de consultas, por lo que TTLs muy bajos pueden incrementar el costo operativo de forma significativa."
+    },
+    {
+      "q": "¿Cómo verifico el TTL actual de mi dominio desde Argentina?",
+      "a": "Podés usar el comando `dig tudominio.com A +noall +answer` desde una terminal Linux/macOS, o en Windows `nslookup -debug tudominio.com`. También herramientas online como **whatsmydns.net** o **dnschecker.org** muestran el TTL en tiempo real desde múltiples resolvers de distintos países, incluyendo puntos de presencia en Latinoamérica para verificar la propagación desde Argentina específicamente."
     }
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
+      "name": "RFC 1035 — Domain Names: Implementation and Specification (IETF)",
+      "url": "https://www.rfc-editor.org/rfc/rfc1035"
     },
     {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "RFC 2308 — Negative Caching of DNS Queries (IETF)",
+      "url": "https://www.rfc-editor.org/rfc/rfc2308"
+    },
+    {
+      "name": "Wikipedia ES — Sistema de nombres de dominio (DNS)",
+      "url": "https://es.wikipedia.org/wiki/Sistema_de_nombres_de_dominio"
     }
   ],
   "relatedSlugs": [

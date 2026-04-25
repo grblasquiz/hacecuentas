@@ -6,14 +6,15 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "ups-autonomia-potencia-carga",
-  "intro": "El mantenimiento y operación eficiente del auto implican cálculos de consumo, potencia, presión, torque y rendimiento. Aplicar las fórmulas correctas evita sobreconsumo y daños mecánicos. Estimá los minutos de autonomía de un UPS según la carga conectada y capacidad de baterías. Respaldo estándar: 5-15 min. Extendido: 30-120 min. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "**Minutos = (Ah × V × η) / (P_carga × 60/100)**. UPS típico 500VA/300W. Con carga 200W: ~8 min autonomía.",
+  "intro": "Una UPS (Uninterruptible Power Supply o fuente de alimentación ininterrumpida) protege equipos eléctricos ante cortes o caídas de tensión. Esta calculadora determina cuántos minutos de autonomía tiene tu UPS según la carga conectada en watts, la capacidad real de la batería en Ah y el voltaje, y la eficiencia del inversor. La fórmula central es: **Autonomía (min) = (Ah × V × η) × 60 ÷ W**, donde η es la eficiencia del inversor expresada en decimal. No alcanza con mirar los VA de la UPS: la autonomía real depende de cuánta energía almacena la batería y cuánta energía consume tu equipo en cada momento. Esta herramienta es indispensable para dimensionar correctamente una UPS para servidores, equipos médicos, routers, PCs de escritorio o cualquier carga crítica que no puede tolerar interrupciones.",
+  "keyTakeaway": "**Autonomía (min) = (Ah × V × η) × 60 ÷ W** — Ejemplo real: batería 9 Ah / 12 V, eficiencia 85%, carga 200 W → (9 × 12 × 0,85) × 60 ÷ 200 = **27,5 minutos**. A mayor carga, menor autonomía en forma inversamente proporcional.",
   "useCases": [
-    "Diseño y análisis de circuitos que involucran calculadora de autonomía de ups por carga conectada",
-    "Validar cálculos teóricos antes de montar el circuito",
-    "Enseñanza de electrónica básica y avanzada",
-    "Estimar parámetros para proyectos de microcontroladores (Arduino, ESP32, STM32)",
-    "Troubleshooting de circuitos existentes"
+    "Dimensionar una UPS para un servidor de oficina de 350 W y garantizar al menos 20 minutos para un apagado controlado ante un corte de luz.",
+    "Verificar si una UPS de 500 VA con batería de 9 Ah/12 V es suficiente para sostener un router Wi-Fi + módem de 40 W durante más de 2 horas en zonas con cortes frecuentes.",
+    "Calcular cuántos minutos dura la batería de una UPS hospitalaria que alimenta un equipo de monitoreo de 120 W y planificar el reemplazo de la batería antes de que baje su capacidad al 80%.",
+    "Comparar la autonomía de dos UPS distintas (por ejemplo, una con batería 7 Ah vs. una con 9 Ah) para una carga fija de 150 W y decidir cuál comprar según el presupuesto.",
+    "Estimar cuándo reemplazar la batería de una UPS existente: si la autonomía medida cayó más del 40% respecto al valor calculado teórico, la batería está degradada.",
+    "Ajustar la carga conectada a una UPS de 650 VA para que los equipos más críticos (PC + monitor) reciban energía durante el tiempo mínimo necesario para guardar el trabajo."
   ],
   "fields": [
     {
@@ -80,53 +81,53 @@
     ],
     "result": "~27 min de autonomía con 200W de carga"
   },
-  "explanation": "Los **cálculos automotrices** son esenciales para dueños de autos, motos y otros vehículos: rendimiento de combustible, costos de mantenimiento, presión de neumáticos, conversiones de potencia, tiempos de amortización.\n\n## Cómo se calcula\n\nEstimá los minutos de autonomía de un UPS según la carga conectada y capacidad de baterías. Respaldo estándar: 5-15 min. Extendido: 30-120 min.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa autonomía de una UPS depende de tres factores: la energía almacenada en la batería, la eficiencia del inversor y la potencia consumida por los equipos conectados.\n\n```\nEnergía útil (Wh) = Ah × V × η\n\nAutonomía (min)   = Energía útil × 60 ÷ W_carga\n\nPorcentaje de carga (%) = W_carga ÷ W_máx_UPS × 100\ndonde W_máx_UPS = VA_UPS × factor_de_potencia (típico 0,6–0,8)\n```\n\n**Variables:**\n- `Ah` = capacidad nominal de la batería en ampere-hora (ej.: 9 Ah)\n- `V` = voltaje de la batería (tipicamente 12 V en UPS domésticas/de oficina)\n- `η` = eficiencia del inversor en decimal (ej.: 85% → 0,85)\n- `W_carga` = potencia real consumida por los equipos en watts\n- `VA_UPS` = potencia aparente nominal de la UPS\n\n> ⚠️ **Importante:** los fabricantes publican autonomías medidas con la batería nueva y a temperatura ambiente (~20–25 °C). A mayor temperatura, menor vida útil; a mayor antigüedad, menor capacidad real.\n\n---\n\n## Tabla de referencia\n\nValores típicos de autonomía según UPS y carga, con batería nueva (η = 85%):\n\n| UPS (VA) | Batería típica | Carga 50 W | Carga 100 W | Carga 200 W | Carga 350 W |\n|----------|---------------|------------|-------------|-------------|-------------|\n| 500 VA   | 1× 9 Ah/12 V  | ~110 min   | ~55 min     | ~27 min     | ~16 min     |\n| 650 VA   | 1× 9 Ah/12 V  | ~110 min   | ~55 min     | ~27 min     | ~16 min     |\n| 1000 VA  | 2× 9 Ah/12 V  | ~220 min   | ~110 min    | ~55 min     | ~31 min     |\n| 1500 VA  | 2× 9 Ah/12 V  | ~220 min   | ~110 min    | ~55 min     | ~31 min     |\n| 2000 VA  | 2× 12 Ah/12 V | ~293 min   | ~147 min    | ~73 min     | ~42 min     |\n| 3000 VA  | 4× 9 Ah/12 V  | ~440 min   | ~220 min    | ~110 min    | ~63 min     |\n\n> Los valores con 2 baterías asumen conexión en paralelo (mismo voltaje, Ah sumados). Conexión en serie duplica el voltaje.\n\n**Factores de potencia típicos por tipo de UPS:**\n| Tipo de UPS        | Factor de potencia |\n|--------------------|--------------------|\n| UPS offline/standby | 0,60             |\n| UPS line-interactive | 0,65–0,70       |\n| UPS online/doble conversión | 0,80–0,90 |\n\n---\n\n## Casos típicos\n\n### Caso 1 — PC de escritorio con monitor\n- UPS: 500 VA line-interactive\n- Batería: 1× 9 Ah / 12 V\n- Carga: PC 150 W + monitor 30 W = **180 W**\n- Eficiencia inversor: 85%\n- Energía útil: 9 × 12 × 0,85 = **91,8 Wh**\n- Autonomía: 91,8 × 60 ÷ 180 = **30,6 minutos**\n- % de carga UPS: 180 ÷ (500 × 0,65) = 180 ÷ 325 = **55,4%** ✅ dentro del rango recomendado (≤ 80%)\n\n### Caso 2 — Router + módem + ONT\n- UPS: 500 VA offline\n- Batería: 1× 9 Ah / 12 V\n- Carga: router 15 W + módem 12 W + ONT 8 W = **35 W**\n- Eficiencia inversor: 80% (offline suele ser menor)\n- Energía útil: 9 × 12 × 0,80 = **86,4 Wh**\n- Autonomía: 86,4 × 60 ÷ 35 = **148 minutos** (~2 h 28 min) ✅ ideal para mantener internet durante cortes cortos\n\n### Caso 3 — Servidor de oficina con batería degradada\n- UPS: 1000 VA online, batería de 2× 9 Ah/12 V (en paralelo = 18 Ah)\n- Batería con 3 años de uso: capacidad real estimada al **65%** → 18 × 0,65 = **11,7 Ah efectivos**\n- Carga: servidor + switch = **400 W**\n- Eficiencia: 90%\n- Energía útil: 11,7 × 12 × 0,90 = **126,4 Wh**\n- Autonomía: 126,4 × 60 ÷ 400 = **18,9 minutos** → recomendable reemplazar batería si se necesitan ≥ 20 min para apagado controlado\n\n---\n\n## Errores comunes\n\n1. **Confundir VA con W:** Los VA son potencia *aparente*; los W son potencia *real*. Una UPS de 500 VA no soporta 500 W. Según el factor de potencia (típicamente 0,6–0,8), el máximo en watts es 300–400 W. Calcular la autonomía usando VA en lugar de W la *sobreestima* gravemente.\n\n2. **Ignorar la degradación de la batería:** Las baterías VRLA (plomo-ácido selladas), estándar en la mayoría de UPS hogareñas y de oficina, pierden aproximadamente un 20% de capacidad por año en condiciones normales de uso. A los 3–4 años, la autonomía real puede ser menos de la mitad de la calculada con batería nueva.\n\n3. **No considerar la temperatura ambiente:** Las baterías de plomo-ácido están especificadas a 20–25 °C. A 30 °C la vida útil se reduce a la mitad; a 10 °C la capacidad disponible cae un 15–20%. En Argentina, un gabinete cerrado en verano puede superar fácilmente los 35 °C.\n\n4. **Sumar cargas en VA en vez de W:** Muchos equipos indican su consumo en VA (ej.: impresoras láser). Antes de sumar, convertir a W multiplicando por el factor de potencia del equipo (generalmente 0,7–0,9 para cargas mixtas de oficina).\n\n5. **Olvidar la profundidad de descarga (DoD):** Las baterías de plomo-ácido no deben descargarse por debajo del 50–80% de su capacidad (recomendación estándar de fabricantes como APC/Schneider). Usar el 100% de la capacidad nominal reduce drásticamente la vida útil de la batería. Una estimación conservadora usa solo el 80% de los Ah nominales.\n\n6. **No verificar que la carga no supere el 80% de la UPS:** Cargar una UPS al 90–100% de su capacidad en W genera calor excesivo, reduce la vida útil del inversor y puede provocar la desconexión automática por sobrecarga ante picos de demanda.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de Ley de Ohm (V, I, R)](/calculadora-ley-ohm-voltaje-corriente-resistencia) — calculá tensión, corriente y resistencia en el circuito de carga de la batería.\n- [Calculadora de potencia eléctrica (P = V × I)](/calculadora-potencia-electrica-p-vi) — convertí entre watts, voltios y amperes para verificar la carga real de tus equipos.\n- [Calculadora de resistencia de LED (serie y paralelo)](/calculadora-resistencia-led-serie-paralelo) — dimensioná resistencias para indicadores LED en paneles de control o equipos alimentados por la UPS.\n- [Calculadora de divisor de voltaje con resistencias](/calculadora-divisor-voltaje-resistencias) — calculá divisores resistivos para sensar el voltaje de la batería en circuitos de monitoreo.",
   "faq": [
     {
-      "q": "¿Cuánto dura mi UPS al 100% carga?",
-      "a": "Mucho menos que al 50%. A 100% de carga suele dar solo 3-5 min. UPS protege pero no hace backup largo."
+      "q": "¿Cuál es la diferencia entre VA y W en una UPS?",
+      "a": "VA (volt-ampere) es la potencia aparente e incluye tanto la potencia real (W) como la reactiva. La relación es W = VA × factor de potencia (FP). Una UPS de 500 VA con FP = 0,65 soporta como máximo 325 W de carga real. Usar VA como si fueran W lleva a sobreestimar la autonomía y la capacidad de la UPS, lo que puede provocar desconexiones por sobrecarga."
     },
     {
-      "q": "¿Puedo agregar más baterías?",
-      "a": "Algunos UPS soportan módulos externos de baterías que multiplican autonomía. Verificá si tu modelo permite."
+      "q": "¿Cada cuánto hay que reemplazar la batería de una UPS?",
+      "a": "Las baterías VRLA (plomo-ácido selladas) estándar en UPS domésticas y de oficina tienen una vida útil de 3 a 5 años a 20–25 °C. A mayor temperatura ambiente, la vida útil se acorta exponencialmente: a 30 °C se estima en 2–3 años. La señal más clara de reemplazo es cuando la autonomía real medida cae más del 40–50% respecto al valor calculado con batería nueva."
     },
     {
-      "q": "¿Dura 5 años?",
-      "a": "Baterías SLA típicas: 3-5 años. Testealas cada 6 meses (botón de test). Reemplazar antes de que fallen."
+      "q": "¿Qué eficiencia de inversor debo usar si no tengo el dato del fabricante?",
+      "a": "Para UPS offline/standby, usá entre 75% y 82%. Para UPS line-interactive (la más común en hogares y oficinas), entre 82% y 88%. Para UPS online de doble conversión (usadas en servidores y equipos críticos), entre 88% y 95%. Si no tenés el dato exacto, un valor conservador del 80–85% es una buena aproximación para la mayoría de los casos domésticos y de oficina."
     },
     {
-      "q": "¿Onda senoidal pura?",
-      "a": "Para electrónica moderna sí. PCs modernas con PFC activo necesitan sinusoidal pura o dan pantalla azul/apagados."
+      "q": "¿Puedo conectar baterías externas para aumentar la autonomía?",
+      "a": "Sí, siempre que la UPS lo admita (muchos modelos 'rack' o de torre tienen puerto para banco de baterías externo). En paralelo (mismo voltaje, se suman los Ah) se multiplica la autonomía proporcionalmente. Por ejemplo, agregar una segunda batería de 9 Ah/12 V a una UPS con 9 Ah/12 V duplica los Ah a 18 Ah y aproximadamente duplica la autonomía. Nunca mezclar baterías de distinta capacidad o antigüedad en un mismo banco."
     },
     {
-      "q": "¿Cómo elijo VA?",
-      "a": "Sumá watts de todos los aparatos, multiplicá por 1.6 (relación VA/W típica = 0.6). Ejemplo: 300W de carga → UPS 500VA."
+      "q": "¿Por qué la autonomía real suele ser menor a la que indica el fabricante?",
+      "a": "Los fabricantes miden con batería 100% nueva, a 20–25 °C y con una carga de prueba estándar (generalmente al 25–50% de la capacidad). En uso real, la batería envejece, la temperatura varía, y la carga puede ser diferente. Además, la mayoría de los fabricantes no descarga la batería más del 80% del total para proteger su vida útil, y ese margen no siempre se aclara en las especificaciones."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Qué porcentaje de carga es recomendable no superar en una UPS?",
+      "a": "La recomendación estándar de los fabricantes (APC, Eaton, CyberPower, entre otros) es no superar el 80% de la capacidad nominal en watts. Por ejemplo, para una UPS de 500 VA / 300 W, la carga máxima práctica es 240 W. Operar al 90–100% genera calor excesivo, acorta la vida útil del inversor y de la batería, y deja sin margen ante picos de corriente de arranque de motores o impresoras."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Cómo afecta la temperatura a la batería de la UPS?",
+      "a": "Las baterías de plomo-ácido están especificadas a 25 °C. Por cada 10 °C de aumento, la vida útil se reduce aproximadamente a la mitad (regla de Arrhenius aplicada a baterías). A 35 °C, una batería de 4 años de vida útil dura solo 2. Además, a bajas temperaturas (menos de 10 °C) la capacidad disponible cae un 15–20%, reduciendo la autonomía real aunque la batería esté en buen estado."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Cómo sé cuántos watts consumen mis equipos si solo tengo la etiqueta con VA?",
+      "a": "Multiplicá los VA indicados en la etiqueta por el factor de potencia del equipo. Para computadoras de escritorio y monitores, el FP típico es 0,85–0,95. Para equipos de telecomunicaciones (routers, módems), 0,80–0,90. Para cargas mixtas de oficina, usá 0,70–0,80 como estimación conservadora. También podés medir directamente con un medidor de consumo tipo 'wattímetro' enchufable (kill-a-watt o similares), que es la forma más precisa."
+    },
+    {
+      "q": "¿Qué pasa si la potencia de carga supera los VA nominales de la UPS?",
+      "a": "La UPS entra en sobrecarga. Según el modelo, puede: (1) emitir una alarma acústica y apagarse automáticamente para proteger el inversor, (2) funcionar en bypass transfiriendo la carga directamente a la red sin protección, o (3) dañarse permanentemente si no tiene protección adecuada. Siempre dimensioná la UPS dejando al menos un 20–25% de margen sobre la carga máxima esperada."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "IRAM 62404 — Sistemas de alimentación ininterrumpida (UPS): requisitos y clasificación",
+      "url": "https://www.iram.org.ar/normas/62404"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
-    },
-    {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "INTI — Seguridad en productos eléctricos y electrónicos",
+      "url": "https://www.inti.gob.ar/areas/electronica-e-informatica"
     }
   ],
   "relatedSlugs": [

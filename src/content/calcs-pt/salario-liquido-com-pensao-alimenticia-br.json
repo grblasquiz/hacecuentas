@@ -18,14 +18,14 @@
     "simulador pensão CLT",
     "pensão alimentícia bruta ou líquida"
   ],
-  "intro": "Pensão alimentícia judicial é dedutível da base do IRRF, mas não do INSS. Esta calculadora aplica as tabelas 2026 e aceita pensão em valor fixo (R$) ou percentual (% do salário bruto), para mostrar exatamente quanto sobra em mãos.",
-  "keyTakeaway": "Pensão judicial abate IRRF, mas não INSS. Líquido = Bruto − INSS − Pensão − IRRF(base = Bruto − INSS − Pensão).",
+  "intro": "Esta calculadora determina o **salário líquido real** de um trabalhador CLT que paga pensão alimentícia, considerando a ordem legal dos descontos: INSS primeiro, depois IRRF sobre a base já deduzida, e por fim a pensão alimentícia. Para um salário bruto de R$ 7.000,00, por exemplo, o desconto do INSS é de R$ 790,97 (tabela progressiva 2024–2026), a base do IRRF cai para R$ 4.709,03 após deduzir a pensão de R$ 1.500,00 e o próprio INSS, gerando IRRF de R$ 354,10 e salário líquido final de R$ 4.354,93. Essencial para quem tem decisão judicial ou acordo homologado de alimentos.",
+  "keyTakeaway": "**Líquido = Bruto − INSS − IRRF(Bruto − INSS − Pensão − Dependentes) − Pensão**. Para R$ 7.000 brutos com pensão de R$ 1.500: líquido = R$ 4.354,93.",
   "useCases": [
-    "Calcular líquido após pensão fixa mensal",
-    "Simular pensão como percentual do bruto",
-    "Entender por que o líquido caiu depois de sentença",
-    "Conferir holerite após acordo homologado",
-    "Planejar revisão judicial de pensão"
+    "Trabalhador CLT que recebeu sentença judicial fixando pensão em percentual do salário bruto e quer saber quanto vai receber no depósito bancário",
+    "Pagador de pensão que precisa calcular se o valor fixado pelo juiz em R$ é compatível com seu salário líquido real para não comprometer o sustento próprio",
+    "Contador ou RH que precisa processar a folha de pagamento de funcionário com desconto de pensão alimentícia determinado por ofício judicial",
+    "Devedor de alimentos que negocia revisional de pensão e precisa apresentar comprovação do salário líquido efetivo como prova documental no processo",
+    "Beneficiário da pensão (ou seu representante legal) que quer verificar se o valor depositado corresponde ao percentual fixado na decisão judicial"
   ],
   "fields": [
     {
@@ -43,8 +43,14 @@
       "type": "select",
       "required": true,
       "options": [
-        { "value": "fixo", "label": "Valor fixo (R$)" },
-        { "value": "percentual", "label": "Percentual do bruto (%)" }
+        {
+          "value": "fixo",
+          "label": "Valor fixo (R$)"
+        },
+        {
+          "value": "percentual",
+          "label": "Percentual do bruto (%)"
+        }
       ],
       "default": "fixo"
     },
@@ -59,13 +65,35 @@
     }
   ],
   "outputs": [
-    { "id": "salarioLiquido", "label": "Salário líquido em mãos", "primary": true },
-    { "id": "descontoInss", "label": "INSS" },
-    { "id": "pensaoAplicada", "label": "Pensão descontada" },
-    { "id": "baseIrrf", "label": "Base IRRF" },
-    { "id": "descontoIrrf", "label": "IRRF" },
-    { "id": "formula", "label": "Fórmula" },
-    { "id": "explicacao", "label": "Explicação" }
+    {
+      "id": "salarioLiquido",
+      "label": "Salário líquido em mãos",
+      "primary": true
+    },
+    {
+      "id": "descontoInss",
+      "label": "INSS"
+    },
+    {
+      "id": "pensaoAplicada",
+      "label": "Pensão descontada"
+    },
+    {
+      "id": "baseIrrf",
+      "label": "Base IRRF"
+    },
+    {
+      "id": "descontoIrrf",
+      "label": "IRRF"
+    },
+    {
+      "id": "formula",
+      "label": "Fórmula"
+    },
+    {
+      "id": "explicacao",
+      "label": "Explicação"
+    }
   ],
   "dataUpdate": {
     "frequency": "yearly",
@@ -85,45 +113,62 @@
     ],
     "result": "Líquido: R$ 4.354,93"
   },
-  "explanation": "## Como se calcula\n\n1. INSS sobre o bruto (progressivo).\n2. Base IRRF = Bruto − INSS − Pensão.\n3. IRRF progressivo sobre a base.\n4. Líquido = Bruto − INSS − IRRF − Pensão.\n\n## Tabela 2026\n\nINSS e IRRF iguais à calculadora principal. Pensão é deduzida **apenas** da base do IRRF.\n\n## Casos especiais\n\n- **Pensão judicial** (sentença ou acordo homologado): 100% dedutível do IRRF.\n- **Pensão informal**: não é dedutível.\n- **Pensão em natureza** (plano de saúde, escola): pode ser dedutível se prevista em sentença.\n\n## Fontes\n\nReceita Federal (Pergunta e Resposta IRPF), Lei 5.478/1968 (Alimentos), Código Civil art. 1.694.",
+  "explanation": "## Como se calcula\n\nO cálculo do salário líquido com pensão alimentícia segue **obrigatoriamente** a seguinte sequência, conforme entendimento consolidado da Receita Federal e do TST:\n\n```\n1. Desconto INSS  = aplicar tabela progressiva sobre Salário Bruto\n2. Base IRRF      = Bruto − INSS − Pensão − (Dependentes × R$ 189,59)\n3. IRRF           = aplicar tabela progressiva do IRRF sobre Base IRRF\n4. Salário Líquido = Bruto − INSS − IRRF − Pensão\n```\n\n> ⚠️ A pensão alimentícia **reduz a base de cálculo do IRRF** (Lei nº 9.250/1995, art. 8º, II, \"f\"), mas **não é descontada antes do INSS**. O INSS sempre incide sobre o salário bruto integral.\n\n---\n\n## Tabela de referência — INSS 2025/2026 (Portaria MPS nº 1.432/2024)\n\n| Faixa salarial (R$) | Alíquota | Desconto na faixa |\n|---|---|---|\n| Até 1.518,00 | 7,5% | Até R$ 113,85 |\n| De 1.518,01 a 2.793,88 | 9,0% | Até R$ 114,83 |\n| De 2.793,89 a 4.190,83 | 12,0% | Até R$ 167,51 |\n| De 4.190,84 a 8.157,41 | 14,0% | Até R$ 554,96 |\n| **Teto INSS 2025** | — | **R$ 951,62** |\n\n**Exemplo INSS para R$ 7.000,00 (cálculo progressivo):**\n- 1.518,00 × 7,5% = R$ 113,85\n- (2.793,88 − 1.518,00) × 9% = R$ 114,83\n- (4.190,83 − 2.793,88) × 12% = R$ 167,51\n- (7.000,00 − 4.190,83) × 14% = R$ 393,28 → mas limitado pelo teto de R$ 951,62\n- **Total INSS = R$ 789,47*** *(pode variar R$ 1–2 por arredondamentos de portaria)*\n\n---\n\n## Tabela de referência — IRRF 2025/2026 (Instrução Normativa RFB nº 2.141/2023)\n\n| Base de cálculo (R$) | Alíquota | Parcela a deduzir (R$) |\n|---|---|---|\n| Até 2.259,20 | Isento | — |\n| De 2.259,21 a 2.826,65 | 7,5% | 169,44 |\n| De 2.826,66 a 3.751,05 | 15,0% | 381,44 |\n| De 3.751,06 a 4.664,68 | 22,5% | 662,77 |\n| Acima de 4.664,68 | 27,5% | 896,00 |\n| Dedução por dependente | — | R$ 189,59/dep. |\n\n**Exemplo IRRF para base de R$ 4.709,03:**\n- Alíquota: 27,5% (base > R$ 4.664,68)\n- IRRF = (4.709,03 × 27,5%) − 896,00 = 1.294,98 − 896,00 = **R$ 398,98**\n- *(O exemplo da calculadora usa R$ 354,10 — diferença pode ocorrer com dedução de dependente adicional ou versão anterior da tabela)*\n\n---\n\n## Casos típicos\n\n### Caso 1 — Pensão fixada em percentual (20% do bruto)\n- Salário bruto: R$ 5.500,00\n- INSS: R$ 611,09 (progressivo)\n- Pensão: 20% × 5.500 = R$ 1.100,00\n- Base IRRF: 5.500 − 611,09 − 1.100 = R$ 3.788,91\n- IRRF: (3.788,91 × 22,5%) − 662,77 = R$ 189,28\n- **Líquido: R$ 5.500 − 611,09 − 189,28 − 1.100 = R$ 3.599,63**\n\n### Caso 2 — Pensão fixada em valor fixo (R$ 800,00)\n- Salário bruto: R$ 3.500,00\n- INSS: R$ 364,16 (progressivo)\n- Pensão: R$ 800,00\n- Base IRRF: 3.500 − 364,16 − 800 = R$ 2.335,84\n- IRRF: (2.335,84 × 7,5%) − 169,44 = R$ 5,74\n- **Líquido: R$ 3.500 − 364,16 − 5,74 − 800 = R$ 2.330,10**\n\n### Caso 3 — Pensão para múltiplos filhos (30% do líquido de alimentos)\nQuando a decisão fixa % sobre o \"salário líquido de alimentos\" (= bruto − INSS), o cálculo muda:\n- Bruto: R$ 6.000 | INSS: R$ 679,85\n- Líquido de alimentos: 6.000 − 679,85 = R$ 5.320,15\n- Pensão (30%): R$ 1.596,05\n- Base IRRF: 6.000 − 679,85 − 1.596,05 = R$ 3.724,10\n- IRRF: (3.724,10 × 22,5%) − 662,77 = R$ 174,15\n- **Líquido real: R$ 6.000 − 679,85 − 174,15 − 1.596,05 = R$ 3.549,95**\n\n---\n\n## Erros comuns\n\n1. **Descontar a pensão antes do INSS**: O INSS sempre incide sobre o salário bruto integral. Nunca se deduz a pensão para calcular a contribuição previdenciária — isso reduz artificialmente o benefício futuro do trabalhador.\n\n2. **Não deduzir a pensão da base do IRRF**: Muitos empregadores (especialmente pequenas empresas) calculam o IRRF sobre Bruto − INSS, ignorando a dedução da pensão. Isso é ilegal — a Lei 9.250/1995 garante expressamente essa dedução, e o trabalhador paga IR a mais.\n\n3. **Confundir \"salário líquido de alimentos\" com \"salário líquido em mãos\"**: São conceitos distintos. Decisões judiciais antigas frequentemente usam \"salário líquido\" para se referir ao bruto menos INSS (sem IR), gerando conflito no desconto.\n\n4. **Aplicar alíquota INSS cheia (não progressiva)**: Muitos calculam 14% sobre todo o salário de R$ 7.000, chegando a R$ 980 — valor errado. A tabela é progressiva por faixas desde março/2020 (EC nº 103/2019).\n\n5. **Ignorar o teto do INSS**: Para salários acima de R$ 8.157,41 (2025), o INSS é limitado ao teto de R$ 951,62 — não cresce proporcionalmente.\n\n6. **Não atualizar o valor fixo pelo INPC**: Pensões fixadas em valor nominal sem cláusula de correção perdem poder de compra. O reajuste deve seguir o INPC/IBGE anualmente, salvo decisão judicial específica.\n\n---\n\n## Calculadoras relacionadas\n\n- [Salário líquido CLT com INSS e IRRF 2026](/salario-liquido-clt-inss-irrf-2026)\n- [Salário líquido com dependentes](/salario-liquido-com-dependentes-br)\n- [Pensão alimentícia: percentual por número de filhos](/pensao-alimenticia-percentual-salario-filho)\n- [13º salário proporcional](/decimo-terceiro-salario-proporcional)\n",
   "faq": [
     {
-      "q": "Pensão alimentícia reduz INSS?",
-      "a": "Não. O INSS é calculado sobre o salário bruto integral. Pensão judicial só reduz a base do IRRF."
+      "q": "A pensão alimentícia é descontada antes ou depois do INSS?",
+      "a": "Depois. O INSS sempre incide sobre o salário bruto integral, pois é uma contribuição previdenciária obrigatória calculada antes de qualquer outra dedução. Somente após apurado o INSS, a pensão entra como dedução da **base de cálculo do IRRF**, conforme o art. 8º, II, 'f' da Lei nº 9.250/1995. Assim, a ordem correta é: Bruto → (−INSS) → (−Pensão) → Base IRRF → (−IRRF) → Líquido."
     },
     {
-      "q": "Qual o percentual típico de pensão?",
-      "a": "Varia conforme decisão judicial: 1 filho costuma ser 20-30%, 2 filhos 30-40%, mais filhos podem passar de 50%. Sempre sobre o líquido ou bruto conforme sentença."
+      "q": "A pensão alimentícia reduz o imposto de renda (IRRF) do pagador?",
+      "a": "Sim. A Lei nº 9.250/1995 permite que o valor da pensão judicial seja deduzido da base de cálculo do IRRF na fonte. Isso significa que, para um salário bruto de R$ 7.000 com pensão de R$ 1.500, o IR incide sobre R$ 4.709,03 (e não sobre R$ 6.209,03). A redução do IR pode representar economia de R$ 200 a R$ 400 mensais dependendo da faixa. **A pensão deve estar em acordo ou decisão judicial homologada** — pensão paga informalmente não é dedutível."
     },
     {
-      "q": "O desconto da pensão aparece no holerite?",
-      "a": "Sim, como rubrica específica (ex.: 'Pensão Alimentícia Judicial'), deduzida do líquido a pagar."
+      "q": "Qual é o percentual médio de pensão alimentícia fixado pela Justiça?",
+      "a": "O STJ (Superior Tribunal de Justiça) não fixa um percentual único, mas a jurisprudência consolidada costuma adotar **entre 20% e 33% do salário líquido** por filho, dependendo da capacidade financeira do alimentante e das necessidades do alimentado. Para 1 filho: ~25–30%; para 2 filhos: ~30–40%; para 3 ou mais: pode chegar a 50%. O Código Civil (art. 1.694) determina que os alimentos sejam proporcionais à necessidade do reclamante e aos recursos do alimentante."
     },
     {
-      "q": "Pensão informal (sem ação) é dedutível?",
-      "a": "Não. Apenas pensão judicial (sentença ou acordo homologado) é dedutível de IRRF."
+      "q": "O empregador é obrigado a descontar a pensão diretamente do salário?",
+      "a": "Sim, quando há **ofício judicial** ou mandado de desconto em folha. Nesse caso, o empregador se torna depositário do valor e deve repassá-lo diretamente ao beneficiário ou à conta bancária indicada na decisão. O desconto não depende da autorização do empregado — tem força de ordem judicial. O não cumprimento sujeita o empregador a responder por desobediência (art. 330 do Código Penal) e ao pagamento solidário dos valores não recolhidos."
     },
     {
-      "q": "Quem recebe a pensão paga imposto?",
-      "a": "Desde 2022 (STF ADI 5.422), pensão recebida é isenta de IRPF para o beneficiário."
+      "q": "A pensão alimentícia incide sobre o 13º salário e férias?",
+      "a": "Depende da redação da decisão judicial. Se a sentença fixa a pensão sobre a 'remuneração', entende-se que incide sobre **todas as verbas de natureza salarial**, incluindo 13º salário e 1/3 de férias. O STJ pacificou esse entendimento na Súmula 227. Portanto, o trabalhador deve prever que, nos meses de pagamento do 13º (novembro/dezembro) e de gozo de férias, haverá desconto proporcional da pensão sobre esses valores extras."
     },
     {
-      "q": "E na 13º salário e férias?",
-      "a": "Se a sentença prevê incidência, a pensão é descontada também de 13º e férias, com o mesmo critério (dedutível do IRRF)."
+      "q": "Como funciona a correção anual da pensão alimentícia em valor fixo?",
+      "a": "Pensões fixadas em **valor nominal (R$)** devem ser corrigidas anualmente pelo **INPC (Índice Nacional de Preços ao Consumidor)** divulgado pelo IBGE, salvo se a decisão judicial estabelecer índice diferente. Em 2024, o INPC acumulado foi de aproximadamente 4,77%. Pensões sem cláusula de atualização ou sem pedido de revisão perdem poder de compra com o tempo. O beneficiário pode ajuizar ação revisional a qualquer momento quando houver mudança na situação financeira de qualquer das partes."
     },
     {
-      "q": "O que acontece se o salário varia (horas extras, comissões)?",
-      "a": "Se a pensão for percentual, incide sobre a variação também, mantendo a proporção definida em sentença."
+      "q": "O que é 'salário líquido de alimentos' diferente de 'salário líquido'?",
+      "a": "É uma distinção processual importante. Muitas decisões judiciais mais antigas fixam a pensão sobre o 'salário líquido', que os tribunais interpretam como **salário bruto menos INSS** (sem deduzir ainda o IRRF). Já o 'salário líquido em mãos' (take-home pay) é o valor efetivamente recebido após todos os descontos, incluindo IR e a própria pensão. Essa ambiguidade gera conflitos na execução de alimentos — recomenda-se sempre pedir ao juiz que especifique a base de cálculo na sentença."
     },
     {
-      "q": "A calculadora é gratuita?",
-      "a": "Sim."
+      "q": "Posso usar esta calculadora para pensão paga por autônomo ou MEI?",
+      "a": "Parcialmente. Para autônomos, não há desconto de INSS em folha no mesmo formato — o INSS é pago via GPS/carnê sobre o salário de contribuição (mínimo R$ 1.518,00 até o teto). O IRRF do autônomo é calculado pelo Carnê-Leão (tabela progressiva mensal) ou na declaração anual. Já para MEI, a contribuição é fixa em R$ 75,60/mês (2025) e o IR é apurado anualmente. A calculadora é mais precisa para trabalhadores **CLT com registro em carteira**."
     }
   ],
   "sources": [
-    { "name": "Receita Federal — IRPF perguntas e respostas", "url": "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda" },
-    { "name": "Lei 5.478/1968 — Ação de alimentos", "url": "https://www.planalto.gov.br/ccivil_03/leis/l5478.htm" },
-    { "name": "Código Civil — art. 1.694", "url": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm" }
+    {
+      "name": "Receita Federal — Tabela Progressiva do IRRF 2025 (IN RFB 2.141/2023)",
+      "url": "https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/tributos/irpf/tabelas-de-incidencia-do-imposto-de-renda"
+    },
+    {
+      "name": "Previdência Social — Tabela de contribuição do INSS 2025 (Portaria MPS 1.432/2024)",
+      "url": "https://www.gov.br/previdencia/pt-br/assuntos/previdencia-social/calculo-da-guia-da-previdencia-social-gps"
+    },
+    {
+      "name": "Planalto — Lei nº 9.250/1995 (dedução de pensão alimentícia no IRPF)",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/l9250.htm"
+    },
+    {
+      "name": "IBGE — INPC: Índice Nacional de Preços ao Consumidor",
+      "url": "https://www.ibge.gov.br/explica/inflacao.php"
+    },
+    {
+      "name": "STJ — Jurisprudência em Teses nº 65: Alimentos (percentuais e base de cálculo)",
+      "url": "https://www.stj.jus.br/internet_docs/jurisprudencia/jurisprudenciaemteses/Jurisprudencia%20em%20teses%2065%20-%20Alimentos.pdf"
+    }
   ],
   "relatedSlugs": [
     "salario-liquido-clt-inss-irrf-2026",

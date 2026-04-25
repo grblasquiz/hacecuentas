@@ -18,14 +18,15 @@
     "time to live DNS",
     "DNS change delay"
   ],
-  "intro": "Technical IT calculations are fundamental: latency, bandwidth, uptime SLA, cloud costs, algorithmic complexity. A good initial calculation prevents over-provisioning infrastructure. Calculate the time it takes for DNS changes to propagate across the internet with our free, fast tool. Values are current as of 2026 and reviewed regularly to keep you up to date.",
-  "keyTakeaway": "Formula: **Propagation Time ≈ Maximum Upstream TTL**. Direct application with your input values. Calculate DNS propagation time instantly.",
+  "intro": "DNS TTL (Time To Live) is a numeric value — measured in seconds — embedded in every DNS record that tells resolvers and caching servers exactly how long to store that record before discarding it and fetching a fresh copy from the authoritative nameserver. It directly governs how quickly a DNS change (e.g., a new A record IP or an updated MX record) spreads across the global DNS infrastructure. The core formula is simple: **Propagation Window ≈ TTL seconds**. A TTL of 3600 means any resolver that cached your record can serve the old value for up to 1 hour after you make a change. Lower TTLs mean faster propagation but higher query load on your nameserver; higher TTLs reduce query load but slow down change rollout. Used by sysadmins, DevOps engineers, and web developers whenever planning a DNS migration, IP failover, domain transfer, or CDN cutover.",
+  "keyTakeaway": "**Propagation Window (seconds) = TTL value in the cached record** — e.g., TTL 86400 = up to 24 h of stale data; TTL 300 = changes visible globally within ~5 minutes.",
   "useCases": [
-    "Technical calculations related to DNS TTL and propagation",
-    "Students and IT professionals",
-    "Validate theoretical results before deployment",
-    "Teaching and learning DNS concepts",
-    "Quick reference for IT projects"
+    "Reducing TTL to 300 s (5 min) 24–48 hours before a planned server migration so DNS changes propagate quickly after the IP switch.",
+    "Setting TTL to 86400 s (24 h) for stable MX or SPF records to reduce authoritative nameserver query load and improve email deliverability consistency.",
+    "Calculating the exact downtime window when failing over to a backup IP during a DDoS attack — old TTL cached at resolvers defines the worst-case outage duration.",
+    "Planning a CDN onboarding cutover: lowering CNAME record TTL to 60 s before pointing traffic to Cloudflare or Akamai to minimize end-user impact.",
+    "Auditing TTL values across all DNS records to ensure SOA refresh intervals and individual record TTLs align with SLA requirements.",
+    "Determining how long to keep an old server running after a DNS change so no cached resolver still sends traffic to the deprecated IP address."
   ],
   "fields": [
     {
@@ -60,53 +61,57 @@
     ],
     "result": "~1h"
   },
-  "explanation": "**Technical IT calculators** for latency, storage, uptime SLA, cloud costs—decisions that scale.\n\n## How It's Calculated\n\nCalculate the time it takes for DNS changes to propagate across the internet. Fast, free, and accurate.\n\nThis calculator applies the standard formula with your input values, checking typical ranges and alerting you to unreasonable values.\n\n## Final Notes\n\nThis calculation is for reference only. For critical decisions (financial, medical, legal), consult a qualified professional. Values are current as of 2026 and reviewed regularly.",
+  "explanation": "## How It Is Calculated\n\nThe propagation time for a DNS change is **bounded by the TTL value stored in the record at the moment a resolver last cached it**. There is no complex formula — the relationship is direct:\n\n```\nMax Propagation Time (seconds) = TTL of the record currently cached by the resolver\n\nEffective Global Propagation ≈ TTL + resolver_overhead (typically 0–120 s)\n\nExample:\n  TTL = 3600 s → resolvers may serve stale data for up to 1 hour\n  TTL = 300 s  → resolvers may serve stale data for up to 5 minutes\n  TTL = 60 s   → resolvers may serve stale data for up to 1 minute\n```\n\nThe **SOA (Start of Authority) record** also contains a `refresh` field (how often secondary nameservers poll the primary) and a `minimum` field, which per **RFC 2308** acts as the negative caching TTL. The actual TTL a resolver honors is `min(record_TTL, resolver_max_cache_TTL)` — many ISP resolvers cap at 86400 s regardless of what you set.\n\n---\n\n## Reference Table\n\n| TTL Value | Human Time | Typical Use Case | Query Load on NS | Change Speed |\n|-----------|------------|-----------------|-----------------|--------------|\n| 30 s | 30 seconds | Emergency failover, active incident | Very High | Near-instant |\n| 60 s | 1 minute | Pre-migration staging (final hours) | High | ~1 min |\n| 300 s | 5 minutes | Pre-migration (24–48 h before change) | Medium-High | ~5 min |\n| 900 s | 15 minutes | Dynamic load-balanced environments | Medium | ~15 min |\n| 3600 s | 1 hour | Standard A/AAAA records, default | Low-Medium | ~1 hour |\n| 14400 s | 4 hours | CNAME, NS records on stable domains | Low | ~4 hours |\n| 43200 s | 12 hours | TXT/SPF records on stable domains | Very Low | ~12 hours |\n| 86400 s | 24 hours | MX, NS records for legacy stability | Minimal | ~24 hours |\n\n> **RFC 1035** (the foundational DNS specification) defines TTL as an unsigned 32-bit integer with a maximum value of **2,147,483,647 seconds** (~68 years), though practical maximums rarely exceed 86400 s (24 h).\n\n---\n\n## Typical Cases\n\n### Case 1 — Planned Server Migration\nYour A record currently has TTL = 86400 s (24 h). You plan to switch your server IP at 9:00 AM Tuesday.\n- **Step 1 (Monday 9:00 AM):** Lower TTL to 300 s. Wait 24 h for all resolvers to refresh and pick up the new TTL.\n- **Step 2 (Tuesday 9:00 AM):** Update the A record to the new IP. Maximum propagation: **300 s (~5 min)**.\n- **Step 3 (After migration stabilizes):** Raise TTL back to 3600–86400 s.\n\n### Case 2 — Emergency IP Failover Mid-Incident\nYour server goes down. The A record has TTL = 3600 s, cached 45 minutes ago by most resolvers.\n- Remaining stale cache life: up to **15 minutes** (3600 − 2700 = 900 s).\n- After updating the record, expect **full propagation in 15–60 minutes** depending on resolver freshness.\n- Lesson: always pre-reduce TTL during maintenance windows.\n\n### Case 3 — Email (MX Record) Stability\nAn MX record with TTL = 86400 s ensures mail servers worldwide cache your mail routing for 24 h.\n- Reduces repeated DNS lookups from sending MTAs.\n- Before changing mail providers, reduce to 3600 s at least **48 hours** in advance (two full cache cycles).\n\n---\n\n## Common Mistakes\n\n1. **Changing the IP without lowering the TTL first** — If your TTL is 86400 s and you flip the IP, visitors can be routed to the old (down) server for up to 24 hours. Always pre-reduce TTL at least one full TTL cycle before making changes.\n\n2. **Assuming TTL = 0 means instant propagation** — Many resolvers and ISPs enforce a minimum cache time (commonly 30–300 s) regardless of what TTL you set. A TTL of 0 is often clamped to 30 s by resolvers per RFC 2308 guidance, so \"instant\" is never truly guaranteed.\n\n3. **Forgetting resolver-level TTL caps** — Large ISP and corporate resolvers frequently cap cached TTLs at 300–86400 s. Setting TTL = 30 s does not guarantee resolvers honor it; some will cache for up to 5 minutes anyway.\n\n4. **Not accounting for the SOA negative TTL** — When a record does *not* exist (NXDOMAIN), the negative cache duration is governed by the SOA `minimum` field (RFC 2308). Forgetting to lower this before deleting records can cause prolonged \"domain not found\" errors.\n\n5. **Leaving low TTLs in place permanently** — A TTL of 60 s on a high-traffic domain generates 1,440 queries/day per resolver per record instead of just 1. At scale, this increases nameserver load dramatically and can trigger rate-limiting from some DNS providers.\n\n6. **Expecting TTL to control browser DNS cache** — Browsers (Chrome, Firefox) implement their own DNS cache with fixed durations (Chrome: ~60 s, Firefox: ~60 s by default) that may ignore your TTL entirely. End-user propagation always includes browser cache on top of resolver TTL.\n\n---\n\n## Related Calculators\n\n- [Subnet Mask & CIDR Calculator](/calculadora-subred-mascara-cidr)\n- [Bandwidth & Data Transfer Calculator](/calculadora-ancho-de-banda-transferencia)\n- [Uptime & SLA Percentage Calculator](/calculadora-uptime-sla-porcentaje)\n",
   "faq": [
     {
-      "q": "Should I use a low TTL?",
-      "a": "Use 300 seconds (5 minutes) if you plan frequent DNS changes. Lower TTLs allow faster updates but increase DNS queries."
+      "q": "What is a good default TTL for a standard website A record?",
+      "a": "For most websites, **3600 seconds (1 hour)** is the industry-standard default. It balances a low enough propagation window for occasional changes with minimal query load on your nameserver. If you anticipate frequent changes or upcoming migrations, lower it to 300 s (5 min) at least 24 hours in advance."
     },
     {
-      "q": "Should I use a high TTL?",
-      "a": "Use 86400 seconds (24 hours) to reduce DNS queries and server load. Best for stable, rarely-changed records."
+      "q": "How long does DNS propagation really take worldwide?",
+      "a": "Global propagation is bounded by your TTL plus resolver refresh lag — typically **TTL + 0 to 120 seconds**. With a TTL of 300 s, over 95% of the world's resolvers will see your new record within 5–10 minutes. With TTL = 86400 s, the full propagation window is up to **24 hours**. Tools like dnschecker.org let you verify propagation across dozens of global vantage points in real time."
     },
     {
-      "q": "Can ISPs ignore my TTL?",
-      "a": "Yes. ISP caches may bypass your TTL setting. If changes are urgent, you may need to wait longer or contact your ISP."
+      "q": "What is the minimum TTL I should use, and are there risks?",
+      "a": "The practical minimum is **30 seconds** for most DNS providers, though some allow 1 s or even 0. Risks of very low TTLs: (1) your authoritative nameserver must handle dramatically more queries; (2) many resolvers and ISPs clamp TTL to 30–300 s regardless; (3) some providers bill by query volume. Use sub-60 s TTLs only during active incident response, not as a permanent setting."
     },
     {
-      "q": "How does CDN affect TTL?",
-      "a": "CDN content updates typically go through API, not DNS. CDN and DNS TTL are usually independent."
+      "q": "What does the SOA record's TTL minimum field do?",
+      "a": "Per **RFC 2308**, the `minimum` field in the SOA record defines the **negative caching TTL** — how long resolvers cache a 'record not found' (NXDOMAIN) response. It does NOT set a floor for positive records. Typical values are 300–3600 s. If you delete a record and resolvers have cached NXDOMAIN, they will continue returning 'not found' until this TTL expires."
     },
     {
-      "q": "What about Anycast routing?",
-      "a": "Services like Cloudflare and Route 53 use Anycast to minimize latency globally. TTL still applies to DNS records."
+      "q": "Does lowering TTL guarantee faster propagation for all users?",
+      "a": "No — three factors can delay propagation beyond the TTL: (1) **ISP resolver caps** that ignore short TTLs and cache for a fixed duration (often up to 300 s); (2) **browser DNS caches** (Chrome and Firefox default to ~60 s internal cache); (3) **OS-level DNS caches** (Windows DNS Client service caches positive responses for up to 86400 s by default unless configured otherwise). Even with TTL = 30 s, some users may take several minutes to see new records."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, completely free. No account, credit card, or registration required."
+      "q": "What TTL should I use for MX (mail) records?",
+      "a": "**3600 to 86400 seconds (1–24 hours)** is recommended for MX records on stable mail configurations. Mail servers cache MX lookups aggressively, and very low TTLs rarely improve mail delivery while significantly increasing query load. Before switching email providers, reduce MX TTL to **3600 s at least 48 hours** before the cutover, then restore to 86400 s after the new provider is confirmed working."
     },
     {
-      "q": "How accurate are the results?",
-      "a": "Results are orientative using standard formulas validated internationally. For critical decisions, consult a professional."
+      "q": "What is the maximum allowed TTL value by the DNS standard?",
+      "a": "**RFC 1035** defines TTL as a 32-bit unsigned integer, giving a theoretical maximum of **2,147,483,647 seconds** (~68 years). However, RFC 2181 recommends treating TTL as a signed 32-bit integer and rejecting values above 2^31 − 1. In practice, most DNS providers cap usable TTL at **86400 seconds (24 hours)** and some at 604800 seconds (7 days). Values above these caps are rarely used outside of very specialized, stable infrastructure."
     },
     {
-      "q": "Do you save my data?",
-      "a": "No. All calculations run in your browser. We never send data to our servers."
+      "q": "How do I calculate how long my old server must stay online after a DNS change?",
+      "a": "Your old server must remain operational for at least **the TTL value that was in place when the DNS change was made**, plus a safety buffer of 10–20%. Formula: `Old Server Min Runtime = old_TTL_seconds × 1.1`. For example, if your A record had TTL = 3600 s when you flipped the IP, keep the old server running for at least **3960 seconds (~66 minutes)** to ensure no cached resolver sends traffic to a dead server."
+    },
+    {
+      "q": "Why do some DNS checkers show different propagation results across locations?",
+      "a": "Because DNS is a **distributed, hierarchical caching system** — not a synchronized broadcast. Each resolver worldwide independently fetches and caches records on its own schedule based on when it last queried. A resolver in Tokyo that cached your record 55 minutes ago (TTL = 3600) will serve the old value 5 minutes longer than a resolver in Frankfurt that cached it 60 minutes ago. This is normal behavior, not a DNS error."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "IETF RFC 1035 – Domain Names: Implementation and Specification (IETF / NIST-referenced standard)",
+      "url": "https://www.rfc-editor.org/rfc/rfc1035"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "IETF RFC 2308 – Negative Caching of DNS Queries",
+      "url": "https://www.rfc-editor.org/rfc/rfc2308"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Wikipedia – Time to Live (DNS)",
+      "url": "https://en.wikipedia.org/wiki/Time_to_live#DNS_records"
     }
   ],
   "dataUpdate": {

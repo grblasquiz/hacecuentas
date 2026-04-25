@@ -7,13 +7,15 @@
   "audience": "global",
   "icon": "➕",
   "formulaId": "fecha-exacta-sumar-restar-dias-habiles",
-  "intro": "Los cálculos de tiempo y fechas son esenciales para planificar eventos, deadlines y metas. Considerar feriados, días hábiles y husos horarios evita sorpresas. Calculadora fecha ± días · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Ingresá fecha y días y obtené resultado al instante, con fórmula estándar del tema y referencias al pie.",
+  "intro": "Esta calculadora te permite sumar o restar una cantidad de días a cualquier fecha, obteniendo la fecha exacta resultante. Podés operar con días corridos (todos los días del calendario) o días hábiles (excluyendo sábados, domingos y feriados nacionales argentinos). La fórmula base es: Fecha Resultado = Fecha Inicial ± N días. Es indispensable en contextos legales (plazos procesales), laborales (vencimiento de contratos, licencias), comerciales (vencimiento de facturas, pagarés) y administrativos (trámites ante AFIP, ANSES, organismos públicos). Un error de un solo día en un plazo legal puede tener consecuencias graves: multas, pérdida de derechos o recursos declarados extemporáneos.",
+  "keyTakeaway": "**Fecha Resultado = Fecha Inicial ± N días**: sumando 30 días corridos al 15/01/2026 da el 14/02/2026; sumando 30 días hábiles (sin sábados, domingos ni feriados) da aproximadamente el 26/02/2026 o más adelante según el calendario oficial.",
   "useCases": [
-    "Tener un dato concreto sobre sumar/restar días a fecha para un trámite o decisión cotidiana.",
-    "Comparar opciones (monto, lugar, modalidad) con números claros.",
-    "Chequear si un valor que te dieron cuadra con lo estándar.",
-    "Planificar gastos o tiempos familiares con data real, no estimaciones a ojo."
+    "Calcular el vencimiento de una factura de crédito emitida el 10/03/2026 con plazo neto a 60 días corridos, para saber exactamente cuándo debés pagar o cobrar.",
+    "Determinar el último día hábil para interponer un recurso administrativo ante AFIP contando 15 días hábiles desde la notificación de una resolución.",
+    "Estimar la fecha de reintegro al trabajo luego de una licencia médica de 21 días corridos otorgada por ANSES, incluyendo fines de semana.",
+    "Verificar si un contrato a plazo fijo de 90 días hábiles vence dentro o fuera de un período de vacaciones o feriados puente, para planificar la renovación.",
+    "Calcular la fecha exacta de vencimiento de un pagaré emitido a 180 días corridos para registrarlo correctamente ante escribano.",
+    "Determinar cuándo cumple el preaviso laboral de 30 días corridos según el artículo 231 de la Ley de Contrato de Trabajo 20.744, partiendo de la fecha de notificación."
   ],
   "fields": [
     {
@@ -52,53 +54,61 @@
     ],
     "result": "Resultado"
   },
-  "explanation": "Los **cálculos de tiempo y fechas** usan el calendario gregoriano (1582) adoptado universalmente. Días hábiles, feriados y vencimientos varían por país.\n\n## Cómo se calcula\n\nCalculadora fecha ± días · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.",
+  "explanation": "## Cómo se calcula\n\nLa operación central es una suma o resta algebraica sobre el calendario gregoriano. Hay dos modalidades bien diferenciadas:\n\n**Días corridos** (también llamados días calendario o naturales): se cuentan absolutamente todos los días, incluyendo sábados, domingos y feriados.\n\n```\nFecha Resultado = Fecha Inicial + N días corridos\nEjemplo: 15/01/2026 + 30 días = 14/02/2026\n```\n\n**Días hábiles**: se excluyen sábados, domingos y los feriados nacionales establecidos por ley en Argentina (Ley 27.399 y decretos anuales del Poder Ejecutivo). El algoritmo itera día a día sumando solo los que califican como hábiles:\n\n```\nFecha Resultado = primer día tal que:\n  contar(días hábiles entre Fecha Inicial y ese día) = N\n  donde día hábil: lunes a viernes + no es feriado nacional\nEjemplo: 15/01/2026 + 15 días hábiles ≈ 05/02/2026\n  (saltando 4 fines de semana = 8 días + feriados que caigan)\n```\n\n**Relación aproximada entre días hábiles y corridos:**\n```\nDías corridos ≈ Días hábiles × (7/5) = Días hábiles × 1,4\nDías hábiles ≈ Días corridos × (5/7) = Días corridos × 0,714\n```\n\n---\n\n## Tabla de referencia\n\n| Días hábiles | Días corridos aprox. | Semanas aprox. | Uso típico |\n|---|---|---|---|\n| 5 | 7 | 1 semana | Plazo corto administrativo |\n| 10 | 14 | 2 semanas | Respuesta a intimación laboral |\n| 15 | 21 | 3 semanas | Recurso ante AFIP / ANSES |\n| 20 | 28 | 4 semanas | Período de prueba corto |\n| 30 | 42 | 6 semanas | Preaviso LCT (hasta 5 años) |\n| 45 | 63 | 9 semanas | Preaviso LCT (+5 años) |\n| 60 | 84 | 12 semanas | Licencia por maternidad parcial |\n| 90 | 126 | 18 semanas | Contrato a plazo fijo típico |\n| 180 | 252 | 36 semanas | Pagaré semestral |\n\n*Los días corridos son aproximados; la cifra exacta depende de cuántos feriados caen en el período.*\n\n---\n\n## Casos típicos\n\n**Caso 1 — Recurso ante AFIP (15 días hábiles)**\nUn contribuyente recibe una resolución de AFIP el 02/03/2026 (lunes). Tiene 15 días hábiles para recurrir. Contando de martes 03/03 en adelante: del 03/03 al 06/03 (4 días), semana 09/03–13/03 (5 días = 9 acumulados), semana 16/03–20/03 (5 días = 14 acumulados), el día 15 cae el 23/03/2026 (lunes). Resultado: vence el **23/03/2026**.\n\n**Caso 2 — Vencimiento de factura a 60 días corridos**\nFactura emitida el 01/04/2026. Sumando 60 días corridos: abril tiene 30 días (quedan 30), mayo completo suma 31 días (total 61 días → el día 60 es el 30/05/2026). Resultado: vence el **31/05/2026** (01/04 + 60 = 31/05).\n\n**Caso 3 — Preaviso laboral (LCT Art. 231)**\nTrabajador con 3 años de antigüedad notificado el 15/06/2026 (lunes). El preaviso es de 30 días corridos (menos de 5 años de antigüedad). Sumando 30 días: 15/06 + 30 = 15/07/2026. Si el 15/07 es hábil, ese es el último día de relación laboral efectiva. Resultado: relación cesa el **15/07/2026**.\n\n---\n\n## Errores comunes\n\n1. **Confundir si el día de inicio se cuenta o no**: En plazos procesales y administrativos argentinos, el día de notificación generalmente NO se cuenta; el plazo arranca el día hábil siguiente. No incorporar esta regla lleva a calcular un día de más o de menos.\n\n2. **Ignorar los feriados puente (asuetos)**: El Poder Ejecutivo puede decretar asuetos o feriados puente que no figuran en la ley fija (Ley 27.399). Usar un calendario desactualizado hace que se cuenten como hábiles días que en realidad no lo son.\n\n3. **Tratar los días hábiles como días corridos multiplicados por 5/7 sin verificar**: La fórmula de conversión es una aproximación. En períodos con muchos feriados (enero, julio, diciembre) el desvío puede ser de 2 a 4 días, lo que invalida el cálculo en contextos legales.\n\n4. **No distinguir \"días hábiles administrativos\" de \"días hábiles judiciales\"**: Los tribunales argentinos tienen sus propios calendarios de receso (enero y julio, principalmente). Un plazo procesal judicial no corre igual que uno administrativo; mezclarlos puede hacer que un recurso sea considerado extemporáneo.\n\n5. **Olvidar el año bisiesto**: El año 2024 fue bisiesto (febrero tuvo 29 días). El próximo año bisiesto es 2028. Calcular plazos que cruzan febrero sin tener en cuenta si el año es o no bisiesto genera errores de 1 día.\n\n6. **Asumir que el resultado es el mismo en todos los años**: Un plazo de 90 días corridos que empieza el 01/11/2025 vence el 29/01/2026; el mismo plazo iniciado el 01/11/2026 también vence el 29/01/2027, pero si en ese período caen más o menos feriados que en el año anterior, la conversión a hábiles es distinta.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de edad en días](/calculadora-edad-en-dias): convertí tu fecha de nacimiento en días de vida exactos.\n- [Días laborables/hábiles entre dos fechas](/calculadora-dias-laborables-habiles-entre-fechas): contá cuántos días hábiles hay entre dos fechas específicas.\n- [Días hábiles del mes actual con feriados](/calculadora-dias-habiles-mes-actual-feriados): consultá cuántos días hábiles tiene el mes en curso según el calendario oficial.\n- [¿Cuándo son tus 10.000 días de vida?](/calculadora-fecha-10000-dias): calculá la fecha exacta en que cumplís un hito especial de días vividos.\n",
   "faq": [
     {
-      "q": "¿Cómo funciona?",
-      "a": "Sumar/restar días a fecha se calcula con la fórmula estándar internacional con datos oficiales 2026."
+      "q": "¿El día de inicio se incluye en el conteo de días?",
+      "a": "Depende del régimen aplicable. En derecho administrativo y laboral argentino, el día en que ocurre el hecho (notificación, intimación) generalmente NO se computa: el plazo comienza a correr a partir del día hábil siguiente. En contratos privados y plazos comerciales, las partes pueden acordar incluirlo. Siempre verificá el marco legal o contractual específico antes de calcular."
     },
     {
-      "q": "¿Precisión?",
-      "a": "Resultado orientativo dentro de ±5%. Para decisiones críticas consultar profesional."
+      "q": "¿Cuál es la diferencia entre días hábiles administrativos y judiciales?",
+      "a": "Los días hábiles administrativos son los días de trabajo de los organismos del Estado (AFIP, ANSES, ministerios): lunes a viernes excluyendo feriados nacionales. Los días hábiles judiciales excluyen adicionalmente los períodos de feria judicial (enero y julio completos en la mayoría de los fueros). Un plazo de 15 días 'hábiles judiciales' puede extenderse semanas más que uno 'hábiles administrativos' si cae en enero."
     },
     {
-      "q": "¿Actualizado?",
-      "a": "Datos y fórmulas 2026. Verificamos trimestralmente."
+      "q": "¿Qué feriados nacionales existen en Argentina y qué ley los regula?",
+      "a": "Los feriados nacionales fijos están establecidos en la Ley 27.399 (sancionada en 2017). Incluyen, entre otros: 1° de enero, 24 de marzo, 2 de abril, 1° de mayo, 25 de mayo, 20 de junio, 9 de julio, 17 de agosto, 12 de octubre, 20 de noviembre, 8 de diciembre y 25 de diciembre. Adicionalmente, cada año el Poder Ejecutivo puede declarar feriados con fines de traslado o asuetos extra mediante decreto."
     },
     {
-      "q": "¿Gratis?",
-      "a": "Sí, como todas las calculadoras de hacecuentas.com."
+      "q": "¿Cómo afectan los feriados puente al cálculo de días hábiles?",
+      "a": "Los 'feriados puente' son días declarados no laborables por decreto del Poder Ejecutivo para generar un fin de semana largo. No son feriados de ley fija, sino discrecionales. Para plazos administrativos stricto sensu, la doctrina mayoritaria los asimila a feriados (no se trabaja en organismos públicos), aunque en el sector privado depende del convenio colectivo. Siempre consultá el decreto del año en cuestión para un cálculo preciso."
     },
     {
-      "q": "¿Fuentes?",
-      "a": "Organismos oficiales: BCRA, INDEC, AFIP, OMS, IOM según tema."
+      "q": "¿Cuántos días hábiles tiene un mes promedio en Argentina?",
+      "a": "Un mes de 30 días tiene aproximadamente 22 días hábiles si no hay feriados en la semana (4 semanas × 5 días hábiles = 20, más los días sueltos del inicio/fin). En la práctica, restando los feriados nacionales promedio (entre 1 y 3 por mes), la mayoría de los meses tienen entre 19 y 21 días hábiles. Enero y julio son los más cortos en términos judiciales por la feria."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cómo calculo el preaviso laboral con esta calculadora?",
+      "a": "Según el artículo 231 de la Ley de Contrato de Trabajo 20.744, el preaviso es de 15 días para trabajadores en período de prueba, 30 días para antigüedades menores a 5 años, y 60 días para antigüedades iguales o mayores a 5 años. Estos plazos se cuentan en días corridos. Ingresá la fecha de notificación del preaviso y sumá 15, 30 o 60 días corridos para obtener el último día de la relación laboral."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Los plazos del Código Civil argentino son en días hábiles o corridos?",
+      "a": "El Código Civil y Comercial de la Nación (Ley 26.994, vigente desde 2015) establece en su artículo 6° que los plazos en días se computan en días corridos (no hábiles), salvo disposición en contrario. Si el último día del plazo coincide con un feriado o día no laborable, el vencimiento se traslada al siguiente día hábil. Siempre verificá si la norma específica que aplica a tu caso no establece una regla diferente."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Qué pasa si el resultado cae en un feriado o fin de semana?",
+      "a": "Para obligaciones legales y administrativas, cuando el vencimiento cae en un día inhábil (sábado, domingo o feriado), en general se prorroga automáticamente al primer día hábil siguiente. Esto surge del artículo 6° del Código Civil y Comercial y de normas procesales específicas. En obligaciones contractuales privadas, la solución depende de lo pactado, pero la costumbre comercial suele seguir el mismo criterio."
+    },
+    {
+      "q": "¿Puedo usar esta calculadora para plazos impositivos de AFIP?",
+      "a": "Sí, con precaución. AFIP trabaja en días hábiles administrativos. Por ejemplo, el plazo para responder una vista o interponer un recurso ante AFIP suele ser de 15 días hábiles contados desde el día siguiente a la notificación (arts. 76 y 77, Ley 11.683). Usá el modo 'días hábiles' de la calculadora, ingresá el día siguiente a la notificación como fecha de inicio, y sumá los días que correspondan según el acto administrativo."
     }
   ],
   "sources": [
     {
-      "name": "INDEC — Canasta Básica y precios Argentina",
-      "url": "https://www.indec.gob.ar"
+      "name": "Ley 27.399 – Feriados Nacionales (InfoLEG / Ministerio de Justicia)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/270000-274999/271803/norma.htm"
     },
     {
-      "name": "OCU — Organización de Consumidores y Usuarios",
-      "url": "https://www.ocu.org"
+      "name": "Ley 20.744 – Ley de Contrato de Trabajo (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm"
     },
     {
-      "name": "Ministerio de Justicia Argentina",
-      "url": "https://www.argentina.gob.ar/justicia"
+      "name": "Ley 26.994 – Código Civil y Comercial de la Nación, Art. 6° (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/235000-239999/235975/norma.htm"
+    },
+    {
+      "name": "Ley 11.683 – Procedimiento Tributario AFIP, Arts. 76-77 (InfoLEG)",
+      "url": "http://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/18771/texact.htm"
     }
   ],
   "relatedSlugs": [
