@@ -211,3 +211,28 @@ const seeAllHref = lang === 'en' ? '/en' : lang === 'pt' ? '/pt' : '/';
     color: var(--text);
   }
 </style>
+
+<script is:inline>
+(() => {
+  const cards = document.querySelectorAll('.related .related-card');
+  if (!cards.length) return;
+  const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (c && (c.saveData || c.effectiveType === 'slow-2g' || c.effectiveType === '2g')) return;
+  if (matchMedia('(prefers-reduced-data: reduce)').matches) return;
+  const done = new Set();
+  const prefetch = (href) => {
+    if (!href || done.has(href)) return;
+    done.add(href);
+    const l = document.createElement('link');
+    l.rel = 'prefetch';
+    l.href = href;
+    l.as = 'document';
+    document.head.appendChild(l);
+  };
+  cards.forEach((card) => {
+    const handler = () => prefetch(card.getAttribute('href'));
+    card.addEventListener('pointerenter', handler, { once: true, passive: true });
+    card.addEventListener('focus', handler, { once: true });
+  });
+})();
+</script>

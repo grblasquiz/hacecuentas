@@ -22,6 +22,11 @@ function task(name: string, script: string): Task {
   return { name, cmd: NODE, args: [...FLAGS, `scripts/${script}.ts`] };
 }
 
+// .mjs no necesita --experimental-strip-types
+function mjsTask(name: string, script: string): Task {
+  return { name, cmd: NODE, args: [`scripts/${script}.mjs`] };
+}
+
 function run(t: Task): Promise<void> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
@@ -71,8 +76,11 @@ async function main() {
     run(task('stamp-sw', 'stamp-sw')),
   ]);
 
-  console.log('[prebuild] fase 3: og-manifest');
-  await run(task('og-manifest', 'generate-og-manifest'));
+  console.log('[prebuild] fase 3: og-manifest + optimize-images (paralelo)');
+  await Promise.all([
+    run(task('og-manifest', 'generate-og-manifest')),
+    run(mjsTask('optimize-images', 'optimize-images')),
+  ]);
 
   const total = ((Date.now() - t0) / 1000).toFixed(1);
   console.log(`[prebuild] ✓ total ${total}s`);

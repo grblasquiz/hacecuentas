@@ -61,3 +61,13 @@
 # Página offline: cacheable a largo plazo
 /offline.html
   Cache-Control: public, max-age=3600
+
+# Search-index: SWR edge — 10 min fresh + 24h stale-while-revalidate.
+# El JSON se invalida en cada deploy via CF Pages purge automático;
+# entre deploys el SWR sirve la versión vieja al instante mientras
+# revalida en background, evitando que el modal de búsqueda se sienta lento.
+# IMPORTANTE: se sobrescribe el `CDN-Cache-Control: no-store` global de /*
+# para que el edge SÍ cachee este JSON.
+/search-index.json
+  Cache-Control: public, max-age=600, stale-while-revalidate=86400
+  CDN-Cache-Control: public, max-age=600, stale-while-revalidate=86400

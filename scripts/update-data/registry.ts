@@ -13,6 +13,7 @@
 import type { Frequency } from './utils/freshness.ts';
 import { fetchDolar } from './fetchers/dolar.ts';
 import { fetchBcra } from './fetchers/bcra.ts';
+import { fetchBcraSeries } from './fetchers/bcra-series.ts';
 import { fetchIpc } from './fetchers/ipc.ts';
 import { fetchMonotributo } from './fetchers/monotributo.ts';
 import { fetchGananciasEscala } from './fetchers/ganancias-escala.ts';
@@ -51,6 +52,19 @@ export const REGISTRY: FetcherEntry[] = [
     ],
     frequency: 'monthly',
     run: fetchBcra,
+  },
+  {
+    name: 'bcra-series',
+    // Persiste series históricas (ICL/UVA/CER/TM20/plazo-fijo-30d) en db/*.json
+    // para uso por componentes que muestren gráficos o snapshots offline.
+    // Daily porque las 5 series son diarias en el BCRA y el costo es bajo (~7s).
+    slugs: [
+      'calculadora-actualizacion-alquiler-icl',
+      'calculadora-credito-uva-vs-tasa-fija',
+      'calculadora-plazo-fijo',
+    ],
+    frequency: 'daily',
+    run: fetchBcraSeries,
   },
   {
     name: 'ipc',

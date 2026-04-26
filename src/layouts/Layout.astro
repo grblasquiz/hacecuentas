@@ -318,6 +318,60 @@ const globalSchema = {
     <slot name="footer" />
     <CookieConsent />
 
+    <!-- Core Web Vitals — sample 25%, lazy load, sendBeacon a /api/vitals + GA4.
+         Reporta LCP, INP, CLS, FCP, TTFB. La librería web-vitals decide cuándo
+         disparar cada métrica (LCP en hidden, INP en pagehide, etc).
+         El cliente samplea: si no entra en el 25% no carga el módulo.
+         Script sin is:inline → Astro lo bundlea con `web-vitals` local (respeta CSP self). -->
+    <script>
+      // Sample 25% antes de cargar el módulo (ahorra bytes a 75% de pageviews)
+      if (Math.random() <= 0.25) {
+        const idle = (window as any).requestIdleCallback || ((fn: () => void) => setTimeout(fn, 1));
+        idle(async () => {
+          try {
+            const { onLCP, onINP, onCLS, onFCP, onTTFB } = await import('web-vitals');
+            const url = location.pathname + location.search;
+            type Metric = { name: string; value: number; rating: string; id: string; navigationType?: string };
+            const report = (m: Metric) => {
+              const payload = {
+                url,
+                metric: m.name,
+                value: m.value,
+                rating: m.rating,
+                id: m.id,
+                navigationType: m.navigationType,
+              };
+              // 1) D1 propio (best-effort, no espera)
+              try {
+                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+                if (navigator.sendBeacon) navigator.sendBeacon('/api/vitals', blob);
+                else fetch('/api/vitals', { method: 'POST', body: blob, keepalive: true }).catch(() => {});
+              } catch {}
+              // 2) GA4 mirror — para Looker Studio
+              try {
+                const g = (window as any).gtag;
+                if (typeof g === 'function') {
+                  g('event', 'web_vital', {
+                    metric_name: m.name,
+                    metric_value: m.name === 'CLS' ? m.value * 1000 : m.value,
+                    metric_rating: m.rating,
+                    metric_id: m.id,
+                    page_path: url,
+                    non_interaction: true,
+                  });
+                }
+              } catch {}
+            };
+            onLCP(report);
+            onINP(report);
+            onCLS(report);
+            onFCP(report);
+            onTTFB(report);
+          } catch {}
+        });
+      }
+    </script>
+
     <!-- Service Worker — solo en producción y si el browser lo soporta -->
     <!-- SW registration + print-header date: diferidos a idle para no bloquear TBT -->
     <script is:inline>

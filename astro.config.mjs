@@ -2,6 +2,15 @@
 import { defineConfig } from 'astro/config';
 
 import cloudflare from '@astrojs/cloudflare';
+import sentry from '@sentry/astro';
+
+// Sentry: DSN se lee de env (SENTRY_DSN). Si está vacío, init es no-op.
+// Source maps se uploadean SOLO en CI/prod cuando SENTRY_AUTH_TOKEN está seteado;
+// en dev no queremos subir source maps a Sentry.
+const SENTRY_DSN = process.env.SENTRY_DSN || '';
+const SENTRY_AUTH_TOKEN = process.env.SENTRY_AUTH_TOKEN || '';
+const SENTRY_ENABLED = Boolean(SENTRY_DSN);
+const IS_PROD_BUILD = process.env.NODE_ENV !== 'development' && Boolean(SENTRY_AUTH_TOKEN);
 // NOTE: Partytown removido 2026-04-22. Bloqueaba events de conversión de
 // Google Ads (gtag no generaba network requests al collect endpoint).
 // Volvemos a async scripts — más CPU main thread pero tracking 100% funcional.
@@ -32,7 +41,25 @@ export default defineConfig({
   },
 
   compressHTML: true,
-  integrations: [],
+  integrations: [
+    // Sentry — solo se inicializa si hay DSN. Sin DSN, queda como no-op total.
+    // - Track errors client-side (autoInstrumentation: true). Server-side OFF
+    //   porque Workers ya tiene su propio logging (CF Workers Observability).
+    // - Source maps upload solo en build de prod con SENTRY_AUTH_TOKEN seteado.
+    ...(SENTRY_ENABLED ? [sentry({
+      dsn: SENTRY_DSN,
+      tracesSampleRate: 0.1,
+      replaysSessionSampleRate: 0,
+      replaysOnErrorSampleRate: 0.1,
+      // Skip server-side init: Workers usan su propio observability.
+      autoInstrumentation: { requestHandler: false },
+      sourceMapsUploadOptions: IS_PROD_BUILD ? {
+        project: process.env.SENTRY_PROJECT || 'hacecuentas',
+        org: process.env.SENTRY_ORG || '',
+        authToken: SENTRY_AUTH_TOKEN,
+      } : { enabled: false },
+    })] : []),
+  ],
 
   // Prefetch on hover: acelera navegación entre calcs sin inflar el payload inicial.
   // "hover" = prefetch cuando el usuario hoverea un link interno (default en Astro v4+).

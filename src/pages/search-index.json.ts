@@ -24,7 +24,11 @@ export const GET: APIRoute = () => {
   return new Response(JSON.stringify(calcs), {
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600, must-revalidate',
+      // SWR edge: 10 min fresh, 24 h stale-while-revalidate.
+      // El JSON se invalida en cada deploy via hash de build (Vite asset),
+      // pero como esta ruta no tiene hash en el nombre, dependemos de
+      // CF Pages purge en deploy + revalidación en background.
+      'Cache-Control': 'public, max-age=600, stale-while-revalidate=86400',
     },
   });
 };

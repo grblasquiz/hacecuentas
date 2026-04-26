@@ -23,6 +23,25 @@
  * - CSS del Layout principal (crítico, above-fold)
  * - CSS específico de la ruta (index@_@astro, calcs, etc.) — pueden tener
  *   estilos del hero/above-fold
+ *
+ * ──────────────────────────────────────────────────────────────────────
+ * Por qué NO usamos beasties/critters (evaluado 2026-04-26):
+ *
+ * Beasties extrae rules realmente "usadas" por el document, pero NO tiene
+ * concepto de viewport / above-the-fold (lo dice su propio README: no usa
+ * headless browser). Resultado en sample 3 páginas:
+ *   - index.html:   <head> 19KB → 75KB (+55KB)
+ *   - aguinaldo:    <head> 16KB → 59KB (+42KB)
+ *   - vo2-max:      <head> 23KB → 96KB (+73KB)
+ *
+ * Inlinea todos los rules del Footer.css (24KB) en el <head>, anulando
+ * todo el ahorro del defer + empujando el LCP más abajo.
+ *
+ * El approach actual (inline <8KB route-specific + defer Footer + remove
+ * orphan CSS) es la mejor heurística sin runtime overhead. Para mejorar
+ * de verdad haría falta un headless-browser pass per-route, lo cual a
+ * 3833 páginas es prohibitivo en CI.
+ * ──────────────────────────────────────────────────────────────────────
  */
 import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';

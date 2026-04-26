@@ -1,0 +1,117 @@
+name: Check stale data
+
+# Corre todos los días a las 11:00 UTC (después de update-data-daily a las 10:00 UTC).
+# Detecta calcs cuyos datos están vencidos según `dataUpdate.frequency` + `lastUpdated`.
+# Si hay más de THRESHOLD vencidos, abre una issue automática (y opcionalmente pinguea Slack).
+
+on:
+  schedule:
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+    inputs:
+      threshold:
+        description: 'Umbral mínimo de calcs vencidos para abrir issue'
+        type: string
+        default: '5'
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  THRESHOLD: ${{ inputs.threshold || '5' }}
+
+jobs:
+  check:
+    name: Detectar calcs vencidos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run check-stale-data
+        id: check
+        run: |
+          set +e
+          node --experimental-strip-types scripts/check-stale-data.ts \
+            --threshold=$THRESHOLD \
+            --out=/tmp/stale.md | tee /tmp/stale.log
+          EXIT=$?
+          set -e
+          # Exit codes del script: 0 = ok, 2 = abrir issue, 1 = error fatal
+          if [ $EXIT -eq 1 ]; then
+            echo "Script falló"
+            exit 1
+          fi
+          SUMMARY=$(grep '^STALE_SUMMARY::' /tmp/stale.log | tail -1 | sed 's/^STALE_SUMMARY:://')
+          COUNT=$(echo "$SUMMARY" | node -e "const s=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log(s.count||0)")
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+          echo "should_alert=$([ $EXIT -eq 2 ] && echo true || echo false)" >> $GITHUB_OUTPUT
+          # Truncar a 60KB por seguridad (límite GH issue body)
+          head -c 60000 /tmp/stale.md > /tmp/stale-trim.md
+          {
+            echo 'body<<STALEEOF'
+            cat /tmp/stale-trim.md
+            echo
+            echo '---'
+            echo "_Generado por \`.github/workflows/check-stale-data.yml\` el $(date -u +'%Y-%m-%d %H:%M UTC')._"
+            echo 'STALEEOF'
+          } >> $GITHUB_OUTPUT
+
+      - name: Open / update GitHub issue
+        if: steps.check.outputs.should_alert == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BODY: ${{ steps.check.outputs.body }}
+          COUNT: ${{ steps.check.outputs.count }}
+        run: |
+          # Si ya hay una issue abierta con label `stale-data`, la actualizamos
+          # comentando — evita inundar el tracker con dups.
+          EXISTING=$(gh issue list --label stale-data --state open --json number --jq '.[0].number' || echo "")
+          TITLE="Datos vencidos: $COUNT calcs (umbral $THRESHOLD)"
+          if [ -n "$EXISTING" ]; then
+            echo "Actualizando issue #$EXISTING"
+            gh issue comment "$EXISTING" --body "$BODY"
+            gh issue edit "$EXISTING" --title "$TITLE"
+          else
+            echo "Creando issue nueva"
+            gh issue create \
+              --title "$TITLE" \
+              --label stale-data \
+              --label automated \
+              --body "$BODY"
+          fi
+
+      - name: Notificar Slack (opcional)
+        if: steps.check.outputs.should_alert == 'true' && env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          COUNT: ${{ steps.check.outputs.count }}
+        run: |
+          REPO_URL="https://github.com/${{ github.repository }}"
+          PAYLOAD=$(node -e "
+            const count = process.env.COUNT;
+            const repo = process.env.REPO_URL;
+            console.log(JSON.stringify({
+              text: \`hacecuentas: \${count} calcs con datos vencidos. Ver issue en \${repo}/issues?q=is%3Aissue+label%3Astale-data+is%3Aopen\`
+            }));
+          ")
+          curl -fsSL -X POST -H 'Content-Type: application/json' \
+            -d "$PAYLOAD" "$SLACK_WEBHOOK_URL"
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stale-data-report
+          path: /tmp/stale.md
+          retention-days: 14

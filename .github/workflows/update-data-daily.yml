@@ -1,7 +1,9 @@
 name: Update data (daily)
 
 # Corre todos los días a las 10:00 UTC (~07:00 ARG).
-# Fetchers daily actuales: dolar (dolarapi.com).
+# Fetchers daily actuales:
+#   - dolar (dolarapi.com)
+#   - bcra-series (ICL/UVA/CER/TM20/plazo-fijo-30d → db/*.json)
 # Si detecta cambios, abre un PR en vez de commitear a main directo — así
 # cualquier regression queda visible antes de deployar.
 
@@ -57,7 +59,7 @@ jobs:
           commit-message: |
             chore(data): actualización automática diaria
 
-            Fetchers: dolar
+            Fetchers: dolar, bcra-series
             ${{ steps.run.outputs.summary }}
           title: '🔄 Update data (daily) — ${{ github.run_number }}'
           body: |
@@ -70,6 +72,7 @@ jobs:
 
             Fetchers que corrieron:
             - `dolar` — dolarapi.com (cotizaciones USD/ARS)
+            - `bcra-series` — api.bcra.gob.ar (ICL, UVA, CER, TM20, plazo fijo 30d → `db/*.json`)
 
             Revisar los cambios antes de mergear. Si algo está raro, cerrar el PR y el próximo cron vuelve a intentar.
           labels: |

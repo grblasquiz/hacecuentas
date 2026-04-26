@@ -47,6 +47,23 @@ CREATE TABLE IF NOT EXISTS error_reports (
 CREATE INDEX IF NOT EXISTS idx_errors_status ON error_reports(status);
 CREATE INDEX IF NOT EXISTS idx_errors_created ON error_reports(created_at DESC);
 
+-- Core Web Vitals (LCP, INP, CLS, FCP, TTFB).
+-- El cliente samplea al 25% antes de enviar — esto ya está filtrado.
+-- Sin UNIQUE en (url, metric, ts) — queremos series temporales completas para
+-- calcular percentiles (P75 según definición Google CrUX).
+CREATE TABLE IF NOT EXISTS web_vitals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  url TEXT NOT NULL,                    -- pathname + query, sin host
+  metric TEXT NOT NULL,                 -- 'LCP' | 'INP' | 'CLS' | 'FCP' | 'TTFB'
+  value REAL NOT NULL,                  -- ms para LCP/INP/FCP/TTFB, ratio para CLS
+  rating TEXT,                          -- 'good' | 'needs-improvement' | 'poor'
+  country TEXT,                         -- ISO-2 desde cf-ipcountry, opcional
+  ts INTEGER NOT NULL                   -- unix ms
+);
+CREATE INDEX IF NOT EXISTS idx_vitals_metric_ts ON web_vitals(metric, ts DESC);
+CREATE INDEX IF NOT EXISTS idx_vitals_url ON web_vitals(url);
+CREATE INDEX IF NOT EXISTS idx_vitals_ts ON web_vitals(ts DESC);
+
 -- Vista útil para panel: agregado de votos por slug.
 CREATE VIEW IF NOT EXISTS calc_votes_summary AS
 SELECT
