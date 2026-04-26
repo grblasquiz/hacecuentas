@@ -1,0 +1,394 @@
+---
+/**
+ * Listado público de sugerencias. SSR (necesita leer D1).
+ *
+ * Filtro por categoría via query string ?category=...
+ * Lista approved+pending por defecto (admin puede ver más en /admin).
+ *
+ * Sin paginación: traemos hasta 200 (límite del endpoint) y mostramos todas.
+ * Si superamos eso podríamos meter paginación, pero por ahora con 200 alcanza.
+ */
+export const prerender = false;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { getEnv } from '../lib/api-utils';
+
+const url = new URL(Astro.request.url);
+const filterCategory = (url.searchParams.get('category') || '').toLowerCase();
+
+const CATEGORY_LABELS: Record<string, string> = {
+  finanzas: 'Finanzas',
+  salud: 'Salud',
+  deportes: 'Deportes',
+  familia: 'Familia',
+  cocina: 'Cocina',
+  construccion: 'Construcción',
+  automotor: 'Automotor',
+  mascotas: 'Mascotas',
+  matematicas: 'Matemáticas',
+  ciencia: 'Ciencia',
+  idiomas: 'Idiomas',
+  entretenimiento: 'Entretenimiento',
+  vida: 'Vida',
+  negocios: 'Negocios',
+  tecnologia: 'Tecnología',
+  otros: 'Otros',
+};
+
+interface Suggestion {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  status: string;
+  vote_count: number;
+  created_at: number;
+}
+
+let suggestions: Suggestion[] = [];
+let dbError = '';
+
+const env = getEnv();
+const db = env.DB;
+
+if (db) {
+  try {
+    const params: any[] = ['approved', 'pending'];
+    let where = `status IN (?, ?)`;
+    if (filterCategory && CATEGORY_LABELS[filterCategory]) {
+      where += ' AND category = ?';
+      params.push(filterCategory);
+    }
+    const res = await db
+      .prepare(
+        `SELECT id, title, description, category, status, vote_count, created_at
+         FROM calc_suggestions
+         WHERE ${where}
+         ORDER BY vote_count DESC, created_at DESC
+         LIMIT 200`,
+      )
+      .bind(...params)
+      .all();
+    suggestions = (res.results as Suggestion[]) || [];
+  } catch (err: any) {
+    dbError = String(err?.message || err);
+  }
+}
+
+// Categorías presentes en los datos (para el filtro), siempre + "todas".
+const presentCategories = Array.from(new Set(suggestions.map((s) => s.category))).sort();
+
+function fmtDate(ts: number): string {
+  if (!ts) return '';
+  try {
+    return new Date(ts).toLocaleDateString('es-AR', {
+      day: '2-digit', month: 'short', year: 'numeric',
+    });
+  } catch { return ''; }
+}
+---
+
+<Layout
+  title="Sugerencias de calculadoras — votá las próximas | Hacé Cuentas"
+  description="Lista pública de calculadoras propuestas por la comunidad. Votá las que más te interesan — las más votadas se construyen primero."
+>
+  <Header slot="header" />
+
+  <article class="legal">
+    <header class="page-head">
+      <h1>Calculadoras propuestas por la comunidad</h1>
+      <p class="intro">
+        Estas son las calculadoras que la gente quiere ver en Hacé Cuentas.
+        Votá las que más te servirían — construimos primero las más votadas.
+        ¿No ves la tuya? <a href="/sugerir">Sugerí una nueva</a>.
+      </p>
+    </header>
+
+    {dbError && (
+      <div class="err-box">
+        <strong>No pudimos cargar las sugerencias.</strong> Probá refrescar en un rato.
+      </div>
+    )}
+
+    {!dbError && suggestions.length === 0 && (
+      <div class="empty-box">
+        <p>
+          Todavía no hay sugerencias{filterCategory ? ` en la categoría ${CATEGORY_LABELS[filterCategory] || filterCategory}` : ''}.
+          <br />
+          <a href="/sugerir">Sé la primera persona en proponer una</a>.
+        </p>
+      </div>
+    )}
+
+    {suggestions.length > 0 && (
+      <>
+        <nav class="cat-filter" aria-label="Filtrar por categoría">
+          <a href="/sugerencias" class={!filterCategory ? 'active' : ''}>Todas ({suggestions.length})</a>
+          {presentCategories.map((cat) => (
+            <a
+              href={`/sugerencias?category=${encodeURIComponent(cat)}`}
+              class={filterCategory === cat ? 'active' : ''}
+            >
+              {CATEGORY_LABELS[cat] || cat}
+            </a>
+          ))}
+        </nav>
+
+        <ul class="sug-list">
+          {suggestions.map((s) => (
+            <li class="sug-card" data-id={s.id}>
+              <div class="vote-col">
+                <button
+                  type="button"
+                  class="vote-btn"
+                  data-id={s.id}
+                  aria-label={`Votar: ${s.title}`}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="18 15 12 9 6 15"/>
+                  </svg>
+                </button>
+                <span class="vote-count" data-count={s.id}>{s.vote_count}</span>
+              </div>
+              <div class="body">
+                <h2>{s.title}</h2>
+                <p class="desc">{s.description}</p>
+                <div class="meta">
+                  <span class={`tag tag-${s.category}`}>{CATEGORY_LABELS[s.category] || s.category}</span>
+                  {s.status === 'pending' && <span class="status status-pending">Pendiente de aprobación</span>}
+                  <span class="date">Propuesta {fmtDate(s.created_at)}</span>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+
+    <div class="cta-bottom">
+      <h2>¿Tenés otra idea?</h2>
+      <p>
+        <a href="/sugerir" class="btn-primary">Sugerí una calculadora nueva →</a>
+      </p>
+    </div>
+  </article>
+
+  <script is:inline>
+    (function () {
+      // Anti-doble-voto cliente con localStorage. El server también valida por
+      // IP hash, esto es solo UX para que el botón quede deshabilitado tras votar.
+      var STORAGE_KEY = 'hc_voted_suggestions';
+      function getVoted() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+        catch { return []; }
+      }
+      function markVoted(id) {
+        var v = getVoted();
+        if (v.indexOf(id) === -1) v.push(id);
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(v)); } catch {}
+      }
+      function isVoted(id) { return getVoted().indexOf(id) !== -1; }
+
+      // Marcar botones ya votados al cargar.
+      document.querySelectorAll('.vote-btn').forEach(function (btn) {
+        var id = parseInt(btn.getAttribute('data-id'), 10);
+        if (isVoted(id)) {
+          btn.classList.add('voted');
+          btn.disabled = true;
+        }
+      });
+
+      document.querySelectorAll('.vote-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = parseInt(btn.getAttribute('data-id'), 10);
+          if (!id || btn.disabled) return;
+          btn.disabled = true;
+          fetch('/api/suggestions/' + id + '/vote', { method: 'POST' })
+            .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
+            .then(function (res) {
+              if (res.status >= 200 && res.status < 300 && res.body && res.body.ok) {
+                btn.classList.add('voted');
+                markVoted(id);
+                var counter = document.querySelector('[data-count="' + id + '"]');
+                if (counter && typeof res.body.vote_count === 'number') {
+                  counter.textContent = res.body.vote_count;
+                }
+                if (typeof window.gtag === 'function') {
+                  window.gtag('event', 'suggestion_vote', { suggestion_id: id });
+                }
+              } else {
+                btn.disabled = false;
+                console.warn('vote failed', res);
+              }
+            })
+            .catch(function () { btn.disabled = false; });
+        });
+      });
+    })();
+  </script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .legal { max-width: 820px; margin: 2rem auto; padding: 0 1rem; }
+  .page-head h1 { margin-bottom: 0.5rem; }
+  .intro { color: var(--text-muted); font-size: 1.0625rem; line-height: 1.6; }
+  .legal a { color: var(--accent); }
+
+  .err-box, .empty-box {
+    margin: 2rem 0;
+    padding: 1.25rem 1.5rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .err-box { color: var(--danger, #b91c1c); }
+
+  .cat-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 2rem 0 1.5rem;
+  }
+  .cat-filter a {
+    padding: 0.375rem 0.75rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .cat-filter a:hover { border-color: var(--accent); color: var(--accent); }
+  .cat-filter a.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .sug-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .sug-card {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.15s;
+  }
+  .sug-card:hover { border-color: var(--accent-soft, var(--border)); }
+
+  .vote-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 56px;
+  }
+  .vote-btn {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .vote-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .vote-btn:disabled { cursor: default; }
+  .vote-btn.voted {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .vote-count {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .body { flex: 1; min-width: 0; }
+  .body h2 {
+    margin: 0 0 0.375rem;
+    font-size: 1.0625rem;
+    color: var(--text);
+  }
+  .desc {
+    margin: 0 0 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    font-size: 0.9375rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 0.75rem;
+  }
+  .tag {
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .status-pending {
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 600;
+  }
+  .date { color: var(--text-subtle); }
+
+  .cta-bottom {
+    margin-top: 3rem;
+    padding: 1.5rem;
+    text-align: center;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .cta-bottom h2 { margin: 0 0 0.75rem; font-size: 1.125rem; }
+  .btn-primary {
+    display: inline-block;
+    padding: 0.625rem 1.25rem;
+    background: var(--accent);
+    color: #fff !important;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .btn-primary:hover { background: var(--accent-strong); }
+
+  @media (max-width: 540px) {
+    .sug-card { flex-direction: row; }
+    .vote-col { min-width: 48px; }
+    .vote-btn { width: 40px; height: 40px; }
+  }
+</style>

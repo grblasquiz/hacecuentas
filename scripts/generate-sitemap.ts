@@ -403,6 +403,8 @@ sitemaps.push({
     core('/politica-editorial',                  '0.5',  'monthly'),
     core('/metodologia',                         '0.5',  'monthly'),
     core('/contacto',                            '0.4',  'yearly'),
+    core('/sugerir',                             '0.6',  'weekly'),
+    core('/sugerencias',                         '0.7',  'daily',   true),
     core('/glosario',                            '0.5',  'monthly'),
     core('/blog',                                '0.7',  'weekly'),
   ],

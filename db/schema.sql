@@ -64,6 +64,39 @@ CREATE INDEX IF NOT EXISTS idx_vitals_metric_ts ON web_vitals(metric, ts DESC);
 CREATE INDEX IF NOT EXISTS idx_vitals_url ON web_vitals(url);
 CREATE INDEX IF NOT EXISTS idx_vitals_ts ON web_vitals(ts DESC);
 
+-- Sugerencias de calculadoras nuevas (UGC + voting público).
+-- Flow: usuario sugiere desde /sugerir → status='pending' (oculto en listado público).
+--       admin revisa en /admin → marca 'approved' (visible) o 'rejected' (descartado).
+--       comunidad vota desde /sugerencias → vote_count desc.
+--       cuando se construye la calc → status='built' (queda en archivo histórico).
+CREATE TABLE IF NOT EXISTS calc_suggestions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,                  -- "Calculadora de X"
+  description TEXT NOT NULL,            -- qué calcula, casos de uso
+  category TEXT NOT NULL,               -- finanzas|salud|deportes|... (mismo set que calcs)
+  email_optional TEXT,                  -- para notificar cuando se construye
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected','built')),
+  vote_count INTEGER NOT NULL DEFAULT 0,
+  ip_hash TEXT,                         -- hash de IP del que la propuso (anti-spam)
+  created_at INTEGER NOT NULL,          -- unix ms
+  updated_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_suggestions_status ON calc_suggestions(status);
+CREATE INDEX IF NOT EXISTS idx_suggestions_votes ON calc_suggestions(vote_count DESC);
+CREATE INDEX IF NOT EXISTS idx_suggestions_created ON calc_suggestions(created_at DESC);
+
+-- Votos individuales por sugerencia (anti-doble-voto por IP).
+-- UNIQUE (suggestion_id, ip_hash) hace idempotente el INSERT OR IGNORE.
+CREATE TABLE IF NOT EXISTS suggestion_votes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  suggestion_id INTEGER NOT NULL,
+  ip_hash TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  UNIQUE (suggestion_id, ip_hash),
+  FOREIGN KEY (suggestion_id) REFERENCES calc_suggestions(id)
+);
+CREATE INDEX IF NOT EXISTS idx_sugvotes_suggestion ON suggestion_votes(suggestion_id);
+
 -- Vista útil para panel: agregado de votos por slug.
 CREATE VIEW IF NOT EXISTS calc_votes_summary AS
 SELECT

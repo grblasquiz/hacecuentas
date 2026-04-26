@@ -25,11 +25,64 @@
     "Comparar prendario bancario vs prendario de concesionaria/financiera."
   ],
   "fields": [
-    { "id": "montoCredito", "label": "Monto del crédito", "type": "number", "suffix": "ARS", "placeholder": "20000000", "min": 0, "step": 100000, "required": true, "help": "Capital a financiar (sin contar tu anticipo)." },
-    { "id": "plazoMeses", "label": "Plazo en meses", "type": "number", "suffix": "meses", "placeholder": "36", "min": 6, "max": 60, "step": 1, "required": true, "help": "Plazo de la cuota fija. Prendarios suelen ofrecer 12, 24, 36, 48 o 60 meses." },
-    { "id": "tnaBancoPct", "label": "TNA del banco", "type": "number", "suffix": "%", "placeholder": "55", "min": 0, "max": 200, "step": 0.1, "required": true, "help": "Tasa Nominal Anual publicada por el banco para esta operación." },
-    { "id": "gastosOtorgamientoPct", "label": "Gastos de otorgamiento", "type": "number", "suffix": "%", "placeholder": "3", "min": 0, "max": 10, "step": 0.1, "required": true, "help": "Costo único de apertura (% sobre el monto). Galicia ~3%, Santander ~2,5%, Nación ~1,5%." },
-    { "id": "seguroMensual", "label": "Seguro patrimonial + vida mensual", "type": "number", "suffix": "ARS", "placeholder": "60000", "min": 0, "step": 100, "required": true, "help": "Cuota del seguro automotor obligatorio + seguro de vida sobre el crédito." }
+    {
+      "id": "montoCredito",
+      "label": "Monto del crédito",
+      "type": "number",
+      "suffix": "ARS",
+      "placeholder": "20000000",
+      "min": 0,
+      "step": 100000,
+      "required": true,
+      "help": "Capital a financiar (sin contar tu anticipo)."
+    },
+    {
+      "id": "plazoMeses",
+      "label": "Plazo en meses",
+      "type": "number",
+      "suffix": "meses",
+      "placeholder": "36",
+      "min": 6,
+      "max": 60,
+      "step": 1,
+      "required": true,
+      "help": "Plazo de la cuota fija. Prendarios suelen ofrecer 12, 24, 36, 48 o 60 meses."
+    },
+    {
+      "id": "tnaBancoPct",
+      "label": "TNA del banco",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "55",
+      "min": 0,
+      "max": 200,
+      "step": 0.1,
+      "required": true,
+      "help": "Tasa Nominal Anual publicada por el banco para esta operación."
+    },
+    {
+      "id": "gastosOtorgamientoPct",
+      "label": "Gastos de otorgamiento",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "3",
+      "min": 0,
+      "max": 10,
+      "step": 0.1,
+      "required": true,
+      "help": "Costo único de apertura (% sobre el monto). Galicia ~3%, Santander ~2,5%, Nación ~1,5%."
+    },
+    {
+      "id": "seguroMensual",
+      "label": "Seguro patrimonial + vida mensual",
+      "type": "number",
+      "suffix": "ARS",
+      "placeholder": "60000",
+      "min": 0,
+      "step": 100,
+      "required": true,
+      "help": "Cuota del seguro automotor obligatorio + seguro de vida sobre el crédito."
+    }
   ],
   "dataUpdate": {
     "frequency": "monthly",
@@ -39,12 +92,38 @@
     "updateType": "manual"
   },
   "outputs": [
-    { "id": "cuotaMensual", "label": "Cuota mensual (sin seguro)", "format": "currency", "primary": true },
-    { "id": "totalAPagar", "label": "Total a pagar (capital + interés)", "format": "currency" },
-    { "id": "intereses", "label": "Intereses totales", "format": "currency" },
-    { "id": "cftEstimadoPct", "label": "CFT estimado anual", "format": "percent" },
-    { "id": "costoTotalConSeguro", "label": "Costo total con seguros", "format": "currency", "primary": true },
-    { "id": "explicacion", "label": "Detalle", "format": "text" }
+    {
+      "id": "cuotaMensual",
+      "label": "Cuota mensual (sin seguro)",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "totalAPagar",
+      "label": "Total a pagar (capital + interés)",
+      "format": "currency"
+    },
+    {
+      "id": "intereses",
+      "label": "Intereses totales",
+      "format": "currency"
+    },
+    {
+      "id": "cftEstimadoPct",
+      "label": "CFT estimado anual",
+      "format": "percent"
+    },
+    {
+      "id": "costoTotalConSeguro",
+      "label": "Costo total con seguros",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
   ],
   "example": {
     "title": "Ejemplo: $20.000.000 a 36 meses, TNA 55%",
@@ -59,32 +138,83 @@
     ],
     "result": "Aunque la TNA es 55%, el CFT real con seguros y gastos sube a 78% — clave a la hora de comparar."
   },
-  "explanation": "## Qué incluye el CFT (y qué no incluye la TNA)\n\nLa **TNA** (Tasa Nominal Anual) es solo el interés puro del banco. El **CFT** (Costo Financiero Total) suma:\n\n| Concepto | Incluido en TNA | Incluido en CFT |\n|---|---|---|\n| Interés del banco | ✅ | ✅ |\n| Gastos de otorgamiento | ❌ | ✅ |\n| Sellado / impuesto provincial | ❌ | ✅ |\n| Seguro de vida sobre el saldo | ❌ | ✅ |\n| IVA sobre los intereses (21%) | ❌ | ✅ |\n| Seguro patrimonial del auto | ❌ | A veces |\n\nPor eso siempre pedí la **simulación CFT escrita** firmada por el banco — la TNA sola te puede engañar 20 puntos.\n\n## Comparativa orientativa bancos AR (abril 2026)\n\n| Banco | TNA | Plazo máximo | Anticipo mín. | CFT estimado |\n|---|---|---|---|---|\n| **Banco Nación** | 45-55% | 60 meses | 30% | 60-70% |\n| **Galicia** | 55-70% | 60 meses | 20% | 75-90% |\n| **Santander** | 55-65% | 48 meses | 25% | 70-85% |\n| **BBVA** | 60-70% | 60 meses | 20% | 80-95% |\n| **Macro** | 60-72% | 48 meses | 25% | 80-95% |\n| **ICBC** | 55-65% | 48 meses | 25% | 70-85% |\n| **Banco Provincia** | 50-60% | 60 meses | 25% | 65-80% |\n\n*Tasas indicativas — verificá con cada banco antes de firmar.*\n\n## Sistema de amortización: francés vs alemán\n\n- **Francés** (cuota fija): pagás siempre lo mismo, al principio casi todo es interés.\n- **Alemán** (cuota decreciente): cuota inicial alta, capital constante, intereses decrecientes.\n\nLa mayoría de prendarios usan **sistema francés**.\n\n## Fórmula cuota francés\n\n```\ncuota = capital × (i × (1+i)^n) / ((1+i)^n − 1)\ndonde i = TNA / 12 y n = plazo en meses\n```\n\n## Tips para conseguir mejor CFT\n\n1. **Anticipo del 30%+**: bancos premian más anticipo con mejor tasa.\n2. **Auto 0 km**: tasa preferencial vs usado.\n3. **Cliente con cuenta sueldo en el banco**: descuento de 5-10 puntos.\n4. **Comparar al menos 3 bancos**: el delta entre el más barato y el más caro suele ser 15-25%.\n5. **Negociar el seguro**: la mayoría de bancos imponen su seguro propio — pedí presupuesto externo y compará.\n\n> **Aviso legal**: Esta calculadora es educativa. **No constituye asesoramiento financiero.** Las tasas y CFT cambian — verificá con el banco antes de tomar el crédito.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** [Política editorial](/politica-editorial) y [metodología](/metodologia).\n\n**Disclaimer:** El CFT calculado es una estimación. El banco está obligado a entregarte la simulación oficial.\n\n**Actualización:** revisión periódica. Fecha en sitemap XML.\n",
+  "explanation": "## Qué incluye el CFT (y qué no incluye la TNA)\n\nLa **TNA** ([Tasa Nominal Anual](/glosario/tna)) es solo el interés puro del banco. El **CFT** (Costo Financiero Total) suma:\n\n| Concepto | Incluido en TNA | Incluido en CFT |\n|---|---|---|\n| Interés del banco | ✅ | ✅ |\n| Gastos de otorgamiento | ❌ | ✅ |\n| Sellado / impuesto provincial | ❌ | ✅ |\n| Seguro de vida sobre el saldo | ❌ | ✅ |\n| IVA sobre los intereses (21%) | ❌ | ✅ |\n| Seguro patrimonial del auto | ❌ | A veces |\n\nPor eso siempre pedí la **simulación CFT escrita** firmada por el banco — la TNA sola te puede engañar 20 puntos.\n\n## Comparativa orientativa bancos AR (abril 2026)\n\n| Banco | TNA | Plazo máximo | Anticipo mín. | CFT estimado |\n|---|---|---|---|---|\n| **Banco Nación** | 45-55% | 60 meses | 30% | 60-70% |\n| **Galicia** | 55-70% | 60 meses | 20% | 75-90% |\n| **Santander** | 55-65% | 48 meses | 25% | 70-85% |\n| **BBVA** | 60-70% | 60 meses | 20% | 80-95% |\n| **Macro** | 60-72% | 48 meses | 25% | 80-95% |\n| **ICBC** | 55-65% | 48 meses | 25% | 70-85% |\n| **Banco Provincia** | 50-60% | 60 meses | 25% | 65-80% |\n\n*Tasas indicativas — verificá con cada banco antes de firmar.*\n\n## Sistema de amortización: francés vs alemán\n\n- **Francés** (cuota fija): pagás siempre lo mismo, al principio casi todo es interés.\n- **Alemán** (cuota decreciente): cuota inicial alta, capital constante, intereses decrecientes.\n\nLa mayoría de prendarios usan **sistema francés**.\n\n## Fórmula cuota francés\n\n```\ncuota = capital × (i × (1+i)^n) / ((1+i)^n − 1)\ndonde i = TNA / 12 y n = plazo en meses\n```\n\n## Tips para conseguir mejor CFT\n\n1. **Anticipo del 30%+**: bancos premian más anticipo con mejor tasa.\n2. **Auto 0 km**: tasa preferencial vs usado.\n3. **Cliente con cuenta sueldo en el banco**: descuento de 5-10 puntos.\n4. **Comparar al menos 3 bancos**: el delta entre el más barato y el más caro suele ser 15-25%.\n5. **Negociar el seguro**: la mayoría de bancos imponen su seguro propio — pedí presupuesto externo y compará.\n\n> **Aviso legal**: Esta calculadora es educativa. **No constituye asesoramiento financiero.** Las tasas y CFT cambian — verificá con el banco antes de tomar el crédito.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** [Política editorial](/politica-editorial) y [metodología](/metodologia).\n\n**Disclaimer:** El CFT calculado es una estimación. El banco está obligado a entregarte la simulación oficial.\n\n**Actualización:** revisión periódica. Fecha en sitemap XML.\n",
   "faq": [
-    { "q": "¿Cuál es el banco más barato para crédito prendario auto en 2026?", "a": "Históricamente **Banco Nación** y **Banco Provincia** ofrecen los prendarios con menor CFT (60-75%) por su rol estatal. Bancos privados como Galicia o Santander rondan 80-95% CFT. La diferencia en una operación de $20M a 36 meses puede ser **$3-5 millones** en intereses." },
-    { "q": "¿Por qué el CFT es mucho más alto que la TNA?", "a": "Porque el CFT incluye **gastos de otorgamiento** (1-3% del monto), **seguro de vida obligatorio** (~0,3% del saldo mensual), **IVA sobre intereses** (21%), **sellado provincial** (1-1,5% en CABA/Buenos Aires) y a veces **seguro patrimonial**. Estos suman 15-25 puntos sobre la TNA." },
-    { "q": "¿Conviene plazo más largo o más corto en un prendario?", "a": "**Plazo corto (24 meses)**: cuota más alta, **mucho menos** interés total. **Plazo largo (60 meses)**: cuota cómoda, pero intereses pagados pueden duplicar el capital. Sugerencia: el plazo más corto que tu flujo de caja banque." },
-    { "q": "¿Puedo cancelar antes el prendario sin penalidad?", "a": "**Sí, por ley** (Ley de Tarjetas + reglamentación BCRA) podés precancelar total o parcialmente sin multas. **Solo pagás los intereses devengados a la fecha**. El banco no puede cobrarte 'lucro cesante'." },
-    { "q": "¿Qué pasa si dejo de pagar la cuota del prendario?", "a": "El banco te intima por mora (días 30-60). Si no regularizás, **ejecutan la prenda**: secuestran el auto y lo subastan. La diferencia (si la subasta no cubre la deuda) **te la siguen reclamando como saldo deudor**." },
-    { "q": "¿Es obligatorio el seguro de vida en un prendario?", "a": "**Sí**, casi todos los bancos lo exigen para garantizar que si el deudor fallece, la deuda se cancele con el seguro. Suele ser **0,2-0,4% del saldo mensual** y va dentro del CFT." },
-    { "q": "¿Puedo cambiar el seguro patrimonial impuesto por el banco?", "a": "**Sí**, por la Resolución SSN 419/2014 podés elegir tu propia aseguradora siempre que cumpla el endoso a favor del banco y la suma asegurada. Cotizá afuera (Sancor, La Caja) y compará." },
-    { "q": "¿Puedo prendar un auto usado y de cuántos años máximo?", "a": "Sí. La mayoría de bancos AR aceptan **autos hasta 8 años de antigüedad** al inicio del crédito y **máximo 12 años al final del plazo**. Banco Nación es más laxo (hasta 10 años inicial)." }
+    {
+      "q": "¿Cuál es el banco más barato para crédito prendario auto en 2026?",
+      "a": "Históricamente **Banco Nación** y **Banco Provincia** ofrecen los prendarios con menor CFT (60-75%) por su rol estatal. Bancos privados como Galicia o Santander rondan 80-95% CFT. La diferencia en una operación de $20M a 36 meses puede ser **$3-5 millones** en intereses."
+    },
+    {
+      "q": "¿Por qué el CFT es mucho más alto que la TNA?",
+      "a": "Porque el CFT incluye **gastos de otorgamiento** (1-3% del monto), **seguro de vida obligatorio** (~0,3% del saldo mensual), **IVA sobre intereses** (21%), **sellado provincial** (1-1,5% en CABA/Buenos Aires) y a veces **seguro patrimonial**. Estos suman 15-25 puntos sobre la TNA."
+    },
+    {
+      "q": "¿Conviene plazo más largo o más corto en un prendario?",
+      "a": "**Plazo corto (24 meses)**: cuota más alta, **mucho menos** interés total. **Plazo largo (60 meses)**: cuota cómoda, pero intereses pagados pueden duplicar el capital. Sugerencia: el plazo más corto que tu flujo de caja banque."
+    },
+    {
+      "q": "¿Puedo cancelar antes el prendario sin penalidad?",
+      "a": "**Sí, por ley** (Ley de Tarjetas + reglamentación BCRA) podés precancelar total o parcialmente sin multas. **Solo pagás los intereses devengados a la fecha**. El banco no puede cobrarte 'lucro cesante'."
+    },
+    {
+      "q": "¿Qué pasa si dejo de pagar la cuota del prendario?",
+      "a": "El banco te intima por mora (días 30-60). Si no regularizás, **ejecutan la prenda**: secuestran el auto y lo subastan. La diferencia (si la subasta no cubre la deuda) **te la siguen reclamando como saldo deudor**."
+    },
+    {
+      "q": "¿Es obligatorio el seguro de vida en un prendario?",
+      "a": "**Sí**, casi todos los bancos lo exigen para garantizar que si el deudor fallece, la deuda se cancele con el seguro. Suele ser **0,2-0,4% del saldo mensual** y va dentro del CFT."
+    },
+    {
+      "q": "¿Puedo cambiar el seguro patrimonial impuesto por el banco?",
+      "a": "**Sí**, por la Resolución SSN 419/2014 podés elegir tu propia aseguradora siempre que cumpla el endoso a favor del banco y la suma asegurada. Cotizá afuera (Sancor, La Caja) y compará."
+    },
+    {
+      "q": "¿Puedo prendar un auto usado y de cuántos años máximo?",
+      "a": "Sí. La mayoría de bancos AR aceptan **autos hasta 8 años de antigüedad** al inicio del crédito y **máximo 12 años al final del plazo**. Banco Nación es más laxo (hasta 10 años inicial)."
+    }
   ],
   "sources": [
-    { "name": "BCRA — Régimen de Transparencia", "url": "https://www.bcra.gob.ar" },
-    { "name": "Banco Nación — Prendario Auto", "url": "https://www.bna.com.ar" },
-    { "name": "Banco Galicia — Prendario", "url": "https://www.galicia.com.ar" }
+    {
+      "name": "BCRA — Régimen de Transparencia",
+      "url": "https://www.bcra.gob.ar"
+    },
+    {
+      "name": "Banco Nación — Prendario Auto",
+      "url": "https://www.bna.com.ar"
+    },
+    {
+      "name": "Banco Galicia — Prendario",
+      "url": "https://www.galicia.com.ar"
+    }
   ],
   "relatedSlugs": [
     "calculadora-hipoteca-divisa-extranjera-vs-uva",
     "calculadora-credito-anses-pre-aprobado-jubilado-cuota"
   ],
   "howToSteps": [
-    { "name": "Definí el monto a financiar", "text": "Restá tu anticipo al precio del auto." },
-    { "name": "Elegí el plazo", "text": "Cuotas más cortas = menos interés total. Cuotas largas = cuota mensual más cómoda." },
-    { "name": "Pedí TNA y gastos a cada banco", "text": "Galicia, Santander, Macro, Nación. Pedí simulación CFT escrita." },
-    { "name": "Cargá la cotización del seguro", "text": "Pedí presupuesto del seguro patrimonial + vida que pide el banco." },
-    { "name": "Comparé los CFT calculados", "text": "El CFT real (no la TNA) es el indicador clave." },
-    { "name": "Negociá", "text": "Si tenés cuenta sueldo, pedí mejor tasa. Si tenés mejor cotización de seguro afuera, pedí cambio." }
+    {
+      "name": "Definí el monto a financiar",
+      "text": "Restá tu anticipo al precio del auto."
+    },
+    {
+      "name": "Elegí el plazo",
+      "text": "Cuotas más cortas = menos interés total. Cuotas largas = cuota mensual más cómoda."
+    },
+    {
+      "name": "Pedí TNA y gastos a cada banco",
+      "text": "Galicia, Santander, Macro, Nación. Pedí simulación CFT escrita."
+    },
+    {
+      "name": "Cargá la cotización del seguro",
+      "text": "Pedí presupuesto del seguro patrimonial + vida que pide el banco."
+    },
+    {
+      "name": "Comparé los CFT calculados",
+      "text": "El CFT real (no la TNA) es el indicador clave."
+    },
+    {
+      "name": "Negociá",
+      "text": "Si tenés cuenta sueldo, pedí mejor tasa. Si tenés mejor cotización de seguro afuera, pedí cambio."
+    }
   ]
 }

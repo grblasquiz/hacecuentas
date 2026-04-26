@@ -18,6 +18,7 @@ const authorized = expectedKey && providedKey === expectedKey;
 let newsletterSubs: any[] = [];
 let voteSummary: any[] = [];
 let errorReports: any[] = [];
+let suggestions: any[] = [];
 let dbError = '';
 
 const db = env.DB;
@@ -38,6 +39,19 @@ if (authorized && db) {
       .prepare('SELECT id, slug, message, email, created_at, status FROM error_reports ORDER BY created_at DESC LIMIT 100')
       .all();
     errorReports = (errors.results as any[]) || [];
+
+    const sugs = await db
+      .prepare(
+        `SELECT id, title, description, category, email_optional, status, vote_count, created_at
+         FROM calc_suggestions
+         ORDER BY
+           CASE status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 WHEN 'built' THEN 2 ELSE 3 END,
+           vote_count DESC,
+           created_at DESC
+         LIMIT 200`,
+      )
+      .all();
+    suggestions = (sugs.results as any[]) || [];
   } catch (err: any) {
     dbError = String(err?.message || err);
   }
@@ -76,6 +90,13 @@ function fmtDate(ts: number): string {
       .stat-up { background: #c6f6d5; color: #22543d; }
       .stat-down { background: #fed7d7; color: #742a2a; }
       .status-new { background: #fef3c7; color: #92400e; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 600; }
+      .status-pending { background: #fef3c7; color: #92400e; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 600; }
+      .status-approved { background: #c6f6d5; color: #22543d; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 600; }
+      .status-rejected { background: #fed7d7; color: #742a2a; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 600; }
+      .status-built { background: #bee3f8; color: #2c5282; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 600; }
+      .sug-action { font-size: 0.6875rem; padding: 0.25rem 0.5rem; margin-right: 0.25rem; margin-bottom: 0.25rem; cursor: pointer; border: 1px solid #cbd5e0; background: #fff; border-radius: 3px; }
+      .sug-action:hover:not(:disabled) { background: #edf2f7; }
+      .sug-action:disabled { opacity: 0.5; cursor: wait; }
       .slug { color: #3182ce; text-decoration: none; }
       .slug:hover { text-decoration: underline; }
       .message-cell { max-width: 400px; word-wrap: break-word; }
@@ -144,6 +165,56 @@ function fmtDate(ts: number): string {
             </tbody>
           </table>
         )}
+
+        <h2>💡 Sugerencias de calculadoras (con moderación)</h2>
+        {suggestions.length === 0 ? (
+          <div class="empty">Sin sugerencias todavía.</div>
+        ) : (
+          <table>
+            <thead><tr><th>Estado</th><th>Título</th><th>Cat</th><th>Descripción</th><th>Email</th><th>Votos</th><th>Fecha</th><th>Acciones</th></tr></thead>
+            <tbody>
+              {suggestions.map((s) => (
+                <tr data-sug-id={s.id}>
+                  <td><span class={`status-${s.status}`}>{s.status}</span></td>
+                  <td><strong>{s.title}</strong></td>
+                  <td class="muted">{s.category}</td>
+                  <td class="message-cell">{s.description}</td>
+                  <td class="muted">{s.email_optional || '—'}</td>
+                  <td>{s.vote_count}</td>
+                  <td class="muted">{fmtDate(s.created_at)}</td>
+                  <td>
+                    <button type="button" class="sug-action" data-id={s.id} data-status="approved">✓ Aprobar</button>
+                    <button type="button" class="sug-action" data-id={s.id} data-status="rejected">✗ Rechazar</button>
+                    <button type="button" class="sug-action" data-id={s.id} data-status="built">🚀 Construida</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <script is:inline define:vars={{ adminKey: providedKey }}>
+          (function () {
+            document.querySelectorAll('.sug-action').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var id = parseInt(btn.getAttribute('data-id'), 10);
+                var status = btn.getAttribute('data-status');
+                if (!id || !status) return;
+                btn.disabled = true;
+                fetch('/api/suggestions?k=' + encodeURIComponent(adminKey), {
+                  method: 'PATCH',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify({ id: id, status: status }),
+                })
+                  .then(function (r) { return r.json(); })
+                  .then(function (j) {
+                    if (j && j.ok) location.reload();
+                    else { btn.disabled = false; alert((j && j.error) || 'Error'); }
+                  })
+                  .catch(function () { btn.disabled = false; alert('Network error'); });
+              });
+            });
+          })();
+        </script>
 
         <h2>🐛 Reportes de error/mejora (últimos 100)</h2>
         {errorReports.length === 0 ? (

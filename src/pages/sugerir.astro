@@ -1,0 +1,262 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const categories = [
+  { value: 'finanzas', label: 'Finanzas' },
+  { value: 'salud', label: 'Salud' },
+  { value: 'deportes', label: 'Deportes' },
+  { value: 'familia', label: 'Familia' },
+  { value: 'cocina', label: 'Cocina' },
+  { value: 'construccion', label: 'Construcción' },
+  { value: 'automotor', label: 'Automotor' },
+  { value: 'mascotas', label: 'Mascotas' },
+  { value: 'matematicas', label: 'Matemáticas' },
+  { value: 'ciencia', label: 'Ciencia' },
+  { value: 'idiomas', label: 'Idiomas' },
+  { value: 'entretenimiento', label: 'Entretenimiento' },
+  { value: 'vida', label: 'Vida' },
+  { value: 'negocios', label: 'Negocios' },
+  { value: 'tecnologia', label: 'Tecnología' },
+  { value: 'otros', label: 'Otros' },
+];
+---
+
+<Layout
+  title="Sugerí una calculadora nueva — Hacé Cuentas"
+  description="¿Hay una calculadora que te falta? Proponé tu idea y la comunidad la vota. Si gana tracción, la construimos. 100% gratis, sin registro."
+>
+  <Header slot="header" />
+
+  <article class="legal">
+    <h1>Sugerí una calculadora nueva</h1>
+    <p class="intro">
+      ¿Hay un cálculo que no encontrás? Contanos qué necesitás.
+      Otros usuarios votan tu idea — las más votadas las construimos.
+      Si dejás tu email te avisamos cuando esté lista.
+    </p>
+
+    <form id="hc-suggest-form" class="suggest-form" novalidate>
+      <div class="form-row">
+        <label for="sg-title">Título de la calculadora <span class="req">*</span></label>
+        <input
+          type="text"
+          id="sg-title"
+          name="title"
+          required
+          minlength="6"
+          maxlength="120"
+          placeholder="Ej: Calculadora de propina por país"
+          autocomplete="off"
+        />
+        <small class="hint">Mínimo 6 caracteres. Sé específico.</small>
+      </div>
+
+      <div class="form-row">
+        <label for="sg-desc">¿Qué calcula? <span class="req">*</span></label>
+        <textarea
+          id="sg-desc"
+          name="description"
+          rows="5"
+          required
+          minlength="20"
+          maxlength="1000"
+          placeholder="Contanos qué inputs tendría, qué devuelve, y para qué la usarías. Ej: ingresar monto de la cuenta y país, devuelve propina sugerida según costumbre local."></textarea>
+        <small class="hint">Entre 20 y 1000 caracteres.</small>
+      </div>
+
+      <div class="form-row">
+        <label for="sg-cat">Categoría <span class="req">*</span></label>
+        <select id="sg-cat" name="category" required>
+          <option value="">— Elegí una —</option>
+          {categories.map((c) => <option value={c.value}>{c.label}</option>)}
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="sg-email">Email (opcional)</label>
+        <input
+          type="email"
+          id="sg-email"
+          name="email"
+          maxlength="254"
+          placeholder="tu@email.com"
+          autocomplete="email"
+        />
+        <small class="hint">Si la construimos, te avisamos. No spam.</small>
+      </div>
+
+      <!-- Honeypot anti-spam: oculto via CSS, los bots lo llenan. -->
+      <div class="hp-field" aria-hidden="true">
+        <label for="sg-website">Tu web (no completes esto)</label>
+        <input type="text" id="sg-website" name="website" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <button type="submit" class="sg-submit" id="sg-submit-btn">
+        Enviar sugerencia
+      </button>
+      <p class="sg-msg" id="sg-msg" role="status" aria-live="polite"></p>
+    </form>
+
+    <div class="cta-listado">
+      <h2>¿Querés ver las ideas de otros?</h2>
+      <p>
+        En <a href="/sugerencias">la lista pública de sugerencias</a> podés votar
+        las que más te interesan. Las más votadas las construimos primero.
+      </p>
+    </div>
+
+    <h2>Cómo funciona</h2>
+    <ol class="how-it-works">
+      <li><strong>Proponés:</strong> llenás este form en 30 segundos.</li>
+      <li><strong>Revisamos:</strong> validamos que sea factible y no esté duplicada (24-48h).</li>
+      <li><strong>Comunidad vota:</strong> aparece en <a href="/sugerencias">/sugerencias</a>.</li>
+      <li><strong>Construimos:</strong> las más votadas pasan a roadmap. Si dejaste email, te avisamos.</li>
+    </ol>
+  </article>
+
+  <script is:inline>
+    (function () {
+      var f = document.getElementById('hc-suggest-form');
+      if (!f) return;
+      var btn = document.getElementById('sg-submit-btn');
+      var msg = document.getElementById('sg-msg');
+
+      function setMsg(text, kind) {
+        msg.textContent = text || '';
+        msg.className = 'sg-msg' + (kind ? ' sg-msg-' + kind : '');
+      }
+
+      f.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var title = f.title.value.trim();
+        var desc = f.description.value.trim();
+        var cat = f.category.value;
+        var email = f.email.value.trim();
+        var hp = f.website.value;
+
+        if (title.length < 6) { setMsg('El título es muy corto.', 'err'); return; }
+        if (desc.length < 20) { setMsg('La descripción es muy corta.', 'err'); return; }
+        if (!cat) { setMsg('Elegí una categoría.', 'err'); return; }
+
+        btn.disabled = true;
+        setMsg('Enviando…', '');
+
+        fetch('/api/suggestions', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ title: title, description: desc, category: cat, email: email, website: hp }),
+        })
+          .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
+          .then(function (res) {
+            if (res.status >= 200 && res.status < 300 && res.body && res.body.ok) {
+              setMsg('¡Gracias! Tu sugerencia fue enviada. Aparecerá en la lista pública una vez aprobada.', 'ok');
+              f.reset();
+              if (typeof window.gtag === 'function') {
+                window.gtag('event', 'suggestion_submit', { category: cat });
+              }
+            } else {
+              setMsg((res.body && res.body.error) || 'Error inesperado. Probá de nuevo.', 'err');
+            }
+          })
+          .catch(function () { setMsg('No pudimos conectarnos. Probá en un rato.', 'err'); })
+          .finally(function () { btn.disabled = false; });
+      });
+    })();
+  </script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .legal { max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  .legal h1 { margin-bottom: 1rem; }
+  .intro { color: var(--text-muted); font-size: 1.0625rem; margin-bottom: 2rem; line-height: 1.6; }
+  .legal h2 { margin-top: 3rem; color: var(--text); }
+  .legal p { color: var(--text-muted); line-height: 1.7; }
+  .legal a { color: var(--accent); }
+
+  .suggest-form {
+    margin: 1.5rem 0 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .form-row { display: flex; flex-direction: column; gap: 0.375rem; }
+  .form-row label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .req { color: var(--accent); }
+  .form-row input,
+  .form-row select,
+  .form-row textarea {
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .form-row input:focus,
+  .form-row select:focus,
+  .form-row textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .form-row textarea { resize: vertical; min-height: 110px; }
+  .hint { font-size: 0.75rem; color: var(--text-subtle); }
+
+  /* Honeypot — visible para bots, invisible para humanos y screen readers. */
+  .hp-field {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .sg-submit {
+    align-self: flex-start;
+    padding: 0.625rem 1.25rem;
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .sg-submit:hover:not(:disabled) { background: var(--accent-strong); }
+  .sg-submit:disabled { opacity: 0.6; cursor: wait; }
+
+  .sg-msg { margin: 0; font-size: 0.875rem; }
+  .sg-msg-ok { color: var(--success, #166534); }
+  .sg-msg-err { color: var(--danger, #b91c1c); }
+
+  .cta-listado {
+    margin-top: 2.5rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .cta-listado h2 { margin: 0 0 0.5rem; font-size: 1.0625rem; }
+  .cta-listado p { margin: 0; }
+
+  .how-it-works { padding-left: 1.25rem; line-height: 1.8; color: var(--text-muted); }
+  .how-it-works strong { color: var(--text); }
+</style>
