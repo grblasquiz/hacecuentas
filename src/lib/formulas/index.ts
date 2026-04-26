@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-04-23
+// Generated: 2026-04-26
 
 import { rmPesoMaximo } from './1rm-peso-maximo';
 import { rmPesoMuertoEstimador } from './1rm-peso-muerto-estimador';
@@ -751,6 +751,7 @@ import { cuantoFaltaCumpleanosFechaEspecifica } from './cuanto-falta-cumpleanos-
 import { cuantoFaltaDiaMadrePadreArgentina } from './cuanto-falta-dia-madre-padre-argentina';
 import { cuantoFaltaEleccionPresidencial2027 } from './cuanto-falta-eleccion-presidencial-2027';
 import { cuantoFaltaFinCursoEscolarMarzo } from './cuanto-falta-fin-curso-escolar-marzo';
+import { cuantoFaltaGritoIndependenciaMexico } from './cuanto-falta-grito-independencia-mexico';
 import { cuantoFaltaJubilarseJubilacionEdadAportes } from './cuanto-falta-jubilarse-jubilacion-edad-aportes';
 import { cuantoFaltaMundialFifa20262030 } from './cuanto-falta-mundial-fifa-2026-2030';
 import { cuantoFaltaNavidadAnoNuevo } from './cuanto-falta-navidad-ano-nuevo';
@@ -1307,6 +1308,7 @@ import { horasEstudioMateriaCreditos } from './horas-estudio-materia-creditos';
 import { horasExtra } from './horas-extra';
 import { horasExtras50100 } from './horas-extras-50-100';
 import { horasExtrasClt } from './horas-extras-clt';
+import { horasExtrasMexico } from './horas-extras-mexico';
 import { horasFacturablesEmpleadoVsFreelanceComparativa } from './horas-facturables-empleado-vs-freelance-comparativa';
 import { horasLuzDiaFechaLatitud } from './horas-luz-dia-fecha-latitud';
 import { horasLuzSolarPlanta } from './horas-luz-solar-planta';
@@ -1457,6 +1459,7 @@ import { irpfMadrid2026 } from './irpf-madrid-2026';
 import { irpfRestituicaoPagar } from './irpf-restituicao-pagar';
 import { irrfMensalFolha } from './irrf-mensal-folha';
 import { islrVenezuela } from './islr-venezuela';
+import { isnImpuestoNominasMexico } from './isn-impuesto-nominas-mexico';
 import { isoInvarianceCamaraModelo } from './iso-invariance-camara-modelo';
 import { isrHonorariosMexico } from './isr-honorarios-mexico';
 import { isrMexico2026 } from './isr-mexico-2026';
@@ -1961,6 +1964,7 @@ import { precioPromedioCompraCripto } from './precio-promedio-compra-cripto';
 import { precioPsicologico999 } from './precio-psicologico-9-99';
 import { precioValorLibro } from './precio-valor-libro';
 import { precioVentaProductoMarkup } from './precio-venta-producto-markup';
+import { predialCdmxMexico } from './predial-cdmx-mexico';
 import { prediccion5k10k } from './prediccion-5k-10k';
 import { prediccionMaraton } from './prediccion-maraton';
 import { premiosChampionsLeagueRonda } from './premios-champions-league-ronda';
@@ -2186,6 +2190,7 @@ import { retrasoVueloCompensacionUsa } from './retraso-vuelo-compensacion-usa';
 import { reunionesCostoTiempoPersonasEmpresa } from './reuniones-costo-tiempo-personas-empresa';
 import { revoqueGruesoM3M2 } from './revoque-grueso-m3-m2';
 import { revoqueMortero } from './revoque-mortero';
+import { rfcResicoPfMexico } from './rfc-resico-pf-mexico';
 import { riegoAutomaticoProgramacion } from './riego-automatico-programacion';
 import { riegoGoteoLitros } from './riego-goteo-litros';
 import { riesgoBurnoutLaboral } from './riesgo-burnout-laboral';
@@ -2555,6 +2560,7 @@ import { upworkFreelancerComisionNetaArgentina } from './upwork-freelancer-comis
 import { usdtVsUsdcComisionExchange } from './usdt-vs-usdc-comision-exchange';
 import { uvaHipotecaVsInflacionRiesgo } from './uva-hipoteca-vs-inflacion-riesgo';
 import { vacaciones } from './vacaciones';
+import { vacacionesDiasAntiguedadMexico } from './vacaciones-dias-antiguedad-mexico';
 import { vacunaCalendarioNacionalAnses } from './vacuna-calendario-nacional-anses';
 import { vacunaFiebreAmarillaCuantoAntes } from './vacuna-fiebre-amarilla-cuanto-antes';
 import { vacunasBebe } from './vacunas-bebe-calendario';
@@ -3453,6 +3459,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuanto-falta-dia-madre-padre-argentina': cuantoFaltaDiaMadrePadreArgentina,
   'cuanto-falta-eleccion-presidencial-2027': cuantoFaltaEleccionPresidencial2027,
   'cuanto-falta-fin-curso-escolar-marzo': cuantoFaltaFinCursoEscolarMarzo,
+  'cuanto-falta-grito-independencia-mexico': cuantoFaltaGritoIndependenciaMexico,
   'cuanto-falta-jubilarse-jubilacion-edad-aportes': cuantoFaltaJubilarseJubilacionEdadAportes,
   'cuanto-falta-mundial-fifa-2026-2030': cuantoFaltaMundialFifa20262030,
   'cuanto-falta-navidad-ano-nuevo': cuantoFaltaNavidadAnoNuevo,
@@ -4009,6 +4016,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'horas-extra': horasExtra,
   'horas-extras-50-100': horasExtras50100,
   'horas-extras-clt': horasExtrasClt,
+  'horas-extras-mexico': horasExtrasMexico,
   'horas-facturables-empleado-vs-freelance-comparativa': horasFacturablesEmpleadoVsFreelanceComparativa,
   'horas-luz-dia-fecha-latitud': horasLuzDiaFechaLatitud,
   'horas-luz-solar-planta': horasLuzSolarPlanta,
@@ -4159,6 +4167,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'irpf-restituicao-pagar': irpfRestituicaoPagar,
   'irrf-mensal-folha': irrfMensalFolha,
   'islr-venezuela': islrVenezuela,
+  'isn-impuesto-nominas-mexico': isnImpuestoNominasMexico,
   'iso-invariance-camara-modelo': isoInvarianceCamaraModelo,
   'isr-honorarios-mexico': isrHonorariosMexico,
   'isr-mexico-2026': isrMexico2026,
@@ -4663,6 +4672,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'precio-psicologico-9-99': precioPsicologico999,
   'precio-valor-libro': precioValorLibro,
   'precio-venta-producto-markup': precioVentaProductoMarkup,
+  'predial-cdmx-mexico': predialCdmxMexico,
   'prediccion-5k-10k': prediccion5k10k,
   'prediccion-maraton': prediccionMaraton,
   'premios-champions-league-ronda': premiosChampionsLeagueRonda,
@@ -4888,6 +4898,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'reuniones-costo-tiempo-personas-empresa': reunionesCostoTiempoPersonasEmpresa,
   'revoque-grueso-m3-m2': revoqueGruesoM3M2,
   'revoque-mortero': revoqueMortero,
+  'rfc-resico-pf-mexico': rfcResicoPfMexico,
   'riego-automatico-programacion': riegoAutomaticoProgramacion,
   'riego-goteo-litros': riegoGoteoLitros,
   'riesgo-burnout-laboral': riesgoBurnoutLaboral,
@@ -5257,6 +5268,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'usdt-vs-usdc-comision-exchange': usdtVsUsdcComisionExchange,
   'uva-hipoteca-vs-inflacion-riesgo': uvaHipotecaVsInflacionRiesgo,
   'vacaciones': vacaciones,
+  'vacaciones-dias-antiguedad-mexico': vacacionesDiasAntiguedadMexico,
   'vacuna-calendario-nacional-anses': vacunaCalendarioNacionalAnses,
   'vacuna-fiebre-amarilla-cuanto-antes': vacunaFiebreAmarillaCuantoAntes,
   'vacunas-bebe-calendario': vacunasBebe,
