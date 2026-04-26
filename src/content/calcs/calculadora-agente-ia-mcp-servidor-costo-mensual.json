@@ -1,0 +1,238 @@
+{
+  "slug": "calculadora-agente-ia-mcp-servidor-costo-mensual",
+  "title": "Calculadora agente IA con MCP: costo mensual operativo 2026",
+  "h1": "Agente IA + MCP servers — costo mensual operativo",
+  "description": "🤖 Calculá el costo mensual de operar un agente IA con MCP servers: tokens LLM (Claude / GPT / Gemini) + cómputo de servidores MCP + almacenamiento. Estimación realista 2026.",
+  "category": "negocios",
+  "audience": "global",
+  "icon": "🤖",
+  "formulaId": "agente-ia-mcp-servidor-costo-mensual",
+  "seoKeywords": [
+    "mcp server costo",
+    "agente ia costo mensual",
+    "claude agent skd precio",
+    "anthropic mcp pricing",
+    "agente autónomo gasto",
+    "openai assistants vs mcp"
+  ],
+  "intro": "Un **agente IA** moderno (Claude con Skills, OpenAI Agents SDK, Cursor agents, Devin, Lindy) suele orquestar **MCP servers** ([Model Context Protocol](https://modelcontextprotocol.io)) para acceder a herramientas: file system, databases, APIs, browsing, scheduled jobs. El costo mensual se compone de tres bloques: (1) **tokens del LLM** (input + output, con la mayoría siendo input por el contexto cargado de cada herramienta), (2) **cómputo** de los MCP servers (Cloudflare Workers, AWS Lambda, EC2 chico, Fly.io) y (3) **almacenamiento** (vector DB, logs, file system del agente). Esta calculadora multiplica calls/día × tokens promedio × 30 para estimar tokens/mes, divide entre input y output usando un ratio configurable, suma cómputo y storage. Útil para presupuestar agentes en producción antes de pasarlo a CFO o Linkedin con cifras concretas.",
+  "keyTakeaway": "Un agente productivo típico (100-500 calls/día, 5k tokens promedio con MCP) suele costar **USD 200-1.500/mes** en LLM con Claude Sonnet 4 o GPT-4o. **Cómputo MCP** suma **USD 20-100/mes** y **storage** USD 10-100. Total razonable para producción: **USD 300-2.000/mes** según volumen.",
+  "useCases": [
+    "Presupuestar un agente de soporte al cliente con MCP a Zendesk + DB + emails.",
+    "Estimar costo de un developer agent (Claude Code) usado N horas/día.",
+    "Comparar Claude Sonnet 4 vs GPT-4o para el mismo agente.",
+    "Decidir entre LLM premium con menos calls vs LLM barato con más calls.",
+    "Justificar a CFO el ROI de un agente que reemplaza N horas humanas."
+  ],
+  "fields": [
+    {
+      "id": "llmCallsDia",
+      "label": "Calls al LLM por día",
+      "type": "number",
+      "suffix": "calls",
+      "placeholder": "200",
+      "min": 0,
+      "step": 1,
+      "required": true,
+      "help": "Cantidad de invocaciones al modelo. Un agente con tool-use suele hacer 5-15 calls por sesión de usuario."
+    },
+    {
+      "id": "tokensPorCallProm",
+      "label": "Tokens promedio por call",
+      "type": "number",
+      "suffix": "tokens",
+      "placeholder": "5000",
+      "min": 0,
+      "step": 100,
+      "required": true,
+      "help": "Suma input (system prompt + MCP tools + history) + output. Agentes con muchas tools cargadas pueden llegar a 10-30k tokens por call."
+    },
+    {
+      "id": "precioInputUsdM",
+      "label": "Precio input por 1M tokens",
+      "type": "number",
+      "suffix": "USD/M",
+      "placeholder": "3",
+      "min": 0,
+      "step": 0.01,
+      "required": true,
+      "help": "Claude Sonnet 4 ~USD 3/M input, GPT-4o ~USD 2,50/M, Gemini 1.5 Pro ~USD 1,25/M, Haiku ~USD 0,80/M. Verificá pricing oficial."
+    },
+    {
+      "id": "precioOutputUsdM",
+      "label": "Precio output por 1M tokens",
+      "type": "number",
+      "suffix": "USD/M",
+      "placeholder": "15",
+      "min": 0,
+      "step": 0.01,
+      "required": true,
+      "help": "Claude Sonnet 4 ~USD 15/M output, GPT-4o ~USD 10/M, Gemini 1.5 Pro ~USD 5/M. Verificá en pricing oficial."
+    },
+    {
+      "id": "ratioOutputPct",
+      "label": "% del total que es output",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "10",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "required": true,
+      "help": "En agentes con MCP el input domina (system + tools + history). Típico 5-15% es output. En chat puro puede ser 30-50%."
+    },
+    {
+      "id": "computoMcpUsdMes",
+      "label": "Cómputo MCP servers",
+      "type": "number",
+      "suffix": "USD/mes",
+      "placeholder": "30",
+      "min": 0,
+      "step": 1,
+      "required": false,
+      "help": "Suma del costo de hostear los MCP servers. Cloudflare Workers ~USD 5-20/mes, Lambda free tier hasta cierto volumen, EC2 t3.small ~USD 15."
+    },
+    {
+      "id": "storageUsdMes",
+      "label": "Storage + vector DB",
+      "type": "number",
+      "suffix": "USD/mes",
+      "placeholder": "20",
+      "min": 0,
+      "step": 1,
+      "required": false,
+      "help": "Logs + memoria persistente + vector DB para context. Pequeño: USD 10-30. Mediano: USD 50-200. Grande: USD 500+."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-26",
+    "source": "Anthropic / OpenAI / Google pricing pages",
+    "sourceUrl": "https://www.anthropic.com/pricing",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "tokensTotalesMes",
+      "label": "Tokens totales por mes",
+      "format": "number"
+    },
+    {
+      "id": "costoLlmUsdMes",
+      "label": "Costo LLM mensual",
+      "format": "currency"
+    },
+    {
+      "id": "costoComputoUsd",
+      "label": "Cómputo + storage",
+      "format": "currency"
+    },
+    {
+      "id": "costoTotalUsdMes",
+      "label": "Costo total mensual",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: agente soporte 200 calls/día, 5k tokens/call con Claude Sonnet 4",
+    "steps": [
+      "**Calls/mes**: 200 × 30 = 6.000.",
+      "**Tokens/mes**: 6.000 × 5.000 = 30M tokens.",
+      "**Output (10%)**: 3M output, 27M input.",
+      "**Costo LLM (precios públicos abril 2026)**: 27 × USD 3 + 3 × USD 15 = USD 81 + USD 45 = **USD 126/mes**.",
+      "**MCP cómputo**: USD 30. **Storage**: USD 20.",
+      "**Total**: ~USD 176/mes."
+    ],
+    "result": "Verificá pricing actual. Si los volúmenes suben 10×, total ~USD 1.500-2.000/mes."
+  },
+  "explanation": "## Anatomía del costo de un agente IA\n\n```\nCosto total = LLM tokens + Cómputo MCP + Storage\nLLM tokens = (input × precio_input + output × precio_output) / 1.000.000\n```\n\nEn agentes con muchas tools (MCP) **el input domina** porque cada call carga: system prompt + descripciones de tools + conversación previa + outputs de tools recientes. El **output** suele ser **5-15% del total**.\n\n## Precios LLM (referencias públicas abril 2026)\n\n*Verificá siempre el pricing oficial vigente — los precios cambian.*\n\n| Modelo | Input USD/M | Output USD/M | Mejor para |\n|---|---|---|---|\n| **Claude Sonnet 4** | ~USD 3 | ~USD 15 | balance, mainstream agents |\n| **Claude Haiku 4** | ~USD 0,80 | ~USD 4 | volumen, agentes simples |\n| **Claude Opus 4** | ~USD 15 | ~USD 75 | razonamiento crítico |\n| **GPT-4o** | ~USD 2,50 | ~USD 10 | balance, OpenAI ecosystem |\n| **GPT-4o-mini** | ~USD 0,15 | ~USD 0,60 | volumen barato |\n| **Gemini 1.5 Pro** | ~USD 1,25 | ~USD 5 | contexto largo (1-2M) |\n| **Llama 70B self-host** | ~USD 0,15 (input/output combinado) | – | privacidad, escala |\n\n## Optimizaciones que bajan el costo 30-70%\n\n1. **Prompt caching**: Anthropic ofrece [prompt caching](https://www.anthropic.com/news/prompt-caching) que reduce input ~90% en lo cacheado. Si tu agente tiene system prompt + tools fijos (que es siempre), aplicá caching.\n2. **Context pruning**: limpiá history antiguo, resumí conversaciones largas.\n3. **Tool selection dinámica**: no cargues 50 tools si solo usás 5 en este flujo.\n4. **Modelo barato para tareas simples**: routing entre Haiku/4o-mini/Sonnet según complejidad.\n5. **Batch processing**: para tareas asíncronas (Anthropic batch API ofrece ~50% off).\n\n## Cómputo MCP servers\n\n| Setup | Costo mensual |\n|---|---|\n| **Cloudflare Workers** (free tier) | USD 0-5 |\n| **Cloudflare Workers Paid** | USD 5-50 |\n| **AWS Lambda** | USD 0-30 (free tier generoso) |\n| **Fly.io machine 1 vCPU** | USD 5-15 |\n| **EC2 t3.small 24/7** | ~USD 15 |\n| **EC2 t3.medium 24/7** | ~USD 30 |\n| **DO droplet 2GB** | USD 12 |\n\n## Storage típico de un agente\n\n| Componente | Costo mensual |\n|---|---|\n| Logs estructurados (CloudWatch / Logtail) | USD 5-30 |\n| Vector DB (Pinecone Serverless / Qdrant) | USD 10-200 |\n| File storage (S3 / R2) | USD 1-20 |\n| Postgres managed (Neon / Supabase) | USD 0-50 |\n\n## Disclaimer educativo IA\n\n**Sobre el uso de IA en producción**:\n- Los modelos pueden alucinar. Diseñá guardrails y validaciones humanas para tareas críticas.\n- Los precios y capacidades cambian frecuentemente.\n- Esta calculadora es una **estimación**, no contrato. Para presupuestos reales pedí cotización al proveedor.\n- Las cifras de pricing son **referenciales a abril 2026** — siempre verificá la página oficial vigente:\n  - [Anthropic pricing](https://www.anthropic.com/pricing)\n  - [OpenAI pricing](https://openai.com/api/pricing/)\n  - [Google AI pricing](https://ai.google.dev/pricing)\n\n## Cuándo el costo se va de las manos\n\n- **No usar caching**: pagás 10× input innecesariamente.\n- **History sin podar**: cada call carga 20k tokens de chat viejo.\n- **MCP tools sobrecargadas**: 100 tools cargadas en system prompt = USD 1.000+ extra/mes.\n- **Loops infinitos del agente**: bug del agent loop quema USD 100 en una hora.\n- **Sin guardrails de costo**: definí budget alerts y rate limits per-user.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Cifras de pricing referenciadas contra páginas oficiales de Anthropic, OpenAI y Google a abril 2026. **Verificá siempre los precios vigentes antes de comprometer presupuesto.**\n",
+  "faq": [
+    {
+      "q": "¿Cuánto cuesta un agente IA típico al mes?",
+      "a": "**Para uso medio** (200-500 calls/día, 5-10k tokens/call), los costos rondan **USD 200-1.500/mes en LLM** + USD 30-150/mes en cómputo y storage. Para uso pesado (miles de calls/día) puede escalar a **USD 5.000-20.000/mes**. Aplicar prompt caching reduce ~30-50% el LLM."
+    },
+    {
+      "q": "¿Por qué el input domina el costo de un agente?",
+      "a": "Cada call al LLM carga: **system prompt** (1-3k tokens) + **descripciones de MCP tools** (2-10k tokens) + **history reciente** (1-5k tokens) + **outputs de tools del turn anterior** (1-10k tokens). El output (la respuesta del LLM) suele ser solo **200-1.000 tokens**. Por eso input ≈ 85-95% del total."
+    },
+    {
+      "q": "¿Qué es prompt caching y cuánto ahorra?",
+      "a": "**Prompt caching** te permite cachear la parte estática del prompt (system + tools) en el lado del proveedor. Anthropic cobra el contenido cacheado a ~10% del precio normal en hits subsiguientes. Para un agente con system prompt de 10k tokens y 1.000 calls/día, **ahorra ~70-90% del costo de input**."
+    },
+    {
+      "q": "¿Cómo bajo el costo del LLM sin perder calidad?",
+      "a": "1) **Caching agresivo**. 2) **Routing por complejidad**: Haiku/4o-mini para tareas simples, Sonnet/GPT-4o para razonamiento. 3) **Context pruning**: limpiá history antiguo. 4) **Tool selection dinámica**: no cargues 50 tools si vas a usar 5. 5) **Batch API** para tareas asíncronas (~50% off)."
+    },
+    {
+      "q": "¿Cómo se diferencia MCP de OpenAI Function Calling?",
+      "a": "**MCP** ([Model Context Protocol](https://modelcontextprotocol.io)) es un protocolo abierto creado por Anthropic en 2024 que cualquier LLM puede consumir. **Function calling** de OpenAI es propietario de su API. MCP separa el agent (consumer) del tool provider (server), permitiendo reutilizar el mismo MCP server en Claude, Cursor, OpenAI, Gemini sin cambios."
+    },
+    {
+      "q": "¿Cuántos tokens consume mi agente por sesión?",
+      "a": "Depende de tools y profundidad. Estimación típica: **agente simple** (1-3 tools, 1-3 calls): 5-15k tokens/sesión. **Agente medio** (5-15 tools, 5-10 calls): 30-100k tokens/sesión. **Agente complejo** (Devin-like, agent loop largo): 200k-2M tokens/sesión."
+    },
+    {
+      "q": "¿Self-hostear Llama 70B reemplaza a Claude/GPT en agentes?",
+      "a": "**Para agentes simples, sí.** Para agentes complejos con tool-use anidado y razonamiento, los modelos **frontier** (Claude Sonnet/Opus, GPT-4o, Gemini Pro) son notablemente mejores en 2026 — especialmente en seguir instrucciones de tools y razonar pasos múltiples. Vale el extra costo si la tarea es crítica."
+    },
+    {
+      "q": "¿Cómo defiendo el costo del agente ante CFO?",
+      "a": "Comparalo contra **horas humanas reemplazadas**. Un agente de soporte que resuelve 1.000 tickets/mes a USD 1.500/mes = **USD 1,50/ticket**. Un agente humano resuelve ~30 tickets/día a USD 4.000/mes = **~USD 6/ticket**. Si el agente IA logra 70-80% de tasa de resolución, el ROI es 4-5×."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Anthropic — Pricing",
+      "url": "https://www.anthropic.com/pricing"
+    },
+    {
+      "name": "OpenAI — API pricing",
+      "url": "https://openai.com/api/pricing/"
+    },
+    {
+      "name": "Google AI — Pricing",
+      "url": "https://ai.google.dev/pricing"
+    },
+    {
+      "name": "Model Context Protocol — docs",
+      "url": "https://modelcontextprotocol.io"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-claude-code-costo-mensual-uso-developer",
+    "calculadora-inferencia-llm-tokens-segundo-throughput",
+    "calculadora-embedding-vector-pinecone-weaviate-costo-mes"
+  ],
+  "howToSteps": [
+    {
+      "name": "Cargá calls/día",
+      "text": "Estimá invocaciones al LLM por día. Mirá métricas de tu logger."
+    },
+    {
+      "name": "Cargá tokens promedio por call",
+      "text": "Suma input + output. Para agentes con tools: 3-15k típico."
+    },
+    {
+      "name": "Cargá precios LLM",
+      "text": "Mirá pricing oficial vigente del proveedor."
+    },
+    {
+      "name": "Cargá ratio output",
+      "text": "5-15% en agentes con tools, 30-50% en chat puro."
+    },
+    {
+      "name": "Cargá cómputo y storage",
+      "text": "Suma servers MCP + vector DB + logs."
+    },
+    {
+      "name": "Calculá",
+      "text": "Total mensual desglosado."
+    }
+  ]
+}

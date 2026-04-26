@@ -1,0 +1,219 @@
+{
+  "slug": "calculadora-fine-tuning-llama-costo-dataset-tokens",
+  "title": "Calculadora fine-tuning Llama 3: costo dataset y tokens 2026",
+  "h1": "Fine-tuning Llama — costo según dataset, épocas y GPU",
+  "description": "🧠 Calculá cuánto cuesta fine-tunear Llama 3 (8B / 70B) según tamaño del dataset (MB), épocas, tokens por segundo y precio de GPU H100. Estimación de horas y USD totales.",
+  "category": "negocios",
+  "audience": "global",
+  "icon": "🧠",
+  "formulaId": "fine-tuning-llama-costo-dataset-tokens",
+  "seoKeywords": [
+    "fine tuning llama costo",
+    "llama 3 fine tune precio",
+    "qlora costo entrenamiento",
+    "fine tune mistral costo",
+    "lora vs full fine tune costo",
+    "cuanto cuesta fine tune llama"
+  ],
+  "intro": "**Fine-tunear** un LLM open-source como **Llama 3 (8B / 70B)**, **Mistral**, **Qwen** o **Gemma** es la forma más usada de adaptar un modelo a un dominio específico (legal, salud, código, soporte) sin pagar tokens premium de OpenAI o Anthropic. El costo total depende de tres variables: **tamaño del dataset** (MB de texto), **cantidad de épocas** (cuántas veces el modelo lee el dataset entero) y **tokens/segundo** que procesa tu setup (depende de la GPU, batch size, técnica usada — full fine-tune, LoRA o QLoRA). Esta calculadora aproxima 1 MB texto ≈ 250k tokens, multiplica por épocas y divide por throughput para devolver horas + costo total en USD según el precio horario de tu GPU. Útil para presupuestar fine-tunes en RunPod, Lambda, AWS o cluster propio antes de arrancar.",
+  "keyTakeaway": "Un fine-tuning **LoRA** de **Llama 3 8B** sobre 100 MB de texto (~25M tokens) durante 3 épocas en **1× H100** suele costar **USD 30-80**. La versión **full fine-tune** del **70B** sobre el mismo dataset escala a **USD 2.000-5.000+** (8× H100 días enteros). **QLoRA** es el sweet spot calidad/costo en 2026.",
+  "useCases": [
+    "Estimar presupuesto antes de iniciar un fine-tune en RunPod o Lambda Labs.",
+    "Comparar LoRA vs full fine-tune en términos de costo total.",
+    "Justificar un proyecto a CFO/equipo con cifras concretas.",
+    "Decidir entre fine-tunear o usar API de OpenAI/Anthropic con few-shot.",
+    "Calcular cuánto sumarle si se duplica el dataset o las épocas."
+  ],
+  "fields": [
+    {
+      "id": "datasetMb",
+      "label": "Tamaño del dataset",
+      "type": "number",
+      "suffix": "MB texto",
+      "placeholder": "100",
+      "min": 0,
+      "step": 1,
+      "required": true,
+      "help": "Tamaño del archivo de texto plano (jsonl, csv, txt) en MB. 1 MB ≈ 250.000 tokens en inglés/español."
+    },
+    {
+      "id": "epocas",
+      "label": "Cantidad de épocas",
+      "type": "number",
+      "suffix": "épocas",
+      "placeholder": "3",
+      "min": 1,
+      "step": 1,
+      "required": true,
+      "help": "Cuántas veces el modelo recorre el dataset completo. LoRA: 3-5 suele alcanzar. Full fine-tune: 1-3 con datasets grandes."
+    },
+    {
+      "id": "tokensSegundo",
+      "label": "Throughput (tokens/segundo)",
+      "type": "number",
+      "suffix": "tok/s",
+      "placeholder": "5000",
+      "min": 0,
+      "step": 100,
+      "required": true,
+      "help": "Throughput de tu setup. Llama 8B LoRA en 1× H100: ~5.000-8.000 tok/s. Llama 70B QLoRA: ~800-1.500 tok/s. Llama 70B full FT 8× H100: ~3.000-5.000 tok/s."
+    },
+    {
+      "id": "precioGpuHoraUsd",
+      "label": "Precio GPU por hora",
+      "type": "number",
+      "suffix": "USD/h",
+      "placeholder": "2.49",
+      "min": 0,
+      "step": 0.01,
+      "required": true,
+      "help": "AWS H100 ~USD 4,50, Lambda ~USD 2,49, RunPod ~USD 1,99. A100 ~50% más barata."
+    },
+    {
+      "id": "cantidadGpus",
+      "label": "Cantidad de GPUs",
+      "type": "number",
+      "suffix": "GPUs",
+      "placeholder": "1",
+      "min": 1,
+      "step": 1,
+      "required": true,
+      "help": "1 para LoRA 8B, 2-4 para QLoRA 70B, 8 para full FT 70B."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-26",
+    "source": "HuggingFace / Lambda benchmarks",
+    "sourceUrl": "https://huggingface.co/blog/llama3",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "totalTokens",
+      "label": "Total tokens procesados",
+      "format": "number"
+    },
+    {
+      "id": "horasEntrenamiento",
+      "label": "Horas estimadas",
+      "format": "number"
+    },
+    {
+      "id": "costoTotalUsd",
+      "label": "Costo total estimado",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "costoPorEpocaUsd",
+      "label": "Costo por época",
+      "format": "currency"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: LoRA Llama 3 8B sobre 100 MB / 3 épocas en 1× H100",
+    "steps": [
+      "**Dataset**: 100 MB ≈ 25M tokens × 3 épocas = **75M tokens** procesados.",
+      "**Throughput**: 6.000 tok/s en 1× H100 con LoRA.",
+      "**Tiempo**: 75M / 6.000 / 3.600 = **3,47 horas**.",
+      "**Costo RunPod (USD 1,99/h)**: ~USD 6,90.",
+      "**Costo Lambda (USD 2,49/h)**: ~USD 8,64.",
+      "**Costo AWS (USD 4,50/h)**: ~USD 15,62."
+    ],
+    "result": "Un LoRA básico de Llama 3 8B cuesta menos que una pizza."
+  },
+  "explanation": "## Las 3 técnicas principales\n\n| Técnica | Memoria | Calidad | Throughput | Costo relativo |\n|---|---|---|---|---|\n| **Full fine-tune** | máxima (~16× params) | máxima | medio | 1× (referencia) |\n| **LoRA** | baja (~0,1-1% params) | alta (90-95%) | rápido | 0,1× |\n| **QLoRA** | mínima (4-bit base + LoRA) | alta (88-93%) | medio | 0,15× |\n\n**LoRA** entrena solo unas matrices de adaptación pequeñas. **QLoRA** además cuantiza el modelo base a 4-bit, permitiendo entrenar Llama 70B en 1× H100. **Full fine-tune** ajusta todos los parámetros y necesita mucha VRAM.\n\n## Tokens, MB y épocas\n\n| Variable | Estimación |\n|---|---|\n| 1 MB texto | ~250.000 tokens (4 chars/token) |\n| 1 GB texto | ~250M tokens |\n| Llama 3 pre-training | 15.000.000.000.000 tokens (15T) |\n| Fine-tune típico | 5M-500M tokens |\n| Épocas LoRA | 3-5 |\n| Épocas full FT | 1-3 |\n\n## Throughput esperado (referencia)\n\n| Setup | Modelo | Técnica | Tok/s |\n|---|---|---|---|\n| 1× H100 80GB | Llama 8B | LoRA | 5.000-8.000 |\n| 1× H100 80GB | Llama 8B | full FT | 3.000-5.000 |\n| 1× H100 80GB | Llama 70B | QLoRA | 800-1.500 |\n| 4× H100 80GB | Llama 70B | LoRA | 3.000-5.000 |\n| 8× H100 80GB | Llama 70B | full FT (DeepSpeed ZeRO-3) | 3.000-5.000 |\n| 1× A100 40GB | Llama 8B | LoRA | 3.000-4.500 |\n\n## La fórmula\n\n```\nTotal tokens = MB × 250.000 × épocas\nHoras = total tokens / (tokens/s × 3600)\nCosto = horas × precio_gpu_hora × cantidad_gpus\n```\n\n## Cuándo conviene fine-tune vs API\n\n| Volumen de inferencia | Recomendación |\n|---|---|\n| < 100k tokens/día | **API (OpenAI/Anthropic)** — fine-tune no se amortiza |\n| 100k-1M tokens/día | **Few-shot prompting** + caching agresivo |\n| > 1M tokens/día | **Fine-tune Llama/Mistral** + self-host |\n| Datos sensibles | **Fine-tune on-prem** sí o sí |\n| Latencia < 100ms | **Fine-tune + servir local** |\n\n## Errores típicos\n\n1. **Sobre-entrenar (overfitting)**: 10+ épocas con dataset chico mata generalización. Con LoRA, 3 épocas es muchas veces suficiente.\n2. **No medir tok/s real**: usá `transformers.trainer` con logging cada N steps para verificar throughput.\n3. **Subestimar storage**: checkpoints de Llama 70B pesan **140 GB c/u**. Si guardás cada época, son 420 GB.\n4. **Tokenizer mal calibrado**: si tu dataset es muy técnico (código, farmacología), 1 MB puede ser 350k tokens, no 250k.\n\n## Costos de referencia OpenAI/Anthropic (abril 2026)\n\nPara comparación con APIs (precios públicos a abril 2026):\n- **GPT-4o fine-tuning**: USD 25 / 1M tokens training + uso de inferencia más caro (consultar [OpenAI pricing](https://openai.com/api/pricing/)).\n- **Anthropic Claude**: no ofrece fine-tuning público al 2026; alternativa via [Bedrock](https://aws.amazon.com/bedrock/pricing/) o prompt-tuning.\n- **Self-host Llama**: el costo es solo la GPU + electricidad/hosting.\n\n> **Aviso legal**: Calculadora educativa con estimaciones aproximadas. Throughput real depende de muchos factores (batch size, sequence length, tokenizer, optimizer). **No constituye recomendación técnica ni de proveedor.**\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Throughput referenciado contra benchmarks públicos de Lambda Labs y HuggingFace a abril 2026.\n",
+  "faq": [
+    {
+      "q": "¿Cuánto cuesta fine-tunear Llama 3 8B?",
+      "a": "Con **LoRA** sobre 100 MB de texto / 3 épocas en 1× H100: **USD 7-15** según proveedor. Con **full fine-tune**: USD 30-60 en el mismo setup. La diferencia escala enorme con datasets grandes (>1 GB)."
+    },
+    {
+      "q": "¿LoRA o full fine-tune?",
+      "a": "**LoRA en 90% de los casos.** Calidad final 90-95% del full fine-tune con 10× menos costo y 10× menos VRAM. Solo conviene full fine-tune para tareas muy distintas al pre-training (cambio de idioma, dominio extremadamente especializado) o cuando ya hiciste LoRA y querés exprimir el último 5%."
+    },
+    {
+      "q": "¿Cuántas épocas usar?",
+      "a": "**LoRA**: 3-5 épocas suele ser óptimo. Más allá de 5 hay riesgo de overfitting. **Full fine-tune**: 1-3 épocas, especialmente si el dataset es grande (>500 MB). Monitoreá la **eval loss** y parate cuando empiece a subir."
+    },
+    {
+      "q": "¿Qué es QLoRA y cuándo usarla?",
+      "a": "**QLoRA** = LoRA aplicado sobre un modelo base **cuantizado a 4-bit**. Reduce 4× la VRAM, permitiendo fine-tunear Llama 70B en 1× H100 80GB. Calidad: ~3-5% peor que LoRA fp16, pero costo total mucho menor. Ideal para experimentar con modelos grandes sin cluster."
+    },
+    {
+      "q": "¿1 MB de texto cuántos tokens son?",
+      "a": "**~250.000 tokens en inglés o español** (estimación: 4 chars/token con tokenizers de Llama, GPT, Mistral). Para **código** suben a ~330k/MB. Para **idiomas asiáticos** (chino, japonés) bajan a ~150k/MB. La calculadora usa la estimación estándar 250k."
+    },
+    {
+      "q": "¿Cuánto pesa el modelo después del fine-tune?",
+      "a": "**Full fine-tune**: el modelo entero (Llama 8B fp16 ≈ 16 GB, Llama 70B fp16 ≈ 140 GB). **LoRA**: solo los adaptadores, **20-200 MB**. Esto hace LoRA muy fácil de versionar, distribuir y combinar (un mismo base + N adaptadores LoRA distintos)."
+    },
+    {
+      "q": "¿Necesito cluster multi-GPU para fine-tunear?",
+      "a": "**No para LoRA Llama 8B-13B**: 1× H100 alcanza. **Sí para Llama 70B full fine-tune**: necesitás 8× H100 con DeepSpeed ZeRO-3. Para 70B QLoRA podés intentar con 1× H100 80GB o 2× A100 40GB."
+    },
+    {
+      "q": "¿Conviene fine-tunear o usar GPT-4o con few-shot?",
+      "a": "Depende del **volumen** y **sensibilidad de datos**. Si procesás <500k tokens/día y no son sensibles → API. Si procesás millones de tokens/día → **fine-tune + self-host se amortiza** en pocas semanas. Si los datos son sensibles (salud, legal, financiero) → fine-tune on-prem casi siempre."
+    }
+  ],
+  "sources": [
+    {
+      "name": "HuggingFace — Fine-tuning Llama 3",
+      "url": "https://huggingface.co/blog/llama3"
+    },
+    {
+      "name": "Lambda Labs — Benchmarks",
+      "url": "https://lambda.ai"
+    },
+    {
+      "name": "OpenAI API pricing",
+      "url": "https://openai.com/api/pricing/"
+    },
+    {
+      "name": "Anthropic — Models pricing",
+      "url": "https://www.anthropic.com/pricing"
+    },
+    {
+      "name": "Meta Llama models",
+      "url": "https://llama.meta.com"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-gpu-h100-renta-hora-cloud-comparativa",
+    "calculadora-inferencia-llm-tokens-segundo-throughput",
+    "calculadora-rag-chunking-tokens-overlap-optimo"
+  ],
+  "howToSteps": [
+    {
+      "name": "Cargá el tamaño del dataset",
+      "text": "Pesá el archivo de texto plano (jsonl, csv) en MB."
+    },
+    {
+      "name": "Cargá las épocas",
+      "text": "LoRA: 3-5. Full FT: 1-3."
+    },
+    {
+      "name": "Cargá tokens/segundo",
+      "text": "Mirá benchmarks de tu setup o medí con un run de prueba corto."
+    },
+    {
+      "name": "Cargá precio GPU/hora",
+      "text": "Según proveedor (RunPod, Lambda, AWS)."
+    },
+    {
+      "name": "Cargá cantidad de GPUs",
+      "text": "1 para 8B LoRA, 8 para 70B full FT."
+    },
+    {
+      "name": "Calculá",
+      "text": "Total tokens, horas estimadas y USD totales."
+    }
+  ]
+}

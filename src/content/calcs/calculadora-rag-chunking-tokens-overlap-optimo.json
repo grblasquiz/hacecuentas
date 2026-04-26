@@ -1,0 +1,200 @@
+{
+  "slug": "calculadora-rag-chunking-tokens-overlap-optimo",
+  "title": "Calculadora RAG chunking: tamaño chunk y overlap óptimo 2026",
+  "h1": "RAG chunking — chunk size y overlap óptimo",
+  "description": "📚 Calculá cantidad de chunks, overlap y eficiencia al chunkear documentos para RAG según largo del doc, chunk size y modelo de embedding (OpenAI, Cohere, BGE).",
+  "category": "negocios",
+  "audience": "global",
+  "icon": "📚",
+  "formulaId": "rag-chunking-tokens-overlap-optimo",
+  "seoKeywords": [
+    "rag chunk size optimal",
+    "chunking strategy embeddings",
+    "overlap chunks rag",
+    "openai embedding chunk size",
+    "rag tokens overlap calculator",
+    "langchain text splitter chunks"
+  ],
+  "intro": "El **chunking** es la pieza más subestimada de un sistema **RAG**. Si los chunks son **muy chicos** (200 tokens), perdés contexto y el embedding no captura la idea completa. Si son **muy grandes** (2.000 tokens), el modelo embedding diluye conceptos y el retrieval devuelve resultados poco precisos. El **overlap** entre chunks (solapar 10-20% del final de un chunk con el inicio del siguiente) evita cortar oraciones por la mitad. La regla práctica 2026: **chunk_size = 500-800 tokens** + **overlap = 10-20%** para la mayoría de casos. Esta calculadora toma tokens del documento, chunk size y % overlap, devuelve cantidad de chunks, tokens totales embedeados y eficiencia (qué fracción es contenido único vs duplicado por overlap). Útil para presupuestar embeddings, tunear retrieval o entender por qué tu RAG no está respondiendo bien.",
+  "keyTakeaway": "**Chunk 500-800 tokens + overlap 10-20%** es el sweet spot 2026 para RAG con embeddings OpenAI / Cohere / BGE. Chunks chicos (<300) pierden contexto. Chunks grandes (>1.500) diluyen el embedding. **Overlap 0%** corta ideas a la mitad. **Overlap 50%+** duplica costo sin mejorar retrieval.",
+  "useCases": [
+    "Decidir el chunk size correcto para tu corpus de PDFs / wiki / docs.",
+    "Calcular cuánto va a costar embeddear N documentos.",
+    "Estimar cuántos vectores tendrás en tu vector DB después del chunking.",
+    "Comparar eficiencia entre overlap 10% vs 20% vs 30%.",
+    "Validar que el chunk no excede el límite del modelo embedding."
+  ],
+  "fields": [
+    {
+      "id": "tokensDocumento",
+      "label": "Tokens del documento",
+      "type": "number",
+      "suffix": "tokens",
+      "placeholder": "20000",
+      "min": 0,
+      "step": 100,
+      "required": true,
+      "help": "Largo total del documento en tokens. 1 página típica ≈ 500 tokens. Un PDF de 40 páginas ≈ 20k tokens."
+    },
+    {
+      "id": "chunkSizeTokens",
+      "label": "Chunk size",
+      "type": "number",
+      "suffix": "tokens",
+      "placeholder": "512",
+      "min": 0,
+      "step": 32,
+      "required": true,
+      "help": "Tamaño de cada chunk en tokens. Default recomendado 2026: 500-800 para texto narrativo, 256-512 para FAQs/snippets, 1.000-1.500 para docs técnicos largos."
+    },
+    {
+      "id": "overlapPct",
+      "label": "Overlap entre chunks",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "15",
+      "min": 0,
+      "max": 80,
+      "step": 1,
+      "required": true,
+      "help": "% del chunk que se repite con el siguiente. Default: 10-20%. Más alto duplica costo sin mucho beneficio extra."
+    },
+    {
+      "id": "tokensMaxEmbedding",
+      "label": "Límite del modelo embedding",
+      "type": "number",
+      "suffix": "tokens",
+      "placeholder": "8192",
+      "min": 1,
+      "step": 1,
+      "required": true,
+      "help": "Máximo que acepta tu modelo embedding por chunk. OpenAI text-embedding-3 = 8.192. Cohere embed-v3 = 512. BGE-M3 = 8.192."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-26",
+    "source": "OpenAI / Cohere embedding docs",
+    "sourceUrl": "https://platform.openai.com/docs/guides/embeddings",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "cantidadChunks",
+      "label": "Cantidad de chunks",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "overlapTokens",
+      "label": "Overlap en tokens",
+      "format": "number"
+    },
+    {
+      "id": "tokensTotalesEmbedeados",
+      "label": "Tokens totales embedeados",
+      "format": "number"
+    },
+    {
+      "id": "eficienciaPct",
+      "label": "Eficiencia (contenido único)",
+      "format": "percent"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: PDF 20.000 tokens, chunk 512, overlap 15%",
+    "steps": [
+      "**Overlap**: 512 × 0,15 = 76,8 ≈ **77 tokens**.",
+      "**Stride** (avance neto): 512 − 77 = **435 tokens**.",
+      "**Cantidad de chunks**: ceil(20.000 / 435) = **46 chunks**.",
+      "**Tokens totales embedeados**: 46 × 512 = **23.552 tokens** (vs 20k del doc original).",
+      "**Eficiencia**: 20.000 / 23.552 = **84,9%** (15% es overlap)."
+    ],
+    "result": "46 vectores en tu DB para este documento."
+  },
+  "explanation": "## La fórmula del chunking\n\n```\noverlap_tokens = chunk_size × overlap_pct\nstride = chunk_size − overlap_tokens\ncantidad_chunks = ceil(tokens_documento / stride)\ntokens_embedeados = cantidad_chunks × chunk_size\neficiencia = tokens_documento / tokens_embedeados\n```\n\nEl **overlap** sirve para que ideas que cruzan la frontera entre chunks no se pierdan. Sin overlap, una oración puede quedar partida exactamente en la unión y ningún chunk la representa bien.\n\n## Modelos embedding y sus límites (abril 2026)\n\n| Modelo | Dim | Token max input | Costo aprox. |\n|---|---|---|---|\n| **OpenAI text-embedding-3-small** | 1536 | 8.192 | USD 0,02 / 1M tokens |\n| **OpenAI text-embedding-3-large** | 3072 | 8.192 | USD 0,13 / 1M tokens |\n| **Cohere embed-multilingual-v3** | 1024 | 512 | USD 0,10 / 1M tokens |\n| **Cohere embed-v3 (English)** | 1024 | 512 | USD 0,10 / 1M tokens |\n| **BGE-M3 (open-source)** | 1024 | 8.192 | self-host |\n| **e5-large-v2 (open-source)** | 1024 | 512 | self-host |\n| **Voyage-3** | 1024 | 32.000 | USD 0,06 / 1M tokens |\n\n*Verificá pricing oficial vigente.*\n\n## Recomendaciones de chunk size\n\n| Tipo de contenido | Chunk recomendado | Overlap |\n|---|---|---|\n| **FAQ corto / snippets** | 200-400 tokens | 10% |\n| **Documentación técnica** | 500-800 tokens | 15% |\n| **Artículos / blog posts** | 600-1.000 tokens | 15-20% |\n| **PDFs estructurados / contratos** | 800-1.500 tokens | 20% |\n| **Código fuente** | semantic split (función) | – |\n| **Conversaciones / chats** | por turn | 0% (boundary natural) |\n\n## Estrategias de chunking\n\n### 1. **Fixed-size** (default, simple)\nDivide cada N tokens. Rápido y predecible. Funciona bien con overlap.\n\n### 2. **Recursive character splitter** (LangChain default)\nIntenta dividir por: párrafos → oraciones → palabras. Mantiene boundaries semánticos.\n\n### 3. **Semantic chunking** (mejor calidad, más caro)\nUsa un LLM o embedding similarity para decidir dónde cortar. Detecta cambios de tema dentro del documento. Costo extra: ~10-30% en latencia + tokens.\n\n### 4. **Document-aware** (PDFs, HTML)\nRespeta secciones, tablas, headers. Crucial en contratos legales y papers científicos.\n\n### 5. **Late chunking** (técnica 2024-2026)\nEmbedeás el documento completo con context-rich models (Voyage, Jina-v3) y chunkeás los embeddings, no el texto. Mejora coherencia pero requiere modelos especiales.\n\n## Errores típicos\n\n1. **Overlap=0%**: corta ideas a la mitad. Mínimo 10%.\n2. **Chunk demasiado chico (<200 tok)**: cada vector pierde contexto. El retrieval devuelve fragmentos sin sentido.\n3. **Chunk demasiado grande (>2.000 tok)**: el embedding promedia tantos conceptos que pierde precisión. Recall@10 cae 20-40%.\n4. **No filtrar metadata**: si todos los chunks van a una bolsa común, el retrieval se desordena. Agregá `source`, `tenant`, `date`.\n5. **Olvidar tablas y código**: chunkear con character splitter rompe tablas Markdown y bloques de código. Tratá esos casos por separado.\n\n## Cómo elegir N (top-k) en retrieval\n\nDespués de chunkear, en query traes los **top-k** chunks más similares. Heurística:\n- Chunk chico (200-400 tok): k=8-15.\n- Chunk medio (500-800): k=4-8.\n- Chunk grande (1.000-1.500): k=2-4.\n\nCostó context window para el LLM final (`k × chunk_size + system + history`).\n\n## Costo de embeddear un corpus\n\n```\ntokens_embedeados = chunks × chunk_size\ncosto_embedding = tokens_embedeados × precio_por_token\n```\n\nEjemplo: 10.000 documentos × 5.000 tokens cada uno = 50M tokens. Con overlap 15% suben a ~58M. Con OpenAI 3-small (USD 0,02/M): ~USD 1,16. Con 3-large (USD 0,13/M): ~USD 7,54.\n\n> **Aviso legal**: Calculadora educativa. **No constituye recomendación técnica final**: el chunk óptimo depende de tu corpus específico — testeá con eval set propio antes de productivizar.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Cifras y prácticas cotejadas contra docs oficiales de OpenAI, Cohere, LangChain y LlamaIndex a abril 2026.\n",
+  "faq": [
+    {
+      "q": "¿Cuál es el chunk size óptimo para RAG?",
+      "a": "**500-800 tokens** funciona bien para 80% de los casos en 2026 con embeddings OpenAI / Cohere / BGE. Para FAQ cortos, bajá a 200-400. Para documentos técnicos densos (papers, contratos), subí a 1.000-1.500. Siempre testeá con eval set propio."
+    },
+    {
+      "q": "¿Cuánto overlap usar?",
+      "a": "**10-20%** es el rango usual. Menos de 10% riesga partir ideas. Más de 30% duplica costo y storage sin mejora notable de retrieval. El default 15% en LangChain es razonable y rara vez vale la pena tunear más."
+    },
+    {
+      "q": "¿Por qué mi RAG devuelve resultados malos?",
+      "a": "Los 5 sospechosos: (1) **chunks demasiado grandes** que diluyen el embedding, (2) **overlap=0%** que corta ideas, (3) **modelo embedding débil** (probá voyage-3 o text-embedding-3-large), (4) **k bajo** en retrieval, (5) **falta de re-ranking** post-retrieval (Cohere Rerank o un cross-encoder mejoran 10-30%)."
+    },
+    {
+      "q": "¿Qué es semantic chunking?",
+      "a": "Estrategia que detecta **cambios de tema** dentro del documento usando similitud entre embeddings de oraciones consecutivas. Cuando hay un \"salto\" semántico, corta. Mejora calidad de retrieval **5-15%** vs fixed-size, pero suma costo (cada doc requiere embedding extra)."
+    },
+    {
+      "q": "¿Conviene chunks fijos o por estructura del documento?",
+      "a": "**Por estructura siempre que sea posible.** Si tenés Markdown/HTML, dividí por headers (h2, h3). En PDFs estructurados, respetá secciones. **Fixed-size** sirve como fallback cuando no hay estructura clara (texto plano, transcripts)."
+    },
+    {
+      "q": "¿Cuánto cuesta embeddear 1.000 documentos?",
+      "a": "Asumiendo 5.000 tokens/doc + chunk 500 + overlap 15%: ~5,8M tokens totales. Con **OpenAI text-embedding-3-small (USD 0,02/M)**: **~USD 0,12**. Con **3-large (USD 0,13/M)**: **~USD 0,75**. Con **Voyage-3 (USD 0,06/M)**: **~USD 0,35**. Lo más barato es self-host BGE-M3 a costo solo de GPU."
+    },
+    {
+      "q": "¿Qué pasa si el chunk excede el límite del modelo?",
+      "a": "El modelo **trunca** los tokens excedentes (silenciosamente en algunos casos). Cohere embed-v3 tiene límite de 512 tokens — si tu chunk es 800, perdés contenido. Por eso la calculadora valida que `chunk ≤ tokens_max`."
+    },
+    {
+      "q": "¿Cuántos vectores genera 1 GB de PDFs?",
+      "a": "Estimación: 1 GB de PDFs ≈ **80-150M tokens** (varía mucho según densidad). Con chunk 500 + overlap 15% → **~190.000-350.000 vectores**. Pesarían **~1-3 GB en una vector DB con embeddings 1536-dim float32**."
+    }
+  ],
+  "sources": [
+    {
+      "name": "OpenAI — Embeddings guide",
+      "url": "https://platform.openai.com/docs/guides/embeddings"
+    },
+    {
+      "name": "LangChain — Text splitters",
+      "url": "https://python.langchain.com/docs/concepts/text_splitters/"
+    },
+    {
+      "name": "Cohere — Embed v3",
+      "url": "https://docs.cohere.com/docs/embeddings"
+    },
+    {
+      "name": "Pinecone — Chunking strategies",
+      "url": "https://www.pinecone.io/learn/chunking-strategies/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-embedding-vector-pinecone-weaviate-costo-mes",
+    "calculadora-fine-tuning-llama-costo-dataset-tokens",
+    "calculadora-inferencia-llm-tokens-segundo-throughput"
+  ],
+  "howToSteps": [
+    {
+      "name": "Cargá tokens del documento",
+      "text": "1 página ≈ 500 tokens (texto plano), más en docs densos."
+    },
+    {
+      "name": "Cargá chunk size",
+      "text": "500-800 default, 256-512 para FAQs, 1.000+ para docs técnicos."
+    },
+    {
+      "name": "Cargá overlap",
+      "text": "10-20% es lo usual."
+    },
+    {
+      "name": "Cargá límite del modelo",
+      "text": "OpenAI 3 = 8192, Cohere v3 = 512, BGE-M3 = 8192."
+    },
+    {
+      "name": "Calculá",
+      "text": "Cantidad de chunks, tokens embedeados y eficiencia."
+    }
+  ]
+}

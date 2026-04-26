@@ -1,0 +1,149 @@
+{
+  "slug": "calculadora-prompt-caching-anthropic-ahorro-mensual",
+  "title": "Calculadora prompt caching Anthropic: ahorro mensual 2026",
+  "h1": "Prompt caching Anthropic — ahorro mensual",
+  "description": "🤖 Calculá cuánto ahorrás por mes activando prompt caching de Anthropic en Claude Sonnet, Opus o Haiku según tu cache hit rate y volumen de tokens diarios.",
+  "category": "negocios",
+  "audience": "global",
+  "icon": "🤖",
+  "formulaId": "prompt-caching-anthropic-ahorro-mensual",
+  "seoKeywords": [
+    "prompt caching anthropic ahorro",
+    "claude prompt cache costo",
+    "anthropic cache hit rate calculator",
+    "ahorro tokens claude api",
+    "prompt caching pricing claude sonnet",
+    "cache write read precio anthropic"
+  ],
+  "intro": "**Prompt caching** de Anthropic permite cachear porciones largas de prompt (system prompts, documentos, ejemplos) y reusarlas pagando **10% del precio normal** en los reads y **125% en el write inicial**. Si tu app envía el mismo system prompt o contexto a cada request — agentes, RAG, asistentes con personalidad fija — el ahorro es enorme: con un cache hit rate del 80%, ahorrás hasta **70% del costo de input**. Esta calculadora estima tu **ahorro mensual en USD** según tokens de input diarios, cache hit rate esperado y modelo (Sonnet, Opus, Haiku). Útil para decidir si vale la pena refactorear tu prompt para activar caching y para presupuestar costos de tu app.",
+  "keyTakeaway": "Con un cache hit rate del 80% en Claude Sonnet (USD 3/MT input → USD 0,30/MT en cache reads), ahorrás aproximadamente **70% del costo de input mensual**. En apps de alto volumen (>10M tokens/día) el ahorro mensual supera fácilmente los **USD 500-2000**.",
+  "useCases": [
+    "Estimar el ROI de implementar prompt caching en tu app de Claude.",
+    "Comparar ahorros entre Claude Sonnet, Opus y Haiku para tu volumen.",
+    "Presupuestar costos mensuales de un agente con system prompt grande.",
+    "Justificar un sprint de optimización de prompt caching ante el equipo.",
+    "Decidir si conviene migrar de OpenAI a Claude por costos."
+  ],
+  "fields": [
+    {
+      "id": "tokensInputDiarios",
+      "label": "Tokens de input diarios",
+      "type": "number",
+      "suffix": "tokens",
+      "placeholder": "1000000",
+      "min": 0,
+      "step": 1000,
+      "required": true,
+      "help": "Total de tokens de input que tu app envía por día. Si no sabés, mirá los logs de Anthropic Console o multiplicá: requests/día × tokens promedio por request."
+    },
+    {
+      "id": "pctCacheHit",
+      "label": "% de cache hit esperado",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "80",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "required": true,
+      "help": "Porcentaje del input que cae en el cache (vs el que cambia entre requests). System prompts grandes y RAG con docs estables alcanzan 70-90%. Chats únicos sin contexto fijo: <30%."
+    },
+    {
+      "id": "modelo",
+      "label": "Modelo Claude",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "haiku", "label": "Claude Haiku (USD 0,80/MT input)" },
+        { "value": "sonnet", "label": "Claude Sonnet (USD 3/MT input)" },
+        { "value": "opus", "label": "Claude Opus (USD 15/MT input)" }
+      ],
+      "help": "Sonnet es el sweet spot calidad/precio. Opus para tareas complejas. Haiku para alto volumen barato."
+    },
+    {
+      "id": "diasPorMes",
+      "label": "Días operativos por mes",
+      "type": "number",
+      "suffix": "días",
+      "placeholder": "30",
+      "min": 1,
+      "max": 31,
+      "step": 1,
+      "required": true,
+      "help": "30 si tu app corre 24/7. 22 si solo días hábiles."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-26",
+    "source": "Anthropic Pricing",
+    "sourceUrl": "https://www.anthropic.com/pricing",
+    "updateType": "manual"
+  },
+  "outputs": [
+    { "id": "ahorroMensualUsd", "label": "Ahorro mensual estimado", "format": "currency", "primary": true },
+    { "id": "ahorroPct", "label": "Ahorro %", "format": "percent" },
+    { "id": "costoSinCacheUsd", "label": "Costo sin caching (USD)", "format": "currency" },
+    { "id": "costoConCacheUsd", "label": "Costo con caching (USD)", "format": "currency" },
+    { "id": "explicacion", "label": "Detalle", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo: agente con 5M tokens input/día en Sonnet, 80% cache hit",
+    "steps": [
+      "Volumen: 5.000.000 tokens × 30 días = **150M tokens/mes**.",
+      "**Sin caching**: 150M × USD 3/MT = **USD 450/mes**.",
+      "**Con caching 80% hit**: writes USD 22,50 + reads USD 36 + non-cache USD 90 ≈ **USD 148,50/mes**.",
+      "**Ahorro mensual: USD 301,50** (~67%)."
+    ],
+    "result": "Para apps con system prompt o RAG estable, prompt caching paga el sprint de implementación en menos de un mes."
+  },
+  "explanation": "## Cómo funciona prompt caching de Anthropic\n\nPrompt caching permite marcar bloques de tu prompt como **cacheables** (`cache_control: { type: 'ephemeral' }`). Anthropic los almacena por 5 minutos (TTL refresh con cada uso) y los siguientes requests pagan precio reducido por leer del cache.\n\n```\ncosto_efectivo = tokens_no_cache × precio_base\n              + tokens_write × (precio_base × 1.25)\n              + tokens_read  × (precio_base × 0.10)\n```\n\n## Pricing de cache (abril 2026)\n\n| Modelo | Input base | Cache write (1.25x) | Cache read (0.10x) |\n|---|---|---|---|\n| Haiku | USD 0,80/MT | USD 1,00/MT | USD 0,08/MT |\n| Sonnet | USD 3/MT | USD 3,75/MT | USD 0,30/MT |\n| Opus | USD 15/MT | USD 18,75/MT | USD 1,50/MT |\n\n## Casos donde el ROI es alto\n\n- **Agentes con system prompt grande** (>5k tokens): cada request lee el mismo system prompt → 90%+ cache hit.\n- **RAG con docs estables**: el conjunto de chunks se reusa entre queries.\n- **Chatbots con personalidad/persona detallada**: intro + ejemplos + tono cacheable.\n- **Code assistants con codebase context**: archivos fuente cacheados entre turnos de conversación.\n\n## Casos donde no conviene\n\n- One-shot completions únicos sin contexto reusable.\n- Prompts cortos (<1024 tokens, mínimo cacheable en Sonnet/Opus).\n- TTL corto: si las requests llegan separadas por más de 5 min, el cache expira.\n\n## Buenas prácticas\n\n- Poné el contexto **estático al inicio** del prompt (system → docs → user query).\n- Marcá hasta **4 cache breakpoints** estratégicos.\n- Monitoreá `cache_creation_input_tokens` vs `cache_read_input_tokens` en la respuesta para validar tu hit rate real.\n- Combiná con **batching** para reducir aún más costo en cargas async.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Los precios se cotejan contra la página oficial de Anthropic Pricing y se actualizan al cierre de cada mes.\n",
+  "faq": [
+    {
+      "q": "¿Cuál es el TTL del cache de Anthropic?",
+      "a": "**5 minutos** (ephemeral) por default, refrescado en cada uso. Si la siguiente request llega dentro de los 5 min de la última, el cache sigue vigente. Anthropic también ofrece un tier de **1 hora** con costo de write 2x (en lugar de 1.25x)."
+    },
+    {
+      "q": "¿Cuál es el mínimo de tokens cacheable?",
+      "a": "**1024 tokens** en Sonnet y Opus, **2048 tokens** en Haiku. Si tu bloque cacheable es menor, el SDK ignora el cache_control y cobra precio normal."
+    },
+    {
+      "q": "¿Cómo mido mi cache hit rate real?",
+      "a": "En cada respuesta de la API, `usage.cache_read_input_tokens` y `usage.cache_creation_input_tokens` te dicen cuántos tokens vinieron del cache vs cuántos se escribieron. Hit rate = `read / (read + creation + uncached)`."
+    },
+    {
+      "q": "¿El cache se comparte entre cuentas o entre regiones?",
+      "a": "**No.** El cache es por API key + región. Si llamás desde otra cuenta o región diferente, se vuelve a escribir."
+    },
+    {
+      "q": "¿Conviene el cache de 1 hora o el de 5 minutos?",
+      "a": "**5 min** para apps con tráfico continuo (chatbot 24/7). **1 hora** si tus requests llegan en batches espaciados (ej: cron jobs cada 30 min) — el write 2x se compensa con menos rewrites."
+    },
+    {
+      "q": "¿Prompt caching funciona con tool use?",
+      "a": "Sí — podés cachear el bloque de definiciones de tools, que suele ser pesado y estable. Marcá `cache_control` al final del array de tools."
+    },
+    {
+      "q": "¿Cómo se compara el ahorro de prompt caching vs batching?",
+      "a": "**Batching** te da 50% off en input + output, pero la respuesta tarda hasta 24h. **Prompt caching** te da hasta 90% off en input cacheable, latencia normal. Para apps real-time, caching gana. Para procesamiento async, combiná ambos."
+    },
+    {
+      "q": "¿Anthropic cobra storage por el cache?",
+      "a": "**No directamente.** El costo está en el write (1.25x del precio base). No hay fee por TB cacheado ni por tiempo de retención dentro del TTL."
+    }
+  ],
+  "sources": [
+    { "name": "Anthropic Pricing", "url": "https://www.anthropic.com/pricing" },
+    { "name": "Anthropic Docs — Prompt Caching", "url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching" }
+  ],
+  "relatedSlugs": [
+    "calculadora-context-1m-tokens-claude-costo-input"
+  ],
+  "howToSteps": [
+    { "name": "Mirá el volumen actual", "text": "Sacá del Anthropic Console el promedio de tokens input por día." },
+    { "name": "Estimá tu cache hit", "text": "Mirá qué fracción de tu prompt es estática (system + docs) — eso es tu hit rate teórico." },
+    { "name": "Elegí modelo", "text": "Sonnet es default. Si ya sabés que vas a usar Opus o Haiku, seleccioná." },
+    { "name": "Ingresá días operativos", "text": "30 si la app corre 24/7, 22 si solo lunes a viernes." },
+    { "name": "Calculá", "text": "Obtené ahorro mensual en USD y % vs costo sin caching." }
+  ]
+}

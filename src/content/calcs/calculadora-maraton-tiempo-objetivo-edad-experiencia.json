@@ -1,0 +1,191 @@
+{
+  "slug": "calculadora-maraton-tiempo-objetivo-edad-experiencia",
+  "title": "Calculadora maratón 42K: tiempo objetivo según edad y experiencia 2026",
+  "h1": "Tiempo objetivo realista para tu maratón",
+  "description": "🏃 Calculá tu tiempo objetivo realista en 42K según ritmo actual de 5K, edad, género y experiencia previa (1ra, 2da o avanzado). Estimación basada en fórmula de Riegel ajustada.",
+  "category": "deportes",
+  "audience": "global",
+  "icon": "🏃",
+  "formulaId": "maraton-tiempo-objetivo-edad-experiencia",
+  "seoKeywords": [
+    "tiempo objetivo maraton calculadora",
+    "predictor tiempo maraton 42k",
+    "ritmo maraton segun edad",
+    "primer maraton tiempo realista",
+    "formula riegel maraton",
+    "como calcular tiempo maraton segun 5k"
+  ],
+  "intro": "Saber **qué tiempo apuntar en tu maratón** es la diferencia entre disfrutarlo y reventar en el km 32. La fórmula clásica de **Pete Riegel** (1981) predice tiempos en distancias largas a partir de un test reciente en distancia corta, con un exponente de 1,06 que asume entrenamiento adecuado para el objetivo. Esta calculadora toma tu **ritmo actual de 5K**, lo proyecta a 42,195K usando Riegel, y luego **ajusta por experiencia** (los corredores nuevos pierden más segundos por km en distancias largas), **edad** (después de los 35 años se pierde ~0,5% de rendimiento por año) y **género** (las mujeres aficionadas suelen estar ~8% más lentas que hombres con el mismo ritmo de 5K, brecha que se reduce a 10% en élite). El resultado es un **objetivo realista**, no aspiracional.",
+  "keyTakeaway": "Si en tu primer maratón apuntás a un tiempo agresivo basado solo en tu 5K, vas a explotar. Sumá ~8% al ritmo proyectado por Riegel para el primer 42K, ~3% para el segundo, y ajustá luego por edad. La diferencia entre objetivo realista y soñado en novatos suele ser de **30-45 minutos**.",
+  "useCases": [
+    "Definir un tiempo objetivo realista para tu primer maratón.",
+    "Saber a qué ritmo entrenar las tiradas largas.",
+    "Comparar tu tiempo objetivo con tiempos de cierre de inscripción de Boston, Berlín o NY.",
+    "Estimar cuánto vas a tardar en distancias intermedias (21K, 30K) durante el entrenamiento.",
+    "Decidir si tu objetivo de sub-4h, sub-3:30h o sub-3h está al alcance este año."
+  ],
+  "fields": [
+    {
+      "id": "ritmoActual5kMinKm",
+      "label": "Ritmo actual de 5K",
+      "type": "number",
+      "suffix": "min/km",
+      "placeholder": "5.0",
+      "min": 2.5,
+      "max": 12,
+      "step": 0.01,
+      "required": true,
+      "help": "Tu ritmo en un test de 5K reciente (últimos 2 meses). Ej: si corriste 5K en 25 minutos, tu ritmo es 5,0 min/km."
+    },
+    {
+      "id": "edad",
+      "label": "Edad",
+      "type": "number",
+      "suffix": "años",
+      "placeholder": "35",
+      "min": 16,
+      "max": 80,
+      "step": 1,
+      "required": true,
+      "help": "Tu edad actual. La penalización por edad arranca a partir de los 35 años (~0,5% por año adicional)."
+    },
+    {
+      "id": "genero",
+      "label": "Género",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "M", "label": "Masculino" },
+        { "value": "F", "label": "Femenino" }
+      ],
+      "help": "Las mujeres aficionadas suelen estar ~8% más lentas que hombres con el mismo ritmo de 5K en distancias largas."
+    },
+    {
+      "id": "experiencia",
+      "label": "Experiencia en maratón",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "primer", "label": "Mi primer maratón" },
+        { "value": "segundo", "label": "Segundo o tercero" },
+        { "value": "avanzado", "label": "Avanzado (4+ maratones)" }
+      ],
+      "help": "Los novatos pierden más segundos por km en distancias largas. Riegel asume corredor experimentado."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-26",
+    "source": "Pete Riegel formula (Runner's World)",
+    "sourceUrl": "https://www.runnersworld.com",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "tiempoObjetivoTexto",
+      "label": "Tiempo objetivo realista",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "ritmoObjetivoMinKm",
+      "label": "Ritmo objetivo",
+      "format": "decimal"
+    },
+    {
+      "id": "tiempoObjetivoHoras",
+      "label": "Tiempo en horas decimales",
+      "format": "decimal"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: corredor de 40 años, ritmo 5K = 5:00/km, primer maratón",
+    "steps": [
+      "Riegel base: 5:00 × (42,195/5)^0,06 = **5:42/km**",
+      "Ajuste primer maratón (+8%): **6:09/km**",
+      "Ajuste edad 40 años (+2,5%): **6:18/km**",
+      "Tiempo proyectado: 42,195 × 6:18 = **4h 25m**"
+    ],
+    "result": "Apuntar a 4h 25m. Si te entrenaste 16 semanas con tirada larga regular, hay buenas chances. Sub-4h en primer maratón con ese 5K es muy ambicioso."
+  },
+  "explanation": "## La fórmula de Riegel\n\nPete Riegel publicó en 1981 una predicción que sigue siendo el estándar:\n\n```\nT2 = T1 × (D2 / D1)^1,06\n```\n\nDonde T1 es el tiempo en una distancia conocida D1, y T2 es la predicción en D2. El exponente **1,06** asume que el atleta tiene entrenamiento de fondo suficiente para sostener la distancia objetivo.\n\n## Por qué Riegel solo no alcanza\n\nLa fórmula original asume corredor experimentado y bien entrenado. La realidad:\n\n| Variable | Penalización |\n|---|---|\n| Primer maratón | +8% al ritmo Riegel |\n| Segundo maratón | +3% |\n| Edad > 35 | +0,5% por año |\n| Género femenino | +8% (aficionadas) |\n| Calor/humedad alta | +5-10% |\n| Desnivel +500m | +3-5% |\n\n## Tabla de tiempos de referencia (varón ~30 años, 1er maratón)\n\n| Ritmo 5K | Riegel solo | Realista 1er maratón |\n|---|---|---|\n| 4:00 min/km | 3h 12m | 3h 28m |\n| 4:30 min/km | 3h 36m | 3h 53m |\n| 5:00 min/km | 4h 00m | 4h 19m |\n| 5:30 min/km | 4h 24m | 4h 45m |\n| 6:00 min/km | 4h 48m | 5h 11m |\n\n## Cómo usar el resultado\n\n1. **Tirada larga al ritmo objetivo + 30-45s/km** durante el entrenamiento.\n2. **Test de 21K en semana -4** debería darte un tiempo coherente con tu objetivo (la mitad - 5 a 8 minutos).\n3. **Carga de carbohidratos** los 2-3 días previos.\n4. **Salí los primeros 5K más lento** que tu ritmo objetivo (al menos 10s/km).\n\n## Variables que NO contempla esta calculadora\n\n- **Volumen semanal de entrenamiento** (correr 40 km/sem vs 80 km/sem cambia mucho).\n- **Largo máximo** de la tirada larga (haber hecho 30 km vs solo 25 km).\n- **Clima del día** del maratón.\n- **Desnivel** del recorrido específico.\n\n> **Aviso**: Esta es una **estimación estadística**. No reemplaza un plan de entrenamiento personalizado ni la opinión de un entrenador. Consultá con tu médico antes de correr distancias largas si tenés condiciones cardiovasculares o lesiones.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Criterios documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia).\n\n**Disclaimer:** Resultados orientativos. Para preparar un maratón consultá con un entrenador certificado y profesional médico.\n",
+  "faq": [
+    {
+      "q": "¿Por qué la fórmula de Riegel sola me da un tiempo muy optimista?",
+      "a": "Porque Riegel asume **corredor con entrenamiento de fondo adecuado**. Los novatos no tienen el volumen aeróbico, la economía de carrera ni la resistencia muscular para sostener el ritmo proyectado durante 42 km. Por eso ajustamos +8% al ritmo en el primer maratón."
+    },
+    {
+      "q": "¿Sirve para predecir 21K también?",
+      "a": "Sí, Riegel funciona muy bien entre 10K y media maratón sin ajustes adicionales. Para distancias > 30K aparecen las variables de resistencia muscular y energía que requieren los ajustes que hacemos acá."
+    },
+    {
+      "q": "¿Cuánto se pierde por edad después de los 40?",
+      "a": "Aproximadamente **0,5% por año** entre 35 y 60, y se acelera a **1% por año** después de los 60. Hay corredores que mantienen rendimiento gracias a entrenamiento, pero el promedio de la población muestra esa caída."
+    },
+    {
+      "q": "¿La diferencia hombre-mujer no es discriminatoria?",
+      "a": "No: las **diferencias fisiológicas** (VO2max promedio, masa muscular, hemoglobina) están bien documentadas y son la razón por la que los récords mundiales separan categorías. Para corredores aficionados la brecha es del 8-12%; para élite, ~10%."
+    },
+    {
+      "q": "¿Vale la pena correr un maratón sin haber corrido un 21K antes?",
+      "a": "**No.** El 21K es el test de validación mínimo. Si nunca corriste 21K bajo el ritmo objetivo + 30s/km, no estás listo para 42K. Los maratones se ganan en las semanas previas, no el día."
+    },
+    {
+      "q": "¿Cómo distribuyo el ritmo durante el maratón?",
+      "a": "Estrategia clásica: **negative split**. Primeros 10 km a ritmo objetivo + 10s/km, km 10-30 a ritmo objetivo, km 30-42 levantar 5-10s/km si tenés piernas. Salir rápido es la receta para reventar en el 32."
+    },
+    {
+      "q": "¿Qué clima penaliza más mi tiempo objetivo?",
+      "a": "**Calor + humedad combinados** son lo peor: a partir de 22°C con humedad >70% hay que sumar 5-10s/km al ritmo. Frío leve (5-10°C) y baja humedad es el clima óptimo. Viento fuerte de frente penaliza ~10-15s/km en tramos expuestos."
+    },
+    {
+      "q": "¿La calculadora vale para corredores élite?",
+      "a": "Para subélite (sub-2:45h) los ajustes que hacemos son demasiado conservadores. La fórmula Riegel pura les funciona bien. Los élites también consideran VO2max medido en laboratorio y umbral de lactato, datos que esta calculadora no toma."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Riegel formula — Runner's World",
+      "url": "https://www.runnersworld.com"
+    },
+    {
+      "name": "World Athletics — récords y datos",
+      "url": "https://worldathletics.org"
+    },
+    {
+      "name": "Daniels' Running Formula (Jack Daniels)",
+      "url": "https://run-smart.com"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-spartan-race-trifecta-tiempo-podio",
+    "calculadora-bjj-cinturon-grados-tiempo-promedio"
+  ],
+  "howToSteps": [
+    {
+      "name": "Hacé un test de 5K reciente",
+      "text": "Idealmente en pista o trazado plano, sin parar, con buen clima. Anotá tu tiempo total."
+    },
+    {
+      "name": "Calculá tu ritmo en min/km",
+      "text": "Dividí el tiempo total en minutos por 5. Ej: 25 minutos / 5 = 5,0 min/km."
+    },
+    {
+      "name": "Cargá tus datos",
+      "text": "Edad, género y experiencia previa en maratón."
+    },
+    {
+      "name": "Ajustá tu plan de entrenamiento",
+      "text": "Las tiradas largas deben ser al ritmo objetivo + 30-45s/km."
+    },
+    {
+      "name": "Validá con un test de 21K",
+      "text": "4 semanas antes del maratón, corré 21K. Tu tiempo debería ser ~50% del objetivo de 42K menos 5-8 minutos."
+    }
+  ]
+}

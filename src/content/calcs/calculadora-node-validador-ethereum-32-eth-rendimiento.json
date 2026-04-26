@@ -1,0 +1,226 @@
+{
+  "slug": "calculadora-node-validador-ethereum-32-eth-rendimiento",
+  "title": "Calculadora validador Ethereum 32 ETH: APY solo vs pool 2026",
+  "h1": "Validador Ethereum — rendimiento de 32 ETH solo vs pool vs LST",
+  "description": "⛓️ Calculá el APY anual de correr un validador Ethereum solo (32 ETH), via Rocket Pool, Lido stETH o Coinbase cbETH. Rendimiento neto en ETH y USD post comisiones y hardware.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "⛓️",
+  "formulaId": "node-validador-ethereum-32-eth-rendimiento",
+  "seoKeywords": [
+    "validador ethereum 32 eth apy",
+    "rocket pool vs lido apy",
+    "stake eth solo rendimiento",
+    "lst comparativa lido rocketpool",
+    "ethereum staking calculator 2026",
+    "node validador ethereum hardware costo"
+  ],
+  "intro": "Correr un **validador Ethereum** requiere **32 ETH** stakeados + hardware (256 GB SSD NVMe, 16-32 GB RAM, internet 24/7) + cliente consenso (Lighthouse/Prysm/Teku) + cliente ejecución (Geth/Nethermind/Reth). El **APY bruto** combina recompensas de **consenso** (~2,5-3,5% en 2026 post-Pectra) + **MEV/tips de ejecución** (~0,5-1,5% según volatilidad). Si en lugar de correr solo usás **pools liquid staking** como **Lido (stETH)**, **Rocket Pool (rETH)** o **Coinbase (cbETH)**, te ahorrás el hardware pero pagás **10-25% de comisión** sobre las recompensas. Esta calculadora compara las tres opciones en términos netos: ETH ganados/año, USD equivalente y APY neto descontando hardware. Útil para decidir si los 32 ETH te alcanzan para validador solo o conviene LST por simplicidad.",
+  "keyTakeaway": "En 2026, con APY bruto ~4,5% post-Pectra, **validador solo** rinde ~1,44 ETH/año (~USD 4.300 a $3k/ETH) menos ~USD 600/año de hardware. **Lido (10% fee)** rinde ~1,30 ETH/año sin hardware. La diferencia es ~0,14 ETH/año a favor del validador solo, pero perdés el factor liquidez (stETH es líquido, ETH stakeado solo necesita exit queue).",
+  "useCases": [
+    "Decidir entre validador solo, Rocket Pool minipool (8 ETH), Lido o cbETH.",
+    "Estimar break-even del hardware al correr nodo solo.",
+    "Comparar rendimiento neto de 32 ETH stakeados en distintos LST.",
+    "Calcular ingresos anuales en USD de un staker con > 32 ETH.",
+    "Ver cómo cambia el APY al variar comisión del pool."
+  ],
+  "fields": [
+    {
+      "id": "ethStakeado",
+      "label": "ETH stakeado",
+      "type": "number",
+      "suffix": "ETH",
+      "placeholder": "32",
+      "min": 0,
+      "step": 0.01,
+      "required": true,
+      "help": "Validador solo requiere exactamente 32 ETH. Pools (Lido, Rocket Pool stake con rETH) aceptan cualquier monto."
+    },
+    {
+      "id": "apyConsensoPct",
+      "label": "APY recompensas consenso",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "3",
+      "min": 0,
+      "max": 20,
+      "step": 0.1,
+      "required": true,
+      "help": "Recompensas por proponer/atestiguar bloques. ~3% en 2026 post-Pectra (depende de cuántos validadores activos hay)."
+    },
+    {
+      "id": "apyEjecucionPct",
+      "label": "APY MEV + tips ejecución",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "1",
+      "min": 0,
+      "max": 10,
+      "step": 0.1,
+      "required": true,
+      "help": "Tips de transacciones + MEV-Boost cuando proponés bloque. ~0,5-1,5% según volatilidad del año."
+    },
+    {
+      "id": "comisionPoolPct",
+      "label": "Comisión del pool / LST",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "10",
+      "min": 0,
+      "max": 50,
+      "step": 0.5,
+      "required": true,
+      "help": "Lido 10%, Rocket Pool 14%, Coinbase 25%, validador solo 0%."
+    },
+    {
+      "id": "costoHardwareMensualUsd",
+      "label": "Costo hardware + electricidad",
+      "type": "number",
+      "suffix": "USD/mes",
+      "placeholder": "50",
+      "min": 0,
+      "step": 1,
+      "required": true,
+      "help": "Si corrés solo: ~USD 30-80/mes (electricidad + amortización 4 años de hardware ~USD 1.500). Si usás LST: 0."
+    },
+    {
+      "id": "precioEthUsd",
+      "label": "Precio ETH",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "3000",
+      "min": 0,
+      "step": 1,
+      "required": true,
+      "help": "Cotización ETH actual para convertir el rendimiento a USD."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-26",
+    "source": "beaconcha.in / Lido / Rocket Pool",
+    "sourceUrl": "https://beaconcha.in",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "rendimientoAnualEth",
+      "label": "Rendimiento anual neto",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "rendimientoAnualUsd",
+      "label": "Rendimiento anual neto (USD)",
+      "format": "currency"
+    },
+    {
+      "id": "apyNetoPct",
+      "label": "APY neto (post hardware)",
+      "format": "percent"
+    },
+    {
+      "id": "costoHardwareAnualUsd",
+      "label": "Costo hardware anual",
+      "format": "currency"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: 32 ETH a USD 3.000, APY 4% bruto",
+    "steps": [
+      "**Validador solo** (0% comisión, USD 50/mes hardware): 1,28 ETH/año = USD 3.840 brutos − USD 600 hardware = **USD 3.240 netos** (APY 3,38%).",
+      "**Lido stETH** (10% comisión, 0 hardware): 1,152 ETH/año = **USD 3.456 netos** (APY 3,60%) + LST líquido.",
+      "**Rocket Pool rETH** (14% comisión): 1,1 ETH/año = **USD 3.302 netos** (APY 3,44%).",
+      "**Coinbase cbETH** (25% comisión): 0,96 ETH/año = **USD 2.880 netos** (APY 3,00%)."
+    ],
+    "result": "Lido gana en pura economía + liquidez. Validador solo gana en descentralización + sin contraparte."
+  },
+  "explanation": "## Stake en Ethereum: las 4 vías\n\n| Vía | Mínimo | APY 2026 | Liquidez | Riesgo extra |\n|---|---|---|---|---|\n| **Validador solo** | 32 ETH | ~4,5% bruto | exit queue ~3-5 días | slashing, hardware downtime |\n| **Rocket Pool minipool** | 8 ETH (operador) | ~5% bruto + RPL | exit queue | slashing compartido |\n| **Lido stETH** | sin mínimo | ~4% neto | inmediata (DEX) | smart contract Lido |\n| **Coinbase cbETH** | sin mínimo | ~3,4% neto | inmediata (CEX) | contraparte Coinbase |\n\n## La fórmula\n\n```\nAPY bruto = APY consenso + APY ejecución (MEV+tips)\nRendimiento ETH = ETH stakeado × APY bruto\nNeto = Rendimiento × (1 − comisión pool)\nUSD neto = Neto × precio ETH − costo hardware anual\n```\n\n## APY consenso post-Pectra (2026)\n\nPectra (mayo 2025) introdujo **MaxEB de 2.048 ETH** por validador, lo que permite consolidar validadores y reducir overhead de la red. El APY consenso se calcula como `BASE_REWARD × √(total_eth_stakeado)` aprox., y en abril 2026 con ~38M ETH stakeados (~30% del supply) está en **~3% anual**.\n\n## MEV + tips\n\nLas recompensas de ejecución dependen de:\n- **Tips de gas** que paga el usuario.\n- **MEV-Boost**: si conectás tu validador a relays (Flashbots, BloXroute, Eden), recibís el bid del block builder.\n\nEn 2026 contribuyen **0,5-1,5%** anual extra al APY.\n\n## Hardware mínimo (validador solo)\n\n| Componente | Recomendación 2026 |\n|---|---|\n| CPU | Ryzen 5 5600 / Intel i5-12400+ |\n| RAM | 32 GB |\n| SSD | 4 TB NVMe Gen4 (Geth + Lighthouse + buffer) |\n| Internet | 100 Mbps simétrico, IP estable, UPS |\n| Costo upfront | ~USD 1.500-2.000 |\n| Electricidad | USD 15-40/mes |\n\n## Slashing\n\nRiesgo de perder ETH por:\n- **Doble firma** (correr el mismo validador en 2 máquinas → casi siempre slashing automático).\n- **Surround voting** (atestiguar dos epochs en conflicto).\n\nEn 2026 el slashing inicial es **1 ETH** + offline penalties hasta el exit. Importante: usar **clients minoritarios** (Nimbus, Lodestar, Reth) para reducir riesgo de bug correlacionado.\n\n## Lido vs Rocket Pool vs Coinbase\n\n| LST | Comisión | Descentralización | Riesgo principal |\n|---|---|---|---|\n| **stETH (Lido)** | 10% | curated set, ~30% supply | concentración de Lido en Ethereum |\n| **rETH (Rocket Pool)** | 14% | permissionless, ~3% supply | menor liquidez DEX |\n| **cbETH (Coinbase)** | 25% | centralizado | contraparte Coinbase + KYC |\n\n> **Aviso legal**: Calculadora educativa. **No constituye asesoramiento financiero ni recomendación de protocolo.** Los APY varían y hay riesgo de slashing y smart contract.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** APYs verificados contra beaconcha.in, Lido y Rocket Pool dashboards a abril 2026.\n",
+  "faq": [
+    {
+      "q": "¿Cuánto rinde 32 ETH stakeados solo en 2026?",
+      "a": "Con APY bruto ~4,5% (3% consenso + 1,5% MEV), **32 ETH rinden ~1,44 ETH/año** = USD 4.320 a USD 3.000/ETH. Descontando hardware (~USD 600/año), el neto es ~USD 3.700, APY neto ~3,85%."
+    },
+    {
+      "q": "¿Conviene Lido o validador solo?",
+      "a": "**Económicamente, Lido suele ganar** porque la comisión de 10% es menor que el costo de hardware + downtime de un validador casero promedio. **Filosóficamente, validador solo gana** porque suma descentralización a Ethereum y elimina riesgo de smart contract."
+    },
+    {
+      "q": "¿Qué pasa si mi nodo se cae?",
+      "a": "Recibís **inactivity penalties** proporcionales al tiempo offline. En 2026 perdés ~50-100 gwei por epoch offline (despreciable si caés 1-2 horas, dolido si caés días). **No es slashing** — solo reduce el APY del año."
+    },
+    {
+      "q": "¿Qué es el MEV y cuánto suma al APY?",
+      "a": "**MEV (Maximal Extractable Value)** es el valor que un block builder puede extraer reordenando/incluyendo transacciones (sandwich, arbitraje, liquidaciones). Conectado vía MEV-Boost, suma **0,3-1,5% APY** anual al validador."
+    },
+    {
+      "q": "¿Cuánta electricidad consume un validador Ethereum?",
+      "a": "Un setup típico (mini PC + SSD NVMe) consume **30-60W continuos**, equivalente a **22-44 kWh/mes** = **USD 5-15/mes** según tarifa eléctrica. En Argentina con tarifa 1 vivienda comercial, ~USD 8-12/mes."
+    },
+    {
+      "q": "¿Qué pasa con Pectra y MaxEB 2.048?",
+      "a": "Desde Pectra (mayo 2025), un validador puede acumular hasta **2.048 ETH** en lugar de tener que crear un validador nuevo cada 32 ETH. Esto reduce overhead de red, permite **auto-compounding** y mejora ligeramente el APY al achicar el set total."
+    },
+    {
+      "q": "¿Cómo retiro mis 32 ETH si quiero salir?",
+      "a": "Iniciás un **voluntary exit** desde tu validador. En 2026 la **exit queue** procesa ~ 8 validadores por epoch, lo que en momentos de salida masiva puede demorar **5-15 días**. Después tus 32 ETH + recompensas vuelven a la withdrawal address."
+    },
+    {
+      "q": "¿Rocket Pool minipool conviene más que validador solo?",
+      "a": "Sí si tenés **menos de 32 ETH** (un minipool clásico requería 16, hoy hay variantes desde 8 ETH). El operador pone una fracción + RPL como colateral y se queda con comisión. APY suele ser **0,5-1% mayor** que validador solo gracias a comisión + recompensas RPL."
+    }
+  ],
+  "sources": [
+    {
+      "name": "beaconcha.in — Ethereum stats",
+      "url": "https://beaconcha.in"
+    },
+    {
+      "name": "Lido — stETH",
+      "url": "https://lido.fi"
+    },
+    {
+      "name": "Rocket Pool — rETH",
+      "url": "https://rocketpool.net"
+    },
+    {
+      "name": "ethereum.org — staking",
+      "url": "https://ethereum.org/staking"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-dao-quorum-propuesta-votacion-token",
+    "calculadora-gpu-h100-renta-hora-cloud-comparativa"
+  ],
+  "howToSteps": [
+    {
+      "name": "Cargá tus ETH",
+      "text": "Si vas a correr validador solo, ingresá 32. Si usás Lido/RP/cbETH, ingresá lo que tengas."
+    },
+    {
+      "name": "Cargá APY consenso y ejecución",
+      "text": "Mirá beaconcha.in para el APY bruto del último mes (consenso + ejecución por separado)."
+    },
+    {
+      "name": "Cargá la comisión",
+      "text": "Lido 10%, Rocket Pool 14%, Coinbase 25%, validador solo 0%."
+    },
+    {
+      "name": "Cargá hardware",
+      "text": "Validador solo: USD 30-80/mes. LST: 0."
+    },
+    {
+      "name": "Cargá precio ETH",
+      "text": "Para convertir el rendimiento a USD."
+    },
+    {
+      "name": "Calculá",
+      "text": "Compará rendimiento neto en ETH y USD entre las opciones."
+    }
+  ]
+}

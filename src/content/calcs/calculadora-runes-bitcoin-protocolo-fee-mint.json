@@ -1,0 +1,200 @@
+{
+  "slug": "calculadora-runes-bitcoin-protocolo-fee-mint",
+  "title": "Calculadora Fee Mint Runes Bitcoin — Sat/vbyte 2026",
+  "h1": "Mint de Runes en Bitcoin — costo de la transacción",
+  "description": "🟧 Calculá el costo en sats y USD de mintear un Rune en Bitcoin según sat/vbyte y tamaño de la tx en vbytes. Total para múltiples mints.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "🟧",
+  "formulaId": "runes-bitcoin-protocolo-fee-mint",
+  "seoKeywords": [
+    "runes bitcoin mint calculator",
+    "fee runes protocolo bitcoin",
+    "sat vbyte mint runes",
+    "casey rodarmor runes",
+    "runes vs ordinals fee",
+    "bitcoin mint cost 2026"
+  ],
+  "intro": "El **protocolo Runes** (lanzado en el bloque del halving 2024 por Casey Rodarmor) permite **fungible tokens nativos en Bitcoin** usando el modelo UTXO. A diferencia de BRC-20 (que usa inscriptions y consume mucho espacio), Runes es más eficiente: una mint usa **80-200 vbytes** según la complejidad de la operación. Pero como Bitcoin tiene fee market dinámico, **el costo en sats por mint depende del sat/vbyte del momento**. Esta calculadora estima el fee en sats y USD para mintear 1 o N Runes según el tamaño de la tx (vbytes) y la fee rate del mempool. Útil para decidir cuándo mintear (cuando el mempool está vacío) y cuánto reservar de BTC para una sesión de minting.",
+  "keyTakeaway": "Mintear 1 Rune con tx de 150 vbytes a **5 sat/vbyte** cuesta solo **750 sats (~USD 0,50 a BTC USD 65k)**. A **150 sat/vbyte** (mempool congestionado) cuesta **22.500 sats (~USD 14)**. Mintear en momentos de baja congestión puede ahorrar 30x.",
+  "useCases": [
+    "Estimar el costo total de mintear N Runes antes de iniciar la sesión.",
+    "Decidir si conviene esperar a que baje la congestión del mempool.",
+    "Comparar el costo de mintear el mismo Rune en distintos sat/vbyte.",
+    "Calcular el costo en USD de un Rune drop popular.",
+    "Planificar el budget de BTC para una colección de Runes."
+  ],
+  "fields": [
+    {
+      "id": "txVbytes",
+      "label": "Tamaño de la tx en vbytes",
+      "type": "number",
+      "suffix": "vbytes",
+      "placeholder": "150",
+      "min": 0,
+      "step": 1,
+      "required": true,
+      "help": "Tamaño aproximado de una mint de Rune. Mint simple ~120-150 vbytes, batch mint ~200-400 vbytes."
+    },
+    {
+      "id": "satsPerVbyte",
+      "label": "Sat/vbyte (fee rate del mempool)",
+      "type": "number",
+      "suffix": "sat/vB",
+      "placeholder": "10",
+      "min": 0,
+      "step": 0.1,
+      "required": true,
+      "help": "Fee rate actual. Mempool vacío: 1-5 sat/vB. Normal: 10-30. Congestionado: 100-500. Mirá mempool.space."
+    },
+    {
+      "id": "btcUsd",
+      "label": "Precio de BTC en USD",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "65000",
+      "min": 0,
+      "step": 1,
+      "required": true,
+      "help": "Cotización BTC actual (CoinGecko, exchange)."
+    },
+    {
+      "id": "cantidadMints",
+      "label": "Cantidad de mints",
+      "type": "number",
+      "suffix": "mints",
+      "placeholder": "10",
+      "min": 1,
+      "step": 1,
+      "required": true,
+      "help": "Cuántos mints vas a hacer en la sesión (cada uno es una tx separada)."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "daily",
+    "lastUpdated": "2026-04-26",
+    "source": "mempool.space",
+    "sourceUrl": "https://mempool.space",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "feeSatosihisPorMint",
+      "label": "Fee por mint (sats)",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "feeUsdPorMint",
+      "label": "Fee por mint (USD)",
+      "format": "currency"
+    },
+    {
+      "id": "feeTotalSats",
+      "label": "Fee total N mints (sats)",
+      "format": "number"
+    },
+    {
+      "id": "feeTotalUsd",
+      "label": "Fee total N mints (USD)",
+      "format": "currency"
+    },
+    {
+      "id": "feePctRespectoBtc",
+      "label": "Fee como % de 1 BTC",
+      "format": "percent"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: 10 mints de Rune con tx 150 vbytes a 10 sat/vbyte (BTC USD 65.000)",
+    "steps": [
+      "Por mint: 150 × 10 = **1.500 sats**.",
+      "En USD: (1.500 / 100.000.000) × 65.000 = **USD 0,975**.",
+      "**Total 10 mints**: 15.000 sats = **USD 9,75**.",
+      "Si la red estuviera a 100 sat/vbyte: USD 97,50 totales.",
+      "Conviene mintear en domingos o noches de Asia (mempool más vacío)."
+    ],
+    "result": "10 mints en condiciones normales cuestan ~USD 10. En picos puede 10x."
+  },
+  "explanation": "## Cómo funcionan los Runes\n\nEl protocolo Runes asigna fungibles tokens directamente a UTXOs de Bitcoin. Cada **rune ID** se identifica por el bloque + índice de la transacción que lo creó (etching). Para mintear, hacés una transacción que referencia el rune mediante un **OP_RETURN** con el código del runestone.\n\n## Tamaños típicos de tx Runes\n\n| Operación | Vbytes aprox |\n|---|---|\n| **Mint simple** | 120-180 vB |\n| **Etching de un Rune nuevo** | 200-400 vB |\n| **Transfer entre direcciones** | 100-200 vB |\n| **Batch mint (varios Runes)** | 200-500 vB |\n\n## Cómo se calcula la fee\n\n```\nfee_sats = vbytes × sat_per_vbyte\nfee_usd = (fee_sats / 100_000_000) × precio_BTC\n```\n\n## Estados típicos del mempool\n\n| Estado | Sat/vbyte | Fee por mint 150vB | USD a BTC 65k |\n|---|---|---|---|\n| **Vacío** (madrugada US, weekend) | 1-3 | 150-450 sats | USD 0,10-0,30 |\n| **Normal** | 5-20 | 750-3.000 sats | USD 0,50-2 |\n| **Congestionado** (rune drop popular) | 50-150 | 7.500-22.500 sats | USD 5-15 |\n| **Crisis** (post-halving, ETF flow) | 300-1.000+ | 45.000-150.000 sats | USD 30-100 |\n\n*Datos aproximados a abril 2026 — verificá mempool.space para ver el estado real.*\n\n## Cuándo conviene mintear\n\n- **Domingos** y **madrugadas zona Asia** suelen ser los momentos de menor congestión.\n- **Después** de eventos grandes (halving, lanzamiento popular) la red queda saturada por 24-72 horas.\n- **Antes** de bajar fee, esperá ~3-5 bloques (15-25 minutos) para confirmar el patrón.\n\n## Comparativa Runes vs Ordinals/BRC-20\n\n| Protocolo | Tamaño tx promedio | Fee promedio | Eficiencia |\n|---|---|---|---|\n| **Runes** | 120-200 vB | Baja | Alta (UTXO nativo) |\n| **Ordinals** (image inscription) | 1.000-50.000 vB | Alta | Baja (carga full image) |\n| **BRC-20** (text inscription) | 200-500 vB | Media | Media |\n\n## Riesgos del mint de Runes\n\n- **Volatilidad del precio de Bitcoin** que afecta la fee en USD.\n- **Sniping bots** que dominan los primeros bloques de un mint popular (subiendo fees a 500+ sat/vB).\n- **Falta de liquidez secundaria** en muchos Runes nuevos (podés no poder vender después).\n- **Riesgo de protocolo** — Runes es relativamente nuevo, podrían surgir bugs.\n\n> **Aviso legal**: Esta calculadora es **educativa**. **No es asesoramiento financiero ni recomendación de comprar Runes**. Los activos digitales tienen **alta volatilidad** y riesgo de pérdida total. Consultá con asesor matriculado.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Los criterios editoriales están documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia).\n\n**Disclaimer:** Resultados orientativos. El sat/vbyte cambia bloque a bloque.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el sitemap XML.\n",
+  "faq": [
+    {
+      "q": "¿Qué son los Runes en Bitcoin?",
+      "a": "**Runes es un protocolo de fungible tokens en Bitcoin** lanzado por Casey Rodarmor en abril 2024 (bloque del halving). Usa el modelo UTXO nativo de Bitcoin, lo que lo hace más eficiente que BRC-20. Permite crear, mintear y transferir tokens fungibles sin necesidad de smart contracts."
+    },
+    {
+      "q": "¿Cuánto cuesta mintear un Rune en 2026?",
+      "a": "Depende del **sat/vbyte del mempool**. En condiciones normales (5-20 sat/vB), un mint cuesta **USD 0,50 a USD 2**. En momentos de alta congestión puede subir a **USD 10-50**. Lanzamientos super populares han llegado a USD 100+ por mint."
+    },
+    {
+      "q": "¿Qué es un sat/vbyte?",
+      "a": "**Sat/vbyte** es el precio que pagás por cada vbyte (virtual byte) de tu transacción. Bitcoin cobra fee proporcional al tamaño de la tx, no al monto transferido. Una tx de 150 vB a 10 sat/vB cuesta 1.500 sats."
+    },
+    {
+      "q": "¿Cuándo es más barato mintear?",
+      "a": "Cuando el **mempool está vacío** — típicamente **domingos**, **madrugadas en horario US** y **noches en Asia**. Mirá mempool.space para ver la fee histórica de últimas 24h y elegir tu momento."
+    },
+    {
+      "q": "¿Qué wallets soportan Runes?",
+      "a": "Wallets compatibles incluyen **Xverse, UniSat, OKX Wallet, Magic Eden Wallet, Leather, Sparrow Wallet** (con Runes integration). Cada una tiene su propia interfaz de mint y send."
+    },
+    {
+      "q": "¿Conviene mintear Runes con bot o manual?",
+      "a": "**Para retail, manual está bien**. Los bots compiten en sniping de mints populares y suben las fees a 500-1000 sat/vB. Si querés un Rune que no es famoso o ya está minteado un buen rato, no necesitás bot. Para drops competitivos (primeras horas), bots dominan el mercado."
+    },
+    {
+      "q": "¿Puedo perder los sats si la mint falla?",
+      "a": "**Sí, las fees se pagan aunque la mint no se confirme**. Si tu tx no entra al bloque (porque otra alguien minteó el último supply primero), perdés la fee. En mints competitivos, esto pasa frecuentemente. **Calculá el riesgo antes**."
+    },
+    {
+      "q": "¿Runes vs Ordinals — cuál tiene futuro?",
+      "a": "**Ordinals** es para imágenes/inscriptions únicas (como NFTs). **Runes** es para fungible tokens (como ERC-20 en ETH). Sirven para casos de uso distintos. Casey Rodarmor (creador de ambos) presentó Runes precisamente como solución más eficiente para fungibles. La adopción de cada uno depende del caso de uso."
+    }
+  ],
+  "sources": [
+    {
+      "name": "mempool.space — Bitcoin fee rate",
+      "url": "https://mempool.space"
+    },
+    {
+      "name": "Runes Protocol GitHub — Casey Rodarmor",
+      "url": "https://github.com/ordinals/ord"
+    },
+    {
+      "name": "Magic Eden — Runes marketplace",
+      "url": "https://magiceden.io/runes"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-airdrop-elegibilidad-wallet-score-puntaje",
+    "calculadora-token-vesting-cliff-tge-unlock-roi",
+    "calculadora-wallet-hardware-ledger-trezor-amortizacion-anos"
+  ],
+  "howToSteps": [
+    {
+      "name": "Estimá el tamaño en vbytes",
+      "text": "Mint simple ~150 vbytes, batch ~300-500 vbytes."
+    },
+    {
+      "name": "Mirá el sat/vbyte actual",
+      "text": "Consultá mempool.space para ver la fee rate del mempool en tiempo real."
+    },
+    {
+      "name": "Cargá el precio de BTC",
+      "text": "Cotización BTC/USD actual."
+    },
+    {
+      "name": "Definí cuántos mints querés hacer",
+      "text": "Cantidad total de mints en la sesión."
+    },
+    {
+      "name": "Calculá el costo total",
+      "text": "Hacé click en Calcular para ver fee por mint y total en sats y USD."
+    }
+  ]
+}

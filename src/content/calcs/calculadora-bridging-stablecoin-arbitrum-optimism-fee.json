@@ -1,0 +1,235 @@
+{
+  "slug": "calculadora-bridging-stablecoin-arbitrum-optimism-fee",
+  "title": "Calculadora Bridge USDC/USDT entre L2s 2026",
+  "h1": "Bridge stablecoin entre L2 — costo nativo vs Across vs Hop",
+  "description": "🌉 Calculá el costo total de bridgear USDC o USDT entre Arbitrum, Optimism, Base y Polygon usando bridge nativo, Across o Hop. Compará y elegí.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "🌉",
+  "formulaId": "bridging-stablecoin-arbitrum-optimism-fee",
+  "seoKeywords": [
+    "bridge usdc arbitrum optimism",
+    "across protocol fee calculator",
+    "hop protocol bridge cost",
+    "stablecoin bridge l2 cheap",
+    "bridge nativo vs across",
+    "usdt bridge fee 2026"
+  ],
+  "intro": "Mover **stablecoins (USDC, USDT)** entre Layer 2 de Ethereum (Arbitrum, Optimism, Base, Polygon, zkSync) es algo que el usuario activo de DeFi hace varias veces por mes. Hay 3 caminos: **bridge nativo de la L2** (gratis pero lento — hasta 7 días para retirar a mainnet en optimistic rollups), **Across Protocol** (intent-based, rápido pero cobra fee variable) y **Hop Protocol** (basado en AMM, más maduro). Esta calculadora compara los 3 para un mismo monto, mostrando: costo total en USD (gas + fee del bridge), tiempo aproximado y cuál es la mejor opción según tu prioridad. Útil antes de cada bridge no trivial — la diferencia puede ser USD 1-10 sobre USD 1.000 transferidos.",
+  "keyTakeaway": "Para montos chicos (USD 100-1.000), **Across suele ser el más barato** porque sus liquidity providers cobran spread bajo. Para montos altos (USD 10.000+), el **bridge nativo conviene** si podés esperar — su único costo es el gas L1+L2 (~USD 5-15). **Hop** queda en el medio, históricamente confiable.",
+  "useCases": [
+    "Decidir entre bridge nativo, Across o Hop antes de un transfer USDC.",
+    "Estimar el costo de mover stablecoins entre Arbitrum y Optimism.",
+    "Comparar speed vs costo cuando necesitás liquidez urgente en otra L2.",
+    "Calcular cuánto vas a recibir neto del otro lado del bridge.",
+    "Evitar pagar de más por bridges en montos chicos."
+  ],
+  "fields": [
+    {
+      "id": "montoUsdc",
+      "label": "Monto a bridgear",
+      "type": "number",
+      "suffix": "USDC",
+      "placeholder": "1000",
+      "min": 0,
+      "step": 1,
+      "required": true,
+      "help": "Cantidad de USDC o USDT a mover entre L2s."
+    },
+    {
+      "id": "gasNativoUsd",
+      "label": "Gas estimado bridge nativo",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "8",
+      "min": 0,
+      "step": 0.1,
+      "required": true,
+      "help": "Costo del gas para iniciar el bridge nativo. Suele ser USD 5-15 para retiros a mainnet, USD 0,50-2 entre L2s con CCTP."
+    },
+    {
+      "id": "gasAcrossUsd",
+      "label": "Gas estimado Across",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "1",
+      "min": 0,
+      "step": 0.1,
+      "required": true,
+      "help": "Gas para iniciar la tx en Across. Suele ser USD 0,30-2 según L2."
+    },
+    {
+      "id": "gasHopUsd",
+      "label": "Gas estimado Hop",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "1.5",
+      "min": 0,
+      "step": 0.1,
+      "required": true,
+      "help": "Gas para iniciar la tx en Hop. Similar a Across."
+    },
+    {
+      "id": "feeAcrossPct",
+      "label": "Fee Across (% del monto)",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "0.05",
+      "min": 0,
+      "max": 5,
+      "step": 0.01,
+      "required": true,
+      "help": "Fee de Across — varía según liquidez del LP. Suele ser 0,03% a 0,15%."
+    },
+    {
+      "id": "feeHopPct",
+      "label": "Fee Hop (% del monto)",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "0.08",
+      "min": 0,
+      "max": 5,
+      "step": 0.01,
+      "required": true,
+      "help": "Fee de Hop AMM. Suele ser 0,04% a 0,20% según el par."
+    },
+    {
+      "id": "minutosNativo",
+      "label": "Tiempo estimado bridge nativo",
+      "type": "number",
+      "suffix": "minutos",
+      "placeholder": "15",
+      "min": 0,
+      "step": 1,
+      "required": true,
+      "help": "Tiempo estimado del bridge nativo (USDC CCTP ~15min, retiros a mainnet ~7 días en optimistic rollups)."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-26",
+    "source": "Across Protocol / Hop Protocol",
+    "sourceUrl": "https://across.to",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "costoNativoUsd",
+      "label": "Costo bridge nativo",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "costoAcrossUsd",
+      "label": "Costo Across",
+      "format": "currency"
+    },
+    {
+      "id": "costoHopUsd",
+      "label": "Costo Hop",
+      "format": "currency"
+    },
+    {
+      "id": "mejorOpcion",
+      "label": "Mejor opción",
+      "format": "text"
+    },
+    {
+      "id": "ahorroVsMasCaroUsd",
+      "label": "Ahorro vs más caro",
+      "format": "currency"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: bridge USD 1.000 USDC de Arbitrum a Base",
+    "steps": [
+      "**Bridge nativo** (CCTP de Circle): solo gas → **USD 0,80**. Tiempo: ~15 min.",
+      "**Across**: gas USD 1 + 0,05% × 1.000 = **USD 1,50**. Tiempo: ~30 segundos.",
+      "**Hop**: gas USD 1,50 + 0,08% × 1.000 = **USD 2,30**. Tiempo: ~5 minutos.",
+      "**Mejor**: bridge nativo (CCTP) si podés esperar 15 min.",
+      "Si necesitás los fondos en 30 segundos, Across es la mejor opción."
+    ],
+    "result": "Para USDC entre L2 con CCTP, bridge nativo gana fácil. Para velocidad, Across."
+  },
+  "explanation": "## Cómo funciona cada bridge\n\n### Bridge nativo (oficial)\n- **USDC CCTP** (Circle Cross-Chain Transfer Protocol): quema USDC en origen, mintea en destino. Tiempo ~15 min, costo solo gas.\n- **Bridge nativo de la L2** (Arbitrum Bridge, Optimism Gateway, Base Bridge): para retirar a mainnet hay challenge period de 7 días en optimistic rollups (excepto si usás bridge tercero).\n\n### Across Protocol\n- **Intent-based**: depositás en origen, un relayer adelanta los fondos en destino, después se reembolsa de un fondo común.\n- Tiempo: 10-60 segundos.\n- Fee: 0,03-0,15% según liquidez.\n\n### Hop Protocol\n- **AMM-based**: usa hTokens (USDC.h, USDT.h) que se cambian por USDC/USDT en pools en cada chain.\n- Tiempo: 1-5 minutos.\n- Fee: 0,05-0,20% (incluye spread del AMM).\n\n## Comparativa funcional\n\n| Bridge | Velocidad | Costo (USD 1k) | Liquidez | Riesgo smart contract |\n|---|---|---|---|---|\n| **Bridge nativo (CCTP)** | 15 min | USD 0,5-2 | Alta | Bajo (Circle) |\n| **Bridge nativo (rollup)** | 7 días o instant si CCTP | USD 5-15 (gas L1+L2) | Alta | Bajo |\n| **Across** | 10-60 seg | USD 1-3 | Alta | Medio |\n| **Hop** | 1-5 min | USD 1-3 | Media | Medio |\n| **Stargate (LayerZero)** | 1-3 min | USD 2-5 | Alta | Medio |\n| **Synapse** | 5-15 min | USD 1-4 | Media | Medio |\n\n## Cuál elegir según el caso\n\n- **USDC entre L2 con CCTP soportado** → bridge nativo (CCTP). Casi siempre el más barato.\n- **USDT u otros entre L2** → Across para velocidad, Hop si Across no tiene liquidez.\n- **Retiro a mainnet** → si podés esperar 7 días, bridge nativo gratis (solo gas). Si no, Across instant withdrawal con 0,2-0,5% fee.\n- **Montos enormes (>USD 100k)** → siempre nativo + esperar. La fee porcentual escala feo en bridges third-party.\n\n## Riesgos a tener en cuenta\n\n- **Smart contract risk**: bridges third-party fueron históricamente target de hacks (Wormhole USD 320M, Nomad USD 190M, Ronin USD 625M).\n- **Liquidity drain**: en momentos de stress, los LPs de Across/Hop pueden vaciarse y subir fees enormemente.\n- **Address mismatch**: si bridgeás a la dirección equivocada (otra chain), puede ser irrecuperable.\n- **Slippage en AMM-based** (Hop, Stargate) cuando los pools están desbalanceados.\n\n## Estrategia óptima 2026\n\n1. **CCTP siempre que esté disponible** (Arbitrum, Optimism, Base, Polygon PoS soportan USDC CCTP).\n2. **Across para urgencia** o cuando CCTP no aplica.\n3. **Bridge nativo** para retiros pacientes a mainnet con montos altos.\n4. **Verificá la dirección destino** y la chain antes de firmar.\n\n> **Aviso legal**: Calculadora **educativa**. **No es asesoramiento financiero**. Bridges son contratos inteligentes con riesgo de hackeo. Las fees y tiempos varían — verificá siempre antes de operar.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Los criterios editoriales están documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia).\n\n**Disclaimer:** Resultados orientativos. Las fees de bridges cambian según liquidez en tiempo real.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el sitemap XML.\n",
+  "faq": [
+    {
+      "q": "¿Cuál es el bridge más barato entre L2s?",
+      "a": "Para **USDC** con CCTP soportado, el **bridge nativo de Circle (CCTP)** suele ser el más barato (USD 0,50-2 según gas). Para otros tokens, **Across** es competitivo a USD 1-3 + 0,03-0,15% del monto."
+    },
+    {
+      "q": "¿Qué es CCTP de Circle?",
+      "a": "**CCTP (Cross-Chain Transfer Protocol)** es el bridge nativo de Circle (emisor de USDC). Quema USDC en la chain origen y mintea en la chain destino. Es el camino oficial y más barato para mover USDC entre Ethereum, Arbitrum, Optimism, Base, Polygon PoS, Avalanche."
+    },
+    {
+      "q": "¿Across Protocol es seguro?",
+      "a": "**Across** ha sido auditado múltiples veces (OpenZeppelin, Trail of Bits) y opera desde 2021. Tiene fondos en custody de USD 100M+. Sus relayers son operadores que adelantan fondos y son reembolsados — el riesgo principal es smart contract, históricamente sin incidentes mayores."
+    },
+    {
+      "q": "¿Cuánto tarda un bridge entre Arbitrum y Optimism?",
+      "a": "**Across**: 10-60 segundos. **Hop**: 1-5 minutos. **Bridge nativo (vía mainnet)**: requiere bridge a mainnet (15 min con CCTP, 7 días sin CCTP) y luego de mainnet a la otra L2. Usar bridge tercero es más rápido para movements entre L2s."
+    },
+    {
+      "q": "¿Puedo bridgear USDT con CCTP?",
+      "a": "**No, CCTP es exclusivo de USDC** de Circle. Para USDT (Tether), tenés que usar bridges third-party como Across, Hop, Stargate o el bridge nativo de la L2."
+    },
+    {
+      "q": "¿Qué pasa si me equivoco de chain al bridgear?",
+      "a": "**Si bridgeás a una dirección que no controlás en la chain destino**, los fondos están perdidos. **Si bridgeás a tu propia dirección pero a una chain incorrecta** (ej: en lugar de Arbitrum mandás a BNB), podés intentar recuperar bridgeando de vuelta — pero pagás doble fee y a veces requiere intervention del bridge support."
+    },
+    {
+      "q": "¿Por qué los bridges optimistic rollup tardan 7 días?",
+      "a": "Porque tienen **challenge period** de 7 días para detectar fraude. Es el tiempo que la red espera antes de finalizar el retiro a mainnet. Bridges third-party como Across **adelantan los fondos** durante ese período (a cambio de fee), lo que da liquidez instantánea."
+    },
+    {
+      "q": "¿Es mejor un bridge multichain o uno especializado?",
+      "a": "**Especializado por chain pair** suele ser más barato y rápido. **Multichain** (Stargate, Synapse) es más conveniente si vas a moverte entre muchas chains. Para casos comunes (USDC entre 2 L2 mayores), el especializado o el nativo gana en costo."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Circle CCTP",
+      "url": "https://www.circle.com/cctp"
+    },
+    {
+      "name": "Across Protocol",
+      "url": "https://across.to"
+    },
+    {
+      "name": "Hop Protocol",
+      "url": "https://hop.exchange"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-ethereum-l2-base-arbitrum-optimism-fee-comparativa",
+    "calculadora-airdrop-elegibilidad-wallet-score-puntaje",
+    "calculadora-restaking-eigenlayer-rendimiento-eth"
+  ],
+  "howToSteps": [
+    {
+      "name": "Definí el monto",
+      "text": "Cantidad de USDC/USDT que querés mover entre L2s."
+    },
+    {
+      "name": "Estimá los gas costs",
+      "text": "Mirá el gwei actual de la chain de origen para estimar gas en USD."
+    },
+    {
+      "name": "Consultá las fees de Across y Hop",
+      "text": "Las apps muestran la fee en tiempo real antes de firmar."
+    },
+    {
+      "name": "Cargá los datos en la calculadora",
+      "text": "Gas estimado y fee% de cada bridge."
+    },
+    {
+      "name": "Compará y elegí",
+      "text": "Hacé click en Calcular para ver cuál te conviene según costo y velocidad."
+    }
+  ]
+}

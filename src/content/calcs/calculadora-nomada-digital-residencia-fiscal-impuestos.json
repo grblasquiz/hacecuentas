@@ -1,0 +1,173 @@
+{
+  "slug": "calculadora-nomada-digital-residencia-fiscal-impuestos",
+  "title": "Calculadora impuestos nómada digital 2026: residencia fiscal por país",
+  "h1": "Nómada digital — impuestos según residencia fiscal y estructura",
+  "description": "🌍 Estimá los impuestos anuales que pagás como nómada digital según país de residencia fiscal (UAE, Portugal, Uruguay, Paraguay, Georgia, USA, Argentina), país del cliente y estructura (LLC, monotributo, offshore).",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "🌍",
+  "formulaId": "nomada-digital-residencia-fiscal-impuestos",
+  "seoKeywords": [
+    "impuestos nomada digital 2026",
+    "residencia fiscal uae portugal uruguay",
+    "llc usa nomada digital impuestos",
+    "doble imposicion nomada digital",
+    "monotributo vs llc nomada",
+    "paraguay residencia fiscal nomada"
+  ],
+  "intro": "Como **nómada digital** que cobra clientes globales, el impuesto que terminás pagando depende de **3 factores**: tu **residencia fiscal** (no donde viajás, sino donde tributás), el **país del cliente** (puede haber retenciones) y la **estructura legal** que usás (persona física, monotributo, sociedad local, **LLC en USA**, offshore). Las diferencias son enormes: residente fiscal en **UAE** (0%), **Georgia** (1%), **Paraguay** (10%), **Uruguay** (7% por dividendos) vs **Argentina** (35% Ganancias) o **Francia** (45%). Esta calc estima el impuesto anual, la **tasa efectiva** según estructura, el ingreso neto y si tenés **riesgo de doble imposición** con el país del cliente.",
+  "keyTakeaway": "Un freelancer ganando USD 80.000/año residente fiscal en Argentina como persona física paga ~USD 28.000 (35%). Mismo ingreso vía LLC en USA + residencia en UAE: ~USD 0 (legal). Vía monotributo en Argentina: ~USD 14.000 (50% del impuesto persona física).",
+  "useCases": [
+    "Comparar tasas efectivas según país de residencia fiscal antes de mudarte.",
+    "Decidir entre persona física, monotributo, LLC en USA o sociedad offshore.",
+    "Detectar riesgo de doble imposición con clientes en países sin CDI.",
+    "Calcular ingreso neto real anual para presupuestar tu vida nómada.",
+    "Estimar el ahorro fiscal de cambiar tu residencia fiscal a UAE, Paraguay o Georgia."
+  ],
+  "fields": [
+    {
+      "id": "paisResidencia",
+      "label": "País de residencia fiscal",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "AE", "label": "UAE / Emiratos (0%)" },
+        { "value": "GE", "label": "Georgia (1% small biz)" },
+        { "value": "PA", "label": "Panamá (5% extranjero)" },
+        { "value": "UY", "label": "Uruguay (7% dividendos)" },
+        { "value": "PY", "label": "Paraguay (10%)" },
+        { "value": "CL", "label": "Chile (18%)" },
+        { "value": "PT", "label": "Portugal (20% NHR)" },
+        { "value": "EE", "label": "Estonia (20% e-Residency)" },
+        { "value": "CO", "label": "Colombia (22%)" },
+        { "value": "MX", "label": "México (25%)" },
+        { "value": "BR", "label": "Brasil (27%)" },
+        { "value": "US", "label": "Estados Unidos (30%)" },
+        { "value": "AR", "label": "Argentina (35%)" },
+        { "value": "ES", "label": "España (40%)" }
+      ],
+      "help": "Donde tributás según ley (no donde viajás). UAE, Georgia, Paraguay y Uruguay son los más eficientes para nómadas."
+    },
+    {
+      "id": "paisCliente",
+      "label": "País del cliente principal",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "US", "label": "Estados Unidos" },
+        { "value": "UK", "label": "Reino Unido" },
+        { "value": "DE", "label": "Alemania" },
+        { "value": "FR", "label": "Francia" },
+        { "value": "ES", "label": "España" },
+        { "value": "AR", "label": "Argentina" },
+        { "value": "BR", "label": "Brasil" },
+        { "value": "MX", "label": "México" },
+        { "value": "CL", "label": "Chile" },
+        { "value": "UY", "label": "Uruguay" }
+      ],
+      "help": "Si tu cliente está en un país sin Convenio de Doble Imposición (CDI) con tu residencia, podés tener riesgo."
+    },
+    {
+      "id": "ingresoAnualUsd",
+      "label": "Ingreso anual",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "80000",
+      "min": 1000,
+      "max": 10000000,
+      "step": 1000,
+      "required": true,
+      "help": "Tu facturación anual bruta (antes de impuestos) en USD."
+    },
+    {
+      "id": "tipoEstructura",
+      "label": "Tipo de estructura",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "persona-fisica", "label": "Persona física (factura directo)" },
+        { "value": "monotributo", "label": "Monotributo / autónomo simplificado" },
+        { "value": "sociedad-local", "label": "Sociedad local (SRL/SA)" },
+        { "value": "llc-us", "label": "LLC en USA (pass-through)" },
+        { "value": "sociedad-offshore", "label": "Sociedad offshore (BVI, Belize, Seychelles)" }
+      ],
+      "help": "Cada estructura tiene multiplicador sobre la tasa base. Monotributo: 0,5x. LLC USA: 0,7x (si sos non-US person). Offshore: 0,4x (con riesgos)."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-26",
+    "source": "PwC Worldwide Tax Summaries + benchmarks nómadas 2026",
+    "sourceUrl": "https://taxsummaries.pwc.com",
+    "updateType": "manual"
+  },
+  "outputs": [
+    { "id": "impuestoEstimadoUsd", "label": "Impuesto anual estimado (USD)", "format": "currency", "primary": true },
+    { "id": "tasaEfectivaPct", "label": "Tasa efectiva", "format": "percent" },
+    { "id": "ingresoNetoUsd", "label": "Ingreso neto anual (USD)", "format": "currency" },
+    { "id": "tieneRiesgoDobleImposicion", "label": "Riesgo doble imposición", "format": "boolean" },
+    { "id": "explicacion", "label": "Detalle", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo: USD 80.000/año, Argentina persona física, cliente USA",
+    "steps": [
+      "Residencia AR → tasa base 35%.",
+      "Estructura persona física → multiplicador 1,0 → tasa efectiva 35%.",
+      "Impuesto: USD 28.000.",
+      "Neto: USD 52.000.",
+      "Cliente USA → hay CDI → sin riesgo de doble imposición."
+    ],
+    "result": "Persona física Argentina con cliente USA y USD 80.000/año: USD 28.000 de impuestos (35% efectivo), USD 52.000 neto."
+  },
+  "explanation": "## Los 3 factores que definen tus impuestos como nómada\n\n1. **Residencia fiscal** — el país que considera vos sos contribuyente. No es donde estés viajando, sino donde:\n   - Pasaste >183 días en el año fiscal\n   - Tenés vivienda permanente\n   - Tenés tu **centro de intereses vitales** (familia, negocios, cuentas)\n2. **País del cliente** — algunos países retienen withholding tax (10-30%) si no presentás certificado fiscal o no hay CDI.\n3. **Estructura legal** — cómo facturás: persona física, autónomo, sociedad local, LLC USA, offshore.\n\n## Tasas efectivas por residencia fiscal 2026 (referencia)\n\n| País | Tasa típica | Notas |\n|---|---|---|\n| **UAE / Emiratos** | 0% | Sin income tax. Visa de free zone fácil para nómadas. |\n| **Georgia** | 1% | Régimen Small Business (<USD 155k facturación) |\n| **Panamá** | 5% | Régimen territorial — solo grava ingreso local |\n| **Uruguay** | 7% | Dividendos. IRPF marginal 36% para no exonerados. |\n| **Paraguay** | 10% | IRP simple, residencia fácil con USD 5k inversión |\n| **Chile** | 18% | Régimen 14D para PyMEs |\n| **Portugal** | 20% | NHR / IFICI hasta 10 años, después 28-48% |\n| **Estonia** | 20% | E-Residency útil pero **no** te da residencia fiscal |\n| **Colombia** | 22% | Renta cedular, marginal hasta 39% |\n| **México** | 25% | RESICO para freelancers |\n| **Brasil** | 27% | Carnê-Leão para autónomos |\n| **EE. UU.** | 30% | Federal + estatal según estado (FL, TX, NV sin estatal) |\n| **Argentina** | 35% | Ganancias (autónomos), monotributo escala |\n| **España** | 40% | IRPF marginal alto + Solidaridad |\n\n## Multiplicador por estructura\n\n| Estructura | Multiplicador | Cuándo conviene |\n|---|---|---|\n| Persona física | 1,0x | Baseline |\n| Monotributo / autónomo simplificado | 0,5x | Facturación <umbral monotributo |\n| Sociedad local (SRL/SA) | 0,85x | Facturación alta + reinversión |\n| LLC en USA (pass-through) | 0,7x | Non-US person facturando a clientes US |\n| Sociedad offshore | 0,4x | **Solo si tu residencia lo acepta** — sino es evasión |\n\n## Doble imposición: cuándo aparece\n\nSi tu **residencia fiscal** y el **país del cliente** ambos cobran impuestos, podés terminar pagando dos veces. **Los Convenios de Doble Imposición (CDI)** evitan esto.\n\n**Países con CDI ampliados** (riesgo bajo):\n\nArgentina, España, Uruguay, Brasil, México, Chile, USA, Alemania, Francia, UK, Italia, Países Bajos.\n\n**Países sin CDI generales** (riesgo alto):\n\nUAE (algunos países sí), Paraguay, Panamá (varía), Bahamas.\n\n## Casos típicos optimizados\n\n| Setup | Tasa efectiva | Riesgo |\n|---|---|---|\n| Argentina persona física | ~35% | 0 |\n| Argentina monotributo | ~17,5% | 0 |\n| LLC USA + residencia AR | ~24,5% | Hay que reportar a ARCA |\n| LLC USA + residencia UAE | ~0% | Bajo (legal) |\n| LLC USA + residencia Paraguay | ~5-7% | Bajo |\n| Sociedad offshore + residencia UAE | ~0% | Sustancia económica + CFC rules |\n\n## Aviso fiscal\n\n> **Esto no constituye asesoramiento fiscal.** La tributación nómada digital es compleja y depende de tu situación específica, ciudadanías, días en cada país, ingreso por fuente y reglas anti-elusión (CFC, GAAR). **Consultá con un contador internacional** antes de tomar decisiones de mudanza fiscal o estructura societaria.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Las tasas se cotejan contra PwC Worldwide Tax Summaries y comunidades especializadas (Nomad Capitalist, Flag Theory). Los regímenes cambian — verificá vigencia con tu contador.\n\n**Disclaimer:** Resultados orientativos. No constituye asesoramiento fiscal ni planificación patrimonial.\n",
+  "faq": [
+    {
+      "q": "¿Cuál es el país con menos impuestos para un nómada digital?",
+      "a": "**UAE / Emiratos Árabes Unidos**: 0% income tax personal. **Georgia**: 1% bajo Small Business Status (hasta USD 155k facturación). **Paraguay**: 10%. **Panamá**: 5% si solo facturás clientes extranjeros. Todos requieren obtener residencia fiscal real (no solo visa)."
+    },
+    {
+      "q": "¿LLC en USA me ahorra impuestos?",
+      "a": "**Sí, si sos non-US person y no tenés ETB&O en USA**. Una **LLC single-member pass-through** en Wyoming/Delaware/New Mexico te permite facturar globalmente sin pagar impuestos federales US. Pero **vos seguís tributando en tu residencia fiscal personal** — la LLC sola no te exime."
+    },
+    {
+      "q": "¿Argentina como nómada digital — qué estructura conviene?",
+      "a": "**Monotributo** hasta el tope de facturación anual (~USD 25-30k al cambio MEP). Por encima, **autónomo en Régimen General** (35% marginal). **LLC en USA + monotributo en AR** es la combinación más usada por desarrolladores que cobran al exterior — declarando todo a ARCA."
+    },
+    {
+      "q": "¿Qué es residencia fiscal y cómo se obtiene?",
+      "a": "Ser **residente fiscal** de un país significa que ese país te puede gravar tu **renta mundial**. Se obtiene por (a) >183 días en el año, (b) vivienda permanente, (c) centro de intereses vitales. Mudarte físicamente sin cumplir requisitos no te saca de la residencia fiscal anterior."
+    },
+    {
+      "q": "¿Es legal usar sociedad offshore?",
+      "a": "**Depende de tu residencia.** Si vivís en un país con **CFC rules** (controlled foreign corporation) — Argentina, España, USA, etc. — los ingresos de la offshore se imputan igual a tu impuesto personal. **Solo es eficiente** si tu residencia fiscal es UAE, Paraguay, o países sin CFC rules."
+    },
+    {
+      "q": "¿Portugal NHR sigue vigente?",
+      "a": "El **NHR clásico** se cerró a nuevas inscripciones en 2024. Lo reemplazó el **IFICI (Tax Incentive for Scientific Research and Innovation)**, más restrictivo — solo aplica a profesiones de alto valor agregado (científicos, IT, profesores). Verificá si calificás antes de mudarte."
+    },
+    {
+      "q": "¿Qué es doble imposición?",
+      "a": "Cuando dos países gravan el mismo ingreso. Pasa cuando vivís en país A pero facturás a cliente en país B sin **CDI (Convenio de Doble Imposición)**. Los CDI permiten **acreditar** lo pagado en uno contra el otro. Sin CDI, terminás pagando dos veces."
+    },
+    {
+      "q": "¿E-Residency de Estonia me hace residente fiscal?",
+      "a": "**No.** E-Residency te permite **abrir una empresa en Estonia (OÜ)** y operarla online — pero **no te da residencia fiscal**. Vos seguís tributando donde vivas físicamente >183 días. La OÜ paga impuesto al distribuir dividendos (20%)."
+    }
+  ],
+  "sources": [
+    { "name": "PwC — Worldwide Tax Summaries", "url": "https://taxsummaries.pwc.com" },
+    { "name": "Nomad Capitalist", "url": "https://nomadcapitalist.com" },
+    { "name": "OECD — Tax Treaties", "url": "https://www.oecd.org/tax" }
+  ],
+  "relatedSlugs": [
+    "calculadora-employer-of-record-eor-costo-mes-pais",
+    "calculadora-coworking-precio-mes-flex-fijo-comparativa"
+  ],
+  "howToSteps": [
+    { "name": "Elegí tu residencia fiscal", "text": "El país donde efectivamente tributás según ley (no donde viajás)." },
+    { "name": "Elegí país del cliente", "text": "Donde está la mayoría de tu facturación." },
+    { "name": "Cargá el ingreso anual", "text": "Tu facturación bruta anual estimada en USD." },
+    { "name": "Elegí estructura", "text": "Persona física, monotributo, sociedad local, LLC USA u offshore." },
+    { "name": "Calculá", "text": "Obtené impuesto, tasa efectiva, ingreso neto y alerta de doble imposición." }
+  ]
+}

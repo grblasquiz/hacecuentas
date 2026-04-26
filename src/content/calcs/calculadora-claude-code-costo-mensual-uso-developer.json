@@ -1,0 +1,237 @@
+{
+  "slug": "calculadora-claude-code-costo-mensual-uso-developer",
+  "title": "Calculadora Claude Code: gasto mensual developer 2026",
+  "h1": "Claude Code — gasto mensual estimado para developer",
+  "description": "💻 Calculá cuánto vas a gastar al mes en Claude Code según horas/día de uso developer, tokens/hora, modelo (Sonnet/Opus/Haiku) y descuento por prompt caching.",
+  "category": "negocios",
+  "audience": "global",
+  "icon": "💻",
+  "formulaId": "claude-code-costo-mensual-uso-developer",
+  "seoKeywords": [
+    "claude code costo mensual",
+    "claude code precio developer",
+    "anthropic api gasto programador",
+    "cuanto cuesta claude code",
+    "claude code vs cursor precio",
+    "claude code prompt caching ahorro"
+  ],
+  "intro": "**Claude Code** es la CLI/agent oficial de Anthropic para developers. A diferencia de suscripciones planas como Cursor/Copilot, **Claude Code factura por tokens consumidos** vía la API de Anthropic (Claude Sonnet 4 / Opus 4 / Haiku 4). El costo mensual depende de: **horas/día** que lo usás (un dev intenso lo tiene corriendo 4-8 horas), **tokens/hora promedio** (50k-300k según intensidad y tamaño de codebase) y **modelo** (Sonnet 4 default, Opus para tareas duras, Haiku para autocomplete). El **prompt caching** de Anthropic reduce 70-90% el costo del input cacheado, que en Claude Code es prácticamente todo el contexto del repo. Esta calculadora multiplica horas × días × tokens/hora, divide entre input/output y aplica descuento de caching para darte una estimación realista del bill mensual de tu cuenta.",
+  "keyTakeaway": "Un developer que usa Claude Code **4 horas/día con Sonnet 4** suele gastar **USD 200-600/mes** sin caching, y **USD 80-250/mes con caching activado**. Devs intensos con Opus 4 pueden llegar a **USD 1.000-3.000/mes**. Comparalo contra Cursor Pro (USD 20/mes plano) — Claude Code conviene si querés agente autónomo con MCP, no autocomplete.",
+  "useCases": [
+    "Estimar el costo mensual de una sub-account de Anthropic para un dev.",
+    "Comparar Claude Code vs Cursor vs Copilot a tu volumen real.",
+    "Decidir si conviene Sonnet 4 o pagar Opus 4 para tareas complejas.",
+    "Justificar a manager/finance el gasto en Claude Code para un equipo.",
+    "Calcular ahorro real al activar prompt caching."
+  ],
+  "fields": [
+    {
+      "id": "horasDiaUso",
+      "label": "Horas de uso por día",
+      "type": "number",
+      "suffix": "horas",
+      "placeholder": "4",
+      "min": 0,
+      "max": 24,
+      "step": 0.5,
+      "required": true,
+      "help": "Tiempo activo de Claude Code corriendo en tu workflow. Dev casual: 1-2hs. Dev intenso: 4-8hs. Heavy user: 8+ hs."
+    },
+    {
+      "id": "diasMes",
+      "label": "Días/mes",
+      "type": "number",
+      "suffix": "días",
+      "placeholder": "22",
+      "min": 1,
+      "max": 31,
+      "step": 1,
+      "required": true,
+      "help": "Días laborables que usás Claude Code. Default 22 (mes laboral promedio)."
+    },
+    {
+      "id": "tokensPorHoraProm",
+      "label": "Tokens/hora promedio",
+      "type": "number",
+      "suffix": "tokens",
+      "placeholder": "150000",
+      "min": 0,
+      "step": 1000,
+      "required": true,
+      "help": "Suma input + output. Uso liviano: 50-100k. Medio: 100-200k. Intenso (codebase grande, agent loops largos): 300-800k."
+    },
+    {
+      "id": "precioInputUsdM",
+      "label": "Precio input por 1M tokens",
+      "type": "number",
+      "suffix": "USD/M",
+      "placeholder": "3",
+      "min": 0,
+      "step": 0.01,
+      "required": true,
+      "help": "Sonnet 4 ~USD 3, Opus 4 ~USD 15, Haiku 4 ~USD 0,80. Verificá pricing oficial."
+    },
+    {
+      "id": "precioOutputUsdM",
+      "label": "Precio output por 1M tokens",
+      "type": "number",
+      "suffix": "USD/M",
+      "placeholder": "15",
+      "min": 0,
+      "step": 0.01,
+      "required": true,
+      "help": "Sonnet 4 ~USD 15, Opus 4 ~USD 75, Haiku 4 ~USD 4. Verificá pricing oficial."
+    },
+    {
+      "id": "ratioOutputPct",
+      "label": "% del total que es output",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "10",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "required": true,
+      "help": "En Claude Code el input domina (codebase + tools + history). Típico 8-15% es output."
+    },
+    {
+      "id": "descuentoCachingPct",
+      "label": "Descuento por prompt caching",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "70",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "required": false,
+      "help": "Anthropic cobra ~10% del precio normal por contenido cacheado. Si tu codebase entero está en cache hits, el ahorro efectivo sobre INPUT es ~70-85%. Default 70."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-26",
+    "source": "Anthropic pricing",
+    "sourceUrl": "https://www.anthropic.com/pricing",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "tokensMes",
+      "label": "Tokens totales mensuales",
+      "format": "number"
+    },
+    {
+      "id": "costoBrutoUsd",
+      "label": "Costo bruto sin caching",
+      "format": "currency"
+    },
+    {
+      "id": "costoConCachingUsd",
+      "label": "Costo con caching",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "ahorroCachingUsd",
+      "label": "Ahorro por caching",
+      "format": "currency"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: dev intenso 4hs/día, 22 días, Sonnet 4",
+    "steps": [
+      "**Horas/mes**: 4 × 22 = 88h.",
+      "**Tokens/mes**: 88 × 150.000 = 13,2M tokens.",
+      "**Output (10%)**: 1,32M output, 11,88M input.",
+      "**Bruto (precios públicos abril 2026)**: 11,88 × USD 3 + 1,32 × USD 15 ≈ USD 35,64 + USD 19,80 = **USD 55/mes**.",
+      "**Con caching (70% off input)**: 11,88 × USD 0,90 + 1,32 × USD 15 ≈ **USD 30,49/mes**.",
+      "**Ahorro caching**: ~USD 25/mes."
+    ],
+    "result": "Verificá pricing actual. Devs intensos con Opus 4 pueden multiplicar por 5×."
+  },
+  "explanation": "## Cómo factura Claude Code\n\nClaude Code consume la **API de Anthropic** y se factura por **tokens consumidos** (input + output). No hay plan plano: pagás exactamente lo que usás. Esto hace que el costo varíe **mucho** según patrón de uso.\n\n## La fórmula\n\n```\nTokens/mes = horas/día × días × tokens/hora\nCosto bruto = (input × precio_input + output × precio_output) / 1.000.000\nCon caching = costo bruto - (input × precio_input × descuento_cache / 1.000.000)\n```\n\n## Precios Anthropic (referenciales abril 2026)\n\n*Verificá [Anthropic pricing](https://www.anthropic.com/pricing) para los valores vigentes — los precios cambian.*\n\n| Modelo | Input USD/M | Output USD/M | Cuándo |\n|---|---|---|---|\n| **Claude Haiku 4** | ~USD 0,80 | ~USD 4 | autocomplete, tareas chicas |\n| **Claude Sonnet 4** | ~USD 3 | ~USD 15 | default Claude Code, balance |\n| **Claude Opus 4** | ~USD 15 | ~USD 75 | refactors complejos, debugging duro |\n| **Caching cost** | ~10% del precio normal | – | hits sobre prompt cacheado |\n\n## Tokens/hora típico por intensidad de uso\n\n| Perfil | Tokens/hora | Casos |\n|---|---|---|\n| **Casual** | 30-80k | preguntas puntuales, edits chicos |\n| **Medio** | 80-200k | features completas, debugging |\n| **Intenso** | 200-500k | agent loops, refactors grandes, tests |\n| **Heavy** | 500k-1M+ | TDD continuo, agentic dev pleno |\n\n## El truco del prompt caching\n\nClaude Code tiene **caching automático activado** por defecto. Cada call repite gran parte del contexto (system prompt + tools + archivos abiertos). Anthropic cobra el cache hit a ~10% del precio normal del input. **Resultado**: si tu prompt repite 80% del input entre calls, ahorrás **~70% del input total**.\n\n**Sin caching**: input full price.\n**Con caching**: 20% nuevo (full price) + 80% cacheado (10% price) = **28% del precio bruto**.\n\n## Comparativa con alternativas (abril 2026)\n\n*Precios públicos referenciales — verificá página oficial de cada producto.*\n\n| Producto | Modelo | Costo mensual aprox. | Caching | Notas |\n|---|---|---|---|---|\n| **Claude Code (API)** | pay-per-token | USD 50-3.000 | sí auto | mejor para uso intenso, agentic |\n| **Cursor Pro** | suscripción | ~USD 20 | sí backend | bueno para autocomplete, balance |\n| **GitHub Copilot Pro** | suscripción | ~USD 10-39 | – | autocomplete maduro, IDE-integrado |\n| **Aider + API** | pay-per-token | similar a Claude Code | depende | terminal-based, open-source |\n| **Cline / Roo Code (VS Code)** | pay-per-token | similar | sí | extension VS Code |\n\n## Cuándo conviene cada uno\n\n- **Cursor Pro**: si querés autocomplete + chat IDE-integrado a costo plano.\n- **Copilot**: si trabajás en repos privados con compliance MS y querés costo previsible.\n- **Claude Code**: si querés agente que ejecute tareas multi-paso, MCP servers, refactors grandes con contexto del repo entero.\n\n## Consejos para bajar el costo\n\n1. **Activá caching siempre** (Claude Code lo hace por default).\n2. **Mantené sesiones cortas**: cerrá y abrí Claude Code entre features grandes para resetear context.\n3. **Usá Haiku para tareas chicas**: explícitamente seleccioná modelo.\n4. **Evitá agent loops sin propósito**: definí budget per-task.\n5. **Excluí node_modules / dist / build**: cargar binarios y deps al context quema tokens.\n6. **Definí budget alerts** en tu Anthropic console.\n\n## Disclaimer educativo\n\nEsta calculadora es **estimativa**. El gasto real depende de:\n- Cuánto contexto Claude Code carga (varía según tarea).\n- Cuántos cache hits se logran (Anthropic los gestiona).\n- Cambios de pricing de Anthropic.\n\nVerificá tu **bill real** en [Anthropic console](https://console.anthropic.com) y configurá alerts. Esta calculadora **no constituye garantía de gasto** ni recomendación de producto.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Cifras de pricing referenciadas contra [Anthropic](https://www.anthropic.com/pricing) y comparativas con Cursor/Copilot a abril 2026. **Verificá siempre los precios vigentes antes de comprometer presupuesto.**\n",
+  "faq": [
+    {
+      "q": "¿Cuánto cuesta Claude Code al mes para un developer?",
+      "a": "Para uso intenso (4hs/día, 22 días) **con Sonnet 4 + caching**: típicamente **USD 80-300/mes**. Sin caching: USD 200-600/mes. Con Opus 4 intensivo: USD 1.000-3.000/mes. Para uso casual (1-2hs/día), USD 20-80/mes con caching."
+    },
+    {
+      "q": "¿Conviene Claude Code o Cursor Pro?",
+      "a": "**Cursor Pro** (~USD 20/mes plano) gana en costo previsible y autocomplete. **Claude Code** gana en agentes, MCP servers, refactors multi-archivo y razonamiento profundo. Muchos devs usan **ambos**: Cursor para edición rápida, Claude Code para tareas grandes."
+    },
+    {
+      "q": "¿Qué modelo usar en Claude Code?",
+      "a": "**Sonnet 4** (default) cubre 90% de los casos con buena calidad/costo. **Opus 4** para refactors arquitecturales, debugging complejo o cuando Sonnet se queda corto. **Haiku 4** para tareas masivas de bajo razonamiento (lints, formateos, búsquedas)."
+    },
+    {
+      "q": "¿Qué es prompt caching y cuánto ahorro?",
+      "a": "Anthropic cachea el contenido estático/repetido entre calls y lo cobra a ~10% del precio normal. En Claude Code, donde el system prompt + tools + archivos abiertos se repiten mucho, **el ahorro real sobre INPUT suele ser 70-85%**. Sobre el costo total (input + output), el ahorro promedio es 50-70%."
+    },
+    {
+      "q": "¿Cómo evito quemar tokens?",
+      "a": "1) **Cerrá Claude Code** entre features grandes (resetea context). 2) **Excluí node_modules, .git, dist** del contexto. 3) **Usá Haiku para tareas chicas** explícitamente. 4) **Cortá agent loops** si ves que se va por las ramas. 5) **Definí budget alerts** en console.anthropic.com."
+    },
+    {
+      "q": "¿Cuántos tokens consume Claude Code por hora típica?",
+      "a": "**Casual** (preguntas y edits chicos): 30-80k tok/h. **Medio** (features completas con tests): 80-200k tok/h. **Intenso** (agent loops largos, refactors grandes): 200-500k+ tok/h. Heavy users con MCP intensivos pueden llegar a 1M tok/h."
+    },
+    {
+      "q": "¿Claude Code puede correr offline o con LLM local?",
+      "a": "**No oficialmente.** Claude Code requiere la API de Anthropic. Si querés algo similar con LLM local, mirá **Aider + Ollama**, **Cline + LM Studio** o el ecosistema de **agents open-source** (Continue, Roo Code) con backends locales."
+    },
+    {
+      "q": "¿Cómo justifico el costo de Claude Code a mi manager?",
+      "a": "Comparalo contra **horas dev ahorradas**. Si Claude Code te ahorra 1-2 horas/día y tu costo dev es USD 60/h, son **USD 60-120/día = USD 1.200-2.400/mes ahorrados**. Aún el plan más caro de Claude Code (USD 1.000/mes en uso intenso) suele tener ROI positivo si efectivamente reemplaza 1 hora/día."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Anthropic — Pricing",
+      "url": "https://www.anthropic.com/pricing"
+    },
+    {
+      "name": "Claude Code — docs",
+      "url": "https://docs.claude.com/claude-code"
+    },
+    {
+      "name": "Anthropic Console",
+      "url": "https://console.anthropic.com"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-agente-ia-mcp-servidor-costo-mensual",
+    "calculadora-inferencia-llm-tokens-segundo-throughput",
+    "calculadora-fine-tuning-llama-costo-dataset-tokens"
+  ],
+  "howToSteps": [
+    {
+      "name": "Cargá horas/día",
+      "text": "Estimá uso real, no idealizado."
+    },
+    {
+      "name": "Cargá días/mes",
+      "text": "Default 22 días laborales."
+    },
+    {
+      "name": "Cargá tokens/hora",
+      "text": "Mirá Anthropic Console del mes anterior si ya usás Claude Code."
+    },
+    {
+      "name": "Cargá precios del modelo",
+      "text": "Sonnet 4 default, Opus 4 si te gusta lo más fuerte."
+    },
+    {
+      "name": "Cargá descuento caching",
+      "text": "Default 70 (Claude Code lo activa por default)."
+    },
+    {
+      "name": "Calculá",
+      "text": "Costo mensual estimado bruto y con caching."
+    }
+  ]
+}

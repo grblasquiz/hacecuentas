@@ -1,0 +1,213 @@
+{
+  "slug": "calculadora-dao-quorum-propuesta-votacion-token",
+  "title": "Calculadora DAO: quórum y votos para aprobar propuesta 2026",
+  "h1": "DAO — quórum y votos requeridos para aprobar una propuesta",
+  "description": "🗳️ Calculá cuántos tokens se necesitan para alcanzar quórum y aprobar una propuesta DAO según supply circulante, % de quórum, mayoría y participación esperada.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "🗳️",
+  "formulaId": "dao-quorum-propuesta-votacion-token",
+  "seoKeywords": [
+    "dao quorum calculator",
+    "calcular quorum dao propuesta",
+    "votacion token gobernanza",
+    "uniswap quorum votos",
+    "compound governance quorum",
+    "dao voting power calculator"
+  ],
+  "intro": "En una **DAO (Decentralized Autonomous Organization)** las decisiones se aprueban con votos de holders del **token de gobernanza**. Para que una propuesta sea válida tiene que cumplir dos condiciones: alcanzar **quórum** (mínimo de tokens votando, típicamente 4-10% del supply circulante) y obtener **mayoría** (típicamente >50% de los votos a favor). En 2026 con la consolidación de Uniswap, Compound, Aave, MakerDAO, Arbitrum y Optimism, los quórums son muy diferentes: Uniswap pide 4% del supply (~40M UNI), Compound 4% (~400k COMP), Aave 320k AAVE. Esta calculadora te dice cuántos tokens necesita una propuesta para pasar y, si tenés voting power propio, cuántos te faltan para inclinar la votación. Útil para delegados, treasuries, fondos cripto y cualquier holder que quiera entender el peso de su voto.",
+  "keyTakeaway": "Una propuesta DAO requiere **quórum** (mínimo de votos totales) **y** **mayoría** (% a favor). Si una de las dos falla, la propuesta no pasa aunque tenga 99% de aprobación. En DAOs grandes el quórum es el cuello de botella: la mayoría de propuestas mueren por **falta de participación**, no por rechazo.",
+  "useCases": [
+    "Delegados de DAOs calculan cuánto voting power necesitan acumular para pasar una propuesta.",
+    "Treasuries miden si su posición alcanza para vetar o aprobar cambios de protocolo.",
+    "Holders comparan participación esperada vs quórum mínimo antes de proponer.",
+    "Auditar gobernanza: detectar DAOs con quórum imposible (>20% del supply) en la práctica.",
+    "Estimar tokens a delegar para inclinar una votación crítica."
+  ],
+  "fields": [
+    {
+      "id": "supplyCirculante",
+      "label": "Supply circulante del token",
+      "type": "number",
+      "suffix": "tokens",
+      "placeholder": "1000000000",
+      "min": 0,
+      "step": 1,
+      "required": true,
+      "help": "Cantidad de tokens en circulación (excluí treasury/team locked). Mirá CoinGecko o el contrato del token."
+    },
+    {
+      "id": "quorumPct",
+      "label": "Quórum requerido",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "4",
+      "min": 0,
+      "max": 100,
+      "step": 0.1,
+      "required": true,
+      "help": "% del supply circulante que tiene que votar para que la propuesta sea válida. Uniswap 4%, Compound 4%, Aave 0,5%."
+    },
+    {
+      "id": "mayoriaPct",
+      "label": "Mayoría requerida",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "50",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "required": true,
+      "help": "% de los votos emitidos que tienen que ir a favor para aprobar. Default 50%+1, algunas DAOs piden 60-67% para cambios críticos."
+    },
+    {
+      "id": "participacionEsperadaPct",
+      "label": "Participación esperada",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "8",
+      "min": 0,
+      "max": 100,
+      "step": 0.1,
+      "required": true,
+      "help": "% del supply que esperás que participe en la votación. Mirá histórico de propuestas pasadas en Tally o Snapshot."
+    },
+    {
+      "id": "tokensATuFavor",
+      "label": "Tokens propios + delegados",
+      "type": "number",
+      "suffix": "tokens",
+      "placeholder": "50000",
+      "min": 0,
+      "step": 1,
+      "required": false,
+      "help": "Voting power propio (tokens propios + delegaciones recibidas). Si lo dejás en 0, te muestra solo los tokens totales necesarios."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-26",
+    "source": "Tally / Snapshot / DAO docs",
+    "sourceUrl": "https://www.tally.xyz",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "tokensQuorum",
+      "label": "Tokens para alcanzar quórum",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "tokensAFavorNecesarios",
+      "label": "Tokens a favor necesarios",
+      "format": "number"
+    },
+    {
+      "id": "participacionVsQuorumPct",
+      "label": "Participación esperada vs quórum",
+      "format": "percent"
+    },
+    {
+      "id": "faltanTokens",
+      "label": "Tokens que te faltan",
+      "format": "number"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: Uniswap propuesta UNI 2026",
+    "steps": [
+      "**Supply circulante UNI**: ~600.000.000.",
+      "**Quórum Uniswap**: 4% → 24.000.000 UNI tienen que votar.",
+      "**Mayoría**: >50% de los votos.",
+      "**Participación esperada** (histórica): 8% → 48M UNI votan.",
+      "**Para pasar**: 24M+1 UNI a favor (mayoría simple del quórum).",
+      "Si tenés 5M UNI delegados, te faltan ~19M más."
+    ],
+    "result": "Las propuestas UNI requieren ~24M votos a favor para pasar (4% supply)."
+  },
+  "explanation": "## Cómo funciona la gobernanza DAO\n\nUna **DAO** delega decisiones a holders de un **token de gobernanza**. Cada token = 1 voto (a veces ponderado por tiempo de stake o por delegación). Las propuestas siguen este flujo:\n\n1. **Temperatura**: foro/Discord para discutir.\n2. **Snapshot off-chain**: votación gasless para sondeo.\n3. **On-chain proposal**: Tally, Compound Governor o sistema propio.\n4. **Voting period**: 3-7 días.\n5. **Timelock**: 24-48hs antes de ejecutarse.\n\n## Las dos barreras: quórum y mayoría\n\n| Concepto | Qué mide | Falla si... |\n|---|---|---|\n| **Quórum** | Cuántos votos totales se emitieron | Participación < quórum mínimo |\n| **Mayoría** | % de los votos que dijeron \"sí\" | Votos a favor < umbral mayoría |\n\nUna propuesta puede tener **100% de aprobación** y **fracasar** si nadie votó.\n\n## Quórum en DAOs grandes (abril 2026)\n\n| DAO | Token | Supply circulante | Quórum % | Tokens necesarios |\n|---|---|---|---|---|\n| Uniswap | UNI | ~600M | 4% | 24M UNI |\n| Compound | COMP | ~10M | 4% | 400k COMP |\n| Aave | AAVE | ~16M | 320k AAVE (fijo) | 320k AAVE |\n| MakerDAO | MKR | ~890k | variable (~50k) | ~50k MKR |\n| Arbitrum | ARB | ~5,8B | 5% | 290M ARB |\n| Optimism | OP | ~4,5B | varía por cámara | depende |\n\n## Mayorías especiales\n\n- **Cambios de smart contract**: a veces requieren 60-67%.\n- **Treasury > X millones**: 50% + delay extra.\n- **Cambios de constitución** (Arbitrum): 60% + ratificación de cámara de Seguridad.\n\n## Por qué tantas propuestas mueren\n\nLa **participación promedio en DAOs es 5-15%** del supply. Si el quórum es 10% y la participación esperada es 8%, **la propuesta nunca llega a quórum** sin campaña activa de delegados.\n\nDelegados grandes como **a16z, Polychain, Robot Ventures, Gauntlet, ParaFi** son los que efectivamente deciden propuestas en la práctica.\n\n## Errores comunes\n\n- Confundir **supply total** con **supply circulante** (el quórum se calcula sobre el segundo).\n- Olvidar que tokens en treasury de la propia DAO **no votan**.\n- Asumir que quórum = mayoría (son condiciones independientes y acumulativas).\n\n> **Aviso legal**: Calculadora educativa. **No constituye asesoramiento financiero ni legal sobre gobernanza de tokens.** Consultá la documentación de cada DAO antes de delegar o votar.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Cifras verificadas contra Tally, Snapshot y docs oficiales de cada protocolo a abril 2026.\n",
+  "faq": [
+    {
+      "q": "¿Qué es quórum en una DAO?",
+      "a": "Quórum es el **mínimo de votos totales** que tiene que recibir una propuesta para ser válida, expresado como % del supply circulante del token de gobernanza. Si no se alcanza, la propuesta **no pasa** aunque tenga 100% de votos a favor."
+    },
+    {
+      "q": "¿Cuál es el quórum típico de una DAO en 2026?",
+      "a": "Entre **3% y 10%** del supply circulante. Uniswap y Compound usan 4%, Aave usa un threshold absoluto (320k AAVE), Arbitrum usa 5%. DAOs nuevas suelen empezar con 1-2% y subirlo al ganar adopción."
+    },
+    {
+      "q": "¿Qué pasa si una propuesta alcanza quórum pero pierde la mayoría?",
+      "a": "**No se ejecuta.** Quórum y mayoría son condiciones acumulativas: tenés que cumplir ambas. Si vota suficiente gente pero la mayoría dice \"no\", la propuesta queda rechazada y entra al timelock como rejected."
+    },
+    {
+      "q": "¿Cuánta gente realmente vota en DAOs?",
+      "a": "Muy poca. La participación promedio en propuestas on-chain es **5-15% del supply circulante** y en muchas DAOs cae a 1-3% en propuestas rutinarias. Por eso los delegados profesionales (a16z, Polychain, Gauntlet) tienen tanto poder relativo."
+    },
+    {
+      "q": "¿Qué diferencia hay entre Snapshot y voto on-chain?",
+      "a": "**Snapshot** es **off-chain**, gasless, no ejecuta nada — es solo señal. **Voto on-chain** se hace via Governor (Compound, OZ Governor) y, si pasa, ejecuta el cambio automáticamente vía smart contract después del timelock."
+    },
+    {
+      "q": "¿Un token en exchange centralizado puede votar?",
+      "a": "**No, salvo que el exchange delegue activamente**. Tokens en hot wallets de Binance/Coinbase no votan a menos que el exchange tenga programa de gobernanza (Coinbase delega cbETH, Binance delega selectivamente). Esto **distorsiona el quórum** porque ese supply circulante en la práctica no participa."
+    },
+    {
+      "q": "¿Puedo delegar mi voto sin perder los tokens?",
+      "a": "Sí. La **delegación de voting power** transfiere solo el voto, no la propiedad. Tus tokens siguen en tu wallet y podés revocar la delegación en cualquier momento. La mayoría de Governors usan checkpoints: el voting power se cuenta al **block del snapshot** de la propuesta."
+    },
+    {
+      "q": "¿Las DAOs grandes tienen quórum real o es teórico?",
+      "a": "**Mixto.** Uniswap suele alcanzar quórum en propuestas relevantes gracias a delegados como a16z y Universidad de Pennsylvania Blockchain. Aave y Compound también. Pero MakerDAO, Arbitrum y muchas DAOs pequeñas viven al filo del quórum y dependen de campaña activa para pasar propuestas."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Tally — DAO governance",
+      "url": "https://www.tally.xyz"
+    },
+    {
+      "name": "Snapshot — off-chain voting",
+      "url": "https://snapshot.org"
+    },
+    {
+      "name": "Compound Governance docs",
+      "url": "https://docs.compound.finance/governance"
+    },
+    {
+      "name": "Uniswap Governance",
+      "url": "https://gov.uniswap.org"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-node-validador-ethereum-32-eth-rendimiento",
+    "calculadora-embedding-vector-pinecone-weaviate-costo-mes"
+  ],
+  "howToSteps": [
+    {
+      "name": "Buscá el supply circulante",
+      "text": "En CoinGecko o el contrato del token, copiá el circulating supply (no el total)."
+    },
+    {
+      "name": "Buscá el quórum requerido",
+      "text": "En la documentación de la DAO o en Tally encontrás el quórum como % del supply o como número absoluto."
+    },
+    {
+      "name": "Cargá la mayoría requerida",
+      "text": "Default 50% + 1, pero algunos cambios pueden pedir 60-67%."
+    },
+    {
+      "name": "Estimá la participación esperada",
+      "text": "Mirá las últimas 5-10 propuestas y calculá el % promedio de supply que votó."
+    },
+    {
+      "name": "Calculá",
+      "text": "La calculadora te devuelve tokens para quórum, votos a favor necesarios y cuántos te faltan a vos."
+    }
+  ]
+}

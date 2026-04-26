@@ -1,0 +1,161 @@
+{
+  "slug": "calculadora-equity-startup-rsu-iso-impuesto-ejercicio-ar",
+  "title": "Calculadora Equity Startup: impuesto AR al ejercer RSU/ISO 2026",
+  "h1": "RSU / ISO / NSO — impuesto en Argentina al ejercer",
+  "description": "🚀 Calculá el impuesto a las Ganancias en Argentina al vestear/ejercer RSU, ISO o NSO de una startup USA siendo residente fiscal AR. Spread, alícuota y neto en mano.",
+  "category": "finanzas",
+  "audience": "argentina",
+  "icon": "🚀",
+  "formulaId": "equity-startup-rsu-iso-impuesto-ejercicio-ar",
+  "seoKeywords": [
+    "rsu impuesto argentina",
+    "iso opciones startup ganancia argentina",
+    "equity startup usa residente argentino",
+    "calcular impuesto ejercer stock options",
+    "nso vs iso vs rsu argentina",
+    "vesting startup arca ganancias"
+  ],
+  "intro": "Si trabajás para una startup USA siendo residente fiscal argentino, en algún momento te van a vestear **RSU (Restricted Stock Units)** o vas a ejercer **ISO/NSO (Incentive/Non-qualified Stock Options)**. El **spread** entre el strike price (lo que pagás) y el FMV (Fair Market Value) en el momento del evento **es ingreso gravado en Argentina**. ARCA lo trata como **renta de cuarta categoría** (RSU al vestear) o como ganancia gravada al ejercer (NSO). En 2026 la **alícuota efectiva** ronda el 27-35% según escalón. Esta calculadora estima el impuesto AR a pagar y el monto neto que te queda, útil para planificar venta de acciones para cubrir el impuesto (sell-to-cover).",
+  "keyTakeaway": "Un spread de USD 50.000 al ejercer NSO con alícuota efectiva 30% deja **USD 35.000 netos** después de impuesto AR. Si no vendés acciones para cubrir, vas a tener que pagar el impuesto en pesos al TC oficial al cierre fiscal — preparate.",
+  "useCases": [
+    "Estimar impuesto AR al vestear RSU de Google, Meta, Stripe, etc.",
+    "Calcular cuántas acciones vender para cubrir el impuesto (sell-to-cover).",
+    "Comparar el costo fiscal entre ejercer ISO vs NSO siendo residente AR.",
+    "Planificar la cuenta corriente fiscal antes del cierre de balance ARCA.",
+    "Decidir si conviene mudar la residencia fiscal antes de un liquidity event."
+  ],
+  "fields": [
+    {
+      "id": "cantidadAcciones",
+      "label": "Cantidad de acciones / units",
+      "type": "number",
+      "suffix": "acciones",
+      "placeholder": "1000",
+      "min": 0,
+      "step": 1,
+      "required": true,
+      "help": "Cantidad de RSU que vestean o de opciones que vas a ejercer."
+    },
+    {
+      "id": "precioEjercicioUsd",
+      "label": "Strike price (precio de ejercicio)",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "5",
+      "min": 0,
+      "step": 0.01,
+      "required": false,
+      "help": "Precio que pagás por acción al ejercer la opción. Para RSU: 0."
+    },
+    {
+      "id": "fmvEjercicioUsd",
+      "label": "FMV al momento del evento",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "50",
+      "min": 0,
+      "step": 0.01,
+      "required": true,
+      "help": "Fair Market Value de la acción al momento de vestear (RSU) o ejercer (ISO/NSO). Si la empresa cotiza, es el precio de mercado. Si es privada, es la 409A valuation."
+    },
+    {
+      "id": "tipoEquity",
+      "label": "Tipo de equity",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "RSU", "label": "RSU — Restricted Stock Units" },
+        { "value": "ISO", "label": "ISO — Incentive Stock Options" },
+        { "value": "NSO", "label": "NSO — Non-qualified Stock Options" }
+      ],
+      "help": "RSU: te dan acciones gratis al vestear (sin ejercicio). ISO: opciones con ventaja fiscal en USA pero AR las trata igual que NSO. NSO: opciones comunes."
+    },
+    {
+      "id": "alicuotaGananciasPct",
+      "label": "Alícuota efectiva Ganancias",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "30",
+      "min": 0,
+      "max": 50,
+      "step": 0.5,
+      "required": true,
+      "help": "Alícuota efectiva según tu escalón anual. Para sueldos altos en 2026: 27%-35%. Mirá la escala progresiva del Art. 94 LIG."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-26",
+    "source": "ARCA — Ley de Impuesto a las Ganancias",
+    "sourceUrl": "https://www.arca.gob.ar",
+    "updateType": "manual"
+  },
+  "outputs": [
+    { "id": "spreadGravadoUsd", "label": "Spread gravado (FMV - strike)", "format": "currency", "primary": true },
+    { "id": "impuestoArUsd", "label": "Impuesto a las Ganancias AR", "format": "currency" },
+    { "id": "netoUsd", "label": "Neto post-impuesto", "format": "currency" },
+    { "id": "explicacion", "label": "Detalle", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo: 1.000 RSU de una startup que IPO a USD 50",
+    "steps": [
+      "Cantidad: **1.000 RSU**, strike USD 0 (RSU vestean gratis).",
+      "FMV al vestear: **USD 50** → spread gravado: USD 50.000.",
+      "Alícuota efectiva 30% (escalón alto residente AR).",
+      "Impuesto AR estimado: **USD 15.000** (≈ ARS 18,75M al TC 1.250)."
+    ],
+    "result": "Neto post-impuesto: **USD 35.000**. Recomendado: vender ~30% de las acciones (sell-to-cover) para tener pesos y pagar Ganancias."
+  },
+  "explanation": "## Cómo tributa el equity de startup USA en Argentina\n\n### RSU (Restricted Stock Units)\nAl **vestear** (cuando las RSU pasan de unvested a vested), Argentina considera que **recibís acciones como remuneración en especie**. El valor gravado es:\n\n```\nspread_RSU = FMV_al_vestear × cantidad\n```\n\nSe agrega a tu base de **cuarta categoría** (renta del trabajo) y tributa según la **escala progresiva** (5% a 35% en 2026).\n\n### ISO / NSO (Stock Options)\nAR no distingue entre ISO y NSO (a diferencia de USA). Al **ejercer**:\n\n```\nspread = (FMV_ejercicio - strike) × cantidad\n```\n\nTambién es renta de cuarta categoría → tributa por escala progresiva.\n\n### Venta posterior de las acciones\nCuando **vendés** las acciones, la diferencia entre el FMV (que ya pagaste impuesto) y el precio de venta es **renta financiera cedular** — alícuota del **15% sobre USD** o **5% en pesos** (según el activo).\n\n## Escala Ganancias 2026 (cuarta categoría)\n\n| Ganancia neta anual | Alícuota efectiva |\n|---|---|\n| Hasta ARS 8.000.000 | 5%-12% |\n| ARS 8M a 25M | 19%-23% |\n| ARS 25M a 60M | 27%-31% |\n| Más de ARS 60M | 35% (techo) |\n\n*Valores ilustrativos abril 2026. Verificá las tablas vigentes en ARCA.*\n\n## Sell-to-cover: estrategia clave\n\nLa trampa más común: AR te grava el spread aunque vos no hayas vendido ni una acción todavía. Si la startup es privada (ilíquida), tenés que pagar Ganancias **con pesos de tu sueldo** — puede ser muy doloroso.\n\nPara empresas públicas, la estrategia es **sell-to-cover**: el broker (Carta, Shareworks, Fidelity) vende automáticamente ~30-40% de las RSU al vestear para cubrir impuestos. En USA esto es estándar pero en AR depende del setup que arme tu empleador.\n\n## Doble imposición USA-AR\n\nSi USA te retiene impuesto (típico en NSO) y AR también te grava, podés computar el impuesto pagado en USA como **crédito de impuesto extranjero** (Art. 1 LIG). Necesitás form 1042-S o equivalente.\n\n## Aviso legal\n\nEsta calculadora es **estimativa** y educativa. La tributación real depende de:\n- Tu escalón concreto en Ganancias\n- Si tu empleador retiene o no\n- Convenio de doble imposición USA-AR\n- Si la empresa es pública o privada (timing del hecho imponible)\n- Reglas anti-double dipping y régimen de transparencia fiscal internacional\n\n**No constituye asesoramiento fiscal.** Consultá con un contador especializado en equity y empresas USA antes de tomar decisiones.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Criterios en nuestra [política editorial](/politica-editorial). Las normas tributarias cambian — verificá con ARCA y un contador certificado.\n",
+  "faq": [
+    {
+      "q": "¿Las RSU de Google/Meta tributan en Argentina aunque la empresa sea de USA?",
+      "a": "Sí. Si sos **residente fiscal argentino**, tributás por tus rentas mundiales (criterio de renta global). Las RSU se gravan en AR al momento del **vesting**, sobre el FMV del día. Que la empresa sea USA no exime de Ganancias AR."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre ISO, NSO y RSU para AR?",
+      "a": "**Para AR no hay diferencia legal entre ISO y NSO** (la distinción es estadounidense). Las tres figuras se gravan como cuarta categoría sobre el spread. La diferencia práctica está en **cuándo** ocurre el hecho imponible: RSU al vestear, ISO/NSO al ejercer."
+    },
+    {
+      "q": "¿Pago doble impuesto USA y Argentina?",
+      "a": "Si USA te retuvo impuesto sobre el spread (típico en NSO con W-8BEN no presentado), podés tomar el monto pagado en USA como **crédito de impuesto extranjero** en tu declaración AR. Necesitás conservar el form 1042-S y declarar correctamente."
+    },
+    {
+      "q": "¿Qué es sell-to-cover y por qué me conviene?",
+      "a": "Es la práctica de **vender automáticamente parte de las RSU al vestear** para cubrir el impuesto. Si te vestean USD 50.000 y tu alícuota es 30%, el broker vende USD 15.000 en acciones y te transfiere los pesos. Sin esto, tendrías que conseguir USD 15.000 en pesos de tu bolsillo para pagar Ganancias."
+    },
+    {
+      "q": "¿Cuándo es el hecho imponible en AR para opciones de empresa privada?",
+      "a": "Hay debate. La doctrina mayoritaria dice que **al ejercer** (cuando convertís opción en acción y pagás strike), aunque la acción todavía no sea líquida. Si la empresa hace IPO o se vende, ahí podrías tener un segundo evento por la **renta financiera** entre FMV ejercicio y precio de venta."
+    },
+    {
+      "q": "¿Qué alícuota uso en la calculadora si no sé en qué escalón estoy?",
+      "a": "Si tu salario anual + spread supera ARS 60M, usá **35%** (techo). Si está entre ARS 25M y 60M, usá **27-31%**. Para casos de mid-senior con RSU que no son enormes, **30%** es una buena aproximación conservadora."
+    },
+    {
+      "q": "¿Mudarme a Uruguay/Paraguay antes del IPO me ahorra Ganancias AR?",
+      "a": "Solo si **realmente** te mudás (criterio sustancial de residencia: presencia física, vínculos económicos, vivienda permanente). El régimen de transparencia fiscal internacional 2026 dificulta los cambios de residencia simulados. Hacelo con asesor fiscal y al menos 12-24 meses antes del liquidity event."
+    },
+    {
+      "q": "¿Las acciones que recibo las declaro en Bienes Personales?",
+      "a": "Sí. Toda acción de empresa extranjera que tengas al **31/12** se declara en Bienes Personales (alícuotas 0,5%-2,25% en 2026 según patrimonio). El valor a declarar es el FMV al cierre del año."
+    }
+  ],
+  "sources": [
+    { "name": "ARCA — Ley de Impuesto a las Ganancias", "url": "https://www.arca.gob.ar" },
+    { "name": "ARCA — Bienes Personales", "url": "https://www.arca.gob.ar" },
+    { "name": "Convenio Doble Imposición USA-Argentina (vigencia)", "url": "https://www.cancilleria.gob.ar" }
+  ],
+  "relatedSlugs": [
+    "calculadora-bienes-personales-2026",
+    "calculadora-renta-financiera-cedular",
+    "calculadora-monotributo-vs-relacion-dependencia"
+  ],
+  "howToSteps": [
+    { "name": "Ingresá la cantidad de acciones", "text": "Cargá las RSU que vestean o las opciones que vas a ejercer." },
+    { "name": "Cargá strike y FMV", "text": "Para RSU el strike es 0. Para ISO/NSO usá el strike de tu grant. El FMV es el precio actual (cotización pública o última 409A)." },
+    { "name": "Elegí el tipo de equity", "text": "RSU, ISO o NSO. AR no diferencia mucho entre los tres pero el momento del hecho imponible cambia." },
+    { "name": "Cargá tu alícuota efectiva", "text": "Estimá tu escalón en Ganancias 2026 (típico mid-senior: 27-32%)." },
+    { "name": "Hacé click en Calcular", "text": "Obtené el spread gravado, el impuesto AR y el neto. Usalo para planificar tu sell-to-cover." }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "slug": "calculadora-context-1m-tokens-claude-costo-input",
+  "title": "Calculadora costo Claude 1M tokens: Sonnet vs Opus 2026",
+  "h1": "Costo Claude 1M context — Sonnet vs Opus",
+  "description": "🧠 Calculá el costo input/output con contexto extendido 1M tokens en Claude Sonnet y Opus. Compará tier estándar (≤200k) vs tier 1M y proyectá costo mensual.",
+  "category": "negocios",
+  "audience": "global",
+  "icon": "🧠",
+  "formulaId": "context-1m-tokens-claude-costo-input",
+  "seoKeywords": [
+    "claude 1m context cost",
+    "anthropic 1 million tokens pricing",
+    "claude sonnet opus 1m comparison",
+    "long context claude api pricing",
+    "claude 1m tier vs standard cost",
+    "costo contexto 1m claude"
+  ],
+  "intro": "Claude Sonnet 4.6 y Opus 4.7 ofrecen ventana de **contexto extendido a 1M tokens** (en beta), pero el pricing cambia: cuando tu request supera **200k tokens de input**, los precios se duplican (USD 6/MT en Sonnet, USD 30/MT en Opus). Esto es clave si vas a cargar codebases enteros, libros, documentación legal masiva o transcripciones largas. Esta calculadora te dice exactamente **cuánto cuesta cada request** con contexto 1M y proyecta tu **gasto mensual** según volumen de requests. Útil para decidir si conviene 1M de contexto o trocear el input con RAG.",
+  "keyTakeaway": "Con 1M tokens de input + 4k output en Claude **Sonnet 1M**, cada request te cuesta ~**USD 6,09**. En **Opus 1M** sube a ~**USD 30,45**. Si vas a hacer 1000 requests/mes de este tamaño, presupuestá USD 6k (Sonnet) o USD 30k (Opus).",
+  "useCases": [
+    "Costear cargar un codebase completo en cada request de tu code assistant.",
+    "Decidir entre RAG (chunking) vs 1M context full para análisis de docs largos.",
+    "Comparar costo de Sonnet 1M vs Opus 1M para el mismo workload.",
+    "Presupuestar un agente que procesa libros, PDFs grandes o transcripciones de horas.",
+    "Justificar implementación de prompt caching cuando el contexto se reusa entre requests."
+  ],
+  "fields": [
+    {
+      "id": "tokensInput",
+      "label": "Tokens de input por request",
+      "type": "number",
+      "suffix": "tokens",
+      "placeholder": "500000",
+      "min": 0,
+      "step": 1000,
+      "required": true,
+      "help": "Cantidad de tokens que mandás como input. Recordá: 1 palabra ~ 1.3 tokens. Un libro de 100k palabras ~ 130k tokens. Un codebase mediano ~ 300-800k tokens."
+    },
+    {
+      "id": "tokensOutput",
+      "label": "Tokens de output por request",
+      "type": "number",
+      "suffix": "tokens",
+      "placeholder": "4000",
+      "min": 0,
+      "step": 100,
+      "required": true,
+      "help": "Tokens que esperás que Claude genere. Una respuesta corta ~ 500. Un análisis largo ~ 4000-8000."
+    },
+    {
+      "id": "modelo",
+      "label": "Modelo y tier",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "sonnet", "label": "Sonnet estándar (≤200k input) — USD 3/15 por MT" },
+        { "value": "sonnet-1m", "label": "Sonnet 1M tier (>200k input) — USD 6/22.50 por MT" },
+        { "value": "opus", "label": "Opus estándar (≤200k input) — USD 15/75 por MT" },
+        { "value": "opus-1m", "label": "Opus 1M tier (>200k input) — USD 30/112.50 por MT" }
+      ],
+      "help": "Si tu input supera 200k tokens, automáticamente entra al tier 1M con pricing 2x."
+    },
+    {
+      "id": "requestsPorMes",
+      "label": "Requests por mes",
+      "type": "number",
+      "suffix": "requests",
+      "placeholder": "1000",
+      "min": 1,
+      "step": 1,
+      "required": true,
+      "help": "Cantidad estimada de requests con este tamaño de input/output al mes."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-26",
+    "source": "Anthropic Pricing",
+    "sourceUrl": "https://www.anthropic.com/pricing",
+    "updateType": "manual"
+  },
+  "outputs": [
+    { "id": "costoMensualUsd", "label": "Costo mensual estimado", "format": "currency", "primary": true },
+    { "id": "costoPorRequestUsd", "label": "Costo por request (USD)", "format": "currency" },
+    { "id": "costoInputUsd", "label": "Costo input/request", "format": "currency" },
+    { "id": "costoOutputUsd", "label": "Costo output/request", "format": "currency" },
+    { "id": "explicacion", "label": "Detalle", "format": "text" }
+  ],
+  "example": {
+    "title": "Ejemplo: 800k input + 5k output en Sonnet 1M, 500 requests/mes",
+    "steps": [
+      "**Input 800k tokens** × USD 6/MT = **USD 4,80**.",
+      "**Output 5k tokens** × USD 22,50/MT = **USD 0,11**.",
+      "**Costo por request: USD 4,91**.",
+      "**Mensual** (500 reqs): USD **2.456**."
+    ],
+    "result": "Si vas a procesar 500 codebases medianos por mes, presupuestá ~USD 2.500 sólo en input. Considerá prompt caching si el contexto se reusa."
+  },
+  "explanation": "## 1M context: cuándo y por qué\n\nLa ventana de **1 millón de tokens** abre casos de uso imposibles antes:\n\n- **Codebase completo en una request** (300k-1M tokens según repo).\n- **Libros enteros** procesados sin trocear.\n- **Transcripciones de horas** de meeting o podcast.\n- **Documentación legal/contratos masivos** sin RAG.\n\n## Pricing por tier\n\n| Modelo | Tier | Input | Output |\n|---|---|---|---|\n| Sonnet | Estándar (≤200k) | USD 3/MT | USD 15/MT |\n| Sonnet | 1M (>200k input) | USD 6/MT | USD 22,50/MT |\n| Opus | Estándar (≤200k) | USD 15/MT | USD 75/MT |\n| Opus | 1M (>200k input) | USD 30/MT | USD 112,50/MT |\n\nEl **trigger del tier 1M** es **únicamente el input total** del request. Si superás 200k, todo el request se cobra al precio 1M (no solo el excedente).\n\n## Estrategias para optimizar costo en 1M\n\n1. **Prompt caching**: si el contexto largo se reusa, el read del cache cuesta 10% del precio. En 1M context, eso baja USD 6/MT a **USD 0,60/MT**.\n2. **Batching async**: 50% off si tolerás latencia hasta 24h. Combinable con caching.\n3. **RAG cuando aplica**: trocear y traer solo chunks relevantes te puede dejar bajo el threshold de 200k.\n4. **Sonnet vs Opus**: para 1M context, Sonnet suele ser suficiente. Opus solo si necesitás razonamiento ultra complejo sobre todo el contexto.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Pricing oficial verificado en anthropic.com/pricing.\n",
+  "faq": [
+    {
+      "q": "¿Por qué Anthropic cobra 2x cuando paso 200k tokens de input?",
+      "a": "Porque el contexto largo requiere infraestructura de inferencia más cara (memoria GPU, KV cache). El pricing 1M refleja ese costo real."
+    },
+    {
+      "q": "¿Si mi request tiene 199k input, pago precio estándar?",
+      "a": "Sí. El threshold es **estricto en 200k tokens de input**. Justo por debajo pagás precio normal."
+    },
+    {
+      "q": "¿El tier 1M está disponible para todos?",
+      "a": "Está en **public beta** abril 2026. Disponible para cuentas Build/Scale tier en Anthropic Console y vía AWS Bedrock/GCP Vertex."
+    },
+    {
+      "q": "¿Conviene usar 1M context o RAG?",
+      "a": "**RAG** si tu pregunta requiere solo un fragmento del corpus. **1M context** si necesitás razonamiento global sobre todo el doc/codebase. Costo: RAG suele ser 5-20x más barato en agregado."
+    },
+    {
+      "q": "¿Prompt caching aplica en tier 1M?",
+      "a": "**Sí**, y es donde más ahorrás. Read del cache cuesta 10% del precio del tier — USD 0,60/MT en Sonnet 1M vs USD 6/MT base."
+    },
+    {
+      "q": "¿Cómo cuento tokens antes de enviar?",
+      "a": "Anthropic SDK incluye `client.messages.count_tokens()` que devuelve el conteo exacto sin gastar la request. Útil para decidir si vas a entrar al tier 1M."
+    },
+    {
+      "q": "¿Hay rate limit distinto en 1M tier?",
+      "a": "Sí, los **TPM (tokens per minute)** del tier 1M son menores. Verificá tu organización en Anthropic Console → Limits."
+    },
+    {
+      "q": "¿Cuál es la diferencia de calidad entre Sonnet 1M y Opus 1M?",
+      "a": "Opus es mejor en razonamiento complejo, codigo, matemática. Sonnet 1M es suficiente para resumen, extracción, Q&A sobre documentos largos. Probá ambos en tu workload antes de comprometerte."
+    }
+  ],
+  "sources": [
+    { "name": "Anthropic Pricing", "url": "https://www.anthropic.com/pricing" },
+    { "name": "Anthropic Docs — Long Context", "url": "https://docs.anthropic.com/en/docs/build-with-claude/context-windows" }
+  ],
+  "relatedSlugs": [
+    "calculadora-prompt-caching-anthropic-ahorro-mensual"
+  ],
+  "howToSteps": [
+    { "name": "Estimá tokens de input", "text": "Usá count_tokens del SDK o aproximá: palabras × 1.3." },
+    { "name": "Estimá output esperado", "text": "Una respuesta corta ~500, larga ~4000-8000 tokens." },
+    { "name": "Elegí modelo y tier", "text": "Si tu input >200k, entrás automáticamente al tier 1M." },
+    { "name": "Ingresá requests/mes", "text": "Volumen mensual estimado a este tamaño." },
+    { "name": "Calculá", "text": "Costo por request y costo mensual proyectado." }
+  ]
+}

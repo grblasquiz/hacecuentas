@@ -1,0 +1,224 @@
+{
+  "slug": "calculadora-token-vesting-cliff-tge-unlock-roi",
+  "title": "Calculadora Vesting de Tokens: Cliff, TGE, Unlock y ROI 2026",
+  "h1": "Token vesting — ROI ajustado por cliff, TGE y unlock lineal",
+  "description": "📅 Calculá el ROI de una inversión en presale o seed con cronograma de vesting: TGE unlock, cliff de meses y unlock lineal. Tokens disponibles ahora vs total.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "📅",
+  "formulaId": "token-vesting-cliff-tge-unlock-roi",
+  "seoKeywords": [
+    "token vesting calculator",
+    "tge unlock calculator",
+    "cliff vesting cripto",
+    "presale roi vesting",
+    "token unlock schedule",
+    "seed round vesting cliff"
+  ],
+  "intro": "Cuando entrás a una **presale, seed round o private round** de un token, el cronograma de **vesting** define cuánto y cuándo recibís: típicamente hay un **TGE unlock** (porcentaje liberado al lanzar el token), un **cliff** (meses sin desbloqueo) y luego un **vesting lineal** (liberación gradual mes a mes). Tu **ROI nominal** puede ser muy distinto al **ROI realmente cobrable hoy** si la mayor parte está bloqueada. Esta calculadora separa: cuánto vale lo que tenés disponible **ahora** (TGE), cuánto valdría el bag **completo** si todo se libera al precio actual y el ROI ajustado por la fracción ya disponible. Útil para evaluar entradas a rondas privadas y comparar términos entre proyectos.",
+  "keyTakeaway": "Un token con **5% TGE + cliff 6 meses + 24 meses de vesting lineal** tarda **30 meses** en liberar el 100%. Si entraste a USD 0,01 y el TGE es a USD 0,10, el **ROI inmediato** es 900% pero solo sobre el 5% disponible — el resto es papel hasta que se libere.",
+  "useCases": [
+    "Evaluar términos de una presale o seed round antes de invertir.",
+    "Calcular cuánto del bag está disponible hoy vs locked.",
+    "Comparar dos rondas con TGE y cliff distintos.",
+    "Estimar el valor real de un airdrop con vesting.",
+    "Decidir si entrar a una private round con cliff largo."
+  ],
+  "fields": [
+    {
+      "id": "tokensTotales",
+      "label": "Tokens totales que vas a recibir",
+      "type": "number",
+      "suffix": "tokens",
+      "placeholder": "1000000",
+      "min": 0,
+      "step": 1000,
+      "required": true,
+      "help": "Cantidad total de tokens asignada en la ronda (suma de TGE + locked)."
+    },
+    {
+      "id": "precioCompraUsd",
+      "label": "Precio de compra por token",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "0.01",
+      "min": 0,
+      "step": 0.0001,
+      "required": true,
+      "help": "Precio que pagaste en la ronda (USD 0,001 a USD 1 según fase)."
+    },
+    {
+      "id": "precioActualUsd",
+      "label": "Precio actual del token",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "0.10",
+      "min": 0,
+      "step": 0.0001,
+      "required": true,
+      "help": "Cotización actual en mercado spot (CoinGecko, DEXScreener)."
+    },
+    {
+      "id": "tgeUnlockPct",
+      "label": "% liberado al TGE",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "5",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "required": true,
+      "help": "Porcentaje del bag que recibís el día del Token Generation Event (típicamente 0-25%)."
+    },
+    {
+      "id": "cliffMeses",
+      "label": "Cliff en meses",
+      "type": "number",
+      "suffix": "meses",
+      "placeholder": "6",
+      "min": 0,
+      "step": 1,
+      "required": true,
+      "help": "Meses sin desbloqueo después del TGE (típicamente 0-12 meses)."
+    },
+    {
+      "id": "vestingMeses",
+      "label": "Duración del vesting lineal",
+      "type": "number",
+      "suffix": "meses",
+      "placeholder": "24",
+      "min": 0,
+      "step": 1,
+      "required": true,
+      "help": "Cuántos meses tarda en liberarse el resto post-cliff (típicamente 12-48 meses)."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-26",
+    "source": "Token Unlocks / TokenTerminal",
+    "sourceUrl": "https://token.unlocks.app",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "tokensDisponiblesAhora",
+      "label": "Tokens disponibles ahora (TGE)",
+      "format": "number",
+      "primary": true
+    },
+    {
+      "id": "valorDisponibleUsd",
+      "label": "Valor disponible ahora",
+      "format": "currency"
+    },
+    {
+      "id": "valorTotalSiUnlock",
+      "label": "Valor total si todo se libera al precio actual",
+      "format": "currency"
+    },
+    {
+      "id": "roiInmediatoPct",
+      "label": "ROI sobre porción TGE",
+      "format": "percent"
+    },
+    {
+      "id": "roiTotalPct",
+      "label": "ROI nominal si todo se libera",
+      "format": "percent"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: 1.000.000 tokens a USD 0,01 con TGE 5%, cliff 6m, vesting 24m",
+    "steps": [
+      "Inversión total: USD 10.000.",
+      "**TGE 5%** = 50.000 tokens disponibles.",
+      "Precio actual USD 0,10 → valor disponible: **USD 5.000**.",
+      "Sobre los USD 500 invertidos en la fracción TGE → **ROI inmediato 900%**.",
+      "Si **todo** se libera a USD 0,10: valor total USD 100.000 → ROI nominal 900%.",
+      "Pero el 95% del bag está locked por 6m de cliff + 24m de vesting (30 meses totales)."
+    ],
+    "result": "ROI nominal espectacular pero solo el 5% es real hoy. El resto depende del precio post-cliff."
+  },
+  "explanation": "## Anatomía de un cronograma de vesting\n\n```\nTotal bag = TGE_unlock + locked\nlocked = cliff_period + linear_vesting_period\n```\n\nEjemplo: **5% TGE + 6m cliff + 24m linear vesting**\n\n| Mes | % desbloqueado |\n|---|---|\n| 0 (TGE) | 5% |\n| 1-6 (cliff) | 5% (sin cambios) |\n| 7 | 5% + (95%/24) = ~9% |\n| 8 | ~13% |\n| ... | ... |\n| 30 | 100% |\n\n## Términos típicos por ronda\n\n| Ronda | TGE | Cliff | Vesting lineal |\n|---|---|---|---|\n| **Pre-seed** | 0-5% | 6-12m | 24-48m |\n| **Seed** | 0-10% | 6-12m | 18-36m |\n| **Private** | 5-15% | 3-6m | 12-24m |\n| **Strategic / KOL** | 10-25% | 1-3m | 6-12m |\n| **Public sale / IDO** | 20-50% | 0m | 3-12m |\n| **Airdrop** | 25-100% | 0-3m | 3-12m |\n\n## Por qué importa el cronograma\n\nUn proyecto puede listar a **100x del precio seed** pero si tu TGE es 5%, **solo cobrás 5x sobre el 5% disponible**. El resto está sujeto a:\n\n- **Riesgo de precio** (puede caer hasta hacerse cero antes del unlock).\n- **Liquidez** (cuando se libera, podés no poder vender sin slippage enorme).\n- **Vesting cliff drops**: cuando un cliff grande se libera, el precio suele caer 20-50% en días.\n\n## Estrategia para operar vesting\n\n1. **Reglas de cap a fully diluted valuation (FDV)**: si la FDV ya está en USD 1B+ al TGE, el upside está mayormente capturado.\n2. **Token Unlock calendar**: revisar tokenunlocks.app para evitar comprar antes de un cliff grande.\n3. **TWAP de salida**: si tenés un bag locked grande, vendé en TWAP (Time-Weighted Average Price) durante el periodo de unlock para evitar slippage.\n4. **Hedging con perp**: shortear el token con futures para fijar el precio de tu bag locked (estrategia avanzada con riesgo de funding).\n\n## ROI ajustado vs ROI nominal\n\n```\nROI_ajustado = (valor_disponible_hoy - dinero_invertido) / dinero_invertido\nROI_nominal_total = (valor_total_si_todo_se_libera - dinero_invertido) / dinero_invertido\n```\n\nLos VCs cripto suelen mirar ambos números. Para retail, **ROI ajustado** es el que realmente importa hasta el unlock completo.\n\n> **Aviso legal**: Esta calculadora es **educativa**. **No es asesoramiento financiero**. Las inversiones en tokens pre-launch tienen **riesgo de pérdida total** y alta volatilidad. Consultá con un asesor matriculado.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Los criterios editoriales están documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia).\n\n**Disclaimer:** Resultados orientativos. El cronograma real lo define el smart contract del proyecto.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el sitemap XML.\n",
+  "faq": [
+    {
+      "q": "¿Qué es un cliff en token vesting?",
+      "a": "Un **cliff** es el período inicial sin desbloqueo de tokens. Por ejemplo, **6 meses de cliff** significa que durante los primeros 6 meses post-TGE no recibís ningún token nuevo (más allá del % TGE). Su función es alinear incentivos del founder/inversor con la sostenibilidad del proyecto."
+    },
+    {
+      "q": "¿Qué es el TGE en cripto?",
+      "a": "**TGE = Token Generation Event** — el momento en que el token nace y se acuña en blockchain, listándose en exchanges o DEXes. En el TGE se desbloquea el primer porcentaje (TGE unlock) según el cronograma."
+    },
+    {
+      "q": "¿Cuál es un cronograma de vesting típico para una seed round?",
+      "a": "**5-10% TGE + 6-12 meses de cliff + 18-36 meses de vesting lineal**. Esto significa que un seed investor cobra el 100% de su bag entre 24 y 48 meses después del TGE."
+    },
+    {
+      "q": "¿Por qué los proyectos usan vesting?",
+      "a": "Para **prevenir dumps masivos** al lanzar el token: si un seed investor entró a USD 0,01 y el TGE es a USD 0,50 (50x), sin vesting podría vender todo el día 1 y crashear el precio. El vesting fuerza a vender gradualmente, alineando incentivos a largo plazo."
+    },
+    {
+      "q": "¿Hay riesgo de que el smart contract no respete el vesting?",
+      "a": "**Sí**. Algunos proyectos usan smart contracts auditados (Sablier, OpenZeppelin VestingWallet, Hedgey), pero otros tienen contracts custom no auditados. Verificá siempre que el contract esté **on-chain, verificado en Etherscan** y que el código coincida con lo prometido en docs."
+    },
+    {
+      "q": "¿Puedo vender mi bag locked antes del unlock?",
+      "a": "**Sí, en plataformas OTC** como Hyperliquid points, X (Twitter) deals o protocolos como Hedgey tokens-as-NFT. Los descuentos suelen ser **30-70%** sobre el precio spot porque el comprador asume el riesgo de unlock + tiempo. Operación riesgosa y poco regulada."
+    },
+    {
+      "q": "¿Conviene entrar a una private round con cliff de 12 meses?",
+      "a": "**Depende del descuento y la confianza en el proyecto**. Si el descuento vs precio público esperado es 80%+ y el proyecto tiene tracción real (TVL, users, revenue), un cliff largo puede ser razonable. Si el descuento es 30% y el proyecto es solo una whitepaper, el cliff aumenta el riesgo de pérdida total."
+    },
+    {
+      "q": "¿Cómo afecta un unlock grande al precio del token?",
+      "a": "**Negativamente, en general**. Cliff drops y unlocks grandes (>5% del supply circulante) suelen anticiparse en mercado: el precio cae 10-30% en los días previos al unlock por venta especulativa. Por eso conviene **mirar el calendario de unlocks** (tokenunlocks.app) antes de entrar a un token."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Token Unlocks — calendario de vesting",
+      "url": "https://token.unlocks.app"
+    },
+    {
+      "name": "Hedgey Finance — vesting on-chain",
+      "url": "https://hedgey.finance"
+    },
+    {
+      "name": "Sablier — token streaming",
+      "url": "https://sablier.com"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-airdrop-elegibilidad-wallet-score-puntaje",
+    "calculadora-runes-bitcoin-protocolo-fee-mint",
+    "calculadora-restaking-eigenlayer-rendimiento-eth"
+  ],
+  "howToSteps": [
+    {
+      "name": "Cargá la cantidad total de tokens",
+      "text": "Suma total que vas a recibir en la ronda."
+    },
+    {
+      "name": "Ingresá precio de compra y precio actual",
+      "text": "Lo que pagaste por token y la cotización actual."
+    },
+    {
+      "name": "Definí el % de TGE",
+      "text": "Porcentaje liberado el día del lanzamiento."
+    },
+    {
+      "name": "Configurá cliff y vesting",
+      "text": "Meses de cliff y duración del vesting lineal post-cliff."
+    },
+    {
+      "name": "Calculá el ROI ajustado",
+      "text": "Hacé click en Calcular para ver tokens disponibles ahora vs valor total."
+    }
+  ]
+}

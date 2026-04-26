@@ -1,0 +1,208 @@
+{
+  "slug": "calculadora-dolar-mep-cocos-iol-comision-real",
+  "title": "Calculadora Dólar MEP: comisión real Cocos, IOL, Bull 2026",
+  "h1": "Dólar MEP — comisión real por broker",
+  "description": "💵 Calculá cuántos dólares MEP recibís neto en Cocos, IOL, Balanz o PPI según comisión compra, venta y derechos de mercado. Tipo de cambio efectivo y spread vs MEP de pizarra.",
+  "category": "finanzas",
+  "audience": "argentina",
+  "icon": "💵",
+  "formulaId": "dolar-mep-cocos-iol-comision-real",
+  "seoKeywords": [
+    "dolar mep cocos comision",
+    "dolar mep iol cuanto cobra",
+    "comparativa brokers dolar mep argentina",
+    "dolar mep balanz comision",
+    "tipo cambio efectivo dolar mep",
+    "dolar mep ppi comision real"
+  ],
+  "intro": "Comprar **dólar MEP** parece simple en la pizarra (compro AL30 en pesos, vendo AL30D en dólares), pero el **tipo de cambio efectivo** que terminás pagando depende de la **comisión del broker** + **derechos de mercado** + spread bid/ask del bono. En 2026 los brokers cobran muy diferente: **Cocos** ~0% en bonos, **IOL** ~0,40% por punta, **Balanz** ~0,50%, **PPI** negociable según volumen. Esta calculadora toma el monto en pesos que vas a operar, el MEP de referencia y las comisiones de tu broker, y devuelve los dólares netos que llegan a tu cuenta + el TC efectivo + el spread real vs el MEP de pizarra. Útil para decidir entre brokers antes de operar montos grandes (donde 0,5% son muchos dólares).",
+  "keyTakeaway": "En 2026 la diferencia entre el broker más barato (Cocos, ~0%) y el más caro (IOL/Balanz, ~0,8% combinado entre puntas + derechos) puede ser **USD 8 cada USD 1.000** comprados. En operaciones de USD 10.000+ vale la pena abrir cuenta en el broker más barato.",
+  "useCases": [
+    "Comparar cuántos dólares netos te llegan operando MEP en Cocos vs IOL vs Balanz vs PPI.",
+    "Calcular el tipo de cambio efectivo real (no el que muestra la pizarra).",
+    "Decidir si conviene cambiar de broker para operar montos grandes.",
+    "Estimar el costo total en pesos de comprar dólar MEP.",
+    "Comparar dólar MEP vs dólar tarjeta o dólar cripto netos de comisiones."
+  ],
+  "fields": [
+    {
+      "id": "montoArs",
+      "label": "Monto en pesos a operar",
+      "type": "number",
+      "suffix": "ARS",
+      "placeholder": "1000000",
+      "min": 0,
+      "step": 1000,
+      "required": true,
+      "help": "Cantidad de pesos que vas a usar para comprar dólar MEP. Recordá que el parking de 1 día hábil aplica para liquidación en CI/24h según el bono."
+    },
+    {
+      "id": "tipoCambioMep",
+      "label": "Tipo de cambio MEP de pizarra",
+      "type": "number",
+      "suffix": "ARS/USD",
+      "placeholder": "1250",
+      "min": 0,
+      "step": 0.01,
+      "required": true,
+      "help": "Cotización MEP del momento (AL30/AL30D suele ser la más operada). Mirá Rava, Bolsar o el dashboard de tu broker."
+    },
+    {
+      "id": "comisionCompraPct",
+      "label": "Comisión compra del bono",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "0.5",
+      "min": 0,
+      "max": 5,
+      "step": 0.01,
+      "required": true,
+      "help": "Comisión que cobra el broker por la punta de compra en pesos. Cocos ~0%, IOL ~0,40%, Balanz ~0,50%, PPI negociable."
+    },
+    {
+      "id": "comisionVentaPct",
+      "label": "Comisión venta del bono en USD",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "0.5",
+      "min": 0,
+      "max": 5,
+      "step": 0.01,
+      "required": true,
+      "help": "Comisión por la punta de venta del bono en dólares. Casi siempre igual a la de compra."
+    },
+    {
+      "id": "derechoMercadoPct",
+      "label": "Derechos de mercado por punta",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "0.045",
+      "min": 0,
+      "max": 1,
+      "step": 0.001,
+      "required": true,
+      "help": "Arancel que cobra BYMA/MAE por cada punta. Suele ser ~0,045% — verificá si tu broker lo absorbe o te lo carga."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "daily",
+    "lastUpdated": "2026-04-26",
+    "source": "BYMA / Rava Online",
+    "sourceUrl": "https://www.byma.com.ar",
+    "updateType": "manual"
+  },
+  "outputs": [
+    {
+      "id": "dolaresNetos",
+      "label": "Dólares MEP netos",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "tipoCambioEfectivo",
+      "label": "TC efectivo (ARS por USD)",
+      "format": "currency"
+    },
+    {
+      "id": "spreadVsMepPct",
+      "label": "Spread vs MEP de pizarra",
+      "format": "percent"
+    },
+    {
+      "id": "costoTotalArs",
+      "label": "Costo total en comisiones (ARS)",
+      "format": "currency"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: $1.000.000 ARS a MEP en Cocos vs IOL",
+    "steps": [
+      "**Cocos** (0% punta + 0% derecho): MEP $1.250 → recibís **USD 800,00 netos**, TC efectivo $1.250.",
+      "**IOL** (0,40% por punta + 0,045% derecho): MEP $1.250 → recibís **USD 792,90 netos**, TC efectivo $1.261,18.",
+      "**Diferencia**: USD 7,10 perdidos por operar en el broker más caro en una operación de $1M.",
+      "Sobre USD 10.000 (operación grande), la diferencia escala a **USD 71** por una sola conversión."
+    ],
+    "result": "Cocos sale ~0,9% más barato que IOL/Balanz en bonos AL30 a abril 2026."
+  },
+  "explanation": "## Cómo funciona el dólar MEP\n\nEl **dólar MEP (Mercado Electrónico de Pagos)** se obtiene comprando un **bono soberano en pesos** (AL30, GD30) y vendiendo el mismo bono en dólares (AL30D, GD30D). El cociente entre el precio en pesos y el precio en dólares **es** el tipo de cambio MEP.\n\n```\nMEP = precio_AL30_ARS / precio_AL30D_USD\n```\n\nNo hay límite de monto y es 100% legal — es la vía más usada para dolarizarse en Argentina post cepo.\n\n## Costos que se comen el TC efectivo\n\n| Costo | Cuánto | Quién lo cobra |\n|---|---|---|\n| Comisión compra bono ARS | 0% a 0,5% | Broker |\n| Comisión venta bono USD | 0% a 0,5% | Broker |\n| Derecho de mercado | ~0,045% por punta | BYMA / MAE |\n| Spread bid/ask del bono | 0,1% a 0,5% | Mercado (no aparece) |\n| IVA sobre comisión | 21% sobre la comisión | ARCA |\n\n## Comparativa de brokers (abril 2026)\n\n| Broker | Compra | Venta | Derecho | Costo total estimado |\n|---|---|---|---|---|\n| **Cocos Capital** | 0% | 0% | absorbe | ~0,1% (solo spread bid/ask) |\n| **IOL** | 0,40% | 0,40% | te lo cargan | ~0,9% |\n| **Balanz** | 0,50% | 0,50% | te lo cargan | ~1,1% |\n| **PPI** | negociable | negociable | te lo cargan | ~0,4-0,8% según volumen |\n| **Bull Market** | 0,30% | 0,30% | te lo cargan | ~0,7% |\n\n*Verificá tarifas vigentes en cada broker antes de operar.*\n\n## Parking y liquidación\n\nLa CNV exige **parking de 1 día hábil** en bonos AL30 si querés transferir los dólares fuera del broker. Para mantenerlos en cuenta del broker, podés operar CI (mismo día) sin parking.\n\n## Alternativas a comparar\n\n- **[Dólar tarjeta](/percepcion-dolar-tarjeta-impuesto-pais)**: cómodo pero con percepciones del 30-60%.\n- **[Dólar cripto (USDT)](/calculadora-dolar-cripto-vs-mep-spread)**: 24/7 pero spread mayor.\n- **CCL**: similar al MEP pero liquida en cuenta del exterior.\n\n> **Aviso legal**: Esta calculadora es educativa. **No constituye asesoramiento financiero ni recomendación de broker.** Las comisiones cambian — verificá siempre con el broker antes de operar.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Los criterios editoriales están documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Las comisiones citadas se cotejan periódicamente contra los tarifarios públicos de cada broker.\n\n**Disclaimer:** Resultados orientativos. Para decisiones relevantes consultá con un asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el sitemap XML de Hacé Cuentas.\n",
+  "faq": [
+    {
+      "q": "¿Cuál es el broker más barato para operar dólar MEP en 2026?",
+      "a": "**Cocos Capital** es el más barato porque cobra **0% de comisión en bonos** y absorbe los derechos de mercado. IOL, Balanz y Bull cobran entre 0,30% y 0,50% por punta + derechos."
+    },
+    {
+      "q": "¿Por qué el TC efectivo es siempre más alto que el MEP de pizarra?",
+      "a": "Porque el MEP de pizarra es el cociente puro de precios del bono, **sin comisiones**. Cuando vos operás, sumás comisión de compra + comisión de venta + derechos + spread bid/ask, y todo eso te saca dólares respecto del MEP teórico."
+    },
+    {
+      "q": "¿Cuánto es el monto mínimo para operar MEP?",
+      "a": "No hay mínimo legal, pero por costo fijo (parking, licencia bursátil, comisiones mínimas en algunos brokers) **debajo de $200.000 ARS** los costos relativos suben mucho. Lo eficiente arranca desde $500.000 ARS."
+    },
+    {
+      "q": "¿Qué es el parking y cuándo aplica?",
+      "a": "Parking es el plazo mínimo de tenencia del bono antes de poder vender (en USD) o transferir los dólares. En AL30 con liquidación 24h, parking es **1 día hábil**. Si operás CI (contado inmediato) y dejás los dólares en el broker, no hay parking."
+    },
+    {
+      "q": "¿Conviene operar MEP con AL30 o GD30?",
+      "a": "**AL30** (ley argentina) suele tener spread bid/ask más chico y mayor volumen → MEP más eficiente. **GD30** (ley NY) sirve más para inversores institucionales o quien busque CCL en el exterior. Para operación retail, AL30 es la default."
+    },
+    {
+      "q": "¿Pago Impuesto a las Ganancias por operar MEP?",
+      "a": "La **diferencia de cotización del bono** entre compra y venta puede generar resultado positivo gravado por Renta Financiera Cedular (5% bonos en pesos, 15% en USD según normativa vigente). Consultá con tu contador, especialmente si operás montos grandes con frecuencia."
+    },
+    {
+      "q": "¿Hay límite de monto para comprar dólar MEP?",
+      "a": "**No, no hay límite legal** desde la salida del cepo en diciembre 2023. Podés operar montos chicos o millones de dólares por mes sin restricciones cambiarias."
+    },
+    {
+      "q": "¿Qué pasa si quiero retirar los dólares MEP a mi cuenta del exterior?",
+      "a": "Tenés que esperar el parking de 1 día hábil y solicitar la transferencia al broker. Suele tardar **1-3 días hábiles** y algunos brokers cobran **comisión de transferencia internacional** (USD 30-100). Cocos e IOL hoy lo permiten sin costo a cuentas en USA si validaste antes."
+    }
+  ],
+  "sources": [
+    {
+      "name": "BYMA — Bolsas y Mercados Argentinos",
+      "url": "https://www.byma.com.ar"
+    },
+    {
+      "name": "CNV — Comisión Nacional de Valores",
+      "url": "https://www.cnv.gov.ar"
+    },
+    {
+      "name": "Rava Online — cotizaciones",
+      "url": "https://www.rava.com"
+    }
+  ],
+  "relatedSlugs": [
+    "cambio-de-monedas",
+    "calculadora-dolar-cripto-vs-mep-spread",
+    "percepcion-dolar-tarjeta-impuesto-pais"
+  ],
+  "howToSteps": [
+    {
+      "name": "Ingresá el monto en pesos",
+      "text": "Ingresá cuántos pesos vas a destinar a comprar dólar MEP (ej: 1000000)."
+    },
+    {
+      "name": "Ingresá el tipo de cambio MEP",
+      "text": "Mirá la cotización MEP actual (AL30/AL30D) en el dashboard de tu broker o en Rava."
+    },
+    {
+      "name": "Ingresá las comisiones de tu broker",
+      "text": "Cargá la comisión de compra del bono ARS, la de venta del bono USD y los derechos de mercado."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón Calcular y obtené los dólares netos + TC efectivo real."
+    },
+    {
+      "name": "Compará brokers",
+      "text": "Cambiá las comisiones por las del próximo broker y compará cuántos dólares más recibís."
+    }
+  ]
+}
