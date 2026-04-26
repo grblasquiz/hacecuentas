@@ -28,7 +28,7 @@ except Exception:
         _ssl_ctx.check_hostname = False
         _ssl_ctx.verify_mode = ssl.CERT_NONE
 
-KEY = '79ef29dd0b79075ac90d508e94114642'
+KEY = '00e48c587b06495db41032c4797d9d39'
 KEY_LOCATION = f'https://hacecuentas.com/{KEY}.txt'
 HOST = 'hacecuentas.com'
 ENDPOINT = 'https://api.indexnow.org/IndexNow'

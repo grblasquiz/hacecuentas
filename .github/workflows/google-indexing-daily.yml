@@ -93,3 +93,35 @@ jobs:
 
       # El state file está en .gitignore — persistencia entre runs vía
       # actions/cache arriba, no vía commit al repo.
+
+      - name: Open GitHub issue if push failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="🚨 Google Indexing API daily push falló ($(date -u +'%Y-%m-%d'))"
+          BODY=$(cat <<EOF
+          El cron diario de Google Indexing API falló.
+
+          **Workflow:** [\`${{ github.workflow }}\` run #${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          **Trigger:** ${{ github.event_name }}
+          **Fecha:** $(date -u +'%Y-%m-%d %H:%M UTC')
+
+          ## Causas típicas
+          1. **Quota excedida**: Google Indexing API permite 200 URLs/día por proyecto. Si subiste el límite, ajustar \`GOOGLE_INDEXING_LIMIT\`.
+          2. **Credenciales inválidas**: el secret \`GCP_INDEXING_CREDS\` puede haber expirado o el Service Account perdió rol "Owner" en GSC.
+          3. **403 Forbidden**: la verificación del sitio en GSC pudo haber caído (verificar \`hacecuentas.com\` en Search Console).
+          4. **5xx transitorio**: re-correr manualmente con \`workflow_dispatch\`.
+
+          ## Próximos pasos
+          - Revisar el log completo en el run linkeado arriba
+          - Verificar quota en [GCP Console](https://console.cloud.google.com/apis/dashboard) → "Web Search Indexing API"
+          EOF
+          )
+          EXISTING=$(gh issue list --label google-indexing-failure --state open --json number --jq '.[0].number' || echo '')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY" --label google-indexing-failure 2>/dev/null || \
+              gh issue create --title "$TITLE" --body "$BODY"
+          fi
