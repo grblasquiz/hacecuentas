@@ -78,7 +78,8 @@ export function finiquitoLiquidacionMexico(i: Inputs): Outputs {
   if (tipoTerm === 'despido-injustificado') {
     tresMeses = sd * 90;
     veinteDias = sd * 20 * anios;
-    const salarioTope = Math.min(sd, 240);
+    // Tope LFT Art. 162: 2 salarios mínimos generales (SMG 2026 = $278.80)
+    const salarioTope = Math.min(sd, 278.80 * 2);
     primaAntiguedad = 12 * anios * salarioTope;
 
     desglose['Indemnización 3 meses'] = Number(tresMeses.toFixed(2));
@@ -88,7 +89,8 @@ export function finiquitoLiquidacionMexico(i: Inputs): Outputs {
     tipoCalculado = 'Liquidación (despido injustificado)';
   } else if (tipoTerm === 'renuncia' && anios >= 15) {
     // Renuncia con 15+ años: prima antigüedad (Art. 162 LFT)
-    const salarioTope = Math.min(sd, 240);
+    // Tope LFT Art. 162: 2 salarios mínimos generales (SMG 2026 = $278.80)
+    const salarioTope = Math.min(sd, 278.80 * 2);
     primaAntiguedad = 12 * anios * salarioTope;
     desglose['Prima de antigüedad'] = Number(primaAntiguedad.toFixed(2));
   }

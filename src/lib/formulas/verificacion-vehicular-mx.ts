@@ -41,7 +41,8 @@ const CALENDARIO_ENGOMADO: Record<string, { meses: number[], vigencia: number }>
 
 export function verificacionVehicularMx(i: Inputs): Outputs {
   const tipoRaw = String(i.tipoHolograma ?? i.tipoEngomado ?? '').toLowerCase();
-  const uma = Number(i.uma ?? 120);
+  // UMA diaria 2026 según INEGI/DOF (vigente desde 1-feb-2026): $113.14
+  const uma = Number(i.uma ?? 113.14);
   const fueraCalendario = i.fueraCalendario === true || i.fueraCalendario === 'si';
 
   if (!tipoRaw) throw new Error('Ingresá el tipo de holograma');

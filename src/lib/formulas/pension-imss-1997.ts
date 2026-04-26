@@ -23,7 +23,10 @@ export interface Outputs {
   mensaje: string;
 }
 
-const PMG_MENSUAL_2026 = 6500; // pensión mínima garantizada indicativa
+// Pensión Mínima Garantizada IMSS Ley 97 (LSS Art. 170): equivale a 1 SMG mensual
+// para 750 semanas, escalada hasta 2 SMG para 1000 semanas. Promedio referencial 2026.
+// Fuente: IMSS - Tabla PMG actualizada por DOF.
+const PMG_MENSUAL_2026 = 7400;
 
 export function pensionImss1997(i: Inputs): Outputs {
   const saldoAfore = Number(i.saldoAfore);
