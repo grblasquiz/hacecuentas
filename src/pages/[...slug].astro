@@ -87,9 +87,14 @@ if ((ogManifest as Record<string, boolean>)[calc.slug]) {
   ogImage = `/og/${calc.slug}.png`;
 }
 
-// dateModified: de calc.lastReviewed si declarado, sino build date
+// dateModified: prioridad lastReviewed > dataUpdate.lastUpdated > build date.
+// dataUpdate.lastUpdated existe en el 100% de calcs; lastReviewed sólo cuando
+// un revisor humano valida la calc. Si ninguno declarado, cae al build date.
+const _dataUpdateLast = calc.dataUpdate?.lastUpdated;
 if (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
   dateModified = new Date(calc.lastReviewed + 'T00:00:00Z').toISOString();
+} else if (_dataUpdateLast && /^\d{4}-\d{2}-\d{2}$/.test(_dataUpdateLast)) {
+  dateModified = new Date(_dataUpdateLast + 'T00:00:00Z').toISOString();
 } else {
   dateModified = new Date().toISOString();
 }
@@ -98,6 +103,12 @@ lastReviewedLabel = new Date(dateModified).toLocaleDateString('es-AR', {
   month: 'long',
   year: 'numeric',
 });
+// Badge "Actualizado <mes> <año>" en español, junto al H1.
+const _badgeMonthYear = new Date(dateModified).toLocaleDateString('es-AR', {
+  month: 'long',
+  year: 'numeric',
+});
+const updatedBadgeLabel = `Actualizado ${_badgeMonthYear}`;
 const datePublished = '2025-09-01T00:00:00Z';
 
 // audience: 'AR' = específica para Argentina; 'global' (default) = aplica en todo el mundo hispanohablante
@@ -173,6 +184,39 @@ const schemaBreadcrumb = {
   ],
 };
 
+// Mapeo categoría → schema.org applicationCategory. Google usa esto para
+// clasificar la app en Rich Results. Las categorías sin match natural
+// (cocina, juegos, etc.) caen a UtilitiesApplication.
+const APPLICATION_CATEGORY_MAP: Record<string, string> = {
+  finanzas: 'FinanceApplication',
+  impuestos: 'FinanceApplication',
+  negocios: 'BusinessApplication',
+  marketing: 'BusinessApplication',
+  salud: 'HealthApplication',
+  mascotas: 'HealthApplication',
+  familia: 'LifestyleApplication',
+  vida: 'LifestyleApplication',
+  hogar: 'LifestyleApplication',
+  jardineria: 'LifestyleApplication',
+  cocina: 'LifestyleApplication',
+  viajes: 'TravelApplication',
+  deportes: 'HealthApplication',
+  educacion: 'EducationalApplication',
+  idiomas: 'EducationalApplication',
+  matematica: 'EducationalApplication',
+  ciencia: 'EducationalApplication',
+  astronomia: 'EducationalApplication',
+  clima: 'UtilitiesApplication',
+  'medio-ambiente': 'UtilitiesApplication',
+  construccion: 'UtilitiesApplication',
+  automotor: 'UtilitiesApplication',
+  tecnologia: 'UtilitiesApplication',
+  electronica: 'UtilitiesApplication',
+  entretenimiento: 'GameApplication',
+  juegos: 'GameApplication',
+};
+const applicationCategory = APPLICATION_CATEGORY_MAP[calc.category] || 'UtilitiesApplication';
+
 // SoftwareApplication + WebApplication — Google las usa para web apps / calculadoras
 const schemaApp = {
   '@context': 'https://schema.org',
@@ -181,9 +225,9 @@ const schemaApp = {
   description: schemaDescription,
   url: `https://hacecuentas.com/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/${calc.slug}`,
-  applicationCategory: 'UtilitiesApplication',
+  applicationCategory,
   applicationSubCategory: 'Calculator',
-  operatingSystem: 'Any (Web)',
+  operatingSystem: 'Web',
   browserRequirements: 'Requires JavaScript. Requires HTML5.',
   inLanguage: schemaLang,
   isAccessibleForFree: true,
@@ -196,10 +240,11 @@ const schemaApp = {
     url: 'https://hacecuentas.com',
   },
   // Speakable: permite a voice assistants (Alexa, Google Assistant) leer las
-  // partes clave de la calc en respuesta a queries de voz.
+  // partes clave de la calc en respuesta a queries de voz. Apunta a
+  // .calc-intro y .calc-key-takeaway (clases dedicadas para schema speakable).
   speakable: {
     '@type': 'SpeakableSpecification',
-    cssSelector: ['h1', '.lead', '.key-takeaway'],
+    cssSelector: ['.calc-intro', '.calc-key-takeaway'],
   },
 };
 
@@ -351,7 +396,7 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
         <span class="icon-wrap" aria-hidden="true">{calc.icon}</span>
         <div>
           <div class="eyebrow">{categoryLabels[calc.category] || calc.category}</div>
-          <h1>{calc.h1}{audience === 'AR' && <span class="ar-badge-h1" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>}</h1>
+          <h1>{calc.h1}{audience === 'AR' && <span class="ar-badge-h1" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>} <span class="updated-badge" title={`Última revisión: ${updated}`}>{updatedBadgeLabel}</span></h1>
         </div>
       </div>
     </header>
@@ -440,7 +485,7 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           </div>
         </div>
 
-        <p class="intro" set:html={mdInline(calc.intro)}></p>
+        <p class="intro calc-intro" set:html={mdInline(calc.intro)}></p>
 
         {audience === 'AR' && (
           <aside class="audience-notice" role="note" aria-label="Aviso sobre la audiencia de esta calculadora">

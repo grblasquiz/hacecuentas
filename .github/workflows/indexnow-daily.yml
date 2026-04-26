@@ -1,0 +1,50 @@
+name: IndexNow daily push (Bing + Yandex)
+
+# Cron diario que pushea TODAS las URLs del sitemap al IndexNow API
+# (Bing, Yandex, Seznam, Naver). Complementa indexnow-push.yml — ese corre
+# post-deploy en main; este corre todos los días aunque no haya deploys, para
+# que Bing/Yandex queden alineados con el push diario que Google ya recibe vía
+# google-indexing-daily.yml.
+#
+# IndexNow no requiere credenciales (sólo la key file servida por CF Pages en
+# /79ef29dd0b79075ac90d508e94114642.txt) — no hay secrets que configurar.
+# El script ya batchea de a 10.000 URLs (límite de IndexNow).
+
+on:
+  schedule:
+    # 09:30 UTC (06:30 AR) — 30 min después de google-indexing-daily.yml
+    # para evitar overlap en el runner queue.
+    - cron: '30 9 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Modo de ejecución'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all       # todas las URLs del sitemap (default)
+          - priority  # solo sitemap-priority.xml
+
+jobs:
+  indexnow-daily:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Push URLs to IndexNow (Bing + Yandex + Seznam + Naver)
+        run: |
+          MODE="${{ github.event.inputs.mode || 'all' }}"
+          if [ "$MODE" = "priority" ]; then
+            python3 scripts/indexnow-push.py
+          else
+            python3 scripts/indexnow-push.py --all
+          fi
