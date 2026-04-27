@@ -46,6 +46,29 @@ const schema = {
       simplificado y Convenio Multilateral.
     </p>
 
+    {provData.details && (
+      <section class="prov-details">
+        <h2>Cómo funciona IIBB en {provincia.name}</h2>
+        <p>{provData.details}</p>
+      </section>
+    )}
+
+    {provData.metrics && (
+      <section>
+        <h2>Alícuotas oficiales {provincia.name} 2026</h2>
+        <table class="metrics-table">
+          <tbody>
+            {Object.entries(provData.metrics).map(([k, v]) => (
+              <tr>
+                <th>{k}</th>
+                <td>{v}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    )}
+
     {provData.localNotes && (
       <aside class="local-notes">
         <h2>Particularidades de {provincia.name}</h2>
@@ -54,20 +77,77 @@ const schema = {
     )}
 
     <section>
-      <h2>Actividades cubiertas</h2>
+      <h2>Buscar IIBB en {provincia.name} por actividad</h2>
+      <p>Elegí tu rubro para ver la alícuota exacta aplicable en {provincia.name},
+        cómo se calcula el impuesto sobre tu facturación, retenciones bancarias
+        habituales y régimen simplificado disponible para monotributistas.</p>
       <ul class="act-grid">
         {actividades.map((a) => (
           <li>
             <a href={`/iibb/${provincia.slug}/${a.slug}`}>
               <span class="act-icon">{a.icon}</span>
               <div>
-                <strong>{a.label}</strong>
-                <small>Alícuota: {a.rateRange}</small>
+                <strong>{a.label} en {provincia.name}</strong>
+                <small>Alícuota base: {a.rateRange}</small>
               </div>
             </a>
           </li>
         ))}
       </ul>
+    </section>
+
+    <section>
+      <h2>Convenio Multilateral en {provincia.name}</h2>
+      <p>
+        Si tu actividad genera ingresos o gastos en {provincia.name} <em>y</em>
+        en otra jurisdicción argentina, debés inscribirte en
+        <strong> Convenio Multilateral (CM)</strong> y distribuir tu base imponible
+        entre las provincias mediante coeficientes calculados sobre ingresos y
+        gastos del año anterior.
+      </p>
+      <ul>
+        <li><strong>Régimen general (Art. 2):</strong> aplica para la mayoría de las actividades. Coeficiente unificado.</li>
+        <li><strong>Régimen especial:</strong> para construcción (Art. 6), entidades financieras (Art. 7), seguros (Art. 8), transporte (Art. 9), profesionales (Art. 10), comisionistas (Art. 11), prestamistas (Art. 12).</li>
+      </ul>
+      <p>
+        El Convenio Multilateral se administra a través de <strong>SIFERE</strong>
+        (Sistema Federal de Recaudación) y la Comisión Arbitral. La presentación
+        es mensual y la liquidación se distribuye automáticamente a {provincia.name}
+        y al resto de las jurisdicciones donde operás.
+      </p>
+    </section>
+
+    <section>
+      <h2>Régimen simplificado de IIBB en {provincia.name}</h2>
+      <p>
+        Para monotributistas y pequeños contribuyentes que operan exclusivamente
+        en {provincia.name} y no superan ciertos topes de ingresos anuales, suele
+        existir un <strong>régimen simplificado</strong> con cuota fija mensual
+        en lugar del porcentaje sobre facturación. Esto simplifica la operatoria
+        (no requiere DDJJ mensual) y unifica el pago.
+      </p>
+      <p>
+        Verificá los topes y requisitos exactos en el portal oficial de la
+        dirección de rentas de {provincia.name}. El régimen suele estar atado
+        al monotributo nacional (categoría máxima permitida) y a la actividad
+        ejercida.
+      </p>
+    </section>
+
+    <section>
+      <h2>Vencimientos y presentación</h2>
+      <p>
+        Las declaraciones juradas de IIBB en {provincia.name} se presentan
+        <strong>mensualmente</strong> mediante el sistema digital del organismo
+        recaudador. Los vencimientos dependen de la terminación del CUIT y se
+        publican en el calendario fiscal anual.
+      </p>
+      <p>
+        El pago se realiza por <strong>VEP, transferencia bancaria o débito
+        automático</strong>. Las retenciones bancarias y percepciones se
+        acreditan como pago a cuenta. Si tenés saldos a favor recurrentes,
+        es común tramitar exención o reducción de retenciones.
+      </p>
     </section>
   </article>
 
@@ -82,6 +162,22 @@ const schema = {
   .lead { color: #475569; font-size: 17px; }
   .local-notes { background: #fef3c7; border-radius: 10px; padding: 16px 22px; margin: 18px 0; }
   .local-notes h2 { font-size: 18px; margin: 0 0 6px; color: #92400e; }
+  .prov-details { margin: 24px 0; }
+  .prov-details p { color: #475569; font-size: 16px; }
+  .metrics-table {
+    width: 100%; border-collapse: collapse; margin: 12px 0;
+    background: #f8fafc; border-radius: 10px; overflow: hidden;
+  }
+  .metrics-table th, .metrics-table td {
+    padding: 10px 14px; text-align: left; border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+  }
+  .metrics-table th { color: #64748b; font-weight: 500; width: 40%; }
+  .metrics-table td { color: #1e293b; font-weight: 500; }
+  .metrics-table tr:last-child th, .metrics-table tr:last-child td { border-bottom: none; }
+  section { margin: 28px 0; }
+  section ul { padding-left: 22px; }
+  section ul li { margin-bottom: 6px; color: #475569; }
   .act-grid {
     list-style: none; padding: 0;
     display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
