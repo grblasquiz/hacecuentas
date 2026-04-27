@@ -151,21 +151,54 @@ jobs:
           set -e
           echo "Esperando 30s a que CF Pages termine de propagar..."
           sleep 30
-          fail=0
-          # Cada URL: status, debe contener H1 con texto no vacío y no contener "undefined"
-          for url in "/" "/calculadora-aguinaldo-sac" "/categoria/finanzas" "/argentina/salta" "/sitemap.xml"; do
-            full="https://hacecuentas.com$url"
-            status=$(curl -sL -o /tmp/body.html -w "%{http_code}" "$full")
-            echo "[$status] $url"
-            if [ "$status" != "200" ]; then echo "  ✗ status no es 200"; fail=$((fail+1)); continue; fi
-            if [[ "$url" == *.xml ]]; then continue; fi
-            if grep -q 'undefined' /tmp/body.html; then echo "  ✗ HTML contiene 'undefined'"; fail=$((fail+1)); fi
-            h1=$(grep -oE '<h1[^>]*>[^<]{1,200}</h1>' /tmp/body.html | head -1 || true)
-            if [ -z "$h1" ]; then echo "  ✗ no hay H1 con texto"; fail=$((fail+1)); fi
-          done
-          if [ "$fail" -gt 0 ]; then
-            echo ""
-            echo "❌ Smoke test fallido en $fail check(s). Deploy probablemente roto."
-            exit 1
-          fi
-          echo "✅ Smoke test OK"
+          # Smoke test en Python para regex multilínea decente.
+          # Checks por URL:
+          #  1) status 200
+          #  2) <title> no contiene 'undefined' ni vacío
+          #  3) primer <h1> tiene texto (tras strip de tags hijos)
+          #  4) ningún <meta name="description"> dice 'undefined'
+          # Antes era bash con grep -q 'undefined' que daba falsos positivos
+          # por usos legítimos en JS (ej. typeof x !== 'undefined').
+          python3 - <<'PYEOF'
+          import sys, re, urllib.request, ssl
+          ctx = ssl.create_default_context(); ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE
+          urls = ['/', '/calculadora-aguinaldo-sac', '/categoria/finanzas', '/argentina/salta', '/sitemap.xml']
+          fails = 0
+          for url in urls:
+              full = f'https://hacecuentas.com{url}'
+              try:
+                  req = urllib.request.Request(full, headers={'User-Agent': 'HC-SmokeTest/1.0'})
+                  r = urllib.request.urlopen(req, timeout=15, context=ctx)
+                  status = r.status
+                  body = r.read().decode('utf-8', errors='replace')
+              except Exception as e:
+                  print(f'  ✗ [{url}] error: {e}'); fails += 1; continue
+              if status != 200:
+                  print(f'  ✗ [{status}] {url}'); fails += 1; continue
+              print(f'  · [{status}] {url}')
+              if url.endswith('.xml'):
+                  if '<urlset' not in body and '<sitemapindex' not in body:
+                      print('    ✗ no parece sitemap XML'); fails += 1
+                  continue
+              # Title check
+              m = re.search(r'<title[^>]*>(.*?)</title>', body, re.S)
+              if not m or 'undefined' in m.group(1).lower() or len(m.group(1).strip()) < 5:
+                  print(f'    ✗ <title> roto: {m.group(1)[:80] if m else "ausente"!r}'); fails += 1
+              # H1 check (permite tags hijos)
+              m = re.search(r'<h1[^>]*>(.*?)</h1>', body, re.S)
+              if not m: print('    ✗ no hay <h1>'); fails += 1
+              else:
+                  text = re.sub(r'<[^>]+>', '', m.group(1)).strip()
+                  if not text:
+                      print('    ✗ <h1> sin texto (solo tags)'); fails += 1
+                  elif 'undefined' in text.lower():
+                      print(f'    ✗ <h1> contiene "undefined": {text[:80]!r}'); fails += 1
+              # Meta description check
+              m = re.search(r'<meta\s+name="description"\s+content="([^"]*)"', body)
+              if m and ('undefined' in m.group(1).lower() or len(m.group(1).strip()) < 10):
+                  print(f'    ✗ meta description roto: {m.group(1)[:80]!r}'); fails += 1
+          if fails:
+              print(f'\n❌ Smoke test: {fails} check(s) fallido(s). Deploy posiblemente roto.')
+              sys.exit(1)
+          print('\n✅ Smoke test OK')
+          PYEOF
