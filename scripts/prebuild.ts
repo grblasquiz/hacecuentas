@@ -76,11 +76,16 @@ async function main() {
     run(task('stamp-sw', 'stamp-sw')),
   ]);
 
-  console.log('[prebuild] fase 3: og-manifest + optimize-images (paralelo)');
-  await Promise.all([
-    run(task('og-manifest', 'generate-og-manifest')),
-    run(mjsTask('optimize-images', 'optimize-images')),
-  ]);
+  console.log('[prebuild] fase 3: og-manifest');
+  // optimize-images sacado del prebuild 2026-04-27. Generaba webp+avif de
+  // 2786 OG PNGs (5572 conversiones, sharp+avif effort:4). En CI no hay
+  // cache de webp/avif (están en .gitignore) → cada deploy regeneraba todo
+  // y tardaba 10+ min, haciendo timeout al job de 15min. Ningún consumidor
+  // (HTML, src/) referencia los .webp/.avif: og:image apunta a .png.
+  // Si en el futuro se quiere servir <picture> con webp/avif, correr
+  // `node scripts/optimize-images.mjs` manualmente y commitear los
+  // resultados, o agregar un actions/cache step al workflow.
+  await run(task('og-manifest', 'generate-og-manifest'));
 
   const total = ((Date.now() - t0) / 1000).toFixed(1);
   console.log(`[prebuild] ✓ total ${total}s`);

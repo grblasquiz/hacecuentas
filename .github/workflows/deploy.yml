@@ -6,15 +6,20 @@ on:
   workflow_dispatch:  # permite correr manual desde Github UI
 
 concurrency:
-  # Cancela deploys anteriores si llega uno nuevo antes de que termine.
-  # Así ahorra builds y siempre deploya el último commit.
+  # Encola deploys (no cancela el en curso). Si cancelamos cuando llega un
+  # nuevo push, los crons (data-update-daily, refresh-freshness, indexnow-*)
+  # que pushean dentro de la ventana de build pisan al deploy original y
+  # nada llega a prod. Era exactamente lo que pasaba 2026-04-26/27: 4 deploys
+  # seguidos quedaron `cancelled` y wrangler tuvo que ir a mano.
   group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15  # si algo se cuelga, corta
+    # Build local: ~90s. CI con npm ci + 2700+ páginas: ~6-10 min observado.
+    # Antes era 15 → cortaba. Subimos a 30 con margen.
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,7 +41,20 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        # Verbose timing: imprime tiempo de cada sub-step de prebuild + astro build.
+        # Si futuro deploy vuelve a colgar, queda registro de qué etapa fue.
+        run: |
+          set -e
+          echo "::group::env info"
+          node --version
+          npm --version
+          free -h || true
+          df -h .
+          echo "::endgroup::"
+          echo "::group::npm run build (with /usr/bin/time)"
+          /usr/bin/time -v npm run build 2>&1 || EXIT=$?
+          echo "::endgroup::"
+          exit ${EXIT:-0}
 
       # El adapter @astrojs/cloudflare genera DOS configs en el build:
       #   1. dist/server/wrangler.json  ← la que queremos usar (workingDirectory)
