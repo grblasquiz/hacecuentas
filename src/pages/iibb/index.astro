@@ -1,0 +1,111 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const provinciasMod = await import('../../content/argentina/provincias.json');
+const provincias: any[] = provinciasMod.default || provinciasMod;
+const actividadesMod = await import('../../content/iibb/actividades.json');
+const actividades: any[] = actividadesMod.default || actividadesMod;
+
+const title = 'Ingresos Brutos (IIBB) Argentina 2026 — Por provincia y actividad | Hacé Cuentas';
+const description = 'Calculá Ingresos Brutos en cualquier provincia argentina y actividad económica. Alícuotas oficiales 2026, retenciones, régimen simplificado y Convenio Multilateral.';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: title,
+  description,
+  url: 'https://hacecuentas.com/iibb',
+  inLanguage: 'es-AR',
+};
+---
+
+<Layout title={title} description={description} canonical="/iibb" schema={schema} audience="AR">
+  <Header slot="header" />
+
+  <article class="iibb-hub">
+    <nav class="breadcrumb"><a href="/">Inicio</a> › <span>IIBB</span></nav>
+    <h1>Ingresos Brutos por provincia y actividad — Argentina 2026</h1>
+    <p class="lead">
+      Encontrá la <strong>alícuota de IIBB</strong> aplicable en tu jurisdicción y rubro,
+      con datos oficiales 2026, retenciones bancarias y régimen simplificado para
+      monotributistas. Cubrimos las <strong>{provincias.length} jurisdicciones</strong>
+      argentinas y las <strong>{actividades.length} actividades</strong> más comunes.
+    </p>
+
+    <section>
+      <h2>Buscar por provincia</h2>
+      <ul class="prov-grid">
+        {provincias.map((p) => (
+          <li><a href={`/iibb/${p.slug}`}>{p.name}</a></li>
+        ))}
+      </ul>
+    </section>
+
+    <section>
+      <h2>Buscar por actividad</h2>
+      <ul class="act-list">
+        {actividades.map((a) => (
+          <li>
+            <span class="act-icon">{a.icon}</span>
+            <div>
+              <strong>{a.label}</strong>
+              <p>{a.description}</p>
+              <small>Alícuota típica: <strong>{a.rateRange}</strong></small>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section>
+      <h2>¿Qué es Ingresos Brutos?</h2>
+      <p>
+        Ingresos Brutos es el principal impuesto provincial en Argentina. Grava la
+        <strong> facturación bruta</strong> (no la ganancia) de quienes ejercen actividades
+        comerciales, industriales o de servicios de manera habitual. Es <strong>acumulativo</strong>
+        (se aplica en cada etapa de la cadena productiva) y <strong>provincial</strong>:
+        cada una de las 24 jurisdicciones fija sus propias alícuotas y reglas.
+      </p>
+      <p>
+        Si operás en una sola provincia, sos <strong>contribuyente local</strong>.
+        Si tenés actividad en dos o más, te inscribís en <strong>Convenio Multilateral</strong>
+        y distribuís la base imponible con coeficientes.
+      </p>
+    </section>
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .iibb-hub { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; line-height: 1.6; }
+  .breadcrumb { color: #64748b; font-size: 14px; margin-bottom: 16px; }
+  .breadcrumb a { color: inherit; text-decoration: none; }
+  h1 { font-size: 32px; line-height: 1.2; margin: 8px 0 16px; }
+  .lead { color: #475569; font-size: 17px; margin-bottom: 32px; }
+  section { margin: 32px 0; }
+  h2 { font-size: 24px; margin: 0 0 16px; color: #1e293b; }
+  .prov-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px; padding: 0; list-style: none;
+  }
+  .prov-grid a {
+    display: block; padding: 10px 14px; background: #f1f5f9;
+    border-radius: 8px; color: #1e293b; text-decoration: none;
+    font-weight: 600; font-size: 14px;
+  }
+  .prov-grid a:hover { background: #e2e8f0; }
+  .act-list { padding: 0; list-style: none; display: grid; gap: 12px; }
+  .act-list li {
+    display: flex; gap: 16px; padding: 16px;
+    background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;
+  }
+  .act-icon { font-size: 28px; flex-shrink: 0; }
+  .act-list strong { color: #1e293b; font-size: 17px; display: block; }
+  .act-list p { margin: 4px 0; color: #64748b; font-size: 14px; }
+  .act-list small { color: #475569; font-size: 13px; }
+</style>

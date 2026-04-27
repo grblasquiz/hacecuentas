@@ -1,0 +1,279 @@
+---
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+
+export async function getStaticPaths() {
+  const provinciasMod = await import('../../../content/argentina/provincias.json');
+  const provincias: any[] = provinciasMod.default || (provinciasMod as any);
+  const actividadesMod = await import('../../../content/iibb/actividades.json');
+  const actividades: any[] = actividadesMod.default || (actividadesMod as any);
+  const ibMod = await import('../../../content/argentina/ingresos-brutos.json');
+  const ib: any = ibMod.default || ibMod;
+
+  const paths: any[] = [];
+  for (const prov of provincias) {
+    for (const act of actividades) {
+      paths.push({
+        params: { provincia: prov.slug, actividad: act.slug },
+        props: { provincia: prov, actividad: act, iibb: ib },
+      });
+    }
+  }
+  return paths;
+}
+
+const { provincia, actividad, iibb } = Astro.props;
+const provData = iibb.provinceData?.[provincia.slug] || {};
+const baseRate = provData.rate || actividad.rateRange.split(' - ')[0];
+
+const siteUrl = 'https://hacecuentas.com';
+const pageUrl = `${siteUrl}/iibb/${provincia.slug}/${actividad.slug}`;
+const title = `IIBB ${provincia.name} para ${actividad.label} 2026 — Alícuotas y cálculo | Hacé Cuentas`;
+const description = `Calculá Ingresos Brutos en ${provincia.name} para ${actividad.label.toLowerCase()}. Alícuota ${actividad.rateRange}, vencimientos, retenciones. Datos oficiales 2026.`;
+const seoKeywords = [
+  `IIBB ${provincia.name} ${actividad.label.toLowerCase()}`,
+  `ingresos brutos ${provincia.name} ${actividad.slug.replace(/-/g, ' ')}`,
+  `alicuota IIBB ${provincia.name} 2026`,
+  `calcular IIBB ${actividad.label.toLowerCase()} ${provincia.name}`,
+  `tasa ingresos brutos ${provincia.name}`,
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${pageUrl}#webpage`,
+      name: title,
+      description,
+      url: pageUrl,
+      inLanguage: 'es-AR',
+      about: { '@type': 'Thing', name: `Ingresos Brutos ${provincia.name} para ${actividad.label}` },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'IIBB', item: 'https://hacecuentas.com/iibb' },
+        { '@type': 'ListItem', position: 3, name: provincia.name, item: `https://hacecuentas.com/iibb/${provincia.slug}` },
+        { '@type': 'ListItem', position: 4, name: actividad.label },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: `¿Cuánto se paga de Ingresos Brutos en ${provincia.name} para ${actividad.label.toLowerCase()}?`,
+          acceptedAnswer: { '@type': 'Answer', text: `La alícuota general en ${provincia.name} para ${actividad.label.toLowerCase()} se ubica en el rango ${actividad.rateRange}. ${actividad.rateNotes} ${provData.localNotes || ''}` },
+        },
+        {
+          '@type': 'Question',
+          name: `¿Hay régimen simplificado de IIBB en ${provincia.name}?`,
+          acceptedAnswer: { '@type': 'Answer', text: `${provincia.name} ofrece régimen simplificado de IIBB para monotributistas y pequeños contribuyentes. Las cuotas son fijas mensuales, en lugar de porcentaje sobre facturación. Verificá los topes de ingresos anuales en la página oficial de la dirección de rentas.` },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Necesito Convenio Multilateral si opero en otra provincia?',
+          acceptedAnswer: { '@type': 'Answer', text: 'Sí. Si tu actividad genera ingresos o gastos en dos o más jurisdicciones, debés inscribirte en Convenio Multilateral (CM) y distribuir la base imponible con coeficientes según el régimen general (Art. 2) o regímenes especiales según la actividad.' },
+        },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical={`/iibb/${provincia.slug}/${actividad.slug}`}
+  schema={schema}
+  audience="AR"
+>
+  <Header slot="header" />
+
+  <article class="iibb-page">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Inicio</a> ›
+      <a href="/iibb">IIBB</a> ›
+      <a href={`/iibb/${provincia.slug}`}>{provincia.name}</a> ›
+      <span>{actividad.label}</span>
+    </nav>
+
+    <header class="iibb-hero">
+      <span class="iibb-eyebrow">{actividad.icon} Ingresos Brutos {provincia.name}</span>
+      <h1>IIBB en {provincia.name} para {actividad.label} 2026</h1>
+      <p class="iibb-lead">
+        La alícuota general aplicable a <strong>{actividad.label.toLowerCase()}</strong> en
+        <strong>{provincia.name}</strong> se ubica en el rango <strong>{actividad.rateRange}</strong>.
+        {actividad.rateNotes}
+      </p>
+      <a class="iibb-cta" href="/calculadora-ingresos-brutos-provincial">
+        🧮 Ir a la calculadora →
+      </a>
+    </header>
+
+    <section class="iibb-card">
+      <h2>Datos clave de IIBB en {provincia.name}</h2>
+      <dl class="iibb-meta">
+        <dt>Provincia</dt><dd>{provincia.name} ({provincia.abbr})</dd>
+        <dt>Actividad</dt><dd>{actividad.label}</dd>
+        <dt>Código de actividad (NAES/CLAE)</dt><dd>{actividad.naesExample}</dd>
+        <dt>Rango de alícuota</dt><dd><strong>{actividad.rateRange}</strong></dd>
+        {provData.rate && <><dt>Alícuota base</dt><dd>{provData.rate}</dd></>}
+        <dt>Frecuencia de presentación</dt><dd>Mensual (DDJJ web)</dd>
+      </dl>
+    </section>
+
+    <section>
+      <h2>¿Cómo se calcula IIBB para {actividad.label.toLowerCase()} en {provincia.name}?</h2>
+      <p>
+        La fórmula básica es <strong>IIBB = Ingresos brutos del período × Alícuota</strong>.
+        Para <strong>{actividad.label.toLowerCase()}</strong>, la alícuota base de
+        {' '}<strong>{provincia.name}</strong> está entre <strong>{actividad.rateRange}</strong>.
+      </p>
+      <p>{actividad.rateNotes}</p>
+      {provData.localNotes && <p>{provData.localNotes}</p>}
+
+      <h3>Ejemplo numérico</h3>
+      <p>
+        Un contribuyente de <strong>{actividad.label.toLowerCase()}</strong> en
+        {' '}{provincia.name} factura <strong>$5.000.000</strong> en un mes:
+      </p>
+      <ul>
+        <li>Base imponible: <strong>$5.000.000</strong> (ingresos brutos del período)</li>
+        <li>Alícuota aplicable: <strong>{actividad.rateRange}</strong></li>
+        <li>IIBB a pagar: entre <strong>${(5_000_000 * parseFloat(actividad.rateRange.split('%')[0]) / 100).toLocaleString('es-AR')}</strong> y <strong>${(5_000_000 * parseFloat(actividad.rateRange.split(' - ')[1]) / 100).toLocaleString('es-AR')}</strong> según código exacto de actividad.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Convenio Multilateral: ¿aplica para {actividad.label.toLowerCase()}?</h2>
+      <p>
+        Si tu actividad de <strong>{actividad.label.toLowerCase()}</strong> genera ingresos o
+        gastos en {provincia.name} <em>y</em> en otra jurisdicción argentina, debés
+        inscribirte en <strong>Convenio Multilateral (CM)</strong> y distribuir tu base
+        imponible entre las provincias mediante coeficientes.
+      </p>
+      <ul>
+        <li><strong>Régimen general (Art. 2):</strong> aplica para la mayoría de las actividades. Coeficiente unificado de ingresos y gastos del año anterior.</li>
+        <li><strong>Régimen especial:</strong> para construcción (Art. 6), entidades financieras (Art. 7), seguros (Art. 8), transporte (Art. 9), profesionales (Art. 10), comisionistas (Art. 11), prestamistas (Art. 12).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Retenciones, percepciones y régimen simplificado</h2>
+      <h3>Retenciones bancarias</h3>
+      <p>
+        Bancos y plataformas de pago retienen IIBB al cobrar facturas. La alícuota
+        de retención depende de la jurisdicción del cuenta-habiente y de su
+        situación fiscal (alta, baja, sin actividad). En {provincia.name},
+        las retenciones se acreditan como pago a cuenta de la DDJJ mensual.
+      </p>
+      <h3>Régimen simplificado</h3>
+      <p>
+        Si sos monotributista o pequeño contribuyente, en muchas provincias podés
+        adherir al régimen simplificado de IIBB con cuota fija mensual. Esto
+        elimina la obligación de presentar DDJJ y simplifica la operatoria.
+        Verificá tope de ingresos anuales en la página oficial de la dirección
+        de rentas de {provincia.name}.
+      </p>
+    </section>
+
+    <section class="iibb-cta-box">
+      <h2>Calculá tu IIBB exacto</h2>
+      <p>
+        Ingresá tu facturación mensual y la actividad: la calculadora aplica
+        la alícuota de {provincia.name} y descuenta retenciones bancarias.
+      </p>
+      <a class="iibb-cta" href="/calculadora-ingresos-brutos-provincial">
+        Ir a la calculadora →
+      </a>
+    </section>
+
+    <section>
+      <h2>FAQ</h2>
+      <details>
+        <summary>¿Cuánto se paga de IIBB en {provincia.name} para {actividad.label.toLowerCase()}?</summary>
+        <p>
+          La alícuota general se ubica en el rango <strong>{actividad.rateRange}</strong>.
+          {actividad.rateNotes} {provData.localNotes || ''}
+        </p>
+      </details>
+      <details>
+        <summary>¿Hay régimen simplificado en {provincia.name}?</summary>
+        <p>
+          {provincia.name} ofrece régimen simplificado de IIBB para monotributistas
+          y pequeños contribuyentes. Las cuotas son fijas mensuales en lugar de
+          porcentaje sobre facturación. Verificá topes y requisitos en la página
+          oficial de la dirección de rentas.
+        </p>
+      </details>
+      <details>
+        <summary>¿Cuándo aplica Convenio Multilateral?</summary>
+        <p>
+          Cuando tu actividad genera ingresos o gastos en dos o más jurisdicciones
+          argentinas. Te inscribís en CM y distribuís la base imponible con
+          coeficientes según régimen general (Art. 2) o régimen especial.
+        </p>
+      </details>
+      <details>
+        <summary>¿Qué pasa si no pago a tiempo?</summary>
+        <p>
+          El incumplimiento genera intereses resarcitorios (3-5% mensual según
+          provincia), multas por falta de presentación, y multas por omisión
+          o defraudación (50-200% del impuesto omitido). Mantener deuda afecta
+          la obtención de constancias fiscales.
+        </p>
+      </details>
+    </section>
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .iibb-page { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; line-height: 1.6; }
+  .breadcrumb { color: #64748b; font-size: 14px; margin-bottom: 16px; }
+  .breadcrumb a { color: inherit; text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .iibb-hero { padding: 16px 0 24px; border-bottom: 1px solid #e2e8f0; margin-bottom: 24px; }
+  .iibb-eyebrow {
+    display: inline-block;
+    background: #fef3c7; color: #92400e;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+    margin-bottom: 12px;
+  }
+  h1 { font-size: 30px; line-height: 1.2; margin: 8px 0 12px; }
+  .iibb-lead { color: #475569; font-size: 17px; }
+  .iibb-cta {
+    display: inline-block; background: #2563eb; color: #fff;
+    padding: 10px 22px; border-radius: 8px;
+    text-decoration: none; font-weight: 600;
+    margin-top: 12px;
+  }
+  .iibb-cta:hover { background: #1d4ed8; }
+  .iibb-card {
+    background: #f1f5f9; border-radius: 12px; padding: 18px 22px; margin: 24px 0;
+  }
+  .iibb-meta { display: grid; grid-template-columns: max-content 1fr; gap: 8px 18px; margin: 8px 0 0; }
+  .iibb-meta dt { color: #64748b; font-weight: 500; }
+  .iibb-meta dd { margin: 0; color: #1e293b; }
+  section { margin: 32px 0; }
+  h2 { font-size: 22px; margin: 0 0 12px; color: #1e293b; }
+  h3 { font-size: 18px; margin: 18px 0 8px; color: #1e293b; }
+  details {
+    border-top: 1px solid #e2e8f0; padding: 12px 0;
+  }
+  details summary {
+    cursor: pointer; font-weight: 600; color: #1e293b;
+  }
+  details p { margin: 8px 0 0; color: #475569; }
+  .iibb-cta-box {
+    background: #f1f5f9; padding: 22px; border-radius: 12px; text-align: center;
+  }
+</style>

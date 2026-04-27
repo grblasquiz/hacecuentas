@@ -1,0 +1,99 @@
+---
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+
+export async function getStaticPaths() {
+  const provinciasMod = await import('../../../content/argentina/provincias.json');
+  const provincias: any[] = provinciasMod.default || provinciasMod;
+  return provincias.map((p) => ({ params: { provincia: p.slug }, props: { provincia: p } }));
+}
+
+const { provincia } = Astro.props;
+const actividadesMod = await import('../../../content/iibb/actividades.json');
+const actividades: any[] = actividadesMod.default || actividadesMod;
+const ibMod = await import('../../../content/argentina/ingresos-brutos.json');
+const iibb: any = ibMod.default || ibMod;
+const provData = iibb.provinceData?.[provincia.slug] || {};
+
+const title = `Ingresos Brutos en ${provincia.name} 2026 — Alícuotas por actividad | Hacé Cuentas`;
+const description = `IIBB en ${provincia.name}: alícuotas 2026 por actividad económica, retenciones bancarias, régimen simplificado y Convenio Multilateral. Datos oficiales.`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: title,
+  description,
+  url: `https://hacecuentas.com/iibb/${provincia.slug}`,
+  inLanguage: 'es-AR',
+  about: { '@type': 'Place', name: provincia.name, addressCountry: 'AR' },
+};
+---
+
+<Layout title={title} description={description} canonical={`/iibb/${provincia.slug}`} schema={schema} audience="AR">
+  <Header slot="header" />
+
+  <article class="iibb-prov">
+    <nav class="breadcrumb">
+      <a href="/">Inicio</a> › <a href="/iibb">IIBB</a> › <span>{provincia.name}</span>
+    </nav>
+    <h1>Ingresos Brutos en {provincia.name} — Alícuotas por actividad 2026</h1>
+    <p class="lead">
+      Elegí tu actividad económica para ver la alícuota de IIBB aplicable en
+      <strong>{provincia.name}</strong> en 2026, junto con retenciones, régimen
+      simplificado y Convenio Multilateral.
+    </p>
+
+    {provData.localNotes && (
+      <aside class="local-notes">
+        <h2>Particularidades de {provincia.name}</h2>
+        <p>{provData.localNotes}</p>
+      </aside>
+    )}
+
+    <section>
+      <h2>Actividades cubiertas</h2>
+      <ul class="act-grid">
+        {actividades.map((a) => (
+          <li>
+            <a href={`/iibb/${provincia.slug}/${a.slug}`}>
+              <span class="act-icon">{a.icon}</span>
+              <div>
+                <strong>{a.label}</strong>
+                <small>Alícuota: {a.rateRange}</small>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .iibb-prov { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; line-height: 1.6; }
+  .breadcrumb { color: #64748b; font-size: 14px; margin-bottom: 16px; }
+  .breadcrumb a { color: inherit; text-decoration: none; }
+  h1 { font-size: 30px; line-height: 1.25; margin: 8px 0 12px; }
+  .lead { color: #475569; font-size: 17px; }
+  .local-notes { background: #fef3c7; border-radius: 10px; padding: 16px 22px; margin: 18px 0; }
+  .local-notes h2 { font-size: 18px; margin: 0 0 6px; color: #92400e; }
+  .act-grid {
+    list-style: none; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+  }
+  .act-grid a {
+    display: flex; gap: 12px; padding: 14px 16px;
+    background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;
+    text-decoration: none; color: #1e293b; align-items: center;
+  }
+  .act-grid a:hover { background: #f1f5f9; border-color: #cbd5e1; }
+  .act-icon { font-size: 26px; }
+  .act-grid strong { display: block; font-size: 15px; }
+  .act-grid small { color: #64748b; font-size: 13px; }
+</style>
