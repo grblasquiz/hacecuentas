@@ -2,19 +2,13 @@
 import CookieConsent from '../components/CookieConsent.astro';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
-// Cada latin-NNN.css trae ~150 bytes de CSS + 1 woff2 (~17 KB).
-// Total: ~100 KB de fuentes servidas desde el mismo dominio, con font-display: swap.
-import '@fontsource/inter/latin-400.css';
-import '@fontsource/inter/latin-500.css';
-import '@fontsource/inter/latin-600.css';
-import '@fontsource/inter/latin-700.css';
-import '@fontsource/inter/latin-800.css';
+// Antes (5 weights estáticos): 5 woff2 × ~17 KB = ~85 KB de Inter.
+// Ahora (variable single-axis): 1 woff2 ~50 KB que cubre weight 100-900 con
+// la misma calidad. Net: -35 KB descargados, menos round-trips, mismo CSS.
+// Importamos el CSS único + el woff2 latin-wght-normal (axis: weight, no italic).
+import '@fontsource-variable/inter/wght.css';
 import '@fontsource/jetbrains-mono/latin-500.css';
-// Preload para fonts arriba-del-fold. Vite les da hash correcto.
-// 400 = body | 700 = headings secundarios | 800 = H1 hero (LCP en home)
-import interFont400Url from '@fontsource/inter/files/inter-latin-400-normal.woff2?url';
-import interFont700Url from '@fontsource/inter/files/inter-latin-700-normal.woff2?url';
-import interFont800Url from '@fontsource/inter/files/inter-latin-800-normal.woff2?url';
+import interVariableFontUrl from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 
 export interface Props {
   title: string;
@@ -239,10 +233,12 @@ const globalSchema = {
     <!-- Schema.org específico de página -->
     {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
 
-    <!-- Fuentes self-hosted — solo preload del weight crítico (800 = H1/LCP).
-         400 y 700 NO preload: cargan vía @font-face con font-display:swap sin bloquear
-         el critical path, reduciendo LCP P75 de 3.6s → ~2.5s en mobile. -->
-    <link rel="preload" href={interFont800Url} as="font" type="font/woff2" crossorigin />
+    <!-- Fuente Inter Variable single file: cubre todos los weights 100-900.
+         Antes: preload del weight 800. Ahora: preload del archivo único
+         variable que también sirve a 400/500/600/700. Mismo overhead pero
+         fuentes secundarias (body/headings) ya no esperan red al primer
+         render. -->
+    <link rel="preload" href={interVariableFontUrl} as="font" type="font/woff2" crossorigin />
 
     <!-- Preconnect: establece conexión (DNS + TCP + TLS) antes de que se necesite.
          Googletagmanager se pide en ~todos los page views (Partytown lo carga en
@@ -444,7 +440,7 @@ const globalSchema = {
         --radius-xl: 20px;
 
         /* Type */
-        --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --font-body: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
       }
 

@@ -138,12 +138,38 @@ function buildSchemaDescription(c: any): string {
 }
 const schemaDescription = buildSchemaDescription(calc);
 
+// Prioridad: 1) howToSteps explícitos en JSON, 2) extraídos del explanation
+// (líneas tipo "1. ...", "Paso 1: ..."), 3) fallback a los fields.
+function extractStepsFromExplanation(text: string): Array<{name: string, text: string}> {
+  if (!text) return [];
+  const steps: Array<{name: string, text: string}> = [];
+  // Match "1. Texto" o "Paso 1: Texto" en líneas separadas
+  const re = /^(?:Paso\s+)?(\d+)\.\s+(.+?)(?:\n(?!\d+\.|\n)[^\n]+)*/gim;
+  for (const m of text.matchAll(re)) {
+    const body = m[2].trim();
+    if (body.length < 8 || body.length > 280) continue;
+    const colon = body.indexOf(':');
+    if (colon > 4 && colon < 60) {
+      steps.push({ name: body.slice(0, colon).trim(), text: body.slice(colon + 1).trim() });
+    } else {
+      const head = body.split(/[.!?]\s/)[0].slice(0, 70);
+      steps.push({ name: head, text: body });
+    }
+    if (steps.length >= 8) break; // Cap razonable para HowTo
+  }
+  return steps;
+}
+
 const howToSteps = calc.howToSteps && calc.howToSteps.length > 0
   ? calc.howToSteps
-  : calc.fields.map((f: any) => ({
-      name: f.label,
-      text: f.help || `Ingresá ${f.label.toLowerCase()}`,
-    }));
+  : (() => {
+      const fromText = extractStepsFromExplanation(calc.explanation || '');
+      if (fromText.length >= 3) return fromText;
+      return calc.fields.map((f: any) => ({
+        name: f.label,
+        text: f.help || `Ingresá ${f.label.toLowerCase()}`,
+      }));
+    })();
 
 const schemaHowTo = {
   '@context': 'https://schema.org',
@@ -300,6 +326,50 @@ if (hasTable) {
     dateModified,
     license: 'https://creativecommons.org/licenses/by/4.0/',
   });
+}
+
+// VideoObject schema — si la calc declara `video` (objeto o array de objetos),
+// agregamos schema VideoObject para que Google muestre el rich snippet de video
+// y aparezca en Google Videos. Formato esperado en JSON:
+//   "video": { "name": "...", "description": "...", "thumbnailUrl": "...",
+//              "uploadDate": "2026-01-15", "embedUrl": "https://www.youtube.com/embed/XXX" }
+//   o array de varios.
+const videos = Array.isArray(calc.video) ? calc.video : (calc.video ? [calc.video] : []);
+for (const v of videos) {
+  if (!v?.name || !v?.embedUrl) continue;
+  schemaGraph.push({
+    '@type': 'VideoObject',
+    name: v.name,
+    description: v.description || schemaDescription,
+    thumbnailUrl: v.thumbnailUrl || `https://hacecuentas.com${ogImage}`,
+    uploadDate: v.uploadDate || datePublished,
+    embedUrl: v.embedUrl,
+    contentUrl: v.contentUrl,
+    duration: v.duration, // ISO 8601, ej "PT2M30S"
+    inLanguage: schemaLang,
+    publisher: {
+      '@type': 'Organization',
+      name: 'Hacé Cuentas',
+      logo: { '@type': 'ImageObject', url: 'https://hacecuentas.com/og-default.png' },
+    },
+  });
+}
+
+// AggregateRating — si la calc tiene >= 5 ratings reales (almacenados en D1),
+// se inyectan en el schema. Por ahora populamos via API runtime; el JSON puede
+// declarar `ratings: { value, count }` opcional como override estático.
+if (calc.ratings && calc.ratings.count >= 5) {
+  // Encontrar SoftwareApplication / WebApplication (schemaApp) y mergear.
+  const appNode = schemaGraph.find((n: any) => n['@type'] === 'SoftwareApplication' || n['@type'] === 'WebApplication');
+  if (appNode) {
+    appNode.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: calc.ratings.value.toFixed(1),
+      ratingCount: calc.ratings.count,
+      bestRating: '5',
+      worstRating: '1',
+    };
+  }
 }
 
 const schema = { '@context': 'https://schema.org', '@graph': schemaGraph };
@@ -556,6 +626,27 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           </section>
         )}
 
+        {Array.isArray(calc.solvedExamples) && calc.solvedExamples.length > 0 && (
+          <section id="casos-resueltos" class="solved-examples" aria-labelledby="solved-heading">
+            <h2 id="solved-heading">Casos resueltos</h2>
+            <p class="solved-intro">Ejemplos numéricos completos con datos reales para que valides cómo funciona la calculadora.</p>
+            {calc.solvedExamples.map((c: any, i: number) => (
+              <article class="solved-case">
+                <h3>Caso {i + 1}{c.title ? `: ${c.title}` : ''}</h3>
+                {c.context && <p class="solved-context" set:html={mdInline(c.context)} />}
+                {Array.isArray(c.steps) && (
+                  <ol class="example-steps">
+                    {c.steps.map((s: string) => <li set:html={md(s)} />)}
+                  </ol>
+                )}
+                {c.result && (
+                  <div class="example-result"><strong>Resultado:</strong> <span set:html={md(c.result)} /></div>
+                )}
+              </article>
+            ))}
+          </section>
+        )}
+
         {calc.explanation && (
           <section id="como-funciona" class="explanation" data-has-math={hasMath ? 'true' : 'false'}>
             <div class="explanation-header">
@@ -592,10 +683,14 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             <ul>
               {sources.map((s: any) => (
                 <li>
-                  {s.url
-                    ? <a href={s.url} target="_blank" rel="noopener nofollow">{s.name}</a>
-                    : <span>{s.name}</span>
-                  }
+                  <cite>
+                    {s.url
+                      ? <a href={s.url} target="_blank" rel="noopener nofollow external">{s.name}</a>
+                      : s.name
+                    }
+                    {s.publisher && <span class="src-pub"> — {s.publisher}</span>}
+                    {s.date && <span class="src-date"> ({s.date})</span>}
+                  </cite>
                 </li>
               ))}
             </ul>

@@ -1,0 +1,132 @@
+---
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import topSlugsData from '../../../lib/top-slugs.json';
+
+export async function getStaticPaths() {
+  const calcs = import.meta.glob<any>('../../../content/calcs/*.json', { eager: true });
+  const all = Object.values(calcs).map((m: any) => m.default || m);
+  const cats = [...new Set(all.map((c) => c.category))];
+  return cats.map((cat) => ({
+    params: { cat },
+    props: { cat, calcs: all.filter((c) => c.category === cat) },
+  }));
+}
+
+const { cat, calcs } = Astro.props;
+
+const CATEGORY_LABELS: Record<string, string> = {
+  finanzas: 'Finanzas', salud: 'Salud', deportes: 'Deportes', viajes: 'Viajes',
+  vida: 'Vida', mascotas: 'Mascotas', matematica: 'Matemática', construccion: 'Construcción',
+  cocina: 'Cocina', educacion: 'Educación', automotor: 'Automotor', tecnologia: 'Tecnología',
+  marketing: 'Marketing', negocios: 'Negocios', ciencia: 'Ciencia', impuestos: 'Impuestos',
+  jardineria: 'Jardinería', electronica: 'Electrónica', astronomia: 'Astronomía',
+  hogar: 'Hogar', entretenimiento: 'Entretenimiento', familia: 'Familia',
+  'medio-ambiente': 'Medio Ambiente',
+};
+
+const catLabel = CATEGORY_LABELS[cat] || cat;
+
+// Ranking: top calcs por GSC clicks (datos de top-slugs.json) + relleno por
+// recencia. top-slugs.json se actualiza por un cron que consulta GSC API
+// (ver scripts/refresh-top-slugs.ts). Si falta, fallback por lastReviewed.
+type TopMap = Record<string, number>;
+const topSlugs = topSlugsData as TopMap;
+
+function score(c: any): number {
+  const clicks = topSlugs[c.slug] || 0;
+  const reviewed = c.lastReviewed ? new Date(c.lastReviewed).getTime() : 0;
+  return clicks * 1000 + reviewed / 1e7; // clicks domina, lastReviewed desempata
+}
+
+const top = [...calcs].sort((a, b) => score(b) - score(a)).slice(0, 30);
+
+const title = `Top calculadoras de ${catLabel} más usadas | Hacé Cuentas`;
+const description = `Las ${top.length} calculadoras de ${catLabel.toLowerCase()} más consultadas por nuestros usuarios. Ranking por uso real actualizado cada semana.`;
+const pageUrl = `https://hacecuentas.com/categoria/${cat}/top`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: title,
+  description,
+  url: pageUrl,
+  mainEntity: {
+    '@type': 'ItemList',
+    name: `Top calculadoras de ${catLabel}`,
+    numberOfItems: top.length,
+    itemListElement: top.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `https://hacecuentas.com/${c.slug}`,
+      name: c.h1 || c.title,
+    })),
+  },
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical={`/categoria/${cat}/top`}
+  schema={schema}
+  audience="AR"
+>
+  <Header slot="header" />
+
+  <article class="top-hub">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Inicio</a> › <a href={`/categoria/${cat}`}>{catLabel}</a> › <span>Top</span>
+    </nav>
+
+    <h1>Top calculadoras de {catLabel} más usadas</h1>
+    <p class="lead">
+      Ranking por uso real de las {top.length} calculadoras de {catLabel.toLowerCase()} más
+      consultadas. Sirve como punto de entrada cuando no sabés cuál buscar.
+    </p>
+
+    <ol class="top-list">
+      {top.map((c, i) => (
+        <li class="top-item">
+          <span class="top-rank">{i + 1}</span>
+          <div class="top-body">
+            <a class="top-link" href={`/${c.slug}`}>{c.h1 || c.title}</a>
+            {c.description && <p class="top-desc">{c.description.slice(0, 160)}</p>}
+          </div>
+        </li>
+      ))}
+    </ol>
+
+    <p class="hub-cta">
+      ¿No es la que buscás? <a href={`/categoria/${cat}`}>Ver todas las de {catLabel.toLowerCase()}</a>.
+    </p>
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .top-hub { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  .breadcrumb { color: #64748b; font-size: 14px; margin-bottom: 16px; }
+  .breadcrumb a { color: inherit; text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  h1 { font-size: 32px; line-height: 1.2; margin: 8px 0 16px; }
+  .lead { color: #475569; font-size: 17px; line-height: 1.55; margin-bottom: 32px; }
+  .top-list { list-style: none; padding: 0; margin: 0; }
+  .top-item { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid #e2e8f0; }
+  .top-item:last-child { border-bottom: none; }
+  .top-rank {
+    flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+    background: #f1f5f9; color: #1e293b; display: grid; place-items: center;
+    font-weight: 700; font-size: 14px;
+  }
+  .top-body { flex: 1; min-width: 0; }
+  .top-link { font-weight: 600; color: #1e293b; text-decoration: none; font-size: 17px; }
+  .top-link:hover { color: #2563eb; text-decoration: underline; }
+  .top-desc { color: #64748b; font-size: 14px; line-height: 1.5; margin: 4px 0 0; }
+  .hub-cta { color: #475569; margin-top: 32px; }
+  .hub-cta a { color: #2563eb; }
+</style>

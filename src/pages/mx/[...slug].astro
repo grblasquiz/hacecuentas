@@ -210,13 +210,21 @@ const reportBody = encodeURIComponent(
   `Hi Equipo Hacé Cuentas,\n\nI found an error in the calculator "${calc.h1}":\n\nURL: https://hacecuentas.com/mx/${calc.slug}\nInput data: \nExpected result: \nActual result: \nSource / reference: \n\nThank you.`
 );
 
-// hreflang: link to Spanish equivalent via esSlug
+// hreflang: declarar es-MX (locale propio) + es-AR (default ES si hay esSlug) + x-default.
+// Si la calc es MX-specific (sin esSlug): solo es-MX + x-default a la misma URL.
+// Antes: con esSlug declaraba dos `lang: 'es'` distintos (ambiguo para Google);
+// sin esSlug Layout fallback declaraba `hreflang="es"` apuntando a la URL MX (contradicción
+// — decía "esta página MX es la versión española").
 const esSlug = calc.esSlug;
+const selfHref = `https://hacecuentas.com/mx/${calc.slug}`;
 const hreflangTags = esSlug ? [
-  { lang: 'es', href: `https://hacecuentas.com/${esSlug}` },
-  { lang: 'es', href: `https://hacecuentas.com/mx/${calc.slug}` },
+  { lang: 'es-AR', href: `https://hacecuentas.com/${esSlug}` },
+  { lang: 'es-MX', href: selfHref },
   { lang: 'x-default', href: `https://hacecuentas.com/${esSlug}` },
-] : undefined;
+] : [
+  { lang: 'es-MX', href: selfHref },
+  { lang: 'x-default', href: selfHref },
+];
 ---
 
 <Layout

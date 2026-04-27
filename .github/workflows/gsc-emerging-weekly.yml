@@ -1,0 +1,64 @@
+name: GSC emerging queries (weekly)
+
+# Detecta queries emergentes en GSC: keywords que crecen en impressions
+# pero están en pos 11-50 (out-of-page-1, alcanzables). Output en un issue
+# semanal para priorizar contenido nuevo o expandir calcs existentes.
+
+on:
+  schedule:
+    - cron: '0 12 * * MON'  # lunes 12:00 UTC (09:00 AR) — agenda semanal Martin
+  workflow_dispatch:
+
+jobs:
+  emerging-queries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install google-auth google-api-python-client
+
+      - name: Write GCP credentials
+        env:
+          GCP_INDEXING_CREDS: ${{ secrets.GCP_INDEXING_CREDS }}
+        run: |
+          mkdir -p ~/.config/gcp
+          echo "$GCP_INDEXING_CREDS" > ~/.config/gcp/hacecuentas-indexing.json
+
+      - name: Run emerging queries report
+        run: |
+          python3 scripts/gsc-emerging-queries.py --days 28 --top 50 --json /tmp/emerging.json | tee /tmp/emerging.txt
+
+      - name: Open issue with report
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="📈 GSC queries emergentes — semana $(date -u +'%Y-W%V')"
+          BODY=$(cat <<EOF
+          Reporte semanal de queries con tracción creciente en GSC, posición 11-50 (alcanzables a top 10 con contenido).
+
+          \`\`\`
+          $(cat /tmp/emerging.txt)
+          \`\`\`
+
+          **Próximos pasos sugeridos:**
+          - Para queries con \`(match: ...)\`: expandir el calc existente (más contenido, casos resueltos, FAQ).
+          - Para queries sin match: evaluar crear calc nuevo con \`scripts/new-calc.ts\`.
+          - JSON detallado adjunto en el run artifact.
+
+          🤖 Auto-generado por gsc-emerging-weekly
+          EOF
+          )
+          gh issue create --title "$TITLE" --body "$BODY" --label gsc-emerging || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emerging-queries
+          path: /tmp/emerging.json
+          retention-days: 30

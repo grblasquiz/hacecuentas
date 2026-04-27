@@ -560,14 +560,63 @@ if (argUrls.length > 0) {
 }
 
 // --------------------------------------------------------------------------
+// Image sitemap — listamos cada calc con su OG png como <image:image>.
+// Apunta a Google Images para queries visuales y abre crawl path adicional.
+// Solo incluye calcs que tienen un OG generado en public/og/{slug}.png.
+// --------------------------------------------------------------------------
+
+interface ImageEntry { loc: string; image: string; caption: string; }
+
+function imagesetXml(entries: ImageEntry[]): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${entries.map((e) => `  <url>
+    <loc>${e.loc}</loc>
+    <image:image>
+      <image:loc>${e.image}</image:loc>
+      <image:caption>${e.caption.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</image:caption>
+    </image:image>
+  </url>`).join('\n')}
+</urlset>`;
+}
+
+const imageEntries: ImageEntry[] = [];
+for (const c of calcs) {
+  const ogPath = join(PUBLIC_DIR, 'og', `${c.slug}.png`);
+  if (!existsSync(ogPath)) continue;
+  imageEntries.push({
+    loc: `${site}/${c.slug}`,
+    image: `${site}/og/${c.slug}.png`,
+    caption: (c.h1 || c.title || c.slug).slice(0, 200),
+  });
+}
+if (imageEntries.length > 0) {
+  writeFileSync(join(PUBLIC_DIR, 'sitemap-images.xml'), imagesetXml(imageEntries), 'utf8');
+  // El sitemap de imágenes va al index con lastmod = buildDate (representa el set actual de OG).
+  // Como urlset propio no calza con el typing Url[], lo agregamos al sitemaps[] para el index
+  // pero usamos un dummy URL para que maxLastmod no rompa.
+  sitemaps.push({
+    name: 'sitemap-images.xml',
+    urls: [{ loc: `${site}/`, lastmod: buildDate, changefreq: 'weekly', priority: '0.5' }],
+    // marcamos que no se debe re-escribir desde urlsetXml (ya escribimos arriba con imagesetXml)
+    // @ts-expect-error campo extra controlado abajo
+    skipWrite: true,
+  });
+}
+
+// --------------------------------------------------------------------------
 // Write files
 // --------------------------------------------------------------------------
 
 let totalUrls = 0;
 for (const s of sitemaps) {
+  // sitemap-images.xml lo escribimos arriba con imagesetXml (schema distinto).
+  if ((s as any).skipWrite) continue;
   writeFileSync(join(PUBLIC_DIR, s.name), urlsetXml(s.urls), 'utf8');
   totalUrls += s.urls.length;
 }
+totalUrls += imageEntries.length;
 
 // Index principal. El lastmod de cada entry del index es el máximo de las URLs
 // adentro de ese sitemap — si "sitemap-calcs-finanzas" no cambió, Google no
