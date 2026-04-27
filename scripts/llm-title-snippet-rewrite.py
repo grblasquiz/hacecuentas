@@ -26,27 +26,49 @@ import anthropic
 
 ROOT = Path(__file__).resolve().parent.parent
 CALCS_DIR = ROOT / "src" / "content" / "calcs"
+# También buscar en calcs locale (para fix EN/PT/MX titles)
+LOCALE_DIRS = [
+    ROOT / "src" / "content" / "calcs-en",
+    ROOT / "src" / "content" / "calcs-pt",
+    ROOT / "src" / "content" / "calcs-mx",
+    ROOT / "src" / "content" / "calcs-co",
+    ROOT / "src" / "content" / "calcs-cl",
+    ROOT / "src" / "content" / "calcs-es",
+]
 MODEL = "claude-haiku-4-5"
 MAX_TOKENS = 1500
 
-SYSTEM_PROMPT = """Sos un SEO copywriter para hacecuentas.com (calculadoras AR).
+SYSTEM_PROMPT = """Sos un SEO copywriter para hacecuentas.com.
 Tu trabajo: optimizar title, meta description y agregar un featured-snippet block
 ("¿Qué es X?" con respuesta corta) a una calc existente.
 
-# Reglas
+# REGLA CRÍTICA: idioma
+
+El user te va a indicar el `lang` de la calc. **TODO el output debe estar en
+ese idioma**. NO mezcles idiomas:
+- `lang=es-AR` → todo en español argentino (vos, fórmulas con "$", referencias AFIP/ANSES)
+- `lang=es` → español neutro (tú/usted, tono LATAM)
+- `lang=en` → todo en inglés (you, $, IRS/USD references si aplica)
+- `lang=pt-BR` → todo en portugués brasileño
+- `lang=es-MX` → español México (tú, tono MX, SAT references)
+
+# Reglas comunes
 
 **Title** (≤ 70 chars, en este orden):
-- Empieza con la palabra clave principal.
-- Incluye cifra concreta cuando aplique (ej: "Aguinaldo 2026: $498.000 neto + cuándo cobrarlo")
-- Año "2026" obligatorio si la calc tiene datos vigentes
-- "Gratis" o "Online" cuando agregue valor (no en todos)
-- Termina con " | Hacé Cuentas"
+- Empieza con la palabra clave principal en el idioma correcto.
+- Incluye cifra concreta cuando aplique.
+- Año "2026" obligatorio si la calc tiene datos vigentes.
+- Termina con " | Hacé Cuentas".
 
 **Meta description** (120-160 chars):
-- 1 frase que resume la utilidad concreta.
+- 1 frase que resume la utilidad concreta — **EN EL IDIOMA INDICADO**.
 - Incluí 1-2 cifras o datos concretos (no genéricos).
-- Empezar con verbo de acción ("Calculá...", "Estimá...", "Compará...").
-- Termina con call to action implícito o beneficio ("en 30 segundos", "gratis y sin registro").
+- Empieza con verbo de acción en el idioma correcto:
+  - es-AR: "Calculá...", "Estimá...", "Compará..."
+  - es: "Calcula...", "Estima...", "Compara..."
+  - en: "Calculate...", "Estimate...", "Compare..."
+  - pt-BR: "Calcule...", "Estime...", "Compare..."
+- Termina con call to action o beneficio.
 
 **Featured snippet block** (markdown):
 Formato exacto:
@@ -75,7 +97,18 @@ Sin markdown wrapper. Sin texto extra antes/después."""
 
 async def rewrite_one(client, calc_data: dict, sem: asyncio.Semaphore) -> dict | None:
     slug = calc_data['slug']
+    # Detectar lang por path del archivo
+    p = get_calc_path(slug)
+    lang = 'es-AR'
+    if p:
+        if 'calcs-en' in str(p): lang = 'en'
+        elif 'calcs-pt' in str(p): lang = 'pt-BR'
+        elif 'calcs-mx' in str(p): lang = 'es-MX'
+        elif 'calcs-co' in str(p): lang = 'es'
+        elif 'calcs-cl' in str(p): lang = 'es'
+        elif 'calcs-es' in str(p): lang = 'es'
     user = (
+        f"lang: {lang}  (escribí TODO el output en este idioma)\n"
         f"slug: {slug}\n"
         f"category: {calc_data.get('category')}\n"
         f"audience: {calc_data.get('audience')}\n"
@@ -84,7 +117,8 @@ async def rewrite_one(client, calc_data: dict, sem: asyncio.Semaphore) -> dict |
         f"description actual: {calc_data.get('description')}\n"
         f"intro: {(calc_data.get('intro') or '')[:400]}\n"
         f"keyTakeaway: {calc_data.get('keyTakeaway')}\n\n"
-        f"Reescribí title + description + agregá snippet block. JSON only."
+        f"Reescribí title + description + agregá snippet block. JSON only. "
+        f"Recordá: TODO en {lang}."
     )
 
     async with sem:
@@ -123,16 +157,19 @@ async def rewrite_one(client, calc_data: dict, sem: asyncio.Semaphore) -> dict |
 _slug_to_path = None
 
 def get_calc_path(slug: str) -> Path | None:
-    """Convención mixta: archivos por formulaId o por slug. Buildeamos un index."""
+    """Convención mixta: archivos por formulaId o por slug. Buildeamos un index
+    sobre src/content/calcs/ + todos los locales (calcs-en, calcs-pt, etc.)."""
     global _slug_to_path
     if _slug_to_path is None:
         _slug_to_path = {}
-        for p in CALCS_DIR.glob("*.json"):
-            try:
-                d = json.loads(p.read_text())
-                if d.get('slug'):
-                    _slug_to_path[d['slug']] = p
-            except: pass
+        all_dirs = [CALCS_DIR] + [d for d in LOCALE_DIRS if d.exists()]
+        for cdir in all_dirs:
+            for p in cdir.glob("*.json"):
+                try:
+                    d = json.loads(p.read_text())
+                    if d.get('slug'):
+                        _slug_to_path[d['slug']] = p
+                except: pass
     return _slug_to_path.get(slug)
 
 
