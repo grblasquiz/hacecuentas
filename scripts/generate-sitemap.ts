@@ -566,6 +566,46 @@ if (argUrls.length > 0) {
 }
 
 // --------------------------------------------------------------------------
+// IIBB programmatic — /iibb/index, /iibb/[provincia], /iibb/[prov]/[actividad]
+// 1 + 24 + 240 = 265 páginas. Long-tail comercial alta intent.
+// --------------------------------------------------------------------------
+const iibbUrls: Url[] = [];
+const iibbActFile = join(ROOT, 'src', 'content', 'iibb', 'actividades.json');
+let iibbActividades: any[] = [];
+try {
+  iibbActividades = JSON.parse(readFileSync(iibbActFile, 'utf8'));
+} catch {}
+
+if (iibbActividades.length > 0 && provincias.length > 0) {
+  // index
+  iibbUrls.push({
+    loc: `${site}/iibb`,
+    priority: '0.85',
+    changefreq: 'monthly',
+    lastmod: buildDate,
+  });
+  // hub por provincia
+  for (const p of provincias) {
+    iibbUrls.push({
+      loc: `${site}/iibb/${p.slug}`,
+      priority: '0.75',
+      changefreq: 'monthly',
+      lastmod: buildDate,
+    });
+    // detalle por actividad
+    for (const act of iibbActividades) {
+      iibbUrls.push({
+        loc: `${site}/iibb/${p.slug}/${act.slug}`,
+        priority: '0.7',
+        changefreq: 'monthly',
+        lastmod: buildDate,
+      });
+    }
+  }
+  sitemaps.push({ name: 'sitemap-iibb.xml', urls: iibbUrls });
+}
+
+// --------------------------------------------------------------------------
 // Image sitemap — listamos cada calc con su OG png como <image:image>.
 // Apunta a Google Images para queries visuales y abre crawl path adicional.
 // Solo incluye calcs que tienen un OG generado en public/og/{slug}.png.
