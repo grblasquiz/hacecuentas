@@ -273,7 +273,7 @@ const formatFreshnessDate = (iso: string): string => {
     </div>
   )}
 
-  <form id={`form-${config.slug}`} class="calc-form" novalidate>
+  <form id={`form-${config.slug}`} class="calc-form" data-calc-input novalidate>
     <div class="fields-grid">
       {basicFields.map((field) => (
         <div class={`field ${field.type === 'select' || field.type === 'date' ? 'field-wide' : ''}`}>
@@ -409,6 +409,19 @@ const formatFreshnessDate = (iso: string): string => {
       ))}
     </div>
 
+    <button
+      type="button"
+      class="back-to-input"
+      data-back-to-input
+      aria-label="Volver al formulario"
+      onclick={`document.querySelector('[data-calc-input]').scrollIntoView({behavior:'smooth',block:'start'})`}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      <span>Modificar datos</span>
+    </button>
+
     <div class="chart-wrap" data-chart-wrap hidden>
       <canvas data-chart-canvas role="img" aria-label={t.chartAriaLabel}></canvas>
       <button type="button" class="chart-download-btn" data-chart-download aria-label={t.downloadPng} title={t.downloadPng}>
@@ -526,6 +539,28 @@ const formatFreshnessDate = (iso: string): string => {
 </div>
 
 <style>
+  /* Botón "Modificar datos": solo visible en mobile dentro de la sección
+     de results. Permite al usuario volver al formulario sin scroll manual
+     después de ver el resultado y la explicación. */
+  .back-to-input {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    margin: 12px 0 4px;
+    padding: 8px 14px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .back-to-input:hover { background: var(--accent); color: var(--bg-card); }
+  @media (max-width: 720px) {
+    .back-to-input { display: inline-flex; }
+  }
+
   .calc-container {
     background: var(--bg-card);
     border: 1.5px solid var(--accent);

@@ -171,7 +171,10 @@ const howToSteps = calc.howToSteps && calc.howToSteps.length > 0
       }));
     })();
 
-const schemaHowTo = {
+// HowTo schema: además de los steps, declaramos `tool` con los inputs del
+// calc (cada field es algo que el usuario "necesita aportar"). Boost al
+// rich result + ayuda a Google a entender qué datos requiere la calc.
+const schemaHowTo: any = {
   '@context': 'https://schema.org',
   '@type': 'HowTo',
   name: `Cómo usar la ${calc.h1}`,
@@ -186,6 +189,18 @@ const schemaHowTo = {
     url: `https://hacecuentas.com/${calc.slug}#paso-${i + 1}`,
   })),
 };
+if (Array.isArray(calc.fields) && calc.fields.length > 0) {
+  schemaHowTo.tool = calc.fields.slice(0, 8).map((f: any) => ({
+    '@type': 'HowToTool',
+    name: f.label,
+  }));
+}
+if (Array.isArray(calc.supplies) && calc.supplies.length > 0) {
+  schemaHowTo.supply = calc.supplies.map((s: any) => ({
+    '@type': 'HowToSupply',
+    name: typeof s === 'string' ? s : s.name,
+  }));
+}
 
 const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
   '@context': 'https://schema.org',
@@ -204,9 +219,23 @@ const schemaBreadcrumb = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
-    { '@type': 'ListItem', position: 2, name: categoryLabels[calc.category] || calc.category, item: `https://hacecuentas.com/categoria/${calc.category}` },
-    { '@type': 'ListItem', position: 3, name: calc.h1 },
+    {
+      '@type': 'ListItem', position: 1,
+      name: 'Inicio',
+      item: 'https://hacecuentas.com/',
+      description: 'Calculadoras gratuitas para Argentina',
+    },
+    {
+      '@type': 'ListItem', position: 2,
+      name: categoryLabels[calc.category] || calc.category,
+      item: `https://hacecuentas.com/categoria/${calc.category}`,
+      description: `Calculadoras de ${categoryLabels[calc.category] || calc.category}`,
+    },
+    {
+      '@type': 'ListItem', position: 3,
+      name: calc.h1,
+      description: (calc.description || '').slice(0, 160),
+    },
   ],
 };
 
@@ -301,6 +330,9 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
     },
   },
   about: categoryLabels[calc.category] || calc.category,
+  articleSection: categoryLabels[calc.category] || calc.category,
+  // wordCount calculado del explanation (campo recomendado por Article schema)
+  wordCount: calc.explanation ? calc.explanation.split(/\s+/).filter(Boolean).length : 0,
   isAccessibleForFree: true,
   citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
 } : null;
@@ -312,6 +344,13 @@ if (schemaArticle) schemaGraph.push(schemaArticle);
 // Dataset schema for calcs whose explanation contains markdown tables
 const hasTable = calc.explanation && /\|.*\|.*\n\|[-:\s|]+\|/.test(calc.explanation);
 if (hasTable) {
+  // temporalCoverage: período al que aplican los datos. Para calcs con
+  // dataUpdate.lastUpdated lo usamos como inicio; el fin queda abierto.
+  const tempStart = (calc.dataUpdate?.lastUpdated || datePublished.split('T')[0]);
+  const datasetKeywords: string[] = [
+    categoryLabels[calc.category] || calc.category,
+    ...(calc.seoKeywords || []).slice(0, 8),
+  ].filter(Boolean);
   schemaGraph.push({
     '@type': 'Dataset',
     name: `${calc.h1} — Datos y tablas de referencia`,
@@ -324,6 +363,8 @@ if (hasTable) {
       url: 'https://hacecuentas.com',
     },
     dateModified,
+    temporalCoverage: `${tempStart}/..`,  // ISO 8601 interval, abierto al futuro
+    keywords: datasetKeywords,
     license: 'https://creativecommons.org/licenses/by/4.0/',
   });
 }
@@ -761,7 +802,11 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
 
   {hasMath && (
     <Fragment>
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous" />
+      <!-- KaTeX CSS: preload-then-swap para no bloquear el render. El usuario
+           ve la página renderizada antes de que llegue el CSS de KaTeX, y
+           cuando llega se aplica al bloque .explanation. -->
+      <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'" />
+      <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous" /></noscript>
       <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
       <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.querySelector('#como-funciona'), {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\\\(',right:'\\\\)',display:false},{left:'\\\\[',right:'\\\\]',display:true}], throwOnError:false});"></script>
     </Fragment>

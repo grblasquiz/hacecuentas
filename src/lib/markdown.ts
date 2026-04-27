@@ -19,12 +19,75 @@ function safeUrl(url: string): string {
   return '#';
 }
 
+// Acrónimos/tecnicismos comunes. Cuando aparecen sueltos en texto plano (no
+// dentro de un link / code / strong existente), los wrappamos en <abbr title>
+// para mejorar a11y (lectores de pantalla expanden la abreviatura) + UX
+// (tooltip nativo) + SEO leve (semántica de glossario implícita).
+const ABBREVIATIONS: Record<string, string> = {
+  TNA: 'Tasa Nominal Anual',
+  TEA: 'Tasa Efectiva Anual',
+  TEM: 'Tasa Efectiva Mensual',
+  CFT: 'Costo Financiero Total',
+  IMC: 'Índice de Masa Corporal',
+  RCC: 'Relación Cintura-Cadera',
+  TDEE: 'Total Daily Energy Expenditure (gasto calórico diario)',
+  BMR: 'Basal Metabolic Rate (metabolismo basal)',
+  IPC: 'Índice de Precios al Consumidor',
+  ICL: 'Índice de Contratos de Locación',
+  UVA: 'Unidad de Valor Adquisitivo',
+  SAC: 'Sueldo Anual Complementario (aguinaldo)',
+  LCT: 'Ley de Contrato de Trabajo (20.744)',
+  ANSES: 'Administración Nacional de la Seguridad Social',
+  AFIP: 'Administración Federal de Ingresos Públicos',
+  ARCA: 'Administración de Recursos del Comercio y Aduanas',
+  PAMI: 'Programa de Atención Médica Integral',
+  BCRA: 'Banco Central de la República Argentina',
+  INDEC: 'Instituto Nacional de Estadística y Censos',
+  IRPF: 'Impuesto sobre la Renta de las Personas Físicas',
+  ISR: 'Impuesto Sobre la Renta',
+  UMA: 'Unidad de Medida y Actualización',
+  DCA: 'Dollar Cost Averaging (compra periódica)',
+  APY: 'Annual Percentage Yield (rendimiento anual)',
+  APR: 'Annual Percentage Rate',
+  RPM: 'Revenue Per Mille (mil impresiones)',
+  CPM: 'Cost Per Mille (costo por mil impresiones)',
+  CPC: 'Cost Per Click',
+  CTR: 'Click-Through Rate',
+  ROAS: 'Return On Ad Spend',
+  LTV: 'Lifetime Value (valor de vida del cliente)',
+  CAC: 'Customer Acquisition Cost',
+};
+
+const ABBR_RE = new RegExp(`\\b(${Object.keys(ABBREVIATIONS).join('|')})\\b`, 'g');
+
+function applyAbbreviations(text: string): string {
+  // Solo aplicar si el segmento NO tiene tags HTML — para evitar inyectar
+  // dentro de <a>, <strong>, <code>, etc. ya formados por mdInline.
+  return text.replace(ABBR_RE, (m, term) => {
+    return `<abbr title="${escHtml(ABBREVIATIONS[term])}">${term}</abbr>`;
+  });
+}
+
 export function mdInline(text: string): string {
-  return text
-    .replace(/\*\*(.+?)\*\*/g, (_, c) => `<strong>${escHtml(c)}</strong>`)
-    .replace(/\*(.+?)\*/g, (_, c) => `<em>${escHtml(c)}</em>`)
-    .replace(/`([^`\n]+)`/g, (_, c) => `<code>${escHtml(c)}</code>`)
-    .replace(/\[(.+?)\]\((.+?)\)/g, (_, label, href) => `<a href="${safeUrl(href)}" rel="noopener">${escHtml(label)}</a>`);
+  // Pase 1: tokens markdown a HTML. Cada placeholder reemplaza el rango
+  // procesado para evitar que el pase de abreviaturas inyecte <abbr> dentro.
+  const tokens: string[] = [];
+  const place = (html: string) => {
+    const i = tokens.length;
+    tokens.push(html);
+    return `\x00TOK${i}\x00`;
+  };
+  const html = text
+    .replace(/\*\*(.+?)\*\*/g, (_, c) => place(`<strong>${escHtml(c)}</strong>`))
+    .replace(/\*(.+?)\*/g, (_, c) => place(`<em>${escHtml(c)}</em>`))
+    .replace(/`([^`\n]+)`/g, (_, c) => place(`<code>${escHtml(c)}</code>`))
+    .replace(/\[(.+?)\]\((.+?)\)/g, (_, label, href) => place(`<a href="${safeUrl(href)}" rel="noopener">${escHtml(label)}</a>`));
+
+  // Pase 2: aplicar <abbr> solo en texto fuera de los tokens.
+  const withAbbrs = applyAbbreviations(html);
+
+  // Pase 3: restaurar tokens.
+  return withAbbrs.replace(/\x00TOK(\d+)\x00/g, (_, i) => tokens[Number(i)] || '');
 }
 
 export function md(text: string): string {

@@ -545,6 +545,19 @@ for (let i = 0; i < calcs.length; i++) {
   const { text: after, added, details } = autoLink(before, c.slug);
   if (added === 0) continue;
 
+  // Guard: detectar nested markdown links rotos generados por el linker.
+  // Patrón: `](/...[ ]( /...)` significa que un link [x](/y) fue inyectado
+  // DENTRO de la URL de otro link existente. Esto se vio en producción el
+  // 2026-04-27: 23 calcs tenían explanation con `[A](/calc-[B](/url-B)-z)`,
+  // que se renderizaba como HTML inválido y Google indexaba URLs 404.
+  // Si lo detectamos, abortamos para esa calc — preferimos perder el link
+  // que romper el explanation.
+  const NESTED_BUG_RE = /\]\([^()]*\[[^\]]+\]\([^)]+\)[^()]*\)/;
+  if (NESTED_BUG_RE.test(after)) {
+    console.error(`[autolink] ⚠️  abortando ${c.slug}: nested link detectado`);
+    continue;
+  }
+
   modifiedCount++;
   totalLinks += added;
 

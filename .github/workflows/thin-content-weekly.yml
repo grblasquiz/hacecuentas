@@ -1,0 +1,82 @@
+name: Thin content audit (weekly)
+
+# Detecta calcs con contenido thin (explanation < 1500 chars) que necesitan
+# expansión manual. Output: issue semanal con la lista priorizada por
+# tráfico (cuando esté el dato; por ahora solo lista por orden de archivo).
+#
+# expand-thin-content.mjs es manual y requiere contenido hand-crafted.
+# Esto NO auto-expande — solo flagea para revisión humana.
+
+on:
+  schedule:
+    - cron: '0 13 * * MON'  # lunes 13:00 UTC (10:00 AR), después de gsc-emerging
+  workflow_dispatch:
+
+jobs:
+  thin-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Detect thin calcs
+        run: |
+          node -e "
+          const fs = require('fs');
+          const path = require('path');
+          const dir = 'src/content/calcs';
+          const files = fs.readdirSync(dir).filter(f => f.endsWith('.json'));
+          const thin = [];
+          for (const f of files) {
+            try {
+              const d = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+              const len = (d.explanation || '').length;
+              if (len < 1500) {
+                thin.push({ slug: d.slug || f, len, h1: d.h1 || '' });
+              }
+            } catch (e) {}
+          }
+          thin.sort((a,b) => a.len - b.len);
+          console.log(JSON.stringify({ total: files.length, thin_count: thin.length, top20: thin.slice(0, 20) }, null, 2));
+          fs.writeFileSync('/tmp/thin.json', JSON.stringify(thin, null, 2));
+          " | tee /tmp/thin-summary.txt
+
+      - name: Open issue with report
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          THIN_COUNT=$(node -e "console.log(JSON.parse(require('fs').readFileSync('/tmp/thin.json', 'utf8')).length)")
+          if [ "$THIN_COUNT" = "0" ]; then
+            echo "No thin calcs detectadas."
+            exit 0
+          fi
+          TOP_20=$(node -e "
+            const t = JSON.parse(require('fs').readFileSync('/tmp/thin.json', 'utf8'));
+            console.log(t.slice(0, 20).map((x, i) => \`\${i+1}. /\${x.slug} (\${x.len} chars) — \${x.h1}\`).join('\\n'));
+          ")
+          TITLE="📝 Thin content audit — semana $(date -u +'%Y-W%V'): ${THIN_COUNT} calcs"
+          BODY="Detectadas **${THIN_COUNT} calcs** con explanation < 1500 chars (ranking de calidad bajo).
+
+          ## Top 20 más urgentes
+
+          \`\`\`
+          ${TOP_20}
+          \`\`\`
+
+          **Próximos pasos:**
+          - Agregar entradas en \`scripts/thin-content-expansions.json\` con contenido hand-crafted.
+          - Correr \`node scripts/expand-thin-content.mjs --write\`.
+          - Commit + deploy.
+
+          🤖 Auto-generado"
+          gh issue create --title "$TITLE" --body "$BODY" --label thin-content || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thin-content
+          path: /tmp/thin.json
+          retention-days: 60

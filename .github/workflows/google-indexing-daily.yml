@@ -94,6 +94,42 @@ jobs:
       # El state file está en .gitignore — persistencia entre runs vía
       # actions/cache arriba, no vía commit al repo.
 
+      # Alerta proactiva: si el run de hoy consumió >= 90% del budget diario
+      # (200 URLs), avisa para que (a) sepamos si hay backlog de URLs nuevas
+      # o (b) el dedupe de 7d no está funcionando. Detecta también el caso
+      # 100% (quota exceeded en mid-run).
+      - name: Alert if quota near limit
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ ! -f scripts/.indexing-api-state.json ]; then exit 0; fi
+          TODAY_COUNT=$(node -e "
+            const s = JSON.parse(require('fs').readFileSync('scripts/.indexing-api-state.json', 'utf8'));
+            const sent = s.sent || {};
+            const cutoff = (Date.now() / 1000) - (24 * 3600);
+            const today = Object.entries(sent).filter(([_, t]) => t >= cutoff).length;
+            console.log(today);
+          ")
+          echo "URLs pusheadas en últimas 24h: $TODAY_COUNT / 200"
+          if [ "$TODAY_COUNT" -ge 180 ]; then
+            TITLE="⚠️ Google Indexing quota near limit ($TODAY_COUNT/200) — $(date -u +'%Y-%m-%d')"
+            BODY="El cron de Google Indexing API consumió **$TODAY_COUNT URLs en las últimas 24h** (≥90% del budget de 200/día).
+
+            **Posibles causas:**
+            - Backlog grande de URLs nuevas a indexar (deploy masivo reciente).
+            - Dedupe de 7 días no aplicando (revisar que el state file persiste).
+            - Quota límite alcanzada → URLs nuevas hoy no se pushearon.
+
+            **Próximos pasos:**
+            - Revisar \`scripts/.indexing-api-state.json\` (artifact del run).
+            - Considerar pedir aumento de quota a Google si el backlog es legítimo.
+            - Si las URLs son del cron sweep, está OK — el dedupe rotará en 7 días.
+
+            🤖 Auto-generado por google-indexing-daily"
+            gh issue create --title "$TITLE" --body "$BODY" --label google-indexing-quota || true
+          fi
+
       - name: Open GitHub issue if push failed
         if: failure()
         env:

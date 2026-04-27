@@ -140,3 +140,32 @@ jobs:
             -H "Content-Type: application/json" \
             --data '{"purge_everything":true}' \
             | grep -q '"success":true' && echo "✅ Cache purgado"
+
+      # Smoke test post-deploy: verifica 5 URLs core. Si alguna no responde
+      # 200 o el HTML no contiene un <h1>, el job falla y queda alerta clara.
+      # Este step se agregó después del incidente 2026-04-26/27 donde el
+      # template de /argentina/[provincia] empezó a emitir <title>undefined
+      # y nadie se enteró por 24h hasta que GSC reportó "sin indexar".
+      - name: Smoke test post-deploy
+        run: |
+          set -e
+          echo "Esperando 30s a que CF Pages termine de propagar..."
+          sleep 30
+          fail=0
+          # Cada URL: status, debe contener H1 con texto no vacío y no contener "undefined"
+          for url in "/" "/calculadora-aguinaldo-sac" "/categoria/finanzas" "/argentina/salta" "/sitemap.xml"; do
+            full="https://hacecuentas.com$url"
+            status=$(curl -sL -o /tmp/body.html -w "%{http_code}" "$full")
+            echo "[$status] $url"
+            if [ "$status" != "200" ]; then echo "  ✗ status no es 200"; fail=$((fail+1)); continue; fi
+            if [[ "$url" == *.xml ]]; then continue; fi
+            if grep -q 'undefined' /tmp/body.html; then echo "  ✗ HTML contiene 'undefined'"; fail=$((fail+1)); fi
+            h1=$(grep -oE '<h1[^>]*>[^<]{1,200}</h1>' /tmp/body.html | head -1 || true)
+            if [ -z "$h1" ]; then echo "  ✗ no hay H1 con texto"; fail=$((fail+1)); fi
+          done
+          if [ "$fail" -gt 0 ]; then
+            echo ""
+            echo "❌ Smoke test fallido en $fail check(s). Deploy probablemente roto."
+            exit 1
+          fi
+          echo "✅ Smoke test OK"
