@@ -1,0 +1,240 @@
+{
+  "slug": "calculadora-mcp-server-costo-hosting-cloudflare-vs-aws",
+  "title": "Costo Hosting MCP Server 2026: CF Workers vs AWS vs Vercel | Hacé Cuentas",
+  "h1": "Calculadora de Costo de Hosting para MCP Server",
+  "description": "Compará costos de hosting para tu MCP server: Cloudflare Workers desde $0, AWS Lambda desde $0.20/M req, Vercel Pro $20/mes, VPS DigitalOcean desde $4/mes.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "🔌",
+  "formulaId": "mcp-server-costo-hosting-cloudflare-vs-aws",
+  "intro": "Elegir dónde hostear un **MCP server** (Model Context Protocol) impacta directamente en latencia, cold starts y costo mensual. Esta calculadora compara Cloudflare Workers, AWS Lambda + ALB, Vercel Pro y un VPS en DigitalOcean según tu volumen real de requests diarios.",
+  "keyTakeaway": "Con 1 millón de requests/día (~30M/mes), Cloudflare Workers cuesta ~$6/mes, AWS Lambda + ALB ~$18/mes, Vercel Pro $20 fijos y un VPS $4–$24/mes según tamaño.",
+  "useCases": [
+    "Estimar costos antes de desplegar un MCP server en producción",
+    "Comparar plataformas serverless vs VPS para workloads de IA",
+    "Calcular el punto de equilibrio entre Vercel Pro y AWS Lambda",
+    "Decidir si el tier gratuito de Cloudflare Workers cubre tu tráfico",
+    "Planificar presupuesto mensual de infraestructura para agentes LLM"
+  ],
+  "fields": [
+    {
+      "id": "requests_per_day",
+      "label": "Requests por día",
+      "type": "number",
+      "placeholder": "100000",
+      "default": 100000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "avg_duration_ms",
+      "label": "Duración promedio por request (ms)",
+      "type": "number",
+      "placeholder": "200",
+      "default": 200,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "memory_mb",
+      "label": "Memoria Lambda (MB)",
+      "type": "select",
+      "options": [
+        {
+          "value": "128",
+          "label": "128 MB"
+        },
+        {
+          "value": "256",
+          "label": "256 MB"
+        },
+        {
+          "value": "512",
+          "label": "512 MB"
+        },
+        {
+          "value": "1024",
+          "label": "1024 MB"
+        }
+      ],
+      "default": "256",
+      "required": true
+    },
+    {
+      "id": "vps_size",
+      "label": "Tamaño VPS DigitalOcean",
+      "type": "select",
+      "options": [
+        {
+          "value": "basic_1vcpu_512mb",
+          "label": "Basic 1 vCPU / 512 MB — $4/mes"
+        },
+        {
+          "value": "basic_1vcpu_1gb",
+          "label": "Basic 1 vCPU / 1 GB — $6/mes"
+        },
+        {
+          "value": "basic_2vcpu_2gb",
+          "label": "Basic 2 vCPU / 2 GB — $18/mes"
+        },
+        {
+          "value": "basic_2vcpu_4gb",
+          "label": "Basic 2 vCPU / 4 GB — $24/mes"
+        }
+      ],
+      "default": "basic_1vcpu_1gb",
+      "required": true
+    },
+    {
+      "id": "cold_start_ok",
+      "label": "¿Son aceptables los cold starts?",
+      "type": "radio",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Sí"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ],
+      "default": "yes",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "monthly_requests",
+      "label": "Requests por mes",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "cost_cloudflare",
+      "label": "Cloudflare Workers / mes",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "cost_aws",
+      "label": "AWS Lambda + ALB / mes",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "cost_vercel",
+      "label": "Vercel Pro / mes",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "cost_vps",
+      "label": "VPS DigitalOcean / mes",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "winner",
+      "label": "Opción más económica",
+      "primary": true,
+      "format": "text"
+    },
+    {
+      "id": "cold_start_warning",
+      "label": "Advertencia cold starts",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "breakdown",
+      "label": "Desglose de costos",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nCada plataforma tiene un modelo de precios distinto. A continuación se detalla la lógica usada para cada una.\n\n---\n\n### Cloudflare Workers\n\nEl plan gratuito incluye **10 millones de requests/mes**. Por encima de ese umbral, el costo es **$0.30 por millón de requests adicionales** (plan Paid, $5/mes base que se omite si no superás el free tier).\n\n```\nreq_pagos = max(0, requests_mes - 10_000_000)\ncosto_cf = req_pagos > 0\n           ? 5 + (req_pagos / 1_000_000) * 0.30\n           : 0\n```\n\nWorkers no tiene cold starts apreciables (isolates, arrancan en < 5 ms). Límite de CPU: 10–50 ms por request en el plan estándar. No es ideal para tareas CPU-intensivas largas.\n\n---\n\n### AWS Lambda + ALB\n\nLambda cobra por **número de invocaciones** y por **GB-segundo de cómputo**.\n\n```\nGB_seg = (memory_mb / 1024) * (duration_ms / 1000) * requests_mes\ncosto_compute = max(0, GB_seg - 400_000) * 0.0000166667\ncosto_invocaciones = max(0, requests_mes - 1_000_000) * 0.0000002\n```\n\nEl **ALB (Application Load Balancer)** suma un costo fijo de ~**$16.20/mes** (0.008 $/LCU-hora × 730 h, estimando 1 LCU mínimo) más LCUs variables según tráfico. Para volúmenes bajos-medios, el ALB domina el costo total. Alternativa: API Gateway HTTP ($1/M req) que para < 10M/mes es más barato que ALB.\n\n```\ncosto_alb = 16.20 + (requests_mes / 1_000_000) * 0.008\ncosto_aws_total = costo_compute + costo_invocaciones + costo_alb\n```\n\nLambda tiene cold starts de **200–500 ms** en runtimes Node.js/Python; con Provisioned Concurrency se eliminan pero añaden costo.\n\n---\n\n### Vercel Pro\n\nPlan Pro: **$20/mes fijo** por miembro del equipo. Incluye 1 millón de invocaciones de Edge Functions y 100 GB de bandwidth. Por encima: $2 por 500K invocaciones adicionales.\n\n```\nextra_invocaciones = max(0, requests_mes - 1_000_000)\ncosto_vercel = 20 + Math.ceil(extra_invocaciones / 500_000) * 2\n```\n\n---\n\n### VPS DigitalOcean (Droplet)\n\nCosto fijo mensual según el plan seleccionado:\n\n| Plan | vCPU | RAM | Precio/mes |\n|------|------|-----|------------|\n| Basic 1 vCPU / 512 MB | 1 | 512 MB | $4 |\n| Basic 1 vCPU / 1 GB | 1 | 1 GB | $6 |\n| Basic 2 vCPU / 2 GB | 2 | 2 GB | $18 |\n| Basic 2 vCPU / 4 GB | 2 | 4 GB | $24 |\n\nCosto constante independiente del tráfico; apropiado para cargas predecibles y alta concurrencia. Sin cold starts. Requiere gestión operativa (actualizaciones, monitoring, escalado manual).\n\n---\n\n### Cuándo NO aplica / limitaciones\n\n- **Cloudflare Workers**: límite de 128 MB de memoria y CPU máximo de 50 ms/req. No apto para procesamiento pesado dentro del worker.\n- **AWS Lambda**: para MCP servers con conexiones persistentes (SSE/WebSockets), Lambda requiere configuración adicional (response streaming o API Gateway WebSocket).\n- **Vercel**: límite de 10 s en Edge Functions y 60 s en Serverless Functions. El precio de $20 es por seat, no por proyecto.\n- **VPS**: no escala automáticamente; picos de tráfico pueden saturar el servidor.\n- Los precios de AWS y Cloudflare pueden variar según región. Esta calculadora usa precios de us-east-1 / zona estándar.",
+  "faq": [
+    {
+      "q": "¿Qué es un MCP server y por qué importa su hosting?",
+      "a": "MCP (Model Context Protocol) es el protocolo abierto de Anthropic para conectar LLMs con herramientas y fuentes de datos. Un MCP server recibe requests de agentes de IA en tiempo real, por lo que la latencia y la disponibilidad impactan directamente en la experiencia del usuario final."
+    },
+    {
+      "q": "¿Cloudflare Workers soporta el protocolo MCP?",
+      "a": "Sí. Workers soporta HTTP streaming y Server-Sent Events (SSE), que son los transportes usados por MCP. Cloudflare publicó guías oficiales para desplegar MCP servers en Workers. El límite de CPU de 50 ms/req aplica al worker en sí, no a llamadas externas (fetch, KV, etc.)."
+    },
+    {
+      "q": "¿Cuándo conviene AWS Lambda sobre Cloudflare Workers para un MCP server?",
+      "a": "Lambda conviene cuando necesitás más de 50 ms de CPU por request, acceso nativo a servicios AWS (RDS, S3, Bedrock), o cuando ya tenés infraestructura AWS consolidada. Para volúmenes bajos, el costo del ALB hace que Lambda sea más caro que Workers."
+    },
+    {
+      "q": "¿Los cold starts afectan a MCP servers en producción?",
+      "a": "Sí, especialmente en Lambda con runtimes pesados. Un cold start de 300–800 ms puede hacer que el primer request de una sesión sea lento. Cloudflare Workers no tiene cold starts perceptibles. Para Lambda, Provisioned Concurrency los elimina pero añade ~$0.000004646 por GB-hora aprovisionado."
+    },
+    {
+      "q": "¿Vercel Pro soporta conexiones SSE persistentes para MCP?",
+      "a": "Las Edge Functions de Vercel soportan streaming con Response streaming, compatible con SSE. Las Serverless Functions tienen un timeout de 60 s. Para conexiones SSE de larga duración (> 60 s), Vercel no es la opción ideal; un VPS o Cloudflare Durable Objects son más adecuados."
+    },
+    {
+      "q": "¿Un VPS de $4/mes puede manejar un MCP server en producción?",
+      "a": "Depende del volumen. Un Droplet de 1 vCPU / 512 MB puede manejar cómodamente hasta ~50–100 req/s con un servidor Node.js optimizado. Para tráfico mayor o picos impredecibles, conviene escalar el Droplet o migrar a una solución serverless con escalado automático."
+    },
+    {
+      "q": "¿Qué pasa si supero el free tier de Cloudflare Workers?",
+      "a": "El plan Paid ($5/mes base) se activa automáticamente. Cada millón de requests adicionales cuesta $0.30. Para 50 millones de requests/mes, el costo total sería: $5 + (40 × $0.30) = $17/mes, aún competitivo frente a otras opciones."
+    },
+    {
+      "q": "¿La calculadora incluye el costo de egress (bandwidth)?",
+      "a": "No. Esta calculadora se enfoca en cómputo e invocaciones. El egress puede añadir costos en AWS ($0.09/GB fuera de us-east-1) y en Cloudflare es gratuito entre Workers y la red de CF. Para respuestas pequeñas típicas de MCP (< 10 KB/req), el egress raramente domina el costo."
+    },
+    {
+      "q": "¿Cuál es la mejor opción para un MCP server con tráfico impredecible?",
+      "a": "Cloudflare Workers es la opción más robusta para tráfico variable: escala automáticamente, no tiene cold starts, el free tier de 10M req/mes cubre la mayoría de proyectos pequeños y medianos, y el costo por exceso es predecible y bajo."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Cloudflare Workers Pricing",
+      "url": "https://developers.cloudflare.com/workers/platform/pricing/",
+      "publisher": "Cloudflare",
+      "date": "2026"
+    },
+    {
+      "name": "AWS Lambda Pricing",
+      "url": "https://aws.amazon.com/lambda/pricing/",
+      "publisher": "Amazon Web Services",
+      "date": "2026"
+    },
+    {
+      "name": "Vercel Pricing",
+      "url": "https://vercel.com/pricing",
+      "publisher": "Vercel",
+      "date": "2026"
+    },
+    {
+      "name": "DigitalOcean Droplets Pricing",
+      "url": "https://www.digitalocean.com/pricing/droplets",
+      "publisher": "DigitalOcean",
+      "date": "2026"
+    },
+    {
+      "name": "Model Context Protocol — Official Docs",
+      "url": "https://modelcontextprotocol.io/introduction",
+      "publisher": "Anthropic",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "biannual",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Revisar precios de Cloudflare Workers (free tier y por-millón), AWS Lambda (GB-segundo y ALB LCU), Vercel Pro (incluye invocaciones y overage), y DigitalOcean Droplets cuando las plataformas actualicen sus tarifas.",
+    "source": "Cloudflare Workers Pricing",
+    "sourceUrl": "https://developers.cloudflare.com/workers/platform/pricing/"
+  },
+  "lastReviewed": "2026-04-27"
+}

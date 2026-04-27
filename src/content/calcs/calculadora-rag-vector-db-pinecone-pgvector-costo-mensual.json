@@ -1,0 +1,302 @@
+{
+  "slug": "calculadora-rag-vector-db-pinecone-pgvector-costo-mensual",
+  "title": "Costo RAG Vector DB 2026: Pinecone vs pgvector vs Weaviate | Hacé Cuentas",
+  "h1": "Calculadora de Costo Mensual RAG con Vector DB",
+  "description": "Calculá el costo mensual de tu sistema RAG: Pinecone, pgvector self-hosted o Weaviate. Incluye storage, queries y LLM. Compará opciones desde $0 hasta cientos de USD/mes.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "🗃️",
+  "formulaId": "rag-vector-db-pinecone-pgvector-costo-mensual",
+  "intro": "Un sistema **RAG (Retrieval-Augmented Generation)** combina una vector database con un LLM para responder preguntas sobre tus documentos. El costo mensual depende de cuántos documentos indexás, cuántas queries recibís por día y qué proveedor elegís. Esta calculadora compara **Pinecone**, **pgvector self-hosted** y **Weaviate Cloud** para que tomes la mejor decisión económica.",
+  "keyTakeaway": "Un sistema RAG con 10.000 documentos y 1.000 queries/día puede costar desde ~$20/mes con pgvector self-hosted hasta $180/mes con Pinecone serverless, más el costo del LLM.",
+  "useCases": [
+    "Estimar el costo mensual antes de lanzar un chatbot sobre documentación interna",
+    "Comparar si conviene Pinecone managed vs pgvector en un VPS propio",
+    "Planificar el presupuesto de un SaaS con búsqueda semántica",
+    "Calcular cuánto cuesta escalar de 10K a 1M documentos",
+    "Justificar ante inversores el costo de infraestructura de un producto de IA",
+    "Evaluar el impacto del volumen de queries diarias en la factura mensual"
+  ],
+  "fields": [
+    {
+      "id": "numDocs",
+      "label": "Cantidad de documentos indexados",
+      "type": "number",
+      "placeholder": "10000",
+      "default": 10000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "chunksPerDoc",
+      "label": "Chunks (fragmentos) por documento",
+      "type": "number",
+      "placeholder": "5",
+      "default": 5,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "embeddingDimensions",
+      "label": "Dimensiones del embedding",
+      "type": "select",
+      "options": [
+        {
+          "value": "768",
+          "label": "768 (e.g. text-embedding-3-small, MiniLM)"
+        },
+        {
+          "value": "1536",
+          "label": "1536 (e.g. text-embedding-3-large, ada-002)"
+        },
+        {
+          "value": "3072",
+          "label": "3072 (e.g. text-embedding-3-large max)"
+        }
+      ],
+      "default": "1536",
+      "required": true
+    },
+    {
+      "id": "queriesPerDay",
+      "label": "Queries por día",
+      "type": "number",
+      "placeholder": "1000",
+      "default": 1000,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "topK",
+      "label": "Chunks recuperados por query (top-k)",
+      "type": "number",
+      "placeholder": "5",
+      "default": 5,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "provider",
+      "label": "Proveedor de vector DB",
+      "type": "select",
+      "options": [
+        {
+          "value": "pinecone_serverless",
+          "label": "Pinecone Serverless (AWS us-east-1)"
+        },
+        {
+          "value": "pinecone_pod",
+          "label": "Pinecone Pod-based (p1.x1)"
+        },
+        {
+          "value": "pgvector",
+          "label": "pgvector self-hosted (VPS)"
+        },
+        {
+          "value": "weaviate_cloud",
+          "label": "Weaviate Cloud (Sandbox/Standard)"
+        }
+      ],
+      "default": "pinecone_serverless",
+      "required": true
+    },
+    {
+      "id": "llmModel",
+      "label": "Modelo LLM para generación",
+      "type": "select",
+      "options": [
+        {
+          "value": "gpt4o_mini",
+          "label": "GPT-4o mini ($0.15/1M input, $0.60/1M output)"
+        },
+        {
+          "value": "gpt4o",
+          "label": "GPT-4o ($2.50/1M input, $10/1M output)"
+        },
+        {
+          "value": "claude_haiku",
+          "label": "Claude 3.5 Haiku ($0.80/1M input, $4/1M output)"
+        },
+        {
+          "value": "claude_sonnet",
+          "label": "Claude 3.5 Sonnet ($3/1M input, $15/1M output)"
+        },
+        {
+          "value": "none",
+          "label": "Sin LLM (solo vector DB)"
+        }
+      ],
+      "default": "gpt4o_mini",
+      "required": true
+    },
+    {
+      "id": "avgTokensPerChunk",
+      "label": "Tokens promedio por chunk",
+      "type": "number",
+      "placeholder": "200",
+      "default": 200,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "avgOutputTokens",
+      "label": "Tokens promedio de respuesta LLM",
+      "type": "number",
+      "placeholder": "300",
+      "default": 300,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "embeddingProvider",
+      "label": "Proveedor de embeddings (indexación + queries)",
+      "type": "select",
+      "options": [
+        {
+          "value": "openai_small",
+          "label": "OpenAI text-embedding-3-small ($0.02/1M tokens)"
+        },
+        {
+          "value": "openai_large",
+          "label": "OpenAI text-embedding-3-large ($0.13/1M tokens)"
+        },
+        {
+          "value": "self_hosted",
+          "label": "Self-hosted (e.g. sentence-transformers) — $0"
+        }
+      ],
+      "default": "openai_small",
+      "required": true
+    },
+    {
+      "id": "avgTokensPerQueryInput",
+      "label": "Tokens promedio por query (para embedding)",
+      "type": "number",
+      "placeholder": "30",
+      "default": 30,
+      "step": 5,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "totalMonthlyCost",
+      "label": "Costo mensual total estimado",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "vectorDbCost",
+      "label": "Costo vector DB (storage + queries)",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "llmCost",
+      "label": "Costo LLM mensual",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "embeddingCost",
+      "label": "Costo embeddings mensual",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "totalVectors",
+      "label": "Total de vectores indexados",
+      "format": "integer"
+    },
+    {
+      "id": "storageGB",
+      "label": "Almacenamiento estimado de vectores",
+      "format": "decimal",
+      "suffix": "GB"
+    },
+    {
+      "id": "breakdown",
+      "label": "Desglose detallado",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula el costo de un sistema RAG\n\nUn sistema RAG tiene tres componentes de costo principales: **vector database**, **embeddings** y **LLM**.\n\n### 1. Total de vectores y almacenamiento\n\n```\ntotalVectors = numDocs × chunksPerDoc\nbytesPerVector = dimensions × 4  // float32\nstorageGB = (totalVectors × bytesPerVector) / 1_073_741_824\n```\n\nCon 10.000 docs, 5 chunks, 1536 dimensiones:\n- 50.000 vectores × 1536 × 4 bytes = ~293 MB\n\n### 2. Costo Pinecone Serverless (2026)\n\nPinecone serverless cobra por escritura y lectura de vectores:\n- **Write**: $2.00 / 1M write units (1 write unit = 1 vector)\n- **Read**: $16.00 / 1M read units  \n- **Storage**: $0.33 / GB / mes\n\nLas queries de indexación inicial son un costo único; las queries diarias se acumulan mensualmente.\n\n```\nwriteCost = (totalVectors / 1_000_000) × 2.00  // costo único amortizado\nreadUnitsPerMonth = queriesPerDay × 30 × topK\nreadCost = (readUnitsPerMonth / 1_000_000) × 16.00\nstorageCost = storageGB × 0.33\npineconeServerlessCost = readCost + storageCost + (writeCost / 12)\n```\n\n### 3. Costo Pinecone Pod-based (p1.x1)\n\n- **p1.x1**: $0.096/hora → ~$70.56/mes por pod\n- Capacidad: ~1M vectores de 768 dims por pod\n- Para 1536 dims, capacidad ~500K vectores por pod\n\n### 4. pgvector self-hosted\n\nEl costo principal es el servidor. Una instancia adecuada en AWS/GCP/Hetzner:\n- Hetzner CX31 (8GB RAM, 4 vCPU): ~$15/mes — hasta ~500K vectores de 1536 dims\n- AWS RDS t3.large con pgvector: ~$90/mes\n- No hay costo por queries, pero hay costo operativo\n\n```\n// Factor de escala basado en tamaño del índice\nif storageGB <= 1: pgvectorCost = 15   // VPS pequeño\nelse if storageGB <= 4: pgvectorCost = 30\nelse if storageGB <= 16: pgvectorCost = 60\nelse: pgvectorCost = 120\n```\n\n### 5. Weaviate Cloud\n\n- **Sandbox**: Gratis (límite 1M objetos, sin SLA)\n- **Standard**: ~$25/mes base + $0.05/1M queries + $0.095/GB storage/mes\n\n### 6. Costo de embeddings\n\nSe pagan tokens en dos momentos: al indexar (una vez) y en cada query:\n\n```\n// Indexación (amortizado mensual)\ntokensIndexacion = totalVectors × avgTokensPerChunk\ncostoIndexacionMensual = (tokensIndexacion / 1_000_000) × precioEmbedding / 12\n\n// Queries diarias\ntokensQueriesMensual = queriesPerDay × 30 × avgTokensPerQueryInput\ncostoQueriesMensual = (tokensQueriesMensual / 1_000_000) × precioEmbedding\n```\n\n| Modelo | Precio por 1M tokens |\n|--------|----------------------|\n| text-embedding-3-small | $0.020 |\n| text-embedding-3-large | $0.130 |\n| Self-hosted | $0.000 |\n\n### 7. Costo LLM\n\nCada query genera un prompt con: instrucción del sistema + chunks recuperados + pregunta del usuario.\n\n```\ntokensInputPorQuery = topK × avgTokensPerChunk + avgTokensPerQueryInput + 100 // system prompt\ncostoLLMMensual = queriesPerDay × 30 × (\n  (tokensInputPorQuery / 1_000_000) × precioInput +\n  (avgOutputTokens / 1_000_000) × precioOutput\n)\n```\n\n| Modelo | Input $/1M | Output $/1M |\n|--------|-----------|-------------|\n| GPT-4o mini | $0.15 | $0.60 |\n| GPT-4o | $2.50 | $10.00 |\n| Claude 3.5 Haiku | $0.80 | $4.00 |\n| Claude 3.5 Sonnet | $3.00 | $15.00 |\n\n### Limitaciones\n\n- Los precios son estimados a Q1 2026 y pueden cambiar.\n- pgvector self-hosted no incluye backup, monitoring ni tiempo operativo del equipo.\n- El costo de la indexación inicial (embeddings) se amortiza en 12 meses.\n- No incluye costos de red/egress ni de la aplicación que sirve el RAG.\n- Weaviate Sandbox no tiene SLA; no apto para producción.\n- Los precios de Pinecone varían según región.",
+  "faq": [
+    {
+      "q": "¿Qué es un chunk y cuántos chunks debo crear por documento?",
+      "a": "Un chunk es un fragmento de texto de tu documento original. Documentos de 1-2 páginas suelen dividirse en 3-8 chunks de 200-400 tokens. Chunks más pequeños dan mayor precisión en el retrieval; chunks más grandes proveen más contexto al LLM. Lo más común es 5 chunks de ~200 tokens por documento."
+    },
+    {
+      "q": "¿Cuándo conviene Pinecone serverless vs pod-based?",
+      "a": "Serverless es mejor para cargas variables o proyectos que arrancan: pagás por uso real. Pod-based conviene cuando superás ~2M queries/mes o necesitás latencia muy baja y predecible. Para menos de 500K queries/mes, serverless casi siempre sale más barato."
+    },
+    {
+      "q": "¿Cuándo pgvector self-hosted es la mejor opción?",
+      "a": "pgvector conviene cuando ya tenés PostgreSQL en producción, el volumen de vectores es manejable (<5M vectores), o los datos son sensibles y no pueden salir de tu infraestructura. El costo fijo es bajo ($15-$60/mes en Hetzner), pero sumá tiempo de mantenimiento y operaciones."
+    },
+    {
+      "q": "¿Por qué el costo de embeddings se amortiza en 12 meses?",
+      "a": "La indexación inicial (convertir todos tus documentos a vectores) es un costo único que no se repite salvo que actualices el corpus. La calculadora distribuye ese costo a lo largo de 12 meses para estimar el impacto mensual real. Si actualizás tu corpus frecuentemente, el costo real puede ser mayor."
+    },
+    {
+      "q": "¿Qué modelo de embedding recomiendan para producción?",
+      "a": "text-embedding-3-small de OpenAI ofrece excelente relación calidad/precio a $0.02/1M tokens y funciona bien con 1536 dims. text-embedding-3-large mejora la calidad en ~5-10% pero cuesta 6x más. Para casos sensibles a costo o privacy, modelos self-hosted como all-MiniLM-L6-v2 son gratuitos y muy buenos."
+    },
+    {
+      "q": "¿El costo del LLM es el más importante en un RAG?",
+      "a": "Depende del volumen. Con pocas queries (<500/día) y GPT-4o mini, el LLM cuesta menos de $10/mes y la vector DB domina. Con >5.000 queries/día el LLM puede representar el 60-80% del costo total, especialmente con GPT-4o o Claude Sonnet."
+    },
+    {
+      "q": "¿Weaviate Cloud es gratis para siempre en el plan Sandbox?",
+      "a": "El Sandbox de Weaviate es gratuito pero tiene límites: sin SLA, sin soporte, y puede ser eliminado tras 14 días de inactividad. Para producción se requiere el plan Standard (~$25/mes base) o superior. Es ideal para prototipos y demos."
+    },
+    {
+      "q": "¿Cómo afecta el top-k al costo?",
+      "a": "Top-k es la cantidad de chunks que recuperás por query. Afecta el costo de dos formas: más read units en la vector DB (especialmente Pinecone serverless) y mayor input al LLM. Subir de top-k=3 a top-k=10 puede incrementar el costo LLM un 40-60% dependiendo del tamaño de los chunks."
+    },
+    {
+      "q": "¿Hay alternativas open-source gratuitas a Pinecone?",
+      "a": "Sí: pgvector (PostgreSQL), Qdrant self-hosted, Chroma, Milvus y Weaviate self-hosted son todas open-source. El costo de hosting en un VPS como Hetzner puede ir desde $5/mes para proyectos pequeños. El trade-off es operaciones, mantenimiento y ausencia de managed scaling."
+    },
+    {
+      "q": "¿Esta calculadora incluye el costo del servidor de la aplicación RAG?",
+      "a": "No. La calculadora cubre vector DB, embeddings y LLM. El servidor web/API que orquesta el RAG (FastAPI, LangChain, LlamaIndex, etc.) tiene su propio costo de hosting, que puede ir desde $5/mes (VPS básico) hasta $50-200/mes para setups con alta disponibilidad."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Pinecone Pricing 2026",
+      "url": "https://www.pinecone.io/pricing/",
+      "publisher": "Pinecone",
+      "date": "2026"
+    },
+    {
+      "name": "OpenAI Embeddings Pricing",
+      "url": "https://openai.com/api/pricing/",
+      "publisher": "OpenAI",
+      "date": "2026"
+    },
+    {
+      "name": "Weaviate Cloud Pricing",
+      "url": "https://weaviate.io/pricing",
+      "publisher": "Weaviate",
+      "date": "2026"
+    },
+    {
+      "name": "Anthropic Claude API Pricing",
+      "url": "https://www.anthropic.com/pricing",
+      "publisher": "Anthropic",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Revisar precios de Pinecone serverless/pod, OpenAI embeddings, modelos GPT-4o/Claude y Weaviate Cloud cuando los proveedores actualicen sus tarifas.",
+    "source": "Pinecone Pricing 2026",
+    "sourceUrl": "https://www.pinecone.io/pricing/"
+  },
+  "lastReviewed": "2026-04-27"
+}

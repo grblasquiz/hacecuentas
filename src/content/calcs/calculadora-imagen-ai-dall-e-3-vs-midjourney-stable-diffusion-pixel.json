@@ -1,0 +1,305 @@
+{
+  "slug": "calculadora-imagen-ai-dall-e-3-vs-midjourney-stable-diffusion-pixel",
+  "title": "Costo Imagen IA: DALL-E 3 vs Midjourney vs Stable Diffusion 2026 | Hacé Cuentas",
+  "h1": "Calculadora de costo por imagen IA por modelo",
+  "description": "Compará el costo real por imagen entre DALL-E 3, Midjourney, Stable Diffusion, Flux Pro e Imagen 3. Ingresá tu volumen mensual y calculá cuál modelo te conviene.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "🎨",
+  "formulaId": "imagen-ai-dall-e-3-vs-midjourney-stable-diffusion-pixel",
+  "intro": "Elegir un generador de imágenes IA no es solo cuestión de calidad: el costo por imagen varía enormemente según el modelo y tu volumen. **DALL-E 3** cobra por imagen, **Midjourney** usa suscripción mensual con límite de GPU, y **Stable Diffusion** self-hosted tiene costo de infraestructura. Esta calculadora muestra el costo real mensual y unitario para cada opción según tus imágenes por mes.",
+  "keyTakeaway": "Con 500 imágenes/mes, DALL-E 3 HD cuesta $40, Midjourney Pro $60 (ilimitado), y Stable Diffusion self-hosted puede bajar a $5-15 en GPU cloud.",
+  "useCases": [
+    "Agencia de marketing que genera 200 imágenes mensuales para redes sociales",
+    "Desarrollador que integra generación de imágenes en una app SaaS",
+    "Freelancer que evalúa qué suscripción de IA visual le rinde más",
+    "Startup que quiere estimar el costo de infraestructura de imagen IA antes de escalar",
+    "Creador de contenido que compara calidad/precio entre plataformas",
+    "Empresa que decide entre API pay-per-use vs suscripción fija mensual"
+  ],
+  "fields": [
+    {
+      "id": "imagenesPerMes",
+      "label": "Imágenes por mes",
+      "type": "number",
+      "placeholder": "200",
+      "default": 200,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "calidadDalle",
+      "label": "Calidad DALL-E 3 (OpenAI API)",
+      "type": "select",
+      "options": [
+        {
+          "value": "standard_1024",
+          "label": "Standard 1024×1024 — $0.040/img"
+        },
+        {
+          "value": "standard_1792",
+          "label": "Standard 1024×1792 o 1792×1024 — $0.080/img"
+        },
+        {
+          "value": "hd_1024",
+          "label": "HD 1024×1024 — $0.080/img"
+        },
+        {
+          "value": "hd_1792",
+          "label": "HD 1024×1792 o 1792×1024 — $0.120/img"
+        }
+      ],
+      "default": "standard_1024",
+      "required": true
+    },
+    {
+      "id": "planMidjourney",
+      "label": "Plan Midjourney",
+      "type": "select",
+      "options": [
+        {
+          "value": "basic",
+          "label": "Basic — $10/mes (200 imágenes ~)"
+        },
+        {
+          "value": "standard",
+          "label": "Standard — $30/mes (ilimitado relax)"
+        },
+        {
+          "value": "pro",
+          "label": "Pro — $60/mes (ilimitado + fast)"
+        },
+        {
+          "value": "mega",
+          "label": "Mega — $120/mes (máximo fast GPU)"
+        }
+      ],
+      "default": "standard",
+      "required": true
+    },
+    {
+      "id": "sdInfra",
+      "label": "Infraestructura Stable Diffusion",
+      "type": "select",
+      "options": [
+        {
+          "value": "runpod_a100",
+          "label": "GPU cloud RunPod A100 (~$1.89/hr)"
+        },
+        {
+          "value": "runpod_rtx4090",
+          "label": "GPU cloud RunPod RTX 4090 (~$0.74/hr)"
+        },
+        {
+          "value": "lambda_a10",
+          "label": "Lambda Labs A10 (~$0.60/hr)"
+        },
+        {
+          "value": "local_3090",
+          "label": "Local RTX 3090 (solo electricidad ~$0.12/kWh)"
+        },
+        {
+          "value": "local_4090",
+          "label": "Local RTX 4090 (solo electricidad ~$0.12/kWh)"
+        }
+      ],
+      "default": "runpod_rtx4090",
+      "required": true
+    },
+    {
+      "id": "fluxPro",
+      "label": "¿Incluir Flux Pro (fal.ai)?",
+      "type": "select",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí — $0.055/imagen (Flux Pro)"
+        },
+        {
+          "value": "flux_schnell",
+          "label": "Sí — $0.003/imagen (Flux Schnell, menor calidad)"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ],
+      "default": "si",
+      "required": true
+    },
+    {
+      "id": "imagen3",
+      "label": "¿Incluir Google Imagen 3 (Vertex AI)?",
+      "type": "select",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí — $0.040/imagen (standard)"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ],
+      "default": "si",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "costeDalle",
+      "label": "Costo mensual DALL-E 3",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "costeDallePorImagen",
+      "label": "DALL-E 3 — costo por imagen",
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "costeMidjourney",
+      "label": "Costo mensual Midjourney",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "costeMidPorImagen",
+      "label": "Midjourney — costo por imagen",
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "costeSD",
+      "label": "Costo mensual Stable Diffusion",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "costeSDPorImagen",
+      "label": "Stable Diffusion — costo por imagen",
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "costeFlux",
+      "label": "Costo mensual Flux Pro / Schnell",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "costeFluxPorImagen",
+      "label": "Flux — costo por imagen",
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "costeImagen3",
+      "label": "Costo mensual Google Imagen 3",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "costeImagen3PorImagen",
+      "label": "Imagen 3 — costo por imagen",
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "modeloMasBarato",
+      "label": "Modelo más económico para tu volumen",
+      "format": "text"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen comparativo",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula el costo por modelo\n\nCada plataforma tiene un modelo de cobro diferente. Esta calculadora normaliza todos a **costo mensual total** y **costo por imagen** para hacerlos comparables.\n\n---\n\n### DALL-E 3 (OpenAI API)\n\nCobro por imagen generada según resolución y calidad:\n\n```\nCosto mensual = imágenes_por_mes × precio_por_imagen\n```\n\n| Calidad | Resolución | Precio/imagen |\n|---|---|---|\n| Standard | 1024×1024 | $0.040 |\n| Standard | 1024×1792 / 1792×1024 | $0.080 |\n| HD | 1024×1024 | $0.080 |\n| HD | 1024×1792 / 1792×1024 | $0.120 |\n\nFuente: OpenAI pricing página oficial (2026).\n\n---\n\n### Midjourney (suscripción)\n\nMidjourney cobra una tarifa mensual fija que incluye créditos de GPU (\"fast hours\") y generación ilimitada en modo relax a partir del plan Standard:\n\n| Plan | Precio/mes | Fast GPU hours | Relax |\n|---|---|---|---|\n| Basic | $10 | 3.3 h | No |\n| Standard | $30 | 15 h | Sí |\n| Pro | $60 | 30 h | Sí |\n| Mega | $120 | 60 h | Sí |\n\nEn el plan Basic (~200 imágenes), el costo efectivo es $0.05/imagen. En planes con relax ilimitado, el costo unitario baja a medida que aumenta el volumen.\n\n```\nCosto por imagen (MJ) = precio_plan / max(imágenes, imágenes_incluidas_estimadas)\n```\n\n---\n\n### Stable Diffusion (self-hosted / GPU cloud)\n\nEl costo depende de la GPU y del tiempo de generación. Con SDXL o SD 3.5, una imagen tarda entre 3 y 10 segundos en GPU moderna:\n\n```\nHoras GPU/mes = (imágenes × seg_por_imagen) / 3600\nCosto mensual = horas_GPU × tarifa_horaria_GPU\nCosto por imagen = tarifa_horaria_GPU × seg_por_imagen / 3600\n```\n\n| Infraestructura | Tarifa/hora | Seg/imagen (est.) |\n|---|---|---|\n| RunPod A100 | $1.89 | 3 seg |\n| RunPod RTX 4090 | $0.74 | 5 seg |\n| Lambda Labs A10 | $0.60 | 8 seg |\n| Local RTX 3090 | solo electricidad (350W × $0.12/kWh) | 8 seg |\n| Local RTX 4090 | solo electricidad (450W × $0.12/kWh) | 5 seg |\n\nNota: el costo local **no incluye** amortización del hardware (una RTX 4090 vale ~$1,800 USD).\n\n---\n\n### Flux Pro / Flux Schnell (fal.ai)\n\n```\nCosto mensual = imágenes × precio_por_imagen\n```\n\n- Flux Pro: $0.055/imagen (alta calidad, 12B params)\n- Flux Schnell: $0.003/imagen (velocidad, menor detalle)\n\nFuente: fal.ai pricing 2026.\n\n---\n\n### Google Imagen 3 (Vertex AI)\n\n```\nCosto mensual = imágenes × $0.040\n```\n\nDisponible vía Vertex AI. Precio referencial al T1 2026; puede variar según región y volumen contractual.\n\n---\n\n## Ejemplo numérico — 500 imágenes/mes\n\n| Modelo | Costo mensual | Costo/imagen |\n|---|---|---|\n| DALL-E 3 Standard 1024 | $20.00 | $0.040 |\n| DALL-E 3 HD 1024 | $40.00 | $0.080 |\n| Midjourney Standard | $30.00 | $0.060 |\n| Midjourney Pro | $60.00 | $0.120 |\n| SD RunPod RTX 4090 | $0.51 | $0.001 |\n| Flux Pro | $27.50 | $0.055 |\n| Flux Schnell | $1.50 | $0.003 |\n| Imagen 3 | $20.00 | $0.040 |\n\n## Limitaciones\n\n- El costo de Midjourney asume uso uniforme; si usás menos del límite, el costo real por imagen sube.\n- SD local no incluye amortización de hardware ni cooling.\n- Las tarifas de GPU cloud varían con disponibilidad y pueden tener mínimos de facturación.\n- Imagen 3 puede tener precios por volumen en contratos enterprise distintos al precio público.",
+  "faq": [
+    {
+      "q": "¿Cuál modelo es más barato para menos de 100 imágenes por mes?",
+      "a": "Para volúmenes bajos, DALL-E 3 Standard sale $4/mes (100 × $0.04) y Flux Schnell $0.30. Midjourney Basic ($10) solo conviene si vas a usar las 200 imágenes incluidas. Stable Diffusion cloud tiene un mínimo práctico que lo hace menos eficiente a bajo volumen."
+    },
+    {
+      "q": "¿Qué incluye el precio de Midjourney? ¿Es realmente ilimitado?",
+      "a": "Los planes Standard, Pro y Mega incluyen generación 'relax' sin límite, pero con menor prioridad de cola. Las 'fast hours' son créditos de GPU prioritaria. En la práctica, para usos no urgentes, el modo relax es efectivamente ilimitado desde $30/mes."
+    },
+    {
+      "q": "¿Stable Diffusion self-hosted es realmente más barato?",
+      "a": "En GPU cloud, el costo por imagen puede ser 10-50× menor que DALL-E 3, pero requiere conocimiento técnico, gestión de infraestructura y el costo no incluye tu tiempo. En local, el ahorro es mayor pero hay que amortizar el hardware ($800-1800 USD para una GPU decente)."
+    },
+    {
+      "q": "¿Qué diferencia hay entre Flux Pro y Flux Schnell?",
+      "a": "Flux Pro usa el modelo completo de 12B parámetros con mayor detalle y adherencia al prompt ($0.055/img). Flux Schnell es la versión destilada y rápida ($0.003/img), ideal para prototipos o previsualizaciones donde la calidad final no es crítica."
+    },
+    {
+      "q": "¿Google Imagen 3 está disponible sin contrato enterprise?",
+      "a": "Imagen 3 está disponible vía Vertex AI con cuenta de Google Cloud. El precio de $0.040/imagen aplica al tier estándar. Para volúmenes altos (>100K imágenes/mes), Google puede ofrecer precios negociados. Se requiere proyecto habilitado en Vertex AI."
+    },
+    {
+      "q": "¿Estos precios incluyen impuestos?",
+      "a": "No. Los precios listados son los precios base publicados por cada plataforma antes de impuestos. Dependiendo de tu país de facturación, puede aplicar IVA u otros impuestos locales. OpenAI y Google aplican el impuesto correspondiente según la dirección de facturación."
+    },
+    {
+      "q": "¿Cuántas imágenes por hora genera Stable Diffusion en una RTX 4090?",
+      "a": "Con SDXL en pasos estándar (20-30 steps), una RTX 4090 genera aproximadamente 700-900 imágenes/hora (5-6 segundos por imagen a 1024×1024). Con modelos más rápidos como LCM o Turbo, puede llegar a 2000+/hora, bajando el costo de electricidad a fracciones de centavo."
+    },
+    {
+      "q": "¿Qué pasa si necesito imágenes en resolución mayor a 1024×1024?",
+      "a": "DALL-E 3 soporta hasta 1792px en un eje. Para resoluciones más altas (4K+), Stable Diffusion con upscaling es la opción más práctica. Midjourney soporta upscale nativo pero consume fast hours adicionales. Flux Pro también tiene opciones de mayor resolución a precio similar."
+    },
+    {
+      "q": "¿Puedo usar estas imágenes comercialmente?",
+      "a": "OpenAI otorga derechos comerciales para imágenes DALL-E 3 generadas vía API. Midjourney permite uso comercial en planes pagos (Basic en adelante). Stable Diffusion tiene licencias abiertas que generalmente permiten uso comercial. Verificá siempre los términos vigentes de cada plataforma, ya que pueden cambiar."
+    },
+    {
+      "q": "¿Con qué volumen conviene pasarse de DALL-E 3 a Midjourney?",
+      "a": "Comparando DALL-E 3 Standard ($0.04/img) con Midjourney Standard ($30/mes): el punto de equilibrio es 750 imágenes/mes ($30 ÷ $0.04). Si generás más de 750 imágenes/mes, Midjourney Standard es más barato. Para HD ($0.08/img), el break-even cae a 375 imágenes/mes."
+    }
+  ],
+  "sources": [
+    {
+      "name": "OpenAI Image Generation Pricing",
+      "url": "https://openai.com/api/pricing/",
+      "publisher": "OpenAI",
+      "date": "2026"
+    },
+    {
+      "name": "Midjourney Subscription Plans",
+      "url": "https://docs.midjourney.com/docs/plans",
+      "publisher": "Midjourney",
+      "date": "2026"
+    },
+    {
+      "name": "fal.ai Flux Model Pricing",
+      "url": "https://fal.ai/models/fal-ai/flux-pro",
+      "publisher": "fal.ai",
+      "date": "2026"
+    },
+    {
+      "name": "Google Vertex AI Imagen Pricing",
+      "url": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+      "publisher": "Google Cloud",
+      "date": "2026"
+    },
+    {
+      "name": "RunPod GPU Cloud Pricing",
+      "url": "https://www.runpod.io/gpu-instance/pricing",
+      "publisher": "RunPod",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Revisar precios de OpenAI API, Midjourney planes, fal.ai Flux, Google Vertex AI y tarifas GPU de RunPod/Lambda mensualmente. Los precios de GPU cloud son especialmente volátiles.",
+    "source": "OpenAI Image Generation Pricing",
+    "sourceUrl": "https://openai.com/api/pricing/"
+  },
+  "lastReviewed": "2026-04-27"
+}

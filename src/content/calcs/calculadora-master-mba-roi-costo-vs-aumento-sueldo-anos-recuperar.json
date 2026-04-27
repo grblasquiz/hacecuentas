@@ -1,0 +1,280 @@
+{
+  "slug": "calculadora-master-mba-roi-costo-vs-aumento-sueldo-anos-recuperar",
+  "title": "Calculadora ROI MBA 2026: ¿Cuándo recuperás la inversión? | Hacé Cuentas",
+  "h1": "Calculadora ROI del MBA: Costo vs. Aumento de Sueldo",
+  "description": "Calculá el ROI real de tu MBA: tuition + costo de oportunidad vs. aumento salarial esperado. Descubrí en cuántos años recuperás la inversión según el tier de la escuela.",
+  "category": "educacion",
+  "audience": "global",
+  "icon": "🎓",
+  "formulaId": "master-mba-roi-costo-vs-aumento-sueldo-anos-recuperar",
+  "intro": "Un MBA de primer nivel puede costar entre USD 80.000 y USD 240.000 entre tuition y costo de oportunidad. Esta calculadora te muestra el **ROI real** combinando todos los costos (incluyendo los 2 años sin sueldo) contra el aumento salarial esperado post-MBA, para que sepas exactamente cuántos años necesitás para recuperar la inversión.",
+  "keyTakeaway": "Un MBA en escuela top (Harvard, Wharton) cuesta en total ~USD 220.000 con costo de oportunidad; con un salto salarial de USD 80.000/año, el breakeven se alcanza en aproximadamente 3-4 años post-graduación.",
+  "useCases": [
+    "Comparar si vale más un MBA full-time top-tier vs. uno part-time de menor costo",
+    "Evaluar si hacer el MBA ahora o esperar a tener mayor salario base (mayor costo de oportunidad)",
+    "Decidir entre financiar con ahorros propios vs. préstamo estudiantil y su impacto en el ROI",
+    "Calcular el punto de equilibrio para negociar tu sueldo post-MBA con reclutadores",
+    "Comparar escuelas de distintos tiers y su relación costo-beneficio salarial"
+  ],
+  "fields": [
+    {
+      "id": "schoolTier",
+      "label": "Tier de la escuela",
+      "type": "select",
+      "options": [
+        {
+          "value": "m7",
+          "label": "M7 / Top 10 global (Harvard, Wharton, Stanford, INSEAD)"
+        },
+        {
+          "value": "top25",
+          "label": "Top 11-25 (Darden, Ross, Fuqua, IE, IESE)"
+        },
+        {
+          "value": "top50",
+          "label": "Top 26-50 (escuelas regionales reconocidas)"
+        },
+        {
+          "value": "custom",
+          "label": "Ingresá costos personalizados"
+        }
+      ],
+      "default": "m7",
+      "required": true
+    },
+    {
+      "id": "tuitionOverride",
+      "label": "Costo total del programa (USD) — solo si elegiste 'personalizado'",
+      "type": "number",
+      "placeholder": "150000",
+      "default": 0,
+      "step": 1000,
+      "required": false
+    },
+    {
+      "id": "currentSalary",
+      "label": "Salario anual actual (USD bruto)",
+      "type": "number",
+      "placeholder": "80000",
+      "default": 80000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "postMbaSalary",
+      "label": "Salario anual esperado post-MBA (USD bruto)",
+      "type": "number",
+      "placeholder": "160000",
+      "default": 160000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "programDuration",
+      "label": "Duración del programa (años)",
+      "type": "select",
+      "options": [
+        {
+          "value": "2",
+          "label": "2 años (full-time estándar)"
+        },
+        {
+          "value": "1",
+          "label": "1 año (programas acelerados / INSEAD)"
+        },
+        {
+          "value": "3",
+          "label": "3 años (part-time / executive)"
+        }
+      ],
+      "default": "2",
+      "required": true
+    },
+    {
+      "id": "livingCostPerYear",
+      "label": "Costo de vida anual durante el MBA (USD)",
+      "type": "number",
+      "placeholder": "30000",
+      "default": 30000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "savingsUsed",
+      "label": "Ahorros propios aplicados (USD)",
+      "type": "number",
+      "placeholder": "30000",
+      "default": 30000,
+      "step": 1000,
+      "required": false
+    },
+    {
+      "id": "loanAmount",
+      "label": "Monto financiado con préstamo (USD)",
+      "type": "number",
+      "placeholder": "80000",
+      "default": 80000,
+      "step": 1000,
+      "required": false
+    },
+    {
+      "id": "loanInterestRate",
+      "label": "Tasa de interés anual del préstamo (%)",
+      "type": "number",
+      "placeholder": "6.5",
+      "default": 6.5,
+      "step": 0.1,
+      "required": false
+    },
+    {
+      "id": "loanTermYears",
+      "label": "Plazo de repago del préstamo (años)",
+      "type": "number",
+      "placeholder": "10",
+      "default": 10,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "discountRate",
+      "label": "Tasa de descuento / costo de oportunidad del capital (%)",
+      "type": "number",
+      "placeholder": "7",
+      "default": 7,
+      "step": 0.5,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "totalInvestment",
+      "label": "Inversión total (tuition + costo de oportunidad + vida)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "annualSalaryGain",
+      "label": "Aumento salarial anual neto",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "simplePaybackYears",
+      "label": "Años para recuperar (método simple)",
+      "primary": true,
+      "format": "decimal"
+    },
+    {
+      "id": "npvAt10Years",
+      "label": "VAN a 10 años post-MBA",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "irrPercent",
+      "label": "TIR estimada del MBA (%)",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "loanMonthlyPayment",
+      "label": "Cuota mensual del préstamo",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "breakEvenYear",
+      "label": "Año de breakeven (desde inicio del programa)",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "summaryText",
+      "label": "Resumen del análisis",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula el ROI de un MBA\n\nEl retorno sobre la inversión de un MBA requiere sumar **todos** los costos reales, incluyendo aquellos que no aparecen en el folleto de la escuela.\n\n## Componentes del costo total\n\n```\nCosto Total = Tuition\n            + (Salario Actual × Duración en años)   ← costo de oportunidad\n            + (Costo de vida anual × Duración en años)\n            + Intereses totales del préstamo\n```\n\nEl **costo de oportunidad** es el ingreso que dejás de percibir mientras estudiás. Para un profesional que gana USD 80.000/año en un programa de 2 años, ese costo invisible es USD 160.000.\n\n## Aumento salarial neto\n\n```\nAumento Anual = Salario Post-MBA − Salario Actual\n```\n\nEste diferencial es la fuente de recupero. Se asume que persiste y crece con la carrera.\n\n## Método de recupero simple (Payback Period)\n\n```\nAños de Recupero = Costo Total ÷ Aumento Salarial Anual\n```\n\n## Valor Actual Neto (VAN) a 10 años\n\nEl VAN descuenta los flujos futuros con una tasa de oportunidad del capital (por defecto 7%, aproximando el retorno histórico real del S&P 500):\n\n```\nVAN = Σ [Aumento_t / (1 + r)^t]  para t=1..10  −  Costo Total\n```\n\nUn VAN positivo indica que el MBA supera invertir ese dinero en el mercado.\n\n## Tasa Interna de Retorno (TIR)\n\nLa TIR es la tasa que hace el VAN = 0 a lo largo de una vida laboral de 30 años. Se estima numéricamente con iteración binaria. MBAs en escuelas M7 típicamente producen TIRs del 15-25% cuando el salto salarial es significativo.\n\n## Valores de referencia por tier (2025-2026)\n\n| Tier | Tuition típica (USD) | Salario pre-MBA típico | Salario post-MBA (año 1) |\n|------|---------------------|------------------------|---------------------------|\n| M7 / Top 10 | 160.000 – 240.000 | 80.000 – 120.000 | 175.000 – 220.000 |\n| Top 11-25 | 90.000 – 150.000 | 60.000 – 100.000 | 120.000 – 160.000 |\n| Top 26-50 | 40.000 – 90.000 | 50.000 – 80.000 | 80.000 – 120.000 |\n\n*Fuentes: Financial Times MBA Ranking 2025, Graduate Management Admission Council (GMAC) 2025 Employment Report.*\n\n## Cuándo NO aplica / Limitaciones\n\n- **No considera impuestos**: el aumento salarial real es después de impuestos; en jurisdicciones con alta carga tributaria el payback se extiende.\n- **Asume empleo inmediato post-MBA**: la búsqueda de trabajo puede tomar 3-12 meses adicionales.\n- **No modela crecimiento salarial diferencial**: con el tiempo, el MBA puede generar compound growth mayor al escenario sin MBA, mejorando el ROI real.\n- **Networking y carrera no lineal**: el valor de la red de alumni es real pero no cuantificable en este modelo.\n- **Programas part-time o executive MBA**: el costo de oportunidad es parcial; ajustá la duración y reducí el salario dejado de percibir manualmente.",
+  "faq": [
+    {
+      "q": "¿El costo de oportunidad realmente importa tanto como la tuition?",
+      "a": "Sí, y muchos candidatos lo subestiman. Para alguien que gana USD 100.000/año, 2 años de programa representan USD 200.000 de ingreso resignado, comparable o superior a la tuition de muchas escuelas. Ignorarlo infla artificialmente el ROI calculado."
+    },
+    {
+      "q": "¿Qué tasa de descuento debo usar?",
+      "a": "La convención académica usa 7-8% (retorno real histórico del mercado accionario en USD). Si tenés deuda estudiantil al 6,5%, usar esa tasa es más conservador y apropiado. Una tasa más alta penaliza más al MBA y da una visión más prudente del ROI."
+    },
+    {
+      "q": "¿La TIR del MBA es comparable a otras inversiones?",
+      "a": "Sí. Una TIR del 15% anual sostenida por décadas supera ampliamente el mercado. El problema es que asume que el diferencial salarial persiste toda la carrera, lo cual depende de la industria, el desempeño individual y el contexto económico. TIRs menores al 8% deberían generar dudas sobre la decisión."
+    },
+    {
+      "q": "¿Cómo afecta el préstamo estudiantil al ROI?",
+      "a": "El préstamo traslada el costo en el tiempo pero agrega intereses. Un préstamo de USD 100.000 al 6,5% a 10 años genera ~USD 36.000 en intereses adicionales. La calculadora suma estos intereses al costo total para reflejar el verdadero desembolso."
+    },
+    {
+      "q": "¿Un MBA de 1 año siempre tiene mejor ROI que uno de 2 años?",
+      "a": "En términos de payback simple, sí: menor costo de oportunidad y menor duración aceleran el recupero. Pero los programas de 1 año (INSEAD, IMD, LBS accelerated) tienen tuitions similares y menor tiempo de networking. El diferencial salarial post-programa puede ser menor también."
+    },
+    {
+      "q": "¿Qué pasa si mi salario post-MBA es solo un 20% mayor?",
+      "a": "Con una tuition de USD 160.000 más USD 160.000 de costo de oportunidad para alguien que ganaba USD 80.000, el costo total es ~USD 320.000. Un 20% de aumento son USD 16.000/año adicionales: tardarías 20 años en recuperar, con VAN negativo. En ese escenario, el MBA no tiene sentido financiero."
+    },
+    {
+      "q": "¿El Executive MBA (EMBA) tiene mejor ROI?",
+      "a": "Generalmente sí en payback, porque no hay costo de oportunidad completo (seguís trabajando) y las empresas frecuentemente financian parte. Sin embargo, el salto salarial inmediato suele ser menor porque el perfil de candidato y el rol post-EMBA son distintos al MBA full-time."
+    },
+    {
+      "q": "¿Debo incluir beneficios no salariales (equity, bonos, health) en el cálculo?",
+      "a": "Idealmente sí. Los paquetes post-MBA en consultoría y finanzas incluyen bonos del 20-50% del base y, en tech, equity significativo. Si tu oferta post-MBA incluye estos componentes, sumá una estimación conservadora al salario anual para obtener un cálculo más realista."
+    },
+    {
+      "q": "¿Cómo impactan los impuestos al resultado?",
+      "a": "Esta calculadora trabaja en términos brutos. Para un análisis after-tax, multiplicá el aumento salarial por (1 − tasa marginal efectiva). En EE.UU. con tasa marginal del 32%, USD 80.000 de aumento bruto equivalen a USD 54.400 netos, extendiendo el payback de ~4 a ~6 años."
+    },
+    {
+      "q": "¿Qué TIR mínima hace financieramente sensato un MBA?",
+      "a": "La mayoría de analistas de educación superior usan el costo de oportunidad del capital (7-10%) como piso. Una TIR por encima del 12-15% indica una inversión educativa sólida. Por debajo del 7%, el mismo dinero invertido en índices de mercado generaría mayor riqueza a largo plazo."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Financial Times Global MBA Ranking 2025",
+      "url": "https://rankings.ft.com/rankings/2870/mba-2025",
+      "publisher": "Financial Times",
+      "date": "2025"
+    },
+    {
+      "name": "GMAC Corporate Recruiters Survey 2025",
+      "url": "https://www.gmac.com/market-intelligence-and-research/research-library/employment-outlook/2025-corporate-recruiters-survey-report",
+      "publisher": "Graduate Management Admission Council",
+      "date": "2025"
+    },
+    {
+      "name": "GMAC Alumni Perspectives Survey — Salary & ROI",
+      "url": "https://www.gmac.com/market-intelligence-and-research/research-library/alumni-perspectives",
+      "publisher": "Graduate Management Admission Council",
+      "date": "2025"
+    },
+    {
+      "name": "Poets & Quants MBA Salary & ROI Report 2025",
+      "url": "https://poetsandquants.com/mba-rankings/",
+      "publisher": "Poets & Quants",
+      "date": "2025"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar tuition por tier con datos FT Rankings y GMAC cada año. Revisar tasas de préstamos estudiantiles federales (EE.UU. Graduate PLUS rate) al inicio de cada ciclo académico.",
+    "source": "Financial Times Global MBA Ranking 2025",
+    "sourceUrl": "https://rankings.ft.com/rankings/2870/mba-2025"
+  },
+  "lastReviewed": "2026-04-27"
+}

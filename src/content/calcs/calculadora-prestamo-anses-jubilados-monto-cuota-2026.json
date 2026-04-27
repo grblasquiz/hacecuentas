@@ -1,0 +1,188 @@
+{
+  "slug": "calculadora-prestamo-anses-jubilados-monto-cuota-2026",
+  "title": "Préstamo ANSES Jubilados 2026: Cuota y Monto Máximo | Hacé Cuentas",
+  "h1": "Préstamo ANSES jubilados 2026: cuota y monto máximo",
+  "description": "Calculá el monto máximo del préstamo ANSES para jubilados, la cuota mensual y el costo total con TNA ~70% y sistema francés. Actualizado 2026.",
+  "category": "finanzas",
+  "audience": "AR",
+  "icon": "💰",
+  "formulaId": "prestamo-anses-jubilados-monto-cuota-2026",
+  "intro": "El préstamo de ANSES para jubilados y pensionados permite acceder a créditos descontados directamente del haber, con una cuota que no puede superar el **30% del haber neto**. Esta calculadora te muestra el monto máximo que podés pedir, la cuota mensual y el costo total a pagar según el plazo elegido.",
+  "keyTakeaway": "Con un haber de $400.000 y 48 cuotas a TNA 70%, el monto máximo prestable ronda los $880.000 y la cuota no puede superar $120.000 mensuales.",
+  "useCases": [
+    "Jubilado que quiere saber cuánto puede pedir prestado según su haber mensual",
+    "Pensionado que compara cuotas entre 24, 48 y 72 meses antes de solicitar el crédito",
+    "Familiar que ayuda a un jubilado a entender el costo total del préstamo",
+    "Asesor previsional que necesita calcular rápido la capacidad de endeudamiento de un cliente",
+    "Jubilado que quiere verificar si la cuota que le ofrecen respeta el límite del 30% del haber"
+  ],
+  "fields": [
+    {
+      "id": "haber",
+      "label": "Haber jubilatorio mensual neto (ARS)",
+      "type": "number",
+      "placeholder": "400000",
+      "default": 400000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "plazo",
+      "label": "Plazo en meses",
+      "type": "select",
+      "options": [
+        {
+          "value": "24",
+          "label": "24 meses (2 años)"
+        },
+        {
+          "value": "36",
+          "label": "36 meses (3 años)"
+        },
+        {
+          "value": "48",
+          "label": "48 meses (4 años)"
+        },
+        {
+          "value": "60",
+          "label": "60 meses (5 años)"
+        },
+        {
+          "value": "72",
+          "label": "72 meses (6 años)"
+        }
+      ],
+      "default": "48",
+      "required": true
+    },
+    {
+      "id": "tna",
+      "label": "TNA (%) — ANSES publica la tasa vigente",
+      "type": "number",
+      "placeholder": "70",
+      "default": 70,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "montoSolicitado",
+      "label": "Monto solicitado (ARS) — dejá 0 para calcular el máximo",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 100,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cuotaMensual",
+      "label": "Cuota mensual (sistema francés)",
+      "primary": true,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "montoMaximo",
+      "label": "Monto máximo prestable según haber",
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "montoUsado",
+      "label": "Capital a recibir",
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "totalPagar",
+      "label": "Total a pagar (capital + intereses)",
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "totalIntereses",
+      "label": "Total de intereses",
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "cfteaStr",
+      "label": "Costo Financiero Total Anual (CFTEA estimado)",
+      "format": "text"
+    },
+    {
+      "id": "advertencia",
+      "label": "Observaciones",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula el préstamo ANSES para jubilados\n\nANSES otorga préstamos a jubilados y pensionados bajo el sistema de **amortización francés**: cuota fija mensual que incluye capital + intereses decrecientes. El descuento se hace directamente del haber.\n\n## Límite de cuota: 30% del haber neto\n\nLa cuota mensual no puede superar el **30% del haber jubilatorio neto**. A partir de ese tope, se calcula el monto máximo prestable.\n\n```\nCuota máxima = Haber neto × 0,30\n```\n\n## Fórmula del sistema francés\n\nDada la tasa mensual `r = TNA / 12 / 100` y el plazo en meses `n`:\n\n```\nCuota = Capital × [r × (1 + r)^n] / [(1 + r)^n − 1]\n```\n\nDespejando el capital máximo a partir de la cuota máxima permitida:\n\n```\nCapital máximo = Cuota máxima × [(1 + r)^n − 1] / [r × (1 + r)^n]\n```\n\nSi el usuario ingresa un monto solicitado menor al máximo, se usa ese valor. Si supera el máximo, se usa el máximo posible.\n\n## Ejemplo numérico\n\n| Parámetro | Valor |\n|---|---|\n| Haber neto | $400.000 |\n| Cuota máxima (30%) | $120.000 |\n| Plazo | 48 meses |\n| TNA | 70% |\n| Tasa mensual | 5,8333% |\n| Capital máximo | ~$884.200 |\n| Total a pagar | ~$5.760.000 |\n| Total intereses | ~$4.875.800 |\n\n## Tasas de referencia ANSES 2026\n\n| Segmento | TNA estimada 2026 |\n|---|---|\n| Jubilados / Pensionados ANSES | ~70% |\n| Beneficiarios AUH/AUE | ~70% |\n\n*Las tasas son indicativas. ANSES las actualiza periódicamente. Verificá la tasa vigente en el portal Mi ANSES.*\n\n## Cuándo NO aplica / Limitaciones\n\n- Esta calculadora **no incluye** el seguro de vida obligatorio ni otros cargos administrativos que ANSES pueda incorporar al costo total, por lo que el CFTEA real puede ser mayor.\n- El cálculo asume haber **fijo** durante todo el plazo; en la práctica, el haber se actualiza por movilidad jubilatoria, lo que puede modificar la relación cuota/haber.\n- Los plazos disponibles y montos mínimos/máximos los fija ANSES y pueden variar según el tipo de beneficio (jubilación, pensión, AUH).\n- No aplica si el jubilado ya tiene descuentos que consumen el 30% disponible.\n\nFuente: ANSES — Programa Créditos ANSES para Beneficiarios.",
+  "faq": [
+    {
+      "q": "¿Cuánto puedo pedir prestado con un haber de $300.000?",
+      "a": "La cuota máxima es $90.000 (30% de $300.000). Con TNA 70% a 48 meses, el capital máximo ronda $663.000. A 72 meses sube a aproximadamente $810.000, aunque el costo total es significativamente mayor."
+    },
+    {
+      "q": "¿Qué es la TNA y cómo afecta la cuota?",
+      "a": "La Tasa Nominal Anual (TNA) determina cuánto pagás de interés por año. ANSES la fija para cada línea de crédito. Una TNA del 70% equivale a una tasa mensual del 5,83%. A mayor TNA, mayor cuota y mayor costo total."
+    },
+    {
+      "q": "¿El 30% se calcula sobre el haber bruto o neto?",
+      "a": "El límite se aplica sobre el haber que efectivamente percibe el jubilado (neto de aportes y descuentos previos). Si ya tenés otros descuentos, el margen disponible para la cuota del préstamo se reduce proporcionalmente."
+    },
+    {
+      "q": "¿Qué es el sistema de amortización francés?",
+      "a": "Es el sistema más común en créditos personales. La cuota es fija durante todo el plazo. Al inicio pagás más intereses y menos capital; al final, más capital y menos intereses. El total pagado es el mismo en cualquier período."
+    },
+    {
+      "q": "¿Puedo pagar antes del vencimiento?",
+      "a": "En general, los préstamos ANSES permiten cancelación anticipada. Al cancelar antes, el saldo de deuda se recalcula descontando los intereses no devengados. Consultá las condiciones vigentes en Mi ANSES o en la sucursal."
+    },
+    {
+      "q": "¿El CFTEA que muestra la calculadora es exacto?",
+      "a": "No. El CFTEA estimado aquí considera solo capital e intereses bajo TNA informada. El CFTEA real incluye seguro de vida, impuestos y cargos administrativos, por lo que suele ser mayor. Pedí el Costo Financiero Total al solicitar el crédito."
+    },
+    {
+      "q": "¿Puedo pedir el préstamo si ya tengo un crédito ANSES vigente?",
+      "a": "Depende del margen disponible. Si la cuota del crédito existente ya consume parte del 30%, el nuevo préstamo solo puede absorber la diferencia restante. En muchos casos ANSES no otorga dos créditos simultáneos."
+    },
+    {
+      "q": "¿Hay un monto mínimo y máximo que fija ANSES?",
+      "a": "Sí. ANSES establece montos mínimos (generalmente equivalentes a algunos haberes) y máximos absolutos que se actualizan periódicamente. La calculadora muestra el máximo teórico por la regla del 30%, pero el tope real de ANSES puede ser inferior."
+    },
+    {
+      "q": "¿Cómo se actualiza la cuota si sube el haber por movilidad?",
+      "a": "En los préstamos ANSES a tasa fija en pesos, la cuota en valor nominal no cambia. Si el haber sube por movilidad jubilatoria, la cuota representa un porcentaje menor del haber. No hay ajuste automático de la cuota al alza."
+    }
+  ],
+  "sources": [
+    {
+      "name": "ANSES — Créditos para beneficiarios",
+      "url": "https://www.anses.gob.ar/prestamos",
+      "publisher": "Administración Nacional de la Seguridad Social",
+      "date": "2026"
+    },
+    {
+      "name": "Mi ANSES — Portal de autogestión",
+      "url": "https://mi.anses.gob.ar",
+      "publisher": "ANSES",
+      "date": "2026"
+    },
+    {
+      "name": "BCRA — Comunicación A sobre tasas de interés",
+      "url": "https://www.bcra.gob.ar/SistemasFinancierosBancarios/creditos_jubilados.asp",
+      "publisher": "Banco Central de la República Argentina",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar TNA por defecto cuando ANSES publique nuevas tasas para créditos a jubilados. Verificar plazos disponibles y límites de monto mínimo/máximo vigentes.",
+    "source": "ANSES — Créditos para beneficiarios",
+    "sourceUrl": "https://www.anses.gob.ar/prestamos"
+  },
+  "lastReviewed": "2026-04-27"
+}

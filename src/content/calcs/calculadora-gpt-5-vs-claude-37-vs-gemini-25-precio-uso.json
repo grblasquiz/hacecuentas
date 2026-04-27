@@ -1,0 +1,190 @@
+{
+  "slug": "calculadora-gpt-5-vs-claude-37-vs-gemini-25-precio-uso",
+  "title": "Comparador LLMs GPT-5 vs Claude 3.7 vs Gemini 2.5 2026 | Hacé Cuentas",
+  "h1": "Comparador de costos LLMs: GPT-5, Claude 3.7 y Gemini 2.5",
+  "description": "Calculá y compará el costo mensual real de GPT-5, Claude 3.7 Sonnet y Gemini 2.5 Pro según tus tokens de entrada, salida, caché y batch. Resultado en USD/mes.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "🔀",
+  "formulaId": "gpt-5-vs-claude-37-vs-gemini-25-precio-uso",
+  "intro": "El costo real de usar un LLM depende de cuántos tokens procesás por mes, qué proporción es entrada vs salida, y si usás features como **caché de prompts** o **batch processing**. Esta calculadora compara GPT-5, Claude 3.7 Sonnet y Gemini 2.5 Pro con tus datos reales de uso y te dice cuál es más barato para tu caso.",
+  "keyTakeaway": "Con 10M tokens/mes (80% input, 20% output) sin optimizaciones, la diferencia entre el modelo más caro y el más barato puede superar los 50 USD mensuales; el caché y el batch pueden reducir costos hasta un 90%.",
+  "useCases": [
+    "Comparar costos antes de migrar tu app de un proveedor a otro",
+    "Estimar el gasto mensual de un chatbot con volumen conocido de mensajes",
+    "Evaluar si el caché de prompts justifica cambiar de modelo",
+    "Calcular el ahorro de usar batch processing para tareas offline",
+    "Decidir qué modelo usar para un contexto largo (RAG, análisis de documentos)"
+  ],
+  "fields": [
+    {
+      "id": "tokens_input_millones",
+      "label": "Tokens de entrada por mes (millones)",
+      "type": "number",
+      "placeholder": "10",
+      "default": 10,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "tokens_output_millones",
+      "label": "Tokens de salida por mes (millones)",
+      "type": "number",
+      "placeholder": "2",
+      "default": 2,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "pct_cache_input",
+      "label": "% de tokens de entrada servidos desde caché",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "pct_batch",
+      "label": "% de solicitudes procesadas en modo batch",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "modelos",
+      "label": "Modelos a comparar",
+      "type": "select",
+      "options": [
+        {
+          "value": "todos",
+          "label": "Todos (GPT-5, Claude 3.7, Gemini 2.5 Pro)"
+        },
+        {
+          "value": "gpt5_claude",
+          "label": "GPT-5 vs Claude 3.7 Sonnet"
+        },
+        {
+          "value": "gpt5_gemini",
+          "label": "GPT-5 vs Gemini 2.5 Pro"
+        },
+        {
+          "value": "claude_gemini",
+          "label": "Claude 3.7 Sonnet vs Gemini 2.5 Pro"
+        }
+      ],
+      "default": "todos",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "costo_gpt5",
+      "label": "Costo GPT-5 (USD/mes)",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "costo_claude",
+      "label": "Costo Claude 3.7 Sonnet (USD/mes)",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "costo_gemini",
+      "label": "Costo Gemini 2.5 Pro (USD/mes)",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "modelo_recomendado",
+      "label": "Modelo más económico",
+      "primary": true,
+      "format": "text"
+    },
+    {
+      "id": "ahorro_vs_caro",
+      "label": "Ahorro vs. el más caro (USD/mes)",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle del cálculo",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula el costo mensual de cada LLM\n\nCada proveedor cobra por separado los tokens de entrada (input) y los de salida (output), expresados en USD por millón de tokens (MTok). Además, ofrecen descuentos mediante **caché de prompts** (prompt caching) y **batch processing**.\n\n### Precios de referencia 2026 (USD por millón de tokens)\n\n| Modelo | Input estándar | Input cacheado | Output estándar | Batch input | Batch output |\n|---|---|---|---|---|---|\n| GPT-5 | 15.00 | 3.75 | 60.00 | 7.50 | 30.00 |\n| Claude 3.7 Sonnet | 3.00 | 0.30 | 15.00 | 1.50 | 7.50 |\n| Gemini 2.5 Pro | 1.25 | 0.31 | 10.00 | — | — |\n\n> **Nota:** GPT-5 se refiere al modelo gpt-5 lanzado por OpenAI en 2025. Gemini 2.5 Pro tiene precios escalonados; esta calculadora usa la tarifa estándar (prompts ≤200K tokens). El batch no está disponible de forma nativa en Gemini 2.5 Pro vía API pública al momento de esta versión.\n\n### Fórmula general\n\n```\ntokens_input_std  = tokens_input × (1 - pct_cache) × (1 - pct_batch)\ntokens_input_cache = tokens_input × pct_cache\ntokens_input_batch = tokens_input × (1 - pct_cache) × pct_batch\ntokens_output_std  = tokens_output × (1 - pct_batch)\ntokens_output_batch= tokens_output × pct_batch\n\ncosto = tokens_input_std   × precio_input_std\n      + tokens_input_cache × precio_input_cache\n      + tokens_input_batch × precio_batch_input\n      + tokens_output_std  × precio_output_std\n      + tokens_output_batch× precio_batch_output\n```\n\nTodos los volúmenes se expresan en millones de tokens para que coincidan con las unidades de precio.\n\n### Ejemplo numérico\n\nSupongamos **10M tokens input** y **2M tokens output** por mes, con **30% de caché** y **0% batch**:\n\n- **GPT-5:** (7M × 15) + (3M × 3.75) + (2M × 60) = 105 + 11.25 + 120 = **236.25 USD**\n- **Claude 3.7:** (7M × 3) + (3M × 0.30) + (2M × 15) = 21 + 0.90 + 30 = **51.90 USD**\n- **Gemini 2.5 Pro:** (7M × 1.25) + (3M × 0.31) + (2M × 10) = 8.75 + 0.93 + 20 = **29.68 USD**\n\nEn este caso Gemini 2.5 Pro es ~8× más barato que GPT-5.\n\n### Cuándo NO aplica o limitaciones\n\n- Los precios cambian frecuentemente; verificá siempre las páginas de pricing oficiales de OpenAI, Anthropic y Google antes de presupuestar.\n- El caché de prompts solo aplica si el prefijo del prompt supera el mínimo requerido por cada proveedor (1024 tokens en OpenAI, 1024 en Anthropic).\n- Esta calculadora no considera latencia, límites de rate, calidad de respuesta ni acuerdos de volumen (enterprise pricing).\n- Gemini 2.5 Pro tiene precios escalonados por longitud de contexto; para prompts >200K tokens el precio de input aumenta.",
+  "faq": [
+    {
+      "q": "¿Qué es un token y cuántos hay en una palabra en español?",
+      "a": "Un token es la unidad mínima de texto que procesa el modelo. En español, una palabra suele equivaler a 1.3–1.8 tokens debido a morfología compleja. Un prompt de 1000 palabras son aproximadamente 1300–1800 tokens. Podés estimar tu volumen multiplicando palabras × 1.5."
+    },
+    {
+      "q": "¿El caché de prompts funciona igual en todos los modelos?",
+      "a": "No exactamente. OpenAI aplica caché automático para prompts ≥1024 tokens con un descuento del 75% en input. Anthropic requiere marcar explícitamente las secciones a cachear (cache_control). Google Gemini ofrece 'context caching' con una tarifa de almacenamiento adicional por hora que esta calculadora no incluye."
+    },
+    {
+      "q": "¿Qué es el batch processing y para qué sirve?",
+      "a": "El batch API procesa solicitudes de forma asíncrona (típicamente en hasta 24 horas) a un costo 50% menor. Es ideal para tareas offline: clasificación masiva, generación de embeddings, análisis de documentos donde la latencia no es crítica. No disponible para aplicaciones conversacionales en tiempo real."
+    },
+    {
+      "q": "¿GPT-5 realmente cuesta 15 USD por millón de tokens de input?",
+      "a": "Sí, GPT-5 (lanzado en 2025) tiene un precio de lista de USD 15/MTok input y USD 60/MTok output en su versión estándar vía API de OpenAI. Con caché automático baja a USD 3.75/MTok input. Verificá la página oficial de OpenAI Pricing para actualizaciones."
+    },
+    {
+      "q": "¿Cuándo conviene usar GPT-5 pese a ser más caro?",
+      "a": "GPT-5 puede justificarse cuando la calidad de respuesta en razonamiento complejo, codificación avanzada o instrucciones multimodales es crítica y el costo se compensa con menor necesidad de revisión humana o re-ejecución. Para tareas estándar de extracción o resumen, modelos más baratos suelen ser suficientes."
+    },
+    {
+      "q": "¿Gemini 2.5 Pro tiene límite de contexto diferente?",
+      "a": "Gemini 2.5 Pro soporta hasta 1 millón de tokens de contexto. Sin embargo, el pricing estándar aplica hasta 200K tokens de contexto por request; por encima de eso el costo de input sube a USD 2.50/MTok. Esta calculadora usa la tarifa estándar; ajustá si tus prompts superan ese umbral."
+    },
+    {
+      "q": "¿Cómo estimo mis tokens de salida si aún no tengo histórico?",
+      "a": "Una regla práctica: los tokens de output suelen ser entre 10% y 30% del volumen de input en casos de uso de extracción/resumen, y pueden igualar o superar al input en generación creativa o de código. Empezá con un ratio output/input de 0.2 y ajustá con tus primeras semanas de logs."
+    },
+    {
+      "q": "¿Esta calculadora incluye el costo de embeddings o fine-tuning?",
+      "a": "No. Esta calculadora solo cubre inferencia estándar (completions) de los tres modelos. Los costos de embeddings, fine-tuning, almacenamiento de vectores, o llamadas a herramientas (tool calls / function calling) se cobran de forma separada y no están incluidos."
+    },
+    {
+      "q": "¿Con qué frecuencia se actualizan los precios en esta calculadora?",
+      "a": "Los precios se revisan manualmente cuando alguno de los tres proveedores anuncia cambios tarifarios. La fecha de última revisión se indica al pie de la calculadora. Para decisiones de presupuesto importantes, siempre verificá los precios oficiales en las páginas de cada proveedor."
+    }
+  ],
+  "sources": [
+    {
+      "name": "OpenAI API Pricing",
+      "url": "https://openai.com/api/pricing/",
+      "publisher": "OpenAI",
+      "date": "2026"
+    },
+    {
+      "name": "Anthropic Claude API Pricing",
+      "url": "https://www.anthropic.com/pricing",
+      "publisher": "Anthropic",
+      "date": "2026"
+    },
+    {
+      "name": "Google Gemini API Pricing",
+      "url": "https://ai.google.dev/pricing",
+      "publisher": "Google DeepMind",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar las constantes de precios (PRICE_*) en el archivo TS cuando OpenAI, Anthropic o Google modifiquen sus tarifas de API. Verificar también cambios en la política de caché y disponibilidad de batch por proveedor."
+  },
+  "lastReviewed": "2026-04-27"
+}

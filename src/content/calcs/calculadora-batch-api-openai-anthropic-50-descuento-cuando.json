@@ -1,0 +1,237 @@
+{
+  "slug": "calculadora-batch-api-openai-anthropic-50-descuento-cuando",
+  "title": "Batch API OpenAI & Anthropic: ¿Cuándo usar 50% descuento? 2026 | Hacé Cuentas",
+  "h1": "Batch API: ¿Cuándo conviene el 50% de descuento?",
+  "description": "Calculá cuánto ahorrás con Batch API de OpenAI y Anthropic (50% off). Compará costos real-time vs batch según modelo, tokens y volumen mensual.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "📦",
+  "formulaId": "batch-api-openai-anthropic-50-descuento-cuando",
+  "intro": "La **Batch API** de OpenAI y Anthropic aplica un **50% de descuento** sobre el precio estándar a cambio de una latencia de hasta 24 horas. Si tu caso de uso tolera esa espera (clasificación masiva, summarization, embeddings offline), podés reducir tu factura a la mitad. Esta calculadora te muestra el ahorro real en dólares según modelo, volumen de tokens y frecuencia.",
+  "keyTakeaway": "Con 10 millones de tokens/mes en GPT-4o, el Batch API te ahorra ~USD 12,50 por millón procesado vs real-time, totalizando USD 125 de ahorro mensual.",
+  "useCases": [
+    "Clasificar 500.000 reviews de productos overnight sin importar latencia",
+    "Resumir miles de documentos legales o médicos en lotes diarios",
+    "Generar embeddings masivos para un pipeline de RAG fuera de horario pico",
+    "Evaluar y etiquetar datasets de fine-tuning con bajo presupuesto",
+    "Procesar logs o tickets de soporte acumulados cada noche",
+    "Comparar si conviene migrar un pipeline real-time existente a batch"
+  ],
+  "fields": [
+    {
+      "id": "proveedor",
+      "label": "Proveedor",
+      "type": "select",
+      "options": [
+        {
+          "value": "openai",
+          "label": "OpenAI"
+        },
+        {
+          "value": "anthropic",
+          "label": "Anthropic"
+        }
+      ],
+      "default": "openai",
+      "required": true
+    },
+    {
+      "id": "modelo",
+      "label": "Modelo",
+      "type": "select",
+      "options": [
+        {
+          "value": "gpt4o",
+          "label": "GPT-4o"
+        },
+        {
+          "value": "gpt4o_mini",
+          "label": "GPT-4o mini"
+        },
+        {
+          "value": "o3_mini",
+          "label": "o3-mini"
+        },
+        {
+          "value": "claude35_sonnet",
+          "label": "Claude 3.5 Sonnet"
+        },
+        {
+          "value": "claude3_haiku",
+          "label": "Claude 3 Haiku"
+        },
+        {
+          "value": "claude35_haiku",
+          "label": "Claude 3.5 Haiku"
+        }
+      ],
+      "default": "gpt4o",
+      "required": true
+    },
+    {
+      "id": "tokens_input_m",
+      "label": "Tokens de entrada por mes (millones)",
+      "type": "number",
+      "placeholder": "10",
+      "default": 10,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "tokens_output_m",
+      "label": "Tokens de salida por mes (millones)",
+      "type": "number",
+      "placeholder": "2",
+      "default": 2,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "latencia_aceptable",
+      "label": "¿Tu caso de uso tolera hasta 24 h de latencia?",
+      "type": "radio",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ],
+      "default": "si",
+      "required": true
+    },
+    {
+      "id": "solicitudes_dia",
+      "label": "Solicitudes por día (para estimar volumen mínimo)",
+      "type": "number",
+      "placeholder": "1000",
+      "default": 1000,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "costo_realtime_usd",
+      "label": "Costo real-time / mes",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "costo_batch_usd",
+      "label": "Costo Batch API / mes",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "ahorro_usd",
+      "label": "Ahorro mensual",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "ahorro_pct",
+      "label": "Ahorro real (%)",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "recomendacion",
+      "label": "Recomendación",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "volumen_minimo_ok",
+      "label": "¿Volumen mínimo suficiente?",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "detalle_precios",
+      "label": "Precios base utilizados",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEl costo de la API de LLMs se factura por **millón de tokens** (MTok), separando tokens de entrada (*input*) y de salida (*output*). La Batch API aplica exactamente un **50% de descuento** sobre las tarifas estándar publicadas por OpenAI y Anthropic, a cambio de procesar las solicitudes de forma asíncrona con una ventana de hasta **24 horas**.\n\n### Fórmula\n\n```\ncosto_realtime = (input_MTok × precio_input) + (output_MTok × precio_output)\ncosto_batch    = costo_realtime × 0.50\nahorro         = costo_realtime − costo_batch\nahorro_pct     = (ahorro / costo_realtime) × 100\n```\n\n### Precios de referencia 2026 (USD por millón de tokens)\n\n| Modelo | Input RT | Output RT | Input Batch | Output Batch |\n|---|---|---|---|---|\n| GPT-4o | 2.50 | 10.00 | 1.25 | 5.00 |\n| GPT-4o mini | 0.15 | 0.60 | 0.075 | 0.30 |\n| o3-mini | 1.10 | 4.40 | 0.55 | 2.20 |\n| Claude 3.5 Sonnet | 3.00 | 15.00 | 1.50 | 7.50 |\n| Claude 3 Haiku | 0.25 | 1.25 | 0.125 | 0.625 |\n| Claude 3.5 Haiku | 0.80 | 4.00 | 0.40 | 2.00 |\n\n### Ejemplo numérico\n\nPipeline de clasificación mensual con GPT-4o mini: 50 M tokens input + 5 M tokens output.\n\n```\ncosto_realtime = (50 × 0.15) + (5 × 0.60) = 7.50 + 3.00 = USD 10.50\ncosto_batch    = 10.50 × 0.50 = USD 5.25\nahorro         = USD 5.25 (50% exacto)\n```\n\n### Volumen mínimo recomendado\n\nBoth OpenAI y Anthropic requieren que cada lote (*batch*) contenga al menos **1 solicitud** pero en la práctica el overhead de gestión de archivos JSONL y la espera de 24 h solo se justifica con **≥ 100 solicitudes/día** o cuando el ahorro mensual supera **USD 5**. Por debajo de ese umbral, la complejidad operativa no justifica la migración.\n\n### Cuándo NO aplica\n\n- Aplicaciones interactivas con usuarios esperando respuesta (chatbots, copilots).\n- Pipelines que necesitan resultado en < 1 minuto.\n- Flujos con dependencias encadenadas donde cada paso necesita la salida del anterior en tiempo real.\n- Modelos con capacidades de streaming que se aprovechan solo en real-time (e.g., tool use con latencia crítica).\n\n**Fuentes:** Páginas de pricing oficiales de OpenAI y Anthropic, documentación de Batch API (2026).",
+  "faq": [
+    {
+      "q": "¿El descuento del 50% aplica a todos los modelos?",
+      "a": "Sí, tanto OpenAI como Anthropic aplican el 50% de descuento uniformemente sobre el precio estándar de cada modelo que soporta Batch API. No todos los modelos están disponibles en modo batch: verificá la documentación oficial para el listado actualizado."
+    },
+    {
+      "q": "¿Cuánto tiempo tarda realmente en procesar un batch?",
+      "a": "OpenAI garantiza resultados en hasta 24 horas; en la práctica muchos lotes se completan en 1-4 horas según carga del sistema. Anthropic tiene una ventana similar. Nunca debés asumir que será inmediato."
+    },
+    {
+      "q": "¿Hay un tamaño máximo de batch?",
+      "a": "OpenAI permite hasta 50.000 solicitudes o 200 MB por archivo JSONL por lote. Anthropic tiene límites similares. Para volúmenes mayores hay que dividir en múltiples lotes y gestionar la cola."
+    },
+    {
+      "q": "¿Los tokens de contexto (system prompt) también se cuentan al 50% off?",
+      "a": "Sí. Todos los tokens del request —incluyendo system prompt, historial y la respuesta generada— reciben el descuento batch. Eso hace que prompts largos o conversaciones con mucho contexto sean especialmente rentables en batch."
+    },
+    {
+      "q": "¿Puedo usar Batch API con fine-tuned models?",
+      "a": "OpenAI soporta Batch API con algunos modelos fine-tuned. El precio base será el del modelo fine-tuned (que incluye el recargo por fine-tune), y sobre ese precio se aplica el 50%. Consultá la pricing page de OpenAI para el modelo específico."
+    },
+    {
+      "q": "¿Qué pasa si el batch no se procesa en 24 horas?",
+      "a": "OpenAI y Anthropic se comprometen a procesar dentro de 24 horas. Si superan ese tiempo, el lote puede expirar y las solicitudes no procesadas se devuelven con error. En ese caso no se cobra por las solicitudes fallidas."
+    },
+    {
+      "q": "¿Vale la pena batch si proceso menos de 100 solicitudes por día?",
+      "a": "Generalmente no. El overhead de preparar el archivo JSONL, subirlo, monitorear el estado y descargar los resultados consume tiempo de ingeniería. Con < 100 solicitudes/día o ahorro < USD 5/mes, la API estándar es más práctica."
+    },
+    {
+      "q": "¿Los embeddings también tienen Batch API con 50% off?",
+      "a": "OpenAI soporta Batch API para modelos de embeddings (text-embedding-3-small, text-embedding-3-large). El 50% de descuento aplica igual. Para pipelines de RAG con indexación masiva, el ahorro puede ser muy significativo."
+    },
+    {
+      "q": "¿Cómo afecta la Batch API al rate limit?",
+      "a": "Los batch requests se procesan con prioridad más baja y no consumen tu rate limit de tokens por minuto (TPM) de la misma forma que las llamadas síncronas. Esto también ayuda a escalar volúmenes altos sin pedir aumentos de rate limit."
+    }
+  ],
+  "sources": [
+    {
+      "name": "OpenAI Batch API Documentation",
+      "url": "https://platform.openai.com/docs/guides/batch",
+      "publisher": "OpenAI",
+      "date": "2026"
+    },
+    {
+      "name": "OpenAI API Pricing",
+      "url": "https://openai.com/api/pricing",
+      "publisher": "OpenAI",
+      "date": "2026"
+    },
+    {
+      "name": "Anthropic Message Batches API",
+      "url": "https://docs.anthropic.com/en/docs/build-with-claude/message-batches",
+      "publisher": "Anthropic",
+      "date": "2026"
+    },
+    {
+      "name": "Anthropic API Pricing",
+      "url": "https://www.anthropic.com/pricing#api",
+      "publisher": "Anthropic",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Verificar precios por millón de tokens en las páginas oficiales de OpenAI y Anthropic cuando publiquen nuevos modelos o cambien tarifas. El descuento del 50% es estructural pero podría cambiar.",
+    "source": "OpenAI Batch API Documentation",
+    "sourceUrl": "https://platform.openai.com/docs/guides/batch"
+  },
+  "lastReviewed": "2026-04-27"
+}

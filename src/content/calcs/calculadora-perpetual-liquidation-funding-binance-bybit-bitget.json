@@ -1,0 +1,227 @@
+{
+  "slug": "calculadora-perpetual-liquidation-funding-binance-bybit-bitget",
+  "title": "Calculadora Liquidación Perpetual + Funding | Hacé Cuentas",
+  "h1": "Liquidación Perpetual por Exchange (Binance, Bybit, Hyperliquid)",
+  "description": "Calculá el precio de liquidación y costo de funding de tu posición perpetual. Soporte para Binance, Bybit e Hyperliquid con leverage hasta 100x.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "📉",
+  "formulaId": "perpetual-liquidation-funding-binance-bybit-bitget",
+  "intro": "Cuando operás futuros perpetuos con apalancamiento, dos riesgos silenciosos erosionan tu capital: la **liquidación forzada** y el **costo acumulado de funding**. Esta calculadora te muestra el precio exacto al que tu posición sería liquidada y cuánto pagás (o cobrás) en funding cada 8 horas, por día y por semana, según el exchange que uses.",
+  "keyTakeaway": "Con 10x de leverage y un mantenimiento del 0.5%, un long se liquida ~10.5% por debajo del precio de entrada; el funding al 0.01% cada 8h suma ~0.03% diario sobre el notional.",
+  "useCases": [
+    "Verificar a qué precio te liquidan antes de abrir una posición apalancada",
+    "Comparar el costo de funding entre Binance, Bybit e Hyperliquid para el mismo trade",
+    "Calcular cuántos días puede sobrevivir una posición sin ser liquidada dado el funding acumulado",
+    "Ajustar el stop-loss por encima/debajo del precio de liquidación para evitar liquidaciones en cascada",
+    "Evaluar si vale la pena mantener una posición larga cuando el funding es persistentemente positivo"
+  ],
+  "fields": [
+    {
+      "id": "exchange",
+      "label": "Exchange",
+      "type": "select",
+      "options": [
+        {
+          "value": "binance",
+          "label": "Binance"
+        },
+        {
+          "value": "bybit",
+          "label": "Bybit"
+        },
+        {
+          "value": "hyperliquid",
+          "label": "Hyperliquid"
+        }
+      ],
+      "default": "binance",
+      "required": true
+    },
+    {
+      "id": "side",
+      "label": "Dirección",
+      "type": "radio",
+      "options": [
+        {
+          "value": "long",
+          "label": "Long (compra)"
+        },
+        {
+          "value": "short",
+          "label": "Short (venta)"
+        }
+      ],
+      "default": "long",
+      "required": true
+    },
+    {
+      "id": "entryPrice",
+      "label": "Precio de entrada (USD)",
+      "type": "number",
+      "placeholder": "65000",
+      "default": 65000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "leverage",
+      "label": "Apalancamiento (x)",
+      "type": "number",
+      "placeholder": "10",
+      "default": 10,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "maintenanceMarginPct",
+      "label": "Margen de mantenimiento (%)",
+      "type": "number",
+      "placeholder": "0.5",
+      "default": 0.5,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "fundingRate8h",
+      "label": "Funding rate cada 8h (%)",
+      "type": "number",
+      "placeholder": "0.01",
+      "default": 0.01,
+      "step": 0.001,
+      "required": true
+    },
+    {
+      "id": "positionSizeUSD",
+      "label": "Tamaño de posición notional (USD)",
+      "type": "number",
+      "placeholder": "10000",
+      "default": 10000,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "liquidationPrice",
+      "label": "Precio de liquidación",
+      "primary": true,
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "distancePct",
+      "label": "Distancia al precio de liquidación",
+      "format": "percent"
+    },
+    {
+      "id": "funding8hUSD",
+      "label": "Costo funding cada 8h",
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "fundingDailyUSD",
+      "label": "Costo funding diario",
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "fundingWeeklyUSD",
+      "label": "Costo funding semanal",
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "daysToFundingDrain",
+      "label": "Días hasta drenar el margen inicial por funding",
+      "format": "decimal",
+      "suffix": "días"
+    },
+    {
+      "id": "initialMarginUSD",
+      "label": "Margen inicial requerido",
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "summary",
+      "label": "Resumen",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula el precio de liquidación\n\nEn futuros perpetuos con margen cruzado simplificado (o margen aislado), la liquidación ocurre cuando las pérdidas no realizadas consumen el margen disponible hasta el nivel de **margen de mantenimiento**.\n\n### Fórmulas\n\n```\n// Margen inicial\nIM = positionSizeUSD / leverage\n\n// Maintenance margin en USD\nMM = positionSizeUSD × (maintenanceMarginPct / 100)\n\n// Precio de liquidación — LONG\nLiqPrice_long  = entryPrice × (1 - (1/leverage) + (maintenanceMarginPct/100))\n\n// Precio de liquidación — SHORT\nLiqPrice_short = entryPrice × (1 + (1/leverage) - (maintenanceMarginPct/100))\n\n// Distancia % al precio de liquidación\ndistance% = |entryPrice - liqPrice| / entryPrice × 100\n\n// Funding cost por período\nfunding8h = positionSizeUSD × (fundingRate8h / 100)\nfundingDaily = funding8h × 3\nfundingWeekly = fundingDaily × 7\n\n// Días hasta drenar el margen inicial\ndaysToFundingDrain = IM / fundingDaily   (si fundingDaily > 0)\n```\n\n### Lógica por exchange\n\n| Exchange | Modelo de margen | Funding interval | Notas |\n|---|---|---|---|\n| Binance | Isolated / Cross | Cada 8h (00:00, 08:00, 16:00 UTC) | MM varía por tier de posición |\n| Bybit | Isolated / Cross | Cada 8h (00:00, 08:00, 16:00 UTC) | MM desde 0.5% en BTC/ETH |\n| Hyperliquid | Isolated (vault) | Cada 1h (rate se normaliza a 8h) | Sin fees de maker en algunos perps |\n\n### Ejemplo numérico\n\nLong BTC, entrada 65.000 USD, 10x leverage, MM 0.5%, posición notional 10.000 USD:\n\n- Margen inicial = 10.000 / 10 = **1.000 USD**\n- Precio liquidación = 65.000 × (1 − 0.10 + 0.005) = 65.000 × 0.905 = **58.825 USD**\n- Distancia = (65.000 − 58.825) / 65.000 = **9.5%**\n- Funding 8h (0.01%) = 10.000 × 0.0001 = **1 USD**\n- Funding diario = 1 × 3 = **3 USD**\n- Días hasta drenar margen = 1.000 / 3 ≈ **333 días**\n\n### Cuándo NO aplica / limitaciones\n\n- Este modelo asume **margen aislado** y posición única. En margen cruzado, el balance total actúa como colateral, lo que desplaza el precio de liquidación.\n- Binance y Bybit usan tablas de **maintenance margin por tier** (a mayor notional, mayor MM%). Esta calculadora usa el porcentaje ingresado manualmente.\n- Hyperliquid liquida a precio mark, no last price; en activos ilíquidos esto puede generar diferencias.\n- El funding rate es variable y puede cambiar cada período. Los costos proyectados asumen tasa constante.\n- No incluye comisiones de apertura/cierre ni el impacto del slippage en la liquidación.",
+  "faq": [
+    {
+      "q": "¿Qué diferencia hay entre precio de liquidación en Binance vs Bybit?",
+      "a": "Ambos usan la misma fórmula base, pero difieren en las tablas de maintenance margin por tier de posición. A mayor tamaño notional, el MM% sube, acercando el precio de liquidación al precio de entrada. Revisá siempre el MM% vigente en la plataforma para tu tamaño de posición."
+    },
+    {
+      "q": "¿El funding rate puede ser negativo?",
+      "a": "Sí. Cuando el mercado está mayoritariamente short, el funding es negativo: los shorts pagan a los longs. En ese caso, mantener una posición larga genera ingresos de funding, no costos. La calculadora acepta valores negativos en el campo de funding rate."
+    },
+    {
+      "q": "¿Cómo funciona el funding en Hyperliquid comparado con Binance?",
+      "a": "Hyperliquid cobra funding cada hora (no cada 8h), aunque la tasa se expresa normalizada a 8h. Esto significa que el impacto se acumula más frecuentemente. Para comparar, el costo total diario es equivalente si la tasa anualizada es la misma."
+    },
+    {
+      "q": "¿Por qué con 10x leverage la liquidación no es exactamente al 10% del precio de entrada?",
+      "a": "Porque el maintenance margin (MM) desplaza el umbral. La liquidación ocurre cuando las pérdidas igualan el margen inicial menos el MM. Con MM 0.5%, el precio de liquidación para un long es Entry × (1 − 1/lev + MM%), que resulta en ~9.5% de distancia, no 10%."
+    },
+    {
+      "q": "¿Qué es el margen de mantenimiento típico en BTC perpetual?",
+      "a": "En Binance y Bybit, para posiciones de hasta 50.000 USD en BTCUSDT perpetual, el maintenance margin es 0.5%. Entre 50.000 y 250.000 USD sube a 0.65%, y así sucesivamente. Verificá la tabla de tiers en la plataforma antes de abrir posiciones grandes."
+    },
+    {
+      "q": "¿El precio de liquidación cambia si agrego más margen?",
+      "a": "Sí. Agregar colateral a una posición aislada desplaza el precio de liquidación alejándolo del precio de entrada, reduciendo el riesgo. La calculadora modela el estado inicial; si añadís margen, recalculá con el nuevo margen inicial total."
+    },
+    {
+      "q": "¿El funding rate impacta el precio de liquidación?",
+      "a": "Indirectamente. El funding se descuenta del margen disponible en cada período. Si el funding es positivo y sostenido, el margen se reduce gradualmente, acercando el precio de liquidación. El campo 'días hasta drenar el margen por funding' cuantifica este riesgo."
+    },
+    {
+      "q": "¿Qué significa que el funding 'drene' el margen inicial en X días?",
+      "a": "Es el tiempo teórico en que el costo acumulado de funding consumiría todo tu margen inicial, asumiendo tasa constante y sin movimiento de precio. Es un indicador de cuánto tiempo podés mantener la posición abierta solo con el costo de financiamiento, sin considerar PnL."
+    },
+    {
+      "q": "¿Cómo comparo si conviene más operar en Binance o en Hyperliquid por costos?",
+      "a": "El principal diferenciador es el funding rate vigente en cada exchange para el par que te interesa, más las comisiones de trading. Hyperliquid suele tener fees de maker en 0% para algunos perps. Usá el mismo funding rate en ambos escenarios para aislar el efecto del exchange."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Binance Futures — Liquidation Price Calculation",
+      "url": "https://www.binance.com/en/support/faq/how-to-calculate-liquidation-price-of-usd-m-futures-contracts-b3c689c1f50a44cabb3a84e663b81d93",
+      "publisher": "Binance",
+      "date": "2026"
+    },
+    {
+      "name": "Bybit — What Is the Liquidation Price?",
+      "url": "https://www.bybit.com/en/help-center/article/What-Is-the-Liquidation-Price",
+      "publisher": "Bybit",
+      "date": "2026"
+    },
+    {
+      "name": "Hyperliquid — Perpetuals Documentation",
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/perpetuals",
+      "publisher": "Hyperliquid",
+      "date": "2026"
+    },
+    {
+      "name": "Binance — Funding Rates Explained",
+      "url": "https://www.binance.com/en/support/faq/what-is-funding-rate-and-why-it-matters-360033525031",
+      "publisher": "Binance",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar si los exchanges modifican los porcentajes de maintenance margin por tier, el intervalo de funding, o las reglas de liquidación (especialmente para Hyperliquid que actualiza su protocolo frecuentemente).",
+    "source": "Binance Futures — Liquidation Price Calculation",
+    "sourceUrl": "https://www.binance.com/en/support/faq/how-to-calculate-liquidation-price-of-usd-m-futures-contracts-b3c689c1f50a44cabb3a84e663b81d93"
+  },
+  "lastReviewed": "2026-04-27"
+}

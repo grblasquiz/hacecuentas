@@ -1,0 +1,268 @@
+{
+  "slug": "calculadora-llm-context-window-200k-vs-1m-cuando-conviene",
+  "title": "1M vs 200K Context Window LLM: cuándo conviene | Hacé Cuentas",
+  "h1": "1M vs 200K context window: ¿cuándo conviene cada uno?",
+  "description": "Calculá el costo por request con 1M, 200K context window o RAG para LLMs. Decidí cuándo usar long context (Claude, Gemini) vs retrieval aumentado.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "📏",
+  "formulaId": "llm-context-window-200k-vs-1m-cuando-conviene",
+  "intro": "Elegir entre un context window de **1M tokens** (Claude Sonnet 4, Gemini 2.5 Pro), **200K** (Claude 3.5, GPT-4o) o **RAG** impacta directamente el costo y la calidad de las respuestas. Esta calculadora te ayuda a estimar el costo por request y a decidir qué estrategia conviene según el tamaño de tu corpus, la frecuencia de consultas y el tipo de análisis.",
+  "keyTakeaway": "Un request con 1M tokens a Gemini 2.5 Pro cuesta ~$1.25 USD; con RAG podés bajar a $0.01–$0.05 por consulta si el corpus es estable y las queries son frecuentes.",
+  "useCases": [
+    "Analizar un contrato legal de 300 páginas en una sola llamada vs. chunking con RAG",
+    "Procesar un codebase completo para code review sin perder contexto entre archivos",
+    "Responder preguntas frecuentes sobre documentación técnica actualizada diariamente",
+    "Comparar el costo mensual entre long context y RAG para un chatbot de soporte",
+    "Decidir si vale la pena pagar 1M context para un análisis financiero de un solo reporte"
+  ],
+  "fields": [
+    {
+      "id": "doc_tokens",
+      "label": "Tokens del documento / corpus (aprox.)",
+      "type": "number",
+      "placeholder": "200000",
+      "default": 200000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "query_tokens",
+      "label": "Tokens por query (pregunta + instrucción)",
+      "type": "number",
+      "placeholder": "500",
+      "default": 500,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "output_tokens",
+      "label": "Tokens de respuesta esperados",
+      "type": "number",
+      "placeholder": "1000",
+      "default": 1000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "queries_per_month",
+      "label": "Consultas por mes",
+      "type": "number",
+      "placeholder": "100",
+      "default": 100,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "modelo",
+      "label": "Modelo long context",
+      "type": "select",
+      "options": [
+        {
+          "value": "gemini25_pro",
+          "label": "Gemini 2.5 Pro (input $1.25/1M hasta 200K, $2.50/1M >200K)"
+        },
+        {
+          "value": "gemini25_flash",
+          "label": "Gemini 2.5 Flash (input $0.15/1M hasta 1M)"
+        },
+        {
+          "value": "claude_sonnet4",
+          "label": "Claude Sonnet 4 (input $3.00/1M, output $15.00/1M)"
+        },
+        {
+          "value": "claude_haiku35",
+          "label": "Claude Haiku 3.5 (input $0.80/1M, output $4.00/1M)"
+        },
+        {
+          "value": "gpt4o",
+          "label": "GPT-4o 128K (input $2.50/1M, output $10.00/1M)"
+        }
+      ],
+      "default": "gemini25_pro",
+      "required": true
+    },
+    {
+      "id": "rag_retrieval_tokens",
+      "label": "Tokens recuperados por RAG (chunks relevantes)",
+      "type": "number",
+      "placeholder": "4000",
+      "default": 4000,
+      "step": 500,
+      "required": true
+    },
+    {
+      "id": "rag_modelo",
+      "label": "Modelo para RAG (generation)",
+      "type": "select",
+      "options": [
+        {
+          "value": "gpt4o_mini",
+          "label": "GPT-4o mini (input $0.15/1M, output $0.60/1M)"
+        },
+        {
+          "value": "gemini25_flash",
+          "label": "Gemini 2.5 Flash (input $0.15/1M, output $0.60/1M)"
+        },
+        {
+          "value": "claude_haiku35",
+          "label": "Claude Haiku 3.5 (input $0.80/1M, output $4.00/1M)"
+        },
+        {
+          "value": "gpt4o",
+          "label": "GPT-4o (input $2.50/1M, output $10.00/1M)"
+        }
+      ],
+      "default": "gpt4o_mini",
+      "required": true
+    },
+    {
+      "id": "doc_update_frequency",
+      "label": "Frecuencia de actualización del corpus",
+      "type": "select",
+      "options": [
+        {
+          "value": "static",
+          "label": "Estático (no cambia)"
+        },
+        {
+          "value": "monthly",
+          "label": "Mensual"
+        },
+        {
+          "value": "weekly",
+          "label": "Semanal"
+        },
+        {
+          "value": "daily",
+          "label": "Diaria o más frecuente"
+        }
+      ],
+      "default": "static",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "long_context_cost_per_request",
+      "label": "Costo long context por request",
+      "primary": true,
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "rag_cost_per_request",
+      "label": "Costo RAG por request",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "long_context_monthly",
+      "label": "Costo long context mensual",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "rag_monthly",
+      "label": "Costo RAG mensual",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "savings_monthly",
+      "label": "Ahorro mensual con RAG",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD"
+    },
+    {
+      "id": "fits_in_200k",
+      "label": "¿Entra en 200K context?",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "fits_in_1m",
+      "label": "¿Entra en 1M context?",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "recommendation",
+      "label": "Recomendación",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa calculadora compara tres estrategias para trabajar con documentos grandes en LLMs: **long context directo** (meter todo el documento en el prompt), y **RAG** (Retrieval-Augmented Generation, donde solo se recuperan los fragmentos relevantes).\n\n### Costo de long context por request\n\nEl costo depende del precio de input y output del modelo elegido, aplicado al total de tokens enviados:\n\n```\ntokens_input = doc_tokens + query_tokens\ncosto_input  = tokens_input × precio_input_por_token\ncosto_output = output_tokens × precio_output_por_token\ncosto_total  = costo_input + costo_output\n```\n\nAlgunos modelos tienen **precios escalonados**: Gemini 2.5 Pro cobra $1.25/1M tokens para prompts ≤200K y $2.50/1M para prompts >200K. Esto se refleja en el cálculo.\n\n### Costo de RAG por request\n\nCon RAG, solo se envían los chunks recuperados (no el corpus completo), más la query y el output:\n\n```\ntokens_input_rag = rag_retrieval_tokens + query_tokens\ncosto_rag        = tokens_input_rag × precio_input_rag + output_tokens × precio_output_rag\n```\n\nEl embedding/indexado tiene un costo adicional (generalmente bajo, ~$0.02/1M tokens con text-embedding-3-small), que no se incluye aquí por depender del pipeline.\n\n### Comparación y recomendación\n\n| Factor | Long context | RAG |\n|---|---|---|\n| Análisis holístico del doc | ✅ Excelente | ⚠️ Puede perder contexto |\n| Corpus estático, pocas queries | ✅ Simple | ✅ Viable |\n| Corpus dinámico / frecuente actualización | ⚠️ Re-indexado innecesario | ✅ Solo re-embed diffs |\n| Multi-documento (100+ docs) | ⚠️ Puede no entrar | ✅ Escala bien |\n| Latencia | ⚠️ Mayor con 1M tokens | ✅ Menor |\n| Costo por query frecuente | ❌ Alto (paga el doc completo cada vez) | ✅ Bajo |\n\n### Cuándo NO usar long context\n\n- Corpus mayor a la ventana máxima del modelo (>1M tokens)\n- Queries muy frecuentes sobre el mismo documento estático: RAG es entre 10x y 100x más barato\n- Múltiples documentos heterogéneos donde la recuperación semántica supera al brute-force\n- Latencia crítica: procesar 1M tokens agrega segundos de TTFT\n\n### Cuándo sí conviene long context (1M tokens)\n\n- Análisis único o poco frecuente sobre un documento complejo (contrato, reporte financiero, codebase)\n- Razonamiento que requiere correlacionar información dispersa a lo largo del documento\n- Prototipado rápido sin infraestructura de vectores\n- Documentos que se actualizan frecuentemente y hacen costoso mantener el índice RAG al día\n\nFuentes: precios publicados por Google (Gemini API), Anthropic (Claude API) y OpenAI (platform.openai.com) vigentes a mediados de 2026.",
+  "faq": [
+    {
+      "q": "¿Qué es el context window y por qué importa?",
+      "a": "El context window es la cantidad máxima de tokens (palabras y símbolos) que un modelo puede procesar en una sola llamada. Un context de 1M tokens equivale a ~750.000 palabras o un codebase mediano completo. Importa porque determina cuánto texto podés analizar de una sola vez sin chunking."
+    },
+    {
+      "q": "¿Cuántos tokens tiene una página típica de documento?",
+      "a": "Una página de texto denso (como un contrato o paper académico) tiene aproximadamente 500–700 tokens. Un documento de 100 páginas ronda los 50.000–70.000 tokens. Un libro estándar de 300 páginas puede llegar a 150.000–200.000 tokens."
+    },
+    {
+      "q": "¿Gemini 2.5 Pro cobra lo mismo por todos los tokens de un prompt de 1M?",
+      "a": "No. Gemini 2.5 Pro tiene precio escalonado: $1.25/1M tokens para prompts de hasta 200K tokens, y $2.50/1M tokens para prompts que superan los 200K. Esta calculadora aplica el precio correcto según el tamaño del prompt enviado."
+    },
+    {
+      "q": "¿Cuándo RAG es claramente superior al long context?",
+      "a": "RAG gana cuando las consultas son frecuentes sobre el mismo corpus estático (el ahorro puede ser de 50x–100x), cuando el corpus supera la ventana del modelo, o cuando tenés cientos de documentos y la recuperación semántica permite filtrar los relevantes antes de llamar al LLM."
+    },
+    {
+      "q": "¿Qué es TTFT y por qué afecta la decisión?",
+      "a": "TTFT (Time To First Token) es el tiempo que tarda el modelo en empezar a responder. Con prompts de 500K–1M tokens, el TTFT puede ser de 10–30 segundos en algunos modelos. Para aplicaciones interactivas (chatbots, UX en tiempo real), esto puede ser inaceptable."
+    },
+    {
+      "q": "¿Claude Sonnet 4 soporta 1M tokens de context?",
+      "a": "Sí, Claude Sonnet 4 tiene soporte para 1M tokens de context window en su API. Su precio de $3.00/1M tokens de input lo hace más caro que Gemini 2.5 Flash para long context, pero ofrece capacidades de razonamiento comparables a modelos más potentes."
+    },
+    {
+      "q": "¿El costo de embedding está incluido en el cálculo de RAG?",
+      "a": "No. Esta calculadora estima solo el costo de la llamada de generación con RAG. El costo de embedding (indexar el corpus) con modelos como text-embedding-3-small ronda los $0.02/1M tokens y generalmente es una fracción pequeña del costo total, pagado una sola vez por batch."
+    },
+    {
+      "q": "¿Cuándo conviene usar un modelo barato (Flash/mini) vs. uno potente para RAG?",
+      "a": "Para preguntas factoriales sobre documentación estructurada, modelos baratos como GPT-4o mini o Gemini 2.5 Flash funcionan muy bien a una fracción del costo. Reservá modelos más potentes para razonamiento complejo, síntesis multi-hop o cuando la calidad de respuesta sea crítica."
+    },
+    {
+      "q": "¿Qué pasa si mi documento no entra ni en 1M tokens?",
+      "a": "Si el corpus supera 1M tokens (aprox. librerías enteras de código, bases de conocimiento corporativas), RAG o una arquitectura de agentes con múltiples llamadas es la única opción viable. Ningún modelo actual maneja más de 2M tokens de contexto en producción a escala."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Gemini API Pricing — Google AI",
+      "url": "https://ai.google.dev/pricing",
+      "publisher": "Google",
+      "date": "2026"
+    },
+    {
+      "name": "Claude API Pricing — Anthropic",
+      "url": "https://www.anthropic.com/pricing",
+      "publisher": "Anthropic",
+      "date": "2026"
+    },
+    {
+      "name": "OpenAI API Pricing",
+      "url": "https://platform.openai.com/docs/pricing",
+      "publisher": "OpenAI",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar precios por modelo (input/output por 1M tokens) cuando los proveedores publiquen cambios. Verificar nuevos modelos con context window extendido.",
+    "source": "Gemini API Pricing — Google AI",
+    "sourceUrl": "https://ai.google.dev/pricing"
+  },
+  "lastReviewed": "2026-04-27"
+}

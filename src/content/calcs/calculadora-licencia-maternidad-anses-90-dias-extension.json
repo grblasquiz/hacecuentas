@@ -1,0 +1,230 @@
+{
+  "slug": "calculadora-licencia-maternidad-anses-90-dias-extension",
+  "title": "Licencia Maternidad ANSES 2026 + Extensión | Hacé Cuentas",
+  "h1": "Licencia Maternidad ANSES 2026 con extensión",
+  "description": "Calculá la asignación por maternidad ANSES 2026: 90 días al 100% del sueldo (tope $1.980.000) + extensión sin goce y AUH por embarazo.",
+  "category": "familia",
+  "audience": "AR",
+  "icon": "👶",
+  "formulaId": "licencia-maternidad-anses-90-dias-extension",
+  "intro": "Esta calculadora te muestra cuánto cobrás durante la **licencia por maternidad** según la Ley 24.714 y la LCT: 90 días al 100% de tu remuneración bruta (con tope RIPTE de $1.980.000), más la opción de extensión sin goce y la **Asignación por Embarazo para Protección Social** de ANSES si no tenés empleo formal.",
+  "keyTakeaway": "Con un sueldo bruto de $800.000, la asignación por maternidad es $800.000/mes durante 3 meses; con $2.500.000 bruto, el tope limita el cobro a $1.980.000/mes.",
+  "useCases": [
+    "Empleada en relación de dependencia que quiere saber cuánto cobra durante los 90 días de licencia",
+    "Trabajadora que evalúa tomar la extensión opcional de 3 o 6 meses sin goce de haberes",
+    "Embarazada sin empleo formal que quiere conocer el monto de la AUH por embarazo de ANSES",
+    "Área de RRHH que necesita calcular el costo real de la licencia y la diferencia que cubre ANSES",
+    "Trabajadora con sueldo alto que quiere saber si el tope salarial le afecta el cobro"
+  ],
+  "fields": [
+    {
+      "id": "modalidad",
+      "label": "Modalidad de la trabajadora",
+      "type": "select",
+      "options": [
+        {
+          "value": "dependencia",
+          "label": "Empleada en relación de dependencia"
+        },
+        {
+          "value": "auh_embarazo",
+          "label": "Sin empleo formal (AUH por Embarazo)"
+        }
+      ],
+      "default": "dependencia",
+      "required": true
+    },
+    {
+      "id": "sueldoBruto",
+      "label": "Sueldo bruto mensual (ARS)",
+      "type": "number",
+      "placeholder": "800000",
+      "default": 800000,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "distribucionDias",
+      "label": "Distribución de los 90 días",
+      "type": "select",
+      "options": [
+        {
+          "value": "45_45",
+          "label": "45 días antes + 45 días después del parto"
+        },
+        {
+          "value": "30_60",
+          "label": "30 días antes + 60 días después del parto"
+        },
+        {
+          "value": "10_80",
+          "label": "10 días antes + 80 días después del parto"
+        }
+      ],
+      "default": "45_45",
+      "required": false
+    },
+    {
+      "id": "extension",
+      "label": "Extensión sin goce (opcional)",
+      "type": "select",
+      "options": [
+        {
+          "value": "ninguna",
+          "label": "Sin extensión"
+        },
+        {
+          "value": "3meses",
+          "label": "3 meses adicionales sin goce"
+        },
+        {
+          "value": "6meses",
+          "label": "6 meses adicionales sin goce"
+        }
+      ],
+      "default": "ninguna",
+      "required": false
+    },
+    {
+      "id": "partoMultiple",
+      "label": "¿Parto múltiple o hijo con discapacidad?",
+      "type": "select",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí (+30 días adicionales remunerados)"
+        }
+      ],
+      "default": "no",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "asignacionMensual",
+      "label": "Asignación mensual efectiva",
+      "primary": true,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "totalCobrado90dias",
+      "label": "Total cobrado en 90 días (aprox.)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "diasTotalesLicencia",
+      "label": "Días totales de licencia (remunerados + sin goce)",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "aplicaTope",
+      "label": "¿Aplica tope salarial RIPTE?",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "detalleExtension",
+      "label": "Detalle extensión sin goce",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen del cálculo",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula la licencia por maternidad\n\nLa licencia por maternidad en Argentina está regulada por la **Ley 20.744 (LCT), Art. 177-186** y la **Ley 24.714** de Asignaciones Familiares. Durante los 90 días de licencia, la trabajadora NO cobra su sueldo directamente del empleador: el empleador la desvincula provisoriamente y **ANSES paga la asignación** equivalente al 100% de la remuneración bruta sujeta a aportes.\n\n## Fórmula principal\n\n```\nAsignación mensual = MIN(sueldo_bruto, tope_RIPTE)\nTotal 90 días ≈ asignación_mensual × 3\n```\n\nEl **tope RIPTE 2026** es de **$1.980.000 brutos mensuales**. Si el sueldo supera ese valor, la asignación se limita a $1.980.000/mes. La diferencia puede ser compensada por el empleador según convenio, pero no es obligatoria por ley.\n\n## Distribución de los 90 días\n\nPor defecto, la licencia se divide en 45 días antes del parto y 45 días después. La trabajadora puede optar, con certificado médico, por:\n- **30 días antes + 60 días después**\n- **10 días antes + 80 días después**\n\nEsta elección no modifica el monto total cobrado, solo redistribuye los períodos.\n\n## Extensión sin goce (Art. 183 LCT)\n\nAl vencer los 90 días obligatorios, la trabajadora puede optar por:\n- **Continuar trabajando** normalmente.\n- **Tomar una excedencia de 3 o 6 meses sin goce de haberes**, conservando su puesto. Durante este período NO cobra asignación de ANSES ni sueldo, pero mantiene obra social y la antigüedad.\n\n## Parto múltiple / hijo con discapacidad\n\nEn caso de parto múltiple o nacimiento de un hijo con discapacidad, la licencia se extiende **30 días adicionales remunerados** (Art. 177 LCT, modificación Ley 27.716).\n\n## Ejemplo numérico\n\n| Concepto | Valor |\n|---|---|\n| Sueldo bruto mensual | $1.200.000 |\n| Tope RIPTE 2026 | $1.980.000 |\n| Aplica tope | No |\n| Asignación mensual | $1.200.000 |\n| Total 90 días (3 meses) | $3.600.000 |\n| Con extensión 3 meses sin goce | $0 adicional |\n| Total días de licencia | 90 + 90 = 180 días |\n\n## AUH por Embarazo para Protección Social\n\nPara trabajadoras **sin empleo formal**, ANSES otorga la **Asignación por Embarazo** desde la semana 12 hasta el mes anterior al parto (máximo 6 liquidaciones). El monto 2026 es de **$89.745/mes** (sujeto a actualización trimestral por movilidad). El 80% se cobra mensualmente y el 20% restante al presentar el certificado de parto y los controles del Plan Nacer/Sumar.\n\n## Cuándo NO aplica esta calculadora\n\n- Trabajadoras autónomas o monotributistas: acceden a una prestación diferente del SIPA, no regulada por la LCT.\n- Empleadas domésticas: régimen especial Ley 26.844, con montos propios.\n- Funcionarias públicas nacionales o provinciales: convenios específicos que pueden superar los 90 días.\n- Períodos con sueldo variable (comisiones, horas extra): el cálculo usa el promedio de los 6 meses anteriores, lo cual requiere cálculo manual.\n\n## Fuente normativa\n\nLCT Art. 177-186, Ley 24.714, Resolución ANSES que actualiza topes RIPTE trimestralmente, y Ley 27.716 (extensión por parto múltiple/discapacidad).",
+  "faq": [
+    {
+      "q": "¿Quién paga la licencia por maternidad, el empleador o ANSES?",
+      "a": "ANSES paga directamente a la trabajadora la asignación por maternidad equivalente al 100% de su sueldo bruto (con tope). El empleador no abona el sueldo durante esos 90 días; es reemplazado completamente por la prestación de ANSES. El empleador sí sigue pagando obra social y aportes patronales."
+    },
+    {
+      "q": "¿Cuál es el tope salarial para la asignación por maternidad en 2026?",
+      "a": "El tope es el equivalente al salario máximo sujeto a aportes, que en 2026 se ubica en $1.980.000 brutos mensuales y se actualiza trimestralmente según el índice RIPTE publicado por la Secretaría de Seguridad Social. Si tu sueldo supera ese monto, solo cobrás $1.980.000/mes de ANSES."
+    },
+    {
+      "q": "¿Qué pasa si tengo un sueldo variable con comisiones?",
+      "a": "Si tu remuneración es variable, ANSES calcula el promedio de los últimos 6 meses de sueldo bruto declarado antes del inicio de la licencia. Esta calculadora usa sueldo fijo; si tenés variable, el resultado es orientativo y debés consultar a tu empleador o al ANSES para el cálculo exacto."
+    },
+    {
+      "q": "¿Puedo redistribuir los 90 días como quiero?",
+      "a": "Podés optar entre tres distribuciones: 45+45, 30+60 o 10+80 días (antes y después del parto). La elección requiere certificado médico y comunicación fehaciente al empleador. El monto total que cobrás no cambia; solo varía cuándo tomás cada parte de la licencia."
+    },
+    {
+      "q": "¿La extensión sin goce me descuenta antigüedad o me hace perder el trabajo?",
+      "a": "No. El Art. 183 LCT garantiza que durante la excedencia (3 o 6 meses sin goce) conservás tu puesto y la antigüedad se sigue acumulando. Sin embargo, no cobrás ni sueldo ni asignación ANSES durante ese período. Solo se conserva la obra social."
+    },
+    {
+      "q": "¿Cuánto cobra una embarazada sin trabajo formal por ANSES?",
+      "a": "La Asignación por Embarazo para Protección Social en 2026 es de $89.745/mes (monto orientativo, sujeto a movilidad trimestral). Se paga desde la semana 12 de embarazo hasta el mes previo al parto. El 80% se cobra mensualmente y el 20% al presentar el certificado de parto y los controles del Programa Sumar."
+    },
+    {
+      "q": "¿Los 90 días incluyen sábados, domingos y feriados?",
+      "a": "Sí, los 90 días son días corridos (calendario), no días hábiles. Incluyen fines de semana y feriados. Esto significa que la licencia equivale aproximadamente a 3 meses calendario desde la fecha de inicio."
+    },
+    {
+      "q": "¿Qué pasa si el bebé nace antes de la fecha prevista?",
+      "a": "Si el parto ocurre antes de la fecha estimada, la licencia prenatal se acorta automáticamente y los días no utilizados se acumulan al período postnatal, de modo que la trabajadora siempre goza de los 90 días totales. ANSES ajusta el período de pago según el certificado de nacimiento."
+    },
+    {
+      "q": "¿Cómo inicio el trámite de la asignación por maternidad en ANSES?",
+      "a": "Debés iniciar el trámite en Mi ANSES con clave fiscal o en una UDAI. El empleador presenta la documentación de baja transitoria y vos presentás el certificado médico de embarazo con la fecha probable de parto. El pago comienza desde el inicio de la licencia, generalmente dentro de los 10 días hábiles de iniciado el trámite."
+    },
+    {
+      "q": "¿Aplica esta calculadora para empleadas domésticas?",
+      "a": "No. Las trabajadoras de casas particulares están reguladas por la Ley 26.844 y tienen un régimen diferente con montos propios que fija la Comisión Nacional de Trabajo en Casas Particulares. Esta calculadora aplica solo a empleadas bajo la Ley de Contrato de Trabajo (LCT)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ley 20.744 - Ley de Contrato de Trabajo, Art. 177-186",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm",
+      "publisher": "InfoLeg - Ministerio de Justicia",
+      "date": "2026"
+    },
+    {
+      "name": "Ley 24.714 - Régimen de Asignaciones Familiares",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/40000-44999/40499/texact.htm",
+      "publisher": "InfoLeg - Ministerio de Justicia",
+      "date": "2026"
+    },
+    {
+      "name": "Asignación por Embarazo para Protección Social - ANSES",
+      "url": "https://www.anses.gob.ar/informacion/asignacion-por-embarazo-para-proteccion-social",
+      "publisher": "ANSES",
+      "date": "2026"
+    },
+    {
+      "name": "Topes y montos de Asignaciones Familiares - ANSES",
+      "url": "https://www.anses.gob.ar/informacion/montos-de-asignaciones-familiares",
+      "publisher": "ANSES",
+      "date": "2026"
+    },
+    {
+      "name": "Índice RIPTE - Secretaría de Seguridad Social",
+      "url": "https://www.argentina.gob.ar/trabajo/seguridadsocial/ripte",
+      "publisher": "Ministerio de Capital Humano - Secretaría de Seguridad Social",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar tope RIPTE ($1.980.000) y monto AUH por embarazo ($89.745) cada vez que ANSES publique nuevos valores por movilidad jubilatoria (trimestral). Verificar cambios en Ley 27.716 y art. 177 LCT ante modificaciones legislativas.",
+    "source": "Ley 20.744 - Ley de Contrato de Trabajo, Art. 177-186",
+    "sourceUrl": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm"
+  },
+  "lastReviewed": "2026-04-27"
+}

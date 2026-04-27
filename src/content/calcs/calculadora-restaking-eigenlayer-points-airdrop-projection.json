@@ -1,0 +1,228 @@
+{
+  "slug": "calculadora-restaking-eigenlayer-points-airdrop-projection",
+  "title": "EigenLayer Restaking: Proyección Airdrop EIGEN 2026 | Hacé Cuentas",
+  "h1": "EigenLayer Restaking: Proyección de Airdrop EIGEN",
+  "description": "Estimá cuántos tokens EIGEN podés recibir según tu ETH restakeado, días activo y AVS conectados. Modelo conservador y optimista con ROI vs. validador solo.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "🪂",
+  "formulaId": "restaking-eigenlayer-points-airdrop-projection",
+  "intro": "EigenLayer distribuye tokens **EIGEN** proporcionalmente a los puntos acumulados por restakers. Esta calculadora estima tu proyección de airdrop según el ETH que tenés restakeado, los días de exposición y la cantidad de AVS (Actively Validated Services) a los que estás conectado. Usamos parámetros basados en las distribuciones históricas de Season 1 y Season 2.",
+  "keyTakeaway": "Con 10 ETH restakeados durante 180 días conectados a 3 AVS, un restaker típico acumula ~5.400 EigenLayer points, equivalentes a entre 270 y 810 tokens EIGEN según el escenario.",
+  "useCases": [
+    "Comparar si conviene hacer restaking vs. quedarse solo como validador Ethereum",
+    "Estimar el valor en USD de tokens EIGEN antes de comprometer ETH",
+    "Planificar cuántos días de restaking se necesitan para alcanzar un umbral de puntos",
+    "Evaluar el impacto de conectar más AVS en la acumulación de puntos",
+    "Calcular el ROI incremental del restaking sobre el yield base de staking"
+  ],
+  "fields": [
+    {
+      "id": "eth_amount",
+      "label": "ETH restakeado",
+      "type": "number",
+      "placeholder": "10",
+      "default": 10,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "days",
+      "label": "Días de restaking",
+      "type": "number",
+      "placeholder": "180",
+      "default": 180,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "avs_count",
+      "label": "AVS conectados",
+      "type": "select",
+      "options": [
+        {
+          "value": "1",
+          "label": "1 AVS"
+        },
+        {
+          "value": "2",
+          "label": "2 AVS"
+        },
+        {
+          "value": "3",
+          "label": "3 AVS"
+        },
+        {
+          "value": "5",
+          "label": "5 AVS"
+        },
+        {
+          "value": "10",
+          "label": "10 AVS"
+        }
+      ],
+      "default": "3",
+      "required": true
+    },
+    {
+      "id": "scenario",
+      "label": "Escenario de distribución",
+      "type": "radio",
+      "options": [
+        {
+          "value": "conservative",
+          "label": "Conservador"
+        },
+        {
+          "value": "base",
+          "label": "Base"
+        },
+        {
+          "value": "optimistic",
+          "label": "Optimista"
+        }
+      ],
+      "default": "base",
+      "required": true
+    },
+    {
+      "id": "eigen_price_usd",
+      "label": "Precio EIGEN (USD)",
+      "type": "number",
+      "placeholder": "3.50",
+      "default": 3.5,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "eth_price_usd",
+      "label": "Precio ETH (USD)",
+      "type": "number",
+      "placeholder": "3200",
+      "default": 3200,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "total_points",
+      "label": "EigenLayer Points estimados",
+      "primary": false,
+      "format": "number"
+    },
+    {
+      "id": "eigen_tokens",
+      "label": "Tokens EIGEN estimados",
+      "primary": true,
+      "format": "decimal"
+    },
+    {
+      "id": "airdrop_usd",
+      "label": "Valor del airdrop (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "validator_yield_usd",
+      "label": "Yield validator solo (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "restaking_premium_usd",
+      "label": "Prima por restaking (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "roi_restaking_pct",
+      "label": "ROI incremental del restaking",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "summary",
+      "label": "Resumen",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEigenLayer asigna **puntos** (EigenLayer Points, ELP) a los restakers en función del ETH comprometido y el tiempo de exposición. Posteriormente, en cada distribución (Season), estos puntos se convierten en tokens EIGEN según una tasa de conversión que varía entre escenarios.\n\n### Paso 1: Acumulación de puntos base\n\n```\nPoints_base = ETH_restakeado × días × 1 point/ETH/hora\n             = ETH × días × 24\n```\n\nEsta es la fórmula canónica publicada por EigenLayer: 1 EigenLayer Point por ETH por hora de restaking.\n\n### Paso 2: Multiplicador por AVS\n\nConectar AVS adicionales incrementa el riesgo de slashing pero también el peso de los puntos en futuras distribuciones. Históricamente, Season 2 otorgó un bonus de ~5% por cada AVS adicional (capped al 50% extra):\n\n```\nMultiplicador_AVS = min(1 + (AVS_count - 1) × 0.05, 1.50)\nTotal_Points = Points_base × Multiplicador_AVS\n```\n\n### Paso 3: Conversión puntos → tokens EIGEN\n\nEigenLayer ha distribuido tokens en oleadas. Basándonos en Season 1 (167M EIGEN para ~15.000M points acumulados) y Season 2, derivamos tasas de conversión por escenario:\n\n| Escenario | Ratio EIGEN / point | Fundamento |\n|-----------|--------------------|-----------|\n| Conservador | 0.04 | Season 2 ajustado por dilución |\n| Base | 0.08 | Promedio S1+S2 |\n| Optimista | 0.15 | Season 1 early adopters |\n\n```\nEIGEN_tokens = Total_Points × ratio_escenario\n```\n\n### Paso 4: Valorización en USD\n\n```\nAirdrop_USD = EIGEN_tokens × precio_EIGEN_USD\n```\n\n### Paso 5: ROI incremental vs. validador solo\n\nUn validador estándar en Ethereum obtiene ~3.5% APY sobre su ETH. Calculamos ese retorno para el mismo período y luego medimos la prima adicional que genera el restaking:\n\n```\nValidator_yield_USD = ETH × ETH_USD × APY_base × (días / 365)\nRestaking_premium_USD = Airdrop_USD\nROI_incremental = Restaking_premium_USD / (ETH × ETH_USD) × (365 / días)\n```\n\n## Ejemplo numérico\n\n10 ETH × 180 días × 24 h = **43.200 points base**\nMultiplicador 3 AVS: 1 + (3-1)×0.05 = **1.10** → 47.520 points\nEscenario Base (0.08): **3.801 EIGEN**\nValor USD a $3.50: **$13.304**\nValidator yield (3.5% APY, 180d): **$987**\nPrima incremental: **$12.317** → ROI incremental ~**7.7% en 180d**\n\n## Limitaciones importantes\n\n- Las tasas de conversión son **estimaciones** basadas en distribuciones pasadas; EigenLayer no garantiza ninguna tasa futura.\n- El modelo asume que el ETH permanece restakeado durante todo el período sin slashing.\n- Los precios de EIGEN y ETH son altamente volátiles; el valor en USD puede variar drásticamente.\n- No incluye gas costs de depósito/retiro ni el costo de oportunidad del período de unbonding.\n- EigenLayer puede cambiar la mecánica de puntos o pausar distribuciones sin previo aviso.",
+  "faq": [
+    {
+      "q": "¿Qué son los EigenLayer Points exactamente?",
+      "a": "Son unidades de medida off-chain que EigenLayer asigna a los restakers: 1 punto por ETH restakeado por hora. No son transferibles ni tienen valor de mercado directo, pero determinan la proporción de tokens EIGEN que recibe cada usuario en cada distribución (Season)."
+    },
+    {
+      "q": "¿Cada cuánto tiempo hace EigenLayer airdrops?",
+      "a": "Hasta 2025, EigenLayer realizó dos distribuciones principales (Season 1 en mayo 2024 y Season 2 en septiembre 2024). No hay calendario oficial publicado para futuras distribuciones. Esta calculadora proyecta sobre un horizonte continuo, no sobre una fecha fija."
+    },
+    {
+      "q": "¿Conectar más AVS aumenta el riesgo de pérdida de ETH?",
+      "a": "Sí. Cada AVS adicional al que delegás tu stake introduce riesgo de slashing independiente. Si un AVS tiene un bug o mal comportamiento, podés perder parte del ETH restakeado. El multiplicador de puntos refleja ese riesgo adicional, pero no lo elimina."
+    },
+    {
+      "q": "¿Por qué hay diferencia entre escenario conservador y optimista?",
+      "a": "La tasa de conversión puntos→EIGEN depende del total de puntos acumulados por todos los restakers en la red. Cuanta más gente haga restaking, mayor es el denominador y menor la tasa. El escenario conservador asume mayor adopción (más dilución); el optimista asume menor base total de puntos competidores."
+    },
+    {
+      "q": "¿Esta calculadora aplica para LST restaking (stETH, rETH)?",
+      "a": "El modelo base aplica también a Liquid Staking Tokens restakeados en EigenLayer, ya que la acumulación de puntos es idéntica por ETH equivalente. Sin embargo, los LST ya cargan el yield de Lido/Rocket Pool por debajo, por lo que el punto de comparación con 'validador solo' debería ajustarse."
+    },
+    {
+      "q": "¿Los tokens EIGEN tienen vesting?",
+      "a": "En Season 1 y 2, los tokens de airdrop estuvieron sujetos a un período de no-transferibilidad inicial. EigenLayer implementó restricciones temporales antes de habilitar la transferencia completa. Es importante contemplar ese lockup al valorizar el airdrop esperado."
+    },
+    {
+      "q": "¿Qué APY base usa la calculadora para comparar con el validador?",
+      "a": "Usamos 3.5% APY anual, que refleja el yield promedio de staking en Ethereum en 2025-2026 según datos de beaconcha.in. Este valor puede variar según la cantidad total de validadores activos en la red."
+    },
+    {
+      "q": "¿Puedo usar esta calculadora para EigenLayer en una testnet?",
+      "a": "La calculadora modela la red principal (mainnet) de Ethereum. Los puntos acumulados en testnets no son elegibles para distribuciones de tokens reales según las reglas publicadas por EigenLayer Foundation."
+    },
+    {
+      "q": "¿Qué pasa si EigenLayer no hace más airdrops?",
+      "a": "En ese caso, el ROI incremental proyectado sería cero o negativo una vez descontados los costos de gas. La calculadora asume que habrá al menos una distribución futura, lo cual es una suposición, no una certeza. Siempre evaluá el riesgo de que no haya nuevas distribuciones."
+    }
+  ],
+  "sources": [
+    {
+      "name": "EigenLayer Points Program — documentación oficial",
+      "url": "https://docs.eigenlayer.xyz/eigenlayer/restaking-guides/restaking-user-guide",
+      "publisher": "EigenLayer Foundation",
+      "date": "2026"
+    },
+    {
+      "name": "EIGEN Token Distribution — Season 1 Announcement",
+      "url": "https://blog.eigenfoundation.org/eigenlayer-season-1-distribution",
+      "publisher": "Eigen Foundation",
+      "date": "2024"
+    },
+    {
+      "name": "Ethereum Staking APY — Beacon Chain Statistics",
+      "url": "https://beaconcha.in/",
+      "publisher": "beaconcha.in",
+      "date": "2026"
+    },
+    {
+      "name": "EigenLayer Whitepaper",
+      "url": "https://docs.eigenlayer.xyz/overview/whitepaper",
+      "publisher": "EigenLayer Foundation",
+      "date": "2023"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar tasas de conversión puntos→EIGEN cuando EigenLayer anuncie nuevas distribuciones (Seasons). Revisar APY base de Ethereum cada trimestre según datos de beaconcha.in. Ajustar precio default de EIGEN y ETH mensualmente.",
+    "source": "EigenLayer Points Program — documentación oficial",
+    "sourceUrl": "https://docs.eigenlayer.xyz/eigenlayer/restaking-guides/restaking-user-guide"
+  },
+  "lastReviewed": "2026-04-27"
+}

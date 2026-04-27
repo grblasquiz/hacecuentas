@@ -1,0 +1,245 @@
+{
+  "slug": "calculadora-pendle-pt-yt-vencimiento-fixed-yield",
+  "title": "Pendle PT/YT Yield Calculator 2026 | Hacé Cuentas",
+  "h1": "Calculadora Pendle PT/YT: Fixed Yield vs Leveraged Yield",
+  "description": "Calculá el APY fijo de Principal Tokens (PT) en Pendle Finance y compará PT vs YT según tu expectativa del yield subyacente. Compatible con stETH, USDe y más.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "📈",
+  "formulaId": "pendle-pt-yt-vencimiento-fixed-yield",
+  "intro": "Pendle Finance divide un activo generador de yield en dos tokens: **PT (Principal Token)** —que vence a 1:1 con el subyacente— y **YT (Yield Token)** —que acumula todo el rendimiento variable hasta el vencimiento—. Esta calculadora te muestra el APY fijo implícito de comprar PT con descuento y compara si PT o YT es más rentable según tu expectativa de yield del activo base (stETH, USDe, sUSDe, etc.).",
+  "keyTakeaway": "Si el yield implícito del PT supera tu expectativa del yield subyacente, PT gana. Si el activo rinde más que el fijo, YT puede multiplicar ganancias con apalancamiento implícito de hasta 20x.",
+  "useCases": [
+    "Fijar un APY garantizado comprando PT de stETH con descuento antes del vencimiento",
+    "Especular con YT de USDe si esperás que Ethena mantenga yields altos de doble dígito",
+    "Comparar el fixed yield de Pendle contra staking directo o protocolos lending",
+    "Calcular cuánto YT comprar para obtener un yield efectivo objetivo sobre tu capital",
+    "Evaluar si conviene rotar de YT a PT cuando el yield subyacente empieza a caer"
+  ],
+  "fields": [
+    {
+      "id": "asset",
+      "label": "Activo subyacente",
+      "type": "select",
+      "options": [
+        {
+          "value": "stETH",
+          "label": "stETH (Lido Staked ETH)"
+        },
+        {
+          "value": "USDe",
+          "label": "USDe (Ethena)"
+        },
+        {
+          "value": "sUSDe",
+          "label": "sUSDe (Ethena Staked)"
+        },
+        {
+          "value": "rsETH",
+          "label": "rsETH (KelpDAO)"
+        },
+        {
+          "value": "custom",
+          "label": "Personalizado"
+        }
+      ],
+      "default": "stETH",
+      "required": true
+    },
+    {
+      "id": "ptPrice",
+      "label": "Precio actual del PT (en unidades del subyacente)",
+      "type": "number",
+      "placeholder": "0.9500",
+      "default": 0.95,
+      "step": 0.0001,
+      "required": true
+    },
+    {
+      "id": "daysToMaturity",
+      "label": "Días hasta el vencimiento",
+      "type": "number",
+      "placeholder": "180",
+      "default": 180,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "capital",
+      "label": "Capital a invertir (USD)",
+      "type": "number",
+      "placeholder": "10000",
+      "default": 10000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "investIn",
+      "label": "¿Dónde invertir?",
+      "type": "radio",
+      "options": [
+        {
+          "value": "PT",
+          "label": "PT (fixed yield)"
+        },
+        {
+          "value": "YT",
+          "label": "YT (leveraged yield)"
+        },
+        {
+          "value": "compare",
+          "label": "Comparar ambos"
+        }
+      ],
+      "default": "compare",
+      "required": true
+    },
+    {
+      "id": "ytPrice",
+      "label": "Precio actual del YT (en unidades del subyacente)",
+      "type": "number",
+      "placeholder": "0.0500",
+      "default": 0.05,
+      "step": 0.0001,
+      "required": true
+    },
+    {
+      "id": "expectedUnderlyingApy",
+      "label": "Expectativa de APY del subyacente (%) durante el período",
+      "type": "number",
+      "placeholder": "4.5",
+      "default": 4.5,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "currentUnderlyingApy",
+      "label": "APY actual del subyacente (%) — referencia de mercado",
+      "type": "number",
+      "placeholder": "4.2",
+      "default": 4.2,
+      "step": 0.01,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "ptImpliedApy",
+      "label": "APY fijo implícito del PT",
+      "primary": true,
+      "format": "percent"
+    },
+    {
+      "id": "ptProfit",
+      "label": "Ganancia PT al vencimiento (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "ytLeverage",
+      "label": "Apalancamiento implícito del YT",
+      "primary": false,
+      "format": "decimal"
+    },
+    {
+      "id": "ytEffectiveApy",
+      "label": "APY efectivo del YT (con tu expectativa)",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "ytProfit",
+      "label": "Ganancia YT al vencimiento (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "breakEvenApy",
+      "label": "Break-even APY subyacente para YT > PT",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "verdict",
+      "label": "Veredicto",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo funciona Pendle Finance\n\nPendle tokeniza el yield de activos DeFi dividiéndolos en dos partes:\n- **PT (Principal Token)**: equivale al capital. Vence a exactamente 1 unidad del subyacente. Se compra con descuento, lo que genera un **yield fijo garantizado**.\n- **YT (Yield Token)**: acumula todo el yield variable generado por el subyacente hasta el vencimiento. Tras vencer, vale 0. Su valor actual es el descuento del PT (PT + YT = 1 subyacente).\n\n## Fórmula del APY fijo del PT\n\nDado que PT se compra a precio `p` y vence a 1:\n\n```\ndiscount = 1 - ptPrice\nyield_period = discount / ptPrice\nAPY_PT = (1 + yield_period) ^ (365 / daysToMaturity) - 1\n```\n\nEjemplo: PT a 0.95 con 180 días\n```\ndiscount = 1 - 0.95 = 0.05\nyield_period = 0.05 / 0.95 = 0.05263\nAPY_PT = (1.05263)^(365/180) - 1 = 10.77%\n```\n\n## Apalancamiento implícito del YT\n\nYT cuesta `ytPrice` pero captura el yield de 1 unidad completa del subyacente:\n\n```\nleverage_YT = 1 / ytPrice\n```\n\nCon YT a 0.05: leverage = 20x. Por cada 1 USD invertido en YT, se captura el yield de 20 USD de subyacente.\n\n## APY efectivo del YT\n\n```\nyield_per_unit = expectedUnderlyingApy * (daysToMaturity / 365)\nyt_yield_earned = yield_per_unit / ytPrice\nAPY_YT = (1 + yt_yield_earned) ^ (365 / daysToMaturity) - 1\n```\n\nNota: YT tiene riesgo de pérdida total si el subyacente rinde 0. El capital invertido en YT se pierde al vencimiento (YT vale 0); la ganancia viene únicamente del yield acumulado.\n\n## Break-even\n\nEl APY del subyacente mínimo para que YT supere al PT en retorno:\n\n```\nbreakEvenApy = ptImpliedApy * ytPrice\n```\n\nSi el subyacente rinde más que breakEven, YT gana. Si rinde menos, PT gana.\n\n## Tabla de referencia — APY típicos 2026\n\n| Activo | APY subyacente típico |\n|---|---|\n| stETH | 3.5% – 5.5% |\n| sUSDe | 8% – 25% |\n| USDe | 4% – 20% |\n| rsETH | 4% – 7% |\n\n## Cuándo NO aplica / limitaciones\n\n- Esta calculadora asume que mantenés la posición hasta el vencimiento. La venta anticipada en el AMM de Pendle implica slippage y price impact.\n- No considera comisiones de gas ni fees del pool de Pendle (típicamente 0.1%–1% de los yields).\n- El YT puede valer 0 si el protocolo subyacente tiene un hack o yield = 0.\n- Los precios PT/YT cambian continuamente en el AMM; el APY fijo varía en cada transacción.\n- Fuente de datos de mercado: Pendle Finance app (app.pendle.finance) y dashboards como Dune Analytics.",
+  "faq": [
+    {
+      "q": "¿Qué es exactamente el PT en Pendle?",
+      "a": "El Principal Token (PT) representa el capital de un activo generador de yield. Al vencimiento, 1 PT se puede redimir por 1 unidad del subyacente (por ejemplo, 1 PT-stETH = 1 stETH). Se compra con descuento, y esa diferencia es tu rendimiento fijo garantizado, sin importar cuánto rinda el staking."
+    },
+    {
+      "q": "¿Puedo perder dinero comprando PT?",
+      "a": "Si mantenés hasta el vencimiento, el único riesgo es el del protocolo subyacente (ej: hack de Lido o Ethena) y el riesgo de smart contract de Pendle. No hay riesgo de precio en el PT mismo: siempre vence a 1 subyacente. Riesgo de mercado sí existe si vendés antes del vencimiento."
+    },
+    {
+      "q": "¿Cómo se genera el yield del YT?",
+      "a": "El YT captura todo el yield que genera el activo subyacente durante el período. Por ejemplo, YT-stETH acumula las recompensas de staking de stETH. Como el YT cuesta solo una fracción del activo completo (el descuento), el leverage puede ser 10x–30x, amplificando tanto ganancias como riesgos."
+    },
+    {
+      "q": "¿Qué significa el break-even APY?",
+      "a": "Es el rendimiento mínimo que debe generar el subyacente para que YT sea más rentable que PT. Si tu expectativa del yield subyacente supera ese break-even, YT gana. Fórmula: Break-even = APY_PT × ytPrice. Con PT al 10% y YT a 0.05: break-even = 0.5% del subyacente."
+    },
+    {
+      "q": "¿Qué diferencia hay entre USDe y sUSDe en Pendle?",
+      "a": "USDe es el stablecoin de Ethena sin staking. sUSDe es la versión stakeada que acumula el yield del delta-neutral funding rate. sUSDe típicamente tiene APY más alto que USDe simple, pero ambos pueden tener pools en Pendle con distintos vencimientos y APYs fijos implícitos."
+    },
+    {
+      "q": "¿Cuándo conviene PT y cuándo YT?",
+      "a": "PT conviene cuando querés certeza: sabés que vas a obtener el APY fijo sin importar el mercado. YT conviene cuando tu expectativa del yield subyacente supera el break-even y estás dispuesto a asumir riesgo de pérdida del capital en YT. Yields altos en mercados bull favorecen YT; yields bajos o inciertos favorecen PT."
+    },
+    {
+      "q": "¿El APY del PT cambia con el tiempo?",
+      "a": "Sí. El precio del PT fluctúa en el AMM de Pendle según oferta y demanda. Cuanto más cerca del vencimiento, más se acerca a 1. El APY implícito que calculás es el que obtenés si comprás HOY al precio ingresado y mantenés hasta el vencimiento."
+    },
+    {
+      "q": "¿Los fees de Pendle afectan el cálculo?",
+      "a": "Esta calculadora no los incluye. Pendle cobra fees sobre el yield obtenido (típicamente entre 3% y 10% del yield generado, no del capital). Para posiciones grandes o yields muy altos, conviene descontar ese fee del APY efectivo esperado."
+    },
+    {
+      "q": "¿Se puede usar esta calculadora para cualquier pool de Pendle?",
+      "a": "Sí, siempre que ingreses el precio PT/YT actual del pool específico y los días a vencimiento. Los activos del selector son los más comunes, pero con 'Personalizado' podés calcular cualquier pool existente: ezETH, weETH, USDC de Aave, etc."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Pendle Finance — Documentación oficial",
+      "url": "https://docs.pendle.finance/",
+      "publisher": "Pendle Finance",
+      "date": "2026"
+    },
+    {
+      "name": "Pendle App — Pools y precios en tiempo real",
+      "url": "https://app.pendle.finance/trade/markets",
+      "publisher": "Pendle Finance",
+      "date": "2026"
+    },
+    {
+      "name": "Ethena — sUSDe yield y métricas",
+      "url": "https://ethena.fi/",
+      "publisher": "Ethena Labs",
+      "date": "2026"
+    },
+    {
+      "name": "Lido Finance — stETH APR histórico",
+      "url": "https://lido.fi/ethereum",
+      "publisher": "Lido DAO",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Los APYs de referencia en la tabla y los activos disponibles se actualizan cuando Pendle lanza nuevos mercados relevantes o cambian significativamente los rangos de yield de stETH, USDe y sUSDe.",
+    "source": "Pendle Finance — Documentación oficial",
+    "sourceUrl": "https://docs.pendle.finance/"
+  },
+  "lastReviewed": "2026-04-27"
+}

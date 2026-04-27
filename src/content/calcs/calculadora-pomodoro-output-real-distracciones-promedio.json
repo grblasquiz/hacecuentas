@@ -1,0 +1,206 @@
+{
+  "slug": "calculadora-pomodoro-output-real-distracciones-promedio",
+  "title": "Calculadora Pomodoro: Output Real vs Nominal 2026 | Hacé Cuentas",
+  "h1": "Productividad real con distracciones (Pomodoro)",
+  "description": "Calculá tu tiempo de foco real según pomodoros agendados, porcentaje de efectividad y distracciones promedio. Descubrí cuánto tiempo productivo perdés.",
+  "category": "salud",
+  "audience": "global",
+  "icon": "🍅",
+  "formulaId": "pomodoro-output-real-distracciones-promedio",
+  "intro": "Planeás 10 pomodoros pero al final del día sentís que avanzaste la mitad. Este cálculo te muestra **cuánto tiempo de foco real obtenés** considerando tu efectividad promedio y las interrupciones que sufre cada bloque. Identificá cuántos minutos perdés por día y cómo reagrupar tus bloques para recuperarlos.",
+  "keyTakeaway": "Con una efectividad del 75% y 2 interrupciones por pomodoro, 8 pomodoros agendados (200 min nominales) se reducen a ~112 min de foco real: un 44% menos de output productivo.",
+  "useCases": [
+    "Estimar cuántas tareas reales caben en tu jornada de trabajo remoto",
+    "Comparar semanas con distintos niveles de interrupciones para detectar patrones",
+    "Justificar ante un equipo cuántos bloques deep-work son sostenibles por día",
+    "Diseñar bloques sin reuniones cuando el % efectivo baja del 70%",
+    "Evaluar si aumentar pomodoros o reducir distracciones tiene más impacto en el output"
+  ],
+  "fields": [
+    {
+      "id": "pomodoros",
+      "label": "Pomodoros agendados",
+      "type": "number",
+      "placeholder": "8",
+      "default": 8,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "duracionPomodoro",
+      "label": "Duración de cada pomodoro (minutos)",
+      "type": "number",
+      "placeholder": "25",
+      "default": 25,
+      "step": 5,
+      "required": true
+    },
+    {
+      "id": "efectividad",
+      "label": "Efectividad promedio por bloque (%)",
+      "type": "number",
+      "placeholder": "75",
+      "default": 75,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "interrupcionesPorPomodoro",
+      "label": "Interrupciones promedio por pomodoro",
+      "type": "number",
+      "placeholder": "2",
+      "default": 2,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "costoInterrupcion",
+      "label": "Costo promedio por interrupción (minutos de reenfoque)",
+      "type": "select",
+      "options": [
+        {
+          "value": "5",
+          "label": "5 min (distracción leve: notificación)"
+        },
+        {
+          "value": "10",
+          "label": "10 min (distracción media: consulta rápida)"
+        },
+        {
+          "value": "15",
+          "label": "15 min (distracción alta: reunión imprevista)"
+        },
+        {
+          "value": "23",
+          "label": "23 min (distracción severa: interrupción profunda)"
+        }
+      ],
+      "default": "10",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "focusRealMin",
+      "label": "Tiempo de foco real",
+      "primary": true,
+      "format": "number",
+      "suffix": "min"
+    },
+    {
+      "id": "focusRealHoras",
+      "label": "Tiempo de foco real",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "horas"
+    },
+    {
+      "id": "tiempoNominalMin",
+      "label": "Tiempo nominal agendado",
+      "primary": false,
+      "format": "number",
+      "suffix": "min"
+    },
+    {
+      "id": "perdidaPorDistracciones",
+      "label": "Pérdida total por distracciones",
+      "primary": false,
+      "format": "number",
+      "suffix": "min"
+    },
+    {
+      "id": "perdidaPorIneficiencia",
+      "label": "Pérdida por baja efectividad",
+      "primary": false,
+      "format": "number",
+      "suffix": "min"
+    },
+    {
+      "id": "porcentajeOutputReal",
+      "label": "Output real vs nominal",
+      "primary": false,
+      "format": "percent",
+      "suffix": ""
+    },
+    {
+      "id": "bloquesOptimos",
+      "label": "Bloques óptimos recomendados por día",
+      "primary": false,
+      "format": "integer",
+      "suffix": ""
+    },
+    {
+      "id": "sugerencia",
+      "label": "Sugerencia",
+      "primary": false,
+      "format": "text",
+      "suffix": ""
+    }
+  ],
+  "explanation": "## Cómo se calcula el output real\n\nEl método Pomodoro divide el trabajo en bloques de foco (típicamente 25 min) separados por pausas cortas. Sin embargo, el tiempo nominal de un pomodoro no es igual al tiempo de foco real: las interrupciones y la efectividad personal reducen el output concreto.\n\n### Fórmula\n\n```\nTiempo nominal total = pomodoros × duración_pomodoro\n\nPérdida por distracciones = pomodoros × interrupciones_por_pomodoro × costo_por_interrupción\n\nBase disponible = Tiempo nominal total − Pérdida por distracciones\n\nFoco real = Base disponible × (efectividad / 100)\n\nPérdida por ineficiencia = Base disponible × (1 − efectividad / 100)\n\nOutput real (%) = Foco real / Tiempo nominal total × 100\n```\n\nSi la base disponible resulta negativa (demasiadas interrupciones), el foco real se fija en 0.\n\n### Ejemplo numérico\n\n- 8 pomodoros × 25 min = **200 min nominales**\n- 2 interrupciones × 10 min × 8 pomodoros = **160 min perdidos por distracciones**\n- Base disponible = 200 − 160 = **40 min**\n- Foco real al 75% = 40 × 0.75 = **30 min** (15% del nominal)\n\nEse escenario extremo ilustra por qué reducir interrupciones importa más que agregar pomodoros.\n\nCon un perfil más favorable (1 interrupción × 5 min, efectividad 80%):\n- Pérdida por distracciones = 8 × 1 × 5 = 40 min\n- Base disponible = 200 − 40 = 160 min\n- Foco real = 160 × 0.80 = **128 min** (64% del nominal)\n\n### Valores de referencia\n\n| Nivel de distracción | Interrupciones/pomodoro | Costo típico |\n|---|---|---|\n| Bajo (trabajo profundo en silencio) | 0–1 | 5 min |\n| Medio (open office / Slack activo) | 2–3 | 10 min |\n| Alto (reuniones ad-hoc frecuentes) | 3–5 | 15 min |\n| Severo (guardia / soporte en vivo) | 5+ | 23 min |\n\n| Perfil de efectividad | % típico |\n|---|---|\n| Estado de flujo sostenido | 85–95% |\n| Trabajador promedio sin fatiga | 70–80% |\n| Fatiga o tareas poco motivantes | 50–65% |\n| Multitasking forzado | 30–50% |\n\n### Bloques óptimos recomendados\n\nLa investigación sobre fatiga cognitiva (Ericsson et al., 1993; Cirillo, 2006) sugiere que la mayoría de las personas sostiene entre 4 y 6 pomodoros de foco real por día. La calculadora recomienda no superar ese umbral cuando el output real cae por debajo del 50% del nominal.\n\n### Limitaciones\n\n- El modelo asume que todas las interrupciones tienen el mismo costo promedio; en la práctica varía por tipo.\n- No contempla la variación intradiaria de energía (picos matutinos vs. caída postprandial).\n- Las pausas entre pomodoros (5 y 15 min) no están incluidas en el tiempo nominal, por lo que el total del día real puede ser mayor.\n- La efectividad es una estimación subjetiva; para mayor precisión usá un tracker de tiempo.",
+  "faq": [
+    {
+      "q": "¿Qué es el porcentaje de efectividad y cómo lo estimo?",
+      "a": "Es la fracción del tiempo disponible en que estás realmente enfocado en la tarea. Podés estimarlo registrando cuántos minutos de un pomodoro usaste en trabajo directo vs. distracción mental o revisión de redes. Un rango honesto para la mayoría es 70–80%."
+    },
+    {
+      "q": "¿Por qué una interrupción cuesta más tiempo que su duración real?",
+      "a": "Porque el reenfoque cognitivo (volver al estado de concentración previo) demanda entre 5 y 23 minutos según la investigación de Gloria Mark (UC Irvine, 2008). Interrumpir no solo gasta el tiempo de la distracción sino el de la recuperación."
+    },
+    {
+      "q": "¿Cuántos pomodoros reales puede sostener una persona por día?",
+      "a": "Los estudios de deliberate practice (Ericsson, 1993) indican un máximo de 4 horas de trabajo cognitivo profundo por día. Con pomodoros de 25 min eso equivale a unos 9–10 nominales, pero el foco real suele concentrarse en 4–6 bloques limpios."
+    },
+    {
+      "q": "¿Qué conviene más: agregar pomodoros o reducir interrupciones?",
+      "a": "Reducir interrupciones casi siempre tiene mayor impacto. Pasar de 3 a 1 interrupción por bloque (costo 10 min) libera 20 min × cantidad de pomodoros. Agregar 2 pomodoros con el mismo nivel de distracción puede generar menos foco real neto."
+    },
+    {
+      "q": "¿La calculadora incluye el tiempo de pausas entre pomodoros?",
+      "a": "No. El modelo trabaja exclusivamente con el tiempo dentro del bloque de trabajo. Las pausas cortas (5 min) y largas (15–30 min cada 4 pomodoros) son adicionales y no se contabilizan como pérdida."
+    },
+    {
+      "q": "¿Qué significa el campo 'bloques óptimos recomendados'?",
+      "a": "Es la cantidad de pomodoros diarios que la calculadora sugiere para mantener sostenibilidad, basándose en que el foco real total no supere 4 horas (240 min) y que el output real sea de al menos el 50% del nominal."
+    },
+    {
+      "q": "¿Puedo usar esta calculadora con pomodoros de 50 o 90 minutos?",
+      "a": "Sí. El campo 'duración del pomodoro' es editable. Técnicas como Ultradian Rhythm (90 min) o bloques de 50/10 funcionan con la misma lógica; solo cambiá la duración y revisá que el costo de interrupción siga siendo proporcional."
+    },
+    {
+      "q": "¿Cómo bajo las interrupciones si trabajo en open office?",
+      "a": "Estrategias documentadas: bloques de 'no-disturb' visibles (auriculares, señal física), apagado de notificaciones push, acuerdo de equipo sobre ventanas de disponibilidad, y trabajo en horas de baja afluencia. Combinarlas puede llevar las interrupciones de 3 a menos de 1 por bloque."
+    },
+    {
+      "q": "¿El resultado considera la fatiga acumulada durante el día?",
+      "a": "No directamente. La efectividad ingresada es un promedio; si querés modelar fatiga, podés correr el cálculo dos veces con distintos valores de efectividad (mañana vs. tarde) y sumar los resultados manualmente."
+    }
+  ],
+  "sources": [
+    {
+      "name": "The Pomodoro Technique — Francesco Cirillo",
+      "url": "https://francescocirillo.com/products/the-pomodoro-technique",
+      "publisher": "Francesco Cirillo",
+      "date": "2006"
+    },
+    {
+      "name": "The Cost of Interrupted Work: More Speed and Stress — Gloria Mark et al.",
+      "url": "https://ics.uci.edu/~gmark/chi08-mark.pdf",
+      "publisher": "UC Irvine / ACM CHI",
+      "date": "2008"
+    },
+    {
+      "name": "The Role of Deliberate Practice in the Acquisition of Expert Performance — Ericsson et al.",
+      "url": "https://psycnet.apa.org/doi/10.1037/0033-295X.100.3.363",
+      "publisher": "Psychological Review / APA",
+      "date": "1993"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Los valores de referencia (costo de interrupción, rangos de efectividad) pueden ajustarse si nueva investigación cognitiva actualiza los benchmarks. Los parámetros del modelo son estables."
+  },
+  "lastReviewed": "2026-04-27"
+}

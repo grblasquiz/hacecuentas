@@ -1,0 +1,188 @@
+{
+  "slug": "calculadora-claude-37-tokens-costo-cache-prompt-mensual",
+  "title": "Costo Claude 3.7 con Prompt Caching 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Costo Claude 3.7 con Prompt Caching",
+  "description": "Estimá el costo mensual de la API de Claude 3.7 con prompt caching activo. Calculá write 1.25x, read 0.1x y tokens variables para optimizar tu gasto en Anthropic.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "🤖",
+  "formulaId": "claude-37-tokens-costo-cache-prompt-mensual",
+  "intro": "El **prompt caching** de Claude 3.7 puede reducir tu factura mensual hasta un 90% en los tokens del sistema reutilizados. Esta calculadora estima el costo real según tu volumen de requests, tamaño del prompt base, tasa de aciertos de caché y tokens de salida, usando los precios oficiales de Anthropic 2026.",
+  "keyTakeaway": "Con un prompt base de 10.000 tokens, 1.000 requests/día y 80% de cache hit rate, el costo mensual puede bajar de ~USD 450 sin caché a menos de USD 80 con caching activo.",
+  "useCases": [
+    "Chatbots con system prompt largo reutilizado en cada conversación",
+    "Pipelines RAG donde el contexto de documentos se repite por request",
+    "Agentes que inyectan instrucciones extensas en cada llamada a la API",
+    "Aplicaciones SaaS que sirven a muchos usuarios con el mismo prompt base",
+    "Evaluación del ROI antes de migrar a Claude 3.7 desde otro modelo"
+  ],
+  "fields": [
+    {
+      "id": "basePromptTokens",
+      "label": "Tokens del prompt base (system prompt / contexto fijo)",
+      "type": "number",
+      "placeholder": "10000",
+      "default": 10000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "variableTokensPerRequest",
+      "label": "Tokens variables por request (mensaje del usuario + contexto dinámico)",
+      "type": "number",
+      "placeholder": "500",
+      "default": 500,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "outputTokensPerRequest",
+      "label": "Tokens de salida por request (respuesta del modelo)",
+      "type": "number",
+      "placeholder": "800",
+      "default": 800,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "requestsPerDay",
+      "label": "Requests por día",
+      "type": "number",
+      "placeholder": "1000",
+      "default": 1000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "cacheHitRate",
+      "label": "Cache hit rate estimado (%)",
+      "type": "number",
+      "placeholder": "80",
+      "default": 80,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "model",
+      "label": "Modelo Claude",
+      "type": "select",
+      "options": [
+        {
+          "value": "claude-37-sonnet",
+          "label": "Claude 3.7 Sonnet"
+        },
+        {
+          "value": "claude-35-sonnet",
+          "label": "Claude 3.5 Sonnet"
+        },
+        {
+          "value": "claude-3-haiku",
+          "label": "Claude 3.5 Haiku"
+        }
+      ],
+      "default": "claude-37-sonnet",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "monthlyCostWithCache",
+      "label": "Costo mensual con prompt caching",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "monthlyCostWithoutCache",
+      "label": "Costo mensual sin prompt caching",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "monthlySavings",
+      "label": "Ahorro mensual estimado",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "savingsPercent",
+      "label": "Porcentaje de ahorro",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "breakdown",
+      "label": "Desglose del costo con caché",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEl prompt caching de Anthropic permite almacenar en caché partes del prompt (típicamente el system prompt o contexto largo) para reutilizarlas en requests subsiguientes. Los tokens cacheados se cobran a tarifas distintas según si se está **escribiendo** la caché o **leyendo** desde ella.\n\n## Precios por modelo (por millón de tokens, USD)\n\n| Modelo | Input normal | Cache write | Cache read | Output |\n|---|---|---|---|---|\n| Claude 3.7 Sonnet | $3.00 | $3.75 | $0.30 | $15.00 |\n| Claude 3.5 Sonnet | $3.00 | $3.75 | $0.30 | $15.00 |\n| Claude 3.5 Haiku | $0.80 | $1.00 | $0.08 | $4.00 |\n\nEl **cache write** cuesta 1.25× el precio de input normal. El **cache read** cuesta 0.1× el precio de input normal.\n\n## Fórmula\n\n```\n// Por request:\ntokens_write = basePromptTokens × (1 - cacheHitRate)\ntokens_read  = basePromptTokens × cacheHitRate\ntokens_variable = variableTokensPerRequest\ntokens_output   = outputTokensPerRequest\n\ncosto_por_request =\n  (tokens_write   / 1_000_000) × precio_cache_write\n+ (tokens_read    / 1_000_000) × precio_cache_read\n+ (tokens_variable/ 1_000_000) × precio_input_normal\n+ (tokens_output  / 1_000_000) × precio_output\n\ncosto_mensual = costo_por_request × requestsPerDay × 30\n\n// Sin caché (todos los tokens base se cobran como input normal):\ncosto_sin_cache_por_request =\n  ((basePromptTokens + variableTokensPerRequest) / 1_000_000) × precio_input_normal\n+ (outputTokensPerRequest / 1_000_000) × precio_output\n```\n\n## Ejemplo numérico (Claude 3.7 Sonnet)\n\nSupuestos: 10.000 tokens base, 500 variables, 800 output, 1.000 req/día, 80% hit rate.\n\n- Cache write: 10.000 × 0.20 = 2.000 tokens → 2.000/1M × $3.75 = $0.0000075/req\n- Cache read: 10.000 × 0.80 = 8.000 tokens → 8.000/1M × $0.30 = $0.0000024/req\n- Variable input: 500/1M × $3.00 = $0.0000015/req\n- Output: 800/1M × $15.00 = $0.000012/req\n- **Total/req ≈ $0.0000234 → Mensual ≈ $70.2**\n\nSin caché: (10.500/1M × $3.00 + 800/1M × $15.00) × 30.000 req ≈ **$1.305** al mes — un 94% más caro.\n\n## Cuándo NO aplica / Limitaciones\n\n- El cache hit rate real depende del TTL (5 minutos por defecto en Anthropic) y del patrón de tráfico; con tráfico muy esporádico puede ser cercano a 0%.\n- El prompt base debe superar el mínimo de tokens cacheables (1.024 para Sonnet, 2.048 para algunos modelos) para activar el caching.\n- Los precios pueden variar según tier de volumen, contratos enterprise o cambios de Anthropic.\n- Esta calculadora no incluye costos de red, latencia ni overhead de infraestructura propia.",
+  "faq": [
+    {
+      "q": "¿Qué es el prompt caching en Claude?",
+      "a": "Es una función de la API de Anthropic que permite guardar en caché partes del prompt (system prompt, documentos de contexto) para reutilizarlas en requests siguientes. Los tokens leídos desde caché cuestan 0.1× el precio normal de input, reduciendo significativamente el costo en aplicaciones con prompts repetitivos."
+    },
+    {
+      "q": "¿Cuánto cuesta escribir en caché vs. leer desde caché?",
+      "a": "Para Claude 3.7 Sonnet: escribir en caché cuesta $3.75/millón de tokens (1.25× el input normal de $3.00), mientras que leer desde caché cuesta solo $0.30/millón de tokens (0.1× el precio normal). El ahorro en lecturas compensa rápidamente el sobrecosto de escritura."
+    },
+    {
+      "q": "¿Cuánto dura la caché?",
+      "a": "El TTL (time-to-live) estándar de la caché de Anthropic es de 5 minutos desde el último uso. Si el cache hit rate de tu aplicación es bajo porque los requests llegan con más de 5 minutos de diferencia, el beneficio real será menor al estimado aquí."
+    },
+    {
+      "q": "¿Cuál es el mínimo de tokens para activar el caching?",
+      "a": "Para Claude 3.7 Sonnet y Claude 3.5 Sonnet el bloque cacheado debe tener al menos 1.024 tokens. Para modelos Opus el mínimo es 2.048 tokens. Prompts base más cortos que ese umbral no se cachean aunque se use el parámetro correspondiente en la API."
+    },
+    {
+      "q": "¿Cómo afecta el cache hit rate al costo final?",
+      "a": "Es el factor más determinante. Con 0% hit rate todos los tokens base se escriben en caché (coste 1.25×), sin aprovechar lecturas baratas. Con 90% hit rate el 90% de los tokens base cuestan solo 0.1×, reduciendo el costo total de forma muy significativa. La calculadora permite ajustar este parámetro."
+    },
+    {
+      "q": "¿Qué diferencia hay entre Claude 3.7 Sonnet y Claude 3.5 Haiku en términos de costo?",
+      "a": "Claude 3.5 Haiku tiene precios aproximadamente 3-4× más bajos ($0.80 input, $4.00 output vs. $3.00/$15.00 de Sonnet). Para casos de uso que no requieren el máximo de razonamiento, Haiku con prompt caching puede ser la opción más económica."
+    },
+    {
+      "q": "¿Los tokens variables (mensaje del usuario) también se cachean?",
+      "a": "Generalmente no. El caching está diseñado para la parte estática del prompt (system prompt, documentos). Los tokens dinámicos por request (mensaje del usuario, contexto variable) se cobran siempre a precio de input normal. Esta calculadora los separa para reflejar esa distinción."
+    },
+    {
+      "q": "¿Cómo activo el prompt caching en la API?",
+      "a": "En la API de Anthropic se agrega el parámetro cache_control: {type: 'ephemeral'} al bloque del system prompt o al contenido que se quiere cachear. Anthropic gestiona el almacenamiento automáticamente. No requiere configuración adicional de infraestructura."
+    },
+    {
+      "q": "¿Esta calculadora incluye el costo de las herramientas (tools/function calling)?",
+      "a": "No. Los tokens de definición de herramientas también pueden cachearse pero no están incluidos en esta estimación. Si usás function calling extensivo, el costo real puede ser ligeramente mayor al calculado aquí."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Anthropic API Pricing",
+      "url": "https://www.anthropic.com/pricing",
+      "publisher": "Anthropic",
+      "date": "2026"
+    },
+    {
+      "name": "Prompt Caching — Anthropic Documentation",
+      "url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching",
+      "publisher": "Anthropic",
+      "date": "2026"
+    },
+    {
+      "name": "Claude 3.7 Sonnet — Model Card",
+      "url": "https://www.anthropic.com/claude/sonnet",
+      "publisher": "Anthropic",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar precios por millón de tokens (input, cache write, cache read, output) cuando Anthropic modifique su página de pricing. Verificar cambios en TTL de caché y umbrales mínimos de tokens cacheables."
+  },
+  "lastReviewed": "2026-04-27"
+}

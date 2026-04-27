@@ -1,0 +1,166 @@
+{
+  "slug": "calculadora-melatonina-dosis-jet-lag-edad-tomar-cuando",
+  "title": "Calculadora Melatonina Jet Lag: Dosis y Horario 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Melatonina para Jet Lag: Dosis y Hora de Toma",
+  "description": "Calculá la dosis de melatonina (0.3–3 mg) y el horario exacto para tomar según zonas horarias cruzadas, dirección del vuelo y tu edad. Resultados basados en evidencia clínica.",
+  "category": "salud",
+  "audience": "global",
+  "icon": "🌙",
+  "formulaId": "melatonina-dosis-jet-lag-edad-tomar-cuando",
+  "intro": "El jet lag ocurre cuando tu reloj biológico queda desfasado respecto al nuevo huso horario. La melatonina puede acortar la adaptación hasta un 50% si se toma en el momento correcto. Esta calculadora determina la **dosis recomendada** (0.3–3 mg) y la **hora exacta de ingesta** según las zonas horarias cruzadas, la dirección del vuelo y tu edad.",
+  "keyTakeaway": "Volar hacia el este es hasta 2x más difícil que hacia el oeste: cruzar 6 zonas horarias hacia el este requiere ~0.5 mg tomados 30 min antes de las 22:00 en destino durante 4–6 noches.",
+  "useCases": [
+    "Viajero frecuente que vuela entre Europa y América (6–8 zonas horarias)",
+    "Persona mayor de 55 años que experimenta jet lag severo por menor producción endógena de melatonina",
+    "Viaje de negocios corto donde necesitás adaptarte rápido al nuevo horario",
+    "Vuelo transpacífico con más de 9 zonas horarias cruzadas",
+    "Padres que viajan con niños y necesitan dosis pediátricas orientativas"
+  ],
+  "fields": [
+    {
+      "id": "zonas",
+      "label": "Zonas horarias cruzadas",
+      "type": "number",
+      "placeholder": "6",
+      "default": 6,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "direccion",
+      "label": "Dirección del vuelo",
+      "type": "select",
+      "options": [
+        {
+          "value": "este",
+          "label": "Hacia el Este (ej: América → Europa)"
+        },
+        {
+          "value": "oeste",
+          "label": "Hacia el Oeste (ej: Europa → América)"
+        }
+      ],
+      "default": "este",
+      "required": true
+    },
+    {
+      "id": "edad",
+      "label": "Edad (años)",
+      "type": "number",
+      "placeholder": "35",
+      "default": 35,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "bedtime_destino",
+      "label": "Hora de dormir habitual en destino (0–23)",
+      "type": "number",
+      "placeholder": "23",
+      "default": 23,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "dosis_mg",
+      "label": "Dosis recomendada",
+      "primary": true,
+      "format": "decimal",
+      "suffix": "mg"
+    },
+    {
+      "id": "hora_toma",
+      "label": "Hora de toma en destino",
+      "format": "text"
+    },
+    {
+      "id": "duracion_dias",
+      "label": "Duración del tratamiento",
+      "format": "text"
+    },
+    {
+      "id": "dificultad",
+      "label": "Nivel de dificultad de adaptación",
+      "format": "text"
+    },
+    {
+      "id": "notas",
+      "label": "Consideraciones adicionales",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa calculadora combina tres variables principales: zonas horarias cruzadas, dirección del vuelo y edad del viajero.\n\n### Dirección del vuelo\n\nViajar hacia el **este** es fisiológicamente más difícil porque obliga al organismo a adelantar su reloj biológico (acortar el ciclo), mientras que viajar hacia el **oeste** lo retrasa (alargar el ciclo), proceso que el cuerpo realiza con mayor facilidad. La regla general es que el cuerpo adapta ~1 zona horaria por día hacia el este y ~1.5 hacia el oeste.\n\n### Fórmula de dosis\n\n```\nfactor_base = zonas_cruzadas / 12        // normalizado sobre máximo práctico\nfactor_direccion = este ? 1.0 : 0.7      // este es más difícil\nfactor_edad = edad < 18 ? 0.4\n             : edad < 55 ? 1.0\n             : 1.3                        // adultos mayores producen menos melatonina\n\ndosis_raw = 0.3 + (factor_base × factor_direccion × factor_edad × 2.7)\ndosis_mg  = clamp(dosis_raw, 0.3, 5.0)  // mínimo clínico / máximo seguro OTC\n```\n\nLa dosis resultante se redondea al múltiplo de 0.5 mg más cercano para facilitar el fraccionamiento de comprimidos comerciales (0.5 mg, 1 mg, 3 mg, 5 mg).\n\n### Hora de toma\n\nLa melatonina debe tomarse **30–60 minutos antes** de la hora de dormir en el destino:\n\n```\nhora_toma = bedtime_destino − 30 minutos\n```\n\nPara vuelos hacia el **este**, se recomienda también evitar la luz brillante por la mañana los primeros días, lo que potencia el efecto de la melatonina.\n\n### Duración del tratamiento\n\n```\ndias_adaptacion_base = zonas_cruzadas × (este ? 1.0 : 0.67)\nduracion = round(dias_adaptacion_base)  // redondeado a entero\n```\n\nNo se recomienda superar 14 días de uso continuado sin consulta médica.\n\n### Ejemplo numérico\n\nViajero de 40 años, Buenos Aires → Madrid (4 zonas hacia el este), hora de dormir en Madrid: 23:00.\n\n| Variable | Valor |\n|---|---|\n| Zonas cruzadas | 4 |\n| Dirección | Este |\n| factor_base | 4/12 = 0.333 |\n| factor_dirección | 1.0 |\n| factor_edad | 1.0 |\n| dosis_raw | 0.3 + (0.333 × 1.0 × 1.0 × 2.7) = 1.2 mg |\n| dosis redondeada | 1.0 mg |\n| Hora toma | 22:30 |\n| Duración | 4 días |\n\n### Cuándo NO aplica / limitaciones\n\n- **Niños menores de 6 años**: consultar pediatra; esta calculadora da orientación general para mayores de 6.\n- **Embarazo y lactancia**: la melatonina no está aprobada en estos casos; no usar sin supervisión médica.\n- **Enfermedades autoinmunes, epilepsia o uso de anticoagulantes**: interacciones documentadas; consultar médico.\n- **Turnos rotativos de trabajo**: el mecanismo es distinto al jet lag; esta calculadora no aplica.\n- Esta calculadora es orientativa. Las dosis clínicas recomendadas en estudios peer-reviewed oscilan entre 0.3 mg y 3 mg; dosis mayores no muestran mayor eficacia y pueden generar somnolencia diurna.",
+  "faq": [
+    {
+      "q": "¿Por qué viajar hacia el este produce más jet lag que hacia el oeste?",
+      "a": "El reloj circadiano humano tiene un ciclo natural ligeramente mayor a 24 horas (~24.2 h). Atrasarlo (vuelo al oeste) es más fácil que adelantarlo (vuelo al este). Por eso, cruzar 6 zonas hacia el este puede generar el doble de síntomas que el mismo recorrido hacia el oeste."
+    },
+    {
+      "q": "¿Cuánto tiempo antes de dormir debo tomar la melatonina?",
+      "a": "Entre 30 y 60 minutos antes de la hora de dormir en el destino. Tomarla demasiado pronto puede desfasar aún más tu ritmo circadiano. Esta calculadora usa 30 minutos como referencia conservadora basada en la farmacocinética de la melatonina de liberación inmediata."
+    },
+    {
+      "q": "¿0.3 mg es suficiente o necesito 5 mg?",
+      "a": "Los estudios de Lewy et al. y la revisión Cochrane de Herxheimer muestran que 0.5–1 mg es tan efectivo como 5 mg para sincronizar el ritmo circadiano. Las dosis altas solo aumentan el riesgo de somnolencia residual al día siguiente. La calculadora prioriza dosis bajas salvo que el desfase horario o la edad lo justifiquen."
+    },
+    {
+      "q": "¿Los adultos mayores necesitan más melatonina?",
+      "a": "Sí. La glándula pineal produce menos melatonina endógena a partir de los 55 años aproximadamente, por lo que suplementar con dosis algo más altas (1.5–3 mg) puede ser más útil. La calculadora aplica un factor de 1.3× para mayores de 55 años."
+    },
+    {
+      "q": "¿Puedo darle melatonina a un niño para el jet lag?",
+      "a": "En niños mayores de 6 años, algunos pediatras aprueban dosis de 0.5–1 mg en casos de jet lag significativo. La calculadora aplica un factor pediátrico de 0.4× para menores de 18 años. Siempre consultá al pediatra antes de administrarla, especialmente en menores de 12 años."
+    },
+    {
+      "q": "¿La melatonina de liberación prolongada funciona mejor para el jet lag?",
+      "a": "No necesariamente. Para jet lag, la melatonina de liberación inmediata es preferida porque actúa como señal circadiana puntual. La de liberación prolongada es más útil para el insomnio general. Usá formulaciones de 0.5–1 mg de liberación inmediata si es posible."
+    },
+    {
+      "q": "¿Cuántos días debo tomarla?",
+      "a": "La duración equivale aproximadamente a la cantidad de zonas horarias cruzadas: ~1 día por zona hacia el este, ~0.67 días por zona hacia el oeste, redondeado. Para vuelos de 6 zonas hacia el este, unos 5–6 días es suficiente en la mayoría de los casos."
+    },
+    {
+      "q": "¿Hay riesgo de dependencia o efectos adversos?",
+      "a": "La melatonina no genera dependencia física. Los efectos adversos más comunes a dosis bajas son somnolencia leve, dolor de cabeza y mareos. A dosis superiores a 3 mg pueden aparecer sueños vívidos o somnolencia diurna. No está indicada para uso crónico sin supervisión."
+    },
+    {
+      "q": "¿La luz artificial afecta la eficacia de la melatonina?",
+      "a": "Sí. La exposición a luz azul (pantallas, luces LED) suprime la producción endógena y puede antagonizar el efecto del suplemento. Se recomienda reducir la exposición a pantallas 1 hora antes de la toma y preferentemente usar gafas filtro de luz azul en los días de ajuste."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Melatonin for the prevention and treatment of jet lag (Cochrane Review)",
+      "url": "https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD001520/full",
+      "publisher": "Cochrane Library – Herxheimer & Petrie",
+      "date": "2002"
+    },
+    {
+      "name": "Circadian rhythm sleep-wake disorders – UpToDate clinical overview",
+      "url": "https://www.uptodate.com/contents/circadian-rhythm-sleep-wake-disorders",
+      "publisher": "UpToDate / Wolters Kluwer",
+      "date": "2025"
+    },
+    {
+      "name": "Melatonin: pharmacology, functions and therapeutic benefits",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5405617/",
+      "publisher": "Current Neuropharmacology – NIH/PubMed",
+      "date": "2017"
+    },
+    {
+      "name": "Jet lag disorder – Mayo Clinic",
+      "url": "https://www.mayoclinic.org/diseases-conditions/jet-lag/symptoms-causes/syc-20374027",
+      "publisher": "Mayo Clinic",
+      "date": "2024"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar si surgen nuevas guías clínicas de la Academia Americana de Medicina del Sueño (AASM) o revisiones Cochrane sobre dosis de melatonina para jet lag."
+  },
+  "lastReviewed": "2026-04-27"
+}

@@ -1,0 +1,209 @@
+{
+  "slug": "calculadora-vino-por-mesa-evento-tinto-blanco-espumante",
+  "title": "Vino por Mesa en Eventos 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Vino por Mesa para Eventos",
+  "description": "Calculá cuántas botellas de tinto, blanco y espumante necesitás por mesa según invitados, duración y tipo de comida. Regla: 750 ml = 5 copas.",
+  "category": "cocina",
+  "audience": "global",
+  "icon": "🍷",
+  "formulaId": "vino-por-mesa-evento-tinto-blanco-espumante",
+  "intro": "Organizar un evento y no saber cuánto vino comprar es uno de los errores más comunes. Esta calculadora te dice exactamente cuántas botellas de **tinto, blanco y espumante** necesitás por mesa, usando la regla estándar de 5 copas por botella de 750 ml, ajustada por duración, porcentaje de bebedores y tipo de comida.",
+  "keyTakeaway": "En una cena de 3 horas con 10 personas por mesa y 80% de bebedores, una mesa típica consume entre 6 y 8 botellas entre tinto, blanco y espumante.",
+  "useCases": [
+    "Casamiento con múltiples mesas y servicio de vino propio",
+    "Cumpleaños de 15 o 18 con cena formal",
+    "Evento corporativo con almuerzo o cena",
+    "Cena de fin de año o celebración familiar",
+    "Brunch o festejo con espumante como protagonista"
+  ],
+  "fields": [
+    {
+      "id": "personasPorMesa",
+      "label": "Personas por mesa",
+      "type": "number",
+      "placeholder": "10",
+      "default": 10,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "mesas",
+      "label": "Cantidad de mesas",
+      "type": "number",
+      "placeholder": "5",
+      "default": 5,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "duracionHoras",
+      "label": "Duración del evento (horas)",
+      "type": "number",
+      "placeholder": "3",
+      "default": 3,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "porcentajeBebedores",
+      "label": "% de invitados que toman vino",
+      "type": "number",
+      "placeholder": "80",
+      "default": 80,
+      "step": 5,
+      "required": true
+    },
+    {
+      "id": "tipoComida",
+      "label": "Tipo de comida",
+      "type": "select",
+      "options": [
+        {
+          "value": "cocktail",
+          "label": "Cocktail / Aperitivo"
+        },
+        {
+          "value": "almuerzo",
+          "label": "Almuerzo formal"
+        },
+        {
+          "value": "cena",
+          "label": "Cena formal"
+        },
+        {
+          "value": "brunch",
+          "label": "Brunch"
+        }
+      ],
+      "default": "cena",
+      "required": true
+    },
+    {
+      "id": "proporcionTinto",
+      "label": "% de vino tinto",
+      "type": "number",
+      "placeholder": "50",
+      "default": 50,
+      "step": 5,
+      "required": true
+    },
+    {
+      "id": "proporcionBlanco",
+      "label": "% de vino blanco",
+      "type": "number",
+      "placeholder": "30",
+      "default": 30,
+      "step": 5,
+      "required": true
+    },
+    {
+      "id": "proporcionEspumante",
+      "label": "% espumante / champagne",
+      "type": "number",
+      "placeholder": "20",
+      "default": 20,
+      "step": 5,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "botellasTotalEvento",
+      "label": "Botellas totales para el evento",
+      "primary": true,
+      "format": "integer"
+    },
+    {
+      "id": "botellasPorMesa",
+      "label": "Botellas por mesa",
+      "primary": false,
+      "format": "decimal"
+    },
+    {
+      "id": "botellasTinto",
+      "label": "Botellas de tinto (evento)",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "botellasBlanco",
+      "label": "Botellas de blanco (evento)",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "botellasEspumante",
+      "label": "Botellas de espumante (evento)",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "copasPerCapita",
+      "label": "Copas por persona (estimado)",
+      "primary": false,
+      "format": "decimal"
+    },
+    {
+      "id": "detalle",
+      "label": "Resumen del cálculo",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa calculadora usa la regla estándar de la industria: **1 botella de 750 ml equivale a 5 copas de vino** (150 ml por copa). A partir de ahí, aplica factores según duración del evento y tipo de comida.\n\n### Copas por persona por hora\n\nEl consumo base se estima en **1 copa por persona por hora**, ajustado según el tipo de evento:\n\n| Tipo de comida | Factor de consumo |\n|---|---|\n| Cocktail / Aperitivo | 0.8 copas/hora |\n| Brunch | 0.9 copas/hora |\n| Almuerzo formal | 1.0 copas/hora |\n| Cena formal | 1.2 copas/hora |\n\n### Fórmula principal\n\n```\nbebedores_por_mesa = personasPorMesa × (porcentajeBebedores / 100)\ncopas_por_bebedor  = factorComida × duracionHoras\ncopas_totales_mesa = bebedores_por_mesa × copas_por_bebedor\nbotellas_por_mesa  = copas_totales_mesa / 5\nbotellas_total     = botellas_por_mesa × mesas  [redondeado hacia arriba]\n```\n\nLuego se distribuye el total según los porcentajes indicados:\n\n```\nbotellasTinto      = ceil(botellas_total × proporcionTinto / 100)\nbotellasBlanco     = ceil(botellas_total × proporcionBlanco / 100)\nbotellasEspumante  = ceil(botellas_total × proporcionEspumante / 100)\n```\n\nSe aplica un **redondeo hacia arriba** (ceil) en cada tipo para no quedarse corto.\n\n### Ejemplo numérico\n\nEvento: cena formal, 10 personas/mesa, 5 mesas, 3 horas, 80% bebedores, 50% tinto / 30% blanco / 20% espumante.\n\n```\nbebedores_mesa = 10 × 0.80 = 8 personas\ncopas_bebedor  = 1.2 × 3   = 3.6 copas\ncopas_mesa     = 8 × 3.6   = 28.8 copas\nbotellas_mesa  = 28.8 / 5  = 5.76 botellas\ntotal          = 5.76 × 5  = 28.8 → 29 botellas\ntinto          = ceil(29 × 0.50) = 15\nblanco         = ceil(29 × 0.30) = 9\nespumante      = ceil(29 × 0.20) = 6\n```\n\n### Consideraciones adicionales\n\n- Los porcentajes de tinto + blanco + espumante **no necesitan sumar exactamente 100%**; si no suman 100, el total por tipo puede diferir ligeramente del total general. Se recomienda que sumen 100 para un resultado coherente.\n- Este cálculo no incluye agua, gaseosas ni otras bebidas.\n- Para eventos con brindis de espumante al inicio, considerá agregar entre 1 y 2 botellas extra por mesa para ese momento puntual.\n- En climas muy cálidos el consumo de blanco y espumante suele ser mayor; ajustá los porcentajes según la temporada.\n\n## Cuándo NO aplica\n\n- Eventos con barra libre de alcohol donde hay rotación intensa y consumo imprevisible.\n- Degustaciones o wine pairing donde las porciones son de 60–80 ml (no 150 ml).\n- Celebraciones sin comida (solo bebida), donde el consumo puede ser 40–60% mayor.",
+  "faq": [
+    {
+      "q": "¿Por qué se usa 5 copas por botella y no 6?",
+      "a": "La medida estándar de servicio en eventos formales es 150 ml por copa, lo que da exactamente 5 copas por botella de 750 ml. En restaurantes a veces se sirven 125 ml (6 copas), pero para eventos se usa 150 ml para un servicio generoso y sin quedar corto."
+    },
+    {
+      "q": "¿Qué pasa si los porcentajes de tinto, blanco y espumante no suman 100%?",
+      "a": "La calculadora calcula cada tipo de forma independiente sobre el total. Si los porcentajes no suman 100, la suma de botellas por tipo será mayor o menor que el total general. Lo más práctico es asegurarse de que sumen 100% para que los números sean coherentes."
+    },
+    {
+      "q": "¿Cuántas botellas extra debo comprar como margen de seguridad?",
+      "a": "La práctica habitual en eventos es agregar un 10–15% sobre el total calculado como colchón. Para un evento de 30 botellas, considera tener 33–35. Muchos proveedores permiten devolver botellas sin abrir, así que es mejor pasarse que quedarse corto."
+    },
+    {
+      "q": "¿El espumante para el brindis va aparte?",
+      "a": "Sí. Si el brindis es un momento específico donde todos reciben una copa al mismo tiempo, calculá 1 botella cada 5 personas (o mesa, según el tamaño) por separado, y sumala al resultado de esta calculadora."
+    },
+    {
+      "q": "¿Cómo afecta el tipo de comida al consumo?",
+      "a": "Las cenas formales tienen mayor consumo porque el servicio es más prolongado y hay más platos para acompañar. Un cocktail es más corto e informal. El brunch tiene consumo moderado porque se mezcla con jugos y el horario es diurno, lo que reduce el consumo de vino."
+    },
+    {
+      "q": "¿Funciona para eventos grandes como casamientos de 200 personas?",
+      "a": "Sí. Ingresá la cantidad de mesas según tu disposición (por ejemplo, 20 mesas de 10 personas). El cálculo escala linealmente. Para eventos grandes es especialmente importante el margen de seguridad del 10–15%."
+    },
+    {
+      "q": "¿Qué hago si no sé exactamente qué porcentaje prefiere tinto vs blanco?",
+      "a": "Una distribución segura y común para cenas formales es 50% tinto, 30% blanco y 20% espumante. Para eventos de verano o con comida liviana, inclinarse más hacia blanco (40%) y espumante (25%) suele funcionar mejor."
+    },
+    {
+      "q": "¿El cálculo contempla que algunos invitados no toman alcohol?",
+      "a": "Sí, por eso existe el campo '% de invitados que toman vino'. Si sabés que el 20% no toma alcohol, configurá el porcentaje en 80. El cálculo aplica ese factor sobre el total de personas por mesa."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Wine Service Standards – Court of Master Sommeliers",
+      "url": "https://www.mastersommeliers.org",
+      "publisher": "Court of Master Sommeliers Americas",
+      "date": "2026"
+    },
+    {
+      "name": "Guía de servicio de vinos en eventos – Wines of Argentina",
+      "url": "https://www.winesofargentina.org",
+      "publisher": "Wines of Argentina",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Los factores de consumo por tipo de comida son convenciones de la industria; se revisan si cambian estándares de servicio reconocidos."
+  },
+  "lastReviewed": "2026-04-27"
+}

@@ -68,11 +68,12 @@ async function main() {
     run(task('formula-index', 'regenerate-formula-index')),
   ]);
 
-  console.log('[prebuild] fase 2: related, og, sitemap, stamp-sw (paralelo)');
+  console.log('[prebuild] fase 2: related, og, sitemap, search-index, stamp-sw (paralelo)');
   await Promise.all([
     run(task('related', 'compute-related')),
     run(task('og', 'generate-og-images')),
     run(task('sitemap', 'generate-sitemap')),
+    run(task('search-index', 'generate-search-index')),
     run(task('stamp-sw', 'stamp-sw')),
   ]);
 

@@ -1,0 +1,267 @@
+{
+  "slug": "calculadora-rwa-ondo-mountain-protocol-yield-tesoros-eeuu",
+  "title": "Calculadora Yield RWA Tokenizados 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Yield en RWA Tokenizados (Ondo, Mountain Protocol, T-Bills)",
+  "description": "Compará el yield neto de RWA tokenizados (Ondo OUSG, Mountain Protocol USDM, Backed bIB01) vs USDC en CEX y T-Bills directos. Incluye gas fees y retenciones 2026.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "🏛️",
+  "formulaId": "rwa-ondo-mountain-protocol-yield-tesoros-eeuu",
+  "intro": "Los RWA (Real World Assets) tokenizados permiten acceder al rendimiento de Treasuries de EE.UU. (~4.5% anual en 2026) desde una wallet. Esta calculadora compara el **yield neto real** de Ondo OUSG, Mountain Protocol USDM y Backed bIB01 contra mantener USDC en un CEX o comprar T-Bills directamente, descontando gas fees, spreads y costos de plataforma.",
+  "keyTakeaway": "Con USD 10.000 invertidos 12 meses, Ondo OUSG y Mountain USDM generan ~USD 420–440 netos vs ~USD 380–400 en CEX con staking de USDC, asumiendo Treasury yield del 4.5% y gas fees de ~USD 15–30 por operación en Ethereum.",
+  "useCases": [
+    "Inversor cripto que quiere exposición a Treasuries sin salir del ecosistema DeFi",
+    "Comparar si conviene más mantener USDC en Coinbase/Binance o pasarse a un RWA tokenizado",
+    "Calcular el punto de equilibrio donde las gas fees erosionan el diferencial de yield",
+    "Evaluar rendimiento para montos pequeños (<USD 1.000) donde los costos fijos impactan más",
+    "Planificar horizonte mínimo de inversión para que los RWA superen al CEX en yield neto",
+    "Estimar impacto de distintos escenarios de Treasury yield (bajada de tasas Fed 2026)"
+  ],
+  "fields": [
+    {
+      "id": "capital",
+      "label": "Capital a invertir (USD)",
+      "type": "number",
+      "placeholder": "10000",
+      "default": 10000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "plazo_meses",
+      "label": "Plazo de inversión (meses)",
+      "type": "number",
+      "placeholder": "12",
+      "default": 12,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "producto_rwa",
+      "label": "Producto RWA",
+      "type": "select",
+      "options": [
+        {
+          "value": "ousg",
+          "label": "Ondo OUSG (acceso KYC, mín. USD 5.000)"
+        },
+        {
+          "value": "usdm",
+          "label": "Mountain Protocol USDM (rebasing, sin mín.)"
+        },
+        {
+          "value": "bib01",
+          "label": "Backed bIB01 (Ethereum, mín. USD 1.000)"
+        }
+      ],
+      "default": "usdm",
+      "required": true
+    },
+    {
+      "id": "treasury_yield",
+      "label": "Treasury yield anual estimado (%)",
+      "type": "number",
+      "placeholder": "4.5",
+      "default": 4.5,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "red",
+      "label": "Red blockchain",
+      "type": "select",
+      "options": [
+        {
+          "value": "ethereum",
+          "label": "Ethereum (gas alto)"
+        },
+        {
+          "value": "polygon",
+          "label": "Polygon / Base (gas bajo)"
+        }
+      ],
+      "default": "ethereum",
+      "required": true
+    },
+    {
+      "id": "operaciones_gas",
+      "label": "Número de operaciones on-chain (entrada + salida)",
+      "type": "number",
+      "placeholder": "2",
+      "default": 2,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "cex_yield",
+      "label": "Yield USDC en CEX anual (%) — referencia",
+      "type": "number",
+      "placeholder": "4.0",
+      "default": 4.0,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "retenciones",
+      "label": "¿Aplicar retención de impuestos sobre rendimientos? (%)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 0.5,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "yield_bruto_rwa",
+      "label": "Yield bruto RWA (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "costo_plataforma_rwa",
+      "label": "Comisión / spread plataforma (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "costo_gas_total",
+      "label": "Gas fees estimados (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "costo_retenciones",
+      "label": "Retenciones impositivas (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "yield_neto_rwa",
+      "label": "Yield neto RWA (USD)",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "yield_neto_cex",
+      "label": "Yield neto CEX USDC (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "diferencial_usd",
+      "label": "Diferencial RWA vs CEX (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "tir_neta_rwa",
+      "label": "TIR neta anualizada RWA (%)",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "plazo_break_even_dias",
+      "label": "Plazo mínimo para superar CEX (días)",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula el yield neto en RWA tokenizados\n\nLos RWA tokenizados replican el rendimiento de instrumentos del Tesoro de EE.UU. (principalmente T-Bills a 3 meses y fondos de money market) dentro de contratos inteligentes. El yield que acumula el tenedor depende de cuánto del Treasury yield bruto translada el protocolo después de sus comisiones.\n\n### Parámetros por producto (2026)\n\n| Producto | Spread / Fee anual | Yield neto aprox. | Mínimo | KYC |\n|---|---|---|---|---|\n| Ondo OUSG | 0.15% mgmt fee | T-Bill − 0.15% | USD 5.000 | Sí (institucional) |\n| Mountain USDM | ~0.50% implícito | T-Bill × 0.995 aprox. | Sin mínimo | Sí (KYC básico) |\n| Backed bIB01 | 0.50% mgmt fee | iShares IB01 − 0.50% | USD 1.000 | Sí |\n| T-Bills directo | 0% | Treasury yield completo | USD 100 | Cuenta de broker |\n\n### Fórmula general\n\n```\nyield_bruto_rwa = capital × treasury_yield_anual × (plazo_meses / 12)\ncosto_plataforma = capital × fee_anual_producto × (plazo_meses / 12)\ncosto_gas = gas_por_operacion_red × numero_operaciones\ncosto_retenciones = (yield_bruto_rwa − costo_plataforma) × tasa_retencion\n\nyield_neto_rwa = yield_bruto_rwa − costo_plataforma − costo_gas − costo_retenciones\n\nyield_neto_cex = capital × cex_yield_anual × (plazo_meses / 12)\n\ndiferencial = yield_neto_rwa − yield_neto_cex\n\ntir_neta_rwa (%) = (yield_neto_rwa / capital) × (12 / plazo_meses) × 100\n```\n\n### Gas fees estimados (Ethereum vs L2, 2026)\n\n| Red | Gas por operación (estimado) |\n|---|---|\n| Ethereum mainnet | USD 15–25 por tx |\n| Polygon / Base / Arbitrum | USD 0.05–0.50 por tx |\n\nEsta calculadora usa USD 20 por operación en Ethereum y USD 0.30 en redes L2/Polygon.\n\n### Ejemplo numérico\n\nCapital USD 10.000, Treasury yield 4.5%, Mountain USDM, plazo 12 meses, Ethereum, 2 operaciones, sin retenciones, CEX yield 4.0%:\n\n- Yield bruto: 10.000 × 4.5% = **USD 450**\n- Fee USDM (0.50%): 10.000 × 0.50% = **USD 50**\n- Gas (2 ops × USD 20): **USD 40**\n- Retenciones: USD 0\n- **Yield neto RWA: USD 360**\n- Yield neto CEX: 10.000 × 4.0% = **USD 400**\n- Diferencial: **−USD 40** (el CEX gana en este caso por el gas)\n\nSi se usa Base/Polygon (gas ~USD 0.60 total), el yield neto RWA sube a ~USD 399, casi igualando el CEX.\n\n### Break-even de plazo\n\nEl plazo mínimo para que el RWA supere al CEX se calcula resolviendo cuándo el diferencial de yield anual compensa los costos fijos de gas:\n\n```\nplazo_break_even = costo_gas / ((yield_rwa_diario − yield_cex_diario) × capital)\n```\n\nSi el yield RWA es menor al CEX (producto con fee alto), el break-even no existe.\n\n### Cuándo NO aplica\n\n- **Restricciones geográficas**: Ondo OUSG está restringido a inversores acreditados en muchos países. Backed bIB01 excluye residentes de EE.UU.\n- **Riesgo smart contract**: el yield calculado es financiero; no incluye riesgo de hack o depeg.\n- **Variabilidad del Treasury yield**: si la Fed baja tasas durante el período, el yield real será menor al estimado.\n- **Retenciones country-specific**: la calculadora acepta un % manual; consultá tu jurisdicción (p.ej. 30% withholding para no residentes EE.UU. sobre intereses en algunos casos).\n- **Liquidez**: OUSG tiene períodos de withdrawal de 1–2 días hábiles; USDM es más líquido pero el rebasing puede generar eventos imponibles en ciertas jurisdicciones.",
+  "faq": [
+    {
+      "q": "¿Qué es un RWA tokenizado y en qué se diferencia de un stablecoin?",
+      "a": "Un RWA tokenizado representa un activo real (como T-Bills) en blockchain. A diferencia de un stablecoin como USDC, que vale siempre USD 1 sin rendimiento directo, un RWA como USDM o OUSG acumula el yield del activo subyacente, ya sea via rebasing (más tokens) o apreciación del precio del token."
+    },
+    {
+      "q": "¿Cuál es el Treasury yield de referencia que usan estos protocolos en 2026?",
+      "a": "En 2026 el rendimiento de T-Bills a 3 meses de EE.UU. se ubica en torno al 4.3%–4.6% anual, dependiendo del ciclo de la Fed. Los protocolos usan fondos como BlackRock BUIDL, iShares IB01 o T-Bills directos como activo subyacente, con yields que reflejan ese benchmark menos la fee del protocolo."
+    },
+    {
+      "q": "¿Ondo OUSG requiere KYC? ¿Puedo acceder desde cualquier país?",
+      "a": "Sí, Ondo OUSG exige KYC institucional y está disponible solo para inversores calificados fuera de EE.UU. (en EE.UU. solo inversores acreditados). El monto mínimo es USD 5.000. Mountain Protocol USDM tiene acceso más amplio con KYC básico y sin monto mínimo relevante."
+    },
+    {
+      "q": "¿Por qué a veces el CEX supera al RWA en yield neto?",
+      "a": "Cuando el capital es bajo (p.ej. menos de USD 2.000) y se usa Ethereum mainnet, los gas fees fijos de USD 30–50 consumen una parte significativa del diferencial de yield. Con redes L2 como Base o Polygon, los fees bajan a centavos y el RWA suele ganar."
+    },
+    {
+      "q": "¿Mountain Protocol USDM paga rendimientos via rebasing? ¿Qué implica eso?",
+      "a": "Sí, USDM usa rebasing: la cantidad de tokens en tu wallet aumenta diariamente para reflejar el yield acumulado. Cada rebase puede ser considerado un evento imponible en algunas jurisdicciones (como EE.UU.). Revisá tu situación fiscal antes de elegir este producto."
+    },
+    {
+      "q": "¿Backed bIB01 tiene acceso desde Latinoamérica?",
+      "a": "Backed Finance permite acceso a residentes de varios países, incluidos muchos en Latinoamérica, con KYC estándar y mínimo de USD 1.000. Ciudadanos y residentes de EE.UU. están excluidos. Siempre verificá los términos actualizados en el sitio oficial de Backed."
+    },
+    {
+      "q": "¿El yield de estos productos es fijo o variable?",
+      "a": "Es variable: el rendimiento sigue el de los T-Bills subyacentes, que cambia con las decisiones de política monetaria de la Fed. En períodos de baja de tasas, el yield disminuye. Esta calculadora permite ajustar el Treasury yield para simular distintos escenarios."
+    },
+    {
+      "q": "¿Cómo afectan las retenciones fiscales al rendimiento neto?",
+      "a": "Inversores no residentes en EE.UU. pueden estar sujetos a withholding tax de hasta 30% sobre intereses de fuente americana, aunque muchos tratados bilaterales lo reducen al 10%–15%. El impacto sobre USD 10.000 al 4.5% sería USD 135 de retención a 30%, reduciendo el neto de USD 450 a USD 315."
+    },
+    {
+      "q": "¿Cuál es el riesgo principal de estos productos que esta calculadora no captura?",
+      "a": "El riesgo de smart contract (hackeos, exploits), riesgo de contraparte del custodio del activo subyacente, riesgo regulatorio (cambios en normativa de valores que puedan suspender el producto) y riesgo de liquidez en eventos de estrés de mercado. El cálculo aquí es puramente financiero."
+    },
+    {
+      "q": "¿Conviene más T-Bills directo que cualquier RWA tokenizado?",
+      "a": "En términos de yield bruto, sí: los T-Bills directos no tienen fee de plataforma ni gas. Pero requieren cuenta de broker en EE.UU. o acceso via plataformas como TreasuryDirect, con restricciones para no residentes. Los RWA tokenizados ofrecen acceso global, composabilidad DeFi y liquidez 24/7 a cambio del costo de plataforma."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ondo Finance — OUSG Documentation",
+      "url": "https://docs.ondo.finance/ondo-finance/ousg",
+      "publisher": "Ondo Finance",
+      "date": "2026"
+    },
+    {
+      "name": "Mountain Protocol — USDM Overview",
+      "url": "https://mountainprotocol.com/usdm",
+      "publisher": "Mountain Protocol",
+      "date": "2026"
+    },
+    {
+      "name": "Backed Finance — bIB01 Product Page",
+      "url": "https://backed.fi/bib01",
+      "publisher": "Backed Finance",
+      "date": "2026"
+    },
+    {
+      "name": "U.S. Treasury — Daily Treasury Bill Rates",
+      "url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_bill_rates",
+      "publisher": "U.S. Department of the Treasury",
+      "date": "2026"
+    },
+    {
+      "name": "Federal Reserve — Policy Rate Decisions 2026",
+      "url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm",
+      "publisher": "Federal Reserve",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar Treasury yield de referencia mensualmente. Revisar fees de plataforma (Ondo, Mountain, Backed) ante cambios en sus docs oficiales. Ajustar gas fees estimados si cambian condiciones de red Ethereum o L2.",
+    "source": "Ondo Finance — OUSG Documentation",
+    "sourceUrl": "https://docs.ondo.finance/ondo-finance/ousg"
+  },
+  "lastReviewed": "2026-04-27"
+}

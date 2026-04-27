@@ -1,0 +1,209 @@
+{
+  "slug": "calculadora-aave-flash-loan-arbitraje-fee-net-profit",
+  "title": "Aave Flash Loan Arbitrage Net Profit 2026 | Hacé Cuentas",
+  "h1": "Aave Flash Loan: Profit Neto de Arbitraje",
+  "description": "Calculá el profit neto de arbitraje con Aave flash loans. Ingresá monto, spread entre exchanges, gas en gwei y ETH/USD. Resultado en segundos.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "⚡",
+  "formulaId": "aave-flash-loan-arbitraje-fee-net-profit",
+  "intro": "Un **flash loan de Aave** te permite tomar prestado cualquier monto sin colateral, ejecutar arbitraje entre dos exchanges y devolver el préstamo en la misma transacción. Si el spread cubre la fee de Aave (0.05%) y el costo de gas, el trade es rentable. Esta calculadora te muestra el profit neto y el gas price máximo tolerable.",
+  "keyTakeaway": "Con un loan de 100,000 USD y spread del 0.2%, el profit bruto es 200 USD; descontando la fee Aave (50 USD) y gas típico (~8 USD a 30 gwei), el profit neto ronda los 142 USD.",
+  "useCases": [
+    "Evaluar si un spread detectado entre dos DEX/CEX justifica ejecutar el flash loan",
+    "Calcular el gas price máximo tolerable antes de que el trade deje de ser rentable",
+    "Comparar rentabilidad según tamaño de loan para optimizar capital",
+    "Estimar costos reales antes de deployar un bot de arbitraje",
+    "Enseñar el mecanismo de flash loans con números concretos"
+  ],
+  "fields": [
+    {
+      "id": "loanAmount",
+      "label": "Monto del flash loan (USD)",
+      "type": "number",
+      "placeholder": "100000",
+      "default": 100000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "spreadPct",
+      "label": "Spread entre exchanges (%)",
+      "type": "number",
+      "placeholder": "0.20",
+      "default": 0.2,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "gasUnits",
+      "label": "Gas units estimado",
+      "type": "number",
+      "placeholder": "200000",
+      "default": 200000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "gasPriceGwei",
+      "label": "Gas price actual (gwei)",
+      "type": "number",
+      "placeholder": "30",
+      "default": 30,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "ethUsd",
+      "label": "Precio de ETH (USD)",
+      "type": "number",
+      "placeholder": "3200",
+      "default": 3200,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "slippagePct",
+      "label": "Slippage estimado (%)",
+      "type": "number",
+      "placeholder": "0.05",
+      "default": 0.05,
+      "step": 0.01,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "grossProfit",
+      "label": "Profit bruto",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "aaveFee",
+      "label": "Fee Aave (0.05%)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "gasCostUsd",
+      "label": "Costo de gas",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "slippageCost",
+      "label": "Costo slippage",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "netProfit",
+      "label": "Profit neto",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "breakevenGwei",
+      "label": "Gas price máximo (breakeven)",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "gwei"
+    },
+    {
+      "id": "roiPct",
+      "label": "ROI sobre loan",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "verdict",
+      "label": "Diagnóstico",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula el profit neto de un flash loan\n\nUn flash loan es atómico: el préstamo, el arbitraje y la devolución ocurren en un único bloque de Ethereum. Si algún paso falla, toda la transacción revierte y solo se pierde el gas de la transacción fallida.\n\n## Fórmulas\n\n```\nGross Profit   = loanAmount × (spreadPct / 100)\nAave Fee       = loanAmount × 0.0005            // 0.05% fijo Aave v3\nSlippage Cost  = loanAmount × (slippagePct / 100)\nGas Cost (USD) = gasUnits × gasPriceGwei × 1e-9 × ethUsd\nNet Profit     = Gross Profit − Aave Fee − Slippage Cost − Gas Cost\n\nBreakeven Gas Price (gwei) =\n  (Gross Profit − Aave Fee − Slippage Cost)\n  / (gasUnits × 1e-9 × ethUsd)\n\nROI (%) = Net Profit / loanAmount × 100\n```\n\n## Ejemplo numérico\n\n| Parámetro | Valor |\n|---|---|\n| Loan | 100,000 USD |\n| Spread | 0.20% |\n| Gas units | 200,000 |\n| Gas price | 30 gwei |\n| ETH/USD | 3,200 |\n| Slippage | 0.05% |\n\n- Gross Profit = 100,000 × 0.002 = **200.00 USD**\n- Aave Fee = 100,000 × 0.0005 = **50.00 USD**\n- Slippage Cost = 100,000 × 0.0005 = **50.00 USD**\n- Gas Cost = 200,000 × 30 × 1e-9 × 3,200 = **19.20 USD**\n- **Net Profit = 200 − 50 − 50 − 19.20 = 80.80 USD**\n- Breakeven gas = (200 − 50 − 50) / (200,000 × 1e-9 × 3,200) ≈ **156.25 gwei**\n\n## Consideraciones adicionales\n\n- **Gas units reales**: un flash loan simple con 2 swaps en Uniswap v3 ronda 150,000–300,000 gas. Contratos más complejos (3+ hops, puentes) pueden superar 500,000.\n- **Aave v3 fee**: actualmente 0.05% (5 bps) sobre el monto tomado, devengado al momento del repago.\n- **Slippage**: en pools con liquidez baja o montos grandes, el slippage efectivo puede superar lo estimado. Modelalo de forma conservadora.\n- **MEV / frontrunning**: bots MEV pueden ver tu transacción en el mempool y sandwichearla, capturando parte o todo el spread. Usar Flashbots Protect o private RPC mitiga esto.\n\n## Cuándo NO aplica / Limitaciones\n\n- Esta calculadora asume que el spread es capturables íntegramente (no hay impacto de precio en el loan). En la práctica, montos grandes mueven el mercado.\n- No contempla costos de desarrollo, auditoría ni hosting de infraestructura.\n- Las tasas de gas varían segundo a segundo; usar un estimador en tiempo real (eth_gasPrice, EIP-1559 baseFee + priority) antes de ejecutar.\n- Aave puede actualizar la fee en futuras versiones; verificar en la documentación oficial de Aave.",
+  "faq": [
+    {
+      "q": "¿Qué es exactamente un flash loan de Aave?",
+      "a": "Es un préstamo sin colateral que se toma y devuelve (con fee) dentro de la misma transacción Ethereum. Si no se devuelve, la transacción revierte completa. Aave v3 cobra 0.05% del monto prestado como fee."
+    },
+    {
+      "q": "¿Cuál es la fee actual de Aave v3 para flash loans?",
+      "a": "0.05% (5 basis points) sobre el monto total del préstamo. Para un loan de 100,000 USD la fee es 50 USD. Esta tasa puede ser modificada por gobernanza de Aave."
+    },
+    {
+      "q": "¿Cuánto gas consume un flash loan típico?",
+      "a": "Un arbitraje simple entre dos pools Uniswap v3 via flash loan ronda 180,000–250,000 gas. Con lógica adicional (múltiples hops, oráculos, conversiones) puede superar 400,000–500,000 gas."
+    },
+    {
+      "q": "¿Qué es el breakeven gas price?",
+      "a": "Es el gas price máximo (en gwei) al que el trade sigue siendo rentable después de descontar la fee de Aave y el slippage. Si el gas price de red supera ese valor, el trade genera pérdida neta."
+    },
+    {
+      "q": "¿Por qué incluir slippage si el spread ya está dado?",
+      "a": "El spread lo observás antes de ejecutar, pero al ejecutar el swap en cadena, el tamaño del trade mueve el precio del pool (price impact). El slippage estima esa pérdida adicional. Para montos grandes puede ser mayor al spread mismo."
+    },
+    {
+      "q": "¿Puedo perder dinero ejecutando un flash loan?",
+      "a": "Si el trade revierte (spread desapareció, slippage mayor al esperado), solo perdés el gas de la transacción fallida, no el principal. Sin embargo, si el contrato tiene un bug, los fondos intermedios podrían estar en riesgo."
+    },
+    {
+      "q": "¿Qué es MEV y cómo afecta el profit?",
+      "a": "MEV (Maximal Extractable Value) es cuando bots monitorean el mempool y ejecutan transacciones delante o alrededor de la tuya (sandwich attack), capturando el spread antes que vos. Se mitiga con RPC privados como Flashbots Protect."
+    },
+    {
+      "q": "¿El cálculo aplica a otras redes (Polygon, Arbitrum, Base)?",
+      "a": "La lógica es idéntica pero los costos de gas son mucho menores. En Arbitrum o Base, el gas total por transacción puede ser menos de 0.10 USD, haciendo viables spreads muy pequeños. Ajustá el precio de ETH y gas price según la red."
+    },
+    {
+      "q": "¿Qué spread mínimo necesito para que sea rentable?",
+      "a": "El spread debe cubrir al menos: Aave fee (0.05%) + slippage estimado + gas / loanAmount. Con un loan de 50,000 USD y gas de 15 USD, necesitás un spread mínimo de ~0.08% solo para cubrir costos fijos."
+    },
+    {
+      "q": "¿Esta calculadora sirve para flash loans en Aave v2 también?",
+      "a": "Sí, con una diferencia: Aave v2 cobra 0.09% de fee (9 bps) en lugar de 0.05%. Podés ajustar el cálculo mentalmente multiplicando el resultado de la Aave fee por 1.8x si usás v2."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Aave v3 Flash Loans Documentation",
+      "url": "https://docs.aave.com/developers/guides/flash-loans",
+      "publisher": "Aave Protocol",
+      "date": "2026"
+    },
+    {
+      "name": "Aave v3 Technical Paper — Fee Structure",
+      "url": "https://github.com/aave/aave-v3-core/blob/master/techpaper/Aave_V3_Technical_Paper.pdf",
+      "publisher": "Aave Labs",
+      "date": "2026"
+    },
+    {
+      "name": "EIP-1559: Fee market change for ETH 1.0 chain",
+      "url": "https://eips.ethereum.org/EIPS/eip-1559",
+      "publisher": "Ethereum Foundation",
+      "date": "2021"
+    },
+    {
+      "name": "Flashbots Protect — MEV mitigation",
+      "url": "https://protect.flashbots.net/",
+      "publisher": "Flashbots",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar si Aave governance modifica la fee de flash loans (actualmente 0.05% en v3). Gas units de referencia pueden cambiar con upgrades de la EVM o cambios en contratos de Uniswap/Curve.",
+    "source": "Aave v3 Flash Loans Documentation",
+    "sourceUrl": "https://docs.aave.com/developers/guides/flash-loans"
+  },
+  "lastReviewed": "2026-04-27"
+}

@@ -1,0 +1,257 @@
+{
+  "slug": "calculadora-cripto-cedears-versus-usd-broker-rentabilidad-ar",
+  "title": "Cripto vs CEDEARs vs USD Broker: Rentabilidad 2026 | Hacé Cuentas",
+  "h1": "Cripto vs CEDEARs vs USD Broker: Rentabilidad 12 meses",
+  "description": "Compará rentabilidad esperada a 12 meses entre cripto (BTC, ETH), CEDEARs (AAPL, MSFT, NVDA) y USD broker (AL30, Treasury). Comisiones, impuestos y liquidez incluidos.",
+  "category": "finanzas",
+  "audience": "AR",
+  "icon": "📊",
+  "formulaId": "cripto-cedears-versus-usd-broker-rentabilidad-ar",
+  "intro": "¿Dónde conviene poner tus dólares en Argentina? Esta calculadora compara tres alternativas reales para el inversor local: **cripto blue chip** (BTC o ETH), **CEDEARs** de empresas tech (AAPL, MSFT, NVDA) y **instrumentos en USD vía broker** (AL30 o Treasury ETF). Ingresá tu capital, elegí activo y perfil de riesgo, y obtenés la rentabilidad neta estimada a 12 meses descontando comisiones e impuestos.",
+  "keyTakeaway": "Un capital de USD 5.000 en BTC con retorno esperado del 40% genera ~USD 1.820 netos tras comisiones del 1% y el impuesto a las ganancias del 15% sobre la ganancia para personas humanas en Argentina en 2026.",
+  "useCases": [
+    "Decidir si mover ahorros de CEDEARs a cripto tras una corrección del mercado",
+    "Comparar rendimiento neto de bonos AL30 vs NVDA para un horizonte de 12 meses",
+    "Estimar cuánto queda en el bolsillo tras impuestos y comisiones de cada alternativa",
+    "Evaluar si la liquidez adicional de cripto justifica mayor volatilidad frente a CEDEARs",
+    "Planificar cartera dolarizada combinando dos o tres instrumentos"
+  ],
+  "fields": [
+    {
+      "id": "capital_usd",
+      "label": "Capital a invertir (USD)",
+      "type": "number",
+      "placeholder": "5000",
+      "default": 5000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "activo",
+      "label": "Activo a evaluar",
+      "type": "select",
+      "options": [
+        {
+          "value": "btc",
+          "label": "Bitcoin (BTC)"
+        },
+        {
+          "value": "eth",
+          "label": "Ethereum (ETH)"
+        },
+        {
+          "value": "aapl",
+          "label": "CEDEAR AAPL (Apple)"
+        },
+        {
+          "value": "msft",
+          "label": "CEDEAR MSFT (Microsoft)"
+        },
+        {
+          "value": "nvda",
+          "label": "CEDEAR NVDA (NVIDIA)"
+        },
+        {
+          "value": "al30",
+          "label": "Bono AL30 USD"
+        },
+        {
+          "value": "treasury",
+          "label": "Treasury ETF (TLT/IEF)"
+        }
+      ],
+      "default": "btc",
+      "required": true
+    },
+    {
+      "id": "retorno_esperado_pct",
+      "label": "Retorno bruto esperado 12 meses (%)",
+      "type": "number",
+      "placeholder": "40",
+      "default": 40,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "broker_comision_pct",
+      "label": "Comisión del broker / exchange (%)",
+      "type": "number",
+      "placeholder": "1",
+      "default": 1,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "perfil_impositivo",
+      "label": "Perfil impositivo",
+      "type": "select",
+      "options": [
+        {
+          "value": "persona_humana",
+          "label": "Persona humana (Ganancias cedular 15%)"
+        },
+        {
+          "value": "empresa",
+          "label": "Empresa / Sociedad (Ganancias 35%)"
+        },
+        {
+          "value": "exento",
+          "label": "Exento / No declarado (0%)"
+        }
+      ],
+      "default": "persona_humana",
+      "required": true
+    },
+    {
+      "id": "incluir_bienes_personales",
+      "label": "¿Incluir impacto Bienes Personales?",
+      "type": "radio",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí (0,5% sobre saldo final)"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ],
+      "default": "no",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "ganancia_bruta_usd",
+      "label": "Ganancia bruta estimada",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "costo_comision_usd",
+      "label": "Costo comisiones broker/exchange",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "impuesto_ganancias_usd",
+      "label": "Impuesto a las Ganancias (cedular)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "impuesto_bp_usd",
+      "label": "Impuesto Bienes Personales estimado",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "ganancia_neta_usd",
+      "label": "Ganancia neta en mano",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "rentabilidad_neta_pct",
+      "label": "Rentabilidad neta sobre capital",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "capital_final_usd",
+      "label": "Capital final estimado",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "resumen_activo",
+      "label": "Perfil del activo",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEl modelo aplica tres capas de descuento sobre el retorno bruto ingresado: **comisiones**, **impuesto a las Ganancias cedular** y, de forma opcional, **Bienes Personales**.\n\n### Fórmula\n\n```\nGanancia bruta = Capital × (Retorno% / 100)\n\nCosto comisión = Capital × (Comisión% / 100)\n\nBase imponible Ganancias = Ganancia bruta − Costo comisión\n\nImpuesto Ganancias = Base imponible × Tasa cedular\n  → Persona humana: 15%  (art. 98 LIG, Ley 27.430 actualizada)\n  → Sociedad:       35%\n  → Exento:          0%\n\nSaldo antes de BP = Capital + Ganancia bruta − Costo comisión − Impuesto Ganancias\n\nBienes Personales = Saldo antes de BP × 0,005  (si aplica)\n\nGanancia neta = Ganancia bruta − Costo comisión − Impuesto Ganancias − BP\n\nRentabilidad neta % = (Ganancia neta / Capital) × 100\n\nCapital final = Capital + Ganancia neta\n```\n\n### Ejemplo numérico\n\nCapital: USD 5.000 | Activo: BTC | Retorno esperado: 40% | Comisión: 1% | Persona humana | Sin BP\n\n| Concepto | Cálculo | Resultado |\n|---|---|---|\n| Ganancia bruta | 5.000 × 0,40 | USD 2.000 |\n| Comisión exchange | 5.000 × 0,01 | USD 50 |\n| Base imponible | 2.000 − 50 | USD 1.950 |\n| Ganancias 15% | 1.950 × 0,15 | USD 292,50 |\n| Ganancia neta | 2.000 − 50 − 292,50 | **USD 1.657,50** |\n| Rentabilidad neta | 1.657,50 / 5.000 | **33,15%** |\n| Capital final | 5.000 + 1.657,50 | **USD 6.657,50** |\n\n### Perfiles de riesgo/liquidez por activo\n\n| Activo | Volatilidad histórica anual | Liquidez | Retorno hist. 5 años |\n|---|---|---|---|\n| BTC | Muy alta (70-80%) | 24/7 instantánea | +150% CAGR aprox. |\n| ETH | Alta (65-75%) | 24/7 instantánea | +90% CAGR aprox. |\n| AAPL CEDEAR | Media (20-30%) | Horario BYMA | +15% CAGR aprox. |\n| MSFT CEDEAR | Media (20-28%) | Horario BYMA | +18% CAGR aprox. |\n| NVDA CEDEAR | Muy alta (50-60%) | Horario BYMA | +80% CAGR aprox. |\n| AL30 USD | Baja-media (10-15%) | Mercado local | Rend. corriente ~9% |\n| Treasury ETF | Baja (8-12%) | Horario NYSE vía broker | Rend. corriente ~4-5% |\n\n### Notas impositivas 2026\n\n**Ganancias cedular (art. 98 Ley 27.430):** Las ganancias de capital de personas humanas por venta de activos financieros —incluyendo CEDEARs, criptomonedas y bonos— tributan al **15%** si el resultado está en moneda extranjera o ajustado por inflación. Las sociedades aplican tasa general del **35%**. La ley de Finanzas Descentralizadas aún no fue aprobada al cierre de esta versión; se utiliza el régimen vigente.\n\n**Bienes Personales:** Alícuota del **0,50%** para activos financieros locales y del exterior bajo el régimen general 2026 (Ley 27.743 de Reforma Tributaria). El RIGI y el blanqueo 2024-2025 eximen a activos declarados bajo esos regímenes.\n\n### Cuándo NO aplica / Limitaciones\n\n- El retorno esperado es ingresado por el usuario: **la calculadora no predice precios**.\n- No contempla diferencias cambiarias por tipo de cambio (MEP, CCL, oficial) en el caso de CEDEARs operados en ARS.\n- No incluye costos de custodia de exchanges ni aranceles BYMA (derechos de mercado ~0,06%).\n- Para cripto, no considera el costo de gas (Ethereum) ni comisiones de red.\n- La situación impositiva individual puede variar; consultá a un contador matriculado.",
+  "faq": [
+    {
+      "q": "¿Las criptomonedas pagan Ganancias en Argentina?",
+      "a": "Sí. Desde la Ley 27.430, las ganancias por venta de criptomonedas tributan como renta financiera de segunda categoría. Para personas humanas la alícuota cedular es del 15% cuando el resultado se expresa en moneda extranjera. La AFIP/ARCA requiere declararlo en la Declaración Jurada anual."
+    },
+    {
+      "q": "¿Qué es un CEDEAR y cómo difiere de comprar acciones directamente?",
+      "a": "Un CEDEAR es un certificado que representa acciones extranjeras (AAPL, MSFT, NVDA, etc.) depositadas en el exterior y negociadas en BYMA en pesos o dólares. Te da exposición a la acción subyacente con liquidez en horario local, sin necesidad de cuenta en el exterior, aunque pagás el spread del ratio de conversión y las comisiones de BYMA."
+    },
+    {
+      "q": "¿Qué tasa de Bienes Personales corresponde a cripto y CEDEARs?",
+      "a": "En 2026, bajo la Ley 27.743, la alícuota general para activos financieros —incluyendo CEDEARs y criptomonedas— es del 0,50% sobre el valor al 31 de diciembre. Los activos declarados bajo el blanqueo 2024 pueden estar exentos durante el período de gracia."
+    },
+    {
+      "q": "¿El AL30 paga Ganancias sobre la renta de cupones?",
+      "a": "Los bonos soberanos argentinos en USD (AL30, GD30) están exentos de Ganancias para personas humanas residentes en Argentina sobre los intereses de cupón, conforme al art. 26 inciso k de la LIG. Sin embargo, la ganancia de capital por diferencia de precio sí podría quedar alcanzada."
+    },
+    {
+      "q": "¿Qué comisión cobra típicamente un broker/exchange argentino?",
+      "a": "Los exchanges cripto locales (Lemon, Belo, Ripio) cobran entre 0,5% y 1,5% por operación. Los brokers de CEDEARs y bonos en Argentina (IOL, Bull Market, PPI) cobran entre 0,5% y 1% de derechos de comisión más aranceles BYMA de ~0,06%. El campo de comisión es editable para reflejar tu broker."
+    },
+    {
+      "q": "¿Cómo afecta el tipo de cambio al rendimiento de los CEDEARs?",
+      "a": "Si operás CEDEARs en ARS, el precio sigue al tipo de cambio implícito (CCL) más la variación de la acción subyacente en USD. Esta calculadora asume que tu retorno esperado ya está expresado en USD equivalente. Si tu referencia es en ARS, convertí el retorno esperado a USD antes de ingresarlo."
+    },
+    {
+      "q": "¿Puedo combinar dos activos en la misma simulación?",
+      "a": "Esta calculadora evalúa un activo a la vez. Para comparar dos alternativas, corrés la simulación dos veces con el mismo capital y horizonte, y comparás los resultados de 'Ganancia neta' y 'Rentabilidad neta %'. Una versión futura puede incluir comparación lado a lado."
+    },
+    {
+      "q": "¿Qué pasa si el retorno es negativo (pérdida)?",
+      "a": "Si ingresás un retorno negativo, la calculadora muestra la pérdida bruta y descuenta las comisiones. No se aplica impuesto a las Ganancias sobre pérdidas (quebranto), aunque el quebranto puede compensarse con ganancias futuras de la misma categoría. Bienes Personales aplica igual sobre el saldo final si corresponde."
+    },
+    {
+      "q": "¿El Treasury ETF (TLT/IEF) paga impuestos en Argentina?",
+      "a": "Sí. Si lo operás vía broker del exterior (cuenta en Interactive Brokers, por ejemplo), la ganancia de capital tributa como renta de fuente extranjera al 15% cedular para personas humanas. Los dividendos o distribuciones pueden tener retención en origen de EE.UU. (30% para no residentes sin treaty)."
+    },
+    {
+      "q": "¿Esta calculadora actualiza los retornos históricos automáticamente?",
+      "a": "No. Los retornos históricos en la tabla de perfiles son referenciales y se actualizan manualmente cada semestre. El campo 'Retorno bruto esperado' es 100% editable: ingresá tu propia proyección basada en análisis propio o de tu asesor."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ley 27.430 — Impuesto a las Ganancias, Renta Financiera",
+      "url": "https://www.afip.gob.ar/impuestos/rentas-financieras.asp",
+      "publisher": "AFIP / ARCA",
+      "date": "2026"
+    },
+    {
+      "name": "Ley 27.743 — Reforma Tributaria, Bienes Personales 2024-2026",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/309724/20240708",
+      "publisher": "Boletín Oficial de la República Argentina",
+      "date": "2024"
+    },
+    {
+      "name": "BYMA — Aranceles y derechos de mercado vigentes",
+      "url": "https://www.byma.com.ar/inversores/aranceles/",
+      "publisher": "Bolsas y Mercados Argentinos (BYMA)",
+      "date": "2026"
+    },
+    {
+      "name": "CNV — Régimen de CEDEARs",
+      "url": "https://www.cnv.gov.ar/SitioWeb/Mercado/CEDEARs",
+      "publisher": "Comisión Nacional de Valores",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "biannual",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar alícuotas de Ganancias cedular y Bienes Personales ante cambios normativos de AFIP/ARCA o nueva legislación de finanzas descentralizadas. Revisar tabla de retornos históricos cada semestre.",
+    "source": "Ley 27.430 — Impuesto a las Ganancias, Renta Financiera",
+    "sourceUrl": "https://www.afip.gob.ar/impuestos/rentas-financieras.asp"
+  },
+  "lastReviewed": "2026-04-27"
+}

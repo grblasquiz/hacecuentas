@@ -1,0 +1,252 @@
+{
+  "slug": "calculadora-ingreso-minimo-credito-hipotecario-uva-banco-nacion",
+  "title": "Ingreso Mínimo Crédito Hipotecario UVA 2026 | Hacé Cuentas",
+  "h1": "Calculadora de ingreso mínimo para crédito hipotecario UVA",
+  "description": "Calculá el ingreso familiar mínimo para acceder a una hipoteca UVA en 2026. Banco Nación, Hipotecario, Galicia y Macro. Relación cuota/ingreso del 25% al 30%.",
+  "category": "finanzas",
+  "audience": "AR",
+  "icon": "🏠",
+  "formulaId": "ingreso-minimo-credito-hipotecario-uva-banco-nacion",
+  "intro": "Para acceder a un crédito hipotecario UVA en Argentina, los bancos exigen que la cuota inicial no supere entre el **25% y el 30% del ingreso familiar neto**. Esta calculadora te muestra cuánto necesitás ganar según el monto del inmueble, el plazo y la tasa real del banco que elijas.",
+  "keyTakeaway": "Para una propiedad de USD 80.000 a 20 años con tasa real del 5,5% anual (Banco Nación 2026), el ingreso familiar mínimo ronda los $3.500.000 netos mensuales.",
+  "useCases": [
+    "Verificar si tu salario actual alcanza para solicitar la hipoteca UVA",
+    "Comparar qué banco ofrece mejores condiciones según tu ingreso",
+    "Calcular cuánto ingreso adicional necesitás sumar con un co-deudor",
+    "Estimar el monto máximo de crédito que podés solicitar con tu sueldo",
+    "Planificar a qué plazo conviene pedir el préstamo para bajar la cuota"
+  ],
+  "fields": [
+    {
+      "id": "precioUsd",
+      "label": "Precio del inmueble (USD)",
+      "type": "number",
+      "placeholder": "80000",
+      "default": 80000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "porcentajeFinanciado",
+      "label": "Porcentaje financiado (%)",
+      "type": "number",
+      "placeholder": "75",
+      "default": 75,
+      "step": 5,
+      "required": true
+    },
+    {
+      "id": "plazoAnios",
+      "label": "Plazo (años)",
+      "type": "select",
+      "options": [
+        {
+          "value": "10",
+          "label": "10 años"
+        },
+        {
+          "value": "15",
+          "label": "15 años"
+        },
+        {
+          "value": "20",
+          "label": "20 años"
+        },
+        {
+          "value": "25",
+          "label": "25 años"
+        },
+        {
+          "value": "30",
+          "label": "30 años"
+        }
+      ],
+      "default": "20",
+      "required": true
+    },
+    {
+      "id": "banco",
+      "label": "Banco / entidad",
+      "type": "select",
+      "options": [
+        {
+          "value": "nacion",
+          "label": "Banco Nación (TNA real 5,5%)"
+        },
+        {
+          "value": "hipotecario",
+          "label": "Banco Hipotecario (TNA real 6,25%)"
+        },
+        {
+          "value": "galicia",
+          "label": "Banco Galicia (TNA real 7,0%)"
+        },
+        {
+          "value": "macro",
+          "label": "Banco Macro (TNA real 7,5%)"
+        },
+        {
+          "value": "personalizada",
+          "label": "Tasa personalizada"
+        }
+      ],
+      "default": "nacion",
+      "required": true
+    },
+    {
+      "id": "tasaPersonalizada",
+      "label": "Tasa real anual personalizada (%)",
+      "type": "number",
+      "placeholder": "5.5",
+      "default": 5.5,
+      "step": 0.25,
+      "required": false
+    },
+    {
+      "id": "tipoCambio",
+      "label": "Tipo de cambio USD → ARS",
+      "type": "number",
+      "placeholder": "1250",
+      "default": 1250,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "relacionCuotaIngreso",
+      "label": "Relación cuota/ingreso máxima (%)",
+      "type": "select",
+      "options": [
+        {
+          "value": "25",
+          "label": "25% (criterio conservador)"
+        },
+        {
+          "value": "30",
+          "label": "30% (criterio estándar)"
+        }
+      ],
+      "default": "30",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "ingresoMinimoArs",
+      "label": "Ingreso familiar mínimo neto",
+      "primary": true,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "cuotaInicialArs",
+      "label": "Cuota inicial estimada (en ARS al valor UVA actual)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "montoCredito",
+      "label": "Monto del crédito (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "montoCreditoArs",
+      "label": "Monto del crédito en ARS",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "tasaUsada",
+      "label": "Tasa real anual utilizada",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle del cálculo",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula el ingreso mínimo para una hipoteca UVA\n\nLos créditos hipotecarios UVA (Unidad de Valor Adquisitivo) se otorgan en UVAs y se devuelven en UVAs. La cuota se actualiza mensualmente según el CER (Coeficiente de Estabilización de Referencia), que sigue de cerca la inflación. Para determinar si calificás, el banco divide la **cuota inicial en pesos** por la **relación cuota/ingreso** exigida.\n\n## Fórmula\n\n```\nMonto crédito ARS = Precio USD × % financiado × Tipo de cambio\n\nTasa mensual real = (1 + TNA_real / 100)^(1/12) - 1\n\nCuota inicial ARS = Monto ARS × [r × (1+r)^n] / [(1+r)^n - 1]\n  donde r = tasa mensual real, n = plazo en meses\n\nIngreso mínimo = Cuota inicial ARS / (relación cuota-ingreso)\n```\n\nLa cuota calculada es la del **primer mes**, expresada en pesos al tipo de cambio actual. Con el tiempo, la cuota sube en pesos porque está atada a la inflación (CER), pero el peso de la cuota sobre el ingreso tiende a mantenerse estable si los salarios acompañan la inflación.\n\n## Tasas reales por banco (referencia 2026)\n\n| Banco | TNA real estimada | Financiación máxima | Plazo máximo |\n|---|---|---|---|\n| Banco Nación | 5,50% | hasta 75% del valor | 30 años |\n| Banco Hipotecario | 6,25% | hasta 80% del valor | 30 años |\n| Banco Galicia | 7,00% | hasta 75% del valor | 20 años |\n| Banco Macro | 7,50% | hasta 75% del valor | 20 años |\n\nEstas tasas son **reales** (sobre UVA). La tasa nominal efectiva en pesos varía según la inflación del período.\n\n## Ejemplo numérico\n\nInmueble USD 80.000, financio 75% (USD 60.000), tipo de cambio $1.250, plazo 20 años (240 meses), Banco Nación TNA real 5,5%, relación cuota/ingreso 30%:\n\n- Monto crédito ARS: 60.000 × 1.250 = **$75.000.000**\n- Tasa mensual real: (1,055)^(1/12) − 1 ≈ **0,4472%**\n- Cuota inicial: 75.000.000 × [0,004472 × (1,004472)^240] / [(1,004472)^240 − 1] ≈ **$521.000**\n- Ingreso mínimo: 521.000 / 0,30 ≈ **$1.737.000 netos**\n\nNota: el tipo de cambio por defecto en la calculadora es $1.250 solo como referencia. Actualizalo al valor oficial del día.\n\n## Cuándo NO aplica / limitaciones\n\n- El cálculo usa la **cuota inicial**. La cuota real evoluciona con el CER (inflación). Si la inflación supera el aumento salarial, la carga real crece.\n- Los bancos también evalúan **historial crediticio, antigüedad laboral y relación deuda/ingreso total** (no solo la cuota de la hipoteca).\n- Para trabajadores **independientes/monotributistas**, algunos bancos exigen hasta 12 meses de facturación promedio y aplican criterios más estrictos.\n- El **tipo de cambio** impacta directamente: si el dólar sube antes de la escritura, el monto en pesos sube.\n- Las tasas reales publicadas pueden variar con condiciones de acreditación de haberes u otros productos del banco.\n- Fuentes: BCRA, webs oficiales de cada banco (Banco Nación, Banco Hipotecario, Banco Galicia, Banco Macro), normativa UVA Ley 27.271.",
+  "faq": [
+    {
+      "q": "¿Qué es la relación cuota/ingreso y qué porcentaje exigen los bancos?",
+      "a": "Es el cociente entre la cuota inicial del crédito y el ingreso familiar neto acreditable. La mayoría de los bancos públicos exige que no supere el 25%-30%. Banco Nación y Banco Hipotecario aplican el 25% para ingresos en relación de dependencia y hasta el 30% con co-deudor."
+    },
+    {
+      "q": "¿El ingreso mínimo es bruto o neto?",
+      "a": "Los bancos trabajan con el **ingreso neto acreditable**, es decir, el sueldo después de descuentos jubilatorios, obra social y ganancias (si aplica). Para autónomos y monotributistas, generalmente calculan el 70-80% de los ingresos declarados promedio de los últimos 12 meses."
+    },
+    {
+      "q": "¿Qué pasa con la cuota UVA en el tiempo? ¿Siempre sube?",
+      "a": "La cuota en pesos sube con el CER (índice atado a inflación). Sin embargo, si tu salario sigue la inflación, la relación cuota/ingreso permanece estable. La Ley 27.271 contempla un mecanismo de cuota segura si la cuota supera en más de 10% la evolución del salario (CVS)."
+    },
+    {
+      "q": "¿Puedo sumar ingresos con mi pareja o un co-deudor?",
+      "a": "Sí. La mayoría de los bancos permiten hasta 2 titulares (deudor y co-deudor) y suman ambos ingresos netos para el cálculo de la relación cuota/ingreso. Esto es clave cuando individualmente no se alcanza el mínimo requerido."
+    },
+    {
+      "q": "¿Qué porcentaje del valor del inmueble financia cada banco?",
+      "a": "En 2026, Banco Nación financia hasta el 75% del valor de tasación o compraventa (el menor). Banco Hipotecario llega al 80% en algunos productos. Galicia y Macro rondan el 75%. El 20-25% restante más los gastos de escritura y comisiones deben aportarse como ahorro propio."
+    },
+    {
+      "q": "¿La calculadora incluye seguros y gastos de otorgamiento?",
+      "a": "No. La calculadora estima la cuota pura de capital e intereses. Los créditos UVA incluyen seguro de vida y seguro de incendio/hogar que incrementan la cuota real entre un 5% y un 15% según el banco y el perfil del solicitante. Consultá con el banco la cuota total."
+    },
+    {
+      "q": "¿Qué es la UVA y quién la publica?",
+      "a": "La Unidad de Valor Adquisitivo (UVA) fue creada por el BCRA en 2016 (Comunicación A 5945). Su valor se actualiza diariamente según el CER. Al inicio de los créditos UVA equivalía a la milésima parte del costo de construcción de 1 m². El BCRA publica el valor diario en su sitio oficial."
+    },
+    {
+      "q": "¿Puedo precancelar el crédito UVA anticipadamente?",
+      "a": "Sí. La normativa del BCRA (Comunicación A 6069 y posteriores) establece que el deudor puede precancelar total o parcialmente sin penalidad si la fuente de los fondos es ajena al sistema financiero. Con fondos propios ahorro, la precancelación es libre."
+    },
+    {
+      "q": "¿Cómo afecta el tipo de cambio al monto del crédito?",
+      "a": "Los inmuebles en Argentina se valúan y pactan en dólares, pero el crédito se otorga en pesos (convertidos a UVAs al momento del desembolso). Si el tipo de cambio oficial sube entre la aprobación y la escritura, el monto en pesos necesario aumenta proporcionalmente."
+    },
+    {
+      "q": "¿Qué documentación básica pide el banco para iniciar el trámite?",
+      "a": "Generalmente: DNI, últimos 3 recibos de sueldo, declaración de bienes, extractos bancarios de 3-6 meses, certificado de libre deuda VERAZ/Nosis, y para autónomos, última declaración AFIP/ARCA. Cada banco puede requerir documentación adicional."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Créditos UVA – Banco de la Nación Argentina",
+      "url": "https://www.bna.com.ar/Personas/CreditosHipotecarios",
+      "publisher": "Banco de la Nación Argentina",
+      "date": "2026"
+    },
+    {
+      "name": "Valor UVA diario y normativa – BCRA",
+      "url": "https://www.bcra.gob.ar/PublicacionesEstadisticas/Principales_variables_datos.asp",
+      "publisher": "Banco Central de la República Argentina",
+      "date": "2026"
+    },
+    {
+      "name": "Ley 27.271 – Créditos hipotecarios UVA",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/265000-269999/265692/norma.htm",
+      "publisher": "InfoLEG – Ministerio de Justicia",
+      "date": "2016"
+    },
+    {
+      "name": "Banco Hipotecario – Préstamo Hipotecario UVA",
+      "url": "https://www.hipotecario.com.ar/prestamos/hipotecarios",
+      "publisher": "Banco Hipotecario",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar tasas reales por banco cuando cada entidad modifique condiciones. Actualizar tipo de cambio de referencia mensualmente. Revisar relación cuota/ingreso si el BCRA modifica regulaciones de crédito hipotecario.",
+    "source": "Créditos UVA – Banco de la Nación Argentina",
+    "sourceUrl": "https://www.bna.com.ar/Personas/CreditosHipotecarios"
+  },
+  "lastReviewed": "2026-04-27"
+}

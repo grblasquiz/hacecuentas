@@ -1,0 +1,173 @@
+{
+  "slug": "calculadora-quita-jubilatoria-bono-refuerzo-anses-2026",
+  "title": "Bono Refuerzo ANSES Jubilados/AUH 2026 | Hacé Cuentas",
+  "h1": "Bono de Refuerzo ANSES 2026: ¿Te corresponde y cuánto?",
+  "description": "Calculá si te corresponde el bono extraordinario ANSES 2026 para jubilados, pensionados, AUH y PUAM. Ingresá tu haber y conocé el monto mensual y acumulado anual.",
+  "category": "finanzas",
+  "audience": "AR",
+  "icon": "🎁",
+  "formulaId": "quita-jubilatoria-bono-refuerzo-anses-2026",
+  "intro": "El gobierno nacional anuncia periódicamente **bonos extraordinarios** para jubilados, pensionados, beneficiarios de AUH y PUAM que no superan cierto umbral de ingresos. Esta calculadora te ayuda a saber si tu haber actual te habilita a cobrarlo y cuánto suma en total al año.",
+  "keyTakeaway": "En 2026 el bono de refuerzo ANSES puede sumar hasta $70.000 mensuales para quienes cobran el haber mínimo (~$326.000 ARS), representando un complemento de hasta ~21% sobre el haber base.",
+  "useCases": [
+    "Jubilado con haber mínimo que quiere saber si cobra el bono y por cuánto",
+    "Pensionado por PUAM que necesita calcular su ingreso total mensual incluyendo refuerzos",
+    "Madre o tutor con AUH que desea estimar el monto anual acumulado de bonos",
+    "Persona con dos jubilaciones que quiere verificar si supera el tope de acceso al bono",
+    "Asesor previsional que necesita comparar el impacto del bono en distintos rangos de haberes"
+  ],
+  "fields": [
+    {
+      "id": "tipo_beneficio",
+      "label": "Tipo de beneficio",
+      "type": "select",
+      "options": [
+        {
+          "value": "jubilacion",
+          "label": "Jubilación / Pensión contributiva"
+        },
+        {
+          "value": "puam",
+          "label": "PUAM (Pensión Universal Adulto Mayor)"
+        },
+        {
+          "value": "auh",
+          "label": "AUH (Asignación Universal por Hijo)"
+        },
+        {
+          "value": "aue",
+          "label": "AUE (Asignación Universal por Embarazo)"
+        }
+      ],
+      "default": "jubilacion",
+      "required": true
+    },
+    {
+      "id": "haber_mensual",
+      "label": "Haber / beneficio mensual bruto (ARS)",
+      "type": "number",
+      "placeholder": "326000",
+      "default": 326000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "meses_cobro",
+      "label": "Meses del año en que cobrás el bono (1–12)",
+      "type": "number",
+      "placeholder": "12",
+      "default": 12,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "bono_mensual",
+      "label": "Bono mensual estimado",
+      "primary": true,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "total_con_bono",
+      "label": "Ingreso mensual total (haber + bono)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "acumulado_anual",
+      "label": "Bono acumulado anual estimado",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "porcentaje_refuerzo",
+      "label": "El bono representa sobre tu haber",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula el bono de refuerzo ANSES 2026\n\nEl bono extraordinario es un complemento no remunerativo que ANSES abona junto con el haber mensual. No forma parte del haber jubilatorio ni se computa para futuras movilidades. Su existencia, monto y condiciones dependen de decretos del Poder Ejecutivo Nacional (PEN) y resoluciones ANSES vigentes en cada mes.\n\n### Parámetros vigentes 2026 (referencia)\n\n| Beneficio | Haber mínimo de referencia | Tope para cobrar bono | Monto del bono |\n|---|---|---|---|\n| Jubilación / Pensión contributiva | ~$326.000 ARS | Hasta 1 haber mínimo | $70.000 ARS |\n| PUAM | ~$228.000 ARS | Hasta 1 PUAM | $50.000 ARS |\n| AUH (por hijo) | ~$75.000 ARS | Sin tope de ingresos | $25.000 ARS |\n| AUE (por embarazo) | ~$75.000 ARS | Sin tope de ingresos | $25.000 ARS |\n\n> Los montos son estimaciones basadas en los últimos anuncios oficiales. ANSES actualiza los valores mes a mes mediante resoluciones publicadas en el Boletín Oficial.\n\n### Fórmula\n\n```\nBono mensual = BONO_REFERENCIA(tipo)  si  haber_mensual ≤ TOPE(tipo)\nBono mensual = 0                       si  haber_mensual >  TOPE(tipo)\n\nTotal mensual = haber_mensual + bono_mensual\nAcumulado anual = bono_mensual × meses_cobro\nPorcentaje refuerzo = (bono_mensual / haber_mensual) × 100\n```\n\n### Ejemplo numérico\n\nUn jubilado percibe $326.000 ARS (haber mínimo). Como no supera el tope:\n- Bono mensual: $70.000 ARS\n- Total mensual: $326.000 + $70.000 = **$396.000 ARS**\n- Acumulado 12 meses: $70.000 × 12 = **$840.000 ARS**\n- El bono representa: 70.000 / 326.000 ≈ **21,5%** del haber\n\nSi el mismo jubilado cobrara $400.000 (por encima del haber mínimo), **no le correspondería el bono** bajo los criterios vigentes.\n\n### Cuándo NO aplica / limitaciones\n\n- Si tu jubilación supera el haber mínimo de referencia, generalmente no accedés al bono. Verificá el decreto vigente del mes en curso.\n- Los beneficiarios de pensiones de privilegio, retiros militares y de fuerzas de seguridad tienen regímenes separados.\n- El bono no es acumulable con ciertos beneficios provinciales en algunas provincias.\n- Esta calculadora usa montos de referencia 2026; los valores exactos surgen de la resolución ANSES de cada mes publicada en el Boletín Oficial.\n- La AUH se calcula por hijo. Si tenés más de un hijo, multiplicá el bono por la cantidad de menores a cargo.",
+  "faq": [
+    {
+      "q": "¿El bono de refuerzo ANSES es permanente o transitorio?",
+      "a": "Es transitorio. Se establece mes a mes por decreto del Poder Ejecutivo o resolución ANSES. No está garantizado de forma permanente ni se incorpora al haber jubilatorio para el cálculo de movilidad futura."
+    },
+    {
+      "q": "¿El bono tributa Ganancias (Impuesto a las Ganancias)?",
+      "a": "No. El bono extraordinario es un complemento no remunerativo exento de Impuesto a las Ganancias y no integra la base imponible para ninguna deducción previsional."
+    },
+    {
+      "q": "¿Qué pasa si cobro dos jubilaciones? ¿cobro el bono igual?",
+      "a": "Generalmente no. Si la suma de tus haberes supera el tope (habitualmente 1 haber mínimo), perdés el derecho al bono. ANSES verifica el total de ingresos previsionales del beneficiario."
+    },
+    {
+      "q": "¿La PUAM tiene el mismo bono que la jubilación mínima?",
+      "a": "No exactamente. La PUAM equivale al 80% del haber mínimo jubilatorio y el bono asignado suele ser proporcionalmente menor. En 2026 se estima en $50.000 ARS versus $70.000 de la jubilación mínima."
+    },
+    {
+      "q": "¿Cuándo se cobra el bono junto con el haber?",
+      "a": "Se abona en la misma fecha que el haber jubilatorio, según el cronograma de pago de ANSES que se publica mensualmente en anses.gob.ar. Se liquida automáticamente sin necesidad de tramitarlo."
+    },
+    {
+      "q": "¿El bono cuenta para el aguinaldo (SAC previsional)?",
+      "a": "No. El bono extraordinario es no remunerativo y no se incluye en el cálculo del Salario Anual Complementario (SAC) previsional. El SAC se calcula solo sobre el haber base."
+    },
+    {
+      "q": "¿Los jubilados provinciales cobran el bono nacional?",
+      "a": "No automáticamente. Los jubilados de cajas provinciales no transferidas (ej. Buenos Aires, Córdoba, Santa Fe) dependen de su caja provincial. El bono ANSES aplica solo a los beneficiarios del sistema nacional (SIPA)."
+    },
+    {
+      "q": "¿Cómo me entero si me corresponde el bono cada mes?",
+      "a": "Podés verificarlo en Mi ANSES (mi.anses.gob.ar) con tu CUIL y clave de seguridad social, o llamando al 130. La liquidación del mes aparece detallada antes de la fecha de cobro."
+    },
+    {
+      "q": "¿La AUH cobra bono por cada hijo?",
+      "a": "Sí. El bono de refuerzo para AUH se abona por cada menor a cargo que perciba la asignación. Si tenés 3 hijos en AUH, el bono se multiplica por 3."
+    }
+  ],
+  "sources": [
+    {
+      "name": "ANSES – Novedades y bonos extraordinarios",
+      "url": "https://www.anses.gob.ar/informacion/bonos-extraordinarios",
+      "publisher": "ANSES",
+      "date": "2026"
+    },
+    {
+      "name": "Boletín Oficial – Decretos PEN sobre haberes previsionales",
+      "url": "https://www.boletinoficial.gob.ar",
+      "publisher": "Secretaría Legal y Técnica de la Nación",
+      "date": "2026"
+    },
+    {
+      "name": "ANSES – Cronograma de pagos jubilaciones y pensiones",
+      "url": "https://www.anses.gob.ar/jubilaciones-y-pensiones/fechas-de-cobro",
+      "publisher": "ANSES",
+      "date": "2026"
+    },
+    {
+      "name": "Ley 24.241 – Sistema Integrado Previsional Argentino (SIPA)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/639/texact.htm",
+      "publisher": "InfoLEG – Ministerio de Justicia",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar mensualmente: haber mínimo jubilatorio, monto del bono extraordinario por tipo de beneficio y topes de acceso, según decretos PEN y resoluciones ANSES publicadas en el Boletín Oficial.",
+    "source": "ANSES – Novedades y bonos extraordinarios",
+    "sourceUrl": "https://www.anses.gob.ar/informacion/bonos-extraordinarios"
+  },
+  "lastReviewed": "2026-04-27"
+}

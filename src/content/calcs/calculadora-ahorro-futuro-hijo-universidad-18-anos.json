@@ -1,0 +1,206 @@
+{
+  "slug": "calculadora-ahorro-futuro-hijo-universidad-18-anos",
+  "title": "Ahorrar para Universidad del Hijo 2026 | Hacé Cuentas",
+  "h1": "¿Cuánto ahorrar por mes para la universidad de tu hijo?",
+  "description": "Calculá el ahorro mensual en USD necesario para costear la universidad de tu hijo a los 18 años. Ingresá edad actual, costo estimado y tasa real esperada.",
+  "category": "finanzas",
+  "audience": "AR",
+  "icon": "🎓",
+  "formulaId": "ahorro-futuro-hijo-universidad-18-anos",
+  "intro": "Si tu hijo tiene 5 años, tenés 13 años para juntar el dinero que necesitás para su educación universitaria. Usando interés compuesto en USD, **este calculador te dice exactamente cuánto depositar por mes** para llegar a la meta, ya sea la UBA (gratuita), el ITBA (~USD 300/mes) o una universidad en el exterior (~USD 30.000/año).",
+  "keyTakeaway": "Para acumular USD 50.000 en 13 años con una tasa real del 6% anual, necesitás ahorrar aproximadamente USD 215 por mes.",
+  "useCases": [
+    "Planificar el ahorro desde el nacimiento del hijo para una carrera en el exterior",
+    "Estimar cuánto falta si empezás a ahorrar tarde, por ejemplo a los 10 años del niño",
+    "Comparar el esfuerzo mensual entre apuntar a una universidad privada local vs. el exterior",
+    "Evaluar el impacto de distintas tasas de retorno (bonos USD, CEDEARs, ETFs) en el plan",
+    "Calcular si con el ahorro actual alcanzás la meta o necesitás aumentar el monto mensual"
+  ],
+  "fields": [
+    {
+      "id": "edadActual",
+      "label": "Edad actual del hijo (años)",
+      "type": "number",
+      "placeholder": "5",
+      "default": 5,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "costoUniversidad",
+      "label": "Costo total estimado de la universidad (USD)",
+      "type": "number",
+      "placeholder": "50000",
+      "default": 50000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "tasaAnual",
+      "label": "Tasa real anual esperada (%)",
+      "type": "number",
+      "placeholder": "6",
+      "default": 6,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "ahorroActual",
+      "label": "Ahorro ya acumulado (USD)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 100,
+      "required": false
+    },
+    {
+      "id": "tipoCosto",
+      "label": "Referencia de costo universitario",
+      "type": "select",
+      "options": [
+        {
+          "value": "personalizado",
+          "label": "Personalizado (uso el monto que ingresé)"
+        },
+        {
+          "value": "uba",
+          "label": "UBA / universidad pública argentina (gratuita)"
+        },
+        {
+          "value": "privada_local",
+          "label": "Universidad privada argentina (~USD 300/mes × 5 años)"
+        },
+        {
+          "value": "latam",
+          "label": "Universidad privada LATAM (~USD 800/mes × 5 años)"
+        },
+        {
+          "value": "usa_publica",
+          "label": "Universidad pública EE.UU. (~USD 15.000/año × 4 años)"
+        },
+        {
+          "value": "usa_privada",
+          "label": "Universidad privada EE.UU. (~USD 30.000/año × 4 años)"
+        }
+      ],
+      "default": "personalizado",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "ahorroPorMes",
+      "label": "Ahorro mensual necesario",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "metaFinal",
+      "label": "Meta total a acumular (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "mesesRestantes",
+      "label": "Meses de ahorro disponibles",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "totalAportado",
+      "label": "Total aportado de tu bolsillo (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "interesesGenerados",
+      "label": "Rendimiento generado por el interés compuesto (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle del cálculo",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEl problema es clásico de matemática financiera: ¿cuánto depositar cada mes para que, con interés compuesto, llegués a un valor futuro deseado en N meses?\n\n### Fórmula\n\nSi ya tenés un ahorro inicial **PV** (present value), la fórmula descompone el problema en dos partes:\n\n**Valor futuro del ahorro ya acumulado:**\n```\nFV_inicial = PV × (1 + r)^n\n```\n\n**Monto restante a cubrir con aportes mensuales:**\n```\nMeta_restante = Meta - FV_inicial\n```\n\n**Cuota mensual (PMT) necesaria:**\n```\nPMT = Meta_restante × r / ((1 + r)^n - 1)\n```\n\nDonde:\n- `r` = tasa mensual = (1 + tasa_anual)^(1/12) - 1\n- `n` = (18 - edad_actual) × 12  → cantidad de meses hasta los 18 años\n- `Meta` = costo total de la universidad en USD\n- `PV` = ahorro ya acumulado en USD\n\n### Ejemplo numérico\n\nHijo de 5 años, meta USD 50.000, tasa real 6% anual, sin ahorro previo:\n\n- n = (18 - 5) × 12 = 156 meses\n- r mensual = (1 + 0,06)^(1/12) - 1 ≈ 0,004868\n- PMT = 50.000 × 0,004868 / ((1,004868)^156 - 1)\n- PMT = 243,4 / (2,132 - 1) ≈ **USD 214,9/mes**\n\nDe ese total, aportás USD 33.524 de tu bolsillo y el resto (USD 16.476) lo genera el interés compuesto.\n\n### Tabla de referencias de costos universitarios\n\n| Opción | Costo total estimado (USD) |\n|---|---|\n| UBA / universidad pública AR | 0 |\n| Privada local (ITBA, Austral, etc.) | ~18.000 (300/mes × 60 meses) |\n| Privada LATAM media | ~48.000 (800/mes × 60 meses) |\n| Universidad pública EE.UU. (4 años) | ~60.000 (15.000/año) |\n| Universidad privada EE.UU. (4 años) | ~120.000 (30.000/año) |\n\nEstos valores son referencias 2026. Los costos reales varían según institución, carrera y ciudad.\n\n### La tasa real vs. tasa nominal\n\nUsamos **tasa real en USD** para abstraernos de la inflación en dólares. Una cartera diversificada (ETFs globales tipo S&P 500, bonos en USD, CEDEARs) históricamente rindió entre 5% y 7% real anual en dólares en horizontes de 10+ años, aunque el pasado no garantiza el futuro. Ser conservador y usar 5% da mayor margen de seguridad.\n\n### Cuándo NO aplica / limitaciones\n\n- **No contempla inflación en USD**: los costos universitarios, especialmente en EE.UU., suelen crecer por encima de la inflación general. Considerá aumentar la meta un 20-30% si apuntás al exterior.\n- **No incluye gastos de vida**: matrícula es solo parte del costo. Vivienda, manutención y pasajes pueden duplicar el presupuesto para estudios en el extranjero.\n- **Riesgo cambiario**: si el ahorro es en ARS y la meta en USD, el tipo de cambio es una variable crítica no incluida aquí.\n- **Edad mínima**: si el hijo ya tiene 18 años o más, el cálculo no aplica.",
+  "faq": [
+    {
+      "q": "¿Qué pasa si mi hijo ya tiene más de 10 años y no ahorré nada?",
+      "a": "Con menos tiempo, el interés compuesto ayuda menos y el aporte mensual sube considerablemente. Por ejemplo, para juntar USD 50.000 en 8 años al 6% anual necesitás unos USD 424/mes, casi el doble que si empezás con 13 años de plazo. Aun así, algo es mejor que nada: calculá con el tiempo real disponible."
+    },
+    {
+      "q": "¿En qué instrumentos puedo ahorrar en USD dentro de Argentina?",
+      "a": "Opciones habituales en 2026: obligaciones negociables (ONs) en USD de empresas argentinas, CEDEARs dolarizados, ETFs a través de brokers locales o del exterior, cuentas remuneradas en USD en billeteras digitales (Mercado Pago, Brubank) o plazos fijos en dólares. Cada uno tiene distinto riesgo y liquidez."
+    },
+    {
+      "q": "¿La UBA realmente es gratis?",
+      "a": "La matrícula en universidades públicas nacionales como la UBA es gratuita para argentinos. Sí pueden existir gastos en apuntes, fotocopias, software y transporte. Sin embargo, la manutención si el hijo estudia lejos de casa es un costo relevante a planificar aparte."
+    },
+    {
+      "q": "¿Qué tasa real debería usar?",
+      "a": "Para un horizonte de 10-18 años, tasas entre 5% y 7% real anual en USD son razonables para una cartera diversificada. Usá 5% si preferís ser conservador o si pensás invertir en instrumentos de menor riesgo (bonos, plazo fijo USD). Usá 6-7% si apuntás a renta variable (ETFs de acciones)."
+    },
+    {
+      "q": "¿Tengo que ajustar la meta por la inflación en dólares?",
+      "a": "Sí, sobre todo para universidades en EE.UU. Los costos universitarios norteamericanos históricamente subieron 3-5% anual en USD. Para un horizonte de 13 años eso puede representar un 50-90% más de costo real. Una solución simple: multiplicá la meta actual por 1,5 a 2 si apuntás al exterior."
+    },
+    {
+      "q": "¿Qué diferencia hay entre el costo de ITBA y UBA?",
+      "a": "La UBA es gratuita (aranceles = 0). El ITBA en 2026 ronda los USD 400-500/mes según la carrera. Para una carrera de 5 años el costo acumulado puede superar USD 25.000-30.000 solo en aranceles. Esta calculadora usa USD 300/mes como referencia conservadora para privadas locales."
+    },
+    {
+      "q": "¿Puedo usar esta calculadora si ya tengo ahorro acumulado?",
+      "a": "Sí. Completá el campo 'Ahorro ya acumulado'. El cálculo descuenta el valor futuro de ese capital y te muestra solo la cuota adicional mensual necesaria para cubrir la diferencia. Si el ahorro actual ya alcanza la meta con los rendimientos proyectados, el aporte mensual resultará cero o negativo."
+    },
+    {
+      "q": "¿Qué pasa si ahorro más de lo calculado?",
+      "a": "Superarás la meta, lo que da margen para gastos imprevistos, inflación universitaria o simplemente tener un fondo de emergencia para tu hijo. Nunca es mala idea ahorrar de más en este tipo de objetivo de largo plazo."
+    },
+    {
+      "q": "¿Cómo impacta el tipo de cambio en el plan de ahorro?",
+      "a": "Si ahorrás en pesos y la meta es en dólares, la brecha cambiaria y la devaluación son riesgos clave. Lo más recomendable es ahorrar directamente en USD o en activos dolarizados para eliminar el riesgo de tipo de cambio del plan."
+    }
+  ],
+  "sources": [
+    {
+      "name": "ITBA – Aranceles y cuotas 2026",
+      "url": "https://www.itba.edu.ar/admision/aranceles/",
+      "publisher": "Instituto Tecnológico Buenos Aires",
+      "date": "2026"
+    },
+    {
+      "name": "UBA – Régimen de gratuidad de la educación superior pública",
+      "url": "https://www.uba.ar/contenido/8",
+      "publisher": "Universidad de Buenos Aires",
+      "date": "2026"
+    },
+    {
+      "name": "College Board – Trends in College Pricing 2025",
+      "url": "https://research.collegeboard.org/trends/college-pricing",
+      "publisher": "College Board",
+      "date": "2025"
+    },
+    {
+      "name": "BCRA – Comunicados sobre instrumentos de ahorro en moneda extranjera",
+      "url": "https://www.bcra.gob.ar/PublicacionesEstadisticas/Principales_variables.asp",
+      "publisher": "Banco Central de la República Argentina",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Revisar anualmente los costos de referencia (aranceles ITBA, costos College Board EE.UU.) y las tasas de rendimiento de instrumentos en USD disponibles en Argentina.",
+    "source": "ITBA – Aranceles y cuotas 2026",
+    "sourceUrl": "https://www.itba.edu.ar/admision/aranceles/"
+  },
+  "lastReviewed": "2026-04-27"
+}

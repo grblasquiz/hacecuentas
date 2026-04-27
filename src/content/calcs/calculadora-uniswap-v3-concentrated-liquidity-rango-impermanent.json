@@ -1,0 +1,258 @@
+{
+  "slug": "calculadora-uniswap-v3-concentrated-liquidity-rango-impermanent",
+  "title": "Uniswap V3 LP Concentrado: APY e Impermanent Loss 2026 | Hacé Cuentas",
+  "h1": "Uniswap V3 LP en rango: APY e Impermanent Loss",
+  "description": "Calculá el APY esperado y el impermanent loss de tu posición concentrada en Uniswap V3. Ingresá par, rango de precio, capital, volumen diario y fee tier (0.05%, 0.30%, 1%).",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "🔄",
+  "formulaId": "uniswap-v3-concentrated-liquidity-rango-impermanent",
+  "intro": "Uniswap V3 permite concentrar liquidez en un rango de precios, lo que amplifica las comisiones ganadas pero también el **impermanent loss**. Esta calculadora estima el APY real de tu posición y cuánto podés perder si el precio se mueve fuera del rango, antes de que deposites.",
+  "keyTakeaway": "Un LP concentrado en rango ±20% puede generar 3x más comisiones que un rango completo, pero sufre impermanent loss hasta 2x mayor si el precio escapa el rango.",
+  "useCases": [
+    "Comparar fee tiers (0.05%, 0.30%, 1%) para el mismo par y capital",
+    "Estimar APY anualizado antes de abrir una posición ETH/USDC",
+    "Calcular el impermanent loss si el precio cae o sube un porcentaje dado",
+    "Evaluar qué tan ancho debe ser el rango para equilibrar fees vs. IL",
+    "Comparar rendimiento concentrado vs. posición full-range (v2 equivalente)"
+  ],
+  "fields": [
+    {
+      "id": "par",
+      "label": "Par de liquidez",
+      "type": "select",
+      "options": [
+        {
+          "value": "eth_usdc",
+          "label": "ETH/USDC"
+        },
+        {
+          "value": "usdc_usdt",
+          "label": "USDC/USDT"
+        },
+        {
+          "value": "eth_usdt",
+          "label": "ETH/USDT"
+        },
+        {
+          "value": "wbtc_usdc",
+          "label": "WBTC/USDC"
+        },
+        {
+          "value": "custom",
+          "label": "Par personalizado"
+        }
+      ],
+      "default": "eth_usdc",
+      "required": true
+    },
+    {
+      "id": "precioActual",
+      "label": "Precio actual del activo base (USD)",
+      "type": "number",
+      "placeholder": "2500",
+      "default": 2500,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "precioMin",
+      "label": "Precio mínimo del rango (USD)",
+      "type": "number",
+      "placeholder": "2000",
+      "default": 2000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "precioMax",
+      "label": "Precio máximo del rango (USD)",
+      "type": "number",
+      "placeholder": "3000",
+      "default": 3000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "capital",
+      "label": "Capital total a depositar (USD)",
+      "type": "number",
+      "placeholder": "10000",
+      "default": 10000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "volumenDiario",
+      "label": "Volumen diario del pool (USD)",
+      "type": "number",
+      "placeholder": "50000000",
+      "default": 50000000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "feeTier",
+      "label": "Fee tier",
+      "type": "select",
+      "options": [
+        {
+          "value": "0.0005",
+          "label": "0.05% — stablecoins correlacionados"
+        },
+        {
+          "value": "0.003",
+          "label": "0.30% — pares principales"
+        },
+        {
+          "value": "0.01",
+          "label": "1.00% — pares exóticos / alta volatilidad"
+        }
+      ],
+      "default": "0.003",
+      "required": true
+    },
+    {
+      "id": "liquidezTotal",
+      "label": "Liquidez total del pool (USD, TVL)",
+      "type": "number",
+      "placeholder": "200000000",
+      "default": 200000000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "precioFinal",
+      "label": "Precio final hipotético para calcular IL (USD)",
+      "type": "number",
+      "placeholder": "2000",
+      "default": 2000,
+      "step": 0.01,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "apyEstimado",
+      "label": "APY estimado (fees)",
+      "primary": true,
+      "format": "percent"
+    },
+    {
+      "id": "feesAnuales",
+      "label": "Fees anuales estimados",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "feesDiarios",
+      "label": "Fees diarios estimados",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "multiplicadorConcentracion",
+      "label": "Multiplicador de concentración vs. full-range",
+      "format": "decimal"
+    },
+    {
+      "id": "impermanentLoss",
+      "label": "Impermanent Loss al precio final",
+      "format": "percent"
+    },
+    {
+      "id": "impermanentLossUSD",
+      "label": "Impermanent Loss en USD",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "valorHodl",
+      "label": "Valor si hubieras hecho HODL",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "valorLP",
+      "label": "Valor de la posición LP al precio final",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "breakeven",
+      "label": "Días para breakeven (fees cubren IL)",
+      "format": "number"
+    },
+    {
+      "id": "estadoRango",
+      "label": "Estado del precio final respecto al rango",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\n### Liquidez concentrada y el multiplicador\n\nEn Uniswap V3, la liquidez se concentra entre un precio mínimo `pa` y un precio máximo `pb`. El **multiplicador de concentración** respecto a una posición full-range (equivalente a Uniswap V2) es:\n\n```\nmultiplicador = sqrt(precioActual) / (sqrt(precioActual) - sqrt(pa))\n             × sqrt(pb) / (sqrt(pb) - sqrt(precioActual))\n             (se toma el menor de los dos factores)\n```\n\nEste multiplicador indica cuántas veces más comisiones genera tu capital concentrado vs. distribuido en [0, ∞).\n\n### Share del pool y fees\n\nTu participación efectiva en el pool (para capturar fees) se estima como:\n\n```\ncapitalEfectivo = capital × multiplicador\nsharePool = capitalEfectivo / (liquidezTotal + capitalEfectivo)\nfeesDiarios = volumenDiario × feeTier × sharePool\nfeesAnuales = feesDiarios × 365\nAPY = feesAnuales / capital\n```\n\n### Impermanent Loss en rango concentrado\n\nEl IL en V3 depende de si el precio final está dentro o fuera del rango.\n\n**Caso 1: precio final dentro del rango (`pa ≤ pf ≤ pb`)**\n\nEl IL se calcula como la diferencia entre el valor de la posición LP rebalanceada automáticamente y el valor HODL de los activos iniciales:\n\n```\nk = sqrt(pf / p0)\nvalorLP  = capital × (2k / (1 + k²))  [simplificado, igual que V2 in-range]\nvalorHODL = capital × (1 + k²) / 2  — aproximación 50/50 inicial\nIL = (valorLP - valorHODL) / valorHODL\n```\n\n**Caso 2: precio final fuera del rango**\n\nSi `pf < pa`: toda la liquidez se convierte al activo base (ej. ETH). El valor cae junto con el precio.\nSi `pf > pb`: toda la liquidez se convierte al activo quote (ej. USDC). El valor queda fijo al techo.\n\n```\n// pf < pa\nvalorLP = capital × sqrt(pa × pf) / p0  [aproximación]\n\n// pf > pb\nvalorLP = capital × sqrt(pb / p0)  [aproximación]\n```\n\n### Breakeven\n\n```\nbreakeven = |impermanentLossUSD| / feesDiarios\n```\n\n### Ejemplo numérico\n\nCapital: 10 000 USD | Par: ETH/USDC | Precio actual: 2 500 | Rango: [2 000, 3 000] | Fee tier: 0.30% | Volumen diario: 50 M USD | TVL: 200 M USD | Precio final hipotético: 2 000 USD\n\n| Parámetro | Valor |\n|---|---|\n| Multiplicador concentración | ~2.37× |\n| Capital efectivo | ~23 700 USD |\n| Share del pool | ~0.0107% |\n| Fees diarios | ~16.05 USD |\n| Fees anuales | ~5 858 USD |\n| APY estimado | ~58.6% |\n| IL al precio 2 000 | ~−5.72% |\n| IL en USD | ~−572 USD |\n| Breakeven | ~36 días |\n\n### Cuándo NO aplica / limitaciones\n\n- El modelo asume que el precio se mantiene **dentro del rango** durante todo el período para el cálculo de fees. Si el precio sale, los fees se detienen.\n- El volumen diario y TVL son variables dinámicas; los valores reales pueden diferir significativamente.\n- No considera gas fees de apertura, rebalanceo o cierre de posición.\n- No contempla el riesgo de smart contract ni liquidaciones.\n- El IL fuera de rango usa una aproximación simplificada; el cálculo exacto requiere álgebra de raíces cuadradas de los ticks de Uniswap V3.\n- Fuentes: Uniswap V3 Whitepaper (Adams et al., 2021), documentación oficial de Uniswap Labs.",
+  "faq": [
+    {
+      "q": "¿Qué es el impermanent loss en Uniswap V3?",
+      "a": "Es la pérdida de valor que sufre un LP comparado con simplemente holdear los activos. En V3 es mayor dentro del rango que en V2, pero también son mayores los fees. Si el precio sale del rango, la posición deja de ganar fees y el IL queda 'congelado' hasta que el precio vuelva."
+    },
+    {
+      "q": "¿Cuánto más gana una posición concentrada vs. full-range?",
+      "a": "Depende del ancho del rango. Un rango ±20% sobre el precio actual puede generar 3x–5x más fees que un rango completo, pero con mayor IL potencial. El multiplicador de concentración lo calcula automáticamente esta herramienta."
+    },
+    {
+      "q": "¿Qué fee tier debo elegir?",
+      "a": "0.05% para pares muy correlacionados (USDC/USDT, DAI/USDC). 0.30% para pares principales con volatilidad moderada (ETH/USDC, ETH/USDT). 1% para pares exóticos o de alta volatilidad donde el riesgo de IL es mayor."
+    },
+    {
+      "q": "¿Qué pasa si el precio sale de mi rango?",
+      "a": "La posición deja de generar fees inmediatamente. Toda la liquidez se convierte al activo más barato (si baja) o al más caro (si sube). Para seguir ganando fees, necesitás cerrar y reabrir la posición en el nuevo rango, pagando gas cada vez."
+    },
+    {
+      "q": "¿El APY calculado incluye el impermanent loss?",
+      "a": "No directamente. El APY mostrado es solo el rendimiento por fees. Para conocer el retorno neto real, debés restar el IL estimado al precio final que vos proyectés. La herramienta te muestra ambos por separado."
+    },
+    {
+      "q": "¿Cómo afecta el TVL del pool a mis ganancias?",
+      "a": "Cuanto mayor es el TVL, menor es tu participación porcentual en el pool y menores tus fees absolutos. Un pool con 200 M USD de TVL y volumen de 50 M diarios genera menos APY por LP que uno con 10 M de TVL y el mismo volumen."
+    },
+    {
+      "q": "¿Cuándo conviene un rango más estrecho vs. más ancho?",
+      "a": "Rango estrecho: mayor APY si el precio se mantiene estable, pero más probabilidad de salirse. Rango ancho: menor APY pero más robusto ante volatilidad. Para USDC/USDT se usan rangos muy estrechos (±0.5%). Para ETH/USDC, rangos del ±15%–30% son comunes."
+    },
+    {
+      "q": "¿El cálculo considera el gas de Ethereum?",
+      "a": "No. Los costos de gas para abrir, cerrar o rebalancear una posición en Ethereum mainnet pueden ser significativos (decenas de USD). En L2 como Arbitrum u Optimism son negligibles. Sumá ese costo al análisis antes de decidir."
+    },
+    {
+      "q": "¿Qué es el breakeven de días?",
+      "a": "Es el número de días que la posición debe estar activa y en rango para que los fees acumulados cubran exactamente el impermanent loss calculado al precio final hipotético. Si el breakeven es 30 días y planeás mantener la posición 90 días, el retorno neto sería positivo."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Uniswap V3 Core Whitepaper",
+      "url": "https://uniswap.org/whitepaper-v3.pdf",
+      "publisher": "Uniswap Labs",
+      "date": "2021"
+    },
+    {
+      "name": "Uniswap V3 Developer Documentation",
+      "url": "https://docs.uniswap.org/concepts/protocol/concentrated-liquidity",
+      "publisher": "Uniswap Labs",
+      "date": "2026"
+    },
+    {
+      "name": "Impermanent Loss in Uniswap V3 — Research",
+      "url": "https://lambert-guillaume.medium.com/understanding-the-value-of-uniswap-v3-liquidity-positions-cdaaee127fe7",
+      "publisher": "Guillaume Lambert",
+      "date": "2021"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Los fee tiers son fijos en el contrato de Uniswap V3. Los valores de volumen y TVL son inputs del usuario y no se actualizan automáticamente. Revisar si Uniswap V4 introduce cambios estructurales en la mecánica de liquidez concentrada."
+  },
+  "lastReviewed": "2026-04-27"
+}

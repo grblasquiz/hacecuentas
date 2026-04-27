@@ -1,0 +1,273 @@
+{
+  "slug": "calculadora-fine-tuning-openai-vs-rag-cuando-conviene",
+  "title": "Fine-tune vs RAG: cuál conviene 2026 | Hacé Cuentas",
+  "h1": "Fine-tune vs RAG: ¿cuál conviene para tu caso?",
+  "description": "Compará costos y adecuación de fine-tuning OpenAI vs RAG según tu dataset, frecuencia de actualización y volumen de requests. Estimá gastos reales en USD.",
+  "category": "tecnologia",
+  "audience": "global",
+  "icon": "⚖️",
+  "formulaId": "fine-tuning-openai-vs-rag-cuando-conviene",
+  "intro": "¿Conviene hacer fine-tuning o implementar RAG para tu aplicación con LLMs? La decisión depende de cuánto cambian tus datos, el volumen de uso y el tipo de tarea. Esta calculadora estima el **costo mensual real** de cada enfoque y te da una recomendación basada en tu situación concreta.",
+  "keyTakeaway": "Con datasets estáticos y tareas de clasificación, el fine-tuning puede costar 60–80% menos que RAG a alto volumen; con datos que cambian semanalmente, RAG suele ser 3–5× más económico a largo plazo.",
+  "useCases": [
+    "Startup que quiere adaptar GPT-4o a su dominio sin reentrenar cada semana",
+    "Empresa con base de conocimiento interna que se actualiza diariamente",
+    "Equipo evaluando si construir un chatbot de soporte con fine-tune o con vector DB",
+    "Desarrollador que compara costos de inference fine-tuned vs RAG con gpt-4o-mini",
+    "Arquitecto de soluciones que necesita justificar la elección ante stakeholders"
+  ],
+  "fields": [
+    {
+      "id": "taskType",
+      "label": "Tipo de tarea principal",
+      "type": "select",
+      "options": [
+        {
+          "value": "classification",
+          "label": "Clasificación / extracción estructurada"
+        },
+        {
+          "value": "generation",
+          "label": "Generación de texto libre"
+        },
+        {
+          "value": "qa",
+          "label": "Q&A sobre documentos propios"
+        }
+      ],
+      "default": "generation",
+      "required": true
+    },
+    {
+      "id": "datasetSizeKB",
+      "label": "Tamaño del dataset de entrenamiento (KB de texto)",
+      "type": "number",
+      "placeholder": "500",
+      "default": 500,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "updateFrequency",
+      "label": "¿Con qué frecuencia cambian tus datos?",
+      "type": "select",
+      "options": [
+        {
+          "value": "never",
+          "label": "Raramente o nunca (estable)"
+        },
+        {
+          "value": "monthly",
+          "label": "Mensual"
+        },
+        {
+          "value": "weekly",
+          "label": "Semanal"
+        },
+        {
+          "value": "daily",
+          "label": "Diaria o más frecuente"
+        }
+      ],
+      "default": "monthly",
+      "required": true
+    },
+    {
+      "id": "requestsPerMonth",
+      "label": "Volumen de requests por mes",
+      "type": "number",
+      "placeholder": "10000",
+      "default": 10000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "avgInputTokens",
+      "label": "Tokens de entrada promedio por request",
+      "type": "number",
+      "placeholder": "500",
+      "default": 500,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "avgOutputTokens",
+      "label": "Tokens de salida promedio por request",
+      "type": "number",
+      "placeholder": "200",
+      "default": 200,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "ragChunks",
+      "label": "Chunks de contexto inyectados por request (RAG)",
+      "type": "number",
+      "placeholder": "5",
+      "default": 5,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "avgChunkTokens",
+      "label": "Tokens promedio por chunk (RAG)",
+      "type": "number",
+      "placeholder": "300",
+      "default": 300,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "vectorDbSizeGB",
+      "label": "Tamaño estimado de la base vectorial (GB)",
+      "type": "number",
+      "placeholder": "1",
+      "default": 1,
+      "step": 0.1,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "recommendation",
+      "label": "Recomendación",
+      "primary": true,
+      "format": "text"
+    },
+    {
+      "id": "ftTotalMonthly",
+      "label": "Costo mensual Fine-tune (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "ragTotalMonthly",
+      "label": "Costo mensual RAG (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "ftTrainingCost",
+      "label": "Costo de entrenamiento (amortizado/mes, USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "ftInferenceCost",
+      "label": "Costo inference fine-tune/mes (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "ragEmbeddingCost",
+      "label": "Costo embeddings RAG/mes (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "ragInferenceCost",
+      "label": "Costo inference base LLM RAG/mes (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "ragVectorDbCost",
+      "label": "Costo vector DB/mes (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "savingsPercent",
+      "label": "Ahorro de la opción recomendada (%)",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "scoreBreakdown",
+      "label": "Factores clave de la decisión",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa calculadora modela tres componentes de costo para cada estrategia y añade una puntuación cualitativa basada en cuatro factores de decisión.\n\n---\n\n### Fine-tuning — componentes de costo\n\n**1. Costo de entrenamiento (amortizado mensualmente)**\n\nOpenAI cobra el entrenamiento por token procesado durante el training run. La tarifa vigente 2026 para gpt-4o-mini fine-tuning es **$25 USD por millón de tokens de entrenamiento**.\n\n```\ntokens_training = datasetSizeKB × 1000 / 4   // ~4 bytes por token\ncosto_training_unico = tokens_training / 1_000_000 × 25\n```\n\nEste costo se amortiza según la frecuencia de reentrenamiento:\n- Nunca/rara vez → amortizado a 12 meses\n- Mensual → cada mes (costo full mensual)\n- Semanal → 4 veces por mes\n- Diaria → 30 veces por mes\n\n**2. Costo de inference fine-tuned**\n\nLa tarifa de inference para modelos fine-tuned de gpt-4o-mini es **$0.30/M tokens input y $1.20/M tokens output** (2026). El fine-tuned no necesita contexto adicional de RAG.\n\n```\ntokens_input_ft  = requestsPerMonth × avgInputTokens\ntokens_output_ft = requestsPerMonth × avgOutputTokens\ncosto_inf_ft = (tokens_input_ft / 1e6 × 0.30) + (tokens_output_ft / 1e6 × 1.20)\n```\n\n---\n\n### RAG — componentes de costo\n\n**1. Embeddings de consulta**\n\nCada request genera una consulta embedida con text-embedding-3-small: **$0.02/M tokens**.\n\n```\ncosto_emb = requestsPerMonth × avgInputTokens / 1e6 × 0.02\n```\n\n**2. Inference del LLM base (gpt-4o-mini)**\n\nRAG suma al prompt original los chunks de contexto recuperados.\n\n```\ntokens_input_rag  = requestsPerMonth × (avgInputTokens + ragChunks × avgChunkTokens)\ntokens_output_rag = requestsPerMonth × avgOutputTokens\ncosto_inf_rag = (tokens_input_rag / 1e6 × 0.15) + (tokens_output_rag / 1e6 × 0.60)\n```\n\nTarifa gpt-4o-mini base 2026: $0.15/M input, $0.60/M output.\n\n**3. Vector database**\n\nCosto estimado de alojamiento de vector DB (Pinecone Serverless, Qdrant Cloud o similar):\n- Hasta 1 GB: $0 – $10/mes (tier gratuito + extras)\n- Por GB adicional: ~$10/mes\n\n```\ncosto_vectordb = max(0, vectorDbSizeGB - 1) × 10 + base_vectordb_fee\n// base_vectordb_fee = 10 USD/mes para prod mínimo\n```\n\n---\n\n### Matriz de decisión (scoring)\n\nAdemás del costo, se evalúan 4 factores cualitativos con puntaje 0–2 a favor de Fine-tune:\n\n| Factor | Favorece Fine-tune (2 pts) | Neutro (1 pt) | Favorece RAG (0 pts) |\n|---|---|---|---|\n| Frecuencia actualización | Nunca | Mensual | Semanal/Diaria |\n| Tipo de tarea | Clasificación | Generación | Q&A sobre docs |\n| Tamaño dataset | > 1 MB | 200 KB – 1 MB | < 200 KB |\n| Volumen requests | > 50 000/mes | 10 000–50 000 | < 10 000 |\n\nScore ≥ 6 → Fine-tune recomendado. Score ≤ 3 → RAG recomendado. Intermedio → híbrido o evaluar ambos.\n\n---\n\n### Ejemplo numérico\n\nDataset 500 KB, mensual, generación, 10 000 req/mes, 500 tokens input, 200 output, 5 chunks × 300 tokens, 1 GB vector DB:\n\n- FT training amortizado: (500×1000/4)/1e6 × 25 = **$3.13/mes**\n- FT inference: (10000×500/1e6×0.30)+(10000×200/1e6×1.20) = $1.50+$2.40 = **$3.90/mes**\n- FT total: **~$7.03/mes**\n- RAG embeddings: 10000×500/1e6×0.02 = **$0.10/mes**\n- RAG inference: (10000×(500+1500)/1e6×0.15)+(10000×200/1e6×0.60) = $3.00+$1.20 = **$4.20/mes**\n- RAG vector DB: **$10/mes**\n- RAG total: **~$14.30/mes**\n→ Fine-tune conviene en este escenario (~51% más barato).\n\n---\n\n### Cuándo NO aplica esta estimación\n\n- Si usás modelos distintos a gpt-4o-mini (GPT-4o, Claude, Gemini tienen tarifas diferentes).\n- Si la infraestructura de vector DB es self-hosted (costo variable por servidor).\n- Si el fine-tuning requiere múltiples épocas o datasets muy grandes (el training cost puede ser mayor).\n- Esta calculadora no modela latencia, complejidad operativa ni costos de desarrollo.\n\nFuentes: OpenAI Pricing Page (2026), Pinecone Pricing (2026).",
+  "faq": [
+    {
+      "q": "¿Qué es fine-tuning y en qué se diferencia de RAG?",
+      "a": "Fine-tuning adapta los pesos del modelo con ejemplos propios: el conocimiento queda internalizado. RAG (Retrieval-Augmented Generation) recupera documentos relevantes en tiempo real y los inyecta en el prompt. Fine-tune es mejor para estilo/formato; RAG es mejor para conocimiento actualizable."
+    },
+    {
+      "q": "¿Por qué RAG puede ser más caro a bajo volumen?",
+      "a": "RAG tiene un costo fijo de vector DB (~$10/mes mínimo en producción) que es independiente del volumen. Con pocos requests, ese fijo domina el costo total. A partir de ~5.000–10.000 requests/mes el costo variable de inference suele superar el fijo."
+    },
+    {
+      "q": "¿Cuándo conviene hacer fine-tuning sí o sí?",
+      "a": "Cuando el comportamiento del modelo (tono, formato, estructura de respuesta) debe cambiar sistemáticamente y el dataset de entrenamiento es estable. También cuando querés reducir el prompt al mínimo y bajar costos de inference a alto volumen."
+    },
+    {
+      "q": "¿Puedo combinar fine-tuning y RAG?",
+      "a": "Sí. Un modelo fine-tuned puede usarse como LLM base de un pipeline RAG. Esto combina personalización de comportamiento (fine-tune) con conocimiento actualizable (RAG). El costo se suma, pero puede justificarse para casos enterprise."
+    },
+    {
+      "q": "¿Qué modelo asume esta calculadora?",
+      "a": "La calculadora usa tarifas de gpt-4o-mini 2026: $25/M tokens de entrenamiento, $0.30/M input y $1.20/M output para fine-tuned; $0.15/M input y $0.60/M output para el modelo base en RAG. Para otros modelos los costos varían significativamente."
+    },
+    {
+      "q": "¿Qué pasa si mi dataset cambia todos los días?",
+      "a": "Con actualizaciones diarias, el fine-tuning se vuelve muy caro: tendrías que pagar el costo de entrenamiento 30 veces por mes. RAG es claramente superior en ese escenario porque solo necesitás re-indexar los documentos nuevos, lo cual es mucho más barato."
+    },
+    {
+      "q": "¿Cómo estimo el tamaño de mi dataset en KB?",
+      "a": "Exportá tus pares (prompt, completion) a un archivo .jsonl. El tamaño del archivo en KB es una buena aproximación. Como referencia: 100 ejemplos de Q&A de longitud media ocupan aproximadamente 50–150 KB."
+    },
+    {
+      "q": "¿El costo de entrenamiento es único o recurrente?",
+      "a": "Es único por run de entrenamiento. Si tus datos no cambian, solo pagás una vez y amortizás ese costo indefinidamente. Si reentrenás mensualmente, el costo de training se suma al invoice de cada mes."
+    },
+    {
+      "q": "¿Qué es el vector DB y cuánto cuesta realmente?",
+      "a": "Es la base de datos que almacena embeddings de tus documentos para recuperación semántica (Pinecone, Qdrant, Weaviate, pgvector). Planes cloud de producción parten de $0 (tier gratuito limitado) a ~$70+/mes según volumen. Esta calc asume ~$10/mes mínimo productivo."
+    }
+  ],
+  "sources": [
+    {
+      "name": "OpenAI API Pricing",
+      "url": "https://openai.com/api/pricing/",
+      "publisher": "OpenAI",
+      "date": "2026"
+    },
+    {
+      "name": "OpenAI Fine-tuning Guide",
+      "url": "https://platform.openai.com/docs/guides/fine-tuning",
+      "publisher": "OpenAI",
+      "date": "2026"
+    },
+    {
+      "name": "Pinecone Pricing",
+      "url": "https://www.pinecone.io/pricing/",
+      "publisher": "Pinecone",
+      "date": "2026"
+    },
+    {
+      "name": "OpenAI Embeddings Guide",
+      "url": "https://platform.openai.com/docs/guides/embeddings",
+      "publisher": "OpenAI",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Revisar tarifas de OpenAI (training, inference fine-tuned, inference base, embeddings) y costos de vector DB cuando OpenAI o Pinecone publiquen cambios de precios.",
+    "source": "OpenAI API Pricing",
+    "sourceUrl": "https://openai.com/api/pricing/"
+  },
+  "lastReviewed": "2026-04-27"
+}

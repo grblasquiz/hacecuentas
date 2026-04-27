@@ -120,33 +120,38 @@ function getLastMod(filepath: string, fallback: string): string {
 }
 
 /**
- * Combina campos editoriales y mtime del filesystem: gana el MÁS RECIENTE.
+ * Devuelve el lastmod editorial de un calc, priorizando señales explícitas
+ * sobre el mtime del filesystem.
  *
- * Fuentes:
- *   - calc.lastReviewed (revisión editorial explícita)
- *   - calc.dataUpdate.lastUpdated (data externa refrescada)
- *   - mtime del archivo JSON (edit real al contenido)
+ * Política (de mayor a menor prioridad):
+ *   1. calc.lastReviewed   — revisión editorial humana ("repasé esto, está OK")
+ *   2. calc.dataUpdate.lastUpdated — refresh de data externa (escalas, alícuotas)
+ *   3. mtime (git log) del JSON — fallback para calcs sin metadata editorial
+ *   4. fallback (buildDate)
  *
- * El mtime vale porque el JSON del calc no se regenera en cada build — sólo
- * cambia cuando un humano o script lo edita. Si editás una fórmula sin tocar
- * lastReviewed, mtime lo captura igual. Si actualizás data externa y bumpeás
- * lastUpdated, eso gana. Si el build no tocó el JSON, mtime queda quieto y
- * Google no re-crawlea al pedo.
+ * Por qué editorial gana sobre mtime: scripts de mass-edit cosmético
+ * (re-format, backfill de campos no-visibles, normalización de slugs) tocan
+ * cientos de JSON en un commit sin que cambie el contenido user-facing. Si
+ * mtime ganara siempre, el sitemap reportaría todas esas URLs como cambiadas
+ * y Google empezaría a desconfiar del lastmod (señal envenenada).
+ *
+ * Implicaciones:
+ *   - Si un calc tiene lastReviewed, ese campo ES la fuente de verdad. Para
+ *     mover su lastmod, bumpear lastReviewed manualmente.
+ *   - Calcs sin lastReviewed siguen con mtime — comportamiento previo intacto
+ *     para el 90% del catálogo.
+ *   - dataUpdate.lastUpdated solo aplica si NO hay lastReviewed (revisión
+ *     editorial es señal más fuerte que refresh de data).
  */
 function getCalcLastMod(calc: any, filepath: string, fallback: string): string {
-  const candidates: string[] = [];
   if (calc?.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
-    candidates.push(calc.lastReviewed);
+    return calc.lastReviewed;
   }
   if (calc?.dataUpdate?.lastUpdated && /^\d{4}-\d{2}-\d{2}$/.test(calc.dataUpdate.lastUpdated)) {
-    candidates.push(calc.dataUpdate.lastUpdated);
+    return calc.dataUpdate.lastUpdated;
   }
   // Resolver el archivo real del calc. Convención histórica mixta en el repo:
   // ~1800 calcs se nombran por `formulaId`, ~600 por `slug`, ~14 por otra cosa.
-  // El caller pasa el path construido con formulaId||slug; si no existe, probamos
-  // el otro formato. Sin esto, 611 calcs pierden la señal de mtime y caen al
-  // dataUpdate.lastUpdated (fecha vieja) → sitemap les reporta fecha anterior
-  // a la real y Google no ve el cambio.
   let resolved = filepath;
   if (!existsSync(resolved)) {
     const bySlug = join(CALCS_DIR, `${calc?.slug}.json`);
@@ -156,10 +161,11 @@ function getCalcLastMod(calc: any, filepath: string, fallback: string): string {
       if (existsSync(byFormula)) resolved = byFormula;
     }
   }
-  const mtime = existsSync(resolved) ? getLastMod(resolved, '') : '';
-  if (mtime) candidates.push(mtime);
-  if (candidates.length === 0) return fallback;
-  return candidates.sort().at(-1)!;
+  if (existsSync(resolved)) {
+    const mtime = getLastMod(resolved, '');
+    if (mtime) return mtime;
+  }
+  return fallback;
 }
 
 /**

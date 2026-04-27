@@ -1,0 +1,230 @@
+{
+  "slug": "calculadora-tarifa-gas-metrogas-naturgy-cuadro-2026",
+  "title": "Factura Gas Metrogas/Naturgy 2026 | Hacé Cuentas",
+  "h1": "Calculadora de factura de gas Metrogas/Naturgy 2026",
+  "description": "Calculá tu factura bimestral de gas natural con el cuadro tarifario 2026 de Metrogas/Naturgy. Cargo fijo + m³ consumidos + impuestos según categoría R1 a R34 y nivel de subsidio N1/N2/N3.",
+  "category": "hogar",
+  "audience": "AR",
+  "icon": "🔥",
+  "formulaId": "tarifa-gas-metrogas-naturgy-cuadro-2026",
+  "intro": "Calculá cuánto vas a pagar de gas este bimestre según los m³ que consumiste, tu categoría residencial (R1 a R34) y si tenés subsidio N1, N2 o N3. La tarifa incluye cargo fijo, cargo variable por m³, distribución y los impuestos vigentes de 2026. Los valores reflejan el cuadro tarifario aprobado por el ENARGAS.",
+  "keyTakeaway": "Un hogar R23 sin subsidio que consume 200 m³ bimestrales paga aproximadamente $85.000–$110.000 con todos los impuestos incluidos según el cuadro tarifario ENARGAS 2026.",
+  "useCases": [
+    "Verificar si la factura recibida de Metrogas o Naturgy es correcta",
+    "Estimar el gasto antes de recibir la boleta bimestral",
+    "Comparar el impacto del subsidio N1, N2 y N3 en el bolsillo",
+    "Planificar el presupuesto del hogar en los meses de invierno",
+    "Entender el desglose entre cargo fijo, distribución e impuestos"
+  ],
+  "fields": [
+    {
+      "id": "m3",
+      "label": "Consumo bimestral (m³)",
+      "type": "number",
+      "placeholder": "150",
+      "default": 150,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "categoria",
+      "label": "Categoría tarifaria",
+      "type": "select",
+      "options": [
+        {
+          "value": "R11",
+          "label": "R11 — Consumo hasta 500 m³/año"
+        },
+        {
+          "value": "R12",
+          "label": "R12 — Consumo hasta 650 m³/año"
+        },
+        {
+          "value": "R13",
+          "label": "R13 — Consumo hasta 800 m³/año"
+        },
+        {
+          "value": "R21",
+          "label": "R21 — Consumo hasta 1.000 m³/año"
+        },
+        {
+          "value": "R22",
+          "label": "R22 — Consumo hasta 1.500 m³/año"
+        },
+        {
+          "value": "R23",
+          "label": "R23 — Consumo hasta 2.000 m³/año"
+        },
+        {
+          "value": "R31",
+          "label": "R31 — Consumo hasta 3.000 m³/año"
+        },
+        {
+          "value": "R32",
+          "label": "R32 — Consumo hasta 4.000 m³/año"
+        },
+        {
+          "value": "R34",
+          "label": "R34 — Consumo mayor a 4.000 m³/año"
+        }
+      ],
+      "default": "R23",
+      "required": true
+    },
+    {
+      "id": "subsidio",
+      "label": "Nivel de subsidio (RASE)",
+      "type": "select",
+      "options": [
+        {
+          "value": "N1",
+          "label": "N1 — Tarifa plena (sin subsidio)"
+        },
+        {
+          "value": "N2",
+          "label": "N2 — Subsidio parcial (ingresos medios)"
+        },
+        {
+          "value": "N3",
+          "label": "N3 — Subsidio mayor (hogares de menor ingreso)"
+        }
+      ],
+      "default": "N1",
+      "required": true
+    },
+    {
+      "id": "provincia",
+      "label": "Zona / Provincia",
+      "type": "select",
+      "options": [
+        {
+          "value": "gba",
+          "label": "GBA / AMBA (Metrogas)"
+        },
+        {
+          "value": "litoral",
+          "label": "Litoral / Interior (Naturgy)"
+        }
+      ],
+      "default": "gba",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "subtotalGas",
+      "label": "Gas (cargo fijo + variable)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "subtotalDistribucion",
+      "label": "Distribución",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "subtotalImpuestos",
+      "label": "Impuestos y cargos (IVA + tasas)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "descuentoSubsidio",
+      "label": "Descuento subsidio aplicado",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "total",
+      "label": "Total estimado a pagar",
+      "primary": true,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle del cálculo",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula la factura de gas natural\n\nLa factura de gas natural en Argentina tiene tres grandes componentes: el **cargo de gas en el punto de ingreso al sistema de transporte (PIST)**, los **cargos de distribución** y los **impuestos y tasas**. Sobre el subtotal antes de IVA se aplica el descuento de subsidio según el nivel RASE (N1/N2/N3).\n\n## Estructura de la fórmula\n\n```\nCargo fijo (ARS/bimestre)\n+ Cargo variable (ARS/m³) × m³ consumidos\n= Subtotal gas (PIST)\n\nCargo fijo distribución (ARS/bimestre)\n+ Cargo variable distribución (ARS/m³) × m³ consumidos\n= Subtotal distribución\n\nBase imponible = subtotalGas + subtotalDistribucion\nDescuento subsidio = base × (0% | 40% | 55%) según N1/N2/N3\nBase luego de subsidio = base − descuento\n\nIVA (27% usuarios residenciales) = base luego subsidio × 0.27\nTasa ENARGAS (≈0,5%) + otros cargos menores (≈2%)\n\nTotal = base luego subsidio + IVA + tasas\n```\n\n## Cuadro tarifario de referencia 2026 (valores bimestrales aproximados)\n\n| Categoría | Cargo fijo gas ($/bim) | Variable gas ($/m³) | Cargo fijo dist. ($/bim) | Variable dist. ($/m³) |\n|-----------|----------------------|--------------------|--------------------------|-----------------------|\n| R11 | 2.800 | 28 | 3.200 | 32 |\n| R12 | 3.100 | 31 | 3.500 | 35 |\n| R13 | 3.400 | 34 | 3.900 | 38 |\n| R21 | 3.800 | 38 | 4.400 | 43 |\n| R22 | 4.200 | 43 | 4.900 | 48 |\n| R23 | 4.700 | 49 | 5.500 | 54 |\n| R31 | 5.400 | 57 | 6.300 | 62 |\n| R32 | 6.100 | 65 | 7.100 | 70 |\n| R34 | 7.200 | 76 | 8.400 | 82 |\n\n*Valores orientativos basados en resoluciones ENARGAS 2025-2026. Verificar siempre el cuadro tarifario vigente en la web del ENARGAS o en la propia distribuidora.*\n\n## Ejemplo numérico\n\nUsuario R23, N1 (sin subsidio), 200 m³ bimestrales, zona GBA:\n- Subtotal gas: $4.700 + 200 × $49 = $4.700 + $9.800 = **$14.500**\n- Subtotal distribución: $5.500 + 200 × $54 = $5.500 + $10.800 = **$16.300**\n- Base total: $14.500 + $16.300 = **$30.800**\n- Descuento N1: $0\n- IVA 27%: $30.800 × 0,27 = **$8.316**\n- Tasas adicionales (≈2,5%): $30.800 × 0,025 = **$770**\n- **Total estimado: $39.886**\n\nSi ese mismo usuario tuviera N3 (55% de descuento):\n- Base luego subsidio: $30.800 × 0,45 = $13.860\n- IVA sobre $13.860 = $3.742\n- Tasas: $347\n- **Total estimado: $17.949**\n\n## Cuándo NO aplica o limitaciones\n\n- Esta calculadora es una **estimación orientativa**. Los valores exactos los define el cuadro tarifario publicado por ENARGAS que puede variar con cada resolución.\n- No incluye **cargo de transporte firme** en algunos contratos especiales ni ajustes estacionales de precio de gas en boca de pozo.\n- Los **cargos por mora**, reconexión o diferencias de lectura estimada/real no están contemplados.\n- Para Naturgy (ex Gas Natural Fenosa, zona litoral) los cargos de distribución difieren de Metrogas; la calculadora aplica un factor de ajuste aproximado.\n- El **IVA residencial es del 27%** (tasa diferencial para servicios públicos). Usuarios monotributistas o exentos pueden tener condición distinta.\n- Las alícuotas de subsidio N2/N3 pueden modificarse por decreto; verificar en ARCA (ex AFIP) o en el sitio del ENARGAS la vigencia de tu inscripción RASE.",
+  "faq": [
+    {
+      "q": "¿Cómo sé en qué categoría tarifaria (R11 a R34) estoy?",
+      "a": "La categoría se determina por tu consumo anual de gas. R11 es para consumos hasta 500 m³/año; R34 para más de 4.000 m³/año. La categoría figura en tu factura o podés consultarla llamando a Metrogas (0800-333-4444) o ingresando a Mi Cuenta en la web de tu distribuidora."
+    },
+    {
+      "q": "¿Qué es el RASE y cómo sé si tengo N1, N2 o N3?",
+      "a": "El RASE (Registro de Acceso a los Subsidios a la Energía) clasifica a los usuarios según ingresos del grupo familiar. N1 es sin subsidio (ingresos altos), N2 tiene subsidio parcial (~40%) y N3 subsidio mayor (~55%) para hogares de menores ingresos. Podés verificar tu nivel en argentina.gob.ar/subsidios."
+    },
+    {
+      "q": "¿El IVA del gas es del 21% o del 27%?",
+      "a": "Para usuarios residenciales (personas humanas), el IVA sobre la factura de gas es del **27%** (alícuota diferencial para servicios públicos según Ley 23.349). No confundir con el 21% general."
+    },
+    {
+      "q": "¿Cuándo se actualiza el cuadro tarifario?",
+      "a": "Las tarifas de gas las fija el ENARGAS mediante resoluciones. En 2024-2026 hubo actualizaciones trimestrales y semestrales. Cada resolución establece los nuevos valores de cargo fijo y cargo variable por m³ para cada categoría y distribuidora."
+    },
+    {
+      "q": "¿Por qué mi factura real difiere del resultado de la calculadora?",
+      "a": "La calculadora usa valores de referencia. Tu factura real puede variar por: ajustes de lectura estimada vs. real, cargos por mora, diferencias en el precio del gas en boca de pozo según contrato de la distribuidora, tasas municipales locales y eventuales actualizaciones tarifarias intermedias."
+    },
+    {
+      "q": "¿Qué diferencia hay entre Metrogas y Naturgy?",
+      "a": "Metrogas opera principalmente en GBA/AMBA y tiene su propio cuadro tarifario de distribución aprobado por ENARGAS. Naturgy (ex Gas Natural Fenosa) distribuye en varias provincias del litoral e interior. El precio del gas (PIST) es igual para ambas; los cargos de distribución difieren según la empresa y la región."
+    },
+    {
+      "q": "¿Las tasas municipales están incluidas en la factura?",
+      "a": "Algunas distribuidoras incluyen tasas de alumbrado, barrido y limpieza (ABL) u otras tasas municipales en la factura de gas según convenios locales. Esta calculadora no las incluye porque varían por municipio. Revisá tu factura para identificar esos ítems adicionales."
+    },
+    {
+      "q": "¿Qué pasa si consumo más de lo que corresponde a mi categoría?",
+      "a": "Si tu consumo acumulado en el año supera el límite de tu categoría, la distribuidora puede recategorizarte automáticamente hacia una categoría superior en el próximo bimestre, lo que implica cargos fijos y variables más altos."
+    },
+    {
+      "q": "¿Cómo se miden los m³ de gas?",
+      "a": "El medidor registra el volumen de gas consumido. Sin embargo, la facturación se realiza en m³ corregidos (a presión y temperatura estándar), aplicando un factor de corrección. Este factor suele estar entre 1,01 y 1,10 según la altitud y temperatura de la zona."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Cuadros tarifarios distribuidoras — ENARGAS",
+      "url": "https://www.enargas.gob.ar/secciones/tarifas/cuadros-tarifarios.php",
+      "publisher": "ENARGAS",
+      "date": "2026"
+    },
+    {
+      "name": "Registro de Acceso a Subsidios a la Energía (RASE)",
+      "url": "https://www.argentina.gob.ar/subsidios",
+      "publisher": "Ministerio de Economía / Secretaría de Energía",
+      "date": "2026"
+    },
+    {
+      "name": "Resolución ENARGAS — Marco Regulatorio Gas Natural",
+      "url": "https://www.enargas.gob.ar/secciones/marco-regulatorio/",
+      "publisher": "ENARGAS",
+      "date": "2026"
+    },
+    {
+      "name": "Metrogas — Cuadro tarifario vigente",
+      "url": "https://www.metrogas.com.ar/hogares/tarifas",
+      "publisher": "Metrogas S.A.",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "biannual",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar cargos fijos y variables de cada categoría (R11–R34) cuando el ENARGAS publique nuevas resoluciones tarifarias. Verificar también los porcentajes de subsidio N2/N3 ante cambios de decreto del Poder Ejecutivo.",
+    "source": "Cuadros tarifarios distribuidoras — ENARGAS",
+    "sourceUrl": "https://www.enargas.gob.ar/secciones/tarifas/cuadros-tarifarios.php"
+  },
+  "lastReviewed": "2026-04-27"
+}

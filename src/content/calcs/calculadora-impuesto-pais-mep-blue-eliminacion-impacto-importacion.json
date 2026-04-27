@@ -1,0 +1,190 @@
+{
+  "slug": "calculadora-impuesto-pais-mep-blue-eliminacion-impacto-importacion",
+  "title": "Impacto Eliminación Impuesto PAIS en Importaciones 2025 | Hacé Cuentas",
+  "h1": "Calculadora: Impacto de la eliminación del Impuesto PAIS",
+  "description": "Calculá cuánto ahorrás en compras al exterior (Amazon, AliExpress, courier) sin el Impuesto PAIS 30%. Incluye IVA, percepción Ganancias e IIBB.",
+  "category": "impuestos",
+  "audience": "AR",
+  "icon": "📦",
+  "formulaId": "impuesto-pais-mep-blue-eliminacion-impacto-importacion",
+  "intro": "Hasta el 22 de diciembre de 2024, las compras al exterior incluían el **Impuesto PAIS del 30%** sobre el tipo de cambio oficial. Su eliminación redujo el costo de importar bienes por courier o plataformas como Amazon y AliExpress. Esta calculadora compara el costo total con y sin ese impuesto, sumando IVA (21%), percepción de Ganancias (30%) y percepción de IIBB (3%) según el tipo de operación.",
+  "keyTakeaway": "Una compra de USD 100 con tipo de cambio oficial de $1.200 costaba $216.720 con Impuesto PAIS; sin él, el costo baja a $166.680, un ahorro de $50.040 (≈23%).",
+  "useCases": [
+    "Comparar el costo de un producto de Amazon antes y después de la eliminación del PAIS",
+    "Calcular el ahorro real en importaciones por courier tras diciembre 2024",
+    "Estimar el precio final en pesos de una compra en AliExpress según el dólar oficial",
+    "Analizar el impacto de IVA, Ganancias e IIBB en compras internacionales",
+    "Planificar importaciones personales bajo el régimen de franquicia de USD 3.000 anuales"
+  ],
+  "fields": [
+    {
+      "id": "montoUsd",
+      "label": "Monto de la compra (USD)",
+      "type": "number",
+      "placeholder": "100",
+      "default": 100,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "tipoCambio",
+      "label": "Tipo de cambio oficial (ARS por USD)",
+      "type": "number",
+      "placeholder": "1200",
+      "default": 1200,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "tipoOperacion",
+      "label": "Tipo de operación / perfil fiscal",
+      "type": "select",
+      "options": [
+        {
+          "value": "consumidor_final",
+          "label": "Consumidor final (no responsable inscripto)"
+        },
+        {
+          "value": "responsable_inscripto",
+          "label": "Responsable inscripto / empresa"
+        },
+        {
+          "value": "monotributista",
+          "label": "Monotributista"
+        }
+      ],
+      "default": "consumidor_final",
+      "required": true
+    },
+    {
+      "id": "incluyeIIBB",
+      "label": "¿Incluir percepción IIBB (3%)?",
+      "type": "radio",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ],
+      "default": "si",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "costoConPais",
+      "label": "Costo total CON Impuesto PAIS (hasta dic 2024)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "costoSinPais",
+      "label": "Costo total SIN Impuesto PAIS (desde 2025)",
+      "primary": true,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "ahorroPesos",
+      "label": "Ahorro por eliminación del PAIS",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "ahorroPorcentaje",
+      "label": "Ahorro porcentual",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "desglose",
+      "label": "Desglose de cargas",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLas importaciones personales por courier o plataformas de e-commerce internacional (Amazon, AliExpress, eBay, etc.) en Argentina tributan varias cargas sobre el valor en dólares convertido al **tipo de cambio oficial** (hoy dólar BNA vendedor).\n\n### Cargas aplicables\n\n| Concepto | Alícuota | Base de cálculo | ¿Acumulable? |\n|---|---|---|---|\n| Impuesto PAIS (hasta 22/12/2024) | 30% | TC oficial × USD | Sí (eleva la base) |\n| IVA | 21% | Base + PAIS | Sí |\n| Percepción Ganancias (RI/Monotrib.) | 30% (RI) / 30% (Mono) | Base + PAIS | Sí |\n| Percepción IIBB (opt.) | 3% | Base + PAIS | Sí |\n\n> Para consumidores finales sin CUIT activo en Ganancias, la percepción de Ganancias generalmente no aplica en operaciones de comercio exterior minorista, pero puede retener la entidad pagadora. En este cálculo se omite para consumidor final y se aplica para RI/Monotributista.\n\n### Fórmula\n\n```\n// Base en pesos\nbaseARS = montoUSD × tipoCambio\n\n// Con Impuesto PAIS (vigente hasta 22/12/2024)\nbaseConPais = baseARS × (1 + 0.30)\nivaConPais  = baseConPais × 0.21\ngananciasConPais = baseConPais × tasaGanancias   // 0.30 si RI o Mono; 0 si CF\niibbConPais = baseConPais × (incluyeIIBB ? 0.03 : 0)\ncostoConPais = baseConPais + ivaConPais + gananciasConPais + iibbConPais\n\n// Sin Impuesto PAIS (desde 23/12/2024)\nbaseSinPais = baseARS\nivasSinPais = baseSinPais × 0.21\ngananciaSinPais = baseSinPais × tasaGanancias\niibbSinPais = baseSinPais × (incluyeIIBB ? 0.03 : 0)\ncostoSinPais = baseSinPais + ivasSinPais + gananciaSinPais + iibbSinPais\n\n// Ahorro\nahorroPesos = costoConPais - costoSinPais\nahorroPct   = ahorroPesos / costoConPais × 100\n```\n\n### Ejemplo numérico\n\nCompra de **USD 100**, tipo de cambio **$1.200**, perfil: **Responsable Inscripto**, con IIBB:\n\n- Base ARS: $120.000\n- **CON PAIS:** Base ajustada $156.000 → IVA $32.760 + Gan. $46.800 + IIBB $4.680 = **$240.240 total**\n- **SIN PAIS:** Base $120.000 → IVA $25.200 + Gan. $36.000 + IIBB $3.600 = **$184.800 total**\n- **Ahorro: $55.440 (23,1%)**\n\n### Cuándo NO aplica / Limitaciones\n\n- **Franquicia:** Las importaciones personales por courier tienen una franquicia de USD 3.000 anuales con un arancel del 50% sobre el excedente. Esta calculadora no incluye ese arancel; corresponde a compras dentro de la franquicia o regímenes especiales.\n- **Tipo de cambio:** El TC oficial fluctúa diariamente. Usá el BNA vendedor del día de la operación.\n- **Bienes con alícuota de IVA diferencial:** Algunos bienes tienen IVA al 10,5% (alimentos, medicamentos). La calculadora asume 21% (alícuota general).\n- **IIBB provincial:** La alícuota del 3% es referencial; varía por provincia y actividad.\n- Esta calculadora NO contempla derechos de importación (aranceles aduaneros), que aplican en envíos comerciales.",
+  "faq": [
+    {
+      "q": "¿Cuándo se eliminó el Impuesto PAIS?",
+      "a": "El Impuesto PAIS fue eliminado el 22 de diciembre de 2024 mediante el Decreto 1057/2024. A partir del 23 de diciembre de 2024, las compras al exterior y los pagos de servicios en moneda extranjera dejaron de incluir ese recargo del 30% sobre el tipo de cambio oficial."
+    },
+    {
+      "q": "¿Qué era el Impuesto PAIS y sobre qué se aplicaba?",
+      "a": "El Impuesto PAIS (Ley 27.541) era un recargo del 30% sobre el tipo de cambio oficial en operaciones de cambio de moneda extranjera: compras al exterior, servicios de streaming, viajes, importaciones por courier y pagos con tarjeta en dólares."
+    },
+    {
+      "q": "¿Las compras en Amazon o AliExpress ya no tienen recargos?",
+      "a": "Siguen teniendo IVA (21%), y según tu condición fiscal, percepción de Ganancias (30%) e IIBB (3% referencial). Solo desapareció el recargo del PAIS. El tipo de cambio oficial sigue siendo la base de conversión."
+    },
+    {
+      "q": "¿Qué tipo de cambio debo usar?",
+      "a": "El tipo de cambio que usan los bancos y el sistema financiero oficial es el dólar BNA vendedor (Banco Nación Argentina). Es el que se aplica en compras con tarjeta, transferencias y pagos al exterior. No aplica el dólar MEP ni el blue para estas operaciones formales."
+    },
+    {
+      "q": "¿Cómo funciona la percepción de Ganancias en compras al exterior?",
+      "a": "Responsables inscriptos y monotributistas pagan una percepción del 30% sobre la base en pesos, que actúa como pago a cuenta del Impuesto a las Ganancias. Para consumidores finales sin CUIT habilitado, generalmente no se retiene, aunque el banco emisor puede aplicarla como pago a cuenta."
+    },
+    {
+      "q": "¿Qué es la percepción de IIBB en importaciones?",
+      "a": "Es una percepción provincial del Impuesto sobre los Ingresos Brutos, de aproximadamente 3% (varía por provincia). Se aplica a compras en moneda extranjera y actúa como pago a cuenta de IIBB. No aplica a consumidores finales sin actividad comercial en la mayoría de provincias."
+    },
+    {
+      "q": "¿Existe una franquicia para importaciones personales por courier?",
+      "a": "Sí. El régimen de envíos de entrega a domicilio (EED) permite hasta USD 3.000 anuales por persona con un arancel del 50% sobre el valor. Esta calculadora muestra las cargas fiscales (IVA, Ganancias, IIBB) pero no incluye el arancel del 50%, que es un derecho aduanero adicional."
+    },
+    {
+      "q": "¿El dólar blue o MEP afecta el cálculo?",
+      "a": "No directamente. Las operaciones de importación formal se liquidan al tipo de cambio oficial (BNA). El dólar blue o MEP son referencias del mercado informal/financiero y no se usan como base para el cálculo de impuestos en importaciones por courier o plataformas de e-commerce."
+    },
+    {
+      "q": "¿Vale la pena importar ahora que se eliminó el PAIS?",
+      "a": "Depende del tipo de cambio oficial vigente y del producto. Sin el PAIS, el costo se redujo entre 18% y 23% según el perfil fiscal. Aun así, sumando IVA (21%) y Ganancias (30% para RI), el costo total puede superar ampliamente el precio en dólares original."
+    },
+    {
+      "q": "¿Qué pasa si el pago es con tarjeta de crédito en el exterior?",
+      "a": "Los resúmenes de tarjeta en moneda extranjera también dejaron de tener el recargo PAIS desde el 23/12/2024. Se liquidan al tipo de cambio oficial del día de imputación del resumen, y siguen incluyendo percepción de Ganancias e IIBB según corresponda."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Decreto 1057/2024 – Eliminación del Impuesto PAIS",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/320917/20241223",
+      "publisher": "Boletín Oficial de la República Argentina",
+      "date": "2024"
+    },
+    {
+      "name": "Ley 27.541 – Solidaridad Social y Reactivación Productiva (Impuesto PAIS)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/330000-334999/333564/norma.htm",
+      "publisher": "InfoLEG – Ministerio de Justicia",
+      "date": "2019"
+    },
+    {
+      "name": "Resolución General AFIP 4815/2020 – Percepciones Ganancias/Bienes Personales en operaciones en moneda extranjera",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/335000-339999/337163/norma.htm",
+      "publisher": "AFIP / ARCA",
+      "date": "2020"
+    },
+    {
+      "name": "Régimen de Envíos de Entrega a Domicilio (EED) – Aduana Argentina",
+      "url": "https://www.afip.gob.ar/aduana/enviosPostales/envios-entrega-domicilio.asp",
+      "publisher": "AFIP / ARCA – Aduana",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar tipo de cambio oficial de referencia (default) cuando el BNA cambie significativamente. Revisar alícuotas de percepción IIBB si hay cambios provinciales. Verificar si se restituye algún impuesto sobre operaciones cambiarias.",
+    "source": "Decreto 1057/2024 – Eliminación del Impuesto PAIS",
+    "sourceUrl": "https://www.boletinoficial.gob.ar/detalleAviso/primera/320917/20241223"
+  },
+  "lastReviewed": "2026-04-27"
+}

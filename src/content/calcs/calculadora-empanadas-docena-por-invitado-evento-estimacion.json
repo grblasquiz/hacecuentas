@@ -1,0 +1,194 @@
+{
+  "slug": "calculadora-empanadas-docena-por-invitado-evento-estimacion",
+  "title": "Calculadora de Empanadas por Invitado 2026 | Hacé Cuentas",
+  "h1": "Calculadora de empanadas por invitado para eventos",
+  "description": "Calculá cuántas empanadas necesitás para tu evento: docenas exactas según invitados, tipo de ocasión y variedades sugeridas (carne, pollo, JyQ, verdura).",
+  "category": "cocina",
+  "audience": "AR",
+  "icon": "🥟",
+  "formulaId": "empanadas-docena-por-invitado-evento-estimacion",
+  "intro": "¿Cuántas empanadas pedís para que no falten ni sobren demasiado? La regla de oro es **4 a 6 por persona como plato principal** y **2 a 3 como entrada o picada**. Esta calculadora te da la cantidad exacta en docenas y una distribución sugerida por variedad según el tipo de evento.",
+  "keyTakeaway": "Para 20 invitados en un almuerzo necesitás al menos 10 docenas: 4 de carne, 2 de pollo, 2 de jamón y queso y 2 de verdura.",
+  "useCases": [
+    "Cumpleaños o reunión familiar con almuerzo o cena",
+    "Picada o after-office con empanadas como entrada",
+    "Evento empresarial o reunión de trabajo",
+    "Reunión de amigos tipo campo o asado con empanadas de entrada",
+    "Festejo infantil o merienda-cena con variedad de sabores"
+  ],
+  "fields": [
+    {
+      "id": "invitados",
+      "label": "Cantidad de invitados",
+      "type": "number",
+      "placeholder": "20",
+      "default": 20,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "momento",
+      "label": "Tipo de ocasión",
+      "type": "select",
+      "options": [
+        {
+          "value": "plato_principal",
+          "label": "Plato principal (almuerzo / cena)"
+        },
+        {
+          "value": "entrada",
+          "label": "Entrada antes de otro plato"
+        },
+        {
+          "value": "picada",
+          "label": "Picada o after-office"
+        }
+      ],
+      "default": "plato_principal",
+      "required": true
+    },
+    {
+      "id": "apetito",
+      "label": "Apetito estimado",
+      "type": "select",
+      "options": [
+        {
+          "value": "moderado",
+          "label": "Moderado (promedio)"
+        },
+        {
+          "value": "alto",
+          "label": "Alto (se come mucho)"
+        },
+        {
+          "value": "bajo",
+          "label": "Bajo (niños, picoteo ligero)"
+        }
+      ],
+      "default": "moderado",
+      "required": true
+    },
+    {
+      "id": "hayNinos",
+      "label": "¿Hay niños entre los invitados?",
+      "type": "radio",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ],
+      "default": "no",
+      "required": true
+    },
+    {
+      "id": "porcentajeNinos",
+      "label": "Porcentaje aproximado de niños (%)",
+      "type": "number",
+      "placeholder": "20",
+      "default": 20,
+      "step": 5,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "totalEmpanadas",
+      "label": "Total de empanadas",
+      "primary": true,
+      "format": "integer",
+      "suffix": "empanadas"
+    },
+    {
+      "id": "totalDocenas",
+      "label": "Total en docenas",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "docenas"
+    },
+    {
+      "id": "docenasRedondeadas",
+      "label": "Docenas a pedir (redondeado arriba)",
+      "primary": false,
+      "format": "integer",
+      "suffix": "docenas"
+    },
+    {
+      "id": "empPorPersona",
+      "label": "Empanadas por persona aplicadas",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "por persona"
+    },
+    {
+      "id": "variedades",
+      "label": "Distribución sugerida por variedad",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa cantidad de empanadas por persona varía según el rol que cumple en el evento:\n\n| Ocasión | Apetito bajo | Apetito moderado | Apetito alto |\n|---|---|---|---|\n| Plato principal | 4 | 5 | 6 |\n| Entrada | 2 | 3 | 3 |\n| Picada / after-office | 2 | 3 | 4 |\n\nLos niños (menores estimados) consumen aproximadamente la mitad que un adulto.\n\n### Fórmula\n\n```\nadultos = invitados * (1 - porcentajeNiños / 100)\nniños   = invitados * (porcentajeNiños / 100)\n\ntotalEmpanadas = adultos * empPorPersona + niños * (empPorPersona / 2)\n\ntotalDocenas        = totalEmpanadas / 12\ndocenasRedondeadas  = ceil(totalDocenas)\n```\n\n### Distribución de variedades\n\nUna distribución clásica y equilibrada para eventos argentinos distribuye las docenas así:\n\n| Variedad | Proporción |\n|---|---|\n| Carne (cortada o picada) | 40 % |\n| Pollo | 25 % |\n| Jamón y queso | 20 % |\n| Verdura / humita | 15 % |\n\nEsta proporción se aplica sobre las **docenas redondeadas** para dar números enteros manejables.\n\n### Ejemplo numérico\n\n20 invitados, plato principal, apetito moderado, sin niños:\n\n```\ntotalEmpanadas = 20 * 5 = 100\ntotalDocenas   = 100 / 12 ≈ 8,33\ndocenasRedondeadas = 9\n\nCarne:     round(9 * 0,40) = 4 docenas\nPollo:     round(9 * 0,25) = 2 docenas\nJyQ:       round(9 * 0,20) = 2 docenas\nVerdura:   resto           = 1 docena\n```\n\n### Cuándo no aplica / limitaciones\n\n- La calculadora no contempla restricciones dietarias específicas (celíacos, veganos). Si hay varios comensales con restricciones, ajuntá la distribución manualmente.\n- El precio por docena varía mucho según proveedor y región; para estimar costos usá esta calculadora junto con una de presupuesto de eventos.\n- En eventos con mesa de comidas variadas (sándwiches, tartas, etc.) podés reducir la cantidad un 20-30 %.\n- Las empanadas fritas sacian más que las de horno; si son fritas podés restar ½ empanada por persona.",
+  "faq": [
+    {
+      "q": "¿Cuántas empanadas por persona se calculan para un asado donde son entrada?",
+      "a": "Como entrada, la regla es 2 a 3 empanadas por persona. Con apetito moderado usá 3 por adulto. Si hay asado abundante de fondo, podés bajar a 2 para no saturar antes del plato fuerte."
+    },
+    {
+      "q": "¿Las docenas se piden exactas o conviene redondear?",
+      "a": "Siempre conviene redondear hacia arriba al número entero de docenas. La mayoría de las empanaderías venden por docena completa y es mejor que sobre una o dos a que falten."
+    },
+    {
+      "q": "¿Cómo cuento a los niños?",
+      "a": "Un niño menor de 10 años consume aproximadamente la mitad que un adulto. En la calculadora ingresás el porcentaje de niños sobre el total de invitados y el cálculo ajusta automáticamente."
+    },
+    {
+      "q": "¿Qué variedad conviene pedir más?",
+      "a": "La carne (cortada o picada) es la más popular en eventos argentinos: suele representar el 40 % del pedido. Pollo y jamón y queso cubren la mayoría del resto. Verdura o humita es ideal para vegetarianos o para diversificar."
+    },
+    {
+      "q": "¿Cuántas empanadas entran en una docena?",
+      "a": "Una docena son exactamente 12 empanadas. Es la unidad de venta estándar en empanadarías y catering en Argentina."
+    },
+    {
+      "q": "¿Horno o fritas? ¿Cambia la cantidad?",
+      "a": "Las empanadas fritas son más contundentes que las de horno. Si pedís fritas, podés reducir entre media y una empanada por persona respecto a la estimación estándar."
+    },
+    {
+      "q": "¿Para un cumpleaños de 50 personas cuántas docenas pido?",
+      "a": "Con 50 personas, plato principal y apetito moderado: 50 × 5 = 250 empanadas = 20,8 docenas → pedí 21 docenas. Distribución sugerida: 9 carne, 5 pollo, 4 jamón y queso, 3 verdura."
+    },
+    {
+      "q": "¿Cuánto antes conviene hacer el pedido a la empanadaría?",
+      "a": "Para eventos de más de 10 docenas, lo ideal es reservar con al menos 48 a 72 horas de anticipación. En fechas especiales (fines de semana largo, Día de la Madre) conviene reservar con una semana."
+    },
+    {
+      "q": "¿Esta estimación sirve para empanadas caseras también?",
+      "a": "Sí, la lógica de cantidad por persona es la misma. Para producción casera, recordá que cada empanada lleva aproximadamente 70-80 g de masa y 40-50 g de relleno."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Federación Empresaria Hotelera Gastronómica de la República Argentina – guías de catering",
+      "url": "https://www.fehgra.org.ar",
+      "publisher": "FEHGRA",
+      "date": "2026"
+    },
+    {
+      "name": "Instituto Nacional de Tecnología Industrial – Fichas técnicas gastronómicas",
+      "url": "https://www.inti.gob.ar/alimentosargentinos",
+      "publisher": "INTI",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Las porciones por persona son convenciones gastronómicas estables. Actualizar si cambian estándares de catering o se agregan nuevas variedades populares."
+  },
+  "lastReviewed": "2026-04-27"
+}

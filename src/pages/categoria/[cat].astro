@@ -1235,12 +1235,7 @@ function md(text: string): string {
 
   <div class="grid" id="cat-grid">
     {calcs.map((c: any) => (
-      <a
-        href={`/${c.slug}`}
-        class="card"
-        data-name={(c.h1 + ' ' + (c.description || '')).toLowerCase()}
-        data-audience={c.audience || 'global'}
-      >
+      <a href={`/${c.slug}`} class="card">
         <div class="card-icon">{c.icon}</div>
         <div class="card-body">
           <div class="card-title">
@@ -1273,24 +1268,34 @@ function md(text: string): string {
       var counter = document.querySelector('.cat-filter-count');
       var empty = document.getElementById('cat-empty');
       if (!input || !grid || !counter) return;
-      var cards = Array.from(grid.querySelectorAll('.card'));
-      var total = cards.length;
-
       function norm(s) { return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+
+      // Pre-computamos el texto buscable leyendo del DOM existente (title + desc)
+      // \u2014 antes esto viv\u00eda duplicado en data-name lowercased, que sumaba ~80-150
+      // bytes por card al HTML servido. La normalizaci\u00f3n se hace una sola vez al
+      // cargar; el filtro per-keystroke solo hace string.includes() contra el cache.
+      var cards = Array.from(grid.querySelectorAll('.card')).map(function (el) {
+        var t = el.querySelector('.card-title');
+        var d = el.querySelector('.card-desc');
+        return {
+          el: el,
+          text: norm(((t && t.textContent) || '') + ' ' + ((d && d.textContent) || '')),
+        };
+      });
+      var total = cards.length;
 
       function filter() {
         var q = norm(input.value.trim());
         if (!q) {
-          cards.forEach(function (c) { c.hidden = false; });
+          cards.forEach(function (c) { c.el.hidden = false; });
           counter.textContent = total + ' resultados';
           if (empty) empty.hidden = true;
           return;
         }
         var visible = 0;
         cards.forEach(function (c) {
-          var hay = norm(c.dataset.name || '');
-          var match = hay.indexOf(q) !== -1;
-          c.hidden = !match;
+          var match = c.text.indexOf(q) !== -1;
+          c.el.hidden = !match;
           if (match) visible++;
         });
         counter.textContent = visible + ' / ' + total + ' resultados';

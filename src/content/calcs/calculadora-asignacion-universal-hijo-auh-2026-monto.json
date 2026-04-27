@@ -1,0 +1,191 @@
+{
+  "slug": "calculadora-asignacion-universal-hijo-auh-2026-monto",
+  "title": "AUH 2026: Calculá tu Asignación Universal por Hijo | Hacé Cuentas",
+  "h1": "AUH Asignación Universal por Hijo 2026",
+  "description": "Calculá el monto de la AUH 2026 según cantidad de hijos y grupo familiar. Incluye 80% mensual, 20% retenido anual y bono refuerzo cuando aplique.",
+  "category": "familia",
+  "audience": "AR",
+  "icon": "👨‍👩‍👧",
+  "formulaId": "asignacion-universal-hijo-auh-2026-monto",
+  "intro": "La **AUH (Asignación Universal por Hijo)** es una prestación de la ANSES para hijos de trabajadores informales, desocupados y monotributistas de categorías bajas. El monto varía según cuántos hijos tenés, si alguno tiene discapacidad, y si el ingreso del grupo familiar no supera el **tope por integrante vigente**. Esta calculadora te muestra el cobro mensual (80%) y la parte retenida que se acredita en marzo (20%).",
+  "keyTakeaway": "En 2026 la AUH paga $84.512 mensual por hijo (80% del valor), más $21.128 retenidos para cobro anual en marzo; el tope de ingreso es $952.110 por integrante del grupo familiar.",
+  "useCases": [
+    "Saber cuánto cobrás por mes si tenés 2 o 3 hijos en la AUH",
+    "Calcular el bono refuerzo adicional cuando ANSES lo dispone",
+    "Estimar el monto retenido que te acreditan en marzo de cada año",
+    "Verificar si tu ingreso familiar supera el tope para acceder a la prestación",
+    "Comparar el beneficio total anual vs. el cobro mensual neto"
+  ],
+  "fields": [
+    {
+      "id": "cantidad_hijos",
+      "label": "Cantidad de hijos en la AUH",
+      "type": "number",
+      "placeholder": "1",
+      "default": 1,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "hijos_discapacidad",
+      "label": "Hijos con discapacidad (incluidos en los anteriores)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "integrantes_grupo",
+      "label": "Integrantes del grupo familiar (incluidos los hijos)",
+      "type": "number",
+      "placeholder": "3",
+      "default": 3,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "ingreso_familiar",
+      "label": "Ingreso mensual total del grupo familiar (ARS)",
+      "type": "number",
+      "placeholder": "500000",
+      "default": 500000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "bono_refuerzo",
+      "label": "¿Hay bono refuerzo activo este mes?",
+      "type": "radio",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ],
+      "default": "no",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "accede",
+      "label": "¿Accede a la AUH?",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "monto_mensual_neto",
+      "label": "Cobro mensual (80%)",
+      "primary": true,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "monto_retenido",
+      "label": "Monto retenido 20% (cobro anual en marzo)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "monto_total_bruto",
+      "label": "Valor total mensual bruto por grupo",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "bono_mensual",
+      "label": "Bono refuerzo mensual",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "acreditacion_anual",
+      "label": "Acreditación anual en marzo (20% × 12 meses)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle del cálculo",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula la AUH 2026\n\nLa Asignación Universal por Hijo se liquida en dos tramos:\n\n- **80% mensual**: se acredita cada mes en la tarjeta de débito ANSES.\n- **20% retenido**: se acumula y se acredita en marzo del año siguiente, una vez que se presenta la libreta sanitaria y el certificado escolar de cada hijo.\n\n### Valores vigentes 2026\n\n| Concepto | Valor ARS |\n|---|---|\n| Valor AUH por hijo (general) | $105.640 |\n| Valor AUH por hijo con discapacidad | $354.280 |\n| Tope de ingreso por integrante del grupo | $952.110 |\n| Bono refuerzo (cuando ANSES lo activa) | $70.000 |\n\n*Fuente: Resolución ANSES y actualizaciones trimestrales por IPC-INDEC.*\n\n### Fórmula\n\n```\nTope familiar = integrantes_grupo × $952.110\n\nSi ingreso_familiar > tope_familiar → NO accede a la AUH\n\nmonto_bruto_total = (hijos_normales × $105.640) + (hijos_discapacidad × $354.280)\n\nmonto_mensual_neto = monto_bruto_total × 0.80\nmonto_retenido    = monto_bruto_total × 0.20\n\nacreditacion_anual = monto_retenido × 12\n\nbono_mensual = (si bono activo) (cantidad_hijos × $70.000) sino 0\n```\n\n### Ejemplo numérico\n\nFamilia de 4 integrantes, 2 hijos sin discapacidad, ingresos $900.000:\n\n- Tope: 4 × $952.110 = $3.808.440 → **accede** (ingresos < tope)\n- Monto bruto: 2 × $105.640 = $211.280\n- Cobro mensual (80%): $169.024\n- Retenido (20%): $42.256\n- Acreditación anual en marzo: $42.256 × 12 = $507.072\n\n### Hijos con discapacidad\n\nCada hijo con Certificado Único de Discapacidad (CUD) vigente percibe la AUH para discapacidad, que en 2026 equivale a aproximadamente **3,35 veces** el valor general. No tiene límite de edad (mientras dure la discapacidad certificada).\n\n### Bono refuerzo\n\nANSES dispone bonos extraordinarios de forma discrecional, generalmente ligados a actualizaciones rezagadas o situaciones de emergencia. El valor de referencia utilizado es $70.000 por hijo; verificá la resolución vigente en el mes de cálculo.\n\n### Cuándo NO aplica / limitaciones\n\n- Si el titular o su cónyuge trabaja en relación de dependencia en el sector formal con salario superior al tope familiar, **no accede**.\n- Monotributistas de categorías C en adelante (según normativa vigente) quedan excluidos.\n- Trabajadores de casas particulares pueden acceder si su ingreso no supera el tope.\n- Esta calculadora usa valores orientativos; los montos exactos se actualizan trimestralmente por IPC publicado por INDEC. Consultá siempre Mi ANSES para el valor oficial del mes.",
+  "faq": [
+    {
+      "q": "¿Cuánto cobra la AUH por hijo en 2026?",
+      "a": "El valor de referencia es $105.640 por hijo por mes. De ese monto, el 80% ($84.512) se acredita mensualmente y el 20% ($21.128) queda retenido hasta marzo del año siguiente, cuando presentás la libreta sanitaria y el certificado escolar."
+    },
+    {
+      "q": "¿Cuál es el tope de ingresos para cobrar la AUH?",
+      "a": "En 2026 el tope es $952.110 por integrante del grupo familiar. Para una familia de 4 personas, el ingreso total no puede superar $3.808.440. Si cualquier integrante trabaja en blanco con un salario mayor al equivalente del SMVyL, tampoco accede."
+    },
+    {
+      "q": "¿Qué pasa si no presento la libreta en marzo?",
+      "a": "Si no presentás la libreta sanitaria con los controles al día y el certificado escolar antes de la fecha límite de marzo, el 20% retenido de ese ciclo se pierde. ANSES puede fijar prórrogas; seguí las novedades en Mi ANSES."
+    },
+    {
+      "q": "¿Un hijo con discapacidad cobra más?",
+      "a": "Sí. La AUH para hijos con discapacidad (CUD vigente) es $354.280 mensuales en 2026, aproximadamente 3,35 veces el valor general. No tiene límite de edad mientras se mantenga la discapacidad certificada."
+    },
+    {
+      "q": "¿Cuántos hijos se pueden incluir en la AUH?",
+      "a": "Podés incluir hasta 5 hijos en la AUH general. A partir del sexto, no se suma prestación adicional, salvo que alguno tenga discapacidad, caso en el que se liquida sin límite de cantidad."
+    },
+    {
+      "q": "¿El bono refuerzo se descuenta el 20%?",
+      "a": "No. Los bonos extraordinarios que dispone ANSES se pagan en su totalidad de forma directa, sin retención del 20%. Solo el monto base de la AUH mensual aplica la retención para el cobro anual."
+    },
+    {
+      "q": "¿Un monotributista puede cobrar la AUH?",
+      "a": "Sí, pero solo los monotributistas encuadrados en las categorías más bajas (A y B según la normativa vigente). A partir de la categoría C, la norma los excluye. Verificá tu categoría actual en AFIP/ARCA."
+    },
+    {
+      "q": "¿Cómo se actualiza el monto de la AUH?",
+      "a": "Desde 2021 la AUH se actualiza trimestralmente por la variación del IPC del INDEC (Índice de Precios al Consumidor). Las actualizaciones entran en vigencia en marzo, junio, septiembre y diciembre de cada año."
+    },
+    {
+      "q": "¿Puedo cobrar AUH y Asignación Familiar al mismo tiempo?",
+      "a": "No. Ambas prestaciones son incompatibles. Si pasás a trabajar en relación de dependencia formal, dejás de percibir la AUH y comenzás a cobrar la asignación familiar contributiva por tu empleador a través de ANSES."
+    }
+  ],
+  "sources": [
+    {
+      "name": "ANSES – Asignación Universal por Hijo",
+      "url": "https://www.anses.gob.ar/asignacion-universal-por-hijo",
+      "publisher": "ANSES",
+      "date": "2026"
+    },
+    {
+      "name": "Resolución de Directorio ANSES – Actualización trimestral AUH",
+      "url": "https://www.anses.gob.ar/normativa",
+      "publisher": "ANSES",
+      "date": "2026"
+    },
+    {
+      "name": "INDEC – Índice de Precios al Consumidor (IPC)",
+      "url": "https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31",
+      "publisher": "INDEC",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar valores AUH general y discapacidad en cada actualización trimestral por IPC (marzo, junio, septiembre, diciembre). Verificar tope de ingreso por integrante y monto de bono refuerzo en resoluciones ANSES.",
+    "source": "ANSES – Asignación Universal por Hijo",
+    "sourceUrl": "https://www.anses.gob.ar/asignacion-universal-por-hijo"
+  },
+  "lastReviewed": "2026-04-27"
+}

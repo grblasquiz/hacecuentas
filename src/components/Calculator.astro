@@ -40,6 +40,17 @@ export interface DataUpdate {
   notes?: string;
 }
 
+export interface Reviewer {
+  name: string;
+  role?: string;          // ej. "Contador Público (CPCECABA T.123 F.45)"
+  url?: string;           // perfil público (LinkedIn, sitio profesional)
+}
+
+export interface ChangelogEntry {
+  date: string;           // YYYY-MM-DD
+  change: string;         // qué cambió (1 línea)
+}
+
 export interface CalcConfig {
   slug: string;
   title: string;
@@ -51,6 +62,9 @@ export interface CalcConfig {
   formulaId: string;
   presets?: PresetsGroup;
   dataUpdate?: DataUpdate;
+  lastReviewed?: string;        // YYYY-MM-DD — fecha visible al usuario
+  reviewer?: Reviewer;          // si ausente: mostramos "Equipo Hacé Cuentas"
+  changelog?: ChangelogEntry[]; // historial de cambios (opcional)
   outputs: {
     id: string;
     label: string;
@@ -113,6 +127,9 @@ const translations = {
     yesAria: 'Yes, helpful', noAria: 'No, not helpful',
     embedButtonTitle: 'Copy the code to embed this calc on your site',
     copyLinkTitle: 'Copy a link that pre-loads the data and re-runs the calculation',
+    reviewedBy: 'Reviewed by', reviewedOn: 'Last reviewed',
+    teamFallback: 'Hacé Cuentas editorial team',
+    changelogTitle: 'What changed', changelogShow: 'See change history',
   },
   pt: {
     calculator: 'Calculadora', badge: 'Grátis · Privado', calculate: 'Calcular',
@@ -135,6 +152,9 @@ const translations = {
     yesAria: 'Sim, foi útil', noAria: 'Não foi útil',
     embedButtonTitle: 'Copie o código para incorporar esta calc no seu site',
     copyLinkTitle: 'Copia um link que pré-carrega os dados e recalcula ao abrir',
+    reviewedBy: 'Revisado por', reviewedOn: 'Última revisão',
+    teamFallback: 'Equipe editorial Hacé Cuentas',
+    changelogTitle: 'O que mudou', changelogShow: 'Ver histórico de mudanças',
   },
   es: {
     calculator: 'Calculadora', badge: 'Gratis · Privada', calculate: 'Calcular',
@@ -157,6 +177,9 @@ const translations = {
     yesAria: 'Sí, me sirvió', noAria: 'No, no me sirvió',
     embedButtonTitle: 'Copiá el código para embeber esta calc en tu sitio',
     copyLinkTitle: 'Copia un link que, al abrirlo, precarga los datos y vuelve a calcular',
+    reviewedBy: 'Revisado por', reviewedOn: 'Última revisión',
+    teamFallback: 'Equipo editorial Hacé Cuentas',
+    changelogTitle: 'Qué cambió', changelogShow: 'Ver historial de cambios',
   },
 };
 const t = translations[lang as keyof typeof translations] || translations.es;
@@ -196,6 +219,17 @@ const advancedFields = config.fields.filter((f) => f.advanced);
 // Data freshness: formatear última actualización para calcs con datos externos
 const dataUpdate = config.dataUpdate;
 const showFreshness = dataUpdate && dataUpdate.frequency !== 'never';
+
+// E-E-A-T: revisor + última revisión visible al usuario.
+// `lastReviewed` aparece si está definido; `reviewer` muestra a la persona si la
+// hay, sino cae al equipo editorial. Solo mostramos el bloque si tenemos al
+// menos una de las dos señales — calcs sin metadata editorial no quedan con
+// "Revisado por undefined".
+const showReviewerBlock = Boolean(config.lastReviewed) || Boolean(config.reviewer);
+const reviewerName = config.reviewer?.name || t.teamFallback;
+const reviewerUrl = config.reviewer?.url;
+const reviewerRole = config.reviewer?.role;
+const changelog = (config.changelog || []).filter((e) => e && e.date && e.change).slice(0, 8);
 const freshnessMonths: Record<string, string> = {
   '01': 'ene', '02': 'feb', '03': 'mar', '04': 'abr', '05': 'may', '06': 'jun',
   '07': 'jul', '08': 'ago', '09': 'sep', '10': 'oct', '11': 'nov', '12': 'dic',
@@ -252,6 +286,47 @@ const formatFreshnessDate = (iso: string): string => {
         )}
       </span>
     </div>
+  )}
+
+  {showReviewerBlock && (
+    <div class="reviewer-block">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>
+        {t.reviewedBy}:{' '}
+        {reviewerUrl ? (
+          <a href={reviewerUrl} target="_blank" rel="noopener noreferrer">{reviewerName}</a>
+        ) : (
+          <strong>{reviewerName}</strong>
+        )}
+        {reviewerRole && <span class="reviewer-role"> — {reviewerRole}</span>}
+        {!config.reviewer && (
+          <>
+            {' ('}
+            <a href="/politica-editorial">política editorial</a>
+            {')'}
+          </>
+        )}
+        {config.lastReviewed && (
+          <>
+            {' · '}{t.reviewedOn}:{' '}
+            <time datetime={config.lastReviewed}>{formatFreshnessDate(config.lastReviewed)}</time>
+          </>
+        )}
+      </span>
+    </div>
+  )}
+
+  {changelog.length > 0 && (
+    <details class="calc-changelog">
+      <summary>{t.changelogShow}</summary>
+      <ul>
+        {changelog.map((e) => (
+          <li>
+            <time datetime={e.date}>{formatFreshnessDate(e.date)}</time> — {e.change}
+          </li>
+        ))}
+      </ul>
+    </details>
   )}
 
   {config.presets && config.presets.items.length > 0 && (
@@ -619,6 +694,8 @@ const formatFreshnessDate = (iso: string): string => {
   }
   .calc-container > .calc-history { padding-top: 1rem; }
   .calc-container > .data-freshness { margin-left: 1.75rem; margin-top: 1.25rem; }
+  .calc-container > .reviewer-block { margin-left: 1.75rem; margin-top: 0.5rem; }
+  .calc-container > .calc-changelog { margin-left: 1.75rem; margin-right: 1.75rem; margin-top: 0.5rem; }
   .calc-container > .presets { padding-top: 1.25rem; margin-left: 1.75rem; margin-right: 1.75rem; padding-left: 0; padding-right: 0; }
   .calc-container > .calc-form { padding: 1.5rem 1.75rem; }
   .calc-container > .calc-error { margin: 0 1.75rem 1rem; }
@@ -650,6 +727,46 @@ const formatFreshnessDate = (iso: string): string => {
     font-weight: 500;
   }
   .data-freshness a:hover { text-decoration: underline; }
+
+  .reviewer-block {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    margin-bottom: 1rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.3;
+  }
+  .reviewer-block svg { flex-shrink: 0; color: var(--accent); }
+  .reviewer-block strong { color: var(--text); font-weight: 600; }
+  .reviewer-block time { font-weight: 600; color: var(--text); }
+  .reviewer-block a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  .reviewer-block a:hover { text-decoration: underline; }
+  .reviewer-block .reviewer-role { color: var(--text-subtle); font-style: italic; }
+
+  .calc-changelog {
+    margin-bottom: 1rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+  .calc-changelog summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--accent);
+    user-select: none;
+  }
+  .calc-changelog summary:hover { text-decoration: underline; }
+  .calc-changelog ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+    list-style: disc;
+  }
+  .calc-changelog li { margin-bottom: 0.25rem; line-height: 1.5; }
+  .calc-changelog time { font-weight: 600; color: var(--text); }
 
   .presets {
     display: flex;

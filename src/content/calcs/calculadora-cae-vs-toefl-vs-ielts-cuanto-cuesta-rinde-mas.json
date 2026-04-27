@@ -1,0 +1,212 @@
+{
+  "slug": "calculadora-cae-vs-toefl-vs-ielts-cuanto-cuesta-rinde-mas",
+  "title": "CAE vs TOEFL vs IELTS vs Duolingo: ¿Cuál conviene? 2026 | Hacé Cuentas",
+  "h1": "¿Qué examen de inglés te conviene rendir?",
+  "description": "Compará CAE Cambridge (~USD 350), IELTS (~USD 300), TOEFL (~USD 300) y Duolingo English Test (~USD 60) según tu objetivo: visa, universidad o trabajo tech.",
+  "category": "educacion",
+  "audience": "AR",
+  "icon": "📝",
+  "formulaId": "cae-vs-toefl-vs-ielts-cuanto-cuesta-rinde-mas",
+  "intro": "Elegir el examen de inglés equivocado puede costarte tiempo y hasta USD 350. Esta calculadora compara **CAE Cambridge, IELTS, TOEFL iBT y Duolingo English Test** según tu destino, objetivo (universidad, visa o trabajo) y presupuesto, y te dice cuál rinde más para tu caso.",
+  "keyTakeaway": "El Duolingo English Test cuesta USD 60 y es aceptado por +5000 instituciones, pero para visa UK o Australia solo vale IELTS o CAE; TOEFL domina admisiones en EE.UU.",
+  "useCases": [
+    "Postularte a una universidad en Reino Unido o Australia",
+    "Aplicar a una maestría en EE.UU. o Canadá",
+    "Tramitar una visa de trabajo o residencia en UK/Irlanda",
+    "Conseguir empleo tech remoto que exige certificación",
+    "Elegir el examen más barato aceptado por tu institución destino"
+  ],
+  "fields": [
+    {
+      "id": "objetivo",
+      "label": "¿Para qué necesitás el examen?",
+      "type": "select",
+      "options": [
+        {
+          "value": "universidad_uk",
+          "label": "Universidad en UK / Australia / Irlanda"
+        },
+        {
+          "value": "universidad_usa",
+          "label": "Universidad o posgrado en EE.UU. / Canadá"
+        },
+        {
+          "value": "visa_uk",
+          "label": "Visa de trabajo o residencia UK / Irlanda"
+        },
+        {
+          "value": "trabajo_tech",
+          "label": "Trabajo tech / empresa remota"
+        },
+        {
+          "value": "cualquiera",
+          "label": "Cualquier destino / no sé aún"
+        }
+      ],
+      "default": "universidad_uk",
+      "required": true
+    },
+    {
+      "id": "presupuesto_usd",
+      "label": "Presupuesto máximo (USD)",
+      "type": "number",
+      "placeholder": "300",
+      "default": 300,
+      "step": 10,
+      "required": true
+    },
+    {
+      "id": "nivel_ingles",
+      "label": "Nivel de inglés actual (auto-evaluación)",
+      "type": "select",
+      "options": [
+        {
+          "value": "b1",
+          "label": "B1 – Intermedio"
+        },
+        {
+          "value": "b2",
+          "label": "B2 – Intermedio alto"
+        },
+        {
+          "value": "c1",
+          "label": "C1 – Avanzado"
+        },
+        {
+          "value": "c2",
+          "label": "C2 – Dominio pleno"
+        }
+      ],
+      "default": "b2",
+      "required": true
+    },
+    {
+      "id": "tipo_cambio",
+      "label": "Tipo de cambio USD → ARS (para referencia)",
+      "type": "number",
+      "placeholder": "1250",
+      "default": 1250,
+      "step": 10,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "examen_recomendado",
+      "label": "Examen recomendado",
+      "primary": true,
+      "format": "text"
+    },
+    {
+      "id": "costo_usd",
+      "label": "Costo estimado (USD)",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "costo_ars",
+      "label": "Costo estimado (ARS)",
+      "format": "currency",
+      "suffix": "ARS"
+    },
+    {
+      "id": "valido_para",
+      "label": "Aceptado para",
+      "format": "text"
+    },
+    {
+      "id": "alternativa",
+      "label": "Alternativa posible",
+      "format": "text"
+    },
+    {
+      "id": "advertencia",
+      "label": "Tener en cuenta",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula la recomendación\n\nLa calculadora cruza tres variables: **objetivo del examen**, **presupuesto en USD** y **nivel de inglés**. A partir de eso aplica reglas de elegibilidad y costo para devolver el examen más conveniente.\n\n## Costos de referencia 2026 (Argentina)\n\n| Examen | Costo aprox. USD | Vigencia | Reconocimiento |\n|---|---|---|---|\n| CAE Cambridge (C1) | USD 350 | Permanente | UK, AUS, IRL, Canadá, EE.UU. |\n| IELTS Academic | USD 300 | 2 años | Universal (visas + universidades) |\n| TOEFL iBT | USD 300 | 2 años | EE.UU., Canadá, Europa |\n| Duolingo English Test | USD 60 | 2 años | +5.000 instituciones, NO visas |\n\n*Los precios en ARS varían según el tipo de cambio vigente al momento del pago.*\n\n## Lógica de la recomendación\n\n```\nsi objetivo == visa_uk:\n  → IELTS Academic (obligatorio; DET no es aceptado para visas)\n\nsi objetivo == universidad_uk:\n  si nivel >= C1 y presupuesto >= 350:\n    → CAE Cambridge (certificación permanente, sin vencimiento)\n  sino:\n    → IELTS Academic\n\nsi objetivo == universidad_usa:\n  si presupuesto >= 300:\n    → TOEFL iBT (preferido por la mayoría de universidades de EE.UU.)\n  alternativa:\n    → IELTS Academic\n\nsi objetivo == trabajo_tech:\n  si presupuesto < 300:\n    → Duolingo English Test (USD 60, aceptado por empresas remotas y muchas universidades)\n  sino:\n    → IELTS o TOEFL según destino\n\nsi objetivo == cualquiera:\n  recomendar IELTS (mayor cobertura universal)\n```\n\n## Ejemplo numérico\n\nObjectivo: posgrado en UK. Nivel C1. Presupuesto USD 300. Tipo de cambio ARS 1.250.\n\n- CAE Cambridge: USD 350 → supera presupuesto → **descartado**\n- IELTS Academic: USD 300 ✓ → dentro del presupuesto\n- Costo en ARS: 300 × 1.250 = **ARS 375.000**\n- Recomendación: **IELTS Academic**\n\n## Cuándo NO aplica / limitaciones\n\n- Los precios son referencias orientativas; el costo real depende del centro de examen en Argentina y puede variar ±10%.\n- El Duolingo English Test **no es válido** para visas de UK, EE.UU., Australia ni Canadá.\n- El CAE Cambridge no tiene vencimiento, lo que lo hace más rentable a largo plazo para quienes planeen múltiples aplicaciones.\n- Algunas universidades de EE.UU. ya aceptan Duolingo; verificá siempre en el sitio oficial de la institución destino.\n- TOEFL y IELTS tienen vigencia de 2 años; si tu plan de aplicación supera ese plazo, deberás rendir nuevamente.",
+  "faq": [
+    {
+      "q": "¿El CAE Cambridge no vence nunca?",
+      "a": "Correcto. El Cambridge C1 Advanced (CAE) y el C2 Proficiency no tienen fecha de vencimiento. Esto lo hace más rentable si pensás aplicar a varias universidades o empleos a lo largo de los años, aunque su costo inicial ronda USD 350."
+    },
+    {
+      "q": "¿Puedo usar el Duolingo English Test para una visa de trabajo en UK?",
+      "a": "No. El UK Home Office solo acepta exámenes SELT (Secure English Language Tests) aprobados, entre los que figuran IELTS for UKVI y Trinity SELT. El Duolingo English Test no es válido para ninguna categoría de visa del Reino Unido ni de Australia."
+    },
+    {
+      "q": "¿Cuánto cuesta rendir IELTS en Argentina en 2026?",
+      "a": "El IELTS Academic cuesta aproximadamente USD 300 en centros habilitados en Argentina (British Council, IDP). En pesos, al tipo de cambio actual, eso equivale a alrededor de ARS 375.000. El precio puede variar según el centro y la fecha."
+    },
+    {
+      "q": "¿TOEFL o IELTS para posgrado en EE.UU.?",
+      "a": "La mayoría de las universidades de EE.UU. aceptan ambos con igual puntaje mínimo. TOEFL iBT es históricamente preferido en EE.UU. y Canadá; IELTS tiene más peso en UK y Australia. Si apuntás solo a EE.UU., TOEFL es una elección sólida. El costo de ambos ronda USD 300 en Argentina."
+    },
+    {
+      "q": "¿Cuál es la vigencia del TOEFL y del IELTS?",
+      "a": "Ambos tienen vigencia de 2 años desde la fecha del examen. Pasado ese plazo, la mayoría de universidades y organismos migratorios no los aceptan y debés rendir nuevamente. El CAE Cambridge no tiene vencimiento."
+    },
+    {
+      "q": "¿El Duolingo English Test es confiable para empresas tech remotas?",
+      "a": "Sí. Más de 5.000 instituciones y muchas empresas de tecnología aceptan el DET. Es la opción más barata (USD 60) y se rinde desde casa en 1 hora. No reemplaza a IELTS o TOEFL para visas ni para universidades de alto ranking que exigen exámenes presenciales supervisados."
+    },
+    {
+      "q": "¿Qué puntaje necesito en cada examen para una universidad de UK?",
+      "a": "Las universidades UK suelen pedir IELTS 6.5–7.0 para grado y 7.0–7.5 para posgrado. En CAE, el equivalente es un score de 176–185 (escala 80–210). En TOEFL iBT, generalmente 90–100. Verificá el requisito exacto en cada institución."
+    },
+    {
+      "q": "¿Puedo pagar el examen en cuotas con tarjeta argentina?",
+      "a": "Algunos centros permiten pago en cuotas con tarjetas de crédito locales, aunque la transacción puede quedar sujeta al tipo de cambio del banco emisor más impuestos (PAIS derogado en 2024; verificá impuestos vigentes al momento del pago). El precio base siempre se cotiza en USD."
+    },
+    {
+      "q": "¿Cuánto tiempo hay que prepararse para cada examen?",
+      "a": "Depende del nivel de partida, pero de forma orientativa: Duolingo (1–4 semanas), IELTS/TOEFL (2–6 meses desde B2), CAE/C1 Cambridge (3–9 meses desde B2 sólido). Una mejor preparación reduce la probabilidad de tener que repetirlo y pagar dos veces."
+    },
+    {
+      "q": "¿Qué pasa si repruepo? ¿Puedo rendir de nuevo?",
+      "a": "Sí, todos los exámenes permiten repetición. IELTS y TOEFL no tienen período de espera obligatorio (podés rendir cuando quieras). CAE Cambridge permite repetir sin restricciones. Cada intento tiene el mismo costo que la primera vez, por lo que la preparación previa es clave para evitar gastos duplicados."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Cambridge Assessment English – C1 Advanced",
+      "url": "https://www.cambridgeenglish.org/exams-and-tests/advanced/",
+      "publisher": "Cambridge Assessment English",
+      "date": "2026"
+    },
+    {
+      "name": "IELTS – Tarifas y centros en Argentina",
+      "url": "https://www.ielts.org/what-is-ielts/ielts-for-organisations/test-taker-performance/test-centre-information",
+      "publisher": "British Council / IDP",
+      "date": "2026"
+    },
+    {
+      "name": "TOEFL iBT – ETS Official",
+      "url": "https://www.ets.org/toefl/test-takers/ibt/about.html",
+      "publisher": "Educational Testing Service (ETS)",
+      "date": "2026"
+    },
+    {
+      "name": "Duolingo English Test – Institutional Partners",
+      "url": "https://englishtest.duolingo.com/institutions",
+      "publisher": "Duolingo",
+      "date": "2026"
+    },
+    {
+      "name": "UK Visas and Immigration – Approved English Tests",
+      "url": "https://www.gov.uk/guidance/prove-your-english-language-abilities-with-a-secure-english-language-test-selt",
+      "publisher": "UK Home Office",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar precios en USD de cada examen según tarifas publicadas por Cambridge, ETS, IDP/British Council y Duolingo. Verificar cambios en listas de exámenes aceptados por UK Home Office y universidades destino.",
+    "source": "Cambridge Assessment English – C1 Advanced",
+    "sourceUrl": "https://www.cambridgeenglish.org/exams-and-tests/advanced/"
+  },
+  "lastReviewed": "2026-04-27"
+}

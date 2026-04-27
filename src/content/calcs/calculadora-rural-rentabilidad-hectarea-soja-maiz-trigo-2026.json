@@ -1,0 +1,293 @@
+{
+  "slug": "calculadora-rural-rentabilidad-hectarea-soja-maiz-trigo-2026",
+  "title": "Rentabilidad por Hectárea Soja, Maíz y Trigo 2026 | Hacé Cuentas",
+  "h1": "Rentabilidad campo argentino 2026 por hectárea",
+  "description": "Calculá la rentabilidad por hectárea de soja, maíz o trigo en 2026 según zona, rendimiento, costos directos y retenciones. Margen neto en USD.",
+  "category": "negocios",
+  "audience": "AR",
+  "icon": "🌾",
+  "formulaId": "rural-rentabilidad-hectarea-soja-maiz-trigo-2026",
+  "intro": "¿Cuánto te queda realmente por hectárea después de semillas, fertilizantes, fitosanitarios, labores y retenciones? Esta calculadora te muestra el **ingreso bruto, los costos directos, las retenciones vigentes 2026 y el margen neto en USD** para soja, maíz y trigo en las principales zonas productoras de Argentina.",
+  "keyTakeaway": "Con soja zona núcleo, rendimiento de 35 qq/ha y costos directos de USD 350/ha, el margen neto ronda USD 180–220/ha después de retenciones del 33 %.",
+  "useCases": [
+    "Evaluar si un campo arrendado a X quintales es viable para la campaña 2025/26",
+    "Comparar rentabilidad entre soja, maíz y trigo para decidir qué cultivar",
+    "Estimar el umbral de rendimiento de indiferencia antes de pagar el alquiler",
+    "Presentar proyecciones a un banco o inversor agropecuario",
+    "Analizar el impacto de distintos escenarios de precio internacional (seco, base, optimista)"
+  ],
+  "fields": [
+    {
+      "id": "cultivo",
+      "label": "Cultivo",
+      "type": "select",
+      "options": [
+        {
+          "value": "soja",
+          "label": "Soja"
+        },
+        {
+          "value": "maiz",
+          "label": "Maíz"
+        },
+        {
+          "value": "trigo",
+          "label": "Trigo"
+        }
+      ],
+      "default": "soja",
+      "required": true
+    },
+    {
+      "id": "zona",
+      "label": "Zona productora",
+      "type": "select",
+      "options": [
+        {
+          "value": "nucleo",
+          "label": "Zona Núcleo (Córdoba/Santa Fe/Buenos Aires)"
+        },
+        {
+          "value": "noa",
+          "label": "NOA (Tucumán, Salta, Jujuy)"
+        },
+        {
+          "value": "nea",
+          "label": "NEA (Chaco, Formosa, Misiones)"
+        },
+        {
+          "value": "cuyo",
+          "label": "Cuyo / Centro-Oeste"
+        },
+        {
+          "value": "patagonia",
+          "label": "Patagonia / Sur"
+        }
+      ],
+      "default": "nucleo",
+      "required": true
+    },
+    {
+      "id": "rendimiento",
+      "label": "Rendimiento esperado (qq/ha)",
+      "type": "number",
+      "placeholder": "35",
+      "default": 35,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "precioPizarra",
+      "label": "Precio pizarra del grano (USD/qq)",
+      "type": "number",
+      "placeholder": "280",
+      "default": 280,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "costoSemilla",
+      "label": "Costo semilla (USD/ha)",
+      "type": "number",
+      "placeholder": "45",
+      "default": 45,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "costoFertilizante",
+      "label": "Costo fertilizantes (USD/ha)",
+      "type": "number",
+      "placeholder": "80",
+      "default": 80,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "costoFitosanitarios",
+      "label": "Costo fitosanitarios (USD/ha)",
+      "type": "number",
+      "placeholder": "60",
+      "default": 60,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "costoLabores",
+      "label": "Labores / siembra / cosecha (USD/ha)",
+      "type": "number",
+      "placeholder": "120",
+      "default": 120,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "costoFlete",
+      "label": "Flete y acondicionamiento (USD/ha)",
+      "type": "number",
+      "placeholder": "25",
+      "default": 25,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "arrendamiento",
+      "label": "Arrendamiento (USD/ha, 0 si campo propio)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 0.5,
+      "required": false
+    },
+    {
+      "id": "gastoComercializacion",
+      "label": "Comercialización / acopio (% sobre ingreso bruto)",
+      "type": "number",
+      "placeholder": "3",
+      "default": 3,
+      "step": 0.1,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "ingresoBruto",
+      "label": "Ingreso bruto (USD/ha)",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD/ha"
+    },
+    {
+      "id": "retencion",
+      "label": "Retenciones (USD/ha)",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD/ha"
+    },
+    {
+      "id": "tasaRetencion",
+      "label": "Alícuota retenciones vigente",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "ingresoNeto",
+      "label": "Ingreso neto tras retenciones (USD/ha)",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD/ha"
+    },
+    {
+      "id": "costoTotal",
+      "label": "Costo directo total (USD/ha)",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD/ha"
+    },
+    {
+      "id": "margenBruto",
+      "label": "Margen bruto (USD/ha)",
+      "primary": true,
+      "format": "decimal",
+      "suffix": "USD/ha"
+    },
+    {
+      "id": "margenNeto",
+      "label": "Margen neto tras arrendamiento (USD/ha)",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "USD/ha"
+    },
+    {
+      "id": "rendimientoIndiferencia",
+      "label": "Rendimiento de indiferencia (qq/ha)",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "qq/ha"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen del análisis",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula la rentabilidad por hectárea\n\nEl modelo sigue la metodología estándar de costos directos utilizada por el INTA y las Bolsas de Cereales argentinas.\n\n### Fórmula paso a paso\n\n```\nIngreso Bruto (IB) = Rendimiento (qq/ha) × Precio Pizarra (USD/qq)\n\nRetenciones = IB × Alícuota Derechos de Exportación\n\nIngreso Neto Retenciones (INR) = IB − Retenciones\n\nGasto Comercialización = INR × % Comercialización\n\nCosto Directo Total = Semilla + Fertilizantes + Fitosanitarios\n                     + Labores + Flete + Comercialización\n\nMargen Bruto (MB) = INR − Costo Directo Total\n\nMargen Neto (MN) = MB − Arrendamiento\n\nRendimiento Indiferencia = Costo Directo Total / (Precio Pizarra × (1 − Alícuota))\n```\n\n### Alícuotas de derechos de exportación vigentes 2026\n\n| Cultivo | Alícuota | Base normativa |\n|---------|----------|----------------|\n| Soja (poroto) | 33 % | Decreto 37/2024 y modificatorias |\n| Maíz | 12 % | Decreto 37/2024 y modificatorias |\n| Trigo | 12 % | Decreto 37/2024 y modificatorias |\n\n> **Nota:** Las retenciones se aplican sobre el valor FOB de exportación, que el modelo aproxima con el precio pizarra informado por el productor. En la práctica, las cerealeras liquidan al tipo de cambio oficial BCRA más el diferencial exportador.\n\n### Ajuste por zona\n\nLa zona no modifica la alícuota de retenciones, pero sí los rendimientos típicos de referencia orientativos:\n\n| Zona | Soja (qq/ha) | Maíz (qq/ha) | Trigo (qq/ha) |\n|------|-------------|-------------|---------------|\n| Núcleo | 33–40 | 80–110 | 35–45 |\n| NOA | 25–35 | 60–90 | 25–35 |\n| NEA | 18–28 | 45–70 | 18–28 |\n| Cuyo | 22–30 | 55–80 | 28–38 |\n| Patagonia | 18–26 | 50–70 | 30–42 |\n\n### Ejemplo numérico — Soja zona núcleo\n\n- Rendimiento: 35 qq/ha | Precio: USD 280/qq\n- IB = 35 × 280 = **USD 9.800/ha**\n- Retenciones (33 %) = **USD 3.234/ha**\n- INR = **USD 6.566/ha**\n- Costo directo (semilla 45 + fert. 80 + fito. 60 + labores 120 + flete 25 + comerc. 3 % sobre INR ≈ 197) = **USD 527/ha**\n- Margen Bruto = **USD 6.039/ha**\n- Arrendamiento (15 qq × 280 × 0.67) ≈ USD 2.814/ha → Margen Neto ≈ **USD 3.225/ha**\n\n### Limitaciones\n\n- No incluye gastos de estructura ni administración (sumar USD 30–80/ha típicamente).\n- No contempla el impuesto IIBB provincial ni tasas municipales.\n- El tipo de cambio y el precio pizarra pueden diferir según plaza y fecha de venta.\n- Las retenciones pueden modificarse por decreto; verificar vigencia antes de cada campaña.\n- La soja diferenciada (identidad preservada) puede tener precio premium no reflejado aquí.",
+  "faq": [
+    {
+      "q": "¿Qué retención se aplica a la soja en 2026?",
+      "a": "La alícuota vigente para soja (poroto) es del 33 % sobre el valor de exportación, según el Decreto 37/2024 y sus modificatorias. Es la más alta del sector. Verificá en la web de la Secretaría de Bioeconomía si hubo cambios antes de cada campaña."
+    },
+    {
+      "q": "¿Cuál es la retención para maíz y trigo?",
+      "a": "Maíz y trigo tributan el 12 % de derechos de exportación. Esta diferencia respecto de la soja hace que en muchas zonas el maíz o el trigo resulten más competitivos cuando el precio internacional es favorable."
+    },
+    {
+      "q": "¿Qué incluyen los costos directos?",
+      "a": "Semillas (bolsas/kg), fertilizantes de base y cobertura, herbicidas/fungicidas/insecticidas, labores de siembra y cosecha, flete a acopio y acondicionamiento. No incluyen gastos de estructura ni arrendamiento, que se descuentan aparte."
+    },
+    {
+      "q": "¿Cómo calculo el arrendamiento en quintales?",
+      "a": "Multiplicá los quintales de alquiler acordados por el precio pizarra y aplicá el factor (1 − alícuota). Ejemplo: 15 qq de soja a USD 280/qq con 33 % de retención = 15 × 280 × 0,67 ≈ USD 2.814/ha. Ingresá ese valor en el campo arrendamiento."
+    },
+    {
+      "q": "¿Qué es el rendimiento de indiferencia?",
+      "a": "Es el rendimiento mínimo que cubre exactamente todos los costos directos (incluido arrendamiento) sin ganancia ni pérdida. Si tu rendimiento esperado supera ese umbral, el negocio es viable. Es clave para evaluar el riesgo productivo de cada lote."
+    },
+    {
+      "q": "¿En qué moneda se expresan los resultados?",
+      "a": "Todo el análisis está en USD porque los precios agrícolas en Argentina se referencian en dólares (pizarra Rosario/Buenos Aires). Los pagos al productor se liquidan al tipo de cambio oficial del BCRA, lo que puede generar diferencias con el dólar financiero."
+    },
+    {
+      "q": "¿La calculadora contempla el diferencial soja (dólar agro)?",
+      "a": "No, porque los tipos de cambio diferenciales son medidas transitorias que el gobierno activa en periodos puntuales. Te recomendamos ajustar el campo 'Precio pizarra' con el valor efectivo que recibirías según el esquema cambiario vigente al momento de la venta."
+    },
+    {
+      "q": "¿Cómo impacta la zona en el cálculo?",
+      "a": "La zona no cambia alícuotas impositivas sino los rendimientos típicos de referencia. Sirve para orientarte si no tenés datos propios. Si conocés el rendimiento histórico de tu lote, ese valor es siempre más preciso que el promedio zonal."
+    },
+    {
+      "q": "¿Qué pasa si el margen bruto es negativo?",
+      "a": "Significa que el ingreso neto de retenciones no cubre los costos directos. En ese caso, producir implica pérdida segura. Las salidas son reducir costos, buscar mejor precio de venta anticipada (forward) o no sembrar ese lote esa campaña."
+    },
+    {
+      "q": "¿Con qué frecuencia se actualizan los datos de esta calculadora?",
+      "a": "Los precios de insumos y los precios pizarra se actualizan mensualmente. Las alícuotas de retenciones se revisan ante cada cambio normativo. El productor siempre debe ingresar los precios actuales del mercado para obtener resultados precisos."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Márgenes agropecuarios — INTA Marcos Juárez",
+      "url": "https://inta.gob.ar/documentos/margenes-agropecuarios",
+      "publisher": "INTA",
+      "date": "2026"
+    },
+    {
+      "name": "Derechos de exportación — Decreto 37/2024",
+      "url": "https://www.boletinoficial.gob.ar/detalleAviso/primera/303226/20240113",
+      "publisher": "Secretaría Legal y Técnica de la Nación",
+      "date": "2024"
+    },
+    {
+      "name": "Precios de pizarra — Bolsa de Comercio de Rosario",
+      "url": "https://www.bcr.com.ar/es/mercados/granos/pizarra-de-precios",
+      "publisher": "Bolsa de Comercio de Rosario",
+      "date": "2026"
+    },
+    {
+      "name": "Costos de producción agrícola — Bolsa de Cereales de Buenos Aires",
+      "url": "https://www.bolsadecereales.com/estimaciones",
+      "publisher": "Bolsa de Cereales de Buenos Aires",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-27",
+    "updateType": "manual",
+    "notes": "Actualizar precios pizarra de referencia mensualmente (BCR). Revisar alícuotas de retenciones ante cada decreto del Poder Ejecutivo. Revisar costos de insumos (fertilizantes, fitosanitarios) cada campaña.",
+    "source": "Márgenes agropecuarios — INTA Marcos Juárez",
+    "sourceUrl": "https://inta.gob.ar/documentos/margenes-agropecuarios"
+  },
+  "lastReviewed": "2026-04-27"
+}
