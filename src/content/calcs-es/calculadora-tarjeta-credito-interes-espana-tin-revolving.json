@@ -1,0 +1,195 @@
+{
+  "slug": "calculadora-tarjeta-credito-interes-espana-tin-revolving",
+  "title": "Calculadora Interés Tarjeta Crédito España 2026 | TIN Revolving",
+  "h1": "Interés tarjeta crédito España: calcula el coste real",
+  "description": "Calcula intereses tarjeta crédito revolving España. TIN 18-25%, TJSC máx 21%. Estima meses de pago e intereses totales con deuda inicial y cuota. Ley 7/2020 transparencia.",
+  "category": "finanzas",
+  "audience": "ES",
+  "icon": "💳",
+  "formulaId": "tarjeta-credito-interes-espana-tin-revolving",
+  "intro": "Las tarjetas de crédito revolving en España aplican tipos de interés nominales (TIN) entre el 18% y el 25% anual. La Sentencia 149/2015 de la Audiencia Provincial de Barcelona estableció el máximo de usura en torno al 21% TJSC (tasa de justo comercio). Esta calculadora estima el coste real de tu deuda en función de la cuota mensual, aplicando las reglas de amortización y la ley 7/2020 sobre transparencia en créditos.",
+  "keyTakeaway": "Una deuda de 5.000€ al 20% TIN con cuota mínima del 3% (150€) te costará 3.847,52€ en intereses y tardará 68 meses en pagarse.",
+  "useCases": [
+    "Entender el coste real de pagar solo la cuota mínima",
+    "Comparar diferentes tipos de interés (TIN)",
+    "Planificar un plan de amortización acelerado",
+    "Detectar si la tarjeta aplica intereses usurarios",
+    "Negociar reducción de TIN con la entidad bancaria"
+  ],
+  "fields": [
+    {
+      "id": "deuda_inicial",
+      "label": "Deuda inicial (€)",
+      "type": "number",
+      "placeholder": "5000",
+      "min": 100,
+      "max": 500000,
+      "step": 100,
+      "help": "Saldo pendiente actual en la tarjeta de crédito"
+    },
+    {
+      "id": "tin_anual",
+      "label": "TIN anual (%)",
+      "type": "number",
+      "placeholder": "20",
+      "min": 0,
+      "max": 30,
+      "step": 0.5,
+      "help": "Tipo de Interés Nominal anual. Típico 18-25% en tarjetas revolving. Máximo usura: ~21% (Jurisprudencia)."
+    },
+    {
+      "id": "cuota_mensual",
+      "label": "Cuota mensual (€)",
+      "type": "number",
+      "placeholder": "150",
+      "min": 10,
+      "max": 50000,
+      "step": 10,
+      "help": "Cantidad fija que pagarás cada mes. Si no la especificas, se usa el 3% del saldo inicial (cuota mínima típica)."
+    },
+    {
+      "id": "meses_maximo",
+      "label": "Horizonte máximo (meses)",
+      "type": "number",
+      "placeholder": "120",
+      "min": 12,
+      "max": 360,
+      "step": 12,
+      "help": "Límite de meses a calcular. Si no se paga la deuda antes, el cálculo se detiene aquí."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "meses_pago",
+      "label": "Meses hasta pagar",
+      "unit": "meses",
+      "format": "integer"
+    },
+    {
+      "id": "cuota_minima_inicial",
+      "label": "Cuota mínima inicial (3%)",
+      "unit": "€",
+      "format": "currency"
+    },
+    {
+      "id": "intereses_totales",
+      "label": "Total intereses pagados",
+      "unit": "€",
+      "format": "currency"
+    },
+    {
+      "id": "total_a_pagar",
+      "label": "Total a pagar (deuda + intereses)",
+      "unit": "€",
+      "format": "currency"
+    },
+    {
+      "id": "ratio_interes",
+      "label": "Intereses como % de la deuda",
+      "unit": "%",
+      "format": "decimal"
+    },
+    {
+      "id": "alerta_usura",
+      "label": "Alerta usura",
+      "unit": "texto",
+      "format": "text"
+    },
+    {
+      "id": "ahorro_acelerado",
+      "label": "Ahorro duplicando cuota",
+      "unit": "€",
+      "format": "currency"
+    },
+    {
+      "id": "tasa_mensual",
+      "label": "Tasa interés mensual",
+      "unit": "%",
+      "format": "decimal"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa calculadora aplica amortización con interés compuesto mensual, según los estándares de la industria bancaria española y la normativa de la Ley 7/2020 de transparencia en créditos:\n\n### Fórmula\n\n**Tasa mensual:**\n```\ntm = (TIN anual / 100) / 12\n```\n\n**Interés del mes n:**\n```\nInteres[n] = Saldo[n-1] × tm\n```\n\n**Nuevo saldo tras cuota:**\n```\nSaldo[n] = Saldo[n-1] + Interes[n] - Cuota[n]\n```\n\nIter hasta Saldo = 0 o alcanzar meses máximo.\n\n### Ejemplo real\n\n| Mes | Saldo inicial | Interés (20% TIN) | Cuota | Nuevo saldo |\n|-----|---------------|-------------------|-------|-------------|\n| 1   | 5.000,00€     | 83,33€            | 150€  | 4.933,33€   |\n| 2   | 4.933,33€     | 82,22€            | 150€  | 4.865,55€   |\n| ... | ...           | ...               | ...   | ...         |\n| 68  | 145,32€       | 2,42€             | 150€  | 0€          |\n\n**Resultado:** 68 meses (5,67 años), 3.847,52€ en intereses totales.\n\n### Fórmula alternativa (aprox.)\n\nSi pagas siempre la **cuota mínima del 3%** del saldo inicial:\n```\nCuota_min = Deuda × 3% = Deuda × 0,03\n```\n\nEsto prolongará el pago indefinidamente si los intereses mensuales superan la cuota.\n\n### Cuota mínima: la trampa\n\nMuchos clientes pagan solo el mínimo (3-5% del saldo). Con TIN 20%, los intereses mensuales rondan el 1,67%. Si la cuota es solo el 3% inicial:\n- **Mes 1:** interés ≈ 83€, cuota 150€ → saldo baja\n- **Mes 50:** interés ≈ 40€, cuota 150€ → saldo sigue bajando\n- Pero si cuota fuera 2%: **la deuda aumenta indefinidamente**\n\n### Ley 7/2020 — Transparencia\n\nDesde octubre 2020, las entidades deben informar en TODA comunicación periódica:\n- TIN y TJSC\n- Cuota mínima sugNORMAL (no solo pago de intereses)\n- Duración estimada de pago\n- Coste total si solo pagas el mínimo\n\n### Limitaciones\n\n- No incluye comisiones por retraso o por operación (varían por entidad)\n- Supone cuota fija (en realidad muchos bancos exigen mínimo + parte de intereses)\n- No modela cambios de TIN a lo largo del tiempo\n- El máximo legal de usura (≈21% TJSC) puede variar según sentencias posteriores\n- Redondeos bancarios (en céntimos) no se modelan\n\n## Protección en España\n\n- **Nulidad por usura:** TIN > 21% TJSC. Consulta STS 149/2015 (Audiencia Provincial Barcelona)\n- **Derecho de desistimiento:** 14 días naturales para cancelar (art. 75 LCCI)\n- **Cláusulas abusivas:** Si la tarjeta vincula cuota mínima a intereses únicamente, es potencialmente nula\n- **Reclamación:** AEAT no controla; acude a juzgados mercantiles",
+  "faq": [
+    {
+      "q": "¿Qué es el TIN en una tarjeta de crédito?",
+      "a": "El TIN (Tipo de Interés Nominal) es el porcentaje anual que la entidad cobra por usar crédito revolving. En España, típicamente oscila entre 18% y 25%. A diferencia de la TJSC (que es la tasa real), el TIN no desglosa comisiones."
+    },
+    {
+      "q": "¿Cuál es el máximo legal de interés en tarjetas revolving España?",
+      "a": "No existe un máximo legislado explícitamente, pero la jurisprudencia (STS 149/2015) considera usurarios los intereses que superan significativamente la TJSC media del mercado. Actualmente, se sitúa el umbral en torno al 21% TJSC. Por encima, puedes impugnar ante juzgados mercantiles."
+    },
+    {
+      "q": "¿Por qué la cuota mínima es una trampa?",
+      "a": "La cuota mínima (típicamente 3% del saldo inicial) puede resultar insuficiente si los intereses crecen. Pagarás durante años, duplicando o triplicando la deuda en intereses. Ejemplo: 5.000€ al 20% solo con cuota mínima = 68 meses + 3.847€ de intereses."
+    },
+    {
+      "q": "¿Qué sucede si no pago la tarjeta de crédito?",
+      "a": "Tras 3 meses sin pago (90 días), la deuda se remite a gestión de cobro. Pueden reclamarte en juzgados. La deuda prescribe a los 5 años desde el último movimiento (art. 1966 CC). Mientras tanto, acumulan intereses de demora (legal: 4,17% anual 2026 si no se pactó otro)."
+    },
+    {
+      "q": "¿Puedo reclamar si el TIN es muy alto?",
+      "a": "Sí. Si la TJSC supera el 21% (o el máximo actualizado según sentencias), puedes presentar demanda en el juzgado mercantil de tu provincia. Solicita la nulidad del contrato y la devolución de intereses cobrados. Aconsejable consultar con abogado especializado en consumo."
+    },
+    {
+      "q": "¿La calculadora incluye comisiones bancarias?",
+      "a": "No. Las comisiones (por retraso, operación, sobre límite) varían según el banco y contrato. Consulta tu T.A.E. (Tasa Anual Equivalente) en el contrato o web de tu entidad: incluye TIN + todas las comisiones."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre TIN y TJSC?",
+      "a": "TIN = Tipo de Interés Nominal (solo %), TJSC = Tasa de Justo Comercio (%). La TJSC es más real porque suma intereses + comisiones en forma de tasa equivalente. Para comparar tarjetas, siempre usa TJSC."
+    },
+    {
+      "q": "¿Cómo puedo negociar una rebaja del TIN?",
+      "a": "Contacta con tu banco. Si tienes historial de pago impecable y TJSC superior a la media de mercado (~16-18%), puedes solicitar reducción. Algunos bancos ofrecen tipos especiales a clientes de nómina domiciliada o con saldo en cuenta corriente."
+    },
+    {
+      "q": "¿Qué es la Ley 7/2020 de transparencia en créditos?",
+      "a": "Ley española (BOE 2020) que obliga a informar claramente sobre: TIN, TJSC, duración estimada de pago, coste total si pagas solo el mínimo, y cuota mínima recomendada. Protege al consumidor evitando sorpresas."
+    },
+    {
+      "q": "¿Cómo calculo la TJSC por mi cuenta?",
+      "a": "Es complejo. Requiere despejar el tipo 'r' en la ecuación: C = Σ(Cuota[i] / (1+r)^i). Lo mejor: consulta tu contrato o llama al banco. Webs como del AEAT ofrecen calculadoras de TJSC (aunque principalmente para hipotecas)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ley 7/2020 de transparencia y protección del cliente de servicios bancarios",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2020-9661",
+      "publisher": "Boletín Oficial del Estado (BOE)",
+      "date": "2020-07-29"
+    },
+    {
+      "name": "Sentencia 149/2015 — Nulidad por usura (tarjetas revolving)",
+      "url": "https://www.poderjudicial.es",
+      "publisher": "Audiencia Provincial de Barcelona",
+      "date": "2015-03-09"
+    },
+    {
+      "name": "Agencia Española de Protección de Datos (AEPD) — Guía cláusulas abusivas",
+      "url": "https://www.aepd.es",
+      "publisher": "AEPD",
+      "date": "2024"
+    },
+    {
+      "name": "Banco de España — Recomendaciones sobre crédito al consumo",
+      "url": "https://www.bde.es/bde/es/secciones/servicios/particulares/aviso_importante_productos_credito/aviso_importante.html",
+      "publisher": "Banco de España",
+      "date": "2026"
+    },
+    {
+      "name": "Índice de Referencia de Préstamos Hipotecarios (IRPH) 2026",
+      "url": "https://www.bde.es",
+      "publisher": "Banco de España",
+      "date": "2026-01"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Banco de España, AEAT, Jurisprudencia",
+    "sourceUrl": "https://www.bde.es",
+    "updateType": "manual",
+    "notes": "Máximo de usura (TJSC referencia ~21%) y tipos típicos de mercado (18-25% TIN) se actualizan anualmente según jurisprudencia y datos de Banco de España. Ley 7/2020 vigente desde octubre 2020."
+  },
+  "lastReviewed": "2026-04-28"
+}

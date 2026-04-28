@@ -1,0 +1,232 @@
+{
+  "slug": "calculadora-bono-electrico-chile-subsidio-cuenta-electrica",
+  "title": "Bono Eléctrico Chile 2026 | Subsidio Luz Hacé Cuentas",
+  "h1": "Bono eléctrico Chile 2026",
+  "description": "Calcula tu subsidio de electricidad según RSH y consumo kWh. Bono Eléctrico: hasta $11.000/mes hogares vulnerables. Requisitos SII 2026.",
+  "category": "vida",
+  "audience": "CL",
+  "icon": "🪙",
+  "formulaId": "bono-electrico-chile-subsidio-cuenta-electrica",
+  "intro": "El **Bono Eléctrico** es un subsidio del Estado para hogares en situación de vulnerabilidad que reduce la tarifa de electricidad. Se otorga a través de distribuidoras según el **Registro Social de Hogares (RSH)** y el consumo mensual. Calcula aquí el descuento estimado en tu cuenta de luz.",
+  "keyTakeaway": "Hogares RSH 40-80% acceden a bono de hasta $11.000/mes; RSH >80% a hasta $14.000/mes. Reducción tarifa kWh según distribuidora.",
+  "useCases": [
+    "Verificar si calificas como hogar vulnerable (RSH tramo 40-80%)",
+    "Estimar descuento mensual en factura eléctrica",
+    "Comparar bono según consumo y distribuidora",
+    "Validar requisitos SII y procedimiento solicitud",
+    "Proyectar ahorro anual en cuenta de luz",
+    "Consultar si eres elegible por ingreso familiar"
+  ],
+  "fields": [
+    {
+      "id": "rsh_tramo",
+      "label": "Tramo RSH (Registro Social de Hogares)",
+      "type": "select",
+      "options": [
+        {
+          "value": "40",
+          "label": "40-60% más vulnerable"
+        },
+        {
+          "value": "61",
+          "label": "61-80%"
+        },
+        {
+          "value": "81",
+          "label": "81-100% (no aplica bono)"
+        }
+      ],
+      "required": true,
+      "help": "Consulta tu RSH en mevsfocalizacion.ministeriodesarrollosocial.gob.cl. Tramos 40-80% son beneficiarios."
+    },
+    {
+      "id": "consumo_kwh",
+      "label": "Consumo mensual (kWh)",
+      "type": "number",
+      "placeholder": "250",
+      "min": 0,
+      "max": 2000,
+      "required": true,
+      "help": "Revisa tu factura eléctrica. Rango típico: 100-500 kWh/mes."
+    },
+    {
+      "id": "distribuidora",
+      "label": "Distribuidora eléctrica",
+      "type": "select",
+      "options": [
+        {
+          "value": "frontel",
+          "label": "Frontel (Arica-Punta Arenas)"
+        },
+        {
+          "value": "emel",
+          "label": "EMEL (Región Metropolitana)"
+        },
+        {
+          "value": "conafe",
+          "label": "Conafe (Valparaíso-Tarapacá)"
+        },
+        {
+          "value": "saesa",
+          "label": "Saesa (Araucanía-Los Lagos)"
+        },
+        {
+          "value": "hidroaysén",
+          "label": "HidroAysén (Aysén-Magallanes)"
+        },
+        {
+          "value": "otra",
+          "label": "Otra"
+        }
+      ],
+      "required": true,
+      "help": "La tarifa de kWh subsidiado varía por distribuidora. Aparece en tu boleta."
+    },
+    {
+      "id": "numero_integrantes",
+      "label": "Integrantes del hogar",
+      "type": "number",
+      "placeholder": "4",
+      "min": 1,
+      "max": 10,
+      "required": true,
+      "help": "Número total de personas en el hogar para validar requisitos."
+    },
+    {
+      "id": "tiene_adulto_mayor",
+      "label": "¿Hay adulto mayor (≥65 años) en el hogar?",
+      "type": "radio",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ],
+      "required": true,
+      "help": "Acceso prioritario a bono según Ley estabilización tarifas."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "bono_mensual_estimado",
+      "label": "Bono eléctrico estimado",
+      "type": "currency",
+      "format": "$"
+    },
+    {
+      "id": "tarifa_subsidiada_kwh",
+      "label": "Tarifa kWh subsidiada",
+      "type": "currency",
+      "format": "$/kWh"
+    },
+    {
+      "id": "descuento_total_factura",
+      "label": "Descuento total en factura (consumo × tarifa)",
+      "type": "currency",
+      "format": "$"
+    },
+    {
+      "id": "porcentaje_descuento",
+      "label": "% Descuento sobre tarifa normal",
+      "type": "percentage"
+    },
+    {
+      "id": "requisitos_cumplidos",
+      "label": "¿Cumples requisitos?",
+      "type": "text"
+    },
+    {
+      "id": "ahorro_anual",
+      "label": "Ahorro anual proyectado",
+      "type": "currency",
+      "format": "$"
+    },
+    {
+      "id": "proximo_paso",
+      "label": "Próximo paso",
+      "type": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula el Bono Eléctrico\n\nEl **Bono Eléctrico** (Ley de Estabilización de Tarifas Eléctricas, Ley 21.444) es un subsidio estatal que reduce la tarifa de electricidad para hogares vulnerables. El cálculo depende de:\n\n### Fórmula\n\n**Descuento mensual = Consumo (kWh) × Tarifa kWh subsidiada**\n\nDonde:\n- **Consumo**: kWh mensuales según factura\n- **Tarifa subsidiada**: La tarifa base menos el subsidio SII, varía por distribuidora\n- **Bono base**: Hasta $11.000/mes (RSH 40-80%) o $14.000/mes (RSH >80%, si aplica)\n- **Límite**: No supera el 30% del consumo en tarifa normal\n\n### Requisitos de elegibilidad\n\n1. **RSH tramo 40-80%** (obligatorio)\n2. **Consumo ≤500 kWh/mes** (límite general)\n3. **Permanencia**: Suscripción activa en distribuidora ≥30 días\n4. **Prioridad**: Adultos mayores (≥65 años), personas con discapacidad, madres solteras\n5. **No tener**: Deuda de servicios básicos >90 días\n\n### Ejemplo concreto\n\n**Hogar RSH 45% (tramo vulnerable)**\n- Consumo: 280 kWh/mes\n- Distribuidora: EMEL\n- Tarifa normal EMEL: ~$150/kWh\n- Tarifa subsidiada EMEL: ~$75/kWh (50% descuento)\n- **Descuento mensual**: 280 kWh × $75 = **$21.000**\n- **Bono real**: Limitado a $11.000 (máximo RSH 40-80%)\n- **% descuento**: ($11.000 / $42.000) × 100 = **26%**\n- **Ahorro anual**: $11.000 × 12 = **$132.000**\n\n| Rango RSH | Bono máximo/mes | Consumo límite | Prioridad |\n|-----------|-----------------|----------------|-----------|\n| 40-60% | $11.000 | 500 kWh | Normal |\n| 61-80% | $11.000 | 500 kWh | Normal |\n| 81-100% | $14.000* | 600 kWh | Muy vulnerable* |\n\n*RSH >80% o con condiciones especiales (requiere revisión SII)\n\n### Limitaciones\n\n- **Vencimiento**: Bono se reactualiza anualmente según IPC\n- **Distribuidora**: Cada empresa aplica tarifa subsidiada distinta\n- **Consumo variable**: Si superas límite, se reduce bono proporcionalmente\n- **Deudas**: Se suspende si acumulas >$20.000 en deuda SII\n- **Focalización**: SII puede reasignar tramo RSH según información tributaria\n- **Cambio de domicilio**: Debes solicitar nuevo beneficio en nueva distribuidora",
+  "faq": [
+    {
+      "question": "¿Cómo sé mi tramo RSH?",
+      "answer": "Consulta en **mevsfocalizacion.ministeriodesarrollosocial.gob.cl** con tu RUT y datos. También pregunta en municipalidad o llama a 1800-221-0330 (Subsecretaría Desarrollo Social). El RSH se asigna según ingresos, patrimonio y composición familiar."
+    },
+    {
+      "question": "¿Aplico automáticamente al bono o debo solicitar?",
+      "answer": "**Debes solicitar** una vez que conozzcas tu RSH. Acude a la oficina de tu distribuidora con cédula RUT, comprobante domicilio (<3 meses) y estado de cuenta. Tramitación: ~10 días hábiles."
+    },
+    {
+      "question": "¿Qué pasa si consumo más de 500 kWh?",
+      "answer": "El bono se reduce proporcionalmente o se suspende según tarifa extraordinaria. Sobre 600 kWh, el subsidio es mínimo. Se recomienda mejora en eficiencia energética."
+    },
+    {
+      "question": "¿El bono aparece como descuento en factura?",
+      "answer": "Sí. La distribuidora aplica automáticamente la tarifa subsidiada. En la boleta verás dos líneas: \"Cargo por energía normal\" y \"Subsidio Bono Eléctrico\". Descuento neto al pie."
+    },
+    {
+      "question": "¿Cuánto tiempo dura el beneficio?",
+      "answer": "**Permanente mientras mantengas requisitos**: RSH 40-80%, pago al día, y que no superes límites de consumo. Se revisa anualmente (agosto-septiembre). Puedes perderlo si subes de tramo RSH o acumulas deudas."
+    },
+    {
+      "question": "¿Hay diferencia entre distribuidoras?",
+      "answer": "Sí. Cada distribuidora (Frontel, EMEL, Conafe, Saesa, HidroAysén) aplica tarifa subsidiada distinta según costos operacionales. EMEL (RM) y Conafe suelen tener bonos mayores; Frontel (norte) menores."
+    },
+    {
+      "question": "¿Puedo reclamar si me niego el bono?",
+      "answer": "Sí. Reclama ante la **CMF (Comisión para el Mercado Financiero)** o **Superintendencia de Servicios Sanitarios** si hay error. Plazo: 30 días desde rechazo. Requiere copia carta denegación."
+    },
+    {
+      "question": "¿El bono incluye otros servicios (agua, gas)?",
+      "answer": "**No, solo electricidad**. Hay subsidios separados para agua potable (Fonasa) y gas (programa de subsidio inverso). Consulta cada servicio por separado."
+    },
+    {
+      "question": "¿Qué pasa si me mudo?",
+      "answer": "Debes solicitar el bono a la nueva distribuidora con cédula, RUT y comprobante nuevo domicilio. El beneficio no se transfiere automáticamente. Requiere nueva tramitación (10 días)."
+    },
+    {
+      "question": "¿Cómo se actualiza el bono?",
+      "answer": "Anualmente (agosto-septiembre), el SII ajusta el bono según **IPC**. Para 2026, se espera ajuste de ~4.2% respecto 2025. La distribuidora notifica cambios en factura."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII - Bono Eléctrico Ley 21.444",
+      "url": "https://www.sii.cl/portalugr/programa-estabilizacion-tarifas-electricas",
+      "publisher": "Servicio de Impuestos Internos (SII)",
+      "date": "2026-03-15"
+    },
+    {
+      "name": "MIDES - Registro Social de Hogares",
+      "url": "https://mevsfocalizacion.ministeriodesarrollosocial.gob.cl",
+      "publisher": "Ministerio de Desarrollo Social e Inclusión Social",
+      "date": "2026-02-01"
+    },
+    {
+      "name": "CMF - Superintendencia Servicios Sanitarios",
+      "url": "https://www.cmfchile.cl/institucional/mercados/mercado-de-valores-y-servicios-financieros",
+      "publisher": "Comisión para el Mercado Financiero",
+      "date": "2026-01-30"
+    },
+    {
+      "name": "Distribuidoras Eléctricas - Consulta tarifa subsidiada",
+      "url": "https://www.emel.cl | https://www.frontel.cl | https://www.saesa.cl",
+      "publisher": "EMEL, Frontel, Saesa, HidroAysén, Conafe",
+      "date": "2026-04-01"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII + Distribuidoras eléctricas",
+    "sourceUrl": "https://www.sii.cl/portalugr/programa-estabilizacion-tarifas-electricas",
+    "updateType": "manual",
+    "notes": "Bono base se ajusta por IPC agosto-septiembre. Tarifas subsidiadas por distribuidora se actualizan mensualmente según componentes (costo generación, transmisión, distribución)."
+  },
+  "lastReviewed": "2026-04-28"
+}

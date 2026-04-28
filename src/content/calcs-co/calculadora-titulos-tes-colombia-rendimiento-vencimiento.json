@@ -1,0 +1,247 @@
+{
+  "slug": "calculadora-titulos-tes-colombia-rendimiento-vencimiento",
+  "title": "Calculadora TES Colombia 2026 | Rendimiento y TIR",
+  "h1": "Calculadora de rendimiento TES Colombia",
+  "description": "Calcula TIR, cupones y fiscalidad de Títulos de Tesorería (TES) Colombia 2026. Plazos 1-10 años, cupón fijo, ganancia ocasional.",
+  "category": "finanzas",
+  "audience": "CO",
+  "icon": "🏛️",
+  "formulaId": "titulos-tes-colombia-rendimiento-vencimiento",
+  "intro": "Los Títulos de Tesorería (TES) son valores emitidos por el Ministerio de Hacienda colombiano. Esta calculadora estima la **Tasa Interna de Retorno (TIR)**, flujos de cupones fijos y la **tributación por ganancia ocasional** según normativa DIAN 2026. Ingresa valor nominal, plazo y tasa de cupón vigente para proyectar rentabilidad bruta y neta.",
+  "keyTakeaway": "Un TES de $10.000.000 al 6% cupón anual en 5 años genera ~$3.000.000 en cupones; tributación: 10% sobre ganancias ocasionales (DIAN 2026).",
+  "useCases": [
+    "Persona natural invierte en TES a través de bróker o banco: necesita proyectar flujos netos",
+    "Fondo de pensiones calcula rentabilidad esperada en cartera de renta fija pública",
+    "Asesor financiero compara TES vs otras opciones de renta fija para cliente",
+    "Inversionista institucional estima impacto fiscal en rentabilidad total",
+    "CFO empresa evalúa alternativas de colocación de tesorería en corto plazo",
+    "Analista de riesgo de crédito monitorea cupones y vencimientos"
+  ],
+  "fields": [
+    {
+      "id": "valor_nominal",
+      "label": "Valor nominal (pesos)",
+      "type": "number",
+      "placeholder": "10000000",
+      "validation": {
+        "min": 100000,
+        "max": 1000000000
+      },
+      "help": "Cantidad invertida en el TES. Mínimo $100.000, máximo $1.000 millones."
+    },
+    {
+      "id": "plazo_anos",
+      "label": "Plazo (años)",
+      "type": "select",
+      "options": [
+        {
+          "value": 1,
+          "label": "1 año (TES B corto plazo)"
+        },
+        {
+          "value": 3,
+          "label": "3 años"
+        },
+        {
+          "value": 5,
+          "label": "5 años"
+        },
+        {
+          "value": 10,
+          "label": "10 años (TES B largo plazo)"
+        }
+      ],
+      "validation": {
+        "required": true
+      },
+      "help": "Plazo de vencimiento del TES. TES B son los más transables."
+    },
+    {
+      "id": "tasa_cupon_anual",
+      "label": "Tasa cupón anual (%)",
+      "type": "number",
+      "placeholder": "6.5",
+      "validation": {
+        "min": 0.5,
+        "max": 15
+      },
+      "help": "Rendimiento cupón fijo anual. Vigente 2026: 5.5%-8.5% según plazo."
+    },
+    {
+      "id": "frecuencia_pago",
+      "label": "Frecuencia pago cupón",
+      "type": "select",
+      "options": [
+        {
+          "value": "anual",
+          "label": "Anual (mayoría TES B)"
+        },
+        {
+          "value": "semestral",
+          "label": "Semestral"
+        }
+      ],
+      "help": "Mayoría de TES B pagan cupones anualmente."
+    },
+    {
+      "id": "precio_compra",
+      "label": "Precio de compra (% del par)",
+      "type": "number",
+      "placeholder": "100",
+      "validation": {
+        "min": 80,
+        "max": 120
+      },
+      "help": "% del valor nominal. 100 = par (sin prima/descuento). Afecta TIR real."
+    },
+    {
+      "id": "incluir_fiscalidad",
+      "label": "¿Incluir fiscalidad DIAN?",
+      "type": "checkbox",
+      "default": true,
+      "help": "Aplica impuesto ganancia ocasional 10% sobre intereses según DIAN 2026."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cupon_anual_bruto",
+      "label": "Cupón anual bruto",
+      "type": "currency",
+      "help": "Flujo anual de intereses fijos (sin impuestos)."
+    },
+    {
+      "id": "total_cupones_brutos",
+      "label": "Total cupones brutos (vencimiento)",
+      "type": "currency",
+      "help": "Suma de todos los cupones hasta vencimiento."
+    },
+    {
+      "id": "impuesto_ganancia_ocasional",
+      "label": "Impuesto ganancia ocasional (DIAN)",
+      "type": "currency",
+      "help": "10% sobre intereses devengados (tributación DIAN 2026)."
+    },
+    {
+      "id": "total_cupones_netos",
+      "label": "Total cupones netos (después impuestos)",
+      "type": "currency",
+      "help": "Cupones menos impuesto ganancia ocasional."
+    },
+    {
+      "id": "ganancia_descuento_prima",
+      "label": "Ganancia/pérdida por precio compra",
+      "type": "currency",
+      "help": "Diferencia entre valor par y precio de compra al vencimiento."
+    },
+    {
+      "id": "tir_anual_bruta",
+      "label": "TIR anual bruta (%)",
+      "type": "percentage",
+      "help": "Tasa Interna de Retorno sin considerar impuestos."
+    },
+    {
+      "id": "tir_anual_neta",
+      "label": "TIR anual neta (%)",
+      "type": "percentage",
+      "help": "TIR después de impuesto ganancia ocasional."
+    },
+    {
+      "id": "valor_total_vencimiento",
+      "label": "Flujo total al vencimiento",
+      "type": "currency",
+      "help": "Valor par + cupón final (sin reinversión)."
+    },
+    {
+      "id": "rentabilidad_total_neta",
+      "label": "Rentabilidad total neta (%)",
+      "type": "percentage",
+      "help": "% de ganancia neta sobre inversión inicial."
+    },
+    {
+      "id": "detalle_flujos",
+      "label": "Detalle flujos anuales",
+      "type": "table",
+      "help": "Tabla con cupones por año, impuestos y flujos netos."
+    }
+  ],
+  "explanation": "## Cómo se calcula rendimiento TES Colombia\n\nLos Títulos de Tesorería (TES) son instrumentos de renta fija emitidos por el Ministerio de Hacienda Colombiano. Su valor radica en cupones periódicos fijos (generalmente anuales) más la devolución del principal al vencimiento.\n\n### Fórmula TIR\n\nLa **Tasa Interna de Retorno (TIR)** es la tasa que iguala el flujo de pagos futuros con la inversión inicial:\n\n```\nPrecio compra = Σ(Cupón_t / (1 + TIR)^t) + (VN / (1 + TIR)^n)\n```\n\nDonde:\n- **Cupón_t**: flujo de cupón en período t\n- **VN**: Valor Nominal (par) = $100\n- **n**: número de períodos hasta vencimiento\n- **TIR**: incógnita a resolver (iteración numérica)\n\n### Cálculo cupones\n\n**Cupón anual bruto** = Valor Nominal × Tasa cupón anual\n\nEjemplo: $10.000.000 × 6% = $600.000/año\n\nSi **frecuencia semestral**: Cupón cada 6 meses = ($600.000 / 2) = $300.000\n\n### Fiscalidad DIAN 2026\n\nSegún **Decreto 560 de 2024** y resoluciones DIAN:\n\n- **Intereses (cupones)**: Tributación como **ganancia ocasional** = **10% impuesto**\n- **Prima/descuento en compra**: Sin tributación adicional (ajusta TIR)\n- **Personas naturales**: aplica retención en la fuente 10% en bróker/banco\n- **Fondos de pensiones**: exención parcial según régimen (EPS/AFP)\n\n**Impuesto = Total cupones brutos × 10%**\n\n### TIR neta\n\n```\nTIR neta ≈ TIR bruta × (1 - tasa impuesto ganancia ocasional)\n```\n\nAproximación válida para TES con cupones < 10%. Cálculo exacto: resolver ecuación TIR con flujos después de impuestos.\n\n## Ejemplo: TES B 5 años, 6.5% cupón\n\n| Año | Cupón bruto | Impuesto (10%) | Cupón neto | Flujo total |\n|-----|------------|----------------|------------|-------------|\n| 1   | $650.000   | $65.000        | $585.000   | $585.000    |\n| 2   | $650.000   | $65.000        | $585.000   | $585.000    |\n| 3   | $650.000   | $65.000        | $585.000   | $585.000    |\n| 4   | $650.000   | $65.000        | $585.000   | $585.000    |\n| 5   | $650.000   | $65.000        | $585.000   | $10.585.000 |\n| **Total** | **$3.250.000** | **$325.000** | **$2.925.000** | — |\n\n**Inversión inicial (par)**: $10.000.000\n**Ganancia bruta**: $3.250.000\n**Impuesto**: $325.000\n**Ganancia neta**: $2.925.000\n\n**TIR bruta** ≈ 6.5% (cupón = TIR cuando se compra a par)\n**TIR neta** ≈ 5.85% (6.5% × 0.9)\n**Rentabilidad total**: 29.25% en 5 años → ~5.3% TAE neta\n\n## Limitaciones\n\n- **Sin reinversión de cupones**: cálculo asume cupones se distribuyen, no se reinvierten\n- **Riesgo de crédito soberano**: TES tiene riesgo bajo (emisor: República) pero no cero\n- **Precio mercado**: si se vende antes de vencimiento, precio varía por tasas de interés (riesgo de tasa)\n- **Inflación**: rendimiento nominal; rendimiento real = nominal − inflación actual (~3.5% Colombia 2026)\n- **Cambio tributario**: DIAN puede modificar tasa ganancia ocasional; simulación usa 10% vigente 2026",
+  "faq": [
+    {
+      "question": "¿Cuál es la diferencia entre TIR bruta y TIR neta?",
+      "answer": "**TIR bruta** es la rentabilidad sin considerar impuestos; **TIR neta** resta el impuesto ganancia ocasional (10% DIAN 2026) sobre cupones. Diferencia típica: 0.65% para cupones 6.5%."
+    },
+    {
+      "question": "¿Cómo afecta comprar TES a descuento o prima?",
+      "answer": "Comprar bajo par (descuento) **aumenta TIR** (ganancia adicional); comprar sobre par (prima) **reduce TIR** (pérdida al vencimiento). Ejemplo: comprar a 98% = descuento 2%, sube TIR ~0.4% en 5 años."
+    },
+    {
+      "question": "¿TES B pagan siempre cupón anual?",
+      "answer": "Mayoría sí, pero algunos plazos cortos (<2 años) tienen cupón semestral. Verifica en COLCAP o bróker; la DIAN reconoce ambas frecuencias."
+    },
+    {
+      "question": "¿Qué pasa si vendo TES antes de vencimiento?",
+      "answer": "Rendimiento depende del **precio mercado** (varía con tasas de interés del Banco República). Esta calculadora asume tenencia a vencimiento; si vendes antes, TIR real puede ser mayor o menor."
+    },
+    {
+      "question": "¿Fondos de pensiones pagan impuesto ganancia ocasional en TES?",
+      "answer": "**Exención parcial**: AFP/EPS solo tributan 10% en distribuciones al afiliado; en acumulación dentro del fondo, están exentos. Diferente a personas naturales."
+    },
+    {
+      "question": "¿Cómo se calcula la TIR si compro a descuento?",
+      "answer": "Se resuelve numéricamente: el precio de compra (p.ej., 98%) ajusta la ecuación del VPN = 0. Resulta en TIR > cupón nominal. Esta calculadora lo hace automáticamente."
+    },
+    {
+      "question": "¿El impuesto ganancia ocasional 10% es retenido por el banco?",
+      "answer": "Sí. Los bancos y brókers autorizados retienen en la fuente el 10% sobre cupones y lo giran a DIAN. Es un pago definitivo (no se declara en renta)."
+    },
+    {
+      "question": "¿TES infla-protegidos existen en Colombia?",
+      "answer": "No como TES standard. Existen **IPC bonds** y en algunas liquidaciones, pero TES B tradicionales son nominales (cupón fijo). Inflación actual ~3.5% resta rentabilidad real."
+    },
+    {
+      "question": "¿Puedo comprar TES directamente o solo a través de bróker?",
+      "answer": "Directamente: a través de subastas del Ministerio de Hacienda (bono.gov.co) o bancos autorizados. Mercado secundario: COLCAP, BVC, brókers. Minúscula es $1.000 generalmente."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ministerio de Hacienda - Títulos de Tesorería TES",
+      "url": "https://www.minhacienda.gov.co/",
+      "publisher": "Ministerio de Hacienda Pública",
+      "date": "2026"
+    },
+    {
+      "name": "DIAN - Decreto 560 de 2024 Reforma Tributaria",
+      "url": "https://www.dian.gov.co/",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Banco de la República - Tasas y mercado de deuda",
+      "url": "https://www.banrep.gov.co/",
+      "publisher": "Banco de la República",
+      "date": "2026"
+    },
+    {
+      "name": "Bolsa de Valores de Colombia - COLCAP TES B",
+      "url": "https://www.bvc.com.co/",
+      "publisher": "BVC",
+      "date": "2026"
+    },
+    {
+      "name": "Superintendencia Financiera - Normativa mercado de valores",
+      "url": "https://www.superfinanciera.gov.co/",
+      "publisher": "Superfinanciera",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-28",
+    "source": "DIAN, Ministerio Hacienda, Banco República",
+    "sourceUrl": "https://www.minhacienda.gov.co/",
+    "updateType": "manual",
+    "notes": "Tasas cupón y resoluciones tributarias DIAN se actualizan mensualmente; fórmula de cálculo TIR es estándar (sin cambios)."
+  },
+  "lastReviewed": "2026-04-28"
+}

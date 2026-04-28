@@ -1,0 +1,211 @@
+{
+  "slug": "calculadora-recibo-luz-chile-enel-cge-saesa-tarifa-bt1",
+  "title": "Calculadora Recibo Luz Chile 2026 | Enel, CGE, Saesa",
+  "h1": "Calculadora de Recibo de Luz Chile - Tarifa BT1 Residencial",
+  "description": "Calcula tu recibo de electricidad Chile 2026. Tarifa BT1 residencial Enel Santiago, CGE, Saesa, Conafe. Cargo fijo, variable, IVA 19% y comparativa solar.",
+  "category": "vida",
+  "audience": "CL",
+  "icon": "💡",
+  "formulaId": "recibo-luz-chile-enel-cge-saesa-tarifa-bt1",
+  "intro": "Simula tu recibo mensual de electricidad en Chile según tu distribuidora y consumo kWh. Incluye cargo fijo, energía, IVA 19% y estimación de ahorro con autoconsumo solar. Válido para tarifa BT1 residencial 2026.",
+  "keyTakeaway": "Un hogar promedio Chile consume 250 kWh/mes pagando $45.000–$65.000 con IVA según distribuidora; solar reduce 40–60% anual.",
+  "useCases": [
+    "Verificar monto factura Enel/CGE antes de recibirla",
+    "Comparar costos entre distribuidoras de tu región",
+    "Estimar ahorro instalando paneles solares",
+    "Planificar presupuesto mensual energía",
+    "Identificar consumo anómalo (spike kWh)"
+  ],
+  "fields": [
+    {
+      "id": "distribuidor",
+      "label": "Distribuidora",
+      "type": "select",
+      "options": [
+        {
+          "value": "enel_santiago",
+          "label": "Enel Distribución Santiago"
+        },
+        {
+          "value": "cge",
+          "label": "CGE (Zona Centro Sur)"
+        },
+        {
+          "value": "saesa",
+          "label": "Saesa (Zona Sur)"
+        },
+        {
+          "value": "conafe",
+          "label": "Conafe (Zona Norte)"
+        },
+        {
+          "value": "eechi",
+          "label": "EEChi (Zona Patagonia)"
+        }
+      ],
+      "default": "enel_santiago",
+      "required": true
+    },
+    {
+      "id": "kwh_consumido",
+      "label": "Consumo mensual (kWh)",
+      "type": "number",
+      "min": 0,
+      "max": 5000,
+      "default": 250,
+      "required": true,
+      "help": "Revisa tu último recibo o medidor"
+    },
+    {
+      "id": "tiene_solar",
+      "label": "¿Tienes autoconsumo solar?",
+      "type": "checkbox",
+      "default": false
+    },
+    {
+      "id": "kwh_solar_generado",
+      "label": "kWh solar generados (si aplica)",
+      "type": "number",
+      "min": 0,
+      "max": 5000,
+      "default": 0,
+      "conditional": "tiene_solar",
+      "help": "Sistema solar residencial típico genera 100–300 kWh/mes"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cargo_fijo",
+      "label": "Cargo Fijo Mensual",
+      "type": "currency",
+      "help": "Costo administración red (sin IVA)"
+    },
+    {
+      "id": "costo_energia",
+      "label": "Costo Energía (kWh)",
+      "type": "currency",
+      "help": "Consumo × tarifa $/kWh (sin IVA)"
+    },
+    {
+      "id": "subtotal_sin_iva",
+      "label": "Subtotal sin IVA",
+      "type": "currency"
+    },
+    {
+      "id": "iva_19",
+      "label": "IVA 19%",
+      "type": "currency"
+    },
+    {
+      "id": "total_recibo",
+      "label": "Total Recibo",
+      "type": "currency",
+      "highlight": true
+    },
+    {
+      "id": "ahorro_solar_mensual",
+      "label": "Ahorro Solar Estimado",
+      "type": "currency",
+      "conditional": "tiene_solar",
+      "help": "Reducción por autoconsumo (kWh solar × tarifa)"
+    },
+    {
+      "id": "total_con_solar",
+      "label": "Total Con Autoconsumo",
+      "type": "currency",
+      "conditional": "tiene_solar",
+      "highlight": true
+    },
+    {
+      "id": "tarifa_promedio",
+      "label": "Tarifa Promedio $/kWh",
+      "type": "number",
+      "decimals": 2,
+      "help": "Costo energía / kWh consumido (sin cargo fijo)"
+    }
+  ],
+  "explanation": "## Cómo se calcula tu recibo de electricidad\n\nTu factura mensual Enel, CGE, Saesa u otra distribuidora se compone de tres elementos principales:\n\n### Fórmula Base\n\n```\nSubtotal = Cargo Fijo + (kWh Consumido × Tarifa $/kWh)\nIVA = Subtotal × 19%\nTotal = Subtotal + IVA\n```\n\nSi tienes autoconsumo solar:\n```\nTotal Neto = Total - (kWh Solar × Tarifa $/kWh × 19%)\n```\n\n### Componentes Detallados\n\n**Cargo Fijo Mensual (CFS)**: Costo administración red, medidor, lectura. Oscila $3.500–$5.500 sin IVA según distribuidora (2026).\n- Enel Santiago: ~$4.200 sin IVA\n- CGE: ~$3.900 sin IVA\n- Saesa: ~$4.100 sin IVA\n\n**Tarifa de Energía ($/kWh)**: Incluye generación, transmisión, distribución. Revisada trimestralmente por CNE (Comisión Nacional de Energía).\n- Rango 2026: $95–$135/kWh según distribuidora y estacionalidad\n- Enel Santiago: ~$115/kWh promedio\n- CGE: ~$110/kWh promedio\n- Saesa: ~$105/kWh promedio\n- Conafe: ~$120/kWh promedio\n\n**IVA 19%**: Impuesto al Valor Agregado aplicado sobre subtotal (cargo fijo + energía).\n\n### Ejemplo Numérico\n\n**Datos**: Enel Santiago, 280 kWh consumidos mes, sin solar\n\n| Item | Cálculo | Monto |\n|------|---------|-------|\n| Cargo Fijo | — | $4.200 |\n| Energía | 280 kWh × $115/kWh | $32.200 |\n| **Subtotal sin IVA** | — | **$36.400** |\n| **IVA 19%** | $36.400 × 0,19 | **$6.916** |\n| **TOTAL RECIBO** | — | **$43.316** |\n| Tarifa Promedio | $32.200 / 280 | **$115/kWh** |\n\n**Con autoconsumo solar (100 kWh/mes generados)**:\n- Ahorro energía: 100 × $115 = $11.500\n- IVA sobre ahorro: $11.500 × 0,19 = $2.185\n- Total neto con solar: $43.316 − $2.185 = **$41.131**\n- Ahorro mensual: **$2.185** (~5% factura)\n\n### Limitaciones y Notas\n\n- **Tarifas vigentes 2026**: Los valores $/kWh son aproximados. Consult la última resolución CNE o tu distribuidora.\n- **Variación estacional**: Tarifa puede cambiar cada trimestre según costo combustibles y renovables.\n- **Consumo punta vs. valle**: Tarifa BT1 no diferencia horarios; tarifa única residencial.\n- **Cargo por servicios adicionales**: No incluye cargos por reconexión, cambio medidor, etc.\n- **Autoconsumo solar**: Simulación simplificada; no incluye depreciación panel, mantenimiento, seguro.\n- **Regiones remotas**: Zonas aisladas (Magallanes, Atacama extremo) tienen adicionales de hasta 15%.\n- **Decreto 244**: Tarifa social protegida hasta 150 kWh/mes en hogares vulnerables (10% descuento).\n\n### Fuentes de Datos\n\n- **CNE (Comisión Nacional de Energía)**: Publica tarifas trimestrales por distribuidora → [www.cne.cl](https://www.cne.cl)\n- **Distribuidoras**: Enel, CGE, Saesa publican su estructura tarifaria en sus portales\n- **SII**: Tasa IVA 19% aplicable a servicio eléctrico\n- **Ley 21.305 (2021)**: Marco autoconsumo solar y almacenamiento energía",
+  "faq": [
+    {
+      "q": "¿Por qué mi recibo es diferente cada mes?",
+      "a": "La tarifa $/kWh cambia cada trimestre por resolución CNE según precio combustibles, hidraulicidad y costo renovables. El consumo también varía por clima (más calefacción invierno, aire acondicionado verano)."
+    },
+    {
+      "q": "¿Qué es el cargo fijo y por qué no puedo evitarlo?",
+      "a": "Es el costo administración red, medidor, lectura y atención comercial. Todas las distribuidoras lo cobran aunque no consumas. Es necesario para mantener infraestructura. No se puede eliminar."
+    },
+    {
+      "q": "¿Cuánto consume una casa típica en Chile?",
+      "a": "Promedio nacional 2025: 220–280 kWh/mes sin calefacción eléctrica. Con bomba de calor o radiadores: 400–600 kWh/mes. Depende región clima y hábitos."
+    },
+    {
+      "q": "¿Me conviene instalar paneles solares?",
+      "a": "Sí si tu consumo es >250 kWh/mes y tienes radiación solar >4,5 kWh/m²/día (casi toda Chile). Payback 7–10 años. Revisa incentivos SII (depreciación acelerada)."
+    },
+    {
+      "q": "¿Cómo se factura si tengo autoconsumo solar?",
+      "a": "Sistema 'net metering' (balance neto): generas 150 kWh, consumes 200 kWh → pagas solo 50 kWh. Sobrante no se compensa (en régimen de medidor neto simplificado). Desde Ley 21.305 (2021)."
+    },
+    {
+      "q": "¿Hay tarifa social o subsidio para bajo ingreso?",
+      "a": "Sí: Decreto 244 protege hasta 150 kWh/mes con 10% descuento en hogares vulnerarios (Fonasa, pensión básica). Solicita en tu distribuidora con Curp + comprobante ingresos."
+    },
+    {
+      "q": "¿Por qué CGE es más barata que Enel en mi región?",
+      "a": "Cada distribuidora cubre zona geográfica distinta. CGE (centro-sur) tiene menor costo transmisión que Enel (eje central densificado). No puedes cambiar; depende tu dirección."
+    },
+    {
+      "q": "¿Se incluyen otros cargos (basura, agua)?",
+      "a": "No. Recibo eléctrico solo incluye cargo fijo, energía e IVA. Servicios otros (sanitario, aseo) se facturan por separado o en boleta común si queda empresa."
+    },
+    {
+      "q": "¿Cada cuánto se revisa la tarifa $/kWh?",
+      "a": "CNE publica nueva resolución cada trimestre (enero, abril, julio, octubre). Se aplica primer día mes siguiente. Podés consultar en [www.cne.cl/tarifas](https://www.cne.cl)."
+    },
+    {
+      "q": "¿Qué pasa si no pago mi recibo a tiempo?",
+      "a": "Interés del 1,5% mensual + sanción administración. A los 90 días sin pago, pueden cortar suministro. Contacta distribuidora para plan de pago antes de vencimiento."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Comisión Nacional de Energía (CNE) - Tarifas Vigentes",
+      "url": "https://www.cne.cl/tarifa-electrica",
+      "publisher": "CNE",
+      "date": "2026-04-28"
+    },
+    {
+      "name": "Enel Distribución Santiago - Tarifa BT1",
+      "url": "https://www.enel.cl/es/customers/tarifas-electricas",
+      "publisher": "Enel Chile",
+      "date": "2026-04-28"
+    },
+    {
+      "name": "Ley 21.305 sobre Net Metering y Autoconsumo Solar",
+      "url": "https://www.bcn.cl/leyes/pdf/2021/2021-05-15/MONOLEY26340.pdf",
+      "publisher": "BCN - Biblioteca Congreso Nacional",
+      "date": "2021-05-15"
+    },
+    {
+      "name": "Decreto 244 - Tarifa Social Protegida",
+      "url": "https://www.sii.cl/",
+      "publisher": "SII / Subsecretaría de Energía",
+      "date": "2023"
+    },
+    {
+      "name": "Portal Distribuidoras (CGE, Saesa, Conafe, EEChi)",
+      "url": "https://www.cge.cl/ | https://www.saesa.cl/ | https://www.conafe.cl/",
+      "publisher": "Distribuidoras Regionales",
+      "date": "2026-04-28"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "quarterly",
+    "lastUpdated": "2026-04-28",
+    "source": "CNE - Comisión Nacional de Energía",
+    "sourceUrl": "https://www.cne.cl/tarifa-electrica",
+    "updateType": "semi-automatic",
+    "notes": "Tarifa $/kWh se actualiza cada trimestre por CNE. Cargo fijo anual. Valores son aproximados y pueden variar por distribuidora; consultar resolución oficial CNE para cifras exactas."
+  },
+  "lastReviewed": "2026-04-28"
+}

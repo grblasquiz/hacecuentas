@@ -1,0 +1,240 @@
+{
+  "slug": "calculadora-hipoteca-inversa-mayores-65-espana",
+  "title": "Calculadora Hipoteca Inversa España 2026 | Mayores 65",
+  "h1": "Hipoteca inversa España mayores 65",
+  "description": "Calcula renta mensual, capital disponible y gastos de hipoteca inversa (Ley 41/2007). Vivienda 300.000€, edad 75: renta aprox. 900-1.200€/mes. Comparativa nuda propiedad.",
+  "category": "finanzas",
+  "audience": "ES",
+  "icon": "👵",
+  "formulaId": "hipoteca-inversa-mayores-65-espana",
+  "intro": "La **hipoteca inversa** (regulada por la Ley 41/2007) permite a mayores de 65 años obtener liquidez sobre su vivienda sin venderla. Calcula la **renta mensual estimada**, **capital disponible total**, **gastos de formalización** y **comparativa con nuda propiedad** según edad, valor inmueble y modalidad elegida (renta vitalicia o temporal). Datos vigentes 2026 AEAT/Banco de España.",
+  "keyTakeaway": "Vivienda 350.000€ a los 75 años: renta vitalicia aprox. 1.050-1.400€/mes, capital disponible 245.000€-280.000€ (según tasadora). Gastos: 3.000-5.000€ (notaría, registro, gestoría).",
+  "useCases": [
+    "Jubilado sin ingresos suficientes necesita complemento mensual garantizado",
+    "Mayor quiere disposición única de capital para reforma, pagar deudas o viaje",
+    "Comparar renta vitalicia vs. temporal según expectativa de vida",
+    "Evaluar hipoteca inversa vs. venta con nuda propiedad (usufructo)",
+    "Estimar impacto fiscal (no hay IRPF sobre renta, pero sí plusvalía eventual)",
+    "Calcular saldo vivo al fallecimiento y herencia reducida"
+  ],
+  "fields": [
+    {
+      "id": "valor_vivienda",
+      "label": "Valor catastral/tasación vivienda",
+      "type": "currency",
+      "placeholder": "350000",
+      "min": 50000,
+      "max": 5000000,
+      "step": 10000,
+      "hint": "€ Catastro o tasación bancaria actual 2026"
+    },
+    {
+      "id": "edad_propietario",
+      "label": "Edad del propietario",
+      "type": "number",
+      "placeholder": "75",
+      "min": 65,
+      "max": 105,
+      "step": 1,
+      "hint": "Mínimo 65 años (requisito legal)"
+    },
+    {
+      "id": "modalidad",
+      "label": "Modalidad de pago",
+      "type": "select",
+      "options": [
+        {
+          "value": "vitalicia",
+          "label": "Renta vitalicia (de por vida)"
+        },
+        {
+          "value": "temporal",
+          "label": "Renta temporal (máx. 20 años)"
+        },
+        {
+          "value": "capital_unico",
+          "label": "Capital único + renta residual"
+        }
+      ],
+      "default": "vitalicia",
+      "hint": "Afecta cálculo de renta mensual"
+    },
+    {
+      "id": "porcentaje_ltv",
+      "label": "Loan-to-Value (LTV) esperado %",
+      "type": "number",
+      "placeholder": "70",
+      "min": 40,
+      "max": 80,
+      "step": 5,
+      "hint": "% típico 60-75% por edad/riesgo. Banco determina final."
+    },
+    {
+      "id": "euribor_asumido",
+      "label": "Euribor asumido % anual",
+      "type": "number",
+      "placeholder": "3.8",
+      "min": 1.5,
+      "max": 6.0,
+      "step": 0.1,
+      "hint": "Ref. Banco España 2026 ~3,5-4%. Hipoteca inversa variable típica."
+    },
+    {
+      "id": "spread_banco",
+      "label": "Spread bancario %",
+      "type": "number",
+      "placeholder": "2.5",
+      "min": 1.0,
+      "max": 4.0,
+      "step": 0.25,
+      "hint": "Margen banco sobre Euribor. Típico 2,0-3,0% por riesgo longevidad."
+    },
+    {
+      "id": "incluir_nuda_propiedad",
+      "label": "¿Comparar con nuda propiedad (usufructo)?",
+      "type": "checkbox",
+      "default": true,
+      "hint": "Muestra alternativa venta con retención de usufructo"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "capital_disponible",
+      "label": "Capital disponible (préstamo máx.)",
+      "type": "currency",
+      "hint": "€ LTV aplicado × tasación. Menos gastos formalización."
+    },
+    {
+      "id": "renta_mensual_estimada",
+      "label": "Renta mensual (estimada)",
+      "type": "currency",
+      "hint": "€/mes según modalidad, edad, tipo interés actualizado"
+    },
+    {
+      "id": "gastos_formalizacion",
+      "label": "Gastos de formalización",
+      "type": "currency",
+      "hint": "€ Notaría + Registro Propiedad + Gestoría + tasación. Año 1."
+    },
+    {
+      "id": "tae_hipoteca",
+      "label": "TAE estimada",
+      "type": "percentage",
+      "hint": "% (Euribor + spread). Referencia coste anual."
+    },
+    {
+      "id": "saldo_vivo_10anos",
+      "label": "Saldo vivo estimado a 10 años",
+      "type": "currency",
+      "hint": "€ Deuda acumulada si renta vitalicia. Referencia herencia."
+    },
+    {
+      "id": "ingreso_anual_neto",
+      "label": "Ingreso anual (renta mensual × 12)",
+      "type": "currency",
+      "hint": "€ Complemento renta anual. No tributa IRPF (préstamo)."
+    },
+    {
+      "id": "comparativa_nuda_propiedad_valor",
+      "label": "Alternativa: Valor nuda propiedad (ref.)",
+      "type": "currency",
+      "hint": "€ Simulado. Valor vivienda × coef. edad (Tablas DGF)."
+    },
+    {
+      "id": "comparativa_nuda_propiedad_renta",
+      "label": "Alternativa: Renta vendida con usufructo",
+      "type": "currency",
+      "hint": "€/mes estimada según edad y rentas disponibles."
+    },
+    {
+      "id": "advertencia_fiscal",
+      "label": "Nota fiscal",
+      "type": "text",
+      "hint": "Información impacto IRPF, Sucesiones, plusvalía eventual."
+    }
+  ],
+  "explanation": "## Cómo se calcula la hipoteca inversa\n\nLa **hipoteca inversa** (Ley 41/2007, regulada por Banco de España) es un instrumento financiero para mayores de 65 años que convierte parte del patrimonio inmobiliario en renta o capital.\n\n### Fórmula principal\n\n**Capital disponible** = Valor tasación × LTV − Gastos formalización\n\nDonde:\n- **LTV (Loan-to-Value)**: 40–80% según edad del propietario, comunidad autónoma, riesgo de mercado.\n- **Gastos formalización**: ~1.000–5.000€ (notaría, registro, tasación, gestoría).\n\n**Renta mensual estimada:**\n\nDepende de **modalidad elegida**:\n\n#### Modalidad 1: Renta vitalicia\n\nRenta = Capital disponible × Tasa longevidad (%) / 12\n\nLa **tasa longevidad** se calcula con tablas actuariales basadas en:\n- Edad del propietario.\n- Expectativa de vida (INE 2026: hombre 81 años, mujer 87 años).\n- Tipo interés (TAE = Euribor + Spread).\n\n*Ejemplo aproximado:*\n- Propietario 75 años, capital 250.000€.\n- Tasa longevidad anual ~5,2% (según tablas asegurador).\n- Renta ≈ 250.000 × 0,052 / 12 = **1.083€/mes de por vida**.\n\n#### Modalidad 2: Renta temporal (máx. 20 años)\n\nRenta = Capital disponible × Coeficiente temporal / 12\n\nMayor renta mensual que vitalicia (amortización acelerada del préstamo).\n\n*Ejemplo:*\n- Mismo capital, renta 15 años.\n- Renta ≈ 250.000 × 0,066 / 12 = **1.375€/mes** (más alta, pero plazo fijo).\n\n#### Modalidad 3: Capital único + renta residual\n\nSe dispone de parte del capital inmediato (ej. 40%), resto como renta mensual.\n\n### Coste de la hipoteca\n\n**TAE = Euribor + Spread**\n\nTípicos 2026:\n- **Euribor 12M**: ~3,5–4,0% (Banco España).\n- **Spread**: 2,0–3,5% (riesgo longevidad y administrativo).\n- **TAE final**: 5,5–7,5%.\n\n**Interés acumulado** (saldo vivo):\n\nSaldo año N = Capital inicial × (1 + TAE/100)^N − (Renta mensual × 12 × factor descuento)\n\n### Saldo vivo y herencia\n\nSi el propietario fallece:\n- **Herederos pueden**: Pagar deuda residual o permitir venta de la vivienda.\n- **No hay embargo**: La hipoteca es sobre la vivienda, no persona. Si venta >deuda, diferencia a herederos.\n- **Plusvalía eventual**: Si vivienda aprecia, hay impuesto sucesiones sobre herencia neta.\n\n### Comparativa: Nuda propiedad (usufructo)\n\nAlternativa: **Vender con retención de usufructo vitalicio**.\n\n**Valor nuda propiedad** (Tablas DGF, Tesoro Público):\n\nNuda propiedad (%) = 100% − Coeficiente usufructo según edad.\n\n*Ejemplos Tablas 2026 (aproximadas):*\n| Edad | Usufructo % | Nuda propiedad % |\n|------|-------------|------------------|\n| 65   | 60%         | 40%              |\n| 75   | 45%         | 55%              |\n| 85   | 30%         | 70%              |\n\n**Renta por usufructo**:\n\nComprador de nuda propiedad paga canon anual aprox. 3–5% valor catastral / 12 = renta mensual equivalente.\n\n*Ejemplo:*\n- Vende nuda (55% × 350.000€ = 192.500€) a comprador.\n- Comprador paga canon anual ~7.000€ (2% valor nuda) = **583€/mes vitalicio**.\n- Propietario recibe capital inmediato 192.500€.\n\n### Limitaciones y consideraciones\n\n1. **Requisitos legales**:\n   - Mínimo 65 años.\n   - Vivienda habitual o principal (no segunda).\n   - Ser propietario sin cargas (o cancelarlas previamente).\n\n2. **Límites por comunidad autónoma**:\n   - Comunidades pueden reducir LTV máximo (ej. Cataluña, País Vasco: límites más conservadores).\n\n3. **Impacto fiscal**:\n   - **IRPF**: NO tributa la renta recibida (es préstamo, no ingreso).\n   - **Plusvalía municipal**: No aplica (no es venta).\n   - **Sucesiones**: Herederos pagan impuesto sobre vivienda (no exención, aunque sí reducciones del 95% en algunas CCAA).\n\n4. **Riesgos**:\n   - Deuda crece con interés compuesto (saldo vivo asciende).\n   - Si vivienda desciende valor, banco puede pedir aportación (raro, pero posible).\n   - Movimientos de tipos de interés afectan renta (si variable).\n\n5. **Insolvencia del banco**: Garantía hipotecaria protege (vivienda es aval).\n\n## Ejemplo práctico\n\n**Caso: Jubilada 78 años, Valladolid**\n\n- Vivienda: 300.000€ (tasación catastral).\n- Modalidad: Renta vitalicia.\n- LTV banco: 70%.\n- Euribor: 3,8%, Spread: 2,5%, TAE: 6,3%.\n\n**Cálculos:**\n\n1. Capital disponible = 300.000 × 0,70 − 3.500 (gastos) = **206.500€**.\n\n2. Tasa longevidad (78 años, tablas actuariales): 4,8% anual.\n\n3. Renta mensual = 206.500 × 0,048 / 12 = **826€/mes de por vida**.\n\n4. TAE = 6,3%.\n\n5. Saldo vivo a 10 años ≈ 206.500 × (1,063^10) − (826 × 12 × 10 × factor PV) ≈ **290.000€** (deuda crece por intereses).\n\n**Alternativa nuda propiedad:**\n- Edad 78: Coeficiente usufructo ~35% → Nuda propiedad 65%.\n- Valor nuda = 300.000 × 0,65 = 195.000€.\n- Comprador paga canon 2% anual = 6.000€/año = **500€/mes**.\n- Recibe capital inmediato 195.000€.\n\n**Comparativa:**\n- Hipoteca inversa: 826€/mes indefinido, sin capital inicial líquido (capital queda en casa).\n- Nuda propiedad: 500€/mes + 195.000€ hoy (capital disponible).\n- **Mejor si**: Necesita capital inmediato → Nuda propiedad. Si necesita renta vitalicia → Hipoteca inversa.",
+  "faq": [
+    {
+      "q": "¿Quién puede solicitar una hipoteca inversa en España?",
+      "a": "Mayores de 65 años, propietarios de vivienda habitual (España principalmente). Banco requerirá: certificado de nacimiento, título propiedad, tasación, informe de solvencia patrimonial, consentimiento cónyuge si hay."
+    },
+    {
+      "q": "¿La renta mensual de la hipoteca inversa tributa en IRPF?",
+      "a": "NO. Es un préstamo, no ingreso. No genera base imponible IRPF. Sí afecta patrimonio neto si saldo vivo aparece en declaración de bienes."
+    },
+    {
+      "q": "¿Qué pasa con la herencia si fallezco con hipoteca inversa?",
+      "a": "Herederos heredan vivienda con deuda hipotecaria. Opciones: (1) Pagar saldo vivo (ej. 290.000€ a 10 años), (2) Vender vivienda (banco se paga de venta), (3) Negociar prórroga con banco. Si venta > deuda, diferencia a herederos."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre hipoteca inversa y nuda propiedad?",
+      "a": "Hipoteca inversa: Renta vitalicia, sigues siendo propietario, deuda crece, vivienda permanece. Nuda propiedad: Vendes nuda (55-70% valor), cobras capital inmediato + renta menor, pierdes propiedad pero capital líquido."
+    },
+    {
+      "q": "¿Puedo cancelar la hipoteca inversa antes de tiempo?",
+      "a": "Sí. Pagando saldo vivo íntegro o parcial. Algunos bancos permiten amortización anticipada sin penalización. Consulta póliza concreta."
+    },
+    {
+      "q": "¿El banco puede pedirme más dinero si la vivienda baja de valor?",
+      "a": "Teóricamente raro si LTV inicial prudente (≤70%). Pero depende de cláusulas póliza. Hipoteca es sobre vivienda (aval), no reclamación personal. Banco asume riesgo inmobiliario."
+    },
+    {
+      "q": "¿Euribor variable afecta mi renta mensual?",
+      "a": "Sí, en hipotecas de tipo variable (mayoría). TAE actualizada anualmente (enero típicamente). Renta puede variar. Algunos bancos ofrecen opciones de fijación parcial o total."
+    },
+    {
+      "q": "¿Qué limitaciones existen por comunidad autónoma?",
+      "a": "Cataluña y País Vasco pueden restringir LTV máximo o incluir requisitos adicionales. Galicia, Castilla-León más flexibles. Consulta normativa autonómica y posibilidad de deducciones autonómicas en sucesiones."
+    },
+    {
+      "q": "¿Necesito préstamo hipotecario inverso si tengo pension suficiente?",
+      "a": "No legalmente. Pero si pensiós es baja (<1.000€/mes) y tienes vivienda pagada, hipoteca inversa complementa. O venta + nuda propiedad para capital inicial mayor."
+    },
+    {
+      "q": "¿Cuándo se actualiza esta calculadora a datos 2027?",
+      "a": "Se revisa anualmente (enero) cuando Banco España publica nuevos tipos, Euribor oficial, tablas INE longevidad y tramos fiscales AEAT. Próxima: enero 2027."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ley 41/2007, de 7 de diciembre, sobre hipoteca inversa",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-21201",
+      "publisher": "BOE - Ministerio de Justicia",
+      "date": "2007 (vigente 2026)"
+    },
+    {
+      "name": "Circular 5/2012 de Banco de España sobre hipoteca inversa",
+      "url": "https://www.bde.es/f/webbde/GAB/ficheros/NotasDePrensa/2012/12/nip2012_26_en.pdf",
+      "publisher": "Banco de España",
+      "date": "2012 (actualmente en revisión 2024-2026)"
+    },
+    {
+      "name": "Tablas de Valoración del Usufructo y Nuda Propiedad (DGF/Tesoro)",
+      "url": "https://www.tesoro.es/es/fiscalidad/impuesto-sobre-sucesiones-donaciones",
+      "publisher": "Dirección General de Fondos - Tesoro Público",
+      "date": "2026"
+    },
+    {
+      "name": "Euribor oficial y tipos de referencia 2026",
+      "url": "https://www.bde.es/wcoreqr/estadisticas-indices-precio-coste",
+      "publisher": "Banco de España",
+      "date": "2026 (actualizado mensualmente)"
+    },
+    {
+      "name": "Estadísticas de longevidad e esperanza de vida (INE)",
+      "url": "https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&cid=1254735572519&menu=resultados",
+      "publisher": "Instituto Nacional de Estadística",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Banco de España (tipos Euribor, circulares), BOE (legislación), Tesoro Público (tablas), INE (longevidad)",
+    "sourceUrl": "https://www.bde.es / https://www.tesoro.es / https://www.ine.es",
+    "updateType": "manual",
+    "notes": "Euribor y spreads se revisan mensualmente. Tablas de longevidad, normativa CCAA y límites LTV se actualizan enero. Próxima revisión completa: enero 2027."
+  },
+  "lastReviewed": "2026-04-28"
+}

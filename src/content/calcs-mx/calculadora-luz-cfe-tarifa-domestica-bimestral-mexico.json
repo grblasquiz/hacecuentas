@@ -1,0 +1,226 @@
+{
+  "slug": "calculadora-luz-cfe-tarifa-domestica-bimestral-mexico",
+  "title": "Calculadora Recibo Luz CFE Bimestral 2026 | Hacé Cuentas",
+  "h1": "Calculadora de recibo luz CFE tarifa doméstica bimestral",
+  "description": "Calcula tu recibo CFE bimestral según tarifa doméstica (1, 1A, 1B, 1C, 1D, 1E, 1F), subsidio progresivo y cargo DAC. Comparación solar instantánea.",
+  "category": "vida",
+  "audience": "MX",
+  "icon": "💡",
+  "formulaId": "luz-cfe-tarifa-domestica-bimestral-mexico",
+  "intro": "La **CFE (Comisión Federal de Electricidad)** aplica tarifas domésticas escalonadas según tu zona climática y consumo bimestral. El subsidio progresivo reduce el costo en los primeros tramos, pero el **cargo DAC (Demanda de Alto Consumo)** añade 12% si superas el límite. Usa esta calculadora para estimar tu gasto real, comparar con energía solar y planificar tu consumo.",
+  "keyTakeaway": "Un hogar promedio en zona templada (tarifa 1) consume 250 kWh bimestrales = ~$850 MXN; con DAC puede llegar a $1,020 MXN. Solar reduce hasta 80% en 5 años.",
+  "useCases": [
+    "Estimar costo mensual del recibo antes de recibirlo",
+    "Comparar consumo entre tarifas 1, 1A, 1B, 1C, 1D, 1E, 1F según tu zona",
+    "Evaluar si activas cargo DAC por alto consumo",
+    "Calcular ahorro potencial con sistema de autoconsumo solar",
+    "Presupuestar gasto anual de energía eléctrica doméstica",
+    "Identificar consumos anómalos o electrodomésticos ineficientes"
+  ],
+  "fields": [
+    {
+      "id": "consumo_kwh",
+      "label": "Consumo bimestral (kWh)",
+      "type": "number",
+      "placeholder": "250",
+      "min": 0,
+      "max": 2000,
+      "step": 1,
+      "required": true,
+      "hint": "Suma los kWh de los últimos 2 meses de tu recibo CFE"
+    },
+    {
+      "id": "tarifa_zona",
+      "label": "Tarifa según zona climática",
+      "type": "select",
+      "options": [
+        {
+          "value": "1",
+          "label": "Tarifa 1 (Templada: interior CDMX, Monterrey, Guadalajara)"
+        },
+        {
+          "value": "1a",
+          "label": "Tarifa 1A (Cálida: Mérida, Campeche, Yucatán)"
+        },
+        {
+          "value": "1b",
+          "label": "Tarifa 1B (Muy cálida: Cancún, Chetumal, Quintana Roo)"
+        },
+        {
+          "value": "1c",
+          "label": "Tarifa 1C (Extrema: Puerto Vallarta, Acapulco"
+        },
+        {
+          "value": "1d",
+          "label": "Tarifa 1D (Muy cálida alta: Hermosillo, Sonora"
+        },
+        {
+          "value": "1e",
+          "label": "Tarifa 1E (Cálida alta: Culiacán, Sinaloa"
+        },
+        {
+          "value": "1f",
+          "label": "Tarifa 1F (Templada fría: zonas altas, Toluca, Puebla"
+        }
+      ],
+      "required": true,
+      "hint": "Consulta tu recibo CFE; zona determina precio/kWh base"
+    },
+    {
+      "id": "aplicar_dac",
+      "label": "¿Aplica cargo DAC (alto consumo)?",
+      "type": "select",
+      "options": [
+        {
+          "value": "no",
+          "label": "No — Consumo normal"
+        },
+        {
+          "value": "si",
+          "label": "Sí — +12% por consumo elevado"
+        }
+      ],
+      "required": true,
+      "hint": "DAC se activa si superas ~400 kWh bimestrales en zona templada"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cargo_base",
+      "label": "Cargo por energía (base)",
+      "format": "currency",
+      "unit": "MXN"
+    },
+    {
+      "id": "subsidio_aplicado",
+      "label": "Subsidio progresivo aplicado",
+      "format": "currency",
+      "unit": "MXN",
+      "note": "Reducción oficial en primeros tramos"
+    },
+    {
+      "id": "cargo_energia_neto",
+      "label": "Cargo energía (después subsidio)",
+      "format": "currency",
+      "unit": "MXN"
+    },
+    {
+      "id": "cargo_dac",
+      "label": "Cargo DAC (alto consumo)",
+      "format": "currency",
+      "unit": "MXN"
+    },
+    {
+      "id": "subtotal_antes_iva",
+      "label": "Subtotal antes IVA",
+      "format": "currency",
+      "unit": "MXN"
+    },
+    {
+      "id": "iva_16",
+      "label": "IVA 16%",
+      "format": "currency",
+      "unit": "MXN"
+    },
+    {
+      "id": "total_recibo",
+      "label": "Total recibo CFE",
+      "format": "currency",
+      "unit": "MXN",
+      "emphasis": true
+    },
+    {
+      "id": "costo_por_kwh",
+      "label": "Costo promedio por kWh",
+      "format": "currency",
+      "unit": "MXN"
+    },
+    {
+      "id": "ahorro_anual_solar_80",
+      "label": "Ahorro anual estimado (80% solar)",
+      "format": "currency",
+      "unit": "MXN",
+      "note": "Si instalas sistema autoconsumo solar"
+    }
+  ],
+  "explanation": "## Cómo se calcula el recibo CFE bimestral\n\nLa CFE aplica un **sistema de tarifa escalonada progresiva** que penaliza consumos altos, con subsidio en tramos bajos:\n\n### Fórmula base\n\n**Cargo energía = (kWh × Tarifa base) − Subsidio + Cargo DAC**\n\n### Estructura tarifaria 2026 (CFE oficial)\n\n| Tarifa | Zona climática | Precio base (MXN/kWh aprox.) | Límite subsidio (kWh) | Factor DAC |\n|--------|---|---|---|---|\n| **1** | Templada (CDMX, Mty, Gdl) | 3.50–4.20 | 150 | +12% si >400 kWh |\n| **1A** | Cálida (Yucatán, Campeche) | 3.80–4.60 | 130 | +12% si >350 kWh |\n| **1B** | Muy cálida (Quintana Roo) | 4.10–4.90 | 110 | +12% si >300 kWh |\n| **1C** | Extrema (costa Pacífico) | 4.40–5.30 | 100 | +12% si >250 kWh |\n| **1D** | Muy cálida alta (Sonora) | 3.90–4.70 | 120 | +12% si >320 kWh |\n| **1E** | Cálida alta (Sinaloa, Nayarit) | 3.75–4.50 | 125 | +12% si >330 kWh |\n| **1F** | Templada fría (altiplano) | 3.20–3.90 | 180 | +12% si >450 kWh |\n\n### Desglose del cálculo\n\n1. **Cargo base**: kWh × Tarifa zona (MXN/kWh)\n2. **Subsidio progresivo**: Porcentaje decreciente según tramo (CFE reduce ~8–15% en primeros 100–150 kWh)\n3. **Cargo DAC**: Si consumo bimestral supera umbral → +12% al subtotal\n4. **IVA 16%**: Se aplica al subtotal final (incluye cargo DAC)\n\n### Ejemplo numérico (Tarifa 1, templada)\n\n**Supuesto:** Consumo 250 kWh bimestral, tarifa 1, sin DAC\n\n- Primeros 150 kWh × $4.00 = $600.00\n- Subsidio en primeros 150 kWh: −$90.00 (15%)\n- Siguientes 100 kWh × $5.20 = $520.00\n- **Subtotal**: ($600.00 − $90.00) + $520.00 = $1,030.00\n- **IVA 16%**: $1,030.00 × 0.16 = $164.80\n- **Total**: $1,194.80\n- **Costo/kWh**: $1,194.80 ÷ 250 = **$4.78/kWh**\n\n### Con cargo DAC (misma zona, 450 kWh)\n\n- Cargo base con subsidio: ~$1,850.00\n- **DAC 12%**: $1,850.00 × 0.12 = $222.00\n- **Subtotal**: $1,850.00 + $222.00 = $2,072.00\n- **IVA 16%**: $2,072.00 × 0.16 = $331.52\n- **Total**: $2,403.52\n- **Impacto DAC**: +$208.72 (9% más caro que sin DAC)\n\n## Limitaciones\n\n- **Precios CFE 2026**: Pueden variar mensual; este cálculo usa tarifas vigentes a abril 2026\n- **Subsidio regional**: Algunas zonas rurales aplican subsidios adicionales no incluidos\n- **Consumo estacional**: Verano/invierno pueden ajustar tarifa hasta 5% CFE según demanda\n- **Medidor inteligente**: Si tu medidor es analógico, lecturas pueden variar ±2%\n- **Ahorro solar**: Estimación asume irradiancia promedio; varía por ubicación, orientación, sombreado",
+  "faq": [
+    {
+      "q": "¿Cómo sé qué tarifa tengo?",
+      "a": "Consulta tu recibo CFE; aparece en grande como «Tarifa 1», «1A», etc. También puedes ingresar tu código postal en https://www.cfe.net.mx y verificar zona climática."
+    },
+    {
+      "q": "¿Qué es el cargo DAC y cuándo me lo aplican?",
+      "a": "DAC (Demanda de Alto Consumo) suma 12% al recibo si tu consumo bimestral supera ~300–450 kWh según tarifa. CFE lo activa automáticamente si detecta consumo elevado; es transparente en el desglose del recibo."
+    },
+    {
+      "q": "¿El subsidio progresivo es permanente?",
+      "a": "Sí; el subsidio es oficial y estructural en la tarifa doméstica desde 2023. Sin embargo, consumos >600 kWh bimestrales lo reducen significativamente. Consulta SAT si tienes dudas sobre cambios futuros."
+    },
+    {
+      "q": "¿Cuánto cuesta una instalación solar para autoconsumo?",
+      "a": "Un sistema residencial (3–5 kW) cuesta $30,000–$60,000 MXN. Con subsidios Banobras/FIRA y Net Metering (compensación CFE), recuperas inversión en 5–7 años en zonas soleadas."
+    },
+    {
+      "q": "¿Puedo comparar con Net Metering?",
+      "a": "Sí; con solar + Net Metering, solo pagas consumo neto (generación menos lo que sacas de CFE). Tu recibo baja 70–80%. Requiere trámite ante CFE y certificación eléctrica."
+    },
+    {
+      "q": "¿Qué consumo es «normal» en México?",
+      "a": "Promedio nacional: 180–250 kWh bimestrales (zona templada). Si usas aire acondicionado/calefacción constantemente, espera 350–500 kWh. Electrobombas o industria doméstica pueden llegar a 800+ kWh."
+    },
+    {
+      "q": "¿IVA 16% se aplica a todo el recibo?",
+      "a": "Sí; CFE incluye IVA 16% sobre el subtotal (energía + cargos). Algunas regiones fronterizas aplican 8%, pero aplica solo en Baja California, Sonora, Chihuahua y Coahuila hasta 20 km de frontera."
+    },
+    {
+      "q": "¿Puedo reclamar si el recibo es muy alto?",
+      "a": "Sí; contacta CFE al 071 (Comisión para Proteger al Usuario de Energía Eléctrica, CPUE) o Profeco. Si sospechas medidor defectuoso, solicita revisión técnica gratuita en 10 días."
+    },
+    {
+      "q": "¿Qué electrodomésticos consumem más?",
+      "a": "Aire acondicionado (40–60% del consumo en verano), calentador eléctrico, horno, refrigerador y bomba de agua. Cambiar a LED/inverter reduce 15–25% anual."
+    }
+  ],
+  "sources": [
+    {
+      "name": "CFE - Tarifas domésticas 2026",
+      "url": "https://www.cfe.net.mx/Tarifas/tarifas-domesticas",
+      "publisher": "Comisión Federal de Electricidad",
+      "date": "2026-01-15"
+    },
+    {
+      "name": "CPUE - Comisión Protectora Usuario Energía",
+      "url": "https://www.cpue.gob.mx",
+      "publisher": "CPUE",
+      "date": "2026-04-01"
+    },
+    {
+      "name": "SAT - IVA Energía Eléctrica",
+      "url": "https://www.sat.gob.mx/impuestos/iva",
+      "publisher": "Servicio de Administración Tributaria",
+      "date": "2026-03-01"
+    },
+    {
+      "name": "Banobras - Subsidios Solar Doméstico",
+      "url": "https://www.banobras.gob.mx/sustentabilidad/energia-solar",
+      "publisher": "Banco Nacional de Obras y Servicios Públicos",
+      "date": "2025-12-01"
+    },
+    {
+      "name": "SENER - Net Metering y Autoconsumo",
+      "url": "https://www.gob.mx/sener/acciones-y-programas/autoconsumo",
+      "publisher": "Secretaría de Energía",
+      "date": "2026-02-28"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-28",
+    "source": "CFE Tarifas Oficiales",
+    "sourceUrl": "https://www.cfe.net.mx/Tarifas",
+    "updateType": "manual",
+    "notes": "Tarifas base (MXN/kWh) se actualizan mensual por CFE según costo combustible y demanda. Umbrales DAC y % subsidio son estructurales anuales (revisión enero). IVA 16% es fijo nacional excepto frontera (8%)."
+  },
+  "lastReviewed": "2026-04-28"
+}

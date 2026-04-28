@@ -1,0 +1,308 @@
+{
+  "slug": "calculadora-universidad-publica-vs-privada-colombia-coste-2026",
+  "title": "Coste Universidad Pública vs Privada Colombia 2026 | Hacé Cuentas",
+  "h1": "Calculadora de coste: Universidad pública vs privada en Colombia",
+  "description": "Compara matrícula pública ($0–3M/semestre) y privada ($8–25M/semestre). Estima coste total carrera, becas disponibles y ROI por programa. Datos ICFES 2026.",
+  "category": "educacion",
+  "audience": "CO",
+  "icon": "🏛️",
+  "formulaId": "universidad-publica-vs-privada-colombia-coste-2026",
+  "intro": "En Colombia, la elección entre universidad pública y privada impacta directamente tu presupuesto educativo. Las universidades públicas (UNAL, UdeA, UNICAUCA) cobran matrícula según estratificación socioeconómica familiar: desde $0 hasta $3.2M por semestre. Las privadas de elite (Andes, Javeriana, Externado) rondan $8M–$25M semestrales. Esta calculadora estima el coste total de carrera (8–12 semestres), becas disponibles por tipo institución y ROI proyectado según salario profesional al egreso.",
+  "keyTakeaway": "Una carrera en universidad pública cuesta $0–$19.2M total; privada, $64M–$150M. ROI público: 3–4 años; privado: 5–7 años. Becas ICETEX cubren hasta 100% pública, 60% privada.",
+  "useCases": [
+    "Comparar presupuesto total: pública vs privada para 4 años carrera",
+    "Evaluar disponibilidad becas ICETEX y créditos educativos por institución",
+    "Estimar ROI: salario egreso vs inversión acumulada por programa",
+    "Planificar ahorro familiar según ingresos y estrato socioeconómico",
+    "Analizar coste oportunidad: trabajar vs estudiar tiempo completo",
+    "Simular financiamiento con crédito educativo y plazos de amortización"
+  ],
+  "fields": [
+    {
+      "id": "tipo_universidad",
+      "label": "Tipo de universidad",
+      "type": "select",
+      "options": [
+        {
+          "value": "publica_elite",
+          "label": "Pública élite (UNAL, UdeA)"
+        },
+        {
+          "value": "publica_regional",
+          "label": "Pública regional"
+        },
+        {
+          "value": "privada_elite",
+          "label": "Privada élite (Andes, Javeriana, Externado)"
+        },
+        {
+          "value": "privada_intermedia",
+          "label": "Privada intermedia"
+        },
+        {
+          "value": "privada_economia",
+          "label": "Privada economía"
+        }
+      ],
+      "default": "publica_regional",
+      "required": true
+    },
+    {
+      "id": "estrato_familiar",
+      "label": "Estrato socioeconómico familia (solo pública)",
+      "type": "select",
+      "options": [
+        {
+          "value": "1",
+          "label": "Estrato 1"
+        },
+        {
+          "value": "2",
+          "label": "Estrato 2"
+        },
+        {
+          "value": "3",
+          "label": "Estrato 3"
+        },
+        {
+          "value": "4",
+          "label": "Estrato 4"
+        },
+        {
+          "value": "5",
+          "label": "Estrato 5"
+        },
+        {
+          "value": "6",
+          "label": "Estrato 6"
+        }
+      ],
+      "default": "3",
+      "required": false,
+      "condition": "tipo_universidad.includes('publica')"
+    },
+    {
+      "id": "programa",
+      "label": "Programa/carrera",
+      "type": "select",
+      "options": [
+        {
+          "value": "ingenieria",
+          "label": "Ingeniería"
+        },
+        {
+          "value": "medicina",
+          "label": "Medicina"
+        },
+        {
+          "value": "derecho",
+          "label": "Derecho"
+        },
+        {
+          "value": "administracion",
+          "label": "Administración"
+        },
+        {
+          "value": "economia",
+          "label": "Economía"
+        },
+        {
+          "value": "enfermeria",
+          "label": "Enfermería"
+        },
+        {
+          "value": "psicologia",
+          "label": "Psicología"
+        },
+        {
+          "value": "artes",
+          "label": "Artes/Humanidades"
+        }
+      ],
+      "default": "ingenieria",
+      "required": true
+    },
+    {
+      "id": "duracion_semestres",
+      "label": "Duración carrera (semestres)",
+      "type": "number",
+      "min": 6,
+      "max": 12,
+      "default": 8,
+      "required": true,
+      "help": "Típico: Ingeniería 8–10, Medicina 12, Derecho 8, Administración 8"
+    },
+    {
+      "id": "ingresos_familia_anual",
+      "label": "Ingresos familia anuales ($ pesos)",
+      "type": "number",
+      "min": 0,
+      "max": 500000000,
+      "default": 24000000,
+      "required": true,
+      "help": "Para cálculo becas ICETEX (corte UVR 2026: 1 UVR = $43.280)"
+    },
+    {
+      "id": "tiene_beca",
+      "label": "¿Acceso a beca/crédito educativo?",
+      "type": "select",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "icetex_50",
+          "label": "ICETEX 50%"
+        },
+        {
+          "value": "icetex_100",
+          "label": "ICETEX 100%"
+        },
+        {
+          "value": "beca_institución",
+          "label": "Beca institución"
+        },
+        {
+          "value": "beca_gobierno",
+          "label": "Beca gobierno (Ser Pilo Paga)"
+        }
+      ],
+      "default": "no",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "matricula_semestral",
+      "label": "Matrícula semestral estimada",
+      "type": "currency",
+      "unit": "COP"
+    },
+    {
+      "id": "coste_total_carrera",
+      "label": "Coste total carrera (sin becas)",
+      "type": "currency",
+      "unit": "COP"
+    },
+    {
+      "id": "becas_total",
+      "label": "Monto becas/créditos disponibles",
+      "type": "currency",
+      "unit": "COP"
+    },
+    {
+      "id": "coste_neto_estudiante",
+      "label": "Coste neto a cargo estudiante/familia",
+      "type": "currency",
+      "unit": "COP"
+    },
+    {
+      "id": "salario_egreso_promedio",
+      "label": "Salario profesional promedio al egreso",
+      "type": "currency",
+      "unit": "COP"
+    },
+    {
+      "id": "roi_meses",
+      "label": "ROI en meses (break-even vs coste neto)",
+      "type": "number",
+      "unit": "meses"
+    },
+    {
+      "id": "cuota_mensual_icetex",
+      "label": "Cuota mensual ICETEX (si aplica)",
+      "type": "currency",
+      "unit": "COP"
+    },
+    {
+      "id": "comparativa_texto",
+      "label": "Resumen comparativo",
+      "type": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEsta calculadora estima costes educativos en Colombia diferenciando entre universidades públicas y privadas, aplicando normas ICETEX 2026 y salarios promedio SENA/BLS.\n\n### Fórmula\n\n**1. Matrícula Semestral Pública:**\n\nSegún estrato familiar (DIAN 2026):\n- Estrato 1–2: $0–$250.000\n- Estrato 3: $450.000–$800.000\n- Estrato 4–5: $1.200.000–$2.100.000\n- Estrato 6: $2.800.000–$3.200.000\n\n**2. Matrícula Semestral Privada:**\n\n- Privada élite (Andes, Javeriana): $15M–$25M\n- Privada intermedia: $8M–$12M\n- Privada economía: $5M–$8M\n\n**3. Coste Total Carrera:**\n\n```\nCoste Total = Matrícula Semestral × Duración (semestres) + Gastos Administrativos\n```\n\nDonde Gastos Administrativos = $200.000/semestre (pública) o $500.000/semestre (privada).\n\n**4. Becas ICETEX 2026:**\n\nSegún ingresos familia (UVR = $43.280):\n- Familia < 3 UVR/mes: 100% beca (pública); 60% (privada)\n- Familia 3–6 UVR/mes: 50% beca\n- Familia > 6 UVR/mes: 0% beca (acceso crédito a tasa 4%)\n\n**5. Salario Egreso Promedio (BLS 2026):**\n\n| Programa | Salario Inicial |\n|----------|----------------|\n| Ingeniería | $3.500.000 |\n| Medicina | $4.200.000 |\n| Derecho | $2.800.000 |\n| Administración | $2.400.000 |\n| Economía | $2.600.000 |\n| Enfermería | $1.900.000 |\n| Psicología | $1.800.000 |\n| Artes | $1.600.000 |\n\n**6. ROI (Break-even):**\n\n```\nROI (meses) = (Coste Neto × 12) / (Salario Egreso − Salario Auxiliar $1.100.000)\n```\n\n**7. Cuota ICETEX (si crédito, 15 años):**\n\n```\nCuota Mensual = Coste Neto × [0.04 × (1.04)^180] / [(1.04)^180 − 1]\n```\n\n### Ejemplo\n\n**Caso 1: UNAL Ingeniería, Estrato 3, 8 semestres, sin beca**\n\n- Matrícula semestral: $800.000\n- Gastos admin: $200.000/sem\n- Coste total: ($800.000 + $200.000) × 8 = **$8.000.000**\n- Salario egreso: $3.500.000\n- ROI: (8.000.000 × 12) / (3.500.000 − 1.100.000) = **38 meses (~3,2 años)**\n\n**Caso 2: Javeriana Ingeniería, 8 semestres, ICETEX 50%**\n\n- Matrícula semestral: $18M\n- Gastos admin: $500.000/sem\n- Coste total: ($18M + $500K) × 8 = **$148.000.000**\n- Con beca 50%: Coste neto = $74M\n- Salario egreso: $3.500.000\n- ROI: (74.000.000 × 12) / (3.500.000 − 1.100.000) = **355 meses (~29,6 años)**\n- Cuota ICETEX 15 años: ~$635.000/mes\n\n### Limitaciones\n\n1. **Salarios**: Promedios SENA 2026; varían por experiencia, ciudad, empleador.\n2. **Becas**: ICETEX, Ser Pilo Paga y becas institución; no incluye becas privadas/ONG específicas.\n3. **Costes adicionales**: No incluye alojamiento, transporte, materiales (varían $1M–$3M/semestre en región).\n4. **Impuestos**: ROI no descuenta impuesto renta sobre salario (30–45% según tramo DIAN).\n5. **Inflación**: Proyección nominal; matrícula sube 5–8% anual históricamente.\n6. **Empleabilidad**: Asume 100% inserción laboral; sector/carrera afecta disponibilidad empleo.",
+  "faq": [
+    {
+      "q": "¿Cuál es la diferencia de coste entre pública y privada?",
+      "a": "Típicamente, pública cuesta $8M–$20M total; privada élite, $120M–$200M. Diferencia: 6–15x según estrato y programa. Pública tiene ROI 3–4 años; privada, 5–8 años."
+    },
+    {
+      "q": "¿Qué becas cubre ICETEX?",
+      "a": "ICETEX 2026 cubre hasta 100% pública (familia < 3 UVR/mes), 60% privada. Crédito complementario a tasa 4% anual. Plazo: hasta 15 años. Requiere estar matriculado institución acreditada MINEDUCACIÓN."
+    },
+    {
+      "q": "¿UNAL tiene matrícula $0?",
+      "a": "Sí, estratos 1–2 pagan $0–$250K semestral. Estratos 3–4 pagan según ingresos familiares. No hay matrícula única; varía por carrera y circunstancias económicas (RESOLUCION 2956 MINEDUCACIÓN 2023)."
+    },
+    {
+      "q": "¿Cómo funciona Ser Pilo Paga 2026?",
+      "a": "Crédito 100% condonable para puntaje ICFES > 70 percentil, familia < 3 SMLV. Aplica a universidad pública o privada acreditada. Max $3M/semestre universidad privada. Requiere 2M promedio al egreso."
+    },
+    {
+      "q": "¿Incluyen costes alojamiento y materiales?",
+      "a": "No. Esta calculadora estima sólo matrícula y gastos administrativos. Alojamiento fuera ciudad: $500K–$2M/mes. Libros/materiales: $200K–$800K/semestre. Suma según región."
+    },
+    {
+      "q": "¿Cuál es el salario después de carrera?",
+      "a": "Varía por programa: Ingeniería $3.5M, Medicina $4.2M, Derecho $2.8M (promedio SENA 2026). Primeros 2–3 años salen 30–40% menos; experimenta crecimiento 8–12% anual."
+    },
+    {
+      "q": "¿Puedo comparar pública vs privada si tengo beca?",
+      "a": "Sí. Selecciona tipo universidad y opción beca ('ICETEX 50%', 'Ser Pilo', etc.). Calculadora estima coste neto y cuota mensual con interés 4% ICETEX."
+    },
+    {
+      "q": "¿Cómo afecta estrato a matrícula pública?",
+      "a": "UNAL y UdeA aplican arancel por ingresos familia (SISBEN/estratificación). Estrato 1–2: $0–$250K; Estrato 6: $2.8M–$3.2M semestral. Formula normativa: Res. Rectoral UNAL 2025."
+    },
+    {
+      "q": "¿Qué pasa si debo cambiar de carrera?",
+      "a": "Coste adicional: 2–4 semestres más. Retraso laboral cuesta ~$6M–$14M ingresos no percibidos. Calcula con duración real esperada para carrera objetivo."
+    },
+    {
+      "q": "¿Es mejor financiar con crédito educativo o trabajar?",
+      "a": "Si coste neto < 12 meses salario futuro: crédito. Si > 24 meses: considerar trabajo paralelo (mitad tiempo). Cuota ICETEX típica: $300K–$800K/mes según monto y plazo."
+    }
+  ],
+  "sources": [
+    {
+      "name": "MINEDUCACIÓN — Aranceles y financiamiento educativo 2026",
+      "url": "https://www.mineducacion.gov.co/portal/financiamiento-educativo/",
+      "publisher": "Ministerio de Educación Colombia",
+      "date": "2026"
+    },
+    {
+      "name": "ICETEX — Tasas, plazos y requisitos crédito educativo 2026",
+      "url": "https://www.icetex.gov.co/dyna/portugues/index.php",
+      "publisher": "Instituto Colombiano de Crédito Educativo y Estudios Técnicos en el Exterior",
+      "date": "2026"
+    },
+    {
+      "name": "UNAL — Resolución rectoral arancel 2026",
+      "url": "https://www.unal.edu.co/contenido/resolucion-rectoral-arancel-2026",
+      "publisher": "Universidad Nacional de Colombia",
+      "date": "2026"
+    },
+    {
+      "name": "SENA — Salarios profesionales por sector y carrera 2026",
+      "url": "https://www.sena.gov.co/observatorio-del-mercado-laboral",
+      "publisher": "Servicio Nacional de Aprendizaje",
+      "date": "2026"
+    },
+    {
+      "name": "ICFES — Informe Ser Pilo Paga 2024–2026",
+      "url": "https://www.icfes.gov.co/programas-icfes/ser-pilo-paga",
+      "publisher": "Instituto Colombiano para la Evaluación de la Educación",
+      "date": "2025"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "MINEDUCACIÓN, ICETEX, SENA, UNAL Resolución Rectoral",
+    "sourceUrl": "https://www.mineducacion.gov.co/ ; https://www.icetex.gov.co/",
+    "updateType": "manual",
+    "notes": "Aranceles pública varían semestral (estrato/programa). Privada: sujeta institución. Salarios SENA actualizados anual. Tasas ICETEX: 4% nominal, revisables trim. UVR 2026: $43.280."
+  },
+  "lastReviewed": "2026-04-28"
+}

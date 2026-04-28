@@ -1,0 +1,254 @@
+{
+  "slug": "calculadora-iva-importacion-chile-aduanas-tope-30-dolares",
+  "title": "Calculadora IVA Importaciones Chile <30 USD | Hacé Cuentas",
+  "h1": "Calculadora IVA importaciones Chile: exención hasta USD 30",
+  "description": "Calcula IVA 19%, arancel y ad valorem para compras internacionales Chile 2026. Exención hasta USD 30. Régimen simplificado courier.",
+  "category": "impuestos",
+  "audience": "CL",
+  "icon": "📦",
+  "formulaId": "iva-importacion-chile-aduanas-tope-30-dolares",
+  "intro": "En Chile, las importaciones personales hasta USD 30 están exentas de impuestos. Por encima de ese monto, se aplica IVA 19%, arancel base 6% y ad valorem según clasificación arancelaria del producto. Esta calculadora estima los impuestos totales y costo final para compras internacionales en régimen simplificado de courier (hasta USD 1000).",
+  "keyTakeaway": "Compras hasta USD 30: sin impuestos. USD 31–1000: IVA 19% + arancel 6% + ad valorem (0–25% según producto). Tipo cambio SII 2026.",
+  "useCases": [
+    "Estimar costo final de compra en Amazon, eBay o Aliexpress para Chile",
+    "Comparar si vale la pena importar vs. compra local",
+    "Calcular aranceles para courier DHL, FedEx o Correos Chile",
+    "Presupuestar importación personal de electrónica, ropa o accesorios",
+    "Entender desglose de impuestos en aduana (IVA + arancel + ad valorem)",
+    "Validar factura aduanal recibida en correo"
+  ],
+  "fields": [
+    {
+      "id": "precio_fob_usd",
+      "label": "Precio FOB (USD)",
+      "type": "number",
+      "placeholder": "29.99",
+      "required": true,
+      "min": 0.01,
+      "max": 1000,
+      "help": "Valor declarado del producto sin envío (Free on Board). Máx USD 1000 régimen simplificado."
+    },
+    {
+      "id": "tipo_cambio_usd_clp",
+      "label": "Tipo de cambio USD → CLP",
+      "type": "number",
+      "placeholder": "920",
+      "required": true,
+      "min": 500,
+      "max": 1500,
+      "help": "Tipo cambio oficial SII del día. Aproximado 920 CLP/USD en 2026."
+    },
+    {
+      "id": "categoria_producto",
+      "label": "Categoría producto",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "electronica",
+          "label": "Electrónica (ad valorem 25%)"
+        },
+        {
+          "value": "ropa_calzado",
+          "label": "Ropa y calzado (ad valorem 20%)"
+        },
+        {
+          "value": "libros_educacion",
+          "label": "Libros, educación (ad valorem 0%)"
+        },
+        {
+          "value": "maquinaria",
+          "label": "Maquinaria, herramientas (ad valorem 15%)"
+        },
+        {
+          "value": "cosmetica",
+          "label": "Cosmética, perfumería (ad valorem 20%)"
+        },
+        {
+          "value": "alimentos_bebidas",
+          "label": "Alimentos, bebidas (ad valorem 25%)"
+        },
+        {
+          "value": "otros",
+          "label": "Otros (ad valorem 15%)"
+        }
+      ],
+      "help": "Ad valorem varía según NCM/arancel SII. Selecciona la más cercana."
+    },
+    {
+      "id": "incluir_gasto_envio_usd",
+      "label": "¿Incluir gasto envío estimado?",
+      "type": "checkbox",
+      "required": false,
+      "help": "Si marca, suma envío internacional a base imponible. Courier aprox USD 8–25."
+    },
+    {
+      "id": "gasto_envio_usd",
+      "label": "Gasto envío (USD)",
+      "type": "number",
+      "placeholder": "15",
+      "required": false,
+      "min": 0,
+      "max": 100,
+      "help": "Costo envío DHL, FedEx, correo. Solo si marcó opción anterior."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "precio_fob_clp",
+      "label": "Precio FOB en CLP",
+      "format": "currency",
+      "precision": 0
+    },
+    {
+      "id": "exento_impuestos",
+      "label": "¿Exento de impuestos?",
+      "format": "boolean_text",
+      "trueText": "Sí (hasta USD 30)",
+      "falseText": "No (supera USD 30)"
+    },
+    {
+      "id": "base_imponible_clp",
+      "label": "Base imponible CLP",
+      "format": "currency",
+      "precision": 0,
+      "help": "FOB + envío si aplica, en pesos."
+    },
+    {
+      "id": "arancel_base_clp",
+      "label": "Arancel base 6%",
+      "format": "currency",
+      "precision": 0
+    },
+    {
+      "id": "ad_valorem_clp",
+      "label": "Ad valorem (según producto)",
+      "format": "currency",
+      "precision": 0
+    },
+    {
+      "id": "subtotal_impuestos_clp",
+      "label": "Subtotal aranceles",
+      "format": "currency",
+      "precision": 0,
+      "help": "Arancel base + ad valorem."
+    },
+    {
+      "id": "iva_19_clp",
+      "label": "IVA 19%",
+      "format": "currency",
+      "precision": 0,
+      "help": "Se calcula sobre base imponible + aranceles."
+    },
+    {
+      "id": "derechos_aduanales_clp",
+      "label": "Derechos aduanales + gestión",
+      "format": "currency",
+      "precision": 0,
+      "help": "Aprox. CLP 3.000–5.000 por trámite. Varía según courier."
+    },
+    {
+      "id": "total_impuestos_clp",
+      "label": "Total impuestos y aranceles",
+      "format": "currency",
+      "precision": 0
+    },
+    {
+      "id": "costo_final_clp",
+      "label": "Costo final en CLP",
+      "format": "currency",
+      "precision": 0,
+      "highlight": true
+    },
+    {
+      "id": "markup_porcentaje",
+      "label": "% aumento sobre precio FOB",
+      "format": "percentage",
+      "precision": 1
+    }
+  ],
+  "explanation": "## Cómo se calcula IVA e impuestos en importaciones Chile\n\nEn Chile, las compras internacionales por correo o courier están sujetas a regulación aduanal específica:\n\n### Régimen de exención hasta USD 30\n\nLas importaciones personales con valor FOB (Free on Board) **hasta USD 30 están completamente exentas** de IVA, arancel y ad valorem. Solo se paga eventualmente gasto de gestión aduanal por el courier (aprox. CLP 2.000–3.000).\n\n### Impuestos para compras > USD 30 (hasta USD 1.000)\n\nUna vez superado USD 30, se aplican:\n\n1. **Arancel base (aranceles ad valorem)**: varía según clasificación NCM SII. Base común **6%** sobre valor FOB.\n2. **Ad valorem adicional**: según tipo producto (electrónica 25%, ropa 20%, libros 0%, alimentos 25%, otros 15%).\n3. **IVA 19%**: se calcula sobre la suma de (FOB + envío + aranceles totales).\n4. **Derechos aduanales y gestión**: courier cobra CLP 3.000–5.000 por tramitación.\n\n### Fórmula\n\n```\nSi FOB ≤ USD 30:\n  Total impuestos = Derechos gestión (aprox. CLP 3.000)\n  Costo final = FOB × TipoCambio + Envío × TipoCambio + Derechos\n\nSi FOB > USD 30:\n  Base imponible = (FOB + Envío) × TipoCambio\n  Arancel base = Base × 6%\n  Ad valorem = Base × %_producto\n  Subtotal aranceles = Arancel base + Ad valorem\n  IVA = (Base + Subtotal aranceles) × 19%\n  Total impuestos = Subtotal aranceles + IVA + Derechos gestión\n  Costo final = Base imponible + Total impuestos\n```\n\n### Ejemplo numérico\n\n**Compra**: Monitor 27\" en Amazon USA, precio USD 199, envío USD 20.\n- Tipo cambio: 920 CLP/USD\n- Categoría: Electrónica (ad valorem 25%)\n\n```\nBase imponible = (199 + 20) × 920 = 201.580 CLP\nArancel 6% = 201.580 × 0,06 = 12.095 CLP\nAd valorem 25% = 201.580 × 0,25 = 50.395 CLP\nSubtotal aranceles = 12.095 + 50.395 = 62.490 CLP\nIVA 19% = (201.580 + 62.490) × 0,19 = 50.100 CLP\nDerechos gestión = 4.000 CLP\nTotal impuestos = 62.490 + 50.100 + 4.000 = 116.590 CLP\nCosto final = 201.580 + 116.590 = 318.170 CLP\nMarkup = 116.590 ÷ 201.580 = 57,8%\n```\n\n### Limitaciones y consideraciones\n\n- **Tipo de cambio**: SII publica diario; esta calculadora usa manual. Varía ±2–3% diariamente.\n- **Ad valorem por NCM**: La clasificación oficial SII puede diferir. Usa como referencia; aduana confirma al llegar.\n- **Derechos aduanales**: El importe exacto depende del courier (DHL, FedEx, Correos, etc.). Aprox. CLP 3.000–5.000.\n- **Régimen simplificado**: Válido solo hasta USD 1.000 FOB. Montos mayores requieren trámite formal con despachante aduanal.\n- **Productos prohibidos/restringidos**: Algunos artículos (drogas, armas, ciertos alimentos) están prohibidos o requieren permisos especiales SII/SAG. Esta calculadora no valida eso.\n- **Envío incluido**: Si el vendedor declara precio incluido envío, esa suma completa es base imponible.\n\n## Referencias normativa\n\n- **SII Resolución Exenta 108/2011 (modificada)**: Régimen simplificado importaciones hasta USD 1.000.\n- **Código Aduanero**: Aranceles base y clasificación NCM.\n- **Reglamento IVA**: Aplicación 19% a importaciones.",
+  "faq": [
+    {
+      "question": "¿Realmente puedo importar hasta USD 30 sin pagar impuestos?",
+      "answer": "Sí, en Chile las importaciones personales hasta USD 30 (valor FOB declarado) están exentas de IVA, arancel y ad valorem. Solo pagas gastos de gestión aduanal del courier (CLP 2.000–3.000 aprox.). Es la llamada 'zona franca de viajero' para correo/paquetería."
+    },
+    {
+      "question": "¿Qué es el 'valor FOB'?",
+      "answer": "FOB (Free on Board) es el precio del producto en origen, sin gastos de envío ni seguros. Es el valor que declara el vendedor en la factura comercial. El envío se suma aparte y también tributa si superas USD 30."
+    },
+    {
+      "question": "¿El tipo de cambio que uso afecta mucho el cálculo?",
+      "answer": "Sí, bastante. Un cambio de ±50 CLP/USD cambia el resultado en ~5%. Usa el tipo cambio **oficial SII del día** de la compra o entrega. La aduana usa el TC del día que clasifican el paquete, no el de compra."
+    },
+    {
+      "question": "¿Qué es 'ad valorem' y por qué varía por producto?",
+      "answer": "Ad valorem es un arancel adicional (% sobre valor) que varía según el tipo de producto clasificado en la nomenclatura aduanal SII. Electrónica suele ser 25%, ropa 20%, libros 0%, etc. Depende de la clasificación NCM oficial, que a veces es discutible (ej: una funda de tablet: ¿accesorios 25% o funda textil 20%?)."
+    },
+    {
+      "question": "¿Puedo importar hasta USD 1.000 sin despachante aduanal?",
+      "answer": "Sí. Hasta USD 1.000 FOB aplica el régimen simplificado: el courier gestiona directamente la aduana, sin necesidad de despachante privado. Encima de USD 1.000 requiere tramitación formal y sí necesitas despachante."
+    },
+    {
+      "question": "¿Dónde veo el tipo de cambio SII oficial?",
+      "answer": "En **www.sii.cl** → Valores y tipos de cambio. O en **www.bccentral.cl** (Banco Central). Publica diariamente el UF, UTM y tipo de cambio observado/promedio para el dólar."
+    },
+    {
+      "question": "¿Qué pasa si declaro un precio FOB menor al real para evadir impuestos?",
+      "answer": "Aduana puede investigar si el precio es sospechosamente bajo comparado con precios de mercado. Si detectan infra-declaración, pueden rechazar la importación, retener el paquete o sancionar. No es recomendable; los aranceles ya son relativamente bajos en Chile."
+    },
+    {
+      "question": "¿Cómo sé la categoría aduanal correcta de mi producto?",
+      "answer": "Puedes buscar en la página SII el **Código NCM** de tu producto (nomenclatura arancelaria). O pregunta al courier o despachante. Esta calculadora usa categorías amplias; para precisión, consulta clasificación oficial SII."
+    },
+    {
+      "question": "¿Qué courier es más barato para importar a Chile?",
+      "answer": "Depende del origen y destino. **DHL y FedEx** son estándar internacionales (caros). **Correos Chile** es más barato para algunos orígenes (USA, España). **AliExpress/Shopee** usan operadores chinos (ZTO, STO) muy económicos pero lentos. Siempre compara gastos de envío antes de comprar."
+    },
+    {
+      "question": "¿Se paga impuesto si el vendedor envía 'como regalo'?",
+      "answer": "En teoría, los obsequios hasta USD 200 también pueden entrar en régimen de exención parcial. Pero aduana evalúa: si es un 'regalo' de un comerciante, suele tributar igual. Si es de persona a persona, depende de la documentación. Lo seguro: tributa como compra normal."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII - Resolución Exenta 108/2011: Régimen Simplificado Importaciones",
+      "url": "https://www.sii.cl/portales/baseslegales/temas/resolucion_exenta_108_2011.html",
+      "publisher": "Servicio de Impuestos Internos (SII)",
+      "date": "2024"
+    },
+    {
+      "name": "SII - Valores y Tipos de Cambio",
+      "url": "https://www.sii.cl/valores_y_tipos_de_cambio/cambio_dolar.html",
+      "publisher": "SII",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central de Chile - Tipo de Cambio Observado",
+      "url": "https://www.bccentral.cl/web/banco-central",
+      "publisher": "Banco Central",
+      "date": "2026"
+    },
+    {
+      "name": "Aduana Chile - Clasificación Arancelaria NCM",
+      "url": "https://www.aduana.cl/arancel-aduanero/aduanachile/2024-01-10/102030.html",
+      "publisher": "Dirección General de Aduanas",
+      "date": "2024"
+    },
+    {
+      "name": "SII - IVA en Importaciones: Normativa y Tasas",
+      "url": "https://www.sii.cl/portales/baseslegales/temas/impuesto_valor_anadido.html",
+      "publisher": "SII",
+      "date": "2024"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII, Banco Central Chile, Dirección General de Aduanas",
+    "sourceUrl": "https://www.sii.cl",
+    "updateType": "manual",
+    "notes": "Tipo de cambio USD/CLP, porcentajes ad valorem por NCM, límite USD 1.000 régimen simplificado, derechos aduanales. IVA fijo 19% desde 2018. Revisar anualmente cambios normativos SII/Aduanas."
+  },
+  "lastReviewed": "2026-04-28"
+}

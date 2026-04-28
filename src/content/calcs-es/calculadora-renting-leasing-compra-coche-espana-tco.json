@@ -1,0 +1,360 @@
+{
+  "slug": "calculadora-renting-leasing-compra-coche-espana-tco",
+  "title": "Calculadora Renting vs Leasing vs Compra Coche 2026 | Hacé Cuentas",
+  "h1": "Renting vs Leasing vs Compra Coche — TCO 4 años España",
+  "description": "Compara el coste total (TCO) a 4 años de renting, leasing y compra de coche en España. Incluye IVA, seguros, IVTM y deducción IRPF 2026.",
+  "category": "automotor",
+  "audience": "ES",
+  "icon": "🚗",
+  "formulaId": "renting-leasing-compra-coche-espana-tco",
+  "intro": "Comparar **renting, leasing y compra** de un vehículo en España va mucho más allá de mirar la cuota mensual. Esta calculadora estima el **coste total de propiedad (TCO) a 4 años** teniendo en cuenta seguro, mantenimiento, ITV, IVTM, financiación e IVA. Si eres autónomo o empresa, también aplica las **deducciones fiscales** vigentes en 2026 para que la comparativa sea real y no sobre el papel.",
+  "keyTakeaway": "Un coche de 30.000 € puede costar entre 38.000 € y 52.000 € a 4 años según si lo compras, financias con leasing o lo rentas, antes de aplicar deducciones fiscales.",
+  "useCases": [
+    "Autónomo que necesita saber cuánto puede deducir con renting frente a compra directa",
+    "Empresa que compara la cuota de leasing financiero con el renting operativo para una flota",
+    "Particular que quiere saber si le sale más barato pedir un préstamo o pagar al contado",
+    "Comparar el impacto del IVA según perfil fiscal antes de firmar un contrato",
+    "Decidir si ejercer la opción de compra al final del leasing compensa frente a renovar",
+    "Evaluar el efecto del kilometraje anual en el coste del renting"
+  ],
+  "fields": [
+    {
+      "id": "precio_vehiculo",
+      "label": "Precio del vehículo (€ sin IVA)",
+      "type": "number",
+      "required": true,
+      "min": 5000,
+      "max": 200000,
+      "default": 25000,
+      "placeholder": "25000",
+      "helpText": "Precio de venta antes de IVA. El IVA del vehículo es el 21%."
+    },
+    {
+      "id": "km_anuales",
+      "label": "Kilómetros anuales estimados",
+      "type": "number",
+      "required": true,
+      "min": 5000,
+      "max": 100000,
+      "default": 20000,
+      "placeholder": "20000",
+      "helpText": "El renting penaliza el exceso de kilómetros. Media española: ~15.000 km/año (DGT 2024)."
+    },
+    {
+      "id": "perfil_fiscal",
+      "label": "Perfil fiscal",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "particular",
+          "label": "Particular (sin deducción IVA ni IRPF)"
+        },
+        {
+          "value": "autonomo",
+          "label": "Autónomo (50% IVA si uso mixto; IRPF: 50% gasto si afecto)"
+        },
+        {
+          "value": "empresa",
+          "label": "Empresa / Sociedad (100% IVA si uso exclusivo empresarial; IS deducible)"
+        }
+      ],
+      "default": "particular"
+    },
+    {
+      "id": "tipo_irpf",
+      "label": "Tipo marginal IRPF / IS (%)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 50,
+      "default": 30,
+      "placeholder": "30",
+      "helpText": "Autónomos: tipo marginal IRPF 2026 (0-47%). Empresas: tipo IS general 25%. Afecta al ahorro fiscal neto."
+    },
+    {
+      "id": "anios",
+      "label": "Período de análisis (años)",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "3",
+          "label": "3 años"
+        },
+        {
+          "value": "4",
+          "label": "4 años"
+        },
+        {
+          "value": "5",
+          "label": "5 años"
+        }
+      ],
+      "default": "4"
+    },
+    {
+      "id": "cuota_renting_mes",
+      "label": "Cuota renting mensual (€ sin IVA)",
+      "type": "number",
+      "required": true,
+      "min": 100,
+      "max": 5000,
+      "default": 450,
+      "placeholder": "450",
+      "helpText": "La cuota de renting incluye seguro todo riesgo, mantenimiento, ITV y IVTM. Pide presupuesto real al concesionario."
+    },
+    {
+      "id": "cuota_leasing_mes",
+      "label": "Cuota leasing mensual (€ sin IVA)",
+      "type": "number",
+      "required": true,
+      "min": 100,
+      "max": 5000,
+      "default": 380,
+      "placeholder": "380",
+      "helpText": "Cuota del leasing financiero. NO incluye seguro ni mantenimiento. Tipo de interés embebido en la cuota."
+    },
+    {
+      "id": "opcion_compra_leasing",
+      "label": "Valor residual / opción compra leasing (€ sin IVA)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 100000,
+      "default": 5000,
+      "placeholder": "5000",
+      "helpText": "Importe a pagar al final del leasing para quedarte con el vehículo. Suele ser 1-15% del precio."
+    },
+    {
+      "id": "entrada_compra",
+      "label": "Entrada inicial en compra (€ con IVA)",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 200000,
+      "default": 0,
+      "placeholder": "0",
+      "helpText": "Importe que pagas al contado. Si es 0, se asume financiación total del precio con IVA."
+    },
+    {
+      "id": "tipo_interes_compra",
+      "label": "Tipo de interés préstamo compra (% TAE anual)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 20,
+      "default": 6.5,
+      "placeholder": "6.5",
+      "helpText": "TAE del préstamo personal o financiación del concesionario. Media España 2024: ~6-8% (Banco de España)."
+    },
+    {
+      "id": "seguro_anual_compra",
+      "label": "Prima de seguro anual en compra/leasing (€ con IVA)",
+      "type": "number",
+      "required": true,
+      "min": 200,
+      "max": 5000,
+      "default": 800,
+      "placeholder": "800",
+      "helpText": "Seguro todo riesgo estimado. En renting ya está incluido en la cuota, no lo indiques aquí."
+    },
+    {
+      "id": "mantenimiento_anual",
+      "label": "Coste mantenimiento anual en compra/leasing (€ con IVA)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 5000,
+      "default": 600,
+      "placeholder": "600",
+      "helpText": "Revisiones, neumáticos, reparaciones. En renting ya está incluido. Media: ~400-800 €/año."
+    },
+    {
+      "id": "ivtm_anual",
+      "label": "IVTM anual (impuesto de circulación, €)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 1000,
+      "default": 120,
+      "placeholder": "120",
+      "helpText": "Impuesto sobre Vehículos de Tracción Mecánica. Varía por municipio y cilindrada. Media turismo: 80-200 €/año. En renting está incluido."
+    },
+    {
+      "id": "valor_residual_compra",
+      "label": "Valor de reventa estimado al final del período (€)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 150000,
+      "default": 12000,
+      "placeholder": "12000",
+      "helpText": "Precio de venta del coche al final del período. Un turismo pierde ~50-60% de valor en 4 años."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "tco_renting",
+      "label": "TCO Renting (€)",
+      "type": "currency",
+      "description": "Coste total neto del renting durante el período"
+    },
+    {
+      "id": "tco_leasing",
+      "label": "TCO Leasing (€)",
+      "type": "currency",
+      "description": "Coste total neto del leasing + opción de compra + extras"
+    },
+    {
+      "id": "tco_compra",
+      "label": "TCO Compra (€)",
+      "type": "currency",
+      "description": "Coste total neto de compra con financiación, descontando reventa"
+    },
+    {
+      "id": "ahorro_fiscal_renting",
+      "label": "Ahorro fiscal renting (€)",
+      "type": "currency",
+      "description": "Deducción IVA y/o IRPF/IS aplicable al renting"
+    },
+    {
+      "id": "ahorro_fiscal_leasing",
+      "label": "Ahorro fiscal leasing (€)",
+      "type": "currency",
+      "description": "Deducción IVA y/o IRPF/IS aplicable al leasing"
+    },
+    {
+      "id": "ahorro_fiscal_compra",
+      "label": "Ahorro fiscal compra (€)",
+      "type": "currency",
+      "description": "Deducción IVA en adquisición para autónomos/empresas"
+    },
+    {
+      "id": "mejor_opcion",
+      "label": "Opción más económica",
+      "type": "text",
+      "description": "Modalidad con menor TCO neto según tu perfil"
+    },
+    {
+      "id": "diferencia_renting_leasing",
+      "label": "Diferencia renting vs leasing (€)",
+      "type": "currency",
+      "description": "Cuánto más caro/barato es el renting respecto al leasing"
+    },
+    {
+      "id": "diferencia_renting_compra",
+      "label": "Diferencia renting vs compra (€)",
+      "type": "currency",
+      "description": "Cuánto más caro/barato es el renting respecto a comprar"
+    },
+    {
+      "id": "coste_mes_renting",
+      "label": "Coste mensual neto renting (€/mes)",
+      "type": "currency",
+      "description": "Cuota mensual efectiva tras deducciones"
+    },
+    {
+      "id": "coste_mes_leasing",
+      "label": "Coste mensual neto leasing (€/mes)",
+      "type": "currency",
+      "description": "Coste mensual efectivo leasing tras deducciones"
+    },
+    {
+      "id": "coste_mes_compra",
+      "label": "Coste mensual neto compra (€/mes)",
+      "type": "currency",
+      "description": "Coste mensual efectivo compra tras deducciones"
+    },
+    {
+      "id": "advertencias",
+      "label": "Avisos",
+      "type": "text",
+      "description": "Alertas sobre los parámetros introducidos"
+    }
+  ],
+  "explanation": "## Cómo se calcula el TCO (Coste Total de Propiedad)\n\nEl **TCO (Total Cost of Ownership)** suma todos los desembolsos reales durante el período elegido y resta el valor residual del vehículo (cuando aplica) y los ahorros fiscales correspondientes al perfil del usuario.\n\n---\n\n## Fórmula general\n\n### Renting\n\n```\nCoste bruto = Cuota_mensual_sin_IVA × 1,21 × 12 × años\nIVA deducible = Cuota_mensual_sin_IVA × 0,21 × porcentaje_deduccion × 12 × años\nGasto deducible IRPF/IS = Cuota_mensual_sin_IVA × 12 × años × porcentaje_afectacion × tipo_marginal\nTCO renting = Coste bruto − IVA deducible − Ahorro IRPF/IS\n```\n\nEn renting la cuota **ya incluye** seguro todo riesgo, mantenimiento, ITV y el IVTM. El renting es un **arrendamiento operativo**: nunca eres propietario, por eso no hay valor residual a recuperar.\n\n### Leasing\n\n```\nCoste cuotas bruto = Cuota_mensual_sin_IVA × 1,21 × 12 × años\nOpción compra bruta = Valor_residual × 1,21\nSeguros + Mantenimiento + IVTM = (seguro + mantenimiento + IVTM) × años\nCoste bruto total = Cuotas + Opción_compra + Seguros_Mant_IVTM\nIVA deducible leasing = (Cuota_sin_IVA × 12 × años + Valor_residual) × 0,21 × porcentaje_deduccion\nGasto deducible IRPF/IS (cuotas) = Cuota_sin_IVA × 12 × años × porc_afectacion × tipo_marginal\nTCO leasing = Coste bruto total − IVA deducible − Ahorro IRPF/IS − Valor_reventa\n```\n\nEl leasing financiero es un arrendamiento **con opción de compra obligatoria implícita**. La AEAT permite deducir la **carga financiera** e incluso las cuotas en algunos casos, pero la amortización del bien sigue los límites de tablas oficiales (Ley 27/2014 IS y RIRPF).\n\n### Compra (con financiación)\n\n```\nPrecio total con IVA = Precio_sin_IVA × 1,21\nImporte financiado = Precio_con_IVA − Entrada\nCuota mensual préstamo = Importe_financiado × [r(1+r)^n] / [(1+r)^n − 1]  (fórmula francesa)\n  donde r = TAE_anual/12, n = meses del período\nTotal pagado préstamo = Cuota_préstamo × n + Entrada\nSeguros + Mantenimiento + IVTM = (seguro + mantenimiento + IVTM) × años\nCoste bruto total = Total_préstamo + Seguros_Mant_IVTM\nIVA deducible compra = Precio_sin_IVA × 0,21 × porcentaje_deduccion  (solo en adquisición, una sola vez)\nAmortización deducible IRPF/IS = Precio_sin_IVA × tasa_amortizacion × porc_afectacion × tipo_marginal × años\nTCO compra = Coste bruto − IVA deducible − Ahorro amortización − Valor_reventa\n```\n\nLa **tasa de amortización** para turismos en tablas oficiales AEAT es el **16% anual** (coeficiente máximo lineal, Ley 27/2014).\n\n---\n\n## Deducciones fiscales por perfil (AEAT 2026)\n\n| Perfil | Deducción IVA | Deducción IRPF/IS |\n|--------|--------------|-------------------|\n| Particular | 0% | 0% |\n| Autónomo (uso mixto) | 50% IVA soportado | 50% gasto/amortización × tipo marginal |\n| Empresa (uso exclusivo negocio) | 100% IVA soportado | 100% gasto/amortización × tipo IS |\n\n> **Nota legal**: La deducción del 50% para autónomos aplica cuando el vehículo se utiliza tanto para actividad económica como para uso privado (art. 95.Tres LIVA y DGT consultas vinculantes). Para el 100% hay que acreditar uso exclusivo empresarial, algo que la AEAT restringe a ciertos tipos de vehículos (transporte de mercancías, representantes comerciales, etc.).\n\n---\n\n## Ejemplo práctico\n\nVehículo de **25.000 € sin IVA**, 4 años, autónomo tipo marginal 30%, 20.000 km/año:\n\n| Concepto | Renting | Leasing | Compra |\n|----------|---------|---------|--------|\n| Cuota mensual (con IVA) | 544,5 € | 459,8 € | ~520 € (préstamo 6,5%) |\n| Coste bruto 4 años | 26.136 € | 28.270 € | 31.850 € |\n| Ahorro fiscal estimado | −3.150 € | −2.800 € | −2.100 € |\n| Valor residual recuperado | 0 € | −5.000 € | −12.000 € |\n| **TCO neto estimado** | **~22.986 €** | **~20.470 €** | **~17.750 €** |\n\n*Los valores anteriores son ilustrativos; la calculadora usa tus datos reales.*\n\n---\n\n## Limitaciones\n\n- **No incluye** el Impuesto de Matriculación (IEDMT), que varía según emisiones de CO₂ (0%, 4,75%, 9,75% o 14,75%).\n- **No incluye** costes de combustible ni electricidad, que son iguales en las tres modalidades para el mismo vehículo.\n- El **valor de reventa** en compra/leasing es una estimación: puede variar significativamente según marca, modelo y estado.\n- Las **deducciones fiscales** requieren acreditación ante la AEAT. Este cálculo es orientativo; consulta con un asesor fiscal.\n- El **exceso de kilómetros** en renting puede suponer 0,05-0,15 €/km extra; no está modelado en esta calculadora.\n- Los tipos de interés del leasing están embebidos en la cuota mensual introducida por el usuario.",
+  "faq": [
+    {
+      "question": "¿Qué diferencia hay entre renting y leasing en España?",
+      "answer": "El **renting** es un alquiler a largo plazo: pagas una cuota que incluye seguro, mantenimiento, ITV y el IVTM, y nunca eres propietario. El **leasing** es una financiación con opción de compra al final: tú corres con el mantenimiento y el seguro, y al terminar puedes quedarte el coche pagando el valor residual pactado. Fiscalmente, en leasing puedes deducir la carga financiera de las cuotas; en renting la cuota entera es gasto deducible."
+    },
+    {
+      "question": "¿Un autónomo puede deducirse el 100% del IVA del renting?",
+      "answer": "Solo si acredita uso **exclusivo** para la actividad económica, lo que la AEAT restringe a vehículos específicos (camiones, furgonetas de reparto, taxis, ambulancias…). Para un turismo de uso mixto, la presunción legal es del **50% de deducción de IVA** (art. 95.Tres.4ª LIVA), salvo prueba en contrario."
+    },
+    {
+      "question": "¿Qué pasa si supero los kilómetros pactados en el renting?",
+      "answer": "El contrato de renting fija un kilometraje máximo. Si lo superas, la empresa de renting cobra un **suplemento por km** que suele oscilar entre 0,05 € y 0,15 € por kilómetro extra. Esta calculadora no modela ese sobrecoste, por lo que si prevés superar el límite, el TCO real del renting será mayor."
+    },
+    {
+      "question": "¿El IVA del leasing se puede deducir mensualmente?",
+      "answer": "Sí. El IVA que soportas cada mes en las cuotas de leasing se deduce en cada período de liquidación, igual que cualquier otro IVA soportado, siempre que el vehículo esté afecto a la actividad (50% para autónomos con turismo de uso mixto, 100% si uso exclusivo empresarial acreditado)."
+    },
+    {
+      "question": "¿La compra al contado siempre es la opción más barata?",
+      "answer": "No necesariamente. La compra al contado evita los intereses de financiación, pero inmoviliza capital que podría rentarse. Además, si eres autónomo o empresa, el renting o leasing pueden reducir la cuota fiscal efectiva de forma que el coste neto sea comparable o inferior. El TCO hay que analizarlo siempre después de deducciones fiscales y valor residual."
+    },
+    {
+      "question": "¿Qué es el IVTM y quién lo paga en cada modalidad?",
+      "answer": "El **Impuesto sobre Vehículos de Tracción Mecánica** (IVTM) es el llamado «impuesto de circulación», gestionado por los ayuntamientos. Lo paga el titular registral del vehículo. En **renting**, lo paga la empresa de renting (propietaria) y lo repercute en la cuota. En **leasing** y **compra**, lo paga el conductor porque es el titular del vehículo."
+    },
+    {
+      "question": "¿Qué tasa de amortización aplica Hacienda a un turismo comprado?",
+      "answer": "Según las tablas oficiales de amortización de la Ley 27/2014 del Impuesto sobre Sociedades (aplicables también en IRPF), el coeficiente máximo para turismos es del **16% anual** (período máximo 14 años). Para un autónomo, la amortización se incluye como gasto deducible en el rendimiento neto de actividades económicas."
+    },
+    {
+      "question": "¿El renting computa como deuda en el CIRBE (Banco de España)?",
+      "answer": "El renting operativo **no se registra como deuda** en el CIRBE del Banco de España porque es un arrendamiento, no una financiación. El leasing, en cambio, sí puede computar como endeudamiento en los análisis de riesgo bancario, lo que puede afectar a la capacidad de financiación futura."
+    },
+    {
+      "question": "¿Qué ocurre con el IVA si soy empresa y compro el coche?",
+      "answer": "Una sociedad puede deducirse el **100% del IVA** de la compra si acredita uso exclusivo empresarial, o el **50%** si es de uso mixto. El IVA se deduce en la declaración del período de adquisición (modelo 303). En caso de inspección, la AEAT puede exigir pruebas del afecto exclusivo."
+    },
+    {
+      "question": "¿Incluye esta calculadora el Impuesto de Matriculación (IEDMT)?",
+      "answer": "No. El **Impuesto Especial sobre Determinados Medios de Transporte** (IEDMT) varía entre 0% y 14,75% según las emisiones de CO₂ homologadas del vehículo, y lo paga el comprador o la empresa de renting/leasing al matricular. Para coches con emisiones ≤120 g/km el tipo es 0%. Debes añadirlo al precio si tu vehículo lo devenga."
+    }
+  ],
+  "sources": [
+    {
+      "name": "AEAT - Deducciones IVA vehículos automóviles (art. 95 LIVA)",
+      "url": "https://sede.agenciatributaria.gob.es/Sede/iva/empresarios-profesionales/deducciones/vehiculos-automoviles.html",
+      "publisher": "Agencia Tributaria (AEAT)",
+      "date": "2026"
+    },
+    {
+      "name": "AEAT - Tablas de amortización IS (Ley 27/2014)",
+      "url": "https://sede.agenciatributaria.gob.es/Sede/impuesto-sobre-sociedades/tablas-amortizacion.html",
+      "publisher": "Agencia Tributaria (AEAT)",
+      "date": "2026"
+    },
+    {
+      "name": "DGT - Estadística de vehículos y kilometraje medio",
+      "url": "https://www.dgt.es/inicio/la-dgt/medidas-actuaciones/publicaciones/estadistica-e-indicadores/",
+      "publisher": "Dirección General de Tráfico (DGT)",
+      "date": "2024"
+    },
+    {
+      "name": "Banco de España - Tipos de interés crédito consumo",
+      "url": "https://www.bde.es/webbe/es/estadisticas/sujetos/tipos-interes-operaciones-credit.html",
+      "publisher": "Banco de España",
+      "date": "2026"
+    },
+    {
+      "name": "BOE - Real Decreto Legislativo 2/2004 TRLRHL (IVTM, art. 92-99)",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4214",
+      "publisher": "BOE / Ministerio de Hacienda",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Agencia Tributaria (AEAT) y BOE",
+    "sourceUrl": "https://sede.agenciatributaria.gob.es/",
+    "updateType": "manual",
+    "notes": "Revisar tipos de deducción IVA, tablas amortización IS/IRPF y tramos IEDMT con cada ejercicio fiscal."
+  },
+  "lastReviewed": "2026-04-28"
+}

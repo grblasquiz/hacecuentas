@@ -1,0 +1,256 @@
+{
+  "slug": "calculadora-deuda-mes-tarjeta-credito-colombia-pago-tope",
+  "title": "Calculadora Cuota Mínima Tarjeta Crédito Colombia 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Cuota Mínima Tarjeta de Crédito Colombia",
+  "description": "Calcula la cuota mínima de tu tarjeta crédito en Colombia. Incluye intereses, seguros y cuota de manejo. Compara pago mínimo vs cuota fija para ahorrar hasta $2.5M en intereses.",
+  "category": "finanzas",
+  "audience": "CO",
+  "icon": "💳",
+  "formulaId": "deuda-mes-tarjeta-credito-colombia-pago-tope",
+  "intro": "La cuota mínima de tu tarjeta de crédito en Colombia es la cantidad que el banco requiere que pagues mensualmente para mantener tu cuenta al día. Esta cuota incluye capital, intereses corrientes, intereses por mora, seguros y cuota de manejo. Entiende cómo se calcula y compara estrategias de pago para salir de deuda más rápido.",
+  "keyTakeaway": "Una cuota mínima típica es 3-5% del saldo; pagando solo el mínimo, podrías tardar 8+ años en cancelar $5M con EA 28%, acumulando $8.5M en intereses.",
+  "useCases": [
+    "Conocer cuánto debes pagar mensualmente como mínimo en tu tarjeta crédito",
+    "Comparar el costo total de pagar solo el mínimo vs una cuota fija mensual",
+    "Estimar cuántos meses tardarás en cancelar la deuda con tu estrategia actual",
+    "Entender la composición de tu pago: cuánto va a capital y cuánto a intereses",
+    "Simular el impacto de aumentar el pago mensual en el tiempo total de deuda",
+    "Evaluar el costo de los seguros y cuota de manejo en tu pago total"
+  ],
+  "fields": [
+    {
+      "id": "saldo_inicial",
+      "label": "Saldo actual de la tarjeta",
+      "type": "number",
+      "placeholder": "5000000",
+      "unit": "$",
+      "required": true,
+      "min": 10000,
+      "max": 100000000,
+      "hint": "Saldo total adeudado en tu tarjeta crédito"
+    },
+    {
+      "id": "tasa_ea_anual",
+      "label": "Tasa efectiva anual (EA %)",
+      "type": "number",
+      "placeholder": "28",
+      "unit": "%",
+      "required": true,
+      "min": 8,
+      "max": 45,
+      "hint": "EA de tu tarjeta (típico 20-32% en Colombia). Verifica tu extracto."
+    },
+    {
+      "id": "cuota_manejo_mensual",
+      "label": "Cuota de manejo mensual",
+      "type": "number",
+      "placeholder": "15000",
+      "unit": "$",
+      "required": false,
+      "min": 0,
+      "max": 500000,
+      "hint": "Cuota fija mensual que cobra el banco (algunos bancos la cobran, otros no)"
+    },
+    {
+      "id": "seguro_mensual",
+      "label": "Seguro de deuda (opcional)",
+      "type": "number",
+      "placeholder": "50000",
+      "unit": "$",
+      "required": false,
+      "min": 0,
+      "max": 1000000,
+      "hint": "Seguro de desempleo o de vida. Deja en 0 si no tienes."
+    },
+    {
+      "id": "porcentaje_cuota_minima",
+      "label": "Porcentaje de cuota mínima",
+      "type": "number",
+      "placeholder": "4",
+      "unit": "%",
+      "required": true,
+      "min": 1,
+      "max": 10,
+      "hint": "% del saldo que exige el banco como mínimo (típico 3-5%)"
+    },
+    {
+      "id": "pago_mensual_fijo",
+      "label": "¿Cuánto pagarías mensualmente si aumentas el pago?",
+      "type": "number",
+      "placeholder": "500000",
+      "unit": "$",
+      "required": false,
+      "min": 0,
+      "max": 10000000,
+      "hint": "Opcional: ingresa una cuota fija mayor para comparar escenarios"
+    },
+    {
+      "id": "meses_proyeccion",
+      "label": "Meses para proyectar (máximo)",
+      "type": "number",
+      "placeholder": "120",
+      "unit": "meses",
+      "required": true,
+      "min": 6,
+      "max": 360,
+      "hint": "Rango de meses a simular (6-360, típico 120)"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cuota_minima_primera",
+      "label": "Cuota mínima primer mes",
+      "unit": "$",
+      "format": "currency",
+      "description": "Suma de: capital (% del saldo), intereses, cuota manejo, seguro"
+    },
+    {
+      "id": "interes_primer_mes",
+      "label": "Interés generado primer mes",
+      "unit": "$",
+      "format": "currency",
+      "description": "Saldo × (EA/12) — interés mensual sobre el saldo"
+    },
+    {
+      "id": "meses_pago_minimo",
+      "label": "Meses para cancelar (solo cuota mínima)",
+      "unit": "meses",
+      "format": "number",
+      "description": "Tiempo total pagando únicamente la cuota mínima"
+    },
+    {
+      "id": "interes_total_minimo",
+      "label": "Interés total acumulado (cuota mínima)",
+      "unit": "$",
+      "format": "currency",
+      "description": "Total de intereses pagados en toda la deuda con cuota mínima"
+    },
+    {
+      "id": "total_pagado_minimo",
+      "label": "Total pagado (cuota mínima)",
+      "unit": "$",
+      "format": "currency",
+      "description": "Saldo inicial + todos los intereses y comisiones"
+    },
+    {
+      "id": "meses_pago_fijo",
+      "label": "Meses para cancelar (cuota fija propuesta)",
+      "unit": "meses",
+      "format": "number",
+      "description": "Tiempo total con el pago mensual fijo que ingresaste"
+    },
+    {
+      "id": "interes_total_fijo",
+      "label": "Interés total acumulado (cuota fija)",
+      "unit": "$",
+      "format": "currency",
+      "description": "Total de intereses con la cuota fija propuesta"
+    },
+    {
+      "id": "total_pagado_fijo",
+      "label": "Total pagado (cuota fija)",
+      "unit": "$",
+      "format": "currency",
+      "description": "Saldo inicial + intereses con cuota fija"
+    },
+    {
+      "id": "ahorro_comparacion",
+      "label": "Ahorro cambiando a cuota fija",
+      "unit": "$",
+      "format": "currency",
+      "description": "Diferencia de intereses: (Min - Fijo). Positivo = ahorro"
+    },
+    {
+      "id": "tiempo_ahorrado",
+      "label": "Tiempo ahorrado",
+      "unit": "meses",
+      "format": "number",
+      "description": "Meses menos en cancelar con cuota fija vs mínima"
+    },
+    {
+      "id": "composicion_minima_primer_mes",
+      "label": "Composición cuota mínima (primer mes)",
+      "unit": "JSON",
+      "format": "text",
+      "description": "Desglose: capital, interés, cuota manejo, seguro"
+    }
+  ],
+  "explanation": "## Cómo se calcula la cuota mínima tarjeta crédito Colombia\n\nLa cuota mínima que cobra tu banco es la cantidad mínima que debes pagar para mantener tu cuenta al día. Se compone de:\n\n### Fórmula Base\n\n**Cuota Mínima = Capital (%) + Interés Mensual + Cuota Manejo + Seguro**\n\nDonde:\n- **Capital (%)**: Porcentaje del saldo (típicamente 3-5% en Colombia)\n- **Interés Mensual**: Saldo × (EA / 12)\n  - EA = Tasa Efectiva Anual (ej: 28% → tasa mensual ≈ 2.07%)\n- **Cuota Manejo**: Comisión fija mensual (algunos bancos cobran $0, otros $15k-$50k)\n- **Seguro**: Póliza de desempleo/vida (opcional, típico $30k-$100k)\n\n### Ejemplo Concreto\n\n| Concepto | Valor |\n|----------|-------|\n| **Saldo Inicial** | $5.000.000 |\n| **EA** | 28% |\n| **Tasa Mensual** | 28% ÷ 12 = 2.333% |\n| **Interés Mes 1** | $5.000.000 × 2.333% = $116.650 |\n| **Capital (4%)** | $5.000.000 × 4% = $200.000 |\n| **Cuota Manejo** | $15.000 |\n| **Seguro** | $50.000 |\n| **Cuota Mínima Mes 1** | $381.650 |\n\n### Simulación: Cuota Mínima vs Fija\n\n**Escenario A: Solo Cuota Mínima (4%)**\n- Mes 1: Paga $381.650, nuevo saldo ≈ $4.735.000\n- Mes 2: Interés ≈ $110.418, nueva cuota ≈ $366.418\n- ...\n- **Meses totales**: ≈ 98 meses (8+ años)\n- **Interés total**: ≈ $7.800.000\n- **Total pagado**: ≈ $12.800.000\n\n**Escenario B: Cuota Fija $500.000**\n- Mes 1: Paga $500.000, nuevo saldo ≈ $4.616.650\n- Mes 2: Interés ≈ $107.629, deuda ≈ $4.724.279 (si el pago no cubre interés+comisión, crece)\n- ...\n- **Meses totales**: ≈ 32 meses (2.7 años)\n- **Interés total**: ≈ $2.100.000\n- **Total pagado**: ≈ $7.100.000\n- **Ahorro**: $5.700.000 vs cuota mínima\n\n### Fórmula para Proyectar Saldo\n\nEn cada mes:\n\n```\nNuevo Saldo = Saldo Anterior + Interés Mensual + Cuota Manejo + Seguro - Pago\n```\n\nDonde:\n- **Interés Mensual** = Saldo Anterior × (EA / 12)\n- **Pago** = Cuota Mínima (calculada) o Cuota Fija (ingresada)\n\n## Limitaciones y Consideraciones\n\n1. **Cambios de EA**: Si el banco ajusta tu tasa, la simulación varía. Renegociar con el banco es recomendable.\n2. **Pagos Parciales**: Si un mes pagas menos del mínimo, se generan intereses por mora (~2% mensual adicional).\n3. **Comisiones Ocultas**: Algunos bancos cobran comisión por transacción, atención especial, etc. Se suman al saldo.\n4. **Seguros Opcionales**: La mayoría son opcionales. Revisa tu contrato y cancela si no los necesitas.\n5. **Capital Mínimo**: Si el 4% calculado es inferior a $50.000, muchos bancos exigen el mínimo de $50k en capital.\n6. **Cierre de Ciclo**: Algunas tarjetas cierran ciclo en fechas específicas (no mes calendario). Verifica tu ciclo.\n\n## Recomendaciones\n\n- **Paga más que el mínimo**: Aumentar el pago reduce drásticamente años de deuda e intereses.\n- **Métodos de Pago**: Considera pagar cada 15 días (mitad del ciclo) para reducir el saldo antes que se genere el siguiente interés.\n- **Refinanciación**: Si tu EA es >30%, negocia con el banco o considera un crédito de libre inversión a tasa menor (típico 18-22%).",
+  "faq": [
+    {
+      "question": "¿Cuál es la cuota mínima típica en Colombia?",
+      "answer": "Entre 3% y 5% del saldo adeudado, más intereses y comisiones. Varía por banco (Banco Bogotá, Davivienda, Santander, BBVA, Scotiabank tienen porcentajes ligeramente diferentes). Revisa tu extracto para confirmar el % exacto."
+    },
+    {
+      "question": "¿Qué pasa si pago menos que la cuota mínima?",
+      "answer": "Tu cuenta queda en mora. El banco cobra interés de mora (~2% mensual adicional) sobre el saldo vencido, reporta a Centrales de Riesgo (Datacrédito, Transunión, Experian), y eventualmente demanda. Afecta tu calificación crediticia."
+    },
+    {
+      "question": "¿Cuál es la diferencia entre EA (Tasa Efectiva Anual) y tasa mensual?",
+      "answer": "La EA es el costo anual. Para obtener la tasa mensual, divide EA entre 12 (aproximado), o usa: Tasa Mensual = (1 + EA)^(1/12) - 1. Ejemplo: 28% EA ≈ 2.07% mensual, no 28%/12 = 2.33% exacto, pero la aproximación es cercana para tasas <30%."
+    },
+    {
+      "question": "¿Cómo nego con el banco para bajar mi EA?",
+      "answer": "Llama al banco, solicita hablar con retención (área que maneja reducciones de tasa para clientes con buen historial). Ofrécete a aumentar límite o activar otros productos. EA típicas caen 2-5 puntos para clientes sin atrasos. Si no acceden, considera consolidar en crédito personal a tasa menor."
+    },
+    {
+      "question": "¿Puedo pagar toda mi deuda de una vez?",
+      "answer": "Sí. Algunos bancos cobran comisión por cancelación anticipada (revisar contrato, típicamente 0-2%). Pagas intereses solo hasta la fecha de pago, no por el mes completo. Es recomendable si tienes liquídez: ahorras cientos de miles en intereses futuros."
+    },
+    {
+      "question": "¿Qué es la cuota de manejo y por qué la cobran?",
+      "answer": "Es la comisión que cobra el banco por administrar tu tarjeta (procesamiento, sistemas, atención). Típico $15k-$50k/mes. ALGUNOS bancos permiten solicitarla exoneración si eres cliente antigua sin atrasos. Vale la pena preguntar."
+    },
+    {
+      "question": "¿Cómo influyen los seguros en mi pago?",
+      "answer": "El seguro de desempleo/vida es OPCIONAL, aunque muchos bancos lo activan por defecto. Cuesta $30k-$100k/mes. Si pierdes el empleo, el seguro paga tu deuda. Si no lo necesitas, solicita su cancelación al banco por teléfono o sucursal."
+    },
+    {
+      "question": "¿Qué diferencia hay entre consolidar deuda vs pagar tarjeta?",
+      "answer": "Consolidación = pedir crédito personal que pague tu tarjeta. Ventajas: tasa menor (18-22% vs 25-32%), plazo fijo conocido (ej: 24-60 meses), cuota fija. Desventaja: término más largo = más interés total si no aceleras. Recomendado si tu EA es >28%."
+    },
+    {
+      "question": "¿Cuándo debo considerar pedir ayuda de finanzas personales?",
+      "answer": "Si tu deuda supera 6 meses de ingresos, tienes >3 tarjetas al máximo, o acumulas atrasos. Contacta con Superfinanciera (línea 018000-926962) para orientación gratuita, o consulta plataformas como Credicuotas (reestructuración de deuda en Colombia)."
+    },
+    {
+      "question": "¿Cómo se reporta a Centrales de Riesgo si estoy en mora?",
+      "answer": "Con 30 días de atraso, el banco reporte a Datacrédito, Transunión o Experian. Esto afecta tu score crediticio durante 5-7 años. Si pagas la deuda, el reporte permanece pero mejora tu score gradualmente. Verifica tu historial en www.datacredi.com.co (gratis una vez/año)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DIAN - Régimen de Personas Naturales",
+      "url": "https://www.dian.gov.co/impuestos/personas-naturales",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Superfinanciera - Tasas de Interés Tarjetas Crédito",
+      "url": "https://www.superfinanciera.gov.co/",
+      "publisher": "Superintendencia Financiera de Colombia",
+      "date": "2026"
+    },
+    {
+      "name": "Banco de la República - Indicadores Económicos",
+      "url": "https://www.banrepcultural.org/",
+      "publisher": "Banco de la República",
+      "date": "2026"
+    },
+    {
+      "name": "Datacrédito - Consulta de Historial Crediticio",
+      "url": "https://www.datacredi.com.co/",
+      "publisher": "Datacrédito",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Superfinanciera de Colombia",
+    "sourceUrl": "https://www.superfinanciera.gov.co/",
+    "updateType": "manual",
+    "notes": "Tasas EA de tarjetas y parámetros de cuota mínima varían por institución. Se actualizan anualmente con datos de los principales bancos (Bogotá, Davivienda, Santander, BBVA, Scotiabank, Colpatria)."
+  },
+  "lastReviewed": "2026-04-28"
+}

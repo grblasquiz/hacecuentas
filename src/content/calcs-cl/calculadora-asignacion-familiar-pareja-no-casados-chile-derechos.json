@@ -1,0 +1,331 @@
+{
+  "slug": "calculadora-asignacion-familiar-pareja-no-casados-chile-derechos",
+  "title": "Derechos Pareja No Casada Chile 2026 | Asignación Familiar",
+  "h1": "Pareja no casada: derechos y asignación familiar en Chile",
+  "description": "Calcula derechos de pareja no casada (Ley 20.830 AUC): herencia, salud, asignación familiar, isapre. Comparativa con matrimonio. Formalización Registro Civil.",
+  "category": "familia",
+  "audience": "CL",
+  "icon": "💑",
+  "formulaId": "asignacion-familiar-pareja-no-casados-chile-derechos",
+  "intro": "La **Ley 20.830 de Acuerdo de Unión Civil (AUC)** reconoce derechos a parejas no casadas desde 2015. Esta calculadora te ayuda a identificar tus derechos en asignación familiar, salud, herencia y otros beneficios, y compara tu situación con el matrimonio. Incluye pasos de formalización en el Registro Civil.",
+  "keyTakeaway": "Con AUC formalizado, parejas no casadas acceden a asignación familiar (hasta $250.000 anuales), herencia legal, pensión de sobrevivencia y beneficios isapre equivalentes a matrimonio.",
+  "useCases": [
+    "Pareja conviviente que quiere formalizar derechos sin casarse",
+    "Determinar elegibilidad para asignación familiar en AUC",
+    "Comparar beneficios matrimonio vs. Acuerdo de Unión Civil",
+    "Calcular herencia y beneficiarios en parejas no casadas",
+    "Revisar derechos en salud e isapre para pareja AUC",
+    "Planificar formalización en Registro Civil"
+  ],
+  "fields": [
+    {
+      "id": "situacion_legal",
+      "label": "Situación legal actual",
+      "type": "select",
+      "options": [
+        {
+          "value": "convivencia_informal",
+          "label": "Convivencia informal (sin documentar)"
+        },
+        {
+          "value": "auc_formalizado",
+          "label": "Acuerdo de Unión Civil (AUC) formalizado"
+        },
+        {
+          "value": "matrimonio",
+          "label": "Matrimonio"
+        },
+        {
+          "value": "separacion_de_hecho",
+          "label": "Separación de hecho (aún casados)"
+        }
+      ],
+      "required": true,
+      "help": "Tu estado legal actual ante Registro Civil"
+    },
+    {
+      "id": "antiguedad_relacion",
+      "label": "Años de relación de pareja",
+      "type": "number",
+      "min": 0,
+      "max": 70,
+      "step": 0.5,
+      "required": true,
+      "help": "Tiempo conviviendo o casados"
+    },
+    {
+      "id": "tiene_hijos",
+      "label": "¿Tienen hijos menores de edad?",
+      "type": "select",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si_biologicos",
+          "label": "Sí, biológicos de ambos"
+        },
+        {
+          "value": "si_un_progenitor",
+          "label": "Sí, de uno de los dos"
+        },
+        {
+          "value": "si_adoptados",
+          "label": "Sí, adoptados"
+        }
+      ],
+      "required": true,
+      "help": "Impacta asignación familiar y derechos de herencia"
+    },
+    {
+      "id": "num_hijos_menores",
+      "label": "Número de hijos menores de edad",
+      "type": "number",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "required": true,
+      "conditional": "tiene_hijos != 'no'",
+      "help": "Para cálculo de asignación familiar"
+    },
+    {
+      "id": "ingreso_mensual_bruto",
+      "label": "Ingreso mensual bruto del solicitante (CLP)",
+      "type": "number",
+      "min": 0,
+      "max": 10000000,
+      "step": 10000,
+      "required": true,
+      "help": "Sueldo o ingreso antes de descuentos. Determina tope asignación familiar"
+    },
+    {
+      "id": "tiene_isapre",
+      "label": "¿Tiene contratación en isapre o Fonasa?",
+      "type": "select",
+      "options": [
+        {
+          "value": "fonasa",
+          "label": "Fonasa (sistema estatal)"
+        },
+        {
+          "value": "isapre",
+          "label": "Isapre (sistema privado)"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno / sin cobertura"
+        }
+      ],
+      "required": true,
+      "help": "Necesario para derechos de salud y cargas familiares"
+    },
+    {
+      "id": "estado_laboral",
+      "label": "Estado laboral del solicitante",
+      "type": "select",
+      "options": [
+        {
+          "value": "dependiente",
+          "label": "Trabajador dependiente (con empleador)"
+        },
+        {
+          "value": "independiente",
+          "label": "Trabajador independiente"
+        },
+        {
+          "value": "pensionado",
+          "label": "Pensionado (vejez, invalidez)"
+        },
+        {
+          "value": "desempleado",
+          "label": "Desempleado o sin ingresos"
+        }
+      ],
+      "required": true,
+      "help": "Determina si accede a asignación familiar y trámites"
+    },
+    {
+      "id": "pacto_auc_vigente",
+      "label": "¿AUC está vigente y notariado?",
+      "type": "select",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí, formalizado desde"
+        },
+        {
+          "value": "en_tramite",
+          "label": "En trámite de formalización"
+        },
+        {
+          "value": "no",
+          "label": "No, requiere formalización"
+        }
+      ],
+      "required": true,
+      "conditional": "situacion_legal == 'auc_formalizado'",
+      "help": "El AUC debe estar registrado en Registro Civil para efectos legales"
+    },
+    {
+      "id": "fecha_auc",
+      "label": "Fecha de formalización del AUC",
+      "type": "date",
+      "required": false,
+      "conditional": "pacto_auc_vigente == 'si'",
+      "help": "Para calcular antigüedad de derechos"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "puede_reclamar_asignacion_familiar",
+      "label": "¿Puede reclamar asignación familiar?",
+      "type": "boolean",
+      "help": "Requiere AUC formalizado + hijos + ingreso bajo"
+    },
+    {
+      "id": "monto_asignacion_familiar_anual",
+      "label": "Monto máximo asignación familiar anual (CLP)",
+      "type": "currency",
+      "help": "Por hijo menor según tope de ingreso. Aproximado 2026."
+    },
+    {
+      "id": "tope_ingreso_asignacion",
+      "label": "Tope de ingreso para asignación familiar (CLP)",
+      "type": "currency",
+      "help": "Si superas este ingreso, no califica. Actualizado UTM 2026."
+    },
+    {
+      "id": "derechos_herencia_auc",
+      "label": "Derechos de herencia (AUC)",
+      "type": "text",
+      "help": "Descripción de quiénes heredan con o sin testamento"
+    },
+    {
+      "id": "hereda_porcentaje",
+      "label": "Porcentaje de herencia (sin testamento)",
+      "type": "percentage",
+      "help": "Parte que heredaría como cónyuge civil según sucesión intestada"
+    },
+    {
+      "id": "derechos_salud_dependientes",
+      "label": "Derechos de salud para dependientes",
+      "type": "text",
+      "help": "Cobertura de pareja e hijos en isapre/Fonasa"
+    },
+    {
+      "id": "pension_sobrevivencia_aplica",
+      "label": "¿Aplica pensión de sobrevivencia?",
+      "type": "boolean",
+      "help": "Si pareja fallece, ¿recibe pensión?"
+    },
+    {
+      "id": "comparativa_matrimonio",
+      "label": "Principales diferencias vs. matrimonio",
+      "type": "text",
+      "help": "Cuadro comparativo de derechos y limitaciones"
+    },
+    {
+      "id": "pasos_formalizacion",
+      "label": "Pasos para formalizar AUC",
+      "type": "text",
+      "help": "Procedimiento ante Registro Civil"
+    },
+    {
+      "id": "documentos_requeridos",
+      "label": "Documentos necesarios",
+      "type": "text",
+      "help": "Listado de documentación para formalización"
+    },
+    {
+      "id": "estado_actual_derechos",
+      "label": "Estado actual de derechos",
+      "type": "text",
+      "help": "Resumen de derechos ya adquiridos o pendientes"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEsta calculadora evalúa tres dimensiones legales:\n\n### 1. Formalización legal (Ley 20.830 AUC)\nLa **Ley 20.830 de Acuerdo de Unión Civil** (en vigencia desde 2015) permite a parejas del mismo o distinto sexo formalizar su relación sin matrimonio. El AUC debe ser **notariado e inscrito en Registro Civil** para tener efectos legales.\n\n**Requisitos AUC:**\n- Ambos mayores de 18 años\n- Capacidad legal (sin impedimentos matrimoniales como estar casados)\n- Acuerdo voluntario ante notario\n- Inscripción en Registro Civil (por cada notario o personalmente)\n\n### 2. Asignación familiar\nLa **Ley 18.681 (Asignación Familiar)** otorga beneficio mensual por cargas familiares según:\n\n**Tabla 2026 (estimada UTM $66.500):**\n- Trabajador dependiente: hasta $250.000 anuales aprox. (según UF)\n- Pensionado: si cumple cotizaciones mínimas\n- AUC formalizado: **mismo derecho que matrimonio**\n- Convivencia informal: **NO califica**\n\n**Tope de ingreso:** Aprox. 2,75 × UTM (2026) = ~$183.000 bruto mensual\n\nSi ingresos > tope, **pierde derecho a asignación familiar**.\n\n### 3. Derechos de herencia\nSin testamento (sucesión intestada):\n\n**Con matrimonio/AUC + hijos:**\n- Viudo(a): 25% de la herencia\n- Hijos: 75% a partes iguales\n\n**Sin matrimonio/AUC (convivencia informal):**\n- Pareja: **NO hereda nada**\n- Solo hijos biológicos heredan (si están reconocidos)\n\n### 4. Derechos de salud\n- **Isapre:** Pareja e hijos menores como cargas familiares (reducción pago)\n- **Fonasa:** Cargas por grupo familiar (reduce cotización 7% base)\n- **AUC formalizado:** mismos derechos que matrimonio\n\n### 5. Pensión de sobrevivencia\nSi pareja muere y tenía fondo de pensiones (AFP):\n- **Matrimonio/AUC formalizado:** Sobreviviente hereda pensión\n- **Convivencia informal:** No hay derechos previsionales\n\n## Fórmula\n\n```\nSi (situacion_legal = \"convivencia_informal\") {\n  asignacion_familiar = 0\n  derechos_herencia = 0\n  pension_sobrevivencia = NO\n  conclusion = \"Sin formalización legal, no hay derechos\"\n}\n\nSi (situacion_legal = \"auc_formalizado\" O \"matrimonio\") {\n  Si (ingreso_mensual_bruto <= tope_ingreso_2026) {\n    asignacion_familiar_anual = num_hijos × $66.500 × coeficiente_ingreso\n  } Sino {\n    asignacion_familiar_anual = 0  // supera tope\n  }\n  \n  Si (tiene_hijos > 0) {\n    herencia_porcentaje = 25%  // viudo(a) sin testamento\n    pension_sobrevivencia = SI\n  } Sino {\n    herencia_porcentaje = 50% (si hay comunidad)\n    pension_sobrevivencia = SI\n  }\n}\n\ntope_ingreso_2026 = UTM_2026 × 2.75 = $66.500 × 2.75 = ~$182.875\n```\n\n## Ejemplo\n\n**Caso 1: María y José en AUC formalizado**\n- Situación: AUC inscrito hace 3 años\n- Ingresos: $1.500.000 brutos (María)\n- Hijos: 2 menores de edad\n- Salud: Fonasa\n\n**Cálculos:**\n- Ingreso bruto $1.500.000 > tope $182.875 → **NO califica asignación familiar**\n- Derechos de herencia: **25% sin testamento** (+ 75% para hijos)\n- Pensión sobrevivencia: **SÍ**\n- Conclusión: Beneficios limitados por ingresos altos\n\n**Caso 2: Andrea y Carlos, convivencia informal**\n- Situación: Viven juntos 5 años, sin formalizar\n- Ingresos: $800.000 brutos (Andrea)\n- Hijos: 1 menor (de Andrea, Carlos no es padre legal)\n- Salud: Isapre\n\n**Cálculos:**\n- Asignación familiar: **$0** (requiere AUC o matrimonio)\n- Herencia: **$0** (convivencia no da derechos)\n- Pension sobrevivencia: **NO**\n- Carlos **no aparece como dependiente** en isapre (pago adicional)\n- Conclusión: Sin formalización, pérdida de ~$66.500 anuales + riesgos patrimoniales\n\n## Limitaciones\n\n1. **Fecha de formalización:** Derechos rigen desde inscripción en Registro Civil, no retroactivamente\n2. **Ingresos variables:** Trabajadores independientes deben acreditar ingresos promedio 12 meses\n3. **Pensionados:** Requieren cotización mínima (10+ años) para asignación familiar\n4. **Separación AUC:** Pueden disolver el AUC notarialmente; bienes se dividen en partes iguales (sin comunidad pactada)\n5. **Sucesión testada:** Si hay testamento válido, distribuye según voluntad del testador (prima testamento sobre ley)\n6. **Cambios legales 2026:** Montos UTM y UF se actualizan anualmente (verifica Banco Central)\n7. **Hijos mayores:** Pierden derecho a asignación familiar al cumplir 18 años\n8. **Pareja extranjera:** Debe tener RUT o cédula de identidad para AUC",
+  "faq": [
+    {
+      "q": "¿Qué es el Acuerdo de Unión Civil (AUC)?",
+      "a": "Es una formalización legal (Ley 20.830, 2015) que reconoce la relación entre dos personas sin requerir matrimonio. Otorga derechos similares a matrimonio en herencia, salud, pensiones y asignación familiar. Requiere trámite notarial e inscripción en Registro Civil."
+    },
+    {
+      "q": "¿Puedo tener asignación familiar en convivencia informal?",
+      "a": "No. La asignación familiar requiere estar casado, en AUC formalizado, o ser pensionado. Vivir juntos sin documentar no genera derechos previsionales ni fiscales."
+    },
+    {
+      "q": "¿Cuánto cuesta formalizar un AUC?",
+      "a": "Arancel notarial: ~$200.000-$400.000 CLP (varía según notaría). Inscripción Registro Civil: ~$30.000-$50.000. Total aproximado: $250.000-$450.000. Chequea con notarías locales."
+    },
+    {
+      "q": "Si muero sin testamento y tengo AUC, ¿hereda mi pareja?",
+      "a": "Sí, con AUC formalizado. Hereda 25% (si hay hijos). Sin AUC y en convivencia, hereda $0 (toda la herencia va a hijos o parientes)."
+    },
+    {
+      "q": "¿El AUC funciona igual que matrimonio para hijos adoptados?",
+      "a": "Sí. Con AUC e hijos adoptados formalemente, generan los mismos derechos: asignación familiar, herencia, pensión de sobrevivencia. Ambos progenitores deben estar en inscripción de adopción."
+    },
+    {
+      "q": "¿Pierdo derechos si me separo de mi pareja AUC?",
+      "a": "Sí. Se disuelve ante notario. Bienes se dividen en partes iguales (si no hay pacto de exclusión). Asignación familiar cesa. Pensiones y herencias se rigen por acuerdos de separación."
+    },
+    {
+      "q": "¿Puedo estar en AUC si mi pareja es extranjera?",
+      "a": "Sí, si tiene RUT (Rol Único Tributario) o cédula de identidad vigente. Debe cumplir requisitos de capacidad legal según su nacionalidad (consulta abogado migratorio)."
+    },
+    {
+      "q": "¿Afecta el AUC mis deducciones de impuestos?",
+      "a": "Sí. Para impuesto a la renta (IRPF), la pareja AUC califica como dependiente si cumple requisitos (ingresos bajos, comunidad de bienes). Consulta SII para tu caso específico."
+    },
+    {
+      "q": "¿Qué documentos necesito para formalizar AUC en Registro Civil?",
+      "a": "Pasaporte/carnet, certificado de nulidad (si fue casado antes), comprobante domicilio, fotografías 4×4. Acta notariada debe llevarse dentro de 30 días de firma. Consulta Registro Civil local para lista completa."
+    },
+    {
+      "q": "¿El AUC se reconoce internacionalmente?",
+      "a": "En Chile sí. En otros países depende de tratados. Para herencia o pensiones en el extranjero, requiere certificado de AUC chileno notarizado y legalizado (Apostilla de La Haya)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ley 20.830 de Acuerdo de Unión Civil",
+      "url": "https://www.leychile.cl/N?i=1090146",
+      "publisher": "BCN Biblioteca del Congreso Nacional",
+      "date": "2015"
+    },
+    {
+      "name": "Ley 18.681 Asignación Familiar",
+      "url": "https://www.leychile.cl/N?i=1009649",
+      "publisher": "BCN",
+      "date": "2024"
+    },
+    {
+      "name": "Registro Civil - Trámite AUC",
+      "url": "https://www.registrocivil.cl/",
+      "publisher": "Servicio de Registro Civil e Identificación",
+      "date": "2026"
+    },
+    {
+      "name": "SII - Cálculo Asignación Familiar 2026",
+      "url": "https://www.sii.cl/sobre-sii/asignacion-familiar",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central Chile - UF y UTM 2026",
+      "url": "https://www.bcentral.cl/",
+      "publisher": "Banco Central de Chile",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Banco Central Chile (UF/UTM), SII (asignación familiar)",
+    "sourceUrl": "https://www.bcentral.cl/",
+    "updateType": "manual",
+    "notes": "Montos UTM y UF se actualizan mensualmente. Leyes de asignación familiar y AUC se revisan anualmente. Trámites Registro Civil pueden variar por región."
+  },
+  "lastReviewed": "2026-04-28"
+}

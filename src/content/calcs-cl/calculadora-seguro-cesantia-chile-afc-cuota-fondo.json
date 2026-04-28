@@ -1,0 +1,235 @@
+{
+  "slug": "calculadora-seguro-cesantia-chile-afc-cuota-fondo",
+  "title": "Calculadora Seguro Cesantía AFC Chile 2026 | Hacé Cuentas",
+  "h1": "Seguro de Cesantía Chile AFC",
+  "description": "Calcula aportes mensuales (empleador 2.4%, empleado 0.6%) y prestaciones por desempleo en Chile 2026. Incluye Fondo Solidario y requisitos según antigüedad.",
+  "category": "finanzas",
+  "audience": "CL",
+  "icon": "🛟",
+  "formulaId": "seguro-cesantia-chile-afc-cuota-fondo",
+  "intro": "El Seguro de Cesantía en Chile es un sistema de protección ante el desempleo administrado por las **Administradoras de Fondos de Cesantía (AFC)**. El empleador aporta 2.4% del salario imponible, el empleado 0.6%, y accedes a prestaciones mensuales de 60% a 30% según antigüedad. Esta calculadora estima tu aporte mensual y las prestaciones potenciales.",
+  "keyTakeaway": "Aporte total 3.0% sobre salario imponible: empleador 2.4% ($3,200 en sueldo $130,000), empleado 0.6%. Prestaciones: hasta 5 meses al 60%, luego 60% más del Fondo Solidario.",
+  "useCases": [
+    "Empleado a honorarios o contrata temporal: estimar protección cesantía disponible",
+    "Empleador: conocer obligación legal y costo mensual del aporte 2.4%",
+    "Planificador financiero: comparar cobertura según antigüedad laboral",
+    "Trabajador próximo a término contrato: calcular acceso a Fondo Solidario",
+    "Auditor laboral: validar aportes legales y elegibilidad requisitos"
+  ],
+  "fields": [
+    {
+      "id": "salario_imponible",
+      "label": "Salario imponible mensual ($)",
+      "type": "number",
+      "placeholder": "2500000",
+      "min": 0,
+      "max": 10000000,
+      "step": 10000,
+      "tooltip": "Sueldo base sujeto a descuentos y aportes. No incluye gratificación ni bono variable."
+    },
+    {
+      "id": "meses_antiguedad",
+      "label": "Meses de antigüedad laboral",
+      "type": "number",
+      "placeholder": "36",
+      "min": 0,
+      "max": 480,
+      "step": 1,
+      "tooltip": "Tiempo acumulado en la empresa actual. Determina tasa de prestación cesantía."
+    },
+    {
+      "id": "tipo_termino",
+      "label": "Tipo de término de contrato",
+      "type": "select",
+      "options": [
+        {
+          "value": "sin_causa",
+          "label": "Sin causa justificada (despido)"
+        },
+        {
+          "value": "con_causa",
+          "label": "Con causa justificada"
+        },
+        {
+          "value": "mutuo_acuerdo",
+          "label": "Mutuo acuerdo"
+        },
+        {
+          "value": "renuncia",
+          "label": "Renuncia voluntaria"
+        },
+        {
+          "value": "activo",
+          "label": "Aún empleado (sin término)"
+        }
+      ],
+      "tooltip": "Afecta elegibilidad a prestaciones. Solo «sin causa» o «mutuo acuerdo» acceden."
+    },
+    {
+      "id": "aportante_afc",
+      "label": "¿Afiliado a AFC vigente?",
+      "type": "select",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí, con aportes al día"
+        },
+        {
+          "value": "no",
+          "label": "No o aportes vencidos"
+        },
+        {
+          "value": "indefinido",
+          "label": "No sabe"
+        }
+      ],
+      "tooltip": "Requisito para acceder a prestaciones. Revisar cartola última AFP o contratante."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "aporte_mensual_empleador",
+      "label": "Aporte mensual empleador (2.4%)",
+      "type": "currency",
+      "tooltip": "Costo legal para la empresa. No se deduce del sueldo del trabajador."
+    },
+    {
+      "id": "aporte_mensual_empleado",
+      "label": "Aporte mensual empleado (0.6%)",
+      "type": "currency",
+      "tooltip": "Descuento en tu nómina. Se acumula en tu cuenta individual AFC."
+    },
+    {
+      "id": "aporte_total_mensual",
+      "label": "Aporte total sistema (3.0%)",
+      "type": "currency",
+      "tooltip": "Suma empleador + empleado. Financian prestaciones y Fondo Solidario."
+    },
+    {
+      "id": "saldo_acumulado_anual",
+      "label": "Saldo acumulado anual (empleado)",
+      "type": "currency",
+      "tooltip": "Tu aporte 0.6% × 12 meses. Acceso según elegibilidad al término."
+    },
+    {
+      "id": "meses_prestacion_60",
+      "label": "Meses con prestación al 60%",
+      "type": "number",
+      "tooltip": "Duración cobertura a tasa máxima según antigüedad."
+    },
+    {
+      "id": "meses_prestacion_solidario",
+      "label": "Meses adicionales Fondo Solidario (30%)",
+      "type": "number",
+      "tooltip": "Si antigüedad ≥12 meses. Complementa después del 60%."
+    },
+    {
+      "id": "prestacion_mensual_60",
+      "label": "Prestación mensual fase 60%",
+      "type": "currency",
+      "tooltip": "Monto a recibir durante primeros meses desempleo."
+    },
+    {
+      "id": "prestacion_total_estimada",
+      "label": "Total estimado prestaciones (máximo teórico)",
+      "type": "currency",
+      "tooltip": "Suma de todos meses al 60% + Solidario. No incluye comisión AFC."
+    },
+    {
+      "id": "elegible_prestacion",
+      "label": "¿Elegible para prestaciones?",
+      "type": "text",
+      "tooltip": "Basado en tipo término y afiliación AFC."
+    },
+    {
+      "id": "requisitos_fondo_solidario",
+      "label": "Requisitos Fondo Solidario",
+      "type": "text",
+      "tooltip": "Condiciones para acceso a complemento 30% por sobre 60%."
+    }
+  ],
+  "explanation": "## Cómo se calcula el Seguro de Cesantía AFC Chile\n\nEl Seguro de Cesantía en Chile funciona como sistema de protección ante desempleo con tres componentes: **cuenta individual**, **fondo solidario** e **indemnización por años de servicio**.\n\n### Fórmula de Aportes\n\n```\nAporte empleador = Salario imponible × 2.4%\nAporte empleado = Salario imponible × 0.6%\nAporte total = Salario imponible × 3.0%\n```\n\n**Nota**: El aporte del 0.6% del empleado se descuenta directamente de su sueldo neto. El aporte del empleador (2.4%) es costo operacional de la empresa, no se deduce del trabajador.\n\n### Duración Prestaciones por Antigüedad\n\nSegún **Ley de Protección al Empleo** (DL 3500), la cobertura varía:\n\n| Antigüedad | Meses al 60% | Meses Solidario 30% | Total máximo |\n|---|---|---|---|\n| < 6 meses | 0 | 0 | Indemnización 30 días |\n| 6–12 meses | 3 | 0 | 3 meses |\n| 12–24 meses | 4 | 1 | 5 meses |\n| 24+ meses | 5 | 2 | 7 meses |\n\n### Elegibilidad\n\nAccedes a prestaciones **solo si**:\n- Término es **sin causa justificada** o **mutuo acuerdo** (no renuncia)\n- Afiliación **AFC vigente** con aportes al día\n- Antigüedad ≥ 6 meses\n\n### Ejemplo Práctico\n\n**Datos**: Salario imponible $2,500,000, antigüedad 30 meses, término sin causa, afiliado AFC.\n\n```\nAporte empleador = 2,500,000 × 2.4% = $60,000/mes\nAporte empleado = 2,500,000 × 0.6% = $15,000/mes\nAporte total = $75,000/mes\n\nSaldo anual empleado = 15,000 × 12 = $180,000\n\nMeses al 60% = 5 (>24 meses antigüedad)\nMeses Solidario = 2 (>24 meses antigüedad)\nTotal = 7 meses cobertura\n\nPrestación 60% = 2,500,000 × 60% = $1,500,000/mes (durante 5 meses)\nPrestación 30% = 1,500,000 × 30% = $450,000/mes (durante 2 meses, Solidario)\n\nTotal estimado = (1,500,000 × 5) + (450,000 × 2) = $8,400,000\n```\n\n### Limitaciones\n\n- **Comisión AFC**: Los fondos se desglosan por comisión (0.5%–0.75% adicional según administradora), reduciendo prestación neta.\n- **Tope UF**: Prestación máxima mensual limitada a UF 60 aproximadamente ($1,800,000 a tasa 2026).\n- **Renuncia no cubre**: Si renuncias voluntariamente, pierdes derecho a prestación aunque tengas saldo acumulado.\n- **Contabilización Fondo Solidario**: Requiere ≥12 meses antigüedad Y empresa con <80 trabajadores o sector vulnerable (SII define).\n- **Recaudación comisión**: AFC descuenta comisión antes de transferir a tu cuenta.\n\n## Fórmula IVA / Impuestos\n\nNo aplica IVA sobre aportes de cesantía. Son descuentos laborales directos.",
+  "faq": [
+    {
+      "question": "¿Cuál es la diferencia entre cuenta individual y Fondo Solidario?",
+      "answer": "La **cuenta individual** acumula tus aportes (0.6% mensual). El **Fondo Solidario** es un fondo común financiado por el aporte del empleador (2.4%) para complementar prestaciones de trabajadores con antigüedad ≥12 meses. Al término, accedes primero a tu saldo individual; después, a Solidario si cumplas requisitos (antigüedad, tipo término, empresa pequeña)."
+    },
+    {
+      "question": "¿Si renuncio voluntariamente, pierdo mi aporte?",
+      "answer": "No pierdes el dinero aportado, pero **no accedes a prestación de desempleo**. Tu saldo acumulado (0.6% × meses) queda en la AFC y se puede recuperar como **bono de desvinculación** (retiro parcial) según normativa de cada AFC. Consulta con tu administradora."
+    },
+    {
+      "question": "¿Qué ocurre si soy despedido con causa justificada?",
+      "answer": "Si el despido es **con causa**, legalmente no tienes derecho a prestación de cesantía, solo a **indemnización por años de servicio** (1 mes de sueldo por año, máximo 12 meses). Tu saldo AFC se mantiene, pero no es accesible como prestación de desempleo."
+    },
+    {
+      "question": "¿Hay comisión de la AFC sobre mis aportes?",
+      "answer": "Sí. Cada AFC cobra comisión (rango 0.5%–0.75% sobre el aporte total) por administración, gestión y cobro. Esta comisión se descuenta automáticamente de tu saldo acumulado antes de transferencias de prestación. Revisa tabla de comisiones en SII o directamente en tu AFC."
+    },
+    {
+      "question": "¿Cuándo puedo empezar a recibir prestación si quedo desempleado?",
+      "answer": "Debes presentar **documento de término** (carta de despido o mutuo acuerdo) en la AFC dentro de **60 días hábiles**. Tras verificación (5–10 días), la prestación comienza el mes siguiente. Si esperas más tiempo, puedes perder derechos por prescripción (plazo máximo 12 meses desde término)."
+    },
+    {
+      "question": "¿El aporte de cesantía reduce mi sueldo neto?",
+      "answer": "El aporte del **empleado (0.6%)** sí se descuenta de tu sueldo. El aporte del **empleador (2.4%)** es costo para la empresa y no afecta tu sueldo. Así, total desembolso legal es 3.0% del salario imponible."
+    },
+    {
+      "question": "¿Qué pasa si cambio de empleador? ¿Se transfiere mi saldo?",
+      "answer": "Tu saldo **no se transfiere automáticamente**. Continúa en la AFC del anterior empleador. En el nuevo empleo, tu empleador afilia a nueva AFC (o la misma). Ambos saldos permanecen independientes hasta que los retires o uses en desempleo. Puedes consolidarlos en una sola AFC solicitándolo."
+    },
+    {
+      "question": "¿Hay tope máximo de prestación mensual por cesantía?",
+      "answer": "Sí. La prestación máxima es aproximadamente **60 UF** (unos $1,800,000 a tasa 2026), aunque es raro alcanzarla. Además, la prestación se calcula como porcentaje del salario (60% o 30%), no como saldo total acumulado."
+    },
+    {
+      "question": "¿Qué pasa si no he aportado los últimos meses?",
+      "answer": "Si tienes **aportes vencidos** (no pagados por empleador), pierdes elegibilidad inmediata a prestación. Debes regularizar con la AFC antes de solicitar cobertura. La ley permite hasta 2 meses de atraso; más allá, la AFC puede rechazar prestación."
+    },
+    {
+      "question": "¿Cómo afecta la comisión de mi AFC al cálculo de prestación?",
+      "answer": "La comisión se resta de tu saldo disponible antes de entregar prestación. Si tu saldo acumulado es $180,000 y comisión es 0.6%, recibirás ~$179,000 en lugar de $180,000. Solicita a tu AFC detalle de comisión aplicada en tu contrato."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Superintendencia de Pensiones (SP) – Seguro de Cesantía",
+      "url": "https://www.spensiones.cl/portal/institucional/594/w3-propertyvalue-18816.html",
+      "publisher": "Superintendencia de Pensiones",
+      "date": "2026"
+    },
+    {
+      "name": "SII – Aportes Obligatorios Trabajadores Chile",
+      "url": "https://www.sii.cl/sobre-impuestos/impuestos-personas/impuesto-global-complementario/descuentos-obligatorios",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "Decreto Ley 3500 – Nuevo Sistema de Pensiones",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=6326",
+      "publisher": "Biblioteca del Congreso Nacional",
+      "date": "2024"
+    },
+    {
+      "name": "Ministerio del Trabajo – Protección al Empleo",
+      "url": "https://www.mintrab.gob.cl/proteccion-social/proteccion-al-empleo",
+      "publisher": "Ministerio del Trabajo y Previsión Social",
+      "date": "2026"
+    },
+    {
+      "name": "ACAFP – Tabla de Comisiones y Comisión Mixta",
+      "url": "https://www.acafp.cl/tabla-de-comisiones",
+      "publisher": "Asociación de Administradoras de Fondos de Cesantía",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Superintendencia de Pensiones + SII",
+    "sourceUrl": "https://www.spensiones.cl",
+    "updateType": "manual",
+    "notes": "Porcentajes de aporte (2.4% empleador, 0.6% empleado) y duración prestaciones (60% + Solidario) validados según normativa 2026. Comisión AFC varía por administradora; se actualiza mensualmente en ACAFP."
+  },
+  "lastReviewed": "2026-04-28"
+}

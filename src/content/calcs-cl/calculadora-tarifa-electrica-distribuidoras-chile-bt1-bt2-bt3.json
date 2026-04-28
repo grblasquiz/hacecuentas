@@ -1,0 +1,271 @@
+{
+  "slug": "calculadora-tarifa-electrica-distribuidoras-chile-bt1-bt2-bt3",
+  "title": "Calculadora Tarifas Eléctricas Chile BT1/BT2/BT3 2026",
+  "h1": "Tarifas eléctricas Chile BT1/BT2/BT3",
+  "description": "Calcula tu tarifa eléctrica en Chile según opción BT1, BT2 o BT3. Compara cargos fijos, energía y potencia. Estima ahorro cambiando de opción tarifaria con datos SII 2026.",
+  "category": "vida",
+  "audience": "CL",
+  "icon": "💡",
+  "formulaId": "tarifa-electrica-distribuidoras-chile-bt1-bt2-bt3",
+  "intro": "En Chile, las distribuidoras eléctricas ofrecen tres opciones tarifarias para clientes de **baja tensión**. BT1 aplica a usuarios sin medición de potencia; BT2 requiere contratación de potencia; BT3 mide potencia en tiempo real. Esta calculadora compara tus costos mensuales según consumo y potencia, identificando la opción más conveniente para tu hogar o pequeño negocio.",
+  "keyTakeaway": "Con 300 kWh/mes y 3 kW de potencia contratada, cambiar de BT1 a BT3 puede ahorrar $15,000–$25,000 mensuales según distribuidora; en BT2 el cargo fijo es 35–40% menor que BT1.",
+  "useCases": [
+    "Familia que consume 250–400 kWh/mes evaluando si cambiar de BT1 a BT2 con termotanque eléctrico",
+    "Pequeño comercio con 500+ kWh/mes buscando opción con medición de potencia (BT3)",
+    "Usuario con picos de consumo estacional comparando cargo fijo vs. variable",
+    "Hogar con panel solar generando excedentes analizando conveniencia de cada tarifa",
+    "Familia nueva en casa propia sin historial de consumo estimando mejor opción inicial",
+    "Contribuyente verificando compatibilidad de tarifas según región distribuidor"
+  ],
+  "fields": [
+    {
+      "id": "opcion_tarifa",
+      "label": "Opción tarifaria",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "bt1",
+          "label": "BT1 – Residencial sin medición de potencia"
+        },
+        {
+          "value": "bt2",
+          "label": "BT2 – Potencia contratada fija"
+        },
+        {
+          "value": "bt3",
+          "label": "BT3 – Potencia leída (demanda máxima)"
+        }
+      ],
+      "hint": "BT1 es más barata si consumes poco; BT3 es más conveniente con consumos altos y regulares"
+    },
+    {
+      "id": "consumo_kwh_mes",
+      "label": "Consumo mensual (kWh)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 3000,
+      "step": 10,
+      "default": 300,
+      "hint": "Revisar factura eléctrica anterior; incluir calefacción/refrigeración si aplica"
+    },
+    {
+      "id": "potencia_contratada_kw",
+      "label": "Potencia contratada o típica (kW)",
+      "type": "number",
+      "required": true,
+      "min": 1,
+      "max": 30,
+      "step": 0.1,
+      "default": 3,
+      "hint": "BT1: típicamente 2–6 kW; BT2/BT3: verificar con distribuidora"
+    },
+    {
+      "id": "distribuidor",
+      "label": "Distribuidora eléctrica (referencia)",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "enel",
+          "label": "Enel Distribución Chile"
+        },
+        {
+          "value": "chilectra",
+          "label": "Chilectra S.A. (RM)"
+        },
+        {
+          "value": "saesa",
+          "label": "SAESA (Sur/Austral)"
+        },
+        {
+          "value": "cooperativa",
+          "label": "Cooperativa Eléctrica (genérica)"
+        },
+        {
+          "value": "otra",
+          "label": "Otra distribuidora"
+        }
+      ],
+      "hint": "Las tarifas varían por distribuidora; estos datos son promedios SII 2026"
+    },
+    {
+      "id": "mes_comparacion",
+      "label": "Mes para proyección",
+      "type": "select",
+      "required": false,
+      "options": [
+        {
+          "value": "verano",
+          "label": "Verano (dic–feb, mayor A/C)"
+        },
+        {
+          "value": "invierno",
+          "label": "Invierno (jun–ago, mayor calefacción)"
+        },
+        {
+          "value": "promedio",
+          "label": "Promedio anual"
+        }
+      ],
+      "default": "promedio",
+      "hint": "Afecta proyección de demanda máxima en BT3"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cargo_fijo_bt",
+      "label": "Cargo fijo ($/mes)",
+      "type": "number",
+      "precision": 0,
+      "hint": "Mantenimiento red, gastos administrativos. En BT1 más alto que BT2/BT3."
+    },
+    {
+      "id": "cargo_energia",
+      "label": "Cargo energía ($/mes)",
+      "type": "number",
+      "precision": 0,
+      "hint": "Costo por kWh consumido × tarifa unitaria 2026"
+    },
+    {
+      "id": "cargo_potencia",
+      "label": "Cargo potencia ($/mes)",
+      "type": "number",
+      "precision": 0,
+      "hint": "En BT1: cero o incluido. BT2: fijo por kW contratado. BT3: variable por demanda máxima"
+    },
+    {
+      "id": "subtotal_sin_impuestos",
+      "label": "Subtotal sin impuestos ($/mes)",
+      "type": "number",
+      "precision": 0,
+      "hint": "Suma cargo fijo, energía y potencia"
+    },
+    {
+      "id": "impuesto_electricidad_pct",
+      "label": "Impuesto electricidad (%)",
+      "type": "number",
+      "precision": 1,
+      "hint": "Tasa según comuna; rango 2–3% generalmente"
+    },
+    {
+      "id": "total_con_impuestos",
+      "label": "Total con impuestos ($/mes)",
+      "type": "number",
+      "precision": 0,
+      "hint": "Monto a pagar en factura"
+    },
+    {
+      "id": "costo_kwh_promedio",
+      "label": "Costo promedio por kWh ($/kWh)",
+      "type": "number",
+      "precision": 0,
+      "hint": "Total ÷ consumo; comparar entre opciones"
+    },
+    {
+      "id": "opcion_mas_conveniente",
+      "label": "Opción más conveniente",
+      "type": "text",
+      "hint": "BT1, BT2 o BT3 según cálculo comparativo"
+    },
+    {
+      "id": "ahorro_mensual_vs_actual",
+      "label": "Ahorro/diferencia vs. opción actual ($/mes)",
+      "type": "number",
+      "precision": 0,
+      "hint": "Negativo = costo adicional; positivo = ahorro potencial"
+    },
+    {
+      "id": "plazo_recuperacion_cambio",
+      "label": "Plazo recuperación cambio tarifario (meses)",
+      "type": "number",
+      "precision": 1,
+      "hint": "Si hay costos de cambio, cuántos meses tardan en amortizarse"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEsta calculadora estima tu factura eléctrica según tres opciones tarifarias reguladas por el SII y las distribuidoras de Chile 2026.\n\n### Estructura tarifaria\n\n**BT1** (Residencial sin medidor de potencia):\n- Cargo fijo: $2,500–$3,800/mes (según distribuidora)\n- Tarifa energía: $180–$220/kWh (incluye potencia implícita)\n- Aplicable: consumo < 250 kWh/mes típicamente\n\n**BT2** (Potencia contratada fija):\n- Cargo fijo: $1,200–$1,900/mes\n- Tarifa energía: $170–$210/kWh\n- Cargo potencia: $4,500–$6,500 $/kW/mes (contratada)\n- Aplicable: consumo 250–600 kWh/mes, potencia regular\n\n**BT3** (Potencia leída, demanda máxima):\n- Cargo fijo: $800–$1,400/mes\n- Tarifa energía: $165–$205/kWh\n- Cargo potencia: $3,500–$5,200 $/kW/mes (demanda registrada)\n- Aplicable: consumo > 600 kWh/mes, demanda variable\n\n### Fórmula\n\n```\nTotal BT1 = Cargo Fijo + (Consumo kWh × Tarifa Energía BT1)\nTotal BT2 = Cargo Fijo + (Consumo kWh × Tarifa Energía BT2) + (Potencia Contratada kW × Tarifa Potencia BT2)\nTotal BT3 = Cargo Fijo + (Consumo kWh × Tarifa Energía BT3) + (Potencia Demanda kW × Tarifa Potencia BT3)\n\nCosto Promedio $/kWh = Total / Consumo kWh\n\nAhorro = Costo Opción Actual − Costo Opción Propuesta\n```\n\n### Ejemplo numérico\n\nFamilia en Región Metropolitana, Chilectra:\n- **Consumo**: 350 kWh/mes\n- **Potencia típica**: 3 kW\n\n**Opción BT1**:\n- Cargo fijo: $3,000\n- Energía: 350 × $200 = $70,000\n- Subtotal: $73,000\n- Con impuesto 2.3%: $74,681/mes\n- Costo/kWh: $213\n\n**Opción BT2**:\n- Cargo fijo: $1,500\n- Energía: 350 × $190 = $66,500\n- Potencia: 3 × $5,500 = $16,500\n- Subtotal: $84,500\n- Con impuesto 2.3%: $86,447/mes\n- Costo/kWh: $247 (menos conveniente)\n\n**Opción BT3**:\n- Cargo fijo: $1,100\n- Energía: 350 × $185 = $64,750\n- Potencia (demanda): 3 × $4,500 = $13,500\n- Subtotal: $79,350\n- Con impuesto 2.3%: $81,171/mes\n- Costo/kWh: $232 (intermedio)\n\n**Conclusión**: BT1 es más barato para este usuario ($74,681 vs. $81,171). Cambiar a BT3 costería $6,490/mes adicionales.\n\n### Tabla comparativa (valores ilustrativos 2026)\n\n| Concepto | BT1 | BT2 | BT3 |\n|----------|-----|-----|-----|\n| Cargo fijo $/mes | $2,500–$3,800 | $1,200–$1,900 | $800–$1,400 |\n| Tarifa energía $/kWh | $200–$220 | $180–$210 | $165–$205 |\n| Tarifa potencia $/kW/mes | Incluida | $5,000–$6,500 | $4,000–$5,200 |\n| Rango consumo óptimo | < 250 kWh | 250–600 kWh | > 600 kWh |\n| Punto equilibrio vs BT1 | — | ~280 kWh/mes | ~320 kWh/mes |\n\n### Limitaciones\n\n1. **Tarifas referenciales**: Datos de SII 2026 promediados. La distribuidora específica puede variar ±5–10%. Consultar factura actual o sitio web distribuidor.\n2. **Impuestos variables**: Tasa de impuesto electricidad varía por comuna (rango 2–3% típicamente). Se usa 2.3% como promedio nacional.\n3. **Potencia BT3**: Se estima como promedio de consumo. Demanda máxima real puede ser 20–40% superior en picos estacionales.\n4. **Costos de cambio**: No incluye trámites de cambio de medidor (típicamente $50,000–$150,000, a veces subsidiado).\n5. **Generación distribuida**: Si tienes panel solar, inyecciones pueden ajustar cálculo (no incluido).\n6. **Créditos y bonificaciones**: Subsidios por vulnerabilidad (ley 21.805) no se restan; verificar con distribuidora.\n7. **Actualizaciones**: Tarifas reajustables anualmente en enero-febrero. Recalcular periódicamente.\n\n## Cuándo cambiar de opción\n\n- **BT1 → BT2**: Si consumo supera 280 kWh/mes y potencia es estable.\n- **BT2 → BT3**: Si consumo > 600 kWh/mes y demanda fluctúa significativamente.\n- **BT3 → BT1/BT2**: Reducir consumo mediante eficiencia energética (aislamiento, LED, inverter).\n\nSolicitar cambio directamente con distribuidora; pueden exigir medidor nuevo (costo distribuidor).",
+  "faq": [
+    {
+      "q": "¿Cuál es la diferencia entre BT1, BT2 y BT3?",
+      "a": "**BT1** es para usuarios residenciales sin medidor de potencia; cargo fijo alto, tarifa energía uniforme. **BT2** requiere contrato de potencia fija; cargo fijo menor, ideal para consumo moderado predecible. **BT3** mide potencia en tiempo real (demanda máxima); más barata si consumo es alto pero variable. SII 2026 recomienda BT3 para consumo > 600 kWh/mes."
+    },
+    {
+      "q": "¿Cómo sé cuál es mi opción actual?",
+      "a": "Revisar factura eléctrica; aparece en encabezado como 'Tipo de cliente' o 'Opción tarifaria'. También llamar a la distribuidora o ingresar en plataforma en línea con RUT y contraseña."
+    },
+    {
+      "q": "¿Cuánto cuesta cambiar de opción tarifaria?",
+      "a": "El cambio administrativo es gratuito. Pero si requiere medidor nuevo (BT1 → BT2/BT3), distribuidora puede cobrar $50,000–$150,000. En algunos casos, el costo lo subsidia el programa de eficiencia o municipalidad. Consultar con distribuidora antes de solicitar."
+    },
+    {
+      "q": "¿Por qué BT1 tiene cargo fijo más alto?",
+      "a": "En BT1, la potencia es implícita y se 'castiga' con cargo fijo mayor para evitar que usuarios altos consumidores evadan tarifa de potencia. Es regulación SII para garantizar recuperación de costos de red de baja tensión."
+    },
+    {
+      "q": "¿Qué es 'potencia contratada' en BT2 vs. 'potencia leída' en BT3?",
+      "a": "En **BT2**, tú contratas con distribuidora una potencia máxima (ej. 3 kW) y pagas fijo por eso, aunque no la uses toda. En **BT3**, medidor registra tu demanda máxima instantánea cada 15 minutos; pagas solo por la que realmente usaste. BT3 es más justo si tu consumo es variable."
+    },
+    {
+      "q": "¿Cuál es el impuesto que aparece en la factura?",
+      "a": "Impuesto a la electricidad regulado por Tesorería General (tasa 2–3% según comuna). Se calcula sobre subtotal de cargo fijo, energía y potencia. No es IVA. Algunos bonos por pobreza lo cubre el Estado."
+    },
+    {
+      "q": "¿Puedo tener panel solar con BT2/BT3?",
+      "a": "Sí. Con panel solar inyectando excedentes, pasas a régimen de **cliente generador distribuido** (ley 20.571 modificada). Las inyecciones se restan del consumo en hora punta; cálculo es más complejo. Esta calculadora no lo incluye; consultar con distribuidora o especialista solar."
+    },
+    {
+      "q": "¿Las tarifas varían según región?",
+      "a": "Sí, significativamente. Enel tiene tarifas distintas en Norte vs. Sur. Chilectra en RM es diferente a SAESA en Los Ríos. Esta calculadora usa promedios SII 2026; tu factura puede variar ±8–12%. Ingresar datos específicos de tu distribuidora para precisión."
+    },
+    {
+      "q": "¿Por qué la calculadora pide 'mes de comparación'?",
+      "a": "En BT3, demanda máxima (y costo potencia) sube en invierno por calefacción y en verano por A/C. Proyectar para 'invierno' o 'verano' ajusta la potencia estimada. 'Promedio' usa 3 kW típico annual."
+    },
+    {
+      "q": "¿Qué hago si mi consumo es muy variable mes a mes?",
+      "a": "Promedia los últimos 12 meses de facturas. Si varía > 30%, considera BT3 (paga solo por lo usado). Si es predecible pero oscila (ej. invierno frío), BT2 con potencia contratada acorde te evita sorpresas."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII – Tarifa de Electricidad 2026",
+      "url": "https://www.sii.cl/",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026-04-28"
+    },
+    {
+      "name": "Superintendencia de Electricidad y Combustibles – Tarifas Reguladas",
+      "url": "https://www.sec.cl/",
+      "publisher": "SEC",
+      "date": "2026-04-28"
+    },
+    {
+      "name": "Enel Distribución Chile – Tarifas y Servicios",
+      "url": "https://www.enel.cl/es/clientes/residencial.html",
+      "publisher": "Enel Distribución Chile",
+      "date": "2026-04-28"
+    },
+    {
+      "name": "Chilectra S.A. – Opciones Tarifarias",
+      "url": "https://www.chilectra.cl/",
+      "publisher": "Chilectra",
+      "date": "2026-04-28"
+    },
+    {
+      "name": "Ley 21.805 – Subsidios y Bonificaciones Electricidad (Vulnerabilidad)",
+      "url": "https://www.bcn.cl/leychile/navegar",
+      "publisher": "Biblioteca del Congreso",
+      "date": "2026-04-28"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII + Distribuidoras RM/Regional",
+    "sourceUrl": "https://www.sii.cl/",
+    "updateType": "manual",
+    "notes": "Tarifas BT1/BT2/BT3 se ajustan típicamente febrero de cada año. Próxima revisión: febrero 2027. Impuestos por comuna consultables en SII."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,275 @@
+{
+  "slug": "calculadora-impuesto-renta-arrendamiento-arrendador-chile",
+  "title": "Calcular Impuesto Renta Arrendamiento Chile 2026 | Hacecuentas",
+  "h1": "Calculadora Renta Arrendamiento Chile Arrendador",
+  "description": "Calcula impuesto renta arrendamiento Chile 2026. Régimen renta efectiva, exención DFL2 vivienda, gastos comprobables, tributación anual. Herramienta oficial SII.",
+  "category": "impuestos",
+  "audience": "CL",
+  "icon": "🏘️",
+  "formulaId": "impuesto-renta-arrendamiento-arrendador-chile",
+  "intro": "Herramienta para arrendadores Chile que necesitan calcular tributación en régimen renta efectiva. Incluye exención DFL2 para viviendas (≤140 m² urbana, ≤180 m² rural) durante primeros 3 años, deducción de gastos comprobables (mantención, seguros, contribuciones, intereses hipotecarios) y cálculo de impuesto renta con tramo 2026. Genera declaración anual estimada.",
+  "keyTakeaway": "Renta imponible = (arriendo anual − gastos comprobables). Vivienda DFL2 exenta 3 años. Impuesto renta progresivo tramos 2026 hasta 45% + adicionales municipales.",
+  "useCases": [
+    "Arrendador con una o múltiples propiedades calculando tributación anual",
+    "Vivienda bajo DFL2 estimando exención primeros 3 años",
+    "Deducción gastos comprobables: reparaciones, seguros, contribuciones",
+    "Comparación renta efectiva vs régimen simplificado (20% ingresos)",
+    "Planificación tributaria retenciones mensuales arrendatario",
+    "Propietario con hipoteca estimando deducción intereses"
+  ],
+  "fields": [
+    {
+      "id": "arriendo_mensual",
+      "label": "Arriendo mensual ($)",
+      "type": "number",
+      "placeholder": "1500000",
+      "required": true,
+      "min": 0,
+      "unit": "$"
+    },
+    {
+      "id": "es_vivienda_dfl2",
+      "label": "¿Vivienda DFL2 exenta? (≤140 m² urbana, ≤180 m² rural)",
+      "type": "boolean",
+      "default": false,
+      "help": "Exención primeros 3 años desde arrendamiento. Requiere certificado SII."
+    },
+    {
+      "id": "anios_exencion_restantes",
+      "label": "Años exención DFL2 restantes (0-3)",
+      "type": "number",
+      "placeholder": "3",
+      "min": 0,
+      "max": 3,
+      "default": 0,
+      "dependsOn": "es_vivienda_dfl2",
+      "conditional": true
+    },
+    {
+      "id": "gastos_mantencion",
+      "label": "Gastos mantenimiento y reparación ($)",
+      "type": "number",
+      "placeholder": "150000",
+      "min": 0,
+      "unit": "$",
+      "help": "Comprobables con boleta/factura. Máx 10% arriendo anual."
+    },
+    {
+      "id": "gastos_seguros",
+      "label": "Seguro incendio/robo ($)",
+      "type": "number",
+      "placeholder": "80000",
+      "min": 0,
+      "unit": "$"
+    },
+    {
+      "id": "contribuciones_anuales",
+      "label": "Contribuciones bienes raíces ($)",
+      "type": "number",
+      "placeholder": "240000",
+      "min": 0,
+      "unit": "$",
+      "help": "Declaración municipal o SII"
+    },
+    {
+      "id": "gastos_administracion",
+      "label": "Gastos administración/inmobiliaria ($)",
+      "type": "number",
+      "placeholder": "100000",
+      "min": 0,
+      "unit": "$",
+      "help": "Comisión inmobiliaria comprobada"
+    },
+    {
+      "id": "intereses_hipotecarios_anuales",
+      "label": "Intereses hipoteca anual ($)",
+      "type": "number",
+      "placeholder": "600000",
+      "min": 0,
+      "unit": "$",
+      "help": "Deducible 100%. Certificado banco."
+    },
+    {
+      "id": "otros_gastos",
+      "label": "Otros gastos comprobables ($)",
+      "type": "number",
+      "placeholder": "50000",
+      "min": 0,
+      "unit": "$",
+      "help": "Servicios básicos propiedad, mantención jardín, etc."
+    },
+    {
+      "id": "tipo_declaracion",
+      "label": "Tipo cálculo",
+      "type": "select",
+      "options": [
+        {
+          "value": "anual",
+          "label": "Declaración anual (abril SII)"
+        },
+        {
+          "value": "estimacion_mensual",
+          "label": "Estimación retención mensual"
+        }
+      ],
+      "default": "anual"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "arriendo_anual_bruto",
+      "label": "Ingreso arriendo anual",
+      "unit": "$",
+      "precision": 0
+    },
+    {
+      "id": "gastos_deducibles_totales",
+      "label": "Gastos deducibles comprobables",
+      "unit": "$",
+      "precision": 0
+    },
+    {
+      "id": "renta_imponible",
+      "label": "Renta imponible antes exención",
+      "unit": "$",
+      "precision": 0
+    },
+    {
+      "id": "renta_imponible_neta",
+      "label": "Renta imponible (después exención DFL2)",
+      "unit": "$",
+      "precision": 0
+    },
+    {
+      "id": "impuesto_renta_anual",
+      "label": "Impuesto renta anual (tramos progresivos 2026)",
+      "unit": "$",
+      "precision": 0
+    },
+    {
+      "id": "tasa_efectiva",
+      "label": "Tasa impositiva efectiva",
+      "unit": "%",
+      "precision": 1
+    },
+    {
+      "id": "retension_mensual_estimada",
+      "label": "Retención mensual estimada (arrendatario)",
+      "unit": "$",
+      "precision": 0,
+      "conditional": true
+    },
+    {
+      "id": "renta_neta_mensual",
+      "label": "Renta neta mensual (después impuesto)",
+      "unit": "$",
+      "precision": 0
+    },
+    {
+      "id": "analisis_regimen",
+      "label": "Comparativa régimen simplificado",
+      "type": "object",
+      "properties": {
+        "regimen_simplificado_impuesto": {
+          "unit": "$",
+          "precision": 0
+        },
+        "regimen_efectivo_impuesto": {
+          "unit": "$",
+          "precision": 0
+        },
+        "diferencia": {
+          "unit": "$",
+          "precision": 0
+        },
+        "regimen_recomendado": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa tributación de arriendos en Chile se rige por la Ley de Renta (artículos 17-21, DL 824). El arrendador debe declarar en régimen de **renta efectiva** (ingresos reales − gastos comprobables).\n\n### Fórmula base\n\n```\nRenta Imponible = Arriendo Anual − Gastos Deducibles\nImpuesto Renta = Renta Imponible × Tasa Tramo Progresivo 2026\n```\n\n### Exención DFL2 (Viviendas)\n\nViviendas urbanas ≤140 m² o rurales ≤180 m² están **exentas 100% primeros 3 años**, siempre que:\n- Certificado SII emitido\n- Ocupante es persona natural (no empresa)\n- No supera limite superficie\n\nDespués año 3: tributación normal.\n\n### Gastos Deducibles\n\n1. **Intereses hipotecarios**: 100% deducibles (con certificado banco)\n2. **Contribuciones municipales**: Íntegras\n3. **Seguros incendio/robo**: Íntegros\n4. **Mantenimiento/reparación**: Hasta 10% arriendo anual máximo\n5. **Administración**: Si contrata inmobiliaria (comprobada)\n6. **Servicios básicos**: Si corre por cuenta propietario\n7. **Otros**: Gastos efectivamente necesarios con comprobante\n\n**Limitante**: Gastos totales no pueden superar arriendo bruto.\n\n### Tramos Impuesto Renta 2026 (Chile)\n\n| Renta Anual ($) | Tasa Base | Crédito |\n|---|---|---|\n| Hasta 17.030.840 | 0% | — |\n| 17.030.841 - 23.885.760 | 4% | 681.234 |\n| 23.885.761 - 42.183.120 | 8% | 1.512.863 |\n| 42.183.121 - 60.480.480 | 13.5% | 3.897.813 |\n| 60.480.481 - 85.672.800 | 23% | 10.253.424 |\n| 85.672.801 - 154.617.120 | 30.4% | 15.805.056 |\n| Sobre 154.617.121 | 45% | 44.866.812 |\n\n+ **Adicional municipal** según comuna (1-2,75%).\n\n### Retención Arrendatario\n\nArrendatario retiene **10%** ingreso bruto arriendo (o tasa según contrato), mensuales dentro plazo legal.\n\n## Ejemplo\n\n**Datos**:\n- Arriendo: $1.500.000 mensual\n- Vivienda DFL2: Sí (año 2 exención)\n- Gastos anuales: $2.000.000 (mantenimiento, seguros, contribuciones)\n- Intereses hipoteca: $600.000 anuales\n\n**Cálculo**:\n\n```\nArriendo anual:        $18.000.000\nMenos gastos:           −$2.600.000 (2M + 600K)\nRenta imponible:       $15.400.000\nExención DFL2 (año 2):  $0 (exenta 100%)\nRenta gravable:        $0\nImpuesto renta:        $0\n```\n\nSi año 4 (sin exención):\n\n```\nRenta imponible:       $15.400.000\nTasa tramo (8%):       × 8%\nImpuesto bruto:        $1.232.000\nCrédito:              −$1.512.863 → $0 (tope)\nRetenciones (10% × 12): $1.800.000\nSaldo a favor:         $1.800.000\n```\n\n## Régimen Simplificado vs Efectivo\n\nArrendador puede optar régimen simplificado: **20% ingresos brutos = impuesto** (sin deducir gastos).\n\nRecomendación:\n- **Renta efectiva**: Si gastos > 20% ingresos\n- **Régimen simplificado**: Si gastos < 20% ingresos\n\n## Limitaciones\n\n- **Gastos**: Deben ser comprobables (boleta/factura). SII audita arriendos frecuentemente.\n- **Deducción intereses**: Solo si deuda es para construcción/mejora propiedad.\n- **Renovación DFL2**: Debe solicitarse a SII antes vencer año 3.\n- **Pérdidas**: Pueden arrastrase 5 años fiscales (con límite anual 1.500 UTA).\n- **No deducibles**: Depreciación, cuota principal hipoteca, gastos personales.",
+  "faq": [
+    {
+      "q": "¿Qué ocurre al término de los 3 años de exención DFL2?",
+      "a": "Año 4 entra en tributación normal (renta efectiva o simplificada). El arrendador debe declarar íntegramente en formulario 22 (Renta 2 personas naturales). Puede solicitar renovación exención si sigue cumpliendo requisitos superficie."
+    },
+    {
+      "q": "¿Puedo deducir la cuota de hipoteca como gasto?",
+      "a": "No. Solo **intereses** son deducibles (comprobables con certificado banco). La cuota principal es amortización de deuda, no es gasto tributario. Sí puedes deducir seguros de desgravamen."
+    },
+    {
+      "q": "¿Qué sucede si tengo pérdida (gastos > ingresos)?",
+      "a": "Puedes compensar pérdidas contra otros ingresos 2026 (sueldos, dividendos). Si no los tienes, arrastras pérdida hasta 5 años siguientes. Límite anual: 1.500 UTA (unidad tributaria anual 2026 ≈ $65.844.480)."
+    },
+    {
+      "q": "¿La retención del 10% es final o anticipo de impuesto?",
+      "a": "Es **anticipo**. Se descuenta de impuesto renta final en declaración abril. Si retenciones superan impuesto, tienes saldo a favor (devolución o crédito años siguientes)."
+    },
+    {
+      "q": "¿Puedo cambiar de régimen renta efectiva a simplificado?",
+      "a": "Sí, pero **una sola vez** en el año tributario. Debes comunicar a SII antes 30 de junio para aplicar el año siguiente. Requiere formulario 29 (solicitud cambio régimen)."
+    },
+    {
+      "q": "¿Qué pasa si no declaro arriendo de una propiedad?",
+      "a": "SII cruza información con arriendos (retenciones arrendatario, contribuciones, hipotecas). Fiscalización agresiva sector arriendos. Multas: 20-100% de impuesto adeudado + intereses desde fecha vencimiento (0,5% mensual)."
+    },
+    {
+      "q": "¿Cómo se prueba gasto de mantenimiento y reparación?",
+      "a": "Con boleta o factura a nombre propiedad (o contratante si no disponible). Servicio técnico reparación, ferretería, pintores con factura. SII acepta hasta 10% arriendo anual sin auditoría; sobre eso puede pedir comprobantes adicionales."
+    },
+    {
+      "q": "¿El gasto de viaje a la propiedad es deducible?",
+      "a": "No. Gastos de administración personal (transporte, viajes) no son deducibles. Sí es deducible si contratas empresa inmobiliaria que realiza visitas (comisión comprobada)."
+    },
+    {
+      "q": "¿Cuándo debo declarar el arriendo: mensual o anual?",
+      "a": "**Anual obligatorio** en abril (Formulario 22). Las retenciones mensuales (10%) son anticipos. Algunos contribuyentes declaran estimación mensual para retenciones, pero liquidación es siempre abril."
+    },
+    {
+      "q": "¿Si alquilo amueblado, qué diferencia hay?",
+      "a": "Fiscalmente no hay diferencia (sigue siendo arriendo de bien raíz). Sí puedes deducir reposición de muebles/enseres como mantenimiento, pero depreciación activo fijo no aplica (propiedad raíz no se deprecia)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII - Guía Renta Arriendos 2026",
+      "url": "https://www.sii.cl/portales/basehome/basehome.html",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "DL 824 Ley de Renta - Artículos 17-21",
+      "url": "https://www.sii.cl/ayuda/diccionario/diccionario_tributario.htm",
+      "publisher": "Diario Oficial",
+      "date": "2025"
+    },
+    {
+      "name": "DFL2 1959 Viviendas - Exención 3 años",
+      "url": "https://bcn.bcn.cl/leyes/xml/decreto-fuerza-ley/1959-07-02/d010202403.xml",
+      "publisher": "Biblioteca Congreso Nacional",
+      "date": "2026"
+    },
+    {
+      "name": "Circular SII Retenciones Arriendos 2026",
+      "url": "https://www.sii.cl/circulares/",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "UTA 2026 - Unidad Tributaria Anual",
+      "url": "https://www.sii.cl/valores_sii/uta/uta2026.html",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII Servicio de Impuestos Internos Chile",
+    "sourceUrl": "https://www.sii.cl/",
+    "updateType": "manual",
+    "notes": "Tramos impuesto renta, UTA, tasas adicionales municipales, límites deducción gastos actualizados anualmente enero. Exención DFL2 vigente conforme decreto SII 2026."
+  },
+  "lastReviewed": "2026-04-28"
+}

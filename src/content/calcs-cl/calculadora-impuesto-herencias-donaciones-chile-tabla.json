@@ -1,0 +1,238 @@
+{
+  "slug": "calculadora-impuesto-herencias-donaciones-chile-tabla",
+  "title": "Calculadora Impuesto Herencias y Donaciones Chile 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Impuesto a Herencias y Donaciones Chile",
+  "description": "Calcula el impuesto a herencias y donaciones en Chile 2026 según Ley 16.271. Tarifa progresiva 1-25% por parentesco. Simula exenciones y descuentos legales.",
+  "category": "impuestos",
+  "audience": "CL",
+  "icon": "📜",
+  "formulaId": "impuesto-herencias-donaciones-chile-tabla",
+  "intro": "El impuesto a herencias y donaciones en Chile (Ley 16.271) grava la transmisión de bienes entre vivos o por causa de muerte. La tarifa varía entre 1% y 25% según el grado de parentesco con el causante y el monto heredado. Cónyuges e hijos gozan de tarifas reducidas y exenciones especiales como la vivienda hereditaria hasta $2.000 UTA.",
+  "keyTakeaway": "Herencia de $50.000.000 para hijo: impuesto ~$2.000.000-3.000.000 (4-6%). Cónyuge: exento total. Hermano: ~$7.500.000 (15%). Consulta SII para bienes y deudas hereditarias.",
+  "useCases": [
+    "Estimar cuota de impuesto al recibir herencia de ascendientes o descendientes",
+    "Comparar obligación tributaria según parentesco (cónyuge, hijo, hermano, otros)",
+    "Calcular beneficio de exención de vivienda hereditaria (hasta $2.000 UTA)",
+    "Proyectar impuesto en donaciones en vida con descuentos por antigüedad",
+    "Evaluar descuento por impuestos pagados en el exterior (bienes raíces)"
+  ],
+  "fields": [
+    {
+      "id": "monto_herencia",
+      "label": "Monto de la herencia/donación",
+      "type": "number",
+      "placeholder": "50000000",
+      "hint": "Valor total bruto de bienes heredados (pesos chilenos)",
+      "required": true,
+      "min": 0,
+      "step": 100000
+    },
+    {
+      "id": "parentesco",
+      "label": "Grado de parentesco con causante",
+      "type": "select",
+      "options": [
+        {
+          "value": "conyuge",
+          "label": "Cónyuge"
+        },
+        {
+          "value": "hijo_descendiente",
+          "label": "Hijo o descendiente directo"
+        },
+        {
+          "value": "padre_abuelo",
+          "label": "Padre, madre, abuelo/a"
+        },
+        {
+          "value": "hermano",
+          "label": "Hermano/a"
+        },
+        {
+          "value": "tio_sobrino",
+          "label": "Tío/sobrino o prima/o hermano"
+        },
+        {
+          "value": "otro_pariente",
+          "label": "Otro pariente consanguíneo"
+        },
+        {
+          "value": "no_pariente",
+          "label": "No pariente (tercero)"
+        }
+      ],
+      "required": true,
+      "hint": "Afecta la tarifa aplicable"
+    },
+    {
+      "id": "es_donacion",
+      "label": "¿Es una donación en vida?",
+      "type": "checkbox",
+      "hint": "Marcá si se trata de un regalo en vida vs. herencia post-mortem",
+      "default": false
+    },
+    {
+      "id": "años_donacion",
+      "label": "Años desde la donación (si aplica)",
+      "type": "number",
+      "placeholder": "0",
+      "hint": "Para donaciones: años transcurridos (máx. 5 años aplica 5% descuento anual)",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "conditional": "es_donacion"
+    },
+    {
+      "id": "vivienda_hereditaria",
+      "label": "¿Incluye vivienda hereditaria única?",
+      "type": "checkbox",
+      "hint": "Exención hasta $2.000 UTA si es habitación principal heredada",
+      "default": false
+    },
+    {
+      "id": "deuda_herencia",
+      "label": "Deudas o cargas hereditarias",
+      "type": "number",
+      "placeholder": "0",
+      "hint": "Hipotecas, impuestos, gastos funerarios (rebajan base imponible)",
+      "min": 0,
+      "step": 100000
+    }
+  ],
+  "outputs": [
+    {
+      "id": "base_imponible",
+      "label": "Base imponible",
+      "format": "currency",
+      "hint": "Monto heredado menos exenciones y deudas"
+    },
+    {
+      "id": "tarifa_aplicada",
+      "label": "Tarifa aplicable",
+      "format": "percentage",
+      "hint": "Según parentesco y tramo de renta"
+    },
+    {
+      "id": "cuota_impuesto",
+      "label": "Cuota de impuesto a pagar",
+      "format": "currency",
+      "highlight": true,
+      "hint": "Impuesto líquido antes de descuentos"
+    },
+    {
+      "id": "descuento_donacion",
+      "label": "Descuento por antigüedad donación",
+      "format": "currency",
+      "hint": "5% anual hasta 5 años (donaciones en vida)"
+    },
+    {
+      "id": "exencion_vivienda",
+      "label": "Exención vivienda hereditaria aplicada",
+      "format": "currency",
+      "hint": "Hasta $2.000 UTA (~$60.880.000 en 2026)"
+    },
+    {
+      "id": "impuesto_neto",
+      "label": "Impuesto neto a pagar",
+      "format": "currency",
+      "highlight": true,
+      "hint": "Cuota menos descuentos y exenciones"
+    },
+    {
+      "id": "tasa_efectiva",
+      "label": "Tasa efectiva sobre herencia bruta",
+      "format": "percentage",
+      "hint": "Impuesto neto / monto original heredado"
+    },
+    {
+      "id": "observacion",
+      "label": "Observación legal",
+      "format": "text",
+      "hint": "Notas sobre beneficios o limitaciones aplicadas"
+    }
+  ],
+  "explanation": "## Cómo se calcula el impuesto a herencias y donaciones\n\nEl impuesto a herencias y donaciones en Chile está regulado por la **Ley 16.271** (1965) y modificaciones posteriores. El gravamen es progresivo y depende de tres factores: **monto heredado, grado de parentesco** y **tipo de transferencia** (herencia vs. donación).\n\n### Fórmula general\n\n**Impuesto = Base Imponible × Tarifa** (después de exenciones y descuentos)\n\nDónde:\n- **Base Imponible** = Monto heredado − Exenciones − Deudas hereditarias\n- **Exenciones**: Cónyuge (100%), vivienda única (hasta $2.000 UTA), bienes corporales muebles (hasta cierto monto)\n- **Tarifa**: Varía de 1% a 25% según parentesco (ver tabla)\n\n### Tabla de tarifas por parentesco (2026)\n\n| Parentesco | Tarifa base | Rango de aplicación |\n|:---|---:|---:|\n| **Cónyuge** | **0%** | Exento total |\n| **Hijo/descendiente** | **1-4%** | Progresiva por tramos de renta |\n| **Padre/madre/abuelo** | **5-15%** | Según monto y situación |\n| **Hermano/a** | **5-25%** | Tarifa más alta entre parientes |\n| **Tío/sobrino/primo** | **8-25%** | Según grado de consanguinidad |\n| **No pariente** | **25%** | Tasa plana máxima |\n\n**Nota**: SII publica anualmente las UTA (Unidad Tributaria Anual) y UTM (Unidad Tributaria Mensual) que actualizan los tramos.\n\n### Ejemplo práctico\n\n**Caso 1: Herencia de hijo**\n- Monto bruto: $50.000.000\n- Parentesco: Hijo\n- Deudas hipotecarias: $5.000.000\n- Vivienda hereditaria: No\n- Base imponible: $45.000.000\n- Tarifa aplicada: 4% (tramo medio para descendiente directo)\n- **Cuota: $1.800.000**\n- Tasa efectiva: 3,6% sobre heredado bruto\n\n**Caso 2: Donación en vida de hermano con antigüedad**\n- Monto: $30.000.000\n- Parentesco: Hermano\n- Años desde donación: 3 años → descuento acumulado 15% (5% × 3)\n- Tarifa aplicada: 15% (hermano)\n- Cuota sin descuento: $4.500.000\n- Descuento por antigüedad: $675.000 (15%)\n- **Impuesto neto: $3.825.000**\n\n### Exenciones especiales\n\n1. **Cónyuge**: Exención total (0% de impuesto)\n2. **Vivienda hereditaria única**: Exenta hasta $2.000 UTA (~$60.880.000 equivalente 2026)\n3. **Bienes muebles corporales**: Ciertos montos exentos según legislación\n4. **Descuento donación antigüedad**: 5% anual hasta máximo 5 años (solo donaciones en vida)\n5. **Impuestos pagados en el exterior**: Descuento proporcional sobre bienes raíces en otro país\n\n### Limitaciones y consideraciones\n\n- **Plazo para pagar**: 12 meses desde aceptación de herencia (excepto cónyuge e hijos menores)\n- **Bienes raíces**: Sujetos a regulaciones especiales del Registro Conservador\n- **Donaciones irrevocables**: Deben inscribirse en Registro Público de Donaciones SII\n- **Deudas hereditarias**: Disminuyen base (hipotecas, créditos, impuestos del causante)\n- **Ausencia de voluntad del fallecido**: Sucesión intestada sigue orden legal (cónyuge, hijos, ascendientes)\n- **Conflicto de leyes**: Si heredero residente en el exterior, aplican tratados tributarios Chile-País de origen\n\n## Proceso tributario\n\n1. Aceptación de herencia (plazo 6 meses desde muerte)\n2. Tasación o avalúo de bienes (por perito o SII)\n3. Cálculo base imponible por cada heredero\n4. Declaración en Formulario 1826 ante SII (si impuesto ≥ $4.000.000 aprox.)\n5. Pago dentro de 12 meses o acuerdo de cuotas\n\n**Fuente normativa**: SII - Impuesto a Herencias y Donaciones, Ley 16.271 modificada.",
+  "faq": [
+    {
+      "q": "¿Cuál es la exención para el cónyuge heredero?",
+      "a": "El cónyuge sobreviviente está exento de impuesto a herencias y donaciones en Chile. No paga ninguna cuota. Solo debe cumplir requisitos legales (matrimonio válido al momento de la muerte)."
+    },
+    {
+      "q": "¿Qué es la vivienda hereditaria y hasta cuánto se exenta?",
+      "a": "Es la casa habitación principal del causante. Se exenta hasta 2.000 UTA de valor (~$60.880.000 en 2026). Debe ser única, destinada a residencia personal, y heredada por cónyuge o descendientes."
+    },
+    {
+      "q": "¿Cómo afectan las deudas del causante al impuesto?",
+      "a": "Las deudas hereditarias (hipotecas, préstamos, impuestos adeudados del fallecido) se restan de la base imponible. Reducen el monto sobre el cual se calcula el impuesto a herederos."
+    },
+    {
+      "q": "¿Las donaciones en vida tienen impuesto diferente?",
+      "a": "Sí. Las donaciones en vida se gravan con la misma tarifa por parentesco, pero gozan de descuento por antigüedad: 5% anual hasta máximo 5 años de antigüedad desde que se otorgó."
+    },
+    {
+      "q": "¿Qué tarifa paga un hermano heredero?",
+      "a": "Hermanos y hermanas pagan tarifa progresiva de 5% a 25% según el monto heredado. Es más alta que descendientes directos (1-4%), pero menor que terceros no parientes (25% plano)."
+    },
+    {
+      "q": "¿Debo pagar impuesto si heredo dentro de 6 meses sin aceptar?",
+      "a": "No. Tienes plazo de 6 meses (desde defunción) para decidir si aceptas o repudias la herencia sin obligación tributaria. Transcurrido ese plazo, se presume aceptación tácita."
+    },
+    {
+      "q": "¿Cómo se calcula el impuesto si hay varios herederos?",
+      "a": "Cada heredero paga impuesto sobre su cuota parte (porcentaje de herencia que le corresponde). Las exenciones y tarifas se aplican individualmente según parentesco de cada uno con el causante."
+    },
+    {
+      "q": "¿Hay descuento si heredé bienes en otro país?",
+      "a": "Sí, hay descuento por impuestos pagados en el exterior sobre esos bienes. Chile firma tratados tributarios bilaterales para evitar doble imposición (especialmente bienes raíces)."
+    },
+    {
+      "q": "¿Quién declara y paga el impuesto a herencias?",
+      "a": "Cada heredero declara su parte en Formulario 1826 ante SII. El impuesto es personal e individual. El plazo es 12 meses desde aceptación de herencia (o acuerdo de cuotas con SII)."
+    },
+    {
+      "q": "¿Qué ocurre si no declaro una herencia?",
+      "a": "SII puede fiscalizar y aplicar multas, intereses y reajustes. Es obligatorio declarar herencias ≥ $4.000.000 aprox. Recomendación: asesorarse con contador o abogado tributarista."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII - Impuesto a Herencias y Donaciones",
+      "url": "https://www.sii.cl/contribuyentes/sucesiones/herencias.html",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "Ley 16.271 - Impuesto a las Herencias, Asignaciones por Causa de Muerte y Donaciones",
+      "url": "https://www.sii.cl/",
+      "publisher": "Biblioteca del Congreso Nacional",
+      "date": "2026"
+    },
+    {
+      "name": "SII - Valores UTA 2026 y aplicación tributaria",
+      "url": "https://www.sii.cl/valores-y-fechas/valores-uta.html",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "Código Civil Chileno - Libro III (Sucesiones)",
+      "url": "https://www.bcn.cl/",
+      "publisher": "Biblioteca del Congreso Nacional",
+      "date": "2026"
+    },
+    {
+      "name": "Circular SII sobre tasación de bienes y avalúos",
+      "url": "https://www.sii.cl/circulares",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII - Tarifas y UTA 2026",
+    "sourceUrl": "https://www.sii.cl",
+    "updateType": "manual",
+    "notes": "Tarifas por parentesco, valores UTA, tramos de renta y exenciones se actualizan anualmente. Se revisa también normativa de Ley 16.271 y tratados internacionales."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,256 @@
+{
+  "slug": "calculadora-pension-colombia-2026-edad-semanas-cotizadas",
+  "title": "Calculadora Pensión Colombia 2026 | Prima Media Colpensiones",
+  "h1": "Pensión Colombia 2026 (régimen prima media)",
+  "description": "Calcula tu pensión vejez 2026 en régimen prima media. Edad mínima: 62 hombres, 57 mujeres. 1300 semanas cotizadas. Fórmula oficial DIAN–Colpensiones.",
+  "category": "finanzas",
+  "audience": "CO",
+  "icon": "👴",
+  "formulaId": "pension-colombia-2026-edad-semanas-cotizadas",
+  "intro": "**Régimen Prima Media Colpensiones 2026**: calcula automáticamente tu pensión de vejez según edad, semanas cotizadas e ingreso base de liquidación (IBL). Aplica para afiliados nacidos antes de 1994. Requisitos: mínimo 62 años (hombres) o 57 años (mujeres), y 1300 semanas cotizadas. La pensión se calcula como porcentaje del IBL (55–79%) según semanas adicionales a las 1300 base.",
+  "keyTakeaway": "Pensión vejez 2026: porcentaje 55–79% del IBL promedio últimos 10 años. Mínimo legal: salario mínimo mensual vigente ($1.160.000 aprox.). Máximo: 5 SLM.",
+  "useCases": [
+    "Calcular pensión vejez próxima a jubilación (62/57 años)",
+    "Comparar pensión estimada vs. salario mínimo legal (RAIS 2026)",
+    "Validar incremento de semanas cotizadas impacto % pensión",
+    "Planificar financiero vejez con proyección oficial",
+    "Verificar elegibilidad prima media (edad + semanas)",
+    "Estimar ingreso post-jubilación régimen solidario"
+  ],
+  "fields": [
+    {
+      "id": "genero",
+      "label": "Género",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "masculino",
+          "label": "Hombre"
+        },
+        {
+          "value": "femenino",
+          "label": "Mujer"
+        }
+      ],
+      "help": "Edad mínima: 62 años (hombre), 57 años (mujer)"
+    },
+    {
+      "id": "edad_actual",
+      "label": "Edad actual (años)",
+      "type": "number",
+      "required": true,
+      "min": 45,
+      "max": 100,
+      "step": 1,
+      "help": "Edad en años cumplidos. Mínimo 62 (H) o 57 (M) para pensionarse."
+    },
+    {
+      "id": "semanas_cotizadas",
+      "label": "Semanas cotizadas",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 3000,
+      "step": 1,
+      "help": "Total de semanas aportadas a Colpensiones. Mínimo: 1300 semanas."
+    },
+    {
+      "id": "ibl_promedio_10_anos",
+      "label": "Ingreso Base Liquidación (IBL) promedio últimos 10 años ($)",
+      "type": "number",
+      "required": true,
+      "min": 1160000,
+      "max": 50000000,
+      "step": 10000,
+      "currency": "COP",
+      "help": "Promedio de ingresos últimos 120 meses cotizados a Colpensiones."
+    },
+    {
+      "id": "incluir_comparativa_rais",
+      "label": "Incluir comparativa con salario mínimo (RAIS 2026)",
+      "type": "checkbox",
+      "required": false,
+      "default": true,
+      "help": "Muestra diferencia pensión estimada vs. salario mínimo legal."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "elegible",
+      "label": "¿Elegible para pensión vejez?",
+      "type": "boolean",
+      "description": "Cumple edad mínima y semanas cotizadas (1300)."
+    },
+    {
+      "id": "motivo_inelegibilidad",
+      "label": "Motivo inelegibilidad (si aplica)",
+      "type": "text",
+      "description": "Razón por la que no cumple requisitos."
+    },
+    {
+      "id": "semanas_adicionales",
+      "label": "Semanas adicionales a 1300 base",
+      "type": "number",
+      "description": "Semanas cotizadas por encima del mínimo legal."
+    },
+    {
+      "id": "porcentaje_pension",
+      "label": "Porcentaje de pensión",
+      "type": "percentage",
+      "description": "% del IBL aplicable según semanas (55–79%)."
+    },
+    {
+      "id": "pension_mensual_bruta",
+      "label": "Pensión mensual bruta (estimada)",
+      "type": "currency",
+      "currency": "COP",
+      "description": "Monto mensual antes de retenciones (APORTE AFILIADO, EPS, AFICO si aplica)."
+    },
+    {
+      "id": "pension_minima_legal",
+      "label": "Pensión mínima legal 2026",
+      "type": "currency",
+      "currency": "COP",
+      "description": "Salario mínimo mensual vigente: $1.160.000 aprox."
+    },
+    {
+      "id": "pension_maxima_legal",
+      "label": "Pensión máxima legal 2026",
+      "type": "currency",
+      "currency": "COP",
+      "description": "Tope: 5 × salario mínimo ≈ $5.800.000."
+    },
+    {
+      "id": "pension_aplicable",
+      "label": "Pensión mensual aplicable",
+      "type": "currency",
+      "currency": "COP",
+      "description": "Pensión bruta ajustada a piso y techo legal."
+    },
+    {
+      "id": "diferencia_rais",
+      "label": "Diferencia vs. RAIS 2026",
+      "type": "currency",
+      "currency": "COP",
+      "description": "Pensión aplicable − salario mínimo. Positiva: supera RAIS. Negativa: subsidio estatal."
+    },
+    {
+      "id": "retencion_aporte_afiliado",
+      "label": "Retención aporte afiliado (4%)",
+      "type": "currency",
+      "currency": "COP",
+      "description": "Aporte obligatorio pensional 4% sobre pensión bruta."
+    },
+    {
+      "id": "retencion_salud",
+      "label": "Retención salud (EPS, variable)",
+      "type": "currency",
+      "currency": "COP",
+      "description": "Aporte EPS tipificado 8–12.5% (estimado 10%)."
+    },
+    {
+      "id": "pension_neta_estimada",
+      "label": "Pensión neta estimada (después retenciones)",
+      "type": "currency",
+      "currency": "COP",
+      "description": "Pensión aplicable − aporte afiliado − salud."
+    },
+    {
+      "id": "fondo_garantia_pensional",
+      "label": "Fondo de Garantía Pensional (FGP) aplica",
+      "type": "boolean",
+      "description": "Subsidio estatal si pensión calculada < salario mínimo."
+    },
+    {
+      "id": "anos_faltantes",
+      "label": "Años faltantes para requisitos (si aplica)",
+      "type": "text",
+      "description": "Tiempo para cumplir edad/semanas si aún no elegible."
+    }
+  ],
+  "explanation": "## Cómo se calcula la pensión vejez (Prima Media) 2026\n\n### Régimen Prima Media Colpensiones\n\nEl **Régimen Prima Media** es el sistema solidario donde Colpensiones invierte los aportes de afiliados activos para financiar pensiones. Aplica para afiliados cotizando antes de la Ley 100 (1994) o transitorios.\n\n### Requisitos mínimos 2026\n\n- **Edad mínima**: 62 años (hombres), 57 años (mujeres).\n- **Semanas cotizadas**: 1.300 semanas mínimo (aprox. 25 años).\n- **Ingreso Base Liquidación (IBL)**: promedio últimos 120 meses (10 años) de ingresos cotizados.\n\n### Fórmula oficial DIAN–Colpensiones\n\n```\nPorcentaje pensión = 55% + (Semanas adicionales − 1300) × 0,01%\n                    (máximo 79% con 2.800+ semanas)\n\nPensión bruta = IBL promedio 10 años × Porcentaje pensión\n\nPensión aplicable = MAX(Pensión bruta; Salario Mínimo Legal)\n                  = MIN(Pensión aplicable; 5 × Salario Mínimo)\n\nAporte afiliado retención = Pensión bruta × 4%\nRetención salud (EPS) ≈ Pensión bruta × 10% (variable 8–12.5%)\n\nPensión neta = Pensión aplicable − Aporte afiliado − Retención salud\n```\n\n### Ejemplo numérico 2026\n\n**Dato: Hombre, 62 años, 1.500 semanas cotizadas, IBL últimos 10 años = $3.500.000/mes.**\n\n1. **Semanas adicionales**: 1.500 − 1.300 = 200 semanas.\n2. **Porcentaje**: 55% + (200 × 0,01%) = 55% + 0,2% = **55,2%**.\n3. **Pensión bruta**: $3.500.000 × 55,2% = **$1.932.000**.\n4. **Comparativa RAIS 2026** ($1.160.000): $1.932.000 > $1.160.000 → **Pensión aplicable: $1.932.000**.\n5. **Retención aporte afiliado (4%)**: $1.932.000 × 4% = **$77.280**.\n6. **Retención salud (10%)**: $1.932.000 × 10% = **$193.200**.\n7. **Pensión neta estimada**: $1.932.000 − $77.280 − $193.200 = **$1.661.520**.\n\n| Concepto | Monto |\n|----------|-------|\n| IBL promedio 10 años | $3.500.000 |\n| Porcentaje pensión | 55,2% |\n| Pensión bruta | $1.932.000 |\n| Aporte afiliado 4% | $(77.280) |\n| Retención salud 10% | $(193.200) |\n| **Pensión neta** | **$1.661.520** |\n\n### Piso y techo legal 2026\n\n- **Pensión mínima**: Salario Mínimo Legal Mensual (SMLM) = aprox. **$1.160.000**.\n  - Si pensión calculada < SMLM → Fondo de Garantía Pensional (FGP) subsidia diferencia.\n- **Pensión máxima**: 5 × SMLM = aprox. **$5.800.000**.\n  - Si pensión calculada > techo → se limita a máximo legal.\n\n### Tramo de porcentajes según semanas\n\n| Semanas | Porcentaje | Semanas | Porcentaje |\n|---------|----------|---------|----------|\n| 1.300   | 55%      | 2.000   | 62% |\n| 1.400   | 56%      | 2.200   | 64% |\n| 1.600   | 58%      | 2.500   | 67% |\n| 1.800   | 60%      | 2.800+  | 79% |\n\n### Limitaciones y consideraciones\n\n1. **Transición SAFI**: Si afiliado se pasó a Régimen de Aporte Definido (AFP) entre 1994–2014, puede optar prima media en ciertos casos (valida con Colpensiones).\n2. **Complementario**: Pensión complementaria AFP si cotizó allá simultáneamente.\n3. **Actualización IBL**: El promedio se recalcula anualmente por DIAN con IPC.\n4. **Retenciones reales**: Varían por EPS, plan salud, AFICO, contribución desempleo; calculadora estima estándar.\n5. **Pensión por invalidez/sobrevivencia**: Fórmulas distintas, no aplica aquí.\n6. **Reforma futura**: Proyecto de ley 2026 puede modificar edad/semanas; consulta DIAN oficial.\n\n## Fuentes normativa\n\n- **Decreto 1507 de 2014** (Colpensiones): Régimen Prima Media, cálculo pensión vejez.\n- **Ley 100 de 1993**: Fundamento sistema pensional Colombia.\n- **Resolución DIAN 000066 de 2025**: SMLM y techo pensional 2026.\n- **Circular Colpensiones 2026**: Actualización semanas, IBL, FGP.",
+  "faq": [
+    {
+      "question": "¿Cuál es la edad mínima para pensionarse en prima media 2026?",
+      "answer": "62 años cumplidos si eres hombre; 57 años cumplidos si eres mujer. Ambos requieren mínimo 1.300 semanas cotizadas."
+    },
+    {
+      "question": "¿Qué son las semanas cotizadas?",
+      "answer": "Semanas aportadas a Colpensiones. Se cuentan semanalmente; 52 semanas ≈ 1 año. Por ej., 25 años = 1.300 semanas aprox."
+    },
+    {
+      "question": "¿Cómo se calcula el IBL promedio últimos 10 años?",
+      "answer": "Colpensiones suma ingresos cotizados últimos 120 meses y divide entre 120. Recibe extracto anual de Colpensiones o portales autoliquidación."
+    },
+    {
+      "question": "¿Si mi pensión es menor al salario mínimo, qué pasa?",
+      "answer": "Entra el Fondo de Garantía Pensional (FGP): el Estado subsidia la diferencia hasta alcanzar SMLM ($1.160.000 aprox. 2026)."
+    },
+    {
+      "question": "¿La pensión bruta incluye retenciones?",
+      "answer": "No. La pensión bruta es el % del IBL. Luego se restan aporte afiliado (4%), salud (EPS 8–12.5%), y otras retenciones para obtener neta."
+    },
+    {
+      "question": "¿Qué pasa si no tengo 1.300 semanas cotizadas?",
+      "answer": "No eres elegible para pensión vejez prima media. Opciones: cotizar más semanas, solicitar pensión por invalidez si aplica, o transitar a AFP."
+    },
+    {
+      "question": "¿Puedo pensionarme antes de los 62/57 años?",
+      "answer": "No en prima media. Sí hay pensión por invalidez o sobrevivencia (requisitos distintos). Consulta Colpensiones."
+    },
+    {
+      "question": "¿El porcentaje máximo de pensión es siempre 79%?",
+      "answer": "Sí. Con 2.800+ semanas alcanzas 79% del IBL promedio; adicionales no mejoran porcentaje."
+    },
+    {
+      "question": "¿Qué diferencia hay entre prima media y AFP?",
+      "answer": "Prima media (Colpensiones): solidario, el Estado invierte aportes afiliados. AFP: individual, tu fondo acumula inversiones. Tasas rentabilidad diferentes."
+    },
+    {
+      "question": "¿Se actualiza la pensión cada año?",
+      "answer": "Sí. Colpensiones ajusta anualmente por IPC (inflación). Tu extracto anual muestra proyección actualizada."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Colpensiones - Régimen Prima Media",
+      "url": "https://www.colpensiones.gov.co/pensionado/mi-pension-vejez",
+      "publisher": "Colpensiones",
+      "date": "2026"
+    },
+    {
+      "name": "DIAN - Salario Mínimo Legal 2026",
+      "url": "https://www.dian.gov.co/sitioweb/",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Decreto 1507 de 2014 - Colpensiones",
+      "url": "https://www.funcionpublica.gov.co/eva/gestornormativo/",
+      "publisher": "Función Pública Colombia",
+      "date": "2014"
+    },
+    {
+      "name": "Ley 100 de 1993 - Sistema Pensional",
+      "url": "https://www.secretariasenado.gov.co/senado/",
+      "publisher": "Secretaría Senado",
+      "date": "1993"
+    },
+    {
+      "name": "MinTrabajo - Fondo Garantía Pensional (FGP)",
+      "url": "https://www.mintrabajo.gov.co/",
+      "publisher": "Ministerio del Trabajo",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Colpensiones + DIAN Resolución salarial anual",
+    "sourceUrl": "https://www.colpensiones.gov.co",
+    "updateType": "manual",
+    "notes": "SMLM, techo pensional, fórmula porcentaje semanas, FGP tasa subsidio, tramos edad. Revisar anualmente por Decreto salarial enero."
+  },
+  "lastReviewed": "2026-04-28"
+}

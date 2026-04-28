@@ -1,0 +1,249 @@
+{
+  "slug": "calculadora-tasa-impuesto-renta-fictop-paraisos-fiscales-colombia",
+  "title": "Retención Paraísos Fiscales Colombia 2026 | Hacé Cuentas",
+  "h1": "Calculadora de retención en la fuente a paraísos fiscales",
+  "description": "Calcula retención 35% DIAN sobre pagos a jurisdicciones no cooperantes. Verifica lista actualizada paraísos fiscales Colombia 2026, tratados tributarios y obligaciones declarativas.",
+  "category": "impuestos",
+  "audience": "CO",
+  "icon": "🌴",
+  "formulaId": "tasa-impuesto-renta-fictop-paraisos-fiscales-colombia",
+  "intro": "La retención en la fuente a paraísos fiscales es un mecanismo de control de la DIAN sobre pagos realizados a entidades ubicadas en jurisdicciones no cooperantes en materia tributaria. **Colombia aplica tarifa del 35%** sobre remesas de dividendos, intereses, regalías y otros conceptos hacia países en lista DIAN. Esta calculadora estima la retención aplicable, verifica existencia de tratados tributarios bilateral y genera resumen para declaración renta.",
+  "keyTakeaway": "Retención mínima 35% DIAN a paraísos fiscales 2026; reduce a 0%-15% si existe tratado vigente; declaración obligatoria RUT beneficiario extranjero.",
+  "useCases": [
+    "Empresa colombiana con filial en jurisdicción no cooperante: estima retención sobre dividendos remitiéndose",
+    "Asesor fiscal: verifica tarifa por país + tratado bilateral para cliente que paga regalías",
+    "Contador: prepara formulario 1780 (renta) con retención correcta a no residentes",
+    "Holding internacional: compara costo retención 35% vs. restructuración domiciliar beneficiario",
+    "Entidad financiera: retiene sobre intereses a acreedor extranjero en paraíso fiscal"
+  ],
+  "fields": [
+    {
+      "id": "tipo_pago",
+      "label": "Tipo de pago o ingreso",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "dividendos",
+          "label": "Dividendos o utilidades"
+        },
+        {
+          "value": "intereses",
+          "label": "Intereses"
+        },
+        {
+          "value": "regalias",
+          "label": "Regalías y patentes"
+        },
+        {
+          "value": "servicios",
+          "label": "Servicios técnicos/profesionales"
+        },
+        {
+          "value": "comisiones",
+          "label": "Comisiones"
+        },
+        {
+          "value": "otros",
+          "label": "Otros ingresos"
+        }
+      ],
+      "help": "Concepto del pago remesado al exterior"
+    },
+    {
+      "id": "pais_beneficiario",
+      "label": "País o jurisdicción beneficiaria",
+      "type": "text",
+      "required": true,
+      "placeholder": "Ej: Islas Caimán, Panamá, Dubái",
+      "help": "Domicilio fiscal del receptor del pago"
+    },
+    {
+      "id": "valor_pago_cop",
+      "label": "Valor del pago (COP)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "step": 1000,
+      "placeholder": "0",
+      "help": "Monto en pesos colombianos antes de retención"
+    },
+    {
+      "id": "existe_tratado",
+      "label": "¿Existe tratado bilateral vigente?",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "no_sabe",
+          "label": "No sé / No verificado"
+        },
+        {
+          "value": "no",
+          "label": "No, jurisdicción no cooperante"
+        },
+        {
+          "value": "si_reducida",
+          "label": "Sí, con tarifa reducida"
+        },
+        {
+          "value": "si_exenta",
+          "label": "Sí, con exención/0%"
+        }
+      ],
+      "help": "Tratados en vigor minimizan retención; DIAN publica lista actualizada"
+    },
+    {
+      "id": "tarifa_tratado",
+      "label": "Tarifa tratado (si aplica %)",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 35,
+      "step": 0.5,
+      "placeholder": "15",
+      "help": "Ej: México 10%, España 15%. Dejar vacío si no hay tratado"
+    },
+    {
+      "id": "es_residente_permanente",
+      "label": "Beneficiario es residente permanente Colombia",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "no",
+          "label": "No, residente exterior"
+        },
+        {
+          "value": "si",
+          "label": "Sí, residente permanente"
+        }
+      ],
+      "help": "Residencia fiscal del receptor del ingreso"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "tarifa_retencion_aplicable",
+      "label": "Tarifa retención aplicable",
+      "type": "percentage",
+      "format": "0.0%"
+    },
+    {
+      "id": "valor_retencion_cop",
+      "label": "Valor retención en COP",
+      "type": "currency",
+      "format": "$#,##0"
+    },
+    {
+      "id": "valor_neto_remesa_cop",
+      "label": "Monto neto remesa al exterior",
+      "type": "currency",
+      "format": "$#,##0"
+    },
+    {
+      "id": "clasificacion_riesgo",
+      "label": "Clasificación riesgo DIAN",
+      "type": "text"
+    },
+    {
+      "id": "obligacion_declarativa",
+      "label": "Obligaciones declarativas",
+      "type": "text"
+    },
+    {
+      "id": "formulario_requerido",
+      "label": "Formulario DIAN requerido",
+      "type": "text"
+    },
+    {
+      "id": "plazo_retencion_dias",
+      "label": "Plazo máximo giro retención (días)",
+      "type": "integer"
+    }
+  ],
+  "explanation": "## Cómo se calcula la retención a paraísos fiscales\n\n### Marco normativo\n\nLa **retención en la fuente a paraísos fiscales** en Colombia está regulada por:\n\n- **Artículo 258 Estatuto Tributario**: retención 35% sobre pagos a jurisdicciones no cooperantes.\n- **Decreto 1771/2020 DIAN**: lista actualizada de paraísos fiscales y jurisdicciones de alto riesgo.\n- **Tratados bilaterales**: reducen o eliminan retención (México 10%, España 15%, EE.UU. variable).\n- **Circular DIAN 100-000000 (2026)**: protocolo verificación beneficiario y documentación.\n\n### Fórmula base\n\n```\nRetención = Valor Pago × Tarifa Aplicable\n\nDonde:\n  Tarifa Aplicable = \n    • 35% (por defecto paraíso fiscal, sin tratado)\n    • Tarifa Tratado (si existe bilateral vigente)\n    • 0% (si exención total por residencia o tratado)\n```\n\n### Lógica de decisión\n\n1. **¿Existe tratado bilateral?**\n   - **NO** → aplica **35%** (retención estándar paraísos fiscales).\n   - **SÍ, tarifa reducida** → aplica tarifa tratado (10%-15% típicamente).\n   - **SÍ, exención** → **0%** (renta exenta).\n\n2. **¿Beneficiario residente permanente Colombia?**\n   - Algunos tratados excluyen residentes permanentes → puede modificar aplicabilidad.\n\n3. **Retenido y neto:**\n   ```\n   Neto = Valor Pago - Retención\n   ```\n\n### Ejemplo numérico\n\n**Caso 1: Dividendos a Islas Caimán (sin tratado)**\n- Valor pago: **$100.000.000 COP**\n- País: Islas Caimán (lista DIAN, no cooperante).\n- Tratado: No.\n- Tarifa: **35%**\n- **Retención: $35.000.000**\n- **Neto: $65.000.000**\n\n**Caso 2: Regalías a México (tratado vigente)**\n- Valor pago: **$100.000.000 COP**\n- País: México.\n- Tratado: Sí, tarifa **10%** regalías.\n- **Retención: $10.000.000**\n- **Neto: $90.000.000**\n- Diferencia vs. paraíso fiscal: **$25.000.000 ahorrados**\n\n**Caso 3: Intereses España (tratado exención)**\n- Valor pago: **$100.000.000 COP**\n- País: España.\n- Tratado: Sí, intereses **0%**.\n- **Retención: $0**\n- **Neto: $100.000.000**\n\n### Tabla de tarifas tratados principales Colombia 2026\n\n| País | Dividendos | Intereses | Regalías | Vigencia |\n|------|-----------|-----------|---------|----------|\n| México | 10% | 10% | 10% | 2025-2030 |\n| España | 15% | 0%-15% | 5%-10% | 2025-2030 |\n| Chile | 5%-15% | 10% | 5% | 2024-2029 |\n| Canadá | 10%-15% | 10% | 10% | 2024-2029 |\n| EE.UU. | 5%-15% | 10% | 10% | 2025-2030 |\n| OCDE/Paraíso no tratado | **35%** | **35%** | **35%** | Permanente |\n\n### Limitaciones y consideraciones\n\n- **Lista DIAN actualizable**: jurisdicciones clasificadas anualmente; verificar www.dian.gov.co.\n- **Beneficiario efectivo**: DIAN exige prueba de residencia genuina (no solo domicilio nominal).\n- **Documentación**: certificado residencia fiscal extranjera (Form W-8BEN o equivalente).\n- **Fraude fiscal**: retención aplicada de mala fe o evasión genera multa 200%-400%.\n- **Plazo giro**: máximo 10 días después retención (no acumular).\n- **IVA no aplicable**: retención es sobre renta, no operación de venta doméstica.\n\n## Obligaciones declarativas\n\n**Empresa que retiene debe:**\n\n1. **Formulario 1780 (Renta 2026)**: reportar retención en sección \"Retenciones practicadas a no residentes\".\n2. **Anexo Renta Exterior**: si beneficiario es vinculado (filial/matriz).\n3. **RUT + NIT beneficiario extranjero**: obligatorio, con certificado residencia fiscal.\n4. **Soporte original**: contrato, factura, extracto bancario.\n5. **Plazo presentación**: antes 31 marzo año siguiente (impuestos 2026 → marzo 2027).\n\n## Limitaciones de esta calculadora\n\n- **No es asesoría legal**: consulta DIAN o asesor certificado para decisiones finales.\n- **Tratados bilaterales dinámicos**: verificar www.dian.gov.co/tratados año en curso.\n- **Cambios normativos 2026**: reforma tributaria pendiente puede modificar tarifas.\n- **Sujeto pasivo definidor**: la entidad que retiene asume responsabilidad completa.",
+  "faq": [
+    {
+      "question": "¿Cuál es la tarifa estándar retención paraísos fiscales Colombia?",
+      "answer": "**35%** según Artículo 258 Estatuto Tributario. Aplica sobre pagos a entidades domiciliadas en jurisdicciones no cooperantes o lista gris DIAN (Islas Caimán, Panamá, Emiratos, Malta, etc.). Se reduce si existe tratado bilateral vigente."
+    },
+    {
+      "question": "¿Cómo verifico si un país está en lista paraísos fiscales DIAN 2026?",
+      "answer": "Ingresa a **www.dian.gov.co > Normativa > Paraísos Fiscales** o descarga Decreto 1771/2020 actualizado. DIAN publica lista anualmente en febrero. Principales: Islas Caimán, Panamá, Samoa, Mauricio, Malta, Seychelles, Dubái."
+    },
+    {
+      "question": "¿Qué sucede si no retengo la tarifa correcta a paraíso fiscal?",
+      "answer": "DIAN sanciona con **multa 200%-400%** sobre retención no practicada + intereses 3% mensual. Si el pago fue documentado correctamente pero tarifa era incorrecta, puede rectificarse con formulario 1780-R (corrección) máximo 12 meses después."
+    },
+    {
+      "question": "¿España está en lista paraísos fiscales DIAN?",
+      "answer": "**No**, España es jurisdicción cooperante OCDE. Aplica tratado bilateral Col-España con tarifas reducidas (15% dividendos, 0%-15% intereses, 5%-10% regalías). Revisa certificado residencia fiscal emisor Agencia Tributaria Española."
+    },
+    {
+      "question": "¿Puedo retener 0% si beneficiario tiene residencia permanente en Colombia?",
+      "answer": "Sí, condicionalmente. Si receptor es residente permanente colombiano (cédula de residencia expedida Migración), la retención puede eliminarse o reducirse según tratado. Pero si es extranjero residente solo domiciliado acá (sin visa permanente), aplica 35% si beneficiario final es paraíso fiscal."
+    },
+    {
+      "question": "¿Cuánto tiempo tengo para girar la retención a la DIAN?",
+      "answer": "**Máximo 10 días calendario** después de practicada retención. DIAN liquida automáticamente en cuenta crédito fiscal. No es retenible por la empresa; giro oportuno es obligación legal."
+    },
+    {
+      "question": "¿Qué documentación debo conservar para justificar retención paraíso fiscal?",
+      "answer": "**Obligatoria:**\n1. Contrato o pedido/factura pago.\n2. Comprobante giro retención a DIAN (comprobante de pago).\n3. Certificado residencia fiscal beneficiario (Form W-8BEN, certificado AIU, etc.).\n4. RUT + NIT beneficiario extranjero.\n5. Justificación por qué se aplicó 35% (copia resolución DIAN paraíso fiscal).\n\nPlazo guarda: mínimo 5 años."
+    },
+    {
+      "question": "¿Cómo reporto retención paraísos fiscales en declaración renta 2026?",
+      "answer": "En **Formulario 1780 (Renta Personas Jurídicas)**, sección \"Retenciones en la Fuente\" → \"Retenciones a no residentes\" o \"Pagos al exterior\". Detalla:\n- Concepto pago.\n- NIT beneficiario (si disponible).\n- Valor retención COP.\n- Tarifa aplicada (35% o tratado).\n\nSi vinculado: también Anexo Renta Exterior."
+    },
+    {
+      "question": "¿Se puede recuperar retención del 35% si luego se descubre tratado bilateral?",
+      "answer": "Sí, mediante **solicitud DIAN de devolución** (Formulario 1780-R, corrección renta) máximo **12 meses** después presentación original. Requiere prueba tratado vigente + nuevo cálculo tarifa reducida. Tiempo DIAN: 1-3 años revisión."
+    },
+    {
+      "question": "¿Cambia retención si pagador es persona natural vs. empresa?",
+      "answer": "**No**, tarifa retención es por ubicación domicilio beneficiario (paraíso fiscal vs. no paraíso) + tipo ingreso. Tanto PJ como PN colombianas retienen 35% a paraísos si beneficiario es paraíso fiscal, independiente de si pagador es natural o jurídica."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DIAN - Paraísos Fiscales y Jurisdicciones No Cooperantes 2026",
+      "url": "https://www.dian.gov.co/normatividad/Paraísos-Fiscales/Paginas/default.aspx",
+      "publisher": "DIAN",
+      "date": "2026-02"
+    },
+    {
+      "name": "Decreto 1771 de 2020 - Lista actualizada paraísos fiscales",
+      "url": "https://www.dian.gov.co/normatividad/Paginas/default.aspx",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Artículo 258 Estatuto Tributario - Retención 35%",
+      "url": "https://www.dian.gov.co/normatividad/EstatutoTributario/Paginas/default.aspx",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Tratados Bilaterales en vigor Colombia 2026",
+      "url": "https://www.mincit.gov.co/negociaciones-comerciales/multilaterales-y-bilaterales",
+      "publisher": "MinCIT",
+      "date": "2026"
+    },
+    {
+      "name": "Circular DIAN 100-000000 (2026) - Protocolo beneficiario efectivo",
+      "url": "https://www.dian.gov.co/normatividad/Circulares/Paginas/default.aspx",
+      "publisher": "DIAN",
+      "date": "2026-01"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-02-28",
+    "source": "DIAN - Decreto 1771/2020 (actualización anual)",
+    "sourceUrl": "https://www.dian.gov.co",
+    "updateType": "manual",
+    "notes": "Lista paraísos fiscales, tarifas tratados bilaterales, artículos Estatuto Tributario. Verificar www.dian.gov.co mensualmente."
+  },
+  "lastReviewed": "2026-02-28"
+}

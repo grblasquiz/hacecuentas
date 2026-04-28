@@ -1,0 +1,273 @@
+{
+  "slug": "calculadora-pago-electronico-chile-transbank-comisiones-onepay-mach",
+  "title": "Calculadora Comisiones Pago Electrónico Chile 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Comisiones Pago Electrónico Chile",
+  "description": "Compara comisiones Transbank, OnePay, Mach y Mercado Pago. Estima costo mensual según giro y monto. Tarjeta débito/crédito. 2026.",
+  "category": "negocios",
+  "audience": "CL",
+  "icon": "💳",
+  "formulaId": "pago-electronico-chile-transbank-comisiones-onepay-mach",
+  "intro": "Calcula las comisiones mensuales según tu medio de pago electrónico. Transbank, OnePay (Banco Estado), Mach (BCI) y Mercado Pago aplican comisiones variables según el tipo de comercio y tarjeta. Esta herramienta estima el costo real de procesar pagos electrónicos para tu negocio, permitiéndote comparar opciones y elegir la más económica.",
+  "keyTakeaway": "Un comercio promedio paga entre $45,000–$180,000 mensuales en comisiones. Transbank: 1.5–3.5% según giro. OnePay y Mach: 2.5–3.2%. Mercado Pago: 3.5–4.99%.",
+  "useCases": [
+    "Pequeño comercio (almacén, farmacia) evaluando Transbank vs OnePay",
+    "Restaurante o café comparando comisiones por tarjeta débito/crédito",
+    "Tienda online decidiendo entre Transbank y Mercado Pago",
+    "Negocio de servicios (peluquería, taller) analizando costo mensual",
+    "Comercio eligiendo entre múltiples pasarelas para minimizar comisión"
+  ],
+  "fields": [
+    {
+      "id": "giro_comercio",
+      "label": "Giro comercial",
+      "type": "select",
+      "options": [
+        {
+          "value": "retail",
+          "label": "Retail/Almacén"
+        },
+        {
+          "value": "gastronomia",
+          "label": "Gastronomía/Café"
+        },
+        {
+          "value": "servicios",
+          "label": "Servicios (peluquería, taller)"
+        },
+        {
+          "value": "turismo",
+          "label": "Turismo/Hotel"
+        },
+        {
+          "value": "farmacia",
+          "label": "Farmacia"
+        },
+        {
+          "value": "educacion",
+          "label": "Educación"
+        },
+        {
+          "value": "ecommerce",
+          "label": "Tienda online"
+        }
+      ],
+      "required": true,
+      "help": "Define las comisiones base según SII clasificación"
+    },
+    {
+      "id": "monto_mensual_pesos",
+      "label": "Monto procesado mensual ($)",
+      "type": "number",
+      "placeholder": "2500000",
+      "min": 10000,
+      "max": 500000000,
+      "step": 50000,
+      "required": true,
+      "help": "Total en pesos que esperas procesar mensualmente"
+    },
+    {
+      "id": "porcentaje_debito",
+      "label": "% ventas con tarjeta débito",
+      "type": "slider",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 40,
+      "required": true,
+      "help": "Porcentaje de transacciones con tarjeta débito (resto crédito)"
+    },
+    {
+      "id": "medio_pago",
+      "label": "Pasarela de pago",
+      "type": "select",
+      "options": [
+        {
+          "value": "transbank",
+          "label": "Transbank (Plus, Flex)"
+        },
+        {
+          "value": "onepay",
+          "label": "OnePay (Banco Estado)"
+        },
+        {
+          "value": "mach",
+          "label": "Mach (BCI)"
+        },
+        {
+          "value": "mercadopago",
+          "label": "Mercado Pago"
+        },
+        {
+          "value": "comparar_todas",
+          "label": "Comparar todas"
+        }
+      ],
+      "required": true,
+      "help": "Selecciona tu pasarela o compara todas simultáneamente"
+    },
+    {
+      "id": "incluir_interes_financiamiento",
+      "label": "¿Incluir interés financiamiento crédito?",
+      "type": "radio",
+      "options": [
+        {
+          "value": true,
+          "label": "Sí (cuotas sin interés)"
+        },
+        {
+          "value": false,
+          "label": "No (pago contado)"
+        }
+      ],
+      "default": false,
+      "required": true,
+      "help": "Si aplica financiamiento en cuotas sin interés, suma ~1.5% comisión extra"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "comision_por_transaccion_debito",
+      "label": "Comisión tarjeta débito (%)",
+      "type": "percentage",
+      "precision": 2
+    },
+    {
+      "id": "comision_por_transaccion_credito",
+      "label": "Comisión tarjeta crédito (%)",
+      "type": "percentage",
+      "precision": 2
+    },
+    {
+      "id": "monto_comision_debito_mensual",
+      "label": "Comisión débito mensual ($)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "monto_comision_credito_mensual",
+      "label": "Comisión crédito mensual ($)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "comision_total_mensual",
+      "label": "Comisión total mensual ($)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "comision_promedio_ponderada",
+      "label": "Comisión promedio ponderada (%)",
+      "type": "percentage",
+      "precision": 2
+    },
+    {
+      "id": "comision_anual_estimada",
+      "label": "Costo anual estimado ($)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "comparativa_alternativas",
+      "label": "Comparativa otras pasarelas ($/mes)",
+      "type": "object",
+      "description": "Desglose mensual de Transbank, OnePay, Mach, Mercado Pago"
+    },
+    {
+      "id": "mejor_opcion",
+      "label": "Mejor opción económica",
+      "type": "text",
+      "description": "Pasarela con menor comisión mensual"
+    },
+    {
+      "id": "ahorro_potencial_mensual",
+      "label": "Ahorro si cambias a mejor opción ($)",
+      "type": "currency",
+      "precision": 0
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa comisión de pago electrónico es el **porcentaje que cobra cada pasarela por procesar transacciones**. Varía según:\n\n1. **Tipo de tarjeta**: débito (más barato, 0.5–1.5%) vs crédito (más caro, 2–4.99%)\n2. **Giro comercial**: retail 1.5–2%, gastronomía 2.5–3.5%, servicios 2–3%, ecommerce 3–3.5%\n3. **Volumen**: montos grandes pueden negociar comisiones menores\n4. **Financiamiento**: si ofreces cuotas sin interés, suma ~1.5% extra\n\n### Fórmula\n\n```\nComisión débito ($/mes) = Monto mensual × % débito × Comisión tarjeta débito\nComisión crédito ($/mes) = Monto mensual × % crédito × Comisión tarjeta crédito\nComisión total = Comisión débito + Comisión crédito\nComisión promedio = Comisión total / Monto mensual × 100%\nAhorro anual = (Comisión actual − Comisión mejor opción) × 12\n```\n\n### Tasas por pasarela (2026)\n\n| Pasarela | Débito | Crédito | Giro | Observaciones |\n|----------|--------|---------|------|---------------|\n| **Transbank Plus** | 0.5–1% | 2–3.5% | Según SII | Cobertura nacional, sin setup fee |\n| **Transbank Flex** | 0.6–1.2% | 2.2–3.2% | Ajustado | Plan flexible, comisión variable |\n| **OnePay** | 0.8–1.2% | 2.5–3.2% | Retail/servicios | Banco Estado, APPs integradas |\n| **Mach** | 0.9–1.3% | 2.6–3.5% | Similar OnePay | BCI, buena para pymes |\n| **Mercado Pago** | 1.5–2% | 3.5–4.99% | Ecommerce | Comisiones más altas, incluye billetera |\n\n### Ejemplo: Almacén con $2,500,000/mes\n\n**Supuestos:**\n- Monto mensual: $2,500,000\n- 40% débito, 60% crédito\n- Giro: Retail\n- Transbank Plus (comisión estándar)\n\n**Cálculo:**\n1. Comisión débito: $2,500,000 × 0.40 × 1% = $10,000\n2. Comisión crédito: $2,500,000 × 0.60 × 2.5% = $37,500\n3. **Total mensual: $47,500**\n4. Comisión promedio: 47,500 / 2,500,000 = **1.9%**\n5. Costo anual: $47,500 × 12 = **$570,000**\n\n**Comparativa:**\n- Transbank Plus: $47,500/mes\n- OnePay: $50,000/mes (+$2,500)\n- Mercado Pago: $62,500/mes (+$15,000)\n- **Ahorro eligiendo Transbank: $180,000/año vs Mercado Pago**\n\n## Limitaciones\n\n- **Negociación**: volúmenes >$10M/mes pueden renegociar tasas hasta −20%\n- **Cuotas sin interés**: comisión adicional ~1.5–2% si ofreces financiamiento\n- **Comisión fija**: algunas pasarelas cobran fee fijo mensual ($5k–$20k), no incluido\n- **Internacionales**: si aceptas tarjetas extranjeras, suma 0.5–1% más\n- **Retenciones**: cheques diferidos aplican comisión adicional 0.5–1%\n- **Actualización 2026**: tasas pueden cambiar. Consulta directamente con Transbank/SII",
+  "faq": [
+    {
+      "question": "¿Cuál es la comisión más barata en Chile?",
+      "answer": "Transbank Plus con tarjeta débito: **0.5–1%**. Mercado Pago es más caro (3.5–4.99%). La mejor opción depende tu giro y mix débito/crédito. Para retail con 40% débito: Transbank ahorra ~$180k/año vs Mercado Pago."
+    },
+    {
+      "question": "¿OnePay o Mach son realmente más baratos que Transbank?",
+      "answer": "No significativamente. Transbank: 1–3.5% según giro. OnePay: 1.2–3.2%. Mach: 1.3–3.5%. La diferencia es <0.5% en promedio. **Elige por integración, UX, o negociación**, no solo comisión."
+    },
+    {
+      "question": "¿Qué es financiamiento sin interés y cómo afecta la comisión?",
+      "answer": "Permite al cliente pagar en cuotas sin costo. **Suma ~1.5–2% de comisión extra**. Ejemplo: crédito normal 2.5%, con cuotas sin interés: 4%. Vale la pena si aumenta el ticket promedio >15%."
+    },
+    {
+      "question": "¿Hay comisión fija mensual además del porcentaje?",
+      "answer": "Sí, algunas pasarelas cobran fee fijo: Transbank $5k–$15k/mes, OnePay $0–$10k, Mach $5k–$12k. **Esta calculadora NO incluye fees fijos**. Consulta contrato para costo total real."
+    },
+    {
+      "question": "¿Cómo negoció mejores comisiones si vendo >$10M/mes?",
+      "answer": "**Transbank**: contacta ejecutiva comercial (010-1400 o sucursal local). **Mercado Pago**: solicita plan empresarial. Volúmenes >$20M pueden conseguir descuentos hasta −20%. Maneja con SII si eres empresa."
+    },
+    {
+      "question": "¿Qué pasarela recomiendan para tienda online?",
+      "answer": "**Transbank Plus (ecommerce)**: 3–3.5%. **Mercado Pago**: 3.5–4.99% pero integra billetera digital (+conversión). Para <$1M/mes: Mercado Pago. Para >$5M: Transbank Plus negocia descuento."
+    },
+    {
+      "question": "¿Se puede cambiar de pasarela sin costo?",
+      "answer": "Sí, en general no hay penalización. Avisa con 30 días. **Pero revisa contrato**: algunos tienen cláusula de permanencia de 6–12 meses. Transbank y OnePay típicamente son flexibles."
+    },
+    {
+      "question": "¿Cómo afecta el mix débito/crédito al costo?",
+      "answer": "Débito es 60–70% más barato que crédito. Si subes débito de 40% a 60%: ahorras ~$5k–$10k/mes (en $2.5M/mes). Promover débito en punto de venta reduce costo total."
+    },
+    {
+      "question": "¿Mercado Pago es opción para comercios sin línea Transbank?",
+      "answer": "Sí, es más accesible (sin requisitos bancarios estrictos). **Pero cuesta 40–50% más en comisión**. Vale si no tienes acceso a Transbank o quieres billetera digital integrada."
+    },
+    {
+      "question": "¿Cómo actualizo esta calculadora si cambian las tasas en 2026?",
+      "answer": "Revisa SII y Transbank (www.transbank.cl, www.onepay.cl) cada trimestre. Las tasas suelen cambiar enero o julio. Recalcula con nueva tasa para evaluar renegociación."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Transbank – Comisiones y tasas",
+      "url": "https://www.transbank.cl/productos-y-servicios/comercios/tarifario",
+      "publisher": "Transbank S.A.",
+      "date": "2026"
+    },
+    {
+      "name": "OnePay – Tarifario Comercios",
+      "url": "https://www.onepay.cl/comercios",
+      "publisher": "Banco Estado",
+      "date": "2026"
+    },
+    {
+      "name": "Mach – Comisiones BCI",
+      "url": "https://www.mach.cl/comercios",
+      "publisher": "BCI",
+      "date": "2026"
+    },
+    {
+      "name": "Mercado Pago – Tarifas Comercios",
+      "url": "https://www.mercadopago.cl/ayuda/commerc-tarifas",
+      "publisher": "Mercado Pago",
+      "date": "2026"
+    },
+    {
+      "name": "SII – Clasificación Giros Comerciales",
+      "url": "https://www.sii.cl/",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "quarterly",
+    "lastUpdated": "2026-04-28",
+    "source": "Transbank, OnePay, Mach, Mercado Pago, SII",
+    "sourceUrl": "https://www.transbank.cl",
+    "updateType": "manual",
+    "notes": "Tasas de comisión por pasarela y giro comercial. Se revisa enero, abril, julio, octubre. Fees fijos requieren verificación en contrato individual."
+  },
+  "lastReviewed": "2026-04-28"
+}

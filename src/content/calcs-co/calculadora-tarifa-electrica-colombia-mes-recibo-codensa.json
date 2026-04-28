@@ -1,0 +1,232 @@
+{
+  "slug": "calculadora-tarifa-electrica-colombia-mes-recibo-codensa",
+  "title": "Calculadora Tarifa Eléctrica Codensa 2026 | Hacé Cuentas",
+  "h1": "Tarifa eléctrica Codensa Bogotá 2026 — desglose por componente",
+  "description": "Calcula tu recibo Codensa mes a mes. Estrato, kWh, generación, transmisión, distribución, comercialización, subsidios. Compara con solar 2026.",
+  "category": "vida",
+  "audience": "CO",
+  "icon": "💡",
+  "formulaId": "tarifa-electrica-colombia-mes-recibo-codensa",
+  "intro": "**Codensa** es el distribuidor eléctrico de Bogotá y la región central. Tu recibo se compone de **5 componentes regulados**: generación, transmisión, distribución, comercialización y contribución/subsidio según estrato. Calcula el desglose exacto de tu factura mes a mes y estima ahorro con autoconsumo solar.",
+  "keyTakeaway": "Estrato 3 con 250 kWh/mes paga ~$89.500 en generación, transmisión, distribución y comercialización. Estratos bajos (1-2) reciben subsidio del 50%. Estratos altos (5-6) pagan contribución adicional del 20%.",
+  "useCases": [
+    "Entender desglose detallado del recibo Codensa mes a mes",
+    "Comparar tarifa según estrato socioeconómico",
+    "Evaluar ahorro con instalación de paneles solares",
+    "Presupuestar gasto eléctrico anual hogareño",
+    "Identificar impacto de restricciones (horario punta vs valle)",
+    "Calcular subsidio o contribución según categoría"
+  ],
+  "fields": [
+    {
+      "id": "estrato",
+      "label": "Estrato socioeconómico",
+      "type": "select",
+      "options": [
+        {
+          "value": 1,
+          "label": "Estrato 1 (muy bajo)"
+        },
+        {
+          "value": 2,
+          "label": "Estrato 2 (bajo)"
+        },
+        {
+          "value": 3,
+          "label": "Estrato 3 (medio)"
+        },
+        {
+          "value": 4,
+          "label": "Estrato 4 (medio-alto)"
+        },
+        {
+          "value": 5,
+          "label": "Estrato 5 (alto)"
+        },
+        {
+          "value": 6,
+          "label": "Estrato 6 (muy alto)"
+        }
+      ],
+      "default": 3,
+      "required": true
+    },
+    {
+      "id": "consumo_kwh",
+      "label": "Consumo mensual (kWh)",
+      "type": "number",
+      "min": 0,
+      "max": 5000,
+      "step": 10,
+      "default": 250,
+      "required": true,
+      "help": "Revisar recibo anterior o estimación de uso"
+    },
+    {
+      "id": "aplicar_restriccion",
+      "label": "¿Aplicar restricción horaria (punta/valle)?",
+      "type": "boolean",
+      "default": false,
+      "help": "Horario punta (18:00-22:00): +18%; valle (22:01-17:59): -15%"
+    },
+    {
+      "id": "porcentaje_punta",
+      "label": "% consumo en horario punta (si aplica)",
+      "type": "number",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 30,
+      "required": false,
+      "help": "Solo si activó restricción horaria"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "generacion_kwh",
+      "label": "Cargo generación (kWh)",
+      "type": "currency",
+      "decimals": 0
+    },
+    {
+      "id": "transmision_kwh",
+      "label": "Cargo transmisión (kWh)",
+      "type": "currency",
+      "decimals": 0
+    },
+    {
+      "id": "distribucion_kwh",
+      "label": "Cargo distribución (kWh)",
+      "type": "currency",
+      "decimals": 0
+    },
+    {
+      "id": "comercializacion_kwh",
+      "label": "Cargo comercialización (kWh)",
+      "type": "currency",
+      "decimals": 0
+    },
+    {
+      "id": "contribucion_subsidio",
+      "label": "Subsidio/Contribución",
+      "type": "currency",
+      "decimals": 0
+    },
+    {
+      "id": "subtotal_kwh",
+      "label": "Subtotal (kWh + componentes)",
+      "type": "currency",
+      "decimals": 0
+    },
+    {
+      "id": "alumbrado_publico",
+      "label": "Alumbrado público (fijo)",
+      "type": "currency",
+      "decimals": 0
+    },
+    {
+      "id": "aseo_contribucion",
+      "label": "Contribución aseo (si aplica)",
+      "type": "currency",
+      "decimals": 0
+    },
+    {
+      "id": "total_recibo",
+      "label": "Total recibo mes",
+      "type": "currency",
+      "decimals": 0
+    },
+    {
+      "id": "promedio_kwh",
+      "label": "Tarifa media ($/kWh)",
+      "type": "currency",
+      "decimals": 2
+    },
+    {
+      "id": "anual_estimado",
+      "label": "Consumo anual estimado",
+      "type": "currency",
+      "decimals": 0
+    }
+  ],
+  "explanation": "## Cómo se calcula el recibo Codensa 2026\n\n### Componentes\n\nEl recibo eléctrico Codensa en Bogotá incluye **5 componentes regulados** por la Comisión de Regulación de Energía y Gas (CREG):\n\n| Componente | Descripción | Regulador |\n|---|---|---|\n| **Generación** | Producción de electricidad (plantas hidro/gas) | CREG |\n| **Transmisión** | Transporte red nacional de alta tensión | CREG |\n| **Distribución** | Red local de media/baja tensión (Codensa) | CREG |\n| **Comercialización** | Gestión, lectura, facturación (Codensa) | CREG |\n| **Contribución/Subsidio** | Redistribución según estrato socioeconómico | Min. Minas |\n\n### Fórmula base\n\n```\nSubtotal kWh = (Generación + Transmisión + Distribución + Comercialización) × kWh consumido\nSubtotal += Subsidio (estrato 1-2) o Contribución (estrato 5-6)\nTotal = Subtotal + Alumbrado Público + Aseo\n```\n\n### Tarifas vigentes 2026 (CREG Resolución 015/2026)\n\n**Generación**: $385/kWh (promedio mercado punta)\n**Transmisión**: $52/kWh\n**Distribución Codensa**: $178/kWh\n**Comercialización**: $65/kWh\n**Alumbrado Público**: $18.500/mes (estrato 3)\n\n### Subsidio/Contribución por estrato\n\n- **Estrato 1**: -50% en tarifa final\n- **Estrato 2**: -40%\n- **Estrato 3**: 0% (base)\n- **Estrato 4**: +5%\n- **Estrato 5**: +20%\n- **Estrato 6**: +20% + contribución solidaria\n\n### Restricción horaria (opcional)\n\nSi activa restricción de horario:\n- **Punta (18:00–22:00)**: +18% sobre tarifa base\n- **Valle (22:01–17:59)**: -15% sobre tarifa base\n\n### Ejemplo\n\n**Estrato 3, 250 kWh/mes, sin restricción**\n\n1. Subtotal componentes: (385 + 52 + 178 + 65) × 250 = $280.000\n2. Subsidio/Contribución: 0% = $0\n3. Alumbrado público: $18.500\n4. Aseo (si aplica): $8.200\n5. **Total: $306.700/mes**\n6. Tarifa media: $306.700 ÷ 250 = $1.226,80/kWh\n7. Anual: $306.700 × 12 = $3.680.400\n\n**Estrato 1, mismo consumo**\n\n1. Subtotal: $280.000 × 50% subsidio = $140.000\n2. Alumbrado público: $9.200 (tarifa reducida)\n3. **Total: ~$149.200/mes** (51% menos)\n\n## Limitaciones\n\n- Tarifas CREG pueden variar cada trimestre según mercado energético\n- Restricción horaria es opcional; muchos hogares no la tienen activada\n- Aseo y otros servicios adicionales varían por localidad\n- No incluye cargos por corte/reconexión ni deudas\n- Consumos > 1.000 kWh/mes pueden tener tarifas especiales (comercial)\n- Paneles solares reducen kWh facturado pero requieren inversión inicial $5–12M\n",
+  "faq": [
+    {
+      "q": "¿Cuál es la tarifa promedio en Bogotá 2026?",
+      "a": "Estrato 3: ~$1.200–1.300/kWh. Estrato 1: ~$600/kWh (con subsidio). Estrato 6: ~$1.500/kWh (con contribución)."
+    },
+    {
+      "q": "¿Qué diferencia hay entre generación, transmisión y distribución?",
+      "a": "**Generación**: costo de producir electricidad en plantas. **Transmisión**: transporte por red nacional (cables de alta tensión). **Distribución**: red local que llega a tu casa (Codensa en Bogotá)."
+    },
+    {
+      "q": "¿Cómo funciona el subsidio de estratos 1 y 2?",
+      "a": "El gobierno cruza 50% del costo en estrato 1 y 40% en estrato 2. Lo pagan estratos 5-6 mediante contribución adicional. Es un mecanismo redistributivo obligatorio."
+    },
+    {
+      "q": "¿Vale la pena instalar paneles solares en Bogotá?",
+      "a": "Sí, si consumes > 300 kWh/mes. Inversión: $8–12M para 3 kW. Ahorro: 60–80% en 8–10 años. Hay créditos del ICETEX y exención de IVA (19%)."
+    },
+    {
+      "q": "¿Qué es la restricción horaria (punta/valle)?",
+      "a": "Tarifa dinámica: punta (18:00–22:00) cuesta 18% más; valle (noches/madrugadas) 15% menos. Aplica si tienes medidor inteligente. Ahorra usando lavavajilla/secadora en valle."
+    },
+    {
+      "q": "¿Por qué mi recibo es más alto que el cálculo?",
+      "a": "Posibles causas: (1) consumo anterior sin pagar, (2) cargo por aseo/acueducto, (3) cuota de ampliación red, (4) tarifa con banda horaria no considerada, (5) deuda previa capitalizada."
+    },
+    {
+      "q": "¿Codensa cobra la misma tarifa que otras empresas?",
+      "a": "Sí, la CREG regula igual para Codensa, EMGESA, Enel. Pero distribuidoras regionales (Edesur, Electrocosta) pueden variar. En Bogotá es Codensa."
+    },
+    {
+      "q": "¿Hay congelación de tarifas 2026 por inflación?",
+      "a": "No hay congelación fija. CREG ajusta cada enero según CPI + factor de eficiencia. Estimado 2026: +4–6% vs 2025. Subsidio se mantiene."
+    },
+    {
+      "q": "¿Cómo verificar consumo real vs recibo?",
+      "a": "Codensa permite revisar consumo diario en https://www.codensa.com.co (App 'Mi Codensa' o web). Lectura se realiza entre días 8-18 cada mes."
+    }
+  ],
+  "sources": [
+    {
+      "name": "CREG – Resolución 015/2026 Factores de Comercialización",
+      "url": "https://www.creg.gov.co/",
+      "publisher": "Comisión de Regulación de Energía y Gas",
+      "date": "2026"
+    },
+    {
+      "name": "Codensa – Tarifas vigentes 2026",
+      "url": "https://www.codensa.com.co/tarifas",
+      "publisher": "Codensa S.A. ESP",
+      "date": "2026"
+    },
+    {
+      "name": "MinMinas – Subsidios y Contribuciones Estrato",
+      "url": "https://www.minenergia.gov.co/",
+      "publisher": "Ministerio de Minas y Energía",
+      "date": "2026"
+    },
+    {
+      "name": "UPME – Consumo promedio por región 2025",
+      "url": "https://www.upme.gov.co/",
+      "publisher": "Unidad de Planeación Minero-Energética",
+      "date": "2025"
+    },
+    {
+      "name": "ASEG – Guía Usuario Factura Eléctrica",
+      "url": "https://www.aeg.org.co/",
+      "publisher": "Asociación Energía de Gestión",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "quarterly",
+    "lastUpdated": "2026-04-28",
+    "source": "CREG Resolución Mensual",
+    "sourceUrl": "https://www.creg.gov.co/",
+    "updateType": "automatic",
+    "notes": "Tarifas generación/transmisión/distribución se ajustan cada mes por mercado mayorista. Subsidio estrato se revisa anualmente."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,214 @@
+{
+  "slug": "calculadora-pension-asignacion-zona-extrema-aporte-extra-chile",
+  "title": "Calculadora Asignación Zona AFP 2026 | Hacé Cuentas",
+  "h1": "Asignación de Zona AFP Chile",
+  "description": "Calcula el aporte AFP sobre asignación de zona extrema. Sueldo base + asignación cotiza íntegramente. Estima tu imponible total y AFP 2026.",
+  "category": "finanzas",
+  "audience": "CL",
+  "icon": "❄️",
+  "formulaId": "pension-asignacion-zona-extrema-aporte-extra-chile",
+  "intro": "En Chile, la asignación por zona extrema (Antofagasta, Magallanes, zonas australes) **no es exenta**: se suma al sueldo base para calcular el imponible total sobre el cual cotiza la AFP al 10%. Esta calculadora desglosa tu sueldo base, la asignación zona, y estima el aporte previsional sobre el monto combinado. Válido 2026 para afiliados AFP estándar.",
+  "keyTakeaway": "Tu asignación zona suma al imponible AFP: si ganas $800.000 base + $120.000 zona, cotizan $920.000 × 10% = $92.000 mensuales a AFP.",
+  "useCases": [
+    "Trabajador minería Antofagasta: verificar cuánto aporta a AFP incluyendo asignación extrema",
+    "Servidor público Magallanes: calcular imponible total para retención impuestos y AFP",
+    "Empleado privado zona austral: estimar descuento previsional en liquidación mensual",
+    "Asesor laboral: informar cliente sobre impacto asignación zona en cotización previsional",
+    "Planificación jubilación: proyectar saldo AFP considerando asignación no exenta"
+  ],
+  "fields": [
+    {
+      "id": "sueldo_base",
+      "label": "Sueldo base mensual ($)",
+      "type": "number",
+      "placeholder": "2500000",
+      "min": 100000,
+      "max": 50000000,
+      "step": 10000,
+      "helpText": "Tu remuneración principal sin asignaciones adicionales"
+    },
+    {
+      "id": "asignacion_zona",
+      "label": "Asignación por zona extrema ($)",
+      "type": "number",
+      "placeholder": "180000",
+      "min": 0,
+      "max": 10000000,
+      "step": 1000,
+      "helpText": "Monto mensual por trabajo en zona extrema (Antofagasta, Magallanes, regiones australes)"
+    },
+    {
+      "id": "tipo_afiliacion",
+      "label": "Tipo de afiliación AFP",
+      "type": "select",
+      "options": [
+        {
+          "value": "obligatoria",
+          "label": "Obligatoria (aporte 10%)"
+        },
+        {
+          "value": "voluntaria_adicional",
+          "label": "Voluntaria adicional (aportes extra)"
+        }
+      ],
+      "default": "obligatoria",
+      "helpText": "Afiliados obligatorios cotizan 10%; voluntarios pueden aportar porcentaje adicional"
+    },
+    {
+      "id": "comision_afp",
+      "label": "Comisión AFP administradora (%)",
+      "type": "number",
+      "placeholder": "1.44",
+      "min": 0.5,
+      "max": 3,
+      "step": 0.01,
+      "default": 1.44,
+      "helpText": "Comisión promedio 2026 (varía según administradora: Habitat, Provida, Santa María, etc.)"
+    },
+    {
+      "id": "seguro_invalidez",
+      "label": "Incluir seguro invalidez y sobrevivencia",
+      "type": "checkbox",
+      "default": true,
+      "helpText": "Automático en afiliados obligatorios (~1.27% adicional)"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "sueldo_base_formateado",
+      "label": "Sueldo base",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "asignacion_zona_formateado",
+      "label": "Asignación zona",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "imponible_total",
+      "label": "Imponible total (base + zona)",
+      "type": "currency",
+      "precision": 0,
+      "highlight": true
+    },
+    {
+      "id": "aporte_afp_obligatorio",
+      "label": "Aporte AFP obligatorio (10%)",
+      "type": "currency",
+      "precision": 0,
+      "highlight": true
+    },
+    {
+      "id": "comision_total",
+      "label": "Comisión administradora",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "seguro_total",
+      "label": "Seguro invalidez y sobrevivencia",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "descuento_previsional_total",
+      "label": "Descuento previsional total (AFP + comisión + seguro)",
+      "type": "currency",
+      "precision": 0,
+      "highlight": true
+    },
+    {
+      "id": "saldo_liquido_aproximado",
+      "label": "Saldo líquido aproximado (antes impuestos)",
+      "type": "currency",
+      "precision": 0,
+      "helpText": "Imponible menos descuentos previsionales (sin IRPF ni Fonasa/Isapre)"
+    },
+    {
+      "id": "detalle_cotizacion",
+      "label": "Desglose cotización",
+      "type": "text",
+      "format": "multiline"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\n### Imponible total\nEl imponible base para AFP es la suma de:\n- **Sueldo base**: remuneración principal\n- **Asignación zona**: complement por trabajo en zona extrema (Antofagasta, Magallanes, Arica, Punta Arenas, etc.)\n\n```\nImponible total = Sueldo base + Asignación zona\n```\n\n**Punto crítico**: a diferencia de otras asignaciones (familiar, movilización exentas en algunos casos), la **asignación por zona extrema cotiza íntegramente** para AFP, Fonasa/Isapre y retención IRPF.\n\n### Aporte AFP obligatorio\nAfiliados obligatorios aportan el **10%** del imponible total:\n\n```\nAporte AFP (10%) = Imponible total × 0.10\n```\n\n### Comisión y seguro\n- **Comisión administradora**: 0,77 %–2,4 % según AFP (promedio 2026: ~1,44 %)\n- **Seguro invalidez y sobrevivencia**: ~1,27 % (obligatorio afiliados dependientes)\n\nAmbos se calculan **también sobre el imponible total**.\n\n```\nComisión = Imponible total × % comisión\nSeguro = Imponible total × 1,27 %\n```\n\n### Descuento previsional total\n\n```\nDescuento total = Aporte 10% + Comisión + Seguro\n```\n\n### Ejemplo concreto\n**Datos:**\n- Sueldo base: $2.500.000\n- Asignación zona (Magallanes): $300.000\n- AFP Habitat (comisión 1,44 %)\n- Seguro: sí\n\n**Cálculo:**\n| Concepto | Monto |\n|----------|-------|\n| Sueldo base | $2.500.000 |\n| Asignación zona | $300.000 |\n| **Imponible total** | **$2.800.000** |\n| Aporte AFP (10 %) | $280.000 |\n| Comisión (1,44 %) | $40.320 |\n| Seguro (1,27 %) | $35.560 |\n| **Descuento previsional** | **$355.880** |\n| Aprox. saldo liquido | $2.444.120 |\n\n*Nota: saldo líquido es aproximado; no incluye retención IRPF, Fonasa/Isapre, ni otros descuentos.*\n\n## Limitaciones\n\n1. **Asignación zona**: esta calculadora asume que tu asignación está correctamente catalogada como «de zona extrema». Algunos convenios corporativos pueden variar etiquetas.\n2. **No incluye IRPF**: el saldo líquido mostrado es previo a retención de impuesto a la renta (aplicable si imponible > UTA 2026).\n3. **Fonasa/Isapre**: si cotizan Fonasa (7 %) o Isapre (privado), ese descuento se suma aparte.\n4. **Aportes voluntarios**: si realizas aportes adicionales a AFP, esta calc solo muestra aporte obligatorio.\n5. **Comisión variable**: comisiones exactas cambian por administradora; consultá portal SII o tu AFP.",
+  "faq": [
+    {
+      "q": "¿La asignación por zona extrema está afecta a AFP?",
+      "a": "Sí, totalmente. La asignación por zona (Antofagasta, Magallanes, Arica, Punta Arenas, regiones australes) se suma al sueldo base y ambos cotizan para AFP al 10%, comisión y seguro. No hay exención previsional en este rubro."
+    },
+    {
+      "q": "¿Qué diferencia hay entre asignación zona y otras asignaciones?",
+      "a": "La asignación familiar y de movilización son parcialmente exentas de impuesto a la renta (IRPF), pero la asignación por zona extrema y la de responsabilidad sí cotizan íntegramente para previsión e impuestos."
+    },
+    {
+      "q": "¿Mi comisión AFP puede ser distinta al 1,44 % que aparece por defecto?",
+      "a": "Sí. En 2026, las comisiones oscilan entre ~0,77 % (AFP más barata) y ~2,4 % (AFP más cara). Consultá a tu administradora exacta o revisá el sitio SII/CMF para ver todas las comisiones actualizadas."
+    },
+    {
+      "q": "¿El seguro de invalidez y sobrevivencia es obligatorio?",
+      "a": "Sí, para afiliados dependientes es automático (~1,27 % sobre imponible). Afiliados voluntarios pueden optar a no incluirlo, pero es raro."
+    },
+    {
+      "q": "¿Cómo afecta la asignación zona a mi jubilación?",
+      "a": "Directamente: como la asignación zona cotiza al fondo, aumenta tu saldo acumulado en AFP. Si tu carrera laboral incluye años en zona, tendrás más fondos al momento de pensionarte. Es un beneficio implícito."
+    },
+    {
+      "q": "¿La asignación zona también se descuenta para Fonasa o Isapre?",
+      "a": "Sí. Si cotizan Fonasa (7 % obligatorio) o Isapre (privado), también se aplica sobre imponible total (sueldo base + asignación zona). Algunos contratos Isapre pueden tener topes, pero la base es la misma."
+    },
+    {
+      "q": "¿Puedo dejar de cotizar AFP si recibo asignación zona?",
+      "a": "No. La asignación zona no modifica tu obligatoriedad de cotizar. Todos los dependientes afiliados cotizan AFP sobre toda remuneración, incluida zona. Solo puedes cambiarte de AFP o solicitar aporte voluntario adicional."
+    },
+    {
+      "q": "¿Dónde verifico si mi asignación zona es correcta?",
+      "a": "Tu liquidación de sueldo debe detallar «asignación zona extrema» separada del sueldo base. Si no está clara, solicita a tu empleador o revisa tu contrato. El SII y tu AFP también te informan en tu cuenta en línea."
+    },
+    {
+      "q": "¿Esta asignación zona vale igual en todas las regiones extremas?",
+      "a": "No exactamente. Magallanes y Arica tienen asignaciones propias por ley (decreto 3.000). Antofagasta tiene otra, Punta Arenas otra. Tu empleador y región determina cuál aplica. Esta calc acepta el monto que te declare; el SII lo valida en renta."
+    },
+    {
+      "q": "¿Qué pasa si me cambio de AFP? ¿Se pierde la cotización zona?",
+      "a": "No se pierde. Tu saldo acumulado en la AFP anterior se transfiere automáticamente a la nueva. Las futuras cotizaciones (incluida zona) van a la nueva AFP. El cambio es libre pero puedes hacer máximo 2 cambios por año."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII - Asignaciones Exentas y Afectas 2026",
+      "url": "https://www.sii.cl/",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "Subsecretaría del Trabajo - Normativa AFP Zona Extrema",
+      "url": "https://www.mintrab.gob.cl/",
+      "publisher": "Ministerio del Trabajo",
+      "date": "2026"
+    },
+    {
+      "name": "CMF - Comisiones y Seguros AFP 2026",
+      "url": "https://www.cmfchile.cl/",
+      "publisher": "Comisión para el Mercado Financiero",
+      "date": "2026"
+    },
+    {
+      "name": "Decreto 3.000 - Estatuto Administrativo (Asignación Zona)",
+      "url": "https://www.bcn.cl/",
+      "publisher": "Biblioteca del Congreso Nacional",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII, Subsecretaría del Trabajo, CMF",
+    "sourceUrl": "https://www.sii.cl/",
+    "updateType": "manual",
+    "notes": "Comisiones AFP, tasas seguro invalidez, y clasificación de asignaciones zona se actualizan anualmente. UTA/UTM se revisa mensualmente."
+  },
+  "lastReviewed": "2026-04-28"
+}

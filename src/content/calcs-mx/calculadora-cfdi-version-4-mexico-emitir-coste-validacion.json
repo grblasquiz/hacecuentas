@@ -1,0 +1,217 @@
+{
+  "slug": "calculadora-cfdi-version-4-mexico-emitir-coste-validacion",
+  "title": "Costo CFDI 4.0 México 2026 | Emisión y Validación",
+  "h1": "Calculadora de costo CFDI 4.0 México: emisión, PAC y validación",
+  "description": "Calcula el costo de emisión de CFDI 4.0 en México 2026. Compara PAC autorizado ($0.50-2 por factura) vs SAT MIS Cuentas gratis (50 facturas/mes). Incluye sanciones por errores RFC.",
+  "category": "negocios",
+  "audience": "MX",
+  "icon": "📄",
+  "formulaId": "cfdi-version-4-mexico-emitir-coste-validacion",
+  "intro": "El CFDI 4.0 es la factura electrónica obligatoria en México desde enero 2022. El costo varía según el PAC (Proveedor Autorizado de Certificación) que uses o si aprovechas la opción gratuita del SAT con MIS Cuentas (máximo 50 facturas mensuales). Esta calculadora estima tu gasto anual en emisión de CFDI y compara opciones.",
+  "keyTakeaway": "PAC autorizado cuesta $0.50–$2 por CFDI; SAT MIS Cuentas es gratis hasta 50 facturas/mes (~$0 anual); excedentes PAC ~$600–$2,400/año si emites >50 facturas.",
+  "useCases": [
+    "Pequeño negocio: decidir entre PAC de bajo costo vs SAT MIS Cuentas gratuito",
+    "Comerciante con >50 facturas/mes: presupuestar costo PAC anual",
+    "Contador: asesorar cliente sobre opción más económica de emisión CFDI",
+    "Facturación B2B: validar impacto de sanciones por RFC inválido en CFDI",
+    "Pyme en transición: comparar migración a PAC vs opción SAT gratuita"
+  ],
+  "fields": [
+    {
+      "id": "facturas_mensuales",
+      "type": "number",
+      "label": "Facturas emitidas por mes",
+      "placeholder": "50",
+      "min": 1,
+      "max": 10000,
+      "step": 1,
+      "required": true,
+      "help": "Número promedio de CFDI que emites cada mes en México."
+    },
+    {
+      "id": "monto_promedio_cfdi",
+      "type": "number",
+      "label": "Monto promedio por CFDI ($)",
+      "placeholder": "5000",
+      "min": 0.01,
+      "max": 1000000,
+      "step": 100,
+      "required": true,
+      "help": "Valor medio de cada factura en pesos mexicanos (sin IVA o con)."
+    },
+    {
+      "id": "tipo_pac",
+      "type": "select",
+      "label": "Proveedor PAC elegido",
+      "options": [
+        {
+          "value": "sin_pac",
+          "label": "SAT MIS Cuentas (gratuito, máx. 50/mes)"
+        },
+        {
+          "value": "pac_bajo",
+          "label": "PAC bajo costo ($0.50/CFDI)"
+        },
+        {
+          "value": "pac_medio",
+          "label": "PAC medio ($1.00/CFDI)"
+        },
+        {
+          "value": "pac_alto",
+          "label": "PAC premium ($2.00/CFDI)"
+        }
+      ],
+      "required": true,
+      "help": "Selecciona tu opción de emisión. PAC = Proveedor Autorizado de Certificación."
+    },
+    {
+      "id": "errores_rfc_porcentaje",
+      "type": "number",
+      "label": "Porcentaje estimado de CFDI con RFC inválido (%)",
+      "placeholder": "0",
+      "min": 0,
+      "max": 100,
+      "step": 0.1,
+      "required": false,
+      "help": "% de facturas que podrían tener errores de RFC (sanción SAT: $500-$5,000 por infracción)."
+    },
+    {
+      "id": "meses_operacion",
+      "type": "number",
+      "label": "Meses de operación al año",
+      "placeholder": "12",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "required": false,
+      "help": "Meses en que efectivamente emites CFDI (default: 12)."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "costo_mensual_pac",
+      "label": "Costo mensual de emisión (PAC o SAT)",
+      "format": "currency",
+      "precision": 2,
+      "unit": "$"
+    },
+    {
+      "id": "costo_anual_pac",
+      "label": "Costo anual de emisión (PAC o SAT)",
+      "format": "currency",
+      "precision": 2,
+      "unit": "$"
+    },
+    {
+      "id": "facturas_sin_costo_sat",
+      "label": "Facturas gratis/mes (SAT MIS Cuentas límite)",
+      "format": "number",
+      "precision": 0
+    },
+    {
+      "id": "facturas_excedentes_mes",
+      "label": "Facturas excedentes/mes (requieren PAC)",
+      "format": "number",
+      "precision": 0
+    },
+    {
+      "id": "sancion_rfc_invalido_anual",
+      "label": "Sanción estimada por RFC inválido (anual)",
+      "format": "currency",
+      "precision": 2,
+      "unit": "$"
+    },
+    {
+      "id": "costo_total_anual",
+      "label": "Costo total anual (emisión + sanciones)",
+      "format": "currency",
+      "precision": 2,
+      "unit": "$"
+    },
+    {
+      "id": "recomendacion",
+      "label": "Recomendación",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula el costo CFDI 4.0 en México\n\nEl costo de emisión de CFDI 4.0 depende de tu volumen de facturas y la opción que elijas:\n\n### Fórmula principal\n\n**Costo mensual PAC** = Facturas mensuales × Tarifa PAC ($/CFDI)\n\n**Costo anual** = Costo mensual × Meses de operación\n\n**Facturas gratis SAT** = 50 por mes (límite MIS Cuentas)\n\n**Facturas excedentes** = max(0, Facturas mensuales − 50)\n\n**Sanción RFC inválido** = (Facturas anuales × % error) × Multa unitaria ($500−$5,000)\n\n**Costo total anual** = Costo emisión + Sanciones\n\n### Opciones disponibles en México 2026\n\n| Opción | Costo/CFDI | Límite mensual | Ideal para |\n|--------|-----------|---|---|\n| **SAT MIS Cuentas** | $0 (gratuito) | 50 facturas | Autónomos, pequeños negocios |\n| **PAC bajo costo** | $0.50 | Ilimitadas | Pymes con 50−200 facturas/mes |\n| **PAC medio** | $1.00 | Ilimitadas | Medianas empresas |\n| **PAC premium** | $2.00 | Ilimitadas | Grandes volúmenes + soporte |\n\n### Ejemplo\n\nEmites **80 facturas mensuales** con PAC de **$1.00/CFDI**:\n\n- Costo mensual: 80 × $1.00 = **$80**\n- Costo anual (12 meses): $80 × 12 = **$960**\n\nSi usaras **SAT MIS Cuentas** (gratuito 50/mes):\n\n- 50 facturas gratis\n- 30 facturas excedentes/mes requieren PAC: 30 × $1.00 = $30/mes\n- Costo anual: $30 × 12 = **$360** (vs $0 si emites ≤50)\n\n### Sanciones por errores de RFC\n\nSi el **5% de tus CFDI contiene RFC inválido** (80 facturas × 5% = 4 errores/mes):\n\n- Multa unitaria SAT: $500−$5,000 por infracción\n- Sanción estimada anual: 4 × 12 × $2,000 (promedio) = **$96,000**\n\n**→ Validar RFC antes de emitir es crítico.**\n\n### Limitaciones\n\n- Tarifa PAC puede variar según proveedor (incluye certificado digital, validación)\n- SAT MIS Cuentas: máximo 50 CFDI/mes; si excedes, necesitas PAC obligatoriamente\n- RFC inválido: sanción aplicable si SAT detecta inconsistencias en comprobante\n- CFDI 4.0 obligatorio desde 2022; versión 3.3 descontinuada\n- No incluye costo de certificado digital (RFC/FIEL) ~$0−$500/año según emisor",
+  "faq": [
+    {
+      "question": "¿Cuál es la diferencia entre SAT MIS Cuentas y un PAC?",
+      "answer": "**SAT MIS Cuentas** es la plataforma gratuita del SAT para emitir hasta 50 CFDI al mes sin costo. **PAC** (Proveedor Autorizado de Certificación) son empresas privadas que cobran por cada factura emitida (~$0.50−$2) pero sin límite de volumen. Elige SAT si emites ≤50/mes; elige PAC si emites más."
+    },
+    {
+      "question": "¿Qué pasa si emito más de 50 facturas/mes con SAT MIS Cuentas?",
+      "answer": "SAT bloqueará la emisión después de 50 CFDI en el mes. Deberás contratar un PAC para emitir el resto. No hay multa por superar el límite, pero las facturas no se generarán."
+    },
+    {
+      "question": "¿Cuál es la sanción por RFC inválido en CFDI?",
+      "answer": "SAT sanciona con $500−$5,000 por cada CFDI que contenga RFC incorrecto o inexistente. Si detecta 10 errores en un mes, la multa puede alcanzar $50,000. Valida siempre el RFC del cliente antes de emitir."
+    },
+    {
+      "question": "¿Incluye el cálculo el costo del certificado digital (FIEL)?",
+      "answer": "No. El certificado digital (RFC/Firma Electrónica Avanzada) se obtiene gratis en el SAT. Solo se usa en PAC premium u emisoras de alto volumen. Se asume disponible sin costo adicional."
+    },
+    {
+      "question": "¿Puedo cambiar de PAC durante el año?",
+      "answer": "Sí. No hay penalización por cambiar de PAC. Asegúrate de que el nuevo PAC valide correctamente tus CFDI y que no haya sobreposición de emisiones (cada RFC solo activo en un PAC a la vez)."
+    },
+    {
+      "question": "¿CFDI 4.0 es obligatorio en México?",
+      "answer": "Sí, desde el **1 de enero de 2022**. CFDI 3.3 está descontinuado. Todas las facturas electrónicas en México deben ser 4.0. El no cumplimiento genera multas de $2,500−$250,000 según SAT."
+    },
+    {
+      "question": "¿Qué información valida SAT en el RFC del CFDI?",
+      "answer": "SAT verifica: (1) RFC válido en el Padrón de Contribuyentes, (2) situación fiscal activa (no cancelado), (3) coherencia entre RFC y nombre/domicilio en comprobante. Errores tipográficos = sanción."
+    },
+    {
+      "question": "¿Hay descuento por volumen en PAC?",
+      "answer": "Algunos PAC ofrecen descuentos por >500 CFDI/mes (~$0.30−$0.70 por factura). Negocia directamente con tu proveedor PAC; esta calculadora usa tarifas estándar 2026."
+    },
+    {
+      "question": "¿Si emito 50 facturas exactas en SAT MIS Cuentas, pago algo?",
+      "answer": "No. SAT MIS Cuentas es completamente gratuito hasta 50 CFDI mensuales. No hay cuotas ocultas ni costo por validación. Solo necesitas RFC activo y contraseña SAT."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SAT - CFDI (Comprobante Fiscal Digital por Internet)",
+      "url": "https://www.sat.gob.mx/aplicacion/16709/consulta-el-catalogo-de-cfdi",
+      "publisher": "Servicio de Administración Tributaria",
+      "date": "2026"
+    },
+    {
+      "name": "SAT - Proveedores Autorizados de Certificación (PAC)",
+      "url": "https://www.sat.gob.mx/aplicacion/17053/directorio-de-pac-autorizados",
+      "publisher": "SAT",
+      "date": "2026"
+    },
+    {
+      "name": "SAT - MIS Cuentas (Emisión Gratuita CFDI)",
+      "url": "https://www.gob.mx/sat/articles/emite-tus-comprobantes-fiscales-de-manera-gratuita",
+      "publisher": "SAT",
+      "date": "2025"
+    },
+    {
+      "name": "SAT - Infracciones y Sanciones (RFC, CFDI)",
+      "url": "https://www.sat.gob.mx/aplicacion/16702/catalogo-de-infracciones-y-sanciones",
+      "publisher": "SAT",
+      "date": "2026"
+    },
+    {
+      "name": "Resolución Miscelánea Fiscal 2026 - CFDI 4.0",
+      "url": "https://www.sat.gob.mx/resolucion-miscelanea-fiscal",
+      "publisher": "SAT",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Servicio de Administración Tributaria (SAT) México",
+    "sourceUrl": "https://www.sat.gob.mx",
+    "updateType": "manual",
+    "notes": "Tarifas PAC y límites SAT MIS Cuentas (50/mes) vigentes 2026. Sanciones RFC según Catálogo de Infracciones SAT 2026. CFDI 4.0 obligatorio desde 2022."
+  },
+  "lastReviewed": "2026-04-28"
+}

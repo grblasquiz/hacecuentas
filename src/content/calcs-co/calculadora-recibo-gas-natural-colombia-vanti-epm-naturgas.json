@@ -1,0 +1,230 @@
+{
+  "slug": "calculadora-recibo-gas-natural-colombia-vanti-epm-naturgas",
+  "title": "Calculadora Recibo Gas Natural Colombia 2026 | Hacé Cuentas",
+  "h1": "Calculadora de recibo de gas natural domiciliario Colombia",
+  "description": "Calcula tu recibo mensual de gas natural en Colombia por estrato (Vanti Bogotá, EPM Medellín). Tarifa m3 + cargo fijo, subsidios estratos 1-3. 2026.",
+  "category": "vida",
+  "audience": "CO",
+  "icon": "🔥",
+  "formulaId": "recibo-gas-natural-colombia-vanti-epm-naturgas",
+  "intro": "El gas natural domiciliario en Colombia varía según tu **estrato socioeconómico**, el **distribuidor regional** (Vanti en Bogotá, EPM en Medellín, Naturgas en la Costa) y el **volumen consumido en m³**.\n\nLos estratos 1 a 3 reciben **subsidio directo** en la tarifa. Calcula aquí tu recibo mensual considerando cargo fijo, consumo variable y descuentos aplicables.",
+  "keyTakeaway": "Un hogar estrato 2 en Bogotá que consume 25 m³/mes paga ~$45,000–$55,000 mensuales; estrato 5 paga tarifa plena ~$85,000–$95,000.",
+  "useCases": [
+    "Presupuestar gasto mensual de gas en vivienda propia o arrendada",
+    "Comparar costo de gas natural vs. electricidad o GLP según estrato",
+    "Verificar factura recibida y detectar anomalías de consumo",
+    "Planificar ahorro energético por cambio de proveedores regionales",
+    "Conocer subsidios disponibles como usuario estrato bajo"
+  ],
+  "fields": [
+    {
+      "id": "estrato",
+      "label": "Estrato socioeconómico",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "1",
+          "label": "Estrato 1 (muy bajo)"
+        },
+        {
+          "value": "2",
+          "label": "Estrato 2 (bajo)"
+        },
+        {
+          "value": "3",
+          "label": "Estrato 3 (medio-bajo)"
+        },
+        {
+          "value": "4",
+          "label": "Estrato 4 (medio)"
+        },
+        {
+          "value": "5",
+          "label": "Estrato 5 (medio-alto)"
+        },
+        {
+          "value": "6",
+          "label": "Estrato 6 (alto)"
+        }
+      ],
+      "help": "Verificar en tu factura anterior o en el catastro municipal"
+    },
+    {
+      "id": "m3_consumidos",
+      "label": "Consumo mensual (m³)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 500,
+      "placeholder": "Ej: 25",
+      "help": "Metros cúbicos facturados en tu recibo anterior"
+    },
+    {
+      "id": "distribuidor",
+      "label": "Distribuidor regional",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "vanti",
+          "label": "Vanti (Bogotá, Cundinamarca)"
+        },
+        {
+          "value": "epm",
+          "label": "EPM (Medellín, Antioquia)"
+        },
+        {
+          "value": "naturgas",
+          "label": "Naturgas (Atlántico, Bolívar, Cesar, Sucre)"
+        },
+        {
+          "value": "otros",
+          "label": "Otros distribuidores nacionales"
+        }
+      ],
+      "help": "Según tu ciudad de residencia"
+    },
+    {
+      "id": "tiene_subsidio",
+      "label": "¿Aplicas para subsidio de gas?",
+      "type": "radio",
+      "required": false,
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí (soy estrato 1, 2 o 3)"
+        },
+        {
+          "value": "no",
+          "label": "No (estrato 4+)"
+        }
+      ],
+      "help": "Solo disponible para estratos 1–3 si cumples requisitos DIAN"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cargo_fijo_mensual",
+      "label": "Cargo fijo mensual",
+      "format": "currency",
+      "description": "Tarifa administrativa del distribuidor"
+    },
+    {
+      "id": "cargo_consumo",
+      "label": "Cargo por consumo (m³)",
+      "format": "currency",
+      "description": "Tarifa unitaria × m³ consumidos"
+    },
+    {
+      "id": "subtotal_servicios",
+      "label": "Subtotal servicios",
+      "format": "currency",
+      "description": "Fijo + variable antes de impuestos"
+    },
+    {
+      "id": "subsidio_aplicado",
+      "label": "Subsidio aplicado (si aplica)",
+      "format": "currency",
+      "description": "Descuento directo en tarifa para estratos 1–3"
+    },
+    {
+      "id": "impuesto_consumo",
+      "label": "Impuesto al consumo (8%)",
+      "format": "currency",
+      "description": "Gravamen nacional sobre gas natural"
+    },
+    {
+      "id": "total_recibo",
+      "label": "TOTAL RECIBO MENSUAL",
+      "format": "currency",
+      "description": "Monto final a pagar"
+    },
+    {
+      "id": "costo_promedio_m3",
+      "label": "Costo promedio por m³",
+      "format": "currency",
+      "description": "Total ÷ m³ consumidos"
+    }
+  ],
+  "explanation": "## Cómo se calcula el recibo de gas natural en Colombia\n\nEl recibo mensual de gas natural se compone de:\n\n### Fórmula base\n\n**Subtotal servicios** = Cargo fijo + (Tarifa unitaria × m³ consumidos)\n\n**Subsidio** = Porcentaje según estrato (estratos 1–3 solamente)\n\n**Impuesto al consumo** = (Subtotal − Subsidio) × 8%\n\n**TOTAL RECIBO** = Subtotal − Subsidio + Impuesto\n\n### Tarifas por distribuidor (vigentes 2026, CREG)\n\n| Distribuidor | Cargo Fijo | Tarifa m³ (estrato 4+) | Nota |\n|---|---|---|---|\n| **Vanti (Bogotá)** | ~$3,800 | ~$2,450/m³ | Principal zona urbana |\n| **EPM (Medellín)** | ~$4,200 | ~$2,380/m³ | Zona metropolitana |\n| **Naturgas (Costa)** | ~$3,500 | ~$2,290/m³ | Atlántico, Bolívar, otros |\n| **Otros** | ~$3,800 | ~$2,400/m³ | Promedio nacional |\n\n### Subsidios por estrato (2026, DIAN/CREG)\n\n- **Estrato 1**: hasta 40% descuento en tarifa\n- **Estrato 2**: hasta 30% descuento\n- **Estrato 3**: hasta 20% descuento\n- **Estrato 4+**: sin subsidio (tarifa plena)\n\n### Impuesto al consumo\n\nGravamen nacional del **8%** aplicado sobre el valor neto (después de subsidio).\n\n## Ejemplo práctico\n\n**Datos:**\n- Estrato: 2\n- Distribuidor: Vanti (Bogotá)\n- Consumo: 25 m³\n- Aplica subsidio: Sí\n\n**Cálculo:**\n\n1. Cargo fijo: **$3,800**\n2. Tarifa unitaria base (estrato 4): **$2,450/m³**\n3. Consumo: 25 × $2,450 = **$61,250**\n4. Subtotal: $3,800 + $61,250 = **$65,050**\n5. Subsidio estrato 2 (30%): $65,050 × 30% = **−$19,515**\n6. Subtotal con subsidio: **$45,535**\n7. Impuesto 8%: $45,535 × 8% = **$3,643**\n8. **TOTAL: $49,178**\n9. Costo promedio: $49,178 ÷ 25 = **$1,967/m³**\n\nSin subsidio, ese mismo consumo saldría ~$70,000.\n\n## Limitaciones y consideraciones\n\n- **Tarifas indicativas**: Los valores 2026 provienen de resoluciones CREG; pueden variar por ajuste trimestral.\n- **Subsidio condicionado**: Requiere actualización en sistema SISBÉN y no tener morosidad anterior.\n- **Servicios adicionales**: No incluye reconexión, instalación ni otros cargos extraordinarios.\n- **Variación regional**: Cada distribuidor aplica metodología propia (algunos incluyen cargo por servicio técnico).\n- **Consumo mínimo**: Si el consumo es muy bajo, el cargo fijo puede superar la facturación de uso (piso mínimo).",
+  "faq": [
+    {
+      "q": "¿Por qué mi estrato afecta tanto la factura de gas?",
+      "a": "En Colombia, el gas natural es un **servicio de utilidad pública regulado**. La CREG establece subsidios cruzados: estratos 1–3 pagan menos; estratos 5–6 pagan más para financiar esos subsidios. Tu estrato catastral es la base de este cálculo."
+    },
+    {
+      "q": "¿Cómo verifico mi estrato socioeconómico?",
+      "a": "Consultá tu **cédula de ciudadanía** (si está registrada), tu **factura de servicios**, o acudí al **Catastro municipal** de tu ciudad. También está en sistemas SISBÉN si recibís subsidios de gobierno."
+    },
+    {
+      "q": "¿Puedo cambiar mi estrato si creo que es incorrecto?",
+      "a": "Sí. Diligencia una **solicitud de reclasificación** ante la municipalidad o el distribuidor. Requiere documentación del inmueble (fotos, escritura). El proceso toma 30–60 días."
+    },
+    {
+      "q": "¿Qué es el 'impuesto al consumo' del 8% en gas?",
+      "a": "Es un **gravamen nacional** (Impuesto Nacional al Consumo de Gasolina) que se aplica también al gas natural domiciliario. Lo cobra el distribuidor en tu factura; lo recauda el Estado."
+    },
+    {
+      "q": "¿Cómo reduzco mi consumo y mi factura de gas?",
+      "a": "- Usa **calentador de agua eficiente** (preferentemente de gas con quemador piloto automático).\n- **Apaga la hornilla** apenas termine de cocinar.\n- Aísla **tuberías de agua caliente** en baños y cocina.\n- Prefiere **duchas cortas** (máx. 5 minutos).\n- Instala **regulador de flujo** en grifería."
+    },
+    {
+      "q": "¿Qué pasa si mi consumo es anormalmente alto de repente?",
+      "a": "Puede ser por **fuga en tuberías** (silbido, olor característico), **lectura errónea del contador** o **aumento real de uso**. Contacta al distribuidor para **inspección técnica gratuita** (obligatoria si la diferencia supera 30%)."
+    },
+    {
+      "q": "¿Cómo cambio de distribuidor de gas natural?",
+      "a": "En **zonas de operación única** (como Vanti en Bogotá), no hay opción de competencia. En zonas donde hay **múltiples operadores** (pocas aún), puedes solicitar cambio con **30 días de anticipación** y acreditar pago de deudas previas."
+    },
+    {
+      "q": "¿Se puede desconectar por deuda de gas?",
+      "a": "Sí, tras **dos meses de mora**, el distribuidor puede suspender el servicio. Es una desconexión física (costosa de reinstalar, ~$150,000–$250,000). Antes de eso, recibirás **avisos de corte** obligatorios."
+    },
+    {
+      "q": "¿Qué documentos necesito para tramitar subsidio de gas?",
+      "a": "- **Cédula de ciudadanía** (tuya y del titular del contrato).\n- **Recibo de servicios públicos** (últimos 3 meses).\n- **Comprobante de SISBÉN** actualizado (si aplica).\n- **Solicitud formal** ante la distribuidora o a través de su portal."
+    }
+  ],
+  "sources": [
+    {
+      "name": "CREG – Comisión de Regulación de Energía y Gas",
+      "url": "https://www.creg.gov.co/",
+      "publisher": "CREG",
+      "date": "2026"
+    },
+    {
+      "name": "Vanti – Tarifas gas natural Bogotá y Cundinamarca",
+      "url": "https://www.vanti.com.co/",
+      "publisher": "Vanti S.A.",
+      "date": "2026"
+    },
+    {
+      "name": "EPM – Empresas Públicas de Medellín",
+      "url": "https://www.epm.com.co/",
+      "publisher": "EPM",
+      "date": "2026"
+    },
+    {
+      "name": "Ministerio de Minas y Energía – Subsidios gas natural",
+      "url": "https://www.minenergia.gov.co/",
+      "publisher": "Ministerio de Minas y Energía",
+      "date": "2026"
+    },
+    {
+      "name": "DIAN – Impuesto nacional al consumo",
+      "url": "https://www.dian.gov.co/",
+      "publisher": "DIAN",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "quarterly",
+    "lastUpdated": "2026-04-28",
+    "source": "CREG – Resoluciones tarifarias trimestrales",
+    "sourceUrl": "https://www.creg.gov.co/",
+    "updateType": "manual",
+    "notes": "Tarifas unitarias por m³, cargos fijos y porcentajes de subsidio se actualizan cada trimestre según CREG. Impuesto al consumo (8%) es fijo nacional."
+  },
+  "lastReviewed": "2026-04-28"
+}

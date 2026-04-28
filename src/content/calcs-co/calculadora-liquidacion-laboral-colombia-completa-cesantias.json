@@ -1,0 +1,319 @@
+{
+  "slug": "calculadora-liquidacion-laboral-colombia-completa-cesantias",
+  "title": "Liquidación Laboral Colombia 2026 | Cesantías, Prima, Vacaciones",
+  "h1": "Calculadora de liquidación laboral Colombia completa",
+  "description": "Calcula cesantías, prima, vacaciones e indemnización por despido injusto en Colombia 2026. Incluye intereses legales y retenciones.",
+  "category": "finanzas",
+  "audience": "CO",
+  "icon": "📋",
+  "formulaId": "liquidacion-laboral-colombia-completa-cesantias",
+  "intro": "La liquidación laboral en Colombia cuando se termina un contrato de trabajo incluye múltiples componentes: cesantías con sus intereses, prima de servicios proporcional, vacaciones no disfrutadas e indemnización en caso de despido injusto. Esta calculadora determina el valor bruto y neto que debe recibir el trabajador conforme a la normativa del Ministerio del Trabajo y la jurisprudencia de la Corte Constitucional.",
+  "keyTakeaway": "Un trabajador con salario de $3.000.000 después de 5 años recibe: cesantías $15.000.000, intereses $3.900.000, prima $7.500.000, vacaciones $1.250.000. Total bruto $27.650.000 (descuentos ~$5.200.000).",
+  "useCases": [
+    "Empleado despedido sin causa justificada calcula indemnización legal",
+    "Trabajador renuncia voluntariamente y requiere liquidación final",
+    "Contrato término fijo finaliza y se liquida con todos los derechos",
+    "Empleador necesita calcular provisión de cesantías e intereses",
+    "Auditoría de nómina: verificación de liquidación correcta",
+    "Abogado laboral estima deuda en demanda por despido injusto"
+  ],
+  "fields": [
+    {
+      "id": "salario_mensual",
+      "label": "Salario mensual bruto (COP)",
+      "type": "number",
+      "unit": "$",
+      "placeholder": "3000000",
+      "min": 0,
+      "help": "Salario ordinario pactado sin bonificaciones ni comisiones"
+    },
+    {
+      "id": "fecha_inicio",
+      "label": "Fecha de inicio del contrato (DD/MM/YYYY)",
+      "type": "date",
+      "placeholder": "15/01/2019",
+      "help": "Primer día de trabajo"
+    },
+    {
+      "id": "fecha_termino",
+      "label": "Fecha de terminación (DD/MM/YYYY)",
+      "type": "date",
+      "placeholder": "28/04/2026",
+      "help": "Último día laboral"
+    },
+    {
+      "id": "tipo_contrato",
+      "label": "Tipo de contrato",
+      "type": "select",
+      "options": [
+        {
+          "value": "indefinido",
+          "label": "Contrato indefinido"
+        },
+        {
+          "value": "termino_fijo",
+          "label": "Contrato a término fijo"
+        }
+      ],
+      "default": "indefinido",
+      "help": "Define derechos a indemnización por despido"
+    },
+    {
+      "id": "tipo_terminacion",
+      "label": "Tipo de terminación",
+      "type": "select",
+      "options": [
+        {
+          "value": "renuncia",
+          "label": "Renuncia voluntaria"
+        },
+        {
+          "value": "despido_injusto",
+          "label": "Despido sin causa justificada"
+        },
+        {
+          "value": "despido_justo",
+          "label": "Despido con causa justificada"
+        },
+        {
+          "value": "vencimiento",
+          "label": "Vencimiento de término fijo"
+        },
+        {
+          "value": "acuerdo",
+          "label": "Terminación por mutuo acuerdo"
+        }
+      ],
+      "default": "despido_injusto",
+      "help": "Determina indemnización y derechos adicionales"
+    },
+    {
+      "id": "dias_vacaciones_pendientes",
+      "label": "Días de vacaciones sin disfrutar",
+      "type": "number",
+      "min": 0,
+      "max": 30,
+      "default": 0,
+      "help": "Vacaciones no tomadas en el último año de labores"
+    },
+    {
+      "id": "aporte_pensional",
+      "label": "Tasa de aporte pensional (%)",
+      "type": "number",
+      "min": 0,
+      "max": 16,
+      "default": 4,
+      "help": "Aporte obligatorio a pensión (4% mínimo, hasta 16% dependiendo del régimen)"
+    },
+    {
+      "id": "aporte_salud",
+      "label": "Tasa de aporte a salud (%)",
+      "type": "number",
+      "min": 0,
+      "max": 12.5,
+      "default": 4,
+      "help": "Aporte obligatorio a EPS (4% mínimo)"
+    },
+    {
+      "id": "tiene_bonificacion",
+      "label": "¿Tiene bonificación o comisiones?",
+      "type": "select",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ],
+      "default": "no"
+    },
+    {
+      "id": "promedio_bonificacion",
+      "label": "Promedio mensual bonificación/comisión (COP)",
+      "type": "number",
+      "unit": "$",
+      "default": 0,
+      "help": "Se usa para cesantías, prima y vacaciones si aplica",
+      "conditional": "tiene_bonificacion === 'si'"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "dias_trabajados",
+      "label": "Días trabajados (acumulados)",
+      "unit": "días",
+      "format": "number"
+    },
+    {
+      "id": "anos_servicio",
+      "label": "Años de servicio",
+      "unit": "años",
+      "format": "decimal:2"
+    },
+    {
+      "id": "salario_base_liquidacion",
+      "label": "Salario base para liquidación",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "cesantias_bruto",
+      "label": "Cesantías (bruto)",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "intereses_cesantias",
+      "label": "Intereses sobre cesantías",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "prima_servicios",
+      "label": "Prima de servicios proporcional",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "vacaciones_no_disfrutadas",
+      "label": "Vacaciones no disfrutadas",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "indemnizacion_despido",
+      "label": "Indemnización por despido injusto",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "total_bruto_antes_descuentos",
+      "label": "Total bruto antes de descuentos",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "descuento_pensional",
+      "label": "Descuento pensión",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "descuento_salud",
+      "label": "Descuento salud (EPS)",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "retencion_renta",
+      "label": "Retención en la fuente (IRPF simplificado)",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "total_descuentos",
+      "label": "Total descuentos",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "total_neto",
+      "label": "Total neto a recibir",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "desglose_componentes",
+      "label": "Desglose de componentes",
+      "type": "table",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula la liquidación laboral en Colombia\n\nLa liquidación de un contrato de trabajo en Colombia es un cálculo que integra múltiples componentes establecidos en el Código Sustantivo del Trabajo (Decreto 2663/1950), la Ley 50/1990 y jurisprudencia de la Corte Constitucional.\n\n### Período de servicio\n\nSe cuenta el tiempo exacto desde la fecha de inicio hasta la fecha de terminación, incluyendo domingos y festivos. Se calcula en días y se convierte a años completos y fracción.\n\n```\nDías totales = fecha_termino - fecha_inicio\nAños = días_totales / 365\n```\n\n### Cesantías\n\nLas cesantías son una prestación social equivalente a 8.33% del salario mensual por cada año de servicio (o proporcional por fracción de año).\n\n**Fórmula:**\n```\nCesantías = (salario_base × años_servicio) / 12\n```\n\nDonde `salario_base` incluye el salario ordinario más el promedio de bonificaciones/comisiones si las hay.\n\n**Ejemplo:** Salario $3.000.000 × 5 años = $15.000.000\n\n### Intereses sobre cesantías\n\nSe causa una tasa del 12% anual simple sobre las cesantías, calculado sobre el saldo que se mantiene en poder del empleador durante cada año.\n\n**Fórmula simplificada (para liquidación final):**\n```\nIntereses = Cesantías × 0.12 × años_servicio\n```\n\nO más precisamente, para cada año completo se toma el 12% del valor acumulado al cierre del año anterior.\n\n**Ejemplo:** $15.000.000 × 0.12 × 5 años / 5 = $3.900.000 (aprox.)\n\n### Prima de servicios\n\nLa prima se causa en dos períodos: semestral (1 de junio) y anual (31 de diciembre), equivalente a un mes de salario cada seis meses.\n\n**Fórmula para liquidación:**\n```\nPrima_proporcional = (salario_base × días_servicio_en_período) / 180\n```\n\nSi hay menos de un semestre completo, se prorratea.\n\n**Ejemplo:** Después de 5 años → 10 períodos completos × $250.000 = $2.500.000. \nPero se toma el promedio del mejor período de 3 meses en los últimos 12 meses:\n```\nPrima = (salario_base × años_completos) + (salario_base × 180 / 360 × fracción_año)\n```\n\nPara simplificar en esta calculadora: Prima = salario_base / 2 × años_servicio.\n\n### Vacaciones no disfrutadas\n\nTodo trabajador tiene derecho a 15 días hábiles de vacaciones anuales (Artículo 168 CST). Si no las disfruta, se pagan en la liquidación.\n\n**Fórmula:**\n```\nVacaciones = (salario_base / 30) × días_pendientes\n```\n\nDonde `días_pendientes` son los días sin gozar reportados en la liquidación.\n\n### Indemnización por despido injusto\n\nAplica únicamente en contratos **indefinidos** con terminación **sin causa justificada**. Es proporcional a los años de servicio:\n\n**Fórmula (Artículo 58 CST modificado):**\n- Para los primeros 2 años: 30 días de salario × años\n- Para los años 3 en adelante: 20 días de salario × años\n\n```\nSi años ≤ 2:\n  Indemnización = salario_base × 30 × años / 30\nSi años > 2:\n  Indemnización = (salario_base × 30 × 2 / 30) + (salario_base × 20 × (años - 2) / 30)\n```\n\n**Ejemplo:** 5 años → (3M × 30 × 2) + (3M × 20 × 3) = 3M × 2 + 3M × 2 = 12M\n\n### Total bruto\n\n```\nTotal_bruto = Cesantías + Intereses + Prima + Vacaciones + Indemnización\n```\n\n### Descuentos obligatorios\n\n**Aporte a pensión:** 4% mínimo (algunas AFP hasta 16%)  \n**Aporte a salud (EPS):** 4% mínimo (algunas hasta 12.5%)\n\n```\nDescuento_pensión = Total_bruto × tasa_pensión / 100\nDescuento_salud = Total_bruto × tasa_salud / 100\n```\n\n**Retención en la fuente (IRPF simplificado):**  \nEn Colombia, las liquidaciones están parcialmente exentas. Se aplica retención solo sobre la parte que exceda cierto umbral (UVT 2026 ≈ $45.000). En esta calculadora usamos una aproximación: 5% sobre total bruto como referencia, ajustado si hay bonificaciones.\n\n```\nRetencion ≈ (Total_bruto - UVT × 8) × 0.05 (si positivo)\n```\n\n### Total neto\n\n```\nTotal_neto = Total_bruto - Descuento_pensión - Descuento_salud - Retención\n```\n\n## Ejemplo completo\n\n**Datos de entrada:**\n- Salario mensual: $3.000.000\n- Fecha inicio: 15/01/2019\n- Fecha término: 28/04/2026\n- Tipo contrato: indefinido\n- Tipo terminación: despido sin causa\n- Vacaciones pendientes: 5 días\n- Aporte pensión: 4%\n- Aporte salud: 4%\n\n**Cálculos:**\n\n| Concepto | Cálculo | Valor |\n|----------|--------|-------|\n| Días trabajados | 28/04/2026 - 15/01/2019 | 2.689 días |\n| Años servicio | 2.689 / 365 | 7,37 años |\n| **Cesantías** | 3.000.000 × 7,37 / 12 | $1.842.500 |\n| **Intereses** | 1.842.500 × 0,12 × 7,37 / 5 | $539.505 |\n| **Prima** | 3.000.000 / 2 × 7,37 | $1.105.500 |\n| **Vacaciones** | (3.000.000 / 30) × 5 | $500.000 |\n| **Indemnización** | (3M × 30 × 2) + (3M × 20 × 5,37) | $10.710.000 |\n| **Total bruto** | suma | **$14.697.505** |\n| Descuento pensión (4%) | 14.697.505 × 0,04 | -$587.900 |\n| Descuento salud (4%) | 14.697.505 × 0,04 | -$587.900 |\n| Retención IRPF | aprox. 5% (si aplica) | -$360.000 |\n| **Total neto** | suma con descuentos | **$12.561.705** |\n\n## Limitaciones y aclaraciones\n\n1. **Bonificaciones y comisiones:** Se promedian en los últimos 3 meses. Si no hay claridad, usar solo salario base.\n\n2. **Prima de servicios:** Esta calculadora usa la fórmula simplificada. Empleadores deben validar el mejor período de 3 meses para exactitud.\n\n3. **Retención en la fuente:** Colombia tiene exenciones parciales en liquidaciones. La fórmula aquí es una aproximación; consulta con contador para exactitud fiscal.\n\n4. **Indemnización:** Solo aplica en contrato indefinido con despido sin justa causa. Causas justificadas (robo, violencia, incumplimiento grave) no generan indemnización extra.\n\n5. **Contrato a término fijo:** Al vencimiento natural no hay indemnización, solo cesantías, prima y vacaciones.\n\n6. **Renuncia voluntaria:** No genera indemnización por despido; solo los componentes básicos.\n\n7. **Aportes pensionales:** Varían por AFP (SURA, Colpensiones, Profuturo, etc.). Esta calculadora usa 4% como referencia.\n\n8. **Efectos del mutuo acuerdo:** Pueden modificar indemnización. Validar en acta de liquidación.\n\n## Fórmula resumida\n\n```\nTotal_bruto = Cesantías + Intereses_cesantías + Prima + Vacaciones + Indemnización\nTotal_neto = Total_bruto - Aportes_pensión - Aportes_salud - Retención\n```",
+  "faq": [
+    {
+      "question": "¿Qué es la indemnización por despido injusto en Colombia?",
+      "answer": "Es una compensación económica que paga el empleador cuando termina un contrato indefinido sin justa causa, según el artículo 58 del Código Sustantivo del Trabajo. Se calcula como 30 días de salario por cada año en los primeros 2 años, y 20 días por año a partir del tercero."
+    },
+    {
+      "question": "¿A quién no le aplica indemnización?",
+      "answer": "No aplica a: (1) trabajadores con contrato a término fijo, (2) renuncia voluntaria, (3) despidos con justa causa (robo, violencia, inasistencia injustificada persistente), (4) terminación por mutuo acuerdo."
+    },
+    {
+      "question": "¿Cómo se calcula la prima de servicios en liquidación?",
+      "answer": "Se toma el mejor promedio de los últimos 3 meses de salario y se prorratea por días. En términos simples: mitad del salario mensual × años de servicio, más ajuste por período incompleto."
+    },
+    {
+      "question": "¿Son deducibles los aportes de pensión y salud en liquidación?",
+      "answer": "Sí. El trabajador debe pagar aportes a su fondo de pensión (4-16% según régimen) y EPS (4-12.5%) sobre el total bruto de la liquidación, como en cualquier nómina."
+    },
+    {
+      "question": "¿Se pagan impuestos sobre la liquidación laboral?",
+      "answer": "Existe retención en la fuente sobre la parte que exceda 8 UVT (aproximadamente $360.000 en 2026). Cesantías, prima y vacaciones tienen tratamiento tributario preferente; indemnización puede estar parcialmente exenta si se acumula con otros ingresos."
+    },
+    {
+      "question": "¿Qué sucede si el trabajador renuncia?",
+      "answer": "Solo recibe cesantías, prima proporcional y vacaciones no disfrutadas. NO hay indemnización por despido, ya que fue renuncia voluntaria."
+    },
+    {
+      "question": "¿Cómo se cuenta el período de servicio?",
+      "answer": "Se incluyen todos los días desde el inicio hasta la terminación: domingos, festivos, vacaciones y permisos. Un año equivale a 365 días, incluyendo años bisiestos."
+    },
+    {
+      "question": "¿Qué documentos debe entregar el empleador?",
+      "answer": "Certificado de terminación, acta de liquidación firmada, constancia de aportes a EPS y pensión, y comprobante de pago. El trabajador puede solicitar copia al Ministerio del Trabajo si hay discrepancia."
+    },
+    {
+      "question": "¿Cuál es el plazo para pagar la liquidación?",
+      "answer": "Dentro de los 10 días hábiles siguientes a la terminación del contrato, según el artículo 87 del CST. Si no paga a tiempo, se generan intereses de mora."
+    },
+    {
+      "question": "¿Cómo se comprueba que la liquidación es correcta?",
+      "answer": "Revisar: (1) fechas exactas, (2) salario base reportado en nómina, (3) cada componente con la fórmula legal, (4) descuentos obligatorios, (5) total neto. Si hay duda, consultar contador o abogado laboral."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Código Sustantivo del Trabajo - Artículos 58, 87, 168",
+      "url": "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=7755",
+      "publisher": "Función Pública de Colombia",
+      "date": "2026"
+    },
+    {
+      "name": "Ley 50 de 1990 - Reforma laboral",
+      "url": "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=7343",
+      "publisher": "Congreso de la República",
+      "date": "2026"
+    },
+    {
+      "name": "Ministerio del Trabajo - Guía de Liquidación Laboral",
+      "url": "https://www.mintrabajo.gov.co/",
+      "publisher": "Ministerio del Trabajo y Economía",
+      "date": "2026"
+    },
+    {
+      "name": "DIAN - UVT 2026 y tratamiento tributario de prestaciones",
+      "url": "https://www.dian.gov.co/",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Sentencias Corte Constitucional sobre indemnización",
+      "url": "https://www.corteconstitucional.gov.co/",
+      "publisher": "Corte Constitucional de Colombia",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Ministerio del Trabajo, DIAN",
+    "sourceUrl": "https://www.mintrabajo.gov.co/",
+    "updateType": "manual",
+    "notes": "Salarios mínimos, UVT, tasas de contribución a pensión y salud actualizadas anualmente. Fórmulas de indemnización según jurisprudencia vigente."
+  },
+  "lastReviewed": "2026-04-28"
+}

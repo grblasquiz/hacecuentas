@@ -1,0 +1,299 @@
+{
+  "slug": "calculadora-cedula-habitabilidad-espana-precio-tramite",
+  "title": "Calculadora Cédula de Habitabilidad España 2026 | Hacé Cuentas",
+  "h1": "Cédula de Habitabilidad España",
+  "description": "Calcula el coste y plazo de la cédula de habitabilidad en España. Honorarios técnico 80-200€ + tasas CCAA 25-100€. Trámites 2026.",
+  "category": "vida",
+  "audience": "ES",
+  "icon": "📝",
+  "formulaId": "cedula-habitabilidad-espana-precio-tramite",
+  "intro": "La **cédula de habitabilidad** es un documento obligatorio en España para alquilar o vender una vivienda. Acredita que la vivienda cumple los requisitos mínimos de habitabilidad según el Código Técnico de la Edificación (CTE). Esta calculadora estima el coste total del trámite (honorarios del técnico + tasas administrativas) y los plazos según comunidad autónoma, tipo de vivienda y profesional designado.",
+  "keyTakeaway": "Cédula de habitabilidad: 105-300€ totales (honorarios 80-200€ + tasas 25-100€ CCAA). Validez 15 años viviendas nuevas, ilimitada usadas. Plazo 7-30 días según CCAA.",
+  "useCases": [
+    "Propietario que alquila apartamento en Madrid: estimar coste técnico + tasa",
+    "Vendedor de casa antigua en Barcelona: validar si necesita cédula actualizada",
+    "Inquilino: verificar que casero ha proporcionado cédula vigente antes de firmar",
+    "Constructor: presupuestar inspección técnica para vivienda nueva de 120 m²",
+    "Gestoría: asesorar cliente sobre requisitos mínimos por CCAA (superficie, luz, ventilación)"
+  ],
+  "fields": [
+    {
+      "id": "comunidad_autonoma",
+      "label": "Comunidad Autónoma",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "label": "Andalucía",
+          "value": "andalucia"
+        },
+        {
+          "label": "Aragón",
+          "value": "aragon"
+        },
+        {
+          "label": "Asturias",
+          "value": "asturias"
+        },
+        {
+          "label": "Baleares",
+          "value": "baleares"
+        },
+        {
+          "label": "Canarias",
+          "value": "canarias"
+        },
+        {
+          "label": "Cantabria",
+          "value": "cantabria"
+        },
+        {
+          "label": "Castilla-La Mancha",
+          "value": "castilla_mancha"
+        },
+        {
+          "label": "Castilla y León",
+          "value": "castilla_leon"
+        },
+        {
+          "label": "Cataluña",
+          "value": "cataluna"
+        },
+        {
+          "label": "Comunidad Valenciana",
+          "value": "valenciana"
+        },
+        {
+          "label": "Extremadura",
+          "value": "extremadura"
+        },
+        {
+          "label": "Galicia",
+          "value": "galicia"
+        },
+        {
+          "label": "Madrid",
+          "value": "madrid"
+        },
+        {
+          "label": "Murcia",
+          "value": "murcia"
+        },
+        {
+          "label": "Navarra",
+          "value": "navarra"
+        },
+        {
+          "label": "País Vasco",
+          "value": "pais_vasco"
+        },
+        {
+          "label": "La Rioja",
+          "value": "rioja"
+        }
+      ],
+      "help": "Donde se ubica la vivienda. Las tasas y procedimientos varían por CCAA."
+    },
+    {
+      "id": "tipo_vivienda",
+      "label": "Tipo de vivienda",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "label": "Vivienda nueva (< 2 años)",
+          "value": "nueva"
+        },
+        {
+          "label": "Vivienda usada (> 2 años)",
+          "value": "usada"
+        }
+      ],
+      "help": "Viviendas nuevas requieren cédula obligatoriamente. Usadas pueden no necesitarla si existe previa vigente."
+    },
+    {
+      "id": "superficie_util",
+      "label": "Superficie útil (m²)",
+      "type": "number",
+      "required": true,
+      "min": 20,
+      "max": 500,
+      "step": 1,
+      "help": "Superficie interior habitable de la vivienda. Mínimo legal: 30 m² (excepto estudios 20 m²)."
+    },
+    {
+      "id": "tecnico_tipo",
+      "label": "Tipo de profesional",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "label": "Arquitecto Técnico (Aparejador)",
+          "value": "aparejador"
+        },
+        {
+          "label": "Arquitecto Superior",
+          "value": "arquitecto"
+        },
+        {
+          "label": "Ingeniero Técnico en Edificación",
+          "value": "ingeniero_tecnico"
+        }
+      ],
+      "help": "Cualquier técnico competente puede emitir. Aparejador es más económico."
+    },
+    {
+      "id": "vivienda_primera_ocupacion",
+      "label": "¿Primera ocupación después de obra?",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "label": "Sí (nueva construcción)",
+          "value": "true"
+        },
+        {
+          "label": "No (ya habida o reforma)",
+          "value": "false"
+        }
+      ],
+      "help": "Primera ocupación requiere documentación de obra finalizada."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "coste_honorarios_min",
+      "label": "Coste honorarios técnico (mínimo)",
+      "type": "currency_eur",
+      "precision": 2
+    },
+    {
+      "id": "coste_honorarios_max",
+      "label": "Coste honorarios técnico (máximo)",
+      "type": "currency_eur",
+      "precision": 2
+    },
+    {
+      "id": "tasa_administrativa",
+      "label": "Tasa administrativa CCAA",
+      "type": "currency_eur",
+      "precision": 2
+    },
+    {
+      "id": "coste_total_min",
+      "label": "Coste total estimado (mínimo)",
+      "type": "currency_eur",
+      "precision": 2
+    },
+    {
+      "id": "coste_total_max",
+      "label": "Coste total estimado (máximo)",
+      "type": "currency_eur",
+      "precision": 2
+    },
+    {
+      "id": "plazo_dias",
+      "label": "Plazo aproximado de emisión",
+      "type": "text"
+    },
+    {
+      "id": "validez_anos",
+      "label": "Validez del certificado",
+      "type": "text"
+    },
+    {
+      "id": "requisito_minimo",
+      "label": "Requisito legal mínimo aplicable",
+      "type": "text"
+    },
+    {
+      "id": "documentacion_necesaria",
+      "label": "Documentación necesaria",
+      "type": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula la cédula de habitabilidad\n\nLa cédula de habitabilidad en España es un certificado de cumplimiento de requisitos mínimos de habitabilidad emitido por un técnico colegiado. Su coste total comprende dos componentes:\n\n### Fórmula\n\n**Coste Total = Honorarios Técnico + Tasa Administrativa CCAA**\n\n- **Honorarios técnico**: varían según profesional (Aparejador 80-120€, Arquitecto 120-200€) y superficie (más metros = más inspección).\n- **Tasa CCAA**: variable según comunidad autónoma (25-100€ aproximadamente). Algunas CCAA no cobran tasa explícita; otras la incluyen en el trámite.\n\n### Requisitos mínimos por tipo\n\n**Vivienda nueva:**\n- Obligatoria cédula de primera ocupación\n- Validez: 15 años desde expedición\n- Requiere documentación de obra (certificado final, proyecto, control de obra)\n\n**Vivienda usada:**\n- No siempre obligatoria si existe cédula anterior vigente\n- Si se requiere: inspección de estado de conservación\n- Validez: ilimitada (sin caducidad explícita en ley estatal, aunque CCAA pueden requerir renovación)\n\n### Requisitos legales mínimos (Código Técnico Edificación)\n\n- **Superficie útil**: mínimo 30 m² (estudios 20 m²)\n- **Altura mínima**: 2,5 m libres entre suelo y techo\n- **Iluminación natural**: mínimo 5-10% de superficie de fachada respecto útil\n- **Ventilación**: acceso a aire exterior (ventanas o sistemas mecánicos)\n- **Acceso**: escaleras, ascensor o rampa según número plantas\n- **Servicios**: agua corriente, electricidad, alcantarillado o fosa séptica\n- **Calefacción**: en climas fríos (según zona climática CTE)\n\n### Ejemplo cálculo\n\n**Caso: Vivienda usada 95 m² en Madrid, aparejador**\n\n| Concepto | Coste |\n|----------|-------|\n| Honorarios aparejador (95 m²) | 110,00€ |\n| Tasa expedición Madrid | 35,00€ |\n| **Total estimado** | **145,00€** |\n| Plazo | 5-10 días laborales |\n| Validez | Ilimitada (vivienda usada) |\n\n**Caso: Vivienda nueva 120 m² en Barcelona, arquitecto + obra nueva**\n\n| Concepto | Coste |\n|----------|-------|\n| Honorarios arquitecto (120 m², obra nueva) | 180,00€ |\n| Tasa expedición Barcelona | 60,00€ |\n| **Total estimado** | **240,00€** |\n| Plazo | 10-15 días laborales |\n| Validez | 15 años |\n\n### Variación por CCAA\n\n| CCAA | Tasa aprox. | Plazo | Observaciones |\n|------|-----------|-------|---------------|\n| Madrid | 35€ | 5-10 días | Expedición rápida, sin arancel técnico fijo |\n| Cataluña | 60€ | 10-15 días | Registrado en col·legi; puede requerir inspección |\n| Valencia | 40€ | 7-12 días | Integrado en procedimiento de calificación |\n| Andalucía | 50€ | 10-20 días | Varía por provincia |\n| Baleares | 45€ | 8-14 días | Viviendas nuevas prioritarias |\n| País Vasco | Variable | 15-30 días | Regulación descentralizada por territorio histórico |\n\n### Limitaciones y aclaraciones\n\n1. **No hay arancel oficial estatal**: Los honorarios técnicos no tienen tarifa fija regulada; cada técnico fija precios según complejidad, distancia, tiempo.\n\n2. **Tasas CCAA**: Varían anualmente. Consultar al colegio profesional o administración local para cifra exacta.\n\n3. **Vigencia y renovación**: Viviendas nuevas: 15 años. Viviendas usadas: algunos CCAA exigen renovación cada 10 años; otros permiten vigencia indefinida si no hay cambios estructurales.\n\n4. **Documentación**: Si la vivienda carece de proyectos originales o hay reformas no documentadas, el técnico puede rechazar la expedición o exigir inspecciones adicionales (+ coste).\n\n5. **Alquiler vs. venta**: Obligatoria en ambos casos en España. Casero sin cédula vigente: incumplimiento contrato alquiler y posible sanción.\n\n6. **Reforma integral**: Si reforma >25% superficie útil, puede requerirse nueva cédula (según CCAA).\n\n7. **Solicitantes**: Propietario, inquilino, constructor o gestoría pueden solicitar. Tramitador no necesita poder específico en algunos CCAA.",
+  "faq": [
+    {
+      "question": "¿Es obligatoria la cédula de habitabilidad para alquilar o vender en España?",
+      "answer": "Sí, es obligatoria en España desde 2020 (salvo excepciones autonómicas muy limitadas). Sin cédula vigente, el contrato de alquiler es ineficaz y el casero puede ser sancionado. Para venta, es requerida por prácticamente todas las transacciones inmobiliarias."
+    },
+    {
+      "question": "¿Cuánto tiempo es válida la cédula de habitabilidad?",
+      "answer": "**Viviendas nuevas**: 15 años desde su expedición. **Viviendas usadas**: Vigencia indefinida en ley estatal, aunque algunas CCAA (como País Vasco) exigen renovación cada 10 años. Consulta tu CCAA para certeza."
+    },
+    {
+      "question": "¿Quién puede emitir la cédula de habitabilidad?",
+      "answer": "Cualquier técnico competente colegiado: Arquitecto, Arquitecto Técnico (Aparejador), Ingeniero Técnico en Edificación o Ingeniero de Obras Públicas. No es necesario que sea quien proyectó o ejecutó la obra."
+    },
+    {
+      "question": "¿Cuál es la diferencia de coste entre aparejador y arquitecto?",
+      "answer": "Aproximadamente 40-80€ de diferencia. Aparejador: 80-120€. Arquitecto: 120-200€. Ambos tienen validez legal idéntica; la diferencia es arancel profesional, no por competencia."
+    },
+    {
+      "question": "¿Qué pasa si la vivienda no cumple requisitos mínimos?",
+      "answer": "El técnico no puede expedir cédula. Debe informar del incumplimiento (superficie, altura, iluminación, servicios). El propietario debe reformar. Si el defecto es de obra original, puede haber responsabilidad del constructor."
+    },
+    {
+      "question": "¿Necesito cédula nueva si reformo mi vivienda?",
+      "answer": "Depende de la envergadura. Reforma menor (<25% útil): probablemente no. Reforma integral: sí, requiere nueva cédula. Consulta a técnico y tu administración CCAA."
+    },
+    {
+      "question": "¿Puedo encargar la cédula por Internet o necesito inspección presencial?",
+      "answer": "El técnico debe realizar inspección in situ obligatoria. No es viable por Internet. La inspección dura 30 min-1 hora y es presencial en la vivienda."
+    },
+    {
+      "question": "¿Qué documentación necesito aportar?",
+      "answer": "**Mínimo**: Permiso de ocupación, proyecto constructivo. **Si obra nueva**: Certificado final de obra, acta de recepción. **Si usada sin documentación**: Inspección del técnico puede bastar. Consulta a colegio profesional de tu CCAA."
+    },
+    {
+      "question": "¿Puedo recurrir si el técnico rechaza expedir la cédula?",
+      "answer": "Tienes derecho a reclamación ante el colegio profesional del técnico. Si hay defecto subsanable (p. ej., reforma menor pendiente), puedes corregir y solicitar a otro técnico. Si defecto es grave, requiere obra del constructor."
+    },
+    {
+      "question": "¿Varía el coste según que sea alquiler o venta?",
+      "answer": "No. El coste técnico y tasa CCAA son iguales. Cambia solo si la vivienda requiere inspecciones adicionales por edad o condición, lo que podría elevar honorarios."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Agencia Tributaria (AEAT) - Normativa cédula de habitabilidad",
+      "url": "https://www.agenciatributaria.gob.es/",
+      "publisher": "AEAT",
+      "date": "2026"
+    },
+    {
+      "name": "Código Técnico de la Edificación (CTE) - Ministerio de Transportes y Movilidad Sostenible",
+      "url": "https://www.mitma.gob.es/el-ministerio/areas-de-trabajo/arquitectura-vivienda-e-infraestructuras/arquitectura-y-vivienda/codigo-tecnico-de-la-edificacion",
+      "publisher": "MITMA",
+      "date": "2026"
+    },
+    {
+      "name": "Colegios Profesionales de Arquitectos Técnicos (CAATEC) - Aranceles y requisitos",
+      "url": "https://www.caatec.org/",
+      "publisher": "CAATEC",
+      "date": "2026"
+    },
+    {
+      "name": "Consejo Superior de Colegios de Arquitectos de España - Normativa",
+      "url": "https://www.cscae.com/",
+      "publisher": "CSCAE",
+      "date": "2026"
+    },
+    {
+      "name": "BOE - Ley de Arrendamientos Urbanos (LAU) y obligación cédula habitabilidad",
+      "url": "https://www.boe.es/",
+      "publisher": "Ministerio de Justicia",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Colegios profesionales de arquitectos, CAATEC, administraciones CCAA",
+    "sourceUrl": "https://www.caatec.org/",
+    "updateType": "manual",
+    "notes": "Tasas CCAA y honorarios técnicos varían anualmente. Requisitos CTE actualizado cada 3 años. Validez y obligatoriedad estables desde 2020."
+  },
+  "lastReviewed": "2026-04-28"
+}

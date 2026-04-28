@@ -1,0 +1,239 @@
+{
+  "slug": "calculadora-mibor-euribor-historico-hipoteca-revision",
+  "title": "Calculadora Euribor histórico 2026 | Revisión hipoteca variable",
+  "h1": "Euribor histórico revisión hipoteca",
+  "description": "Calcula la nueva cuota de tu hipoteca variable con el Euribor oficial 2026. Datos históricos mensuales del Banco de España. Compara tu cuota actual con la estimada.",
+  "category": "finanzas",
+  "audience": "ES",
+  "icon": "📉",
+  "formulaId": "mibor-euribor-historico-hipoteca-revision",
+  "intro": "Estima la nueva cuota de tu **hipoteca variable** en España usando el Euribor histórico publicado por el **Banco de España**. Introduce el capital pendiente, tu diferencial contractual, la fecha de próxima revisión y la periodicidad. Obtendrás la cuota estimada, el sobrecoste o ahorro mensual, y el impacto anual respecto a tu cuota actual.",
+  "keyTakeaway": "Con Euribor 2026 al 2,94% + diferencial: hipoteca de 250.000€ a 25 años pasa de 1.135€ a 1.287€/mes (sobrecoste 152€/mes).",
+  "useCases": [
+    "Revisar hipoteca variable antes de cambio de índice de referencia",
+    "Comparar cuota actual vs estimada con Euribor publicado",
+    "Planificar presupuesto familiar para subida de cuota",
+    "Evaluar conveniencia de convertir a hipoteca fija",
+    "Negociar mejora de diferencial con banco"
+  ],
+  "fields": [
+    {
+      "id": "capital_pendiente",
+      "label": "Capital pendiente de la hipoteca",
+      "type": "number",
+      "unit": "€",
+      "placeholder": "250000",
+      "min": 50000,
+      "max": 1000000,
+      "step": 1000,
+      "required": true,
+      "help": "Saldo actual del préstamo hipotecario sin amortizar"
+    },
+    {
+      "id": "euribor_anterior",
+      "label": "Euribor anterior (última revisión)",
+      "type": "number",
+      "unit": "%",
+      "placeholder": "1.85",
+      "min": -1,
+      "max": 5,
+      "step": 0.01,
+      "required": true,
+      "help": "Tasa Euribor vigente en tu última revisión (p.ej. hace 1 ó 2 años)"
+    },
+    {
+      "id": "euribor_actual",
+      "label": "Euribor actual (última publicación Banco de España)",
+      "type": "number",
+      "unit": "%",
+      "placeholder": "2.94",
+      "min": -1,
+      "max": 5,
+      "step": 0.01,
+      "required": true,
+      "help": "Media mensual oficial del Euribor 12 meses de abril 2026. Fuente: Banco de España"
+    },
+    {
+      "id": "diferencial",
+      "label": "Diferencial de tu hipoteca",
+      "type": "number",
+      "unit": "%",
+      "placeholder": "0.99",
+      "min": 0.25,
+      "max": 3,
+      "step": 0.01,
+      "required": true,
+      "help": "Porcentaje fijo que suma la entidad bancaria al Euribor. Aparece en tu contrato"
+    },
+    {
+      "id": "cuota_mensual_actual",
+      "label": "Cuota mensual actual",
+      "type": "number",
+      "unit": "€",
+      "placeholder": "1135",
+      "min": 100,
+      "max": 5000,
+      "step": 1,
+      "required": true,
+      "help": "Importe que pagas ahora mensualmente (incluye capital + intereses)"
+    },
+    {
+      "id": "anos_restantes",
+      "label": "Años restantes de hipoteca",
+      "type": "number",
+      "unit": "años",
+      "placeholder": "20",
+      "min": 1,
+      "max": 40,
+      "step": 1,
+      "required": true,
+      "help": "Plazo pendiente desde la próxima revisión hasta fin de hipoteca"
+    },
+    {
+      "id": "periodicidad_revision",
+      "label": "Periodicidad de revisión",
+      "type": "select",
+      "options": [
+        {
+          "value": "anual",
+          "label": "Anual (cada 12 meses)"
+        },
+        {
+          "value": "semestral",
+          "label": "Semestral (cada 6 meses)"
+        }
+      ],
+      "required": true,
+      "help": "Frecuencia con la que se recalcula el tipo de interés"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "tipo_interes_nuevo",
+      "label": "Nuevo tipo de interés",
+      "unit": "%",
+      "precision": 2,
+      "description": "Euribor actual + diferencial"
+    },
+    {
+      "id": "tipo_interes_anterior",
+      "label": "Tipo de interés anterior",
+      "unit": "%",
+      "precision": 2,
+      "description": "Euribor anterior + diferencial"
+    },
+    {
+      "id": "cuota_mensual_nueva",
+      "label": "Nueva cuota mensual estimada",
+      "unit": "€",
+      "precision": 2,
+      "description": "Cuota recalculada tras revisión del Euribor"
+    },
+    {
+      "id": "diferencia_cuota",
+      "label": "Diferencia cuota (nueva - actual)",
+      "unit": "€",
+      "precision": 2,
+      "description": "Sobrecoste (positivo) o ahorro (negativo) mensual"
+    },
+    {
+      "id": "impacto_anual",
+      "label": "Impacto anual",
+      "unit": "€",
+      "precision": 2,
+      "description": "Diferencia cuota × 12 meses"
+    },
+    {
+      "id": "impacto_vida_restante",
+      "label": "Coste adicional vida restante de hipoteca",
+      "unit": "€",
+      "precision": 2,
+      "description": "Sobrecoste acumulado hasta fin de préstamo (aproximado)"
+    },
+    {
+      "id": "variacion_euribor",
+      "label": "Variación Euribor",
+      "unit": "p.p.",
+      "precision": 2,
+      "description": "Puntos porcentuales de cambio del Euribor"
+    }
+  ],
+  "explanation": "## Cómo se calcula la revisión de hipoteca con Euribor\n\n### Fórmula base\n\n**Tipo de interés = Euribor + Diferencial**\n\nDonde:\n- **Euribor**: media mensual oficial del índice de referencia (Banco de España)\n- **Diferencial**: porcentaje fijo pactado en contrato (típicamente 0,50%–1,50%)\n\n### Cálculo de nueva cuota\n\n1. **Obtener nuevo tipo**: Euribor actualizado + diferencial\n2. **Recalcular cuota**: fórmula de amortización francés sobre capital restante y años pendientes\n3. **Cuota nueva** = Capital pendiente × [r(1+r)^n] / [(1+r)^n - 1]\n   - r = Tipo mensual (TIN / 12)\n   - n = Meses restantes\n\n### Ejemplo\n\n| Concepto | Valor |\n|----------|-------|\n| Capital pendiente | 250.000€ |\n| Euribor anterior (2024) | 1,85% |\n| Euribor actual (2026) | 2,94% |\n| Diferencial | 0,99% |\n| Tipo anterior | 2,84% |\n| Tipo nuevo | 3,93% |\n| Años restantes | 20 |\n| Cuota actual | 1.135€/mes |\n| Cuota nueva (estimada) | 1.287€/mes |\n| **Sobrecoste mensual** | **152€** |\n| **Impacto anual** | **1.824€** |\n| **Coste total 20 años** | ~36.480€ |\n\n### Fórmula amortización francés (Excel/hoja)\n\n```\nCuota = Capital × [i × (1+i)^n] / [(1+i)^n - 1]\ni = TIN / 12 (tipo mensual)\nn = meses restantes\n```\n\n### Limitaciones\n\n- **Aproximación**: el cálculo es estimativo; bancos pueden redondeados, aplicar comisiones, o usar publicación oficial distinta\n- **Euribor variable**: datos históricos mensuales; se actualiza mensualmente el 20 en BOE\n- **No incluye**: seguros asociados (vida, invalidez), comisiones de tasación o modificación, gastos notariales\n- **Cambios contractuales**: si tu hipoteca incluye techo (cap) o suelo (floor) de tipo, el resultado real puede diferir\n- **Plazo**: asume amortización lineal sin cambios en periodicidad de pago",
+  "faq": [
+    {
+      "question": "¿Dónde encuentro el Euribor oficial de España 2026?",
+      "answer": "El **Banco de España** publica mensualmente (hacia el 20) la media del Euribor 12 meses en su web oficial (www.bde.es) y en el BOE. También aparece en portales financieros como Hacienda.gob.es. Nuestro dato de referencia (2,94% abril 2026) es la media oficial mensual."
+    },
+    {
+      "question": "¿Cuál es mi diferencial? ¿Cómo lo encuentro?",
+      "answer": "Tu **diferencial** está en la **cláusula de interés** del contrato hipotecario. Es el porcentaje que suma el banco al Euribor (p.ej. «Euribor + 0,99%»). También aparece en la última notificación de revisión de cuota de tu entidad."
+    },
+    {
+      "question": "¿Por qué la cuota estimada no coincide con la que me envía el banco?",
+      "answer": "Posibles motivos: (1) Euribor diferente (banco usa publicación oficial del mes de tu revisión, no la del mes anterior); (2) redondeos y cálculos internos del banco; (3) comisiones o seguros; (4) si tu hipoteca tiene suelo/techo de tipo, se aplica en lugar del calculado."
+    },
+    {
+      "question": "¿Puedo negociar el diferencial con mi banco?",
+      "answer": "Sí. Si has pagado puntual, tienes buen historial o refinancia a otra entidad, puedes solicitar **mejora del diferencial** (reducción de 0,20%–0,50 p.p.). Contacta con tu director de sucursal o gestor hipotecario."
+    },
+    {
+      "question": "¿Euribor anual vs. Euribor 3/6 meses? ¿Cuál uso?",
+      "answer": "Depende de tu contrato. La mayoría en España usan **Euribor 12 meses** (anual). Revisa tu contrato. Si usas otro plazo (3 ó 6 meses), los datos históricos y actuales varían. Esta calculadora asume Euribor 12 meses."
+    },
+    {
+      "question": "¿Qué es el suelo y techo de tipo de interés?",
+      "answer": "**Suelo** = tipo mínimo garantizado (p.ej. 2,5% aunque Euribor baje). **Techo** = tipo máximo (p.ej. 4,5% aunque Euribor suba). Si tu hipoteca tiene estos límites, la cuota real se ajustará a ellos aunque nuestro cálculo exceda o no llegue."
+    },
+    {
+      "question": "¿Puedo cambiar mi hipoteca variable a fija?",
+      "answer": "Sí. Si anticipas subidas del Euribor, puedes **reconvertir a tasa fija** (novación de contrato) con tu banco o **cambiar a otra entidad**. Ambas opciones implican gastos (tasación, notaría, registro). Compara el coste vs. el ahorro esperado."
+    },
+    {
+      "question": "¿Cómo afecta la inflación y decisiones del BCE a mi cuota?",
+      "answer": "El Euribor refleja el coste interbancario (decisiones del BCE sobre tipos de política monetaria). Si el BCE mantiene tipos altos por inflación, Euribor sube → tu cuota sube. Si bajan tipos, Euribor baja → cuota baja. Ninguno es predecible; depende de coyuntura económica."
+    },
+    {
+      "question": "¿Puedo deducirme intereses de hipoteca en IRPF?",
+      "answer": "Solo si la hipoteca es para tu **vivienda habitual** y el préstamo se formalizó **antes del 1/1/2013**. Desde 2013, no hay deducción por adquisición de vivienda habitual en IRPF (derogada). Consulta AEAT si tu hipoteca es anterior."
+    },
+    {
+      "question": "¿Cada cuándo me revisan la cuota? ¿Puedo cambiar la periodicidad?",
+      "answer": "Según contrato, la revisión es **anual** o **semestral**. No puedes cambiarla unilateralmente; requiere acuerdo con el banco (novación). La mayoría son anuales. Tu contrato especifica la fecha de revisión."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Banco de España - Tipos Euribor históricos",
+      "url": "https://www.bde.es/bde/es/areas/estadisticas/tipos-de-interes/tipos-interes-euro-mercado-interbancario.html",
+      "publisher": "Banco de España",
+      "date": "2026-04-20"
+    },
+    {
+      "name": "BOE - Publicación oficial Euribor",
+      "url": "https://www.boe.es/",
+      "publisher": "Boletín Oficial del Estado",
+      "date": "2026-04-20"
+    },
+    {
+      "name": "Hacienda.gob.es - Información hipotecaria",
+      "url": "https://www.hacienda.gob.es/",
+      "publisher": "Ministerio de Hacienda",
+      "date": "2026-01-01"
+    },
+    {
+      "name": "AEAT - Deductibilidad intereses hipoteca vivienda habitual",
+      "url": "https://sede.agenciatributaria.gob.es/",
+      "publisher": "Agencia Tributaria (AEAT)",
+      "date": "2026-01-01"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-20",
+    "source": "Banco de España (media mensual Euribor 12 meses)",
+    "sourceUrl": "https://www.bde.es/bde/es/areas/estadisticas/tipos-de-interes/tipos-interes-euro-mercado-interbancario.html",
+    "updateType": "automatic",
+    "notes": "Euribor se publica el 20 de cada mes. Se actualiza automáticamente la referencia mensual. Datos históricos 2024–2026 del Banco de España."
+  },
+  "lastReviewed": "2026-04-20"
+}

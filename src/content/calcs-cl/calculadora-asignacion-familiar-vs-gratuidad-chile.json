@@ -1,0 +1,289 @@
+{
+  "slug": "calculadora-asignacion-familiar-vs-gratuidad-chile",
+  "title": "Asignación Familiar y RSH 2026 | Hacé Cuentas Chile",
+  "h1": "Calculadora Asignación Familiar y Registro Social Hogares",
+  "description": "Calcula tu tramo de asignación familiar según ingresos 2026 y determina acceso a beneficios: PGU, gratuidad educacional, pase escolar. Datos SII Chile actualizados.",
+  "category": "familia",
+  "audience": "CL",
+  "icon": "👨‍👩‍👧‍👦",
+  "formulaId": "asignacion-familiar-vs-gratuidad-chile",
+  "intro": "La **asignación familiar** en Chile varía según tramo de ingreso y número de cargas. El **Registro Social Hogares (RSH)** es el instrumento que determina tu acceso a beneficios sociales como gratuidad educacional, pase escolar, bonificaciones y programas estatales. Esta calculadora estima tu tramo de asignación familiar y los beneficios potenciales según ingresos mensuales y composición del hogar.",
+  "keyTakeaway": "Con ingresos bajo $1.250.000 mensuales y hasta 2 cargas, accedes a asignación familiar máxima ($49.850) + gratuidad educacional completa. RSH valida elegibilidad para PGU, pase escolar y bonificaciones escolares 2026.",
+  "useCases": [
+    "Trabajadores dependientes con hijos: estimar asignación familiar mensual según contrato",
+    "Padres separados: calcular asignación por cargas reconocidas legalmente",
+    "Familias en programas sociales: verificar acceso a gratuidad y beneficios educacionales",
+    "Microempresarios: proyectar asignación familiar según ingresos tributarios",
+    "Estudiantes de educación superior: determinar elegibilidad para gratuidad según RSH",
+    "Beneficiarios PGU: validar tramo de asignación y otros beneficios complementarios"
+  ],
+  "fields": [
+    {
+      "id": "ingresos_mensuales",
+      "label": "Ingresos mensuales netos ($)",
+      "type": "number",
+      "placeholder": "2500000",
+      "min": 0,
+      "max": 10000000,
+      "step": 10000,
+      "hint": "Sueldo líquido o ingresos promedio mensual. Incluye AFP, salud, impuestos descontados.",
+      "required": true
+    },
+    {
+      "id": "numero_cargas",
+      "label": "Número de cargas familiares",
+      "type": "number",
+      "placeholder": "2",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "hint": "Hijos menores de 18 años o hasta 24 en educación. Reconocidos legalmente.",
+      "required": true
+    },
+    {
+      "id": "tipo_trabajador",
+      "label": "Tipo de trabajador",
+      "type": "select",
+      "options": [
+        {
+          "value": "dependiente",
+          "label": "Dependiente (empresa/institución)"
+        },
+        {
+          "value": "independiente",
+          "label": "Independiente registrado SII"
+        },
+        {
+          "value": "microempresario",
+          "label": "Microempresario/monotributista"
+        },
+        {
+          "value": "estudiante",
+          "label": "Estudiante de educación superior"
+        },
+        {
+          "value": "beneficiario_pgu",
+          "label": "Beneficiario PGU/pensionado"
+        }
+      ],
+      "hint": "Define acceso a asignación familiar y otros beneficios.",
+      "required": true
+    },
+    {
+      "id": "region",
+      "label": "Región de residencia",
+      "type": "select",
+      "options": [
+        {
+          "value": "metropoliana",
+          "label": "Metropolitana de Santiago"
+        },
+        {
+          "value": "norte",
+          "label": "Regiones Norte (I-III)"
+        },
+        {
+          "value": "centro",
+          "label": "Regiones Centro (IV-VI)"
+        },
+        {
+          "value": "sur",
+          "label": "Regiones Sur (VII-X)"
+        },
+        {
+          "value": "extrema",
+          "label": "Regiones Extrema (XI-XII)"
+        }
+      ],
+      "hint": "Algunas bonificaciones varían por región (ej: transporte escolar).",
+      "required": false
+    },
+    {
+      "id": "hijos_educacion_superior",
+      "label": "Hijos en educación superior",
+      "type": "number",
+      "placeholder": "0",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "hint": "Estudiantes en universidades, institutos profesionales o CFT elegibles para gratuidad.",
+      "required": false
+    },
+    {
+      "id": "grupo_tramo_rsh",
+      "label": "Grupo de ingreso RSH estimado",
+      "type": "select",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Calcular automáticamente"
+        },
+        {
+          "value": "indigente",
+          "label": "Indigente (sin ingresos regulares)"
+        },
+        {
+          "value": "d",
+          "label": "Tramo D (extrema pobreza)"
+        },
+        {
+          "value": "c",
+          "label": "Tramo C (pobreza)"
+        },
+        {
+          "value": "b",
+          "label": "Tramo B (vulnerabilidad)"
+        },
+        {
+          "value": "a",
+          "label": "Tramo A (clase media baja)"
+        }
+      ],
+      "hint": "RSH determina acceso a beneficios. Dejar 'Automático' si no lo conoces.",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "tramo_asignacion",
+      "label": "Tramo de asignación familiar",
+      "type": "string",
+      "unit": ""
+    },
+    {
+      "id": "monto_asignacion_mensual",
+      "label": "Asignación familiar mensual",
+      "type": "number",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "asignacion_anual",
+      "label": "Asignación familiar anual",
+      "type": "number",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "tramo_rsh_resultado",
+      "label": "Tramo RSH estimado",
+      "type": "string",
+      "unit": ""
+    },
+    {
+      "id": "acceso_gratuidad",
+      "label": "Acceso a gratuidad educacional",
+      "type": "string",
+      "unit": ""
+    },
+    {
+      "id": "acceso_pgu",
+      "label": "Elegibilidad PGU/bonificaciones",
+      "type": "string",
+      "unit": ""
+    },
+    {
+      "id": "beneficios_adicionales",
+      "label": "Beneficios adicionales accesibles",
+      "type": "string",
+      "unit": ""
+    },
+    {
+      "id": "ingreso_per_capita",
+      "label": "Ingreso per cápita del hogar",
+      "type": "number",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "observaciones",
+      "label": "Observaciones y próximos pasos",
+      "type": "string",
+      "unit": ""
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa asignación familiar en Chile se determina por **tramos de ingreso** establecidos por Decreto del Ministerio del Trabajo. El cálculo integra tres dimensiones:\n\n### Tramos de asignación familiar 2026\n\n| Ingreso mensual | Monto mensual | Observaciones |\n|---|---|---|\n| Hasta $853.750 (base mensual) | $49.850 | 100% asignación |\n| $853.751 - $1.280.625 | $37.387 | 75% de asignación |\n| $1.280.626 - $1.707.500 | $24.925 | 50% de asignación |\n| $1.707.501 - $2.134.375 | $12.462 | 25% de asignación |\n| Superior a $2.134.375 | $0 | Sin asignación |\n\n*Estos tramos se ajustan anualmente según índice de precios al consumidor (IPC) y disposiciones SII.*\n\n### Registro Social Hogares (RSH)\n\nEl RSH utiliza un **algoritmo de estratificación socioeconómica** que integra:\n- **Ingresos per cápita del hogar** (principal factor)\n- **Educación del jefe de hogar**\n- **Acceso a servicios básicos**\n- **Condición laboral**\n\n**Tramos RSH y acceso a beneficios:**\n\n| Tramo | Ingreso per cápita | Gratuidad | PGU | Pase Escolar | Bonificación |\n|---|---|---|---|---|---|\n| Indigente/D | < $250.000 | Sí (100%) | Sí | Sí | Sí |\n| Tramo C | $250.001 - $450.000 | Sí (100%) | Sí | Sí | Sí |\n| Tramo B | $450.001 - $800.000 | Sí (50-100%) | Parcial | Sí | Parcial |\n| Tramo A | $800.001 - $1.200.000 | No | Parcial | No | No |\n| Superior | > $1.200.000 | No | No | No | No |\n\n### Fórmula de cálculo\n\n```\n1. Ingreso per cápita = Ingresos mensuales totales ÷ (número de cargas + jefe de hogar)\n\n2. Tramo RSH = Función(ingreso per cápita, educación, servicios)\n\n3. Monto asignación = Función(tramo ingreso, número de cargas)\n\n4. Beneficios accesibles = Función(tramo RSH, tipo trabajador, región)\n```\n\n### Ejemplo práctico\n\n**Datos:**\n- Trabajador dependiente, ingresos netos: $1.800.000 mensuales\n- 2 hijos menores (cargas reconocidas)\n- Residencia: Región Metropolitana\n\n**Cálculo:**\n1. Ingreso per cápita: $1.800.000 ÷ 3 = $600.000 → **Tramo B (vulnerable)**\n2. Ingresos totales mensuales: $1.800.000 → **Tramo 50% asignación**\n3. Asignación familiar: $49.850 × 50% = $24.925 × 2 cargas = **$49.850 mensual**\n4. Gratuidad educacional: **50-100% según establecimiento**\n5. PGU/bonificaciones: **Parcial** (requiere validación RSH completa)\n6. Pase escolar: **Sí, acceso completo**\n\n### Limitaciones importantes\n\n- **RSH requiere actualización:** Esta calculadora estima tramificación. Para beneficios oficiales, validar en dssi.cl con RUT.\n- **Cargas reconocidas:** Solo hijos menores de 18 años o hasta 24 en educación. Requiere acreditación legal (partida de nacimiento, sentencia judicial).\n- **Asignación solo empleados:** Trabajadores dependientes reciben asignación automática en nómina. Independientes deben solicitarla en SII con declaración de impuestos.\n- **Variables regionales:** Algunas bonificaciones (ej: transporte escolar) varían por región y municipalidad.\n- **PGU acumulable:** Puede combinarse con otros beneficios según RSH, pero ciertas prestaciones son excluyentes.\n- **Actualización anual:** Tramos se reajustan cada enero según IPC. Cifras 2026 provisionales.\n\n## Consideraciones legales\n\nLa asignación familiar está regulada por:\n- **Decreto Supremo (MINTRA):** Establece tramos y montos anuales.\n- **Ley 19.728 (Nuevo Sistema de Asignación Familiar):** Marco normativo.\n- **Instrucciones SII 2026:** Validación de ingresos y cargas.\n- **RSH (DSSI):** Instrumento oficial de estratificación socioeconómica.",
+  "faq": [
+    {
+      "question": "¿Cómo se diferencia la asignación familiar del subsidio familiar?",
+      "answer": "La **asignación familiar** es un aporte mensual obligatorio por cargas, regulado por el Ministerio del Trabajo según tramos de ingreso. El **subsidio familiar** (o bonificación) es un beneficio adicional otorgado por el Estado a trabajadores de menores ingresos. Ambos pueden combinarse según RSH y tipo de contrato."
+    },
+    {
+      "question": "¿Qué es el Registro Social Hogares (RSH)?",
+      "answer": "El RSH es un instrumento del Ministerio de Desarrollo Social que clasifica a hogares chilenos en **tramos socioeconómicos (D, C, B, A)** para determinar elegibilidad en programas sociales: gratuidad educacional, pase escolar, bonificaciones, PGU, etc. Es obligatorio actualizarlo cada 2 años en dssi.cl."
+    },
+    {
+      "question": "¿Cuál es el ingreso límite para acceder a asignación familiar completa en 2026?",
+      "answer": "Con ingresos mensuales **hasta $853.750** (aproximadamente), accedes a asignación familiar completa ($49.850 por carga). Sobre ese monto, el porcentaje disminuye progresivamente hasta anularse en $2.134.375. Estos tramos se reajustan anualmente según IPC."
+    },
+    {
+      "question": "¿Los trabajadores independientes reciben asignación familiar?",
+      "answer": "Sí, pero deben **solicitarla ante SII** adjuntando declaración de impuestos (Formulario 22). No es automática como en empleados dependientes. El monto se calcula sobre ingresos declarados. Requieren estar al día en impuestos."
+    },
+    {
+      "question": "¿Qué cargas familiares cuenta la asignación familiar?",
+      "answer": "Cuentan hijos **menores de 18 años** o hasta **24 años si están en educación superior** (universidad, IP, CFT). Deben estar reconocidos legalmente (partida de nacimiento, reconocimiento ante notario o sentencia de paternidad/maternidad). Hijastros y adoptados también califican."
+    },
+    {
+      "question": "¿Cómo accedo a la gratuidad educacional con RSH?",
+      "answer": "Si tu hogar está en **tramo D, C o parte de B según RSH**, tienes derecho a gratuidad en educación escolar (50-100% según establecimiento) y educación superior (universidades, IP, CFT acreditadas). Debes estar inscrito en SIES y haber completado RSH en dssi.cl."
+    },
+    {
+      "question": "¿Puedo combinar asignación familiar con PGU?",
+      "answer": "Sí. La asignación familiar es un derecho laboral; el PGU es un beneficio de protección social. Pueden coexistir si cumples requisitos de RSH. Sin embargo, algunos beneficios son excluyentes (ej: bonificación y subsidio de cesantía). Consulta en tu municipio."
+    },
+    {
+      "question": "¿Cada cuánto debo actualizar mi RSH?",
+      "answer": "El RSH debe actualizarse **cada 2 años** como máximo. Lo haces en línea en dssi.cl con RUT. Si no lo actualizas, pierdes acceso a beneficios. Te recomendamos hacerlo anualmente si tus ingresos cambian significativamente."
+    },
+    {
+      "question": "¿Qué ocurre si declaro cargas ficticias para asignación familiar?",
+      "answer": "Es **fraude tributario y laboral**. Implica restitución de montos, multas (hasta 100% del monto defraudado), antecedentes penales y posible cárcel. SII audita regularmente. Solo declara cargas reales con acreditación legal."
+    },
+    {
+      "question": "¿Cómo sé cuál es mi tramo RSH exacto?",
+      "answer": "Ingresa a **dssi.cl**, consulta con RUT y contraseña. Recibirás tu tramo oficial. Esta calculadora estima tramos según ingresos, pero **no reemplaza la consulta oficial en DSSI** para acceder a beneficios reales."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ministerio del Trabajo - Asignación Familiar 2026",
+      "url": "https://www.mintrabajo.gob.cl/beneficios-laborales/asignacion-familiar",
+      "publisher": "MINTRA",
+      "date": "2026"
+    },
+    {
+      "name": "Servicio de Impuestos Internos - Asignación Familiar",
+      "url": "https://www.sii.cl/impuestos/asignacion-familiar",
+      "publisher": "SII",
+      "date": "2026"
+    },
+    {
+      "name": "DSSI - Registro Social Hogares",
+      "url": "https://www.registrosocialhogares.cl",
+      "publisher": "Ministerio de Desarrollo Social",
+      "date": "2026"
+    },
+    {
+      "name": "Junaeb - Beneficios Educacionales y Pase Escolar",
+      "url": "https://www.junaeb.gob.cl",
+      "publisher": "JUNAEB",
+      "date": "2026"
+    },
+    {
+      "name": "Decreto Supremo Asignación Familiar - MINTRA 2026",
+      "url": "https://www.mintrabajo.gob.cl/leyes-y-decretos",
+      "publisher": "Diario Oficial",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Ministerio del Trabajo, SII, DSSI",
+    "sourceUrl": "https://www.mintrabajo.gob.cl",
+    "updateType": "manual",
+    "notes": "Tramos de asignación familiar se reajustan cada enero según IPC. RSH se actualiza permanentemente en dssi.cl. Cifras base 2026 confirmadas por MINTRA."
+  },
+  "lastReviewed": "2026-04-28"
+}

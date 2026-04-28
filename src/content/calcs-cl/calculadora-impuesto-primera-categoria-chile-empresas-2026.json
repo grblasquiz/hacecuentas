@@ -1,0 +1,247 @@
+{
+  "slug": "calculadora-impuesto-primera-categoria-chile-empresas-2026",
+  "title": "Calculadora Impuesto Primera Categoría Chile 2026 | Hacé Cuentas",
+  "h1": "Calculadora Impuesto Primera Categoría Chile 2026",
+  "description": "Calcula impuesto Primera Categoría empresas Chile 2026: tarifa 27% régimen 14A, 25% régimen 14D PYME. Incluye PPM, créditos IGC accionistas.",
+  "category": "impuestos",
+  "audience": "CL",
+  "icon": "🏢",
+  "formulaId": "impuesto-primera-categoria-chile-empresas-2026",
+  "intro": "El **Impuesto de Primera Categoría** (1ª Cat.) grava la renta líquida imponible (RLI) de empresas y personas naturales con giro comercial en Chile. En 2026 rige el sistema semi-integrado: tarifa **27% régimen 14A** (general); tarifa **25% régimen 14D** para PYME con ingresos ≤ $3.000 millones. Calcula tu impuesto, PPM mensual y créditos contra el impuesto global complementario.",
+  "keyTakeaway": "Empresa con RLI $10.000.000: impuesto 1ª Cat. $2.700.000 (27% régimen 14A) o $2.500.000 (25% régimen 14D); PPM: $225.000/mes.",
+  "useCases": [
+    "Estimar carga tributaria anual para empresas con giro comercial",
+    "Calcular PPM (Pago Provisional Mensual) a declarar mensualment",
+    "Determinar crédito contra impuesto global complementario (IGC) accionistas",
+    "Comparar carga impositiva entre régimen 14A (general) y 14D (PYME)",
+    "Proyectar impuesto en base a utilidad fiscal estimada",
+    "Identificar ajustes por gastos rechazados o rentas no operacionales"
+  ],
+  "fields": [
+    {
+      "id": "utilidad_bruta",
+      "label": "Utilidad Bruta (Ingresos − Costos Directos)",
+      "type": "number",
+      "placeholder": "50000000",
+      "suffix": "$",
+      "min": 0,
+      "required": true,
+      "help": "Resultado de explotación antes de gastos operacionales y financieros."
+    },
+    {
+      "id": "gastos_operacionales",
+      "label": "Gastos Operacionales (sueldos, arriendo, servicios, etc.)",
+      "type": "number",
+      "placeholder": "15000000",
+      "suffix": "$",
+      "min": 0,
+      "required": true,
+      "help": "Gastos deducibles del giro: sueldos, arriendos, servicios básicos, seguros."
+    },
+    {
+      "id": "gastos_financieros",
+      "label": "Gastos Financieros (intereses, comisiones bancarias)",
+      "type": "number",
+      "placeholder": "2000000",
+      "suffix": "$",
+      "min": 0,
+      "required": true,
+      "help": "Intereses de créditos y comisiones bancarias pagadas."
+    },
+    {
+      "id": "gastos_rechazados",
+      "label": "Gastos Rechazados (no deducibles, donaciones, sanciones)",
+      "type": "number",
+      "placeholder": "500000",
+      "suffix": "$",
+      "min": 0,
+      "required": false,
+      "help": "Gastos que el SII no permite deducir: multas, sanciones, donaciones político-partidarias, etc."
+    },
+    {
+      "id": "rentas_no_operacionales",
+      "label": "Rentas No Operacionales (ganancias acciones, intereses recibidos)",
+      "type": "number",
+      "placeholder": "1000000",
+      "suffix": "$",
+      "min": 0,
+      "required": false,
+      "help": "Ingresos fuera del giro: dividendos, ganancias de venta de activos, intereses recibidos."
+    },
+    {
+      "id": "depreciacion",
+      "label": "Depreciación (bienes muebles, inmuebles, máquinas)",
+      "type": "number",
+      "placeholder": "3000000",
+      "suffix": "$",
+      "min": 0,
+      "required": false,
+      "help": "Depreciación acumulada del ejercicio según Ley de la Renta."
+    },
+    {
+      "id": "regime_tributario",
+      "label": "Régimen Tributario",
+      "type": "select",
+      "options": [
+        {
+          "value": "14a",
+          "label": "14A (General) − Tarifa 27%"
+        },
+        {
+          "value": "14d",
+          "label": "14D (PYME) − Tarifa 25% (hasta $3.000MM ingresos)"
+        }
+      ],
+      "required": true,
+      "help": "Régimen 14A aplica tarifa 27%; régimen 14D (PYME) aplica 25% si ingresos ≤ $3.000 millones."
+    },
+    {
+      "id": "ingresos_anuales",
+      "label": "Ingresos Anuales (verificación 14D)",
+      "type": "number",
+      "placeholder": "60000000",
+      "suffix": "$",
+      "min": 0,
+      "required": false,
+      "help": "Ingresos totales del año. Necesario para verificar elegibilidad régimen 14D."
+    },
+    {
+      "id": "ppm_pagados",
+      "label": "PPM Pagados en el Año (para crédito contra impuesto)",
+      "type": "number",
+      "placeholder": "2700000",
+      "suffix": "$",
+      "min": 0,
+      "required": false,
+      "help": "Suma de 12 PPM mensuales pagados. Se acredita contra impuesto final."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "rli",
+      "label": "Renta Líquida Imponible (RLI)",
+      "suffix": "$",
+      "format": "currency"
+    },
+    {
+      "id": "tarifa_efectiva",
+      "label": "Tarifa Aplicable",
+      "suffix": "%",
+      "format": "percentage"
+    },
+    {
+      "id": "impuesto_primera_categoria",
+      "label": "Impuesto Primera Categoría",
+      "suffix": "$",
+      "format": "currency"
+    },
+    {
+      "id": "ppm_mensual",
+      "label": "PPM Mensual (12 cuotas iguales)",
+      "suffix": "$",
+      "format": "currency"
+    },
+    {
+      "id": "impuesto_neto",
+      "label": "Impuesto Neto (después de crédito PPM)",
+      "suffix": "$",
+      "format": "currency"
+    },
+    {
+      "id": "credito_igc",
+      "label": "Crédito contra IGC Accionistas",
+      "suffix": "$",
+      "format": "currency"
+    },
+    {
+      "id": "carga_tributaria_efectiva",
+      "label": "Carga Tributaria Efectiva (%RLI)",
+      "suffix": "%",
+      "format": "percentage"
+    }
+  ],
+  "explanation": "## Cómo se calcula el Impuesto de Primera Categoría Chile 2026\n\nEl impuesto de **Primera Categoría** grava la renta líquida imponible (RLI) de empresas. En Chile rige desde 2018 el **sistema semi-integrado**, donde el impuesto pagado por la empresa es acreditable contra el Impuesto Global Complementario (IGC) de accionistas.\n\n### Fórmula Base\n\n```\nRLI = Utilidad Bruta − Gastos Operacionales − Gastos Financieros − Depreciación + Rentas No Operacionales + Gastos Rechazados\n```\n\n**Impuesto Primera Categoría:**\n- **Régimen 14A (General):** Impuesto = RLI × 27%\n- **Régimen 14D (PYME):** Impuesto = RLI × 25% (si ingresos anuales ≤ $3.000 millones)\n\n**PPM (Pago Provisional Mensual):**\n```\nPPM = Impuesto Primera Categoría ÷ 12\n```\n\n**Impuesto Neto (después de crédito PPM):**\n```\nImpuesto Neto = Impuesto Primera Categoría − PPM Pagados en el Año\n```\n\n**Crédito contra IGC Accionistas:**\n```\nCrédito IGC = Impuesto Primera Categoría (se acredita 100% en sistema semi-integrado)\n```\n\n### Ejemplo Práctico\n\nEmpresa régimen 14A, 2026:\n- Utilidad Bruta: $50.000.000\n- Gastos Operacionales: −$15.000.000\n- Gastos Financieros: −$2.000.000\n- Depreciación: −$3.000.000\n- Rentas No Operacionales: +$1.000.000\n- Gastos Rechazados: +$500.000\n\n**RLI = $50.000.000 − $15.000.000 − $2.000.000 − $3.000.000 + $1.000.000 + $500.000 = $31.500.000**\n\n**Impuesto 14A = $31.500.000 × 0,27 = $8.505.000**\n\n**PPM Mensual = $8.505.000 ÷ 12 = $708.750**\n\nSi se pagaron $8.505.000 en PPM durante el año, el impuesto neto = $0 (crédito total).\n\nEl accionista podrá acreditar $8.505.000 contra su IGC cuando retire utilidades.\n\n### Ajustes Tributarios\n\n| Concepto | Efecto | Fuente |\n|----------|--------|--------|\n| Gastos Rechazados (multas, sanciones) | Suma a RLI | Art. 21 Ley Renta |\n| Rentas No Operacionales | Suma a RLI | Art. 14−17 Ley Renta |\n| Depreciación | Resta de RLI | Art. 31−34 Ley Renta |\n| Pérdidas Tributarias Anteriores | Compensa RLI (5 años máx.) | Art. 21a Ley Renta |\n| Gasto por Prevención Ambiental | Deducible especial 100% | Art. 34a Ley Renta |\n\n### Limitaciones y Consideraciones\n\n- **Elegibilidad 14D:** Solo si ingresos < $3.000 millones y no hay ingresos de capital (acciones, inmuebles) que superen 10% de ingresos totales.\n- **PPM:** Es obligatorio pagarlo mensualmente (vencimiento 12 del mes siguiente). Si no se paga, genera multa e interés.\n- **Crédito IGC:** En sistema semi-integrado, el impuesto Primera Categoría es 100% acreditable. No hay retención adicional en dividendos si se acredita.\n- **Período:** El cálculo corresponde al ejercicio comercial (generalmente enero−diciembre). Empresas nuevas pueden tener períodos menores.\n- **Personas Naturales:** Quienes ejerzan giro comercial (freelancers, consultores) también pagan Primera Categoría si facturan > $25 millones anuales (2026).\n- **Consolidación:** Grupos empresariales pueden optar por impuesto global (antes de 2018) en casos excepcionales autorizados por SII.",
+  "faq": [
+    {
+      "question": "¿Cuál es la diferencia entre régimen 14A y 14D?",
+      "answer": "Régimen 14A (general) aplica tarifa 27% a toda empresa. Régimen 14D (PYME) aplica tarifa 25% si el año anterior tuvo ingresos ≤ $3.000 millones y no posee rentas de capital (acciones, inmuebles) > 10%. La ventaja: 2 puntos porcentuales de ahorro en impuesto."
+    },
+    {
+      "question": "¿Qué son gastos rechazados?",
+      "answer": "Gastos que la ley no permite deducir: multas y sanciones administrativas, donaciones político-partidarias, gasto sin comprobante, gastos personales del dueño. El SII rechaza estos y los suma a RLI, aumentando impuesto."
+    },
+    {
+      "question": "¿Puedo acreditar PPM pagados contra el impuesto final?",
+      "answer": "Sí. Los PPM (12 cuotas mensuales) se acreditan 100% contra el impuesto Primera Categoría final. Si pagas todo en PPM, el impuesto neto a diciembre es cero. Si queda saldo, debes pagar en abril cuando se vence impuesto anual."
+    },
+    {
+      "question": "¿En qué me beneficia el sistema semi-integrado?",
+      "answer": "El impuesto Primera Categoría pagado por la empresa es acreditable contra el Impuesto Global Complementario (IGC) del accionista. No hay doble tributación: accionistas solo pagan IGC sobre diferencia entre su renta total y el crédito de empresa."
+    },
+    {
+      "question": "¿Qué es PPM y cuándo debo pagarlo?",
+      "answer": "PPM (Pago Provisional Mensual) es 1/12 del impuesto anual estimado. Se paga los días 12 de cada mes por ingresos del mes anterior. Vencimiento: día 12 del mes siguiente. Se acredita contra impuesto final."
+    },
+    {
+      "question": "¿Puedo compensar pérdidas de años anteriores?",
+      "answer": "Sí, hasta 5 años. Si 2025 tuviste pérdida, puedes compensarla contra RLI 2026, reduciendo impuesto. El SII exige declaración de pérdida tributaria en formulario 22 del año anterior."
+    },
+    {
+      "question": "¿Qué pasa si tengo ingresos por acciones o inmuebles?",
+      "answer": "Son rentas no operacionales y se suman a RLI, aumentando impuesto. Si en 14D estos ingresos superan 10% del total, pierdes elegibilidad para régimen 25% y pasas a 27% (14A)."
+    },
+    {
+      "question": "¿Cómo afecta depreciación al impuesto?",
+      "answer": "La depreciación es gasto deducible que resta de RLI. Reduce impuesto en el ejercicio actual. En años posteriores, cuando vendes el bien, reconoces ganancia por diferencia, generando impuesto adicional."
+    },
+    {
+      "question": "¿Qué personas naturales pagan Primera Categoría?",
+      "answer": "Personas naturales con giro comercial que facturen > $25 millones anuales (2026) deben pagar impuesto Primera Categoría. Si es freelancer o consultor con menores ingresos, tributan solo por IGC."
+    },
+    {
+      "question": "¿Cuál es el vencimiento de impuesto Primera Categoría?",
+      "answer": "Formulario 22 (declaración anual) vence en abril. Impuesto se paga en cuotas entre abril−mayo o al contado. Si pagas todo en PPM durante año, saldo final es cero en abril. Multa por atraso: 1% interés diario."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII − Impuesto Categoría",
+      "url": "https://www.sii.cl/sobre-sii/impuestos/impuesto-a-la-renta/impuesto-de-primera-categoria",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "Ley sobre Impuesto a la Renta − Artículos 14 a 34 (DL 824)",
+      "url": "https://www.sii.cl/normativa/leyes/decreto-ley-824",
+      "publisher": "SII / BCN",
+      "date": "2026"
+    },
+    {
+      "name": "SII − Régimen PYME 14D",
+      "url": "https://www.sii.cl/sobre-sii/impuestos/impuesto-a-la-renta/regimen-de-renta-atribuida-pyme",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "SII − Sistema Semi-Integrado",
+      "url": "https://www.sii.cl/normativa/resoluciones/resolucion-sistema-semi-integrado",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central − UTA y UTM 2026",
+      "url": "https://www.bcentral.cl/web/banco-central/areas/estadisticas/uta-y-utm",
+      "publisher": "Banco Central de Chile",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII − Resoluciones de Impuesto a la Renta 2026",
+    "sourceUrl": "https://www.sii.cl/sobre-sii/impuestos/impuesto-a-la-renta",
+    "updateType": "manual",
+    "notes": "Tarifas 27% (14A) y 25% (14D), límite PYME $3.000 millones, depreciación, gastos deducibles, PPM mensual vigentes 2026. Se actualiza anualmente por cambios en tramos o tasas del SII."
+  },
+  "lastReviewed": "2026-04-28"
+}

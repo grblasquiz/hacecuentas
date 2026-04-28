@@ -1,0 +1,205 @@
+{
+  "slug": "calculadora-credito-libranza-colombia-empleado-cuota-tasa",
+  "title": "Calculadora Crédito Libranza Colombia 2026 | Cuota y Tasa",
+  "h1": "Crédito libranza Colombia empleado",
+  "description": "Calcula cuota mensual, tasa efectiva anual y máximo prestable en crédito libranza Colombia. Descuento directo nómina, plazo 12-72 meses, tasa 1-2% más baja que personal.",
+  "category": "finanzas",
+  "audience": "CO",
+  "icon": "💼",
+  "formulaId": "credito-libranza-colombia-empleado-cuota-tasa",
+  "intro": "El crédito libranza es un producto de financiación exclusivo para empleados formales en Colombia. Se caracteriza por un **descuento automático en nómina**, tasas de interés **1-2% inferiores a créditos personales** y plazos flexibles de **12 a 72 meses**. La cuota máxima permitida es el **50% del ingreso disponible** (salario menos descuentos legales: AFP, EPS, retención en la fuente). Esta calculadora te permite simular el costo real del crédito: cuota mensual, tasa efectiva anual (EA), intereses totales y el monto máximo que puedes solicitar según tu salario.",
+  "keyTakeaway": "Un crédito libranza de $10.000.000 a 60 meses con tasa EA 11,5% genera cuota de $198.775/mes e intereses totales de $1.926.500. Máximo prestable con salario de $3.000.000: $1.200.000 (50% ingreso disponible).",
+  "useCases": [
+    "Empleado calcula si cuota libranza cabe en su presupuesto mensual",
+    "Comparar tasa libranza vs crédito personal o tarjeta de crédito",
+    "Determinar monto máximo a solicitar según ingresos disponibles",
+    "Simular diferentes plazos para elegir cuota cómoda",
+    "Validar si conviene refinanciar deuda de tarjeta con libranza",
+    "Calcular intereses totales pagados en toda la vida del crédito"
+  ],
+  "fields": [
+    {
+      "id": "salario_mensual",
+      "label": "Salario mensual bruto",
+      "type": "number",
+      "placeholder": "3000000",
+      "unit": "$",
+      "min": 1000000,
+      "max": 50000000,
+      "step": 100000,
+      "hint": "Salario bruto sin descuentos. Rango: SMLMV 2026 ($1.375.000) a $50M."
+    },
+    {
+      "id": "monto_solicitado",
+      "label": "Monto a financiar",
+      "type": "number",
+      "placeholder": "10000000",
+      "unit": "$",
+      "min": 1000000,
+      "max": 100000000,
+      "step": 100000,
+      "hint": "Debe ser ≤ máximo prestable según ingresos disponibles (50% salario menos descuentos)."
+    },
+    {
+      "id": "plazo_meses",
+      "label": "Plazo en meses",
+      "type": "number",
+      "placeholder": "60",
+      "unit": "meses",
+      "min": 12,
+      "max": 72,
+      "step": 6,
+      "hint": "Rango permitido: 12 a 72 meses. Plazo mayor = cuota menor pero más intereses."
+    },
+    {
+      "id": "tasa_ea",
+      "label": "Tasa Efectiva Anual (EA)",
+      "type": "number",
+      "placeholder": "11.5",
+      "unit": "%",
+      "min": 8.5,
+      "max": 16.0,
+      "step": 0.1,
+      "hint": "Rango típico libranza 2026: 8.5% a 16% EA. Verifica con tu entidad. Más baja que crédito personal."
+    },
+    {
+      "id": "descuentos_legales_pct",
+      "label": "Descuentos legales (AFP + EPS + retención) %",
+      "type": "number",
+      "placeholder": "12.5",
+      "unit": "%",
+      "min": 8.0,
+      "max": 25.0,
+      "step": 0.5,
+      "hint": "Típico en Colombia: AFP 4% + EPS 4% + retención 2.5-8% = 10.5-16.5%. Verifica tu rol."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "ingreso_disponible",
+      "label": "Ingreso disponible mensual",
+      "unit": "$",
+      "hint": "Salario bruto menos descuentos legales. Base para cuota máxima (50%)."
+    },
+    {
+      "id": "cuota_maxima_permitida",
+      "label": "Cuota máxima permitida (50% ingreso disponible)",
+      "unit": "$",
+      "hint": "Límite regulatorio para libranza. No puede excederse."
+    },
+    {
+      "id": "cuota_mensual",
+      "label": "Cuota mensual",
+      "unit": "$",
+      "hint": "Pago constante cada mes incluyendo capital e intereses."
+    },
+    {
+      "id": "pct_ingreso_disponible",
+      "label": "Cuota como % ingreso disponible",
+      "unit": "%",
+      "hint": "Indicador de viabilidad. Idealmente <30-40%. Máx regulatorio: 50%."
+    },
+    {
+      "id": "intereses_totales",
+      "label": "Intereses totales pagados",
+      "unit": "$",
+      "hint": "Suma de todos los intereses durante el plazo."
+    },
+    {
+      "id": "valor_total_pagado",
+      "label": "Valor total a pagar (capital + intereses)",
+      "unit": "$",
+      "hint": "Cuota mensual × plazo en meses."
+    },
+    {
+      "id": "maximo_prestable",
+      "label": "Máximo prestable según ingresos",
+      "unit": "$",
+      "hint": "50% ingreso disponible × (cuota máxima / cuota a tasa EA dada). Límite real de solicitud."
+    },
+    {
+      "id": "es_viable",
+      "label": "¿Es viable la solicitud?",
+      "unit": "Sí/No",
+      "hint": "Sí si monto ≤ máximo prestable y cuota ≤ 50% ingreso disponible."
+    }
+  ],
+  "explanation": "## Cómo se calcula el crédito libranza\n\n### Fórmula de cuota mensual (Sistema Francés)\n\nEl crédito libranza usa **amortización en sistema francés**, donde la cuota es constante:\n\n**C = P × [i(1+i)ⁿ] / [(1+i)ⁿ - 1]**\n\nDonde:\n- **C** = cuota mensual ($)\n- **P** = principal/monto solicitado ($)\n- **i** = tasa de interés mensual (EA ÷ 12 ÷ 100)\n- **n** = número de cuotas (plazo en meses)\n\n### Cálculo de máximo prestable\n\nSe obtiene desde dos restricciones:\n\n1. **Límite de cuota**: cuota máxima = 50% × ingreso disponible\n2. **Despejando P** de la fórmula anterior:\n\n**P_máx = C_máx × [(1+i)ⁿ - 1] / [i(1+i)ⁿ]**\n\n### Intereses totales\n\n**Intereses = (C × n) - P**\n\nDonde C×n es el total pagado en el plazo.\n\n### Ingreso disponible\n\n**Ingreso disponible = Salario bruto × (1 - descuentos_legales%)**\n\nDescuentos típicos Colombia 2026:\n- AFP (fondo pensión): 4%\n- EPS (seguro salud): 4%\n- Retención en la fuente: 2.5% a 8% (según renta)\n- **Total típico**: 10.5% a 16%\n\n## Ejemplo práctico\n\n| Concepto | Valor |\n|----------|-------|\n| Salario bruto | $3.000.000 |\n| Descuentos legales (12.5%) | $375.000 |\n| **Ingreso disponible** | **$2.625.000** |\n| Cuota máxima permitida (50%) | **$1.312.500** |\n| Monto solicitado | $10.000.000 |\n| Plazo | 60 meses |\n| Tasa EA | 11.5% |\n| Tasa mensual | 0.913% |\n| **Cuota mensual calculada** | **$198.775** |\n| Cuota como % ingreso disponible | 7.6% ✓ (viable) |\n| **Intereses totales** | **$1.926.500** |\n| Valor total pagado | $11.926.500 |\n| **Máximo prestable** | **$8.678.000** (estimado) |\n\n## Limitaciones y consideraciones\n\n- **Requiere vínculo laboral formal**: Solo empleados con contrato indefinido o fijo (mínimo 6 meses antigüedad según entidad).\n- **Afiliación a fondo de pensiones**: Obligatoria (Colpensiones o fondo privado).\n- **Saldo máximo en libranza**: No pueden coexistir más de 1-2 libranzas simultáneamente según política de entidades.\n- **Comisión de apertura**: Algunas entidades cobran 0.5%-1.5% del monto (no incluida en esta calculadora; **verifica con tu banco**).\n- **Seguro de vida**: Obligatorio en libranzas; se suma a la cuota (no modelado aquí).\n- **Tasa fija vs variable**: Esta calculadora asume tasa fija. Algunas entidades ofrecen tasas variables ligadas a DTF + spread.\n- **Precisión**: Cálculo teórico. El saldo real puede variar por redondeos de cuota, pagos anticipados o cambios de plazo.\n- **Renta sobre intereses**: Los intereses pagados NO son deducibles en IRPF personal en Colombia (a diferencia de algunos países).",
+  "faq": [
+    {
+      "question": "¿Qué es un crédito libranza y quién puede solicitar?",
+      "answer": "Un crédito libranza es un producto de financiación exclusivo para empleados formales en Colombia. El banco se asegura el cobro mediante **descuento directo en nómina** realizado por la empresa empleadora. Requisitos típicos: contrato laboral indefinido/fijo, mínimo 6 meses antigüedad, afiliación a fondo de pensiones (Colpensiones o privado), ingreso mínimo SMLMV 2026 ($1.375.000)."
+    },
+    {
+      "question": "¿Cuál es la diferencia entre tasa EA (Efectiva Anual) y tasa nominal?",
+      "answer": "La **EA (Efectiva Anual)** incluye todos los costos del crédito (comisiones, seguros, capitalizaciones) expresados como porcentaje anual. Es la tasa que **debes comparar entre ofertas**. La tasa nominal es una fracción de la EA (p.ej., EA 11.5% ≈ tasa nominal 10.9%). En Colombia, por regulación DIAN/SFC, los bancos **deben informar EA claramente**."
+    },
+    {
+      "question": "¿Por qué la libranza tiene tasa más baja que crédito personal?",
+      "answer": "Porque el riesgo para el banco es menor: el descuento se toma **directamente de nómina**, garantizando pago automático. No hay riesgo de incumplimiento por cambio de empleo (o hay cláusula de cobertura). Esto **reduce costo operativo y cobranza**, lo que se refleja en tasa 1-2% más baja que personal."
+    },
+    {
+      "question": "¿Cuál es el plazo máximo de una libranza?",
+      "answer": "El plazo máximo típico es **72 meses (6 años)**. Algunos bancos ofrecen hasta 84 meses. Plazo muy largo aumenta intereses totales; plazo muy corto aumenta cuota mensual. Recomendación: **12-60 meses** para balance entre cuota y costo."
+    },
+    {
+      "question": "¿Qué significa 'máximo prestable' y cómo se calcula?",
+      "answer": "Es el **monto máximo que puedes solicitar** según regulación y tu ingreso disponible. Se limita a que la **cuota mensual no exceda el 50% del ingreso disponible** (salario menos descuentos AFP/EPS/retención). Si calculas máximo prestable de $8M con cuota $1.3M y tu ingreso disponible es $2.6M, no puedes pedir $15M."
+    },
+    {
+      "question": "¿Incluye seguro de vida la cuota de libranza?",
+      "answer": "**Sí, en la mayoría de casos**. El seguro de vida (invalidez/muerte) es obligatorio en libranzas. Su costo (típicamente 0.3%-0.8% del saldo) se suma a la cuota mensual. **Esta calculadora asume seguro en la tasa EA que ingresas**; verifica con tu banco si la tasa informada ya lo incluye."
+    },
+    {
+      "question": "¿Puedo cancelar la libranza antes del plazo?",
+      "answer": "**Sí**, pero con **penalización por cancelación anticipada**. Varía por entidad: algunos bancos cobran 1-3% del saldo pendiente. Otros **no cobran penalización**. Verifica contrato. Desde 2020, la normativa SFC exige **transparencia en penalizaciones anticipadas**."
+    },
+    {
+      "question": "¿Qué pasa si me despiden o cambio de empleo?",
+      "answer": "El crédito libranza **requiere vínculo laboral activo**. Si te despiden: (1) algunas entidades exigen que pagues lump sum con indemnización; (2) otras permiten continuar si liquidación es suficiente; (3) algunas requieren que aportes lo que faltaría de nómina. **Verifica cláusula 'cesantía' en contrato de libranza**."
+    },
+    {
+      "question": "¿Puedo tener varias libranzas a la vez?",
+      "answer": "Regulatorio, **máximo 2 libranzas simultáneamente**, pero esto depende de cada banco. En la práctica, la mayoría de entidades **no aprueban más de 1 libranza vigente**. Si tienes libranza con banco A, banco B probablemente rechazará solicitud. Verifica con la entidad."
+    },
+    {
+      "question": "¿Cómo afecta la libranza mi puntaje de crédito (CIFIN)?",
+      "answer": "Una libranza **afecta igual que cualquier crédito** en términos de historial: si pagas puntualmente, **mejora tu calificación**; si incumples, **daña CIFIN**. El descuento automático en nómina hace que incumplimientos sean raros. Sin embargo, solicitar libranza genera **consulta de crédito**, que sí impacta ligeramente (menos de 10 puntos)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DIAN - Información Tributaria Créditos",
+      "url": "https://www.dian.gov.co/impuestos/personas/crediitos",
+      "publisher": "DIAN (Dirección de Impuestos y Aduanas Nacionales)",
+      "date": "2026"
+    },
+    {
+      "name": "Superfinanciera - Tasas de Interés Bancarias",
+      "url": "https://www.superfinanciera.gov.co/inicio/informacion-financiera/encuestas-de-opinion/tasas-interes-creditos",
+      "publisher": "Superfinanciera de Colombia",
+      "date": "2026"
+    },
+    {
+      "name": "Ministerio del Trabajo - Descuentos en Nómina",
+      "url": "https://www.mintrabajo.gov.co/ciudadanos/fondo-de-pensiones",
+      "publisher": "Ministerio del Trabajo y Previsión Social",
+      "date": "2026"
+    },
+    {
+      "name": "Asobancaria - Estándares Créditos Libranza",
+      "url": "https://www.asobancaria.com/caracteristicas-creditos/",
+      "publisher": "Asociación Bancaria y de Entidades Financieras de Colombia",
+      "date": "2025"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Superfinanciera de Colombia, DIAN, Asobancaria",
+    "sourceUrl": "https://www.superfinanciera.gov.co/",
+    "updateType": "manual",
+    "notes": "Tasas EA libranza 2026, plazo máximo regulatorio, límite cuota 50% ingreso disponible, SMLMV 2026 $1.375.000, descuentos AFP/EPS/retención actualizados."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,166 @@
+{
+  "slug": "calculadora-pension-viudez-vitalicia-chile-cuantia",
+  "title": "Calculadora Pensión Viudez Chile 2026 | Cuantía Cónyuge",
+  "h1": "Calculadora de pensión de viudez vitalicia Chile",
+  "description": "Calcula la pensión de viudez que recibe el cónyuge sobreviviente en Chile. 60% o 50% de la pensión del causante según hijos. Datos SII 2026.",
+  "category": "familia",
+  "audience": "CL",
+  "icon": "🕊️",
+  "formulaId": "pension-viudez-vitalicia-chile-cuantia",
+  "intro": "La **pensión de viudez vitalicia** es la prestación que recibe el cónyuge sobreviviente cuando fallece el pensionista o el afiliado. El porcentaje varía según si existen hijos: **60%** de la pensión del causante si no hay hijos o éstos son independientes; **50%** si hay hijos menores, inválidos o estudiantes menores de 24 años a cargo. Este cálculo incluye pensión para el cónyuge, distribución entre hijos menores y el monto total del grupo familiar.",
+  "keyTakeaway": "La viuda/o recibe el 60% de la pensión (sin hijos) o 50% (con hijos). Si hay menores, se distribuye 50% cónyuge + 25% dividido entre hijos. Máximo $2.456.000 mensual pensión base 2026.",
+  "useCases": [
+    "Viuda necesita saber cuánto recibirá mensualmente tras fallecimiento del pensionista",
+    "Comparar cuantía de viudez si hay hijos menores a cargo vs. sin dependientes",
+    "Planificar ingresos familiares post-pérdida de causante",
+    "Validar cálculo de AFP o institución previsional",
+    "Estimar distribución entre cónyuge e hijos en pensión conjunta"
+  ],
+  "fields": [
+    {
+      "id": "pension_causante",
+      "label": "Pensión mensual del causante",
+      "type": "currency",
+      "placeholder": "1500000",
+      "help": "Pensión que recibía o hubiera recibido el fallecido (jubilación, invalidez, etc.)",
+      "required": true,
+      "min": 0,
+      "max": 10000000
+    },
+    {
+      "id": "tiene_hijos_dependientes",
+      "label": "¿Existen hijos menores, inválidos o estudiantes < 24 años?",
+      "type": "boolean",
+      "help": "Hijos que dependen económicamente del causante",
+      "required": true
+    },
+    {
+      "id": "cantidad_hijos",
+      "label": "Cantidad de hijos dependientes",
+      "type": "number",
+      "placeholder": "2",
+      "help": "Solo si respondiste sí anterior. Menores de edad, inválidos o estudiantes < 24.",
+      "required": false,
+      "min": 0,
+      "max": 20,
+      "dependsOn": "tiene_hijos_dependientes"
+    },
+    {
+      "id": "es_conyuge_invalido",
+      "label": "¿El cónyuge es inválido (pensionado por invalidez)?",
+      "type": "boolean",
+      "help": "Si es pensionado por invalidez, aplica 60% aunque haya hijos",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "pension_conyuge",
+      "label": "Pensión mensual del cónyuge",
+      "type": "currency",
+      "help": "Monto que recibe el viudo/a en calidad de sobreviviente"
+    },
+    {
+      "id": "pension_total_hijos",
+      "label": "Pensión total para hijos (distribuida entre todos)",
+      "type": "currency",
+      "help": "Suma a repartir entre menores; cada hijo recibe prorrata"
+    },
+    {
+      "id": "pension_por_hijo",
+      "label": "Pensión por cada hijo (promedio)",
+      "type": "currency",
+      "help": "Cantidad individual si se distribuye equitativamente"
+    },
+    {
+      "id": "pension_total_grupo",
+      "label": "Pensión total grupo familiar",
+      "type": "currency",
+      "help": "Cónyuge + todos los hijos; no puede exceder 100% pensión causante"
+    },
+    {
+      "id": "porcentaje_aplicado",
+      "label": "Porcentaje aplicado sobre pensión causante",
+      "type": "text",
+      "help": "60% sin hijos / 50% con hijos (o 60% si cónyuge inválido)"
+    }
+  ],
+  "explanation": "## Cómo se calcula la pensión de viudez en Chile\n\nLa pensión de viudez vitalicia se rige por los artículos 46 y 47 de la Ley 19.071 (Sistema Integrado de Pensiones) y disposiciones del SII.\n\n### Fórmula base\n\n**Sin hijos dependientes:**\n```\nPensión Cónyuge = Pensión Causante × 60%\n```\n\n**Con hijos menores, inválidos o estudiantes < 24 años:**\n```\nPensión Total Grupo = Pensión Causante × 50%\nPensión Cónyuge = Pensión Total Grupo × 50% = Pensión Causante × 25%\nPensión Hijos = Pensión Total Grupo × 50% = Pensión Causante × 25%\nPor cada hijo = Pensión Hijos ÷ cantidad hijos\n```\n\n**Excepción: Cónyuge inválido**\nSi el cónyuge es pensionado por invalidez, recibe **60%** aunque haya hijos. Los hijos reciben el 40% restante distribuido.\n\n### Ejemplo 1: Sin hijos dependientes\n\n| Concepto | Monto |\n|----------|-------|\n| Pensión causante | $1.500.000 |\n| % aplicable | 60% |\n| Pensión viuda | **$900.000** |\n| Pensión hijos | $0 |\n| **Total grupo** | **$900.000** |\n\n### Ejemplo 2: Con 2 hijos menores\n\n| Concepto | Monto |\n|----------|-------|\n| Pensión causante | $1.500.000 |\n| % aplicable | 50% |\n| Total grupo (50%) | $750.000 |\n| Cónyuge (50% del 50%) | **$375.000** |\n| Hijos conjuntos (50% del 50%) | $375.000 |\n| Por cada hijo | **$187.500** |\n| **Total grupo** | **$750.000** |\n\n### Ejemplo 3: Cónyuge inválido con hijos\n\n| Concepto | Monto |\n|----------|-------|\n| Pensión causante | $2.000.000 |\n| % cónyuge inválido | 60% |\n| Pensión cónyuge | **$1.200.000** |\n| Hijos (40% restante) | $800.000 |\n| Por cada hijo (2 hijos) | **$400.000** |\n| **Total grupo** | **$2.000.000** |\n\n## Limitaciones y consideraciones\n\n- **Límite máximo:** La pensión total del grupo familiar **no puede superar** la pensión completa del causante (100%).\n- **Ascendientes:** Si no hay cónyuge ni hijos, pueden optar padres o abuelos (con porcentajes distintos).\n- **Pensión temporal de viudez:** Existe pensión temporal si el cónyuge es joven (< 45 años) sin hijos, durante 5 años; luego cesa.\n- **Pensión conjunta:** Mientras convivan cónyuge e hijos, reciben pensión conjunta; al egresar hijo (mayoría edad, término carrera), su parte se redistribuye.\n- **Reintegro por fallecimiento:** Si la viuda fallece, los hijos mantienen derecho; si fallecen todos los hijos, el cónyuge recibe 100% (jubilación).\n- **Compatibilidad:** El cónyuge puede tener ingresos propios; la viudez no se pierde por trabajar.\n- **Actualización:** Pensiones se reajustan anualmente conforme a variación del IPC (enero).",
+  "faq": [
+    {
+      "q": "¿Cuánto tiempo dura la pensión de viudez?",
+      "a": "La pensión de viudez es **vitalicia** (de por vida) si el cónyuge tiene 45 años o más, o si tiene hijos dependientes. Si es menor de 45 sin hijos, la pensión es temporal por **5 años**; pasado ese tiempo, cesa."
+    },
+    {
+      "q": "¿Qué pasa si el cónyuge vuelve a casarse?",
+      "a": "La pensión de viudez **cesa inmediatamente** al contraer nuevo matrimonio. El nuevo cónyuge debe obtener su propia pensión si se produce un fallecimiento futuro."
+    },
+    {
+      "q": "¿Los hijos heredan la pensión si fallece la madre viuda?",
+      "a": "No directamente. Si fallece el cónyuge, los hijos pierden la pensión de viudez. Sin embargo, si el fallecido causante fue trabajador, pueden optar a orfandad (art. 49 Ley 19.071) con montos distintos."
+    },
+    {
+      "q": "¿Se puede aumentar la pensión si hay más hijos después?",
+      "a": "No. La pensión se calcula al momento del fallecimiento. Hijos nacidos después no generan derecho. Hijos que cumplen mayoría de edad o terminan carrera salen del grupo y su parte se redistribuye entre los restantes."
+    },
+    {
+      "q": "¿Cómo se distribuye la pensión entre cónyuge e hijos?",
+      "a": "Con hijos: 50% cónyuge + 50% hijos (distribuido en partes iguales). Sin hijos: 100% cónyuge (60% si es temporal). Excepción: cónyuge inválido recibe 60% siempre."
+    },
+    {
+      "q": "¿Puedo trabajar y recibir pensión de viudez simultáneamente?",
+      "a": "Sí. La pensión de viudez **no es incompatible** con ingresos laborales. Se paga completa sin importar salario u otros ingresos que tenga el cónyuge."
+    },
+    {
+      "q": "¿Qué se entiende por 'estudiante menor de 24 años'?",
+      "a": "Hijo que está cursando educación superior (carrera técnica, universitaria) acreditada ante la institución previsional (AFP, Fonasa). Cesa al terminar carrera, aunque no cumpla 24 años, o al cumplir 24 si aún estudia."
+    },
+    {
+      "q": "¿Se descuentan AFP, salud u otros aportes de la pensión de viudez?",
+      "a": "La pensión de viudez es una **prestación sin aportes**; no se descuentan AFP ni comisiones. Sí se descuenta impuesto a la renta si superan los $1.426.000 mensuales (base 2026). Salud obligatoria (7%) sí se descuenta si está afiliado/a a Fonasa o Isapre."
+    },
+    {
+      "q": "¿Cómo se calcula si el causante era independiente?",
+      "a": "Para independientes sin pensión, se estima pensión teórica según ingresos acreditados últimos años (DUI, boletas). El SII y AFP calculan base de viudez; el cálculo de cuantía es igual (60% o 50%)."
+    },
+    {
+      "q": "¿Hay aumento si hay más de 4 hijos?",
+      "a": "No hay aumento automático. El 50% destinado a hijos se divide entre la cantidad que exista. A más hijos, menor monto individual por cada uno. El total grupo nunca supera pensión causante (100%)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII - Pensiones de sobrevivencia (viudez, orfandad, padre/madre inválido)",
+      "url": "https://www.sii.cl/portales/informacion-tributaria/pensiones",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "Superintendencia de Pensiones - Guía de beneficiarios en viudez",
+      "url": "https://www.spensiones.cl/portal/informe-beneficiarios",
+      "publisher": "Superintendencia de Pensiones",
+      "date": "2026"
+    },
+    {
+      "name": "Ley 19.071 - Sistema Integrado de Pensiones (D.O. 5/7/1991)",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=30733",
+      "publisher": "Biblioteca del Congreso Nacional",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central - UTA y reajuste anual de pensiones 2026",
+      "url": "https://www.bcentral.cl/indices-de-reajuste",
+      "publisher": "Banco Central de Chile",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII, Superintendencia de Pensiones, Ley 19.071",
+    "sourceUrl": "https://www.sii.cl/portales/informacion-tributaria/pensiones",
+    "updateType": "manual",
+    "notes": "Porcentajes de viudez (60%/50%), condiciones de beneficiarios menores/estudiantes. Montos referenciales en UTA/UTM varían anualmente en enero."
+  },
+  "lastReviewed": "2026-04-28"
+}

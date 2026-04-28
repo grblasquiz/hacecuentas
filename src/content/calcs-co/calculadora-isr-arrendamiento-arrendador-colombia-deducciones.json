@@ -1,0 +1,245 @@
+{
+  "slug": "calculadora-isr-arrendamiento-arrendador-colombia-deducciones",
+  "title": "Calculadora ISR Arrendador Colombia 2026 | Deducciones",
+  "h1": "Renta arrendador Colombia deducciones",
+  "description": "Calcula renta líquida cedular arrendamientos Colombia: ingresos − gastos mantenimiento, predial, intereses hipoteca, depreciación. Retención inquilino 3.5% persona moral. ISR estimado 2026.",
+  "category": "impuestos",
+  "audience": "CO",
+  "icon": "🏠",
+  "formulaId": "isr-arrendamiento-arrendador-colombia-deducciones",
+  "intro": "Calcula tu renta líquida cedular como arrendador en Colombia. Descuenta gastos deducibles: mantenimiento, impuesto predial, intereses de hipoteca y depreciación del inmueble. Estima el ISR según tramos 2026 DIAN y la retención que hace el inquilino persona moral al 3.5%. Herramienta para personas naturales con cédula.",
+  "keyTakeaway": "Renta arrendador = canon anual − (mantenimiento + predial + intereses + depreciación). ISR marginal 2026 hasta $39.5 M: 0%; $39.5–$82.2 M: 8%; $82.2–$163.5 M: 14%; $163.5–$326.8 M: 19%; superior: 24%.",
+  "useCases": [
+    "Arrendador persona natural con una o varias propiedades en alquiler",
+    "Cálculo de renta cedular no laboral para declaración anual DIAN",
+    "Estimación de impuesto a pagar y retención en la fuente inquilino",
+    "Análisis de rentabilidad neta tras deducciones y cargas impositivas",
+    "Comparación de flujos netos con diferentes gastos deducibles"
+  ],
+  "fields": [
+    {
+      "id": "canon_mensual",
+      "label": "Canon mensual arrendamiento",
+      "type": "number",
+      "placeholder": "2500000",
+      "hint": "Renta mensual pactada en contrato, en pesos colombianos",
+      "required": true,
+      "min": 0
+    },
+    {
+      "id": "meses_activos",
+      "label": "Meses activos en el año",
+      "type": "number",
+      "placeholder": "12",
+      "hint": "Meses en que la propiedad estuvo arrendada",
+      "required": true,
+      "min": 0,
+      "max": 12
+    },
+    {
+      "id": "gasto_mantenimiento_anual",
+      "label": "Gasto anual mantenimiento y reparaciones",
+      "type": "number",
+      "placeholder": "600000",
+      "hint": "Pintura, plomería, electricidad, servicios técnicos, etc.",
+      "required": false,
+      "min": 0
+    },
+    {
+      "id": "impuesto_predial_anual",
+      "label": "Impuesto predial anual",
+      "type": "number",
+      "placeholder": "1200000",
+      "hint": "Gravamen predial unificado (según valuación catastral)",
+      "required": false,
+      "min": 0
+    },
+    {
+      "id": "interes_hipoteca_anual",
+      "label": "Intereses hipoteca anual",
+      "type": "number",
+      "placeholder": "3600000",
+      "hint": "Solo la cuota de intereses del crédito hipotecario",
+      "required": false,
+      "min": 0
+    },
+    {
+      "id": "valor_inmueble",
+      "label": "Valor del inmueble (para depreciar)",
+      "type": "number",
+      "placeholder": "150000000",
+      "hint": "Costo de compra sin terreno; se usa para cálculo depreciación anual",
+      "required": false,
+      "min": 0
+    },
+    {
+      "id": "tasa_depreciacion",
+      "label": "Tasa depreciación anual (%)",
+      "type": "number",
+      "placeholder": "5",
+      "hint": "Típicamente 5% (20 años) o 10% (10 años) según tipo inmueble",
+      "required": false,
+      "min": 0,
+      "max": 10,
+      "step": 0.5
+    },
+    {
+      "id": "cedulante_empleado",
+      "label": "¿Arrendador también es empleado (laboral)?",
+      "type": "select",
+      "options": [
+        {
+          "value": "no",
+          "label": "No (solo renta no laboral)"
+        },
+        {
+          "value": "si",
+          "label": "Sí (combina renta laboral + no laboral)"
+        }
+      ],
+      "required": false,
+      "hint": "Afecta si hay acumulación de rentas para declaración"
+    },
+    {
+      "id": "inquilino_tipo",
+      "label": "Tipo de inquilino pagador",
+      "type": "select",
+      "options": [
+        {
+          "value": "persona_natural",
+          "label": "Persona natural"
+        },
+        {
+          "value": "persona_moral",
+          "label": "Persona jurídica (empresa, sociedad)"
+        }
+      ],
+      "required": true,
+      "hint": "Determina si aplica retención en la fuente 3.5%"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "canon_anual",
+      "label": "Canon anual",
+      "format": "currency",
+      "hint": "Canon mensual × meses activos"
+    },
+    {
+      "id": "total_deducciones",
+      "label": "Total deducciones permitidas",
+      "format": "currency",
+      "hint": "Mantenimiento + predial + intereses hipoteca + depreciación"
+    },
+    {
+      "id": "depreciacion_anual",
+      "label": "Depreciación anual del inmueble",
+      "format": "currency",
+      "hint": "Valor inmueble × tasa depreciación"
+    },
+    {
+      "id": "renta_liquida_cedular",
+      "label": "Renta líquida cedular",
+      "format": "currency",
+      "hint": "Canon anual − deducciones. Base gravable para ISR"
+    },
+    {
+      "id": "retencion_inquilino",
+      "label": "Retención en la fuente inquilino (3.5%)",
+      "format": "currency",
+      "hint": "Si inquilino es persona jurídica; aplica sobre canon mensual"
+    },
+    {
+      "id": "tarifa_marginal",
+      "label": "Tarifa marginal ISR 2026",
+      "format": "percent",
+      "hint": "Según tramos DIAN renta no laboral 2026"
+    },
+    {
+      "id": "isr_estimado",
+      "label": "ISR estimado 2026",
+      "format": "currency",
+      "hint": "Sobre renta líquida cedular, menos retención en la fuente"
+    },
+    {
+      "id": "flujo_neto_anual",
+      "label": "Flujo neto arrendador (anual)",
+      "format": "currency",
+      "hint": "Canon anual − deducciones − ISR − (opcionalmente retención inquilino)"
+    }
+  ],
+  "explanation": "## Cómo se calcula renta arrendador Colombia 2026\n\nLa **renta cedular no laboral** para arrendamientos en Colombia se obtiene descontando del canon gravable todos los gastos deducibles permitidos por DIAN.\n\n### Fórmula\n\n```\nCanon anual = Canon mensual × Meses activos\n\nTotal deducciones = Mantenimiento + Impuesto predial + Intereses hipoteca + Depreciación\n\nDepreciación anual = Valor inmueble × Tasa depreciación (%)\n\nRenta líquida cedular = Canon anual − Total deducciones\n\nRetención inquilino (si es persona jurídica) = Canon anual × 3.5%\n\nISR = Renta líquida × Tarifa marginal (según tramos DIAN 2026)\n\nFlujo neto anual = Canon anual − Deducciones − ISR\n```\n\n### Tramos ISR renta no laboral 2026 (DIAN)\n\n| Rango UVT | Renta anual (aprox $) | Tarifa marginal |\n|-----------|----------------------|----------------|\n| 0 – 107 UVT | $0 – $39.5 M | 0% |\n| 107 – 223 UVT | $39.5 – $82.2 M | 8% |\n| 223 – 445 UVT | $82.2 – $163.5 M | 14% |\n| 445 – 890 UVT | $163.5 – $326.8 M | 19% |\n| Más de 890 UVT | Más de $326.8 M | 24% |\n\n*Nota: UVT 2026 = $368,348 (aproximado); valores sujetos a actualización oficial DIAN.*\n\n### Deducciones permitidas\n\n1. **Mantenimiento y reparaciones**: Pintura, reparación fontanería, electricidad, vidrios, servicios técnicos certificados.\n2. **Impuesto predial**: Gravamen unificado anual sobre el predio.\n3. **Intereses hipotecarios**: Solo la porción de intereses de la cuota del crédito (no la amortización de capital).\n4. **Depreciación**: 5–10% anual sobre el valor del edificio/mejoras (no terreno). Típicamente 5% (vida útil 20 años) o 10% (10 años).\n5. **Servicios públicos** (si corre a cargo arrendador): agua, luz, gas.\n6. **Administración** (en edificios de apartamentos): cuota de administración común.\n7. **Seguros**: Póliza incendio/responsabilidad civil.\n\n**NO deducibles**: Amortización de capital del crédito, IVA pagado (para personas no obligadas a IVA), multas, sanciones.\n\n### Retención en la fuente\n\n- Si el **inquilino es persona jurídica** (empresa, sociedad comercial): retención **3.5%** sobre canon.\n- Si es **persona natural**: no hay retención obligatoria en origen.\n- Esta retención se acredita contra el ISR a pagar.\n\n### Ejemplo\n\n**Datos:**\n- Canon mensual: $2.500.000\n- Meses activos: 12\n- Mantenimiento: $600.000\n- Impuesto predial: $1.200.000\n- Intereses hipoteca: $3.600.000\n- Valor edificio: $150.000.000\n- Depreciación: 5% anual\n- Inquilino: Persona jurídica\n\n**Cálculo:**\n- Canon anual = $2.500.000 × 12 = $30.000.000\n- Depreciación = $150.000.000 × 5% = $7.500.000\n- Total deducciones = $600.000 + $1.200.000 + $3.600.000 + $7.500.000 = $12.900.000\n- Renta líquida = $30.000.000 − $12.900.000 = $17.100.000\n- Retención inquilino = $30.000.000 × 3.5% = $1.050.000\n- ISR: $17.100.000 cae en tramo 0% (< $39.5 M) → ISR = $0\n- Flujo neto = $30.000.000 − $12.900.000 − $1.050.000 = $16.050.000\n\n### Limitaciones y consideraciones\n\n1. **Documentación**: Todos los gastos deben estar documentados con facturas y soportes contables.\n2. **Depreciación**: Solo aplica si el inmueble se mantiene como activo rentable; se recupera vía impuesto diferido al vender.\n3. **Cambios normativos**: DIAN puede ajustar tasas y límites; consultar anualmente.\n4. **Acumulación de rentas**: Si tienes renta laboral, se acumula con no laboral para ISR total (progresividad).\n5. **Impuesto municipal**: Algunas ciudades cobran contribución sobre arrendamiento (ej. Bogotá); no incluida aquí.\n6. **Anticipo ISR**: Si renta excede $4.7 M, puede existir obligación de anticipo trimestral o mensual.\n7. **Ganancias ocasionales**: Si vendes la propiedad, aplica impuesto sobre la ganancia (diferente régimen).",
+  "faq": [
+    {
+      "q": "¿Qué gastos puedo descontar como arrendador en Colombia?",
+      "a": "Mantenimiento/reparaciones, impuesto predial, intereses hipotecarios, depreciación (5–10% anual), servicios públicos a cargo tuyo, cuota administración (edificios), y seguros. NO deduces amortización de capital, multas ni sanciones."
+    },
+    {
+      "q": "¿Cuál es la tarifa ISR para arrendatarios en 2026?",
+      "a": "Depende de tu renta no laboral total: 0% hasta $39.5 M; 8% ($39.5–$82.2 M); 14% ($82.2–$163.5 M); 19% ($163.5–$326.8 M); 24% (más de $326.8 M). Son tramos marginales, no sobre renta total."
+    },
+    {
+      "q": "¿Qué es la depreciación y cómo se calcula?",
+      "a": "Descuento anual por desgaste del inmueble. Se aplica sobre el valor de construcción/mejoras (no terreno). Típicamente 5% anual (vida útil 20 años) o 10% (10 años). Es una deducción que reduce renta gravable pero se recupera en venta."
+    },
+    {
+      "q": "¿Me retienen dinero si el inquilino es empresa?",
+      "a": "Sí. Si es persona jurídica, retiene el 3.5% del canon antes de pagarte. Este porcentaje se acredita contra tu ISR anual. Persona natural no retiene obligatoriamente."
+    },
+    {
+      "q": "¿Debo pagar anticipos de impuesto si arriendo?",
+      "a": "Si tu renta anual no laboral supera $4.7 M aprox., sí. DIAN puede exigir pago de anticipo mensual o trimestral. Se descuenta del ISR anual que cálcules."
+    },
+    {
+      "q": "¿Puedo descontar el capital del crédito hipotecario?",
+      "a": "NO. Solo los intereses de la hipoteca son deducibles. La amortización de capital es tu inversión en el activo, no gasto operacional."
+    },
+    {
+      "q": "¿Se acumula mi renta de arrendamiento con mi salario?",
+      "a": "Sí. Si trabajas por cuenta ajena, ambas rentas se suman para cálculo de ISR marginal (progresividad). Puedes estar en tarifa más alta con ambos ingresos."
+    },
+    {
+      "q": "¿Qué documentos debo guardar para sustentar deducciones?",
+      "a": "Facturas de mantenimiento, recibos predial, extractos bancarios hipoteca (intereses), pólizas seguros, comprobantes servicios. Todo con RUT/NIT del proveedor y tu nombre."
+    },
+    {
+      "q": "¿La calculadora incluye contribuciones municipales sobre arrendamiento?",
+      "a": "NO. Algunas ciudades (ej. Bogotá) cobran contribución adicional sobre cánones. Consulta tu secretaría de hacienda local; esta herramienta es nacional DIAN."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DIAN - Declaración renta 2026 personas naturales no residentes",
+      "url": "https://www.dian.gov.co/impuestos/impuestoalarenta/Paginas/default.aspx",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Decreto 2649 de 1993 - Normas de contabilidad para deducciones",
+      "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=9863",
+      "publisher": "Presidencia República Colombia",
+      "date": "2026"
+    },
+    {
+      "name": "Resolución DIAN 000626 de 2023 - UVT y tramos ISR 2026",
+      "url": "https://www.dian.gov.co/",
+      "publisher": "DIAN",
+      "date": "2025"
+    },
+    {
+      "name": "Manual del declarante - Renta no laboral y arrendamientos",
+      "url": "https://www.dian.gov.co/impuestos/impuestoalarenta/Paginas/manual-declarante.aspx",
+      "publisher": "DIAN",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "DIAN - Resoluciones tramos y UVT 2026",
+    "sourceUrl": "https://www.dian.gov.co/",
+    "updateType": "manual",
+    "notes": "Tramos ISR, UVT, tasas depreciación y retenciones se actualizan anualmente. Consultar DIAN antes de declarar."
+  },
+  "lastReviewed": "2026-04-28"
+}

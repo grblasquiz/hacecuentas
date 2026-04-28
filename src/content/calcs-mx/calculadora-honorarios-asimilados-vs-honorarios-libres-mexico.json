@@ -1,0 +1,231 @@
+{
+  "slug": "calculadora-honorarios-asimilados-vs-honorarios-libres-mexico",
+  "title": "Asimilados vs Honorarios México 2026 | Hacé Cuentas",
+  "h1": "Comparativa: Ingresos Asimilados vs Honorarios en México",
+  "description": "Calcula ISR, IVA y neto en ambas modalidades. Asimilados: tarifa salarios. Honorarios: IVA 16%, retención 10%. Decisión fiscal clara.",
+  "category": "impuestos",
+  "audience": "MX",
+  "icon": "💼",
+  "formulaId": "honorarios-asimilados-vs-honorarios-libres-mexico",
+  "intro": "En México, los prestadores de servicios pueden estructurarse como **Asimilados a Salarios** o **Personas Físicas con Honorarios**. Los Asimilados tributan con la tarifa de salarios del ISR (sin IVA), mientras que los Honorarios enfrentan IVA del 16% y retención del 10%. Esta calculadora compara ambas modalidades para ayudarte a elegir la estructura fiscal más conveniente según tu ingreso y gastos deducibles.",
+  "keyTakeaway": "Un ingreso de $50,000 MXN mensuales como Asimilado genera ~$6,500 ISR; como Honorario, el cliente paga $58,000 (incluido IVA) pero tú recibes neto similar tras retenciones e IVA.",
+  "useCases": [
+    "Freelancer que debe decidir entre contrato de Asimilado o Honorarios",
+    "Consultor independiente comparando carga fiscal de ambas modalidades",
+    "Empresa evaluando cost del Asimilado vs contratar Honorarios",
+    "Contador asesorando cliente en opción más rentable según ingresos",
+    "Profesional independiente planificando estructura fiscal anual"
+  ],
+  "fields": [
+    {
+      "id": "ingreso_mensual_bruto",
+      "label": "Ingreso mensual bruto (pesos MXN)",
+      "type": "number",
+      "min": 0,
+      "max": 500000,
+      "step": 100,
+      "default": 50000,
+      "hint": "Ingreso antes de impuestos y deducciones"
+    },
+    {
+      "id": "gastos_deducibles_mensual",
+      "label": "Gastos deducibles mensuales (pesos MXN)",
+      "type": "number",
+      "min": 0,
+      "max": 250000,
+      "step": 100,
+      "default": 10000,
+      "hint": "Gastos comprobables: oficina, software, transportes. SAT requiere documentación."
+    },
+    {
+      "id": "modalidad",
+      "label": "Modalidad a comparar",
+      "type": "select",
+      "options": [
+        {
+          "value": "ambas",
+          "label": "Ambas (comparativa completa)"
+        },
+        {
+          "value": "asimilado",
+          "label": "Solo Asimilado a Salarios"
+        },
+        {
+          "value": "honorarios",
+          "label": "Solo Honorarios"
+        }
+      ],
+      "default": "ambas"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "asimilado_ingreso_gravable",
+      "label": "Asimilado: Ingreso gravable",
+      "type": "currency",
+      "hint": "Ingreso bruto menos gastos deducibles"
+    },
+    {
+      "id": "asimilado_isr",
+      "label": "Asimilado: ISR mensual",
+      "type": "currency",
+      "hint": "Según tarifa salarios 2026 (1.92%-35%)"
+    },
+    {
+      "id": "asimilado_imss_aportacion",
+      "label": "Asimilado: Aportación IMSS",
+      "type": "currency",
+      "hint": "7.065% patronal + 8.5% obrero"
+    },
+    {
+      "id": "asimilado_neto_mensual",
+      "label": "Asimilado: Neto mensual (tu bolsillo)",
+      "type": "currency",
+      "hint": "Ingreso - ISR - IMSS"
+    },
+    {
+      "id": "asimilado_costo_cliente",
+      "label": "Asimilado: Costo para el cliente",
+      "type": "currency",
+      "hint": "Ingreso bruto (sin IVA adicional)"
+    },
+    {
+      "id": "honorarios_ingreso_gravable",
+      "label": "Honorarios: Base gravable",
+      "type": "currency",
+      "hint": "Ingreso bruto menos gastos deducibles"
+    },
+    {
+      "id": "honorarios_isr_retension",
+      "label": "Honorarios: ISR retención (10%)",
+      "type": "currency",
+      "hint": "El cliente retiene 10% del pago"
+    },
+    {
+      "id": "honorarios_iva",
+      "label": "Honorarios: IVA a cobrar (16%)",
+      "type": "currency",
+      "hint": "Sobre el ingreso bruto, transferible al SAT"
+    },
+    {
+      "id": "honorarios_isr_anual_estimado",
+      "label": "Honorarios: ISR anual estimado (tarifa FPC)",
+      "type": "currency",
+      "hint": "Tributación de Personas Físicas. Incluye retenciones."
+    },
+    {
+      "id": "honorarios_neto_mensual",
+      "label": "Honorarios: Neto mensual (tu bolsillo)",
+      "type": "currency",
+      "hint": "Ingreso - retención 10% - ISR anual / 12"
+    },
+    {
+      "id": "honorarios_costo_cliente",
+      "label": "Honorarios: Costo para el cliente",
+      "type": "currency",
+      "hint": "Ingreso bruto + IVA 16%"
+    },
+    {
+      "id": "diferencia_neto",
+      "label": "Diferencia neto (Asimilado - Honorarios)",
+      "type": "currency",
+      "hint": "Positivo = Asimilado más rentable. Negativo = Honorarios más ventajosos."
+    },
+    {
+      "id": "diferencia_cliente",
+      "label": "Diferencia costo cliente (Honorarios - Asimilado)",
+      "type": "currency",
+      "hint": "Cuánto más caro es para el cliente pagar Honorarios"
+    },
+    {
+      "id": "recomendacion",
+      "label": "Recomendación fiscal",
+      "type": "text",
+      "hint": "Análisis según cifras"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\n### Asimilados a Salarios\n\nLos Asimilados son personas que reciben ingresos por servicios subordinados o eventos similares, tratados **como salarios** por el SAT:\n\n1. **Ingreso gravable** = Ingreso bruto − Gastos deducibles\n2. **ISR** = Según tarifa de salarios 2026 (escala progresiva 1.92% a 35%)\n3. **IMSS** = 15.565% total (7.065% empresa + 8.5% trabajador, aproximado)\n4. **Neto** = Ingreso − ISR − IMSS\n5. **Sin IVA** (el cliente paga solo el ingreso bruto)\n\n**Tarifa ISR 2026 (ejemplo):**\n- Hasta $680.94 MXN: 1.92%\n- $680.94 a $5,951.97: 6.4%\n- $5,951.97 a $104,087.95: 10.88%\n- (aumenta progresivamente hasta 35%)\n\n### Honorarios Libres (Persona Física)\n\nLos Honorarios son ingresos de Personas Físicas sin relación de subordinación:\n\n1. **Ingreso gravable** = Ingreso bruto − Gastos deducibles\n2. **IVA** = 16% sobre ingreso bruto (transferible, acreditable)\n3. **Retención cliente** = 10% sobre ingreso bruto (anticipo ISR)\n4. **ISR anual** = Según tarifa Personas Físicas (5%–35%), calculado sobre base anual\n5. **ISR mensual estimado** = ISR anual / 12\n6. **Neto** = Ingreso − Retención − ISR mensual\n\n**El cliente paga**: Ingreso + IVA\n\n### Comparativa\n\n| Concepto | Asimilado | Honorarios |\n|----------|-----------|------------|\n| **ISR** | Tarifa salarios | Tarifa PF (5%–35%) |\n| **IVA** | No aplica | 16% |\n| **IMSS** | Sí (15.565%) | No (puedo afiliarme voluntario) |\n| **Retención cliente** | No | Sí (10%) |\n| **Costo cliente** | Ingreso bruto | Ingreso + IVA |\n| **Deducibilidad de gastos** | Limitada | Mayor flexibility |\n\n## Fórmula\n\n**Asimilado (mensual):**\n```\nIngreso gravable = Ingreso bruto − Gastos deducibles\nISR = tarifa_salarios(Ingreso gravable)\nIMSS = Ingreso bruto × 0.15565\nNeto = Ingreso bruto − ISR − IMSS\nCosto cliente = Ingreso bruto\n```\n\n**Honorarios (mensual, estimado):**\n```\nIngreso gravable = Ingreso bruto − Gastos deducibles\nIVA = Ingreso bruto × 0.16\nRetención = Ingreso bruto × 0.10\nISR anual = tarifa_PF(Ingreso gravable × 12) − Retenciones anuales\nISR mensual = ISR anual / 12\nNeto = Ingreso bruto − Retención − ISR mensual\nCosto cliente = Ingreso bruto + IVA\n```\n\n## Ejemplo\n\n**Escenario:** Consultor freelance, ingreso $50,000 MXN/mes, gastos $10,000 MXN/mes.\n\n**Asimilado:**\n- Ingreso gravable: $50,000 − $10,000 = $40,000\n- ISR (tarifa salarios): ~$3,600 (9%)\n- IMSS: $50,000 × 0.15565 = $7,782.50\n- Neto: $50,000 − $3,600 − $7,782.50 = **$38,617.50**\n- Costo cliente: **$50,000**\n\n**Honorarios:**\n- Ingreso gravable: $50,000 − $10,000 = $40,000\n- IVA: $50,000 × 0.16 = **$8,000**\n- Retención: $50,000 × 0.10 = $5,000\n- ISR anual (tarifa PF, base $480,000): ~$48,000 (después de retenciones ~$24,000 adeudados)\n- ISR mensual: $48,000 / 12 = $4,000\n- Neto: $50,000 − $5,000 − $4,000 = **$41,000**\n- Costo cliente: $50,000 + $8,000 = **$58,000**\n\n**Conclusión:** Como Honorarios, recibes $2,382.50 más/mes, pero el cliente paga $8,000 extra (IVA). La decisión depende de si tu cliente asume el IVA o negocias tarifa reducida.\n\n## Limitaciones\n\n- **ISR anual estimado:** Cálculo simplificado; tu ISR real depende de créditos, deducciones extras, y ejercicio completo.\n- **IMSS:** Tarifa 2026 aproximada. Varía por patrones de cotización.\n- **Gastos deducibles:** El SAT exige comprobantes (facturas, recibos). No todos los gastos son deducibles.\n- **Régimen Asimilado:** Solo aplica si el contrato o relación lo establece claramente ante SAT.\n- **IVA acreditable:** Aplica si tienes gastos con IVA comprobado; de lo contrario, es costo neto.\n- **Cambios normativos:** Tasas 2026 son estimadas; consulta SAT antes de decidir.",
+  "faq": [
+    {
+      "question": "¿Cuál es la diferencia fiscal principal entre Asimilado y Honorarios?",
+      "answer": "Asimilado se trata como **salario** (ISR tarifa salarios, IMSS obligatorio, sin IVA). Honorarios son ingresos de **Persona Física** (ISR 5%–35%, sin IMSS obligatorio, IVA 16% que el cliente paga)."
+    },
+    {
+      "question": "¿A quién le conviene ser Asimilado?",
+      "answer": "A quién valora **seguridad social (IMSS)**, tiene ingreso bajo-medio y el cliente está dispuesto a asumir el costo sin IVA. Tasa ISR suele ser menor que Honorarios en ingresos bajos."
+    },
+    {
+      "question": "¿A quién le conviene Honorarios?",
+      "answer": "A quién tiene **ingresos altos**, puede deducir muchos gastos, busca independencia, y el cliente puede absorber el IVA o está dispuesto a pagar más por flexibilidad."
+    },
+    {
+      "question": "¿Puedo deducir gastos en ambas modalidades?",
+      "answer": "**Asimilado:** Deducción limitada; el SAT es restrictivo. **Honorarios:** Mayor flexibilidad (oficina, software, transportes, capacitación), pero requiere comprobantes (facturas, recibos)."
+    },
+    {
+      "question": "¿El IVA en Honorarios es un costo real para mí?",
+      "answer": "**No, si tienes gastos con IVA comprobado.** Cobras IVA al cliente y lo acreditas contra IVA de tus gastos. Si tus gastos no tienen IVA (o son muy bajos), el IVA se convierte en costo neto."
+    },
+    {
+      "question": "¿Qué pasa si elijo Asimilado pero después cambio de cliente?",
+      "answer": "La modalidad es **contrato-específica.** Cada cliente define si es Asimilado u Honorarios. Puedes tener un cliente como Asimilado y otro como Honorarios simultáneamente."
+    },
+    {
+      "question": "¿Quién retiene el 10% en Honorarios?",
+      "answer": "**El cliente (pagador).** El cliente retiene 10% del pago y lo envía al SAT en tu nombre. Tú recibes el 90% y declaras todo al cierre del año."
+    },
+    {
+      "question": "¿Debo afiliarme al IMSS siendo Honorarios?",
+      "answer": "**No es obligatorio**, pero es recomendable (aseguranza médica, pensión). Puedes afiliarme como **independiente voluntario** (~$500–$1,000 MXN/mes, según IMSS)."
+    },
+    {
+      "question": "¿Cómo sé si mis gastos son deducibles?",
+      "answer": "Consulta el **Catálogo de Gastos Deducibles del SAT** o a un contador. Regla: debe ser **necesario, relacionado con el negocio, y comprobado** (factura, recibo, póliza bancaria)."
+    },
+    {
+      "question": "¿La calculadora incluye INFONAVIT?",
+      "answer": "**No.** INFONAVIT (5% del salario) solo aplica si eres **empleado tradicional.** Asimilados y Honorarios generalmente no lo pagan. Verifica con tu cliente o consultor fiscal."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SAT - Impuesto Sobre la Renta (ISR)",
+      "url": "https://www.sat.gob.mx/aplicacion/40707/impuesto-sobre-la-renta",
+      "publisher": "SAT",
+      "date": "2026"
+    },
+    {
+      "name": "SAT - Deducciones Personales y Comprobantes",
+      "url": "https://www.sat.gob.mx/aplicacion/40690/deducciones-personales",
+      "publisher": "SAT",
+      "date": "2026"
+    },
+    {
+      "name": "IMSS - Afiliación de Asimilados",
+      "url": "https://www.gob.mx/imss",
+      "publisher": "IMSS",
+      "date": "2026"
+    },
+    {
+      "name": "SAT - Régimen de Pequeños Contribuyentes (RIF)",
+      "url": "https://www.sat.gob.mx",
+      "publisher": "SAT",
+      "date": "2026"
+    },
+    {
+      "name": "Profeco - Derechos del Consumidor / Honorarios Profesionales",
+      "url": "https://www.profeco.gob.mx",
+      "publisher": "Profeco",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SAT - Tablas de ISR 2026, IMSS Cuotas y Aportaciones 2026",
+    "sourceUrl": "https://www.sat.gob.mx",
+    "updateType": "manual",
+    "notes": "Tarifa ISR salarios, tarifa PF, tasa IMSS, tasa IVA, retención honorarios. Se actualiza anualmente con nuevas tablas SAT."
+  },
+  "lastReviewed": "2026-04-28"
+}

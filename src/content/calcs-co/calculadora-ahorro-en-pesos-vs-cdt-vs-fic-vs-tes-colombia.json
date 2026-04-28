@@ -1,0 +1,290 @@
+{
+  "slug": "calculadora-ahorro-en-pesos-vs-cdt-vs-fic-vs-tes-colombia",
+  "title": "Comparador Ahorro Pesos Colombia 2026 | CDT vs FIC vs TES",
+  "h1": "Comparador ahorro pesos Colombia 2026",
+  "description": "Compara rentabilidad neta de cuenta ahorro (1-3% EA), CDT (8-11%), FIC liquidez, TES corto plazo y fondos gestión activa. Calcula retención y gravamen 4×1000 en pesos colombianos 2026.",
+  "category": "finanzas",
+  "audience": "CO",
+  "icon": "💰",
+  "formulaId": "ahorro-en-pesos-vs-cdt-vs-fic-vs-tes-colombia",
+  "intro": "Descubre cuál instrumento de ahorro o inversión te genera mayor rentabilidad neta en Colombia. Comparamos cuentas de ahorro tradicionales, CDT (Certificados de Depósito a Término), fondos de inversión colectiva de liquidez, TES (Títulos de Tesorería) de corto plazo y fondos de gestión activa. El cálculo incluye retención en la fuente (19% para algunos, 8% para TES), gravamen 4×1000 y comisiones según tipo de instrumento. Inputs: monto invertido en pesos, plazo en meses, perfil de riesgo (conservador, moderado, agresivo). Output: rentabilidad bruta y neta para cada opción, comparativa visual, y recomendación según perfil.",
+  "keyTakeaway": "Un CDT a 10% EA rentabiliza $1.000.000 en $100.000 brutos (12 meses), pero tras retención 8% y comisión, neto son ~$88.000 vs $30.000 de cuenta ahorro tradicional: diferencia de $58.000 según plazo y riesgo.",
+  "useCases": [
+    "Persona con $500K-$10M que busca optimizar flujo efectivo sin riesgo de mercado",
+    "Empleado que recibe bonificación y requiere comparar dónde invertir 3-6 meses",
+    "Independiente evaluando dónde colocar reserva de emergencia por 12 meses",
+    "Inversor conservador decidiendo entre rentabilidad fija vs fondos liquidez",
+    "Empresario con excedente operacional comparando CDT vs TES según plazo",
+    "Emprendedor planificando fondo semilla con horizonte 6-24 meses"
+  ],
+  "fields": [
+    {
+      "id": "monto_inversion",
+      "label": "Monto a invertir (pesos COP)",
+      "type": "number",
+      "placeholder": "500000",
+      "min": 10000,
+      "max": 100000000,
+      "step": 10000,
+      "help": "Cantidad en pesos colombianos. Bancos tienen mínimos: COP $1.000 cuentas, $100.000 CDT, $500.000 FIC típico."
+    },
+    {
+      "id": "plazo_meses",
+      "label": "Plazo de inversión (meses)",
+      "type": "number",
+      "placeholder": "12",
+      "min": 1,
+      "max": 240,
+      "step": 1,
+      "help": "Período en meses. Menores plazos: menor rentabilidad. Mínimo CDT suele ser 30 días."
+    },
+    {
+      "id": "perfil_riesgo",
+      "label": "Perfil de riesgo",
+      "type": "select",
+      "options": [
+        {
+          "value": "conservador",
+          "label": "Conservador (evito riesgo mercado)"
+        },
+        {
+          "value": "moderado",
+          "label": "Moderado (aceptaré volatilidad baja)"
+        },
+        {
+          "value": "agresivo",
+          "label": "Agresivo (busco máxima rentabilidad)"
+        }
+      ],
+      "help": "Define instrumentos recomendados: conservador = cuentas/CDT/TES; moderado = FIC liquidez; agresivo = fondos gestión activa."
+    },
+    {
+      "id": "tasa_cuenta_ahorro",
+      "label": "Tasa anual cuenta ahorro (%)",
+      "type": "number",
+      "placeholder": "2.5",
+      "min": 0.5,
+      "max": 5,
+      "step": 0.1,
+      "help": "Tasa EA (efectivo anual) típica 2026: 1-3% según banco y volumen."
+    },
+    {
+      "id": "tasa_cdt",
+      "label": "Tasa CDT anual (%)",
+      "type": "number",
+      "placeholder": "10",
+      "min": 5,
+      "max": 12,
+      "step": 0.1,
+      "help": "Tasa EA típica 2026: 8-11% según plazo (más corto, menor tasa)."
+    },
+    {
+      "id": "tasa_fic",
+      "label": "Rentabilidad FIC liquidez (%)",
+      "type": "number",
+      "placeholder": "5",
+      "min": 2,
+      "max": 8,
+      "step": 0.1,
+      "help": "Tasa promedio esperada anual FIC liquidez 2026: 4-6% según fondo."
+    },
+    {
+      "id": "tasa_tes",
+      "label": "Rentabilidad TES corto plazo (%)",
+      "type": "number",
+      "placeholder": "8",
+      "min": 4,
+      "max": 10,
+      "step": 0.1,
+      "help": "Tasa efectiva anual TES 2026 (< 1 año): 7-9% según mercado."
+    },
+    {
+      "id": "tasa_fondo_activo",
+      "label": "Rentabilidad fondo gestión activa (%)",
+      "type": "number",
+      "placeholder": "7",
+      "min": 2,
+      "max": 15,
+      "step": 0.1,
+      "help": "Rentabilidad histórica o proyectada fondo: 5-12% según estrategia."
+    },
+    {
+      "id": "es_cliente_banco",
+      "label": "¿Eres cliente preferente del banco?",
+      "type": "select",
+      "options": [
+        {
+          "value": "no",
+          "label": "No / Cliente estándar"
+        },
+        {
+          "value": "si",
+          "label": "Sí, tengo CTA corriente + ahorros"
+        }
+      ],
+      "help": "Clientes preferentes: comisiones reducidas CDT, exención 4×1000."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "resultado_cuenta_ahorro",
+      "label": "Cuenta Ahorro",
+      "type": "currency",
+      "format": "COP"
+    },
+    {
+      "id": "rentabilidad_neta_cuenta_ahorro",
+      "label": "Rentabilidad neta cuenta ahorro",
+      "type": "currency",
+      "format": "COP"
+    },
+    {
+      "id": "resultado_cdt",
+      "label": "CDT (Certificado Depósito a Término)",
+      "type": "currency",
+      "format": "COP"
+    },
+    {
+      "id": "rentabilidad_neta_cdt",
+      "label": "Rentabilidad neta CDT",
+      "type": "currency",
+      "format": "COP"
+    },
+    {
+      "id": "resultado_fic",
+      "label": "FIC Liquidez",
+      "type": "currency",
+      "format": "COP"
+    },
+    {
+      "id": "rentabilidad_neta_fic",
+      "label": "Rentabilidad neta FIC",
+      "type": "currency",
+      "format": "COP"
+    },
+    {
+      "id": "resultado_tes",
+      "label": "TES Corto Plazo",
+      "type": "currency",
+      "format": "COP"
+    },
+    {
+      "id": "rentabilidad_neta_tes",
+      "label": "Rentabilidad neta TES",
+      "type": "currency",
+      "format": "COP"
+    },
+    {
+      "id": "resultado_fondo_activo",
+      "label": "Fondo Gestión Activa",
+      "type": "currency",
+      "format": "COP"
+    },
+    {
+      "id": "rentabilidad_neta_fondo_activo",
+      "label": "Rentabilidad neta fondo",
+      "type": "currency",
+      "format": "COP"
+    },
+    {
+      "id": "mejor_opcion",
+      "label": "Mejor opción para tu perfil",
+      "type": "text"
+    },
+    {
+      "id": "diferencia_maxima",
+      "label": "Diferencia entre mejor y peor opción",
+      "type": "currency",
+      "format": "COP"
+    },
+    {
+      "id": "tabla_resumen",
+      "label": "Resumen comparativo",
+      "type": "table"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEl comparador estima la rentabilidad neta de cinco instrumentos de ahorro/inversión en Colombia tras aplicar impuestos y comisiones reglamentarias 2026.\n\n## Fórmula por instrumento\n\n### Cuenta Ahorro Tradicional\n```\nRentabilidad bruta = Monto × (Tasa % / 100) × (Plazo / 12)\nRetención en la fuente = 0% (exenta para personas naturales hasta $34.5M anuales)\nGravamen 4×1000 = Monto × 0.004 × (Plazo / 12)\nRentabilidad neta = Rentabilidad bruta - Gravamen 4×1000\n```\n\n### CDT (Certificado de Depósito a Término)\n```\nRentabilidad bruta = Monto × (Tasa % / 100) × (Plazo / 12)\nRetención en la fuente = Rentabilidad bruta × 8% (Resolución DIAN, personas naturales)\nComisión banco = Rentabilidad bruta × 1% a 2% (según cliente y plazo)\nGravamen 4×1000 = Monto × 0.004 × (Plazo / 12) [exento si cliente preferente]\nRentabilidad neta = Rentabilidad bruta - Retención - Comisión - Gravamen\n```\n\n### FIC Liquidez (Fondo Inversión Colectiva)\n```\nRentabilidad bruta = Monto × (Tasa % / 100) × (Plazo / 12)\nRetención en la fuente = Rentabilidad bruta × 19% (impuesto a ganancias ocasionales)\nComisión administradora = Rentabilidad bruta × 0.5% a 1.2% anual (promedio 0.75%)\nComisión custodio = Rentabilidad bruta × 0.05% a 0.1%\nGravamen 4×1000 = Monto × 0.004 × (Plazo / 12)\nRentabilidad neta = Rentabilidad bruta - Retención - Comisiones - Gravamen\n```\n\n### TES (Títulos de Tesorería) Corto Plazo\n```\nRentabilidad bruta = Monto × (Tasa % / 100) × (Plazo / 12)\nRetención en la fuente = Rentabilidad bruta × 8% (tasa diferenciada TES)\nComisión broker/banco = Rentabilidad bruta × 0.5% a 1% (si se vende antes vencimiento)\nGravamen 4×1000 = Monto × 0.004 × (Plazo / 12) [exento si vencimiento]\nRentabilidad neta = Rentabilidad bruta - Retención - Comisión - Gravamen\n```\n\n### Fondo de Gestión Activa\n```\nRentabilidad bruta = Monto × (Tasa % / 100) × (Plazo / 12)\nRetención en la fuente = Rentabilidad bruta × 19% (ganancias ocasionales)\nComisión administradora = Rentabilidad bruta × 0.8% a 1.5% (promedio 1.2%)\nComisión custodio = Rentabilidad bruta × 0.1% a 0.2%\nGravamen 4×1000 = Monto × 0.004 × (Plazo / 12)\nRentabilidad neta = Rentabilidad bruta - Retención - Comisiones - Gravamen\n```\n\n## Ejemplo práctico\n\n**Supuestos:**\n- Monto: $1.000.000 COP\n- Plazo: 12 meses\n- Perfil: Moderado\n- Cliente estándar (no preferente)\n\n| Instrumento | Tasa | Bruto | Retención | Comisión | 4×1000 | Neto | % Neto |\n|---|---|---|---|---|---|---|---|\n| Cuenta ahorro | 2.5% | $25.000 | $0 | $0 | $4.000 | $21.000 | 2.1% |\n| CDT | 10% | $100.000 | $8.000 | $1.500 | $4.000 | $86.500 | 8.65% |\n| FIC liquidez | 5% | $50.000 | $9.500 | $625 | $4.000 | $35.875 | 3.59% |\n| TES corto plazo | 8% | $80.000 | $6.400 | $800 | $4.000 | $68.800 | 6.88% |\n| Fondo activo | 7% | $70.000 | $13.300 | $1.050 | $4.000 | $50.650 | 5.07% |\n\n**Resultado:** CDT genera $86.500 netos (8.65% EA), 4× más que cuenta ahorro. TES es segunda opción ($68.800, 6.88%).\n\n## Limitaciones y notas\n\n1. **Tasas ilustrativas:** Las tasas varían por banco, plazo, volumen y coyuntura de mercado 2026. Consulta con tu entidad.\n2. **Retención personalizada:** La retención en la fuente depende de tu nivel de ingresos y obligación tributaria (DIAN). Pueden aplicarse tasas diferenciales.\n3. **Comisiones:** Varían significativamente. Bancos grandes ofrecen comisiones reducidas a clientes preferentes. Fondos de inversión cobran más.\n4. **Gravamen 4×1000:** Se aplica por egreso de efectivo. Algunos productos (CDT cliente preferente, TES vencimiento) pueden estar exentos. Verifica con tu banco.\n5. **Volatilidad FIC/Fondos:** Rentabilidad histórica no garantiza futura. Fondos de gestión activa exponen a riesgo de mercado.\n6. **Liquidez:** Cuenta ahorro (inmediata), FIC (1-2 días), CDT y TES (requieren venta en bolsa o esperar vencimiento).\n7. **Inflación:** Estas tasas son nominales. Con inflación 2026 estimada 3-4%, rentabilidad real es menor.\n8. **Plazo:** Tasas más altas para CDT y TES a mayor plazo. Comparador asume tasa plana por simplicidad.\n\n## Recomendaciones según perfil\n\n- **Conservador (< 6 meses):** Cuenta ahorro + CDT plazo corto\n- **Moderado (6-24 meses):** CDT + TES + FIC liquidez\n- **Agresivo (> 24 meses):** Fondo gestión activa + TES + CDT largo plazo\n\nLa mejor opción depende de tu horizonte temporal, necesidad de liquidez, monto invertido y nivel de confianza en el gestor.",
+  "faq": [
+    {
+      "q": "¿Qué es un CDT y cuánto rinde vs cuenta ahorro?",
+      "a": "CDT (Certificado de Depósito a Término) es un título de renta fija emitido por bancos. Rinde 8-11% anual vs 1-3% cuenta ahorro. A cambio, tu dinero queda inmovilizado hasta vencimiento (30 días a 3 años). Neto de impuestos, CDT rinde ~3-4× más."
+    },
+    {
+      "q": "¿Cuánta retención en la fuente me descuentan?",
+      "a": "CDT y TES: 8% sobre ganancias (DIAN 2026). FIC y fondos gestión activa: 19% (ganancias ocasionales). Cuenta ahorro: 0% si eres persona natural con ingresos < $34.5M anuales. La retención se calcula sobre la rentabilidad, no el monto."
+    },
+    {
+      "q": "¿Qué es el gravamen 4×1000 y cuándo se aplica?",
+      "a": "Gravamen de $4 por cada $1.000 en movimientos de dinero (egreso bancario). Se aplica en transacciones, pero muchos productos de ahorro e inversión están exentos si vences la inversión. Clientes preferentes suelen tener exención total. Consulta con tu banco."
+    },
+    {
+      "q": "¿Es mejor un FIC de liquidez o un CDT de corto plazo?",
+      "a": "CDT suele ser mejor si confías en la tasa fija: ~8-10% neto anual. FIC liquidez ofrece mayor flexibilidad (puedes sacar en 1-2 días) pero menor rentabilidad (~3-5% neto) y más comisiones. Si necesitas dinero en < 3 meses, FIC. Si puedes esperar 6-12 meses, CDT."
+    },
+    {
+      "q": "¿Qué ventajas tienen los TES?",
+      "a": "TES (Títulos de Tesorería del Estado) ofrecen: seguridad garantizada por estado colombiano, retención menor (8% vs 19%), posibilidad de vender antes de vencimiento en mercado secundario, comisiones bajas. Rentabilidad 2026: 7-9% anual. Ideales para perfil moderado."
+    },
+    {
+      "q": "¿Puedo sacar mi dinero antes si lo necesito?",
+      "a": "Cuenta ahorro: sí, inmediatamente. FIC: sí, en 1-2 días (rescate). CDT: solo si lo vendes al banco (puede perder rentabilidad) o esperas vencimiento. TES: puedes vender en bolsa antes de vencimiento (precio depende del mercado). Fondos: rescate en 1-5 días según fondo."
+    },
+    {
+      "q": "¿Debo tener en cuenta la inflación?",
+      "a": "Sí. Si inflación 2026 es 3.5% y CDT rinde 10%, tu ganancia real es ~6.5%. Cuenta ahorro a 2.5% genera pérdida real (-1%). Siempre compara tasas ajustadas por inflación esperada, no solo nominales."
+    },
+    {
+      "q": "¿Qué es comisión administradora en FIC y fondos?",
+      "a": "Comisión anual que cobra el gestor del fondo por administrar tu dinero. Típica: 0.75-1.5% anual (se descuenta de la rentabilidad). A mayor comisión, menor rentabilidad neta. Revisa el prospecto del fondo antes de invertir."
+    },
+    {
+      "q": "¿Cuál es el monto mínimo para invertir?",
+      "a": "Cuenta ahorro: $1.000. CDT: $100.000 mínimo típico (algunos bancos $50K). FIC: $500.000 a $1M inicial (depende del fondo). TES: $500.000 a $2M. Fondos gestión activa: $1M a $5M. Consulta con bancos; hay excepciones."
+    },
+    {
+      "q": "¿Qué pasa si invierto por más de 1 año?",
+      "a": "Tasas suelen ser mejores a mayor plazo (CDT 12+ meses rinde más que 6 meses). Pero pierdes liquidez. La inflación también afecta más. Nuestro cálculo ajusta la rentabilidad al plazo elegido. Simula diferentes períodos para encontrar el óptimo."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DIAN - Retención en la fuente (CDT, fondos, ganancias ocasionales)",
+      "url": "https://www.dian.gov.co/impuestos/impuestorenta",
+      "publisher": "Dirección de Impuestos y Aduanas Nacionales",
+      "date": "2026"
+    },
+    {
+      "name": "Banco de la República - Tasas de interés y mercado monetario",
+      "url": "https://www.banrep.gov.co/es/estadisticas/tasas-interes",
+      "publisher": "Banco de la República",
+      "date": "2026"
+    },
+    {
+      "name": "Superfinanciera - Regulación CDT, FIC y fondos de inversión",
+      "url": "https://www.superfinanciera.gov.co/jsp/index.jsf",
+      "publisher": "Superintendencia Financiera de Colombia",
+      "date": "2026"
+    },
+    {
+      "name": "BVC - Mercado de valores, TES y fondos",
+      "url": "https://www.bvc.com.co/",
+      "publisher": "Bolsa de Valores de Colombia",
+      "date": "2026"
+    },
+    {
+      "name": "Ministerio de Hacienda - Gravamen 4×1000 (GMFN)",
+      "url": "https://www.minhacienda.gov.co/webcenter/portal/en/gravamen-movimiento-financiero-gmf",
+      "publisher": "Ministerio de Hacienda y Crédito Público",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "DIAN, Banco de la República, Superfinanciera",
+    "sourceUrl": "https://www.dian.gov.co/",
+    "updateType": "manual",
+    "notes": "Tasas de interés varían diariamente; este cálculo usa promedios 2026. Retención 8% CDT/TES y 19% fondos, comisiones según estándares Superfinanciera. Gravamen 4×1000 a $4 por $1.000. Usuarios deben ingresar tasas actuales de su banco."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,272 @@
+{
+  "slug": "calculadora-cae-credito-aval-estado-chile-vs-becas",
+  "title": "CAE vs Beca Bicentenario 2026 | Hacé Cuentas",
+  "h1": "Comparador CAE Chile vs Beca Bicentenario",
+  "description": "Calcula el costo total del Crédito Aval Estado (CAE) vs Beca Bicentenario. Simula deuda a 5 años post-egreso, cuota máxima 10% RSH, tasa 2% anual. Datos SII/MINEDUC 2026.",
+  "category": "educacion",
+  "audience": "CL",
+  "icon": "🎓",
+  "formulaId": "cae-credito-aval-estado-chile-vs-becas",
+  "intro": "El Crédito Aval Estado (CAE) financia aranceles en IES acreditadas. Tasa fija 2% post-egreso, cuota máxima 10% de tu renta. La Beca Bicentenario cubre gratuidad en años iniciales según quintil de vulnerabilidad. Compara ambas opciones según tu RSH, programa y puntaje PAES para estimar deuda potencial a 5 años.",
+  "keyTakeaway": "CAE con tasa 2% anual genera deuda promedio $4.2M a $7.8M a 5 años post-titulación según arancel ($1.5M–$3.8M anual). Beca Bicentenario exime hasta $2.5M anuales en años I–III si RSH ≤40%.",
+  "useCases": [
+    "Estudiante de primer año evaluando acceso a educación superior públicamente financiada",
+    "Familia analizando costo total CAE vs cobertura beca según quintil socioeconómico",
+    "Profesional egresado estimando cuota futura CAE y liquidación en 5 años",
+    "Asesor MINEDUC simulando impacto de ambos instrumentos en rentabilidad educativa",
+    "Postulante PAES comparando viabilidad financiera de programas según arancel",
+    "Trabajador en condición de vulnerabilidad evaluando compatibilidad beca + ingresos"
+  ],
+  "fields": [
+    {
+      "id": "programa_tipo",
+      "label": "Tipo de programa",
+      "type": "select",
+      "options": [
+        {
+          "value": "carrera_4anios",
+          "label": "Carrera 4 años (Ingeniería, Derecho, etc.)"
+        },
+        {
+          "value": "carrera_5anios",
+          "label": "Carrera 5 años (Medicina, Arquitectura)"
+        },
+        {
+          "value": "tecnico_2anios",
+          "label": "Técnico Superior 2 años"
+        },
+        {
+          "value": "licenciatura_3anios",
+          "label": "Licenciatura 3 años"
+        }
+      ],
+      "required": true,
+      "help": "Duración oficial del programa en IES acreditada"
+    },
+    {
+      "id": "arancel_anual_pesos",
+      "label": "Arancel anual del programa",
+      "type": "number",
+      "placeholder": "1500000",
+      "min": 500000,
+      "max": 5000000,
+      "step": 50000,
+      "required": true,
+      "help": "Costo anual fijado por IES (UF, pesos). Consulta sitio web institución."
+    },
+    {
+      "id": "rsh_percentil",
+      "label": "RSH (percentil de vulnerabilidad 0–100)",
+      "type": "number",
+      "placeholder": "45",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "required": true,
+      "help": "Tu Registro Socioeconómico actualizado. 0=más vulnerable, 100=menos vulnerable. SII/MIDESO."
+    },
+    {
+      "id": "puntaje_paes",
+      "label": "Puntaje PAES (escala 150–1000)",
+      "type": "number",
+      "placeholder": "650",
+      "min": 150,
+      "max": 1000,
+      "step": 10,
+      "required": true,
+      "help": "Prueba Acceso Educación Superior 2025–2026. DEMRE."
+    },
+    {
+      "id": "renta_mensual_estimada",
+      "label": "Renta mensual familiar estimada",
+      "type": "number",
+      "placeholder": "1200000",
+      "min": 0,
+      "max": 5000000,
+      "step": 50000,
+      "required": true,
+      "help": "Ingreso total del grupo familiar. Base para cálculo cuota CAE máx 10%."
+    },
+    {
+      "id": "anos_carrera",
+      "label": "Años de duración carrera (auto-calculado)",
+      "type": "number",
+      "placeholder": "4",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "required": false,
+      "help": "Se rellena según tipo programa. Editable si hay prórroga."
+    },
+    {
+      "id": "beca_bicentenario_opcion",
+      "label": "¿Postulas a Beca Bicentenario?",
+      "type": "select",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí, evaluaré ambas opciones"
+        },
+        {
+          "value": "no",
+          "label": "No, solo CAE"
+        },
+        {
+          "value": "ambas",
+          "label": "Ambas simultáneamente (compatible)"
+        }
+      ],
+      "required": true,
+      "help": "CAE y Beca Bicentenario son compatibles. Beca cubre gratuidad años I–III según RSH."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "costo_total_carrera_pesos",
+      "label": "Costo total carrera (arancel bruto)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "costo_anual_medio",
+      "label": "Costo anual medio",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "elegibilidad_cae",
+      "label": "¿Eres elegible CAE?",
+      "type": "text"
+    },
+    {
+      "id": "elegibilidad_beca_bicentenario",
+      "label": "¿Eres elegible Beca Bicentenario?",
+      "type": "text"
+    },
+    {
+      "id": "cobertura_beca_bicentenario_pesos",
+      "label": "Cobertura Beca Bicentenario (años I–III)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "deuda_cae_post_titulacion_pesos",
+      "label": "Deuda CAE estimada 5 años post-titulación",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "cuota_cae_mensual_maxima",
+      "label": "Cuota CAE máxima mensual (10% RSH)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "plazo_pago_meses",
+      "label": "Plazo de pago estimado CAE (meses)",
+      "type": "number",
+      "precision": 0
+    },
+    {
+      "id": "interes_total_2porciento",
+      "label": "Interés total CAE (tasa 2% anual)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "ahorro_beca_vs_cae",
+      "label": "Ahorro neto Beca Bicentenario vs CAE solo",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "recomendacion_financiera",
+      "label": "Recomendación financiera",
+      "type": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEsta calculadora simula dos instrumentos de financiamiento educativo en Chile vigentes 2026:\n\n### Crédito Aval Estado (CAE)\n\n**Criterios de elegibilidad:**\n- Inscrito en IES acreditada (Universidad, IP, CFT)\n- Arancel máx. $2.5M anuales (MINEDUC 2026)\n- RSH ≤80 (percentil 80 de vulnerabilidad)\n- Puntaje PAES ≥450 (DEMRE)\n- No alumno de pregrado previo financiado con CAE\n\n**Cálculo de deuda CAE:**\n\n```\nDeuda bruta = Arancel anual × Años carrera\nTasa interés anual = 2% (fija post-egreso, SII 2026)\nInterés simple 5 años = Deuda bruta × 0.02 × 5\nDeuda total 5 años = Deuda bruta + Interés\n```\n\n**Cuota máxima mensual:**\n\n```\nCuota máx = Renta mensual × 0.10 (máximo 10%, MINEDUC)\nPlazo meses = Deuda total ÷ Cuota máx\n```\n\n### Beca Bicentenario\n\n**Criterios de elegibilidad:**\n- RSH ≤60 (percentil 60, MINEDUC 2026)\n- Puntaje PAES ≥500\n- Primer año de pregrado en programa acreditado\n\n**Cobertura:**\n- **Años I–II:** Hasta $2.5M anuales (gratuidad total si arancel ≤ monto)\n- **Año III:** 50% cobertura restante\n- **Años IV+:** Sin cobertura (postulante debe financiar con CAE u otros)\n\n**Cálculo de aporte beca (años I–III):**\n\n```\nAño I–II: min(Arancel, $2.5M)\nAño III: min(Arancel, $2.5M) × 0.50\nAños IV+: $0 (debe financiar con CAE si procede)\n```\n\n### Compatibilidad\n\nCAE y Beca Bicentenario son **compatibles**. Beca cubre arancel años I–III; CAE financia el saldo años I+ si no alcanza beca.\n\n## Fórmula integrada\n\n| Concepto | Fórmula | Ejemplo |\n|----------|---------|----------|\n| Costo total carrera | Arancel anual × Años | $1.8M × 4 = $7.2M |\n| Cobertura Beca Bic (años I–II) | min(Arancel, $2.5M) × 2 | min($1.8M, $2.5M) × 2 = $3.6M |\n| Deuda neta post-beca | Costo total − Cobertura beca | $7.2M − $3.6M = $3.6M |\n| CAE con tasa 2% años 5 | Deuda neta × (1 + 0.02 × 5) | $3.6M × 1.1 = $3.96M |\n| Cuota máx (10% RSH) | min(Cuota calc, 10% renta) | min($66k, 10% $1.2M) = $66k/mes |\n| Plazo pago | Deuda total ÷ Cuota máx | $3.96M ÷ $66k ≈ 60 meses |\n\n## Ejemplo concreto\n\n**Inputs:**\n- Carrera Ingeniería en Computación, 4 años\n- Arancel: $1.8M anuales\n- RSH: 35% (quintil I–II)\n- PAES: 680 (sobre 1000)\n- Renta familiar: $1.2M mensual\n- Postula a Beca Bicentenario\n\n**Cálculos:**\n1. **Costo total bruto:** $1.8M × 4 = $7.2M\n2. **Elegibilidad CAE:** RSH 35 ≤ 80 ✓, PAES 680 ≥ 450 ✓ → **Elegible**\n3. **Elegibilidad Beca:** RSH 35 ≤ 60 ✓, PAES 680 ≥ 500 ✓ → **Elegible**\n4. **Cobertura Beca años I–II:** min($1.8M, $2.5M) × 2 = $3.6M\n5. **Cobertura Beca año III:** $1.8M × 0.50 = $900k\n6. **Total cobertura beca:** $3.6M + $900k = $4.5M\n7. **Deuda neta CAE:** $7.2M − $4.5M = $2.7M\n8. **Interés CAE 2% × 5 años:** $2.7M × 0.02 × 5 = $270k\n9. **Deuda total CAE post-egreso:** $2.7M + $270k = $2.97M\n10. **Cuota máxima:** min($49.75k, 10% × $1.2M) = $49.75k/mes\n11. **Plazo pago:** $2.97M ÷ $49.75k ≈ 60 meses (5 años)\n12. **Ahorro vs CAE solo:** $4.5M (cobertura beca)\n\n## Limitaciones\n\n- **No incluye:** Arancel matrícula, derechos, cuotas operacionales (pueden sumar $150k–$300k anuales)\n- **RSH:** Variable anual (recalculado por MIDESO); datos aquí son estimados 2026\n- **Tasa CAE:** 2% anual fija; no contempla cambios legales post-2026\n- **Beca Bicentenario:** Presupuesto limitado; puede haber restricciones de cupo\n- **Compatibilidad total:** Algunos créditos privados no son compatibles con CAE; verifica con IES\n- **Años IV+:** Sin cobertura Beca Bicentenario; requiere CAE u otro financiamiento\n- **Deuda estimada 5 años:** Asume cuota máx constante; renta variable afecta plazo real\n\n---",
+  "faq": [
+    {
+      "question": "¿Cuál es la diferencia entre CAE y Beca Bicentenario?",
+      "answer": "**CAE** es un crédito con tasa 2% anual que debes devolver. **Beca Bicentenario** es una beca gratuita que cubre parte del arancel en años I–III si tu RSH ≤60 y PAES ≥500. Son compatibles: Beca paga primero, CAE financia el saldo."
+    },
+    {
+      "question": "¿Cómo se calcula la cuota máxima del CAE?",
+      "answer": "La cuota CAE no puede superar el 10% de tu renta mensual familiar. Si debes $2.97M en 60 meses, la cuota sería $49.75k; si tu 10% de RSH es menor, pagas el mínimo."
+    },
+    {
+      "question": "¿Qué RSH necesito para Beca Bicentenario?",
+      "answer": "RSH ≤60 (percentil 60 de vulnerabilidad). Tu RSH está en el Registro Socioeconómico actualizado en SII/MIDESO. Si postulas en 2026, se usa RSH 2025–2026."
+    },
+    {
+      "question": "¿Puedo tener CAE y Beca Bicentenario a la vez?",
+      "answer": "Sí. La Beca Bicentenario cubre arancel años I–III; el CAE financia el saldo años I+ y años IV+ completos. Son instrumentos complementarios."
+    },
+    {
+      "question": "¿A qué edad debo empezar a pagar CAE?",
+      "answer": "CAE se comienza a pagar **después de egresar** de tu carrera. Durante años de estudio, la deuda acumula pero sin cuota. Tasa 2% aplica post-egreso."
+    },
+    {
+      "question": "¿Qué pasa si mi RSH aumenta durante la carrera?",
+      "answer": "Tu RSH se recalcula anualmente (MIDESO). Si sube por sobre 80, pierdes elegibilidad CAE. Si baja, podrías acceder a más beca. Verifica cada año con tu IES."
+    },
+    {
+      "question": "¿Hay límite de arancel para CAE?",
+      "answer": "Sí. CAE cubre aranceles hasta $2.5M anuales (MINEDUC 2026). Aranceles superiores debes pagarlos con fondos propios o crédito privado."
+    },
+    {
+      "question": "¿Se puede cambiar de programa con CAE?",
+      "answer": "Sí, pero con límites. CAE se puede transferir entre IES si cambias programa antes de 2.º año. Consulta con tu institución actual; afecta plazo y deuda."
+    },
+    {
+      "question": "¿Cómo afecta el PAES a CAE y Beca?",
+      "answer": "PAES mínimo para CAE: 450. Para Beca Bicentenario: 500. Puntajes más altos no te dan más dinero, pero abren acceso a programas selectivos. DEMRE publica cortes 2026 en marzo."
+    },
+    {
+      "question": "¿Debo pagar CAE si no me titulé?",
+      "answer": "Sí. El CAE es deuda desde desembolso. Si desistes, igual debes pagar lo que fue acopiado, aunque sin tasa mientras estés como estudiante regular."
+    }
+  ],
+  "sources": [
+    {
+      "name": "MINEDUC – Crédito Aval Estado (CAE)",
+      "url": "https://www.mineduc.cl/cae/",
+      "publisher": "Ministerio de Educación Chile",
+      "date": "2026"
+    },
+    {
+      "name": "MINEDUC – Beca Bicentenario",
+      "url": "https://www.mineduc.cl/beca-bicentenario/",
+      "publisher": "Ministerio de Educación Chile",
+      "date": "2026"
+    },
+    {
+      "name": "DEMRE – Prueba Acceso Educación Superior (PAES)",
+      "url": "https://www.demre.cl/",
+      "publisher": "Departamento de Evaluación, Medición y Registro Educacional",
+      "date": "2026"
+    },
+    {
+      "name": "MIDESO – Registro Socioeconómico",
+      "url": "https://www.registrosocioeconomico.gob.cl/",
+      "publisher": "Ministerio de Desarrollo Social e Inclusión",
+      "date": "2026"
+    },
+    {
+      "name": "SII – Servicios Financieros Educación",
+      "url": "https://www.sii.cl/",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "MINEDUC, DEMRE, MIDESO, SII",
+    "sourceUrl": "https://www.mineduc.cl/",
+    "updateType": "manual",
+    "notes": "Aranceles, tasa CAE 2%, límites beca ($2.5M), criterios RSH/PAES se revisan anualmente en enero. Próxima revisión 2027."
+  },
+  "lastReviewed": "2026-04-28"
+}

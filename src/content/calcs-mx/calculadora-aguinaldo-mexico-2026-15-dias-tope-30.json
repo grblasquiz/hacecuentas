@@ -1,0 +1,186 @@
+{
+  "slug": "calculadora-aguinaldo-mexico-2026-15-dias-tope-30",
+  "title": "Calculadora Aguinaldo México 2026 | Hacé Cuentas",
+  "h1": "Aguinaldo México 2026 (15 días)",
+  "description": "Calcula tu aguinaldo 2026 en México: mínimo 15 días LFT, máximo 30 sector privado. Incluye ISR retenido y exención de 30 UMA ($32,430 aprox). Pago antes 20 dic.",
+  "category": "finanzas",
+  "audience": "MX",
+  "icon": "🎁",
+  "formulaId": "aguinaldo-mexico-2026-15-dias-tope-30",
+  "intro": "El aguinaldo es una prestación obligatoria en México regulada por la Ley Federal del Trabajo. **Mínimo 15 días** de salario (art. 87 LFT). Sector público puede llegar a 30-40 días según convenio colectivo. Se paga **antes del 20 de diciembre**. Los primeros **30 UMA** (~$32,430 en 2026) están **exentos de ISR**; el resto se grava con tarifa anual.",
+  "keyTakeaway": "Aguinaldo bruto = (sueldo diario × días aguinaldo). Con exención 30 UMA en 2026, un aguinaldo de $20,000 brutos es casi **100% neto**; a partir de $35,000+ pagas ISR progresivo.",
+  "useCases": [
+    "Empleado privado: calcular neto de 15 días aguinaldo",
+    "Servidor público: comparar 30 vs 40 días según contrato",
+    "Auditor: verificar retención ISR correcta pre-20 dic",
+    "RH: proyectar costo nómina aguinaldo empresa",
+    "Trabajador independiente: estimar obligación contributiva si aplica"
+  ],
+  "fields": [
+    {
+      "id": "sueldo_diario",
+      "label": "Sueldo diario ($)",
+      "type": "number",
+      "placeholder": "500",
+      "min": 0,
+      "max": 50000,
+      "step": 0.01,
+      "hint": "Tu salario diario base (sin descuentos). En caso de salario mensual, divide entre 30.",
+      "required": true
+    },
+    {
+      "id": "dias_trabajados_anio",
+      "label": "Días trabajados en 2026",
+      "type": "number",
+      "placeholder": "365",
+      "min": 1,
+      "max": 365,
+      "step": 1,
+      "hint": "Días efectivamente laborados en el año (para proporcionar aguinaldo si ingreso es parcial).",
+      "required": true
+    },
+    {
+      "id": "dias_aguinaldo",
+      "label": "Días aguinaldo por convenio",
+      "type": "select",
+      "options": [
+        {
+          "value": 15,
+          "label": "15 días (mínimo LFT, sector privado)"
+        },
+        {
+          "value": 20,
+          "label": "20 días (común sector público)"
+        },
+        {
+          "value": 30,
+          "label": "30 días (sector público típico)"
+        },
+        {
+          "value": 40,
+          "label": "40 días (algunos sectores público)"
+        }
+      ],
+      "default": 15,
+      "hint": "Verifica tu contrato colectivo o IMSS. Mínimo legal: 15 días.",
+      "required": true
+    },
+    {
+      "id": "considerar_proporcional",
+      "label": "¿Aplicar prorrateo por días trabajados?",
+      "type": "checkbox",
+      "default": false,
+      "hint": "Si trabajaste < 365 días en 2026, el aguinaldo se prorratea. Ej: 300 días = 300/365 × aguinaldo."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "aguinaldo_bruto",
+      "label": "Aguinaldo bruto",
+      "type": "currency",
+      "hint": "Total sin retenciones = sueldo diario × días aguinaldo (× factor prorrateo si aplica)."
+    },
+    {
+      "id": "base_isr",
+      "label": "Base gravable ISR",
+      "type": "currency",
+      "hint": "Aguinaldo bruto menos exención 30 UMA ($32,430 aprox 2026)."
+    },
+    {
+      "id": "isr_retenido",
+      "label": "ISR retenido (2026)",
+      "type": "currency",
+      "hint": "Impuesto sobre la base gravable con tarifa anual 2026. Si base ≤ 0, ISR = $0."
+    },
+    {
+      "id": "aguinaldo_neto",
+      "label": "Aguinaldo neto en mano",
+      "type": "currency",
+      "hint": "Aguinaldo bruto - ISR retenido. Es el monto que recibirás antes 20 dic."
+    },
+    {
+      "id": "tasa_isr_efectiva",
+      "label": "Tasa ISR efectiva (%)",
+      "type": "percentage",
+      "hint": "ISR / Aguinaldo bruto. Indica % real de retención sobre lo devengado."
+    }
+  ],
+  "explanation": "## Cómo se calcula el aguinaldo en México 2026\n\n### Marco legal\nLa **Ley Federal del Trabajo (LFT)** art. 87 establece:\n- **Mínimo**: 15 días de salario antes 20 dic de cada año.\n- **Cálculo**: sueldo diario × días aguinaldo.\n- **Exención ISR**: primeros 30 UMA libres de impuesto (SAT, ISR 2026). UMA 2026 = $1,081 → 30 UMA ≈ $32,430.\n- **Retención**: El exceso sobre 30 UMA se grava con **tarifa ISR anual 2026** (1.92% a 35% según tramo).\n\n### Fórmula\n\n```\nAguinaldo Bruto = Sueldo Diario × Días Aguinaldo × (Días Trabajados ÷ 365)\n\nBase Gravable = máx(0, Aguinaldo Bruto − 30 UMA)\n\nISR Retenido = Aplicar Tarifa Anual 2026 a Base Gravable\n  Tramos 2026 (SAT):\n  $ 0 − $3,271 → 1.92%\n  $3,271 − $26,170 → 6.4%\n  $26,170 − $61,790 → 10.88%\n  ... (hasta 35% en tramo máximo)\n\nAguinaldo Neto = Aguinaldo Bruto − ISR Retenido\n\nTasa Efectiva = (ISR Retenido ÷ Aguinaldo Bruto) × 100%\n```\n\n### Ejemplo\n\n**Empleado sector privado, contrato anual:**\n- Sueldo diario: $500\n- Días trabajados 2026: 365\n- Días aguinaldo: 15 (mínimo LFT)\n\n**Cálculo:**\n1. Aguinaldo bruto = $500 × 15 = **$7,500**\n2. Base gravable = máx(0, $7,500 − $32,430) = $0\n3. ISR retenido = **$0** (exención 30 UMA cubre todo)\n4. Aguinaldo neto = $7,500 − $0 = **$7,500**\n5. Tasa efectiva = 0%\n\n**Ejemplo 2 (aguinaldo mayor):**\n- Sueldo diario: $2,000\n- Días trabajados: 365\n- Días aguinaldo: 30 (sector público)\n\n**Cálculo:**\n1. Aguinaldo bruto = $2,000 × 30 = **$60,000**\n2. Base gravable = $60,000 − $32,430 = **$27,570**\n3. ISR retenido (aprox):\n   - $3,271 × 1.92% = $62.80\n   - ($26,170 − $3,271) × 6.4% = $1,465.67\n   - ($27,570 − $26,170) × 10.88% = $152.32\n   - Total ≈ **$1,680.79**\n4. Aguinaldo neto = $60,000 − $1,680.79 = **$58,319.21**\n5. Tasa efectiva = 1,680.79 ÷ 60,000 = **2.8%**\n\n### Limitaciones y consideraciones\n\n1. **Proporcionalidad**: Si iniciaste o terminaste a mitad de año, el aguinaldo se prorratea: (días trabajados ÷ 365) × aguinaldo teórico.\n2. **Salario variable**: Si ganas comisiones, bonus o propinas, se calcula promedio últimos 30 días.\n3. **Prestaciones no cuentan**: Vales, despensas, seguro médico, NO integran sueldo diario.\n4. **Sector público**: Algunos convenios (docentes, militares, etc.) pueden tener 40+ días; verifica contrato colectivo.\n5. **ISR anual**: La retención es estimada con tarifa 2026 (puede variar si hay otras ingresos en el año; se regulariza en declaración anual RFC).\n6. **IMSS**: El aguinaldo sí se integra para cálculo de cuotas IMSS (pensión).\n7. **Finiquito**: Si despido antes 20 dic, empleador debe pagar aguinaldo prorrateado + finiquito.\n\n| Concepto | Monto/Fórmula | Fuente |\n|----------|---------------|--------|\n| Mínimo legal | 15 días | LFT art. 87 |\n| Exención ISR | 30 UMA = $32,430 | SAT 2026 |\n| Tarifa ISR | 1.92%–35% | SAT Tablas 2026 |\n| Pago antes | 20 dic | LFT |\n| Proporcional | días_laborados ÷ 365 | LFT art. 87 |\n",
+  "faq": [
+    {
+      "question": "¿El aguinaldo es obligatorio en México?",
+      "answer": "Sí. **Art. 87 LFT** obliga a empleadores a pagar mínimo **15 días de salario** antes 20 dic. Sin excepciones por tamaño de empresa, sector o tipo de contrato."
+    },
+    {
+      "question": "¿Qué UMA se usa para la exención ISR 2026?",
+      "answer": "**UMA 2026 = $1,081 diarios**. Exención = 30 UMA = **$32,430**. Se fija anualmente SAT (INEGI). Solo aplica a aguinaldo, no otros bonos."
+    },
+    {
+      "question": "¿Si trabajo 6 meses, me toca aguinaldo completo?",
+      "answer": "No. Se **prorratea**: (180 días ÷ 365) × aguinaldo teórico = ~49.3% del aguinaldo anual. Verifica tu fecha ingreso en recibos de nómina."
+    },
+    {
+      "question": "¿Cuánto ISR me retienen en aguinaldo?",
+      "answer": "Depende monto. Si aguinaldo ≤ $32,430, **0% ISR** (exención total). Arriba de eso, **tarifa anual SAT 2026** (empieza 1.92%, sube progresivo). Ejemplo: $50,000 bruto ≈ 0.5–1.5% ISR."
+    },
+    {
+      "question": "¿El aguinaldo cuenta para IMSS/pensión?",
+      "answer": "Sí. El aguinaldo **integra** salario para cuotas IMSS (pensión, invalidez, vida). Empleador paga aportación patronal sobre aguinaldo."
+    },
+    {
+      "question": "¿Sector público tiene más días?",
+      "answer": "Típicamente sí. **Mínimo legal 15 días**, pero muchos convenios públicos pagan **20, 30 ó 40 días**. Docentes SNTE, militares, etc. tienen convenios especiales. Verifica tu contrato colectivo INASGG o STPS."
+    },
+    {
+      "question": "¿Si me despiden antes 20 dic, me dan aguinaldo prorrateado?",
+      "answer": "Sí. **LFT art. 87**: empleador debe incluir aguinaldo prorrateado en **finiquito**. Ejemplo: despido 15 nov tras 10 meses = (300 días ÷ 365) × 15 días = ~12.3 días aguinaldo."
+    },
+    {
+      "question": "¿Las comisiones/bonos integran sueldo diario para aguinaldo?",
+      "answer": "**Parcialmente**. Según **jurisprudencia SCJN**: comisiones y bonos de naturaleza **periódica** (mensuales, trimestrales) se promedian últimos 30 días y se integran. Bonus extraordinarios, NO."
+    },
+    {
+      "question": "¿Cómo se regulariza el ISR en declaración anual?",
+      "answer": "El ISR retenido en nómina (incluido aguinaldo) se acumula en tu **Declaración Anual RFC (antes 30 abr)**. Si retuvieron demás, recuperas saldo. Si menos, pagas. SAT automatiza cálculo en Portal RFC."
+    },
+    {
+      "question": "¿Vales de despensa/seguro médico cuentan para aguinaldo?",
+      "answer": "**No**. Solo **salario en efectivo o equivalente**. Prestaciones (despensa, transporte, seguro, fondo ahorro, vivienda INFONAVIT) no integran salario diario para LFT art. 87."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SAT - Exención por Aguinaldo (30 UMA 2026)",
+      "url": "https://www.sat.gob.mx/aplicacion/26830/calcula-tu-isr-2026",
+      "publisher": "Servicio de Administración Tributaria",
+      "date": "2026"
+    },
+    {
+      "name": "Ley Federal del Trabajo - Artículo 87 (Aguinaldo)",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/125_LFT.pdf",
+      "publisher": "Cámara de Diputados",
+      "date": "2024"
+    },
+    {
+      "name": "STPS - Tablas Arancelarias ISR 2026",
+      "url": "https://www.gob.mx/stps",
+      "publisher": "Secretaría del Trabajo y Previsión Social",
+      "date": "2026"
+    },
+    {
+      "name": "INEGI - UMA 2026",
+      "url": "https://www.inegi.org.mx/temas/uma/",
+      "publisher": "Instituto Nacional de Estadística y Geografía",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-01-15",
+    "source": "SAT Tablas ISR 2026, INEGI UMA",
+    "sourceUrl": "https://www.sat.gob.mx",
+    "updateType": "manual",
+    "notes": "Tarifa ISR anual, UMA, exención 30 UMA. Se revisa anualmente; cambios típicos en enero por decreto federal."
+  },
+  "lastReviewed": "2026-01-15"
+}

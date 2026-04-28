@@ -1,0 +1,290 @@
+{
+  "slug": "calculadora-impuesto-seguro-vida-chile-prima-deduccion",
+  "title": "Calculadora Seguro de Vida Chile 2026 | Prima y Deducción",
+  "h1": "Calculadora de Prima de Seguro de Vida Chile",
+  "description": "Estima la prima mensual de seguro de vida en Chile según edad, monto asegurado y modalidad. Incluye deducción fiscal si está asociado a APV. Datos SII 2026.",
+  "category": "finanzas",
+  "audience": "CL",
+  "icon": "🛡️",
+  "formulaId": "impuesto-seguro-vida-chile-prima-deduccion",
+  "intro": "El seguro de vida en Chile ofrece protección financiera a tu familia. Existen tres modalidades principales: **temporal** (cobertura fija por plazo), **vida universal** (acumulación de valor) y **asociado a APV** (ahorro + protección). Las primas se calculan según tu edad, monto asegurado y riesgo. Si tu póliza está vinculada a un **APV**, la prima es **100% deducible del Impuesto Global Complementario** (IGC), lo que reduce significativamente tu carga tributaria. Esta calculadora estima la prima mensual y el beneficio fiscal en tu declaración anual.",
+  "keyTakeaway": "Un seguro de vida temporal de $50.000.000 a los 40 años cuesta ~$150.000–$200.000/mes; si se asocia a APV, deduce hasta ~$23.800/mes del IGC (con tasa 37%).",
+  "useCases": [
+    "Trabajador independiente que busca proteger a su familia y reducir impuestos vía APV",
+    "Ejecutivo que evalúa seguro temporal vs universal según costo y beneficio fiscal",
+    "Persona con crédito hipotecario que necesita cobertura asociada a APV",
+    "Emprendedor comparando primas entre aseguradoras según edad y montos",
+    "Afiliado AFP que desea maximizar aportes voluntarios con beneficio tributario",
+    "Jubilado que revisa opciones de seguro de vida para beneficiarios"
+  ],
+  "fields": [
+    {
+      "id": "edad",
+      "label": "Tu edad (años)",
+      "type": "number",
+      "placeholder": "40",
+      "min": 18,
+      "max": 75,
+      "required": true,
+      "hint": "Edad actual al contratar o renovar el seguro"
+    },
+    {
+      "id": "monto_asegurado",
+      "label": "Monto asegurado ($)",
+      "type": "number",
+      "placeholder": "50000000",
+      "min": 1000000,
+      "max": 500000000,
+      "required": true,
+      "hint": "Cantidad que recibirían tus beneficiarios en caso de fallecimiento"
+    },
+    {
+      "id": "modalidad",
+      "label": "Tipo de seguro",
+      "type": "select",
+      "options": [
+        {
+          "value": "temporal_10",
+          "label": "Temporal a 10 años"
+        },
+        {
+          "value": "temporal_20",
+          "label": "Temporal a 20 años"
+        },
+        {
+          "value": "temporal_30",
+          "label": "Temporal a 30 años"
+        },
+        {
+          "value": "vida_universal",
+          "label": "Vida Universal"
+        },
+        {
+          "value": "apv_asociado",
+          "label": "Asociado a APV (deducible)"
+        }
+      ],
+      "required": true,
+      "hint": "Temporal: cobertura fija por años. Universal: acumula valor. APV: máxima deducción fiscal"
+    },
+    {
+      "id": "genero",
+      "label": "Género (para cálculo de riesgo)",
+      "type": "select",
+      "options": [
+        {
+          "value": "masculino",
+          "label": "Masculino"
+        },
+        {
+          "value": "femenino",
+          "label": "Femenino"
+        }
+      ],
+      "required": true,
+      "hint": "Las mujeres suelen tener primas menores por estadística actuarial"
+    },
+    {
+      "id": "salud_declarada",
+      "label": "Estado de salud",
+      "type": "select",
+      "options": [
+        {
+          "value": "optimo",
+          "label": "Óptimo (sin antecedentes)"
+        },
+        {
+          "value": "bueno",
+          "label": "Bueno (controlado)"
+        },
+        {
+          "value": "regular",
+          "label": "Regular (preexistencias)"
+        }
+      ],
+      "required": true,
+      "hint": "Impacta en recargo de prima (SII y aseguradoras usan tablas de mortalidad)"
+    },
+    {
+      "id": "tramo_isc",
+      "label": "Tramo IGC estimado (%)",
+      "type": "select",
+      "options": [
+        {
+          "value": "5",
+          "label": "5% (hasta ~$1.490.000/mes)"
+        },
+        {
+          "value": "10",
+          "label": "10% (~$1.490.000–$3.130.000)"
+        },
+        {
+          "value": "14",
+          "label": "14% (~$3.130.000–$5.570.000)"
+        },
+        {
+          "value": "17",
+          "label": "17% (~$5.570.000–$7.770.000)"
+        },
+        {
+          "value": "20",
+          "label": "20% (~$7.770.000–$10.570.000)"
+        },
+        {
+          "value": "23",
+          "label": "23% (~$10.570.000–$14.100.000)"
+        },
+        {
+          "value": "27",
+          "label": "27% (~$14.100.000–$18.630.000)"
+        },
+        {
+          "value": "32",
+          "label": "32% (~$18.630.000–$24.840.000)"
+        },
+        {
+          "value": "37",
+          "label": "37% (>$24.840.000)"
+        }
+      ],
+      "required": true,
+      "hint": "Tramo IGC 2026 SII. Requerido para calcular beneficio fiscal si es APV"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "prima_mensual_base",
+      "label": "Prima mensual (sin recargo)",
+      "type": "currency",
+      "format": "CLP"
+    },
+    {
+      "id": "prima_mensual_total",
+      "label": "Prima mensual total (con recargo)",
+      "type": "currency",
+      "format": "CLP"
+    },
+    {
+      "id": "recargo_porcentaje",
+      "label": "Recargo por edad/salud (%)",
+      "type": "percentage"
+    },
+    {
+      "id": "prima_anual",
+      "label": "Prima anual",
+      "type": "currency",
+      "format": "CLP"
+    },
+    {
+      "id": "es_deducible_apv",
+      "label": "¿Prima deducible del IGC?",
+      "type": "text"
+    },
+    {
+      "id": "ahorro_fiscal_anual",
+      "label": "Ahorro fiscal anual (si APV)",
+      "type": "currency",
+      "format": "CLP"
+    },
+    {
+      "id": "prima_neta_anual",
+      "label": "Prima neta anual (después de deducción)",
+      "type": "currency",
+      "format": "CLP"
+    },
+    {
+      "id": "comparativa_aseguradoras",
+      "label": "Rango de primas en mercado",
+      "type": "text"
+    },
+    {
+      "id": "recomendacion",
+      "label": "Recomendación",
+      "type": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula la prima de seguro de vida en Chile\n\nLa prima de un seguro de vida depende de **cuatro factores principales**:\n\n### 1. **Edad y género**\nLa edad es el factor determinante. El riesgo actuarial aumenta exponencialmente a partir de los 50 años. Las tablas de mortalidad del SII (basadas en datos de la población chilena) establecen que:\n- A los 30 años: factor 1.0 (base)\n- A los 40 años: factor 1.5–1.8\n- A los 50 años: factor 2.5–3.2\n- A los 60 años: factor 4.5–6.0\n\nLas mujeres pagan ~15–20% menos que los hombres por la misma cobertura.\n\n### 2. **Monto asegurado (suma asegurada)**\nLa prima es **directamente proporcional** al monto. Por ejemplo:\n- $20.000.000: ~$80.000/mes (temporal a 10 años, edad 40)\n- $50.000.000: ~$200.000/mes\n- $100.000.000: ~$400.000/mes\n\n### 3. **Tipo de seguro**\n\n| Modalidad | Característica | Deducible IGC | Prima relativa |\n|-----------|---|---|---|\n| **Temporal 10** | Cobertura pura, sin valor acumulado | No | 100% (base) |\n| **Temporal 20** | Plazo mayor = prima más estable | No | 120–130% |\n| **Temporal 30** | Cobertura hasta jubilación | No | 150–170% |\n| **Vida Universal** | Acumula valor (costo inversión + mortalidad) | No | 200–300% |\n| **Asociado a APV** | Prima + fondo de pensión; **100% deducible** | **Sí** | 110–140% |\n\n### 4. **Estado de salud (recargos)**\n- **Óptimo**: sin recargo\n- **Bueno** (diabetes controlada, hipertensión tratada): +20–40%\n- **Regular** (antecedentes cardíacos, cáncer): +60–150%\n\n## Fórmula base\n\n```\nPrima Base Mensual = (Monto Asegurado / 1.000.000) × Factor Edad × Factor Género × Factor Salud\n```\n\n**Ejemplo:** Hombre 40 años, óptimo, $50.000.000, temporal 10 años\n- Factor edad (40): 1.6\n- Factor género (masculino): 1.0\n- Factor salud (óptimo): 1.0\n- Prima = (50 × 1.6 × 1.0 × 1.0) × $2.500/millón ≈ $200.000/mes\n\n## Deducción fiscal (APV asociado)\n\nSi la póliza se asocia a un **APV (Ahorro Previsional Voluntario)**, la prima es **100% deducible del Impuesto Global Complementario (IGC)** según artículo 57 ter de la Ley de la Renta (SII 2026).\n\n**Ahorro fiscal anual** = Prima Anual × Tramo IGC\n\n**Ejemplo:** Prima $150.000/mes, tramo 37%\n- Prima anual: $150.000 × 12 = $1.800.000\n- Ahorro fiscal: $1.800.000 × 0.37 = **$666.000/año**\n- Prima neta: $1.800.000 − $666.000 = **$1.134.000/año**\n\n## Limitaciones y consideraciones\n\n- **Asegurabilidad**: Edad máxima de entrada típicamente 70 años; renovación hasta 90 años.\n- **Reinversión**: Prima de APV debe estar vigente durante todo el año tributario para gozar de deducción.\n- **Competencia**: Cotizaciones varían ±20% entre aseguradoras (San Cristóbal, Consigo, Seguros Monterrey, BBVA Seguros, Allianz).\n- **UTA/UTM**: Algunos montos se indexan; la calculadora usa valores 2026.\n- **Comisión de corretaje**: No incluida en este cálculo (típicamente 5–15% de prima).",
+  "faq": [
+    {
+      "question": "¿Cuál es la diferencia entre seguro temporal y vida universal?",
+      "answer": "El **temporal** es cobertura pura: pagas una prima mensual y si falleces, tus beneficiarios reciben el monto asegurado. No hay valor acumulado. Es más barato (especialmente joven). El **vida universal** combina inversión + mortalidad: parte de tu prima se invierte (fondo de inversión), generando valor que puede retirar en vida o heredar. Es más caro pero flexible. El **APV asociado** es un híbrido: prima deducible + acumulación en cuenta de pensión (máximo beneficio fiscal)."
+    },
+    {
+      "question": "¿La prima del seguro se descuenta del sueldo si lo contrata mi empleador?",
+      "answer": "Sí. Si tu empleador descuenta la prima de nómina, es un **gasto de funcionamiento** para él (no tributario si está vinculado a beneficio laboral colectivo). Para ti, **no es deducible del IGC** a menos que sea un **APV** formalizado. Si lo contratas por tu cuenta como trabajador independiente o complementariamente, la deducción aplica solo si es APV."
+    },
+    {
+      "question": "¿Hasta cuánto puedo deducir por APV en mi declaración de renta?",
+      "answer": "El límite de **aporte voluntario a APV es del 10% de tu sueldo** (o hasta el tope UTA 2026 = $62.610.000 anuales). Sin embargo, la **prima de seguro asociado a APV es 100% deducible sin límite adicional**, siempre que esté formalizada como tal ante la AFP y aseguradora. Debes conservar comprobantes (póliza, boletas mensuales)."
+    },
+    {
+      "question": "¿A qué edad es mejor contratar un seguro de vida?",
+      "answer": "**Cuanto antes, mejor**: a los 30 años pagas ~60% menos que a los 50 años por el mismo monto. Si tienes dependientes o créditos (hipoteca, auto), es recomendable a partir de los 25–30 años. A partir de 60–65 años, muchas aseguradoras aplican recargos significativos o niegan cobertura. Planes asociados a APV son especialmente rentables entre 30–55 años."
+    },
+    {
+      "question": "¿Qué aseguradoras operan en Chile y cómo comparo primas?",
+      "answer": "Principales aseguradoras reguladas por la CMF (2026): **San Cristóbal**, **Consigo**, **Seguros Monterrey New York**, **BBVA Seguros**, **Allianz**, **SURA**, **Zurich**. Las primas varían ±15–20% por misma edad/monto. Puedes cotizar directamente en sus sitios web o vía corredores (Amauta, Soluciones Financieras). Verifica que sean miembros de Asociación Aseguradoras Chile (AACH)."
+    },
+    {
+      "question": "¿El seguro de vida cubre suicidio?",
+      "answer": "En general, **no durante los primeros 12 meses** (cláusula de exclusión por suicidio). Después, la cobertura depende del contrato. Otras exclusiones típicas: muertes por participación en actividades delictivas, conducción en estado de embriaguez, actos de guerra. Revisa las **condiciones específicas** de la póliza antes de firmar."
+    },
+    {
+      "question": "¿Cómo se indexa la prima anualmente?",
+      "answer": "Las primas **no se indexan automáticamente** por UTA/UTM en seguro de vida. Sin embargo, algunos aseguradoras aplican reajustes anuales por inflación (0–3%) según clausulado. El monto asegurado sí puede indexarse si así figura en contrato. Al renovar (especialmente si cambias de edad o tramo), la prima se recalcula con nuevas tablas de mortalidad."
+    },
+    {
+      "question": "¿Puedo aumentar o disminuir el monto asegurado después de contratar?",
+      "answer": "Sí, pero requiere **nueva evaluación de salud**. Un aumento suele exigir declaración de salud completa (exámenes médicos si supera cierto monto). Una disminución es más simple. Los cambios generan nueva póliza y prima desde la fecha de aprobación. Si es APV asociado, cambios afectan la deducción fiscal (prorratea el año)."
+    },
+    {
+      "question": "¿Qué documentos necesito para contratar un seguro de vida en Chile?",
+      "answer": "Requerimientos mínimos (SII + CMF regulados): RUT, cédula vigente, comprobante domicilio (últimos 3 meses), declaración de salud (formulario asegurador), últimas 3 liquidaciones de sueldo o declaración de ingresos independiente. Si es APV, además: número de AFP, fondo elegido. Algunas aseguradoras piden examen médico (glucosa, presión) si edad >50 o monto >$100M."
+    },
+    {
+      "question": "¿Qué pasa si me enfermo después de contratar el seguro?",
+      "answer": "La póliza **no se modifica** (prima sigue igual) porque el riesgo fue aceptado en la fecha de contratación. Sin embargo, si cometes **fraude o ocultamiento de información** en la solicitud (ej.: no declaraste antecedente cardíaco), la aseguradora puede ejercer derecho de rescisión dentro de 2 años. Siempre declara tu estado de salud real."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII - Aporte Voluntario a Fondos de Pensiones (APV)",
+      "url": "https://www.sii.cl/sobre-sii/noticias/2025/aporte-voluntario-fondos-pensiones-apv",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "CMF - Superintendencia de Valores y Seguros (SVS) - Regulación Seguros",
+      "url": "https://www.cmfchile.cl/sitio/aplic/serdoc/ver_resol_grl.php?id_resol=R05162024",
+      "publisher": "Comisión para el Mercado Financiero",
+      "date": "2026"
+    },
+    {
+      "name": "AACH - Asociación Aseguradoras Chile - Estadísticas Seguros Vida",
+      "url": "https://www.aachile.cl/web/estadisticas-seguros",
+      "publisher": "Asociación Aseguradoras Chile",
+      "date": "2025"
+    },
+    {
+      "name": "Banco Central Chile - Tasas e Índices 2026",
+      "url": "https://www.bcentral.cl/contenido/inicio",
+      "publisher": "Banco Central de Chile",
+      "date": "2026"
+    },
+    {
+      "name": "Ley N° 19.281 - Regulación Seguros y Aseguradoras Chile",
+      "url": "https://www.leychile.cl/Navegar?idNorma=30560",
+      "publisher": "Biblioteca del Congreso Nacional",
+      "date": "2024"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "annual",
+    "lastUpdated": "2026-04-28",
+    "source": "SII, CMF, AACH, Banco Central Chile",
+    "sourceUrl": "https://www.sii.cl/ | https://www.cmfchile.cl/ | https://www.aachile.cl/",
+    "updateType": "manual",
+    "notes": "Tramos IGC, factores actuariales por edad y género según tablas SII 2026. Primas estimadas basadas en cotizaciones promedio mercado AACH 2025–2026. APV deducción según Art. 57 ter Ley Renta (vigente). UTA/UTM indexados a febrero 2026."
+  },
+  "lastReviewed": "2026-04-28"
+}

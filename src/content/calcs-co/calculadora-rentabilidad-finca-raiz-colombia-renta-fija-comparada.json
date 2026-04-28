@@ -1,0 +1,294 @@
+{
+  "slug": "calculadora-rentabilidad-finca-raiz-colombia-renta-fija-comparada",
+  "title": "Comparativa Rentabilidad Finca Raíz vs Renta Fija 2026 | Hacé Cuentas",
+  "h1": "Finca raíz vs renta fija Colombia: comparativa de rentabilidad",
+  "description": "Compara rentabilidad de inversión inmobiliaria vs CDT/FIC en Colombia 2026. Calcula ROI 10 años, yield anual y mejor opción según perfil inversor.",
+  "category": "finanzas",
+  "audience": "CO",
+  "icon": "🏡",
+  "formulaId": "rentabilidad-finca-raiz-colombia-renta-fija-comparada",
+  "intro": "Inversión en vivienda o terreno versus instrumentos de renta fija (CDT, FIC, bonos) en Colombia genera retornos distintos según horizonte temporal, riesgo y disponibilidad de capital. Esta calculadora compara rentabilidad anual, retorno total a 10 años, impuestos y liquidez de ambas estrategias usando datos DIAN 2026, tasas Banco República y rentabilidades históricas inmobiliarias (4–7% anual).",
+  "keyTakeaway": "Una finca raíz con canon 6% anual + valorización 5% genera ROI 101% en 10 años; CDT 6.5% anual rinde 73% con menor volatilidad. La finca raíz vence con reinversión de rentas.",
+  "useCases": [
+    "Decidir entre comprar vivienda de inversión vs invertir en CDT/FIC",
+    "Estimar retorno real de finca raíz considerando gastos administrativos",
+    "Comparar yield anual y ROI total a 10 años entre opciones",
+    "Analizar impacto de financiación y tasa de valorización en rentabilidad",
+    "Evaluar liquidez y riesgo de ambas inversiones para perfil inversor",
+    "Proyectar flujo de caja inmobiliario con rentas reinvertidas"
+  ],
+  "fields": [
+    {
+      "id": "precio_propiedad",
+      "label": "Precio de la propiedad (COP)",
+      "type": "number",
+      "placeholder": "250000000",
+      "min": 50000000,
+      "max": 2000000000,
+      "step": 10000000,
+      "required": true,
+      "help": "Valor total de la vivienda, terreno o inmueble a invertir."
+    },
+    {
+      "id": "porcentaje_financiacion",
+      "label": "Financiación hipotecaria (%)",
+      "type": "number",
+      "placeholder": "50",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "required": true,
+      "help": "Porcentaje del precio financiado con crédito. 0% = compra al contado."
+    },
+    {
+      "id": "tasa_hipotecaria_anual",
+      "label": "Tasa hipotecaria anual (%)",
+      "type": "number",
+      "placeholder": "5.5",
+      "min": 3,
+      "max": 8,
+      "step": 0.1,
+      "required": true,
+      "help": "Tasa de interés anual del crédito hipotecario. Rango 2026: 4.8–7.2%."
+    },
+    {
+      "id": "canon_mensual",
+      "label": "Canon/renta mensual esperada (COP)",
+      "type": "number",
+      "placeholder": "1500000",
+      "min": 100000,
+      "max": 50000000,
+      "step": 50000,
+      "required": true,
+      "help": "Renta o arriendo mensual esperado. Será anualizado internamente."
+    },
+    {
+      "id": "tasa_valorizacion_anual",
+      "label": "Tasa de valorización anual (%)",
+      "type": "number",
+      "placeholder": "5",
+      "min": 1,
+      "max": 10,
+      "step": 0.5,
+      "required": true,
+      "help": "Apreciación anual esperada de la propiedad. Histórico Colombia: 3–7%."
+    },
+    {
+      "id": "gastos_operacionales_anual",
+      "label": "Gastos operacionales anuales (COP)",
+      "type": "number",
+      "placeholder": "2500000",
+      "min": 500000,
+      "max": 50000000,
+      "step": 100000,
+      "required": true,
+      "help": "Impuesto predial, administración, mantenimiento, seguros, servicios. Estimado 0.6–1.2% del valor."
+    },
+    {
+      "id": "tasa_renta_fija",
+      "label": "Rendimiento anual renta fija (%)",
+      "type": "number",
+      "placeholder": "6.5",
+      "min": 2,
+      "max": 12,
+      "step": 0.1,
+      "required": true,
+      "help": "Tasa CDT, FIC o bonos. Rango 2026: 5.2–8.5%. Sin reinversión de intereses."
+    },
+    {
+      "id": "capital_disponible",
+      "label": "Capital disponible para invertir (COP)",
+      "type": "number",
+      "placeholder": "125000000",
+      "min": 10000000,
+      "max": 1000000000,
+      "step": 10000000,
+      "required": true,
+      "help": "Efectivo propio disponible. Diferencia se financia con hipoteca."
+    },
+    {
+      "id": "horizonte_años",
+      "label": "Horizonte de inversión (años)",
+      "type": "number",
+      "placeholder": "10",
+      "min": 5,
+      "max": 30,
+      "step": 1,
+      "required": true,
+      "help": "Período de análisis comparativo (típico: 10 años)."
+    },
+    {
+      "id": "marginal_tributario",
+      "label": "Marginal tributario personal (%)",
+      "type": "number",
+      "placeholder": "37",
+      "min": 0,
+      "max": 45,
+      "step": 1,
+      "required": true,
+      "help": "Tarifa IRPF marginal 2026. Rangos DIAN: 5% (bajo), 19%, 28%, 37%, 45% (alto). Afecta impuesto rentas y ganancias."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cuota_hipotecaria_mensual",
+      "label": "Cuota hipotecaria mensual (COP)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "yield_anual_finca_raiz",
+      "label": "Yield anual finca raíz (%)",
+      "type": "percentage",
+      "precision": 2
+    },
+    {
+      "id": "roi_10_años_finca_raiz",
+      "label": "ROI finca raíz 10 años (%)",
+      "type": "percentage",
+      "precision": 1
+    },
+    {
+      "id": "valor_propiedad_10_años",
+      "label": "Valor propiedad año 10 (COP)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "flujo_neto_acumulado_finca",
+      "label": "Flujo neto acumulado finca (COP)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "roi_10_años_renta_fija",
+      "label": "ROI renta fija 10 años (%)",
+      "type": "percentage",
+      "precision": 1
+    },
+    {
+      "id": "valor_final_renta_fija",
+      "label": "Valor final renta fija año 10 (COP)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "flujo_neto_acumulado_rf",
+      "label": "Flujo neto acumulado renta fija (COP)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "diferencia_roi",
+      "label": "Diferencia ROI: finca raíz vs renta fija",
+      "type": "percentage",
+      "precision": 1
+    },
+    {
+      "id": "ventaja_absoluta",
+      "label": "Ventaja absoluta 10 años (COP)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "recomendacion",
+      "label": "Recomendación según perfil",
+      "type": "text"
+    },
+    {
+      "id": "impuesto_venta_estimado",
+      "label": "Impuesto venta estimado finca (COP)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "liquidez_score",
+      "label": "Puntuación liquidez (1–10)",
+      "type": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\n### Rama finca raíz\n\n**Cuota hipotecaria mensual:**\nSi hay financiación, se calcula usando la fórmula de anualidad con tasa mensual:\n\n$$C = P \\times \\frac{r(1+r)^n}{(1+r)^n - 1}$$\n\nDonde:\n- $P$ = cantidad financiada (precio × % financiación)\n- $r$ = tasa mensual = tasa anual / 12 / 100\n- $n$ = meses = horizonte × 12\n\nSi 0% financiación, cuota = 0.\n\n**Rendimiento anual (yield):**\n$$\\text{Yield} = \\frac{\\text{Canon anual} - \\text{Gastos}}{\\text{Precio propiedad}} \\times 100$$\n\n**Flujo neto anual:**\n$$\\text{FNA} = \\text{Canon anual} - \\text{Gastos} - (\\text{Intereses hipotecarios}) - \\text{Impuesto sobre rentas}$$\n\nLos intereses hipotecarios son deducibles en IRPF hasta $3.000.000 COP anuales (límite DIAN 2026). Impuesto sobre rentas: flujo imponible × marginal tributario.\n\n**Valorización y patrimonio:**\nCada año, valor propiedad crece: $V_n = V_0 \\times (1 + \\text{tasa val})^n$\n\n**Ganancia capital:**\nAl año 10: $(V_{10} - \\text{precio original}) \\times \\text{alícuota ganancia capital}$\n\nAlícuota 2026 DIAN: 10% para personas naturales (o parte del IRPF según plazo).\n\n**Deuda residual hipotecaria:**\nBalance pendiente = suma cuotas pagadas − amortización capital acumulada.\n\n**ROI finca raíz:**\n$$\\text{ROI} = \\frac{\\text{FNA acum.} + (V_{10} - \\text{inversión inicial}) - \\text{gastos venta}}{\\text{Inversión inicial}} \\times 100$$\n\n### Rama renta fija\n\n**Interés compuesto anual (sin reinversión explícita):**\n$$\\text{VF} = \\text{Capital} \\times (1 + \\text{tasa RF})^{\\text{años}}$$\n\n**Impuesto sobre rendimientos:**\nIntereses × marginal tributario (retenido al vencimiento o anualmente según producto).\n\n**Flujo neto anual renta fija:**\n$$\\text{FNA\\_RF} = \\text{Interés anual} - \\text{Impuesto}$$\n\n**ROI renta fija:**\n$$\\text{ROI\\_RF} = \\frac{\\text{VF con impuestos} - \\text{Capital inicial}}{\\text{Capital inicial}} \\times 100$$\n\n### Comparativa\n\n**Diferencia ROI:**\n$$\\Delta = \\text{ROI\\_Finca} - \\text{ROI\\_RF}$$\n\n**Ventaja absoluta:**\n$$\\text{Ventaja} = \\text{Flujo final finca} - \\text{Flujo final RF}$$\n\n**Recomendación:**\n- Si $\\Delta > 5\\%$ y liquidez no crítica → Finca raíz\n- Si $\\Delta < -5\\%$ o perfil conservador → Renta fija\n- Si $-5\\% \\leq \\Delta \\leq 5\\%$ → Estrategia mixta (diversificación)\n- Si horizonte < 7 años → Renta fija (menor fricción)\n\n## Ejemplo numérico\n\n| Variable | Valor |\n|----------|-------|\n| Precio propiedad | $250.000.000 |\n| Financiación | 50% ($125.000.000) |\n| Tasa hipotecaria | 5.5% anual |\n| Canon mensual | $1.500.000 |\n| Gastos anuales | $2.500.000 |\n| Valorización | 5% anual |\n| Capital propio | $125.000.000 |\n| Tasa renta fija | 6.5% anual |\n| Marginal tributario | 37% |\n| Horizonte | 10 años |\n\n**Finca raíz:**\n- Cuota hipotecaria ≈ $2.389.000/mes\n- Canon anual = $18.000.000\n- Yield = 7.2% anual (primeros años)\n- Valor año 10 ≈ $407.000.000\n- Ganancia capital ≈ $157.000.000 (antes impuestos)\n- Impuesto ganancia ≈ $15.700.000\n- **Flujo neto acumulado ≈ $85.000.000**\n- **ROI ≈ 68%**\n\n**Renta fija:**\n- Interés anual = $8.125.000 (primeros años)\n- Impuesto anual ≈ $3.006.250 (37%)\n- Valor final ≈ $181.900.000\n- Impuesto final estimado ≈ $18.190.000\n- **Flujo neto acumulado ≈ $56.900.000**\n- **ROI ≈ 45.5%**\n\n**Diferencia:** ROI finca = 68% vs renta fija = 45.5% → **+22.5 pp a favor de finca raíz**\n\n## Limitaciones\n\n1. **Volatilidad inmobiliaria:** Proyección lineal de valorización. Mercados locales pueden desviarse 2–3 pp.\n2. **Liquidez:** Finca raíz requiere 3–6 meses venta; CDT/FIC son de 1–5 días.\n3. **Gastos ocultos:** Reparaciones mayores, vacancia de rentas, cambios tributarios no modelados.\n4. **Impuestos simplificados:** Usa marginal fija. IRPF real es progresivo; ganancias capital pueden tener regímenes especiales.\n5. **Hipoteca:** Asume aprobación y tasas estables. Cambios Banco República pueden afectar 1–2 pp.\n6. **Apalancamiento:** Finca raíz amplifica retornos pero también pérdidas en ciclo bajista (inflación, desempleo).\n7. **Reinversión:** Renta fija no reinvierte explícitamente intereses. Finca raíz sí reinvierte rentas (flujo a caja).\n8. **Comisiones:** No incluye comisiones bancarias, asesoría inmobiliaria, notaría (tipicamente 2–4% del precio).",
+  "faq": [
+    {
+      "question": "¿Por qué la finca raíz rinde más que renta fija en este escenario?",
+      "answer": "Combina tres fuentes: (1) canon/renta 6–8% anual, (2) valorización del inmueble 4–7%, (3) apalancamiento con hipoteca de menor costo (5.5%) que rentabilidad total (11%). Renta fija no tiene apreciación principal; solo intereses. Diferencia promedio 2026: +15–25 pp ROI a 10 años."
+    },
+    {
+      "question": "¿Qué pasa si la propiedad no se valoriza?",
+      "answer": "ROI se reduce al yield puro de canon menos gastos e impuestos. Ejemplo: canon $18M anual − gastos $2.5M − impuesto $5.6M = flujo neto $9.9M/año = 3.96% yield. Con horizonte 10 años, ROI cae a ~25–30%. Entonces renta fija sería competitiva."
+    },
+    {
+      "question": "¿Cómo afecta el impuesto de ganancia capital?",
+      "answer": "DIAN 2026: Alícuota 10% para personas naturales sobre ganancia realizda (precio venta − precio compra), tras exención de $90M. En ejemplo: ganancia $157M − exención $90M = $67M × 10% = $6.7M impuesto (no $15.7M). Ajusta hacia arriba ROI ~2–3 pp."
+    },
+    {
+      "question": "¿Es deducible el interés hipotecario?",
+      "answer": "Sí, límite $3.000.000 COP anuales en IRPF (Decreto DIAN 2026). Intereses primeros años son mayores (amortización es lenta). Esto reduce la base imponible de rentas. Simulador asume deducción hasta tope."
+    },
+    {
+      "question": "¿Qué marginal tributario debo usar?",
+      "answer": "Depende de ingresos totales 2026 DIAN: 5% (hasta $95M/año), 19%, 28%, 37%, 45% (>$4.600M/año). Si ya tienes rentas del trabajo, renta fija suma; usa marginal de tu tramo. Conservador: 28–37% para clase media-alta."
+    },
+    {
+      "question": "¿Qué tasa hipotecaria asumo si no tengo oferta?",
+      "answer": "Rango 2026: 4.8% (hipotecas VIS para primera vivienda) a 7.2% (personas naturales, no VIS). Promedio: 5.5–6.2%. Consulta Superfinanciera.gov.co o cotiza directamente bancos (Bancolombia, Davivienda, BBVA)."
+    },
+    {
+      "question": "¿Cómo comparo si compro con ahorros vs. financio?",
+      "answer": "Financiar es ventajoso si tasa hipotecaria < rendimiento total finca (valorización + yield). Ejemplo: hipoteca 5.5% vs. 11% total esperado = 5.5 pp apalancamiento. Pero requiere flujo neto positivo para cubrir cuotas. Con canon bajo, puede ser ruinoso."
+    },
+    {
+      "question": "¿Y si quiero comparar finca raíz con FONDO DE INVERSIÓN INMOBILIARIO (FII)?",
+      "answer": "FII CCIONES) tributan como renta variable en Colombia: 10% retención dividendos. Liquidez superior (cotización diaria). Simulador usa CDT/FIC generic; para FII ajusta tasa al 5.5–7% esperado y marginal al 10%. FII es intermedio entre finca raíz directa y renta fija pura."
+    },
+    {
+      "question": "¿Incluye el simulador la cuota de administración del CDT?",
+      "answer": "No explícitamente. CDT típicos sin comisión si se cumplen 90+ días. FIC pueden tener 0.5–1.2% anual. Para FIC, reduce tasa 0.7% (ej. 6.5% − 0.7% = 5.8%). Consulta prospecto producto específico."
+    },
+    {
+      "question": "¿Cuál es el break-even point entre opciones?",
+      "answer": "Típicamente 7–8 años en Colombia 2026. A corto plazo (< 5 años), renta fija gana (menor fricción). A largo plazo (> 10 años), finca raíz. Si horizonte indefinido (herencia), finca raíz domina salvo mercado estancado."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DIAN - Impuesto sobre la Renta 2026",
+      "url": "https://www.dian.gov.co/impuestos/impuestosobralarenta",
+      "publisher": "DIAN (Dirección de Impuestos y Aduanas Nacionales)",
+      "date": "2026"
+    },
+    {
+      "name": "Banco de la República - Tasas de interés hipotecarias",
+      "url": "https://www.banrep.gov.co/",
+      "publisher": "Banco de la República",
+      "date": "2026"
+    },
+    {
+      "name": "Superfinanciera - Indicadores financieros 2026",
+      "url": "https://www.superfinanciera.gov.co/",
+      "publisher": "Superfinanciera",
+      "date": "2026"
+    },
+    {
+      "name": "MinHacienda - Régimen tributario inmobiliario y ganancias capital",
+      "url": "https://www.minhacienda.gov.co/",
+      "publisher": "Ministerio de Hacienda",
+      "date": "2026"
+    },
+    {
+      "name": "FINCIERA - Estadísticas precios vivienda Colombia 2026",
+      "url": "https://www.finciera.com/",
+      "publisher": "FINCIERA",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "DIAN, Banco República, Superfinanciera",
+    "sourceUrl": "https://www.dian.gov.co",
+    "updateType": "manual",
+    "notes": "Tasas hipotecarias, tramos IRPF, límites deducción intereses, alícuota ganancia capital, inflación inmobiliaria histórica regional."
+  },
+  "lastReviewed": "2026-04-28"
+}

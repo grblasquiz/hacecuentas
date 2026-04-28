@@ -1,0 +1,273 @@
+{
+  "slug": "calculadora-cfdi-rfc-validacion-uso-cliente-mexico",
+  "title": "Validador RFC + CFDI 4.0 México 2026 | Hacé Cuentas",
+  "h1": "Validación RFC y uso CFDI 4.0",
+  "description": "Valida estructura RFC, compatibilidad CFDI 4.0 y régimen fiscal (PM, PF, RESICO). Detecta errores comunes RFC México 2026.",
+  "category": "negocios",
+  "audience": "MX",
+  "icon": "✓",
+  "formulaId": "cfdi-rfc-validacion-uso-cliente-mexico",
+  "intro": "Herramienta para validar datos fiscales de clientes antes de emitir CFDI 4.0. Verifica estructura RFC según reglas SAT, compatibilidad con régimen fiscal y uso CFDI permitido (G01 ingreso general, G03 sección 3, P01 participaciones, etc). Evita rechazo de facturas por datos erróneos.",
+  "keyTakeaway": "Valida RFC 12-13 caracteres, detecta incoherencias entre razón social y régimen fiscal (PM 601, PF 612, RESICO 626) en México 2026.",
+  "useCases": [
+    "Contador validando datos cliente antes de emitir CFDI",
+    "Empresa verificando RFC proveedor para pago",
+    "Sistema de facturación automatizado pre-validación",
+    "Auditoría fiscal detectando inconsistencias régimen-RFC",
+    "Capacitación fiscal sobre estructura RFC y usos CFDI"
+  ],
+  "fields": [
+    {
+      "id": "rfc",
+      "label": "RFC cliente",
+      "type": "text",
+      "placeholder": "AAA010101ABC o AAAA010101ABC",
+      "required": true,
+      "help": "RFC 12 caracteres (PF) o 13 (PM). Solo mayúsculas, sin guiones.",
+      "validation": "RFC válido SAT"
+    },
+    {
+      "id": "razon_social",
+      "label": "Razón social o nombre",
+      "type": "text",
+      "placeholder": "Acme S.A. de C.V. o Juan Pérez García",
+      "required": true,
+      "help": "Nombre registrado ante SAT. Mín. 5 caracteres."
+    },
+    {
+      "id": "codigo_postal",
+      "label": "Código postal",
+      "type": "text",
+      "placeholder": "28001 o 06500",
+      "required": true,
+      "help": "CP 5 dígitos. Valida contra catálogo SAT.",
+      "validation": "CP válido INEGI"
+    },
+    {
+      "id": "regimen_fiscal",
+      "label": "Régimen fiscal",
+      "type": "select",
+      "options": [
+        {
+          "value": "601",
+          "label": "601 - Persona Moral General"
+        },
+        {
+          "value": "612",
+          "label": "612 - PF Actividad Empresarial"
+        },
+        {
+          "value": "614",
+          "label": "614 - PF Sin Actividad Empresarial"
+        },
+        {
+          "value": "626",
+          "label": "626 - RESICO (Régimen Simplificado)"
+        },
+        {
+          "value": "629",
+          "label": "629 - PF Asalariada"
+        },
+        {
+          "value": "630",
+          "label": "630 - Ingresos por Intereses"
+        }
+      ],
+      "required": true,
+      "help": "Clave SAT vigente. Consulta RFC en carátula del ISR."
+    },
+    {
+      "id": "uso_cfdi",
+      "label": "Uso CFDI previsto (opcional)",
+      "type": "select",
+      "options": [
+        {
+          "value": "G01",
+          "label": "G01 - Adquisición de mercancías"
+        },
+        {
+          "value": "G02",
+          "label": "G02 - Devoluciones, descuentos"
+        },
+        {
+          "value": "G03",
+          "label": "G03 - Gastos en general"
+        },
+        {
+          "value": "I01",
+          "label": "I01 - Construcciones"
+        },
+        {
+          "value": "I02",
+          "label": "I02 - Mobildario y equipo"
+        },
+        {
+          "value": "I03",
+          "label": "I03 - Equipo transporte"
+        },
+        {
+          "value": "I04",
+          "label": "I04 - Equipo cómputo"
+        },
+        {
+          "value": "I05",
+          "label": "I05 - Equipo oficina"
+        },
+        {
+          "value": "I06",
+          "label": "I06 - Papelería"
+        },
+        {
+          "value": "I07",
+          "label": "I07 - Servicios"
+        },
+        {
+          "value": "I08",
+          "label": "I08 - Arrendamiento"
+        },
+        {
+          "value": "P01",
+          "label": "P01 - Participaciones corporativas"
+        },
+        {
+          "value": "S01",
+          "label": "S01 - Sin efectos fiscales"
+        }
+      ],
+      "required": false,
+      "help": "Deductibilidad varía por régimen. Influye en contabilidad."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "validacion_rfc",
+      "label": "RFC válido",
+      "type": "boolean"
+    },
+    {
+      "id": "rfc_estructura",
+      "label": "Estructura RFC",
+      "type": "text"
+    },
+    {
+      "id": "tipo_rfc",
+      "label": "Tipo RFC",
+      "type": "text",
+      "help": "PF (12 chars) o PM (13 chars)"
+    },
+    {
+      "id": "coherencia_regimen",
+      "label": "Coherencia RFC-régimen",
+      "type": "text",
+      "help": "PF válida 612/614/629. PM válida 601/625/630."
+    },
+    {
+      "id": "usos_cfdi_compatibles",
+      "label": "Usos CFDI compatibles",
+      "type": "array",
+      "help": "Usos permitidos por SAT para este régimen fiscal"
+    },
+    {
+      "id": "validacion_cp",
+      "label": "CP válido",
+      "type": "text",
+      "help": "Válido INEGI o advertencia"
+    },
+    {
+      "id": "errores_detectados",
+      "label": "Errores/advertencias",
+      "type": "array",
+      "help": "Lista detallada de inconsistencias encontradas"
+    },
+    {
+      "id": "recomendaciones",
+      "label": "Recomendaciones",
+      "type": "array",
+      "help": "Pasos para corregir antes de facturar"
+    }
+  ],
+  "explanation": "## Validación RFC + CFDI 4.0 México\n\n### Estructura RFC\n\nEl RFC (Registro Federal de Contribuyentes) es la clave fiscal asignada por el SAT a personas físicas y morales. Consta de:\n\n**Persona Física (12 caracteres):**\n- 6 letras: apellido paterno (4), paterno (1), materno (1)\n- 6 dígitos: AAMMDD (fecha nacimiento)\n- 3 caracteres: homoclave alfanumérica\n\nEjemplo válido: `PÉRO851231XYZ`\n\n**Persona Moral (13 caracteres):**\n- 3 letras: primeras 3 palabras razón social\n- 6 dígitos: AAMMDD (constitución)\n- 4 caracteres: homoclave + verificador\n\nEjemplo válido: `ACM850615ABC01`\n\n### Regímenes Fiscales (2026)\n\n| Código | Descripción | RFC tipo | Usos CFDI permitidos |\n|--------|-------------|----------|----------------------|\n| **601** | PM General | PM | G01, G02, G03, I01-I08, P01 |\n| **612** | PF Actividad Empresarial | PF | G01, G02, G03, I07 |\n| **614** | PF Sin actividad (jubilada) | PF | G03 (gastos) |\n| **626** | RESICO (simplificado) | PF | G01, G03 (restricciones) |\n| **629** | PF Asalariada | PF | G03, P01 |\n| **625** | PM Tributación Federal | PM | G01, G02, G03 |\n| **630** | Ingresos por intereses | PF/PM | P01 |\n\n### Validación de coherencia\n\n1. **Tipo RFC vs. tipo contribuyente:**\n   - RFC de 12 caracteres → debe ser PF (régimen 612, 614, 626, 629)\n   - RFC de 13 caracteres → debe ser PM (régimen 601, 625)\n\n2. **Régimen vs. usos CFDI:**\n   - PF 614: solo G03 (no puede facturar mercancías)\n   - RESICO 626: restringido a actividades permitidas\n   - PM 601: máxima libertad de usos\n\n3. **Validación homoclave (SAT):**\n   - Dígito verificador mediante algoritmo módulo 97\n   - Detecta errores tipográficos en captura\n\n### Fórmula de Validación Homoclave (PF)\n\n```\npalabra = (apellido_paterno[0:3] + apellido_materno[0:1] + nombre[0:1] + fecha_AAMMDD).upper()\nposición_ñ = 13 si hay Ñ en palabra; si no, 10\nvalor_ascii = suma(ord(char) % posición_ñ para cada char)\nverificador = (97 - (valor_ascii % 97)).toString(16).upper()\n```\n\n### Catálogo de Usos CFDI (Clave c_UsoCFDI)\n\n- **G01-G03:** Adquisiciones, devoluciones, gastos generales\n- **I01-I08:** Inversiones (construcciones, equipo, servicios)\n- **P01:** Participaciones y dividendos\n- **S01:** Sin efectos fiscales (intercompany, demostraciones)\n\nDeductibilidad varía por régimen y tipo de gasto (art. 24 LISR).\n\n### Errores Comunes Detectados\n\n1. **RFC incompleto/caracteres inválidos:** `AAA0101` (falta homoclave)\n2. **Longitud incorrecta:** `AAAA010101ABCDE` (14 chars)\n3. **Tipo RFC ≠ régimen:** PM con RFC de 12 caracteres\n4. **Fechas futuras:** AAMMDD > fecha actual (fecha constitución inválida)\n5. **CP no existe:** CP no registrado en INEGI\n6. **Razón social muy corta/vacía:** < 5 caracteres\n7. **Uso CFDI no permitido:** Régimen 614 con G01 (mercancías)\n\n### Límites y Advertencias\n\n- Validador **no consulta base SAT en tiempo real** (requiere API SAT)\n- Detecta **errores estructurales y lógicos**, no estatus fiscal (activo/cancelado)\n- CP validado contra catálogo INEGI 2026, pero cambios recientes pueden no reflejarse\n- Régimen fiscal debe confirmarse en carátula ISR anual del contribuyente\n- CFDI 4.0 requiere validación adicional de complementos (timbre, retenciones, nómina) no incluida aquí",
+  "faq": [
+    {
+      "question": "¿Cómo sé si un RFC es válido antes de facturas?",
+      "answer": "Esta herramienta valida estructura (12-13 chars, homoclave módulo 97) y coherencia con régimen fiscal. Para validar estatus real (activo/cancelado), consulta directamente **consultas.sat.gob.mx** o la clave SAT en la factura emitida anterior."
+    },
+    {
+      "question": "¿Qué pasa si uso un uso CFDI no permitido por régimen?",
+      "answer": "El CFDI se genera, pero **puede ser rechazado en auditoría SAT**. PF 614 (jubilada) solo puede recibir G03 (gastos). Violarlo genera multas por deducibilidad incorrecta. Valida antes de emitir."
+    },
+    {
+      "question": "¿RESICO (626) puede facturar mercancías (G01)?",
+      "answer": "Sí, pero con limitaciones. RESICO es régimen simplificado con ingresos hasta $2M anuales. G01 y G03 permitidos, pero **no I01-I08 (inversiones)**. Revisa Decreto RESICO vigente 2026."
+    },
+    {
+      "question": "Mi RFC tiene Ñ. ¿Cómo se valida?",
+      "answer": "La Ñ se considera en homoclave con valor especial (posición 13 en tabla ASCII). Esta herramienta la detecta. Si validador rechaza RFC con Ñ, probablemente fue capturada como 'N' simple en SAT."
+    },
+    {
+      "question": "¿Puedo cambiar el régimen fiscal sin cambiar RFC?",
+      "answer": "Sí. El RFC no cambia, pero debes **avisar al SAT antes de cambio de régimen** (forma 20 en línea). Nuevo régimen rige desde mes siguiente. Usos CFDI varían con régimen."
+    },
+    {
+      "question": "¿Qué significa homoclave inválida?",
+      "answer": "RFC capturado con error tipográfico. Si validador marca homoclave incorrecta, verifica caracteres 10-13 en RFC cliente. Consulta documento fiscal anterior o RFC en trámite ante SAT."
+    },
+    {
+      "question": "¿PM y PF pueden usar mismo RFC?",
+      "answer": "No. RFC es único e intransferible. PM genera RFC de 13 chars (único nombre empresa). PF genera RFC de 12 chars. Un individuo solo tiene un RFC. No pueden intercambiarse."
+    },
+    {
+      "question": "¿Código postal válido vs. RFC válido?",
+      "answer": "Son independientes. CP valida contra catálogo INEGI (ubicación existe). RFC valida estructura + régimen fiscal. Ambos deben coincidir: CP debe ser zona operativa contribuyente."
+    },
+    {
+      "question": "¿Puedo facturar con RFC de cliente cancelado?",
+      "answer": "No. SAT rechazará timbre. Valida **estatus fiscal en consultas.sat.gob.mx** antes de emitir. Si está cancelado, gestiona tramite de reinstalación con cliente."
+    },
+    {
+      "question": "¿CFDI 3.3 vs. 4.0 cambia validación RFC?",
+      "answer": "No. RFC estructura es idéntica. CFDI 4.0 solo agrega campos XML (globalización de atributos, precisión de montos). RFC sigue siendo 12-13 caracteres validación igual."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SAT - Catalogo de Personas",
+      "url": "https://www.sat.gob.mx/home",
+      "publisher": "SAT",
+      "date": "2026"
+    },
+    {
+      "name": "SAT - RFC y homoclave",
+      "url": "https://www.sat.gob.mx/",
+      "publisher": "SAT",
+      "date": "2026"
+    },
+    {
+      "name": "SAT - Catálogo de Usos CFDI",
+      "url": "https://www.sat.gob.mx/",
+      "publisher": "SAT",
+      "date": "2025"
+    },
+    {
+      "name": "INEGI - Catálogo de CP",
+      "url": "https://www.inegi.org.mx/",
+      "publisher": "INEGI",
+      "date": "2026"
+    },
+    {
+      "name": "CFDI 4.0 - Especificación XML",
+      "url": "https://www.sat.gob.mx/factura",
+      "publisher": "SAT",
+      "date": "2023"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SAT Catálogo de Regímenes Fiscales",
+    "sourceUrl": "https://www.sat.gob.mx/",
+    "updateType": "manual",
+    "notes": "Actualizar cuando SAT publique nuevas claves de régimen fiscal o cambios en usos CFDI (usualmente enero). Catálogo CP se revisa cada actualización INEGI."
+  },
+  "lastReviewed": "2026-04-28"
+}

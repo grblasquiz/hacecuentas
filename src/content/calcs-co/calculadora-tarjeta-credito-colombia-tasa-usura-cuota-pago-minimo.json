@@ -1,0 +1,214 @@
+{
+  "slug": "calculadora-tarjeta-credito-colombia-tasa-usura-cuota-pago-minimo",
+  "title": "Calculadora Tarjeta Crédito Colombia 2026 | Tasa Usura Superfinanciera",
+  "h1": "Calculadora de tarjeta de crédito: intereses, cuota y pago mínimo",
+  "description": "Calcula intereses, meses de pago y trampa del pago mínimo en tarjeta crédito Colombia. Tasa usura 2026: ~33% EA Superfinanciera. Compara con CDT.",
+  "category": "finanzas",
+  "audience": "CO",
+  "icon": "💳",
+  "formulaId": "tarjeta-credito-colombia-tasa-usura-cuota-pago-minimo",
+  "intro": "En Colombia, la **tasa de usura máxima para tarjeta de crédito ronda el 33% efectivo anual (EA)** según la Superfinanciera, ajustándose mensualmente. Si pagas solo el **pago mínimo** (típicamente 2-3% del saldo), los intereses crecen y la deuda **puede triplicarse**. Esta calculadora estima cuánto tiempo tardarás en liquidar la deuda, cuánto pagarás en intereses totales y compara contra inversiones más seguras (CDT).",
+  "keyTakeaway": "Con $1.000.000 de deuda al 32% EA pagando mínimo (2,5% mes), terminarás pagando $2.850.000 en 48 meses. Ese pago mínimo es una trampa.",
+  "useCases": [
+    "Estimar meses de pago y intereses totales con cuota fija mensual",
+    "Detectar la trampa del pago mínimo (crece deuda antes de bajar)",
+    "Comparar costo real de tarjeta vs. CDT o crédito personal",
+    "Planificar estrategia de pago acelerado (avalancha o bola de nieve)",
+    "Validar si tasa ofrecida por banco está dentro de límite usura",
+    "Simular impacto de atraso o pago irregular"
+  ],
+  "fields": [
+    {
+      "id": "deuda_inicial",
+      "label": "Deuda actual en tarjeta (COP)",
+      "type": "number",
+      "placeholder": "1000000",
+      "min": 0,
+      "max": 100000000,
+      "step": 10000,
+      "required": true,
+      "help": "Saldo actual que debes en la tarjeta de crédito"
+    },
+    {
+      "id": "tasa_anual_ea",
+      "label": "Tasa de interés anual (% EA)",
+      "type": "number",
+      "placeholder": "32",
+      "min": 0,
+      "max": 50,
+      "step": 0.1,
+      "required": true,
+      "help": "Tasa efectiva anual. Consulta tu extracto. Superfinanciera máximo ~33% EA 2026"
+    },
+    {
+      "id": "pago_mensual",
+      "label": "Pago mensual (COP)",
+      "type": "number",
+      "placeholder": "50000",
+      "min": 0,
+      "max": 10000000,
+      "step": 5000,
+      "required": true,
+      "help": "Monto fijo mensual que puedes/quieres pagar. Si es 0, usa pago mínimo"
+    },
+    {
+      "id": "usar_pago_minimo",
+      "label": "¿Usar pago mínimo en lugar de cuota fija?",
+      "type": "checkbox",
+      "default": false,
+      "help": "Si es verdadero, ignora 'Pago mensual' y calcula con 2,5% del saldo cada mes"
+    },
+    {
+      "id": "porcentaje_minimo",
+      "label": "Porcentaje pago mínimo (% saldo)",
+      "type": "number",
+      "placeholder": "2.5",
+      "min": 0.5,
+      "max": 10,
+      "step": 0.1,
+      "required": false,
+      "help": "Típicamente 2-3% del saldo. Solo aplica si 'Usar pago mínimo' está activo"
+    },
+    {
+      "id": "meses_max",
+      "label": "Límite de meses a calcular",
+      "type": "number",
+      "placeholder": "120",
+      "min": 1,
+      "max": 600,
+      "step": 1,
+      "required": false,
+      "help": "Para evitar loops infinitos. Si aún hay deuda, se reporta"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "meses_pago",
+      "label": "Meses para liquidar deuda",
+      "type": "number",
+      "unit": "meses"
+    },
+    {
+      "id": "intereses_totales",
+      "label": "Intereses pagados en total",
+      "type": "currency",
+      "unit": "COP"
+    },
+    {
+      "id": "total_pagado",
+      "label": "Total pagado (principal + intereses)",
+      "type": "currency",
+      "unit": "COP"
+    },
+    {
+      "id": "multiplicador_deuda",
+      "label": "Multiplicador de deuda",
+      "type": "number",
+      "unit": "×",
+      "help": "Total pagado ÷ Deuda inicial"
+    },
+    {
+      "id": "costo_efectivo_mensual",
+      "label": "Costo efectivo promedio mensual",
+      "type": "currency",
+      "unit": "COP"
+    },
+    {
+      "id": "aviso_trampa",
+      "label": "⚠️ Aviso pago mínimo",
+      "type": "text",
+      "help": "Si meses > 48 o multiplicador > 2.5, es trampa"
+    },
+    {
+      "id": "comparacion_cdt",
+      "label": "Si invertías en CDT al 10% EA 36 meses",
+      "type": "currency",
+      "unit": "COP",
+      "help": "Diferencia entre costo tarjeta y ganancia CDT"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\n### Fórmula interés mensual\n\nDe tasa efectiva anual (EA) a tasa mensual:\n```\nTasa_mensual = (1 + EA)^(1/12) − 1\n```\n\nPor ejemplo, 32% EA → 2,34% mensual.\n\n### Iteración mes a mes (amortización)\n\nCada mes:\n1. **Interés del mes** = Saldo_anterior × Tasa_mensual\n2. **Abono capital** = Pago − Interés\n3. **Nuevo saldo** = Saldo_anterior − Abono_capital\n\nSi es **pago mínimo**:\n- Pago_mes = Saldo × 2,5% (o porcentaje ingresado)\n- Los primeros meses, casi todo es interés\n- Deuda baja muy lentamente\n\n### Ejemplo concreto\n\n**Entrada:**\n- Deuda: $1.000.000\n- Tasa: 32% EA\n- Pago fijo: $50.000/mes\n\n**Mes 1:**\n- Tasa mensual = (1,32)^(1/12) − 1 = 2,34%\n- Interés = $1.000.000 × 2,34% = $23.400\n- Abono capital = $50.000 − $23.400 = $26.600\n- Nuevo saldo = $1.000.000 − $26.600 = $973.400\n\n**Mes 2:**\n- Interés = $973.400 × 2,34% = $22.778\n- Abono capital = $50.000 − $22.778 = $27.222\n- Nuevo saldo = $973.400 − $27.222 = $946.178\n\n... (continúa hasta saldo ≤ 0)\n\n**Resultado: ~26 meses, ~$300.000 en intereses**\n\n### Con pago mínimo (2,5% saldo)\n\n**Mes 1:**\n- Pago = $1.000.000 × 2,5% = $25.000\n- Interés = $23.400\n- Abono capital = $1.600 (¡muy poco!)\n- Nuevo saldo = $998.400\n\n**Mes 2:**\n- Saldo casi igual, pago sigue ~$25.000\n- Interés domina, deuda baja muy lentamente\n\n**Resultado: ~48+ meses, $850.000+ en intereses, deuda se multiplica ×2,8**\n\n### Comparación CDT\n\nSi en lugar de pagar tarjeta, hubieras invertido el mismo monto en CDT al 10% EA:\n```\nMonto_CDT_36m = $1.000.000 × (1,10)^(36/12)\n              = $1.000.000 × 1,3310\n              = $1.331.000\nGanancia = $331.000\n```\n\nPero por tarjeta pagaste $1.300.000 (36 meses × $50.000 − abono capital).\n\n**Costo de oportunidad = Intereses_tarjeta + Ganancia_CDT_no_realizada**\n\n### Limitaciones\n\n- **No considera nuevas compras** en la tarjeta durante el período\n- **No incluye comisiones, seguros o gastos de administración** (varían por banco)\n- **Tasa fija**: en realidad, la tasa puede cambiar (sube/baja con DTF)\n- **No modela atrasos**: incrementos por mora (1-3% adicional) no incluidos\n- **Pago mínimo varía**: algunos bancos usan porcentaje, otros cuota fija + interés\n- **Límite de 600 meses**: si sigue sin pagar, el algoritmo se detiene",
+  "faq": [
+    {
+      "q": "¿Cuál es la tasa de usura máxima para tarjeta en Colombia 2026?",
+      "a": "La Superfinanciera establece el límite de tasa de usura mensualmente. A 2026, ronda **32-33% EA** para tarjetas de crédito personas naturales. Varía por riesgo y banco. Consulta tu extracto o la web de Superfinanciera."
+    },
+    {
+      "q": "¿Qué es el pago mínimo y por qué es una trampa?",
+      "a": "El pago mínimo (~2,5% del saldo) cubre apenas los intereses del mes. El abono capital es mínimo, así que la deuda baja muy lentamente. Con deuda de $1M al 32%, el pago mínimo ronda $25.000/mes pero casi todo es interés. Terminas pagando más de 2,8× lo que debías."
+    },
+    {
+      "q": "¿Cómo se convierte tasa anual (EA) a mensual?",
+      "a": "Fórmula: **Tasa_mensual = (1 + EA)^(1/12) − 1**. Ejemplo: 32% EA = (1,32)^(1/12) − 1 = 2,34% mensual. Es composición, no simple división entre 12."
+    },
+    {
+      "q": "¿Qué diferencia hay entre EA y MV (mensual vencida)?",
+      "a": "EA es efectiva anual (compuesta). MV es la tasa simple mensual. Si el banco dice \"32% MV\", es mucho más caro que 32% EA. Siempre pide claridad: ¿es EA o MV? Colombia usa típicamente EA en tarjeta."
+    },
+    {
+      "q": "¿Vale la pena pagar más que la cuota mínima?",
+      "a": "**Sí, siempre**. Si puedes pagar más que el mínimo, hazlo. Reduce el tiempo y los intereses dramáticamente. Estrategias: **avalancha** (primero deuda con tasa más alta) o **bola de nieve** (primero deuda más pequeña)."
+    },
+    {
+      "q": "¿Qué pasa si no pago la tarjeta?",
+      "a": "Después de 30 días de atraso: recargo por mora (~1-3%), reporta a centrales de riesgo (CIFIN, Equifax), sube tasa, pueden congelar tarjeta. Después de 90+ días: envían a cobranza. Afecta tu crédito años. No recomendado."
+    },
+    {
+      "q": "¿Cómo comparo costo tarjeta vs. crédito personal?",
+      "a": "Crédito personal típicamente cuesta 25-28% EA, con cuota fija desde el inicio (no pago mínimo). Calcula: intereses totales tarjeta vs. intereses crédito personal. Suele ser 3-5% más barato con crédito personal."
+    },
+    {
+      "q": "¿Por qué algunos bancos ofrecen 0% de interés en la tarjeta?",
+      "a": "Solo en periodos promocionales (Black Friday, Navidad) y solo si pagas en 1-3 cuotas. Después vuelve a la tasa normal. También requiere compra mínima. Lee letra chica del banco."
+    },
+    {
+      "q": "¿Qué es DTF y cómo afecta mi tarjeta?",
+      "a": "DTF (tasa de depósitos a término fijo) es el índice de referencia del mercado interbancario. Muchos bancos ajustan tasa de tarjeta según DTF + margen fijo. Si DTF sube, tu tasa sube. Revisada diariamente."
+    },
+    {
+      "q": "¿Conviene transferencia de saldo entre tarjetas?",
+      "a": "Solo si la nueva tarjeta ofrece tasa promocional (0-5% por 3-6 meses) y no cobra comisión de transferencia (típicamente 1-2%). Sirve para ganar tiempo, pero después vuelve tasa normal. Úsalo para negociar pago en cuotas con mejor tasa."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Superfinanciera - Tasas de usura y tasas efectivas",
+      "url": "https://www.superfinanciera.gov.co/",
+      "publisher": "Superintendencia Financiera de Colombia",
+      "date": "2026-04-28"
+    },
+    {
+      "name": "Banco de la República - DTF y tasas de referencia",
+      "url": "https://www.banrep.gov.co/",
+      "publisher": "Banco de la República",
+      "date": "2026-04-28"
+    },
+    {
+      "name": "DIAN - Normativa crédito y operaciones financieras",
+      "url": "https://www.dian.gov.co/",
+      "publisher": "Dirección de Impuestos y Aduanas Nacionales",
+      "date": "2026-04-28"
+    },
+    {
+      "name": "Asobancaria - Información productos y servicios bancarios",
+      "url": "https://www.asobancaria.com/",
+      "publisher": "Asociación Bancaria y de Entidades Financieras de Colombia",
+      "date": "2026-04-28"
+    },
+    {
+      "name": "CIFIN - Centrales de riesgo y antecedentes crediticios",
+      "url": "https://www.cifin.com.co/",
+      "publisher": "Central de Información de la Superintendencia Financiera",
+      "date": "2026-04-28"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-28",
+    "source": "Superfinanciera de Colombia",
+    "sourceUrl": "https://www.superfinanciera.gov.co/",
+    "updateType": "manual",
+    "notes": "Tasa de usura máxima se ajusta mensualmente. Datos fórmula amortización son estándar financiero universal. DTF se revisa diariamente."
+  },
+  "lastReviewed": "2026-04-28"
+}

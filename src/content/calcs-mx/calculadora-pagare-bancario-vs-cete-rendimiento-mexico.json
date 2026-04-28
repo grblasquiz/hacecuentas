@@ -1,0 +1,248 @@
+{
+  "slug": "calculadora-pagare-bancario-vs-cete-rendimiento-mexico",
+  "title": "Comparativa Pagaré vs CETES 2026 | Hacé Cuentas",
+  "h1": "Pagaré bancario vs CETES: rendimiento neto México",
+  "description": "Calcula rendimiento neto pagaré bancario (8-11% TIIE) vs CETES gobierno (~10%). Retención ISR, liquidez, riesgo. Monto $10,000-$1,000,000.",
+  "category": "finanzas",
+  "audience": "MX",
+  "icon": "💵",
+  "formulaId": "pagare-bancario-vs-cete-rendimiento-mexico",
+  "intro": "Compara dos instrumentos de inversión mexicanos: **pagaré bancario** (depósito a plazo fijo, 28-182 días) y **CETES** (certificados tesorería corto plazo). Ambos requieren ISR retención. Estima tu rendimiento neto según monto y plazo.",
+  "keyTakeaway": "Pagaré típico 8-11% anual; CETE ~10% anual. Después ISR (retención 1.2-1.5% en CETE, similar en pagaré), rentabilidad neta 7-9% aprox. CETE menos riesgo crediticio.",
+  "useCases": [
+    "Inversor con $50,000-$500,000 por 28-182 días",
+    "Comparar rendimiento neto pagaré vs CETE mismo plazo",
+    "Evaluar impacto ISR en rentabilidad real",
+    "Decidir entre banco vs inversión gubernamental",
+    "Planificar horizonte de inversión corto plazo",
+    "Analizar liquidez y riesgo contrapartes"
+  ],
+  "fields": [
+    {
+      "id": "monto_invertido",
+      "label": "Monto invertido (MXN)",
+      "type": "number",
+      "min": 1000,
+      "max": 5000000,
+      "step": 1000,
+      "default": 100000,
+      "help": "Capital a invertir: $1,000-$5,000,000. Pagaré mínimo típico $10,000."
+    },
+    {
+      "id": "plazo_dias",
+      "label": "Plazo (días)",
+      "type": "select",
+      "options": [
+        {
+          "label": "28 días",
+          "value": 28
+        },
+        {
+          "label": "91 días",
+          "value": 91
+        },
+        {
+          "label": "182 días",
+          "value": 182
+        },
+        {
+          "label": "365 días",
+          "value": 365
+        }
+      ],
+      "default": 91,
+      "help": "Pagaré: 28/91/182/365. CETE: típicamente 7/28/91/182 días."
+    },
+    {
+      "id": "tasa_pagare",
+      "label": "Tasa anual pagaré (%)",
+      "type": "number",
+      "min": 5,
+      "max": 15,
+      "step": 0.1,
+      "default": 9.5,
+      "help": "Tasa TIIE + spread. Típico 8-11% (2026). Consulta tu banco."
+    },
+    {
+      "id": "tasa_cete",
+      "label": "Tasa anual CETE (%)",
+      "type": "number",
+      "min": 6,
+      "max": 14,
+      "step": 0.1,
+      "default": 10.2,
+      "help": "Tasa CETE vigente. ~10% en 2026. Varía diariamente Banxico."
+    },
+    {
+      "id": "cliente_tiie",
+      "label": "¿Cliente preferente banco? (spread menor)",
+      "type": "boolean",
+      "default": false,
+      "help": "Cliente preferente obtiene tasa más baja en pagaré (descuento ~0.5-1%)."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "interes_bruto_pagare",
+      "label": "Interés bruto pagaré",
+      "type": "currency",
+      "help": "Capital × tasa anual × (días/365), sin retención."
+    },
+    {
+      "id": "retencion_isr_pagare",
+      "label": "Retención ISR pagaré (1.2%)",
+      "type": "currency",
+      "help": "Interés × 1.2% (tasa retención estándar personas físicas)."
+    },
+    {
+      "id": "interes_neto_pagare",
+      "label": "Interés neto pagaré (después ISR)",
+      "type": "currency",
+      "help": "Interés bruto − retención ISR."
+    },
+    {
+      "id": "rendimiento_neto_pagare",
+      "label": "Rendimiento neto pagaré (%)",
+      "type": "percentage",
+      "help": "Tasa efectiva después retención ISR."
+    },
+    {
+      "id": "monto_final_pagare",
+      "label": "Monto final pagaré",
+      "type": "currency",
+      "help": "Capital + interés neto (lo que recibes al vencimiento)."
+    },
+    {
+      "id": "interes_bruto_cete",
+      "label": "Interés bruto CETE",
+      "type": "currency",
+      "help": "Capital × tasa anual × (días/365), descuento aplicado."
+    },
+    {
+      "id": "retencion_isr_cete",
+      "label": "Retención ISR CETE (1.5%)",
+      "type": "currency",
+      "help": "Interés × 1.5% (tasa retención estándar CETE)."
+    },
+    {
+      "id": "interes_neto_cete",
+      "label": "Interés neto CETE (después ISR)",
+      "type": "currency",
+      "help": "Interés bruto − retención ISR."
+    },
+    {
+      "id": "rendimiento_neto_cete",
+      "label": "Rendimiento neto CETE (%)",
+      "type": "percentage",
+      "help": "Tasa efectiva después retención ISR."
+    },
+    {
+      "id": "monto_final_cete",
+      "label": "Monto final CETE",
+      "type": "currency",
+      "help": "Capital + interés neto (lo que recibes al vencimiento)."
+    },
+    {
+      "id": "diferencia_absoluta",
+      "label": "Diferencia (pagaré − CETE)",
+      "type": "currency",
+      "help": "Monto neto pagaré menos CETE. Positivo = pagaré mejor."
+    },
+    {
+      "id": "diferencia_relativa",
+      "label": "Diferencia relativa (%)",
+      "type": "percentage",
+      "help": "Cuánto % mejor/peor pagaré vs CETE."
+    },
+    {
+      "id": "recomendacion",
+      "label": "Recomendación",
+      "type": "text",
+      "help": "Análisis riesgo, liquidez, impacto fiscal."
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\n### Fórmula pagaré bancario\n\nInterés bruto = Capital × (Tasa anual / 100) × (Días / 365)\n\nRetención ISR = Interés bruto × 1.2%\n\nInterés neto = Interés bruto − Retención ISR\n\nTasa neta (%) = (Interés neto / Capital) × (365 / Días) × 100\n\n### Fórmula CETE\n\nCETE se comercializa con descuento. El rendimiento es implícito en el descuento de compra.\n\nInterés bruto = Capital × (Tasa anual / 100) × (Días / 365)\n\nRetención ISR = Interés bruto × 1.5% (tasa estándar CETE personas físicas)\n\nInterés neto = Interés bruto − Retención ISR\n\nTasa neta (%) = (Interés neto / Capital) × (365 / Días) × 100\n\n### Ejemplo numérico\n\nCapital: $100,000 MXN  \nPlazo: 91 días\n\n**Pagaré (tasa 9.5% anual)**\n- Interés bruto = 100,000 × 0.095 × (91/365) = $2,369.86\n- Retención ISR (1.2%) = $2,369.86 × 0.012 = $28.44\n- Interés neto = $2,369.86 − $28.44 = **$2,341.42**\n- Tasa neta = 9.37% anual\n- Monto final = **$102,341.42**\n\n**CETE (tasa 10.2% anual)**\n- Interés bruto = 100,000 × 0.102 × (91/365) = $2,552.05\n- Retención ISR (1.5%) = $2,552.05 × 0.015 = $38.28\n- Interés neto = $2,552.05 − $38.28 = **$2,513.77**\n- Tasa neta = 10.06% anual\n- Monto final = **$102,513.77**\n\n**Análisis**: CETE genera $172.35 más en este escenario (0.69% mejor), pese a retención ISR más alta, porque tasa base es superior.\n\n### Tabla comparativa 91 días, $100,000\n\n| Concepto | Pagaré (9.5%) | CETE (10.2%) | Diferencia |\n|----------|---------------|--------------|------------|\n| Interés bruto | $2,369.86 | $2,552.05 | +$182.19 |\n| Retención ISR | $28.44 | $38.28 | −$9.84 |\n| Interés neto | $2,341.42 | $2,513.77 | +$172.35 |\n| Tasa neta (%) | 9.37% | 10.06% | +0.69 pp |\n| Monto final | $102,341.42 | $102,513.77 | +$172.35 |\n\n## Limitaciones y consideraciones\n\n**Riesgo de crédito**: Pagaré = riesgo banco (aunque IPAB ampara hasta $400,000). CETE = riesgo soberano México (muy bajo).\n\n**Liquidez**: Pagaré típicamente no es líquido antes de vencimiento. CETE puede venderse en mercado secundario (Banxico, BMV).\n\n**Comisiones**: No incluidas. Algunos bancos cobran comisión por pagaré anticipado.\n\n**Variación de tasas**: Calcula con tasas vigentes. Banxico publica CETE diaria; TIIE reportada por bancos.\n\n**ISR**: Retención estándar 1.2% pagaré, 1.5% CETE para personas físicas no residentes/residentes con ingresos México.\n\n**Inflación**: Rendimiento real = rendimiento nominal − inflación (~3% en 2026). Ambos instrumentos nominales, no inflación-ligados.",
+  "faq": [
+    {
+      "q": "¿Qué es un pagaré bancario en México?",
+      "a": "Instrumento de deuda corto plazo emitido por banco. Cliente coloca dinero, banco se compromete devolverlo con intereses (8-11% típico TIIE + spread). Plazo estándar 28, 91, 182, 365 días. IPAB ampara hasta $400,000."
+    },
+    {
+      "q": "¿Qué son CETES?",
+      "a": "Certificados de la Tesorería de la Federación (CETES). Bonos corto plazo emitidos por gobierno México. Plazo 7-364 días. Se venden con descuento, tasa ~10% en 2026. Riesgo soberano (muy bajo). Administrador: Banxico."
+    },
+    {
+      "q": "¿Cuál tiene más riesgo?",
+      "a": "CETE = riesgo soberano (mínimo). Pagaré = riesgo banco. Aunque IPAB asegura depósitos hasta $400,000, CETE es más seguro por ser obligación gobierno directo."
+    },
+    {
+      "q": "¿Cómo se retiene ISR en pagaré vs CETE?",
+      "a": "Pagaré: retención 1.2% del interés (personas físicas). CETE: retención 1.5%. Retención automática; no se deduce monto capital, solo ganancia. Se reporta en anual (formato fiscal)."
+    },
+    {
+      "q": "¿Puedo sacar dinero antes del vencimiento?",
+      "a": "Pagaré: no típicamente. Algunos bancos permiten cancelación anticipada con penalización. CETE: sí, se vende en mercado secundario (BMV, plataformas Banxico), pero comisiones+spreads."
+    },
+    {
+      "q": "¿Cuál costo de comisión cada uno?",
+      "a": "Pagaré: comisión intrínseca en tasa (spread sobre TIIE). Operaciones extra (compra, retiro) pueden tener fee. CETE: comisión por intermediación (bróker/casa bolsa) típicamente 0.1-0.5% del monto inicial."
+    },
+    {
+      "q": "¿Qué tasa TIIE/CETE usar?",
+      "a": "TIIE: reportada diaria por Banxico (promedio 16 bancos). Tu banco aplica + spread (0.5-2% según cliente). CETE: Banxico publica tasa diaria subasta. Consulta sitio Banxico oficial antes de invertir."
+    },
+    {
+      "q": "¿Afecta inflación a rentabilidad?",
+      "a": "Sí. Pagaré y CETE son nominales (fijo en $). Si inflación > rendimiento neto, pierdes poder compra. Ejemplo: rendimiento 8%, inflación 3.5%, rentabilidad real ~4.5%."
+    },
+    {
+      "q": "¿Hay monto mínimo?",
+      "a": "Pagaré: $10,000-$50,000 típico (varía banco). CETE: $100 en plataformas retail (GBM, Fondo, etc.); corretaje requiere mínimo mayor. Consulta tu institución."
+    },
+    {
+      "q": "¿Qué elegir: pagaré o CETE?",
+      "a": "Depende perfil: (1) Seguridad máxima + liquidez = CETE. (2) Tasa máxima + horizonte fijo = pagaré. (3) Monto > $400k y riesgo banco = CETE. Combina ambos para diversificar."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Banco de México (Banxico) - CETES",
+      "url": "https://www.banxico.org.mx/tiops/d-cetes.html",
+      "publisher": "Banxico",
+      "date": "2026"
+    },
+    {
+      "name": "SAT - Retención ISR Intereses",
+      "url": "https://www.sat.gob.mx/estim_ingresos",
+      "publisher": "SAT",
+      "date": "2026"
+    },
+    {
+      "name": "IPAB - Protección Depósitos Bancarios",
+      "url": "https://www.ipab.org.mx",
+      "publisher": "IPAB",
+      "date": "2026"
+    },
+    {
+      "name": "CNBV - Regulación Pagarés Bancarios",
+      "url": "https://www.gob.mx/cnbv/articulos/pagaré",
+      "publisher": "CNBV",
+      "date": "2026"
+    },
+    {
+      "name": "Condusef - Comparativa Inversiones",
+      "url": "https://www.condusef.gob.mx/comparador",
+      "publisher": "Condusef",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-28",
+    "source": "Banxico (CETE), bancos (TIIE), SAT (retención ISR)",
+    "sourceUrl": "https://www.banxico.org.mx",
+    "updateType": "manual",
+    "notes": "Tasas CETE y TIIE varían diariamente. Retención ISR 1.2-1.5% estable normativa 2026."
+  },
+  "lastReviewed": "2026-04-28"
+}

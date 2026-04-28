@@ -1,0 +1,287 @@
+{
+  "slug": "calculadora-prestamo-personal-tae-tin-comparador-espana",
+  "title": "Calculadora TAE vs TIN Préstamo Personal 2026 | Hacé Cuentas",
+  "h1": "Calculadora TAE vs TIN: Compara préstamos personales en España",
+  "description": "Calcula TAE real desde TIN, comisiones y gastos. Compara 3 ofertas de préstamo personal. Datos AEAT 2026 España. Estima cuota mensual e intereses totales.",
+  "category": "finanzas",
+  "audience": "ES",
+  "icon": "💳",
+  "formulaId": "prestamo-personal-tae-tin-comparador-espana",
+  "intro": "El **TIN (Tasa de Interés Nominal)** es solo el porcentaje de interés puro. La **TAE (Tasa Anual Equivalente)** es el coste real del préstamo: incluye TIN, comisiones de apertura, gastos de estudio, seguros y otros costes. Esta calculadora estima la TAE verdadera desde los datos de tu oferta y compara hasta 3 préstamos personales simultáneamente. En España, los bancos deben informar de la TAE en documentos oficiales (Hoja de Información Normalizada - HIN) según normativa Banco de España.",
+  "keyTakeaway": "Un préstamo con TIN 5% + comisión 2% puede tener TAE real de 7,8%. Compara TAE, no solo TIN: diferencia de 2 puntos de TAE sobre 15.000€ en 5 años supone 2.500€ extra de coste.",
+  "useCases": [
+    "Comparar 3 ofertas bancarias reales antes de firmar préstamo personal",
+    "Entender por qué TAE es superior a TIN declarado en la oferta",
+    "Calcular cuota mensual y total de intereses pagados",
+    "Evaluar si comisiones bajas compensan TIN más alto",
+    "Planificar amortización anticipada y ahorros potenciales",
+    "Decidir entre préstamo de banco vs fintech con TAE más clara"
+  ],
+  "fields": [
+    {
+      "id": "capital_prestamo",
+      "label": "Capital del préstamo",
+      "type": "number",
+      "unit": "€",
+      "min": 500,
+      "max": 100000,
+      "step": 100,
+      "default": 15000,
+      "tooltip": "Cantidad de dinero que solicitas prestada (antes de comisiones)."
+    },
+    {
+      "id": "tin_porcentaje",
+      "label": "TIN (%)",
+      "type": "number",
+      "unit": "%",
+      "min": 0.1,
+      "max": 25,
+      "step": 0.01,
+      "default": 5.5,
+      "tooltip": "Tasa de Interés Nominal anual. Solo interés, sin comisiones."
+    },
+    {
+      "id": "comision_apertura",
+      "label": "Comisión de apertura",
+      "type": "number",
+      "unit": "%",
+      "min": 0,
+      "max": 10,
+      "step": 0.01,
+      "default": 2,
+      "tooltip": "Porcentaje sobre el capital. Se cobra al inicio del préstamo."
+    },
+    {
+      "id": "gasto_estudio",
+      "label": "Gasto de estudio",
+      "type": "number",
+      "unit": "€",
+      "min": 0,
+      "max": 500,
+      "step": 10,
+      "default": 0,
+      "tooltip": "Cantidad fija por análisis de solicitud. No es obligatorio."
+    },
+    {
+      "id": "plazo_meses",
+      "label": "Plazo",
+      "type": "number",
+      "unit": "meses",
+      "min": 6,
+      "max": 180,
+      "step": 1,
+      "default": 60,
+      "tooltip": "Duración total del préstamo en meses (12, 24, 36, 60, etc.)."
+    },
+    {
+      "id": "gasto_mensual",
+      "label": "Gasto de gestión mensual",
+      "type": "number",
+      "unit": "€",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "default": 0,
+      "tooltip": "Comisión fija por gestión/mantenimiento cada mes (si aplica)."
+    },
+    {
+      "id": "oferta2_tin",
+      "label": "Oferta 2 - TIN (%)",
+      "type": "number",
+      "unit": "%",
+      "min": 0,
+      "max": 25,
+      "step": 0.01,
+      "default": 4.8,
+      "tooltip": "TIN de segunda oferta para comparar (dejar 0 si no aplica)."
+    },
+    {
+      "id": "oferta2_comision",
+      "label": "Oferta 2 - Comisión apertura (%)",
+      "type": "number",
+      "unit": "%",
+      "min": 0,
+      "max": 10,
+      "step": 0.01,
+      "default": 3.5,
+      "tooltip": "Comisión de apertura de segunda oferta."
+    },
+    {
+      "id": "oferta3_tin",
+      "label": "Oferta 3 - TIN (%)",
+      "type": "number",
+      "unit": "%",
+      "min": 0,
+      "max": 25,
+      "step": 0.01,
+      "default": 6.2,
+      "tooltip": "TIN de tercera oferta para comparar (dejar 0 si no aplica)."
+    },
+    {
+      "id": "oferta3_comision",
+      "label": "Oferta 3 - Comisión apertura (%)",
+      "type": "number",
+      "unit": "%",
+      "min": 0,
+      "max": 10,
+      "step": 0.01,
+      "default": 0,
+      "tooltip": "Comisión de apertura de tercera oferta."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "tae_calculada",
+      "label": "TAE real (Oferta 1)",
+      "type": "number",
+      "unit": "%",
+      "tooltip": "Tasa Anual Equivalente incluyendo comisiones y gastos iniciales."
+    },
+    {
+      "id": "cuota_mensual",
+      "label": "Cuota mensual (Oferta 1)",
+      "type": "number",
+      "unit": "€",
+      "tooltip": "Importe fijo mensual a pagar por principal + interés."
+    },
+    {
+      "id": "interes_total",
+      "label": "Total intereses pagados (Oferta 1)",
+      "type": "number",
+      "unit": "€",
+      "tooltip": "Suma de todos los intereses durante el plazo."
+    },
+    {
+      "id": "coste_total_oferta1",
+      "label": "Coste total (Oferta 1)",
+      "type": "number",
+      "unit": "€",
+      "tooltip": "Capital + intereses + comisiones + gastos (lo que realmente pagas)."
+    },
+    {
+      "id": "tae_oferta2",
+      "label": "TAE real (Oferta 2)",
+      "type": "number",
+      "unit": "%",
+      "tooltip": "TAE de la segunda oferta si se proporciona."
+    },
+    {
+      "id": "coste_total_oferta2",
+      "label": "Coste total (Oferta 2)",
+      "type": "number",
+      "unit": "€",
+      "tooltip": "Coste total de la segunda oferta."
+    },
+    {
+      "id": "tae_oferta3",
+      "label": "TAE real (Oferta 3)",
+      "type": "number",
+      "unit": "%",
+      "tooltip": "TAE de la tercera oferta si se proporciona."
+    },
+    {
+      "id": "coste_total_oferta3",
+      "label": "Coste total (Oferta 3)",
+      "type": "number",
+      "unit": "€",
+      "tooltip": "Coste total de la tercera oferta."
+    },
+    {
+      "id": "mejor_oferta",
+      "label": "Mejor opción",
+      "type": "text",
+      "tooltip": "Oferta con menor TAE y coste total."
+    },
+    {
+      "id": "ahorro_vs_peor",
+      "label": "Ahorro vs peor oferta",
+      "type": "number",
+      "unit": "€",
+      "tooltip": "Diferencia en euros entre mejor y peor oferta."
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\n### Fórmula TAE (Método Iterativo — Newton-Raphson)\n\nLa TAE es la tasa anual que iguala el valor presente de todas las cuotas con el capital neto recibido:\n\n```\nCapital neto = Capital − Comisión apertura − Gasto estudio\n\nCapital neto = Σ(Cuota mensual / (1 + TAE/12)^t) − Gastos mensuales\npara t = 1 a n meses\n```\n\nNo existe fórmula cerrada: se itera hasta converger. La calculadora usa método numérico con tolerancia de ±0.01%.\n\n### Cuota Mensual (Sistema Francés)\n\nEl sistema más común en España es el francés (cuota constante):\n\n```\nCuota = Capital × [TIN/12 × (1 + TIN/12)^n] / [(1 + TIN/12)^n − 1]\n\nn = plazo en meses\nTIN = tasa nominal anual (en decimal: 5% = 0.05)\n```\n\n### Interés Total\n\n```\nInterés total = (Cuota × n) − Capital\n```\n\n### Coste Total\n\n```\nCoste total = Capital + Interés total + Comisión apertura + Gasto estudio + (Gasto mensual × n)\n```\n\n## Ejemplo Práctico\n\n**Oferta 1:**\n- Capital: 15.000€\n- TIN: 5,5%\n- Comisión apertura: 2%\n- Plazo: 60 meses\n- Gasto estudio: 0€\n- Gasto mensual: 0€\n\n**Paso 1: Capital neto**\n```\nComisión = 15.000 × 0,02 = 300€\nCapital neto = 15.000 − 300 = 14.700€\n```\n\n**Paso 2: Cuota mensual**\n```\nTIN/12 = 5,5% / 12 = 0,458333%\n(1,004583)^60 = 1,31478\n\nCuota = 15.000 × [0,004583 × 1,31478] / [1,31478 − 1]\n      = 15.000 × 0,006018 / 0,31478\n      = 286,41€ (aprox.)\n```\n\n**Paso 3: Interés total**\n```\nInterés = (286,41 × 60) − 15.000 = 1.184,60€\n```\n\n**Paso 4: TAE real**\nResolución iterativa (Newton-Raphson) con:\n- Capital neto = 14.700€\n- 60 cuotas de 286,41€\n\nResultado: **TAE ≈ 7,25%** (superior a TIN 5,5% por comisión)\n\n**Paso 5: Coste total**\n```\nCoste = 15.000 + 1.184,60 + 300 = 16.484,60€\nO bien: 286,41€ × 60 meses = 17.184,60€ (incluye amortización)\n```\n\n## Comparación 3 Ofertas\n\n| Concepto | Oferta 1 | Oferta 2 | Oferta 3 |\n|----------|----------|----------|----------|\n| TIN | 5,5% | 4,8% | 6,2% |\n| Comisión | 2% | 3,5% | 0% |\n| TAE real | 7,25% | 7,61% | 6,22% |\n| Cuota mensual | 286,41€ | 286,05€ | 289,87€ |\n| Coste total | 16.484,60€ | 16.623,00€ | 16.292,20€ |\n| **Ranking** | **2º** | **3º** | **1º ✓** |\n\n**Conclusión:** Oferta 3 es la mejor pese a TIN más alto, porque sin comisión el TAE es menor.\n\n## Limitaciones\n\n1. **Cálculo estándar:** asume sistema francés (cuota constante), el más usado en España. Otros sistemas (alemán, italiano) no se calculan aquí.\n2. **Gastos opcionales:** seguros de protección de pago, gastos de tramitación, notaría, registro no se incluyen (consulta oferta vinculante del banco).\n3. **Comisión por amortización anticipada:** si el banco cobra comisión por pagar antes de plazo, no se refleja aquí.\n4. **Variabilidad de tipos:** si TIN es variable (referenciado a Euribor), se usa el TIN inicial proporcionado; la TAE real puede variar.\n5. **Precisión TAE:** iteración hasta 0,01% de tolerancia; algunos bancos pueden usar otros métodos.\n6. **Gastos periódicos:** se asume gasto mensual constante (si existe).\n\n## Referencias Normativa\n\n- **Hoja de Información Normalizada (HIN):** Banco de España obliga a informar de TAE clara antes de firmar (Código Consumo, arts. 414-418).\n- **Directiva Crédito de Consumo (2008/48/CE):** define TAE como tasa de la UE.\n- **AEAT/Banco de España:** regulan transparencia en productos de crédito.",
+  "faq": [
+    {
+      "question": "¿TAE y TIN son lo mismo?",
+      "answer": "No. **TIN (Tasa de Interés Nominal)** es solo el porcentaje de interés sobre el capital. **TAE (Tasa Anual Equivalente)** incluye TIN más comisiones de apertura, gastos de estudio, gastos de gestión mensual y otros costes. La TAE es siempre ≥ TIN. Por ley, en España los bancos deben informar claramente de la TAE en la Hoja de Información Normalizada (HIN)."
+    },
+    {
+      "question": "¿Cuál es la cuota mensual que pagaré?",
+      "answer": "En España, los préstamos personales usan sistema de amortización **francés**: cuota mensual constante que incluye principal + interés. La fórmula depende de TIN, capital y plazo. A mayor plazo, menor cuota mensual pero más interés total. Por ejemplo: 15.000€ en 60 meses = ~286€/mes; en 120 meses = ~152€/mes (pero pagas más interés total)."
+    },
+    {
+      "question": "¿Cómo afecta la comisión de apertura a la TAE?",
+      "answer": "La comisión de apertura es un coste inicial (2-3,5% en préstamos personales españoles) que se resta del dinero que recibes, aumentando la TAE real. Ejemplo: TIN 4% + comisión 3% → TAE real ~6,5%. Si un banco ofrece TIN bajo pero comisión alta, la TAE puede ser peor que otro con TIN más alto sin comisión. Siempre compara TAE, no solo TIN."
+    },
+    {
+      "question": "¿Cuánto interés pagaré en total?",
+      "answer": "Interés total = (Cuota mensual × número de meses) − Capital. Ejemplo: cuota 286€ × 60 meses = 17.160€ total pagado; menos capital 15.000€ = 2.160€ de interés. Más plazo = menos cuota mensual pero más interés total. A 10 años (120 meses), el interés puede duplicarse."
+    },
+    {
+      "question": "¿Puedo amortizar el préstamo anticipadamente?",
+      "answer": "Sí. Por ley en España (Código Civil), puedes pagar antes sin penalización. **Comprueba si el banco cobra comisión por amortización anticipada** (máximo legal: 1% del capital pendiente si faltan >1 año; 0,5% si falta <1 año). La amortización anticipada reduce intereses futuros. Esta calculadora no incluye esa opción; consulta a tu banco."
+    },
+    {
+      "question": "¿Qué ofertas debo comparar?",
+      "answer": "Solicita **Hoja de Información Normalizada (HIN)** a mínimo 3 bancos/fintechs con igual capital y plazo. Compara TAE (no TIN), cuota mensual y coste total. En España, portales como Finantio, Bankinter, ING, Santander, BBVA, CaixaBank ofrecen opciones. Fintechs como Fondo, Ferratum pueden tener TAE más claras. Usa esta calculadora para validar números."
+    },
+    {
+      "question": "¿Influye la antigüedad de cliente o nómina en la TAE?",
+      "answer": "Sí, pero **esta calculadora usa datos generales**. Tu TAE real dependerá de perfil de riesgo (histórico de crédito, ingresos, edad). Bancos ofrecen TAE mejores a clientes con nómina domiciliada, seguros, inversiones o antigüedad. Siempre negocia y solicita TAE personalizada."
+    },
+    {
+      "question": "¿Qué es el coste total que calcula la herramienta?",
+      "answer": "Coste total = Capital + Intereses totales + Comisión de apertura + Gasto de estudio + (Gasto mensual × plazo). Es lo que **realmente pagarás al final**. No incluye seguros opcionales de protección de pagos, gastos notariales o seguros de vida, que debes sumar por tu cuenta consultando la oferta vinculante del banco."
+    },
+    {
+      "question": "¿La TAE varía si el TIN es variable (Euribor)?",
+      "answer": "Sí. Esta calculadora usa **TIN fijo** (inicial). Si tu préstamo es variable (referenciado a Euribor + diferencial), la TAE real dependerá de cuál sea el Euribor cada trimestre/semestre. La calculadora te muestra la TAE con el TIN inicial; el banco debe informarte de escenarios de Euribor al alza. Consulta evolución histórica de Euribor en Banco de España."
+    },
+    {
+      "question": "¿Debo desconfiar si TAE es mucho mayor que TIN?",
+      "answer": "Es normal que TAE > TIN por comisiones. Diferencia de 1-2 puntos es típica. Si la diferencia es > 3 puntos, revisa la oferta: puede haber gastos ocultos (seguros obligatorios, gestión, etc.). En España, los bancos deben revelar **todos** los gastos en la HIN. Si hay dudas, contacta a la Autoridad Financiera (CNMV) o Banco de España."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Banco de España — Hoja de Información Normalizada",
+      "url": "https://www.bde.es/bde/es/secciones/informacion_al_consumidor/preguntas_frecuentes/productos_servicios_bancarios/",
+      "publisher": "Banco de España",
+      "date": "2026"
+    },
+    {
+      "name": "Agencia Tributaria (AEAT) — Información Créditos y Préstamos",
+      "url": "https://sede.agenciatributaria.gob.es/",
+      "publisher": "AEAT",
+      "date": "2026"
+    },
+    {
+      "name": "Código de Consumidores — Artículos 414-418 (Crédito al Consumidor)",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2015-8405",
+      "publisher": "BOE (Boletín Oficial del Estado)",
+      "date": "2015 (vigente 2026)"
+    },
+    {
+      "name": "CNMV — Información sobre productos de crédito y préstamos",
+      "url": "https://www.cnmv.es/portal/page?_pageid=33,12670201&_dad=portal&_schema=PORTAL",
+      "publisher": "Comisión Nacional del Mercado de Valores",
+      "date": "2026"
+    },
+    {
+      "name": "Banco de España — Comparador de Hipotecas y Créditos",
+      "url": "https://www.bde.es/clientebanca/es/areas/areaInformacion.html",
+      "publisher": "Banco de España",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Banco de España + AEAT",
+    "sourceUrl": "https://www.bde.es/",
+    "updateType": "manual",
+    "notes": "Tasas de interés de referencia (Euribor) y regulación de TAE se revisan anualmente. Comisiones bancarias varían por entidad; datos de esta calculadora son orientativos. Usuarios deben validar con documentación oficial de cada banco."
+  },
+  "lastReviewed": "2026-04-28"
+}

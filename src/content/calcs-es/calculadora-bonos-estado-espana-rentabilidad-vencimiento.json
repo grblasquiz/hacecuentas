@@ -1,0 +1,234 @@
+{
+  "slug": "calculadora-bonos-estado-espana-rentabilidad-vencimiento",
+  "title": "Calculadora Bonos del Estado España 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Bonos del Estado España: Cupón, TIR y Fiscalidad",
+  "description": "Calcula el cupón anual, TIR y retención IRPF de tus Bonos y Obligaciones del Estado España. Plazos 3, 5, 10, 15 y 30 años. Datos AEAT 2026.",
+  "category": "finanzas",
+  "audience": "ES",
+  "icon": "📈",
+  "formulaId": "bonos-estado-espana-rentabilidad-vencimiento",
+  "intro": "Los **Bonos del Estado** (3 y 5 años) y las **Obligaciones del Estado** (10, 15 y 30 años) son deuda pública emitida por el Tesoro Público español con **cupón fijo anual**. El precio de compra en el mercado secundario puede ser distinto del nominal, lo que hace que la rentabilidad real (TIR) difiera del cupón nominal. Esta calculadora estima el **cupón anual neto de retención**, la **TIR hasta vencimiento** y el **impacto fiscal IRPF 2026** según los tramos vigentes del ahorro.",
+  "keyTakeaway": "Un bono a 5 años con nominal 1.000 € y cupón del 3,50 % genera 35 € brutos anuales; con retención del 19 % cobras 28,35 € netos por año y una TIR efectiva que varía si compras por encima o por debajo de 1.000 €.",
+  "useCases": [
+    "Calcular el cupón neto anual que recibirás tras la retención del 19 % del IRPF",
+    "Estimar la TIR hasta vencimiento si compras en el mercado secundario a un precio distinto del nominal",
+    "Comparar la rentabilidad de bonos con distintos plazos (3, 5, 10, 15 o 30 años)",
+    "Conocer el efecto fiscal en tu declaración de la renta al acumular varios bonos",
+    "Evaluar el riesgo de precio si los tipos de interés suben antes del vencimiento",
+    "Planificar el cobro de cupones anuales para complementar ingresos de forma predecible"
+  ],
+  "fields": [
+    {
+      "id": "nominal",
+      "label": "Nominal del bono (€)",
+      "type": "number",
+      "defaultValue": 1000,
+      "min": 1000,
+      "step": 1000,
+      "helpText": "El Tesoro emite en múltiplos de 1.000 €. Introduce el importe total que deseas calcular."
+    },
+    {
+      "id": "precio_compra",
+      "label": "Precio de compra (% del nominal)",
+      "type": "number",
+      "defaultValue": 100,
+      "min": 50,
+      "max": 150,
+      "step": 0.01,
+      "helpText": "100 = precio a la par. En subasta suele ser ≈100. En mercado secundario puede ser mayor o menor."
+    },
+    {
+      "id": "cupon_pct",
+      "label": "Tipo de cupón anual (%)",
+      "type": "number",
+      "defaultValue": 3.5,
+      "min": 0,
+      "max": 20,
+      "step": 0.01,
+      "helpText": "Cupón fijo anual del bono, fijado en la subasta del Tesoro Público."
+    },
+    {
+      "id": "plazo_anios",
+      "label": "Plazo hasta vencimiento (años)",
+      "type": "select",
+      "options": [
+        {
+          "value": 3,
+          "label": "3 años — Bono del Estado"
+        },
+        {
+          "value": 5,
+          "label": "5 años — Bono del Estado"
+        },
+        {
+          "value": 10,
+          "label": "10 años — Obligación del Estado"
+        },
+        {
+          "value": 15,
+          "label": "15 años — Obligación del Estado"
+        },
+        {
+          "value": 30,
+          "label": "30 años — Obligación del Estado"
+        }
+      ],
+      "defaultValue": 5,
+      "helpText": "Bonos: 3 y 5 años. Obligaciones: 10, 15 y 30 años. Según nomenclatura oficial del Tesoro Público."
+    },
+    {
+      "id": "base_imponible_ahorro",
+      "label": "Base imponible del ahorro estimada (€/año)",
+      "type": "number",
+      "defaultValue": 1500,
+      "min": 0,
+      "step": 100,
+      "helpText": "Suma de rendimientos del capital mobiliario y ganancias patrimoniales del año. Determina el tramo marginal del ahorro en IRPF."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cupon_bruto_anual",
+      "label": "Cupón bruto anual",
+      "format": "currency"
+    },
+    {
+      "id": "retencion_anual",
+      "label": "Retención IRPF (19%)",
+      "format": "currency"
+    },
+    {
+      "id": "cupon_neto_anual",
+      "label": "Cupón neto anual",
+      "format": "currency"
+    },
+    {
+      "id": "total_cupones_brutos",
+      "label": "Total cupones brutos (plazo completo)",
+      "format": "currency"
+    },
+    {
+      "id": "total_cupones_netos",
+      "label": "Total cupones netos (plazo completo)",
+      "format": "currency"
+    },
+    {
+      "id": "ganancia_perdida_capital",
+      "label": "Ganancia/pérdida de capital al vencimiento",
+      "format": "currency"
+    },
+    {
+      "id": "tir_bruta_pct",
+      "label": "TIR bruta hasta vencimiento (%)",
+      "format": "percent"
+    },
+    {
+      "id": "tir_neta_pct",
+      "label": "TIR neta estimada (%)",
+      "format": "percent"
+    },
+    {
+      "id": "tipo_marginal_ahorro_pct",
+      "label": "Tipo marginal del ahorro aplicable (%)",
+      "format": "percent"
+    },
+    {
+      "id": "impuesto_ganancia_capital",
+      "label": "Impuesto sobre ganancia de capital",
+      "format": "currency"
+    },
+    {
+      "id": "precio_compra_euros",
+      "label": "Precio de compra efectivo (€)",
+      "format": "currency"
+    },
+    {
+      "id": "duracion_modificada",
+      "label": "Duración modificada (sensibilidad a tipos)",
+      "format": "number"
+    },
+    {
+      "id": "alerta_tipo",
+      "label": "Tipo de deuda pública",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEsta calculadora aplica los conceptos estándar de renta fija adaptados a la estructura de los **Bonos y Obligaciones del Estado español** emitidos por el **Tesoro Público**, con la fiscalidad vigente en el **IRPF 2026** según la Ley 35/2006 y las modificaciones recogidas en los Presupuestos Generales del Estado.\n\n## Fórmula del cupón\n\nEl cupón bruto anual es:\n\n```\nCupón bruto = Nominal × (Cupón% / 100)\n```\n\nLos cupones tributan como **rendimientos del capital mobiliario** en la base imponible del ahorro, con una **retención a cuenta del 19 %** aplicada directamente por el Tesoro en cada pago (art. 101 LIRPF):\n\n```\nRetención = Cupón bruto × 0,19\nCupón neto = Cupón bruto × 0,81\n```\n\n## Tramos IRPF del ahorro 2026\n\n| Base imponible del ahorro | Tipo marginal |\n|---|---|\n| Hasta 6.000 € | 19 % |\n| De 6.000 € a 50.000 € | 21 % |\n| De 50.000 € a 200.000 € | 23 % |\n| De 200.000 € a 300.000 € | 27 % |\n| Más de 300.000 € | 28 % |\n\nLa retención del 19 % es a cuenta; si tu tipo marginal real supera ese porcentaje, pagarás la diferencia en la declaración. Si es menor, recibirás devolución.\n\n## Ganancia o pérdida de capital\n\nSi compras a un precio distinto del nominal (100 %), al vencimiento el Tesoro reembolsa siempre el 100 % del nominal. La diferencia tributa también como rendimiento del capital mobiliario en el ahorro (no como ganancia patrimonial):\n\n```\nGanancia/pérdida = Nominal - Precio de compra efectivo\nImpuesto = Ganancia × Tipo marginal del ahorro\n```\n\n## TIR bruta hasta vencimiento\n\nLa **TIR (Tasa Interna de Retorno)** es el tipo de descuento que iguala el precio de compra con el valor actual de todos los flujos futuros (cupones + reembolso del nominal). Se calcula numéricamente por bisección:\n\n```\nPrecio = Σ [Cupón / (1+TIR)^t] + Nominal / (1+TIR)^N\n```\n\nCuando el precio de compra es igual al nominal (100 %), la TIR coincide exactamente con el cupón. Si compras por debajo del par (precio < 100 %), la TIR es **superior** al cupón; si compras por encima, la TIR es **inferior**.\n\n## Duración modificada\n\nLa **duración modificada** mide la sensibilidad del precio del bono ante una variación de 1 punto porcentual en los tipos de interés. Un bono con duración modificada de 4 perderá aproximadamente un 4 % de valor de mercado si los tipos suben 1 %.\n\n```\nDuración de Macaulay = Σ [t × FlujoActualizado_t] / Precio\nDuración Modificada = Duración Macaulay / (1 + TIR)\n```\n\n## Ejemplo práctico\n\n**Obligación a 10 años**, nominal 10.000 €, cupón 3,25 %, precio de compra 98 % (9.800 €):\n\n- Cupón bruto anual: 325,00 €\n- Retención 19 %: 61,75 €\n- Cupón neto anual: 263,25 €\n- Ganancia al vencimiento: 200 € (10.000 - 9.800)\n- TIR bruta estimada: ≈ 3,48 %\n- Duración modificada: ≈ 8,2 años\n\nSi los tipos suben 1 %, el precio de mercado caería ~8,2 % (≈ 804 €), pero si mantienes hasta vencimiento ese riesgo no se materializa.\n\n## Limitaciones\n\n- La TIR se calcula con método de bisección numérica (precisión ±0,001 %).\n- Se asume reinversión de cupones a la misma TIR (supuesto estándar).\n- No incluye comisiones de custodia ni de compraventa del intermediario financiero.\n- La fiscalidad autonómica puede variar ligeramente (el tipo estatal del ahorro es el indicado; el tipo autonómico coincide en la mayoría de CCAA).\n- Los tipos IRPF son los vigentes a 2026; pueden modificarse por ley.",
+  "faq": [
+    {
+      "question": "¿Cuál es la diferencia entre un Bono del Estado y una Obligación del Estado?",
+      "answer": "La diferencia es únicamente el plazo. Los Bonos del Estado tienen vencimiento a **3 o 5 años**; las Obligaciones del Estado, a **10, 15 o 30 años**. Ambos pagan un cupón fijo anual y reembolsan el nominal al vencimiento. La denominación la fija el Tesoro Público español."
+    },
+    {
+      "question": "¿Cómo tributan los cupones de los Bonos del Estado en el IRPF 2026?",
+      "answer": "Los cupones son **rendimientos del capital mobiliario** y tributan en la base imponible del ahorro a los tipos del 19 %, 21 %, 23 %, 27 % o 28 % según el importe acumulado. El Tesoro aplica una **retención del 19 %** en origen que luego se descuenta de la cuota en la declaración anual."
+    },
+    {
+      "question": "¿Puedo perder dinero con un Bono del Estado español si lo mantengo hasta vencimiento?",
+      "answer": "Si mantienes el bono hasta vencimiento, el Tesoro te devuelve el 100 % del nominal independientemente del precio al que compraste. Solo puedes perder en términos reales si la inflación supera el cupón, o en términos nominales si vendes en el mercado secundario cuando los tipos han subido y el precio ha bajado."
+    },
+    {
+      "question": "¿Qué ocurre si los tipos de interés suben después de comprar el bono?",
+      "answer": "El precio de mercado del bono **bajará**. La sensibilidad se mide con la duración modificada: si es 6, una subida de 1 % en los tipos provoca una caída aproximada del 6 % en el precio de mercado. Si no vendes antes del vencimiento, este riesgo no tiene efecto real en tu rentabilidad."
+    },
+    {
+      "question": "¿Qué significa comprar un bono 'por encima del par' o 'por debajo del par'?",
+      "answer": "'A la par' significa comprar al 100 % del nominal (1.000 € por cada 1.000 € nominal). 'Por encima del par' (precio > 100) significa pagar más y obtener una TIR inferior al cupón. 'Por debajo del par' (precio < 100) implica una TIR superior al cupón, ya que al vencimiento cobras el nominal completo."
+    },
+    {
+      "question": "¿Cómo puedo comprar Bonos del Estado en España directamente sin comisiones de custodia?",
+      "answer": "Puedes acudir a las **subastas del Tesoro Público** a través de la Cuenta Directa del Tesoro (sin comisiones de custodia) o mediante entidades financieras colaboradoras. Las subastas se celebran periódicamente; el calendario está en la web del Tesoro Público (tesoro.gob.es)."
+    },
+    {
+      "question": "¿La retención del 19 % se aplica siempre aunque mi tipo marginal del ahorro sea inferior?",
+      "answer": "Sí, la retención del 19 % se aplica siempre en el momento del cobro. Si tu tipo marginal real es inferior (por tener rendimientos del ahorro menores de 6.000 €), la diferencia te la devuelve la AEAT al presentar la declaración de la renta."
+    },
+    {
+      "question": "¿La ganancia obtenida al comprar por debajo del par tributa igual que el cupón?",
+      "answer": "Sí. Según la normativa española, la diferencia positiva entre el valor de reembolso (nominal) y el precio de adquisición tributa como **rendimiento del capital mobiliario** (no como ganancia patrimonial), integrándose en la base imponible del ahorro al tipo correspondiente."
+    },
+    {
+      "question": "¿Cuál es el nominal mínimo para invertir en Bonos del Estado españoles?",
+      "answer": "El Tesoro Público establece un nominal mínimo de **1.000 €** por título, y las peticiones deben realizarse en múltiplos de 1.000 €. No existe límite máximo para particulares."
+    },
+    {
+      "question": "¿Están garantizados los Bonos del Estado por el gobierno español?",
+      "answer": "Sí. Los Bonos y Obligaciones del Estado están respaldados por el **Reino de España** y su capacidad de recaudar impuestos. Tienen calificación crediticia de grado de inversión (Investment Grade) según las principales agencias. No están cubiertos por el Fondo de Garantía de Depósitos (FGD), que solo protege depósitos bancarios."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Tesoro Público — Bonos y Obligaciones del Estado",
+      "url": "https://www.tesoro.gob.es/es/deuda-publica/instrumentos/bonos-y-obligaciones/index.html",
+      "publisher": "Tesoro Público — Ministerio de Hacienda",
+      "date": "2026"
+    },
+    {
+      "name": "AEAT — Rendimientos del capital mobiliario: Ley IRPF art. 25",
+      "url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025/c5-rendimientos-capital-mobiliario.html",
+      "publisher": "Agencia Estatal de Administración Tributaria (AEAT)",
+      "date": "2026"
+    },
+    {
+      "name": "BOE — Ley 35/2006 del IRPF (tramos base del ahorro)",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
+      "publisher": "Boletín Oficial del Estado (BOE)",
+      "date": "2026"
+    },
+    {
+      "name": "Banco de España — Mercado de Deuda Pública",
+      "url": "https://www.bde.es/wbe/es/areas-actuacion/deuda-publica/",
+      "publisher": "Banco de España",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "AEAT — Tramos IRPF base del ahorro 2026",
+    "sourceUrl": "https://sede.agenciatributaria.gob.es/",
+    "updateType": "manual",
+    "notes": "Revisar tramos y tipos de la base imponible del ahorro si se aprueban nuevos Presupuestos Generales del Estado. Verificar tipo de retención (actualmente 19 %) en caso de reforma fiscal."
+  },
+  "lastReviewed": "2026-04-28"
+}

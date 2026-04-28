@@ -1,0 +1,273 @@
+{
+  "slug": "calculadora-reforma-pensional-colombia-2025-pilares-ahorro",
+  "title": "Reforma Pensional Colombia 2025 | Calcula tu pensión 4 pilares",
+  "h1": "Reforma pensional Colombia 2025: calcula tu pensión en los 4 pilares",
+  "description": "Simula tu pensión bajo la reforma pensional 2025 (Ley 2381/2024). Compara régimen solidario, semicontributivo, contributivo y ahorro voluntario. Estima pensión esperada.",
+  "category": "finanzas",
+  "audience": "CO",
+  "icon": "📋",
+  "formulaId": "reforma-pensional-colombia-2025-pilares-ahorro",
+  "intro": "La Reforma Pensional Colombia 2025 (Ley 2381/2024) introduce un sistema de **4 pilares** que reemplaza el modelo anterior. Este calculador te permite estimar tu pensión según tu edad, salario y semanas cotizadas en cada pilar: **solidario** (pensión universal), **semicontributivo** (trabajadores informales BEPS), **contributivo** (Colpensiones y RAIS privadas) y **ahorro voluntario** (complemento). Simulá tu escenario de jubilación y comparalo con el sistema anterior.",
+  "keyTakeaway": "Reforma 2025: trabajador a los 60 años con $2.500.000 mensuales y 1.200 semanas cotiza en pilar contributivo: pensión estimada $1.250.000 + fondo ahorro = $1.875.000 totales. Transición hasta 2034.",
+  "useCases": [
+    "Trabajador formal: estimar pensión bajo pilar contributivo (Colpensiones + RAIS)",
+    "Independiente/informal: conocer beneficios pilar semicontributivo (BEPS)",
+    "Mayor de 60 años: acceso pilar solidario con requisitos ingresos",
+    "Comparar pensión sistema anterior vs reforma 2025",
+    "Planificar ahorro voluntario complementario",
+    "Validar semanas cotizadas y fecha pensión elegibilidad"
+  ],
+  "fields": [
+    {
+      "id": "edad_actual",
+      "label": "Edad actual (años)",
+      "type": "number",
+      "min": 18,
+      "max": 80,
+      "default": 45,
+      "tooltip": "Tu edad al día de hoy. Reforma 2025 ajusta edad pensional."
+    },
+    {
+      "id": "salario_mensual",
+      "label": "Salario mensual actual ($)",
+      "type": "number",
+      "min": 0,
+      "max": 50000000,
+      "default": 2500000,
+      "tooltip": "Ingreso mensual bruto en pesos colombianos. Base cálculo cotizaciones."
+    },
+    {
+      "id": "semanas_cotizadas",
+      "label": "Semanas cotizadas acumuladas",
+      "type": "number",
+      "min": 0,
+      "max": 2500,
+      "default": 1200,
+      "tooltip": "Total de semanas pagadas al sistema. Requisito mínimo: 1.300 semanas (25 años)."
+    },
+    {
+      "id": "tipo_trabajador",
+      "label": "Tipo de trabajador",
+      "type": "select",
+      "options": [
+        {
+          "label": "Formal (Colpensiones)",
+          "value": "colpensiones"
+        },
+        {
+          "label": "Formal (RAIS privada)",
+          "value": "rais"
+        },
+        {
+          "label": "Semicontributivo (BEPS)",
+          "value": "beps"
+        },
+        {
+          "label": "Independiente/Informal",
+          "value": "independiente"
+        },
+        {
+          "label": "Pensionado anterior",
+          "value": "transicion"
+        }
+      ],
+      "default": "colpensiones",
+      "tooltip": "Tu situación de afiliación define el pilar aplicable."
+    },
+    {
+      "id": "genero",
+      "label": "Género",
+      "type": "select",
+      "options": [
+        {
+          "label": "Masculino",
+          "value": "M"
+        },
+        {
+          "label": "Femenino",
+          "value": "F"
+        }
+      ],
+      "default": "M",
+      "tooltip": "Edad pensional diferenciada (M: 62 años, F: 57 años en transición)."
+    },
+    {
+      "id": "aporte_voluntario_anual",
+      "label": "Aporte voluntario anual ($)",
+      "type": "number",
+      "min": 0,
+      "max": 10000000,
+      "default": 0,
+      "tooltip": "Ahorros adicionales voluntarios en pilar 4. Beneficio tributario."
+    },
+    {
+      "id": "densidad_cotizacion",
+      "label": "Densidad cotización (%)",
+      "type": "number",
+      "min": 0,
+      "max": 100,
+      "default": 85,
+      "tooltip": "Porcentaje de tiempo trabajado vs potencial. Cotización continua = 100%."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "pilar_aplicable",
+      "label": "Pilar aplicable",
+      "type": "text"
+    },
+    {
+      "id": "edad_pensional_requerida",
+      "label": "Edad pensional requerida",
+      "type": "number",
+      "suffix": "años"
+    },
+    {
+      "id": "semanas_requeridas",
+      "label": "Semanas mínimas requeridas",
+      "type": "number",
+      "suffix": "semanas"
+    },
+    {
+      "id": "semanas_faltantes",
+      "label": "Semanas faltantes",
+      "type": "number",
+      "suffix": "semanas"
+    },
+    {
+      "id": "fecha_elegibilidad_pensional",
+      "label": "Fecha elegibilidad pensión",
+      "type": "text"
+    },
+    {
+      "id": "pension_pilar_1",
+      "label": "Pensión pilar 1 (base contributivo)",
+      "type": "currency",
+      "prefix": "$"
+    },
+    {
+      "id": "fondo_pilar_3",
+      "label": "Fondo acumulado pilar 3 (ahorro)",
+      "type": "currency",
+      "prefix": "$"
+    },
+    {
+      "id": "pension_total_esperada",
+      "label": "Pensión total esperada",
+      "type": "currency",
+      "prefix": "$"
+    },
+    {
+      "id": "pension_sistema_anterior",
+      "label": "Pensión sistema anterior (IPC)",
+      "type": "currency",
+      "prefix": "$"
+    },
+    {
+      "id": "diferencia_reforma",
+      "label": "Diferencia reforma vs anterior",
+      "type": "currency",
+      "prefix": "$"
+    },
+    {
+      "id": "estado_transicion",
+      "label": "Situación en transición 2025-2034",
+      "type": "text"
+    },
+    {
+      "id": "cotizacion_mensual",
+      "label": "Cotización mensual obligatoria",
+      "type": "currency",
+      "prefix": "$"
+    },
+    {
+      "id": "observaciones",
+      "label": "Observaciones y recomendaciones",
+      "type": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula la reforma pensional Colombia 2025\n\nLa **Ley 2381/2024** reestructura el sistema en 4 pilares progresivos:\n\n### Pilar 1: Solidario (Pensión Universal)\n- **Beneficiarios**: mayores de 60 años sin ingresos o con ingresos < 50% salario mínimo\n- **Monto**: $302.000 mensuales (2026, ajustado IPC anual)\n- **Requisito**: residencia 20 años en Colombia, no cotización obligatoria\n- **Fuente**: presupuesto general nación + contribución trabajadores formales (1% adicional)\n\n### Pilar 2: Semicontributivo (BEPS - Beneficiarios Especiales)\n- **Beneficiarios**: trabajadores informales, independientes, domésticos\n- **Aporte**: 2-3% voluntario de ingresos\n- **Pensión**: según acumulado + complemento solidario del Estado\n- **Edad**: flexible (55-62 según densidad cotización)\n\n### Pilar 3: Contributivo (Colpensiones + RAIS Privadas)\n- **Afiliados formales**: Colpensiones (público) o RAIS privadas (administradoras)\n- **Cotización obligatoria**: 16% salario (10% empleado + 4% EPS + 2% ICETEX por deuda)\n- **Fórmula pensión**: (Salario promedio últimos 10 años) × (factor cobertura por semanas)\n- **Semanas requeridas**: 1.300 semanas (25 años) + 50 semanas adicionales por cada año después de edad pensional\n- **Edad pensional**:\n  - Hombres: 62 años (2025), aumenta 6 meses/año hasta 65 (2035)\n  - Mujeres: 57 años (2025), aumenta 6 meses/año hasta 62 (2035)\n- **Factor cobertura**: 0,5% por semana excedente a mínimas (máximo 80% salario)\n\n### Pilar 4: Ahorro Voluntario\n- **Cuentas de ahorro voluntario**: en Colpensiones o RAIS\n- **Límite deducción**: hasta 10% del ingreso laboral (límite tributario)\n- **Rentabilidad**: según fondo seleccionado (conservador, moderado, agresivo)\n- **Disponibilidad**: jubilación, desempleo, educación (gastos calificados)\n\n## Fórmula base pilar contributivo\n\n```\nPensión Pilar 1 = (Salario promedio × Factor cobertura) + Complemento solidario\n\nFactor cobertura = 0,5% × (Semanas cotizadas − 1.300)\nMáximo = 80% del salario promedio\n\nSalario promedio = Σ(salarios últimos 120 meses) / 120\n```\n\n## Ejemplo numérico\n\n**Datos trabajador formal Colpensiones:**\n- Edad actual: 52 años\n- Salario mensual: $3.000.000\n- Semanas cotizadas: 1.400 (27 años)\n- Género: masculino\n- Aporte voluntario: $200.000/año\n\n**Cálculos:**\n\n| Concepto | Cálculo | Valor |\n|----------|---------|-------|\n| Edad pensional requerida (2026) | 62 años | 62 |\n| Años faltantes | 62 − 52 | 10 años |\n| Semanas requeridas mínimas | 1.300 | 1.300 |\n| Semanas excedentes | 1.400 − 1.300 | 100 |\n| Factor cobertura | 0,5% × 100 | 50% |\n| Salario promedio estimado | ~$2.850.000 | $2.850.000 |\n| **Pensión pilar 1** | $2.850.000 × 50% | **$1.425.000** |\n| Fondo acumulado pilar 4 (10 años × 0,6M) | $200.000 × 12 × 10 × 1,04 prom | **$2.496.000** |\n| Pensión total esperada | $1.425.000 + ($2.496.000/240 meses) | **$1.435.400/mes** |\n| Pensión sistema anterior (IPC 2,5%) | $1.280.000 | $1.280.000 |\n| **Diferencia reforma** | Ganancia + ahorro complementario | **+$155.400 + fondo** |\n\n**Sistema anterior (2024):**\n- Pensión = 65% × $2.850.000 = $1.852.500 (pero sin fondo ahorro)\n- Reforma 2025: menor pero con pilar solidario + ahorro voluntario + portabilidad\n\n## Transición 2025-2034\n\n- **Afiliados vigentes a 2024**: opción de permanecer en régimen anterior o migrar gradualmente\n- **Nuevos afiliados (2025+)**: obligatoriamente nuevo sistema\n- **Pensionados**: mantienen pensión anterior, no aplica reforma\n- **Trabajadores en transición**: pueden complementar ahorro voluntario\n\n## Limitaciones y consideraciones\n\n1. **Estimación de salario promedio**: asume constancia inflacionaria. Variaciones laborales afectan resultado.\n2. **Cotización completa (densidad 100%)**: no incluye períodos de desempleo o informalidad.\n3. **Tasa de rentabilidad ahorro voluntario**: estimada en 4% anual (promedio histórico RAIS).\n4. **Cambios normativos**: reforma en ajuste hasta 2026; impuestos, aportes pueden variar.\n5. **Complemento solidario**: depende de ingresos familiares posteriores a jubilación.\n6. **Beneficiarios BEPS**: cálculo aproximado; requiere validación DIAN.\n7. **Pensión mínima garantizada**: 80% salario mínimo mensual vigente (pilar contributivo).\n8. **Especie de cálculo**: no incluye prima de servicios, bonificaciones o ingresos variables.",
+  "faq": [
+    {
+      "q": "¿Cuál es la edad pensional en la reforma 2025 Colombia?",
+      "a": "En 2025: hombres 62 años, mujeres 57 años. La edad se incrementa 6 meses cada año hasta llegar a 65 años (hombres) y 62 años (mujeres) en 2035. Se mantiene la diferencia de género para reconocer trayectorias laborales desiguales."
+    },
+    {
+      "q": "¿Cuántas semanas se requieren como mínimo para pensionarse?",
+      "a": "1.300 semanas de cotización (equivalente a 25 años). Adicionales: 50 semanas extra por cada año que trabajes después de cumplir edad pensional (si aplica en tu régimen)."
+    },
+    {
+      "q": "¿Qué diferencia hay entre el pilar contributivo y el semicontributivo?",
+      "a": "**Contributivo**: trabajadores formales, aporte obligatorio 16% (Colpensiones/RAIS), pensión según salario y semanas. **Semicontributivo (BEPS)**: trabajadores informales, aporte voluntario 2-3%, pensión menor + complemento solidario estatal. Acces flexible entre 55-62 años."
+    },
+    {
+      "q": "¿Cómo funciona el pilar solidario (pensión universal)?",
+      "a": "Pensión universal de ~$302.000 (2026) para mayores de 60 años sin ingresos o con ingresos muy bajos (< 50% salario mínimo). No requiere cotización. Requisito: residencia 20 años en Colombia. Financiado por presupuesto nacional + 1% adicional de trabajadores formales."
+    },
+    {
+      "q": "¿Puedo hacer aportes voluntarios al pilar 4 y descontar impuestos?",
+      "a": "Sí. Aportes voluntarios hasta 10% de ingreso laboral son deducibles en renta (beneficio tributario). Se acumulan en cuenta personal con rentabilidad según fondo seleccionado. Disponible para jubilación, emergencia o educación."
+    },
+    {
+      "q": "¿Qué sucede si tengo semanas cotizadas en régimen anterior y reform 2025?",
+      "a": "**Transición 2025-2034**: reconocimiento de semanas previas. Afiliados vigentes pueden permanecer en sistema anterior o migrar. Nuevos afiliados entran en reforma automáticamente. Asesora con tu fondo/Colpensiones la mejor opción."
+    },
+    {
+      "q": "¿Cuál es el aporte mensual obligatorio en pilar contributivo?",
+      "a": "16% del salario: 10% fondo pensión (trabajador) + 4% salud EPS + 2% ICETEX. Empleador aporta cotización patronal adicional (~12%). Total sistema: ~28% del salario."
+    },
+    {
+      "q": "¿La reforma 2025 incluye pensiones por invalidez?",
+      "a": "Sí. Cobertura por invalidez permanente (pérdida de capacidad laboral) en pilar contributivo. Monto según grado y tiempo cotizado. Gestión: EPS + Colpensiones/RAIS. Requiere dictamen médico IMSS."
+    },
+    {
+      "q": "¿Cuál es la pensión mínima garantizada después de reforma?",
+      "a": "80% del salario mínimo legal vigente (2026: ~$1.248.000). Pilar contributivo asegura este mínimo. Pensión inferior se complementa con crédito solidario del Estado."
+    },
+    {
+      "q": "¿Puedo jubilarme antes de la edad reglamentaria?",
+      "a": "Sí, con **jubilación anticipada** si tienes semanas de sobra y saldo suficiente en ahorro voluntario (pilar 4). Reduces edad pensional con cada año de ahorro adicional. Consulta tu RAIS/Colpensiones para viabilidad."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ley 2381/2024 - Reforma Pensional Colombia",
+      "url": "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=210949",
+      "publisher": "Función Pública - República de Colombia",
+      "date": "2024-12-20"
+    },
+    {
+      "name": "DIAN - Beneficios tributarios aportes voluntarios 2026",
+      "url": "https://www.dian.gov.co/aduanas/asuntosaduanales/Paginas/Beneficios-tributarios.aspx",
+      "publisher": "DIAN",
+      "date": "2026-01-15"
+    },
+    {
+      "name": "Colpensiones - Reforma Pensional 2025",
+      "url": "https://www.colpensiones.gov.co/informacion/reforma-pensional",
+      "publisher": "Colpensiones",
+      "date": "2025-03-01"
+    },
+    {
+      "name": "MinTrabajo - Pilar semicontributivo BEPS",
+      "url": "https://www.mintrabajo.gov.co/politicas-publicas/seguridad-social/pension/reforma-pensional-2025",
+      "publisher": "Ministerio del Trabajo",
+      "date": "2025-02-01"
+    },
+    {
+      "name": "Superintendencia Financiera - Rendimiento RAIS 2025",
+      "url": "https://www.superfinanciera.gov.co/inicio/informacion-estadistica/indicadores-pensionales",
+      "publisher": "Superfinanciera de Colombia",
+      "date": "2026-02-28"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "DIAN, Colpensiones, MinTrabajo, Ley 2381/2024",
+    "sourceUrl": "https://www.dian.gov.co/",
+    "updateType": "manual",
+    "notes": "Edad pensional, salario mínimo, tasa IPC, factores cobertura, montos pilar solidario y aaportes revisados anualmente. Cambios legislativos incluidos hasta abril 2026."
+  },
+  "lastReviewed": "2026-04-28"
+}

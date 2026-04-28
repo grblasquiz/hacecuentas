@@ -1,0 +1,224 @@
+{
+  "slug": "calculadora-impuesto-consumo-licores-colombia-cerveza-vino",
+  "title": "Calculadora Impuesto al Consumo Licores Colombia 2026",
+  "h1": "Impuesto al consumo licores, cerveza y cigarrillos Colombia",
+  "description": "Calcula impuesto al consumo para cerveza (48%), licores (25-40%), cigarrillos (componente específico + ad valorem) en Colombia 2026. Incluye IVA 19%.",
+  "category": "impuestos",
+  "audience": "CO",
+  "icon": "🍺",
+  "formulaId": "impuesto-consumo-licores-colombia-cerveza-vino",
+  "intro": "En Colombia, el impuesto al consumo sobre bebidas alcohólicas y cigarrillos es uno de los tributos indirectos más relevantes. La cerveza soporta una tarifa del **48% sobre el precio de venta al público**, mientras que licores y destilados varían entre **25% y 40%** según su grado alcohólico. Los cigarrillos combinan un **componente específico por unidad** más un **porcentaje ad valorem**. Esta calculadora estima el impuesto consumo y el IVA aplicable según DIAN 2026.",
+  "keyTakeaway": "Cerveza: 48% de impuesto consumo. Licores: 25-40% según grado. Cigarrillos: tarifa específica + porcentaje valor. Total a consumidor incluye IVA 19%.",
+  "useCases": [
+    "Distribuidor calcula precio final con impuestos para establecimiento comercial",
+    "Tabernero o comerciante estima margen bruto deduciendo impuestos del precio venta",
+    "Importador proyecta costo fiscal de bebidas alcohólicas antes de desembarque",
+    "Consumidor entiende composición tributaria del precio de cerveza o licor",
+    "Auditor DIAN verifica consistencia de retenciones y traslados en factura"
+  ],
+  "fields": [
+    {
+      "id": "tipo_producto",
+      "label": "Tipo de producto",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "cerveza",
+          "label": "Cerveza (hasta 6° alcohol)"
+        },
+        {
+          "value": "cerveza_premium",
+          "label": "Cerveza Premium (> 6° alcohol)"
+        },
+        {
+          "value": "vino_nacional",
+          "label": "Vino nacional (hasta 15° alcohol)"
+        },
+        {
+          "value": "vino_importado",
+          "label": "Vino importado (hasta 15° alcohol)"
+        },
+        {
+          "value": "licor_destilado",
+          "label": "Licores destilados (ron, whisky, vodka, etc.)"
+        },
+        {
+          "value": "aguardiente",
+          "label": "Aguardiente nacional"
+        },
+        {
+          "value": "cigarrillos_nacionales",
+          "label": "Cigarrillos nacionales"
+        },
+        {
+          "value": "cigarrillos_importados",
+          "label": "Cigarrillos importados"
+        }
+      ],
+      "help": "Selecciona el tipo de bebida o producto para aplicar la tarifa correcta"
+    },
+    {
+      "id": "precio_unitario",
+      "label": "Precio unitario (sin impuestos)",
+      "type": "number",
+      "required": true,
+      "unit": "$",
+      "placeholder": "50000",
+      "help": "Precio base en pesos colombianos sin incluir impuesto al consumo ni IVA",
+      "min": 100,
+      "max": 500000
+    },
+    {
+      "id": "cantidad",
+      "label": "Cantidad",
+      "type": "number",
+      "required": true,
+      "placeholder": "1",
+      "help": "Número de unidades (botellas, cajetillas, etc.)",
+      "min": 1,
+      "max": 10000
+    },
+    {
+      "id": "grado_alcohol",
+      "label": "Grado de alcohol (opcional, para licores)",
+      "type": "number",
+      "required": false,
+      "unit": "°",
+      "placeholder": "40",
+      "help": "Grado alcohólico para cálculo de tarifa en licores (25% a 40%)",
+      "min": 0,
+      "max": 96
+    }
+  ],
+  "outputs": [
+    {
+      "id": "tarifa_impuesto",
+      "label": "Tarifa de impuesto al consumo",
+      "type": "percentage",
+      "unit": "%"
+    },
+    {
+      "id": "subtotal_base",
+      "label": "Subtotal base (precio unitario × cantidad)",
+      "type": "currency",
+      "unit": "$"
+    },
+    {
+      "id": "impuesto_consumo_unitario",
+      "label": "Impuesto al consumo por unidad",
+      "type": "currency",
+      "unit": "$"
+    },
+    {
+      "id": "impuesto_consumo_total",
+      "label": "Impuesto al consumo total",
+      "type": "currency",
+      "unit": "$"
+    },
+    {
+      "id": "base_iva",
+      "label": "Base para IVA (precio + impuesto consumo)",
+      "type": "currency",
+      "unit": "$"
+    },
+    {
+      "id": "iva_total",
+      "label": "IVA (19%)",
+      "type": "currency",
+      "unit": "$"
+    },
+    {
+      "id": "precio_final_unitario",
+      "label": "Precio final por unidad al consumidor",
+      "type": "currency",
+      "unit": "$"
+    },
+    {
+      "id": "precio_final_total",
+      "label": "Precio final total (todas las unidades)",
+      "type": "currency",
+      "unit": "$"
+    },
+    {
+      "id": "total_impuestos",
+      "label": "Total impuestos (consumo + IVA)",
+      "type": "currency",
+      "unit": "$"
+    }
+  ],
+  "explanation": "## Cómo se calcula el impuesto al consumo en Colombia\n\nEl impuesto al consumo sobre bebidas alcohólicas y cigarrillos se rige por el **Decreto 1625 de 2016** y circulares DIAN 2026. Es un impuesto **indirecto trasladable**, es decir, el comerciante incluye el costo en el precio al consumidor final.\n\n### Tarifas vigentes 2026 (DIAN)\n\n| Producto | Tarifa | Base | Observaciones |\n|----------|--------|------|---------------|\n| **Cerveza** (≤6° alcohol) | 48% | Precio venta al público | Tarifa fija 2026 |\n| **Cerveza Premium** (>6° alcohol) | 48% | Precio venta al público | Aplicable a cervezas artesanales o importadas |\n| **Vino nacional** | 25% | Precio venta | Hasta 15° de alcohol |\n| **Vino importado** | 25% | Precio venta | Hasta 15° de alcohol |\n| **Licores destilados** (ron, whisky, vodka) | 35-40% | Precio venta | 40% si > 30° alcohol; 35% si ≤ 30° |\n| **Aguardiente nacional** | 32% | Precio venta | Bebidas fermentadas 20-40° |\n| **Cigarrillos nacionales** | Componente específico + 31.5% ad valorem | Precio venta | Reforma fiscal 2023 |\n| **Cigarrillos importados** | Componente específico + 31.5% ad valorem | Precio venta | Misma base que nacionales |\n\n### Fórmula general\n\n```\nImpuesto Consumo = Precio Base × Tarifa (%)\nBase IVA = Precio Base + Impuesto Consumo\nIVA = Base IVA × 19%\nPrecio Final = Precio Base + Impuesto Consumo + IVA\n```\n\n### Ejemplo: Cerveza nacional\n\n**Datos:**\n- Producto: Cerveza nacional\n- Precio base: $8,000 por botella\n- Cantidad: 24 unidades (1 caja)\n- Tarifa impuesto: 48%\n\n**Cálculos:**\n\n1. **Subtotal base:** 8,000 × 24 = $192,000\n2. **Impuesto consumo unitario:** 8,000 × 48% = $3,840\n3. **Impuesto consumo total:** 3,840 × 24 = $92,160\n4. **Base IVA:** 192,000 + 92,160 = $284,160\n5. **IVA 19%:** 284,160 × 19% = $53,990.40\n6. **Precio final total:** 192,000 + 92,160 + 53,990.40 = **$338,150.40**\n7. **Precio por unidad al consumidor:** 338,150.40 ÷ 24 = **$14,089.60**\n\nEn este caso, el consumidor paga $6,089.60 adicionales por impuestos sobre los $8,000 iniciales (76.1% de recargo fiscal).\n\n### Ejemplo: Licores destilados importados (whisky)\n\n**Datos:**\n- Producto: Whisky importado (42° alcohol)\n- Precio base: $120,000 por botella\n- Cantidad: 6 unidades\n- Tarifa: 40% (porque > 30° alcohol)\n\n**Cálculos:**\n\n1. **Subtotal base:** 120,000 × 6 = $720,000\n2. **Impuesto consumo unitario:** 120,000 × 40% = $48,000\n3. **Impuesto consumo total:** 48,000 × 6 = $288,000\n4. **Base IVA:** 720,000 + 288,000 = $1,008,000\n5. **IVA 19%:** 1,008,000 × 19% = $191,520\n6. **Precio final total:** 720,000 + 288,000 + 191,520 = **$1,199,520**\n7. **Precio por unidad:** 1,199,520 ÷ 6 = **$199,920**\n\n### Limitaciones y consideraciones\n\n- **Exenciones:** Las bebidas sin alcohol (o con ≤ 0,5° alcohol) **no soportan este impuesto**.\n- **Régimen especial cigarrillos:** Desde 2024, cigarrillos combinan tarifa específica por unidad (aprox. $250-400/cigarro) más porcentaje ad valorem 31.5%. Esta calculadora usa 31.5% sin componente específico por simplificación.\n- **IVA siempre se aplica:** El impuesto consumo es base gravable para IVA. No hay exención.\n- **Diferencial importación:** Bebidas importadas pueden soportar **arancel aduanero** (5-20%) además de este impuesto consumo.\n- **Cambios tributarios:** DIAN actualiza tarifas anualmente; verifica circulares vigentes antes de proyecciones a mediano plazo.\n- **Devoluciones:** Solo se devuelven impuestos si hay reclamación dentro de 2 años ante DIAN.\n\n## Fórmula \n\n**Impuesto Consumo = Precio Base × Tarifa**\n\n**IVA = (Precio Base + Impuesto Consumo) × 19%**\n\n**Total a Pagar = Precio Base + Impuesto Consumo + IVA**",
+  "faq": [
+    {
+      "q": "¿Cuál es la tarifa de impuesto al consumo para cerveza en Colombia 2026?",
+      "a": "La cerveza nacional soporta un **impuesto al consumo del 48%** sobre el precio de venta al público, según DIAN 2026. Esta es una de las tarifas más altas entre bebidas."
+    },
+    {
+      "q": "¿Cómo varía el impuesto según el grado de alcohol en licores?",
+      "a": "Los licores destilados tienen tarifa **35%** si el grado alcohólico es ≤ 30° (como ron, vodka estándar) y **40%** si superan 30° (como whiskies premium, coñac). El vino se mantiene en 25% hasta 15° de alcohol."
+    },
+    {
+      "q": "¿El IVA se aplica sobre el impuesto al consumo?",
+      "a": "Sí. El IVA del 19% se calcula sobre la **base gravable que incluye el precio más el impuesto al consumo**. Es decir, hay un impuesto sobre impuesto."
+    },
+    {
+      "q": "¿Qué pasa con bebidas sin alcohol o bebidas azucaradas?",
+      "a": "Las bebidas **sin alcohol** (≤ 0,5° de contenido alcohólico) **no pagan impuesto al consumo**. Las bebidas azucaradas o energéticas tienen impuestos diferentes (no aplica este cálculo)."
+    },
+    {
+      "q": "¿Los precios que ingreso deben incluir el impuesto o no?",
+      "a": "El campo \"Precio unitario\" debe ser el **precio base sin impuestos**. Es decir, el costo de la botella o cajetilla antes de agregar consumo e IVA. La calculadora suma los impuestos automáticamente."
+    },
+    {
+      "q": "¿Cómo afecta el impuesto al consumo el precio final para el consumidor?",
+      "a": "En cerveza, el impuesto consumo del 48% más IVA 19% genera un recargo total de aproximadamente **72%-76%** sobre el precio base. Por ejemplo, una cerveza de $10,000 puede costar $17,200 al consumidor."
+    },
+    {
+      "q": "¿Qué diferencia hay entre bebidas importadas y nacionales?",
+      "a": "La **tarifa de impuesto al consumo es igual** para ambas (cerveza 48%, vino 25%, etc.). Sin embargo, las importadas pueden soportar **arancel aduanero adicional** (5-20%) en frontera, que no está incluido en esta calculadora."
+    },
+    {
+      "q": "¿Los comerciantes pueden recuperar este impuesto en IVA?",
+      "a": "No. El **impuesto al consumo NO es acreditable** en el IVA. El distribuidor o comerciante lo paga como costo final; no genera crédito fiscal frente a DIAN."
+    },
+    {
+      "q": "¿Dónde verifico la tarifa exacta para un producto específico?",
+      "a": "Consulta la **Clasificación Arancelaria Nacional (CAN)** en el sitio de DIAN o la **Resolución de Arancel Aduanero** vigente. Las tarifas pueden variar por resolución ministerial anual."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DIAN - Impuesto al Consumo 2026",
+      "url": "https://www.dian.gov.co/impuestos/personas/impuesto-consumo",
+      "publisher": "DIAN (Dirección de Impuestos y Aduanas Nacionales)",
+      "date": "2026"
+    },
+    {
+      "name": "Decreto 1625 de 2016 - Régimen Tributario Simplificado",
+      "url": "https://www.funcionpública.gov.co/eva/gestornormativo/norma.php?i=78632",
+      "publisher": "Ministerio de Hacienda y Crédito Público",
+      "date": "2016"
+    },
+    {
+      "name": "Circular DIAN - Tarifas Impuesto Consumo 2026",
+      "url": "https://www.dian.gov.co/aduanas",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Arancel Aduanero Nacional 2026 - Bebidas Alcohólicas",
+      "url": "https://www.tlc.gov.co/publicaciones/arancel-aduanero",
+      "publisher": "Ministerio de Comercio, Industria y Turismo",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "DIAN - Circular Tarifas Impuesto Consumo",
+    "sourceUrl": "https://www.dian.gov.co/impuestos",
+    "updateType": "manual",
+    "notes": "Tarifas de impuesto al consumo para cerveza (48%), licores (25-40%), vino (25%), aguardiente (32%), cigarrillos (componente específico + 31.5%). IVA fijo 19%. Se actualiza anualmente conforme a resoluciones DIAN."
+  },
+  "lastReviewed": "2026-04-28"
+}

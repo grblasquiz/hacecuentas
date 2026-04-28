@@ -1,0 +1,268 @@
+{
+  "slug": "calculadora-comprar-acciones-bvc-colombia-comisiones-impuesto",
+  "title": "Calculadora compra acciones BVC 2026 | Comisiones e impuestos",
+  "h1": "Comprar acciones BVC Colombia",
+  "description": "Calcula comisiones (0.4–1.2%), retención dividendos 7.5% y ganancia ocasional 15% en bolsa Valores Colombia. Compara brokers Bancolombia, Davivienda, Acciones y Valores.",
+  "category": "finanzas",
+  "audience": "CO",
+  "icon": "📈",
+  "formulaId": "comprar-acciones-bvc-colombia-comisiones-impuesto",
+  "intro": "La Bolsa de Valores de Colombia (BVC) permite invertir en acciones de empresas listadas. Cada compra genera comisión del broker (0.4–1.2% según intermediario) y retenciones sobre dividendos (7.5% para personas naturales) o ganancias ocasionales (15% si la vendes tras >1 año de tenencia). Esta calculadora estima los costos totales y compara tarifas de los principales brokers colombianos.",
+  "keyTakeaway": "Una compra de $1.000.000 en acciones cuesta $4.000–$12.000 en comisión + $75.000 anuales en retención de dividendos (5% rentabilidad). Davivienda (0.65%) es más económico que Acciones y Valores (1.2%).",
+  "useCases": [
+    "Presupuestar el costo total de tu inversión en acciones BVC",
+    "Comparar comisiones entre brokers (Bancolombia, Davivienda, Acciones y Valores)",
+    "Estimar retención de impuestos sobre dividendos y ganancias ocasionales",
+    "Evaluar punto de equilibrio: qué rentabilidad necesitas para cubrir comisiones",
+    "Planificar estrategia fiscal: tenencia >1 año vs. <1 año",
+    "Analizar impacto de comisiones en rentabilidad neta anual"
+  ],
+  "fields": [
+    {
+      "id": "monto_compra",
+      "label": "Monto de compra",
+      "type": "number",
+      "placeholder": "1000000",
+      "helpText": "Cantidad en pesos colombianos a invertir en acciones BVC",
+      "required": true,
+      "min": 10000,
+      "max": 1000000000
+    },
+    {
+      "id": "broker",
+      "label": "Broker seleccionado",
+      "type": "select",
+      "options": [
+        {
+          "value": "bancolombia",
+          "label": "Bancolombia (0.75%)"
+        },
+        {
+          "value": "davivienda",
+          "label": "Davivienda (0.65%)"
+        },
+        {
+          "value": "acciones_valores",
+          "label": "Acciones y Valores (1.2%)"
+        },
+        {
+          "value": "btg_pactual",
+          "label": "BTG Pactual (0.5%)"
+        },
+        {
+          "value": "personalizado",
+          "label": "Personalizado"
+        }
+      ],
+      "required": true,
+      "helpText": "Elige intermediario o ingresa comisión manual"
+    },
+    {
+      "id": "comision_personalizada",
+      "label": "Comisión personalizada (%)",
+      "type": "number",
+      "placeholder": "0.75",
+      "helpText": "Si seleccionaste 'Personalizado', ingresa comisión en porcentaje",
+      "required": false,
+      "min": 0.1,
+      "max": 2,
+      "step": 0.01,
+      "visible": "broker === 'personalizado'"
+    },
+    {
+      "id": "rentabilidad_anual",
+      "label": "Rentabilidad anual esperada (%)",
+      "type": "number",
+      "placeholder": "8",
+      "helpText": "Rendimiento estimado de dividendos o plusvalía anual (ej: 5–10%)",
+      "required": false,
+      "min": -50,
+      "max": 50,
+      "step": 0.5
+    },
+    {
+      "id": "dias_tenencia",
+      "label": "Días de tenencia proyectados",
+      "type": "number",
+      "placeholder": "365",
+      "helpText": "Plazo estimado antes de vender (>365 días = ganancia ocasional 15%)",
+      "required": false,
+      "min": 1,
+      "max": 3650,
+      "step": 1
+    },
+    {
+      "id": "es_persona_natural",
+      "label": "¿Eres persona natural?",
+      "type": "select",
+      "options": [
+        {
+          "value": "true",
+          "label": "Sí (retención 7.5% dividendos)"
+        },
+        {
+          "value": "false",
+          "label": "No (empresa, otro régimen)"
+        }
+      ],
+      "required": true,
+      "helpText": "Retención de dividendos: 7.5% PN, 0% jurídica (excepción)"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "comision_compra",
+      "label": "Comisión compra",
+      "type": "currency",
+      "precision": 2,
+      "suffix": "COP",
+      "helpText": "Costo intermediación del broker sobre monto compra"
+    },
+    {
+      "id": "valor_neto_invertido",
+      "label": "Valor neto invertido",
+      "type": "currency",
+      "precision": 2,
+      "suffix": "COP",
+      "helpText": "Monto compra menos comisión (tu inversión real)"
+    },
+    {
+      "id": "ganancia_bruta_anual",
+      "label": "Ganancia bruta anual (estimada)",
+      "type": "currency",
+      "precision": 2,
+      "suffix": "COP",
+      "helpText": "Rentabilidad en pesos según % esperado"
+    },
+    {
+      "id": "retencion_dividendos",
+      "label": "Retención dividendos (anual)",
+      "type": "currency",
+      "precision": 2,
+      "suffix": "COP",
+      "helpText": "7.5% sobre ganancia bruta si eres persona natural"
+    },
+    {
+      "id": "ganancia_ocasional",
+      "label": "Ganancia ocasional por venta (estimada)",
+      "type": "currency",
+      "precision": 2,
+      "suffix": "COP",
+      "helpText": "Precio venta − compra neta. Se calcula si dias_tenencia > 365"
+    },
+    {
+      "id": "impuesto_ganancia_ocasional",
+      "label": "Impuesto ganancia ocasional (15%)",
+      "type": "currency",
+      "precision": 2,
+      "suffix": "COP",
+      "helpText": "15% sobre ganancia ocasional si tenencia >1 año"
+    },
+    {
+      "id": "costo_total_operacion",
+      "label": "Costo total operación",
+      "type": "currency",
+      "precision": 2,
+      "suffix": "COP",
+      "helpText": "Comisión + retención + impuesto ganancia ocasional"
+    },
+    {
+      "id": "rentabilidad_neta_anual",
+      "label": "Rentabilidad neta anual",
+      "type": "percentage",
+      "precision": 2,
+      "suffix": "%",
+      "helpText": "Ganancia bruta menos impuestos, sobre inversión neta"
+    },
+    {
+      "id": "comparativa_brokers",
+      "label": "Comparativa comisiones todos brokers",
+      "type": "text",
+      "helpText": "Tabla con costo en cada intermediario"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\n### Fórmula comisión\n\n**Comisión = Monto compra × (% Comisión broker / 100)**\n\nLa comisión es cobrada por el intermediario (broker) en Colombia. Rango típico: 0.5%–1.2% según intermediario.\n\n### Fórmula retención dividendos\n\n**Retención = Ganancia bruta anual × 7.5%** (personas naturales)\n\nLa DIAN retiene el 7.5% sobre dividendos distribuidos por acciones. Para personas jurídicas pueden aplicarse regímenes especiales.\n\n### Fórmula ganancia ocasional\n\n**Ganancia ocasional = Precio venta − Precio compra neto**\n\nSi la tenencia supera 365 días:\n- **Impuesto (15%) = Ganancia ocasional × 0.15**\n\nSi la tenencia es <365 días, se trata como renta ordinaria (tarifas progresivas UVT).\n\n### Fórmula rentabilidad neta\n\n**Rentabilidad neta = [(Ganancia bruta − Impuestos) / Valor neto invertido] × 100**\n\n## Ejemplo\n\nInversión: $1.000.000  \nBroker: Davivienda (0.65%)  \nRentabilidad esperada: 8% anual  \nTenencia: 2 años  \nPersona natural: Sí\n\n| Concepto | Cálculo | Resultado |\n|----------|---------|----------|\n| Comisión compra | $1.000.000 × 0.65% | $6.500 |\n| Valor neto invertido | $1.000.000 − $6.500 | $993.500 |\n| Ganancia bruta año 1 | $993.500 × 8% | $79.480 |\n| Retención dividendos | $79.480 × 7.5% | $5.961 |\n| Ganancia neta año 1 | $79.480 − $5.961 | $73.519 |\n| Rentabilidad neta anual | ($73.519 / $993.500) × 100 | **7.41%** |\n\nSi vendes al final del año 2 con plusvalía de $100.000:\n- **Impuesto ganancia ocasional (15%) = $100.000 × 0.15 = $15.000**\n\n## Comparativa brokers\n\n| Broker | Comisión | Costo en $1M | Ahorro vs. máximo |\n|--------|----------|------------|------------------|\n| BTG Pactual | 0.50% | $5.000 | $7.000 |\n| Davivienda | 0.65% | $6.500 | $5.500 |\n| Bancolombia | 0.75% | $7.500 | $4.500 |\n| Acciones y Valores | 1.20% | $12.000 | — |\n\n## Limitaciones\n\n- **Comisiones variables**: algunos brokers cobran tarifa mínima mensual o adicional por servicios (custodia, análisis).\n- **Impuesto ganancia ocasional**: aplica solo si tenencia >365 días. Si es <365 días, se grava como renta ordinaria con tarifa progresiva UVT (2026: 1 UVT ≈ $45.526).\n- **Dividendos reinvertidos**: si reinviertes dividendos, el cálculo de base costo se complica (promedio ponderado).\n- **Comisión de venta**: hay comisión adicional al vender (no incluida aquí).\n- **GMF (Gravamen a Movimientos Financieros)**: 0.004% sobre débitos > $14.000.000 no está incluido.\n- **Cambios normativos**: tasas de retención pueden variar por reforma tributaria.",
+  "faq": [
+    {
+      "question": "¿Qué es la ganancia ocasional en Colombia?",
+      "answer": "Es el beneficio por venta de bienes (acciones) después de más de 1 año de tenencia. Se grava al 15% (tarifa fija) según art. 41 Estatuto Tributario. Si la vendes antes de 1 año, es renta ordinaria con tarifa progresiva."
+    },
+    {
+      "question": "¿Por qué retienen el 7.5% en dividendos?",
+      "answer": "La DIAN retiene 7.5% sobre dividendos distribuidos por acciones (personas naturales residentes). Es un anticipo de impuesto de renta que se declara y compensa en el año fiscal."
+    },
+    {
+      "question": "¿Cuál es el broker más barato de Colombia?",
+      "answer": "BTG Pactual (0.5%), seguido Davivienda (0.65%). Bancolombia cuesta 0.75% y Acciones y Valores 1.2%. En grandes volúmenes algunos negocian descuentos."
+    },
+    {
+      "question": "¿Hay comisión también al vender acciones?",
+      "answer": "Sí. La venta tiene comisión similar o igual a la compra. Tu calculadora estima solo compra; al salir duplica aproximadamente el costo (compra + venta ≈ 1.3–2.4% total)."
+    },
+    {
+      "question": "¿Qué es el GMF en compra de acciones?",
+      "answer": "Gravamen a Movimientos Financieros: 0.004% sobre débitos de cuenta >$14.000.000. Mínimo $1.980 / máximo $12.600 por transacción. Se aplica cuando transfieren fondos para compra."
+    },
+    {
+      "question": "¿Las personas jurídicas pagan impuesto ganancia ocasional?",
+      "answer": "No. Las PJ tributan la ganancia como renta ordinaria según su régimen (común, simple). Solo PN residentes pagan 15% en ganancia ocasional >1 año."
+    },
+    {
+      "question": "¿Puedo deducir comisiones de impuestos?",
+      "answer": "No directamente. Las comisiones reducen tu base de costo (precio de compra neta), pero no son gasto deducible. Afectan el resultado final de ganancia/pérdida."
+    },
+    {
+      "question": "¿Qué acciones cotizan en la BVC?",
+      "answer": "Aproximadamente 80 empresas (bancos, cemento, energía, telecomunicaciones, consumo). Puedes consultar listado completo en www.bvc.com.co/precios-y-cotizaciones"
+    },
+    {
+      "question": "¿Hay límite de inversión en acciones colombianas?",
+      "answer": "No hay límite normativo. Pero residentes en el exterior deben registrarse en Banco República (Banco Central). El límite es tu capacidad de inversión y políticas del broker."
+    },
+    {
+      "question": "¿Cómo se declaran acciones en el formulario 210 DIAN?",
+      "answer": "En el anexo de patrimonio (sección 2), a valor comercial (cotización última del año). Dividendos se reportan como renta no laboral. Ganancias ocasionales, en sección correspondiente de rentas."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DIAN - Retención en dividendos",
+      "url": "https://www.dian.gov.co/impuestos/personas-naturales/retenciones",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Bolsa de Valores de Colombia - Tarifas brokers",
+      "url": "https://www.bvc.com.co/precios-y-cotizaciones",
+      "publisher": "BVC",
+      "date": "2026"
+    },
+    {
+      "name": "Estatuto Tributario - Art. 41 Ganancia Ocasional",
+      "url": "https://www.dian.gov.co/normatividad/estatuto-tributario",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Superintendencia Financiera - Vigilancia brokers",
+      "url": "https://www.superfinanciera.gov.co/",
+      "publisher": "Superfinanciera",
+      "date": "2026"
+    },
+    {
+      "name": "Banco de la República - GMF y normas mercado valores",
+      "url": "https://www.banrep.gov.co/",
+      "publisher": "Banco de la República",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "DIAN, BVC, Superintendencia Financiera",
+    "sourceUrl": "https://www.dian.gov.co/",
+    "updateType": "manual",
+    "notes": "Comisiones brokers, tasa retención dividendos 7.5%, ganancia ocasional 15%, UVT anual"
+  },
+  "lastReviewed": "2026-04-28"
+}

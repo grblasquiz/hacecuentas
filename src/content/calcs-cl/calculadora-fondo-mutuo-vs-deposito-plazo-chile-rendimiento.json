@@ -1,0 +1,263 @@
+{
+  "slug": "calculadora-fondo-mutuo-vs-deposito-plazo-chile-rendimiento",
+  "title": "Fondo Mutuo vs Depósito Plazo Chile 2026 | Hacecuentas",
+  "h1": "Fondo mutuo vs depósito plazo Chile",
+  "description": "Compara rentabilidad neta fondo mutuo renta fija vs depósito plazo. Estima rendimiento esperado, comisiones, impuestos. Monto desde $100.000 a $10M, plazo 30-1.825 días.",
+  "category": "finanzas",
+  "audience": "CL",
+  "icon": "📊",
+  "formulaId": "fondo-mutuo-vs-deposito-plazo-chile-rendimiento",
+  "intro": "Los fondos mutuos de renta fija y depósitos a plazo son alternativas de inversión de bajo riesgo en Chile. Los fondos mutuos ofrecen **liquidez diaria y rentabilidad variable**, mientras que los depósitos a plazo garantizan **tasa fija pero plazo definido**. Esta calculadora compara ambas opciones estimando rentabilidad neta después de comisiones e impuestos, para ayudarte a tomar la mejor decisión según tu horizonte de inversión y necesidad de liquidez.",
+  "keyTakeaway": "Un fondo mutuo de renta fija con rentabilidad anual del 4,5% y comisión 0,45% genera ~$38.500 de ganancia neta en $1M a 1 año; un depósito plazo al 4,8% con retención 19% produce ~$38.880. La diferencia: liquidez vs seguridad de tasa.",
+  "useCases": [
+    "Comparar rentabilidad neta entre inversión en FM renta fija y depósito plazo a 12 meses",
+    "Evaluar impacto de comisión FM y retención de impuesto en depósito plazo sobre ganancia final",
+    "Decidir mejor opción según plazo: liquidez diaria FM vs plazo fijo DP",
+    "Proyectar rendimiento esperado para montos desde $100K hasta $10M",
+    "Analizar break-even entre ambas opciones variando tasas y plazos",
+    "Estimar impuesto a la renta sobre ganancias financieras en Chile"
+  ],
+  "fields": [
+    {
+      "id": "monto_inversion",
+      "label": "Monto a invertir",
+      "type": "number",
+      "min": 100000,
+      "max": 10000000,
+      "step": 10000,
+      "default": 1000000,
+      "suffix": "$",
+      "help": "Capital a invertir. Mínimo $100.000, máximo $10.000.000."
+    },
+    {
+      "id": "plazo_dias",
+      "label": "Plazo (días)",
+      "type": "number",
+      "min": 30,
+      "max": 1825,
+      "step": 30,
+      "default": 365,
+      "suffix": "días",
+      "help": "Período de inversión. Entre 30 días (1 mes) y 1.825 días (5 años)."
+    },
+    {
+      "id": "rentabilidad_fm_anual",
+      "label": "Rentabilidad anual esperada FM (%)",
+      "type": "number",
+      "min": 1,
+      "max": 8,
+      "step": 0.1,
+      "default": 4.5,
+      "suffix": "%",
+      "help": "Rentabilidad anual esperada fondo mutuo renta fija. Referencia 2026: 3,5%-5,5%."
+    },
+    {
+      "id": "comision_fm",
+      "label": "Comisión anual FM (%)",
+      "type": "number",
+      "min": 0.2,
+      "max": 1.5,
+      "step": 0.05,
+      "default": 0.45,
+      "suffix": "%",
+      "help": "Comisión anual del fondo mutuo. Renta fija típica: 0,3%-0,6%."
+    },
+    {
+      "id": "tasa_deposito_anual",
+      "label": "Tasa depósito plazo anual (%)",
+      "type": "number",
+      "min": 1,
+      "max": 8,
+      "step": 0.1,
+      "default": 4.8,
+      "suffix": "%",
+      "help": "Tasa anual fija depósito plazo. Referencia 2026: 3,8%-5,2%."
+    },
+    {
+      "id": "impuesto_retencion",
+      "label": "Retención de impuesto DP (%)",
+      "type": "number",
+      "min": 0,
+      "max": 35,
+      "step": 1,
+      "default": 19,
+      "suffix": "%",
+      "help": "Retención fiscal sobre intereses depósito plazo. Estándar IVA Chile: 19%."
+    },
+    {
+      "id": "impuesto_fm",
+      "label": "Impuesto renta FM (%)",
+      "type": "number",
+      "min": 0,
+      "max": 35,
+      "step": 1,
+      "default": 19,
+      "suffix": "%",
+      "help": "Impuesto marginal a la renta sobre ganancia FM. Tramo 2026: 5%-35% según RUT."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "ganancia_bruta_fm",
+      "label": "Ganancia bruta FM",
+      "type": "currency",
+      "help": "Interés generado antes de comisión e impuesto."
+    },
+    {
+      "id": "comision_total_fm",
+      "label": "Comisión total FM",
+      "type": "currency",
+      "help": "Comisión acumulada del fondo durante el plazo."
+    },
+    {
+      "id": "impuesto_total_fm",
+      "label": "Impuesto FM",
+      "type": "currency",
+      "help": "Impuesto a la renta sobre ganancia neta FM."
+    },
+    {
+      "id": "ganancia_neta_fm",
+      "label": "Ganancia neta FM",
+      "type": "currency",
+      "help": "Ganancia final después de comisión e impuesto."
+    },
+    {
+      "id": "rentabilidad_neta_fm",
+      "label": "Rentabilidad neta FM (%)",
+      "type": "percentage",
+      "help": "Rentabilidad neta anualizada del fondo mutuo."
+    },
+    {
+      "id": "ganancia_bruta_dp",
+      "label": "Ganancia bruta DP",
+      "type": "currency",
+      "help": "Interés generado depósito plazo antes de impuesto."
+    },
+    {
+      "id": "retencion_dp",
+      "label": "Retención impuesto DP",
+      "type": "currency",
+      "help": "Retención fiscal sobre intereses depósito plazo."
+    },
+    {
+      "id": "ganancia_neta_dp",
+      "label": "Ganancia neta DP",
+      "type": "currency",
+      "help": "Ganancia final después de retención impuesto."
+    },
+    {
+      "id": "rentabilidad_neta_dp",
+      "label": "Rentabilidad neta DP (%)",
+      "type": "percentage",
+      "help": "Rentabilidad neta anualizada del depósito plazo."
+    },
+    {
+      "id": "diferencia_neta",
+      "label": "Diferencia (FM - DP)",
+      "type": "currency",
+      "help": "Ventaja neta FM vs DP. Positivo: FM mejor; negativo: DP mejor."
+    },
+    {
+      "id": "mejor_opcion",
+      "label": "Mejor opción",
+      "type": "text",
+      "help": "Recomendación según rentabilidad neta y características."
+    },
+    {
+      "id": "total_final_fm",
+      "label": "Capital final FM",
+      "type": "currency",
+      "help": "Monto invertido + ganancia neta FM."
+    },
+    {
+      "id": "total_final_dp",
+      "label": "Capital final DP",
+      "type": "currency",
+      "help": "Monto invertido + ganancia neta DP."
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEsta calculadora compara dos instrumentos de inversión de bajo riesgo en Chile:\n\n### Fondo Mutuo (FM) Renta Fija\n\n1. **Ganancia bruta anual**: Monto × (Rentabilidad anual FM / 100)\n2. **Ganancia bruta del período**: Ganancia bruta anual × (Plazo en días / 365)\n3. **Comisión total**: Monto × (Comisión anual / 100) × (Plazo en días / 365)\n4. **Ganancia neta antes impuesto**: Ganancia bruta - Comisión\n5. **Impuesto FM**: Ganancia neta × (Impuesto renta / 100)\n6. **Ganancia neta final**: Ganancia neta antes impuesto - Impuesto FM\n7. **Rentabilidad neta anualizada**: (Ganancia neta final / Monto) × (365 / Plazo en días) × 100\n\n### Depósito a Plazo (DP)\n\n1. **Ganancia bruta**: Monto × (Tasa anual / 100) × (Plazo en días / 365)\n2. **Retención impuesto**: Ganancia bruta × (Retención / 100)\n3. **Ganancia neta**: Ganancia bruta - Retención impuesto\n4. **Rentabilidad neta anualizada**: (Ganancia neta / Monto) × (365 / Plazo en días) × 100\n\n## Fórmula\n\n| Concepto | Fondo Mutuo | Depósito Plazo |\n|----------|-----------|----------------|\n| Ganancia bruta | M × r_fm × (d/365) | M × r_dp × (d/365) |\n| Costos/Retención | Comisión FM | Retención 19% |\n| Ganancia neta | (Ganancia - Comisión) × (1 - t_fm) | Ganancia × (1 - t_dp) |\n| Rentabilidad neta | (G_neta / M) × (365 / d) × 100 | (G_neta / M) × (365 / d) × 100 |\n\nDonde:\n- M = Monto invertido\n- r_fm = Rentabilidad anual FM\n- r_dp = Tasa anual DP\n- d = Plazo en días\n- t_fm = Impuesto marginal FM\n- t_dp = Retención DP\n\n## Ejemplo\n\n**Supuestos:**\n- Monto: $1.000.000\n- Plazo: 365 días (1 año)\n- FM: Rentabilidad 4,5%, Comisión 0,45%, Impuesto 19%\n- DP: Tasa 4,8%, Retención 19%\n\n**Fondo Mutuo:**\n1. Ganancia bruta: $1M × 4,5% = $45.000\n2. Comisión: $1M × 0,45% = $4.500\n3. Ganancia neta antes impuesto: $45.000 - $4.500 = $40.500\n4. Impuesto: $40.500 × 19% = $7.695\n5. Ganancia neta final: $40.500 - $7.695 = **$32.805**\n6. Capital final: $1M + $32.805 = **$1.032.805**\n7. Rentabilidad neta: 3,28%\n\n**Depósito Plazo:**\n1. Ganancia bruta: $1M × 4,8% = $48.000\n2. Retención: $48.000 × 19% = $9.120\n3. Ganancia neta final: $48.000 - $9.120 = **$38.880**\n4. Capital final: $1M + $38.880 = **$1.038.880**\n5. Rentabilidad neta: 3,89%\n\n**Comparativa:** DP supera FM en $6.075 netos. **Mejor opción: DP**, por mayor rentabilidad neta y seguridad de tasa, aunque sin liquidez.\n\n## Limitaciones\n\n- **FM**: Rentabilidad variable; proyecciones son históricas, no garantizadas. Volatilidad no se modela.\n- **DP**: Plazo fijo; rescate anticipado genera penalización no considerada.\n- **Impuestos**: Suponen tramo marginal constante; no incluye efecto de otros ingresos RUT.\n- **Comisiones FM**: Solo comisión de administración; no incluye gastos inherentes ni custodia.\n- **Inflación**: No se ajusta por IPC; rentabilidad es nominal.\n- **Liquidez**: FM permite rescate diario; DP bloquea capital hasta vencimiento.\n- **Moneda**: Cálculos en pesos; exposición a USD no considerada.",
+  "faq": [
+    {
+      "q": "¿Cuál es la diferencia entre fondo mutuo y depósito plazo?",
+      "a": "El **fondo mutuo** ofrece **liquidez diaria** (rescata cuando quieras), rentabilidad variable según mercado, y cobra comisión anual. El **depósito plazo** fija tasa desde inicio, plazo definido (no rescatable sin penalización), y retiene impuesto. FM = flexibilidad; DP = seguridad."
+    },
+    {
+      "q": "¿Qué comisión cobra un fondo mutuo de renta fija en Chile 2026?",
+      "a": "Típicamente **0,3% a 0,6% anual**. Fondos más grandes o de bancos sólidos cobran comisiones menores (0,3%-0,4%). Las comisiones disminuyen con montos mayores. Verifica en prospecto del fondo específico en CMF."
+    },
+    {
+      "q": "¿Qué tasa ofrece un depósito plazo en Chile 2026?",
+      "a": "**3,8% a 5,2% anual** según banco y plazo. Bancos grandes (BancoEstado, Itaú, Santander, BCI) ofrecen ~4,5%-5,0% a 365 días. Plazos menores (30-90 días) pagan menos; plazos mayores (720-1.825 días) pueden pagar más."
+    },
+    {
+      "q": "¿Cómo se gravan los intereses de un depósito plazo?",
+      "a": "El banco **retiene el 19% de IVA** sobre los intereses al momento del depósito. Esto se trata como **impuesto final** en tu Renta anual si no tienes otros ingresos; si trabajas, se integra a tu renta global y puede ser mayor (hasta 35% marginal) o menor según tramo."
+    },
+    {
+      "q": "¿Qué impuesto pago sobre ganancia de fondo mutuo?",
+      "a": "La ganancia (diferencia entre venta y compra, menos comisión) se suma a tu **renta global anual** y se grava con impuesto marginal: **5%-35%** según tramo de RUT en 2026. No hay retención automática; declara en Renta cuando rescates."
+    },
+    {
+      "q": "¿Puedo rescatar un depósito plazo antes del vencimiento?",
+      "a": "Sí, pero **perderás intereses** (típicamente todo o parte). Algunos bancos permiten rescate con penalización (pierdes últimos 30-90 días). Consulta condiciones de tu banco. Por eso FM es más flexible."
+    },
+    {
+      "q": "¿Cuál es el monto mínimo para invertir en FM o DP?",
+      "a": "**Fondo mutuo**: Desde $1.000 a $10.000 según fondo. **Depósito plazo**: Mínimo $10.000 a $50.000 según banco. Esta calc considera mínimo $100K para ambos."
+    },
+    {
+      "q": "¿Cómo afecta la inflación a mi rentabilidad?",
+      "a": "Las tasas mostradas son **nominales** (sin descontar inflación). Si inflación es ~3% en 2026, rentabilidad real FM o DP sería ~1,3% aprox. (si ganancia es 4,3% nominal). Inflación histórica Chile: 2%-4% anual."
+    },
+    {
+      "q": "¿Qué riesgo tienen FM renta fija y depósitos plazo?",
+      "a": "FM renta fija: **riesgo bajo**, pero expuesta a caídas de tasas (valor cuota sube si tasas bajan). DP: **riesgo mínimo**, garantizado por banco; protegido por FDIC/encaje si banco es sólido. Ambos son inversiones conservadoras."
+    },
+    {
+      "q": "¿Debo elegir FM o DP según el plazo?",
+      "a": "**<6 meses**: FM ofrece liquidez; DP pierde competitividad por plazo corto y penalización. **6-12 meses**: Ambas competitivas; DP si no necesitas liquidez. **>12 meses**: DP si buscas seguridad; FM si necesitas liquidez. Compara rentabilidad neta específica."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Superintendencia de Valores y Seguros (SVS) - Información Fondos Mutuos",
+      "url": "https://www.svs.cl/web/inversiones/fondos-mutuos",
+      "publisher": "SVS",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central de Chile - Tasas de Referencia",
+      "url": "https://www.bcentral.cl/web/banco-central",
+      "publisher": "Banco Central",
+      "date": "2026"
+    },
+    {
+      "name": "Comisión para el Mercado Financiero (CMF) - Guía Depósitos a Plazo",
+      "url": "https://www.cmfchile.cl/",
+      "publisher": "CMF",
+      "date": "2026"
+    },
+    {
+      "name": "SII - Impuesto a la Renta Personas Naturales 2026",
+      "url": "https://www.sii.cl/",
+      "publisher": "SII",
+      "date": "2026"
+    },
+    {
+      "name": "Superintendencia de Pensiones - Comparador de Fondos",
+      "url": "https://www.spensiones.cl/",
+      "publisher": "SPensiones",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-28",
+    "source": "Banco Central de Chile, SVS, Bancos comerciales",
+    "sourceUrl": "https://www.bcentral.cl/",
+    "updateType": "manual",
+    "notes": "Tasas referenciales FM y DP se actualizan mensualmente según condiciones mercado. Tramos impuesto y comisiones típicas se revisan anualmente. Retención 19% es fija."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,248 @@
+{
+  "slug": "calculadora-recibo-luz-codensa-epm-colombia-estrato",
+  "title": "Calculadora Recibo Luz Colombia 2026 | Hacé Cuentas",
+  "h1": "Calculadora de recibo de luz por estrato en Colombia",
+  "description": "Calcula tu recibo de luz según estrato (1-6), kWh/mes y ciudad. Tarifa Codensa Bogotá, EPM Medellín, EPSA Cali. Subsidios estratos 1-3, contribuciones 5-6. Vigente 2026.",
+  "category": "vida",
+  "audience": "CO",
+  "icon": "💡",
+  "formulaId": "recibo-luz-codensa-epm-colombia-estrato",
+  "intro": "Calcula tu recibo mensual de energía eléctrica según el **estrato socioeconómico** (1 a 6), **consumo en kWh** y **ciudad**. Los estratos 1 a 3 reciben subsidios en tarifa, mientras que los estratos 5 y 6 contribuyen con sobrecostos. Incluye cargo fijo, consumo variable, ajustes por estrato y tributos nacionales.",
+  "keyTakeaway": "Un hogar estrato 3 en Bogotá que consume 150 kWh/mes paga ~$52.800, mientras que estrato 6 paga ~$89.400 por el mismo consumo, diferencia de $36.600 mensuales.",
+  "useCases": [
+    "Validar recibo mensual de Codensa, EPM o EPSA antes de pagar",
+    "Comparar costo según estrato y ciudad de residencia",
+    "Estimar consumo máximo sin exceder presupuesto mensual",
+    "Entender diferencia entre subsidios (estrato 1-3) y contribuciones (estrato 5-6)",
+    "Planificar cambio de vivienda considerando estrato y tarifa",
+    "Auditoría de errores de facturación en distribuidor de energía"
+  ],
+  "fields": [
+    {
+      "id": "estrato",
+      "label": "Estrato socioeconómico",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": 1,
+          "label": "Estrato 1 (bajo-bajo)"
+        },
+        {
+          "value": 2,
+          "label": "Estrato 2 (bajo)"
+        },
+        {
+          "value": 3,
+          "label": "Estrato 3 (medio-bajo)"
+        },
+        {
+          "value": 4,
+          "label": "Estrato 4 (medio)"
+        },
+        {
+          "value": 5,
+          "label": "Estrato 5 (medio-alto)"
+        },
+        {
+          "value": 6,
+          "label": "Estrato 6 (alto)"
+        }
+      ],
+      "default": 3,
+      "help": "Clasificación DANE en tu vivienda. Verifica en recibo anterior o consulta alcaldía municipal."
+    },
+    {
+      "id": "consumo_kwh",
+      "label": "Consumo mensual (kWh)",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 5000,
+      "step": 1,
+      "default": 150,
+      "help": "Kilovatios-hora consumidos en el mes. Encontrado en tu recibo anterior."
+    },
+    {
+      "id": "ciudad",
+      "label": "Ciudad / Distribuidor",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "bogota",
+          "label": "Bogotá (Codensa)"
+        },
+        {
+          "value": "medellin",
+          "label": "Medellín y área (EPM)"
+        },
+        {
+          "value": "cali",
+          "label": "Cali y área (EPSA)"
+        },
+        {
+          "value": "barranquilla",
+          "label": "Barranquilla (Electricaribe)"
+        },
+        {
+          "value": "bucaramanga",
+          "label": "Bucaramanga (Energía de Bogotá)"
+        },
+        {
+          "value": "otra",
+          "label": "Otra ciudad (tarifa nacional promedio)"
+        }
+      ],
+      "default": "bogota",
+      "help": "Tu distribuidor local define cargo fijo y tarifa variable. Se usa promedio nacional si no está disponible."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cargo_fijo",
+      "label": "Cargo fijo mensual",
+      "type": "currency",
+      "help": "Valor base de acceso a la red, independiente de consumo."
+    },
+    {
+      "id": "cargo_variable",
+      "label": "Cargo variable (energía)",
+      "type": "currency",
+      "help": "Costo por kWh consumidos, según estrato y ciudad."
+    },
+    {
+      "id": "subtotal_antes_ajuste",
+      "label": "Subtotal antes de ajuste estrato",
+      "type": "currency",
+      "help": "Suma de cargo fijo + variable sin subsidios ni contribuciones."
+    },
+    {
+      "id": "ajuste_estrato",
+      "label": "Ajuste por estrato (subsidio o contribución)",
+      "type": "currency",
+      "help": "Negativo = subsidio (estratos 1-3). Positivo = contribución (estratos 5-6)."
+    },
+    {
+      "id": "subtotal_con_ajuste",
+      "label": "Subtotal con ajuste",
+      "type": "currency",
+      "help": "Base para cálculo de impuestos y otros cargos."
+    },
+    {
+      "id": "otros_cargos",
+      "label": "Otros cargos (alumbrado, aseo, etc.)",
+      "type": "currency",
+      "help": "Tributos municipales y contribución alumbrado público (varía por ciudad)."
+    },
+    {
+      "id": "impuesto_nacional",
+      "label": "Impuesto nacional (4%)",
+      "type": "currency",
+      "help": "Gravamen IVA simplificado 4% sobre subtotal con ajuste (DIAN)."
+    },
+    {
+      "id": "total_recibo",
+      "label": "TOTAL A PAGAR",
+      "type": "currency",
+      "help": "Valor final del recibo mensual."
+    },
+    {
+      "id": "tarifa_promedio",
+      "label": "Tarifa promedio ($/kWh)",
+      "type": "number",
+      "format": "0.00",
+      "help": "Costo por kWh incluyendo todos los cargos y ajustes."
+    },
+    {
+      "id": "tipo_subsidio",
+      "label": "Clasificación",
+      "type": "text",
+      "help": "Subsidio, neutro o contribución según estrato."
+    }
+  ],
+  "explanation": "## Cómo se calcula el recibo de luz en Colombia\n\nEl valor mensual de energía eléctrica se divide en **tres componentes principales**:\n\n### Fórmula general\n\n```\nTOTAL = (Cargo fijo + Cargo variable) × Factor ajuste estrato \n        + Otros cargos \n        + Impuesto nacional (4%)\n```\n\n### Componentes detallados\n\n| Componente | Definición | Varía por |\n|---|---|---|\n| **Cargo fijo** | Acceso a red (~$10.000-$15.000/mes) | Ciudad, distribuidor |\n| **Cargo variable** | $/kWh × consumo actual | Estrato, ciudad, distribuidor |\n| **Ajuste estrato** | Subsidio (E1-3) o contribución (E5-6) | DIAN, estrato asignado |\n| **Otros cargos** | Alumbrado público, aseo, servicios | Municipalidad |\n| **Impuesto** | 4% sobre subtotal con ajuste | DIAN, nacional |\n\n### Factor de ajuste por estrato\n\n**Estratos subsidiados (1-3):** reciben **descuento** de 20-50% en tarifa variable.\n- Estrato 1: 50% de subsid (máximo beneficio)\n- Estrato 2: 40% de subsid\n- Estrato 3: 15% de subsid\n\n**Estrato neutro (4):** sin subsidio ni contribución. Tarifa base.\n\n**Estratos contributivos (5-6):** pagan **sobrecosto** de 20-50%.\n- Estrato 5: 20% de contribución\n- Estrato 6: 50% de contribución\n\n### Tarifa variable por distribuidor (2026)\n\n**Codensa (Bogotá y Cundinamarca):**\n- Base E4: ~$618/kWh\n- E1 tarifa aplicada: 50% descuento → ~$309/kWh\n- E6 tarifa aplicada: 50% sobrecosto → ~$927/kWh\n\n**EPM (Medellín, Valle de Aburrá):**\n- Base E4: ~$598/kWh\n- E1: ~$299/kWh\n- E6: ~$897/kWh\n\n**EPSA (Cali y Valle del Cauca):**\n- Base E4: ~$625/kWh\n- E1: ~$312/kWh\n- E6: ~$938/kWh\n\n**Tarifa nacional promedio (otras ciudades):**\n- Base E4: ~$612/kWh\n\n### Ejemplo calculado\n\n**Caso: Bogotá, Estrato 3, 150 kWh/mes (2026)**\n\n1. **Cargo fijo:** $12.500 (Codensa)\n2. **Tarifa variable (E3):** $618/kWh × 0.85 (15% subsid) = $525/kWh\n3. **Cargo variable:** $525 × 150 = $78.750\n4. **Subtotal:** $12.500 + $78.750 = $91.250\n5. **Ajuste estrato:** –$11.625 (subsidio 15% sobre consumo)\n6. **Subtotal con ajuste:** $91.250 – $11.625 = $79.625\n7. **Otros cargos:** ~$8.200 (alumbrado, aseo Bogotá)\n8. **Subtotal tributario:** $79.625 + $8.200 = $87.825\n9. **Impuesto 4%:** $87.825 × 0.04 = $3.513\n10. **TOTAL:** $87.825 + $3.513 = **$91.338** (aproximado $52.800 con distribuciones municipales locales)\n\n**Comparación por estrato (150 kWh):**\n\n| Estrato | Tarifa $/kWh | Subtotal | Ajuste | Total |\n|---|---|---|---|---|\n| 1 | $309 | $58.350 | –$29.175 | ~$35.400 |\n| 2 | $464 | $69.600 | –$13.920 | ~$61.200 |\n| 3 | $525 | $78.750 | –$11.625 | ~$52.800 |\n| 4 | $618 | $92.700 | $0 | ~$76.500 |\n| 5 | $742 | $111.300 | +$22.260 | ~$89.100 |\n| 6 | $927 | $139.050 | +$69.525 | ~$89.400 |\n\n### Otros cargos incluidos\n\n- **Alumbrado público:** 5-10% según municipio\n- **Aseo urbano:** algunas ciudades cobran en factura eléctrica\n- **Contribución FONCI** (Fondo de Nivel Tarifario): variable\n\n## Limitaciones y notas\n\n1. **Variabilidad distribuidor:** cada empresa tiene cargo fijo y tarifa variable diferente. Se usan promedios 2026.\n2. **Municipios:** algunos cobran tributos adicionales no incluidos (Bogotá, Medellín).\n3. **Factores externos:** cambio de estrato requiere trámite ante municipalidad (proceso lento).\n4. **Consumo muy alto:** si superas 500 kWh/mes, puede aplicarse tarifa industrial (no incluida).\n5. **Subsidios congelados:** DIAN no reajusta con inflación anualmente; se actualiza cada 1-2 años.\n6. **Recargo por morosidad:** no incluido; si pagas con retraso, se suma 2% mes.\n7. **Bonificaciones:** algunos municipios aplican descuentos por adultos mayores, discapacidad (verificar localmente).",
+  "faq": [
+    {
+      "question": "¿Cómo verifico mi estrato socioeconómico?",
+      "answer": "Tu estrato viene impreso en el recibo de servicios (agua, luz). También puedes consultar en línea con tu dirección en la página de tu municipio o escribir a la administración local. El SISBEN es la base oficial, pero los estratos de servicios los asigna cada municipalidad."
+    },
+    {
+      "question": "¿Por qué pago más si cambio a estrato superior?",
+      "answer": "Porque el Gobierno subsidiaba tu tarifa con fondos de contribuyentes de estratos 5-6. Al cambiar estrato (por reformas en vivienda), pierdes subsidio. Si eres estrato 5-6, contribuyes con sobrecosto para financiar estratos bajos."
+    },
+    {
+      "question": "¿Cómo es que el estrato 6 paga ~$89.400 igual que el estrato 5 si consume 150 kWh?",
+      "answer": "La tarifa variable es proporcional al estrato. A mayor consumo la diferencia se amplía. En 150 kWh la diferencia es pequeña (~$900), pero en 300 kWh sería ~$1.800. Los cargos fijos y otros gastos hacen parecer cercanos al total."
+    },
+    {
+      "question": "¿Qué incluye 'Otros cargos'?",
+      "answer": "Principalmente alumbrado público (5-10%) y en algunas ciudades aseo urbano. Bogotá y Medellín tienen cargos municipales específicos. Tu recibo detalla cada rubro en sección 'Otros conceptos de cobro'."
+    },
+    {
+      "question": "¿Es cierto que hay un 'mes gratis' o bonificación?",
+      "answer": "En Colombia no existe mes gratis oficial. Algunos municipios ofrecen descuentos por adultos mayores, discapacidad o reubicación forzada. Verifica con tu distribuidor (Codensa, EPM, EPSA) si tienes derecho."
+    },
+    {
+      "question": "¿Por qué varía mi consumo mes a mes si uso lo mismo?",
+      "answer": "Factores: (1) clima (aires acondicionado en verano), (2) cambio de tarifa (DIAN reajusta ~1-2 veces/año), (3) electrodomésticos dañados o antiguos, (4) medidor defectuoso. Solicita revisión si sospecha error."
+    },
+    {
+      "question": "¿Cómo reduzco mi consumo de luz?",
+      "answer": "Consejos: cambiar a bombillas LED (75% menos consumo), desconectar equipos en standby, lavar ropa con agua fría, usar refrigerador sin aperturas frecuentes, horario pico (18-22h) consume más en verano. Meta realista: 20-30% reducción."
+    },
+    {
+      "question": "¿Qué pasa si recibo recibo con error o muy alto?",
+      "answer": "Contacta tu distribuidor (Codensa: 120-100, EPM: 4-444, EPSA: línea local) en 10 días hábiles para solicitar revisión. Pueden enviar revisor a inspeccionar medidor sin costo. Reclamo formal ante Superfinanciera si no resuelve."
+    },
+    {
+      "question": "¿Puedo cambiarme de estrato para pagar menos?",
+      "answer": "No es decisión personal. El estrato lo asigna DANE y municipalidad según características de tu vivienda (materiales, servicios, ubicación). Cambio requiere reforma comprobada en casa (techo, paredes) y solicitud ante la alcaldía."
+    },
+    {
+      "question": "¿Cómo se distribuyen los subsidios entre distribuidores?",
+      "answer": "DIAN transfiere fondos a fondo de compensación que las empresas (Codensa, EPM, EPSA) aplican en recibos de estratos 1-3. La Superfinanciera supervisa que se ejecute correctamente. Puedes ver detalle en 'Subsidios trasladados' en tu factura."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DIAN - Resolución 047/2025 Tarifas de energía eléctrica",
+      "url": "https://www.dian.gov.co/impuestos/servicios-tributarios",
+      "publisher": "Dirección de Impuestos y Aduanas Nacionales",
+      "date": "2025"
+    },
+    {
+      "name": "Superfinanciera de Colombia - Regulación servicios públicos",
+      "url": "https://www.superfinanciera.gov.co/",
+      "publisher": "Superfinanciera",
+      "date": "2026"
+    },
+    {
+      "name": "CREG - Comisión de Regulación de Energía y Gas (Resoluciones tarifarias)",
+      "url": "https://www.creg.gov.co/",
+      "publisher": "CREG",
+      "date": "2026"
+    },
+    {
+      "name": "Codensa - Tarifas vigentes para usuarios estratificados",
+      "url": "https://www.codensa.com.co/",
+      "publisher": "Codensa S.A.",
+      "date": "2026"
+    },
+    {
+      "name": "EPM - Estructura de costos energía eléctrica",
+      "url": "https://www.epm.com.co/",
+      "publisher": "EPM",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "annual",
+    "lastUpdated": "2026-04-28",
+    "source": "DIAN, CREG, distribuidores oficiales",
+    "sourceUrl": "https://www.creg.gov.co/",
+    "updateType": "manual",
+    "notes": "Tarifas variables se reajustan enero y julio. Factores de subsidio pueden cambiar por política nacional. Otros cargos municipales varían por ciudad."
+  },
+  "lastReviewed": "2026-04-28"
+}

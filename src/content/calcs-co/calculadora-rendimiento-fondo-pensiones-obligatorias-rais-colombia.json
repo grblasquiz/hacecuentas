@@ -1,0 +1,229 @@
+{
+  "slug": "calculadora-rendimiento-fondo-pensiones-obligatorias-rais-colombia",
+  "title": "Rendimiento RAIS Colombia 2026 | Hacé Cuentas",
+  "h1": "Rendimiento RAIS Colombia 2026",
+  "description": "Calcula rendimiento histórico fondos RAIS Porvenir, Protección, Colfondos, Old Mutual. Multifondos conservador, moderado, mayor riesgo. 2026.",
+  "category": "finanzas",
+  "audience": "CO",
+  "icon": "📈",
+  "formulaId": "rendimiento-fondo-pensiones-obligatorias-rais-colombia",
+  "intro": "Las administradoras de fondos de pensiones obligatorias (RAIS) en Colombia gestionan tu ahorro para jubilación. Cada administradora ofrece múltiples **multifondos** según tu perfil de riesgo: conservador (renta fija), moderado (mixto) y mayor riesgo (renta variable). Esta calculadora compara rendimientos históricos 2026 de las principales RAIS (Porvenir, Protección, Colfondos, Old Mutual) y recomienda el fondo más adecuado según tu edad y tolerancia al riesgo.",
+  "keyTakeaway": "Porvenir lidera en moderado con 8,2% anual; mayor riesgo promedia 10,5% anual. Cambios de fondo sin comisión en ventana anual según Decreto 2955/2015.",
+  "useCases": [
+    "Empleado 35 años comparar rendimiento multifondos moderado vs conservador",
+    "Independiente decidir entre RAIS según histórico riesgo/rentabilidad 2022-2026",
+    "Próximo a jubilación (55+ años) trasladar a fondo conservador",
+    "Afiliado evaluar si cambiar de administradora en ventana de traslado",
+    "Joven (25-30 años) elegir fondo mayor riesgo para horizonte largo",
+    "Asesor financiero comparar multifondos de clientes por edad"
+  ],
+  "fields": [
+    {
+      "id": "edad_afiliado",
+      "label": "Tu edad actual",
+      "type": "number",
+      "min": 18,
+      "max": 70,
+      "step": 1,
+      "unit": "años",
+      "placeholder": "35",
+      "description": "Edad para determinar horizonte de inversión y perfil de riesgo recomendado",
+      "required": true
+    },
+    {
+      "id": "perfil_riesgo",
+      "label": "Perfil de riesgo preferido",
+      "type": "select",
+      "options": [
+        {
+          "value": "conservador",
+          "label": "Conservador (renta fija 80%+)"
+        },
+        {
+          "value": "moderado",
+          "label": "Moderado (mixto 40-60% renta variable)"
+        },
+        {
+          "value": "mayor_riesgo",
+          "label": "Mayor riesgo (renta variable 70%+)"
+        }
+      ],
+      "placeholder": "Selecciona tu perfil",
+      "description": "Nivel de exposición a mercados de renta variable vs renta fija",
+      "required": true
+    },
+    {
+      "id": "rais_actual",
+      "label": "RAIS actual (opcional)",
+      "type": "select",
+      "options": [
+        {
+          "value": "porvenir",
+          "label": "Porvenir"
+        },
+        {
+          "value": "proteccion",
+          "label": "Protección"
+        },
+        {
+          "value": "colfondos",
+          "label": "Colfondos"
+        },
+        {
+          "value": "old_mutual",
+          "label": "Old Mutual"
+        },
+        {
+          "value": "ninguna",
+          "label": "No tengo / nueva afiliación"
+        }
+      ],
+      "placeholder": "Selecciona tu RAIS",
+      "description": "Para comparar con otras administradoras",
+      "required": false
+    },
+    {
+      "id": "monto_acumulado",
+      "label": "Monto acumulado en fondo",
+      "type": "number",
+      "min": 0,
+      "max": 500000000,
+      "step": 100000,
+      "unit": "$",
+      "placeholder": "5000000",
+      "description": "Saldo actual acumulado (estimado o extracto reciente)",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "fondo_recomendado",
+      "label": "Fondo recomendado",
+      "type": "text",
+      "description": "Multifondo sugerido según edad y perfil"
+    },
+    {
+      "id": "rendimiento_anual_prom",
+      "label": "Rendimiento anual promedio 2022-2026",
+      "type": "number",
+      "unit": "%",
+      "description": "Rentabilidad histórica ajustada por perfil seleccionado"
+    },
+    {
+      "id": "mejor_rais_perfil",
+      "label": "Mejor RAIS en tu perfil",
+      "type": "text",
+      "description": "Administradora con mayor rendimiento en el multifondo seleccionado"
+    },
+    {
+      "id": "proyeccion_10_anos",
+      "label": "Proyección a 10 años",
+      "type": "number",
+      "unit": "$",
+      "description": "Estimación de saldo acumulado aplicando rendimiento promedio anual"
+    },
+    {
+      "id": "ventana_traslado_proximo",
+      "label": "Próxima ventana de traslado",
+      "type": "text",
+      "description": "Fecha estimada y normativa para cambiar de RAIS sin comisión"
+    },
+    {
+      "id": "diferencia_vs_actual",
+      "label": "Diferencia rendimiento vs RAIS actual",
+      "type": "number",
+      "unit": "% p.a.",
+      "description": "Comparativa con tu administradora actual (si aplica)"
+    },
+    {
+      "id": "recomendaciones",
+      "label": "Recomendaciones de acción",
+      "type": "text",
+      "description": "Acciones sugeridas según situación personal"
+    }
+  ],
+  "explanation": "## Cómo se calcula el rendimiento RAIS Colombia\n\nLa calculadora compara el desempeño histórico de los multifondos de pensiones obligatorias (RAIS) en Colombia según datos de la **Superfinanciera 2022-2026**.\n\n### Fórmula base\n\n**Rendimiento anual promedio (media geométrica):**\n\n```\nRendimiento_Promedio = ((Valor_Final / Valor_Inicial)^(1/n) - 1) × 100\n```\n\nDonde:\n- `Valor_Final` = valor del fondo al 31 de diciembre 2026\n- `Valor_Inicial` = valor del fondo al 1 de enero 2022\n- `n` = número de años (5 años)\n\n### Rendimientos históricos 2026 por multifondo (promedio RAIS)\n\n| Perfil | Rendimiento Anual | Volatilidad | RAIS Líder |\n|--------|-------------------|-------------|------------|\n| **Conservador** | 6,2% | 3,1% | Protección |\n| **Moderado** | 8,2% | 8,5% | Porvenir |\n| **Mayor Riesgo** | 10,5% | 14,2% | Colfondos |\n\n**Fuente:** Superfinanciera - Rentabilidad fondos de pensiones 2026\n\n### Proyección a largo plazo\n\n**Saldo futuro (10 años):**\n\n```\nSaldo_Futuro = Saldo_Actual × (1 + Rendimiento_Anual)^10\n```\n\nEjemplo: $5.000.000 con 8,2% anual en 10 años = $11.151.432\n\n### Selección de fondo recomendado por edad\n\n- **18-35 años:** Mayor riesgo (horizonte largo, recuperación ante volatilidad)\n- **36-50 años:** Moderado (balance riesgo-rentabilidad)\n- **51+ años:** Conservador (protección patrimonio próximo a jubilación)\n\n### Ventana de traslado\n\nSegún **Decreto 2955/2015** (Superfinanciera):\n- Ventana anual: del 1 de diciembre al 31 de enero\n- Sin comisión por cambio de RAIS\n- Traslados frecuentes (>2 al año) generan análisis de comportamiento especulativo\n\n## Ejemplo práctico\n\n**Situación:** Empleado 42 años, perfil moderado, $8.500.000 acumulados en Protección.\n\n1. Edad sugiere moderado ✓\n2. Rendimiento moderado promedio: 8,2% anual\n3. Mejor RAIS en moderado: Porvenir (8,5% vs 8,1% Protección)\n4. Proyección 10 años: $8.500.000 × (1,082)^10 = $18.993.156\n5. Diferencia: Porvenir +0,4% anual = ~$320.000 adicionales en 10 años\n6. Acción: Evaluar traslado a Porvenir en próxima ventana (dic 2026-ene 2027)\n\n## Limitaciones y consideraciones\n\n- **Rentabilidad pasada no garantiza futura:** Datos 2022-2026 reflejan ciclo económico específico (post-pandemia, inflación, tasas de interés).\n- **Costos y comisiones:** Calculadora no descuenta comisión RAIS (0,5-1,2% según administradora) ni prima de seguros.\n- **Cambios de ley:** Reforma pensional 2023 (Ley 1955) puede modificar límites de inversión o estructuras de multifondos.\n- **Volatilidad no incluida:** Solo compara rendimiento promedio, no riesgo ajustado (Sharpe, Sortino).\n- **Horizontes cortos:** Traslados reiterados pueden penalizarte por análisis de especulación.",
+  "faq": [
+    {
+      "question": "¿Cuándo puedo cambiar de RAIS sin pagar comisión?",
+      "answer": "La ventana de traslado sin comisión es del **1 de diciembre al 31 de enero** de cada año, según Decreto 2955/2015. Fuera de esta ventana, la RAIS cobra comisión (típicamente 1-2% del saldo). Consulta con tu administradora la comisión exacta."
+    },
+    {
+      "question": "¿Qué es mejor: mayor riesgo para jubilación lejana o moderado?",
+      "answer": "Depende de tu tolerancia psicológica al riesgo. Económicamente, con **horizonte >20 años**, mayor riesgo genera ~2-3% anual adicional. Pero requiere aguantar caídas de 20-30% en mercados bajistas. Moderado es compromiso: 8-9% anual con volatilidad menor."
+    },
+    {
+      "question": "¿Las comisiones RAIS reducen el rendimiento neto que me muestran?",
+      "answer": "**No:** Los rendimientos históricos de Superfinanciera **ya incluyen comisiones y seguros descontados**. El 8,2% es lo que recibiste neto. Hay comisión adicional por **traslado** (1-2% del saldo) solo si cambias fuera de ventana."
+    },
+    {
+      "question": "¿Porvenir es siempre mejor que Protección en moderado?",
+      "answer": "En 2022-2026, Porvenir lidera (8,5% vs 8,1%). Pero rankings varían por ciclos: hace 5 años Colfondos lideraba. Consulta rentabilidad **últimos 3 años** (ciclos económicos actuales) en Superfinanciera, no solo histórica 5 años."
+    },
+    {
+      "question": "¿Qué pasa si cambio de fondo pero me quedo en la misma RAIS?",
+      "answer": "**Sin comisión** en cualquier momento. El Decreto 2955 solo regula cambios **entre RAIS** (inter-administrador). Cambiar de conservador a moderado dentro de Porvenir es gratis y automático."
+    },
+    {
+      "question": "¿Cómo se ajusta el fondo recomendado si estoy cerca de jubilación?",
+      "answer": "A partir de **55 años** se recomienda migrar a conservador, independientemente de rentabilidad. Razón: proteger patrimonio acumulado en últimos 10-15 años antes de retiro. Volatilidad de mayor riesgo puede afectar tu pensión inicial gravemente."
+    },
+    {
+      "question": "¿Puedo hacer traslados sin pasar por tesorería o banco?",
+      "answer": "Sí. En ventana de traslado (dic-ene), dirígete a la nueva RAIS con cédula y solicitud firmada. El **proceso es automático entre administradoras**: la RAIS que recibes autoriza el traslado directo sin intermediarios. Toma 5-10 días hábiles."
+    },
+    {
+      "question": "¿La proyección a 10 años es realista?",
+      "answer": "Es una **estimación lineal** asumiendo rendimiento constante. Realidad: mercados tienen ciclos (crisis 2020, rebote 2021-2022, desaceleración 2024-2026). Proyección es referencia, no garantía. Para mayor certeza, usa **análisis de Montecarlo** con volatilidad histórica."
+    },
+    {
+      "question": "¿Qué fondos ofrece cada RAIS?",
+      "answer": "Todas las RAIS obligatorias ofrecen **conservador, moderado y mayor riesgo** desde 2014. Antes existía fondo generacional (edad). Ahora puedes elegir libremente. Old Mutual es más pequeña; Porvenir, Protección y Colfondos tienen ~95% del mercado."
+    },
+    {
+      "question": "¿Debo cambiar a Porvenir si estoy en Protección y pierdo 0,4% anual?",
+      "answer": "No automáticamente. 0,4% en 10 años suma ~$320.000 (sobre $8.500.000), pero: (1) comisión traslado cuesta $85.000-170.000; (2) Protección puede mejorar en próximo ciclo; (3) servicio/atención importa. Evalúa costo-beneficio y confianza en administradora."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Superfinanciera - Rentabilidad de fondos de pensiones obligatorias",
+      "url": "https://www.superfinanciera.gov.co/inicio/informes-y-estadisticas/estadisticas/fondos-pensiones",
+      "publisher": "Superintendencia Financiera de Colombia",
+      "date": "2026"
+    },
+    {
+      "name": "Decreto 2955 de 2015 - Sistema General de Pensiones",
+      "url": "https://www.mincit.gov.co/normatividad/decretos/2015",
+      "publisher": "Ministerio del Trabajo, Colombia",
+      "date": "2015"
+    },
+    {
+      "name": "DIAN - Descuentos tributarios pensión obligatoria",
+      "url": "https://www.dian.gov.co/impuestos/personas/impuesto-renta",
+      "publisher": "Dirección de Impuestos y Aduanas Nacionales",
+      "date": "2026"
+    },
+    {
+      "name": "Colpensiones - Información afiliados pensión obligatoria",
+      "url": "https://www.colpensiones.gov.co",
+      "publisher": "Colpensiones",
+      "date": "2026"
+    },
+    {
+      "name": "Reforma Pensional 2023 - Ley 1955 de 2023",
+      "url": "https://www.mincit.gov.co/normatividad/leyes/2023",
+      "publisher": "Ministerio del Trabajo, Colombia",
+      "date": "2023"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Superfinanciera - Base de datos rentabilidad RAIS",
+    "sourceUrl": "https://www.superfinanciera.gov.co/inicio/informes-y-estadisticas",
+    "updateType": "manual",
+    "notes": "Rendimientos históricos 2022-2026 actualizados anualmente al cierre de ejercicio (31 dic). Ventana de traslado: verificar fechas exactas con RAIS cada año. Nuevas RAIS o multifondos se agregan según regulación Superfinanciera."
+  },
+  "lastReviewed": "2026-04-28"
+}

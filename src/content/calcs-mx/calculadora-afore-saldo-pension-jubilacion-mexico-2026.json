@@ -1,0 +1,284 @@
+{
+  "slug": "calculadora-afore-saldo-pension-jubilacion-mexico-2026",
+  "title": "Calculadora AFORE Pensión 2026 | Saldo Proyectado México",
+  "h1": "Calcula tu saldo AFORE y pensión proyectada",
+  "description": "Estima el saldo de tu AFORE (RCV, vivienda, voluntarias) y pensión mensual en retiro. Vigente Ley 97 IMSS 2026.",
+  "category": "finanzas",
+  "audience": "MX",
+  "icon": "🏦",
+  "formulaId": "afore-saldo-pension-jubilacion-mexico-2026",
+  "intro": "Calcula el saldo proyectado de tu cuenta AFORE (Administradora de Fondos para el Retiro) considerando las tres subcuentas: Retiro, Cesantía y Vejez (RCV), Vivienda e inversiones voluntarias. Estima tu pensión mensual esperada al cumplir la edad de retiro bajo la Ley 97 del IMSS. Incluye análisis de modalidad de retiro (pensión vitalicia vs fondo de pensión).",
+  "keyTakeaway": "Con $250,000 ahorrados a los 35 años, retirándote a 65 con rendimiento promedio 5% anual, recibirías aprox. $12,500–$15,000 MXN/mes de pensión AFORE en 2026.",
+  "useCases": [
+    "Trabajador privado IMSS: proyectar saldo AFORE al retiro obligatorio (65 años)",
+    "Cesantía en edad avanzada: calcular pensión a partir de 60 años si cumple 1,250 semanas",
+    "Contribuyente voluntario: estimar aporte mensual para alcanzar saldo objetivo",
+    "Cambio de AFORE: comparar comisiones y rendimientos históricos entre administradoras",
+    "Pensionado: validar cálculo de pensión vitalicia vs retiro por fondo fijo",
+    "Trabajador independiente: evaluar si aplica Seguro de Invalidez y Vida (SIV)"
+  ],
+  "fields": [
+    {
+      "id": "edad_actual",
+      "label": "Edad actual (años)",
+      "type": "number",
+      "min": 18,
+      "max": 70,
+      "step": 1,
+      "placeholder": "35",
+      "helperText": "Edad actual en años cumplidos"
+    },
+    {
+      "id": "edad_retiro",
+      "label": "Edad de retiro (años)",
+      "type": "select",
+      "options": [
+        {
+          "value": 60,
+          "label": "60 años (cesantía; requiere 1,250 semanas)"
+        },
+        {
+          "value": 62,
+          "label": "62 años (anticipado; requiere 1,300 semanas)"
+        },
+        {
+          "value": 65,
+          "label": "65 años (vejez obligatoria)"
+        }
+      ],
+      "helperText": "Conforme a Ley 97 IMSS: mínimo 1,250 semanas cotizadas"
+    },
+    {
+      "id": "salario_mensual_actual",
+      "label": "Salario mensual actual ($)",
+      "type": "number",
+      "min": 248.93,
+      "step": 100,
+      "placeholder": "15000",
+      "helperText": "Salario bruto mensual en pesos mexicanos 2026"
+    },
+    {
+      "id": "semanas_cotizadas",
+      "label": "Semanas cotizadas acumuladas",
+      "type": "number",
+      "min": 0,
+      "max": 3000,
+      "step": 1,
+      "placeholder": "500",
+      "helperText": "Total de semanas de cotización al IMSS hasta hoy"
+    },
+    {
+      "id": "saldo_actual_afore",
+      "label": "Saldo AFORE actual ($)",
+      "type": "number",
+      "min": 0,
+      "step": 1000,
+      "placeholder": "250000",
+      "helperText": "Saldo total de todas las subcuentas (RCV + vivienda + voluntarias)"
+    },
+    {
+      "id": "saldo_vivienda",
+      "label": "Saldo subcuenta INFONAVIT ($)",
+      "type": "number",
+      "min": 0,
+      "step": 1000,
+      "placeholder": "50000",
+      "helperText": "Saldo separado en subcuenta de vivienda (si aplica)"
+    },
+    {
+      "id": "aporte_voluntario_mensual",
+      "label": "Aporte voluntario mensual ($)",
+      "type": "number",
+      "min": 0,
+      "step": 100,
+      "placeholder": "0",
+      "helperText": "Contribución adicional voluntaria mensual (opcional)"
+    },
+    {
+      "id": "rendimiento_anual_esperado",
+      "label": "Rendimiento anual esperado (%)",
+      "type": "number",
+      "min": 0,
+      "max": 12,
+      "step": 0.1,
+      "placeholder": "5.0",
+      "helperText": "Rendimiento histórico AFORE 2026: 4–7% anual aprox."
+    },
+    {
+      "id": "inflacion_anual",
+      "label": "Inflación anual esperada (%)",
+      "type": "number",
+      "min": 0,
+      "max": 8,
+      "step": 0.1,
+      "placeholder": "3.5",
+      "helperText": "Meta Banxico 2026: 3%–3.5% anual"
+    },
+    {
+      "id": "afore_comision",
+      "label": "Comisión AFORE anual (%)",
+      "type": "number",
+      "min": 0.5,
+      "max": 2.5,
+      "step": 0.1,
+      "placeholder": "1.2",
+      "helperText": "Comisión anual + seguros de la administradora (rango SAT: 0.65%–2.0%)"
+    },
+    {
+      "id": "aplicar_siv",
+      "label": "¿Cotiza Seguro Invalidez y Vida (SIV)?",
+      "type": "select",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí, descuentan SIV"
+        },
+        {
+          "value": "no",
+          "label": "No, no aplica"
+        }
+      ],
+      "helperText": "SIV se descuenta (~0.625%) en cotización obrero-patronal"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "saldo_proyectado_retiro",
+      "label": "Saldo AFORE proyectado al retiro",
+      "type": "currency",
+      "description": "Saldo total estimado (RCV + vivienda + voluntarias) a edad de retiro"
+    },
+    {
+      "id": "semanas_faltantes",
+      "label": "Semanas para alcanzar 1,250 (mínimo)",
+      "type": "number",
+      "description": "Semanas faltantes si aún no reúne requisito de retiro anticipado"
+    },
+    {
+      "id": "anos_laborales_restantes",
+      "label": "Años hasta edad de retiro",
+      "type": "number",
+      "description": "Período de acumulación y crecimiento del saldo"
+    },
+    {
+      "id": "pension_mensual_vitalicia",
+      "label": "Pensión mensual (modalidad renta vitalicia)",
+      "type": "currency",
+      "description": "Pensión fija de por vida contratada con aseguradora"
+    },
+    {
+      "id": "pension_mensual_fondo",
+      "label": "Pensión mensual (retiro programado del fondo)",
+      "type": "currency",
+      "description": "Retiro periódico según saldo y esperanza de vida (CONSAR)"
+    },
+    {
+      "id": "tasa_reemplazo",
+      "label": "Tasa de reemplazo (%)",
+      "type": "percentage",
+      "description": "% de pensión mensual vs salario actual (meta mínima 40%)"
+    },
+    {
+      "id": "contribucion_total_estimada",
+      "label": "Contribución obrero-patronal acumulada",
+      "type": "currency",
+      "description": "Aporte obligatorio (patrón + obrero) desde hoy hasta retiro"
+    },
+    {
+      "id": "diferencia_ley_97_vs_ley_73",
+      "label": "Diferencia estimada (Ley 97 vs Ley 73)",
+      "type": "currency",
+      "description": "Ventaja o desventaja de estar bajo Ley 97 vs anterior (si aplica)"
+    },
+    {
+      "id": "saldo_herencia_esperada",
+      "label": "Saldo esperado para herederos",
+      "type": "currency",
+      "description": "Saldo remanente (fondo) disponible tras muerte del pensionado"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa calculadora estima el **saldo AFORE** proyectado a la edad de retiro aplicando rendimientos anuales, comisiones y aportes voluntarios. Luego calcula dos **modalidades de pensión**: renta vitalicia (aseguradora) y retiro programado (fondo propio).\n\n### Fórmula base de acumulación\n\n```\nSaldo_proyectado = Saldo_actual × (1 + r_neto)^años + Aportes_anuales × [((1 + r_neto)^años - 1) / r_neto]\n\ndonde:\n  r_neto = (rendimiento_anual - comisión_anual) / 100\n```\n\n**Aportes anuales** incluyen:\n- **Obrero** (trabajador): 1.125% salario\n- **Patronal** (patrón): 5.15% salario\n- **SIV** (si aplica): 0.625% salario\n- **Voluntario**: aporte mensual × 12\n\n### Pensión vitalicia (renta asegurada)\n\nLa aseguradora calcula con factores CONSAR 2026:\n\n```\nPensión_vitalicia = Saldo_proyectado / Factor_CONSAR(edad_retiro, sexo)\n```\n\nFactor CONSAR 2026 aprox.:\n- Edad 60: factor 240–260 (varía por sexo/tasas)\n- Edad 65: factor 200–220\n- Edad 70: factor 160–180\n\n### Retiro programado (fondo)\n\n```\nPensión_programada = Saldo_proyectado / Meses_esperanza_vida\n               ≈ Saldo_proyectado / 240–300 (según edad/INEGI)\n```\n\n### Tasa de reemplazo\n\n```\nTasa_reemplazo (%) = (Pensión_mensual / Salario_actual) × 100\n```\n\nOBJETIVO SAT: mínimo 40% para adecuada jubilación.\n\n### Tabla comparativa: Ley 97 vs Ley 73\n\n| Concepto | Ley 97 (2026) | Ley 73 (anterior) |\n|----------|---------------|------------------|\n| **Administración** | AFORE privada | IMSS directo |\n| **Rentabilidad** | Sujeta a mercado (4–7%) | Garantizada 2% |\n| **Comisión anual** | 0.65%–2.0% | No hay comisión |\n| **Flexibilidad retiro** | Sí (60/62/65) | No (fija) |\n| **Herencia** | Saldo remanente | No hay |\n| **Pensión estimada** | Variable (mayor si rendimientos altos) | Fija (menor) |\n\n### Ejemplo numérico 2026\n\n**Inputs:**\n- Edad actual: 35 años\n- Edad retiro: 65 años (30 años de acumulación)\n- Salario actual: $15,000 MXN/mes\n- Saldo AFORE hoy: $250,000\n- Rendimiento esperado: 5% anual\n- Comisión AFORE: 1.2% anual\n- Aporte voluntario: $500/mes\n\n**Cálculos:**\n\n1. **Rendimiento neto:** 5% − 1.2% = 3.8% anual\n\n2. **Aporte anual obligatorio:**\n   - Obrero: $15,000 × 1.125% × 12 = $2,025/año\n   - Patronal: $15,000 × 5.15% × 12 = $9,270/año\n   - SIV: $15,000 × 0.625% × 12 = $1,125/año\n   - **Total obligatorio:** $12,420/año\n   - **Voluntario:** $500 × 12 = $6,000/año\n   - **Total:** $18,420/año\n\n3. **Saldo a los 65 años:**\n   ```\n   Saldo = $250,000 × (1.038)^30 + $18,420 × [((1.038)^30 − 1) / 0.038]\n         = $250,000 × 3.12 + $18,420 × 78.9\n         = $780,000 + $1,453,000\n         = $2,233,000 MXN (aproximado)\n   ```\n\n4. **Pensión vitalicia (factor CONSAR 65 años ≈ 210):**\n   ```\n   Pensión = $2,233,000 / 210 ≈ $10,638/mes\n   ```\n\n5. **Pensión retiro programado (240 meses esperanza):**\n   ```\n   Pensión = $2,233,000 / 240 ≈ $9,304/mes\n   ```\n\n6. **Tasa reemplazo:**\n   ```\n   Tasa = ($10,638 / $15,000) × 100 = 70.9% ✓ (excelente, >40%)\n   ```\n\n### Limitaciones y supuestos\n\n- **Inflación salarial:** Se asume salario actual constante; inflaciones altas pueden reducir poder adquisitivo de pensión\n- **Cambio de AFORE:** Cambios de administradora generan pérdida ~2% por comisiones de traspaso\n- **Invalidez/Muerte:** SIV financia pensiones a beneficiarios; saldo puede quedar reducido\n- **Reforma legislativa:** Cambios a % de cotización o edad de retiro alteran cálculos\n- **Volatilidad de mercado:** Rendimientos reales pueden diferir; crisis económicas lo reducen\n- **Longevidad:** Si sobrevives >90 años, pensión programada se agota (renta vitalicia no)\n- **Deudor alimentario:** Embargo puede afectar disponibilidad de saldo\n- **No incluye:** Seguro de vida IMSS, prestaciones complementarias, pensión garantizada\n\n## Fórmula completa (TypeScript en código formula_ts)\n\nVéase implementación en sección código TypeScript.\n",
+  "faq": [
+    {
+      "q": "¿Cuál es el saldo mínimo AFORE para retirarse?",
+      "a": "No hay saldo mínimo obligatorio, pero debes tener ≥1,250 semanas cotizadas (25 años) para retiro a 65 años; ≥1,300 semanas para retiro anticipado a 60 años. Si el saldo es muy bajo, se reconoce una **pensión garantizada** (mínimo legal IMSS 2026 ≈ $3,100 MXN/mes)."
+    },
+    {
+      "q": "¿Qué diferencia hay entre renta vitalicia y retiro programado?",
+      "a": "**Renta vitalicia:** Aseguradora te paga pensión fija de por vida; no heredas saldo, pero nunca se agota. **Retiro programado:** Tú controlas el saldo; retiras lo que necesitas cada mes; si se agota, tienes derecho a pensión garantizada. Renta vitalicia es más segura; retiro programado más flexible."
+    },
+    {
+      "q": "¿Cómo afecta cambiar de AFORE mi saldo?",
+      "a": "Al cambiar de AFORE (traspaso) hay comisión de salida (~1–1.5%) y pérdida de saldo. La CONSAR regula que los traslados sean sin pérdida del patrimonio, pero gastos de comisión y seguros pueden reducir ~2% total. Cambiar es útil si la nueva AFORE tiene comisión mucho más baja y buenos rendimientos históricos."
+    },
+    {
+      "q": "¿Se hereda el saldo AFORE si fallezco?",
+      "a": "Sí, si aún no te has pensionado. Los beneficiarios designados heredan el saldo completo. Si ya recibes **renta vitalicia**, la herencia depende del contrato (hay opciones con reversión a viuda/hijos); si recibes **retiro programado**, el saldo remanente se hereda. Con pensión garantizada, no hay herencia de saldo."
+    },
+    {
+      "q": "¿Qué rendimiento histórico tiene mi AFORE en 2026?",
+      "a": "El rendimiento neto (después de comisiones) de AFORE varía 4–7% anual según el tipo de fondo (conservador/moderado/agresivo) y desempeño de bolsa. Consulta el **Boletín de Rendimientos CONSAR** (https://www.consar.gob.mx) para tu administradora. Promedio 2020–2026: ~5.2% anual."
+    },
+    {
+      "q": "¿Puedo retirar dinero de mi AFORE antes de jubilarme?",
+      "a": "Solo en casos excepcionales: (1) desempleo ≥3 meses, retiras hasta 90 días de salario; (2) adquisición de vivienda (subcuenta vivienda INFONAVIT); (3) enfermedad catastrófica (trámite IMSS). Retiro anticipado sin causa legal penaliza tu pensión futura. NO hay retiro voluntario de RCV antes de retiro obligatorio."
+    },
+    {
+      "q": "¿Cuál es la 'pensión garantizada' si mi AFORE es muy baja?",
+      "a": "Si al retirarte tu saldo AFORE es insuficiente para contratar renta vitalicia, el IMSS te proporciona **pensión garantizada** (mínimo legal). En 2026, aprox. $3,100–$3,300 MXN/mes según categoría. Es derecho si cumples 1,250 semanas cotizadas."
+    },
+    {
+      "q": "¿Cómo sé cuántas semanas llevo cotizadas?",
+      "a": "Consulta en **Mi Cuenta IMSS** (www.imss.gob.mx) o solicita tu **Estado de Cuenta IMSS** en cualña delegación. También recibes informe anual por correo si diste autorización. Cada semana trabajada (dentro o fuera de plazo pago) se suma; recuerdos parciales no cuentan."
+    },
+    {
+      "q": "¿Qué sucede si cambio de trabajo frecuentemente?",
+      "a": "Cada cambio de trabajo es un nuevo registro ante IMSS, pero tu **curp/rfc** centraliza todas tus semanas. Los cambios **no afectan acumulación de semanas**; solo garantiza que cada patrón aporte a tu AFORE. Sí hay riesgo de lagunas: si dejas de cotizar >4 años, pierdes derechos a SIV (invalidez/vida) pero NO semanas acumuladas."
+    },
+    {
+      "q": "¿Cómo se actualiza esta calculadora?",
+      "a": "Anualmente en abril (post-reformas fiscales/IMSS). Se actualizan: % cotización IMSS/SIV, comisiones SAT-reguladas, factores CONSAR, UMA (unidad de medida), meta Banxico inflación. Próxima revisión: abril 2027 o si hay decreto legislativo."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SAT - AFORE y Pensión Contributiva",
+      "url": "https://www.sat.gob.mx/aplicacion/operaciones/25410/afore-administradoras-de-fondos-para-el-retiro",
+      "publisher": "SAT (Servicio de Administración Tributaria)",
+      "date": "2026"
+    },
+    {
+      "name": "IMSS - Ley 97 y Régimen de Seguridad Social",
+      "url": "https://www.imss.gob.mx/trabajadores/afiliacion/ley97",
+      "publisher": "IMSS (Instituto Mexicano del Seguro Social)",
+      "date": "2026"
+    },
+    {
+      "name": "CONSAR - Rendimientos y Factores de Retiro 2026",
+      "url": "https://www.consar.gob.mx/rinde_cuentas/boletines_html/RendimientoPorAdministradora.html",
+      "publisher": "CONSAR (Comisión Nacional del Sistema de Ahorro para el Retiro)",
+      "date": "2026"
+    },
+    {
+      "name": "Banxico - Meta Inflación 2026",
+      "url": "https://www.banxico.org.mx/publicaciones-y-prensa/objetivo-de-inflacion",
+      "publisher": "Banco de México",
+      "date": "2026"
+    },
+    {
+      "name": "INEGI - Esperanza de Vida al Nacer 2026",
+      "url": "https://www.inegi.org.mx/temas/esperanzadevida/",
+      "publisher": "INEGI (Instituto Nacional de Estadística y Geografía)",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SAT, IMSS, CONSAR, Banxico",
+    "sourceUrl": "https://www.consar.gob.mx/",
+    "updateType": "manual",
+    "notes": "% de cotización IMSS (obrero 1.125%, patrón 5.15%, SIV 0.625%), comisiones AFORE SAT-reguladas, factores CONSAR, meta inflación Banxico, UMA, pensión garantizada IMSS"
+  },
+  "lastReviewed": "2026-04-28"
+}

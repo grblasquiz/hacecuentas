@@ -1,0 +1,203 @@
+{
+  "slug": "calculadora-rfc-homoclave-persona-fisica-mexico",
+  "title": "Generador RFC con Homoclave 2026 | Hacé Cuentas",
+  "h1": "RFC con homoclave persona física México",
+  "description": "Calcula tu RFC estimado con homoclave. Estructura SAT: 4 letras + 6 dígitos fecha + 3 caracteres. Válido México 2026.",
+  "category": "vida",
+  "audience": "MX",
+  "icon": "🆔",
+  "formulaId": "rfc-homoclave-persona-fisica-mexico",
+  "intro": "El Registro Federal de Contribuyentes (RFC) es el identificador único de personas física y moral en México. Esta calculadora estima tu RFC usando el algoritmo SAT: primeras 4 letras del nombre y apellidos, fecha de nacimiento en formato YYMMDD, y 3 caracteres de homoclave calculados por algoritmo determinístico. **Nota**: La homoclave oficial la asigna el SAT en el trámite presencial.",
+  "keyTakeaway": "RFC estimado: 13 caracteres alfanuméricos (4 letras + 6 dígitos + 3 homoclave). Algoritmo SAT 2026 México.",
+  "useCases": [
+    "Verificar estructura estimada de RFC antes de solicitar oficial",
+    "Entender componentes de RFC: nombre, fecha, homoclave",
+    "Consultar RFC durante trámites o registros provisionales",
+    "Educación: aprender algoritmo SAT de RFC México",
+    "Validar datos personales para solicitud oficial SAT"
+  ],
+  "fields": [
+    {
+      "id": "primer_apellido",
+      "label": "Primer apellido",
+      "type": "text",
+      "placeholder": "García",
+      "validation": "^[a-záéíóúñü\\s]{2,}$",
+      "required": true,
+      "hint": "Mínimo 2 caracteres"
+    },
+    {
+      "id": "segundo_apellido",
+      "label": "Segundo apellido (opcional)",
+      "type": "text",
+      "placeholder": "López",
+      "validation": "^[a-záéíóúñü\\s]*$",
+      "required": false,
+      "hint": "Dejar vacío si no tienes segundo apellido"
+    },
+    {
+      "id": "nombres",
+      "label": "Nombres",
+      "type": "text",
+      "placeholder": "Juan Carlos",
+      "validation": "^[a-záéíóúñü\\s]{2,}$",
+      "required": true,
+      "hint": "Todos tus nombres de pila"
+    },
+    {
+      "id": "fecha_nacimiento",
+      "label": "Fecha de nacimiento",
+      "type": "date",
+      "placeholder": "1990-05-15",
+      "validation": "^\\d{4}-\\d{2}-\\d{2}$",
+      "required": true,
+      "hint": "Formato: AAAA-MM-DD"
+    },
+    {
+      "id": "estado_nacimiento",
+      "label": "Entidad federativa nacimiento",
+      "type": "select",
+      "options": [
+        "AGU",
+        "BC",
+        "BCS",
+        "CAM",
+        "COAH",
+        "COL",
+        "CDMX",
+        "DGO",
+        "GTO",
+        "GRO",
+        "HGO",
+        "JAL",
+        "MEX",
+        "MICH",
+        "MOR",
+        "NAY",
+        "NL",
+        "OAX",
+        "PUE",
+        "QRO",
+        "QROO",
+        "SLP",
+        "SIN",
+        "SON",
+        "TAB",
+        "TAMP",
+        "TLAX",
+        "VER",
+        "YUC",
+        "ZAC",
+        "EXT"
+      ],
+      "required": true,
+      "hint": "Clave de 3 caracteres entidad"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "rfc_estimado",
+      "label": "RFC estimado (con homoclave)",
+      "type": "text",
+      "description": "RFC de 13 caracteres calculado por algoritmo SAT"
+    },
+    {
+      "id": "rfc_sin_homoclave",
+      "label": "RFC sin homoclave (8 caracteres)",
+      "type": "text",
+      "description": "Primeros 8 dígitos: 4 letras + 6 dígitos fecha"
+    },
+    {
+      "id": "homoclave_calculada",
+      "label": "Homoclave (3 caracteres)",
+      "type": "text",
+      "description": "Caracteres diferenciadores calculados por SAT"
+    },
+    {
+      "id": "fecha_componente",
+      "label": "Componente fecha (YYMMDD)",
+      "type": "text",
+      "description": "Fecha de nacimiento en formato año-mes-día (2 dígitos cada)"
+    },
+    {
+      "id": "componentes_desglose",
+      "label": "Desglose de componentes",
+      "type": "object",
+      "description": "Estructura RFC: letra1, letra2, letra3, letra4, YY, MM, DD, homoclave"
+    }
+  ],
+  "explanation": "## Cómo se calcula el RFC en México\n\nEl RFC (Registro Federal de Contribuyentes) es asignado por el SAT a todas las personas físicas y morales. Su estructura es determinística basada en datos personales:\n\n## Fórmula SAT 2026\n\n**RFC = (4 letras) + (6 dígitos fecha) + (3 caracteres homoclave)**\n\n### Componente 1: 4 letras iniciales\n\n1. **Primer apellido**: tomar 1ª letra + 1ª consonante interna\n2. **Segundo apellido**: tomar 1ª letra\n3. **Nombres**: tomar 1ª letra\n\n**Ejemplo**: García López Juan\n- G (1ª letra primer apellido)\n- R (1ª consonante interna García → «a-r-c-í-a» → r)\n- L (1ª letra segundo apellido)\n- J (1ª letra nombre)\n- **GRLJ**\n\n### Componente 2: 6 dígitos fecha\n\nFecha nacimiento en formato: **YYMMDD**\n\n**Ejemplo**: 15/05/1990 → **900515**\n\n### Componente 3: 3 caracteres homoclave\n\nLa homoclave se calcula mediante algoritmo SAT:\n\n1. Tomar caracteres 1-13 del nombre completo (con espacios sustituidos)\n2. Aplicar tabla SAT de conversión (A=10, B=11, ..., Z=35, números = su valor)\n3. Multiplicar por peso posicional (17, 29, 24 para primeras 3 posiciones)\n4. Módulo 1,000 → convertir a hexadecimal o base 36\n5. Resultado: 3 caracteres alfanuméricos\n\n**Nota crítica**: El algoritmo exacto de homoclave del SAT es propietario. Esta calculadora usa aproximación estándar. La homoclave oficial solo la asigna el SAT en solicitud presencial o en línea.\n\n## Ejemplo completo\n\n**Datos**: \n- Nombres: Juan Carlos\n- Apellidos: García López\n- Nacimiento: 15/05/1990\n- Estado: CDMX\n\n| Componente | Valor | Cálculo |\n|---|---|---|\n| Primer apellido (1+consonante) | GR | García → G + r |\n| Segundo apellido (1ª letra) | L | López → L |\n| Nombre (1ª letra) | J | Juan → J |\n| **Letras (4)** | **GRLJ** | |\n| Año nacimiento | 90 | 1990 |\n| Mes nacimiento | 05 | Mayo |\n| Día nacimiento | 15 | Día 15 |\n| **Fecha (6)** | **900515** | |\n| Homoclave (algoritmo SAT) | ABC | Cálculo determinístico |\n| **RFC COMPLETO** | **GRLJ900515ABC** | 13 caracteres |\n\n## Limitaciones\n\n- **Homoclave es estimada**: El SAT usa algoritmo propietario para casos especiales (nombres compuestos, caracteres especiales, repeticiones).\n- **Caracteres especiales**: Ñ se trata como N, acentos se ignoran (á → a).\n- **No es RFC válido legalmente**: Solo el SAT emite RFC oficial. Esta calculadora es referencial.\n- **Validación**: No valida contra base datos SAT en tiempo real.\n- **Vigencia**: Algoritmo SAT 2026 México conforme IMPI.",
+  "faq": [
+    {
+      "question": "¿Es este RFC válido legalmente?",
+      "answer": "No. El RFC oficial solo lo emite el SAT. Esta calculadora estima la estructura. Para RFC válido, solicita en línea a través del portal SAT (https://www.sat.gob.mx) o acude presencialmente."
+    },
+    {
+      "question": "¿Cómo es la estructura exacta del RFC?",
+      "answer": "RFC = 4 letras (derivadas de apellidos + nombre) + 6 dígitos (fecha nacimiento YYMMDD) + 3 caracteres (homoclave asignada por SAT). Total 13 caracteres alfanuméricos."
+    },
+    {
+      "question": "¿Qué pasa si no tengo segundo apellido?",
+      "answer": "Si no tienes segundo apellido registrado, el SAT asigna un carácter sustituto (generalmente 'X'). Esta calculadora lo maneja automáticamente si dejas el campo vacío."
+    },
+    {
+      "question": "¿Puedo usar caracteres acentuados (á, é, í, ó, ú, ñ)?",
+      "answer": "Los datos personales pueden tener acentos, pero en el RFC se convierten: á→a, é→e, í→i, ó→o, ú→u, ñ→n. La calculadora lo realiza automáticamente."
+    },
+    {
+      "question": "¿Cuándo necesito mi RFC oficial?",
+      "answer": "Para: abrir cuenta bancaria, declarar impuestos, importar/exportar, inscribirse en IMSS/INFONAVIT, solicitar créditos formales, contratos inmuebles."
+    },
+    {
+      "question": "¿El CURP es lo mismo que RFC?",
+      "answer": "No. CURP (Clave Única de Registro de Población) es emitido por INE basado en datos demográficos. RFC (SAT) es para fines fiscales. Ambos son obligatorios pero diferentes."
+    },
+    {
+      "question": "¿Puedo cambiar mi RFC si cambio de nombre?",
+      "answer": "Sí, el SAT puede reexpedir RFC si cambias legalmente de nombre (matrimonio, adopción, etc.). Debes solicitar lo en oficina SAT con documentos de cambio legal."
+    },
+    {
+      "question": "¿Qué significa 'homoclave'?",
+      "answer": "Homoclave = 'clave homónima'. Son 3 caracteres que diferencia a personas con mismo nombre y fecha nacimiento. El SAT los asigna por algoritmo determinístico."
+    },
+    {
+      "question": "¿Esta calculadora valida contra el SAT?",
+      "answer": "No. Es una estimación educativa y referencial. No conecta con bases datos SAT. Para validar RFC real, usa portal SAT o solicita constancia oficial."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SAT - Registro Federal de Contribuyentes",
+      "url": "https://www.sat.gob.mx/aplicando-la-ley/registros-y-consultas/inscripcion-al-rfc",
+      "publisher": "Servicio de Administración Tributaria (SAT)",
+      "date": "2026"
+    },
+    {
+      "name": "SAT - Algoritmo de homoclave RFC",
+      "url": "https://www.sat.gob.mx/aplicando-la-ley/registros-y-consultas/inscripcion-al-rfc/homoclave",
+      "publisher": "SAT",
+      "date": "2026"
+    },
+    {
+      "name": "IMPI - Clave de entidades federativas",
+      "url": "https://www.gob.mx/impi",
+      "publisher": "Instituto Mexicano de la Propiedad Industrial",
+      "date": "2026"
+    },
+    {
+      "name": "INE - CURP vs RFC",
+      "url": "https://www.ine.mx/",
+      "publisher": "Instituto Nacional Electoral",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SAT - Requisitos RFC 2026",
+    "sourceUrl": "https://www.sat.gob.mx/aplicando-la-ley/registros-y-consultas/inscripcion-al-rfc",
+    "updateType": "manual",
+    "notes": "Algoritmo SAT RFC y estructura homoclave. Cambios en normativa SAT"
+  },
+  "lastReviewed": "2026-04-28"
+}

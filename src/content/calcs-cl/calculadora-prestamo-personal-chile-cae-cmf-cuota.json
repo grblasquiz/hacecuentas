@@ -1,0 +1,200 @@
+{
+  "slug": "calculadora-prestamo-personal-chile-cae-cmf-cuota",
+  "title": "Calculadora Préstamo Personal Chile CAE 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Préstamo Personal Chile: CAE, Cuota y Comparativa",
+  "description": "Calcula cuota mensual, intereses totales y CAE de préstamos personales Chile 2026. Compara bancos vs cooperativas. Tasa máx convencional CMF 32%.",
+  "category": "finanzas",
+  "audience": "CL",
+  "icon": "💳",
+  "formulaId": "prestamo-personal-chile-cae-cmf-cuota",
+  "intro": "En Chile, los préstamos personales de bancos, cooperativas y financieras varían significativamente en costo. La **Carga Anual Equivalente (CAE)** es la tasa real que incluye intereses, comisiones y seguros. Esta calculadora te permite simular cuotas mensuales, estimar intereses totales y comparar diferentes ofertas respecto al tope de tasa máxima convencional que fija la CMF (~32% 2026).",
+  "keyTakeaway": "Un préstamo de $10.000.000 a 60 meses con CAE 20% genera cuota de ~$238.047 y costo total de intereses de $4.282.820.",
+  "useCases": [
+    "Comparar oferta de banco vs cooperativa (Coopeuch, Caja Los Andes)",
+    "Evaluar impacto del plazo en cuota mensual y costo total",
+    "Verificar si CAE excede tope máximo convencional CMF 32%",
+    "Planificar presupuesto mensual con simulaciones",
+    "Detectar comisiones ocultas comparando CAE vs tasa nominal"
+  ],
+  "fields": [
+    {
+      "id": "monto_prestamo",
+      "label": "Monto del préstamo",
+      "unit": "$",
+      "type": "number",
+      "min": 500000,
+      "max": 100000000,
+      "step": 100000,
+      "default": 10000000,
+      "description": "Cantidad en pesos chilenos a financiar. Rango típico: $500.000 a $100.000.000"
+    },
+    {
+      "id": "plazo_meses",
+      "label": "Plazo",
+      "unit": "meses",
+      "type": "number",
+      "min": 6,
+      "max": 120,
+      "step": 1,
+      "default": 60,
+      "description": "Duración del préstamo. Rango: 6 a 120 meses"
+    },
+    {
+      "id": "cae_anual",
+      "label": "CAE (Carga Anual Equivalente)",
+      "unit": "%",
+      "type": "number",
+      "min": 3,
+      "max": 35,
+      "step": 0.1,
+      "default": 20,
+      "description": "Tasa annual equivalente que incluye interés, comisión y seguros. Rango típico bancos: 15-30%. Cooperativas: 12-22%"
+    },
+    {
+      "id": "comision_originacion",
+      "label": "Comisión de originación (opcional)",
+      "unit": "%",
+      "type": "number",
+      "min": 0,
+      "max": 10,
+      "step": 0.1,
+      "default": 0,
+      "description": "Comisión única por apertura. Típicamente 0-3%. Si está incluida en CAE, dejar en 0"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cuota_mensual",
+      "label": "Cuota mensual",
+      "unit": "$",
+      "type": "number",
+      "description": "Monto fijo a pagar cada mes"
+    },
+    {
+      "id": "total_pagado",
+      "label": "Total pagado",
+      "unit": "$",
+      "type": "number",
+      "description": "Suma de todas las cuotas mensuales + comisión originación"
+    },
+    {
+      "id": "total_interes",
+      "label": "Costo total de intereses",
+      "unit": "$",
+      "type": "number",
+      "description": "Diferencia entre total pagado y monto del préstamo (sin comisión)"
+    },
+    {
+      "id": "costo_financiero_total",
+      "label": "Costo financiero total (interés + comisión)",
+      "unit": "$",
+      "type": "number",
+      "description": "Intereses más comisión de originación"
+    },
+    {
+      "id": "cae_real",
+      "label": "CAE verificada",
+      "unit": "%",
+      "type": "number",
+      "description": "CAE ingresada para referencia y comparación"
+    },
+    {
+      "id": "excede_tasa_maxima",
+      "label": "¿Excede tasa máxima convencional CMF 32%?",
+      "unit": "Sí/No",
+      "type": "string",
+      "description": "Verifica si la CAE supera el tope legal CMF (~32% 2026)"
+    },
+    {
+      "id": "tasa_mensual",
+      "label": "Tasa mensual equivalente",
+      "unit": "%",
+      "type": "number",
+      "description": "CAE convertida a tasa mensual"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEsta calculadora utiliza la **fórmula de anualidad ordinaria** para determinar la cuota fija de un préstamo con amortización constante.\n\n### Fórmula principal\n\n**Tasa mensual:**\n```\ntasa_mensual = CAE / 100 / 12\n```\n\n**Cuota mensual (anualidad vencida):**\n```\nCuota = Monto × [tasa_mensual × (1 + tasa_mensual)^n] / [(1 + tasa_mensual)^n - 1]\n```\nDonde `n` = número de meses de plazo.\n\n**Total pagado:**\n```\nTotal pagado = Cuota × n + (Comisión originación × Monto / 100)\n```\n\n**Costo total de intereses:**\n```\nCosto intereses = Total pagado - Monto - (Comisión originación × Monto / 100)\n```\n\n**Costo financiero total:**\n```\nCosto total = Costo intereses + (Comisión originación × Monto / 100)\n```\n\n### Ejemplo práctico\n\n| Concepto | Valor |\n|----------|-------|\n| Monto préstamo | $10.000.000 |\n| Plazo | 60 meses (5 años) |\n| CAE | 20% anual |\n| Tasa mensual | 1,5309% |\n| Cuota mensual | $238.047 |\n| Total pagado | $14.282.820 |\n| Costo intereses | $4.282.820 |\n| **Veredicto** | **CAE dentro del tope CMF (20% < 32%)** |\n\n### Tope máximo convencional CMF\n\nSegún la CMF (Comisión para el Mercado Financiero) 2026, la **tasa máxima convencional** para préstamos personales es aproximadamente **32% anual**. Si tu CAE excede este valor, es señal de tasas abusivas o alertas regulatorias.\n\n### Diferencia CAE vs Tasa nominal\n\n- **Tasa nominal:** solo el interés del crédito\n- **CAE:** incluye interés + comisiones + seguros. Es la tasa **real** que pagas\n\nLa CAE siempre es ≥ a la tasa nominal.\n\n### Limitaciones\n\n- Asume cuota **fija mensual** (sistema de amortización francés)\n- No incluye seguros de desgravamen (si los hay, deben estar reflejados en CAE)\n- No considera variaciones de tasa (créditos a tasa fija vs variable)\n- Comisión de originación se aplica única vez al inicio\n- No descuenta bonificaciones de empleador ni incentivos especiales\n- Datos CMF 2026 pueden variar según institución financiera",
+  "faq": [
+    {
+      "question": "¿Qué es la CAE y por qué es importante?",
+      "answer": "La CAE (Carga Anual Equivalente) es la tasa anual que **incluye intereses, comisiones y seguros** de un préstamo. Es la métrica oficial en Chile para comparar créditos entre instituciones, ya que la tasa nominal puede ocultar costos adicionales. Siempre compara CAEs, no tasas nominales."
+    },
+    {
+      "question": "¿Cuál es la CAE típica en Chile 2026?",
+      "answer": "Bancos grandes: 15-25% CAE. Cooperativas (Coopeuch, Caja Los Andes): 12-20% CAE. Financieras: 25-35% CAE. El rango depende de tu historial crediticio, ingresos verificados y colateral (avalista)."
+    },
+    {
+      "question": "¿Qué pasa si mi CAE supera 32%?",
+      "answer": "El 32% es el tope de tasa máxima convencional según CMF 2026. CAEs superiores pueden ser legales en casos especiales (cliente de riesgo alto), pero debes cuestionarlas. Compara ofertas antes de firmar. Considera créditos con instituciones reguladas SII + CMF."
+    },
+    {
+      "question": "¿Préstamo de banco vs cooperativa?",
+      "answer": "**Bancos:** CAE 18-25%, trámite rápido (3-5 días), requisitos estrictos (Dicom limpio, línea de crédito activa). **Cooperativas:** CAE 12-20%, más flexible con empleados dependientes, trámite 1-2 semanas. Coopeuch es la cooperativa financiera más grande de Chile."
+    },
+    {
+      "question": "¿Cómo afecta el plazo a la cuota y el costo total?",
+      "answer": "A **mayor plazo**, **menor cuota mensual** pero **mayor costo total de intereses**. Ej: $10M a 20% CAE → 60 meses = $238.047/mes, costo $4,28M vs 36 meses = $335.627/mes, costo $2,08M. Negocia el plazo según tu capacidad de pago."
+    },
+    {
+      "question": "¿Qué es la comisión de originación?",
+      "answer": "Es una comisión única de apertura, típicamente 0-3% del monto. Algunos bancos la incluyen en CAE; otros la cobran aparte. Verifica en el contrato si está desagregada. Afecta el costo total pero no la cuota fija (solo suma inicial)."
+    },
+    {
+      "question": "¿Puedo prepagar sin penalidad en Chile?",
+      "answer": "Sí. Según la Ley de Protección Financiera en Chile, puedes prepagar sin penalidad. Algunos bancos aún cobran comisión de prepago (~0,5-1%). Verifica en el contrato. Prepagar reduce intereses totales significativamente."
+    },
+    {
+      "question": "¿Cómo verifico que la CAE del banco es real?",
+      "answer": "La CAE debe aparecer explícita en el **documento de Información Previa** (DIP) del banco. Compáralo con el simulador de tu entidad y esta calculadora. Si hay discrepancias >1%, consulta al servicio de atención al cliente o SII. Puedes reportar prácticas abusivas a la Superintendencia de Insolvencia y Reemprendimiento (SIRE)."
+    },
+    {
+      "question": "¿Incluye la CAE el seguro de desgravamen?",
+      "answer": "Normalmente sí. El seguro de desgravamen (que cancela el crédito si falleces) está incluido en la CAE. Verifica en el DIP si es obligatorio u opcional. Algunos bancos lo incluyen forzado; otros lo ofrecen como opcional (reducing the CAE if declined)."
+    },
+    {
+      "question": "¿Cómo se relaciona con mi RUT y Dicom?",
+      "answer": "El RUT identifica tu registro. Dicom es el sistema de deudas: si tienes morosidades, tu CAE sube (riesgo +). Solicita tu historial Dicom en www.dicom.cl (gratis 1x/año). Un historial limpio reduce CAE 2-5%. Si estás en Dicom, cooperativas pueden ser más accesibles."
+    }
+  ],
+  "sources": [
+    {
+      "name": "CMF - Tasa máxima convencional 2026",
+      "url": "https://www.cmfchile.cl/",
+      "publisher": "Comisión para el Mercado Financiero",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central de Chile - Tasas de interés",
+      "url": "https://www.bcentral.cl/",
+      "publisher": "Banco Central",
+      "date": "2026"
+    },
+    {
+      "name": "SII - Información de créditos y CAE",
+      "url": "https://www.sii.cl/",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "Coopeuch - Simulador de préstamos personales",
+      "url": "https://www.coopeuch.cl/",
+      "publisher": "Coopeuch Cooperativa de Ahorro y Crédito",
+      "date": "2026"
+    },
+    {
+      "name": "Superintendencia de Insolvencia y Reemprendimiento (SIRE)",
+      "url": "https://www.sire.gob.cl/",
+      "publisher": "Gobierno de Chile",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-28",
+    "source": "CMF - Tasa máxima convencional y regulaciones financieras Chile",
+    "sourceUrl": "https://www.cmfchile.cl/",
+    "updateType": "manual",
+    "notes": "Tope CMF 32%, rangos CAE típicos bancos 15-30%, cooperativas 12-22%. Se actualiza mensualmente según variaciones de tasas de mercado y normativas CMF."
+  },
+  "lastReviewed": "2026-04-28"
+}

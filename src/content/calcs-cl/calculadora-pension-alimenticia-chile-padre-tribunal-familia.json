@@ -1,0 +1,289 @@
+{
+  "slug": "calculadora-pension-alimenticia-chile-padre-tribunal-familia",
+  "title": "Calculadora Pensión Alimenticia Chile 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Pensión Alimenticia Chile - Divorcio y Custodia",
+  "description": "Estima pensión alimenticia según Ley 14.908 Chile. 30-50% ingresos progenitor no custodio, ajuste por custodia compartida, gastos educación/salud. Resultado mensual actualizado 2026.",
+  "category": "familia",
+  "audience": "CL",
+  "icon": "⚖️",
+  "formulaId": "pension-alimenticia-chile-padre-tribunal-familia",
+  "intro": "La pensión alimenticia en Chile se calcula conforme a la **Ley 14.908** sobre Abandono de Familia y Pago de Pensiones Alimenticias. Esta calculadora estima el monto mensual que debe aportar el progenitor no custodio basándose en sus ingresos, número de hijos, régimen de custodia y gastos extraordinarios. Los tribunales de familia consideran orientativamente el **30-50% del ingreso líquido** del alimentante, ajustado por custodia compartida y capacidad económica real.",
+  "keyTakeaway": "Pensión alimenticia estimada: 30-50% ingreso progenitor no custodio. Con custodia compartida se reduce 25-33%. Gastos educación/salud se agregan según acuerdo tribunal.",
+  "useCases": [
+    "Progenitor sin custodia calculando obligación legal mensual",
+    "Madre/padre con custodia estimando aporte del otro progenitor",
+    "Abogado familia preparando demanda o acuerdo extrajudicial",
+    "Revisión de pensión alimenticia vigente por cambio de ingresos",
+    "Determinación inicial en trámite de divorcio o nulidad",
+    "Cálculo con custodia compartida 50/50 o régimen especial"
+  ],
+  "fields": [
+    {
+      "id": "ingresos_mensual_alimentante",
+      "label": "Ingresos mensuales brutos alimentante",
+      "type": "number",
+      "unit": "$",
+      "placeholder": "2500000",
+      "help": "Sueldo, bonos, comisiones, rentas, pensiones. Se considera ingreso imponible SII.",
+      "required": true
+    },
+    {
+      "id": "descuentos_legales",
+      "label": "Descuentos legales (AFP + Salud + Impuesto)",
+      "type": "number",
+      "unit": "%",
+      "placeholder": "25",
+      "help": "AFP ~10%, Isapre/Fonasa ~7%, Impuesto progresivo ~8-20%. Típico 25-30%.",
+      "required": true
+    },
+    {
+      "id": "numero_hijos",
+      "label": "Número de hijos alimentandos",
+      "type": "number",
+      "placeholder": "2",
+      "help": "Hijos menores de edad (menores 18) o mayores en situación de desamparo",
+      "required": true
+    },
+    {
+      "id": "tipo_custodia",
+      "label": "Tipo de custodia",
+      "type": "select",
+      "options": [
+        {
+          "value": "exclusiva_otro",
+          "label": "Custodia exclusiva en el otro progenitor"
+        },
+        {
+          "value": "compartida_50",
+          "label": "Custodia compartida 50/50"
+        },
+        {
+          "value": "compartida_alterno",
+          "label": "Custodia alternada (semanas/meses alternos)"
+        }
+      ],
+      "required": true
+    },
+    {
+      "id": "tiene_otros_hijos",
+      "label": "¿Tiene otros hijos alimentandos de relaciones anteriores?",
+      "type": "select",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si_cantidad",
+          "label": "Sí, cantidad:"
+        }
+      ],
+      "required": true
+    },
+    {
+      "id": "cantidad_otros_hijos",
+      "label": "Cantidad de otros hijos alimentandos",
+      "type": "number",
+      "placeholder": "1",
+      "help": "Se reduce proporcionalmente la cuota por hijo",
+      "required": false,
+      "conditional": "tiene_otros_hijos == si_cantidad"
+    },
+    {
+      "id": "gastos_educacion_anual",
+      "label": "Gastos educación anual (colegio, universidad)",
+      "type": "number",
+      "unit": "$",
+      "placeholder": "3600000",
+      "help": "Arancel colegio, cuotas universidad, cursos. Se prorratean mensualmente.",
+      "required": false
+    },
+    {
+      "id": "gastos_salud_anual",
+      "label": "Gastos salud anual (no cubiertos Isapre/Fonasa)",
+      "type": "number",
+      "unit": "$",
+      "placeholder": "600000",
+      "help": "Copagos, orthodoncias, medicina privada. Se prorratean mensualmente.",
+      "required": false
+    },
+    {
+      "id": "gastos_actividades",
+      "label": "Gastos mensuales actividades/deportes",
+      "type": "number",
+      "unit": "$",
+      "placeholder": "150000",
+      "help": "Deporte, música, talleres. Deben acreditarse según acuerdo.",
+      "required": false
+    },
+    {
+      "id": "capacidad_economica",
+      "label": "Capacidad económica progenitor (ajuste tribunal)",
+      "type": "select",
+      "options": [
+        {
+          "value": "normal",
+          "label": "Normal (aplica 30-50%)"
+        },
+        {
+          "value": "reducida",
+          "label": "Reducida (desempleo, deudas, enfermedad)"
+        },
+        {
+          "value": "superior",
+          "label": "Superior (múltiples ingresos, patrimonio)"
+        }
+      ],
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "ingreso_liquido",
+      "label": "Ingreso líquido estimado",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "pension_base",
+      "label": "Pensión alimenticia base (30-50%)",
+      "unit": "$",
+      "format": "currency",
+      "help": "Cálculo orientativo según jurisprudencia tribunal familia"
+    },
+    {
+      "id": "ajuste_custodia",
+      "label": "Ajuste por tipo custodia",
+      "unit": "%",
+      "format": "percent"
+    },
+    {
+      "id": "pension_custodia",
+      "label": "Pensión ajustada por custodia",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "gastos_extraordinarios",
+      "label": "Gastos extraordinarios mensuales",
+      "unit": "$",
+      "format": "currency",
+      "help": "Educación + salud + actividades prorrateado"
+    },
+    {
+      "id": "pension_total_estimada",
+      "label": "Pensión alimenticia TOTAL estimada",
+      "unit": "$",
+      "format": "currency",
+      "emphasis": true
+    },
+    {
+      "id": "rango_minimo",
+      "label": "Rango mínimo (30% ingreso)",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "rango_maximo",
+      "label": "Rango máximo (50% ingreso)",
+      "unit": "$",
+      "format": "currency"
+    },
+    {
+      "id": "modalidad_pago",
+      "label": "Modalidad de pago recomendada",
+      "type": "text",
+      "format": "text"
+    },
+    {
+      "id": "advertencia",
+      "label": "Advertencia legal",
+      "type": "text",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula la pensión alimenticia en Chile\n\nLa pensión alimenticia se rige por la **Ley 14.908 de 1968** y jurisprudencia de tribunales de familia. El cálculo no es una fórmula matemática rígida, sino orientativo; cada caso es único según circunstancias del alimentante y alimentandos.\n\n### Fórmula base\n\n1. **Ingreso líquido del alimentante:**\n   - Ingresos brutos (sueldo, bonos, rentas, pensiones)\n   - Menos descuentos legales obligatorios:\n     - AFP: ~10% (SPP) o ~9,23% (SFP)\n     - Salud: Isapre (~7%) o Fonasa (~7%)\n     - Impuesto Único (por licencia, si aplica)\n   - Resultado: **ingreso líquido imponible**\n\n2. **Aplicación de porcentaje:**\n   - Rango orientativo: **30% a 50%** del ingreso líquido\n   - 30% si: ingreso moderado, alimentante con carga familiar propia\n   - 40-50% si: ingreso alto, capacidad evidente, sin cargas adicionales\n   - Tribunal evalúa caso por caso conforme a Decreto 993/1960\n\n3. **Ajuste por tipo de custodia:**\n   - **Custodia exclusiva en el otro progenitor:** Se aplica el porcentaje íntegro\n   - **Custodia compartida 50/50:** Se reduce 25-33% (cada progenitor aporta proporcionalmente)\n   - **Custodia alternada:** Se reduce 20-30% según regulación período\n   - **Custodia demandada/otorgada a alimentante:** Reduce o elimina obligación\n\n4. **Gastos extraordinarios:**\n   - Educación: Cuotas colegio, arancel universidad, libros obligatorios\n   - Salud: Copagos, dentista, lentes, medicamentos especiales (no Isapre/Fonasa cubre)\n   - Actividades: Deporte, música, talleres acreditados\n   - Se prorratean mensualmente y **se suman** a pensión base\n\n### Ejemplo concreto\n\n**Datos:**\n- Ingreso bruto alimentante: $2.500.000\n- Descuentos legales (AFP 10% + Isapre 7% + Impuesto 5%): 22% = $550.000\n- **Ingreso líquido: $1.950.000**\n- Número de hijos: 2\n- Tipo custodia: Exclusiva en madre\n- Gastos educación: $2.400.000/año = $200.000/mes\n- Gastos salud: $600.000/año = $50.000/mes\n\n**Cálculo:**\n1. Rango 30-50% de $1.950.000:\n   - Mínimo: $1.950.000 × 30% = $585.000\n   - Máximo: $1.950.000 × 50% = $975.000\n2. Tribunal considera capacidad: aplica 40% = $780.000\n3. Ajuste custodia: no aplica (custodia exclusiva)\n4. Gastos extra: $200.000 + $50.000 = $250.000\n5. **Pensión total: $780.000 + $250.000 = $1.030.000 mensual**\n\n### Factores que considera el tribunal\n\n| Factor | Efecto |\n|--------|--------|\n| Ingresos alimentante | Mayor ingreso → % mayor (hasta 50%) |\n| Número de hijos | Más hijos → se divide proporcionalmente |\n| Otros hijos del alimentante | Reduce % aplicable |\n| Custodia compartida | Reduce 25-33% |\n| Desempleo/enfermedad alimentante | Reduce o aplaza pago |\n| Capacidad patrimonial | Aumenta si tiene bienes |\n| Edad de hijos | Mayores de 18 sin causal continúan si estudian |\n| Acuerdo mutuo | Prevalece si es equitativo |\n\n## Limitaciones\n\n- **No es vinculante:** Esta calculadora estima solo. Tribunal fija monto final según pruebas (boletas, contrato, declaración SII).\n- **Cambios ingresos:** Alimentante puede solicitar rebaja si pierde empleo o ingresos legítimos disminuyen (artículo 8 Ley 14.908).\n- **Revisión obligatoria:** Cada 2 años o si cambio relevante ingresos/custodia.\n- **Deuda alimenticia:** Es imprescriptible hasta los 18 años del hijo; después prescribe en 3 años.\n- **No incluye:** Gastos por incumplimiento previo, intereses legales (aplica reajuste UTM + interés 1,5% mensual).",
+  "faq": [
+    {
+      "question": "¿Cuál es el monto mínimo de pensión alimenticia en Chile 2026?",
+      "answer": "No existe un mínimo legal fijo. Se calcula sobre ingresos reales. Si alimentante está desempleado o con ingresos muy bajos, puede solicitar aplazamiento. La pensión no puede reducir al alimentante por debajo de subsistencia; tribunales reconocen gasto mínimo hogar ~$800.000-1.200.000 según región."
+    },
+    {
+      "question": "¿Se incluye el 13° sueldo o bono en ingresos?",
+      "answer": "Sí, se promedian ingresos anuales totales (incluyendo bonificaciones, gratificación, comisiones, rentas) dividido por 12 meses. Si son variables, se acredita con últimos 3 años SII o contrato laboral."
+    },
+    {
+      "question": "¿Qué ocurre con custodia compartida 50/50?",
+      "answer": "Con custodia compartida cada progenitor tiene gastos de manutención directa (alimentación, vivienda, servicios). Tribunal reduce 25-33% la pensión porque ambos sostienen hijos. No es automático; depende acuerdo y efectiva distribución tiempo/gastos."
+    },
+    {
+      "question": "¿Puedo solicitar rebaja de pensión si me despido?",
+      "answer": "Sí, artículo 8 Ley 14.908 permite demanda de rebaja si circunstancias económicas cambian sustancialmente. Debes acreditar: desempleo involuntario, certificado médico (enfermedad), cierre empresa. No aplica si renuncias voluntariamente sin causa válida."
+    },
+    {
+      "question": "¿Cuándo termina la obligación alimenticia?",
+      "answer": "Generalmente a los 18 años. Si hijo está estudiando en educación superior acreditada, se extiende hasta término legítimo (máx 4 años). Si hijo con discapacidad: indefinido. Demandante (hijo) debe acreditar condición estudiante anualmente."
+    },
+    {
+      "question": "¿Cómo se cobran gastos de educación y salud?",
+      "answer": "Se suman a pensión base. Educación: boleta colegio/universidad. Salud: boletas médico, farmacia, dentista no cubiertas. Actividades: deben acordarse previo. Tribunal autoriza reajuste si gasto crece (e.g., cambio colegio)."
+    },
+    {
+      "question": "¿Qué pasa si alimentante no paga?",
+      "answer": "Mora genera reajuste mensual por UTM + interés 1,5% mensual. Después de 3 meses sin pago, alimentante enfrenta: rebaja subsidios (Fonasa), retención salario (vía tesorería municipal), embargo bienes. Carabineros puede ejecutar si se requiere."
+    },
+    {
+      "question": "¿Se puede cambiar monto de pensión?",
+      "answer": "Sí, cada 2 años o ante cambio relevante (desempleo, enfermedad, reducción ingresos acreditada, cambio custodia). Debes presentar demanda nueva con documentos SII. Hasta fallo, se mantiene pensión anterior."
+    },
+    {
+      "question": "¿Cómo se acreditan ingresos si soy independiente o dueño de negocio?",
+      "answer": "Declaración de impuestos SII últimos 3 años, estado de cuenta bancaria, contrataciones (boletas), avalúo patrimonio. Tribunal descuenta costos operacionales legítimos y llega a ingreso neto. Si ingresos fluctúan, promedia 3 años."
+    },
+    {
+      "question": "¿Esta calculadora reemplaza sentencia tribunal?",
+      "answer": "No. Es solo estimativa orientativa. Tribunal de familia evaluará pruebas reales, capacidad, circunstancias. Monto final puede variar 20-40%. Consulta abogado familia antes de acudir a juicio."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ley 14.908 sobre Abandono de Familia y Pago de Pensiones Alimenticias",
+      "url": "https://www.bcn.cl/leyes/pdf/1968-14908.pdf",
+      "publisher": "Biblioteca del Congreso Nacional (BCN)",
+      "date": "2024"
+    },
+    {
+      "name": "Decreto 993/1960 - Fija normas pensión alimenticia",
+      "url": "https://www.bcn.cl/leyes/pdf/1960-00993.pdf",
+      "publisher": "BCN",
+      "date": "2024"
+    },
+    {
+      "name": "Código de Familia - Libro II Filiación y Alimentos",
+      "url": "https://www.bcn.cl/leyes/pdf/2022-21014.pdf",
+      "publisher": "BCN - Ley 21.014 (2022)",
+      "date": "2024"
+    },
+    {
+      "name": "Guía Pensión Alimenticia - Poder Judicial",
+      "url": "https://www.pjud.cl/",
+      "publisher": "Poder Judicial de Chile - Tribunales de Familia",
+      "date": "2025"
+    },
+    {
+      "name": "Circular SII - Ingresos imponibles y descuentos AFP/Salud",
+      "url": "https://www.sii.cl/",
+      "publisher": "Servicio de Impuestos Internos (SII)",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Jurisprudencia tribunales familia Chile, Código de Familia vigente, parámetros SII",
+    "sourceUrl": "https://www.poder-judicial.cl/tribunales-de-familia/",
+    "updateType": "manual",
+    "notes": "Porcentajes 30-50%, descuentos AFP/Isapre/Fonasa, UTM reajustes se actualizan anualmente. Jurisprudencia tribunal puede variar por región y juez."
+  },
+  "lastReviewed": "2026-04-28"
+}

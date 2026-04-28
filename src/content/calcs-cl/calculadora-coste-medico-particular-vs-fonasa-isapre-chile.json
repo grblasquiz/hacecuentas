@@ -1,0 +1,283 @@
+{
+  "slug": "calculadora-coste-medico-particular-vs-fonasa-isapre-chile",
+  "title": "Médico Particular vs Fonasa/Isapre 2026 | Hacé Cuentas",
+  "h1": "Comparativa de costos: médico particular vs Fonasa e Isapre",
+  "description": "Compara el costo de consulta médica particular ($40-80K) vs Fonasa (bonificación 50-80%) vs Isapre (plan según UF). Elige la opción más económica en Chile 2026.",
+  "category": "finanzas",
+  "audience": "CL",
+  "icon": "🏥",
+  "formulaId": "coste-medico-particular-vs-fonasa-isapre-chile",
+  "intro": "En Chile, el costo de una consulta médica varía significativamente según dónde la realices. Una consulta particular oscila entre $40.000 y $80.000, mientras que en Fonasa puedes optar por Modalidad de Atención Institucional (MAI) o Modalidad de Libre Elección (MLE), y las Isapres ofrecen planes según Unidades de Fomento (UF). Esta calculadora te ayuda a comparar el gasto real en cada opción y tomar la decisión más conveniente para tu bolsillo.",
+  "keyTakeaway": "Una consulta particular ($50K promedio) versus Fonasa MLE con 60% bonificación ($20K aprox.) o Isapre según plan ($15-35K). Ahorra hasta $30K eligiendo la opción correcta.",
+  "useCases": [
+    "Decidir entre sistema particular e institucional para una consulta urgente",
+    "Evaluar si conviene cambiar de Isapre a Fonasa según plan contratado",
+    "Calcular gasto anual en consultas médicas por sistema",
+    "Comparar costo de especialista particular vs referencia en Fonasa/Isapre",
+    "Presupuestar atención médica familiar según ingresos"
+  ],
+  "fields": [
+    {
+      "id": "tipo_consulta",
+      "label": "Tipo de consulta",
+      "type": "select",
+      "options": [
+        {
+          "value": "medico_general",
+          "label": "Médico general"
+        },
+        {
+          "value": "especialista",
+          "label": "Especialista"
+        },
+        {
+          "value": "urgencia",
+          "label": "Urgencia/Emergencia"
+        }
+      ],
+      "default": "especialista",
+      "help": "Selecciona el tipo de atención médica que necesitas"
+    },
+    {
+      "id": "sistema_elegido",
+      "label": "Sistema de salud",
+      "type": "select",
+      "options": [
+        {
+          "value": "particular",
+          "label": "Médico particular"
+        },
+        {
+          "value": "fonasa_mai",
+          "label": "Fonasa MAI"
+        },
+        {
+          "value": "fonasa_mle",
+          "label": "Fonasa MLE"
+        },
+        {
+          "value": "isapre",
+          "label": "Isapre"
+        }
+      ],
+      "default": "fonasa_mle",
+      "help": "Elige el sistema donde deseas atenderte"
+    },
+    {
+      "id": "costo_particular",
+      "label": "Costo consulta particular ($)",
+      "type": "number",
+      "min": 20000,
+      "max": 150000,
+      "default": 50000,
+      "step": 5000,
+      "help": "Rango típico: médico general $25-40K, especialista $40-80K"
+    },
+    {
+      "id": "bonificacion_fonasa",
+      "label": "Bonificación Fonasa MLE (%)",
+      "type": "select",
+      "options": [
+        {
+          "value": "50",
+          "label": "50%"
+        },
+        {
+          "value": "60",
+          "label": "60%"
+        },
+        {
+          "value": "70",
+          "label": "70%"
+        },
+        {
+          "value": "80",
+          "label": "80%"
+        }
+      ],
+      "default": "60",
+      "help": "Según tramo de ingreso y vigencia. Consulta SII-Fonasa"
+    },
+    {
+      "id": "valor_uf",
+      "label": "Valor UF actual",
+      "type": "number",
+      "min": 30000,
+      "max": 40000,
+      "default": 36700,
+      "step": 100,
+      "help": "Consulta Banco Central. Actualizado a abril 2026"
+    },
+    {
+      "id": "copago_isapre_uf",
+      "label": "Copago Isapre (UF)",
+      "type": "number",
+      "min": 0.25,
+      "max": 1.5,
+      "default": 0.75,
+      "step": 0.05,
+      "help": "Típico: médico general 0.25-0.5 UF, especialista 0.5-1 UF"
+    },
+    {
+      "id": "consultas_anuales",
+      "label": "Consultas médicas al año (estimado)",
+      "type": "number",
+      "min": 1,
+      "max": 24,
+      "default": 4,
+      "step": 1,
+      "help": "Para proyección anual de gastos"
+    },
+    {
+      "id": "tiene_referencia_fonasa",
+      "label": "¿Tienes referencia Fonasa/Isapre?",
+      "type": "select",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ],
+      "default": "si",
+      "help": "Con referencia institucional, Fonasa MAI es gratuito"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "costo_consulta_particular",
+      "label": "Costo consulta particular",
+      "type": "currency",
+      "help": "Monto a pagar en consultorio privado"
+    },
+    {
+      "id": "costo_fonasa_mai",
+      "label": "Costo Fonasa MAI",
+      "type": "currency",
+      "help": "Con referencia: sin costo. Sin referencia: $15-25K aprox."
+    },
+    {
+      "id": "costo_fonasa_mle",
+      "label": "Costo Fonasa MLE (después bonificación)",
+      "type": "currency",
+      "help": "Lo que pagas tras descuento de Fonasa"
+    },
+    {
+      "id": "costo_isapre",
+      "label": "Costo Isapre (en $)",
+      "type": "currency",
+      "help": "Copago según plan y UF vigente"
+    },
+    {
+      "id": "opcion_mas_economica",
+      "label": "Opción más económica",
+      "type": "text",
+      "help": "Sistema que minimiza tu gasto"
+    },
+    {
+      "id": "ahorro_vs_particular",
+      "label": "Ahorro vs particular",
+      "type": "currency",
+      "help": "Diferencia de costo (positivo = ahorras)"
+    },
+    {
+      "id": "gasto_anual_estimado",
+      "label": "Gasto anual estimado (tu sistema)",
+      "type": "currency",
+      "help": "Proyección anual según número de consultas"
+    },
+    {
+      "id": "tiempo_espera_dias",
+      "label": "Tiempo espera aproximado (días)",
+      "type": "number",
+      "help": "Fonasa/Isapre: 7-30 días. Particular: mismo día a 2 días"
+    }
+  ],
+  "explanation": "## Cómo se calcula la comparativa de costos médicos en Chile\n\nEsta calculadora compara el gasto real en consultas médicas según el sistema elegido, considerando bonificaciones, copagos y estructura de precios 2026.\n\n### Fórmula base\n\n**Médico particular:**\n```\nCosto = Valor ingresado (sin bonificación)\n```\n\n**Fonasa MAI (Modalidad Atención Institucional):**\n```\nCosto = $0 (con referencia válida)\nCosto ≈ $15.000-25.000 (sin referencia, por urgencia)\n```\n\n**Fonasa MLE (Modalidad Libre Elección):**\n```\nMonto base = Costo particular ingresado\nBonificación SII = Monto base × (% según tramo)\nCosto final = Monto base - Bonificación\n```\nRangos 2026:\n- Tramo A (hasta $1.023 UF/mes): 80% bonificación\n- Tramo B ($1.024-2.747 UF/mes): 70% bonificación\n- Tramo C ($2.748-8.242 UF/mes): 60% bonificación\n- Tramo D (>$8.242 UF/mes): 50% bonificación\n\n**Isapre:**\n```\nCosto = Copago (UF) × Valor UF vigente\nPor ejemplo: 0.75 UF × $36.700 = $27.525\n```\n\n### Ejemplo práctico\n\n**Escenario:** Especialista (dermatólogo)\n- **Costo particular:** $60.000\n- **Fonasa MLE:** Tramo C (60% bonificación)\n  - Bonificación: $60.000 × 0,60 = $36.000\n  - Costo final: $60.000 - $36.000 = **$24.000**\n- **Isapre:** Plan con 1 UF de copago para especialista\n  - Costo: 1 UF × $36.700 = **$36.700**\n- **Fonasa MAI:** Con referencia = **$0** | Sin referencia ≈ **$20.000**\n\n**Opción más económica:** Fonasa MAI con referencia\n\n### Gasto anual proyectado\n\n```\nGasto anual = Costo por consulta × Número de consultas esperadas\n```\n\nSi realizas 4 consultas/año:\n- Particular: $60K × 4 = $240.000/año\n- Fonasa MLE: $24K × 4 = $96.000/año\n- **Ahorro:** $144.000/año con Fonasa\n\n### Tabla comparativa 2026\n\n| Sistema | Médico General | Especialista | Urgencia | Referencia |  \n|---------|---|---|---|---|\n| **Particular** | $25-40K | $40-80K | $60-100K | No necesaria |\n| **Fonasa MAI** | Libre | Libre | Libre | Sí (obligatoria) |\n| **Fonasa MLE** | $20-30K (después bono) | $24-35K (después bono) | $30-50K | No necesaria |\n| **Isapre** | 0.2-0.5 UF | 0.5-1 UF | 1-2 UF | Plan contratado |\n\n### Factores no considerados en costo directo\n\n- **Tiempo espera:** Fonasa MAI/MLE 7-30 días | Isapre 3-10 días | Particular 0-2 días\n- **Cobertura farmacéutica:** Varía según plan Isapre/Fonasa\n- **Aporte obligatorio:** AFP (10%) + comisión, salud (7%) ya descontados del sueldo\n- **Exámenes complementarios:** No incluidos, cotos varían\n- **Hospitalizaciones:** Requerirían cálculo separado\n\n### Limitaciones\n\n1. **Valores referenciales:** Los costos de médicos particulares varían por zona, especialidad y experiencia del profesional\n2. **Actualización UF:** Valor UF cambia diariamente (consulta Banco Central)\n3. **Tramos Fonasa:** Dependen de ingreso acreditado ante SII; puede variar anualmente\n4. **Planes Isapre:** Existen >100 planes vigentes con copagos diferentes\n5. **Urgencias:** Los precios en urgencia son significativamente más altos\n6. **Licencias médicas:** Sistema distinto, requiere cálculo separado",
+  "faq": [
+    {
+      "question": "¿Cuál es la diferencia entre Fonasa MAI y MLE?",
+      "answer": "**Fonasa MAI (Modalidad Atención Institucional):** Atención en centros Fonasa públicos, gratuita con referencia válida. Espera: 7-30 días. **Fonasa MLE (Modalidad Libre Elección):** Eliges médico/clínica particular acreditado, Fonasa bonifica 50-80% según tu tramo. Espera: 2-10 días. MLE es más caro pero con más opciones."
+    },
+    {
+      "question": "¿Cuánto bonifica Fonasa según mi ingreso?",
+      "answer": "Depende de tu Unidad Tributaria Mensual (UTM, ~$65.000 en 2026):\n- **Hasta 1 UTM:** 80% bonificación\n- **1-2,68 UTM:** 70% bonificación\n- **2,68-8,05 UTM:** 60% bonificación\n- **Más de 8,05 UTM:** 50% bonificación\n\nDebes acreditar ingreso ante SII. Consulta tu tramo en sii.cl"
+    },
+    {
+      "question": "¿Isapre siempre es más caro que Fonasa?",
+      "answer": "No necesariamente. Depende del plan contratado y el copago. Un plan Isapre básico ($0.25-0.5 UF ≈ $9-18K por especialista) puede ser comparable a Fonasa MLE. Pero Isapre suma **prima mensual** (3-10% de sueldo). Calcula costo total anual: prima + copagos."
+    },
+    {
+      "question": "¿Cuánto cuesta una consulta particular en 2026?",
+      "answer": "Varía según zona y especialidad:\n- **Médico general en Santiago:** $25-40K\n- **Especialista en Santiago:** $40-80K\n- **Especialista en regiones:** $30-60K\n- **Urgencia/Guardia:** $60-100K\n\nConsulta directamente al consultorio, estos son promedios."
+    },
+    {
+      "question": "¿Si no tengo referencia Fonasa, puedo ir al MAI?",
+      "answer": "Sí, pero deberás pagar un copago (típicamente $15-25K) si no tienes referencia de tu médico general. Es más barato que particular pero menos flexible. Solicita referencia a tu médico general Fonasa primero."
+    },
+    {
+      "question": "¿Qué incluye el copago Isapre?",
+      "answer": "El copago es lo que pagas en la consulta. **No incluye:**\n- Exámenes complementarios (hemograma, resonancia, etc.)\n- Medicamentos (cubren según plan, típicamente 50-70%)\n- Hospitalizaciones (coberturas reducidas a veces)\n- Deducibles anuales (algunos planes los tienen)\n\nLee bien tu contrato Isapre."
+    },
+    {
+      "question": "¿Cuál es el tiempo promedio de espera en cada sistema?",
+      "answer": "- **Fonasa MAI con referencia:** 7-30 días (según urgencia)\n- **Fonasa MLE:** 3-10 días\n- **Isapre:** 2-7 días (planes selectivos)\n- **Médico particular:** Mismo día a 2 días\n\nLas urgencias son prioritarias en todos."
+    },
+    {
+      "question": "¿Puedo comparar costo mensual si pago prima Isapre?",
+      "answer": "Sí, la calculadora estima costo por consulta. Para costo **total mensual** debes sumar:\n**Costo total = (Prima Isapre mensual) + (Copagos esperados)**\n\nEjemplo: Prima $50K + 2 consultas × $30K copago = $110K/mes. Si usas poco, Fonasa es más económico."
+    },
+    {
+      "question": "¿Cómo cambio de Isapre a Fonasa o viceversa?",
+      "answer": "**De Isapre → Fonasa:** Trámite en Fonasa con cédula + RUT, plazo 30 días. **De Fonasa → Isapre:** Afiliación en Isapre elegida, plazo 60 días (hay períodos de bloqueo). Cambios generalmente en enero o por situación laboral. Consulta CMF (Comisión para el Mercado Financiero) para regulaciones."
+    },
+    {
+      "question": "¿Qué pasa si necesito cirugía o hospitalización?",
+      "answer": "Esta calculadora estima **consultas ambulatorias**. Para cirugías:\n- **Fonasa MAI:** Costo compartido según complejidad\n- **Fonasa MLE:** 10-20% de copago después bonificación\n- **Isapre:** Varían mucho según plan; algunos tienen deducibles\n- **Particular:** Costo total muy alto ($500K-5M según procedimiento)\n\nSolicita presupuesto al proveedor antes de operarte."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Superintendencia de Salud (SUPERINTENDENCIA) - Comparador Isapres",
+      "url": "https://www.supersalud.gob.cl/",
+      "publisher": "Superintendencia de Salud, Chile",
+      "date": "2026"
+    },
+    {
+      "name": "Fondo Nacional de Salud (Fonasa) - Oficialmente",
+      "url": "https://www.fonasa.cl/",
+      "publisher": "Ministerio de Salud, Chile",
+      "date": "2026"
+    },
+    {
+      "name": "Servicio de Impuestos Internos (SII) - Tramos tributarios 2026",
+      "url": "https://www.sii.cl/",
+      "publisher": "SII, Chile",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central de Chile - Valor UF diario",
+      "url": "https://www.bcentral.cl/",
+      "publisher": "Banco Central",
+      "date": "2026"
+    },
+    {
+      "name": "Comisión para el Mercado Financiero (CMF) - Regulación seguros salud",
+      "url": "https://www.cmfchile.cl/",
+      "publisher": "CMF, Chile",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII, Fonasa, Superintendencia Salud, Banco Central",
+    "sourceUrl": "https://www.sii.cl/; https://www.fonasa.cl/; https://www.supersalud.gob.cl/",
+    "updateType": "manual",
+    "notes": "Actualizar tramos Fonasa enero (nuevo año tributario), valor UF diariamente (consulta BC), planes Isapre según cambios de ofertas."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,232 @@
+{
+  "slug": "calculadora-factura-luz-pvpc-vs-mercado-libre-espana-2026",
+  "title": "Calculadora factura luz PVPC vs mercado libre 2026 | Hacé Cuentas",
+  "h1": "Calcula tu factura luz: PVPC vs mercado libre",
+  "description": "Compara coste mensual PVPC (regulado, variable por hora) vs mercado libre (tarifa fija). Estima ahorro con datos CNMC 2026 España.",
+  "category": "vida",
+  "audience": "ES",
+  "icon": "💡",
+  "formulaId": "factura-luz-pvpc-vs-mercado-libre-espana-2026",
+  "intro": "En España, la factura de luz depende de tu tarifa: el **PVPC** (Precio Voluntario del Pequeño Consumidor) es el precio regulado que varía cada hora según el mercado mayorista; el **mercado libre** ofrece precios fijos negociados con comercializadoras. Esta calculadora compara el coste mensual en ambas modalidades usando datos CNMC 2026, potencia contratada y perfil de consumo, para identificar cuál es más rentable en tu caso.",
+  "keyTakeaway": "PVPC 2026: 0,18–0,22 €/kWh promedio. Mercado libre: 0,16–0,25 €/kWh según comercializadora. Ahorro potencial: 5–25% si cambias a tarifa fija en períodos de picos altos.",
+  "useCases": [
+    "Familia consumo 300 kWh/mes: comparar PVPC vs fijo 0,19€/kWh mercado libre",
+    "Consumidor nocturno: evaluar descuento PVPC fuera de punta (0,12€/kWh) frente a tarifa única",
+    "Pequeña empresa: estimar factura 500 kWh/mes con bono social aplicable",
+    "Cambio de comercializadora: simular ahorro mes a mes 2026",
+    "Perfil muy variable: identificar si PVPC nocturno es más barato que mercado fijo",
+    "Titular bono social: calcular descuento 25–50% sobre tarifa regulada"
+  ],
+  "fields": [
+    {
+      "id": "consumo_kwh_mes",
+      "label": "Consumo mensual (kWh)",
+      "type": "number",
+      "min": 50,
+      "max": 2000,
+      "step": 10,
+      "default": 300,
+      "description": "Consumo medio mensual en kilovatios hora (revisar últimas facturas o estimación anual ÷ 12)",
+      "help": "Facturas anteriores o lectura medidor"
+    },
+    {
+      "id": "potencia_contratada_kw",
+      "label": "Potencia contratada (kW)",
+      "type": "number",
+      "min": 1.15,
+      "max": 15,
+      "step": 0.05,
+      "default": 4.6,
+      "description": "Potencia máxima simultánea en kilowatios (3,45 kW es estándar vivienda, empresa puede ser mayor)",
+      "help": "Aparece en factura o contacta comercializadora"
+    },
+    {
+      "id": "perfil_consumo",
+      "label": "Perfil de consumo",
+      "type": "select",
+      "options": [
+        {
+          "value": "diurno",
+          "label": "Diurno (mañana-tarde)"
+        },
+        {
+          "value": "nocturno",
+          "label": "Nocturno (noche-madrugada)"
+        },
+        {
+          "value": "uniforme",
+          "label": "Uniforme (distribuido)"
+        }
+      ],
+      "default": "uniforme",
+      "description": "Concentración horaria de consumo para aplicar coeficientes PVPC",
+      "help": "¿Cuándo usas más luz? (horno, lavadora, AC)"
+    },
+    {
+      "id": "tarifa_mercado_libre_eur_kwh",
+      "label": "Tarifa mercado libre (€/kWh)",
+      "type": "number",
+      "min": 0.12,
+      "max": 0.35,
+      "step": 0.01,
+      "default": 0.19,
+      "description": "Precio fijo por kWh ofertado por comercializadora (solicita presupuesto real)",
+      "help": "Comparador CNMC o contacta: Iberdrola, Endesa, Naturgy, etc."
+    },
+    {
+      "id": "tiene_bono_social",
+      "label": "¿Tienes bono social?",
+      "type": "select",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "vulnerabilidad_severa",
+          "label": "Sí, vulnerabilidad severa (50% desc)"
+        },
+        {
+          "value": "vulnerabilidad_media",
+          "label": "Sí, vulnerabilidad media (25% desc)"
+        }
+      ],
+      "default": "no",
+      "description": "Descuento aplicable a PVPC si eres cliente vulnerable (Seguridad Social, servicios sociales, etc.)",
+      "help": "Consulta con tu autonomía o Ministerio Inclusión Social"
+    },
+    {
+      "id": "coste_fijo_mensual_eur",
+      "label": "Coste fijo mensual (€) — término potencia",
+      "type": "number",
+      "min": 5,
+      "max": 50,
+      "step": 0.5,
+      "default": 12,
+      "description": "Cuota mensual por potencia contratada (independiente de consumo). Estándar: 0,50–0,55 €/kW/mes",
+      "help": "Calcula: potencia × coef. (ej. 4,6 kW × 0,50 €/kW = 2,30€/mes base + 9,70€ impuestos aprox.)"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "coste_total_pvpc_mes",
+      "label": "Coste total PVPC/mes",
+      "unit": "€",
+      "description": "Suma de término potencia, consumo variable PVPC (con posible descuento bono social) e impuestos"
+    },
+    {
+      "id": "coste_total_mercado_libre_mes",
+      "label": "Coste total mercado libre/mes",
+      "unit": "€",
+      "description": "Suma de término potencia, consumo a tarifa fija + impuestos"
+    },
+    {
+      "id": "diferencia_mensual",
+      "label": "Diferencia mensual",
+      "unit": "€",
+      "description": "PVPC menos mercado libre. Positivo = PVPC más caro; negativo = mercado libre más caro"
+    },
+    {
+      "id": "ahorro_anual",
+      "label": "Ahorro anual potencial",
+      "unit": "€",
+      "description": "Diferencia × 12 meses si se mantienen precios constantes"
+    },
+    {
+      "id": "recomendacion",
+      "label": "Recomendación",
+      "unit": "texto",
+      "description": "Mejor opción según tu perfil y números actuales"
+    },
+    {
+      "id": "precio_promedio_kwh_pvpc",
+      "label": "Precio promedio €/kWh PVPC",
+      "unit": "€/kWh",
+      "description": "Coste total PVPC dividido por consumo (sin potencia, solo energía)"
+    },
+    {
+      "id": "precio_promedio_kwh_mercado_libre",
+      "label": "Precio promedio €/kWh mercado libre",
+      "unit": "€/kWh",
+      "description": "Tarifa fija introducida (referencia directa)"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa factura de luz en España está compuesta por dos componentes principales:\n\n1. **Término de potencia (fijo):** Es el coste mensual por tener una potencia disponible. Se calcula como `Potencia (kW) × Coeficiente de potencia (€/kW/mes) + IVA + impuestos especiales`.\n2. **Término de consumo (variable):** Es el coste por la energía realmente consumida.\n   - En **PVPC**: el precio por kWh varía cada hora según el mercado mayorista, pero la calculadora usa un precio promedio 2026 de 0,18–0,22 €/kWh ajustado por perfil de consumo (diurno/nocturno).\n   - En **mercado libre**: el precio es fijo (negociado con la comercializadora).\n\n### Fórmula PVPC\n\n```\nCoste PVPC = [Potencia × 0,50€/kW + (Consumo × Precio promedio PVPC)] × (1 + IVA 21%) × Factor impuesto eléctrico\n```\n\nSi aplica bono social (25% o 50%), se descuenta sobre el término de consumo:\n\n```\nCoste PVPC con bono = Coste PVPC × (1 − Descuento bono social)\n```\n\n### Fórmula mercado libre\n\n```\nCoste Mercado Libre = [Potencia × 0,50€/kW + (Consumo × Tarifa fija €/kWh)] × (1 + IVA 21%) × Factor impuesto eléctrico\n```\n\n### IVA e impuestos 2026 (España)\n\n- IVA: 21% (estándar para electricidad doméstica).\n- Impuesto especial sobre electricidad: 5,127% sobre la energía consumida.\n- Coste de gestión: incluido en coeficiente de potencia.\n\n### Ajustes por perfil de consumo\n\n- **Diurno:** +5% al precio promedio PVPC (picos mañana-tarde más caros).\n- **Nocturno:** −10% al precio promedio PVPC (descuento horas valle).\n- **Uniforme:** precio promedio sin ajuste.\n\n## Ejemplo\n\n**Datos entrada:**\n- Consumo: 300 kWh/mes\n- Potencia: 4,6 kW\n- Perfil: Uniforme\n- Tarifa mercado libre: 0,19 €/kWh\n- Sin bono social\n\n**Cálculo PVPC:**\n- Término potencia: 4,6 × 0,50 = 2,30€ (base)\n- Término potencia con impuestos: 2,30 × 1,212 ≈ 2,79€\n- Consumo energía: 300 × 0,20 = 60€\n- Consumo con impuestos (5,127% + 21% IVA): 60 × 1,2663 ≈ 75,98€\n- **Total PVPC ≈ 78,77€/mes**\n\n**Cálculo mercado libre:**\n- Término potencia: 2,79€ (igual que PVPC)\n- Consumo energía: 300 × 0,19 = 57€\n- Consumo con impuestos: 57 × 1,2663 ≈ 72,18€\n- **Total Mercado Libre ≈ 74,97€/mes**\n\n**Diferencia:** 78,77 − 74,97 = **3,80€/mes a favor del mercado libre**\n**Ahorro anual:** 3,80 × 12 = **45,60€/año**\n\n| Concepto | PVPC | Mercado Libre |\n|----------|------|---------------|\n| Término potencia | 2,79€ | 2,79€ |\n| Consumo energía | 75,98€ | 72,18€ |\n| **Total** | **78,77€** | **74,97€** |\n\n## Limitaciones\n\n1. **PVPC real varía por hora:** Esta calculadora usa un promedio 2026 estimado por CNMC. Tu factura real PVPC será más exacta con datos horarios de tu comercializadora.\n2. **Tarifas mercado libre cambian:** Los precios fijos negociados varían según comercializadora, zona geográfica y momento de contratación. Solicita presupuesto actualizado antes de firmar.\n3. **Bono social:** El descuento exacto depende de tu comunidad autónoma y categoría de vulnerabilidad. Consulta con Seguridad Social o servicios sociales.\n4. **Impuestos autonómicos:** Algunas autonomías aplican impuestos adicionales (ej. Cataluña) no incluidos en esta estimación básica.\n5. **Mantenimiento de precio:** Mercado libre permite cambios si renegocias contrato. PVPC está regulado pero sujeto a revisión oficial quincenal.\n6. **Consumo estacional:** Consumo real varía con estación (calefacción invierno, AC verano). Usa dato anual promedio.",
+  "faq": [
+    {
+      "q": "¿Cuál es la diferencia principal entre PVPC y mercado libre?",
+      "a": "PVPC es el precio regulado de la Administración (varía cada hora según mercado mayorista, pero tienes protección de precios máximos). Mercado libre es un contrato negociado directamente con comercializadora privada a precio fijo (más caro algunos meses, más barato otros según oferta). En 2026, PVPC es más estable; mercado libre es competitivo si tu consumo es bajo o si negocias bien."
+    },
+    {
+      "q": "¿Puedo cambiarme de PVPC a mercado libre en cualquier momento?",
+      "a": "Sí. No hay penalización por cambio. Contacta con una comercializadora (Iberdrola, Endesa, Naturgy, Podo, Holaluz, etc.) y solicita presupuesto. El cambio suele tardar 5–10 días hábiles. Puedes cambiar tantas veces como quieras, pero revisa duración de oferta (mín. 1 año típico)."
+    },
+    {
+      "q": "¿Qué es el bono social de electricidad y cuánto ahorro tengo?",
+      "a": "Es un descuento (25–50%) sobre la factura de electricidad para hogares vulnerables (ingresos bajos, pensionistas, desempleo prolongado, familias monoparentales). Solo aplica en PVPC. Descuento del 25% es estándar; 50% si vulnerabilidad severa certificada. Solicita en tu autonomía o AEAT."
+    },
+    {
+      "q": "¿Cómo sé si el PVPC o mercado libre es mejor para mí?",
+      "a": "Usa esta calculadora con datos reales de tu factura. Si tu consumo es estable y bajo (<150 kWh/mes), PVPC suele ser más barato. Si es alto (>400 kWh/mes) y tienes tarifas nocturnas especiales, mercado libre puede compensar. Si eres vulnerable, PVPC con bono social es casi siempre mejor."
+    },
+    {
+      "q": "¿Qué pasa si cambio a mercado libre y los precios suben?",
+      "a": "En contrato mercado libre a plazo fijo, el precio no cambia hasta que vence la oferta (típicamente 1 año). Puedes renegociar o cambiar de comercializadora. Riesgo: si precios suben, estarás atrapado hasta fin de contrato salvo cláusula de revisión. Siempre lee letra pequeña."
+    },
+    {
+      "q": "¿Se incluyen los impuestos en esta calculadora?",
+      "a": "Sí. Incluye IVA 21%, impuesto especial electricidad (5,127%) y coste de gestión. No incluye impuestos autonómicos específicos (ej. Cataluña tiene impuesto adicional). Tu factura real puede variar ±2–3% por estos conceptos."
+    },
+    {
+      "q": "¿Qué pasa si consumo más o menos de lo estimado?",
+      "a": "En PVPC pagas exactamente lo que consumas (regulado). En mercado libre, pagas el consumo real al precio fijo acordado. Si consumes menos, ahorras dinero en ambos. Revisa consumo real cada 3 meses en portal de tu comercializadora."
+    },
+    {
+      "q": "¿Es cierto que PVPC es más caro ahora que hace años?",
+      "a": "Sí. Desde 2021–2022, PVPC subió por crisis energética global, pero 2024–2025 ha bajado. 2026 está más estable (0,18–0,22€/kWh promedio). Mercado libre varía según oferta comercial. Ambos son más caros que 2019–2020, pero el descenso es notable."
+    },
+    {
+      "q": "¿Puedo volver a PVPC si cambio a mercado libre?",
+      "a": "Sí, en cualquier momento. Si tu contrato mercado libre tiene duración mínima (ej. 1 año), puedes salir antes pagando penalización mínima o sin ella (depende cláusulas). Cambio es gratuito: contacta con una comercializadora con tarifa PVPC (todas tienen) o con tu anterior proveedor."
+    },
+    {
+      "q": "¿Cómo afecta mi potencia contratada a la factura?",
+      "a": "Potencia contratada determina el coste fijo mensual (término de potencia: 0,45–0,55€/kW/mes aprox.). Si contratas 4,6 kW pagas más que con 3,45 kW en concepto fijo, pero aseguras que no se dispare si usas muchos electrodomésticos simultáneamente. Revisar cada 2 años si es adecuada a tu uso real."
+    }
+  ],
+  "sources": [
+    {
+      "name": "CNMC — Comisión Nacional de los Mercados y la Competencia",
+      "url": "https://www.cnmc.es/ambitos-de-actuacion/energia/mercados-minoristas-de-gas-y-electricidad",
+      "publisher": "CNMC",
+      "date": "2026"
+    },
+    {
+      "name": "Red Eléctrica de España — Precio del PVPC 2026",
+      "url": "https://www.redelectrica.es",
+      "publisher": "REE",
+      "date": "2026"
+    },
+    {
+      "name": "Ministerio de Inclusión, Seguridad Social y Migraciones — Bono Social",
+      "url": "https://www.inclusion.gob.es",
+      "publisher": "Ministerio de Inclusión",
+      "date": "2026"
+    },
+    {
+      "name": "Agencia Tributaria — Impuestos sobre electricidad",
+      "url": "https://sede.agenciatributaria.gob.es/Sede/impuestos/especiales/electricidad.html",
+      "publisher": "AEAT",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-28",
+    "source": "CNMC + datos comerciales 2026",
+    "sourceUrl": "https://www.cnmc.es",
+    "updateType": "manual",
+    "notes": "Tarifa PVPC promedio revisada mensualmente por REE. Tarifas mercado libre son estimativas; solicita presupuesto real a comercializadora. Bono social 2026 vigente según criterios MICSM."
+  },
+  "lastReviewed": "2026-04-28"
+}

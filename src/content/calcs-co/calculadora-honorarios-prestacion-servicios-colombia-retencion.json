@@ -1,0 +1,299 @@
+{
+  "slug": "calculadora-honorarios-prestacion-servicios-colombia-retencion",
+  "title": "Calculadora Retenciones Honorarios Prestación Servicios 2026 | Hacé Cuentas",
+  "h1": "Calculadora de retenciones para honorarios por prestación de servicios en Colombia",
+  "description": "Calcula retenciones en renta (10-11%), ICA (8-13,8 por mil) y reteIVA (19%) sobre honorarios. Incluye neto recibido y periodicidad declaración DIAN 2026.",
+  "category": "impuestos",
+  "audience": "CO",
+  "icon": "📝",
+  "formulaId": "honorarios-prestacion-servicios-colombia-retencion",
+  "intro": "Al prestar servicios como persona natural o jurídica en Colombia, los clientes (retenedores) deben practicar retenciones en la fuente por renta, ICA y potencialmente reteIVA. Esta calculadora estima el total retenido sobre tus honorarios, el monto neto recibido y la periodicidad de declaración ante la **DIAN** según tu actividad económica y ubicación del cliente.",
+  "keyTakeaway": "Un honorario de $10.000.000 COP puede generar retenciones totales entre $1.980.000–$2.400.000 COP (19,8–24%), dejando neto $7.600.000–$8.020.000 COP según ICA municipal.",
+  "useCases": [
+    "Consultor independiente que emite facturas a empresa retenedora en Bogotá o Medellín",
+    "Trabajador en misión (outsourcing) con contrato de servicios y retenciones automáticas",
+    "Profesional freelance que necesita proyectar ingreso neto mensual después de retenciones",
+    "Empresa pequeña que presta servicios B2B y debe cumplir declaración de retenciones bimestrales",
+    "Asesor o contador que valida si el cliente aplicó correctamente retenciones en renta e ICA",
+    "Autorretenedor que evalúa si le aplica retención sobre sus propios honorarios internos"
+  ],
+  "fields": [
+    {
+      "id": "monto_honorario",
+      "label": "Monto del honorario (sin IVA)",
+      "type": "number",
+      "placeholder": "10000000",
+      "hint": "Base sobre la que se calculan retenciones. Ingresa valor sin incluir IVA.",
+      "required": true,
+      "min": 0
+    },
+    {
+      "id": "incluye_iva",
+      "label": "¿El monto ingresado incluye IVA del 19%?",
+      "type": "checkbox",
+      "hint": "Si es sí, se descontará IVA para calcular base de retenciones.",
+      "required": false
+    },
+    {
+      "id": "departamento_cliente",
+      "label": "Departamento/ciudad del cliente (retenedor)",
+      "type": "select",
+      "options": [
+        {
+          "value": "bogota",
+          "label": "Bogotá"
+        },
+        {
+          "value": "antioquia",
+          "label": "Antioquia (Medellín)"
+        },
+        {
+          "value": "valle",
+          "label": "Valle (Cali)"
+        },
+        {
+          "value": "atlantico",
+          "label": "Atlántico (Barranquilla)"
+        },
+        {
+          "value": "cundinamarca",
+          "label": "Cundinamarca (otra ciudad)"
+        },
+        {
+          "value": "santander",
+          "label": "Santander (Bucaramanga)"
+        },
+        {
+          "value": "nariño",
+          "label": "Nariño (Pasto)"
+        },
+        {
+          "value": "cauca",
+          "label": "Cauca (Popayán)"
+        },
+        {
+          "value": "tolima",
+          "label": "Tolima (Ibagué)"
+        },
+        {
+          "value": "huila",
+          "label": "Huila (Neiva)"
+        },
+        {
+          "value": "otro",
+          "label": "Otro departamento"
+        }
+      ],
+      "hint": "El ICA varía por municipio (8–13,8 por mil). Selecciona principal.",
+      "required": true
+    },
+    {
+      "id": "cliente_es_retenedor",
+      "label": "¿El cliente está obligado a retener (empresa, persona jurídica)?",
+      "type": "checkbox",
+      "hint": "Si no, no hay retenciones. Solo personas naturales sin actividad comercial están exentas.",
+      "required": true
+    },
+    {
+      "id": "aplica_reteiva",
+      "label": "¿Aplica reteIVA (19%)? (cliente gran retenedor o servicio específico)",
+      "type": "checkbox",
+      "hint": "Algunos servicios (consultoría, transporte, etc.) tienen reteIVA. Confirma con cliente.",
+      "required": false
+    },
+    {
+      "id": "es_autorretenedor",
+      "label": "¿Eres autorretenedor (persona jurídica con régimen especial)?",
+      "type": "checkbox",
+      "hint": "Algunos autorretenedores se practican retención a sí mismos sobre gastos.",
+      "required": false
+    },
+    {
+      "id": "periodicidad_declaracion",
+      "label": "Periodicidad fiscal habitual (para referencia)",
+      "type": "select",
+      "options": [
+        {
+          "value": "mensual",
+          "label": "Mensual (retenciones > $600.000 COP mensual aprox.)"
+        },
+        {
+          "value": "bimestral",
+          "label": "Bimestral (retenciones < $600.000 COP promedio)"
+        }
+      ],
+      "hint": "DIAN determina según volumen. Esta es solo referencia educativa.",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "base_retencion",
+      "label": "Base para retenciones",
+      "type": "currency",
+      "hint": "Monto honorario sin IVA. Si incluía IVA, se extrae primero."
+    },
+    {
+      "id": "iva_honorario",
+      "label": "IVA 19% del honorario",
+      "type": "currency",
+      "hint": "IVA a facturar al cliente (no retendible como ingreso tuyo)."
+    },
+    {
+      "id": "retencion_renta",
+      "label": "Retención en renta (10–11%)",
+      "type": "currency",
+      "hint": "Retención por concepto de renta según artículos DIAN. Típicamente 10% (servicios) o 11% (consultoría)."
+    },
+    {
+      "id": "porcentaje_renta_aplicado",
+      "label": "% retención renta aplicado",
+      "type": "percentage",
+      "hint": "10% servicios generales, 11% consultoría, variable por causal."
+    },
+    {
+      "id": "tarifa_ica",
+      "label": "Tarifa ICA del municipio cliente",
+      "type": "text",
+      "hint": "Varía: Bogotá 8,0 por mil; Medellín 8,0; Cali 8,0; otros hasta 13,8 por mil."
+    },
+    {
+      "id": "retencion_ica",
+      "label": "Retención ICA (8–13,8 por mil)",
+      "type": "currency",
+      "hint": "Impuesto sobre la industria y comercio. Municipal. Solo si cliente está obligado."
+    },
+    {
+      "id": "retencion_reteiva",
+      "label": "ReteIVA 19% (si aplica)",
+      "type": "currency",
+      "hint": "Retención sobre IVA del servicio. Solo en servicios específicos o cliente gran retenedor."
+    },
+    {
+      "id": "total_retenciones",
+      "label": "Total retenciones practicadas",
+      "type": "currency",
+      "hint": "Suma: renta + ICA + reteIVA (si aplica)."
+    },
+    {
+      "id": "neto_recibido_sin_iva",
+      "label": "Neto recibido (sin IVA)",
+      "type": "currency",
+      "hint": "Base honorario menos total retenciones. Es lo que ingresa a tu cuenta."
+    },
+    {
+      "id": "total_facturado",
+      "label": "Total facturado (honorario + IVA)",
+      "type": "currency",
+      "hint": "Lo que debe pagar el cliente. Retenciones se descuentan de aquí."
+    },
+    {
+      "id": "efectivo_neto_total",
+      "label": "Efectivo neto total recibido",
+      "type": "currency",
+      "hint": "Neto recibido sin IVA. Cantidad real en cuenta bancaria."
+    },
+    {
+      "id": "tasa_retencion_efectiva",
+      "label": "Tasa de retención efectiva",
+      "type": "percentage",
+      "hint": "% del honor base retenido. Referencia sobre carga tributaria."
+    },
+    {
+      "id": "periodicidad_declaracion_resultado",
+      "label": "Periodicidad sugerida para declaración de retenciones",
+      "type": "text",
+      "hint": "Mensual o bimestral según acumulado. Consulta tu RUT o asesor."
+    },
+    {
+      "id": "obligaciones_complementarias",
+      "label": "Obligaciones complementarias",
+      "type": "text",
+      "hint": "Resumen de declaraciones e impuestos adicionales a gestionar."
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa retención en la fuente sobre prestación de servicios en Colombia comprende tres componentes principales regulados por la **DIAN**, la **Superfinanciera** y autoridades municipales:\n\n### Fórmula general\n\n```\nBase retención = Monto honorario (sin IVA)\n\nRetención renta = Base × % causal (10% servicios, 11% consultoría, variable)\nRetención ICA = Base × tarifa municipal (8–13,8 por mil) / 1000\nRetención reteIVA = IVA (19% base) × 19% (si cliente retenedor de IVA)\n\nTotal retenciones = Retención renta + Retención ICA + Retención reteIVA\nNeto = Base - Total retenciones\n```\n\n### Retención en renta\n\n- **Servicios generales**: 10% (artículo 383 ET).\n- **Consultoría, asesoría**: 11% (artículo 384 ET).\n- **Transporte, construcción, arrendamiento**: 10–11% (causal específica).\n- Se practica **obligatoriamente** si cliente es empresa, PJ o persona natural con NIT activo (no aplica a PN sin actividad comercial).\n\n### Retención ICA\n\n- Impuesto Municipal sobre Industria y Comercio.\n- Tarifa varía por municipio:\n  - **Bogotá**: 8,0 por mil.\n  - **Medellín**: 8,0 por mil.\n  - **Cali**: 8,0 por mil.\n  - **Otros**: 8,0–13,8 por mil (consulta municipio específico).\n- Fórmula: `ICA = Base × tarifa por mil ÷ 1000`.\n- Aplica si cliente **está obligado a retener** (empresa o PN con RUT activo en actividad comercial).\n\n### ReteIVA (Retención sobre IVA)\n\n- 19% sobre el IVA facturado.\n- **Aplica en**:\n  - Servicios de transporte terrestre.\n  - Servicios de consultoría, asesoría.\n  - Algunos servicios técnicos y profesionales.\n  - Cliente es gran retenedor (categoría A, según DIAN).\n- **No aplica** en servicios exentos de IVA o cliente pequeño retenedor.\n- Se calcula sobre: `IVA = Base × 19%`, luego `ReteIVA = IVA × 19%`.\n\n### IVA del servicio\n\n- Servicio de honor típicamente tiene IVA 19%.\n- **No es retendible** directamente, pero puede serlo si incluye causal reteIVA.\n- Se suma al honorario facturado.\n\n## Ejemplo práctico\n\n**Datos**:\n- Monto honorario: **$10.000.000 COP** (consultoría).\n- Cliente: empresa en **Bogotá**.\n- Tarifa ICA Bogotá: **8,0 por mil**.\n- ReteIVA: sí aplica (cliente retenedor, servicio de consultoría).\n\n**Cálculos**:\n\n| Concepto | Fórmula | Valor COP |\n|----------|---------|----------|\n| Base honorario | — | 10.000.000 |\n| Retención renta (11%) | 10.000.000 × 0,11 | 1.100.000 |\n| Retención ICA (8,0 ‰) | 10.000.000 × 8,0 ÷ 1000 | 80.000 |\n| IVA 19% | 10.000.000 × 0,19 | 1.900.000 |\n| ReteIVA 19% | 1.900.000 × 0,19 | 361.000 |\n| **Total retenciones** | 1.100.000 + 80.000 + 361.000 | **1.541.000** |\n| **Neto recibido (s/IVA)** | 10.000.000 − 1.541.000 | **8.459.000** |\n| **Total facturado** | 10.000.000 + 1.900.000 | **11.900.000** |\n| **Tasa retención efectiva** | 1.541.000 ÷ 10.000.000 | **15,41%** |\n\n## Declaración ante DIAN\n\n- **Periodicidad**: depende del acumulado de retenciones:\n  - Mensuales si monto mensual promedio > ~$600.000 COP.\n  - Bimestrales si menor (RUT especifica).\n- **Responsabilidad**: el cliente (retenedor) declara y paga retenciones.\n- **Documentación**: factura con número de retención, certificado anual de retenciones (formulario 1099 o 2645 DIAN).\n\n## Limitaciones\n\n- **Tarifa ICA municipal**: requiere validación en administración tributaria local. Esta calc usa promedios; municipios pueden variar.\n- **ReteIVA**: no todos los servicios tienen causal; requiere análisis del cliente o CIIU específico.\n- **Cambios normativos**: DIAN ajusta porcentajes; verifica vigencia anual.\n- **Régimen especial**: autorretenedores, personas jurídicas con régimen simplificado pueden tener excepciones.\n- **Exoneraciones**: algunos servicios o clientes pueden estar exentos; consulta base de datos DIAN.\n- **Otros impuestos**: esta calc no incluye impuesto a la renta sobre ganancia personal (depende declaración anual), contribuciones EPS/pensión si eres empleado, o IVA por ventas si eres responsable.\n\n## Referencia normativa\n\n- Artículos 369–387 del Estatuto Tributario (Retención en la fuente).\n- Decreto 624/1989 (DIAN).\n- Resoluciones anuales DIAN sobre tarifas y causales.\n- Ordenanzas municipales para ICA.\n- Decreto 1165/2022 para reteIVA en servicios específicos.",
+  "faq": [
+    {
+      "q": "¿Quién practica la retención: yo o el cliente?",
+      "a": "El **cliente** (retenedor). Tú factura el monto completo, pero el cliente descuenta las retenciones y las paga a DIAN. Tú recibes neto (sin retenciones). El cliente te entrega certificado anual (1099 o 2645) para validarlas en tu declaración."
+    },
+    {
+      "q": "¿Si el cliente es persona natural sin negocio, ¿hay retención?",
+      "a": "No. Solo si el cliente es empresa, persona jurídica, o persona natural con **NIT activo** en actividad comercial está obligado a retener. Una PN que contrata servicios puntuales sin ser comerciante no retiene."
+    },
+    {
+      "q": "¿Cómo sé qué tarifa ICA aplicar si no sé el municipio exacto del cliente?",
+      "a": "Pregunta al cliente o valida en la administración municipal. Esta calc usa Bogotá (8,0) como referencia. Municipios pequeños pueden llegar a 13,8 por mil. Diferencia es material."
+    },
+    {
+      "q": "¿El IVA se retiene o se factura normalmente?",
+      "a": "El IVA (19%) se **factura** normalmente. Lo que **se retiene** es el IVA si aplica **reteIVA** (19% sobre el IVA). En la mayoría de servicios, reteIVA no aplica; solo cliente retenedor de IVA lo practica."
+    },
+    {
+      "q": "¿Tengo que hacer algo si el cliente no retiene correctamente?",
+      "a": "Tienes derecho a exigir certificado de retención (1099) que acredite lo que practicó. Si no retiene siendo obligado, tú debes reportar ingresos en tu declaración de renta anual; DIAN puede fiscalizar al cliente por no cumplir retención. Exige siempre factura con retención anotada."
+    },
+    {
+      "q": "¿Puedo deducir las retenciones de impuestos que debo pagar?",
+      "a": "Sí. Las retenciones son **saldo a favor**: en tu declaración de renta anual (Formulario 210 o 110), restas el total de retenciones practicadas. Si exceden el impuesto a pagar, genera devolución o saldo a pagar años posteriores."
+    },
+    {
+      "q": "¿Qué es ICA y quién lo recibe?",
+      "a": "El **Impuesto sobre la Industria y Comercio (ICA)** es un gravamen municipal sobre la actividad económica. Lo cobra el municipio donde opera el negocio del cliente. Tasa varía 8–13,8 por mil. El cliente (retenedor) lo deduce de tu pago."
+    },
+    {
+      "q": "¿Autorretenedor significa que yo retiene para mí mismo?",
+      "a": "Sí. Si eres autorretenedor certificado (PJ con régimen especial), puedes practicarte retenciones a ti mismo sobre gastos/servicios internos. Es excepcional; requiere solicitud a DIAN y cumplimiento especial. La mayoría de freelancers no son autorretenedores."
+    },
+    {
+      "q": "¿Esto afecta mi afiliación a EPS y pensión?",
+      "a": "No directamente. Las retenciones renta/ICA/reteIVA son tributarias. Tus aportes EPS (~12,5%) y pensión (~4%) se descuentan aparte como cotizante en salud y pensión, si eres independiente o afiliado. Consulta tu fondo."
+    },
+    {
+      "q": "¿Con qué frecuencia declaro estas retenciones a DIAN?",
+      "a": "Depends on accumulated. If >~$600k/month average, monthly declaration (Formulario 361). If lower, bimonthly (Formulario 361 bimestral). Your RUT specifies. Cliente (retenedor) declares, not you directly; you receive certificate."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DIAN - Retención en la Fuente (Artículos 369–387 Estatuto Tributario)",
+      "url": "https://www.dian.gov.co/impuestos/impuestosdelasPersonasNaturales/Paginas/default.aspx",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "DIAN - Resolución anual causales y tarifas retención 2026",
+      "url": "https://www.dian.gov.co/impuestos/impuestosdelasPersonasNaturales/Paginas/retencionalafuente.aspx",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Cámara de Comercio Bogotá - ICA tarifas municipales 2026",
+      "url": "https://www.ccb.org.co/",
+      "publisher": "CCB",
+      "date": "2026"
+    },
+    {
+      "name": "Decreto 624/1989 - Estatuto Tributario Colombiano (Retención)",
+      "url": "https://www.dian.gov.co/normatividad/Paginas/decreto-624-1989.aspx",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Superfinanciera - Circular 100/1995 (Retención IVA servicios financieros)",
+      "url": "https://www.superfinanciera.gov.co/",
+      "publisher": "Superfinanciera",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "DIAN - Resoluciones anuales causales y tarifas retención en la fuente 2026",
+    "sourceUrl": "https://www.dian.gov.co/impuestos/impuestosdelasPersonasNaturales/Paginas/retencionalafuente.aspx",
+    "updateType": "manual",
+    "notes": "Tarifas renta 10–11% (causales por servicio), ICA municipal (8–13,8 por mil según DIAN municipal), reteIVA 19% (servicios específicos). Validar anualmente en DIAN y cámara comercio local."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,279 @@
+{
+  "slug": "calculadora-isapre-cotizacion-chile-7-porcentaje-plan",
+  "title": "Calculadora Isapre Chile 7% | Cotización Plan 2026",
+  "h1": "Calculadora de cotización Isapre Chile: 7% legal + plan",
+  "description": "Calcula tu cotización Isapre en Chile 2026. Estima el 7% legal, plus del plan elegido y comparativa con Fonasa. Banmédica, Colmena, Cruz Blanca, Vida Tres.",
+  "category": "finanzas",
+  "audience": "CL",
+  "icon": "🏥",
+  "formulaId": "isapre-cotizacion-chile-7-porcentaje-plan",
+  "intro": "Calcula tu cotización mensual en Isapre Chile 2026. Las Isapres (Instituciones de Salud Previsional) aplican un **cotización mínima del 7% de tu sueldo bruto** más un plus si el plan elegido supera este tope. Esta calculadora estima tu costo total en Isapres como Banmédica, Colmena, Cruz Blanca y Vida Tres, incluyendo comparativa con Fonasa según tu tramo de ingreso.",
+  "keyTakeaway": "Cotización Isapre = 7% sueldo + plus plan. Ejemplo: sueldo $2.500.000 → 7% = $175.000 + plus variable. Compara con Fonasa (0-7% según ingreso).",
+  "useCases": [
+    "Trabajador dependiente: calcular descuento mensual Isapre en nómina",
+    "Autónomo o independiente: presupuestar cotización Isapre voluntaria",
+    "Cambio de plan: estimar diferencia de costo entre planes UF Isapre",
+    "Decisión Isapre vs Fonasa: comparar costo total y cobertura",
+    "Jubilado: proyectar cotización Isapre en pensión según tramo UF",
+    "Familia: calcular cotización múltiple por cargas y dependientes"
+  ],
+  "fields": [
+    {
+      "id": "sueldo_bruto",
+      "label": "Sueldo bruto mensual (CLP)",
+      "type": "number",
+      "placeholder": "2500000",
+      "min": 380000,
+      "required": true,
+      "help": "Sueldo imponible SII 2026. Mínimo: UF × 22 (~$1.000.000). Se usa para calcular el 7% legal."
+    },
+    {
+      "id": "edad",
+      "label": "Edad (años)",
+      "type": "number",
+      "placeholder": "35",
+      "min": 15,
+      "max": 100,
+      "required": true,
+      "help": "Edad al 31 de diciembre del año. Afecta prima por edad en algunos planes Isapre."
+    },
+    {
+      "id": "plan_uf_mensual",
+      "label": "Plan elegido (UF/mes)",
+      "type": "number",
+      "placeholder": "2.5",
+      "min": 0.5,
+      "step": 0.1,
+      "required": true,
+      "help": "Costo mensual del plan Isapre en UF. Ejemplo: Banmédica Plan Básico ~2,5 UF/mes (2026)."
+    },
+    {
+      "id": "isapre_nombre",
+      "label": "Isapre seleccionada",
+      "type": "select",
+      "options": [
+        {
+          "value": "banmedica",
+          "label": "Banmédica"
+        },
+        {
+          "value": "colmena",
+          "label": "Colmena Seguros"
+        },
+        {
+          "value": "cruz_blanca",
+          "label": "Cruz Blanca"
+        },
+        {
+          "value": "vida_tres",
+          "label": "Vida Tres"
+        },
+        {
+          "value": "otra",
+          "label": "Otra Isapre"
+        }
+      ],
+      "required": true,
+      "help": "Principales Isapres Chile 2026. Afecta factor de riesgo y aportante (empleador)."
+    },
+    {
+      "id": "tiene_cargas",
+      "label": "¿Tienes cargas familiares (cónyuge, hijos)?",
+      "type": "checkbox",
+      "required": false,
+      "help": "Cargas agregan % adicional a la cotización en algunas Isapres."
+    },
+    {
+      "id": "cantidad_cargas",
+      "label": "Cantidad de cargas",
+      "type": "number",
+      "placeholder": "2",
+      "min": 0,
+      "max": 10,
+      "required": false,
+      "help": "Cónyuge + hijos menores de 25 años. Cada carga suma ~1,5%-2% al plan."
+    },
+    {
+      "id": "tipo_afiliado",
+      "label": "Tipo de afiliado",
+      "type": "select",
+      "options": [
+        {
+          "value": "dependiente",
+          "label": "Dependiente (empleado)"
+        },
+        {
+          "value": "independiente",
+          "label": "Independiente"
+        },
+        {
+          "value": "jubilado",
+          "label": "Jubilado/Pensionado"
+        }
+      ],
+      "required": true,
+      "help": "Afiliación legal. Dependiente: 7% empleado + 0% a 1,5% empleador. Independiente/jubilado: 100% a su cargo."
+    },
+    {
+      "id": "uf_valor_mes",
+      "label": "Valor UF mes actual (CLP)",
+      "type": "number",
+      "placeholder": "38500",
+      "min": 35000,
+      "required": true,
+      "help": "UF de abril 2026: $38.521. Actualizar según fecha cálculo desde Banco Central."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cotizacion_7_legal",
+      "label": "Cotización 7% legal (CLP)",
+      "type": "currency",
+      "help": "7% de tu sueldo bruto. Base mínima Isapre obligatoria por ley."
+    },
+    {
+      "id": "costo_plan_uf_clp",
+      "label": "Costo plan en CLP",
+      "type": "currency",
+      "help": "Plan Isapre expresado en pesos (UF × valor UF)."
+    },
+    {
+      "id": "plus_plan",
+      "label": "Plus del plan (CLP)",
+      "type": "currency",
+      "help": "Diferencia si plan supera 7% legal. Máximo legal: diferencia plan − 7%."
+    },
+    {
+      "id": "cotizacion_total_mensual",
+      "label": "Cotización total mensual (CLP)",
+      "type": "currency",
+      "help": "7% legal + plus. Es el costo del plan elegido."
+    },
+    {
+      "id": "cotizacion_anual",
+      "label": "Cotización anual (CLP)",
+      "type": "currency",
+      "help": "Total mensual × 12 meses."
+    },
+    {
+      "id": "aporte_empleador_dependiente",
+      "label": "Aporte empleador (dependientes, CLP)",
+      "type": "currency",
+      "help": "Empleador descuenta 0% a 1,5% adicional si es Isapre. En Fonasa: 0%."
+    },
+    {
+      "id": "costo_total_con_empleador",
+      "label": "Costo total (empleado + empleador, CLP)",
+      "type": "currency",
+      "help": "Solo para dependientes: tu cotización + aporte empleador."
+    },
+    {
+      "id": "comparativa_fonasa_b",
+      "label": "Fonasa B: cotización estimada (CLP)",
+      "type": "currency",
+      "help": "Fonasa B (ingreso $1M-$2M): 7% sueldo. Cobertura 80% sin plus."
+    },
+    {
+      "id": "comparativa_fonasa_c",
+      "label": "Fonasa C: cotización estimada (CLP)",
+      "type": "currency",
+      "help": "Fonasa C (ingreso $2M-$3M): 7% sueldo. Cobertura 70% sin plus."
+    },
+    {
+      "id": "diferencia_isapre_vs_fonasa_b",
+      "label": "Diferencia Isapre − Fonasa B (CLP)",
+      "type": "currency",
+      "help": "Positivo: Isapre más cara. Negativo: Fonasa B más cara (raro)."
+    },
+    {
+      "id": "resumen_comparativa",
+      "label": "Resumen comparativa",
+      "type": "text",
+      "help": "Análisis cualitativo: recomendación según tramo y plan."
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\n### Cotización Legal 7% (Obligatorio)\nLa cotización base Isapre es **7% del sueldo imponible SII bruto**:\n\n**Cotización 7% = Sueldo bruto × 0,07**\n\nEsta es la cotización mínima que toda Isapre debe cobrar por ley (DL 3500, Circular SII). No hay excepciones por edad, plan o carga.\n\n### Costo Real del Plan (en UF)\nCada Isapre fija planes con precio en UF (Unidad de Fomento). El costo mensual es:\n\n**Costo plan (CLP) = Plan (UF) × Valor UF del mes**\n\nPor ejemplo: Plan Banmédica Básico = 2,5 UF/mes × $38.521 (UF abril 2026) = $96.303 CLP aprox.\n\n### Plus del Plan\nSi el costo del plan supera el 7% legal, la diferencia es el \"plus\" (cotización adicional obligatoria para afiliado):\n\n**Plus = máx(0, Costo plan − Cotización 7%)**\n\nEjemplo:\n- Sueldo: $2.000.000\n- 7% legal: $140.000\n- Plan: 2,5 UF = $96.303 < $140.000 → Plus = $0 (plan cubre el 7%)\n\nCaso 2:\n- Sueldo: $1.000.000\n- 7% legal: $70.000\n- Plan: 3 UF = $115.563 > $70.000 → Plus = $45.563\n\n### Cotización Total\n**Total = 7% legal + Plus = Costo plan**\n\n(Si plan ≤ 7%, el total es solo el 7%. En práctica, los planes Isapre están diseñados para cubrir o superar el 7%.)\n\n### Cargas Familiares\nCargas (cónyuge, hijos menores 25 años) agregan porcentaje al plan:\n\n**Costo cargas ≈ 1,5% − 2% por cada carga del plan base**\n\nEjemplo: Plan $100.000 + 2 cargas (3%) = $103.000 aprox.\n\n### Aporte del Empleador (Dependientes)\nPara trabajadores dependientes, el empleador puede aportar a Isapre (voluntario):\n\n**Aporte empleador (Isapre) = 0% a 1,5% del sueldo** (según contrato/convenio)\n\nEn Fonasa, el empleador NO aporta.\n\n### Comparativa Fonasa\n\n#### Fonasa Categoría B\n- Ingreso imponible: $1.000.001 − $2.000.000\n- Cotización: **7% del ingreso**\n- Cobertura: **80%** de arancel arancel (copago 20%)\n- Prestaciones: red pública estatal + privados convenio\n\n#### Fonasa Categoría C\n- Ingreso: $2.000.001 − $3.000.000\n- Cotización: **7% del ingreso**\n- Cobertura: **70%** arancel (copago 30%)\n\n#### Fonasa Categoría D\n- Ingreso: > $3.000.000\n- Cotización: **7% del ingreso**\n- Cobertura: **60%** arancel (copago 40%)\n\nIsapre vs Fonasa:\n- **Isapre**: cotización variable según plan (puede ser 7%−12%+ sueldo). Red privada, cobertura 80%−100%.\n- **Fonasa**: 7% fijo. Red pública + convenios. Copago según categoría.\n\n### Fórmula Resumida\n\n```\nCotización Isapre = Plan (UF) × Valor UF\n                  = máx(Sueldo × 7%, Costo plan)\nCotización Anual = Cotización mensual × 12\nCosto total (empleado + empleador) = Cotización × (1 + % aporte empleador)\n```\n\n## Ejemplo Completo (2026)\n\n**Datos:**\n- Sueldo bruto: $2.500.000\n- Edad: 38 años\n- Isapre: Banmédica Plan Básico\n- Plan: 2,8 UF/mes\n- UF abril 2026: $38.521\n- Dependiente, sin cargas\n- Aporte empleador: 1%\n\n**Cálculos:**\n\n1. Cotización 7% legal: $2.500.000 × 0,07 = **$175.000**\n2. Costo plan: 2,8 UF × $38.521 = **$107.859**\n3. Plus: máx(0, $107.859 − $175.000) = **$0** (plan no supera 7%)\n4. Cotización total: **$175.000** (cubre plan)\n5. Aporte empleador: $175.000 × 1% = **$1.750**\n6. Costo total mensual: $175.000 + $1.750 = **$176.750**\n7. Costo anual: $176.750 × 12 = **$2.121.000**\n\n**Comparativa Fonasa:**\n- Sueldo $2.500.000 → Categoría C (ingreso $2M−$3M)\n- Cotización Fonasa C: $2.500.000 × 7% = **$175.000** (igual a Isapre)\n- Diferencia: **$0** (cotización idéntica)\n- **Ventaja Isapre**: cobertura 90%−100% vs Fonasa 70% (copago 30%)\n\n## Limitaciones\n\n1. **Precio plan variable**: Las Isapres ajustan planes mensualmente. Esta calculadora usa valor UF del mes ingresado; confirmar cotización en portal Isapre.\n2. **Factor de riesgo no incluido**: Algunas Isapres aplican \"factor de riesgo\" por edad/sexo (máx legal: ±10%). Aquí se asume factor 1,0.\n3. **Cargas estimadas**: El % por cargas varía según Isapre y plan. Usar como referencia.\n4. **Aporte empleador**: Es voluntario y depende de contrato. Aquí se estima 0%−1,5%.\n5. **Cambios legales**: Reforma salud 2026 puede alterar cotizaciones. Revisar SII/CMF.\n6. **Fonasa comparativa**: Categorías son estimadas por ingreso. Confirmar tramo exacto en Fonasa.cl.",
+  "faq": [
+    {
+      "q": "¿Cuál es el mínimo legal que cobra una Isapre?",
+      "a": "**7% de tu sueldo bruto**. Es obligatorio por ley (DL 3500). Si el plan elegido es más barato que esto, la Isapre cobra el 7%. Si el plan es más caro, cobras el costo del plan."
+    },
+    {
+      "q": "¿Qué es el \"plus\" del plan Isapre?",
+      "a": "Es la diferencia entre el costo del plan (en UF) y el 7% legal. Si tu plan cuesta más que el 7%, pagas el extra (plus). Ejemplo: plan 3 UF = $115.000, pero 7% es $70.000 → plus = $45.000."
+    },
+    {
+      "q": "¿El empleador aporta a Isapre?",
+      "a": "**No obligatoriamente**. A diferencia de AFP (10%), en Isapre el empleador NO tiene aporte legal mínimo. Puede aportar 0% a 1,5% según convenio colectivo o contrato individual."
+    },
+    {
+      "q": "¿Cómo cambia la cotización Isapre si tengo cargas (cónyuge, hijos)?",
+      "a": "Las cargas agregan porcentaje al plan (típicamente 1,5%−2% por carga). Ejemplo: plan base $100.000 + 2 cargas = ~$103.000−$104.000. Confirmar en cotizador Isapre."
+    },
+    {
+      "q": "¿Es más caro Isapre o Fonasa a la misma cotización?",
+      "a": "**Cotización**: similar (ambas ~7%). **Cobertura**: Isapre 80%−100%, Fonasa B 80% / C 70% / D 60%. Isapre: red privada, copago bajo. Fonasa: red pública, copago por categoría."
+    },
+    {
+      "q": "¿Qué son las categorías Fonasa B, C, D?",
+      "a": "Dependen de tu **ingreso imponible**: B ($1M−$2M), C ($2M−$3M), D (>$3M). Cada categoría tiene cobertura diferente (80%, 70%, 60%) y copago. Isapre no usa categorías, es plan a plan."
+    },
+    {
+      "q": "¿Puedo cambiar de Isapre sin perder descuentos o carencias?",
+      "a": "Sí, puedes cambiar 1 vez al año sin carencia (ley de portabilidad). Cambios adicionales pueden tener carencia de 3−12 meses según plan. Consulta con tu nueva Isapre."
+    },
+    {
+      "q": "¿Qué pasa con mi cotización Isapre si jubilo?",
+      "a": "Como jubilado/pensionado, puedes mantener Isapre (cotización 100% a tu cargo desde pensión) o pasar a Fonasa gratuito (sin copago si pensión < UF × 100). La cotización Isapre no cambia por edad."
+    },
+    {
+      "q": "¿La edad afecta la cotización Isapre?",
+      "a": "Sí, algunas Isapres aplican \"factor de riesgo\" que ajusta el precio según edad y sexo (máximo ±10% legal). Esta calculadora asume factor 1,0; confirma en tu Isapre si hay ajuste."
+    },
+    {
+      "q": "¿Cómo actualizo el valor de la UF para mi cálculo?",
+      "a": "Consulta **Banco Central (bcentralchile.cl)** o **SII (sii.cl)** → UF del mes. Valor UF varía diariamente. Ingresa la UF del día de tu cálculo para precisión."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Superintendencia de Salud - Instituciones de Salud Previsional (Isapres)",
+      "url": "https://www.supersalud.gob.cl/instituciones/570/w3-channel.html",
+      "publisher": "Superintendencia de Salud",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central de Chile - Valor UF",
+      "url": "https://www.bcentralchile.cl/indicadores/valor-uf",
+      "publisher": "Banco Central",
+      "date": "2026"
+    },
+    {
+      "name": "Servicio de Impuestos Internos (SII) - Cotizaciones y aportes",
+      "url": "https://www.sii.cl/sobre-sii/novedades-tributarias",
+      "publisher": "SII",
+      "date": "2026"
+    },
+    {
+      "name": "Ministerio de Salud - Protección Social en Salud",
+      "url": "https://www.minsal.cl/",
+      "publisher": "Ministerio de Salud",
+      "date": "2026"
+    },
+    {
+      "name": "Fonasa - Categorías y cotizaciones",
+      "url": "https://www.fonasa.cl/",
+      "publisher": "Fonasa",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-28",
+    "source": "Superintendencia de Salud, Banco Central, SII",
+    "sourceUrl": "https://www.supersalud.gob.cl",
+    "updateType": "manual",
+    "notes": "UF se actualiza diariamente (Banco Central). Cotizaciones Isapres cambian mensualmente según ajuste plan. Reglamento Isapre se revisa anualmente por CMF/Supersalud. Factor riesgo y cargas pueden variar por institución."
+  },
+  "lastReviewed": "2026-04-28"
+}

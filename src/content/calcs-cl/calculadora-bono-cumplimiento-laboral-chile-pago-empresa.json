@@ -1,0 +1,237 @@
+{
+  "slug": "calculadora-bono-cumplimiento-laboral-chile-pago-empresa",
+  "title": "Calculadora Bono Cumplimiento Laboral Chile 2026 | Hacé Cuentas",
+  "h1": "Bono cumplimiento laboral Chile",
+  "description": "Calcula bono variable por objetivos cumplidos, retenciones IUSC, AFP y salud. Chile 2026. Sueldo base + bono integrado.",
+  "category": "finanzas",
+  "audience": "CL",
+  "icon": "🎯",
+  "formulaId": "bono-cumplimiento-laboral-chile-pago-empresa",
+  "intro": "El bono de cumplimiento laboral es una remuneración variable común en sectores minería, retail y manufactura chilena. Tu cálculo integra el bono esperado ajustado por porcentaje de objetivos alcanzados, calcula retenciones obligatorias (IUSC, AFP, Isapre/Fonasa) y entrega el líquido final más desglose de imponible para declaración anual SII.",
+  "keyTakeaway": "Bono $500.000 al 100% objetivos + sueldo $2.500.000 = imponible $3.000.000 con retenciones aprox. $630.000, líquido $2.370.000 (2026).",
+  "useCases": [
+    "Trabajador minería planificando bono semestral según desempeño",
+    "Empresa retail calculando costo nómina con bono variable",
+    "Verificar retenciones correctas antes de liquidación final",
+    "Comparar líquido con sueldo base para proyectar ingresos",
+    "Departamento RR.HH. validando cálculos legales SII"
+  ],
+  "fields": [
+    {
+      "id": "sueldo_base_mensual",
+      "label": "Sueldo base mensual",
+      "type": "currency",
+      "placeholder": "2500000",
+      "required": true,
+      "description": "Remuneración fija mensual en pesos chilenos"
+    },
+    {
+      "id": "bono_esperado",
+      "label": "Bono esperado (100% objetivos)",
+      "type": "currency",
+      "placeholder": "500000",
+      "required": true,
+      "description": "Monto máximo del bono si cumple 100% de objetivos"
+    },
+    {
+      "id": "objetivos_cumplidos_pct",
+      "label": "Objetivos cumplidos (%)",
+      "type": "number",
+      "placeholder": "100",
+      "required": true,
+      "min": 0,
+      "max": 150,
+      "description": "Porcentaje de objetivos alcanzados (0-150%)"
+    },
+    {
+      "id": "tipo_salud",
+      "label": "Sistema de salud",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "fonasa",
+          "label": "Fonasa (7%)"
+        },
+        {
+          "value": "isapre",
+          "label": "Isapre (7% aprox.)"
+        }
+      ],
+      "description": "Retención salud integrada en imponible"
+    },
+    {
+      "id": "afiliado_afp",
+      "label": "¿Afiliado a AFP?",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí (10% + comisión)"
+        },
+        {
+          "value": "no",
+          "label": "No (sin descuento)"
+        }
+      ],
+      "description": "Descuento AFP obligatorio trabajadores privados"
+    },
+    {
+      "id": "comision_afp_pct",
+      "label": "Comisión AFP (%)",
+      "type": "number",
+      "placeholder": "1.45",
+      "required": false,
+      "min": 0,
+      "max": 2.5,
+      "description": "Comisión vigente 2026 (promedio 1.45%)"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "bono_bruto_calculado",
+      "label": "Bono bruto (según % objetivos)",
+      "type": "currency"
+    },
+    {
+      "id": "remuneracion_bruta_total",
+      "label": "Remuneración bruta total",
+      "type": "currency"
+    },
+    {
+      "id": "imponible_total",
+      "label": "Imponible (para IUSC/salud)",
+      "type": "currency"
+    },
+    {
+      "id": "descuento_afp",
+      "label": "Descuento AFP (10%)",
+      "type": "currency"
+    },
+    {
+      "id": "comision_afp",
+      "label": "Comisión AFP",
+      "type": "currency"
+    },
+    {
+      "id": "descuento_salud",
+      "label": "Descuento salud (7%)",
+      "type": "currency"
+    },
+    {
+      "id": "iusc_retenido",
+      "label": "IUSC retenido",
+      "type": "currency"
+    },
+    {
+      "id": "total_retenciones",
+      "label": "Total retenciones",
+      "type": "currency"
+    },
+    {
+      "id": "sueldo_liquido",
+      "label": "Sueldo líquido (a pagar)",
+      "type": "currency"
+    },
+    {
+      "id": "aporte_empleador_afp",
+      "label": "Aporte empleador AFP (10%)",
+      "type": "currency"
+    },
+    {
+      "id": "aporte_empleador_salud",
+      "label": "Aporte empleador salud (6.17%)",
+      "type": "currency"
+    },
+    {
+      "id": "costo_nomina_total",
+      "label": "Costo nómina total (empresa)",
+      "type": "currency"
+    }
+  ],
+  "explanation": "## Cómo se calcula el bono de cumplimiento laboral\n\n### Fórmula principal\n\n1. **Bono ajustado por objetivos:**\n   - Bono bruto = Bono esperado × (Objetivos cumplidos % / 100)\n\n2. **Remuneración bruta total:**\n   - Bruta total = Sueldo base + Bono bruto ajustado\n\n3. **Imponible (base para retenciones):**\n   - Imponible = Remuneración bruta total\n   - Sobre este monto se calculan IUSC, AFP, Salud\n\n4. **Retenciones obligatorias:**\n   - **AFP (Fondo de Pensiones):** 10% × Imponible (si afiliado)\n   - **Comisión AFP:** (Comisión % / 100) × Imponible\n   - **Salud (Fonasa/Isapre):** 7% × Imponible\n   - **IUSC:** Según tramo UTA 2026 (tabla progresiva SII)\n\n5. **Sueldo líquido:**\n   - Líquido = Bruta total − AFP − Comisión AFP − Salud − IUSC\n\n6. **Costo para empresa:**\n   - Aporte AFP empleador: 10% × Imponible\n   - Aporte salud empleador: 6.17% × Imponible\n   - Costo total = Bruta total + Aportes empleador\n\n### Tabla IUSC 2026 (UTA = $62.868)\n\n| Tramo | Desde UTA | Hasta UTA | Tasa | Rebaja |\n|-------|-----------|-----------|------|--------|\n| 1 | 0 | 13.5 | 0% | 0 |\n| 2 | 13.5 | 21 | 5% | Según cálculo |\n| 3 | 21 | 30 | 10% | Según cálculo |\n| 4 | 30 | 40 | 14% | Según cálculo |\n| 5 | 40 | 50 | 17% | Según cálculo |\n| 6 | 50 | 60 | 20% | Según cálculo |\n| 7 | 60 | 70 | 23% | Según cálculo |\n| 8 | 70+ | ∞ | 27% | Según cálculo |\n\n### Ejemplo práctico\n\n**Datos:**\n- Sueldo base: $2.500.000\n- Bono esperado: $500.000\n- Objetivos cumplidos: 80%\n- Afiliado AFP: Sí\n- Comisión AFP: 1.45%\n- Sistema salud: Fonasa (7%)\n\n**Cálculos:**\n1. Bono bruto = $500.000 × (80/100) = $400.000\n2. Remuneración bruta = $2.500.000 + $400.000 = $2.900.000\n3. Imponible = $2.900.000\n4. AFP = $2.900.000 × 10% = $290.000\n5. Comisión AFP = $2.900.000 × 1.45% = $42.050\n6. Salud = $2.900.000 × 7% = $203.000\n7. IUSC (tramo 6 aprox.) = ~$160.000\n8. Total retenciones = $290.000 + $42.050 + $203.000 + $160.000 = $695.050\n9. **Sueldo líquido = $2.900.000 − $695.050 = $2.204.950**\n\n**Costo empresa:**\n- Aporte AFP: $2.900.000 × 10% = $290.000\n- Aporte salud: $2.900.000 × 6.17% = $178.930\n- Costo total nómina = $2.900.000 + $290.000 + $178.930 = $3.368.930\n\n### Limitaciones y consideraciones\n\n- **IUSC progresivo:** El cálculo IUSC utiliza tabla oficial SII 2026; varía si hay otras fuentes de renta\n- **Bono no integrado:** Si el bono es no integrado (menos común), se retiene diferente; esta calculadora asume bono integrado\n- **Bonos adicionales:** No incluye bonos especiales (productividad, asiduidad) que afecten imponible\n- **Asignaciones familiares:** Se calculan por separado según cargas (no incluido aquí)\n- **Depreciación UTA:** Valores vigentes al 2026; pueden variar anualmente\n- **Comisión AFP:** Rangos 0.77% a 2.42% según administradora; usa promedio 1.45%\n- **Periodicidad:** Cálculo mensual; bono puede ser semestral o anual (ajusta según período real)\n\n",
+  "faq": [
+    {
+      "question": "¿El bono se integra siempre al imponible?",
+      "answer": "En Chile, la mayoría de bonos de cumplimiento son integrados (se incluyen en el cálculo de IUSC, AFP y salud). Algunos bonos especiales pueden ser no integrados; consulta tu contrato o con RR.HH."
+    },
+    {
+      "question": "¿Qué ocurre si cumplo más del 100% de objetivos?",
+      "answer": "Muchos programas de bono tienen topes (máximo 120-150% según empresa). Esta calculadora permite ingresar hasta 150% para simular ese escenario."
+    },
+    {
+      "question": "¿Cómo se calcula el IUSC exacto?",
+      "answer": "El IUSC es progresivo según UTA (Unidad Tributaria Anual). Se divide el imponible entre UTA vigente, se ubica en tabla, se aplica tasa y rebaja. Es complejo; aquí se estima por tramo. Revisa liquidación final del empleador para cifra exacta."
+    },
+    {
+      "question": "¿La AFP es obligatoria?",
+      "answer": "Sí, en sector privado es obligatoria si eres trabajador por contrato. Solo exentos ciertos grupos (Fuerzas Armadas, magistrados). Puedes elegir administradora, pero descuento del 10% es fijo."
+    },
+    {
+      "question": "¿Qué es comisión AFP?",
+      "answer": "Además del 10% aporte, cada administradora cobra comisión variable (0.77% a 2.42% 2026). Es descuento adicional sobre el imponible. Puedes revisar en comisión de cada AFP."
+    },
+    {
+      "question": "¿El empleador también paga aportes?",
+      "answer": "Sí. Empleador aporta 10% a AFP y 6.17% a salud del trabajador. Son costos para la empresa, no se restan del sueldo del trabajador, pero sí del presupuesto nómina."
+    },
+    {
+      "question": "¿Hay diferencia entre Fonasa e Isapre en retención?",
+      "answer": "Para cálculo retención, ambas descuentan 7% del imponible. Isapre puede tener variantes según plan; pero en general es 7% (algunos planes pueden ser menos)."
+    },
+    {
+      "question": "¿Cómo declaro el bono en Renta?",
+      "answer": "El bono integrado se suma al sueldo base en el F-22 (declaración de renta). El SII toma el imponible anual y calcula IUSC total del año; la retención mensual es anticipo."
+    },
+    {
+      "question": "¿Puedo comparar dos bonos diferentes?",
+      "answer": "Sí, corre la calculadora dos veces con datos distintos. Verás diferencia en líquido, retenciones y costo empresa. Útil para negociar con empleador."
+    },
+    {
+      "question": "¿Qué datos debo verificar con mi liquidación?",
+      "answer": "Comprueba: sueldo base, bono (si aplica), AFP, comisión, salud, IUSC. Los aportes empleador no aparecen en tu liquidación pero sí en declaración anual de empresa."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII - Impuesto Único a la Remuneración (IUSC) 2026",
+      "url": "https://www.sii.cl/impuestos/impuestos-a-la-renta/trabajadores",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central Chile - UTA 2026",
+      "url": "https://www.bcentral.cl/web/guest/estudios",
+      "publisher": "Banco Central de Chile",
+      "date": "2026"
+    },
+    {
+      "name": "Superintendencia de Pensiones - Aportes AFP",
+      "url": "https://www.spensiones.cl/",
+      "publisher": "Superintendencia de Pensiones",
+      "date": "2026"
+    },
+    {
+      "name": "Superintendencia de Salud - Descuentos Fonasa/Isapre",
+      "url": "https://www.supersalud.gob.cl/",
+      "publisher": "Superintendencia de Salud",
+      "date": "2026"
+    },
+    {
+      "name": "Código del Trabajo Chile - Remuneraciones",
+      "url": "https://www.dt.gob.cl/",
+      "publisher": "Dirección del Trabajo",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII / Banco Central Chile",
+    "sourceUrl": "https://www.sii.cl/impuestos/impuestos-a-la-renta/trabajadores",
+    "updateType": "manual",
+    "notes": "UTA, tramos IUSC, tasas AFP y comisiones se actualizan anualmente en enero/febrero"
+  },
+  "lastReviewed": "2026-04-28"
+}

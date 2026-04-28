@@ -1,0 +1,261 @@
+{
+  "slug": "calculadora-impuesto-segunda-categoria-anual-chile-rentas-altas",
+  "title": "Impuesto Global Complementario Chile 2026 | Hacé Cuentas",
+  "h1": "Impuesto Global Complementario Chile (rentas anuales)",
+  "description": "Calcula tu impuesto anual Chile 2026: tramos UTA, créditos, retenciones. Rentas segunda categoría hasta $180M. Declaración SII abril.",
+  "category": "impuestos",
+  "audience": "CL",
+  "icon": "📊",
+  "formulaId": "impuesto-segunda-categoria-anual-chile-rentas-altas",
+  "intro": "El **Impuesto Global Complementario** en Chile grava la renta anual total de personas naturales residentes. Se aplica sobre ingresos de segunda categoría (sueldos, honorarios) y otras rentas, con descuentos por AFP, salud e impuestos pagados. Los tramos 2026 usan como medida la **UTA (Unidad Tributaria Anual)**. Este simulador calcula tu obligación final, anticipo obligatorio y eventual devolución o cargo para la declaración ante el SII.",
+  "keyTakeaway": "En Chile 2026, rentas entre $32M–$90M tributan 17–35% según tramos UTA; con retenciones y créditos, muchos contribuyentes reciben devolución en abril.",
+  "useCases": [
+    "Calcular impuesto anual antes de declaración SII (F22, abril)",
+    "Estimar anticipo obligatorio (segundo semestre año siguiente)",
+    "Comparar impacto de AFP 10% + comisión vs salud 7%",
+    "Simular devolución por retenciones excesivas",
+    "Planificar retiros de SPP o fondos mutuos con impacto tributario",
+    "Validar renta imponible en tramos altos (>80 UTA)"
+  ],
+  "fields": [
+    {
+      "id": "renta_sueldos_anuales",
+      "label": "Ingresos sueldos/salarios anuales (brutos)",
+      "type": "number",
+      "min": 0,
+      "max": 500000000,
+      "step": 100000,
+      "hint": "Sueldo mensual × 12 (sin descuentos)",
+      "placeholder": "36000000"
+    },
+    {
+      "id": "renta_honorarios",
+      "label": "Ingresos honorarios/servicios profesionales",
+      "type": "number",
+      "min": 0,
+      "max": 500000000,
+      "step": 100000,
+      "hint": "Honorarios netos (facturados)",
+      "placeholder": "0"
+    },
+    {
+      "id": "renta_capital_mobiliario",
+      "label": "Rentas de capital mobiliario (dividendos, intereses)",
+      "type": "number",
+      "min": 0,
+      "max": 500000000,
+      "step": 100000,
+      "hint": "Ganancias bolsa, fondos, depósitos",
+      "placeholder": "0"
+    },
+    {
+      "id": "renta_arriendos",
+      "label": "Rentas de arriendos (inmuebles)",
+      "type": "number",
+      "min": 0,
+      "max": 500000000,
+      "step": 100000,
+      "hint": "Arriendo anual neto (gastos deducibles)",
+      "placeholder": "0"
+    },
+    {
+      "id": "descuento_afp",
+      "label": "Descuento AFP anual (obligatorio 10% + comisión)",
+      "type": "number",
+      "min": 0,
+      "max": 50000000,
+      "step": 100000,
+      "hint": "Retención AFP en nómina todo el año",
+      "placeholder": "3600000"
+    },
+    {
+      "id": "descuento_salud",
+      "label": "Descuento salud anual (Fonasa 7% o Isapre)",
+      "type": "number",
+      "min": 0,
+      "max": 50000000,
+      "step": 100000,
+      "hint": "Cotización de salud retenida",
+      "placeholder": "2520000"
+    },
+    {
+      "id": "impuestos_pagados",
+      "label": "Impuestos pagados/retenidos (Impuesto Único, AFP, otros)",
+      "type": "number",
+      "min": 0,
+      "max": 100000000,
+      "step": 100000,
+      "hint": "Impuesto Único 2ª cat, retenciones, anticipos",
+      "placeholder": "5400000"
+    },
+    {
+      "id": "gastos_deducibles",
+      "label": "Gastos deducibles (solo si tienes honorarios/arriendos)",
+      "type": "number",
+      "min": 0,
+      "max": 200000000,
+      "step": 100000,
+      "hint": "Gastos de operación (hasta 30% renta bruta)",
+      "placeholder": "0"
+    },
+    {
+      "id": "credito_unico_familiar",
+      "label": "Crédito Único Familiar (CUF) anual",
+      "type": "number",
+      "min": 0,
+      "max": 10000000,
+      "step": 50000,
+      "hint": "Si tienes cargas familiares, consulta SII",
+      "placeholder": "0"
+    },
+    {
+      "id": "uta_valor",
+      "label": "Valor UTA 2026",
+      "type": "number",
+      "min": 0,
+      "max": 1000000,
+      "step": 1000,
+      "hint": "UTA enero 2026 (actualizar según SII)",
+      "placeholder": "68625"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "renta_imponible_total",
+      "label": "Renta imponible total (después descuentos)",
+      "type": "number",
+      "format": "currency"
+    },
+    {
+      "id": "renta_en_uta",
+      "label": "Renta imponible en UTA",
+      "type": "number",
+      "format": "decimal",
+      "decimals": 2
+    },
+    {
+      "id": "tramo_impositivo",
+      "label": "Tramo impositivo según UTA",
+      "type": "string"
+    },
+    {
+      "id": "tasa_marginal",
+      "label": "Tasa marginal aplicable",
+      "type": "number",
+      "format": "percentage"
+    },
+    {
+      "id": "impuesto_global_complementario",
+      "label": "Impuesto Global Complementario calculado",
+      "type": "number",
+      "format": "currency"
+    },
+    {
+      "id": "impuesto_menos_creditos",
+      "label": "Impuesto menos créditos y retenciones",
+      "type": "number",
+      "format": "currency"
+    },
+    {
+      "id": "resultado_declaracion",
+      "label": "Resultado (devolución/cargo en abril)",
+      "type": "number",
+      "format": "currency"
+    },
+    {
+      "id": "tipo_resultado",
+      "label": "Tipo resultado",
+      "type": "string"
+    },
+    {
+      "id": "anticipo_obligatorio",
+      "label": "Anticipo obligatorio 2do semestre siguiente",
+      "type": "number",
+      "format": "currency"
+    }
+  ],
+  "explanation": "## Cómo se calcula el Impuesto Global Complementario (IGC) en Chile\n\nEl **Impuesto Global Complementario** es un gravamen progresivo sobre la renta total anual de personas naturales residentes en Chile. Se aplica al final del año tributario (declaración F22 en abril) y considera ingresos de todas las fuentes menos descuentos obligatorios.\n\n### Fórmula principal\n\n```\nRenta Imponible = (Sueldos + Honorarios + Arriendos + Capital Mobiliario)\n                  - AFP - Salud - Gastos Deducibles\n\nRenta en UTA = Renta Imponible ÷ Valor UTA\n\nImpuesto IGC = Aplicar tramo UTA × Tasa marginal\n\nResultado = IGC - (Impuestos Pagados + Créditos)\n```\n\n### Tramos 2026 (UTA = $68.625)\n\n| Renta Anual (UTA) | Desde | Hasta | Tasa | Desde ($) | Hasta ($) |\n|:---|---:|---:|---:|---:|---:|\n| **0–13,5** | 0 | 13,5 | 0% | $0 | $926.438 |\n| **13,5–30** | 13,5 | 30 | 5% | $926.438 | $2.058.750 |\n| **30–60** | 30 | 60 | 10% | $2.058.750 | $4.117.500 |\n| **60–80** | 60 | 80 | 17% | $4.117.500 | $5.490.000 |\n| **80–120** | 80 | 120 | 25% | $5.490.000 | $8.235.000 |\n| **>120** | 120 | ∞ | 35-40% | >$8.235.000 | – |\n\n*Tasas aproximadas 2026. Verificar en **www.sii.cl** (Renta 2026, Tablas)*\n\n### Descuentos y créditos\n\n1. **AFP (10% obligatorio + 0,8-1,5% comisión)**: Retención en nómina, se descuenta de renta imponible.\n2. **Salud (7% Fonasa o Isapre)**: Cotización de salud, descuento obligatorio.\n3. **Gastos deducibles**: Hasta 30% de renta bruta en casos de honorarios o arriendos.\n4. **Impuesto Único 2ª categoría**: Si pagaste Único (19%), se acredita.\n5. **Crédito Único Familiar (CUF)**: Por cargas familiares (hijos, cónyuge).\n6. **Retenciones**: Retenciones en honorarios, dividendos, etc.\n\n### Ejemplo práctico\n\n**Caso: Profesional con sueldo + honorarios, Chile 2026**\n\n- Sueldo anual bruto: $48.000.000\n- Honorarios: $18.000.000\n- Arriendos: $6.000.000\n- **Renta bruta total**: $72.000.000\n\n**Descuentos:**\n- AFP (10%): –$4.800.000\n- Salud (7%): –$3.360.000\n- Gastos arriendos (25%): –$1.500.000\n\n**Renta imponible**: $72M – $4,8M – $3,36M – $1,5M = **$62.340.000**\n\n**En UTA**: $62.340.000 ÷ $68.625 = **907,44 UTA** (tramo >120)\n\n**Impuesto aplicable** (aproximado, tramo 35-40%): ~$21.820.000\n\n**Menos:**\n- Impuesto Único pagado: –$3.000.000\n- Retenciones honorarios (10%): –$1.800.000\n- Crédito familiar: –$500.000\n\n**Resultado final**: $21.820.000 – $5.300.000 = **$16.520.000 a pagar** (cargo en abril)\n\n### Limitaciones y consideraciones\n\n- **Tasa máxima real**: Puede alcanzar 40-45% en tramos altos con adiciones (GMF, etc.).\n- **Ganancia de capital**: Si vendes inmueble o acciones, se suma a la renta (aplica 10% en algunos casos).\n- **Honorarios sin factura**: No son tributables (riesgo SII).\n- **Valores UTA**: Se actualizan mensualmente por IPC. Usar valor del mes correspondiente.\n- **Anticipo obligatorio**: Si debes >$1.500.000, pagas 50% en julio y 50% en diciembre del año siguiente.\n- **Prescripción**: SII puede auditar hasta 6 años atrás.\n- **Dependencia de retenciones**: Muchas devoluciones dependen de retenciones completas (ISAPRE, AFP, impuesto único).\n\n### Estrategias de optimización\n\n1. Revisar **fraccionamiento de honorarios** con empresa (Impuesto Único puede ser menor).\n2. **Deducir gastos al máximo** en arriendos y profesionales (recibos, contabilidad).\n3. **Contribuciones voluntarias AFP**: Son deducibles hasta $600.000/año adicionales.\n4. **Crédito por gastos de salud**: Últimos cambios permiten mayores créditos médicos.\n5. **Timing de ventas**: Diferir ganancia de capital a año siguiente si es posible.\n\n---\n\n## Fuentes y normativa\n\n- **SII (Servicio de Impuestos Internos)**: Tablas impuesto 2026, RUT, declaración F22.\n- **Banco Central Chile**: Valor UTA actualizado mensualmente.\n- **Superintendencia de Pensiones**: Comisiones AFP vigentes.\n- **Superintendencia de Salud**: Cotizaciones Isapre/Fonasa.",
+  "faq": [
+    {
+      "q": "¿Cuándo debo pagar el Impuesto Global Complementario en Chile?",
+      "a": "El período de declaración es **abril del año siguiente** (formulario F22 ante el SII). El pago de cargo (si la deuda es >$1.500.000) se fracciona: 50% a mediados de julio y 50% a mediados de diciembre del año posterior. Las devoluciones se procesan en mayo–junio."
+    },
+    {
+      "q": "¿Se descuenta la AFP de mi renta imponible?",
+      "a": "Sí. La cotización obligatoria AFP (10% + comisión 0,8-1,5%) se resta de la renta bruta para calcular la renta imponible. También se acredita el impuesto pagado por Impuesto Único en AFP."
+    },
+    {
+      "q": "¿Qué es el 'Crédito Único Familiar' (CUF)?",
+      "a": "Es un descuento en el impuesto por cada carga familiar (hijo, cónyuge con ingresos <$13,5 UTA). En 2026 es aproximadamente $180.000–$250.000 por carga. Se solicita en la declaración F22 con documentos de filiación."
+    },
+    {
+      "q": "¿Cómo se calcula si tengo tanto sueldo como honorarios?",
+      "a": "Se suma la renta bruta de **ambas fuentes** en la renta total. Sueldos tributaban a 'Impuesto Único 2ª categoría' (19%), pero en el IGC anual se acredita ese impuesto pagado. Honorarios pueden estar bajo Impuesto Único (empresa ficticia) o ser sumados al IGC."
+    },
+    {
+      "q": "¿Qué pasa si mis impuestos pagados superan la deuda?",
+      "a": "Tienes **devolución**. El SII procesa devoluciones automáticas en mayo–junio (directo a cuenta bancaria registrada). Si declaras antes, aceleras el proceso. En caso de rechazos, puedes recurrir con antecedentes."
+    },
+    {
+      "q": "¿Es obligatorio pagar anticipo si debo impuesto?",
+      "a": "Sí, si la deuda en abril supera **$1.500.000** (aproximadamente 22 UTA). El anticipo es el 50% de la deuda calculada, pagadero en cuotas a mediados de julio y diciembre del año siguiente. Se ajusta cuando declares el año siguiente."
+    },
+    {
+      "q": "¿Puedo deducir gastos de profesional independiente?",
+      "a": "Hasta el **30% de la renta bruta** en gastos reales (arriendo oficina, servicios, útiles, contabilidad, etc.). Requiere documentación (boletas, facturas, contabilidad). Arriendos de inmuebles también deducen gastos (mantención, impuestos, seguros)."
+    },
+    {
+      "q": "¿Qué es la 'Ganancia de Capital' y cómo tributa?",
+      "a": "Si vendes acciones o inmuebles, la ganancia (precio venta – costo adquisición) se suma a renta total. Acciones de bolsa: 10% si se cumplen requisitos. Inmuebles: tasa marginal completa. Exención si es primera vivienda y cumples requisitos."
+    },
+    {
+      "q": "¿Cuáles son las consecuencias de no declarar?",
+      "a": "Multa del SII (5–50% de impuesto adeudado), intereses por mora (~1% mensual), posible embargo y antecedentes penales en casos graves. La evasión fiscal es delito penal en Chile."
+    },
+    {
+      "q": "¿Dónde puedo validar mi cálculo antes de declarar?",
+      "a": "En **www.sii.cl** tienes 'Mis Impuestos' (portal de contribuyentes), calculadora SII, tablas actualizadas, y la opción de presentar borrador F22. Muchas cajas (Cajas AFP) ofrecen asesoría gratuita en marzo–abril."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII – Impuesto Global Complementario 2026",
+      "url": "https://www.sii.cl/contribuyentes/impuesto-global-complementario",
+      "publisher": "Servicio de Impuestos Internos (SII)",
+      "date": "2026"
+    },
+    {
+      "name": "SII – Valores UTA 2026",
+      "url": "https://www.sii.cl/contribuyentes/impuestos/utm-uta",
+      "publisher": "Servicio de Impuestos Internos (SII)",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central Chile – Valores Económicos",
+      "url": "https://www.bcentral.cl/web/banco-central/indicadores-econom",
+      "publisher": "Banco Central de Chile",
+      "date": "2026"
+    },
+    {
+      "name": "Superintendencia de Pensiones – Comisiones AFP 2026",
+      "url": "https://www.spensiones.cl/portal/institucional/594/w3-channel.html",
+      "publisher": "Superintendencia de Pensiones",
+      "date": "2026"
+    },
+    {
+      "name": "SII – Declaración de Renta F22 Instrucciones 2026",
+      "url": "https://www.sii.cl/contribuyentes/impuestos/declaracion-renta",
+      "publisher": "Servicio de Impuestos Internos (SII)",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Servicio de Impuestos Internos (SII)",
+    "sourceUrl": "https://www.sii.cl",
+    "updateType": "manual",
+    "notes": "Tramos UTA, tasa marginal, valores UTA, límites de crédito y anticipo se actualizan anualmente en enero. Comisiones AFP se actualizan mensualmente. Se revisa completo en cada año tributario antes de período de declaración (marzo–mayo)."
+  },
+  "lastReviewed": "2026-04-28"
+}

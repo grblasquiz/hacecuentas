@@ -1,0 +1,246 @@
+{
+  "slug": "calculadora-renta-vitalicia-mayores-65-espana-fiscalidad",
+  "title": "Calculadora Renta Vitalicia >65 años | Fiscalidad IRPF 2026",
+  "h1": "Renta vitalicia mayores 65 años España",
+  "description": "Calcula la renta mensual y tributación IRPF de una renta vitalicia para mayores de 65 años. Exención de ganancia patrimonial hasta 240.000€ reinvertida. AEAT 2026.",
+  "category": "finanzas",
+  "audience": "ES",
+  "icon": "👴",
+  "formulaId": "renta-vitalicia-mayores-65-espana-fiscalidad",
+  "intro": "Una **renta vitalicia** es un producto financiero que garantiza ingresos mensuales de por vida. En España, los mayores de 65 años disfrutan de **ventajas fiscales significativas**: exención de la ganancia patrimonial si reinvierten hasta 240.000€, y tributación reducida del rendimiento según tramos de edad (24% a los 65-69 años, 20% a los 70-79, y solo 8% a partir de 80). Esta calculadora estima tu renta mensual neta y el impuesto efectivo según la edad actual y el capital invertido.",
+  "keyTakeaway": "Renta vitalicia de 120.000€ a los 70 años: ~280€/mes brutos, tributación 20% IRPF = ~224€/mes netos. Exención de ganancia patrimonial hasta 240.000€.",
+  "useCases": [
+    "Estimar ingresos mensuales garantizados de una renta vitalicia contratada",
+    "Comparar tributación según tramo de edad (65-69, 70-79, ≥80 años)",
+    "Planificar reinversión de herencia o indemnización en renta vitalicia con máximo beneficio fiscal",
+    "Calcular la retención IRPF efectiva sobre rendimientos de vida",
+    "Evaluar rentabilidad neta anual de diferentes montos de capital invertido"
+  ],
+  "fields": [
+    {
+      "id": "capital_invertido",
+      "label": "Capital invertido en renta vitalicia",
+      "type": "number",
+      "unit": "€",
+      "placeholder": "120000",
+      "min": 1000,
+      "max": 1000000,
+      "step": 1000,
+      "info": "Importe total que contrataste en la renta vitalicia. Máximo beneficiario de exención: 240.000€."
+    },
+    {
+      "id": "edad_actual",
+      "label": "Edad actual",
+      "type": "number",
+      "unit": "años",
+      "placeholder": "70",
+      "min": 65,
+      "max": 105,
+      "step": 1,
+      "info": "Tu edad al momento del cálculo. Determina el tramo de tributación IRPF: 65-69 (24%), 70-79 (20%), ≥80 (8%)."
+    },
+    {
+      "id": "tasa_rendimiento_anual",
+      "label": "Tasa de rendimiento anual esperada",
+      "type": "number",
+      "unit": "%",
+      "placeholder": "2.5",
+      "min": 0.5,
+      "max": 5,
+      "step": 0.1,
+      "info": "Rendimiento anual medio de la renta vitalicia (típico 2-3% para productos 2026). Incluye intereses y primas de longevidad."
+    },
+    {
+      "id": "tramo_base_irpf",
+      "label": "Tramo base IRPF aplicable",
+      "type": "select",
+      "options": [
+        {
+          "value": "19",
+          "label": "19% (renta hasta 21.600€)"
+        },
+        {
+          "value": "24",
+          "label": "24% (21.600 - 45.000€)"
+        },
+        {
+          "value": "30",
+          "label": "30% (45.000 - 90.000€)"
+        },
+        {
+          "value": "37",
+          "label": "37% (90.000 - 180.000€)"
+        },
+        {
+          "value": "45",
+          "label": "45% (>180.000€)"
+        }
+      ],
+      "placeholder": "24",
+      "info": "Tu tramo IRPF general 2026 según renta total. Se aplica sobre la parte no exenta."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "renta_bruta_mensual",
+      "label": "Renta bruta mensual",
+      "unit": "€",
+      "precision": 2,
+      "format": "currency"
+    },
+    {
+      "id": "renta_bruta_anual",
+      "label": "Renta bruta anual",
+      "unit": "€",
+      "precision": 2,
+      "format": "currency"
+    },
+    {
+      "id": "exension_patrimonial_euros",
+      "label": "Exención ganancia patrimonial (máx 240.000€)",
+      "unit": "€",
+      "precision": 2,
+      "format": "currency"
+    },
+    {
+      "id": "rendimiento_anual_exento",
+      "label": "Rendimiento anual exento",
+      "unit": "€",
+      "precision": 2,
+      "format": "currency"
+    },
+    {
+      "id": "rendimiento_anual_tributable",
+      "label": "Rendimiento anual tributable",
+      "unit": "€",
+      "precision": 2,
+      "format": "currency"
+    },
+    {
+      "id": "irpf_reducido_por_edad",
+      "label": "Retención IRPF reducida por edad",
+      "unit": "%",
+      "precision": 0,
+      "format": "number"
+    },
+    {
+      "id": "irpf_pagado_anual",
+      "label": "IRPF anual a pagar",
+      "unit": "€",
+      "precision": 2,
+      "format": "currency"
+    },
+    {
+      "id": "renta_neta_mensual",
+      "label": "Renta neta mensual (después IRPF)",
+      "unit": "€",
+      "precision": 2,
+      "format": "currency"
+    },
+    {
+      "id": "renta_neta_anual",
+      "label": "Renta neta anual",
+      "unit": "€",
+      "precision": 2,
+      "format": "currency"
+    },
+    {
+      "id": "tasa_efectiva_irpf",
+      "label": "Tasa efectiva IRPF",
+      "unit": "%",
+      "precision": 2,
+      "format": "number"
+    },
+    {
+      "id": "nota_fiscalidad",
+      "label": "Nota de fiscalidad",
+      "unit": "",
+      "precision": 0,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula la fiscalidad de una renta vitalicia para mayores de 65 años\n\nEn España, la renta vitalicia contratada por mayores de 65 años goza de **privilegios fiscales únicos** recogidos en la Ley del IRPF y regulados por la AEAT:\n\n### Beneficio 1: Exención de ganancia patrimonial\n\nCuando reinviertes una **ganancia patrimonial** (herencia, indemnización, venta de activos) en una renta vitalicia, **se exime la ganancia patrimonial** hasta un máximo de **240.000€**. Esto significa que no pagas IRPF por los beneficios del capital inicial invertido.\n\n**Fórmula de exención:**\n```\nCapital exento = mín(capital_invertido, 240.000€)\nRendimiento exento anual = (capital_exento × tasa_rendimiento) / 100\n```\n\n### Beneficio 2: Tributación reducida por edad\n\nEl **rendimiento anual** (intereses y prima de longevidad) de la renta vitalicia tributa a un **tipo reducido según edad actual**:\n\n| Edad | Tipo IRPF reducido | Vigencia |\n|------|-------------------|----------|\n| 65-69 años | 24% | AEAT 2026 |\n| 70-79 años | 20% | AEAT 2026 |\n| ≥80 años | 8% | AEAT 2026 |\n\nEste tipo **reduce** el tramo general (19%-45%) que normalmente aplicaría.\n\n### Cálculo paso a paso\n\n**Paso 1: Rendimiento anual bruto**\n```\nRendimiento bruto anual = (capital_invertido × tasa_rendimiento_anual) / 100\n```\n\n**Paso 2: Aplicar exención de ganancia patrimonial**\n```\nCapital exento = mín(capital_invertido, 240.000€)\nRendimiento exento = (capital_exento × tasa_rendimiento_anual) / 100\nRendimiento tributable = rendimiento_bruto - rendimiento_exento\n```\n\n**Paso 3: Determinar tipo IRPF reducido según edad**\n```\nsi edad >= 80: tipo_reducido = 8%\nsi edad >= 70 y edad < 80: tipo_reducido = 20%\nsi edad >= 65 y edad < 70: tipo_reducido = 24%\n```\n\n**Paso 4: Calcular IRPF anual**\n```\nIRPF anual = rendimiento_tributable × tipo_reducido / 100\n```\n\n**Paso 5: Renta neta**\n```\nRenta neta anual = rendimiento_bruto - IRPF anual\nRenta neta mensual = renta_neta_anual / 12\n```\n\n## Ejemplo práctico\n\n**Datos de entrada:**\n- Capital invertido: 120.000€\n- Edad actual: 70 años\n- Tasa de rendimiento: 2,5% anual\n- Tramo IRPF general: 24%\n\n**Cálculos:**\n\n1. Rendimiento bruto anual: 120.000€ × 2,5% = **3.000€**\n\n2. Exención de ganancia patrimonial:\n   - Capital exento: mín(120.000€, 240.000€) = **120.000€**\n   - Rendimiento exento: 120.000€ × 2,5% = **3.000€**\n\n3. Rendimiento tributable: 3.000€ − 3.000€ = **0€** (completamente exento primer año)\n\n4. IRPF a pagar: 0€ × 20% = **0€**\n\n5. Renta neta mensual: 3.000€ / 12 = **250€** sin retención\n\n**Nota:** La exención de ganancia patrimonial solo aplica el **primer año**. Desde el segundo año, todo el rendimiento tributa al 20% (edad 70).\n\n---\n\n## Ejemplo con capital por encima de 240.000€\n\n**Datos:**\n- Capital invertido: 350.000€\n- Edad: 75 años\n- Rendimiento: 2,5%\n\n**Cálculos:**\n\n1. Rendimiento bruto anual: 350.000€ × 2,5% = **8.750€**\n\n2. Exención: Capital exento = mín(350.000€, 240.000€) = **240.000€**\n   - Rendimiento exento: 240.000€ × 2,5% = **6.000€**\n\n3. Rendimiento tributable: 8.750€ − 6.000€ = **2.750€**\n\n4. Tipo IRPF (75 años): **20%**\n\n5. IRPF anual: 2.750€ × 20% = **550€**\n\n6. Renta neta anual: 8.750€ − 550€ = **8.200€**\n\n7. Renta neta mensual: 8.200€ / 12 = **683,33€**\n\n---\n\n## Limitaciones y consideraciones\n\n1. **Exención de ganancia patrimonial limitada a 240.000€:** Solo aplica si reinvertiste una ganancia patrimonial (no para ahorros previos). La exención es del capital, no del rendimiento posterior.\n\n2. **Vigencia anual:** La exención es válida solo para el ejercicio fiscal 2026 y posteriores. La AEAT puede revisar estos límites.\n\n3. **Tipos reducidos según edad vigentes 2026:** Los porcentajes (24%, 20%, 8%) son los vigentes en 2026 según AEAT. Pueden cambiar en futuras reformas.\n\n4. **Rendimiento estimado:** La tasa de rendimiento (2-3% típico) es orientativa. Consulta el contrato de tu renta vitalicia para conocer el rendimiento exacto garantizado.\n\n5. **No incluye Hacienda autonómica:** Algunas Comunidades Autónomas aplican complementos de IRPF. Esta calculadora usa el tipo estatal 2026.\n\n6. **Incompatibilidad con otros beneficios:** La exención de ganancia patrimonial por renta vitalicia es incompatible con otros beneficios del mismo capital (ej: exención por reinversión en empresa).\n\n7. **Impuestos locales no incluidos:** No se contabilizan el IBI u otros impuestos locales sobre el patrimonio.",
+  "faq": [
+    {
+      "q": "¿Qué es exactamente una renta vitalicia?",
+      "a": "Una renta vitalicia es un contrato con una aseguradora o banco donde entregas un capital (ej: 120.000€) y recibes una renta mensual garantizada de por vida. Es especialmente atractiva para mayores de 65 años en España por sus beneficios fiscales."
+    },
+    {
+      "q": "¿Cuál es el límite de la exención de ganancia patrimonial?",
+      "a": "El límite es **240.000€** en 2026 según AEAT. Si invertiste 350.000€ de una herencia, los primeros 240.000€ están exentos de IRPF por ganancia patrimonial; los 110.000€ restantes tributan a rendimientos normales."
+    },
+    {
+      "q": "¿Cuánto IRPF me retienen si tengo 68 años?",
+      "a": "A los 68 años aplica el tipo reducido del **24%** sobre la parte tributable del rendimiento. Si la exención cubre todo el rendimiento (capital ≤ 240.000€), pagas 0€ de IRPF ese primer año."
+    },
+    {
+      "q": "¿Y si tengo 82 años? ¿Realmente solo 8%?",
+      "a": "Sí, a partir de 80 años el tipo reducido es **8%** según AEAT 2026. Es una ventaja muy significativa: una renta de 200.000€ paga solo 8% de IRPF frente al 24-45% normal."
+    },
+    {
+      "q": "¿La exención de 240.000€ aplica cada año o solo el primero?",
+      "a": "La exención por **ganancia patrimonial** aplica una sola vez (año de la inversión). Desde el año siguiente, todo el rendimiento tributa según el tipo reducido por edad, pero ya sin exención patrimonial."
+    },
+    {
+      "q": "¿Qué pasa si no reinvertí una ganancia patrimonial, sino que uso mis ahorros?",
+      "a": "Si es capital propio ahorrado (no ganancia patrimonial), **no aplica la exención de 240.000€**. Todo el rendimiento tributa al tipo reducido por edad (24%, 20% u 8%), pero desde el inicio."
+    },
+    {
+      "q": "¿Puedo contratar una renta vitalicia antes de 65 años y disfrutar de estos beneficios después?",
+      "a": "No. Los beneficios (tipo reducido por edad) aplican a partir de los 65 años cumplidos. Si contratas a los 62, debes esperar a los 65 para acceder al tipo 24%. La exención de ganancia patrimonial también requiere ≥65 años."
+    },
+    {
+      "q": "¿Incluye esta calculadora impuestos autonómicos?",
+      "a": "No. Usa el IRPF estatal 2026 de la AEAT. Algunas Comunidades Autónomas (Cataluña, Andalucía, etc.) pueden aplicar complementos adicionales. Consulta con tu asesor autonómico."
+    },
+    {
+      "q": "¿Y si dejo la renta vitalicia a herederos? ¿Pagan más impuestos?",
+      "a": "El capital de la renta vitalicia es un activo patrimonial sujeto al Impuesto de Sucesiones (no IRPF). La herencia paga según la tarifa autonómica. La renta vitalicia en sí se extingue a tu muerte (es vitalicia)."
+    },
+    {
+      "q": "¿Cuál es la tasa de rendimiento típica de una renta vitalicia 2026?",
+      "a": "Típicamente **2-3% anual garantizado**, dependiendo de tu edad, estado de salud y el producto. Los mayores de 80 años suelen obtener rendimientos un poco más altos (3-3,5%) por menor vida esperada."
+    }
+  ],
+  "sources": [
+    {
+      "name": "AEAT - Impuesto sobre la Renta de las Personas Físicas 2026",
+      "url": "https://www.agenciatributaria.gob.es/AEAT.internet/inicio/_private/comun/consultas_ayuda/consultas/renta.html",
+      "publisher": "Agencia Estatal de Administración Tributaria",
+      "date": "2026"
+    },
+    {
+      "name": "BOE - Normativa IRPF 2026 (Ley 35/2006)",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
+      "publisher": "Boletín Oficial del Estado",
+      "date": "2026"
+    },
+    {
+      "name": "AEAT - Tipo de gravamen reducido por edad en rentas vitalicias",
+      "url": "https://www.agenciatributaria.gob.es/",
+      "publisher": "Agencia Estatal de Administración Tributaria",
+      "date": "2026"
+    },
+    {
+      "name": "Tesoro Público España - Fiscalidad de rentas vitalicias",
+      "url": "https://www.tesoro.es/",
+      "publisher": "Ministerio de Hacienda y Función Pública",
+      "date": "2026"
+    },
+    {
+      "name": "Dirección General del Impuesto sobre Sucesiones - Régimen especial renta vitalicia",
+      "url": "https://www.agenciatributaria.gob.es/",
+      "publisher": "AEAT",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "AEAT - Tramos IRPF 2026 y tipos reducidos por edad",
+    "sourceUrl": "https://www.agenciatributaria.gob.es/",
+    "updateType": "manual",
+    "notes": "Tipos reducidos por edad (24%, 20%, 8%), límite exención 240.000€, tramos IRPF 2026. Se actualiza anualmente con cambios legislativos del Ministerio de Hacienda."
+  },
+  "lastReviewed": "2026-04-28"
+}

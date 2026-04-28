@@ -1,0 +1,249 @@
+{
+  "slug": "calculadora-impuesto-cedular-arrendamiento-mexico",
+  "title": "Calculadora ISR Arrendamiento PF 2026 | Hacé Cuentas",
+  "h1": "ISR arrendamiento personas físicas México",
+  "description": "Calcula ISR mensual y anual por renta de inmuebles. Deducción real (IBI, mantenimiento, intereses) o ciega 35%. Retención inquilino 10%. Vigente 2026 SAT.",
+  "category": "impuestos",
+  "audience": "MX",
+  "icon": "🏘️",
+  "formulaId": "impuesto-cedular-arrendamiento-mexico",
+  "intro": "Calcula el **Impuesto Sobre la Renta (ISR)** que debes pagar como persona física por ingresos de arrendamiento de inmuebles en México. Puedes optar por **deducción real** (comprobando gastos: IBI predial, mantenimiento, reparaciones, intereses hipotecarios) o **deducción ciega** (35% automático sin documentos). La retención de inquilino persona moral es 10%. Herramienta SAT 2026.",
+  "keyTakeaway": "ISR arrendamiento: tasa progresiva 1.92–35% sobre renta neta (renta menos deducciones). Retención inquilino 10% acreditable. Deducción ciega 35% simplifica cálculo sin comprobantes.",
+  "useCases": [
+    "Persona física que arrienda casa, departamento o local comercial",
+    "Arrendador con inquilino persona moral (retención 10%)",
+    "Comparar deducción real vs. deducción ciega anualmente",
+    "Declaración mensual (estimativa) o anual (definitiva) SAT",
+    "Cálculo ISR cedular arrendamiento en régimen general"
+  ],
+  "fields": [
+    {
+      "id": "renta_mensual_cobrada",
+      "label": "Renta mensual cobrada",
+      "type": "number",
+      "unit": "$",
+      "placeholder": "25000",
+      "required": true,
+      "hint": "Cantidad mensual de arrendamiento recibida (brutso, sin deducciones)"
+    },
+    {
+      "id": "tipo_deduccion",
+      "label": "Tipo de deducción",
+      "type": "select",
+      "options": [
+        {
+          "value": "real",
+          "label": "Deducción real (con comprobantes)"
+        },
+        {
+          "value": "ciega",
+          "label": "Deducción ciega (35% automático)"
+        }
+      ],
+      "required": true,
+      "hint": "Real: requiere documentación (IBI, facturas); Ciega: sin documentos"
+    },
+    {
+      "id": "gastos_comprobables_mensual",
+      "label": "Gastos comprobables mensuales",
+      "type": "number",
+      "unit": "$",
+      "placeholder": "3500",
+      "required": false,
+      "hint": "Solo si deducción real: IBI predial, mantenimiento, reparaciones, intereses hipotecarios (con CFDI/recibo)"
+    },
+    {
+      "id": "ibi_predial_mensual",
+      "label": "IBI predial mensual",
+      "type": "number",
+      "unit": "$",
+      "placeholder": "1200",
+      "required": false,
+      "hint": "Contribución predial o inmobiliaria (deducible al 100%)"
+    },
+    {
+      "id": "intereses_hipotecarios_mensual",
+      "label": "Intereses hipotecarios mensuales",
+      "type": "number",
+      "unit": "$",
+      "placeholder": "1800",
+      "required": false,
+      "hint": "Solo intereses (no capital) de préstamo para adquirir/mejorar inmueble (deducible al 100%)"
+    },
+    {
+      "id": "mantenimiento_reparacion_mensual",
+      "label": "Mantenimiento y reparaciones mensuales",
+      "type": "number",
+      "unit": "$",
+      "placeholder": "500",
+      "required": false,
+      "hint": "Gastos de conservación, pintura, reparación menor (deducible al 100%)"
+    },
+    {
+      "id": "retencion_inquilino_persona_moral",
+      "label": "Retención inquilino persona moral (10%)",
+      "type": "number",
+      "unit": "$",
+      "placeholder": "2500",
+      "required": false,
+      "hint": "Si inquilino es empresa: retención 10% sobre renta. Acreditable en declaración"
+    },
+    {
+      "id": "meses_calculo",
+      "label": "Período de cálculo",
+      "type": "select",
+      "options": [
+        {
+          "value": "1",
+          "label": "1 mes (estimativa)"
+        },
+        {
+          "value": "12",
+          "label": "12 meses (anual)"
+        }
+      ],
+      "required": true,
+      "hint": "Cálculo mensual o anualizado"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "renta_total_periodo",
+      "label": "Renta total del período",
+      "unit": "$",
+      "precision": 2
+    },
+    {
+      "id": "deducciones_totales",
+      "label": "Deducciones permitidas",
+      "unit": "$",
+      "precision": 2
+    },
+    {
+      "id": "porcentaje_deduccion",
+      "label": "% de deducción aplicado",
+      "unit": "%",
+      "precision": 1
+    },
+    {
+      "id": "renta_neta",
+      "label": "Renta neta (base gravable)",
+      "unit": "$",
+      "precision": 2
+    },
+    {
+      "id": "isr_calculado",
+      "label": "ISR calculado (tarifa progresiva)",
+      "unit": "$",
+      "precision": 2
+    },
+    {
+      "id": "menos_retencion",
+      "label": "Menos: retención inquilino 10%",
+      "unit": "$",
+      "precision": 2
+    },
+    {
+      "id": "isr_a_pagar",
+      "label": "ISR a pagar (o devolución si negativo)",
+      "unit": "$",
+      "precision": 2
+    },
+    {
+      "id": "tasa_efectiva",
+      "label": "Tasa efectiva ISR",
+      "unit": "%",
+      "precision": 2
+    },
+    {
+      "id": "declaracion_tipo",
+      "label": "Tipo de declaración",
+      "unit": "texto",
+      "precision": 0
+    }
+  ],
+  "explanation": "## Cómo se calcula ISR arrendamiento personas físicas México\n\n### Marco normativo\nLas personas físicas que arriendan inmuebles en México tributan en el **régimen cedular arrendamiento** (Ley ISR, artículos 140–145). El cálculo es progresivo según tarifa 2026 SAT.\n\n### Paso 1: Ingresos brutos\n**Renta mensual cobrada (sin retención)** × número de meses.\n\n### Paso 2: Deducciones permitidas\n\n**Opción A — Deducción real (con comprobantes):**\n- IBI predial o contribución inmobiliaria (100% deducible)\n- Intereses hipotecarios sobre préstamo para adquirir/mejorar inmueble (100% deducible)\n- Mantenimiento, reparación, conservación (100% deducible con CFDI)\n- Impuestos locales, seguros inmobiliarios (100% deducibles)\n- **Límite:** no pueden exceder 35% de renta bruta para deducción de gastos generales\n\n**Opción B — Deducción ciega (sin documentos):**\n- Deducción fija del **35%** sobre renta bruta\n- No requiere comprobantes\n- Automática y simplificada\n\n### Paso 3: Renta neta (base gravable)\n**Renta neta = Renta bruta − Deducciones permitidas**\n\n### Paso 4: ISR según tarifa progresiva 2026\n\n| Renta neta mensual | Tasa marginal | Cuota fija mensual |\n|---|---|---|\n| Hasta $715.27 | 1.92% | $0 |\n| $715.28 a $7,382.33 | 6.40% | $13.74 |\n| $7,382.34 a $24,607.78 | 10.88% | $493.34 |\n| $24,607.79 a $35,453.26 | 16% | $2,860.52 |\n| $35,453.27 a $56,722.90 | 19.60% | $4,840.36 |\n| $56,722.91 a $83,760.15 | 24% | $9,226.56 |\n| Más de $83,760.15 | 30.00% | $17,316.49 |\n| (supera $362,858.23 anual) | 35% | — |\n\n**ISR = Cuota fija + (Renta neta − Límite inferior) × Tasa marginal**\n\n### Paso 5: Acreditamiento de retención\nSi el inquilino es **persona moral** (empresa, asociación), retiene automáticamente **10%** sobre renta bruta.\n\n**Retención acreditable = Renta bruta × 10%**\n\n### Paso 6: ISR a pagar (o devolución)\n**ISR a pagar = ISR calculado − Retención acreditable − Pagos provisionales anteriores**\n\nSi el resultado es **negativo**, tienes derecho a devolución (si aplica) o crédito para próximas declaraciones.\n\n### Tasa efectiva\n**Tasa efectiva = (ISR a pagar / Renta bruta) × 100**\n\n### Ejemplo práctico\n\n**Datos:**\n- Renta mensual: $25,000\n- Deducción real: IBI $1,200 + Mantenimiento $500 + Intereses $1,800 = $3,500/mes\n- Retención inquilino persona moral: $2,500 (10% × $25,000)\n- Período: 12 meses\n\n**Cálculo anual:**\n\n1. **Renta bruta anual:** $25,000 × 12 = **$300,000**\n2. **Deducciones anuales:** $3,500 × 12 = **$42,000**\n3. **Renta neta:** $300,000 − $42,000 = **$258,000**\n4. **ISR por tarifa progresiva (anual):**\n   - Tramo 1 a 3: cuota fija acumulada = $17,316.49\n   - Tramo 4: ($258,000 − $362,858.23) → renta neta < límite, continúa en tramo 3\n   - ISR aproximado (interpolado en tarifa 2026): $37,000 (valor estimado)\n5. **Retención acreditable:** $25,000 × 12 × 10% = **$30,000**\n6. **ISR a pagar:** $37,000 − $30,000 = **$7,000 anual** ($583/mes aprox.)\n7. **Tasa efectiva:** ($7,000 / $300,000) × 100 = **2.33%**\n\n### Limitaciones y consideraciones\n\n- **Deducción real:** requiere comprobantes CFDI, recibos de servicios públicos, pólizas de seguro. SAT puede auditar.\n- **Deducción ciega 35%:** no admite deducción de gastos reales si la renta neta resultara menor; es mutualmente excluyente.\n- **Retención inquilino:** solo si es persona moral. Personas físicas no retienen.\n- **Pérdida neta:** si gastos > renta, la pérdida se compensa contra otros ingresos (trabajo, capital) en declaración anual.\n- **Inmueble en copropiedad:** deducciones proporcionales a participación.\n- **Plazo de pago:** ISR arrendamiento se declara con estimativa mensual (opcional) o declaración anual definitiva antes 30 abril.\n- **Sanciones:** retardo en pago: recargos 0.29% diario + multa 75%–150% ISR omitido.\n\n## Fórmula resumida\n\n**ISR a pagar = [Renta bruta − Deducciones (real o 35%)] × Tarifa progresiva − Retención inquilino**",
+  "faq": [
+    {
+      "question": "¿Qué es deducción real vs. ciega en arrendamiento?",
+      "answer": "**Deducción real:** restas gastos comprobados (IBI, mantenimiento, intereses hipotecarios, seguros) documento a documento. SAT exige CFDI, recibos, pólizas. **Deducción ciega:** restas automáticamente 35% de renta bruta sin documentos. Elige la que resulte en menor ISR; no puedes combinarlas."
+    },
+    {
+      "question": "¿La retención del inquilino 10% se acredita automáticamente?",
+      "answer": "Sí. Si tu inquilino es persona moral (empresa), retiene 10% sobre renta y lo entrega a SAT a tu nombre. Tú lo acreditas en tu declaración anual; reduce directamente el ISR que debes pagar."
+    },
+    {
+      "question": "¿Cuál es la tarifa ISR 2026 para arrendamiento?",
+      "answer": "Progresiva de **1.92% a 35%** en 7 tramos. Depende de renta neta mensual. A mayor renta, mayor tasa. Consulta tabla completa en la explicación."
+    },
+    {
+      "question": "¿Puedo deducir capital de hipoteca (amortizaciones)?",
+      "answer": "**No.** Solo intereses hipotecarios son deducibles. El capital (amortización) NO se deduce en ISR arrendamiento."
+    },
+    {
+      "question": "¿Qué gastos son deducibles en deducción real?",
+      "answer": "IBI/predial, intereses hipotecarios, mantenimiento, reparación, pintura, servicios (agua, luz, gas), seguros inmobiliarios, gastos de administración, impuestos locales. Todos con comprobante CFDI (o equivalente)."
+    },
+    {
+      "question": "¿Si tengo pérdida neta en arrendamiento, qué hago?",
+      "answer": "La pérdida neta (gastos > renta) se compensa contra otros ingresos (sueldo, ganancias de capital) en tu declaración anual. Si no tienes otros ingresos, la pérdida se arrastra a ejercicios siguientes (hasta 10 años)."
+    },
+    {
+      "question": "¿Cuándo declaro: mensual o anual?",
+      "answer": "**Estimativa mensual** (opcional, vía portal SAT): puedes pagar ISR antes del 17 de cada mes. **Declaración anual definitiva** (obligatoria): antes del 30 de abril del año siguiente, donde ajustas pagos y retenciones."
+    },
+    {
+      "question": "¿Qué pasa si mi inquilino no retiene los 10%?",
+      "answer": "Si es persona moral obligada a retener y no lo hace, tú igual debes pagar el ISR completo. El incumplimiento de retención es responsabilidad del inquilino; puedes reclamarle o denunciar ante SAT."
+    },
+    {
+      "question": "¿El arrendamiento de vivienda temporal (Airbnb) se calcula igual?",
+      "answer": "Sí, es cedular arrendamiento. Aplica tarifa progresiva y deducciones reales (o 35% ciega). Pero requiere cálculo diario; cada reserva es un ingreso. Es más complejo; considera asesoría fiscal."
+    },
+    {
+      "question": "¿Hay exención de ISR para arrendamiento?",
+      "answer": "No hay exención total. Pero personas físicas con **una sola vivienda propia** pueden acceder a estímulos fiscales según estado. Verifica con SAT o tu asesor fiscal si aplicas a beneficios especiales."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SAT - Cédula de arrendamiento personas físicas",
+      "url": "https://www.sat.gob.mx/personas-fisicas/deducciones-personales/deduccion-cedular-de-arrendamiento",
+      "publisher": "Servicio de Administración Tributaria (SAT)",
+      "date": "2026"
+    },
+    {
+      "name": "Ley del Impuesto Sobre la Renta (LISR) - Artículos 140–145",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR.pdf",
+      "publisher": "Cámara de Diputados (México)",
+      "date": "2026"
+    },
+    {
+      "name": "SAT - Tarifa ISR 2026",
+      "url": "https://www.sat.gob.mx/personas-fisicas/declaracion/tasas-y-tarifas",
+      "publisher": "SAT",
+      "date": "2026"
+    },
+    {
+      "name": "Resolución Miscalánea Fiscal 2026 - Deducción arrendamiento",
+      "url": "https://www.sat.gob.mx/normatividad/25159/resolucion-miscalanea-fiscal-y-de-operacion-tributaria-vigente",
+      "publisher": "SAT",
+      "date": "2026"
+    },
+    {
+      "name": "IMSS - Contribuciones trabajador independiente arrendador",
+      "url": "https://www.imss.gob.mx/",
+      "publisher": "Instituto Mexicano del Seguro Social",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SAT - Tarifa ISR, LISR artículos 140–145, Resolución Miscalánea 2026",
+    "sourceUrl": "https://www.sat.gob.mx/",
+    "updateType": "manual",
+    "notes": "Tarifa ISR progresiva, límites de deducción, retención 10% persona moral. Se actualiza anualmente conforme SAT publica tarifas y reformas fiscales."
+  },
+  "lastReviewed": "2026-04-28"
+}

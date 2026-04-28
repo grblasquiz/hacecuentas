@@ -1,0 +1,263 @@
+{
+  "slug": "calculadora-canasta-basica-mensual-chile-ine-2026",
+  "title": "Canasta Básica Chile INE 2026 | Hacecuentas.com",
+  "h1": "Canasta Básica Chile INE 2026",
+  "description": "Calcula presupuesto mensual canasta básica familia Chile. CBA ~$70K/persona, CBT ~$140K. Compara cadenas supermercados. Estima % salario mínimo.",
+  "category": "vida",
+  "audience": "CL",
+  "icon": "🛒",
+  "formulaId": "canasta-basica-mensual-chile-ine-2026",
+  "intro": "La **Canasta Básica Alimentaria (CBA)** del Instituto Nacional de Estadísticas (INE) representa el costo mensual mínimo de alimentos para una persona. En 2026, ronda **$70.500 pesos**. La **Canasta Básica Total (CBT)** incluye vivienda, servicios, transporte y alcanza ~**$140.800 pesos**. Esta calculadora estima tu presupuesto familiar, compara precios entre cadenas (Líder, Jumbo, Tottus, Unimarc) y calcula qué porcentaje del salario mínimo representa.",
+  "keyTakeaway": "Familia 4 personas: CBA ~$282K/mes, CBT ~$563K. Salario mín nacional $450K deja solo 20% para no-alimentario.",
+  "useCases": [
+    "Presupuestar gasto alimentario mensual por persona y familia",
+    "Comparar costo CBA vs CBT según composición demográfica",
+    "Estimar % del salario mínimo ($450.000 2026) dedicado a canasta",
+    "Planificar compras en cadenas específicas (Líder, Jumbo, Tottus, Unimarc)",
+    "Analizar impacto inflación anual en presupuesto familiar",
+    "Identificar ajustes en gasto para cumplir restricciones presupuestarias"
+  ],
+  "fields": [
+    {
+      "id": "adultos",
+      "label": "Adultos (18+ años)",
+      "type": "number",
+      "placeholder": "2",
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "required": true,
+      "helperText": "Personas mayores de 18 años en el hogar"
+    },
+    {
+      "id": "adolescentes",
+      "label": "Adolescentes (13-17 años)",
+      "type": "number",
+      "placeholder": "0",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "required": true,
+      "helperText": "Requieren ~85% de gasto adulto según INE"
+    },
+    {
+      "id": "ninos",
+      "label": "Niños (6-12 años)",
+      "type": "number",
+      "placeholder": "1",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "required": true,
+      "helperText": "Requieren ~60% de gasto adulto"
+    },
+    {
+      "id": "menores",
+      "label": "Menores (0-5 años)",
+      "type": "number",
+      "placeholder": "0",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "required": true,
+      "helperText": "Requieren ~45% de gasto adulto (incluye lácteos especiales)"
+    },
+    {
+      "id": "incluir_cbt",
+      "label": "¿Incluir CBT completa? (no solo CBA)",
+      "type": "checkbox",
+      "required": false,
+      "helperText": "Marca para incluir vivienda, servicios, transporte. Sin marcar = solo alimentos (CBA)"
+    },
+    {
+      "id": "cadena_supermercado",
+      "label": "Cadena de supermercados principal",
+      "type": "select",
+      "options": [
+        {
+          "value": "promedio",
+          "label": "Promedio nacional"
+        },
+        {
+          "value": "lider",
+          "label": "Líder (más caro ~+5%)"
+        },
+        {
+          "value": "jumbo",
+          "label": "Jumbo (promedio)"
+        },
+        {
+          "value": "tottus",
+          "label": "Tottus (promedio)"
+        },
+        {
+          "value": "unimarc",
+          "label": "Unimarc (más económico ~-3%)"
+        }
+      ],
+      "required": false,
+      "helperText": "Ajusta precios según cadena. Datos INE referencia nacional."
+    },
+    {
+      "id": "salario_mensual",
+      "label": "Ingreso familiar mensual (opcional)",
+      "type": "number",
+      "placeholder": "1800000",
+      "min": 0,
+      "step": 100000,
+      "required": false,
+      "helperText": "Para estimar % del presupuesto. Salario mín 2026: $450.000"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cba_total",
+      "label": "Canasta Básica Alimentaria (CBA) estimada",
+      "type": "currency",
+      "format": "CLP",
+      "helperText": "Costo mínimo alimentos/mes para tu familia (INE 2026: $70.500/adulto)"
+    },
+    {
+      "id": "cbt_total",
+      "label": "Canasta Básica Total (CBT) estimada",
+      "type": "currency",
+      "format": "CLP",
+      "helperText": "Incluye alimentos + vivienda + servicios + transporte (INE 2026: ~$140.800/adulto)"
+    },
+    {
+      "id": "cba_por_persona",
+      "label": "CBA promedio por persona",
+      "type": "currency",
+      "format": "CLP",
+      "helperText": "Total CBA / personas en hogar"
+    },
+    {
+      "id": "ajuste_cadena",
+      "label": "Ajuste por cadena supermercados",
+      "type": "percentage",
+      "helperText": "Variación respecto promedio nacional (-3% a +5%)"
+    },
+    {
+      "id": "cba_ajustada",
+      "label": "CBA ajustada por cadena",
+      "type": "currency",
+      "format": "CLP",
+      "helperText": "CBA * (1 + ajuste cadena)"
+    },
+    {
+      "id": "porcentaje_salario",
+      "label": "% del ingreso familiar dedicado a CBA",
+      "type": "percentage",
+      "helperText": "CBA ajustada / salario mensual. Valor crítico >50% = riesgo alimentario"
+    },
+    {
+      "id": "personas_totales",
+      "label": "Personas en el hogar",
+      "type": "number",
+      "helperText": "Total: adultos + adolescentes + niños + menores"
+    },
+    {
+      "id": "composicion_detalle",
+      "label": "Desglose composición familiar",
+      "type": "text",
+      "helperText": "Explicación pesos relativos por grupo etario aplicados"
+    },
+    {
+      "id": "margen_seguridad",
+      "label": "Margen de seguridad recomendado",
+      "type": "currency",
+      "format": "CLP",
+      "helperText": "CBA ajustada × 1.15 = presupuesto con colchón 15% (variaciones estacionales, promociones)"
+    },
+    {
+      "id": "comparacion_cadenas",
+      "label": "Comparación de precios entre cadenas",
+      "type": "text",
+      "helperText": "Tabla estimada Líder vs Jumbo vs Tottus vs Unimarc para tu canasta"
+    }
+  ],
+  "explanation": "## Cómo se calcula la Canasta Básica\n\nLa **Canasta Básica Alimentaria (CBA)** del INE es el costo mínimo mensual de alimentos para satisfacer necesidades nutricionales de una persona. Para 2026, el valor base adulto es **$70.500 pesos**.\n\nLos grupos etarios requieren distintos niveles de gasto:\n- **Adultos (18+)**: 100% = $70.500\n- **Adolescentes (13-17)**: 85% = $59.925\n- **Niños (6-12)**: 60% = $42.300\n- **Menores (0-5)**: 45% = $31.725\n\n### Fórmula CBA Total\n```\nCBA Total = (Adultos × 70.500) + (Adolescentes × 59.925) + (Niños × 42.300) + (Menores × 31.725)\n```\n\n### Canasta Básica Total (CBT)\nLa **CBT** incluye CBA + gastos esenciales:\n- Vivienda/servicios básicos: ~$35K adulto\n- Transporte público: ~$15K adulto\n- Ropa, higiene, otros: ~$20K adulto\n- **Total CBT adulto 2026: ~$140.800** (aprox. 2× CBA)\n\n```\nCBT Total = CBA Total × 2.0\n```\n\n### Ajuste por Cadena Supermercados\nDatos INE 2026 muestran variaciones:\n- **Líder**: +5% (más premium)\n- **Jumbo, Tottus**: 0% (promedio)\n- **Unimarc**: -3% (más económico, marca propia)\n\n```\nCBA Ajustada = CBA Total × (1 + % cadena)\n```\n\n### Porcentaje del Salario\n```\n% Salario = (CBA Ajustada / Ingreso Mensual) × 100\n```\n\nValores críticos:\n- **<30%**: Situación holgada\n- **30-50%**: Situación normal (norma CEPAL)\n- **>50%**: Riesgo de inseguridad alimentaria (hogares vulnerables)\n\n## Ejemplo Práctico\n\n**Familia: 2 adultos + 1 niño 8 años + 1 menor 3 años**\n\n```\nCBA = (2 × 70.500) + (1 × 42.300) + (1 × 31.725)\nCBA = 141.000 + 42.300 + 31.725 = $215.025\n```\n\nSi compra en Unimarc (ajuste -3%):\n```\nCBA Ajustada = 215.025 × 0.97 = $208.574\n```\n\nCon ingreso familiar $900.000:\n```\n% Salario = (208.574 / 900.000) × 100 = 23.2%\n```\n\n**Margen de seguridad** (15% extra):\n```\nPresupuesto recomendado = 208.574 × 1.15 = $239.860\n```\n\n| Cadena | Costo mensual | Variación |\n|--------|---------------|----------|\n| Líder | $226.277 | +5% |\n| Jumbo | $215.025 | 0% |\n| Tottus | $215.025 | 0% |\n| Unimarc | $208.574 | -3% |\n\n## Limitaciones\n\n1. **Valores INE son mínimos nutritivos**, no incluyen preferencias, dietas especiales, celiacos, alergias.\n2. **Variaciones estacionales**: frutas/verduras suben Nov-Dic, bajan Mar-Apr.\n3. **Promociones no incluidas**: precios INE son de lista, sin descuentos.\n4. **No incluye bebidas alcohólicas, tabaco, medicinas** (están en CBT pero no desglosados).\n5. **Impacto inflación**: INE actualiza mensualmente. Valores 2026 vigentes a abril; consultar SII si requieres más reciente.\n6. **Diferencias regionales**: precios zona sur/norte pueden variar ±8% respecto promedio nacional.",
+  "faq": [
+    {
+      "question": "¿Cuál es la diferencia entre CBA y CBT?",
+      "answer": "**CBA (Canasta Básica Alimentaria)**: solo alimentos (~$70.500/adulto 2026). **CBT (Canasta Básica Total)**: alimentos + vivienda, servicios, transporte (~$140.800/adulto). CBT es el doble porque incluye todos los gastos esenciales mínimos."
+    },
+    {
+      "question": "¿Por qué cambia la CBA cada mes?",
+      "answer": "El INE actualiza mensualmente la CBA según inflación, variación de precios agrícolas y de productos. Abril 2026 es el valor de referencia; para cifras actuales, consulta www.ine.cl/estadísticas/precios/canasta-basica."
+    },
+    {
+      "question": "¿Qué cadena es más barata: Líder, Jumbo, Tottus o Unimarc?",
+      "answer": "Según estudios INE 2025-2026, **Unimarc es ~3% más económica** (marca propia, menos costo operativo). Líder es ~5% más cara (posicionamiento premium). Jumbo y Tottus rondan promedio nacional. Pero varía por producto y región."
+    },
+    {
+      "question": "¿Cuál es el salario mínimo 2026 en Chile?",
+      "answer": "Salario mínimo nacional 2026: **$450.000 pesos/mes** (afiliados AFP). Para jubilados o no afiliados, consultar Dirección del Trabajo. Jornada 44-45 horas/semana."
+    },
+    {
+      "question": "¿Qué significa si mi % de gasto en CBA es >50% del salario?",
+      "answer": "Indica **riesgo de inseguridad alimentaria**. Según CEPAL, familias que gastan >50% en alimentos tienen dificultad cubrir otros gastos (salud, educación, vivienda). Sugiere necesidad de asistencia (Bono Familia, Junaeb, Fonasa)."
+    },
+    {
+      "question": "¿Incluye esta CBA alimentos para dietas especiales (celiacos, diabéticos)?",
+      "answer": "No. La CBA del INE es **canasta estándar**. Dietas especiales (sin gluten, bajas calorías) suelen costar 20-40% más. Si tienes restricciones médicas, suma margen adicional o consulta nutricionista."
+    },
+    {
+      "question": "¿Cómo impacta la CBA en créditos o avalúos de vivienda?",
+      "answer": "Bancos e instituciones financieras usan CBT (o múltiplos de ella) para evaluar capacidad de endeudamiento. Si tu gasto CBA es muy alto, reduces cuota máxima disponible para hipoteca o crédito. Es indicador de salud financiera."
+    },
+    {
+      "question": "¿Varían mucho los precios entre regiones (zona sur vs norte)?",
+      "answer": "Sí. **Zona sur** (Aysén, Magallanes): +5-8% por logística. **Zona norte** (Arica, Tarapacá): +3-6%. **Zona central** (Metropolitana): promedio INE. Frutas/verduras son más variables que productos importados."
+    },
+    {
+      "question": "¿Debo sumar IVA (19%) al costo de la CBA?",
+      "answer": "No. Los precios que el INE publica ya **incluyen IVA**. No sumes 19% adicional. Si compras con factura y tienes derecho a recuperar IVA (personas jurídicas), entonces la base sin IVA = CBA / 1.19."
+    },
+    {
+      "question": "¿Qué pasa si mi familia tiene embarazada o lactante?",
+      "answer": "La CBA estándar no diferencia. Embarazadas y madres lactantes requieren +10-15% proteína y calorías. El INE considera menores 0-5 años (con +lácteos). Para embarazada, suma margen seguridad 15-20%, o consulta INTA (Instituto de Nutrición y Tecnología de Alimentos)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "INE - Índices de Precios Canasta Básica",
+      "url": "https://www.ine.cl/estadisticas/precios/canasta-basica",
+      "publisher": "Instituto Nacional de Estadísticas",
+      "date": "2026-04"
+    },
+    {
+      "name": "SII - Salario Mínimo e Indicadores 2026",
+      "url": "https://www.sii.cl/valores_y_fechas/valores_ut_utm.html",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026-01"
+    },
+    {
+      "name": "Dirección del Trabajo - Salarios Mínimos Vigentes",
+      "url": "https://www.dt.gob.cl/portal/1626/w3-propertyvalue-22474.html",
+      "publisher": "Ministerio del Trabajo y Previsión Social",
+      "date": "2026-04"
+    },
+    {
+      "name": "CEPAL - Inseguridad Alimentaria Latinoamérica",
+      "url": "https://www.cepal.org/es/temas/pobreza",
+      "publisher": "Comisión Económica para América Latina",
+      "date": "2025"
+    },
+    {
+      "name": "INTA - Recomendaciones Nutricionales por Edad",
+      "url": "https://www.inta.uchile.cl/",
+      "publisher": "Instituto de Nutrición y Tecnología de Alimentos, Universidad de Chile",
+      "date": "2024"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-28",
+    "source": "Instituto Nacional de Estadísticas (INE)",
+    "sourceUrl": "https://www.ine.cl/estadisticas/precios/canasta-basica",
+    "updateType": "automatic",
+    "notes": "INE publica actualización canasta básica entre 1-5 de cada mes. Valores abril 2026 son base; se recomienda verificar si requieres precisión máxima mes actual."
+  },
+  "lastReviewed": "2026-04-28"
+}

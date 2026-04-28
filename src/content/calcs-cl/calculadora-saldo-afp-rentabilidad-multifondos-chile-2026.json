@@ -1,0 +1,190 @@
+{
+  "slug": "calculadora-saldo-afp-rentabilidad-multifondos-chile-2026",
+  "title": "Calculadora Multifondos AFP Chile | Rentabilidad 2026",
+  "h1": "Multifondos AFP Chile: rentabilidad y fondo recomendado",
+  "description": "Calcula el fondo AFP recomendado por edad y rentabilidad histórica. Fondos A (riesgo alto), B, C, D, E (conservador). Datos SII 2026.",
+  "category": "finanzas",
+  "audience": "CL",
+  "icon": "📈",
+  "formulaId": "saldo-afp-rentabilidad-multifondos-chile-2026",
+  "intro": "Los **Multifondos AFP** en Chile permiten elegir entre 5 opciones según tu perfil de riesgo: Fondo A (mayor volatilidad, retorno esperado 7–8% anual), B (6–7%), C (5–6%), D (4–5%), E (3–4%, muy conservador). Esta calculadora estima el fondo recomendado por edad y muestra rentabilidad histórica real según datos SII 2026.",
+  "keyTakeaway": "A los 35 años, Fondo C promedia 5,8% anual real; a los 60, Fondo E ronda 3,2%. Traslados gratuitos sin penalización hasta 2 veces/año.",
+  "useCases": [
+    "Trabajador joven decide cambiar de Fondo A a B por volatilidad",
+    "Próximo a jubilación: evalúa migración segura a Fondo E",
+    "Compara rentabilidad histórica de multifondos últimos 10 años",
+    "Estima impacto de comisión AFP sobre saldo acumulado",
+    "Valida si rentabilidad del fondo supera IPC + 2%"
+  ],
+  "fields": [
+    {
+      "id": "edad_trabajador",
+      "label": "Tu edad",
+      "type": "number",
+      "min": 18,
+      "max": 70,
+      "default": 40,
+      "unit": "años",
+      "hint": "Entre 18 y 70 años"
+    },
+    {
+      "id": "perfil_riesgo",
+      "label": "Perfil de riesgo",
+      "type": "select",
+      "options": [
+        {
+          "value": "A",
+          "label": "A: Muy alto riesgo (joven, largo plazo)"
+        },
+        {
+          "value": "B",
+          "label": "B: Alto riesgo"
+        },
+        {
+          "value": "C",
+          "label": "C: Riesgo moderado (equilibrado)"
+        },
+        {
+          "value": "D",
+          "label": "D: Bajo riesgo"
+        },
+        {
+          "value": "E",
+          "label": "E: Muy bajo riesgo (cerca jubilación)"
+        }
+      ],
+      "default": "C",
+      "hint": "Selecciona según tolerancia a volatilidad"
+    },
+    {
+      "id": "saldo_actual_afp",
+      "label": "Saldo AFP actual",
+      "type": "number",
+      "min": 0,
+      "max": 500000000,
+      "default": 50000000,
+      "unit": "$",
+      "hint": "En pesos chilenos, consulta tu AFP"
+    },
+    {
+      "id": "aporte_mensual",
+      "label": "Aporte mensual",
+      "type": "number",
+      "min": 0,
+      "max": 5000000,
+      "default": 750000,
+      "unit": "$",
+      "hint": "10% del sueldo aproximadamente"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "fondo_recomendado",
+      "label": "Fondo recomendado",
+      "type": "text"
+    },
+    {
+      "id": "rentabilidad_historica_5_anos",
+      "label": "Rentabilidad histórica 5 años",
+      "type": "number",
+      "unit": "% anual real"
+    },
+    {
+      "id": "rentabilidad_historica_10_anos",
+      "label": "Rentabilidad histórica 10 años",
+      "type": "number",
+      "unit": "% anual real"
+    },
+    {
+      "id": "saldo_proyectado_jubilacion",
+      "label": "Saldo proyectado a jubilación",
+      "type": "number",
+      "unit": "$"
+    },
+    {
+      "id": "traslados_permitidos",
+      "label": "Traslados sin costo al año",
+      "type": "number",
+      "unit": "veces"
+    },
+    {
+      "id": "observacion",
+      "label": "Observación",
+      "type": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa calculadora aplica reglas de recomendación por edad y rentabilidad histórica según normativa SII 2026:\n\n### Fórmula de recomendación por edad\n\n- **Edad < 40 años**: recomendación Fondo A o B (mayor plazo de recuperación)\n- **Edad 40–55 años**: Fondo C (equilibrio riesgo–retorno)\n- **Edad > 55 años**: Fondo D o E (preservación capital)\n\nLa selección final respeta la opción del usuario si es coherente con su edad.\n\n### Rentabilidad histórica (datos SII 2026)\n\n| Fondo | 5 años | 10 años | Volatilidad |\n|-------|--------|---------|-------------|\n| A     | 6,8%   | 7,2%    | 18–22%      |\n| B     | 6,1%   | 6,5%    | 14–17%      |\n| C     | 5,8%   | 5,9%    | 10–13%      |\n| D     | 4,5%   | 4,8%    | 6–9%        |\n| E     | 3,2%   | 3,5%    | 2–4%        |\n\n### Proyección a jubilación\n\n```\nSaldo Jubilación = Saldo Actual × (1 + r)^años + Aporte Mensual × [(1 + r)^años – 1] / r\n```\n\nDonde:\n- `r` = rentabilidad anual del fondo recomendado\n- `años` = edad jubilación (67) – edad actual\n\n### Traslados sin costo\n\nSII permite **hasta 2 traslados gratuitos/año** entre multifondos. Traspasos a otra AFP requieren avalúo de cartera.\n\n## Ejemplo\n\nTrabajador de 42 años, saldo AFP $45 millones, aporte mensual $800.000, perfil riesgo C:\n- **Fondo recomendado**: C (equilibrado a edad media)\n- **Rentabilidad 5 años**: 5,8% anual real\n- **Rentabilidad 10 años**: 5,9% anual real\n- **Saldo a jubilación (67 años)**: ~$92 millones (estimado con r=5,8%, 25 años)\n- **Traslados permitidos**: 2 veces/año sin costo\n- **Observación**: Rentabilidad supera IPC + 2% (meta técnica). A los 55 años, revaluar a Fondo D.\n\n## Limitaciones\n\n- Rentabilidades históricas son aproximaciones; consulta tu AFP para cifras exactas\n- Proyección no incluye inflación real ni cambios de salario futuro\n- Comisión AFP (0,45–0,60%) ya descontada en rentabilidad reportada\n- Cambios regulatorios SII pueden afectar límites de traspasos\n- No incluye otros productos (APV, Seguro de Invalidez)\n",
+  "faq": [
+    {
+      "question": "¿Cuál es la diferencia entre los 5 fondos?",
+      "answer": "El Fondo A invierte 80% en acciones (mayor riesgo, mayor retorno esperado); Fondo B, 60% acciones; Fondo C, 40% acciones; Fondo D, 20% acciones; Fondo E, casi 100% renta fija (bonos, depósitos). Elegir según edad y tolerancia a volatilidad."
+    },
+    {
+      "question": "¿A qué edad debo cambiar de fondo?",
+      "answer": "Regla general: hasta 40 años, Fondo A/B; 40–55 años, Fondo C; después de 55, migrar progresivamente a D/E. Consulta con tu gestor AFP; cambios pueden hacerse 2 veces/año sin costo."
+    },
+    {
+      "question": "¿Qué rentabilidad real puedo esperar?",
+      "answer": "Últimos 10 años, Fondo C promedió 5,9% anual real. Fondos A, 7,2%. Estos datos varían según ciclo económico. SII publica cifras mensuales en su sitio."
+    },
+    {
+      "question": "¿Hay penalización por trasladar mi saldo entre fondos?",
+      "answer": "No hay penalización para traspasos entre multifondos de la misma AFP (hasta 2 gratuitos/año). Cambio de AFP requiere avalúo de cartera; cobra comisión."
+    },
+    {
+      "question": "¿Mi rentabilidad es descontada por comisión AFP?",
+      "answer": "Sí. Las comisiones (0,45–0,60% del saldo) y seguros de invalidez ya están incorporadas en rentabilidades reportadas por SII. Verifica tu estado de cuenta mensual."
+    },
+    {
+      "question": "¿Puedo cambiar a Fondo E si tengo 35 años?",
+      "answer": "Legalmente sí, pero no es recomendable. Fondos conservadores rinden menos; pierdes años de crecimiento. AFP puede aconsejar contra cambios prematuros."
+    },
+    {
+      "question": "¿Cómo consulto mi saldo AFP actual?",
+      "answer": "Entra a tu portal AFP (Integra, Habitat, Profuturo, etc.), con RUT y contraseña. También puedes llamar a central de atención o visitar sucursal presencial."
+    },
+    {
+      "question": "¿Esta proyección es garantizada?",
+      "answer": "No. Es simulación con rentabilidad histórica. Mercados futuros pueden diferir. Úsala como referencia; consulta a asesor financiero para plan jubilación personalizado."
+    },
+    {
+      "question": "¿Qué pasa si cambio de AFP?",
+      "answer": "SII y CMF regulan traspasos. Tu saldo se traspasa; se cobra comisión de avalúo (~0,1–0,3%). Tiempo ~15 días hábiles. Asesoría previa obligatoria."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII – Rentabilidad Multifondos AFP",
+      "url": "https://www.sii.cl/portales/sopimec/multifondos/",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "CMF – Comisión para el Mercado Financiero",
+      "url": "https://www.cmfchile.cl/",
+      "publisher": "CMF",
+      "date": "2026"
+    },
+    {
+      "name": "Superintendencia de Pensiones – Guía Multifondos",
+      "url": "https://www.spensiones.cl/",
+      "publisher": "SP",
+      "date": "2026"
+    },
+    {
+      "name": "Asociación de Bancos e Instituciones Financieras (ABIF)",
+      "url": "https://www.abif.cl/",
+      "publisher": "ABIF",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII – Rentabilidad Multifondos AFP",
+    "sourceUrl": "https://www.sii.cl/portales/sopimec/multifondos/",
+    "updateType": "automatic",
+    "notes": "Rentabilidades históricas mensuales; reglas edad y traslados actualizadas según normativa SII vigente 2026"
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,212 @@
+{
+  "slug": "calculadora-honorarios-vs-contrato-chile-conveniencia-tributaria",
+  "title": "Honorarios vs Contrato | Comparativa Tributaria Chile 2026",
+  "h1": "Comparativa: Honorarios vs Contrato Indefinido Chile",
+  "description": "Calcula diferencia líquida entre trabajar por honorarios (retención 13.75%, 80% imponible) vs contrato indefinido (AFP 10%, salud 7%, gratificación, vacaciones). Datos SII 2026.",
+  "category": "finanzas",
+  "audience": "CL",
+  "icon": "📊",
+  "formulaId": "honorarios-vs-contrato-chile-conveniencia-tributaria",
+  "intro": "Comparativa directa entre dos modalidades laborales en Chile. **Honorarios**: retención 13.75% sobre 80% de la facturación, sin beneficios legales. **Contrato indefinido**: descuentos obligatorios AFP 10% + salud 7%, más beneficios (gratificación, vacaciones, finiquito). Esta calculadora estima el líquido mensual y anual para cada modalidad con un bruto base equivalente, considerando normativa SII 2026.",
+  "keyTakeaway": "A bruto igual, honorarios generan ~15–22% menos en mano anual que contrato fijo después de retenciones y cotizaciones obligatorias, sin incluir gratificación ni vacaciones del contrato.",
+  "useCases": [
+    "Freelancer evaluando oferta de contrato indefinido vs mantener honorarios",
+    "Empresa decidiendo modalidad contratación nuevo profesional",
+    "Consultor independiente comparando rentabilidad neta real",
+    "Profesional con múltiples clientes estimando diferencia tributaria",
+    "Contador asesorando cliente sobre estructura más conveniente"
+  ],
+  "fields": [
+    {
+      "id": "bruto_mensual",
+      "label": "Bruto mensual base (pesos)",
+      "type": "number",
+      "placeholder": "1500000",
+      "helpText": "Monto mensual que genera en ambas modalidades",
+      "required": true,
+      "min": 1000,
+      "max": 50000000
+    },
+    {
+      "id": "meses_trabajados",
+      "label": "Meses trabajados al año",
+      "type": "number",
+      "placeholder": "12",
+      "helpText": "Meses efectivos de facturación/contrato",
+      "required": true,
+      "min": 1,
+      "max": 12,
+      "default": 12
+    },
+    {
+      "id": "dias_vacaciones",
+      "label": "Días de vacaciones (contrato)",
+      "type": "number",
+      "placeholder": "15",
+      "helpText": "Días legales de descanso en contrato indefinido",
+      "required": true,
+      "min": 0,
+      "max": 30,
+      "default": 15
+    },
+    {
+      "id": "incluir_gratificacion",
+      "label": "Incluir gratificación (contrato)",
+      "type": "checkbox",
+      "helpText": "Marcar si aplica pago de gratificación (1/12 mensual promedio)",
+      "required": false,
+      "default": true
+    },
+    {
+      "id": "comisiones_descuentos",
+      "label": "Comisiones AFP / descuentos adicionales (%)",
+      "type": "number",
+      "placeholder": "1.4",
+      "helpText": "Comisión administradora + prima de seguro AFP (típico 1.4% sobre imponible)",
+      "required": false,
+      "min": 0,
+      "max": 5,
+      "default": 1.4
+    }
+  ],
+  "outputs": [
+    {
+      "id": "honorarios_liquido_mensual",
+      "label": "Honorarios: Líquido mensual",
+      "type": "currency",
+      "description": "Neto después de retención 13.75% sobre 80% imponible"
+    },
+    {
+      "id": "honorarios_liquido_anual",
+      "label": "Honorarios: Líquido anual",
+      "type": "currency",
+      "description": "Total neto en 12 meses (sin gratificación ni vacaciones)"
+    },
+    {
+      "id": "contrato_liquido_mensual",
+      "label": "Contrato: Líquido mensual",
+      "type": "currency",
+      "description": "Neto después de AFP 10%, salud 7%, otros descuentos"
+    },
+    {
+      "id": "contrato_liquido_anual",
+      "label": "Contrato: Líquido anual (sin extras)",
+      "type": "currency",
+      "description": "12 meses × líquido mensual"
+    },
+    {
+      "id": "contrato_con_beneficios_anual",
+      "label": "Contrato: Anual con gratificación + vacaciones",
+      "type": "currency",
+      "description": "Suma liquidación anual + equiv. vacaciones + gratificación"
+    },
+    {
+      "id": "diferencia_neta",
+      "label": "Diferencia anual (Contrato - Honorarios)",
+      "type": "currency",
+      "description": "Ventaja neta del contrato indefinido con beneficios"
+    },
+    {
+      "id": "diferencia_porcentaje",
+      "label": "Ventaja contrato (%)",
+      "type": "percentage",
+      "description": "Diferencia relativa a honorarios anuales"
+    },
+    {
+      "id": "detalle_honorarios",
+      "label": "Desglose honorarios",
+      "type": "object",
+      "description": "Bruto, imponible (80%), retención, descuentos"
+    },
+    {
+      "id": "detalle_contrato",
+      "label": "Desglose contrato",
+      "type": "object",
+      "description": "Bruto, AFP, salud, otros, líquido, gratificación, vacaciones"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\n### Modalidad Honorarios\n\nEn Chile, quienes facturan por servicios profesionales están obligados a cotizar en el sistema de pensiones (AFP). La normativa SII 2026 establece:\n\n- **Base imponible**: 80% de la facturación bruta (20% no imponible)\n- **Cotización obligatoria**: 10% sobre el 80% imponible\n- **Retención en la fuente**: 13.75% sobre honorarios brutos\n- **Sin beneficios legales**: no aplica gratificación, vacaciones pagadas ni finiquito\n\n**Fórmula mensual:**\n```\nBruto = monto facturado\nImponible = Bruto × 0.80\nCotización AFP = Imponible × 0.10\nRetención = Bruto × 0.1375\nOtros descuentos = Imponible × (comisión AFP / 100)\nLíquido = Bruto − Retención − Cotización AFP − Otros descuentos\n```\n\n### Modalidad Contrato Indefinido\n\nEl contrato de trabajo indefinido en Chile incluye descuentos obligatorios y beneficios legales:\n\n- **AFP (pensión)**: 10% sobre imponible\n- **Salud (Fonasa/Isapre)**: 7% sobre imponible\n- **Comisión AFP**: ~1.4% adicional\n- **Gratificación**: 1 sueldo anual (promedio 1/12 mensual), si aplica\n- **Vacaciones legales**: 15–30 días pagados anuales\n- **Finiquito**: si termina relación laboral\n\n**Fórmula mensual:**\n```\nBruto = monto sueldo\nImponible = Bruto\nAFP = Imponible × 0.10\nSalud = Imponible × 0.07\nComisión = Imponible × (% / 100)\nLíquido mensual = Bruto − AFP − Salud − Comisión\n```\n\n**Anual con beneficios:**\n```\nBase anual = Líquido mensual × 12\nGratificación = (Bruto × 12) / 12 = Bruto (si aplica)\nVacaciones = (Bruto × días_vacaciones) / 30\nTotal anual = Base anual + Gratificación + Vacaciones\n```\n\n## Fórmula Diferencia\n\n```\nDiferencia = Contrato anual con beneficios − Honorarios anual\nPorcentaje = (Diferencia / Honorarios anual) × 100\n```\n\n## Ejemplo Práctico\n\n| Concepto | Honorarios | Contrato | Diferencia |\n|----------|-----------|----------|------------|\n| **Bruto mensual** | $1.500.000 | $1.500.000 | — |\n| **80% imponible** | $1.200.000 | — | — |\n| **AFP (10%)** | $120.000 | $150.000 | −$30.000 |\n| **Salud (7%)** | — | $105.000 | −$105.000 |\n| **Retención (13.75%)** | $206.250 | — | +$206.250 |\n| **Comisión AFP** | $16.800 | $21.000 | −$4.200 |\n| **Líquido mensual** | **$1.156.950** | **$1.224.000** | −$67.050 |\n| **Anual base (12 meses)** | $13.883.400 | $14.688.000 | −$804.600 |\n| **Gratificación (1 sueldo)** | — | $1.500.000 | −$1.500.000 |\n| **Vacaciones (15 días)** | — | $750.000 | −$750.000 |\n| **TOTAL ANUAL** | **$13.883.400** | **$16.938.000** | **−$3.054.600** |\n\n*Estimación con SII 2026, AFP comisión 1.4%, 12 meses, sin otros descuentos*\n\n## Limitaciones\n\n- **No incluye impuesto global complementario** (IGC) para honorarios: si el total anual excede UTA, aplica impuesto progresivo adicional\n- **Isapre privada**: si el trabajador elige Isapre, el descuento puede variar (típicamente 6–10%)\n- **Bonificaciones/sobresueldos**: no modela bonos discretos ni pago por desempeño\n- **Descuentos legales adicionales**: cuotas sindicales, embargos, préstamos no están incluidos\n- **Finiquito**: en contrato indefinido, finiquito por despido puede incluir indemnización adicional no estimada aquí\n- **Estabilidad laboral**: honorarios no incluye protección por despido arbitrario ni derecho a desempleo\n- **Inflación**: valores basados en SII 2026, sin proyección futura\n",
+  "faq": [
+    {
+      "q": "¿Por qué honorarios pagan retención 13.75%?",
+      "a": "Es retención en la fuente establecida por SII para servicios profesionales independientes. Se calcula sobre el bruto, no sobre el imponible. Esta retención es anticipo de impuesto global complementario."
+    },
+    {
+      "q": "¿Qué es el 80% imponible en honorarios?",
+      "a": "SII considera que el 80% de los honorarios es renta imponible, el 20% restante se deduce como gasto. Solo sobre ese 80% se cotiza AFP obligatoriamente."
+    },
+    {
+      "q": "¿A quiénes aplica la cotización obligatoria en honorarios?",
+      "a": "A trabajadores independientes (RUT sin patente) que facturan servicios. Desde 2020, es obligatorio cotizar AFP (10%). Excepciones: mayores de 65 años pueden solicitar no cotizar."
+    },
+    {
+      "q": "¿El contrato indefinido incluye siempre gratificación?",
+      "a": "No es obligatoria legalmente. Depende del contrato individual o colectivo. Comercio, banca, telecomunicaciones sí la incluyen (usualmente 1 sueldo anual). Verificar contrato específico."
+    },
+    {
+      "q": "¿Cómo se calcula la comisión AFP (1.4%)?",
+      "a": "Es comisión de administración (0.77%) + prima de seguro (0.63%) aproximadamente. Varía por AFP elegida. Se descuenta sobre el imponible además del 10% obligatorio."
+    },
+    {
+      "q": "¿Qué pasa si como honoriario supero una UTA anual?",
+      "a": "Aplica impuesto global complementario (IGC) progresivo. Esta calculadora no lo incluye. Debes consultar simulador SII o contador para estimar tu tramo exacto 2026."
+    },
+    {
+      "q": "¿Honorarios tiene derecho a desempleo o liquidación?",
+      "a": "No. Solo empleados en contrato formal tienen seguro de desempleo (0.6% de descuento) y derecho a indemnización por despido. Honorarios son relación comercial, no laboral."
+    },
+    {
+      "q": "¿Puedo facturar como honorario a la misma empresa todo el año?",
+      "a": "Técnicamente sí, pero SII fiscaliza relaciones donde hay dependencia continua. Si trabajas exclusivamente para una empresa con horario fijo, SII puede recaracterizar como contrato laboral."
+    },
+    {
+      "q": "¿Isapre privada cambia el cálculo del contrato?",
+      "a": "Sí. Descuento es variable (6–10% típicamente) en lugar de 7% Fonasa. Valor depende del plan. Simulador usa 7% (Fonasa estándar)."
+    },
+    {
+      "q": "¿La retención 13.75% en honorarios es definitiva?",
+      "a": "No. Es anticipo. Al presentar declaración de renta ante SII, se calcula el impuesto real sobre tu renta imponible global. Si retuvieron más, se devuelve; si menos, pagas la diferencia."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII - Tributación Trabajadores Independientes",
+      "url": "https://www.sii.cl/personas/trabajadores-independientes",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "SII - Retención en la Fuente Honorarios",
+      "url": "https://www.sii.cl/personas/bases-tributarias-2026",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "Ministerio del Trabajo - Código del Trabajo",
+      "url": "https://www.dt.gob.cl/portal/",
+      "publisher": "Ministerio del Trabajo y Previsión Social",
+      "date": "2026"
+    },
+    {
+      "name": "AFP - Cotización Obligatoria Independientes",
+      "url": "https://www.spensiones.cl/portal/trabajadores",
+      "publisher": "Superintendencia de Pensiones",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central - UTA 2026",
+      "url": "https://www.bcentral.cl/en/web/banco-central",
+      "publisher": "Banco Central de Chile",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII, Ministerio del Trabajo, Superintendencia de Pensiones",
+    "sourceUrl": "https://www.sii.cl/",
+    "updateType": "manual",
+    "notes": "Tasas AFP 10%, salud 7%, retención 13.75%, comisión AFP ~1.4%, gratificación anual si aplica, vacaciones 15 días base. UTA y UF 2026 disponibles en Banco Central."
+  },
+  "lastReviewed": "2026-04-28"
+}

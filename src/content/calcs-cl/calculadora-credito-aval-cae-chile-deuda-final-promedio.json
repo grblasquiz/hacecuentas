@@ -1,0 +1,269 @@
+{
+  "slug": "calculadora-credito-aval-cae-chile-deuda-final-promedio",
+  "title": "Calculadora CAE Chile 2026 | Deuda Final y Cuota Post-Titulación",
+  "h1": "Calculadora CAE Chile: Deuda Final y Cuota Post-Egreso",
+  "description": "Calcula tu deuda CAE acumulada, cuota mensual post-titulación (máx 10% renta) y años de pago. Incluye proyección con tasa 2% anual y escenarios de condonación. Datos SII 2026.",
+  "category": "educacion",
+  "audience": "CL",
+  "icon": "💸",
+  "formulaId": "credito-aval-cae-chile-deuda-final-promedio",
+  "intro": "El Crédito con Aval del Estado (CAE) es el sistema de financiamiento para estudiantes de educación superior en Chile. Esta calculadora estima tu **deuda nominal acumulada**, la **cuota mensual máxima post-egreso** (limitada al 10% de tu renta bruta), el **tiempo estimado de pago** y posibles **condonaciones** según reformas vigentes. Ingresa los datos de tu carrera y obtén una proyección realista de tu compromiso financiero.",
+  "keyTakeaway": "Un estudiante de Ingeniería de 5 años con arancel $8.500.000 acumula aprox. $9.200.000 en CAE (con tasa 2% anual); con sueldo inicial $2.500.000, pagará ~$200.000 mensuales durante ~4-5 años.",
+  "useCases": [
+    "Estudiantes pre-ingreso evaluando impacto financiero de la carrera elegida",
+    "Recién egresados planificando presupuesto con deuda CAE",
+    "Profesionales comparando simulaciones ante cambios de renta",
+    "Padres proyectando apoyo post-titulación del estudiante",
+    "Investigadores analizando impacto de reformas CAE en endeudamiento",
+    "Asesor académico informando a candidatos sobre costo real de estudios"
+  ],
+  "fields": [
+    {
+      "id": "carrera_tipo",
+      "label": "Tipo de carrera",
+      "type": "select",
+      "options": [
+        {
+          "value": "ingeniera",
+          "label": "Ingeniería / Tecnología"
+        },
+        {
+          "value": "ciencias",
+          "label": "Ciencias (Biología, Física, Química)"
+        },
+        {
+          "value": "medicina",
+          "label": "Medicina / Salud"
+        },
+        {
+          "value": "derecho",
+          "label": "Derecho / Ciencias Jurídicas"
+        },
+        {
+          "value": "administracion",
+          "label": "Administración / Economía"
+        },
+        {
+          "value": "educacion",
+          "label": "Educación / Pedagogía"
+        },
+        {
+          "value": "artes",
+          "label": "Artes / Humanidades"
+        },
+        {
+          "value": "otra",
+          "label": "Otra carrera"
+        }
+      ],
+      "required": true,
+      "tooltip": "Selecciona para referencia; no cambia cálculo directo."
+    },
+    {
+      "id": "duracion_anos",
+      "label": "Duración de la carrera (años)",
+      "type": "number",
+      "min": 2,
+      "max": 7,
+      "step": 0.5,
+      "required": true,
+      "placeholder": "Ej: 5",
+      "tooltip": "Años de estudio formal (semestres ÷ 2)."
+    },
+    {
+      "id": "arancel_anual",
+      "label": "Arancel anual actual (pesos chilenos)",
+      "type": "number",
+      "min": 1500000,
+      "max": 15000000,
+      "step": 100000,
+      "required": true,
+      "placeholder": "Ej: 8500000",
+      "tooltip": "Arancel nominal 2026 sin becas ni descuentos. Fuente: institución."
+    },
+    {
+      "id": "incremento_anual",
+      "label": "Incremento anual arancel (%)",
+      "type": "number",
+      "min": 0,
+      "max": 10,
+      "step": 0.5,
+      "value": 3,
+      "tooltip": "Proyección de aumento (histórico ~2-4% anual en Chile)."
+    },
+    {
+      "id": "tasa_cae_anual",
+      "label": "Tasa CAE anual (%)",
+      "type": "number",
+      "min": 0,
+      "max": 5,
+      "step": 0.1,
+      "value": 2,
+      "readonly": true,
+      "tooltip": "Tasa vigente CAE 2026: 2% anual (fija por ley)."
+    },
+    {
+      "id": "renta_inicial_egreso",
+      "label": "Renta mensual bruta estimada al egreso (pesos)",
+      "type": "number",
+      "min": 500000,
+      "max": 10000000,
+      "step": 100000,
+      "placeholder": "Ej: 2500000",
+      "required": true,
+      "tooltip": "Tu sueldo esperado post-titulación (sin descuentos)."
+    },
+    {
+      "id": "crecimiento_renta",
+      "label": "Crecimiento anual renta post-egreso (%)",
+      "type": "number",
+      "min": 0,
+      "max": 8,
+      "step": 0.5,
+      "value": 2.5,
+      "tooltip": "Aumento esperado de salario anual (~2-3% en Chile)."
+    },
+    {
+      "id": "incluir_condonacion",
+      "label": "¿Incluir escenarios de condonación?",
+      "type": "checkbox",
+      "value": true,
+      "tooltip": "Muestra deuda bajo reforma de condonación después de 20 años pago."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "deuda_nominal_acumulada",
+      "label": "Deuda nominal acumulada (sin intereses futuros)",
+      "type": "currency",
+      "tooltip": "Suma de aranceles reales pagados durante carrera."
+    },
+    {
+      "id": "deuda_con_capitalizacion",
+      "label": "Deuda con capitalización al egreso (tasa 2%)",
+      "type": "currency",
+      "tooltip": "Deuda nominal + intereses acumulados durante estudio (capitalización anual)."
+    },
+    {
+      "id": "cuota_maxima_inicial",
+      "label": "Cuota CAE inicial (10% renta post-egreso)",
+      "type": "currency",
+      "tooltip": "Primer pago mensual: máximo 10% de renta bruta inicial."
+    },
+    {
+      "id": "anos_pago_estimados",
+      "label": "Años estimados de pago",
+      "type": "number",
+      "decimals": 1,
+      "tooltip": "Tiempo hasta amortizar deuda con cuota variable (crece con renta)."
+    },
+    {
+      "id": "cuota_promedio_mensual",
+      "label": "Cuota promedio mensual durante pago",
+      "type": "currency",
+      "tooltip": "Promedio simple de cuotas variables (crece 2.5% anual)."
+    },
+    {
+      "id": "interes_total_pagado",
+      "label": "Interés total estimado a pagar",
+      "type": "currency",
+      "tooltip": "Diferencia entre total pagado y deuda nominal acumulada."
+    },
+    {
+      "id": "deuda_condonable_20anos",
+      "label": "Deuda condonable a los 20 años (reforma 2026)",
+      "type": "currency",
+      "tooltip": "Saldo restante si aplica condonación post-20 años de pago (escenario)."
+    },
+    {
+      "id": "descuento_condonacion",
+      "label": "Ahorro con condonación (vs pago completo)",
+      "type": "currency",
+      "tooltip": "Deuda perdonada bajo reforma; no incluye intereses futuros evitados."
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa deuda CAE se acumula **durante los años de estudio** con una tasa de interés del **2% anual** que se capitaliza (interés compuesto) año a año. Luego del egreso, el estudiante debe comenzar a pagar una **cuota máxima del 10% de su renta bruta mensual**, que aumenta conforme crece el sueldo.\n\n### Fórmula: Deuda Nominal Acumulada\n\n**Deuda nominal = Σ (arancel año_i)**\n\nDonde cada arancel de año i se incrementa por el % anual especificado:\n- Año 1: arancel_base\n- Año 2: arancel_base × (1 + incremento%)\n- Año n: arancel_base × (1 + incremento%)^(n-1)\n\n### Fórmula: Deuda con Capitalización al Egreso\n\n**Deuda capitalizada = Σ [arancel año_i × (1 + tasa_CAE)^(años_egreso - año_i)]**\n\nCada arancel se capitaliza desde el año en que se desembolsa hasta el final de la carrera. La tasa CAE vigente en 2026 es **2% anual**.\n\n### Fórmula: Cuota Inicial Post-Egreso\n\n**Cuota inicial = renta_inicial × 10% / 12**\n\nLa ley CAE limita la cuota al **10% máximo de la renta bruta mensual**. Se divide entre 12 meses.\n\n### Fórmula: Años de Pago Estimados\n\nSe simula mes a mes:\n1. Cada mes, la cuota es = 10% de (renta actual) ÷ 12\n2. La renta crece anualmente por crecimiento_renta%\n3. Se resta la cuota del saldo deudor\n4. Se cuenta hasta que saldo = 0\n\n**Nota**: En Chile, la deuda CAE **no genera interés adicional durante repago** (a diferencia de otros créditos). Solo acumula interés 2% durante estudio.\n\n### Fórmula: Condonación (Escenario Reforma 2026)\n\nVarias reformas proponen **condonación parcial o total después de 15-20 años de pago** o si el egresado no supera cierto umbral de renta. Para esta calculadora:\n\n**Deuda condonable = saldo restante si transcurren 20 años de pago con cuota máxima 10% renta**\n\nEs un **escenario**, no garantía legal.\n\n## Ejemplo Práctico\n\n**Estudiante Ingeniería, 5 años, arancel $8.500.000 anual (+ 3% anual):**\n\n| Año | Arancel | Factor capitalización | Aporte capitalizado |\n|-----|---------|----------------------|---------------------|\n| 1 | $8.500.000 | (1.02)^4 | $9.204.848 |\n| 2 | $8.755.000 | (1.02)^3 | $9.307.815 |\n| 3 | $9.018.650 | (1.02)^2 | $9.414.223 |\n| 4 | $9.291.210 | (1.02)^1 | $9.477.034 |\n| 5 | $9.569.946 | (1.02)^0 | $9.569.946 |\n| **Total** | | | **$47.073.866** |\n\n**Deuda nominal acumulada: $45.134.806**  \n**Deuda capitalizada al egreso (tasa 2%): $47.073.866**\n\nCon renta inicial $2.500.000:\n- **Cuota inicial**: 10% × $2.500.000 ÷ 12 = **$20.833**\n- Si renta crece 2.5% anual:\n  - Año 1 pago: cuota ~$21k\n  - Año 3 pago: cuota ~$22.5k\n  - Año 5 pago: cuota ~$23.7k\n- **Años de pago estimados: ~4.2 años**\n- **Cuota promedio: ~$22.000**\n- **Interés pagado: ~$0** (sin interés durante repago)\n\nCon condonación tras 20 años (escenario): bajo renta baja, podría haber saldo perdonable, pero con crecimiento renta típico, se paga completo mucho antes.\n\n## Limitaciones\n\n1. **No incluye IVA en arancel**: Algunos aranceles publicados ya incluyen 19%; verifica con tu institución.\n2. **Renta estimada**: Salario real post-egreso puede variar significativamente (crisis, cambio sector).\n3. **Condonación no es ley**: Los escenarios de condonación son reformas propuestas; status legal en 2026 puede cambiar.\n4. **No considera otros créditos**: Si tienes deuda paralela (CORFO, créditos privados), suma independiente.\n5. **Sin descuentos de arancel**: No contempla becas, descuentos por mérito o aporte estatal directo (ve sitio institución).\n6. **Tasa CAE fija 2%**: Cambios legislativos podrían modificarla.\n7. **Morosidad / suspensión de pago**: Si no pagas, intereses y costos legales aplican (no simulados).\n\n",
+  "faq": [
+    {
+      "question": "¿Qué es el CAE y quién puede acceder?",
+      "answer": "El Crédito con Aval del Estado (CAE) es un sistema de financiamiento para estudiantes de instituciones acreditadas (universidades, institutos profesionales, centros de formación técnica) en Chile. Pueden acceder estudiantes de grado (pregrado) que cumplan requisitos de renta familiar, disponibilidad presupuestaria anual del Estado y acreditación de la institución. No hay límite de edad ni restricciones por género. Consulta sii.cl/estudiantes."
+    },
+    {
+      "question": "¿Cuál es la tasa de interés CAE 2026?",
+      "answer": "La tasa CAE vigente en 2026 es **2% anual**, fija y establecida por ley. Se capitaliza durante el período de estudio (interés compuesto). Una vez egresado, **no hay interés adicional**: solo pagas la cuota del 10% de tu renta bruta mensual."
+    },
+    {
+      "question": "¿Cómo se calcula la cuota post-egreso?",
+      "answer": "La cuota mensual es el **10% de tu renta bruta dividido entre 12 meses**. Ejemplo: si ganas $2.500.000 bruto, tu cuota es ($2.500.000 × 10%) ÷ 12 = $20.833. La cuota es variable: si tu sueldo sube a $3.000.000, la cuota sube a $25.000. Este sistema permite que pagos escalen con tu carrera profesional."
+    },
+    {
+      "question": "¿Cuánto tiempo tardo en pagar mi deuda CAE?",
+      "answer": "Depende de tu deuda inicial y crecimiento salarial. La mayoría de egresados paga entre **3 a 5 años** si el arancel fue moderado y el sueldo inicial es competente. Con arancel alto ($10M+) o renta baja inicial, puede extenderse hasta **8-10 años**. Esta calculadora simula tu caso específico."
+    },
+    {
+      "question": "¿Existe condonación de deuda CAE?",
+      "answer": "En 2026 no hay condonación automática vigente. Sin embargo, varias reformas proponen condonación tras 15-20 años de pago o para deudores con renta bajo cierto umbral. El Congreso debate cambios continuamente. Esta calculadora muestra un escenario de condonación post-20 años como referencia, pero **no es garantía legal**. Revisa actualizaciones en sii.cl."
+    },
+    {
+      "question": "¿Qué pasa si no puedo pagar la cuota de CAE?",
+      "answer": "Si tienes dificultades, puedes solicitar **suspensión temporal de pago** (hasta 2 años acumulados) ante la Tesorería General de la República (TGR), demostrando insolvencia. También existen bonificaciones por desempleo prolongado o situación crítica. **No dejes de pagar sin autorización**: hay costos legales y afecta tu historial crediticio."
+    },
+    {
+      "question": "¿El CAE puede ser condonado si muero o quedo inválido?",
+      "answer": "Sí. Si el deudor CAE fallece o es declarado inválido permanentemente, la deuda es **condonada automáticamente**. Requiere tramitar la solicitud ante TGR o SII con documentación legal (acta defunción, resolución invalidez)."
+    },
+    {
+      "question": "¿Debo pagar CAE si me voy a trabajar al extranjero?",
+      "answer": "Sí. La obligación de pago subsiste mientras hayas sido beneficiario CAE. Debes comunicar domicilio exterior a TGR y puedes realizar pagos desde cuentas internacionales o giros. **No te exonera vivir afuera.**"
+    },
+    {
+      "question": "¿Puedo pagar el CAE de una sola vez (prepago)?",
+      "answer": "No existe descuento oficial por prepago CAE. Sin embargo, puedes **pagar más de la cuota requerida** cada mes para acelerar amortización y reducir plazo total. Consulta directamente con TGR sobre mecanismos de pago anticipado sin penalización."
+    },
+    {
+      "question": "¿Cómo se diferencia el CAE de otros créditos educacionales (Corfo, créditos privados)?",
+      "answer": "**CAE**: 2% anual fijo, aval Estado, cuota máx. 10% renta, sin interés post-egreso.  \n**Créditos CORFO**: para posgrado, tasas variables, hasta 12-15% anual.  \n**Créditos privados (bancos)**: tasas 4-8% anual, exigen garantía, cuota fija. El CAE es **más favorable** para pregrado en instituciones acreditadas."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII - Sitio CAE Estudiantes",
+      "url": "https://www.sii.cl/portales/estudiantes/cae.html",
+      "publisher": "Servicio de Impuestos Internos (SII)",
+      "date": "2026"
+    },
+    {
+      "name": "Tesorería General de la República - CAE",
+      "url": "https://www.tesoreria.cl/",
+      "publisher": "TGR",
+      "date": "2026"
+    },
+    {
+      "name": "MINEDUC - Financiamiento Estudiantil",
+      "url": "https://www.mineduc.cl/programas-y-beneficios/credito-con-aval-del-estado-cae/",
+      "publisher": "Ministerio de Educación",
+      "date": "2026"
+    },
+    {
+      "name": "Superintendencia de Educación Superior - Instituciones Acreditadas",
+      "url": "https://www.sies.cl/",
+      "publisher": "SIES",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central de Chile - UF y tasas referenciales",
+      "url": "https://www.bcentral.cl/",
+      "publisher": "Banco Central",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SII, MINEDUC, TGR, Banco Central",
+    "sourceUrl": "https://www.sii.cl; https://www.mineduc.cl; https://www.tesoreria.cl",
+    "updateType": "manual",
+    "notes": "Tasa CAE 2%, arancel base estimado 2026, límite cuota 10% renta. Se actualiza anualmente con cambios de tasas y normativa SII/MINEDUC."
+  },
+  "lastReviewed": "2026-04-28"
+}

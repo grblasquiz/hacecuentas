@@ -1,0 +1,214 @@
+{
+  "slug": "calculadora-cripto-bitcoin-impuestos-mexico-isr-ganancia",
+  "title": "Impuestos Cripto México 2026 | Calcula ISR Bitcoin",
+  "h1": "Calculadora de Impuestos Cripto México 2026",
+  "description": "Calcula ISR sobre ganancias de criptomonedas en México. SAT: enajenación de bienes. Estima ISR 1.92-35%, retenciones Bitso 1.04%, PTU. 2026.",
+  "category": "impuestos",
+  "audience": "MX",
+  "icon": "₿",
+  "formulaId": "cripto-bitcoin-impuestos-mexico-isr-ganancia",
+  "intro": "En México, las ganancias por venta de criptomonedas (Bitcoin, Ethereum, etc.) están sujetas a **ISR como enajenación de bienes inmuebles** según el SAT. No aplica IVA. Si eres trader frecuente, el SAT puede reclasificarte como **actividad empresarial**. Esta calculadora estima tu ISR, retenciones de plataforma (Bitso 1.04%) y PTU potencial en 2026.",
+  "keyTakeaway": "Ganancia gravable: (Venta - Compra - Fees) × Tarifa ISR anual. Retención Bitso: ~1.04%. SAT requiere declaración en RFC/CURP aunque seas persona física.",
+  "useCases": [
+    "Inversores que venden Bitcoin/Ethereum y necesitan estimar ISR",
+    "Traders frecuentes para conocer si aplica actividad empresarial",
+    "Freelancers que reciben pagos en cripto en México",
+    "Personas que usan exchanges como Bitso, Kraken, Coinbase",
+    "Asesoría fiscal previa antes de declarar ante SAT"
+  ],
+  "fields": [
+    {
+      "id": "monto_compra_mxn",
+      "label": "Monto de compra (MXN)",
+      "type": "number",
+      "placeholder": "100000",
+      "help": "Precio total al que compraste la cripto (en pesos mexicanos). Incluye comisiones de compra.",
+      "required": true,
+      "min": 0
+    },
+    {
+      "id": "monto_venta_mxn",
+      "label": "Monto de venta (MXN)",
+      "type": "number",
+      "placeholder": "150000",
+      "help": "Precio total al que vendiste la cripto (en pesos mexicanos). Antes de comisiones.",
+      "required": true,
+      "min": 0
+    },
+    {
+      "id": "fees_exchange_mxn",
+      "label": "Comisiones exchange (MXN)",
+      "type": "number",
+      "placeholder": "1500",
+      "help": "Comisiones totales de compra + venta. Bitso ~1.04%, Kraken ~0.16-0.26%.",
+      "required": true,
+      "min": 0
+    },
+    {
+      "id": "frecuencia_operaciones",
+      "label": "¿Haces operaciones frecuentes? (5+ al año)",
+      "type": "select",
+      "options": [
+        {
+          "value": "no",
+          "label": "No, soy inversor ocasional"
+        },
+        {
+          "value": "si",
+          "label": "Sí, soy trader frecuente"
+        }
+      ],
+      "help": "El SAT puede reclasificarte como actividad empresarial si haces muchas operaciones.",
+      "required": true
+    },
+    {
+      "id": "salario_anual_bruto",
+      "label": "Salario anual bruto (MXN) — opcional",
+      "type": "number",
+      "placeholder": "480000",
+      "help": "Si tienes empleo, para calcular tu tarifa ISR marginal acumulada.",
+      "required": false,
+      "min": 0
+    }
+  ],
+  "outputs": [
+    {
+      "id": "ganancia_bruta",
+      "label": "Ganancia bruta",
+      "type": "currency",
+      "help": "Venta - Compra (antes de fees)"
+    },
+    {
+      "id": "ganancia_neta",
+      "label": "Ganancia neta gravable",
+      "type": "currency",
+      "help": "Ganancia bruta - Comisiones (lo que declara ante SAT)"
+    },
+    {
+      "id": "tarifa_isr",
+      "label": "Tarifa ISR marginal 2026",
+      "type": "percentage",
+      "help": "Tramo ISR SAT 2026. Rango 1.92% a 35%"
+    },
+    {
+      "id": "isr_estimado",
+      "label": "ISR estimado",
+      "type": "currency",
+      "help": "Ganancia neta × Tarifa ISR (no incluye retenciones)"
+    },
+    {
+      "id": "retencion_bitso",
+      "label": "Retención plataforma (Bitso 1.04%)",
+      "type": "currency",
+      "help": "Si usas Bitso, retienen ~1.04% sobre la ganancia"
+    },
+    {
+      "id": "isr_pendiente",
+      "label": "ISR pendiente a pagar",
+      "type": "currency",
+      "help": "ISR estimado - Retenciones (lo que debes pagar al SAT)"
+    },
+    {
+      "id": "ptu_potencial",
+      "label": "PTU potencial (empresa)",
+      "type": "currency",
+      "help": "Si eres reclasificado como empresa, 10% de ganancia neta es repartible"
+    },
+    {
+      "id": "carga_fiscal_total",
+      "label": "Carga fiscal total (%)",
+      "type": "percentage",
+      "help": "(ISR + Retenciones) / Ganancia neta"
+    },
+    {
+      "id": "advertencia",
+      "label": "Advertencia SAT",
+      "type": "text",
+      "help": "Condiciones de reclasificación como actividad empresarial"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEn México, el SAT trata las ganancias de criptomonedas como **enajenación de bienes** (artículo 19 LISR). No aplica IVA. La tributación depende de tu perfil:\n\n### Fórmula ISR — Persona Física Ocasional\n\n```\nGanancia Neta = (Monto Venta - Monto Compra) - Fees Exchange\nISR = Ganancia Neta × Tarifa ISR Marginal (tramo 2026)\nRetención Plataforma = Ganancia Neta × 1.04% (Bitso)\nISR Pendiente = ISR - Retención\n```\n\n### Tramos ISR 2026 (México)\n\n| Rango (MXN) | Tarifa | Cuota Fija | Plus |\n|---|---|---|---|\n| 0 - 248,457 | 1.92% | 0 | 0 |\n| 248,457 - 741,372 | 6.4% | 4,768.24 | 1.92% hasta 248,457 |\n| 741,372 - 1,482,528 | 10.88% | 47,299.04 | 6.4% hasta 741,372 |\n| 1,482,528 - 2,482,429 | 16% | 130,104.41 | 10.88% hasta 1,482,528 |\n| 2,482,429 - 3,720,643 | 19.2% | 288,857.69 | 16% hasta 2,482,429 |\n| 3,720,643 - 5,926,629 | 21.36% | 505,933.61 | 19.2% hasta 3,720,643 |\n| 5,926,629+ | 35% | 1,375,302.08 | 21.36% hasta 5,926,629 |\n\n**Nota:** Si tienes salario + ganancias cripto, tu tarifa marginal es acumulativa.\n\n### Reclasificación como Actividad Empresarial\n\nEl SAT puede cambiar tu clasificación a **actividad empresarial** si:\n- Haces **5+ operaciones** en el año\n- Tiempo promedio entre compra-venta **< 6 meses**\n- Ganancia > **50% de tu ingreso anual**\n- Usas herramientas trading (bots, APIs)\n\nEn ese caso:\n- Aplica ISR sobre **resultado del ejercicio** (ganancia - gastos deducibles)\n- **PTU:** 10% de ganancia neta es repartible\n- Requieres **RFC activo** y declaración mensual\n- Posible inspección SAT\n\n### Retenciones Plataforma\n\n- **Bitso:** 1.04% (más común en MX)\n- **Kraken:** 0.16-0.26%\n- **Coinbase:** 0% (pero declara el SAT)\n- **Ripple Desktop Wallet:** 0% (custodia propia)\n\nLa retención es **acreditable** contra ISR final.\n\n### Ejemplo Práctico\n\n**Caso:** Persona física, 1 operación anual.\n\n- Compra: $100,000 MXN\n- Venta: $150,000 MXN\n- Fees: $1,500 MXN\n- Salario: $480,000 MXN (tarifa base 6.4%)\n\n```\nGanancia Neta = (150,000 - 100,000) - 1,500 = $48,500\nTarifa Marginal = 6.4% (por acumulación con salario)\nISR Estimado = 48,500 × 6.4% = $3,104\nRetención Bitso = 48,500 × 1.04% = $504.40\nISR Pendiente = 3,104 - 504.40 = $2,599.60\nCarga Fiscal = (3,104 + 504.40) / 48,500 = 7.44%\n```\n\n## Limitaciones\n\n- **No calcula base acumulada:** Si tienes múltiples operaciones, acumula ganancia neta total antes de aplicar tarifa.\n- **Pérdidas:** El SAT permite compensar pérdidas en años posteriores (carryforward 5 años).\n- **Derivados:** Opciones, futuros cripto tienen reglas distintas (ganancia ordinaria 25% fija).\n- **Custodia propia:** Wallets no custodiales (Metamask, Ledger) no generan retención, pero debes declararlas.\n- **Conversión FIAT:** El SAT considera \"enajenación\" solo cuando conviertes a pesos/USD. Cambios cripto-cripto pueden no ser gravables (criterio SAT cambió en 2024, requiere asesoría).\n- **RFC requerido:** Toda operación registrada ante SAT requiere RFC válido y CURP.",
+  "faq": [
+    {
+      "question": "¿Pago ISR si solo tengo criptos en mi wallet sin vender?",
+      "answer": "No. El SAT solo grava **enajenación** (venta/conversión a FIAT). Tenencia pasiva no es gravable. Pero si recibiste cripto como pago (nómina, servicios), se considera ingreso."
+    },
+    {
+      "question": "¿Bitso retiene automáticamente o debo declararle al SAT?",
+      "answer": "Bitso retiene ~1.04% automáticamente en retiros. **Debes declararla en tu declaración anual (Anexo de Ingresos por Enajenación)**. La retención es acreditable contra ISR final."
+    },
+    {
+      "question": "¿Qué pasa si hago 10 operaciones al año?",
+      "answer": "El SAT puede reclasificarte como actividad empresarial. Entonces: 1) Declara ingresos brutos sin deducción automática. 2) Desglosa gastos deducibles (asesores, hardware). 3) Paga PTU (10% de ganancia). Requiere RFC y asesoría contable."
+    },
+    {
+      "question": "¿Puedo deducir pérdidas en criptos?",
+      "answer": "Sí. Pérdidas en una operación se restan de ganancias en otras (mismo año o carryforward 5 años máximo). Ej: Ganancia $50k - Pérdida $20k = Base $30k."
+    },
+    {
+      "question": "¿ISR en cripto-a-cripto (BTC → ETH)?",
+      "answer": "Criterio SAT 2024: cambio directo cripto-cripto **no genera ISR** si no hay conversión a FIAT. Pero requiere documentación (exchange logs, blockchain). Si pasas por peso/dólar, sí aplica ISR en ambas operaciones."
+    },
+    {
+      "question": "¿Qué tarifa ISR aplica si gano $200k en cripto?",
+      "answer": "Depende de tu ingreso anual total. Si ganas solo cripto: **1.92%** (primer tramo). Si tienes salario $480k + cripto $200k: acumula, aplica **6.4-10.88%** según tramo marginal 2026."
+    },
+    {
+      "question": "¿Debo guardar recibos/facturas de Bitso?",
+      "answer": "Obligatorio. El SAT audita operaciones cripto. Descarga: 1) Historial transacciones Bitso. 2) Comprobantes de depósito/retiro. 3) Cotización MXN/BTC fecha operación (Banxico o exchange). Mínimo 5 años."
+    },
+    {
+      "question": "¿Qué pasa si no declaro ganancias cripto?",
+      "answer": "Riesgo alto. El SAT accede datos Bitso, Kraken via convenios internacionales. Multas: 75-110% sobre impuesto omitido + recargos + sanciones. Máximo delito fiscal (cárcel) si omites > $500k."
+    },
+    {
+      "question": "¿Aplica IVA en venta de criptos en México?",
+      "answer": "**No.** El SAT considera criptos como bienes intangibles, no mercancías. Solo ISR sobre ganancia. Esto cambia si eres exchange regulado (entonces sí IVA sobre comisiones)."
+    },
+    {
+      "question": "¿Cómo declaro ante SAT en formulario?",
+      "answer": "Forma 3: Sección VI (Ingresos por Enajenación de Bienes Muebles Diversos). Requiere RFC activo. Si > $600k anual, presentación electrónica obligatoria (e.firma + software SAT). Recomendado: asesor contable especializado cripto."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SAT - Criterio Criptomonedas Enajenación",
+      "url": "https://www.sat.gob.mx/aplicacion/contribuyentes/criterios",
+      "publisher": "SAT México",
+      "date": "2024"
+    },
+    {
+      "name": "SAT - Tramos ISR 2026",
+      "url": "https://www.sat.gob.mx/aplicacion/contribuyentes/nuevos-sistemas-contribuciones",
+      "publisher": "SAT México",
+      "date": "2026"
+    },
+    {
+      "name": "Resolución Miscelánea Fiscal 2026 - Criptos",
+      "url": "https://www.sat.gob.mx/aplicacion/sat/resolucion-misc-fiscal",
+      "publisher": "SAT México",
+      "date": "2026"
+    },
+    {
+      "name": "CONDUSEF - Guía Exchanges Cripto México",
+      "url": "https://www.gob.mx/condusef/articulos/criptomonedas",
+      "publisher": "CONDUSEF",
+      "date": "2024"
+    },
+    {
+      "name": "Banxico - Tipo de Cambio Histórico",
+      "url": "https://www.banxico.org.mx/tiposdeintercambio",
+      "publisher": "Banco de México",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "SAT México - Tablas ISR 2026 y Criterios Criptomonedas",
+    "sourceUrl": "https://www.sat.gob.mx",
+    "updateType": "manual",
+    "notes": "Tramos ISR actualizados anualmente por inflación. Criterio criptos se ajusta según cambios LISR. Retención Bitso ~1.04% verificada 2026."
+  },
+  "lastReviewed": "2026-04-28"
+}

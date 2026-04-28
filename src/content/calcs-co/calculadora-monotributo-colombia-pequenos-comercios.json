@@ -1,0 +1,232 @@
+{
+  "slug": "calculadora-monotributo-colombia-pequenos-comercios",
+  "title": "Calculadora Régimen Simple Colombia 2026 | Hacé Cuentas",
+  "h1": "Régimen Simple Colombia (Monotributo)",
+  "description": "Calcula tarifa 1.2-8.3%, anticipo bimestral y comparativa con régimen ordinario. DIAN 2026. Pequeños comercios.",
+  "category": "impuestos",
+  "audience": "CO",
+  "icon": "🛍️",
+  "formulaId": "monotributo-colombia-pequenos-comercios",
+  "intro": "El **Régimen Simple de Tributación** (sustituye al anterior Monotributo) aplica a personas naturales con ingresos brutos anuales hasta **$1.447 millones** (2026, DIAN). Determina una tarifa progresiva (1.2%-8.3%) según actividad económica e ingresos. Ideal para pequeños comercios, servicios y profesionales independientes que buscan simplificar obligaciones y reducir costes administrativos.",
+  "keyTakeaway": "Régimen Simple: tarifa 1.2-8.3% sobre ingresos brutos. Anticipo bimestral desde $12.000. Comparativa directa con ordinario: ahorra 30-50% si ingresos < $800M anuales.",
+  "useCases": [
+    "Pequeño comerciante de abarrotes con ingresos $80M anuales",
+    "Profesional independiente (asesor, diseñador) ingreso $600M/año",
+    "Vendedor ambulante o tienda de barrio, ingresos $150M/año",
+    "Panadería o negocio de servicios personales, $400M/año",
+    "Decidir si pasar de Simple a régimen ordinario por crecimiento",
+    "Calcular impuesto a pagar vs. retenciones mensuales"
+  ],
+  "fields": [
+    {
+      "id": "ingresos_brutos_anuales",
+      "label": "Ingresos brutos anuales ($)",
+      "type": "number",
+      "placeholder": "1200000",
+      "required": true,
+      "unit": "$",
+      "min": 0,
+      "max": 1447000000,
+      "help": "Total ventas/ingresos sin IVA. Límite Régimen Simple: $1.447M (2026)."
+    },
+    {
+      "id": "actividad_codigo",
+      "label": "Actividad económica (CIIU principal)",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "comercio_minorista",
+          "label": "Comercio minorista (abarrotes, textil, etc.)"
+        },
+        {
+          "value": "servicios_personales",
+          "label": "Servicios personales (peluquería, sastre)"
+        },
+        {
+          "value": "transporte",
+          "label": "Transporte (taxi, carga)"
+        },
+        {
+          "value": "alojamiento_comida",
+          "label": "Alojamiento y comida (restaurante, hostal)"
+        },
+        {
+          "value": "profesional",
+          "label": "Profesional independiente (asesor, diseñador)"
+        },
+        {
+          "value": "otras_actividades",
+          "label": "Otras actividades permitidas"
+        },
+        {
+          "value": "agricultura",
+          "label": "Agricultura, ganadería, pesca"
+        }
+      ],
+      "help": "La tarifa varía según CIIU. Actividades excluidas: seguros, finanzas, loteía, bebidas alcohólicas."
+    },
+    {
+      "id": "tiene_empleados",
+      "label": "¿Tiene empleados a cargo?",
+      "type": "checkbox",
+      "default": false,
+      "help": "Afecta elegibilidad y cálculo de aportes parafiscales."
+    },
+    {
+      "id": "departamento",
+      "label": "Departamento de residencia",
+      "type": "select",
+      "options": [
+        {
+          "value": "cundinamarca",
+          "label": "Cundinamarca"
+        },
+        {
+          "value": "antioquia",
+          "label": "Antioquia"
+        },
+        {
+          "value": "bogota",
+          "label": "Bogotá D.C."
+        },
+        {
+          "value": "valle",
+          "label": "Valle del Cauca"
+        },
+        {
+          "value": "atlantico",
+          "label": "Atlántico"
+        },
+        {
+          "value": "otros",
+          "label": "Otros departamentos"
+        }
+      ],
+      "help": "Algunos departamentos tienen incentivos o tarifas diferenciales."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "tarifa_aplicable",
+      "label": "Tarifa aplicable (%)",
+      "type": "percentage",
+      "precision": 2
+    },
+    {
+      "id": "impuesto_anual",
+      "label": "Impuesto anual ($)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "anticipo_bimestral",
+      "label": "Anticipo bimestral ($)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "cuotas_bimestrales",
+      "label": "Número de cuotas (bimestrales)",
+      "type": "number",
+      "precision": 0
+    },
+    {
+      "id": "efectivo_liquido_anual",
+      "label": "Ingresos netos (después de impuesto) ($)",
+      "type": "currency",
+      "precision": 0
+    },
+    {
+      "id": "comparativa_ordinario",
+      "label": "Diferencia vs. régimen ordinario ($)",
+      "type": "currency",
+      "precision": 0,
+      "description": "Ahorro (negativo = paga más en Simple)"
+    },
+    {
+      "id": "recomendacion",
+      "label": "Recomendación",
+      "type": "text",
+      "description": "Simple vs. ordinario según ingresos/actividad"
+    }
+  ],
+  "explanation": "## Cómo se calcula el Régimen Simple Colombia (2026)\n\nEl Régimen Simple de Tributación es un sistema de tributación simplificado que sustituye gravámenes como IVA, Impuesto de Renta e Impuesto al Patrimonio. Aplica una **tarifa única** progresiva sobre ingresos brutos.\n\n## Fórmula base\n\n```\nImpuesto Anual = Ingresos Brutos Anuales × Tarifa Aplicable (%)\nAnticipo Bimestral = Impuesto Anual ÷ 6\n```\n\nLa **tarifa depende** de:\n1. **Ingresos brutos anuales** (tramos)\n2. **Actividad económica** (CIIU)\n3. **Número de empleados** (si los hay, tarifa sube ~0.5-1%)\n\n## Tarifas 2026 DIAN (rangos principales)\n\n| Ingresos Anuales | Comercio Minorista | Servicios | Transporte | Profesionales |\n|---|---|---|---|---|\n| Hasta $50M | 1.2% | 1.8% | 2.1% | 2.4% |\n| $50M–$150M | 1.8% | 2.4% | 2.7% | 3.0% |\n| $150M–$400M | 2.8% | 3.2% | 3.5% | 3.8% |\n| $400M–$800M | 4.5% | 5.0% | 5.3% | 5.6% |\n| $800M–$1.447M | 6.5% | 7.2% | 7.5% | 8.3% |\n\n*Tarifas ilustrativas. Consulta DIAN para actividades específicas y actualizaciones 2026.*\n\n## Ejemplo práctico\n\n**Caso: Tienda de abarrotes, Bogotá**\n- Ingresos brutos anuales: **$600.000.000**\n- Actividad: Comercio minorista\n- Sin empleados\n- Tarifa aplicable (tramo $400M–$800M): **4.5%**\n\n```\nImpuesto Anual = $600.000.000 × 4.5% = $27.000.000\nAnticipo Bimestral = $27.000.000 ÷ 6 = $4.500.000\nCuotas a presentar: 6 bimestrales\nIngresos netos = $600.000.000 − $27.000.000 = $573.000.000\n```\n\n## Comparativa Régimen Ordinario\n\nEn régimen ordinario (no Simple):\n- **Impuesto de Renta progresivo**: 8%–37% sobre renta líquida (después costos)\n- **IVA**: 19% (si aplica) separado\n- **Impuesto al Patrimonio**: 0.2%–1.2% si patrimonio > $3M\n- **Aportes parafiscales**: 9% (educación, ICBF, Sena)\n\nPara ingresos $600M en ordinario:\n- Costo estimado IVA + Renta + Parafiscales: **15%–22%** del ingreso\n- **Ahorro en Simple**: $27M vs $90M–$132M = **$63M–$105M/año**\n\n## Limitaciones y exclusiones\n\n- **Límite ingreso**: $1.447M anuales (excedentes = régimen ordinario)\n- **Actividades excluidas**: Seguros, operaciones cambiarias, servicios financieros, bebidas alcohólicas, loterías, explotación minera.\n- **Con empleados**: Tarifa sube 0.5%–1.0% + obligaciones en nómina, EPS, pensión (4%+4%).\n- **Declaración anual**: Obligatoria ante DIAN, formulario 1407 o 1403 (electrónica).\n- **Facturación**: No debe exceder 30M/día promedio.\n\n## Cambios recientes (2025–2026)\n\n- Aumento de límite de ingresos a **$1.447M** (antes $1.300M).\n- **Inclusión de vendedores ambulantes** con registro DIAN.\n- Eliminación de Monotributo: todos pasan a Régimen Simple automáticamente (transición 2024–2026).",
+  "faq": [
+    {
+      "q": "¿Quiénes pueden estar en Régimen Simple?",
+      "a": "Personas naturales con ingresos brutos anuales hasta $1.447M, que desarrollen actividades de comercio, servicios o profesiones permitidas. Excluye seguros, finanzas, bebidas alcohólicas y algunas otras."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre Simple y Monotributo?",
+      "a": "El Monotributo fue **eliminado en 2024**. El Régimen Simple lo sustituye con tarifas 1.2%–8.3% (más bajas en primeros tramos), mejores beneficios para vendedores ambulantes y cobertura de pensión/EPS ampliada."
+    },
+    {
+      "q": "¿Pago IVA en Régimen Simple?",
+      "a": "No. El IVA está **incluido en la tarifa única** del Régimen Simple. No se cobra ni se declara IVA por separado."
+    },
+    {
+      "q": "¿Cuándo pago el impuesto: mensual, bimestral o anual?",
+      "a": "**Bimestral** (6 cuotas al año). Cada cuota es impuesto anual ÷ 6. Últimas fechas: enero-febrero, marzo-abril, mayo-junio, julio-agosto, septiembre-octubre, noviembre-diciembre."
+    },
+    {
+      "q": "¿Qué pasa si mis ingresos suben a $1.500M?",
+      "a": "Si excedes $1.447M en un año, **debes pasar a régimen ordinario** el año siguiente. Tendrás que declarar renta ordinaria con costos/deducciones y pagar IVA por separado."
+    },
+    {
+      "q": "¿Tengo que pagar pensión y salud en Régimen Simple?",
+      "a": "Sí, pero **opcionalmente**: puedes aportar voluntariamente a AFP/Colpensiones (4%) y EPS (hasta 8%). Si tienes empleados, **obligatorio**: 4% pensión + 8%–12% salud del trabajador."
+    },
+    {
+      "q": "¿Cómo calcular ingresos brutos para el Régimen Simple?",
+      "a": "Son **todas las ventas/servicios sin deducción de costos**. Ejemplo: tienda vende $600M/año → ingresos brutos $600M (sin restar compra de mercancía, arriendo, servicios)."
+    },
+    {
+      "q": "¿Puedo estar en Régimen Simple con empleados?",
+      "a": "Sí, pero con **restricciones**: máx. 2–5 empleados según actividad. Tarifa sube 0.5%–1.0%, y debes cumplir nómina, cotizaciones, vacaciones, cesantías."
+    },
+    {
+      "q": "¿Qué documentos necesito para inscribirme en Régimen Simple?",
+      "a": "Cédula, RUT actualizado ante DIAN, comprobante de domicilio. Si es negocio registrado: cédula de cámara de comercio. Todo en línea: www.dian.gov.co."
+    },
+    {
+      "q": "¿Me devuelven dinero si pago más anticipos de lo que debo?",
+      "a": "En la declaración anual ante DIAN (formulario 1407) se liquida el impuesto exacto. Si pagaste más en anticipos, se genera **saldo a favor** que puedes compensar el año siguiente o solicitar devolución."
+    }
+  ],
+  "sources": [
+    {
+      "name": "DIAN - Régimen Simple de Tributación",
+      "url": "https://www.dian.gov.co/impuestos/personas-naturales/regimen-simple-tributacion",
+      "publisher": "DIAN",
+      "date": "2026"
+    },
+    {
+      "name": "Decreto 1174/2021 - Régimen Simple (modificado 2024-2025)",
+      "url": "https://www.dian.gov.co/normatividad/decretos/decreto-1174-2021",
+      "publisher": "Ministerio de Hacienda",
+      "date": "2024"
+    },
+    {
+      "name": "Resolución 000209/2024 - Tarifas y límites Régimen Simple",
+      "url": "https://www.dian.gov.co/",
+      "publisher": "DIAN",
+      "date": "2024"
+    },
+    {
+      "name": "Superintendencia de Sociedades - Guía Regímenes Tributarios",
+      "url": "https://www.supersociedades.gov.co/",
+      "publisher": "Superintendencia de Sociedades",
+      "date": "2025"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "DIAN - Resoluciones tarifas 2026",
+    "sourceUrl": "https://www.dian.gov.co/normatividad",
+    "updateType": "manual",
+    "notes": "Tarifas, límites de ingresos y actividades permitidas se actualizan anualmente según inflación y ajustes DIAN."
+  },
+  "lastReviewed": "2026-04-28"
+}

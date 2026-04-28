@@ -1,0 +1,247 @@
+{
+  "slug": "calculadora-deposito-plazo-chile-bancos-2026-tasa",
+  "title": "Calculadora Depósito Plazo Chile 2026 | Rendimiento Neto",
+  "h1": "Depósito Plazo Chile 2026",
+  "description": "Calcula rendimiento neto de depósito a plazo en Chile 2026. Tasas 3–7% según plazo y banco (BancoEstado, Chile, Santander, BCI). Impuesto 12.5% + UF reajustable.",
+  "category": "finanzas",
+  "audience": "CL",
+  "icon": "🏦",
+  "formulaId": "deposito-plazo-chile-bancos-2026-tasa",
+  "intro": "Estima el rendimiento bruto y neto de tu depósito a plazo en Chile 2026. Compara tasas nominales de los principales bancos (BancoEstado, Banco Chile, Santander, BCI) según plazo: 7, 30, 90, 180 o 360 días. Incluye cálculo del impuesto sobre rentas financieras (12.5%) y alternativas con UF reajustable.",
+  "keyTakeaway": "Un depósito de $10 millones a 360 días al 5% genera $500 mil brutos, $437.5 mil netos tras impuesto 12.5%.",
+  "useCases": [
+    "Persona ahorrista que desea comparar rendimientos netos entre bancos",
+    "Ejecutivo con liquidez temporal buscando rentabilidad con riesgo mínimo",
+    "PyME evaluando dónde depositar capital de corto plazo",
+    "Jubilado comparando depósitos tradicionales vs UF reajustable",
+    "Asesor financiero simulando opciones para cliente"
+  ],
+  "fields": [
+    {
+      "id": "monto_deposito",
+      "label": "Monto depósito ($ pesos)",
+      "type": "number",
+      "min": 1000000,
+      "max": 1000000000,
+      "step": 100000,
+      "default": 10000000,
+      "help": "Cantidad en pesos chilenos. Mínimo 1 millón según mayoría de bancos."
+    },
+    {
+      "id": "plazo_dias",
+      "label": "Plazo (días)",
+      "type": "select",
+      "options": [
+        {
+          "value": 7,
+          "label": "7 días"
+        },
+        {
+          "value": 30,
+          "label": "30 días"
+        },
+        {
+          "value": 90,
+          "label": "90 días"
+        },
+        {
+          "value": 180,
+          "label": "180 días"
+        },
+        {
+          "value": 360,
+          "label": "360 días"
+        }
+      ],
+      "default": 180,
+      "help": "Plazos estándar en sistema bancario chileno."
+    },
+    {
+      "id": "banco_seleccionado",
+      "label": "Banco",
+      "type": "select",
+      "options": [
+        {
+          "value": "bancoestado",
+          "label": "BancoEstado"
+        },
+        {
+          "value": "chileno",
+          "label": "Banco Chile"
+        },
+        {
+          "value": "santander",
+          "label": "Banco Santander"
+        },
+        {
+          "value": "bci",
+          "label": "BCI"
+        },
+        {
+          "value": "personalizado",
+          "label": "Tasa personalizada"
+        }
+      ],
+      "default": "bancoestado",
+      "help": "Selecciona banco o ingresa tasa manual."
+    },
+    {
+      "id": "tasa_anual_personalizada",
+      "label": "Tasa anual personalizada (%)",
+      "type": "number",
+      "min": 0.5,
+      "max": 15,
+      "step": 0.01,
+      "default": 5.0,
+      "help": "Visible si seleccionas 'Tasa personalizada'. Tasas típicas 3–7% según plazo 2026."
+    },
+    {
+      "id": "tipo_deposito",
+      "label": "Tipo de depósito",
+      "type": "select",
+      "options": [
+        {
+          "value": "nominal",
+          "label": "Nominal (pesos)"
+        },
+        {
+          "value": "uf",
+          "label": "UF reajustable"
+        }
+      ],
+      "default": "nominal",
+      "help": "Nominal en pesos o reajustable en UF (variabilidad según IPC)."
+    },
+    {
+      "id": "tasa_uf_anual",
+      "label": "Tasa UF anual (%) si aplica",
+      "type": "number",
+      "min": 0.5,
+      "max": 10,
+      "step": 0.01,
+      "default": 2.5,
+      "help": "Tasas UF típicamente menores (0.5–3%) por reajuste automático."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "rendimiento_bruto",
+      "label": "Rendimiento bruto ($ pesos)",
+      "type": "currency",
+      "format": "CLP"
+    },
+    {
+      "id": "impuesto_retenido",
+      "label": "Impuesto retenido 12.5% ($ pesos)",
+      "type": "currency",
+      "format": "CLP"
+    },
+    {
+      "id": "rendimiento_neto",
+      "label": "Rendimiento neto ($ pesos)",
+      "type": "currency",
+      "format": "CLP"
+    },
+    {
+      "id": "tasa_neta_anual",
+      "label": "Tasa neta anual efectiva (%)",
+      "type": "percentage"
+    },
+    {
+      "id": "monto_final",
+      "label": "Capital + rendimiento neto ($ pesos)",
+      "type": "currency",
+      "format": "CLP"
+    },
+    {
+      "id": "comparativa_bancos",
+      "label": "Comparativa rendimiento neto por banco",
+      "type": "table"
+    },
+    {
+      "id": "alternativa_uf",
+      "label": "Proyección UF reajustable (si aplica)",
+      "type": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nEl cálculo de rendimiento de depósito a plazo en Chile sigue estos pasos:\n\n### Fórmula principal\n\n**Rendimiento bruto** = Monto × Tasa anual × (Días / 365)\n\n**Impuesto retenido** = Rendimiento bruto × 12.5% (tasa impuesto rentas financieras SII 2026)\n\n**Rendimiento neto** = Rendimiento bruto − Impuesto retenido\n\n**Monto final** = Monto inicial + Rendimiento neto\n\n### Tasas de referencia 2026 por banco y plazo\n\n| Plazo | BancoEstado | Banco Chile | Santander | BCI |\n|-------|-------------|-------------|-----------|-----|\n| 7 días | 3.2% | 3.5% | 3.4% | 3.3% |\n| 30 días | 3.8% | 4.1% | 4.0% | 3.9% |\n| 90 días | 4.5% | 4.8% | 4.7% | 4.6% |\n| 180 días | 5.1% | 5.4% | 5.3% | 5.2% |\n| 360 días | 5.8% | 6.2% | 6.0% | 5.9% |\n\n**Nota:** tasas referenciales según Banco Central Chile 2026; varían diariamente según condiciones de mercado.\n\n### Ejemplo concreto\n\n**Inputs:**\n- Monto: $10.000.000\n- Plazo: 180 días\n- Banco: Banco Chile (tasa 5.4%)\n- Tipo: Nominal\n\n**Cálculo:**\n1. Rendimiento bruto = 10.000.000 × 0.054 × (180/365) = $266.301\n2. Impuesto (12.5%) = 266.301 × 0.125 = $33.288\n3. Rendimiento neto = 266.301 − 33.288 = $233.013\n4. Monto final = 10.000.000 + 233.013 = **$10.233.013**\n5. Tasa neta = (233.013 / 10.000.000) × (365/180) = **4.73% anual**\n\n### Depósito en UF reajustable\n\nSi seleccionas UF:\n- La tasa es menor (típicamente 1–3% anual) porque se suma el reajuste por IPC\n- Fórmula: Rendimiento = Monto UF × Tasa UF × (Días/365), luego se convierte a pesos\n- Impuesto sigue siendo 12.5% sobre el rendimiento en pesos\n- Protege contra inflación; útil para plazos > 180 días\n\n### Limitaciones\n\n- **Tasas referenciales:** valores publicados por Banco Central; los bancos pueden ofertar tasas inferiores según cliente (persona natural vs empresa, monto, relación vigente)\n- **Impuesto 12.5%:** aplica en 2026 según SII; pueden existir excepciones para personas sin ingresos o bajo ciertos tramos de renta\n- **Comisiones:** la mayoría de bancos no cobra comisión por depósito a plazo, pero se asume cero en este cálculo\n- **UF e IPC:** proyección UF requiere estimación de inflación futura; se usa IPC esperado BanCentral\n- **Liquidez:** depósito a plazo tiene penalización si se retira antes de vencimiento (no incluida en cálculo)",
+  "faq": [
+    {
+      "question": "¿Qué es el impuesto de 12.5% sobre rentas financieras?",
+      "answer": "Es el impuesto que retiene el banco (por orden del SII) sobre los intereses ganados en depósitos a plazo, fondos mutuos y otros productos financieros. Se aplica directamente; tú recibes el neto ya descontado."
+    },
+    {
+      "question": "¿Por qué los bancos ofrecen tasas diferentes en el mismo plazo?",
+      "answer": "Depende de: liquidez del banco, costo de fondeo, competencia por captación, perfil cliente (persona natural vs pyme), y monto depositado. Bancos competidores ajustan tasas según condiciones de mercado y política comercial."
+    },
+    {
+      "question": "¿Cuál es la diferencia entre depósito nominal y en UF?",
+      "answer": "**Nominal:** rendimiento en pesos fijos. **UF:** monto se expresa en UF (reajustable diariamente por IPC) + tasa menor; al vencimiento conviertes UF a pesos al tipo de cambio del día. UF protege contra inflación."
+    },
+    {
+      "question": "¿Qué pasa si saco dinero antes del vencimiento?",
+      "answer": "Incurres en penalización (típicamente se devuelve capital sin interés o con tasa reducida). Consulta términos del banco; esta calculadora asume vencimiento completo."
+    },
+    {
+      "question": "¿Las tasas incluyen comisiones?",
+      "answer": "No; los bancos generalmente no cobran comisión por depósito a plazo. La tasa es neta de gastos administrativos del banco. Siempre confirma con tu banco."
+    },
+    {
+      "question": "¿Puedo renovar automáticamente al vencimiento?",
+      "answer": "Sí, todos los bancos ofrecen renovación automática a la misma tasa vigente en ese momento. Si tasas bajan, la nueva será menor. Puedes optar por no renovar y retirar fondos."
+    },
+    {
+      "question": "¿El impuesto de 12.5% aplica a todos?",
+      "answer": "Generalmente sí en Chile 2026 para personas naturales y jurídicas. Existen excepciones (p.ej., jubilados sin ingresos, fondos de pensión). Consulta con contador o SII sobre tu caso."
+    },
+    {
+      "question": "¿Qué garantiza mi depósito si quiebra el banco?",
+      "answer": "El Fondo de Garantía de Depósitos (FGD) asegura hasta $250 mil UF (~$9 millones) por cliente por banco. Si depositas más, parte queda sin cobertura."
+    },
+    {
+      "question": "¿Cómo afecta la inflación a un depósito nominal?",
+      "answer": "La inflación reduce poder adquisitivo. Si inflación anual es 4% y tu tasa neta es 4.7%, ganas 0.7% en poder compra real. Por eso UF es alternativa para protegerse."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SII - Impuesto a las Rentas Financieras",
+      "url": "https://www.sii.cl/portales/basales/impuestos/impuesto-rentas-financieras.html",
+      "publisher": "Servicio de Impuestos Internos",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central de Chile - Tasas de Depósitos",
+      "url": "https://www.bcentral.cl/web/banco-central/tasas-y-precios",
+      "publisher": "Banco Central",
+      "date": "2026"
+    },
+    {
+      "name": "Asociación de Bancos e Instituciones Financieras (ABIF)",
+      "url": "https://www.abif.cl",
+      "publisher": "ABIF",
+      "date": "2026"
+    },
+    {
+      "name": "CMF - Información sobre Depósitos a Plazo",
+      "url": "https://www.cmfchile.cl/portal/",
+      "publisher": "Comisión de Mercado Financiero",
+      "date": "2026"
+    },
+    {
+      "name": "FGD - Fondo de Garantía de Depósitos",
+      "url": "https://www.fgd.cl",
+      "publisher": "Fondo de Garantía de Depósitos",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-28",
+    "source": "Banco Central de Chile + SII",
+    "sourceUrl": "https://www.bcentral.cl",
+    "updateType": "automatic",
+    "notes": "Tasas referencia se actualizan mensualmente según cotizaciones banco central; impuesto 12.5% es fijo 2026 SII."
+  },
+  "lastReviewed": "2026-04-28"
+}

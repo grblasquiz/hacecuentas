@@ -1,0 +1,281 @@
+{
+  "slug": "calculadora-pension-imss-modalidad-40-mexico-aportacion",
+  "title": "Calculadora Modalidad 40 IMSS 2026 | Pensión Voluntaria",
+  "h1": "Modalidad 40 IMSS México: Calcula tu pensión voluntaria",
+  "description": "Estima cuota mensual, pensión proyectada Ley 73 y comparativa AFORE Ley 97. Modalidad 40 IMSS 2026: aportaciones desde $2,472 MXN mensuales.",
+  "category": "finanzas",
+  "audience": "MX",
+  "icon": "👴",
+  "formulaId": "pension-imss-modalidad-40-mexico-aportacion",
+  "intro": "La **Modalidad 40 del IMSS** permite a trabajadores independientes, desempleados o que hayan dejado de cotizar mantener o mejorar su pensión. Calcula tu cuota mensual según el salario base de cotización elegido (1 a 25 UMA), proyecta tu pensión bajo Ley 73, y compárala con el régimen AFORE Ley 97. Incluye cálculo de ROI y costo acumulado en 5 años.",
+  "keyTakeaway": "Modalidad 40 IMSS 2026: cuota desde $2,472 MXN/mes con UMA $248.93. Pensión proyectada Ley 73: ~$8,500-$21,250 MXN/mes según 25-40 años cotización. ROI estimado 4.2-6.8% anual vs. AFORE.",
+  "useCases": [
+    "Trabajador independiente que perdió cotización y busca recuperar semanas de seguro",
+    "Persona desempleada que quiere mejorar su pensión futura",
+    "Jubilado cercano a pensión que desea incrementar su cuantía mensual",
+    "Comparativa personal: Modalidad 40 vs. AFORE Ley 97 antes de decidir",
+    "Planificación de aportaciones voluntarias para maximizar pensión garantizada",
+    "Cálculo de flujo de caja: cuota mensual vs. beneficio esperado en 20 años de jubilación"
+  ],
+  "fields": [
+    {
+      "id": "salario_base_cotizacion_uma",
+      "label": "Salario base de cotización (en UMA)",
+      "type": "number",
+      "min": 1,
+      "max": 25,
+      "default": 3,
+      "step": 0.5,
+      "help": "Elige entre 1 y 25 UMA. 1 UMA = $248.93 MXN (2026). Mayor salario = mayor cuota y pensión."
+    },
+    {
+      "id": "anos_aportacion_previos",
+      "label": "Años de aportación IMSS previos",
+      "type": "number",
+      "min": 0,
+      "max": 50,
+      "default": 15,
+      "step": 1,
+      "help": "Semanas cotizadas antes de Modalidad 40. Mínimo 500 semanas (9.6 años) para pensión garantizada."
+    },
+    {
+      "id": "semanas_previas",
+      "label": "Semanas cotizadas previas (complemento)",
+      "type": "number",
+      "min": 0,
+      "max": 2600,
+      "default": 0,
+      "step": 1,
+      "help": "Semanas adicionales cotizadas. Se suma a años previos × 52."
+    },
+    {
+      "id": "anos_modalidad_40",
+      "label": "Años que aportarás en Modalidad 40",
+      "type": "number",
+      "min": 1,
+      "max": 20,
+      "default": 5,
+      "step": 1,
+      "help": "Cuántos años planeas cotizar voluntariamente. Máximo hasta cumplir 60 años."
+    },
+    {
+      "id": "edad_actual",
+      "label": "Edad actual",
+      "type": "number",
+      "min": 30,
+      "max": 59,
+      "default": 50,
+      "step": 1,
+      "help": "Edad actual. Pensión se liquida a 60 años (hombre) o 55 (mujer, desde 2023 reforma). Usa 60 como estándar."
+    },
+    {
+      "id": "genero",
+      "label": "Género",
+      "type": "select",
+      "options": [
+        {
+          "value": "hombre",
+          "label": "Hombre"
+        },
+        {
+          "value": "mujer",
+          "label": "Mujer"
+        }
+      ],
+      "default": "hombre",
+      "help": "Edad de pensión: hombre 60 años, mujer 55 años (desde 2023, transición hasta 60)."
+    },
+    {
+      "id": "incremento_anual_salario",
+      "label": "Incremento anual estimado del salario (%) ",
+      "type": "number",
+      "min": 0,
+      "max": 15,
+      "default": 3.5,
+      "step": 0.5,
+      "help": "Inflación + crecimiento esperado. Afecta cuota futura en Modalidad 40."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "uma_vigente",
+      "label": "UMA vigente 2026",
+      "unit": "MXN",
+      "format": "currency"
+    },
+    {
+      "id": "cuota_mensual_inicial",
+      "label": "Cuota mensual inicial Modalidad 40",
+      "unit": "MXN",
+      "format": "currency"
+    },
+    {
+      "id": "cuota_mensual_promedio_5anos",
+      "label": "Cuota mensual promedio (5 años con incremento)",
+      "unit": "MXN",
+      "format": "currency"
+    },
+    {
+      "id": "aportacion_acumulada_5anos",
+      "label": "Aportación acumulada en 5 años",
+      "unit": "MXN",
+      "format": "currency"
+    },
+    {
+      "id": "semanas_totales_al_cierre",
+      "label": "Semanas cotizadas totales al cierre (Modalidad 40)",
+      "unit": "semanas",
+      "format": "number"
+    },
+    {
+      "id": "edad_pension",
+      "label": "Edad de pensión estimada",
+      "unit": "años",
+      "format": "number"
+    },
+    {
+      "id": "pension_mensual_ley73",
+      "label": "Pensión mensual estimada Ley 73 (seguro de vida)",
+      "unit": "MXN",
+      "format": "currency"
+    },
+    {
+      "id": "pension_anual_ley73",
+      "label": "Pensión anual estimada Ley 73",
+      "unit": "MXN",
+      "format": "currency"
+    },
+    {
+      "id": "pension_garantizada_minimo",
+      "label": "Pensión garantizada mínima IMSS 2026",
+      "unit": "MXN",
+      "format": "currency"
+    },
+    {
+      "id": "comparativa_afore_pension_mensual",
+      "label": "Pensión estimada AFORE Ley 97 (comparativa)",
+      "unit": "MXN",
+      "format": "currency"
+    },
+    {
+      "id": "diferencia_modalidad_vs_afore",
+      "label": "Ventaja Modalidad 40 vs. AFORE (mensual)",
+      "unit": "MXN",
+      "format": "currency"
+    },
+    {
+      "id": "breakeven_meses",
+      "label": "Meses para recuperar inversión (breakeven)",
+      "unit": "meses",
+      "format": "number"
+    },
+    {
+      "id": "roi_anual_modalidad40",
+      "label": "ROI anual estimado Modalidad 40",
+      "unit": "%",
+      "format": "percent"
+    },
+    {
+      "id": "valor_presente_pension_20anos",
+      "label": "Valor presente: pensión 20 años de jubilación",
+      "unit": "MXN",
+      "format": "currency"
+    },
+    {
+      "id": "valor_presente_neto_20anos",
+      "label": "VPN (20 años jubilación, tasa 4% descuento)",
+      "unit": "MXN",
+      "format": "currency"
+    },
+    {
+      "id": "mensaje_recomendacion",
+      "label": "Recomendación",
+      "unit": "texto",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula la Modalidad 40 IMSS\n\nLa **Modalidad 40 del IMSS** (Continuación Voluntaria en el Seguro de Invalidez, Vejez y Muerte) permite a personas que han dejado de cotizar mantener o mejorar su pensión. La cuota se calcula como un porcentaje del salario base elegido (entre 1 y 25 UMA).\n\n### Fórmula principal\n\n```\nCuota Mensual = Salario Base (UMA × UMA Vigente) × Tasa de Aportación\nTasa Aportación = 10.075% (empleador 5.15% + trabajador 4.925% + 0% estatal)\n```\n\n**Ejemplo con 3 UMA (2026):**\n- 1 UMA = $248.93 MXN\n- Salario Base = 3 × $248.93 = $746.79 MXN\n- Cuota Mensual = $746.79 × 10.075% = **$75.22 MXN** (aporte trabajador ~$36.74 MXN)\n\nEn Modalidad 40, **tú pagas ambas partes** (patrón + trabajador). Cuota Total Mensual = $75.22 MXN por cada UMA elegida.\n\n### Cálculo de pensión Ley 73 (Seguro de Vida)\n\nLa pensión se estima con la **fórmula de seguro de vida del IMSS**:\n\n```\nPensión Mensual = Salario Base × Factor Actuarial × Semanas Cotizadas / 500\n```\n\nEl **factor actuarial** depende de edad y género (tabla SAT IMSS 2026):\n- Hombre 60 años: factor ~0.85-0.92\n- Mujer 55 años: factor ~0.78-0.85\n\n**Requisitos mínimos:**\n- 500 semanas cotizadas (9.6 años) para pensión garantizada\n- Edad mínima: 60 años (hombre), 55 años (mujer, transición 2023-2030)\n\n### Tabla de ejemplos por UMA elegida\n\n| UMA | Cuota Mensual | Salario Base | Semanas 25 años | Pensión 40 años |\n|-----|---------------|--------------|-----------------|----------------|\n| 1   | $25.07        | $248.93      | 1300            | ~$2,850 MXN    |\n| 3   | $75.22        | $746.79      | 1300            | ~$8,550 MXN    |\n| 5   | $125.37       | $1,244.65    | 1300            | ~$14,250 MXN   |\n| 10  | $250.75       | $2,489.30    | 1300            | ~$28,500 MXN   |\n| 25  | $626.88       | $6,223.25    | 1300            | ~$71,250 MXN   |\n\n### Comparativa AFORE Ley 97\n\nEn AFORE (régimen de cuenta individual), la pensión depende del saldo acumulado y expectativa de vida:\n\n```\nPensión AFORE ≈ (Saldo Acumulado + Rendimientos) / Meses Esperados Vida\nRendimiento promedio AFORE: 4.5-5.5% anual\n```\n\n**Ventaja Modalidad 40:**\n- Pensión garantizada por el IMSS (no depende de mercado)\n- Acceso a prestaciones médicas IMSS\n- Cálculo transparente y previsible\n\n**Ventaja AFORE:**\n- Potencial de mayor rendimiento (5-7% anual vs. 3-4% IMSS)\n- Herencia del saldo no utilizado\n- Mayor flexibilidad en retiros parciales\n\n### Cálculo de ROI y Breakeven\n\n**ROI Anual:**\n```\nROI = (Pensión Mensual - Cuota Mensual) / Cuota Mensual × 100\n```\n\n**Breakeven (meses para recuperar inversión):**\n```\nBreakeven = Aportación Acumulada / (Pensión Mensual - Cuota Mensual)\n```\n\n**Ejemplo:** \n- Aportación 5 años: $45,000 MXN\n- Pensión mensual: $8,500 MXN\n- Cuota mensual: $75 MXN\n- Beneficio neto: $8,425 MXN/mes\n- Breakeven: 45,000 / 8,425 = **5.3 meses**\n- ROI anual: ($8,500 / $75) - 1 = **11,166% primero año** (posterior: ~4.2%)\n\n### Valor Presente Neto (VPN)\n\nAsume jubilación 20 años, tasa descuento 4% (Banxico referencia 2026):\n\n```\nVPN = Σ [Pensión Mensual / (1 + 0.04/12)^t] - Aportación Acumulada\n```\n\nSi VPN > 0, la inversión es rentable; si < 0, AFORE puede ser mejor opción.\n\n### Limitaciones y consideraciones\n\n1. **Inflación:** Pensión IMSS se reajusta anualmente con inflación (INPC), pero cuota de aportación también aumenta.\n2. **Cambios legales:** Reforma 2023 elevó edad de pensión mujer de 55 a 60 años progresivamente.\n3. **Supervivencia:** Estimación asume esperanza de vida CONAPO 2026 (~81 años hombre, ~87 mujeres).\n4. **Rendimientos AFORE:** Varían según fondo elegido (SieFORE, rendimiento histórico 4.5-5.8%).\n5. **No incluye:** Descuentos por jubilación anticipada, pensiones por viudez/orfandad, cuotas de solidaridad estatal.\n6. **Cuota trabajador:** En Modalidad 40, asumir que **tú pagas 100%** de la cuota. Requiere trámite ante IMSS.\n\n## Ejemplo completo\n\n**Datos entrada:**\n- Salario base: 5 UMA ($1,244.65 MXN)\n- Años previos: 20 años (1,040 semanas)\n- Años Modalidad 40: 5 años\n- Edad actual: 55 años (hombre)\n- Incremento anual: 3.5%\n\n**Cálculos:**\n1. Cuota inicial: $1,244.65 × 10.075% = **$125.37 MXN/mes**\n2. Semanas al cierre: 1,040 + (5 × 52) = **1,300 semanas**\n3. Aportación acumulada (5 años, con incremento): ~$7,700 MXN\n4. Edad pensión: 60 años (5 años desde ahora)\n5. Pensión Ley 73 a 60 años: ~$14,250 MXN/mes (factor 0.85, 1,300 semanas)\n6. Pensión AFORE comparable: ~$12,800 MXN/mes (saldo $285,000 / 267 meses vida)\n7. Ventaja Modalidad 40: **+$1,450 MXN/mes**\n8. Breakeven: 7,700 / 1,450 = **5.3 meses**\n9. ROI anual (años 2-5): **~4.8%**\n10. VPN 20 años: $2,850,000 - $7,700 = **$2,842,300 MXN** (altamente positivo)\n\n**Conclusión:** En este caso, Modalidad 40 es ventajosa si planeas vivir >60 años y valoras seguridad de pensión garantizada.",
+  "faq": [
+    {
+      "question": "¿Cuál es la cuota mínima y máxima de Modalidad 40?",
+      "answer": "**Mínima:** 1 UMA × 10.075% = $25.07 MXN/mes (2026). **Máxima:** 25 UMA × 10.075% = $626.88 MXN/mes. Puedes cambiar la UMA elegida cada año."
+    },
+    {
+      "question": "¿Cuántas semanas cotizadas necesito para pensión garantizada?",
+      "answer": "Mínimo **500 semanas cotizadas** (9.6 años). Con menos de 500 semanas, el IMSS devuelve tu cuota sin intereses. Modalidad 40 suma semanas: cada semana de aportación cuenta como 1 semana de cotización."
+    },
+    {
+      "question": "¿A qué edad puedo pensionarme con Modalidad 40?",
+      "answer": "**Hombre:** 60 años. **Mujer:** 55 años (desde 2023; transición gradual hasta 60 años en 2030). No hay jubilación anticipada sin penalización."
+    },
+    {
+      "question": "¿Cómo se reajusta la pensión después de jubilarse?",
+      "answer": "La pensión IMSS se reajusta **anualmente con inflación (INPC)**. Desde 2020, ajuste es acumulativo. Tu cuota de aportación en Modalidad 40 también aumenta con inflación."
+    },
+    {
+      "question": "¿Puedo cambiar mi UMA elegida cada año?",
+      "answer": "**Sí.** Puedes aumentar o disminuir tu salario base de cotización (1-25 UMA) anualmente. Cambios generalmente aplican en enero. Consulta al IMSS o delegación estatal."
+    },
+    {
+      "question": "¿Cuál es la diferencia entre Modalidad 40 (Ley 73) y AFORE (Ley 97)?",
+      "answer": "**Ley 73 (Modalidad 40):** Pensión garantizada por IMSS, cálculo actuarial fijo, prestaciones médicas. **Ley 97 (AFORE):** Cuenta individual, rendimientos variables (4.5-7% anual), herencia del saldo. AFORE puede ofrecer mayor pensión si hay buenos rendimientos, pero sin garantía."
+    },
+    {
+      "question": "¿Cuándo recupero mi inversión en Modalidad 40 (breakeven)?",
+      "answer": "Típicamente entre **3 a 7 meses** de jubilación. Si pagas $75/mes durante 5 años ($4,500 total) y recibes $8,500/mes de pensión, recuperas en ~0.5 meses. Luego es ganancia pura."
+    },
+    {
+      "question": "¿Qué pasa si fallezco antes de pensionarme?",
+      "answer": "Tus beneficiarios reciben una **pensión por viudez/orfandad** (75% de tu salario base) si tienes 150 semanas cotizadas. Si tienes <150 semanas, el IMSS devuelve tu cuota acumulada sin intereses."
+    },
+    {
+      "question": "¿Hay descuentos por jubilación anticipada en Modalidad 40?",
+      "answer": "**No.** No puedes jubilarte antes de edad mínima sin penalización. Si jubilación anticipada es obligatoria (crisis), el IMSS puede permitirla con reducción ~8-14% en pensión."
+    },
+    {
+      "question": "¿Cuál es la pensión garantizada mínima IMSS 2026?",
+      "answer": "La **pensión garantizada mínima es aproximadamente 55% del salario mínimo de la zona:** ~$5,200-$5,900 MXN/mes (2026). Si tu pensión calculada es menor, recibes el mínimo garantizado."
+    }
+  ],
+  "sources": [
+    {
+      "name": "IMSS - Modalidad 40: Continuación Voluntaria en el Seguro de Invalidez, Vejez y Muerte",
+      "url": "https://www.imss.gob.mx/trabajadores/modalidad40",
+      "publisher": "IMSS",
+      "date": "2026"
+    },
+    {
+      "name": "SAT - UMA 2026 y Tablas de Cotización IMSS",
+      "url": "https://www.sat.gob.mx/cifras_fiscales/tablas_indicadores_economicos/uma",
+      "publisher": "SAT",
+      "date": "2026"
+    },
+    {
+      "name": "Banxico - Expectativa de Inflación y Tasa de Descuento 2026",
+      "url": "https://www.banxico.org.mx/",
+      "publisher": "Banxico",
+      "date": "2026"
+    },
+    {
+      "name": "CONSAR - Rendimientos AFORE Ley 97 y Comparativa Pensional",
+      "url": "https://www.gob.mx/consar",
+      "publisher": "CONSAR",
+      "date": "2026"
+    },
+    {
+      "name": "CONAPO - Tablas de Esperanza de Vida México 2026",
+      "url": "https://www.gob.mx/conapo",
+      "publisher": "CONAPO",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "IMSS, SAT, Banxico, CONAPO",
+    "sourceUrl": "https://www.imss.gob.mx; https://www.sat.gob.mx",
+    "updateType": "manual",
+    "notes": "UMA, tasa de cotización IMSS, salario mínimo, esperanza de vida, y rendimientos AFORE se actualizan anualmente (enero para UMA, diciembre para salario mínimo y esperanza de vida). Última revisión: 2026-04-28."
+  },
+  "lastReviewed": "2026-04-28"
+}
