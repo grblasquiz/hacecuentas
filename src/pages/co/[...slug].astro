@@ -62,15 +62,15 @@ try {
 } catch {
   dateModified = new Date().toISOString();
 }
-lastReviewedLabel = new Date(dateModified).toLocaleDateString('es-MX', {
+lastReviewedLabel = new Date(dateModified).toLocaleDateString('es-CO', {
   day: 'numeric',
   month: 'long',
   year: 'numeric',
 });
 const datePublished = '2025-09-01T00:00:00Z';
 
-// audience: 'MX' (México-specific) o 'global' (aplica a cualquier país).
-const audience: 'MX' | 'global' = calc.audience === 'MX' ? 'MX' : 'global';
+// audience: 'CO' (país-específico) o 'global' (aplica a cualquier país).
+const audience: 'CO' | 'global' = calc.audience === 'CO' ? 'CO' : 'global';
 
 const schemaHowTo = {
   '@context': 'https://schema.org',
@@ -78,7 +78,7 @@ const schemaHowTo = {
   name: calc.h1,
   description: calc.description,
   totalTime: 'PT1M',
-  inLanguage: 'es-MX',
+  inLanguage: 'es-CO',
   step: calc.fields.map((f: any, i: number) => ({
     '@type': 'HowToStep',
     position: i + 1,
@@ -104,8 +104,8 @@ const schemaBreadcrumb = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/mx/' },
-    { '@type': 'ListItem', position: 2, name: categoryLabels[calc.category] || calc.category, item: 'https://hacecuentas.com/mx/' },
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/co/' },
+    { '@type': 'ListItem', position: 2, name: categoryLabels[calc.category] || calc.category, item: 'https://hacecuentas.com/co/' },
     { '@type': 'ListItem', position: 3, name: calc.h1 },
   ],
 };
@@ -116,17 +116,17 @@ const schemaApp = {
   '@type': ['SoftwareApplication', 'WebApplication'],
   name: calc.h1,
   description: calc.description,
-  url: `https://hacecuentas.com/mx/${calc.slug}`,
-  mainEntityOfPage: `https://hacecuentas.com/mx/${calc.slug}`,
+  url: `https://hacecuentas.com/co/${calc.slug}`,
+  mainEntityOfPage: `https://hacecuentas.com/co/${calc.slug}`,
   applicationCategory: 'UtilitiesApplication',
   applicationSubCategory: 'Calculator',
   operatingSystem: 'Any (Web)',
   browserRequirements: 'Requires JavaScript. Requires HTML5.',
-  inLanguage: 'es-MX',
+  inLanguage: 'es-CO',
   isAccessibleForFree: true,
   datePublished,
   dateModified,
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'COP' },
   publisher: {
     '@type': 'Organization',
     name: 'Hacé Cuentas',
@@ -141,9 +141,9 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   '@type': 'Article',
   headline: calc.h1,
   description: calc.description,
-  url: `https://hacecuentas.com/mx/${calc.slug}`,
-  mainEntityOfPage: `https://hacecuentas.com/mx/${calc.slug}`,
-  inLanguage: 'es-MX',
+  url: `https://hacecuentas.com/co/${calc.slug}`,
+  mainEntityOfPage: `https://hacecuentas.com/co/${calc.slug}`,
+  inLanguage: 'es-CO',
   datePublished,
   dateModified,
   author: {
@@ -192,29 +192,29 @@ const relatedContextual = relatedSlugs
 
 // TOC: top-level rendered sections (in order of appearance)
 const tocSections: Array<{ id: string; label: string }> = [
-  { id: 'calculator', label: 'Calculator' },
+  { id: 'calculator', label: 'Calculadora' },
 ];
-if (keyTakeaway) tocSections.push({ id: 'summary', label: 'In a nutshell' });
-if (useCases.length > 0) tocSections.push({ id: 'when-to-use', label: 'When to use' });
-if (example && example.steps) tocSections.push({ id: 'example', label: 'Step-by-step example' });
-if (calc.explanation) tocSections.push({ id: 'how-it-works', label: 'How it works' });
-if (calc.faq && calc.faq.length > 0) tocSections.push({ id: 'faq', label: 'FAQ' });
-if (sources.length > 0) tocSections.push({ id: 'sources', label: 'Sources' });
+if (keyTakeaway) tocSections.push({ id: 'summary', label: 'En pocas palabras' });
+if (useCases.length > 0) tocSections.push({ id: 'when-to-use', label: 'Cuándo usar' });
+if (example && example.steps) tocSections.push({ id: 'example', label: 'Ejemplo paso a paso' });
+if (calc.explanation) tocSections.push({ id: 'how-it-works', label: 'Cómo funciona' });
+if (calc.faq && calc.faq.length > 0) tocSections.push({ id: 'faq', label: 'Preguntas frecuentes' });
+if (sources.length > 0) tocSections.push({ id: 'sources', label: 'Fuentes' });
 
 // Heuristic LaTeX detection in explanation (to conditionally load KaTeX)
 const hasMath = calc.explanation && /(\$[^$\n]+\$|\\frac|\\sqrt|\\sum|\\times|\\cdot)/.test(calc.explanation);
 
 // Pre-filled subject for "Report error"
-const reportSubject = encodeURIComponent(`Error in /mx/${calc.slug}`);
+const reportSubject = encodeURIComponent(`Error en /co/${calc.slug}`);
 const reportBody = encodeURIComponent(
-  `Hi Equipo Hacé Cuentas,\n\nI found an error in the calculator "${calc.h1}":\n\nURL: https://hacecuentas.com/mx/${calc.slug}\nInput data: \nExpected result: \nActual result: \nSource / reference: \n\nThank you.`
+  `Hi Equipo Hacé Cuentas,\n\nI found an error in the calculator "${calc.h1}":\n\nURL: https://hacecuentas.com/co/${calc.slug}\nInput data: \nExpected result: \nActual result: \nSource / reference: \n\nThank you.`
 );
 
 // hreflang: link to Spanish equivalent via esSlug
 const esSlug = calc.esSlug;
 const hreflangTags = esSlug ? [
   { lang: 'es', href: `https://hacecuentas.com/${esSlug}` },
-  { lang: 'es', href: `https://hacecuentas.com/mx/${calc.slug}` },
+  { lang: 'es', href: `https://hacecuentas.com/co/${calc.slug}` },
   { lang: 'x-default', href: `https://hacecuentas.com/${esSlug}` },
 ] : undefined;
 ---
@@ -232,7 +232,7 @@ const hreflangTags = esSlug ? [
 
   <article class="calc-page">
     <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="/mx/">Home</a>
+      <a href="/co">Hacé Cuentas Colombia</a>
       <span class="sep" aria-hidden="true">/</span>
       <span>{categoryLabels[calc.category] || calc.category}</span>
       <span class="sep" aria-hidden="true">/</span>
@@ -252,7 +252,7 @@ const hreflangTags = esSlug ? [
     <div class="calc-layout">
       {tocSections.length > 2 && (
         <aside class="toc" aria-label="Table of contents">
-          <div class="toc-title">On this page</div>
+          <div class="toc-title">En esta página</div>
           <ol class="toc-list">
             {tocSections.map((s) => (
               <li><a href={`#${s.id}`} data-toc-link={s.id}>{s.label}</a></li>
@@ -268,7 +268,7 @@ const hreflangTags = esSlug ? [
 
         <div class="calc-actions" id="calc-actions">
           <div class="ca-feedback" data-state="ask">
-            <span class="ca-q">Was this calculator helpful?</span>
+            <span class="ca-q">¿Te resultó útil esta calculadora?</span>
             <div class="ca-buttons">
               <button type="button" class="ca-vote" data-vote="up" aria-label="Yes, it was helpful">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7"/></svg>
@@ -281,7 +281,7 @@ const hreflangTags = esSlug ? [
             </div>
           </div>
           <div class="ca-tools">
-            <button type="button" class="ca-tool" id="ca-share" data-url={`https://hacecuentas.com/mx/${calc.slug}`} data-title={calc.h1}>
+            <button type="button" class="ca-tool" id="ca-share" data-url={`https://hacecuentas.com/co/${calc.slug}`} data-title={calc.h1}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
               Share
             </button>
@@ -336,7 +336,7 @@ const hreflangTags = esSlug ? [
             <div class="kt-icon" aria-hidden="true">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             </div>
-            <div><strong>In a nutshell:</strong> <span set:html={md(keyTakeaway)} /></div>
+            <div><strong>En pocas palabras:</strong> <span set:html={md(keyTakeaway)} /></div>
           </aside>
         )}
 
@@ -353,12 +353,12 @@ const hreflangTags = esSlug ? [
 
         {example && example.steps && (
           <section id="example" class="example" aria-labelledby="example-heading">
-            <h2 id="example-heading">{example.title || 'Step-by-step example'}</h2>
+            <h2 id="example-heading">{example.title || 'Ejemplo paso a paso'}</h2>
             <ol class="example-steps">
               {example.steps.map((s: string) => <li set:html={md(s)} />)}
             </ol>
             {example.result && (
-              <div class="example-result"><strong>Result:</strong> <span set:html={md(example.result)} /></div>
+              <div class="example-result"><strong>Resultado:</strong> <span set:html={md(example.result)} /></div>
             )}
           </section>
         )}
@@ -366,7 +366,7 @@ const hreflangTags = esSlug ? [
         {calc.explanation && (
           <section id="how-it-works" class="explanation" data-has-math={hasMath ? 'true' : 'false'}>
             <div class="explanation-header">
-              <h2 class="explanation-title">How it works</h2>
+              <h2 class="explanation-title">Cómo funciona</h2>
               <span class="reading-time">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 {readingMin} min read
@@ -378,7 +378,7 @@ const hreflangTags = esSlug ? [
 
         {calc.faq && calc.faq.length > 0 && (
           <section id="faq" class="faq">
-            <h2>Frequently asked questions</h2>
+            <h2>Preguntas frecuentes</h2>
             <div class="faq-list">
               {calc.faq.map((f: any) => (
                 <details>
@@ -395,7 +395,7 @@ const hreflangTags = esSlug ? [
 
         {sources.length > 0 && (
           <section id="sources" class="sources-box" aria-labelledby="sources-heading">
-            <h2 id="sources-heading">Sources and references</h2>
+            <h2 id="sources-heading">Fuentes y referencias</h2>
             <ul>
               {sources.map((s: any) => (
                 <li>
@@ -430,7 +430,7 @@ const hreflangTags = esSlug ? [
 
         <aside class="cta-back">
           <p>Looking for a different calculator?</p>
-          <a href="/mx/" class="btn-ghost">See all calculators &rarr;</a>
+          <a href="/co" class="btn-ghost">Ver todas las calculadoras Colombia &rarr;</a>
           <p class="cta-suggest">Can't find what you need? <a href="mailto:ideas@hacecuentas.com?subject=Calculator idea&body=I'd like Hacé Cuentas to have a calculator for...">Request a new calculator &rarr;</a></p>
         </aside>
       </div>

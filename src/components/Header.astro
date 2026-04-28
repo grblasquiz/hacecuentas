@@ -30,6 +30,71 @@ const translations = {
 const t = translations[lang as keyof typeof translations] || translations.es;
 const isIntl = lang === 'en' || lang === 'pt';
 const intlHome = lang === 'en' ? '/en' : '/pt';
+
+// Detección de país por path para nav country-aware
+type Country = 'AR' | 'ES' | 'MX' | 'CO' | 'CL' | 'GLOBAL';
+let pageCountry: Country = 'AR';
+if (currentPath.startsWith('/es')) pageCountry = 'ES';
+else if (currentPath.startsWith('/mx')) pageCountry = 'MX';
+else if (currentPath.startsWith('/co')) pageCountry = 'CO';
+else if (currentPath.startsWith('/cl')) pageCountry = 'CL';
+else if (currentPath.startsWith('/global')) pageCountry = 'GLOBAL';
+
+// Nav items por país
+const COUNTRY_NAVS: Record<Country, Array<{href: string; label: string; activePath?: string}>> = {
+  AR: [
+    { href: '/cambio-de-monedas', label: 'Cambio de monedas' },
+    { href: '/cotizacion-cripto', label: 'Cripto' },
+    { href: '/inflacion-argentina', label: 'Inflación', activePath: '/inflacion' },
+    { href: '/guias', label: 'Guías', activePath: '/guia' },
+    { href: '/categoria/finanzas', label: 'Finanzas' },
+    { href: '/categoria/marketing', label: 'Marketing' },
+    { href: '/categoria/salud', label: 'Salud' },
+    { href: '/categoria/viajes', label: 'Viajes' },
+    { href: '/categoria/vida', label: 'Vida' },
+  ],
+  ES: [
+    { href: '/es/calculadora-irpf-2026-tramos-espana-nomina', label: 'IRPF', activePath: '/es/calculadora-irpf' },
+    { href: '/es/calculadora-hipoteca-fija-vs-variable-euribor-espana-2026', label: 'Hipoteca', activePath: '/es/calculadora-hipoteca' },
+    { href: '/es/calculadora-autonomo-cuota-2026-espana-rendimiento-neto', label: 'Autónomos', activePath: '/es/calculadora-autonomo' },
+    { href: '/es/calculadora-finiquito-despido-improcedente-espana-2026', label: 'Finiquito', activePath: '/es/calculadora-finiquito' },
+    { href: '/es/calculadora-jubilacion-espana-2026-pension-anos-cotizados', label: 'Jubilación', activePath: '/es/calculadora-jubilacion' },
+    { href: '/es', label: 'Todas' },
+  ],
+  MX: [
+    { href: '/mx/calculadora-isr-mexico-2026-tarifa-mensual-empleado', label: 'ISR', activePath: '/mx/calculadora-isr' },
+    { href: '/mx/calculadora-finiquito-mexico-completo-rescision-relacion', label: 'Finiquito', activePath: '/mx/calculadora-finiquito' },
+    { href: '/mx/calculadora-aguinaldo-mexico-2026-15-dias-tope-30', label: 'Aguinaldo', activePath: '/mx/calculadora-aguinaldo' },
+    { href: '/mx/calculadora-imss-cuotas-empleado-patron-mexico-2026', label: 'IMSS', activePath: '/mx/calculadora-imss' },
+    { href: '/mx/calculadora-rfc-homoclave-persona-fisica-mexico', label: 'RFC', activePath: '/mx/calculadora-rfc' },
+    { href: '/mx', label: 'Todas' },
+  ],
+  CO: [
+    { href: '/co/calculadora-retefuente-colombia-2026-empleado-tabla', label: 'Retefuente', activePath: '/co/calculadora-retefuente' },
+    { href: '/co/calculadora-prima-legal-colombia-30-dias-junio-diciembre', label: 'Prima', activePath: '/co/calculadora-prima' },
+    { href: '/co/calculadora-cesantias-colombia-12-porciento-anual', label: 'Cesantías', activePath: '/co/calculadora-cesantias' },
+    { href: '/co/calculadora-liquidacion-laboral-colombia-completa-cesantias', label: 'Liquidación', activePath: '/co/calculadora-liquidacion' },
+    { href: '/co/calculadora-salario-minimo-colombia-2026-auxilio-transporte', label: 'Salario mín.', activePath: '/co/calculadora-salario' },
+    { href: '/co', label: 'Todas' },
+  ],
+  CL: [
+    { href: '/cl/calculadora-sueldo-liquido-chile-2026-impuesto-segunda-categoria', label: 'Sueldo líquido', activePath: '/cl/calculadora-sueldo' },
+    { href: '/cl/calculadora-finiquito-chile-completo-causal-despido', label: 'Finiquito', activePath: '/cl/calculadora-finiquito' },
+    { href: '/cl/calculadora-afp-pension-chile-2026-tabla-comisiones', label: 'AFP', activePath: '/cl/calculadora-afp' },
+    { href: '/cl/calculadora-isapre-cotizacion-chile-7-porcentaje-plan', label: 'Isapre', activePath: '/cl/calculadora-isapre' },
+    { href: '/cl/calculadora-credito-hipotecario-chile-uf-cmf-2026', label: 'Hipoteca', activePath: '/cl/calculadora-credito-hipotecario' },
+    { href: '/cl', label: 'Todas' },
+  ],
+  GLOBAL: [
+    { href: '/global', label: 'Todas' },
+    { href: '/categoria/salud', label: 'Salud' },
+    { href: '/categoria/finanzas', label: 'Finanzas' },
+    { href: '/categoria/cocina', label: 'Cocina' },
+    { href: '/categoria/mascotas', label: 'Mascotas' },
+    { href: '/categoria/matematica', label: 'Matemática' },
+  ],
+};
+const navItems = COUNTRY_NAVS[pageCountry];
 ---
 
 <a href="#main" class="skip-link">{t.skip}</a>
@@ -47,15 +112,9 @@ const intlHome = lang === 'en' ? '/en' : '/pt';
       </nav>
     ) : (
       <nav aria-label={t.navAria}>
-        <a href="/cambio-de-monedas" class={isActive('/cambio-de-monedas') ? 'active' : ''}>Cambio de monedas</a>
-        <a href="/cotizacion-cripto" class={isActive('/cotizacion-cripto') ? 'active' : ''}>Cripto</a>
-        <a href="/inflacion-argentina" class={isActive('/inflacion-argentina') ? 'active' : ''}>Inflación</a>
-        <a href="/guias" class={isActive('/guia') ? 'active' : ''}>Guías</a>
-        <a href="/categoria/finanzas" class={isActive('/categoria/finanzas') ? 'active' : ''}>Finanzas</a>
-        <a href="/categoria/marketing" class={isActive('/categoria/marketing') ? 'active' : ''}>Marketing</a>
-        <a href="/categoria/salud" class={isActive('/categoria/salud') ? 'active' : ''}>Salud</a>
-        <a href="/categoria/viajes" class={isActive('/categoria/viajes') ? 'active' : ''}>Viajes</a>
-        <a href="/categoria/vida" class={isActive('/categoria/vida') ? 'active' : ''}>Vida</a>
+        {navItems.map(item => (
+          <a href={item.href} class={isActive(item.activePath || item.href) ? 'active' : ''}>{item.label}</a>
+        ))}
       </nav>
     )}
 
@@ -114,20 +173,9 @@ const intlHome = lang === 'en' ? '/en' : '/pt';
     </div>
   ) : (
     <div class="mobile-nav" id="mobile-nav" hidden>
-      <a href="/cambio-de-monedas">💱 Cambio de monedas</a>
-      <a href="/cotizacion-cripto">🪙 Cotización cripto</a>
-      <a href="/inflacion-argentina">📊 Inflación Argentina</a>
-      <a href="/categoria/finanzas">💰 Finanzas</a>
-      <a href="/categoria/negocios">🏢 Negocios</a>
-      <a href="/categoria/marketing">📈 Marketing</a>
-      <a href="/categoria/salud">❤️ Salud</a>
-      <a href="/categoria/deportes">⚽ Deportes</a>
-      <a href="/categoria/viajes">✈️ Viajes</a>
-      <a href="/categoria/vida">📅 Vida</a>
-      <a href="/categoria/mascotas">🐶 Mascotas</a>
-      <a href="/categoria/matematica">🧮 Matemática</a>
-      <a href="/categoria/construccion">🏗️ Construcción</a>
-      <a href="/categoria/cocina">🍳 Cocina</a>
+      {navItems.map(item => (
+        <a href={item.href}>{item.label}</a>
+      ))}
       <a href="/buscar">🔍 Buscar</a>
     </div>
   )}
@@ -321,12 +369,27 @@ const intlHome = lang === 'en' ? '/en' : '/pt';
     const query = norm(q);
     let matches;
     if (query) {
-      // Score cada calc y ordenar:
-      // +100 si el título empieza con la query
-      // +50 si el título contiene la query
-      // +10 si el slug/descripción contiene la query
-      // +15 si audience === 'AR' (boost para usuarios argentinos)
+      // Detectar audience preferido por path actual
+      const _path = location.pathname;
+      const preferredAudience =
+        _path.startsWith('/es/') || _path === '/es' ? 'ES' :
+        _path.startsWith('/mx/') || _path === '/mx' ? 'MX' :
+        _path.startsWith('/co/') || _path === '/co' ? 'CO' :
+        _path.startsWith('/cl/') || _path === '/cl' ? 'CL' :
+        _path.startsWith('/en') ? 'EN' :
+        _path.startsWith('/pt') ? 'BR' :
+        _path.startsWith('/global') ? 'global' :
+        'AR';
+      // Score:
+      // +100 título empieza con query
+      // +50 título contiene query
+      // +10 slug/desc contiene query
+      // +30 audience matches el path actual
+      // -20 audience es de otro país (penaliza fuerte calcs MX si estás en /es)
       const scored = [];
+      const isOtherCountry = function(a) {
+        return ['AR','ES','MX','CO','CL','BO','PE','UY','BR'].indexOf(a) >= 0 && a !== preferredAudience;
+      };
       for (const c of calcs) {
         const title = norm(c.h1 || '');
         const slug = norm(c.slug || '');
@@ -336,7 +399,8 @@ const intlHome = lang === 'en' ? '/en' : '/pt';
         else if (title.includes(query)) score += 50;
         if (slug.includes(query) || desc.includes(query)) score += 10;
         if (score === 0) continue;
-        if (c.audience === 'AR') score += 15;
+        if (c.audience === preferredAudience) score += 30;
+        else if (preferredAudience !== 'global' && isOtherCountry(c.audience)) score -= 20;
         scored.push({ c: c, score: score });
       }
       scored.sort(function (a, b) { return b.score - a.score; });

@@ -2267,8 +2267,25 @@ const formatFreshnessDate = (iso: string): string => {
   // Leído una sola vez para evitar múltiples querys al DOM.
   const _rawLang = (document.querySelector('.calc-container') as HTMLElement | null)?.dataset?.lang;
   const CALC_LANG: 'es' | 'en' | 'pt' = _rawLang === 'en' ? 'en' : _rawLang === 'pt' ? 'pt' : 'es';
-  const NUM_LOCALE = CALC_LANG === 'en' ? 'en-US' : CALC_LANG === 'pt' ? 'pt-BR' : 'es-AR';
-  const NUM_CURRENCY = CALC_LANG === 'en' ? 'USD' : CALC_LANG === 'pt' ? 'BRL' : 'ARS';
+  // Locale + currency derivados del path para distinguir es-ES (€), es-MX ($MXN), etc.
+  const _path = (typeof location !== 'undefined' ? location.pathname : '') as string;
+  const NUM_LOCALE: string =
+    CALC_LANG === 'en' ? 'en-US' :
+    CALC_LANG === 'pt' ? 'pt-BR' :
+    _path.startsWith('/es/') || _path === '/es' ? 'es-ES' :
+    _path.startsWith('/mx/') || _path === '/mx' ? 'es-MX' :
+    _path.startsWith('/co/') || _path === '/co' ? 'es-CO' :
+    _path.startsWith('/cl/') || _path === '/cl' ? 'es-CL' :
+    _path.startsWith('/global') ? 'es' :
+    'es-AR';
+  const NUM_CURRENCY: string =
+    CALC_LANG === 'en' ? 'USD' :
+    CALC_LANG === 'pt' ? 'BRL' :
+    _path.startsWith('/es/') || _path === '/es' ? 'EUR' :
+    _path.startsWith('/mx/') || _path === '/mx' ? 'MXN' :
+    _path.startsWith('/co/') || _path === '/co' ? 'COP' :
+    _path.startsWith('/cl/') || _path === '/cl' ? 'CLP' :
+    'ARS';
 
   // Dict de traducciones ES→EN por-fórmula, generado build-time con Haiku (scripts/translate-formula-strings.py).
   // Lookup exacto: si el output string existe en el dict, se usa su traducción (calidad nativa).
