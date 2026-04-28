@@ -69,6 +69,24 @@ const intlHome = lang === 'en' ? '/en' : '/pt';
         <kbd class="kbd">⌘K</kbd>
       </button>
 
+      <div class="country-selector" id="country-selector">
+        <button class="icon-btn country-btn" id="country-btn" aria-label="Select country / language" aria-expanded="false" aria-haspopup="listbox" title="País / idioma">
+          <span class="country-flag" id="country-flag">🌎</span>
+          <span class="country-code" id="country-code">AR</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="country-dropdown" id="country-dropdown" hidden role="listbox">
+          <a href="/" data-country="AR" role="option"><span>🇦🇷</span> Argentina</a>
+          <a href="/global" data-country="global" role="option"><span>🌎</span> Global (español)</a>
+          <a href="/es" data-country="ES" role="option"><span>🇪🇸</span> España</a>
+          <a href="/mx" data-country="MX" role="option"><span>🇲🇽</span> México</a>
+          <a href="/co" data-country="CO" role="option"><span>🇨🇴</span> Colombia</a>
+          <a href="/cl" data-country="CL" role="option"><span>🇨🇱</span> Chile</a>
+          <a href="/pt" data-country="BR" role="option"><span>🇧🇷</span> Brasil</a>
+          <a href="/en" data-country="EN" role="option"><span>🇺🇸</span> English</a>
+        </div>
+      </div>
+
       <button class="icon-btn" id="theme-toggle" aria-label={t.themeAria} title={t.themeTitle}>
         <svg class="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="4"/>
@@ -150,6 +168,56 @@ const intlHome = lang === 'en' ? '/en' : '/pt';
     const current = document.documentElement.dataset.theme || 'light';
     applyTheme(current === 'dark' ? 'light' : 'dark');
   });
+
+  // Country selector
+  (() => {
+    const btn = document.getElementById('country-btn');
+    const dropdown = document.getElementById('country-dropdown');
+    const flagEl = document.getElementById('country-flag');
+    const codeEl = document.getElementById('country-code');
+    if (!btn || !dropdown || !flagEl || !codeEl) return;
+
+    // Detectar país actual desde URL path
+    const path = location.pathname;
+    let current = 'AR';
+    if (path.startsWith('/en')) current = 'EN';
+    else if (path.startsWith('/pt')) current = 'BR';
+    else if (path.startsWith('/es')) current = 'ES';
+    else if (path.startsWith('/mx')) current = 'MX';
+    else if (path.startsWith('/co')) current = 'CO';
+    else if (path.startsWith('/cl')) current = 'CL';
+    else if (path.startsWith('/global')) current = 'global';
+
+    const FLAGS = { AR: '🇦🇷', global: '🌎', ES: '🇪🇸', MX: '🇲🇽', CO: '🇨🇴', CL: '🇨🇱', BR: '🇧🇷', EN: '🇺🇸' };
+    const LABELS = { AR: 'AR', global: 'GLO', ES: 'ES', MX: 'MX', CO: 'CO', CL: 'CL', BR: 'BR', EN: 'EN' };
+    flagEl.textContent = FLAGS[current] || '🌎';
+    codeEl.textContent = LABELS[current] || 'AR';
+
+    // Marcar opción actual
+    dropdown.querySelectorAll('a').forEach((a) => {
+      if (a.getAttribute('data-country') === current) a.classList.add('current');
+    });
+
+    // Persistir clic en localStorage
+    dropdown.querySelectorAll('a').forEach((a) => {
+      a.addEventListener('click', () => {
+        try { localStorage.setItem('hc-country', a.getAttribute('data-country')); } catch {}
+      });
+    });
+
+    const open = () => { dropdown.removeAttribute('hidden'); btn.setAttribute('aria-expanded', 'true'); };
+    const close = () => { dropdown.setAttribute('hidden', ''); btn.setAttribute('aria-expanded', 'false'); };
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.hasAttribute('hidden') ? open() : close();
+    });
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target) && e.target !== btn) close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !dropdown.hasAttribute('hidden')) close();
+    });
+  })();
 
   // Mobile menu
   const mToggle = document.getElementById('menu-toggle');
@@ -472,6 +540,50 @@ const intlHome = lang === 'en' ? '/en' : '/pt';
     transition: all 0.15s;
   }
   .icon-btn:hover { background: var(--bg-muted); color: var(--text); border-color: var(--border-strong); }
+
+  /* Country selector */
+  .country-selector { position: relative; }
+  .country-btn {
+    width: auto;
+    padding: 0 0.5rem 0 0.5rem;
+    gap: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .country-flag { font-size: 1rem; line-height: 1; }
+  .country-code { letter-spacing: 0.02em; }
+  .country-dropdown {
+    position: absolute;
+    top: calc(100% + 0.375rem);
+    right: 0;
+    min-width: 200px;
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    padding: 0.375rem;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .country-dropdown[hidden] { display: none; }
+  .country-dropdown a {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: background 0.1s;
+  }
+  .country-dropdown a:hover { background: var(--bg-muted); }
+  .country-dropdown a span { font-size: 1.125rem; line-height: 1; }
+  .country-dropdown a.current { background: var(--accent-soft); color: var(--accent); }
 
   #theme-toggle .moon { display: none; }
   :global([data-theme="dark"]) #theme-toggle .sun { display: none; }

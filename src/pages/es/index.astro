@@ -6,9 +6,14 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 
-// Load all English calculators
-const calcModules = import.meta.glob<any>('../../content/calcs-es/*.json', { eager: true });
-const calcs = Object.values(calcModules).map((m: any) => m.default || m);
+// Load locale-specific (calcs-es/) + audience=ES from main bucket (calcs/)
+const localeModules = import.meta.glob<any>('../../content/calcs-es/*.json', { eager: true });
+const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m);
+const audienceFiltered = Object.values(mainModules)
+  .map((m: any) => m.default || m)
+  .filter((c: any) => c.audience === 'ES');
+const calcs = [...localeCalcs, ...audienceFiltered];
 
 // Group by category
 const byCategory: Record<string, any[]> = {};
@@ -85,16 +90,23 @@ const schema = {
 };
 
 const hreflangTags = [
-  { lang: 'es',        href: 'https://hacecuentas.com/mx/' },
-  { lang: 'es',        href: 'https://hacecuentas.com/' },
-  { lang: 'x-default', href: 'https://hacecuentas.com/' },
+  { lang: 'es-ES',     href: 'https://hacecuentas.com/es' },
+  { lang: 'es-AR',     href: 'https://hacecuentas.com/' },
+  { lang: 'es-MX',     href: 'https://hacecuentas.com/mx' },
+  { lang: 'es-CO',     href: 'https://hacecuentas.com/co' },
+  { lang: 'es-CL',     href: 'https://hacecuentas.com/cl' },
+  { lang: 'es',        href: 'https://hacecuentas.com/global' },
+  { lang: 'en',        href: 'https://hacecuentas.com/en' },
+  { lang: 'pt-BR',     href: 'https://hacecuentas.com/pt' },
+  { lang: 'x-default', href: 'https://hacecuentas.com/global' },
 ];
 ---
 
 <Layout
-  title="Free Online Calculators — Hacé Cuentas"
-  description="Free online calculators for finance, health, math, business, sports, and everyday life. Accurate formulas, instant results, 100% private. No registration required."
+  title="Calculadoras gratis online — España (IRPF, hipoteca, autónomos) | Hacé Cuentas"
+  description="Calculadoras específicas para España: IRPF 2026, hipoteca fija vs variable, autónomos cuota RETA, IBI, finiquito, jubilación. Sin registro, gratis."
   lang="es"
+  audience="ES"
   hreflang={hreflangTags}
   schema={schema}
 >

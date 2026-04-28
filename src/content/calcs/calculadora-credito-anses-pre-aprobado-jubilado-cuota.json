@@ -4,7 +4,7 @@
   "h1": "Crédito ANSES jubilado — cálculo de cuota mensual",
   "description": "💰 Calculá la cuota del crédito ANSES para jubilados según monto, plazo y tu haber mensual. Verificá si pasás el filtro del 30%.",
   "category": "finanzas",
-  "audience": "argentina",
+  "audience": "AR",
   "icon": "💰",
   "formulaId": "credito-anses-pre-aprobado-jubilado-cuota",
   "seoKeywords": [
@@ -25,10 +25,52 @@
     "Decidir entre 24, 36 o 48 meses según la cuota."
   ],
   "fields": [
-    { "id": "montoSolicitado", "label": "Monto solicitado", "type": "number", "suffix": "ARS", "placeholder": "1500000", "min": 0, "step": 10000, "required": true, "help": "Monto del crédito a pedir. ANSES suele tener tope ($2-3M para jubilados en 2026)." },
-    { "id": "plazoMeses", "label": "Plazo en meses", "type": "number", "suffix": "meses", "placeholder": "36", "min": 6, "max": 72, "step": 1, "required": true, "help": "Plazo en meses. ANSES jubilados ofrece 24, 36, 48, 60 meses." },
-    { "id": "tnaPct", "label": "TNA del crédito ANSES", "type": "number", "suffix": "%", "placeholder": "60", "min": 0, "max": 200, "step": 0.1, "required": true, "help": "TNA vigente. En 2026 ronda 50-70% para jubilados." },
-    { "id": "haberMensual", "label": "Haber mensual neto", "type": "number", "suffix": "ARS", "placeholder": "650000", "min": 0, "step": 1000, "required": true, "help": "Tu haber neto mensual (después de descuentos)." }
+    {
+      "id": "montoSolicitado",
+      "label": "Monto solicitado",
+      "type": "number",
+      "suffix": "ARS",
+      "placeholder": "1500000",
+      "min": 0,
+      "step": 10000,
+      "required": true,
+      "help": "Monto del crédito a pedir. ANSES suele tener tope ($2-3M para jubilados en 2026)."
+    },
+    {
+      "id": "plazoMeses",
+      "label": "Plazo en meses",
+      "type": "number",
+      "suffix": "meses",
+      "placeholder": "36",
+      "min": 6,
+      "max": 72,
+      "step": 1,
+      "required": true,
+      "help": "Plazo en meses. ANSES jubilados ofrece 24, 36, 48, 60 meses."
+    },
+    {
+      "id": "tnaPct",
+      "label": "TNA del crédito ANSES",
+      "type": "number",
+      "suffix": "%",
+      "placeholder": "60",
+      "min": 0,
+      "max": 200,
+      "step": 0.1,
+      "required": true,
+      "help": "TNA vigente. En 2026 ronda 50-70% para jubilados."
+    },
+    {
+      "id": "haberMensual",
+      "label": "Haber mensual neto",
+      "type": "number",
+      "suffix": "ARS",
+      "placeholder": "650000",
+      "min": 0,
+      "step": 1000,
+      "required": true,
+      "help": "Tu haber neto mensual (después de descuentos)."
+    }
   ],
   "dataUpdate": {
     "frequency": "monthly",
@@ -38,12 +80,38 @@
     "updateType": "manual"
   },
   "outputs": [
-    { "id": "cuotaMensual", "label": "Cuota mensual", "format": "currency", "primary": true },
-    { "id": "totalAPagar", "label": "Total a pagar", "format": "currency" },
-    { "id": "intereses", "label": "Intereses totales", "format": "currency" },
-    { "id": "relacionCuotaHaberPct", "label": "Cuota / Haber", "format": "percent", "primary": true },
-    { "id": "aproboPorRelacion", "label": "¿Cuota dentro del 30%?", "format": "boolean" },
-    { "id": "explicacion", "label": "Detalle", "format": "text" }
+    {
+      "id": "cuotaMensual",
+      "label": "Cuota mensual",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "totalAPagar",
+      "label": "Total a pagar",
+      "format": "currency"
+    },
+    {
+      "id": "intereses",
+      "label": "Intereses totales",
+      "format": "currency"
+    },
+    {
+      "id": "relacionCuotaHaberPct",
+      "label": "Cuota / Haber",
+      "format": "percent",
+      "primary": true
+    },
+    {
+      "id": "aproboPorRelacion",
+      "label": "¿Cuota dentro del 30%?",
+      "format": "boolean"
+    },
+    {
+      "id": "explicacion",
+      "label": "Detalle",
+      "format": "text"
+    }
   ],
   "example": {
     "title": "Ejemplo: jubilado con haber $650.000 pide $1.500.000 a 36 meses",
@@ -60,30 +128,81 @@
   },
   "explanation": "## Cómo funcionan los créditos ANSES\n\nANSES ofrece **créditos a sola firma** para titulares activos del sistema (jubilados, pensionados, AUH, SUAF, PUAM). Las características en 2026 son:\n\n| Característica | Jubilados / Pensionados | AUH / SUAF |\n|---|---|---|\n| Monto máximo | ~$2.500.000 | ~$1.000.000 |\n| Plazo | 24 / 36 / 48 / 60 meses | 24 / 36 / 48 meses |\n| TNA | ~50-70% | ~80-100% |\n| Cuota máxima | 30% del haber | 30% del beneficio |\n| Ejecución | Descuento directo del haber | Descuento del beneficio |\n\n## Filtro del 30% (clave)\n\nANSES **no aprueba** créditos cuya cuota mensual supere el **30% del haber neto** del beneficiario. Esto incluye:\n\n- Créditos ANSES previos vigentes.\n- Embargos judiciales.\n- Créditos del Banco Nación con descuento por haber (si los hubiera).\n\nSi ya tenés un crédito ANSES vigente, el nuevo se suma — y entre ambos no podés superar el 30%.\n\n## Sistema de amortización\n\nANSES usa **sistema francés** (cuota fija). Fórmula:\n\n```\ncuota = monto × (TEM × (1+TEM)^plazo) / ((1+TEM)^plazo − 1)\nTEM = TNA / 12\n```\n\n## Comparativa: ANSES vs banco privado\n\n| Concepto | ANSES Jubilados | Banco Privado (préstamo personal) |\n|---|---|---|\n| TNA | 50-70% | 100-180% |\n| CFT | 80-110% | 180-300% |\n| Garantía | Descuento directo de haber | Garantía propia / fiador |\n| Aprobación | Pre-aprobado online | Análisis crediticio |\n| Velocidad | 48-72 hs | 7-15 días |\n\n**Conclusión**: si calificás para ANSES, **siempre** es mejor que un banco privado.\n\n## Cómo solicitarlo\n\n1. Entrá a **mi.anses.gob.ar** con tu CUIL y clave.\n2. Sección 'Créditos' → ver tu monto pre-aprobado.\n3. Elegí monto y plazo dentro del rango pre-aprobado.\n4. Confirmá la solicitud — el desembolso suele ser en **24-72 hs** a tu cuenta bancaria registrada.\n5. La cuota se descuenta automáticamente todos los meses del haber.\n\n## Restricciones\n\n- **Edad máxima**: el crédito debe terminar antes de cumplir 90 años (algunos casos hasta 95).\n- **No tener mora**: si tenés cuotas atrasadas en otro crédito ANSES, no aprueban uno nuevo.\n- **Beneficio activo**: si te dan de baja del beneficio, el saldo se vuelve exigible.\n\n> **Aviso legal**: Esta calculadora es educativa. **No constituye asesoramiento financiero.** Las TNA y montos máximos de ANSES cambian periódicamente — verificá en mi.anses.gob.ar antes de solicitar.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** [Política editorial](/politica-editorial) y [metodología](/metodologia).\n\n**Disclaimer:** Cálculo orientativo. La aprobación efectiva depende del análisis interno de ANSES (otros créditos vigentes, embargos, etc.).\n\n**Actualización:** revisión periódica. Fecha en sitemap XML.\n",
   "faq": [
-    { "q": "¿Cuál es el monto máximo del crédito ANSES para jubilados en 2026?", "a": "Aproximadamente **$2.500.000** para jubilados con haberes promedio. ANSES actualiza el tope cada 6 meses según movilidad. El monto **pre-aprobado** específico se ve en mi.anses.gob.ar — depende de tu haber, edad y créditos vigentes." },
-    { "q": "¿Qué pasa si la cuota supera el 30% de mi haber?", "a": "ANSES **rechaza automáticamente** la solicitud. Para que pase el filtro, podés: (1) reducir el monto solicitado, (2) extender el plazo (60 meses en lugar de 36), o (3) cancelar primero un crédito ANSES vigente que esté ocupando ese margen." },
-    { "q": "¿La TNA de ANSES es fija durante todo el crédito?", "a": "Sí, **la TNA queda fija** al momento de tomar el crédito y se mantiene hasta la última cuota. No hay riesgo de que te suban la tasa por inflación o cambios en política monetaria." },
-    { "q": "¿Puedo precancelar el crédito ANSES sin penalidad?", "a": "**Sí**, por ley podés precancelar total o parcialmente sin penalidad. **Solo pagás capital + intereses devengados a la fecha**. La precancelación se gestiona desde mi.anses.gob.ar o telefónicamente." },
-    { "q": "¿Cuánto tarda el desembolso del crédito ANSES?", "a": "Una vez aprobada la solicitud online, el desembolso suele ser de **24 a 72 horas hábiles** a tu cuenta bancaria registrada en ANSES. En picos de demanda puede tardar hasta 5 días." },
-    { "q": "¿Puedo pedir un crédito ANSES si ya tengo uno vigente?", "a": "**Sí**, podés tener hasta 3 créditos ANSES simultáneos, **siempre que la suma de cuotas no supere el 30% del haber**. Si ya estás cerca del 30%, no te aprueban uno nuevo hasta cancelar un viejo." },
-    { "q": "¿La pensión por viudez puede pedir crédito ANSES?", "a": "**Sí**, los **pensionados por viudez** pueden solicitar el mismo crédito que los jubilados, con los mismos topes y condiciones. La pensión por discapacidad también califica." },
-    { "q": "¿Los titulares de AUH pueden pedir el crédito ANSES?", "a": "**Sí**, los titulares de **Asignación Universal por Hijo (AUH)** y **SUAF** acceden a una versión específica del crédito con **monto menor (hasta $1M)** y plazos de 24-48 meses. La cuota tampoco puede superar el 30% del beneficio mensual." }
+    {
+      "q": "¿Cuál es el monto máximo del crédito ANSES para jubilados en 2026?",
+      "a": "Aproximadamente **$2.500.000** para jubilados con haberes promedio. ANSES actualiza el tope cada 6 meses según movilidad. El monto **pre-aprobado** específico se ve en mi.anses.gob.ar — depende de tu haber, edad y créditos vigentes."
+    },
+    {
+      "q": "¿Qué pasa si la cuota supera el 30% de mi haber?",
+      "a": "ANSES **rechaza automáticamente** la solicitud. Para que pase el filtro, podés: (1) reducir el monto solicitado, (2) extender el plazo (60 meses en lugar de 36), o (3) cancelar primero un crédito ANSES vigente que esté ocupando ese margen."
+    },
+    {
+      "q": "¿La TNA de ANSES es fija durante todo el crédito?",
+      "a": "Sí, **la TNA queda fija** al momento de tomar el crédito y se mantiene hasta la última cuota. No hay riesgo de que te suban la tasa por inflación o cambios en política monetaria."
+    },
+    {
+      "q": "¿Puedo precancelar el crédito ANSES sin penalidad?",
+      "a": "**Sí**, por ley podés precancelar total o parcialmente sin penalidad. **Solo pagás capital + intereses devengados a la fecha**. La precancelación se gestiona desde mi.anses.gob.ar o telefónicamente."
+    },
+    {
+      "q": "¿Cuánto tarda el desembolso del crédito ANSES?",
+      "a": "Una vez aprobada la solicitud online, el desembolso suele ser de **24 a 72 horas hábiles** a tu cuenta bancaria registrada en ANSES. En picos de demanda puede tardar hasta 5 días."
+    },
+    {
+      "q": "¿Puedo pedir un crédito ANSES si ya tengo uno vigente?",
+      "a": "**Sí**, podés tener hasta 3 créditos ANSES simultáneos, **siempre que la suma de cuotas no supere el 30% del haber**. Si ya estás cerca del 30%, no te aprueban uno nuevo hasta cancelar un viejo."
+    },
+    {
+      "q": "¿La pensión por viudez puede pedir crédito ANSES?",
+      "a": "**Sí**, los **pensionados por viudez** pueden solicitar el mismo crédito que los jubilados, con los mismos topes y condiciones. La pensión por discapacidad también califica."
+    },
+    {
+      "q": "¿Los titulares de AUH pueden pedir el crédito ANSES?",
+      "a": "**Sí**, los titulares de **Asignación Universal por Hijo (AUH)** y **SUAF** acceden a una versión específica del crédito con **monto menor (hasta $1M)** y plazos de 24-48 meses. La cuota tampoco puede superar el 30% del beneficio mensual."
+    }
   ],
   "sources": [
-    { "name": "ANSES — Créditos", "url": "https://www.anses.gob.ar" },
-    { "name": "mi.anses.gob.ar — Portal", "url": "https://mi.anses.gob.ar" },
-    { "name": "InfoLEG — Resoluciones ANSES", "url": "https://www.infoleg.gob.ar" }
+    {
+      "name": "ANSES — Créditos",
+      "url": "https://www.anses.gob.ar"
+    },
+    {
+      "name": "mi.anses.gob.ar — Portal",
+      "url": "https://mi.anses.gob.ar"
+    },
+    {
+      "name": "InfoLEG — Resoluciones ANSES",
+      "url": "https://www.infoleg.gob.ar"
+    }
   ],
   "relatedSlugs": [
     "calculadora-credito-prendario-auto-cft-comparativa-bancos",
     "calculadora-obra-social-monotributista-aporte-extra-familiar"
   ],
   "howToSteps": [
-    { "name": "Consultá tu pre-aprobado", "text": "Entrá a mi.anses.gob.ar y revisá tu monto pre-aprobado." },
-    { "name": "Cargá el monto y plazo", "text": "Pone el monto que querés y el plazo (24-60 meses)." },
-    { "name": "Cargá la TNA vigente", "text": "Mirá en mi.anses.gob.ar la TNA aplicable a tu segmento." },
-    { "name": "Cargá tu haber neto", "text": "El haber neto que cobrás cada mes (después de descuentos)." },
-    { "name": "Calculá", "text": "Verificá que la relación cuota/haber sea ≤ 30%." },
-    { "name": "Solicitá el crédito", "text": "Si pasa el filtro, confirmá la solicitud en mi.anses.gob.ar." }
+    {
+      "name": "Consultá tu pre-aprobado",
+      "text": "Entrá a mi.anses.gob.ar y revisá tu monto pre-aprobado."
+    },
+    {
+      "name": "Cargá el monto y plazo",
+      "text": "Pone el monto que querés y el plazo (24-60 meses)."
+    },
+    {
+      "name": "Cargá la TNA vigente",
+      "text": "Mirá en mi.anses.gob.ar la TNA aplicable a tu segmento."
+    },
+    {
+      "name": "Cargá tu haber neto",
+      "text": "El haber neto que cobrás cada mes (después de descuentos)."
+    },
+    {
+      "name": "Calculá",
+      "text": "Verificá que la relación cuota/haber sea ≤ 30%."
+    },
+    {
+      "name": "Solicitá el crédito",
+      "text": "Si pasa el filtro, confirmá la solicitud en mi.anses.gob.ar."
+    }
   ]
 }

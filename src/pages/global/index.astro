@@ -1,0 +1,213 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ScrollToTop from '../../components/ScrollToTop.astro';
+
+// Cargar todas las calcs y filtrar a las que aplican globalmente (no AR-specific)
+const calcModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
+const calcs = allCalcs.filter((c) => c.audience === 'global');
+
+// Agrupar por categoría
+const byCategory: Record<string, any[]> = {};
+calcs.forEach((c) => {
+  if (!byCategory[c.category]) byCategory[c.category] = [];
+  byCategory[c.category].push(c);
+});
+
+// Categorías con label en español neutro (sin AR-specific)
+const categoryMeta: Record<string, { label: string; desc: string; color: string; icon: string }> = {
+  finanzas:        { label: 'Finanzas',       desc: 'Interés compuesto, préstamos, ahorro, criptomonedas.',    color: '#2563eb', icon: '💰' },
+  salud:           { label: 'Salud',          desc: 'IMC, calorías, macros, embarazo, frecuencia cardíaca.',   color: '#16a34a', icon: '❤️' },
+  negocios:        { label: 'Negocios',       desc: 'Márgenes, markup, punto de equilibrio, pricing.',        color: '#7c3aed', icon: '📊' },
+  marketing:       { label: 'Marketing',      desc: 'CTR, CPC, ROAS, CAC, LTV, MRR, churn.',                  color: '#e11d48', icon: '📈' },
+  vida:            { label: 'Vida cotidiana', desc: 'Edad, fechas, porcentajes, regla de tres, conversores.', color: '#d97706', icon: '🗓️' },
+  deportes:        { label: 'Deportes',       desc: 'Pace, 1RM, VO2 max, ciclismo, maratón.',                 color: '#65a30d', icon: '🏃' },
+  viajes:          { label: 'Viajes',         desc: 'Combustible, presupuesto, dividir gastos, propinas.',     color: '#0891b2', icon: '✈️' },
+  cocina:          { label: 'Cocina',         desc: 'Tazas a gramos, ajustar receta, tiempo de cocción.',     color: '#ea580c', icon: '🍳' },
+  mascotas:        { label: 'Mascotas',       desc: 'Edad perro/gato, alimentación, dosis por peso.',         color: '#db2777', icon: '🐕' },
+  matematica:      { label: 'Matemática',     desc: 'Conversores, Pitágoras, promedios, ecuaciones.',         color: '#0d9488', icon: '🧮' },
+  educacion:       { label: 'Educación',      desc: 'Notas, promedios, créditos, tiempo de tesis.',           color: '#8b5cf6', icon: '🎓' },
+  tecnologia:      { label: 'Tecnología',     desc: 'Almacenamiento, velocidad, IA, cloud, batería.',         color: '#06b6d4', icon: '💻' },
+  'medio-ambiente':{ label: 'Medio Ambiente', desc: 'Huella de carbono, energía solar, agua, reciclaje.',     color: '#22c55e', icon: '🌱' },
+  electronica:     { label: 'Electrónica',    desc: 'Ley de Ohm, resistencias, consumo kWh, circuitos.',      color: '#f59e0b', icon: '⚡' },
+  entretenimiento: { label: 'Entretenimiento', desc: 'Gaming, música, fotografía, redes, streaming.',        color: '#ec4899', icon: '🎮' },
+  ciencia:         { label: 'Ciencia',        desc: 'Física, química, astronomía, leyes y fórmulas.',         color: '#6366f1', icon: '🔬' },
+  jardineria:      { label: 'Jardinería',     desc: 'Riego, tierra, siembra, compost, huerta.',               color: '#15803d', icon: '🌿' },
+  construccion:    { label: 'Construcción',   desc: 'Cemento, ladrillos, pintura, materiales.',               color: '#b45309', icon: '🧱' },
+  automotor:       { label: 'Automotor',      desc: 'Consumo, kilometraje, costo por km, mantenimiento.',     color: '#6366f1', icon: '🚗' },
+};
+
+const categoryOrder = ['finanzas','salud','negocios','marketing','vida','deportes','viajes','cocina','mascotas','matematica','educacion','tecnologia','medio-ambiente','electronica','entretenimiento','ciencia','jardineria','construccion','automotor'];
+
+// Top 6 populares globales (curado)
+const popularSlugs = [
+  'calculadora-imc',
+  'calculadora-interes-compuesto-aporte-mensual',
+  'calculadora-tmb-metabolismo-basal-mifflin',
+  'calculadora-fecha-ovulacion-ventana-fertil',
+  'calculadora-edad-exacta',
+  'calculadora-fecha-parto-fum-naegele',
+];
+const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
+
+const totalGlobal = calcs.length;
+---
+
+<Layout
+  title="Calculadoras gratis online — versión global | Hacé Cuentas"
+  description={`Más de ${totalGlobal} calculadoras gratis sin registro: salud, finanzas, conversores, embarazo, mascotas, cocina. Sin ads invasivos.`}
+  canonical="/global"
+  audience="global"
+  hreflang={[
+    { lang: 'es', href: 'https://hacecuentas.com/global' },
+    { lang: 'es-AR', href: 'https://hacecuentas.com/' },
+    { lang: 'es-ES', href: 'https://hacecuentas.com/es' },
+    { lang: 'es-MX', href: 'https://hacecuentas.com/mx' },
+    { lang: 'en', href: 'https://hacecuentas.com/en' },
+    { lang: 'pt-BR', href: 'https://hacecuentas.com/pt' },
+    { lang: 'x-default', href: 'https://hacecuentas.com/global' },
+  ]}
+>
+  <Header lang="es" />
+
+  <main id="main">
+    <section class="hero">
+      <div class="hero-inner">
+        <p class="eyebrow">🌎 Versión global · Español neutro</p>
+        <h1 class="hero-title">Calculadoras <span class="accent">universales</span>.</h1>
+        <p class="hero-subtitle">{totalGlobal}+ calculadoras que funcionan en cualquier país: salud, conversores, matemática, finanzas globales, embarazo, mascotas, cocina. Sin localización a Argentina.</p>
+        <div class="hero-actions">
+          <a href="#categorias" class="btn-primary">Ver categorías</a>
+          <a href="/" class="btn-secondary">Versión Argentina →</a>
+        </div>
+      </div>
+    </section>
+
+    {popular.length > 0 && (
+      <section class="popular-rail">
+        <div class="container">
+          <h2 class="section-title">Más usadas</h2>
+          <div class="popular-grid">
+            {popular.map((c: any) => (
+              <a href={`/${c.slug}`} class="popular-card">
+                <span class="popular-icon">{c.icon || '🧮'}</span>
+                <span class="popular-label">{c.h1}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <section id="categorias" class="categories">
+      <div class="container">
+        <h2 class="section-title">Categorías</h2>
+        <div class="cat-grid">
+          {categoryOrder.filter((cat) => byCategory[cat]?.length > 0).map((cat) => {
+            const meta = categoryMeta[cat] || { label: cat, desc: '', color: '#6b7280', icon: '📁' };
+            const list = (byCategory[cat] || []).slice(0, 5);
+            return (
+              <article class="cat-card" style={`--cat-color: ${meta.color};`}>
+                <div class="cat-header">
+                  <span class="cat-icon">{meta.icon}</span>
+                  <div>
+                    <h3>{meta.label}</h3>
+                    <p>{meta.desc}</p>
+                  </div>
+                </div>
+                <ul class="cat-list">
+                  {list.map((c: any) => (
+                    <li><a href={`/${c.slug}`}>{c.h1}</a></li>
+                  ))}
+                </ul>
+                <p class="cat-count">{byCategory[cat].length} calculadoras</p>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+
+    <section class="other-versions">
+      <div class="container">
+        <h2 class="section-title">¿Buscás versión específica de tu país?</h2>
+        <div class="versions-grid">
+          <a href="/" class="version-card"><span>🇦🇷</span> <strong>Argentina</strong> — sueldo, monotributo, AFIP</a>
+          <a href="/es" class="version-card"><span>🇪🇸</span> <strong>España</strong> — IRPF, hipoteca, autónomo</a>
+          <a href="/mx" class="version-card"><span>🇲🇽</span> <strong>México</strong> — ISR, IMSS, RFC</a>
+          <a href="/co" class="version-card"><span>🇨🇴</span> <strong>Colombia</strong> — DIAN, retefuente</a>
+          <a href="/cl" class="version-card"><span>🇨🇱</span> <strong>Chile</strong> — SII, AFP, isapre</a>
+          <a href="/pt" class="version-card"><span>🇧🇷</span> <strong>Brasil</strong> — IRPF, INSS, FGTS</a>
+          <a href="/en" class="version-card"><span>🇺🇸</span> <strong>English</strong> — finance, health, math</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <ScrollToTop />
+  <Footer lang="es" />
+</Layout>
+
+<style>
+  .hero {
+    background: linear-gradient(135deg, var(--accent-soft) 0%, transparent 100%);
+    padding: 3rem 1.25rem 2.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-inner { max-width: 900px; margin: 0 auto; text-align: center; }
+  .eyebrow { color: var(--text-muted); font-size: 0.875rem; margin: 0 0 0.5rem; }
+  .hero-title { font-size: clamp(2rem, 5vw, 3.25rem); font-weight: 700; margin: 0 0 1rem; line-height: 1.1; }
+  .accent { color: var(--accent); }
+  .hero-subtitle { color: var(--text-muted); font-size: 1.125rem; max-width: 700px; margin: 0 auto 1.5rem; line-height: 1.5; }
+  .hero-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+  .btn-primary, .btn-secondary { padding: 0.75rem 1.25rem; border-radius: var(--radius-sm); font-weight: 600; text-decoration: none; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-secondary { background: var(--bg-muted); color: var(--text); border: 1px solid var(--border); }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 1.25rem; }
+  .section-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 1rem; }
+
+  .popular-rail { padding: 2rem 0 0.5rem; }
+  .popular-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+  .popular-card {
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    padding: 1.25rem 0.75rem; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); text-decoration: none; color: var(--text);
+    transition: all 0.15s; text-align: center;
+  }
+  .popular-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .popular-icon { font-size: 1.75rem; line-height: 1; }
+  .popular-label { font-size: 0.8125rem; font-weight: 600; line-height: 1.3; }
+
+  .categories { padding: 2.5rem 0; }
+  .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .cat-card {
+    padding: 1.25rem; background: var(--bg-card); border: 1px solid var(--border);
+    border-top: 3px solid var(--cat-color); border-radius: var(--radius-sm);
+  }
+  .cat-header { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; }
+  .cat-header h3 { margin: 0; font-size: 1rem; }
+  .cat-header p { margin: 0.125rem 0 0; font-size: 0.8125rem; color: var(--text-muted); }
+  .cat-icon { font-size: 1.5rem; line-height: 1; }
+  .cat-list { list-style: none; padding: 0; margin: 0 0 0.75rem; }
+  .cat-list li { padding: 0.25rem 0; font-size: 0.875rem; }
+  .cat-list a { color: var(--text); text-decoration: none; }
+  .cat-list a:hover { color: var(--accent); }
+  .cat-count { margin: 0; font-size: 0.75rem; color: var(--text-muted); }
+
+  .other-versions { padding: 2rem 0 4rem; }
+  .versions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; }
+  .version-card {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.875rem 1rem; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); text-decoration: none; color: var(--text);
+    transition: all 0.15s;
+  }
+  .version-card:hover { border-color: var(--accent); }
+  .version-card span { font-size: 1.5rem; }
+  .version-card strong { font-weight: 600; }
+</style>

@@ -6,9 +6,11 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 
-// Load all English calculators
-const calcModules = import.meta.glob<any>('../../content/calcs-cl/*.json', { eager: true });
-const calcs = Object.values(calcModules).map((m: any) => m.default || m);
+// /cl/ no tiene directorio de calcs locales: cargamos desde calcs/ filtrando audience=CL
+const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const calcs = Object.values(mainModules)
+  .map((m: any) => m.default || m)
+  .filter((c: any) => c.audience === 'CL');
 
 // Group by category
 const byCategory: Record<string, any[]> = {};
@@ -85,16 +87,21 @@ const schema = {
 };
 
 const hreflangTags = [
-  { lang: 'es',        href: 'https://hacecuentas.com/mx/' },
-  { lang: 'es',        href: 'https://hacecuentas.com/' },
-  { lang: 'x-default', href: 'https://hacecuentas.com/' },
+  { lang: 'es-CL',     href: 'https://hacecuentas.com/cl' },
+  { lang: 'es-AR',     href: 'https://hacecuentas.com/' },
+  { lang: 'es-ES',     href: 'https://hacecuentas.com/es' },
+  { lang: 'es-MX',     href: 'https://hacecuentas.com/mx' },
+  { lang: 'es-CO',     href: 'https://hacecuentas.com/co' },
+  { lang: 'es',        href: 'https://hacecuentas.com/global' },
+  { lang: 'x-default', href: 'https://hacecuentas.com/global' },
 ];
 ---
 
 <Layout
-  title="Free Online Calculators — Hacé Cuentas"
-  description="Free online calculators for finance, health, math, business, sports, and everyday life. Accurate formulas, instant results, 100% private. No registration required."
+  title="Calculadoras Chile 2026 — SII, AFP, isapre | Hacé Cuentas"
+  description="Calculadoras Chile: impuesto a la renta, AFP, isapres, finiquito, gratificación, sueldo líquido. Datos oficiales SII 2026."
   lang="es"
+  audience="CL"
   hreflang={hreflangTags}
   schema={schema}
 >

@@ -16,7 +16,7 @@ export interface Props {
   canonical?: string;
   schema?: object;
   image?: string;
-  audience?: 'AR' | 'global'; // 'AR' = calculadora/página específica de Argentina; default 'global'
+  audience?: 'AR' | 'MX' | 'CL' | 'CO' | 'ES' | 'BO' | 'PE' | 'UY' | 'BR' | 'global'; // país-específica o 'global'
   lang?: 'es' | 'en' | 'pt';
   hreflang?: Array<{lang: string, href: string}>;
   noindex?: boolean;
@@ -41,12 +41,16 @@ const fullCanonical = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${cleanP
 const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
 
 // Lang/locale dinámicos según audience y lang.
-// Para EN: 'en' + en_US.
-// Para AR-only: es-AR fuerte (Google la prioriza para usuarios argentinos).
-// Para globales: es genérico + alternate es-AR/es-419 (es-419 = español Latinoamérica).
-const htmlLang = lang === 'en' ? 'en' : lang === 'pt' ? 'pt-BR' : audience === 'AR' ? 'es-AR' : 'es';
-const ogLocale = lang === 'en' ? 'en_US' : lang === 'pt' ? 'pt_BR' : audience === 'AR' ? 'es_AR' : 'es_419';
-const schemaLang = lang === 'en' ? 'en' : lang === 'pt' ? 'pt-BR' : audience === 'AR' ? 'es-AR' : 'es';
+const _LANG_BY_AUDIENCE: Record<string, [string, string]> = {
+  AR: ['es-AR', 'es_AR'], MX: ['es-MX', 'es_MX'], CL: ['es-CL', 'es_CL'],
+  CO: ['es-CO', 'es_CO'], ES: ['es-ES', 'es_ES'], BO: ['es-BO', 'es_BO'],
+  PE: ['es-PE', 'es_PE'], UY: ['es-UY', 'es_UY'], BR: ['pt-BR', 'pt_BR'],
+  global: ['es', 'es_419'],
+};
+const _audByLocale = _LANG_BY_AUDIENCE[audience] || _LANG_BY_AUDIENCE.global;
+const htmlLang = lang === 'en' ? 'en' : lang === 'pt' ? 'pt-BR' : _audByLocale[0];
+const ogLocale = lang === 'en' ? 'en_US' : lang === 'pt' ? 'pt_BR' : _audByLocale[1];
+const schemaLang = htmlLang;
 
 // Schema.org WebSite + Organization global (siempre presente)
 const globalSchema = {
@@ -195,15 +199,14 @@ const globalSchema = {
     <link rel="canonical" href={fullCanonical} />
     {hreflang ? (
       hreflang.map(h => <link rel="alternate" hreflang={h.lang} href={h.href} />)
-    ) : audience === 'AR' ? (
+    ) : audience !== 'global' ? (
+      /* País-específico (AR/MX/ES/CL/CO/...): hreflang con código país completo. */
       <>
-        <link rel="alternate" hreflang="es-AR" href={fullCanonical} />
+        <link rel="alternate" hreflang={_audByLocale[0]} href={fullCanonical} />
         <link rel="alternate" hreflang="x-default" href={fullCanonical} />
       </>
     ) : (
-      /* Página en español global (sin variante por país): Google interpreta
-         múltiples hreflang apuntando a la misma URL como error. Declaramos
-         sólo 'es' + x-default. */
+      /* Página global (sin variante por país): solo es + x-default. */
       <>
         <link rel="alternate" hreflang="es" href={fullCanonical} />
         <link rel="alternate" hreflang="x-default" href={fullCanonical} />

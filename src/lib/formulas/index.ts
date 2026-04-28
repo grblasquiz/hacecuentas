@@ -189,6 +189,7 @@ import { autonomiaBateriaDispositivoMah } from './autonomia-bateria-dispositivo-
 import { autonomiaTanqueCombustible } from './autonomia-tanque-combustible';
 import { autonomiaTanqueLlenoKilometros } from './autonomia-tanque-lleno-kilometros';
 import { autonomiaUpsTiempoRespaldoServidor } from './autonomia-ups-tiempo-respaldo-servidor';
+import { compute as compute__autonomo_cuota_2026_espana_rendimiento_neto } from './autonomo-cuota-2026-espana-rendimiento-neto';
 import { autonomosCategoriaMonto2026 } from './autonomos-categoria-monto-2026';
 import { autonomosCategorias2026Aportes } from './autonomos-categorias-2026-aportes';
 import { autoviaPeajesArgentinaRuta2Ruta3 } from './autovia-peajes-argentina-ruta-2-ruta-3';
@@ -208,6 +209,7 @@ import { azulejosBaldosasMetrosCuadradosCantidad } from './azulejos-baldosas-met
 import { compute as compute__baby_feeding_amount_by_age_calculator } from './baby-feeding-amount-by-age-calculator';
 import { backtestEstrategiaTradingSharpeRatio } from './backtest-estrategia-trading-sharpe-ratio';
 import { bajaAutoDesarmeChatarraFinVida } from './baja-auto-desarme-chatarra-fin-vida';
+import { compute as compute__baja_laboral_incapacidad_temporal_espana_cuantia } from './baja-laboral-incapacidad-temporal-espana-cuantia';
 import { compute as compute__bakers_percentage_calculator } from './bakers-percentage-calculator';
 import { balanceoEcuacionQuimica } from './balanceo-ecuacion-quimica';
 import { bancoBateriasSolarDiasAutonomia } from './banco-baterias-solar-dias-autonomia';
@@ -225,6 +227,7 @@ import { becaPorcentajeDescuentoCuota } from './beca-porcentaje-descuento-cuota'
 import { becaPromedioMinimoRequisitoUniversidades } from './beca-promedio-minimo-requisito-universidades';
 import { becasJuanmarinPrimariasSecundarias } from './becas-juanmarin-primarias-secundarias';
 import { becasManuelBelgranoMonto } from './becas-manuel-belgrano-monto';
+import { compute as compute__becas_mec_2026_espana_renta_familiar_rendimiento } from './becas-mec-2026-espana-renta-familiar-rendimiento';
 import { becasPorcentajeCobertura } from './becas-porcentaje-cobertura';
 import { betaAccionRiesgo } from './beta-accion-riesgo';
 import { betaHcg } from './beta-hcg';
@@ -435,6 +438,7 @@ import { cervezaPorInvitadoFiesta } from './cerveza-por-invitado-duracion-fiesta
 import { cesantiasColombia } from './cesantias-colombia';
 import { cesantiasColombiaLiquidacion } from './cesantias-colombia-liquidacion';
 import { cespedSemillasKgM2 } from './cesped-semillas-kg-m2';
+import { compute as compute__cesta_compra_mensual_familia_espana_inflacion } from './cesta-compra-mensual-familia-espana-inflacion';
 import { cetEmprestimoPessoal } from './cet-emprestimo-pessoal';
 import { cetesRendimientoMx } from './cetes-rendimiento-mx';
 import { cftPrestamoPersonalComparativa } from './cft-prestamo-personal-comparativa';
@@ -523,8 +527,11 @@ import { compostajeResiduosOrganicos } from './compostaje-residuos-organicos';
 import { compostajeVolumenResiduos } from './compostaje-volumen-residuos';
 import { compute as compute__compound_interest_calculator } from './compound-interest-calculator';
 import { compoundSupplyBorrow } from './compound-supply-borrow';
+import { compute as compute__comprar_coche_electrico_vs_gasolina_espana_2026 } from './comprar-coche-electrico-vs-gasolina-espana-2026';
+import { compute as compute__comprar_vs_alquilar_vivienda_espana_10_anos } from './comprar-vs-alquilar-vivienda-espana-10-anos';
 import { comprensionLectoraScore } from './comprension-lectora-score';
 import { computoPrisionPreventiva } from './computo-prision-preventiva';
+import { compute as compute__comunidad_autonoma_irpf_mas_alto_bajo_espana } from './comunidad-autonoma-irpf-mas-alto-bajo-espana';
 import { concentracionMolarSolucion } from './concentracion-molar-solucion';
 import { compute as compute__conception_date_from_due_date_calculator } from './conception-date-from-due-date-calculator';
 import { concursoDocentePuntajeAntecedentesBaires } from './concurso-docente-puntaje-antecedentes-baires';
@@ -554,6 +561,7 @@ import { contenidoCalendarioMensual } from './contenido-calendario-mensual';
 import { context1mTokensClaudeCostoInput } from './context-1m-tokens-claude-costo-input';
 import { contraccionesParto } from './contracciones-parto';
 import { contratoAlquiler2AniosVs3Anios } from './contrato-alquiler-2-anios-vs-3-anios';
+import { compute as compute__contrato_alquiler_espana_fianza_aval_mes_renta } from './contrato-alquiler-espana-fianza-aval-mes-renta';
 import { contratoLocacionEnDolaresUsdPesificacion } from './contrato-locacion-en-dolares-usd-pesificacion';
 import { conversacionIntercambioIdiomaHorasSemana } from './conversacion-intercambio-idioma-horas-semana';
 import { conversionBaseDecimalBinarioHexa } from './conversion-base-decimal-binario-hexa';
@@ -710,6 +718,7 @@ import { cortinaMedidaVentana } from './cortina-medida-ventana';
 import { cortinasMedirTelaVentanaAnchotelaje } from './cortinas-medir-tela-ventana-anchotelaje';
 import { cosechaEsperadaHuertaKg } from './cosecha-esperada-huerta-kg';
 import { cosmopolitanIngredientes } from './cosmopolitan-ingredientes';
+import { compute as compute__coste_vida_mensual_soltero_pareja_espana_ccaa } from './coste-vida-mensual-soltero-pareja-espana-ccaa';
 import { costoAbonoBundesligaPremier } from './costo-abono-bundesliga-premier';
 import { costoAireAcondicionadoHora } from './costo-aire-acondicionado-hora';
 import { costoAlmacenamientoInventario } from './costo-almacenamiento-inventario';
@@ -891,6 +900,7 @@ import { deckMaderaTablastornillos } from './deck-madera-tablas-tornillos';
 import { deduccionAlquilerGanancias40Porciento } from './deduccion-alquiler-ganancias-40-porciento';
 import { deduccionFamiliaConyugeHijoGanancias } from './deduccion-familia-conyuge-hijo-ganancias';
 import { deduccionPrepagaMedicinaGanancias } from './deduccion-prepaga-medicina-ganancias';
+import { compute as compute__deduccion_vivienda_habitual_irpf_espana } from './deduccion-vivienda-habitual-irpf-espana';
 import { compute as compute__deel_vs_payoneer_vs_wise_comision_empleado_eeuu } from './deel-vs-payoneer-vs-wise-comision-empleado-eeuu';
 import { deepWorkCalNewportHorasMaximoDiario } from './deep-work-cal-newport-horas-maximo-diario';
 import { defiProtocolHackRisk } from './defi-hack-risk-score';
@@ -1257,6 +1267,7 @@ import { compute as compute__financiamento_veiculo_cdc_banco } from './financiam
 import { fineTuningLlamaCostoDatasetTokens } from './fine-tuning-llama-costo-dataset-tokens';
 import { compute as compute__fine_tuning_openai_vs_rag_cuando_conviene } from './fine-tuning-openai-vs-rag-cuando-conviene';
 import { finiquitoBoliviaLtg } from './finiquito-bolivia-ltg';
+import { compute as compute__finiquito_despido_improcedente_espana_2026 } from './finiquito-despido-improcedente-espana-2026';
 import { finiquitoDespidoInjustificadoMexico } from './finiquito-despido-injustificado-mexico';
 import { finiquitoLiquidacionMexico } from './finiquito-liquidacion-mexico';
 import { finiquitoMexicoCalculo } from './finiquito-mexico-calculo';
@@ -1401,6 +1412,7 @@ import { hierroFerritinaAnemiaDiagnostico } from './hierro-ferritina-anemia-diag
 import { hiloBordadoDiseno } from './hilo-bordado-diseno';
 import { hipotecaCiudadProcrear } from './hipoteca-ciudad-procrear';
 import { hipotecaDivisaExtranjeraVsUva } from './hipoteca-divisa-extranjera-vs-uva';
+import { compute as compute__hipoteca_fija_vs_variable_euribor_espana_2026 } from './hipoteca-fija-vs-variable-euribor-espana-2026';
 import { hipotecaInfonavitMx } from './hipoteca-infonavit-mx';
 import { compute as compute__hipoteca_mensual_cuota_fija } from './hipoteca-mensual-cuota-fija';
 import { hipotecaUvaBbva } from './hipoteca-uva-bbva';
@@ -1479,6 +1491,7 @@ import { humedadAbsolutaRelativa } from './humedad-absoluta-relativa';
 import { humedadIdealAmbiente } from './humedad-ideal-ambiente';
 import { huronFerretDietaProteinaAnimal } from './huron-ferret-dieta-proteina-animal';
 import { hyroxTiempoEdadCategoriaMundial } from './hyrox-tiempo-edad-categoria-mundial';
+import { compute as compute__ibi_cuota_anual_espana_valor_catastral_municipio } from './ibi-cuota-anual-espana-valor-catastral-municipio';
 import { ibuCervezaLupuloTinseth } from './ibu-cerveza-lupulo-tinseth';
 import { idiomaParalelo2AlMismo } from './idioma-paralelo-2-al-mismo';
 import { idiomasMasUtilesProfesionInternacional } from './idiomas-mas-utiles-profesion-internacional';
@@ -1505,6 +1518,7 @@ import { implantacionEmbrion } from './implantacion-embrion';
 import { compute as compute__imposto_renda_2026_brasil_completa_simplificada } from './imposto-renda-2026-brasil-completa-simplificada';
 import { impresionDpiCalidad } from './impresion-dpi-calidad';
 import { compute as compute__impuesto_bienes_personales_2026_cripto_cedears } from './impuesto-bienes-personales-2026-cripto-cedears';
+import { compute as compute__impuesto_circulacion_vehiculos_espana_municipio } from './impuesto-circulacion-vehiculos-espana-municipio';
 import { impuestoCriptoArgentinaDeclaracionAnual } from './impuesto-cripto-argentina-declaracion-anual';
 import { impuestoDebitosCreditos } from './impuesto-debitos-creditos';
 import { impuestoGananciaCriptoArgentina } from './impuesto-ganancia-cripto-argentina';
@@ -1515,6 +1529,7 @@ import { impuestoPaisPercepcionDolarTarjeta } from './impuesto-pais-percepcion-d
 import { impuestoPaulistaIibbInfluencerRedes } from './impuesto-paulista-iibb-influencer-redes';
 import { impuestoRentaPeru } from './impuesto-renta-peru';
 import { impuestoSellosInmuebleContrato } from './impuesto-sellos-inmueble-contrato';
+import { compute as compute__impuesto_sucesiones_donaciones_espana_ccaa_2026 } from './impuesto-sucesiones-donaciones-espana-ccaa-2026';
 import { impuestoTransferenciaItuItiInmueble } from './impuesto-transferencia-itu-iti-inmueble';
 import { impuestos1099ContractorUsa } from './impuestos-1099-contractor-usa';
 import { impuestosAutonomoEspana } from './impuestos-autonomo-espana';
@@ -1596,6 +1611,7 @@ import { irAluguelCarneLeao } from './ir-aluguel-carne-leao';
 import { irDayTrade } from './ir-day-trade';
 import { irGanhoCapitalImovel } from './ir-ganho-capital-imovel';
 import { irSwingTrade } from './ir-swing-trade';
+import { compute as compute__irpf_2026_tramos_espana_nomina } from './irpf-2026-tramos-espana-nomina';
 import { irpfAndalucia2026 } from './irpf-andalucia-2026';
 import { irpfCataluna2026 } from './irpf-cataluna-2026';
 import { irpfDeclaracaoComparador } from './irpf-declaracao-comparador';
@@ -1620,7 +1636,9 @@ import { itbiPortoAlegre } from './itbi-porto-alegre';
 import { itbiRioDeJaneiro } from './itbi-rio-de-janeiro';
 import { itbiSaoPaulo } from './itbi-sao-paulo';
 import { itinerarioCiudadesDiasOptimoPorCiudad } from './itinerario-ciudades-dias-optimo-por-ciudad';
+import { compute as compute__itp_actos_juridicos_documentados_espana_vivienda } from './itp-actos-juridicos-documentados-espana-vivienda';
 import { ivPokemonGo } from './iv-pokemon-go';
+import { compute as compute__iva_espana_21_10_4_categorias } from './iva-espana-21-10-4-categorias';
 import { ivaIncluidoNetoDiscriminar } from './iva-incluido-neto-discriminar';
 import { ivaPaisesLatam } from './iva-paises-latam';
 import { ivaSaldoFavorContraRi } from './iva-saldo-favor-contra-ri';
@@ -1640,6 +1658,7 @@ import { jubilacionAnsesMontoMinimoMaxima2026 } from './jubilacion-anses-monto-m
 import { jubilacionCuantoNecesito } from './jubilacion-cuanto-necesito';
 import { jubilacionDocenteCaba } from './jubilacion-docente-caba';
 import { jubilacionDocenteIpsBa } from './jubilacion-docente-ips-ba';
+import { compute as compute__jubilacion_espana_2026_pension_anos_cotizados } from './jubilacion-espana-2026-pension-anos-cotizados';
 import { jubilacionHaberMinimoMovilidad } from './jubilacion-haber-minimo-movilidad';
 import { jubilacionMinima } from './jubilacion-minima';
 import { jubilacionPuaPrestacionUniversalAdultoMayor } from './jubilacion-pua-prestacion-universal-adulto-mayor';
@@ -1838,6 +1857,7 @@ import { miningRigBreakEven } from './mining-rig-break-even';
 import { mlsPlayoffs } from './mls-playoffs';
 import { compute as compute__mochila_escolar_peso_maximo_edad_espalda } from './mochila-escolar-peso-maximo-edad-espalda';
 import { compute as compute__modelismo_pintura_figuras_tiempo_warhammer_citadel } from './modelismo-pintura-figuras-tiempo-warhammer-citadel';
+import { compute as compute__modelo_130_pago_fraccionado_autonomo_espana } from './modelo-130-pago-fraccionado-autonomo-espana';
 import { compute as compute__modelo_local_ollama_vs_api_openai_costo_tco } from './modelo-local-ollama-vs-api-openai-costo-tco';
 import { mojitoCubanoIngredientes } from './mojito-cubano-ingredientes';
 import { mokaPotAguaCafe } from './moka-pot-agua-cafe';
@@ -1970,11 +1990,13 @@ import { panoramaFotoSolapamiento } from './panorama-foto-solapamiento';
 import { papelAhorradoImpresionDobleCara } from './papel-ahorrado-impresion-doble-cara';
 import { paralajeDistanciaEstrellaParsec } from './paralaje-distancia-estrella-parsec';
 import { paredLadrillosMetrosM2 } from './pared-ladrillos-metros-m2';
+import { compute as compute__pareja_de_hecho_vs_matrimonio_espana_fiscal } from './pareja-de-hecho-vs-matrimonio-espana-fiscal';
 import { compute as compute__paritaria_camioneros_2026_flete_larga_distancia } from './paritaria-camioneros-2026-flete-larga-distancia';
 import { compute as compute__paritaria_comercio_2026_aumento_acumulado } from './paritaria-comercio-2026-aumento-acumulado';
 import { compute as compute__paritaria_uocra_construccion_2026_categoria } from './paritaria-uocra-construccion-2026-categoria';
 import { paroAutonomosCeseActividadEspana } from './paro-autonomos-cese-actividad-espana';
 import { paroEspanaSepe } from './paro-espana-sepe';
+import { compute as compute__paro_prestacion_desempleo_espana_2026_meses } from './paro-prestacion-desempleo-espana-2026-meses';
 import { pasajeAereoMillasVsPesosCanjear } from './pasaje-aereo-millas-vs-pesos-canjear';
 import { pasaporteRenovacionCostoTiempo } from './pasaporte-renovacion-costo-tiempo';
 import { paseoPerro } from './paseo-perro';
@@ -2032,6 +2054,7 @@ import { perimetroAbdominalRiesgoCardiovascular } from './perimetro-abdominal-ri
 import { periodizacionEntrenamiento } from './periodizacion-entrenamiento';
 import { periodoFertilIrregular } from './periodo-fertil-irregular';
 import { periodoOrbitalPlaneta } from './periodo-orbital-planeta';
+import { compute as compute__permiso_paternidad_maternidad_espana_2026_semanas } from './permiso-paternidad-maternidad-espana-2026-semanas';
 import { permutacionesNTomadosKPnk } from './permutaciones-n-tomados-k-pnk';
 import { compute as compute__perpetual_liquidation_funding_binance_bybit_bitget } from './perpetual-liquidation-funding-binance-bybit-bitget';
 import { compute as compute__perro_anciano_7_anos_suplementos_diarios } from './perro-anciano-7-anos-suplementos-diarios';
@@ -2109,6 +2132,7 @@ import { planEntrenamiento5kSemanas } from './plan-entrenamiento-5k-semanas';
 import { planEntrenamientoMaraton42kSemanas } from './plan-entrenamiento-maraton-42k-semanas';
 import { planEstudioIdiomaMinutosDiaObjetivo } from './plan-estudio-idioma-minutos-dia-objetivo';
 import { planMaratonSemanas } from './plan-maraton-semanas';
+import { compute as compute__plan_pensiones_aportacion_deduccion_espana_2026 } from './plan-pensiones-aportacion-deduccion-espana-2026';
 import { planetaRegente } from './planeta-regente';
 import { playlistDuracionCanciones } from './playlist-duracion-canciones';
 import { plazoFijo } from './plazo-fijo';
@@ -2377,7 +2401,9 @@ import { rendimientoFciMoneyMarket } from './rendimiento-fci-money-market';
 import { rendimientoMasaEmpanadasCantidad } from './rendimiento-masa-empanadas-cantidad';
 import { rendimientoReaccionQuimica } from './rendimiento-reaccion-quimica';
 import { compute as compute__rent_vs_buy_5_year_calculator } from './rent-vs-buy-5-year-calculator';
+import { compute as compute__renta_bruta_neta_espana_2026_irpf_ss } from './renta-bruta-neta-espana-2026-irpf-ss';
 import { rentaColombiaPersonaNatural } from './renta-colombia-persona-natural';
+import { compute as compute__renta_disponible_mensual_espana_gastos_fijos_30_30_30_10 } from './renta-disponible-mensual-espana-gastos-fijos-30-30-30-10';
 import { rentaFinancieraCedularPersonas } from './renta-financiera-cedular-personas';
 import { rentabilidadAlquiler } from './rentabilidad-alquiler';
 import { rentabilidadAlquilerInmuebleCabaNetoBruto } from './rentabilidad-alquiler-inmueble-caba-neto-bruto';
@@ -2496,6 +2522,7 @@ import { seguroAutoEstimado } from './seguro-auto-estimado';
 import { seguroAutoGpsInmovilizadorDescuento } from './seguro-auto-gps-inmovilizador-descuento';
 import { seguroCaucionAlquilerCostoMensual } from './seguro-caucion-alquiler-costo-mensual';
 import { seguroCaucionAlquilerEspana } from './seguro-caucion-alquiler-espana';
+import { compute as compute__seguro_coche_precio_espana_2026_edad_bonus_malus } from './seguro-coche-precio-espana-2026-edad-bonus-malus';
 import { seguroDesempregoParcelas } from './seguro-desemprego-parcelas';
 import { seguroDesempregoValor } from './seguro-desemprego-valor';
 import { seguroHogarEstimacionCobertura } from './seguro-hogar-estimacion-cobertura';
@@ -2772,6 +2799,7 @@ import { compute as compute__time_card_hours_worked_calculator } from './time-ca
 import { timeLapseDuracionFotos } from './time-lapse-duracion-fotos';
 import { timeLapseDuracionFotosMaker } from './time-lapse-duracion-fotos-maker';
 import { compute as compute__tip_by_state_bill_calculator } from './tip-by-state-bill-calculator';
+import { compute as compute__tipo_marginal_irpf_espana_2026_tramos_rapido } from './tipo-marginal-irpf-espana-2026-tramos-rapido';
 import { tipoPielTest } from './tipo-piel-test';
 import { tirVan } from './tir-van';
 import { titularidadCaratularAutoTrasladarProvincia } from './titularidad-caratular-auto-trasladar-provincia';
@@ -2797,6 +2825,7 @@ import { transportadoraTamanoMascotaViaje } from './transportadora-tamano-mascot
 import { transportePublicoViajePresupuesto } from './transporte-publico-viaje-presupuesto';
 import { transposicionAcordes } from './transposicion-acordes';
 import { trasladoAeropuertoCiudadTiempo } from './traslado-aeropuerto-ciudad-tiempo';
+import { compute as compute__trastero_garaje_precio_alquiler_espana_2026 } from './trastero-garaje-precio-alquiler-espana-2026';
 import { triatlonIronmanTiempoMedioEdadCategoria } from './triatlon-ironman-tiempo-medio-edad-categoria';
 import { trigliceridosValoresNormalesRiesgo } from './trigliceridos-valores-normales-riesgo';
 import { trigonometria } from './trigonometria';
@@ -2832,6 +2861,7 @@ import { vacaciones } from './vacaciones';
 import { vacacionesBarilochePresupuesto7DiasFamilia } from './vacaciones-bariloche-presupuesto-7-dias-familia';
 import { vacacionesDiasAntiguedadMexico } from './vacaciones-dias-antiguedad-mexico';
 import { vacacionesNoTomadasIndemnizacionFormula } from './vacaciones-no-tomadas-indemnizacion-formula';
+import { compute as compute__vacaciones_pagadas_espana_22_dias_laborables } from './vacaciones-pagadas-espana-22-dias-laborables';
 import { vacunaCalendarioNacionalAnses } from './vacuna-calendario-nacional-anses';
 import { vacunaFiebreAmarillaCuantoAntes } from './vacuna-fiebre-amarilla-cuanto-antes';
 import { vacunasBebe } from './vacunas-bebe-calendario';
@@ -3178,6 +3208,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'autonomia-tanque-combustible': autonomiaTanqueCombustible,
   'autonomia-tanque-lleno-kilometros': autonomiaTanqueLlenoKilometros,
   'autonomia-ups-tiempo-respaldo-servidor': autonomiaUpsTiempoRespaldoServidor,
+  'autonomo-cuota-2026-espana-rendimiento-neto': compute__autonomo_cuota_2026_espana_rendimiento_neto,
   'autonomos-categoria-monto-2026': autonomosCategoriaMonto2026,
   'autonomos-categorias-2026-aportes': autonomosCategorias2026Aportes,
   'autovia-peajes-argentina-ruta-2-ruta-3': autoviaPeajesArgentinaRuta2Ruta3,
@@ -3197,6 +3228,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'baby-feeding-amount-by-age-calculator': compute__baby_feeding_amount_by_age_calculator,
   'backtest-estrategia-trading-sharpe-ratio': backtestEstrategiaTradingSharpeRatio,
   'baja-auto-desarme-chatarra-fin-vida': bajaAutoDesarmeChatarraFinVida,
+  'baja-laboral-incapacidad-temporal-espana-cuantia': compute__baja_laboral_incapacidad_temporal_espana_cuantia,
   'bakers-percentage-calculator': compute__bakers_percentage_calculator,
   'balanceo-ecuacion-quimica': balanceoEcuacionQuimica,
   'banco-baterias-solar-dias-autonomia': bancoBateriasSolarDiasAutonomia,
@@ -3214,6 +3246,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'beca-promedio-minimo-requisito-universidades': becaPromedioMinimoRequisitoUniversidades,
   'becas-juanmarin-primarias-secundarias': becasJuanmarinPrimariasSecundarias,
   'becas-manuel-belgrano-monto': becasManuelBelgranoMonto,
+  'becas-mec-2026-espana-renta-familiar-rendimiento': compute__becas_mec_2026_espana_renta_familiar_rendimiento,
   'becas-porcentaje-cobertura': becasPorcentajeCobertura,
   'beta-accion-riesgo': betaAccionRiesgo,
   'beta-hcg': betaHcg,
@@ -3424,6 +3457,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cesantias-colombia': cesantiasColombia,
   'cesantias-colombia-liquidacion': cesantiasColombiaLiquidacion,
   'cesped-semillas-kg-m2': cespedSemillasKgM2,
+  'cesta-compra-mensual-familia-espana-inflacion': compute__cesta_compra_mensual_familia_espana_inflacion,
   'cet-emprestimo-pessoal': cetEmprestimoPessoal,
   'cetes-rendimiento-mx': cetesRendimientoMx,
   'cft-prestamo-personal-comparativa': cftPrestamoPersonalComparativa,
@@ -3512,8 +3546,11 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'compostaje-volumen-residuos': compostajeVolumenResiduos,
   'compound-interest-calculator': compute__compound_interest_calculator,
   'compound-supply-borrow': compoundSupplyBorrow,
+  'comprar-coche-electrico-vs-gasolina-espana-2026': compute__comprar_coche_electrico_vs_gasolina_espana_2026,
+  'comprar-vs-alquilar-vivienda-espana-10-anos': compute__comprar_vs_alquilar_vivienda_espana_10_anos,
   'comprension-lectora-score': comprensionLectoraScore,
   'computo-prision-preventiva': computoPrisionPreventiva,
+  'comunidad-autonoma-irpf-mas-alto-bajo-espana': compute__comunidad_autonoma_irpf_mas_alto_bajo_espana,
   'concentracion-molar-solucion': concentracionMolarSolucion,
   'conception-date-from-due-date-calculator': compute__conception_date_from_due_date_calculator,
   'concurso-docente-puntaje-antecedentes-baires': concursoDocentePuntajeAntecedentesBaires,
@@ -3543,6 +3580,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'context-1m-tokens-claude-costo-input': context1mTokensClaudeCostoInput,
   'contracciones-parto': contraccionesParto,
   'contrato-alquiler-2-anios-vs-3-anios': contratoAlquiler2AniosVs3Anios,
+  'contrato-alquiler-espana-fianza-aval-mes-renta': compute__contrato_alquiler_espana_fianza_aval_mes_renta,
   'contrato-locacion-en-dolares-usd-pesificacion': contratoLocacionEnDolaresUsdPesificacion,
   'conversacion-intercambio-idioma-horas-semana': conversacionIntercambioIdiomaHorasSemana,
   'conversion-base-decimal-binario-hexa': conversionBaseDecimalBinarioHexa,
@@ -3699,6 +3737,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cortinas-medir-tela-ventana-anchotelaje': cortinasMedirTelaVentanaAnchotelaje,
   'cosecha-esperada-huerta-kg': cosechaEsperadaHuertaKg,
   'cosmopolitan-ingredientes': cosmopolitanIngredientes,
+  'coste-vida-mensual-soltero-pareja-espana-ccaa': compute__coste_vida_mensual_soltero_pareja_espana_ccaa,
   'costo-abono-bundesliga-premier': costoAbonoBundesligaPremier,
   'costo-aire-acondicionado-hora': costoAireAcondicionadoHora,
   'costo-almacenamiento-inventario': costoAlmacenamientoInventario,
@@ -3880,6 +3919,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'deduccion-alquiler-ganancias-40-porciento': deduccionAlquilerGanancias40Porciento,
   'deduccion-familia-conyuge-hijo-ganancias': deduccionFamiliaConyugeHijoGanancias,
   'deduccion-prepaga-medicina-ganancias': deduccionPrepagaMedicinaGanancias,
+  'deduccion-vivienda-habitual-irpf-espana': compute__deduccion_vivienda_habitual_irpf_espana,
   'deel-vs-payoneer-vs-wise-comision-empleado-eeuu': compute__deel_vs_payoneer_vs_wise_comision_empleado_eeuu,
   'deep-work-cal-newport-horas-maximo-diario': deepWorkCalNewportHorasMaximoDiario,
   'defi-hack-risk-score': defiProtocolHackRisk,
@@ -4246,6 +4286,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'fine-tuning-llama-costo-dataset-tokens': fineTuningLlamaCostoDatasetTokens,
   'fine-tuning-openai-vs-rag-cuando-conviene': compute__fine_tuning_openai_vs_rag_cuando_conviene,
   'finiquito-bolivia-ltg': finiquitoBoliviaLtg,
+  'finiquito-despido-improcedente-espana-2026': compute__finiquito_despido_improcedente_espana_2026,
   'finiquito-despido-injustificado-mexico': finiquitoDespidoInjustificadoMexico,
   'finiquito-liquidacion-mexico': finiquitoLiquidacionMexico,
   'finiquito-mexico-calculo': finiquitoMexicoCalculo,
@@ -4390,6 +4431,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'hilo-bordado-diseno': hiloBordadoDiseno,
   'hipoteca-ciudad-procrear': hipotecaCiudadProcrear,
   'hipoteca-divisa-extranjera-vs-uva': hipotecaDivisaExtranjeraVsUva,
+  'hipoteca-fija-vs-variable-euribor-espana-2026': compute__hipoteca_fija_vs_variable_euribor_espana_2026,
   'hipoteca-infonavit-mx': hipotecaInfonavitMx,
   'hipoteca-mensual-cuota-fija': compute__hipoteca_mensual_cuota_fija,
   'hipoteca-uva-bbva': hipotecaUvaBbva,
@@ -4468,6 +4510,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'humedad-ideal-ambiente': humedadIdealAmbiente,
   'huron-ferret-dieta-proteina-animal': huronFerretDietaProteinaAnimal,
   'hyrox-tiempo-edad-categoria-mundial': hyroxTiempoEdadCategoriaMundial,
+  'ibi-cuota-anual-espana-valor-catastral-municipio': compute__ibi_cuota_anual_espana_valor_catastral_municipio,
   'ibu-cerveza-lupulo-tinseth': ibuCervezaLupuloTinseth,
   'idioma-paralelo-2-al-mismo': idiomaParalelo2AlMismo,
   'idiomas-mas-utiles-profesion-internacional': idiomasMasUtilesProfesionInternacional,
@@ -4494,6 +4537,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'imposto-renda-2026-brasil-completa-simplificada': compute__imposto_renda_2026_brasil_completa_simplificada,
   'impresion-dpi-calidad': impresionDpiCalidad,
   'impuesto-bienes-personales-2026-cripto-cedears': compute__impuesto_bienes_personales_2026_cripto_cedears,
+  'impuesto-circulacion-vehiculos-espana-municipio': compute__impuesto_circulacion_vehiculos_espana_municipio,
   'impuesto-cripto-argentina-declaracion-anual': impuestoCriptoArgentinaDeclaracionAnual,
   'impuesto-debitos-creditos': impuestoDebitosCreditos,
   'impuesto-ganancia-cripto-argentina': impuestoGananciaCriptoArgentina,
@@ -4504,6 +4548,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'impuesto-paulista-iibb-influencer-redes': impuestoPaulistaIibbInfluencerRedes,
   'impuesto-renta-peru': impuestoRentaPeru,
   'impuesto-sellos-inmueble-contrato': impuestoSellosInmuebleContrato,
+  'impuesto-sucesiones-donaciones-espana-ccaa-2026': compute__impuesto_sucesiones_donaciones_espana_ccaa_2026,
   'impuesto-transferencia-itu-iti-inmueble': impuestoTransferenciaItuItiInmueble,
   'impuestos-1099-contractor-usa': impuestos1099ContractorUsa,
   'impuestos-autonomo-espana': impuestosAutonomoEspana,
@@ -4585,6 +4630,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ir-day-trade': irDayTrade,
   'ir-ganho-capital-imovel': irGanhoCapitalImovel,
   'ir-swing-trade': irSwingTrade,
+  'irpf-2026-tramos-espana-nomina': compute__irpf_2026_tramos_espana_nomina,
   'irpf-andalucia-2026': irpfAndalucia2026,
   'irpf-cataluna-2026': irpfCataluna2026,
   'irpf-declaracao-comparador': irpfDeclaracaoComparador,
@@ -4609,7 +4655,9 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'itbi-rio-de-janeiro': itbiRioDeJaneiro,
   'itbi-sao-paulo': itbiSaoPaulo,
   'itinerario-ciudades-dias-optimo-por-ciudad': itinerarioCiudadesDiasOptimoPorCiudad,
+  'itp-actos-juridicos-documentados-espana-vivienda': compute__itp_actos_juridicos_documentados_espana_vivienda,
   'iv-pokemon-go': ivPokemonGo,
+  'iva-espana-21-10-4-categorias': compute__iva_espana_21_10_4_categorias,
   'iva-incluido-neto-discriminar': ivaIncluidoNetoDiscriminar,
   'iva-paises-latam': ivaPaisesLatam,
   'iva-saldo-favor-contra-ri': ivaSaldoFavorContraRi,
@@ -4629,6 +4677,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'jubilacion-cuanto-necesito': jubilacionCuantoNecesito,
   'jubilacion-docente-caba': jubilacionDocenteCaba,
   'jubilacion-docente-ips-ba': jubilacionDocenteIpsBa,
+  'jubilacion-espana-2026-pension-anos-cotizados': compute__jubilacion_espana_2026_pension_anos_cotizados,
   'jubilacion-haber-minimo-movilidad': jubilacionHaberMinimoMovilidad,
   'jubilacion-minima': jubilacionMinima,
   'jubilacion-pua-prestacion-universal-adulto-mayor': jubilacionPuaPrestacionUniversalAdultoMayor,
@@ -4827,6 +4876,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'mls-playoffs': mlsPlayoffs,
   'mochila-escolar-peso-maximo-edad-espalda': compute__mochila_escolar_peso_maximo_edad_espalda,
   'modelismo-pintura-figuras-tiempo-warhammer-citadel': compute__modelismo_pintura_figuras_tiempo_warhammer_citadel,
+  'modelo-130-pago-fraccionado-autonomo-espana': compute__modelo_130_pago_fraccionado_autonomo_espana,
   'modelo-local-ollama-vs-api-openai-costo-tco': compute__modelo_local_ollama_vs_api_openai_costo_tco,
   'mojito-cubano-ingredientes': mojitoCubanoIngredientes,
   'moka-pot-agua-cafe': mokaPotAguaCafe,
@@ -4959,11 +5009,13 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'papel-ahorrado-impresion-doble-cara': papelAhorradoImpresionDobleCara,
   'paralaje-distancia-estrella-parsec': paralajeDistanciaEstrellaParsec,
   'pared-ladrillos-metros-m2': paredLadrillosMetrosM2,
+  'pareja-de-hecho-vs-matrimonio-espana-fiscal': compute__pareja_de_hecho_vs_matrimonio_espana_fiscal,
   'paritaria-camioneros-2026-flete-larga-distancia': compute__paritaria_camioneros_2026_flete_larga_distancia,
   'paritaria-comercio-2026-aumento-acumulado': compute__paritaria_comercio_2026_aumento_acumulado,
   'paritaria-uocra-construccion-2026-categoria': compute__paritaria_uocra_construccion_2026_categoria,
   'paro-autonomos-cese-actividad-espana': paroAutonomosCeseActividadEspana,
   'paro-espana-sepe': paroEspanaSepe,
+  'paro-prestacion-desempleo-espana-2026-meses': compute__paro_prestacion_desempleo_espana_2026_meses,
   'pasaje-aereo-millas-vs-pesos-canjear': pasajeAereoMillasVsPesosCanjear,
   'pasaporte-renovacion-costo-tiempo': pasaporteRenovacionCostoTiempo,
   'paseo-perro': paseoPerro,
@@ -5021,6 +5073,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'periodizacion-entrenamiento': periodizacionEntrenamiento,
   'periodo-fertil-irregular': periodoFertilIrregular,
   'periodo-orbital-planeta': periodoOrbitalPlaneta,
+  'permiso-paternidad-maternidad-espana-2026-semanas': compute__permiso_paternidad_maternidad_espana_2026_semanas,
   'permutaciones-n-tomados-k-pnk': permutacionesNTomadosKPnk,
   'perpetual-liquidation-funding-binance-bybit-bitget': compute__perpetual_liquidation_funding_binance_bybit_bitget,
   'perro-anciano-7-anos-suplementos-diarios': compute__perro_anciano_7_anos_suplementos_diarios,
@@ -5098,6 +5151,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'plan-entrenamiento-maraton-42k-semanas': planEntrenamientoMaraton42kSemanas,
   'plan-estudio-idioma-minutos-dia-objetivo': planEstudioIdiomaMinutosDiaObjetivo,
   'plan-maraton-semanas': planMaratonSemanas,
+  'plan-pensiones-aportacion-deduccion-espana-2026': compute__plan_pensiones_aportacion_deduccion_espana_2026,
   'planeta-regente': planetaRegente,
   'playlist-duracion-canciones': playlistDuracionCanciones,
   'plazo-fijo': plazoFijo,
@@ -5366,7 +5420,9 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'rendimiento-masa-empanadas-cantidad': rendimientoMasaEmpanadasCantidad,
   'rendimiento-reaccion-quimica': rendimientoReaccionQuimica,
   'rent-vs-buy-5-year-calculator': compute__rent_vs_buy_5_year_calculator,
+  'renta-bruta-neta-espana-2026-irpf-ss': compute__renta_bruta_neta_espana_2026_irpf_ss,
   'renta-colombia-persona-natural': rentaColombiaPersonaNatural,
+  'renta-disponible-mensual-espana-gastos-fijos-30-30-30-10': compute__renta_disponible_mensual_espana_gastos_fijos_30_30_30_10,
   'renta-financiera-cedular-personas': rentaFinancieraCedularPersonas,
   'rentabilidad-alquiler': rentabilidadAlquiler,
   'rentabilidad-alquiler-inmueble-caba-neto-bruto': rentabilidadAlquilerInmuebleCabaNetoBruto,
@@ -5485,6 +5541,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'seguro-auto-gps-inmovilizador-descuento': seguroAutoGpsInmovilizadorDescuento,
   'seguro-caucion-alquiler-costo-mensual': seguroCaucionAlquilerCostoMensual,
   'seguro-caucion-alquiler-espana': seguroCaucionAlquilerEspana,
+  'seguro-coche-precio-espana-2026-edad-bonus-malus': compute__seguro_coche_precio_espana_2026_edad_bonus_malus,
   'seguro-desemprego-parcelas': seguroDesempregoParcelas,
   'seguro-desemprego-valor': seguroDesempregoValor,
   'seguro-hogar-estimacion-cobertura': seguroHogarEstimacionCobertura,
@@ -5761,6 +5818,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'time-lapse-duracion-fotos': timeLapseDuracionFotos,
   'time-lapse-duracion-fotos-maker': timeLapseDuracionFotosMaker,
   'tip-by-state-bill-calculator': compute__tip_by_state_bill_calculator,
+  'tipo-marginal-irpf-espana-2026-tramos-rapido': compute__tipo_marginal_irpf_espana_2026_tramos_rapido,
   'tipo-piel-test': tipoPielTest,
   'tir-van': tirVan,
   'titularidad-caratular-auto-trasladar-provincia': titularidadCaratularAutoTrasladarProvincia,
@@ -5786,6 +5844,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'transporte-publico-viaje-presupuesto': transportePublicoViajePresupuesto,
   'transposicion-acordes': transposicionAcordes,
   'traslado-aeropuerto-ciudad-tiempo': trasladoAeropuertoCiudadTiempo,
+  'trastero-garaje-precio-alquiler-espana-2026': compute__trastero_garaje_precio_alquiler_espana_2026,
   'triatlon-ironman-tiempo-medio-edad-categoria': triatlonIronmanTiempoMedioEdadCategoria,
   'trigliceridos-valores-normales-riesgo': trigliceridosValoresNormalesRiesgo,
   'trigonometria': trigonometria,
@@ -5821,6 +5880,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'vacaciones-bariloche-presupuesto-7-dias-familia': vacacionesBarilochePresupuesto7DiasFamilia,
   'vacaciones-dias-antiguedad-mexico': vacacionesDiasAntiguedadMexico,
   'vacaciones-no-tomadas-indemnizacion-formula': vacacionesNoTomadasIndemnizacionFormula,
+  'vacaciones-pagadas-espana-22-dias-laborables': compute__vacaciones_pagadas_espana_22_dias_laborables,
   'vacuna-calendario-nacional-anses': vacunaCalendarioNacionalAnses,
   'vacuna-fiebre-amarilla-cuanto-antes': vacunaFiebreAmarillaCuantoAntes,
   'vacunas-bebe-calendario': vacunasBebe,

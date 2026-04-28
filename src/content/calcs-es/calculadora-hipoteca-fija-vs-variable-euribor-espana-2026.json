@@ -1,0 +1,279 @@
+{
+  "slug": "calculadora-hipoteca-fija-vs-variable-euribor-espana-2026",
+  "title": "Hipoteca Fija vs Variable España 2026 | Hacé Cuentas",
+  "h1": "Hipoteca fija vs variable España 2026",
+  "description": "Compara cuota mensual fija (3,0-3,5%) vs variable (Euribor ~2,9% + diferencial) y calcula intereses totales en 3 escenarios para tu hipoteca en España 2026.",
+  "category": "finanzas",
+  "audience": "ES",
+  "icon": "🏠",
+  "formulaId": "hipoteca-fija-vs-variable-euribor-espana-2026",
+  "intro": "Calcula y compara la **cuota mensual** de una hipoteca a tipo fijo frente a una hipoteca a tipo variable referenciada al **Euríbor** en España. Introduce el precio de la vivienda, la entrada (mínimo el 20% que exigen los bancos), el plazo y los tipos de interés para ver tres escenarios de Euríbor: bajada, estabilidad y subida. Los datos de tipos corresponden al mercado hipotecario español en 2026.",
+  "keyTakeaway": "Con un préstamo de 200.000 € a 25 años, la hipoteca fija al 3,20% supone 966 €/mes y 89.800 € en intereses totales; la variable (Euríbor 2,90% + 0,80%) parte de 964 €/mes pero puede dispararse si el Euríbor sube al 4,50%.",
+  "useCases": [
+    "Decidir entre hipoteca fija o variable al comprar tu primera vivienda en España",
+    "Comparar el coste total de distintos plazos: 15, 20, 25 o 30 años",
+    "Evaluar el impacto de una subida del Euríbor en tu cuota mensual",
+    "Calcular cuánto ahorras en intereses eligiendo un plazo más corto",
+    "Valorar si amortizar anticipadamente compensa con un tipo fijo",
+    "Estimar el importe máximo de hipoteca según la cuota máxima asumible"
+  ],
+  "fields": [
+    {
+      "id": "precio_vivienda",
+      "label": "Precio de la vivienda (€)",
+      "type": "number",
+      "min": 50000,
+      "max": 2000000,
+      "step": 1000,
+      "defaultValue": 250000,
+      "placeholder": "250000",
+      "helpText": "Valor de compraventa de la vivienda en euros."
+    },
+    {
+      "id": "porcentaje_entrada",
+      "label": "Entrada (%)",
+      "type": "number",
+      "min": 20,
+      "max": 80,
+      "step": 1,
+      "defaultValue": 20,
+      "placeholder": "20",
+      "helpText": "Mínimo el 20% del precio; los bancos financian como máximo el 80% en vivienda libre."
+    },
+    {
+      "id": "plazo_anos",
+      "label": "Plazo (años)",
+      "type": "select",
+      "options": [
+        {
+          "value": 15,
+          "label": "15 años"
+        },
+        {
+          "value": 20,
+          "label": "20 años"
+        },
+        {
+          "value": 25,
+          "label": "25 años"
+        },
+        {
+          "value": 30,
+          "label": "30 años"
+        }
+      ],
+      "defaultValue": 25,
+      "helpText": "Plazo de amortización. El Banco de España limita generalmente el máximo a 30 años."
+    },
+    {
+      "id": "tipo_fijo",
+      "label": "Tipo fijo anual (%)",
+      "type": "number",
+      "min": 1.0,
+      "max": 6.0,
+      "step": 0.05,
+      "defaultValue": 3.2,
+      "placeholder": "3.20",
+      "helpText": "TIN fijo ofrecido por el banco. Rango habitual en España en 2026: 3,0%-3,5%."
+    },
+    {
+      "id": "euribor_actual",
+      "label": "Euríbor a 12 meses actual (%)",
+      "type": "number",
+      "min": -1.0,
+      "max": 8.0,
+      "step": 0.01,
+      "defaultValue": 2.9,
+      "placeholder": "2.90",
+      "helpText": "Valor del Euríbor a 12 meses. Publicado mensualmente por el Banco de España. Valor orientativo abril 2026: ~2,90%."
+    },
+    {
+      "id": "diferencial_variable",
+      "label": "Diferencial hipoteca variable (%)",
+      "type": "number",
+      "min": 0.1,
+      "max": 3.0,
+      "step": 0.05,
+      "defaultValue": 0.8,
+      "placeholder": "0.80",
+      "helpText": "Margen que suma el banco al Euríbor. Rango habitual en España 2026: 0,50%-1,00%."
+    },
+    {
+      "id": "euribor_escenario_bajada",
+      "label": "Euríbor escenario bajada (%)",
+      "type": "number",
+      "min": -1.0,
+      "max": 6.0,
+      "step": 0.1,
+      "defaultValue": 2.0,
+      "placeholder": "2.00",
+      "helpText": "Euríbor proyectado en un escenario favorable (bajada de tipos BCE)."
+    },
+    {
+      "id": "euribor_escenario_subida",
+      "label": "Euríbor escenario subida (%)",
+      "type": "number",
+      "min": 0.0,
+      "max": 10.0,
+      "step": 0.1,
+      "defaultValue": 4.5,
+      "placeholder": "4.50",
+      "helpText": "Euríbor proyectado en un escenario desfavorable (repunte de tipos)."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "capital_prestado",
+      "label": "Capital prestado",
+      "format": "currency"
+    },
+    {
+      "id": "entrada_importe",
+      "label": "Entrada aportada",
+      "format": "currency"
+    },
+    {
+      "id": "cuota_fija_mensual",
+      "label": "Cuota fija mensual",
+      "format": "currency"
+    },
+    {
+      "id": "intereses_totales_fija",
+      "label": "Intereses totales (fija)",
+      "format": "currency"
+    },
+    {
+      "id": "coste_total_fija",
+      "label": "Coste total hipoteca fija",
+      "format": "currency"
+    },
+    {
+      "id": "tipo_variable_actual",
+      "label": "Tipo variable actual (Euríbor + diferencial)",
+      "format": "percent"
+    },
+    {
+      "id": "cuota_variable_actual",
+      "label": "Cuota variable (escenario actual)",
+      "format": "currency"
+    },
+    {
+      "id": "intereses_totales_variable_actual",
+      "label": "Intereses totales (variable actual)",
+      "format": "currency"
+    },
+    {
+      "id": "cuota_variable_bajada",
+      "label": "Cuota variable (escenario bajada)",
+      "format": "currency"
+    },
+    {
+      "id": "intereses_totales_variable_bajada",
+      "label": "Intereses totales (variable bajada)",
+      "format": "currency"
+    },
+    {
+      "id": "cuota_variable_subida",
+      "label": "Cuota variable (escenario subida)",
+      "format": "currency"
+    },
+    {
+      "id": "intereses_totales_variable_subida",
+      "label": "Intereses totales (variable subida)",
+      "format": "currency"
+    },
+    {
+      "id": "diferencia_cuota_actual",
+      "label": "Diferencia cuota fija vs variable (actual)",
+      "format": "currency"
+    },
+    {
+      "id": "diferencia_intereses_actual",
+      "label": "Diferencia intereses totales (actual)",
+      "format": "currency"
+    },
+    {
+      "id": "recomendacion",
+      "label": "Recomendación orientativa",
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo se calcula\n\nLa herramienta aplica la **fórmula de anualidad constante** (sistema de amortización francés), que es el estándar en España para hipotecas a tipo fijo y como base de cálculo para las variables.\n\n## Fórmula\n\n```\nCuota mensual = C × [r(1+r)^n] / [(1+r)^n − 1]\n```\n\nDonde:\n- **C** = capital prestado (precio vivienda × (1 − entrada%))\n- **r** = tipo de interés mensual = TIN anual / 12\n- **n** = número de cuotas = plazo en años × 12\n\n**Intereses totales** = (Cuota mensual × n) − C\n\n**Coste total** = Cuota mensual × n\n\nPara la hipoteca variable, el tipo aplicado es: **TIN = Euríbor + diferencial**. Se calculan tres escenarios:\n1. **Actual**: Euríbor introducido por el usuario\n2. **Bajada**: Euríbor de escenario favorable\n3. **Subida**: Euríbor de escenario desfavorable\n\n> ⚠️ En la práctica, la hipoteca variable se revisa cada 6 o 12 meses con el Euríbor vigente en ese momento. Esta calculadora simula como si el tipo se mantuviera constante durante todo el plazo en cada escenario, lo que permite comparar el coste máximo y mínimo potencial.\n\n## Ejemplo\n\n| Parámetro | Valor |\n|---|---|\n| Precio vivienda | 250.000 € |\n| Entrada (20%) | 50.000 € |\n| Capital prestado | 200.000 € |\n| Plazo | 25 años (300 cuotas) |\n| Tipo fijo | 3,20% |\n| Euríbor actual + diferencial | 2,90% + 0,80% = 3,70% |\n\n| Modalidad | Cuota/mes | Intereses totales | Coste total |\n|---|---|---|---|\n| **Fija 3,20%** | 966 € | 89.800 € | 289.800 € |\n| Variable actual 3,70% | 1.021 € | 106.300 € | 306.300 € |\n| Variable bajada 2,80% | 924 € | 77.200 € | 277.200 € |\n| Variable subida 5,30% | 1.196 € | 158.800 € | 358.800 € |\n\n## Limitaciones\n\n- **No incluye costes adicionales**: notaría (~1.000-1.500 €), registro (~400-700 €), gestoría, tasación (~300-500 €) ni el Impuesto de Actos Jurídicos Documentados (AJD, 0,5%-1,5% según comunidad autónoma) o ITP en vivienda de segunda mano.\n- **No contempla amortizaciones anticipadas** ni cambios de plazo durante la vida del préstamo.\n- **La hipoteca variable real** se revisa periódicamente; los escenarios son simulaciones estáticas.\n- **El Euríbor** puede diferir del valor oficial publicado por el Banco de España con fecha de referencia del mes de revisión de tu hipoteca.\n- Los tipos reales ofertados dependen del perfil crediticio del solicitante, garantías y vinculación con el banco.",
+  "faq": [
+    {
+      "question": "¿Qué porcentaje financia el banco en España en 2026?",
+      "answer": "La normativa española (Ley 5/2019 reguladora del crédito inmobiliario) limita la financiación al 80% del valor de tasación en vivienda habitual y al 60% en segunda residencia. Por tanto, necesitas al menos el 20% de entrada más los gastos adicionales (impuestos, notaría, etc.), que suelen suponer otro 10-12% del precio."
+    },
+    {
+      "question": "¿Qué es el Euríbor y quién lo publica en España?",
+      "answer": "El Euríbor (Euro Interbank Offered Rate) es el tipo de interés al que se prestan dinero los bancos de la eurozona. En España, el Banco de España publica mensualmente el valor oficial del Euríbor a 12 meses en el BOE, que es el índice de referencia utilizado en la inmensa mayoría de hipotecas variables."
+    },
+    {
+      "question": "¿Cuándo se revisa la cuota de una hipoteca variable?",
+      "answer": "Habitualmente cada 6 o 12 meses, según lo estipulado en la escritura. En la fecha de revisión, el banco aplica el Euríbor a 12 meses publicado el mes anterior más el diferencial pactado, calculando la nueva cuota para el período siguiente."
+    },
+    {
+      "question": "¿Qué TIN fijo son habituales en España en 2026?",
+      "answer": "Según datos del mercado hipotecario español a principios de 2026, los tipos fijos se sitúan aproximadamente entre el 3,00% y el 3,50% TIN para plazos de 20-30 años, con bonificaciones por domiciliación de nómina, seguros u otros productos vinculados."
+    },
+    {
+      "question": "¿Qué diferencial se aplica en hipotecas variables en España?",
+      "answer": "El diferencial más habitual en el mercado español en 2026 oscila entre 0,50% y 1,00%. Las mejores ofertas, con máxima vinculación, pueden situarse en torno a 0,50%-0,60%, mientras que sin vinculación pueden superar el 1,00%."
+    },
+    {
+      "question": "¿Merece la pena la hipoteca fija o variable en 2026?",
+      "answer": "Depende del perfil del solicitante. La hipoteca fija ofrece seguridad y cuota constante, recomendable si el presupuesto es ajustado o si se prefiere planificación sin sorpresas. La variable puede ser más barata si el Euríbor baja, pero implica riesgo de subida. Esta calculadora te muestra los tres escenarios para que valores el riesgo asumible."
+    },
+    {
+      "question": "¿Puedo cambiar de hipoteca variable a fija (o viceversa)?",
+      "answer": "Sí. La Ley 5/2019 facilita la novación (modificación con el mismo banco) y la subrogación (traslado a otro banco). Los costes son limitados por ley: máximo 0,15% del capital pendiente en los primeros 3 años para pasar de variable a fija, y 0% a partir del tercer año."
+    },
+    {
+      "question": "¿Están los gastos de hipoteca sujetos a deducción fiscal en España?",
+      "answer": "La deducción estatal por inversión en vivienda habitual se suprimió en 2013. Solo conservan la deducción quienes firmaron hipoteca antes del 1 de enero de 2013 (régimen transitorio). Algunas comunidades autónomas mantienen deducciones propias autonómicas; conviene consultar la normativa de tu comunidad."
+    },
+    {
+      "question": "¿Qué es el AJD y quién lo paga en una hipoteca?",
+      "answer": "El Impuesto de Actos Jurídicos Documentados grava la escritura pública de constitución de hipoteca. Desde la reforma de octubre de 2018, el banco es el sujeto pasivo y paga el AJD, no el cliente. Los compradores sí pagan el Impuesto de Transmisiones Patrimoniales (ITP) en vivienda usada o el IVA (10%) en vivienda nueva."
+    },
+    {
+      "question": "¿Qué plazo máximo permite la normativa española para una hipoteca?",
+      "answer": "La mayoría de entidades en España limitan el plazo a 30 años para vivienda habitual, aunque algunas ofertan hasta 35 años. El Banco de España recomienda que la cuota no supere el 30-35% de los ingresos netos del hogar. A mayor plazo, menor cuota pero mayores intereses totales."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Banco de España - Tipos de referencia oficiales del mercado hipotecario",
+      "url": "https://www.bde.es/bde/es/areas/estadis/estadisticas-por/tipos-de-interes/tipos-de-interes-3a7.html",
+      "publisher": "Banco de España",
+      "date": "2026"
+    },
+    {
+      "name": "Ley 5/2019, de 15 de marzo, reguladora de los contratos de crédito inmobiliario",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2019-3814",
+      "publisher": "BOE / Ministerio de Economía",
+      "date": "2019"
+    },
+    {
+      "name": "Banco de España - Simulador de cuotas hipotecarias",
+      "url": "https://www.bde.es/bde/es/areas/ciudadanos/Preguntas-frecuentes-sobre-la-hipoteca/Simulador-de-cu-tas-de-un-prestamo-hipotecario.html",
+      "publisher": "Banco de España",
+      "date": "2026"
+    },
+    {
+      "name": "INE - Estadística de Hipotecas",
+      "url": "https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&cid=1254736170236&menu=ultiDatos&idp=1254735576757",
+      "publisher": "Instituto Nacional de Estadística",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-04-28",
+    "source": "Banco de España - Euríbor 12 meses",
+    "sourceUrl": "https://www.bde.es/bde/es/areas/estadis/estadisticas-por/tipos-de-interes/tipos-de-interes-3a7.html",
+    "updateType": "manual",
+    "notes": "Actualizar el valor por defecto del Euríbor mensualmente con el dato oficial publicado por el Banco de España en el BOE. Revisar rango de tipos fijos semestralmente según condiciones del mercado hipotecario español."
+  },
+  "lastReviewed": "2026-04-28"
+}

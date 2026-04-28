@@ -1,0 +1,244 @@
+{
+  "slug": "calculadora-baja-laboral-incapacidad-temporal-espana-cuantia",
+  "title": "Calculadora Baja Laboral IT 2026 España | Hacé Cuentas",
+  "h1": "Calculadora de Baja Laboral (Incapacidad Temporal) España 2026",
+  "description": "Calcula la cuantía de tu baja laboral en España 2026: días 1-3, 4-15 al 60% y 21+ al 75% de la base reguladora. Resultado en euros netos.",
+  "category": "finanzas",
+  "audience": "ES",
+  "icon": "🏥",
+  "formulaId": "baja-laboral-incapacidad-temporal-espana-cuantia",
+  "intro": "Cuando estás de baja por **incapacidad temporal (IT)**, el subsidio que cobras depende de tu **base reguladora**, los **días transcurridos** y si la causa es **enfermedad común/accidente no laboral** o **contingencia profesional**. En contingencia común, los días 1-3 suelen estar sin subsidio público (aunque muchos convenios obligan a la empresa a complementarlos), del día 4 al 15 la empresa paga el 60% de la base reguladora, y desde el día 16 la Seguridad Social asume el pago: 60% hasta el día 20 y **75% desde el día 21**. En contingencias profesionales (accidente laboral o enfermedad profesional) se cobra el **75% desde el primer día**. Esta calculadora estima la cuantía bruta y neta de tu IT.",
+  "keyTakeaway": "Una baja de 30 días por enfermedad común con 2.000€/mes brutos equivale a cobrar unos 1.237€ netos frente a los ~1.540€ netos habituales, una diferencia de más de 300€.",
+  "useCases": [
+    "Estimar cuánto cobrarás durante una baja por enfermedad común o gripe prolongada",
+    "Calcular el impacto económico de una operación con recuperación de varias semanas",
+    "Comparar el subsidio de IT con tu sueldo habitual antes de pedir la baja",
+    "Saber cuánto paga la empresa y cuánto la Seguridad Social en cada tramo",
+    "Planificar tus finanzas ante un accidente laboral o enfermedad profesional",
+    "Comprobar si tu convenio colectivo mejora los días 1-3 sin subsidio público"
+  ],
+  "fields": [
+    {
+      "id": "salario_bruto_mensual",
+      "label": "Salario bruto mensual (€)",
+      "type": "number",
+      "placeholder": "2000",
+      "min": 1000,
+      "max": 20000,
+      "step": 10,
+      "defaultValue": 2000,
+      "helpText": "Incluye prorrateo de pagas extras si las cobras en 12 mensualidades. Se usará para calcular la base reguladora diaria."
+    },
+    {
+      "id": "dias_baja",
+      "label": "Número de días de baja",
+      "type": "number",
+      "placeholder": "30",
+      "min": 1,
+      "max": 545,
+      "step": 1,
+      "defaultValue": 30,
+      "helpText": "Máximo 365 días prorrogables hasta 545 días (18 meses). El primer día de baja es el día 1."
+    },
+    {
+      "id": "contingencia",
+      "label": "Tipo de contingencia",
+      "type": "select",
+      "options": [
+        {
+          "value": "comun",
+          "label": "Enfermedad común / Accidente no laboral"
+        },
+        {
+          "value": "profesional",
+          "label": "Accidente laboral / Enfermedad profesional"
+        }
+      ],
+      "defaultValue": "comun",
+      "helpText": "Las contingencias profesionales tienen mejores condiciones desde el primer día."
+    },
+    {
+      "id": "complemento_empresa_dias1_3",
+      "label": "¿Tu empresa o convenio complementa los días 1-3?",
+      "type": "select",
+      "options": [
+        {
+          "value": "no",
+          "label": "No — no hay complemento (cobro 0€ esos días)"
+        },
+        {
+          "value": "60",
+          "label": "Sí — empresa paga el 60% de la base reguladora"
+        },
+        {
+          "value": "100",
+          "label": "Sí — empresa paga el 100% del salario"
+        }
+      ],
+      "defaultValue": "no",
+      "helpText": "Muchos convenios colectivos obligan a la empresa a pagar un complemento durante los días de espera. Consulta tu convenio."
+    },
+    {
+      "id": "num_pagas",
+      "label": "Número de pagas al año",
+      "type": "select",
+      "options": [
+        {
+          "value": "12",
+          "label": "12 pagas (extras ya prorrateadas)"
+        },
+        {
+          "value": "14",
+          "label": "14 pagas (2 extras separadas)"
+        }
+      ],
+      "defaultValue": "14",
+      "helpText": "Si cobras 14 pagas, la base reguladora diaria incluye el prorrateo de las extras."
+    },
+    {
+      "id": "tipo_irpf",
+      "label": "Tipo de retención IRPF (%)",
+      "type": "number",
+      "placeholder": "15",
+      "min": 2,
+      "max": 47,
+      "step": 0.5,
+      "defaultValue": 15,
+      "helpText": "La IT tributa como rendimiento del trabajo. Usa tu tipo habitual o calcula en la AEAT. Por defecto 15%."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "base_reguladora_diaria",
+      "label": "Base reguladora diaria",
+      "format": "currency",
+      "helpText": "Salario bruto mensual × 12 (o × 14 con extras) ÷ 365"
+    },
+    {
+      "id": "subsidio_bruto_total",
+      "label": "Subsidio IT bruto total",
+      "format": "currency",
+      "helpText": "Suma de los tres tramos aplicando los porcentajes correspondientes"
+    },
+    {
+      "id": "retencion_irpf",
+      "label": "Retención IRPF estimada",
+      "format": "currency",
+      "helpText": "Aplicada sobre el subsidio bruto total"
+    },
+    {
+      "id": "cotizacion_ss_trabajador",
+      "label": "Cotización SS a cargo del trabajador",
+      "format": "currency",
+      "helpText": "Durante la IT sigues cotizando a la SS (6,35% sobre la base de cotización)"
+    },
+    {
+      "id": "subsidio_neto_total",
+      "label": "Subsidio IT neto estimado",
+      "format": "currency",
+      "helpText": "Subsidio bruto menos IRPF y cotización SS del trabajador"
+    },
+    {
+      "id": "sueldo_neto_normal",
+      "label": "Sueldo neto normal estimado (mismo periodo)",
+      "format": "currency",
+      "helpText": "Referencia: tu salario neto habitual para los mismos días"
+    },
+    {
+      "id": "diferencia_neta",
+      "label": "Diferencia neta respecto al sueldo normal",
+      "format": "currency",
+      "helpText": "Cuánto menos (o más) cobrarás respecto a tu salario habitual"
+    },
+    {
+      "id": "porcentaje_sueldo_recuperado",
+      "label": "% del sueldo neto que recuperas",
+      "format": "percent",
+      "helpText": "Subsidio neto ÷ sueldo neto normal × 100"
+    },
+    {
+      "id": "desglose_texto",
+      "label": "Desglose por tramos",
+      "format": "text",
+      "helpText": "Detalle de cuánto corresponde a cada tramo de días"
+    }
+  ],
+  "explanation": "## Cómo se calcula la cuantía de la baja laboral (IT) en España\n\n### Base reguladora diaria\n\nLa **base reguladora (BR) diaria** es el punto de partida de todo el cálculo:\n\n- Con **12 pagas** (extras prorrateadas): BR diaria = Salario bruto mensual ÷ 30\n- Con **14 pagas** (2 extras separadas): BR diaria = (Salario bruto mensual × 12 + 2 pagas extras) ÷ 365\n\nEn la práctica, para 14 pagas se suele aproximar como: BR diaria = Salario bruto mensual × 14 ÷ 12 ÷ 30 = Salario bruto mensual × 14 ÷ 360.\n\nEsta calculadora usa la fórmula: **BR diaria = Salario bruto mensual × nº_pagas ÷ 12 ÷ 30**.\n\n---\n\n## Tramos y porcentajes aplicables\n\n### Contingencia común (enfermedad o accidente no laboral)\n\n| Días de baja | Quién paga | % sobre BR diaria |\n|---|---|---|\n| Días 1-3 | Empresa (si convenio) / Nadie (sin complemento) | 0% subsidio SS (convenio: 60-100%) |\n| Días 4-15 | Empresa (a cuenta de la SS) | 60% |\n| Días 16-20 | Seguridad Social | 60% |\n| Día 21 en adelante | Seguridad Social | 75% |\n\n### Contingencia profesional (accidente laboral o enfermedad profesional)\n\n| Días de baja | Quién paga | % sobre BR diaria |\n|---|---|---|\n| Día 1 en adelante | Seguridad Social (vía mutua) | 75% |\n\n---\n\n## Fórmula detallada (contingencia común)\n\n```\nSubsidio_tramo1 = días_tramo1 × BR_diaria × porcentaje_dias1_3\nSubsidio_tramo2 = días_tramo2 × BR_diaria × 0,60   (días 4-15)\nSubsidio_tramo3 = días_tramo3 × BR_diaria × 0,60   (días 16-20)\nSubsidio_tramo4 = días_tramo4 × BR_diaria × 0,75   (día 21+)\n\nSubsidio_bruto = Σ de los cuatro tramos\n\nRetención_IRPF = Subsidio_bruto × tipo_IRPF\nCotización_SS_trabajador = BR_diaria × días_baja × 0,0635\n\nSubsidio_neto = Subsidio_bruto − Retención_IRPF − Cotización_SS_trabajador\n```\n\n**Nota:** durante la IT, el trabajador sigue obligado a cotizar a la Seguridad Social (contingencias comunes: 4,70%, desempleo: 1,55%, formación: 0,10% → total 6,35%), calculadas sobre la base de cotización del mes anterior a la baja.\n\n---\n\n## Ejemplo práctico\n\nEmpleado con **2.000€ brutos/mes**, **14 pagas**, baja de **30 días** por enfermedad común, **sin complemento** de empresa los días 1-3, IRPF del **15%**.\n\n- BR diaria = 2.000 × 14 ÷ 12 ÷ 30 = **77,78 €/día**\n- Días 1-3 (sin complemento): 0 €\n- Días 4-15 (12 días × 77,78 × 60%): **560,42 €**\n- Días 16-20 (5 días × 77,78 × 60%): **233,33 €**\n- Días 21-30 (10 días × 77,78 × 75%): **583,33 €**\n- **Subsidio bruto total: 1.377,08 €**\n- Retención IRPF (15%): −206,56 €\n- Cotización SS trabajador (6,35% × 77,78 × 30): −148,15 €\n- **Subsidio neto estimado: 1.022,37 €**\n\nComparado con el sueldo neto normal (~1.540€), la diferencia es de unos **−517€**.\n\n---\n\n## Limitaciones\n\n- Esta calculadora es una **estimación orientativa**. La base reguladora oficial puede diferir si tienes pluses, horas extras u otras percepciones variables.\n- Los **complementos de empresa** (días 1-3 y mejoras de convenio) varían según el convenio colectivo aplicable: consúltalo con tu departamento de RRHH.\n- El tipo de IRPF puede variar a lo largo de la baja si esta supera el año natural.\n- No incluye situaciones especiales como trabajadores autónomos (RETA), empleadas del hogar ni regímenes especiales de la SS.\n- El subsidio máximo de IT está topado por las bases máximas de cotización (14.000€/mes aprox. en 2026).\n- La duración máxima de la IT por contingencias comunes es de **365 días**, prorrogables hasta **545 días**.",
+  "faq": [
+    {
+      "question": "¿Cuánto cobro los primeros tres días de baja en España?",
+      "answer": "Por norma general, la Seguridad Social no abona subsidio durante los días 1 a 3 de una baja por enfermedad común o accidente no laboral. Sin embargo, muchos convenios colectivos obligan a la empresa a pagar un complemento del 60% o incluso el 100% del salario esos días. Consulta tu convenio colectivo sectorial o de empresa."
+    },
+    {
+      "question": "¿Quién paga la baja laboral entre el día 4 y el día 15?",
+      "answer": "Del día 4 al 15 de baja por contingencias comunes, el pago (60% de la base reguladora diaria) corre a cargo de la empresa, aunque técnicamente lo adelanta a cuenta de la Seguridad Social. A partir del día 16, la Seguridad Social (o la mutua colaboradora) asume el pago directamente."
+    },
+    {
+      "question": "¿Cuál es la base reguladora y cómo se calcula?",
+      "answer": "La base reguladora diaria es la base de cotización del mes anterior a la baja dividida entre 30. Si tienes pagas extras no prorrateadas, se suma la parte proporcional de esas extras al cálculo anual y se divide entre 365. Esta calculadora simplifica usando el salario bruto mensual y el número de pagas anuales."
+    },
+    {
+      "question": "¿Desde cuándo se cobra el 75% en la baja por enfermedad común?",
+      "answer": "El subsidio sube al 75% de la base reguladora diaria a partir del **día 21** de baja por contingencias comunes (enfermedad común o accidente no laboral). Entre los días 4 y 20 se aplica el 60%."
+    },
+    {
+      "question": "¿Qué ocurre si la baja es por accidente laboral o enfermedad profesional?",
+      "answer": "En contingencias profesionales (accidente de trabajo o enfermedad profesional), el subsidio es del **75% de la base reguladora desde el primer día**, incluido el día del accidente. Lo gestiona la mutua colaboradora de la empresa."
+    },
+    {
+      "question": "¿Pago cotizaciones a la Seguridad Social mientras estoy de baja?",
+      "answer": "Sí. Durante la incapacidad temporal, el trabajador sigue obligado a cotizar a la Seguridad Social. La cuota del trabajador (6,35% sobre la base de cotización) se descuenta del subsidio. La empresa también sigue cotizando por su parte."
+    },
+    {
+      "question": "¿Tributa la baja laboral en el IRPF?",
+      "answer": "Sí. El subsidio de incapacidad temporal tributa como **rendimiento del trabajo** en el IRPF. Se aplica la retención que corresponda según tus circunstancias personales. El pagador (empresa o Seguridad Social) te practicará la retención correspondiente."
+    },
+    {
+      "question": "¿Cuánto tiempo puede durar una baja laboral en España?",
+      "answer": "La IT por contingencias comunes puede durar hasta **365 días**, prorrogables por otros 180 días más (total 545 días) cuando se prevé curación. Transcurrido ese plazo, el INSS puede prorrogar, declarar la incapacidad permanente o dar de alta al trabajador."
+    },
+    {
+      "question": "¿Puede mi empresa mejorar lo que paga la Seguridad Social?",
+      "answer": "Sí. La empresa puede mejorar voluntariamente el subsidio de IT o estar obligada a ello por convenio colectivo. Es habitual que los convenios establezcan complementos hasta el 100% del salario desde el primer día. Revisa siempre tu convenio aplicable."
+    },
+    {
+      "question": "¿Esta calculadora sirve para autónomos?",
+      "answer": "No. Los trabajadores autónomos (RETA) tienen un régimen propio: cobran el 60% de la base reguladora desde el cuarto día de baja (o desde el primer día si la causa es accidente laboral o enfermedad profesional) y deben seguir pagando sus cuotas de autónomo salvo que tengan contratada cobertura específica. Próximamente publicaremos una calculadora específica para autónomos."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Seguridad Social - Incapacidad Temporal: prestación",
+      "url": "https://www.seg-social.es/wps/portal/wss/internet/Trabajadores/PrestacionesPensionesContribuyentes/10938/10941",
+      "publisher": "Ministerio de Inclusión, Seguridad Social y Migraciones",
+      "date": "2026"
+    },
+    {
+      "name": "AEAT - Rendimientos del trabajo: prestaciones de la SS",
+      "url": "https://sede.agenciatributaria.gob.es/Sede/Ayuda/ManualIRPF/10_rendimientos_trabajo/10_2_rendimientos_trabajo.html",
+      "publisher": "Agencia Estatal de Administración Tributaria (AEAT)",
+      "date": "2026"
+    },
+    {
+      "name": "BOE - Real Decreto Legislativo 8/2015, Ley General de la Seguridad Social (art. 169-176)",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11724",
+      "publisher": "Boletín Oficial del Estado",
+      "date": "2026"
+    },
+    {
+      "name": "Seguridad Social - Cuadro de cotización 2026",
+      "url": "https://www.seg-social.es/wps/portal/wss/internet/Trabajadores/CotizacionRecaudacionTrabajadores/10721/10726",
+      "publisher": "Tesorería General de la Seguridad Social (TGSS)",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "source": "Tesorería General de la Seguridad Social / AEAT",
+    "sourceUrl": "https://www.seg-social.es/wps/portal/wss/internet/Trabajadores/CotizacionRecaudacionTrabajadores/10721/10726",
+    "updateType": "manual",
+    "notes": "Revisar porcentajes de subsidio IT, tipos de cotización y bases máximas/mínimas cada enero al publicarse la Ley de Presupuestos o el Real Decreto de cotizaciones."
+  },
+  "lastReviewed": "2026-04-28"
+}
