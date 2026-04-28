@@ -6,14 +6,17 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 
+const localeModules = import.meta.glob<any>('../../content/calcs-cl/*.json', { eager: true });
 const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
-const calcs = Object.values(mainModules)
+const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m);
+const audienceFiltered = Object.values(mainModules)
   .map((m: any) => m.default || m)
   .filter((c: any) => c.audience === 'CL');
+const calcs = [...localeCalcs, ...audienceFiltered];
 
+const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
 function calcUrl(c: any): string {
-  // /co y /cl no tienen calcs locale: todas vienen de calcs/, URL en root
-  return `/${c.slug}`;
+  return localeSlugs.has(c.slug) ? `/cl/${c.slug}` : `/${c.slug}`;
 }
 
 const byCategory: Record<string, any[]> = {};
