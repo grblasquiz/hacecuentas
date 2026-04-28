@@ -3,7 +3,7 @@
   "title": "CET Empréstimo Pessoal: Custo Efetivo Total 2026 | Hacé Cuentas",
   "h1": "CET do Empréstimo Pessoal: Custo Efetivo Total Anual",
   "description": "Calcule o CET (Custo Efetivo Total) de empréstimo pessoal em 2026 incluindo juros, IOF, tarifas e seguro prestamista.",
-  "category": "fiscal",
+  "category": "impuestos",
   "icon": "💳",
   "formulaId": "cet-emprestimo-pessoal",
   "audience": "br",
@@ -29,21 +29,95 @@
     "Negociar com o gerente mostrando a diferença entre juros e CET."
   ],
   "fields": [
-    { "id": "valorLiberado", "label": "Valor do empréstimo contratado (R$)", "type": "number", "required": true, "placeholder": "Ex: 10000", "min": 0, "step": 0.01, "help": "Valor total do empréstimo antes dos descontos." },
-    { "id": "parcelaMensal", "label": "Valor da parcela (R$)", "type": "number", "required": true, "placeholder": "Ex: 300", "min": 0, "step": 0.01 },
-    { "id": "numeroParcelas", "label": "Número de parcelas", "type": "number", "required": true, "placeholder": "Ex: 48", "min": 1, "step": 1 },
-    { "id": "iofValor", "label": "IOF total retido (R$)", "type": "number", "required": false, "placeholder": "Ex: 300", "min": 0, "step": 0.01, "help": "IOF 0,38% fixo + 0,0082%/dia (máx 3% aa). Somado no CET do contrato." },
-    { "id": "tarifas", "label": "Tarifas administrativas (R$)", "type": "number", "required": false, "placeholder": "Ex: 50", "min": 0, "step": 0.01 },
-    { "id": "seguros", "label": "Seguro prestamista (R$)", "type": "number", "required": false, "placeholder": "Ex: 200", "min": 0, "step": 0.01, "help": "Seguro opcional — questione se vale a pena." }
+    {
+      "id": "valorLiberado",
+      "label": "Valor do empréstimo contratado (R$)",
+      "type": "number",
+      "required": true,
+      "placeholder": "Ex: 10000",
+      "min": 0,
+      "step": 0.01,
+      "help": "Valor total do empréstimo antes dos descontos."
+    },
+    {
+      "id": "parcelaMensal",
+      "label": "Valor da parcela (R$)",
+      "type": "number",
+      "required": true,
+      "placeholder": "Ex: 300",
+      "min": 0,
+      "step": 0.01
+    },
+    {
+      "id": "numeroParcelas",
+      "label": "Número de parcelas",
+      "type": "number",
+      "required": true,
+      "placeholder": "Ex: 48",
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "iofValor",
+      "label": "IOF total retido (R$)",
+      "type": "number",
+      "required": false,
+      "placeholder": "Ex: 300",
+      "min": 0,
+      "step": 0.01,
+      "help": "IOF 0,38% fixo + 0,0082%/dia (máx 3% aa). Somado no CET do contrato."
+    },
+    {
+      "id": "tarifas",
+      "label": "Tarifas administrativas (R$)",
+      "type": "number",
+      "required": false,
+      "placeholder": "Ex: 50",
+      "min": 0,
+      "step": 0.01
+    },
+    {
+      "id": "seguros",
+      "label": "Seguro prestamista (R$)",
+      "type": "number",
+      "required": false,
+      "placeholder": "Ex: 200",
+      "min": 0,
+      "step": 0.01,
+      "help": "Seguro opcional — questione se vale a pena."
+    }
   ],
   "outputs": [
-    { "id": "cetAnual", "label": "CET anual", "format": "text", "primary": true },
-    { "id": "cetMensal", "label": "CET mensal" },
-    { "id": "totalPago", "label": "Total a pagar" },
-    { "id": "custoTotal", "label": "Custo total (vs líquido recebido)" },
-    { "id": "jurosPagos", "label": "Juros pagos" },
-    { "id": "encargosExtras", "label": "Encargos extras (IOF + tarifas + seguros)" },
-    { "id": "resumen", "label": "Resumo" }
+    {
+      "id": "cetAnual",
+      "label": "CET anual",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "cetMensal",
+      "label": "CET mensal"
+    },
+    {
+      "id": "totalPago",
+      "label": "Total a pagar"
+    },
+    {
+      "id": "custoTotal",
+      "label": "Custo total (vs líquido recebido)"
+    },
+    {
+      "id": "jurosPagos",
+      "label": "Juros pagos"
+    },
+    {
+      "id": "encargosExtras",
+      "label": "Encargos extras (IOF + tarifas + seguros)"
+    },
+    {
+      "id": "resumen",
+      "label": "Resumo"
+    }
   ],
   "dataUpdate": {
     "frequency": "yearly",
@@ -66,20 +140,56 @@
   },
   "explanation": "## Como se calcula\n\nO CET é a **Taxa Interna de Retorno** (TIR) do fluxo de caixa real:\n\n- Tempo 0: você recebe `valor_liberado − IOF − tarifas − seguros` (líquido)\n- Tempo 1 a n: você paga `parcela` todo mês\n\nÉ a taxa `i` que satisfaz:\n\n`valor_líquido = parcela × [1 − (1 + i)^(-n)] / i`\n\nResolvida por **bisseção numérica** (não tem fórmula fechada).\n\n`CET_Anual = (1 + CET_Mensal)^12 − 1`\n\n## Componentes do CET\n\n| Componente | Natureza |\n|---|---|\n| Juros contratuais | Explícito no contrato |\n| IOF adicional | 0,38% sobre valor financiado |\n| IOF diário | 0,0082%/dia (máx 3% aa) |\n| Tarifa de cadastro | Fixa, paga no início |\n| Seguro prestamista | Opcional, inflaciona o CET |\n| Avaliação de imóvel | (crédito imobiliário) |\n\n## Por que o CET é sempre maior que o juros nominal?\n\nPorque juros nominais escondem:\n\n- IOF retido na origem (reduz o valor líquido recebido)\n- Tarifa de cadastro\n- Seguros empurrados\n- Capitalização mensal\n\nExemplo típico: banco anuncia **1,99% ao mês** → CET real pode ser **32% ao ano** (=~2,3% am efetivo).\n\n## Comparação 2026: modalidades de crédito\n\n| Modalidade | CET típico (% aa) |\n|---|---|\n| Rotativo cartão (teto Lei 14.690) | 150-180% |\n| Cheque especial | 150-170% |\n| Empréstimo pessoal | 40-80% |\n| Crédito imobiliário garantia | 15-25% |\n| Consignado público | 18-25% |\n| Consignado privado INSS | 22-30% |\n\n## Fontes\n\n- Resolução CMN 3.517/2007 (CET obrigatório)\n- BCB — Portal do Cidadão\n- Decreto 6.306/2007 (IOF crédito)",
   "faq": [
-    { "q": "O que é CET?", "a": "Custo Efetivo Total: a taxa real do empréstimo incluindo juros + IOF + tarifas + seguros. Obrigatória desde 2008 (Resolução CMN 3.517/2007)." },
-    { "q": "Por que o CET é maior que a taxa de juros?", "a": "Porque inclui tudo: IOF 0,38% + IOF diário + tarifa de cadastro + seguro prestamista. Um juros 'de 2% am' pode virar CET de 40% aa com esses adicionais." },
-    { "q": "O banco é obrigado a mostrar o CET?", "a": "Sim. Pela Resolução CMN 3.517/2007, o banco deve informar o CET de forma destacada no contrato e na publicidade de crédito." },
-    { "q": "O que é seguro prestamista?", "a": "Seguro opcional que cobre parcelas em caso de morte/invalidez. Pode ser útil mas encarece o CET. Pergunte se é realmente obrigatório ou apenas recomendado." },
-    { "q": "Posso recusar o seguro prestamista?", "a": "Sim, a contratação é opcional. Bancos às vezes oferecem taxa menor com o seguro — compare os dois CETs." },
-    { "q": "Como calcular o CET à mão?", "a": "Não tem fórmula fechada. É a TIR do fluxo (valor líquido recebido vs parcelas). Use calculadora financeira (HP-12C: f CLX, entradas, função IRR) ou essa nossa calculadora online." },
-    { "q": "Qual é um CET aceitável em empréstimo pessoal?", "a": "Em 2026, entre 25% e 60% ao ano é típico em bancos tradicionais. Fintechs (Nubank, Banco Inter, C6) chegam a 20-40%. Consignado fica em 18-30%." },
-    { "q": "CET inclui o IOF diário de 0,0082%?", "a": "Sim. O IOF de crédito tem duas partes: 0,38% adicional (uma vez) + 0,0082% ao dia (cumulativo até 3% ao ano). Ambos entram no CET obrigatório." }
+    {
+      "q": "O que é CET?",
+      "a": "Custo Efetivo Total: a taxa real do empréstimo incluindo juros + IOF + tarifas + seguros. Obrigatória desde 2008 (Resolução CMN 3.517/2007)."
+    },
+    {
+      "q": "Por que o CET é maior que a taxa de juros?",
+      "a": "Porque inclui tudo: IOF 0,38% + IOF diário + tarifa de cadastro + seguro prestamista. Um juros 'de 2% am' pode virar CET de 40% aa com esses adicionais."
+    },
+    {
+      "q": "O banco é obrigado a mostrar o CET?",
+      "a": "Sim. Pela Resolução CMN 3.517/2007, o banco deve informar o CET de forma destacada no contrato e na publicidade de crédito."
+    },
+    {
+      "q": "O que é seguro prestamista?",
+      "a": "Seguro opcional que cobre parcelas em caso de morte/invalidez. Pode ser útil mas encarece o CET. Pergunte se é realmente obrigatório ou apenas recomendado."
+    },
+    {
+      "q": "Posso recusar o seguro prestamista?",
+      "a": "Sim, a contratação é opcional. Bancos às vezes oferecem taxa menor com o seguro — compare os dois CETs."
+    },
+    {
+      "q": "Como calcular o CET à mão?",
+      "a": "Não tem fórmula fechada. É a TIR do fluxo (valor líquido recebido vs parcelas). Use calculadora financeira (HP-12C: f CLX, entradas, função IRR) ou essa nossa calculadora online."
+    },
+    {
+      "q": "Qual é um CET aceitável em empréstimo pessoal?",
+      "a": "Em 2026, entre 25% e 60% ao ano é típico em bancos tradicionais. Fintechs (Nubank, Banco Inter, C6) chegam a 20-40%. Consignado fica em 18-30%."
+    },
+    {
+      "q": "CET inclui o IOF diário de 0,0082%?",
+      "a": "Sim. O IOF de crédito tem duas partes: 0,38% adicional (uma vez) + 0,0082% ao dia (cumulativo até 3% ao ano). Ambos entram no CET obrigatório."
+    }
   ],
   "sources": [
-    { "name": "Resolução CMN 3.517/2007", "url": "https://www.bcb.gov.br/estabilidadefinanceira/cet" },
-    { "name": "Banco Central — Portal Crédito", "url": "https://www.bcb.gov.br/cidadaniafinanceira" },
-    { "name": "Decreto 6.306/2007 (IOF)", "url": "https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/decreto/d6306.htm" },
-    { "name": "Receita Federal", "url": "https://www.gov.br/receitafederal/pt-br" }
+    {
+      "name": "Resolução CMN 3.517/2007",
+      "url": "https://www.bcb.gov.br/estabilidadefinanceira/cet"
+    },
+    {
+      "name": "Banco Central — Portal Crédito",
+      "url": "https://www.bcb.gov.br/cidadaniafinanceira"
+    },
+    {
+      "name": "Decreto 6.306/2007 (IOF)",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/decreto/d6306.htm"
+    },
+    {
+      "name": "Receita Federal",
+      "url": "https://www.gov.br/receitafederal/pt-br"
+    }
   ],
   "relatedSlugs": [
     "juros-rotativo-cartao-credito-maximo-8",
@@ -88,9 +198,21 @@
     "previdencia-pgbl-vs-vgbl-comparador"
   ],
   "howToSteps": [
-    { "name": "Informe valor e parcelas", "text": "Valor contratado, parcela mensal e quantas parcelas." },
-    { "name": "Adicione IOF, tarifas e seguros", "text": "Consulte a planilha de encargos do contrato. Não pule — é onde o CET explode." },
-    { "name": "Calcule e compare", "text": "A calculadora aplica a TIR do fluxo e devolve CET mensal e anual." },
-    { "name": "Use para comparar bancos", "text": "CET é a única métrica justa. Não compare 'juros nominal' entre ofertas diferentes." }
+    {
+      "name": "Informe valor e parcelas",
+      "text": "Valor contratado, parcela mensal e quantas parcelas."
+    },
+    {
+      "name": "Adicione IOF, tarifas e seguros",
+      "text": "Consulte a planilha de encargos do contrato. Não pule — é onde o CET explode."
+    },
+    {
+      "name": "Calcule e compare",
+      "text": "A calculadora aplica a TIR do fluxo e devolve CET mensal e anual."
+    },
+    {
+      "name": "Use para comparar bancos",
+      "text": "CET é a única métrica justa. Não compare 'juros nominal' entre ofertas diferentes."
+    }
   ]
 }

@@ -291,7 +291,6 @@ const prio = (path: string, priority: string, changefreq: string, dynamic = fals
 const priorityUrls: Url[] = [
   prio('/',                                  '1.0',  'daily',  true),
   prio('/guias',                             '0.95', 'weekly'),
-  prio('/buscar',                            '0.85', 'monthly'),
   prio('/cambio-de-monedas',                 '0.95', 'hourly', true),
   prio('/cotizacion-cripto',                 '0.95', 'hourly', true),
   prio('/inflacion-argentina',               '0.95', 'daily',  true),
@@ -379,7 +378,6 @@ sitemaps.push({
   name: 'sitemap-core.xml',
   urls: [
     core('/',                                    '1.0',  'daily',   true),
-    core('/buscar',                              '0.7',  'monthly'),
     core('/comparador-plazo-fijo',               '0.85', 'daily',   true),
     core('/valores-bcra',                        '0.85', 'daily',   true),
     core('/cambio-de-monedas',                   '0.95', 'hourly',  true),
