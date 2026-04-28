@@ -1,0 +1,260 @@
+{
+  "slug": "calculadora-13-salario-liquido-bruto-clt",
+  "title": "Calculadora 13° Salário Líquido e Bruto CLT 2026 | Hacé Cuentas",
+  "h1": "Calculadora 13° Salário Líquido CLT",
+  "description": "Calcule o 13° salário líquido e bruto CLT 2026 com INSS e IRRF. Estime 1ª e 2ª parcela com descontos proporcionais por meses trabalhados.",
+  "category": "financas",
+  "audience": "global",
+  "icon": "💰",
+  "formulaId": "13-salario-liquido-bruto-clt",
+  "intro": "O **13° salário** (gratificação natalina) é um direito garantido pela CLT a todo trabalhador com carteira assinada. A **1ª parcela** (50% do bruto proporcional) deve ser paga até 30 de novembro, sem descontos de INSS ou IR. A **2ª parcela** é paga até 20 de dezembro e sofre desconto de **INSS** e **IRRF**. Se você não trabalhou o ano completo, o valor é proporcional aos meses trabalhados (mínimo 15 dias no mês conta como mês cheio).",
+  "keyTakeaway": "Para um salário de R$ 5.000 com 12 meses trabalhados e sem dependentes, o 13° líquido em 2026 fica em torno de R$ 4.300, considerando INSS de 9% e IRRF da tabela progressiva.",
+  "useCases": [
+    "Planejar as finanças de fim de ano com o valor exato do 13°",
+    "Verificar se os descontos de INSS e IR estão corretos no holerite",
+    "Calcular o 13° proporcional para quem foi admitido no meio do ano",
+    "Estimar o valor da 1ª e 2ª parcela separadamente",
+    "Conferir o impacto de dependentes do IR no valor líquido recebido",
+    "Comparar o líquido do 13° antes de negociar rescisão ou férias"
+  ],
+  "fields": [
+    {
+      "id": "salario_bruto",
+      "label": "Salário Bruto Mensal (R$)",
+      "type": "number",
+      "placeholder": "5000",
+      "default": 5000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "meses_trabalhados",
+      "label": "Meses Trabalhados no Ano",
+      "type": "select",
+      "options": [
+        {
+          "value": "1",
+          "label": "1 mês"
+        },
+        {
+          "value": "2",
+          "label": "2 meses"
+        },
+        {
+          "value": "3",
+          "label": "3 meses"
+        },
+        {
+          "value": "4",
+          "label": "4 meses"
+        },
+        {
+          "value": "5",
+          "label": "5 meses"
+        },
+        {
+          "value": "6",
+          "label": "6 meses"
+        },
+        {
+          "value": "7",
+          "label": "7 meses"
+        },
+        {
+          "value": "8",
+          "label": "8 meses"
+        },
+        {
+          "value": "9",
+          "label": "9 meses"
+        },
+        {
+          "value": "10",
+          "label": "10 meses"
+        },
+        {
+          "value": "11",
+          "label": "11 meses"
+        },
+        {
+          "value": "12",
+          "label": "12 meses (ano completo)"
+        }
+      ],
+      "default": "12",
+      "required": true
+    },
+    {
+      "id": "dependentes",
+      "label": "Número de Dependentes (IR)",
+      "type": "select",
+      "options": [
+        {
+          "value": "0",
+          "label": "Nenhum"
+        },
+        {
+          "value": "1",
+          "label": "1 dependente"
+        },
+        {
+          "value": "2",
+          "label": "2 dependentes"
+        },
+        {
+          "value": "3",
+          "label": "3 dependentes"
+        },
+        {
+          "value": "4",
+          "label": "4 dependentes"
+        },
+        {
+          "value": "5",
+          "label": "5 ou mais dependentes"
+        }
+      ],
+      "default": "0",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "decimo_terceiro_bruto",
+      "label": "13° Salário Bruto Proporcional",
+      "primary": true,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "primeira_parcela",
+      "label": "1ª Parcela (até 30/nov) — sem descontos",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "inss_desconto",
+      "label": "Desconto INSS (2ª parcela)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "base_irrf",
+      "label": "Base de Cálculo IRRF",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "irrf_desconto",
+      "label": "Desconto IRRF (2ª parcela)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "segunda_parcela",
+      "label": "2ª Parcela Líquida (até 20/dez)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "liquido_total",
+      "label": "13° Salário Líquido Total",
+      "primary": true,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "aliquota_efetiva_irrf",
+      "label": "Alíquota Efetiva IRRF",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "detalhamento",
+      "label": "Detalhamento",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Como funciona o cálculo do 13° Salário\n\nO 13° salário corresponde a **1/12 do salário bruto por mês trabalhado** no ano de referência. Meses com pelo menos 15 dias de trabalho contam como mês cheio (art. 1°, Lei 4.090/1962).\n\n### Fórmula do 13° Bruto Proporcional\n\n```\n13° Bruto = Salário Bruto × (Meses Trabalhados ÷ 12)\n```\n\n### 1ª Parcela\n\nCorresponde a **50% do 13° bruto proporcional**, paga até 30 de novembro (ou nas férias, a pedido do empregado). **Não sofre desconto de INSS nem de IRRF.**\n\n```\n1ª Parcela = 13° Bruto × 0,50\n```\n\n### Desconto INSS — Tabela Progressiva 2026\n\nO INSS incide sobre o valor **integral** do 13° bruto usando a tabela progressiva (Portaria MPS/MF 1.716/2024 e atualizações 2026):\n\n| Faixa de salário (R$)     | Alíquota |\n|--------------------------|----------|\n| Até R$ 1.518,00          | 7,5%     |\n| R$ 1.518,01 – R$ 2.793,88 | 9,0%    |\n| R$ 2.793,89 – R$ 4.190,83 | 12,0%   |\n| R$ 4.190,84 – R$ 8.157,41 | 14,0%   |\n| Acima de R$ 8.157,41     | Teto: R$ 908,86 |\n\nO cálculo é **progressivo** (cada faixa paga sua alíquota apenas sobre o valor dentro dela).\n\n### Desconto IRRF — Tabela Mensal 2026\n\nO IRRF do 13° é calculado **separadamente** da folha mensal, sobre a base:\n\n```\nBase IRRF = 13° Bruto − INSS − (Nº Dependentes × R$ 189,59)\n```\n\nTabela IRRF 2026 (Instrução Normativa RFB 2.141/2023 atualizada):\n\n| Base de Cálculo (R$)       | Alíquota | Parcela a Deduzir |\n|---------------------------|----------|-------------------|\n| Até R$ 2.259,20           | Isento   | —                 |\n| R$ 2.259,21 – R$ 2.826,65 | 7,5%     | R$ 169,44         |\n| R$ 2.826,66 – R$ 3.751,05 | 15,0%    | R$ 381,44         |\n| R$ 3.751,06 – R$ 4.664,68 | 22,5%    | R$ 662,77         |\n| Acima de R$ 4.664,68      | 27,5%    | R$ 896,00         |\n\n### 2ª Parcela Líquida\n\n```\n2ª Parcela = (13° Bruto × 0,50) − INSS − IRRF\n```\n\nObs: tecnicamente INSS e IRRF incidem sobre o bruto total, mas são descontados apenas na 2ª parcela.\n\n### Exemplo Prático\n\nSalário bruto R$ 5.000, 12 meses, 0 dependentes:\n- **13° Bruto:** R$ 5.000,00\n- **1ª Parcela:** R$ 2.500,00 (sem descontos)\n- **INSS progressivo:** ≈ R$ 476,35\n- **Base IRRF:** R$ 5.000 − R$ 476,35 = R$ 4.523,65 → alíquota 22,5% − R$ 662,77 = **≈ R$ 354,05**\n- **2ª Parcela líquida:** R$ 2.500 − R$ 476,35 − R$ 354,05 ≈ **R$ 1.669,60**\n- **Líquido total:** R$ 2.500 + R$ 1.669,60 ≈ **R$ 4.169,60**\n\n### Limitações\n\n- Esta calculadora não considera **pensão alimentícia**, **previdência complementar** (VGBL/PGBL) ou outros descontos específicos.\n- Empregadas domésticas seguem as mesmas alíquotas de INSS como seguradas.\n- Valores de faixas podem ser reajustados por portaria ministerial durante 2026; confirme sempre com seu RH ou contador.\n- O cálculo não abrange trabalhadores autônomos (MEI, PJ), somente CLT.",
+  "faq": [
+    {
+      "q": "Quando o 13° salário é pago?",
+      "a": "A 1ª parcela deve ser paga até 30 de novembro. A 2ª parcela, com os descontos de INSS e IR, deve ser paga até 20 de dezembro. O empregador pode antecipar a 1ª parcela junto com as férias, desde que o empregado solicite até janeiro do mesmo ano."
+    },
+    {
+      "q": "A 1ª parcela tem desconto de INSS ou IR?",
+      "a": "Não. A 1ª parcela equivale a 50% do salário bruto proporcional e é paga sem qualquer desconto de INSS ou Imposto de Renda. Os descontos incidem apenas na 2ª parcela, calculados sobre o valor integral do 13° bruto."
+    },
+    {
+      "q": "Como calcular o 13° proporcional para quem entrou no meio do ano?",
+      "a": "Divide-se o salário bruto por 12 e multiplica pelo número de meses trabalhados. Meses com pelo menos 15 dias de trabalho contam como mês inteiro. Exemplo: entrou em 1° de julho → 6 meses → 13° = Salário × 6/12."
+    },
+    {
+      "q": "Como os dependentes reduzem o Imposto de Renda do 13°?",
+      "a": "Cada dependente cadastrado na Receita Federal permite deduzir R$ 189,59 da base de cálculo do IRRF em 2026. Com 2 dependentes, a dedução é de R$ 379,18. Isso pode reduzir a alíquota efetiva aplicada ou até isentar o trabalhador do IR."
+    },
+    {
+      "q": "O INSS do 13° é calculado sobre o valor bruto integral ou sobre a metade?",
+      "a": "O INSS incide sobre o valor **integral** do 13° bruto proporcional (não apenas sobre a metade), mas o desconto é realizado na 2ª parcela. O cálculo usa a tabela progressiva de 2026, com teto de contribuição em R$ 908,86."
+    },
+    {
+      "q": "Trabalhador demitido tem direito ao 13°?",
+      "a": "Sim. Em caso de demissão sem justa causa, o 13° proporcional aos meses trabalhados é pago nas verbas rescisórias. Em demissão por justa causa, o trabalhador perde o direito ao 13° proporcional. Pedido de demissão garante o pagamento normalmente."
+    },
+    {
+      "q": "O 13° salário conta para o FGTS?",
+      "a": "Sim. O empregador deve recolher 8% de FGTS sobre o valor bruto do 13° salário. Esse valor é depositado na conta vinculada do trabalhador no FGTS, assim como ocorre com a remuneração mensal regular."
+    },
+    {
+      "q": "Existe teto para o INSS no 13° salário em 2026?",
+      "a": "Sim. O teto do INSS para o 13° em 2026 é de R$ 908,86, correspondente ao salário máximo de contribuição de R$ 8.157,41. Quem recebe acima desse valor paga INSS apenas até o teto, independentemente do salário."
+    },
+    {
+      "q": "Qual a diferença entre alíquota nominal e alíquota efetiva do IR?",
+      "a": "A alíquota nominal é a da faixa em que a base de cálculo se enquadra (ex: 22,5%). A alíquota efetiva é o percentual real que incide sobre o total da base, já considerando a parcela a deduzir. Ela é sempre menor que a alíquota nominal e representa o custo real do IR."
+    },
+    {
+      "q": "O salário do mês de dezembro entra no cálculo do 13°?",
+      "a": "Não. O 13° é baseado na remuneração do ano completo (ou proporcional), mas o salário de dezembro é pago normalmente, separado do 13°. Os dois têm descontos calculados de forma independente: o 13° tem cálculo e tabelas próprios."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Lei nº 4.090/1962 — Institui a Gratificação de Natal",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/l4090.htm",
+      "publisher": "Presidência da República",
+      "date": "2026"
+    },
+    {
+      "name": "Tabela de Contribuição INSS 2026 — Previdência Social",
+      "url": "https://www.gov.br/previdencia/pt-br/assuntos/previdencia-social/contribuicao/tabela-de-contribuicao-mensal",
+      "publisher": "Ministério da Previdência Social",
+      "date": "2026"
+    },
+    {
+      "name": "Tabela Progressiva IRRF 2026 — Receita Federal",
+      "url": "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas/tabela-progressiva-para-o-calculo-mensal-do-imposto-sobre-a-renda-da-pessoa-fisica",
+      "publisher": "Receita Federal do Brasil",
+      "date": "2026"
+    },
+    {
+      "name": "Decreto nº 57.155/1965 — Regulamenta a Lei do 13° Salário",
+      "url": "https://www.planalto.gov.br/ccivil_03/decreto/d57155.htm",
+      "publisher": "Presidência da República",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Atualizar anualmente: faixas e alíquotas INSS (portaria MPS/MF), tabela progressiva IRRF (IN RFB), dedução por dependente e teto de contribuição previdenciária."
+  },
+  "lastReviewed": "2026-04-28"
+}

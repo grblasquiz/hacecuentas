@@ -1,0 +1,238 @@
+{
+  "slug": "calculadora-financiamento-imovel-prestacao-sac-price",
+  "title": "Financiamento Imóvel SAC vs Price 2026 | Hacé Cuentas",
+  "h1": "Financiamento Imóvel: SAC vs Price",
+  "description": "Calcule e compare prestações SAC e Price para financiamento imóvel. Veja 1ª e última parcela, total de juros e qual sistema é mais vantajoso para você.",
+  "category": "financas",
+  "audience": "global",
+  "icon": "🏠",
+  "formulaId": "financiamento-imovel-prestacao-sac-price",
+  "intro": "Ao financiar um imóvel no Brasil, você escolhe entre dois sistemas de amortização: **SAC** (prestação decrescente) ou **Price** (prestação fixa). A diferença no total de juros pagos pode ser de dezenas de milhares de reais. Esta calculadora usa a **taxa Caixa SBPE 2026 (~10,5% a.a.)** e projeta todas as parcelas, mostrando quanto você paga no início, no fim e ao total em cada sistema.",
+  "keyTakeaway": "No SAC, a 1ª parcela pode ser até 40% maior que a última; no Price, todas as parcelas são iguais, mas o total de juros pago costuma ser 15–25% maior que no SAC para prazos acima de 20 anos.",
+  "useCases": [
+    "Comparar quanto pagará no total pelo imóvel em cada sistema antes de assinar o contrato",
+    "Saber se sua renda comporta a 1ª parcela do SAC, que é a mais alta",
+    "Calcular o financiamento com entrada de 20%, 30% ou 50% do valor do imóvel",
+    "Estimar o impacto da TR sobre as prestações ao longo do prazo",
+    "Decidir entre prazo de 20, 25 ou 30 anos e seu efeito nos juros totais",
+    "Planejar a compra do primeiro imóvel com dados reais da Caixa Econômica Federal"
+  ],
+  "fields": [
+    {
+      "id": "property_value",
+      "label": "Valor do imóvel (R$)",
+      "type": "number",
+      "placeholder": "500000",
+      "default": 500000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "down_payment_pct",
+      "label": "Entrada (%)",
+      "type": "number",
+      "placeholder": "20",
+      "default": 20,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "term_years",
+      "label": "Prazo (anos)",
+      "type": "select",
+      "options": [
+        {
+          "value": "10",
+          "label": "10 anos"
+        },
+        {
+          "value": "15",
+          "label": "15 anos"
+        },
+        {
+          "value": "20",
+          "label": "20 anos"
+        },
+        {
+          "value": "25",
+          "label": "25 anos"
+        },
+        {
+          "value": "30",
+          "label": "30 anos"
+        },
+        {
+          "value": "35",
+          "label": "35 anos"
+        }
+      ],
+      "default": "30",
+      "required": true
+    },
+    {
+      "id": "annual_rate_pct",
+      "label": "Taxa de juros anual (%)",
+      "type": "number",
+      "placeholder": "10.5",
+      "default": 10.5,
+      "step": 0.05,
+      "required": true
+    },
+    {
+      "id": "tr_annual_pct",
+      "label": "TR estimada anual (%)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 0.05,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "financed_amount",
+      "label": "Valor financiado",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "sac_first_payment",
+      "label": "SAC — 1ª prestação",
+      "primary": true,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "sac_last_payment",
+      "label": "SAC — última prestação",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "sac_total_interest",
+      "label": "SAC — total de juros",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "sac_total_paid",
+      "label": "SAC — total pago",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "price_payment",
+      "label": "Price — prestação fixa",
+      "primary": true,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "price_total_interest",
+      "label": "Price — total de juros",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "price_total_paid",
+      "label": "Price — total pago",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "interest_difference",
+      "label": "Diferença de juros (Price − SAC)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "recommendation",
+      "label": "Recomendação",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Como funciona o cálculo\n\nO financiamento imobiliário no Brasil utiliza dois sistemas de amortização principais, ambos com correção pela **TR (Taxa Referencial)** no caso da Caixa Econômica Federal (SBPE/FGTS).\n\n---\n\n## Sistema SAC (Sistema de Amortização Constante)\n\nNo SAC, a **amortização mensal é constante**: o saldo devedor cai de forma linear. Os juros diminuem a cada mês porque incidem sobre um saldo menor.\n\n```\nAmortização mensal  = Valor financiado ÷ Número de meses (n)\nJuros do mês k      = Saldo devedor(k) × taxa_mensal\nPrestação do mês k  = Amortização + Juros(k)\n```\n\nOnde:\n- `taxa_mensal = (1 + taxa_anual)^(1/12) − 1`\n- `Saldo devedor(k) = Valor financiado − (k − 1) × Amortização`\n\n**Com TR:** o saldo é corrigido mensalmente: `Saldo_corrigido = Saldo × (1 + TR_mensal)`, onde `TR_mensal = (1 + TR_anual)^(1/12) − 1`.\n\n---\n\n## Sistema Price (Tabela Price / Amortização Francesa)\n\nNo Price, a **prestação é constante** durante todo o prazo. A amortização cresce mês a mês enquanto os juros diminuem.\n\n```\nPrestação fixa (PMT) = PV × [i × (1+i)^n] ÷ [(1+i)^n − 1]\n```\n\nOnde:\n- `PV` = valor financiado\n- `i` = taxa mensal\n- `n` = número de meses\n\nCom TR, a prestação é recalculada periodicamente, mas nesta calculadora usamos a TR estimada para projeção.\n\n---\n\n## Exemplo prático\n\nImóvel de **R$ 500.000**, entrada de **20%** (R$ 100.000), financiamento de R$ 400.000, prazo **30 anos** (360 meses), taxa **10,5% a.a.**, TR **0%**:\n\n| Indicador | SAC | Price |\n|---|---|---|\n| 1ª prestação | ~R$ 4.611 | ~R$ 3.659 |\n| Última prestação | ~R$ 1.113 | ~R$ 3.659 |\n| Total de juros | ~R$ 207.000 | ~R$ 317.200 |\n| Total pago | ~R$ 607.000 | ~R$ 717.200 |\n\n---\n\n## Quando NÃO usar esta calculadora / Limitações\n\n- **Não inclui** seguros obrigatórios (MIP e DFI), que somam 0,02%–0,04% ao mês sobre o saldo.\n- **Não inclui** taxas administrativas e tarifas de avaliação do imóvel.\n- A TR futura é **estimada** — o valor real é publicado mensalmente pelo Banco Central.\n- Para financiamentos pelo **FGTS (SFH)**, podem existir subsídios e condições diferentes das simuladas.\n- Esta calculadora é uma **projeção educacional**; consulte sempre o banco para a proposta oficial.",
+  "faq": [
+    {
+      "q": "Qual sistema é melhor, SAC ou Price?",
+      "a": "Depende da sua situação. O SAC costuma gerar menos juros totais (economia de 15–25% para prazos longos), mas exige maior capacidade de pagamento no início. Se sua renda está crescendo ou se pode pagar a 1ª parcela maior, o SAC é mais vantajoso financeiramente."
+    },
+    {
+      "q": "Qual é a taxa de juros da Caixa para financiamento imóvel em 2026?",
+      "a": "A taxa Caixa SBPE 2026 está em torno de 10,5% a.a. para imóveis residenciais com recursos próprios (fora do FGTS). A taxa efetiva pode variar conforme relacionamento com o banco, score e uso de conta-salário. Consulte a simulação oficial em caixa.gov.br."
+    },
+    {
+      "q": "O que é a TR e como ela afeta as prestações?",
+      "a": "A TR (Taxa Referencial) é definida mensalmente pelo Banco Central e corrige o saldo devedor nos contratos de financiamento habitacional da Caixa. Historicamente ficou próxima de zero entre 2017 e 2021, mas voltou a subir. Em 2025, ficou entre 0,05% e 0,10% ao mês. Uma TR de 2% a.a. pode elevar o total de juros em R$ 15.000 a R$ 40.000 em um financiamento de 30 anos."
+    },
+    {
+      "q": "A renda mínima exigida é calculada aqui?",
+      "a": "Não diretamente. A regra geral dos bancos é que a parcela não pode comprometer mais de 30% da renda familiar bruta. Divida a 1ª prestação do SAC (ou a prestação fixa do Price) por 0,30 para estimar a renda mínima necessária. Para o exemplo de R$ 400.000 em 30 anos (SAC): R$ 4.611 ÷ 0,30 ≈ R$ 15.370 de renda mínima."
+    },
+    {
+      "q": "Qual é o prazo máximo permitido no Brasil?",
+      "a": "Para financiamentos habitacionais no Brasil (SFH e SFI), o prazo máximo é de **35 anos (420 meses)**, conforme regras da Caixa Econômica Federal e do Banco Central. O prazo máximo pode ser limitado pela idade do mutuário (geralmente até 80 anos e 6 meses ao fim do contrato)."
+    },
+    {
+      "q": "O que é a entrada mínima exigida?",
+      "a": "Pelo SFH (Sistema Financeiro de Habitação), a entrada mínima é de **20% do valor do imóvel**. No SFI (imóveis acima do limite do SFH, que em 2026 é R$ 1.500.000), a entrada mínima pode ser de 30% ou mais, dependendo do banco."
+    },
+    {
+      "q": "Como os seguros MIP e DFI impactam as prestações?",
+      "a": "Os seguros obrigatórios (MIP: morte e invalidez; DFI: dano físico ao imóvel) são cobrados mensalmente sobre o saldo devedor, geralmente entre 0,02% e 0,04% ao mês. Para um saldo de R$ 400.000, isso representa R$ 80 a R$ 160 por mês apenas em seguros — valor que não está incluído nesta calculadora."
+    },
+    {
+      "q": "Vale a pena usar o FGTS para reduzir o saldo devedor?",
+      "a": "Sim, para contratos no SFH. O FGTS pode ser usado para amortização do saldo devedor ou para pagar até 80% das prestações por até 12 meses (a cada 2 anos). A amortização pelo FGTS reduz saldo e juros futuros — especialmente vantajosa no SAC, pois a amortização constante recomeça sobre um saldo menor."
+    },
+    {
+      "q": "Esta calculadora vale para financiamentos pelo Minha Casa Minha Vida?",
+      "a": "Parcialmente. O MCMV tem subsídios que reduzem o valor financiado e taxas de juros menores (3,5% a 8,16% a.a. conforme faixa de renda em 2026). Os sistemas SAC e Price se aplicam normalmente, mas o valor financiado efetivo é diferente. Recomendamos usar a simulação oficial em habitacao.gov.br para contratos MCMV."
+    },
+    {
+      "q": "A prestação do SAC pode subir ao longo do tempo?",
+      "a": "Sem TR, não — ela é sempre decrescente. Com TR positiva, a correção do saldo pode fazer as primeiras prestações oscilarem levemente para cima em meses de TR alta. Mas a tendência de longo prazo do SAC é sempre decrescente. No Price com TR, a prestação nominal pode subir, pois a prestação fixa é recalculada sobre o saldo corrigido."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Caixa Econômica Federal — Simulador Habitacional",
+      "url": "https://www.caixa.gov.br/voce/habitacao/financiamento-habitacional/Paginas/default.aspx",
+      "publisher": "Caixa Econômica Federal",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central do Brasil — Taxa Referencial (TR)",
+      "url": "https://www.bcb.gov.br/controleinflacao/taxareferencial",
+      "publisher": "Banco Central do Brasil",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central do Brasil — Resolução CMN 4.676/2018 (SFH)",
+      "url": "https://www.bcb.gov.br/estabilidadefinanceira/sfh",
+      "publisher": "Banco Central do Brasil",
+      "date": "2026"
+    },
+    {
+      "name": "Ministério das Cidades — Minha Casa Minha Vida 2026",
+      "url": "https://www.gov.br/cidades/pt-br/assuntos/habitacao/minha-casa-minha-vida",
+      "publisher": "Ministério das Cidades",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Atualizar taxa SBPE da Caixa anualmente (atualmente ~10,5% a.a.) e o limite do SFH (atualmente R$ 1.500.000). Verificar TR média publicada pelo Banco Central para ajustar o default."
+  },
+  "lastReviewed": "2026-04-28"
+}

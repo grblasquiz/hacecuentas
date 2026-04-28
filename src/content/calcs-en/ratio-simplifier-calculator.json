@@ -1,0 +1,188 @@
+{
+  "slug": "ratio-simplifier-calculator",
+  "title": "Ratio Calculator & Simplifier 2026 | Hacé Cuentas",
+  "h1": "Ratio Calculator & Simplifier",
+  "description": "Simplify any ratio A:B or A:B:C instantly. Calculate decimal value, percentage equivalent, and scale ratios to any target total. Fast, accurate, free.",
+  "category": "math",
+  "audience": "global",
+  "icon": "➗",
+  "formulaId": "ratio-simplifier-calculator",
+  "intro": "A ratio expresses the relative size of two or more quantities. Whether you're mixing concrete (3:2:1 cement:sand:gravel), scaling a recipe, or analyzing financial data, **unsimplified ratios hide the real relationship**. This calculator reduces any ratio to its simplest form using the Greatest Common Divisor (GCD), then shows the decimal value, percentage breakdown, and lets you scale to any target total.",
+  "keyTakeaway": "A ratio like 120:80 simplifies to 3:2 — scaled to a total of 100, that's 60:40. GCD-based reduction works for 2-part and 3-part ratios instantly.",
+  "useCases": [
+    "Simplify a 2-part or 3-part ratio to lowest terms for a math problem or homework",
+    "Find the decimal and percentage breakdown of ingredients in a recipe or mixture",
+    "Scale a ratio (e.g. 4:6) up or down to hit a specific total quantity (e.g. 500 units)",
+    "Compare financial ratios like debt-to-equity or current ratio in simplified form",
+    "Check aspect ratios for images, screens, or print layouts (e.g. 1920:1080 → 16:9)",
+    "Convert paint or chemical mixing ratios to precise quantities for a given batch size"
+  ],
+  "fields": [
+    {
+      "id": "a",
+      "label": "Part A",
+      "type": "number",
+      "placeholder": "4",
+      "default": 4,
+      "step": 0.001,
+      "required": true
+    },
+    {
+      "id": "b",
+      "label": "Part B",
+      "type": "number",
+      "placeholder": "6",
+      "default": 6,
+      "step": 0.001,
+      "required": true
+    },
+    {
+      "id": "c",
+      "label": "Part C (optional — leave 0 for 2-part ratio)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 0.001,
+      "required": false
+    },
+    {
+      "id": "scale_mode",
+      "label": "Scale to",
+      "type": "select",
+      "options": [
+        {
+          "value": "none",
+          "label": "No scaling"
+        },
+        {
+          "value": "total",
+          "label": "Target total (sum of parts)"
+        },
+        {
+          "value": "first",
+          "label": "Target value of Part A"
+        }
+      ],
+      "default": "none",
+      "required": true
+    },
+    {
+      "id": "scale_value",
+      "label": "Target value (used if scaling is enabled)",
+      "type": "number",
+      "placeholder": "100",
+      "default": 100,
+      "step": 0.001,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "simplified",
+      "label": "Simplified Ratio",
+      "primary": true,
+      "format": "text"
+    },
+    {
+      "id": "decimal_value",
+      "label": "Decimal Value (A ÷ B)",
+      "format": "decimal"
+    },
+    {
+      "id": "percentages",
+      "label": "Percentage Breakdown",
+      "format": "text"
+    },
+    {
+      "id": "scaled_ratio",
+      "label": "Scaled Ratio",
+      "format": "text"
+    },
+    {
+      "id": "equivalent_ratios",
+      "label": "Equivalent Ratios (×2, ×3, ×5, ×10)",
+      "format": "text"
+    },
+    {
+      "id": "gcd_used",
+      "label": "GCD Used",
+      "format": "integer"
+    }
+  ],
+  "explanation": "## How It Works\n\nA ratio compares quantities. Simplifying means dividing every part by the **Greatest Common Divisor (GCD)** — the largest integer that divides all parts evenly. For decimal inputs, the calculator first converts to integers by multiplying by the appropriate power of 10.\n\n## Formula\n\n```\n// Step 1: find GCD of two numbers (Euclidean algorithm)\ngcd(a, b) = b === 0 ? a : gcd(b, a % b)\n\n// Step 2: for three parts\ngcd3(a, b, c) = gcd(gcd(a, b), c)\n\n// Step 3: simplified parts\nA_simple = A / GCD\nB_simple = B / GCD\nC_simple = C / GCD   // only for 3-part ratios\n\n// Step 4: decimal value (2-part only)\ndecimal = A / B\n\n// Step 5: percentage breakdown\npctA = (A / sum) × 100\npctB = (B / sum) × 100\n// etc.\n\n// Step 6: scale to total T\nscaledA = (A / sum) × T\nscaledB = (B / sum) × T\n```\n\n## Worked Example\n\n**Input:** 120 : 80\n\n| Step | Calculation | Result |\n|------|-------------|--------|\n| GCD | gcd(120, 80) | 40 |\n| Simplified | 120÷40 : 80÷40 | **3 : 2** |\n| Decimal | 120 ÷ 80 | **1.5** |\n| Percentages | 120/200 = 60%, 80/200 = 40% | **60% : 40%** |\n| Scaled to 500 | (3/5)×500 : (2/5)×500 | **300 : 200** |\n\n**3-part example:** 6 : 9 : 15\n- GCD(6,9,15) = 3\n- Simplified: **2 : 3 : 5**\n- Percentages: 20% : 30% : 50%\n\n## Decimal Input Handling\n\nInputs like 2.5 : 1.5 are multiplied by 10 → 25 : 15, GCD = 5 → simplified **5 : 3**.\n\n## Limitations & When NOT to Apply\n\n- **Zero values:** A ratio with any part equal to 0 is undefined or degenerate. The calculator returns an error message.\n- **Negative values:** Ratios are defined for positive quantities only. Negative inputs are rejected.\n- **Irrational relationships:** If A and B share no common integer factor (e.g. 1 : √2), this integer GCD approach will report GCD = 1 and the ratio cannot be simplified further.\n- **Scaling precision:** When scaling to a non-divisible total (e.g. 3:2 to total 7), the results are decimal approximations — round to practical units as needed.\n- **Three-part vs. two-part:** The decimal value output (A÷B) is only meaningful for 2-part ratios.",
+  "faq": [
+    {
+      "q": "What is a ratio and how is it different from a fraction?",
+      "a": "A ratio compares two or more quantities (e.g. 3:2), while a fraction expresses one part over a whole (e.g. 3/5). The ratio 3:2 means for every 3 units of A there are 2 units of B. As a fraction of the total, A is 3/5 = 60%."
+    },
+    {
+      "q": "How does the GCD simplification work?",
+      "a": "The Greatest Common Divisor (GCD) is found using the Euclidean algorithm: repeatedly replace the larger number with the remainder when divided by the smaller, until the remainder is 0. Dividing all ratio parts by the GCD gives the simplest form."
+    },
+    {
+      "q": "Can I simplify a 3-part ratio like 6:9:15?",
+      "a": "Yes. The calculator finds GCD(6,9) = 3, then GCD(3,15) = 3. Dividing each part by 3 gives 2:3:5. The decimal output (A÷B) is omitted for 3-part ratios as it is not a single meaningful value."
+    },
+    {
+      "q": "What does 'scale to total' mean?",
+      "a": "It redistributes the simplified ratio so the parts add up to your target. For 3:2 scaled to total 100: A = (3/5)×100 = 60, B = (2/5)×100 = 40. Useful for recipes, mixtures, or budgets."
+    },
+    {
+      "q": "What does 'scale to Part A' mean?",
+      "a": "It fixes Part A at your target value and scales the other parts proportionally. For 3:2, if you want Part A = 150: multiplier = 150/3 = 50, so Part B = 2×50 = 100. Result: 150:100."
+    },
+    {
+      "q": "Why does 1920:1080 simplify to 16:9?",
+      "a": "GCD(1920, 1080) = 120. Dividing: 1920÷120 = 16, 1080÷120 = 9. This is the standard widescreen aspect ratio used by HD and 4K displays."
+    },
+    {
+      "q": "Can I use decimal inputs like 2.5:1.5?",
+      "a": "Yes. The calculator detects the maximum number of decimal places and multiplies all parts by the corresponding power of 10 (here ×10 → 25:15). Then it applies GCD normally. GCD(25,15) = 5, result: 5:3."
+    },
+    {
+      "q": "What equivalent ratios does the calculator show?",
+      "a": "It multiplies the simplified ratio by 2, 3, 5, and 10. For 3:2, equivalents are 6:4, 9:6, 15:10, and 30:20. All represent the same relationship — useful for scaling up without a calculator."
+    },
+    {
+      "q": "Is a ratio the same as odds (like in probability)?",
+      "a": "Odds express a ratio of favorable to unfavorable outcomes, so they use the same math. Odds of 3:2 mean 3 favorable to 2 unfavorable, which is 60% probability. This calculator simplifies odds ratios correctly."
+    },
+    {
+      "q": "What if both parts are already in simplest form?",
+      "a": "If GCD equals 1, the ratio is already fully simplified and no reduction is possible. The calculator will display GCD = 1 and show the original ratio as the simplified result."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Khan Academy — Ratios and Proportions",
+      "url": "https://www.khanacademy.org/math/cc-sixth-grade-math/cc-6th-ratios-prop",
+      "publisher": "Khan Academy",
+      "date": "2026"
+    },
+    {
+      "name": "NIST Digital Library of Mathematical Functions — Greatest Common Divisor",
+      "url": "https://dlmf.nist.gov/",
+      "publisher": "National Institute of Standards and Technology (NIST)",
+      "date": "2026"
+    },
+    {
+      "name": "Euclidean Algorithm — Wolfram MathWorld",
+      "url": "https://mathworld.wolfram.com/EuclideanAlgorithm.html",
+      "publisher": "Wolfram Research",
+      "date": "2026"
+    },
+    {
+      "name": "Common Core State Standards for Mathematics — Ratios and Proportional Relationships",
+      "url": "https://www.thecorestandards.org/Math/Content/6/RP/",
+      "publisher": "Common Core State Standards Initiative",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Pure mathematical calculator — no rates or regulatory values to update. Review if formula logic is extended to support more than 3 parts."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,231 @@
+{
+  "slug": "roth-vs-traditional-ira-calculator",
+  "title": "Roth vs Traditional IRA Calculator 2026 | Hacé Cuentas",
+  "h1": "Roth vs Traditional IRA Calculator",
+  "description": "Calculate and compare Roth vs Traditional IRA after-tax balances. Uses 2026 limits ($7,000 / $8,000), your tax rates, and expected return to show which account wins.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "🏦",
+  "formulaId": "roth-vs-traditional-ira-calculator",
+  "intro": "Choosing between a **Roth IRA** and a **Traditional IRA** is one of the most impactful retirement decisions you can make. The difference comes down to *when* you pay taxes: now (Roth) or later (Traditional). This calculator projects both accounts to retirement, applies the appropriate tax, and tells you which option leaves more money in your pocket.",
+  "keyTakeaway": "With a $7,000/year contribution, a 7% return, 30 years of growth, and a drop from a 24% to 22% tax rate, a Roth IRA can yield over $15,000 more after tax than a Traditional IRA.",
+  "useCases": [
+    "Deciding which IRA type to open for the first time",
+    "Evaluating whether to convert a Traditional IRA to Roth",
+    "Planning contributions when you expect a lower tax rate in retirement",
+    "Comparing outcomes when current and retirement tax rates are equal",
+    "Maximizing after-tax wealth for early retirees or FIRE planners",
+    "Illustrating the long-term value of tax-free vs tax-deferred compounding"
+  ],
+  "fields": [
+    {
+      "id": "current_age",
+      "label": "Current Age",
+      "type": "number",
+      "placeholder": "30",
+      "default": 30,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "retirement_age",
+      "label": "Retirement Age",
+      "type": "number",
+      "placeholder": "65",
+      "default": 65,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "annual_contribution",
+      "label": "Annual Contribution ($)",
+      "type": "number",
+      "placeholder": "7000",
+      "default": 7000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "current_tax_rate",
+      "label": "Current Marginal Tax Rate (%)",
+      "type": "number",
+      "placeholder": "22",
+      "default": 22,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "retirement_tax_rate",
+      "label": "Expected Retirement Tax Rate (%)",
+      "type": "number",
+      "placeholder": "22",
+      "default": 22,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "annual_return",
+      "label": "Expected Annual Return (%)",
+      "type": "number",
+      "placeholder": "7",
+      "default": 7,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "age_50_or_older",
+      "label": "Are you age 50 or older?",
+      "type": "radio",
+      "options": [
+        {
+          "value": "no",
+          "label": "No (limit: $7,000)"
+        },
+        {
+          "value": "yes",
+          "label": "Yes — catch-up (limit: $8,000)"
+        }
+      ],
+      "default": "no",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "roth_balance",
+      "label": "Roth IRA Balance at Retirement (after tax)",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "traditional_balance_after_tax",
+      "label": "Traditional IRA Balance at Retirement (after tax)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "traditional_balance_pretax",
+      "label": "Traditional IRA Pre-Tax Balance",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "tax_savings_now",
+      "label": "Traditional IRA Tax Savings (contributed years)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "difference",
+      "label": "Difference (Roth minus Traditional, after tax)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "recommendation",
+      "label": "Recommendation",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "years_of_growth",
+      "label": "Years of Growth",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "contribution_used",
+      "label": "Annual Contribution Used (IRS-capped)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    }
+  ],
+  "explanation": "## How It Works\n\nBoth a Roth IRA and a Traditional IRA grow **tax-deferred** inside the account, but they differ at contribution and withdrawal time:\n\n- **Roth IRA**: Contributions are made with *after-tax* dollars. Qualified withdrawals in retirement are **100% tax-free**.\n- **Traditional IRA**: Contributions are made with *pre-tax* dollars (you get a deduction now). Withdrawals in retirement are taxed as **ordinary income**.\n\n---\n\n## Formula\n\nLet:\n- `C` = annual contribution (IRS-capped)\n- `r` = annual return rate (decimal)\n- `n` = years until retirement\n- `t_now` = current marginal tax rate (decimal)\n- `t_ret` = retirement marginal tax rate (decimal)\n\n```\nFV = C × [(1 + r)^n − 1] / r\n\nRoth after-tax balance    = FV\n  (contributions were already taxed)\n\nTraditional pre-tax bal.  = FV\nTraditional after-tax bal. = FV × (1 − t_ret)\n\nTax savings (Traditional) = C × t_now × n\n  (the deductions received over contribution years)\n\nDifference = Roth_after_tax − Traditional_after_tax\n```\n\nNote: The formula uses end-of-year contributions (ordinary annuity). For beginning-of-year contributions the balance is multiplied by `(1 + r)`, but this calculator uses the standard end-of-year assumption.\n\n---\n\n## 2026 IRS Contribution Limits\n\n| Age | Annual IRA Limit |\n|-----|------------------|\n| Under 50 | $7,000 |\n| 50 or older | $8,000 (includes $1,000 catch-up) |\n\nIf you enter a contribution above the IRS cap, the calculator automatically caps it.\n\n---\n\n## Worked Example\n\nAge 30 → retirement at 65 (35 years), $7,000/year, 7% return, 24% current rate, 22% retirement rate.\n\n```\nFV = 7000 × [(1.07^35 − 1) / 0.07]\n   = 7000 × [10.6766 − 1) / 0.07]\n   = 7000 × 138.237\n   ≈ $967,659\n\nRoth after-tax   = $967,659\nTrad pre-tax     = $967,659\nTrad after-tax   = $967,659 × (1 − 0.22) = $754,774\nTax savings now  = $7,000 × 0.24 × 35  = $58,800\nDifference       = $967,659 − $754,774  = $212,885 in favor of Roth\n```\n\n---\n\n## When the Traditional IRA Wins\n\nThe Traditional IRA produces a **higher after-tax balance** when your retirement tax rate is *meaningfully lower* than your current rate. The breakeven point is:\n\n```\nTraditional wins when: t_ret < t_now\nRoth wins (or ties) when: t_ret ≥ t_now\n```\n\nThis is a simplification — in practice, factors like state taxes, Required Minimum Distributions (RMDs starting at age 73), Roth conversion ladders, and estate planning goals also matter.\n\n---\n\n## Limitations\n\n- Assumes a **constant** annual return and tax rate throughout the accumulation period.\n- Does not model **income phase-outs** (Roth eligibility phases out at $150,000–$165,000 MAGI for single filers in 2026).\n- Does not account for **state income taxes**, which vary widely.\n- RMD rules for Traditional IRAs (age 73) can force taxable distributions, reducing the Traditional IRA's effective advantage.\n- This calculator assumes **all Traditional IRA contributions are fully deductible** (applies if you have no workplace plan or are below the deductibility threshold).",
+  "faq": [
+    {
+      "q": "What is the 2026 IRA contribution limit?",
+      "a": "$7,000 per year for individuals under age 50. Those aged 50 or older may contribute up to $8,000 thanks to a $1,000 catch-up contribution. These limits apply across all your IRAs combined, not per account."
+    },
+    {
+      "q": "Can I contribute to both a Roth and a Traditional IRA in the same year?",
+      "a": "Yes, but your combined contributions to both accounts cannot exceed the annual limit ($7,000 or $8,000). For example, you could put $3,500 in a Roth and $3,500 in a Traditional IRA."
+    },
+    {
+      "q": "What income limits apply to Roth IRA contributions in 2026?",
+      "a": "Roth IRA contributions phase out for single filers with MAGI between $150,000 and $165,000, and for married filing jointly between $236,000 and $246,000. Above these limits, direct Roth contributions are not allowed (though a backdoor Roth conversion may be possible)."
+    },
+    {
+      "q": "Does the Traditional IRA deduction have income limits?",
+      "a": "Only if you (or your spouse) are covered by a workplace retirement plan. For 2026, the deduction phases out for single filers with MAGI between $79,000 and $89,000, and for married filing jointly between $126,000 and $146,000 when the contributing spouse has a workplace plan."
+    },
+    {
+      "q": "Why does the Roth IRA tend to win when tax rates are the same?",
+      "a": "When current and retirement tax rates are identical, the math produces exactly the same after-tax result. Neither account has an inherent advantage in that scenario — the calculator will show a $0 difference. If rates diverge, the account that taxes you at the lower rate wins."
+    },
+    {
+      "q": "What are Required Minimum Distributions (RMDs) and do they affect this comparison?",
+      "a": "Traditional IRAs require you to take minimum taxable withdrawals starting at age 73, which can push you into higher tax brackets. Roth IRAs have no RMDs during the owner's lifetime, making them attractive for wealth transfer and tax flexibility. This calculator does not model RMDs."
+    },
+    {
+      "q": "Is a 7% annual return realistic?",
+      "a": "The historical long-run average real return of the US stock market is approximately 7% after inflation (10% nominal before inflation). It's a common planning assumption, but actual returns vary year to year and are not guaranteed. You can adjust this field to model conservative (5%) or optimistic (9%) scenarios."
+    },
+    {
+      "q": "What is a Roth conversion, and should I do one?",
+      "a": "A Roth conversion moves funds from a Traditional IRA to a Roth IRA; you pay income tax on the converted amount in the year of conversion. It can be beneficial if you expect higher future tax rates or want to eliminate RMDs. This calculator models ongoing contributions, not conversions."
+    },
+    {
+      "q": "Can I withdraw contributions from a Roth IRA before retirement without penalty?",
+      "a": "Yes. Roth IRA contributions (not earnings) can be withdrawn at any time, at any age, without tax or penalty. This gives Roth IRAs an emergency-fund flexibility advantage that this calculator does not capture."
+    },
+    {
+      "q": "What happens if I exceed the IRS contribution limit?",
+      "a": "Excess contributions are subject to a 6% excise tax per year until corrected. The calculator automatically caps your input at the 2026 IRS limit ($7,000 or $8,000) to prevent over-contribution scenarios."
+    }
+  ],
+  "sources": [
+    {
+      "name": "IRS Publication 590-A: Contributions to Individual Retirement Arrangements (IRAs)",
+      "url": "https://www.irs.gov/publications/p590a",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Publication 590-B: Distributions from Individual Retirement Arrangements (IRAs)",
+      "url": "https://www.irs.gov/publications/p590b",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS: Retirement Topics — IRA Contribution Limits",
+      "url": "https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-topics-ira-contribution-limits",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS: Amount of Roth IRA Contributions That You Can Make for 2026",
+      "url": "https://www.irs.gov/retirement-plans/amount-of-roth-ira-contributions-that-you-can-make-for-2024",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS: Traditional and Roth IRAs",
+      "url": "https://www.irs.gov/retirement-plans/traditional-and-roth-iras",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Update IRS contribution limits ($7,000 / $8,000), Roth income phase-out thresholds, Traditional IRA deductibility thresholds, and RMD age each January when IRS publishes updated figures."
+  },
+  "lastReviewed": "2026-04-28"
+}

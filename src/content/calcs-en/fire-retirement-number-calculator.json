@@ -1,0 +1,217 @@
+{
+  "slug": "fire-retirement-number-calculator",
+  "title": "FIRE Number Calculator 2026 – Retire Early | Hacé Cuentas",
+  "h1": "FIRE Number Calculator (Retire Early)",
+  "description": "Calculate your FIRE number using the 25× rule (4% SWR). Estimate years to financial independence, gap to target, and compare Lean, Standard, Fat & Coast FIRE.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "🔥",
+  "formulaId": "fire-retirement-number-calculator",
+  "intro": "**FIRE (Financial Independence, Retire Early)** lets you stop working when your invested portfolio can fund your lifestyle indefinitely. The classic rule: save **25× your annual expenses** — at a **4% safe withdrawal rate**, your money statistically lasts 30+ years. This calculator shows your target number, how many years away you are, and which FIRE variant fits your goals.",
+  "keyTakeaway": "A household spending $50,000/year needs a $1,250,000 portfolio to retire under the standard 4% rule; Lean FIRE requires $1,000,000 (5% SWR) and Fat FIRE requires $1,650,000 (3% SWR).",
+  "useCases": [
+    "Determine your exact FIRE number based on current annual spending",
+    "Project how many years until you reach financial independence",
+    "Compare Lean FIRE, Standard FIRE, Fat FIRE, and Coast FIRE targets",
+    "Calculate the gap between your current portfolio and your FI target",
+    "Model how increasing monthly savings accelerates your retirement date",
+    "Evaluate whether a lower expected real return changes your timeline"
+  ],
+  "fields": [
+    {
+      "id": "annual_expenses",
+      "label": "Annual Expenses ($)",
+      "type": "number",
+      "placeholder": "50000",
+      "default": 50000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "current_portfolio",
+      "label": "Current Invested Portfolio ($)",
+      "type": "number",
+      "placeholder": "100000",
+      "default": 100000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "monthly_savings",
+      "label": "Monthly Savings / Contributions ($)",
+      "type": "number",
+      "placeholder": "2000",
+      "default": 2000,
+      "step": 50,
+      "required": true
+    },
+    {
+      "id": "real_return",
+      "label": "Expected Real Annual Return (%)",
+      "type": "number",
+      "placeholder": "6",
+      "default": 6,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "fire_variant",
+      "label": "FIRE Variant",
+      "type": "select",
+      "options": [
+        {
+          "value": "lean",
+          "label": "Lean FIRE (20× expenses — 5% SWR)"
+        },
+        {
+          "value": "standard",
+          "label": "Standard FIRE (25× expenses — 4% SWR)"
+        },
+        {
+          "value": "fat",
+          "label": "Fat FIRE (33× expenses — 3% SWR)"
+        },
+        {
+          "value": "coast",
+          "label": "Coast FIRE (stop contributing, let it grow)"
+        }
+      ],
+      "default": "standard",
+      "required": true
+    },
+    {
+      "id": "current_age",
+      "label": "Current Age",
+      "type": "number",
+      "placeholder": "30",
+      "default": 30,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "coast_retirement_age",
+      "label": "Target Retirement Age (for Coast FIRE)",
+      "type": "number",
+      "placeholder": "65",
+      "default": 65,
+      "step": 1,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "fire_number",
+      "label": "Your FIRE Number",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "gap",
+      "label": "Gap to FIRE Number",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "years_to_fi",
+      "label": "Years to Financial Independence",
+      "primary": false,
+      "format": "decimal"
+    },
+    {
+      "id": "fi_age",
+      "label": "Projected FI Age",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "savings_rate_note",
+      "label": "Summary",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How the FIRE Number Is Calculated\n\nThe FIRE number is the portfolio size at which you can withdraw your annual expenses indefinitely without running out of money.\n\n```\nFIRE Number = Annual Expenses × Multiplier\n\nMultipliers:\n  Lean FIRE  → 20×  (5.0% SWR)\n  Standard   → 25×  (4.0% SWR)\n  Fat FIRE   → 33×  (3.0% SWR)\n```\n\nThe **4% Safe Withdrawal Rate (SWR)** comes from the Trinity Study (1998, updated 2011, 2024), which backtested US stock/bond portfolios from 1926 onward and found a 4% withdrawal rate had a ~95% success rate over 30-year periods.\n\n## Years to FI Formula\n\nTo project how long it takes to grow your current portfolio `P` to the target `T` with monthly contributions `c` and monthly real return `r = (real_return / 100) / 12`:\n\n```\nIf P >= T: years = 0\n\nOtherwise, solve for n (months):\n  T = P × (1 + r)^n  +  c × [(1 + r)^n − 1] / r\n\n  n = ln[(T + c/r) / (P + c/r)] / ln(1 + r)\n\nyears = n / 12\n```\n\nWhen `r = 0`, the formula simplifies to `n = (T − P) / c`.\n\n## Coast FIRE\n\nCoast FIRE answers: *how large must my portfolio be today so that, with zero additional contributions, it grows to my Standard FIRE number by retirement age?*\n\n```\nCoast FIRE Number = FIRE Number / (1 + r_annual)^(retirement_age − current_age)\n```\n\nIf your current portfolio already exceeds this value, you can stop contributing and still retire on time.\n\n## Worked Example\n\n| Input | Value |\n|---|---|\n| Annual expenses | $50,000 |\n| Current portfolio | $150,000 |\n| Monthly savings | $2,500 |\n| Real return | 6% |\n| Variant | Standard (25×) |\n| Current age | 32 |\n\n- FIRE Number = $50,000 × 25 = **$1,250,000**\n- Gap = $1,250,000 − $150,000 = **$1,100,000**\n- Monthly rate r = 0.06 / 12 = 0.005\n- n = ln[(1,250,000 + 2,500/0.005) / (150,000 + 2,500/0.005)] / ln(1.005)\n- n = ln[(1,750,000) / (650,000)] / ln(1.005) ≈ 197 months ≈ **16.4 years**\n- FI Age ≈ 32 + 16 = **48**\n\n## Limitations & When NOT to Apply\n\n- The 4% rule was derived from **US historical returns**. International or lower-return portfolios may require a 3–3.5% SWR.\n- **Real return** must account for inflation (e.g., 9% nominal − 3% inflation = 6% real).\n- Sequence-of-returns risk is not modeled here; early retirement periods (40s–50s) face higher failure rates than 65+ retirements.\n- Healthcare costs, taxes on withdrawals (Traditional IRA/401k), and Social Security income are not included.\n- Use this as a planning benchmark, not a guarantee.",
+  "faq": [
+    {
+      "q": "What is the FIRE number?",
+      "a": "Your FIRE number is the total invested portfolio you need to retire. It equals your annual expenses multiplied by a factor based on your chosen withdrawal rate — 25× for the standard 4% rule. A household spending $60,000/year needs $1,500,000."
+    },
+    {
+      "q": "Where does the 25× rule come from?",
+      "a": "The Trinity Study (Cooley, Hubbard & Walz, 1998) backtested portfolios from 1926–1995 and found that withdrawing 4% of an initial portfolio annually, adjusted for inflation, sustained a 50/50 stock-bond portfolio for 30 years in ~95% of historical scenarios. 1 ÷ 4% = 25."
+    },
+    {
+      "q": "What is the difference between Lean, Standard, and Fat FIRE?",
+      "a": "Lean FIRE uses 20× (5% SWR) for frugal lifestyles under ~$40,000/year. Standard FIRE uses 25× (4% SWR) for typical middle-class spending. Fat FIRE uses 33× (~3% SWR) for $100,000+/year lifestyles with extra safety margin."
+    },
+    {
+      "q": "What is Coast FIRE?",
+      "a": "Coast FIRE is the portfolio size where, if you stop contributing entirely today, compound growth alone will reach your full FIRE number by traditional retirement age (~65). Once you hit Coast FIRE, you only need to cover current expenses — not save extra."
+    },
+    {
+      "q": "Should I use nominal or real return?",
+      "a": "Use real return (after inflation). A typical US diversified index portfolio has returned ~9.5% nominally and ~6.5% real over the last 50 years. Using 6–7% real is a common conservative assumption for planning purposes."
+    },
+    {
+      "q": "Does the 4% rule work for early retirees?",
+      "a": "The Trinity Study modeled 30-year periods. Retiring at 40 means a 50+ year horizon. For early retirees, many researchers suggest using a 3–3.5% SWR, which corresponds to a 28–33× multiplier, to handle the longer time frame and sequence risk."
+    },
+    {
+      "q": "Are taxes included in this calculation?",
+      "a": "No. Withdrawals from tax-deferred accounts (Traditional 401k, IRA) are taxed as ordinary income. Roth accounts are tax-free. Your actual spending target should account for your expected tax burden in retirement — often adding 10–25% to pre-tax withdrawal needs."
+    },
+    {
+      "q": "What if I have Social Security or a pension?",
+      "a": "Subtract guaranteed income from your annual expenses before calculating. If you expect $15,000/year from Social Security and spend $50,000, your portfolio only needs to cover $35,000 — reducing your FIRE number from $1,250,000 to $875,000 (25× rule)."
+    },
+    {
+      "q": "What annual return should I assume?",
+      "a": "Vanguard's 2026 10-year forecast projects 4.2–6.2% real for a global 60/40 portfolio. Using 5–6% real is a cautious baseline. If you invest 100% in equities, 6–7% real is commonly used, though future returns may differ from historical averages."
+    },
+    {
+      "q": "How does monthly savings rate affect my timeline?",
+      "a": "Savings rate is the biggest lever. Doubling monthly contributions from $1,000 to $2,000 can cut 5–8 years off a typical 15-year path to FIRE, depending on current portfolio and return assumptions. Small increases in savings matter far more than chasing higher returns."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Trinity Study – Sustainable Withdrawal Rates from Your Retirement Portfolio",
+      "url": "https://www.aaii.com/journal/article/sustainable-withdrawal-rates-from-your-retirement-portfolio",
+      "publisher": "American Association of Individual Investors",
+      "date": "1998"
+    },
+    {
+      "name": "Cooley, Hubbard & Walz – Updated Trinity Study (2011)",
+      "url": "https://afcpe.org/assets/pdf/vol2214.pdf",
+      "publisher": "Journal of Financial Planning / AFCPE",
+      "date": "2011"
+    },
+    {
+      "name": "Vanguard Economic and Market Outlook 2026",
+      "url": "https://institutional.vanguard.com/insights/research/market-perspectives/vanguard-economic-and-market-outlook",
+      "publisher": "Vanguard",
+      "date": "2025"
+    },
+    {
+      "name": "IRS – Retirement Topics: Required Minimum Distributions",
+      "url": "https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-topics-required-minimum-distributions-rmds",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "SSA – Retirement Benefits: How Much Will I Receive?",
+      "url": "https://www.ssa.gov/benefits/retirement/estimator.html",
+      "publisher": "Social Security Administration",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Review multipliers and SWR guidance annually as new Trinity Study updates or major market research revises safe withdrawal rate consensus. Update Vanguard return forecast link each year."
+  },
+  "lastReviewed": "2026-04-28"
+}

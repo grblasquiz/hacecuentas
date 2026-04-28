@@ -1,0 +1,183 @@
+{
+  "slug": "credit-card-payoff-time-calculator",
+  "title": "Credit Card Payoff Calculator 2026 | Hacé Cuentas",
+  "h1": "Credit Card Payoff Calculator",
+  "description": "Calculate months to pay off your credit card balance. Enter balance, APR, and monthly payment to see total interest and payoff timeline.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "💳",
+  "formulaId": "credit-card-payoff-time-calculator",
+  "intro": "Carrying a credit card balance is expensive. At the **average US APR of 22.5% in 2026**, a $5,000 balance paid at $100/month takes **88 months** and costs over **$4,300 in interest**. This calculator shows exactly how long payoff takes, total interest charged, and what happens if you pay more each month.",
+  "keyTakeaway": "At 22.5% APR, paying only the minimum (~2% of balance) on $5,000 takes 88 months and costs $4,321 in interest — more than 86% of the original balance.",
+  "useCases": [
+    "Find out how many months until your credit card is paid off at your current payment",
+    "Compare the interest cost of paying $150/month vs. $300/month",
+    "Calculate the monthly payment needed to pay off a balance within 12 or 24 months",
+    "Understand the minimum-payment trap before making only the required payment",
+    "Plan a debt payoff strategy after a balance transfer or consolidation",
+    "Estimate total interest before deciding whether to carry a balance"
+  ],
+  "fields": [
+    {
+      "id": "balance",
+      "label": "Current Balance ($)",
+      "type": "number",
+      "placeholder": "5000",
+      "default": 5000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "apr",
+      "label": "Annual Percentage Rate — APR (%)",
+      "type": "number",
+      "placeholder": "22.5",
+      "default": 22.5,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "mode",
+      "label": "I want to calculate",
+      "type": "select",
+      "options": [
+        {
+          "value": "payment_to_months",
+          "label": "Months to payoff (I know my monthly payment)"
+        },
+        {
+          "value": "months_to_payment",
+          "label": "Required monthly payment (I have a target payoff date)"
+        }
+      ],
+      "default": "payment_to_months",
+      "required": true
+    },
+    {
+      "id": "monthly_payment",
+      "label": "Fixed Monthly Payment ($)",
+      "type": "number",
+      "placeholder": "100",
+      "default": 100,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "target_months",
+      "label": "Target Payoff (months)",
+      "type": "number",
+      "placeholder": "24",
+      "default": 24,
+      "step": 1,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "months_to_payoff",
+      "label": "Months to Payoff",
+      "primary": true,
+      "format": "integer"
+    },
+    {
+      "id": "total_interest",
+      "label": "Total Interest Paid",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_paid",
+      "label": "Total Amount Paid",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "required_payment",
+      "label": "Required Monthly Payment",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "interest_ratio",
+      "label": "Interest as % of Original Balance",
+      "format": "percent"
+    },
+    {
+      "id": "payoff_summary",
+      "label": "Summary",
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nCredit card interest compounds **monthly**. Each month, the card issuer applies one-twelfth of the annual APR to the remaining balance before subtracting your payment.\n\n## Formula\n\nFor a **fixed monthly payment**, the number of months to payoff is derived from the standard loan amortization formula:\n\n```\nmonthly_rate  = APR / 100 / 12\n\nmonths = -log(1 - (balance × monthly_rate) / payment)\n         ÷ log(1 + monthly_rate)\n\ntotal_paid    = months × payment\ntotal_interest = total_paid - balance\n```\n\nWhen `payment ≤ balance × monthly_rate`, the payment does not cover the interest accruing that month and the balance **never reaches zero** — the minimum-payment trap.\n\nFor a **target payoff period**, the required monthly payment is:\n\n```\npayment = balance × monthly_rate × (1 + monthly_rate)^months\n          ÷ ((1 + monthly_rate)^months - 1)\n```\n\n## Worked Example — The Minimum-Payment Trap\n\n| Parameter | Value |\n|---|---|\n| Balance | $5,000 |\n| APR | 22.0% |\n| Monthly rate | 1.833% |\n| Fixed payment | $100 |\n| **Months to payoff** | **88** |\n| Total paid | $8,766 |\n| **Total interest** | **$3,766** |\n\nRaising the payment to **$200/month** cuts payoff time to **30 months** and total interest to **$917** — a saving of $2,849.\n\n## Limitations and When NOT to Apply\n\n- This calculator assumes a **constant APR** for the entire repayment period. Promotional 0% APR periods, variable-rate cards, and balance-transfer fees are not modeled.\n- It does **not** account for new purchases added to the balance each month.\n- Minimum payments on real cards are typically the greater of a fixed floor (e.g., $25) or a percentage of the balance (1–3%). This calculator uses a fixed payment you specify.\n- Results are estimates. Actual payoff may vary by a month due to billing-cycle timing and rounding by the issuer.",
+  "faq": [
+    {
+      "q": "What is the average credit card APR in the US in 2026?",
+      "a": "The Federal Reserve reported the average credit card interest rate at approximately 22.5% APR for accounts assessed interest in late 2025, entering 2026. Rates vary from about 18% on lower-risk cards to over 29% on retail and subprime cards."
+    },
+    {
+      "q": "What happens if my monthly payment is less than the monthly interest?",
+      "a": "If your payment is less than or equal to balance × (APR / 12 / 100), the balance grows every month instead of shrinking. The calculator will flag this as 'payment too low to pay off balance' rather than returning an infinite number of months."
+    },
+    {
+      "q": "How does this differ from using the card's minimum payment?",
+      "a": "Card issuers typically set the minimum at 1–3% of the outstanding balance (or a $25–$35 floor). Because that percentage shrinks as the balance falls, total interest can exceed the original balance. This calculator assumes a fixed dollar payment, which pays off debt far faster."
+    },
+    {
+      "q": "Does this account for new charges I add to the card?",
+      "a": "No. The calculator assumes no new purchases. Adding new charges while paying down a balance extends the payoff timeline significantly and would require a separate month-by-month simulation."
+    },
+    {
+      "q": "What if I have a 0% balance transfer offer?",
+      "a": "During a 0% promotional period, set APR to 0. The calculator will divide the balance evenly over the number of months you specify — no interest accrues. Be sure to account for the balance-transfer fee (typically 3–5%) by adding it to the balance field."
+    },
+    {
+      "q": "What is the monthly interest rate and how is it calculated?",
+      "a": "The monthly periodic rate is APR ÷ 12. At 22.5% APR, the monthly rate is 22.5 / 12 = 1.875%. On a $5,000 balance, that is $93.75 of interest in the first month alone — so a $100 payment reduces the balance by only $6.25."
+    },
+    {
+      "q": "Why does increasing my payment by $50/month make such a big difference?",
+      "a": "Each extra dollar reduces the principal faster, which reduces the balance on which future interest is calculated — a compounding effect in reverse. On a $5,000 balance at 22.5% APR, going from $150 to $200/month saves roughly 18 months and over $700 in interest."
+    },
+    {
+      "q": "How accurate is the months-to-payoff calculation?",
+      "a": "The logarithmic formula gives the exact theoretical result assuming a constant rate and fixed payment. Real issuers may round to the nearest cent and apply payments on specific cycle dates, so actual payoff may differ by one month."
+    },
+    {
+      "q": "Does APR include fees?",
+      "a": "APR as disclosed on US credit cards under the Truth in Lending Act includes the periodic interest rate but generally excludes penalty fees like late fees or over-limit fees. For most payoff calculations, the stated purchase APR is the correct figure to use."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Federal Reserve — Consumer Credit (G.19 Release)",
+      "url": "https://www.federalreserve.gov/releases/g19/current/",
+      "publisher": "Federal Reserve",
+      "date": "2026"
+    },
+    {
+      "name": "Consumer Financial Protection Bureau — Credit Cards",
+      "url": "https://www.consumerfinance.gov/consumer-tools/credit-cards/",
+      "publisher": "CFPB",
+      "date": "2026"
+    },
+    {
+      "name": "Truth in Lending Act — Regulation Z (12 CFR Part 1026)",
+      "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026",
+      "publisher": "CFPB / eCFR",
+      "date": "2026"
+    },
+    {
+      "name": "Federal Reserve — Charge-Off and Delinquency Rates (E.15)",
+      "url": "https://www.federalreserve.gov/releases/chargeoff/",
+      "publisher": "Federal Reserve",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Update the default APR (currently 22.5%) when the Federal Reserve G.19 release publishes new average credit card rates. Verify CFPB minimum-payment disclosure rules annually."
+  },
+  "lastReviewed": "2026-04-28"
+}

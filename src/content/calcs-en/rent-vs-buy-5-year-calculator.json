@@ -1,0 +1,297 @@
+{
+  "slug": "rent-vs-buy-5-year-calculator",
+  "title": "Rent vs Buy Calculator (5-Year) 2026 | Hacé Cuentas",
+  "h1": "Rent vs. Buy Calculator (5-Year Horizon)",
+  "description": "Calculate the 5-year net cost of renting vs. buying a home. Compare total ownership costs against rent plus opportunity cost to find your break-even year.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "⚖️",
+  "formulaId": "rent-vs-buy-5-year-calculator",
+  "intro": "Buying a home feels like the \"right\" financial move — but over a 5-year window, renting is often cheaper once you account for closing costs, property taxes, maintenance, and the opportunity cost of your down payment. This calculator runs both scenarios month by month, then shows you the **5-year net cost** of each path and the **break-even year** when buying starts to win.",
+  "keyTakeaway": "On a $400,000 home with 10% down at 6.8% mortgage rate, buying typically costs ~$30,000–$50,000 more than renting over 5 years once closing costs and opportunity cost are included — break-even often falls between years 6 and 9.",
+  "useCases": [
+    "Deciding whether to buy now or wait and keep renting",
+    "Evaluating a job relocation: is it worth buying if you may move in 3–5 years?",
+    "Comparing two cities with different price-to-rent ratios",
+    "Stress-testing a purchase against different appreciation and rate assumptions",
+    "Presenting a rent-vs-buy analysis to a financial advisor or partner"
+  ],
+  "fields": [
+    {
+      "id": "home_price",
+      "label": "Home Price ($)",
+      "type": "number",
+      "placeholder": "400000",
+      "default": 400000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "down_payment_pct",
+      "label": "Down Payment (%)",
+      "type": "number",
+      "placeholder": "10",
+      "default": 10,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "mortgage_rate",
+      "label": "Mortgage Interest Rate (% per year)",
+      "type": "number",
+      "placeholder": "6.8",
+      "default": 6.8,
+      "step": 0.05,
+      "required": true
+    },
+    {
+      "id": "loan_term_years",
+      "label": "Loan Term (years)",
+      "type": "select",
+      "options": [
+        {
+          "value": "30",
+          "label": "30 years"
+        },
+        {
+          "value": "20",
+          "label": "20 years"
+        },
+        {
+          "value": "15",
+          "label": "15 years"
+        }
+      ],
+      "default": "30",
+      "required": true
+    },
+    {
+      "id": "property_tax_rate",
+      "label": "Annual Property Tax Rate (% of home value)",
+      "type": "number",
+      "placeholder": "1.1",
+      "default": 1.1,
+      "step": 0.05,
+      "required": true
+    },
+    {
+      "id": "home_insurance_annual",
+      "label": "Annual Home Insurance ($)",
+      "type": "number",
+      "placeholder": "1500",
+      "default": 1500,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "hoa_monthly",
+      "label": "Monthly HOA Fee ($)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 10,
+      "required": false
+    },
+    {
+      "id": "maintenance_rate",
+      "label": "Annual Maintenance (% of home value)",
+      "type": "number",
+      "placeholder": "1.0",
+      "default": 1.0,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "buy_closing_cost_pct",
+      "label": "Buying Closing Costs (% of home price)",
+      "type": "number",
+      "placeholder": "3.0",
+      "default": 3.0,
+      "step": 0.25,
+      "required": true
+    },
+    {
+      "id": "sell_closing_cost_pct",
+      "label": "Selling Closing Costs / Agent Fees (% of sale price)",
+      "type": "number",
+      "placeholder": "6.0",
+      "default": 6.0,
+      "step": 0.25,
+      "required": true
+    },
+    {
+      "id": "appreciation_rate",
+      "label": "Home Appreciation Rate (% per year)",
+      "type": "number",
+      "placeholder": "3.5",
+      "default": 3.5,
+      "step": 0.25,
+      "required": true
+    },
+    {
+      "id": "monthly_rent",
+      "label": "Current Monthly Rent ($)",
+      "type": "number",
+      "placeholder": "2200",
+      "default": 2200,
+      "step": 50,
+      "required": true
+    },
+    {
+      "id": "rent_inflation",
+      "label": "Annual Rent Increase (% per year)",
+      "type": "number",
+      "placeholder": "3.0",
+      "default": 3.0,
+      "step": 0.25,
+      "required": true
+    },
+    {
+      "id": "investment_return",
+      "label": "Investment Return on Down Payment if Renting (% per year)",
+      "type": "number",
+      "placeholder": "7.0",
+      "default": 7.0,
+      "step": 0.25,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "buy_net_cost_5yr",
+      "label": "5-Year Net Cost of Buying",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "rent_net_cost_5yr",
+      "label": "5-Year Net Cost of Renting",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "difference_5yr",
+      "label": "Difference (Buying minus Renting)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "breakeven_year",
+      "label": "Estimated Break-Even Year",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "monthly_mortgage_payment",
+      "label": "Monthly Mortgage Payment (P&I)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "home_value_5yr",
+      "label": "Estimated Home Value at Year 5",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "equity_5yr",
+      "label": "Equity Built at Year 5 (after selling costs)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "summary",
+      "label": "Summary",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How the Calculator Works\n\nThis tool runs two parallel 5-year cash-flow models and compares their **net cost** — what each path actually costs you after accounting for what you get back.\n\n---\n\n## Buying Model\n\n### Upfront costs\n```\nDown payment       = home_price × (down_payment_pct / 100)\nBuying closing costs = home_price × (buy_closing_cost_pct / 100)\nTotal upfront cash = down_payment + buying_closing_costs\n```\n\n### Monthly mortgage payment (principal + interest)\n```\nloan_amount = home_price − down_payment\nr = (mortgage_rate / 100) / 12          # monthly rate\nn = loan_term_years × 12                # total payments\nmonthly_PI = loan × r × (1+r)^n / ((1+r)^n − 1)\n```\n\n### Annual ownership costs (years 1–5)\nEach year, property tax and maintenance are applied to the **current home value**, which grows at `appreciation_rate` per year:\n```\nhome_value[y] = home_price × (1 + appreciation_rate/100)^y\nproperty_tax[y]  = home_value[y−1] × (property_tax_rate / 100)\nmaintenance[y]   = home_value[y−1] × (maintenance_rate / 100)\ninsurance[y]     = home_insurance_annual (held constant)\nhoa[y]           = hoa_monthly × 12\nmortgage_total[y]= monthly_PI × 12\n```\n\n### What you get back at year 5 (sale proceeds)\n```\nsale_price   = home_value[5]\nsell_costs   = sale_price × (sell_closing_cost_pct / 100)\nremaining_balance = outstanding principal after 60 payments\nequity_net   = sale_price − sell_costs − remaining_balance\n```\n\n### 5-Year net cost of buying\n```\ntotal_paid_buying = down_payment + buying_closing_costs\n                  + Σ(years 1–5)[mortgage_total + property_tax\n                    + maintenance + insurance + hoa]\nbuy_net_cost = total_paid_buying − equity_net\n```\nThis is the true out-of-pocket cost after you \"cash out\" at year 5.\n\n---\n\n## Renting Model\n\n### Cumulative rent paid\nRent grows at `rent_inflation` % per year:\n```\nannual_rent[y] = monthly_rent × 12 × (1 + rent_inflation/100)^(y−1)\nrent_total_5yr = Σ(years 1–5) annual_rent[y]\n```\n\n### Opportunity cost of NOT investing the down payment\nIf you rent, the down payment cash stays invested and compounds:\n```\nopportunity_cost = down_payment × ((1 + investment_return/100)^5 − 1)\n```\nThis is a **gain** to the renter — it reduces their net cost.\n\n### 5-Year net cost of renting\n```\nrent_net_cost = rent_total_5yr − opportunity_cost\n```\n\n---\n\n## Break-Even Year\n\nThe calculator solves the same equations year-by-year (years 1–15) and finds the first year where `buy_net_cost[y] < rent_net_cost[y]`. If buying never wins within 15 years under the given assumptions, it reports \"> 15 years\".\n\n---\n\n## Worked Example\n\n| Input | Value |\n|---|---|\n| Home price | $400,000 |\n| Down payment | 10% ($40,000) |\n| Mortgage rate | 6.8% / 30 yr |\n| Property tax | 1.1% / yr |\n| Insurance | $1,500 / yr |\n| Maintenance | 1.0% / yr |\n| Buy closing costs | 3% ($12,000) |\n| Sell closing costs | 6% |\n| Appreciation | 3.5% / yr |\n| Monthly rent | $2,200 |\n| Rent inflation | 3% / yr |\n| Investment return | 7% / yr |\n\nResult: **Buy net cost ≈ $95,700 | Rent net cost ≈ $68,400** → renting is ~$27,300 cheaper over 5 years. Break-even falls around **year 7**.\n\n---\n\n## Limitations\n\n- **Taxes not modeled**: mortgage interest deduction and capital gains exclusion can meaningfully shift the buy side for some filers.\n- **PMI not included**: if down payment < 20%, add ~0.5–1.5%/yr of loan balance until you hit 80% LTV.\n- **Rent vs. buy quality**: assumes comparable housing; lifestyle differences are not priced.\n- **Appreciation and returns are estimates**: past averages don't guarantee future results.\n- **Refinancing ignored**: a future rate drop could improve the buy scenario.",
+  "faq": [
+    {
+      "q": "What does \"net cost\" mean in this calculator?",
+      "a": "Net cost is total cash you spend minus what you get back. For buying, that means all payments and fees minus the equity you receive when you sell at year 5. For renting, it's total rent paid minus the investment gains on your down payment if you had invested it instead."
+    },
+    {
+      "q": "Why is buying often more expensive over 5 years even if rent is high?",
+      "a": "Buying carries two large upfront drags: closing costs on purchase (2–4%) and selling costs (5–7%). Together that's roughly 8–11% of the home price — on a $400K home, up to $44,000 — that you must \"earn back\" through appreciation and equity before buying breaks even."
+    },
+    {
+      "q": "What is opportunity cost and why does it favor renting?",
+      "a": "If you rent instead of buy, your down payment cash doesn't sit idle — you can invest it. At a 7% annual return, a $40,000 down payment grows by roughly $16,100 over 5 years. That gain offsets rent and makes renting financially competitive even when rent seems expensive."
+    },
+    {
+      "q": "Should I include PMI in this calculator?",
+      "a": "Yes, if your down payment is below 20%. PMI typically costs 0.5–1.5% of the loan balance per year. Add it to your effective annual insurance or maintenance cost. PMI usually cancels once you reach 80% LTV, which for a 30-year loan with 10% down happens around year 9–11."
+    },
+    {
+      "q": "What selling cost percentage should I use?",
+      "a": "Traditional real estate agent commissions run 5–6% of the sale price. Post-2024 NAR settlement changes may lower buyer-agent fees, so 4–5% total is increasingly common. Add title/transfer taxes (0.1–2% depending on state) for a conservative estimate of 5–7% total."
+    },
+    {
+      "q": "Is 3.5% home appreciation realistic?",
+      "a": "The long-run national average (inflation-adjusted) is roughly 1–2% per year per Yale economist Robert Shiller's data. Nominal appreciation has averaged 3–5% in recent decades. However, individual markets vary enormously — coastal metros have seen 6–10% stretches, while some markets have been flat or negative."
+    },
+    {
+      "q": "How accurate is the 7% investment return assumption?",
+      "a": "The S&P 500 has returned roughly 10% nominally and 7% inflation-adjusted over long periods. For a 5-year window, returns are highly variable — the market could return 50% or lose 30%. Using 5–7% is a reasonable moderate assumption; run the calculator at 4% and 10% to see the range."
+    },
+    {
+      "q": "Does this calculator account for the mortgage interest tax deduction?",
+      "a": "No. The standard deduction ($14,600 single / $29,200 married in 2024) means only about 14% of filers itemize. If you do itemize, the deduction improves the buy side — roughly $1,500–$4,000/yr in tax savings in early years of a $360,000 loan at 6.8%."
+    },
+    {
+      "q": "When does buying clearly win over renting?",
+      "a": "Buying tends to win decisively when: (1) you hold 7+ years to recover closing costs, (2) you put 20%+ down to avoid PMI, (3) local appreciation outpaces the national average, or (4) rent-to-price ratios are high (monthly rent > 0.6–0.7% of home price)."
+    },
+    {
+      "q": "What price-to-rent ratio tells me buying is a good deal?",
+      "a": "Divide the home price by annual rent. A ratio below 15 generally favors buying; 15–20 is neutral; above 20 tends to favor renting. Example: a $400,000 home with $2,200/month rent = $26,400/yr → ratio of 15.2, which is in neutral territory."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Federal Reserve Bank of St. Louis — U.S. Home Price Index (CSUSHPINSA)",
+      "url": "https://fred.stlouisfed.org/series/CSUSHPINSA",
+      "publisher": "FRED / Federal Reserve",
+      "date": "2026"
+    },
+    {
+      "name": "Freddie Mac Primary Mortgage Market Survey",
+      "url": "https://www.freddiemac.com/pmms",
+      "publisher": "Freddie Mac",
+      "date": "2026"
+    },
+    {
+      "name": "Consumer Expenditure Survey — Housing",
+      "url": "https://www.bls.gov/cex/",
+      "publisher": "U.S. Bureau of Labor Statistics",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Publication 936 — Home Mortgage Interest Deduction",
+      "url": "https://www.irs.gov/publications/p936",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "Yale / Shiller Home Price Data",
+      "url": "http://www.econ.yale.edu/~shiller/data.htm",
+      "publisher": "Robert J. Shiller, Yale University",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Review default mortgage rate against Freddie Mac PMMS annually; update standard deduction figures if IRS changes them; revisit default appreciation rate against FHFA HPI data."
+  },
+  "lastReviewed": "2026-04-28"
+}

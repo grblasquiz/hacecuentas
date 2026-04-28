@@ -1,0 +1,279 @@
+{
+  "slug": "calculadora-rescisao-clt-completa-aviso-multa",
+  "title": "Calculadora Rescisão CLT 2026 Completa | Hacé Cuentas",
+  "h1": "Rescisão CLT: Cálculo Completo 2026",
+  "description": "Calcule sua rescisão CLT com aviso prévio, multa FGTS, 13° e férias proporcionais. Sem justa causa, demissão ou acordo mútuo em segundos.",
+  "category": "financas",
+  "audience": "global",
+  "icon": "📋",
+  "formulaId": "rescisao-clt-completa-aviso-multa",
+  "intro": "Calcular a rescisão trabalhista corretamente exige atenção a vários componentes: saldo de salário, aviso prévio (trabalhado ou indenizado), 13° salário proporcional, férias proporcionais com 1/3 constitucional e a multa sobre o saldo do FGTS. O valor final varia conforme o **tipo de rescisão**: demissão sem justa causa gera multa de **40%** do FGTS; acordo mútuo (Art. 484-A CLT), **20%**; pedido de demissão, sem multa.",
+  "keyTakeaway": "Uma rescisão sem justa causa com salário de R$ 3.000 e 2 anos de contrato pode gerar direito a mais de R$ 8.000, incluindo multa de 40% do FGTS.",
+  "useCases": [
+    "Conferir os valores que a empresa deve pagar na demissão sem justa causa",
+    "Calcular o que o trabalhador recebe ao pedir demissão voluntariamente",
+    "Estimar o saldo de rescisão em acordo mútuo (Art. 484-A CLT)",
+    "Verificar se o aviso prévio indenizado está sendo calculado corretamente",
+    "Planejar financeiramente a saída de um emprego antes de tomar a decisão",
+    "Comparar o impacto financeiro entre pedir demissão e aceitar um acordo"
+  ],
+  "fields": [
+    {
+      "id": "salario_bruto",
+      "label": "Salário bruto mensal (R$)",
+      "type": "number",
+      "placeholder": "3000",
+      "default": 3000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "data_admissao",
+      "label": "Data de admissão",
+      "type": "date",
+      "default": "2023-01-01",
+      "required": true
+    },
+    {
+      "id": "data_rescisao",
+      "label": "Data de rescisão (último dia)",
+      "type": "date",
+      "default": "2026-04-28",
+      "required": true
+    },
+    {
+      "id": "tipo_rescisao",
+      "label": "Tipo de rescisão",
+      "type": "select",
+      "options": [
+        {
+          "value": "sem_justa_causa",
+          "label": "Demissão sem justa causa (empresa demite)"
+        },
+        {
+          "value": "pedido_demissao",
+          "label": "Pedido de demissão (funcionário pede)"
+        },
+        {
+          "value": "acordo_mutuo",
+          "label": "Acordo mútuo (Art. 484-A CLT)"
+        },
+        {
+          "value": "justa_causa",
+          "label": "Demissão por justa causa"
+        }
+      ],
+      "default": "sem_justa_causa",
+      "required": true
+    },
+    {
+      "id": "aviso_previo",
+      "label": "Aviso prévio",
+      "type": "select",
+      "options": [
+        {
+          "value": "indenizado",
+          "label": "Indenizado (empresa paga sem trabalhar)"
+        },
+        {
+          "value": "trabalhado",
+          "label": "Trabalhado (funcionário cumpre o período)"
+        },
+        {
+          "value": "dispensado",
+          "label": "Dispensado pelo empregador"
+        },
+        {
+          "value": "nao_aplica",
+          "label": "Não se aplica (pedido de demissão sem aviso)"
+        }
+      ],
+      "default": "indenizado",
+      "required": true
+    },
+    {
+      "id": "dias_trabalhados_mes",
+      "label": "Dias trabalhados no mês da rescisão",
+      "type": "number",
+      "placeholder": "15",
+      "default": 28,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "saldo_fgts",
+      "label": "Saldo atual do FGTS (R$) — ver extrato CAIXA",
+      "type": "number",
+      "placeholder": "5000",
+      "default": 5000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "ferias_vencidas",
+      "label": "Possui férias vencidas (período aquisitivo completo não gozado)?",
+      "type": "select",
+      "options": [
+        {
+          "value": "nao",
+          "label": "Não"
+        },
+        {
+          "value": "sim",
+          "label": "Sim — 1 período completo"
+        },
+        {
+          "value": "dois",
+          "label": "Sim — 2 períodos completos"
+        }
+      ],
+      "default": "nao",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "saldo_salario",
+      "label": "Saldo de salário",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "aviso_previo_valor",
+      "label": "Aviso prévio indenizado",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "decimo_terceiro",
+      "label": "13° salário proporcional",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "ferias_proporcionais",
+      "label": "Férias proporcionais + 1/3",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "ferias_vencidas_valor",
+      "label": "Férias vencidas + 1/3",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "multa_fgts",
+      "label": "Multa FGTS (40% ou 20%)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "total_bruto",
+      "label": "Total bruto a receber",
+      "primary": true,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "meses_aviso",
+      "label": "Dias de aviso prévio proporcional",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "detalhamento",
+      "label": "Resumo da rescisão",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Como funciona o cálculo de rescisão CLT\n\nA rescisão trabalhista no Brasil é regida pela **Consolidação das Leis do Trabalho (CLT)** e pela Lei 13.467/2017 (Reforma Trabalhista). Os valores variam conforme o tipo de desligamento.\n\n---\n\n## Componentes da rescisão\n\n### 1. Saldo de salário\nProporcional aos dias trabalhados no último mês:\n```\nSaldo = (Salário bruto ÷ 30) × Dias trabalhados no mês\n```\n\n### 2. Aviso prévio proporcional\nO aviso prévio base é de **30 dias**, acrescido de **3 dias por ano completo** de serviço, limitado a **90 dias** (Lei 12.506/2011):\n```\nDias aviso = 30 + (3 × anos completos)   →   máximo 90 dias\nValor aviso indenizado = (Salário ÷ 30) × Dias aviso\n```\nNa demissão sem justa causa com aviso indenizado, esses dias são **somados ao tempo de serviço** para cálculo das demais verbas.\n\n### 3. 13° salário proporcional\nContabiliza os meses trabalhados no ano corrente (fração ≥ 15 dias = 1 mês):\n```\n13° proporcional = (Salário ÷ 12) × Meses trabalhados no ano\n```\n\n### 4. Férias proporcionais + 1/3 constitucional\nMeses do período aquisitivo em curso (fração ≥ 15 dias = 1 mês):\n```\nFérias prop. = (Salário ÷ 12) × Meses do período aquisitivo\nValor final   = Férias prop. × (1 + 1/3)  →  multiplica por 1,3333\n```\n\n### 5. Férias vencidas + 1/3\nSe houver períodos aquisitivos completos não gozados, cada um vale:\n```\nFérias vencidas = Salário × (1 + 1/3) × Nº de períodos\n```\n\n### 6. Multa sobre o FGTS\n| Tipo de rescisão | Multa FGTS |\n|---|---|\n| Sem justa causa | **40%** do saldo do FGTS |\n| Acordo mútuo (Art. 484-A) | **20%** do saldo do FGTS |\n| Pedido de demissão | **0%** (sem multa) |\n| Justa causa | **0%** (sem multa) |\n\n```\nMulta = Saldo FGTS × Percentual\n```\n\n---\n\n## Exemplo prático\n\nFuncionário admitido em **01/01/2023**, demitido sem justa causa em **28/04/2026**, salário R$ 3.000, FGTS R$ 5.000, 28 dias trabalhados em abril, sem férias vencidas:\n\n- **Anos completos**: 3 → aviso prévio = 30 + 9 = **39 dias**\n- **Saldo salário**: (3.000 ÷ 30) × 28 = **R$ 2.800,00**\n- **Aviso indenizado**: (3.000 ÷ 30) × 39 = **R$ 3.900,00**\n- **13° prop.**: (3.000 ÷ 12) × 4 meses = **R$ 1.000,00**\n- **Férias prop. + 1/3**: (3.000 ÷ 12) × 4 × 1,3333 = **R$ 1.333,33**\n- **Multa FGTS 40%**: 5.000 × 0,40 = **R$ 2.000,00**\n- **Total bruto**: ≈ **R$ 11.033,33**\n\n---\n\n## Limitações e avisos importantes\n\n- Este cálculo é **estimativo** e não considera descontos de INSS, IR ou adiantamentos de salário.\n- O FGTS do último mês e do aviso prévio indenizado deve ser depositado pela empresa antes de gerar a GRRF — valores que aumentam ligeiramente o saldo.\n- Rescisões com **estabilidade provisória** (gestante, CIPA, acidente de trabalho) têm regras especiais não cobertas aqui.\n- Acordos coletivos podem prever verbas adicionais.\n- Consulte sempre um advogado trabalhista ou o sindicato da categoria para validar os valores.",
+  "faq": [
+    {
+      "q": "Qual a diferença entre aviso prévio trabalhado e indenizado?",
+      "a": "No aviso trabalhado, o funcionário continua trabalhando durante o período de aviso (30 a 90 dias) e recebe o salário normalmente. No indenizado, a empresa paga o equivalente ao período sem exigir a prestação de serviço. Ambos garantem os mesmos direitos às demais verbas rescisórias."
+    },
+    {
+      "q": "A multa de 40% do FGTS é paga pela empresa ou descontada do trabalhador?",
+      "a": "É paga pela empresa ao trabalhador. O empregador deposita 40% sobre o saldo total do FGTS do funcionário diretamente na conta vinculada, e o trabalhador pode sacar esse valor junto com todo o saldo do FGTS após a demissão sem justa causa."
+    },
+    {
+      "q": "No acordo mútuo (Art. 484-A), o trabalhador pode sacar o FGTS?",
+      "a": "Sim, mas apenas 80% do saldo do FGTS (a multa depositada é de 20%, não 40%). Além disso, o trabalhador não tem direito ao seguro-desemprego no acordo mútuo. As demais verbas (saldo salário, 13°, férias, aviso de 50%) são pagas normalmente."
+    },
+    {
+      "q": "Quem pede demissão perde o direito ao FGTS?",
+      "a": "Não perde o saldo do FGTS, mas não pode sacá-lo imediatamente — apenas em situações específicas permitidas por lei, como compra de imóvel ou aposentadoria. Também não recebe multa de 40% nem tem direito ao seguro-desemprego."
+    },
+    {
+      "q": "Como calcular os meses de férias proporcionais?",
+      "a": "Conta-se quantos meses completos se passaram desde o início do período aquisitivo atual (após o último aniversário de contrato). Uma fração de 15 dias ou mais equivale a 1 mês. Por exemplo, 4 meses e 20 dias = 5 meses de férias proporcionais."
+    },
+    {
+      "q": "O cálculo da rescisão inclui descontos de INSS e IR?",
+      "a": "Esta calculadora exibe o total bruto. Na prática, incide INSS sobre salário, aviso prévio e 13°. O IR (tabela progressiva) incide sobre o total de verbas tributáveis acima da faixa de isenção. Férias e 1/3 têm tributação específica. O líquido pode ser de 10% a 20% menor dependendo do salário."
+    },
+    {
+      "q": "A empresa pode parcelar o pagamento da rescisão?",
+      "a": "Não. Pela CLT, o prazo máximo para pagamento das verbas rescisórias é de 10 dias corridos a partir do término do contrato (Art. 477, §6°). O descumprimento gera multa equivalente a 1 salário mensal em favor do empregado."
+    },
+    {
+      "q": "O que é a GRRF e como ela se relaciona com a rescisão?",
+      "a": "A GRRF (Guia de Recolhimento Rescisório do FGTS) é o documento que a empresa emite para liberar o saldo do FGTS ao trabalhador demitido sem justa causa. Deve ser gerada no sistema FGTS Digital ou Conectividade Social da CAIXA e entregue no ato da rescisão."
+    },
+    {
+      "q": "Aviso prévio tem limite máximo?",
+      "a": "Sim. A Lei 12.506/2011 estabelece o máximo de 90 dias (30 dias base + 3 dias por ano completo, limitado a 20 anos adicionais, ou seja, máximo de 30 + 60 dias extras = 90 dias). Convenções coletivas não podem reduzir esse limite."
+    },
+    {
+      "q": "Funcionário demitido por justa causa tem direito a quais verbas?",
+      "a": "Na justa causa, o trabalhador recebe apenas saldo de salário e férias vencidas + 1/3 (se houver). Perde aviso prévio, 13° proporcional, férias proporcionais, multa do FGTS e não pode sacar o saldo do FGTS nem receber seguro-desemprego."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Consolidação das Leis do Trabalho (CLT) — Decreto-Lei 5.452/1943",
+      "url": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm",
+      "publisher": "Presidência da República",
+      "date": "2026"
+    },
+    {
+      "name": "Lei 12.506/2011 — Aviso Prévio Proporcional",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12506.htm",
+      "publisher": "Presidência da República",
+      "date": "2026"
+    },
+    {
+      "name": "Lei 13.467/2017 — Reforma Trabalhista (Art. 484-A Acordo Mútuo)",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2017/lei/l13467.htm",
+      "publisher": "Presidência da República",
+      "date": "2026"
+    },
+    {
+      "name": "FGTS Digital — Guia de Recolhimento Rescisório",
+      "url": "https://fgts.mte.gov.br",
+      "publisher": "Ministério do Trabalho e Emprego",
+      "date": "2026"
+    },
+    {
+      "name": "Nota Técnica sobre Rescisão de Contrato de Trabalho — MTE",
+      "url": "https://www.gov.br/trabalho-e-emprego/pt-br",
+      "publisher": "Ministério do Trabalho e Emprego",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Atualizar percentual de multa FGTS e regras de aviso prévio se houver alteração legislativa. Verificar tabela INSS e IR anualmente para cálculo de descontos."
+  },
+  "lastReviewed": "2026-04-28"
+}

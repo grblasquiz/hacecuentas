@@ -1,0 +1,558 @@
+{
+  "slug": "recipe-scaling-calculator",
+  "title": "Recipe Scaling Calculator 2026 | Hacé Cuentas",
+  "h1": "Recipe Scaling Calculator",
+  "description": "Calculate scaled ingredient amounts instantly. Enter original servings, target servings, and up to 10 ingredients. Smart unit conversion included.",
+  "category": "cooking",
+  "audience": "global",
+  "icon": "🍳",
+  "formulaId": "recipe-scaling-calculator",
+  "intro": "Need to double a dinner recipe or cut a batch of cookies in half? This calculator scales every ingredient proportionally in one step. Enter your original serving count, your target, and up to 10 ingredients with amounts and units. **Smart unit conversion** automatically switches cups to tablespoons when results fall below ¼ cup, and ounces to pounds when they exceed 16 oz. Note: baking staples like eggs and leavening agents don't scale perfectly — see the limitations section below.",
+  "keyTakeaway": "Scaling from 4 to 12 servings triples every ingredient: 1 cup flour becomes 3 cups, 2 tsp baking powder becomes 6 tsp — but eggs may need rounding and leavening should be increased by only 75–80% of the linear amount.",
+  "useCases": [
+    "Doubling a family pasta recipe for a dinner party",
+    "Halving a cake recipe to fit a 6-inch pan instead of a 9-inch",
+    "Scaling a restaurant prep recipe from 50 to 200 servings",
+    "Adjusting a cocktail batch from 1 drink to a pitcher of 8",
+    "Converting a personal meal-prep recipe to a full week of lunches",
+    "Reducing a cookie recipe to a small test batch before baking in bulk"
+  ],
+  "fields": [
+    {
+      "id": "original_servings",
+      "label": "Original Servings",
+      "type": "number",
+      "placeholder": "4",
+      "default": 4,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "desired_servings",
+      "label": "Desired Servings",
+      "type": "number",
+      "placeholder": "8",
+      "default": 8,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "ing1_amount",
+      "label": "Ingredient 1 — Amount",
+      "type": "number",
+      "placeholder": "2",
+      "default": 2,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "ing1_unit",
+      "label": "Ingredient 1 — Unit",
+      "type": "select",
+      "options": [
+        {
+          "value": "cup",
+          "label": "cup(s)"
+        },
+        {
+          "value": "tbsp",
+          "label": "tablespoon(s)"
+        },
+        {
+          "value": "tsp",
+          "label": "teaspoon(s)"
+        },
+        {
+          "value": "oz",
+          "label": "oz (weight)"
+        },
+        {
+          "value": "lb",
+          "label": "lb"
+        },
+        {
+          "value": "g",
+          "label": "g"
+        },
+        {
+          "value": "kg",
+          "label": "kg"
+        },
+        {
+          "value": "ml",
+          "label": "ml"
+        },
+        {
+          "value": "l",
+          "label": "L"
+        },
+        {
+          "value": "whole",
+          "label": "whole (e.g. eggs)"
+        }
+      ],
+      "default": "cup",
+      "required": true
+    },
+    {
+      "id": "ing1_label",
+      "label": "Ingredient 1 — Name (optional)",
+      "type": "select",
+      "options": [
+        {
+          "value": "generic",
+          "label": "Generic ingredient"
+        },
+        {
+          "value": "egg",
+          "label": "Egg (round to whole)"
+        },
+        {
+          "value": "leavening",
+          "label": "Leavening (baking powder/soda)"
+        }
+      ],
+      "default": "generic",
+      "required": false
+    },
+    {
+      "id": "ing2_amount",
+      "label": "Ingredient 2 — Amount",
+      "type": "number",
+      "placeholder": "1",
+      "default": 1,
+      "step": 0.01,
+      "required": false
+    },
+    {
+      "id": "ing2_unit",
+      "label": "Ingredient 2 — Unit",
+      "type": "select",
+      "options": [
+        {
+          "value": "cup",
+          "label": "cup(s)"
+        },
+        {
+          "value": "tbsp",
+          "label": "tablespoon(s)"
+        },
+        {
+          "value": "tsp",
+          "label": "teaspoon(s)"
+        },
+        {
+          "value": "oz",
+          "label": "oz (weight)"
+        },
+        {
+          "value": "lb",
+          "label": "lb"
+        },
+        {
+          "value": "g",
+          "label": "g"
+        },
+        {
+          "value": "kg",
+          "label": "kg"
+        },
+        {
+          "value": "ml",
+          "label": "ml"
+        },
+        {
+          "value": "l",
+          "label": "L"
+        },
+        {
+          "value": "whole",
+          "label": "whole (e.g. eggs)"
+        }
+      ],
+      "default": "tsp",
+      "required": false
+    },
+    {
+      "id": "ing2_label",
+      "label": "Ingredient 2 — Name (optional)",
+      "type": "select",
+      "options": [
+        {
+          "value": "generic",
+          "label": "Generic ingredient"
+        },
+        {
+          "value": "egg",
+          "label": "Egg (round to whole)"
+        },
+        {
+          "value": "leavening",
+          "label": "Leavening (baking powder/soda)"
+        }
+      ],
+      "default": "leavening",
+      "required": false
+    },
+    {
+      "id": "ing3_amount",
+      "label": "Ingredient 3 — Amount",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 0.01,
+      "required": false
+    },
+    {
+      "id": "ing3_unit",
+      "label": "Ingredient 3 — Unit",
+      "type": "select",
+      "options": [
+        {
+          "value": "cup",
+          "label": "cup(s)"
+        },
+        {
+          "value": "tbsp",
+          "label": "tablespoon(s)"
+        },
+        {
+          "value": "tsp",
+          "label": "teaspoon(s)"
+        },
+        {
+          "value": "oz",
+          "label": "oz (weight)"
+        },
+        {
+          "value": "lb",
+          "label": "lb"
+        },
+        {
+          "value": "g",
+          "label": "g"
+        },
+        {
+          "value": "kg",
+          "label": "kg"
+        },
+        {
+          "value": "ml",
+          "label": "ml"
+        },
+        {
+          "value": "l",
+          "label": "L"
+        },
+        {
+          "value": "whole",
+          "label": "whole (e.g. eggs)"
+        }
+      ],
+      "default": "cup",
+      "required": false
+    },
+    {
+      "id": "ing3_label",
+      "label": "Ingredient 3 — Name (optional)",
+      "type": "select",
+      "options": [
+        {
+          "value": "generic",
+          "label": "Generic ingredient"
+        },
+        {
+          "value": "egg",
+          "label": "Egg (round to whole)"
+        },
+        {
+          "value": "leavening",
+          "label": "Leavening (baking powder/soda)"
+        }
+      ],
+      "default": "generic",
+      "required": false
+    },
+    {
+      "id": "ing4_amount",
+      "label": "Ingredient 4 — Amount",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 0.01,
+      "required": false
+    },
+    {
+      "id": "ing4_unit",
+      "label": "Ingredient 4 — Unit",
+      "type": "select",
+      "options": [
+        {
+          "value": "cup",
+          "label": "cup(s)"
+        },
+        {
+          "value": "tbsp",
+          "label": "tablespoon(s)"
+        },
+        {
+          "value": "tsp",
+          "label": "teaspoon(s)"
+        },
+        {
+          "value": "oz",
+          "label": "oz (weight)"
+        },
+        {
+          "value": "lb",
+          "label": "lb"
+        },
+        {
+          "value": "g",
+          "label": "g"
+        },
+        {
+          "value": "kg",
+          "label": "kg"
+        },
+        {
+          "value": "ml",
+          "label": "ml"
+        },
+        {
+          "value": "l",
+          "label": "L"
+        },
+        {
+          "value": "whole",
+          "label": "whole (e.g. eggs)"
+        }
+      ],
+      "default": "cup",
+      "required": false
+    },
+    {
+      "id": "ing4_label",
+      "label": "Ingredient 4 — Name (optional)",
+      "type": "select",
+      "options": [
+        {
+          "value": "generic",
+          "label": "Generic ingredient"
+        },
+        {
+          "value": "egg",
+          "label": "Egg (round to whole)"
+        },
+        {
+          "value": "leavening",
+          "label": "Leavening (baking powder/soda)"
+        }
+      ],
+      "default": "generic",
+      "required": false
+    },
+    {
+      "id": "ing5_amount",
+      "label": "Ingredient 5 — Amount",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 0.01,
+      "required": false
+    },
+    {
+      "id": "ing5_unit",
+      "label": "Ingredient 5 — Unit",
+      "type": "select",
+      "options": [
+        {
+          "value": "cup",
+          "label": "cup(s)"
+        },
+        {
+          "value": "tbsp",
+          "label": "tablespoon(s)"
+        },
+        {
+          "value": "tsp",
+          "label": "teaspoon(s)"
+        },
+        {
+          "value": "oz",
+          "label": "oz (weight)"
+        },
+        {
+          "value": "lb",
+          "label": "lb"
+        },
+        {
+          "value": "g",
+          "label": "g"
+        },
+        {
+          "value": "kg",
+          "label": "kg"
+        },
+        {
+          "value": "ml",
+          "label": "ml"
+        },
+        {
+          "value": "l",
+          "label": "L"
+        },
+        {
+          "value": "whole",
+          "label": "whole (e.g. eggs)"
+        }
+      ],
+      "default": "cup",
+      "required": false
+    },
+    {
+      "id": "ing5_label",
+      "label": "Ingredient 5 — Name (optional)",
+      "type": "select",
+      "options": [
+        {
+          "value": "generic",
+          "label": "Generic ingredient"
+        },
+        {
+          "value": "egg",
+          "label": "Egg (round to whole)"
+        },
+        {
+          "value": "leavening",
+          "label": "Leavening (baking powder/soda)"
+        }
+      ],
+      "default": "generic",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "scale_factor",
+      "label": "Scale Factor",
+      "primary": true,
+      "format": "decimal",
+      "suffix": "×"
+    },
+    {
+      "id": "ing1_scaled",
+      "label": "Ingredient 1 — Scaled Amount",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "ing2_scaled",
+      "label": "Ingredient 2 — Scaled Amount",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "ing3_scaled",
+      "label": "Ingredient 3 — Scaled Amount",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "ing4_scaled",
+      "label": "Ingredient 4 — Scaled Amount",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "ing5_scaled",
+      "label": "Ingredient 5 — Scaled Amount",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "baking_warning",
+      "label": "Baking Notes",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nRecipe scaling uses a single **scale factor** applied to every ingredient:\n\n```\nScale Factor = Desired Servings ÷ Original Servings\nScaled Amount = Original Amount × Scale Factor\n```\n\nFor example, scaling from 4 to 10 servings gives a factor of 2.5. An ingredient listed as 1 cup becomes 2.5 cups.\n\n## Smart Unit Conversion Rules\n\nRaw scaled values are automatically converted to more practical units:\n\n| Condition | Conversion Applied |\n|---|---|\n| Scaled cups < 0.25 | Convert to tablespoons (1 cup = 16 tbsp) |\n| Scaled tablespoons < 1 | Convert to teaspoons (1 tbsp = 3 tsp) |\n| Scaled oz ≥ 16 | Convert to pounds (16 oz = 1 lb) |\n| Scaled kg ≥ 1 | Display as kg with 2 decimals |\n| Scaled L ≥ 1 | Display as L with 2 decimals |\n\n## Worked Example\n\nOriginal recipe: **4 servings**. Target: **10 servings**.\n\n- Scale factor: 10 ÷ 4 = **2.5×**\n- 2 cups flour → 5 cups flour\n- 1 tsp baking powder → 2.5 tsp (linear) → **adjusted to ~2 tsp** (leavening cap at 75–80%)\n- 2 eggs → 5 eggs (rounded to nearest whole)\n- 4 oz butter → 10 oz butter (displayed as **0.625 lb**)\n- 3 tbsp sugar → 7.5 tbsp → displayed as **7 tbsp + 1½ tsp** (approximate)\n\n## Limitations & When NOT to Apply Linear Scaling\n\n**Leavening agents (baking powder, baking soda, yeast):** Scaling linearly beyond 2× frequently produces over-risen, bitter, or dense results. Professional bakers cap leavening increases at 75–80% of the linear amount when scaling up 3× or more.\n\n**Eggs:** Since eggs come in discrete units, fractional results must be rounded. A half-egg can be approximated by beating one egg and using half the volume (~1.5 tbsp per half large egg).\n\n**Salt and strong spices:** Taste perception is not strictly linear. Scale to 75% of the calculated amount first, then adjust by taste.\n\n**Pan size:** Doubling a batter recipe does not mean doubling bake time. Volume-to-surface-area ratios change; check doneness by internal temperature or toothpick test.\n\n**Cook times:** This calculator does NOT adjust cooking times. Larger batches in the same vessel may require 10–25% more time; smaller batches may need less.",
+  "faq": [
+    {
+      "q": "What is a scale factor and how is it calculated?",
+      "a": "The scale factor is the ratio of desired servings to original servings. If you want 12 servings from a 4-serving recipe, the scale factor is 12 ÷ 4 = 3. Every ingredient is multiplied by this number."
+    },
+    {
+      "q": "Why shouldn't I scale baking powder and baking soda linearly?",
+      "a": "Leavening works through a chemical reaction with a ceiling effect. Too much baking powder produces a bitter taste and can cause a cake to collapse. For recipes scaling 3× or more, use 75–80% of the linearly calculated amount and test before committing to a large batch."
+    },
+    {
+      "q": "How do I handle a scaled egg amount that isn't a whole number?",
+      "a": "Round to the nearest whole egg for most recipes. If precision matters (custards, soufflés), beat a whole egg, weigh or measure it (a large egg ≈ 3 tbsp / 50 g), then use the exact fractional volume."
+    },
+    {
+      "q": "Does scaling change cooking time or oven temperature?",
+      "a": "No. Temperature stays the same. Time may increase by 10–25% for larger batches in the same vessel, or decrease for smaller batches. Always verify doneness with a thermometer or visual cues, not a timer alone."
+    },
+    {
+      "q": "Can I scale a recipe down to less than one serving?",
+      "a": "Yes. A scale factor below 1 (e.g., 0.25 for a quarter batch) works mathematically. Practically, very small amounts of leavening are hard to measure accurately; use a precision kitchen scale for anything under ¼ tsp."
+    },
+    {
+      "q": "Why does the calculator convert cups to tablespoons automatically?",
+      "a": "Measuring ⅛ cup is awkward and imprecise; 2 tablespoons is the same volume and far easier to measure accurately. The conversion threshold is 0.25 cups (4 tablespoons)."
+    },
+    {
+      "q": "Is this calculator suitable for professional or commercial recipe scaling?",
+      "a": "It handles the arithmetic correctly. For commercial kitchens, also account for equipment capacity, batch cooking losses (evaporation, trim waste), and ingredient purchasing units. The baking non-linearity notes are especially important at high multipliers (5× and above)."
+    },
+    {
+      "q": "What units does the calculator support?",
+      "a": "US volume (cups, tablespoons, teaspoons), US weight (oz, lb), metric weight (g, kg), metric volume (ml, L), and whole-unit counts (eggs, pieces). Mixed US/metric in the same recipe is supported ingredient by ingredient."
+    },
+    {
+      "q": "How accurate is the smart unit display for tablespoons and teaspoons?",
+      "a": "The conversion is exact (1 cup = 16 tbsp; 1 tbsp = 3 tsp). Rounding to 2 decimal places is applied for display. For baking, always measure by weight when possible — 1 cup of flour can range from 120 g to 150 g depending on scooping technique."
+    },
+    {
+      "q": "Can I use this for drinks and cocktail batches?",
+      "a": "Yes. Cocktail scaling is purely linear — no leavening concerns. Scale factor works identically. Use ml or oz units for liquid ingredients. Remember ice dilution changes as batch size increases in punches and large-format cocktails."
+    }
+  ],
+  "sources": [
+    {
+      "name": "USDA Food Safety and Inspection Service — Cooking for Groups",
+      "url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/cooking-groups",
+      "publisher": "USDA FSIS",
+      "date": "2024"
+    },
+    {
+      "name": "King Arthur Baking — Scaling Recipes",
+      "url": "https://www.kingarthurbaking.com/pro/reference/scaling-recipes",
+      "publisher": "King Arthur Baking Company",
+      "date": "2025"
+    },
+    {
+      "name": "FDA — Food Code 2022: Volume and Weight Equivalents",
+      "url": "https://www.fda.gov/food/fda-food-code/food-code-2022",
+      "publisher": "U.S. Food and Drug Administration",
+      "date": "2022"
+    },
+    {
+      "name": "NIST Handbook 44 — Specifications for Measuring Devices (weights and measures)",
+      "url": "https://www.nist.gov/pml/weights-and-measures/publications/nist-handbooks/handbook-44",
+      "publisher": "NIST",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Unit conversion constants (cups/tbsp/tsp, oz/lb) are fixed physical standards and do not change. Baking adjustment recommendations reviewed against current professional baking literature as needed.",
+    "source": "USDA Food Safety and Inspection Service — Cooking for Groups",
+    "sourceUrl": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/cooking-groups"
+  },
+  "lastReviewed": "2026-04-28"
+}

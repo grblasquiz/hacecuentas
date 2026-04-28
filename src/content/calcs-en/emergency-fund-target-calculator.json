@@ -1,0 +1,262 @@
+{
+  "slug": "emergency-fund-target-calculator",
+  "title": "Emergency Fund Calculator 2026 | Hacé Cuentas",
+  "h1": "Emergency Fund Calculator",
+  "description": "Calculate your ideal emergency fund target. Enter monthly expenses, job type, and dependents to get a personalized 3–12 month savings goal in dollars.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "🛟",
+  "formulaId": "emergency-fund-target-calculator",
+  "intro": "An emergency fund is your financial safety net — cash set aside to cover essential expenses if you lose income, face a medical crisis, or hit an unexpected repair bill. **Most financial planners recommend 3–6 months of essentials**, but freelancers, single-income households, and families with dependents often need 6–12 months. This calculator sizes your target precisely based on your real expenses and risk profile.",
+  "keyTakeaway": "A single-income household spending $3,500/month on essentials typically needs $10,500–$21,000 in an emergency fund; freelancers and those with dependents should target $21,000–$42,000.",
+  "useCases": [
+    "Determining how much cash to keep in a high-yield savings account",
+    "Setting a savings milestone before investing in stocks or paying extra on debt",
+    "Reassessing your fund after a job change, new dependent, or major expense shift",
+    "Planning how many months it will take to fully fund your emergency reserve",
+    "Comparing coverage needs as a dual-income couple vs. a solo freelancer",
+    "Budgeting after a layoff to know exactly how long your current savings will last"
+  ],
+  "fields": [
+    {
+      "id": "rent",
+      "label": "Monthly Rent or Mortgage ($)",
+      "type": "number",
+      "placeholder": "1500",
+      "default": 1500,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "food",
+      "label": "Monthly Groceries & Food ($)",
+      "type": "number",
+      "placeholder": "500",
+      "default": 500,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "utilities",
+      "label": "Monthly Utilities (electric, gas, water, internet) ($)",
+      "type": "number",
+      "placeholder": "200",
+      "default": 200,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "insurance",
+      "label": "Monthly Insurance Premiums (health, auto, renters/home) ($)",
+      "type": "number",
+      "placeholder": "300",
+      "default": 300,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "transport",
+      "label": "Monthly Transportation (gas, transit, car payment) ($)",
+      "type": "number",
+      "placeholder": "300",
+      "default": 300,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "debt_payments",
+      "label": "Monthly Minimum Debt Payments (credit cards, loans) ($)",
+      "type": "number",
+      "placeholder": "200",
+      "default": 200,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "other_essentials",
+      "label": "Other Essential Monthly Expenses (medications, childcare, etc.) ($)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "income_type",
+      "label": "Income Situation",
+      "type": "select",
+      "options": [
+        {
+          "value": "dual",
+          "label": "Dual income (two earners in household)"
+        },
+        {
+          "value": "single",
+          "label": "Single income (one earner, stable job)"
+        },
+        {
+          "value": "freelance",
+          "label": "Freelance / self-employed / irregular income"
+        }
+      ],
+      "default": "single",
+      "required": true
+    },
+    {
+      "id": "dependents",
+      "label": "Number of Dependents (children, elderly, etc.)",
+      "type": "select",
+      "options": [
+        {
+          "value": "0",
+          "label": "0 — no dependents"
+        },
+        {
+          "value": "1",
+          "label": "1 dependent"
+        },
+        {
+          "value": "2",
+          "label": "2 dependents"
+        },
+        {
+          "value": "3plus",
+          "label": "3 or more dependents"
+        }
+      ],
+      "default": "0",
+      "required": true
+    },
+    {
+      "id": "current_savings",
+      "label": "Current Emergency Fund Balance ($)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "monthly_saving",
+      "label": "Amount You Can Save Per Month Toward This Goal ($)",
+      "type": "number",
+      "placeholder": "200",
+      "default": 200,
+      "step": 1,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "total_monthly_essentials",
+      "label": "Total Monthly Essential Expenses",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "recommended_months",
+      "label": "Recommended Coverage (months)",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "target_amount",
+      "label": "Target Emergency Fund",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "gap",
+      "label": "Remaining Amount Needed",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "months_to_goal",
+      "label": "Months to Reach Goal",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "coverage_status",
+      "label": "Current Coverage",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How the Emergency Fund Target Is Calculated\n\nYour emergency fund target is built on two variables: **monthly essential expenses** and a **coverage multiplier** (in months) based on your income risk and family situation.\n\n```\nMonthly Essentials = rent + food + utilities + insurance\n                   + transport + debt_payments + other_essentials\n\nTarget = Monthly Essentials × Recommended Months\n\nGap = max(Target − Current Savings, 0)\n\nMonths to Goal = Gap ÷ Monthly Saving Rate  (if saving rate > 0)\n```\n\n## How the Recommended Months Are Determined\n\nThe calculator starts with a base coverage level and adjusts it upward for risk factors:\n\n| Income Situation | Base Coverage |\n|---|---|\n| Dual income, stable | 3 months |\n| Single income, stable | 5 months |\n| Freelance / irregular | 8 months |\n\nDependents add additional buffer:\n\n| Dependents | Added Months |\n|---|---|\n| 0 | +0 |\n| 1 | +1 |\n| 2 | +2 |\n| 3 or more | +3 |\n\nThe total is capped at **12 months**, which is the upper bound recommended even for high-risk situations. The floor is **3 months**, the widely cited minimum from CFPB and financial planning guidelines.\n\n## Worked Example\n\nSuppose a freelance designer lives alone with one child:\n- Rent: $1,400 | Food: $600 | Utilities: $180 | Insurance: $350 | Transport: $250 | Debt payments: $150 | Other: $100\n- **Monthly Essentials = $3,030**\n- Income type: freelance → base 8 months; 1 dependent → +1 month → **9 months**\n- **Target = $3,030 × 9 = $27,270**\n- Current savings: $5,000 → Gap = $22,270\n- Saving $400/month → **55.7 months (~4 years 8 months) to reach goal**\n\n## What Counts as an Essential Expense?\n\nOnly include costs you **cannot eliminate** if you lose income: housing, minimum food budget, utilities needed for shelter, required insurance, minimum debt payments (to avoid default), and essential medications or childcare. Do **not** include discretionary spending (dining out, subscriptions, vacations) — your fund covers survival, not lifestyle.\n\n## Limitations\n\n- This calculator does not account for inflation eroding your fund's purchasing power over time. Revisit your target annually.\n- It assumes your saving rate is consistent. Irregular savers should use a conservative (lower) monthly saving figure.\n- Tax implications (e.g., interest earned on HYSA) are not modeled.\n- If you carry high-interest debt, some advisors recommend a smaller $1,000–$2,000 starter fund first, then aggressively paying debt before fully funding this target.",
+  "faq": [
+    {
+      "q": "Why do I need 3 to 12 months — isn't 3 months enough?",
+      "a": "Three months is the minimum for someone with a stable dual income and no dependents. The average job search in the U.S. takes 3–6 months (BLS data), and freelancers or single-income households face higher volatility. More dependents mean more potential simultaneous crises, so a larger buffer is prudent."
+    },
+    {
+      "q": "Should I include my full rent or only part of it?",
+      "a": "Include your full rent or mortgage payment. In a financial emergency you still owe 100% of housing costs. Do not reduce it — housing is typically the largest single essential expense and skipping payments has severe credit and legal consequences."
+    },
+    {
+      "q": "Where should I keep my emergency fund?",
+      "a": "A high-yield savings account (HYSA) or money market account is the standard recommendation. As of 2026, many HYSAs offer 4–5% APY. Avoid investing your emergency fund in stocks — market downturns often coincide with job losses, which is exactly when you'd need to withdraw."
+    },
+    {
+      "q": "Does my emergency fund need to be fully funded before I invest?",
+      "a": "Most financial planners recommend a starter fund of $1,000 first, then prioritize high-interest debt (>7% APR), then fully fund your emergency reserve, then invest. However, if your employer offers a 401(k) match, contribute enough to capture the full match throughout — that's an immediate 50–100% return."
+    },
+    {
+      "q": "Should I include my minimum debt payments in monthly essentials?",
+      "a": "Yes — only minimum payments, not extra principal payments. In an emergency you must make minimums to avoid default and credit damage. Extra payments are discretionary and would stop in a true emergency."
+    },
+    {
+      "q": "My income varies widely each month. How should I calculate my saving rate?",
+      "a": "Use your average monthly net income from the lowest 3 months of the past year, subtract your essential expenses, and use the remainder as your saving rate. This gives a conservative, achievable figure rather than an optimistic one based on peak months."
+    },
+    {
+      "q": "What if I already have $50,000 saved — do I still need an emergency fund?",
+      "a": "If that $50,000 is liquid (not in retirement accounts or illiquid investments) and not earmarked for another goal, it can serve as your emergency fund. The key is accessibility: money in a 401(k) comes with penalties and taxes if withdrawn early, so it does not count."
+    },
+    {
+      "q": "How often should I recalculate my emergency fund target?",
+      "a": "Recalculate whenever your essential expenses change significantly: after a move, salary change, new dependent, insurance change, or taking on new debt. At minimum, review annually. Inflation of 3–4% per year means a $20,000 fund loses roughly $600–$800 of real purchasing power each year."
+    },
+    {
+      "q": "Is the emergency fund target different for homeowners vs. renters?",
+      "a": "Homeowners typically need a larger fund because of potential repair costs (HVAC, roof, plumbing) that renters do not face. This calculator covers recurring monthly expenses; homeowners should consider adding a separate home repair reserve of 1–2% of home value annually on top of their emergency fund target."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Consumer Financial Protection Bureau — Building an Emergency Fund",
+      "url": "https://www.consumerfinance.gov/consumer-tools/educator-tools/youth-financial-education/teach/activities/build-an-emergency-savings-fund/",
+      "publisher": "CFPB",
+      "date": "2025"
+    },
+    {
+      "name": "U.S. Bureau of Labor Statistics — Job Openings and Labor Turnover Survey (JOLTS)",
+      "url": "https://www.bls.gov/jlt/",
+      "publisher": "BLS",
+      "date": "2026"
+    },
+    {
+      "name": "Federal Reserve — Report on the Economic Well-Being of U.S. Households",
+      "url": "https://www.federalreserve.gov/consumerscommunities/shed.htm",
+      "publisher": "Federal Reserve",
+      "date": "2025"
+    },
+    {
+      "name": "IRS — Early Retirement Plan Withdrawal Penalties",
+      "url": "https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-topics-tax-on-early-distributions",
+      "publisher": "IRS",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Review recommended months ranges if BLS average job search duration changes materially. Update HYSA rate references in FAQ annually."
+  },
+  "lastReviewed": "2026-04-28"
+}

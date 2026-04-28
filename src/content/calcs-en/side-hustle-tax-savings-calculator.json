@@ -1,0 +1,248 @@
+{
+  "slug": "side-hustle-tax-savings-calculator",
+  "title": "Side Hustle Tax Calculator (USA) 2026 | Hacé Cuentas",
+  "h1": "Side Hustle Tax Calculator (USA)",
+  "description": "Calculate self-employment tax, federal income tax, and net income from your side hustle. Estimates SE tax (15.3%), QBI deduction, and quarterly payments for 2026.",
+  "category": "career",
+  "audience": "global",
+  "icon": "💼",
+  "formulaId": "side-hustle-tax-savings-calculator",
+  "intro": "Running a side hustle means the IRS treats you as self-employed — even for part-time gigs. On top of your regular federal income tax, you owe **self-employment (SE) tax of 15.3%** on net profit (Social Security 12.4% up to $176,100 + Medicare 2.9% unlimited). This calculator shows your real tax bill, the deductions you qualify for, and how much you actually keep after taxes.",
+  "keyTakeaway": "A side hustle earning $30,000 net in the 22% bracket typically owes ~$4,239 SE tax + ~$4,559 federal income tax = ~$8,798 total, keeping roughly $21,202 — about 70.7 cents on the dollar.",
+  "useCases": [
+    "Freelancer estimating quarterly estimated tax payments to avoid IRS penalties",
+    "Gig worker (Uber, DoorDash, Etsy) calculating true after-tax hourly rate",
+    "Side business owner deciding whether to incorporate as an S-Corp to reduce SE tax",
+    "Employee with a side hustle estimating additional taxes before year-end",
+    "1099 contractor comparing W-2 job offer vs. staying self-employed",
+    "Blogger or content creator tracking deductible business expenses vs. gross revenue"
+  ],
+  "fields": [
+    {
+      "id": "gross_income",
+      "label": "Gross Side Hustle Income ($)",
+      "type": "number",
+      "placeholder": "30000",
+      "default": 30000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "business_expenses",
+      "label": "Deductible Business Expenses ($)",
+      "type": "number",
+      "placeholder": "5000",
+      "default": 5000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "fed_bracket",
+      "label": "Your Marginal Federal Tax Bracket",
+      "type": "select",
+      "options": [
+        {
+          "value": "0.10",
+          "label": "10%"
+        },
+        {
+          "value": "0.12",
+          "label": "12%"
+        },
+        {
+          "value": "0.22",
+          "label": "22%"
+        },
+        {
+          "value": "0.24",
+          "label": "24%"
+        },
+        {
+          "value": "0.32",
+          "label": "32%"
+        },
+        {
+          "value": "0.35",
+          "label": "35%"
+        },
+        {
+          "value": "0.37",
+          "label": "37%"
+        }
+      ],
+      "default": "0.22",
+      "required": true
+    },
+    {
+      "id": "state_rate",
+      "label": "State Income Tax Rate (%)",
+      "type": "number",
+      "placeholder": "5",
+      "default": 5,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "apply_qbi",
+      "label": "Apply 20% QBI Deduction?",
+      "type": "select",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes — I qualify (income below phase-out limits)"
+        },
+        {
+          "value": "no",
+          "label": "No — I don't qualify or prefer to skip"
+        }
+      ],
+      "default": "yes",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "net_profit",
+      "label": "Net Profit (after expenses)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "se_tax",
+      "label": "Self-Employment Tax (15.3%)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "fed_tax",
+      "label": "Federal Income Tax on Side Income",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "state_tax",
+      "label": "State Income Tax on Side Income",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_tax",
+      "label": "Total Tax Owed",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "net_keep",
+      "label": "Net Amount You Keep",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "effective_rate",
+      "label": "Effective Total Tax Rate",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "quarterly_payment",
+      "label": "Estimated Quarterly Payment (Form 1040-ES)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "breakdown",
+      "label": "Tax Breakdown Summary",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How the Calculator Works\n\nSide hustle income is reported on **Schedule C** (Profit or Loss from Business). Net profit equals gross income minus deductible business expenses. All taxes apply to this net figure.\n\n## Formula\n\n```\nNet Profit = Gross Income − Business Expenses\n\nSE Tax Base  = Net Profit × 0.9235          // IRS multiplier (92.35%)\nSE Tax       = SE Tax Base × 0.153          // 12.4% SS + 2.9% Medicare\n\nHalf SE Tax Deduction = SE Tax / 2          // Above-the-line deduction (Schedule 1)\n\nQBI Deduction (if eligible) = (Net Profit − Half SE Deduction) × 0.20\n\nTaxable Side Income = Net Profit\n                    − Half SE Tax Deduction\n                    − QBI Deduction\n\nFederal Income Tax = Taxable Side Income × Marginal Bracket\nState Income Tax   = Net Profit × State Rate\n\nTotal Tax = SE Tax + Federal Income Tax + State Income Tax\nNet Keep  = Net Profit − Total Tax\n\nQuarterly Payment = Total Tax / 4\n```\n\n## Worked Example\n\nAssume: $30,000 gross, $5,000 expenses, 22% bracket, 5% state, QBI applied.\n\n| Step | Amount |\n|---|---|\n| Net Profit | $25,000 |\n| SE Tax Base (×0.9235) | $23,087.50 |\n| SE Tax (×0.153) | $3,532.39 |\n| Half SE Deduction | $1,766.19 |\n| QBI Base ($25,000 − $1,766.19) | $23,233.81 |\n| QBI Deduction (×0.20) | $4,646.76 |\n| Taxable Side Income | $18,587.05 |\n| Federal Income Tax (×0.22) | $4,089.15 |\n| State Tax ($25,000 × 0.05) | $1,250.00 |\n| **Total Tax** | **$8,871.54** |\n| **Net Keep** | **$16,128.46** |\n| Quarterly Payment | $2,217.89 |\n\n## 2026 Key Thresholds\n\n- **Social Security wage base**: $176,100 (income above this pays only the 2.9% Medicare portion)\n- **Additional Medicare Tax**: 0.9% on self-employment income exceeding $200,000 (single) / $250,000 (MFJ) — not included in this basic calculator\n- **QBI phase-out**: begins at $197,300 (single) / $394,600 (MFJ) for specified service trades\n\n## Limitations & When NOT to Rely Solely on This Tool\n\n- This calculator uses your **marginal bracket** for the side income estimate. If the side income pushes you into a higher bracket mid-range, results will be slightly overstated.\n- The **QBI deduction** has income-based phase-outs and excludes certain service businesses (law, finance, consulting above thresholds). Verify eligibility with a tax professional.\n- **S-Corp election** can reduce SE tax for high earners (typically worthwhile above ~$50,000 net profit) — this calculator does not model that strategy.\n- State calculations use a flat rate; many states use graduated brackets or allow different deductions.\n- Does not account for **self-employed health insurance deduction**, **SEP-IRA contributions**, or **home office deduction** — all of which can further reduce taxable income.",
+  "faq": [
+    {
+      "q": "Why is the SE tax base multiplied by 92.35% instead of the full net profit?",
+      "a": "The IRS allows you to reduce net profit by 7.65% before calculating SE tax. This mirrors how W-2 employees only pay their half of FICA (7.65%) — employers pay the other half. Self-employed individuals get an equivalent adjustment. The factor is 1 − 0.0765 = 0.9235. See IRS Schedule SE instructions."
+    },
+    {
+      "q": "What counts as a deductible business expense for a side hustle?",
+      "a": "Ordinary and necessary expenses directly tied to your business. Common examples: software subscriptions, home office (dedicated space), equipment, vehicle mileage (67 cents/mile in 2024; check 2026 IRS rate), professional services, advertising, and supplies. Personal expenses are never deductible. Keep receipts and bank records."
+    },
+    {
+      "q": "Do I owe SE tax if my side hustle nets less than $400?",
+      "a": "No. The IRS does not require you to file Schedule SE or pay SE tax if your net self-employment income is under $400 for the year. However, you still must report the income on Schedule C."
+    },
+    {
+      "q": "What is the QBI deduction and do all self-employed people qualify?",
+      "a": "The 20% Qualified Business Income (QBI) deduction under IRC §199A lets eligible self-employed individuals deduct 20% of qualified business income from taxable income. It phases out for Specified Service Trades or Businesses (SSTBs) — lawyers, doctors, financial advisers, consultants — once income exceeds $197,300 (single, 2026). Non-SSTB businesses have different W-2/property limits at higher incomes."
+    },
+    {
+      "q": "When are quarterly estimated tax payments due in 2026?",
+      "a": "The four 2026 due dates are: April 15, June 16, September 15, and January 15, 2027. You owe estimated payments if you expect to owe at least $1,000 in federal taxes after withholding. Use IRS Form 1040-ES to calculate and submit. Missing payments triggers an underpayment penalty (currently ~8% annualized)."
+    },
+    {
+      "q": "I also have a W-2 job. How does that affect my SE tax?",
+      "a": "SE tax is calculated only on your self-employment net profit, regardless of W-2 wages. However, your W-2 wages count toward the $176,100 Social Security wage base. If your W-2 wages already reach $176,100, the 12.4% SS portion of SE tax on your side income is zero (only the 2.9% Medicare portion applies). The calculator does not model W-2 wages; consult IRS Schedule SE Part I for this calculation."
+    },
+    {
+      "q": "Can I reduce SE tax by forming an S-Corporation?",
+      "a": "Yes. An S-Corp pays you a 'reasonable salary' (subject to payroll taxes) and the remaining profit as a distribution (not subject to SE tax). At ~$50,000+ net profit, the savings can exceed S-Corp costs (~$1,500–$2,500/year in filing fees and accounting). This is a legitimate and common strategy, but requires payroll setup and additional filings. Consult a CPA before electing S-Corp status."
+    },
+    {
+      "q": "What is the Additional Medicare Tax and when does it apply?",
+      "a": "The 0.9% Additional Medicare Tax applies to self-employment income exceeding $200,000 (single filers) or $250,000 (married filing jointly) combined across all income. This calculator excludes it. If your total income approaches those thresholds, add 0.9% on the amount over the limit manually."
+    },
+    {
+      "q": "Does this calculator apply to gig workers on 1099-NEC or 1099-K forms?",
+      "a": "Yes. Income reported on a 1099-NEC (nonemployee compensation) or 1099-K (payment card/third-party network, threshold $5,000 for 2024–2025, $600 from 2026) is treated as self-employment income. The same SE tax, deduction, and quarterly payment rules apply. Always reconcile 1099 totals with your own records — platforms may report gross before their fees."
+    },
+    {
+      "q": "What state tax rate should I enter if my state has no income tax?",
+      "a": "Enter 0. States with no personal income tax include Alaska, Florida, Nevada, South Dakota, Tennessee, Texas, Washington, and Wyoming. New Hampshire taxes only interest and dividends (not wages/self-employment income as of 2025). If your state uses graduated brackets, enter your effective marginal rate for the most accurate estimate."
+    }
+  ],
+  "sources": [
+    {
+      "name": "IRS Publication 334 — Tax Guide for Small Business (2025)",
+      "url": "https://www.irs.gov/publications/p334",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Schedule SE — Self-Employment Tax Instructions",
+      "url": "https://www.irs.gov/forms-pubs/about-schedule-se-form-1040",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Form 1040-ES — Estimated Tax for Individuals",
+      "url": "https://www.irs.gov/forms-pubs/about-form-1040-es",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Topic No. 407 — Business Income",
+      "url": "https://www.irs.gov/taxtopics/tc407",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Revenue Procedure 2025-28 — 2026 Tax Inflation Adjustments",
+      "url": "https://www.irs.gov/newsroom/irs-provides-tax-inflation-adjustments-for-tax-year-2026",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Update Social Security wage base ($176,100 for 2026), QBI phase-out thresholds ($197,300/$394,600), federal tax brackets, and Additional Medicare Tax thresholds each January when IRS publishes annual inflation adjustments."
+  },
+  "lastReviewed": "2026-04-28"
+}

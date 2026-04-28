@@ -1,0 +1,190 @@
+{
+  "slug": "ethereum-gas-fee-estimator",
+  "title": "Ethereum Gas Fee Estimator 2026 | Hacé Cuentas",
+  "h1": "Ethereum Gas Fee Estimator",
+  "description": "Calculate Ethereum gas fees in ETH and USD. Estimate costs for transfers, ERC-20, Uniswap swaps, NFT mints, and DeFi. Compare L1 vs L2 savings.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "⛽",
+  "formulaId": "ethereum-gas-fee-estimator",
+  "intro": "Every Ethereum transaction consumes **gas** — a unit measuring computational effort. Your total fee equals gas used multiplied by the gas price you set (in gwei) multiplied by the current ETH/USD price. This calculator shows you the exact cost before you submit, so you can choose the right transaction type, time your tx when the network is cheap, or decide whether an L2 like Arbitrum or Base makes more financial sense.",
+  "keyTakeaway": "At 30 gwei and $3,000 ETH, a simple ETH transfer costs ~$1.89, while a complex DeFi interaction can exceed $45 — Layer 2s reduce those same fees to $0.10–$0.50.",
+  "useCases": [
+    "Estimating the cost of sending ETH or ERC-20 tokens before confirming",
+    "Comparing L1 Ethereum fees vs Arbitrum/Base Layer 2 fees",
+    "Deciding whether a Uniswap swap is worth executing at current gas prices",
+    "Budgeting gas costs for NFT minting campaigns",
+    "Timing DeFi transactions to minimize fees during low-congestion periods",
+    "Teaching or learning how Ethereum gas pricing works with real numbers"
+  ],
+  "fields": [
+    {
+      "id": "tx_type",
+      "label": "Transaction Type",
+      "type": "select",
+      "options": [
+        {
+          "value": "eth_transfer",
+          "label": "ETH Transfer (21,000 gas)"
+        },
+        {
+          "value": "erc20_transfer",
+          "label": "ERC-20 Token Transfer (65,000 gas)"
+        },
+        {
+          "value": "uniswap_swap",
+          "label": "Uniswap Swap (150,000 gas)"
+        },
+        {
+          "value": "nft_mint",
+          "label": "NFT Mint (200,000 gas)"
+        },
+        {
+          "value": "defi_complex",
+          "label": "Complex DeFi Interaction (500,000 gas)"
+        }
+      ],
+      "default": "eth_transfer",
+      "required": true
+    },
+    {
+      "id": "gas_price_gwei",
+      "label": "Gas Price (Gwei)",
+      "type": "number",
+      "placeholder": "30",
+      "default": 30,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "eth_price_usd",
+      "label": "ETH Price (USD)",
+      "type": "number",
+      "placeholder": "3000",
+      "default": 3000,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "gas_used",
+      "label": "Gas Units Used",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "fee_eth",
+      "label": "Gas Fee (ETH)",
+      "primary": false,
+      "format": "decimal"
+    },
+    {
+      "id": "fee_usd",
+      "label": "Gas Fee (USD)",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "l2_fee_usd",
+      "label": "Estimated L2 Fee (Arbitrum / Base)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "l2_savings_usd",
+      "label": "L2 Savings vs L1",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "summary",
+      "label": "Summary",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How Ethereum Gas Fees Work\n\nEvery operation on the Ethereum Virtual Machine (EVM) has an assigned gas cost. A transaction fee is calculated as:\n\n```\nFee (ETH) = Gas Used × Gas Price (gwei) × 10⁻⁹\nFee (USD) = Fee (ETH) × ETH/USD Price\n```\n\nGwei is simply a denomination of ETH: 1 ETH = 1,000,000,000 gwei (10⁹ gwei). So multiplying by 10⁻⁹ converts gwei-denominated gas cost back into ETH.\n\n## Gas Units by Transaction Type\n\n| Transaction Type | Typical Gas Used |\n|---|---|\n| ETH Transfer | 21,000 |\n| ERC-20 Token Transfer | 65,000 |\n| Uniswap V3 Swap | 150,000 |\n| NFT Mint (ERC-721) | 200,000 |\n| Complex DeFi (e.g., multi-hop, lending) | 500,000 |\n\nThese figures represent typical medians. Actual gas may vary based on contract complexity, storage operations, and current state of the chain.\n\n## Worked Example\n\nSuppose you want to swap tokens on Uniswap when the gas price is 25 gwei and ETH trades at $3,200:\n\n```\nGas Used    = 150,000\nGas Price   = 25 gwei\nFee (ETH)   = 150,000 × 25 × 10⁻⁹ = 0.00375 ETH\nFee (USD)   = 0.00375 × $3,200 = $12.00\n```\n\n## Layer 2 Alternatives\n\nOptimistic rollups (Arbitrum, Base) and ZK rollups batch transactions and post compressed proofs to L1. This reduces the per-transaction cost dramatically:\n\n- **ETH Transfer on L2:** ~$0.01–$0.05\n- **ERC-20 Transfer on L2:** ~$0.05–$0.15\n- **Swap / DeFi on L2:** ~$0.10–$0.50\n\nThis calculator uses a conservative midpoint estimate per transaction type on L2 to compute your savings.\n\n## EIP-1559 Note\n\nSince the London upgrade (EIP-1559), Ethereum fees have two components: a **base fee** (burned, set by the protocol) and a **priority fee** (tip to validators). The gas price you enter here represents the effective total (base + priority). Tools like Etherscan Gas Tracker show live gwei values.\n\n## Limitations\n\n- Gas estimates are medians; specific contract calls can use more or less gas.\n- ETH price and gwei fluctuate second-to-second; this calc is a planning tool, not a real-time oracle.\n- L2 fees are approximations; check the specific L2 bridge or app for exact costs.\n- Does not account for EIP-4844 blob transactions (Proto-Danksharding), which may further reduce L2 costs.",
+  "faq": [
+    {
+      "q": "What is a gwei?",
+      "a": "Gwei is a denomination of ETH: 1 ETH equals 1,000,000,000 gwei (one billion gwei). Gas prices are quoted in gwei because the numbers are more human-readable. At 30 gwei, each unit of gas costs 0.000000030 ETH."
+    },
+    {
+      "q": "Why does an ETH transfer always cost exactly 21,000 gas?",
+      "a": "The Ethereum protocol hard-codes 21,000 gas as the minimum cost for any transaction that moves value between externally owned accounts (EOAs). It covers the base cost of signature verification and state update. Contract interactions cost more because they execute code."
+    },
+    {
+      "q": "How do I find the current gas price in gwei?",
+      "a": "Check Etherscan Gas Tracker (etherscan.io/gastracker) or the EtherScan API for live base fee and priority fee data. Gas prices fluctuate from under 5 gwei during quiet periods to over 200 gwei during high-demand events like popular NFT mints."
+    },
+    {
+      "q": "What is the difference between gas limit and gas used?",
+      "a": "Gas limit is the maximum you authorize a transaction to consume. Gas used is the actual amount consumed. You are only charged for gas used. Wallets like MetaMask estimate a safe gas limit automatically; unused gas is refunded."
+    },
+    {
+      "q": "Are Layer 2 fees always cheaper than Ethereum mainnet?",
+      "a": "In practice, yes — usually by 10x to 100x. Arbitrum and Base typically charge $0.01–$0.50 per transaction. However, bridging assets from L1 to L2 incurs a one-time L1 fee. For infrequent large transactions, the L1 fee may be acceptable."
+    },
+    {
+      "q": "Does a failed transaction still cost gas?",
+      "a": "Yes. If a transaction is submitted and fails on-chain (e.g., due to slippage, insufficient liquidity, or a reverted contract call), the gas consumed up to the point of failure is still charged. The ETH value transfer is reverted, but the computational work is not."
+    },
+    {
+      "q": "What is EIP-1559 and does it affect this calculation?",
+      "a": "EIP-1559 introduced a base fee that is algorithmically adjusted each block and burned (removed from supply), plus an optional priority fee (tip) paid to validators. Your effective gas price = base fee + priority fee. The formula in this calculator uses your total effective gas price, so it remains accurate."
+    },
+    {
+      "q": "Can I set my gas price to zero to avoid fees?",
+      "a": "No. Validators select transactions by fee. A zero-gwei transaction would never be included in a block. Most wallets enforce a minimum that is at or above the current base fee, which itself cannot be zero as long as there is any network activity."
+    },
+    {
+      "q": "How much cheaper are ZK rollups like zkSync compared to Optimistic rollups like Arbitrum?",
+      "a": "Both are significantly cheaper than L1. ZK rollups can be marginally cheaper for simple transfers because proof generation is very efficient. For complex DeFi, costs are broadly similar ($0.10–$0.50). The L2 fee range in this calculator applies to both rollup types."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ethereum Documentation — Gas and Fees",
+      "url": "https://ethereum.org/en/developers/docs/gas/",
+      "publisher": "Ethereum Foundation",
+      "date": "2026"
+    },
+    {
+      "name": "EIP-1559: Fee market change for ETH 1.0 chain",
+      "url": "https://eips.ethereum.org/EIPS/eip-1559",
+      "publisher": "Ethereum Improvement Proposals",
+      "date": "2021"
+    },
+    {
+      "name": "Etherscan Gas Tracker",
+      "url": "https://etherscan.io/gastracker",
+      "publisher": "Etherscan",
+      "date": "2026"
+    },
+    {
+      "name": "L2Beat — Layer 2 Ecosystem Overview",
+      "url": "https://l2beat.com",
+      "publisher": "L2Beat",
+      "date": "2026"
+    },
+    {
+      "name": "EIP-4844: Shard Blob Transactions (Proto-Danksharding)",
+      "url": "https://eips.ethereum.org/EIPS/eip-4844",
+      "publisher": "Ethereum Improvement Proposals",
+      "date": "2024"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Gas unit estimates per transaction type should be reviewed if major EVM upgrades change opcode costs. L2 fee ranges should be updated if rollup cost structures change significantly. ETH price and gwei inputs are user-provided.",
+    "source": "Ethereum Documentation — Gas and Fees",
+    "sourceUrl": "https://ethereum.org/en/developers/docs/gas/"
+  },
+  "lastReviewed": "2026-04-28"
+}

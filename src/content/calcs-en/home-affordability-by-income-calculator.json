@@ -1,0 +1,257 @@
+{
+  "slug": "home-affordability-by-income-calculator",
+  "title": "Home Affordability Calculator 2026 | Hacé Cuentas",
+  "h1": "Home Affordability Calculator",
+  "description": "Calculate the maximum home price you can afford based on income, debts, and down payment. Uses 28%/36% DTI rules and 2026 mortgage rates.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "🏡",
+  "formulaId": "home-affordability-by-income-calculator",
+  "intro": "Buying a home is likely the largest financial decision you'll make. This calculator uses your **gross annual income**, monthly debt obligations, down payment savings, and current mortgage rates to estimate the **maximum home price you can safely afford** — without overextending your budget. It applies the standard 28% front-end and 36% back-end debt-to-income (DTI) limits used by most U.S. lenders.",
+  "keyTakeaway": "With a $90,000 annual income, $500/month in debts, $30,000 down, and a 6.8% rate, most lenders will approve you for a home around $280,000–$310,000 using the 28/36 DTI rule.",
+  "useCases": [
+    "First-time buyers estimating a realistic price range before house-hunting",
+    "Homeowners planning to upsize or downsize and checking new affordability",
+    "Couples combining incomes to see how much more they can qualify for",
+    "Real estate agents quickly sizing up buyer budgets during consultations",
+    "Financial planners stress-testing client housing costs against retirement savings goals",
+    "Renters deciding whether buying makes financial sense in their current situation"
+  ],
+  "fields": [
+    {
+      "id": "gross_annual_income",
+      "label": "Gross Annual Income ($)",
+      "type": "number",
+      "placeholder": "90000",
+      "default": 90000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "monthly_debts",
+      "label": "Monthly Debt Payments ($)",
+      "type": "number",
+      "placeholder": "500",
+      "default": 500,
+      "step": 50,
+      "required": true
+    },
+    {
+      "id": "down_payment",
+      "label": "Down Payment Savings ($)",
+      "type": "number",
+      "placeholder": "30000",
+      "default": 30000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "mortgage_rate",
+      "label": "Annual Mortgage Rate (%)",
+      "type": "number",
+      "placeholder": "6.8",
+      "default": 6.8,
+      "step": 0.05,
+      "required": true
+    },
+    {
+      "id": "loan_term",
+      "label": "Loan Term (years)",
+      "type": "select",
+      "options": [
+        {
+          "value": "30",
+          "label": "30 years"
+        },
+        {
+          "value": "20",
+          "label": "20 years"
+        },
+        {
+          "value": "15",
+          "label": "15 years"
+        },
+        {
+          "value": "10",
+          "label": "10 years"
+        }
+      ],
+      "default": "30",
+      "required": true
+    },
+    {
+      "id": "property_tax_rate",
+      "label": "Annual Property Tax Rate (%)",
+      "type": "number",
+      "placeholder": "1.1",
+      "default": 1.1,
+      "step": 0.05,
+      "required": true
+    },
+    {
+      "id": "annual_insurance",
+      "label": "Annual Homeowner's Insurance ($)",
+      "type": "number",
+      "placeholder": "1500",
+      "default": 1500,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "front_end_dti",
+      "label": "Front-End DTI Limit (%)",
+      "type": "number",
+      "placeholder": "28",
+      "default": 28,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "back_end_dti",
+      "label": "Back-End DTI Limit (%)",
+      "type": "number",
+      "placeholder": "36",
+      "default": 36,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "max_home_price",
+      "label": "Maximum Home Price",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "max_loan_amount",
+      "label": "Maximum Loan Amount",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "monthly_pi",
+      "label": "Monthly Principal & Interest",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "monthly_tax",
+      "label": "Monthly Property Tax",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "monthly_insurance",
+      "label": "Monthly Insurance",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_monthly_housing",
+      "label": "Total Monthly Housing Cost (PITI)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "front_end_ratio_used",
+      "label": "Front-End DTI Used",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "back_end_ratio_used",
+      "label": "Back-End DTI Used",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "limiting_factor",
+      "label": "Budget Limited By",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nThis calculator applies the **28/36 DTI rule** — the industry-standard guideline used by conventional mortgage lenders in the United States. Two separate limits are computed and the more restrictive one sets your maximum loan amount.\n\n---\n\n## The Formula\n\n```\nGross Monthly Income (GMI) = Gross Annual Income ÷ 12\n\nFront-End Limit:\n  Max PITI = GMI × Front-End DTI %\n  Max P&I (front) = Max PITI − Monthly Tax − Monthly Insurance\n\nBack-End Limit:\n  Max Total Debt = GMI × Back-End DTI %\n  Max P&I (back) = Max Total Debt − Existing Monthly Debts − Monthly Tax − Monthly Insurance\n\nBinding Max P&I = MIN(Max P&I front, Max P&I back)\n\nMax Loan Amount (from P&I using amortization):\n  r = (Annual Rate / 100) / 12\n  n = Loan Term in Years × 12\n  Max Loan = Max P&I × [(1 − (1+r)^(−n)) / r]\n\nMax Home Price = Max Loan Amount + Down Payment\n\nMonthly Tax = (Home Price × Property Tax Rate / 100) / 12\nMonthly Insurance = Annual Insurance / 12\nTotal Monthly Housing (PITI) = P&I + Monthly Tax + Monthly Insurance\n```\n\n> **Note on iteration:** Because property tax and insurance are based on home price, and home price depends on the loan limit, the calculation uses the final home price to compute PITI components — this is the standard lender approach (they use the actual purchase price, not a circular estimate).\n\n---\n\n## Worked Example\n\n| Input | Value |\n|---|---|\n| Gross Annual Income | $90,000 |\n| Monthly Debts | $500 |\n| Down Payment | $30,000 |\n| Rate | 6.8% |\n| Term | 30 years |\n| Property Tax | 1.1% |\n| Insurance | $1,500/yr |\n| DTI Limits | 28% / 36% |\n\n**Step 1 — Gross Monthly Income:** $90,000 ÷ 12 = **$7,500/mo**\n\n**Step 2 — Monthly tax & insurance on estimated price (~$310,000):**\n- Monthly Tax: $310,000 × 0.011 ÷ 12 ≈ $284\n- Monthly Insurance: $1,500 ÷ 12 = $125\n\n**Step 3 — Front-End P&I budget:**\n$7,500 × 28% = $2,100 − $284 − $125 = **$1,691**\n\n**Step 4 — Back-End P&I budget:**\n$7,500 × 36% = $2,700 − $500 − $284 − $125 = **$1,791**\n\n**Step 5 — Binding limit:** MIN($1,691, $1,791) = **$1,691** (front-end binds)\n\n**Step 6 — Max loan:** r = 0.068/12 = 0.005667; n = 360\nLoan = $1,691 × [(1−(1.005667)^−360) / 0.005667] ≈ **$258,600**\n\n**Step 7 — Max home price:** $258,600 + $30,000 = **~$288,600**\n\n---\n\n## Limitations & When NOT to Use This Calculator\n\n- **PMI not included.** If your down payment is under 20% of the home price, lenders require Private Mortgage Insurance (typically 0.5%–1.5%/yr of loan), which reduces your effective buying power by $100–$300/mo.\n- **HOA fees excluded.** Condo and HOA fees are counted in PITI by lenders — add them manually to monthly debts if applicable.\n- **Pre-qualification ≠ pre-approval.** Lenders also review credit score, employment history, and assets. A 620+ credit score is typically required for conventional loans; FHA allows 580+.\n- **Jumbo loans use stricter DTIs.** Loans above the 2026 conforming limit (~$806,500 in most counties) typically require back-end DTI ≤ 43%.\n- **This is not financial advice.** Always consult a HUD-approved housing counselor or licensed mortgage professional before committing.",
+  "faq": [
+    {
+      "q": "What is the 28/36 rule?",
+      "a": "The 28/36 rule states that your monthly housing costs (PITI: principal, interest, taxes, insurance) should not exceed 28% of gross monthly income (front-end DTI), and your total monthly debt payments — including housing — should not exceed 36% (back-end DTI). Most conventional lenders in the U.S. use these thresholds."
+    },
+    {
+      "q": "What does PITI stand for?",
+      "a": "PITI stands for Principal, Interest, Taxes, and Insurance — the four components of a full monthly mortgage payment. Lenders use PITI (not just P&I) when calculating your debt-to-income ratio, which is why this calculator includes property tax and insurance."
+    },
+    {
+      "q": "Does this calculator include PMI?",
+      "a": "No. Private Mortgage Insurance (PMI) is required when your down payment is less than 20% of the home price. PMI typically costs 0.5%–1.5% of the loan amount per year ($83–$250/mo on a $200,000 loan). To account for it, reduce your effective P&I budget by your estimated monthly PMI before using this tool."
+    },
+    {
+      "q": "Can I use a back-end DTI higher than 36%?",
+      "a": "Yes — FHA loans allow back-end DTI up to 43% (sometimes 50% with compensating factors). VA and USDA loans have more flexible guidelines. However, higher DTIs increase financial risk. You can adjust the back-end DTI field above to model different lender thresholds."
+    },
+    {
+      "q": "What mortgage rate should I use in 2026?",
+      "a": "The default rate of 6.8% reflects average 30-year fixed mortgage rates in early 2026, per Freddie Mac's Primary Mortgage Market Survey. Rates vary by credit score, loan type, and lender. Check current rates at Freddie Mac or your preferred lender for the most accurate estimate."
+    },
+    {
+      "q": "How does down payment affect my maximum home price?",
+      "a": "A larger down payment increases your maximum home price dollar-for-dollar, since it reduces the loan amount needed. It also helps you avoid PMI if you reach 20% of the purchase price, further improving affordability. However, this calculator doesn't currently model PMI — factor that in separately."
+    },
+    {
+      "q": "Why does the front-end limit sometimes bind instead of back-end?",
+      "a": "If you have low existing debts, the back-end limit gives you more room than the front-end limit. In that case, the front-end rule (28% of income for housing alone) becomes the binding constraint. Both limits are always computed and the stricter one is applied."
+    },
+    {
+      "q": "Does this include HOA fees?",
+      "a": "No. Lenders include HOA fees in your monthly housing cost when calculating DTI. If you're buying a condo or property with HOA fees, add the estimated monthly HOA amount to your 'Monthly Debt Payments' field to get a realistic estimate."
+    },
+    {
+      "q": "What credit score do I need to get approved?",
+      "a": "This calculator does not model credit score requirements. Generally: conventional loans require a 620+ score; FHA loans allow 580+ (3.5% down) or 500–579 (10% down); VA and USDA loans have no official minimum but lenders typically require 580–620. A higher score also qualifies you for lower rates."
+    },
+    {
+      "q": "How accurate is this estimate compared to an actual lender pre-approval?",
+      "a": "This calculator closely mirrors standard lender qualification math for conventional loans. However, actual pre-approval also factors in credit history, employment stability, asset reserves, and loan-specific overlays. Use this as a reliable starting point, then consult a licensed mortgage lender for a binding figure."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Freddie Mac Primary Mortgage Market Survey",
+      "url": "https://www.freddiemac.com/pmms",
+      "publisher": "Freddie Mac",
+      "date": "2026"
+    },
+    {
+      "name": "HUD Housing Counseling Program",
+      "url": "https://www.hud.gov/program_offices/housing/sfh/hcc",
+      "publisher": "U.S. Department of Housing and Urban Development",
+      "date": "2026"
+    },
+    {
+      "name": "Consumer Financial Protection Bureau — Debt-to-Income Calculator Guidance",
+      "url": "https://www.consumerfinance.gov/ask-cfpb/what-is-a-debt-to-income-ratio-why-is-the-43-debt-to-income-ratio-important-en-1791/",
+      "publisher": "CFPB",
+      "date": "2026"
+    },
+    {
+      "name": "Federal Housing Finance Agency — Conforming Loan Limits 2026",
+      "url": "https://www.fhfa.gov/data/conforming-loan-limit",
+      "publisher": "FHFA",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Update default mortgage rate to match current Freddie Mac PMMS 30-year average. Update conforming loan limit per FHFA annual announcement. Review FHA/VA DTI limits if policy changes."
+  },
+  "lastReviewed": "2026-04-28"
+}

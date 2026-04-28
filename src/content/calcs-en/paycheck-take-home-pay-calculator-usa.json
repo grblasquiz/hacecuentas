@@ -1,0 +1,266 @@
+{
+  "slug": "paycheck-take-home-pay-calculator-usa",
+  "title": "Paycheck Take-Home Pay Calculator USA 2026 | Hacé Cuentas",
+  "h1": "Paycheck Take-Home Pay Calculator (USA)",
+  "description": "Calculate your net take-home pay after federal taxes, FICA, state tax, 401(k), and health insurance deductions. 2026 IRS brackets included.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "💵",
+  "formulaId": "paycheck-take-home-pay-calculator-usa",
+  "intro": "Enter your **gross pay**, filing status, and pre-tax deductions to see exactly what lands in your bank account. This calculator applies **2026 IRS federal withholding brackets**, FICA (Social Security 6.2% up to $176,100 + Medicare 1.45%), and state income tax for CA, NY, TX, and FL. It also accounts for 401(k) contributions and health insurance premiums that reduce your taxable income.",
+  "keyTakeaway": "A single filer earning $75,000/year in California takes home roughly $54,000 after federal tax, FICA, and CA state tax — about 72 cents on every dollar.",
+  "useCases": [
+    "Compare take-home pay before accepting a job offer in a different state",
+    "Estimate how a 401(k) contribution increase affects your net paycheck",
+    "Plan a budget after switching from salary to hourly or changing pay frequency",
+    "Understand the difference between gross salary and actual spendable income",
+    "Check how Additional Medicare Tax applies above $200,000 in wages",
+    "See how health insurance premiums lower your federal and state taxable income"
+  ],
+  "fields": [
+    {
+      "id": "gross_pay",
+      "label": "Gross Pay per Period ($)",
+      "type": "number",
+      "placeholder": "5000",
+      "default": 5000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "pay_frequency",
+      "label": "Pay Frequency",
+      "type": "select",
+      "options": [
+        {
+          "value": "weekly",
+          "label": "Weekly (52×/year)"
+        },
+        {
+          "value": "biweekly",
+          "label": "Bi-Weekly (26×/year)"
+        },
+        {
+          "value": "semimonthly",
+          "label": "Semi-Monthly (24×/year)"
+        },
+        {
+          "value": "monthly",
+          "label": "Monthly (12×/year)"
+        }
+      ],
+      "default": "biweekly",
+      "required": true
+    },
+    {
+      "id": "filing_status",
+      "label": "Federal Filing Status",
+      "type": "select",
+      "options": [
+        {
+          "value": "single",
+          "label": "Single / Married Filing Separately"
+        },
+        {
+          "value": "married",
+          "label": "Married Filing Jointly"
+        },
+        {
+          "value": "hoh",
+          "label": "Head of Household"
+        }
+      ],
+      "default": "single",
+      "required": true
+    },
+    {
+      "id": "extra_withholding",
+      "label": "Extra Federal Withholding per Period (W-4 Step 4c, $)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 0.01,
+      "required": false
+    },
+    {
+      "id": "state",
+      "label": "State",
+      "type": "select",
+      "options": [
+        {
+          "value": "CA",
+          "label": "California (CA)"
+        },
+        {
+          "value": "NY",
+          "label": "New York (NY)"
+        },
+        {
+          "value": "TX",
+          "label": "Texas (TX) — no state income tax"
+        },
+        {
+          "value": "FL",
+          "label": "Florida (FL) — no state income tax"
+        }
+      ],
+      "default": "CA",
+      "required": true
+    },
+    {
+      "id": "retirement_pct",
+      "label": "401(k) / 403(b) Pre-Tax Contribution (%)",
+      "type": "number",
+      "placeholder": "6",
+      "default": 6,
+      "step": 0.1,
+      "required": false
+    },
+    {
+      "id": "health_insurance",
+      "label": "Health Insurance Premium per Period (Pre-Tax, $)",
+      "type": "number",
+      "placeholder": "150",
+      "default": 150,
+      "step": 0.01,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "net_pay",
+      "label": "Estimated Net Take-Home Pay",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "federal_tax",
+      "label": "Federal Income Tax Withheld",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "social_security",
+      "label": "Social Security Tax (6.2%)",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "medicare",
+      "label": "Medicare Tax (1.45% / 2.35%)",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "state_tax",
+      "label": "State Income Tax",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "retirement_deduction",
+      "label": "401(k) / Pre-Tax Retirement",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "effective_rate",
+      "label": "Effective Federal Tax Rate",
+      "format": "percent"
+    },
+    {
+      "id": "annual_net",
+      "label": "Estimated Annual Take-Home",
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "breakdown",
+      "label": "Pay Breakdown Summary",
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nThis calculator converts your gross pay into estimated net pay using four layers of deductions:\n\n1. **Pre-tax deductions** (401k, health insurance) reduce the base before income tax is calculated.\n2. **Federal income tax** is computed from 2026 IRS Publication 15-T annualized brackets.\n3. **FICA taxes** (Social Security + Medicare) are applied to gross pay (not reduced by 401k or health insurance for this purpose — standard payroll treatment).\n4. **State income tax** is applied using a simplified progressive model for CA and NY; TX and FL have no state income tax.\n\n---\n\n## Formula\n\n```\n// Step 1 — Annualize gross pay\nannual_gross = gross_pay × periods_per_year\n\n// Step 2 — Pre-tax deductions (reduce federal & state taxable income)\npretax_total = retirement_deduction + health_insurance\nannual_taxable = annual_gross − (pretax_total × periods_per_year)\n\n// Step 3 — Federal standard deduction (2026)\n// Single/MFS: $15,000 | MFJ: $30,000 | HOH: $22,500\nfederal_taxable = max(0, annual_taxable − standard_deduction)\n\n// Step 4 — Federal income tax (2026 brackets)\nannual_federal_tax = bracket_tax(federal_taxable, filing_status)\nper_period_federal = annual_federal_tax / periods_per_year + extra_withholding\n\n// Step 5 — FICA (applied to gross, capped)\nss_wage = min(gross_pay × periods_per_year, 176100)\nss_tax_annual = ss_wage × 0.062\nmedicare_tax_annual = gross_annual × 0.0145\n  + max(0, gross_annual − 200000) × 0.009  // Additional Medicare Tax\n\n// Step 6 — State tax (CA / NY progressive, TX / FL = 0)\nstate_tax_annual = state_bracket_tax(annual_taxable, state, filing_status)\n\n// Step 7 — Net pay per period\nnet_pay = gross_pay\n  − per_period_federal\n  − (ss_tax_annual / periods)\n  − (medicare_tax_annual / periods)\n  − (state_tax_annual / periods)\n  − pretax_total\n```\n\n---\n\n## 2026 Federal Brackets (Single)\n\n| Taxable Income | Rate |\n|---|---|\n| $0 – $11,925 | 10% |\n| $11,926 – $48,475 | 12% |\n| $48,476 – $103,350 | 22% |\n| $103,351 – $197,300 | 24% |\n| $197,301 – $250,525 | 32% |\n| $250,526 – $626,350 | 35% |\n| Over $626,350 | 37% |\n\nMFJ brackets are approximately double; HOH brackets are intermediate.\n\n---\n\n## Worked Example\n\nGross: **$5,000 bi-weekly** | Single | CA | 6% 401k | $150 health insurance\n\n- Periods/year: 26\n- Annual gross: $130,000\n- Pre-tax deductions: ($300 + $150) × 26 = $11,700/yr → taxable = $118,300\n- Federal taxable: $118,300 − $15,000 = $103,300 → ~$17,168 federal tax/yr → **$661/period**\n- SS: min($130,000, $176,100) × 6.2% = $8,060/yr → **$310/period**\n- Medicare: $130,000 × 1.45% = $1,885/yr → **$73/period**\n- CA state tax (approx): ~$6,200/yr → **$239/period**\n- Net ≈ $5,000 − $661 − $310 − $73 − $239 − $450 = **~$3,267/period** ≈ $84,942/yr\n\n---\n\n## Limitations\n\n- **Does not include** local/city taxes (e.g., NYC, Philadelphia).\n- State tax models for CA and NY are simplified progressive estimates; exact withholding uses additional withholding tables.\n- Does not model Roth 401(k) (post-tax), HSA, FSA, or other pre-tax benefits beyond the two fields provided.\n- Self-employed individuals owe the full 15.3% FICA (not the employee 7.65% shown here).\n- Additional Medicare Tax on wages over $200,000 is calculated at the annualized level; actual employer withholding may differ slightly until year-end adjustment.",
+  "faq": [
+    {
+      "q": "What is the Social Security wage base for 2026?",
+      "a": "The IRS set the Social Security taxable wage base at $176,100 for 2026. You pay 6.2% on wages up to that limit. Earnings above $176,100 are not subject to the SS portion, though Medicare (1.45%) continues with no cap."
+    },
+    {
+      "q": "What is the Additional Medicare Tax and who pays it?",
+      "a": "An extra 0.9% Medicare surtax applies to wages exceeding $200,000 for single filers ($250,000 for MFJ) in a calendar year. Employers withhold it once your wages cross $200,000 from that employer; any remaining liability is settled on your Form 1040."
+    },
+    {
+      "q": "Does a 401(k) contribution actually reduce my taxes?",
+      "a": "Yes. Traditional (pre-tax) 401(k) contributions reduce your federal and most state taxable income dollar-for-dollar. On a $5,000 paycheck with a 6% contribution ($300), you save roughly $66–$72 in federal tax alone (at the 22% bracket), making your real cost of that $300 contribution only about $230."
+    },
+    {
+      "q": "Why does Texas show lower taxes than California on the same salary?",
+      "a": "Texas has no state income tax. California taxes wages at rates from 1% up to 13.3% (for income over ~$1 million). On a $130,000 salary, a CA resident pays approximately $6,000–$7,000 more per year in state income tax than a TX resident with identical federal exposure."
+    },
+    {
+      "q": "What is the 2026 federal standard deduction?",
+      "a": "For 2026, the IRS standard deduction is $15,000 for Single and Married Filing Separately filers, $30,000 for Married Filing Jointly, and $22,500 for Head of Household. These amounts are indexed for inflation each year under the Tax Cuts and Jobs Act."
+    },
+    {
+      "q": "How do I enter the W-4 'extra withholding' field?",
+      "a": "If you wrote an additional dollar amount on Step 4(c) of your W-4, enter it here. This is a flat extra amount withheld each pay period on top of the calculated federal tax. It does not change your marginal bracket — it simply increases the amount sent to the IRS each period."
+    },
+    {
+      "q": "Is this calculator accurate for hourly workers?",
+      "a": "Yes. Multiply your hourly rate by expected hours per period to get gross pay, then enter that amount. For example, $22/hr × 80 hours = $1,760 gross per bi-weekly period. The withholding logic is the same regardless of whether wages come from salary or hourly pay."
+    },
+    {
+      "q": "Why doesn't the calculator include New York City tax?",
+      "a": "NYC residents owe an additional local income tax of 3.078%–3.876% on top of NY state tax. This calculator uses statewide NY rates only. NYC residents should add roughly $1,500–$3,500 per year in local tax for incomes between $60,000 and $130,000."
+    },
+    {
+      "q": "What if I'm self-employed or a 1099 contractor?",
+      "a": "Self-employed workers pay both the employee (6.2% SS + 1.45% Medicare) and employer (6.2% + 1.45%) shares — a combined 15.3% self-employment tax on net earnings, with a deduction for half of that on Form 1040. This calculator is designed for W-2 employees only."
+    },
+    {
+      "q": "How often are federal tax brackets updated?",
+      "a": "The IRS adjusts tax brackets annually for inflation under IRC §1(f). The 2026 brackets used here reflect IRS Revenue Procedure 2025-28 inflation adjustments. Always verify current-year figures on IRS.gov before year-end tax planning."
+    }
+  ],
+  "sources": [
+    {
+      "name": "IRS Publication 15-T (2026): Federal Income Tax Withholding Methods",
+      "url": "https://www.irs.gov/publications/p15t",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Revenue Procedure 2025-28: 2026 Tax Inflation Adjustments",
+      "url": "https://www.irs.gov/pub/irs-drop/rp-25-28.pdf",
+      "publisher": "Internal Revenue Service",
+      "date": "2025"
+    },
+    {
+      "name": "Social Security Administration: 2026 Wage Base Announcement",
+      "url": "https://www.ssa.gov/news/press/factsheets/colafacts2026.htm",
+      "publisher": "Social Security Administration",
+      "date": "2025"
+    },
+    {
+      "name": "California Franchise Tax Board: 2026 Withholding Schedules",
+      "url": "https://www.ftb.ca.gov/forms/2026/2026-de-4.html",
+      "publisher": "California Franchise Tax Board",
+      "date": "2026"
+    },
+    {
+      "name": "New York State Department of Taxation and Finance: 2026 Withholding Tables",
+      "url": "https://www.tax.ny.gov/pdf/current_forms/wt/nys50_t_nys.pdf",
+      "publisher": "NY State Dept. of Taxation and Finance",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Update federal brackets, standard deduction amounts, SS wage base, and state withholding tables each January when IRS publishes Publication 15-T and SSA announces new wage base."
+  },
+  "lastReviewed": "2026-04-28"
+}

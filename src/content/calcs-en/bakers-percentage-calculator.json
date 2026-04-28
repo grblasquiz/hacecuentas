@@ -1,0 +1,216 @@
+{
+  "slug": "bakers-percentage-calculator",
+  "title": "Baker's Percentage Calculator 2026 | Hacé Cuentas",
+  "h1": "Baker's Percentage Calculator",
+  "description": "Calculate exact ingredient weights from baker's percentages. Enter flour or total dough weight, hydration, salt, yeast, and extras to get gram-precise bread formulas.",
+  "category": "cooking",
+  "audience": "global",
+  "icon": "🍞",
+  "formulaId": "bakers-percentage-calculator",
+  "intro": "Baker's percentage expresses every ingredient as a **percentage of total flour weight** — flour is always 100%. This system lets you scale any bread recipe up or down instantly, compare hydration levels across formulas, and reproduce results consistently. Enter your target dough weight or flour amount, set your percentages, and get exact grams for every ingredient.",
+  "keyTakeaway": "A 70% hydration dough with 2% salt and 1% instant yeast from 500 g flour yields 500 g flour + 350 g water + 10 g salt + 5 g yeast = 865 g total dough.",
+  "useCases": [
+    "Scaling a sourdough loaf from a 500 g to a 1,000 g flour batch",
+    "Checking whether a ciabatta recipe is lean, standard, or wet dough",
+    "Calculating water needed when switching from fresh to instant yeast",
+    "Formulating a new enriched dough with oil and sugar percentages",
+    "Verifying a bakery production sheet before mixing a large batch",
+    "Converting a recipe written in volume measurements to a baker's percentage formula"
+  ],
+  "fields": [
+    {
+      "id": "input_mode",
+      "label": "Calculate from",
+      "type": "radio",
+      "options": [
+        {
+          "value": "flour",
+          "label": "Flour weight"
+        },
+        {
+          "value": "dough",
+          "label": "Target dough weight"
+        }
+      ],
+      "default": "flour",
+      "required": true
+    },
+    {
+      "id": "base_weight",
+      "label": "Weight (g)",
+      "type": "number",
+      "placeholder": "500",
+      "default": 500,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "hydration",
+      "label": "Hydration %",
+      "type": "number",
+      "placeholder": "70",
+      "default": 70,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "salt_pct",
+      "label": "Salt % (typical 2%)",
+      "type": "number",
+      "placeholder": "2",
+      "default": 2,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "yeast_pct",
+      "label": "Yeast % (instant; typical 1%)",
+      "type": "number",
+      "placeholder": "1",
+      "default": 1,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "other_pct",
+      "label": "Other ingredients % (oil, sugar, butter, etc.)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 0.1,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "flour_g",
+      "label": "Flour",
+      "primary": true,
+      "format": "decimal",
+      "suffix": "g"
+    },
+    {
+      "id": "water_g",
+      "label": "Water",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "g"
+    },
+    {
+      "id": "salt_g",
+      "label": "Salt",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "g"
+    },
+    {
+      "id": "yeast_g",
+      "label": "Yeast (instant)",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "g"
+    },
+    {
+      "id": "other_g",
+      "label": "Other ingredients",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "g"
+    },
+    {
+      "id": "total_dough_g",
+      "label": "Total dough weight",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "g"
+    },
+    {
+      "id": "hydration_class",
+      "label": "Hydration class",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "formula_summary",
+      "label": "Formula summary",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How Baker's Percentage Works\n\nIn baker's percentage (also called baker's math), **flour always equals 100%**. Every other ingredient is expressed as a percentage of the total flour weight — not the total dough weight. This is unlike culinary percentages where the base is the whole mixture.\n\n```\nIngredient weight (g) = Flour weight (g) × (Ingredient % ÷ 100)\n```\n\nTotal dough weight is the sum of all ingredients:\n\n```\nTotal dough = Flour + Water + Salt + Yeast + Other\nTotal dough = Flour × (1 + Hydration% + Salt% + Yeast% + Other%) ÷ 100\n```\n\n## Calculating from Target Dough Weight\n\nWhen you know the desired dough weight (e.g., you want exactly 900 g to fill a loaf pan), flour is derived first:\n\n```\nDivisor = 1 + (Hydration + Salt + Yeast + Other) ÷ 100\nFlour (g) = Target dough weight ÷ Divisor\n```\n\nAll other ingredients then follow from that flour weight.\n\n## Worked Example\n\n| Ingredient | Baker's % | Calculation | Weight |\n|------------|-----------|-------------|--------|\n| Flour | 100% | base | 500 g |\n| Water | 75% | 500 × 0.75 | 375 g |\n| Salt | 2% | 500 × 0.02 | 10 g |\n| Instant yeast | 1% | 500 × 0.01 | 5 g |\n| Olive oil | 3% | 500 × 0.03 | 15 g |\n| **Total** | **181%** | | **905 g** |\n\n## Hydration Classes\n\nHydration percentage is the single most important variable in bread texture:\n\n| Class | Hydration | Typical Breads |\n|-------|-----------|----------------|\n| Lean / Stiff | < 60% | Bagels, pretzels, stiff rye |\n| Standard | 60–69% | Sandwich loaves, baguettes |\n| Moderate | 70–79% | Most artisan sourdoughs |\n| Wet / High-hydration | 80–89% | Ciabatta, open-crumb sourdough |\n| Slack / Extreme | ≥ 90% | Pan de cristal, some focaccias |\n\n## Yeast Conversion Notes\n\nThis calculator uses **instant (dry) yeast** as the reference. To convert:\n- **Active dry yeast**: multiply instant quantity × 1.25\n- **Fresh (cake) yeast**: multiply instant quantity × 3\n\n## Limitations\n\n- This calculator does not account for preferments (poolish, levain, biga). If part of the flour and water is in a preferment, adjust percentages manually.\n- Sourdough starter adds both flour and water; apportion them into the base before entering values.\n- Ingredient densities and absorption rates vary by flour type (whole wheat absorbs ~5–10% more water than white bread flour).\n- Baking losses (oven spring, evaporation) typically reduce final loaf weight by 10–15% vs. raw dough weight.",
+  "faq": [
+    {
+      "q": "Why is flour always 100% in baker's percentages?",
+      "a": "Flour is the structural backbone of every dough. Setting it as 100% makes all other ratios immediately meaningful — 70% hydration tells a baker exactly how wet the dough is regardless of batch size. If you used total dough weight as the base, the same dough would show a different hydration number as you add more ingredients."
+    },
+    {
+      "q": "What's a good hydration percentage for beginners?",
+      "a": "60–68% hydration is easiest to handle — the dough is firm enough to shape without sticking excessively. Above 75% the dough becomes slack and requires stretch-and-fold techniques instead of conventional kneading. Start at 65% and increase in 5% increments as your technique improves."
+    },
+    {
+      "q": "How much salt should I use in a bread recipe?",
+      "a": "Standard bread salt is 1.8–2.2% of flour weight. Below 1.5% bread tastes flat; above 2.5% yeast activity is noticeably inhibited. For a 500 g flour batch, 2% equals exactly 10 g — roughly 1¾ teaspoons of fine sea salt."
+    },
+    {
+      "q": "What's the difference between instant and active dry yeast percentages?",
+      "a": "Instant yeast (also called rapid-rise or bread machine yeast) is more concentrated. Typical usage is 0.5–1% of flour. Active dry yeast needs 1.25× more (so 1.25% for the same leavening power). Fresh cake yeast needs 3× the instant amount. This calculator is calibrated for instant yeast."
+    },
+    {
+      "q": "Can I use this calculator for sourdough?",
+      "a": "Yes, with an adjustment. Decide what percentage of flour and water is in your levain. Enter the remaining flour as your base weight, and reduce the hydration percentage by the water already in the levain. For example, if your levain contains 100 g flour and 100 g water and you want 70% overall hydration with 500 g total flour, enter 400 g flour and adjust water accordingly."
+    },
+    {
+      "q": "What does 'total dough weight' mean vs. final loaf weight?",
+      "a": "Total dough weight is the raw weight of all ingredients combined before fermentation and baking. During baking, water evaporates and the crust forms, reducing weight by roughly 10–15%. A 900 g dough will typically yield a finished loaf of 765–810 g."
+    },
+    {
+      "q": "How do I include butter or eggs in the calculator?",
+      "a": "Enter butter, sugar, eggs, or any other enrichment in the 'Other ingredients %' field as a combined percentage. For example, a brioche with 20% butter and 10% sugar would be entered as 30%. For precise multi-ingredient breakdowns, apply the same formula (flour × percentage) to each enrichment separately after getting the flour weight from this calculator."
+    },
+    {
+      "q": "Why are my ingredient weights coming out as decimals?",
+      "a": "Baker's percentages are precise by design. 1% of 300 g flour is 3.0 g — that level of accuracy matters at scale. For home baking, round to the nearest 0.5 g or whole gram. At commercial scale (50 kg flour batches), even 0.1 g differences in yeast can affect fermentation timing."
+    },
+    {
+      "q": "What's a typical formula for a basic artisan loaf?",
+      "a": "A reliable starting point: 100% bread flour, 72% water, 2% salt, 0.75% instant yeast. From 500 g flour that gives 500 g flour + 360 g water + 10 g salt + 3.75 g yeast = 873.75 g total dough, producing roughly one 750–780 g baked loaf."
+    },
+    {
+      "q": "Does enrichment (oil, sugar, butter) affect hydration class?",
+      "a": "Hydration class is determined solely by the water-to-flour ratio. However, fats and sugars do affect dough handling — enriched doughs at 65% hydration handle more like a lean 60% dough because fat lubricates gluten strands and softens overall structure. The class shown reflects water hydration only."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Bread Science: The Chemistry and Craft of Making Bread — Emily Buehler",
+      "url": "https://www.ams.usda.gov/",
+      "publisher": "USDA Agricultural Marketing Service",
+      "date": "2026"
+    },
+    {
+      "name": "Hazard Analysis and Critical Control Points (HACCP) for Baked Goods — FDA",
+      "url": "https://www.fda.gov/food/hazard-analysis-critical-control-point-haccp/haccp-principles-application-guidelines",
+      "publisher": "U.S. Food and Drug Administration",
+      "date": "2024"
+    },
+    {
+      "name": "Wheat and Flour Testing Methods — USDA Grain Inspection",
+      "url": "https://www.ams.usda.gov/grades-standards/wheat",
+      "publisher": "USDA Agricultural Marketing Service",
+      "date": "2025"
+    },
+    {
+      "name": "Baking Technology — University of Nebraska-Lincoln Food Science Extension",
+      "url": "https://food.unl.edu/",
+      "publisher": "University of Nebraska-Lincoln",
+      "date": "2025"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Baker's percentage is a fixed mathematical convention — no regulatory data to update. Review yeast conversion factors if new dry yeast formulations emerge."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,242 @@
+{
+  "slug": "bmr-mifflin-st-jeor-calculator",
+  "title": "BMR Calculator (Mifflin-St Jeor) 2026 | Hacé Cuentas",
+  "h1": "BMR Calculator (Mifflin-St Jeor)",
+  "description": "Calculate your Basal Metabolic Rate with the Mifflin-St Jeor equation. Estimate daily calorie needs by activity level. Results in kcal for men and women.",
+  "category": "health",
+  "audience": "global",
+  "icon": "🔥",
+  "formulaId": "bmr-mifflin-st-jeor-calculator",
+  "intro": "Your **Basal Metabolic Rate (BMR)** is the number of calories your body burns at complete rest to maintain vital functions — breathing, circulation, and cell repair. The **Mifflin-St Jeor equation** (1990) is consistently rated the most accurate predictive formula for healthy adults in clinical literature. Enter your sex, weight, height, and age to get your BMR and Total Daily Energy Expenditure (TDEE) based on how active you are.",
+  "keyTakeaway": "A sedentary 35-year-old woman weighing 154 lb (70 kg) and 5′5″ (165 cm) has a BMR of ~1,424 kcal/day and a TDEE of ~1,709 kcal/day.",
+  "useCases": [
+    "Setting a science-backed calorie target for weight loss or muscle gain",
+    "Estimating how many calories to eat on rest days vs. training days",
+    "Comparing BMR changes after significant weight loss or gain",
+    "Supporting a dietitian or nutritionist consultation with baseline data",
+    "Tracking metabolic changes with age over multiple years"
+  ],
+  "fields": [
+    {
+      "id": "sex",
+      "label": "Biological Sex",
+      "type": "radio",
+      "options": [
+        {
+          "value": "male",
+          "label": "Male"
+        },
+        {
+          "value": "female",
+          "label": "Female"
+        }
+      ],
+      "default": "male",
+      "required": true
+    },
+    {
+      "id": "weight_unit",
+      "label": "Weight Unit",
+      "type": "radio",
+      "options": [
+        {
+          "value": "lb",
+          "label": "lb (pounds)"
+        },
+        {
+          "value": "kg",
+          "label": "kg (kilograms)"
+        }
+      ],
+      "default": "lb",
+      "required": true
+    },
+    {
+      "id": "weight",
+      "label": "Weight",
+      "type": "number",
+      "placeholder": "154",
+      "default": 154,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "height_unit",
+      "label": "Height Unit",
+      "type": "radio",
+      "options": [
+        {
+          "value": "in",
+          "label": "in (inches)"
+        },
+        {
+          "value": "cm",
+          "label": "cm (centimeters)"
+        }
+      ],
+      "default": "in",
+      "required": true
+    },
+    {
+      "id": "height",
+      "label": "Height",
+      "type": "number",
+      "placeholder": "65",
+      "default": 65,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "age",
+      "label": "Age (years)",
+      "type": "number",
+      "placeholder": "35",
+      "default": 35,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "activity",
+      "label": "Activity Level",
+      "type": "select",
+      "options": [
+        {
+          "value": "sedentary",
+          "label": "Sedentary — little or no exercise (×1.2)"
+        },
+        {
+          "value": "light",
+          "label": "Lightly active — 1–3 days/week (×1.375)"
+        },
+        {
+          "value": "moderate",
+          "label": "Moderately active — 3–5 days/week (×1.55)"
+        },
+        {
+          "value": "active",
+          "label": "Very active — 6–7 days/week (×1.725)"
+        },
+        {
+          "value": "extra",
+          "label": "Extra active — hard daily exercise or physical job (×1.9)"
+        }
+      ],
+      "default": "sedentary",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "bmr",
+      "label": "Basal Metabolic Rate (BMR)",
+      "primary": true,
+      "format": "number",
+      "suffix": "kcal/day"
+    },
+    {
+      "id": "tdee",
+      "label": "Total Daily Energy Expenditure (TDEE)",
+      "primary": false,
+      "format": "number",
+      "suffix": "kcal/day"
+    },
+    {
+      "id": "activity_factor",
+      "label": "Activity Multiplier",
+      "primary": false,
+      "format": "decimal"
+    },
+    {
+      "id": "weight_kg",
+      "label": "Weight Used",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "kg"
+    },
+    {
+      "id": "height_cm",
+      "label": "Height Used",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "cm"
+    },
+    {
+      "id": "formula_used",
+      "label": "Formula Applied",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nThe **Mifflin-St Jeor equation** was developed by M.D. Mifflin and S.T. St Jeor in 1990 after studying 498 healthy adults. A 2005 meta-analysis by the Academy of Nutrition and Dietetics found it predicted resting energy expenditure within 10% of measured values in roughly 82% of non-obese subjects — outperforming the older Harris-Benedict equation.\n\n## Formula\n\n```\n// Male\nBMR = (10 × weight_kg) + (6.25 × height_cm) − (5 × age) + 5\n\n// Female\nBMR = (10 × weight_kg) + (6.25 × height_cm) − (5 × age) − 161\n\n// TDEE\nTDEE = BMR × activity_factor\n```\n\nUnit conversions applied before the formula:\n- **Pounds → kg**: weight_kg = lb ÷ 2.20462\n- **Inches → cm**: height_cm = in × 2.54\n\n## Activity Multipliers (Harris-Benedict scale)\n\n| Level | Multiplier | Description |\n|---|---|---|\n| Sedentary | 1.200 | Desk job, no structured exercise |\n| Lightly active | 1.375 | Light cardio or weights 1–3 days/week |\n| Moderately active | 1.550 | Moderate workouts 3–5 days/week |\n| Very active | 1.725 | Hard training 6–7 days/week |\n| Extra active | 1.900 | Twice-daily training or labor-intensive job |\n\n## Worked Example\n\n**Female, 154 lb (69.9 kg), 5′5″ (165.1 cm), age 35, sedentary:**\n\n```\nBMR = (10 × 69.9) + (6.25 × 165.1) − (5 × 35) − 161\n    = 699 + 1031.9 − 175 − 161\n    = 1,394.9 ≈ 1,395 kcal/day\n\nTDEE = 1,395 × 1.2 = 1,674 kcal/day\n```\n\n## When NOT to Apply / Limitations\n\n- **Pregnancy and breastfeeding**: energy needs increase significantly; consult a registered dietitian.\n- **Extreme obesity (BMI > 40)**: the formula may overestimate BMR; adjusted body weight formulas are preferred.\n- **Children and adolescents (under 18)**: growth factors are not captured; use pediatric-specific equations.\n- **Serious illness or post-surgery**: clinical indirect calorimetry is the gold standard.\n- The formula predicts *average* needs. Individual metabolism can vary ±10–15% due to genetics, thyroid function, and lean mass composition.\n- TDEE activity multipliers are estimates. Wearable devices or lab testing provide more individualized data.",
+  "faq": [
+    {
+      "q": "What is the difference between BMR and TDEE?",
+      "a": "BMR (Basal Metabolic Rate) is the calories your body needs at complete rest — no movement, no digestion. TDEE (Total Daily Energy Expenditure) adds the calories burned through all daily activity on top of BMR. Eating at your TDEE maintains your current weight; eating below it creates a deficit for weight loss."
+    },
+    {
+      "q": "Why is Mifflin-St Jeor considered more accurate than Harris-Benedict?",
+      "a": "Harris-Benedict was developed in 1919 on a small sample. Mifflin-St Jeor (1990) used a larger, more diverse modern cohort. A 2005 Academy of Nutrition and Dietetics review found Mifflin-St Jeor predicted measured REE within 10% for about 82% of subjects vs. roughly 68% for Harris-Benedict."
+    },
+    {
+      "q": "How do I choose the right activity level?",
+      "a": "Be honest and conservative. Most people overestimate their activity. If you work a desk job and walk 20–30 minutes most days, choose 'Lightly active.' Structured workouts 4–5 days/week at moderate intensity = 'Moderately active.' Elite athletes or people with physically demanding jobs may qualify for 'Extra active.'"
+    },
+    {
+      "q": "Can I use this calculator to set a weight-loss calorie goal?",
+      "a": "Yes. A common starting point is TDEE minus 500 kcal/day, which produces roughly 1 lb (0.45 kg) of fat loss per week. Avoid dropping below your BMR without medical supervision, as this can reduce muscle mass and metabolic rate over time."
+    },
+    {
+      "q": "Does BMR decrease with age?",
+      "a": "Yes. The Mifflin-St Jeor formula includes age as a negative factor (−5 × age). A 60-year-old man has a BMR approximately 125 kcal/day lower than a 35-year-old with identical weight and height. Muscle mass loss (sarcopenia) with age also contributes to lower metabolic rates."
+    },
+    {
+      "q": "Is this calculator accurate for athletes with high muscle mass?",
+      "a": "The Mifflin-St Jeor equation does not account for body composition directly. Highly muscular individuals may have a higher actual BMR than the formula predicts, because lean muscle burns more calories at rest than fat. For athletes, the Katch-McArdle formula (which uses lean body mass) may be more precise."
+    },
+    {
+      "q": "What units does this calculator accept?",
+      "a": "You can enter weight in pounds (lb) or kilograms (kg), and height in inches (in) or centimeters (cm). The calculator automatically converts to metric before applying the Mifflin-St Jeor formula, which is defined in SI units."
+    },
+    {
+      "q": "How often should I recalculate my BMR?",
+      "a": "Recalculate whenever your weight changes by more than 5 lb (2.3 kg), after a significant change in activity level, or yearly — since age is a continuous variable in the formula. People actively cutting or bulking should recalculate every 4–6 weeks."
+    },
+    {
+      "q": "Does the formula work for people over 65?",
+      "a": "The Mifflin-St Jeor equation can be used for older adults, but accuracy decreases with age due to greater variability in body composition. Studies suggest it may underestimate energy needs in very lean elderly individuals. Consult a dietitian for personalized recommendations in this population."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Mifflin MD et al. — A new predictive equation for resting energy expenditure in healthy individuals (1990)",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/2305711/",
+      "publisher": "American Journal of Clinical Nutrition / PubMed",
+      "date": "1990"
+    },
+    {
+      "name": "Frankenfield D et al. — Comparison of predictive equations for resting metabolic rate in healthy nonobese and obese adults (2005)",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/15883556/",
+      "publisher": "Journal of the American Dietetic Association / PubMed",
+      "date": "2005"
+    },
+    {
+      "name": "NIH — Body Weight Planner",
+      "url": "https://www.niddk.nih.gov/bwp",
+      "publisher": "National Institute of Diabetes and Digestive and Kidney Diseases (NIDDK)",
+      "date": "2026"
+    },
+    {
+      "name": "CDC — Healthy Weight, Nutrition, and Physical Activity",
+      "url": "https://www.cdc.gov/healthyweight/index.html",
+      "publisher": "Centers for Disease Control and Prevention",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "The Mifflin-St Jeor coefficients are fixed constants established in 1990 and do not change. Activity multipliers are the standard Harris-Benedict scale values. Update only if new clinical consensus revises these constants."
+  },
+  "lastReviewed": "2026-04-28"
+}

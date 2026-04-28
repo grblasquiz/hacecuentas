@@ -1,0 +1,261 @@
+{
+  "slug": "staking-rewards-projection-calculator",
+  "title": "Staking Rewards Calculator 2026 | Hacé Cuentas",
+  "h1": "Staking Rewards Calculator",
+  "description": "Calculate crypto staking rewards for ETH, SOL, ADA, ATOM, DOT or custom APR. Estimate token earnings and USD value over any period with compound frequency and validator commission.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "🪙",
+  "formulaId": "staking-rewards-projection-calculator",
+  "intro": "**Staking** locks your crypto tokens to help secure a proof-of-stake network and earns you yield in return. This calculator projects your staking rewards for Ethereum (ETH), Solana (SOL), Cardano (ADA), Cosmos (ATOM), Polkadot (DOT), or any custom APR. Enter your stake size, holding period, compounding frequency, and validator commission to see your net token earnings and estimated USD value.",
+  "keyTakeaway": "At 6% APR staked monthly with 5% validator commission, 10,000 SOL grows to ~10,570 SOL after 12 months — an effective APY of 5.99% net of commission.",
+  "useCases": [
+    "Project annual staking income before committing capital to a validator",
+    "Compare APY across ETH, SOL, ADA, ATOM, and DOT networks side-by-side",
+    "Estimate USD value of staking rewards at a target token price",
+    "Understand the compounding benefit of auto-restaking vs. manual claiming",
+    "Calculate how validator commission erodes your gross APR",
+    "Plan a staking strategy for a specific savings goal or time horizon"
+  ],
+  "fields": [
+    {
+      "id": "token",
+      "label": "Token / Network",
+      "type": "select",
+      "options": [
+        {
+          "value": "eth",
+          "label": "Ethereum (ETH) — ~3.5% APR"
+        },
+        {
+          "value": "sol",
+          "label": "Solana (SOL) — ~6% APR"
+        },
+        {
+          "value": "ada",
+          "label": "Cardano (ADA) — ~3% APR"
+        },
+        {
+          "value": "atom",
+          "label": "Cosmos (ATOM) — ~14% APR"
+        },
+        {
+          "value": "dot",
+          "label": "Polkadot (DOT) — ~11% APR"
+        },
+        {
+          "value": "custom",
+          "label": "Custom APR"
+        }
+      ],
+      "default": "sol",
+      "required": true
+    },
+    {
+      "id": "custom_apr",
+      "label": "Custom APR (%)",
+      "type": "number",
+      "placeholder": "8.0",
+      "default": 8.0,
+      "step": 0.01,
+      "required": false
+    },
+    {
+      "id": "amount_staked",
+      "label": "Amount Staked (tokens)",
+      "type": "number",
+      "placeholder": "1000",
+      "default": 1000,
+      "step": 1e-06,
+      "required": true
+    },
+    {
+      "id": "token_price_usd",
+      "label": "Current Token Price (USD)",
+      "type": "number",
+      "placeholder": "150",
+      "default": 150,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "period_months",
+      "label": "Staking Period (months)",
+      "type": "number",
+      "placeholder": "12",
+      "default": 12,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "compound_frequency",
+      "label": "Compounding Frequency",
+      "type": "select",
+      "options": [
+        {
+          "value": "1",
+          "label": "Annually (1×/year)"
+        },
+        {
+          "value": "2",
+          "label": "Semi-annually (2×/year)"
+        },
+        {
+          "value": "4",
+          "label": "Quarterly (4×/year)"
+        },
+        {
+          "value": "12",
+          "label": "Monthly (12×/year)"
+        },
+        {
+          "value": "365",
+          "label": "Daily (365×/year)"
+        },
+        {
+          "value": "0",
+          "label": "No compounding (simple interest)"
+        }
+      ],
+      "default": "12",
+      "required": true
+    },
+    {
+      "id": "validator_commission",
+      "label": "Validator Commission (%)",
+      "type": "number",
+      "placeholder": "5",
+      "default": 5,
+      "step": 0.1,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "net_apr",
+      "label": "Net APR (after commission)",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "effective_apy",
+      "label": "Effective APY",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "rewards_tokens",
+      "label": "Rewards Earned (tokens)",
+      "primary": true,
+      "format": "decimal"
+    },
+    {
+      "id": "end_stake_tokens",
+      "label": "Total Stake at End (tokens)",
+      "primary": false,
+      "format": "decimal"
+    },
+    {
+      "id": "rewards_usd",
+      "label": "Rewards Earned (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "end_stake_usd",
+      "label": "Total Stake at End (USD)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "breakdown",
+      "label": "Summary",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How Staking Rewards Are Calculated\n\nProof-of-stake networks pay validators (and their delegators) a yield for locking tokens and participating in consensus. The *gross APR* is the annualized rate before fees. Your *net APR* subtracts the validator's commission cut:\n\n```\nnet_apr = gross_apr × (1 − commission_rate)\n```\n\n## Compound vs. Simple Interest\n\nWhen you auto-restake rewards, they compound. With **n** compounding periods per year and a holding time of **t** years:\n\n```\nend_stake = principal × (1 + net_apr / n)^(n × t)\nrewards   = end_stake − principal\n```\n\nWith **no compounding** (simple interest — you claim and hold rewards separately):\n\n```\nrewards   = principal × net_apr × t\nend_stake = principal + rewards\n```\n\n## APR → APY Conversion\n\nAPY (Annual Percentage Yield) reflects the real yearly gain once compounding is included:\n\n```\napy = (1 + net_apr / n)^n − 1\n```\n\nFor simple interest, APY = net APR.\n\n## Worked Example\n\n| Input | Value |\n|---|---|\n| Token | SOL (~6% APR) |\n| Amount staked | 10,000 SOL |\n| Token price | $150 |\n| Period | 12 months |\n| Compounding | Monthly (12×) |\n| Validator commission | 5% |\n\n**Step 1 — Net APR:** 6% × (1 − 0.05) = **5.70%**\n\n**Step 2 — End stake:** 10,000 × (1 + 0.057/12)^12 = **10,585.4 SOL**\n\n**Step 3 — Rewards:** 10,585.4 − 10,000 = **585.4 SOL** ≈ **$87,810 USD**\n\n**Step 4 — Effective APY:** (1 + 0.057/12)^12 − 1 = **5.864%**\n\n## Limitations & Important Notes\n\n- **APRs fluctuate.** Network staking yields change with participation rate, inflation schedules, and protocol upgrades. Values used here are typical 2025–2026 estimates, not guarantees.\n- **Token price risk is separate.** This calculator projects token-denominated rewards. Your USD value depends entirely on future market price.\n- **Slashing risk.** Misbehaving validators can have stake slashed. Choose reputable validators.\n- **Lock-up and unbonding periods** are not modeled; liquidity may be restricted for days to weeks depending on the network.\n- **Tax treatment** of staking rewards varies by jurisdiction; consult a tax professional.",
+  "faq": [
+    {
+      "q": "What APR does Ethereum staking currently pay?",
+      "a": "ETH staking yields approximately 3–4% APR as of early 2026, depending on total ETH staked network-wide. Higher total stake = lower individual yield. Check beaconcha.in or rated.network for live figures."
+    },
+    {
+      "q": "What is the difference between APR and APY?",
+      "a": "APR (Annual Percentage Rate) is the simple yearly rate before compounding. APY (Annual Percentage Yield) shows your actual gain after reinvesting rewards. With monthly compounding at 6% APR, the APY is ~6.17%. The more frequently you compound, the larger the gap."
+    },
+    {
+      "q": "How does validator commission affect my rewards?",
+      "a": "Validators charge a percentage of gross rewards as a fee. At 10% commission on 6% APR, your net APR is 5.4%. Always check a validator's current commission before delegating — it can change."
+    },
+    {
+      "q": "Does compounding make a significant difference?",
+      "a": "Over short periods the difference is small. Over multiple years it becomes meaningful. At 10% net APR, $10,000 staked for 5 years with daily compounding grows to $16,487 vs. $15,000 with no compounding — a $1,487 difference."
+    },
+    {
+      "q": "Is staking income taxable?",
+      "a": "In the United States, the IRS generally treats staking rewards as ordinary income at fair market value on the date received (Rev. Rul. 2023-14). Tax rules differ internationally. Consult a qualified tax advisor for your situation."
+    },
+    {
+      "q": "Why is Cosmos (ATOM) APR so high compared to ETH?",
+      "a": "ATOM inflation is higher by design (~10–14% annual issuance) to incentivize staking participation. Higher inflation APR means your tokens are diluted if you do NOT stake. Real purchasing power gain depends on ATOM's price action."
+    },
+    {
+      "q": "Can I lose my staked tokens?",
+      "a": "Yes. Most PoS networks have 'slashing' — a penalty where a portion of a validator's stake is destroyed if they act maliciously or go offline. Delegating to reputable, high-uptime validators reduces this risk but does not eliminate it."
+    },
+    {
+      "q": "What does 'no compounding' mean in practice?",
+      "a": "It models a scenario where you claim rewards but keep them as cash or in a separate wallet rather than restaking. Your principal stays constant and earns simple interest. This is common when you need periodic liquidity from staking income."
+    },
+    {
+      "q": "How accurate is the USD output?",
+      "a": "The USD output uses the token price you enter — it is a projection at that fixed price. Crypto prices are highly volatile; the real USD value of your rewards at the end of the period could be dramatically higher or lower."
+    },
+    {
+      "q": "What is the minimum amount required to stake ETH directly?",
+      "a": "Solo staking on Ethereum requires exactly 32 ETH. For smaller amounts, liquid staking protocols (e.g., Lido, Rocket Pool) allow staking any amount, though they introduce their own smart-contract risks and commission structures."
+    }
+  ],
+  "sources": [
+    {
+      "name": "IRS Revenue Ruling 2023-14: Taxation of Crypto Staking Rewards",
+      "url": "https://www.irs.gov/pub/irs-drop/rr-23-14.pdf",
+      "publisher": "Internal Revenue Service",
+      "date": "2023"
+    },
+    {
+      "name": "Ethereum Proof-of-Stake FAQ",
+      "url": "https://ethereum.org/en/staking/",
+      "publisher": "Ethereum Foundation",
+      "date": "2026"
+    },
+    {
+      "name": "Polkadot Staking Overview",
+      "url": "https://wiki.polkadot.network/docs/learn-staking",
+      "publisher": "Web3 Foundation",
+      "date": "2026"
+    },
+    {
+      "name": "Cosmos Hub Staking Documentation",
+      "url": "https://docs.cosmos.network/main/modules/staking",
+      "publisher": "Interchain Foundation",
+      "date": "2026"
+    },
+    {
+      "name": "Cardano Staking and Delegation",
+      "url": "https://docs.cardano.org/new-to-cardano/cardano-tracking-tools",
+      "publisher": "Cardano Foundation / IOHK",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "biannual",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Default APR values for each token should be reviewed every 6 months against network staking dashboards (beaconcha.in for ETH, stakingrewards.com for others). IRS guidance should be checked annually."
+  },
+  "lastReviewed": "2026-04-28"
+}

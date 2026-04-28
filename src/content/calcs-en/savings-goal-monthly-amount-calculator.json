@@ -1,0 +1,165 @@
+{
+  "slug": "savings-goal-monthly-amount-calculator",
+  "title": "Savings Goal Calculator 2026 | Hacé Cuentas",
+  "h1": "Savings Goal Calculator",
+  "description": "Calculate the monthly savings amount needed to reach any financial goal. Enter your target, current balance, time horizon, and APY to get your required monthly contribution.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "🎯",
+  "formulaId": "savings-goal-monthly-amount-calculator",
+  "intro": "Whether you're saving for a house down payment, an emergency fund, or a dream vacation, this calculator tells you exactly how much to set aside each month. Enter your **target amount**, current savings balance, time horizon in months, and expected annual yield — and get your required monthly contribution instantly.",
+  "keyTakeaway": "To save $20,000 in 24 months starting from $2,000 at 4.5% APY, you need to contribute roughly $745/month — and interest covers about $290 of the gap.",
+  "useCases": [
+    "Planning a house down payment savings schedule",
+    "Building a 3–6 month emergency fund",
+    "Saving for a car, vacation, or large purchase",
+    "Setting up a college tuition savings plan",
+    "Tracking progress toward an investment account milestone",
+    "Comparing how APY changes affect your required monthly deposit"
+  ],
+  "fields": [
+    {
+      "id": "future_value",
+      "label": "Savings Goal ($)",
+      "type": "number",
+      "placeholder": "20000",
+      "default": 20000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "present_value",
+      "label": "Current Balance ($)",
+      "type": "number",
+      "placeholder": "2000",
+      "default": 2000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "months",
+      "label": "Time Horizon (months)",
+      "type": "number",
+      "placeholder": "24",
+      "default": 24,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "apy",
+      "label": "Expected APY (%)",
+      "type": "number",
+      "placeholder": "4.5",
+      "default": 4.5,
+      "step": 0.01,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "monthly_payment",
+      "label": "Required Monthly Contribution",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_contributed",
+      "label": "Total You Contribute",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "interest_earned",
+      "label": "Interest Earned",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "interest_percent",
+      "label": "Goal Funded by Interest",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "explanation_note",
+      "label": "Summary",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nThis calculator uses the **future value of an annuity** formula, solved for the periodic payment (PMT). It accounts for both the growth of your existing balance and the compounding of each new monthly deposit.\n\n## Formula\n\n```\nr  = APY / 12 / 100          // monthly interest rate\nn  = months                  // number of periods\n\n// Future value of current balance after n months:\nFV_existing = PV × (1 + r)^n\n\n// Remaining gap to fill with monthly deposits:\nGap = FV − FV_existing\n\n// Monthly payment needed (annuity PMT formula):\nIf r > 0:\n  PMT = Gap × r / ((1 + r)^n − 1)\nIf r = 0:\n  PMT = Gap / n\n```\n\nWhen the APY is 0%, the formula simplifies to dividing the gap equally across all months.\n\n## Worked Example\n\n| Input | Value |\n|---|---|\n| Savings Goal (FV) | $20,000 |\n| Current Balance (PV) | $2,000 |\n| Time Horizon | 24 months |\n| APY | 4.5% |\n\n**Step 1 — Monthly rate:** 4.5 / 12 / 100 = 0.00375\n\n**Step 2 — Growth of existing balance:** $2,000 × (1.00375)^24 = $2,184.89\n\n**Step 3 — Gap:** $20,000 − $2,184.89 = $17,815.11\n\n**Step 4 — PMT:** $17,815.11 × 0.00375 / ((1.00375)^24 − 1) ≈ **$744.99/month**\n\n**Step 5 — Total contributed:** $744.99 × 24 + $2,000 = **$19,879.76**\n\n**Step 6 — Interest earned:** $20,000 − $19,879.76 = **$120.24** *(note: slight rounding)*\n\n## Outputs Explained\n\n- **Required Monthly Contribution** — the fixed deposit you need every month to hit your goal exactly at the end of the period.\n- **Total You Contribute** — your initial balance plus all monthly deposits (excludes interest).\n- **Interest Earned** — the portion of your goal funded by compound growth, not out-of-pocket savings.\n- **Goal Funded by Interest** — interest earned as a percentage of the final goal amount.\n\n## Limitations & When NOT to Apply\n\n- **Fixed rate assumption:** The formula assumes a constant monthly rate derived from APY. Real savings accounts, CDs, or HYSAs may change rates over time.\n- **End-of-period deposits:** PMT assumes you deposit at the end of each month (ordinary annuity). Depositing at the start of each month (annuity-due) yields a slightly lower required payment.\n- **No taxes or fees:** Interest income may be taxable as ordinary income. HYSA and brokerage fees are not modeled.\n- **Not for investments with variable returns:** Do not use this for stock market projections — equity returns are not guaranteed.",
+  "faq": [
+    {
+      "q": "What APY should I use for a high-yield savings account in 2026?",
+      "a": "As of early 2026, competitive high-yield savings accounts (HYSAs) offer between 4.00% and 5.00% APY. Check current rates at your bank or aggregator sites. The national average savings rate remains much lower (~0.45%), so using a HYSA matters significantly."
+    },
+    {
+      "q": "What if my current balance is $0?",
+      "a": "Enter 0 in the Current Balance field. The calculator will compute a PMT based entirely on building the goal from scratch through monthly deposits plus compounding interest."
+    },
+    {
+      "q": "What does APY mean versus APR?",
+      "a": "APY (Annual Percentage Yield) reflects the actual yearly return including compounding. APR (Annual Percentage Rate) does not include compounding effects. Always use APY when available — savings accounts typically advertise APY, so you can enter that figure directly."
+    },
+    {
+      "q": "Can I use this for a 401(k) or IRA savings goal?",
+      "a": "You can use the same math, but note that tax-advantaged accounts have contribution limits ($7,000/year for IRA in 2026; $23,500/year for 401(k)) and returns vary. This calculator works best for cash savings goals with a predictable yield."
+    },
+    {
+      "q": "What happens if my current balance already exceeds the goal?",
+      "a": "If the future value of your current balance already covers your goal, the required monthly contribution will be $0 or negative (meaning no additional deposits are needed). The calculator will flag this scenario."
+    },
+    {
+      "q": "Does this assume I deposit at the beginning or end of each month?",
+      "a": "The standard PMT formula used here assumes end-of-month deposits (ordinary annuity). This is the most common assumption. Beginning-of-month deposits would reduce the required amount very slightly."
+    },
+    {
+      "q": "How does a longer time horizon affect my monthly payment?",
+      "a": "A longer horizon lowers your monthly payment but also gives interest more time to compound, so the reduction is not strictly linear. Doubling your timeline from 12 to 24 months reduces payments by more than half when a meaningful APY is applied."
+    },
+    {
+      "q": "Is interest on savings accounts taxable?",
+      "a": "In the United States, interest earned in regular savings or HYSA accounts is taxable as ordinary income in the year it is credited, and must be reported on Form 1099-INT. This calculator does not model tax drag — your after-tax effective rate will be lower."
+    },
+    {
+      "q": "Can I use this calculator for a CD (certificate of deposit)?",
+      "a": "Yes, if the CD compounds monthly and you reinvest any interest (or it compounds internally). Enter the CD's APY and term in months. Note that CDs typically do not allow monthly additions — if that is the case, only the lump-sum initial deposit applies."
+    }
+  ],
+  "sources": [
+    {
+      "name": "FDIC — National Rates and Rate Caps",
+      "url": "https://www.fdic.gov/resources/resolutions/bank-failures/failed-bank-list/",
+      "publisher": "Federal Deposit Insurance Corporation",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Publication 550 — Investment Income and Expenses",
+      "url": "https://www.irs.gov/publications/p550",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Retirement Topics — IRA Contribution Limits",
+      "url": "https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-topics-ira-contribution-limits",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "Consumer Financial Protection Bureau — Savings Accounts",
+      "url": "https://www.consumerfinance.gov/consumer-tools/bank-accounts/",
+      "publisher": "Consumer Financial Protection Bureau",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Update default APY example and FAQ figures annually to reflect current HYSA market rates and IRS contribution limits."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,183 @@
+{
+  "slug": "student-loan-payoff-time-calculator",
+  "title": "Student Loan Payoff Calculator 2026 | Hacé Cuentas",
+  "h1": "Student Loan Payoff Calculator",
+  "description": "Calculate how extra monthly payments cut your student loan payoff time. Compare months to payoff, total interest paid, and your exact payoff date.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "🎓",
+  "formulaId": "student-loan-payoff-time-calculator",
+  "intro": "The average US student loan borrower carries **$37,000** in debt and takes **10 years** to repay under the standard federal plan. Making even a small extra payment each month can shave years off that timeline and save thousands in interest. This calculator shows exactly how many months you'll need—with and without extra payments—so you can make an informed decision before committing.",
+  "keyTakeaway": "Adding $100/month to a $37,000 loan at 6.54% APR cuts payoff time by roughly 22 months and saves over $2,100 in interest.",
+  "useCases": [
+    "Finding out how much sooner you'll be debt-free if you redirect a side-hustle paycheck to your loans",
+    "Comparing payoff timelines before choosing between the 10-year standard plan and a graduated repayment plan",
+    "Deciding whether to make a one-time lump-sum payment vs. consistent monthly extra payments",
+    "Planning your budget after graduation to eliminate student debt before a major life milestone",
+    "Evaluating refinancing offers by testing new APRs against your current payoff schedule",
+    "Tracking progress on private student loans where income-driven plans aren't available"
+  ],
+  "fields": [
+    {
+      "id": "balance",
+      "label": "Current Loan Balance ($)",
+      "type": "number",
+      "placeholder": "37000",
+      "default": 37000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "apr",
+      "label": "Annual Interest Rate (APR %)",
+      "type": "number",
+      "placeholder": "6.54",
+      "default": 6.54,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "monthly_payment",
+      "label": "Current Monthly Payment ($)",
+      "type": "number",
+      "placeholder": "418",
+      "default": 418,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "extra_payment",
+      "label": "Extra Payment per Month ($)",
+      "type": "number",
+      "placeholder": "100",
+      "default": 100,
+      "step": 1,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "months_without_extra",
+      "label": "Months to Payoff (Current Plan)",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "months_with_extra",
+      "label": "Months to Payoff (With Extra Payment)",
+      "primary": true,
+      "format": "integer"
+    },
+    {
+      "id": "months_saved",
+      "label": "Months Saved",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "interest_without_extra",
+      "label": "Total Interest (Current Plan)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "interest_with_extra",
+      "label": "Total Interest (With Extra Payment)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "interest_saved",
+      "label": "Total Interest Saved",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "payoff_date_without_extra",
+      "label": "Payoff Date (Current Plan)",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "payoff_date_with_extra",
+      "label": "Payoff Date (With Extra Payment)",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nThis calculator uses the **amortization formula** to compute exactly how many monthly payments are needed to reduce a loan balance to zero, then repeats the calculation with an increased monthly payment to show the impact of extra contributions.\n\n## Formula\n\nThe number of months to pay off a fixed-rate loan is derived from the standard loan amortization equation:\n\n```\nn = -ln(1 - (r × P) / M) / ln(1 + r)\n\nWhere:\n  P = current principal balance\n  r = monthly interest rate = APR / 12 / 100\n  M = monthly payment amount\n  n = number of months to payoff\n```\n\nThe condition `M > r × P` must hold — if your payment doesn't cover the monthly interest accrued, the balance grows indefinitely.\n\nTotal interest paid is simply:\n```\nTotal Interest = (n × M) - P\n```\n\nWhen an extra payment `E` is added:\n```\nM_extra = M + E\nn_extra = -ln(1 - (r × P) / M_extra) / ln(1 + r)\n```\n\nBecause the amortization formula assumes a fixed payment each period, this is a mathematically exact result — not an estimate.\n\n## Worked Example\n\n| Input | Value |\n|---|---|\n| Balance | $37,000 |\n| APR | 6.54% |\n| Monthly Payment | $418 |\n| Extra Payment | $100 |\n\n**Without extra payment:**\n- Monthly rate r = 6.54 / 12 / 100 = 0.00545\n- n = -ln(1 - 0.00545 × 37000 / 418) / ln(1.00545) ≈ 119.6 → 120 months (10 years)\n- Total interest ≈ (120 × $418) − $37,000 = $13,160\n\n**With $100 extra ($518/month):**\n- n = -ln(1 - 0.00545 × 37000 / 518) / ln(1.00545) ≈ 91.8 → 92 months (~7.7 years)\n- Total interest ≈ (92 × $518) − $37,000 = $10,656\n- **Months saved:** 28 | **Interest saved:** ~$2,504\n\n## Limitations & When NOT to Apply\n\n- **Income-driven repayment plans (IDR):** Payments on PAYE, SAVE, or IBR change with income, so a fixed-payment formula doesn't apply directly. Use this calculator only for fixed-payment scenarios.\n- **Variable-rate loans:** The APR you enter is assumed constant. If your rate adjusts, recalculate whenever the rate changes.\n- **Loan forgiveness programs:** If you're pursuing PSLF or other forgiveness, paying extra may not be optimal — consult a financial advisor.\n- **Multiple loans:** Run the calculator separately for each loan or use a weighted-average rate as an approximation.\n- **Negative amortization:** If your monthly payment is less than or equal to monthly interest (r × P), no payoff occurs. The calculator flags this condition.",
+  "faq": [
+    {
+      "q": "What is the 2026 interest rate for federal student loans?",
+      "a": "For the 2025–2026 academic year, federal Direct Subsidized and Unsubsidized loans for undergraduates carry a fixed rate of 6.53%. Graduate Unsubsidized loans are 8.08% and Direct PLUS loans are 9.08%, as set by the Department of Education."
+    },
+    {
+      "q": "Does paying extra each month actually reduce interest, or just shorten the term?",
+      "a": "Both. Every extra dollar applied to principal reduces the balance on which next month's interest is calculated. This compounding effect lowers total interest paid and shortens the payoff term simultaneously — the two outcomes are inseparable."
+    },
+    {
+      "q": "Should I tell my loan servicer to apply extra payments to principal?",
+      "a": "Yes. By default, many servicers apply overpayments to advance your next due date rather than reducing principal. Contact your servicer or log in to your account and specify that any amount above the minimum should be applied directly to principal."
+    },
+    {
+      "q": "Can I use this for income-driven repayment (IDR) plans like SAVE or PAYE?",
+      "a": "Not directly. IDR plans recalculate your payment annually based on income and family size, so your payment is not fixed. This calculator assumes a constant monthly payment. You can still use it to model what happens if you pay more than your IDR minimum."
+    },
+    {
+      "q": "What if my payment is less than the monthly interest on my balance?",
+      "a": "If your monthly payment is less than or equal to (APR/12/100) × Balance, your loan will never be paid off — the balance actually grows each month (negative amortization). The calculator detects this and displays an error message instead of a payoff date."
+    },
+    {
+      "q": "How does this calculator handle multiple loans?",
+      "a": "It handles one loan at a time. If you have multiple loans, run the calculator separately for each. A common strategy is to focus extra payments on the highest-APR loan first (avalanche method) to minimize total interest."
+    },
+    {
+      "q": "Is there a tax deduction for student loan interest in 2026?",
+      "a": "Yes. As of 2026, you can deduct up to $2,500 of student loan interest per year if your modified adjusted gross income (MAGI) is below $85,000 (single) or $175,000 (married filing jointly), with a phase-out range above those limits. This deduction is taken above-the-line, so you don't need to itemize."
+    },
+    {
+      "q": "Should I invest extra money instead of paying off student loans early?",
+      "a": "It depends on your loan APR versus expected investment returns. If your loan rate is below ~5%, historical stock market returns (~7–10% long-term) may favor investing. If your rate is above 7%, paying off the loan offers a guaranteed return equal to that rate. The answer is personal and depends on risk tolerance, employer 401(k) match, and emergency fund status."
+    },
+    {
+      "q": "Does refinancing make sense to speed up payoff?",
+      "a": "Refinancing into a lower APR reduces monthly interest, meaning more of each payment goes to principal. However, refinancing federal loans into private loans permanently removes access to IDR plans, PSLF, and federal forbearance. Evaluate the trade-off carefully before refinancing federal debt."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Federal Student Aid – Interest Rates and Fees",
+      "url": "https://studentaid.gov/understand-aid/types/loans/interest-rates",
+      "publisher": "U.S. Department of Education",
+      "date": "2026"
+    },
+    {
+      "name": "Student Loan Debt Statistics",
+      "url": "https://educationdata.org/student-loan-debt-statistics",
+      "publisher": "Education Data Initiative",
+      "date": "2026"
+    },
+    {
+      "name": "Publication 970 – Tax Benefits for Education",
+      "url": "https://www.irs.gov/publications/p970",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "CFPB – Making Extra Loan Payments",
+      "url": "https://www.consumerfinance.gov/ask-cfpb/what-is-the-best-way-to-make-extra-payments-on-my-student-loans-en-634/",
+      "publisher": "Consumer Financial Protection Bureau",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Federal loan interest rates are set each July 1 by Congress based on the 10-year Treasury note auction in May. Update default APR and FAQ rate figures annually after the Department of Education publishes new rates."
+  },
+  "lastReviewed": "2026-04-28"
+}

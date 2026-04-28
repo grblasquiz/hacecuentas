@@ -1,0 +1,216 @@
+{
+  "slug": "openai-api-monthly-cost-estimator",
+  "title": "OpenAI API Cost Calculator 2026 | Hacé Cuentas",
+  "h1": "OpenAI API Monthly Cost Calculator",
+  "description": "Calculate your OpenAI API monthly spend. Estimate GPT-4o, GPT-4o-mini, and o3 costs by token usage, daily requests, and Batch API discounts.",
+  "category": "tech",
+  "audience": "global",
+  "icon": "🤖",
+  "formulaId": "openai-api-monthly-cost-estimator",
+  "intro": "API costs can spiral fast if you're not tracking token usage carefully. This calculator estimates your **monthly OpenAI API bill** based on model choice, average input/output tokens per request, and daily request volume. It also shows the **50% Batch API discount** impact and compares your projected cost against Claude 3.5 Sonnet and Gemini 1.5 Pro so you can make an informed model choice.",
+  "keyTakeaway": "GPT-4o at 1,000 requests/day with 500 input + 500 output tokens each costs ~$150/month; switching to GPT-4o-mini cuts that to ~$4.50/month — a 97% reduction.",
+  "useCases": [
+    "Estimating monthly API budget before launching a new AI-powered product",
+    "Comparing cost impact of upgrading from GPT-4o-mini to GPT-4o or o3",
+    "Calculating Batch API savings for offline or asynchronous workloads",
+    "Projecting costs as daily request volume scales up over time",
+    "Benchmarking OpenAI pricing against Claude and Gemini for a given workload",
+    "Planning infrastructure spend for a SaaS product with AI features"
+  ],
+  "fields": [
+    {
+      "id": "model",
+      "label": "OpenAI Model",
+      "type": "select",
+      "options": [
+        {
+          "value": "gpt4o",
+          "label": "GPT-4o ($5/M input · $15/M output)"
+        },
+        {
+          "value": "gpt4o_mini",
+          "label": "GPT-4o mini ($0.15/M input · $0.60/M output)"
+        },
+        {
+          "value": "o3",
+          "label": "o3 ($15/M input · $60/M output)"
+        }
+      ],
+      "default": "gpt4o",
+      "required": true
+    },
+    {
+      "id": "input_tokens",
+      "label": "Avg Input Tokens per Request",
+      "type": "number",
+      "placeholder": "500",
+      "default": 500,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "output_tokens",
+      "label": "Avg Output Tokens per Request",
+      "type": "number",
+      "placeholder": "500",
+      "default": 500,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "requests_per_day",
+      "label": "Requests per Day",
+      "type": "number",
+      "placeholder": "1000",
+      "default": 1000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "batch_api",
+      "label": "Use Batch API (50% discount)?",
+      "type": "select",
+      "options": [
+        {
+          "value": "no",
+          "label": "No — Standard (synchronous) API"
+        },
+        {
+          "value": "yes",
+          "label": "Yes — Batch API (async, ≤24 h turnaround)"
+        }
+      ],
+      "default": "no",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cost_per_day",
+      "label": "Cost per Day",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "cost_per_month",
+      "label": "Estimated Monthly Cost",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "input_cost_month",
+      "label": "Monthly Input Token Cost",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "output_cost_month",
+      "label": "Monthly Output Token Cost",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "batch_savings_month",
+      "label": "Batch API Savings vs Standard",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "tokens_per_month",
+      "label": "Total Tokens per Month",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "comparison",
+      "label": "vs. Claude & Gemini (same workload)",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How the Cost Formula Works\n\nOpenAI charges separately for **input tokens** (the prompt + context you send) and **output tokens** (the completion the model generates). Prices are expressed per **1 million tokens**.\n\n### Pricing Table (2026)\n\n| Model | Input ($/M tokens) | Output ($/M tokens) |\n|---|---|---|\n| GPT-4o | $5.00 | $15.00 |\n| GPT-4o mini | $0.15 | $0.60 |\n| o3 | $15.00 | $60.00 |\n\n### Core Formula\n\n```\ndaily_input_cost  = (input_tokens × requests_per_day / 1,000,000) × input_price\ndaily_output_cost = (output_tokens × requests_per_day / 1,000,000) × output_price\ncost_per_day      = (daily_input_cost + daily_output_cost) × discount_factor\ncost_per_month    = cost_per_day × 30.44   // avg days per month\n```\n\n`discount_factor` = 0.50 when Batch API is enabled, 1.0 otherwise.\n\n### Worked Example\n\nAssume: **GPT-4o**, 500 input tokens, 500 output tokens, 1,000 requests/day, **no batch**.\n\n```\ndaily_input  = (500 × 1000 / 1,000,000) × $5.00  = 0.5M tokens × $5  = $2.50\ndaily_output = (500 × 1000 / 1,000,000) × $15.00 = 0.5M tokens × $15 = $7.50\ncost_per_day = $2.50 + $7.50 = $10.00\ncost_per_month = $10.00 × 30.44 = $304.40\n```\n\nWith **Batch API enabled**, that drops to **$5.00/day → $152.20/month**.\n\n### Comparison Models (same workload)\n\nFor reference, the calculator also estimates cost using:\n- **Claude 3.5 Sonnet**: $3.00/M input · $15.00/M output (Anthropic, 2026)\n- **Gemini 1.5 Pro**: $1.25/M input · $5.00/M output (Google, 2026 ≤128K context tier)\n\nThese are shown as informational comparisons only — exact pricing depends on your tier and may differ.\n\n### Limitations & When NOT to Rely on This Estimate\n\n- **System prompts and conversation history** add input tokens on every turn; this calculator assumes a fixed per-request token count.\n- **Cached input tokens** (OpenAI Prompt Caching) can reduce input costs by ~50% for repeated prefixes — not modeled here.\n- **Fine-tuned models** carry different per-token rates not covered here.\n- **Rate limits and tier discounts** (enterprise agreements) may lower your actual bill.\n- Token counts are approximate; the OpenAI tokenizer (tiktoken) is the authoritative source.\n- 1 month is approximated as 30.44 days.",
+  "faq": [
+    {
+      "q": "What is a token?",
+      "a": "A token is roughly 4 characters or ¾ of a word in English. The sentence 'OpenAI charges per token' is about 6 tokens. You can count tokens precisely using OpenAI's open-source tiktoken library or the Tokenizer tool in the OpenAI Playground."
+    },
+    {
+      "q": "What is the Batch API and when should I use it?",
+      "a": "The OpenAI Batch API lets you submit a file of requests that are processed asynchronously within 24 hours. In exchange, you get a 50% discount on all input and output tokens. It's ideal for data processing, evals, content generation pipelines, and any workload that doesn't require a real-time response."
+    },
+    {
+      "q": "Does this calculator include image or audio tokens?",
+      "a": "No. This calculator covers text tokens only. Image inputs (vision) are priced differently based on image size and detail level. Audio via Whisper or TTS is priced per minute of audio, not per token."
+    },
+    {
+      "q": "How accurate is the monthly estimate?",
+      "a": "It assumes the same request volume every day of the month (×30.44 days). Real usage often has weekday/weekend variation. Treat this as a planning estimate, not a billing guarantee. Your actual invoice may differ due to caching, retries, and tier pricing."
+    },
+    {
+      "q": "Why is o3 so much more expensive than GPT-4o?",
+      "a": "o3 is OpenAI's reasoning model. It runs an internal chain-of-thought process (called 'thinking tokens') before producing a final answer, which consumes substantially more compute. It's best suited for complex coding, math, and multi-step logic tasks where accuracy justifies the cost."
+    },
+    {
+      "q": "Does OpenAI offer volume discounts?",
+      "a": "OpenAI's public API pricing (shown here) applies to pay-as-you-go users. Enterprise contracts may include negotiated discounts not reflected in these figures. Prompt Caching (automatic for prompts >1,024 tokens) can reduce effective input cost by ~50% for repeated context."
+    },
+    {
+      "q": "How do Claude and Gemini prices compare?",
+      "a": "For a text-only workload in 2026, Gemini 1.5 Pro is generally the cheapest of the three at $1.25/M input and $5.00/M output (up to 128K context). Claude 3.5 Sonnet sits at $3.00/M input and $15.00/M output. GPT-4o is $5.00/$15.00. o3 is the most expensive at $15.00/$60.00."
+    },
+    {
+      "q": "What if my input-to-output token ratio is very different?",
+      "a": "Adjust the 'Avg Input Tokens' and 'Avg Output Tokens' fields to match your actual workload. RAG pipelines typically have large inputs (retrieved context) and short outputs. Chatbots often have moderate input and longer outputs. The ratio dramatically affects cost, especially on models with asymmetric pricing like o3."
+    },
+    {
+      "q": "Are there free tiers I should know about?",
+      "a": "OpenAI's free tier (when available) provides a limited credit for new accounts, not a recurring free allowance. This calculator assumes you are past any free credit and paying standard per-token rates."
+    }
+  ],
+  "sources": [
+    {
+      "name": "OpenAI API Pricing",
+      "url": "https://openai.com/api/pricing",
+      "publisher": "OpenAI",
+      "date": "2026"
+    },
+    {
+      "name": "OpenAI Batch API Documentation",
+      "url": "https://platform.openai.com/docs/guides/batch",
+      "publisher": "OpenAI",
+      "date": "2026"
+    },
+    {
+      "name": "Anthropic Claude API Pricing",
+      "url": "https://www.anthropic.com/pricing",
+      "publisher": "Anthropic",
+      "date": "2026"
+    },
+    {
+      "name": "Google Gemini API Pricing",
+      "url": "https://ai.google.dev/pricing",
+      "publisher": "Google DeepMind",
+      "date": "2026"
+    },
+    {
+      "name": "OpenAI Tokenizer (tiktoken)",
+      "url": "https://platform.openai.com/tokenizer",
+      "publisher": "OpenAI",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Update model pricing constants when OpenAI, Anthropic, or Google publish new rates. Verify Batch API discount percentage and add new models (e.g., o4, GPT-5) as they become available.",
+    "source": "OpenAI API Pricing",
+    "sourceUrl": "https://openai.com/api/pricing"
+  },
+  "lastReviewed": "2026-04-28"
+}

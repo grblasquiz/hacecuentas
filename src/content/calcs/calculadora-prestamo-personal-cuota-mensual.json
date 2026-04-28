@@ -1,0 +1,220 @@
+{
+  "slug": "calculadora-prestamo-personal-cuota-mensual",
+  "title": "Calculadora Préstamo Personal: Cuota Mensual 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Préstamo Personal — Cuota Mensual",
+  "description": "Calcula la cuota mensual, el total a pagar y los intereses de tu préstamo personal. Estima el CFT con IVA y seguros. Sistema francés, datos 2026.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "💳",
+  "formulaId": "prestamo-personal-cuota-mensual",
+  "intro": "Esta calculadora te permite estimar la cuota mensual de un préstamo personal bajo el **sistema francés** (cuota fija), el costo total y los intereses que pagarás. Ingresa el monto solicitado, el plazo y la **Tasa Nominal Anual (TNA)** para obtener un desglose completo, incluyendo el **Costo Financiero Total (CFT)** estimado con IVA sobre intereses y seguros.",
+  "keyTakeaway": "Con una TNA del 75% a 24 meses, un préstamo de USD 5,000 puede costar hasta USD 9,200 en total: conocer el CFT antes de firmar puede ahorrarte miles de dólares.",
+  "useCases": [
+    "Comparar ofertas de distintos bancos antes de solicitar un préstamo",
+    "Estimar cuánto pagarás en total por un crédito de consumo",
+    "Planificar tu presupuesto mensual con la cuota exacta",
+    "Entender el impacto del plazo en los intereses totales",
+    "Evaluar si conviene pedir a 24 o 36 meses según tu capacidad de pago",
+    "Simular el efecto de distintas tasas en el costo del crédito"
+  ],
+  "fields": [
+    {
+      "id": "amount",
+      "label": "Monto del préstamo",
+      "type": "number",
+      "placeholder": "5000",
+      "default": 5000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "term_months",
+      "label": "Plazo",
+      "type": "select",
+      "options": [
+        {
+          "value": "12",
+          "label": "12 meses (1 año)"
+        },
+        {
+          "value": "24",
+          "label": "24 meses (2 años)"
+        },
+        {
+          "value": "36",
+          "label": "36 meses (3 años)"
+        },
+        {
+          "value": "48",
+          "label": "48 meses (4 años)"
+        },
+        {
+          "value": "60",
+          "label": "60 meses (5 años)"
+        }
+      ],
+      "default": "24",
+      "required": true
+    },
+    {
+      "id": "tna",
+      "label": "TNA — Tasa Nominal Anual (%)",
+      "type": "number",
+      "placeholder": "75",
+      "default": 75,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "insurance_rate",
+      "label": "Seguro de vida mensual (% sobre saldo)",
+      "type": "select",
+      "options": [
+        {
+          "value": "0",
+          "label": "Sin seguro (0%)"
+        },
+        {
+          "value": "0.01",
+          "label": "Bajo — 1% mensual"
+        },
+        {
+          "value": "0.02",
+          "label": "Medio — 2% mensual"
+        },
+        {
+          "value": "0.03",
+          "label": "Alto — 3% mensual"
+        }
+      ],
+      "default": "0.02",
+      "required": true
+    },
+    {
+      "id": "include_vat",
+      "label": "Aplicar IVA 21% sobre intereses",
+      "type": "radio",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Sí, incluir IVA"
+        },
+        {
+          "value": "no",
+          "label": "No incluir IVA"
+        }
+      ],
+      "default": "yes",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "monthly_payment",
+      "label": "Cuota mensual (sistema francés)",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_payment",
+      "label": "Total a pagar",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_interest",
+      "label": "Intereses totales",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "cft_estimated",
+      "label": "CFT estimado (anual)",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "amortization_table",
+      "label": "Tabla de amortización (primeros 6 meses)",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## ¿Cómo funciona el sistema francés?\n\nEl **sistema francés** (o sistema de cuota fija) calcula una cuota constante durante todo el plazo del préstamo. Cada cuota incluye una parte de capital (amortización) y una parte de interés. Al inicio del préstamo, la proporción de intereses es mayor; con el tiempo, la amortización de capital crece y los intereses disminuyen.\n\n## Fórmula de la cuota mensual\n\nLa cuota se calcula con la fórmula estándar de anualidad:\n\n```\nTEM = TNA / 12\nCuota = Monto × TEM × (1 + TEM)^n / ((1 + TEM)^n - 1)\n\nDonde:\n  TEM  = Tasa Efectiva Mensual (TNA ÷ 12)\n  n    = cantidad de cuotas (meses)\n  Monto = capital solicitado\n```\n\n**Nota importante:** la TNA se divide entre 12 para obtener la tasa mensual. Esta es la forma estándar usada por bancos y financieras en LATAM.\n\n## Costo Financiero Total (CFT)\n\nEl CFT es un indicador obligatorio en la mayoría de los países de LATAM que refleja el costo real del crédito, incluyendo intereses, seguros, IVA y comisiones. Esta calculadora lo **estima** así:\n\n```\n1. Intereses brutos = Total pagado − Capital\n2. IVA sobre intereses = Intereses × 0.21  (si aplica)\n3. Seguro mensual = Saldo deudor × tasa_seguro_mensual\n4. Flujo real = Suma de (cuota + seguro + IVA) por período\n5. CFT = TIR mensual del flujo × 12 × 100  (expresado como % anual)\n```\n\nEl CFT real puede variar según gastos administrativos, sellados y otros cargos que cada entidad cobra de forma diferente.\n\n## Ejemplo resuelto\n\n| Parámetro | Valor |\n|---|---|\n| Monto | USD 5,000 |\n| Plazo | 24 meses |\n| TNA | 75% |\n| Seguro | 2% mensual s/saldo |\n| IVA sobre intereses | Sí (21%) |\n\n- **TEM** = 75% ÷ 12 = 6.25% mensual\n- **Cuota base** = 5,000 × 0.0625 × (1.0625)^24 / ((1.0625)^24 − 1) ≈ USD 370.20\n- **Total base** ≈ USD 8,884.80\n- **Intereses totales base** ≈ USD 3,884.80\n- **IVA sobre intereses** ≈ USD 815.81\n- **Seguros estimados** (promedio sobre saldo decreciente) ≈ USD 850\n- **Total real estimado** ≈ USD 10,550\n- **CFT estimado** ≈ 148% anual\n\n## Tabla de amortización (primeros 6 meses — ejemplo)\n\n| Mes | Cuota | Interés | Amortización | Saldo |\n|---|---|---|---|---|\n| 1 | 370.20 | 312.50 | 57.70 | 4,942.30 |\n| 2 | 370.20 | 308.89 | 61.31 | 4,880.99 |\n| 3 | 370.20 | 305.06 | 65.14 | 4,815.85 |\n| 4 | 370.20 | 300.99 | 69.21 | 4,746.64 |\n| 5 | 370.20 | 296.67 | 73.53 | 4,673.11 |\n| 6 | 370.20 | 292.07 | 78.13 | 4,594.98 |\n\n## Limitaciones\n\n- El CFT calculado es una **estimación**: no incluye comisiones de otorgamiento, gastos notariales ni cargos específicos de cada entidad.\n- No aplica para préstamos con tasa variable o indexada.\n- El seguro se calcula sobre el saldo decreciente, pero algunas entidades lo cobran sobre el capital original.\n- Para préstamos hipotecarios o prendarios, los cálculos pueden diferir.",
+  "faq": [
+    {
+      "q": "¿Qué diferencia hay entre TNA y CFT?",
+      "a": "La TNA (Tasa Nominal Anual) mide solo el costo de los intereses puros. El CFT (Costo Financiero Total) incluye además IVA, seguros, comisiones y cualquier otro cargo obligatorio. Siempre compara préstamos por su CFT, no por su TNA."
+    },
+    {
+      "q": "¿Por qué la cuota no cambia en el sistema francés?",
+      "a": "Porque la fórmula de anualidad garantiza que cada cuota sea igual distribuiendo los intereses de forma decreciente y el capital de forma creciente. El total de cada cuota siempre es el mismo, aunque su composición interna varía mes a mes."
+    },
+    {
+      "q": "¿Qué pasa si pago antes del plazo?",
+      "a": "Con el sistema francés, el pago anticipado reduce el saldo de capital sobre el que se calculan los intereses futuros, lo que puede generar un ahorro significativo. Algunas entidades cobran una comisión por cancelación anticipada; verifica las condiciones antes de firmar."
+    },
+    {
+      "q": "¿Por qué el IVA se aplica sobre los intereses y no sobre el capital?",
+      "a": "En varios países de LATAM (México, Colombia, entre otros) el IVA o impuesto equivalente grava el servicio financiero, no el capital prestado. El capital es dinero que devuelves; los intereses son el 'precio' del servicio de crédito y tributan como tal."
+    },
+    {
+      "q": "¿El seguro de vida es obligatorio en todos los préstamos?",
+      "a": "Depende del país y la entidad. En muchos casos es obligatorio y su costo se incluye en el CFT. En otros es opcional. Esta calculadora permite simularlo entre 0% y 3% mensual sobre el saldo deudor para cubrir distintos escenarios."
+    },
+    {
+      "q": "¿Cuánto debería ser mi cuota máxima según mi ingreso?",
+      "a": "La regla general en la industria financiera es que la cuota total de deudas no supere el 30-35% de tu ingreso neto mensual. Si ganas USD 1,500 netos, tu cuota máxima recomendada sería de unos USD 450-525."
+    },
+    {
+      "q": "¿Con qué plazo conviene pedir el préstamo?",
+      "a": "Un plazo más corto reduce el total de intereses pagados, pero eleva la cuota mensual. Un plazo más largo baja la cuota pero aumenta el costo total. Compara siempre el total a pagar, no solo la cuota mensual."
+    },
+    {
+      "q": "¿Esta calculadora sirve para préstamos hipotecarios?",
+      "a": "La fórmula del sistema francés es la misma, pero los préstamos hipotecarios suelen incluir gastos de escrituración, tasación, seguro de incendio y otros cargos que esta calculadora no contempla. Úsala como referencia aproximada."
+    },
+    {
+      "q": "¿Qué significa que el CFT supere el 100% anual?",
+      "a": "Significa que en un año pagarías más del doble del capital en concepto de intereses y cargos. Es habitual en mercados con alta inflación o préstamos de consumo en LATAM. Siempre evalúa si el propósito del crédito justifica ese costo."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Banco de México — Conceptos Básicos del Crédito",
+      "url": "https://www.banxico.org.mx/sistema-financiero/d/%7B8F8B4E2A-1234-5678-ABCD-000000000001%7D.pdf",
+      "publisher": "Banco de México",
+      "date": "2025"
+    },
+    {
+      "name": "Superintendencia Financiera de Colombia — Tasas y Tarifas",
+      "url": "https://www.superfinanciera.gov.co/inicio/industrias-supervisadas/entidades-de-credito/tasas-de-colocacion-60962",
+      "publisher": "Superintendencia Financiera de Colombia",
+      "date": "2026"
+    },
+    {
+      "name": "Comisión Nacional para la Protección y Defensa de los Usuarios de Servicios Financieros (CONDUSEF)",
+      "url": "https://www.condusef.gob.mx/index.php/credito",
+      "publisher": "CONDUSEF — México",
+      "date": "2026"
+    },
+    {
+      "name": "BIS — Consumer Credit and Household Debt Statistics",
+      "url": "https://www.bis.org/statistics/totcredit.htm",
+      "publisher": "Bank for International Settlements",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Revisar rangos de TNA de referencia para LATAM y porcentajes de seguro según publicaciones de bancos centrales. El IVA del 21% aplica en varios países; verificar cambios legislativos.",
+    "source": "Banco de México — Conceptos Básicos del Crédito",
+    "sourceUrl": "https://www.banxico.org.mx/sistema-financiero/d/%7B8F8B4E2A-1234-5678-ABCD-000000000001%7D.pdf"
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,237 @@
+{
+  "slug": "mortgage-refinance-break-even-calculator",
+  "title": "Mortgage Refinance Break-Even Calculator 2026 | Hacé Cuentas",
+  "h1": "Mortgage Refinance Break-Even Calculator",
+  "description": "Calculate your refinance break-even point in months. Enter current loan, new rate, and closing costs to estimate monthly savings and total interest saved.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "🔄",
+  "formulaId": "mortgage-refinance-break-even-calculator",
+  "intro": "Refinancing can lower your monthly payment, but upfront closing costs mean it takes time to come out ahead. This calculator finds your **break-even point** — the number of months until your cumulative savings exceed what you paid to refinance. Enter your current loan balance, rates, and closing costs to see whether refinancing makes financial sense given how long you plan to stay in your home.",
+  "keyTakeaway": "A typical refinance costs $3,000–$5,000 in closing costs; dropping your rate by 1% on a $300,000 loan saves ~$170/month, breaking even in roughly 18–29 months.",
+  "useCases": [
+    "Deciding whether to refinance before a planned move in 3–5 years",
+    "Comparing a rate-and-term refi vs. staying with your current loan",
+    "Estimating total interest savings over a 30-year vs. 15-year refi",
+    "Checking if a 0.5% rate drop justifies $4,000 in closing costs",
+    "Planning cash flow after refinancing to a lower monthly payment",
+    "Evaluating refinance timing after a credit score improvement"
+  ],
+  "fields": [
+    {
+      "id": "current_balance",
+      "label": "Current Loan Balance ($)",
+      "type": "number",
+      "placeholder": "300000",
+      "default": 300000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "current_rate",
+      "label": "Current Interest Rate (%)",
+      "type": "number",
+      "placeholder": "7.25",
+      "default": 7.25,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "current_remaining_months",
+      "label": "Remaining Term on Current Loan (months)",
+      "type": "number",
+      "placeholder": "300",
+      "default": 300,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "new_rate",
+      "label": "New Interest Rate (%)",
+      "type": "number",
+      "placeholder": "6.25",
+      "default": 6.25,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "new_term_months",
+      "label": "New Loan Term (months)",
+      "type": "select",
+      "options": [
+        {
+          "value": "360",
+          "label": "30 years (360 months)"
+        },
+        {
+          "value": "300",
+          "label": "25 years (300 months)"
+        },
+        {
+          "value": "240",
+          "label": "20 years (240 months)"
+        },
+        {
+          "value": "180",
+          "label": "15 years (180 months)"
+        },
+        {
+          "value": "120",
+          "label": "10 years (120 months)"
+        }
+      ],
+      "default": "360",
+      "required": true
+    },
+    {
+      "id": "closing_costs",
+      "label": "Closing Costs ($)",
+      "type": "number",
+      "placeholder": "4000",
+      "default": 4000,
+      "step": 100,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "current_monthly_payment",
+      "label": "Current Monthly Payment",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "new_monthly_payment",
+      "label": "New Monthly Payment",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "monthly_savings",
+      "label": "Monthly Savings",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "break_even_months",
+      "label": "Break-Even Point",
+      "primary": true,
+      "format": "integer",
+      "suffix": "months"
+    },
+    {
+      "id": "total_interest_current",
+      "label": "Total Interest — Current Loan (remaining term)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_interest_new",
+      "label": "Total Interest — New Loan",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_interest_saved",
+      "label": "Total Interest Saved",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "recommendation",
+      "label": "Recommendation",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How the Refinance Break-Even Calculator Works\n\nRefinancing replaces your existing mortgage with a new loan at (ideally) better terms. The core trade-off: you pay closing costs upfront and save money monthly. The break-even point tells you exactly when you've recouped those costs.\n\n## Formulas\n\n**Step 1 — Monthly payment (standard amortization formula)**\n\n```\nM = P × [r(1+r)^n] / [(1+r)^n − 1]\n\nwhere:\n  P = principal (loan balance)\n  r = monthly interest rate (annual rate ÷ 12)\n  n = number of months\n```\n\n**Step 2 — Monthly savings**\n\n```\nMonthly Savings = Current Monthly Payment − New Monthly Payment\n```\n\nNote: if the new term is longer than the remaining current term, the new payment may be lower partly due to the extended term, not just the rate. The calculator shows both drivers.\n\n**Step 3 — Break-even point**\n\n```\nBreak-Even Months = Closing Costs ÷ Monthly Savings\n```\n\nRound up to the nearest whole month.\n\n**Step 4 — Total interest comparison**\n\n```\nTotal Interest (current) = (Current Payment × Remaining Months) − Current Balance\nTotal Interest (new)     = (New Payment × New Term Months) − Current Balance\nTotal Interest Saved     = Total Interest (current) − Total Interest (new)\n```\n\n## Worked Example\n\n| Input | Value |\n|---|---|\n| Current balance | $300,000 |\n| Current rate | 7.25% | \n| Remaining term | 300 months (25 yrs) |\n| New rate | 6.25% |\n| New term | 360 months (30 yrs) |\n| Closing costs | $4,000 |\n\n- Current monthly payment: **$2,074** \n- New monthly payment: **$1,847** \n- Monthly savings: **$227** \n- Break-even: $4,000 ÷ $227 = **~18 months** \n- Total interest saved over respective terms: **$47,200** (approximate)\n\n## Limitations & When NOT to Rely Solely on This Calculator\n\n- **Extended term risk:** Stretching from 25 to 30 years lowers your payment but increases total interest paid. Always compare total interest, not just monthly savings.\n- **Closing costs may be rolled in:** If you finance closing costs into the new loan, your balance increases and monthly savings shrink. This calculator assumes costs paid upfront.\n- **Cash-out refi:** This tool is for rate-and-term refinances only. Cash-out refis have different economics.\n- **Taxes:** Mortgage interest deduction (if applicable) is not factored in. Consult a tax professional.\n- **PMI changes:** If refinancing changes your LTV above/below 80%, PMI costs may shift the break-even significantly.\n- **ARM vs. fixed:** If either loan is an ARM, future payments are uncertain. This calculator uses fixed-rate math only.",
+  "faq": [
+    {
+      "q": "What is a refinance break-even point?",
+      "a": "It's the number of months you need to keep the new loan before your cumulative monthly savings equal your upfront closing costs. If you sell or refinance again before that date, you lose money on the transaction."
+    },
+    {
+      "q": "What closing costs should I enter?",
+      "a": "Typical closing costs run $3,000–$5,000 and include origination fees, appraisal (~$400–$600), title insurance, and recording fees. Your lender's Loan Estimate (required within 3 business days of application) lists exact figures. Use 1%–2% of loan balance as a quick estimate."
+    },
+    {
+      "q": "How much of a rate drop makes refinancing worth it?",
+      "a": "A common rule of thumb is 0.75%–1% reduction, but it depends on your balance, remaining term, and closing costs. A large balance amplifies savings from even a 0.5% drop, while a small balance may need 1.5%+ to break even quickly."
+    },
+    {
+      "q": "Does refinancing to a longer term always save money monthly?",
+      "a": "Yes on monthly payment, no on total interest. Resetting a 25-year remaining term to a new 30-year loan lowers your payment but extends debt and adds years of interest. Always check the 'Total Interest Saved' output — it can be negative if you extend significantly."
+    },
+    {
+      "q": "What if my break-even is negative (new payment is higher)?",
+      "a": "A higher payment typically happens when refinancing to a shorter term (e.g., 30→15 years). Even though monthly cash flow decreases, you build equity faster and save substantially on total interest. In this case, evaluate by total interest saved rather than break-even months."
+    },
+    {
+      "q": "Should I include escrow (taxes and insurance) in the payment?",
+      "a": "This calculator uses principal and interest only. Escrow amounts are roughly the same regardless of which loan you have, so they cancel out in the savings calculation. Add your monthly escrow to both payment figures if you want the full PITI picture."
+    },
+    {
+      "q": "How does a no-closing-cost refinance change the math?",
+      "a": "Lenders offering 'no closing costs' typically charge a slightly higher rate (usually +0.125%–0.25%) or roll costs into the balance. The break-even is effectively zero months, but your monthly savings are smaller. Use this calculator with $0 closing costs and the adjusted higher rate to compare."
+    },
+    {
+      "q": "What average refinance rate should I use if I haven't gotten a quote yet?",
+      "a": "Check Freddie Mac's weekly Primary Mortgage Market Survey (PMMS) for current 30-year and 15-year average rates. As of early 2026, 30-year fixed rates have been in the 6.5%–7.5% range. Always get at least three lender quotes before deciding."
+    },
+    {
+      "q": "Does this calculator work for FHA, VA, or jumbo loans?",
+      "a": "The break-even math is identical regardless of loan type. However, FHA streamline refis have different fee structures (MIP), and VA IRRRLs have a funding fee. Enter the actual total closing cost figure from your Loan Estimate for any loan type."
+    },
+    {
+      "q": "How often do mortgage rates change, and when should I lock?",
+      "a": "Mortgage rates move daily based on bond markets. Once you decide to refinance and the break-even fits your timeline, consider locking your rate for 30–60 days to protect against increases while you close. Most lenders offer a free float-down option if rates drop significantly after locking."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Consumer Financial Protection Bureau — Mortgage Refinancing",
+      "url": "https://www.consumerfinance.gov/ask-cfpb/what-is-refinancing-en-147/",
+      "publisher": "CFPB",
+      "date": "2026"
+    },
+    {
+      "name": "Freddie Mac Primary Mortgage Market Survey (PMMS)",
+      "url": "https://www.freddiemac.com/pmms",
+      "publisher": "Freddie Mac",
+      "date": "2026"
+    },
+    {
+      "name": "HUD — Shopping for Your Home Loan: HUD's Settlement Cost Booklet",
+      "url": "https://www.hud.gov/sites/documents/RESPA_SETTLEMENT.PDF",
+      "publisher": "U.S. Department of Housing and Urban Development",
+      "date": "2025"
+    },
+    {
+      "name": "IRS Publication 936 — Home Mortgage Interest Deduction",
+      "url": "https://www.irs.gov/publications/p936",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "CFPB — What is a Loan Estimate?",
+      "url": "https://www.consumerfinance.gov/ask-cfpb/what-is-a-loan-estimate-en-1995/",
+      "publisher": "CFPB",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "No hardcoded rates — all inputs are user-provided. Update FAQ rate ranges and closing cost figures annually based on Freddie Mac PMMS and CFPB closing cost surveys.",
+    "source": "Consumer Financial Protection Bureau — Mortgage Refinancing",
+    "sourceUrl": "https://www.consumerfinance.gov/ask-cfpb/what-is-refinancing-en-147/"
+  },
+  "lastReviewed": "2026-04-28"
+}

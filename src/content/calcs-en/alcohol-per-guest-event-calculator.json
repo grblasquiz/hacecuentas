@@ -1,0 +1,217 @@
+{
+  "slug": "alcohol-per-guest-event-calculator",
+  "title": "Alcohol Per Guest Calculator 2026 | Hacé Cuentas",
+  "h1": "Alcohol Per Guest Calculator",
+  "description": "Calculate how much alcohol you need per guest. Estimate wine bottles, beer cans, and spirits for weddings, cocktail parties, and casual events.",
+  "category": "events",
+  "audience": "global",
+  "icon": "🍷",
+  "formulaId": "alcohol-per-guest-event-calculator",
+  "intro": "Planning a party and wondering how much alcohol to buy? This calculator uses the **standard catering rule**: 1 drink per guest per hour for the first 2 hours, then 0.5 drinks per hour after that. It splits the total across **50% wine, 30% beer, and 20% spirits**, then converts everything into bottles, cans, and liters so you know exactly what to buy.",
+  "keyTakeaway": "A 4-hour wedding with 100 guests typically requires about 42 bottles of wine, 126 beers, and 3.8 liters of spirits — roughly $900–$1,400 in alcohol costs.",
+  "useCases": [
+    "Estimating alcohol quantities for a wedding reception",
+    "Planning a cocktail party without over- or under-buying",
+    "Budgeting alcohol costs for a corporate event",
+    "Calculating bar supplies for a birthday or anniversary party",
+    "Comparing drink needs for different event durations",
+    "Adjusting quantities for light vs. heavy drinking crowds"
+  ],
+  "fields": [
+    {
+      "id": "guests",
+      "label": "Number of Guests",
+      "type": "number",
+      "placeholder": "100",
+      "default": 100,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "hours",
+      "label": "Event Duration (hours)",
+      "type": "number",
+      "placeholder": "4",
+      "default": 4,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "event_type",
+      "label": "Event Type",
+      "type": "select",
+      "options": [
+        {
+          "value": "wedding",
+          "label": "Wedding / Formal Reception"
+        },
+        {
+          "value": "cocktail",
+          "label": "Cocktail Party"
+        },
+        {
+          "value": "casual",
+          "label": "Casual Party / BBQ"
+        }
+      ],
+      "default": "wedding",
+      "required": true
+    },
+    {
+      "id": "wine_price",
+      "label": "Average Wine Bottle Price ($)",
+      "type": "number",
+      "placeholder": "15",
+      "default": 15,
+      "step": 0.5,
+      "required": false
+    },
+    {
+      "id": "beer_price",
+      "label": "Average Beer (6-pack) Price ($)",
+      "type": "number",
+      "placeholder": "10",
+      "default": 10,
+      "step": 0.5,
+      "required": false
+    },
+    {
+      "id": "spirits_price",
+      "label": "Average Spirits (750 mL bottle) Price ($)",
+      "type": "number",
+      "placeholder": "25",
+      "default": 25,
+      "step": 0.5,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "total_drinks",
+      "label": "Total Drinks Needed",
+      "primary": true,
+      "format": "integer",
+      "suffix": "drinks"
+    },
+    {
+      "id": "wine_bottles",
+      "label": "Wine Bottles (750 mL)",
+      "primary": false,
+      "format": "integer",
+      "suffix": "bottles"
+    },
+    {
+      "id": "beers",
+      "label": "Beers (12 oz cans/bottles)",
+      "primary": false,
+      "format": "integer",
+      "suffix": "cans"
+    },
+    {
+      "id": "spirits_liters",
+      "label": "Spirits Needed",
+      "primary": false,
+      "format": "decimal",
+      "suffix": "liters"
+    },
+    {
+      "id": "spirits_bottles",
+      "label": "Spirit Bottles (750 mL)",
+      "primary": false,
+      "format": "integer",
+      "suffix": "bottles"
+    },
+    {
+      "id": "cost_low",
+      "label": "Estimated Cost (Low)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "cost_high",
+      "label": "Estimated Cost (High)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "breakdown",
+      "label": "Breakdown & Notes",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nThis calculator applies the **standard bar catering formula** used by professional event planners and caterers across the US.\n\n## Formula\n\n```\n// Step 1: Total drinks\nFirst 2 hours:  guests × 1 drink/hr × min(hours, 2)\nRemaining hrs:  guests × 0.5 drink/hr × max(hours - 2, 0)\nTotal drinks  = first_block + second_block\n\n// Event-type multipliers (consumption tendency)\nWedding:  ×1.0  (standard)\nCocktail: ×1.15 (higher — drinks-focused format)\nCasual:   ×0.85 (lower — food competes, mixed audiences)\n\n// Step 2: Split by drink type\nWine drinks   = total_drinks × 0.50\nBeer drinks   = total_drinks × 0.30\nSpirit drinks = total_drinks × 0.20\n\n// Step 3: Convert to purchasable units\nWine bottles  = ceil(wine_drinks   / 5)   // 750 mL bottle ≈ 5 x 5 oz pours\nBeers         = ceil(beer_drinks   / 1)   // 1 drink = 1 can/bottle (12 oz)\nSpirits (L)   = spirit_drinks × 0.044    // 1 spirit drink ≈ 1.5 oz = 0.044 L\nSpirit bottles= ceil(spirits_L / 0.75)   // 750 mL per bottle\n```\n\n## Worked Example\n\n**Input:** 80 guests, 5-hour wedding\n\n| Step | Calculation | Result |\n|------|-------------|--------|\n| Drinks (first 2 hrs) | 80 × 1 × 2 | 160 |\n| Drinks (next 3 hrs) | 80 × 0.5 × 3 | 120 |\n| Total (×1.0 wedding) | 160 + 120 | **280 drinks** |\n| Wine (50%) | 280 × 0.50 / 5 | **28 bottles** |\n| Beer (30%) | 280 × 0.30 | **84 cans** |\n| Spirits (20%) | 280 × 0.20 × 0.044 L | **2.46 L → 4 bottles** |\n\n**Cost estimate** at $15/wine, $10/6-pack, $25/spirit bottle:\n- Wine: 28 × $15 = $420\n- Beer: 84 ÷ 6 × $10 = $140\n- Spirits: 4 × $25 = $100\n- **Total ≈ $660 (low end)**\n\nThe calculator also adds a **10% buffer** for the high-end estimate to account for spillage, unexpected guests, or heavier drinkers.\n\n## Assumptions & Limitations\n\n- The 50/30/20 wine-beer-spirits split is the US national average for mixed events. Adjust mentally if your crowd skews strongly toward one type.\n- The formula assumes roughly equal male/female attendance. All-male crowds may drink 15–20% more; all-female crowds slightly less on average.\n- Non-drinkers are not subtracted automatically — if you know 20% of your guests don't drink, reduce the guest count accordingly before calculating.\n- This estimate covers **beer, wine, and spirits only** — it does not include mixers, ice, garnishes, or non-alcoholic beverages.\n- Local laws (open bar permits, corkage fees, dry counties) are not factored in. Always verify regulations for your venue.",
+  "faq": [
+    {
+      "q": "What is the standard drink rule for events?",
+      "a": "The industry standard used by US caterers is 1 drink per guest per hour for the first 2 hours, then 0.5 drinks per hour for each additional hour. This accounts for the fact that consumption tapers off as the event progresses and guests shift to food, dancing, or conversation."
+    },
+    {
+      "q": "How many glasses of wine are in a 750 mL bottle?",
+      "a": "A standard 750 mL bottle yields approximately 5 glasses at a 5 oz pour, which is the US standard serving size for wine. Some venues pour 6 oz, which gives roughly 4 glasses per bottle. This calculator uses 5 glasses per bottle."
+    },
+    {
+      "q": "Why does a cocktail party need more alcohol than a wedding?",
+      "a": "Cocktail parties are drink-centric by design — guests arrive expecting to hold a glass the whole time, and there is typically less food to slow consumption. This calculator applies a 1.15× multiplier for cocktail events compared to the baseline wedding format."
+    },
+    {
+      "q": "Should I buy extra as a buffer?",
+      "a": "Yes. Professional planners recommend buying 10–15% more than the calculated amount. Running out of alcohol mid-event is far worse than having leftovers. Many retailers also allow unopened returns, so over-buying carries low risk. The 'high' cost estimate in this calculator already includes a 10% buffer."
+    },
+    {
+      "q": "How much alcohol does a 100-guest, 4-hour wedding need?",
+      "a": "Using this calculator's formula: 100 guests × (2 hrs × 1 + 2 hrs × 0.5) = 300 drinks. Split: 150 wine drinks (30 bottles), 90 beers, 60 spirit drinks (≈2.6 L / 4 bottles of 750 mL). At average US prices (~$15 wine, ~$10 six-pack, ~$25 spirits), expect $700–$800."
+    },
+    {
+      "q": "What if many guests don't drink alcohol?",
+      "a": "Subtract non-drinkers from the guest count before entering it. For example, if 100 guests are attending but 20 don't drink, enter 80 in the guest field. The formula does not automatically account for abstainers, designated drivers, or underage guests."
+    },
+    {
+      "q": "Does this include beer kegs?",
+      "a": "This calculator outputs individual 12 oz cans/bottles for simplicity. If you prefer kegs: a standard half-barrel (15.5 gal) yields about 165 twelve-oz servings; a quarter-barrel (7.75 gal) yields about 82 servings. Divide the beer count accordingly."
+    },
+    {
+      "q": "Are mixers and non-alcoholic drinks included?",
+      "a": "No. This calculator covers only beer, wine, and spirits. For mixers, a common rule is 1 liter of mixer (soda, juice, tonic) per 2 spirit drinks. For non-alcoholic options, plan at least 1–2 non-alcoholic drinks per guest across the full event duration."
+    },
+    {
+      "q": "How accurate are the cost estimates?",
+      "a": "The estimates use the prices you enter for wine bottles, beer six-packs, and spirit bottles. Default prices ($15 wine, $10 six-pack, $25 spirits) reflect mid-range US retail in 2026. Costs vary by state, store, and brand — these figures are planning baselines, not quotes."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Dietary Guidelines for Americans 2020–2025 — Alcohol",
+      "url": "https://www.dietaryguidelines.gov/resources/2020-2025-dietary-guidelines-online-materials",
+      "publisher": "U.S. Department of Health and Human Services / USDA",
+      "date": "2025"
+    },
+    {
+      "name": "NIAAA: What Is A Standard Drink?",
+      "url": "https://www.niaaa.nih.gov/alcohols-effects-health/overview-alcohol-consumption/what-standard-drink",
+      "publisher": "National Institute on Alcohol Abuse and Alcoholism",
+      "date": "2025"
+    },
+    {
+      "name": "TTB Beverage Alcohol Statistics",
+      "url": "https://www.ttb.gov/beer/statistics",
+      "publisher": "Alcohol and Tobacco Tax and Trade Bureau (TTB)",
+      "date": "2026"
+    },
+    {
+      "name": "CDC Alcohol and Public Health — Data & Maps",
+      "url": "https://www.cdc.gov/alcohol/data-stats.htm",
+      "publisher": "Centers for Disease Control and Prevention",
+      "date": "2025"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Review drink-split percentages and default retail prices annually. Verify NIAAA standard drink definition (currently 14g pure alcohol) has not changed."
+  },
+  "lastReviewed": "2026-04-28"
+}

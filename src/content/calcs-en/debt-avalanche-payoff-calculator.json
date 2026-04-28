@@ -1,0 +1,265 @@
+{
+  "slug": "debt-avalanche-payoff-calculator",
+  "title": "Debt Avalanche Payoff Calculator 2026 | Hacé Cuentas",
+  "h1": "Debt Avalanche Payoff Calculator",
+  "description": "Calculate your debt payoff using the avalanche method. Estimate total interest saved vs. snowball and compare payoff timelines across all your debts.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "🏔️",
+  "formulaId": "debt-avalanche-payoff-calculator",
+  "intro": "The **debt avalanche** method directs every extra dollar toward your highest-APR balance first, then rolls that payment to the next-highest rate once each debt is cleared. It is mathematically optimal: you pay the least total interest of any fixed-payment strategy. This calculator shows the exact payoff order, months to freedom, and how much you save compared to the snowball method.",
+  "keyTakeaway": "Avalanche typically cuts total interest by 5–20% vs. snowball — on $20,000 across three debts that can mean $800–$3,000 in savings over the payoff period.",
+  "useCases": [
+    "Ranking which credit card to attack first when rates range from 18% to 29.99% APR",
+    "Estimating how many months until you are completely debt-free with a fixed extra payment",
+    "Comparing total interest paid under avalanche vs. snowball to pick the right strategy",
+    "Planning cash flow after each debt is eliminated by seeing how freed-up minimums stack",
+    "Deciding whether a balance-transfer offer actually beats the avalanche on your specific debts",
+    "Setting a realistic payoff goal before applying for a mortgage or auto loan"
+  ],
+  "fields": [
+    {
+      "id": "debt1_name",
+      "label": "Debt 1 — Name",
+      "type": "text",
+      "placeholder": "Visa card",
+      "default": "Visa card",
+      "required": true
+    },
+    {
+      "id": "debt1_balance",
+      "label": "Debt 1 — Balance ($)",
+      "type": "number",
+      "placeholder": "5000",
+      "default": 5000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "debt1_apr",
+      "label": "Debt 1 — APR (%)",
+      "type": "number",
+      "placeholder": "24.99",
+      "default": 24.99,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "debt1_min",
+      "label": "Debt 1 — Minimum Payment ($)",
+      "type": "number",
+      "placeholder": "100",
+      "default": 100,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "debt2_name",
+      "label": "Debt 2 — Name",
+      "type": "text",
+      "placeholder": "MasterCard",
+      "default": "MasterCard",
+      "required": false
+    },
+    {
+      "id": "debt2_balance",
+      "label": "Debt 2 — Balance ($)",
+      "type": "number",
+      "placeholder": "3000",
+      "default": 3000,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "debt2_apr",
+      "label": "Debt 2 — APR (%)",
+      "type": "number",
+      "placeholder": "19.99",
+      "default": 19.99,
+      "step": 0.01,
+      "required": false
+    },
+    {
+      "id": "debt2_min",
+      "label": "Debt 2 — Minimum Payment ($)",
+      "type": "number",
+      "placeholder": "75",
+      "default": 75,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "debt3_name",
+      "label": "Debt 3 — Name",
+      "type": "text",
+      "placeholder": "Student loan",
+      "default": "Student loan",
+      "required": false
+    },
+    {
+      "id": "debt3_balance",
+      "label": "Debt 3 — Balance ($)",
+      "type": "number",
+      "placeholder": "12000",
+      "default": 12000,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "debt3_apr",
+      "label": "Debt 3 — APR (%)",
+      "type": "number",
+      "placeholder": "6.54",
+      "default": 6.54,
+      "step": 0.01,
+      "required": false
+    },
+    {
+      "id": "debt3_min",
+      "label": "Debt 3 — Minimum Payment ($)",
+      "type": "number",
+      "placeholder": "130",
+      "default": 130,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "extra_payment",
+      "label": "Extra Monthly Payment ($)",
+      "type": "number",
+      "placeholder": "200",
+      "default": 200,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "avalanche_total_interest",
+      "label": "Total Interest — Avalanche",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "avalanche_months",
+      "label": "Months to Payoff — Avalanche",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "snowball_total_interest",
+      "label": "Total Interest — Snowball",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "snowball_months",
+      "label": "Months to Payoff — Snowball",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "interest_saved",
+      "label": "Interest Saved by Avalanche",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "months_difference",
+      "label": "Month Difference (Avalanche vs. Snowball)",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "payoff_order",
+      "label": "Avalanche Payoff Order",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "payoff_schedule",
+      "label": "Per-Debt Summary",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How the Debt Avalanche Works\n\nThe avalanche method sorts your debts from **highest APR to lowest APR**. Every month you pay each debt's minimum payment, then direct every extra dollar to the top-ranked (highest-rate) debt. Once that debt hits $0, its minimum payment is freed up and added to the extra payment pool — this is called \"rolling\" the payment.\n\n## The Core Formula\n\nFor each month `t`, for debt `i` with balance `B_i`, monthly rate `r_i = APR_i / 12`, and payment `P_i`:\n\n```\nInterest_i(t) = B_i(t) × r_i\nPrincipal_i(t) = P_i(t) − Interest_i(t)\nB_i(t+1) = max(0, B_i(t) − Principal_i(t))\n```\n\nThe total monthly payment is fixed:\n```\nTotal = sum(all minimums) + extra_payment\n```\n\nThe target debt (highest APR with balance > 0) receives:\n```\nP_target = minimum_target + remaining_extra\n```\n\nAll other debts receive only their minimum payment.\n\n## Worked Example\n\nThree debts, $200 extra/month:\n\n| Debt | Balance | APR | Minimum |\n|------|---------|-----|--------|\n| Visa | $5,000 | 24.99% | $100 |\n| MC | $3,000 | 19.99% | $75 |\n| Student | $12,000 | 6.54% | $130 |\n\nTotal monthly payment = $100 + $75 + $130 + $200 = **$505/month**\n\nAvalanche targets Visa first (24.99%). Visa clears in ~29 months. Then $300/month rolls onto MC (19.99%). MC clears ~14 months later. Finally $375/month onto the student loan.\n\n- **Avalanche total interest ≈ $4,620** | Payoff ≈ 57 months\n- **Snowball total interest ≈ $5,080** | Payoff ≈ 57 months\n- **Saved: ≈ $460** with avalanche\n\n## Snowball Comparison\n\nThe snowball method sorts debts **lowest balance first** instead. It often produces faster early wins (first debt eliminated sooner) but pays slightly more total interest because lower-balance debts do not always carry the highest rates.\n\n## Limitations\n\n- **Assumes fixed monthly payment.** If minimums change (common with revolving credit), actual results differ.\n- **No new charges.** This model assumes balances only decrease.\n- **Three debts maximum in this calculator.** For more debts, split into batches.\n- **Does not account for promotional 0% APR windows** or balance-transfer fees.\n- **Tax-deductible interest** (student loans, mortgage) changes the true after-tax cost — consult a tax professional.",
+  "faq": [
+    {
+      "q": "Does the avalanche always save the most money?",
+      "a": "Yes — among fixed-payment strategies, directing extra dollars to the highest APR first minimizes total interest paid. The savings depend on the spread between your rates. If all your debts are at similar APRs, the difference vs. snowball may be under $50. If rates range from 6% to 29%, savings can easily exceed $1,000–$3,000."
+    },
+    {
+      "q": "Why does the snowball sometimes finish faster even though it costs more?",
+      "a": "It doesn't — both methods use the exact same total monthly payment, so payoff length is nearly identical (often within 1–2 months). The snowball can finish fractionally faster or slower depending on balance-to-rate combinations, but the primary difference is always total interest, not timeline."
+    },
+    {
+      "q": "What counts as the 'extra payment'?",
+      "a": "Any amount above the sum of all your minimums. Even $50/month extra accelerates payoff significantly. On $8,000 at 22% APR with a $160 minimum only, adding $100 extra cuts payoff from 62 months to 40 months and saves roughly $1,400 in interest."
+    },
+    {
+      "q": "Should I include my mortgage in the avalanche?",
+      "a": "Generally no. Mortgage interest is often tax-deductible, making the effective APR lower than stated. Most financial planners recommend focusing the avalanche on high-rate consumer debt (credit cards, personal loans) and handling the mortgage separately."
+    },
+    {
+      "q": "What if I can't afford even the minimum payments?",
+      "a": "The avalanche assumes you are current on all minimums. If you're struggling, contact each creditor directly about hardship programs, or reach out to a nonprofit credit counseling agency (NFCC-member agencies charge low or no fees). Prioritize keeping accounts current to avoid penalty APRs and credit score damage."
+    },
+    {
+      "q": "How does a balance transfer affect the avalanche?",
+      "a": "A 0% promotional balance transfer temporarily removes interest on the transferred amount. You can model this by setting that debt's APR to 0% for the promo period. The avalanche will deprioritize it during the promo — which is correct, since it's not accruing interest. Factor in the transfer fee (typically 3–5%) when evaluating whether the offer saves money."
+    },
+    {
+      "q": "My minimum payments change every month — is this calculator accurate?",
+      "a": "This calculator uses fixed minimums, which is how installment loans (auto, student) work. For revolving credit cards, minimums are typically 1–2% of the current balance and shrink as you pay down. Fixed minimums produce a conservative (slightly pessimistic) estimate — actual payoff will likely be somewhat faster."
+    },
+    {
+      "q": "How is the monthly interest calculated?",
+      "a": "Monthly rate = APR ÷ 12. For a 24% APR card: monthly rate = 2.00%. On a $5,000 balance, month-one interest = $5,000 × 0.02 = $100. The rest of your payment reduces principal. This matches the standard actuarial method used by US credit card issuers under the Truth in Lending Act (Regulation Z)."
+    },
+    {
+      "q": "What if two debts have the same APR?",
+      "a": "When APRs are equal, this calculator breaks the tie by targeting the higher-balance debt first, which minimizes interest in the next period. You can also choose to target the lower balance (mini-snowball) without meaningful cost difference."
+    },
+    {
+      "q": "Is the avalanche better than investing the extra money instead?",
+      "a": "If your debt APR exceeds your expected after-tax investment return, paying debt wins. High-rate credit card debt at 22–30% APR almost always beats expected market returns (~7–10% long-run). Low-rate debt at 4–6% is a closer call and depends on your risk tolerance and tax situation."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Consumer Financial Protection Bureau — Strategies for Paying Down Debt",
+      "url": "https://www.consumerfinance.gov/ask-cfpb/what-is-the-best-way-to-pay-off-credit-card-debt-en-1442/",
+      "publisher": "CFPB",
+      "date": "2025"
+    },
+    {
+      "name": "Federal Reserve — Consumer Credit Report (G.19)",
+      "url": "https://www.federalreserve.gov/releases/g19/current/",
+      "publisher": "Federal Reserve",
+      "date": "2026"
+    },
+    {
+      "name": "Regulation Z — Truth in Lending (12 CFR Part 1026)",
+      "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1026",
+      "publisher": "CFPB / eCFR",
+      "date": "2026"
+    },
+    {
+      "name": "National Foundation for Credit Counseling (NFCC)",
+      "url": "https://www.nfcc.org/",
+      "publisher": "NFCC",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "No regulatory rates embedded — all APR inputs are user-supplied. Update worked example figures if typical credit card APR benchmarks shift materially."
+  },
+  "lastReviewed": "2026-04-28"
+}

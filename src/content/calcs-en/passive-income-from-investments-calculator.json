@@ -1,0 +1,271 @@
+{
+  "slug": "passive-income-from-investments-calculator",
+  "title": "Passive Income From Investments Calculator 2026 | Hacé Cuentas",
+  "h1": "Passive Income From Investments Calculator",
+  "description": "Calculate monthly passive income from your portfolio. Estimate yield from bonds, dividend stocks, REITs, HYSA, and T-Bills. Compare yield-only vs 4% rule strategies.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "💸",
+  "formulaId": "passive-income-from-investments-calculator",
+  "intro": "Enter your portfolio size and allocation across five asset classes to see how much **monthly passive income** your investments can generate. Choose between a **yield-only** strategy (spending only what your portfolio earns) or the **4% rule** (a widely studied safe withdrawal rate for retirement). Tax impact on non-tax-advantaged accounts is also estimated using 2026 federal rates.",
+  "keyTakeaway": "A $500,000 portfolio split evenly across bonds (4%), dividend stocks (3%), REITs (5%), HYSA (4.5%), and T-Bills (4.8%) generates roughly $1,783/month before taxes using a yield-only strategy.",
+  "useCases": [
+    "FIRE (Financial Independence, Retire Early) planning",
+    "Estimating retirement income before touching principal",
+    "Comparing yield-only vs 4% safe withdrawal strategies",
+    "Deciding how to allocate between income-generating asset classes",
+    "Understanding the tax drag on taxable brokerage income",
+    "Stress-testing whether a portfolio can cover monthly expenses"
+  ],
+  "fields": [
+    {
+      "id": "portfolio_value",
+      "label": "Total Portfolio Value ($)",
+      "type": "number",
+      "placeholder": "500000",
+      "default": 500000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "pct_bonds",
+      "label": "Bonds / Bond Funds (%)",
+      "type": "number",
+      "placeholder": "20",
+      "default": 20,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "pct_dividend",
+      "label": "Dividend Stocks (%)",
+      "type": "number",
+      "placeholder": "20",
+      "default": 20,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "pct_reits",
+      "label": "REITs (%)",
+      "type": "number",
+      "placeholder": "20",
+      "default": 20,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "pct_hysa",
+      "label": "High-Yield Savings / Money Market (%)",
+      "type": "number",
+      "placeholder": "20",
+      "default": 20,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "pct_tbills",
+      "label": "T-Bills / Short-Term Treasuries (%)",
+      "type": "number",
+      "placeholder": "20",
+      "default": 20,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "withdrawal_strategy",
+      "label": "Withdrawal Strategy",
+      "type": "select",
+      "options": [
+        {
+          "value": "yield_only",
+          "label": "Yield-Only (spend income, preserve principal)"
+        },
+        {
+          "value": "four_percent",
+          "label": "4% Rule (annual withdrawal = 4% of portfolio)"
+        }
+      ],
+      "default": "yield_only",
+      "required": true
+    },
+    {
+      "id": "account_type",
+      "label": "Account Type",
+      "type": "select",
+      "options": [
+        {
+          "value": "taxable",
+          "label": "Taxable Brokerage (taxes apply)"
+        },
+        {
+          "value": "tax_advantaged",
+          "label": "Tax-Advantaged (IRA / 401k / Roth — no current tax)"
+        }
+      ],
+      "default": "taxable",
+      "required": true
+    },
+    {
+      "id": "tax_bracket",
+      "label": "Federal Income Tax Bracket (for taxable accounts)",
+      "type": "select",
+      "options": [
+        {
+          "value": "10",
+          "label": "10%"
+        },
+        {
+          "value": "12",
+          "label": "12%"
+        },
+        {
+          "value": "22",
+          "label": "22%"
+        },
+        {
+          "value": "24",
+          "label": "24%"
+        },
+        {
+          "value": "32",
+          "label": "32%"
+        },
+        {
+          "value": "35",
+          "label": "35%"
+        },
+        {
+          "value": "37",
+          "label": "37%"
+        }
+      ],
+      "default": "22",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "monthly_income_gross",
+      "label": "Monthly Gross Income",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "annual_income_gross",
+      "label": "Annual Gross Income",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "blended_yield",
+      "label": "Blended Portfolio Yield",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "annual_tax_estimate",
+      "label": "Estimated Annual Tax (taxable accounts)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "monthly_income_net",
+      "label": "Monthly Net Income (after estimated tax)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "allocation_note",
+      "label": "Allocation Check",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nThis calculator applies a **blended yield** to your portfolio based on your chosen allocation across five income-producing asset classes. Each class carries a 2026 benchmark yield:\n\n```\nBonds / Bond Funds:           4.0% annual yield\nDividend Stocks:              3.0% annual yield\nREITs:                        5.0% annual yield\nHigh-Yield Savings / MM:      4.5% annual yield\nT-Bills / Short-Term Treas.:  4.8% annual yield\n```\n\n## Formula\n\n**Blended Yield**\n```\nBlended Yield = (pct_bonds × 4.0% + pct_dividend × 3.0%\n               + pct_reits × 5.0% + pct_hysa × 4.5%\n               + pct_tbills × 4.8%) / 100\n```\n\n**Yield-Only Strategy** (preserves principal)\n```\nAnnual Gross Income = Portfolio Value × Blended Yield\nMonthly Gross Income = Annual Gross Income / 12\n```\n\n**4% Rule Strategy** (planned principal drawdown over ~30 years)\n```\nAnnual Gross Income = Portfolio Value × 4%\nMonthly Gross Income = Annual Gross Income / 12\n```\n\n**Tax Estimate (taxable accounts only)**\n\nIncome is modeled at a simplified flat marginal rate. Qualified dividends and long-term capital gains receive preferential rates (0%, 15%, or 20% depending on income), but bond interest, REIT dividends, and HYSA/T-Bill interest are taxed as ordinary income. This calculator applies the selected bracket uniformly as a conservative estimate:\n```\nAnnual Tax = Annual Gross Income × (tax_bracket / 100)\nMonthly Net = (Annual Gross Income − Annual Tax) / 12\n```\n\n## Worked Example\n\n| Input | Value |\n|---|---|\n| Portfolio Value | $500,000 |\n| Allocation | 20% each across all 5 classes |\n| Strategy | Yield-Only |\n| Account | Taxable, 22% bracket |\n\nBlended Yield = (20×4.0 + 20×3.0 + 20×5.0 + 20×4.5 + 20×4.8) / 100 = 4.26%\n\nAnnual Gross = $500,000 × 4.26% = **$21,300**\nMonthly Gross = $21,300 / 12 = **$1,775**\nAnnual Tax = $21,300 × 22% = $4,686\nMonthly Net = ($21,300 − $4,686) / 12 = **$1,384**\n\n## Limitations\n\n- **Yields are benchmarks, not guarantees.** Actual dividend cuts, rate changes, or NAV fluctuations will affect real income.\n- **Tax treatment is simplified.** Qualified dividends and LTCG are taxed at 0–20%, not your marginal rate. Consult a CPA for a precise figure.\n- **The 4% rule is a guideline**, not a guarantee. It is based on historical US market data (Bengen 1994; Trinity Study) assuming a 30-year horizon and a diversified equity/bond portfolio.\n- **State income taxes are not included.** Add your state rate to the federal estimate for a complete picture.\n- **Inflation is not modeled.** Real purchasing power of a fixed withdrawal declines over time unless the portfolio grows.",
+  "faq": [
+    {
+      "q": "What is the 4% rule and is it still valid in 2026?",
+      "a": "The 4% rule states you can withdraw 4% of your portfolio in year one, then adjust for inflation annually, with a high historical probability of not running out of money over 30 years. Research from Morningstar and Vanguard suggests it remains broadly applicable but may be conservative for longer retirements (40+ years). Some planners now use 3.3%–3.5% for early retirees."
+    },
+    {
+      "q": "What yields does this calculator use for each asset class?",
+      "a": "Bonds/Bond Funds: 4.0% (aggregate bond index approximation). Dividend Stocks: 3.0% (S&P 500 dividend yield range). REITs: 5.0% (REIT index historical payout). HYSA/Money Market: 4.5% (competitive online bank rates, 2026). T-Bills/Short-Term Treasuries: 4.8% (4-week to 1-year T-Bill range, 2026 TreasuryDirect data)."
+    },
+    {
+      "q": "How are REITs taxed differently from dividend stocks?",
+      "a": "Most REIT distributions are classified as ordinary income (not qualified dividends), so they are taxed at your marginal rate rather than the lower 0–20% qualified dividend rate. The 20% pass-through deduction (Section 199A) may partially offset this for non-corporate investors. This calculator uses a flat marginal rate as a conservative estimate."
+    },
+    {
+      "q": "Does the yield-only strategy truly preserve my principal?",
+      "a": "In nominal terms, spending only income leaves the principal balance unchanged. However, inflation erodes purchasing power over time, and market fluctuations can change the portfolio's real value. Bond funds, REITs, and dividend stocks all carry price risk in addition to their income component."
+    },
+    {
+      "q": "Why doesn't my allocation add up to 100%?",
+      "a": "The calculator checks whether your five allocation percentages sum to 100%. If they do not, a warning is shown. The blended yield calculation scales proportionally to whatever total you enter, but for accurate results your allocations should sum to exactly 100%."
+    },
+    {
+      "q": "Should I use a Roth IRA or traditional IRA for income investing?",
+      "a": "Roth IRAs provide tax-free withdrawals in retirement, making them ideal for high-yield assets like REITs. Traditional IRAs defer taxes until withdrawal, useful for bond interest taxed as ordinary income. This calculator models tax-advantaged accounts as having no current tax drag, which best represents Roth distributions or pre-withdrawal accumulation."
+    },
+    {
+      "q": "How does HYSA income compare to T-Bills for a taxable investor?",
+      "a": "T-Bill interest is exempt from state and local income taxes; HYSA interest is not. For investors in high-tax states (e.g., CA at 13.3%, NY at 10.9%), T-Bills may net more after-tax income even if the nominal yield is similar. This calculator does not model state taxes, so factor that difference in manually."
+    },
+    {
+      "q": "What portfolio size do I need to retire on $4,000/month using the 4% rule?",
+      "a": "Using the 4% rule: Annual need = $4,000 × 12 = $48,000. Required portfolio = $48,000 / 0.04 = $1,200,000. With a yield-only strategy at a 4.26% blended yield, you would need roughly $1,127,000 to generate the same gross income, but your principal would remain intact."
+    },
+    {
+      "q": "Are these yields realistic for 2026?",
+      "a": "The yields reflect 2026 benchmark ranges based on TreasuryDirect, Vanguard index fund data, and competitive HYSA rates. They are subject to change with Federal Reserve policy. T-Bill and HYSA yields in particular are sensitive to Fed Funds Rate moves. Always verify current rates before making investment decisions."
+    },
+    {
+      "q": "Does this calculator account for dividend growth?",
+      "a": "No. This calculator uses static yield rates. In practice, dividend growth investing (e.g., Dividend Aristocrats) produces increasing income over time as companies raise payouts. A 3% starting yield with 6% annual dividend growth doubles income roughly every 12 years, but that compounding is outside the scope of this snapshot calculator."
+    }
+  ],
+  "sources": [
+    {
+      "name": "TreasuryDirect — Treasury Bill Rates",
+      "url": "https://www.treasurydirect.gov/auctions/announcements-data-results/auction-results/",
+      "publisher": "U.S. Department of the Treasury",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Publication 550 — Investment Income and Expenses",
+      "url": "https://www.irs.gov/publications/p550",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Rev. Proc. 2025-28 — 2026 Tax Brackets and Standard Deductions",
+      "url": "https://www.irs.gov/pub/irs-drop/rp-25-28.pdf",
+      "publisher": "Internal Revenue Service",
+      "date": "2025"
+    },
+    {
+      "name": "Vanguard — How to Implement the 4% Rule",
+      "url": "https://institutional.vanguard.com/content/dam/inst/vanguard-has/insights-pdfs/how-to-implement-a-4-percent-spending-rule.pdf",
+      "publisher": "Vanguard Group",
+      "date": "2026"
+    },
+    {
+      "name": "FDIC — National Rates and Rate Caps",
+      "url": "https://www.fdic.gov/resources/resolutions/bank-failures/failed-bank-list/banklist.html",
+      "publisher": "Federal Deposit Insurance Corporation",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Update benchmark yields annually: T-Bill rate from TreasuryDirect auction results, HYSA rate from FDIC national rate survey, dividend yield from S&P 500 index, REIT yield from NAREIT data, bond yield from Bloomberg Aggregate. Update tax brackets per IRS annual inflation adjustments."
+  },
+  "lastReviewed": "2026-04-28"
+}

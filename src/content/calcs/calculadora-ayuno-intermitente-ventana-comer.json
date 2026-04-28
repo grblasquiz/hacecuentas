@@ -1,0 +1,261 @@
+{
+  "slug": "calculadora-ayuno-intermitente-ventana-comer",
+  "title": "Calculadora Ayuno Intermitente 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Ayuno Intermitente",
+  "description": "Calcula tu ventana de alimentación, hora de inicio y fin del ayuno según protocolo 16:8, 18:6, 20:4 u OMAD. Estima cuándo entras en cetosis y autofagia.",
+  "category": "salud",
+  "audience": "global",
+  "icon": "⏱️",
+  "formulaId": "ayuno-intermitente-ventana-comer",
+  "intro": "El ayuno intermitente organiza cuándo comes, no qué comes. Esta calculadora toma tu protocolo preferido (16:8, 18:6, 20:4 o OMAD) y la hora a la que quieres comenzar a comer, y te devuelve exactamente en qué horario debes cerrar y abrir tu ventana de alimentación. También indica a partir de qué hora esperar las fases metabólicas de **cetosis** y **autofagia**, según la evidencia disponible.",
+  "keyTakeaway": "Con el protocolo 16:8 ayunas 16 horas y comes en 8; con 18:6 reduces la ventana a 6 horas; con OMAD tienes solo ~1 hora para comer al día.",
+  "useCases": [
+    "Definir el horario exacto para abrir y cerrar la ventana de alimentación",
+    "Saber a qué hora aproximada tu cuerpo puede entrar en cetosis nutricional",
+    "Estimar cuándo inicia la autofagia celular según horas de ayuno acumuladas",
+    "Adaptar el protocolo a tu horario laboral o familiar",
+    "Comparar distintos protocolos antes de elegir uno",
+    "Planificar el ayuno en turnos nocturnos o mañanas tempranas"
+  ],
+  "fields": [
+    {
+      "id": "protocol",
+      "label": "Protocolo de ayuno",
+      "type": "select",
+      "options": [
+        {
+          "value": "16_8",
+          "label": "16:8 — Ayunas 16 h, comes 8 h"
+        },
+        {
+          "value": "18_6",
+          "label": "18:6 — Ayunas 18 h, comes 6 h"
+        },
+        {
+          "value": "20_4",
+          "label": "20:4 — Ayunas 20 h, comes 4 h"
+        },
+        {
+          "value": "omad",
+          "label": "OMAD — Una sola comida al día (~23 h ayuno)"
+        }
+      ],
+      "default": "16_8",
+      "required": true
+    },
+    {
+      "id": "eating_start_hour",
+      "label": "Hora de inicio de la ventana de alimentación",
+      "type": "select",
+      "options": [
+        {
+          "value": "5",
+          "label": "05:00"
+        },
+        {
+          "value": "6",
+          "label": "06:00"
+        },
+        {
+          "value": "7",
+          "label": "07:00"
+        },
+        {
+          "value": "8",
+          "label": "08:00"
+        },
+        {
+          "value": "9",
+          "label": "09:00"
+        },
+        {
+          "value": "10",
+          "label": "10:00"
+        },
+        {
+          "value": "11",
+          "label": "11:00"
+        },
+        {
+          "value": "12",
+          "label": "12:00"
+        },
+        {
+          "value": "13",
+          "label": "13:00"
+        },
+        {
+          "value": "14",
+          "label": "14:00"
+        },
+        {
+          "value": "15",
+          "label": "15:00"
+        },
+        {
+          "value": "16",
+          "label": "16:00"
+        },
+        {
+          "value": "17",
+          "label": "17:00"
+        },
+        {
+          "value": "18",
+          "label": "18:00"
+        },
+        {
+          "value": "19",
+          "label": "19:00"
+        },
+        {
+          "value": "20",
+          "label": "20:00"
+        }
+      ],
+      "default": "12",
+      "required": true
+    },
+    {
+      "id": "lifestyle",
+      "label": "Estilo de vida predominante",
+      "type": "select",
+      "options": [
+        {
+          "value": "sedentary",
+          "label": "Sedentario (trabajo de escritorio, poco ejercicio)"
+        },
+        {
+          "value": "active",
+          "label": "Activo (ejercicio 3-5 días/semana)"
+        },
+        {
+          "value": "very_active",
+          "label": "Muy activo (ejercicio diario o trabajo físico)"
+        }
+      ],
+      "default": "sedentary",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "eating_window_hours",
+      "label": "Ventana de alimentación",
+      "primary": true,
+      "format": "text"
+    },
+    {
+      "id": "eating_start_label",
+      "label": "Hora de inicio — Abrir ventana",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "eating_end_label",
+      "label": "Hora de cierre — Cerrar ventana",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "fast_hours",
+      "label": "Horas de ayuno",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "ketosis_start_label",
+      "label": "Cetosis estimada desde",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "autophagy_start_label",
+      "label": "Autofagia estimada desde",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "lifestyle_note",
+      "label": "Nota según estilo de vida",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Cómo funciona esta calculadora\n\nEl ayuno intermitente no es una dieta: es un patrón de alimentación que alterna períodos de ingesta y períodos de ayuno. Esta calculadora toma tres datos —protocolo, hora de inicio de la ventana y estilo de vida— y calcula todos los horarios relevantes, más estimaciones de fases metabólicas.\n\n## Fórmula principal\n\n```\nHora de cierre de ventana = Hora de apertura + Horas de alimentación\nHoras de alimentación = 24 − Horas de ayuno\n\nProtocolos:\n  16:8  → 16 h ayuno, 8 h alimentación\n  18:6  → 18 h ayuno, 6 h alimentación\n  20:4  → 20 h ayuno, 4 h alimentación\n  OMAD  → 23 h ayuno, 1 h alimentación\n\nHora de inicio del próximo ayuno = Hora de cierre de ventana\nHora en que se retoma la alimentación = Hora de inicio ayuno + Horas de ayuno\n```\n\n## Fases metabólicas estimadas\n\nEstas son ventanas aproximadas basadas en estudios en adultos sanos en reposo. Varían según glucógeno previo, nivel de actividad física y metabolismo individual.\n\n| Fase | Inicio estimado desde última comida |\n|---|---|\n| Agotamiento de glucosa en sangre | 4–6 h |\n| Inicio de cetosis leve (β-hidroxibutirato detectable) | 12–18 h |\n| Autofagia celular activada | 16–24 h |\n| Cetosis nutricional sostenida | 18–24 h |\n\nLa calculadora usa los siguientes umbrales conservadores:\n- **Cetosis estimada**: 12 h tras el cierre de la ventana de alimentación (inicio del ayuno)\n- **Autofagia estimada**: 16 h tras el cierre de la ventana\n\n## Ejemplo práctico\n\nProtocolo 16:8, ventana abre a las 12:00:\n- Ventana de alimentación: 12:00 a 20:00 (8 horas)\n- Cierre/inicio del ayuno: 20:00\n- Cetosis estimada: 20:00 + 12 h = **08:00 del día siguiente**\n- Autofagia estimada: 20:00 + 16 h = **12:00 del día siguiente** (justo al abrir la ventana)\n\n## Efecto del estilo de vida\n\nLas personas muy activas consumen glucógeno muscular más rápido, por lo que pueden alcanzar cetosis antes. Las sedentarias pueden tardar más. Esta calculadora añade una nota contextual pero no modifica los horarios base, ya que la variabilidad individual es alta.\n\n## Limitaciones\n\n- Las horas de cetosis y autofagia son **estimaciones poblacionales**, no valores individuales.\n- Si consumiste carbohidratos altos el día anterior, el inicio de cetosis se retrasa.\n- Este planificador no constituye asesoramiento médico. Personas con diabetes, embarazo, trastornos alimentarios o enfermedades crónicas deben consultar a su médico antes de iniciar cualquier protocolo de ayuno.",
+  "faq": [
+    {
+      "q": "¿Qué diferencia hay entre el protocolo 16:8 y el 18:6?",
+      "a": "En el 16:8 tienes 8 horas para comer; en el 18:6, solo 6 horas. La diferencia práctica es que en el 18:6 sueles poder hacer dos comidas bien distribuidas, mientras que el 16:8 permite tres comidas con más margen. A mayor tiempo de ayuno, mayor potencial de cetosis y autofagia, pero también más dificultad de adherencia."
+    },
+    {
+      "q": "¿Es obligatorio comer exactamente a la hora de apertura?",
+      "a": "No. La hora de apertura marca el momento a partir del cual puedes comer, no una obligación. Lo que importa es no comer antes de esa hora ni después de la hora de cierre. El ayuno se rompe con cualquier ingesta calórica, incluidos jugos, leche y alcohol."
+    },
+    {
+      "q": "¿El café o el agua rompen el ayuno?",
+      "a": "El agua, el té sin azúcar y el café negro sin aditivos (sin leche, azúcar ni crema) no rompen el ayuno en términos metabólicos significativos para la mayoría de protocolos. Sin embargo, el café sí estimula el cortisol e insulina en algunas personas, lo que puede afectar resultados."
+    },
+    {
+      "q": "¿A qué hora se produce realmente la autofagia?",
+      "a": "La autofagia es un proceso continuo que se intensifica con el ayuno. Estudios en humanos y modelos animales sugieren que se activa de forma significativa entre las 16 y 24 horas de ayuno. No hay una hora exacta universal; la cifra de 16 h es un umbral conservador basado en evidencia disponible a 2025."
+    },
+    {
+      "q": "¿Puedo hacer ejercicio durante el período de ayuno?",
+      "a": "Sí, y muchas personas lo hacen. El ejercicio en ayunas puede acelerar el uso de grasa como combustible. Sin embargo, el rendimiento en sesiones de alta intensidad puede verse afectado. Se recomienda hidratarse bien y, si el entrenamiento es muy exigente, considerar abrir la ventana de alimentación alrededor del ejercicio."
+    },
+    {
+      "q": "¿El ayuno intermitente funciona igual para hombres y mujeres?",
+      "a": "La evidencia sugiere que los efectos y la tolerancia pueden diferir. Algunas mujeres reportan alteraciones en el ciclo menstrual con protocolos muy estrictos como el 20:4 o OMAD. Se recomienda que mujeres en edad fértil comiencen con 14:10 o 16:8 y ajusten según respuesta individual."
+    },
+    {
+      "q": "¿Cuánto tiempo tarda el cuerpo en adaptarse al ayuno?",
+      "a": "La mayoría de personas reporta que los primeros 3 a 7 días son los más difíciles (hambre, irritabilidad, dificultad de concentración). La adaptación metabólica plena, donde el cuerpo usa grasa de forma eficiente, suele ocurrir entre 2 y 4 semanas de práctica consistente."
+    },
+    {
+      "q": "¿Qué protocolo es el más fácil para comenzar?",
+      "a": "El 16:8 es el protocolo más estudiado y con mayor tasa de adherencia. Suele recomendarse para principiantes porque permite saltarse el desayuno y comer desde el mediodía. Protocolos más largos como el 20:4 u OMAD son más exigentes y se recomiendan solo tras semanas de adaptación."
+    },
+    {
+      "q": "¿Puedo cambiar la hora de mi ventana de alimentación cada día?",
+      "a": "Es posible, pero no ideal. La consistencia en los horarios ayuda a sincronizar el ritmo circadiano con el patrón de ayuno, lo que potencia los beneficios. Cambios ocasionales de 1-2 horas son tolerables; variaciones grandes o diarias reducen la efectividad del protocolo."
+    },
+    {
+      "q": "¿El ayuno intermitente está contraindicado en algún caso?",
+      "a": "Sí. No se recomienda en personas con diabetes tipo 1 o tipo 2 que usan insulina (sin supervisión médica), embarazo, lactancia, trastornos de la conducta alimentaria, bajo peso, ni en niños y adolescentes. Siempre consulta a tu médico antes de iniciar si tienes alguna condición de salud."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Intermittent Fasting: A Review of Human Trials — New England Journal of Medicine",
+      "url": "https://www.nejm.org/doi/full/10.1056/NEJMra1905136",
+      "publisher": "New England Journal of Medicine",
+      "date": "2019"
+    },
+    {
+      "name": "Autophagy and Fasting — NEJM / Ohsumi Nobel Lecture",
+      "url": "https://www.nobelprize.org/prizes/medicine/2016/ohsumi/lecture/",
+      "publisher": "Nobel Prize Organization",
+      "date": "2016"
+    },
+    {
+      "name": "Time-Restricted Eating and Metabolic Health — Cell Metabolism",
+      "url": "https://www.cell.com/cell-metabolism/fulltext/S1550-4131(22)00291-7",
+      "publisher": "Cell Press",
+      "date": "2022"
+    },
+    {
+      "name": "OPS/OMS — Nutrición y estilos de vida saludable",
+      "url": "https://www.paho.org/es/temas/nutricion",
+      "publisher": "Organización Panamericana de la Salud",
+      "date": "2024"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Actualizar umbrales de cetosis y autofagia si nuevos metaanálisis en humanos establecen rangos distintos a los usados (cetosis: 12-18 h; autofagia: 16-24 h)."
+  },
+  "lastReviewed": "2026-04-28"
+}

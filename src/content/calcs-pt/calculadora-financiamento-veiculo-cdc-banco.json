@@ -1,0 +1,240 @@
+{
+  "slug": "calculadora-financiamento-veiculo-cdc-banco",
+  "title": "Calculadora de Financiamento de Veículo CDC 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Financiamento de Veículo (CDC)",
+  "description": "Calcule a prestação mensal, total pago e CET do financiamento CDC de veículo. Compare com consórcio. Taxa média 1,8% a.m. (2026). Resultado em segundos.",
+  "category": "financas",
+  "audience": "global",
+  "icon": "🚗",
+  "formulaId": "financiamento-veiculo-cdc-banco",
+  "intro": "O **CDC (Crédito Direto ao Consumidor)** é a modalidade mais usada para financiar veículos no Brasil. Com a Tabela Price, as prestações são fixas, mas os juros compostos fazem o total pago superar bastante o valor do bem. Esta calculadora mostra exatamente quanto você pagará de juros, qual o **Custo Efetivo Total (CET)** aproximado e compara o financiamento com o consórcio.",
+  "keyTakeaway": "Em 2026, a taxa média de CDC para veículos usados é de 1,8% a.m. (~24% a.a.): num financiamento de R$ 40.000 em 48 meses, você paga cerca de R$ 18.000 em juros.",
+  "useCases": [
+    "Comparar propostas de diferentes bancos antes de assinar o contrato",
+    "Descobrir quanto de juros você paga no total do financiamento",
+    "Avaliar se compensa dar uma entrada maior para reduzir o CET",
+    "Comparar financiamento CDC com consórcio de veículos",
+    "Planejar o orçamento mensal com o valor exato da prestação",
+    "Simular diferentes prazos (24, 36, 48 ou 60 meses) e escolher o ideal"
+  ],
+  "fields": [
+    {
+      "id": "vehicle_value",
+      "label": "Valor do veículo (R$)",
+      "type": "number",
+      "placeholder": "40000",
+      "default": 40000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "down_payment",
+      "label": "Valor da entrada (R$)",
+      "type": "number",
+      "placeholder": "8000",
+      "default": 8000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "term_months",
+      "label": "Prazo do financiamento",
+      "type": "select",
+      "options": [
+        {
+          "value": "24",
+          "label": "24 meses (2 anos)"
+        },
+        {
+          "value": "36",
+          "label": "36 meses (3 anos)"
+        },
+        {
+          "value": "48",
+          "label": "48 meses (4 anos)"
+        },
+        {
+          "value": "60",
+          "label": "60 meses (5 anos)"
+        }
+      ],
+      "default": "48",
+      "required": true
+    },
+    {
+      "id": "monthly_rate",
+      "label": "Taxa de juros mensal (%)",
+      "type": "number",
+      "placeholder": "1.8",
+      "default": 1.8,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "iof_rate",
+      "label": "IOF anual (%)",
+      "type": "number",
+      "placeholder": "3.0",
+      "default": 3.0,
+      "step": 0.01,
+      "required": false
+    },
+    {
+      "id": "compare_consortium",
+      "label": "Comparar com consórcio?",
+      "type": "radio",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Sim"
+        },
+        {
+          "value": "no",
+          "label": "Não"
+        }
+      ],
+      "default": "yes",
+      "required": true
+    },
+    {
+      "id": "consortium_admin_rate",
+      "label": "Taxa de administração do consórcio (% sobre o bem)",
+      "type": "number",
+      "placeholder": "18",
+      "default": 18,
+      "step": 0.1,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "monthly_payment",
+      "label": "Prestação mensal (CDC)",
+      "primary": true,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "total_paid",
+      "label": "Total pago no financiamento",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "total_interest",
+      "label": "Total de juros pagos",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "cet_annual",
+      "label": "CET aproximado (% a.a.)",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "consortium_monthly",
+      "label": "Parcela mensal do consórcio",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "consortium_total",
+      "label": "Total pago no consórcio",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "savings_vs_consortium",
+      "label": "Diferença CDC × Consórcio",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "summary",
+      "label": "Resumo",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Como funciona o cálculo\n\nO financiamento CDC usa a **Tabela Price** (sistema francês de amortização): as prestações são fixas, mas a composição de juros e amortização muda a cada mês — no início, você paga mais juros; no fim, mais amortização.\n\n## Fórmula da prestação (Tabela Price)\n\n```\nPMT = PV × [i × (1+i)^n] / [(1+i)^n - 1]\n\nOnde:\n  PMT = valor da prestação mensal\n  PV  = valor financiado (veículo − entrada)\n  i   = taxa de juros mensal (ex: 1,8% → 0,018)\n  n   = número de parcelas (meses)\n```\n\n## IOF no crédito\n\nO IOF incide sobre o valor financiado com alíquota diária de 0,0082% + alíquota adicional de 0,38% (alíquota fixa). Para prazos de 365 dias ou mais, a alíquota máxima chega a 3,0% a.a. O IOF é incorporado ao valor financiado para fins de cálculo do CET.\n\n## CET (Custo Efetivo Total)\n\nO CET inclui juros + IOF + tarifas. Esta calculadora estima o CET incorporando o IOF ao valor financiado e recalculando a taxa interna de retorno (TIR) pelo método iterativo de Newton-Raphson:\n\n```\nEncontrar r tal que:\nPV_total = Σ [PMT / (1+r)^t]  para t = 1 até n\nCET a.a. = (1 + r)^12 - 1\n```\n\n## Exemplo prático\n\n| Parâmetro | Valor |\n|---|---|\n| Veículo | R$ 40.000 |\n| Entrada | R$ 8.000 |\n| Valor financiado | R$ 32.000 |\n| Taxa | 1,8% a.m. |\n| Prazo | 48 meses |\n| **Prestação** | **R$ 937,06** |\n| Total pago | R$ 44.978,88 |\n| Juros totais | R$ 12.978,88 |\n| CET aprox. | ~25,2% a.a. |\n\n## Consórcio: como comparar\n\nNo consórcio **não há juros**, mas existe a **taxa de administração** (média de 15% a 22% sobre o valor do bem, diluída nas parcelas) e o **fundo de reserva** (~2%). A parcela mensal é:\n\n```\nParcela consórcio = (Valor do bem × (1 + taxa_adm/100)) / n_meses\n```\n\nA grande desvantagem: você pode ser contemplado no final do prazo e só recebe o bem quando sorteado ou quando dá um lance. Já no CDC, você sai com o veículo no ato.\n\n## Limitações\n\n- O CET calculado é uma **estimativa**: bancos podem cobrar tarifas adicionais (tarifa de cadastro, seguro prestamista) que elevam o CET real.\n- A taxa de 1,8% a.m. é a **média de mercado** para veículos usados (BACEN, 2026); para veículos novos, pode ser menor (~1,3% a.m.).\n- Consórcios são regulados pelo BACEN, mas as condições variam por administradora.",
+  "faq": [
+    {
+      "q": "O que é CDC e como ele difere de outros financiamentos?",
+      "a": "CDC (Crédito Direto ao Consumidor) é um empréstimo direto ao comprador, com o veículo como garantia (alienação fiduciária). Diferente do leasing, no CDC você já é o proprietário do bem desde o início, e o banco tem apenas a garantia fiduciária até quitar o contrato."
+    },
+    {
+      "q": "Qual é a taxa média de CDC para veículos em 2026?",
+      "a": "Segundo o BACEN, a taxa média para financiamento de veículos com recursos livres pessoa física ficou em torno de 1,75% a 1,85% a.m. para veículos usados e 1,2% a 1,5% a.m. para novos em 2026. Taxas variam conforme banco, score de crédito e entrada."
+    },
+    {
+      "q": "Vale a pena dar uma entrada maior?",
+      "a": "Sim. Quanto maior a entrada, menor o valor financiado (PV), o que reduz os juros totais e o CET. Além disso, bancos tendem a oferecer taxas menores para clientes que financiam um percentual menor do veículo (ex: até 70% do valor)."
+    },
+    {
+      "q": "O IOF é cobrado sobre o valor total do financiamento?",
+      "a": "Sim. O IOF no crédito pessoal/CDC incide sobre o valor financiado com alíquota diária de 0,0082% (base 365 dias) mais 0,38% fixo. Para um contrato de 48 meses, a alíquota total fica próxima de 3,0%, conforme Decreto nº 6.306/2007 e atualizações."
+    },
+    {
+      "q": "Qual a diferença entre taxa nominal e CET?",
+      "a": "A taxa nominal (ex: 1,8% a.m.) é apenas os juros. O CET (Custo Efetivo Total) inclui juros + IOF + tarifas obrigatórias, expresso em % a.a. Pelo Banco Central, bancos são obrigados a informar o CET antes da assinatura do contrato."
+    },
+    {
+      "q": "Consórcio é melhor que financiamento?",
+      "a": "Depende do objetivo. Consórcio tem custo total menor (sem juros), mas você pode esperar meses ou anos para receber o veículo. CDC dá o bem imediatamente, mas você paga juros. Para quem precisa do veículo agora, CDC é mais adequado; para quem pode esperar e quer economizar, consórcio é melhor."
+    },
+    {
+      "q": "Posso quitar o financiamento antecipadamente?",
+      "a": "Sim. Pela Lei 9.870/1999 e Resolução BACEN, você tem direito à quitação antecipada com desconto proporcional dos juros futuros. No sistema Price, o saldo devedor é calculado pelo valor presente das parcelas restantes descontado pela taxa contratada."
+    },
+    {
+      "q": "O seguro do veículo é obrigatório no CDC?",
+      "a": "O banco não pode exigir que você contrate o seguro com eles (venda casada é proibida pelo Banco Central). Porém, o seguro em si costuma ser exigido por contrato para proteger a garantia (alienação fiduciária). Você pode contratar em qualquer seguradora."
+    },
+    {
+      "q": "Como funciona a alienação fiduciária no CDC?",
+      "a": "No CDC, o veículo é dado como garantia ao banco. Tecnicamente, o banco é o credor fiduciário e você é o devedor fiduciante. Você usa o veículo, mas o banco pode retomá-lo judicialmente se houver inadimplência. Após quitação, a alienação é baixada no DETRAN."
+    },
+    {
+      "q": "A calculadora considera o seguro prestamista?",
+      "a": "Não. O seguro prestamista (que quita o contrato em caso de morte ou invalidez) é opcional e varia conforme a instituição e perfil do contratante. Se quiser incluí-lo, some o prêmio mensal à prestação calculada."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Banco Central do Brasil — Taxas de Operações de Crédito",
+      "url": "https://www.bcb.gov.br/estatisticas/txjuros",
+      "publisher": "Banco Central do Brasil",
+      "date": "2026"
+    },
+    {
+      "name": "Decreto nº 6.306/2007 — Regulamento do IOF",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/decreto/d6306.htm",
+      "publisher": "Presidência da República",
+      "date": "2007"
+    },
+    {
+      "name": "Banco Central — Resolução CMN 3.517/2007 (CET)",
+      "url": "https://www.bcb.gov.br/pre/normativos/res/2007/pdf/res_3517_v2_P.pdf",
+      "publisher": "Banco Central do Brasil",
+      "date": "2007"
+    },
+    {
+      "name": "Banco Central — Consórcios: regulação e supervisão",
+      "url": "https://www.bcb.gov.br/estabilidadefinanceira/consorcios",
+      "publisher": "Banco Central do Brasil",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Atualizar a taxa média de CDC para veículos (BACEN) anualmente. Verificar alíquota do IOF se houver alteração no Decreto 6.306."
+  },
+  "lastReviewed": "2026-04-28"
+}

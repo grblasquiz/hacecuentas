@@ -1,0 +1,208 @@
+{
+  "slug": "car-loan-monthly-payment-calculator",
+  "title": "Car Loan Monthly Payment Calculator 2026 | Hacé Cuentas",
+  "h1": "Car Loan Monthly Payment Calculator",
+  "description": "Calculate your exact auto loan monthly payment with sales tax, trade-in, and down payment. Average APR 2026: 7.5% new / 11.5% used.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "🚗",
+  "formulaId": "car-loan-monthly-payment-calculator",
+  "intro": "Buying a car? This calculator shows your **exact monthly payment** before you walk into the dealership. Enter the vehicle price, your trade-in value, down payment, local sales tax, loan term, and APR — and get your payment, total interest, and a full 12-month amortization schedule. Average new-car APR in 2026 is **7.5%**; used-car APR averages **11.5%** (Experian Q1 2026).",
+  "keyTakeaway": "On a $35,000 new car at 7.5% APR for 60 months with $3,000 down and 8% sales tax, your monthly payment is roughly $665 and total interest paid is about $4,900.",
+  "useCases": [
+    "Budgeting before visiting a dealership",
+    "Comparing 48-month vs. 60-month vs. 72-month loan terms",
+    "Evaluating how much a trade-in reduces your monthly payment",
+    "Estimating total interest cost for new vs. used vehicle APRs",
+    "Checking whether a larger down payment is worth it",
+    "Planning a refinance by recalculating at a lower APR"
+  ],
+  "fields": [
+    {
+      "id": "vehicle_price",
+      "label": "Vehicle Price ($)",
+      "type": "number",
+      "placeholder": "35000",
+      "default": 35000,
+      "step": 100,
+      "required": true
+    },
+    {
+      "id": "trade_in_value",
+      "label": "Trade-In Value ($)",
+      "type": "number",
+      "placeholder": "5000",
+      "default": 0,
+      "step": 100,
+      "required": false
+    },
+    {
+      "id": "down_payment",
+      "label": "Down Payment ($)",
+      "type": "number",
+      "placeholder": "3000",
+      "default": 3000,
+      "step": 100,
+      "required": false
+    },
+    {
+      "id": "sales_tax_rate",
+      "label": "Sales Tax Rate (%)",
+      "type": "number",
+      "placeholder": "8",
+      "default": 8,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "loan_term_months",
+      "label": "Loan Term",
+      "type": "select",
+      "options": [
+        {
+          "value": "24",
+          "label": "24 months (2 years)"
+        },
+        {
+          "value": "36",
+          "label": "36 months (3 years)"
+        },
+        {
+          "value": "48",
+          "label": "48 months (4 years)"
+        },
+        {
+          "value": "60",
+          "label": "60 months (5 years)"
+        },
+        {
+          "value": "72",
+          "label": "72 months (6 years)"
+        },
+        {
+          "value": "84",
+          "label": "84 months (7 years)"
+        }
+      ],
+      "default": "60",
+      "required": true
+    },
+    {
+      "id": "apr",
+      "label": "Annual Percentage Rate / APR (%)",
+      "type": "number",
+      "placeholder": "7.5",
+      "default": 7.5,
+      "step": 0.01,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "monthly_payment",
+      "label": "Monthly Payment",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_paid",
+      "label": "Total Amount Paid",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_interest",
+      "label": "Total Interest Paid",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "financed_amount",
+      "label": "Amount Financed",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "amortization_table",
+      "label": "First 12 Months Amortization",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How the Formula Works\n\nAn auto loan uses the standard **amortizing loan formula**, which spreads equal payments across the loan term so that each payment covers accrued interest plus a portion of principal.\n\n### Step 1 — Calculate the Financed Amount\n\nSales tax is applied to the vehicle price (after deducting the trade-in in most U.S. states), then the down payment and trade-in are subtracted:\n\n```\ntaxable_price   = vehicle_price - trade_in_value\ntax_amount      = taxable_price × (sales_tax_rate / 100)\nadjusted_price  = vehicle_price + tax_amount\nfinanced_amount = adjusted_price - trade_in_value - down_payment\n```\n\nIf `financed_amount ≤ 0`, no loan is needed.\n\n### Step 2 — Monthly Payment (PMT Formula)\n\n```\nr = APR / 100 / 12          (monthly interest rate)\nn = loan_term_months\n\nIf r > 0:\n  monthly_payment = financed_amount × [r(1+r)^n] / [(1+r)^n - 1]\n\nIf r = 0 (0% APR deal):\n  monthly_payment = financed_amount / n\n```\n\n### Step 3 — Totals\n\n```\ntotal_paid     = monthly_payment × n\ntotal_interest = total_paid - financed_amount\n```\n\n### Step 4 — Amortization (first 12 months)\n\nEach month:\n```\ninterest_portion  = remaining_balance × r\nprincipal_portion = monthly_payment - interest_portion\nremaining_balance = remaining_balance - principal_portion\n```\n\n### Worked Example\n\n| Input | Value |\n|---|---|\n| Vehicle price | $35,000 |\n| Trade-in | $0 |\n| Down payment | $3,000 |\n| Sales tax | 8% |\n| Term | 60 months |\n| APR | 7.5% |\n\n- Tax: $35,000 × 0.08 = $2,800\n- Adjusted price: $37,800\n- Financed: $37,800 − $3,000 = **$34,800**\n- r = 7.5% / 12 = 0.625% = 0.00625\n- Monthly payment ≈ **$695.26**\n- Total paid ≈ $41,715.60\n- Total interest ≈ **$6,915.60**\n\n### Limitations & When NOT to Rely Solely on This Tool\n\n- **Dealer fees** (documentation, destination, registration) are not included — these can add $500–$2,500 to the financed amount.\n- **Sales tax rules vary by state**: some states tax on the full price before trade-in (e.g., California), others after (e.g., most others). This calculator uses the post-trade-in method by default.\n- **GAP insurance, extended warranties, and add-ons** financed into the loan will increase the financed amount.\n- This tool does not account for **prepayment penalties** (rare on auto loans but verify your contract).\n- APR shown is the annualized cost of interest only; it may differ slightly from the Money Factor used in leases.",
+  "faq": [
+    {
+      "q": "What is the average car loan APR in 2026?",
+      "a": "According to Experian's Q1 2026 State of the Automotive Finance Market report, average APRs are approximately 7.5% for new vehicles and 11.5% for used vehicles. Super-prime borrowers (credit score 781+) often qualify for rates below 5%, while deep-subprime borrowers may see rates above 15%."
+    },
+    {
+      "q": "Does a larger down payment significantly lower my monthly payment?",
+      "a": "Yes, but the effect is linear, not exponential. On a $30,000 loan at 7.5% APR for 60 months, increasing your down payment by $1,000 reduces the monthly payment by about $20. The bigger benefit of a larger down payment is reducing total interest paid and avoiding negative equity."
+    },
+    {
+      "q": "Is a 72-month loan a good idea?",
+      "a": "A 72-month term lowers your monthly payment but substantially increases total interest. On a $30,000 loan at 7.5% APR, going from 60 to 72 months saves about $80/month but costs an extra $1,400 in interest. You also risk being 'underwater' (owing more than the car is worth) for longer."
+    },
+    {
+      "q": "How does my trade-in affect the loan calculation?",
+      "a": "Your trade-in value reduces the amount you need to finance. In most states, it is deducted from the vehicle price before sales tax is calculated, which also lowers the tax you owe. A $5,000 trade-in on a $35,000 car saves you roughly $400 in sales tax at an 8% rate."
+    },
+    {
+      "q": "What credit score do I need for the lowest car loan rates?",
+      "a": "Most lenders classify 'super-prime' as a FICO score of 781 or above, which typically qualifies for the lowest advertised APRs. Prime (661–780) borrowers pay 1–3 percentage points more on average. If your score is below 600, expect APRs of 14–20% from most lenders."
+    },
+    {
+      "q": "Does this calculator account for sales tax on the trade-in?",
+      "a": "Yes. The calculator applies sales tax to the vehicle price minus the trade-in value (the most common U.S. method). California and a few other states tax the full vehicle price before the trade-in credit — check your state's DMV rules if you need exact figures."
+    },
+    {
+      "q": "What is an amortization schedule and why does it matter?",
+      "a": "An amortization schedule shows how much of each monthly payment goes to interest vs. principal. In early months, most of your payment is interest. By month 12 on a 60-month loan at 7.5%, you've paid off only about 15% of the principal. This is important when deciding whether to pay off the loan early."
+    },
+    {
+      "q": "Can I use this calculator to estimate a refinance?",
+      "a": "Yes. Enter your current remaining balance as the 'Vehicle Price', set trade-in and down payment to $0, set sales tax to 0%, and enter your new APR and remaining term. The result is your estimated new monthly payment after refinancing."
+    },
+    {
+      "q": "Are dealer fees included in this calculation?",
+      "a": "No. Common dealer fees — documentation fee ($100–$900), destination charge ($900–$1,800), registration and title fees — are not included. Add these to the vehicle price or down payment field to get a more accurate financed amount."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Experian State of the Automotive Finance Market Q1 2026",
+      "url": "https://www.experian.com/automotive/automotive-credit",
+      "publisher": "Experian",
+      "date": "2026"
+    },
+    {
+      "name": "Consumer Financial Protection Bureau — Auto Loans",
+      "url": "https://www.consumerfinance.gov/consumer-tools/auto-loans/",
+      "publisher": "CFPB",
+      "date": "2026"
+    },
+    {
+      "name": "Federal Reserve G.19 Consumer Credit Report",
+      "url": "https://www.federalreserve.gov/releases/g19/",
+      "publisher": "Federal Reserve",
+      "date": "2026"
+    },
+    {
+      "name": "IRS — Sales Tax Deduction for Vehicle Purchases",
+      "url": "https://www.irs.gov/taxtopics/tc503",
+      "publisher": "IRS",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Update average APR benchmarks (new and used) from Experian quarterly reports each year. Verify sales tax handling rules if any major state changes policy."
+  },
+  "lastReviewed": "2026-04-28"
+}

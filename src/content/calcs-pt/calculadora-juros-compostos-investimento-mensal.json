@@ -1,0 +1,227 @@
+{
+  "slug": "calculadora-juros-compostos-investimento-mensal",
+  "title": "Calculadora Juros Compostos 2026 | Hacé Cuentas",
+  "h1": "Calculadora de Juros Compostos com Aporte Mensal",
+  "description": "Calcule o montante final com juros compostos e aportes mensais. Estime seus ganhos na Selic (11% a.a.) ou CDB 110% CDI. Compare cenários em segundos.",
+  "category": "financas",
+  "audience": "global",
+  "icon": "📈",
+  "formulaId": "juros-compostos-investimento-mensal",
+  "intro": "Os **juros compostos** são o principal motor de crescimento de investimentos a longo prazo. Esta calculadora aplica a fórmula completa com **aporte mensal**, mostrando o montante final, o total que você investiu e quanto veio exclusivamente dos juros. Ideal para planejar a aposentadoria, comparar a Selic com CDBs e entender o impacto de aportar mais cedo.",
+  "keyTakeaway": "Investindo R$ 500/mês por 20 anos a 11% a.a. (Selic), você acumula R$ 431.128 — mais de 3× o total aportado de R$ 120.000.",
+  "useCases": [
+    "Simular crescimento de investimentos na Selic ou CDB com aportes mensais",
+    "Comparar quanto rende poupar R$ 200/mês versus R$ 500/mês ao longo dos anos",
+    "Planejar a aposentadoria estimando o patrimônio acumulado em 20 ou 30 anos",
+    "Entender visualmente a diferença entre juros simples e compostos",
+    "Calcular o impacto de começar a investir 5 anos mais cedo",
+    "Estimar o montante final de um Tesouro Direto com aportes periódicos"
+  ],
+  "fields": [
+    {
+      "id": "initial_capital",
+      "label": "Capital inicial (R$)",
+      "type": "number",
+      "placeholder": "10000",
+      "default": 10000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "monthly_contribution",
+      "label": "Aporte mensal (R$)",
+      "type": "number",
+      "placeholder": "500",
+      "default": 500,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "annual_rate",
+      "label": "Taxa de juros anual (%)",
+      "type": "number",
+      "placeholder": "11",
+      "default": 11,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "years",
+      "label": "Período (anos)",
+      "type": "number",
+      "placeholder": "10",
+      "default": 10,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "compound_frequency",
+      "label": "Frequência de capitalização",
+      "type": "select",
+      "options": [
+        {
+          "value": "monthly",
+          "label": "Mensal (recomendado para investimentos BR)"
+        },
+        {
+          "value": "annual",
+          "label": "Anual"
+        }
+      ],
+      "default": "monthly",
+      "required": true
+    },
+    {
+      "id": "preset",
+      "label": "Usar taxa predefinida",
+      "type": "select",
+      "options": [
+        {
+          "value": "custom",
+          "label": "Taxa personalizada (usar campo acima)"
+        },
+        {
+          "value": "selic",
+          "label": "Selic 2026 — 11,00% a.a."
+        },
+        {
+          "value": "cdb110",
+          "label": "CDB 110% CDI (~12,10% a.a.)"
+        },
+        {
+          "value": "poupanca",
+          "label": "Poupança — 6,17% a.a."
+        },
+        {
+          "value": "tesouro_ipca",
+          "label": "Tesouro IPCA+ — IPCA + 6,50% a.a. (~11,28% a.a.)*"
+        }
+      ],
+      "default": "custom",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "final_amount",
+      "label": "Montante final",
+      "primary": true,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "total_invested",
+      "label": "Total investido",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "total_interest",
+      "label": "Juros ganhos",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "return_ratio",
+      "label": "Rentabilidade total",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "effective_rate_label",
+      "label": "Taxa efetiva utilizada",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "yearly_breakdown",
+      "label": "Evolução ano a ano",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Como funciona a fórmula\n\nA fórmula dos juros compostos com aporte periódico combina dois componentes:\n\n**1. Crescimento do capital inicial:**\n```\nM_capital = C × (1 + i)^n\n```\n\n**2. Valor futuro dos aportes mensais (anuidade):**\n```\nM_aportes = PMT × [(1 + i)^n − 1] / i\n```\n\n**Montante total:**\n```\nM = C × (1 + i)^n + PMT × [(1 + i)^n − 1] / i\n```\n\nOnde:\n- `C` = capital inicial (R$)\n- `PMT` = aporte mensal (R$)\n- `i` = taxa de juros por período (mensal ou anual)\n- `n` = número de períodos (meses ou anos)\n\n### Conversão de taxa anual para mensal\n\nQuando a capitalização é **mensal** (padrão no Brasil), a taxa anual é convertida pela equivalência exponencial:\n```\ni_mensal = (1 + i_anual)^(1/12) − 1\n```\nNão se usa divisão simples por 12, pois isso subestima os juros compostos.\n\n---\n\n## Exemplo prático\n\n**Cenário:** Capital inicial R$ 10.000, aporte R$ 500/mês, taxa Selic 11% a.a., 10 anos, capitalização mensal.\n\n| Variável | Valor |\n|---|---|\n| Taxa mensal | (1,11)^(1/12) − 1 = 0,8735% a.m. |\n| Meses (n) | 120 |\n| Capital corrigido | R$ 10.000 × (1,008735)^120 = R$ 28.394 |\n| Valor futuro aportes | R$ 500 × [(1,008735)^120 − 1] / 0,008735 = R$ 108.048 |\n| **Montante final** | **R$ 136.442** |\n| Total investido | R$ 10.000 + R$ 500 × 120 = R$ 70.000 |\n| Juros ganhos | R$ 66.442 (94,9% de rentabilidade) |\n\n---\n\n## Taxas de referência 2026\n\n| Produto | Taxa a.a. | Observação |\n|---|---|---|\n| Selic | 11,00% | Taxa básica BACEN, jan/2026 |\n| CDB 110% CDI | ~12,10% | CDI ≈ Selic − 0,10% |\n| Poupança | 6,17% | 70% Selic quando Selic > 8,5% |\n| Tesouro IPCA+ 2035 | IPCA + 6,50% | ~11,28% assumindo IPCA 4,78% |\n\n---\n\n## Limitações e quando NÃO usar esta calculadora\n\n- **Imposto de Renda não incluído:** Renda fixa tributável tem IR regressivo (22,5% a 15%). O montante real pós-IR será menor.\n- **Inflação não descontada:** Os valores são nominais. Para rentabilidade real, desconte o IPCA previsto.\n- **Taxas variáveis:** Selic e CDI mudam ao longo do tempo; esta calculadora assume taxa constante.\n- **Taxa do Tesouro IPCA+:** O componente IPCA é estimado; use a taxa total como referência.\n- **Aportes irregulares:** A fórmula assume aportes iguais todo mês sem interrupção.",
+  "faq": [
+    {
+      "q": "Qual a diferença entre capitalização mensal e anual?",
+      "a": "Na capitalização mensal, os juros incidem sobre o saldo todo mês, gerando 'juros sobre juros' com mais frequência. Para 11% a.a., a taxa mensal equivalente é 0,8735% a.m. — diferente de 11/12 = 0,9167%. A capitalização mensal é o padrão dos investimentos brasileiros (CDB, Tesouro Direto, fundos)."
+    },
+    {
+      "q": "O Imposto de Renda está incluído no cálculo?",
+      "a": "Não. Esta calculadora mostra o montante bruto. Investimentos de renda fixa têm IR regressivo: 22,5% até 180 dias, 20% até 360 dias, 17,5% até 720 dias e 15% acima de 720 dias. Para estimar o valor líquido, subtraia o IR sobre os juros ganhos conforme o prazo."
+    },
+    {
+      "q": "O que significa CDB a 110% do CDI?",
+      "a": "O CDI (Certificado de Depósito Interbancário) é a taxa de referência do mercado interbancário, geralmente 0,10 p.p. abaixo da Selic. Com Selic a 11%, o CDI fica em ~10,90%. Um CDB a 110% do CDI rende ~12,10% a.a. brutos. Bancos médios e fintechs costumam oferecer entre 100% e 120% do CDI."
+    },
+    {
+      "q": "Como a poupança rende quando a Selic está acima de 8,5%?",
+      "a": "Pela regra vigente (Lei 12.703/2012), quando a Selic supera 8,5% a.a., a poupança rende 70% da Selic + TR. Com Selic a 11% e TR próxima de zero, a poupança rende cerca de 7,70% a.a. brutos — isenta de IR para pessoa física, mas inferior à maioria dos títulos de renda fixa."
+    },
+    {
+      "q": "A inflação afeta meu rendimento real?",
+      "a": "Sim. O montante calculado é nominal (em reais correntes). Para obter o poder de compra real, divida o montante final pelo fator de inflação acumulada: M_real = M_nominal / (1 + IPCA_acumulado). Com IPCA projetado em 4,78% a.a. (meta 2026), R$ 100.000 daqui a 10 anos equivalem a ~R$ 63.000 de hoje."
+    },
+    {
+      "q": "Vale mais a pena aumentar o aporte ou o capital inicial?",
+      "a": "Matematicamente, o capital inicial se beneficia de mais períodos de capitalização. Porém, manter aportes mensais consistentes ao longo de 20–30 anos supera na maioria dos cenários um aporte inicial isolado. A calculadora permite testar ambos: experimente dobrar o capital inicial versus dobrar o aporte mensal e compare os resultados."
+    },
+    {
+      "q": "Como converter taxa anual para mensal corretamente?",
+      "a": "Use a fórmula de equivalência: i_mensal = (1 + i_anual)^(1/12) − 1. Para 11% a.a.: i_mensal = (1,11)^(0,0833) − 1 = 0,008735 = 0,8735% a.m. Nunca divida simplesmente por 12 (isso daria 0,9167% e superestimaria os juros no cálculo anualizado)."
+    },
+    {
+      "q": "O Tesouro Direto segue essa fórmula?",
+      "a": "Sim, com ressalvas. O Tesouro Selic e o Tesouro IPCA+ capitalizam diariamente com base na taxa Selic/CDI. Para fins de planejamento de longo prazo, a fórmula mensal apresentada aqui é uma boa aproximação. Taxas exatas e preços dos títulos estão disponíveis no portal do Tesouro Direto (tesouro.fazenda.gov.br)."
+    },
+    {
+      "q": "Qual o efeito de começar a investir 5 anos mais cedo?",
+      "a": "O tempo é o fator mais poderoso dos juros compostos. Exemplo: R$ 300/mês a 11% a.a. por 30 anos resulta em ~R$ 793.000. Começando 5 anos mais tarde (25 anos), o resultado cai para ~R$ 415.000 — uma diferença de R$ 378.000 para apenas R$ 18.000 a mais investidos no período extra."
+    },
+    {
+      "q": "Posso usar esta calculadora para o Tesouro IPCA+?",
+      "a": "Sim, com adaptação. Insira a taxa total estimada (IPCA esperado + taxa real). Para o Tesouro IPCA+ 2035, com IPCA projetado de 4,78% e taxa real de 6,50%, use aproximadamente 11,28% a.a. Lembre-se: o resultado será em reais constantes de hoje, pois o IPCA protege o poder de compra do capital."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Banco Central do Brasil — Taxa Selic",
+      "url": "https://www.bcb.gov.br/controleinflacao/taxaselic",
+      "publisher": "Banco Central do Brasil",
+      "date": "2026"
+    },
+    {
+      "name": "Tesouro Direto — Taxas e Preços dos Títulos",
+      "url": "https://www.tesourodireto.com.br/titulos/precos-e-taxas.htm",
+      "publisher": "Secretaria do Tesouro Nacional",
+      "date": "2026"
+    },
+    {
+      "name": "Receita Federal — Tributação Renda Fixa (IR Regressivo)",
+      "url": "https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/declaracoes-e-demonstrativos/dirpf/rendimentos-de-aplicacoes-financeiras",
+      "publisher": "Receita Federal do Brasil",
+      "date": "2026"
+    },
+    {
+      "name": "IBGE — IPCA Projeções e Histórico",
+      "url": "https://www.ibge.gov.br/explica/inflacao.php",
+      "publisher": "IBGE",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central — Calculadora do Cidadão",
+      "url": "https://www3.bcb.gov.br/CALCIDADAO/publico/exibirFormCorrecaoValores.do?method=exibirFormCorrecaoValores",
+      "publisher": "Banco Central do Brasil",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Atualizar taxa Selic, CDI e IPCA projetado conforme reuniões do COPOM e projeções do BACEN. Revisar alíquota IR regressivo se houver alteração legislativa."
+  },
+  "lastReviewed": "2026-04-28"
+}

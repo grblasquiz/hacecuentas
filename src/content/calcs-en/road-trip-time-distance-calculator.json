@@ -1,0 +1,220 @@
+{
+  "slug": "road-trip-time-distance-calculator",
+  "title": "Road Trip Time Calculator 2026 | Hacé Cuentas",
+  "h1": "Road Trip Time Calculator",
+  "description": "Calculate drive time, total trip time with breaks, and ETA for any road trip. Enter distance, speed, and departure time to get your arrival estimate.",
+  "category": "travel",
+  "audience": "global",
+  "icon": "🛣️",
+  "formulaId": "road-trip-time-distance-calculator",
+  "intro": "Planning a road trip? This calculator tells you exactly how long the drive will take based on your distance, average speed, and planned stops. Enter your departure time to get a precise ETA — and find out whether your trip crosses the 10-hour threshold where an overnight stay is worth considering. **Covers highway, mixed, and city driving speeds.**",
+  "keyTakeaway": "A 500-mile trip at 65 mph takes about 7h 42m of pure drive time — add 2 breaks and your total trip time reaches roughly 8h 12m, shifting your ETA by 30 minutes.",
+  "useCases": [
+    "Estimating arrival time for a cross-country family road trip",
+    "Planning rest stops and overnight hotels for multi-day drives",
+    "Comparing drive-through vs. break-heavy schedules for long hauls",
+    "Deciding if a same-day round trip is feasible before you leave",
+    "Coordinating meet-up times with other travelers on the same route",
+    "Checking whether a drive fits safely within daylight hours"
+  ],
+  "fields": [
+    {
+      "id": "distance",
+      "label": "Total Distance",
+      "type": "number",
+      "placeholder": "500",
+      "default": 500,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "distance_unit",
+      "label": "Distance Unit",
+      "type": "select",
+      "options": [
+        {
+          "value": "miles",
+          "label": "Miles (mi)"
+        },
+        {
+          "value": "kilometers",
+          "label": "Kilometers (km)"
+        }
+      ],
+      "default": "miles",
+      "required": true
+    },
+    {
+      "id": "avg_speed",
+      "label": "Average Speed",
+      "type": "number",
+      "placeholder": "65",
+      "default": 65,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "speed_unit",
+      "label": "Speed Unit",
+      "type": "select",
+      "options": [
+        {
+          "value": "mph",
+          "label": "mph (miles per hour)"
+        },
+        {
+          "value": "kph",
+          "label": "km/h (kilometers per hour)"
+        }
+      ],
+      "default": "mph",
+      "required": true
+    },
+    {
+      "id": "break_duration",
+      "label": "Break Duration (minutes per stop)",
+      "type": "number",
+      "placeholder": "15",
+      "default": 15,
+      "step": 5,
+      "required": true
+    },
+    {
+      "id": "break_frequency",
+      "label": "Break Every (hours of driving)",
+      "type": "number",
+      "placeholder": "2",
+      "default": 2,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "departure_hour",
+      "label": "Departure Hour (0–23)",
+      "type": "number",
+      "placeholder": "8",
+      "default": 8,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "departure_minute",
+      "label": "Departure Minute (0–59)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 1,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "pure_drive_time",
+      "label": "Pure Drive Time",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "total_break_time",
+      "label": "Total Break Time",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "total_trip_time",
+      "label": "Total Trip Time (with breaks)",
+      "primary": true,
+      "format": "text"
+    },
+    {
+      "id": "eta",
+      "label": "Estimated Arrival Time",
+      "primary": true,
+      "format": "text"
+    },
+    {
+      "id": "number_of_breaks",
+      "label": "Number of Breaks",
+      "primary": false,
+      "format": "integer"
+    },
+    {
+      "id": "overnight_recommendation",
+      "label": "Overnight Recommendation",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nThis calculator uses three core components to estimate total road trip time:\n\n1. **Pure drive time** — distance divided by average speed.\n2. **Break time** — number of breaks multiplied by break duration.\n3. **ETA** — departure time plus total trip time.\n\n## Formula\n\n```\nPure Drive Time (hrs) = Distance (mi) ÷ Average Speed (mph)\n\nNumber of Breaks = floor(Pure Drive Time ÷ Break Frequency)\n  [last segment doesn't count if it ends the trip]\n\nTotal Break Time (hrs) = Number of Breaks × Break Duration (min) ÷ 60\n\nTotal Trip Time (hrs) = Pure Drive Time + Total Break Time\n\nETA = Departure Time + Total Trip Time\n```\n\nIf you enter distance in kilometers and speed in km/h, both are first converted to miles and mph so all intermediate math stays consistent before converting back for display.\n\n## Worked Example\n\n| Input | Value |\n|---|---|\n| Distance | 500 mi |\n| Average speed | 65 mph |\n| Break duration | 15 min |\n| Break frequency | Every 2 hrs |\n| Departure | 8:00 AM |\n\n**Step 1 — Pure drive time:**\n500 ÷ 65 = 7.692 hrs → **7h 41m**\n\n**Step 2 — Number of breaks:**\nfloor(7.692 ÷ 2) = **3 breaks**\n\n**Step 3 — Total break time:**\n3 × 15 = 45 min → **0h 45m**\n\n**Step 4 — Total trip time:**\n7h 41m + 0h 45m = **8h 26m**\n\n**Step 5 — ETA:**\n8:00 AM + 8h 26m = **4:26 PM**\n\n## Speed Guidelines (US Highways)\n\n| Road Type | Typical Avg Speed |\n|---|---|\n| Interstate highway | 65–75 mph |\n| US/state highway | 55–65 mph |\n| Mixed city + highway | 45–55 mph |\n| Urban/city driving | 25–35 mph |\n\n## When NOT to Apply / Limitations\n\n- **Traffic is not modeled.** Rush-hour commutes, construction zones, or holiday congestion can add 20–60%+ to drive times on popular corridors.\n- **Terrain is not modeled.** Mountain passes (Rockies, Sierra Nevada) reduce effective average speed significantly; plan 10–15 mph lower.\n- **Fuel stops are not included.** For trips over 300 miles, add one 10–15 minute fuel stop per 300–350 miles depending on your vehicle's range.\n- **Driver fatigue thresholds.** The FMCSA 11-hour rule (commercial drivers) and AAA research both recommend no more than 8–10 hours of total driving per day. This calculator flags trips over 10 hours of total trip time as overnight candidates.\n- **ETA wraps midnight correctly** but does not account for daylight saving time transitions mid-drive.",
+  "faq": [
+    {
+      "q": "What average speed should I use for a US highway road trip?",
+      "a": "For interstate driving, 65 mph is a solid default — it accounts for occasional slowdowns while reflecting posted limits of 65–75 mph on most western interstates. If your route mixes cities and highways, 55 mph is more realistic. Pure city driving averages 25–35 mph."
+    },
+    {
+      "q": "How many breaks should I plan on a long drive?",
+      "a": "The AAA Foundation for Traffic Safety recommends a 15-minute break every 2 hours. On a 10-hour drive that means roughly 4–5 stops. This calculator auto-computes breaks based on your chosen frequency, so you can customize it to your preference."
+    },
+    {
+      "q": "Why does the calculator recommend an overnight stay after 10 hours?",
+      "a": "Research from the AAA Foundation and NHTSA shows drowsy driving risk increases sharply after 8–10 hours on the road. The 10-hour total trip time threshold is a conservative safety benchmark — not a legal limit — to prompt you to consider splitting the drive across two days."
+    },
+    {
+      "q": "Does this calculator account for traffic?",
+      "a": "No. This tool models ideal driving conditions. For routes through major metro areas (LA, Atlanta, Chicago, NYC) or during peak travel periods (Friday afternoons, holiday weekends), add 30–60 minutes or more. Use Google Maps or Waze for real-time traffic estimates."
+    },
+    {
+      "q": "How do I convert my trip from kilometers to miles?",
+      "a": "Select 'Kilometers (km)' as your distance unit and 'km/h' as your speed unit. The calculator converts internally: 1 km = 0.621371 mi. All results are displayed in the same unit system you chose."
+    },
+    {
+      "q": "What if my departure time is in the evening and I arrive after midnight?",
+      "a": "The calculator handles midnight crossings correctly. If you depart at 10:00 PM and your trip takes 4 hours, your ETA will show as 2:00 AM the next day, clearly labeled."
+    },
+    {
+      "q": "Does the calculator include fuel stops?",
+      "a": "Fuel stops are not auto-added because tank range varies widely by vehicle (250–400+ miles per tank). For trips over 300 miles, manually add 10–15 minutes to your break time to account for one fuel stop, or increase break duration."
+    },
+    {
+      "q": "How accurate is average speed as a trip-planning metric?",
+      "a": "Average speed is the most practical single-number estimate for trip planning. It implicitly smooths over acceleration, deceleration, and short stops. For detailed route analysis, use turn-by-turn navigation apps. For broad planning and time budgeting, average speed is reliable within ±10%."
+    },
+    {
+      "q": "Can I use this for motorcycle or RV trips?",
+      "a": "Yes, with adjustments. RV drivers typically average 55–60 mph on interstates due to size and fuel efficiency concerns. Motorcyclists often average 60–70 mph. Just enter your expected average speed and the formula applies identically."
+    }
+  ],
+  "sources": [
+    {
+      "name": "AAA Foundation for Traffic Safety — Drowsy Driving Research",
+      "url": "https://aaafoundation.org/prevalence-magnitude-drowsy-driving/",
+      "publisher": "AAA Foundation for Traffic Safety",
+      "date": "2024"
+    },
+    {
+      "name": "NHTSA — Drowsy Driving",
+      "url": "https://www.nhtsa.gov/risky-driving/drowsy-driving",
+      "publisher": "National Highway Traffic Safety Administration",
+      "date": "2025"
+    },
+    {
+      "name": "FMCSA Hours of Service Regulations",
+      "url": "https://www.fmcsa.dot.gov/regulations/hours-of-service",
+      "publisher": "Federal Motor Carrier Safety Administration",
+      "date": "2026"
+    },
+    {
+      "name": "US DOT — Highway Statistics",
+      "url": "https://www.fhwa.dot.gov/policyinformation/statistics.cfm",
+      "publisher": "Federal Highway Administration",
+      "date": "2025"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Speed guidelines and safety thresholds updated as NHTSA/AAA publish new research. No annually changing rate data."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,230 @@
+{
+  "slug": "hotel-split-cost-calculator",
+  "title": "Hotel Cost Split Calculator 2026 | Hacé Cuentas",
+  "h1": "Hotel Cost Split Calculator",
+  "description": "Calculate how to split a hotel bill across travelers and nights. Handle uneven stays, early checkouts, and custom splits in seconds.",
+  "category": "travel",
+  "audience": "global",
+  "icon": "🏨",
+  "formulaId": "hotel-split-cost-calculator",
+  "intro": "Sharing a hotel room saves money — but splitting the bill fairly gets complicated fast. If everyone stays the same number of nights, it's simple division. The real challenge is when one traveler checks out a night early, or someone joins mid-trip. This calculator handles both **even splits** and **custom per-person night counts**, giving you a clear breakdown per person, per night, and per person per night.",
+  "keyTakeaway": "A $900 hotel bill for 3 nights split among 4 travelers costs $225 each — but if one person only stays 2 nights, their fair share drops to $180 while the remaining 3 each pay $240.",
+  "useCases": [
+    "Splitting a family vacation hotel among travelers who arrive or leave on different days",
+    "Group trip where one person checks out a night early",
+    "Business travel reimbursement requiring a per-night cost breakdown",
+    "Calculating each roommate's share in a shared hotel suite",
+    "Verifying a friend's Venmo request matches the actual hotel math",
+    "Budgeting per-person hotel cost before booking a group trip"
+  ],
+  "fields": [
+    {
+      "id": "total_cost",
+      "label": "Total Hotel Bill ($)",
+      "type": "number",
+      "placeholder": "900",
+      "default": 900,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "num_nights",
+      "label": "Total Nights of Stay",
+      "type": "number",
+      "placeholder": "3",
+      "default": 3,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "split_method",
+      "label": "Split Method",
+      "type": "select",
+      "options": [
+        {
+          "value": "even",
+          "label": "Even split (all travelers, all nights)"
+        },
+        {
+          "value": "custom",
+          "label": "Custom split (different nights per person)"
+        }
+      ],
+      "default": "even",
+      "required": true
+    },
+    {
+      "id": "num_travelers",
+      "label": "Number of Travelers (even split)",
+      "type": "number",
+      "placeholder": "4",
+      "default": 4,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "traveler_1_nights",
+      "label": "Traveler 1 — Nights Stayed (custom split)",
+      "type": "number",
+      "placeholder": "3",
+      "default": 3,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "traveler_2_nights",
+      "label": "Traveler 2 — Nights Stayed (custom split)",
+      "type": "number",
+      "placeholder": "3",
+      "default": 3,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "traveler_3_nights",
+      "label": "Traveler 3 — Nights Stayed (custom split)",
+      "type": "number",
+      "placeholder": "2",
+      "default": 2,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "traveler_4_nights",
+      "label": "Traveler 4 — Nights Stayed (custom split)",
+      "type": "number",
+      "placeholder": "3",
+      "default": 3,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "traveler_5_nights",
+      "label": "Traveler 5 — Nights Stayed (custom split)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 1,
+      "required": false
+    },
+    {
+      "id": "traveler_6_nights",
+      "label": "Traveler 6 — Nights Stayed (custom split)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 1,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cost_per_night",
+      "label": "Cost Per Night",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "even_cost_per_person",
+      "label": "Even Share Per Person",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "cost_per_person_per_night",
+      "label": "Cost Per Person Per Night (even)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "custom_split_breakdown",
+      "label": "Custom Split — Per Person Amounts",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "custom_cost_per_night_unit",
+      "label": "Per Person-Night Rate (custom)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "summary",
+      "label": "Summary",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nThis calculator uses two splitting approaches depending on your situation.\n\n---\n\n### Even Split Formula\n\nWhen all travelers stay the same number of nights:\n\n```\nCost Per Night       = Total Bill ÷ Number of Nights\nShare Per Person     = Total Bill ÷ Number of Travelers\nPer Person Per Night = Total Bill ÷ (Number of Travelers × Number of Nights)\n```\n\n**Worked Example — Even Split:**\n- Total bill: $900\n- Nights: 3\n- Travelers: 4\n\n```\nCost per night       = $900 ÷ 3 = $300/night\nShare per person     = $900 ÷ 4 = $225\nPer person per night = $900 ÷ (4 × 3) = $75/person/night\n```\n\n---\n\n### Custom Split Formula (Uneven Nights)\n\nWhen travelers stay different numbers of nights, a fair split is based on **person-nights** — each traveler's share is proportional to the number of nights they occupied the room.\n\n```\nTotal Person-Nights  = Σ (nights stayed by each traveler)\nPer Person-Night Rate = Total Bill ÷ Total Person-Nights\nTraveler i Share     = (Traveler i Nights) × Per Person-Night Rate\n```\n\n**Worked Example — Custom Split:**\n- Total bill: $900\n- Nights: 3\n- Traveler 1: 3 nights, Traveler 2: 3 nights, Traveler 3: 2 nights, Traveler 4: 3 nights\n\n```\nTotal Person-Nights   = 3 + 3 + 2 + 3 = 11\nPer Person-Night Rate = $900 ÷ 11 ≈ $81.82/person-night\n\nTraveler 1 share = 3 × $81.82 = $245.45\nTraveler 2 share = 3 × $81.82 = $245.45\nTraveler 3 share = 2 × $81.82 = $163.64\nTraveler 4 share = 3 × $81.82 = $245.45\nTotal check: $245.45 × 3 + $163.64 = $900.00 ✓\n```\n\n| Traveler | Nights | Share |\n|----------|--------|-------|\n| 1 | 3 | $245.45 |\n| 2 | 3 | $245.45 |\n| 3 | 2 | $163.64 |\n| 4 | 3 | $245.45 |\n\n---\n\n### When NOT to Use This Calculator / Limitations\n\n- **Different room types:** If travelers are in separate rooms of different price tiers, split each room's cost separately before combining.\n- **Incidental charges:** Mini-bar, room service, and resort fees charged per person should be split individually, not averaged.\n- **Occupancy-based pricing:** Some hotels charge more per night for additional occupants. In that case the base rate + the incremental per-person fee should each be split separately.\n- **Currency conversions:** All amounts are in a single currency. If your hotel bill is in a foreign currency, convert first.\n- **Tax and service fees:** Include taxes in the total bill field only if you want them split proportionally. If one traveler is tax-exempt, exclude tax before entering the figure.",
+  "faq": [
+    {
+      "q": "How do I split a hotel bill when someone leaves one night early?",
+      "a": "Use the Custom Split method. Enter each person's actual nights stayed. The calculator divides the total bill by total person-nights, then multiplies each person's rate by their nights. Someone staying 2 of 3 nights pays roughly 2/3 of an equal share."
+    },
+    {
+      "q": "Is splitting by person-nights actually fair?",
+      "a": "For most group trips, yes. It assumes each night's occupancy cost is shared equally among whoever was present. If one traveler occupies a separate bed or has special arrangements, a manual adjustment may be fairer."
+    },
+    {
+      "q": "What counts as the 'total hotel bill'?",
+      "a": "Enter the full amount on the final invoice, including taxes, resort fees, and parking if those are being shared. Exclude personal charges like room service or incidentals — those should be paid individually."
+    },
+    {
+      "q": "Can I use this for more than 4 travelers?",
+      "a": "The calculator supports up to 6 travelers in custom mode. For even splits, simply enter the total number of travelers regardless of how large the group is — there's no upper limit on that field."
+    },
+    {
+      "q": "What if one traveler is the room 'owner' and others are guests — does that change the split?",
+      "a": "Legally, no. The hotel charges the room, not the individuals. Who owes what is a private agreement. This calculator handles the math neutrally — apply any social discount or host adjustment manually on top of the result."
+    },
+    {
+      "q": "How is this different from just dividing the bill equally?",
+      "a": "An equal split ignores night count differences. If you stayed 3 nights and a friend joined only for night 3, equal splitting charges them the same as you — $225 vs. $75 in a $900/4-person example. The custom method charges them $81.82 instead."
+    },
+    {
+      "q": "Should I include the hotel deposit in the total?",
+      "a": "No. Deposits are typically refunded and not part of the final cost. Enter only the final charged amount. If the deposit was partially forfeited (e.g., late cancellation fee), include only the non-refunded portion."
+    },
+    {
+      "q": "What is 'cost per person per night' used for?",
+      "a": "It's the most useful figure for comparing hotel costs across trips. A $75/person/night rate lets you directly compare a 3-night group trip to a 5-night solo stay. It's also the unit most travel budgets use."
+    },
+    {
+      "q": "Do resort fees and parking get split the same way?",
+      "a": "Only if they're charged per room, not per person. A $30/night resort fee on a shared room is a room cost — split it proportionally. A $15/night parking fee per car is a personal cost — each car owner pays theirs separately."
+    }
+  ],
+  "sources": [
+    {
+      "name": "U.S. Travel Association — Group Travel Statistics",
+      "url": "https://www.ustravel.org/research",
+      "publisher": "U.S. Travel Association",
+      "date": "2026"
+    },
+    {
+      "name": "Consumer Financial Protection Bureau — Splitting Costs",
+      "url": "https://www.consumerfinance.gov/consumer-tools/",
+      "publisher": "CFPB",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Publication 463 — Travel Expenses (per diem rates)",
+      "url": "https://www.irs.gov/publications/p463",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "No rate-based data. Update if formula logic or field defaults change based on user feedback.",
+    "source": "U.S. Travel Association — Group Travel Statistics",
+    "sourceUrl": "https://www.ustravel.org/research"
+  },
+  "lastReviewed": "2026-04-28"
+}

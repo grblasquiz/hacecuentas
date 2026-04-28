@@ -1,0 +1,192 @@
+{
+  "slug": "calculadora-interes-compuesto-aporte-mensual",
+  "title": "Calculadora Interés Compuesto con Aportes | Hacé Cuentas",
+  "h1": "Calculadora de Interés Compuesto con Aporte Mensual",
+  "description": "Calcula el balance final de una inversión con interés compuesto y aportes mensuales. Estima el interés ganado, total aportado y evolución anual.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "📈",
+  "formulaId": "interes-compuesto-aporte-mensual",
+  "intro": "El interés compuesto es el mecanismo por el cual los rendimientos generados se reinvierten y, a su vez, producen más rendimientos. Cuando además se hacen **aportes periódicos**, el efecto se amplifica de forma considerable. Esta calculadora combina ambos elementos: un capital inicial y un aporte mensual constante, permitiéndote proyectar con precisión cuánto acumularás en cualquier horizonte de tiempo.",
+  "keyTakeaway": "Con USD 10,000 iniciales, aportes de USD 200/mes y una tasa del 7% anual capitalizada mensualmente, en 20 años acumulas más de USD 152,000 — de los cuales más de USD 93,000 son intereses puros.",
+  "useCases": [
+    "Planificar el ahorro para el retiro con aportes regulares",
+    "Comparar distintas frecuencias de capitalización (mensual vs. anual)",
+    "Evaluar el impacto de aumentar el aporte mensual en el largo plazo",
+    "Estimar el crecimiento de un fondo de emergencia o inversión indexada",
+    "Calcular cuánto capital se acumula antes de un objetivo financiero concreto",
+    "Visualizar año por año cómo crece el saldo de una inversión"
+  ],
+  "fields": [
+    {
+      "id": "principal",
+      "label": "Capital inicial",
+      "type": "number",
+      "placeholder": "10000",
+      "default": 10000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "monthly_contribution",
+      "label": "Aporte mensual",
+      "type": "number",
+      "placeholder": "200",
+      "default": 200,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "annual_rate",
+      "label": "Tasa de interés anual (%)",
+      "type": "number",
+      "placeholder": "7",
+      "default": 7,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "years",
+      "label": "Plazo (años)",
+      "type": "number",
+      "placeholder": "20",
+      "default": 20,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "compounding_frequency",
+      "label": "Frecuencia de capitalización",
+      "type": "select",
+      "options": [
+        {
+          "value": "annually",
+          "label": "Anual (1 vez/año)"
+        },
+        {
+          "value": "quarterly",
+          "label": "Trimestral (4 veces/año)"
+        },
+        {
+          "value": "monthly",
+          "label": "Mensual (12 veces/año)"
+        },
+        {
+          "value": "daily",
+          "label": "Diaria (365 veces/año)"
+        }
+      ],
+      "default": "monthly",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "final_balance",
+      "label": "Balance final",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_contributed",
+      "label": "Total aportado",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_interest",
+      "label": "Interés ganado",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "interest_ratio",
+      "label": "Interés como % del balance final",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "yearly_breakdown",
+      "label": "Evolución anual",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Fórmula utilizada\n\nLa calculadora combina dos componentes estándar de matemática financiera:\n\n**1. Componente del capital inicial (interés compuesto clásico):**\n\n```\nA_principal = P × (1 + r/n)^(n×t)\n```\n\n**2. Componente de los aportes mensuales (anualidad futura):**\n\n```\nA_aportes = PMT × [(1 + r/n)^(n×t) − 1] / (r/n)\n```\n\nDonde los aportes se realizan al inicio de cada período mensual, la fórmula se ajusta con un factor `(1 + r/n)`:\n\n```\nA_aportes = PMT × [(1 + r/n)^(n×t) − 1] / (r/n) × (1 + r/n)\n```\n\n**Balance final:**\n\n```\nA = A_principal + A_aportes\n```\n\n**Variables:**\n- `P` = Capital inicial\n- `PMT` = Aporte mensual\n- `r` = Tasa de interés anual (decimal)\n- `n` = Frecuencia de capitalización por año (1, 4, 12 o 365)\n- `t` = Plazo en años\n\n## Ejemplo resuelto\n\nSupón: P = USD 10,000 · PMT = USD 200/mes · r = 7% anual · n = 12 (mensual) · t = 20 años\n\n- Tasa por período: 0.07 / 12 = 0.005833\n- Períodos totales: 12 × 20 = 240\n- Factor de crecimiento: (1.005833)^240 ≈ 4.0387\n- A_principal: 10,000 × 4.0387 ≈ USD 40,387\n- A_aportes: 200 × (4.0387 − 1) / 0.005833 × 1.005833 ≈ USD 112,174\n- **Balance final ≈ USD 152,561**\n- Total aportado: 10,000 + (200 × 240) = USD 58,000\n- **Interés ganado ≈ USD 94,561 (62% del balance final)**\n\n## Evolución anual\n\n| Año | Balance | Aportado acumulado | Interés acumulado |\n|-----|---------|-------------------|-------------------|\n| 5   | ~USD 28,000 | USD 22,000 | ~USD 6,000 |\n| 10  | ~USD 52,000 | USD 34,000 | ~USD 18,000 |\n| 20  | ~USD 152,000 | USD 58,000 | ~USD 94,000 |\n\n## Limitaciones y cuándo NO aplicar esta fórmula\n\n- **No contempla impuestos**: en muchos países los rendimientos financieros tributan; el resultado real después de impuestos será menor.\n- **Tasa constante**: se asume que la tasa no varía en el tiempo. En entornos de alta inflación o tasas variables, el resultado puede diferir significativamente.\n- **Aportes constantes**: no modela aumentos periódicos del aporte ni pausas de contribución.\n- **No incluye inflación**: el balance final está en términos nominales, no reales. Para obtener el valor real, deflacta por la inflación proyectada.\n- **Frecuencia del aporte vs. capitalización**: esta calculadora supone que el aporte es siempre mensual, independientemente de la frecuencia de capitalización seleccionada. En capitalización diaria, el cálculo es una aproximación muy precisa pero no exacta al día.",
+  "faq": [
+    {
+      "q": "¿Qué diferencia hay entre capitalización mensual y anual?",
+      "a": "Con capitalización mensual, los intereses se suman al capital 12 veces al año, lo que genera una tasa efectiva anual mayor. Por ejemplo, una tasa nominal del 7% anual equivale a una tasa efectiva del 7.229% si se capitaliza mensualmente, frente al 7% exacto si se capitaliza una sola vez al año."
+    },
+    {
+      "q": "¿Los aportes mensuales se consideran al inicio o al final del período?",
+      "a": "Esta calculadora usa la convención de pago al inicio del período (annuity-due), lo que produce un resultado ligeramente mayor que la convención de pago al final. La diferencia es del orden de un período adicional de capitalización por cada aporte."
+    },
+    {
+      "q": "¿La calculadora descuenta inflación?",
+      "a": "No. El balance final es en términos nominales. Para estimar el poder adquisitivo real, debes restar la inflación proyectada. Si la inflación es del 3% anual, la tasa real sería aproximadamente 7% − 3% = 4% anual (regla de Fisher simplificada)."
+    },
+    {
+      "q": "¿Puedo usar esta calculadora para un plazo inferior a un año?",
+      "a": "Sí. Puedes ingresar valores como 0.5 para 6 meses. La fórmula funciona con cualquier valor positivo de t, incluyendo decimales."
+    },
+    {
+      "q": "¿Qué pasa si no tengo capital inicial (P = 0)?",
+      "a": "La calculadora acepta P = 0. En ese caso, solo opera el componente de aportes mensuales y el resultado refleja exclusivamente el crecimiento de tus contribuciones periódicas."
+    },
+    {
+      "q": "¿Por qué la capitalización diaria da un resultado apenas mayor que la mensual?",
+      "a": "Porque a partir de cierta frecuencia, el efecto marginal de capitalizar más seguido es muy pequeño. El límite matemático es la capitalización continua (e^rt), que para una tasa del 7% a 20 años produce solo un 0.25% más que la capitalización mensual."
+    },
+    {
+      "q": "¿Esta fórmula aplica para fondos de inversión indexados?",
+      "a": "Es una buena aproximación para estimar el crecimiento esperado de un fondo indexado, asumiendo que la tasa ingresada es el rendimiento promedio anual. Sin embargo, los fondos reales tienen volatilidad: años buenos y malos que la fórmula no captura."
+    },
+    {
+      "q": "¿Cómo afecta duplicar el aporte mensual al resultado final?",
+      "a": "El componente de aportes escala linealmente con PMT. Si duplicas el aporte, el componente de aportes se duplica, pero el componente del capital inicial permanece igual. El efecto total depende del peso relativo de cada componente en el balance final."
+    },
+    {
+      "q": "¿Puedo calcular cuántos años necesito para llegar a un balance objetivo?",
+      "a": "Esta calculadora proyecta hacia adelante dado un plazo. Para encontrar el plazo necesario dado un objetivo de balance, deberías despejar t de la fórmula, lo que requiere métodos numéricos. Puedes aproximarlo probando distintos valores de años hasta alcanzar el objetivo."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Compound Interest Formula — Investopedia",
+      "url": "https://www.investopedia.com/terms/c/compoundinterest.asp",
+      "publisher": "Investopedia",
+      "date": "2026"
+    },
+    {
+      "name": "Time Value of Money — CFA Institute",
+      "url": "https://www.cfainstitute.org/en/membership/professional-development/refresher-readings/time-value-money",
+      "publisher": "CFA Institute",
+      "date": "2026"
+    },
+    {
+      "name": "Financial Mathematics — Khan Academy",
+      "url": "https://www.khanacademy.org/economics-finance-domain/core-finance/interest-tutorial",
+      "publisher": "Khan Academy",
+      "date": "2026"
+    },
+    {
+      "name": "Mathematics of Investment and Credit — Broverman",
+      "url": "https://www.actex.com/",
+      "publisher": "ACTEX Publications",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "La fórmula es matemáticamente estable y no depende de tasas regulatorias. Se revisará si cambia alguna convención estándar de cálculo financiero.",
+    "source": "Compound Interest Formula — Investopedia",
+    "sourceUrl": "https://www.investopedia.com/terms/c/compoundinterest.asp"
+  },
+  "lastReviewed": "2026-04-28"
+}

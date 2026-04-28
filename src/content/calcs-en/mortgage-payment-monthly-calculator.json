@@ -1,0 +1,322 @@
+{
+  "slug": "mortgage-payment-monthly-calculator",
+  "title": "Mortgage Payment Calculator (Monthly) 2026 | Hacé Cuentas",
+  "h1": "Mortgage Payment Calculator (Monthly)",
+  "description": "Calculate your monthly mortgage payment. Estimate P&I, taxes, insurance, and PMI. Compare 15, 20, and 30-year fixed-rate loans instantly.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "🏠",
+  "formulaId": "mortgage-payment-monthly-calculator",
+  "intro": "Buying a home? This calculator breaks down your **true monthly cost**: principal & interest (P&I), property taxes, homeowner's insurance, and PMI (if your down payment is under 20%). Enter your home price, down payment, loan term, and current rate to see exactly what you'll owe each month — and how much total interest you'll pay over the life of the loan.",
+  "keyTakeaway": "On a $400,000 home with 10% down, a 30-year fixed at 6.8% yields a P&I payment of ~$2,348/mo and $485,000+ in total interest over the loan life.",
+  "useCases": [
+    "Estimating affordability before making an offer on a home",
+    "Comparing 15-year vs. 30-year loan total interest costs",
+    "Understanding how PMI adds to your payment when putting less than 20% down",
+    "Planning your budget after locking in a specific interest rate",
+    "Calculating your payoff date based on loan start month",
+    "Evaluating the impact of a larger down payment on monthly costs"
+  ],
+  "fields": [
+    {
+      "id": "home_price",
+      "label": "Home Price ($)",
+      "type": "number",
+      "placeholder": "400000",
+      "default": 400000,
+      "step": 1000,
+      "required": true
+    },
+    {
+      "id": "down_payment_pct",
+      "label": "Down Payment (%)",
+      "type": "number",
+      "placeholder": "20",
+      "default": 20,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "loan_term",
+      "label": "Loan Term",
+      "type": "select",
+      "options": [
+        {
+          "value": "30",
+          "label": "30 Years"
+        },
+        {
+          "value": "20",
+          "label": "20 Years"
+        },
+        {
+          "value": "15",
+          "label": "15 Years"
+        }
+      ],
+      "default": "30",
+      "required": true
+    },
+    {
+      "id": "interest_rate",
+      "label": "Annual Interest Rate (%)",
+      "type": "number",
+      "placeholder": "6.8",
+      "default": 6.8,
+      "step": 0.05,
+      "required": true
+    },
+    {
+      "id": "property_tax_pct",
+      "label": "Annual Property Tax Rate (%)",
+      "type": "number",
+      "placeholder": "1.1",
+      "default": 1.1,
+      "step": 0.05,
+      "required": false
+    },
+    {
+      "id": "home_insurance_yr",
+      "label": "Annual Home Insurance ($)",
+      "type": "number",
+      "placeholder": "1500",
+      "default": 1500,
+      "step": 50,
+      "required": false
+    },
+    {
+      "id": "pmi_rate",
+      "label": "PMI Rate (% of loan/yr, if down < 20%)",
+      "type": "number",
+      "placeholder": "0.5",
+      "default": 0.5,
+      "step": 0.05,
+      "required": false
+    },
+    {
+      "id": "start_month",
+      "label": "First Payment Month",
+      "type": "select",
+      "options": [
+        {
+          "value": "1",
+          "label": "January"
+        },
+        {
+          "value": "2",
+          "label": "February"
+        },
+        {
+          "value": "3",
+          "label": "March"
+        },
+        {
+          "value": "4",
+          "label": "April"
+        },
+        {
+          "value": "5",
+          "label": "May"
+        },
+        {
+          "value": "6",
+          "label": "June"
+        },
+        {
+          "value": "7",
+          "label": "July"
+        },
+        {
+          "value": "8",
+          "label": "August"
+        },
+        {
+          "value": "9",
+          "label": "September"
+        },
+        {
+          "value": "10",
+          "label": "October"
+        },
+        {
+          "value": "11",
+          "label": "November"
+        },
+        {
+          "value": "12",
+          "label": "December"
+        }
+      ],
+      "default": "1",
+      "required": false
+    },
+    {
+      "id": "start_year",
+      "label": "First Payment Year",
+      "type": "number",
+      "placeholder": "2026",
+      "default": 2026,
+      "step": 1,
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "total_monthly",
+      "label": "Total Monthly Payment",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "pi_payment",
+      "label": "Principal & Interest (P&I)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "monthly_tax",
+      "label": "Monthly Property Tax",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "monthly_insurance",
+      "label": "Monthly Home Insurance",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "monthly_pmi",
+      "label": "Monthly PMI",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "loan_amount",
+      "label": "Loan Amount",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "down_payment_amount",
+      "label": "Down Payment",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_interest",
+      "label": "Total Interest Paid (Life of Loan)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_cost",
+      "label": "Total Amount Paid (P&I only)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "payoff_date",
+      "label": "Estimated Payoff Date",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "pmi_note",
+      "label": "PMI Status",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nThis calculator uses the standard **amortizing mortgage formula** to compute your monthly principal & interest payment, then adds escrow items (taxes, insurance, PMI) for a true PITI total.\n\n## Formula\n\n```\nM = P · [r(1+r)^n] / [(1+r)^n − 1]\n\nWhere:\n  M = monthly P&I payment\n  P = principal loan amount (home price − down payment)\n  r = monthly interest rate = annual rate / 12\n  n = total number of payments = loan term in years × 12\n```\n\n**Example — $400,000 home, 10% down, 30-year, 6.8% rate:**\n- P = $400,000 × (1 − 0.10) = $360,000\n- r = 6.8% / 12 = 0.5667% = 0.005667\n- n = 30 × 12 = 360\n- M = 360,000 × [0.005667 × (1.005667)^360] / [(1.005667)^360 − 1]\n- M ≈ **$2,348/month** (P&I only)\n- Total paid = $2,348 × 360 = $845,280\n- Total interest = $845,280 − $360,000 = **$485,280**\n\n## Component Breakdown\n\n| Component | Calculation |\n|---|---|\n| Principal & Interest | Amortization formula above |\n| Property Tax | (Home Price × Tax Rate) / 12 |\n| Home Insurance | Annual premium / 12 |\n| PMI | (Loan Amount × PMI Rate) / 12 (only if down < 20%) |\n\n## PMI Note\n\nPrivate Mortgage Insurance (PMI) is typically required when your down payment is **less than 20%** of the purchase price. PMI rates generally range from **0.2% to 2%** of the original loan amount per year, depending on your credit score, loan type, and lender. Once your loan balance reaches 80% of the original home value, you can request PMI cancellation under the Homeowners Protection Act.\n\n## Limitations & When NOT to Rely Solely on This Calculator\n\n- **Adjustable-rate mortgages (ARMs):** This tool calculates fixed-rate payments only. ARM payments change after the initial fixed period.\n- **HOA fees:** Not included. Add these manually to your budget.\n- **Closing costs:** Typically 2–5% of the loan amount; not factored into monthly payment here.\n- **Tax & insurance estimates:** Property tax rates vary widely by state and county (0.3%–2.5%). Verify with your local assessor.\n- **PMI removal timeline:** This calculator applies PMI for the full loan term. In practice, PMI drops off when you reach 20% equity.\n- **Escrow changes:** Lenders adjust escrow annually; your actual payment may vary slightly year to year.",
+  "faq": [
+    {
+      "q": "What is the current average 30-year mortgage rate in 2026?",
+      "a": "As of early 2026, the average 30-year fixed mortgage rate is approximately 6.8%, based on Freddie Mac's Primary Mortgage Market Survey. Rates fluctuate weekly; always confirm the current rate with your lender before making financial decisions."
+    },
+    {
+      "q": "What does PITI stand for?",
+      "a": "PITI stands for Principal, Interest, Taxes, and Insurance. It represents the full monthly housing cost most lenders use to qualify borrowers. This calculator computes all four components, plus PMI if applicable, giving you a complete monthly payment estimate."
+    },
+    {
+      "q": "How much does PMI cost and when can I remove it?",
+      "a": "PMI typically costs 0.2%–2% of the original loan amount per year (often ~0.5% for well-qualified borrowers). You can request cancellation once your loan balance drops to 80% of the original purchase price. Lenders must automatically cancel it at 78% under the Homeowners Protection Act of 1998."
+    },
+    {
+      "q": "Is a 15-year or 30-year mortgage better?",
+      "a": "A 15-year mortgage carries a lower interest rate (typically 0.5–0.75% less) and you pay far less total interest — often 50–60% less than a 30-year loan. However, monthly payments are roughly 40–50% higher. A 30-year loan offers lower monthly payments and more cash-flow flexibility but significantly higher lifetime interest costs."
+    },
+    {
+      "q": "What down payment do I need to avoid PMI?",
+      "a": "A down payment of 20% or more of the home's purchase price eliminates the PMI requirement on conventional loans. Some loan programs (FHA, VA, USDA) have different rules: VA loans have no PMI at all, while FHA loans require mortgage insurance premiums regardless of down payment size."
+    },
+    {
+      "q": "How is the payoff date calculated?",
+      "a": "The payoff date is the first payment date plus the total number of monthly payments (loan term in months). For example, a 30-year loan starting in January 2026 has 360 payments and a payoff date of December 2055. This assumes no extra payments are made."
+    },
+    {
+      "q": "What is a typical property tax rate in the US?",
+      "a": "The US average effective property tax rate is roughly 0.9%–1.1% of the home's value per year, but it varies significantly: New Jersey averages ~2.2%, while Hawaii averages ~0.3%. Use your county assessor's website for an exact figure. The default in this calculator is 1.1%."
+    },
+    {
+      "q": "Does this calculator account for extra payments or lump-sum paydowns?",
+      "a": "No. This tool calculates a standard amortizing schedule with fixed monthly payments. Making extra principal payments each month or year would reduce your total interest and shorten your payoff date — use a dedicated amortization schedule tool to model those scenarios."
+    },
+    {
+      "q": "What is a good debt-to-income (DTI) ratio for a mortgage?",
+      "a": "Most conventional lenders prefer a total DTI (all monthly debt payments divided by gross monthly income) of 43% or lower. Some loan programs allow up to 50% with strong compensating factors. Your housing costs (PITI) alone should ideally stay below 28% of gross monthly income — a rule known as the 'front-end ratio.'"
+    },
+    {
+      "q": "Are property taxes and insurance included in my mortgage payment?",
+      "a": "They can be, through an escrow account. Most lenders require escrow for taxes and insurance when your down payment is below 20%. Your lender collects 1/12 of the annual amounts each month and pays the bills on your behalf. This calculator adds those estimates to show your full PITI payment."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Freddie Mac Primary Mortgage Market Survey",
+      "url": "https://www.freddiemac.com/pmms",
+      "publisher": "Freddie Mac",
+      "date": "2026"
+    },
+    {
+      "name": "Consumer Financial Protection Bureau — Mortgage Key Terms",
+      "url": "https://www.consumerfinance.gov/ask-cfpb/what-is-piti-en-1953/",
+      "publisher": "CFPB",
+      "date": "2026"
+    },
+    {
+      "name": "Homeowners Protection Act of 1998 (PMI Cancellation)",
+      "url": "https://www.fdic.gov/regulations/laws/rules/6500-3250.html",
+      "publisher": "FDIC",
+      "date": "2026"
+    },
+    {
+      "name": "Tax Foundation — Property Taxes by State",
+      "url": "https://taxfoundation.org/data/all/state/property-taxes-by-state-county/",
+      "publisher": "Tax Foundation",
+      "date": "2026"
+    },
+    {
+      "name": "HUD — Homebuyer's Guide",
+      "url": "https://www.hud.gov/buying/localbuying",
+      "publisher": "U.S. Department of Housing and Urban Development",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Default interest rate updated annually to reflect current Freddie Mac PMMS 30-year fixed average. PMI rate range and property tax default reviewed yearly."
+  },
+  "lastReviewed": "2026-04-28"
+}

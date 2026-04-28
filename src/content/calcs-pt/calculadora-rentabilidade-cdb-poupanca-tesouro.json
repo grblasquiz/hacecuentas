@@ -1,0 +1,216 @@
+{
+  "slug": "calculadora-rentabilidade-cdb-poupanca-tesouro",
+  "title": "Calculadora CDB vs Poupança vs Tesouro Selic 2026 | Hacé Cuentas",
+  "h1": "Calculadora Rentabilidade CDB vs Poupança vs Tesouro Selic",
+  "description": "Compare o rendimento líquido do CDB, Poupança e Tesouro Selic. Calcule com IR regressivo, IOF e Selic 2026 em segundos.",
+  "category": "financas",
+  "audience": "global",
+  "icon": "🏦",
+  "formulaId": "rentabilidade-cdb-poupanca-tesouro",
+  "intro": "Escolher entre CDB, Poupança e Tesouro Selic pode fazer diferença de centenas de reais por ano. Esta calculadora aplica a **tributação real** de cada investimento — IR regressivo (22,5% a 15%) e IOF nos primeiros 30 dias para CDB e Tesouro, isenção total para Poupança — e mostra o rendimento líquido de cada opção lado a lado.",
+  "keyTakeaway": "Um CDB a 110% do CDI com Selic a 11% ao ano rende cerca de 40% a mais que a Poupança no mesmo período de 12 meses, já descontado o Imposto de Renda.",
+  "useCases": [
+    "Comparar onde aplicar sua reserva de emergência",
+    "Decidir entre CDB do banco e Tesouro Selic para prazo de 1 ano",
+    "Calcular quanto rende R$ 10.000 em cada opção",
+    "Verificar o impacto do IR regressivo em resgates antes de 6 meses",
+    "Planejar aplicações de curto prazo levando IOF em conta",
+    "Entender por que a Poupança pode perder para o CDB mesmo sendo isenta"
+  ],
+  "fields": [
+    {
+      "id": "principal",
+      "label": "Valor investido (R$)",
+      "type": "number",
+      "placeholder": "10000",
+      "default": 10000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "months",
+      "label": "Prazo (meses)",
+      "type": "number",
+      "placeholder": "12",
+      "default": 12,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "selic",
+      "label": "Taxa Selic anual (%)",
+      "type": "number",
+      "placeholder": "11",
+      "default": 11,
+      "step": 0.25,
+      "required": true
+    },
+    {
+      "id": "cdb_rate",
+      "label": "CDB — percentual do CDI",
+      "type": "select",
+      "options": [
+        {
+          "value": "90",
+          "label": "90% do CDI"
+        },
+        {
+          "value": "100",
+          "label": "100% do CDI"
+        },
+        {
+          "value": "110",
+          "label": "110% do CDI"
+        },
+        {
+          "value": "120",
+          "label": "120% do CDI"
+        },
+        {
+          "value": "130",
+          "label": "130% do CDI"
+        }
+      ],
+      "default": "100",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cdb_net",
+      "label": "Rendimento líquido CDB",
+      "primary": true,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "savings_net",
+      "label": "Rendimento líquido Poupança",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "treasury_net",
+      "label": "Rendimento líquido Tesouro Selic",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "cdb_total",
+      "label": "Valor final CDB",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "savings_total",
+      "label": "Valor final Poupança",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "treasury_total",
+      "label": "Valor final Tesouro Selic",
+      "primary": false,
+      "format": "currency",
+      "suffix": "BRL"
+    },
+    {
+      "id": "ir_aliquota",
+      "label": "Alíquota de IR aplicada ao CDB",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "summary",
+      "label": "Comparativo resumido",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## Como funciona o cálculo\n\nCada investimento tem regras tributárias distintas que impactam diretamente o rendimento líquido.\n\n---\n\n## Fórmulas utilizadas\n\n### CDB (Certificado de Depósito Bancário)\n\nO CDI acompanha a Selic com diferença mínima (~0,1 p.p.). A calculadora adota **CDI ≈ Selic − 0,1% a.a.** como convenção de mercado.\n\n```\nTaxa CDI anual = Selic − 0,10%\nTaxa CDB anual = CDI × (percentual_CDI / 100)\nFator mensal    = (1 + Taxa CDB anual) ^ (1/12)\nBruto           = Principal × (Fator mensal ^ meses) − Principal\n\nIR regressivo (sobre o bruto):\n  até 180 dias  → 22,5%\n  181–360 dias  → 20,0%\n  361–720 dias  → 17,5%\n  acima 720 dias→ 15,0%\n\nIOF (apenas nos primeiros 30 dias — tabela regressiva diária):\n  Dia 1 → 96% | Dia 2 → 93% | ... | Dia 29 → 3% | Dia 30+ → 0%\n\nLíquido CDB = Bruto × (1 − IR) × (1 − IOF_aplicável)\n```\n\n### Poupança\n\nRegra vigente (Selic > 8,5% a.a.): **0,5% ao mês + TR**. A TR tem sido próxima de zero desde 2017; esta calculadora usa **TR = 0%** como aproximação conservadora.\n\n```\nRendimento mensal = 0,5% ao mês\nBruto Poupança    = Principal × ((1,005) ^ meses) − Principal\nIR                = 0% (isenta)\nLíquido Poupança  = Bruto Poupança\n```\n\n### Tesouro Selic\n\nRende aproximadamente 100% da Selic. A calculadora considera o ágio/deságio nulo (título novo). Tributação idêntica ao CDB (IR regressivo + IOF 30 dias).\n\n```\nTaxa Tesouro = Selic anual\nBruto Tesouro = Principal × ((1 + Selic)^(meses/12)) − Principal\nLíquido Tesouro = Bruto × (1 − IR) − IOF\n```\n\n---\n\n## Exemplo prático\n\n| Parâmetro | Valor |\n|---|---|\n| Principal | R$ 10.000 |\n| Prazo | 12 meses |\n| Selic | 11% a.a. |\n| CDB | 110% do CDI |\n\n| Investimento | Bruto | IR | Líquido |\n|---|---|---|---|\n| CDB 110% CDI | R$ 1.198 | 20% → R$ 240 | **R$ 958** |\n| Poupança | R$ 615 | Isento | **R$ 615** |\n| Tesouro Selic | R$ 1.100 | 20% → R$ 220 | **R$ 880** |\n\n---\n\n## Limitações e quando NÃO usar\n\n- **TR positiva**: Se a Taxa Referencial subir, o rendimento real da Poupança será ligeiramente maior que o calculado.\n- **Custos de custódia**: O Tesouro Selic cobra taxa B3 de 0,2% a.a.; esta calculadora não desconta esse custo para manter a comparação simplificada.\n- **CDB de liquidez diária**: Alguns CDBs pagam juros apenas no vencimento; verifique as condições do seu banco.\n- **Inflação**: Este cálculo é nominal. Para análise real, desconte o IPCA do período.\n- **FGC**: O CDB tem garantia do FGC até R$ 250.000 por CPF por instituição; o Tesouro tem garantia soberana.",
+  "faq": [
+    {
+      "q": "O CDB sempre rende mais que a Poupança?",
+      "a": "Com Selic acima de 8,5% a.a., um CDB que pague pelo menos 84% do CDI já supera a Poupança líquida. A maioria dos bancos digitais oferece 100% ou mais, tornando o CDB superior na prática para prazos acima de 30 dias."
+    },
+    {
+      "q": "O que é o IR regressivo do CDB?",
+      "a": "É uma tabela do fisco brasileiro onde a alíquota cai com o tempo: 22,5% até 6 meses, 20% de 6 a 12 meses, 17,5% de 12 a 24 meses e 15% acima de 24 meses. Resgates mais longos pagam menos imposto sobre o lucro."
+    },
+    {
+      "q": "O que é o IOF no CDB?",
+      "a": "O Imposto sobre Operações Financeiras incide somente nos primeiros 30 dias, com alíquota que cai a cada dia — de 96% no dia 1 até 0% a partir do dia 30. Após 30 dias, o IOF é zero."
+    },
+    {
+      "q": "A Poupança paga 0,5% ao mês ou 70% da Selic?",
+      "a": "Quando a Selic está acima de 8,5% a.a. (como em 2026), a Poupança paga 0,5% ao mês + TR. A regra de 70% da Selic só vale quando a Selic está igual ou abaixo de 8,5% a.a."
+    },
+    {
+      "q": "Qual a diferença entre CDB e Tesouro Selic?",
+      "a": "Ambos têm tributação igual, mas o Tesouro Selic tem garantia do governo federal (risco soberano), enquanto o CDB tem garantia do FGC até R$ 250.000. O Tesouro Selic cobra taxa B3 de 0,2% a.a.; muitos CDBs não têm esse custo."
+    },
+    {
+      "q": "Posso usar esta calculadora para CDB de prazo fixo sem liquidez diária?",
+      "a": "Sim. O cálculo considera o rendimento até o vencimento. Lembre-se que CDBs sem liquidez diária só permitem resgate na data de vencimento, então o prazo escolhido deve ser exato."
+    },
+    {
+      "q": "Por que o CDI é diferente da Selic neste cálculo?",
+      "a": "Na prática, o CDI (taxa interbancária diária) costuma ficar cerca de 0,10 p.p. abaixo da Selic. Esta calculadora adota essa convenção de mercado para maior precisão."
+    },
+    {
+      "q": "A Taxa Referencial (TR) está incluída no cálculo da Poupança?",
+      "a": "Esta calculadora adota TR = 0%, pois desde 2017 a TR tem ficado em zero ou próximo a zero. Se a TR voltar a subir, o rendimento da Poupança será ligeiramente maior que o exibido."
+    },
+    {
+      "q": "O resultado inclui a taxa de custódia do Tesouro Direto?",
+      "a": "Não. A B3 cobra 0,2% a.a. sobre o saldo do Tesouro Direto. Para maior precisão ao comparar com o CDB, subtraia esse custo do rendimento do Tesouro Selic exibido."
+    },
+    {
+      "q": "Os valores mostrados são brutos ou líquidos?",
+      "a": "Todos os rendimentos exibidos são líquidos de IR e IOF. O valor final de cada investimento já reflete os descontos tributários aplicáveis ao prazo informado."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Receita Federal — Tributação de Renda Fixa e IR Regressivo",
+      "url": "https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/pagamentos-e-parcelamentos/aplicacoes-financeiras",
+      "publisher": "Receita Federal do Brasil",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central do Brasil — Taxa Selic Meta 2026",
+      "url": "https://www.bcb.gov.br/controleinflacao/taxaselic",
+      "publisher": "Banco Central do Brasil",
+      "date": "2026"
+    },
+    {
+      "name": "Tesouro Nacional — Tesouro Selic: como funciona",
+      "url": "https://www.tesourodireto.com.br/titulos/tipos-de-tesouro/tesouro-selic.htm",
+      "publisher": "Tesouro Nacional",
+      "date": "2026"
+    },
+    {
+      "name": "Banco Central do Brasil — Regras da Caderneta de Poupança",
+      "url": "https://www.bcb.gov.br/pre/bc_atende/port/poupanca.asp",
+      "publisher": "Banco Central do Brasil",
+      "date": "2026"
+    },
+    {
+      "name": "Receita Federal — Tabela IOF sobre Operações de Crédito e Renda Fixa",
+      "url": "https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/pagamentos-e-parcelamentos/iof",
+      "publisher": "Receita Federal do Brasil",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "biannual",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Atualizar taxa Selic padrão conforme decisões do COPOM (reuniões a cada 45 dias). Verificar regra da Poupança se Selic cair abaixo de 8,5% a.a. Confirmar alíquotas de IR regressivo e IOF na Receita Federal a cada revisão."
+  },
+  "lastReviewed": "2026-04-28"
+}

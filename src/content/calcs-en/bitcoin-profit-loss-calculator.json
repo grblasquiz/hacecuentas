@@ -1,0 +1,196 @@
+{
+  "slug": "bitcoin-profit-loss-calculator",
+  "title": "Bitcoin Profit/Loss Calculator 2026 | Hacé Cuentas",
+  "h1": "Bitcoin Profit/Loss Calculator",
+  "description": "Calculate Bitcoin profit or loss instantly. Enter buy price, sell price, fees, and holding period to get net P&L, % return, annualized return, and short vs long-term tax status.",
+  "category": "finance",
+  "audience": "global",
+  "icon": "₿",
+  "formulaId": "bitcoin-profit-loss-calculator",
+  "intro": "Bought Bitcoin and wondering if you're ahead or behind? This calculator gives you **exact profit or loss in USD**, your percentage return, and annualized performance — all after trading fees. It also flags whether your gain qualifies as **long-term (held >1 year)** or short-term, which directly affects your U.S. federal tax rate.",
+  "keyTakeaway": "A $10,000 BTC investment held 2 years that doubles to $20,000 (1% fees each way) nets ~$9,700 profit — a 97% total return or ~39% annualized.",
+  "useCases": [
+    "Calculating net profit after exchange fees on a BTC sale",
+    "Comparing short-term vs long-term capital gains tax exposure",
+    "Estimating annualized return to benchmark against stocks or ETFs",
+    "Tracking cost basis for IRS Schedule D reporting",
+    "Evaluating whether to hold longer to qualify for lower long-term tax rates",
+    "Reviewing historical trades to understand true net performance"
+  ],
+  "fields": [
+    {
+      "id": "btc_amount",
+      "label": "BTC Amount Purchased",
+      "type": "number",
+      "placeholder": "0.5",
+      "default": 0.5,
+      "step": 1e-08,
+      "required": true
+    },
+    {
+      "id": "buy_price",
+      "label": "Buy Price per BTC (USD)",
+      "type": "number",
+      "placeholder": "40000",
+      "default": 40000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "sell_price",
+      "label": "Sell Price per BTC (USD)",
+      "type": "number",
+      "placeholder": "70000",
+      "default": 70000,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "buy_fee_pct",
+      "label": "Buy Fee (%)",
+      "type": "number",
+      "placeholder": "0.1",
+      "default": 0.1,
+      "step": 0.01,
+      "required": false
+    },
+    {
+      "id": "sell_fee_pct",
+      "label": "Sell Fee (%)",
+      "type": "number",
+      "placeholder": "0.1",
+      "default": 0.1,
+      "step": 0.01,
+      "required": false
+    },
+    {
+      "id": "holding_days",
+      "label": "Holding Period (Days)",
+      "type": "number",
+      "placeholder": "365",
+      "default": 365,
+      "step": 1,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "cost_basis",
+      "label": "Cost Basis (after buy fee)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "net_proceeds",
+      "label": "Net Proceeds (after sell fee)",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "profit_loss",
+      "label": "Profit / Loss",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "pct_return",
+      "label": "Total Return",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "annualized_return",
+      "label": "Annualized Return (CAGR)",
+      "primary": false,
+      "format": "percent"
+    },
+    {
+      "id": "tax_term",
+      "label": "Tax Term",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "breakeven_price",
+      "label": "Breakeven Sell Price",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    }
+  ],
+  "explanation": "## How It Works\n\nThis calculator uses standard cost-basis accounting and compound annual growth rate (CAGR) math to show your true profit or loss after all trading fees.\n\n## Formulas\n\n```\n// Step 1: Cost Basis\nCost Basis = (BTC Amount × Buy Price) × (1 + Buy Fee %)\n\n// Step 2: Gross Proceeds\nGross Proceeds = BTC Amount × Sell Price\n\n// Step 3: Net Proceeds\nNet Proceeds = Gross Proceeds × (1 - Sell Fee %)\n\n// Step 4: Profit / Loss\nProfit / Loss = Net Proceeds - Cost Basis\n\n// Step 5: Total Return\nTotal Return (%) = (Profit / Loss) / Cost Basis × 100\n\n// Step 6: Annualized Return (CAGR)\nAnnualized Return = (Net Proceeds / Cost Basis)^(365 / Holding Days) - 1\n\n// Step 7: Breakeven Sell Price\nBreakeven = Cost Basis / (BTC Amount × (1 - Sell Fee %))\n```\n\n## Worked Example\n\n| Input | Value |\n|---|---|\n| BTC bought | 0.5 BTC |\n| Buy price | $40,000 |\n| Sell price | $70,000 |\n| Buy fee | 0.1% |\n| Sell fee | 0.1% |\n| Holding period | 365 days |\n\n- **Cost Basis** = (0.5 × $40,000) × 1.001 = **$20,020.00**\n- **Net Proceeds** = (0.5 × $70,000) × 0.999 = **$34,965.00**\n- **Profit** = $34,965 − $20,020 = **$14,945.00**\n- **Total Return** = $14,945 / $20,020 = **74.65%**\n- **Annualized Return** = ($34,965 / $20,020)^(365/365) − 1 = **74.65%**\n- **Tax Term** = Held exactly 365 days → **Short-term** (IRS requires *more than* 365 days for long-term treatment)\n- **Breakeven price** = $20,020 / (0.5 × 0.999) ≈ **$40,080.08 per BTC**\n\n## Tax Classification (U.S.)\n\nThe IRS classifies capital gains based on holding period:\n- **Short-term**: held ≤ 365 days → taxed as ordinary income (10%–37%)\n- **Long-term**: held > 365 days → taxed at 0%, 15%, or 20% depending on income\n\nThis calculator flags which category applies based on your entered holding days. Consult a tax professional for your specific situation.\n\n## Limitations\n\n- Does not account for dollar-cost averaging (multiple buys); use one entry per lot.\n- Does not calculate actual tax owed — only identifies the applicable term.\n- Does not include wash-sale rules (currently do not apply to crypto under 2026 law, but legislation may change).\n- Fee inputs assume a flat percentage; some exchanges charge tiered or fixed fees.\n- Annualized return is undefined for a holding period of 0 days.",
+  "faq": [
+    {
+      "q": "What is cost basis for Bitcoin?",
+      "a": "Cost basis is the total amount you paid to acquire your Bitcoin, including purchase price and any transaction fees. For 0.5 BTC bought at $40,000 with a 0.1% fee, the cost basis is $20,020. The IRS requires accurate cost-basis tracking for capital gains reporting."
+    },
+    {
+      "q": "How are Bitcoin gains taxed in the U.S.?",
+      "a": "The IRS treats Bitcoin as property. Short-term gains (held ≤ 1 year) are taxed as ordinary income at rates up to 37%. Long-term gains (held > 1 year) are taxed at 0%, 15%, or 20% depending on your taxable income. See IRS Notice 2014-21 and Publication 544."
+    },
+    {
+      "q": "Does the holding period include the buy and sell day?",
+      "a": "The IRS counts from the day after acquisition through the date of sale (inclusive). For simplicity, this calculator uses the number of days you enter directly. Enter 366+ days to ensure long-term treatment under IRS rules."
+    },
+    {
+      "q": "What is a typical Bitcoin exchange fee?",
+      "a": "Most major exchanges (Coinbase, Kraken, Binance.US) charge maker/taker fees between 0.05% and 1.5% per trade. Coinbase Advanced Trade starts at 0.6% taker for low-volume users. Always check your exchange's current fee schedule."
+    },
+    {
+      "q": "What is annualized return (CAGR) and why does it matter?",
+      "a": "CAGR (Compound Annual Growth Rate) normalizes returns across different holding periods so you can compare them fairly. A 50% gain in 6 months is a ~125% annualized return — far better than a 50% gain held for 3 years (~14.5% annualized)."
+    },
+    {
+      "q": "Can I use this calculator for Ethereum or other cryptocurrencies?",
+      "a": "Yes. The math is identical for any crypto asset. Simply enter the token amount, your buy and sell prices in USD, your fees, and your holding period. The tax-term logic applies equally under current IRS property rules."
+    },
+    {
+      "q": "What is the breakeven sell price?",
+      "a": "The breakeven sell price is the minimum price at which you must sell to recover your full cost basis after both buy and sell fees. Selling at exactly this price results in $0 profit and $0 loss."
+    },
+    {
+      "q": "Does this calculator handle multiple buy lots?",
+      "a": "No. This calculator is designed for a single buy lot. If you purchased Bitcoin in multiple transactions, calculate each lot separately. For tax purposes, you can use FIFO, LIFO, or specific identification — consult IRS Publication 550 for guidance."
+    },
+    {
+      "q": "Are Bitcoin losses tax-deductible?",
+      "a": "Yes. Capital losses from Bitcoin can offset capital gains dollar-for-dollar. If losses exceed gains, up to $3,000 can offset ordinary income per year, with the remainder carried forward. Unlike stocks, Bitcoin is currently not subject to wash-sale rules (as of 2026)."
+    }
+  ],
+  "sources": [
+    {
+      "name": "IRS Notice 2014-21: Virtual Currency Guidance",
+      "url": "https://www.irs.gov/irb/2014-16_IRB#NOT-2014-21",
+      "publisher": "Internal Revenue Service",
+      "date": "2014"
+    },
+    {
+      "name": "IRS Publication 544: Sales and Other Dispositions of Assets",
+      "url": "https://www.irs.gov/publications/p544",
+      "publisher": "Internal Revenue Service",
+      "date": "2025"
+    },
+    {
+      "name": "IRS Topic No. 409: Capital Gains and Losses",
+      "url": "https://www.irs.gov/taxtopics/tc409",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Revenue Ruling 2023-14: Crypto Staking",
+      "url": "https://www.irs.gov/pub/irs-drop/rr-23-14.pdf",
+      "publisher": "Internal Revenue Service",
+      "date": "2023"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Review short-term/long-term threshold (currently >365 days), U.S. capital gains tax rates, and wash-sale rule applicability to crypto annually or when new IRS guidance is issued."
+  },
+  "lastReviewed": "2026-04-28"
+}

@@ -1,0 +1,218 @@
+{
+  "slug": "401k-contribution-match-calculator",
+  "title": "401(k) Contribution & Match Calculator 2026 | Hacé Cuentas",
+  "h1": "401(k) Contribution & Match Calculator",
+  "description": "Calculate your 2026 401(k) employee contribution, employer match, and projected year-end balance. IRS limit: $23,500 (under 50) or $31,000 (50+).",
+  "category": "finance",
+  "audience": "global",
+  "icon": "💼",
+  "formulaId": "401k-contribution-match-calculator",
+  "intro": "Leaving employer match money on the table is one of the most common—and costliest—retirement mistakes. This calculator shows your **exact annual 401(k) contribution**, how much your employer adds through their match formula, whether you're hitting the **2026 IRS elective deferral limit**, and a first-year balance projection assuming 7% annualized growth.",
+  "keyTakeaway": "In 2026, employees can defer up to $23,500 (or $31,000 if age 50+); a typical 100%-up-to-6% employer match on a $80,000 salary adds $4,800 in free contributions annually.",
+  "useCases": [
+    "Verify you're capturing your full employer match before increasing other investments",
+    "Check whether your contribution rate will breach the 2026 IRS elective deferral cap",
+    "Estimate the catch-up contribution advantage for workers aged 50 and older",
+    "Project a year-end 401(k) balance to set realistic retirement savings goals",
+    "Compare outcomes of different contribution percentages side by side",
+    "Understand how partial employer match formulas (e.g., 50% up to 6%) affect total savings"
+  ],
+  "fields": [
+    {
+      "id": "annual_salary",
+      "label": "Annual Gross Salary ($)",
+      "type": "number",
+      "placeholder": "80000",
+      "default": 80000,
+      "step": 1,
+      "required": true
+    },
+    {
+      "id": "employee_rate",
+      "label": "Your Contribution Rate (%)",
+      "type": "number",
+      "placeholder": "6",
+      "default": 6,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "age_band",
+      "label": "Age Group",
+      "type": "select",
+      "options": [
+        {
+          "value": "under_50",
+          "label": "Under 50"
+        },
+        {
+          "value": "50_plus",
+          "label": "50 or Older (catch-up eligible)"
+        }
+      ],
+      "default": "under_50",
+      "required": true
+    },
+    {
+      "id": "match_rate",
+      "label": "Employer Match Rate (%)",
+      "type": "number",
+      "placeholder": "100",
+      "default": 100,
+      "step": 5,
+      "required": true
+    },
+    {
+      "id": "match_cap",
+      "label": "Employer Match Cap (% of Salary)",
+      "type": "number",
+      "placeholder": "6",
+      "default": 6,
+      "step": 0.5,
+      "required": true
+    },
+    {
+      "id": "current_balance",
+      "label": "Current 401(k) Balance ($)",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 100,
+      "required": false
+    },
+    {
+      "id": "annual_return",
+      "label": "Expected Annual Return (%)",
+      "type": "number",
+      "placeholder": "7",
+      "default": 7,
+      "step": 0.5,
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "employee_contribution",
+      "label": "Your Annual Contribution",
+      "primary": true,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "employer_match",
+      "label": "Employer Annual Match",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "total_contribution",
+      "label": "Total Annual Contribution",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "irs_limit",
+      "label": "2026 IRS Elective Deferral Limit",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "limit_status",
+      "label": "IRS Limit Status",
+      "primary": false,
+      "format": "text"
+    },
+    {
+      "id": "year_end_balance",
+      "label": "Projected Year-End Balance",
+      "primary": false,
+      "format": "currency",
+      "suffix": "USD"
+    },
+    {
+      "id": "match_efficiency",
+      "label": "Match Capture",
+      "primary": false,
+      "format": "text"
+    }
+  ],
+  "explanation": "## How It Works\n\nThe calculator applies three sequential calculations: employee deferral, employer match, and a single-period balance projection.\n\n## Formulas\n\n```\n// 1. Employee annual contribution (before IRS cap)\nemployee_raw = annual_salary × (employee_rate / 100)\n\n// 2. IRS elective deferral limit (2026)\nirs_limit = 23,500   (age < 50)\nirs_limit = 31,000   (age ≥ 50, includes $7,500 catch-up)\n\n// 3. Effective employee contribution (capped)\nemployee_contribution = min(employee_raw, irs_limit)\n\n// 4. Employer match\n// Match is calculated on the LESSER of actual contribution rate or match cap\neligible_rate = min(employee_rate, match_cap)\nemployer_match = annual_salary × (eligible_rate / 100) × (match_rate / 100)\n\n// 5. Total annual contribution\ntotal_contribution = employee_contribution + employer_match\n\n// 6. Year-end balance projection (contributions made mid-year on average)\nyear_end_balance = current_balance × (1 + r)\n                 + total_contribution × (1 + r/2)\n// where r = annual_return / 100\n```\n\n## Worked Example\n\nAssume: $80,000 salary, 8% employee rate, age 45, employer matches 100% up to 6%, current balance $25,000, 7% return.\n\n| Item | Calculation | Result |\n|---|---|---|\n| Employee raw | $80,000 × 8% | $6,400 |\n| IRS limit (under 50) | — | $23,500 |\n| Employee contribution | min($6,400, $23,500) | $6,400 |\n| Eligible match rate | min(8%, 6%) | 6% |\n| Employer match | $80,000 × 6% × 100% | $4,800 |\n| Total contribution | $6,400 + $4,800 | $11,200 |\n| Year-end balance | $25,000×1.07 + $11,200×1.035 | $38,542 |\n\nNote the employer match is capped at 6% of salary regardless of the employee contributing 8%.\n\n## The Catch-Up Contribution Advantage\n\nWorkers aged 50 or older can contribute an additional $7,500 in 2026 (total $31,000). On a $100,000 salary with a 100%-up-to-6% match, a 50-year-old maxing out saves $31,000 + $6,000 employer match = $37,000 per year—vs. $29,000 for a younger colleague maxing the base limit.\n\n## Limitations & When NOT to Rely Solely on This Calculator\n\n- **Mid-year contributions**: This tool assumes an annual lump-sum approximation. Paycheck-by-paycheck modeling may differ slightly.\n- **Employer match timing**: Some employers deposit matches quarterly or annually rather than per paycheck; the true compounding effect will vary.\n- **Highly Compensated Employees (HCE)**: IRS nondiscrimination tests may further restrict contributions for HCEs—consult your plan administrator.\n- **Roth vs. Traditional**: The tool models pre-tax (Traditional) deferrals; Roth 401(k) contributions share the same limit but have different tax treatment at withdrawal.\n- **Market returns**: The 7% default is a common long-run historical average for diversified equity portfolios, but is not guaranteed.",
+  "faq": [
+    {
+      "q": "What is the 401(k) contribution limit for 2026?",
+      "a": "The IRS elective deferral limit for 2026 is $23,500 for employees under age 50. Workers aged 50 or older can add a $7,500 catch-up contribution, bringing their limit to $31,000. These limits apply to Traditional and Roth 401(k) contributions combined."
+    },
+    {
+      "q": "Does employer match count toward the $23,500 limit?",
+      "a": "No. The $23,500 (or $31,000) cap applies only to your own elective deferrals. Employer contributions are subject to a separate combined limit of $70,000 in 2026 (employee + employer + after-tax, for those under 50)."
+    },
+    {
+      "q": "What does '100% match up to 6%' mean exactly?",
+      "a": "Your employer matches every dollar you contribute, dollar-for-dollar, on the first 6% of your salary. If you earn $70,000 and contribute at least 6% ($4,200), you receive $4,200 in employer contributions. Contributing less than 6% means leaving match money unclaimed."
+    },
+    {
+      "q": "What if my employer does a 50% match up to 6%?",
+      "a": "Enter 50 in the Employer Match Rate field and 6 in the Match Cap field. The calculator will credit you 50 cents for every dollar you contribute, on up to 6% of salary. On $70,000 contributing 6%, the employer adds $2,100 (not $4,200)."
+    },
+    {
+      "q": "Why does the projected balance use a mid-year assumption?",
+      "a": "Contributions are typically spread across 26 bi-weekly paychecks throughout the year rather than invested on January 1. Multiplying total contributions by (1 + r/2) approximates this timing, providing a more realistic estimate than assuming all money earns a full year of returns."
+    },
+    {
+      "q": "I'm over 50. Is the catch-up contribution worth it?",
+      "a": "Almost always, yes—especially if your employer match isn't affected. The extra $7,500 reduces your current taxable income (Traditional) or builds tax-free assets (Roth), and at a 7% return compounds meaningfully over a 10–15 year runway to retirement."
+    },
+    {
+      "q": "What happens if I exceed the IRS limit?",
+      "a": "Excess deferrals must be withdrawn by April 15 of the following year, along with any earnings on those excess amounts. Failure to withdraw results in the excess being taxed twice—once when deferred and again when distributed. The calculator flags this scenario automatically."
+    },
+    {
+      "q": "Does this calculator cover SIMPLE 401(k) or Solo 401(k) plans?",
+      "a": "No. This tool is designed for standard employer-sponsored 401(k) plans. SIMPLE 401(k) plans have a $16,500 employee limit in 2026, and Solo 401(k) plans allow up to $70,000 total. Use a plan-specific calculator for those scenarios."
+    },
+    {
+      "q": "How accurate is the 7% return assumption?",
+      "a": "7% is a widely cited long-run average annual return for a diversified U.S. equity portfolio (after inflation adjustment often cited as ~5%). It is not guaranteed. Conservative planners use 5–6%; more aggressive projections use 8–10%. Adjust the field to match your own expectations or your plan's target-date fund estimate."
+    },
+    {
+      "q": "Should I always contribute at least up to the employer match cap?",
+      "a": "Financial planners almost universally recommend contributing at least enough to capture the full employer match before allocating money elsewhere. The match represents an immediate 50%–100% return on your contribution, which no other risk-free investment can match."
+    }
+  ],
+  "sources": [
+    {
+      "name": "IRS 401(k) Plan Contribution Limits 2026",
+      "url": "https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-topics-401k-and-profit-sharing-plan-contribution-limits",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "IRS Retirement Topics – Catch-Up Contributions",
+      "url": "https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-topics-catch-up-contributions",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    },
+    {
+      "name": "DOL Private Pension Plan Bulletin",
+      "url": "https://www.dol.gov/agencies/ebsa/researchers/statistics/retirement-bulletins",
+      "publisher": "U.S. Department of Labor – Employee Benefits Security Administration",
+      "date": "2025"
+    },
+    {
+      "name": "IRS Publication 560 – Retirement Plans for Small Business",
+      "url": "https://www.irs.gov/publications/p560",
+      "publisher": "Internal Revenue Service",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-04-28",
+    "updateType": "manual",
+    "notes": "Update IRS elective deferral limit ($23,500 / $31,000) and combined limit ($70,000) each November when IRS announces cost-of-living adjustments for the following year."
+  },
+  "lastReviewed": "2026-04-28"
+}
