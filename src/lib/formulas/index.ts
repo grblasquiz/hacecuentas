@@ -1130,16 +1130,9 @@ import { dollarCostAveragingCripto } from './dollar-cost-averaging-cripto';
 import { domingosAdvientoNavidad } from './domingos-adviento-navidad';
 import { domoticaAlexaGoogleSuscripcionMensual } from './domotica-alexa-google-suscripcion-mensual';
 import { dosisAcidoFolico } from './dosis-acido-folico';
-import { dosisAmoxicilinaPediatricaPeso } from './dosis-amoxicilina-pediatrica-peso';
 import { dosisAntiparasitario } from './dosis-antiparasitario';
 import { dosisAntipulgasPesoMascota } from './dosis-antipulgas-peso-mascota';
-import { dosisIbuprofeno } from './dosis-ibuprofeno';
-import { dosisIbuprofenoParacetamolPesoNino } from './dosis-ibuprofeno-paracetamol-peso-nino';
-import { dosisIbuprofenoPediatrico } from './dosis-ibuprofeno-pediatrico';
 import { dosisMascota } from './dosis-mascota';
-import { dosisParacetamolPediatrico } from './dosis-paracetamol-pediatrico';
-import { dosisParacetamolPeso } from './dosis-paracetamol-peso';
-import { dosisPediatricaMgPorKgMedicamento } from './dosis-pediatrica-mg-por-kg-medicamento';
 import { dosisVitaminaDDiariaRecomendada } from './dosis-vitamina-d-diaria-recomendada';
 import { doulaPartoAcompanamientoHonorarios } from './doula-parto-acompanamiento-honorarios';
 import { dpiPppImpresionResolucion } from './dpi-ppp-impresion-resolucion';
@@ -1241,7 +1234,6 @@ import { ensayosSemanalesMejorarWritingIdioma } from './ensayos-semanales-mejora
 import { entalpiaReaccionHess } from './entalpia-reaccion-hess';
 import { entropiaCambioFase } from './entropia-cambio-fase';
 import { envejecerMascotaHumanoTablaRazaTamano } from './envejecer-mascota-humano-tabla-raza-tamano';
-import { epinefrinaDosisPesoAnafilaxia } from './epinefrina-dosis-peso-anafilaxia';
 import { equipajeExtraCostoAerolinea } from './equipaje-extra-costo-aerolinea';
 import { equipajeManoBodegaPesoVolumenAerolinea } from './equipaje-mano-bodega-peso-volumen-aerolinea';
 import { equipajePesoSobrepesoCostePorKilo } from './equipaje-peso-sobrepeso-coste-por-kilo';
@@ -4457,16 +4449,9 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'domingos-adviento-navidad': domingosAdvientoNavidad,
   'domotica-alexa-google-suscripcion-mensual': domoticaAlexaGoogleSuscripcionMensual,
   'dosis-acido-folico': dosisAcidoFolico,
-  'dosis-amoxicilina-pediatrica-peso': dosisAmoxicilinaPediatricaPeso,
   'dosis-antiparasitario': dosisAntiparasitario,
   'dosis-antipulgas-peso-mascota': dosisAntipulgasPesoMascota,
-  'dosis-ibuprofeno': dosisIbuprofeno,
-  'dosis-ibuprofeno-paracetamol-peso-nino': dosisIbuprofenoParacetamolPesoNino,
-  'dosis-ibuprofeno-pediatrico': dosisIbuprofenoPediatrico,
   'dosis-mascota': dosisMascota,
-  'dosis-paracetamol-pediatrico': dosisParacetamolPediatrico,
-  'dosis-paracetamol-peso': dosisParacetamolPeso,
-  'dosis-pediatrica-mg-por-kg-medicamento': dosisPediatricaMgPorKgMedicamento,
   'dosis-vitamina-d-diaria-recomendada': dosisVitaminaDDiariaRecomendada,
   'doula-parto-acompanamiento-honorarios': doulaPartoAcompanamientoHonorarios,
   'dpi-ppp-impresion-resolucion': dpiPppImpresionResolucion,
@@ -4568,7 +4553,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'entalpia-reaccion-hess': entalpiaReaccionHess,
   'entropia-cambio-fase': entropiaCambioFase,
   'envejecer-mascota-humano-tabla-raza-tamano': envejecerMascotaHumanoTablaRazaTamano,
-  'epinefrina-dosis-peso-anafilaxia': epinefrinaDosisPesoAnafilaxia,
   'equipaje-extra-costo-aerolinea': equipajeExtraCostoAerolinea,
   'equipaje-mano-bodega-peso-volumen-aerolinea': equipajeManoBodegaPesoVolumenAerolinea,
   'equipaje-peso-sobrepeso-coste-por-kilo': equipajePesoSobrepesoCostePorKilo,
