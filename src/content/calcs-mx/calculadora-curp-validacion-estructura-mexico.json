@@ -234,44 +234,44 @@
   "explanation": "## Cómo se calcula la CURP\n\nLa CURP es un identificador único de 18 caracteres alfanuméricos generado por el RNRPI según el artículo 3 del Reglamento de la Ley General de Población. La estructura es:\n\n### Estructura CURP (18 caracteres)\n\n| Posiciones | Componente | Ejemplo | Regla |\n|---|---|---|---|\n| 1-6 | Datos apellidos/nombre | GAR\u0001JUA | Letra inicial apellido 1 + consonante apellido 1 + consonante apellido 2 + inicial nombre + fecha nacimiento |\n| 7-12 | Fecha nacimiento | 900315 | YYMMDD (año-mes-día) |\n| 13 | Sexo | H | H (hombre) o M (mujer) |\n| 14-15 | Entidad nacimiento | GO | Clave 2 letras SAT (32 estados + NE) |\n| 16-18 | Folio | 001 | Número correlativo asignado por RNRPI |\n| 19 (en validación) | Dígito verificador | 7 | Módulo 97 sobre primeros 17 caracteres |\n\n### Fórmula componente 1-6 (apellidos y nombre)\n\n1. **Primer apellido**: letra inicial + 1ª consonante\n2. **Segundo apellido**: 1ª consonante (si existe; si no, \"X\")\n3. **Nombre**: 1ª consonante del primer nombre\n4. **Vocal interna**: 1ª vocal interna del 1er apellido (se usa en RFC, aquí se omite en cálculo CURP simple)\n\nEn la validación mostrada aquí, generamos los 6 caracteres básicos sin incluir vocales internas (variante simplificada). El RNRPI puede aplicar reglas adicionales para casos especiales (ej: nombres compuestos \"Juan de Dios\", apellidos con consonantes duplicadas).\n\n### Fórmula dígito verificador\n\n```\nSuma ponderada = Σ(valor_char_i × peso_i) para i=0 a 16\nSuma módulo 97 = Suma ponderada MOD 97\nDígito verificador = (97 - Suma módulo 97) MOD 10\n```\n\nCada letra se convierte a número (A=10, B=11, ..., Z=35); dígitos conservan su valor. Pesos: 3, 7, 13, 1, 3, 7, 13, 1, 3, 7, 13, 1, 3, 7, 13, 1, 3 (patrón repetido).\n\n### Ejemplo completo\n\n**Datos entrada**:\n- Primer apellido: García\n- Segundo apellido: López\n- Nombre: Juan\n- Fecha nacimiento: 15 de marzo de 1990\n- Sexo: Hombre\n- Entidad: Guanajuato\n\n**Cálculo**:\n1. Primer apellido \"García\" → G (inicial) + R (1ª consonante) = GR\n2. Segundo apellido \"López\" → P (1ª consonante) = P\n3. Nombre \"Juan\" → N (1ª consonante) = N\n4. Fecha: 900315\n5. Sexo: H\n6. Entidad Guanajuato: GO\n7. Folio: 000 (hipotético para validación)\n8. Primeros 17: GRPN900315HGO000\n9. Dígito verificador (módulo 97): [cálculo ponderado] → 7\n\n**CURP esperada**: GRPN900315HGO0007\n\n## Limitaciones y casos especiales\n\n- **Nombres compuestos**: Si nombre es \"José Luis\", se toma 1ª consonante de \"José\" (not \"Luis\"). Algunos estados procesan diferente.\n- **Segundos apellidos inexistentes**: Se rellena con \"X\" en posición 3.\n- **Caracteres especiales**: Tildes se convierten (é→E, ü→U). Espacios, guiones se eliminan.\n- **Folio (posiciones 16-18)**: Solo RNRPI lo asigna; aquí usamos \"000\" como referencia.\n- **Dígito verificador**: Crítico para validación ante SAT/IMSS. Un error anula la CURP.\n- **Validación completa**: Esta calculadora genera estructura esperada; el RNRPI valida contra registro oficial.\n- **RFC diferente**: La CURP y RFC no siempre coinciden (RFC incluye datos actividad). Validarlas por separado.",
   "faq": [
     {
-      "question": "¿Cuál es la diferencia entre CURP y RFC?",
-      "answer": "La CURP es clave personal emitida por RNRPI (identidad física). El RFC es clave fiscal emitida por SAT para personas con actividad económica. La CURP tiene 18 caracteres; el RFC generalmente 13 + 3 dígitos de control. Ambas son necesarias para ciudadano mexicano con impuestos."
+      "q": "¿Cuál es la diferencia entre CURP y RFC?",
+      "a": "La CURP es clave personal emitida por RNRPI (identidad física). El RFC es clave fiscal emitida por SAT para personas con actividad económica. La CURP tiene 18 caracteres; el RFC generalmente 13 + 3 dígitos de control. Ambas son necesarias para ciudadano mexicano con impuestos."
     },
     {
-      "question": "¿Dónde solicito mi CURP oficial?",
-      "answer": "El RNRPI emite CURP a través de: 1) Portal en línea www.gob.mx/rnrpi (tramite digital), 2) Instalaciones locales del Registro Civil en tu estado, 3) Módulos RNRPI en capitales. Requiere certificado nacimiento original. Esta calculadora valida estructura, no genera CURP oficial."
+      "q": "¿Dónde solicito mi CURP oficial?",
+      "a": "El RNRPI emite CURP a través de: 1) Portal en línea www.gob.mx/rnrpi (tramite digital), 2) Instalaciones locales del Registro Civil en tu estado, 3) Módulos RNRPI en capitales. Requiere certificado nacimiento original. Esta calculadora valida estructura, no genera CURP oficial."
     },
     {
-      "question": "¿Qué significa si mi CURP no coincide con la generada aquí?",
-      "answer": "Puede deberse a: 1) Nombres especiales o compuestos procesados diferente, 2) Variantes en apellidos (guiones, espacios), 3) Dígito verificador incorrecta (error del RNRPI o tu anotación), 4) Folio único del RNRPI (posiciones 16-18). Verifica documento oficial o contacta RNRPI para corrección."
+      "q": "¿Qué significa si mi CURP no coincide con la generada aquí?",
+      "a": "Puede deberse a: 1) Nombres especiales o compuestos procesados diferente, 2) Variantes en apellidos (guiones, espacios), 3) Dígito verificador incorrecta (error del RNRPI o tu anotación), 4) Folio único del RNRPI (posiciones 16-18). Verifica documento oficial o contacta RNRPI para corrección."
     },
     {
-      "question": "¿CURP caduca o requiere renovación?",
-      "answer": "No. La CURP es vitalicia y no caduca. Se mantiene igual toda la vida, incluso si cambias nombre por matrimonio u otros trámites. Solo se solicita corrección si hay error en registro (acudir RNRPI con pruebas)."
+      "q": "¿CURP caduca o requiere renovación?",
+      "a": "No. La CURP es vitalicia y no caduca. Se mantiene igual toda la vida, incluso si cambias nombre por matrimonio u otros trámites. Solo se solicita corrección si hay error en registro (acudir RNRPI con pruebas)."
     },
     {
-      "question": "¿Cómo se valida dígito verificador si no tengo folio?",
-      "answer": "El folio (posiciones 16-18) es interno RNRPI y no lo conoces a priori. Para validación estructural, esta calc usa folio hipotético (000). Dígito verificador real se calcula sobre folio auténtico que solo tiene RNRPI/SAT. Usa esta herramienta para verificar primeros 15 caracteres."
+      "q": "¿Cómo se valida dígito verificador si no tengo folio?",
+      "a": "El folio (posiciones 16-18) es interno RNRPI y no lo conoces a priori. Para validación estructural, esta calc usa folio hipotético (000). Dígito verificador real se calcula sobre folio auténtico que solo tiene RNRPI/SAT. Usa esta herramienta para verificar primeros 15 caracteres."
     },
     {
-      "question": "¿Qué nacionalidades pueden solicitar CURP en México?",
-      "answer": "La CURP se emite a: 1) Nacidos en México, 2) Extranjeros residentes con documento identidad válido. Si naciste fuera, código entidad es 'NE'. Requiere registro ante RNRPI con documentación completa (pasaporte, visa, etc.)."
+      "q": "¿Qué nacionalidades pueden solicitar CURP en México?",
+      "a": "La CURP se emite a: 1) Nacidos en México, 2) Extranjeros residentes con documento identidad válido. Si naciste fuera, código entidad es 'NE'. Requiere registro ante RNRPI con documentación completa (pasaporte, visa, etc.)."
     },
     {
-      "question": "¿Puedo cambiar mi CURP si tengo error o actualizar datos?",
-      "answer": "Sí. Acude a RNRPI con comprobante error: certificado nacimiento, cambio nombre legal, o documento identidad. RNRPI emite corrección. No uses esta calc para auto-corrección; es solo validación estructural. Trámite en ventanilla o línea SAT."
+      "q": "¿Puedo cambiar mi CURP si tengo error o actualizar datos?",
+      "a": "Sí. Acude a RNRPI con comprobante error: certificado nacimiento, cambio nombre legal, o documento identidad. RNRPI emite corrección. No uses esta calc para auto-corrección; es solo validación estructural. Trámite en ventanilla o línea SAT."
     },
     {
-      "question": "¿CURP es requerida para abrir cuenta bancaria o INFONAVIT?",
-      "answer": "Sí, es documento oficial de identidad. Bancos e INFONAVIT la solicitan obligatoriamente. Sin CURP válida, no puedes acceder a créditos, inversiones, trámites estatales. Obtén la tuya ante RNRPI si aún no la tienes."
+      "q": "¿CURP es requerida para abrir cuenta bancaria o INFONAVIT?",
+      "a": "Sí, es documento oficial de identidad. Bancos e INFONAVIT la solicitan obligatoriamente. Sin CURP válida, no puedes acceder a créditos, inversiones, trámites estatales. Obtén la tuya ante RNRPI si aún no la tienes."
     },
     {
-      "question": "¿Cómo validar una CURP que ya tengo (no generarla)?",
-      "answer": "Introduce tu CURP real en campos correspondientes (apellidos, nombre, fecha, sexo, estado). Compara CURP generada con la tuya. Si coinciden primeros 17 caracteres y dígito verificador, es válida. Si diverge, hay error estructural o en datos entrada."
+      "q": "¿Cómo validar una CURP que ya tengo (no generarla)?",
+      "a": "Introduce tu CURP real en campos correspondientes (apellidos, nombre, fecha, sexo, estado). Compara CURP generada con la tuya. Si coinciden primeros 17 caracteres y dígito verificador, es válida. Si diverge, hay error estructural o en datos entrada."
     },
     {
-      "question": "¿Es seguro usar esta calculadora en línea? ¿Se guarda mi información?",
-      "answer": "Esta calculadora es pública, educativa, sin almacenamiento. No se envían datos a servidores (cálculo local). Para trámites oficiales SAT/IMSS, usa plataformas certificadas gob.mx. Nunca compartas CURP en sitios no verificados."
+      "q": "¿Es seguro usar esta calculadora en línea? ¿Se guarda mi información?",
+      "a": "Esta calculadora es pública, educativa, sin almacenamiento. No se envían datos a servidores (cálculo local). Para trámites oficiales SAT/IMSS, usa plataformas certificadas gob.mx. Nunca compartas CURP en sitios no verificados."
     }
   ],
   "sources": [

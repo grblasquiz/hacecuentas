@@ -244,44 +244,44 @@
   "explanation": "## Cómo se calcula\n\nEsta calculadora aplica las fórmulas financieras estándar vigentes en España para cada modalidad de financiación de vehículos.\n\n---\n\n## Fórmula\n\n### Préstamo bancario y financiación de concesionario (CDC)\n\nAmbas modalidades usan el sistema francés de amortización (cuota constante):\n\n```\nCapital financiado = Precio coche − Entrada\nTipo mensual (r) = TIN anual / 12 / 100\nCuota = Capital × r × (1 + r)^n / [(1 + r)^n − 1]\nTotal pagado = Cuota × n + Entrada + Comisión apertura\nIntereses totales = Total pagado − Precio coche\n```\n\nLa **TAE** (Tasa Anual Equivalente) se calcula resolviendo numéricamente la ecuación:\n\n```\nCapital neto = Σ [ Cuota / (1 + TAE/12)^k ]  para k = 1..n\n```\n\ndonde el capital neto es el capital financiado menos la comisión de apertura (que el banco cobra por adelantado, reduciendo el capital disponible pero no la deuda).\n\nLa TAE es el indicador comparador exigido por el Banco de España (Circular 5/2012) y la Directiva 2014/17/UE.\n\n---\n\n### Renting\n\nEl renting no es financiación: es un **arrendamiento operativo**. No hay opción de compra obligatoria (aunque puede existir). El coste total es:\n\n```\nTotal renting = Cuota mensual × Plazo meses\nExceso km = MAX(0, km_reales − km_contratados) × Años × Coste_exceso_km_unitario\n  (estimado a 0,09 €/km por exceso, valor medio del mercado 2026)\nCoste total ajustado = Total renting + Exceso km\n```\n\nAl final del contrato **no eres propietario** del vehículo. Si existe valor residual de compra, se suma al coste total si decides ejercer la opción.\n\n---\n\n### Leasing financiero\n\nEn el leasing, las cuotas se calculan sobre el capital financiado menos el **valor residual descontado**:\n\n```\nCapital a amortizar = (Precio − Entrada) − VR / (1 + r)^n\n  donde VR = Precio × valor_residual_leasing_pct / 100\nCuota leasing = Capital_amortizar × r × (1 + r)^n / [(1 + r)^n − 1]\nTotal leasing = Cuota × n + VR + Entrada\n```\n\nEl IVA de las cuotas (21%) es **deducible para autónomos y empresas** si el vehículo está afecto a la actividad (art. 95 Ley 37/1992 del IVA).\n\n---\n\n## Ejemplo\n\nCoche de **25.000 €**, entrada **5.000 €**, plazo **60 meses**:\n\n| Modalidad | Capital | TIN | Cuota/mes | Total pagado | TAE |\n|---|---|---|---|---|---|\n| Banco | 20.000 € | 6,5% | 390,32 € | 28.419 € | 7,1% |\n| Concesionario | 20.000 € | 3,9% | 368,05 € | 27.083 € | 4,2% |\n| Renting | — | — | 450 € | 27.000 € | — |\n| Leasing (15% res.) | 17.000 € | 5,5% | 324,50 € | 27.670 € | 5,8% |\n\n*Nota: el renting incluye seguro, mantenimiento e impuestos; los préstamos no.*\n\n---\n\n## Limitaciones\n\n- La calculadora **no incluye** el coste del seguro de coche en las modalidades de préstamo y leasing (obligatorio por ley; añade 400-1.200 €/año según perfil).\n- El IVA deducible en leasing/renting para autónomos está sujeto a afectación real y a posibles limitaciones de Hacienda. Consulta con tu asesor fiscal.\n- Las TAE calculadas son **aproximadas** (Newton-Raphson a 50 iteraciones); la TAE oficial debe figurar en el contrato (FEIN) según Ley 5/2019.\n- El renting no computa como deuda en el CIRBE (Central de Información de Riesgos del Banco de España), lo que puede ser relevante si prevés pedir una hipoteca.\n- Los tipos de interés mostrados son referencias de mercado 2026; la oferta real depende del perfil crediticio del solicitante.",
   "faq": [
     {
-      "question": "¿Qué diferencia hay entre TIN y TAE en un préstamo de coche?",
-      "answer": "El TIN (Tipo de Interés Nominal) es el tipo puro del préstamo, sin comisiones. La TAE (Tasa Anual Equivalente) incluye también las comisiones de apertura y otros gastos obligatorios, por lo que es el indicador real de coste y el que exige publicar el Banco de España. Siempre compara TAE, no TIN."
+      "q": "¿Qué diferencia hay entre TIN y TAE en un préstamo de coche?",
+      "a": "El TIN (Tipo de Interés Nominal) es el tipo puro del préstamo, sin comisiones. La TAE (Tasa Anual Equivalente) incluye también las comisiones de apertura y otros gastos obligatorios, por lo que es el indicador real de coste y el que exige publicar el Banco de España. Siempre compara TAE, no TIN."
     },
     {
-      "question": "¿La financiación al 0% del concesionario es realmente gratis?",
-      "answer": "No necesariamente. Muchos fabricantes ofrecen financiación al 0% TIN pero con comisiones de apertura, seguros vinculados o sin posibilidad de negociar descuento en el precio del vehículo. Calcula la TAE total y compara con un préstamo bancario más un buen descuento en el precio."
+      "q": "¿La financiación al 0% del concesionario es realmente gratis?",
+      "a": "No necesariamente. Muchos fabricantes ofrecen financiación al 0% TIN pero con comisiones de apertura, seguros vinculados o sin posibilidad de negociar descuento en el precio del vehículo. Calcula la TAE total y compara con un préstamo bancario más un buen descuento en el precio."
     },
     {
-      "question": "¿El renting es mejor que comprar si soy autónomo?",
-      "answer": "Depende del uso. El renting permite deducir el 100% de la cuota como gasto en el IRPF (módulos u estimación directa) y recuperar el IVA si el vehículo se usa exclusivamente para la actividad. Además no inmoviliza capital. Sin embargo, a largo plazo suele ser más caro que la compra y no genera patrimonio."
+      "q": "¿El renting es mejor que comprar si soy autónomo?",
+      "a": "Depende del uso. El renting permite deducir el 100% de la cuota como gasto en el IRPF (módulos u estimación directa) y recuperar el IVA si el vehículo se usa exclusivamente para la actividad. Además no inmoviliza capital. Sin embargo, a largo plazo suele ser más caro que la compra y no genera patrimonio."
     },
     {
-      "question": "¿Qué pasa si supero los kilómetros contratados en el renting?",
-      "answer": "La mayoría de contratos de renting en España cobran un sobrecoste por kilómetro extra, habitualmente entre 0,06 y 0,15 €/km según el vehículo. Para un uso intensivo (más de 25.000 km/año) puede encarecer significativamente el coste total. Negocia el contrato con los km reales previstos."
+      "q": "¿Qué pasa si supero los kilómetros contratados en el renting?",
+      "a": "La mayoría de contratos de renting en España cobran un sobrecoste por kilómetro extra, habitualmente entre 0,06 y 0,15 €/km según el vehículo. Para un uso intensivo (más de 25.000 km/año) puede encarecer significativamente el coste total. Negocia el contrato con los km reales previstos."
     },
     {
-      "question": "¿Puedo amortizar anticipadamente el préstamo del coche?",
-      "answer": "Sí. La Ley de Crédito al Consumo (Ley 16/2011) limita la comisión por amortización anticipada al 1% del capital reembolsado si el plazo restante es superior a un año, o al 0,5% si es inferior. Amortizar anticipadamente reduce considerablemente los intereses totales pagados."
+      "q": "¿Puedo amortizar anticipadamente el préstamo del coche?",
+      "a": "Sí. La Ley de Crédito al Consumo (Ley 16/2011) limita la comisión por amortización anticipada al 1% del capital reembolsado si el plazo restante es superior a un año, o al 0,5% si es inferior. Amortizar anticipadamente reduce considerablemente los intereses totales pagados."
     },
     {
-      "question": "¿El leasing aparece en el CIRBE (riesgos del Banco de España)?",
-      "answer": "Sí. El leasing financiero computa como riesgo crediticio en el CIRBE, igual que un préstamo. El renting operativo, en cambio, no se declara al CIRBE ya que es un arrendamiento, no una deuda financiera. Esto puede ser relevante si necesitas solicitar una hipoteca a corto plazo."
+      "q": "¿El leasing aparece en el CIRBE (riesgos del Banco de España)?",
+      "a": "Sí. El leasing financiero computa como riesgo crediticio en el CIRBE, igual que un préstamo. El renting operativo, en cambio, no se declara al CIRBE ya que es un arrendamiento, no una deuda financiera. Esto puede ser relevante si necesitas solicitar una hipoteca a corto plazo."
     },
     {
-      "question": "¿Puedo deducirme el IVA del leasing si soy autónomo?",
-      "answer": "Sí, siempre que el vehículo esté afecto exclusivamente a la actividad económica. La Ley del IVA (art. 95 Ley 37/1992) permite la deducción del 100% del IVA de las cuotas en ese caso. Si hay uso mixto (personal y profesional), la deducción se limita y Hacienda presume uso privado del 50% para turismos."
+      "q": "¿Puedo deducirme el IVA del leasing si soy autónomo?",
+      "a": "Sí, siempre que el vehículo esté afecto exclusivamente a la actividad económica. La Ley del IVA (art. 95 Ley 37/1992) permite la deducción del 100% del IVA de las cuotas en ese caso. Si hay uso mixto (personal y profesional), la deducción se limita y Hacienda presume uso privado del 50% para turismos."
     },
     {
-      "question": "¿Qué documentación pide el banco para un préstamo de coche en España?",
-      "answer": "Habitualmente: DNI/NIE, las dos últimas nóminas o declaración de IRPF si eres autónomo, contrato de trabajo, extractos bancarios de los últimos 3 meses, y la factura pro forma del vehículo. El banco consultará el CIRBE y el historial en ASNEF/Equifax."
+      "q": "¿Qué documentación pide el banco para un préstamo de coche en España?",
+      "a": "Habitualmente: DNI/NIE, las dos últimas nóminas o declaración de IRPF si eres autónomo, contrato de trabajo, extractos bancarios de los últimos 3 meses, y la factura pro forma del vehículo. El banco consultará el CIRBE y el historial en ASNEF/Equifax."
     },
     {
-      "question": "¿Cuánto es la entrada mínima recomendable para un préstamo de coche?",
-      "answer": "No existe mínimo legal, pero los bancos en España suelen financiar como máximo el 80-90% del valor de tasación o factura. Aportar al menos un 20% de entrada (en el ejemplo, 5.000 € sobre 25.000 €) mejora las condiciones de tipo y reduce el riesgo de que el préstamo supere el valor del coche a mitad del plazo."
+      "q": "¿Cuánto es la entrada mínima recomendable para un préstamo de coche?",
+      "a": "No existe mínimo legal, pero los bancos en España suelen financiar como máximo el 80-90% del valor de tasación o factura. Aportar al menos un 20% de entrada (en el ejemplo, 5.000 € sobre 25.000 €) mejora las condiciones de tipo y reduce el riesgo de que el préstamo supere el valor del coche a mitad del plazo."
     },
     {
-      "question": "¿Cómo tributa la cuota del renting en el IRPF de un asalariado?",
-      "answer": "Los asalariados no pueden deducir el renting en el IRPF. Solo los autónomos en estimación directa o entidades en el Impuesto de Sociedades pueden tratar la cuota como gasto deducible. Un trabajador por cuenta ajena no obtiene ventaja fiscal directa del renting frente al préstamo."
+      "q": "¿Cómo tributa la cuota del renting en el IRPF de un asalariado?",
+      "a": "Los asalariados no pueden deducir el renting en el IRPF. Solo los autónomos en estimación directa o entidades en el Impuesto de Sociedades pueden tratar la cuota como gasto deducible. Un trabajador por cuenta ajena no obtiene ventaja fiscal directa del renting frente al préstamo."
     }
   ],
   "sources": [

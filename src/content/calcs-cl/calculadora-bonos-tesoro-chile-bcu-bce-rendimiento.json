@@ -265,44 +265,44 @@
   "explanation": "## Cómo se calcula\n\nLa calculadora estima el **rendimiento total (TIR)** de bonos BCU (UF) y BCE (pesos) del Banco Central Chile, considerando flujos de cupones semestrales, ganancias de capital y tributación SII 2026.\n\n### Fórmula principal\n\n#### 1. Cupones semestrales\n```\nCupón semestral = Monto nominal × (Tasa cupón anual / 2)\nCupones totales (brutos) = Cupón semestral × Número de cupones (plazo × 2)\n```\n\n#### 2. Ganancia de capital\n```\nGanancia capital bruta = Monto nominal × (100% - Precio compra %)\n```\nSi compras a 98% (descuento 2%), la ganancia es 2% del nominal al rescate.\n\n#### 3. Tributación cupones (persona natural)\n```\nCupones netos = Cupones brutos × (1 - Tramo IRPF marginal 2026)\n```\nSegún SII 2026:\n- 5% renta < $2,1M\n- 14% $2,1M–$3,5M\n- 23% $3,5M–$5,4M\n- 30% $5,4M–$8,8M\n- 37% $8,8M–$13,8M\n- 45% > $13,8M\n\n#### 4. Tributación ganancia capital\n```\nImpuesto ganancia capital = Ganancia bruta × (19% IVA + Tramo IRPF marginal)\n```\nEmpresa: aplica tramo marginal del RUT. Persona natural: 19% IVA + marginal IRPF.\n\n#### 5. TIR bruta (sin impuestos)\n```\nTIR bruta: r tal que\nPrecio compra % = Σ [Cupón semestral / (1 + r/2)^t] + 100% / (1 + r/2)^(2×plazo)\n```\nDonde r es la TIR anual y t = período semestral.\n\n#### 6. TIR neta (con impuestos)\n```\nTIR neta: r* tal que\nPrecio compra % = Σ [Cupón neto / (1 + r*/2)^t] + 100% / (1 + r*/2)^(2×plazo) - Impuesto GC\n```\n\n#### 7. Duración Macaulay (sensibilidad tasa)\n```\nDuración = Σ [t × Flujo / (1 + y)^t] / Σ [Flujo / (1 + y)^t]\n```\nDonde y = yield al rescate. Aproxima caída % de precio por subida 1% tasa.\n\n#### 8. Precio ante subida tasas\n```\nPrecio nuevo ≈ Precio actual × [1 - Duración × Δ tasa]\n```\nSi tasas suben +1%, precio cae aproximadamente duración %.\n\n### Ejemplo numérico\n\n**Datos:**\n- Tipo: BCU (UF)\n- Nominal: $10.000.000\n- Plazo: 10 años\n- Cupón: 3,5% anual\n- Precio compra: 100% (par)\n- Inversionista: Persona natural, tramo IRPF 23%\n\n**Cálculos:**\n\n| Concepto | Cálculo | Resultado |\n|----------|---------|----------|\n| Cupón semestral | 10M × 3,5% / 2 | $175.000 |\n| Total cupones (20) | 175k × 20 | $3.500.000 |\n| Tributación cupones (23%) | 3.500k × 0,23 | $805.000 |\n| Cupones netos | 3.500k - 805k | $2.695.000 |\n| Ganancia capital bruta | 10M × (100% - 100%) | $0 |\n| Impuesto GC | $0 | $0 |\n| TIR bruta | VPI cupones + rescate | 3,50% |\n| TIR neta (con IRPF 23%) | Flujos netos al inversionista | ~2,69% |\n| Duración Macaulay | Promedio ponderado 10a | ~8,2 años |\n| Precio si tasas +100pb | 10M × (100% - 8,2% × 1%) | ~99,18% |\n\n**Escenario: compra a descuento 98%**\n\n| Concepto | Cálculo | Resultado |\n|----------|---------|----------|\n| Nominal pagado | 10M × 98% | $9.800.000 |\n| Ganancia capital bruta | 10M × 2% | $200.000 |\n| Impuesto GC (19% + 23%) | 200k × 0,42 | $84.000 |\n| Ganancia capital neta | 200k - 84k | $116.000 |\n| Rendimiento total neto | 2.695k + 116k | $2.811.000 |\n| TIR neta (aproximada) | 2,69% + Δ descuento | ~3,0% |\n\n### Limitaciones\n\n1. **TIR calculada asume reinversión de cupones** a tasa entrada. En realidad, cupones posteriores se reinvierten a tasas vigentes (puede variar).\n2. **Tributación**: modelo simplificado. Empresa (SPJ) puede tener exenciones parciales o retenciones. Consult SII para RUT específico.\n3. **Riesgo tasa**: duración es aproximación lineal. Bonos largo plazo tienen convexidad; caída precio no es perfectamente lineal.\n4. **BCU UF vs. BCE pesos**: BCU indexa inflación (protege poder adquisitivo pero sin capturo total). BCE pesos es riesgo inflacionario mayor pero cupón más alto típicamente.\n5. **Mercado secundario**: precio compra <100% requiere acceso mercado secundario SII (Bolsa o dealers). Primaria típicamente par o pequeña prima.\n6. **Cambios normativa 2026**: SII puede actualizar tramos IRPF o tasas IVA. Consulta SII.cl antes de inversión.\n7. **Riesgo contraparte**: aunque Banco Central es emisor de máxima solvencia, existe riesgo país Chile (calificación actual Moody's: A1).\n\n## Fórmula TIR (simplificada)\n\n```\nTIR bruta: hallar r tal que\n\nValor Presente = -Precio compra + Σ(t=1 a 2×plazo) [Cupón / (1 + r/2)^t] + [100 / (1 + r/2)^(2×plazo)]\n                = 0\n```\n\nDonde:\n- Cupón = Nominal × tasa cupón anual / 2\n- r = TIR anual (incógnita)\n- Plazo en años",
   "faq": [
     {
-      "question": "¿Cuál es la diferencia entre BCU (UF) y BCE (pesos)?",
-      "answer": "**BCU en UF**: Bono indexado a Unidad de Fomento. Protege contra inflación; cupón y rescate varían con UF. Rendimiento real (sobre inflación) típicamente 1,5%–3% anual. **BCE en pesos**: Bono en pesos nominales. Cupón fijo en pesos; no sube con inflación. Rendimiento nominal mayor (p.ej. 4%–5%) pero riesgo inflacionario. Persona natural prefiere BCU si espera inflación >2%; empresa puede elegir según cobertura balances."
+      "q": "¿Cuál es la diferencia entre BCU (UF) y BCE (pesos)?",
+      "a": "**BCU en UF**: Bono indexado a Unidad de Fomento. Protege contra inflación; cupón y rescate varían con UF. Rendimiento real (sobre inflación) típicamente 1,5%–3% anual. **BCE en pesos**: Bono en pesos nominales. Cupón fijo en pesos; no sube con inflación. Rendimiento nominal mayor (p.ej. 4%–5%) pero riesgo inflacionario. Persona natural prefiere BCU si espera inflación >2%; empresa puede elegir según cobertura balances."
     },
     {
-      "question": "¿Quién emite BCU y BCE? ¿Son seguros?",
-      "answer": "**Emisor**: Banco Central de Chile (autoridad monetaria, no comercial). **Solvencia**: máxima de Chile; calificación Moody's A1 (2025). **Garantía**: respaldados por activos y poder de emisión de Banco Central. **Riesgo**: prácticamente inexistente riesgo default; principal riesgo es de tasa (si tasas suben, precio baja en mercado secundario). Aptos para conservadores y jubilación."
+      "q": "¿Quién emite BCU y BCE? ¿Son seguros?",
+      "a": "**Emisor**: Banco Central de Chile (autoridad monetaria, no comercial). **Solvencia**: máxima de Chile; calificación Moody's A1 (2025). **Garantía**: respaldados por activos y poder de emisión de Banco Central. **Riesgo**: prácticamente inexistente riesgo default; principal riesgo es de tasa (si tasas suben, precio baja en mercado secundario). Aptos para conservadores y jubilación."
     },
     {
-      "question": "¿Por qué el TIR neta es menor que la bruta?",
-      "answer": "SII grava cupones como renta ($) con tramo IRPF marginal 2026 (5%–45%) + ganancias de capital con 19% IVA + IRPF marginal. Si compras a par y eres persona natural en tramo 23%, pérdida fiscal es ~23% cupones + ~42% ganancia capital. Ejemplo: bono 3,5% bruta → ~2,7% neta persona natural 23%."
+      "q": "¿Por qué el TIR neta es menor que la bruta?",
+      "a": "SII grava cupones como renta ($) con tramo IRPF marginal 2026 (5%–45%) + ganancias de capital con 19% IVA + IRPF marginal. Si compras a par y eres persona natural en tramo 23%, pérdida fiscal es ~23% cupones + ~42% ganancia capital. Ejemplo: bono 3,5% bruta → ~2,7% neta persona natural 23%."
     },
     {
-      "question": "¿Cómo afecta la subida de tasas al precio del bono?",
-      "answer": "Si tasas de mercado suben post-compra (p.ej. Banco Central sube TPM), **el precio de tu bono en mercado secundario baja**. Duración Macaulay estima caída: caída % ≈ duración × Δ tasa. Ejemplo: bono 10a, duración 8a. Si tasas +1%, precio cae ~8%. Si mantienes hasta rescate, recuperas 100% par. Riesgo es si necesitas vender antes."
+      "q": "¿Cómo afecta la subida de tasas al precio del bono?",
+      "a": "Si tasas de mercado suben post-compra (p.ej. Banco Central sube TPM), **el precio de tu bono en mercado secundario baja**. Duración Macaulay estima caída: caída % ≈ duración × Δ tasa. Ejemplo: bono 10a, duración 8a. Si tasas +1%, precio cae ~8%. Si mantienes hasta rescate, recuperas 100% par. Riesgo es si necesitas vender antes."
     },
     {
-      "question": "¿Dónde compro bonos BCU/BCE?",
-      "answer": "**Primaria (emisión nueva)**: Banco Central, bancos autorizados (p.ej. BCI, Santander, Itaú) o bolsa SVS. **Secundario**: Bolsa de Santiago, plataformas de dealers (p.ej. Scotiabank, BBVA). Acceso típicamente requiere cuenta corriente/inversión banco o broker. Comisión: 0,1%–0,5% nominal."
+      "q": "¿Dónde compro bonos BCU/BCE?",
+      "a": "**Primaria (emisión nueva)**: Banco Central, bancos autorizados (p.ej. BCI, Santander, Itaú) o bolsa SVS. **Secundario**: Bolsa de Santiago, plataformas de dealers (p.ej. Scotiabank, BBVA). Acceso típicamente requiere cuenta corriente/inversión banco o broker. Comisión: 0,1%–0,5% nominal."
     },
     {
-      "question": "¿Cómo se pagan los cupones? ¿En pesos o UF?",
-      "answer": "**BCU**: Cupones pagados en UF equivalentes a fecha pago (no pesos). **BCE**: Cupones en pesos. Pago es **semestral** (cada 6 meses) + rescate de principal a vencimiento. Banco Central o agente pagador (banco custodio) acredita en tu cuenta."
+      "q": "¿Cómo se pagan los cupones? ¿En pesos o UF?",
+      "a": "**BCU**: Cupones pagados en UF equivalentes a fecha pago (no pesos). **BCE**: Cupones en pesos. Pago es **semestral** (cada 6 meses) + rescate de principal a vencimiento. Banco Central o agente pagador (banco custodio) acredita en tu cuenta."
     },
     {
-      "question": "¿Puedo comparar un bono con un depósito a plazo (DAP)?",
-      "answer": "Sí. Un DAP 10a a 3,0% bruta (bancario típico, tributado 17% SII impuesto global) rinde ~2,49% neta. Un bono BCU 10a a 3,5% bruta rinde ~2,70% neta (persona 23%). Bono es ligeramente mejor, pero menos liquid; DAP puedes retirar antes (sanción). Riesgo tasa: bono es mayor si suben tasas (precio cae) pero DAP protege si rescatas antes."
+      "q": "¿Puedo comparar un bono con un depósito a plazo (DAP)?",
+      "a": "Sí. Un DAP 10a a 3,0% bruta (bancario típico, tributado 17% SII impuesto global) rinde ~2,49% neta. Un bono BCU 10a a 3,5% bruta rinde ~2,70% neta (persona 23%). Bono es ligeramente mejor, pero menos liquid; DAP puedes retirar antes (sanción). Riesgo tasa: bono es mayor si suben tasas (precio cae) pero DAP protege si rescatas antes."
     },
     {
-      "question": "¿Impuesto a la renta por ganancia capital: 19% o marginal?",
-      "answer": "**Ganancia capital** en bonos es ingreso capital (no renta) sujeto a: **Persona natural**: 19% IVA + IRPF marginal 2026 (total ~38%–64% según tramo). **Empresa**: IRPF marginal del RUT (p.ej. 27% SPJ tipo). SII considera ganancia = (Precio rescate - Precio compra) / Precio compra. Consult SII.cl Art. 17 LIR si en duda."
+      "q": "¿Impuesto a la renta por ganancia capital: 19% o marginal?",
+      "a": "**Ganancia capital** en bonos es ingreso capital (no renta) sujeto a: **Persona natural**: 19% IVA + IRPF marginal 2026 (total ~38%–64% según tramo). **Empresa**: IRPF marginal del RUT (p.ej. 27% SPJ tipo). SII considera ganancia = (Precio rescate - Precio compra) / Precio compra. Consult SII.cl Art. 17 LIR si en duda."
     },
     {
-      "question": "¿Qué es duración Macaulay y por qué importa?",
-      "answer": "**Duración**: promedio ponderado de años hasta recibir flujos. Mide sensibilidad a cambios tasa. Duración 8a = si tasas suben 1%, precio cae aprox 8%. Bonos largo plazo (20a, 30a) tienen duración muy alta (riesgo tasa elevado). Bonos corto plazo (5a) duración baja (riesgo tasa bajo). Si esperas subida tasas, elige plazo corto o duración baja."
+      "q": "¿Qué es duración Macaulay y por qué importa?",
+      "a": "**Duración**: promedio ponderado de años hasta recibir flujos. Mide sensibilidad a cambios tasa. Duración 8a = si tasas suben 1%, precio cae aprox 8%. Bonos largo plazo (20a, 30a) tienen duración muy alta (riesgo tasa elevado). Bonos corto plazo (5a) duración baja (riesgo tasa bajo). Si esperas subida tasas, elige plazo corto o duración baja."
     },
     {
-      "question": "¿Cómo tributa una empresa (SPJ) los bonos BCU/BCE?",
-      "answer": "Empresa tributa cupones (renta) a su **tramo IRPF marginal** (p.ej. 27% SPJ tipo) + ganancia capital idem. Puede deducir intereses si bono es deuda (acreedor). Algunas inversiones institucionalesl (fondos de pensiones, fondos mutuos) tienen exención parcial. Consult contador SII-SPJ antes de inversión grande."
+      "q": "¿Cómo tributa una empresa (SPJ) los bonos BCU/BCE?",
+      "a": "Empresa tributa cupones (renta) a su **tramo IRPF marginal** (p.ej. 27% SPJ tipo) + ganancia capital idem. Puede deducir intereses si bono es deuda (acreedor). Algunas inversiones institucionalesl (fondos de pensiones, fondos mutuos) tienen exención parcial. Consult contador SII-SPJ antes de inversión grande."
     }
   ],
   "sources": [
