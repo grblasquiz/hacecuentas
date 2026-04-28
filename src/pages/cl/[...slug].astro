@@ -24,6 +24,8 @@ const { calc } = Astro.props;
 
 const categoryLabels: Record<string, string> = {
   finanzas: 'Finanzas',
+  impuestos: 'Impuestos',
+  familia: 'Familia',
   negocios: 'Negocios',
   negocio: 'Negocios',
   salud: 'Salud',
@@ -172,7 +174,7 @@ const schema = { '@context': 'https://schema.org', '@graph': schemaGraph };
 
 const updated = lastReviewedLabel;
 
-// Reading time: ~250 palabras/minuto en español
+// Tiempo de lectura: ~250 palabras/minuto en español
 const wordCount = calc.explanation ? calc.explanation.split(/\s+/).length : 0;
 const readingMin = Math.max(1, Math.round(wordCount / 250));
 
@@ -270,11 +272,11 @@ const hreflangTags = esSlug ? [
           <div class="ca-feedback" data-state="ask">
             <span class="ca-q">¿Te resultó útil esta calculadora?</span>
             <div class="ca-buttons">
-              <button type="button" class="ca-vote" data-vote="up" aria-label="Yes, it was helpful">
+              <button type="button" class="ca-vote" data-vote="up" aria-label="Sí, me sirvió">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7"/></svg>
-                Yes
+                Sí
               </button>
-              <button type="button" class="ca-vote" data-vote="down" aria-label="Not helpful">
+              <button type="button" class="ca-vote" data-vote="down" aria-label="No me sirvió">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H17"/></svg>
                 No
               </button>
@@ -283,11 +285,11 @@ const hreflangTags = esSlug ? [
           <div class="ca-tools">
             <button type="button" class="ca-tool" id="ca-share" data-url={`https://hacecuentas.com/cl/${calc.slug}`} data-title={calc.h1}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              Share
+              Compartir
             </button>
             <button type="button" class="ca-tool" onclick="document.querySelector('.ca-feedback .ca-vote[data-vote=&quot;down&quot;]').click(); document.querySelector('.ca-feedback').scrollIntoView({behavior:'smooth',block:'center'});">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-              Report error
+              Reportar error
             </button>
           </div>
         </div>
@@ -305,18 +307,18 @@ const hreflangTags = esSlug ? [
         )}
 
         <div class="meta">
-          <span class="meta-item" title={`Last reviewed: ${updated} · Equipo Hacé Cuentas`}>
+          <span class="meta-item" title={`Última revisión: ${updated} · Equipo Hacé Cuentas`}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Last reviewed: <strong>{updated}</strong>
+            Última revisión: <strong>{updated}</strong>
           </span>
           <span class="meta-item meta-reviewer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-            Verified by <a href="/politica-editorial">Equipo Hacé Cuentas</a>
+            Verificado por <a href="/politica-editorial">Equipo Hacé Cuentas</a>
           </span>
           {sources.length > 0 && (
             <span class="meta-item">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-              Source: {sources.map((s) => s.name).join(', ')}
+              Fuente: {sources.map((s) => s.name).join(', ')}
             </span>
           )}
           {sources.length === 0 && (
@@ -327,7 +329,7 @@ const hreflangTags = esSlug ? [
           )}
           <span class="meta-item">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            100% private
+            100% privado
           </span>
         </div>
 
@@ -342,7 +344,7 @@ const hreflangTags = esSlug ? [
 
         {useCases.length > 0 && (
           <section id="when-to-use" class="use-cases" aria-labelledby="use-cases-heading">
-            <h2 id="use-cases-heading">When to use this calculator</h2>
+            <h2 id="use-cases-heading">Cuándo usar esta calculadora</h2>
             <ul>
               {useCases.map((u: string) => (
                 <li set:html={md(u)} />
