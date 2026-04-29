@@ -131,7 +131,8 @@ def find_haiku_calcs():
                       'scripts/calcs-spain-extra-specs.json',
                       'scripts/calcs-mexico-specs.json',
                       'scripts/calcs-colombia-specs.json',
-                      'scripts/calcs-chile-specs.json']:
+                      'scripts/calcs-chile-specs.json',
+                      'scripts/calcs-gsc-gaps-specs.json']:
         p = ROOT / spec_file
         if p.exists():
             for s in json.loads(p.read_text()):

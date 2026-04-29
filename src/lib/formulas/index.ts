@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-04-28
+// Generated: 2026-04-29
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -57,6 +57,7 @@ import { aguaPezBettaLitros } from './agua-pez-betta-litros';
 import { aguaPorInvitadoFiesta } from './agua-por-invitado-fiesta';
 import { aguaRiegoPlantasDia } from './agua-riego-plantas-dia';
 import { aguinaldo } from './aguinaldo';
+import { compute as compute__aguinaldo_empleado_mensual_quincenal_vs_quincena } from './aguinaldo-empleado-mensual-quincenal-vs-quincena';
 import { aguinaldoMexico } from './aguinaldo-mexico';
 import { compute as compute__aguinaldo_mexico_2026_15_dias_tope_30 } from './aguinaldo-mexico-2026-15-dias-tope-30';
 import { aguinaldoMexicoNeto } from './aguinaldo-mexico-neto';
@@ -190,6 +191,7 @@ import { compute as compute__asado_kg_por_persona_cortes_tira_vacio_pollo } from
 import { asadoPorInvitadoKgCarne } from './asado-por-invitado-kg-carne';
 import { asignacionDesempleoSeguroPrestacionAnses } from './asignacion-desempleo-seguro-prestacion-anses';
 import { asignacionDiscapacidadPensionado } from './asignacion-discapacidad-pensionado';
+import { compute as compute__asignacion_familiar_anses_2026_tramos_ingreso } from './asignacion-familiar-anses-2026-tramos-ingreso';
 import { compute as compute__asignacion_familiar_chile_2026_tramos_renta } from './asignacion-familiar-chile-2026-tramos-renta';
 import { asignacionFamiliarEmpleadoRegistradoAnses } from './asignacion-familiar-empleado-registrado-anses';
 import { asignacionFamiliarHijoAnsesTramo } from './asignacion-familiar-hijo-anses-tramo';
@@ -231,6 +233,7 @@ import { azucarAgregadaOcultaGramos } from './azucar-agregada-oculta-gramos';
 import { azucaresAnadidosDiariosOmsMgGramos } from './azucares-anadidos-diarios-oms-mg-gramos';
 import { azulejosBaldosasMetrosCuadradosCantidad } from './azulejos-baldosas-metros-cuadrados-cantidad';
 import { compute as compute__baby_feeding_amount_by_age_calculator } from './baby-feeding-amount-by-age-calculator';
+import { compute as compute__baby_shower_budget_guests_food_decoration } from './baby-shower-budget-guests-food-decoration';
 import { backtestEstrategiaTradingSharpeRatio } from './backtest-estrategia-trading-sharpe-ratio';
 import { bajaAutoDesarmeChatarraFinVida } from './baja-auto-desarme-chatarra-fin-vida';
 import { compute as compute__baja_laboral_incapacidad_temporal_espana_cuantia } from './baja-laboral-incapacidad-temporal-espana-cuantia';
@@ -279,6 +282,7 @@ import { bitcoinHalving2028Proyeccion } from './bitcoin-halving-2028-proyeccion'
 import { bitcoinHalvingCountdown } from './bitcoin-halving-countdown';
 import { bitcoinMiningProfit } from './bitcoin-mining-profit';
 import { compute as compute__bitcoin_profit_loss_calculator } from './bitcoin-profit-loss-calculator';
+import { compute as compute__bits_bytes_kilobytes_megabytes_conversion } from './bits-bytes-kilobytes-megabytes-conversion';
 import { bjjCinturonGradosTiempoPromedio } from './bjj-cinturon-grados-tiempo-promedio';
 import { blackFridayDescuentoReal } from './black-friday-descuento-real';
 import { blackScholesOpcionCallPut } from './black-scholes-opcion-call-put';
@@ -295,6 +299,7 @@ import { boloCasamentoBr } from './bolo-casamento-br';
 import { bolsaFamiliaValor } from './bolsa-familia-valor';
 import { compute as compute__bomba_calor_aerotermia_espana_coste_instalacion } from './bomba-calor-aerotermia-espana-coste-instalacion';
 import { bombeoCisternaTanqueWatts } from './bombeo-cisterna-tanque-watts';
+import { compute as compute__bono_anses_jubilados_junio_2026_aumento_mensual } from './bono-anses-jubilados-junio-2026-aumento-mensual';
 import { compute as compute__bono_cumplimiento_laboral_chile_pago_empresa } from './bono-cumplimiento-laboral-chile-pago-empresa';
 import { compute as compute__bono_electrico_chile_subsidio_cuenta_electrica } from './bono-electrico-chile-subsidio-cuenta-electrica';
 import { compute as compute__bono_hambre_cero_colombia_renta_ciudadana } from './bono-hambre-cero-colombia-renta-ciudadana';
@@ -394,6 +399,7 @@ import { caloriasLactancia } from './calorias-lactancia';
 import { caloriasLactanciaProduccionLeche } from './calorias-lactancia-produccion-leche';
 import { caloriasMediocampista } from './calorias-mediocampista';
 import { caloriasNatacion } from './calorias-natacion';
+import { compute as compute__calorias_natacion_estilos_distancia_velocidad } from './calorias-natacion-estilos-distancia-velocidad';
 import { caloriasPadel } from './calorias-padel';
 import { caloriasPaltaAguacateCompletaMitad } from './calorias-palta-aguacate-completa-mitad';
 import { caloriasPanBlancoIntegralPorcion } from './calorias-pan-blanco-integral-porcion';
@@ -567,10 +573,15 @@ import { comidaTortugaDiariaGramos } from './comida-tortuga-diaria-gramos';
 import { compute as compute__comida_yorkshire_terrier_porcion_diaria_edad } from './comida-yorkshire-terrier-porcion-diaria-edad';
 import { comisionAmazonFbaProducto } from './comision-amazon-fba-producto';
 import { comisionBrokerCocosIolBullComparativa } from './comision-broker-cocos-iol-bull-comparativa';
+import { compute as compute__comision_doordash_rappi_pedidosya_restaurante_2026 } from './comision-doordash-rappi-pedidosya-restaurante-2026';
 import { comisionEbayVenta } from './comision-ebay-venta';
 import { comisionEtsyVentaHandmade } from './comision-etsy-venta-handmade';
 import { comisionInmobiliariaAlquilerCabaPba } from './comision-inmobiliaria-alquiler-caba-pba';
+import { compute as compute__comision_mercadolibre_2026_vendedor_publicacion } from './comision-mercadolibre-2026-vendedor-publicacion';
 import { comisionRepresentanteFifa } from './comision-representante-fifa';
+import { compute as compute__comision_shopify_pesos_argentinos_vs_tienda_nube } from './comision-shopify-pesos-argentinos-vs-tienda-nube';
+import { compute as compute__comision_tienda_nube_2026_monto_mensual_checkout } from './comision-tienda-nube-2026-monto-mensual-checkout';
+import { compute as compute__comision_uber_driver_ganancia_real_argentina_2026 } from './comision-uber-driver-ganancia-real-argentina-2026';
 import { comisionUberEatsGlovoRider } from './comision-uber-eats-glovo-rider';
 import { comisionVenta } from './comision-venta';
 import { compute as compute__comparador_tarjeta_debito_colombia_2026_comisiones } from './comparador-tarjeta-debito-colombia-2026-comisiones';
@@ -631,21 +642,25 @@ import { contratoLocacionEnDolaresUsdPesificacion } from './contrato-locacion-en
 import { compute as compute__convenio_comercio_espana_sueldo_categoria_2026 } from './convenio-comercio-espana-sueldo-categoria-2026';
 import { compute as compute__convenio_hosteleria_espana_sueldo_2026_categoria } from './convenio-hosteleria-espana-sueldo-2026-categoria';
 import { conversacionIntercambioIdiomaHorasSemana } from './conversacion-intercambio-idioma-horas-semana';
+import { compute as compute__conversion_atmosferas_pascales_bar } from './conversion-atmosferas-pascales-bar';
 import { conversionBaseDecimalBinarioHexa } from './conversion-base-decimal-binario-hexa';
 import { conversionBases } from './conversion-bases';
 import { conversionBtuKcalAireAcondicionado } from './conversion-btu-kcal-aire-acondicionado';
 import { conversionBytesKbMbGbTb } from './conversion-bytes-kb-mb-gb-tb';
 import { conversionCelsiusFahrenheitKelvin } from './conversion-celsius-fahrenheit-kelvin';
+import { compute as compute__conversion_celsius_fahrenheit_kelvin_rankine_temperatura } from './conversion-celsius-fahrenheit-kelvin-rankine-temperatura';
 import { conversionColesterolMgMmol } from './conversion-colesterol-mg-mmol';
 import { conversionCriptoArs } from './conversion-cripto-ars';
 import { conversionCucharaditasGramosEspeciasSal } from './conversion-cucharaditas-gramos-especias-sal';
 import { conversionCupsGramosHarinaAzucarAceite } from './conversion-cups-gramos-harina-azucar-aceite';
 import { conversionFahrenheitCelsiusClima } from './conversion-fahrenheit-celsius-clima';
+import { compute as compute__conversion_galon_litro_onzas_fluidas_cc } from './conversion-galon-litro-onzas-fluidas-cc';
 import { conversionGalonLitroUsUk } from './conversion-galon-litro-us-uk';
 import { conversionGradosRadianes } from './conversion-grados-radianes';
 import { conversionGradosRadianesGradianes } from './conversion-grados-radianes-gradianes';
 import { conversionHpKwCaballosKilowatts } from './conversion-hp-kw-caballos-kilowatts';
 import { conversionKiloLibraLbKgExacto } from './conversion-kilo-libra-lb-kg-exacto';
+import { compute as compute__conversion_libras_kilos_onzas_stone } from './conversion-libras-kilos-onzas-stone';
 import { conversionLitrosGalones } from './conversion-litros-galones';
 import { conversionMedidaNeumaticoRadioDiametro } from './conversion-medida-neumatico-radio-diametro';
 import { conversionMedidasCocina } from './conversion-medidas-cocina';
@@ -659,6 +674,7 @@ import { conversionPieCuadradoMetroBienesRaices } from './conversion-pie-cuadrad
 import { conversionPorcentajeFraccionDecimal } from './conversion-porcentaje-fraccion-decimal';
 import { conversionPpmMgLQuimicaAgua } from './conversion-ppm-mg-l-quimica-agua';
 import { conversionPulgadaCentimetroScreen } from './conversion-pulgada-centimetro-screen';
+import { compute as compute__conversion_pulgadas_pies_cm_metros_altura } from './conversion-pulgadas-pies-cm-metros-altura';
 import { conversionQuintalToneladaKgAgro } from './conversion-quintal-tonelada-kg-agro';
 import { conversionRadianesGradosAngulo } from './conversion-radianes-grados-angulo';
 import { conversionRateEcommerceBenchmark } from './conversion-rate-ecommerce-benchmark';
@@ -913,17 +929,23 @@ import { criticalPowerCp } from './critical-power-cp';
 import { crossfitFranBenchmarkTiempoRx } from './crossfit-fran-benchmark-tiempo-rx';
 import { ctsPeru } from './cts-peru';
 import { cuadroAlturaColgar } from './cuadro-altura-colgar';
+import { compute as compute__cuantas_calorias_bicicleta_distancia_pendiente_perfil } from './cuantas-calorias-bicicleta-distancia-pendiente-perfil';
 import { cuantasMateriassFaltan } from './cuantas-materias-faltan';
+import { compute as compute__cuanto_cobrar_traduccion_palabra_2026_espanol_ingles } from './cuanto-cobrar-traduccion-palabra-2026-espanol-ingles';
 import { cuantoCobroPorHoraFreelance } from './cuanto-cobro-por-hora-freelance';
 import { cuantoFaltaAguinaldoJunioDiciembre } from './cuanto-falta-aguinaldo-junio-diciembre';
 import { cuantoFaltaBlackFridayCyberMonday } from './cuanto-falta-black-friday-cyber-monday';
 import { cuantoFaltaCumpleanosFechaEspecifica } from './cuanto-falta-cumpleanos-fecha-especifica';
+import { compute as compute__cuanto_falta_cumpleanos_fecha_personalizada_eventos } from './cuanto-falta-cumpleanos-fecha-personalizada-eventos';
 import { cuantoFaltaDiaMadrePadreArgentina } from './cuanto-falta-dia-madre-padre-argentina';
 import { cuantoFaltaEleccionPresidencial2027 } from './cuanto-falta-eleccion-presidencial-2027';
+import { compute as compute__cuanto_falta_feriado_proximo_argentina_2026 } from './cuanto-falta-feriado-proximo-argentina-2026';
 import { cuantoFaltaFinCursoEscolarMarzo } from './cuanto-falta-fin-curso-escolar-marzo';
+import { compute as compute__cuanto_falta_fin_de_año_2026_dias_horas_segundos } from './cuanto-falta-fin-de-año-2026-dias-horas-segundos';
 import { cuantoFaltaGritoIndependenciaMexico } from './cuanto-falta-grito-independencia-mexico';
 import { cuantoFaltaJubilarseJubilacionEdadAportes } from './cuanto-falta-jubilarse-jubilacion-edad-aportes';
 import { cuantoFaltaMundialFifa20262030 } from './cuanto-falta-mundial-fifa-2026-2030';
+import { compute as compute__cuanto_falta_navidad_2026_dias_semanas_meses } from './cuanto-falta-navidad-2026-dias-semanas-meses';
 import { cuantoFaltaNavidadAnoNuevo } from './cuanto-falta-navidad-ano-nuevo';
 import { cuantoFaltaOlimpiadasParis2028LosAngeles } from './cuanto-falta-olimpiadas-paris-2028-los-angeles';
 import { cuantoFaltaPagoMonotributoIngreso } from './cuanto-falta-pago-monotributo-ingreso';
@@ -934,6 +956,7 @@ import { cuantoGanoPorSegundo } from './cuanto-gano-por-segundo';
 import { cuantoGastarRegaloNoviaAniversario } from './cuanto-gastar-regalo-novia-aniversario';
 import { cuantoGastoEnDelivery } from './cuanto-gasto-en-delivery';
 import { cuantoValeMiTiempo } from './cuanto-vale-mi-tiempo';
+import { compute as compute__cuanto_vale_mi_tiempo_hora_anual_salario } from './cuanto-vale-mi-tiempo-hora-anual-salario';
 import { cuantosDiasVacacionesLaboralesAntiguedad } from './cuantos-dias-vacaciones-laborales-antiguedad';
 import { cuantosDiasVividoPersonaFechaNacimiento } from './cuantos-dias-vivido-persona-fecha-nacimiento';
 import { cuantosFeriadosRestanAnoArgentina } from './cuantos-feriados-restan-ano-argentina';
@@ -941,6 +964,7 @@ import { cuantosJuguetesNinoEdadDesarrollo } from './cuantos-juguetes-nino-edad-
 import { cuartaCategoriaEmpleadoEmpresaArgentina } from './cuarta-categoria-empleado-empresa-argentina';
 import { compute as compute__cuenta_2_afp_chile_aporte_voluntario_rendimiento } from './cuenta-2-afp-chile-aporte-voluntario-rendimiento';
 import { compute as compute__cuenta_afc_ahorro_fomento_construccion_colombia } from './cuenta-afc-ahorro-fomento-construccion-colombia';
+import { compute as compute__cuenta_crecimiento_aporte_mensual_vs_tasa_anual } from './cuenta-crecimiento-aporte-mensual-vs-tasa-anual';
 import { compute as compute__cuenta_de_ahorro_mexico_rendimiento_cetes_directo_nu_mercado_pago } from './cuenta-de-ahorro-mexico-rendimiento-cetes-directo-nu-mercado-pago';
 import { cuentaRegresiva } from './cuenta-regresiva';
 import { cuentaRegresivaFecha } from './cuenta-regresiva-fecha';
@@ -1128,6 +1152,7 @@ import { dolarRealIofRemessa } from './dolar-real-iof-remessa';
 import { dolarSojaExportadorDiferencia } from './dolar-soja-exportador-diferencia';
 import { dollarCostAveragingCripto } from './dollar-cost-averaging-cripto';
 import { domingosAdvientoNavidad } from './domingos-adviento-navidad';
+import { compute as compute__domingos_restantes_navidad_2026_fin_de_año } from './domingos-restantes-navidad-2026-fin-de-año';
 import { domoticaAlexaGoogleSuscripcionMensual } from './domotica-alexa-google-suscripcion-mensual';
 import { dosisAcidoFolico } from './dosis-acido-folico';
 import { dosisAntiparasitario } from './dosis-antiparasitario';
@@ -1142,6 +1167,8 @@ import { drawdownMaximoInversion } from './drawdown-maximo-inversion';
 import { drenajeGravaMaceta } from './drenaje-grava-maceta';
 import { dso } from './dso';
 import { dsrDescansoSemanal } from './dsr-descanso-semanal';
+import { compute as compute__due_date_by_conception_date_pregnancy_weeks } from './due-date-by-conception-date-pregnancy-weeks';
+import { compute as compute__due_date_calendar_week_by_week_trimester_milestones } from './due-date-calendar-week-by-week-trimester-milestones';
 import { duolingoStreakProgresionDiariaIdioma } from './duolingo-streak-progresion-diaria-idioma';
 import { duolingoTiempoDiaNivelMcerProgreso } from './duolingo-tiempo-dia-nivel-mcer-progreso';
 import { duolingoXpObjetivo } from './duolingo-xp-objetivo';
@@ -1168,6 +1195,7 @@ import { edadGatoHumano } from './edad-gato-humano';
 import { edadGatoHumanoFormulaAnos } from './edad-gato-humano-formula-anos';
 import { edadGestacionalCorregidaPrematuro } from './edad-gestacional-corregida-prematuro';
 import { compute as compute__edad_gestacional_ecografia_corona_rabadilla } from './edad-gestacional-ecografia-corona-rabadilla';
+import { compute as compute__edad_gestacional_perro_gato_camada_fecha_parto } from './edad-gestacional-perro-gato-camada-fecha-parto';
 import { edadHamster } from './edad-hamster';
 import { edadHumanaPorRazaPerro } from './edad-humana-por-raza-perro';
 import { edadHumanaTortuga } from './edad-humana-tortuga';
@@ -1177,6 +1205,7 @@ import { edadJubilacionAnosAporte } from './edad-jubilacion-anos-aporte';
 import { edadMetabolica } from './edad-metabolica';
 import { edadOptimaAprenderIdiomaNinosAdultos } from './edad-optima-aprender-idioma-ninos-adultos';
 import { edadPerro } from './edad-perro';
+import { compute as compute__edad_perro_gato_anos_humanos_tabla_2026_actualizada } from './edad-perro-gato-anos-humanos-tabla-2026-actualizada';
 import { edadPerroHumano } from './edad-perro-humano';
 import { edadPerroHumanoRazaTamano } from './edad-perro-humano-raza-tamano';
 import { edadPlaneta } from './edad-planeta';
@@ -1216,6 +1245,7 @@ import { emisionesCo2AutoGKmAnual } from './emisiones-co2-auto-g-km-anual';
 import { emisionesEnviarEmailAdjuntos } from './emisiones-enviar-email-adjuntos';
 import { compute as compute__empanadas_docena_por_invitado_evento_estimacion } from './empanadas-docena-por-invitado-evento-estimacion';
 import { empanadasPorInvitadoJuntada } from './empanadas-por-invitado-juntada';
+import { compute as compute__empanadas_por_persona_evento_asado_cumple } from './empanadas-por-persona-evento-asado-cumple';
 import { employerOfRecordEorCostoMesPais } from './employer-of-record-eor-costo-mes-pais';
 import { compute as compute__emprendedor_pyme_chile_puesta_marcha_1_dia } from './emprendedor-pyme-chile-puesta-marcha-1-dia';
 import { empujeArquimedesVolumen } from './empuje-arquimedes-volumen';
@@ -1347,6 +1377,7 @@ import { fertilidadMasculinaEdad } from './fertilidad-masculina-edad';
 import { fertilidadTiempoConcepcionEdadMujer } from './fertilidad-tiempo-concepcion-edad-mujer';
 import { fertilizanteNpkDosis } from './fertilizante-npk-dosis';
 import { festaChurrascoGramasBr } from './festa-churrasco-gramas-br';
+import { compute as compute__fetal_weight_by_week_percentile_hadlock } from './fetal-weight-by-week-percentile-hadlock';
 import { ffmi } from './ffmi';
 import { fgtsCompraImovel } from './fgts-compra-imovel';
 import { compute as compute__fgts_multa_40_rescisao } from './fgts-multa-40-rescisao';
@@ -1422,6 +1453,7 @@ import { frecuenciaBanoPerro } from './frecuencia-bano-perro';
 import { frecuenciaCardiaca } from './frecuencia-cardiaca';
 import { frecuenciaCardiacaEntrenamiento } from './frecuencia-cardiaca-entrenamiento';
 import { frecuenciaCardiacaMaximaEdad } from './frecuencia-cardiaca-maxima-edad';
+import { compute as compute__frecuencia_cardiaca_reposo_categorias_deportistas_edad } from './frecuencia-cardiaca-reposo-categorias-deportistas-edad';
 import { frecuenciaCardiacaZonasEntrenamientoKarvonen } from './frecuencia-cardiaca-zonas-entrenamiento-karvonen';
 import { compute as compute__frecuencia_cardiaca_zonas_karvonen } from './frecuencia-cardiaca-zonas-karvonen';
 import { frecuenciaCorteFiltroRc } from './frecuencia-corte-filtro-rc';
@@ -1740,6 +1772,7 @@ import { inmobiliarioProvincialPbaTramos } from './inmobiliario-provincial-pba-t
 import { inssAutonomoIndividual } from './inss-autonomo-individual';
 import { inssPatronalEmpresa } from './inss-patronal-empresa';
 import { instagramAdsCpmNicho } from './instagram-ads-cpm-nicho';
+import { compute as compute__instagram_ads_presupuesto_cpm_cpr_roi_2026 } from './instagram-ads-presupuesto-cpm-cpr-roi-2026';
 import { instagramCarrouselSlidesOptimas } from './instagram-carrousel-slides-optimas';
 import { instagramHashtagsOptimos } from './instagram-hashtags-optimos';
 import { instagramInfluencerPagoHistoria } from './instagram-influencer-pago-historia';
@@ -1820,6 +1853,7 @@ import { ivPokemonGo } from './iv-pokemon-go';
 import { compute as compute__iva_bienes_exentos_excluidos_colombia_2026 } from './iva-bienes-exentos-excluidos-colombia-2026';
 import { compute as compute__iva_chile_19_porciento_tarifa_general } from './iva-chile-19-porciento-tarifa-general';
 import { compute as compute__iva_colombia_19_porciento_tarifa_general } from './iva-colombia-19-porciento-tarifa-general';
+import { compute as compute__iva_espana_2026_21_tipo_general_formula } from './iva-espana-2026-21-tipo-general-formula';
 import { compute as compute__iva_espana_21_10_4_categorias } from './iva-espana-21-10-4-categorias';
 import { compute as compute__iva_frontera_paso_fronterizo_colombia_zonas_especiales } from './iva-frontera-paso-fronterizo-colombia-zonas-especiales';
 import { compute as compute__iva_honorarios_chile_10_porciento_retencion } from './iva-honorarios-chile-10-porciento-retencion';
@@ -1827,6 +1861,7 @@ import { compute as compute__iva_ieps_cigarros_bebidas_azucar_mexico } from './i
 import { compute as compute__iva_importacion_chile_aduanas_tope_30_dolares } from './iva-importacion-chile-aduanas-tope-30-dolares';
 import { ivaIncluidoNetoDiscriminar } from './iva-incluido-neto-discriminar';
 import { compute as compute__iva_mexico_16_tasa_cero_exenta_frontera } from './iva-mexico-16-tasa-cero-exenta-frontera';
+import { compute as compute__iva_mexico_frontera_norte_sur_8_vs_16_comparador } from './iva-mexico-frontera-norte-sur-8-vs-16-comparador';
 import { ivaPaisesLatam } from './iva-paises-latam';
 import { ivaSaldoFavorContraRi } from './iva-saldo-favor-contra-ri';
 import { compute as compute__ivf_due_date_calculator } from './ivf-due-date-calculator';
@@ -1908,6 +1943,7 @@ import { compute as compute__licencia_medica_chile_pago_subsidio_isapre_fonasa }
 import { compute as compute__licencia_paternidad_colombia_2_semanas } from './licencia-paternidad-colombia-2-semanas';
 import { compute as compute__licencia_paternidad_mexico_5_dias_laborables } from './licencia-paternidad-mexico-5-dias-laborables';
 import { licenciaPorMaternidadPaternidadDias } from './licencia-por-maternidad-paternidad-dias';
+import { compute as compute__licencia_vacaciones_cct_comercio_empleados_comercio_argentina_2026 } from './licencia-vacaciones-cct-comercio-empleados-comercio-argentina-2026';
 import { licenciamentoVeiculos } from './licenciamento-veiculos';
 import { ligaMxLiguilla } from './liga-mx-liguilla';
 import { limpiezaFrecuenciaAmbiente } from './limpieza-frecuencia-ambiente';
@@ -2018,6 +2054,7 @@ import { mediaPonderada } from './media-ponderada';
 import { compute as compute__meditacion_minutos_ansiedad_cortisol_impacto } from './meditacion-minutos-ansiedad-cortisol-impacto';
 import { meditacionMinutosBeneficio } from './meditacion-minutos-beneficio';
 import { megapixelesImpresionTamano } from './megapixeles-impresion-tamano';
+import { compute as compute__mei_brasil_limite_faturamento_2026_categoria } from './mei-brasil-limite-faturamento-2026-categoria';
 import { meiDasMensalComercio } from './mei-das-mensal-comercio';
 import { meiDasMensalServicos } from './mei-das-mensal-servicos';
 import { meiDasMensalTransporte } from './mei-das-mensal-transporte';
@@ -2042,6 +2079,7 @@ import { metaAhorroMensual } from './meta-ahorro-mensual';
 import { metodoFeynmanTiempo } from './metodo-feynman-tiempo';
 import { metrosCuadradosHabitacion } from './metros-cuadrados-habitacion';
 import { metrosHectareas } from './metros-hectareas';
+import { compute as compute__metros_lineales_metros_cuadrados_rollos_papel_tela } from './metros-lineales-metros-cuadrados-rollos-papel-tela';
 import { mezclaAudioHeadroomDb } from './mezcla-audio-headroom-db';
 import { compute as compute__mibor_euribor_historico_hipoteca_revision } from './mibor-euribor-historico-hipoteca-revision';
 import { midjourneyStableDiffusionCreditsMensual } from './midjourney-stable-diffusion-credits-mensual';
@@ -2188,6 +2226,7 @@ import { compute as compute__pagare_bancario_vs_cete_rendimiento_mexico } from '
 import { compute as compute__pago_anticipado_credito_hipotecario_chile_ahorro_uf } from './pago-anticipado-credito-hipotecario-chile-ahorro-uf';
 import { compute as compute__pago_anticipado_credito_hipotecario_colombia_ahorro_intereses } from './pago-anticipado-credito-hipotecario-colombia-ahorro-intereses';
 import { compute as compute__pago_electronico_chile_transbank_comisiones_onepay_mach } from './pago-electronico-chile-transbank-comisiones-onepay-mach';
+import { compute as compute__pago_proporcional_pareja_ingreso_gastos_compartidos } from './pago-proporcional-pareja-ingreso-gastos-compartidos';
 import { palabrasDiaParaNivel } from './palabras-dia-para-nivel';
 import { palabrasPorMinutoLecturaNivel } from './palabras-por-minuto-lectura-nivel';
 import { palabrasPorPagina } from './palabras-por-pagina';
@@ -2260,6 +2299,7 @@ import { compute as compute__pension_colombia_2026_edad_semanas_cotizadas } from
 import { compute as compute__pension_de_alimentos_mora_chile_registro_deudores } from './pension-de-alimentos-mora-chile-registro-deudores';
 import { pensionImss1997 } from './pension-imss-1997';
 import { compute as compute__pension_imss_modalidad_40_mexico_aportacion } from './pension-imss-modalidad-40-mexico-aportacion';
+import { compute as compute__pension_invalidez_anses_no_contributiva_2026_cuantia } from './pension-invalidez-anses-no-contributiva-2026-cuantia';
 import { compute as compute__pension_jubilacion_chile_edad_aportes_2026 } from './pension-jubilacion-chile-edad-aportes-2026';
 import { compute as compute__pension_no_contributiva_jubilacion_invalidez_espana } from './pension-no-contributiva-jubilacion-invalidez-espana';
 import { compute as compute__pension_rais_vs_prima_media_colombia } from './pension-rais-vs-prima-media-colombia';
@@ -2306,6 +2346,7 @@ import { pesoIdealDachshundSalchicha } from './peso-ideal-dachshund-salchicha';
 import { pesoIdealEmbarazoImcPrevio } from './peso-ideal-embarazo-imc-previo';
 import { pesoIdealFormula } from './peso-ideal-formula';
 import { pesoIdealFormulaLorentzDevine } from './peso-ideal-formula-lorentz-devine';
+import { compute as compute__peso_ideal_formulas_comparativa_broca_devine_robinson } from './peso-ideal-formulas-comparativa-broca-devine-robinson';
 import { pesoIdealFutbolista } from './peso-ideal-futbolista';
 import { pesoIdealGato } from './peso-ideal-gato';
 import { pesoIdealGatoBritanico } from './peso-ideal-gato-britanico';
@@ -2432,6 +2473,8 @@ import { precioMinimoVenta } from './precio-minimo-venta';
 import { precioPorKiloLitro } from './precio-por-kilo-litro';
 import { precioPromedioCompraCripto } from './precio-promedio-compra-cripto';
 import { precioPsicologico999 } from './precio-psicologico-9-99';
+import { compute as compute__precio_remis_por_km_argentina_2026_cordoba_rosario_buenos_aires } from './precio-remis-por-km-argentina-2026-cordoba-rosario-buenos-aires';
+import { compute as compute__precio_uber_cabify_didi_comparador_argentina_2026 } from './precio-uber-cabify-didi-comparador-argentina-2026';
 import { precioValorLibro } from './precio-valor-libro';
 import { precioVentaProductoMarkup } from './precio-venta-producto-markup';
 import { predialCdmxMexico } from './predial-cdmx-mexico';
@@ -2439,6 +2482,7 @@ import { compute as compute__predial_cdmx_monterrey_guadalajara_2026 } from './p
 import { prediccion5k10k } from './prediccion-5k-10k';
 import { prediccionMaraton } from './prediccion-maraton';
 import { preescolarJardinCuotaMensualComparativaPaises } from './preescolar-jardin-cuota-mensual-comparativa-paises';
+import { compute as compute__pregnancy_weeks_by_ultrasound_crl_measurement } from './pregnancy-weeks-by-ultrasound-crl-measurement';
 import { compute as compute__pregnancy_weeks_to_months_converter } from './pregnancy-weeks-to-months-converter';
 import { premiosChampionsLeagueRonda } from './premios-champions-league-ronda';
 import { premiosCopaAmerica } from './premios-copa-america';
@@ -2453,6 +2497,7 @@ import { presionArterial } from './presion-arterial';
 import { presionArterialClasificacionOms } from './presion-arterial-clasificacion-oms';
 import { presionArterialRango } from './presion-arterial-rango';
 import { presionArterialTablaNormalHipertension } from './presion-arterial-tabla-normal-hipertension';
+import { compute as compute__presion_arterial_tension_categorias_oms_2026 } from './presion-arterial-tension-categorias-oms-2026';
 import { presionAtmosfericaAltitud } from './presion-atmosferica-altitud';
 import { presionHidrostatica } from './presion-hidrostatica';
 import { presionHidrostaticaProfundidad } from './presion-hidrostatica-profundidad';
@@ -2568,7 +2613,9 @@ import { proyeccion21kDesde10kCameron } from './proyeccion-21k-desde-10k-cameron
 import { proyeccionVentas } from './proyeccion-ventas';
 import { ptuMexico } from './ptu-mexico';
 import { compute as compute__ptu_reparto_utilidades_mexico_10_porcentaje } from './ptu-reparto-utilidades-mexico-10-porcentaje';
+import { compute as compute__puam_pension_universal_adulto_mayor_anses_2026 } from './puam-pension-universal-adulto-mayor-anses-2026';
 import { pubalgiaRecuperacion } from './pubalgia-recuperacion';
+import { compute as compute__puente_feriado_fines_semana_largos_argentina_2026 } from './puente-feriado-fines-semana-largos-argentina-2026';
 import { pulgadasCentimetros } from './pulgadas-centimetros';
 import { pulsoArterialOximetriaSaturacionNormal } from './pulso-arterial-oximetria-saturacion-normal';
 import { puntajeApgar } from './puntaje-apgar';
@@ -2869,6 +2916,7 @@ import { streamerGananciasTwitchYoutubeViewersAfiliacion } from './streamer-gana
 import { streamerSetupPresupuesto } from './streamer-setup-presupuesto';
 import { compute as compute__streaming_vs_batch_llm_latencia_costo_tradeoff } from './streaming-vs-batch-llm-latencia-costo-tradeoff';
 import { compute as compute__student_loan_payoff_time_calculator } from './student-loan-payoff-time-calculator';
+import { compute as compute__stylecraze_peso_ideal_women_formula_altura } from './stylecraze-peso-ideal-women-formula-altura';
 import { subnettingMascaraRedCidr } from './subnetting-mascara-red-cidr';
 import { compute as compute__subsidio_mayores_52_anos_espana_cuantia_meses } from './subsidio-mayores-52-anos-espana-cuantia-meses';
 import { compute as compute__subsidio_vivienda_mi_casa_ya_colombia_2026 } from './subsidio-vivienda-mi-casa-ya-colombia-2026';
@@ -2962,6 +3010,7 @@ import { compute as compute__tarifa_electrica_colombia_mes_recibo_codensa } from
 import { compute as compute__tarifa_electrica_distribuidoras_chile_bt1_bt2_bt3 } from './tarifa-electrica-distribuidoras-chile-bt1-bt2-bt3';
 import { compute as compute__tarifa_electrica_edenor_edesur_segmentacion_n1_n2_n3 } from './tarifa-electrica-edenor-edesur-segmentacion-n1-n2-n3';
 import { tarifaFreelanceDolarExperienciaHora } from './tarifa-freelance-dolar-experiencia-hora';
+import { compute as compute__tarifa_freelance_hora_argentina_cliente_exterior_deel } from './tarifa-freelance-hora-argentina-cliente-exterior-deel';
 import { compute as compute__tarifa_gas_metrogas_naturgy_cuadro_2026 } from './tarifa-gas-metrogas-naturgy-cuadro-2026';
 import { compute as compute__tarifa_vuelo_domestico_chile_impuestos_tasas_aeropuerto } from './tarifa-vuelo-domestico-chile-impuestos-tasas-aeropuerto';
 import { tarjetaAlimentarMontoHijos2026 } from './tarjeta-alimentar-monto-hijos-2026';
@@ -3076,6 +3125,7 @@ import { tiempoVueloEstimadoDistancia } from './tiempo-vuelo-estimado-distancia'
 import { tiemposCoccionVerdurasAlVaporHervido } from './tiempos-coccion-verduras-al-vapor-hervido';
 import { tierraCanteroM3Litros } from './tierra-cantero-m3-litros';
 import { tierraMacetaLitros } from './tierra-maceta-litros';
+import { compute as compute__tiktok_ads_cpm_presupuesto_conversion_2026 } from './tiktok-ads-cpm-presupuesto-conversion-2026';
 import { tiktokCreatorFundIngreso } from './tiktok-creator-fund-ingreso';
 import { tiktokCreatorFundViewsIngresosArgentina } from './tiktok-creator-fund-views-ingresos-argentina';
 import { tiktokDuracionOptimaVideo } from './tiktok-duracion-optima-video';
@@ -3184,6 +3234,7 @@ import { valorPaginaVistaRpm } from './valor-pagina-vista-rpm';
 import { valorPresenteBonoCuponZeroTir } from './valor-presente-bono-cupon-zero-tir';
 import { valorPresenteNetoVpn } from './valor-presente-neto-vpn';
 import { valuacionFiscalAutomotorProvincia } from './valuacion-fiscal-automotor-provincia';
+import { compute as compute__valuacion_fiscal_neuquen_2026_impuesto_inmobiliario } from './valuacion-fiscal-neuquen-2026-impuesto-inmobiliario';
 import { valuacionStartupMetodoBerkus } from './valuacion-startup-metodo-berkus';
 import { variantesIdiomaEspanolPortuguesInglesRegiones } from './variantes-idioma-espanol-portugues-ingles-regiones';
 import { vectorSumaRestaMagnitud } from './vector-suma-resta-magnitud';
@@ -3276,6 +3327,7 @@ import { vueloEmisionesCo2Pasajero } from './vuelo-emisiones-co2-pasajero';
 import { waccCostoCapital } from './wacc-costo-capital';
 import { walletHardwareLedgerTrezorAmortizacionAnos } from './wallet-hardware-ledger-trezor-amortizacion-anos';
 import { wattsCiclismoFtpUmbralTest } from './watts-ciclismo-ftp-umbral-test';
+import { compute as compute__watts_consumo_electrico_aparato_hora } from './watts-consumo-electrico-aparato-hora';
 import { wattsFuenteAlimentacionPc } from './watts-fuente-alimentacion-pc';
 import { compute } from './wedding-budget-allocation-calculator';
 import { weeklyReviewGtdAllenTiempo6090min } from './weekly-review-gtd-allen-tiempo-60-90min';
@@ -3376,6 +3428,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'agua-por-invitado-fiesta': aguaPorInvitadoFiesta,
   'agua-riego-plantas-dia': aguaRiegoPlantasDia,
   'aguinaldo': aguinaldo,
+  'aguinaldo-empleado-mensual-quincenal-vs-quincena': compute__aguinaldo_empleado_mensual_quincenal_vs_quincena,
   'aguinaldo-mexico': aguinaldoMexico,
   'aguinaldo-mexico-2026-15-dias-tope-30': compute__aguinaldo_mexico_2026_15_dias_tope_30,
   'aguinaldo-mexico-neto': aguinaldoMexicoNeto,
@@ -3509,6 +3562,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'asado-por-invitado-kg-carne': asadoPorInvitadoKgCarne,
   'asignacion-desempleo-seguro-prestacion-anses': asignacionDesempleoSeguroPrestacionAnses,
   'asignacion-discapacidad-pensionado': asignacionDiscapacidadPensionado,
+  'asignacion-familiar-anses-2026-tramos-ingreso': compute__asignacion_familiar_anses_2026_tramos_ingreso,
   'asignacion-familiar-chile-2026-tramos-renta': compute__asignacion_familiar_chile_2026_tramos_renta,
   'asignacion-familiar-empleado-registrado-anses': asignacionFamiliarEmpleadoRegistradoAnses,
   'asignacion-familiar-hijo-anses-tramo': asignacionFamiliarHijoAnsesTramo,
@@ -3550,6 +3604,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'azucares-anadidos-diarios-oms-mg-gramos': azucaresAnadidosDiariosOmsMgGramos,
   'azulejos-baldosas-metros-cuadrados-cantidad': azulejosBaldosasMetrosCuadradosCantidad,
   'baby-feeding-amount-by-age-calculator': compute__baby_feeding_amount_by_age_calculator,
+  'baby-shower-budget-guests-food-decoration': compute__baby_shower_budget_guests_food_decoration,
   'backtest-estrategia-trading-sharpe-ratio': backtestEstrategiaTradingSharpeRatio,
   'baja-auto-desarme-chatarra-fin-vida': bajaAutoDesarmeChatarraFinVida,
   'baja-laboral-incapacidad-temporal-espana-cuantia': compute__baja_laboral_incapacidad_temporal_espana_cuantia,
@@ -3598,6 +3653,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'bitcoin-halving-countdown': bitcoinHalvingCountdown,
   'bitcoin-mining-profit': bitcoinMiningProfit,
   'bitcoin-profit-loss-calculator': compute__bitcoin_profit_loss_calculator,
+  'bits-bytes-kilobytes-megabytes-conversion': compute__bits_bytes_kilobytes_megabytes_conversion,
   'bjj-cinturon-grados-tiempo-promedio': bjjCinturonGradosTiempoPromedio,
   'black-friday-descuento-real': blackFridayDescuentoReal,
   'black-scholes-opcion-call-put': blackScholesOpcionCallPut,
@@ -3614,6 +3670,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'bolsa-familia-valor': bolsaFamiliaValor,
   'bomba-calor-aerotermia-espana-coste-instalacion': compute__bomba_calor_aerotermia_espana_coste_instalacion,
   'bombeo-cisterna-tanque-watts': bombeoCisternaTanqueWatts,
+  'bono-anses-jubilados-junio-2026-aumento-mensual': compute__bono_anses_jubilados_junio_2026_aumento_mensual,
   'bono-cumplimiento-laboral-chile-pago-empresa': compute__bono_cumplimiento_laboral_chile_pago_empresa,
   'bono-electrico-chile-subsidio-cuenta-electrica': compute__bono_electrico_chile_subsidio_cuenta_electrica,
   'bono-hambre-cero-colombia-renta-ciudadana': compute__bono_hambre_cero_colombia_renta_ciudadana,
@@ -3713,6 +3770,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calorias-lactancia-produccion-leche': caloriasLactanciaProduccionLeche,
   'calorias-mediocampista': caloriasMediocampista,
   'calorias-natacion': caloriasNatacion,
+  'calorias-natacion-estilos-distancia-velocidad': compute__calorias_natacion_estilos_distancia_velocidad,
   'calorias-padel': caloriasPadel,
   'calorias-palta-aguacate-completa-mitad': caloriasPaltaAguacateCompletaMitad,
   'calorias-pan-blanco-integral-porcion': caloriasPanBlancoIntegralPorcion,
@@ -3886,10 +3944,15 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'comida-yorkshire-terrier-porcion-diaria-edad': compute__comida_yorkshire_terrier_porcion_diaria_edad,
   'comision-amazon-fba-producto': comisionAmazonFbaProducto,
   'comision-broker-cocos-iol-bull-comparativa': comisionBrokerCocosIolBullComparativa,
+  'comision-doordash-rappi-pedidosya-restaurante-2026': compute__comision_doordash_rappi_pedidosya_restaurante_2026,
   'comision-ebay-venta': comisionEbayVenta,
   'comision-etsy-venta-handmade': comisionEtsyVentaHandmade,
   'comision-inmobiliaria-alquiler-caba-pba': comisionInmobiliariaAlquilerCabaPba,
+  'comision-mercadolibre-2026-vendedor-publicacion': compute__comision_mercadolibre_2026_vendedor_publicacion,
   'comision-representante-fifa': comisionRepresentanteFifa,
+  'comision-shopify-pesos-argentinos-vs-tienda-nube': compute__comision_shopify_pesos_argentinos_vs_tienda_nube,
+  'comision-tienda-nube-2026-monto-mensual-checkout': compute__comision_tienda_nube_2026_monto_mensual_checkout,
+  'comision-uber-driver-ganancia-real-argentina-2026': compute__comision_uber_driver_ganancia_real_argentina_2026,
   'comision-uber-eats-glovo-rider': comisionUberEatsGlovoRider,
   'comision-venta': comisionVenta,
   'comparador-tarjeta-debito-colombia-2026-comisiones': compute__comparador_tarjeta_debito_colombia_2026_comisiones,
@@ -3950,21 +4013,25 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'convenio-comercio-espana-sueldo-categoria-2026': compute__convenio_comercio_espana_sueldo_categoria_2026,
   'convenio-hosteleria-espana-sueldo-2026-categoria': compute__convenio_hosteleria_espana_sueldo_2026_categoria,
   'conversacion-intercambio-idioma-horas-semana': conversacionIntercambioIdiomaHorasSemana,
+  'conversion-atmosferas-pascales-bar': compute__conversion_atmosferas_pascales_bar,
   'conversion-base-decimal-binario-hexa': conversionBaseDecimalBinarioHexa,
   'conversion-bases': conversionBases,
   'conversion-btu-kcal-aire-acondicionado': conversionBtuKcalAireAcondicionado,
   'conversion-bytes-kb-mb-gb-tb': conversionBytesKbMbGbTb,
   'conversion-celsius-fahrenheit-kelvin': conversionCelsiusFahrenheitKelvin,
+  'conversion-celsius-fahrenheit-kelvin-rankine-temperatura': compute__conversion_celsius_fahrenheit_kelvin_rankine_temperatura,
   'conversion-colesterol-mg-mmol': conversionColesterolMgMmol,
   'conversion-cripto-ars': conversionCriptoArs,
   'conversion-cucharaditas-gramos-especias-sal': conversionCucharaditasGramosEspeciasSal,
   'conversion-cups-gramos-harina-azucar-aceite': conversionCupsGramosHarinaAzucarAceite,
   'conversion-fahrenheit-celsius-clima': conversionFahrenheitCelsiusClima,
+  'conversion-galon-litro-onzas-fluidas-cc': compute__conversion_galon_litro_onzas_fluidas_cc,
   'conversion-galon-litro-us-uk': conversionGalonLitroUsUk,
   'conversion-grados-radianes': conversionGradosRadianes,
   'conversion-grados-radianes-gradianes': conversionGradosRadianesGradianes,
   'conversion-hp-kw-caballos-kilowatts': conversionHpKwCaballosKilowatts,
   'conversion-kilo-libra-lb-kg-exacto': conversionKiloLibraLbKgExacto,
+  'conversion-libras-kilos-onzas-stone': compute__conversion_libras_kilos_onzas_stone,
   'conversion-litros-galones': conversionLitrosGalones,
   'conversion-medida-neumatico-radio-diametro': conversionMedidaNeumaticoRadioDiametro,
   'conversion-medidas-cocina': conversionMedidasCocina,
@@ -3978,6 +4045,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'conversion-porcentaje-fraccion-decimal': conversionPorcentajeFraccionDecimal,
   'conversion-ppm-mg-l-quimica-agua': conversionPpmMgLQuimicaAgua,
   'conversion-pulgada-centimetro-screen': conversionPulgadaCentimetroScreen,
+  'conversion-pulgadas-pies-cm-metros-altura': compute__conversion_pulgadas_pies_cm_metros_altura,
   'conversion-quintal-tonelada-kg-agro': conversionQuintalToneladaKgAgro,
   'conversion-radianes-grados-angulo': conversionRadianesGradosAngulo,
   'conversion-rate-ecommerce-benchmark': conversionRateEcommerceBenchmark,
@@ -4232,17 +4300,23 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'crossfit-fran-benchmark-tiempo-rx': crossfitFranBenchmarkTiempoRx,
   'cts-peru': ctsPeru,
   'cuadro-altura-colgar': cuadroAlturaColgar,
+  'cuantas-calorias-bicicleta-distancia-pendiente-perfil': compute__cuantas_calorias_bicicleta_distancia_pendiente_perfil,
   'cuantas-materias-faltan': cuantasMateriassFaltan,
+  'cuanto-cobrar-traduccion-palabra-2026-espanol-ingles': compute__cuanto_cobrar_traduccion_palabra_2026_espanol_ingles,
   'cuanto-cobro-por-hora-freelance': cuantoCobroPorHoraFreelance,
   'cuanto-falta-aguinaldo-junio-diciembre': cuantoFaltaAguinaldoJunioDiciembre,
   'cuanto-falta-black-friday-cyber-monday': cuantoFaltaBlackFridayCyberMonday,
   'cuanto-falta-cumpleanos-fecha-especifica': cuantoFaltaCumpleanosFechaEspecifica,
+  'cuanto-falta-cumpleanos-fecha-personalizada-eventos': compute__cuanto_falta_cumpleanos_fecha_personalizada_eventos,
   'cuanto-falta-dia-madre-padre-argentina': cuantoFaltaDiaMadrePadreArgentina,
   'cuanto-falta-eleccion-presidencial-2027': cuantoFaltaEleccionPresidencial2027,
+  'cuanto-falta-feriado-proximo-argentina-2026': compute__cuanto_falta_feriado_proximo_argentina_2026,
   'cuanto-falta-fin-curso-escolar-marzo': cuantoFaltaFinCursoEscolarMarzo,
+  'cuanto-falta-fin-de-año-2026-dias-horas-segundos': compute__cuanto_falta_fin_de_año_2026_dias_horas_segundos,
   'cuanto-falta-grito-independencia-mexico': cuantoFaltaGritoIndependenciaMexico,
   'cuanto-falta-jubilarse-jubilacion-edad-aportes': cuantoFaltaJubilarseJubilacionEdadAportes,
   'cuanto-falta-mundial-fifa-2026-2030': cuantoFaltaMundialFifa20262030,
+  'cuanto-falta-navidad-2026-dias-semanas-meses': compute__cuanto_falta_navidad_2026_dias_semanas_meses,
   'cuanto-falta-navidad-ano-nuevo': cuantoFaltaNavidadAnoNuevo,
   'cuanto-falta-olimpiadas-paris-2028-los-angeles': cuantoFaltaOlimpiadasParis2028LosAngeles,
   'cuanto-falta-pago-monotributo-ingreso': cuantoFaltaPagoMonotributoIngreso,
@@ -4253,6 +4327,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuanto-gastar-regalo-novia-aniversario': cuantoGastarRegaloNoviaAniversario,
   'cuanto-gasto-en-delivery': cuantoGastoEnDelivery,
   'cuanto-vale-mi-tiempo': cuantoValeMiTiempo,
+  'cuanto-vale-mi-tiempo-hora-anual-salario': compute__cuanto_vale_mi_tiempo_hora_anual_salario,
   'cuantos-dias-vacaciones-laborales-antiguedad': cuantosDiasVacacionesLaboralesAntiguedad,
   'cuantos-dias-vivido-persona-fecha-nacimiento': cuantosDiasVividoPersonaFechaNacimiento,
   'cuantos-feriados-restan-ano-argentina': cuantosFeriadosRestanAnoArgentina,
@@ -4260,6 +4335,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuarta-categoria-empleado-empresa-argentina': cuartaCategoriaEmpleadoEmpresaArgentina,
   'cuenta-2-afp-chile-aporte-voluntario-rendimiento': compute__cuenta_2_afp_chile_aporte_voluntario_rendimiento,
   'cuenta-afc-ahorro-fomento-construccion-colombia': compute__cuenta_afc_ahorro_fomento_construccion_colombia,
+  'cuenta-crecimiento-aporte-mensual-vs-tasa-anual': compute__cuenta_crecimiento_aporte_mensual_vs_tasa_anual,
   'cuenta-de-ahorro-mexico-rendimiento-cetes-directo-nu-mercado-pago': compute__cuenta_de_ahorro_mexico_rendimiento_cetes_directo_nu_mercado_pago,
   'cuenta-regresiva': cuentaRegresiva,
   'cuenta-regresiva-fecha': cuentaRegresivaFecha,
@@ -4447,6 +4523,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'dolar-soja-exportador-diferencia': dolarSojaExportadorDiferencia,
   'dollar-cost-averaging-cripto': dollarCostAveragingCripto,
   'domingos-adviento-navidad': domingosAdvientoNavidad,
+  'domingos-restantes-navidad-2026-fin-de-año': compute__domingos_restantes_navidad_2026_fin_de_año,
   'domotica-alexa-google-suscripcion-mensual': domoticaAlexaGoogleSuscripcionMensual,
   'dosis-acido-folico': dosisAcidoFolico,
   'dosis-antiparasitario': dosisAntiparasitario,
@@ -4461,6 +4538,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'drenaje-grava-maceta': drenajeGravaMaceta,
   'dso': dso,
   'dsr-descanso-semanal': dsrDescansoSemanal,
+  'due-date-by-conception-date-pregnancy-weeks': compute__due_date_by_conception_date_pregnancy_weeks,
+  'due-date-calendar-week-by-week-trimester-milestones': compute__due_date_calendar_week_by_week_trimester_milestones,
   'duolingo-streak-progresion-diaria-idioma': duolingoStreakProgresionDiariaIdioma,
   'duolingo-tiempo-dia-nivel-mcer-progreso': duolingoTiempoDiaNivelMcerProgreso,
   'duolingo-xp-objetivo': duolingoXpObjetivo,
@@ -4487,6 +4566,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'edad-gato-humano-formula-anos': edadGatoHumanoFormulaAnos,
   'edad-gestacional-corregida-prematuro': edadGestacionalCorregidaPrematuro,
   'edad-gestacional-ecografia-corona-rabadilla': compute__edad_gestacional_ecografia_corona_rabadilla,
+  'edad-gestacional-perro-gato-camada-fecha-parto': compute__edad_gestacional_perro_gato_camada_fecha_parto,
   'edad-hamster': edadHamster,
   'edad-humana-por-raza-perro': edadHumanaPorRazaPerro,
   'edad-humana-tortuga': edadHumanaTortuga,
@@ -4496,6 +4576,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'edad-metabolica': edadMetabolica,
   'edad-optima-aprender-idioma-ninos-adultos': edadOptimaAprenderIdiomaNinosAdultos,
   'edad-perro': edadPerro,
+  'edad-perro-gato-anos-humanos-tabla-2026-actualizada': compute__edad_perro_gato_anos_humanos_tabla_2026_actualizada,
   'edad-perro-humano': edadPerroHumano,
   'edad-perro-humano-raza-tamano': edadPerroHumanoRazaTamano,
   'edad-planeta': edadPlaneta,
@@ -4535,6 +4616,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'emisiones-enviar-email-adjuntos': emisionesEnviarEmailAdjuntos,
   'empanadas-docena-por-invitado-evento-estimacion': compute__empanadas_docena_por_invitado_evento_estimacion,
   'empanadas-por-invitado-juntada': empanadasPorInvitadoJuntada,
+  'empanadas-por-persona-evento-asado-cumple': compute__empanadas_por_persona_evento_asado_cumple,
   'employer-of-record-eor-costo-mes-pais': employerOfRecordEorCostoMesPais,
   'emprendedor-pyme-chile-puesta-marcha-1-dia': compute__emprendedor_pyme_chile_puesta_marcha_1_dia,
   'empuje-arquimedes-volumen': empujeArquimedesVolumen,
@@ -4666,6 +4748,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'fertilidad-tiempo-concepcion-edad-mujer': fertilidadTiempoConcepcionEdadMujer,
   'fertilizante-npk-dosis': fertilizanteNpkDosis,
   'festa-churrasco-gramas-br': festaChurrascoGramasBr,
+  'fetal-weight-by-week-percentile-hadlock': compute__fetal_weight_by_week_percentile_hadlock,
   'ffmi': ffmi,
   'fgts-compra-imovel': fgtsCompraImovel,
   'fgts-multa-40-rescisao': compute__fgts_multa_40_rescisao,
@@ -4741,6 +4824,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'frecuencia-cardiaca': frecuenciaCardiaca,
   'frecuencia-cardiaca-entrenamiento': frecuenciaCardiacaEntrenamiento,
   'frecuencia-cardiaca-maxima-edad': frecuenciaCardiacaMaximaEdad,
+  'frecuencia-cardiaca-reposo-categorias-deportistas-edad': compute__frecuencia_cardiaca_reposo_categorias_deportistas_edad,
   'frecuencia-cardiaca-zonas-entrenamiento-karvonen': frecuenciaCardiacaZonasEntrenamientoKarvonen,
   'frecuencia-cardiaca-zonas-karvonen': compute__frecuencia_cardiaca_zonas_karvonen,
   'frecuencia-corte-filtro-rc': frecuenciaCorteFiltroRc,
@@ -5059,6 +5143,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'inss-autonomo-individual': inssAutonomoIndividual,
   'inss-patronal-empresa': inssPatronalEmpresa,
   'instagram-ads-cpm-nicho': instagramAdsCpmNicho,
+  'instagram-ads-presupuesto-cpm-cpr-roi-2026': compute__instagram_ads_presupuesto_cpm_cpr_roi_2026,
   'instagram-carrousel-slides-optimas': instagramCarrouselSlidesOptimas,
   'instagram-hashtags-optimos': instagramHashtagsOptimos,
   'instagram-influencer-pago-historia': instagramInfluencerPagoHistoria,
@@ -5139,6 +5224,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'iva-bienes-exentos-excluidos-colombia-2026': compute__iva_bienes_exentos_excluidos_colombia_2026,
   'iva-chile-19-porciento-tarifa-general': compute__iva_chile_19_porciento_tarifa_general,
   'iva-colombia-19-porciento-tarifa-general': compute__iva_colombia_19_porciento_tarifa_general,
+  'iva-espana-2026-21-tipo-general-formula': compute__iva_espana_2026_21_tipo_general_formula,
   'iva-espana-21-10-4-categorias': compute__iva_espana_21_10_4_categorias,
   'iva-frontera-paso-fronterizo-colombia-zonas-especiales': compute__iva_frontera_paso_fronterizo_colombia_zonas_especiales,
   'iva-honorarios-chile-10-porciento-retencion': compute__iva_honorarios_chile_10_porciento_retencion,
@@ -5146,6 +5232,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'iva-importacion-chile-aduanas-tope-30-dolares': compute__iva_importacion_chile_aduanas_tope_30_dolares,
   'iva-incluido-neto-discriminar': ivaIncluidoNetoDiscriminar,
   'iva-mexico-16-tasa-cero-exenta-frontera': compute__iva_mexico_16_tasa_cero_exenta_frontera,
+  'iva-mexico-frontera-norte-sur-8-vs-16-comparador': compute__iva_mexico_frontera_norte_sur_8_vs_16_comparador,
   'iva-paises-latam': ivaPaisesLatam,
   'iva-saldo-favor-contra-ri': ivaSaldoFavorContraRi,
   'ivf-due-date-calculator': compute__ivf_due_date_calculator,
@@ -5227,6 +5314,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'licencia-paternidad-colombia-2-semanas': compute__licencia_paternidad_colombia_2_semanas,
   'licencia-paternidad-mexico-5-dias-laborables': compute__licencia_paternidad_mexico_5_dias_laborables,
   'licencia-por-maternidad-paternidad-dias': licenciaPorMaternidadPaternidadDias,
+  'licencia-vacaciones-cct-comercio-empleados-comercio-argentina-2026': compute__licencia_vacaciones_cct_comercio_empleados_comercio_argentina_2026,
   'licenciamento-veiculos': licenciamentoVeiculos,
   'liga-mx-liguilla': ligaMxLiguilla,
   'limpieza-frecuencia-ambiente': limpiezaFrecuenciaAmbiente,
@@ -5337,6 +5425,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'meditacion-minutos-ansiedad-cortisol-impacto': compute__meditacion_minutos_ansiedad_cortisol_impacto,
   'meditacion-minutos-beneficio': meditacionMinutosBeneficio,
   'megapixeles-impresion-tamano': megapixelesImpresionTamano,
+  'mei-brasil-limite-faturamento-2026-categoria': compute__mei_brasil_limite_faturamento_2026_categoria,
   'mei-das-mensal-comercio': meiDasMensalComercio,
   'mei-das-mensal-servicos': meiDasMensalServicos,
   'mei-das-mensal-transporte': meiDasMensalTransporte,
@@ -5361,6 +5450,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'metodo-feynman-tiempo': metodoFeynmanTiempo,
   'metros-cuadrados-habitacion': metrosCuadradosHabitacion,
   'metros-hectareas': metrosHectareas,
+  'metros-lineales-metros-cuadrados-rollos-papel-tela': compute__metros_lineales_metros_cuadrados_rollos_papel_tela,
   'mezcla-audio-headroom-db': mezclaAudioHeadroomDb,
   'mibor-euribor-historico-hipoteca-revision': compute__mibor_euribor_historico_hipoteca_revision,
   'midjourney-stable-diffusion-credits-mensual': midjourneyStableDiffusionCreditsMensual,
@@ -5507,6 +5597,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'pago-anticipado-credito-hipotecario-chile-ahorro-uf': compute__pago_anticipado_credito_hipotecario_chile_ahorro_uf,
   'pago-anticipado-credito-hipotecario-colombia-ahorro-intereses': compute__pago_anticipado_credito_hipotecario_colombia_ahorro_intereses,
   'pago-electronico-chile-transbank-comisiones-onepay-mach': compute__pago_electronico_chile_transbank_comisiones_onepay_mach,
+  'pago-proporcional-pareja-ingreso-gastos-compartidos': compute__pago_proporcional_pareja_ingreso_gastos_compartidos,
   'palabras-dia-para-nivel': palabrasDiaParaNivel,
   'palabras-por-minuto-lectura-nivel': palabrasPorMinutoLecturaNivel,
   'palabras-por-pagina': palabrasPorPagina,
@@ -5579,6 +5670,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'pension-de-alimentos-mora-chile-registro-deudores': compute__pension_de_alimentos_mora_chile_registro_deudores,
   'pension-imss-1997': pensionImss1997,
   'pension-imss-modalidad-40-mexico-aportacion': compute__pension_imss_modalidad_40_mexico_aportacion,
+  'pension-invalidez-anses-no-contributiva-2026-cuantia': compute__pension_invalidez_anses_no_contributiva_2026_cuantia,
   'pension-jubilacion-chile-edad-aportes-2026': compute__pension_jubilacion_chile_edad_aportes_2026,
   'pension-no-contributiva-jubilacion-invalidez-espana': compute__pension_no_contributiva_jubilacion_invalidez_espana,
   'pension-rais-vs-prima-media-colombia': compute__pension_rais_vs_prima_media_colombia,
@@ -5625,6 +5717,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'peso-ideal-embarazo-imc-previo': pesoIdealEmbarazoImcPrevio,
   'peso-ideal-formula': pesoIdealFormula,
   'peso-ideal-formula-lorentz-devine': pesoIdealFormulaLorentzDevine,
+  'peso-ideal-formulas-comparativa-broca-devine-robinson': compute__peso_ideal_formulas_comparativa_broca_devine_robinson,
   'peso-ideal-futbolista': pesoIdealFutbolista,
   'peso-ideal-gato': pesoIdealGato,
   'peso-ideal-gato-britanico': pesoIdealGatoBritanico,
@@ -5751,6 +5844,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'precio-por-kilo-litro': precioPorKiloLitro,
   'precio-promedio-compra-cripto': precioPromedioCompraCripto,
   'precio-psicologico-9-99': precioPsicologico999,
+  'precio-remis-por-km-argentina-2026-cordoba-rosario-buenos-aires': compute__precio_remis_por_km_argentina_2026_cordoba_rosario_buenos_aires,
+  'precio-uber-cabify-didi-comparador-argentina-2026': compute__precio_uber_cabify_didi_comparador_argentina_2026,
   'precio-valor-libro': precioValorLibro,
   'precio-venta-producto-markup': precioVentaProductoMarkup,
   'predial-cdmx-mexico': predialCdmxMexico,
@@ -5758,6 +5853,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'prediccion-5k-10k': prediccion5k10k,
   'prediccion-maraton': prediccionMaraton,
   'preescolar-jardin-cuota-mensual-comparativa-paises': preescolarJardinCuotaMensualComparativaPaises,
+  'pregnancy-weeks-by-ultrasound-crl-measurement': compute__pregnancy_weeks_by_ultrasound_crl_measurement,
   'pregnancy-weeks-to-months-converter': compute__pregnancy_weeks_to_months_converter,
   'premios-champions-league-ronda': premiosChampionsLeagueRonda,
   'premios-copa-america': premiosCopaAmerica,
@@ -5772,6 +5868,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'presion-arterial-clasificacion-oms': presionArterialClasificacionOms,
   'presion-arterial-rango': presionArterialRango,
   'presion-arterial-tabla-normal-hipertension': presionArterialTablaNormalHipertension,
+  'presion-arterial-tension-categorias-oms-2026': compute__presion_arterial_tension_categorias_oms_2026,
   'presion-atmosferica-altitud': presionAtmosfericaAltitud,
   'presion-hidrostatica': presionHidrostatica,
   'presion-hidrostatica-profundidad': presionHidrostaticaProfundidad,
@@ -5887,7 +5984,9 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'proyeccion-ventas': proyeccionVentas,
   'ptu-mexico': ptuMexico,
   'ptu-reparto-utilidades-mexico-10-porcentaje': compute__ptu_reparto_utilidades_mexico_10_porcentaje,
+  'puam-pension-universal-adulto-mayor-anses-2026': compute__puam_pension_universal_adulto_mayor_anses_2026,
   'pubalgia-recuperacion': pubalgiaRecuperacion,
+  'puente-feriado-fines-semana-largos-argentina-2026': compute__puente_feriado_fines_semana_largos_argentina_2026,
   'pulgadas-centimetros': pulgadasCentimetros,
   'pulso-arterial-oximetria-saturacion-normal': pulsoArterialOximetriaSaturacionNormal,
   'puntaje-apgar': puntajeApgar,
@@ -6188,6 +6287,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'streamer-setup-presupuesto': streamerSetupPresupuesto,
   'streaming-vs-batch-llm-latencia-costo-tradeoff': compute__streaming_vs_batch_llm_latencia_costo_tradeoff,
   'student-loan-payoff-time-calculator': compute__student_loan_payoff_time_calculator,
+  'stylecraze-peso-ideal-women-formula-altura': compute__stylecraze_peso_ideal_women_formula_altura,
   'subnetting-mascara-red-cidr': subnettingMascaraRedCidr,
   'subsidio-mayores-52-anos-espana-cuantia-meses': compute__subsidio_mayores_52_anos_espana_cuantia_meses,
   'subsidio-vivienda-mi-casa-ya-colombia-2026': compute__subsidio_vivienda_mi_casa_ya_colombia_2026,
@@ -6281,6 +6381,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tarifa-electrica-distribuidoras-chile-bt1-bt2-bt3': compute__tarifa_electrica_distribuidoras_chile_bt1_bt2_bt3,
   'tarifa-electrica-edenor-edesur-segmentacion-n1-n2-n3': compute__tarifa_electrica_edenor_edesur_segmentacion_n1_n2_n3,
   'tarifa-freelance-dolar-experiencia-hora': tarifaFreelanceDolarExperienciaHora,
+  'tarifa-freelance-hora-argentina-cliente-exterior-deel': compute__tarifa_freelance_hora_argentina_cliente_exterior_deel,
   'tarifa-gas-metrogas-naturgy-cuadro-2026': compute__tarifa_gas_metrogas_naturgy_cuadro_2026,
   'tarifa-vuelo-domestico-chile-impuestos-tasas-aeropuerto': compute__tarifa_vuelo_domestico_chile_impuestos_tasas_aeropuerto,
   'tarjeta-alimentar-monto-hijos-2026': tarjetaAlimentarMontoHijos2026,
@@ -6395,6 +6496,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tiempos-coccion-verduras-al-vapor-hervido': tiemposCoccionVerdurasAlVaporHervido,
   'tierra-cantero-m3-litros': tierraCanteroM3Litros,
   'tierra-maceta-litros': tierraMacetaLitros,
+  'tiktok-ads-cpm-presupuesto-conversion-2026': compute__tiktok_ads_cpm_presupuesto_conversion_2026,
   'tiktok-creator-fund-ingreso': tiktokCreatorFundIngreso,
   'tiktok-creator-fund-views-ingresos-argentina': tiktokCreatorFundViewsIngresosArgentina,
   'tiktok-duracion-optima-video': tiktokDuracionOptimaVideo,
@@ -6503,6 +6605,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'valor-presente-bono-cupon-zero-tir': valorPresenteBonoCuponZeroTir,
   'valor-presente-neto-vpn': valorPresenteNetoVpn,
   'valuacion-fiscal-automotor-provincia': valuacionFiscalAutomotorProvincia,
+  'valuacion-fiscal-neuquen-2026-impuesto-inmobiliario': compute__valuacion_fiscal_neuquen_2026_impuesto_inmobiliario,
   'valuacion-startup-metodo-berkus': valuacionStartupMetodoBerkus,
   'variantes-idioma-espanol-portugues-ingles-regiones': variantesIdiomaEspanolPortuguesInglesRegiones,
   'vector-suma-resta-magnitud': vectorSumaRestaMagnitud,
@@ -6595,6 +6698,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'wacc-costo-capital': waccCostoCapital,
   'wallet-hardware-ledger-trezor-amortizacion-anos': walletHardwareLedgerTrezorAmortizacionAnos,
   'watts-ciclismo-ftp-umbral-test': wattsCiclismoFtpUmbralTest,
+  'watts-consumo-electrico-aparato-hora': compute__watts_consumo_electrico_aparato_hora,
   'watts-fuente-alimentacion-pc': wattsFuenteAlimentacionPc,
   'wedding-budget-allocation-calculator': compute,
   'weekly-review-gtd-allen-tiempo-60-90min': weeklyReviewGtdAllenTiempo6090min,
