@@ -577,7 +577,6 @@ import { compute as compute__comision_doordash_rappi_pedidosya_restaurante_2026 
 import { comisionEbayVenta } from './comision-ebay-venta';
 import { comisionEtsyVentaHandmade } from './comision-etsy-venta-handmade';
 import { comisionInmobiliariaAlquilerCabaPba } from './comision-inmobiliaria-alquiler-caba-pba';
-import { compute as compute__comision_mercadolibre_2026_vendedor_publicacion } from './comision-mercadolibre-2026-vendedor-publicacion';
 import { comisionRepresentanteFifa } from './comision-representante-fifa';
 import { compute as compute__comision_shopify_pesos_argentinos_vs_tienda_nube } from './comision-shopify-pesos-argentinos-vs-tienda-nube';
 import { compute as compute__comision_tienda_nube_2026_monto_mensual_checkout } from './comision-tienda-nube-2026-monto-mensual-checkout';
@@ -3948,7 +3947,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'comision-ebay-venta': comisionEbayVenta,
   'comision-etsy-venta-handmade': comisionEtsyVentaHandmade,
   'comision-inmobiliaria-alquiler-caba-pba': comisionInmobiliariaAlquilerCabaPba,
-  'comision-mercadolibre-2026-vendedor-publicacion': compute__comision_mercadolibre_2026_vendedor_publicacion,
   'comision-representante-fifa': comisionRepresentanteFifa,
   'comision-shopify-pesos-argentinos-vs-tienda-nube': compute__comision_shopify_pesos_argentinos_vs_tienda_nube,
   'comision-tienda-nube-2026-monto-mensual-checkout': compute__comision_tienda_nube_2026_monto_mensual_checkout,
