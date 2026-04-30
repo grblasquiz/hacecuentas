@@ -18,6 +18,17 @@
 	"observability": {
 		"enabled": true
 	},
+	// Worker Route para 410 Gone del sitemap del subdomain `www` se configura
+	// MANUALMENTE en CF Dashboard (no acá), porque el API token no tiene
+	// permisos sobre la zona `www.hacecuentas.com` (zona separada del apex).
+	//
+	// Setup manual:
+	//   CF Dashboard → www.hacecuentas.com → Workers Routes
+	//   Add: pattern = `www.hacecuentas.com/sitemap*`  → Worker = `hacecuentas`
+	//
+	// El middleware en `src/middleware.ts` devuelve 410 cuando esos requests
+	// llegan al Worker. Sin la route, el Edge de CF redirige 301 al apex
+	// antes que el Worker los vea.
 	// D1 database para formularios (newsletter, votes, error reports).
 	// Setup inicial (una vez):
 	//   1. npx wrangler d1 create hacecuentas-forms
