@@ -28,7 +28,7 @@ export const CLUSTERS: Record<string, Cluster> = {
       { slug: 'tracker-embarazo-semana-a-semana', label: 'Tracker semanal', icon: '📆' },
       { slug: 'calculadora-calorias-embarazo-trimestre', label: 'Calorías extra', icon: '🍎' },
       { slug: 'calculadora-aumento-peso-embarazo-imc-semana', label: 'Aumento peso', icon: '⚖️' },
-      { slug: 'calculadora-peso-ideal-bebe-mes-percentil', label: 'Peso bebé', icon: '👶' },
+      { slug: 'calculadora-percentil-peso-bebe-oms-edad-meses', label: 'Peso bebé', icon: '👶' },
       { slug: 'calculadora-indice-masa-corporal-pediatrico', label: 'IMC pediátrico', icon: '📊' },
       { slug: 'calculadora-calendario-vacunas-bebe-argentina-2026-completo', label: 'Vacunas bebé', icon: '💉' },
     ],
