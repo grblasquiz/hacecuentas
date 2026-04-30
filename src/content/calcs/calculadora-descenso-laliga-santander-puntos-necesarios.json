@@ -28,18 +28,83 @@
     "Comparás el ritmo actual con el umbral histórico de los 40 puntos."
   ],
   "fields": [
-    { "id": "puntosEquipo", "label": "Puntos actuales de tu equipo", "type": "number", "placeholder": "28", "default": 0, "min": 0, "max": 114, "step": 1, "help": "Puntos acumulados hasta hoy." },
-    { "id": "puntosDecimoSeptimo", "label": "Puntos del 17º (último salvado)", "type": "number", "placeholder": "32", "default": 0, "min": 0, "max": 114, "step": 1, "help": "Puntos del equipo en el puesto 17 de LaLiga." },
-    { "id": "fechasRestantes", "label": "Fechas que faltan", "type": "number", "placeholder": "10", "default": 0, "min": 0, "max": 38, "step": 1, "help": "Jornadas restantes hasta el final de la temporada." },
-    { "id": "safetyThreshold", "label": "Umbral de salvación (pts)", "type": "number", "placeholder": "38", "default": 38, "min": 30, "max": 50, "step": 1, "help": "Promedio histórico: equipos con ≥38 pts se salvan casi siempre." }
+    {
+      "id": "puntosEquipo",
+      "label": "Puntos actuales de tu equipo",
+      "type": "number",
+      "placeholder": "28",
+      "default": 0,
+      "min": 0,
+      "max": 114,
+      "step": 1,
+      "help": "Puntos acumulados hasta hoy."
+    },
+    {
+      "id": "puntosDecimoSeptimo",
+      "label": "Puntos del 17º (último salvado)",
+      "type": "number",
+      "placeholder": "32",
+      "default": 0,
+      "min": 0,
+      "max": 114,
+      "step": 1,
+      "help": "Puntos del equipo en el puesto 17 de LaLiga."
+    },
+    {
+      "id": "fechasRestantes",
+      "label": "Fechas que faltan",
+      "type": "number",
+      "placeholder": "10",
+      "default": 0,
+      "min": 0,
+      "max": 38,
+      "step": 1,
+      "help": "Jornadas restantes hasta el final de la temporada."
+    },
+    {
+      "id": "safetyThreshold",
+      "label": "Umbral de salvación (pts)",
+      "type": "number",
+      "placeholder": "38",
+      "default": 38,
+      "min": 30,
+      "max": 50,
+      "step": 1,
+      "help": "Promedio histórico: equipos con ≥38 pts se salvan casi siempre."
+    }
   ],
   "outputs": [
-    { "id": "veredicto", "label": "Veredicto", "format": "text", "primary": true },
-    { "id": "puntosParaAlcanzar17", "label": "Puntos para superar al 17º", "format": "number" },
-    { "id": "puntosMaxPosibles", "label": "Puntos máximos al cierre", "format": "number" },
-    { "id": "puntosProyectadosEmpatando", "label": "Puntos si empata todos", "format": "number" },
-    { "id": "diferenciaConSafety", "label": "Diferencia con el umbral (38 pts)", "format": "number" },
-    { "id": "porcentajeSalvacion", "label": "Probabilidad de salvación (%)", "format": "percent" }
+    {
+      "id": "veredicto",
+      "label": "Veredicto",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "puntosParaAlcanzar17",
+      "label": "Puntos para superar al 17º",
+      "format": "number"
+    },
+    {
+      "id": "puntosMaxPosibles",
+      "label": "Puntos máximos al cierre",
+      "format": "number"
+    },
+    {
+      "id": "puntosProyectadosEmpatando",
+      "label": "Puntos si empata todos",
+      "format": "number"
+    },
+    {
+      "id": "diferenciaConSafety",
+      "label": "Diferencia con el umbral (38 pts)",
+      "format": "number"
+    },
+    {
+      "id": "porcentajeSalvacion",
+      "label": "Probabilidad de salvación (%)",
+      "format": "percent"
+    }
   ],
   "dataUpdate": {
     "frequency": "yearly",
@@ -64,30 +129,70 @@
   },
   "explanation": "## Cómo se calcula el descenso en LaLiga\n\n**LaLiga** (Primera División de España) enfrenta a 20 equipos en **38 jornadas** a ida y vuelta. Al final de la temporada, los **tres últimos descienden a LaLiga Hypermotion (Segunda División)**: puestos 18, 19 y 20. Los puestos 17 en adelante se mantienen en Primera.\n\nLa fórmula clave para proyectar:\n\n```\npuntos_para_salvarse = pts_17º_actual − pts_tu_equipo + 1\npuntos_máximos_posibles = pts_actuales + fechas_restantes × 3\n```\n\nSi los **puntos máximos posibles < puntos del 17º actual**, el equipo está **matemáticamente descendido**.\n\n## Reglamento 2026\n\n- **20 equipos**, 38 jornadas.\n- **3 descensos directos** (sin playoff como en Bundesliga).\n- **3 ascensos desde Segunda**: 2 directos (campeón y subcampeón) + 1 por playoff entre los puestos 3-6.\n- **Umbral de salvación histórico**: 38-42 pts. La 'línea de 40 puntos' nació en los 90 y sigue siendo referencia.\n\n## Casos especiales\n\n- **Sanciones UEFA por FFP** pueden restar puntos o bloquear inscripción a copas, pero no afectan la tabla de Liga directamente.\n- **Empate en puntos** al cierre: se define por **diferencia de gol particular** entre los equipos empatados, luego diferencia general, luego goles a favor.\n- **Recién ascendidos** arrancan con 0 puntos y suelen tener el promedio más bajo de la categoría.\n\n## Fuentes\n\n- **LaLiga** — sitio oficial con tabla y reglamento.\n- **RFEF** — Real Federación Española de Fútbol.\n- Prensa deportiva española (Marca, AS, Mundo Deportivo).",
   "faq": [
-    { "q": "¿Cuántos equipos descienden en LaLiga?", "a": "**Descienden 3 equipos**: los que terminen en los puestos **18, 19 y 20** después de las 38 jornadas. No hay playoff de descenso (a diferencia de la Bundesliga). Es descenso directo." },
-    { "q": "¿Cuál es el umbral histórico para salvarse?", "a": "Estadísticamente, **38-42 puntos** suelen alcanzar. La famosa 'línea de los 40 puntos' es una referencia: equipos con 40+ se salvaron casi siempre. Hubo temporadas donde 35 alcanzaban (ligas débiles abajo) y otras donde incluso 40 no bastaron." },
-    { "q": "¿Qué equipos ascienden a LaLiga?", "a": "**3 equipos suben cada año**: el campeón y subcampeón de LaLiga Hypermotion (Segunda División) suben directo. El **tercer ascenso** se define por un **playoff** entre los puestos 3º, 4º, 5º y 6º de Segunda." },
-    { "q": "¿Cómo se definen los empates en puntos al final?", "a": "El primer criterio es la **diferencia de goles en enfrentamientos directos** (partidos jugados entre los equipos empatados). Si persiste, se compara **diferencia de gol general**, luego **goles a favor general**. Esto difiere de Premier League, que usa directamente diferencia de gol general." },
-    { "q": "¿Puede descender el Real Madrid, Barcelona o Atlético Madrid?", "a": "**Matemáticamente sí, realísticamente no** en décadas. Los tres grandes tienen presupuestos que los mantienen en la parte alta. El Atlético incluso sin ganar título siempre termina top 4. Para estos clubes, la calculadora es más útil para ver umbrales de Champions League que para descenso." },
-    { "q": "¿Por qué LaLiga no tiene playoff de descenso como Bundesliga?", "a": "Es una **decisión histórica y reglamentaria** de LaLiga y la RFEF. El modelo español prefiere descensos directos y un playoff **de ascenso** en Segunda (los puestos 3-6 de LaLiga Hypermotion juegan un mini torneo por una plaza en Primera). Otros países como Alemania o Bélgica usan playoff de descenso." },
-    { "q": "¿Qué pasa con los puntos si un equipo es sancionado por LaLiga?", "a": "LaLiga puede aplicar **sanciones económicas y reglamentarias** (típicamente límites salariales y bloqueos de fichajes), pero las **quitas de puntos son extremadamente raras** en Primera División. Si se aplican, se reflejan en la tabla oficial y afectan la lucha por el descenso." },
-    { "q": "¿Cómo se compara LaLiga con Premier League en cuanto a descensos?", "a": "Ambas bajan **3 equipos de 20**, en 38 fechas. La **diferencia principal** es el umbral: Premier suele requerir **35-40 puntos** (más parejo abajo), LaLiga **38-42** (tres grandes absorben mucha diferencia arriba). Además, Premier desempata por diferencia de gol general; LaLiga por enfrentamientos directos." }
+    {
+      "q": "¿Cuántos equipos descienden en LaLiga?",
+      "a": "**Descienden 3 equipos**: los que terminen en los puestos **18, 19 y 20** después de las 38 jornadas. No hay playoff de descenso (a diferencia de la Bundesliga). Es descenso directo."
+    },
+    {
+      "q": "¿Cuál es el umbral histórico para salvarse?",
+      "a": "Estadísticamente, **38-42 puntos** suelen alcanzar. La famosa 'línea de los 40 puntos' es una referencia: equipos con 40+ se salvaron casi siempre. Hubo temporadas donde 35 alcanzaban (ligas débiles abajo) y otras donde incluso 40 no bastaron."
+    },
+    {
+      "q": "¿Qué equipos ascienden a LaLiga?",
+      "a": "**3 equipos suben cada año**: el campeón y subcampeón de LaLiga Hypermotion (Segunda División) suben directo. El **tercer ascenso** se define por un **playoff** entre los puestos 3º, 4º, 5º y 6º de Segunda."
+    },
+    {
+      "q": "¿Cómo se definen los empates en puntos al final?",
+      "a": "El primer criterio es la **diferencia de goles en enfrentamientos directos** (partidos jugados entre los equipos empatados). Si persiste, se compara **diferencia de gol general**, luego **goles a favor general**. Esto difiere de Premier League, que usa directamente diferencia de gol general."
+    },
+    {
+      "q": "¿Puede descender el Real Madrid, Barcelona o Atlético Madrid?",
+      "a": "**Matemáticamente sí, realísticamente no** en décadas. Los tres grandes tienen presupuestos que los mantienen en la parte alta. El Atlético incluso sin ganar título siempre termina top 4. Para estos clubes, la calculadora es más útil para ver umbrales de Champions League que para descenso."
+    },
+    {
+      "q": "¿Por qué LaLiga no tiene playoff de descenso como Bundesliga?",
+      "a": "Es una **decisión histórica y reglamentaria** de LaLiga y la RFEF. El modelo español prefiere descensos directos y un playoff **de ascenso** en Segunda (los puestos 3-6 de LaLiga Hypermotion juegan un mini torneo por una plaza en Primera). Otros países como Alemania o Bélgica usan playoff de descenso."
+    },
+    {
+      "q": "¿Qué pasa con los puntos si un equipo es sancionado por LaLiga?",
+      "a": "LaLiga puede aplicar **sanciones económicas y reglamentarias** (típicamente límites salariales y bloqueos de fichajes), pero las **quitas de puntos son extremadamente raras** en Primera División. Si se aplican, se reflejan en la tabla oficial y afectan la lucha por el descenso."
+    },
+    {
+      "q": "¿Cómo se compara LaLiga con Premier League en cuanto a descensos?",
+      "a": "Ambas bajan **3 equipos de 20**, en 38 fechas. La **diferencia principal** es el umbral: Premier suele requerir **35-40 puntos** (más parejo abajo), LaLiga **38-42** (tres grandes absorben mucha diferencia arriba). Además, Premier desempata por diferencia de gol general; LaLiga por enfrentamientos directos."
+    }
   ],
   "sources": [
-    { "name": "LaLiga — sitio oficial", "url": "https://www.laliga.com/" },
-    { "name": "RFEF — Real Federación Española de Fútbol", "url": "https://www.rfef.es/" },
-    { "name": "LaLiga Hypermotion (Segunda División)", "url": "https://www.laliga.com/laliga-hypermotion" }
+    {
+      "name": "LaLiga — sitio oficial",
+      "url": "https://www.laliga.com/"
+    },
+    {
+      "name": "RFEF — Real Federación Española de Fútbol",
+      "url": "https://www.rfef.es/"
+    },
+    {
+      "name": "LaLiga Hypermotion (Segunda División)",
+      "url": "https://www.laliga.com/laliga-hypermotion"
+    }
   ],
-  "relatedSlugs": [
-    "calculadora-descenso-premier-league-3-puntos-seguros",
-    "calculadora-descenso-serie-a-italia-3-equipos",
-    "calculadora-descenso-bundesliga-playoff-16",
-    "calculadora-probabilidad-descenso-matematico-fecha"
-  ],
+  "relatedSlugs": [],
   "howToSteps": [
-    { "name": "Ingresá puntos del equipo", "text": "Puntos acumulados hasta hoy en la temporada actual." },
-    { "name": "Ingresá puntos del 17º", "text": "El equipo en el puesto 17 es el último salvado — necesitás superarlo." },
-    { "name": "Cargá fechas restantes", "text": "Jornadas que quedan hasta el cierre de la temporada." },
-    { "name": "Revisá veredicto y proyección", "text": "Puntos para salvarte, puntos máximos posibles y probabilidad de salvación." }
+    {
+      "name": "Ingresá puntos del equipo",
+      "text": "Puntos acumulados hasta hoy en la temporada actual."
+    },
+    {
+      "name": "Ingresá puntos del 17º",
+      "text": "El equipo en el puesto 17 es el último salvado — necesitás superarlo."
+    },
+    {
+      "name": "Cargá fechas restantes",
+      "text": "Jornadas que quedan hasta el cierre de la temporada."
+    },
+    {
+      "name": "Revisá veredicto y proyección",
+      "text": "Puntos para salvarte, puntos máximos posibles y probabilidad de salvación."
+    }
   ]
 }
