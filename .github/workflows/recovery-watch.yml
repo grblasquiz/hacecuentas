@@ -1,0 +1,163 @@
+name: Recovery watch (daily)
+
+# Monitor diario del recovery post-crash 2026-04-30.
+# Trae GSC daily clicks/impressions, detecta tendencia (recovering/stalling/declining)
+# y abre o comenta issue según severity.
+#
+# Cron 13:30 UTC = 10:30 AR. GSC tiene ~2-3 días de lag, así que esta corrida
+# analiza data hasta hace ~2 días. Suficiente para detectar plateaus tempranos.
+#
+# Issue lifecycle:
+# - Si NO hay issue abierta con label `recovery-watch` → la crea (cualquier trend).
+# - Si hay issue abierta:
+#     * Recovering → comenta progreso solo lunes (resumen semanal).
+#     * Stalling   → comenta diario (mantener visibility).
+#     * Declining  → comenta + asigna `priority/high`.
+# - Cuando recovery_pct >= 100% por 7 días seguidos → cerrar issue manual
+#   (no automatizo el close para que Martin confirme visualmente).
+
+on:
+  schedule:
+    - cron: '30 13 * * *'  # daily 13:30 UTC (10:30 AR)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install deps
+        run: pip install google-auth google-api-python-client
+
+      - name: Write GCP credentials
+        env:
+          GCP_INDEXING_CREDS: ${{ secrets.GCP_INDEXING_CREDS }}
+        run: |
+          mkdir -p ~/.config/gcp
+          echo "$GCP_INDEXING_CREDS" > ~/.config/gcp/hacecuentas-indexing.json
+
+      - name: Run recovery-watch
+        id: watch
+        run: |
+          set +e
+          python3 scripts/recovery-watch.py \
+            --json /tmp/recovery.json \
+            --md /tmp/recovery.md \
+            | tee /tmp/recovery.txt
+          EXIT=$?
+          set -e
+          # Exit codes: 0=recovering, 1=stalling, 2=declining, 3=insufficient-data
+          case $EXIT in
+            0) TREND=recovering ;;
+            1) TREND=stalling ;;
+            2) TREND=declining ;;
+            3) TREND=insufficient ;;
+            *) TREND=unknown ;;
+          esac
+          echo "trend=$TREND" >> $GITHUB_OUTPUT
+          # Body for issue (truncate to 60KB safe)
+          head -c 60000 /tmp/recovery.md > /tmp/recovery-trim.md
+          {
+            echo 'body<<EOFRECOV'
+            cat /tmp/recovery-trim.md
+            echo
+            echo '---'
+            echo "_Generado por \`.github/workflows/recovery-watch.yml\` el $(date -u +'%Y-%m-%d %H:%M UTC')._"
+            echo 'EOFRECOV'
+          } >> $GITHUB_OUTPUT
+
+      - name: Ensure labels exist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Crea labels si no existen (idempotente)
+          gh label create recovery-watch \
+            --color "FBCA04" \
+            --description "Recovery watch — monitoreo post-crash 2026-04-30" \
+            2>/dev/null || true
+          gh label create "priority/high" \
+            --color "B60205" \
+            --description "Acción requerida en próximas 24h" \
+            2>/dev/null || true
+
+      - name: Open or comment issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TREND: ${{ steps.watch.outputs.trend }}
+          BODY: ${{ steps.watch.outputs.body }}
+        run: |
+          # Find existing open issue
+          EXISTING=$(gh issue list \
+            --label recovery-watch --state open \
+            --json number --jq '.[0].number' || echo "")
+
+          DAY_OF_WEEK=$(date -u +%u)  # 1=Monday
+          TITLE_DATE=$(date -u +%Y-%m-%d)
+
+          # Trend emoji
+          case "$TREND" in
+            recovering)  EMOJI="🟢" ;;
+            stalling)    EMOJI="🟡" ;;
+            declining)   EMOJI="🔴" ;;
+            insufficient) EMOJI="⚪" ;;
+            *) EMOJI="❓" ;;
+          esac
+
+          if [ -z "$EXISTING" ]; then
+            # No issue → create one
+            TITLE="$EMOJI Recovery watch — crash 2026-04-30 ($TREND)"
+            gh issue create \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --label recovery-watch \
+              $([ "$TREND" = "declining" ] && echo "--label priority/high") \
+              || echo "Issue create failed (label may not exist yet)"
+          else
+            # Issue exists — comment based on trend
+            SHOULD_COMMENT=false
+            case "$TREND" in
+              recovering)
+                # Solo lunes
+                [ "$DAY_OF_WEEK" = "1" ] && SHOULD_COMMENT=true
+                ;;
+              stalling|declining|insufficient)
+                # Diario
+                SHOULD_COMMENT=true
+                ;;
+            esac
+
+            if [ "$SHOULD_COMMENT" = "true" ]; then
+              gh issue comment "$EXISTING" --body "$BODY"
+              # Update title to reflect current trend
+              gh issue edit "$EXISTING" \
+                --title "$EMOJI Recovery watch — crash 2026-04-30 ($TREND)"
+
+              # Add priority/high if declining
+              if [ "$TREND" = "declining" ]; then
+                gh issue edit "$EXISTING" --add-label "priority/high" || true
+              fi
+            else
+              echo "Skipping comment (recovering, not Monday)"
+            fi
+          fi
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recovery-watch-${{ github.run_id }}
+          path: |
+            /tmp/recovery.json
+            /tmp/recovery.md
+            /tmp/recovery.txt
+          retention-days: 30
