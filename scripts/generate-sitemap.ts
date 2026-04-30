@@ -62,7 +62,12 @@ function readJSONs(dir: string): any[] {
     .map((f) => {
       try { return JSON.parse(readFileSync(join(dir, f), 'utf8')); } catch { return null; }
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    // Excluimos páginas con `noindex: true` del sitemap. Si la página tiene
+    // <meta name="robots" content="noindex">, listarla en el sitemap es
+    // contradictorio (Google se confunde) y desperdicia crawl budget.
+    // Cuando alguien des-noindexa una calc, regenerar sitemap la incluye de nuevo.
+    .filter((d: any) => !d.noindex);
 }
 
 /**
