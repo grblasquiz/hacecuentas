@@ -212,13 +212,18 @@ const reportBody = encodeURIComponent(
   `Hi Equipo Hacé Cuentas,\n\nI found an error in the calculator "${calc.h1}":\n\nURL: https://hacecuentas.com/co/${calc.slug}\nInput data: \nExpected result: \nActual result: \nSource / reference: \n\nThank you.`
 );
 
-// hreflang: link to Spanish equivalent via esSlug
+// hreflang: declarar es-CO + es-AR + x-default.
+// CRÍTICO: NO usar dos entries con lang="es" duplicado — Google invalida toda la cadena.
 const esSlug = calc.esSlug;
+const selfHref = `https://hacecuentas.com/co/${calc.slug}`;
 const hreflangTags = esSlug ? [
-  { lang: 'es', href: `https://hacecuentas.com/${esSlug}` },
-  { lang: 'es', href: `https://hacecuentas.com/co/${calc.slug}` },
+  { lang: 'es-AR', href: `https://hacecuentas.com/${esSlug}` },
+  { lang: 'es-CO', href: selfHref },
   { lang: 'x-default', href: `https://hacecuentas.com/${esSlug}` },
-] : undefined;
+] : [
+  { lang: 'es-CO', href: selfHref },
+  { lang: 'x-default', href: selfHref },
+];
 ---
 
 <Layout
