@@ -486,7 +486,7 @@ function sitemapForLocale(cs: any[], locale: string, dir: string, withIndex: boo
   const urls: Url[] = withIndex
     ? [
         {
-          loc: `${site}/${locale}/`,
+          loc: `${site}/${locale}`,
           priority: '0.8',
           changefreq: 'weekly',
           lastmod: maxLastmod(calcUrls, buildDate),
