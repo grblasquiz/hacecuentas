@@ -1,0 +1,61 @@
+name: Wayback Machine snapshots (weekly)
+
+# Submit top 50 URLs/semana a archive.org Wayback Machine.
+# archive.org tiene DA 91 — cada snapshot crea un backlink natural permanente.
+# Re-snapshotea cada 30 días (state file evita spam).
+#
+# Cron: martes 14:00 UTC (11:00 AR) — fuera de horarios pico.
+
+on:
+  schedule:
+    - cron: '0 14 * * 2'  # Tuesday 14:00 UTC
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Mode'
+        required: false
+        default: 'priority'
+        type: choice
+        options:
+          - priority   # solo sitemap-priority.xml (~70 URLs)
+          - all        # todas las URLs (respeta state, slow)
+      limit:
+        description: 'Max URLs por corrida'
+        required: false
+        default: '50'
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Restore wayback state
+        uses: actions/cache@v4
+        with:
+          path: scripts/.wayback-state.json
+          key: wayback-state-${{ github.run_id }}
+          restore-keys: |
+            wayback-state-
+
+      - name: Submit to Wayback Machine
+        run: |
+          MODE="${{ github.event.inputs.mode || 'priority' }}"
+          LIMIT="${{ github.event.inputs.limit || '50' }}"
+          if [ "$MODE" = "all" ]; then
+            python3 scripts/wayback-snapshots.py --all --limit "$LIMIT"
+          else
+            python3 scripts/wayback-snapshots.py --limit "$LIMIT"
+          fi
+
+      - name: Save wayback state
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: scripts/.wayback-state.json
+          key: wayback-state-${{ github.run_id }}

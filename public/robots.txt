@@ -1,7 +1,15 @@
 # Hacé Cuentas — robots.txt
-# Estrategia: maximizar crawl budget en páginas de contenido (calcs, blog, guías)
-# y bloquear rutas técnicas que no aportan SEO.
+#
+# Política 2026 (revisada 2026-05-01):
+# Maximizar visibilidad en search ENGINES tradicionales + AI search
+# (ChatGPT, Claude, Gemini, Perplexity, etc.). En 2026 el tráfico
+# orgánico tradicional cae mientras AI search crece 10x — conviene
+# permitir LLMs para ser citados como fuente.
+#
+# Bloqueamos solo scrapers comerciales sin valor SEO (Bytespider,
+# Diffbot, Omgili, etc.) y rutas técnicas internas.
 
+# ──────── Default (todos los bots) ────────
 User-agent: *
 Allow: /
 Disallow: /admin
@@ -11,6 +19,7 @@ Disallow: /embed.js
 Disallow: /buscar
 Disallow: /search-index.json
 
+# ──────── Search engines tradicionales ────────
 User-agent: Googlebot
 Allow: /
 Disallow: /admin
@@ -56,6 +65,65 @@ Disallow: /embed.js
 Disallow: /buscar
 Disallow: /search-index.json
 
+# ──────── AI / LLM search bots — PERMITIDOS (cambio de política 2026-05-01) ────────
+# Razón: aparecer en AI Overviews + ChatGPT + Claude + Perplexity respuestas.
+# El tráfico desde AI search convierte 2-27x premium vs organic search.
+
+# OpenAI: GPTBot (training), ChatGPT-User (live citations), OAI-SearchBot (search)
+User-agent: GPTBot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /embed/
+Disallow: /embed.js
+Disallow: /buscar
+Disallow: /search-index.json
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /buscar
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /buscar
+
+# Anthropic: ClaudeBot (training), Claude-Web (research mode), anthropic-ai (legacy)
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /embed/
+Disallow: /embed.js
+Disallow: /buscar
+Disallow: /search-index.json
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /buscar
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /buscar
+
+# Google Gemini (separado de Googlebot — opt-in explícito para AI training)
+User-agent: Google-Extended
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /embed/
+Disallow: /embed.js
+Disallow: /buscar
+Disallow: /search-index.json
+
+# Perplexity (search engine basado en LLMs, alta conversión)
 User-agent: PerplexityBot
 Allow: /
 Disallow: /admin
@@ -67,67 +135,80 @@ Disallow: /search-index.json
 
 User-agent: Perplexity-User
 Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /buscar
 
-# Bloquear scrapers de IA para entrenamiento (ahorro de ancho de banda y protección de contenido)
-User-agent: GPTBot
-Disallow: /
+# Apple Intelligence (Siri, Apple Search)
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /buscar
 
-User-agent: ChatGPT-User
-Disallow: /
-
-User-agent: OAI-SearchBot
-Disallow: /
-
+# Common Crawl — base de training data de muchos LLMs públicos (Llama, Mistral, etc.)
 User-agent: CCBot
-Disallow: /
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /buscar
 
-User-agent: anthropic-ai
-Disallow: /
+# Meta (Llama models)
+User-agent: Meta-ExternalAgent
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /buscar
 
-User-agent: Claude-Web
-Disallow: /
+User-agent: FacebookBot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /buscar
 
-User-agent: ClaudeBot
-Disallow: /
+# You.com
+User-agent: YouBot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /buscar
 
-User-agent: Google-Extended
-Disallow: /
+# ──────── Bloqueados: scrapers comerciales sin valor SEO ────────
+# Estos no traen tráfico ni mejoran AI visibility — solo consumen ancho de banda.
 
+# Bytespider (TikTok/ByteDance scraper — no agrega tráfico, opaco)
 User-agent: Bytespider
 Disallow: /
 
-User-agent: Amazonbot
-Disallow: /
-
-User-agent: Meta-ExternalAgent
-Disallow: /
-
-User-agent: FacebookBot
-Disallow: /
-
-User-agent: cohere-ai
-Disallow: /
-
-User-agent: cohere-training-data-crawler
-Disallow: /
-
+# Diffbot (commercial data scraper)
 User-agent: Diffbot
 Disallow: /
 
+# ImagesiftBot (image scraping comercial)
 User-agent: ImagesiftBot
 Disallow: /
 
+# Omgili / Omgilibot (scraping for sale, no valor SEO)
 User-agent: Omgilibot
 Disallow: /
 
 User-agent: Omgili
 Disallow: /
 
-User-agent: YouBot
-Disallow: /
-
+# Timpibot (AI scraper poco transparente)
 User-agent: Timpibot
 Disallow: /
 
-# Sitemap
+# Cohere (no es buscador público, training-only)
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: cohere-training-data-crawler
+Disallow: /
+
+# Amazon (Alexa training, no aporta tráfico web)
+User-agent: Amazonbot
+Disallow: /
+
+# ──────── Sitemap ────────
 Sitemap: https://hacecuentas.com/sitemap.xml

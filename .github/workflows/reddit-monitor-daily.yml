@@ -1,0 +1,56 @@
+name: Reddit monitor (daily)
+
+# Detecta threads en r/argentina + finanzasargentina + merval donde una calc
+# de hacecuentas.com sería la respuesta. NO postea — genera un archivo
+# `docs/reddit-queue-YYYY-MM-DD.md` con drafts pre-redactados.
+#
+# Estrategia ganadora 2026: Reddit threads aparecen TOP 3 en Google (DA 91).
+# Comentario tuyo con link a la calc → tráfico calificado evitando sandbox.
+#
+# Cron: daily 11:00 UTC (08:00 AR) — empezar el día con la queue lista.
+
+on:
+  schedule:
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+    inputs:
+      hours:
+        description: 'Window de búsqueda (horas)'
+        required: false
+        default: '24'
+      limit:
+        description: 'Top N threads'
+        required: false
+        default: '10'
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run Reddit monitor
+        run: |
+          HOURS="${{ github.event.inputs.hours || '24' }}"
+          LIMIT="${{ github.event.inputs.limit || '10' }}"
+          python3 scripts/reddit-monitor.py --hours "$HOURS" --limit "$LIMIT"
+
+      - name: Commit queue file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/reddit-queue-*.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(reddit-queue): daily monitor $(date -u +'%Y-%m-%d')"
+            git push
+          fi
