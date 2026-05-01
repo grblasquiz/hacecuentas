@@ -312,12 +312,15 @@ const schemaApp = {
     name: 'Hacé Cuentas',
     url: 'https://hacecuentas.com',
   },
-  // Speakable: permite a voice assistants (Alexa, Google Assistant) leer las
-  // partes clave de la calc en respuesta a queries de voz. Apunta a
-  // .calc-intro y .calc-key-takeaway (clases dedicadas para schema speakable).
+  // Speakable: permite a voice assistants (Alexa, Google Assistant) y AI bots
+  // (ChatGPT, Claude, Perplexity, Gemini) identificar las partes clave de la
+  // calc para responder a queries de voz/AI. Apunta a:
+  // - .aeo-quick-answer (Respuesta rápida — el bloque más importante para AEO)
+  // - .calc-intro (intro)
+  // - .calc-key-takeaway (alias retrocompatible del antiguo "En pocas palabras")
   speakable: {
     '@type': 'SpeakableSpecification',
-    cssSelector: ['.calc-intro', '.calc-key-takeaway'],
+    cssSelector: ['.aeo-quick-answer', '.calc-intro', '.calc-key-takeaway'],
   },
 };
 
@@ -334,9 +337,19 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   datePublished,
   dateModified,
   author: {
-    '@type': 'Organization',
-    name: 'Equipo Hacé Cuentas',
-    url: 'https://hacecuentas.com/politica-editorial',
+    '@type': 'Person',
+    name: 'Martín Rodríguez',
+    url: 'https://hacecuentas.com/sobre-nosotros',
+    sameAs: [
+      'https://www.linkedin.com/in/martinrodriguezbaranek/',
+      'https://github.com/grblasquiz',
+    ],
+    jobTitle: 'Editor general',
+    worksFor: {
+      '@type': 'Organization',
+      name: 'Hacé Cuentas',
+      url: 'https://hacecuentas.com',
+    },
   },
   publisher: {
     '@type': 'Organization',
@@ -346,6 +359,12 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
       '@type': 'ImageObject',
       url: 'https://hacecuentas.com/og-default.png',
     },
+  },
+  // Reviewed by — separate from author en YMYL pages para señales fuertes E-E-A-T
+  reviewedBy: {
+    '@type': 'Organization',
+    name: 'Equipo editorial Hacé Cuentas',
+    url: 'https://hacecuentas.com/politica-editorial',
   },
   about: categoryLabels[calc.category] || calc.category,
   articleSection: categoryLabels[calc.category] || calc.category,
@@ -621,6 +640,21 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           </div>
         </div>
 
+        {/* AEO Quick Answer — para AI scrapers (ChatGPT, Claude, Perplexity, Gemini).
+            Definition-then-example pattern recomendado por research 2026:
+            "Sites with a 40-75 word answer capsule at the top earn 3x more AI citations". */}
+        {keyTakeaway && (
+          <aside id="respuesta-rapida"
+                 class="aeo-quick-answer key-takeaway calc-key-takeaway"
+                 aria-label="Respuesta rápida"
+                 data-speakable="true">
+            <div class="kt-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </div>
+            <div><strong>Respuesta rápida:</strong> <span set:html={md(keyTakeaway)} /></div>
+          </aside>
+        )}
+
         <p class="intro calc-intro" set:html={mdInline(calc.intro)}></p>
 
         {audience === 'AR' && (
@@ -640,7 +674,7 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           </span>
           <span class="meta-item meta-reviewer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-            Verificado por <a href="/politica-editorial">Equipo Hacé Cuentas</a>
+            Por <a href="/sobre-nosotros" rel="author"><strong>Martín Rodríguez</strong></a> · revisado por <a href="/politica-editorial">Equipo editorial</a>
           </span>
           {sources.length > 0 && (
             <span class="meta-item">
@@ -659,15 +693,6 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             100% privado
           </span>
         </div>
-
-        {keyTakeaway && (
-          <aside id="resumen" class="key-takeaway" aria-label="Resumen rápido">
-            <div class="kt-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            </div>
-            <div><strong>En pocas palabras:</strong> <span set:html={md(keyTakeaway)} /></div>
-          </aside>
-        )}
 
         {useCases.length > 0 && (
           <section id="cuando-usar" class="use-cases" aria-labelledby="use-cases-heading">

@@ -5,6 +5,85 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { TOTAL_DISPLAY } from '../lib/calc-counts';
+
+// Schema.org Person + Organization + AboutPage para señales E-E-A-T fuertes
+// y para que AI bots (ChatGPT, Claude, Perplexity) identifiquen al autor
+// como entidad verificable cuando citen contenido del sitio.
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  '@id': 'https://hacecuentas.com/sobre-nosotros#martin-rodriguez',
+  name: 'Martín Rodríguez',
+  givenName: 'Martín',
+  familyName: 'Rodríguez',
+  alternateName: ['Martín Rodríguez Baranek'],
+  jobTitle: 'Editor general y fundador',
+  description: 'Fundador de Hacé Cuentas. CMO en Argenprop con +10 años en producto digital y análisis de audiencia. Especializado en cálculos fiscales y financieros argentinos.',
+  worksFor: {
+    '@type': 'Organization',
+    name: 'Hacé Cuentas',
+    url: 'https://hacecuentas.com',
+  },
+  url: 'https://hacecuentas.com/sobre-nosotros',
+  sameAs: [
+    'https://www.linkedin.com/in/martinrodriguezbaranek/',
+    'https://github.com/grblasquiz',
+  ],
+  knowsAbout: [
+    'Cálculos fiscales argentinos',
+    'Impuesto a las Ganancias',
+    'Monotributo',
+    'Aguinaldo SAC',
+    'Jubilación ANSES',
+    'Inflación y poder de compra',
+    'Mercado inmobiliario argentino',
+    'Análisis financiero',
+    'SEO y producto digital',
+  ],
+  nationality: { '@type': 'Country', name: 'Argentina' },
+};
+
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  '@id': 'https://hacecuentas.com#organization',
+  name: 'Hacé Cuentas',
+  alternateName: 'hacecuentas.com',
+  url: 'https://hacecuentas.com',
+  logo: {
+    '@type': 'ImageObject',
+    url: 'https://hacecuentas.com/og-default.png',
+    width: 1200,
+    height: 630,
+  },
+  description: 'Plataforma argentina de calculadoras online gratuitas para cálculos fiscales, laborales, financieros, de salud y matemática. +2.500 calculadoras con datos oficiales de AFIP, BCRA, ANSES, INDEC.',
+  founder: { '@id': 'https://hacecuentas.com/sobre-nosotros#martin-rodriguez' },
+  foundingDate: '2026-04-14',
+  foundingLocation: {
+    '@type': 'Place',
+    address: { '@type': 'PostalAddress', addressCountry: 'AR' },
+  },
+  knowsLanguage: ['es-AR', 'es', 'en', 'pt-BR'],
+  sameAs: [
+    'https://github.com/grblasquiz/hacecuentas',
+  ],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    email: 'rodriguezb.martin@gmail.com',
+    contactType: 'customer support',
+  },
+};
+
+const aboutPageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  url: 'https://hacecuentas.com/sobre-nosotros',
+  name: 'Sobre Hacé Cuentas',
+  inLanguage: 'es-AR',
+  mainEntity: { '@id': 'https://hacecuentas.com#organization' },
+  about: { '@id': 'https://hacecuentas.com/sobre-nosotros#martin-rodriguez' },
+  publisher: { '@id': 'https://hacecuentas.com#organization' },
+};
 ---
 
 <Layout
@@ -12,6 +91,10 @@ import { TOTAL_DISPLAY } from '../lib/calc-counts';
   description="Hacé Cuentas es un proyecto argentino de calculadoras online gratuitas para todo el mundo hispanohablante, pensadas para ayudar a resolver cálculos cotidianos de forma rápida y precisa."
 >
   <Header slot="header" />
+
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(personSchema)}></script>
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(organizationSchema)}></script>
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(aboutPageSchema)}></script>
 
   <article class="legal">
     <h1>Sobre Hacé Cuentas</h1>
