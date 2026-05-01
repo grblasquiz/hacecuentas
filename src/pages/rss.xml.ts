@@ -47,6 +47,7 @@ export const GET: APIRoute = () => {
       <guid isPermaLink="true">${url}</guid>
       <description>${desc}</description>
       <category>${cat}</category>
+      <dc:creator>Martín Rodríguez</dc:creator>
       <pubDate>${mtime.toUTCString()}</pubDate>
     </item>`;
     })
@@ -57,13 +58,37 @@ export const GET: APIRoute = () => {
     : new Date().toUTCString();
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:sy="http://purl.org/rss/1.0/modules/syndication/">
   <channel>
     <title>Hacé Cuentas — Calculadoras actualizadas</title>
     <link>${site}</link>
     <atom:link href="${site}/rss.xml" rel="self" type="application/rss+xml" />
-    <description>Últimas calculadoras actualizadas en Hacé Cuentas: sueldo, finanzas, salud, negocios y más.</description>
+    <atom:link href="https://pubsubhubbub.superfeedr.com/" rel="hub" />
+    <atom:link href="https://pubsubhubbub.appspot.com/" rel="hub" />
+    <description>Calculadoras argentinas actualizadas: sueldo, aguinaldo, monotributo, ganancias, jubilación. Datos oficiales (AFIP, BCRA, ANSES) verificados por Martín Rodríguez.</description>
     <language>es-AR</language>
+    <copyright>© ${new Date().getFullYear()} Hacé Cuentas — Martín Rodríguez. Contenido bajo CC BY 4.0 (atribución requerida).</copyright>
+    <managingEditor>rodriguezb.martin@gmail.com (Martín Rodríguez)</managingEditor>
+    <webMaster>rodriguezb.martin@gmail.com (Martín Rodríguez)</webMaster>
+    <category>Finanzas</category>
+    <category>Argentina</category>
+    <category>Calculadoras</category>
+    <category>Impuestos</category>
+    <generator>Astro + custom RSS pipeline</generator>
+    <docs>https://www.rssboard.org/rss-specification</docs>
+    <ttl>360</ttl>
+    <sy:updatePeriod>daily</sy:updatePeriod>
+    <sy:updateFrequency>1</sy:updateFrequency>
+    <image>
+      <url>${site}/og-default.png</url>
+      <title>Hacé Cuentas</title>
+      <link>${site}</link>
+      <width>1200</width>
+      <height>630</height>
+    </image>
     <lastBuildDate>${lastBuildDate}</lastBuildDate>
 ${items}
   </channel>

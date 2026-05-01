@@ -1,0 +1,25 @@
+name: RSS aggregators submit (weekly)
+
+# Pingea WebSub hubs (Superfeedr, Google PubSubHubbub) + discovery URLs
+# de Feedly/Inoreader/Old Reader/etc. Mantiene el feed visible en agregadores.
+#
+# Cron: jueves 12:00 UTC (09:00 AR) — fuera de horarios de pico.
+
+on:
+  schedule:
+    - cron: '0 12 * * 4'  # Thursday 12:00 UTC
+  workflow_dispatch:
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Submit to RSS aggregators
+        run: python3 scripts/submit-rss-aggregators.py
