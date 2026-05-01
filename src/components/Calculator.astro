@@ -3103,6 +3103,8 @@ const formatFreshnessDate = (iso: string): string => {
 
       fbEl.querySelector<HTMLButtonElement>('[data-feedback-send]')?.addEventListener('click', () => {
         const text = textEl.value.trim().slice(0, 500);
+
+        // 1) GA4 event (tracking analytics)
         if (typeof (window as any).gtag === 'function') {
           (window as any).gtag('event', 'feedback_submit', {
             calc_slug: slug,
@@ -3110,6 +3112,22 @@ const formatFreshnessDate = (iso: string): string => {
             feedback_text: text || '(sin comentario)',
           });
         }
+
+        // 2) POST al backend para que llegue al equipo editorial via D1 + email
+        // (no esperamos respuesta — fire-and-forget, no bloqueamos UI)
+        if (text && currentVote) {
+          fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slug: '/' + slug,
+              vote: currentVote,
+              feedback_text: text,
+            }),
+            keepalive: true,
+          }).catch(() => { /* silencioso, el GA4 event ya fue */ });
+        }
+
         try { localStorage.setItem(`hc-feedback-${slug}`, String(Date.now())); } catch {}
         promptEl.hidden = true;
         followupEl.hidden = true;

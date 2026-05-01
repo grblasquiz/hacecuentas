@@ -32,6 +32,24 @@ CREATE TABLE IF NOT EXISTS calc_votes (
 CREATE INDEX IF NOT EXISTS idx_votes_slug ON calc_votes(slug);
 CREATE INDEX IF NOT EXISTS idx_votes_created ON calc_votes(created_at DESC);
 
+-- Feedback abierto del usuario después de votar (👍/👎).
+-- El user puede agregar texto libre explicando qué le faltó / qué le gustó.
+-- El vote en sí se registra en calc_votes; esta tabla guarda solo el texto
+-- de seguimiento (que es opcional).
+CREATE TABLE IF NOT EXISTS calc_feedback (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT NOT NULL,                      -- '/calculadora-X' (con slash inicial)
+  vote TEXT NOT NULL CHECK (vote IN ('up','down')),
+  feedback_text TEXT NOT NULL,             -- texto libre del usuario, max 500 chars
+  created_at INTEGER NOT NULL,
+  user_agent TEXT,
+  ip_hash TEXT,
+  status TEXT DEFAULT 'new'                -- 'new', 'read', 'actioned'
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_status ON calc_feedback(status);
+CREATE INDEX IF NOT EXISTS idx_feedback_created ON calc_feedback(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_feedback_slug ON calc_feedback(slug);
+
 -- Reportes de error (reemplaza el mailto viejo).
 -- El user puede reportar desde cualquier calc con un motivo.
 CREATE TABLE IF NOT EXISTS error_reports (
