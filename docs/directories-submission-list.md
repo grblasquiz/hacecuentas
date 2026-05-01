@@ -72,8 +72,8 @@ Categoría: Online Calculators / Finance Tools
 Subcategoría: Argentine fiscal/labor calculators
 Idioma principal: Spanish (Argentina)
 País: Argentina
-Email contacto: rodriguezb.martin@gmail.com
-Fundador: Martín Rodríguez
+Email contacto: editorial@hacecuentas.com
+Fundador: Joaquín Mendoza
 Año fundación: 2026
 Empleados: 1-10
 

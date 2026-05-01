@@ -9,7 +9,7 @@ Tiempo total: **15 min** para crear cuenta + 10 min de propiedades.
 ### Paso 1 — Crear cuenta Wikidata
 1. Andá a https://www.wikidata.org/wiki/Special:CreateAccount
 2. Username sugerido: `Hacecuentas` o `MartinRodriguezB`
-3. Email: rodriguezb.martin@gmail.com
+3. Email: editorial@hacecuentas.com
 4. Confirmá email → listo
 
 (Las cuentas anónimas ya no son aceptadas para crear items nuevos en Wikidata desde 2024.)
@@ -54,8 +54,8 @@ Click "Add statement" para cada una. Wikidata autocompleta cuando empezás a tip
 
 | Property | Value |
 |----------|-------|
-| `creator (P170)` | `Martín Rodríguez` (creá item nuevo si no existe) |
-| `founded by (P112)` | `Martín Rodríguez` |
+| `creator (P170)` | `Joaquín Mendoza` (creá item nuevo si no existe) |
+| `founded by (P112)` | `Joaquín Mendoza` |
 | `owner of (P1830)` (recíproco en su perfil) | esta entrada |
 
 **Identificadores externos** (importantísimos para Knowledge Graph):
@@ -78,20 +78,19 @@ Para cada statement importante, agregá una "reference":
 Si no existe ya, crear:
 
 1. Andá a https://www.wikidata.org/wiki/Special:NewItem
-2. Label: `Martín Rodríguez`
+2. Label: `Joaquín Mendoza`
 3. Description: `Argentine entrepreneur and CMO at Argenprop, founder of Hacé Cuentas`
 
 Properties:
 | Property | Value |
 |----------|-------|
 | `instance of (P31)` | `human` (Q5) |
-| `sex or gender (P21)` | `male` (Q6581097) |
 | `country of citizenship (P27)` | `Argentina` (Q414) |
-| `occupation (P106)` | `chief marketing officer` (Q42569) |
+| `occupation (P106)` | `editor` (Q1607826) |
 | `occupation (P106)` | `entrepreneur` (Q131524) |
-| `employer (P108)` | `Argenprop` (Q...) |
 | `notable work (P800)` | `Hacé Cuentas` (la entrada que acabás de crear) |
-| `LinkedIn personal profile ID (P6634)` | `martinrodriguezbaranek` |
+
+(Si el autor usa pseudónimo, omitir LinkedIn/Twitter ID — Wikidata permite Person sin perfiles externos siempre que haya `notable work` linkeado.)
 
 ## 🎯 Por qué esto importa para SEO
 
@@ -136,7 +135,7 @@ Si Wikidata rechaza la entrada por "no notable enough":
 2. **Acumular references**: artículos en blogs/medios que mencionen hacecuentas (los 29 outreach emails ayudan acá)
 3. Reintentar cuando tengas 5+ menciones externas
 
-**Workaround**: en vez de crear "Hacé Cuentas" como item directo, podés agregar una **statement** en el item de "Martín Rodríguez" o "Argenprop" mencionando que vos creaste el sitio. Esto es más fácil de pasar.
+**Workaround**: en vez de crear "Hacé Cuentas" como item directo, podés agregar una **statement** en el item de "Joaquín Mendoza" o "Argenprop" mencionando que vos creaste el sitio. Esto es más fácil de pasar.
 
 ---
 

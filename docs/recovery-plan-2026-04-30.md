@@ -146,7 +146,7 @@ Target: bajar de 2.837 → 700 calcs (el core AR + 187 mejores global hechas a m
 
 ### Fase 5 — Long term — Build E-E-A-T
 
-- [ ] Author bylines en cada calc (Martín Rodríguez, autor + bio).
+- [ ] Author bylines en cada calc (Joaquín Mendoza, autor + bio).
 - [ ] Source citations explícitas (BCRA, INDEC, ANSES, etc.).
 - [ ] "Última revisión técnica" date visible en el header.
 - [ ] About/Editorial/Methodology pages enriquecidas.

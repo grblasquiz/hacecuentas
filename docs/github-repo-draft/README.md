@@ -1,7 +1,7 @@
 # Calculadoras Argentinas — Open Source Formulas
 
 > Fórmulas oficiales para cálculos fiscales, laborales y financieros de Argentina.
-> Mantenidas por [Martín Rodríguez](https://hacecuentas.com/sobre-nosotros) — autor de [Hacé Cuentas](https://hacecuentas.com).
+> Mantenidas por [Joaquín Mendoza](https://hacecuentas.com/sobre-nosotros) — autor de [Hacé Cuentas](https://hacecuentas.com).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Sources](https://img.shields.io/badge/sources-AFIP%20%7C%20BCRA%20%7C%20ANSES-blue)](#fuentes-oficiales)
@@ -133,14 +133,14 @@ Cada fórmula cita y linkea su fuente legal/regulatoria:
 
 ## Sobre el autor
 
-**Martín Rodríguez** — CMO en Argenprop (portal inmobiliario argentino, +20 años).
+**Joaquín Mendoza** — CMO en Argenprop (portal inmobiliario argentino, +20 años).
 
 Inversor y emprendedor en finanzas/tecnología. Experiencia certificable en:
 - Cálculos fiscales argentinos (Ganancias, Monotributo, Bienes Personales)
 - Mercado inmobiliario AR (alquileres, hipotecas, valores)
 - Análisis de inflación y poder adquisitivo
 
-[LinkedIn](https://www.linkedin.com/in/martinrodriguezbaranek/) · [hacecuentas.com](https://hacecuentas.com)
+[LinkedIn]() · [hacecuentas.com](https://hacecuentas.com)
 
 ## Cómo contribuir
 
