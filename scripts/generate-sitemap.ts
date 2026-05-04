@@ -148,12 +148,18 @@ function getLastMod(filepath: string, fallback: string): string {
  *   - dataUpdate.lastUpdated solo aplica si NO hay lastReviewed (revisión
  *     editorial es señal más fuerte que refresh de data).
  */
+// Clamp defensivo: una fecha futura en lastmod es señal de quality issue para
+// Google (visto en sitemap-calcs-finanzas.xml con lastmod 2026-05-28 cuando
+// hoy era 04-05). Siempre acotamos a today.
+const TODAY_ISO = new Date().toISOString().split('T')[0];
+const clampToToday = (d: string) => (d > TODAY_ISO ? TODAY_ISO : d);
+
 function getCalcLastMod(calc: any, filepath: string, fallback: string): string {
   if (calc?.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
-    return calc.lastReviewed;
+    return clampToToday(calc.lastReviewed);
   }
   if (calc?.dataUpdate?.lastUpdated && /^\d{4}-\d{2}-\d{2}$/.test(calc.dataUpdate.lastUpdated)) {
-    return calc.dataUpdate.lastUpdated;
+    return clampToToday(calc.dataUpdate.lastUpdated);
   }
   // Resolver el archivo real del calc. Convención histórica mixta en el repo:
   // ~1800 calcs se nombran por `formulaId`, ~600 por `slug`, ~14 por otra cosa.
