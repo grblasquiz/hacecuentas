@@ -37,12 +37,12 @@ async function getCotizaciones(): Promise<Record<string, number>> {
   } catch {
     // Fallback con valores estimados si falla la API
     return {
-      blue: 1450,
-      bolsa: 1380, // MEP
-      contadoconliqui: 1420,
-      oficial: 1080,
-      tarjeta: 1728,
-      cripto: 1440,
+      blue: 1400,
+      bolsa: 1449, // MEP
+      contadoconliqui: 1494,
+      oficial: 1415,
+      tarjeta: 1840,
+      cripto: 1478,
     };
   }
 }
