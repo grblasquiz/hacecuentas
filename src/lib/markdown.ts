@@ -121,11 +121,23 @@ export function md(text: string): string {
     .replace(/^\- (.+)$/gm, (_, c) => `<li>${mdInline(c)}</li>`);
 
   // Step 4: inline formatting
+  // Dedup glossary links: la 1ra mención queda como <a>, las siguientes como <strong>.
+  // Rationale SEO: linkear el mismo término 5 veces a /glosario/X es señal débil
+  // post Core Update Abril 2026 (link spam pattern). Mantenemos UX (highlight visual
+  // del término) sin spam. Solo aplica a /glosario/* — otras URLs no se afectan.
+  const seenGlossary = new Set<string>();
   text = text
     .replace(/\*\*(.+?)\*\*/g, (_, c) => `<strong>${escHtml(c)}</strong>`)
     .replace(/\*(.+?)\*/g, (_, c) => `<em>${escHtml(c)}</em>`)
     .replace(/`([^`\n]+)`/g, (_, c) => `<code>${escHtml(c)}</code>`)
-    .replace(/\[(.+?)\]\((.+?)\)/g, (_, label, href) => `<a href="${safeUrl(href)}" rel="noopener">${escHtml(label)}</a>`);
+    .replace(/\[(.+?)\]\((.+?)\)/g, (_, label, href) => {
+      const safe = safeUrl(href);
+      if (safe.startsWith('/glosario/')) {
+        if (seenGlossary.has(safe)) return `<strong>${escHtml(label)}</strong>`;
+        seenGlossary.add(safe);
+      }
+      return `<a href="${safe}" rel="noopener">${escHtml(label)}</a>`;
+    });
 
   // Step 5: paragraphs + breaks
   text = text
