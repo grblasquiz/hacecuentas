@@ -40,5 +40,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
     );
   }
 
-  return next();
+  // ────── Cross-Origin isolation headers ──────
+  // Aplicados acá vía middleware porque CF Workers Static Assets ignora
+  // silenciosamente Cross-Origin-* en `_headers` (otros headers como CSP/HSTS
+  // sí se respetan, pero estos tres no — verificado 2026-05-04).
+  //
+  // Política:
+  // - /embed/*: cross-origin permitido (es el feature core)
+  // - resto: same-origin para isolation + defense vs Spectre/hotlinking
+  // - COEP credentialless (no require-corp) para no romper AdSense
+  const response = await next();
+  const isEmbed = url.pathname.startsWith('/embed/');
+  response.headers.set('Cross-Origin-Opener-Policy', isEmbed ? 'unsafe-none' : 'same-origin');
+  response.headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
+  response.headers.set('Cross-Origin-Resource-Policy', isEmbed ? 'cross-origin' : 'same-origin');
+  return response;
 });
