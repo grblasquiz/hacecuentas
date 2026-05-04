@@ -47,7 +47,7 @@ export const GET: APIRoute = () => {
       <guid isPermaLink="true">${url}</guid>
       <description>${desc}</description>
       <category>${cat}</category>
-      <dc:creator>Joaquín Mendoza</dc:creator>
+      <dc:creator>Equipo editorial Hacé Cuentas</dc:creator>
       <pubDate>${mtime.toUTCString()}</pubDate>
     </item>`;
     })
@@ -68,11 +68,11 @@ export const GET: APIRoute = () => {
     <atom:link href="${site}/rss.xml" rel="self" type="application/rss+xml" />
     <atom:link href="https://pubsubhubbub.superfeedr.com/" rel="hub" />
     <atom:link href="https://pubsubhubbub.appspot.com/" rel="hub" />
-    <description>Calculadoras argentinas actualizadas: sueldo, aguinaldo, monotributo, ganancias, jubilación. Datos oficiales (AFIP, BCRA, ANSES) verificados por Joaquín Mendoza.</description>
+    <description>Calculadoras argentinas actualizadas: sueldo, aguinaldo, monotributo, ganancias, jubilación. Datos oficiales (AFIP, BCRA, ANSES) verificados por el equipo editorial.</description>
     <language>es-AR</language>
-    <copyright>© ${new Date().getFullYear()} Hacé Cuentas — Joaquín Mendoza. Contenido bajo CC BY 4.0 (atribución requerida).</copyright>
-    <managingEditor>editorial@hacecuentas.com (Joaquín Mendoza)</managingEditor>
-    <webMaster>editorial@hacecuentas.com (Joaquín Mendoza)</webMaster>
+    <copyright>© ${new Date().getFullYear()} Hacé Cuentas. Contenido bajo CC BY 4.0 (atribución requerida).</copyright>
+    <managingEditor>editorial@hacecuentas.com (Equipo editorial Hacé Cuentas)</managingEditor>
+    <webMaster>editorial@hacecuentas.com (Equipo editorial Hacé Cuentas)</webMaster>
     <category>Finanzas</category>
     <category>Argentina</category>
     <category>Calculadoras</category>
