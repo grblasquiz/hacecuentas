@@ -5,6 +5,7 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Calculator from '../components/Calculator.astro';
+import LiveData from '../components/LiveData.astro';
 import RelatedCalcs from '../components/RelatedCalcs.astro';
 import ogManifest from '../lib/og-manifest.json';
 import ClusterHub from '../components/ClusterHub.astro';
@@ -578,6 +579,11 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
         <section id="calculadora">
           <Calculator config={calc} />
         </section>
+
+        {/* LiveData: bloque "Datos verificables actualizados" si la calc declara dataSource */}
+        {calc.dataSource && Array.isArray(calc.dataSource) && calc.dataSource.length > 0 && (
+          <LiveData dataSource={calc.dataSource} />
+        )}
 
         {calc.slug === 'calculadora-feriados-argentina-2026-calendario' && (
           <CalendarioFeriados />

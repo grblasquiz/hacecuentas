@@ -1,0 +1,137 @@
+---
+/**
+ * LiveData — bloque de "Datos verificables actualizados" para calcs.
+ *
+ * Renderiza un panel con datos live scrapeados de fuentes oficiales
+ * (BCRA, INDEC, ArgentinaDatos) con timestamp y link a la fuente.
+ *
+ * Uso: pasar la calc completa. Si tiene `dataSource: [...]`, renderiza
+ * los datos pedidos. Si no, no renderiza nada.
+ *
+ * dataSource values soportados:
+ *  - "dolar:oficial" | "dolar:blue" | "dolar:mep" | "dolar:ccl" | "dolar:mayorista" | "dolar:tarjeta"
+ *  - "inflacion:last_month" | "inflacion:acumulado_12m" | "inflacion:acumulado_ytd"
+ *  - "tasa:plazo_fijo_30d" | "tasa:badlar" | "tasa:prestamos_personales"
+ *  - "uva"
+ */
+import dolarData from "../data/live/dolar.json";
+import inflacionData from "../data/live/inflacion.json";
+import tasasData from "../data/live/tasas.json";
+
+interface Props {
+  dataSource?: string[];
+}
+
+const { dataSource = [] } = Astro.props;
+
+if (!dataSource || !Array.isArray(dataSource) || dataSource.length === 0) {
+  // render nothing
+}
+
+type Item = {
+  label: string;
+  value: string;
+  date: string;
+  source: string;
+  sourceUrl: string;
+};
+
+const items: Item[] = [];
+
+function fmtPct(n: number, digits = 2): string {
+  return `${n.toFixed(digits)}%`;
+}
+function fmtMoney(n: number): string {
+  return `$${n.toLocaleString("es-AR", { maximumFractionDigits: 2 })}`;
+}
+function fmtDate(iso: string): string {
+  // "2026-05-07" or full ISO
+  const d = iso.slice(0, 10);
+  return d;
+}
+
+for (const ref of dataSource) {
+  const [kind, sub] = ref.split(":");
+  if (kind === "dolar" && sub) {
+    const q = dolarData.quotes?.[sub];
+    if (q) {
+      items.push({
+        label: `Dólar ${q.nombre || sub}`,
+        value: `compra ${fmtMoney(q.compra)} / venta ${fmtMoney(q.venta)}`,
+        date: fmtDate(q.fechaActualizacion),
+        source: dolarData._meta.source,
+        sourceUrl: dolarData._meta.sourceUrl,
+      });
+    }
+  } else if (kind === "inflacion") {
+    if (sub === "last_month") {
+      const x = inflacionData.last_month;
+      items.push({
+        label: `Inflación mensual (último dato)`,
+        value: fmtPct(x.valor, 1),
+        date: fmtDate(x.fecha),
+        source: inflacionData._meta.source,
+        sourceUrl: inflacionData._meta.sourceOfficial,
+      });
+    } else if (sub === "acumulado_12m") {
+      items.push({
+        label: `Inflación acumulada 12 meses`,
+        value: fmtPct(inflacionData.acumulado_12m_pct, 1),
+        date: fmtDate(inflacionData.last_month.fecha),
+        source: inflacionData._meta.source,
+        sourceUrl: inflacionData._meta.sourceOfficial,
+      });
+    } else if (sub === "acumulado_ytd") {
+      items.push({
+        label: `Inflación acumulada año en curso`,
+        value: fmtPct(inflacionData.acumulado_ytd_pct, 1),
+        date: fmtDate(inflacionData.last_month.fecha),
+        source: inflacionData._meta.source,
+        sourceUrl: inflacionData._meta.sourceOfficial,
+      });
+    }
+  } else if (kind === "tasa" && sub) {
+    const v = tasasData[sub];
+    if (v) {
+      items.push({
+        label: v.label,
+        value: fmtPct(v.valor, 2),
+        date: fmtDate(v.fecha),
+        source: tasasData._meta.source,
+        sourceUrl: tasasData._meta.sourceOfficial,
+      });
+    }
+  } else if (kind === "uva") {
+    const v = tasasData.uva;
+    if (v) {
+      items.push({
+        label: v.label,
+        value: fmtMoney(v.valor),
+        date: fmtDate(v.fecha),
+        source: tasasData._meta.source,
+        sourceUrl: tasasData._meta.sourceOfficial,
+      });
+    }
+  }
+}
+---
+
+{items.length > 0 && (
+  <section class="live-data-panel my-6 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+    <h3 class="mb-2 text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+      📊 Datos verificables (actualizados al {items[0].date})
+    </h3>
+    <dl class="grid gap-x-4 gap-y-2 sm:grid-cols-2">
+      {items.map((it) => (
+        <div class="flex items-baseline justify-between gap-2 border-b border-slate-200 py-1.5 last:border-b-0 dark:border-slate-700/60">
+          <dt class="text-sm text-slate-600 dark:text-slate-400">{it.label}</dt>
+          <dd class="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">{it.value}</dd>
+        </div>
+      ))}
+    </dl>
+    <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
+      Fuente: <a href={items[0].sourceUrl} target="_blank" rel="noopener" class="underline hover:text-slate-700 dark:hover:text-slate-200">{items[0].source}</a>.
+      Datos actualizados automáticamente cada día.
+    </p>
+  </section>
+)}

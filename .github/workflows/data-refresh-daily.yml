@@ -1,0 +1,44 @@
+name: Data refresh (daily)
+
+# Pulls live data from BCRA / DolarAPI / ArgentinaDatos every day
+# and commits to src/data/live/ — triggering a redeploy.
+
+on:
+  schedule:
+    # 06:00 ART = 09:00 UTC (after BCRA publishes daily values)
+    - cron: "0 9 * * *"
+  workflow_dispatch: # allow manual trigger
+
+concurrency:
+  group: data-refresh-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Fetch all sources
+        run: node scripts/data-sources/fetch-all.mjs
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet src/data/live/; then
+            echo "No changes — skipping commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/live/
+          git commit -m "chore(data-live): refresh datos BCRA/INDEC/Dolar $(date -u +%Y-%m-%d)"
+          git push
