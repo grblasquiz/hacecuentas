@@ -423,6 +423,19 @@ const topPrioritySlugs = [
   'calculadora-plazo-fijo-ganancia-neta-anual',
   'calculadora-cuotas-sin-interes-costo-real-inflacion',
   'calculadora-sueldo-minimo-liga-profesional-argentina-afa',
+  // === Top 12 por GA4 views (1 abr - 11 may 2026) que faltaban en priority ===
+  'calculadora-actualizacion-alquiler-icl',
+  'calculadora-indice-masa-corporal-pediatrico',
+  'calculadora-feriados-argentina-2026-calendario',
+  'calculadora-edad-en-semanas',
+  'calculadora-peso-ideal',
+  'calculadora-sueldo-neto-chile-2026',
+  'calculadora-liquidacion-final-renuncia',
+  'calculadora-edad-perro-humano',
+  'calculadora-peso-ideal-bebe-mes-percentil',
+  'calculadora-proteina-gramos-por-peso-actividad',
+  'calculadora-semanas-embarazo',
+  'calculadora-vacaciones-argentina',
 ];
 const calcBySlug = new Map((calcs as any[]).map((c: any) => [c.slug, c]));
 for (const slug of topPrioritySlugs) {
