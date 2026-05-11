@@ -16,6 +16,7 @@ import ScrollToTop from '../components/ScrollToTop.astro';
 import { findClusterForSlug } from '../lib/clusters';
 import { md, mdInline } from '../lib/markdown';
 import { CATEGORY_TO_GUIDE, GUIDE_TITLES } from '../lib/category-guide-map';
+import { findMentions } from '../lib/wikidata-entities';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
@@ -346,6 +347,13 @@ const schemaApp = {
   // Importante incluirlo en SoftwareApplication (que se renderiza siempre) y no
   // solo en Article (que solo aplica a YMYL o explanation > 1500).
   citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+  // Mentions: entidades Wikidata reconocidas en h1/seoKeywords. Le da a LLMs
+  // (ChatGPT/Claude/Perplexity/Gemini) entity disambiguation gratis vía
+  // knowledge graph de Wikidata. Ej: si la calc menciona "ANSES" → linkea a
+  // https://www.wikidata.org/wiki/Q830348.
+  mentions: findMentions(
+    `${calc.h1 || ''} ${calc.title || ''} ${(calc.seoKeywords || []).join(' ')}`
+  ),
 };
 
 // Article schema para categorías YMYL (Finanzas, Salud) y cualquier calc con explanation extensa
@@ -389,6 +397,29 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
 const schemaGraph: any[] = [schemaHowTo, schemaBreadcrumb, schemaApp];
 if (schemaFAQ) schemaGraph.push(schemaFAQ);
 if (schemaArticle) schemaGraph.push(schemaArticle);
+
+// MathSolver schema: para calcs matemáticas/científicas/educativas.
+// Reconocido por Google, Bing, Perplexity para "math answer cards".
+// Ref: https://schema.org/MathSolver
+const isMathSolver = ['matematica', 'ciencia', 'educacion'].includes(calc.category);
+if (isMathSolver) {
+  schemaGraph.push({
+    '@context': 'https://schema.org',
+    '@type': 'MathSolver',
+    name: calc.h1,
+    description: schemaDescription,
+    url: `https://hacecuentas.com/${calc.slug}`,
+    inLanguage: schemaLang,
+    mathExpression: calc.formula ? [{
+      '@type': 'SolveMathAction',
+      eduQuestion: calc.h1,
+      eduAnswer: calc.formula,
+    }] : undefined,
+    educationalUse: 'practice',
+    learningResourceType: 'Calculator',
+    isAccessibleForFree: true,
+  });
+}
 
 // Dataset schema for calcs whose explanation contains markdown tables
 const hasTable = calc.explanation && /\|.*\|.*\n\|[-:\s|]+\|/.test(calc.explanation);
