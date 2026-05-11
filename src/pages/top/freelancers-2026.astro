@@ -1,0 +1,86 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+export const prerender = true;
+
+const calcModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
+const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+
+const slugs = [
+  'calculadora-tarifa-freelance-dolar-experiencia-hora',
+  'calculadora-costo-hora-desarrollador-senior',
+  'calculadora-costo-hora-redactor-copywriter',
+  'calculadora-costo-hora-ilustrador-digital',
+  'calculadora-costo-hora-fotografo-evento',
+  'calculadora-monotributo-2026',
+  'calculadora-impuestos-freelance-usa-argentina-doble',
+  'calculadora-dolar-mep-paso-a-paso-costo-operacion',
+  'calculadora-deel-vs-payoneer-vs-wise-comision-empleado-eeuu',
+  'calculadora-payroll-internacional-deel-remote-costo-empleado',
+  'calculadora-cuota-prestamo',
+  'calculadora-fire-retiro-temprano',
+  'calculadora-inflacion-poder-compra',
+  'calculadora-retorno-real-inversion-descontando-inflacion',
+];
+
+const items = slugs.map((s) => bySlug.get(s)).filter(Boolean);
+
+const title = 'Top calculadoras para freelancers Argentina 2026 | Hacé Cuentas';
+const description =
+  'Las calculadoras que necesitás como freelancer en Argentina: tarifa por hora, monotributo, dólar MEP, Deel vs Payoneer, impuestos, ahorro y poder de compra.';
+
+const itemListSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: title,
+  description,
+  numberOfItems: items.length,
+  itemListElement: items.map((c: any, i: number) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    url: `https://hacecuentas.com/${c.slug}`,
+    name: c.h1,
+  })),
+};
+---
+
+<Layout title={title} description={description} canonical="/top/freelancers-2026" audience="AR" schema={itemListSchema}>
+  <Header />
+  <main class="article-main">
+    <article class="hub-page">
+      <header>
+        <h1>Top calculadoras para freelancers — Argentina 2026</h1>
+        <p class="lede">
+          Si trabajás freelance en Argentina facturando al exterior, estas son las
+          calculadoras clave: tarifa por hora, monotributo, dólar MEP, comparativa
+          de plataformas (Deel/Payoneer/Wise), impuestos y planificación financiera.
+        </p>
+      </header>
+
+      <ol class="hub-list">
+        {items.map((c: any, idx: number) => (
+          <li class="hub-item">
+            <span class="hub-num">{idx + 1}.</span>
+            <div>
+              <a href={`/${c.slug}`}><strong>{c.h1}</strong></a>
+              <p>{c.description}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </article>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  .hub-page { max-width: 860px; margin: 0 auto; padding: 1rem; }
+  .lede { font-size: 1.1rem; color: var(--text-2, #444); }
+  .hub-list { list-style: none; padding: 0; margin: 2rem 0; display: grid; gap: 1rem; }
+  .hub-item { display: flex; gap: 0.75rem; padding: 0.75rem; border: 1px solid var(--border, #ddd); border-radius: 0.5rem; }
+  .hub-num { font-weight: 700; color: var(--accent, #2c5cdc); min-width: 2rem; }
+  .hub-item p { margin: 0.25rem 0 0; color: var(--text-2, #666); font-size: 0.95rem; }
+</style>

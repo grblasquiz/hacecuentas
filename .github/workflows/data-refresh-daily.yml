@@ -33,12 +33,13 @@ jobs:
 
       - name: Commit if changed
         run: |
-          if git diff --quiet src/data/live/; then
+          # Verifica cambios en datos live (src/data/live/) Y en datasets públicos (public/datasets/)
+          if git diff --quiet src/data/live/ public/datasets/; then
             echo "No changes — skipping commit"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/live/
-          git commit -m "chore(data-live): refresh datos BCRA/INDEC/Dolar $(date -u +%Y-%m-%d)"
+          git add src/data/live/ public/datasets/
+          git commit -m "chore(data-live): refresh datos + datasets BCRA/INDEC/Dolar $(date -u +%Y-%m-%d)"
           git push

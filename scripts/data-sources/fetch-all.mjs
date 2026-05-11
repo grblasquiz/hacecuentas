@@ -6,6 +6,7 @@ const sources = [
   "scripts/data-sources/fetch-dolar.mjs",
   "scripts/data-sources/fetch-inflacion.mjs",
   "scripts/data-sources/fetch-bcra.mjs",
+  "scripts/data-sources/generate-datasets.mjs",
 ];
 
 async function run(script) {
