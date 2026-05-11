@@ -88,11 +88,17 @@ if ((ogManifest as Record<string, boolean>)[calc.slug]) {
   ogImage = `/og/${calc.slug}.png`;
 }
 
-// dateModified: prioridad lastReviewed > dataUpdate.lastUpdated > build date.
-// dataUpdate.lastUpdated existe en el 100% de calcs; lastReviewed sólo cuando
-// un revisor humano valida la calc. Si ninguno declarado, cae al build date.
+// dateModified: prioridad live-data-refresh > lastReviewed > dataUpdate.lastUpdated > build date.
+// - Si la calc tiene dataSource (Information Gain con datos live BCRA/INDEC/Dolar),
+//   dateModified = build date (porque el cron diario re-deploya cuando hay cambios live).
+// - Caso contrario: lastReviewed > dataUpdate.lastUpdated > build date.
 const _dataUpdateLast = calc.dataUpdate?.lastUpdated;
-if (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
+const _hasLiveData = Array.isArray(calc.dataSource) && calc.dataSource.length > 0;
+if (_hasLiveData) {
+  // Live data se refresca diariamente vía data-refresh-daily.yml — usar build date
+  // como dateModified señaliza a Google/Bing que la página tiene contenido fresco.
+  dateModified = new Date().toISOString();
+} else if (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
   dateModified = new Date(calc.lastReviewed + 'T00:00:00Z').toISOString();
 } else if (_dataUpdateLast && /^\d{4}-\d{2}-\d{2}$/.test(_dataUpdateLast)) {
   dateModified = new Date(_dataUpdateLast + 'T00:00:00Z').toISOString();
@@ -319,16 +325,27 @@ const schemaApp = {
     name: 'Hacé Cuentas',
     url: 'https://hacecuentas.com',
   },
-  // Speakable: permite a voice assistants (Alexa, Google Assistant) y AI bots
-  // (ChatGPT, Claude, Perplexity, Gemini) identificar las partes clave de la
-  // calc para responder a queries de voz/AI. Apunta a:
-  // - .aeo-quick-answer (Respuesta rápida — el bloque más importante para AEO)
-  // - .calc-intro (intro)
-  // - .calc-key-takeaway (alias retrocompatible del antiguo "En pocas palabras")
+  // Speakable: permite a voice assistants (Alexa, Cortana, Google Assistant) y
+  // AI bots (ChatGPT, Copilot, Claude, Perplexity, Gemini) identificar las
+  // partes clave de la calc para responder a queries de voz/AI.
+  // Bing/Copilot le prestan especial atención a Speakable.
+  // Selectores ampliados 2026-05-11 para incluir FAQ y primer párrafo de explicación.
   speakable: {
     '@type': 'SpeakableSpecification',
-    cssSelector: ['.aeo-quick-answer', '.calc-intro', '.calc-key-takeaway'],
+    cssSelector: [
+      '.aeo-quick-answer',          // Respuesta rápida (TOP para AEO/voice)
+      '.calc-intro',                 // intro
+      '.calc-key-takeaway',          // en pocas palabras
+      '#como-funciona p:first-of-type',  // primer párrafo de explicación
+      '#faq dt:first-of-type',       // primera pregunta FAQ
+      '#faq dd:first-of-type',       // primera respuesta FAQ
+    ],
   },
+  // Citation: fuentes verificables externas (mismo array que Article schema cuando aplica).
+  // Bing/Copilot priorizan citation para citar en answer cards y AI Overviews.
+  // Importante incluirlo en SoftwareApplication (que se renderiza siempre) y no
+  // solo en Article (que solo aplica a YMYL o explanation > 1500).
+  citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
 };
 
 // Article schema para categorías YMYL (Finanzas, Salud) y cualquier calc con explanation extensa
