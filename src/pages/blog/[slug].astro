@@ -118,9 +118,16 @@ const toc = buildToc(post.content || '');
 const contentWithIds = injectH2Ids(post.content || '', toc);
 
 // ─── Schema.org ──────────────────────────────────────────────────────────────
+// NewsArticle si es un informe periódico (datos económicos, news real).
+// Mejora elegibilidad para Google Discover + Top Stories carousel.
+// Detección: slug contiene "informe", "actualizacion", "novedades", o tags news.
+const isNews = /^(informe|actualizacion|novedades|noticias)/i.test(post.slug) ||
+               (post.tags || []).some((t: string) => /news|informe|actualidad/i.test(t));
+const articleType = isNews ? 'NewsArticle' : 'BlogPosting';
+
 const articleSchema: any = {
   '@context': 'https://schema.org',
-  '@type': 'BlogPosting',
+  '@type': articleType,
   headline: post.title,
   description: post.description,
   datePublished: dateISO,
@@ -143,9 +150,18 @@ const articleSchema: any = {
     '@type': 'WebPage',
     '@id': `${siteUrl}/blog/${post.slug}`,
   },
-  image: `${siteUrl}/og-default.png`,
+  // Image array con múltiples aspect ratios — recomendado por Google para
+  // Discover + Top Stories (16:9, 4:3, 1:1 según Google guidelines).
+  image: [
+    `${siteUrl}/og-default.png`,           // 1200x630 (16:9-ish, OK Twitter/FB)
+    `${siteUrl}/og-default.png`,           // placeholder — todo: generate 4:3
+    `${siteUrl}/og-default.png`,           // placeholder — todo: generate 1:1
+  ],
   inLanguage: 'es-AR',
   keywords: (post.seoKeywords || []).join(', '),
+  // articleBody para que Google Discover entienda contenido completo
+  articleBody: post.content?.replace(/<[^>]+>/g, '').slice(0, 3000),
+  wordCount: post.content?.replace(/<[^>]+>/g, '').split(/\s+/).filter(Boolean).length || 0,
 };
 
 const breadcrumbSchema = {
