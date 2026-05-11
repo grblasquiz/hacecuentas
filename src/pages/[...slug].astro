@@ -109,7 +109,13 @@ const _badgeMonthYear = new Date(dateModified).toLocaleDateString('es-AR', {
   year: 'numeric',
 });
 const updatedBadgeLabel = `Actualizado ${_badgeMonthYear}`;
-const datePublished = '2025-09-01T00:00:00Z';
+// datePublished opcional: viene de calc.datePublished si está declarada (YYYY-MM-DD o ISO).
+// Si no, omitimos el campo del schema (JSON.stringify ignora undefined).
+// Fechas uniformes hardcodeadas son señal de scaled content para Google.
+const _rawDatePub = calc.datePublished;
+const datePublished: string | undefined = typeof _rawDatePub === 'string' && /^\d{4}-\d{2}-\d{2}(T.*)?$/.test(_rawDatePub)
+  ? (_rawDatePub.length === 10 ? new Date(_rawDatePub + 'T00:00:00Z').toISOString() : _rawDatePub)
+  : undefined;
 
 // audience: código país ISO o 'global'. Default histórico: 'global'.
 type AudienceCode = 'AR' | 'MX' | 'CL' | 'CO' | 'ES' | 'BO' | 'PE' | 'UY' | 'BR' | 'global';
@@ -354,12 +360,6 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
       url: 'https://hacecuentas.com/og-default.png',
     },
   },
-  // Reviewed by — separate from author para señales E-E-A-T explícitas
-  reviewedBy: {
-    '@type': 'Organization',
-    name: 'Equipo editorial Hacé Cuentas',
-    url: 'https://hacecuentas.com/politica-editorial',
-  },
   about: categoryLabels[calc.category] || calc.category,
   articleSection: categoryLabels[calc.category] || calc.category,
   // wordCount calculado del explanation (campo recomendado por Article schema)
@@ -377,7 +377,7 @@ const hasTable = calc.explanation && /\|.*\|.*\n\|[-:\s|]+\|/.test(calc.explanat
 if (hasTable) {
   // temporalCoverage: período al que aplican los datos. Para calcs con
   // dataUpdate.lastUpdated lo usamos como inicio; el fin queda abierto.
-  const tempStart = (calc.dataUpdate?.lastUpdated || datePublished.split('T')[0]);
+  const tempStart = (calc.dataUpdate?.lastUpdated || (datePublished || dateModified).split('T')[0]);
   const datasetKeywords: string[] = [
     categoryLabels[calc.category] || calc.category,
     ...(calc.seoKeywords || []).slice(0, 8),
@@ -414,7 +414,7 @@ for (const v of videos) {
     name: v.name,
     description: v.description || schemaDescription,
     thumbnailUrl: v.thumbnailUrl || `https://hacecuentas.com${ogImage}`,
-    uploadDate: v.uploadDate || datePublished,
+    uploadDate: v.uploadDate || (datePublished || dateModified).split('T')[0],
     embedUrl: v.embedUrl,
     contentUrl: v.contentUrl,
     duration: v.duration, // ISO 8601, ej "PT2M30S"

@@ -69,7 +69,12 @@ lastReviewedLabel = new Date(dateModified).toLocaleDateString('es-CL', {
   month: 'long',
   year: 'numeric',
 });
-const datePublished = '2025-09-01T00:00:00Z';
+// datePublished opcional: viene de calc.datePublished si está declarada.
+// Si no, omitimos el campo del schema (JSON.stringify ignora undefined).
+const _rawDatePub = calc.datePublished;
+const datePublished: string | undefined = typeof _rawDatePub === 'string' && /^\d{4}-\d{2}-\d{2}(T.*)?$/.test(_rawDatePub)
+  ? (_rawDatePub.length === 10 ? new Date(_rawDatePub + 'T00:00:00Z').toISOString() : _rawDatePub)
+  : undefined;
 
 // audience: 'CL' (país-específico) o 'global' (aplica a cualquier país).
 const audience: 'CL' | 'global' = calc.audience === 'CL' ? 'CL' : 'global';
