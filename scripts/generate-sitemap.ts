@@ -125,28 +125,28 @@ function getLastMod(filepath: string, fallback: string): string {
 }
 
 /**
- * Devuelve el lastmod editorial de un calc, priorizando señales explícitas
- * sobre el mtime del filesystem.
+ * Devuelve el lastmod editorial de un calc combinando todas las señales fiables
+ * y eligiendo la más reciente.
  *
- * Política (de mayor a menor prioridad):
- *   1. calc.lastReviewed   — revisión editorial humana ("repasé esto, está OK")
- *   2. calc.dataUpdate.lastUpdated — refresh de data externa (escalas, alícuotas)
- *   3. mtime (git log) del JSON — fallback para calcs sin metadata editorial
- *   4. fallback (buildDate)
+ * Política: `max(lastReviewed, dataUpdate.lastUpdated, mtime del JSON)` con
+ * clamp a today. La señal más nueva gana, porque cualquiera de las tres es
+ * evidencia legítima de que la calc cambió:
+ *   - lastReviewed       — revisión editorial humana ("repasé esto, está OK")
+ *   - dataUpdate.lastUpdated — refresh de data externa (escala AFIP, ICL, IPC)
+ *   - mtime (git log)    — último commit que tocó el JSON
  *
- * Por qué editorial gana sobre mtime: scripts de mass-edit cosmético
- * (re-format, backfill de campos no-visibles, normalización de slugs) tocan
- * cientos de JSON en un commit sin que cambie el contenido user-facing. Si
- * mtime ganara siempre, el sitemap reportaría todas esas URLs como cambiadas
- * y Google empezaría a desconfiar del lastmod (señal envenenada).
+ * Antes era prioridad secuencial (si había lastReviewed, ignoraba dataUpdate y
+ * mtime). El bug era que una calc con lastReviewed=2025-01-01 y
+ * dataUpdate.lastUpdated=2026-05-12 reportaba enero 2025 al sitemap aunque la
+ * data se hubiera refrescado hace 1 día. Ahora gana la más nueva.
  *
- * Implicaciones:
- *   - Si un calc tiene lastReviewed, ese campo ES la fuente de verdad. Para
- *     mover su lastmod, bumpear lastReviewed manualmente.
- *   - Calcs sin lastReviewed siguen con mtime — comportamiento previo intacto
- *     para el 90% del catálogo.
- *   - dataUpdate.lastUpdated solo aplica si NO hay lastReviewed (revisión
- *     editorial es señal más fuerte que refresh de data).
+ * Por qué seguimos ignorando el mtime "puro" del filesystem y usamos git log:
+ * scripts de mass-edit cosmético (re-format, backfill de campos no user-facing)
+ * tocan cientos de JSON en un commit. Como git log devuelve el ts del commit
+ * y editorial/data tienen ts dedicado, el max() respeta el cambio real más
+ * grande. Si un mass-edit toca todo el catálogo, el commit ts mueve mtime de
+ * todas, pero como lastReviewed/dataUpdate están seteados a fechas anteriores
+ * "reales", solo bumpea las calcs cuyo último cambio real ES ese commit.
  */
 // Clamp defensivo: una fecha futura en lastmod es señal de quality issue para
 // Google (visto en sitemap-calcs-finanzas.xml con lastmod 2026-05-28 cuando
@@ -154,13 +154,19 @@ function getLastMod(filepath: string, fallback: string): string {
 const TODAY_ISO = new Date().toISOString().split('T')[0];
 const clampToToday = (d: string) => (d > TODAY_ISO ? TODAY_ISO : d);
 
+const DATE_RX = /^\d{4}-\d{2}-\d{2}$/;
+const pickIfValid = (d: unknown): string | null =>
+  typeof d === 'string' && DATE_RX.test(d) ? clampToToday(d) : null;
+
 function getCalcLastMod(calc: any, filepath: string, fallback: string): string {
-  if (calc?.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
-    return clampToToday(calc.lastReviewed);
-  }
-  if (calc?.dataUpdate?.lastUpdated && /^\d{4}-\d{2}-\d{2}$/.test(calc.dataUpdate.lastUpdated)) {
-    return clampToToday(calc.dataUpdate.lastUpdated);
-  }
+  const candidates: string[] = [];
+
+  const lr = pickIfValid(calc?.lastReviewed);
+  if (lr) candidates.push(lr);
+
+  const du = pickIfValid(calc?.dataUpdate?.lastUpdated);
+  if (du) candidates.push(du);
+
   // Resolver el archivo real del calc. Convención histórica mixta en el repo:
   // ~1800 calcs se nombran por `formulaId`, ~600 por `slug`, ~14 por otra cosa.
   let resolved = filepath;
@@ -173,10 +179,13 @@ function getCalcLastMod(calc: any, filepath: string, fallback: string): string {
     }
   }
   if (existsSync(resolved)) {
-    const mtime = getLastMod(resolved, '');
-    if (mtime) return mtime;
+    const mtime = pickIfValid(getLastMod(resolved, ''));
+    if (mtime) candidates.push(mtime);
   }
-  return fallback;
+
+  if (candidates.length === 0) return fallback;
+  // max() lexicográfico funciona para YYYY-MM-DD.
+  return candidates.reduce((a, b) => (b > a ? b : a));
 }
 
 /**
@@ -234,6 +243,124 @@ ${sitemaps.map((s) => `  <sitemap>
     <lastmod>${s.lastmod}</lastmod>
   </sitemap>`).join('\n')}
 </sitemapindex>`;
+}
+
+// --------------------------------------------------------------------------
+// Rollout cap — limita cuánto puede subir el lastmod de una URL entre deploys.
+//
+// Por qué: cualquier mejora a la lógica de lastmod (max() del bug fix, nueva
+// señal de frescura, fetcher que toca N calcs) puede generar un spike donde
+// cientos/miles de URLs ven su lastmod cambiar el mismo día. Eso es un patrón
+// que Google asocia con sitemaps sucios (mass-bump fake).
+//
+// El cap distribuye el ajuste en el tiempo: si una URL "merece" un lastmod
+// 14 días más nuevo del que reportamos antes, le damos +7 hoy y +7 al próximo
+// deploy. Estabiliza naturalmente cuando todas las URLs llegan a su "desired".
+//
+// State persistido en db/sitemap-state.json. Si no existe, hacemos bootstrap
+// leyendo los XMLs actuales en public/ (transición sin spike). Si tampoco
+// existen (clean repo), usamos desired sin cap (no hay qué romper).
+//
+// Cap configurable via env: SITEMAP_LASTMOD_CAP_DAYS (default 7).
+//   - cap=0 desactiva el sistema (siempre usa desired, riesgo de spike).
+//   - cap=∞ equivalente con valor muy alto.
+// --------------------------------------------------------------------------
+
+const STATE_FILE = join(ROOT, 'db', 'sitemap-state.json');
+const CAP_DAYS = (() => {
+  const raw = process.env.SITEMAP_LASTMOD_CAP_DAYS;
+  if (!raw) return 7;
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) && n >= 0 ? n : 7;
+})();
+
+interface SitemapState {
+  // ISO timestamp del último guardado. Usado para calcular el cap efectivo:
+  // si pasaron < 24h entre builds, el cap se reduce proporcionalmente para
+  // que 10 deploys el mismo día no sumen 10*CAP_DAYS.
+  savedAt: string;
+  // URL → lastmod reportado en el sitemap previo. Se actualiza tras cada build.
+  lastmods: Record<string, string>;
+}
+
+let prevSavedAt: Date | null = null;
+
+function bootstrapStateFromXmls(): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const f of safeReadDir(PUBLIC_DIR)) {
+    if (!f.startsWith('sitemap') || !f.endsWith('.xml')) continue;
+    try {
+      const xml = readFileSync(join(PUBLIC_DIR, f), 'utf8');
+      const rx = /<loc>([^<]+)<\/loc>\s*<lastmod>([^<]+)<\/lastmod>/g;
+      let m: RegExpExecArray | null;
+      while ((m = rx.exec(xml)) !== null) {
+        // Una URL puede aparecer en >1 sitemap (ej. /categoria/X en priority Y
+        // en sitemap-calcs-X). Google ve TODOS y se queda con el más nuevo,
+        // así que ese es el baseline real para nuestro cap.
+        const prev = map.get(m[1]);
+        if (!prev || m[2] > prev) map.set(m[1], m[2]);
+      }
+    } catch {}
+  }
+  return map;
+}
+
+function loadState(): { state: Map<string, string>; source: 'state-file' | 'xml-bootstrap' | 'fresh' } {
+  if (existsSync(STATE_FILE)) {
+    try {
+      const raw = JSON.parse(readFileSync(STATE_FILE, 'utf8')) as SitemapState;
+      if (raw.savedAt) prevSavedAt = new Date(raw.savedAt);
+      return { state: new Map(Object.entries(raw.lastmods || {})), source: 'state-file' };
+    } catch (err) {
+      console.warn(`[sitemap] state file corrupto: ${(err as Error).message} — caigo a bootstrap`);
+    }
+  }
+  const fromXml = bootstrapStateFromXmls();
+  if (fromXml.size > 0) return { state: fromXml, source: 'xml-bootstrap' };
+  return { state: new Map(), source: 'fresh' };
+}
+
+function addDays(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+/**
+ * Cap el lastmod desired contra el previamente reportado. Solo limita SUBIDAS
+ * (URLs que aparecen como más nuevas de lo que dijimos antes). Si baja o no
+ * había previo, se respeta desired.
+ *
+ * El cap efectivo se escala según el tiempo real desde el último build: si
+ * pasaron 24h, cap = CAP_DAYS; si pasaron 6h, cap = CAP_DAYS * 0.25; con esto
+ * 10 deploys el mismo día no suman 10*CAP_DAYS al lastmod de cada URL.
+ */
+function effectiveCapDays(): number {
+  if (CAP_DAYS === 0) return 0;
+  if (!prevSavedAt) return CAP_DAYS;
+  const hoursSince = (Date.now() - prevSavedAt.getTime()) / (1000 * 60 * 60);
+  if (hoursSince >= 24) return CAP_DAYS;
+  if (hoursSince <= 0) return 0;
+  // Cap proporcional. Mínimo 0 días (no movimiento) si pasaron < 1h.
+  const scaled = Math.floor(CAP_DAYS * (hoursSince / 24));
+  return Math.max(0, scaled);
+}
+
+function capLastmod(prev: string | undefined, desired: string): string {
+  const cap = effectiveCapDays();
+  if (cap === 0) return prev && desired > prev ? prev : desired;
+  if (!prev || desired <= prev) return desired;
+  const ceiling = addDays(prev, cap);
+  return desired > ceiling ? ceiling : desired;
+}
+
+function saveState(used: Map<string, string>) {
+  const lastmods: Record<string, string> = {};
+  for (const [loc, lm] of [...used.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    lastmods[loc] = lm;
+  }
+  const out: SitemapState = { savedAt: new Date().toISOString(), lastmods };
+  writeFileSync(STATE_FILE, JSON.stringify(out, null, 2) + '\n', 'utf8');
 }
 
 // --------------------------------------------------------------------------
@@ -744,6 +871,36 @@ if (imageEntries.length > 0) {
 }
 
 // --------------------------------------------------------------------------
+// Apply rollout cap antes de escribir
+// --------------------------------------------------------------------------
+// Pasada final: para cada URL, comparamos el lastmod desired contra el state
+// previo y limitamos la subida a CAP_DAYS. URLs nuevas o que bajan se respetan.
+// El state se persiste en db/sitemap-state.json para el próximo build.
+
+const { state: prevState, source: stateSource } = loadState();
+const usedLastmods = new Map<string, string>();
+let cappedCount = 0;
+let unchangedCount = 0;
+let raisedCount = 0;
+let newCount = 0;
+
+for (const s of sitemaps) {
+  for (const u of s.urls) {
+    const prev = prevState.get(u.loc);
+    const capped = capLastmod(prev, u.lastmod);
+    if (prev === undefined) newCount++;
+    else if (capped < u.lastmod) cappedCount++;
+    else if (capped > prev) raisedCount++;
+    else unchangedCount++;
+    u.lastmod = capped;
+    // MAX si la URL aparece en >1 sitemap — el state representa el lastmod
+    // que Google verá para esa URL (Google también toma el más nuevo).
+    const prevUsed = usedLastmods.get(u.loc);
+    if (!prevUsed || capped > prevUsed) usedLastmods.set(u.loc, capped);
+  }
+}
+
+// --------------------------------------------------------------------------
 // Write files
 // --------------------------------------------------------------------------
 
@@ -757,16 +914,24 @@ for (const s of sitemaps) {
 totalUrls += imageEntries.length;
 
 // Index principal. El lastmod de cada entry del index es el máximo de las URLs
-// adentro de ese sitemap — si "sitemap-calcs-finanzas" no cambió, Google no
-// va a re-crawlear ese sitemap. Antes esto era `buildDate` constante, lo que
-// hacía que Google re-fetcheara todos los sub-sitemaps en cada deploy aunque
-// el contenido fuera idéntico.
-const indexContent = indexXml(
-  sitemaps.map((s) => ({ loc: `${site}/${s.name}`, lastmod: maxLastmod(s.urls, buildDate) }))
-);
+// adentro de ese sitemap (post-cap), también capeado contra el state previo —
+// el index entry tampoco debe saltar > CAP_DAYS porque Google también puede
+// asociar ese cambio con un sitemap "sospechoso".
+const indexEntries = sitemaps.map((s) => {
+  const loc = `${site}/${s.name}`;
+  const desired = maxLastmod(s.urls, buildDate);
+  const capped = capLastmod(prevState.get(loc), desired);
+  const prevUsed = usedLastmods.get(loc);
+  if (!prevUsed || capped > prevUsed) usedLastmods.set(loc, capped);
+  return { loc, lastmod: capped };
+});
+const indexContent = indexXml(indexEntries);
 writeFileSync(join(PUBLIC_DIR, 'sitemap.xml'), indexContent, 'utf8');
 
+saveState(usedLastmods);
+
 console.log(`✓ sitemap index → ${sitemaps.length} sitemaps, ${totalUrls} URLs totales`);
+console.log(`  rollout cap: cap=${CAP_DAYS}d (efectivo=${effectiveCapDays()}d) · state=${stateSource} · new=${newCount} · raised=${raisedCount} · capped=${cappedCount} · unchanged=${unchangedCount}`);
 for (const s of sitemaps) {
   console.log(`  · ${s.name.padEnd(40)} ${String(s.urls.length).padStart(5)} URLs`);
 }

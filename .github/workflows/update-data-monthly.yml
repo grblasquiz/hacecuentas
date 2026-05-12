@@ -8,8 +8,9 @@ name: Update data (monthly)
 # Fetchers monthly actuales: bcra (ICL + UVA + TNA plazo fijo), ipc.
 
 on:
+  # Minuto no-redondo + jitter in-job (0-30min) → distribuye horario real.
   schedule:
-    - cron: '0 10 16 * *'
+    - cron: '17 9 16 * *'
   workflow_dispatch:
     inputs:
       dry:
@@ -28,6 +29,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Jitter pre-fetch
+        if: github.event_name == 'schedule'
+        run: sleep $((RANDOM % 1800))
 
       - name: Setup Node
         uses: actions/setup-node@v4

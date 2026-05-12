@@ -8,8 +8,10 @@ name: Update data (daily)
 # cualquier regression queda visible antes de deployar.
 
 on:
+  # Minuto no-redondo + jitter in-job (0-30min) → ejecución real distribuida
+  # ~ entre 09:23 y 09:53 UTC, evitando patrón "todos los crons a las :00".
   schedule:
-    - cron: '0 10 * * *'
+    - cron: '23 9 * * *'
   workflow_dispatch:
     inputs:
       dry:
@@ -28,6 +30,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Jitter pre-fetch
+        # Distribuye el horario real de actualización dentro de una ventana de
+        # 30 min — los bumps de lastUpdated no caen todos a la misma hora UTC.
+        if: github.event_name == 'schedule'
+        run: sleep $((RANDOM % 1800))
 
       - name: Setup Node
         uses: actions/setup-node@v4

@@ -55,6 +55,10 @@ function parseArgs() {
   const args = process.argv.slice(2);
   return {
     json: args.includes('--json'),
+    // En modo strict, el exit code para "stale > threshold" es 1 (rompe el
+    // build) en lugar del 2 informativo. Usar en prebuild si querés bloquear
+    // deploys cuando hay datos muy desactualizados.
+    strict: args.includes('--strict'),
     threshold: (() => {
       const arg = args.find((a) => a.startsWith('--threshold='));
       return arg ? Number.parseInt(arg.split('=')[1] ?? '5', 10) : 5;
@@ -174,10 +178,14 @@ function main() {
   }
 
   // Resumen machine-readable que el workflow puede grepear
-  console.log(`STALE_SUMMARY::${JSON.stringify({ count: stale.length, threshold: opts.threshold })}`);
+  console.log(`STALE_SUMMARY::${JSON.stringify({ count: stale.length, threshold: opts.threshold, strict: opts.strict })}`);
 
-  // Exit codes: 0 normal, 2 = "stale > threshold, abrir issue", 1 = error fatal
-  if (stale.length > opts.threshold) process.exit(2);
+  // Exit codes:
+  //   0 = OK (stale ≤ threshold)
+  //   1 = error fatal (siempre)
+  //   2 = stale > threshold, modo informativo (abrir issue, no rompe build)
+  //   En --strict, "stale > threshold" sale con 1 para romper builds.
+  if (stale.length > opts.threshold) process.exit(opts.strict ? 1 : 2);
 }
 
 try {

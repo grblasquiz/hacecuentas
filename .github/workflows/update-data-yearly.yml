@@ -12,7 +12,8 @@ name: Update data (yearly auto-llm)
 
 on:
   schedule:
-    - cron: '0 10 1 2 *'
+    # 1 de febrero, ~09:34 UTC + jitter (0-30min).
+    - cron: '34 9 1 2 *'
   workflow_dispatch:
     inputs:
       dry:
@@ -32,6 +33,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Jitter pre-fetch
+        if: github.event_name == 'schedule'
+        run: sleep $((RANDOM % 1800))
 
       - name: Setup Node
         uses: actions/setup-node@v4

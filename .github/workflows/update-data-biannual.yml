@@ -11,8 +11,8 @@ name: Update data (biannual auto-llm)
 
 on:
   schedule:
-    # 15 de enero y 15 de julio, 10:00 UTC
-    - cron: '0 10 15 1,7 *'
+    # 15 de enero y 15 de julio, ~09:41 UTC + jitter (0-30min).
+    - cron: '41 9 15 1,7 *'
   workflow_dispatch:
     inputs:
       dry:
@@ -32,6 +32,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Jitter pre-fetch
+        if: github.event_name == 'schedule'
+        run: sleep $((RANDOM % 1800))
 
       - name: Setup Node
         uses: actions/setup-node@v4
