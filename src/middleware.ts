@@ -1,4 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
+import { PRUNING_REDIRECTS } from './lib/pruning-redirects';
 
 /**
  * Astro middleware — corre antes de cualquier route en el Worker de CF.
@@ -38,6 +39,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
         },
       }
     );
+  }
+
+  // ────── Pruning redirects (post-HCU recovery) ──────
+  // CF Workers Static Assets sirve el HTML antes que aplique `_redirects`
+  // si el archivo existe en dist/. Para forzar el 301 sin borrar JSONs (que
+  // perdería link equity si nos arrepentimos), aplicamos el redirect acá.
+  // El mapa se genera desde `public/_redirects` por
+  // scripts/extract-pruning-redirects.py.
+  if (url.hostname === 'hacecuentas.com' || url.hostname === 'www.hacecuentas.com') {
+    const target = PRUNING_REDIRECTS[url.pathname];
+    if (target) {
+      return Response.redirect(`https://hacecuentas.com${target}`, 301);
+    }
   }
 
   // ────── Cross-Origin isolation headers ──────
