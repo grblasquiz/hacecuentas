@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-04-29
+// Generated: 2026-05-12
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -2135,6 +2135,10 @@ import { multaTransitoPuntosLicencia } from './multa-transito-puntos-licencia';
 import { multaTransitoValor } from './multa-transito-valor';
 import { multiplicarReceta } from './multiplicar-receta';
 import { multitaskingPerdidaProductividadSwitching } from './multitasking-perdida-productividad-switching';
+import { mundial2026BonusJugadorFase } from './mundial-2026-bonus-jugador-fase';
+import { mundial2026BotinOroGoleadorEstimador } from './mundial-2026-botin-oro-goleador-estimador';
+import { mundial2026CamisetaPrecioComparador } from './mundial-2026-camiseta-precio-comparador';
+import { mundial2026CervezaComidaEstadioPrecio } from './mundial-2026-cerveza-comida-estadio-precio';
 import { mundial2026ComparadorSelecciones } from './mundial-2026-comparador-selecciones';
 import { mundial2026CostoEntrada } from './mundial-2026-costo-entrada';
 import { mundial2026CostoViaje } from './mundial-2026-costo-viaje';
@@ -2143,18 +2147,24 @@ import { mundial2026Descanso } from './mundial-2026-descanso';
 import { mundial2026DiasDebut } from './mundial-2026-dias-debut';
 import { mundial2026DiferenciaGol } from './mundial-2026-diferencia-gol';
 import { mundial2026DreamTeam } from './mundial-2026-dream-team';
+import { mundial2026EstadiosComparador } from './mundial-2026-estadios-comparador';
 import { mundial2026FixtureOctavos } from './mundial-2026-fixture-octavos';
 import { mundial2026GolesArgentina } from './mundial-2026-goles-argentina';
 import { mundial2026GolesProrroga } from './mundial-2026-goles-prorroga';
 import { mundial2026GrupoMuerte } from './mundial-2026-grupo-muerte';
 import { mundial2026HorarioZonaHoraria } from './mundial-2026-horario-zona-horaria';
+import { mundial2026HorasTvCronogramaFan } from './mundial-2026-horas-tv-cronograma-fan';
 import { mundial2026MessiRecord } from './mundial-2026-messi-record';
 import { mundial2026PartidosFaltantes } from './mundial-2026-partidos-faltantes';
+import { mundial2026PredictorCampeonRanking } from './mundial-2026-predictor-campeon-ranking';
 import { mundial2026PresupuestoHincha } from './mundial-2026-presupuesto-hincha';
+import { mundial2026ProbabilidadBicampeon } from './mundial-2026-probabilidad-bicampeon';
 import { mundial2026ProbabilidadPenales } from './mundial-2026-probabilidad-penales';
 import { mundial2026ProbabilidadSeed } from './mundial-2026-probabilidad-seed';
 import { mundial2026PuntajeHistorico } from './mundial-2026-puntaje-historico';
 import { mundial2026PuntosOctavos } from './mundial-2026-puntos-octavos';
+import { mundial2026QuinielaPoolProbabilidad } from './mundial-2026-quiniela-pool-probabilidad';
+import { mundial2026TarjetasSuspension } from './mundial-2026-tarjetas-suspension';
 import { mxnUsdConversion } from './mxn-usd-conversion';
 import { natacionPace100m } from './natacion-pace-100m';
 import { necesidadCaloricaHospitalizado } from './necesidad-calorica-hospitalizado';
@@ -2964,6 +2974,7 @@ import { sueldoSmataMecanicoAutomotorBasico } from './sueldo-smata-mecanico-auto
 import { sueldoTop5Ligas } from './sueldo-top-5-ligas';
 import { sueldoUocraConstruccionBasicoNeto } from './sueldo-uocra-construccion-basico-neto';
 import { sueldoUomMetalurgicoBasicoNeto } from './sueldo-uom-metalurgico-basico-neto';
+import { sueldoVsPromedioArgentino } from './sueldo-vs-promedio-argentino';
 import { suenoBebe } from './sueno-bebe-horas';
 import { compute as compute__sueno_bebe_horas_meses_tabla_padres } from './sueno-bebe-horas-meses-tabla-padres';
 import { suenoIdealEdad } from './sueno-ideal-edad';
@@ -5505,6 +5516,10 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'multa-transito-valor': multaTransitoValor,
   'multiplicar-receta': multiplicarReceta,
   'multitasking-perdida-productividad-switching': multitaskingPerdidaProductividadSwitching,
+  'mundial-2026-bonus-jugador-fase': mundial2026BonusJugadorFase,
+  'mundial-2026-botin-oro-goleador-estimador': mundial2026BotinOroGoleadorEstimador,
+  'mundial-2026-camiseta-precio-comparador': mundial2026CamisetaPrecioComparador,
+  'mundial-2026-cerveza-comida-estadio-precio': mundial2026CervezaComidaEstadioPrecio,
   'mundial-2026-comparador-selecciones': mundial2026ComparadorSelecciones,
   'mundial-2026-costo-entrada': mundial2026CostoEntrada,
   'mundial-2026-costo-viaje': mundial2026CostoViaje,
@@ -5513,18 +5528,24 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'mundial-2026-dias-debut': mundial2026DiasDebut,
   'mundial-2026-diferencia-gol': mundial2026DiferenciaGol,
   'mundial-2026-dream-team': mundial2026DreamTeam,
+  'mundial-2026-estadios-comparador': mundial2026EstadiosComparador,
   'mundial-2026-fixture-octavos': mundial2026FixtureOctavos,
   'mundial-2026-goles-argentina': mundial2026GolesArgentina,
   'mundial-2026-goles-prorroga': mundial2026GolesProrroga,
   'mundial-2026-grupo-muerte': mundial2026GrupoMuerte,
   'mundial-2026-horario-zona-horaria': mundial2026HorarioZonaHoraria,
+  'mundial-2026-horas-tv-cronograma-fan': mundial2026HorasTvCronogramaFan,
   'mundial-2026-messi-record': mundial2026MessiRecord,
   'mundial-2026-partidos-faltantes': mundial2026PartidosFaltantes,
+  'mundial-2026-predictor-campeon-ranking': mundial2026PredictorCampeonRanking,
   'mundial-2026-presupuesto-hincha': mundial2026PresupuestoHincha,
+  'mundial-2026-probabilidad-bicampeon': mundial2026ProbabilidadBicampeon,
   'mundial-2026-probabilidad-penales': mundial2026ProbabilidadPenales,
   'mundial-2026-probabilidad-seed': mundial2026ProbabilidadSeed,
   'mundial-2026-puntaje-historico': mundial2026PuntajeHistorico,
   'mundial-2026-puntos-octavos': mundial2026PuntosOctavos,
+  'mundial-2026-quiniela-pool-probabilidad': mundial2026QuinielaPoolProbabilidad,
+  'mundial-2026-tarjetas-suspension': mundial2026TarjetasSuspension,
   'mxn-usd-conversion': mxnUsdConversion,
   'natacion-pace-100m': natacionPace100m,
   'necesidad-calorica-hospitalizado': necesidadCaloricaHospitalizado,
@@ -6334,6 +6355,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sueldo-top-5-ligas': sueldoTop5Ligas,
   'sueldo-uocra-construccion-basico-neto': sueldoUocraConstruccionBasicoNeto,
   'sueldo-uom-metalurgico-basico-neto': sueldoUomMetalurgicoBasicoNeto,
+  'sueldo-vs-promedio-argentino': sueldoVsPromedioArgentino,
   'sueno-bebe-horas': suenoBebe,
   'sueno-bebe-horas-meses-tabla-padres': compute__sueno_bebe_horas_meses_tabla_padres,
   'sueno-ideal-edad': suenoIdealEdad,

@@ -449,6 +449,49 @@ if (hasTable) {
   });
 }
 
+// Recipe schema — para calcs cocina que computan proporciones/cantidades
+// (asado por persona, sushi por invitado, vino por mesa, etc.). Google y AI
+// engines premian Recipe rich result + agrega chance de aparecer en Recipe
+// carousel + Discover. No aplica a conversiones (tazas-gramos, etc.).
+const RECIPE_SLUG_PATTERNS = [
+  'por-persona', 'por-invitado', 'por-mesa', 'para-evento', 'cumpleanos',
+  'casamiento', 'fiesta', 'asado', 'parrilla', 'cocktail',
+  'bebidas-evento', 'cantidad-empanadas', 'cantidad-hamburguesas',
+  'cantidad-pizzas', 'hielo-cubos', 'porciones-',
+];
+const isRecipeEligible = calc.category === 'cocina' &&
+  RECIPE_SLUG_PATTERNS.some((p) => calc.slug.includes(p));
+if (isRecipeEligible) {
+  const primaryOutput = calc.outputs?.find((o: any) => o.primary) || calc.outputs?.[0];
+  const recipeYield = primaryOutput?.label || 'Cantidad calculada según invitados';
+  schemaGraph.push({
+    '@type': 'Recipe',
+    name: calc.h1,
+    description: schemaDescription,
+    url: `https://hacecuentas.com/${calc.slug}`,
+    inLanguage: schemaLang,
+    author: {
+      '@type': 'Organization',
+      name: 'Equipo editorial Hacé Cuentas',
+      url: 'https://hacecuentas.com/politica-editorial',
+    },
+    datePublished: (datePublished || dateModified).split('T')[0],
+    dateModified: dateModified.split('T')[0],
+    image: `https://hacecuentas.com${ogImage}`,
+    recipeCategory: 'Cantidades para eventos',
+    recipeCuisine: 'Argentina',
+    recipeYield,
+    recipeInstructions: howToSteps.map((s: any, i: number) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.name,
+      text: s.text,
+      url: `https://hacecuentas.com/${calc.slug}#paso-${i + 1}`,
+    })),
+    keywords: (calc.seoKeywords || []).slice(0, 5).join(', '),
+  });
+}
+
 // VideoObject schema — si la calc declara `video` (objeto o array de objetos),
 // agregamos schema VideoObject para que Google muestre el rich snippet de video
 // y aparezca en Google Videos. Formato esperado en JSON:
