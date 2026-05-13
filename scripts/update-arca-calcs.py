@@ -149,7 +149,7 @@ def update_calc(slug: str, arca: dict) -> bool:
         'lastUpdated': PUBLISHED_DATE,
         'source': src_meta['source'],
         'sourceUrl': src_meta['sourceUrl'],
-        'updateType': 'auto',
+        'updateType': 'auto-scrape',
         'notes': prev.get('notes') or 'Datos vigentes parseados desde fuentes oficiales de ARCA. Refresh diario via cron (.github/workflows/arca-monitor-daily.yml).',
     }
     # Solo el grupo "ganancias" recibe el autoSource con datos parseados del PDF;
