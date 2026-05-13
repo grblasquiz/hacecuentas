@@ -1,0 +1,48 @@
+name: ARCA monitor (daily)
+
+# Detecta cambios en los PDFs oficiales de ARCA con la escala/deducciones del
+# Impuesto a las Ganancias. ARCA publica 2 PDFs por semestre (ene-jun, jul-dic)
+# que cambian cuando se actualiza por IPC INDEC (art. 73 Ley 27.743).
+#
+# Política: cron diario. Si hash del PDF cambió → re-extraer + commit + alerta.
+# Si no cambió → no-op (la mayoría de los días).
+#
+# Output: db/data-sources/arca-ganancias-<periodo>.json (escala + deducciones
+# parseadas + lastUpdated + lastChecked + hash).
+
+on:
+  schedule:
+    - cron: '0 13 * * *'  # daily 13:00 UTC = 10:00 ART
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pypdf
+        run: pip install pypdf
+
+      - name: Run ARCA monitor
+        run: python3 scripts/data-sources/fetch-arca-ganancias.py
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add db/data-sources/arca-ganancias-*.json
+          if git diff --cached --quiet; then
+            echo "✓ Sin cambios — ARCA no publicó nueva tabla"
+          else
+            git commit -m "chore(arca): refresh escala/deducciones Ganancias $(date -u +'%Y-%m-%d')"
+            git push
+          fi
