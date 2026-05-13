@@ -2118,6 +2118,7 @@ import { compute as compute__monotributo_colombia_pequenos_comercios } from './m
 import { monotributoCuota2026TodasCategorias } from './monotributo-cuota-2026-todas-categorias';
 import { monotributoSocialBeneficioExencion } from './monotributo-social-beneficio-exencion';
 import { compute as compute__monotributo_vs_autonomo_vs_empleado_mismo_ingreso } from './monotributo-vs-autonomo-vs-empleado-mismo-ingreso';
+import { monotributoVsCategoriaOptima } from './monotributo-vs-categoria-optima';
 import { monotributoVsInscripto } from './monotributo-vs-inscripto';
 import { morphoBlueMarkets } from './morpho-blue-markets';
 import { morteroJuntas } from './mortero-juntas';
@@ -5499,6 +5500,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'monotributo-cuota-2026-todas-categorias': monotributoCuota2026TodasCategorias,
   'monotributo-social-beneficio-exencion': monotributoSocialBeneficioExencion,
   'monotributo-vs-autonomo-vs-empleado-mismo-ingreso': compute__monotributo_vs_autonomo_vs_empleado_mismo_ingreso,
+  'monotributo-vs-categoria-optima': monotributoVsCategoriaOptima,
   'monotributo-vs-inscripto': monotributoVsInscripto,
   'morpho-blue-markets': morphoBlueMarkets,
   'mortero-juntas': morteroJuntas,
