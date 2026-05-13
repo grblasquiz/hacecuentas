@@ -1,0 +1,131 @@
+# Pruning batch 2 — 2026-05-13
+
+**118 redirects** de variantes near-duplicate → canónica del mismo cluster.
+
+Criterios estrictos:
+- Todas las hermanas del cluster son `audience: global`
+- Ninguna del cluster menciona AR (ARCA/AFIP/ANSES/etc.)
+- Canónica tiene ≥200 palabras de contenido
+
+## Redirects
+
+| From | To | From wc | Canonical wc |
+|---|---|---|---|
+| `/calculadora-1rm-peso-maximo` | `/calculadora-1rm-peso-maximo-levantamiento` | 338 | 998 |
+| `/calculadora-1rm-peso-muerto-estimador` | `/calculadora-1rm-peso-maximo-levantamiento` | 299 | 998 |
+| `/calculadora-agua-diaria-litros-segun-peso` | `/calculadora-agua-diaria-recomendada` | 388 | 666 |
+| `/calculadora-agua-diaria-litros-necesarios-ejercicio-clima` | `/calculadora-agua-diaria-recomendada` | 272 | 666 |
+| `/calculadora-agua-diaria-necesaria` | `/calculadora-agua-diaria-recomendada` | 265 | 666 |
+| `/calculadora-area-perimetro-circulo-sector-circular` | `/calculadora-area-perimetro-figuras` | 411 | 668 |
+| `/calculadora-area-perimetro-circulo-radio` | `/calculadora-area-perimetro-figuras` | 330 | 668 |
+| `/calculadora-ayuno-intermitente-16-8-ventana-horario` | `/calculadora-ayuno-intermitente-ventana-comer` | 434 | 452 |
+| `/calculadora-ayuno-intermitente-beneficios-calorias-20-4` | `/calculadora-ayuno-intermitente-ventana-comer` | 305 | 452 |
+| `/calculadora-ayuno-intermitente-16-8-calorias` | `/calculadora-ayuno-intermitente-ventana-comer` | 302 | 452 |
+| `/calculadora-calorias-diarias-gato-peso-actividad` | `/calculadora-calorias-diarias-tdee` | 655 | 877 |
+| `/calculadora-calorias-diarias-perro-actividad` | `/calculadora-calorias-diarias-tdee` | 367 | 877 |
+| `/calculadora-calorias-quemadas-tareas-domesticas` | `/calculadora-calorias-quemadas-deporte` | 351 | 805 |
+| `/calculadora-calorias-quemadas-yoga-pilates` | `/calculadora-calorias-quemadas-deporte` | 349 | 805 |
+| `/calculadora-calorias-quemadas-running-km-peso` | `/calculadora-calorias-quemadas-deporte` | 305 | 805 |
+| `/calculadora-calorias-quemadas-nadar-estilo-libre-pecho` | `/calculadora-calorias-quemadas-deporte` | 304 | 805 |
+| `/calculadora-calorias-quemadas-bicicleta-distancia-pendiente` | `/calculadora-calorias-quemadas-deporte` | 302 | 805 |
+| `/calculadora-calorias-quemadas-ejercicio` | `/calculadora-calorias-quemadas-deporte` | 285 | 805 |
+| `/calculadora-calorias-quemadas-delantero-sprinter-partido` | `/calculadora-calorias-quemadas-deporte` | 265 | 805 |
+| `/calculadora-calorias-quemadas-mediocampista-partido` | `/calculadora-calorias-quemadas-deporte` | 247 | 805 |
+| `/calculadora-calorias-quemadas-arquero-partido-90-min` | `/calculadora-calorias-quemadas-deporte` | 239 | 805 |
+| `/calculadora-conversor-mb-a-gb` | `/calculadora-conversor-hp-a-kw` | 281 | 291 |
+| `/calculadora-conversor-kw-a-hp` | `/calculadora-conversor-hp-a-kw` | 265 | 291 |
+| `/calculadora-conversor-gb-a-mb` | `/calculadora-conversor-hp-a-kw` | 264 | 291 |
+| `/calculadora-conversor-gb-a-tb` | `/calculadora-conversor-hp-a-kw` | 263 | 291 |
+| `/calculadora-conversor-tb-a-gb` | `/calculadora-conversor-hp-a-kw` | 263 | 291 |
+| `/calculadora-conversor-kb-a-mb` | `/calculadora-conversor-hp-a-kw` | 257 | 291 |
+| `/calculadora-conversor-fahrenheit-a-celsius` | `/calculadora-conversor-fahrenheit-a-celsius-horno` | 292 | 298 |
+| `/calculadora-conversor-fahrenheit-a-kelvin` | `/calculadora-conversor-fahrenheit-a-celsius-horno` | 284 | 298 |
+| `/calculadora-conversor-kmh-a-mph` | `/calculadora-conversor-kmh-a-ms` | 276 | 279 |
+| `/calculadora-conversor-ms-a-kmh` | `/calculadora-conversor-kmh-a-ms` | 276 | 279 |
+| `/calculadora-conversor-libras-a-onzas` | `/calculadora-conversor-libras-a-kilogramos` | 277 | 292 |
+| `/calculadora-conversor-libras-a-gramos` | `/calculadora-conversor-libras-a-kilogramos` | 254 | 292 |
+| `/calculadora-conversor-metros-a-pies` | `/calculadora-conversor-metros-lineales-a-metros-cuadrados` | 297 | 302 |
+| `/calculadora-conversor-metros-a-yardas` | `/calculadora-conversor-metros-lineales-a-metros-cuadrados` | 287 | 302 |
+| `/calculadora-conversor-metros-cubicos-a-litros` | `/calculadora-conversor-metros-lineales-a-metros-cuadrados` | 279 | 302 |
+| `/calculadora-conversor-metros-cuadrados-a-pies-cuadrados` | `/calculadora-conversor-metros-lineales-a-metros-cuadrados` | 271 | 302 |
+| `/calculadora-conversor-pies-a-pulgadas` | `/calculadora-conversor-pies-a-metros` | 281 | 303 |
+| `/calculadora-conversor-pies-cubicos-a-metros-cubicos` | `/calculadora-conversor-pies-a-metros` | 268 | 303 |
+| `/calculadora-conversor-pies-cuadrados-a-metros-cuadrados` | `/calculadora-conversor-pies-a-metros` | 258 | 303 |
+| `/calculadora-conversor-pulgadas-a-milimetros` | `/calculadora-conversor-pulgadas-a-centimetros` | 280 | 316 |
+| `/calculadora-conversor-pulgadas-cuadradas-a-centimetros-cuadrados` | `/calculadora-conversor-pulgadas-a-centimetros` | 258 | 316 |
+| `/calculadora-costo-mascota-vida-util` | `/calculadora-costo-mascota-primer-ano` | 318 | 323 |
+| `/calculadora-costo-mascota-mensual` | `/calculadora-costo-mascota-primer-ano` | 299 | 323 |
+| `/calculadora-costo-mensual-pez-acuario` | `/calculadora-costo-mensual-raza-gato` | 553 | 668 |
+| `/calculadora-costo-mensual-aire-acondicionado-consumo-kwh-factura` | `/calculadora-costo-mensual-raza-gato` | 469 | 668 |
+| `/calculadora-costo-mensual-raza-perro` | `/calculadora-costo-mensual-raza-gato` | 383 | 668 |
+| `/calculadora-costo-mensual-mascota-perro-gato` | `/calculadora-costo-mensual-raza-gato` | 370 | 668 |
+| `/calculadora-costo-mensual-aprender-idioma-opciones` | `/calculadora-costo-mensual-raza-gato` | 332 | 668 |
+| `/calculadora-deficit-calorico-perder-peso` | `/calculadora-deficit-calorico-semanal` | 369 | 846 |
+| `/calculadora-deficit-calorico-perder-peso-semana` | `/calculadora-deficit-calorico-semanal` | 307 | 846 |
+| `/calculadora-distancia-entre-plantas-espaciado` | `/calculadora-distancia-entre-plantas-huerto` | 474 | 534 |
+| `/calculadora-distancia-entre-dos-puntos-2d-3d` | `/calculadora-distancia-entre-plantas-huerto` | 296 | 534 |
+| `/calculadora-edad-gato-humano` | `/calculadora-edad-gato-anos-humanos` | 367 | 1198 |
+| `/calculadora-edad-gato-humano-formula-anos` | `/calculadora-edad-gato-anos-humanos` | 194 | 1198 |
+| `/calculadora-edad-humana-hamster-anos` | `/calculadora-edad-humana-tortuga` | 347 | 503 |
+| `/calculadora-edad-humana-conejo-anos` | `/calculadora-edad-humana-tortuga` | 330 | 503 |
+| `/calculadora-edad-humana-por-raza-perro` | `/calculadora-edad-humana-tortuga` | 286 | 503 |
+| `/calculadora-edad-perro-humano` | `/calculadora-edad-perro-anos-humanos` | 432 | 1194 |
+| `/calculadora-edad-perro-gato-anos-humanos-tabla-2026-actualizada` | `/calculadora-edad-perro-anos-humanos` | 402 | 1194 |
+| `/calculadora-edad-perro-humano-raza-tamano` | `/calculadora-edad-perro-anos-humanos` | 191 | 1194 |
+| `/calculadora-frecuencia-cardiaca-zonas-karvonen` | `/calculadora-frecuencia-cardiaca-zonas-entrenamiento` | 400 | 782 |
+| `/calculadora-frecuencia-cardiaca-maxima-edad` | `/calculadora-frecuencia-cardiaca-zonas-entrenamiento` | 398 | 782 |
+| `/calculadora-frecuencia-cardiaca-zonas-entrenamiento-karvonen` | `/calculadora-frecuencia-cardiaca-zonas-entrenamiento` | 304 | 782 |
+| `/calculadora-horas-aprender-arabe-b2` | `/calculadora-horas-aprender-aleman-c1` | 289 | 290 |
+| `/calculadora-horas-aprender-frances-b2` | `/calculadora-horas-aprender-aleman-c1` | 289 | 290 |
+| `/calculadora-horas-aprender-italiano-b1` | `/calculadora-horas-aprender-aleman-c1` | 288 | 290 |
+| `/calculadora-horas-aprender-ruso-b2` | `/calculadora-horas-aprender-aleman-c1` | 288 | 290 |
+| `/calculadora-horas-aprender-chino-hsk4` | `/calculadora-horas-aprender-aleman-c1` | 287 | 290 |
+| `/calculadora-horas-aprender-ingles-nivel-c1` | `/calculadora-horas-aprender-aleman-c1` | 287 | 290 |
+| `/calculadora-horas-aprender-portugues-b2` | `/calculadora-horas-aprender-aleman-c1` | 287 | 290 |
+| `/calculadora-horas-aprender-japones-n3` | `/calculadora-horas-aprender-aleman-c1` | 286 | 290 |
+| `/calculadora-horas-aprender-coreano-topik4` | `/calculadora-horas-aprender-aleman-c1` | 284 | 290 |
+| `/calculadora-indice-cintura-estatura` | `/calculadora-indice-cintura-cadera` | 363 | 399 |
+| `/calculadora-indice-cintura-altura-whtr-riesgo` | `/calculadora-indice-cintura-cadera` | 360 | 399 |
+| `/calculadora-indice-cintura-cadera-salud-cardiovascular` | `/calculadora-indice-cintura-cadera` | 269 | 399 |
+| `/calculadora-jet-lag-zonas-horarias-adaptacion-dias` | `/calculadora-jet-lag-recuperacion` | 908 | 1166 |
+| `/calculadora-jet-lag-recuperacion-horas-diferencia-dias` | `/calculadora-jet-lag-recuperacion` | 709 | 1166 |
+| `/calculadora-jet-lag-recovery-dias-ruta` | `/calculadora-jet-lag-recuperacion` | 324 | 1166 |
+| `/calculadora-mundial-2026-probabilidad-clasificacion-ranking-fifa` | `/calculadora-mundial-2026-probabilidad-bicampeon` | 364 | 534 |
+| `/calculadora-mundial-2026-probabilidad-ganar-penales` | `/calculadora-mundial-2026-probabilidad-bicampeon` | 226 | 534 |
+| `/calculadora-plan-entrenamiento-10k-semanas` | `/calculadora-plan-entrenamiento-5k-semanas` | 751 | 847 |
+| `/calculadora-plan-entrenamiento-21k-semi-maraton-semanas` | `/calculadora-plan-entrenamiento-5k-semanas` | 701 | 847 |
+| `/calculadora-plan-entrenamiento-maraton-42k-semanas` | `/calculadora-plan-entrenamiento-5k-semanas` | 665 | 847 |
+| `/calculadora-position-size-forex-pips-riesgo` | `/calculadora-position-size-cripto-leverage` | 321 | 343 |
+| `/calculadora-position-size-stocks-porcentaje` | `/calculadora-position-size-cripto-leverage` | 291 | 343 |
+| `/calculadora-potencia-electrica-watts-volts-amperes` | `/calculadora-potencia-electrica-p-vi` | 311 | 750 |
+| `/calculadora-potencia-electrica-watts` | `/calculadora-potencia-electrica-p-vi` | 280 | 750 |
+| `/calculadora-premios-mundial-2026-seleccion-por-fase` | `/calculadora-premios-mundial-clubes-2025-fifa-32-equipos` | 261 | 328 |
+| `/calculadora-premios-mundial-clubes-fifa-2025-2026` | `/calculadora-premios-mundial-clubes-2025-fifa-32-equipos` | 225 | 328 |
+| `/calculadora-presion-arterial-rango` | `/calculadora-presion-arterial-clasificacion` | 427 | 553 |
+| `/calculadora-presion-arterial-tabla-normal-hipertension` | `/calculadora-presion-arterial-clasificacion` | 268 | 553 |
+| `/calculadora-presion-arterial-clasificacion-oms` | `/calculadora-presion-arterial-clasificacion` | 266 | 553 |
+| `/calculadora-promedio-ponderado-notas-materias` | `/calculadora-promedio-ponderado-materias-creditos-universidad` | 429 | 744 |
+| `/calculadora-promedio-ponderado-universidad` | `/calculadora-promedio-ponderado-materias-creditos-universidad` | 359 | 744 |
+| `/calculadora-proteina-diaria-gramos-objetivo` | `/calculadora-proteina-diaria-objetivo` | 451 | 872 |
+| `/calculadora-proteina-diaria-fisicoculturismo-ganar-musculo` | `/calculadora-proteina-diaria-objetivo` | 306 | 872 |
+| `/calculadora-regla-de-tres-simple-directa-inversa` | `/calculadora-regla-de-tres-simple` | 731 | 1028 |
+| `/calculadora-regla-de-tres-compuesta` | `/calculadora-regla-de-tres-simple` | 629 | 1028 |
+| `/calculadora-regla-de-tres-compuesta-directa-inversa` | `/calculadora-regla-de-tres-simple` | 444 | 1028 |
+| `/calculadora-regla-de-tres-inversa` | `/calculadora-regla-de-tres-simple` | 284 | 1028 |
+| `/calculadora-resistencia-led-tension-corriente` | `/calculadora-resistencia-led-serie-paralelo` | 526 | 898 |
+| `/calculadora-resistencia-led-voltaje-caida` | `/calculadora-resistencia-led-serie-paralelo` | 318 | 898 |
+| `/calculadora-tasa-metabolica-reposo-katch` | `/calculadora-tasa-metabolica-reposo-katch-mcardle` | 425 | 449 |
+| `/calculadora-tasa-metabolica-reposo-rmr` | `/calculadora-tasa-metabolica-reposo-katch-mcardle` | 379 | 449 |
+| `/calculadora-tiempo-lectura-paginas-estudio` | `/calculadora-tiempo-lectura-libro-paginas` | 357 | 414 |
+| `/calculadora-tiempo-lectura-por-paginas` | `/calculadora-tiempo-lectura-libro-paginas` | 213 | 414 |
+| `/calculadora-tiempo-leer-novela-genero` | `/calculadora-tiempo-leer-libro-paginas-velocidad` | 188 | 708 |
+| `/calculadora-tiempo-leer-libro-general` | `/calculadora-tiempo-leer-libro-paginas-velocidad` | 156 | 708 |
+| `/calculadora-tiempo-recuperacion-isquiotibial-grado-1-2-3` | `/calculadora-tiempo-recuperacion-rotura-lca-ligamento-cruzado` | 243 | 246 |
+| `/calculadora-tiempo-recuperacion-fractura-tibia-perone-futbolista` | `/calculadora-tiempo-recuperacion-rotura-lca-ligamento-cruzado` | 242 | 246 |
+| `/calculadora-velocidad-lectura-comprension` | `/calculadora-velocidad-lectura-idioma-palabras-minuto` | 407 | 648 |
+| `/calculadora-velocidad-lectura-wpm` | `/calculadora-velocidad-lectura-idioma-palabras-minuto` | 290 | 648 |
+| `/calculadora-velocidad-lectura-rapida-ejercicio` | `/calculadora-velocidad-lectura-idioma-palabras-minuto` | 188 | 648 |
+| `/calculadora-vino-por-invitado-cena` | `/calculadora-vino-por-mesa-evento-tinto-blanco-espumante` | 344 | 411 |
+| `/calculadora-vino-por-invitado-horas-evento` | `/calculadora-vino-por-mesa-evento-tinto-blanco-espumante` | 274 | 411 |
+| `/calculadora-vo2-max-cooper-12-minutos` | `/calculadora-vo2-max-test-cooper` | 408 | 993 |
+| `/calculadora-vo2-max-futbolista-profesional-vs-amateur` | `/calculadora-vo2-max-test-cooper` | 246 | 993 |
