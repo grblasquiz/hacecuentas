@@ -17,7 +17,7 @@ on:
       hours:
         description: 'Window de búsqueda (horas)'
         required: false
-        default: '24'
+        default: '168'
       limit:
         description: 'Top N threads'
         required: false
@@ -38,8 +38,12 @@ jobs:
           python-version: '3.12'
 
       - name: Run Reddit monitor
+        # Default 168h (7d) — los hilos AR financieros son evergreen, un
+        # window de 24h dejaba la queue vacía la mayoría de los días.
+        # Overlap con días anteriores se filtra manualmente (regla del script:
+        # "Si se repite el thread, mandá el comment 1 vez sola").
         run: |
-          HOURS="${{ github.event.inputs.hours || '24' }}"
+          HOURS="${{ github.event.inputs.hours || '168' }}"
           LIMIT="${{ github.event.inputs.limit || '10' }}"
           python3 scripts/reddit-monitor.py --hours "$HOURS" --limit "$LIMIT"
 

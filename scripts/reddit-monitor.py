@@ -378,7 +378,7 @@ Acá te calcula semanas + FPP: {calc}""",
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('--hours', type=int, default=24, help='Window de búsqueda (horas)')
+    p.add_argument('--hours', type=int, default=168, help='Window de búsqueda (horas). Default 168=7d porque hilos r/argentina relevantes a calcs financieras son evergreen — un window de 24h dejaba la queue vacía la mayoría de los días.')
     p.add_argument('--out', default=None, help='Output MD path (default: docs/reddit-queue-YYYYMMDD.md)')
     p.add_argument('--limit', type=int, default=10, help='Top N threads a generar drafts')
     args = p.parse_args()

@@ -43,6 +43,11 @@ jobs:
       - name: Build
         # Verbose timing: imprime tiempo de cada sub-step de prebuild + astro build.
         # Si futuro deploy vuelve a colgar, queda registro de qué etapa fue.
+        env:
+          # PUBLIC_MS_CLARITY_ID se inyecta en build-time vía import.meta.env
+          # (ver src/layouts/Layout.astro). Sin el secret la condición evalúa
+          # falso y el script no se renderiza — no rompe el build.
+          PUBLIC_MS_CLARITY_ID: ${{ secrets.PUBLIC_MS_CLARITY_ID }}
         run: |
           set -e
           echo "::group::env info"
