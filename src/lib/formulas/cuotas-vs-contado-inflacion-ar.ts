@@ -21,12 +21,12 @@ export function cuotasVsContadoInflacionAr(i: Inputs): Outputs {
   const diferencia = valorContadoConDescuento - valorPresenteCuotas;
   const ahorroPctRealEnCuotas = ((precio - valorPresenteCuotas) / precio) * 100;
   let recomendacion: string;
-  if (diferencia < 0) {
-    recomendacion = `Cuotas sin interés te ahorran ${Math.round(-diferencia).toLocaleString('es-AR')} ARS en valor presente (${ahorroPctRealEnCuotas.toFixed(1)}% real). Siempre cuotas.`;
+  if (diferencia > 0) {
+    recomendacion = `Cuotas sin interés te ahorran ${Math.round(diferencia).toLocaleString('es-AR')} ARS en valor presente (${ahorroPctRealEnCuotas.toFixed(1)}% real). Siempre cuotas.`;
   } else if (diferencia === 0) {
     recomendacion = 'Es equivalente. Elegí según tu flujo de caja.';
   } else {
-    recomendacion = `Contado con ${desc}% de descuento conviene: te ahorrás ${Math.round(diferencia).toLocaleString('es-AR')} ARS sobre el valor presente de las cuotas.`;
+    recomendacion = `Contado con ${desc}% de descuento conviene: te ahorrás ${Math.round(-diferencia).toLocaleString('es-AR')} ARS sobre el valor presente de las cuotas.`;
   }
   return {
     valorPresenteCuotas: Math.round(valorPresenteCuotas),
