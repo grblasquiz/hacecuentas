@@ -182,6 +182,42 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
 const schemaGraph: any[] = [schemaHowTo, schemaBreadcrumb, schemaApp];
 if (schemaFAQ) schemaGraph.push(schemaFAQ);
 if (schemaArticle) schemaGraph.push(schemaArticle);
+
+// MedicalWebPage / LearningResource — categoría 'salud' / 'educacion'.
+// Bing y Copilot priorizan schema médico/educativo para esos queries.
+if (calc.category === 'salud') {
+  schemaGraph.push({
+    '@type': 'MedicalWebPage',
+    name: calc.h1,
+    description: schemaDescription,
+    url: `https://hacecuentas.com/es/${calc.slug}`,
+    inLanguage: 'es',
+    datePublished: (datePublished || dateModified).split('T')[0],
+    dateModified: dateModified.split('T')[0],
+    lastReviewed: (calc.lastReviewed || dateModified.split('T')[0]),
+    audience: { '@type': 'MedicalAudience', audienceType: 'Patient' },
+    medicalAudience: 'Patient',
+    publisher: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+    specialty: { '@type': 'MedicalSpecialty', name: 'General medicine' },
+  });
+}
+if (calc.category === 'educacion') {
+  schemaGraph.push({
+    '@type': 'LearningResource',
+    name: calc.h1,
+    description: schemaDescription,
+    url: `https://hacecuentas.com/es/${calc.slug}`,
+    inLanguage: 'es',
+    learningResourceType: 'Calculator',
+    educationalUse: 'Practice',
+    audience: { '@type': 'EducationalAudience', educationalRole: 'student' },
+    datePublished: (datePublished || dateModified).split('T')[0],
+    dateModified: dateModified.split('T')[0],
+    publisher: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+    isAccessibleForFree: true,
+  });
+}
+
 const schema = { '@context': 'https://schema.org', '@graph': schemaGraph };
 
 const updated = lastReviewedLabel;

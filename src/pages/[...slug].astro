@@ -496,6 +496,71 @@ if (isRecipeEligible) {
   });
 }
 
+// MedicalWebPage / MedicalEntity — para calcs categoría 'salud'.
+// Bing y Copilot priorizan schema médico para queries de salud → más confianza,
+// más rich snippets, más citas en respuestas AI.
+// Sin "reviewedBy" de un médico real, usamos Organization con disclosure honesta.
+if (calc.category === 'salud') {
+  schemaGraph.push({
+    '@type': 'MedicalWebPage',
+    name: calc.h1,
+    description: schemaDescription,
+    url: `https://hacecuentas.com/${calc.slug}`,
+    inLanguage: schemaLang,
+    datePublished: (datePublished || dateModified).split('T')[0],
+    dateModified: dateModified.split('T')[0],
+    lastReviewed: (calc.lastReviewed || dateModified.split('T')[0]),
+    audience: {
+      '@type': 'MedicalAudience',
+      audienceType: 'Patient',
+    },
+    medicalAudience: 'Patient',
+    publisher: {
+      '@type': 'Organization',
+      name: 'Hacé Cuentas',
+      url: 'https://hacecuentas.com',
+      logo: 'https://hacecuentas.com/logo-512.png',
+    },
+    specialty: {
+      '@type': 'MedicalSpecialty',
+      name: 'General medicine',
+    },
+    // Disclosure: cálculos orientativos, no reemplazan consulta médica.
+    // Bing/Copilot premian la transparencia explícita.
+    aspect: 'Diagnosis',
+    citation: {
+      '@type': 'CreativeWork',
+      name: 'Fórmulas validadas — OMS, MD Calc, sociedades médicas',
+    },
+  });
+}
+
+// LearningResource — para calcs categoría 'educacion'.
+// Bing y AI engines lo usan para clasificar contenido educativo.
+if (calc.category === 'educacion') {
+  schemaGraph.push({
+    '@type': 'LearningResource',
+    name: calc.h1,
+    description: schemaDescription,
+    url: `https://hacecuentas.com/${calc.slug}`,
+    inLanguage: schemaLang,
+    learningResourceType: 'Calculator',
+    educationalUse: 'Practice',
+    audience: {
+      '@type': 'EducationalAudience',
+      educationalRole: 'student',
+    },
+    datePublished: (datePublished || dateModified).split('T')[0],
+    dateModified: dateModified.split('T')[0],
+    publisher: {
+      '@type': 'Organization',
+      name: 'Hacé Cuentas',
+      url: 'https://hacecuentas.com',
+    },
+    isAccessibleForFree: true,
+  });
+}
+
 // VideoObject schema — si la calc declara `video` (objeto o array de objetos),
 // agregamos schema VideoObject para que Google muestre el rich snippet de video
 // y aparezca en Google Videos. Formato esperado en JSON:
