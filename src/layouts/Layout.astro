@@ -312,12 +312,21 @@ const globalSchema = {
       gtag('set', 'ads_data_redaction', true);
       gtag('js', new Date());
       // send_page_view true (default) + anonymize_ip. Config explícito para debug.
-      gtag('config', 'G-789KMTKWX2', {
-        anonymize_ip: true,
-        send_page_view: true,
-        transport_type: 'beacon',
-      });
-      gtag('config', 'AW-18096606872');
+      // Fix `(not set)` landing: si Chrome/Bing prerender la página, postergar config
+      // hasta que el user active la navegación. Sin esto, ~500 sess/mes caen como (not set).
+      function configGA() {
+        gtag('config', 'G-789KMTKWX2', {
+          anonymize_ip: true,
+          send_page_view: true,
+          transport_type: 'beacon',
+        });
+        gtag('config', 'AW-18096606872');
+      }
+      if (document.prerendering) {
+        document.addEventListener('prerenderingchange', configGA, { once: true });
+      } else {
+        configGA();
+      }
       function gtagSendEvent(url) {
         var callback = function () {
           if (typeof url === 'string') { window.location = url; }
