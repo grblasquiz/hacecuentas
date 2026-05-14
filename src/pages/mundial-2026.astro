@@ -1,0 +1,268 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+export const prerender = true;
+
+const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
+const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+
+const groups: Array<{ title: string; icon: string; intro: string; slugs: string[] }> = [
+  {
+    title: 'Clasificación y formato 48 selecciones',
+    icon: '🏆',
+    intro: 'El Mundial 2026 estrena formato 48 selecciones y 12 grupos. Estas calculadoras te explican el reglamento nuevo, los puntos que necesita tu selección y cómo se ordenan los mejores terceros.',
+    slugs: [
+      'calculadora-mundial-2026-puntos-clasificar-octavos',
+      'calculadora-mundial-2026-cupos-confederacion',
+      'calculadora-mundial-2026-grupo-muerte-detector',
+      'calculadora-mundial-2026-diferencia-gol-desempate',
+      'calculadora-mundial-2026-fixture-octavos-posicion-grupo',
+      'calculadora-mundial-2026-puntaje-historico-fase-grupos',
+    ],
+  },
+  {
+    title: 'Probabilidades y predicciones',
+    icon: '📊',
+    intro: 'Calculá las chances reales de tu selección de pasar la fase de grupos, llegar a la final o ganar el Mundial — basado en ranking FIFA, sorteo, histórico y ELO.',
+    slugs: [
+      'calculadora-mundial-2026-predictor-campeon-ranking',
+      'calculadora-mundial-2026-probabilidad-clasificacion-ranking-fifa',
+      'calculadora-mundial-2026-probabilidad-bicampeon',
+      'calculadora-mundial-2026-probabilidad-ganar-penales',
+      'calculadora-mundial-2026-comparador-selecciones-ranking',
+      'calculadora-mundial-2026-goles-argentina-repetir-titulo',
+    ],
+  },
+  {
+    title: 'Reglas del juego',
+    icon: '⚽',
+    intro: 'Amarillas, suspensiones, prórroga, tiempo añadido y todo lo que define un partido del Mundial.',
+    slugs: [
+      'calculadora-mundial-2026-tarjetas-suspension',
+      'calculadora-mundial-2026-descanso-entre-partidos',
+      'calculadora-mundial-2026-goles-prorroga-promedio',
+      'calculadora-tiempo-anadido-promedio-mundial-2026-liga',
+    ],
+  },
+  {
+    title: 'Plata, premios y bonus',
+    icon: '💰',
+    intro: 'Cuánto reparte FIFA por cada fase, cuánto cobra cada jugador, cuánto vale un viaje completo y cuántos dólares se mueven en derechos de TV.',
+    slugs: [
+      'calculadora-premios-mundial-2026-seleccion-por-fase',
+      'calculadora-mundial-2026-bonus-jugador-fase',
+      'calculadora-derechos-tv-mundial-2026-argentina-espana-mexico-brasil',
+      'calculadora-mundial-2026-presupuesto-hincha-total',
+    ],
+  },
+  {
+    title: 'Viaje, entradas y experiencia',
+    icon: '✈️',
+    intro: 'Si vas al Mundial, estas calcs te ayudan a presupuestar todo: vuelos, entradas, estadios, comida en la cancha y horarios de partidos.',
+    slugs: [
+      'calculadora-mundial-2026-costo-viaje-miami-toronto-cdmx',
+      'calculadora-mundial-2026-costo-entrada-fase',
+      'calculadora-mundial-2026-estadios-comparador',
+      'calculadora-mundial-2026-cerveza-comida-estadio-precio',
+      'calculadora-mundial-2026-horario-partido-zona-horaria',
+      'calculadora-mundial-2026-dias-hasta-debut-seleccion',
+      'calculadora-mundial-2026-partidos-faltantes-seleccion',
+    ],
+  },
+  {
+    title: 'Fan, quinielas y fantasy',
+    icon: '🎯',
+    intro: 'Si lo vivís de hincha o lo apostás con amigos, estas son las calculadoras para vos.',
+    slugs: [
+      'calculadora-mundial-2026-quiniela-pool-probabilidad',
+      'calculadora-fantasy-mundial-2026-mejor-once',
+      'calculadora-mundial-2026-dream-team-once-combinaciones',
+      'calculadora-mundial-2026-horas-tv-cronograma-fan',
+      'calculadora-mundial-2026-camiseta-precio-comparador',
+    ],
+  },
+  {
+    title: 'Jugadores, goleadores y récords',
+    icon: '⭐',
+    intro: 'Messi, el botín de oro, los récords históricos y cuántos goles te imaginás que vas a ver.',
+    slugs: [
+      'calculadora-mundial-2026-record-messi-goles-minutos',
+      'calculadora-mundial-2026-botin-oro-goleador-estimador',
+      'calculadora-top-10-goleadores-historico-mundial-fifa',
+      'cuanto-falta-mundial-fifa-2026-2030',
+    ],
+  },
+];
+
+// Resolver y filtrar
+const resolvedGroups = groups.map((g) => ({
+  ...g,
+  items: g.slugs.map((s) => bySlug.get(s)).filter(Boolean),
+}));
+const totalItems = resolvedGroups.reduce((acc, g) => acc + g.items.length, 0);
+
+const title = `Mundial 2026 — ${totalItems}+ calculadoras: probabilidades, puntos, viaje, premios | Hacé Cuentas`;
+const description = `Todas las calculadoras del Mundial 2026 en un solo lugar: clasificación, probabilidades de tu selección, reglas del juego, presupuesto de viaje, entradas, fantasy, jugadores y récords. Actualizadas a 2026 con formato 48 selecciones.`;
+const canonical = '/mundial-2026';
+
+// ItemList schema con todas las calcs
+const allItems = resolvedGroups.flatMap((g) => g.items);
+const itemListSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Calculadoras Mundial 2026',
+  description,
+  numberOfItems: allItems.length,
+  itemListElement: allItems.map((c: any, i: number) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    url: `https://hacecuentas.com/${c.slug}`,
+    name: c.h1,
+  })),
+};
+
+// CollectionPage schema
+const collectionSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Calculadoras Mundial 2026',
+  description,
+  url: `https://hacecuentas.com${canonical}`,
+  inLanguage: 'es-AR',
+  about: {
+    '@type': 'SportsEvent',
+    name: 'Copa Mundial de la FIFA 2026',
+    startDate: '2026-06-11',
+    endDate: '2026-07-19',
+    location: [
+      { '@type': 'Country', name: 'Estados Unidos' },
+      { '@type': 'Country', name: 'México' },
+      { '@type': 'Country', name: 'Canadá' },
+    ],
+    organizer: { '@type': 'Organization', name: 'FIFA' },
+  },
+  isPartOf: { '@type': 'WebSite', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+};
+
+const schema = { '@context': 'https://schema.org', '@graph': [itemListSchema, collectionSchema] };
+
+// Countdown info
+const debut = new Date('2026-06-11T00:00:00Z');
+const today = new Date();
+const daysToDebut = Math.max(0, Math.ceil((debut.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+---
+
+<Layout title={title} description={description} canonical={canonical} audience="global" schema={schema}>
+  <Header />
+  <main class="article-main">
+    <article class="hub-page">
+      <header class="hub-header">
+        <div class="hub-eyebrow">⚽ Hub temático</div>
+        <h1>Mundial 2026 — Todas las calculadoras</h1>
+        <p class="lede">
+          Más de <strong>{totalItems} calculadoras</strong> sobre el Mundial 2026 — el primero con
+          <strong>48 selecciones</strong>, <strong>104 partidos</strong> y tres sedes (USA, México, Canadá).
+          Clasificación, probabilidades, reglas, presupuesto, entradas, jugadores y récords. Todo
+          calculado con datos actualizados a 2026.
+        </p>
+        <div class="hub-meta">
+          <span class="meta-item"><strong>{daysToDebut} días</strong> al debut (11 jun 2026)</span>
+          <span class="meta-item">📅 <strong>11 jun – 19 jul 2026</strong></span>
+          <span class="meta-item">🌎 <strong>3 países</strong>, 16 estadios</span>
+          <span class="meta-item">🏆 <strong>48 selecciones</strong>, 104 partidos</span>
+        </div>
+      </header>
+
+      <nav class="hub-toc" aria-label="Índice del hub">
+        <strong>Saltar a:</strong>
+        <ul>
+          {resolvedGroups.map((g) => (
+            <li>
+              <a href={`#${g.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
+                {g.icon} {g.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {resolvedGroups.map((g) => {
+        const id = g.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        return (
+          <section class="hub-group" id={id}>
+            <h2><span class="group-icon" aria-hidden="true">{g.icon}</span> {g.title}</h2>
+            <p class="group-intro">{g.intro}</p>
+            <ul class="hub-list">
+              {g.items.map((c: any) => (
+                <li class="hub-item">
+                  <a href={`/${c.slug}`} class="hub-link">
+                    <span class="hub-icon" aria-hidden="true">{c.icon || '⚽'}</span>
+                    <div class="hub-body">
+                      <strong>{c.h1}</strong>
+                      <p>{c.description}</p>
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+
+      <aside class="hub-cta">
+        <h2>¿No encontrás lo que buscás?</h2>
+        <p>
+          Estamos sumando calcs nuevas cada semana. Pedí la tuya en{' '}
+          <a href="mailto:ideas@hacecuentas.com?subject=Calculadora Mundial 2026">ideas@hacecuentas.com</a>{' '}
+          o seguí explorando{' '}
+          <a href="/categoria/deportes">todas las calculadoras de deportes →</a>.
+        </p>
+      </aside>
+    </article>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  .hub-page { max-width: 980px; margin: 0 auto; padding: 1rem 1rem 3rem; }
+  .hub-header { text-align: center; padding: 1.5rem 0 2rem; border-bottom: 1px solid var(--border, #e2e8f0); margin-bottom: 2rem; }
+  .hub-eyebrow { display: inline-block; background: var(--accent-soft, #eef4ff); color: var(--accent-strong, #1e40af); padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 0.75rem; }
+  .hub-header h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); margin: 0.25rem 0 0.75rem; line-height: 1.15; }
+  .lede { font-size: 1.05rem; color: var(--text-2, #475569); max-width: 760px; margin: 0 auto 1.25rem; line-height: 1.55; }
+  .hub-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: center; font-size: 0.875rem; color: var(--text-2, #475569); }
+  .hub-meta strong { color: var(--text, #1e293b); }
+  .meta-item { white-space: nowrap; }
+
+  .hub-toc { background: var(--surface-2, #f8fafc); padding: 1rem 1.25rem; border-radius: 0.75rem; margin: 0 0 2rem; font-size: 0.9rem; }
+  .hub-toc strong { display: block; margin-bottom: 0.5rem; color: var(--text-2, #475569); }
+  .hub-toc ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
+  .hub-toc a { color: var(--accent, #2c5cdc); text-decoration: none; font-weight: 500; }
+  .hub-toc a:hover { text-decoration: underline; }
+
+  .hub-group { margin: 2.5rem 0; scroll-margin-top: 1rem; }
+  .hub-group h2 { font-size: 1.4rem; margin: 0 0 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+  .group-icon { font-size: 1.5rem; line-height: 1; }
+  .group-intro { color: var(--text-2, #475569); margin: 0 0 1rem; font-size: 0.975rem; line-height: 1.5; }
+
+  .hub-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+  .hub-item { margin: 0; }
+  .hub-link { display: flex; gap: 0.75rem; padding: 0.875rem; border: 1px solid var(--border, #e2e8f0); border-radius: 0.5rem; text-decoration: none; color: inherit; transition: border-color 0.15s, transform 0.15s; height: 100%; box-sizing: border-box; }
+  .hub-link:hover { border-color: var(--accent, #2c5cdc); transform: translateY(-1px); }
+  .hub-icon { font-size: 1.4rem; line-height: 1.2; flex-shrink: 0; }
+  .hub-body { display: flex; flex-direction: column; min-width: 0; }
+  .hub-body strong { color: var(--text, #1e293b); font-size: 0.975rem; line-height: 1.3; }
+  .hub-body p { margin: 0.25rem 0 0; color: var(--text-2, #64748b); font-size: 0.85rem; line-height: 1.4; }
+
+  .hub-cta { margin-top: 3rem; padding: 1.5rem; background: var(--surface-2, #f8fafc); border-radius: 0.75rem; text-align: center; }
+  .hub-cta h2 { font-size: 1.15rem; margin: 0 0 0.5rem; }
+  .hub-cta p { margin: 0; color: var(--text-2, #475569); }
+  .hub-cta a { color: var(--accent, #2c5cdc); font-weight: 500; }
+
+  @media (max-width: 640px) {
+    .hub-list { grid-template-columns: 1fr; }
+    .hub-meta { gap: 0.4rem 0.75rem; }
+  }
+</style>

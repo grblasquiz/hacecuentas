@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-05-12
+// Generated: 2026-05-14
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -1002,6 +1002,8 @@ import { compute as compute__cursor_vs_copilot_vs_claude_code_precio_mensual } f
 import { curvaOlvidoEbbinghausRepasosProgramados } from './curva-olvido-ebbinghaus-repasos-programados';
 import { curveStablePoolApy } from './curve-stable-pool';
 import { customerEffortScoreCes } from './customer-effort-score-ces';
+import { cyberMondayCountdownAhorroEstimado } from './cyber-monday-countdown-ahorro-estimado';
+import { cyberMondayCuotasSinInteresVsContado } from './cyber-monday-cuotas-sin-interes-vs-contado';
 import { compute as compute__daily_protein_intake_by_goal_calculator } from './daily-protein-intake-by-goal-calculator';
 import { compute as compute__daily_water_intake_by_weight_calculator } from './daily-water-intake-by-weight-calculator';
 import { daiquiriClasicoPersonas } from './daiquiri-clasico-personas';
@@ -1632,6 +1634,8 @@ import { horasSuenoHijoEdadRecomendadas } from './horas-sueno-hijo-edad-recomend
 import { horasSuenoNecesariasEdadAdulto } from './horas-sueno-necesarias-edad-adulto';
 import { horasTrabajoComprar } from './horas-trabajo-comprar';
 import { horasVidaRestantes } from './horas-vida-restantes';
+import { hotSaleAhorroTotalDescuentoCashbackCupon } from './hot-sale-ahorro-total-descuento-cashback-cupon';
+import { hotSaleCuotasSinInteresVsContado } from './hot-sale-cuotas-sin-interes-vs-contado';
 import { hotelPrecioNochesVsAirbnbComparativa } from './hotel-precio-noches-vs-airbnb-comparativa';
 import { compute as compute__hotel_split_cost_calculator } from './hotel-split-cost-calculator';
 import { hotelVsAirbnbVsHostelNocheComparativa } from './hotel-vs-airbnb-vs-hostel-noche-comparativa';
@@ -4384,6 +4388,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'curva-olvido-ebbinghaus-repasos-programados': curvaOlvidoEbbinghausRepasosProgramados,
   'curve-stable-pool': curveStablePoolApy,
   'customer-effort-score-ces': customerEffortScoreCes,
+  'cyber-monday-countdown-ahorro-estimado': cyberMondayCountdownAhorroEstimado,
+  'cyber-monday-cuotas-sin-interes-vs-contado': cyberMondayCuotasSinInteresVsContado,
   'daily-protein-intake-by-goal-calculator': compute__daily_protein_intake_by_goal_calculator,
   'daily-water-intake-by-weight-calculator': compute__daily_water_intake_by_weight_calculator,
   'daiquiri-clasico-personas': daiquiriClasicoPersonas,
@@ -5014,6 +5020,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'horas-sueno-necesarias-edad-adulto': horasSuenoNecesariasEdadAdulto,
   'horas-trabajo-comprar': horasTrabajoComprar,
   'horas-vida-restantes': horasVidaRestantes,
+  'hot-sale-ahorro-total-descuento-cashback-cupon': hotSaleAhorroTotalDescuentoCashbackCupon,
+  'hot-sale-cuotas-sin-interes-vs-contado': hotSaleCuotasSinInteresVsContado,
   'hotel-precio-noches-vs-airbnb-comparativa': hotelPrecioNochesVsAirbnbComparativa,
   'hotel-split-cost-calculator': compute__hotel_split_cost_calculator,
   'hotel-vs-airbnb-vs-hostel-noche-comparativa': hotelVsAirbnbVsHostelNocheComparativa,

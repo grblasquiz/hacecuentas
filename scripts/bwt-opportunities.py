@@ -34,13 +34,14 @@ if not csv_path.exists():
 
 # Normalizar headers de BWT (varían según versión del export)
 def norm(h):
-    h = h.lower().strip().replace(' ', '_').replace('-', '_')
+    h = h.lower().strip().replace(' ', '_').replace('-', '_').replace('.', '')
     aliases = {
-        'queries': 'query', 'q': 'query', 'search_query': 'query',
+        'queries': 'query', 'q': 'query', 'search_query': 'query', 'keyword': 'query',
         'clicks': 'clicks', 'click': 'clicks',
         'impr': 'impressions', 'imps': 'impressions', 'impressions': 'impressions',
         'ctr': 'ctr', 'click_through_rate': 'ctr',
-        'pos': 'position', 'avg_pos': 'position', 'position': 'position', 'avg_position': 'position',
+        'pos': 'position', 'avg_pos': 'position', 'position': 'position',
+        'avg_position': 'position', 'average_position': 'position',
         'page': 'page', 'url': 'page', 'landing_page': 'page',
     }
     return aliases.get(h, h)

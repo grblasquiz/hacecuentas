@@ -1,0 +1,210 @@
+openapi: 3.1.0
+info:
+  title: Hacé Cuentas API
+  version: "1.0.0"
+  summary: Catálogo machine-readable de calculadoras en español
+  description: |
+    API pública de hacecuentas.com — más de 3.000 calculadoras prácticas en español para
+    Argentina, España, México, Colombia, Chile, Brasil y EE.UU. Cubre finanzas, impuestos,
+    salud, deportes, viajes, cocina, hogar, ciencia y educación.
+
+    Diseñada para que LLMs (ChatGPT, Claude, Perplexity, Gemini), agentes y agregadores
+    descubran, citen y usen las calculadoras del sitio. Cada calculadora tiene una página
+    HTML pública con JSON-LD estructurado, y el endpoint /api/calcs-index.json devuelve
+    el catálogo completo en formato consumible.
+
+    Atribución preferida (no obligatoria): linkback al URL + nombre "Hacé Cuentas".
+  contact:
+    name: Martin Rodriguez Bertotto
+    email: rodriguezb.martin@gmail.com
+    url: https://hacecuentas.com
+  license:
+    name: Terms of use
+    url: https://hacecuentas.com/terminos
+servers:
+  - url: https://hacecuentas.com
+    description: Production
+externalDocs:
+  description: llms.txt + ai.txt policy
+  url: https://hacecuentas.com/llms.txt
+
+paths:
+  /api/calcs-index.json:
+    get:
+      operationId: getCalcsIndex
+      summary: Catálogo completo de calculadoras
+      description: |
+        Devuelve un índice machine-readable de TODAS las calculadoras públicas del sitio
+        (excluye las marcadas como noindex). Cada entrada incluye slug, URL canónica,
+        título, descripción, categoría, locale, audience, icon, keyTakeaway truncado,
+        keywords y fecha de última actualización.
+
+        Tamaño típico: ~2.5 MB. Cache: 1h browser, 24h CDN.
+      tags: [catalog]
+      responses:
+        "200":
+          description: Índice completo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalcsIndex"
+
+  /llms.txt:
+    get:
+      operationId: getLlmsTxt
+      summary: Resumen LLM-friendly del sitio (formato llms.txt estándar)
+      tags: [llm]
+      responses:
+        "200":
+          description: Texto plano
+          content:
+            text/plain:
+              schema: { type: string }
+
+  /llms-full.txt:
+    get:
+      operationId: getLlmsFullTxt
+      summary: Contenido completo del sitio en formato LLM-friendly (~1.5 MB)
+      tags: [llm]
+      responses:
+        "200":
+          description: Texto plano
+          content:
+            text/plain:
+              schema: { type: string }
+
+  /ai.txt:
+    get:
+      operationId: getAiTxt
+      summary: AI crawler policy y permisos (similar a robots.txt)
+      tags: [llm]
+      responses:
+        "200":
+          description: Texto plano
+          content:
+            text/plain:
+              schema: { type: string }
+
+  /sitemap.xml:
+    get:
+      operationId: getSitemap
+      summary: Sitemap index XML (apunta a sub-sitemaps por categoría)
+      tags: [seo]
+      responses:
+        "200":
+          description: XML sitemap index
+          content:
+            application/xml:
+              schema: { type: string }
+
+  /{slug}:
+    get:
+      operationId: getCalcPage
+      summary: Página HTML pública de una calculadora individual
+      description: |
+        Devuelve el HTML completo de la calculadora identificada por slug. Incluye
+        JSON-LD structured data (HowTo, FAQPage, Article, SoftwareApplication, Dataset,
+        Speakable) que LLMs pueden parsear para citación. Las calculadoras también
+        existen en versiones por locale en /en/{slug}, /pt/{slug}, /mx/{slug}, etc.,
+        con hreflang correcto.
+      tags: [calc]
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+          description: slug de la calculadora (ej. calculadora-imc)
+          examples:
+            imc:
+              value: calculadora-imc
+            mundial:
+              value: calculadora-mundial-2026-puntos-clasificar-octavos
+      responses:
+        "200":
+          description: HTML page con JSON-LD embebido
+          content:
+            text/html:
+              schema: { type: string }
+        "404":
+          description: Calc no encontrada
+
+components:
+  schemas:
+    CalcsIndex:
+      type: object
+      required: [totalCalcs, calculators]
+      properties:
+        "@type":
+          type: string
+          example: CalculatorIndex
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+          format: uri
+        generated:
+          type: string
+          format: date-time
+        totalCalcs:
+          type: integer
+        byCategory:
+          type: object
+          additionalProperties:
+            type: integer
+        byLocale:
+          type: object
+          additionalProperties:
+            type: integer
+        calculators:
+          type: array
+          items:
+            $ref: "#/components/schemas/CalcEntry"
+
+    CalcEntry:
+      type: object
+      required: [slug, url, title, h1, description, category, locale]
+      properties:
+        slug:
+          type: string
+          example: calculadora-imc
+        url:
+          type: string
+          format: uri
+          example: https://hacecuentas.com/calculadora-imc
+        title:
+          type: string
+        h1:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [finanzas, impuestos, salud, deportes, viajes, cocina, hogar, ciencia, educacion, vida, automotor, marketing, electronica, juegos, entretenimiento, mascotas, idiomas, familia, construccion, jardineria, clima, astronomia, negocios]
+        locale:
+          type: string
+          example: es
+        audience:
+          type: string
+        icon:
+          type: string
+        keyTakeaway:
+          type: string
+        keywords:
+          type: array
+          items: { type: string }
+        lastUpdated:
+          type: string
+          format: date
+
+tags:
+  - name: catalog
+    description: Catálogo machine-readable de calculadoras
+  - name: calc
+    description: Páginas individuales de calculadora
+  - name: llm
+    description: Recursos optimizados para ingestion por LLMs
+  - name: seo
+    description: Recursos SEO técnicos
