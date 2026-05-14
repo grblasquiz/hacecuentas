@@ -3,6 +3,12 @@ name: Deploy to Cloudflare
 on:
   push:
     branches: [main]
+    # Paths que no afectan el build de produccion: NO redeployar.
+    # chore(reddit-queue) solo toca docs/reddit-queue-*.md — ahorra ~15min/dia.
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'cerebro/**'
   workflow_dispatch:  # permite correr manual desde Github UI
 
 concurrency:
@@ -39,6 +45,19 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # Cache para compute-related (prebuild). Sin esto, cada deploy gasta ~150s
+      # recalculando el grafo TF-IDF de related-auto. El cache hit lo baja a <2s.
+      # Key: hash de todos los calc JSONs. Si cambia uno solo, recompila.
+      # El pre-commit hook (.githooks/pre-commit) deberia mantener el committed
+      # related-auto.{json,hash} en sync, pero esto es safety net.
+      - name: Cache related-auto (TF-IDF)
+        uses: actions/cache@v4
+        with:
+          path: |
+            src/lib/related-auto.json
+            src/lib/related-auto.hash
+          key: related-auto-${{ hashFiles('src/content/calcs/**/*.json') }}
 
       - name: Build
         # Verbose timing: imprime tiempo de cada sub-step de prebuild + astro build.

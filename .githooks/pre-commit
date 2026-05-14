@@ -1,7 +1,20 @@
 #!/bin/sh
 # Pre-commit hook de hacecuentas. Activar con:
 #   git config core.hooksPath .githooks
+# (el postinstall del package.json lo hace automaticamente)
 #
 # Checks:
 #  1) check-slug-renames: si renombraste el `slug` de una calc, pedir 301.
-exec node scripts/check-slug-renames.mjs
+#  2) related-auto-sync: si tocaste calcs, verificar que related-auto.{json,hash}
+#     este al dia. Sino, CI rebuildea 150s al pedo.
+
+set -e
+
+node scripts/check-slug-renames.mjs
+
+# Si hay calcs staged y related-auto no esta staged, chequear sync.
+# Skip en GH Actions bots: GITHUB_ACTIONS=true → CI vuelve a generar el cache
+# via actions/cache + compute-related (cache MISS la primera vez post-bot, OK).
+if [ -z "$GITHUB_ACTIONS" ] && git diff --cached --name-only | grep -qE '^src/content/calcs/.*\.json$'; then
+  node --experimental-strip-types scripts/check-related-hash.ts
+fi
