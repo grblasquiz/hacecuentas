@@ -104,6 +104,108 @@ export const WIKIDATA_ENTITIES: WikidataEntity[] = [
     name: 'Sueldo Anual Complementario',
     patterns: [/aguinaldo/i, /\bsac\b/i, /sueldo anual complementario/i],
   },
+  // ── Expansion 2026-05-12 (Q IDs verificados con wikidata.org/wiki/QXXX) ──
+  // Universal concepts
+  {
+    qid: 'Q11229',
+    name: 'Porcentaje',
+    patterns: [/\bporcentaje\b/i, /\bpercentage\b/i, /regla de tres/i],
+  },
+  {
+    qid: 'Q11570',
+    name: 'Kilogramo',
+    patterns: [/\bkilogramos?\b/i, /\bkilograms?\b/i, /\bkg\b/i],
+  },
+  {
+    qid: 'Q25267',
+    name: 'Grado Celsius',
+    patterns: [/celsius/i, /grado.*centígrado/i, /\bºc\b/i],
+  },
+  {
+    qid: 'Q123148',
+    name: 'Decibelio',
+    patterns: [/\bdecibelios?\b/i, /\bdecibel(s|es)?\b/i, /\bdb\b/i],
+  },
+  {
+    qid: 'Q1062498',
+    name: 'Kilovatio-hora',
+    patterns: [/\bkwh\b/i, /kilovatio.hora/i, /kilowatt.hour/i],
+  },
+  // Tiempo / calendario
+  {
+    qid: 'Q19809',
+    name: 'Navidad',
+    patterns: [/\bnavidad\b/i, /\bchristmas\b/i, /\bnatal\b/i],
+  },
+  {
+    qid: 'Q4856414',
+    name: 'Aniversario',
+    patterns: [/aniversario.*pareja/i, /aniversario.*boda/i, /wedding anniversary/i],
+  },
+  // Finanzas
+  {
+    qid: 'Q1227997',
+    name: 'Préstamo',
+    patterns: [/cuota.*préstamo/i, /cuota.*prestamo/i, /\bloan\b/i, /préstamo personal/i],
+  },
+  {
+    qid: 'Q2249676',
+    name: 'Depósito a plazo fijo',
+    patterns: [/plazo fijo/i, /fixed deposit/i, /\bcdb\b/i],
+  },
+  {
+    qid: 'Q179322',
+    name: 'Interés compuesto',
+    patterns: [/interés compuesto/i, /interes compuesto/i, /compound interest/i],
+  },
+  {
+    qid: 'Q5360226',
+    name: 'Movimiento FIRE',
+    patterns: [/\bfire\b.*retiro/i, /retiro temprano/i, /financial independence/i],
+  },
+  {
+    qid: 'Q170658',
+    name: 'Fondo común de inversión',
+    patterns: [/\bfci\b/i, /fondo común de inversión/i, /money market/i],
+  },
+  // Comida / cultura
+  {
+    qid: 'Q1190554',
+    name: 'Propina',
+    patterns: [/\bpropina\b/i, /\btip\b.*restaurant/i, /\bgratuit(y|ie)\b/i],
+  },
+  {
+    qid: 'Q935843',
+    name: 'Empanada',
+    patterns: [/\bempanadas?\b/i],
+  },
+  {
+    qid: 'Q2872105',
+    name: 'Asado',
+    patterns: [/\basado\b/i, /\bparrillada\b/i, /chorizos?.*invitado/i],
+  },
+  // Tech / media
+  {
+    qid: 'Q5466811',
+    name: 'Twitch',
+    patterns: [/\btwitch\b/i, /\bbits\b.*don/i],
+  },
+  {
+    qid: 'Q186975',
+    name: 'Stop motion',
+    patterns: [/stop.motion/i],
+  },
+  // Fútbol / deportes
+  {
+    qid: 'Q19317',
+    name: 'Copa Mundial de Fútbol de 2026',
+    patterns: [/mundial 2026/i, /world cup 2026/i, /fifa 2026/i, /copa mundial.*2026/i],
+  },
+  {
+    qid: 'Q17313',
+    name: 'Copa Mundial de Fútbol',
+    patterns: [/copa mundial.*fifa/i, /\bfifa world cup\b/i, /fifa world championship/i],
+  },
 ];
 
 /**
@@ -129,4 +231,30 @@ export function findMentions(text: string): Array<{ '@type': 'Thing'; name: stri
     }
   }
   return mentions;
+}
+
+/**
+ * Returns the primary Wikidata entity that the calc is ABOUT (vs just mentions).
+ * Heurística: prioriza match en H1 sobre seoKeywords. Si hay match en H1, ese
+ * es el `about` (primary topic). Si no hay match en H1 pero sí en keywords,
+ * devuelve null (mejor no inyectar about que inyectarlo erróneo).
+ *
+ * Schema.org distingue:
+ *   - `about`: el primary topic de la página (más fuerte para Google/Bing/LLMs)
+ *   - `mentions`: entidades secundarias mencionadas
+ */
+export function findPrimaryAbout(h1: string): { '@type': 'Thing'; name: string; sameAs: string } | null {
+  if (!h1 || typeof h1 !== 'string') return null;
+  for (const ent of WIKIDATA_ENTITIES) {
+    for (const pat of ent.patterns) {
+      if (pat.test(h1)) {
+        return {
+          '@type': 'Thing',
+          name: ent.name,
+          sameAs: `https://www.wikidata.org/wiki/${ent.qid}`,
+        };
+      }
+    }
+  }
+  return null;
 }
