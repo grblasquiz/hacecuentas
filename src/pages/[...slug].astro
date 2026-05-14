@@ -16,7 +16,7 @@ import ScrollToTop from '../components/ScrollToTop.astro';
 import { findClusterForSlug } from '../lib/clusters';
 import { md, mdInline } from '../lib/markdown';
 import { CATEGORY_TO_GUIDE, GUIDE_TITLES } from '../lib/category-guide-map';
-import { findMentions } from '../lib/wikidata-entities';
+import { findMentions, findPrimaryAbout } from '../lib/wikidata-entities';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
@@ -40,6 +40,10 @@ const mxCalcModules = import.meta.glob<any>('../content/calcs-mx/*.json', { eage
 const mxCalcs = Object.values(mxCalcModules).map((m: any) => m.default || m);
 const esCalcModules = import.meta.glob<any>('../content/calcs-es/*.json', { eager: true });
 const esCalcs = Object.values(esCalcModules).map((m: any) => m.default || m);
+const coCalcModules = import.meta.glob<any>('../content/calcs-co/*.json', { eager: true });
+const coCalcs = Object.values(coCalcModules).map((m: any) => m.default || m);
+const clCalcModules = import.meta.glob<any>('../content/calcs-cl/*.json', { eager: true });
+const clCalcs = Object.values(clCalcModules).map((m: any) => m.default || m);
 
 // Markdown simple → HTML
 // Escape HTML antes de inyectar en templates. Defense-in-depth por si un JSON
@@ -338,8 +342,10 @@ const schemaApp = {
       '.calc-intro',                 // intro
       '.calc-key-takeaway',          // en pocas palabras
       '#como-funciona p:first-of-type',  // primer párrafo de explicación
-      '#faq dt:first-of-type',       // primera pregunta FAQ
-      '#faq dd:first-of-type',       // primera respuesta FAQ
+      '#faq dt',                     // todas las preguntas FAQ (expandido 2026-05-12)
+      '#faq dd',                     // todas las respuestas FAQ (expandido 2026-05-12)
+      '.use-cases li',               // casos de uso (alta densidad de intent)
+      '#cuando-usar p',              // intro de "cuando usar"
     ],
   },
   // Citation: fuentes verificables externas (mismo array que Article schema cuando aplica).
@@ -354,6 +360,10 @@ const schemaApp = {
   mentions: findMentions(
     `${calc.h1 || ''} ${calc.title || ''} ${(calc.seoKeywords || []).join(' ')}`
   ),
+  // About: primary topic de la página. Más fuerte que `mentions` para entity
+  // resolution en Google/Bing/LLMs. Solo si matcheamos en el H1 (conservador).
+  // Si no hay match en H1, no inyectamos `about` (mejor vacío que erróneo).
+  ...(findPrimaryAbout(calc.h1 || '') ? { about: findPrimaryAbout(calc.h1 || '') } : {}),
 };
 
 // Article schema para categorías YMYL (Finanzas, Salud) y cualquier calc con explanation extensa
@@ -398,32 +408,17 @@ const schemaGraph: any[] = [schemaHowTo, schemaBreadcrumb, schemaApp];
 if (schemaFAQ) schemaGraph.push(schemaFAQ);
 if (schemaArticle) schemaGraph.push(schemaArticle);
 
-// MathSolver schema: para calcs matemáticas/científicas/educativas.
-// Reconocido por Google, Bing, Perplexity para "math answer cards".
-// Ref: https://schema.org/MathSolver
-const isMathSolver = ['matematica', 'ciencia', 'educacion'].includes(calc.category);
-if (isMathSolver) {
-  schemaGraph.push({
-    '@context': 'https://schema.org',
-    '@type': 'MathSolver',
-    name: calc.h1,
-    description: schemaDescription,
-    url: `https://hacecuentas.com/${calc.slug}`,
-    inLanguage: schemaLang,
-    mathExpression: calc.formula ? [{
-      '@type': 'SolveMathAction',
-      eduQuestion: calc.h1,
-      eduAnswer: calc.formula,
-    }] : undefined,
-    educationalUse: 'practice',
-    learningResourceType: 'Calculator',
-    isAccessibleForFree: true,
-  });
-}
-
-// Dataset schema for calcs whose explanation contains markdown tables
+// Dataset schema — RESTRINGIDO a calcs con datos vivos (auto-api / auto-scrape).
+// Schema.org/Dataset es para CONJUNTOS DE DATOS CURADOS (escala ARCA, tasas
+// BCRA, IPC INDEC, etc.), no para cualquier calc con tabla en explanation.
+// Google puede flaggear Dataset overuse como schema padding (señal HCU).
+// Antes: hasTable disparaba Dataset en ~700+ calcs (falso positivo).
+// Ahora: solo las ~45 calcs con dataUpdate de fuentes oficiales en vivo.
+const isLiveDataCalc =
+  calc.dataUpdate?.updateType === 'auto-api' ||
+  calc.dataUpdate?.updateType === 'auto-scrape';
 const hasTable = calc.explanation && /\|.*\|.*\n\|[-:\s|]+\|/.test(calc.explanation);
-if (hasTable) {
+if (isLiveDataCalc && hasTable) {
   // temporalCoverage: período al que aplican los datos. Para calcs con
   // dataUpdate.lastUpdated lo usamos como inicio; el fin queda abierto.
   const tempStart = (calc.dataUpdate?.lastUpdated || (datePublished || dateModified).split('T')[0]);
@@ -592,6 +587,8 @@ const enVersion = enCalcs.find((c: any) => c.esSlug === calc.slug);
 const ptVersion = ptCalcs.find((c: any) => c.esSlug === calc.slug);
 const mxVersion = mxCalcs.find((c: any) => c.esSlug === calc.slug || (c.slug && c.slug.replace('calculadora-','') === calc.slug.replace('calculadora-','')));
 const esVersion = esCalcs.find((c: any) => c.esSlug === calc.slug || (c.slug && c.slug.replace('calculadora-','') === calc.slug.replace('calculadora-','')));
+const coVersion = coCalcs.find((c: any) => c.esSlug === calc.slug || (c.slug && c.slug.replace('calculadora-','') === calc.slug.replace('calculadora-','')));
+const clVersion = clCalcs.find((c: any) => c.esSlug === calc.slug || (c.slug && c.slug.replace('calculadora-','') === calc.slug.replace('calculadora-','')));
 
 // Hreflang lang code para esta página segun audience
 const HREFLANG_BY_AUDIENCE: Record<AudienceCode, string> = {
@@ -606,6 +603,8 @@ if (enVersion) alternates.push({ lang: 'en', href: `https://hacecuentas.com/en/$
 if (ptVersion) alternates.push({ lang: 'pt-BR', href: `https://hacecuentas.com/pt/${ptVersion.slug}` });
 if (mxVersion && audience !== 'MX') alternates.push({ lang: 'es-MX', href: `https://hacecuentas.com/mx/${mxVersion.slug}` });
 if (esVersion && audience !== 'ES') alternates.push({ lang: 'es-ES', href: `https://hacecuentas.com/es/${esVersion.slug}` });
+if (coVersion && audience !== 'CO') alternates.push({ lang: 'es-CO', href: `https://hacecuentas.com/co/${coVersion.slug}` });
+if (clVersion && audience !== 'CL') alternates.push({ lang: 'es-CL', href: `https://hacecuentas.com/cl/${clVersion.slug}` });
 alternates.push({ lang: 'x-default', href: `https://hacecuentas.com/${calc.slug}` });
 
 const hreflangTags = alternates.length > 2 ? alternates : undefined;
@@ -706,19 +705,6 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
         )}
 
         <div class="calc-actions" id="calc-actions">
-          <div class="ca-feedback" data-state="ask">
-            <span class="ca-q">¿Te resultó útil esta calculadora?</span>
-            <div class="ca-buttons">
-              <button type="button" class="ca-vote" data-vote="up" aria-label="Sí, me sirvió">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7"/></svg>
-                Sí
-              </button>
-              <button type="button" class="ca-vote" data-vote="down" aria-label="No me sirvió">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H17"/></svg>
-                No
-              </button>
-            </div>
-          </div>
           <div class="ca-tools">
             <button type="button" class="ca-tool" id="ca-share" data-url={`https://hacecuentas.com/${calc.slug}`} data-title={calc.h1}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -955,86 +941,6 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
 
   <script is:inline>
     (function () {
-      // Thumbs feedback — guarda en D1 vía /api/vote + GA4.
-      var feedback = document.querySelector('.ca-feedback');
-      if (feedback) {
-        var slug = window.location.pathname;
-        var key = 'hc-vote-' + slug;
-        var prev = null;
-        try { prev = localStorage.getItem(key); } catch (e) {}
-        if (prev === 'up' || prev === 'down') {
-          renderThanks(prev);
-        }
-        feedback.querySelectorAll('.ca-vote').forEach(function (btn) {
-          btn.addEventListener('click', function () {
-            var v = btn.getAttribute('data-vote');
-            try { localStorage.setItem(key, v); } catch (e) {}
-            renderThanks(v);
-            // GA4
-            if (typeof window.gtag === 'function') {
-              window.gtag('event', 'calc_feedback', { value: v, slug: slug });
-            }
-            // D1 vía API (fire-and-forget, no bloqueamos UX si falla)
-            try {
-              fetch('/api/vote', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ slug: slug, vote: v }),
-                keepalive: true,
-              }).catch(function () {});
-            } catch (e) {}
-          });
-        });
-        function renderThanks(v) {
-          if (v === 'up') {
-            feedback.setAttribute('data-state', 'thanks');
-            feedback.innerHTML = '<span class="ca-msg">¡Gracias por tu voto! 🙌</span>';
-          } else {
-            // Para 👎 mostramos un form inline en vez de mailto (que no llegaba a nadie).
-            feedback.setAttribute('data-state', 'sorry');
-            feedback.innerHTML =
-              '<span class="ca-msg">Gracias. ¿Qué falta o está mal? Contanos:</span>' +
-              '<form class="ca-err-form" id="ca-err-form">' +
-              '  <textarea name="message" required placeholder="Ej: la fórmula devuelve X pero debería ser Y" rows="3" maxlength="2000"></textarea>' +
-              '  <input type="email" name="email" placeholder="Tu email (opcional, para responderte)" />' +
-              '  <button type="submit">Enviar</button>' +
-              '  <p class="ca-err-msg" hidden></p>' +
-              '</form>';
-            var form = document.getElementById('ca-err-form');
-            var emsg = form.querySelector('.ca-err-msg');
-            form.addEventListener('submit', async function (e) {
-              e.preventDefault();
-              var fd = new FormData(form);
-              var btn2 = form.querySelector('button');
-              btn2.disabled = true;
-              emsg.hidden = false;
-              emsg.textContent = 'Enviando…';
-              try {
-                var res = await fetch('/api/error-report', {
-                  method: 'POST',
-                  headers: { 'content-type': 'application/json' },
-                  body: JSON.stringify({
-                    slug: slug,
-                    message: String(fd.get('message') || ''),
-                    email: String(fd.get('email') || ''),
-                  }),
-                });
-                if (res.ok) {
-                  feedback.innerHTML = '<span class="ca-msg">¡Gracias! Ya recibimos tu reporte y lo revisamos.</span>';
-                } else {
-                  var j = await res.json().catch(function () { return {}; });
-                  emsg.textContent = j.error || 'No se pudo enviar. Probá más tarde.';
-                  btn2.disabled = false;
-                }
-              } catch (err) {
-                emsg.textContent = 'Error de red.';
-                btn2.disabled = false;
-              }
-            });
-          }
-        }
-      }
-
       // Compartir
       var shareBtn = document.getElementById('ca-share');
       if (shareBtn) {

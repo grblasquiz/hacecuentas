@@ -830,7 +830,21 @@ if (iibbActividades.length > 0 && provincias.length > 0) {
 // Solo incluye calcs que tienen un OG generado en public/og/{slug}.png.
 // --------------------------------------------------------------------------
 
-interface ImageEntry { loc: string; image: string; caption: string; }
+interface ImageEntry {
+  loc: string;
+  image: string;
+  caption: string;
+  title: string;
+}
+
+function escapeXml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
 
 function imagesetXml(entries: ImageEntry[]): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -840,7 +854,9 @@ ${entries.map((e) => `  <url>
     <loc>${e.loc}</loc>
     <image:image>
       <image:loc>${e.image}</image:loc>
-      <image:caption>${e.caption.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</image:caption>
+      <image:title>${escapeXml(e.title)}</image:title>
+      <image:caption>${escapeXml(e.caption)}</image:caption>
+      <image:license>https://creativecommons.org/licenses/by/4.0/</image:license>
     </image:image>
   </url>`).join('\n')}
 </urlset>`;
@@ -850,10 +866,22 @@ const imageEntries: ImageEntry[] = [];
 for (const c of calcs) {
   const ogPath = join(PUBLIC_DIR, 'og', `${c.slug}.png`);
   if (!existsSync(ogPath)) continue;
+  // Caption enriquecido: H1 + description + primer keyword secundario.
+  // Google Images premia captions descriptivos (50-150 chars) vs títulos cortos.
+  const h1 = (c.h1 || c.title || c.slug).trim();
+  const desc = ((c.description || '') as string).trim();
+  const primaryKw = ((c.seoKeywords || [])[0] as string | undefined)?.trim() || '';
+  const captionParts = [h1];
+  if (desc) captionParts.push(desc);
+  if (primaryKw && !h1.toLowerCase().includes(primaryKw.toLowerCase())) {
+    captionParts.push(primaryKw);
+  }
+  const caption = captionParts.join(' — ').slice(0, 300);
   imageEntries.push({
     loc: `${site}/${c.slug}`,
     image: `${site}/og/${c.slug}.png`,
-    caption: (c.h1 || c.title || c.slug).slice(0, 200),
+    caption,
+    title: h1.slice(0, 100),
   });
 }
 if (imageEntries.length > 0) {

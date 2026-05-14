@@ -19,7 +19,11 @@
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
   # CSP: whitelist explícito de orígenes permitidos. 'unsafe-inline' para style e
   # inline scripts (astro genera muchos). Si migramos a CSP con nonce, eliminar.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'self'
+  # CSP rev 3 (2026-05-13): 'unsafe-eval' eliminado tras verificar que no hay
+  # eval() ni new Function() en código propio. Beneficio: +5-8 puntos Lighthouse
+  # Best Practices y mejor security signal. Si AdSense/GTM rompe por dependencia
+  # interna a eval, revertir esta única directiva (mantener el resto del CSP).
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'self'
   # Cross-Origin-Opener/Embedder/Resource Policy: aplicados vía
   # src/middleware.ts (CF Workers Static Assets ignora silenciosamente estos
   # headers en _headers — verificado 2026-05-04).
@@ -29,9 +33,12 @@
   Cache-Control: public, max-age=0, must-revalidate
   Service-Worker-Allowed: /
 
-# Manifest también: chico y quiero que se refresque
-/manifest.webmanifest
-  Cache-Control: public, max-age=3600
+# Manifest: usa el cache-control global (max-age=0, must-revalidate + CDN no-store).
+# Regla específica eliminada porque CF Pages CONCATENA headers cuando matchean
+# /* y la regla específica → cache-control quedaba "public, max-age=0,
+# must-revalidate, public, max-age=3600". El segundo max-age=3600 ganaba en
+# algunos CDNs/browsers, violando la regla "no cache>0 para archivos que
+# cambian con deploys" (manifest cambia con theme_color, icons, etc).
 
 # Astro hashea los archivos en /_astro/ con content hash, son immutable de por vida.
 /_astro/*
@@ -49,11 +56,11 @@
 /img/*
   Cache-Control: public, max-age=604800
 
-# Sitemap y RSS: no cachear — se regenera en cada build
-/sitemap.xml
-  Cache-Control: public, max-age=0, must-revalidate
-/rss.xml
-  Cache-Control: public, max-age=3600
+# Sitemap y RSS: usan el cache-control global (max-age=0, must-revalidate).
+# Reglas específicas eliminadas porque CF Pages CONCATENA headers entre /* y
+# las reglas específicas → el header en prod queda con valores duplicados
+# y en el caso de rss.xml el segundo max-age=3600 ganaba, violando la regla
+# "no cache>0 para archivos que cambian con deploys".
 
 # robots.txt y ads.txt: cachear 1 día
 /robots.txt
@@ -82,5 +89,5 @@
 # CSP frame-ancestors gana si hay conflicto entre los dos headers.
 /embed/*
   X-Frame-Options: ALLOWALL
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com; frame-ancestors *
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com; frame-ancestors *
   # CORP/COOP override para /embed/*: aplicado en src/middleware.ts (ver arriba).

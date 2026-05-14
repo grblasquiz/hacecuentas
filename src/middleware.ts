@@ -41,6 +41,20 @@ export const onRequest = defineMiddleware(async (context, next) => {
     );
   }
 
+  // ────── Trailing slash → 308 permanente ──────
+  // Astro está en trailingSlash: 'never'. CF Pages Static Assets responde 307
+  // (temporal) por default, lo cual mantiene ambas versiones en index y diluye
+  // link equity. Forzamos 308 (permanente) acá para que Google consolide al
+  // único canonical sin trailing slash.
+  if (
+    (url.hostname === 'hacecuentas.com' || url.hostname === 'www.hacecuentas.com') &&
+    url.pathname.length > 1 &&
+    url.pathname.endsWith('/')
+  ) {
+    const targetPath = url.pathname.replace(/\/+$/, '');
+    return Response.redirect(`https://hacecuentas.com${targetPath}${url.search}`, 308);
+  }
+
   // ────── Pruning redirects (post-HCU recovery) ──────
   // CF Workers Static Assets sirve el HTML antes que aplique `_redirects`
   // si el archivo existe en dist/. Para forzar el 301 sin borrar JSONs (que
