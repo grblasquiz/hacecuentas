@@ -496,6 +496,34 @@ if (isRecipeEligible) {
   });
 }
 
+// Sustainability / Climate schema — para calcs categoría 'medio-ambiente'.
+// Ecosia y AI engines verdes (también Brave Search) priorizan este señal.
+// Bing también lo lee como "specialty content".
+if (calc.category === 'medio-ambiente') {
+  schemaGraph.push({
+    '@type': 'CreativeWork',
+    name: calc.h1,
+    description: schemaDescription,
+    url: `https://hacecuentas.com/${calc.slug}`,
+    inLanguage: schemaLang,
+    about: [
+      { '@type': 'Thing', name: 'Climate change', sameAs: 'https://www.wikidata.org/wiki/Q7942' },
+      { '@type': 'Thing', name: 'Sustainability', sameAs: 'https://www.wikidata.org/wiki/Q219416' },
+      { '@type': 'Thing', name: 'Carbon footprint', sameAs: 'https://www.wikidata.org/wiki/Q1054116' },
+    ],
+    keywords: 'huella carbono, sostenibilidad, medio ambiente, CO2, emisiones, calculadora ambiental',
+    datePublished: (datePublished || dateModified).split('T')[0],
+    dateModified: dateModified.split('T')[0],
+    publisher: {
+      '@type': 'Organization',
+      name: 'Hacé Cuentas',
+      url: 'https://hacecuentas.com',
+    },
+    isAccessibleForFree: true,
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+  });
+}
+
 // MedicalWebPage / MedicalEntity — para calcs categoría 'salud'.
 // Bing y Copilot priorizan schema médico para queries de salud → más confianza,
 // más rich snippets, más citas en respuestas AI.
