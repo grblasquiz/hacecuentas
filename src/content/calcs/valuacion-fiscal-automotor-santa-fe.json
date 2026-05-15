@@ -2,7 +2,7 @@
   "slug": "calculadora-valuacion-fiscal-automotor-santa-fe",
   "title": "Valuación Fiscal Automotor Santa Fe 2026 — Calculadora | Hacé Cuentas",
   "h1": "Valuación Fiscal Automotor Santa Fe 2026",
-  "description": "Calculá impuesto automotor Santa Fe 2026: valuación fiscal ARCA × alícuota (franjas del 2,0% al 3,0%). Rápido, sin registro.",
+  "description": "Calculá impuesto automotor Santa Fe 2026: valuación fiscal ARCA × alícuota API (2,0% a 3,0%) con depreciación por antigüedad. Sin registro.",
   "category": "automotor",
   "icon": "🚗",
   "formulaId": "valuacion-fiscal-automotor-provincia",
@@ -17,14 +17,17 @@
     "rentas santa fe automotor",
     "impuesto auto santa fe 2026"
   ],
-  "intro": "Esta calculadora estima el impuesto automotor anual en Santa Fe cruzando la valuación fiscal oficial de ARCA (ex-AFIP) con la alícuota provincial vigente (franjas del 2,0% al 3,0%). La API Santa Fe aplica una estructura progresiva por tramos de valor fiscal, similar a Córdoba y Buenos Aires. Ajustamos la base imponible por antigüedad (depreciación del 8% anual con piso del 40%) para aproximarnos al valor que efectivamente toma API — Administración Provincial de Impuestos Santa Fe al liquidar el impuesto.",
+  "intro": "La patente del auto en Santa Fe es uno de esos gastos fijos que sorprenden cuando llega la boleta. Para 2026, la <strong>API — Administración Provincial de Impuestos de Santa Fe</strong> liquida el impuesto automotor tomando como base la valuación fiscal que publica ARCA (ex-AFIP) para cada marca, modelo y año, y le aplica una escala de alícuotas progresiva que va del 2,0% al 3,0% según el valor del rodado.\n\nEl problema es que esa valuación fiscal no es el precio de mercado de tu auto: es un número técnico que ARCA actualiza periódicamente y que puede estar muy por encima o por debajo de lo que pagarías en un concesionario. Por eso muchos propietarios reciben boletas que no entienden o que no pueden cruzar con ningún número propio.\n\nEsta calculadora resuelve eso paso a paso. Tomás la valuación fiscal de ARCA (la encontrás en su buscador público ingresando marca, modelo y año), ingresás la antigüedad del vehículo y la herramienta aplica la depreciación del 8% anual con piso en el 40% del valor original —el mismo criterio que usa API para ajustar la base imponible de autos usados— y luego cruza el resultado con la escala de alícuotas 2026.\n\nLo que obtenés es el impuesto anual estimado, el equivalente mensual, la alícuota efectiva aplicada y la valuación ya depreciada. Todo con el detalle del cálculo para que puedas chequearlo contra tu boleta real.\n\nDato importante: este estimador se basa en la Ley Impositiva anual de Santa Fe y en las tablas vigentes de ARCA. Las cifras exactas que cobra API pueden variar si hubo actualizaciones de tablas o si tu vehículo tiene particularidades (adaptaciones, uso comercial, exenciones). Para cualquier discrepancia, la fuente oficial es siempre el portal de API Santa Fe.",
   "keyTakeaway": "impuesto = valuación fiscal ARCA × alícuota Santa Fe (franjas del 2,0% al 3,0%), ajustado por antigüedad del vehículo.",
   "useCases": [
-    "Estimar cuánto vas a pagar de patente en Santa Fe antes de comprar un auto 0km o usado.",
-    "Comparar el costo anual de mantener el rodado en Santa Fe vs otra provincia limítrofe.",
-    "Verificar si la boleta que te mandó API — Administración Provincial de Impuestos Santa Fe está en línea con la alícuota vigente.",
-    "Proyectar el costo del impuesto automotor para un vehículo que ya tiene varios años (aplica la depreciación).",
-    "Planificar la transferencia de un vehículo desde o hacia Santa Fe y estimar el cambio de carga impositiva."
+    "Un santafesino está por comprar un SUV 0km con valuación fiscal ARCA de $25.000.000: la calc le muestra que la alícuota aplicable es 2,5% (segundo tramo) y el impuesto anual estimado ronda los $625.000, unos $52.000 por mes.",
+    "El dueño de un sedán con 10 años de antigüedad y valuación fiscal original de $15.000.000 usa la calculadora para ver cómo la depreciación (8% × 10 años = 80%, tope al 40% del valor) reduce la base imponible a $6.000.000 y el impuesto anual cae a unos $120.000 al 2,0%.",
+    "Una familia que se muda de Córdoba a Rosario quiere comparar la carga impositiva antes de transferir el auto: ingresa la valuación fiscal y contrasta la alícuota de Santa Fe (hasta 3,0%) contra la de Córdoba para decidir si conviene radicalizar el vehículo antes o después del traslado.",
+    "Un remisero de Santa Fe que solicita la exención por uso comercial quiere verificar cuánto ahorra respecto a la tarifa general: usa la calc para tener el número base antes de presentar la documentación ante API.",
+    "Un contador que lleva los libros de una flota de 8 vehículos de empresa en Santa Fe usa la calculadora para proyectar el gasto anual total en patentes, con distintas antigüedades y valuaciones, y armar el presupuesto de costos fijos.",
+    "Alguien recibió la boleta de API y el monto le parece alto: ingresa los datos en la calc para verificar si API aplicó la alícuota correcta o si hay un error en la valuación base que vale la pena impugnar.",
+    "Un particular con un auto de colección de más de 20 años quiere saber si aplica alguna exención o si el piso de depreciación del 40% es lo máximo que puede descontar de la valuación fiscal original.",
+    "Un vendedor de usados de Santa Fe usa la calculadora como argumento de venta para mostrarle al comprador cuánto va a pagar de patente anual según el modelo y año que está evaluando, con números concretos antes de cerrar la operación."
   ],
   "fields": [
     {
@@ -103,40 +106,52 @@
   "explanation": "El impuesto automotor (también llamado patente) en Santa Fe es un tributo **provincial** anual que se calcula a partir de la **valuación fiscal** publicada por ARCA (ex-AFIP) en su tabla oficial de vehículos, cruzada con la **alícuota** que fija cada año el boletín oficial de la provincia.\n\n## Cómo se calcula\n\nLa fórmula general que aplicamos es:\n\n`impuesto anual = valuación fiscal ARCA × factor de antigüedad × alícuota Santa Fe`\n\nEl **factor de antigüedad** se calcula como `max(0,40 ; 1 − antigüedad × 0,08)`. Eso equivale a una depreciación del 8% anual con un piso del 40% del valor original (criterio habitual en tablas provinciales para no castigar de más a vehículos muy viejos).\n\n## Alícuotas 2026 por franja\n\nEscala progresiva: hasta $10M al 2,0%, hasta $30M al 2,5%, más de $30M al 3,0%.\n\n## Quién debe pagar\n\nEl impuesto automotor en Santa Fe lo paga el **titular registral** del vehículo al 1° de enero de cada año, salvo transferencias con denuncia de venta hecha en la Dirección Nacional del Registro de la Propiedad Automotor (DNRPA). Si comprás un usado, pedí siempre **libre deuda de patentes** antes de firmar la transferencia.\n\n## Descuentos y exenciones\n\n- **Pago anual adelantado:** API — Administración Provincial de Impuestos Santa Fe suele ofrecer descuentos del 10% al 20% por pago total al contado en los primeros meses del año.\n- **Buen cumplimiento:** beneficio extra (5%–10%) para contribuyentes sin deuda en los últimos 2 años.\n- **Exenciones:** vehículos adaptados para personas con discapacidad, rodados afectados a servicios públicos o taxis (según ordenanza), y autos con más de cierta antigüedad (generalmente 15–20 años, variable por provincia).\n- **Régimen especial Santa Fe:** Santa Fe concentra un parque automotor enorme (Rosario, la capital, Venado Tuerto) y tiene padrón digital con débito automático y bonificaciones por pago anual.\n\n## Fuentes\n\nLas alícuotas y la metodología se verifican contra la ley impositiva anual de Santa Fe y contra la tabla de valuación publicada por ARCA. Los valores pueden variar si la provincia emite resoluciones complementarias durante el año. Ante dudas, confirmá con API — Administración Provincial de Impuestos Santa Fe o con un contador matriculado.\n",
   "faq": [
     {
-      "q": "¿Cómo se calcula el impuesto automotor en Santa Fe?",
-      "a": "Se multiplica la valuación fiscal oficial de ARCA por la alícuota provincial vigente (franjas del 2,0% al 3,0%) y se ajusta por antigüedad (depreciación del 8% anual, piso del 40%)."
+      "q": "¿Cómo se calcula exactamente el impuesto automotor en Santa Fe 2026?",
+      "a": "El cálculo tiene tres pasos. <strong>Primero</strong>, se toma la valuación fiscal que publica ARCA (ex-AFIP) para tu marca, modelo y año. <strong>Segundo</strong>, si el auto tiene antigüedad, se aplica una depreciación del 8% por año calendario hasta un piso del 40% del valor original (es decir, un auto de 8 años tiene un factor de 0,40 porque 8 × 8% = 64%, pero el piso es 40%). <strong>Tercero</strong>, sobre esa base depreciada se aplica la alícuota progresiva según la Ley Impositiva anual de Santa Fe: 2,0% hasta $10.000.000, 2,5% entre $10.000.001 y $30.000.000, y 3,0% para valuaciones superiores a $30.000.000. El resultado es el impuesto anual. Por ejemplo: valuación fiscal $20.000.000, auto nuevo = $500.000 anuales al 2,5%."
     },
     {
-      "q": "¿Cuál es la alícuota 2026 en Santa Fe?",
-      "a": "Escala progresiva: hasta $10M al 2,0%, hasta $30M al 2,5%, más de $30M al 3,0%."
+      "q": "¿Qué es la valuación fiscal de ARCA y dónde la busco?",
+      "a": "La valuación fiscal es un valor de referencia que ARCA (ex-AFIP) asigna a cada modelo de vehículo según marca, versión y año. No es el precio de mercado ni el valor de venta: es una tabla técnica que el organismo actualiza periódicamente y que sirve como base imponible para el impuesto automotor en todo el país. Para consultarla, ingresás al sitio oficial de ARCA y buscás por marca, modelo y año. El valor que aparece ahí es el número que debés ingresar en esta calculadora. Tené en cuenta que las tablas se actualizan varias veces al año, por lo que el valor puede cambiar entre cuotas."
     },
     {
-      "q": "¿Dónde consulto la valuación fiscal de mi auto?",
-      "a": "En la página de ARCA (ex-AFIP) hay un buscador público por marca, modelo y año. Es la misma tabla que usa cada provincia como base imponible del impuesto automotor."
+      "q": "¿Cuáles son las alícuotas vigentes en Santa Fe para 2026?",
+      "a": "Según la Ley Impositiva anual de Santa Fe (que se aprueba cada diciembre y rige desde el 1° de enero), la escala para 2026 es progresiva: <strong>2,0%</strong> para valuaciones fiscales ajustadas de hasta $10.000.000; <strong>2,5%</strong> para el tramo entre $10.000.001 y $30.000.000; y <strong>3,0%</strong> para valuaciones superiores a $30.000.000. Esta estructura progresiva significa que si tu auto tiene una valuación depreciada de $25.000.000, se aplica directamente la alícuota del tramo en que cae ese valor (2,5%), no se fracciona el cálculo por tramos como ocurre en el impuesto a las ganancias."
     },
     {
-      "q": "¿Qué organismo cobra el impuesto en Santa Fe?",
-      "a": "API — Administración Provincial de Impuestos Santa Fe. Desde su sitio web se emite la boleta, se consulta deuda y se adhieren débitos automáticos."
+      "q": "¿Qué organismo cobra el impuesto automotor y cómo se emite la boleta?",
+      "a": "El organismo recaudador es la <strong>API — Administración Provincial de Impuestos de Santa Fe</strong>, dependiente del Ministerio de Economía provincial. Desde el portal web de API podés consultar la deuda de tu vehículo ingresando el dominio, imprimir boletas de pago, adherirte a débito automático y gestionar planes de pago. El impuesto se divide en cuotas bimestrales (generalmente entre 3 y 6 según la reglamentación anual). También existe la opción de pago único anual adelantado, que históricamente viene con un descuento que ronda el 10% al 20%, aunque el porcentaje exacto lo fija API cada año."
     },
     {
-      "q": "¿Se puede pagar en cuotas?",
-      "a": "Sí. En Santa Fe el impuesto automotor se suele cobrar en 3 a 6 cuotas bimestrales. También se puede pagar el total anual por adelantado con un descuento (10%–20% habitual)."
+      "q": "¿Cómo afecta la antigüedad al monto del impuesto?",
+      "a": "La antigüedad reduce la base imponible mediante un coeficiente de depreciación del <strong>8% anual</strong>. El cálculo es: valor depreciado = valuación fiscal ARCA × (1 − 0,08 × años de antigüedad), con un piso mínimo del 40% del valor original. Ejemplo concreto: auto con valuación fiscal de $18.000.000 y 7 años de antigüedad → depreciación = 7 × 8% = 56%, pero como no puede bajar del 40%, el factor es 0,44 → base imponible = $18.000.000 × 0,44 = $7.920.000 → impuesto al 2,0% = $158.400 anuales. Un auto 0km del mismo modelo pagaría $450.000 al 2,5%. La diferencia es sustancial."
     },
     {
-      "q": "¿Hay exenciones en Santa Fe?",
-      "a": "Sí. Las principales son: vehículos adaptados para personas con discapacidad (Ley 19.279 y su adhesión provincial), autos afectados a taxis o remises habilitados, rodados de más de 15–20 años según la normativa vigente, y casos particulares como vehículos del Estado o de bomberos voluntarios."
+      "q": "¿Qué exenciones existen en Santa Fe para el impuesto automotor?",
+      "a": "La Ley Impositiva de Santa Fe y normativas complementarias establecen exenciones para: <strong>personas con discapacidad</strong> (conforme Ley Nacional 19.279 y su adhesión provincial, para vehículos adaptados o afectados al traslado del titular discapacitado); <strong>taxis y remises habilitados</strong> con licencia vigente otorgada por el municipio correspondiente; <strong>vehículos del Estado</strong> provincial, municipal y nacional; <strong>bomberos voluntarios</strong> para los rodados afectados a ese servicio; y en algunos casos, <strong>vehículos de más de 15 o 20 años</strong> con carácter histórico o de colección, según reglamentación vigente. Las exenciones generalmente se tramitan ante API con documentación respaldatoria y no son automáticas."
     },
     {
-      "q": "¿Qué pasa si no pago el impuesto automotor?",
-      "a": "API — Administración Provincial de Impuestos Santa Fe aplica intereses resarcitorios (del orden del 5%–6% mensual) y puede iniciar juicio de apremio. La deuda bloquea la transferencia y la renovación de la VTV. Por montos altos, puede haber embargo sobre el vehículo."
+      "q": "¿Qué pasa si no pago el impuesto automotor en Santa Fe?",
+      "a": "La falta de pago genera <strong>intereses resarcitorios</strong> que API fija periódicamente, históricamente en el orden del 5% al 6% mensual sobre el capital adeudado. Si la deuda persiste, API puede iniciar un <strong>juicio de apremio</strong> para cobrar por vía ejecutiva. Las consecuencias prácticas inmediatas son: imposibilidad de transferir el vehículo (la DNRPA — Dirección Nacional de los Registros de la Propiedad Automotor no autoriza transferencias con deuda provincial), imposibilidad de renovar la VTV en muchos municipios santafesinos, y eventualmente embargo del rodado. Por montos significativos, también puede afectar la situación crediticia del titular."
     },
     {
-      "q": "¿Cómo afecta la antigüedad del vehículo al impuesto?",
-      "a": "La valuación fiscal baja aproximadamente 8% por año hasta un piso del 40% del valor original. Un auto de 8 años paga cerca de la mitad de patente que uno 0km del mismo modelo."
+      "q": "¿Puedo pagar el impuesto automotor en cuotas o debo pagarlo todo junto?",
+      "a": "Sí, en Santa Fe el impuesto automotor se divide en cuotas. La cantidad y el calendario de vencimientos los fija API cada año mediante resolución. Lo habitual son <strong>entre 3 y 6 cuotas bimestrales</strong>, con vencimiento entre los meses de enero y noviembre según el cronograma anual. También existe la opción de <strong>pago anticipado anual</strong> con descuento, que API publica al inicio de cada período fiscal. El débito automático está disponible en varios bancos adheridos. Si el vehículo tiene deuda de años anteriores, es posible adherirse a planes de regularización que API habilita periódicamente."
     },
     {
-      "q": "¿Conviene más tener el auto patentado en Santa Fe o en otra provincia?",
-      "a": "Legalmente el auto debe estar radicado en la jurisdicción donde tiene su asiento principal el titular. Cambiar de radicación solo por alícuota puede ser considerado una maniobra evasiva. Pero sí conviene comparar Santa Fe (franjas del 2,0% al 3,0%) vs provincias vecinas antes de mudarse o transferir el vehículo."
+      "q": "¿El impuesto automotor de Santa Fe es el mismo para autos, motos y camionetas?",
+      "a": "La estructura de alícuotas y el mecanismo de cálculo basado en valuación fiscal ARCA aplica de manera similar para <strong>automóviles, camionetas, pickups y utilitarios</strong>. Las motocicletas tienen un tratamiento diferenciado en la Ley Impositiva provincial, generalmente con alícuotas menores o montos fijos según la cilindrada. Los vehículos de carga y transporte de pasajeros (camiones, colectivos) se rigen por disposiciones específicas. Esta calculadora está optimizada para autos particulares y vehículos livianos; para otros tipos de rodados, conviene verificar directamente en el portal de API."
+    },
+    {
+      "q": "¿Conviene radicalizar el auto en Santa Fe o en otra provincia para pagar menos?",
+      "a": "Legalmente, el vehículo debe estar radicado en el <strong>domicilio real del titular</strong> (donde tiene su residencia habitual), conforme las normas de la DNRPA — Dirección Nacional de los Registros de la Propiedad Automotor. Cambiar artificialmente la radicación a otra jurisdicción solo para beneficiarse de una alícuota menor puede ser considerado una maniobra evasiva y está sujeto a impugnación por parte de los fiscos provinciales. Dicho esto, si efectivamente te mudás a otra provincia, sí conviene hacer el cambio de radicación dentro de los plazos legales. Santa Fe (hasta 3,0%) tiene alícuotas similares a Córdoba pero superiores a algunas provincias del norte del país."
+    },
+    {
+      "q": "¿La valuación fiscal de ARCA es la misma que el valor venal del auto?",
+      "a": "No, son conceptos distintos. La <strong>valuación fiscal de ARCA</strong> es un valor administrativo que el organismo calcula con metodología propia y publica en tablas. El <strong>valor venal</strong> es el precio de mercado del vehículo, que puede estar muy por encima o por debajo de la valuación fiscal según la oferta y demanda. Para el impuesto automotor, lo que importa es la valuación fiscal ARCA, no lo que vale el auto en el mercado. Sin embargo, el valor venal también se usa en otros contextos (seguros, indemnizaciones, peritajes), por lo que es importante no confundirlos al momento de calcular el impuesto."
+    },
+    {
+      "q": "¿Cómo verifico si la boleta que me mandó API tiene un error?",
+      "a": "El proceso es el siguiente: <strong>1)</strong> Consultá la valuación fiscal de tu vehículo en el buscador de ARCA (sitio oficial del organismo) anotando el valor exacto para el año de modelo y versión. <strong>2)</strong> Aplicá la depreciación según la antigüedad (8% por año, piso 40%). <strong>3)</strong> Identificá en qué tramo cae la valuación depreciada y calculá el impuesto con la alícuota correspondiente. <strong>4)</strong> Comparás ese número con el de la boleta de API. Si hay diferencia significativa, puede deberse a una versión distinta del modelo, a una actualización de tablas en el año, o a un error. En ese caso, el canal para impugnar es una presentación formal ante API con la documentación del vehículo y la valuación oficial de ARCA como respaldo."
     }
   ],
   "sources": [

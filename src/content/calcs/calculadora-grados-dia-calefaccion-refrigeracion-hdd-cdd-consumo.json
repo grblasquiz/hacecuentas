@@ -2,7 +2,7 @@
   "slug": "calculadora-grados-dia-calefaccion-refrigeracion-hdd-cdd-consumo",
   "title": "Calculadora Grados-Día HDD y CDD (Calefacción y AC) | Hacé Cuentas",
   "h1": "Calculadora de Grados-Día de Calefacción (HDD) y Refrigeración (CDD)",
-  "description": "🌡️ Grados-día HDD (base 18°C) y CDD (base 24°C) para estimar consumo de gas o electricidad por clima. Estándar ASHRAE.",
+  "description": "Calculá grados-día HDD y CDD (base ASHRAE 18°C/24°C) para estimar consumo de gas o electricidad según el clima de tu ciudad.",
   "category": "hogar",
   "icon": "🌡️",
   "formulaId": "grados-dia-hdd-cdd",
@@ -26,15 +26,17 @@
     "sourceUrl": null,
     "updateType": "manual"
   },
-  "intro": "Los **grados-día** son un índice internacional para estimar cuánta energía necesita un edificio para mantenerse confortable. **HDD (Heating Degree Days)** = Σ max(18 − T_media_diaria, 0): suma los grados que faltan para llegar a 18 °C cada día del período. **CDD (Cooling Degree Days)** = Σ max(T_media − 24, 0): suma los grados por encima de 24 °C que hay que enfriar. Las bases 18 °C y 24 °C vienen de **ASHRAE** y representan el rango en el que un edificio promedio no necesita climatización. Son el estándar para comparar clima entre ciudades, estimar facturas de gas/electricidad antes de mudarte y dimensionar sistemas HVAC. Esta calculadora te deja ingresar la temperatura media del período y los días, más (opcional) un consumo por grado-día para estimar gas en m³ o electricidad en kWh.",
+  "intro": "¿Por qué en julio tu factura de gas se triplicó respecto a mayo, aunque vivís en el mismo departamento? La respuesta no está en el medidor: está en el clima. Los <strong>grados-día</strong> son el índice que usa el mundo para medir exactamente eso: cuánta \"carga climática\" tuvo un período sobre tu sistema de calefacción o refrigeración.\n\nEl concepto es simple pero potente. Cada día que la temperatura media quedó por debajo de 18 °C, tu caldera trabajó. Sumá esa diferencia día a día y obtenés los <strong>HDD (Heating Degree Days)</strong>. Lo mismo al revés para el AC: cada día que superó los 24 °C, el equipo frío arrancó, y eso son los <strong>CDD (Cooling Degree Days)</strong>. Las bases 18 °C y 24 °C son el estándar internacional de ASHRAE (American Society of Heating, Refrigerating and Air-Conditioning Engineers) y representan el rango donde un edificio promedio no necesita climatización activa.\n\nEn Argentina, esta métrica tiene aplicaciones concretas: Buenos Aires acumula aproximadamente 1.400 HDD/año y 400 CDD/año; Bariloche supera los 3.000 HDD/año; Salta llega a 900 CDD/año en verano. El Servicio Meteorológico Nacional (SMN) publica datos históricos de temperatura que te permiten calcularlos con precisión real.\n\nEsta calculadora te da HDD y CDD de cualquier período ingresando la temperatura media y los días. Opcionalmente, si cargás tu coeficiente de consumo personal (m³ de gas por HDD, o kWh por CDD), obtenés una estimación directa de la factura antes de que llegue. Es la herramienta que usan ingenieros de HVAC para dimensionar calderas, pero explicada para cualquier argentino que quiera entender su boleta de gas o electricidad.",
   "keyTakeaway": "**HDD base 18 °C** y **CDD base 24 °C** (ASHRAE). Buenos Aires típica: ~1 400 HDD/año y ~400 CDD/año. Berlín: 3 200 HDD/año.",
   "useCases": [
-    "Estimar factura de gas en invierno antes de que llegue.",
-    "Comparar costo energético entre dos ciudades antes de mudarte.",
-    "Dimensionar una caldera o equipo de AC según clima local.",
-    "Analizar si un mes fue más caluroso/frío de lo normal.",
-    "Proyectar ahorro de poner aislación térmica (reducción de HDD efectivos).",
-    "Ajustar presupuesto familiar según HDD/CDD históricos del mes."
+    "Un vecino de Mendoza calcula que julio tuvo T_media de 5 °C durante 31 días: HDD = (18 − 5) × 31 = 403 HDD. Con su coeficiente de 0,20 m³/HDD, estima 80,6 m³ de gas antes de que llegue la factura de Metrogas.",
+    "Una familia de Rosario quiere saber si instalar aislación térmica vale la pena: compara sus HDD actuales (consumo real ÷ m³/HDD) con los que tendría si bajara el coeficiente de 0,28 a 0,15 m³/HDD. El ahorro proyectado supera el costo de la obra en 4 años.",
+    "Un profesional que se muda de Córdoba (1.600 HDD/año) a Mar del Plata (1.900 HDD/año) usa la calculadora para anticipar que su gasto en gas aumentará aproximadamente un 19% anual solo por el clima, sin cambiar hábitos.",
+    "Una empresa de construcción en CABA dimensiona el sistema de calefacción de un edificio de 20 pisos usando los HDD históricos de la ciudad (≈1.400/año base 18 °C) para cumplir con la Ley 13.059 de eficiencia energética de la Provincia de Buenos Aires.",
+    "Un usuario de Tucumán evalúa si su split de 3.000 frigorías alcanza para el verano: con T_media de 30 °C durante 90 días, CDD = (30 − 24) × 90 = 540 CDD. A 0,65 kWh/CDD, proyecta un consumo de 351 kWh extra de electricidad en esos meses.",
+    "Un docente de física usa la calculadora para comparar en clase los HDD de Ushuaia (≈3.800/año) vs. Buenos Aires (≈1.400/año) y mostrar por qué las viviendas patagónicas necesitan aislación tres veces mayor para el mismo confort.",
+    "Un inquilino analiza si el mes de agosto fue \"más frío de lo normal\": ingresa la temperatura media real del SMN y la compara con el promedio histórico de HDD para ese mes en su ciudad, detectando que fue un 15% más frío que la media de los últimos 10 años.",
+    "Una pyme de logística con depósito en zona industrial de La Matanza calcula los CDD de los meses de diciembre a marzo para decidir si conviene instalar ventilación mecánica o un sistema de AC, comparando el costo del equipo contra el costo energético estimado con su coeficiente kWh/CDD."
   ],
   "fields": [
     {
@@ -153,36 +155,52 @@
   "explanation": "## Cómo se calcula\n\n- **HDD día** = max(base_HDD − T_media_diaria, 0). Default base 18 °C (ASHRAE).\n- **CDD día** = max(T_media_diaria − base_CDD, 0). Default base 24 °C.\n- **HDD mensual/anual** = suma de los HDD de cada día del período.\n\nPara una estimación rápida con temperatura media constante:\n\n- `HDD = max(base − T_media, 0) × días`\n- `CDD = max(T_media − base, 0) × días`\n\nMás preciso: sumar día a día con datos reales del servicio meteorológico.\n\n## Valores de referencia\n\n**HDD anual típico (base 18 °C):**\n\n| Ciudad | HDD/año | Comentario |\n|---|---|---|\n| Miami | ~200 | Apenas calefacción |\n| Buenos Aires | ~1 400 | Invierno moderado |\n| Madrid | ~2 100 | Invierno seco frío |\n| Berlín | ~3 200 | Invierno largo |\n| Montreal | ~4 500 | Invierno muy frío |\n| Moscú | ~4 800 | Invierno extremo |\n\n**CDD anual típico (base 24 °C):**\n\n| Ciudad | CDD/año |\n|---|---|\n| Buenos Aires | ~300-500 |\n| Madrid | ~250 |\n| Bangkok | ~2 600 |\n| Dubái | ~3 200 |\n\n## Casos especiales\n\n- **Base distinta**: Reino Unido usa 15.5 °C; EE.UU. tradicional 65 °F (18.3 °C); Canadá a veces 17 °C.\n- **Grados-hora**: refinamiento con datos horarios en lugar de media diaria, más preciso.\n- **Aislación térmica**: un edificio mal aislado puede gastar 0.25 m³/HDD mientras uno certificado gasta 0.08 m³/HDD — diferencia del triple.\n- **Bomba de calor**: en climas templados, COP 3-4 convierte 1 kWh eléctrico en 3-4 kWh térmicos; HDD × 0.25 = kWh eléctricos aprox.\n- **Consumo mixto**: una vivienda moderna suele tener HDD dominante; comercios con mucha iluminación, CDD dominante.\n\n## Fuentes\n\n- ASHRAE Handbook — Fundamentals, Chapter 14 (Climatic Design).\n- NOAA NCEI — Heating & Cooling Degree Days dataset.\n- ISO 15927-6 — Hygrothermal performance / degree days.\n- SMN Argentina — Servicios climáticos para energía.\n\n## Revisión editorial\n\nRevisado por el equipo editorial de Hacé Cuentas. Metodología alineada a ASHRAE y NOAA.\n\n**Disclaimer:** Los consumos específicos por HDD/CDD dependen de aislación, sistema, uso y tarifa. Son órdenes de magnitud.\n",
   "faq": [
     {
-      "q": "¿Qué son los grados-día?",
-      "a": "Un índice que suma cuántos grados debajo (o encima) de una temperatura base hubo en un período. Mide la 'demanda climática' de calefacción o refrigeración."
+      "q": "¿Qué son los grados-día y cómo se interpretan?",
+      "a": "Los grados-día son un índice que mide la \"demanda climática\" acumulada de un período. Cada día, calculás cuántos grados de diferencia hubo respecto a una temperatura base de confort: si la temperatura media fue 10 °C y la base es 18 °C, ese día aportó 8 HDD. Sumás todos los días del período y obtenés el total. Un período con 300 HDD requiere el doble de energía para calefacción que uno con 150 HDD, en la misma vivienda. No mide temperatura promedio: mide <strong>esfuerzo acumulado</strong> del sistema térmico. Por eso dos ciudades con la misma temperatura promedio de julio pueden tener HDD muy distintos si una tiene más oscilación diaria."
     },
     {
-      "q": "¿Por qué base 18 °C para calefacción y 24 °C para AC?",
-      "a": "Son las bases ASHRAE que representan el rango en el que un edificio promedio no necesita climatización: por debajo de 18 °C prende la calefacción, por encima de 24 °C prende el AC."
+      "q": "¿Por qué la base es 18 °C para HDD y 24 °C para CDD?",
+      "a": "<strong>ASHRAE</strong> (American Society of Heating, Refrigerating and Air-Conditioning Engineers) estableció 18 °C (65 °F) como la temperatura por debajo de la cual un edificio promedio necesita calefacción activa, considerando las ganancias internas de personas, electrodomésticos e iluminación. 24 °C es el umbral desde el que el cuerpo humano empieza a requerir refrigeración activa en condiciones de humedad normal. Estas bases no son absolutas: Reino Unido usa 15,5 °C, Rusia 20 °C, y algunos protocolos de eficiencia energética europeos trabajan con 17 °C. Lo importante es mantener la misma base al comparar períodos o ciudades entre sí."
     },
     {
-      "q": "¿Cuántos HDD tiene Buenos Aires?",
-      "a": "Alrededor de 1 400 al año con base 18 °C. Comparable a Madrid o Roma. Los meses de junio y julio concentran el 45% del total anual."
+      "q": "¿Cuántos HDD y CDD tienen las principales ciudades argentinas?",
+      "a": "Los valores anuales aproximados con base ASHRAE son: <strong>Buenos Aires</strong> ≈ 1.400 HDD y 400 CDD; <strong>Córdoba</strong> ≈ 1.600 HDD y 350 CDD; <strong>Mendoza</strong> ≈ 1.800 HDD y 450 CDD; <strong>Rosario</strong> ≈ 1.350 HDD y 420 CDD; <strong>Mar del Plata</strong> ≈ 1.900 HDD y 120 CDD; <strong>Bariloche</strong> ≈ 3.100 HDD y 30 CDD; <strong>Salta</strong> ≈ 900 HDD y 800 CDD; <strong>Ushuaia</strong> ≈ 3.800 HDD y prácticamente 0 CDD. Estos datos surgen de registros históricos del <strong>Servicio Meteorológico Nacional (SMN)</strong>. Para valores exactos por período, consultá los datos climáticos históricos en smn.gob.ar."
     },
     {
-      "q": "¿Cómo convierto HDD a m³ de gas?",
-      "a": "Multiplicá por el coeficiente de consumo específico de tu vivienda. Una casa bien aislada de 80 m²: ~0.10-0.15 m³/HDD. Mal aislada: 0.25-0.35 m³/HDD. Pedí tu coeficiente real dividiendo consumo mensual por HDD del mes."
+      "q": "¿Cómo convierto HDD a metros cúbicos de gas?",
+      "a": "Necesitás tu <strong>coeficiente de consumo específico</strong>, que se mide en m³/HDD. Para calcularlo, dividí el consumo de gas de un mes (en m³, que figura en la factura de Metrogas, Naturgy o Litoral Gas) por los HDD de ese mismo mes en tu ciudad. Valores de referencia: casa de 80 m² bien aislada con carpinterías doble vidrio: <strong>0,10–0,15 m³/HDD</strong>; casa estándar sin mejoras: <strong>0,20–0,28 m³/HDD</strong>; construcción antigua sin aislación: <strong>0,30–0,40 m³/HDD</strong>. Si tu coeficiente es muy alto respecto a estas referencias, es señal de que la vivienda pierde calor y que una inversión en aislamiento tiene alto retorno."
     },
     {
-      "q": "¿Y a kWh eléctricos para AC?",
-      "a": "Un split 3 000 frigorías bien seleccionado consume ~0.5-0.7 kWh por CDD en vivienda estándar. Con aislación pobre, hasta 1.2 kWh/CDD."
+      "q": "¿Cómo estimo el consumo eléctrico del aire acondicionado con CDD?",
+      "a": "El coeficiente kWh/CDD depende de la eficiencia del equipo (EER o COP) y del aislamiento del espacio. Para un <strong>split inverter de 3.000 frigorías con EER ≈ 3</strong> en un ambiente de 25 m² estándar: aproximadamente <strong>0,5–0,7 kWh/CDD</strong>. Para equipos on/off más viejos o espacios mal aislados: <strong>1,0–1,4 kWh/CDD</strong>. Ejemplo: Salta, enero con T_media de 31 °C durante 31 días → CDD = (31 − 24) × 31 = 217 CDD → consumo estimado entre 108 y 152 kWh solo por aire acondicionado ese mes. A la tarifa residencial de EDESAL, eso puede representar una diferencia importante en la categoría de facturación."
     },
     {
-      "q": "¿Se pueden usar datos diarios reales?",
-      "a": "Sí, es lo más preciso. Sumá día a día `max(base − T_media_dia, 0)`. El SMN o NOAA publica T_media histórica."
+      "q": "¿Puedo calcular HDD con datos reales del SMN en lugar de temperatura media del período?",
+      "a": "Sí, y es lo más preciso. El <strong>Servicio Meteorológico Nacional (smn.gob.ar)</strong> publica temperatura máxima y mínima diaria histórica para todas las estaciones del país. La temperatura media diaria se calcula como (T_max + T_min) / 2. Luego sumás día a día: HDD_diario = max(18 − T_media_día, 0). Con datos diarios reales, el cálculo es exacto; con temperatura media del período es una aproximación que puede subestimar HDD en meses con alta variabilidad térmica, ya que los días muy fríos aportan desproporcionadamente más que los días moderados."
     },
     {
-      "q": "¿Para qué me sirve el HDD si no soy ingeniero?",
-      "a": "Para comparar años (¿este invierno fue peor?), comparar ciudades antes de mudarte, evaluar si una mejora de aislación vale la pena y anticipar facturas."
+      "q": "¿Qué dice la normativa argentina sobre grados-día?",
+      "a": "La <strong>Ley 13.059 de la Provincia de Buenos Aires</strong> (y su Decreto Reglamentario 1.030/2010) establece condiciones de acondicionamiento térmico para edificios nuevos, y usa grados-día como variable de diseño para zonas bioambientales. El <strong>Instituto Argentino de Normalización y Certificación (IRAM)</strong> a través de las normas <strong>IRAM 11.603</strong> (zonas bioambientales) e <strong>IRAM 11.604</strong> (ahorro de energía en calefacción) define zonas climáticas para Argentina usando datos de HDD. A nivel nacional, la <strong>Ley 27.191 de Energías Renovables</strong> y el programa de eficiencia energética de la Secretaría de Energía toman como referencia los índices de grados-día del SMN para establecer metas de reducción de consumo."
     },
     {
-      "q": "¿Hay una base universal?",
-      "a": "No. La más común es 18 °C / 65 °F, pero Reino Unido usa 15.5 °C, Rusia 20 °C y algunos manuales 17 °C. Elegí la base y mantenela para comparar."
+      "q": "¿Cuál es el error más común al calcular grados-día?",
+      "a": "El error más frecuente es confundir <strong>temperatura media del mes con temperatura media diaria</strong>. Si julio tuvo T_media mensual de 10 °C, no podés multiplicar directamente (18 − 10) × 31 = 248 HDD, porque asumís que todos los días tuvieron exactamente 10 °C. En realidad, si hubo días a 5 °C y días a 15 °C, los días fríos aportan más HDD que lo que los días cálidos restan. Esta subestimación puede ser del 5 al 20% según la variabilidad del mes. Para estimaciones rápidas de factura está bien; para dimensionamiento de equipos, usá datos diarios reales del SMN."
+    },
+    {
+      "q": "¿Existe una base de temperatura universal para grados-día?",
+      "a": "No hay una única base universal. La más extendida es <strong>18 °C / 65 °F (ASHRAE)</strong>, usada en América del Norte, América Latina y como referencia internacional. <strong>Reino Unido</strong> usa 15,5 °C históricamente. <strong>Rusia y países escandinavos</strong> trabajan con bases de 20 °C. El <strong>IRAM en Argentina</strong> también referencia 18 °C en sus normas de eficiencia energética. La clave es mantener la misma base al comparar datos: si comparás los HDD de Buenos Aires con los de Madrid, asegurate de que ambos estén calculados con base 18 °C; de lo contrario, la comparación no tiene sentido."
+    },
+    {
+      "q": "¿Para qué sirven los grados-día si no soy ingeniero ni técnico?",
+      "a": "Para tres usos concretos y cotidianos. Primero, <strong>anticipar tu factura</strong>: si sabés que junio fue 20% más frío que el año pasado (más HDD), podés prever que la factura de gas será proporcionalmente más alta. Segundo, <strong>comparar ciudades antes de mudarte</strong>: saber que Bariloche tiene más del doble de HDD que Buenos Aires te dice que el gasto en calefacción se duplica o más. Tercero, <strong>evaluar reformas</strong>: si ponés doble vidrio y tu coeficiente baja de 0,25 a 0,15 m³/HDD, podés calcular en cuántos años recuperás la inversión con los HDD históricos de tu ciudad."
+    },
+    {
+      "q": "¿Cómo sé si un mes fue más frío o más caluroso que lo normal?",
+      "a": "Calculá los HDD (o CDD) del mes actual y comparálos con el promedio histórico de ese mismo mes en tu ciudad. El <strong>SMN publica normales climáticas</strong> de temperatura para el período 1991–2020 (estándar de la Organización Meteorológica Mundial). Por ejemplo, si los HDD de julio en Córdoba son típicamente 280 y este año fueron 340, el mes fue un 21% más frío de lo normal. Eso explica directamente por qué tu factura de gas subió aunque tu consumo de hábitos fue igual. Es una herramienta objetiva para discutir con la distribuidora de gas si una factura te parece inusualmente alta."
+    },
+    {
+      "q": "¿Puedo usar esta calculadora para dimensionar una caldera o equipo de AC?",
+      "a": "Como primera aproximación, sí. Para dimensionar correctamente un sistema HVAC se necesita además la <strong>carga térmica pico</strong> del edificio (en kcal/h o kW), que depende de la superficie, aislación, orientación y temperatura de diseño exterior. Las normas <strong>IRAM 11.604 e IRAM 11.659</strong> establecen la metodología oficial en Argentina. Pero los HDD y CDD te dan el <strong>consumo energético anual estimado</strong>, que es lo que determina si el equipo es eficiente en operación continua. Un instalador habilitado debería cruzar ambos análisis: potencia pico para el diseño y grados-día para estimar la factura anual."
     }
   ],
   "sources": [

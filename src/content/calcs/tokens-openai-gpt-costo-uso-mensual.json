@@ -2,18 +2,21 @@
   "slug": "calculadora-tokens-openai-gpt-costo-uso-mensual",
   "title": "Calculadora Costo API ChatGPT 2026 — Gratis | Hacé Cuentas",
   "h1": "Costo API ChatGPT",
-  "description": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica.",
+  "description": "Calculá el costo mensual de la API de OpenAI por modelo (GPT-4o, o1, mini) en USD. Ingresá tokens y volumen diario.",
   "category": "tecnologia",
   "audience": "global",
   "icon": "🤖",
   "formulaId": "tokens-openai-gpt-costo-uso-mensual",
-  "intro": "El precio de la API de OpenAI se factura en **tokens** (aprox. 4 caracteres o 0,75 palabras) con **dos tarifas por modelo**: input (prompt enviado) y output (completion recibida), donde el output suele ser 3-5x más caro. GPT-4o cuesta USD 2,50/MTok input y USD 10/MTok output; GPT-4o-mini baja a USD 0,15/USD 0,60; o1-preview sube a USD 15/USD 60 por millón. El costo mensual depende mucho del uso real: un chatbot con 100 interacciones/día y 500 tokens promedio por turno gasta muy distinto de un sistema RAG que procesa documentos de 10k tokens. Esta calculadora toma tu volumen estimado de mensajes diarios, longitud promedio de input y output, modelo elegido y uso (o no) de **prompt caching** (50% de descuento sobre input cacheado) para devolverte el **costo mensual estimado en USD**, una proyección anual y el costo marginal por interacción.",
+  "intro": "Si estás integrando la API de OpenAI en un producto —un chatbot, un asistente de código, un sistema de análisis de documentos— el costo puede escalar rápido y de forma poco intuitiva. No pagás por «consultas» ni por «usuarios»: pagás por tokens, y la diferencia entre un diseño eficiente y uno descuidado puede ser de 10x en la factura mensual.\n\nUn token equivale aproximadamente a 4 caracteres del inglés, o algo menos en español (el castellano tokeniza un poco peor, así que tus prompts en español suelen consumir un 15-20% más de tokens que el equivalente en inglés). Y acá está el punto crítico que muchos developers descubren tarde: <strong>el output es entre 3 y 5 veces más caro que el input</strong>. GPT-4o cobra USD 2,50 por millón de tokens de entrada pero USD 10 por millón de tokens de salida. Si tu sistema genera respuestas largas, el modelo más «barato» puede terminar costando más que uno premium con respuestas cortas y precisas.\n\nEsta calculadora te permite estimar el costo mensual real según tu volumen diario de mensajes, la longitud promedio de input y output, el modelo que usás (GPT-4o, GPT-4o-mini, o1, o1-mini, GPT-3.5-turbo) y si aplicás o no prompt caching (50% de descuento sobre tokens de entrada repetidos). También calcula el costo marginal por interacción individual, que es el número que necesitás para decidir si podés monetizar el producto o si el modelo de negocio cierra.\n\nSi estás en Argentina, tené en cuenta que OpenAI factura en dólares via tarjeta internacional o Wise, y que la deducción aplica impuestos del Impuesto PAIS o retenciones según el medio de pago que uses. Eso no lo calculamos acá, pero es un 30-60% adicional sobre el tipo de cambio que no podés ignorar al presupuestar.",
   "keyTakeaway": "Ingresá tokens entrada, tokens salida y modelo y obtené costo mensual USD al instante, con fórmula estándar del tema y referencias al pie.",
   "useCases": [
-    "Dimensionar Costo API ChatGPT antes de comprar equipos o contratar servicio.",
-    "Comparar alternativas con specs medibles.",
-    "Planificar upgrades o cambios con datos reales.",
-    "Justificar una decisión técnica frente a tu equipo o cliente."
+    "Un freelance argentino que construye un chatbot de atención al cliente para un e-commerce: 500 interacciones diarias, 300 tokens de input y 400 de output promedio por turno, usando GPT-4o-mini. Resultado: aproximadamente USD 5,40/mes, un costo completamente viable para incluir en un retainer mensual.",
+    "Una startup SaaS que procesa contratos legales con GPT-4o: 200 documentos por día, 8.000 tokens de input por documento y 1.500 de output (resumen). Sin caching, el costo mensual supera los USD 500. Activando prompt caching en el system prompt (≈2.000 tokens fijos), el ahorro puede ser de USD 90/mes.",
+    "Un equipo de data que usa o1-mini para generar código Python de análisis: 50 requests diarios, 1.200 tokens de input y 2.000 de output. A USD 1,10/MTok input y USD 4,40/MTok output de o1-mini, el costo mensual ronda USD 11, mucho más barato que o1-full para tareas de código estándar.",
+    "Una agencia de marketing que automatiza la generación de copies en español con GPT-4o: 1.000 copies por mes, promedio 200 tokens de input (brief) y 350 de output (copy). Costo total: menos de USD 5/mes. El modelo se autofinancia con el primer cliente.",
+    "Un developer que evalúa si migrar de GPT-4o a GPT-4o-mini en su app de resumen de noticias: 10.000 requests diarios, 600 tokens in / 300 tokens out. Con GPT-4o el costo mensual es ≈USD 1.800; con GPT-4o-mini baja a ≈USD 108. Si la calidad del resumen es aceptable, el ahorro justifica ampliamente la migración.",
+    "Una empresa que quiere usar la Batch API para procesar análisis de sentimiento offline: 500.000 registros mensuales, 150 tokens de input y 20 de output cada uno. Con el 50% de descuento del modo batch sobre GPT-4o-mini, el costo cae de ≈USD 19,50 a ≈USD 9,75 por el mes completo.",
+    "Un emprendedor que planifica el unit economics de su producto: si cobra USD 9,99/mes por usuario y cada usuario genera 200 interacciones mensuales con 400 tokens in / 300 tokens out en GPT-4o-mini, el costo de IA por usuario es ≈USD 0,20/mes, dejando margen operativo saludable."
   ],
   "fields": [
     {
@@ -86,36 +89,52 @@
   "explanation": "## Cómo se calcula el costo mensual de uso de la API OpenAI\n\nEl modelo de facturación es por tokens: input (prompt) y output (completion) con tarifas distintas según modelo. Un token ≈ 4 caracteres ≈ 0,75 palabras en inglés (un 15-25% más en español por la tokenización del BPE en subpalabras).\n\n```\ncosto_mensual = Σ (tokens_input × tarifa_input + tokens_output × tarifa_output) / 1M\n```\n\n## Tabla 2026: precios API OpenAI (USD por 1M tokens)\n\n| Modelo | Input | Output | Caching | Contexto |\n|---|---|---|---|---|\n| GPT-4o | 2,50 | 10,00 | Sí | 128k |\n| GPT-4o mini | 0,15 | 0,60 | Sí | 128k |\n| o1-preview | 15,00 | 60,00 | Sí | 128k |\n| o1-mini | 3,00 | 12,00 | Sí | 128k |\n| GPT-4 Turbo | 10,00 | 30,00 | No | 128k |\n| GPT-3.5 Turbo | 0,50 | 1,50 | No | 16k |\n\n## Casos especiales\n\n- **Prompt caching**: 50% de descuento sobre input cacheado; útil para RAG con prompts repetitivos.\n- **Batch API**: 50% de descuento en procesamiento asincrónico (hasta 24 h).\n- **Vision**: imágenes cuestan ~150-1.500 tokens según tamaño y detail.\n- **Fine-tuning**: cobra por tokens de training y por tokens de uso del modelo fine-tuned (3x vs modelo base).\n- **Reasoning de o1**: genera 'reasoning tokens' no visibles pero facturables, pueden 2-5x la longitud de la respuesta final.\n\n## Errores comunes\n\n1. **No habilitar prompt caching**: descarta 50% de ahorro en prompts fijos.\n2. **Usar GPT-4o para tareas que GPT-4o-mini resuelve**: factor 16x de costo evitable.\n3. **No usar batch API para procesamiento masivo**: 50% extra innecesario.\n4. **Contar tokens con heurística**: usar el tokenizer oficial (`tiktoken`) evita subestimar en 15-25%.\n5. **No monitorear por endpoint**: sin logging se dispara un feature sin que lo notes.\n\n## Fuentes\n\nReferencias: pricing oficial en openai.com/api/pricing, documentación de prompt caching y batch API, repositorio *tiktoken* para conteo exacto de tokens y benchmarks publicados por Artificial Analysis y LMSYS sobre costos comparativos entre modelos OpenAI y competidores.",
   "faq": [
     {
-      "q": "¿Tokens?",
-      "a": "~4 caracteres por token. 1000 tokens ≈ 750 palabras."
+      "q": "¿Qué es un token y por qué importa tanto para el costo?",
+      "a": "Un token es la unidad mínima que el modelo procesa: aproximadamente 4 caracteres en inglés o 3,5 en español. La palabra «calculadora» es 2 tokens; «AI» es 1. OpenAI cobra por millón de tokens (MTok) procesados, separando input (lo que enviás: system prompt + historial + mensaje del usuario) y output (la respuesta generada). Lo crítico es entender que <strong>toda llamada a la API acumula tokens de contexto</strong>: si tenés un historial de conversación de 10 turnos, cada nuevo mensaje envía todos los anteriores como input, lo que puede multiplicar el costo real por 5x o más respecto al costo de un solo mensaje aislado."
     },
     {
-      "q": "¿GPT-4 Turbo?",
-      "a": "USD 10/M input, USD 30/M output."
+      "q": "¿Cuáles son los precios actuales de los modelos principales de OpenAI?",
+      "a": "<strong>GPT-4o:</strong> USD 2,50/MTok input — USD 10/MTok output. <strong>GPT-4o-mini:</strong> USD 0,15/MTok input — USD 0,60/MTok output. <strong>o1:</strong> USD 15/MTok input — USD 60/MTok output. <strong>o1-mini:</strong> USD 1,10/MTok input — USD 4,40/MTok output. <strong>GPT-3.5-turbo:</strong> USD 0,50/MTok input — USD 1,50/MTok output. Importante: los precios de OpenAI cambian con frecuencia y fueron reduciéndose históricamente. Verificá siempre en platform.openai.com/pricing antes de presupuestar un proyecto. Los modelos de la familia o1 incluyen tokens de «razonamiento interno» que no se ven en el output pero sí se facturan."
     },
     {
-      "q": "¿GPT-4o?",
-      "a": "USD 5/M input, USD 15/M output (más barato)."
+      "q": "¿Qué es el prompt caching y cuánto ahorra realmente?",
+      "a": "Prompt caching es una función de la API de OpenAI que almacena en memoria los primeros tokens del prompt (generalmente el system prompt y contexto fijo) durante hasta 5 minutos. Si la misma secuencia de tokens se repite en la siguiente llamada, OpenAI cobra solo el 50% por esa porción cacheada. El ahorro es significativo cuando tenés un system prompt largo y estático: si tu prompt fijo tiene 2.000 tokens y hacés 10.000 llamadas por día con GPT-4o, el ahorro mensual por caching es ≈USD 75. El caching se activa automáticamente en prompts de más de 1.024 tokens; no necesitás configurarlo manualmente en la API estándar."
     },
     {
-      "q": "¿GPT-3.5?",
-      "a": "USD 0.50/M input, USD 1.50/M output."
+      "q": "¿Qué es la Batch API y cuándo conviene usarla?",
+      "a": "La Batch API de OpenAI procesa solicitudes de forma asíncrona (en hasta 24 horas) a cambio de un <strong>50% de descuento sobre el precio estándar</strong>. Es ideal para tareas offline o diferibles: clasificación de textos, análisis de sentimiento, generación de embeddings masiva, moderación de contenido o cualquier pipeline que no requiera respuesta en tiempo real. No sirve para chatbots o aplicaciones donde el usuario espera una respuesta instantánea. Si tu caso de uso tolera la demora, la Batch API puede reducir a la mitad tu factura mensual sin cambiar nada en la lógica de tu aplicación."
     },
     {
-      "q": "¿Caching?",
-      "a": "Prompt caching reduce 50% input tokens repetidos."
+      "q": "¿Cómo se calcula exactamente el costo de una sesión de chat con historial?",
+      "a": "Supongamos que usás GPT-4o-mini y tenés una conversación de 5 turnos. En el turno 1 enviás 200 tokens de system prompt + 50 de mensaje = 250 tokens input, y recibís 150 output. En el turno 2 enviás 250 (anterior) + 150 (respuesta) + 60 (nuevo mensaje) = 460 tokens input. Para el turno 5, el input acumulado puede ser 1.200+ tokens. El costo total de la sesión es la suma de cada llamada individual. En este ejemplo de 5 turnos el costo acumulado es ≈USD 0,0015, algo ridículo. Pero con 10.000 usuarios activos haciendo 10 turnos por día, eso se convierte en USD 450/mes. <strong>El historial de contexto es el multiplicador oculto más importante.</strong>"
     },
     {
-      "q": "¿Batch API?",
-      "a": "50% descuento async."
+      "q": "¿Por qué mis tokens en español cuestan más de lo esperado?",
+      "a": "El tokenizer de OpenAI (tiktoken, basado en BPE) fue entrenado principalmente con texto en inglés. Las palabras en español, especialmente las con tildes y caracteres especiales, se fragmentan en más tokens que sus equivalentes en inglés. Por ejemplo, «información» puede ser 4 tokens mientras que «information» son 3. En la práctica, los prompts en español consumen entre un 15% y un 25% más de tokens que el equivalente en inglés, lo que eleva el costo real por interacción. Si tu aplicación maneja volúmenes altos en castellano, esto es un factor que debés incluir en tus estimaciones."
     },
     {
-      "q": "¿Alternativas?",
-      "a": "Claude (Anthropic), Gemini (Google), Llama (local)."
+      "q": "¿Cómo afecta el context window al costo en aplicaciones RAG?",
+      "a": "En sistemas RAG (Retrieval Augmented Generation), el contexto que inyectás por cada consulta (fragmentos de documentos recuperados) puede ser de 2.000 a 8.000 tokens por llamada. Con GPT-4o y 1.000 consultas diarias con 5.000 tokens de contexto cada una, el costo solo de input es USD 375/mes. Las optimizaciones clave son: reducir el tamaño de los fragmentos recuperados, usar reranking para traer solo los más relevantes, aplicar prompt caching en el system prompt, y evaluar si GPT-4o-mini ofrece calidad suficiente para tu caso de uso, lo que reduciría el costo de input a ≈USD 22,50/mes en el mismo escenario."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿Cómo impacta la facturación de OpenAI para usuarios en Argentina?",
+      "a": "OpenAI cobra en dólares estadounidenses mediante tarjeta de crédito/débito internacional o plataformas como Wise o PayPal. Si usás una tarjeta argentina, el consumo se procesa como compra en el exterior, por lo que históricamente aplicaron el tipo de cambio tarjeta más el Impuesto PAIS (cuando estaba vigente) y la percepción del 45% a cuenta de Ganancias/Bienes Personales. Con la eliminación del Impuesto PAIS en septiembre 2024, el costo total bajó, pero la percepción del SIRASE (35%) sigue aplicando en muchas tarjetas. <strong>Conviene pagar con Wise o una cuenta en el exterior para evitar recargos</strong> y que el costo real sea más cercano al dólar oficial."
+    },
+    {
+      "q": "¿Cuándo conviene usar o1 o o1-mini versus GPT-4o?",
+      "a": "Los modelos de la familia o1 son modelos de «razonamiento extendido»: piensan paso a paso antes de responder, lo que los hace superiores en matemática, lógica, código complejo y análisis científico. Sin embargo, ese razonamiento interno genera tokens adicionales que se facturan aunque no los veas. Son entre 6x y 24x más caros que GPT-4o. Regla práctica: usá o1 o o1-mini cuando la tarea sea realmente de razonamiento complejo (resolver un bug difícil, demostrar un teorema, planificar una arquitectura). Para generación de texto, resúmenes, traducciones o chatbots conversacionales, GPT-4o o GPT-4o-mini ofrecen mejor relación costo-calidad."
+    },
+    {
+      "q": "¿Qué errores comunes llevan a facturas inesperadamente altas?",
+      "a": "Los errores más frecuentes son: <strong>1) No truncar el historial de conversación</strong>, dejando que crezca indefinidamente en cada turno. <strong>2) System prompts excesivamente largos</strong> sin evaluar si toda esa información es necesaria. <strong>3) No manejar reintentos con exponential backoff</strong>, lo que puede generar llamadas duplicadas en caso de error. <strong>4) Usar GPT-4o para tareas de clasificación simple</strong> que GPT-4o-mini resuelve igualmente bien. <strong>5) No configurar max_tokens en el output</strong>, dejando que el modelo genere respuestas arbitrariamente largas. <strong>6) No monitorear el uso real</strong> con los dashboards de OpenAI ni configurar límites de gasto mensuales en la cuenta."
+    },
+    {
+      "q": "¿Cómo puedo estimar los tokens de mi caso de uso sin tener la app lista?",
+      "a": "OpenAI ofrece el Tokenizer en platform.openai.com/tokenizer: pegás cualquier texto y te muestra exactamente cuántos tokens consume. Para estimar el volumen mensual: tomá un prompt representativo, contá sus tokens, multiplicá por tu volumen diario de llamadas esperado y por 30. Para el output, si no tenés idea del largo típico de respuesta, empezá asumiendo que será igual al input y ajustá una vez que tengas datos reales. También podés usar la librería tiktoken en Python para contar tokens programáticamente antes de hacer la llamada, lo que permite implementar lógica de truncado automático del historial cuando el contexto supera un umbral de costo."
+    },
+    {
+      "q": "¿Existen alternativas más baratas a la API de OpenAI?",
+      "a": "Sí, el mercado de LLMs API creció mucho. <strong>Anthropic Claude 3.5 Haiku</strong> está en USD 0,80/MTok input y USD 4/MTok output, comparable a GPT-4o-mini pero con contexto de 200k tokens. <strong>Google Gemini 1.5 Flash</strong> tiene tier gratuito generoso y precios por debajo de USD 0,075/MTok input. <strong>Llama 3 via Groq</strong> ofrece inferencia ultra-rápida a precios muy bajos o gratuita en tier free. <strong>Modelos locales</strong> (Ollama con Llama, Mistral) tienen costo marginal cero pero requieren infraestructura GPU propia. La elección depende del caso de uso, la calidad requerida y si preferís pagar por uso o invertir en infraestructura."
     }
   ],
   "sources": [

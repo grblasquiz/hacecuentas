@@ -2,7 +2,7 @@
   "slug": "calculadora-percentil-dato",
   "title": "Calculadora de Percentil de un Dato 2026 | Hacé Cuentas",
   "h1": "Calculadora de Percentil de un Dato",
-  "description": "Calculá en qué percentil cae un dato dentro de un conjunto. Ingresá los datos y el valor a evaluar. Incluye cuartiles. Con pasos detallados.",
+  "description": "Calculá el percentil de un dato dentro de tu conjunto en segundos. Incluye Q1, Q2, Q3, IQR y detección de outliers. Con pasos.",
   "category": "matematica",
   "icon": "📊",
   "formulaId": "percentil-dato",
@@ -14,14 +14,17 @@
     "percentil estadistica",
     "rango percentil"
   ],
-  "intro": "El **[percentil](/calculadora-percentil-estatura-peso-bebe-oms)** indica qué porcentaje de datos es menor o igual a un valor dado. Si estás en el percentil 80, superás al 80% de los datos. Esta calculadora determina el percentil de un valor dentro de un conjunto de datos e incluye los cuartiles Q1, Q2 y Q3.",
+  "intro": "Cuando tenés un conjunto de datos y querés saber exactamente dónde cae un valor dentro de ese grupo, el percentil es la herramienta correcta. No alcanza con saber si algo es \"alto\" o \"bajo\"; necesitás saber qué porcentaje del grupo queda por debajo de ese número.\n\nEjemplo concreto: si un alumno sacó 72 puntos en un examen y los demás obtuvieron entre 40 y 95, ¿le fue bien? Depende de dónde cae ese 72 respecto al resto. Si supera al 85% de los estudiantes, está en el percentil 85. Si solo supera al 40%, está en el percentil 40. Son realidades muy distintas con el mismo número.\n\nEsta calculadora resuelve exactamente eso: ingresás todos los datos del conjunto separados por coma, indicás el valor que querés evaluar, y obtenés su percentil calculado con interpolación lineal, el cuartil en que cae (Q1, Q2, Q3 o Q4), los tres cuartiles del conjunto completo y el rango intercuartílico (IQR). También te muestra los pasos del cálculo para que puedas entender —o repasar— la lógica.\n\nEs útil en educación (notas, puntajes de admisión, evaluaciones estandarizadas), en salud (comparar una medición con un grupo de referencia), en recursos humanos (posicionar un salario dentro de una banda), en estadística descriptiva y en análisis de datos de cualquier tipo. A diferencia de otras herramientas que solo te dan el número final, acá ves el proceso completo, los cuartiles y la interpretación en palabras. Funciona con cualquier cantidad de datos numéricos, sin límite de decimales ni de valores.",
   "keyTakeaway": "Si tu valor es mayor que **80 de 100 datos**, estás en el **percentil 80** (superás al 80% del grupo).",
   "useCases": [
-    "Saber en qué percentil cae un puntaje de examen.",
-    "Evaluar una medición respecto a un grupo de referencia.",
-    "Calcular cuartiles de un dataset.",
-    "Resolver ejercicios de estadística descriptiva.",
-    "Interpretar resultados de tests estandarizados."
+    "Un docente cargó los 30 puntajes de un parcial (40, 52, 58, 61, 65, 68, 70, 72, 72, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 93, 95, 98) y quiso saber en qué percentil cayó el alumno con 72 puntos: resultó en el percentil 30, es decir, por debajo de la mayoría del grupo.",
+    "Una empresa de Córdoba relevó los salarios de 20 empleados del área comercial y necesitaba saber si un sueldo de $850.000 estaba por encima o por debajo de la mediana del equipo antes de una negociación paritaria. El cálculo mostró que ese valor correspondía al percentil 62.",
+    "Una nutricionista quiso comparar el IMC de una paciente (24,3) con el de las otras 15 pacientes de su consultorio del último trimestre, para contextualizar el resultado sin usar tablas OMS externas.",
+    "Un estudiante de Estadística I de la UBA tenía que resolver un ejercicio práctico: dado el conjunto {12, 15, 18, 20, 22, 25, 28, 30}, calcular el percentil del valor 22 y los tres cuartiles. La calculadora le mostró el procedimiento paso a paso para chequear su desarrollo manual.",
+    "Un analista de e-commerce necesitaba saber si el ticket promedio de cierta categoría ($34.200) estaba en el cuartil superior o inferior respecto a las últimas 50 transacciones registradas, para decidir si aplicar descuento.",
+    "Un médico clínico quiso ubicar una presión arterial sistólica (128 mmHg) dentro de los valores registrados en 25 pacientes hipertensos del último mes, para evaluar la evolución del caso respecto al grupo bajo seguimiento.",
+    "Un coach deportivo registró los tiempos de 100 metros llanos de 12 atletas juveniles y necesitaba saber en qué percentil estaba el tiempo de 14,2 segundos para armar grupos de entrenamiento diferenciados.",
+    "Un investigador de ciencias sociales analizó ingresos de 40 hogares de una encuesta local y necesitaba calcular Q1, Q2 y Q3 para describir la distribución sin recurrir a software estadístico pagado."
   ],
   "fields": [
     {
@@ -74,32 +77,52 @@
   },
   "faq": [
     {
-      "q": "¿Qué es un percentil?",
-      "a": "El **porcentaje de datos que son menores o iguales** a un valor. Percentil 90 = superás al 90% del grupo."
+      "q": "¿Qué es exactamente un percentil?",
+      "a": "El percentil de un valor indica qué porcentaje de datos del conjunto es <strong>menor o igual</strong> a ese valor. Si tu dato está en el percentil 70, significa que el 70% de los valores del grupo son iguales o menores al tuyo. Los percentiles van del 0 al 100 y siempre se interpretan en relación a un grupo específico: el percentil 70 en un grupo de ingenieros puede representar un desempeño completamente diferente al percentil 70 en otro contexto. No es un valor absoluto; es siempre relativo al conjunto de referencia que ingresás."
     },
     {
-      "q": "¿Qué son los cuartiles?",
-      "a": "**Q1** = percentil 25, **Q2** = percentil 50 (mediana), **Q3** = percentil 75. Dividen los datos en 4 partes iguales."
+      "q": "¿Cómo se calcula el percentil de un dato en esta calculadora?",
+      "a": "La fórmula base es: <strong>Percentil = (cantidad de datos ≤ valor / total de datos) × 100</strong>. Esta calculadora usa interpolación lineal para mayor precisión cuando el valor no coincide exactamente con uno de los datos del conjunto. El proceso es: (1) ordenar todos los datos de menor a mayor, (2) contar cuántos son menores o iguales al valor evaluado, (3) dividir ese conteo por el total y multiplicar por 100. Ejemplo: si tenés 20 datos y 14 son menores o iguales a tu valor, el percentil es (14/20) × 100 = <strong>percentil 70</strong>."
     },
     {
-      "q": "¿Percentil alto es bueno o malo?",
-      "a": "Depende del contexto. Para puntajes y notas: alto = bueno. Para tiempos o errores: alto = malo."
+      "q": "¿Qué son Q1, Q2 y Q3?",
+      "a": "Son los <strong>tres cuartiles</strong> que dividen el conjunto ordenado en cuatro partes iguales. <strong>Q1 (percentil 25)</strong>: el 25% de los datos está por debajo. <strong>Q2 (percentil 50)</strong>: es la mediana, el punto medio del conjunto. <strong>Q3 (percentil 75)</strong>: el 75% de los datos está por debajo. Ejemplo: si tus datos son {10, 20, 30, 40, 50, 60, 70, 80}, Q1 = 22,5, Q2 = 45, Q3 = 67,5. Estos tres valores resumen la distribución sin necesitar ver todos los datos."
     },
     {
-      "q": "¿Cómo se calcula exactamente?",
-      "a": "**Percentil = (# de datos ≤ valor / total) × 100**. Hay varias fórmulas; esta usa interpolación lineal."
+      "q": "¿Qué es el rango intercuartílico (IQR) y para qué sirve?",
+      "a": "El IQR es la diferencia entre Q3 y Q1: <strong>IQR = Q3 - Q1</strong>. Mide la dispersión del 50% central de los datos, ignorando los extremos. Es especialmente útil para detectar <strong>outliers (valores atípicos)</strong>: un dato se considera outlier si está por debajo de Q1 − 1,5 × IQR o por encima de Q3 + 1,5 × IQR. Ejemplo: si Q1 = 20 y Q3 = 60, el IQR = 40. Cualquier valor menor a 20 − 60 = −40 o mayor a 60 + 60 = 120 sería un outlier según el criterio de Tukey."
     },
     {
-      "q": "¿Cuántos datos necesito?",
-      "a": "Mínimo 3-5 para que tenga sentido. Con más de 30 datos, los percentiles son más estables."
+      "q": "¿Percentil alto siempre es mejor?",
+      "a": "No. Depende completamente de qué mide el dato. Para <strong>puntajes de examen, salarios, altura o productividad</strong>, un percentil alto generalmente es favorable. Para <strong>tiempos de respuesta, errores, presión arterial elevada o nivel de deuda</strong>, un percentil alto puede ser desfavorable. En medicina pediátrica, por ejemplo, según las tablas de la OMS, un bebé en el percentil 97 de peso puede estar en sobrepeso. Siempre interpretá el percentil en el contexto de lo que estás midiendo."
     },
     {
-      "q": "¿Qué es el rango intercuartílico?",
-      "a": "**IQR = Q3 - Q1**. Mide la dispersión del 50% central de los datos. Se usa para detectar outliers: valor < Q1 - 1,5×IQR o > Q3 + 1,5×IQR."
+      "q": "¿Cuántos datos necesito para que el percentil tenga sentido estadístico?",
+      "a": "Con menos de 5 datos el percentil pierde significado práctico: cada valor representa demasiado del total. Con <strong>entre 10 y 30 datos</strong> ya obtenés una referencia útil para comparaciones cotidianas. Con <strong>más de 30 datos</strong> los percentiles se estabilizan y son más confiables estadísticamente. Para estudios formales o investigaciones académicas, la recomendación general es trabajar con muestras de al menos 100 observaciones para percentiles extremos (por debajo de 10 o por encima de 90)."
     },
     {
-      "q": "¿Es lo mismo que el porcentaje?",
-      "a": "No exactamente. El porcentaje puede referirse a cualquier proporción. El percentil siempre se refiere a la **posición relativa** dentro de un grupo ordenado."
+      "q": "¿Percentil es lo mismo que porcentaje o que puntaje z?",
+      "a": "Son tres cosas distintas. El <strong>porcentaje</strong> expresa una proporción (ej: 80% de respuestas correctas). El <strong>percentil</strong> expresa posición relativa dentro de un grupo ordenado (ej: superás al 80% del grupo). El <strong>puntaje z o z-score</strong> expresa cuántos desvíos estándar se aleja un valor de la media, asumiendo distribución normal. Un percentil 84 equivale aproximadamente a un z-score de +1 en una distribución normal estándar. La diferencia práctica: el percentil no asume distribución normal; funciona con cualquier tipo de datos."
+    },
+    {
+      "q": "¿Esta calculadora sirve para datos de salud como peso, talla o presión?",
+      "a": "Sí, con una aclaración importante: esta calculadora calcula el percentil de un valor <strong>dentro del conjunto de datos que vos ingresás</strong>. Si querés comparar con tablas de referencia poblacional (como las tablas OMS para peso y talla de bebés, o las tablas del Ministerio de Salud de Argentina), esas tablas ya tienen los percentiles precalculados para grandes muestras poblacionales. Esta herramienta es ideal para comparar dentro de un grupo propio: los pacientes de un consultorio, los alumnos de una clase, los participantes de un estudio local."
+    },
+    {
+      "q": "¿Cómo interpreto el cuartil que me da la calculadora?",
+      "a": "El resultado de cuartil indica en qué cuarto del conjunto cae tu valor: <strong>Q1</strong> = está en el 25% inferior del grupo. <strong>Q2</strong> = está entre el 25% y el 50% (segunda mitad baja). <strong>Q3</strong> = está entre el 50% y el 75% (segunda mitad alta). <strong>Q4</strong> = está en el 25% superior del grupo. Es una forma rápida de ubicar el dato sin calcular el percentil exacto. En recursos humanos se usa mucho para ubicar salarios dentro de bandas salariales: Q1 es entrada de banda, Q4 es techo de banda."
+    },
+    {
+      "q": "¿Qué pasa si el valor que ingreso no está en el conjunto de datos?",
+      "a": "La calculadora lo maneja sin problema. El percentil no requiere que el valor evaluado esté dentro del conjunto; simplemente cuenta cuántos datos del conjunto son menores o iguales a ese valor. Ejemplo: si tu conjunto es {10, 20, 30, 40, 50} y evaluás el valor 25, la calculadora cuenta cuántos datos son ≤ 25 (respuesta: 10 y 20, o sea 2 de 5) y calcula el percentil correspondiente (40). El valor 25 no aparece en el conjunto y eso no es un problema."
+    },
+    {
+      "q": "¿Hay diferencias entre los métodos de cálculo de percentiles?",
+      "a": "Sí, y es una fuente frecuente de confusión. Existen múltiples métodos: el de <strong>interpolación lineal</strong> (que usa esta calculadora), el método de la <strong>posición más cercana</strong>, el método de <strong>Excel (PERCENTIL.INC y PERCENTIL.EXC)</strong>, entre otros. Los resultados pueden diferir levemente, especialmente con muestras pequeñas. En ambientes académicos argentinos (secundario y universitario) suele usarse la fórmula L = (P/100) × n, donde P es el percentil buscado y n el total de datos. Si el resultado de esta calculadora difiere ligeramente del manual, es probable que se use otro método de interpolación."
+    },
+    {
+      "q": "¿Puedo usar esta calculadora para resolver ejercicios de estadística del CBC o de facultad?",
+      "a": "Sí. Esta calculadora es útil para <strong>verificar resultados</strong> de ejercicios de estadística descriptiva del CBC de la UBA, de materias como Probabilidad y Estadística de carreras de Ciencias Económicas, Exactas, Ingeniería y Psicología. Mostrá los pasos detallados que devuelve la calculadora y comparalos con tu desarrollo manual. Tené en cuenta que algunos libros de texto usan fórmulas levemente distintas para ubicar la posición del percentil (Lp = P/100 × (n+1) en vez de P/100 × n), lo que puede dar un valor final ligeramente diferente con muestras pequeñas."
     }
   ],
   "howToSteps": [

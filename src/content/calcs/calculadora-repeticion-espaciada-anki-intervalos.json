@@ -2,7 +2,7 @@
   "slug": "calculadora-repeticion-espaciada-anki-intervalos",
   "title": "Calculadora de Intervalos Anki 2026 — Gratis | Hacé Cuentas",
   "h1": "Calculadora de Intervalos Anki",
-  "description": "Calculá los intervalos de repaso óptimos con repetición espaciada tipo Anki/SM-2: cuándo repetir cada tarjeta según respuestas · Gratis y rápido.",
+  "description": "Calculá intervalos de repaso óptimos con algoritmo SM-2 tipo Anki: cuándo revisar cada tarjeta, carga diaria estimada y minutos necesarios.",
   "icon": "📚",
   "seoKeywords": [
     "anki intervalos",
@@ -14,13 +14,17 @@
     "sistema leitner",
     "repeticion espaciada intervalos"
   ],
-  "intro": "La repetición espaciada es la técnica más eficiente para memorización a largo plazo. El algoritmo SM-2 (SuperMemo 2) desarrollado por Piotr Woźniak en 1985 es la base de Anki y calcula el próximo intervalo según tu respuesta: 'again' reinicia, 'good' multiplica por factor (~2.5) y 'easy' acelera más. Esta calculadora simula esos intervalos para que planifiques tu carga de repasos. Ideal para memorizar vocabulario de idiomas, leyes, términos médicos o cualquier contenido que requiera retención a largo plazo.",
+  "intro": "Si alguna vez arrancaste un mazo de Anki con energía y a los 10 días tenías 300 tarjetas atrasadas acumulándose, sabés exactamente el problema que resuelve esta calculadora. La trampa más común no es la falta de disciplina: es no dimensionar bien la carga antes de empezar.\n\nEl algoritmo SM-2 (SuperMemo 2), desarrollado por Piotr Woźniak en 1985, es la base matemática detrás de Anki. Su lógica es simple pero poderosa: cada vez que respondés 'good' a una tarjeta, el intervalo al siguiente repaso se multiplica por tu ease factor (por defecto 2.5). Así, una tarjeta nueva pasa de 1 día → 3 días → 8 días → 20 días → 50 días. Si fallás y marcás 'again', el contador vuelve a cero. El sistema distribuye el esfuerzo en el tiempo justo antes de que olvidés, aprovechando la curva del olvido de Ebbinghaus.\n\nEl problema real aparece cuando sumás cuentas: si cargás 500 tarjetas a 20 nuevas por día, en régimen estable (cuando todas las tarjetas están 'vivas' en el sistema) vas a tener entre 80 y 150 repasos diarios según tu ease factor y tasa de errores. Eso son 40-75 minutos al día, todos los días, sin falta.\n\nEsta calculadora te muestra eso antes de que te metas de lleno. Ingresás el total de tarjetas, cuántas nuevas querés agregar por día y tu ease factor promedio, y el sistema te devuelve: cuántos días tardás en agregar todo el mazo, cuántos repasos diarios vas a tener en régimen estable, los intervalos típicos de revisión y los minutos diarios que necesitás reservar. Una herramienta práctica para estudiantes de idiomas, medicina, derecho, o cualquier disciplina donde la memoria de largo plazo sea crítica.",
   "keyTakeaway": "Una tarjeta aprendida se repasa a **1, 3, 7, 15, 30, 60 días** con 'good' consistente. Si fallás, vuelve a 1 día. Anki ajusta automáticamente según tu ease factor.",
   "useCases": [
-    "Querés dimensionar cuántas cartas Anki nuevas agregar por día.",
-    "Estás por examen y calculás si el mazo llega a tiempo.",
-    "Evaluás si tu plan de vocabulario idioma es sostenible.",
-    "Medicina/derecho: planificás memorización por ciclos."
+    "Un estudiante de medicina carga 1.200 tarjetas de anatomía a 20 por día: la calculadora le muestra que en régimen estable tendrá ~130 repasos diarios, unos 65 minutos. Decide bajar a 15 nuevas/día para que sean 50 minutos sostenibles.",
+    "Una persona que estudia japonés tiene un mazo de 2.000 vocablos JLPT N3. Con ease factor 2.2 (kanji es difícil) y 25 nuevas/día, ve que tardará 80 días en cargar todo y tendrá ~180 repasos diarios en pico: decide dividir el mazo en dos etapas.",
+    "Un abogado que prepara el examen de admisión a la magistratura tiene 600 tarjetas de jurisprudencia y 45 días hasta el examen. Calcula que necesita 14 nuevas/día mínimo para llegar con todo el material visto al menos una vez.",
+    "Un docente universitario diseña un curso con Anki compartido: usa la calculadora para estimar que sus 300 alumnos necesitarán ~20 minutos diarios si cargan 10 tarjetas nuevas por día, información clave para recomendar la carga sin que abandonen.",
+    "Un estudiante de inglés con ease factor 2.8 (material fácil, cognados españoles-inglés) ve que sus intervalos crecen más rápido: 1 → 3 → 8 → 22 → 62 días, lo que significa menos repasos diarios totales que alguien con ease factor 2.2.",
+    "Alguien que se atrasó dos semanas y tiene 400 tarjetas vencidas usa la calculadora para entender cuántos días necesita solo para ponerse al día si pausa las tarjetas nuevas y procesa 60 repasos por día.",
+    "Un estudiante de farmacología calcula que con 800 tarjetas de principios activos a 20 por día, tardará 40 días en completar el mazo y luego tendrá ~90 repasos diarios: decide arrancar 6 semanas antes del parcial, no 3.",
+    "Un políglota que maneja tres mazos simultáneos (español-francés 400 cartas, español-italiano 300, español-portugués 250) usa la calculadora para cada uno y suma la carga total: 85 minutos diarios en régimen, más de lo que tiene disponible. Decide pausar el italiano hasta terminar los primeros dos."
   ],
   "fields": [
     {
@@ -105,32 +109,52 @@
   "explanation": "## Algoritmo SM-2 explicado\n\nPor cada tarjeta respondida:\n\n```\nintervalo_nuevo = intervalo_anterior × ease_factor\n```\n\n**Ease factor** arranca en 2.5 y se ajusta:\n- 'again' (0): reinicia a 0 y baja ease 0.2.\n- 'hard' (3): mantiene ease o baja 0.15.\n- 'good' (4): mantiene ease.\n- 'easy' (5): sube ease 0.15.\n\n## Intervalos típicos\n\n| Repaso # | Intervalo (good) | Intervalo (easy) |\n|---|---|---|\n| 1 | 1 día | 4 días |\n| 2 | 3 días | 10 días |\n| 3 | 7 días | 25 días |\n| 4 | 15 días | 60 días |\n| 5 | 35 días | 150 días |\n| 6 | 90 días | 1 año |\n\n## Carga real de repasos\n\nEn régimen estable con 20 nuevas/día, terminás repasando **~8-12×** ese número en sesiones (incluyendo tarjetas viejas). Con mazo de 2.000 → 160-240 repasos diarios.\n\n## Reglas para no colapsar\n\n1. **Empezá conservador**: 10-15 nuevas/día primero mes.\n2. **Leave cards behind**: si te atrasás, pausá nuevas antes que abandonar repasos.\n3. **Precisión tarjetas**: 1 concepto por carta, imagen si ayuda.\n4. **Cloze deletion** para conceptos: más efectivo que front/back simple.\n\nMirá la [curva de Ebbinghaus](/calculadora-ebbinghaus-curva-olvido) para entender por qué estos intervalos funcionan, y la [calculadora de flashcards por día](/calculadora-flashcards-por-dia).",
   "faq": [
     {
-      "q": "¿Cuántas nuevas tarjetas por día?",
-      "a": "Empezá con 10-15 y subí gradualmente. Más de 30/día es insostenible para la mayoría."
+      "q": "¿Cómo funciona exactamente el algoritmo SM-2 que usa esta calculadora?",
+      "a": "El SM-2 calcula el próximo intervalo de repaso con una fórmula sencilla: <strong>Intervalo(n) = Intervalo(n-1) × EaseFactor</strong>. El ease factor arranca en 2.5 por defecto. Los primeros dos repasos son fijos: día 1 y día 6 (en Anki moderno, día 1 y día 4). A partir del tercero, el intervalo se multiplica. Si respondés 'again', la tarjeta vuelve a la cola de aprendizaje desde cero. Si respondés 'hard', el intervalo crece menos y el ease factor baja 0.15. Con 'good' crece normalmente. Con 'easy' crece más rápido y el ease factor sube 0.15. Acumular muchos 'again' baja tu ease factor y genera el fenómeno llamado 'ease hell': intervalos que nunca crecen aunque sepas la tarjeta. La solución es la función 'Reset' de ease o usar el algoritmo FSRS disponible en Anki 23.10 en adelante."
     },
     {
-      "q": "¿Qué pasa si me atraso?",
-      "a": "Pausá nuevas y priorizá repasos. Mejor no agregar 2 semanas que abandonar el mazo."
+      "q": "¿Qué es el ease factor y qué valor debo poner en la calculadora?",
+      "a": "El ease factor (factor de facilidad) determina cuánto crece el intervalo entre repasos. <strong>El default de Anki es 2.5</strong>, lo que significa que cada repaso exitoso multiplica el intervalo por 2.5. Un ease factor de 2.2 implica intervalos más cortos y más repasos: material difícil como kanji japonés, gramática coreana o terminología médica específica suele bajar a ese rango. Un ease factor de 2.8 o más aplica para vocabulario con cognados fáciles o material que ya conocés parcialmente. Si estás empezando y no sabés tu promedio, usá 2.5. En Anki podés ver tu ease factor promedio en Herramientas → Estadísticas. Nunca bajes el mínimo por debajo de 1.3 (ese es el límite que pone Anki) porque los intervalos se vuelven demasiado cortos para ser útiles."
     },
     {
-      "q": "¿Por qué Anki sigue mostrando cartas que sé?",
-      "a": "Por 'leeches': tarjetas que olvidás repetidamente. Anki las marca y requieren reformulación."
+      "q": "¿Cuántas tarjetas nuevas por día es razonable agregar?",
+      "a": "<strong>La respuesta correcta depende del tiempo disponible y del ease factor</strong>, no de un número mágico. Dicho esto, hay rangos útiles: 10-15 nuevas/día es una carga muy sostenible para la mayoría, con 30-60 minutos diarios en régimen. 20-25 nuevas/día es lo que hacen estudiantes de idiomas serios o personas en preparación de exámenes con tiempo dedicado. Más de 30 nuevas/día es viable solo si tenés 1.5-2 horas diarias disponibles y material relativamente fácil. El error más común es arrancar con 50 nuevas/día la primera semana (porque todavía no hay repasos), y darse cuenta tres semanas después de que los repasos se acumularon a 300 por día. Esta calculadora muestra esa proyección antes de que ocurra."
     },
     {
-      "q": "¿SM-2 es el mejor algoritmo?",
-      "a": "FSRS (2023) lo supera en eficiencia hasta 30%. Anki 23.10+ incluye FSRS opcional."
+      "q": "¿Cuáles son los intervalos típicos con 'good' consistente?",
+      "a": "Con ease factor 2.5 y respuestas 'good' sin errores, una tarjeta sigue aproximadamente esta secuencia: <strong>Día 1 → Día 4 → Día 10 → Día 25 → Día 62 → Día 155</strong>. Con ease factor 2.2 (material difícil): Día 1 → Día 3 → Día 7 → Día 15 → Día 33 → Día 73. Con ease factor 2.8 (material fácil): Día 1 → Día 6 → Día 17 → Día 47 → Día 132 → Día 370. Notás la diferencia: con material fácil una tarjeta puede pasar de revisarse cada 4 meses a revisarse cada año mucho antes. El ease factor importa más de lo que parece en el volumen total de repasos."
     },
     {
-      "q": "¿Cómo funciona esta calculadora?",
-      "a": "Ingresás los datos pedidos, el cálculo se ejecuta al instante en tu navegador y se muestra el resultado. Todo corre localmente: nada viaja a un servidor externo."
+      "q": "¿Qué pasa si me atraso varios días o semanas?",
+      "a": "Anki acumula todas las tarjetas vencidas y las muestra como 'overdue'. <strong>El error más costoso es seguir agregando tarjetas nuevas mientras hay un atraso grande</strong>. La recomendación práctica: pausá las nuevas completamente, poné un límite de repasos por día (por ejemplo 100), y procesá el atraso en 3-7 días según el volumen. Si el atraso supera los 500 repasos, considerá usar la función 'Reschedule cards' para distribuirlos en los próximos días en lugar de enfrentarlos todos juntos. Una alternativa drástica pero efectiva: si el mazo tiene más de 1.000 tarjetas atrasadas y llevas más de un mes sin usarlo, resetear y empezar de nuevo puede ser más eficiente que ponerse al día."
     },
     {
-      "q": "¿Es precisa?",
-      "a": "Basado en las fuentes citadas en la sección \"Fuentes\" de esta página. Los resultados son indicativos y sirven como referencia. Para decisiones críticas (médicas, legales, financieras grandes) consultá siempre con un profesional."
+      "q": "¿SM-2 sigue siendo el mejor algoritmo o hay algo más actualizado?",
+      "a": "<strong>FSRS (Free Spaced Repetition Scheduler), desarrollado por Jarrett Ye en 2022-2023, supera al SM-2 en eficiencia</strong>. Según análisis publicados en la comunidad de Anki y el repositorio de FSRS en GitHub, FSRS reduce la carga de repasos entre un 20% y un 30% manteniendo el mismo nivel de retención. Esto ocurre porque FSRS usa un modelo más sofisticado de la curva del olvido que considera el tiempo desde el último repaso, la estabilidad de la memoria y la dificultad intrínseca de cada tarjeta. Anki incorporó FSRS en la versión 23.10 (octubre 2023) como opción activable. Esta calculadora usa SM-2 porque es el estándar de referencia más extendido y entendido, pero si usás Anki 23.10 o posterior, activar FSRS en la configuración del mazo puede reducir tu carga de repasos reales."
     },
     {
-      "q": "¿Es gratis? ¿Tengo que registrarme?",
-      "a": "Sí, 100% gratis. No pedimos email, registro, ni datos personales. Podés usarla todas las veces que quieras."
+      "q": "¿Qué son las 'leeches' y por qué Anki me sigue mostrando tarjetas que creo que sé?",
+      "a": "Una <strong>leech (sanguijuela)</strong> es una tarjeta que fallás repetidamente. Por defecto, Anki la marca como leech después de 8 respuestas 'again' y la suspende automáticamente. El problema de fondo casi siempre no es la memoria sino la tarjeta en sí: está mal formulada, mezcla dos conceptos, o carece de contexto suficiente. La solución no es repetir más sino reformular. El principio de Michael Nielsen y el de SuperMemo coinciden: una buena tarjeta tiene una sola idea, usa contexto mínimo necesario y tiene una respuesta sin ambigüedad. Si una tarjeta sigue siendo leech después de reformularla, considerá eliminarla y reemplazarla por dos tarjetas más simples."
+    },
+    {
+      "q": "¿Cuántos minutos diarios necesito para mantener un mazo en régimen estable?",
+      "a": "La estimación estándar es <strong>entre 5 y 8 segundos por repaso</strong>, incluyendo el tiempo de lectura y la respuesta. Con 100 repasos diarios, eso es entre 8 y 13 minutos. Con 200 repasos, 17-27 minutos. El tiempo real varía mucho según el tipo de tarjeta: tarjetas de vocabulario simple (5 segundos promedio) versus tarjetas con audio, imagen o párrafos largos (15-20 segundos). Esta calculadora usa un promedio de 30 segundos por repaso para ser conservadora y contemplar tarjetas más complejas, lo que da una estimación del lado alto. Si tu mazo es de vocabulario puro, podés dividir el resultado por dos y estar más cerca de la realidad."
+    },
+    {
+      "q": "¿Es posible usar Anki para preparar el CBC, el ingreso a medicina o la facu argentina con este método?",
+      "a": "Sí, y hay comunidades activas en Argentina que comparten mazos. Para el <strong>CBC (UBA)</strong>, existen mazos públicos de Biología, Química y Sociedad para el uso compartidos en grupos de Facebook y Discord. Para el ingreso a Medicina de la UBA o universidades provinciales, los conceptos de anatomía, bioquímica y fisiología son ideales para repetición espaciada porque requieren retención exacta. El método funciona mejor cuando combinás Anki con comprensión previa: primero entendés el concepto con apuntes o video, después creás o usás tarjetas para fijarlo. Usar Anki sin entender el material de base produce tarjetas que se aprenden 'de memoria' sin anclaje conceptual y se olvidan ante cambios de contexto en el examen."
+    },
+    {
+      "q": "¿Cuántas tarjetas totales es razonable tener en un mazo activo?",
+      "a": "<strong>No hay un límite absoluto, pero sí uno práctico</strong>: el que resulta de multiplicar tu carga diaria sostenible por el tamaño del ciclo promedio. Con 100 repasos/día y un ease factor de 2.5, en régimen estable manejás cómodamente mazos de 1.000-1.500 tarjetas. Con 200 repasos/día, podés sostener 2.500-3.000. Los políglotas o estudiantes de medicina avanzados con años de práctica reportan mazos de 10.000-20.000 tarjetas activas con 200-400 repasos diarios, pero eso es resultado de años de construcción gradual, no el punto de partida. El error de principiante es importar un mazo compartido de 5.000 tarjetas el primer día."
+    },
+    {
+      "q": "¿Qué diferencia hay entre los botones 'Again', 'Hard', 'Good' y 'Easy' en Anki?",
+      "a": "Son los cuatro niveles de calificación del SM-2 adaptado por Anki: <strong>'Again'</strong> indica que fallaste: la tarjeta vuelve a la fase de aprendizaje y el ease factor baja 0.20. <strong>'Hard'</strong> indica que costó mucho: el intervalo crece menos de lo normal (multiplicado por 1.2) y el ease factor baja 0.15. <strong>'Good'</strong> es la respuesta estándar: el intervalo crece por el ease factor normal y este no cambia. <strong>'Easy'</strong> indica que fue trivial: el intervalo crece más que lo normal y el ease factor sube 0.15. El consejo práctico más importante: <strong>no abuses de 'Easy'</strong>. Darle 'easy' a todo parece eficiente pero hace que las tarjetas desaparezcan por meses y cuando vuelven ya no las recordás. 'Good' para casi todo y 'Again' cuando realmente fallaste es la estrategia más robusta."
+    },
+    {
+      "q": "¿Cómo uso esta calculadora para planificar un examen con fecha fija?",
+      "a": "El flujo práctico es este: <strong>1)</strong> Contá o estimá cuántas tarjetas necesitás para el examen. <strong>2)</strong> Calculá los días disponibles hasta la fecha. <strong>3)</strong> Dividí tarjetas por días para saber las nuevas por día mínimas. <strong>4)</strong> Ingresá esos datos en la calculadora y verificá si los repasos diarios estimados son sostenibles con tu tiempo real. <strong>5)</strong> Si no lo son, ajustá reduciendo tarjetas o ampliando el plazo de preparación. Ejemplo concreto: 400 tarjetas de historia del derecho, 30 días hasta el parcial, 13-14 nuevas/día mínimo. Con ease factor 2.5, en día 30 tendrás pico de ~120 repasos diarios porque las tarjetas tempranas ya están en intervalos largos pero las recientes están en repasos frecuentes. Ese pico hay que contemplarlo, no ignorarlo."
     }
   ],
   "sources": [

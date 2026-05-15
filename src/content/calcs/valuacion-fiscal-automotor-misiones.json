@@ -2,7 +2,7 @@
   "slug": "calculadora-valuacion-fiscal-automotor-misiones",
   "title": "Valuación Fiscal Automotor Misiones 2026 — Calculadora | Hacé Cuentas",
   "h1": "Valuación Fiscal Automotor Misiones 2026",
-  "description": "Calculá impuesto automotor Misiones 2026: valuación fiscal ARCA × alícuota (alícuota del 1,6%). Rápido, sin registro.",
+  "description": "Calculá el impuesto automotor 2026 en Misiones: valuación fiscal ARCA × 1,6% con depreciación por antigüedad. Sin registro.",
   "category": "automotor",
   "icon": "🚗",
   "formulaId": "valuacion-fiscal-automotor-provincia",
@@ -17,14 +17,17 @@
     "rentas misiones automotor",
     "impuesto auto misiones 2026"
   ],
-  "intro": "Esta calculadora estima el impuesto automotor anual en Misiones cruzando la valuación fiscal oficial de ARCA (ex-AFIP) con la alícuota provincial vigente (alícuota del 1,6%). La Dirección General de Rentas de Misiones aplica una alícuota flat sobre el valor fiscal ARCA. Ajustamos la base imponible por antigüedad (depreciación del 8% anual con piso del 40%) para aproximarnos al valor que efectivamente toma Dirección General de Rentas Misiones al liquidar el impuesto.",
+  "intro": "En Misiones, el impuesto automotor 2026 se liquida aplicando una alícuota flat del <strong>1,6%</strong> sobre la valuación fiscal que publica ARCA (ex-AFIP) para cada marca, modelo y año. El problema real que tiene la mayoría de los misioneros es que esa valuación no llega al mostrador sin ajuste: la Dirección General de Rentas de Misiones (DGR) aplica una depreciación del <strong>8% anual acumulativo sobre el valor original</strong>, con un piso del <strong>40%</strong> del valor base. Es decir, un auto de 10 años no paga sobre el 100% de lo que ARCA publica, sino sobre el 40% (el piso). Eso cambia bastante la boleta.\n\nEsta calculadora resuelve esa cuenta en dos pasos: primero deprecia la valuación fiscal según los años del vehículo, y después aplica la alícuota vigente sobre ese valor ajustado. El resultado es una estimación del impuesto anual y mensual que va a coincidir razonablemente con lo que emite la DGR Misiones en su boleta oficial.\n\n¿Para qué sirve en la práctica? Para saber cuánto vas a pagar de patente antes de comprar un usado en Posadas o en el interior provincial, para revisar si tu boleta tiene sentido, o para comparar la carga fiscal entre modelos antes de decidir. La normativa de referencia es la <strong>Ley Impositiva anual de Misiones</strong> (que fija alícuotas y actualizaciones cada año fiscal), el <strong>Código Fiscal de Misiones</strong> en lo que hace al Impuesto a los Automotores, y la tabla de valuaciones de ARCA que se actualiza semestralmente. Los valores de ARCA los encontrás directamente en su portal; esta calculadora trabaja con el número que vos ingresás, sin conexión a APIs externas.",
   "keyTakeaway": "impuesto = valuación fiscal ARCA × alícuota Misiones (alícuota del 1,6%), ajustado por antigüedad del vehículo.",
   "useCases": [
-    "Estimar cuánto vas a pagar de patente en Misiones antes de comprar un auto 0km o usado.",
-    "Comparar el costo anual de mantener el rodado en Misiones vs otra provincia limítrofe.",
-    "Verificar si la boleta que te mandó Dirección General de Rentas Misiones está en línea con la alícuota vigente.",
-    "Proyectar el costo del impuesto automotor para un vehículo que ya tiene varios años (aplica la depreciación).",
-    "Planificar la transferencia de un vehículo desde o hacia Misiones y estimar el cambio de carga impositiva."
+    "Un vecino de Posadas está por comprar una Toyota Hilux 2022 con valuación fiscal ARCA de $12.000.000. Con 3 años de antigüedad (depreciación del 24%, base ajustada $9.120.000), el impuesto anual ronda los $145.920, unos $12.160 por mes.",
+    "Una persona en Oberá tiene un Volkswagen Gol 2015 valuado en $4.800.000 por ARCA. Con 10 años aplica el piso del 40% ($1.920.000); el impuesto anual es aproximadamente $30.720, menos de $2.600 por mes.",
+    "Alguien que se muda de Corrientes a Misiones quiere saber si cambia su patente: compara la alícuota de Corrientes (1,5% base) contra el 1,6% de Misiones para un auto de 5 años y decide si conviene hacer la radicación antes de cerrar el año fiscal.",
+    "Un contador de El Dorado liquida el impuesto de una flota de 8 vehículos de una empresa. Usa la calculadora para estimar la carga fiscal total antes de presentar el presupuesto anual al cliente.",
+    "Un particular en Eldorado quiere verificar si la boleta que le llegó por su Ford Ranger 2019 valuada en $9.500.000 es correcta. Ingresa los datos, ve el resultado y lo compara con el monto de la DGR; la diferencia de $200 se explica por redondeos de la tabla oficial.",
+    "Un joven en Puerto Iguazú evalúa si le conviene comprar un auto 0km valuado en $18.000.000 o uno de 7 años valuado en $6.000.000. La diferencia en patente anual es de aprox. $265.000 vs $56.160: un factor real en el costo de tenencia.",
+    "Un titular que tiene un auto con más de 15 años y valuación ARCA baja quiere confirmar si ya aplica el piso del 40% y si corresponde alguna exención por antigüedad según la Ley Impositiva vigente de Misiones.",
+    "Un asesor de concesionaria en Misiones estima el costo anual de patente para distintos modelos del año y se lo muestra al cliente durante la negociación, diferenciando el costo de tenencia entre versiones de diferente valor fiscal."
   ],
   "fields": [
     {
@@ -103,40 +106,52 @@
   "explanation": "El impuesto automotor (también llamado patente) en Misiones es un tributo **provincial** anual que se calcula a partir de la **valuación fiscal** publicada por ARCA (ex-AFIP) en su tabla oficial de vehículos, cruzada con la **alícuota** que fija cada año el boletín oficial de la provincia.\n\n## Cómo se calcula\n\nLa fórmula general que aplicamos es:\n\n`impuesto anual = valuación fiscal ARCA × factor de antigüedad × alícuota Misiones`\n\nEl **factor de antigüedad** se calcula como `max(0,40 ; 1 − antigüedad × 0,08)`. Eso equivale a una depreciación del 8% anual con un piso del 40% del valor original (criterio habitual en tablas provinciales para no castigar de más a vehículos muy viejos).\n\n## Alícuotas 2026 por franja\n\nAlícuota flat del 1,6% sobre valuación fiscal ARCA ajustada.\n\n## Quién debe pagar\n\nEl impuesto automotor en Misiones lo paga el **titular registral** del vehículo al 1° de enero de cada año, salvo transferencias con denuncia de venta hecha en la Dirección Nacional del Registro de la Propiedad Automotor (DNRPA). Si comprás un usado, pedí siempre **libre deuda de patentes** antes de firmar la transferencia.\n\n## Descuentos y exenciones\n\n- **Pago anual adelantado:** Dirección General de Rentas Misiones suele ofrecer descuentos del 10% al 20% por pago total al contado en los primeros meses del año.\n- **Buen cumplimiento:** beneficio extra (5%–10%) para contribuyentes sin deuda en los últimos 2 años.\n- **Exenciones:** vehículos adaptados para personas con discapacidad, rodados afectados a servicios públicos o taxis (según ordenanza), y autos con más de cierta antigüedad (generalmente 15–20 años, variable por provincia).\n- **Régimen especial Misiones:** Misiones contempla exenciones para vehículos del sector yerbatero y forestal inscriptos en el registro provincial. Además hay régimen fronterizo en Puerto Iguazú.\n\n## Fuentes\n\nLas alícuotas y la metodología se verifican contra la ley impositiva anual de Misiones y contra la tabla de valuación publicada por ARCA. Los valores pueden variar si la provincia emite resoluciones complementarias durante el año. Ante dudas, confirmá con Dirección General de Rentas Misiones o con un contador matriculado.\n",
   "faq": [
     {
-      "q": "¿Cómo se calcula el impuesto automotor en Misiones?",
-      "a": "Se multiplica la valuación fiscal oficial de ARCA por la alícuota provincial vigente (alícuota del 1,6%) y se ajusta por antigüedad (depreciación del 8% anual, piso del 40%)."
+      "q": "¿Cómo se calcula exactamente el impuesto automotor en Misiones 2026?",
+      "a": "El cálculo tiene tres pasos. <strong>Primero</strong>: tomás la valuación fiscal publicada por ARCA (ex-AFIP) para tu vehículo según marca, modelo y año de fabricación. <strong>Segundo</strong>: aplicás la depreciación por antigüedad del 8% anual acumulativo, con un piso del 40% del valor original (si el auto tiene 8 años: 100% − 64% = 36%, pero como es menor al piso, se usa 40%). <strong>Tercero</strong>: multiplicás ese valor ajustado por la alícuota del <strong>1,6%</strong> que fija la Ley Impositiva de Misiones para el período 2026. Ejemplo concreto: valuación ARCA $8.000.000, antigüedad 5 años (depreciación 40%, base ajustada $4.800.000), impuesto anual = $4.800.000 × 0,016 = <strong>$76.800</strong>."
     },
     {
-      "q": "¿Cuál es la alícuota 2026 en Misiones?",
-      "a": "Alícuota flat del 1,6% sobre valuación fiscal ARCA ajustada."
+      "q": "¿Dónde encuentro la valuación fiscal de mi auto?",
+      "a": "La valuación fiscal la publica <strong>ARCA (ex-AFIP)</strong> en su portal oficial, en la sección de bienes personales / automotores. El buscador es público y gratuito: ingresás marca, modelo, año de fabricación y devuelve el valor de tabla. Esa misma tabla es la que usa como base la Dirección General de Rentas de Misiones para liquidar el impuesto. ARCA actualiza los valores dos veces por año, generalmente en enero y en julio, siguiendo parámetros de mercado. Si tu auto es muy antiguo o un modelo poco común, es posible que no figure o figure con valor mínimo."
     },
     {
-      "q": "¿Dónde consulto la valuación fiscal de mi auto?",
-      "a": "En la página de ARCA (ex-AFIP) hay un buscador público por marca, modelo y año. Es la misma tabla que usa cada provincia como base imponible del impuesto automotor."
+      "q": "¿Cuál es la alícuota vigente en Misiones para 2026?",
+      "a": "La alícuota general del impuesto a los automotores en Misiones para el período 2026 es del <strong>1,6%</strong> flat sobre la valuación fiscal ajustada. A diferencia de otras provincias como Buenos Aires o Córdoba que usan escalas progresivas según valor del vehículo, Misiones aplica una tasa única independientemente del valor del auto. Esta alícuota está fijada en la <strong>Ley Impositiva anual de Misiones</strong> y puede ser modificada por cada presupuesto provincial. Para vehículos afectados a actividades comerciales específicas (transporte público, remises habilitados) pueden existir tratamientos distintos según el <strong>Código Fiscal de Misiones</strong>."
     },
     {
-      "q": "¿Qué organismo cobra el impuesto en Misiones?",
-      "a": "Dirección General de Rentas Misiones. Desde su sitio web se emite la boleta, se consulta deuda y se adhieren débitos automáticos."
+      "q": "¿Cómo funciona la depreciación por antigüedad en Misiones?",
+      "a": "La DGR Misiones reduce la base imponible un <strong>8% por cada año de antigüedad</strong> del vehículo, calculado de forma acumulativa sobre el valor original de ARCA. El tope mínimo es el <strong>40%</strong> del valor base: un auto no puede tributar sobre menos del 40% de su valuación fiscal, aunque tenga 20 o 30 años. Ejemplo: auto con valuación $5.000.000 y 10 años → depreciación acumulada = 80%, pero el piso es 40%, entonces la base imponible es $2.000.000. Impuesto: $2.000.000 × 1,6% = $32.000 anuales. A partir del año 8 aproximadamente, la mayoría de los vehículos ya tocaron el piso del 40%."
     },
     {
-      "q": "¿Se puede pagar en cuotas?",
-      "a": "Sí. En Misiones el impuesto automotor se suele cobrar en 3 a 6 cuotas bimestrales. También se puede pagar el total anual por adelantado con un descuento (10%–20% habitual)."
+      "q": "¿Qué exenciones existen en Misiones para el impuesto automotor?",
+      "a": "El <strong>Código Fiscal de Misiones</strong> y la Ley Impositiva prevén exenciones para: <strong>personas con discapacidad</strong> que sean titulares o convivientes del vehículo adaptado (en consonancia con la Ley Nacional 19.279 y su adhesión provincial); <strong>vehículos del Estado</strong> nacional, provincial y municipal; <strong>bomberos voluntarios</strong> con automotores afectados al servicio; <strong>taxis y remises</strong> habilitados por la autoridad competente bajo condiciones específicas; y en ciertos períodos, <strong>vehículos con más de 15 o 20 años</strong> de antigüedad según la normativa vigente del año. Para acreditar la exención hay que tramitarla ante la DGR Misiones presentando la documentación requerida; no es automática."
     },
     {
-      "q": "¿Hay exenciones en Misiones?",
-      "a": "Sí. Las principales son: vehículos adaptados para personas con discapacidad (Ley 19.279 y su adhesión provincial), autos afectados a taxis o remises habilitados, rodados de más de 15–20 años según la normativa vigente, y casos particulares como vehículos del Estado o de bomberos voluntarios."
+      "q": "¿Cuándo y cómo se paga el impuesto automotor en Misiones?",
+      "a": "La <strong>Dirección General de Rentas de Misiones</strong> emite las cuotas del impuesto automotor a lo largo del año. El esquema habitual es de <strong>3 a 6 cuotas bimestrales</strong>, con vencimientos escalonados. Desde el sitio web oficial de la DGR (dgr.misiones.gov.ar) podés consultar deuda, descargar la boleta de pago y adherirte a débito automático. También existe la opción de <strong>pago anticipado anual con descuento</strong>, que históricamente ronda entre el 10% y el 20% dependiendo del período. Los medios de pago aceptados incluyen transferencia bancaria, pago en bancos habilitados y plataformas digitales vinculadas a la DGR."
     },
     {
-      "q": "¿Qué pasa si no pago el impuesto automotor?",
-      "a": "Dirección General de Rentas Misiones aplica intereses resarcitorios (del orden del 5%–6% mensual) y puede iniciar juicio de apremio. La deuda bloquea la transferencia y la renovación de la VTV. Por montos altos, puede haber embargo sobre el vehículo."
+      "q": "¿Qué pasa si no pago la patente en Misiones?",
+      "a": "La falta de pago genera <strong>intereses resarcitorios</strong> que fija la DGR Misiones periódicamente, históricamente en el rango del 5% al 6% mensual sobre el saldo adeudado. La deuda queda registrada en el sistema y <strong>bloquea la transferencia del vehículo</strong>: no podés vender ni cambiar la titularidad sin cancelar el impuesto. También puede impedir la renovación de la <strong>VTV (Verificación Técnica Vehicular)</strong>. Por deudas de mayor cuantía, la DGR puede iniciar <strong>juicio de apremio</strong>, lo que habilita medidas cautelares como embargo sobre el vehículo o bienes del titular. El Código Fiscal de Misiones regula este proceso."
     },
     {
-      "q": "¿Cómo afecta la antigüedad del vehículo al impuesto?",
-      "a": "La valuación fiscal baja aproximadamente 8% por año hasta un piso del 40% del valor original. Un auto de 8 años paga cerca de la mitad de patente que uno 0km del mismo modelo."
+      "q": "¿Puedo radicar el auto en Misiones si vivo en otra provincia para pagar menos?",
+      "a": "No. Según el <strong>Decreto-Ley 6.582/58 y la normativa de la DNRPA (Dirección Nacional de los Registros de la Propiedad Automotor)</strong>, el vehículo debe estar radicado en la jurisdicción donde el titular tiene su <strong>domicilio real o el asiento principal de su actividad</strong>. Cambiar la radicación ficticiamente para aprovechar alícuotas más bajas puede ser considerado evasión fiscal por las provincias afectadas. Sin embargo, si genuinamente te mudás a Misiones, el cambio de radicación es no solo permitido sino obligatorio, y a partir de ese momento tributás la alícuota misionera del 1,6%."
     },
     {
-      "q": "¿Conviene más tener el auto patentado en Misiones o en otra provincia?",
-      "a": "Legalmente el auto debe estar radicado en la jurisdicción donde tiene su asiento principal el titular. Cambiar de radicación solo por alícuota puede ser considerado una maniobra evasiva. Pero sí conviene comparar Misiones (alícuota del 1,6%) vs provincias vecinas antes de mudarse o transferir el vehículo."
+      "q": "¿La valuación de ARCA es el mismo valor que el precio de mercado del auto?",
+      "a": "No, son conceptos distintos. La <strong>valuación fiscal de ARCA</strong> es un valor de referencia oficial que ARCA publica para uso impositivo (impuesto automotor provincial y Bienes Personales nacional). Suele estar por <strong>debajo del precio real de mercado</strong>, especialmente en contextos inflacionarios, porque las actualizaciones semestrales de ARCA no siempre siguen el ritmo de los precios de los usados. El precio de mercado lo reflejan plataformas como Kavak, MercadoAutos o las cotizaciones de concesionarias. Para el cálculo del impuesto automotor en Misiones, lo que importa es la valuación fiscal ARCA, no el valor de mercado ni el precio de compra."
+    },
+    {
+      "q": "¿Hay alguna diferencia entre el impuesto de un auto y el de una moto o camión en Misiones?",
+      "a": "Sí. La <strong>Ley Impositiva de Misiones</strong> establece tratamientos diferenciados según el tipo de vehículo. Las <strong>motocicletas</strong> generalmente tributan con alícuotas menores o tienen valuaciones más bajas. Los <strong>vehículos de carga</strong> (camiones, utilitarios de carga) y los de <strong>transporte de pasajeros</strong> pueden estar sujetos a alícuotas distintas o a regímenes especiales según su afectación. Esta calculadora está orientada a <strong>automóviles particulares</strong>. Si tenés una moto o un camión, los parámetros específicos hay que consultarlos directamente en la DGR Misiones o en la Ley Impositiva del ejercicio en curso."
+    },
+    {
+      "q": "¿Cuánto pagaría de patente en Misiones por un auto 0km valuado en $15.000.000?",
+      "a": "Para un vehículo 0km (antigüedad 0 años), no hay depreciación: la base imponible es el 100% de la valuación fiscal ARCA. Con $15.000.000 de valuación: <strong>$15.000.000 × 1,6% = $240.000 anuales</strong>, equivalente a <strong>$20.000 por mes</strong> en 12 cuotas. Si pagás el total anual anticipado con el descuento habitual del 15%, el costo sería aproximadamente $204.000. Este cálculo puede variar levemente según los redondeos de la tabla oficial de la DGR y si ARCA actualiza la valuación durante el año."
+    },
+    {
+      "q": "¿Esta calculadora reemplaza la liquidación oficial de la DGR Misiones?",
+      "a": "No. Esta herramienta es una <strong>estimación orientativa</strong> basada en la fórmula pública de la DGR Misiones: alícuota del 1,6% sobre valuación fiscal ARCA con depreciación del 8% anual y piso del 40%. El resultado real puede diferir por: actualizaciones de valuación ARCA durante el año, particularidades del modelo en la tabla oficial, estado de deuda anterior, o cambios normativos intrayear. Para la boleta oficial y el monto exacto a pagar, hay que consultar el sitio de la <strong>Dirección General de Rentas de Misiones</strong> (dgr.misiones.gov.ar) con el dominio del vehículo (número de patente o padrón del titular)."
     }
   ],
   "sources": [
