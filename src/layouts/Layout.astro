@@ -180,12 +180,14 @@ const globalSchema = {
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="format-detection" content="telephone=no" />
 
-    <!-- Theme init: prevent FOUC leyendo localStorage antes del paint -->
+    <!-- Theme init: prevent FOUC leyendo localStorage antes del paint.
+         Default = light (ignoramos prefers-color-scheme del OS).
+         El user puede activar dark con el toggle, se persiste en localStorage. -->
     <script is:inline>
       (function() {
         try {
           var t = localStorage.getItem('theme');
-          if (t === 'dark' || (t === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          if (t === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
           }
         } catch (e) {}
