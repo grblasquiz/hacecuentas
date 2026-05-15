@@ -2,7 +2,7 @@
   "slug": "calculadora-presion-atmosferica-altitud-barometrica",
   "title": "Calculadora de Presión Atmosférica según Altitud 2026 | Hacé Cuentas",
   "h1": "Calculadora de Presión Atmosférica según Altitud (Fórmula Barométrica)",
-  "description": "Calculá la presión atmosférica a cualquier altitud con la fórmula barométrica ICAO. Útil para aviación, montañismo, meteorología y experimentos.",
+  "description": "Calculá la presión atmosférica a cualquier altitud con la fórmula barométrica ICAO. Resultados en hPa, mmHg y % vs nivel del mar.",
   "category": "ciencia",
   "icon": "🎈",
   "formulaId": "presion-atmosferica-altitud",
@@ -18,15 +18,17 @@
     "calculadora presion barometrica",
     "como varia presion con altura"
   ],
-  "intro": "La presión atmosférica **cae con la altitud** de forma exponencial suave. La fórmula barométrica estándar de la **ICAO** (Organización de Aviación Civil Internacional) modela esta caída con `P(h) = 1013.25 × (1 − 0.0065·h / 288.15)^5.255` hPa. A 5500 m la presión es aproximadamente la mitad que al nivel del mar.",
+  "intro": "Si alguna vez subiste a las sierras de Córdoba, al cerro Aconcagua o simplemente volaste en un Cessna, ya sentiste en el cuerpo lo que los números confirman: a mayor altura, el aire pesa menos. La presión atmosférica no cae de forma lineal sino siguiendo la **fórmula barométrica estándar de la ICAO** (Organización de Aviación Civil Internacional), que modela con precisión el comportamiento de la atmósfera hasta los 11.000 metros de altitud (tropopausa).\n\nLa ecuación central es `P(h) = P₀ × (1 − 0.0065·h / 288.15)^5.255`, donde `P₀` es la presión al nivel del mar (1013.25 hPa en condiciones estándar ISA), `h` es la altitud en metros y el exponente 5.255 surge de combinar la constante gravitacional, la masa molar del aire y la constante de los gases ideales.\n\nEsta calculadora te da en segundos lo que un meteorólogo necesitaría calcular a mano: la presión en hPa y mmHg, el porcentaje respecto al nivel del mar y la temperatura estándar ISA a esa altitud. Todo eso con la posibilidad de ingresar la presión real del día (dato QNH que usan los pilotos argentinos antes de despegar).\n\n¿Para qué sirve en la práctica? Si sos montañista y querés subir el Aconcagua (6.962 m), sabés de antemano que respirarás con solo el 47% de la presión del mar. Si cocinás a 3.700 m en Jujuy o Mendoza, el agua hierve a 86 °C en lugar de 100 °C y tus pastas necesitan el doble de tiempo. Si calibrás un barómetro o diseñás un sistema de ventilación, los datos que ves acá son los mismos que usa la industria aeronáutica global.\n\nLa calculadora cubre desde altitudes negativas (fondos de minas o el Mar Muerto a −430 m) hasta la cima del Everest a 8.848 m, con resultados instantáneos y sin fórmulas que recordar.",
   "keyTakeaway": "Al nivel del mar hay ~1013 hPa. A 1000 m bajás a 899 hPa (~89%). A 3000 m quedan 701 hPa (~69%). A 8848 m (Everest) sólo 314 hPa (~31%).",
   "useCases": [
-    "Planificar aclimatación y riesgo de mal de altura en trekking y montañismo.",
-    "Aviación general: cálculo de altitud presión e interpretación de altímetros.",
-    "Cocina de altura: estimar temperatura de ebullición del agua.",
-    "Experimentos de física en la escuela (globos, barómetros).",
-    "Calibración de barómetros caseros.",
-    "Cálculos de rendimiento de motores atmosféricos y turbinas."
+    "Montañista que planifica ascenso al Aconcagua (6.962 m): la calc muestra 472 hPa (~47% del nivel del mar), lo que equivale a solo 9,9 kPa de oxígeno parcial. Con ese dato puede diseñar su plan de aclimatación por etapas.",
+    "Piloto de aviación general en Argentina: antes de despegar necesita saber la altitud de presión (pressure altitude). Ingresa el QNH del ATIS del aeródromo y la altitud de campo para calcular la densidad de aire que afecta la performance del avión.",
+    "Cocinero en Tilcara, Jujuy (2.461 m): con ~752 hPa, el agua hierve a ~92 °C. La calc confirma que las legumbres necesitan al menos 30% más de tiempo de cocción que en Buenos Aires.",
+    "Docente de física en una escuela de La Paz, Mendoza (2.000 m): usa la calculadora para demostrar que la presión allí es ~795 hPa, un 21% menos que al mar, y diseña experimentos con globos y jeringas para visualizar la diferencia.",
+    "Técnico que calibra sensores barométricos industriales en una planta de San Juan (650 m): la calc le da 937 hPa como referencia estándar para ajustar los equipos sin depender de medición manual.",
+    "Ciclista que compite en la Vuelta a San Juan y quiere estimar el rendimiento aeróbico en los puertos de montaña: a 2.200 m hay ~776 hPa, lo que reduce la masa de oxígeno disponible por respiración en un 23% respecto a los valles.",
+    "Estudiante de ingeniería que diseña un motor atmosférico: necesita saber la presión en Mendoza capital (760 m) para calcular la densidad del aire de admisión y estimar la pérdida de potencia respecto al nivel del mar (~7% menos).",
+    "Turista que viaja de Buenos Aires a Potosí y quiere entender por qué se marea: a 4.090 m la presión cae a ~614 hPa, solo el 61% del nivel del mar, con presión parcial de O₂ de ~13 kPa frente a los 21 kPa habituales."
   ],
   "fields": [
     {
@@ -105,36 +107,52 @@
   "explanation": "## Cómo se calcula\n\nLa atmósfera estándar ICAO modela la troposfera con una temperatura que decae linealmente con la altura: `T(h) = T0 − L·h`, donde `T0 = 288.15 K` y `L = 0.0065 K/m`. Integrando la ecuación hidrostática `dP/dh = −ρg` con aire ideal se obtiene:\n\n```\nP(h) = P0 × (1 − L·h / T0)^(g·M / (R·L))\n```\n\nDonde el exponente `g·M / (R·L) ≈ 5.2559`. Con P0 = 1013.25 hPa, queda la forma clásica:\n\n```\nP(h) = 1013.25 × (1 − 0.0065·h / 288.15)^5.255\n```\n\n## Fórmulas físicas\n\n- **Ecuación hidrostática**: `dP/dh = −ρ·g`.\n- **Gas ideal**: `P = ρ·R·T/M`.\n- **Gradiente térmico estándar (lapse rate)**: 6.5 °C/km en la troposfera.\n- **Tropopausa**: a ~11 km, la temperatura se estabiliza en −56.5 °C y la fórmula cambia de forma a exponencial pura.\n\n## Casos especiales\n\n- **Mar Muerto (−430 m)**: P ≈ 1067 hPa (mayor presión habitable del planeta).\n- **Mount Everest (8848 m)**: P ≈ 314 hPa, apenas 31 % — necesita oxígeno suplementario.\n- **Altitud de crucero de aviones comerciales (10000-12000 m)**: 200-270 hPa. La cabina se presuriza a equivalente 1800-2400 m.\n- **Día de baja presión** (tormenta): P0 puede bajar a 970 hPa; usalo como input si querés precisión operativa.\n\n## Fuentes\n\n- ICAO Doc 7488 — Standard Atmosphere.\n- U.S. Standard Atmosphere 1976 (NASA TM-X-74335).\n- NOAA — National Weather Service Aviation Weather.",
   "faq": [
     {
-      "q": "¿Por qué cae la presión al subir?",
-      "a": "Porque la presión en un punto es el peso del aire que está por encima. A mayor altitud, hay menos aire por encima tuyo, por lo tanto menos peso. La caída es exponencial porque el aire es compresible: cerca del suelo hay más masa por metro cúbico que en altura."
+      "q": "¿Qué es la presión atmosférica y por qué cae con la altitud?",
+      "a": "La presión atmosférica es el peso de la columna de aire que existe por encima de un punto dado. Al nivel del mar esa columna mide unos 100 km de espesor y genera una presión de <strong>1013.25 hPa</strong> (valor estándar ISA). A medida que subís, la columna de aire por encima tuyo se achica y pesa menos. La caída no es lineal sino exponencial suave porque el aire es compresible: cerca del suelo está más comprimido por el peso de las capas superiores, y cuanto más subís, más rarificado está. Por eso los primeros 1.000 m de ascenso te quitan unos 110-115 hPa, pero los 1.000 m entre 5.000 y 6.000 m solo te quitan unos 60-65 hPa."
     },
     {
-      "q": "¿A qué altura la presión se reduce a la mitad?",
-      "a": "Aproximadamente a **5500 m** la presión baja a ~500 hPa, la mitad del valor al nivel del mar. Es una altura característica conocida como ‘altura de escala ajustada’."
+      "q": "¿Qué fórmula usa esta calculadora y de dónde viene?",
+      "a": "Usa la <strong>fórmula barométrica estándar de la ICAO (Doc 7488 — Manual of the ICAO Standard Atmosphere)</strong>, que también coincide con la U.S. Standard Atmosphere 1976 (NASA TM-X-74335) para la troposfera: <strong>P(h) = 1013.25 × (1 − 0.0065·h / 288.15)^5.255</strong> hPa, donde h es la altitud en metros. El gradiente térmico de 0,0065 K/m (6,5 °C cada 1.000 m) y la temperatura base de 288.15 K (15 °C al nivel del mar) son los valores estándar ISA. El exponente 5.255 proviene de combinar la aceleración gravitacional (9.80665 m/s²), la masa molar del aire (0.0289644 kg/mol) y la constante de los gases ideales (8.31432 J/mol·K). La fórmula es válida hasta 11.000 m; por encima la temperatura se mantiene constante y la ecuación cambia."
     },
     {
-      "q": "¿La fórmula ICAO sirve siempre?",
-      "a": "Sí hasta 11 km (tropopausa). Más arriba hay que usar otra capa (estratosfera baja), donde la temperatura es constante y la fórmula se vuelve exponencial pura. Para uso doméstico, trekking y aviación general, la forma estándar alcanza."
+      "q": "¿A qué altitud argentina o de la región conviene conocer la presión?",
+      "a": "Varios puntos de referencia útiles: <strong>Buenos Aires</strong> (25 m): ~1012 hPa. <strong>Córdoba capital</strong> (431 m): ~964 hPa. <strong>Mendoza capital</strong> (760 m): ~929 hPa. <strong>Salta capital</strong> (1.187 m): ~883 hPa. <strong>San Carlos de Bariloche</strong> (770 m): ~928 hPa. <strong>La Quiaca</strong> (3.442 m): ~676 hPa. <strong>Paso de Jama</strong> (4.200 m): ~605 hPa. <strong>Aconcagua cima</strong> (6.962 m): ~472 hPa. Estos valores son los estándar ISA; la presión real del día puede variar ±20-30 hPa según el sistema meteorológico presente."
     },
     {
-      "q": "¿Cómo afecta esto al agua hirviendo?",
-      "a": "El agua hierve cuando su presión de vapor iguala la presión atmosférica. Por eso en altura hierve antes: a 1013 hPa a 100 °C, a 800 hPa a ~94 °C, a 550 hPa (4500 m) a ~84 °C. Cocinar pastas y legumbres toma más tiempo en altura."
+      "q": "¿Cómo afecta la altitud al punto de ebullición del agua y a la cocina?",
+      "a": "El agua hierve cuando su presión de vapor iguala la presión atmosférica. A <strong>1013 hPa hierve a 100 °C</strong>. A medida que baja la presión, baja también el punto de ebullición: a 800 hPa (~1.900 m, altura de algunas ciudades de Mendoza) hierve a ~94 °C; a 750 hPa (~2.400 m, Tilcara) a ~92 °C; a 650 hPa (~3.600 m, Abra Pampa) a ~87 °C; a 540 hPa (~4.600 m, Paso de San Francisco) a ~82 °C. Esto tiene consecuencias directas: las legumbres tardan hasta el doble en ablandarse, los huevos se cocinan menos en el mismo tiempo, y las recetas de pastelería con leudantes deben ajustarse porque los gases se expanden más rápido."
     },
     {
-      "q": "¿Qué es la altitud de presión que usan los aviones?",
-      "a": "Es la altitud leída en el altímetro cuando se lo calibra a 1013.25 hPa (QNE). Se usa sobre una altitud de transición (18000 ft en USA, 3000-10000 ft en otros) para que todos los aviones usen la misma referencia y no choquen entre sí."
+      "q": "¿Por qué el mal de altura ocurre y a qué presión empieza a ser peligroso?",
+      "a": "El aire siempre contiene 21% de oxígeno, pero a mayor altitud hay menos moléculas por metro cúbico. La <strong>presión parcial de oxígeno</strong> (PO₂) es 21% de la presión total: al mar son ~21 kPa, a 3.000 m bajan a ~14 kPa, a 5.000 m a ~11 kPa. El cuerpo humano empieza a sentir efectos (dolor de cabeza, náuseas, fatiga) generalmente a partir de los <strong>2.500-3.000 m</strong> en personas no aclimatadas. La saturación arterial de O₂ cae del 98% normal a ~90% a 3.500 m y puede bajar al 70% a 6.000 m. El Edema Pulmonar de Altura (EPAA) y el Edema Cerebral de Altura (ECAA) son emergencias médicas que pueden ocurrir por encima de los 3.500-4.000 m. El protocolo estándar de aclimatación recomienda no subir más de <strong>300-500 m por día</strong> por encima de los 3.000 m."
     },
     {
-      "q": "¿Por qué hay mal de altura?",
-      "a": "Al bajar la presión, baja también la **presión parcial de oxígeno** (21 % de la presión total). A 3500 m tenés ~14 kPa de O₂ frente a 21 kPa al mar → saturación arterial cae del 98 % al ~90 %. El cuerpo compensa hiperventilando y aumentando glóbulos rojos en 1-2 semanas."
+      "q": "¿Qué es el QNH y cómo se usa esta calculadora para aviación en Argentina?",
+      "a": "El <strong>QNH</strong> es la presión barométrica reducida al nivel del mar que transmite el servicio meteorológico aeronáutico (SMNA, dependiente del SMN en Argentina) a los aeródromos. Los pilotos lo ingresan en el altímetro para que este muestre la altitud real sobre el nivel del mar. Esta calculadora permite ingresar el QNH real del día en lugar del estándar de 1013.25 hPa, obteniendo así la <strong>altitud de presión</strong> exacta para ese vuelo, lo que afecta directamente el cálculo de performance (distancia de despegue, techo de servicio, consumo). En Argentina, la altitud de transición (cambio de QNH a QNE=1013.25) varía por TMA, generalmente entre <strong>3.000 y 10.000 pies</strong> según el AIP Argentina publicado por ANAC."
     },
     {
-      "q": "¿En bajo nivel del mar (Mar Muerto, Mina Kola) qué pasa?",
-      "a": "La fórmula funciona igual. A −430 m la presión sube a ~1068 hPa, un 5 % más. En minas profundas (−2000 m) llegás a ~1270 hPa y el aire está comprimido; se usan compensadores para evitar embolias."
+      "q": "¿Cómo funciona la fórmula en altitudes negativas (bajo el nivel del mar)?",
+      "a": "La fórmula barométrica estándar también funciona para altitudes negativas. Ingresando valores negativos obtenés las presiones en depresiones geográficas o minas. Por ejemplo: a <strong>−100 m</strong> la presión sube a ~1025 hPa; a <strong>−430 m</strong> (profundidad del Mar Muerto, el punto más bajo de la Tierra sobre tierra firme) llegás a ~1068 hPa, un 5,4% más que al nivel del mar. En minas profundas de Argentina como las de la provincia de San Juan o las salinas, donde se trabaja a decenas de metros bajo la superficie, la diferencia es menor al 1% y no tiene efectos fisiológicos. Las minas de carbón o metal que superan los <strong>−1.000 m</strong> pueden llegar a ~1130 hPa y requieren sistemas de ventilación forzada por la acumulación de gases, no por exceso de presión."
     },
     {
-      "q": "¿Cómo se relaciona hPa con mmHg y atmósferas?",
-      "a": "1 atmósfera estándar = 1013.25 hPa = 760 mmHg = 29.92 inHg = 101325 Pa. Para convertir de hPa a mmHg multiplicá por 0.7501."
+      "q": "¿Cuáles son las equivalencias entre hPa, mmHg, inHg y atmósferas?",
+      "a": "<strong>1 atmósfera estándar (atm) = 1013.25 hPa = 101.325 Pa = 760 mmHg = 29.92 inHg</strong>. Para convertir: de hPa a mmHg multiplicá por <strong>0.7501</strong>; de hPa a inHg multiplicá por <strong>0.02953</strong>; de hPa a kPa dividí por <strong>10</strong>. En medicina argentina los tensiómetros usan mmHg (la presión arterial normal es 120/80 mmHg). En meteorología se usan hPa (equivalente a mbar). En aviación americana se usan inHg. Los barómetros domésticos suelen mostrar hPa o mbar. La calculadora devuelve hPa y mmHg simultáneamente para cubrir todos los usos."
+    },
+    {
+      "q": "¿Cómo afecta la presión atmosférica al rendimiento de motores y vehículos?",
+      "a": "Los motores de combustión interna atmosféricos aspiran aire a la presión ambiente. A menor presión, hay menos masa de oxígeno por litro de mezcla, lo que reduce la potencia de forma casi proporcional a la presión. Regla práctica: <strong>por cada 1.000 m de altitud se pierde entre 8% y 12% de potencia</strong> en un motor atmosférico. A 1.187 m (Salta) un motor que da 100 CV al mar entrega unos 89-91 CV. Los turbocompresores compensan esta pérdida hasta cierta altitud. También afecta a los frenos de tambor y disco por menor enfriamiento del aire, y a los neumáticos: un neumático inflado a 32 PSI en Buenos Aires marcará ~31 PSI en Mendoza y ~29 PSI en La Quiaca, solo por el cambio de presión atmosférica relativa."
+    },
+    {
+      "q": "¿La temperatura estándar ISA que muestra la calculadora es la temperatura real?",
+      "a": "No. La <strong>temperatura ISA (International Standard Atmosphere)</strong> es un modelo teórico definido por la ICAO que supone 15 °C al nivel del mar y una caída de <strong>6,5 °C por cada 1.000 m</strong> en la troposfera. Así a 2.000 m ISA dice 2 °C y a 5.000 m dice −17,5 °C. La temperatura real puede diferir varios grados dependiendo de la estación, el sistema meteorológico y la geografía local (inversiones térmicas, efecto foehn, etc.). La temperatura ISA es útil para cálculos de performance aeronáutica estandarizados, no como pronóstico meteorológico. El Servicio Meteorológico Nacional (SMN) publica sondeos atmosféricos reales para Argentina en smn.gob.ar."
+    },
+    {
+      "q": "¿Qué pasa por encima de los 11.000 m donde la fórmula deja de ser válida?",
+      "a": "A partir de los <strong>11.000 m</strong> comienza la estratosfera baja (tropopausa). En esa región la temperatura deja de caer y se mantiene constante en <strong>−56,5 °C (216,65 K)</strong> hasta los 20.000 m aproximadamente. Como la temperatura es constante, la fórmula ya no usa el gradiente térmico y se convierte en una exponencial pura: <strong>P(h) = 226.32 × e^(−0.0001577 × (h − 11000))</strong> hPa. Los aviones comerciales vuelan en este rango (10.000-13.000 m), donde la presión es de 260-226 hPa (~25% del nivel del mar), por eso las cabinas están presurizado equivalente a 1.800-2.400 m. Para uso en trekking, deporte y física general, la fórmula troposférica de esta calculadora cubre todos los casos prácticos en Argentina y la región."
+    },
+    {
+      "q": "¿Cómo se calibra un barómetro casero usando esta calculadora?",
+      "a": "El procedimiento es simple: <strong>1)</strong> Buscá la altitud exacta de tu ubicación (Google Earth, IGN Argentina o una app GPS). <strong>2)</strong> Ingresá esa altitud en la calculadora con la presión estándar de 1013.25 hPa para obtener la presión ISA de referencia. <strong>3)</strong> Compará con la lectura actual del barómetro. <strong>4)</strong> Para mayor precisión, usá como referencia la presión QNH del aeródromo más cercano (disponible en el SMNA o en apps como Windy) que ya está reducida al nivel del mar; luego calculá la presión esperada en tu altitud y ajustá el tornillo de calibración del barómetro hasta que coincida. En Argentina el IGN publica la altitud de puntos de referencia geodésicos que podés usar como referencia precisa."
     }
   ],
   "sources": [
