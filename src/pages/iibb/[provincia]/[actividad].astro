@@ -12,20 +12,23 @@ export async function getStaticPaths() {
   const actividades: any[] = actividadesMod.default || (actividadesMod as any);
   const ibMod = await import('../../../content/argentina/ingresos-brutos.json');
   const ib: any = ibMod.default || ibMod;
+  const specificMod = await import('../../../content/iibb/specific.json');
+  const specific: Record<string, any> = (specificMod.default || (specificMod as any)) as Record<string, any>;
 
   const paths: any[] = [];
   for (const prov of provincias) {
     for (const act of actividades) {
+      const key = `${prov.slug}__${act.slug}`;
       paths.push({
         params: { provincia: prov.slug, actividad: act.slug },
-        props: { provincia: prov, actividad: act, iibb: ib },
+        props: { provincia: prov, actividad: act, iibb: ib, specific: specific[key] || null },
       });
     }
   }
   return paths;
 }
 
-const { provincia, actividad, iibb } = Astro.props;
+const { provincia, actividad, iibb, specific } = Astro.props;
 const provData = iibb.provinceData?.[provincia.slug] || {};
 const baseRate = provData.rate || actividad.rateRange.split(' - ')[0];
 
@@ -149,6 +152,34 @@ const schema = {
         <li>IIBB a pagar: entre <strong>${(5_000_000 * parseFloat(actividad.rateRange.split('%')[0]) / 100).toLocaleString('es-AR')}</strong> y <strong>${(5_000_000 * parseFloat(actividad.rateRange.split(' - ')[1]) / 100).toLocaleString('es-AR')}</strong> según código exacto de actividad.</li>
       </ul>
     </section>
+
+    {specific && (
+      <>
+        <section class="iibb-specific">
+          <h2>Particularidades de {actividad.label.toLowerCase()} en {provincia.name}</h2>
+          <div set:html={specific.localContent} />
+        </section>
+
+        {specific.exampleCalc && (
+          <section class="iibb-specific-example">
+            <h2>Ejemplo aplicado al rubro</h2>
+            <div set:html={specific.exampleCalc} />
+          </section>
+        )}
+
+        {Array.isArray(specific.specificFaq) && specific.specificFaq.length > 0 && (
+          <section class="iibb-specific-faq">
+            <h2>Preguntas frecuentes sobre IIBB {actividad.label} en {provincia.name}</h2>
+            {specific.specificFaq.map((qa: {q: string; a: string}) => (
+              <details class="iibb-faq-item">
+                <summary>{qa.q}</summary>
+                <div set:html={qa.a} />
+              </details>
+            ))}
+          </section>
+        )}
+      </>
+    )}
 
     <section>
       <h2>Convenio Multilateral: ¿aplica para {actividad.label.toLowerCase()}?</h2>
