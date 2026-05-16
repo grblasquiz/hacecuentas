@@ -153,6 +153,22 @@ const schema = {
       ¿Falta alguna calculadora específica de {provincia.name}? <a href="/contacto">Avisanos</a>
       o abrí un <a href="https://github.com/grblasquiz/hacecuentas/issues" rel="noopener" target="_blank">issue en GitHub</a>.
     </p>
+
+    {provincia.hubContent && (
+      <section class="prov-hub-extended" set:html={provincia.hubContent} />
+    )}
+
+    {Array.isArray(provincia.hubFaq) && provincia.hubFaq.length > 0 && (
+      <section class="prov-hub-faq">
+        <h2>Preguntas frecuentes sobre {provincia.name}</h2>
+        {provincia.hubFaq.map((qa: {q: string; a: string}) => (
+          <details class="prov-faq-item">
+            <summary>{qa.q}</summary>
+            <div set:html={qa.a} />
+          </details>
+        ))}
+      </section>
+    )}
   </article>
 
   <Footer slot="footer" />

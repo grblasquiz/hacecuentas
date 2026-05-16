@@ -277,6 +277,31 @@ const pageSchema = {
         )}
       </section>
 
+      {provinceInfo.specificContent && (
+        <section class="province-specific prose">
+          <div set:html={provinceInfo.specificContent} />
+        </section>
+      )}
+
+      {provinceInfo.specificExample && (
+        <section class="province-specific-example prose">
+          <h2>Ejemplo aplicado</h2>
+          <div set:html={provinceInfo.specificExample} />
+        </section>
+      )}
+
+      {Array.isArray(provinceInfo.specificFaq) && provinceInfo.specificFaq.length > 0 && (
+        <section class="province-specific-faq">
+          <h2>Preguntas específicas para {provincia.name}</h2>
+          {provinceInfo.specificFaq.map((qa: {q: string; a: string}) => (
+            <details class="province-faq-item">
+              <summary>{qa.q}</summary>
+              <div set:html={qa.a} />
+            </details>
+          ))}
+        </section>
+      )}
+
       <!-- Province details -->
       {provinceInfo.details && (
         <section class="province-details prose">
