@@ -2,7 +2,7 @@
   "slug": "calculadora-cooling-fan-3d-material",
   "title": "Calculadora de cooling fan (ventilador) por material | Hacé Cuentas",
   "h1": "Calculadora de cooling fan (ventilador) por material 3D",
-  "description": "Calculá el porcentaje de ventilador ideal para cada material 3D: PLA, PETG, ABS y TPU sin warping ni mala adhesión. PLA 100% fan desde layer 3.",
+  "description": "Calculá el % de ventilador ideal para PLA, PETG, ABS, TPU, ASA y Nylon en impresión 3D. Evitá warping, delaminación y blobs con un clic.",
   "category": "tecnologia",
   "audience": "global",
   "icon": "🖨️",
@@ -15,14 +15,41 @@
     "fan abs",
     "enfriamiento 3d"
   ],
-  "intro": "El cooling fan enfría la capa recién depositada para evitar que se deforme antes de solidificar. Pero el cooling correcto depende del material: PLA ama el cooling (100% fan), PETG lo pide moderado (40-60%), ABS lo odia (0-20% o se delamina), TPU lo tolera poco (20-30%). Esta calculadora te da porcentaje de fan, layer time mínimo, bridge fan y direcciones específicas si la pieza tiene partes delgadas o overhangs. Un fan mal ajustado genera: PLA blob en overhangs (fan bajo), PETG frágil entre capas (fan alto), ABS grietas y warping (fan alto), TPU superficies rugosas (fan alto).",
+  "intro": "El cooling fan es una de las variables más subestimadas en impresión 3D FDM. La mayoría de los usuarios primerizos deja el porcentaje en el valor por defecto del slicer —generalmente 100%— sin importar el material, y después se preguntan por qué el ABS se agrieta, el PETG queda frágil o el TPU sale rugoso. El problema no es la impresora: es que cada filamento tiene una naturaleza química distinta que exige una estrategia de enfriamiento completamente diferente.\n\nEl PLA es un polímero amorfo de baja temperatura de transición vítrea (~60 °C). Se solidifica rápido y necesita refrigeración intensa para mantener la geometría en voladizos y puentes: 100% de fan desde la tercera capa es la regla de oro. El PETG, en cambio, es más sensible a enfriamientos bruscos: un fan al 100% genera cristalización superficial irregular, lo que reduce dramáticamente la adhesión entre capas y produce piezas que se parten con muy poca fuerza. El rango seguro es 40–60%.\n\nEl ABS y el ASA son los materiales que más sufren con el cooling. Ambos tienen un coeficiente de contracción térmica elevado: si las capas se enfrían a velocidades distintas —lo que inevitablemente pasa con un fan potente y sin enclosure—, la tensión interna acumulada genera warping en la base y grietas (layer splitting) en la altura. Para estos materiales el fan debe mantenerse entre 0 y 20%, siempre con enclosure cerrado que homogeneice la temperatura ambiental. El Nylon comparte esta lógica y además es higroscópico, por lo que el enfriamiento abrupto potencia los defectos del filamento húmedo.\n\nEl TPU y otros materiales flexibles tienen una tolerancia intermedia: 20–30% de fan. Más ventilación genera superficies opacas y rugosas porque el material no termina de fluir antes de solidificarse.\n\nLos bridges (puentes) son el único caso donde la regla general se suspende: independientemente del material, el bridge fan sube momentáneamente al 100% para solidificar el filamento en el aire antes de que caiga. Esto lo manejan automáticamente slicers como Orca Slicer, PrusaSlicer y Cura con la opción \"bridge fan speed\".\n\nEsta calculadora toma tu material, si tenés enclosure y si la pieza tiene detalles finos, y te devuelve el porcentaje recomendado de part cooling, el time mínimo por capa y las consideraciones especiales para overhangs. No es una opinión: es la síntesis de lo que la física de polímeros y miles de pruebas documentadas en la comunidad de impresión 3D confirman como punto de partida óptimo.",
   "keyTakeaway": "**PLA 100% fan** desde layer 3. **PETG 40-50%**. **ABS 0-20%** con enclosure. **TPU 20-30%**. Bridge fan siempre 100% independiente.",
   "useCases": [
-    "Tenés warping en ABS y sospechás del fan.",
-    "PLA hace blobs en overhangs y el fan parece no alcanzar.",
-    "Cambiás de material y no sabés ajustar.",
-    "Tu PETG queda frágil y se parte entre capas.",
-    "Imprimís miniaturas PLA con detalles finos."
+    {
+      "title": "ABS con warping severo en pieza grande",
+      "description": "Estás imprimiendo una tapa de 20×15 cm en ABS negro a 240 °C, con fan al 50% por defecto del slicer. Las esquinas se levantan a partir de la capa 30 y la pieza se desprende. La calculadora indica fan 0–10% con enclosure cerrado. Bajás el fan a 5%, cubrís la impresora con una caja de cartón y aplicás brim de 8 mm. La pieza imprime sin warping. El ABS necesita que toda la cámara se mantenga a 45–50 °C para que la contracción sea homogénea; el fan rompe ese equilibrio térmico capa a capa."
+    },
+    {
+      "title": "PETG frágil que se parte entre capas",
+      "description": "Imprimís una pieza estructural en PETG transparente a 230 °C con fan al 100%. Al hacer una prueba de flexión, la pieza se parte limpiamente a lo largo de las capas con muy poca fuerza. La calculadora recomienda 40–50% de fan. Bajás a 45%, subís temperatura a 235 °C y aumentás el overlap de perímetros al 30%. El resultado es una pieza con adhesión intercapa notablemente mayor, que supera la prueba de flexión sin fracturarse. El exceso de cooling es la causa número uno de PETG frágil."
+    },
+    {
+      "title": "PLA con blobs en overhangs de miniatura",
+      "description": "Imprimís una miniatura de 4 cm de alto con brazos en ángulo de 50°. Con fan al 70% aparecen blobs y el plástico cuelga. La calculadora confirma: PLA al 100% desde layer 3, con layer time mínimo de 15 segundos. Activás el cooling al 100%, configurás el mínimo de tiempo por capa en Orca Slicer y reducís la velocidad de overhangs al 30%. Los brazos salen limpios. En piezas pequeñas el layer time es tan corto que el filamento no alcanza a solidificar entre capa y capa aunque el fan esté activo."
+    },
+    {
+      "title": "TPU con superficie rugosa y opaca",
+      "description": "Imprimís una funda flexible en TPU 95A a 220 °C. La superficie exterior queda con textura granulosa y opaca en lugar del acabado semimatte esperado. Tenés el fan al 80%. La calculadora recomienda 20–30%. Bajás a 25% y reducís la velocidad de impresión a 25 mm/s. La superficie mejora notablemente: el TPU necesita tiempo para fluir y extenderse antes de que el fan lo endurezca, de lo contrario cada línea de extrusión queda marcada visualmente."
+    },
+    {
+      "title": "ASA para uso exterior con enclosure improvisado",
+      "description": "Querés imprimir soportes para panel solar en ASA blanco, material elegido por su resistencia UV. No tenés enclosure comercial pero armás uno con una caja de Ikea Lack. La calculadora indica 0–15% de fan con enclosure. Con la caja cerrada y fan al 10%, imprimís las piezas sin grietas ni warping. El ASA sin enclosure tiene más tendencia al warping que el ABS, pero bien contenido térmicamente da piezas con excelente resistencia a la intemperie."
+    },
+    {
+      "title": "PLA Silk con pérdida de brillo y efecto mate",
+      "description": "Comprás PLA Silk dorado para imprimir un trofeo decorativo. Con fan al 100% la pieza sale con aspecto mate y sin el efecto metálico esperado. La calculadora detecta el material especial y recomienda 70–80%. Bajás a 75% y subís la temperatura a 225 °C. El brillo sedoso aparece. El PLA Silk tiene aditivos que necesitan más tiempo de flujo superficial para alinearse y producir el efecto brillante; el exceso de cooling los fija antes de que se reorganicen."
+    },
+    {
+      "title": "Nylon PA12 técnico para pieza mecánica",
+      "description": "Imprimís un engranaje en Nylon PA12 a 260 °C en impresora con enclosure a 60 °C de cámara. Con fan al 40% el engranaje presenta delaminación en los dientes. La calculadora recomienda 0–10% con enclosure obligatorio. Bajás el fan a 5%, verificás que el filamento estuvo 12 horas en desecante antes de imprimir, y ajustás el flow al 105%. El engranaje sale sólido, sin delaminación, listo para carga mecánica real. El Nylon es especialmente sensible al cooling Y a la humedad: ambos factores deben controlarse juntos."
+    },
+    {
+      "title": "Upgrade de fan 4010 a 5015 en Ender 3 con PLA",
+      "description": "Tenés una Ender 3 stock con fan 4010 y el PLA presenta defectos en overhangs de 45° o más. Calculadora y comunidad coinciden: upgrade a 5015 con shroud tipo Bullseye (imprimible en PLA a 100% fan antes del upgrade). El 5015 dobla el caudal de aire. Post-upgrade, los overhangs de 55° salen limpios y los puentes de 60 mm quedan sin sagging. Costo del 5015 en MercadoLibre Argentina: entre $3.500 y $6.000 pesos según el mes. Para ABS este upgrade es contraproducente: más caudal = más warping."
+    }
   ],
   "fields": [
     {
@@ -103,32 +130,52 @@
   "explanation": "## Fan por material\n\n| Material | Fan normal | Layer time min | Notas |\n|---|---|---|---|\n| PLA | 100% ✅ | 5 s | Desde layer 3 |\n| PLA Silk | 80-90% | 5 s | Bajar para brillo |\n| PETG | 40-60% | 8-10 s | Demasiado = frágil |\n| ABS | 0-20% | 10-15 s | Enclosure **requerido** |\n| ASA | 10-30% | 10-15 s | Enclosure recomendado |\n| TPU 95A | 20-40% | 8-10 s | Fan bajo, flow lento |\n| Nylon | 0-20% | 10-20 s | Secar antes, fan off |\n| PC | 0-10% | 15-20 s | Enclosure **requerido** |\n\n## Bridge cooling\n\nSiempre **100% fan en bridges** independiente del material, porque el puente sin soporte necesita solidificar rápido:\n\n| Material | Bridge fan |\n|---|---|\n| PLA | 100% |\n| PETG | 100% |\n| ABS | 50-70% (con enclosure) |\n| TPU | 60-80% |\n\n## Layer time mínimo\n\nSi la capa es pequeña (<10 seg de impresión real), el slicer **baja la velocidad** para darle tiempo a enfriar. Fórmula:\n\n```\nVelocidad_ajustada = Velocidad_nominal × (Tiempo_real / Layer_min)\n```\n\nSin layer time mínimo, puntas de figuras y detalles quedan blobby.\n\n## Casos específicos\n\n- **Miniaturas PLA** (Warhammer, D&D): fan 100%, layer time 8 s, velocidad 30 mm/s.\n- **Figura grande ABS**: fan 10%, enclosure 40-50 °C, layer time 12 s.\n- **TPU flexible**: flow 95%, fan 25%, velocidad 25 mm/s.\n\n## Errores comunes\n\n1. **PLA con fan 50%**: pierde detalle en overhangs, queda mate desigual.\n2. **PETG con fan 100%**: capas mal fusionadas, pieza frágil al doblar.\n3. **ABS con fan**: warping y delaminación 90% de los casos sin enclosure.\n4. **Fan desde layer 1**: mala adherencia de primera capa. Activar desde layer 3.\n\n## Duct y fan real\n\nEl porcentaje del slicer es teórico. Un fan 4010 en ducto original Ender genera muy poco flujo vs un ducto Satsana con fan 5015. Si tu PLA blobby no mejora con 100%, el problema es el hardware.\n\nCombiná con [primer layer](/calculadora-primer-layer-adherencia-bed), [retracción](/calculadora-retraccion-3d-bowden-direct) y [tiempo](/calculadora-tiempo-impresion-3d-layer).",
   "faq": [
     {
-      "q": "¿PLA siempre al 100%?",
-      "a": "Sí, salvo silk PLA (baja a 80% para brillo) o PLA+ técnicos (80-90%)."
+      "q": "¿Por qué el PLA necesita fan al 100% y el ABS casi nada?",
+      "a": "La diferencia está en la química del polímero y su coeficiente de contracción térmica. El PLA tiene una temperatura de transición vítrea baja (~60 °C) y se solidifica muy rápido; sin cooling intenso, las capas en voladizos y puentes no tienen tiempo de solidificarse y el plástico cae o forma blobs. El ABS, en cambio, tiene un coeficiente de contracción volumétrica mucho mayor que el PLA (alrededor del doble). Si cada capa se enfría a distinta velocidad —lo que hace un fan potente— la contracción es desigual entre capas adyacentes, generando tensión interna que produce warping en la base y layer splitting (grietas horizontales visibles) en la altura. Un enclosure que mantiene la cámara a 45–55 °C hace que todas las capas se enfríen a velocidad similar, eliminando el gradiente de tensión. La física de polímeros es clara: no hay un solo valor de fan óptimo para todos los materiales."
     },
     {
-      "q": "¿Por qué ABS sin fan?",
-      "a": "ABS se contrae al enfriar. Si se enfría rápido capa a capa, contrae desigual → warping y grietas. Enclosure y fan 0-20% evita el problema."
+      "q": "¿Desde qué capa debo activar el cooling fan?",
+      "a": "La regla estándar es activar el fan a partir de la capa 2 o 3, nunca desde la primera. La primera capa necesita máxima adhesión a la cama: el calor residual del plástico ayuda a que se expanda levemente y agarre mejor al vidrio, PEI o BuildTak. Si activás el fan en la primera capa, el plástico se contrae antes de adherir y aumenta el riesgo de desprendimiento. En Orca Slicer y PrusaSlicer esto se configura con el parámetro 'Close fan the first X layers', típicamente 2–3. En materiales como ABS y ASA, algunos usuarios lo mantienen apagado hasta la capa 8–10 para que la base gane temperatura y adhesión antes de cualquier corriente de aire."
     },
     {
-      "q": "¿Fan desde qué layer?",
-      "a": "Desde layer 2-3, no desde el primero. El primer layer no lleva fan para adherir mejor."
+      "q": "¿Qué es el bridge fan y por qué siempre va al 100%?",
+      "a": "Un bridge o puente es un segmento de filamento que se imprime en el aire sin soporte debajo, conectando dos paredes. El filamento extruido necesita solidificarse casi instantáneamente antes de que la gravedad lo haga caer. Por eso, independientemente del material —incluso en ABS que normalmente odia el fan— el bridge fan se sube al 100% de forma momentánea solo durante esas líneas. Una vez terminado el puente, el fan vuelve al porcentaje configurado para el material. Esta función está disponible en todos los slicers principales: en Cura se llama 'Bridge Fan Speed', en PrusaSlicer/Orca 'Bridge fan speed' bajo la sección de cooling. En materiales como ABS, si el bridge es muy largo (más de 40 mm), es preferible agregar soportes antes que depender del bridge fan, ya que la corriente de aire afectará las capas adyacentes."
     },
     {
-      "q": "¿Bridge fan afecta warping?",
-      "a": "En bridges el fan es momentáneo y ayuda. En ABS aun así mantener la pieza en enclosure cerrada después."
+      "q": "¿El PETG realmente se vuelve frágil con fan alto? ¿Cómo lo verifico?",
+      "a": "Sí, es uno de los defectos más documentados del PETG y sorprende porque visualmente la pieza parece correcta. El mecanismo es el siguiente: el PETG es semicristalino y necesita cierto tiempo de enfriamiento lento para que las cadenas moleculares se 'anclen' a la capa inferior. Con fan al 100%, la superficie se solidifica tan rápido que la unión intercapa es superficial. Para verificarlo, hacé una prueba simple: imprimí una tira de 10×80×3 mm con fan 100% y otra con fan 45%. Doblala manualmente. La de 100% fan va a quebrarse limpiamente a lo largo de las capas; la de 45% va a flexionar antes de romperse. También podés hacer la prueba con un cutter: si las capas se separan fácilmente con la punta del cutter, el fan está demasiado alto o la temperatura demasiado baja."
     },
     {
-      "q": "¿Mi fan zumba feo?",
-      "a": "Fan 4010 stock tiene vida ~1000 hs. Cambialo por Noctua o Sunon. Mejora calidad y ruido drásticamente."
+      "q": "¿Qué diferencia hay entre el hotend fan y el part cooling fan?",
+      "a": "Son dos ventiladores con funciones completamente distintas que no deben confundirse nunca. El hotend fan (también llamado cold end fan o heatbreak fan) enfría la zona fría del hotend, específicamente el disipador y el heatbreak, para evitar que el calor suba hacia la zona de filamento sin fundir y cause atascos por heat creep. Este fan debe estar al 100% siempre que la impresora esté encendida y el hotend caliente; nunca se regula. Si se apaga o falla, en minutos tenés un atasco severo. El part cooling fan, en cambio, es el que apunta a la pieza recién impresa y es el que el slicer controla con los porcentajes de los que habla esta calculadora. En impresoras como la Ender 3, el hotend fan es el pequeño que está sobre el radiador; el part cooling es el que tiene el conducto que apunta a la boquilla."
     },
     {
-      "q": "¿Part cooling vs hotend fan?",
-      "a": "**Hotend fan** siempre al 100% (enfría el heatbreak). **Part cooling** es el que el slicer controla. No confundirlos."
+      "q": "¿Vale la pena cambiar el fan 4010 stock por uno 5015 o 4020?",
+      "a": "Para PLA, PETG y materiales que se benefician del cooling, el upgrade de 4010 a 5015 es una de las mejoras con mejor relación costo-beneficio en impresoras de entrada como la Ender 3 o la Elegoo Neptune. El 5015 es un ventilador centrífugo (blower) que puede duplicar el caudal de aire en la misma zona. Con un shroud imprimible como el Bullseye o el Satsana, los overhangs mejoran notablemente y se pueden imprimir ángulos de hasta 60–65° sin soporte. El costo en Argentina ronda los $3.500–$7.000 pesos (MercadoLibre, 2024). Sin embargo, para ABS, ASA y Nylon este upgrade es activamente contraproducente: más caudal de aire significa más warping y más grietas. Si imprimís principalmente materiales de ingeniería, no hagas el upgrade; en cambio, invertí en un enclosure. Si imprimís principalmente PLA, el 5015 es casi obligatorio."
     },
     {
-      "q": "¿Vale la pena upgrade a ventilador blower 5015 o 4020?",
-      "a": "**Sí, 100% vale** en impresoras chinas baratas (Ender 3, Elegoo Neptune) que vienen con 4010 débil. Upgrade a **5015 axial con shroud** reduce warping en overhangs **30-40%**, permite PLA a 100% sin defectos de enfriamiento. Costo **$15-25 USD** AliExpress. Para ABS/ASA **peor idea** — necesitás MENOS fan, no más. Mod más popular: **Bullseye** (imprimible) o **Creality Sprite direct drive** con 4010 doble. Mantener fan hotend en 100% siempre (no el part cooling)."
+      "q": "¿Qué es el layer time mínimo y por qué importa tanto como el fan?",
+      "a": "El layer time mínimo (minimum layer time o minimum print time) es el tiempo mínimo que el slicer obliga a tardar en cada capa, aunque para eso tenga que reducir la velocidad. Su función es complementaria al fan: asegura que cada capa tenga tiempo suficiente de solidificarse antes de que la siguiente se deposite encima. En piezas pequeñas o con geometría puntiforme —como la punta de una torre o el cuerpo de una miniatura— las capas son tan cortas que se imprimen en uno o dos segundos. Aunque el fan esté al 100%, ese tiempo es insuficiente para que el PLA solidifique. El resultado son blobs, overhangs caídos y pérdida de detalle. El valor recomendado es 10–15 segundos para PLA, 15–20 para PETG. En Orca Slicer se llama 'Slow printing down for better layer cooling'; en Cura, 'Minimum Layer Time'."
+    },
+    {
+      "q": "¿El filamento húmedo afecta el comportamiento del cooling?",
+      "a": "Sí, y de una forma que complica mucho el diagnóstico. El filamento húmedo —especialmente PETG, Nylon y TPU— genera pequeñas burbujas de vapor durante la extrusión que producen chasquidos audibles, stringing excesivo y superficies con cráteres o burbujas. Cuando ajustás el fan para compensar estos defectos sin secar el filamento primero, terminás modificando parámetros sobre una causa incorrecta. La secuencia correcta siempre es: primero secá el filamento (PETG 65 °C por 6 hs, Nylon 80 °C por 12 hs, TPU 55 °C por 8 hs), luego calibrá temperatura, luego ajustá fan. Si después de secar los defectos desaparecen, nunca fue un problema de cooling. En Argentina, donde la humedad ambiente puede superar el 70% en ciudades como Buenos Aires o Rosario, el secado previo es especialmente relevante."
+    },
+    {
+      "q": "¿El ASA se comporta igual que el ABS respecto al cooling?",
+      "a": "Casi igual, con algunas diferencias importantes. El ASA (Acrilonitrilo Estireno Acrilato) fue diseñado como reemplazo del ABS con mayor resistencia UV para aplicaciones exteriores —placas de señalización, soportes para uso en intemperie, piezas para autos. Comparte con el ABS la sensibilidad al enfriamiento rápido: fan 0–15% con enclosure obligatorio. Sin embargo, el ASA tiene mayor temperatura de impresión (240–260 °C) y es aún más sensible al warping sin enclosure que el ABS estándar. La buena noticia es que el ASA es menos propenso al layer splitting que el ABS si la temperatura de cámara se mantiene estable. Si tenés dudas entre ambos: para uso estructural en interiores, ABS; para exterior con exposición solar o lluvia, ASA. Los parámetros de fan son prácticamente intercambiables entre ambos."
+    },
+    {
+      "q": "¿Cómo configuro el fan correctamente en Orca Slicer, PrusaSlicer y Cura?",
+      "a": "En Orca Slicer (el más completo actualmente): dentro del perfil de filamento encontrás 'Fan speed' con campos separados para 'Min fan speed', 'Max fan speed', 'Overhang fan speed', 'Bridge fan speed' y 'Close fan the first X layers'. Configurá min y max según tu material (ej: PLA min 70%, max 100%), overhang fan al 100% desde 50°, bridge fan al 100%. En PrusaSlicer: en la pestaña de filamento, 'Cooling' permite configurar 'Fan speed' y activar 'Auto cooling'. En Cura: en la sección 'Cooling' del perfil, 'Print Cooling Fan Speed' es el valor principal; 'Regular Fan Speed at Layer' define desde qué capa arranca. Todos los slicers permiten activar el cooling diferenciado para bridges. Si usás Klipper con Mainsail/Fluidd, podés controlar el fan por macro y hacer perfiles aún más detallados."
+    },
+    {
+      "q": "¿Un ventilador ruidoso o con vibración afecta la calidad de impresión?",
+      "a": "Sí, más de lo que parece. Un fan desbalanceado o con rodamientos gastados genera vibraciones que se transmiten al carriage y al hotend, lo que produce ringing o ghosting (ondas en la superficie de la pieza, especialmente visible en paredes planas con texto o bordes afilados). El fan 4010 stock de la mayoría de las impresoras chinas tiene una vida útil aproximada de 800–1.500 horas de uso. Si el tuyo zumba, vibra o hace ruido irregular, es momento de cambiarlo. Las opciones de upgrade más recomendadas por la comunidad son: Noctua NF-A4x10 (silencioso, larga vida, pero requiere adaptador de voltaje de 12V a 5V en impresoras de 24V), Sunon MagLev (buena relación precio/desempeño) y GDStime (económico, disponible en MercadoLibre Argentina). El costo del diagnóstico: si al apoyar levemente el dedo en el fan el ruido desaparece, el problema es vibración por desbalance."
+    },
+    {
+      "q": "¿Puedo usar estos parámetros como punto de partida o necesito calibrar para mi impresora específica?",
+      "a": "Son un excelente punto de partida, pero cada impresora tiene su propia eficiencia de cooling según el diseño del shroud, la distancia del fan a la boquilla, la potencia real del motor del fan y la temperatura ambiente del lugar donde imprimís. Una impresora en Mendoza en verano a 35 °C de ambiente va a necesitar más fan que la misma impresora en Ushuaia en invierno. La forma correcta de calibrar es imprimir un test de overhang (el clásico es el de Thingiverse #2972495 o el que incluye Orca Slicer en sus calibraciones) con distintos porcentajes de fan, de 30% en 30%, y elegir el mínimo valor que da resultado limpio a 45°. Esto te da el piso. Para el techo, imprimí el mismo test con fan excesivo en PETG y verificás el punto en que aparece fragilidad intercapa. La calculadora te da el rango validado por la comunidad; tu test de calibración te da el valor óptimo para tu setup particular."
     }
   ],
   "sources": [
@@ -161,5 +208,5 @@
       "text": "Los resultados aparecen debajo del formulario. Podés modificar cualquier dato y recalcular."
     }
   ],
-  "noindex": true
+  "noindex": false
 }
