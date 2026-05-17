@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Pre-commit hook para hacecuentas.
+#
+# Validaciones rápidas que evitan deploys rotos:
+#   1. updateType validator en JSONs de data-sources (feedback 13/5: 5 commits perdidos)
+#   2. related-auto cache sync con calcs (si modificás calcs JSONs)
+#   3. Schema validator sample (si modificás Layout/templates/calcs)
+#
+# Salida 0 = OK, salida 1 = bloquea commit.
+#
+# Skip individual: COMMIT_SKIP_RELATED=1 / COMMIT_SKIP_SCHEMA=1
+# Skip total: SKIP_HOOKS=1 git commit ...
+
+set -e
+
+if [ "${SKIP_HOOKS:-0}" = "1" ]; then
+  echo "⚠️  SKIP_HOOKS=1 — saltando pre-commit checks"
+  exit 0
+fi
+
+cd "$(git rev-parse --show-toplevel)"
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+# 1) updateType validator (data-sources JSONs)
+if echo "$STAGED" | grep -qE '^(db/data-sources/.*\.json|src/data/live/.*\.json|public/datasets/.*\.json)$'; then
+  echo "🔍 Validando dataUpdate types..."
+  if ! node --experimental-strip-types scripts/validate-data-updates.ts 2>&1; then
+    echo "❌ validate-data-updates falló. Fix antes de commitear (updateType debe ser manual|auto-api|auto-scrape|auto-llm)."
+    exit 1
+  fi
+fi
+
+# 2) related-auto cache sync
+if [ "${COMMIT_SKIP_RELATED:-0}" != "1" ] && echo "$STAGED" | grep -qE '^src/content/calcs/.*\.json$'; then
+  echo "🔍 Verificando related-auto cache sync..."
+  npm run related --silent 2>&1 | tail -3
+  if ! git diff --quiet src/lib/related-auto.json src/lib/related-auto.hash 2>/dev/null; then
+    echo "❌ related-auto desfasado. Stage los cambios:"
+    echo "   git add src/lib/related-auto.json src/lib/related-auto.hash"
+    exit 1
+  fi
+fi
+
+# 3) Schema validator (sample rápido) — solo si tocaste templates/Layout/schema-related
+if [ "${COMMIT_SKIP_SCHEMA:-0}" != "1" ] && echo "$STAGED" | grep -qE '(src/layouts/|src/pages/\[?\.\.\.|src/components/.*Schema|src/lib/wikidata|src/lib/schema)'; then
+  if [ -d "dist/client" ]; then
+    echo "🔍 Validando JSON-LD en dist/client (sample 20)..."
+    if ! node scripts/validate-schema.mjs --sample 2>&1 | tail -5; then
+      echo "❌ Schema validation falló. Corre 'npm run build' y revisa."
+      exit 1
+    fi
+  else
+    echo "⚠️  Schema validator skipped (no dist/client — corre 'npm run build' antes del próximo commit grande)"
+  fi
+fi
+
+echo "✅ Pre-commit OK"
+exit 0
