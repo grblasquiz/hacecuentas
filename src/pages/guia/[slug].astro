@@ -127,66 +127,70 @@ const schema = {
       </div>
     </header>
 
-    <aside class="toc" id="guide-toc">
-      <h2>Contenidos</h2>
-      <ul class="toc-list">
+    <div class="pillar-body">
+      <aside class="toc" id="guide-toc">
+        <h2>Contenidos</h2>
+        <ul class="toc-list">
+          {guia.sections.map((s: any, i: number) => (
+            <li class="toc-item" data-toc-target={`sec-${i}`}><a href={`#sec-${i}`}>{s.heading}</a></li>
+          ))}
+          <li class="toc-item" data-toc-target="faq"><a href="#faq">Preguntas frecuentes</a></li>
+          <li class="toc-item" data-toc-target="sources"><a href="#sources">Fuentes</a></li>
+        </ul>
+      </aside>
+
+      <div class="pillar-content">
         {guia.sections.map((s: any, i: number) => (
-          <li class="toc-item" data-toc-target={`sec-${i}`}><a href={`#sec-${i}`}>{s.heading}</a></li>
+          <section class="pillar-section" id={`sec-${i}`}>
+            <h2>{s.heading}</h2>
+            <div class="section-content" set:html={`<p>${md(s.content)}</p>`}></div>
+            {s.calcs && s.calcs.length > 0 && (
+              <div class="calcs-grid">
+                {s.calcs.map((slug: string) => {
+                  const c: any = calcLookup.get(slug);
+                  if (!c) return null;
+                  return (
+                    <a href={`/${c.slug}`} class="calc-card">
+                      <span class="calc-icon">{c.icon || '🧮'}</span>
+                      <div>
+                        <span class="calc-title">{c.h1}</span>
+                        <span class="calc-desc">{(c.description || '').slice(0, 100)}...</span>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+          </section>
         ))}
-        <li class="toc-item" data-toc-target="faq"><a href="#faq">Preguntas frecuentes</a></li>
-        <li class="toc-item" data-toc-target="sources"><a href="#sources">Fuentes</a></li>
-      </ul>
-    </aside>
+
+        <section class="pillar-section" id="faq">
+          <h2>Preguntas frecuentes</h2>
+          <div class="faq-list">
+            {guia.faq.map((f: any) => (
+              <details>
+                <summary>{f.q}</summary>
+                <div class="faq-answer" set:html={md(f.a)}></div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <section class="pillar-section" id="sources">
+          <h2>Fuentes y referencias</h2>
+          <ul class="sources">
+            {guia.sources.map((s: any) => (
+              <li><a href={s.url} rel="noopener nofollow" target="_blank">{s.name}</a></li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    </div>
 
     <button type="button" class="toc-fab" id="toc-fab" aria-label="Mostrar tabla de contenidos" aria-expanded="false" hidden>
       <span aria-hidden="true">☰</span>
       <span class="toc-fab-label">Contenidos</span>
     </button>
-
-    {guia.sections.map((s: any, i: number) => (
-      <section class="pillar-section" id={`sec-${i}`}>
-        <h2>{s.heading}</h2>
-        <div class="section-content" set:html={`<p>${md(s.content)}</p>`}></div>
-        {s.calcs && s.calcs.length > 0 && (
-          <div class="calcs-grid">
-            {s.calcs.map((slug: string) => {
-              const c: any = calcLookup.get(slug);
-              if (!c) return null;
-              return (
-                <a href={`/${c.slug}`} class="calc-card">
-                  <span class="calc-icon">{c.icon || '🧮'}</span>
-                  <div>
-                    <span class="calc-title">{c.h1}</span>
-                    <span class="calc-desc">{(c.description || '').slice(0, 100)}...</span>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-        )}
-      </section>
-    ))}
-
-    <section class="pillar-section" id="faq">
-      <h2>Preguntas frecuentes</h2>
-      <div class="faq-list">
-        {guia.faq.map((f: any) => (
-          <details>
-            <summary>{f.q}</summary>
-            <div class="faq-answer" set:html={md(f.a)}></div>
-          </details>
-        ))}
-      </div>
-    </section>
-
-    <section class="pillar-section" id="sources">
-      <h2>Fuentes y referencias</h2>
-      <ul class="sources">
-        {guia.sources.map((s: any) => (
-          <li><a href={s.url} rel="noopener nofollow" target="_blank">{s.name}</a></li>
-        ))}
-      </ul>
-    </section>
 
     {relatedCategories.length > 0 && (
       <section class="pillar-section related-cats">
@@ -284,15 +288,20 @@ const schema = {
     margin: 0 0 3rem;
   }
   @media (min-width: 1180px) {
-    .pillar-page { position: relative; }
+    .pillar-body {
+      display: flex;
+      flex-direction: row-reverse;
+      gap: 2.5rem;
+      align-items: flex-start;
+    }
+    .pillar-content { flex: 1 1 0; min-width: 0; }
     .toc {
+      flex: 0 0 260px;
       position: sticky;
       top: 1rem;
-      float: right;
-      width: 260px;
       max-height: calc(100vh - 2rem);
       overflow-y: auto;
-      margin: 0 0 2rem 1.5rem;
+      margin: 0;
       padding: 1rem 1.1rem;
       font-size: .9rem;
     }
