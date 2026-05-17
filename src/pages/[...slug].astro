@@ -17,6 +17,7 @@ import { findClusterForSlug } from '../lib/clusters';
 import { md, mdInline } from '../lib/markdown';
 import { CATEGORY_TO_GUIDE, GUIDE_TITLES } from '../lib/category-guide-map';
 import { findMentions, findPrimaryAbout } from '../lib/wikidata-entities';
+import { datasetSchemasForCalc } from '../lib/calc-datasets';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
@@ -455,6 +456,15 @@ if (isLiveDataCalc && hasTable) {
     keywords: datasetKeywords,
     license: 'https://creativecommons.org/licenses/by/4.0/',
   });
+}
+
+// Datasets descargables externos (CSV+JSON en /datasets/): para las calcs
+// listadas en CALC_DATASETS exponemos Schema Dataset con distribution real,
+// no solo metadata. Esto las hace descubribles en Google Dataset Search desde
+// la URL de la calc además de /datasets.
+const externalDatasets = datasetSchemasForCalc(calc.slug);
+if (externalDatasets.length > 0) {
+  schemaGraph.push(...externalDatasets);
 }
 
 // Recipe schema — para calcs cocina que computan proporciones/cantidades
