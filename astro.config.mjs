@@ -51,8 +51,13 @@ export default defineConfig({
       tracesSampleRate: 0.1,
       replaysSessionSampleRate: 0,
       replaysOnErrorSampleRate: 0.1,
-      // Skip server-side init: Workers usan su propio observability.
-      autoInstrumentation: { requestHandler: false },
+      // Server-side: activamos con sampling 1% para complementar CF Workers
+      // Observability con stack traces de errors. CF tiene logs pero los stack
+      // traces los pierde tras unas horas. Sentry mantiene 30d y permite
+      // correlacionar con client errors (mismo proyecto). Sample 0.01 mantiene
+      // CPU overhead < 1ms por request.
+      autoInstrumentation: { requestHandler: true },
+      tracesSampler: () => 0.01,
       sourceMapsUploadOptions: IS_PROD_BUILD ? {
         project: process.env.SENTRY_PROJECT || 'hacecuentas',
         org: process.env.SENTRY_ORG || '',
