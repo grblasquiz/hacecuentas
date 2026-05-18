@@ -28,8 +28,55 @@ const { provincia, calcs } = Astro.props;
 const siteUrl = 'https://hacecuentas.com';
 const pageUrl = `${siteUrl}/argentina/${provincia.slug}`;
 
+// Mapeo de calcSlug → bloque visualizable con la data provincial real
+type ProvinceBlock = {
+  calcSlug: string;
+  calcName: string;
+  emoji: string;
+  rate: string;
+  details: string;
+  metrics: Record<string, string>;
+  localNotes: string;
+};
+
+const provinceBlocks: ProvinceBlock[] = calcs
+  .map((c: any) => {
+    const pd = (c.provinceData || {})[provincia.slug];
+    if (!pd) return null;
+    return {
+      calcSlug: c.calcSlug,
+      calcName: c.calcName || c.title || c.calcSlug,
+      emoji: c.heroEmoji || '📊',
+      rate: pd.rate || '',
+      details: pd.details || '',
+      metrics: pd.metrics || {},
+      localNotes: pd.localNotes || '',
+    } as ProvinceBlock;
+  })
+  .filter((b: ProvinceBlock | null): b is ProvinceBlock => b !== null);
+
+// Pequeño "snapshot" económico de la provincia que se muestra arriba.
+const snapshot: { label: string; value: string }[] = [];
+for (const b of provinceBlocks) {
+  if (b.calcSlug.includes('costo-m2-construccion') && b.metrics['Costo m2 medio']) {
+    snapshot.push({ label: 'Costo m² construcción (media)', value: b.metrics['Costo m2 medio'] });
+  }
+  if (b.calcSlug.includes('ingresos-brutos') && b.metrics['Alicuota general']) {
+    snapshot.push({ label: 'Alícuota IIBB general', value: b.metrics['Alicuota general'] });
+  }
+  if (b.calcSlug.includes('inmobiliario') && b.metrics['Alicuota urbano']) {
+    snapshot.push({ label: 'Inmobiliario urbano', value: b.metrics['Alicuota urbano'] });
+  }
+  if (b.calcSlug.includes('sellos') && b.metrics['Alicuota inmuebles']) {
+    snapshot.push({ label: 'Sellos inmuebles', value: b.metrics['Alicuota inmuebles'] });
+  }
+  if (b.calcSlug.includes('patente') && b.metrics['Alicuota general']) {
+    snapshot.push({ label: 'Patente (rango)', value: b.rate || b.metrics['Alicuota general'] });
+  }
+}
+
 const title = `${provincia.name} — Calculadoras e impuestos provinciales 2026 | Hacé Cuentas`;
-const description = `Calculadoras específicas para ${provincia.name}: Ingresos Brutos, patente automotor, impuesto inmobiliario, sellos y costo m² de construcción. Con alícuotas oficiales 2026.`;
+const description = `${provincia.name} 2026: alícuotas oficiales de IIBB, patente, inmobiliario, sellos y costo m² de construcción.${snapshot[0] ? ` ${snapshot[0].label}: ${snapshot[0].value}.` : ''}`;
 
 const schema = {
   '@context': 'https://schema.org',
@@ -59,10 +106,23 @@ const schema = {
       itemListElement: calcs.map((c: any, i: number) => ({
         '@type': 'ListItem',
         position: i + 1,
-        name: c.title || c.calcSlug,
+        name: c.title || c.calcName || c.calcSlug,
         url: `${pageUrl}/${c.calcSlug}`,
       })),
     },
+    ...(snapshot.length > 0
+      ? [
+          {
+            '@type': 'Dataset',
+            name: `Snapshot fiscal ${provincia.name} 2026`,
+            description: `Alícuotas y valores fiscales de ${provincia.name}: IIBB, inmobiliario, sellos, patente y costo m² de construcción.`,
+            url: pageUrl,
+            inLanguage: 'es-AR',
+            keywords: snapshot.map((s) => `${s.label}: ${s.value}`).join(', '),
+            spatialCoverage: { '@type': 'Place', name: `${provincia.name}, Argentina` },
+          },
+        ]
+      : []),
   ],
 };
 ---
@@ -94,31 +154,76 @@ const schema = {
     <h2>Datos clave de {provincia.name}</h2>
     <ul class="info-list">
       <li><strong>Capital</strong>: {provincia.capital || '—'}</li>
-      <li><strong>Código</strong>: {provincia.codigo || provincia.slug.toUpperCase()}</li>
+      <li><strong>Región</strong>: {provincia.region || '—'}</li>
+      <li><strong>Código</strong>: {provincia.codigo || provincia.abbr || provincia.slug.toUpperCase()}</li>
       <li><strong>Organismo fiscal</strong>: {provincia.agencia || 'Agencia provincial de recaudación'}</li>
       {provincia.sitioOficial && <li><strong>Sitio oficial</strong>: <a href={provincia.sitioOficial} rel="nofollow" target="_blank">{provincia.sitioOficial.replace(/^https?:\/\//, '')}</a></li>}
     </ul>
 
+    {snapshot.length > 0 && (
+      <section class="prov-snapshot" aria-labelledby="snap-h">
+        <h2 id="snap-h">Snapshot fiscal 2026 — {provincia.name}</h2>
+        <p class="lead-small">
+          Valores y alícuotas vigentes para {provincia.name} consolidadas de cada calculadora. Cada
+          número se detalla y fundamenta más abajo, con su fuente oficial.
+        </p>
+        <div class="snap-grid">
+          {snapshot.map((s) => (
+            <div class="snap-card">
+              <span class="snap-label">{s.label}</span>
+              <strong class="snap-value">{s.value}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
     <h2>Calculadoras disponibles para {provincia.name}</h2>
 
-    {calcs.length === 0 ? (
+    {provinceBlocks.length === 0 ? (
       <p class="empty-msg">
         Todavía no tenemos calculadoras específicas para {provincia.name} cargadas en el sistema.
         Podés ver las <a href="/categoria/impuestos">calculadoras fiscales generales</a> o
         <a href="/contacto"> sugerirnos una</a>.
       </p>
     ) : (
-      <ul class="calcs-grid">
-        {calcs.map((c: any) => (
-          <li class="calc-card">
-            <a href={`/argentina/${provincia.slug}/${c.calcSlug}`}>
-              <h3>{c.title || c.calcSlug}</h3>
-              <p>{c.description || `Calculadora específica de ${provincia.name} con alícuotas oficiales.`}</p>
-              <span class="arrow">→</span>
-            </a>
-          </li>
+      <div class="calc-blocks">
+        {provinceBlocks.map((b) => (
+          <article class="prov-calc">
+            <header class="prov-calc-h">
+              <h3>
+                <span class="emoji" aria-hidden="true">{b.emoji}</span>
+                <a href={`/argentina/${provincia.slug}/${b.calcSlug}`}>{b.calcName} en {provincia.name}</a>
+              </h3>
+              {b.rate && <span class="prov-rate">{b.rate}</span>}
+            </header>
+            {b.details && <p class="prov-details">{b.details}</p>}
+            {Object.keys(b.metrics).length > 0 && (
+              <table class="prov-metrics">
+                <caption class="sr-only">{b.calcName} — {provincia.name} (2026)</caption>
+                <tbody>
+                  {Object.entries(b.metrics).map(([k, v]) => (
+                    <tr>
+                      <th scope="row">{k}</th>
+                      <td>{v}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {b.localNotes && (
+              <p class="prov-localnotes">
+                <strong>Particularidades de {provincia.name}:</strong> {b.localNotes}
+              </p>
+            )}
+            <p class="prov-cta">
+              <a href={`/argentina/${provincia.slug}/${b.calcSlug}`} class="btn-link">
+                Abrir calculadora de {b.calcName.toLowerCase()} en {provincia.name} →
+              </a>
+            </p>
+          </article>
         ))}
-      </ul>
+      </div>
     )}
 
     <h2>Calculadoras nacionales relacionadas</h2>
@@ -221,6 +326,93 @@ const schema = {
     bottom: 0.8rem;
     color: var(--color-accent, #2563eb);
     font-size: 1.2rem;
+  }
+  .lead-small { font-size: 0.95rem; color: var(--color-muted, #555); margin: 0.25rem 0 1rem; }
+  .prov-snapshot { margin: 1.8rem 0 0.5rem; }
+  .snap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0.6rem;
+    margin: 0.8rem 0 0.5rem;
+  }
+  .snap-card {
+    background: rgba(37, 99, 235, 0.06);
+    border: 1px solid rgba(37, 99, 235, 0.18);
+    border-radius: 8px;
+    padding: 0.7rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .snap-label { font-size: 0.78rem; color: var(--color-muted, #555); text-transform: uppercase; letter-spacing: 0.02em; }
+  .snap-value { font-size: 1.05rem; }
+  .calc-blocks { display: flex; flex-direction: column; gap: 1.2rem; margin: 1.2rem 0 1.5rem; }
+  .prov-calc {
+    border: 1px solid rgba(128, 128, 128, 0.22);
+    border-radius: 10px;
+    padding: 1.1rem 1.15rem 1rem;
+    background: rgba(0, 0, 0, 0.012);
+  }
+  .prov-calc-h {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    justify-content: space-between;
+    border-bottom: 1px dashed rgba(128, 128, 128, 0.25);
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.7rem;
+  }
+  .prov-calc-h h3 { margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.45rem; }
+  .prov-calc-h h3 .emoji { font-size: 1.15rem; }
+  .prov-rate {
+    font-weight: 600;
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--color-accent, #2563eb);
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  .prov-details { margin: 0 0 0.65rem; font-size: 0.95rem; }
+  .prov-metrics {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.4rem 0 0.7rem;
+    font-size: 0.92rem;
+  }
+  .prov-metrics th, .prov-metrics td {
+    text-align: left;
+    padding: 0.4rem 0.55rem;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.18);
+  }
+  .prov-metrics th { color: var(--color-muted, #555); font-weight: 500; width: 45%; }
+  .prov-localnotes {
+    background: rgba(245, 158, 11, 0.07);
+    border-left: 3px solid rgba(245, 158, 11, 0.55);
+    padding: 0.55rem 0.75rem;
+    margin: 0.4rem 0 0.7rem;
+    font-size: 0.92rem;
+    border-radius: 4px;
+  }
+  .prov-cta { margin: 0.4rem 0 0; font-size: 0.92rem; }
+  .btn-link {
+    display: inline-block;
+    color: var(--color-accent, #2563eb);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .btn-link:hover { text-decoration: underline; }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
   }
   .empty-msg {
     background: rgba(128, 128, 128, 0.08);
