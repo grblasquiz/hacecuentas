@@ -72,6 +72,17 @@ const _LANG_BY_AUDIENCE: Record<string, [string, string]> = {
 };
 const _audByLocale = _LANG_BY_AUDIENCE[audience] || _LANG_BY_AUDIENCE.global;
 const htmlLang = lang === 'en' ? 'en' : lang === 'pt' ? 'pt-BR' : _audByLocale[0];
+
+// Geo targeting por audience — Bing Local + Yandex usan; Google ignora.
+const _GEO_BY_AUDIENCE: Record<string, {region: string; placename: string; icbm: string; country: string}> = {
+  AR: { region: 'AR', placename: 'Buenos Aires, Argentina', icbm: '-34.6037, -58.3816', country: 'Argentina' },
+  MX: { region: 'MX', placename: 'Ciudad de México, México', icbm: '19.4326, -99.1332', country: 'Mexico' },
+  ES: { region: 'ES', placename: 'Madrid, España', icbm: '40.4168, -3.7038', country: 'Spain' },
+  CL: { region: 'CL', placename: 'Santiago, Chile', icbm: '-33.4489, -70.6693', country: 'Chile' },
+  CO: { region: 'CO', placename: 'Bogotá, Colombia', icbm: '4.7110, -74.0721', country: 'Colombia' },
+  BR: { region: 'BR', placename: 'São Paulo, Brasil', icbm: '-23.5505, -46.6333', country: 'Brazil' },
+};
+const _geo = _GEO_BY_AUDIENCE[audience] || _GEO_BY_AUDIENCE.AR;
 const ogLocale = lang === 'en' ? 'en_US' : lang === 'pt' ? 'pt_BR' : _audByLocale[1];
 const schemaLang = htmlLang;
 
@@ -234,27 +245,12 @@ const globalSchema = {
 
     {/* Geo targeting — Bing Local + Yandex usan estos; Google ignora.
         AR es el mercado principal (62%+ del tráfico); para otras audiences
-        ajustamos a su país para que Bing local pueda priorizar. */}
-    {(() => {
-      const GEO: Record<string, {region: string; placename: string; icbm: string; country: string}> = {
-        AR: { region: 'AR', placename: 'Buenos Aires, Argentina', icbm: '-34.6037, -58.3816', country: 'Argentina' },
-        MX: { region: 'MX', placename: 'Ciudad de México, México', icbm: '19.4326, -99.1332', country: 'Mexico' },
-        ES: { region: 'ES', placename: 'Madrid, España', icbm: '40.4168, -3.7038', country: 'Spain' },
-        CL: { region: 'CL', placename: 'Santiago, Chile', icbm: '-33.4489, -70.6693', country: 'Chile' },
-        CO: { region: 'CO', placename: 'Bogotá, Colombia', icbm: '4.7110, -74.0721', country: 'Colombia' },
-        BR: { region: 'BR', placename: 'São Paulo, Brasil', icbm: '-23.5505, -46.6333', country: 'Brazil' },
-      };
-      const g = GEO[audience] || GEO.AR;
-      return (
-        <>
-          <meta name="geo.region" content={g.region} />
-          <meta name="geo.placename" content={g.placename} />
-          <meta name="geo.position" content={g.icbm.replace(', ', ';')} />
-          <meta name="ICBM" content={g.icbm} />
-          <meta name="country" content={g.country} />
-        </>
-      );
-    })()}
+        ajustamos a su país. Map definido en frontmatter (_geo). */}
+    <meta name="geo.region" content={_geo.region} />
+    <meta name="geo.placename" content={_geo.placename} />
+    <meta name="geo.position" content={_geo.icbm.replace(', ', ';')} />
+    <meta name="ICBM" content={_geo.icbm} />
+    <meta name="country" content={_geo.country} />
 
     {/* content-language: Bing y crawlers viejos lo leen como señal idioma fuerte
         (separada del <html lang>). Google deprecó este meta pero no penaliza. */}
