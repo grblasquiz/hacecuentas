@@ -155,6 +155,19 @@ const schemaApp = {
   // gratis para LLMs (ChatGPT/Claude/Perplexity/Gemini) vía Wikidata knowledge graph.
   mentions: findMentions(`${calc.h1 || ''} ${(calc.seoKeywords || []).join(' ')}`),
   ...(findPrimaryAbout(calc.h1 || '') ? { about: findPrimaryAbout(calc.h1 || '') } : {}),
+  // Speakable selectors expandidos — voice assistants (Alexa/Cortana/Google) y
+  // AI (ChatGPT/Copilot/Claude/Perplexity) priorizan estos fragmentos para
+  // responder queries de voz/AI.
+  speakable: {
+    '@type': 'SpeakableSpecification',
+    cssSelector: [
+      '.aeo-quick-answer', '.calc-intro', '.calc-key-takeaway',
+      '#how-it-works p:first-of-type',
+      '#faq dt', '#faq dd',
+      '.use-cases li', '#when-to-use p',
+    ],
+  },
+  citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
 };
 
 // Article schema for YMYL categories
