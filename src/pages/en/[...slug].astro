@@ -8,6 +8,7 @@ import Calculator from '../../components/Calculator.astro';
 import RelatedCalcs from '../../components/RelatedCalcs.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import { md, mdInline } from '../../lib/markdown';
+import ogManifest from '../../lib/og-manifest.json';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../../content/calcs-en/*.json', { eager: true });
@@ -42,24 +43,23 @@ const categoryLabels: Record<string, string> = {
   electronica: 'Electronics',
 };
 
-// dateModified = lastReviewed from JSON > mtime > build date
+// OG image: manifest pre-build. output:'server' corre el frontmatter en Workers
+// runtime sin node:fs — usar fs directo rompe ~187 HTMLs con "Illegal invocation"
+// de miniflare bajo carga durante prerender.
+let ogImage = '/og-default.png';
+if ((ogManifest as Record<string, boolean>)[calc.slug]) {
+  ogImage = `/og/${calc.slug}.png`;
+}
+
+// dateModified: lastReviewed > dataUpdate.lastUpdated > build date.
 let dateModified: string;
 let lastReviewedLabel: string;
-// OG image: if /public/og/{slug}.png exists use it, else fallback to default
-let ogImage = '/og-default.png';
-try {
-  const { statSync, existsSync } = await import('node:fs');
-  const { join } = await import('node:path');
-  const cwd = process.cwd();
-  const filePath = join(cwd, 'src', 'content', 'calcs-en', `${calc.formulaId || calc.slug}.json`);
-  const ogPath = join(cwd, 'public', 'og', `${calc.slug}.png`);
-  if (existsSync(ogPath)) ogImage = `/og/${calc.slug}.png`;
-  if (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
-    dateModified = new Date(calc.lastReviewed + 'T00:00:00Z').toISOString();
-  } else {
-    dateModified = statSync(filePath).mtime.toISOString();
-  }
-} catch {
+const _dataUpdateLast = calc.dataUpdate?.lastUpdated;
+if (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed)) {
+  dateModified = new Date(calc.lastReviewed + 'T00:00:00Z').toISOString();
+} else if (_dataUpdateLast && /^\d{4}-\d{2}-\d{2}$/.test(_dataUpdateLast)) {
+  dateModified = new Date(_dataUpdateLast + 'T00:00:00Z').toISOString();
+} else {
   dateModified = new Date().toISOString();
 }
 lastReviewedLabel = new Date(dateModified).toLocaleDateString('en-US', {
