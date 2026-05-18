@@ -113,6 +113,69 @@ jobs:
           echo "::endgroup::"
           exit ${EXIT:-0}
 
+      # Bundle size budget: previene regresiones de performance. Si el worker
+      # crece desmedidamente o un calc HTML pasa el threshold, falla el deploy
+      # antes de pushear código que degrade Core Web Vitals.
+      - name: Bundle size budget
+        run: |
+          set -e
+          python3 - <<'PYEOF'
+          import os, sys
+          BUDGETS = {
+              'dist/server/_worker.js': 2.5 * 1024 * 1024,    # 2.5 MB worker (current ~1.9MB)
+              'dist/server/entry.mjs':  0.5 * 1024 * 1024,    # entry stub
+          }
+          MAX_HTML = 150 * 1024  # 150KB per HTML (current avg ~95KB, max ~120KB)
+          MAX_BROKEN_BODY = 1000  # detecta el bug schemaDescription (316b)
+
+          fails = []
+
+          # Per-file budgets
+          for path, max_size in BUDGETS.items():
+              if not os.path.exists(path):
+                  continue
+              size = os.path.getsize(path)
+              kb = size / 1024
+              status = '✓' if size <= max_size else '✗'
+              print(f'  {status} {path}: {kb:.1f}KB (budget {max_size/1024:.0f}KB)')
+              if size > max_size:
+                  fails.append(f'{path}: {kb:.1f}KB > {max_size/1024:.0f}KB budget')
+
+          # Scan dist/client for too-big HTMLs OR too-small (= Worker error)
+          big_htmls = []
+          broken_htmls = []
+          for root, dirs, files in os.walk('dist/client'):
+              for f in files:
+                  if not f.endswith('.html'):
+                      continue
+                  fp = os.path.join(root, f)
+                  size = os.path.getsize(fp)
+                  if size > MAX_HTML:
+                      big_htmls.append((fp.replace('dist/client/', ''), size))
+                  elif size < MAX_BROKEN_BODY:
+                      broken_htmls.append((fp.replace('dist/client/', ''), size))
+
+          if broken_htmls:
+              fails.append(f'{len(broken_htmls)} HTMLs < {MAX_BROKEN_BODY} bytes (Worker error?)')
+              for path, size in sorted(broken_htmls)[:10]:
+                  print(f'  ✗ BROKEN {path}: {size}b')
+              if len(broken_htmls) > 10:
+                  print(f'  ... +{len(broken_htmls)-10} more broken HTMLs')
+
+          if big_htmls:
+              # Warning-only para HTMLs grandes — algunos calcs grandes son legit
+              print(f'\n  ⚠️  {len(big_htmls)} HTMLs > {MAX_HTML/1024:.0f}KB (warn, no fail):')
+              for path, size in sorted(big_htmls, key=lambda x: -x[1])[:5]:
+                  print(f'     {size/1024:.0f}KB  {path}')
+
+          if fails:
+              print(f'\n❌ Bundle budget FAIL ({len(fails)} issues)')
+              for f in fails:
+                  print(f'   {f}')
+              sys.exit(1)
+          print('\n✅ Bundle size dentro del budget')
+          PYEOF
+
       # El adapter @astrojs/cloudflare genera DOS configs en el build:
       #   1. dist/server/wrangler.json  ← la que queremos usar (workingDirectory)
       #   2. .wrangler/deploy/config.json  ← "deploy config" apuntando a 1
