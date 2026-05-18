@@ -407,6 +407,20 @@ const globalSchema = {
          render. -->
     <link rel="preload" href={interVariableFontUrl} as="font" type="font/woff2" crossorigin />
 
+    <!-- Critical CSS inline para el LCP element (hero-lead en homepage).
+         El CSS scoped del index.astro (24KB) es render-blocking y suma ~2s al
+         element render delay en mobile 3G (Lighthouse). Inlinear las pocas
+         reglas del hero permite que el browser paintee el <p class=hero-lead>
+         antes de descargar el CSS completo. Selectores sin data-astro-cid-*
+         para matchear cualquier scope hash. -->
+    <style>
+      .hero { padding: 3.5rem 0 2.5rem; text-align: center; position: relative; }
+      .hero-title { font-size: clamp(2rem, 5.5vw, 3.5rem); line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 1.25rem; font-weight: 800; }
+      .hero-lead { font-size: 1.0625rem; max-width: 620px; margin: 0 auto 1rem; color: var(--text-muted); line-height: 1.6; }
+      .trust-row { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; }
+      .trust-pill { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.3125rem 0.75rem; background: var(--success-soft); color: var(--success); border-radius: 999px; font-size: 0.8125rem; font-weight: 500; }
+    </style>
+
     <!-- Preconnect: establece conexión (DNS + TCP + TLS) antes de que se necesite.
          Googletagmanager se pide en ~todos los page views. cdn.jsdelivr solo en
          calcs que usan Chart.js, dns-prefetch alcanza. APIs live (BCRA, dolar,
