@@ -60,6 +60,20 @@ function isStaticAsset(url) {
   return /\.(?:css|js|woff2?|ttf|otf|svg|png|jpg|jpeg|webp|ico|json)$/.test(url.pathname);
 }
 
+// SWR: rutas que cambian con frecuencia pero queremos servir cache instantáneo
+// y revalidar en background. Search index + JSON feed + manifest se actualizan
+// con cada deploy pero el user no necesita esperar la red para ver versión cacheada.
+const SWR_PATHS = [
+  '/search-index.json',
+  '/api/calcs-index.json',
+  '/feed.json',
+  '/manifest.webmanifest',
+];
+
+function isSWRPath(url) {
+  return SWR_PATHS.includes(url.pathname);
+}
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
@@ -72,6 +86,23 @@ self.addEventListener('fetch', (event) => {
 
   // Bypass para sitemap.xml y rss.xml (conviene que vayan a network siempre)
   if (url.pathname === '/sitemap.xml' || url.pathname === '/rss.xml') return;
+
+  // Stale-while-revalidate para JSON feeds chicos que cambian con deploy
+  if (isSWRPath(url)) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        const fetchPromise = fetch(request).then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        }).catch(() => cached);
+        return cached || fetchPromise;
+      })
+    );
+    return;
+  }
 
   // HTML / navegación → network-first
   if (isHTMLRequest(request)) {
