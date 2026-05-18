@@ -245,6 +245,34 @@ ${sitemaps.map((s) => `  <sitemap>
 </sitemapindex>`;
 }
 
+// News sitemap schema — Google News requiere registration vía Publisher Center
+// pero Bing News + Yandex News leen el mismo formato sin opt-in. Cobertura
+// principal: blog posts + calcs con dataUpdate.lastUpdated en últimos 2 días
+// (refresh diario BCRA/dolar/inflación las hace news-worthy).
+interface NewsEntry {
+  loc: string;
+  title: string;
+  publicationDate: string; // ISO 8601 con timezone
+  language: 'es' | 'en' | 'pt';
+}
+function newsSitemapXml(entries: NewsEntry[]): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+${entries.map((e) => `  <url>
+    <loc>${e.loc}</loc>
+    <news:news>
+      <news:publication>
+        <news:name>Hacé Cuentas</news:name>
+        <news:language>${e.language}</news:language>
+      </news:publication>
+      <news:publication_date>${e.publicationDate}</news:publication_date>
+      <news:title>${e.title.replace(/[<>&"']/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c]!))}</news:title>
+    </news:news>
+  </url>`).join('\n')}
+</urlset>`;
+}
+
 // --------------------------------------------------------------------------
 // Rollout cap — limita cuánto puede subir el lastmod de una URL entre deploys.
 //
@@ -731,6 +759,61 @@ if (blogPosts.length > 0) {
       lastmod: p.updatedDate || p.date || buildDate,
     })),
   });
+}
+
+// 4b. News sitemap — formato Google News (Bing/Yandex News también lo leen).
+// Entries: blog posts publicados últimos 2 días + calcs con dataUpdate
+// .lastUpdated en últimos 2 días (fresh live data signals: dolar, BCRA, IPC).
+// Si no hay entries fresh, no escribimos el archivo (Google News penaliza
+// sitemaps vacíos o con artículos > 2 días).
+{
+  const now = Date.now();
+  const TWO_DAYS_MS = 2 * 24 * 3600 * 1000;
+  const newsEntries: NewsEntry[] = [];
+
+  // Blog posts fresh
+  for (const p of (blogPosts as any[])) {
+    const dateStr = p.updatedDate || p.date;
+    if (!dateStr) continue;
+    const t = Date.parse(dateStr);
+    if (Number.isNaN(t) || now - t > TWO_DAYS_MS) continue;
+    newsEntries.push({
+      loc: `${site}/blog/${p.slug}`,
+      title: (p.title || p.slug).slice(0, 120),
+      publicationDate: new Date(t).toISOString(),
+      language: 'es',
+    });
+  }
+
+  // Calcs con dataUpdate fresh (BCRA/dolar/inflación refresh diario)
+  for (const c of (calcs as any[])) {
+    const dataDate = c.dataUpdate?.lastUpdated;
+    if (!dataDate || !/^\d{4}-\d{2}-\d{2}$/.test(dataDate)) continue;
+    const t = Date.parse(dataDate + 'T00:00:00Z');
+    if (Number.isNaN(t) || now - t > TWO_DAYS_MS) continue;
+    newsEntries.push({
+      loc: `${site}/${c.slug}`,
+      title: (c.h1 || c.title || c.slug).slice(0, 120),
+      publicationDate: new Date(t).toISOString(),
+      language: 'es',
+    });
+  }
+
+  // Cap a 1000 entries (Google News limit)
+  newsEntries.splice(1000);
+
+  if (newsEntries.length > 0) {
+    writeFileSync(join(PUBLIC_DIR, 'sitemap-news.xml'), newsSitemapXml(newsEntries), 'utf8');
+    sitemaps.push({
+      name: 'sitemap-news.xml',
+      urls: [{ loc: `${site}/`, lastmod: buildDate, changefreq: 'hourly', priority: '0.9' }],
+      // @ts-expect-error skipWrite — ya escribimos arriba con schema custom
+      skipWrite: true,
+    });
+    console.log(`📰 sitemap-news.xml: ${newsEntries.length} entries fresh (<48h)`);
+  } else {
+    console.log('📰 sitemap-news.xml: 0 entries fresh — skipping');
+  }
 }
 
 // 5. Comparaciones, tablas, glosario — mtime del JSON (no del build)
