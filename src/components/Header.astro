@@ -129,7 +129,7 @@ const navItems = COUNTRY_NAVS[pageCountry];
       </button>
 
       <div class="country-selector" id="country-selector">
-        <button class="icon-btn country-btn" id="country-btn" aria-label="Select country / language" aria-expanded="false" aria-haspopup="listbox" title="País / idioma">
+        <button class="icon-btn country-btn" id="country-btn" aria-label={lang === 'en' ? `Country / language: ${pageCountry || 'AR'}` : lang === 'pt' ? `País / idioma: ${pageCountry || 'AR'}` : `País / idioma: ${pageCountry || 'AR'}`} aria-expanded="false" aria-haspopup="listbox" title={lang === 'en' ? 'Country / language' : 'País / idioma'}>
           <span class="country-flag" id="country-flag">🌎</span>
           <span class="country-code" id="country-code">AR</span>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
@@ -465,25 +465,25 @@ const navItems = COUNTRY_NAVS[pageCountry];
 </script>
 
 <style>
-  /* Skip-link pattern accesible: oculto visualmente pero en flujo y enfocable */
+  /* Skip-link pattern accesible: usa transform en vez de clip:rect(0,0,0,0)
+     que algunos screen readers + Lighthouse marcan como "no focusable".
+     Pattern actual sigue WCAG 2.4.1 + ARIA APG. */
   .skip-link {
     position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+    top: 0;
+    left: 0;
+    padding: 0.75rem 1rem;
+    background: var(--accent);
+    color: #fff;
+    z-index: 1000;
+    transform: translateY(-200%);
+    transition: transform 0.15s ease;
   }
   .skip-link:focus {
+    transform: translateY(0);
     position: fixed;
     top: 1rem;
     left: 1rem;
-    width: auto;
-    height: auto;
-    clip: auto;
     padding: 0.75rem 1rem;
     background: var(--accent);
     color: #fff;
