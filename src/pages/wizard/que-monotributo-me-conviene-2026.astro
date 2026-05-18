@@ -1,0 +1,981 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+// Tabla de categorías 2026 — mirror de src/lib/formulas/monotributo-categoria-ingresos-tope.ts.
+// Inline para que el JS del wizard la tenga disponible sin imports adicionales.
+const CATEGORIAS = [
+  { cat: 'A', tope: 3500000, cuota: 15000 },
+  { cat: 'B', tope: 5200000, cuota: 18000 },
+  { cat: 'C', tope: 7300000, cuota: 22000 },
+  { cat: 'D', tope: 14000000, cuota: 35000 },
+  { cat: 'E', tope: 16500000, cuota: 55000 },
+  { cat: 'F', tope: 20600000, cuota: 70000 },
+  { cat: 'G', tope: 24800000, cuota: 85000 },
+  { cat: 'H', tope: 34000000, cuota: 150000 },
+  { cat: 'I', tope: 40000000, cuota: 200000, soloVenta: true },
+  { cat: 'J', tope: 44000000, cuota: 230000, soloVenta: true },
+  { cat: 'K', tope: 48000000, cuota: 260000, soloVenta: true },
+];
+
+const title = '¿Qué Monotributo me conviene en 2026? Test interactivo | Hacé Cuentas';
+const description = 'Respondé 5 preguntas y descubrí tu categoría exacta de Monotributo (A-K), cuota mensual y si te conviene cambiar al Régimen General. Gratis, escala ARCA 2026 vigente.';
+
+// Schema Quiz + FAQ — Bing/Copilot priorizan Quiz format para AI citations.
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Quiz',
+      name: '¿Qué Monotributo me conviene en 2026?',
+      description,
+      educationalLevel: 'beginner',
+      learningResourceType: 'Self Assessment',
+      audience: { '@type': 'Audience', audienceType: 'Argentinian taxpayers' },
+      inLanguage: 'es-AR',
+      isAccessibleForFree: true,
+      author: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+      datePublished: '2026-05-18',
+      url: 'https://hacecuentas.com/wizard/que-monotributo-me-conviene-2026',
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: '¿Cuál es el tope de facturación del Monotributo en 2026?',
+          acceptedAnswer: { '@type': 'Answer', text: 'En 2026 el tope para servicios es $34.000.000 anuales (categoría H), y para venta de productos $48.000.000 (categoría K). Superado el tope, debés inscribirte como Responsable Inscripto.' },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Cómo se recategoriza el Monotributo?',
+          acceptedAnswer: { '@type': 'Answer', text: 'La recategorización es semestral: enero y julio. ARCA recalcula automáticamente según facturación de los últimos 12 meses. Podés autoconsultar antes en el sitio de ARCA con tu CUIT.' },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Conviene Monotributo o Responsable Inscripto?',
+          acceptedAnswer: { '@type': 'Answer', text: 'Si tus ingresos están bajo el tope, el Monotributo es siempre más simple y barato (cuota fija mensual, sin libros contables). Solo conviene RI si superás el tope o trabajás B2B con clientes que necesitan factura A para descontar IVA.' },
+        },
+        {
+          '@type': 'Question',
+          name: '¿El Monotributo incluye obra social?',
+          acceptedAnswer: { '@type': 'Answer', text: 'Sí, todas las categorías incluyen aporte a obra social ($X mensuales en 2026) y aporte jubilatorio. Por eso la cuota mensual cubre IVA + Ganancias + Aportes en un solo pago.' },
+        },
+        {
+          '@type': 'Question',
+          name: '¿Qué pasa si me paso del tope a mitad de año?',
+          acceptedAnswer: { '@type': 'Answer', text: 'Tenés que recategorizarte en la próxima recategorización (enero o julio). Si superás el tope máximo (categoría H servicios / K venta), debés inscribirte como Responsable Inscripto. ARCA puede aplicar multa si no lo declarás voluntariamente.' },
+        },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical="/wizard/que-monotributo-me-conviene-2026"
+  schema={schema}
+  audience="AR"
+  ogType="article"
+  articleSection="Impuestos"
+  articleTags={['monotributo', 'arca', 'categoria-monotributo', 'monotributo-2026']}
+  keywords={['monotributo categoria 2026', 'que monotributo me conviene', 'monotributo cuota 2026', 'cambiar categoria monotributo', 'monotributo o responsable inscripto']}
+>
+  <Header slot="header" />
+
+  <main id="main" class="wizard-wrap">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Inicio</a></li>
+        <li aria-hidden="true" class="sep">›</li>
+        <li><a href="/categoria/impuestos">Impuestos</a></li>
+        <li aria-hidden="true" class="sep">›</li>
+        <li aria-current="page">Test Monotributo</li>
+      </ol>
+    </nav>
+
+    <header class="wizard-header">
+      <div class="header-icon" aria-hidden="true">🎯</div>
+      <h1>¿Qué Monotributo me conviene en 2026?</h1>
+      <p class="lead">
+        5 preguntas rápidas. Te decimos qué <strong>categoría exacta</strong> te corresponde,
+        la <strong>cuota mensual</strong> y si conviene seguir en monotributo o pasar al Régimen General.
+        Escala <strong>ARCA 2026 vigente</strong>.
+      </p>
+      <div class="meta-row">
+        <span class="meta-pill">⏱ 60 segundos</span>
+        <span class="meta-pill">🆓 Gratis, sin registro</span>
+        <span class="meta-pill">🔐 100% en tu navegador</span>
+      </div>
+    </header>
+
+    <section class="wizard" id="wizard" aria-live="polite">
+      <div class="progress-bar" aria-hidden="true">
+        <div class="progress-fill" id="progress-fill" style="width: 20%"></div>
+      </div>
+      <div class="progress-label">Pregunta <span id="step-num">1</span> de 5</div>
+
+      <!-- Step 1: Facturación -->
+      <div class="step" data-step="1" id="step-1">
+        <h2>¿Cuánto facturás (o estimás facturar) en los últimos 12 meses?</h2>
+        <p class="hint">Sumá todas tus facturas emitidas en los últimos 12 meses. Si recién arrancás, estimá tu facturación anual.</p>
+        <div class="preset-row">
+          <button type="button" class="preset" data-value="3000000">~$3M</button>
+          <button type="button" class="preset" data-value="6000000">~$6M</button>
+          <button type="button" class="preset" data-value="15000000">~$15M</button>
+          <button type="button" class="preset" data-value="30000000">~$30M</button>
+          <button type="button" class="preset" data-value="45000000">~$45M</button>
+        </div>
+        <div class="input-row">
+          <span class="input-prefix">$</span>
+          <input type="number" id="q1-facturacion" inputmode="numeric" placeholder="Tu facturación anual exacta" min="0" />
+        </div>
+      </div>
+
+      <!-- Step 2: Actividad -->
+      <div class="step" data-step="2" id="step-2" hidden>
+        <h2>¿Qué actividad principal hacés?</h2>
+        <p class="hint">El monotributo distingue servicios de venta de cosas. Si hacés ambos, elegí el que represente más del 50% de tus ingresos.</p>
+        <div class="radio-grid">
+          <label class="radio-card">
+            <input type="radio" name="q2" value="servicios" />
+            <span class="radio-icon">💼</span>
+            <span class="radio-label"><strong>Servicios profesionales</strong></span>
+            <span class="radio-desc">Programador, contador, médico, abogado, freelance, asesor, profesor</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="q2" value="venta" />
+            <span class="radio-icon">📦</span>
+            <span class="radio-label"><strong>Venta de productos</strong></span>
+            <span class="radio-desc">Comercio, dropshipping, e-commerce, productos físicos, reventa</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="q2" value="mixto" />
+            <span class="radio-icon">🔀</span>
+            <span class="radio-label"><strong>Mixto</strong></span>
+            <span class="radio-desc">Servicios + productos. Elegí esta opción si no supera el 50/50.</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Step 3: Compatibilidad -->
+      <div class="step" data-step="3" id="step-3" hidden>
+        <h2>¿Tenés alguna de estas situaciones?</h2>
+        <p class="hint">Marcá todas las que apliquen. Algunas te excluyen del monotributo aunque tu facturación esté bajo el tope.</p>
+        <div class="check-list">
+          <label class="check-item">
+            <input type="checkbox" name="q3" value="sociedad" />
+            <span><strong>Soy socio/a de S.A. o SRL</strong> — solo persona física puede ser monotributista</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="q3" value="empleados-muchos" />
+            <span><strong>Tengo más de 3 empleados</strong> — monotributo limita a 3 empleados en relación de dependencia</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="q3" value="alquiler-3+" />
+            <span><strong>Alquilo 3+ inmuebles</strong> — solo se permiten hasta 3 locaciones de inmuebles</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="q3" value="importacion" />
+            <span><strong>Importo o exporto productos</strong> — actividades de comercio exterior excluyen el monotributo</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="q3" value="ninguna" checked />
+            <span><strong>Ninguna de las anteriores</strong> — soy persona física, sin sociedades ni operaciones complejas</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Step 4: IVA -->
+      <div class="step" data-step="4" id="step-4" hidden>
+        <h2>¿Tus clientes te piden factura A (IVA discriminado)?</h2>
+        <p class="hint">Si trabajás B2B con empresas grandes, suelen pedirte factura A para descontar el IVA. El monotributo emite factura C, sin IVA discriminado.</p>
+        <div class="radio-grid">
+          <label class="radio-card">
+            <input type="radio" name="q4" value="no" />
+            <span class="radio-icon">✅</span>
+            <span class="radio-label"><strong>No, factura C está bien</strong></span>
+            <span class="radio-desc">Mis clientes son consumidores finales, otros monotributistas, o empresas chicas que no precisan IVA.</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="q4" value="si" />
+            <span class="radio-icon">⚠️</span>
+            <span class="radio-label"><strong>Sí, me piden factura A</strong></span>
+            <span class="radio-desc">Trabajo B2B con empresas que necesitan descontar IVA. El monotributo me limitaría.</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="q4" value="mixto" />
+            <span class="radio-icon">🤔</span>
+            <span class="radio-label"><strong>Algunos sí, otros no</strong></span>
+            <span class="radio-desc">Tengo clientes mixtos. Habría que ver si el "perder esos clientes B2B" compensa la simplicidad del monotributo.</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Step 5: Otros ingresos -->
+      <div class="step" data-step="5" id="step-5" hidden>
+        <h2>¿Tenés OTROS ingresos además de los del monotributo?</h2>
+        <p class="hint">Sueldo en relación de dependencia, jubilación, alquileres, ganancias por inversiones. No suman al tope del monotributo pero pueden generar obligación de Bienes Personales.</p>
+        <div class="radio-grid">
+          <label class="radio-card">
+            <input type="radio" name="q5" value="solo-mono" />
+            <span class="radio-icon">🎯</span>
+            <span class="radio-label"><strong>Solo lo del monotributo</strong></span>
+            <span class="radio-desc">Mi única fuente de ingresos es mi actividad de monotributo.</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="q5" value="sueldo" />
+            <span class="radio-icon">💼</span>
+            <span class="radio-label"><strong>Sueldo en relación de dependencia + monotributo</strong></span>
+            <span class="radio-desc">Cobro sueldo mensual de un empleador Y además factureo por afuera.</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="q5" value="otros" />
+            <span class="radio-icon">📊</span>
+            <span class="radio-label"><strong>Alquileres, inversiones u otros</strong></span>
+            <span class="radio-desc">Tengo ingresos pasivos (departamento alquilado, plazo fijo, dividendos, cripto).</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="step result-step" data-step="result" id="step-result" hidden>
+        <div class="result-card" id="result-card">
+          <!-- JS injecta resultado acá -->
+        </div>
+      </div>
+
+      <div class="wizard-actions">
+        <button type="button" class="btn-secondary" id="btn-prev" hidden>← Atrás</button>
+        <button type="button" class="btn-primary" id="btn-next" disabled>Siguiente →</button>
+        <button type="button" class="btn-primary" id="btn-restart" hidden>↻ Reiniciar</button>
+      </div>
+    </section>
+
+    <section class="seo-content">
+      <h2>Cómo funciona el test del Monotributo 2026</h2>
+      <p>
+        Este test gratuito te ayuda a determinar la <strong>categoría exacta de Monotributo</strong> que te corresponde según las
+        <a href="/calculadora-monotributo-2026" rel="related">escalas vigentes 2026 de ARCA</a> (ex-AFIP), publicadas en febrero
+        post-aumento por IPC. Los topes de facturación y cuotas mensuales se actualizan
+        semestralmente — verificamos que estén al día en cada deploy.
+      </p>
+
+      <h2>¿Qué pasa después del test?</h2>
+      <p>
+        Te damos tu categoría sugerida + cuota mensual estimada. Si querés profundizar:
+      </p>
+      <ul>
+        <li><a href="/calculadora-monotributo-2026">Calculadora completa Monotributo 2026</a> — con todos los componentes (impuesto integrado + jubilación + obra social) y comparativa entre categorías.</li>
+        <li><a href="/calculadora-monotributo-categoria-2026-recategorizacion-julio">Recategorización Julio 2026</a> — cuándo y cómo recategorizar.</li>
+        <li><a href="/calculadora-monotributo-vs-autonomo-vs-empleado-mismo-ingreso">Monotributo vs Autónomo vs Empleado</a> — comparativa neto en mano con el mismo ingreso bruto.</li>
+        <li><a href="/calculadora-impuesto-ganancias-sueldo">Impuesto a las Ganancias</a> — si superás el tope y pasás a Responsable Inscripto.</li>
+      </ul>
+
+      <h2>Preguntas frecuentes</h2>
+      <dl class="faq-list">
+        <details>
+          <summary>¿Cuál es el tope de facturación del Monotributo en 2026?</summary>
+          <div>En 2026 el tope para <strong>servicios es $34M anuales (categoría H)</strong> y para <strong>venta de productos $48M (categoría K)</strong>. Superado, Responsable Inscripto.</div>
+        </details>
+        <details>
+          <summary>¿Cómo se recategoriza el Monotributo?</summary>
+          <div>Semestral: <strong>enero y julio</strong>. ARCA recalcula automáticamente según facturación últimos 12 meses. Podés autoconsultar antes en arca.gob.ar con tu CUIT.</div>
+        </details>
+        <details>
+          <summary>¿Conviene Monotributo o Responsable Inscripto?</summary>
+          <div>Si tus ingresos están bajo el tope, monotributo es siempre más simple y barato. Solo conviene RI si superás el tope o trabajás B2B con clientes que necesitan factura A.</div>
+        </details>
+        <details>
+          <summary>¿Qué pasa si me paso del tope a mitad de año?</summary>
+          <div>Tenés que recategorizarte en la próxima recategorización (enero o julio). Si superás el tope máximo (H servicios / K venta), debés inscribirte como Responsable Inscripto. ARCA puede multar si no lo declarás.</div>
+        </details>
+        <details>
+          <summary>¿El test guarda mis datos?</summary>
+          <div>No. Todo corre en tu navegador, no enviamos nada a servidores. Los resultados son orientativos — no reemplazan asesoramiento profesional de un contador.</div>
+        </details>
+      </dl>
+
+      <p class="disclaimer-block">
+        <strong>Disclaimer:</strong> Este test es orientativo y se basa en las escalas ARCA 2026 vigentes al momento del último deploy.
+        Los resultados no constituyen asesoramiento contable o legal. Para cambios de categoría reales, consultá con un profesional
+        matriculado o ingresá directamente a <a href="https://www.arca.gob.ar/monotributo/" target="_blank" rel="noopener noreferrer">ARCA Monotributo</a>.
+      </p>
+    </section>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script is:inline define:vars={{ CATEGORIAS }}>
+  // Idempotente: re-corre en astro:page-load (ClientRouter swap) + DOMContentLoaded.
+  // Sin esto, navegar al wizard via View Transitions pierde los event listeners.
+  function initMonotributoWizard() {
+    if (window.__monoWizardInit) return;
+    window.__monoWizardInit = true;
+    const TOTAL_STEPS = 5;
+    let currentStep = 1;
+    const state = { facturacion: 0, actividad: '', exclusion: ['ninguna'], iva: '', otros: '' };
+
+    const $ = (id) => document.getElementById(id);
+    const stepEls = Array.from(document.querySelectorAll('.step[data-step]'));
+    if (stepEls.length === 0) return; // no estamos en la page del wizard
+
+    function updateProgress() {
+      $('progress-fill').style.width = `${(currentStep / TOTAL_STEPS) * 100}%`;
+      $('step-num').textContent = String(currentStep);
+    }
+
+    function showStep(n) {
+      stepEls.forEach((el) => {
+        const step = el.getAttribute('data-step');
+        el.hidden = (step !== String(n) && !(n === 'result' && step === 'result'));
+      });
+      $('btn-prev').hidden = (n === 1 || n === 'result');
+      $('btn-next').hidden = (n === 'result');
+      $('btn-restart').hidden = (n !== 'result');
+      $('btn-next').disabled = true;
+      if (n !== 'result') {
+        currentStep = n;
+        updateProgress();
+      }
+      window.scrollTo({ top: $('wizard').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    function isStepValid(n) {
+      if (n === 1) return state.facturacion > 0;
+      if (n === 2) return !!state.actividad;
+      if (n === 3) return state.exclusion.length > 0;
+      if (n === 4) return !!state.iva;
+      if (n === 5) return !!state.otros;
+      return false;
+    }
+
+    function refreshNextBtn() {
+      $('btn-next').disabled = !isStepValid(currentStep);
+      $('btn-next').textContent = currentStep === TOTAL_STEPS ? 'Ver resultado →' : 'Siguiente →';
+    }
+
+    // Step 1 — facturación
+    const q1Input = $('q1-facturacion');
+    document.querySelectorAll('.preset').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const v = Number(btn.getAttribute('data-value'));
+        q1Input.value = String(v);
+        state.facturacion = v;
+        document.querySelectorAll('.preset').forEach((b) => b.classList.toggle('active', b === btn));
+        refreshNextBtn();
+      });
+    });
+    q1Input.addEventListener('input', () => {
+      state.facturacion = Number(q1Input.value) || 0;
+      document.querySelectorAll('.preset').forEach((b) => b.classList.remove('active'));
+      refreshNextBtn();
+    });
+
+    // Step 2 — actividad
+    document.querySelectorAll('input[name="q2"]').forEach((r) => {
+      r.addEventListener('change', () => {
+        state.actividad = r.value;
+        refreshNextBtn();
+      });
+    });
+
+    // Step 3 — exclusiones (multi)
+    document.querySelectorAll('input[name="q3"]').forEach((c) => {
+      c.addEventListener('change', () => {
+        if (c.value === 'ninguna' && c.checked) {
+          document.querySelectorAll('input[name="q3"]').forEach((other) => {
+            if (other.value !== 'ninguna') other.checked = false;
+          });
+        } else if (c.checked && c.value !== 'ninguna') {
+          const ninguna = document.querySelector('input[name="q3"][value="ninguna"]');
+          if (ninguna) ninguna.checked = false;
+        }
+        state.exclusion = Array.from(document.querySelectorAll('input[name="q3"]:checked')).map((x) => x.value);
+        refreshNextBtn();
+      });
+    });
+    // Init q3 con "ninguna" pre-checked
+    state.exclusion = ['ninguna'];
+
+    // Step 4 — IVA
+    document.querySelectorAll('input[name="q4"]').forEach((r) => {
+      r.addEventListener('change', () => {
+        state.iva = r.value;
+        refreshNextBtn();
+      });
+    });
+
+    // Step 5 — otros ingresos
+    document.querySelectorAll('input[name="q5"]').forEach((r) => {
+      r.addEventListener('change', () => {
+        state.otros = r.value;
+        refreshNextBtn();
+      });
+    });
+
+    // Navegación
+    $('btn-next').addEventListener('click', () => {
+      if (!isStepValid(currentStep)) return;
+      if (currentStep < TOTAL_STEPS) {
+        showStep(currentStep + 1);
+        refreshNextBtn();
+      } else {
+        renderResult();
+        showStep('result');
+      }
+    });
+    $('btn-prev').addEventListener('click', () => {
+      if (currentStep > 1) {
+        showStep(currentStep - 1);
+        refreshNextBtn();
+      }
+    });
+    $('btn-restart').addEventListener('click', () => {
+      currentStep = 1;
+      state.facturacion = 0;
+      state.actividad = '';
+      state.exclusion = ['ninguna'];
+      state.iva = '';
+      state.otros = '';
+      q1Input.value = '';
+      document.querySelectorAll('input[type=radio], .preset.active').forEach((el) => {
+        if (el.tagName === 'INPUT') el.checked = false;
+        else el.classList.remove('active');
+      });
+      document.querySelectorAll('input[name="q3"]').forEach((c) => {
+        c.checked = (c.value === 'ninguna');
+      });
+      showStep(1);
+      refreshNextBtn();
+    });
+
+    function renderResult() {
+      const card = $('result-card');
+      const ex = state.exclusion.filter((e) => e !== 'ninguna');
+
+      // Caso 1: excluido por estructura
+      if (ex.length > 0) {
+        const reasons = {
+          'sociedad': 'sos socio/a de S.A. o SRL',
+          'empleados-muchos': 'tenés más de 3 empleados',
+          'alquiler-3+': 'alquilás 3+ inmuebles',
+          'importacion': 'importás o exportás productos',
+        };
+        card.innerHTML = `
+          <div class="result-icon result-warn">⚠️</div>
+          <h2>No podés ser monotributista</h2>
+          <p class="result-lead">Por tu situación: <strong>${ex.map((r) => reasons[r]).join(', ')}</strong>, ARCA te excluye del régimen simplificado.</p>
+          <div class="result-action">
+            <p><strong>Régimen sugerido:</strong> Responsable Inscripto (IVA + Ganancias) o, si sos socio, declarás por la S.A./SRL.</p>
+            <a href="/calculadora-impuesto-ganancias-sueldo" class="result-cta">Ver calculadora de Ganancias →</a>
+          </div>
+        `;
+        return;
+      }
+
+      // Caso 2: excede tope
+      const esServicios = state.actividad === 'servicios';
+      const esMixto = state.actividad === 'mixto';
+      const cats = state.actividad === 'venta'
+        ? CATEGORIAS
+        : CATEGORIAS.filter((c) => !c.soloVenta);
+      const maxCat = cats[cats.length - 1];
+
+      if (state.facturacion > maxCat.tope) {
+        card.innerHTML = `
+          <div class="result-icon result-warn">🚫</div>
+          <h2>Tus ingresos superan el tope del monotributo</h2>
+          <p class="result-lead">Facturás <strong>$${state.facturacion.toLocaleString('es-AR')}/año</strong> en ${state.actividad}, y el tope máximo es <strong>$${maxCat.tope.toLocaleString('es-AR')}</strong> (categoría ${maxCat.cat}).</p>
+          <div class="result-action">
+            <p><strong>Régimen sugerido:</strong> Responsable Inscripto. Pagás IVA mensual + Ganancias anuales, pero podés deducir gastos y facturar A.</p>
+            <a href="/calculadora-impuesto-ganancias-sueldo" class="result-cta">Ver Ganancias →</a>
+            <a href="/calculadora-monotributo-vs-autonomo-vs-empleado-mismo-ingreso" class="result-cta-secondary">Comparar regímenes</a>
+          </div>
+        `;
+        return;
+      }
+
+      // Caso 3: IVA conflict
+      if (state.iva === 'si') {
+        card.innerHTML = `
+          <div class="result-icon result-warn">⚠️</div>
+          <h2>Probablemente te convenga Responsable Inscripto</h2>
+          <p class="result-lead">Tu facturación está bajo el tope, pero tus clientes B2B necesitan factura A — el monotributo solo emite factura C.</p>
+          <p>Si seguís en monotributo, podés perder esos clientes (no pueden descontar IVA). El RI te permite emitir A pero requiere contador y libros.</p>
+          <div class="result-action">
+            <a href="/calculadora-monotributo-vs-autonomo-vs-empleado-mismo-ingreso" class="result-cta">Comparar Monotributo vs RI →</a>
+          </div>
+        `;
+        return;
+      }
+
+      // Caso happy: ajustar a categoría
+      const cat = cats.find((c) => state.facturacion <= c.tope) || maxCat;
+      const margen = cat.tope - state.facturacion;
+      const margenPct = ((margen / cat.tope) * 100).toFixed(1);
+      const cuotaAnual = cat.cuota * 12;
+      const efectivoFiscal = ((cuotaAnual / state.facturacion) * 100).toFixed(2);
+
+      card.innerHTML = `
+        <div class="result-icon result-ok">✅</div>
+        <h2>Te corresponde Categoría ${cat.cat}</h2>
+        <div class="result-cat-pill">${cat.cat}</div>
+        <p class="result-lead">Con <strong>$${state.facturacion.toLocaleString('es-AR')}/año</strong> en ${state.actividad}, estás en el rango de la <strong>categoría ${cat.cat}</strong> (tope $${cat.tope.toLocaleString('es-AR')}).</p>
+        <div class="result-grid">
+          <div class="result-stat">
+            <div class="stat-label">Cuota mensual estimada</div>
+            <div class="stat-value">$${cat.cuota.toLocaleString('es-AR')}</div>
+          </div>
+          <div class="result-stat">
+            <div class="stat-label">Margen al tope</div>
+            <div class="stat-value">$${Math.round(margen).toLocaleString('es-AR')} <small>(${margenPct}%)</small></div>
+          </div>
+          <div class="result-stat">
+            <div class="stat-label">Carga fiscal efectiva</div>
+            <div class="stat-value">${efectivoFiscal}%</div>
+          </div>
+        </div>
+        ${esMixto ? '<p class="note"><strong>📌 Actividad mixta:</strong> verificá que servicios y venta no superen sus topes individuales. Si la facturación de cada actividad por separado excede su tope, ARCA puede recategorizarte.</p>' : ''}
+        ${state.otros === 'sueldo' ? '<p class="note"><strong>📌 Sueldo + monotributo:</strong> son compatibles. El sueldo va por ART/SUSS aparte y no afecta tu categoría. Sumá ambos al declarar Bienes Personales.</p>' : ''}
+        ${state.otros === 'otros' ? '<p class="note"><strong>📌 Otros ingresos:</strong> alquileres, dividendos e inversiones NO suman al tope del monotributo, pero pueden generar Bienes Personales (sobre $300M+ en bienes).</p>' : ''}
+        <div class="result-action">
+          <a href="/calculadora-monotributo-2026" class="result-cta">Calculadora completa con todos los componentes →</a>
+          <a href="https://www.arca.gob.ar/monotributo/" target="_blank" rel="noopener noreferrer" class="result-cta-secondary">Recategorizar en ARCA</a>
+        </div>
+      `;
+    }
+
+    refreshNextBtn();
+    updateProgress();
+  }
+
+  // Init en primer DOMContentLoaded + en cada swap del ClientRouter.
+  // Reset del flag entre swaps para que re-inicialice los listeners.
+  document.addEventListener('astro:page-load', () => {
+    window.__monoWizardInit = false;
+    initMonotributoWizard();
+  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMonotributoWizard);
+  } else {
+    initMonotributoWizard();
+  }
+</script>
+
+<style is:global>
+  /* is:global porque el result-card se inyecta via JS innerHTML — Astro scoped
+     CSS (data-astro-cid-XXX) no matchea HTML runtime-injected. */
+  .wizard-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 1rem 1.25rem 3rem;
+  }
+  .breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+  }
+  .breadcrumb a { color: var(--accent, #2563eb); text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb .sep { opacity: 0.5; }
+
+  .wizard-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .header-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+  .wizard-header h1 {
+    font-size: 1.75rem;
+    line-height: 1.2;
+    margin: 0 0 0.5rem;
+  }
+  @media (min-width: 640px) {
+    .wizard-header h1 { font-size: 2.25rem; }
+  }
+  .wizard-header .lead {
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--text-muted, #555);
+    margin: 0 auto 1rem;
+    max-width: 580px;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  .meta-pill {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+    background: var(--accent-soft, #eff6ff);
+    color: var(--accent, #2563eb);
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  .wizard {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 14px;
+    padding: 1.5rem 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  @media (min-width: 640px) { .wizard { padding: 2rem; } }
+
+  .progress-bar {
+    height: 6px;
+    background: var(--border-light, #f1f5f9);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent, #2563eb), var(--accent-2, #3b82f6));
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-size: 0.8rem;
+    color: var(--text-muted, #666);
+    margin-bottom: 1.5rem;
+    text-align: right;
+  }
+
+  .step h2 {
+    font-size: 1.2rem;
+    line-height: 1.3;
+    margin: 0 0 0.5rem;
+  }
+  @media (min-width: 640px) {
+    .step h2 { font-size: 1.4rem; }
+  }
+  .step .hint {
+    font-size: 0.9rem;
+    color: var(--text-muted, #666);
+    line-height: 1.5;
+    margin: 0 0 1.25rem;
+  }
+
+  .preset-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .preset {
+    padding: 0.5rem 0.9rem;
+    background: var(--bg-soft, #f1f5f9);
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    color: var(--text, #111);
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.15s ease;
+  }
+  .preset:hover { background: var(--accent-soft, #dbeafe); }
+  .preset.active {
+    background: var(--accent-soft, #dbeafe);
+    border-color: var(--accent, #2563eb);
+    color: var(--accent, #2563eb);
+  }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    border: 2px solid var(--border, #e5e7eb);
+    border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg, #fff);
+    transition: border-color 0.15s ease;
+  }
+  .input-row:focus-within { border-color: var(--accent, #2563eb); }
+  .input-prefix {
+    color: var(--text-muted, #777);
+    font-weight: 600;
+    margin-right: 0.4rem;
+  }
+  .input-row input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    padding: 0.5rem 0;
+    color: var(--text, #111);
+    outline: none;
+  }
+
+  .radio-grid {
+    display: grid;
+    gap: 0.6rem;
+  }
+  .radio-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 0.75rem;
+    align-items: start;
+    padding: 1rem;
+    background: var(--bg-soft, #f8fafc);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .radio-card:hover { background: var(--accent-soft, #eff6ff); }
+  .radio-card:has(input:checked) {
+    background: var(--accent-soft, #eff6ff);
+    border-color: var(--accent, #2563eb);
+  }
+  .radio-card input { position: absolute; opacity: 0; pointer-events: none; }
+  .radio-icon {
+    grid-row: 1 / 3;
+    font-size: 1.6rem;
+    line-height: 1;
+  }
+  .radio-label { font-size: 1rem; color: var(--text, #111); }
+  .radio-desc {
+    grid-column: 2;
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    line-height: 1.45;
+    margin-top: 0.15rem;
+  }
+
+  .check-list {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .check-item {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    padding: 0.85rem 1rem;
+    background: var(--bg-soft, #f8fafc);
+    border: 1.5px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    transition: all 0.15s ease;
+  }
+  .check-item:has(input:checked) {
+    background: var(--accent-soft, #eff6ff);
+    border-color: var(--accent, #2563eb);
+  }
+  .check-item input { margin-top: 0.2rem; flex-shrink: 0; }
+
+  .wizard-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    justify-content: space-between;
+  }
+  .btn-primary, .btn-secondary {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-primary {
+    background: var(--accent, #2563eb);
+    color: #fff;
+    margin-left: auto;
+  }
+  .btn-primary:disabled {
+    background: var(--border, #cbd5e1);
+    cursor: not-allowed;
+  }
+  .btn-primary:not(:disabled):hover { background: var(--accent-dark, #1d4ed8); }
+  .btn-secondary {
+    background: var(--bg-soft, #f1f5f9);
+    color: var(--text, #111);
+  }
+  .btn-secondary:hover { background: var(--border-light, #e2e8f0); }
+
+  /* Result */
+  .result-step { padding: 1rem 0; }
+  .result-icon {
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  .result-step h2 {
+    text-align: center;
+    font-size: 1.4rem;
+    margin: 0 0 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .result-step h2 { font-size: 1.7rem; }
+  }
+  .result-cat-pill {
+    display: block;
+    width: 80px;
+    height: 80px;
+    line-height: 80px;
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent, #2563eb), var(--accent-2, #3b82f6));
+    color: #fff;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+  }
+  .result-lead {
+    text-align: center;
+    font-size: 1.05rem;
+    line-height: 1.55;
+    margin: 0 0 1.25rem;
+  }
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+  }
+  .result-stat {
+    background: var(--bg-soft, #f8fafc);
+    border-radius: 10px;
+    padding: 0.9rem 0.75rem;
+    text-align: center;
+  }
+  .stat-label {
+    font-size: 0.78rem;
+    color: var(--text-muted, #666);
+    margin-bottom: 0.25rem;
+  }
+  .stat-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text, #111);
+  }
+  .stat-value small { font-size: 0.7em; color: var(--text-muted, #666); }
+  .result-action {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+  .result-cta, .result-cta-secondary {
+    display: block;
+    padding: 0.85rem 1rem;
+    text-align: center;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.15s ease;
+  }
+  .result-cta {
+    background: var(--accent, #2563eb);
+    color: #fff;
+  }
+  .result-cta:hover { background: var(--accent-dark, #1d4ed8); }
+  .result-cta-secondary {
+    background: var(--bg-soft, #f1f5f9);
+    color: var(--text, #111);
+    border: 1px solid var(--border, #e5e7eb);
+  }
+  .result-cta-secondary:hover { background: var(--border-light, #e2e8f0); }
+  .note {
+    background: #fef3c7;
+    color: #78350f;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin: 0.75rem 0;
+  }
+
+  .seo-content {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border, #e5e7eb);
+  }
+  .seo-content h2 {
+    font-size: 1.35rem;
+    margin: 2rem 0 0.75rem;
+  }
+  .seo-content p, .seo-content li {
+    line-height: 1.65;
+    color: var(--text, #333);
+  }
+  .seo-content ul { padding-left: 1.25rem; }
+  .seo-content li { margin-bottom: 0.5rem; }
+  .seo-content a {
+    color: var(--accent, #2563eb);
+    text-decoration: underline;
+  }
+  .faq-list details {
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    background: var(--bg, #fff);
+  }
+  .faq-list summary {
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  .faq-list summary::-webkit-details-marker { display: none; }
+  .faq-list summary::after {
+    content: '+';
+    float: right;
+    color: var(--accent, #2563eb);
+    font-weight: 700;
+  }
+  .faq-list details[open] summary::after { content: '−'; }
+  .faq-list details[open] > div {
+    margin-top: 0.5rem;
+    line-height: 1.6;
+    color: var(--text-muted, #555);
+  }
+  .disclaimer-block {
+    margin-top: 2rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-soft, #f8fafc);
+    border-left: 3px solid var(--accent, #2563eb);
+    border-radius: 0 8px 8px 0;
+    font-size: 0.88rem;
+    color: var(--text-muted, #555);
+    line-height: 1.6;
+  }
+
+  /* Dark mode adjustments */
+  :global(html[data-theme="dark"]) .wizard,
+  :global(html[data-theme="dark"]) .result-stat,
+  :global(html[data-theme="dark"]) .check-item,
+  :global(html[data-theme="dark"]) .radio-card,
+  :global(html[data-theme="dark"]) .faq-list details {
+    background: #1e293b;
+    color: #f1f5f9;
+  }
+  :global(html[data-theme="dark"]) .preset,
+  :global(html[data-theme="dark"]) .input-row,
+  :global(html[data-theme="dark"]) .btn-secondary,
+  :global(html[data-theme="dark"]) .result-cta-secondary {
+    background: #334155;
+    color: #f1f5f9;
+  }
+  :global(html[data-theme="dark"]) .note {
+    background: #78350f;
+    color: #fef3c7;
+  }
+</style>
