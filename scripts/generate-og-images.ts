@@ -23,6 +23,20 @@ import { Resvg } from '@resvg/resvg-js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const CALCS_DIR = join(ROOT, 'src', 'content', 'calcs');
+// Intl calcs: cada locale tiene su propio dir. OG image filename = slug,
+// y los slugs son únicos cross-locale (no colisionan con calcs/AR).
+// Calcs con `noindex: true` se omiten — no aportan tráfico social y suman
+// ~330MB de PNGs innecesarios al repo. Se respeta el comportamiento previo
+// para AR (todos los .json de calcs/ generan, sin filtrar noindex) para
+// no romper diffs históricos.
+const CALCS_INTL_DIRS = [
+  join(ROOT, 'src', 'content', 'calcs-en'),
+  join(ROOT, 'src', 'content', 'calcs-es'),
+  join(ROOT, 'src', 'content', 'calcs-mx'),
+  join(ROOT, 'src', 'content', 'calcs-co'),
+  join(ROOT, 'src', 'content', 'calcs-cl'),
+  join(ROOT, 'src', 'content', 'calcs-pt'),
+];
 const OUT_DIR = join(ROOT, 'public', 'og');
 const FONTS_DIR = join(__dirname, '.fonts');
 
@@ -36,6 +50,7 @@ interface Calc {
   description: string;
   icon?: string;
   category?: string;
+  noindex?: boolean;
 }
 
 // Paleta por categoría — cada calc hereda un color de marca.
@@ -409,23 +424,16 @@ async function renderOne(
   return resvg.render().asPng();
 }
 
-async function main(): Promise<void> {
-  const started = Date.now();
-
-  mkdirSync(OUT_DIR, { recursive: true });
-
-  const files = readdirSync(CALCS_DIR).filter((f) => f.endsWith('.json'));
-  if (files.length === 0) {
-    console.warn(`[og] no calcs found in ${CALCS_DIR}`);
-    return;
-  }
-
-  const fonts = await loadFonts();
-
-  const result: GenResult = { generated: 0, cached: 0, failed: [] };
-
+async function processDir(
+  dir: string,
+  fonts: Awaited<ReturnType<typeof loadFonts>>,
+  result: GenResult,
+  opts: { skipNoindex: boolean },
+): Promise<void> {
+  if (!existsSync(dir)) return;
+  const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
   for (const file of files) {
-    const srcPath = join(CALCS_DIR, file);
+    const srcPath = join(dir, file);
     let calc: Calc;
     try {
       calc = JSON.parse(readFileSync(srcPath, 'utf8')) as Calc;
@@ -441,6 +449,12 @@ async function main(): Promise<void> {
         slug: file,
         error: 'missing required fields (slug/h1/description)',
       });
+      continue;
+    }
+    // Skip noindex calcs en intl: no aparecen en social shares ni search.
+    // Comportamiento histórico para AR (calcs/) sigue intacto: skipNoindex=false.
+    if (opts.skipNoindex && calc.noindex === true) {
+      result.cached++; // contamos como "skipped" para no inflar failed[]
       continue;
     }
 
@@ -465,6 +479,29 @@ async function main(): Promise<void> {
         error: (err as Error).message,
       });
     }
+  }
+}
+
+async function main(): Promise<void> {
+  const started = Date.now();
+
+  mkdirSync(OUT_DIR, { recursive: true });
+
+  const arFiles = readdirSync(CALCS_DIR).filter((f) => f.endsWith('.json'));
+  if (arFiles.length === 0) {
+    console.warn(`[og] no calcs found in ${CALCS_DIR}`);
+    return;
+  }
+
+  const fonts = await loadFonts();
+  const result: GenResult = { generated: 0, cached: 0, failed: [] };
+
+  // AR: histórico, sin filtrar noindex.
+  await processDir(CALCS_DIR, fonts, result, { skipNoindex: false });
+
+  // Intl: filtrar noindex para evitar ~430+ PNGs sin valor SEO/social.
+  for (const dir of CALCS_INTL_DIRS) {
+    await processDir(dir, fonts, result, { skipNoindex: true });
   }
 
   const elapsed = ((Date.now() - started) / 1000).toFixed(2);
