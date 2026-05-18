@@ -593,6 +593,7 @@ const topPrioritySlugs = [
   'calculadora-vacaciones-argentina',
 ];
 const calcBySlug = new Map((calcs as any[]).map((c: any) => [c.slug, c]));
+const seenInPriority = new Set<string>(topPrioritySlugs);
 for (const slug of topPrioritySlugs) {
   const c = calcBySlug.get(slug);
   if (!c) continue;
@@ -604,6 +605,38 @@ for (const slug of topPrioritySlugs) {
     lastmod: getCalcLastMod(c, fp, buildDate),
   });
 }
+
+// Auto-expand top 50 por score de completitud (proxy de "calcs maduras"):
+// example.steps + sources + faq + useCases + keyTakeaway + explanation > 1500 chars.
+// Solo agrega slugs no presentes ya en topPrioritySlugs ni noindex.
+function completenessScore(c: any): number {
+  let s = 0;
+  if (c.example?.steps?.length) s += 2;
+  if (c.sources?.length >= 2) s += 2;
+  if (c.faq?.length >= 7) s += 2;        // feedback FAQ min 7
+  if (c.useCases?.length >= 4) s += 1;
+  if (c.keyTakeaway) s += 1;
+  if (c.explanation && c.explanation.length > 1500) s += 2;
+  if (c.lastReviewed) s += 1;
+  if (c.dataUpdate?.lastUpdated) s += 1;  // live data signal
+  return s;
+}
+const autoTopPriority = (calcs as any[])
+  .filter((c) => !c.noindex && !seenInPriority.has(c.slug))
+  .map((c) => ({ c, score: completenessScore(c) }))
+  .filter((x) => x.score >= 8)
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 50);
+for (const { c } of autoTopPriority) {
+  const fp = join(CALCS_DIR, `${c.formulaId || c.slug}.json`);
+  priorityUrls.push({
+    loc: `${site}/${c.slug}`,
+    priority: '0.85',
+    changefreq: 'weekly',
+    lastmod: getCalcLastMod(c, fp, buildDate),
+  });
+}
+console.log(`📌 sitemap-priority.xml: ${topPrioritySlugs.length} curated + ${autoTopPriority.length} auto-completeness`);
 
 sitemaps.push({ name: 'sitemap-priority.xml', urls: priorityUrls });
 
