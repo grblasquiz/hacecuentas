@@ -21,6 +21,10 @@ export interface Props {
   lang?: 'es' | 'en' | 'pt';
   hreflang?: Array<{lang: string, href: string}>;
   noindex?: boolean;
+  keywords?: string[];      // calc.seoKeywords — Bing/Yandex aún leen <meta name=keywords>
+  jsonFeed?: string;         // path al JSON Feed por-calc (LLMs parsean sin HTML)
+  prevPage?: string;         // pagination — rel=prev
+  nextPage?: string;         // pagination — rel=next
 }
 
 const {
@@ -33,6 +37,10 @@ const {
   lang,
   hreflang,
   noindex = false,
+  keywords,
+  jsonFeed,
+  prevPage,
+  nextPage,
 } = Astro.props;
 
 const siteUrl = 'https://hacecuentas.com';
@@ -200,6 +208,15 @@ const globalSchema = {
 
     <title>{title}</title>
     <meta name="description" content={description} />
+    {keywords && keywords.length > 0 && (
+      <meta name="keywords" content={keywords.slice(0, 10).join(', ')} />
+    )}
+    {/* Señales legacy — Google las ignora pero Bing/Yandex/Baidu las leen.
+        rating=general previene filtrado por safe-search; distribution=global
+        confirma que el contenido aplica internacionalmente. */}
+    <meta name="rating" content="general" />
+    <meta name="distribution" content="global" />
+    <meta name="revisit-after" content="7 days" />
     {/* Robots: max-image-preview:large habilita que Google Discover use
          nuestras OG images en full-width cards del feed Android/Chrome.
          Sin este tag, Discover limita los thumbnails o los omite. Es la
@@ -239,6 +256,11 @@ const globalSchema = {
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     <link rel="alternate" type="application/rss+xml" title="Hacé Cuentas — Calculadoras actualizadas" href="/rss.xml" />
     <link rel="alternate" type="application/feed+json" title="Hacé Cuentas — JSON Feed" href="/feed.json" />
+    {/* JSON Feed per-calc (LLMs/scrapers parsean datos sin HTML). */}
+    {jsonFeed && <link rel="alternate" type="application/json" title="Calculadora JSON" href={jsonFeed} />}
+    {/* Paginación: rel=prev/next aún ayudan a Bing y Yandex con crawl budget. */}
+    {prevPage && <link rel="prev" href={prevPage} />}
+    {nextPage && <link rel="next" href={nextPage} />}
     <link rel="search" type="application/opensearchdescription+xml" title="Hacé Cuentas" href="/opensearch.xml" />
     <!-- Wikidata entity — identifica al sitio como entidad reconocida en el knowledge graph -->
     <link rel="me" href="https://www.wikidata.org/wiki/Q139824747" />
@@ -253,7 +275,15 @@ const globalSchema = {
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={title} />
     <meta property="og:locale" content={ogLocale} />
-    {audience !== 'AR' && <meta property="og:locale:alternate" content="es_AR" />}
+    {/* og:locale:alternate — todas las variantes localizadas declaradas. Permite
+        a Facebook/LinkedIn/WhatsApp ofrecer la versión correcta del país del user. */}
+    {ogLocale !== 'es_AR' && <meta property="og:locale:alternate" content="es_AR" />}
+    {ogLocale !== 'es_MX' && <meta property="og:locale:alternate" content="es_MX" />}
+    {ogLocale !== 'es_ES' && <meta property="og:locale:alternate" content="es_ES" />}
+    {ogLocale !== 'es_CL' && <meta property="og:locale:alternate" content="es_CL" />}
+    {ogLocale !== 'es_CO' && <meta property="og:locale:alternate" content="es_CO" />}
+    {ogLocale !== 'en_US' && <meta property="og:locale:alternate" content="en_US" />}
+    {ogLocale !== 'pt_BR' && <meta property="og:locale:alternate" content="pt_BR" />}
     <meta property="og:site_name" content="Hacé Cuentas" />
 
     <!-- Twitter — Bing/Copilot también consume estos tags -->
