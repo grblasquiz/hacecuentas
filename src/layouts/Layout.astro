@@ -1,5 +1,6 @@
 ---
 import CookieConsent from '../components/CookieConsent.astro';
+import { ClientRouter } from 'astro:transitions';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
 // Antes (5 weights estáticos): 5 woff2 × ~17 KB = ~85 KB de Inter.
@@ -288,12 +289,20 @@ const globalSchema = {
     <link rel="preload" href={interVariableFontUrl} as="font" type="font/woff2" crossorigin />
 
     <!-- Preconnect: establece conexión (DNS + TCP + TLS) antes de que se necesite.
-         Googletagmanager se pide en ~todos los page views (Partytown lo carga en
-         worker). cdn.jsdelivr solo en calcs que usan Chart.js, dns-prefetch alcanza. -->
+         Googletagmanager se pide en ~todos los page views. cdn.jsdelivr solo en
+         calcs que usan Chart.js, dns-prefetch alcanza. APIs live (BCRA, dolar,
+         coingecko) se prefetchean para LiveData.astro — la conexión queda
+         caliente antes que el JS la dispare. -->
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+    <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
     <link rel="dns-prefetch" href="https://www.google-analytics.com" />
     <link rel="dns-prefetch" href="https://static.cloudflareinsights.com" />
+    <link rel="dns-prefetch" href="https://dolarapi.com" />
+    <link rel="dns-prefetch" href="https://api.argentinadatos.com" />
+    <link rel="dns-prefetch" href="https://api.coingecko.com" />
+    <link rel="dns-prefetch" href="https://open.er-api.com" />
+    <link rel="dns-prefetch" href="https://www.clarity.ms" />
 
     <!-- Google Consent Mode v2
          Default 'granted' para analytics (Argentina/LATAM no requiere opt-in bajo Ley 25.326).
@@ -358,6 +367,11 @@ const globalSchema = {
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
       })(window, document, "clarity", "script", "${import.meta.env.PUBLIC_MS_CLARITY_ID}");`} />
     )}
+
+    <!-- View Transitions: navegación SPA-like entre páginas. Reduce flash de
+         contenido + mantiene scroll position en navigation. fallback='swap'
+         para browsers sin View Transitions API (Safari < 18, Firefox sin flag). -->
+    <ClientRouter fallback="swap" />
   </head>
   <body>
     <!-- Print-only header (hidden on screen, visible when printing) -->
