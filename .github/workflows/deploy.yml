@@ -59,6 +59,39 @@ jobs:
             src/lib/related-auto.hash
           key: related-auto-${{ hashFiles('src/content/calcs/**/*.json') }}
 
+      # Cache OG images (~8500 PNGs en public/og/). Generarlos via Sharp/Resvg
+      # tarda ~60-90s en CI. El hash key invalida cuando cambia la fuente
+      # (template, fuentes, listado de slugs). Si solo cambia un JSON de calc,
+      # no se regenera todo.
+      - name: Cache OG images
+        uses: actions/cache@v4
+        with:
+          path: public/og
+          key: og-images-v1-${{ hashFiles('scripts/generate-og-images.ts', 'scripts/generate-og-images.mjs', 'public/og-default.png') }}-${{ hashFiles('src/content/calcs/**/*.json', 'src/content/calcs-*/**/*.json') }}
+          restore-keys: |
+            og-images-v1-${{ hashFiles('scripts/generate-og-images.ts', 'scripts/generate-og-images.mjs', 'public/og-default.png') }}-
+
+      # Cache Vite/Astro internal cache. Acelera resolución de módulos +
+      # transformaciones (TypeScript, JSON, etc.) entre builds. Key dinámico
+      # por package-lock para invalidar cuando cambian deps.
+      - name: Cache Astro + Vite internal
+        uses: actions/cache@v4
+        with:
+          path: |
+            .astro
+            node_modules/.cache
+            node_modules/.vite
+          key: astro-vite-${{ runner.os }}-${{ hashFiles('package-lock.json', 'astro.config.*', 'tsconfig.json') }}
+          restore-keys: |
+            astro-vite-${{ runner.os }}-
+
+      # Cache search-index.json — generarlo escanea 4000+ calcs. ~10s saved.
+      - name: Cache search-index
+        uses: actions/cache@v4
+        with:
+          path: public/search-index.json
+          key: search-index-${{ hashFiles('src/content/calcs/**/*.json', 'src/content/calcs-*/**/*.json', 'scripts/generate-search-index.ts') }}
+
       - name: Build
         # Verbose timing: imprime tiempo de cada sub-step de prebuild + astro build.
         # Si futuro deploy vuelve a colgar, queda registro de qué etapa fue.
