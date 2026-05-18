@@ -91,12 +91,18 @@ const schemaHowTo = {
     position: i + 1,
     name: f.label,
     text: f.help || `Enter ${f.label.toLowerCase()}`,
+    url: `https://hacecuentas.com/mx/${calc.slug}#paso-${i + 1}`,
+    ...(ogImage !== '/og-default.png' ? { image: `https://hacecuentas.com${ogImage}` } : {}),
   })),
 };
 
 const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
+  speakable: {
+    '@type': 'SpeakableSpecification',
+    cssSelector: ['.faq-list summary', '.faq-list details > div'],
+  },
   mainEntity: calc.faq.map((f: any) => ({
     '@type': 'Question',
     name: f.q,
