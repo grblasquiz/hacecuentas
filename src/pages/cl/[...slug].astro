@@ -9,6 +9,7 @@ import RelatedCalcs from '../../components/RelatedCalcs.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import { md, mdInline } from '../../lib/markdown';
 import ogManifest from '../../lib/og-manifest.json';
+import { findMentions, findPrimaryAbout } from '../../lib/wikidata-entities';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../../content/calcs-cl/*.json', { eager: true });
@@ -152,6 +153,8 @@ const schemaApp = {
     name: 'Hacé Cuentas',
     url: 'https://hacecuentas.com',
   },
+  mentions: findMentions(`${calc.h1 || ''} ${(calc.seoKeywords || []).join(' ')}`),
+  ...(findPrimaryAbout(calc.h1 || '') ? { about: findPrimaryAbout(calc.h1 || '') } : {}),
 };
 
 // Article schema for YMYL categories
