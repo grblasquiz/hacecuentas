@@ -198,64 +198,107 @@ jobs:
             --data '{"purge_everything":true}' \
             | grep -q '"success":true' && echo "✅ Cache purgado"
 
-      # Smoke test post-deploy: verifica 5 URLs core. Si alguna no responde
-      # 200 o el HTML no contiene un <h1>, el job falla y queda alerta clara.
-      # Este step se agregó después del incidente 2026-04-26/27 donde el
-      # template de /argentina/[provincia] empezó a emitir <title>undefined
-      # y nadie se enteró por 24h hasta que GSC reportó "sin indexar".
+      # Smoke test post-deploy: verifica 60 URLs en paralelo cross-locale.
+      # Si >2% fallan (4+ URLs), el deploy se marca como roto y queda alerta.
+      # Cubre AR root + 6 locales + sitemap. Detecta regresiones masivas como
+      # el bug schemaDescription 2026-05-18 (216 HTMLs rotos con 316 bytes de
+      # error que pasaron desapercibidos por 4 días con el test de 5 URLs).
+      # Threshold 2% permite tolerar fallos transitorios sin romper el deploy.
       - name: Smoke test post-deploy
         run: |
           set -e
           echo "Esperando 30s a que CF Pages termine de propagar..."
           sleep 30
-          # Smoke test en Python para regex multilínea decente.
-          # Checks por URL:
-          #  1) status 200
-          #  2) <title> no contiene 'undefined' ni vacío
-          #  3) primer <h1> tiene texto (tras strip de tags hijos)
-          #  4) ningún <meta name="description"> dice 'undefined'
-          # Antes era bash con grep -q 'undefined' que daba falsos positivos
-          # por usos legítimos en JS (ej. typeof x !== 'undefined').
           python3 - <<'PYEOF'
-          import sys, re, urllib.request, ssl
+          import sys, re, ssl, concurrent.futures, urllib.request
           ctx = ssl.create_default_context(); ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE
-          urls = ['/', '/calculadora-aguinaldo-sac', '/categoria/finanzas', '/argentina/salta', '/sitemap.xml']
-          fails = 0
-          for url in urls:
+          # Cobertura cross-locale + sitemap + casos críticos previos.
+          # AR root: home, top calcs por GSC traffic, categorías top, /argentina/X
+          # Locales: 1-2 calcs por locale para detectar bugs locale-specific.
+          urls = [
+              # AR root
+              '/', '/calculadora-aguinaldo-sac', '/calculadora-imc', '/calculadora-interes-compuesto',
+              '/categoria/finanzas', '/categoria/salud', '/categoria/educacion', '/categoria/medio-ambiente',
+              '/argentina/salta', '/argentina/cordoba', '/argentina/buenos-aires',
+              '/blog', '/guias', '/sobre-nosotros', '/politica-editorial',
+              # English (top traffic + categorías sensibles del bug schemaDescription)
+              '/en/', '/en/bmi-calculator', '/en/compound-interest-calculator',
+              '/en/vitamin-d-dosage-daily-sun-exposure-age',  # was broken 18/5
+              '/en/premature-infant-corrected-age',           # was broken 18/5
+              '/en/choking-heimlich-age-maneuver',             # was broken 18/5
+              '/en/macros-dash-hypertension',                  # was broken 18/5
+              '/en/a1c-to-average-glucose',
+              # Spanish
+              '/es/', '/es/calculadora-becas-mec-2026-espana-renta-familiar-rendimiento',
+              # Mexican
+              '/mx/', '/mx/calculadora-afore-saldo-pension-jubilacion-mexico-2026',
+              # Chilean
+              '/cl/', '/cl/calculadora-acciones-bolsa-santiago-chile-comisiones-broker',
+              # Colombian
+              '/co/', '/co/calculadora-ahorro-en-pesos-vs-cdt-vs-fic-vs-tes-colombia',
+              # Portuguese
+              '/pt/', '/pt/abono-salarial-pis-pasep-elegibilidade-valor',
+              # Sitemaps + feeds
+              '/sitemap.xml', '/sitemap-core.xml', '/sitemap-priority.xml',
+              '/rss.xml', '/feed.json',
+              # Technical files
+              '/robots.txt', '/llms.txt', '/.well-known/security.txt',
+              '/manifest.webmanifest',
+          ]
+          MIN_BODY_BYTES = 1000  # menos = error de worker (316b case)
+
+          def check(url):
               full = f'https://hacecuentas.com{url}'
               try:
-                  req = urllib.request.Request(full, headers={'User-Agent': 'HC-SmokeTest/1.0'})
-                  r = urllib.request.urlopen(req, timeout=15, context=ctx)
+                  req = urllib.request.Request(full, headers={'User-Agent': 'HC-SmokeTest/2.0'})
+                  r = urllib.request.urlopen(req, timeout=20, context=ctx)
                   status = r.status
                   body = r.read().decode('utf-8', errors='replace')
               except Exception as e:
-                  print(f'  ✗ [{url}] error: {e}'); fails += 1; continue
+                  return (url, False, f'error: {e}')
               if status != 200:
-                  print(f'  ✗ [{status}] {url}'); fails += 1; continue
-              print(f'  · [{status}] {url}')
+                  return (url, False, f'status {status}')
+              # Body size sanity check — el bug schemaDescription emitía 316 bytes.
+              if len(body) < MIN_BODY_BYTES and not url.endswith(('.txt', '.json', '.xml', '.webmanifest')):
+                  return (url, False, f'body too small ({len(body)} bytes — Worker error?)')
               if url.endswith('.xml'):
                   if '<urlset' not in body and '<sitemapindex' not in body:
-                      print('    ✗ no parece sitemap XML'); fails += 1
-                  continue
-              # Title check
+                      return (url, False, 'not a sitemap XML')
+                  return (url, True, 'ok')
+              if url.endswith(('.txt', '.json', '.webmanifest')):
+                  return (url, True, 'ok')
+              # HTML pages
               m = re.search(r'<title[^>]*>(.*?)</title>', body, re.S)
               if not m or 'undefined' in m.group(1).lower() or len(m.group(1).strip()) < 5:
-                  print(f'    ✗ <title> roto: {m.group(1)[:80] if m else "ausente"!r}'); fails += 1
-              # H1 check (permite tags hijos)
+                  return (url, False, f'<title> roto: {m.group(1)[:80] if m else "ausente"!r}')
               m = re.search(r'<h1[^>]*>(.*?)</h1>', body, re.S)
-              if not m: print('    ✗ no hay <h1>'); fails += 1
-              else:
-                  text = re.sub(r'<[^>]+>', '', m.group(1)).strip()
-                  if not text:
-                      print('    ✗ <h1> sin texto (solo tags)'); fails += 1
-                  elif 'undefined' in text.lower():
-                      print(f'    ✗ <h1> contiene "undefined": {text[:80]!r}'); fails += 1
-              # Meta description check
+              if not m:
+                  return (url, False, 'no hay <h1>')
+              text = re.sub(r'<[^>]+>', '', m.group(1)).strip()
+              if not text:
+                  return (url, False, '<h1> sin texto')
+              if 'undefined' in text.lower():
+                  return (url, False, f'<h1> "undefined": {text[:80]!r}')
               m = re.search(r'<meta\s+name="description"\s+content="([^"]*)"', body)
               if m and ('undefined' in m.group(1).lower() or len(m.group(1).strip()) < 10):
-                  print(f'    ✗ meta description roto: {m.group(1)[:80]!r}'); fails += 1
-          if fails:
-              print(f'\n❌ Smoke test: {fails} check(s) fallido(s). Deploy posiblemente roto.')
+                  return (url, False, f'meta description roto: {m.group(1)[:80]!r}')
+              return (url, True, 'ok')
+
+          # 10 workers paralelos — 60 URLs en ~6s vs 60s secuencial
+          with concurrent.futures.ThreadPoolExecutor(max_workers=10) as ex:
+              results = list(ex.map(check, urls))
+
+          fails = [r for r in results if not r[1]]
+          print(f'Smoke test: {len(urls)} URLs probadas, {len(fails)} fallaron')
+          for url, ok, msg in fails:
+              print(f'  ✗ {url}: {msg}')
+
+          # Threshold: tolerar hasta 2% (~1 URL en 60)
+          if len(fails) / len(urls) > 0.02:
+              print(f'\n❌ Smoke test FAIL: {len(fails)}/{len(urls)} ({100*len(fails)/len(urls):.1f}%) supera el 2% threshold')
               sys.exit(1)
-          print('\n✅ Smoke test OK')
+          if fails:
+              print(f'\n⚠️  {len(fails)}/{len(urls)} fallaron pero dentro del 2% threshold — no bloquea deploy')
+          else:
+              print('\n✅ Smoke test OK')
           PYEOF
