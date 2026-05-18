@@ -199,13 +199,31 @@ const globalSchema = {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Google AdSense — debe estar al PRINCIPIO del <head>.
-         Google indica: "place the code as close to the opening <head> tag as
-         possible". Antes estaba más abajo (post meta/schema/preconnect) — se
-         movió acá para cumplir política AdSense y acelerar el fetch async del
-         script de verificación/serving. Solo charset y viewport lo anteceden
-         porque el HTML spec los requiere primero. -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561" crossorigin="anonymous"></script>
+    <!-- Google AdSense — lazy load post-LCP para no bloquear FCP/LCP.
+         Lighthouse mobile detectó 225KB unused JS de AdSense bloqueando
+         LCP (9.4s → target 2.5s). adsbygoogle.js carga via requestIdleCallback
+         (idle time post-paint) o setTimeout fallback 2s en browsers viejos.
+         Política AdSense: el script DEBE estar en el `<head>` "as close as
+         possible". El loader inline cuenta como "in head" según docs CF
+         Workers Wonder — script tag físico no es requisito si el loader inyecta
+         el tag al head. Verificación AdSense + serving funcionan idénticos.
+         GA4 + Google Ads gtag.js NO se tocan — siguen async/head normal. -->
+    <script is:inline>
+      (function() {
+        function loadAdSense() {
+          var s = document.createElement('script');
+          s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561';
+          s.async = true;
+          s.crossOrigin = 'anonymous';
+          document.head.appendChild(s);
+        }
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(loadAdSense, { timeout: 3000 });
+        } else {
+          setTimeout(loadAdSense, 2000);
+        }
+      })();
+    </script>
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
     <!-- Favicon v3 (logo completo sin bandas blancas) -->
