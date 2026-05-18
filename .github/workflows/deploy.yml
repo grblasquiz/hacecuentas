@@ -365,3 +365,17 @@ jobs:
           else:
               print('\n✅ Smoke test OK')
           PYEOF
+
+      # Bing Webmaster Submit URL — pushea sitemap-priority al índice prioritario.
+      # Quota Bing: 10.000 URLs/día. sitemap-priority tiene ~180 URLs, holgura
+      # enorme. Non-blocking: continue-on-error en caso de quota o API issue.
+      - name: Bing Webmaster URL Submission
+        continue-on-error: true
+        env:
+          BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
+        run: |
+          if [ -z "$BING_WEBMASTER_API_KEY" ]; then
+            echo "⚠️  BING_WEBMASTER_API_KEY no configurado — skip"
+            exit 0
+          fi
+          python3 scripts/bing-submit.py 2>&1 || echo "⚠️  Bing submit falló (no bloqueante)"
