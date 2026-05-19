@@ -417,6 +417,17 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   wordCount: calc.explanation ? calc.explanation.split(/\s+/).filter(Boolean).length : 0,
   isAccessibleForFree: true,
   citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+  // mentions: entidades Wikidata reconocidas en h1/seoKeywords (mismo helper que
+  // usamos en SoftwareApplication). LLMs (ChatGPT/Claude/Perplexity/Copilot)
+  // reciben entity disambiguation cross-schema → más probabilidades de ser citado.
+  mentions: findMentions(
+    `${calc.h1 || ''} ${calc.title || ''} ${(calc.seoKeywords || []).join(' ')}`
+  ),
+  // keywords: refuerza tema para Bing AI y AI Overviews. Concat de seoKeywords
+  // (top 5 para no inflar).
+  keywords: (calc.seoKeywords || []).slice(0, 5).join(', '),
+  // publishingPrinciples a nivel Article (no solo Org) refuerza E-E-A-T en YMYL.
+  publishingPrinciples: 'https://hacecuentas.com/politica-editorial',
 } : null;
 
 const schemaGraph: any[] = [schemaHowTo, schemaBreadcrumb, schemaApp];
