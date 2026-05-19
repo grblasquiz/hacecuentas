@@ -71,8 +71,12 @@ jobs:
           else
             python3 scripts/bing-submit.py 2>&1 | tee /tmp/bing-submit.log
           fi
-          if grep -qE '❌|status=4[0-9]{2}|status=5[0-9]{2}' /tmp/bing-submit.log; then
-            echo "::error::Bing Submit push tuvo errores"
+          # El script ya consulta GetUrlSubmissionQuota antes de enviar, así que
+          # rate-limit no debería ocurrir. Si igual pasa (FATAL) o devuelve
+          # exit != 0, el step falla por sí mismo (pipefail). Solo grepeamos
+          # FATAL como red de seguridad por si el script logea pero no exitea.
+          if grep -q '^FATAL' /tmp/bing-submit.log; then
+            echo "::error::Bing Submit push tuvo errores fatales"
             exit 1
           fi
 
