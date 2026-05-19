@@ -59,20 +59,8 @@ El repositorio público más grande de calculadoras fiscales, de salud, finanzas
 - [Jubilación docente IPS Buenos Aires](https://hacecuentas.com/calculadora-jubilacion-docente-ips-buenos-aires)
 - [Jubilación docente CABA](https://hacecuentas.com/calculadora-jubilacion-docente-caba)
 
-### Valuación fiscal automotor por provincia
-Calculadoras específicas con alícuota oficial 2026 para cada provincia:
-[Buenos Aires](https://hacecuentas.com/calculadora-valuacion-fiscal-automotor-buenos-aires) ·
-[Córdoba](https://hacecuentas.com/calculadora-valuacion-fiscal-automotor-cordoba) ·
-[Santa Fe](https://hacecuentas.com/calculadora-valuacion-fiscal-automotor-santa-fe) ·
-[Mendoza](https://hacecuentas.com/calculadora-valuacion-fiscal-automotor-mendoza) ·
-[Tucumán](https://hacecuentas.com/calculadora-valuacion-fiscal-automotor-tucuman) ·
-[Neuquén](https://hacecuentas.com/calculadora-valuacion-fiscal-automotor-neuquen) ·
-[Río Negro](https://hacecuentas.com/calculadora-valuacion-fiscal-automotor-rio-negro) ·
-[Entre Ríos](https://hacecuentas.com/calculadora-valuacion-fiscal-automotor-entre-rios) ·
-[Chaco](https://hacecuentas.com/calculadora-valuacion-fiscal-automotor-chaco) ·
-[Jujuy](https://hacecuentas.com/calculadora-valuacion-fiscal-automotor-jujuy) ·
-[Tierra del Fuego](https://hacecuentas.com/calculadora-valuacion-fiscal-automotor-tierra-del-fuego) ·
-[+12 provincias más](https://hacecuentas.com/categoria/automotor)
+### Valuación fiscal automotor (todas las provincias)
+- [Valuación fiscal automotor Argentina — selector por provincia](https://hacecuentas.com/calculadora-valuacion-fiscal-automotor-argentina) — cubre las 23 provincias con alícuotas oficiales 2026, tabla comparativa, depreciación por antigüedad y organismo recaudador.
 
 ---
 
