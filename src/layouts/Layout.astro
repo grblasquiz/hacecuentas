@@ -231,29 +231,35 @@ const globalSchema = {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Google AdSense — lazy load post-LCP para no bloquear FCP/LCP.
-         Lighthouse mobile detectó 225KB unused JS de AdSense bloqueando
-         LCP (9.4s → target 2.5s). adsbygoogle.js carga via requestIdleCallback
-         (idle time post-paint) o setTimeout fallback 2s en browsers viejos.
-         Política AdSense: el script DEBE estar en el `<head>` "as close as
-         possible". El loader inline cuenta como "in head" según docs CF
-         Workers Wonder — script tag físico no es requisito si el loader inyecta
-         el tag al head. Verificación AdSense + serving funcionan idénticos.
+    <!-- Google AdSense — interaction-triggered load (facade pattern).
+         PSI audit 2026-05-19 detectó LCP 6.9s y TBT 1.510ms con AdSense en
+         requestIdleCallback. AdSense aporta 132KB de unused JS post-LCP.
+         Solución: cargar SOLO al primer scroll/touch/click/keydown del user,
+         o fallback 5s si nadie interactúa. Esto garantiza que AdSense NO
+         compite con el LCP por main-thread CPU.
+         Trade-off: ~10% potencial de impressions perdidas en users que
+         bounce <5s sin interactuar; pero al mejorar LCP, el ranking Google
+         sube y eso compensa con creces (revenue total ↑).
+         Política AdSense: el script SIGUE inyectándose en <head> via JS
+         (compliant con docs CF Workers Wonder), solo cambia el trigger.
          GA4 + Google Ads gtag.js NO se tocan — siguen async/head normal. -->
     <script is:inline>
       (function() {
+        var loaded = false;
+        var events = ['scroll','touchstart','mousedown','keydown','mousemove'];
         function loadAdSense() {
+          if (loaded) return;
+          loaded = true;
+          events.forEach(function(e) { window.removeEventListener(e, loadAdSense, { passive: true }); });
           var s = document.createElement('script');
           s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561';
           s.async = true;
           s.crossOrigin = 'anonymous';
           document.head.appendChild(s);
         }
-        if ('requestIdleCallback' in window) {
-          requestIdleCallback(loadAdSense, { timeout: 3000 });
-        } else {
-          setTimeout(loadAdSense, 2000);
-        }
+        events.forEach(function(e) { window.addEventListener(e, loadAdSense, { passive: true, once: true }); });
+        // Fallback: si el user no interactúa en 5s, cargamos igual para no perder revenue
+        setTimeout(loadAdSense, 5000);
       })();
     </script>
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
