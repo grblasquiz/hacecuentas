@@ -31,6 +31,48 @@ export async function getStaticPaths() {
 const { provincia, actividad, iibb, specific } = Astro.props;
 const provData = iibb.provinceData?.[provincia.slug] || {};
 const baseRate = provData.rate || actividad.rateRange.split(' - ')[0];
+const recaudador = provData.metrics?.['Organismo recaudador'] || `Dirección General de Rentas de ${provincia.name}`;
+const minimo = provData.metrics?.['Minimo mensual'] || provData.metrics?.['Mínimo mensual'] || null;
+const provRate = provData.rate || actividad.rateRange;
+
+const faqs: { q: string; a: string }[] = [
+  {
+    q: `¿Cuánto se paga de Ingresos Brutos en ${provincia.name} para ${actividad.label.toLowerCase()}?`,
+    a: `La alícuota general en ${provincia.name} para ${actividad.label.toLowerCase()} se ubica en el rango ${actividad.rateRange}. ${actividad.rateNotes} ${provData.localNotes || ''}`.trim(),
+  },
+  {
+    q: `¿Qué es Ingresos Brutos y quién está obligado a pagarlo en ${provincia.name}?`,
+    a: `Ingresos Brutos (IIBB) es un impuesto provincial que grava el ejercicio habitual de una actividad económica con fines de lucro. En ${provincia.name} lo administra ${recaudador}. Están obligados comerciantes, profesionales, industriales, prestadores de servicios y locadores que desarrollen actividad en la jurisdicción, sean personas humanas o jurídicas.`,
+  },
+  {
+    q: `¿Cómo me inscribo en IIBB en ${provincia.name}?`,
+    a: `La inscripción se realiza en el portal web de ${recaudador} con clave fiscal AFIP (o clave fiscal provincial según jurisdicción). Tenés que declarar la actividad principal (código NAES/CLAE), domicilio fiscal y forma jurídica. Si operás en más de una provincia, debés inscribirte también en Convenio Multilateral (COMARB). El alta debe hacerse antes de iniciar la actividad gravada.`,
+  },
+  {
+    q: `¿Hay régimen simplificado de IIBB en ${provincia.name}?`,
+    a: `${provincia.name} ofrece régimen simplificado de IIBB para monotributistas y pequeños contribuyentes administrado por ${recaudador}. Las cuotas son fijas mensuales, según categoría, en lugar de porcentaje sobre facturación. Esto elimina la obligación de presentar DDJJ mensual. Verificá los topes de ingresos anuales y la grilla de cuotas vigente en la web oficial.`,
+  },
+  {
+    q: '¿Cuál es la diferencia entre régimen simplificado y régimen general?',
+    a: 'El régimen simplificado paga una cuota fija mensual por categoría, sin liquidar alícuota sobre facturación. El régimen general aplica la alícuota provincial sobre los ingresos brutos del período y exige presentar DDJJ mensual. Para Convenio Multilateral siempre corresponde régimen general, no se puede usar el simplificado.',
+  },
+  {
+    q: '¿Cuándo aplica Convenio Multilateral?',
+    a: 'Convenio Multilateral (CM) aplica cuando una actividad genera ingresos o gastos en dos o más jurisdicciones argentinas. El contribuyente distribuye su base imponible entre las provincias mediante coeficientes según el régimen general (Art. 2, basado en ingresos y gastos del año anterior) o un régimen especial (Arts. 6 a 13) para construcción, transporte, seguros, financieras, profesionales, comisionistas o prestamistas.',
+  },
+  {
+    q: `¿Qué retenciones y percepciones de IIBB existen en ${provincia.name}?`,
+    a: `${recaudador} aplica retenciones bancarias (SIRCREB sobre acreditaciones), retenciones de agentes designados (clientes grandes, plataformas de pago) y percepciones sobre compras a proveedores. Los importes retenidos y percibidos se computan como pago a cuenta en la DDJJ mensual. Si generan saldo a favor sostenido, se puede pedir cese de retenciones.`,
+  },
+  {
+    q: '¿Qué pasa si no presento la DDJJ o no pago a tiempo?',
+    a: 'El incumplimiento genera intereses resarcitorios mensuales (tasa que fija cada provincia, típicamente 3-5% mensual), multas formales por falta de presentación y multas materiales por omisión o defraudación que pueden ir del 50% al 300% del impuesto omitido. Adeudar IIBB impide obtener constancias fiscales y puede derivar en juicio de apremio.',
+  },
+  {
+    q: `¿En qué se diferencia IIBB de otros impuestos provinciales como Sellos o Inmobiliario en ${provincia.name}?`,
+    a: `IIBB grava la actividad económica habitual (un impuesto recurrente, mensual). Sellos grava actos jurídicos puntuales (contratos, escrituras) con alícuota proporcional al monto del instrumento. Inmobiliario grava la propiedad de inmuebles urbanos y rurales con valuación fiscal anual. Los tres conviven en ${provincia.name} y los administra ${recaudador}, pero son independientes y se pagan por separado.`,
+  },
+];
 
 const siteUrl = 'https://hacecuentas.com';
 const pageUrl = `${siteUrl}/iibb/${provincia.slug}/${actividad.slug}`;
@@ -67,23 +109,11 @@ const schema = {
     },
     {
       '@type': 'FAQPage',
-      mainEntity: [
-        {
-          '@type': 'Question',
-          name: `¿Cuánto se paga de Ingresos Brutos en ${provincia.name} para ${actividad.label.toLowerCase()}?`,
-          acceptedAnswer: { '@type': 'Answer', text: `La alícuota general en ${provincia.name} para ${actividad.label.toLowerCase()} se ubica en el rango ${actividad.rateRange}. ${actividad.rateNotes} ${provData.localNotes || ''}` },
-        },
-        {
-          '@type': 'Question',
-          name: `¿Hay régimen simplificado de IIBB en ${provincia.name}?`,
-          acceptedAnswer: { '@type': 'Answer', text: `${provincia.name} ofrece régimen simplificado de IIBB para monotributistas y pequeños contribuyentes. Las cuotas son fijas mensuales, en lugar de porcentaje sobre facturación. Verificá los topes de ingresos anuales en la página oficial de la dirección de rentas.` },
-        },
-        {
-          '@type': 'Question',
-          name: '¿Necesito Convenio Multilateral si opero en otra provincia?',
-          acceptedAnswer: { '@type': 'Answer', text: 'Sí. Si tu actividad genera ingresos o gastos en dos o más jurisdicciones, debés inscribirte en Convenio Multilateral (CM) y distribuir la base imponible con coeficientes según el régimen general (Art. 2) o regímenes especiales según la actividad.' },
-        },
-      ],
+      mainEntity: faqs.map((qa) => ({
+        '@type': 'Question',
+        name: qa.q,
+        acceptedAnswer: { '@type': 'Answer', text: qa.a },
+      })),
     },
   ],
 };
@@ -226,40 +256,13 @@ const schema = {
     </section>
 
     <section>
-      <h2>FAQ</h2>
-      <details>
-        <summary>¿Cuánto se paga de IIBB en {provincia.name} para {actividad.label.toLowerCase()}?</summary>
-        <p>
-          La alícuota general se ubica en el rango <strong>{actividad.rateRange}</strong>.
-          {actividad.rateNotes} {provData.localNotes || ''}
-        </p>
-      </details>
-      <details>
-        <summary>¿Hay régimen simplificado en {provincia.name}?</summary>
-        <p>
-          {provincia.name} ofrece régimen simplificado de IIBB para monotributistas
-          y pequeños contribuyentes. Las cuotas son fijas mensuales en lugar de
-          porcentaje sobre facturación. Verificá topes y requisitos en la página
-          oficial de la dirección de rentas.
-        </p>
-      </details>
-      <details>
-        <summary>¿Cuándo aplica Convenio Multilateral?</summary>
-        <p>
-          Cuando tu actividad genera ingresos o gastos en dos o más jurisdicciones
-          argentinas. Te inscribís en CM y distribuís la base imponible con
-          coeficientes según régimen general (Art. 2) o régimen especial.
-        </p>
-      </details>
-      <details>
-        <summary>¿Qué pasa si no pago a tiempo?</summary>
-        <p>
-          El incumplimiento genera intereses resarcitorios (3-5% mensual según
-          provincia), multas por falta de presentación, y multas por omisión
-          o defraudación (50-200% del impuesto omitido). Mantener deuda afecta
-          la obtención de constancias fiscales.
-        </p>
-      </details>
+      <h2>Preguntas frecuentes sobre IIBB en {provincia.name}</h2>
+      {faqs.map((qa) => (
+        <details>
+          <summary>{qa.q}</summary>
+          <p>{qa.a}</p>
+        </details>
+      ))}
     </section>
   </article>
 
