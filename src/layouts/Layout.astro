@@ -524,9 +524,12 @@ const globalSchema = {
          no bloquea render desde ninguna posición — y al final del body el request
          recién salía después de parsear todo el DOM, perdiendo pageviews en sesiones
          cortas (bounce <2s, clicks rápidos). Con async en head la red arranca
-         inmediato y el inline de arriba ya dejó el pageview encolado en dataLayer. -->
+         inmediato y el inline de arriba ya dejó el pageview encolado en dataLayer.
+         IMPORTANTE: un solo <script gtag/js> es suficiente para múltiples productos
+         Google (GA4 + Ads). El gtag('config','AW-...') del inline registra el ID de
+         Ads en el runtime ya cargado. Cargar 2 scripts de gtag/js duplica 105KB
+         de JS unused sin agregar funcionalidad. (PSI audit 2026-05-19: confirmado). -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18096606872"></script>
     <!-- (AdSense script movido al inicio del <head>, ver arriba) -->
 
     <!-- Microsoft Clarity (signal positiva para Bing/Copilot rankings) -->

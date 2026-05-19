@@ -90,12 +90,18 @@ export function mdInline(text: string): string {
   return withAbbrs.replace(/\x00TOK(\d+)\x00/g, (_, i) => tokens[Number(i)] || '');
 }
 
-export function md(text: string): string {
+export function md(text: unknown): string {
+  // Defensive coercion: callers pasaban objetos `{title, description}` en
+  // useCases (TS annotation `(u: string)` mentía), lo cual hacía que
+  // text.replace(...) lanzara TypeError → Astro cortaba el HTML silently.
+  // 145 calcs afectadas (bug detectado 2026-05-19, PSI deep audit).
+  if (text == null) return '';
+  if (typeof text !== 'string') text = String(text);
   // Placeholder-based extraction to avoid regex cross-contamination.
   // Step 1: fenced code blocks (triple backtick) — MUST be first so inline backticks don't
   // eat opening/closing fences and swallow content between separate code blocks.
   const fenceBlocks: string[] = [];
-  text = text.replace(/```([\s\S]*?)```/g, (_match, content: string) => {
+  text = (text as string).replace(/```([\s\S]*?)```/g, (_match, content: string) => {
     const idx = fenceBlocks.length;
     fenceBlocks.push(`<pre><code>${escHtml(content.replace(/^\n/, '').replace(/\n$/, ''))}</code></pre>`);
     return `\x00FENCE${idx}\x00`;
