@@ -180,15 +180,30 @@ const allCssFiles = existsSync(ASTRO_DIR)
   ? readdirSync(ASTRO_DIR).filter((f) => f.endsWith('.css')).map((f) => join(ASTRO_DIR, f))
   : [];
 
-// Relee todos los HTMLs ahora modificados
-const allHtmls = walk(DIST).map((f) => readFileSync(f, 'utf8')).join('\n');
+// Streaming check: leer HTMLs uno por uno y registrar qué CSS files referencian.
+// Antes: join('\n') de todos los HTMLs → RangeError "Invalid string length" cuando
+// el total supera ~512MB (límite V8). Tras el fix masivo de 145 calcs broken
+// (2026-05-19, commit dfdd909e), el total de HTML pasó de ~6MB a ~300MB+ porque
+// las 145 calcs ahora renderean HTML completo (~114KB en vez de ~43KB).
+const referencedCss = new Set();
+const cssBasenames = allCssFiles.map((p) => p.split('/').pop());
+for (const f of walk(DIST)) {
+  const html = readFileSync(f, 'utf8');
+  for (const basename of cssBasenames) {
+    if (!referencedCss.has(basename) && html.includes(basename)) {
+      referencedCss.add(basename);
+    }
+  }
+  // early-exit si ya encontramos todos los CSS referenciados
+  if (referencedCss.size === cssBasenames.length) break;
+}
 
 let orphansRemoved = 0;
 let orphanKb = 0;
 for (const cssFile of allCssFiles) {
   const basename = cssFile.split('/').pop();
   // Si ningún HTML referencia este archivo, es huérfano
-  if (!allHtmls.includes(basename)) {
+  if (!referencedCss.has(basename)) {
     try {
       const kb = statSync(cssFile).size / 1024;
       unlinkSync(cssFile);
