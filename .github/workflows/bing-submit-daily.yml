@@ -28,6 +28,10 @@ on:
           - priority  # solo sitemap-priority.xml (default, ~178 URLs)
           - all       # todos los sitemaps (cuidado quota)
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   bing-submit-daily:
     runs-on: ubuntu-latest
@@ -44,6 +48,16 @@ jobs:
 
       - name: Install certifi
         run: pip install --quiet certifi
+
+      - name: Validate required secrets
+        env:
+          BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
+        run: |
+          if [ -z "$BING_WEBMASTER_API_KEY" ]; then
+            echo "::error::Secret BING_WEBMASTER_API_KEY no está configurado en repo settings. Settings → Secrets → Actions → New repository secret."
+            exit 1
+          fi
+          echo "✓ Secret BING_WEBMASTER_API_KEY presente (longitud: ${#BING_WEBMASTER_API_KEY})"
 
       - name: Push URLs to Bing Webmaster Submit API
         id: push

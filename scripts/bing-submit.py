@@ -36,7 +36,10 @@ if ENV_FILE.exists():
 
 API_KEY = os.environ.get("BING_WEBMASTER_API_KEY")
 if not API_KEY:
-    print("❌ Falta BING_WEBMASTER_API_KEY en .env", file=sys.stderr)
+    # En GH Actions el .env no existe — el secret se inyecta via env.
+    # Local: faltaría en .env.
+    where = "GitHub Secrets" if os.environ.get("GITHUB_ACTIONS") == "true" else ".env"
+    print(f"❌ Falta BING_WEBMASTER_API_KEY en {where}", file=sys.stderr)
     sys.exit(1)
 
 SITE = "https://hacecuentas.com"
