@@ -1068,10 +1068,15 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
   )}
 
   <script is:inline>
-    (function () {
+    // setupCalcPage: re-run en cada Astro page navigation porque ClientRouter
+    // (View Transitions) NO re-ejecuta `<script is:inline>` IIFE entre pages SPA.
+    // Antes el botón share, TOC scrollspy y FAB recalculate solo funcionaban en
+    // el primer page load; tras navegar a otra calc se rompían silentemente.
+    function setupCalcPage() {
       // Compartir
       var shareBtn = document.getElementById('ca-share');
-      if (shareBtn) {
+      if (shareBtn && !shareBtn.dataset.shareBound) {
+        shareBtn.dataset.shareBound = '1';
         shareBtn.addEventListener('click', async function () {
           var url = shareBtn.getAttribute('data-url');
           var title = shareBtn.getAttribute('data-title');
@@ -1108,7 +1113,8 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
 
       // Floating recalculate FAB (mobile only)
       var fab = document.getElementById('fab-recalc');
-      if (fab && window.innerWidth < 1100) {
+      if (fab && !fab.dataset.fabBound && window.innerWidth < 1100) {
+        fab.dataset.fabBound = '1';
         var calcSection = document.getElementById('calculadora');
         if (calcSection) {
           var resultsEl = calcSection.querySelector('.calc-results');
@@ -1127,7 +1133,10 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           });
         }
       }
-    })();
+    }
+    // First load + cada navigation SPA (ClientRouter)
+    setupCalcPage();
+    document.addEventListener('astro:page-load', setupCalcPage);
   </script>
 
   <!-- Floating recalculate (mobile only, post-result) -->
