@@ -48,7 +48,10 @@ for (const file of staged) {
 
   if (oldSlug && newSlug && oldSlug !== newSlug) {
     // Necesitamos un redirect /<oldSlug> -> /<newSlug>
-    const re = new RegExp(`^/${oldSlug.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\\\b`, 'm');
+    // Fix 2026-05-20: usar concatenacion en vez de template literal para
+    // evitar over-escape de \\b a literal backslash-b en la regex final.
+    const escaped = oldSlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('^/' + escaped + '\\b', 'm');
     if (!re.test(redirects)) {
       missing.push({ file, oldSlug, newSlug });
     }
