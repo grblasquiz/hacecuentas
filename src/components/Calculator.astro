@@ -2440,17 +2440,43 @@ const formatFreshnessDate = (iso: string): string => {
   function formatValue(value: number | string, format: string, suffix = ''): string {
     if (value === null || value === undefined || value === '') return '—';
     let formatted: string;
-    if (format === 'currency') {
+    // Normalizar aliases legacy de format (974 calcs los usan):
+    //   thousands/integer → number sin decimales
+    //   decimal → number con decimales
+    //   money → currency
+    //   percent → percentage
+    // Sin esta normalizacion, caian al else (raw) y mostraban "1000" en
+    // vez de "1.000" (formato AR thousands separator).
+    let fmt = format;
+    if (fmt === 'money') fmt = 'currency';
+    else if (fmt === 'percent') fmt = 'percentage';
+    else if (fmt === 'decimal') fmt = 'number';
+    else if (fmt === 'thousands' || fmt === 'integer') fmt = 'integer-internal';
+
+    if (fmt === 'currency') {
       formatted = new Intl.NumberFormat(NUM_LOCALE, {
         style: 'currency',
         currency: NUM_CURRENCY,
         maximumFractionDigits: 0,
       }).format(Number(value));
-    } else if (format === 'number') {
+    } else if (fmt === 'number') {
       formatted = new Intl.NumberFormat(NUM_LOCALE, { maximumFractionDigits: 2 }).format(Number(value));
-    } else if (format === 'percentage') {
-      formatted = `${Number(value).toFixed(2)}%`;
-    } else if (format === 'date') {
+    } else if (fmt === 'integer-internal') {
+      // thousands/integer: separadores de miles AR, sin decimales
+      formatted = new Intl.NumberFormat(NUM_LOCALE, { maximumFractionDigits: 0 }).format(Number(value));
+    } else if (fmt === 'percentage') {
+      // Fix bug: aplicar Intl.NumberFormat para thousands separator (1.234,50%)
+      // antes de toFixed devolvia "1234.50%" sin formato AR.
+      const num = Number(value);
+      if (Number.isFinite(num)) {
+        formatted = new Intl.NumberFormat(NUM_LOCALE, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(num) + '%';
+      } else {
+        formatted = `${value}%`;
+      }
+    } else if (fmt === 'date') {
       // Parse manual de 'YYYY-MM-DD' para evitar el bug UTC clásico:
       // new Date('2027-01-10') se parsea como UTC medianoche; en zonas al
       // oeste de UTC (AR=-3) retrocede y muestra "9 de enero". Construyendo
