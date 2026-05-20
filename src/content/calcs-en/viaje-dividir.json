@@ -18,8 +18,8 @@
     "split gas lodging",
     "group expenses"
   ],
-  "intro": "After a group trip comes the least fun moment: **splitting expenses**. One paid for the Airbnb, another for gas, someone covered the last-night dinner, another the excursion… and nobody knows who owes whom. This calculator solves it instantly: you enter what **each person spent** (up to 6 participants), it calculates the **common total**, **divides it equally**, and tells you exactly **how much each person should transfer and to whom** so everyone ends up even, minimizing the number of transfers needed. Works for weekend getaways, long vacations, birthdays, road trips, international travel with expenses in multiple currencies, and any situation where several people contributed to a shared pool.",
-  "keyTakeaway": "**Fair share per person = total spent / number of people**. Whoever spent more receives; whoever spent less pays. Direct 'debtor → creditor' payments avoid chains of transfers.",
+  "intro": "After a US group trip — a Vegas weekend, a national-park road trip, a ski week in Aspen, a beach house in the Outer Banks — comes the awkward moment: **splitting expenses**. This calculator instantly settles the bill in **USD**: enter what each of up to 6 people spent, it computes the common total, divides equally, and tells you exactly who owes whom — minimizing total transfers. Works seamlessly with **Venmo, Zelle, Cash App, PayPal, and Apple Cash** (the dominant US peer-to-peer payment apps, used by ~85% of US adults per Federal Reserve survey data). Solves the same problem as Splitwise without an account.",
+  "keyTakeaway": "**Fair share per person = total spent / number of people** (USD). Whoever spent more receives; whoever spent less pays. Direct **Venmo/Zelle** payments from debtors to creditors avoid transfer chains. The IRS treats reimbursements among friends as non-taxable gifts under the annual exclusion (currently $18,000/year per recipient in 2024).",
   "useCases": [
     "You're back from a trip with friends and need to settle up.",
     "Someone paid for the Airbnb with a credit card and needs reimbursement.",
@@ -136,7 +136,7 @@
       "**Paul**: $600 − $950 = −$350 (owes $350).",
       "**Lu**: $400 − $950 = −$550 (owes $550)."
     ],
-    "result": "**Transfers**: Mary → John $150. Paul → John $350. Lu → John $550. Everyone ends with $950 of final spending."
+    "result": "**Venmo/Zelle transfers**: Mary → John $150. Paul → John $350. Lu → John $550. Everyone ends with **USD $950** in final spending."
   },
   "explanation": "## How to Split Group Trip Expenses\n\n### Calculation Logic\n\n1. **Add up what each person spent** in the common pool.\n2. **Divide the total by the number of people** → that's the **fair cost per head**.\n3. Each person who spent **more than the fair share** has a positive balance (they're owed).\n4. Each person who spent **less than the fair share** has a negative balance (they need to pay).\n5. Debtors transfer to creditors until everything balances.\n\n### Formula\n\n```\nfair_share = total_spent / number_people\nbalance_X = spent_X − fair_share\n\nIf balance > 0 → they're owed\nIf balance < 0 → they owe\n```\n\n## Minimizing Transfers\n\nFor 4 people with 3 creditors and 1 debtor (or vice versa), there can be up to **n-1 transfers**. Rule:\n\n- **Debtors transfer directly to the main creditor**.\n- Avoid chains like 'A pays B, B pays C, C pays D' → you multiply errors and work.\n- When there are several creditors, the optimal algorithm assigns each debtor to the creditor where the amount fits best.\n\n## Tips for Group Travel Without Fights\n\n1. **Use a shared list**: Google Keep, iPhone Notes, Notion, or a WhatsApp sheet. Each person records what they pay with a photo of the receipt.\n2. **Save receipts and transfers**: as photos to avoid losing them.\n3. **Define what's 'common' before leaving**: the group BBQ yes, the personal souvenir no; lodging yes, a private romantic dinner no.\n4. **Assign a 'main payer'**: one person pays big items (Airbnb, group tour) with a card, reducing transfers and earning points/discounts.\n5. **Don't mix common spending with treats**: if someone's treating, it doesn't go in the pool.\n6. **Balance at the end, not at every meal**: minimizes on-the-spot arguments.\n7. **Convert currencies at the same exchange rate**: if you traveled abroad, lock the rate (e.g., USD/EUR on the return day) and apply to all expenses.\n\n## Special Cases\n\n### A guest who doesn't contribute\nIf you invited someone who won't contribute (parent, child), the group covers them. Either subtract that person from the divisor or include them and split their share among the rest.\n\n### Someone only participated in some expenses\nIf they didn't go on a tour or to a dinner, that expense **is only split among participants**. Run a sub-calculation or subtract proportionally.\n\n### Cash vs. card payments\nCash payments can lose tracking. Recommendation: **photo of the receipt** or have everyone pay with apps for automatic records.\n\n## Recommended Apps to Split Expenses\n\n| App | Best for | Free |\n|---|---|---|\n| **Splitwise** | Multi-currency, debt history, reminders | Freemium |\n| **Tricount** | No registration, ideal for one-off trips | 100% free |\n| **Settle Up** | Good UX, auto currency conversion | Freemium |\n| **Venmo / PayPal** | Social money transfers, US-based | Free |\n| **Google Sheets** | Total flexibility | 100% free |\n\n## Common Conflicts and How to Resolve\n\n1. **'I already sent you a transfer'**: request a screenshot of the receipt.\n2. **'I don't remember how much it was'**: whoever doesn't remember, absorbs their share without complaint.\n3. **'I ate less'**: if you agreed to split equally at the start, respect the agreement.\n4. **'That expense isn't common'**: discuss it on the spot, not at the end.\n5. **Expense in another currency with varying rates**: agree on a single rate beforehand.\n\n## Math: Why Transfer Count Is Minimized\n\nSplitting group expenses is a version of the **min-cash-flow problem**. For `n` people:\n- **No optimization**: up to `n × (n-1)/2` transfers.\n- **Optimized**: maximum `n-1` transfers.\n\nThis calculator applies the optimized version: all debtors transfer first to the creditor with the largest balance, and so on.",
   "faq": [
@@ -175,6 +175,18 @@
   ],
   "sources": [
     {
+      "name": "Federal Reserve - Consumer Payments & Use of P2P Apps (Venmo, Zelle, Cash App)",
+      "url": "https://www.federalreserve.gov/publications/2023-economic-well-being-of-us-households-in-2022-banking-credit.htm"
+    },
+    {
+      "name": "IRS - Gifts to Individuals & Annual Exclusion (Form 709)",
+      "url": "https://www.irs.gov/businesses/small-businesses-self-employed/frequently-asked-questions-on-gift-taxes"
+    },
+    {
+      "name": "Consumer Financial Protection Bureau - Peer-to-Peer Payment Apps Guide",
+      "url": "https://www.consumerfinance.gov/about-us/blog/what-to-know-before-using-payment-apps-to-gift-money/"
+    },
+    {
       "name": "Splitwise - Expense splitting guide",
       "url": "https://www.splitwise.com/guide"
     }
@@ -205,5 +217,6 @@
       "name": "Review the results",
       "text": "Review the results below the form. Modify any value and recalculate."
     }
-  ]
+  ],
+  "lastReviewed": "2026-05-20"
 }
