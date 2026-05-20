@@ -2577,7 +2577,16 @@ const formatFreshnessDate = (iso: string): string => {
     }
   }
 
-  document.querySelectorAll<HTMLElement>('.calc-container').forEach((container) => {
+  // Fix 2026-05-20: el init de la calc se ejecutaba solo en module load.
+  // Con Astro View Transitions, navegar entre calcs reemplaza el DOM SIN
+  // re-ejecutar el script → el nuevo form queda SIN submit listener →
+  // browser hace default GET y recarga la URL. Solucion: envolver el init
+  // en una funcion, llamarla en initial + astro:page-load, e idempotent
+  // via dataset.calcInited.
+  function initCalculator(container: HTMLElement) {
+    if (container.dataset.calcInited === '1') return;
+    container.dataset.calcInited = '1';
+
     const slug = container.dataset.slug!;
     const formulaId = container.dataset.formula!;
     const form = container.querySelector<HTMLFormElement>('.calc-form')!;
@@ -3232,6 +3241,13 @@ const formatFreshnessDate = (iso: string): string => {
         }
       }
     } catch {}
+  }  // end initCalculator
+
+  // Trigger en initial load + en cada astro:page-load (view transitions).
+  // Idempotent via dataset.calcInited en cada container.
+  document.querySelectorAll<HTMLElement>('.calc-container').forEach(initCalculator);
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('.calc-container').forEach(initCalculator);
   });
 
   // ── Helpers de historial ─────────────────────────────────────
