@@ -129,11 +129,24 @@ def query_page_stats(s, page_url: str, start: str, end: str) -> dict:
 
 
 # ---- verdict logic -------------------------------------------------------
+# Tres estados de verdict:
+#   * GONE_410  → URL zombie con 0 trafico real, target tampoco trafica.
+#                 Aplica 410 (Mueller-style fast desindex).
+#   * DESPRUNE  → URL tiene impressions o ranking real, vale recuperarla.
+#   * REVIEW    → caso ambiguo, decision manual.
+#   * KEEP      → target absorbio el trafico bien, no tocar.
+#   * SKIP_LOW  → bajo threshold, no analizar.
 
 def verdict(zombie_stats: dict, target_stats: dict, threshold_impr: int) -> str:
     z_impr = zombie_stats.get("impressions", 0)
     z_clicks = zombie_stats.get("clicks", 0)
     t_clicks = target_stats.get("clicks", 0)
+    t_impr = target_stats.get("impressions", 0)
+
+    # 410 Gone: cero actividad real en zombie Y target tampoco trafica
+    # → URL es ruido puro post-HCU, sin riesgo de perder link equity.
+    if z_impr == 0 and z_clicks == 0 and t_clicks == 0 and t_impr <= 5:
+        return "GONE_410"
 
     if z_impr < threshold_impr:
         return "SKIP_LOW"
@@ -160,12 +173,14 @@ def fmt_row(item: dict) -> str:
 
 
 def write_markdown(items: list[dict], out: Path, start: str, end: str, threshold: int) -> None:
+    gone = [i for i in items if i["verdict"] == "GONE_410"]
     desprune = [i for i in items if i["verdict"] == "DESPRUNE"]
     review = [i for i in items if i["verdict"] == "REVIEW"]
     keep = [i for i in items if i["verdict"] == "KEEP"]
 
     desprune.sort(key=lambda x: x["zombie_stats"]["impressions"], reverse=True)
     review.sort(key=lambda x: x["zombie_stats"]["impressions"], reverse=True)
+    gone.sort(key=lambda x: x["from"])
 
     total_recovered_impr = sum(i["zombie_stats"]["impressions"] for i in desprune)
 
@@ -175,9 +190,19 @@ def write_markdown(items: list[dict], out: Path, start: str, end: str, threshold
         f"Periodo: **{start} → {end}** ({(datetime.fromisoformat(end) - datetime.fromisoformat(start)).days + 1} dias).",
         f"Threshold impressions: **{threshold}/periodo**.",
         "",
+        f"- **GONE_410**: {len(gone)} URLs (0 impr + 0 clicks, candidatas a 410 Gone para fast desindex)",
         f"- **DESPRUNE recomendado**: {len(desprune)} URLs (≈ **{total_recovered_impr} impressions/periodo recuperables**)",
         f"- **REVIEW manual**: {len(review)} URLs",
         f"- **KEEP** (target funciona): {len(keep)} URLs",
+        "",
+        "## GONE_410 — devolver 410 (acelera desindex vs 301)",
+        "",
+        "URLs con verdadero 0-trafico. Al pasar a `src/lib/gone-410.ts` y deployar,",
+        "el middleware devuelve **HTTP 410 Gone**, lo que le dice a Google: ",
+        "*'esta URL fue eliminada permanentemente, sacala del index ya'*.",
+        "Mas rapido que 301 (que mantiene la URL en queue de re-crawl).",
+        "",
+        f"Total: {len(gone)} URLs. Para aplicar: corre `--emit-gone-410`.",
         "",
         "## DESPRUNE — orden por impressions desc",
         "",
@@ -200,9 +225,51 @@ def write_markdown(items: list[dict], out: Path, start: str, end: str, threshold
         "5. Deploy normal + ritual CF cache: `bash scripts/cf-purge-cache.sh` x2.",
         "6. Verificar con curl que devuelven 200 OK con title del CTR rescue.",
         "",
+        "## Como aplicar el GONE_410",
+        "",
+        "1. Re-correr el audit con `--emit-gone-410` para actualizar `src/lib/gone-410.ts`.",
+        "2. Build local: `npm run build`.",
+        "3. Deploy: `wrangler deploy` o git push.",
+        "4. CF purge x2 si hay assets HTML cacheados de esas URLs.",
+        "5. Verificar con curl que devuelven 410.",
+        "",
     ])
 
     out.write_text("\n".join(lines), encoding="utf-8")
+
+
+def write_gone_410_ts(items: list[dict], out: Path) -> int:
+    """Sobrescribe src/lib/gone-410.ts con la lista de URLs verdict==GONE_410."""
+    gone_urls = sorted({i["from"] for i in items if i["verdict"] == "GONE_410"})
+    today = datetime.now(datetime_tz.utc).date().isoformat()
+    body = (
+        "/**\n"
+        " * Lista de URLs zombie con verdadero 0-trafico (0 impressions, 0 clicks)\n"
+        " * que devuelven HTTP 410 Gone en el middleware.\n"
+        " *\n"
+        " * Estrategia post-Core Update Abril 2026:\n"
+        " *   - 301 a categoria mantiene la URL en queue de re-crawl de Google.\n"
+        " *   - 410 le dice \"removida permanentemente\" → Google la saca del index mas\n"
+        " *     rapido (confirmado por John Mueller multiple veces).\n"
+        " *   - Aplicar 410 solo cuando NO hay riesgo de perder link equity:\n"
+        " *       clicks == 0 AND impressions == 0 AND target_clicks == 0 AND\n"
+        " *       target_impressions <= 5.\n"
+        " *\n"
+        " * Esta lista se genera/actualiza con:\n"
+        " *   python3 scripts/audit-pruning-vs-gsc.py --emit-gone-410\n"
+        " *\n"
+        " * Que escribe la salida directamente a este archivo. NO editar a mano —\n"
+        " * cualquier cambio se sobreescribe en el proximo audit.\n"
+        " *\n"
+        f" * Generated: {today} ({len(gone_urls)} URLs)\n"
+        " */\n"
+        "export const GONE_410_URLS: ReadonlySet<string> = new Set<string>([\n"
+    )
+    for u in gone_urls:
+        body += f"  {u!r},\n".replace("'", '"')
+    body += "]);\n"
+    out.write_text(body, encoding="utf-8")
+    return len(gone_urls)
 
 
 # ---- main ----------------------------------------------------------------
@@ -213,6 +280,7 @@ def main() -> int:
     ap.add_argument("--impressions-min", type=int, default=50, help="Umbral minimo impr para considerar zombie 'viva'")
     ap.add_argument("--top-n", type=int, default=0, help="Solo procesar las top-N zombies por len (0 = todas)")
     ap.add_argument("--only-categoria", action="store_true", help="Filtrar solo zombies que redirigen a /categoria/*")
+    ap.add_argument("--emit-gone-410", action="store_true", help="Escribir/actualizar src/lib/gone-410.ts con URLs verdict=GONE_410")
     ap.add_argument("--dry-run", action="store_true", help="No llamar GSC, mock data")
     args = ap.parse_args()
 
@@ -277,12 +345,20 @@ def main() -> int:
     )
 
     desprune_count = sum(1 for i in items if i["verdict"] == "DESPRUNE")
+    gone_count = sum(1 for i in items if i["verdict"] == "GONE_410")
     print(f"\nResultados:", file=sys.stderr)
+    print(f"  GONE_410: {gone_count}", file=sys.stderr)
     print(f"  DESPRUNE: {desprune_count}", file=sys.stderr)
     print(f"  REVIEW  : {sum(1 for i in items if i['verdict'] == 'REVIEW')}", file=sys.stderr)
     print(f"  KEEP    : {sum(1 for i in items if i['verdict'] == 'KEEP')}", file=sys.stderr)
     print(f"\nReporte: {md_path}", file=sys.stderr)
     print(f"Data:    {json_path}", file=sys.stderr)
+
+    if args.emit_gone_410:
+        gone_path = ROOT / "src" / "lib" / "gone-410.ts"
+        n = write_gone_410_ts(items, gone_path)
+        print(f"\nEscribi {n} URLs GONE_410 → {gone_path}", file=sys.stderr)
+
     return 0
 
 

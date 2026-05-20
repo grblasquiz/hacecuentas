@@ -1,5 +1,6 @@
 import { defineMiddleware } from 'astro:middleware';
 import { PRUNING_REDIRECTS } from './lib/pruning-redirects';
+import { GONE_410_URLS } from './lib/gone-410';
 
 /**
  * Astro middleware — corre antes de cualquier route en el Worker de CF.
@@ -53,6 +54,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
   ) {
     const targetPath = url.pathname.replace(/\/+$/, '');
     return Response.redirect(`https://hacecuentas.com${targetPath}${url.search}`, 308);
+  }
+
+  // ────── 410 Gone para zombies con verdadero 0-trafico ──────
+  // Acelera la desindexacion vs 301: Google saca la URL del index mas rapido
+  // cuando recibe 410 (vs queue de re-crawl con 301). Mueller lo confirmo
+  // multiples veces. Solo aplica a URLs con clicks==0 y impressions==0
+  // en GSC (sin riesgo de perder link equity). La lista se genera con
+  // `python3 scripts/audit-pruning-vs-gsc.py --emit-gone-410`.
+  if (url.hostname === 'hacecuentas.com' || url.hostname === 'www.hacecuentas.com') {
+    if (GONE_410_URLS.has(url.pathname)) {
+      return new Response('<!doctype html><title>410 Gone</title><h1>Gone</h1><p>This page has been permanently removed.</p>', {
+        status: 410,
+        statusText: 'Gone',
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'public, max-age=86400',
+          'X-Robots-Tag': 'noindex',
+        },
+      });
+    }
   }
 
   // ────── Pruning redirects (post-HCU recovery) ──────

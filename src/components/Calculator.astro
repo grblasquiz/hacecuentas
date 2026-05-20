@@ -84,6 +84,15 @@ export interface CalcConfig {
       suffix?: string;
     }>;
   };
+  // Caso de ejemplo prerenderizado al SSG-time (sin markdown). Se inyecta
+  // como contenido inicial del result-value primary para que el bot de Google
+  // vea un baseline numerico above-the-fold antes de ejecutar JS. El
+  // cliente lo sobreescribe en compute() al primer input valido.
+  example?: {
+    title?: string;
+    result?: string;
+    steps?: string[];
+  };
 }
 
 export interface Props {
@@ -92,6 +101,15 @@ export interface Props {
 }
 
 const { config, lang = 'es' } = Astro.props;
+
+// SSG baseline: texto plano del example.result para el output primary.
+// El bot lo ve above-the-fold antes de ejecutar JS; el cliente lo
+// sobreescribe en compute() al primer input valido.
+const exampleBaseline: string = (() => {
+  const raw = config.example?.result;
+  if (!raw) return '';
+  return raw.replace(/[*`_]/g, '').replace(/\s+/g, ' ').trim().slice(0, 120);
+})();
 
 // Cargar traducciones de strings de output por formulaId (solo para lang=en).
 // El JSON se genera con scripts/translate-formula-strings.py (Haiku 4.5).
@@ -479,7 +497,7 @@ const formatFreshnessDate = (iso: string): string => {
       {config.outputs.map((out) => (
         <div class={`result ${out.primary ? 'primary' : ''}`} data-output={out.id} data-format={out.format} data-suffix={out.suffix || ''} data-primary={out.primary ? 'true' : 'false'}>
           <div class="result-label">{out.label}</div>
-          <div class="result-value" data-value></div>
+          <div class="result-value" data-value>{out.primary ? exampleBaseline : ''}</div>
         </div>
       ))}
     </div>
