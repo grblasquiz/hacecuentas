@@ -289,11 +289,12 @@ jobs:
               '/blog', '/guias', '/sobre-nosotros', '/politica-editorial',
               # English (top traffic + categorías sensibles del bug schemaDescription)
               '/en/', '/en/bmi-calculator', '/en/compound-interest-calculator',
-              '/en/vitamin-d-dosage-daily-sun-exposure-age',  # was broken 18/5
-              '/en/premature-infant-corrected-age',           # was broken 18/5
-              '/en/choking-heimlich-age-maneuver',             # was broken 18/5
-              '/en/macros-dash-hypertension',                  # was broken 18/5
-              '/en/a1c-to-average-glucose',
+              # NOTE: 5 URLs /en/ removidas del smoke test (2026-05-20) tras commit
+              # 8eb6441a "mass noindex 973 calcs rechazadas por Google". Estaban como
+              # regresión 18/5 pero fueron noindex-eadas a propósito y ahora dan 404.
+              # Originales: vitamin-d-dosage-daily-sun-exposure-age,
+              # premature-infant-corrected-age, choking-heimlich-age-maneuver,
+              # macros-dash-hypertension, a1c-to-average-glucose.
               # Spanish
               '/es/', '/es/calculadora-becas-mec-2026-espana-renta-familiar-rendimiento',
               # Mexican
@@ -328,8 +329,10 @@ jobs:
               if len(body) < MIN_BODY_BYTES and not url.endswith(('.txt', '.json', '.xml', '.webmanifest')):
                   return (url, False, f'body too small ({len(body)} bytes — Worker error?)')
               if url.endswith('.xml'):
-                  if '<urlset' not in body and '<sitemapindex' not in body:
-                      return (url, False, 'not a sitemap XML')
+                  # /rss.xml es RSS feed (<rss>), no sitemap. El resto debe ser
+                  # sitemap (<urlset>) o índice de sitemaps (<sitemapindex>).
+                  if '<urlset' not in body and '<sitemapindex' not in body and '<rss' not in body:
+                      return (url, False, 'not a sitemap or RSS XML')
                   return (url, True, 'ok')
               if url.endswith(('.txt', '.json', '.webmanifest')):
                   return (url, True, 'ok')
