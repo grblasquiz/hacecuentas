@@ -1,0 +1,111 @@
+name: Daily Audit
+
+# Audit diario de hacecuentas.com.ar — técnico, SEO, links internos.
+# Corre todas las mañanas, deja el reporte en audits/YYYY-MM-DD.md
+# y abre un GitHub issue con el resumen + link al .md.
+# Sin Mac, sin Claude Code abierto, 100% en cloud.
+
+on:
+  schedule:
+    - cron: '7 11 * * *'  # 08:07 ART (UTC-3)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run audit
+        id: audit
+        run: node scripts/daily-audit.mjs
+
+      - name: Commit report
+        id: commit
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          git config user.name "audit-bot"
+          git config user.email "audit-bot@users.noreply.github.com"
+          git add audits/$DATE.md
+          if git diff --staged --quiet; then
+            echo "No new report"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "audit: $DATE"
+            git push origin HEAD:main
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Ensure labels exist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create daily-audit --color "0E8A16" --description "Daily audit report" 2>/dev/null || true
+          gh label create "priority/high" --color "B60205" --description "Action required" 2>/dev/null || true
+
+      - name: Open issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DATE: ${{ steps.commit.outputs.date }}
+        run: |
+          SUMMARY=$(cat audits/.cache/summary.json)
+          BLOCKERS=$(echo "$SUMMARY" | jq -r .blockerCount)
+          WARNINGS=$(echo "$SUMMARY" | jq -r .warnCount)
+          OK=$(echo "$SUMMARY" | jq -r .okCount)
+          SAMPLE=$(echo "$SUMMARY" | jq -r .sampleSize)
+          DURATION=$(echo "$SUMMARY" | jq -r .runDuration)
+          TOP_ISSUES=$(echo "$SUMMARY" | jq -r '.topIssues[]?' | sed 's/^/- /')
+
+          if [ "$BLOCKERS" -gt 0 ]; then
+            EMOJI="🔴"
+            LABELS="daily-audit,priority/high"
+          elif [ "$WARNINGS" -gt 0 ]; then
+            EMOJI="🟡"
+            LABELS="daily-audit"
+          else
+            EMOJI="🟢"
+            LABELS="daily-audit"
+          fi
+
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
+          REPORT_URL="$REPO_URL/blob/main/audits/$DATE.md"
+
+          BODY=$(cat <<EOF
+          **Resumen**: $EMOJI $BLOCKERS bloqueantes · 🟡 $WARNINGS warnings · 🟢 $OK OK · ⏱ ${DURATION}s · 📊 $SAMPLE URLs auditadas
+
+          ## Top issues
+          ${TOP_ISSUES:-_Sin issues detectados 🎉_}
+
+          ## Reporte completo
+          📄 [audits/$DATE.md]($REPORT_URL)
+
+          ---
+          🤖 Generado por [\`daily-audit.yml\`]($REPO_URL/blob/main/.github/workflows/daily-audit.yml) · run [\`${{ github.run_id }}\`]($REPO_URL/actions/runs/${{ github.run_id }})
+          EOF
+          )
+
+          gh issue create \
+            --title "$EMOJI Audit $DATE — $BLOCKERS blockers · $WARNINGS warnings" \
+            --body "$BODY" \
+            --label "$LABELS"
+
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-${{ steps.commit.outputs.date }}-${{ github.run_id }}
+          path: |
+            audits/*.md
+            audits/.cache/summary.json
+          retention-days: 30
+          if-no-files-found: warn
