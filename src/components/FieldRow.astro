@@ -56,3 +56,138 @@ const isWide = field.type === "select" || field.type === "date";
     {field.suffix && <span class="suffix">{field.suffix}</span>}
   </div>
 </div>
+
+<style>
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4375rem;
+  }
+  .field-wide {
+    grid-column: 1 / -1;
+  }
+  .field label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .label-text {
+    letter-spacing: -0.005em;
+  }
+  .help-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+  .help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--bg-muted);
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    cursor: help;
+    border: 1px solid var(--border);
+  }
+  .help-tip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 240px;
+    padding: 0.5rem 0.75rem;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.4;
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 10;
+    box-shadow: var(--shadow-md);
+  }
+  .help:hover + .help-tip,
+  .help:focus + .help-tip {
+    opacity: 1;
+  }
+  /* Mobile: tooltip reposicionado para no salirse */
+  @media (max-width: 480px) {
+    .help-tip {
+      left: auto;
+      right: -8px;
+      transform: none;
+      max-width: 78vw;
+    }
+  }
+  .input-wrap {
+    display: flex;
+    align-items: stretch;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: all 0.15s;
+  }
+  .input-wrap:hover {
+    border-color: var(--border-strong);
+  }
+  .input-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .field input,
+  .field select {
+    flex: 1;
+    padding: 0.6875rem 0.875rem;
+    background: transparent;
+    color: var(--text);
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 0.9375rem;
+    font-feature-settings: "tnum";
+    font-family: inherit;
+  }
+  .field select {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.25rem;
+  }
+  .prefix,
+  .suffix {
+    padding: 0 0.75rem;
+    background: var(--bg-muted);
+    color: var(--text-subtle);
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    border-left: 1px solid var(--border);
+  }
+  .prefix {
+    border-left: none;
+    border-right: 1px solid var(--border);
+  }
+  /* Mobile: hit targets más grandes */
+  @media (max-width: 480px) {
+    .field input,
+    .field select {
+      padding: 0.875rem 0.875rem;
+      font-size: 1rem;
+    }
+  }
+</style>
+
