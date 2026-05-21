@@ -130,8 +130,10 @@ async function checkUrl(url) {
       status: res.status,
       ttfb,
       total: Date.now() - start,
-      size: buf.byteLength,
+      size: Number(res.headers.get('content-length')) || buf.byteLength,
+      decodedSize: buf.byteLength,
       contentType: res.headers.get('content-type') || '',
+      contentEncoding: res.headers.get('content-encoding') || '',
       redirectLocation: res.status >= 300 && res.status < 400 ? res.headers.get('location') : null,
     };
   } catch (e) {
@@ -257,7 +259,9 @@ function generateReport({ sample, techResults, seoResults, linkResults, titleDup
 
   const errors = techResults.filter(r => r.error || (r.status >= 400 && r.status < 600));
   const slow = techResults.filter(r => !r.error && r.ttfb > 1500);
-  const heavy = techResults.filter(r => !r.error && r.size > 500_000 && !r.url.includes('sitemap'));
+  // Threshold 200KB sobre wire size (post-compresión). HTML decoded de una
+  // categoría hacecuentas ~600KB raw → ~80-100KB gzip / ~70KB brotli.
+  const heavy = techResults.filter(r => !r.error && r.size > 200_000 && !r.url.includes('sitemap'));
   const seoHigh = seoResults.flatMap(r => (r.issues || []).filter(i => i.severity === 'high').map(i => ({ url: r.url, ...i })));
   const seoMed = seoResults.flatMap(r => (r.issues || []).filter(i => i.severity === 'medium').map(i => ({ url: r.url, ...i })));
   const seoLow = seoResults.flatMap(r => (r.issues || []).filter(i => i.severity === 'low').map(i => ({ url: r.url, ...i })));
@@ -302,7 +306,7 @@ function generateReport({ sample, techResults, seoResults, linkResults, titleDup
   }
   if (heavy.length) {
     hasWarns = true;
-    lines.push('### Páginas pesadas (>500KB)');
+    lines.push('### Páginas pesadas (>200KB wire)');
     for (const h of heavy.slice(0, 10)) lines.push(`- ${h.url} — ${(h.size / 1024).toFixed(0)}KB`);
     lines.push('');
   }
@@ -390,9 +394,10 @@ async function main() {
   const seoMed = seoResults.flatMap(r => (r.issues || []).filter(i => i.severity === 'medium'));
   const brokenLinks = linkResults.filter(r => r.status >= 400 && r.status < 600);
   const slow = techResults.filter(r => !r.error && r.ttfb > 1500);
+  const heavy = techResults.filter(r => !r.error && r.size > 200_000 && !r.url.includes('sitemap'));
 
   const blockerCount = errors.length + seoHigh.length + brokenLinks.length;
-  const warnCount = slow.length + seoMed.length + titleDuplicates.length;
+  const warnCount = slow.length + heavy.length + seoMed.length + titleDuplicates.length;
   const okCount = Math.max(0, techResults.length - errors.length);
 
   const topIssues = [];
@@ -400,6 +405,7 @@ async function main() {
   if (seoHigh.length) topIssues.push(`${seoHigh.length} SEO high-severity`);
   if (brokenLinks.length) topIssues.push(`${brokenLinks.length} links internos rotos`);
   if (slow.length) topIssues.push(`${slow.length} URLs lentas (TTFB > 1.5s)`);
+  if (heavy.length) topIssues.push(`${heavy.length} URLs pesadas (>200KB wire)`);
   if (titleDuplicates.length) topIssues.push(`${titleDuplicates.length} títulos duplicados`);
 
   const summary = {

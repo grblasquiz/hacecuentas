@@ -24,6 +24,7 @@ import { readFileSync, writeFileSync, statSync, readdirSync, existsSync } from '
 import { join, resolve, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
+import { GONE_410_URLS } from '../src/lib/gone-410.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -1047,6 +1048,25 @@ for (const s of sitemaps) {
 // --------------------------------------------------------------------------
 // Write files
 // --------------------------------------------------------------------------
+
+// Filtro defensivo: excluir URLs en GONE_410_URLS de cualquier sitemap. El
+// middleware del Worker sirve 410 GONE para esas rutas; listarlas en sitemap
+// confunde a Google (le decimos "indexá" y al rato "esto no existe").
+// Ya pasó con /en/burnout-mbi-assessment — pruna no removida del sitemap-en.
+let gone410Stripped = 0;
+for (const s of sitemaps) {
+  const before = s.urls.length;
+  s.urls = s.urls.filter((u: any) => {
+    try {
+      const path = new URL(u.loc).pathname.replace(/\/$/, '') || '/';
+      return !GONE_410_URLS.has(path);
+    } catch { return true; }
+  });
+  gone410Stripped += before - s.urls.length;
+}
+if (gone410Stripped > 0) {
+  console.log(`Stripped ${gone410Stripped} URLs marcadas como 410 GONE.`);
+}
 
 let totalUrls = 0;
 for (const s of sitemaps) {
