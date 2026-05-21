@@ -419,6 +419,12 @@ const globalSchema = {
     {ogLocale !== 'pt_BR' && <meta property="og:locale:alternate" content="pt_BR" />}
     <meta property="og:site_name" content="Hacé Cuentas" />
 
+    {/* LinkedIn signals — Microsoft Bing tiene partnership con LinkedIn y
+        consume estos tags para enriquecer previews + authority signals.
+        Zero JS overhead, solo meta tags estaticos. */}
+    <meta property="article:publisher" content="https://www.linkedin.com/company/hacecuentas/" />
+    <meta name="linkedin:owner" content="hacecuentas" />
+
     <!-- Twitter Cards — Bing/Copilot también consumen estos tags directamente
          (Bing es Microsoft + Twitter colab, signals fuertes para News + Discover) -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -548,6 +554,14 @@ const globalSchema = {
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
       })(window, document, "clarity", "script", "${import.meta.env.PUBLIC_MS_CLARITY_ID}");`} />
+    )}
+
+    {/* Scroll-depth tracker idle/lazy — dispara eventos Clarity en 25/50/75/100%
+        del scroll. Bing usa Clarity engagement signals para ranking. Cero overhead
+        en LCP/INP: arranca solo despues de window.load + requestIdleCallback,
+        scroll listener pasivo, idempotent por umbral. */}
+    {import.meta.env.PUBLIC_MS_CLARITY_ID && (
+      <script set:html={`window.addEventListener('load',function(){(window.requestIdleCallback||function(f){return setTimeout(f,500)})(function(){var fired={};var thresholds=[25,50,75,100];function send(d){if(fired[d]||typeof clarity!=='function')return;fired[d]=1;try{clarity('event','scroll_'+d);}catch(e){}}function check(){var f=document.body;var h=Math.max(f.scrollHeight,document.documentElement.scrollHeight)-window.innerHeight;if(h<=0){send(100);return;}var p=Math.round((window.scrollY/h)*100);thresholds.forEach(function(t){if(p>=t)send(t);});}window.addEventListener('scroll',check,{passive:true});check();},{timeout:2000});});`} />
     )}
 
     <!-- View Transitions: navegación SPA-like entre páginas. Reduce flash de

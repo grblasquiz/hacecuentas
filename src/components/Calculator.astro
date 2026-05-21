@@ -2916,6 +2916,17 @@ const formatFreshnessDate = (iso: string): string => {
             if (primaryValue && primaryValue !== '—') {
               saveToHistory(slug, { inputs, primary: primaryValue, label: primaryLabel, ts: Date.now() });
               renderHistory(container, slug, form);
+              // Clarity custom event: calc_submit (Bing usa Clarity signals para
+              // ranking — high engagement = better signal). Zero overhead: ya
+              // está cargado, solo push al queue. Idle-fire para no bloquear UI.
+              const cl = (window as any).clarity;
+              if (typeof cl === 'function') {
+                (window as any).requestIdleCallback?.(() => {
+                  try { cl('event', 'calc_submit'); cl('set', 'calc_slug', slug); } catch {}
+                }) || setTimeout(() => {
+                  try { cl('event', 'calc_submit'); cl('set', 'calc_slug', slug); } catch {}
+                }, 0);
+              }
             }
           } catch {}
 
