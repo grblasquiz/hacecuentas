@@ -3,13 +3,20 @@ export interface Inputs {
   precioUnitario: number;
   cantidad: number;
   descuentoPorcentaje: number; // % descuento aplicado a la cantidad
+  consumoMensualEstimado?: number;
 }
 export interface Outputs {
   subtotal: number;
   descuentoMonto: number;
   total: number;
   precioEfectivoUnitario: number;
+  precioUnitarioDescuento: number;
+  costoTotalBase: number;
+  costoTotalConDescuento: number;
+  ahorroTotal: number;
+  ahorroPorcentaje: number;
   ahorroPorUnidad: number;
+  mesesParaConsumir: number;
   resumen: string;
 }
 
@@ -17,6 +24,7 @@ export function descuentoVolumenCantidad(i: Inputs): Outputs {
   const precio = Number(i.precioUnitario);
   const cant = Number(i.cantidad);
   const desc = Number(i.descuentoPorcentaje);
+  const consumoMensual = Number(i.consumoMensualEstimado) || 0;
 
   if (!precio || precio <= 0) throw new Error('Ingresá el precio unitario');
   if (!cant || cant <= 0) throw new Error('Ingresá la cantidad');
@@ -28,6 +36,10 @@ export function descuentoVolumenCantidad(i: Inputs): Outputs {
   const precioEfectivo = total / cant;
   const ahorroUnit = precio - precioEfectivo;
 
+  const mesesParaConsumir = consumoMensual > 0
+    ? Number((cant / consumoMensual).toFixed(1))
+    : 0;
+
   const resumen = `Comprando ${cant} unidades con ${desc}% de descuento, pagás ${total.toLocaleString()} total (${precioEfectivo.toFixed(2)} por unidad, ahorrás ${ahorroUnit.toFixed(2)} en cada una).`;
 
   return {
@@ -35,7 +47,13 @@ export function descuentoVolumenCantidad(i: Inputs): Outputs {
     descuentoMonto: Math.round(descMonto),
     total: Math.round(total),
     precioEfectivoUnitario: Number(precioEfectivo.toFixed(2)),
+    precioUnitarioDescuento: Number(precioEfectivo.toFixed(2)),
+    costoTotalBase: Math.round(subtotal),
+    costoTotalConDescuento: Math.round(total),
+    ahorroTotal: Math.round(descMonto),
+    ahorroPorcentaje: Number(desc.toFixed(2)),
     ahorroPorUnidad: Number(ahorroUnit.toFixed(2)),
+    mesesParaConsumir,
     resumen,
   };
 }

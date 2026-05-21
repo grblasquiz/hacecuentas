@@ -7,9 +7,13 @@ export interface Inputs {
 
 export interface Outputs {
   pacePor100m: string;
+  pace100m: string;
   pacePor50m: string;
   velocidadMS: number;
   velocidadKmH: number;
+  velocidadKmh: number;
+  segundosPor100m: number;
+  tiempoEstimado1500m: string;
   categoria: string;
   resumen: string;
 }
@@ -34,6 +38,10 @@ export function velocidadNatacion100m(i: Inputs): Outputs {
     return `${m}:${sec.toFixed(1).padStart(4, '0')}`;
   };
 
+  // Tiempo proyectado para 1500m a este pace
+  const seg1500 = segPor100 * 15;
+  const tiempoEstimado1500m = fmt(seg1500);
+
   // Categoría aproximada para nadadores recreativos/amateur
   let cat = 'Principiante';
   if (segPor100 <= 60) cat = 'Nivel competitivo (sub 1:00/100m)';
@@ -42,12 +50,18 @@ export function velocidadNatacion100m(i: Inputs): Outputs {
   else if (segPor100 <= 120) cat = 'Recreativo (1:40-2:00/100m)';
   else cat = 'Principiante (>2:00/100m)';
 
+  const paceLabel = fmt(segPor100);
+
   return {
-    pacePor100m: fmt(segPor100),
+    pacePor100m: paceLabel,
+    pace100m: paceLabel,
     pacePor50m: fmt(segPor50),
     velocidadMS: Number(vMs.toFixed(2)),
     velocidadKmH: Number(vKmh.toFixed(2)),
+    velocidadKmh: Number(vKmh.toFixed(2)),
+    segundosPor100m: Number(segPor100.toFixed(1)),
+    tiempoEstimado1500m,
     categoria: cat,
-    resumen: `Nadaste ${dist}m en ${min}:${String(seg).padStart(2, '0')} → pace de **${fmt(segPor100)} por 100m** (${vKmh.toFixed(2)} km/h). Nivel: ${cat}.`,
+    resumen: `Nadaste ${dist}m en ${min}:${String(seg).padStart(2, '0')} → pace de **${paceLabel} por 100m** (${vKmh.toFixed(2)} km/h). Nivel: ${cat}. Para 1500m: ${tiempoEstimado1500m}.`,
   };
 }

@@ -50,7 +50,7 @@ export interface MonotributoCategoriaOptimaOutputs {
   cuotaMensualCorrecta: number;
   cuotaAnualCorrecta: number;
   diagnostico: string;
-  ahorroAnualSiCambias: number | null;
+  ahorroAnualSiCambias: number;
   margenHastaSiguienteCat: number;
   vigenciaTabla: string;
 }
@@ -74,7 +74,7 @@ export function monotributoVsCategoriaOptima(
       cuotaMensualCorrecta: TABLA_2026[0].cuotaServicios,
       cuotaAnualCorrecta: TABLA_2026[0].cuotaServicios * 12,
       diagnostico: 'Sin facturación → categoría A (mínima)',
-      ahorroAnualSiCambias: null,
+      ahorroAnualSiCambias: 0,
       margenHastaSiguienteCat: TABLA_2026[0].topeFacturacionAnual,
       vigenciaTabla: FECHA_VIGENCIA,
     };
@@ -89,7 +89,7 @@ export function monotributoVsCategoriaOptima(
       cuotaMensualCorrecta: 0,
       cuotaAnualCorrecta: 0,
       diagnostico: `Tu facturación supera el tope de cat K ($${topeMaximo.toLocaleString('es-AR')}/año). Debés inscribirte en el Régimen General (Responsable Inscripto). Consultá con un contador para hacer el pase.`,
-      ahorroAnualSiCambias: null,
+      ahorroAnualSiCambias: 0,
       margenHastaSiguienteCat: 0,
       vigenciaTabla: FECHA_VIGENCIA,
     };

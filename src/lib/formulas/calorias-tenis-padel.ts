@@ -10,6 +10,7 @@ export interface Outputs {
   caloriasPorMinuto: number;
   metUsado: number;
   deporteMostrado: string;
+  equivalenteAlimento: string;
   resumen: string;
 }
 
@@ -34,12 +35,32 @@ export function caloriasTenisPadel(i: Inputs): Outputs {
   const info = MET[dep] || MET['tenis-singles'];
   const kcalMin = (info.met * 3.5 * peso) / 200;
   const total = kcalMin * min;
+  const totalRounded = Math.round(total);
+
+  // Equivalentes alimentarios aproximados
+  // milanesa napolitana ~700kcal, alfajor triple ~280kcal, banana ~90kcal,
+  // gaseosa 500ml ~210kcal, hamburguesa con papas ~900kcal, helado bocha ~150kcal
+  let equivalenteAlimento = '';
+  if (totalRounded < 100) {
+    equivalenteAlimento = `${totalRounded} kcal equivalen a una manzana mediana (${totalRounded} kcal).`;
+  } else if (totalRounded < 250) {
+    const bochas = (totalRounded / 150).toFixed(1);
+    equivalenteAlimento = `${totalRounded} kcal equivalen a ${bochas} bochas de helado (~150 kcal c/u) o 1 gaseosa de 500 ml.`;
+  } else if (totalRounded < 500) {
+    const alfajores = (totalRounded / 280).toFixed(1);
+    equivalenteAlimento = `${totalRounded} kcal equivalen a ${alfajores} alfajor triple (~280 kcal c/u) o 2 bananas grandes.`;
+  } else if (totalRounded < 800) {
+    equivalenteAlimento = `${totalRounded} kcal equivalen a 1 milanesa napolitana (~700 kcal) o 3 alfajores triples.`;
+  } else {
+    equivalenteAlimento = `${totalRounded} kcal equivalen a 1 hamburguesa completa con papas (~900 kcal) o 1 pizza de muzzarella personal.`;
+  }
 
   return {
-    caloriasTotal: Math.round(total),
+    caloriasTotal: totalRounded,
     caloriasPorMinuto: Number(kcalMin.toFixed(2)),
     metUsado: info.met,
     deporteMostrado: info.nombre,
-    resumen: `Jugando **${info.nombre}** durante ${min} minutos quemás **${Math.round(total)} kcal** (${kcalMin.toFixed(1)} kcal/min, MET ${info.met}).`,
+    equivalenteAlimento,
+    resumen: `Jugando **${info.nombre}** durante ${min} minutos quemás **${totalRounded} kcal** (${kcalMin.toFixed(1)} kcal/min, MET ${info.met}).`,
   };
 }

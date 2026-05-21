@@ -9,6 +9,10 @@ export interface Outputs {
   margen: number;
   precioVenta: number;
   gananciaNeta: number;
+  gananciaUnitaria: number;
+  markupPorcentaje: number;
+  margenPorcentaje: number;
+  multiplicadorPrecio: number;
   costoReferencia: number;
   resumen: string;
 }
@@ -38,6 +42,7 @@ export function markupVsMargen(i: Inputs): Outputs {
 
   const precioVenta = costo * (1 + markup / 100);
   const gananciaNeta = precioVenta - costo;
+  const multiplicador = costo > 0 ? precioVenta / costo : 0;
 
   const resumen = `Markup ${markup.toFixed(2)}% sobre costo equivale a margen ${margen.toFixed(2)}% sobre venta.`;
 
@@ -46,6 +51,10 @@ export function markupVsMargen(i: Inputs): Outputs {
     margen: Number(margen.toFixed(2)),
     precioVenta: Number(precioVenta.toFixed(2)),
     gananciaNeta: Number(gananciaNeta.toFixed(2)),
+    gananciaUnitaria: Number(gananciaNeta.toFixed(2)),
+    markupPorcentaje: Number(markup.toFixed(2)),
+    margenPorcentaje: Number(margen.toFixed(2)),
+    multiplicadorPrecio: Number(multiplicador.toFixed(2)),
     costoReferencia: Number(costo.toFixed(2)),
     resumen,
   };

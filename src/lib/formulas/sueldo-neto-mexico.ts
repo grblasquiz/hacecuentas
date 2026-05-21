@@ -3,15 +3,24 @@
 // Fuente: SAT, IMSS, DOF — vigente para ejercicio fiscal 2026.
 
 export interface Inputs {
-  salarioBrutoMensual: number;
+  salarioBrutoMensual?: number;
+  sueldoBrutoMensual?: number;
   numHijosCargo?: number;
+  tieneInfonavit?: string | boolean;
+  porcentajeInfonavit?: number;
+  valesDespensa?: number;
 }
 
 export interface Outputs {
   salarioNeto: number;
+  sueldoNeto: number;
   isrRetenido: number;
+  isr: number;
   imssObrero: number;
+  imss: number;
+  infonavit: number;
   subsidioEmpleo: number;
+  totalDescuentos: number;
   detalle: string;
 }
 
@@ -82,14 +91,23 @@ function calcularIMSSObrero(base: number): number {
 }
 
 export function sueldoNetoMexico(inputs: Inputs): Outputs {
-  const bruto = Number(inputs.salarioBrutoMensual);
+  // Aceptar ambos nombres de campo
+  const bruto = Number(inputs.salarioBrutoMensual ?? inputs.sueldoBrutoMensual);
+  const tieneInfonavit = inputs.tieneInfonavit === true || inputs.tieneInfonavit === 'true';
+  const porcInfonavit = Number(inputs.porcentajeInfonavit) || 5;
+  const vales = Number(inputs.valesDespensa) || 0;
 
   if (!isFinite(bruto) || bruto <= 0) {
     return {
       salarioNeto: 0,
+      sueldoNeto: 0,
       isrRetenido: 0,
+      isr: 0,
       imssObrero: 0,
+      imss: 0,
+      infonavit: 0,
       subsidioEmpleo: 0,
+      totalDescuentos: 0,
       detalle: 'Ingresa un salario bruto mensual válido mayor a cero.',
     };
   }
@@ -117,21 +135,34 @@ export function sueldoNetoMexico(inputs: Inputs): Outputs {
     }
   }
 
-  const neto = Math.round((bruto - isrEfectivo - imss + speEntregado) * 100) / 100;
+  // 4) Infonavit (si aplica)
+  const infonavit = tieneInfonavit
+    ? Math.round(bruto * (porcInfonavit / 100) * 100) / 100
+    : 0;
 
+  // Vales de despensa se suman al neto (porción exenta, sin impacto en ISR/IMSS para este cálculo simplificado)
+  const neto = Math.round((bruto - isrEfectivo - imss - infonavit + speEntregado + vales) * 100) / 100;
+  const totalDesc = Math.round((isrEfectivo + imss + infonavit) * 100) / 100;
   const porcentaje = ((neto / bruto) * 100).toFixed(1);
 
   const detalle =
     `Bruto: $${bruto.toFixed(2)} | Tramo ISR: ${tramo}/11 | ISR: $${isr.toFixed(2)} | ` +
     `IMSS obrero (2.775%): $${imss.toFixed(2)} | ` +
     `Subsidio empleo: $${spe.toFixed(2)} (entregado al neto: $${speEntregado.toFixed(2)}) | ` +
+    (tieneInfonavit ? `Infonavit (${porcInfonavit}%): $${infonavit.toFixed(2)} | ` : '') +
+    (vales > 0 ? `Vales despensa: $${vales.toFixed(2)} | ` : '') +
     `Neto: $${neto.toFixed(2)} (${porcentaje}% del bruto)`;
 
   return {
     salarioNeto: neto,
+    sueldoNeto: neto,
     isrRetenido: Math.round(isrEfectivo * 100) / 100,
+    isr: Math.round(isrEfectivo * 100) / 100,
     imssObrero: imss,
+    imss,
+    infonavit,
     subsidioEmpleo: Math.round(speEntregado * 100) / 100,
+    totalDescuentos: totalDesc,
     detalle,
   };
 }

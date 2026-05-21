@@ -38,7 +38,9 @@ export function drawdownMaximoInversion(i: Inputs): Outputs {
 
   const valorPerdido = maximo - minimo;
   const recuperado = actual >= maximo;
-  const recuperacionActual = minimo > 0 ? ((actual - minimo) / (maximo - minimo)) * 100 : 0;
+  const recuperacionActual = maximo === minimo
+    ? (actual >= maximo ? 100 : 0)
+    : (minimo > 0 ? ((actual - minimo) / (maximo - minimo)) * 100 : 0);
 
   const formula = `Drawdown = ($${maximo.toLocaleString()} - $${minimo.toLocaleString()}) / $${maximo.toLocaleString()} = ${drawdownMaxPorc.toFixed(2)}%`;
   const explicacion = `Desde el máximo de $${maximo.toLocaleString()} hasta el mínimo de $${minimo.toLocaleString()}, el drawdown fue de ${drawdownMaxPorc.toFixed(2)}% ($${drawdownMaxMonto.toLocaleString()} de pérdida). Para recuperar ese drawdown se necesita una suba de ${recuperacionNecesaria.toFixed(2)}% desde el mínimo.${actual !== minimo ? ` Valor actual: $${actual.toLocaleString()} (${recuperado ? 'recuperado completo' : `recuperación ${recuperacionActual.toFixed(1)}%`}).` : ''} Regla clave: a mayor drawdown, exponencialmente más difícil recuperar (50% de caída requiere 100% de suba).`;

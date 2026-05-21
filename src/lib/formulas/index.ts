@@ -2989,7 +2989,7 @@ import { superficieCorporal } from './superficie-corporal';
 import { superficieCorporalBsa } from './superficie-corporal-bsa';
 import { superficieQuemaduraReglaNueves } from './superficie-quemadura-regla-nueves';
 import { suplementosDeportivosStackPrincipiante } from './suplementos-deportivos-stack-principiante';
-import { compute as compute__sushi_piezas_por_persona_evento_cumpleaños } from './sushi-piezas-por-persona-evento-cumpleaños';
+import { compute as compute__sushi_piezas_por_persona_evento_cumpleanos } from './sushi-piezas-por-persona-evento-cumpleanos';
 import { sushiPorInvitadoCena } from './sushi-por-invitado-cena';
 import { sushiswapLpRewards } from './sushiswap-lp-rewards';
 import { suspensionAlturaLibrePisoAuto } from './suspension-altura-libre-piso-auto';
@@ -6375,7 +6375,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'superficie-corporal-bsa': superficieCorporalBsa,
   'superficie-quemadura-regla-nueves': superficieQuemaduraReglaNueves,
   'suplementos-deportivos-stack-principiante': suplementosDeportivosStackPrincipiante,
-  'sushi-piezas-por-persona-evento-cumpleaños': compute__sushi_piezas_por_persona_evento_cumpleaños,
+  'sushi-piezas-por-persona-evento-cumpleanos': compute__sushi_piezas_por_persona_evento_cumpleanos,
   'sushi-por-invitado-cena': sushiPorInvitadoCena,
   'sushiswap-lp-rewards': sushiswapLpRewards,
   'suspension-altura-libre-piso-auto': suspensionAlturaLibrePisoAuto,

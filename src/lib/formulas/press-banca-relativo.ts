@@ -3,12 +3,14 @@ export interface Inputs {
   rmKg: number;
   pesoCorporal: number;
   sexo: string; // 'hombre' | 'mujer'
-  experiencia: string; // 'principiante' | 'intermedio' | 'avanzado' | 'elite'
+  experiencia?: string; // 'principiante' | 'intermedio' | 'avanzado' | 'elite'
 }
 
 export interface Outputs {
   ratio: number;
   categoria: string;
+  siguienteCategoria: string;
+  kgFaltantes: number;
   rmEsperadoParaTuNivel: number;
   diferencia: number;
   resumen: string;
@@ -32,6 +34,15 @@ const STANDARDS: Record<string, Record<string, number>> = {
   },
 };
 
+// Tiers ordenados de menor a mayor para calcular la próxima categoría
+const TIER_ORDER: Array<{ key: string; label: string }> = [
+  { key: 'principiante', label: 'Principiante' },
+  { key: 'novato', label: 'Novato' },
+  { key: 'intermedio', label: 'Intermedio' },
+  { key: 'avanzado', label: 'Avanzado' },
+  { key: 'elite', label: 'Elite' },
+];
+
 export function pressBancaRelativo(i: Inputs): Outputs {
   const rm = Number(i.rmKg);
   const peso = Number(i.pesoCorporal);
@@ -44,12 +55,28 @@ export function pressBancaRelativo(i: Inputs): Outputs {
   const ratio = rm / peso;
   const standards = STANDARDS[sexo] || STANDARDS.hombre;
 
+  // Categoría actual
   let cat = 'Principiante';
-  if (ratio >= standards.elite) cat = 'Elite (atleta competitivo)';
-  else if (ratio >= standards.avanzado) cat = 'Avanzado';
-  else if (ratio >= standards.intermedio) cat = 'Intermedio';
-  else if (ratio >= standards.novato) cat = 'Novato (con algo de experiencia)';
-  else cat = 'Principiante';
+  let currentTierIdx = 0;
+  if (ratio >= standards.elite) { cat = 'Elite (atleta competitivo)'; currentTierIdx = 4; }
+  else if (ratio >= standards.avanzado) { cat = 'Avanzado'; currentTierIdx = 3; }
+  else if (ratio >= standards.intermedio) { cat = 'Intermedio'; currentTierIdx = 2; }
+  else if (ratio >= standards.novato) { cat = 'Novato (con algo de experiencia)'; currentTierIdx = 1; }
+  else { cat = 'Principiante'; currentTierIdx = 0; }
+
+  // Siguiente categoría y kg faltantes
+  let siguienteCategoria = '';
+  let kgFaltantes = 0;
+  if (currentTierIdx >= TIER_ORDER.length - 1) {
+    siguienteCategoria = 'Ya alcanzaste el nivel Elite. Mantenelo o apuntá a competición.';
+    kgFaltantes = 0;
+  } else {
+    const nextTier = TIER_ORDER[currentTierIdx + 1];
+    const ratioObjetivo = standards[nextTier.key];
+    const rmObjetivo = ratioObjetivo * peso;
+    kgFaltantes = Math.max(0, Math.round(rmObjetivo - rm));
+    siguienteCategoria = `${nextTier.label} (ratio ${ratioObjetivo.toFixed(2)}x = ${Math.round(rmObjetivo)} kg)`;
+  }
 
   const esperado = standards[exp] || standards.intermedio;
   const rmEsperado = esperado * peso;
@@ -58,8 +85,10 @@ export function pressBancaRelativo(i: Inputs): Outputs {
   return {
     ratio: Number(ratio.toFixed(2)),
     categoria: cat,
+    siguienteCategoria,
+    kgFaltantes,
     rmEsperadoParaTuNivel: Math.round(rmEsperado),
     diferencia: Math.round(dif),
-    resumen: `Tu ratio press banca es **${ratio.toFixed(2)}x tu peso corporal** → nivel **${cat}**. Esperado para ${exp}: ${Math.round(rmEsperado)} kg (${dif >= 0 ? '+' : ''}${Math.round(dif)} kg).`,
+    resumen: `Tu ratio press banca es **${ratio.toFixed(2)}x tu peso corporal** → nivel **${cat}**. ${kgFaltantes > 0 ? `Para subir a ${siguienteCategoria}, sumá ${kgFaltantes} kg.` : 'Ya estás en el tope de los estándares.'}`,
   };
 }

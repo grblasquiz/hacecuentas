@@ -30,7 +30,7 @@ export function pesoPosparto(i: Inputs): Outputs {
     return {
       pesoAPerdPer: '¡Ya estás en tu peso pre-embarazo o menos!',
       tiempoEstimado: 'No necesitás perder peso.',
-      ritmo: 'N/A',
+      ritmo: '0 kg/semana (objetivo cumplido)',
       nota: 'Enfocate en alimentación nutritiva y actividad física para mantener tu salud.',
     };
   }

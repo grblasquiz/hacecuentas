@@ -11,7 +11,9 @@ export interface Outputs {
   caloriasPorMinuto: number;
   metUsado: number;
   formatoMostrado: string;
+  modalidadMostrada: string;
   kmEstimadosCorridos: number;
+  kmCorridosEstimados: number;
   resumen: string;
 }
 
@@ -46,12 +48,17 @@ export function caloriasFutbol(i: Inputs): Outputs {
   const total = kcalMin * min;
   const km = (kmH * min) / 60;
 
+  const formatoLabel = info.nombre + (pos === 'arquero' ? ' (arquero)' : '');
+  const kmRounded = Number(km.toFixed(1));
+
   return {
     caloriasTotal: Math.round(total),
     caloriasPorMinuto: Number(kcalMin.toFixed(2)),
     metUsado: Number(met.toFixed(1)),
-    formatoMostrado: info.nombre + (pos === 'arquero' ? ' (arquero)' : ''),
-    kmEstimadosCorridos: Number(km.toFixed(1)),
+    formatoMostrado: formatoLabel,
+    modalidadMostrada: formatoLabel,
+    kmEstimadosCorridos: kmRounded,
+    kmCorridosEstimados: kmRounded,
     resumen: `Jugando **${info.nombre}**${pos === 'arquero' ? ' de arquero' : ''} ${min} minutos quemás **${Math.round(total)} kcal** y corrés ~${km.toFixed(1)} km (MET ${met.toFixed(1)}).`,
   };
 }
