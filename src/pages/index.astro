@@ -2017,38 +2017,70 @@ const schema = {
     gap: 0.625rem;
   }
 
-  /* Secciones editoriales (qué encontrarás / cómo construimos / FAQ).
-     Rediseño 2026-05-21: cards + jerarquía + eyebrows. */
+  /* Secciones editoriales — rediseño v3 con cards explícitos + icon grande.
+     Cada sección es un container visual claro (no más muros de texto). */
   .editorial-intro,
   .editorial-method,
   .editorial-faq {
-    margin: 4rem 0;
+    margin: 4rem auto;
+    max-width: 1100px;
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 24px;
+    padding: 3rem 2.75rem;
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 8px 24px -8px rgba(15, 23, 42, 0.08);
+    position: relative;
+    overflow: hidden;
   }
+  /* Banda gradient top */
+  .editorial-intro::before,
+  .editorial-method::before,
+  .editorial-faq::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 50%, #7c3aed));
+  }
+  html[data-theme="dark"] .editorial-intro,
+  html[data-theme="dark"] .editorial-method,
+  html[data-theme="dark"] .editorial-faq {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  }
+
   .editorial-wrap {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 0 0.25rem;
+    max-width: none;
+    margin: 0;
+    padding: 0;
   }
-  /* Eyebrow chip arriba del h2 */
+
+  /* Header: icon grande + eyebrow + título */
   .editorial-intro h2,
   .editorial-method h2,
   .editorial-faq h2 {
-    font-size: 1.875rem;
+    font-size: 2rem;
     font-weight: 800;
-    letter-spacing: -0.025em;
-    line-height: 1.15;
-    margin: 0 0 0.75rem;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin: 0 0 1.5rem;
     color: var(--text);
-    max-width: 760px;
+    position: relative;
+    padding-top: 4.5rem;
   }
+  /* Eyebrow */
   .editorial-intro h2::before,
   .editorial-method h2::before,
   .editorial-faq h2::before {
-    content: attr(data-eyebrow);
     display: block;
     font-size: 0.75rem;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: 0.5rem;
@@ -2057,33 +2089,55 @@ const schema = {
   .editorial-method h2::before { content: "Cómo trabajamos"; }
   .editorial-faq h2::before { content: "Preguntas frecuentes"; }
 
-  /* Contenedor visual para Qué encontrarás */
-  .editorial-intro {
-    background: linear-gradient(180deg, var(--bg-soft, #f8fafc) 0%, transparent 100%);
-    padding: 3rem 0 3.5rem;
-    border-radius: var(--radius-xl, 20px);
+  /* Icono circular arriba del h2 */
+  .editorial-intro h2::after,
+  .editorial-method h2::after,
+  .editorial-faq h2::after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--accent-soft), color-mix(in srgb, var(--accent) 18%, transparent));
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    line-height: 1;
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
   }
-  .editorial-intro .editorial-wrap {
-    padding: 0 1.5rem;
-  }
+  .editorial-intro h2::after { content: "📚"; }
+  .editorial-method h2::after { content: "🛠️"; }
+  .editorial-faq h2::after { content: "💬"; }
+
+  /* Body de Qué encontrarás */
   .editorial-intro p {
     color: var(--text-muted, #475569);
     font-size: 1.0625rem;
     line-height: 1.75;
     margin: 0 0 1.125rem;
-    max-width: 760px;
   }
   .editorial-intro p:first-of-type {
     font-size: 1.1875rem;
     color: var(--text);
     line-height: 1.6;
+    font-weight: 500;
+  }
+  .editorial-intro p:first-of-type strong {
+    background: linear-gradient(120deg, var(--accent), color-mix(in srgb, var(--accent) 50%, #7c3aed));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 800;
   }
   .editorial-intro strong {
     color: var(--text);
     font-weight: 700;
   }
 
-  /* Common links */
+  /* Links */
   .editorial-intro a,
   .editorial-method a,
   .editorial-faq a {
@@ -2099,55 +2153,71 @@ const schema = {
     color: var(--accent-strong);
   }
 
-  /* Método: grid de cards numeradas */
-  .editorial-method .editorial-wrap > p {
+  /* Método: intro párrafo + grid de cards numeradas */
+  .editorial-method .editorial-wrap > p:first-of-type {
     color: var(--text-muted, #475569);
     font-size: 1.0625rem;
     line-height: 1.7;
-    margin: 0 0 1.5rem;
-    max-width: 760px;
+    margin: 0 0 1.75rem;
   }
   .method-steps {
     counter-reset: ms;
     list-style: none;
     padding: 0;
-    margin: 1.75rem 0 1.5rem;
+    margin: 1.75rem 0 1.75rem;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 0.875rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
   }
   .method-steps > li {
     position: relative;
-    padding: 1.5rem 1.25rem 1.25rem;
-    background: var(--bg-card, #fff);
+    padding: 1.5rem 1.25rem 1.375rem;
+    background: var(--bg-soft, #f8fafc);
     border: 1px solid var(--border, #e2e8f0);
-    border-radius: var(--radius-lg, 14px);
+    border-radius: 16px;
     counter-increment: ms;
     font-size: 0.9375rem;
-    line-height: 1.65;
+    line-height: 1.6;
     color: var(--text-muted, #475569);
-    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      border-color 0.2s ease,
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
   }
   .method-steps > li:hover {
     border-color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md, 0 4px 12px rgba(15,23,42,0.08));
+    background: var(--bg-card, #fff);
+    transform: translateY(-3px);
+    box-shadow:
+      0 4px 12px -4px color-mix(in srgb, var(--accent) 30%, transparent),
+      0 12px 24px -12px rgba(15, 23, 42, 0.12);
+  }
+  html[data-theme="dark"] .method-steps > li:hover {
+    background: var(--bg-muted, #334155);
+    box-shadow:
+      0 4px 12px -4px color-mix(in srgb, var(--accent) 40%, transparent),
+      0 12px 24px -12px rgba(0, 0, 0, 0.5);
   }
   .method-steps > li::before {
     content: counter(ms);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #7c3aed));
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #7c3aed));
     color: #fff;
     font-weight: 800;
-    font-size: 1rem;
-    margin-bottom: 0.75rem;
+    font-size: 1.125rem;
+    margin-bottom: 0.875rem;
     letter-spacing: -0.02em;
-    box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 30%, transparent);
+    box-shadow: 0 4px 8px color-mix(in srgb, var(--accent) 35%, transparent);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .method-steps > li:hover::before {
+    transform: scale(1.08) rotate(-3deg);
   }
   html[data-theme="dark"] .method-steps > li::before {
     color: var(--bg);
@@ -2156,31 +2226,67 @@ const schema = {
     display: block;
     color: var(--text);
     font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
-    letter-spacing: -0.005em;
+    font-size: 1.0625rem;
+    margin-bottom: 0.375rem;
+    letter-spacing: -0.01em;
   }
   .method-steps code {
     background: var(--accent-soft);
     color: var(--accent-strong);
-    padding: 0.1rem 0.4rem;
-    border-radius: 4px;
+    padding: 0.125rem 0.45rem;
+    border-radius: 5px;
     font-size: 0.85em;
     font-family: var(--font-mono);
   }
+  /* Callout final del método */
   .editorial-method .editorial-wrap > p:last-child {
     margin-top: 1.5rem;
-    padding: 1rem 1.25rem;
-    background: var(--bg-soft, #f8fafc);
-    border-left: 3px solid var(--accent);
-    border-radius: var(--radius-sm, 6px);
+    padding: 1.125rem 1.25rem;
+    background: linear-gradient(135deg, var(--accent-soft), color-mix(in srgb, var(--accent) 8%, var(--bg-soft)));
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    border-left: 4px solid var(--accent);
+    border-radius: 12px;
     font-size: 0.9375rem;
-    color: var(--text-muted, #475569);
+    color: var(--text);
     line-height: 1.6;
   }
   @media (prefers-reduced-motion: reduce) {
-    .method-steps > li { transition: none; }
+    .method-steps > li,
+    .method-steps > li::before { transition: none; }
     .method-steps > li:hover { transform: none; }
+    .method-steps > li:hover::before { transform: none; }
+  }
+
+  @media (max-width: 720px) {
+    .editorial-intro,
+    .editorial-method,
+    .editorial-faq {
+      padding: 2rem 1.25rem 2.25rem;
+      border-radius: 18px;
+      margin: 2.5rem auto;
+    }
+    .editorial-intro h2,
+    .editorial-method h2,
+    .editorial-faq h2 {
+      font-size: 1.5rem;
+      padding-top: 4rem;
+    }
+    .editorial-intro h2::after,
+    .editorial-method h2::after,
+    .editorial-faq h2::after {
+      width: 48px;
+      height: 48px;
+      font-size: 1.5rem;
+    }
+    .editorial-intro p:first-of-type {
+      font-size: 1.0625rem;
+    }
+    .method-steps {
+      gap: 0.75rem;
+    }
+    .method-steps > li {
+      padding: 1.25rem 1rem 1.125rem;
+    }
   }
   .ed-faq-item {
     border: 1px solid var(--border, rgba(0,0,0,0.08));
