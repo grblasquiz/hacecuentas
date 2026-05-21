@@ -2488,8 +2488,18 @@ const formatFreshnessDate = (iso: string): string => {
         : new Date(value);
       formatted = d.toLocaleDateString(NUM_LOCALE, { day: '2-digit', month: 'long', year: 'numeric' });
     } else {
-      // format === 'text' o similar: aplicar traducción i18n
-      formatted = translateOutputStr(String(value));
+      // format === 'text', undefined, null, '' u otro no reconocido.
+      // Fix 2026-05-20: 1914 outputs en 668 calcs tienen `format: null` o
+      // no setean format. Si el valor es numerico, default a formato AR
+      // con thousands separator (antes mostraba "1000" raw → ahora "1.000").
+      // String non-numeric pasa por translateOutputStr (i18n).
+      const strVal = String(value);
+      const num = Number(strVal);
+      if (Number.isFinite(num) && strVal.trim() !== '' && /^-?\d+([.,]\d+)?$/.test(strVal.trim())) {
+        formatted = new Intl.NumberFormat(NUM_LOCALE, { maximumFractionDigits: 2 }).format(num);
+      } else {
+        formatted = translateOutputStr(strVal);
+      }
     }
     return suffix ? `${formatted} ${suffix}` : formatted;
   }
