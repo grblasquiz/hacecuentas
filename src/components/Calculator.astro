@@ -2987,9 +2987,17 @@ const formatFreshnessDate = (iso: string): string => {
       // no setean format. Si el valor es numerico, default a formato AR
       // con thousands separator (antes mostraba "1000" raw → ahora "1.000").
       // String non-numeric pasa por translateOutputStr (i18n).
+      //
+      // Fix 2026-05-21: regex original `/^-?\d+([.,]\d+)?$/` matcheaba "318.720"
+      // (string ya formateado en es-AR con punto como separador de miles) y lo
+      // reinterpretaba como decimal → output corrupto "318,72". Bug visible en
+      // calc edad-exacta donde horasTotal = (dias*24).toLocaleString('es-AR').
+      // Nuevo regex acepta solo enteros raw o decimales con MAX 2 dígitos
+      // después del punto. "1.000" o "318.720" (3 dígitos = AR thousands) ya
+      // vienen formateados desde la fórmula → no re-formatear.
       const strVal = String(value);
       const num = Number(strVal);
-      if (Number.isFinite(num) && strVal.trim() !== '' && /^-?\d+([.,]\d+)?$/.test(strVal.trim())) {
+      if (Number.isFinite(num) && strVal.trim() !== '' && /^-?\d+(\.\d{1,2})?$/.test(strVal.trim())) {
         formatted = new Intl.NumberFormat(NUM_LOCALE, { maximumFractionDigits: 2 }).format(num);
       } else {
         formatted = translateOutputStr(strVal);
