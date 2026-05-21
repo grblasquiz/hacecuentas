@@ -117,7 +117,6 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/calculadora-cuanto-falta-eleccion-presidencial-2027': '/categoria/vida',
   '/calculadora-cuanto-falta-fin-curso-escolar-marzo': '/categoria/vida',
   '/calculadora-cuanto-falta-fin-de-ano-2026-dias-horas-segundos': '/categoria/vida',
-  '/calculadora-cuanto-falta-mundial-fifa-2026-2030': '/categoria/vida',
   '/calculadora-cuanto-falta-navidad-2026-dias-semanas-meses': '/calculadora-cuanto-falta-Navidad-2026-dias-semanas-meses',
   '/calculadora-domingos-restantes-navidad-2026-fin-de-ano': '/calculadora-domingos-restantes-Navidad-2026-fin-de-ano',
   '/calculadora-cuanto-falta-olimpiadas-paris-2028-los-angeles': '/categoria/vida',
