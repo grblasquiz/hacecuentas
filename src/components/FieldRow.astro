@@ -1,0 +1,58 @@
+---
+/**
+ * FieldRow — fragmento reutilizable de un input del formulario de Calculator.
+ * Extraído de Calculator.astro para soportar agrupación (Smart Input Groups)
+ * sin duplicar el HTML del input.
+ *
+ * Mantiene EXACTAMENTE los mismos data attrs, ids, classes y aria que el
+ * código original. No cambia el comportamiento del JS handler de Calculator.
+ */
+import type { Field } from "./Calculator.astro";
+
+interface Props {
+  field: Field;
+}
+const { field } = Astro.props;
+const isWide = field.type === "select" || field.type === "date";
+---
+
+<div class={`field ${isWide ? "field-wide" : ""}`}>
+  <label for={field.id}>
+    <span class="label-text">{field.label}</span>
+    {field.help && (
+      <span class="help-wrap">
+        <span class="help" tabindex="0" aria-describedby={`tip-${field.id}`}>?</span>
+        <span class="help-tip" id={`tip-${field.id}`} role="tooltip">{field.help}</span>
+      </span>
+    )}
+  </label>
+  <div class="input-wrap">
+    {field.prefix && <span class="prefix">{field.prefix}</span>}
+    {field.type === "select" ? (
+      <select id={field.id} name={field.id} required={field.required}>
+        {field.options?.map((opt) => (
+          <option value={opt.value} selected={opt.value === field.default}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    ) : (
+      <input
+        id={field.id}
+        name={field.id}
+        type={field.type === "number" && field.format === "thousands" ? "text" : field.type}
+        placeholder={field.placeholder}
+        min={field.min}
+        max={field.max}
+        step={field.step}
+        value={field.default === 0 || field.default === undefined ? undefined : field.default}
+        required={field.required}
+        inputmode={field.type === "number" ? "decimal" : undefined}
+        autocomplete="off"
+        data-format={field.format}
+        data-type={field.type}
+      />
+    )}
+    {field.suffix && <span class="suffix">{field.suffix}</span>}
+  </div>
+</div>

@@ -1,0 +1,421 @@
+---
+/**
+ * ShareBottomSheet — trigger + sheet de share para mobile.
+ *
+ * Visible solo en pantallas < 768px. Los botones internos usan los mismos
+ * `data-action` que `.share` del Calculator, así el handler JS de Calculator
+ * los procesa via event delegation sin cambios.
+ *
+ * UX:
+ *  - Trigger fila única: "Compartir resultado".
+ *  - Sheet con backdrop, handle, 5 acciones.
+ *  - Cerrar: tap backdrop, tap fuera, ESC, swipe down (no implementado, futuro).
+ *  - Respeta prefers-reduced-motion.
+ *
+ * Performance: CSS-only animation. JS ~0.6KB minified.
+ */
+interface Props {
+  lang?: "es" | "en" | "pt";
+}
+const { lang = "es" } = Astro.props;
+
+const t = {
+  es: {
+    open: "Compartir resultado",
+    title: "Compartir",
+    whatsapp: "WhatsApp",
+    whatsappSub: "Enviar a un contacto",
+    copy: "Copiar resultado",
+    copySub: "Solo el número",
+    link: "Copiar link",
+    linkSub: "Con datos precargados",
+    pdf: "Descargar PDF",
+    pdfSub: "Con desglose completo",
+    reset: "Empezar de nuevo",
+    close: "Cerrar",
+  },
+  en: {
+    open: "Share result",
+    title: "Share",
+    whatsapp: "WhatsApp",
+    whatsappSub: "Send to a contact",
+    copy: "Copy result",
+    copySub: "Just the number",
+    link: "Copy link",
+    linkSub: "With data preloaded",
+    pdf: "Download PDF",
+    pdfSub: "Full breakdown",
+    reset: "Start over",
+    close: "Close",
+  },
+  pt: {
+    open: "Compartilhar resultado",
+    title: "Compartilhar",
+    whatsapp: "WhatsApp",
+    whatsappSub: "Enviar a um contato",
+    copy: "Copiar resultado",
+    copySub: "Apenas o número",
+    link: "Copiar link",
+    linkSub: "Com dados pré-carregados",
+    pdf: "Baixar PDF",
+    pdfSub: "Detalhamento completo",
+    reset: "Recomeçar",
+    close: "Fechar",
+  },
+}[lang] || {} as any;
+---
+
+<button
+  type="button"
+  class="share-bottom-trigger"
+  data-share-bottom-trigger
+  aria-haspopup="dialog"
+  aria-expanded="false"
+  aria-controls="share-bottom-sheet"
+>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="18" cy="5" r="3"/>
+    <circle cx="6" cy="12" r="3"/>
+    <circle cx="18" cy="19" r="3"/>
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+  </svg>
+  <span>{t.open}</span>
+</button>
+
+<div
+  class="share-bottom-backdrop"
+  data-share-bottom-backdrop
+  hidden
+  aria-hidden="true"
+></div>
+
+<div
+  class="share-bottom-sheet"
+  data-share-bottom-sheet
+  id="share-bottom-sheet"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="share-bottom-sheet-title"
+  hidden
+>
+  <button type="button" class="share-bottom-handle" data-share-bottom-close aria-label={t.close}></button>
+  <h3 class="share-bottom-title" id="share-bottom-sheet-title">{t.title}</h3>
+
+  <button type="button" class="share-bottom-action" data-action="whatsapp">
+    <span class="share-bottom-action-icon share-bottom-action-icon--wa">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    </span>
+    <span class="share-bottom-action-text">
+      <strong>{t.whatsapp}</strong>
+      <span>{t.whatsappSub}</span>
+    </span>
+  </button>
+
+  <button type="button" class="share-bottom-action" data-action="copy-result">
+    <span class="share-bottom-action-icon share-bottom-action-icon--copy">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    </span>
+    <span class="share-bottom-action-text">
+      <strong>{t.copy}</strong>
+      <span>{t.copySub}</span>
+    </span>
+  </button>
+
+  <button type="button" class="share-bottom-action" data-action="copy-link">
+    <span class="share-bottom-action-icon share-bottom-action-icon--link">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    </span>
+    <span class="share-bottom-action-text">
+      <strong>{t.link}</strong>
+      <span>{t.linkSub}</span>
+    </span>
+  </button>
+
+  <button type="button" class="share-bottom-action" data-action="print">
+    <span class="share-bottom-action-icon share-bottom-action-icon--pdf">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    </span>
+    <span class="share-bottom-action-text">
+      <strong>{t.pdf}</strong>
+      <span>{t.pdfSub}</span>
+    </span>
+  </button>
+
+  <button type="button" class="share-bottom-action" data-action="reset">
+    <span class="share-bottom-action-icon share-bottom-action-icon--reset">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+    </span>
+    <span class="share-bottom-action-text">
+      <strong>{t.reset}</strong>
+    </span>
+  </button>
+</div>
+
+<style>
+  /* Trigger button — solo mobile */
+  .share-bottom-trigger {
+    display: none;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--bg-card);
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 0.75rem;
+    transition:
+      background 0.15s ease,
+      transform 0.1s ease;
+  }
+  .share-bottom-trigger:hover {
+    background: var(--accent-soft);
+  }
+  .share-bottom-trigger:active {
+    transform: scale(0.98);
+  }
+  html[data-theme="dark"] .share-bottom-trigger {
+    color: var(--accent-strong);
+    border-color: var(--accent);
+  }
+
+  @media (max-width: 767px) {
+    .share-bottom-trigger {
+      display: inline-flex;
+    }
+  }
+
+  /* Backdrop */
+  .share-bottom-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+    pointer-events: none;
+  }
+  .share-bottom-backdrop[hidden] {
+    display: none !important;
+  }
+  .share-bottom-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Sheet */
+  .share-bottom-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 91;
+    background: var(--bg-card);
+    border-top-left-radius: 22px;
+    border-top-right-radius: 22px;
+    box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.25);
+    padding: 0.625rem 1rem 1.25rem;
+    transform: translateY(105%);
+    transition: transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1);
+    max-height: 88vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+  .share-bottom-sheet[hidden] {
+    display: none !important;
+  }
+  .share-bottom-sheet.is-open {
+    transform: translateY(0);
+  }
+  html[data-theme="dark"] .share-bottom-sheet {
+    box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.6);
+    border-top: 1px solid var(--border);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .share-bottom-sheet,
+    .share-bottom-backdrop {
+      transition: opacity 0.15s ease;
+    }
+    .share-bottom-sheet.is-open {
+      transform: translateY(0);
+    }
+  }
+
+  .share-bottom-handle {
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: var(--border-strong);
+    border: none;
+    border-radius: 99px;
+    margin: 0 auto 0.875rem;
+    padding: 0;
+    cursor: pointer;
+  }
+  .share-bottom-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+    color: var(--text);
+  }
+  .share-bottom-action {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text);
+    text-align: left;
+    transition: background 0.12s ease;
+  }
+  .share-bottom-action:hover,
+  .share-bottom-action:focus-visible {
+    background: var(--bg-soft);
+    outline: none;
+  }
+  .share-bottom-action:active {
+    background: var(--bg-muted);
+  }
+  .share-bottom-action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .share-bottom-action-icon--wa {
+    background: var(--success-soft);
+    color: var(--success);
+  }
+  .share-bottom-action-icon--copy {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .share-bottom-action-icon--link {
+    background: color-mix(in srgb, #8b5cf6 22%, transparent);
+    color: #7c3aed;
+  }
+  html[data-theme="dark"] .share-bottom-action-icon--link {
+    background: rgba(167, 139, 250, 0.22);
+    color: #c4b5fd;
+  }
+  .share-bottom-action-icon--pdf {
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+  .share-bottom-action-icon--reset {
+    background: var(--bg-muted);
+    color: var(--text-muted);
+  }
+  .share-bottom-action-text {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
+  }
+  .share-bottom-action-text strong {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .share-bottom-action-text span {
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+  }
+
+  /* No mostrar sheet/backdrop en desktop */
+  @media (min-width: 768px) {
+    .share-bottom-sheet,
+    .share-bottom-backdrop {
+      display: none !important;
+    }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    function init() {
+      var trigger = document.querySelector('[data-share-bottom-trigger]');
+      var sheet = document.querySelector('[data-share-bottom-sheet]');
+      var backdrop = document.querySelector('[data-share-bottom-backdrop]');
+      var closeBtn = document.querySelector('[data-share-bottom-close]');
+      if (!trigger || !sheet || !backdrop) return;
+
+      function open() {
+        sheet.removeAttribute('hidden');
+        backdrop.removeAttribute('hidden');
+        backdrop.setAttribute('aria-hidden', 'false');
+        // doble rAF para animar
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            sheet.classList.add('is-open');
+            backdrop.classList.add('is-open');
+          });
+        });
+        trigger.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function close() {
+        sheet.classList.remove('is-open');
+        backdrop.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+        backdrop.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        setTimeout(function () {
+          sheet.setAttribute('hidden', '');
+          backdrop.setAttribute('hidden', '');
+        }, 350);
+      }
+
+      trigger.addEventListener('click', open);
+      backdrop.addEventListener('click', close);
+      if (closeBtn) closeBtn.addEventListener('click', close);
+
+      // Cerrar con ESC
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sheet && !sheet.hasAttribute('hidden')) {
+          close();
+        }
+      });
+
+      // Cerrar al tocar una acción (después del click handler de Calculator)
+      sheet.querySelectorAll('.share-bottom-action').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          // pequeño delay para que el handler de Calculator (event delegation) procese primero
+          setTimeout(close, 80);
+        });
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () {
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(init, { timeout: 2000 });
+        } else {
+          setTimeout(init, 300);
+        }
+      });
+    } else {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(init, { timeout: 2000 });
+      } else {
+        setTimeout(init, 300);
+      }
+    }
+  })();
+</script>

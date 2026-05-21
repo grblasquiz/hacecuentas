@@ -1,0 +1,241 @@
+---
+/**
+ * StickyResultPill — pill flotante en mobile cuando el resultado primary sale del viewport.
+ *
+ * - Solo se activa en pantallas < 768px (matchMedia).
+ * - Observa `.result.primary` con IntersectionObserver.
+ * - Cuando el primary sale del viewport Y los resultados están visibles,
+ *   muestra la pill arriba con el valor actual.
+ * - Tap en el pill → scroll smooth al primary.
+ * - MutationObserver sobre [data-value] mantiene la pill sincronizada con el valor.
+ * - Respeta prefers-reduced-motion.
+ *
+ * Performance: ~0.8KB minified, sin librerías, lazy (rAF + idle callback).
+ */
+---
+
+<div class="sticky-result-pill" data-sticky-pill hidden aria-live="polite">
+  <div class="sticky-result-pill-icon" aria-hidden="true">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="1" x2="12" y2="23"/>
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>
+  </div>
+  <div class="sticky-result-pill-content">
+    <div class="sticky-result-pill-label" data-pill-label>Tu resultado</div>
+    <div class="sticky-result-pill-value" data-pill-value>—</div>
+  </div>
+  <div class="sticky-result-pill-actions">
+    <button type="button" class="sticky-result-pill-btn" data-pill-scroll aria-label="Volver al resultado">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="18 15 12 9 6 15"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<style>
+  .sticky-result-pill {
+    position: fixed;
+    top: 0.625rem;
+    left: 0.625rem;
+    right: 0.625rem;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.625rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-110%);
+    opacity: 0;
+    transition:
+      transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 0.2s ease;
+    pointer-events: none;
+  }
+  .sticky-result-pill.is-visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .sticky-result-pill[hidden] {
+    display: none !important;
+  }
+  .sticky-result-pill-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 50%, #7c3aed));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  html[data-theme="dark"] .sticky-result-pill-icon {
+    color: var(--bg);
+  }
+  .sticky-result-pill-content {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.15;
+  }
+  .sticky-result-pill-label {
+    font-size: 0.65rem;
+    color: var(--text-subtle);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .sticky-result-pill-value {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.015em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sticky-result-pill-actions {
+    display: flex;
+    gap: 0.25rem;
+  }
+  .sticky-result-pill-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-soft);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+  }
+  .sticky-result-pill-btn:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  /* Solo en mobile */
+  @media (min-width: 768px) {
+    .sticky-result-pill {
+      display: none !important;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sticky-result-pill {
+      transition: opacity 0.15s ease;
+    }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    function init() {
+      var pill = document.querySelector('[data-sticky-pill]');
+      if (!pill) return;
+      var primary = document.querySelector('.result.primary');
+      var resultsBox = document.querySelector('.calc-results');
+      if (!primary || !resultsBox) return;
+
+      // Solo mobile
+      var mq = window.matchMedia('(max-width: 767px)');
+      if (!mq.matches) return;
+
+      var valueEl = primary.querySelector('[data-value]');
+      var valueOutEl = pill.querySelector('[data-pill-value]');
+      var labelOutEl = pill.querySelector('[data-pill-label]');
+      var scrollBtn = pill.querySelector('[data-pill-scroll]');
+
+      function setPillValue() {
+        if (!valueEl || !valueOutEl) return;
+        var txt = (valueEl.textContent || '').trim();
+        if (txt) valueOutEl.textContent = txt;
+      }
+
+      // Toma el label del primary si existe
+      var labelEl = primary.querySelector('.result-label');
+      if (labelEl && labelOutEl) {
+        labelOutEl.textContent = (labelEl.textContent || '').trim() || 'Tu resultado';
+      }
+      setPillValue();
+
+      var visible = false;
+      function setVisible(v) {
+        if (v === visible) return;
+        visible = v;
+        if (v) {
+          pill.removeAttribute('hidden');
+          // doble rAF para asegurar la animación
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () { pill.classList.add('is-visible'); });
+          });
+        } else {
+          pill.classList.remove('is-visible');
+          setTimeout(function () {
+            if (!visible) pill.setAttribute('hidden', '');
+          }, 250);
+        }
+      }
+
+      // Sólo mostrar cuando results visibles
+      function resultsAreVisible() {
+        return !resultsBox.hasAttribute('hidden');
+      }
+
+      var io = new IntersectionObserver(function (entries) {
+        var e = entries[0];
+        if (!e) return;
+        setPillValue();
+        if (!resultsAreVisible()) {
+          setVisible(false);
+          return;
+        }
+        setVisible(!e.isIntersecting);
+      }, { threshold: 0, rootMargin: '-10px 0px 0px 0px' });
+      io.observe(primary);
+
+      // MutationObserver: actualiza valor cuando el JS de calc cambia [data-value]
+      if (valueEl) {
+        var mo = new MutationObserver(setPillValue);
+        mo.observe(valueEl, { childList: true, characterData: true, subtree: true });
+      }
+
+      // Tap → volver al primary
+      if (scrollBtn) {
+        scrollBtn.addEventListener('click', function () {
+          primary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+
+      // Ocultar si results vuelven a estar hidden (cuando user da "Modificar datos")
+      var mo2 = new MutationObserver(function () {
+        if (!resultsAreVisible()) setVisible(false);
+      });
+      mo2.observe(resultsBox, { attributes: true, attributeFilter: ['hidden'] });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () {
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(init, { timeout: 1500 });
+        } else {
+          setTimeout(init, 250);
+        }
+      });
+    } else {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(init, { timeout: 1500 });
+      } else {
+        setTimeout(init, 250);
+      }
+    }
+  })();
+</script>

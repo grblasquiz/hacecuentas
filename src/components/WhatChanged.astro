@@ -1,0 +1,242 @@
+---
+/**
+ * WhatChanged — diff visual de un dato vs períodos anteriores + real terms.
+ *
+ * Killer feature para calcs data-driven (jubilación, aguinaldo, IPC, plazo fijo):
+ * justifica visita recurrente y captura queries "cuánto aumentó X".
+ *
+ * Renderiza:
+ *  - Card con valor actual + badge "Actualizado"
+ *  - Diff % vs mes anterior
+ *  - Diff % vs YTD / año anterior (opcional)
+ *  - Diff en términos reales (vs inflación, opcional)
+ *  - Mini sparkline 6m (opcional, si hay histórico)
+ *
+ * Cero JS, SVG inline, SSG.
+ */
+
+export type WhatChangedDiff = {
+  /** Label "+5.2%" o "-3.1%" (formato libre — viene del calc). */
+  label: string;
+  /** Texto secundario: "vs. mayo ($349.250)" */
+  context: string;
+  /** Si true, el diff es negativo (rojo). Default infiere del signo del label. */
+  negative?: boolean;
+};
+
+interface Props {
+  /** Título del card (ej. "Jubilación mínima · junio 2026"). */
+  title: string;
+  /** Valor primario formateado (ej. "$367.450"). */
+  value: string;
+  /** Fecha de última actualización amigable (ej. "hoy", "ayer", "21 may"). */
+  updatedLabel?: string;
+  /** Diffs a mostrar (1-3 ideal). */
+  diffs?: WhatChangedDiff[];
+  /** Histórico para sparkline (valores numéricos). Si tiene >=2 puntos se renderiza. */
+  history?: number[];
+  /** Labels del primer y último punto del histórico (ej. "ene", "jun"). */
+  historyLabels?: { first?: string; last?: string };
+}
+
+const { title, value, updatedLabel, diffs = [], history = [], historyLabels = {} } = Astro.props;
+
+function inferNegative(label: string): boolean {
+  return /^-|^▼|▼\s*$/.test(label.trim());
+}
+
+function sparklinePoints(values: number[], w = 280, h = 50): string {
+  if (!values.length) return "";
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const xStep = w / Math.max(values.length - 1, 1);
+  return values
+    .map((v, i) => {
+      const x = i * xStep;
+      const y = h - 4 - ((v - min) / range) * (h - 8);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+const lastX = history.length > 0 ? 280 : 0;
+const lastY = history.length > 0
+  ? (() => {
+      const min = Math.min(...history);
+      const max = Math.max(...history);
+      const range = max - min || 1;
+      return 50 - 4 - ((history[history.length - 1] - min) / range) * (50 - 8);
+    })()
+  : 0;
+---
+
+<section class="what-changed" aria-label={`${title} — qué cambió`}>
+  {updatedLabel && (
+    <span class="what-changed-badge">
+      <span class="what-changed-badge-dot" aria-hidden="true"></span>
+      {updatedLabel}
+    </span>
+  )}
+  <div class="what-changed-label">{title}</div>
+  <div class="what-changed-value">{value}</div>
+
+  {diffs.length > 0 && (
+    <div class="what-changed-diffs">
+      {diffs.map((d) => {
+        const neg = d.negative ?? inferNegative(d.label);
+        return (
+          <div class={`what-changed-diff ${neg ? "is-negative" : ""}`}>
+            <span class={`what-changed-diff-arrow ${neg ? "is-negative" : ""}`} aria-hidden="true">
+              {neg ? "▼" : "▲"}
+            </span>
+            <span class="what-changed-diff-text">
+              <strong>{d.label}</strong> {d.context}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  )}
+
+  {history.length >= 2 && (
+    <div class="what-changed-chart">
+      <div class="what-changed-chart-title">Evolución últimos {history.length} meses</div>
+      <svg viewBox="0 0 280 50" preserveAspectRatio="none" class="what-changed-chart-svg" role="img" aria-label="Evolución histórica">
+        <polyline
+          fill="none"
+          stroke="var(--accent)"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          points={sparklinePoints(history)}
+        />
+        <circle cx={lastX} cy={lastY} r="3.5" fill="var(--accent)"></circle>
+      </svg>
+      {(historyLabels.first || historyLabels.last) && (
+        <div class="what-changed-chart-labels">
+          <span>{historyLabels.first}</span>
+          <span>{historyLabels.last}</span>
+        </div>
+      )}
+    </div>
+  )}
+</section>
+
+<style>
+  .what-changed {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.125rem 1.25rem;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+    margin: 1.25rem 0;
+  }
+  .what-changed-badge {
+    position: absolute;
+    top: 0.875rem;
+    right: 0.875rem;
+    background: var(--success-soft);
+    color: var(--success);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    padding: 0.1875rem 0.5rem;
+    border-radius: 99px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  html[data-theme="dark"] .what-changed-badge {
+    color: var(--success);
+  }
+  .what-changed-badge-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .what-changed-label {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    padding-right: 6rem;
+    font-weight: 500;
+  }
+  .what-changed-value {
+    font-size: 2.25rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 50%, #7c3aed));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin-bottom: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .what-changed-diffs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .what-changed-diff {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-soft);
+    border-radius: var(--radius);
+    font-size: 0.8125rem;
+    border-left: 3px solid var(--success);
+  }
+  .what-changed-diff.is-negative {
+    border-left-color: var(--danger);
+  }
+  .what-changed-diff-arrow {
+    font-weight: 700;
+    color: var(--success);
+    font-size: 0.875rem;
+    flex-shrink: 0;
+  }
+  .what-changed-diff-arrow.is-negative {
+    color: var(--danger);
+  }
+  .what-changed-diff-text {
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .what-changed-diff-text strong {
+    color: var(--text);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .what-changed-chart {
+    margin-top: 0.875rem;
+    padding-top: 0.875rem;
+    border-top: 1px dashed var(--border);
+  }
+  .what-changed-chart-title {
+    font-size: 0.6875rem;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .what-changed-chart-svg {
+    width: 100%;
+    height: 50px;
+    display: block;
+  }
+  .what-changed-chart-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6875rem;
+    color: var(--text-subtle);
+    margin-top: 0.25rem;
+  }
+</style>

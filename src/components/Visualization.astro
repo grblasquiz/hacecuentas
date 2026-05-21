@@ -1,0 +1,523 @@
+---
+/**
+ * Visualization — wrapper unificado para visualizaciones contextuales por tipo de calc.
+ *
+ * Renderiza SVG inline server-rendered, cero JS, cero dependencias. Tipos soportados:
+ *  - `bar`: stacked horizontal bar (ej. sueldo: neto / aportes / ganancias)
+ *  - `gauge`: barra con marker (ej. IMC adulto)
+ *  - `curve`: línea con área (ej. plazo fijo vs inflación)
+ *  - `donut`: chart circular (ej. gastos)
+ *  - `timeline`: barra horizontal con start/current/end (ej. fecha probable)
+ *
+ * Uso opcional desde Calculator: solo renderiza si `data` está definida.
+ * Cada calc puede declarar `config.visualization` en su JSON con el shape del tipo elegido.
+ */
+
+export type VizSegment = { label: string; value: number; color?: string };
+export type VizZone = { to: number; label: string; color: string };
+export type VizSeries = { name: string; points: number[]; color?: string; dashed?: boolean };
+export type VizSlice = { label: string; value: number; color?: string };
+export type VizMilestone = { date: string; label: string; percent?: number };
+
+export type VizData =
+  | { type: "bar"; segments: VizSegment[]; total?: number }
+  | { type: "gauge"; value: number; min: number; max: number; zones: VizZone[]; label?: string; markerLabel?: string }
+  | { type: "curve"; series: VizSeries[]; xLabels?: string[]; height?: number }
+  | { type: "donut"; slices: VizSlice[]; centerValue?: string; centerLabel?: string }
+  | { type: "timeline"; start: VizMilestone; current: VizMilestone; end: VizMilestone };
+
+interface Props {
+  title?: string;
+  data?: VizData;
+  /** Si true, no envuelve en card. Útil para embeber dentro de otro panel. */
+  bare?: boolean;
+}
+const { title, data, bare = false } = Astro.props;
+
+// Helpers
+const DEFAULT_COLORS = ["var(--accent)", "#a78bfa", "var(--success)", "var(--warning)", "var(--danger)", "#0ea5e9"];
+
+function pickColor(i: number, override?: string): string {
+  return override || DEFAULT_COLORS[i % DEFAULT_COLORS.length];
+}
+
+function curvePoints(values: number[], w = 280, h = 80): string {
+  if (!values.length) return "";
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const xStep = w / Math.max(values.length - 1, 1);
+  return values
+    .map((v, i) => {
+      const x = i * xStep;
+      const y = h - 2 - ((v - min) / range) * (h - 4);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+function curveAreaPath(values: number[], w = 280, h = 80): string {
+  const pts = curvePoints(values, w, h);
+  if (!pts) return "";
+  return `M 0,${h} L ${pts.replace(/,/g, " ").split(" ").map((v, i) => (i === 0 ? v : v)).join(",").replace(/,([0-9.]+),/g, ",$1 L ")} L ${w},${h} Z`;
+}
+
+// Donut math
+function donutSegments(slices: VizSlice[], radius = 38, strokeWidth = 14): Array<{ color: string; dasharray: string; dashoffset: number; label: string; value: number }> {
+  const circ = 2 * Math.PI * radius;
+  const total = slices.reduce((sum, s) => sum + Math.max(0, s.value), 0) || 1;
+  let offset = 0;
+  return slices.map((s, i) => {
+    const len = (Math.max(0, s.value) / total) * circ;
+    const seg = {
+      color: pickColor(i, s.color),
+      dasharray: `${len.toFixed(2)} ${circ.toFixed(2)}`,
+      dashoffset: -offset,
+      label: s.label,
+      value: s.value,
+    };
+    offset += len;
+    return seg;
+  });
+}
+
+// Marker position for gauge
+function gaugeMarkerPercent(value: number, min: number, max: number): number {
+  const range = max - min || 1;
+  return Math.max(0, Math.min(100, ((value - min) / range) * 100));
+}
+---
+
+{data && (
+  <div class={`viz ${bare ? "viz--bare" : ""}`} data-viz-type={data.type}>
+    {title && <div class="viz-title">{title}</div>}
+
+    {/* ───────── BAR (stacked horizontal) ───────── */}
+    {data.type === "bar" && (
+      <div class="viz-bar-wrap">
+        <div class="viz-bar" role="img" aria-label={`${title || "Distribución"}: ${data.segments.map((s) => `${s.label} ${s.value}`).join(", ")}`}>
+          {data.segments.map((seg, i) => {
+            const total = data.total ?? data.segments.reduce((sum, s) => sum + s.value, 0);
+            const pct = total > 0 ? (seg.value / total) * 100 : 0;
+            return (
+              <div
+                class="viz-bar-seg"
+                style={`flex: ${seg.value}; background: ${pickColor(i, seg.color)};`}
+                title={`${seg.label}: ${pct.toFixed(1)}%`}
+              >
+                {pct > 8 && <span>{seg.label}</span>}
+              </div>
+            );
+          })}
+        </div>
+        <div class="viz-legend">
+          {data.segments.map((seg, i) => {
+            const total = data.total ?? data.segments.reduce((sum, s) => sum + s.value, 0);
+            const pct = total > 0 ? (seg.value / total) * 100 : 0;
+            return (
+              <span class="viz-legend-item">
+                <span class="viz-legend-dot" style={`background: ${pickColor(i, seg.color)};`}></span>
+                {seg.label} <strong>{pct.toFixed(0)}%</strong>
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    )}
+
+    {/* ───────── GAUGE ───────── */}
+    {data.type === "gauge" && (
+      <div class="viz-gauge-wrap">
+        <div class="viz-gauge" role="img" aria-label={`${title || "Gauge"}: ${data.value} de ${data.min}-${data.max}`}>
+          <div
+            class="viz-gauge-marker"
+            style={`left: ${gaugeMarkerPercent(data.value, data.min, data.max)}%;`}
+          >
+            <div class="viz-gauge-pin" aria-hidden="true"></div>
+            {data.markerLabel && <div class="viz-gauge-label">{data.markerLabel}</div>}
+          </div>
+          <div class="viz-gauge-bar">
+            {data.zones.map((zone, i) => {
+              const prevTo = i === 0 ? data.min : data.zones[i - 1].to;
+              const span = zone.to - prevTo;
+              return (
+                <div class="viz-gauge-zone" style={`flex: ${span}; background: ${zone.color};`}>
+                  {span > (data.max - data.min) * 0.12 && <span>{zone.label}</span>}
+                </div>
+              );
+            })}
+          </div>
+          <div class="viz-gauge-scale">
+            <span>{data.min}</span>
+            {data.zones.slice(0, -1).map((z) => <span>{z.to}</span>)}
+            <span>{data.max}</span>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* ───────── CURVE ───────── */}
+    {data.type === "curve" && (
+      <div class="viz-curve-wrap" style={`height: ${data.height || 100}px`}>
+        <svg viewBox={`0 0 280 ${data.height || 80}`} preserveAspectRatio="none" class="viz-curve-svg" role="img" aria-label={title || "Evolución"}>
+          {data.series.map((serie, i) => {
+            const color = pickColor(i, serie.color);
+            const points = curvePoints(serie.points, 280, data.height || 80);
+            return (
+              <>
+                {!serie.dashed && (
+                  <polyline
+                    fill="none"
+                    stroke={color}
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    points={points}
+                    opacity="0.95"
+                  />
+                )}
+                {serie.dashed && (
+                  <polyline
+                    fill="none"
+                    stroke={color}
+                    stroke-width="2"
+                    stroke-dasharray="4 3"
+                    stroke-linecap="round"
+                    points={points}
+                    opacity="0.85"
+                  />
+                )}
+              </>
+            );
+          })}
+        </svg>
+        <div class="viz-legend">
+          {data.series.map((serie, i) => (
+            <span class="viz-legend-item">
+              <span class="viz-legend-dot" style={`background: ${pickColor(i, serie.color)};`}></span>
+              {serie.name}
+            </span>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* ───────── DONUT ───────── */}
+    {data.type === "donut" && (
+      <div class="viz-donut-wrap">
+        <div class="viz-donut">
+          <svg viewBox="0 0 100 100" class="viz-donut-svg" role="img" aria-label={title || "Distribución"}>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="var(--bg-muted)" stroke-width="14" />
+            {donutSegments(data.slices).map((seg) => (
+              <circle
+                cx="50"
+                cy="50"
+                r="38"
+                fill="none"
+                stroke={seg.color}
+                stroke-width="14"
+                stroke-dasharray={seg.dasharray}
+                stroke-dashoffset={seg.dashoffset}
+                transform="rotate(-90 50 50)"
+              />
+            ))}
+          </svg>
+          {(data.centerValue || data.centerLabel) && (
+            <div class="viz-donut-center">
+              {data.centerValue && <div class="viz-donut-value">{data.centerValue}</div>}
+              {data.centerLabel && <div class="viz-donut-label">{data.centerLabel}</div>}
+            </div>
+          )}
+        </div>
+        <div class="viz-legend viz-legend--center">
+          {data.slices.map((slice, i) => {
+            const total = data.slices.reduce((sum, s) => sum + s.value, 0) || 1;
+            const pct = (slice.value / total) * 100;
+            return (
+              <span class="viz-legend-item">
+                <span class="viz-legend-dot" style={`background: ${pickColor(i, slice.color)};`}></span>
+                {slice.label} <strong>{pct.toFixed(0)}%</strong>
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    )}
+
+    {/* ───────── TIMELINE ───────── */}
+    {data.type === "timeline" && (
+      <div class="viz-timeline-wrap" role="img" aria-label={`${data.start.label} → ${data.current.label} → ${data.end.label}`}>
+        <div class="viz-timeline-track">
+          <div class="viz-timeline-line"></div>
+          <div class="viz-timeline-fill" style={`width: ${Math.max(0, Math.min(100, data.current.percent || 50))}%`}></div>
+          <div class="viz-timeline-dot" style={`left: ${Math.max(0, Math.min(100, data.current.percent || 50))}%`}></div>
+        </div>
+        <div class="viz-timeline-labels">
+          <div class="viz-timeline-label" style="left: 0;">
+            <div class="viz-timeline-label-top">{data.start.label}</div>
+            <div class="viz-timeline-label-bottom">{data.start.date}</div>
+          </div>
+          <div class="viz-timeline-label viz-timeline-label--current" style={`left: ${data.current.percent || 50}%;`}>
+            <div class="viz-timeline-label-top">{data.current.label}</div>
+            <div class="viz-timeline-label-bottom">{data.current.date}</div>
+          </div>
+          <div class="viz-timeline-label" style="right: 0;">
+            <div class="viz-timeline-label-top">{data.end.label}</div>
+            <div class="viz-timeline-label-bottom">{data.end.date}</div>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+)}
+
+<style>
+  .viz {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.125rem;
+    margin: 1.25rem 0;
+  }
+  .viz--bare {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+  .viz-title {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    margin-bottom: 0.875rem;
+  }
+  .viz-legend {
+    display: flex;
+    gap: 0.875rem;
+    flex-wrap: wrap;
+    margin-top: 0.625rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .viz-legend--center {
+    justify-content: center;
+  }
+  .viz-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .viz-legend-item strong {
+    color: var(--text);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .viz-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* ── BAR ── */
+  .viz-bar-wrap { display: block; }
+  .viz-bar {
+    display: flex;
+    height: 36px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 0.625rem;
+  }
+  .viz-bar-seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 0.375rem;
+  }
+  html[data-theme="dark"] .viz-bar-seg { color: var(--bg); }
+
+  /* ── GAUGE ── */
+  .viz-gauge-wrap { padding: 0.5rem 0 0.25rem; }
+  .viz-gauge {
+    position: relative;
+    height: 100px;
+  }
+  .viz-gauge-marker {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    z-index: 1;
+  }
+  .viz-gauge-pin {
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 10px solid var(--text);
+    margin: 0 auto;
+  }
+  .viz-gauge-label {
+    background: var(--text);
+    color: var(--bg);
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    margin-top: 4px;
+    box-shadow: var(--shadow-sm);
+  }
+  .viz-gauge-bar {
+    display: flex;
+    height: 32px;
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 30px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+  }
+  .viz-gauge-zone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    padding: 0 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  html[data-theme="dark"] .viz-gauge-zone { color: var(--bg); }
+  .viz-gauge-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6875rem;
+    color: var(--text-subtle);
+    margin-top: 0.375rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── CURVE ── */
+  .viz-curve-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .viz-curve-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* ── DONUT ── */
+  .viz-donut-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .viz-donut {
+    position: relative;
+    width: 140px;
+    height: 140px;
+  }
+  .viz-donut-svg {
+    width: 100%;
+    height: 100%;
+  }
+  .viz-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .viz-donut-value {
+    font-size: 1.125rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .viz-donut-label {
+    font-size: 0.6875rem;
+    color: var(--text-subtle);
+  }
+
+  /* ── TIMELINE ── */
+  .viz-timeline-wrap { padding: 0.5rem 0.5rem 0; }
+  .viz-timeline-track {
+    position: relative;
+    height: 16px;
+    margin: 0.75rem 0;
+  }
+  .viz-timeline-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--bg-muted);
+    border-radius: 99px;
+    transform: translateY(-50%);
+  }
+  .viz-timeline-fill {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #7c3aed));
+    border-radius: 99px;
+    transform: translateY(-50%);
+  }
+  .viz-timeline-dot {
+    position: absolute;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    background: var(--bg-card);
+    border: 3px solid var(--accent);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    box-shadow: var(--shadow-sm);
+  }
+  .viz-timeline-labels {
+    position: relative;
+    height: 36px;
+  }
+  .viz-timeline-label {
+    position: absolute;
+    text-align: center;
+    width: 70px;
+    transform: translateX(-50%);
+    line-height: 1.2;
+  }
+  .viz-timeline-label[style*="left: 0"] { transform: translateX(0); text-align: left; }
+  .viz-timeline-label[style*="right: 0"] { transform: translateX(0); text-align: right; right: 0; }
+  .viz-timeline-label-top {
+    font-size: 0.6875rem;
+    color: var(--text-subtle);
+  }
+  .viz-timeline-label-bottom {
+    font-size: 0.75rem;
+    color: var(--text);
+    font-weight: 600;
+    margin-top: 0.125rem;
+  }
+  .viz-timeline-label--current .viz-timeline-label-bottom {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  html[data-theme="dark"] .viz-timeline-label--current .viz-timeline-label-bottom {
+    color: var(--accent-strong);
+  }
+</style>
