@@ -1,4 +1,13 @@
 ---
+import FieldRow from "./FieldRow.astro";
+import StickyResultPill from "./StickyResultPill.astro";
+import ShareBottomSheet from "./ShareBottomSheet.astro";
+import Visualization from "./Visualization.astro";
+import type { VizData } from "./Visualization.astro";
+import WhatChanged from "./WhatChanged.astro";
+import type { WhatChangedDiff } from "./WhatChanged.astro";
+import ScenarioComparator from "./ScenarioComparator.astro";
+import type { Scenario } from "./ScenarioComparator.astro";
 export interface Field {
   id: string;
   label: string;
@@ -15,6 +24,10 @@ export interface Field {
   help?: string;
   format?: 'thousands';
   advanced?: boolean;
+  /** Smart Input Groups: agrupador opcional. Fields con el mismo `group` se renderizan juntos en un panel con header. */
+  group?: string;
+  /** Icono opcional para el header del grupo (emoji o caracter). Solo se usa en el primer field del grupo. */
+  groupIcon?: string;
 }
 
 export interface Preset {
@@ -71,6 +84,21 @@ export interface CalcConfig {
     format: 'currency' | 'number' | 'percentage' | 'date' | 'text' | 'duration';
     primary?: boolean;
     suffix?: string;
+    /** Result Hero opcional: chip de contexto que aparece arriba del label en el output primary. */
+    contextChip?: string;
+    /** Result Hero opcional: barra comparativa visual debajo del valor (vs. mínimo/promedio/meta). */
+    compareBar?: {
+      percent: number;        // 0..100 — porcentaje de fill de la barra
+      minLabel?: string;      // ej. "Mínimo: $1.200.000"
+      label?: string;         // ej. "↑ 53% más"
+    };
+    /** Result Hero opcional: CTAs contextuales debajo del valor (ej. "Ver desglose", "¿Es justo?"). */
+    ctas?: Array<{
+      label: string;
+      icon?: string;          // emoji o caracter pequeño
+      href?: string;          // si tiene, es <a>
+      action?: string;        // si tiene, es <button data-action>
+    }>;
   }[];
   interactive?: {
     sliders: Array<{
@@ -92,6 +120,25 @@ export interface CalcConfig {
     title?: string;
     result?: string;
     steps?: string[];
+  };
+  /** Visualization opcional debajo del result primary (bar/gauge/curve/donut/timeline). */
+  visualization?: { title?: string; data: VizData };
+  /** What Changed opcional (diff vs períodos anteriores) — para calcs con datos históricos. */
+  whatChanged?: {
+    title: string;
+    value: string;
+    updatedLabel?: string;
+    diffs?: WhatChangedDiff[];
+    history?: number[];
+    historyLabels?: { first?: string; last?: string };
+  };
+  /** Scenario Comparator opcional (escenarios pre-calculados). */
+  scenarios?: {
+    title?: string;
+    current: Scenario;
+    alternative: Scenario;
+    summary?: string;
+    summaryIcon?: string;
   };
 }
 
@@ -135,6 +182,7 @@ const translations = {
     recentCalcs: 'Your recent calculations', clear: 'Clear', clearHistory: 'Clear history',
     sourceLabel: 'Source', advancedOptions: 'Advanced options', calculating: 'Calculating...',
     emptyText: 'Your result will appear here', emptySub: 'Fill in the fields and tap',
+    tryExample: 'Try an example', orFillBelow: 'Or fill in your data above',
     resultBadge: 'Result', chartAriaLabel: 'Result chart', downloadPng: 'Download chart as PNG',
     whatIfBadge: '🎚️ What if...?', whatIfHint: 'Move and see how everything changes',
     emailHeading: 'Get this result by email', emailPlaceholder: 'you@email.com',
@@ -160,6 +208,7 @@ const translations = {
     recentCalcs: 'Seus últimos cálculos', clear: 'Limpar', clearHistory: 'Apagar histórico',
     sourceLabel: 'Fonte', advancedOptions: 'Opções avançadas', calculating: 'Calculando...',
     emptyText: 'Seu resultado vai aparecer aqui', emptySub: 'Preencha os campos e toque em',
+    tryExample: 'Tente um exemplo', orFillBelow: 'Ou preencha seus dados acima',
     resultBadge: 'Resultado', chartAriaLabel: 'Gráfico do resultado', downloadPng: 'Baixar gráfico como PNG',
     whatIfBadge: '🎚️ E se...?', whatIfHint: 'Mova e veja como tudo muda',
     emailHeading: 'Receba este resultado por e-mail', emailPlaceholder: 'voce@email.com',
@@ -185,6 +234,7 @@ const translations = {
     recentCalcs: 'Tus últimos cálculos', clear: 'Limpiar', clearHistory: 'Borrar historial',
     sourceLabel: 'Fuente', advancedOptions: 'Opciones avanzadas', calculating: 'Calculando...',
     emptyText: 'Tu resultado va a aparecer acá', emptySub: 'Completá los datos y tocá',
+    tryExample: 'Probá con un ejemplo', orFillBelow: 'O completá tus datos arriba',
     resultBadge: 'Resultado', chartAriaLabel: 'Gráfico del resultado', downloadPng: 'Descargar gráfico como imagen',
     whatIfBadge: '🎚️ ¿Qué pasa si...?', whatIfHint: 'Movelo y mirá cómo cambia todo',
     emailHeading: 'Recibí este resultado por email', emailPlaceholder: 'tu@email.com',
@@ -234,6 +284,30 @@ const disclaimer = (lang === 'en' || lang === 'pt') ? '' : (disclaimers[config.s
 const basicFields = config.fields.filter((f) => !f.advanced);
 const advancedFields = config.fields.filter((f) => f.advanced);
 
+// Smart Input Groups: agrupa fields con la misma key `group` para reducir
+// carga cognitiva en calcs con muchos campos. Backwards-compatible:
+// si ningún field tiene `group`, renderiza el grid plano como siempre.
+type FieldGroup = { name?: string; icon?: string; fields: Field[] };
+function groupFields(fields: Field[]): FieldGroup[] {
+  const result: FieldGroup[] = [];
+  const map = new Map<string, FieldGroup>();
+  for (const f of fields) {
+    const key = f.group || '__default__';
+    let entry = map.get(key);
+    if (!entry) {
+      entry = { name: f.group, icon: f.groupIcon, fields: [] };
+      map.set(key, entry);
+      result.push(entry);
+    }
+    entry.fields.push(f);
+  }
+  return result;
+}
+const basicGroups = groupFields(basicFields);
+const advancedGroups = groupFields(advancedFields);
+const useGroupsBasic = basicGroups.some((g) => Boolean(g.name));
+const useGroupsAdvanced = advancedGroups.some((g) => Boolean(g.name));
+
 // Data freshness: formatear última actualización para calcs con datos externos
 const dataUpdate = config.dataUpdate;
 const showFreshness = dataUpdate && dataUpdate.frequency !== 'never';
@@ -276,7 +350,7 @@ const formatFreshnessDate = (iso: string): string => {
     <span class="calc-card-badge">{t.badge}</span>
   </div>
   <!-- Historial: últimos cálculos del usuario (localStorage) — solo se muestra si hay entries -->
-  <div class="calc-history" data-history-widget hidden>
+  <div class="calc-history" data-history-widget data-history-icon={config.icon || '📊'} hidden>
     <div class="history-head">
       <span class="history-title">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
@@ -367,50 +441,29 @@ const formatFreshnessDate = (iso: string): string => {
   )}
 
   <form id={`form-${config.slug}`} class="calc-form" data-calc-input novalidate>
-    <div class="fields-grid">
-      {basicFields.map((field) => (
-        <div class={`field ${field.type === 'select' || field.type === 'date' ? 'field-wide' : ''}`}>
-          <label for={field.id}>
-            <span class="label-text">{field.label}</span>
-            {field.help && (
-              <span class="help-wrap">
-                <span class="help" tabindex="0" aria-describedby={`tip-${field.id}`}>?</span>
-                <span class="help-tip" id={`tip-${field.id}`} role="tooltip">{field.help}</span>
-              </span>
-            )}
-          </label>
-          <div class="input-wrap">
-            {field.prefix && <span class="prefix">{field.prefix}</span>}
-            {field.type === 'select' ? (
-              <select id={field.id} name={field.id} required={field.required}>
-                {field.options?.map((opt) => (
-                  <option value={opt.value} selected={opt.value === field.default}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                id={field.id}
-                name={field.id}
-                type={field.type === 'number' && field.format === 'thousands' ? 'text' : field.type}
-                placeholder={field.placeholder}
-                min={field.min}
-                max={field.max}
-                step={field.step}
-                value={field.default === 0 || field.default === undefined ? undefined : field.default}
-                required={field.required}
-                inputmode={field.type === 'number' ? 'decimal' : undefined}
-                autocomplete="off"
-                data-format={field.format}
-                data-type={field.type}
-              />
-            )}
-            {field.suffix && <span class="suffix">{field.suffix}</span>}
+    {useGroupsBasic ? (
+      basicGroups.map((g) => (
+        g.name ? (
+          <fieldset class="input-group">
+            <legend class="input-group-header">
+              {g.icon && <span class="input-group-icon" aria-hidden="true">{g.icon}</span>}
+              <span>{g.name}</span>
+            </legend>
+            <div class="fields-grid">
+              {g.fields.map((field) => <FieldRow field={field} />)}
+            </div>
+          </fieldset>
+        ) : (
+          <div class="fields-grid">
+            {g.fields.map((field) => <FieldRow field={field} />)}
           </div>
-        </div>
-      ))}
-    </div>
+        )
+      ))
+    ) : (
+      <div class="fields-grid">
+        {basicFields.map((field) => <FieldRow field={field} />)}
+      </div>
+    )}
 
     {advancedFields.length > 0 && (
       <details class="advanced-toggle">
@@ -419,50 +472,29 @@ const formatFreshnessDate = (iso: string): string => {
           {t.advancedOptions}
           <span class="adv-count">({advancedFields.length})</span>
         </summary>
-        <div class="fields-grid advanced-grid">
-          {advancedFields.map((field) => (
-            <div class={`field ${field.type === 'select' || field.type === 'date' ? 'field-wide' : ''}`}>
-              <label for={field.id}>
-                <span class="label-text">{field.label}</span>
-                {field.help && (
-                  <span class="help-wrap">
-                    <span class="help" tabindex="0" aria-describedby={`tip-${field.id}`}>?</span>
-                    <span class="help-tip" id={`tip-${field.id}`} role="tooltip">{field.help}</span>
-                  </span>
-                )}
-              </label>
-              <div class="input-wrap">
-                {field.prefix && <span class="prefix">{field.prefix}</span>}
-                {field.type === 'select' ? (
-                  <select id={field.id} name={field.id} required={field.required}>
-                    {field.options?.map((opt) => (
-                      <option value={opt.value} selected={opt.value === field.default}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    id={field.id}
-                    name={field.id}
-                    type={field.type === 'number' && field.format === 'thousands' ? 'text' : field.type}
-                    placeholder={field.placeholder}
-                    min={field.min}
-                    max={field.max}
-                    step={field.step}
-                    value={field.default === 0 || field.default === undefined ? undefined : field.default}
-                    required={field.required}
-                    inputmode={field.type === 'number' ? 'decimal' : undefined}
-                    autocomplete="off"
-                    data-format={field.format}
-                    data-type={field.type}
-                  />
-                )}
-                {field.suffix && <span class="suffix">{field.suffix}</span>}
+        {useGroupsAdvanced ? (
+          advancedGroups.map((g) => (
+            g.name ? (
+              <fieldset class="input-group">
+                <legend class="input-group-header">
+                  {g.icon && <span class="input-group-icon" aria-hidden="true">{g.icon}</span>}
+                  <span>{g.name}</span>
+                </legend>
+                <div class="fields-grid advanced-grid">
+                  {g.fields.map((field) => <FieldRow field={field} />)}
+                </div>
+              </fieldset>
+            ) : (
+              <div class="fields-grid advanced-grid">
+                {g.fields.map((field) => <FieldRow field={field} />)}
               </div>
-            </div>
-          ))}
-        </div>
+            )
+          ))
+        ) : (
+          <div class="fields-grid advanced-grid">
+            {advancedFields.map((field) => <FieldRow field={field} />)}
+          </div>
+        )}
       </details>
     )}
 
@@ -484,9 +516,40 @@ const formatFreshnessDate = (iso: string): string => {
   </form>
 
   <div class="empty-preview" data-empty-preview aria-hidden="true">
-    <div class="empty-icon" aria-hidden="true">{config.icon}</div>
-    <div class="empty-text">{t.emptyText}</div>
-    <div class="empty-sub">{t.emptySub} <strong>{t.calculate}</strong></div>
+    {config.presets && config.presets.items.length > 0 ? (
+      <div class="empty-onboarding">
+        <div class="empty-onboarding-head">
+          <div class="empty-onboarding-icon" aria-hidden="true">{config.icon || '👇'}</div>
+          <div class="empty-onboarding-meta">
+            <div class="empty-onboarding-title">{t.tryExample}</div>
+            <div class="empty-onboarding-sub">{t.orFillBelow}</div>
+          </div>
+        </div>
+        <div class="empty-onboarding-presets">
+          {config.presets.items.slice(0, 3).map((p) => (
+            <button
+              type="button"
+              class="empty-preset-card preset-btn"
+              data-preset={JSON.stringify(p.values)}
+              title={p.note}
+              aria-pressed="false"
+            >
+              <div class="empty-preset-card-text">
+                <strong>{p.label}</strong>
+                {p.note && <span>{p.note}</span>}
+              </div>
+              <span class="empty-preset-card-arrow" aria-hidden="true">→</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <>
+        <div class="empty-icon" aria-hidden="true">{config.icon}</div>
+        <div class="empty-text">{t.emptyText}</div>
+        <div class="empty-sub">{t.emptySub} <strong>{t.calculate}</strong></div>
+      </>
+    )}
   </div>
 
   <div class="calc-results" id={`results-${config.slug}`} hidden aria-live="polite" aria-atomic="true">
@@ -496,11 +559,67 @@ const formatFreshnessDate = (iso: string): string => {
     <div class="results-grid">
       {config.outputs.map((out) => (
         <div class={`result ${out.primary ? 'primary' : ''}`} data-output={out.id} data-format={out.format} data-suffix={out.suffix || ''} data-primary={out.primary ? 'true' : 'false'}>
+          {out.primary && out.contextChip && (
+            <span class="result-context-chip">{out.contextChip}</span>
+          )}
           <div class="result-label">{out.label}</div>
           <div class="result-value" data-value>{out.primary ? exampleBaseline : ''}</div>
+          {out.primary && out.compareBar && (
+            <div class="result-compare">
+              <div class="result-compare-bar" role="presentation">
+                <div class="result-compare-fill" style={`width: ${Math.max(0, Math.min(100, out.compareBar.percent))}%`}></div>
+              </div>
+              <div class="result-compare-row">
+                {out.compareBar.minLabel && <span class="result-compare-min">{out.compareBar.minLabel}</span>}
+                {out.compareBar.label && <strong class="result-compare-label">{out.compareBar.label}</strong>}
+              </div>
+            </div>
+          )}
+          {out.primary && out.ctas && out.ctas.length > 0 && (
+            <div class="result-ctas">
+              {out.ctas.map((cta) => (
+                cta.href ? (
+                  <a class="result-cta" href={cta.href}>
+                    {cta.icon && <span class="result-cta-icon" aria-hidden="true">{cta.icon}</span>}
+                    <span>{cta.label}</span>
+                  </a>
+                ) : (
+                  <button type="button" class="result-cta" data-action={cta.action || undefined}>
+                    {cta.icon && <span class="result-cta-icon" aria-hidden="true">{cta.icon}</span>}
+                    <span>{cta.label}</span>
+                  </button>
+                )
+              ))}
+            </div>
+          )}
         </div>
       ))}
     </div>
+
+    {config.visualization && (
+      <Visualization title={config.visualization.title} data={config.visualization.data} />
+    )}
+
+    {config.whatChanged && (
+      <WhatChanged
+        title={config.whatChanged.title}
+        value={config.whatChanged.value}
+        updatedLabel={config.whatChanged.updatedLabel}
+        diffs={config.whatChanged.diffs}
+        history={config.whatChanged.history}
+        historyLabels={config.whatChanged.historyLabels}
+      />
+    )}
+
+    {config.scenarios && (
+      <ScenarioComparator
+        title={config.scenarios.title}
+        current={config.scenarios.current}
+        alternative={config.scenarios.alternative}
+        summary={config.scenarios.summary}
+        summaryIcon={config.scenarios.summaryIcon}
+      />
+    )}
 
     <button
       type="button"
@@ -590,6 +709,7 @@ const formatFreshnessDate = (iso: string): string => {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
         {t.newCalc}
       </button>
+      <ShareBottomSheet lang={lang} />
     </div>
 
     <!-- Email capture CTA -->
@@ -630,6 +750,8 @@ const formatFreshnessDate = (iso: string): string => {
 
   <div class="calc-error" id={`error-${config.slug}`} hidden role="alert"></div>
 </div>
+
+<StickyResultPill />
 
 <style>
   /* Botón "Modificar datos": solo visible en mobile dentro de la sección
@@ -831,6 +953,50 @@ const formatFreshnessDate = (iso: string): string => {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem 1.25rem;
     margin-bottom: 1.5rem;
+  }
+
+  /* Smart Input Groups — fieldset con header visual cuando los fields tienen `group` */
+  .input-group {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.125rem 0.5rem;
+    margin: 0 0 0.875rem;
+    transition: border-color 0.15s ease;
+  }
+  .input-group:hover {
+    border-color: var(--border-strong);
+  }
+  .input-group + .input-group {
+    margin-top: -0.25rem;
+  }
+  .input-group-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.875rem;
+    padding: 0;
+    line-height: 1;
+  }
+  .input-group-header::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #7c3aed));
+    border-radius: 99px;
+  }
+  .input-group-icon {
+    font-size: 1rem;
+    line-height: 1;
+  }
+  .input-group .fields-grid {
+    margin-bottom: 0.75rem;
   }
 
   .field {
@@ -1226,6 +1392,145 @@ const formatFreshnessDate = (iso: string): string => {
     .result.primary .result-value { animation: none; }
   }
 
+  /* Result Hero — chip de contexto opcional */
+  .result-context-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--accent-strong);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    padding: 0.25rem 0.625rem;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+    position: relative;
+    z-index: 1;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  html[data-theme="dark"] .result-context-chip {
+    background: rgba(96, 165, 250, 0.16);
+    color: var(--accent-strong);
+  }
+
+  /* Result Hero — barra comparativa opcional */
+  .result-compare {
+    margin-top: 1rem;
+    padding-top: 0.875rem;
+    border-top: 1px dashed color-mix(in srgb, var(--accent) 25%, var(--border));
+    position: relative;
+    z-index: 1;
+  }
+  .result-compare-bar {
+    position: relative;
+    height: 8px;
+    background: color-mix(in srgb, var(--accent) 12%, var(--bg-muted));
+    border-radius: 99px;
+    overflow: visible;
+    margin-bottom: 0.5rem;
+  }
+  .result-compare-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #7c3aed));
+    border-radius: 99px;
+    position: relative;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .result-compare-fill::after {
+    content: '';
+    position: absolute;
+    right: -7px;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    background: var(--bg-card);
+    border: 3px solid var(--accent);
+    border-radius: 50%;
+    transform: translateY(-50%);
+    box-shadow: var(--shadow-sm);
+  }
+  .result-compare-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .result-compare-label {
+    color: var(--success);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  html[data-theme="dark"] .result-compare-label {
+    color: var(--success);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .result-compare-fill { transition: none; }
+  }
+
+  /* Result Hero — CTAs contextuales */
+  .result-ctas {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+  .result-cta {
+    flex: 1 1 120px;
+    background: var(--bg-card);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+    border-radius: var(--radius);
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease,
+      color 0.15s ease,
+      transform 0.15s ease;
+  }
+  .result-cta:hover,
+  .result-cta:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg-card));
+    transform: translateY(-1px);
+    outline: none;
+  }
+  .result-cta:active {
+    transform: translateY(0);
+  }
+  .result-cta-icon {
+    font-size: 0.95em;
+    line-height: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .result-cta { transition: none; }
+    .result-cta:hover, .result-cta:active { transform: none; }
+  }
+  @media (max-width: 480px) {
+    .result-ctas { flex-direction: column; }
+    .result-cta { flex: 1 1 auto; }
+  }
+
   /* Empty state — antes de calcular */
   .empty-preview {
     margin: 0 1.75rem 1.75rem;
@@ -1256,6 +1561,126 @@ const formatFreshnessDate = (iso: string): string => {
   .empty-sub strong {
     color: var(--accent);
     font-weight: 600;
+  }
+  /* Empty state mejorado con onboarding (cuando hay presets) */
+  .empty-preview:has(.empty-onboarding) {
+    background: transparent;
+    border: none;
+    padding: 0 1.75rem 1.75rem;
+    text-align: left;
+  }
+  .empty-onboarding {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.125rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .empty-onboarding-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.875rem;
+  }
+  .empty-onboarding-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--bg-muted));
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.375rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .empty-onboarding-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .empty-onboarding-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .empty-onboarding-sub {
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    margin-top: 0.125rem;
+  }
+  .empty-onboarding-presets {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .empty-preset-card {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text);
+    text-align: left;
+    transition:
+      border-color 0.18s ease,
+      background 0.18s ease,
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+  .empty-preset-card:hover,
+  .empty-preset-card:focus-visible {
+    border-color: var(--accent);
+    background: var(--bg-card);
+    transform: translateX(3px);
+    box-shadow: var(--shadow-sm);
+    outline: none;
+  }
+  .empty-preset-card:active {
+    transform: translateX(2px) scale(0.99);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .empty-preset-card {
+      transition: none;
+    }
+    .empty-preset-card:hover,
+    .empty-preset-card:active {
+      transform: none;
+    }
+  }
+  .empty-preset-card-text {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
+  }
+  .empty-preset-card-text strong {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+  }
+  .empty-preset-card-text span {
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    display: block;
+    margin-top: 0.125rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .empty-preset-card-arrow {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: transform 0.18s ease;
+  }
+  .empty-preset-card:hover .empty-preset-card-arrow {
+    transform: translateX(3px);
   }
   /* Oculta empty state cuando hay resultados visibles */
   .calc-container:has(.calc-results:not([hidden])) .empty-preview {
@@ -1429,6 +1854,19 @@ const formatFreshnessDate = (iso: string): string => {
     border-color: var(--success);
   }
 
+  /* En mobile, ocultamos los share buttons individuales y mostramos solo
+     el trigger del ShareBottomSheet (que aparece como single button "Compartir"). */
+  @media (max-width: 767px) {
+    .share {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .share .share-label,
+    .share .btn-share {
+      display: none;
+    }
+  }
+
   /* Embed CTA — standalone promoted button */
   .embed-cta {
     display: flex;
@@ -1526,37 +1964,85 @@ const formatFreshnessDate = (iso: string): string => {
   }
   .history-clear:hover { color: var(--danger); }
   .history-list {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
     gap: 0.375rem;
   }
   .history-item {
-    background: var(--bg);
+    background: var(--bg-soft);
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0.375rem 0.625rem;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    cursor: pointer;
-    display: inline-flex;
-    gap: 0.4rem;
-    align-items: center;
-    font-family: var(--font-mono);
-    transition: all 0.15s;
-  }
-  .history-item:hover {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--accent-strong);
-  }
-  .history-item strong {
+    border-radius: var(--radius);
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8125rem;
     color: var(--text);
-    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    gap: 0.625rem;
+    align-items: center;
+    text-align: left;
+    font-family: inherit;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease,
+      transform 0.15s ease;
+    width: 100%;
   }
-  .history-item time {
-    color: var(--text-subtle);
+  .history-item:hover,
+  .history-item:focus-visible {
+    background: var(--bg-card);
+    border-color: var(--accent);
+    transform: translateX(2px);
+    outline: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .history-item { transition: none; }
+    .history-item:hover { transform: none; }
+  }
+  .history-item-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--accent-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .history-item-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.2;
+  }
+  .history-item-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .history-item-time {
     font-size: 0.6875rem;
-    margin-left: 0.25rem;
+    color: var(--text-subtle);
+    margin-top: 0.125rem;
+  }
+  .history-item-value {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+    margin-left: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 45%;
+  }
+  html[data-theme="dark"] .history-item-value {
+    color: var(--accent-strong);
   }
 
   /* Feedback inline */
@@ -3303,13 +3789,17 @@ const formatFreshnessDate = (iso: string): string => {
     }
     widget.hidden = false;
     list.innerHTML = '';
+    const icon = widget.getAttribute('data-history-icon') || '📊';
 
     history.forEach((entry) => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'history-item';
       const timeAgo = relativeTime(entry.ts);
-      btn.innerHTML = `<strong>${escapeHtml(entry.primary)}</strong><span>${escapeHtml(entry.label || '')}</span><time>${timeAgo}</time>`;
+      btn.innerHTML =
+        `<span class="history-item-icon" aria-hidden="true">${escapeHtml(icon)}</span>` +
+        `<span class="history-item-content"><span class="history-item-label">${escapeHtml(entry.label || 'Resultado')}</span><time class="history-item-time">${timeAgo}</time></span>` +
+        `<span class="history-item-value">${escapeHtml(entry.primary)}</span>`;
       btn.addEventListener('click', () => {
         // Precargar form con los inputs del entry y resubmit
         Object.entries(entry.inputs).forEach(([name, val]) => {
