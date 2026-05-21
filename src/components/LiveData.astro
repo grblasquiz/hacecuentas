@@ -3,13 +3,14 @@
  * LiveData — bloque de "Datos verificables actualizados" para calcs.
  *
  * Renderiza un panel con datos live scrapeados de fuentes oficiales
- * (BCRA, INDEC, ArgentinaDatos) con timestamp y link a la fuente.
+ * (BCRA, INDEC, ArgentinaDatos / DolarAPI) con timestamp y link a la fuente.
  *
  * Uso: pasar la calc completa. Si tiene `dataSource: [...]`, renderiza
  * los datos pedidos. Si no, no renderiza nada.
  *
  * dataSource values soportados:
- *  - "dolar:oficial" | "dolar:blue" | "dolar:mep" | "dolar:ccl" | "dolar:mayorista" | "dolar:tarjeta"
+ *  - "dolar:oficial" | "dolar:blue" | "dolar:bolsa" | "dolar:contadoconliqui"
+ *    | "dolar:mayorista" | "dolar:cripto" | "dolar:tarjeta"
  *  - "inflacion:last_month" | "inflacion:acumulado_12m" | "inflacion:acumulado_ytd"
  *  - "tasa:plazo_fijo_30d" | "tasa:badlar" | "tasa:prestamos_personales"
  *  - "uva"
@@ -24,114 +25,387 @@ interface Props {
 
 const { dataSource = [] } = Astro.props;
 
-if (!dataSource || !Array.isArray(dataSource) || dataSource.length === 0) {
-  // render nothing
-}
-
 type Item = {
-  label: string;
+  shortLabel: string;
   value: string;
-  date: string;
+  meta?: string;
   source: string;
+  sourceShort: string;
   sourceUrl: string;
+  sparkline?: { values: number[]; trend: "up" | "down" | "flat" };
 };
+
+function fmtPct(n: number, d = 1): string {
+  return `${n.toFixed(d)}%`;
+}
+function fmtMoney(n: number): string {
+  return `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
+}
+function sparklinePoints(values: number[], w = 100, h = 24): string {
+  if (!values.length) return "";
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const xStep = w / Math.max(values.length - 1, 1);
+  return values
+    .map((v, i) => {
+      const x = i * xStep;
+      const y = h - 2 - ((v - min) / range) * (h - 4);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+function trendOf(values: number[]): "up" | "down" | "flat" {
+  if (values.length < 2) return "flat";
+  const first = values[0];
+  const last = values[values.length - 1];
+  const diff = ((last - first) / first) * 100;
+  if (diff > 1) return "up";
+  if (diff < -1) return "down";
+  return "flat";
+}
+function fmtUpdated(iso: string): string {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const today = now.toDateString() === d.toDateString();
+    const yest = new Date(now);
+    yest.setDate(now.getDate() - 1);
+    const isYest = yest.toDateString() === d.toDateString();
+    const time = d.toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    if (today) return `hoy ${time}`;
+    if (isYest) return `ayer ${time}`;
+    return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
+  } catch {
+    return iso.slice(0, 10);
+  }
+}
 
 const items: Item[] = [];
 
-function fmtPct(n: number, digits = 2): string {
-  return `${n.toFixed(digits)}%`;
-}
-function fmtMoney(n: number): string {
-  return `$${n.toLocaleString("es-AR", { maximumFractionDigits: 2 })}`;
-}
-function fmtDate(iso: string): string {
-  // "2026-05-07" or full ISO
-  const d = iso.slice(0, 10);
-  return d;
-}
-
-for (const ref of dataSource) {
+for (const ref of dataSource || []) {
+  if (!ref) continue;
   const [kind, sub] = ref.split(":");
+
   if (kind === "dolar" && sub) {
-    const q = dolarData.quotes?.[sub];
+    const q = (dolarData.quotes as any)?.[sub];
     if (q) {
+      const spread = q.compra && q.venta ? ((q.venta - q.compra) / q.compra) * 100 : 0;
       items.push({
-        label: `Dólar ${q.nombre || sub}`,
-        value: `compra ${fmtMoney(q.compra)} / venta ${fmtMoney(q.venta)}`,
-        date: fmtDate(q.fechaActualizacion),
-        source: dolarData._meta.source,
+        shortLabel: `Dólar ${q.nombre || sub}`,
+        value: fmtMoney(q.venta),
+        meta: q.compra && q.venta ? `compra ${fmtMoney(q.compra)} · spread ${spread.toFixed(1)}%` : undefined,
+        source: "DolarAPI",
+        sourceShort: "DolarAPI",
         sourceUrl: dolarData._meta.sourceUrl,
       });
     }
   } else if (kind === "inflacion") {
     if (sub === "last_month") {
       const x = inflacionData.last_month;
+      const series = (inflacionData as any).last_12_months?.map((m: any) => m.valor) ?? [];
       items.push({
-        label: `Inflación mensual (último dato)`,
+        shortLabel: "Inflación mensual",
         value: fmtPct(x.valor, 1),
-        date: fmtDate(x.fecha),
-        source: inflacionData._meta.source,
-        sourceUrl: inflacionData._meta.sourceOfficial,
+        meta: "último dato INDEC",
+        source: "INDEC",
+        sourceShort: "INDEC",
+        sourceUrl: (inflacionData._meta as any).sourceOfficial,
+        sparkline: series.length ? { values: series, trend: trendOf(series) } : undefined,
       });
     } else if (sub === "acumulado_12m") {
       items.push({
-        label: `Inflación acumulada 12 meses`,
+        shortLabel: "Inflación 12 meses",
         value: fmtPct(inflacionData.acumulado_12m_pct, 1),
-        date: fmtDate(inflacionData.last_month.fecha),
-        source: inflacionData._meta.source,
-        sourceUrl: inflacionData._meta.sourceOfficial,
+        meta: "acumulado interanual",
+        source: "INDEC",
+        sourceShort: "INDEC",
+        sourceUrl: (inflacionData._meta as any).sourceOfficial,
       });
     } else if (sub === "acumulado_ytd") {
       items.push({
-        label: `Inflación acumulada año en curso`,
+        shortLabel: "Inflación YTD",
         value: fmtPct(inflacionData.acumulado_ytd_pct, 1),
-        date: fmtDate(inflacionData.last_month.fecha),
-        source: inflacionData._meta.source,
-        sourceUrl: inflacionData._meta.sourceOfficial,
+        meta: "acumulado año en curso",
+        source: "INDEC",
+        sourceShort: "INDEC",
+        sourceUrl: (inflacionData._meta as any).sourceOfficial,
       });
     }
   } else if (kind === "tasa" && sub) {
-    const v = tasasData[sub];
+    const v = (tasasData as any)[sub];
     if (v) {
       items.push({
-        label: v.label,
+        shortLabel: v.label.replace(/\s*\([^)]*\)\s*/g, "").trim(),
         value: fmtPct(v.valor, 2),
-        date: fmtDate(v.fecha),
-        source: tasasData._meta.source,
-        sourceUrl: tasasData._meta.sourceOfficial,
+        meta: v.label.includes("(") ? v.label.match(/\(([^)]+)\)/)?.[1] : undefined,
+        source: "BCRA",
+        sourceShort: "BCRA",
+        sourceUrl: (tasasData._meta as any).sourceOfficial,
       });
     }
   } else if (kind === "uva") {
-    const v = tasasData.uva;
+    const v = (tasasData as any).uva;
     if (v) {
       items.push({
-        label: v.label,
+        shortLabel: "UVA",
         value: fmtMoney(v.valor),
-        date: fmtDate(v.fecha),
-        source: tasasData._meta.source,
-        sourceUrl: tasasData._meta.sourceOfficial,
+        meta: "valor en pesos",
+        source: "BCRA",
+        sourceShort: "BCRA",
+        sourceUrl: (tasasData._meta as any).sourceOfficial,
       });
     }
   }
 }
+
+// Latest fetch timestamp across all data
+const fetchedTimestamps = [
+  dolarData._meta?.fetchedAt,
+  inflacionData._meta?.fetchedAt,
+  tasasData._meta?.fetchedAt,
+]
+  .filter(Boolean)
+  .sort()
+  .reverse();
+const latestFetch = fetchedTimestamps[0] || "";
+const updatedLabel = fmtUpdated(latestFetch);
+
+// Unique sources with urls
+const uniqueSources = Array.from(
+  new Map(items.map((i) => [i.sourceShort, { name: i.sourceShort, url: i.sourceUrl }])).values()
+);
 ---
 
-{items.length > 0 && (
-  <section class="live-data-panel my-6 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
-    <h3 class="mb-2 text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-      📊 Datos verificables (actualizados al {items[0].date})
-    </h3>
-    <dl class="grid gap-x-4 gap-y-2 sm:grid-cols-2">
-      {items.map((it) => (
-        <div class="flex items-baseline justify-between gap-2 border-b border-slate-200 py-1.5 last:border-b-0 dark:border-slate-700/60">
-          <dt class="text-sm text-slate-600 dark:text-slate-400">{it.label}</dt>
-          <dd class="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">{it.value}</dd>
-        </div>
-      ))}
-    </dl>
-    <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
-      Fuente: <a href={items[0].sourceUrl} target="_blank" rel="noopener" class="underline hover:text-slate-700 dark:hover:text-slate-200">{items[0].source}</a>.
-      Datos actualizados automáticamente cada día.
-    </p>
-  </section>
-)}
+{
+  items.length > 0 && (
+    <section class="live-data" aria-label="Datos oficiales en vivo">
+      <header class="live-data-header">
+        <h3>
+          <span class="live-dot" aria-hidden="true" />
+          Datos oficiales en vivo
+        </h3>
+        {updatedLabel && (
+          <span class="live-data-updated" title={latestFetch}>
+            ↻ {updatedLabel}
+          </span>
+        )}
+      </header>
+
+      <div class="live-data-grid">
+        {items.map((item) => (
+          <article class="live-data-item">
+            <div class="live-data-label">
+              <span>{item.shortLabel}</span>
+              <span class="live-data-source">{item.sourceShort}</span>
+            </div>
+            <div class="live-data-value">{item.value}</div>
+            {item.meta && <div class="live-data-meta">{item.meta}</div>}
+            {item.sparkline && (
+              <svg
+                class={`live-data-spark spark-${item.sparkline.trend}`}
+                viewBox="0 0 100 24"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <polyline
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  points={sparklinePoints(item.sparkline.values)}
+                />
+              </svg>
+            )}
+          </article>
+        ))}
+      </div>
+
+      {uniqueSources.length > 0 && (
+        <p class="live-data-footer">
+          Fuentes:{" "}
+          {uniqueSources.map((s, i) => (
+            <>
+              {i > 0 && " · "}
+              <a href={s.url} target="_blank" rel="noopener nofollow">
+                {s.name}
+              </a>
+            </>
+          ))}
+          . Actualización automática diaria.
+        </p>
+      )}
+    </section>
+  )
+}
+
+<style>
+  .live-data {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin: 1.5rem 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .live-data-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.875rem;
+    border-bottom: 1px dashed var(--border);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .live-data-header h3 {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text);
+  }
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    animation: live-data-pulse 2s ease-in-out infinite;
+  }
+  @keyframes live-data-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 var(--success-soft);
+    }
+    50% {
+      box-shadow: 0 0 0 6px transparent;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot {
+      animation: none;
+    }
+  }
+  .live-data-updated {
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    font-variant-numeric: tabular-nums;
+  }
+  .live-data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+  }
+  .live-data-item {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.875rem;
+    transition:
+      border-color 0.15s ease,
+      transform 0.15s ease;
+  }
+  .live-data-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .live-data-item {
+      transition: none;
+    }
+    .live-data-item:hover {
+      transform: none;
+    }
+  }
+  .live-data-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.6875rem;
+    color: var(--text-subtle);
+    margin-bottom: 0.375rem;
+    font-weight: 500;
+    gap: 0.5rem;
+  }
+  .live-data-source {
+    background: var(--bg-muted);
+    color: var(--text-muted);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .live-data-value {
+    font-size: 1.375rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .live-data-meta {
+    font-size: 0.7rem;
+    color: var(--text-subtle);
+    margin-top: 0.375rem;
+    line-height: 1.3;
+  }
+  .live-data-spark {
+    width: 100%;
+    height: 22px;
+    margin-top: 0.5rem;
+    display: block;
+  }
+  .spark-up {
+    color: var(--success);
+  }
+  .spark-down {
+    color: var(--danger);
+  }
+  .spark-flat {
+    color: var(--text-subtle);
+  }
+  .live-data-footer {
+    margin-top: 1rem;
+    padding-top: 0.875rem;
+    border-top: 1px dashed var(--border);
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    line-height: 1.5;
+  }
+  .live-data-footer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .live-data-footer a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 480px) {
+    .live-data {
+      padding: 1rem;
+    }
+    .live-data-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+    .live-data-item {
+      padding: 0.75rem;
+    }
+    .live-data-value {
+      font-size: 1.125rem;
+    }
+  }
+</style>
