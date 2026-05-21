@@ -19,12 +19,31 @@ export type VizSeries = { name: string; points: number[]; color?: string; dashed
 export type VizSlice = { label: string; value: number; color?: string };
 export type VizMilestone = { date: string; label: string; percent?: number };
 
-export type VizData =
-  | { type: "bar"; segments: VizSegment[]; total?: number }
-  | { type: "gauge"; value: number; min: number; max: number; zones: VizZone[]; label?: string; markerLabel?: string }
-  | { type: "curve"; series: VizSeries[]; xLabels?: string[]; height?: number }
-  | { type: "donut"; slices: VizSlice[]; centerValue?: string; centerLabel?: string }
-  | { type: "timeline"; start: VizMilestone; current: VizMilestone; end: VizMilestone };
+export interface VizData {
+  type: "bar" | "gauge" | "curve" | "donut" | "timeline";
+  // bar
+  segments?: VizSegment[];
+  total?: number;
+  // gauge
+  value?: number;
+  min?: number;
+  max?: number;
+  zones?: VizZone[];
+  label?: string;
+  markerLabel?: string;
+  // curve
+  series?: VizSeries[];
+  xLabels?: string[];
+  height?: number;
+  // donut
+  slices?: VizSlice[];
+  centerValue?: string;
+  centerLabel?: string;
+  // timeline
+  start?: VizMilestone;
+  current?: VizMilestone;
+  end?: VizMilestone;
+}
 
 interface Props {
   title?: string;
