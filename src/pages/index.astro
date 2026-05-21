@@ -2018,36 +2018,72 @@ const schema = {
   }
 
   /* Secciones editoriales (qué encontrarás / cómo construimos / FAQ).
-     Mobile-first: text-first, sin grids visuales, prosa legible. */
+     Rediseño 2026-05-21: cards + jerarquía + eyebrows. */
   .editorial-intro,
   .editorial-method,
   .editorial-faq {
-    margin: 3rem 0;
+    margin: 4rem 0;
   }
   .editorial-wrap {
-    max-width: 760px;
+    max-width: 1080px;
     margin: 0 auto;
     padding: 0 0.25rem;
   }
+  /* Eyebrow chip arriba del h2 */
   .editorial-intro h2,
   .editorial-method h2,
   .editorial-faq h2 {
-    font-size: 1.5rem;
-    margin: 0 0 1rem;
+    font-size: 1.875rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    margin: 0 0 0.75rem;
     color: var(--text);
-    line-height: 1.25;
+    max-width: 760px;
   }
-  .editorial-intro p,
-  .editorial-method p {
+  .editorial-intro h2::before,
+  .editorial-method h2::before,
+  .editorial-faq h2::before {
+    content: attr(data-eyebrow);
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .editorial-intro h2::before { content: "Sobre Hacé Cuentas"; }
+  .editorial-method h2::before { content: "Cómo trabajamos"; }
+  .editorial-faq h2::before { content: "Preguntas frecuentes"; }
+
+  /* Contenedor visual para Qué encontrarás */
+  .editorial-intro {
+    background: linear-gradient(180deg, var(--bg-soft, #f8fafc) 0%, transparent 100%);
+    padding: 3rem 0 3.5rem;
+    border-radius: var(--radius-xl, 20px);
+  }
+  .editorial-intro .editorial-wrap {
+    padding: 0 1.5rem;
+  }
+  .editorial-intro p {
+    color: var(--text-muted, #475569);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    margin: 0 0 1.125rem;
+    max-width: 760px;
+  }
+  .editorial-intro p:first-of-type {
+    font-size: 1.1875rem;
     color: var(--text);
-    font-size: 1rem;
-    line-height: 1.7;
-    margin: 0 0 1rem;
+    line-height: 1.6;
   }
-  .editorial-intro strong,
-  .editorial-method strong {
+  .editorial-intro strong {
     color: var(--text);
+    font-weight: 700;
   }
+
+  /* Common links */
   .editorial-intro a,
   .editorial-method a,
   .editorial-faq a {
@@ -2055,51 +2091,96 @@ const schema = {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 2px;
+    font-weight: 500;
   }
   .editorial-intro a:hover,
   .editorial-method a:hover,
   .editorial-faq a:hover {
     color: var(--accent-strong);
   }
+
+  /* Método: grid de cards numeradas */
+  .editorial-method .editorial-wrap > p {
+    color: var(--text-muted, #475569);
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    margin: 0 0 1.5rem;
+    max-width: 760px;
+  }
   .method-steps {
     counter-reset: ms;
     list-style: none;
     padding: 0;
-    margin: 1rem 0 1.5rem;
+    margin: 1.75rem 0 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0.875rem;
   }
   .method-steps > li {
     position: relative;
-    padding: 0.75rem 0 0.75rem 2.5rem;
-    border-bottom: 1px solid var(--border, rgba(0,0,0,0.06));
+    padding: 1.5rem 1.25rem 1.25rem;
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: var(--radius-lg, 14px);
     counter-increment: ms;
-    font-size: 1rem;
+    font-size: 0.9375rem;
     line-height: 1.65;
-    color: var(--text);
+    color: var(--text-muted, #475569);
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   }
-  .method-steps > li:last-child {
-    border-bottom: 0;
+  .method-steps > li:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md, 0 4px 12px rgba(15,23,42,0.08));
   }
   .method-steps > li::before {
     content: counter(ms);
-    position: absolute;
-    left: 0;
-    top: 0.85rem;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 999px;
-    background: var(--accent-soft);
-    color: var(--accent-strong);
-    font-weight: 700;
-    font-size: 0.875rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #7c3aed));
+    color: #fff;
+    font-weight: 800;
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  html[data-theme="dark"] .method-steps > li::before {
+    color: var(--bg);
+  }
+  .method-steps > li strong {
+    display: block;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.005em;
   }
   .method-steps code {
     background: var(--accent-soft);
-    padding: 0.05rem 0.35rem;
+    color: var(--accent-strong);
+    padding: 0.1rem 0.4rem;
     border-radius: 4px;
-    font-size: 0.875em;
+    font-size: 0.85em;
+    font-family: var(--font-mono);
+  }
+  .editorial-method .editorial-wrap > p:last-child {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-soft, #f8fafc);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm, 6px);
+    font-size: 0.9375rem;
+    color: var(--text-muted, #475569);
+    line-height: 1.6;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .method-steps > li { transition: none; }
+    .method-steps > li:hover { transform: none; }
   }
   .ed-faq-item {
     border: 1px solid var(--border, rgba(0,0,0,0.08));
