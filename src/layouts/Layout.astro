@@ -333,6 +333,12 @@ const globalSchema = {
       ? <meta name="robots" content="noindex, follow" />
       : <meta name="robots" content="max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     }
+    {/* Bing-specific directives — Bingbot lee este tag y lo prioriza sobre el
+       generico "robots". Mantenemos los mismos valores que Google + index/follow
+       explicito (Bing a veces es mas conservador). */}
+    {!noindex && (
+      <meta name="bingbot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1, noarchive" />
+    )}
     <link rel="canonical" href={fullCanonical} />
     {hreflang ? (
       hreflang.map(h => <link rel="alternate" hreflang={h.lang} href={h.href} />)
