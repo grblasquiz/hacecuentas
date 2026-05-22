@@ -25,6 +25,9 @@ import { join, resolve, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import { GONE_410_URLS } from '../src/lib/gone-410.ts';
+import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
+
+const PRUNED_SLUGS = new Set(Object.keys(PRUNING_REDIRECTS).map((p) => p.replace(/^\//, '')));
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -68,7 +71,10 @@ function readJSONs(dir: string): any[] {
     // <meta name="robots" content="noindex">, listarla en el sitemap es
     // contradictorio (Google se confunde) y desperdicia crawl budget.
     // Cuando alguien des-noindexa una calc, regenerar sitemap la incluye de nuevo.
-    .filter((d: any) => !d.noindex);
+    .filter((d: any) => !d.noindex)
+    // Excluimos slugs en PRUNING_REDIRECTS: el JSON sigue presente para que
+    // el middleware sepa redirigir, pero la URL ya no debe figurar en el sitemap.
+    .filter((d: any) => !d.slug || !PRUNED_SLUGS.has(d.slug));
 }
 
 /**
