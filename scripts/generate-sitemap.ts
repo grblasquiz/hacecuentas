@@ -744,13 +744,27 @@ for (const [cat, items] of Object.entries(byCat).sort()) {
   // La página de categoría hereda el lastmod de su calc más reciente — así
   // "agregaste una calc de finanzas hoy" mueve /categoria/finanzas, pero
   // "no tocaste finanzas en 3 meses" deja el lastmod quieto.
+  const catLastmod = maxLastmod(calcUrls, buildDate);
   const catUrl: Url = {
     loc: `${site}/categoria/${cat}`,
     priority: '0.8',
     changefreq: 'weekly',
-    lastmod: maxLastmod(calcUrls, buildDate),
+    lastmod: catLastmod,
   };
-  sitemaps.push({ name: `sitemap-calcs-${cat}.xml`, urls: [catUrl, ...calcUrls] });
+  // Páginas paginadas: /categoria/{cat}/{N} para N>=2 si la categoría
+  // tiene más de PAGE_SIZE calcs. Coincide con PAGE_SIZE en [...page].astro.
+  const PAGE_SIZE = 60;
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const pagerUrls: Url[] = [];
+  for (let i = 2; i <= totalPages; i++) {
+    pagerUrls.push({
+      loc: `${site}/categoria/${cat}/${i}`,
+      priority: '0.6',
+      changefreq: 'weekly',
+      lastmod: catLastmod,
+    });
+  }
+  sitemaps.push({ name: `sitemap-calcs-${cat}.xml`, urls: [catUrl, ...pagerUrls, ...calcUrls] });
 }
 
 // 3. Calcs por locale (EN, PT, MX, ES, CO, CL).

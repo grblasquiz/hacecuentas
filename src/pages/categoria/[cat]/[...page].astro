@@ -1,22 +1,40 @@
 ---
 export const prerender = true;
 
-import Layout from '../../layouts/Layout.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import { CATEGORY_TO_GUIDE, GUIDE_TITLES, SIBLING_CATEGORIES, CATEGORY_TITLES, CATEGORY_ICONS } from '../../lib/category-guide-map';
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import { CATEGORY_TO_GUIDE, GUIDE_TITLES, SIBLING_CATEGORIES, CATEGORY_TITLES, CATEGORY_ICONS } from '../../../lib/category-guide-map';
+
+const PAGE_SIZE = 60;
 
 export async function getStaticPaths() {
-  const calcs = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
-  const all = Object.values(calcs).map((m: any) => m.default || m);
+  const calcsGlob = import.meta.glob<any>('../../../content/calcs/*.json', { eager: true });
+  const all = Object.values(calcsGlob).map((m: any) => m.default || m);
   const cats = [...new Set(all.map((c) => c.category))];
-  return cats.map((cat) => ({
-    params: { cat },
-    props: { cat, calcs: all.filter((c) => c.category === cat) },
-  }));
+  const paths: any[] = [];
+  for (const cat of cats) {
+    const filtered = all.filter((c) => c.category === cat);
+    const totalPages = Math.max(1, Math.ceil(filtered.length / 60));
+    for (let i = 1; i <= totalPages; i++) {
+      const start = (i - 1) * 60;
+      paths.push({
+        params: { cat, page: i === 1 ? undefined : String(i) },
+        props: {
+          cat,
+          calcs: filtered.slice(start, start + 60),
+          currentPage: i,
+          totalPages,
+          totalCalcs: filtered.length,
+        },
+      });
+    }
+  }
+  return paths;
 }
 
-const { cat, calcs } = Astro.props;
+const { cat, calcs, currentPage, totalPages, totalCalcs } = Astro.props;
+const isFirstPage = currentPage === 1;
 
 interface CatMeta {
   label: string;
@@ -1385,19 +1403,36 @@ const siblings = (SIBLING_CATEGORIES[cat] || []).filter(
   (sc: string) => typeof sc === 'string' && CATEGORY_TITLES[sc]
 );
 
+// URL canónica de la categoría (página 1) y de esta página (puede ser igual o /N)
+const catUrl = `https://hacecuentas.com/categoria/${cat}`;
+const pagePath = isFirstPage ? `/categoria/${cat}` : `/categoria/${cat}/${currentPage}`;
+const pageUrl = `https://hacecuentas.com${pagePath}`;
+
+// Título / descripción según si es página 1 o no. Página 1 mantiene el SEO
+// pleno; páginas 2+ usan título derivado y NO repiten el contenido editorial.
+const pageTitle = isFirstPage
+  ? m.title
+  : `${m.label} — Página ${currentPage} de ${totalPages} | Hacé Cuentas`;
+const pageDesc = isFirstPage
+  ? m.desc
+  : `Página ${currentPage} de ${totalPages} de calculadoras de ${m.label.toLowerCase()}. ${totalCalcs} calculadoras en total.`;
+
 // Schemas combinados: CollectionPage + BreadcrumbList + FAQPage
 // ItemList top-level (standalone) — Google lo prefiere así para rich results
 // en lugar de embebido en CollectionPage. Incluye imagen + descripción por item.
+// En páginas 2+ la position respeta el offset acumulado para que el ItemList
+// describa correctamente la posición global de cada item dentro de la serie.
+const positionOffset = (currentPage - 1) * PAGE_SIZE;
 const schemaItemList = {
   '@type': 'ItemList',
-  '@id': `https://hacecuentas.com/categoria/${cat}#itemlist`,
-  name: `Calculadoras de ${m.label}`,
+  '@id': `${pageUrl}#itemlist`,
+  name: `Calculadoras de ${m.label}${isFirstPage ? '' : ` — Página ${currentPage}`}`,
   description: m.desc,
-  numberOfItems: calcs.length,
+  numberOfItems: totalCalcs,
   itemListOrder: 'https://schema.org/ItemListOrderAscending',
   itemListElement: calcs.map((c: any, i: number) => ({
     '@type': 'ListItem',
-    position: i + 1,
+    position: positionOffset + i + 1,
     url: `https://hacecuentas.com/${c.slug}`,
     name: c.h1,
     description: c.description,
@@ -1407,23 +1442,27 @@ const schemaItemList = {
 
 const schemaCollection = {
   '@type': 'CollectionPage',
-  '@id': `https://hacecuentas.com/categoria/${cat}`,
-  name: m.label,
+  '@id': pageUrl,
+  name: isFirstPage ? m.label : `${m.label} — Página ${currentPage}`,
   description: m.desc,
-  url: `https://hacecuentas.com/categoria/${cat}`,
+  url: pageUrl,
   inLanguage: 'es-AR',
-  mainEntity: { '@id': `https://hacecuentas.com/categoria/${cat}#itemlist` },
+  isPartOf: isFirstPage ? undefined : { '@type': 'CollectionPage', '@id': catUrl },
+  mainEntity: { '@id': `${pageUrl}#itemlist` },
 };
 
 const schemaBreadcrumb = {
   '@type': 'BreadcrumbList',
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
-    { '@type': 'ListItem', position: 2, name: m.label, item: `https://hacecuentas.com/categoria/${cat}` },
+    { '@type': 'ListItem', position: 2, name: m.label, item: catUrl },
+    ...(isFirstPage ? [] : [{ '@type': 'ListItem', position: 3, name: `Página ${currentPage}`, item: pageUrl }]),
   ],
 };
 
-const schemaFAQ = m.faq.length > 0 ? {
+// FAQ solo en página 1: en páginas 2+ duplicaría el rich result y desperdicia
+// crawl budget. La info de FAQ es la misma para toda la serie.
+const schemaFAQ = isFirstPage && m.faq.length > 0 ? {
   '@type': 'FAQPage',
   mainEntity: m.faq.map((f) => ({
     '@type': 'Question',
@@ -1458,23 +1497,31 @@ function md(text: string): string {
 }
 ---
 
-<Layout title={m.title} description={m.desc} image={`/og/categoria-${cat}.png`} schema={schema}>
+<Layout title={pageTitle} description={pageDesc} canonical={pagePath} image={`/og/categoria-${cat}.png`} schema={schema}>
   <Header slot="header" />
 
   <nav class="breadcrumbs" aria-label="Ruta de navegación">
     <a href="/">Inicio</a>
     <span class="sep" aria-hidden="true">/</span>
-    <span class="current">{m.label}</span>
+    {isFirstPage ? (
+      <span class="current">{m.label}</span>
+    ) : (
+      <>
+        <a href={`/categoria/${cat}`}>{m.label}</a>
+        <span class="sep" aria-hidden="true">/</span>
+        <span class="current">Página {currentPage}</span>
+      </>
+    )}
   </nav>
 
   <header class="cat-header" style={`--cat-color: ${m.color}`}>
     <div class="icon-wrap" aria-hidden="true">{m.icon}</div>
     <div>
-      <div class="eyebrow">Categoría</div>
+      <div class="eyebrow">Categoría{isFirstPage ? '' : ` · Página ${currentPage} de ${totalPages}`}</div>
       <h1>{m.label}</h1>
-      <p class="intro">{m.intro}</p>
+      {isFirstPage && <p class="intro">{m.intro}</p>}
       <div class="quick-stats">
-        <span class="qs-item"><strong>{calcs.length}</strong> calculadoras</span>
+        <span class="qs-item"><strong>{totalCalcs}</strong> calculadoras</span>
         <span class="qs-dot" aria-hidden="true">·</span>
         <span class="qs-item">Actualizadas a <strong>2026</strong></span>
         <span class="qs-dot" aria-hidden="true">·</span>
@@ -1485,7 +1532,7 @@ function md(text: string): string {
     </div>
   </header>
 
-  {pillarSlug && pillarTitle && (
+  {isFirstPage && pillarSlug && pillarTitle && (
     <aside class="pillar-cta">
       <div class="pillar-cta-icon" aria-hidden="true">📘</div>
       <div class="pillar-cta-body">
@@ -1506,12 +1553,18 @@ function md(text: string): string {
         type="search"
         id={`cat-filter-${cat}`}
         class="cat-filter"
-        placeholder={`Filtrar entre ${calcs.length} calculadoras de ${m.label.toLowerCase()}…`}
+        placeholder={totalPages > 1 ? `Filtrar en esta página…` : `Filtrar entre ${calcs.length} calculadoras de ${m.label.toLowerCase()}…`}
         autocomplete="off"
       />
     </label>
     <span class="cat-filter-count" data-total={calcs.length}>{calcs.length} resultados</span>
   </div>
+
+  {totalPages > 1 && (
+    <p class="cat-global-search">
+      ¿Buscás algo específico? <a href={`/buscar?cat=${cat}`}>Buscar en las {totalCalcs} calculadoras de {m.label.toLowerCase()} →</a>
+    </p>
+  )}
 
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
     <symbol id="cat-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1544,6 +1597,37 @@ function md(text: string): string {
     No encontramos calculadoras que coincidan. Probá otro término o
     <a href="/buscar">buscá en todo el sitio</a>.
   </p>
+
+  {totalPages > 1 && (
+    <nav class="pager" aria-label="Paginación de calculadoras">
+      <div class="pager-info">
+        Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong> · {totalCalcs} calculadoras
+      </div>
+      <div class="pager-controls">
+        {currentPage > 1 && (
+          <a class="pager-btn" rel="prev" href={currentPage === 2 ? `/categoria/${cat}` : `/categoria/${cat}/${currentPage - 1}`}>
+            ← Anterior
+          </a>
+        )}
+        <ol class="pager-pages">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+            <li>
+              {n === currentPage ? (
+                <span class="pager-current" aria-current="page">{n}</span>
+              ) : (
+                <a href={n === 1 ? `/categoria/${cat}` : `/categoria/${cat}/${n}`}>{n}</a>
+              )}
+            </li>
+          ))}
+        </ol>
+        {currentPage < totalPages && (
+          <a class="pager-btn" rel="next" href={`/categoria/${cat}/${currentPage + 1}`}>
+            Siguiente →
+          </a>
+        )}
+      </div>
+    </nav>
+  )}
 
   <script is:inline define:vars={{ catSlug: cat }}>
     (function () {
@@ -1593,13 +1677,13 @@ function md(text: string): string {
     })();
   </script>
 
-  {m.seoContent && (
+  {isFirstPage && m.seoContent && (
     <section class="seo-content">
       <Fragment set:html={`<p>${md(m.seoContent)}</p>`} />
     </section>
   )}
 
-  {m.faq.length > 0 && (
+  {isFirstPage && m.faq.length > 0 && (
     <section class="faq">
       <h2>Preguntas frecuentes sobre {m.label}</h2>
       <div class="faq-list">
@@ -2032,9 +2116,84 @@ function md(text: string): string {
   .sib-name { font-weight: 600; font-size: 0.9375rem; flex: 1; }
   .sib-arrow { color: var(--accent); font-weight: 700; }
 
+  .cat-global-search {
+    margin: 0 0 1rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+  .cat-global-search a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .cat-global-search a:hover { text-decoration: underline; }
+
+  .pager {
+    margin: 2rem 0 2.5rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-card);
+  }
+  .pager-info {
+    margin-bottom: 0.875rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+  .pager-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .pager-btn {
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    background: var(--bg);
+  }
+  .pager-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .pager-pages {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+  }
+  .pager-pages li { display: inline-flex; }
+  .pager-pages a, .pager-current {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    padding: 0 0.5rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--text-muted);
+  }
+  .pager-pages a:hover { background: var(--bg-hover, rgba(0,0,0,0.04)); color: var(--accent); }
+  .pager-current {
+    background: var(--accent);
+    color: white;
+    cursor: default;
+  }
+
   @media (max-width: 640px) {
     .seo-content { padding: 1.5rem 1.25rem; }
     .pillar-cta { padding: 0.875rem 1rem; }
     .pillar-cta-btn { width: 100%; text-align: center; }
+    .pager { padding: 1rem 0.75rem; }
+    .pager-pages a, .pager-current { min-width: 1.875rem; height: 1.875rem; padding: 0 0.375rem; }
   }
 </style>
