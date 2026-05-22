@@ -119,17 +119,36 @@ def detect_near_duplicates(calcs: list[dict]) -> dict[str, list[str]]:
     return {k: sorted(v) for k, v in by_stem.items() if len(v) >= 3}
 
 
+def load_pruned_slugs() -> set[str]:
+    """Carga slugs que YA están redirigidos via PRUNING_REDIRECTS en el middleware.
+    Filtramos esos: ya no son indexables, no tiene sentido analizarlos."""
+    import re
+    ts_file = ROOT / 'src' / 'lib' / 'pruning-redirects.ts'
+    if not ts_file.exists():
+        return set()
+    content = ts_file.read_text(encoding='utf-8')
+    return set(re.findall(r"^\s*'/([^']+)':\s*'", content, re.MULTILINE))
+
+
 def main() -> int:
+    pruned_slugs = load_pruned_slugs()
+    print(f'Pruning redirects activos (excluidos del análisis): {len(pruned_slugs)}')
+
     calcs = []
+    skipped_pruned = 0
     for f in sorted(CALCS_DIR.glob('*.json')):
         try:
             d = json.loads(f.read_text(encoding='utf-8'))
+            slug = d.get('slug', '')
+            if slug in pruned_slugs:
+                skipped_pruned += 1
+                continue
             d['_path'] = str(f.relative_to(ROOT))
             calcs.append(d)
         except Exception:
             continue
 
-    print(f'Analizando {len(calcs)} calcs...')
+    print(f'Analizando {len(calcs)} calcs activas (saltadas {skipped_pruned} ya prunadas)...')
 
     # Pre-compute cluster sizes
     cluster_sizes = Counter(c.get('category', 'unknown') for c in calcs)
