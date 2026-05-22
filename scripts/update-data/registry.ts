@@ -28,6 +28,7 @@ import { fetchGasNatural } from './fetchers/gas-natural.ts';
 import { fetchCostoM2 } from './fetchers/costo-m2.ts';
 import { fetchGananciasRG830 } from './fetchers/ganancias-rg830.ts';
 import { fetchIngresosBrutos } from './fetchers/ingresos-brutos.ts';
+import { fetchRipte } from './fetchers/ripte.ts';
 
 export interface FetcherEntry {
   name: string;
@@ -168,6 +169,18 @@ export const REGISTRY: FetcherEntry[] = [
     slugs: ['calculadora-ingresos-brutos-provincial'],
     frequency: 'yearly',
     run: fetchIngresosBrutos,
+  },
+  {
+    name: 'ripte',
+    // RIPTE — Remuneración promedio trabajadores estables. INDEC/Min Capital Humano.
+    // Publicada con ~3-5 meses de retraso. Persiste serie histórica en db/ripte.json.
+    slugs: [
+      'sueldo-vs-promedio-argentino',
+      'calculadora-jubilacion-haber-movilidad-trimestral',
+      'calculadora-ripte-actualizacion-jubilatoria-sueldo',
+    ],
+    frequency: 'monthly',
+    run: fetchRipte,
   },
 ];
 
