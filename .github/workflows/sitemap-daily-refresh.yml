@@ -1,0 +1,65 @@
+name: Sitemap daily refresh
+
+# Regenera el sitemap segmentado todos los días. Si hay cambios reales
+# (lastmod, URLs nuevas, etc.), commitea — eso dispara deploy y Cloudflare
+# Pages sirve el sitemap fresco al próximo crawl.
+#
+# Razones para correrlo daily aunque haya pocos cambios:
+#   1. Bing Webmaster Tools lo pide explícitamente: "Sitemaps should be
+#      updated at least once a day" — sin actualización diaria flagea las
+#      URLs como Failing.
+#   2. sitemap-fresh.xml es un sliding window (URLs <14d): aunque ningún
+#      contenido cambie, el set rota día a día porque URLs viejas salen.
+#   3. El rollout cap del generador suaviza spikes — esto es seguro: no
+#      bumpea lastmod masivamente, solo los que naturalmente avanzaron.
+#
+# Si el sitemap NO cambió (raro pero posible), no se hace commit — evitamos
+# deploys innecesarios y commits vacíos.
+
+on:
+  schedule:
+    # 09:45 UTC — 45 min después de data-refresh-daily.yml (09:00 UTC) para
+    # capturar cualquier change que ese workflow haya commiteado.
+    - cron: "45 9 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sitemap-refresh-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Necesitamos history para que generate-sitemap.ts pueda leer git log
+          # de cada calc y calcular lastmod correctamente.
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
+
+      - name: Regenerate sitemap
+        run: npm run sitemap
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet public/sitemap*.xml db/sitemap-state.json; then
+            echo "No sitemap changes — skipping commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/sitemap*.xml db/sitemap-state.json
+          git commit -m "chore(sitemap): daily refresh $(date -u +%Y-%m-%d)"
+          git push

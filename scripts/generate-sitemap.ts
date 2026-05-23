@@ -839,10 +839,17 @@ if (blogPosts.length > 0) {
     });
   }
 
-  // Calcs con dataUpdate fresh (BCRA/dolar/inflación refresh diario)
+  // Calcs con dataUpdate fresh (BCRA/dolar/inflación refresh diario).
+  // Filtro frequency: el news sitemap es para contenido editorialmente news-worthy
+  // (data dinámica con refresh real). Calcs con frequency='never' o 'monthly'/'yearly'
+  // que vieron lastUpdated bumpeado por un bulk-fix de metadata NO son news.
+  // Sin este filtro, un bulk update de 2k+ calcs el mismo día genera 1000 entries
+  // con misma publication_date — patrón que Google News penaliza como spam.
   for (const c of (calcs as any[])) {
     const dataDate = c.dataUpdate?.lastUpdated;
+    const freq = c.dataUpdate?.frequency;
     if (!dataDate || !/^\d{4}-\d{2}-\d{2}$/.test(dataDate)) continue;
+    if (freq !== 'daily' && freq !== 'weekly') continue;
     const t = Date.parse(dataDate + 'T00:00:00Z');
     if (Number.isNaN(t) || now - t > TWO_DAYS_MS) continue;
     newsEntries.push({
@@ -866,7 +873,15 @@ if (blogPosts.length > 0) {
     });
     console.log(`📰 sitemap-news.xml: ${newsEntries.length} entries fresh (<48h)`);
   } else {
-    console.log('📰 sitemap-news.xml: 0 entries fresh — skipping');
+    // Si no hay entries fresh, borramos el archivo viejo. Sin esto el sitemap-news.xml
+    // de la corrida anterior queda servido — engines siguen leyendo data stale.
+    const newsPath = join(PUBLIC_DIR, 'sitemap-news.xml');
+    if (existsSync(newsPath)) {
+      execSync(`rm -f "${newsPath}"`);
+      console.log('📰 sitemap-news.xml: 0 entries fresh — removed stale file');
+    } else {
+      console.log('📰 sitemap-news.xml: 0 entries fresh — skipping');
+    }
   }
 }
 
