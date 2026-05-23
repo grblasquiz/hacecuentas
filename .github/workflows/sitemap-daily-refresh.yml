@@ -63,3 +63,26 @@ jobs:
           git add public/sitemap*.xml db/sitemap-state.json
           git commit -m "chore(sitemap): daily refresh $(date -u +%Y-%m-%d)"
           git push
+
+      # Ping Bing Webmaster con SubmitFeed siempre, aunque no haya cambios.
+      # Esto es lo que satisface el aviso "Sitemaps should be updated at least
+      # once a day" — Bing registra el submit como refresh aunque el contenido
+      # del sitemap sea idéntico al de ayer. Cero impacto en Google porque no
+      # tocamos lastmods.
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install certifi
+        run: pip install --quiet certifi
+
+      - name: Submit sitemap a Bing (SubmitFeed)
+        env:
+          BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
+        run: |
+          if [ -z "$BING_WEBMASTER_API_KEY" ]; then
+            echo "::warning::BING_WEBMASTER_API_KEY no configurada — skipping SubmitFeed"
+            exit 0
+          fi
+          python3 scripts/bing-submit-feed.py
