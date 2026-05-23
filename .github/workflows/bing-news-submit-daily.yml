@@ -1,0 +1,77 @@
+name: Bing News submit (daily)
+
+# Pushea URLs editorial-fresh (blog posts modificados + calcs con
+# dataUpdate.frequency=daily/weekly refrescadas <48h) al Bing Webmaster
+# Submit URL API.
+#
+# Bing News no tiene endpoint público dedicado, pero la Submit URL API
+# tiene quota separada para contenido fresh (~10k/día). El script ya
+# filtra estricto: solo URLs realmente news-worthy.
+#
+# Complementa:
+#   - indexnow-daily.yml (señal pasiva multi-engine)
+#   - bing-submit-daily.yml (URLs prioritarias AR, no necesariamente fresh)
+#   - sitemap-daily-refresh.yml (SubmitFeed del sitemap completo)
+#
+# Sin secret BING_WEBMASTER_API_KEY el script sale con exit 0 (no rompe).
+
+on:
+  schedule:
+    # 10:15 UTC (07:15 ART) — 15 min después de bing-submit-daily (10:00)
+    # y 30 min después de sitemap-daily-refresh (09:45). Spaced para evitar
+    # overlap de quota y ordenar señales lógicamente:
+    # 1) sitemap-feed (Bing pull pasivo) → 2) submit-batch (priority) →
+    # 3) news-batch (editorial fresh).
+    - cron: "15 10 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: bing-news-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  bing-news-submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install certifi
+        run: pip install --quiet certifi
+
+      - name: Submit news URLs a Bing
+        id: submit
+        env:
+          BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
+        run: |
+          set -o pipefail
+          if [ -z "$BING_WEBMASTER_API_KEY" ]; then
+            echo "::warning::BING_WEBMASTER_API_KEY no configurada — skipping"
+            exit 0
+          fi
+          python3 scripts/bing-news-submit.py 2>&1 | tee /tmp/bing-news.log
+          # Solo fallamos si hubo error real (no si "0 URLs fresh")
+          if grep -qE '^FATAL|^ERROR|status=4[0-9]{2}|status=5[0-9]{2}' /tmp/bing-news.log; then
+            echo "::error::Bing News submit con errores"
+            exit 1
+          fi
+
+      - name: Open issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "bing-news-submit-daily falló — $(date -u +%Y-%m-%d)" \
+            --body "Workflow falló. Logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --label "bing-submit-failure" || true
