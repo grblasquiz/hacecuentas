@@ -76,6 +76,12 @@ const IGNORE_PATTERNS: RegExp[] = [
   // solo permite que las nuevas resuelvan su formula. Tratamos como artifact.
   /^src\/lib\/formulas\/index\.ts$/,
   /^\.gitignore$/,
+  // Scripts de tooling local que no afectan el build de prod.
+  /^scripts\/detect-changes\.ts$/,
+  /^scripts\/incremental-purge\.ts$/,
+  /^scripts\/deploy-local\.sh$/,
+  /^scripts\/new-calc\.ts$/,
+  /^scripts\/cf-purge-cache\.sh$/,
 ];
 
 // Regex de content types
