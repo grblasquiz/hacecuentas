@@ -87,6 +87,34 @@ export default defineConfig({
       // Preserva el dist cacheado en builds incrementales. En full build
       // (default) limpia como siempre.
       emptyOutDir: !IS_INCREMENTAL,
+      // Chunks estables: agrupa deps de node_modules en `vendor` y código
+      // compartido de src/lib y src/components en chunks propios. Esto evita
+      // que cada incremental regenere ~3000 chunks JS con hashes nuevos por
+      // cascada y permite que wrangler delta upload skipee la mayoría.
+      // En builds incrementales (CALCS_HASH_KEEP=true) usamos hashes basados
+      // en el nombre del chunk en vez del contenido — cambios mínimos en el
+      // contenido no propagan cascada a chunks dependientes.
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            // Todas las deps de node_modules → 1 sólo vendor chunk
+            // (super estable: solo cambia si actualizamos package.json)
+            if (id.includes('node_modules')) {
+              return 'vendor';
+            }
+            // Código compartido de src/lib/* (NO formulas/, esas son por-calc)
+            if (id.includes('/src/lib/') && !id.includes('/src/lib/formulas/')) {
+              return 'lib-shared';
+            }
+            // Componentes compartidos (Calculator, Layout, Header, etc.)
+            if (id.includes('/src/components/') || id.includes('/src/layouts/')) {
+              return 'components-shared';
+            }
+            // El resto → chunks automáticos de Vite (uno por entrypoint)
+            return undefined;
+          },
+        },
+      },
     },
     // Inline las env vars de incremental en build time. process.env no
     // funciona dentro del worker simulado de miniflare que el adapter CF
