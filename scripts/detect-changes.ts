@@ -71,6 +71,11 @@ const IGNORE_PATTERNS: RegExp[] = [
   /^public\/sw\.js$/,
   /^src\/lib\/og-manifest\.json$/,
   /^src\/lib\/related-auto\.(json|hash)$/,
+  // Auto-regenerado por scripts/regenerate-formula-index.ts en cada prebuild.
+  // Solo agrega entries para slugs nuevos — no afecta lógica de calcs viejas,
+  // solo permite que las nuevas resuelvan su formula. Tratamos como artifact.
+  /^src\/lib\/formulas\/index\.ts$/,
+  /^\.gitignore$/,
 ];
 
 // Regex de content types
