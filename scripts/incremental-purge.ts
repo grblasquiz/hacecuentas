@@ -1,25 +1,40 @@
 /**
- * Purga selectiva de CF cache post-deploy.
+ * Purga selectiva de CF cache post-deploy (v2).
  *
- * Modo full (INCREMENTAL_SLUGS vacío): purge_everything como antes.
- * Modo incremental: solo purga las URLs que cambiaron (slugs en sus locales
- * respectivas + variantes /embed/<slug> + sitemaps que siempre cambian).
+ * Modo full: purge_everything como antes.
+ * Modo incremental: lee INCREMENTAL_CHANGES (JSON) y purga solo las URLs
+ * de los content types cambiados.
  *
- * Lee de env:
- *   - CF_TOKEN (Cloudflare API token con permiso Zone.Cache.Purge)
- *   - CF_ZONE  (zone ID)
+ * Env:
+ *   - CF_TOKEN, CF_ZONE
  *   - INCREMENTAL_MODE = 'full' | 'incremental'
- *   - INCREMENTAL_SLUGS  (CSV)
- *   - INCREMENTAL_LOCALES (CSV, '' = AR root)
+ *   - INCREMENTAL_CHANGES = JSON con la estructura de Changes (ver incremental.ts)
  */
 
 const CF_TOKEN = process.env.CF_TOKEN || '';
 const CF_ZONE = process.env.CF_ZONE || '';
 const MODE = (process.env.INCREMENTAL_MODE || 'full') as 'full' | 'incremental';
-const SLUGS = (process.env.INCREMENTAL_SLUGS || '').split(',').filter(Boolean);
-const LOCALES = (process.env.INCREMENTAL_LOCALES || '').split(',');
+const CHANGES_RAW = process.env.INCREMENTAL_CHANGES || '';
 
 const BASE = 'https://hacecuentas.com';
+
+interface ContentChanges {
+  slugs: string[];
+  locales?: string[];
+}
+
+interface Changes {
+  calcs?: ContentChanges;
+  blog?: ContentChanges;
+  guias?: ContentChanges;
+  tablas?: ContentChanges;
+  comparaciones?: ContentChanges;
+  glosario?: ContentChanges;
+  argentina?: ContentChanges;
+  iibb?: boolean;
+  categories?: string[];
+  provincias?: string[];
+}
 
 if (!CF_TOKEN || !CF_ZONE) {
   console.error('[purge] CF_TOKEN o CF_ZONE no seteados — skip');
@@ -27,7 +42,7 @@ if (!CF_TOKEN || !CF_ZONE) {
 }
 
 async function purgeEverything(): Promise<void> {
-  console.log('[purge] mode=full → purge_everything');
+  console.log('[purge] purge_everything');
   const res = await fetch(
     `https://api.cloudflare.com/client/v4/zones/${CF_ZONE}/purge_cache`,
     {
@@ -48,7 +63,6 @@ async function purgeEverything(): Promise<void> {
 }
 
 async function purgeFiles(urls: string[]): Promise<void> {
-  // CF acepta hasta 30 URLs por request. Lo manejamos en chunks.
   const CHUNK = 30;
   for (let i = 0; i < urls.length; i += CHUNK) {
     const slice = urls.slice(i, i + CHUNK);
@@ -68,17 +82,15 @@ async function purgeFiles(urls: string[]): Promise<void> {
       console.error('[purge] FAIL chunk', i, JSON.stringify(data.errors));
       process.exit(1);
     }
-    console.log(`[purge] ok chunk ${i}-${i + slice.length} (${slice.length} URLs)`);
+    console.log(`[purge] ok chunk ${i}-${i + slice.length} (${slice.length})`);
   }
 }
 
-function buildUrls(): string[] {
+function buildUrls(changes: Changes): string[] {
   const set = new Set<string>();
 
-  // Sitemaps + RSS + search-index siempre cambian al editar un calc
+  // Sitemaps + feeds + search-index siempre cambian al editar contenido
   set.add(`${BASE}/sitemap.xml`);
-  set.add(`${BASE}/sitemap-calcs-1.xml`);
-  set.add(`${BASE}/sitemap-calcs-2.xml`);
   set.add(`${BASE}/sitemap-core.xml`);
   set.add(`${BASE}/sitemap-priority.xml`);
   set.add(`${BASE}/sitemap-fresh.xml`);
@@ -86,34 +98,80 @@ function buildUrls(): string[] {
   set.add(`${BASE}/feed.json`);
   set.add(`${BASE}/search-index.json`);
 
-  // Calc URLs por slug × locale. 'ar' es el root sin prefijo, los demás
-  // usan /<locale>/<slug>.
-  for (const slug of SLUGS) {
-    for (const locale of LOCALES) {
-      const prefix = locale === 'ar' ? '' : `/${locale}`;
-      set.add(`${BASE}${prefix}/${slug}`);
+  // Calcs (por slug × locale + embed)
+  if (changes.calcs) {
+    const locales = changes.calcs.locales || ['ar'];
+    for (const slug of changes.calcs.slugs) {
+      for (const locale of locales) {
+        const prefix = locale === 'ar' ? '' : `/${locale}`;
+        set.add(`${BASE}${prefix}/${slug}`);
+      }
+      set.add(`${BASE}/embed/${slug}`);
     }
-    // Embed siempre cuelga del root (no por locale)
-    set.add(`${BASE}/embed/${slug}`);
+  }
+
+  if (changes.blog) {
+    for (const slug of changes.blog.slugs) set.add(`${BASE}/blog/${slug}`);
+    set.add(`${BASE}/blog`);
+  }
+  if (changes.guias) {
+    for (const slug of changes.guias.slugs) set.add(`${BASE}/guia/${slug}`);
+    set.add(`${BASE}/guias`);
+  }
+  if (changes.tablas) {
+    for (const slug of changes.tablas.slugs) set.add(`${BASE}/tabla/${slug}`);
+  }
+  if (changes.comparaciones) {
+    for (const slug of changes.comparaciones.slugs) set.add(`${BASE}/comparar/${slug}`);
+  }
+  if (changes.glosario) {
+    for (const slug of changes.glosario.slugs) set.add(`${BASE}/glosario/${slug}`);
+  }
+  if (changes.argentina && changes.provincias) {
+    // Cada calc × cada provincia con datos
+    for (const calcSlug of changes.argentina.slugs) {
+      for (const prov of changes.provincias) {
+        set.add(`${BASE}/argentina/${prov}/${calcSlug}`);
+      }
+    }
+  }
+  if (changes.provincias) {
+    for (const prov of changes.provincias) set.add(`${BASE}/argentina/${prov}`);
+  }
+  if (changes.categories) {
+    for (const cat of changes.categories) {
+      set.add(`${BASE}/categoria/${cat}`);
+      set.add(`${BASE}/categoria/${cat}/top`);
+      set.add(`${BASE}/categoria/${cat}/rss.xml`);
+    }
   }
 
   return Array.from(set);
 }
 
 async function main(): Promise<void> {
-  if (MODE === 'full') {
+  if (MODE === 'full' || !CHANGES_RAW) {
     await purgeEverything();
     return;
   }
 
-  if (SLUGS.length === 0) {
-    console.log('[purge] mode=incremental pero sin slugs → fallback purge_everything');
+  let changes: Changes;
+  try {
+    changes = JSON.parse(CHANGES_RAW);
+  } catch (err) {
+    console.log('[purge] INCREMENTAL_CHANGES no parseable → fallback purge_everything');
     await purgeEverything();
     return;
   }
 
-  const urls = buildUrls();
-  console.log(`[purge] mode=incremental → ${urls.length} URLs`);
+  const urls = buildUrls(changes);
+  if (urls.length === 0) {
+    console.log('[purge] no URLs to purge → fallback purge_everything');
+    await purgeEverything();
+    return;
+  }
+
+  console.log(`[purge] incremental → ${urls.length} URLs`);
   await purgeFiles(urls);
 }
 

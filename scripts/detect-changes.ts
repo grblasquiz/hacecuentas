@@ -1,19 +1,31 @@
 /**
- * Detect changes since last successful deploy.
+ * Detect changes since last successful deploy (v2 — multi content type).
  *
- * Lee LAST_DEPLOY_SHA (env) y compara contra HEAD via `git diff`. Clasifica
- * cada archivo cambiado en una de tres categorías:
+ * Lee LAST_DEPLOY_SHA y compara contra HEAD. Clasifica los archivos en
+ * múltiples content types y emite un único JSON con todo lo que cambió:
  *
- *   1. shared  → archivo que afecta múltiples páginas (Layout, Calculator,
- *                astro.config, package.json, etc.). Output: mode=full.
- *   2. calcs   → src/content/calcs(-loc)/X.json o src/lib/formulas/X.ts.
- *                Output: mode=incremental + lista de slugs + locales.
- *   3. ignore  → docs/, *.md, cerebro/, workflows que no afectan build.
- *                No suma al modo, se skipea.
+ *   {
+ *     "calcs":         { "slugs": [...], "locales": [...] },
+ *     "blog":          { "slugs": [...] },
+ *     "guias":         { "slugs": [...] },
+ *     "tablas":        { "slugs": [...] },
+ *     "comparaciones": { "slugs": [...] },
+ *     "glosario":      { "slugs": [...] },
+ *     "argentina":     { "slugs": [...] },
+ *     "iibb":          true | false,
+ *     "categories":    [...],   // derivado leyendo c.category de calcs cambiados
+ *     "provincias":    [...]    // derivado de calcs en content/argentina/
+ *   }
  *
- * Si LAST_DEPLOY_SHA no está seteado o el diff falla → mode=full (seguro).
+ * Outputs:
+ *   - $GITHUB_OUTPUT: `mode=full|incremental`, `changes_json=...` (compact)
+ *   - stdout (para uso local sin GH)
  *
- * Output: escribe key=value lines a $GITHUB_OUTPUT (o stdout en local).
+ * Fallbacks defensivos:
+ *   - LAST_DEPLOY_SHA vacío → full
+ *   - git diff fail → full
+ *   - Delete/rename → full (emptyOutDir:false dejaría ghosts en dist)
+ *   - Archivo no clasificado → full
  */
 
 import { execSync } from 'node:child_process';
@@ -21,17 +33,12 @@ import { appendFileSync, readFileSync, existsSync } from 'node:fs';
 
 const LAST_SHA = process.env.LAST_DEPLOY_SHA || '';
 
-// Patrones que disparan FULL rebuild si tocan estos archivos. Diseñado defensivo:
-// ante la duda, full rebuild. Es mejor un build largo de más que un deploy roto.
+// Patrones que disparan FULL rebuild si cambian. Defensivo: ante la duda, full.
 const SHARED_PATTERNS: RegExp[] = [
   /^src\/components\//,
   /^src\/layouts\//,
-  // src/lib EXCEPTO formulas/<slug>.ts (esos son específicos del calc)
   /^src\/lib\/(?!formulas\/[^/]+\.ts$)/,
   /^src\/styles\//,
-  // src/pages/* excepto los content endpoints que no participan del prerender
-  // de calcs (sitemap, rss, feed). Sin embargo, defensivo: si tocaron pages,
-  // full rebuild — los pages estructuran TODO el sitio.
   /^src\/pages\//,
   /^src\/middleware/,
   /^src\/env\.d\.ts$/,
@@ -39,16 +46,16 @@ const SHARED_PATTERNS: RegExp[] = [
   /^package\.json$/,
   /^package-lock\.json$/,
   /^wrangler\./,
-  // Scripts de build/prebuild — si cambian, full rebuild
   /^scripts\/(?!new-calc\.ts$|cf-purge-cache\.sh$|detect-changes\.ts$|incremental-purge\.ts$)/,
   /^public\//,
   /^tsconfig\.json$/,
   /^\.github\/workflows\/deploy\.yml$/,
-  // Otros content types que NO son calcs JSON
-  /^src\/content\/(blog|guias|tablas|comparaciones|glosario|argentina|iibb)\//,
+  // Archivos de content que afectan TODA una ruta cuando cambian
+  /^src\/content\/argentina\/provincias\.json$/,
+  /^src\/content\/iibb\/actividades\.json$/,
 ];
 
-// Patrones que SE PUEDEN ignorar (no afectan build de prod).
+// Patrones que se pueden ignorar (no afectan build de prod).
 const IGNORE_PATTERNS: RegExp[] = [
   /^docs\//,
   /^cerebro\//,
@@ -57,23 +64,48 @@ const IGNORE_PATTERNS: RegExp[] = [
   /\.md$/,
   /^\.githooks\//,
   /^\.vscode\//,
-  // Otros workflows (no deploy.yml) son crons que no afectan prod
   /^\.github\/workflows\/(?!deploy\.yml).+\.yml$/,
   /^\.github\/(?!workflows\/).+/,
-  // OG cache (se regenera con caches del workflow)
   /^public\/og\//,
   /^public\/search-index\.json$/,
   /^public\/sw\.js$/,
-  // Manifests autogenerados
   /^src\/lib\/og-manifest\.json$/,
   /^src\/lib\/related-auto\.(json|hash)$/,
 ];
 
-// Calcs JSON: src/content/calcs/X.json (AR) o src/content/calcs-XX/X.json (locale)
-// X puede ser el slug O el formulaId — convención mixta histórica. El slug real
-// está dentro del JSON, hay que leerlo.
-const CALC_JSON_RE = /^src\/content\/calcs(-([a-z]{2}))?\/([^/]+)\.json$/;
+// Regex de content types
+const CALC_RE = /^src\/content\/calcs(-([a-z]{2}))?\/([^/]+)\.json$/;
 const FORMULA_TS_RE = /^src\/lib\/formulas\/([^/]+)\.ts$/;
+const BLOG_RE = /^src\/content\/blog\/([^/]+)\.json$/;
+const GUIAS_RE = /^src\/content\/guias\/([^/]+)\.json$/;
+const TABLAS_RE = /^src\/content\/tablas\/([^/]+)\.json$/;
+const COMPARACIONES_RE = /^src\/content\/comparaciones\/([^/]+)\.json$/;
+const GLOSARIO_RE = /^src\/content\/glosario\/([^/]+)\.json$/;
+const ARGENTINA_RE = /^src\/content\/argentina\/([^/]+)\.json$/;
+const IIBB_RE = /^src\/content\/iibb\//;
+
+interface ContentChanges {
+  slugs: Set<string>;
+  locales?: Set<string>;
+}
+
+interface DetectResult {
+  mode: 'full' | 'incremental';
+  changes?: {
+    calcs?: { slugs: string[]; locales: string[] };
+    blog?: { slugs: string[] };
+    guias?: { slugs: string[] };
+    tablas?: { slugs: string[] };
+    comparaciones?: { slugs: string[] };
+    glosario?: { slugs: string[] };
+    argentina?: { slugs: string[] };
+    iibb?: boolean;
+    categories?: string[];
+    provincias?: string[];
+  };
+  reason: string;
+  filesAnalyzed: number;
+}
 
 function readSlugFromJson(filePath: string): string | null {
   if (!existsSync(filePath)) return null;
@@ -85,44 +117,39 @@ function readSlugFromJson(filePath: string): string | null {
   }
 }
 
-function readSlugFromFormulaId(formulaId: string): string[] {
-  // Una fórmula puede pertenecer a varios calcs (varios locales). Escaneamos
-  // los content/calcs* directories para encontrar los que tienen este formulaId.
-  const locales = ['', 'en', 'es', 'mx', 'cl', 'co', 'pt'];
-  const slugs = new Set<string>();
+function readJsonField<T = unknown>(filePath: string, field: string): T | null {
+  if (!existsSync(filePath)) return null;
+  try {
+    const data = JSON.parse(readFileSync(filePath, 'utf8'));
+    return data[field] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function readSlugsFromFormulaId(formulaId: string): { slug: string; locale: string }[] {
+  const locales = ['ar', 'en', 'es', 'mx', 'cl', 'co', 'pt'];
+  const out: { slug: string; locale: string }[] = [];
   for (const loc of locales) {
-    const dir = loc ? `src/content/calcs-${loc}` : 'src/content/calcs';
-    // Búsqueda rápida via grep
+    const dir = loc === 'ar' ? 'src/content/calcs' : `src/content/calcs-${loc}`;
     try {
-      const out = execSync(
+      const grepOut = execSync(
         `grep -l '"formulaId": "${formulaId}"' ${dir}/*.json 2>/dev/null || true`,
         { encoding: 'utf8' },
       );
-      for (const file of out.split('\n').filter(Boolean)) {
+      for (const file of grepOut.split('\n').filter(Boolean)) {
         const slug = readSlugFromJson(file);
-        if (slug) slugs.add(slug);
+        if (slug) out.push({ slug, locale: loc });
       }
     } catch {
-      // sin matches, skip
+      // sin matches
     }
   }
-  return Array.from(slugs);
+  return out;
 }
 
-interface DetectResult {
-  mode: 'full' | 'incremental';
-  slugs: string[];
-  locales: string[];
-  reason: string;
-  filesAnalyzed: number;
-}
-
-function writeOutput(lines: string[]): void {
-  const out = lines.join('\n') + '\n';
-  if (process.env.GITHUB_OUTPUT) {
-    appendFileSync(process.env.GITHUB_OUTPUT, out);
-  }
-  process.stdout.write(out);
+function fullResult(reason: string, filesAnalyzed: number = 0): DetectResult {
+  return { mode: 'full', reason, filesAnalyzed };
 }
 
 function detect(baseSha: string): DetectResult {
@@ -140,143 +167,191 @@ function detect(baseSha: string): DetectResult {
         return { status: parts[0], path: parts[parts.length - 1] };
       });
   } catch (err: any) {
-    return {
-      mode: 'full',
-      slugs: [],
-      locales: [],
-      reason: `no se pudo diff vs ${baseSha}: ${err.message || err}`,
-      filesAnalyzed: 0,
-    };
+    return fullResult(`no se pudo diff vs ${baseSha}: ${err.message || err}`);
   }
 
-  // Delete (D) o rename (R) → archivos que ya no deberían estar en dist. Como
-  // emptyOutDir=false no los borra, dejaríamos ghosts. Mejor full rebuild
-  // (que limpia dist al inicio).
-  const deletedOrRenamed = entries.find(
+  if (entries.length === 0) {
+    return fullResult('sin cambios detectados');
+  }
+
+  // Delete/rename → full (emptyOutDir:false dejaría ghosts)
+  const dr = entries.find(
     (e) => e.status.startsWith('D') || e.status.startsWith('R'),
   );
-  if (deletedOrRenamed) {
-    return {
-      mode: 'full',
-      slugs: [],
-      locales: [],
-      reason: `delete/rename detectado: ${deletedOrRenamed.status} ${deletedOrRenamed.path}`,
-      filesAnalyzed: entries.length,
-    };
+  if (dr) {
+    return fullResult(`delete/rename: ${dr.status} ${dr.path}`, entries.length);
   }
 
   const files = entries.map((e) => e.path);
 
-  if (files.length === 0) {
-    // Sin diffs → puede ser primer deploy o re-run. Full por seguridad pero
-    // probablemente termine en 2s porque no hay nada que regenerar.
-    return {
-      mode: 'full',
-      slugs: [],
-      locales: [],
-      reason: 'sin cambios detectados',
-      filesAnalyzed: 0,
-    };
-  }
-
-  const slugs = new Set<string>();
-  const locales = new Set<string>();
+  const calcs: ContentChanges = { slugs: new Set(), locales: new Set() };
+  const blog: ContentChanges = { slugs: new Set() };
+  const guias: ContentChanges = { slugs: new Set() };
+  const tablas: ContentChanges = { slugs: new Set() };
+  const comparaciones: ContentChanges = { slugs: new Set() };
+  const glosario: ContentChanges = { slugs: new Set() };
+  const argentina: ContentChanges = { slugs: new Set() };
+  const provincias = new Set<string>();
+  const categories = new Set<string>();
+  let iibb = false;
 
   for (const file of files) {
-    // ignore primero (no participa de la decisión)
     if (IGNORE_PATTERNS.some((p) => p.test(file))) continue;
 
-    // calc JSON específico — el slug real está adentro del JSON (filename
-    // puede ser slug o formulaId). Locale 'ar' es el root, los demás son el
-    // sufijo del directorio (calcs-en → 'en', etc.).
-    const calcMatch = file.match(CALC_JSON_RE);
-    if (calcMatch) {
-      const locale = calcMatch[2] || 'ar';
+    // Calcs JSON
+    const calcM = file.match(CALC_RE);
+    if (calcM) {
+      const locale = calcM[2] || 'ar';
       const slug = readSlugFromJson(file);
-      if (!slug) {
-        return {
-          mode: 'full',
-          slugs: [],
-          locales: [],
-          reason: `no se pudo leer slug de ${file}`,
-          filesAnalyzed: files.length,
-        };
-      }
-      slugs.add(slug);
-      locales.add(locale);
+      if (!slug) return fullResult(`no se pudo leer slug de ${file}`, files.length);
+      calcs.slugs.add(slug);
+      calcs.locales!.add(locale);
+      // Derivar categoría
+      const cat = readJsonField<string>(file, 'category');
+      if (cat) categories.add(cat);
       continue;
     }
 
-    // formula TS específica — un mismo formulaId puede usarse en varios calcs
-    // y locales. Buscamos qué slugs lo usan via grep en content/calcs*.
-    const formMatch = file.match(FORMULA_TS_RE);
-    if (formMatch) {
-      const matchedSlugs = readSlugFromFormulaId(formMatch[1]);
-      if (matchedSlugs.length === 0) {
-        // Formula huérfana o nueva sin calc → defensivo: full
-        return {
-          mode: 'full',
-          slugs: [],
-          locales: [],
-          reason: `formula ${formMatch[1]}.ts sin calcs asociados`,
-          filesAnalyzed: files.length,
-        };
+    // Formula TS — afecta múltiples slugs/locales
+    const formM = file.match(FORMULA_TS_RE);
+    if (formM) {
+      const matched = readSlugsFromFormulaId(formM[1]);
+      if (matched.length === 0) {
+        return fullResult(`formula ${formM[1]}.ts sin calcs asociados`, files.length);
       }
-      for (const s of matchedSlugs) slugs.add(s);
-      // Como no sabemos en qué locales aparece, marcamos todos
-      ['ar', 'en', 'es', 'mx', 'cl', 'co', 'pt'].forEach((l) => locales.add(l));
+      for (const m of matched) {
+        calcs.slugs.add(m.slug);
+        calcs.locales!.add(m.locale);
+        // Categoría del calc
+        const dir = m.locale === 'ar' ? 'src/content/calcs' : `src/content/calcs-${m.locale}`;
+        // El filename puede ser slug o formulaId; intentamos ambos
+        for (const fname of [`${m.slug}.json`, `${formM[1]}.json`]) {
+          const cat = readJsonField<string>(`${dir}/${fname}`, 'category');
+          if (cat) { categories.add(cat); break; }
+        }
+      }
       continue;
     }
 
-    // shared
-    for (const pat of SHARED_PATTERNS) {
-      if (pat.test(file)) {
-        return {
-          mode: 'full',
-          slugs: [],
-          locales: [],
-          reason: `shared file changed: ${file}`,
-          filesAnalyzed: files.length,
-        };
-      }
+    if (BLOG_RE.test(file)) {
+      const slug = readSlugFromJson(file);
+      if (!slug) return fullResult(`no slug en ${file}`, files.length);
+      blog.slugs.add(slug);
+      continue;
+    }
+    if (GUIAS_RE.test(file)) {
+      const slug = readSlugFromJson(file);
+      if (!slug) return fullResult(`no slug en ${file}`, files.length);
+      guias.slugs.add(slug);
+      continue;
+    }
+    if (TABLAS_RE.test(file)) {
+      const slug = readSlugFromJson(file);
+      if (!slug) return fullResult(`no slug en ${file}`, files.length);
+      tablas.slugs.add(slug);
+      continue;
+    }
+    if (COMPARACIONES_RE.test(file)) {
+      const slug = readSlugFromJson(file);
+      if (!slug) return fullResult(`no slug en ${file}`, files.length);
+      comparaciones.slugs.add(slug);
+      continue;
+    }
+    if (GLOSARIO_RE.test(file)) {
+      const slug = readSlugFromJson(file);
+      if (!slug) return fullResult(`no slug en ${file}`, files.length);
+      glosario.slugs.add(slug);
+      continue;
     }
 
-    // Archivo no clasificado → defensivo, full rebuild
-    return {
-      mode: 'full',
-      slugs: [],
-      locales: [],
-      reason: `unclassified file (defensive full): ${file}`,
-      filesAnalyzed: files.length,
-    };
+    // Argentina (calcs provinciales) — excluyendo provincias.json (en SHARED)
+    // Estos JSON usan `calcSlug` en vez de `slug`.
+    const argM = file.match(ARGENTINA_RE);
+    if (argM && argM[1] !== 'provincias' && !argM[1].includes('ingresos-brutos')) {
+      const calcSlug = readJsonField<string>(file, 'calcSlug');
+      if (!calcSlug) return fullResult(`no calcSlug en ${file}`, files.length);
+      argentina.slugs.add(calcSlug);
+      // provinceData es un dict {provSlug: ...}. Si cambian todos los provinceData,
+      // todas las combinaciones (provincia × calc) podrían cambiar; nosotros marcamos
+      // todas las provincias del JSON como afectadas.
+      const provData = readJsonField<Record<string, unknown>>(file, 'provinceData');
+      if (provData && typeof provData === 'object') {
+        for (const provSlug of Object.keys(provData)) provincias.add(provSlug);
+      }
+      continue;
+    }
+    // ingresos-brutos.json en argentina = shared (afecta iibb específicos)
+    if (file === 'src/content/argentina/ingresos-brutos.json') {
+      return fullResult(`argentina/ingresos-brutos.json (shared)`, files.length);
+    }
+
+    if (IIBB_RE.test(file)) {
+      iibb = true;
+      continue;
+    }
+
+    // Shared
+    if (SHARED_PATTERNS.some((p) => p.test(file))) {
+      return fullResult(`shared: ${file}`, files.length);
+    }
+
+    return fullResult(`no clasificado (defensive full): ${file}`, files.length);
   }
 
-  if (slugs.size === 0) {
-    return {
-      mode: 'full',
-      slugs: [],
-      locales: [],
-      reason: 'solo cambios en archivos ignore (no debería disparar deploy)',
-      filesAnalyzed: files.length,
+  // ¿Hubo algún cambio de content?
+  const anyChange =
+    calcs.slugs.size > 0 ||
+    blog.slugs.size > 0 ||
+    guias.slugs.size > 0 ||
+    tablas.slugs.size > 0 ||
+    comparaciones.slugs.size > 0 ||
+    glosario.slugs.size > 0 ||
+    argentina.slugs.size > 0 ||
+    iibb;
+
+  if (!anyChange) {
+    return fullResult('solo cambios en archivos ignore', files.length);
+  }
+
+  const changes: DetectResult['changes'] = {};
+  if (calcs.slugs.size > 0) {
+    changes.calcs = {
+      slugs: Array.from(calcs.slugs).sort(),
+      locales: Array.from(calcs.locales!).sort(),
     };
   }
+  if (blog.slugs.size > 0) changes.blog = { slugs: Array.from(blog.slugs).sort() };
+  if (guias.slugs.size > 0) changes.guias = { slugs: Array.from(guias.slugs).sort() };
+  if (tablas.slugs.size > 0) changes.tablas = { slugs: Array.from(tablas.slugs).sort() };
+  if (comparaciones.slugs.size > 0) changes.comparaciones = { slugs: Array.from(comparaciones.slugs).sort() };
+  if (glosario.slugs.size > 0) changes.glosario = { slugs: Array.from(glosario.slugs).sort() };
+  if (argentina.slugs.size > 0) changes.argentina = { slugs: Array.from(argentina.slugs).sort() };
+  if (iibb) changes.iibb = true;
+  if (categories.size > 0) changes.categories = Array.from(categories).sort();
+  if (provincias.size > 0) changes.provincias = Array.from(provincias).sort();
 
   return {
     mode: 'incremental',
-    slugs: Array.from(slugs).sort(),
-    locales: Array.from(locales).sort(),
-    reason: `${slugs.size} slug(s) en ${locales.size} locale(s)`,
+    changes,
+    reason: `${Object.keys(changes).length} content type(s) cambiados`,
     filesAnalyzed: files.length,
   };
 }
 
+function writeOutput(lines: string[]): void {
+  const out = lines.join('\n') + '\n';
+  if (process.env.GITHUB_OUTPUT) {
+    appendFileSync(process.env.GITHUB_OUTPUT, out);
+  }
+  process.stdout.write(out);
+}
+
 function main(): void {
   if (!LAST_SHA) {
-    console.log('[detect-changes] LAST_DEPLOY_SHA vacío → full build (probable primer deploy)');
+    console.log('[detect-changes] LAST_DEPLOY_SHA vacío → full');
     writeOutput([
       'mode=full',
-      'slugs=',
-      'locales=',
+      'changes_json=',
       'reason=no last deploy sha',
     ]);
     return;
@@ -286,17 +361,21 @@ function main(): void {
   const result = detect(LAST_SHA);
 
   console.log(`[detect-changes] mode=${result.mode} files=${result.filesAnalyzed} reason="${result.reason}"`);
-  if (result.mode === 'incremental') {
-    console.log(`[detect-changes] slugs=${result.slugs.join(',')}`);
-    console.log(`[detect-changes] locales=${result.locales.join(',')}`);
-  }
 
-  writeOutput([
-    `mode=${result.mode}`,
-    `slugs=${result.slugs.join(',')}`,
-    `locales=${result.locales.join(',')}`,
-    `reason=${result.reason}`,
-  ]);
+  if (result.mode === 'incremental' && result.changes) {
+    console.log('[detect-changes] changes:', JSON.stringify(result.changes, null, 2));
+    writeOutput([
+      'mode=incremental',
+      `changes_json=${JSON.stringify(result.changes)}`,
+      `reason=${result.reason}`,
+    ]);
+  } else {
+    writeOutput([
+      'mode=full',
+      'changes_json=',
+      `reason=${result.reason}`,
+    ]);
+  }
 }
 
 main();

@@ -128,8 +128,7 @@ jobs:
           else
             echo "Sin .last-deploy-sha previo → full build"
             echo "mode=full" >> $GITHUB_OUTPUT
-            echo "slugs=" >> $GITHUB_OUTPUT
-            echo "locales=" >> $GITHUB_OUTPUT
+            echo "changes_json=" >> $GITHUB_OUTPUT
             echo "reason=no last deploy sha" >> $GITHUB_OUTPUT
           fi
 
@@ -141,16 +140,14 @@ jobs:
           # (ver src/layouts/Layout.astro). Sin el secret la condición evalúa
           # falso y el script no se renderiza — no rompe el build.
           PUBLIC_MS_CLARITY_ID: ${{ secrets.PUBLIC_MS_CLARITY_ID }}
-          # En modo incremental, Astro filtra getStaticPaths a estos slugs/locales
-          # y emptyOutDir=false preserva el dist cacheado.
-          INCREMENTAL_SLUGS: ${{ steps.detect.outputs.mode == 'incremental' && steps.detect.outputs.slugs || '' }}
-          INCREMENTAL_LOCALES: ${{ steps.detect.outputs.mode == 'incremental' && steps.detect.outputs.locales || '' }}
+          # En modo incremental, Astro filtra getStaticPaths según el JSON.
+          # emptyOutDir=false preserva el dist cacheado.
+          INCREMENTAL_CHANGES: ${{ steps.detect.outputs.mode == 'incremental' && steps.detect.outputs.changes_json || '' }}
         run: |
           set -e
           echo "::group::detect-changes result"
           echo "mode:    ${{ steps.detect.outputs.mode }}"
-          echo "slugs:   ${{ steps.detect.outputs.slugs }}"
-          echo "locales: ${{ steps.detect.outputs.locales }}"
+          echo "changes: ${{ steps.detect.outputs.changes_json }}"
           echo "reason:  ${{ steps.detect.outputs.reason }}"
           echo "::endgroup::"
 
@@ -332,8 +329,7 @@ jobs:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           INCREMENTAL_MODE: ${{ steps.detect.outputs.mode }}
-          INCREMENTAL_SLUGS: ${{ steps.detect.outputs.slugs }}
-          INCREMENTAL_LOCALES: ${{ steps.detect.outputs.locales }}
+          INCREMENTAL_CHANGES: ${{ steps.detect.outputs.changes_json }}
         run: node --experimental-strip-types scripts/incremental-purge.ts
 
       # Smoke test post-deploy: verifica 60 URLs en paralelo cross-locale.

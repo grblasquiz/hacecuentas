@@ -1,66 +1,136 @@
 /**
- * Helper para builds incrementales.
+ * Helper para builds incrementales (v2).
  *
- * Cómo funciona:
- *   - En full build (default): no hay env vars → filterByIncremental devuelve
- *     todos los items sin modificar.
- *   - En incremental build: el workflow detecta qué cambió desde el último
- *     deploy exitoso y setea INCREMENTAL_SLUGS + INCREMENTAL_LOCALES. Cada
- *     getStaticPaths usa este helper para filtrar qué páginas regenerar.
+ * Diseño:
+ *   - `detect-changes.ts` analiza el diff y emite UN solo env var
+ *     `INCREMENTAL_CHANGES` con JSON describiendo qué cambió por content type.
+ *   - `astro.config.mjs` inline-ea esa env como `__INCREMENTAL_CHANGES__`
+ *     porque `process.env` está vacío adentro del worker miniflare que
+ *     usa el adapter CF para prerendear.
+ *   - Cada `getStaticPaths` llama `filterByIncremental(items, ...)` con
+ *     contentType + locale. En full build no filtra; en incremental devuelve
+ *     solo los items relevantes.
  *
- * Convenciones:
- *   - INCREMENTAL_SLUGS: lista CSV de slugs cambiados (sin locale prefix).
- *   - INCREMENTAL_LOCALES: lista CSV de locales afectadas ('' para AR root,
- *     'en', 'es', 'mx', 'cl', 'co', 'pt'). Si una locale no está en la lista,
- *     getStaticPaths de ese locale devuelve [] (Astro skip-ea esas rutas).
+ * Estructura del JSON:
+ * {
+ *   "calcs":         { "slugs": ["X","Y"], "locales": ["ar","en"] },
+ *   "blog":          { "slugs": ["a-post"] },
+ *   "guias":         { "slugs": ["la-guia"] },
+ *   "tablas":        { "slugs": ["la-tabla"] },
+ *   "comparaciones": { "slugs": ["X-vs-Y"] },
+ *   "glosario":      { "slugs": ["termino"] },
+ *   "argentina":     { "slugs": ["calc-prov-x"] },  // calcs en content/argentina/
+ *   "iibb":          true,                            // si algo de iibb/ cambió
+ *   "categories":    ["finanzas","salud"],           // derivado de calcs cambiados
+ *   "provincias":    ["caba","buenos-aires"]         // derivado si aplica
+ * }
  *
- * El resto de los HTMLs queda intacto del build anterior (dist/client/ se
- * restaura desde el cache de GH Actions antes de buildar).
+ * Locales válidos: 'ar' (root), 'en', 'es', 'mx', 'cl', 'co', 'pt'.
  */
 
-// Vite inline-ea estos placeholders via `define` en astro.config.mjs. Eso
-// hace que las env vars del proceso padre estén disponibles en el bundle del
-// adapter CF — `process.env` adentro del worker miniflare está vacío.
-declare const __INCREMENTAL_SLUGS__: string;
-declare const __INCREMENTAL_LOCALES__: string;
+// Vite inline-ea este placeholder via `define` en astro.config.mjs.
+declare const __INCREMENTAL_CHANGES__: string;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const SLUGS_ENV = (typeof __INCREMENTAL_SLUGS__ !== 'undefined' ? __INCREMENTAL_SLUGS__ : process.env.INCREMENTAL_SLUGS) ?? '';
-const LOCALES_ENV = (typeof __INCREMENTAL_LOCALES__ !== 'undefined' ? __INCREMENTAL_LOCALES__ : process.env.INCREMENTAL_LOCALES) ?? '';
+export type ContentType =
+  | 'calcs'
+  | 'blog'
+  | 'guias'
+  | 'tablas'
+  | 'comparaciones'
+  | 'glosario'
+  | 'argentina'
+  | 'iibb';
 
-const INCREMENTAL_SLUGS: Set<string> | null = SLUGS_ENV
-  ? new Set(SLUGS_ENV.split(',').map((s) => s.trim()).filter(Boolean))
-  : null;
+interface ContentChanges {
+  slugs: string[];
+  locales?: string[];
+}
 
-const INCREMENTAL_LOCALES: Set<string> | null = LOCALES_ENV
-  ? new Set(LOCALES_ENV.split(',').map((s) => s.trim()))
-  : null;
+interface Changes {
+  calcs?: ContentChanges;
+  blog?: ContentChanges;
+  guias?: ContentChanges;
+  tablas?: ContentChanges;
+  comparaciones?: ContentChanges;
+  glosario?: ContentChanges;
+  argentina?: ContentChanges;
+  iibb?: boolean;
+  categories?: string[];
+  provincias?: string[];
+}
 
-export const isIncrementalBuild = INCREMENTAL_SLUGS !== null;
+const RAW = (typeof __INCREMENTAL_CHANGES__ !== 'undefined'
+  ? __INCREMENTAL_CHANGES__
+  : process.env.INCREMENTAL_CHANGES) ?? '';
+
+let CHANGES: Changes | null = null;
+if (RAW) {
+  try {
+    CHANGES = JSON.parse(RAW) as Changes;
+  } catch {
+    // RAW corrupto → full build defensivo
+    CHANGES = null;
+  }
+}
+
+export const isIncrementalBuild = CHANGES !== null;
 
 if (isIncrementalBuild) {
   // eslint-disable-next-line no-console
-  console.log(
-    `[incremental] mode=ON slugs=${INCREMENTAL_SLUGS!.size} locales=${
-      INCREMENTAL_LOCALES ? Array.from(INCREMENTAL_LOCALES).join('|') : 'all'
-    }`,
-  );
+  console.log('[incremental] v2 ON', JSON.stringify(CHANGES));
 }
 
 /**
- * Filtra un array de items (que tienen .slug) según los slugs cambiados.
- * En full build (sin env vars), devuelve el array intacto.
+ * Filtra items con `.slug` según los cambios detectados.
+ *   - En full build: devuelve todos.
+ *   - En incremental: devuelve solo los que matcheen el contentType.
  *
- * @param items array de calcs/items con .slug
- * @param locale 'ar' para AR root, 'en'/'es'/'mx'/'cl'/'co'/'pt' para otros
+ * Para 'calcs', también filtra por `locale` si la lista de locales
+ * cambiados no incluye el que se pasa.
+ *
+ * @param items array con .slug
+ * @param contentType  uno de los content types soportados
+ * @param locale       'ar' para AR root, otras para locales no-AR (solo aplica a calcs)
  */
 export function filterByIncremental<T extends { slug: string }>(
   items: T[],
+  contentType: ContentType,
   locale: string = 'ar',
 ): T[] {
-  if (INCREMENTAL_SLUGS === null) return items;
-  if (INCREMENTAL_LOCALES !== null && !INCREMENTAL_LOCALES.has(locale)) {
+  if (CHANGES === null) return items;
+
+  const bucket = CHANGES[contentType];
+  if (!bucket || bucket === true) {
+    // contentType no tocado → no se regenera nada de este tipo
+    // (excepción: iibb es boolean — se maneja con `shouldBuildContent`)
     return [];
   }
-  return items.filter((item) => INCREMENTAL_SLUGS!.has(item.slug));
+
+  const cc = bucket as ContentChanges;
+  // Para calcs, filtrar por locale también
+  if (contentType === 'calcs' && cc.locales && cc.locales.length > 0) {
+    if (!cc.locales.includes(locale)) return [];
+  }
+
+  const set = new Set(cc.slugs);
+  return items.filter((item) => set.has(item.slug));
+}
+
+/**
+ * Para rutas que no usan slug-list directo (categorías, iibb index, etc.).
+ * Devuelve true si esta ruta/categoría/provincia tiene que regenerarse.
+ */
+export function shouldBuildCategory(category: string): boolean {
+  if (CHANGES === null) return true;
+  return Boolean(CHANGES.categories?.includes(category));
+}
+
+export function shouldBuildProvincia(provincia: string): boolean {
+  if (CHANGES === null) return true;
+  return Boolean(CHANGES.provincias?.includes(provincia));
+}
+
+export function shouldBuildIibb(): boolean {
+  if (CHANGES === null) return true;
+  return Boolean(CHANGES.iibb);
 }

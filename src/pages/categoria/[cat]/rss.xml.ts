@@ -1,4 +1,5 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
+import { shouldBuildCategory } from '../../../lib/incremental';
 
 // RSS por categoría — feeds nicho para bloggers/aggregators temáticos.
 // Mejor descubribilidad y syndication targeting.
@@ -17,7 +18,7 @@ const CATEGORIES = [
 ];
 
 export const getStaticPaths: GetStaticPaths = () => {
-  return CATEGORIES.map((cat) => ({ params: { cat } }));
+  return CATEGORIES.filter(shouldBuildCategory).map((cat) => ({ params: { cat } }));
 };
 
 function escapeXML(s: string): string {

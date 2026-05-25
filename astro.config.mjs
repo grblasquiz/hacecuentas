@@ -12,11 +12,11 @@ const SENTRY_AUTH_TOKEN = process.env.SENTRY_AUTH_TOKEN || '';
 const SENTRY_ENABLED = Boolean(SENTRY_DSN);
 const IS_PROD_BUILD = process.env.NODE_ENV !== 'development' && Boolean(SENTRY_AUTH_TOKEN);
 
-// Build incremental: INCREMENTAL_SLUGS no vacío implica que el workflow ya
+// Build incremental: INCREMENTAL_CHANGES no vacío implica que el workflow ya
 // restauró dist/ del cache y solo queremos regenerar las páginas listadas.
 // emptyOutDir:false evita que Vite borre el dist cacheado. En full build
 // (sin env var) limpia normal.
-const IS_INCREMENTAL = Boolean(process.env.INCREMENTAL_SLUGS);
+const IS_INCREMENTAL = Boolean(process.env.INCREMENTAL_CHANGES);
 // NOTE: Partytown removido 2026-04-22. Bloqueaba events de conversión de
 // Google Ads (gtag no generaba network requests al collect endpoint).
 // Volvemos a async scripts — más CPU main thread pero tracking 100% funcional.
@@ -92,8 +92,7 @@ export default defineConfig({
     // funciona dentro del worker simulado de miniflare que el adapter CF
     // usa para prerendear, así que define las hace literales en el bundle.
     define: {
-      __INCREMENTAL_SLUGS__: JSON.stringify(process.env.INCREMENTAL_SLUGS || ''),
-      __INCREMENTAL_LOCALES__: JSON.stringify(process.env.INCREMENTAL_LOCALES || ''),
+      __INCREMENTAL_CHANGES__: JSON.stringify(process.env.INCREMENTAL_CHANGES || ''),
     },
   },
 });

@@ -67,7 +67,7 @@ async function main() {
   // 60-90s y mejora marginal: el related-auto.json del último deploy se
   // mantiene válido (afecta solo los related blocks de calcs vecinos al
   // slug modificado, y solo hasta el próximo full rebuild).
-  const incremental = Boolean(process.env.INCREMENTAL_SLUGS);
+  const incremental = Boolean(process.env.INCREMENTAL_CHANGES);
 
   console.log(`[prebuild] mode=${incremental ? 'incremental' : 'full'}`);
   console.log('[prebuild] fase 1: validate:data + regenerate-formula-index');
