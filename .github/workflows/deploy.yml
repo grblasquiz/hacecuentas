@@ -92,6 +92,47 @@ jobs:
           path: public/search-index.json
           key: search-index-${{ hashFiles('src/content/calcs/**/*.json', 'src/content/calcs-*/**/*.json', 'scripts/generate-search-index.ts') }}
 
+      # Cache del dist anterior para builds incrementales. Key dinámica por
+      # SHA (siempre miss), restore-keys trae el cache más reciente con prefijo
+      # `dist-`. Adentro del cache guardamos `.last-deploy-sha` para que el
+      # detect-changes step sepa contra qué commit diffear.
+      #
+      # En full build (cuando hay cambios shared o no hay cache previo), el
+      # build step limpia dist y rebuildea todo desde cero — el cache previo
+      # se ignora. En incremental, dist/client se preserva y solo se regeneran
+      # los HTMLs filtrados.
+      - name: Restore dist cache
+        id: dist-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            dist/client
+            .last-deploy-sha
+          key: dist-${{ github.sha }}
+          restore-keys: |
+            dist-
+
+      # Detect changes desde el último deploy exitoso. Output:
+      #   - mode=full|incremental
+      #   - slugs=csv (vacio si full)
+      #   - locales=csv (vacio si full)
+      #   - reason=texto humano para debug
+      # Si no hay .last-deploy-sha en el cache → mode=full por seguridad.
+      - name: Detect changes since last deploy
+        id: detect
+        run: |
+          if [ -f .last-deploy-sha ]; then
+            LAST_SHA=$(cat .last-deploy-sha | tr -d '[:space:]')
+            echo "Last deploy SHA: $LAST_SHA"
+            LAST_DEPLOY_SHA="$LAST_SHA" node --experimental-strip-types scripts/detect-changes.ts
+          else
+            echo "Sin .last-deploy-sha previo → full build"
+            echo "mode=full" >> $GITHUB_OUTPUT
+            echo "slugs=" >> $GITHUB_OUTPUT
+            echo "locales=" >> $GITHUB_OUTPUT
+            echo "reason=no last deploy sha" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build
         # Verbose timing: imprime tiempo de cada sub-step de prebuild + astro build.
         # Si futuro deploy vuelve a colgar, queda registro de qué etapa fue.
@@ -100,8 +141,32 @@ jobs:
           # (ver src/layouts/Layout.astro). Sin el secret la condición evalúa
           # falso y el script no se renderiza — no rompe el build.
           PUBLIC_MS_CLARITY_ID: ${{ secrets.PUBLIC_MS_CLARITY_ID }}
+          # En modo incremental, Astro filtra getStaticPaths a estos slugs/locales
+          # y emptyOutDir=false preserva el dist cacheado.
+          INCREMENTAL_SLUGS: ${{ steps.detect.outputs.mode == 'incremental' && steps.detect.outputs.slugs || '' }}
+          INCREMENTAL_LOCALES: ${{ steps.detect.outputs.mode == 'incremental' && steps.detect.outputs.locales || '' }}
         run: |
           set -e
+          echo "::group::detect-changes result"
+          echo "mode:    ${{ steps.detect.outputs.mode }}"
+          echo "slugs:   ${{ steps.detect.outputs.slugs }}"
+          echo "locales: ${{ steps.detect.outputs.locales }}"
+          echo "reason:  ${{ steps.detect.outputs.reason }}"
+          echo "::endgroup::"
+
+          # Si full, limpiamos dist por las dudas (cache restoreado o no, queremos clean slate)
+          if [ "${{ steps.detect.outputs.mode }}" = "full" ]; then
+            echo "::group::clean dist for full rebuild"
+            rm -rf dist
+            ls -la
+            echo "::endgroup::"
+          else
+            echo "::group::incremental — dist/client restaurado del cache"
+            du -sh dist/client 2>/dev/null || echo "(dist/client vacío, fallback a full)"
+            ls dist/client 2>/dev/null | wc -l
+            echo "::endgroup::"
+          fi
+
           echo "::group::env info"
           node --version
           npm --version
@@ -112,6 +177,11 @@ jobs:
           /usr/bin/time -v npm run build 2>&1 || EXIT=$?
           echo "::endgroup::"
           exit ${EXIT:-0}
+
+      # Persistir el SHA actual para el próximo deploy. Se guarda en el cache
+      # junto con dist/client al final del job (auto-save de actions/cache).
+      - name: Save current SHA for next deploy
+        run: echo "${{ github.sha }}" > .last-deploy-sha
 
       # Bundle size budget: previene regresiones grandes. Threshold relajado
       # para tolerar edge cases (404, offline, redirect HTMLs); el smoke test
@@ -254,17 +324,17 @@ jobs:
           echo "--- deploy ---"
           npx wrangler@latest deploy 2>&1
 
+      # Purge selectivo: en incremental purga solo las URLs cambiadas (sitemaps
+       # + slug×locale + embed). En full purga todo. Evita re-bajar 3600
+      # archivos de cache en deploys de 1-5 calcs.
       - name: Purge Cloudflare cache
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-        run: |
-          curl -sS -X POST \
-            "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/purge_cache" \
-            -H "Authorization: Bearer $CF_TOKEN" \
-            -H "Content-Type: application/json" \
-            --data '{"purge_everything":true}' \
-            | grep -q '"success":true' && echo "✅ Cache purgado"
+          INCREMENTAL_MODE: ${{ steps.detect.outputs.mode }}
+          INCREMENTAL_SLUGS: ${{ steps.detect.outputs.slugs }}
+          INCREMENTAL_LOCALES: ${{ steps.detect.outputs.locales }}
+        run: node --experimental-strip-types scripts/incremental-purge.ts
 
       # Smoke test post-deploy: verifica 60 URLs en paralelo cross-locale.
       # Detecta regresiones masivas (tipo schemaDescription bug 18/5 → 216
