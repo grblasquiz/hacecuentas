@@ -5,15 +5,16 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import Newsletter from '../../components/Newsletter.astro';
-import { filterByIncremental } from '../../lib/incremental';
 
 export async function getStaticPaths() {
   const modules = import.meta.glob<any>('../../content/glosario/*.json', { eager: true });
-  const all = Object.values(modules).map((mod: any) => mod.default || mod);
-  return filterByIncremental(all, 'glosario').map((t: any) => ({
-    params: { slug: t.slug },
-    props: { term: t },
-  }));
+  return Object.values(modules).map((mod: any) => {
+    const t = mod.default || mod;
+    return {
+      params: { slug: t.slug },
+      props: { term: t },
+    };
+  });
 }
 
 const { term } = Astro.props;

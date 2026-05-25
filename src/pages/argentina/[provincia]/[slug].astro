@@ -5,7 +5,6 @@ import Layout from '../../../layouts/Layout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
 import Newsletter from '../../../components/Newsletter.astro';
-import { filterByIncremental } from '../../../lib/incremental';
 
 export async function getStaticPaths() {
   // Load provinces
@@ -16,16 +15,12 @@ export async function getStaticPaths() {
   const calcModules = import.meta.glob<any>('../../../content/argentina/*.json', { eager: true });
   const calcs: any[] = Object.entries(calcModules)
     .map(([, mod]) => mod.default || mod)
-    .filter((c: any) => c.calcSlug);
+    .filter((c: any) => c.calcSlug); // excludes provincias.json which has no calcSlug
 
-  // Filter incremental: el filter trabaja sobre `.slug` así que mapeamos calcSlug → slug.
-  const calcsForFilter = calcs.map((c: any) => ({ ...c, slug: c.calcSlug }));
-  const filtered = filterByIncremental(calcsForFilter, 'argentina');
-
-  // Generate paths: for each province × each filtered calc
+  // Generate paths: for each province × each calc that has data for that province
   const paths: any[] = [];
   for (const prov of provincias) {
-    for (const calc of filtered) {
+    for (const calc of calcs) {
       if (calc.provinceData && calc.provinceData[prov.slug]) {
         paths.push({
           params: { provincia: prov.slug, slug: calc.calcSlug },

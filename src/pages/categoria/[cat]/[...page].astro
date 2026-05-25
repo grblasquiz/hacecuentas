@@ -5,15 +5,13 @@ import Layout from '../../../layouts/Layout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
 import { CATEGORY_TO_GUIDE, GUIDE_TITLES, SIBLING_CATEGORIES, CATEGORY_TITLES, CATEGORY_ICONS } from '../../../lib/category-guide-map';
-import { shouldBuildCategory } from '../../../lib/incremental';
 
 const PAGE_SIZE = 60;
 
 export async function getStaticPaths() {
   const calcsGlob = import.meta.glob<any>('../../../content/calcs/*.json', { eager: true });
   const all = Object.values(calcsGlob).map((m: any) => m.default || m);
-  // Solo regenerar las categorías afectadas en incremental.
-  const cats = [...new Set(all.map((c) => c.category))].filter(shouldBuildCategory);
+  const cats = [...new Set(all.map((c) => c.category))];
   const paths: any[] = [];
   for (const cat of cats) {
     const filtered = all.filter((c) => c.category === cat);

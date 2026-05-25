@@ -12,7 +12,6 @@
  */
 
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
 
 type Task = { name: string; cmd: string; args: string[] };
 
@@ -63,40 +62,20 @@ function run(t: Task): Promise<void> {
 async function main() {
   const t0 = Date.now();
 
-  // En build incremental, skip compute-related — recompute TF-IDF tarda
-  // 60-90s y mejora marginal: el related-auto.json del último deploy se
-  // mantiene válido (afecta solo los related blocks de calcs vecinos al
-  // slug modificado, y solo hasta el próximo full rebuild).
-  const incremental = Boolean(process.env.INCREMENTAL_CHANGES);
-
-  console.log(`[prebuild] mode=${incremental ? 'incremental' : 'full'}`);
   console.log('[prebuild] fase 1: validate:data + regenerate-formula-index');
   await Promise.all([
     run(task('validate', 'validate-data-updates')),
     run(task('formula-index', 'regenerate-formula-index')),
   ]);
 
-  const phase2Tasks: Task[] = [
-    task('og', 'generate-og-images'),
-    task('sitemap', 'generate-sitemap'),
-    task('search-index', 'generate-search-index'),
-    task('stamp-sw', 'stamp-sw'),
-  ];
-  // Skip compute-related solo si estamos en incremental Y el output cacheado
-  // ya existe. Si no existe (primer build de la rama, cache invalidado, etc.)
-  // correlo igual para no romper el import del JSON desde los componentes.
-  const relatedExists = existsSync('src/lib/related-auto.json');
-  if (!incremental || !relatedExists) {
-    phase2Tasks.unshift(task('related', 'compute-related'));
-    if (incremental) {
-      console.log('[prebuild] incremental pero related-auto.json no existe → corre compute-related igual');
-    }
-  } else {
-    console.log('[prebuild] incremental: skip compute-related (related-auto.json del último deploy se reutiliza)');
-  }
-
-  console.log(`[prebuild] fase 2: ${phase2Tasks.map((t) => t.name).join(', ')} (paralelo)`);
-  await Promise.all(phase2Tasks.map((t) => run(t)));
+  console.log('[prebuild] fase 2: related, og, sitemap, search-index, stamp-sw (paralelo)');
+  await Promise.all([
+    run(task('related', 'compute-related')),
+    run(task('og', 'generate-og-images')),
+    run(task('sitemap', 'generate-sitemap')),
+    run(task('search-index', 'generate-search-index')),
+    run(task('stamp-sw', 'stamp-sw')),
+  ]);
 
   console.log('[prebuild] fase 3: og-manifest');
   // optimize-images sacado del prebuild 2026-04-27. Generaba webp+avif de

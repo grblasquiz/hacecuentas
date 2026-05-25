@@ -6,7 +6,6 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { md } from '../../lib/markdown';
 import { GUIDE_TO_CATEGORIES, CATEGORY_TITLES, CATEGORY_ICONS, GUIDE_TITLES } from '../../lib/category-guide-map';
-import { filterByIncremental } from '../../lib/incremental';
 
 export async function getStaticPaths() {
   const guias = import.meta.glob<any>('../../content/guias/*.json', { eager: true });
@@ -14,7 +13,8 @@ export async function getStaticPaths() {
   const allCalcs = Object.values(calcs).map((m: any) => m.default || m);
   const allGuides = Object.values(guias).map((m: any) => m.default || m);
 
-  return filterByIncremental(allGuides, 'guias').map((g: any) => {
+  return Object.values(guias).map((mod: any) => {
+    const g = mod.default || mod;
     // Resolver calcs referenciadas en cada sección
     const calcMap = new Map(allCalcs.map((c: any) => [c.slug, c]));
     // Otras guías (siblings) para interlinking

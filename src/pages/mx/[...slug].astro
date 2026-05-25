@@ -10,15 +10,16 @@ import ScrollToTop from '../../components/ScrollToTop.astro';
 import { md, mdInline } from '../../lib/markdown';
 import ogManifest from '../../lib/og-manifest.json';
 import { findMentions, findPrimaryAbout } from '../../lib/wikidata-entities';
-import { filterByIncremental } from '../../lib/incremental';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../../content/calcs-mx/*.json', { eager: true });
-  const all = Object.values(calcs).map((mod: any) => mod.default || mod);
-  return filterByIncremental(all, 'calcs', 'mx').map((c: any) => ({
-    params: { slug: c.slug },
-    props: { calc: c },
-  }));
+  return Object.values(calcs).map((mod: any) => {
+    const c = mod.default || mod;
+    return {
+      params: { slug: c.slug },
+      props: { calc: c },
+    };
+  });
 }
 
 const { calc } = Astro.props;

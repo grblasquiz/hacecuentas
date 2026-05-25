@@ -4,10 +4,8 @@ export const prerender = true;
 import Layout from '../../../layouts/Layout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
-import { shouldBuildIibb } from '../../../lib/incremental';
 
 export async function getStaticPaths() {
-  if (!shouldBuildIibb()) return [];
   const provinciasMod = await import('../../../content/argentina/provincias.json');
   const provincias: any[] = provinciasMod.default || provinciasMod;
   return provincias.map((p) => ({ params: { provincia: p.slug }, props: { provincia: p } }));
