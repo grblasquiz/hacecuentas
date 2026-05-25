@@ -4,8 +4,12 @@ export const prerender = true;
 import Layout from '../../../layouts/Layout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
+import { shouldBuildIibb } from '../../../lib/incremental';
 
 export async function getStaticPaths() {
+  // En incremental, regenerar solo si algo de content/iibb/ cambió.
+  if (!shouldBuildIibb()) return [];
+
   const provinciasMod = await import('../../../content/argentina/provincias.json');
   const provincias: any[] = provinciasMod.default || (provinciasMod as any);
   const actividadesMod = await import('../../../content/iibb/actividades.json');

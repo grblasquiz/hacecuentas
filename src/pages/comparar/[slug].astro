@@ -5,16 +5,15 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import Newsletter from '../../components/Newsletter.astro';
+import { filterByIncremental } from '../../lib/incremental';
 
 export async function getStaticPaths() {
   const comparaciones = import.meta.glob<any>('../../content/comparaciones/*.json', { eager: true });
-  return Object.values(comparaciones).map((mod: any) => {
-    const c = mod.default || mod;
-    return {
-      params: { slug: c.slug },
-      props: { comparacion: c },
-    };
-  });
+  const all = Object.values(comparaciones).map((mod: any) => mod.default || mod);
+  return filterByIncremental(all, 'comparaciones').map((c: any) => ({
+    params: { slug: c.slug },
+    props: { comparacion: c },
+  }));
 }
 
 const { comparacion } = Astro.props;

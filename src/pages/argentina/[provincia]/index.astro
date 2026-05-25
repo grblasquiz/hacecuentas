@@ -4,6 +4,7 @@ export const prerender = true;
 import Layout from '../../../layouts/Layout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
+import { shouldBuildProvincia } from '../../../lib/incremental';
 
 export async function getStaticPaths() {
   const provinciasMod = await import('../../../content/argentina/provincias.json');
@@ -14,13 +15,16 @@ export async function getStaticPaths() {
     .map(([, mod]) => mod.default || mod)
     .filter((c: any) => c.calcSlug);
 
-  return provincias.map((prov: any) => {
-    const provCalcs = calcs.filter((c: any) => c.provinceData && c.provinceData[prov.slug]);
-    return {
-      params: { provincia: prov.slug },
-      props: { provincia: prov, calcs: provCalcs },
-    };
-  });
+  // Solo regenerar los index de provincias afectadas. En full build se generan todos.
+  return provincias
+    .filter((prov: any) => shouldBuildProvincia(prov.slug))
+    .map((prov: any) => {
+      const provCalcs = calcs.filter((c: any) => c.provinceData && c.provinceData[prov.slug]);
+      return {
+        params: { provincia: prov.slug },
+        props: { provincia: prov, calcs: provCalcs },
+      };
+    });
 }
 
 const { provincia, calcs } = Astro.props;
