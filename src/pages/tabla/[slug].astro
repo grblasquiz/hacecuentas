@@ -5,16 +5,15 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import Newsletter from '../../components/Newsletter.astro';
+import { filterByIncremental } from '../../lib/incremental';
 
 export async function getStaticPaths() {
   const tablas = import.meta.glob<any>('../../content/tablas/*.json', { eager: true });
-  return Object.values(tablas).map((mod: any) => {
-    const t = mod.default || mod;
-    return {
-      params: { slug: t.slug },
-      props: { tabla: t },
-    };
-  });
+  const all = Object.values(tablas).map((mod: any) => mod.default || mod);
+  return filterByIncremental(all, 'tablas').map((t: any) => ({
+    params: { slug: t.slug },
+    props: { tabla: t },
+  }));
 }
 
 const { tabla } = Astro.props;
