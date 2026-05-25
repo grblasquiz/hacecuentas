@@ -1,0 +1,229 @@
+{
+  "slug": "calculadora-plusvalia-inmueble-pba-venta-impuesto-2026",
+  "title": "Calculadora ITI Venta Inmueble 2026: 1,5% + sellos PBA",
+  "h1": "Calculadora de ITI por venta de inmueble (Ley 23.905) + sellos PBA",
+  "description": "Calculá el ITI (1,5% sobre el precio de venta, Ley 23.905) y sellos de PBA al vender un inmueble. Incluye exención por reemplazo de vivienda única.",
+  "category": "finanzas",
+  "icon": "🏘️",
+  "formulaId": "plusvalia-inmueble-pba",
+  "seoKeywords": [
+    "calculadora ITI venta inmueble",
+    "impuesto transferencia inmuebles",
+    "ley 23905 art 7",
+    "ITI 1.5 porciento argentina",
+    "sellos PBA compraventa",
+    "exencion ITI vivienda unica",
+    "plusvalia venta inmueble argentina",
+    "AFIP ARCA ITI",
+    "escribano retencion ITI"
+  ],
+  "intro": "Cuando vendés un inmueble en Argentina como **persona física**, el tributo más relevante es el **Impuesto a la Transferencia de Inmuebles (ITI)** regulado por la **Ley 23.905 Arts. 7 a 15**, con **Decreto Reglamentario 1.097/85** y **Resolución General AFIP 4.190/2018** (hoy ARCA). El **ITI es del 1,5% sobre el precio de venta** y lo retiene el escribano interviniente en el acto de escrituración. Aplica en **toda Argentina** porque es un impuesto **nacional**.\n\nA esto se suman los **impuestos provinciales de sellos** que cada provincia cobra sobre la compraventa. En **Provincia de Buenos Aires (PBA)** el sello es del **3,6% en total** (1,8% lo paga el comprador y 1,8% el vendedor, salvo pacto en contrario, según **Ley Impositiva PBA**). En **CABA** es del **3,5%**. En interior varía según provincia.\n\nLa Ley 23.905 prevé una **exención del ITI** importante: si el vendedor **reemplaza su vivienda única** dentro de los **12 meses anteriores o posteriores** a la venta, no paga ITI sobre la operación (Art. 14 Ley 23.905). Para acceder a la exención hay que presentar la **F. 145** ante AFIP/ARCA solicitando el **\"Certificado de no retención\"** que el escribano necesita para no retener el 1,5%.\n\n**Importante:** desde la Ley 27.430 (2017) las personas físicas que adquieran un inmueble a partir del 1° de enero de 2018 ya **no pagan ITI** cuando lo venden — pagan **Ganancias cedular del 15% sobre la utilidad** (precio venta menos precio de compra ajustado). El ITI sigue vigente solo para **inmuebles adquiridos antes del 1° de enero de 2018**. Esta calculadora cubre el caso ITI clásico que aún representa la mayoría de las transacciones en 2026.\n\nSi sos **persona jurídica** (sociedad), no pagás ITI sino **Ganancias del 35%** sobre la utilidad (Art. 73 Ley 20.628), más sellos provinciales correspondientes.",
+  "keyTakeaway": "**ITI = 1,5% del precio de venta**. Lo retiene el escribano en la escritura. **Exento si reemplazás vivienda única** dentro de 12 meses (F. 145 AFIP). En **PBA: 3,6% sellos** adicionales. Para inmuebles comprados después del **1/1/2018**: aplica Ganancias 15% en lugar de ITI.",
+  "useCases": [
+    "Vas a vender tu departamento en La Plata, lo compraste en 2010 y querés saber cuánto te retiene el escribano.",
+    "Vendés tu casa en Mar del Plata y dentro de 6 meses comprás otra como vivienda única — querés saber si te toca pagar ITI.",
+    "Sos sucesión y vendés un inmueble heredado: querés saber qué tributos hay que pagar antes de cerrar.",
+    "Sos abogado o escribano y necesitás estimar los costos de cierre para mostrarle al cliente.",
+    "Comprás un inmueble en PBA en $200.000.000 y querés saber cuánto sale el sello de la compraventa.",
+    "Tu inmueble lo compraste antes de 2018 y querés comparar contra el régimen actual (Ganancias 15%) por si te conviniera no aplicar el ITI."
+  ],
+  "fields": [
+    {
+      "id": "precioVenta",
+      "label": "Precio de venta del inmueble",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "200000000",
+      "format": "thousands",
+      "min": 0,
+      "step": 100000,
+      "required": true,
+      "help": "Precio total de la operación según escritura. Si está en dólares, convertí a pesos al tipo de cambio del día de la escrituración."
+    },
+    {
+      "id": "exoneradoIti",
+      "label": "¿Reemplazás vivienda única dentro de los 12 meses?",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "no",
+          "label": "No — pago ITI normal"
+        },
+        {
+          "value": "si",
+          "label": "Sí — exento (Art. 14 Ley 23.905)"
+        }
+      ],
+      "default": "no",
+      "help": "Si vendés tu vivienda única para comprar otra dentro de 12 meses (anteriores o posteriores), estás exento del ITI. Hay que presentar el F. 145 en AFIP/ARCA antes de la escritura."
+    },
+    {
+      "id": "provinciaInmueble",
+      "label": "Provincia donde está el inmueble",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "PBA",
+          "label": "Buenos Aires (PBA) — sellos 3,6%"
+        },
+        {
+          "value": "CABA",
+          "label": "CABA — sellos 3,5%"
+        },
+        {
+          "value": "Interior",
+          "label": "Resto del país (sellos variable, calc usa 2%)"
+        }
+      ],
+      "default": "PBA",
+      "help": "Los sellos los cobra cada provincia. En PBA y CABA son ~3,5-3,6% repartidos entre comprador y vendedor. En el interior varían."
+    },
+    {
+      "id": "tipoVendedor",
+      "label": "Tipo de vendedor",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "persona-fisica",
+          "label": "Persona física (ITI Ley 23.905)"
+        },
+        {
+          "value": "persona-juridica",
+          "label": "Persona jurídica (Ganancias 35%)"
+        }
+      ],
+      "default": "persona-fisica",
+      "help": "Las personas físicas pagan ITI 1,5% sobre precio de venta. Las personas jurídicas pagan Ganancias 35% sobre la utilidad (Art. 73 Ley 20.628)."
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "anual",
+    "lastUpdated": "2026-05-25",
+    "source": "Ley 23.905 Arts. 7-15 / RG ARCA 4.190 / Leyes Impositivas Provinciales 2026",
+    "sourceUrl": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/272/norma.htm",
+    "updateType": "manual",
+    "notes": "El ITI nacional es del 1,5% fijo desde la sanción de la Ley 23.905. Los sellos provinciales varían anualmente por Leyes Impositivas Provinciales — usamos los vigentes 2026 (PBA 3,6%, CABA 3,5%). El interior se aproxima con 2% (valor orientativo)."
+  },
+  "outputs": [
+    {
+      "id": "totalTributos",
+      "label": "Total tributos a pagar (ITI + sellos)",
+      "format": "currency",
+      "primary": true
+    },
+    {
+      "id": "iti15Porciento",
+      "label": "ITI (1,5% del precio de venta)",
+      "format": "currency"
+    },
+    {
+      "id": "sellosCompraventa",
+      "label": "Sellos provincia (parte del vendedor)",
+      "format": "currency"
+    },
+    {
+      "id": "percibeEscribano",
+      "label": "Lo retiene el escribano en la escritura",
+      "format": "text"
+    },
+    {
+      "id": "mensaje",
+      "label": "Observación / exención",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo real: Venta de departamento en La Plata por $200.000.000",
+    "steps": [
+      "**Precio de venta**: $200.000.000.",
+      "**Tipo de vendedor**: persona física (titular individual desde 2012).",
+      "**Reemplazo de vivienda única**: NO (es una segunda propiedad para inversión).",
+      "**Provincia**: PBA → sellos 3,6% repartidos (1,8% comprador + 1,8% vendedor).",
+      "**ITI (1,5%)**: `200.000.000 × 0,015` = **$3.000.000**.",
+      "**Sellos PBA parte vendedor (1,8%)**: `200.000.000 × 0,018` = **$3.600.000**.",
+      "**Total a cargo del vendedor**: $3.000.000 + $3.600.000 = **$6.600.000**."
+    ],
+    "result": "El vendedor paga **$6.600.000 en tributos** (3,3% del precio de venta). El **ITI lo retiene el escribano** y lo deposita en AFIP/ARCA dentro de los 15 días. Los **sellos se pagan en ARBA** antes de la escrituración. Si la operación fuera por reemplazo de vivienda única, el vendedor ahorraría los $3.000.000 del ITI."
+  },
+  "explanation": "## Qué es el ITI (Impuesto a la Transferencia de Inmuebles)\n\nEs un tributo **nacional** que grava las transferencias **onerosas** (compraventa, permuta, dación en pago) de inmuebles ubicados en Argentina realizadas por **personas físicas y sucesiones indivisas**. Está regulado por:\n\n- **Ley 23.905 Arts. 7-15** (sancionada en 1991).\n- **Decreto Reglamentario 1.097/85**.\n- **Resolución General AFIP/ARCA 4.190/2018** (actualizada).\n\nLa **alícuota es del 1,5%** sobre el precio total de venta declarado en la escritura, sin deducciones.\n\n### Quién paga el ITI\n\n- **Pagan ITI**: personas físicas y sucesiones indivisas que vendan inmuebles adquiridos **antes del 1° de enero de 2018**.\n- **No pagan ITI** (pero sí Ganancias cedular 15%): personas físicas que vendan inmuebles adquiridos **a partir del 1° de enero de 2018** (Ley 27.430 / Reforma Tributaria 2017).\n- **No pagan ITI** (pero sí Ganancias 35% sobre utilidad): personas jurídicas (sociedades).\n\n## Cómo se calcula el ITI\n\n```\nITI = Precio de venta × 1,5%\n```\n\n### Quién lo retiene y deposita\n\n- El **escribano interviniente** en la escritura actúa como **agente de retención** (Art. 15 Ley 23.905 + RG ARCA 4.190).\n- Retiene el **1,5% del precio de venta** y lo deposita en AFIP/ARCA dentro de los **15 días corridos** de la escrituración.\n- Si el vendedor presenta el **Certificado de No Retención (F. 145)** por exención, el escribano no retiene.\n\n## Exención por reemplazo de vivienda única (Art. 14 Ley 23.905)\n\nEs la **exención más usada**. Está vigente cuando:\n\n1. El vendedor es **persona física** (no sociedad).\n2. El inmueble vendido es la **vivienda única familiar y de ocupación permanente**.\n3. El vendedor **adquiere otra vivienda** (también única y de ocupación permanente) **dentro de los 12 meses anteriores o posteriores** a la venta.\n4. Se presenta el **F. 145** ante ARCA antes de la escritura para obtener el **Certificado de No Retención**.\n\n### Cómo se tramita la exención (F. 145)\n\n1. Ingresar al servicio **\"Transferencia de Inmuebles\"** con CUIT y clave fiscal en ARCA.\n2. Completar el **Formulario F. 145** declarando: datos del inmueble vendido, precio, datos del inmueble que se reemplaza, fechas.\n3. ARCA emite un **Certificado de No Retención** (electrónico).\n4. Entregar el certificado al **escribano** antes de la escrituración.\n5. Conservar la documentación del **inmueble reemplazo** (escritura, boleto) durante 10 años por si ARCA solicita verificación.\n\n## Sellos provinciales\n\nAdemás del ITI nacional, cada **provincia** cobra **sellos** sobre el contrato de compraventa. Los valores 2026 (orientativos):\n\n| Provincia | Sello total | Vendedor | Comprador |\n|---|---|---|---|\n| Buenos Aires (PBA / ARBA) | 3,6% | 1,8% | 1,8% |\n| CABA (AGIP) | 3,5% | 1,75% | 1,75% |\n| Córdoba (DGR Córdoba) | 3% | 1,5% | 1,5% |\n| Santa Fe (API) | 2,5% | 1,25% | 1,25% |\n| Mendoza | 1,5-3% | variable | variable |\n\n**El reparto entre comprador y vendedor** suele ser por mitades, pero puede pactarse distinto en el boleto (Art. 1011 CCCN). En la práctica, en CABA y PBA se respeta el 50/50.\n\n## Otros costos asociados a la venta\n\nMás allá de ITI y sellos, el vendedor debe considerar:\n\n- **Honorarios del escribano** (paga el comprador por costumbre): 1-2% del precio.\n- **Honorarios inmobiliaria** (paga el vendedor): 3-4% + IVA (Resolución Colegio Único de Corredores Inmobiliarios PBA).\n- **Bienes Personales**: si supera el mínimo no imponible, el inmueble formaba parte de la base imponible y al venderlo cambia.\n- **Inscripción del nuevo título**: el comprador paga la inscripción registral (~0,2-0,5% según provincia).\n\n## Casos especiales\n\n### Venta de inmueble adquirido por herencia\n\nLas **sucesiones indivisas** pagan ITI igual que las personas físicas (Art. 7 Ley 23.905). La fecha de adquisición es la de la **muerte del causante** (no la fecha de inscripción del testimonio), por lo tanto se aplica el régimen vigente a esa fecha.\n\n### Permuta\n\nLa Ley 23.905 (Art. 7) grava también las **permutas**: cada parte paga ITI sobre el valor del inmueble que entrega. El escribano retiene a ambos.\n\n### Venta con boleto sin escritura\n\nSi se vende solo el **boleto de compraventa** sin llegar a escriturar (cesión de boleto), igual se devenga ITI según el Art. 7 Ley 23.905. El escribano que intervenga en la cesión debe retener.\n\n### Inmueble en construcción\n\nLa venta de **boleto de obra en construcción** (\"venta de pozo\") también está alcanzada por el ITI, salvo que se trate del **desarrollador** que está sujeto al régimen general de Ganancias.\n\n## Cambio de régimen: Ganancias cedular 15% (Ley 27.430)\n\nLa **Reforma Tributaria 2017 (Ley 27.430)** modificó el régimen. Para inmuebles **adquiridos desde el 1/1/2018**:\n\n- **No** se paga ITI.\n- Se paga **Ganancias cedular del 15%** sobre la **utilidad** (precio venta - precio compra ajustado por inflación).\n- Se aplica la **misma exención por reemplazo de vivienda única** (Art. 137 Ley 20.628 t.o.).\n- Si la utilidad es **negativa o cero**, no se paga nada (con ITI sí pagás 1,5% sobre precio de venta aunque pierdas plata).\n\n**Cuándo conviene cada uno:**\n\n- Si comprás barato hace muchos años y vendés caro hoy → **Ganancias 15% sobre utilidad** es más caro que ITI.\n- Si comprás y vendés cerca en el tiempo con poca utilidad → **Ganancias 15%** es más barato.\n\nEsta calculadora cubre el **ITI clásico**. Para el régimen post-2018 hay otra calculadora dedicada.\n\n## Errores comunes\n\n1. **Confundir ITI con Ganancias**: son dos regímenes excluyentes según la fecha de adquisición del inmueble.\n2. **No tramitar el F. 145 a tiempo**: si llegás a la escritura sin el Certificado de No Retención, el escribano debe retener. Reclamar la devolución después es lento.\n3. **Olvidar los sellos provinciales**: el ITI 1,5% es lo más visible pero los sellos PBA/CABA suman otro 3,5-3,6%.\n4. **Pensar que la exención es automática**: la exención por reemplazo de vivienda única **requiere trámite expreso** (F. 145 ARCA) más documentación.\n5. **Vender sociedad por sociedad**: las sociedades **no pagan ITI** pero pagan **Ganancias 35%** sobre utilidad. A veces se cree erróneamente que la sociedad evade el impuesto cuando en realidad paga más.\n6. **No conservar documentación 10 años**: ARCA puede pedir verificación de la exención por hasta 10 años (Art. 56 Ley 11.683 — prescripción).\n\n## Calculadoras relacionadas\n\n- [Calculadora ABL CABA por valuación fiscal](/calculadora-abl-caba-valuacion-fiscal-actualizada-2026) — impuesto anual del inmueble.\n- [Calculadora patente auto Córdoba](/calculadora-patente-auto-cordoba-2026-valuacion-fiscal-cuotas) — impuesto provincial al auto.\n- [Calculadora Bienes Personales](/calculadora-bienes-personales) — sobre el patrimonio total.\n- [Sueldo bruto a neto](/sueldo-en-mano-argentina) — para presupuestar tu ingreso.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Las referencias normativas corresponden a la Ley 23.905, su Decreto Reglamentario 1.097/85 y la Resolución General ARCA 4.190/2018, además de las Leyes Impositivas Provinciales 2026 para los sellos.\n\n**Disclaimer:** Los resultados son orientativos. Las exenciones y trámites se gestionan en ARCA con un **contador público matriculado** o **escribano interviniente** que valide el caso particular. Esta calculadora no tramita el F. 145 ni reemplaza el dictamen profesional.\n\n**Actualización:** los sellos provinciales se actualizan anualmente por Ley Impositiva Provincial. El ITI nacional del 1,5% está fijo desde la Ley 23.905.",
+  "faq": [
+    {
+      "q": "¿Quién paga el ITI cuando vendo un inmueble?",
+      "a": "El **ITI lo paga el vendedor** (persona física o sucesión indivisa) cuando vende un inmueble adquirido **antes del 1/1/2018**. La alícuota es del **1,5% sobre el precio total de venta** y lo retiene el **escribano interviniente** en la escritura (Art. 15 Ley 23.905). El escribano deposita el monto en ARCA dentro de los 15 días corridos."
+    },
+    {
+      "q": "¿Cuándo estoy exento del ITI?",
+      "a": "Estás exento si **reemplazás tu vivienda única** comprando otra **dentro de los 12 meses anteriores o posteriores** a la venta (Art. 14 Ley 23.905). Para activar la exención debés tramitar el **Formulario F. 145** en ARCA con CUIT y clave fiscal, y entregarle al escribano el **Certificado de No Retención** antes de la escritura. La exención requiere que ambas viviendas sean únicas y de ocupación permanente."
+    },
+    {
+      "q": "¿Cuánto son los sellos en PBA por una compraventa?",
+      "a": "En **Provincia de Buenos Aires (PBA / ARBA)** los sellos son del **3,6% del precio de la operación**, repartidos en partes iguales entre comprador y vendedor: **1,8% cada parte**, salvo pacto en contrario en el boleto (Art. 1011 CCCN). Los sellos se pagan en **ARBA** antes de la escrituración mediante boleta generada en el portal."
+    },
+    {
+      "q": "¿Si compré el inmueble después de 2018 pago ITI?",
+      "a": "**No**. Por la **Ley 27.430 (Reforma Tributaria 2017)**, los inmuebles adquiridos a partir del **1° de enero de 2018** quedan fuera del ITI y pasan al régimen de **Ganancias cedular del 15% sobre la utilidad** (precio venta menos precio compra ajustado por inflación). Si tu utilidad es negativa, no pagás Ganancias. Si la utilidad es alta, podés pagar más que el 1,5% del ITI original."
+    },
+    {
+      "q": "¿Qué pasa si soy persona jurídica (sociedad)?",
+      "a": "Las **personas jurídicas no pagan ITI** pero pagan **Impuesto a las Ganancias del 35%** sobre la **utilidad** de la operación (precio venta - costo computable - gastos), según Art. 73 Ley 20.628 (t.o. 2019). Esto es independiente del año de adquisición del inmueble. Además, las sociedades pagan los mismos sellos provinciales que las personas físicas."
+    },
+    {
+      "q": "¿El ITI se paga sobre el valor de mercado o sobre el precio escriturado?",
+      "a": "Se paga sobre el **precio total declarado en la escritura** (Art. 8 Ley 23.905). Si ARCA detecta que el precio escriturado está por debajo del valor de mercado (ejemplo: comparando con valuación fiscal o publicaciones), puede observar la operación y exigir el ajuste. Por eso es muy importante **declarar el precio real** — el ahorro de ITI nunca compensa el riesgo de una determinación de oficio."
+    },
+    {
+      "q": "¿Cómo se calcula el ITI en una permuta?",
+      "a": "En las **permutas** (intercambio de inmueble por inmueble) la Ley 23.905 (Art. 7) grava a **cada parte** sobre el **valor del inmueble que entrega**. Si A da un departamento de $150M y B da uno de $200M más $50M en efectivo, A paga ITI sobre $150M y B sobre $200M. El escribano retiene a ambos. Si el inmueble de B es vivienda única y la reemplaza por el de A, B puede pedir la exención del Art. 14."
+    },
+    {
+      "q": "¿Qué documentos necesito para tramitar la exención por vivienda única?",
+      "a": "Para el **F. 145 en ARCA** necesitás: (1) **escritura del inmueble vendido** o título de propiedad, (2) **boleto o escritura del inmueble reemplazo** (si ya lo compraste), (3) **constancia de domicilio** acreditando ocupación permanente, (4) **servicios pagos a tu nombre** del inmueble vendido (luz, gas, ABL), (5) **DNI escaneado**. El trámite es 100% online con clave fiscal nivel 3."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ley 23.905 - ITI (Arts. 7-15)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/272/norma.htm"
+    },
+    {
+      "name": "Resolución General ARCA 4.190/2018 - Régimen de Retención ITI",
+      "url": "https://www.arca.gob.ar/"
+    },
+    {
+      "name": "Ley 27.430 - Reforma Tributaria (Ganancias cedular inmuebles)",
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/305000-309999/305262/norma.htm"
+    },
+    {
+      "name": "ARBA - Impuesto de Sellos PBA",
+      "url": "https://www.arba.gob.ar/"
+    }
+  ],
+  "relatedSlugs": [],
+  "audience": "AR",
+  "howToSteps": [
+    {
+      "name": "Ingresá el precio de venta del inmueble",
+      "text": "Precio total de la operación según escritura. Si está en dólares, convertí a pesos al tipo de cambio del día de la escrituración. Ejemplo: $200.000.000."
+    },
+    {
+      "name": "Indicá si reemplazás vivienda única",
+      "text": "Si vendés tu vivienda única para comprar otra dentro de 12 meses (anteriores o posteriores), estás exento del ITI. Tramitalo con F. 145 en ARCA antes de la escritura."
+    },
+    {
+      "name": "Elegí la provincia donde está el inmueble",
+      "text": "Los sellos los cobra cada provincia: PBA 3,6%, CABA 3,5%, interior variable. La calculadora estima la parte que paga el vendedor (50% del total)."
+    },
+    {
+      "name": "Seleccioná el tipo de vendedor",
+      "text": "Persona física: paga ITI 1,5%. Persona jurídica: no paga ITI, paga Ganancias 35% sobre utilidad (Art. 73 Ley 20.628)."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Vas a obtener el ITI 1,5%, los sellos provinciales, el total de tributos y el detalle de lo que retiene el escribano vs lo que pagás aparte."
+    }
+  ],
+  "lastReviewed": "2026-05-25"
+}
