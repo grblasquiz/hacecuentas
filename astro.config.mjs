@@ -102,6 +102,13 @@ export default defineConfig({
             if (id.includes('node_modules')) {
               return 'vendor';
             }
+            // Per-component <script> blocks de Astro (entries `?astro&type=script`)
+            // van a chunks propios — NO los agrupamos en components-shared. Sin
+            // esto, Layout.astro y Calculator.astro se mergeaban en un sólo bundle
+            // de 634KB con 70% unused JS, bloqueando LCP por ~1150ms.
+            if (id.includes('?astro') && id.includes('type=script')) {
+              return undefined;
+            }
             // Código compartido de src/lib/* (NO formulas/, esas son por-calc)
             if (id.includes('/src/lib/') && !id.includes('/src/lib/formulas/')) {
               return 'lib-shared';
