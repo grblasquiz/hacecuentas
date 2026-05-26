@@ -108,15 +108,32 @@ export function md(text: unknown): string {
   });
 
   // Step 2: markdown tables
+  // Semantic HTML para Featured Snippets de Google:
+  // - `<thead><th scope="col">` en encabezados (vs th sin scope) → Google detecta tablas como
+  //   featured snippet candidates. Sin scope, una tabla con encabezado se trata como ambigua.
+  // - Primera celda de cada fila body con `scope="row"` cuando la tabla parece "matriz" (>= 3 cols)
+  //   → mejora a11y (lectores de pantalla) + refuerza estructura para snippet.
+  // - `<caption>` opcional: si el párrafo inmediatamente anterior es un heading `## X` o `### X`,
+  //   no inyectamos caption (el heading ya hace de label vía aria-labelledby implícito). Si la
+  //   tabla está suelta sin encabezado, queda sin caption (no inventamos uno).
   text = text.replace(
     /^(\|.+\|)\n(\|[-:| ]+\|)\n((?:\|.+\|\n?)*\|.+\|)/gm,
     (_match, headerLine: string, _sep: string, bodyBlock: string) => {
       const hCells = headerLine.slice(1, -1).split('|').map((s: string) => s.trim());
+      const colCount = hCells.length;
+      // Heurística: tablas "matriz" (>= 3 columnas) suelen tener la 1ra col como label de fila.
+      const useRowScope = colCount >= 3;
       const rows = bodyBlock.split('\n').filter(Boolean).map((row: string) => {
         const cells = row.slice(1, -1).split('|').map((s: string) => s.trim());
-        return '<tr>' + cells.map((c: string) => `<td>${mdInline(c)}</td>`).join('') + '</tr>';
+        const tds = cells.map((c: string, i: number) => {
+          if (i === 0 && useRowScope) {
+            return `<th scope="row">${mdInline(c)}</th>`;
+          }
+          return `<td>${mdInline(c)}</td>`;
+        });
+        return '<tr>' + tds.join('') + '</tr>';
       });
-      return '<table><thead><tr>' + hCells.map((c: string) => `<th>${escHtml(c)}</th>`).join('') + '</tr></thead><tbody>' + rows.join('') + '</tbody></table>';
+      return '<table><thead><tr>' + hCells.map((c: string) => `<th scope="col">${escHtml(c)}</th>`).join('') + '</tr></thead><tbody>' + rows.join('') + '</tbody></table>';
     }
   );
 

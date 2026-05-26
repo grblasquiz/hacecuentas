@@ -98,7 +98,23 @@ export async function fetchCostoLaboral({ dry = false }: { dry?: boolean }): Pro
   }
 
   if (anyChanged) {
-    touchLastUpdated('calculadora-costo-laboral-empleado', today);
+    // Bumpear lastUpdated en TODAS las calcs que reflejan estas alícuotas.
+    // Aportes patronales (-2026) tiene desglose interno que NO se auto-patchea
+    // — queda como pista para que el editorial revise el PR y, si el total
+    // cambió, actualice manualmente el desglose por concepto (SIPA/INSSJP/...).
+    const slugs = [
+      'calculadora-costo-laboral-empleado',
+      'calculadora-aportes-patronales-empleado-registrado-cargas-sociales-2026',
+    ];
+    for (const slug of slugs) {
+      try {
+        if (touchLastUpdated(slug, today)) {
+          log.info(`lastUpdated → ${today} en ${slug}`);
+        }
+      } catch (err) {
+        log.warn(`no se pudo tocar lastUpdated en ${slug}: ${(err as Error).message}`);
+      }
+    }
     return true;
   }
   log.skip('sin cambios');

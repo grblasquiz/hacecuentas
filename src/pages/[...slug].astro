@@ -174,6 +174,25 @@ function buildSchemaDescription(c: any): string {
 }
 const schemaDescription = buildSchemaDescription(calc);
 
+// Featured Snippet description: prioridad answerSnippet > keyTakeaway > schemaDescription.
+// Se inyecta en Article/SoftwareApplication.description para que Google use ese texto
+// como base del featured snippet (Position 0). Strip markdown bold/italic para evitar
+// que `**` aparezcan literales en SERP. Cap a 500 chars (límite seguro Article schema).
+function stripMd(s: string): string {
+  return String(s || '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/`([^`\n]+)`/g, '$1')
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+const snippetDescription = (() => {
+  const candidate = calc.answerSnippet || calc.keyTakeaway || schemaDescription;
+  const stripped = stripMd(candidate);
+  return (stripped.length >= 50 ? stripped : schemaDescription).slice(0, 500);
+})();
+
 // Prioridad: 1) howToSteps explícitos en JSON, 2) extraídos del explanation
 // (líneas tipo "1. ...", "Paso 1: ..."), 3) fallback a los fields.
 function extractStepsFromExplanation(text: string): Array<{name: string, text: string}> {
@@ -318,7 +337,9 @@ const schemaApp = {
   '@context': 'https://schema.org',
   '@type': ['SoftwareApplication', 'WebApplication'],
   name: calc.h1,
-  description: schemaDescription,
+  // description con fallback answerSnippet > keyTakeaway > schemaDescription para
+  // que Bing/Copilot levanten el texto curado al rich snippet.
+  description: snippetDescription,
   url: `https://hacecuentas.com/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/${calc.slug}`,
   applicationCategory,
@@ -352,6 +373,7 @@ const schemaApp = {
   speakable: {
     '@type': 'SpeakableSpecification',
     cssSelector: [
+      '.answer-snippet',            // Featured Snippet block (Position 0 Google)
       '.aeo-quick-answer',          // Respuesta rápida (TOP para AEO/voice)
       '.calc-intro',                 // intro
       '.calc-key-takeaway',          // en pocas palabras
@@ -386,7 +408,9 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: calc.h1,
-  description: schemaDescription,
+  // description: usa answerSnippet (50-60 palabras) > keyTakeaway > schemaDescription
+  // para que Google levante directo el texto del featured snippet.
+  description: snippetDescription,
   url: `https://hacecuentas.com/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/${calc.slug}`,
   inLanguage: schemaLang,
@@ -673,6 +697,12 @@ const sources: Array<{ name: string; url?: string }> = calc.sources || [];
 const useCases: string[] = calc.useCases || [];
 const example: { title?: string; steps?: string[]; result?: string } | null = calc.example || null;
 const keyTakeaway: string = calc.keyTakeaway || '';
+// answerSnippet: 50-60 palabras optimizadas para Google Featured Snippet (Position 0).
+// A diferencia de keyTakeaway (40-75 palabras para AEO/AI engines), este campo está
+// formateado específicamente como respuesta directa al query principal — sin markdown
+// pesado, idealmente 1 párrafo conciso que Google pueda extraer literal al SERP.
+// Campo opcional: si no existe, el bloque no se renderiza y schemas hacen fallback.
+const answerSnippet: string = calc.answerSnippet || '';
 const relatedSlugs: string[] = calc.relatedSlugs || [];
 const downloads: Array<{ label: string; href: string; description?: string }> = calc.downloads || [];
 
@@ -871,6 +901,16 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             </a>
           </div>
         </div>
+
+        {/* Featured Snippet block (Google Position 0).
+            50-60 palabras formateadas como respuesta directa para que Google las pickee
+            como featured snippet. Distinto de keyTakeaway (AEO 40-75 palabras): este es
+            específico para SERP Position 0. Si no existe en JSON, no se renderiza. */}
+        {answerSnippet && (
+          <div class="answer-snippet" data-speakable="true" aria-label="Respuesta directa">
+            <p set:html={mdInline(answerSnippet)} />
+          </div>
+        )}
 
         {/* AEO Quick Answer — para AI scrapers (ChatGPT, Claude, Perplexity, Gemini).
             Definition-then-example pattern recomendado por research 2026:
@@ -1631,6 +1671,24 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
     margin: 0;
     line-height: 1.65;
     font-size: 0.9375rem;
+  }
+
+  /* Answer snippet (Featured Snippet Google — Position 0).
+     Párrafo destacado al inicio, sin iconos ni adornos: Google levanta el texto
+     plano para el SERP. Tipografía un punto más grande para legibilidad humana. */
+  .answer-snippet {
+    margin: 1.5rem 0 0.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-soft);
+    border-left: 4px solid var(--accent);
+    border-radius: 6px;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .answer-snippet p {
+    margin: 0;
+    font-weight: 500;
   }
 
   /* Key takeaway (resumen rápido) */

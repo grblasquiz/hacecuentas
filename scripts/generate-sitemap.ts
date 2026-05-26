@@ -166,16 +166,30 @@ const pickIfValid = (d: unknown): string | null =>
   typeof d === 'string' && DATE_RX.test(d) ? clampToToday(d) : null;
 
 function getCalcLastMod(calc: any, filepath: string, fallback: string): string {
-  const candidates: string[] = [];
-
+  // Política: prioridad editorial > fecha de datos > git mtime.
+  //   1. Si hay lastReviewed: usar max(lastReviewed, dataUpdate.lastUpdated)
+  //      — la fecha editorial gana sobre git mtime. Esto permite que
+  //      mass-edits (backfill de campos como seoKeywords/lastReviewed) NO
+  //      inflen el sitemap si el editorial review no cambió. Si dataUpdate
+  //      es más reciente que lastReviewed, igual lo respetamos (señal de
+  //      datos actualizados es más fresca que el último review humano).
+  //   2. Si NO hay lastReviewed pero sí dataUpdate: usar dataUpdate.
+  //   3. Si no hay ninguno: fallback a git mtime.
+  //
+  // Antes hacíamos `max(lastReviewed, dataUpdate, mtime)` siempre, lo que
+  // significaba que cualquier commit que tocara el JSON (aún para agregar
+  // un campo SEO sin cambiar contenido editorial) movía el sitemap. Eso
+  // viola la rule #3 de CLAUDE.md (no inflar crawl budget de Google).
   const lr = pickIfValid(calc?.lastReviewed);
-  if (lr) candidates.push(lr);
-
   const du = pickIfValid(calc?.dataUpdate?.lastUpdated);
-  if (du) candidates.push(du);
 
-  // Resolver el archivo real del calc. Convención histórica mixta en el repo:
-  // ~1800 calcs se nombran por `formulaId`, ~600 por `slug`, ~14 por otra cosa.
+  if (lr) {
+    if (du && du > lr) return du;
+    return lr;
+  }
+  if (du) return du;
+
+  // Sin lastReviewed ni dataUpdate: usar git mtime como última señal.
   let resolved = filepath;
   if (!existsSync(resolved)) {
     const bySlug = join(CALCS_DIR, `${calc?.slug}.json`);
@@ -187,12 +201,9 @@ function getCalcLastMod(calc: any, filepath: string, fallback: string): string {
   }
   if (existsSync(resolved)) {
     const mtime = pickIfValid(getLastMod(resolved, ''));
-    if (mtime) candidates.push(mtime);
+    if (mtime) return mtime;
   }
-
-  if (candidates.length === 0) return fallback;
-  // max() lexicográfico funciona para YYYY-MM-DD.
-  return candidates.reduce((a, b) => (b > a ? b : a));
+  return fallback;
 }
 
 /**

@@ -1,0 +1,43 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    # Tests no dependen de docs/cerebro/markdown — skip esos paths para
+    # ahorrar minutos de Actions (consistente con deploy.yml).
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'cerebro/**'
+  pull_request:
+  workflow_dispatch:  # permite correr manual desde Github UI
+
+concurrency:
+  # Cancela runs anteriores del mismo PR/branch — para tests SI queremos
+  # cancelar (a diferencia de deploy.yml donde encolamos): si llega un push
+  # nuevo, el resultado anterior es irrelevante.
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # Vitest local: smoke test ~2700 formulas tarda <30s, suite chica <5s.
+    # En CI con npm ci + cold cache: budget de 10 min con margen amplio.
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # Alineado con engines en package.json (>=22.12.0) y deploy.yml.
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test

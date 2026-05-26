@@ -76,7 +76,22 @@ const SERIES: SeriesConfig[] = [
     nombre: 'uva',
     descripcion: 'Unidad de Valor Adquisitivo (BCRA, base 31/03/2016 = 14.05 ARS)',
     unidad: 'ARS',
-    refreshSlugs: ['calculadora-credito-uva-vs-tasa-fija'],
+    // Todas las calcs cuyo lastmod debería seguir el valor UVA del BCRA.
+    // El fetcher persiste serie en db/uva.json y bumpea lastUpdated en estas
+    // calcs cuando hay cambio real de último valor → sitemap.xml las marca
+    // como recién actualizadas para Google.
+    refreshSlugs: [
+      'calculadora-credito-uva-vs-tasa-fija',
+      'calculadora-credito-uva-cuota-actual',
+      'calculadora-hipoteca-uva-bbva-argentina',
+      'calculadora-hipoteca-uva-santander-argentina',
+      'calculadora-hipoteca-divisa-extranjera-vs-uva',
+      'calculadora-ingreso-minimo-credito-hipotecario-uva-banco-nacion',
+      'calculadora-cuota-credito-hipotecario-uva-banco-nacion',
+      'calculadora-ahorro-uva-vs-pesos-vs-dolar-12-meses',
+      'calculadora-plazo-fijo-uva-precancelable-rendimiento',
+      'calculadora-uva-hipoteca-vs-inflacion-riesgo',
+    ],
   },
   {
     idVariable: 30,

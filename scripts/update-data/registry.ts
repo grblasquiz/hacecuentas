@@ -59,9 +59,20 @@ export const REGISTRY: FetcherEntry[] = [
     // Persiste series históricas (ICL/UVA/CER/TM20/plazo-fijo-30d) en db/*.json
     // para uso por componentes que muestren gráficos o snapshots offline.
     // Daily porque las 5 series son diarias en el BCRA y el costo es bajo (~7s).
+    // Bumpea lastUpdated en TODAS las calcs cuyo valor depende de UVA/ICL/plazo
+    // fijo (ver refreshSlugs por serie en bcra-series.ts).
     slugs: [
       'calculadora-actualizacion-alquiler-icl',
       'calculadora-credito-uva-vs-tasa-fija',
+      'calculadora-credito-uva-cuota-actual',
+      'calculadora-hipoteca-uva-bbva-argentina',
+      'calculadora-hipoteca-uva-santander-argentina',
+      'calculadora-hipoteca-divisa-extranjera-vs-uva',
+      'calculadora-ingreso-minimo-credito-hipotecario-uva-banco-nacion',
+      'calculadora-cuota-credito-hipotecario-uva-banco-nacion',
+      'calculadora-ahorro-uva-vs-pesos-vs-dolar-12-meses',
+      'calculadora-plazo-fijo-uva-precancelable-rendimiento',
+      'calculadora-uva-hipoteca-vs-inflacion-riesgo',
       'calculadora-plazo-fijo',
     ],
     frequency: 'daily',
@@ -124,7 +135,15 @@ export const REGISTRY: FetcherEntry[] = [
   {
     name: 'costo-laboral',
     // Alícuotas patronales grande/pyme + ART promedio.
-    slugs: ['calculadora-costo-laboral-empleado'],
+    // Patchea consts en src/lib/formulas/costo-laboral.ts (CARGA_GRANDE/PYME/ART)
+    // y bumpea lastUpdated en las calcs que reflejan esas alícuotas.
+    // aportes-patronales-...-2026 también depende de Dec. 814/2001: cuando la
+    // suma total cambia, su desglose interno (SIPA/INSSJP/FNE/AAFF) suele cambiar
+    // también — el editorial revisa el PR antes de mergear.
+    slugs: [
+      'calculadora-costo-laboral-empleado',
+      'calculadora-aportes-patronales-empleado-registrado-cargas-sociales-2026',
+    ],
     frequency: 'yearly',
     run: fetchCostoLaboral,
   },
