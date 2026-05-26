@@ -41,35 +41,53 @@
 # cambian con deploys" (manifest cambia con theme_color, icons, etc).
 
 # Astro hashea los archivos en /_astro/ con content hash, son immutable de por vida.
+# IMPORTANTE: usar `! Cache-Control` para BORRAR el header heredado de /* antes
+# de setear el nuevo valor — sin esto CF Pages concatena: el browser ve
+# "public, max-age=0, must-revalidate, public, max-age=31536000, immutable"
+# y respeta el primer max-age=0 (revalida cada vez, defeating immutable).
 /_astro/*
+  ! Cache-Control
   Cache-Control: public, max-age=31536000, immutable
 
 # Iconos y favicons: cambian poco, cachear 1 día
 /favicon.svg
+  ! Cache-Control
   Cache-Control: public, max-age=86400
 /favicon.ico
+  ! Cache-Control
   Cache-Control: public, max-age=86400
 /apple-touch-icon.png
+  ! Cache-Control
+  Cache-Control: public, max-age=86400
+/apple-touch-icon-180x180.png
+  ! Cache-Control
   Cache-Control: public, max-age=86400
 
 # Logo files (versionado vía nuevo filename si cambia): 30 días
 /logo-32.png
+  ! Cache-Control
   Cache-Control: public, max-age=2592000
 /logo-64.png
+  ! Cache-Control
   Cache-Control: public, max-age=2592000
 /logo-128.png
+  ! Cache-Control
   Cache-Control: public, max-age=2592000
 /logo-64.webp
+  ! Cache-Control
   Cache-Control: public, max-age=2592000
 /logo-128.webp
+  ! Cache-Control
   Cache-Control: public, max-age=2592000
 
 # OG images (regeneradas con build, no cambian día a día): 30 días
 /og/*
+  ! Cache-Control
   Cache-Control: public, max-age=2592000
 
 # Imágenes en /img/ o similar: cachear 1 semana
 /img/*
+  ! Cache-Control
   Cache-Control: public, max-age=604800
 
 # Sitemap y RSS: usan el cache-control global (max-age=0, must-revalidate).
@@ -80,21 +98,25 @@
 
 # robots.txt y ads.txt: cachear 1 día
 /robots.txt
+  ! Cache-Control
   Cache-Control: public, max-age=86400
 /ads.txt
+  ! Cache-Control
   Cache-Control: public, max-age=86400
 
 # Página offline: cacheable a largo plazo
 /offline.html
+  ! Cache-Control
   Cache-Control: public, max-age=3600
 
 # Search-index: SWR edge — 10 min fresh + 24h stale-while-revalidate.
 # El JSON se invalida en cada deploy via CF Pages purge automático;
 # entre deploys el SWR sirve la versión vieja al instante mientras
 # revalida en background, evitando que el modal de búsqueda se sienta lento.
-# IMPORTANTE: se sobrescribe el `CDN-Cache-Control: no-store` global de /*
-# para que el edge SÍ cachee este JSON.
+# IMPORTANTE: usar ! para borrar el Cache-Control + CDN-Cache-Control heredados.
 /search-index.json
+  ! Cache-Control
+  ! CDN-Cache-Control
   Cache-Control: public, max-age=600, stale-while-revalidate=86400
   CDN-Cache-Control: public, max-age=600, stale-while-revalidate=86400
 

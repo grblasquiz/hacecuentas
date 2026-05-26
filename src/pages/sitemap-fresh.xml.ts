@@ -1,9 +1,17 @@
 import type { APIRoute } from 'astro';
 
-// Sitemap fresh — calcs con `lastReviewed` o `dataUpdate.lastUpdated` en los
-// ultimos 14 dias. Bing valora freshness signals y el sitemap-news.xml standard
-// limita entries a 48h (Google News compat). Este sitemap separado le da a Bing
-// (y Yandex) un universo mas grande de URLs frescas para re-crawl prioritario.
+// Sitemap fresh — calcs con `dataUpdate.lastUpdated` en los últimos 14 días.
+// Bing valora freshness signals y el sitemap-news.xml standard limita entries a
+// 48h (Google News compat). Este sitemap separado le da a Bing (y Yandex) un
+// universo mas grande de URLs frescas para re-crawl prioritario.
+//
+// IMPORTANTE 2026-05-26: filtramos por `dataUpdate.lastUpdated` ÚNICAMENTE,
+// NO por `lastReviewed`. Razón: backfills masivos de metadata (commit
+// `704790d3` el 23-may bumpeó lastReviewed en 2471 archivos) inflan el fresh
+// con URLs que NO tuvieron cambio editorial real, violando CLAUDE.md regla #3
+// y diluyendo la señal de freshness para las URLs con data dinámica genuina.
+// Para que una calc aparezca en sitemap-fresh ahora se requiere que su data
+// externa (BCRA, IPC, ARCA escalas) se haya refrescado real-time.
 //
 // Cero impacto en performance cliente — se genera build-time (prerender).
 //
@@ -43,11 +51,12 @@ function buildEntries(modules: Record<string, any>, prefix: string): Entry[] {
   for (const m of Object.values(modules)) {
     const calc = m.default || m;
     if (calc.noindex) continue;
-    const lr = getDateValid(calc.lastReviewed);
+    // Solo dataUpdate.lastUpdated cuenta para freshness signal.
+    // lastReviewed se bumpea con backfills metadata y NO refleja
+    // cambio editorial real — incluirlo infla el fresh con falsos positivos.
     const du = getDateValid(calc.dataUpdate?.lastUpdated);
-    const latest = [lr, du].filter(Boolean).sort().pop();
-    if (!latest) continue;
-    const t = Date.parse(latest + 'T00:00:00Z');
+    if (!du) continue;
+    const t = Date.parse(du + 'T00:00:00Z');
     if (Number.isNaN(t) || now - t > FOURTEEN_DAYS_MS) continue;
     out.push({
       loc: `${SITE}${prefix}${calc.slug}`,
