@@ -100,7 +100,13 @@ else
   else
     log "diff desde ${LAST_SHA:0:8}..."
     DETECT_OUT=$(LAST_DEPLOY_SHA="$LAST_SHA" node --experimental-strip-types scripts/detect-changes.ts 2>&1) || DETECT_OUT="ERROR"
-    if echo "$DETECT_OUT" | grep -q "^mode=incremental"; then
+    if echo "$DETECT_OUT" | grep -q "^mode=skip"; then
+      REASON=$(echo "$DETECT_OUT" | grep "^reason=" | sed 's/^reason=//')
+      ok "SKIP — $REASON"
+      echo "Solo cambios en tooling/docs. Nada que deployar. Saliendo en $(($(date +%s) - T_START))s."
+      echo "$CURRENT_SHA" > .last-deploy-sha
+      exit 0
+    elif echo "$DETECT_OUT" | grep -q "^mode=incremental"; then
       MODE=incremental
       INCREMENTAL_CHANGES=$(echo "$DETECT_OUT" | grep "^changes_json=" | sed 's/^changes_json=//')
       REASON=$(echo "$DETECT_OUT" | grep "^reason=" | sed 's/^reason=//')

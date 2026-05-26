@@ -107,7 +107,7 @@ interface ContentChanges {
 }
 
 interface DetectResult {
-  mode: 'full' | 'incremental';
+  mode: 'full' | 'incremental' | 'skip';
   changes?: {
     calcs?: { slugs: string[]; locales: string[] };
     blog?: { slugs: string[] };
@@ -327,7 +327,14 @@ function detect(baseSha: string): DetectResult {
     iibb;
 
   if (!anyChange) {
-    return fullResult('solo cambios en archivos ignore', files.length);
+    // Solo cambios en archivos ignore (tooling, docs, etc.). No hay nada
+    // que regenerar en dist. Devolvemos un modo especial "skip" para que
+    // el deploy script salga sin buildear ni subir nada.
+    return {
+      mode: 'skip' as const,
+      reason: 'solo cambios en archivos ignore (tooling/docs)',
+      filesAnalyzed: files.length,
+    } as unknown as DetectResult;
   }
 
   const changes: DetectResult['changes'] = {};
@@ -384,6 +391,12 @@ function main(): void {
     writeOutput([
       'mode=incremental',
       `changes_json=${JSON.stringify(result.changes)}`,
+      `reason=${result.reason}`,
+    ]);
+  } else if (result.mode === 'skip') {
+    writeOutput([
+      'mode=skip',
+      'changes_json=',
       `reason=${result.reason}`,
     ]);
   } else {
