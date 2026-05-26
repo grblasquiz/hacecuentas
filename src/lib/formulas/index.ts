@@ -950,7 +950,6 @@ import { compute as compute__cuanto_falta_fin_de_año_2026_dias_horas_segundos }
 import { cuantoFaltaGritoIndependenciaMexico } from './cuanto-falta-grito-independencia-mexico';
 import { cuantoFaltaJubilarseJubilacionEdadAportes } from './cuanto-falta-jubilarse-jubilacion-edad-aportes';
 import { cuantoFaltaMundialFifa20262030 } from './cuanto-falta-mundial-fifa-2026-2030';
-import { compute as compute__cuanto_falta_navidad_2026_dias_semanas_meses } from './cuanto-falta-navidad-2026-dias-semanas-meses';
 import { cuantoFaltaNavidadAnoNuevo } from './cuanto-falta-navidad-ano-nuevo';
 import { cuantoFaltaOlimpiadasParis2028LosAngeles } from './cuanto-falta-olimpiadas-paris-2028-los-angeles';
 import { cuantoFaltaPagoMonotributoIngreso } from './cuanto-falta-pago-monotributo-ingreso';
@@ -4356,7 +4355,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuanto-falta-grito-independencia-mexico': cuantoFaltaGritoIndependenciaMexico,
   'cuanto-falta-jubilarse-jubilacion-edad-aportes': cuantoFaltaJubilarseJubilacionEdadAportes,
   'cuanto-falta-mundial-fifa-2026-2030': cuantoFaltaMundialFifa20262030,
-  'cuanto-falta-navidad-2026-dias-semanas-meses': compute__cuanto_falta_navidad_2026_dias_semanas_meses,
   'cuanto-falta-navidad-ano-nuevo': cuantoFaltaNavidadAnoNuevo,
   'cuanto-falta-olimpiadas-paris-2028-los-angeles': cuantoFaltaOlimpiadasParis2028LosAngeles,
   'cuanto-falta-pago-monotributo-ingreso': cuantoFaltaPagoMonotributoIngreso,
