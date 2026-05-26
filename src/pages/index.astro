@@ -77,24 +77,35 @@ function getTopCalcs(cat: string): any[] {
   return [...picked, ...fallback].slice(0, 3);
 }
 
-// Populares (rail) — top 6 originales (GA4 2026-05-14, engagement >3min,
-// bounce <30%, conv > 0) + 6 ampliadas el 2026-05-19 para internal-link
-// boost a páginas pos 11-25 GSC con +200 impr/28d (CTR rescue fase 2).
-// Mezcla de finanzas AR + conversores universales + utilities AR.
-const popularSlugs = [
-  'sueldo-en-mano-argentina',
-  'calculadora-aguinaldo-sac',
-  'calculadora-antiguedad-laboral',
-  'calculadora-ingresos-brutos-provincial',
-  'calculadora-impuesto-cheque-debitos-creditos',
-  'calculadora-imc',
-  'dias-entre-dos-fechas',
-  'calculadora-conversor-metros-lineales-a-metros-cuadrados',
-  'calculadora-estimador-costo-viaje-taxi-remis',
-  'calculadora-impuesto-sellos-inmueble-contrato',
-  'calculadora-costo-m2-construccion-argentina',
-  'calculadora-cuantos-dias-faltan-Navidad-2026',
-];
+// Populares (rail) — si existe popular-curated.json (alimentado por
+// scripts/refresh-home-popular.py desde GSC clicks 28d), usar esa lista.
+// Si no, fallback a la curada manual histórica.
+// El script se corre manualmente; mientras el JSON no esté commiteado
+// la home sigue con la lista hardcoded.
+const popularCuratedModules = import.meta.glob<any>(
+  '../lib/popular-curated.json',
+  { eager: true },
+);
+const curatedJson: { slugs?: string[] } | null =
+  Object.values(popularCuratedModules)[0]?.default ??
+  Object.values(popularCuratedModules)[0] ??
+  null;
+const popularSlugs = curatedJson?.slugs?.length
+  ? curatedJson.slugs
+  : [
+      'sueldo-en-mano-argentina',
+      'calculadora-aguinaldo-sac',
+      'calculadora-antiguedad-laboral',
+      'calculadora-ingresos-brutos-provincial',
+      'calculadora-impuesto-cheque-debitos-creditos',
+      'calculadora-imc',
+      'dias-entre-dos-fechas',
+      'calculadora-conversor-metros-lineales-a-metros-cuadrados',
+      'calculadora-estimador-costo-viaje-taxi-remis',
+      'calculadora-impuesto-sellos-inmueble-contrato',
+      'calculadora-costo-m2-construccion-argentina',
+      'calculadora-cuantos-dias-faltan-Navidad-2026',
+    ];
 const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
 
 const arOnlyCount = calcs.filter((c: any) => c.audience === 'AR').length;
@@ -524,17 +535,24 @@ const schema = {
     </div>
   </section>
 
-  <section class="para-vos" id="para-vos-section" aria-labelledby="para-vos-heading" style="display:none;">
+  <section class="para-vos" id="para-vos-section" aria-labelledby="para-vos-heading">
     <div class="section-header">
       <div>
         <span class="eyebrow eyebrow-inline">
-          <span id="pv-flag" aria-hidden="true"></span>
+          <span id="pv-flag" aria-hidden="true">🇦🇷</span>
           Para vos
         </span>
-        <h2 id="para-vos-heading">Calculadoras para <span id="pv-country-name">tu país</span></h2>
+        <h2 id="para-vos-heading">Calculadoras para <span id="pv-country-name">Argentina</span></h2>
       </div>
     </div>
-    <div class="pv-grid" id="pv-grid"></div>
+    <div class="pv-grid" id="pv-grid">
+      {countryCalcData.AR.map((c) => (
+        <a href={`/${c.slug}`} class="pv-card">
+          <span class="pv-icon" aria-hidden="true">{c.icon}</span>
+          <span class="pv-title">{c.h1}</span>
+        </a>
+      ))}
+    </div>
   </section>
 
   <section class="populares" aria-labelledby="populares-heading">
