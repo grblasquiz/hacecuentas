@@ -157,6 +157,7 @@ const schemaApp = {
   speakable: {
     '@type': 'SpeakableSpecification',
     cssSelector: [
+      '.answer-snippet',
       '.aeo-quick-answer', '.calc-intro', '.calc-key-takeaway',
       '#como-funciona p:first-of-type',
       '#faq dt', '#faq dd',
@@ -179,9 +180,10 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   datePublished,
   dateModified,
   author: {
-    '@type': 'Organization',
-    name: 'Equipo Hacé Cuentas',
-    url: 'https://hacecuentas.com/politica-editorial',
+    '@type': 'Person',
+    '@id': 'https://hacecuentas.com/autores/martin-rodriguez#person',
+    name: 'Martín Rodríguez',
+    url: 'https://hacecuentas.com/autores/martin-rodriguez',
   },
   publisher: {
     '@type': 'Organization',
@@ -301,7 +303,7 @@ const hasMath = calc.explanation && /(\$[^$\n]+\$|\\frac|\\sqrt|\\sum|\\times|\\
 // Pre-filled subject for "Report error"
 const reportSubject = encodeURIComponent(`Error en /es/${calc.slug}`);
 const reportBody = encodeURIComponent(
-  `Hi Equipo Hacé Cuentas,\n\nI found an error in the calculator "${calc.h1}":\n\nURL: https://hacecuentas.com/es/${calc.slug}\nInput data: \nExpected result: \nActual result: \nSource / reference: \n\nThank you.`
+  `Hi Martín,\n\nI found an error in the calculator "${calc.h1}":\n\nURL: https://hacecuentas.com/es/${calc.slug}\nInput data: \nExpected result: \nActual result: \nSource / reference: \n\nThank you.`
 );
 
 // hreflang: declarar es-ES (locale propio) + es-AR (versión origen si hay esSlug) + x-default.
@@ -405,13 +407,13 @@ const hreflangTags = esSlug ? [
         )}
 
         <div class="meta">
-          <span class="meta-item" title={`Última revisión: ${updated} · Equipo Hacé Cuentas`}>
+          <span class="meta-item" title={`Última revisión: ${updated} · Martín Rodríguez`}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Última revisión: <strong>{updated}</strong>
           </span>
           <span class="meta-item meta-reviewer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-            Verificado por <a href="/politica-editorial">Equipo Hacé Cuentas</a>
+            Verificado por <a href="/autores/martin-rodriguez" rel="author"><strong>Martín Rodríguez</strong></a>
           </span>
           {sources.length > 0 && (
             <span class="meta-item">
@@ -430,6 +432,12 @@ const hreflangTags = esSlug ? [
             100% privado
           </span>
         </div>
+
+        {calc.answerSnippet && (
+          <div class="answer-snippet" data-speakable="true" aria-label="Respuesta directa">
+            <p>{calc.answerSnippet}</p>
+          </div>
+        )}
 
         {keyTakeaway && (
           <aside id="summary"
@@ -1407,5 +1415,18 @@ const hreflangTags = esSlug ? [
     text-decoration: underline;
     text-underline-offset: 2px;
     font-weight: 500;
+  }
+
+  .answer-snippet {
+    background: var(--surface, #f9fafb);
+    border-left: 4px solid var(--accent, #2563eb);
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    margin: 1.25rem 0 1.5rem;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+  .answer-snippet p {
+    margin: 0;
   }
 </style>
