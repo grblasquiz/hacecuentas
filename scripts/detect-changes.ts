@@ -82,6 +82,12 @@ const IGNORE_PATTERNS: RegExp[] = [
   /^scripts\/deploy-local\.sh$/,
   /^scripts\/new-calc\.ts$/,
   /^scripts\/cf-purge-cache\.sh$/,
+  // Scripts de submission a buscadores (post-deploy o cron, no afectan build)
+  /^scripts\/bing-/,
+  /^scripts\/google-indexing-/,
+  /^scripts\/indexnow-/,
+  /^scripts\/submit-indexnow/,
+  /^scripts\/post-deploy-/,
 ];
 
 // Regex de content types

@@ -112,11 +112,22 @@ def main():
 
     if args.from_file:
         with open(args.from_file) as f:
-            urls = [l.strip() for l in f if l.strip()]
+            raw_urls = [l.strip() for l in f if l.strip() and not l.startswith('#')]
     elif args.urls:
-        urls = [u if u.startswith('http') else f'{HOST}{u if u.startswith("/") else "/" + u}' for u in args.urls]
+        raw_urls = args.urls
     else:
-        urls = default_priority_urls()
+        raw_urls = default_priority_urls()
+
+    # Normalizar TODAS las inputs a URL absoluta. Si llega "/calc" o "calc",
+    # prefijar con HOST. Bing rechaza paths relativos con un genérico
+    # "AuthorizationFailed" (clasificación incorrecta del lado server) — hay
+    # que mandar siempre URL completa.
+    def to_absolute(u: str) -> str:
+        if u.startswith('http://') or u.startswith('https://'):
+            return u
+        return f'{HOST}/{u.lstrip("/")}'
+
+    urls = [to_absolute(u) for u in raw_urls]
 
     print(f'📡 {len(urls)} URLs → Bing Webmaster API')
     print(submit_batch(key, urls))
