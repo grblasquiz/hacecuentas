@@ -20,11 +20,16 @@ const BASE = 'https://hacecuentas.com';
 
 interface ContentChanges {
   slugs: string[];
-  locales?: string[];
 }
 
 interface Changes {
   calcs?: ContentChanges;
+  calcs_en?: ContentChanges;
+  calcs_pt?: ContentChanges;
+  calcs_mx?: ContentChanges;
+  calcs_cl?: ContentChanges;
+  calcs_co?: ContentChanges;
+  calcs_es?: ContentChanges;
   blog?: ContentChanges;
   guias?: ContentChanges;
   tablas?: ContentChanges;
@@ -35,6 +40,17 @@ interface Changes {
   categories?: string[];
   provincias?: string[];
 }
+
+type CalcBucketKey = 'calcs' | 'calcs_en' | 'calcs_pt' | 'calcs_mx' | 'calcs_cl' | 'calcs_co' | 'calcs_es';
+const CALC_BUCKETS: Array<{ key: CalcBucketKey; prefix: string }> = [
+  { key: 'calcs', prefix: '' },          // AR root
+  { key: 'calcs_en', prefix: '/en' },
+  { key: 'calcs_pt', prefix: '/pt' },
+  { key: 'calcs_mx', prefix: '/mx' },
+  { key: 'calcs_cl', prefix: '/cl' },
+  { key: 'calcs_co', prefix: '/co' },
+  { key: 'calcs_es', prefix: '/es' },
+];
 
 if (!CF_TOKEN || !CF_ZONE) {
   console.error('[purge] CF_TOKEN o CF_ZONE no seteados — skip');
@@ -98,15 +114,14 @@ function buildUrls(changes: Changes): string[] {
   set.add(`${BASE}/feed.json`);
   set.add(`${BASE}/search-index.json`);
 
-  // Calcs (por slug × locale + embed)
-  if (changes.calcs) {
-    const locales = changes.calcs.locales || ['ar'];
-    for (const slug of changes.calcs.slugs) {
-      for (const locale of locales) {
-        const prefix = locale === 'ar' ? '' : `/${locale}`;
-        set.add(`${BASE}${prefix}/${slug}`);
-      }
-      set.add(`${BASE}/embed/${slug}`);
+  // Calcs: cada locale tiene su propio bucket. /embed/<slug> solo existe
+  // para slugs AR (la ruta /embed glob-ea solo src/content/calcs/*).
+  for (const { key, prefix } of CALC_BUCKETS) {
+    const bucket = changes[key];
+    if (!bucket) continue;
+    for (const slug of bucket.slugs) {
+      set.add(`${BASE}${prefix}/${slug}`);
+      if (key === 'calcs') set.add(`${BASE}/embed/${slug}`);
     }
   }
 

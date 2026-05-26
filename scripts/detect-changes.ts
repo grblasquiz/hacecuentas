@@ -5,7 +5,13 @@
  * múltiples content types y emite un único JSON con todo lo que cambió:
  *
  *   {
- *     "calcs":         { "slugs": [...], "locales": [...] },
+ *     "calcs":         { "slugs": [...] },   // solo AR root
+ *     "calcs_en":      { "slugs": [...] },
+ *     "calcs_pt":      { "slugs": [...] },
+ *     "calcs_mx":      { "slugs": [...] },
+ *     "calcs_cl":      { "slugs": [...] },
+ *     "calcs_co":      { "slugs": [...] },
+ *     "calcs_es":      { "slugs": [...] },
  *     "blog":          { "slugs": [...] },
  *     "guias":         { "slugs": [...] },
  *     "tablas":        { "slugs": [...] },
@@ -16,6 +22,10 @@
  *     "categories":    [...],   // derivado leyendo c.category de calcs cambiados
  *     "provincias":    [...]    // derivado de calcs en content/argentina/
  *   }
+ *
+ * Cada locale tiene su propio bucket de slugs porque un mismo slug podría
+ * existir en varios locales (caso raro hoy, frágil ante futuros renombres).
+ * Bucketizar por locale evita falsos positivos en el filter incremental.
  *
  * Outputs:
  *   - $GITHUB_OUTPUT: `mode=full|incremental`, `changes_json=...` (compact)
@@ -93,6 +103,8 @@ const IGNORE_PATTERNS: RegExp[] = [
 // Regex de content types
 const CALC_RE = /^src\/content\/calcs(-([a-z]{2}))?\/([^/]+)\.json$/;
 const FORMULA_TS_RE = /^src\/lib\/formulas\/([^/]+)\.ts$/;
+const LOCALES = ['ar', 'en', 'es', 'mx', 'cl', 'co', 'pt'] as const;
+type Locale = typeof LOCALES[number];
 const BLOG_RE = /^src\/content\/blog\/([^/]+)\.json$/;
 const GUIAS_RE = /^src\/content\/guias\/([^/]+)\.json$/;
 const TABLAS_RE = /^src\/content\/tablas\/([^/]+)\.json$/;
@@ -103,13 +115,18 @@ const IIBB_RE = /^src\/content\/iibb\//;
 
 interface ContentChanges {
   slugs: Set<string>;
-  locales?: Set<string>;
 }
 
 interface DetectResult {
   mode: 'full' | 'incremental' | 'skip';
   changes?: {
-    calcs?: { slugs: string[]; locales: string[] };
+    calcs?: { slugs: string[] };
+    calcs_en?: { slugs: string[] };
+    calcs_pt?: { slugs: string[] };
+    calcs_mx?: { slugs: string[] };
+    calcs_cl?: { slugs: string[] };
+    calcs_co?: { slugs: string[] };
+    calcs_es?: { slugs: string[] };
     blog?: { slugs: string[] };
     guias?: { slugs: string[] };
     tablas?: { slugs: string[] };
@@ -201,7 +218,10 @@ function detect(baseSha: string): DetectResult {
 
   const files = entries.map((e) => e.path);
 
-  const calcs: ContentChanges = { slugs: new Set(), locales: new Set() };
+  const calcsByLocale: Record<Locale, Set<string>> = {
+    ar: new Set(), en: new Set(), es: new Set(), mx: new Set(),
+    cl: new Set(), co: new Set(), pt: new Set(),
+  };
   const blog: ContentChanges = { slugs: new Set() };
   const guias: ContentChanges = { slugs: new Set() };
   const tablas: ContentChanges = { slugs: new Set() };
@@ -218,11 +238,10 @@ function detect(baseSha: string): DetectResult {
     // Calcs JSON
     const calcM = file.match(CALC_RE);
     if (calcM) {
-      const locale = calcM[2] || 'ar';
+      const locale = (calcM[2] || 'ar') as Locale;
       const slug = readSlugFromJson(file);
       if (!slug) return fullResult(`no se pudo leer slug de ${file}`, files.length);
-      calcs.slugs.add(slug);
-      calcs.locales!.add(locale);
+      calcsByLocale[locale].add(slug);
       // Derivar categoría
       const cat = readJsonField<string>(file, 'category');
       if (cat) categories.add(cat);
@@ -237,8 +256,7 @@ function detect(baseSha: string): DetectResult {
         return fullResult(`formula ${formM[1]}.ts sin calcs asociados`, files.length);
       }
       for (const m of matched) {
-        calcs.slugs.add(m.slug);
-        calcs.locales!.add(m.locale);
+        calcsByLocale[m.locale as Locale].add(m.slug);
         // Categoría del calc
         const dir = m.locale === 'ar' ? 'src/content/calcs' : `src/content/calcs-${m.locale}`;
         // El filename puede ser slug o formulaId; intentamos ambos
@@ -316,8 +334,9 @@ function detect(baseSha: string): DetectResult {
   }
 
   // ¿Hubo algún cambio de content?
+  const anyCalcChange = LOCALES.some((loc) => calcsByLocale[loc].size > 0);
   const anyChange =
-    calcs.slugs.size > 0 ||
+    anyCalcChange ||
     blog.slugs.size > 0 ||
     guias.slugs.size > 0 ||
     tablas.slugs.size > 0 ||
@@ -338,11 +357,17 @@ function detect(baseSha: string): DetectResult {
   }
 
   const changes: DetectResult['changes'] = {};
-  if (calcs.slugs.size > 0) {
-    changes.calcs = {
-      slugs: Array.from(calcs.slugs).sort(),
-      locales: Array.from(calcs.locales!).sort(),
-    };
+  if (calcsByLocale.ar.size > 0) {
+    changes.calcs = { slugs: Array.from(calcsByLocale.ar).sort() };
+  }
+  for (const loc of LOCALES) {
+    if (loc === 'ar') continue;
+    if (calcsByLocale[loc].size > 0) {
+      const key = `calcs_${loc}` as keyof NonNullable<DetectResult['changes']>;
+      (changes as Record<string, unknown>)[key] = {
+        slugs: Array.from(calcsByLocale[loc]).sort(),
+      };
+    }
   }
   if (blog.slugs.size > 0) changes.blog = { slugs: Array.from(blog.slugs).sort() };
   if (guias.slugs.size > 0) changes.guias = { slugs: Array.from(guias.slugs).sort() };

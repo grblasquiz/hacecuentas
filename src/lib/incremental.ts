@@ -13,7 +13,13 @@
  *
  * Estructura del JSON:
  * {
- *   "calcs":         { "slugs": ["X","Y"], "locales": ["ar","en"] },
+ *   "calcs":         { "slugs": ["X","Y"] },        // solo AR root
+ *   "calcs_en":      { "slugs": ["foo"] },          // un bucket por locale
+ *   "calcs_pt":      { "slugs": ["bar"] },
+ *   "calcs_mx":      { "slugs": [...] },
+ *   "calcs_cl":      { "slugs": [...] },
+ *   "calcs_co":      { "slugs": [...] },
+ *   "calcs_es":      { "slugs": [...] },
  *   "blog":          { "slugs": ["a-post"] },
  *   "guias":         { "slugs": ["la-guia"] },
  *   "tablas":        { "slugs": ["la-tabla"] },
@@ -26,6 +32,9 @@
  * }
  *
  * Locales válidos: 'ar' (root), 'en', 'es', 'mx', 'cl', 'co', 'pt'.
+ * Para calcs, filterByIncremental con locale='ar' lee `calcs`; con cualquier
+ * otro locale lee `calcs_<locale>`. Cada bucket es independiente y solo
+ * contiene los slugs de su locale → cero falsos positivos cross-locale.
  */
 
 // Vite inline-ea este placeholder via `define` en astro.config.mjs.
@@ -43,11 +52,16 @@ export type ContentType =
 
 interface ContentChanges {
   slugs: string[];
-  locales?: string[];
 }
 
 interface Changes {
   calcs?: ContentChanges;
+  calcs_en?: ContentChanges;
+  calcs_pt?: ContentChanges;
+  calcs_mx?: ContentChanges;
+  calcs_cl?: ContentChanges;
+  calcs_co?: ContentChanges;
+  calcs_es?: ContentChanges;
   blog?: ContentChanges;
   guias?: ContentChanges;
   tablas?: ContentChanges;
@@ -85,8 +99,9 @@ if (isIncrementalBuild) {
  *   - En full build: devuelve todos.
  *   - En incremental: devuelve solo los que matcheen el contentType.
  *
- * Para 'calcs', también filtra por `locale` si la lista de locales
- * cambiados no incluye el que se pasa.
+ * Para 'calcs', lee el bucket por locale: locale='ar' → `changes.calcs`,
+ * locale='en' → `changes.calcs_en`, etc. Cada bucket solo contiene los
+ * slugs de ese locale → un slug AR cambiado nunca regenera EN ni viceversa.
  *
  * @param items array con .slug
  * @param contentType  uno de los content types soportados
@@ -99,7 +114,11 @@ export function filterByIncremental<T extends { slug: string }>(
 ): T[] {
   if (CHANGES === null) return items;
 
-  const bucket = CHANGES[contentType];
+  // Para calcs no-AR, leer el bucket por locale (`calcs_en`, `calcs_pt`, etc.)
+  const bucketKey: keyof Changes = contentType === 'calcs' && locale !== 'ar'
+    ? (`calcs_${locale}` as keyof Changes)
+    : (contentType as keyof Changes);
+  const bucket = CHANGES[bucketKey];
   if (!bucket || bucket === true) {
     // contentType no tocado → no se regenera nada de este tipo
     // (excepción: iibb es boolean — se maneja con `shouldBuildContent`)
@@ -107,11 +126,6 @@ export function filterByIncremental<T extends { slug: string }>(
   }
 
   const cc = bucket as ContentChanges;
-  // Para calcs, filtrar por locale también
-  if (contentType === 'calcs' && cc.locales && cc.locales.length > 0) {
-    if (!cc.locales.includes(locale)) return [];
-  }
-
   const set = new Set(cc.slugs);
   return items.filter((item) => set.has(item.slug));
 }
