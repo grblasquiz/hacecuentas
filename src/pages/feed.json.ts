@@ -37,8 +37,8 @@ export const GET: APIRoute = () => {
       tags: [calc.category, ...(calc.seoKeywords || []).slice(0, 5)].filter(Boolean),
       authors: [
         {
-          name: 'Equipo editorial Hacé Cuentas',
-          url: `${site}/politica-editorial`,
+          name: 'Martín Rodríguez',
+          url: `${site}/autores/martin-rodriguez`,
         },
       ],
       language: 'es-AR',
@@ -55,7 +55,7 @@ export const GET: APIRoute = () => {
     icon: `${site}/og-default.png`,
     favicon: `${site}/favicon.ico`,
     language: 'es-AR',
-    authors: [{ name: 'Equipo editorial Hacé Cuentas', url: `${site}/politica-editorial` }],
+    authors: [{ name: 'Martín Rodríguez', url: `${site}/autores/martin-rodriguez` }],
     items,
   };
 

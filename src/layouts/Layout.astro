@@ -144,6 +144,22 @@ const globalSchema = {
       ],
       // publishingPrinciples: refuerza E-E-A-T (Article-level y Org-level)
       publishingPrinciples: `${siteUrl}/politica-editorial`,
+      // founder + employee: ancla la Person (Martín) al Organization. Google
+      // Knowledge Graph usa estos edges para construir entity relationships.
+      founder: { '@id': `${siteUrl}/autores/martin-rodriguez#person` },
+      employee: { '@id': `${siteUrl}/autores/martin-rodriguez#person` },
+    },
+    {
+      // Person global (Martín Rodríguez) — referenciable por @id desde Article,
+      // Recipe, etc. Definición canónica vive en /autores/martin-rodriguez.
+      '@type': 'Person',
+      '@id': `${siteUrl}/autores/martin-rodriguez#person`,
+      name: 'Martín Rodríguez',
+      url: `${siteUrl}/autores/martin-rodriguez`,
+      jobTitle: 'Fundador y editor responsable',
+      worksFor: { '@id': `${siteUrl}/#organization` },
+      sameAs: ['https://github.com/grblasquiz'],
+      nationality: { '@type': 'Country', name: 'Argentina' },
     },
     {
       '@type': 'WebSite',
@@ -443,7 +459,7 @@ const globalSchema = {
 
     <!-- Pinterest Rich Pins fallback (cuando page no override via props).
          Si props pasaron articleAuthor/Section, ya se renderizaron arriba. -->
-    {!articleAuthor && <meta property="article:author" content="Equipo editorial Hacé Cuentas" />}
+    {!articleAuthor && <meta property="article:author" content="Martín Rodríguez" />}
     <meta property="article:publisher" content="https://hacecuentas.com" />
     {!articleSection && <meta property="article:section" content="Calculadoras" />}
     <meta name="pinterest-rich-pin" content="true" />

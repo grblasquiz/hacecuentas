@@ -392,14 +392,15 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   inLanguage: schemaLang,
   datePublished,
   dateModified,
-  // Author como Organization (no Person individual): atribuir 4.000+ calcs
-  // a un solo Person es señal débil para EEAT post Core Update Abril 2026.
-  // El equipo editorial es la unidad real responsable.
+  // Author como Person (Martín Rodríguez). Post Core Update Abril 2026,
+  // Google premia author real verificable por encima de Organization genérica.
+  // El @id Person está definido en /autores/martin-rodriguez con sameAs GitHub.
+  // Publisher queda Organization (Hacé Cuentas) — author/publisher split correcto.
   author: {
-    '@type': 'Organization',
-    '@id': 'https://hacecuentas.com#organization',
-    name: 'Equipo editorial Hacé Cuentas',
-    url: 'https://hacecuentas.com/politica-editorial',
+    '@type': 'Person',
+    '@id': 'https://hacecuentas.com/autores/martin-rodriguez#person',
+    name: 'Martín Rodríguez',
+    url: 'https://hacecuentas.com/autores/martin-rodriguez',
   },
   publisher: {
     '@type': 'Organization',
@@ -500,9 +501,10 @@ if (isRecipeEligible) {
     url: `https://hacecuentas.com/${calc.slug}`,
     inLanguage: schemaLang,
     author: {
-      '@type': 'Organization',
-      name: 'Equipo editorial Hacé Cuentas',
-      url: 'https://hacecuentas.com/politica-editorial',
+      '@type': 'Person',
+      '@id': 'https://hacecuentas.com/autores/martin-rodriguez#person',
+      name: 'Martín Rodríguez',
+      url: 'https://hacecuentas.com/autores/martin-rodriguez',
     },
     datePublished: (datePublished || dateModified).split('T')[0],
     dateModified: dateModified.split('T')[0],
@@ -898,13 +900,13 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
         )}
 
         <div class="meta">
-          <span class="meta-item" title={`Última revisión: ${updated} · Equipo Hacé Cuentas`}>
+          <span class="meta-item" title={`Última revisión: ${updated} · Martín Rodríguez`}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Última revisión: <strong>{updated}</strong>
           </span>
           <span class="meta-item meta-reviewer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-            Revisado por <a href="/politica-editorial" rel="author"><strong>Equipo editorial Hacé Cuentas</strong></a>
+            Revisado por <a href="/autores/martin-rodriguez" rel="author"><strong>Martín Rodríguez</strong></a>
           </span>
           {sources.length > 0 && (
             <span class="meta-item">

@@ -47,7 +47,7 @@ export const GET: APIRoute = () => {
       <guid isPermaLink="true">${url}</guid>
       <description>${desc}</description>
       <category>${cat}</category>
-      <dc:creator>Equipo editorial Hacé Cuentas</dc:creator>
+      <dc:creator>Martín Rodríguez</dc:creator>
       <pubDate>${mtime.toUTCString()}</pubDate>
     </item>`;
     })
@@ -71,8 +71,8 @@ export const GET: APIRoute = () => {
     <description>Calculadoras argentinas actualizadas: sueldo, aguinaldo, monotributo, ganancias, jubilación. Datos oficiales (AFIP, BCRA, ANSES) verificados por el equipo editorial.</description>
     <language>es-AR</language>
     <copyright>© ${new Date().getFullYear()} Hacé Cuentas. Contenido bajo CC BY 4.0 (atribución requerida).</copyright>
-    <managingEditor>editorial@hacecuentas.com (Equipo editorial Hacé Cuentas)</managingEditor>
-    <webMaster>editorial@hacecuentas.com (Equipo editorial Hacé Cuentas)</webMaster>
+    <managingEditor>editorial@hacecuentas.com (Martín Rodríguez)</managingEditor>
+    <webMaster>editorial@hacecuentas.com (Martín Rodríguez)</webMaster>
     <category>Finanzas</category>
     <category>Argentina</category>
     <category>Calculadoras</category>

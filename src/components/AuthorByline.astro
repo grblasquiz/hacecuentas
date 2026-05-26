@@ -1,0 +1,107 @@
+---
+// Byline reutilizable. Renderiza el autor real del sitio (Martín Rodríguez)
+// con link a /autores/martin-rodriguez + rel="author". E-E-A-T post-Core
+// Update Abril 2026: Google premia autor real verificable por encima de
+// "Equipo editorial" genérico.
+//
+// Uso:
+//   <AuthorByline />                          → "Martín Rodríguez"
+//   <AuthorByline lastReviewed="2026-05-01" /> → "Martín · Última revisión: ..."
+//   <AuthorByline variant="card" />            → versión completa con avatar
+//
+// El @id Person debe coincidir con el de /autores/martin-rodriguez.astro
+// para que Google Knowledge Graph una los nodos.
+interface Props {
+  lastReviewed?: string;
+  variant?: 'inline' | 'card';
+  showRole?: boolean;
+  reviewedByLabel?: string;
+  reviewedOnLabel?: string;
+}
+const {
+  lastReviewed,
+  variant = 'inline',
+  showRole = false,
+  reviewedByLabel = 'Revisado por',
+  reviewedOnLabel = 'Última revisión',
+} = Astro.props;
+
+const formattedDate = lastReviewed
+  ? new Date(lastReviewed + (lastReviewed.length === 10 ? 'T00:00:00Z' : '')).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })
+  : null;
+---
+
+{variant === 'inline' ? (
+  <span class="ab-inline">
+    {reviewedByLabel}{' '}
+    <a href="/autores/martin-rodriguez" rel="author"><strong>Martín Rodríguez</strong></a>
+    {showRole && <span class="ab-role"> · Fundador y editor</span>}
+    {formattedDate && (
+      <>
+        {' · '}{reviewedOnLabel}: <time datetime={lastReviewed}>{formattedDate}</time>
+      </>
+    )}
+  </span>
+) : (
+  <div class="ab-card">
+    <a href="/autores/martin-rodriguez" rel="author" class="ab-avatar" aria-hidden="true">MR</a>
+    <div class="ab-meta">
+      <div class="ab-name">
+        <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a>
+      </div>
+      <div class="ab-role">Fundador y editor responsable</div>
+      {formattedDate && (
+        <div class="ab-date">{reviewedOnLabel}: <time datetime={lastReviewed}>{formattedDate}</time></div>
+      )}
+    </div>
+  </div>
+)}
+
+<style>
+  .ab-inline {
+    display: inline;
+  }
+  .ab-inline a {
+    color: inherit;
+  }
+  .ab-role {
+    color: var(--text-muted, #64748b);
+  }
+  .ab-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+  }
+  .ab-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  .ab-meta {
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+  .ab-name a {
+    color: var(--text, #0f172a);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .ab-name a:hover {
+    text-decoration: underline;
+  }
+  .ab-card .ab-role,
+  .ab-date {
+    font-size: 0.8rem;
+    color: var(--text-muted, #64748b);
+  }
+</style>

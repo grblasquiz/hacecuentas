@@ -1,0 +1,326 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { TOTAL_DISPLAY } from '../../lib/calc-counts';
+
+// Schema Person para E-E-A-T. Honesto: NO somos contadores ni abogados
+// matriculados. El sitio cita fuentes oficiales (Infoleg, ANSES, ARCA, BCRA,
+// AFIP), no presta servicios profesionales. Google valora autores reales con
+// background verificable (GitHub público, repo del sitio auditable) más que
+// "expertos" sin background.
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  '@id': 'https://hacecuentas.com/autores/martin-rodriguez#person',
+  name: 'Martín Rodríguez',
+  url: 'https://hacecuentas.com/autores/martin-rodriguez',
+  description:
+    'Emprendedor argentino, desarrollador y creador de hacecuentas.com. Construye herramientas online basadas en fuentes oficiales verificables (Infoleg, ANSES, ARCA, BCRA, INDEC, CSJN).',
+  jobTitle: 'Fundador y editor responsable',
+  worksFor: {
+    '@id': 'https://hacecuentas.com#organization',
+  },
+  knowsAbout: [
+    'Finanzas personales',
+    'Impuestos Argentina (AFIP/ARCA)',
+    'Régimen laboral (LCT, Ley 20.744)',
+    'Seguridad social (ANSES)',
+    'Tributación provincial',
+    'Cálculos matemáticos y financieros',
+  ],
+  sameAs: ['https://github.com/grblasquiz'],
+  nationality: { '@type': 'Country', name: 'Argentina' },
+};
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Inicio',
+      item: 'https://hacecuentas.com',
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Sobre nosotros',
+      item: 'https://hacecuentas.com/sobre-nosotros',
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: 'Martín Rodríguez',
+      item: 'https://hacecuentas.com/autores/martin-rodriguez',
+    },
+  ],
+};
+---
+
+<Layout
+  title="Martín Rodríguez — Autor y editor de Hacé Cuentas"
+  description="Martín Rodríguez es emprendedor, desarrollador y creador de hacecuentas.com. Bio, áreas que cubre, metodología y disclaimer profesional."
+  canonical="/autores/martin-rodriguez"
+>
+  <Header />
+
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(personSchema)}
+    is:inline
+  />
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbSchema)}
+    is:inline
+  />
+
+  <main class="author">
+    <article>
+      <header class="hero">
+        <div class="avatar" aria-hidden="true">MR</div>
+        <div>
+          <h1>Martín Rodríguez</h1>
+          <p class="role">Fundador y editor responsable de Hacé Cuentas</p>
+          <p class="meta">
+            <a href="https://github.com/grblasquiz" rel="me noopener" target="_blank">GitHub</a>
+            ·
+            <a href="/sobre-nosotros">Sobre el sitio</a>
+            ·
+            <a href="/politica-editorial">Política editorial</a>
+            ·
+            <a href="/metodologia">Metodología</a>
+          </p>
+        </div>
+      </header>
+
+      <section>
+        <h2>Quién soy</h2>
+        <p>
+          Soy emprendedor argentino y desarrollador. Empecé Hacé Cuentas en 2024
+          porque me cansé de buscar calculadoras de aguinaldo, monotributo o
+          indemnización en internet y encontrar resultados desactualizados,
+          contradictorios o llenos de publicidad agresiva. Lo construí para mí
+          primero. Después empecé a publicarlo.
+        </p>
+        <p>
+          Hoy el sitio tiene <strong>{TOTAL_DISPLAY} calculadoras online</strong>
+          con foco en Argentina (ARCA, ANSES, BCRA, INDEC) y cobertura para
+          México, España, Chile, Colombia, Brasil y mercado anglosajón.
+        </p>
+      </section>
+
+      <section class="disclaimer">
+        <h2>Lo que NO soy</h2>
+        <p>
+          <strong>No soy contador público ni abogado matriculado.</strong> No
+          presto servicios profesionales. Las calculadoras de Hacé Cuentas son
+          herramientas orientativas basadas en fuentes oficiales públicas. Antes
+          de tomar decisiones que tengan impacto económico, fiscal o legal
+          consultá con un <abbr title="Consejo Profesional de Ciencias Económicas">CPN</abbr>{' '}
+          matriculado, un abogado o un asesor financiero registrado en la CNV.
+        </p>
+        <p>
+          Cuando las calcs incluyen referencias a leyes, fallos o resoluciones,
+          son citas verificables al Boletín Oficial, Infoleg, jurisprudencia
+          CSJN o la página oficial del organismo. Si encontrás un error, podés
+          reportarlo en{' '}
+          <a href="https://github.com/grblasquiz/hacecuentas/issues" target="_blank" rel="noopener">
+            GitHub
+          </a>{' '}
+          o vía <a href="/contacto">contacto</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Áreas que cubre el sitio</h2>
+        <p>
+          Las calculadoras de Hacé Cuentas se agrupan en 19 categorías. Las que
+          más uso personal y profesional reciben son:
+        </p>
+        <ul>
+          <li>
+            <strong>Finanzas personales y AR</strong>: aguinaldo (SAC), sueldo
+            neto, indemnización por despido, plazo fijo UVA, dólar MEP/CCL,
+            cuotas hipoteca, créditos personales.
+          </li>
+          <li>
+            <strong>Impuestos AR</strong>: monotributo (recategorización,
+            categorías, jubilación), Ganancias 4ta categoría, Bienes Personales,
+            IIBB Convenio Multilateral, ITI, sellos provinciales.
+          </li>
+          <li>
+            <strong>Régimen laboral (LCT)</strong>: liquidación final,
+            indemnización agravada (embarazo, matrimonio), licencias,
+            convenios colectivos, aportes patronales.
+          </li>
+          <li>
+            <strong>Seguridad social</strong>: ANSES (PUAM, PNC, jubilaciones,
+            moratoria previsional, AUH, asignaciones familiares), ART.
+          </li>
+          <li>
+            <strong>Provinciales</strong>: ARBA, ATER, ATM (sellos, patentes,
+            inmobiliario, IIBB), ABL CABA.
+          </li>
+          <li>
+            <strong>Otras</strong>: salud, cocina, construcción, deportes,
+            educación, mascotas, jardinería, viajes.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Metodología (resumen)</h2>
+        <p>
+          Cada calculadora se construye sobre fuentes oficiales. Por categoría:
+        </p>
+        <ul>
+          <li>
+            <strong>Fiscal AR</strong>: Resoluciones Generales AFIP/ARCA vigentes
+            + texto de ley vía Infoleg.
+          </li>
+          <li>
+            <strong>Laboral AR</strong>: Ley 20.744 (LCT) + jurisprudencia CSJN
+            relevante (Vizzoti, Negri, De Lorenzo).
+          </li>
+          <li>
+            <strong>Previsional</strong>: leyes y decretos ANSES, valor MOPRE
+            vigente, movilidad jubilatoria publicada.
+          </li>
+          <li>
+            <strong>Provincial</strong>: códigos tributarios y leyes impositivas
+            anuales de cada jurisdicción.
+          </li>
+          <li>
+            <strong>Datos macro</strong>: BCRA (Comunicaciones A, Centro de
+            Estadísticas), INDEC (IPC, ICL, salarios), Banco Mundial.
+          </li>
+        </ul>
+        <p>
+          La metodología completa está en{' '}
+          <a href="/metodologia">/metodologia</a> y los criterios editoriales en{' '}
+          <a href="/politica-editorial">/politica-editorial</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Cómo se actualizan las calcs</h2>
+        <p>
+          Las calcs con datos sensibles al tiempo (salario mínimo, MOPRE, haber
+          jubilatorio mínimo, valor UVA, alícuotas paritarias) llevan un campo{' '}
+          <code>lastReviewed</code> visible y se revisan cuando cambia la norma
+          o el dato oficial. Las modificaciones de leyes argentinas se rastrean
+          principalmente desde el Boletín Oficial e Infoleg.
+        </p>
+      </section>
+
+      <section>
+        <h2>Contacto</h2>
+        <p>
+          Si querés reportar un error, sugerir una calculadora o colaborar:{' '}
+          <a href="/contacto">/contacto</a>. Para reportes de seguridad o
+          vulnerabilidades del sitio, hay un{' '}
+          <a href="/.well-known/security.txt">/.well-known/security.txt</a>.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .author {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+  }
+  .hero {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border, #e5e7eb);
+  }
+  .avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .hero h1 {
+    margin: 0 0 0.35rem;
+    font-size: 1.85rem;
+  }
+  .role {
+    margin: 0 0 0.5rem;
+    color: var(--text-muted, #64748b);
+    font-size: 0.95rem;
+  }
+  .meta {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted, #64748b);
+  }
+  .meta a {
+    color: inherit;
+  }
+  .author h2 {
+    font-size: 1.35rem;
+    margin: 2rem 0 0.75rem;
+  }
+  .author p,
+  .author ul {
+    margin: 0 0 1rem;
+  }
+  .author ul {
+    padding-left: 1.4rem;
+  }
+  .author li {
+    margin-bottom: 0.5rem;
+  }
+  .author a {
+    color: var(--accent, #2563eb);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .disclaimer {
+    background: var(--surface, #f9fafb);
+    border-left: 4px solid #f59e0b;
+    padding: 1.25rem 1.25rem 0.5rem;
+    border-radius: 0.5rem;
+    margin: 1.5rem 0;
+  }
+  .disclaimer h2 {
+    margin-top: 0 !important;
+    color: #b45309;
+  }
+  code {
+    background: var(--surface, #f1f5f9);
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.25rem;
+    font-size: 0.92em;
+  }
+  @media (prefers-color-scheme: dark) {
+    .disclaimer {
+      background: rgba(245, 158, 11, 0.08);
+    }
+    .disclaimer h2 {
+      color: #fbbf24;
+    }
+  }
+</style>

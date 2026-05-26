@@ -131,10 +131,15 @@ const articleSchema: any = {
   description: post.description,
   datePublished: dateISO,
   dateModified: dateISO,
-  author: {
-    '@type': 'Organization',
-    name: post.author || 'Hacé Cuentas',
+  author: post.author ? {
+    '@type': 'Person',
+    name: post.author,
     url: siteUrl,
+  } : {
+    '@type': 'Person',
+    '@id': `${siteUrl}/autores/martin-rodriguez#person`,
+    name: 'Martín Rodríguez',
+    url: `${siteUrl}/autores/martin-rodriguez`,
   },
   publisher: {
     '@type': 'Organization',
@@ -222,7 +227,7 @@ const pageSchema = {
   noindex={false}
   audience="AR"
   ogType="article"
-  articleAuthor={post.author || 'Equipo editorial Hacé Cuentas'}
+  articleAuthor={post.author || 'Martín Rodríguez'}
   articleSection={categoryLabel}
   articleTags={post.tags || post.seoKeywords || []}
   articlePublishedTime={dateISO}
