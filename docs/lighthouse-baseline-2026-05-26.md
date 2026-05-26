@@ -52,11 +52,47 @@ Workflow `.github/workflows/lighthouse.yml` corre lunes 11:00 UTC (junio 1).
 Para trigger manual sin gh CLI: GitHub web UI → Actions → Lighthouse CI →
 Run workflow. O instalar gh (`brew install gh`) y `gh workflow run lighthouse.yml`.
 
+## PSI con CrUX field data (REAL users)
+
+PSI API (`category=seo&category=performance&strategy=mobile`) reporta datos de
+Chrome UX Report — distribución real de devices/redes en los últimos 28 días.
+
+| URL | SEO | LCP CrUX (p75 real) | LCP Lab (sim) | Perf |
+|---|---:|---:|---:|---:|
+| `/calculadora-aniversario-pareja` | 1.00 | **2066ms** ✓ | 6928ms | 0.57 |
+| `/calculadora-imc` | 1.00 | **2335ms** ✓ | 3776ms | 0.76 |
+| `/autores/martin-rodriguez` | 1.00 | **2066ms** ✓ | 1357ms | 0.70 |
+
+**Conclusión:** En datos reales (CrUX) ya estamos en VERDE para LCP en las 3
+URLs (umbral <2500ms). Lab data sigue mostrando peor performance pero refleja
+mobile throttled artificial, no la experiencia real con CF edge cache + 4G/5G.
+
+Las field data se mueven lento (28-day rolling window). Próximas mediciones
+deberían reflejar la mejora del LCP fix de hoy a partir de junio.
+
+## Featured snippets — qué se hizo y cómo verificar
+
+Code-side, todo lo verificable:
+- ✓ Schema HowTo + FAQPage + Article correctos en `[...slug].astro`
+- ✓ `answerSnippet` 40-75 palabras en 42 calcs (top 50 priority menos los redirects)
+- ✓ Tablas markdown con `<thead>` + `scope="col"`/`scope="row"`
+- ✓ `.answer-snippet` en `speakable.cssSelector` (prioridad voice assistants)
+- ✓ Schema.org "author" Person + sameAs GitHub (E-E-A-T post Core Update)
+
+**Verificación manual pendiente** (no hay API pública para esto):
+1. Google Search Console → URL Inspection → ver "Rich results detected" en
+   una calc de top 50. Esperado: HowTo, FAQPage, Article, SoftwareApplication.
+2. GSC → Performance → filter by Position 1 + filter por URL de calc top → ver
+   queries que generaron impressions/clicks. Posición 1 con CTR alto = featured
+   snippet activo.
+3. Re-correr Lighthouse después del próximo recrawl de Google (2-4 semanas).
+
 ## Histórico de mejoras
 
 | Commit | Cambio | Impacto observado |
 |---|---|---|
-| `b1ad79f3` | manualChunks separa entry scripts | Layout bundle 634KB → 1KB, LCP autor -45% |
+| `528ee785` | manualChunks separa entry scripts | Layout bundle 634KB → 1KB, LCP autor -45% |
+| `0700ef29` | Doc baseline post-fix | Documentación |
 
 ## Recordatorio
 
