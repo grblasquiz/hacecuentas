@@ -92,8 +92,20 @@ function buildInputs(fields: CalcField[] | undefined): Record<string, any> {
       let n: number | undefined;
       if (typeof ph === 'number' && Number.isFinite(ph)) n = ph;
       else if (typeof ph === 'string') {
-        // placeholders tipo "1.000" o "1,5" — limpiar separador de miles ES.
-        const cleaned = ph.replace(/\./g, '').replace(',', '.');
+        // Heuristica: si tiene coma decimal ES ("1,5") o un solo punto seguido
+        // de 1-2 digitos ("0.85"), tratar como decimal. Si tiene varios puntos
+        // o un punto seguido de 3+ digitos ("1.000"), tratar como miles ES.
+        let cleaned: string;
+        if (ph.includes(',')) {
+          // ES decimal con coma — quitar dots de miles, cambiar coma por dot.
+          cleaned = ph.replace(/\./g, '').replace(',', '.');
+        } else if (/^\d+\.\d{1,2}$/.test(ph)) {
+          // Decimal corto tipo "0.85" — preservar el punto como decimal.
+          cleaned = ph;
+        } else {
+          // Default: dot como separador de miles ES.
+          cleaned = ph.replace(/\./g, '');
+        }
         const parsed = parseFloat(cleaned);
         if (!Number.isNaN(parsed) && Number.isFinite(parsed)) n = parsed;
       }
@@ -101,6 +113,10 @@ function buildInputs(fields: CalcField[] | undefined): Record<string, any> {
       if (n === undefined) n = 1;
       // Algunas fórmulas explotan con 0 (división), si min permite empujamos a 1.
       if (n === 0 && (f.min === undefined || f.min <= 1)) n = 1;
+      // Clamp a [min, max] declarados — evita que un parser ambiguo de placeholder
+      // genere valores fuera del rango y la fórmula tire validation error.
+      if (typeof f.max === 'number' && n > f.max) n = f.max;
+      if (typeof f.min === 'number' && n < f.min) n = f.min;
       inputs[f.id] = n;
     } else if (t === 'select') {
       const first = Array.isArray(f.options) && f.options.length > 0
