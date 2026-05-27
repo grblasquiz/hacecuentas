@@ -250,30 +250,28 @@ const globalSchema = {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     {/* Infolinks — facade pattern lazy load (mismo approach que tenía AdSense).
-        Solo se inyecta si PUBLIC_INFOLINKS_PID está seteado en build. Carga al
-        primer scroll/touch/click o fallback 5s. Protege LCP en recovery post
-        Core Update. Formatos in-text + InFold — NO popunder, NO push notif. */}
-    {import.meta.env.PUBLIC_INFOLINKS_PID && (
-      <script is:inline define:vars={{ infolinksPid: import.meta.env.PUBLIC_INFOLINKS_PID }}>
-        (function() {
-          var loaded = false;
-          var events = ['scroll','touchstart','mousedown','keydown','mousemove'];
-          function loadInfolinks() {
-            if (loaded) return;
-            loaded = true;
-            events.forEach(function(e) { window.removeEventListener(e, loadInfolinks, { passive: true }); });
-            window.infolinks_pid = parseInt(infolinksPid, 10);
-            window.infolinks_wsid = 0;
-            var s = document.createElement('script');
-            s.src = 'https://resources.infolinks.com/js/infolinks_main.js';
-            s.async = true;
-            document.head.appendChild(s);
-          }
-          events.forEach(function(e) { window.addEventListener(e, loadInfolinks, { passive: true, once: true }); });
-          setTimeout(loadInfolinks, 5000);
-        })();
-      </script>
-    )}
+        PID 3445727 (publisher Hacé Cuentas). Carga al primer scroll/touch/click
+        o fallback 5s. Protege LCP en recovery post Core Update. https forzado
+        porque el snippet oficial de Infolinks viene en http (mixed content). */}
+    <script is:inline>
+      (function() {
+        var loaded = false;
+        var events = ['scroll','touchstart','mousedown','keydown','mousemove'];
+        function loadInfolinks() {
+          if (loaded) return;
+          loaded = true;
+          events.forEach(function(e) { window.removeEventListener(e, loadInfolinks, { passive: true }); });
+          window.infolinks_pid = 3445727;
+          window.infolinks_wsid = 0;
+          var s = document.createElement('script');
+          s.src = 'https://resources.infolinks.com/js/infolinks_main.js';
+          s.async = true;
+          document.head.appendChild(s);
+        }
+        events.forEach(function(e) { window.addEventListener(e, loadInfolinks, { passive: true, once: true }); });
+        setTimeout(loadInfolinks, 5000);
+      })();
+    </script>
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
     <!-- Favicon v3 (logo completo sin bandas blancas) -->
