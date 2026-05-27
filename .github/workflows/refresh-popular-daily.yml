@@ -1,0 +1,137 @@
+name: Refresh home popular (daily)
+
+# Refresca src/lib/popular-curated.json con el top 12 de calcs AR root por clicks
+# de los últimos 28 días desde GSC Search Analytics.
+#
+# El script ya está en scripts/refresh-home-popular.py (mismo que se corre manual
+# vía `npm run refresh-popular`). Acá lo automatizamos diario a las 11:00 UTC
+# (08:00 ART) — después de que GSC tiene la data del día previo procesada y antes
+# del horario típico de tráfico AR.
+#
+# Si el JSON cambia respecto al committeado, hace commit + push. Cloudflare Pages
+# re-deploya automáticamente desde main. Si el JSON no cambia → no-op.
+#
+# Latencia del rail: 1 día (vs 3-4d cuando se corre manual con menos frecuencia).
+# Real-time real requiere otra fuente (GA4 Realtime API o auto-tracking CF KV) —
+# fuera de scope de este workflow.
+#
+# Requisitos:
+#   - Secret GCP_INDEXING_CREDS (mismo que google-indexing-daily) con scope
+#     webmasters.readonly sobre la propiedad sc-domain:hacecuentas.com.
+
+on:
+  schedule:
+    # Diario 11:00 UTC = 08:00 ART. Después del low-traffic AR (5-7am)
+    # y antes del peak (9am+). CF Pages re-deploya en ~2-3 min si hay push.
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Ventana de días para GSC (default 28)'
+        required: false
+        default: '28'
+      top:
+        description: 'Cantidad de slugs en el output (default 12)'
+        required: false
+        default: '12'
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  refresh-popular:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install google-auth google-api-python-client
+
+      - name: Write GCP credentials
+        env:
+          GCP_CREDS: ${{ secrets.GCP_INDEXING_CREDS }}
+        run: |
+          if [ -z "$GCP_CREDS" ]; then
+            echo "::error::Falta el secret GCP_INDEXING_CREDS. Agregalo en Settings → Secrets → Actions."
+            exit 1
+          fi
+          mkdir -p /tmp/gcp
+          echo "$GCP_CREDS" > /tmp/gcp/creds.json
+          chmod 600 /tmp/gcp/creds.json
+
+      - name: Refresh popular-curated.json
+        env:
+          GOOGLE_INDEXING_CREDS: /tmp/gcp/creds.json
+        run: |
+          DAYS="${{ github.event.inputs.days || '28' }}"
+          TOP="${{ github.event.inputs.top || '12' }}"
+          python3 scripts/refresh-home-popular.py --days "$DAYS" --top "$TOP"
+
+      - name: Detect changes
+        id: diff
+        run: |
+          if git diff --quiet -- src/lib/popular-curated.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Sin cambios en popular-curated.json — no-op."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Cambios detectados:"
+            git --no-pager diff -- src/lib/popular-curated.json | head -40
+          fi
+
+      - name: Commit and push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/popular-curated.json
+          git commit -m "chore(popular): refresh GSC top 12 calcs AR ($(date -u +'%Y-%m-%d'))
+
+          Auto-refreshed por .github/workflows/refresh-popular-daily.yml
+          Fuente: GSC Search Analytics, ventana 28d, top 12 slugs AR root.
+          "
+          git push origin HEAD:main
+
+      - name: Open issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="🚨 refresh-popular-daily falló ($(date -u +'%Y-%m-%d'))"
+          BODY=$(cat <<EOF
+          El cron diario de refresh-home-popular falló.
+
+          **Workflow:** [\`${{ github.workflow }}\` run #${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          **Trigger:** ${{ github.event_name }}
+          **Fecha:** $(date -u +'%Y-%m-%d %H:%M UTC')
+
+          ## Causas típicas
+          1. **Credenciales GSC inválidas**: el secret \`GCP_INDEXING_CREDS\` puede haber expirado o perder permisos en sc-domain:hacecuentas.com.
+          2. **GSC API down / rate limit**: 5xx transitorio o quota agotada. Re-correr con workflow_dispatch.
+          3. **Sin datos en la ventana**: si GSC devuelve 0 rows, el script aborta sin escribir (protección contra borrar la lista).
+
+          ## Próximos pasos
+          - Revisar el log del run linkeado arriba.
+          - Verificar GSC API status en [GCP Console](https://console.cloud.google.com/apis/dashboard).
+          - Validar que el service account siga teniendo scope webmasters.readonly sobre hacecuentas.com.
+          EOF
+          )
+          EXISTING=$(gh issue list --label refresh-popular-failure --state open --json number --jq '.[0].number' || echo '')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY" --label refresh-popular-failure 2>/dev/null || \
+              gh issue create --title "$TITLE" --body "$BODY"
+          fi

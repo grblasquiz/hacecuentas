@@ -1,0 +1,375 @@
+---
+/**
+ * ResultContext — chips de equivalencia bajo el primary output.
+ *
+ * Toma el valor del primary (currency ARS) y muestra equivalencias en USD
+ * MEP, % inflación 12m, etc — para que el número no quede "pelado".
+ *
+ * Opt-in: la calc define `resultContext: { equivalencias: ["dolar-mep", ...] }`
+ * en su JSON. Si no, no renderiza nada.
+ *
+ * SSG inyecta el rate de dolar/inflación como data-attr; cliente computa
+ * la equivalencia cuando llega el evento hc-calc-result.
+ */
+import dolarData from "../data/live/dolar.json";
+import inflacionData from "../data/live/inflacion.json";
+
+export type EquivalenciaId = "dolar-mep" | "dolar-blue" | "dolar-oficial" | "inflacion-12m" | "salario-minimo";
+
+interface Props {
+  equivalencias: EquivalenciaId[];
+  /** Umbral mínimo del valor primary para mostrar el bloque. Default 1000. */
+  minValue?: number;
+  lang?: "es" | "en" | "pt";
+}
+
+const { equivalencias, minValue = 1000, lang = "es" } = Astro.props;
+
+// SMVM (Salario Mínimo Vital y Móvil) — Argentina. Hardcoded por ahora;
+// si se vuelve un dato vivo, mover a src/data/live/salarios.json.
+// Fuente: Resolución CNEPySMVM N° 6/2026 (vigente desde feb 2026): $322.200 mensual.
+const SMVM_2026 = 322200;
+
+const dolarMep = (dolarData.quotes as any)?.bolsa?.venta || 0;
+const dolarBlue = (dolarData.quotes as any)?.blue?.venta || 0;
+const dolarOficial = (dolarData.quotes as any)?.oficial?.venta || 0;
+const inflacion12m = (inflacionData as any).acumulado_12m_pct || 0;
+
+const dataAttrs = {
+  "data-dolar-mep": String(dolarMep),
+  "data-dolar-blue": String(dolarBlue),
+  "data-dolar-oficial": String(dolarOficial),
+  "data-inflacion-12m": String(inflacion12m),
+  "data-smvm": String(SMVM_2026),
+  "data-min-value": String(minValue),
+};
+
+const t = {
+  es: {
+    title: "Para tenerlo en contexto",
+    sub: "Equivalencias con el dato más reciente",
+  },
+  en: {
+    title: "For context",
+    sub: "Equivalences with latest data",
+  },
+  pt: {
+    title: "Para ter contexto",
+    sub: "Equivalências com dado mais recente",
+  },
+}[lang];
+---
+
+{equivalencias && equivalencias.length > 0 && (
+  <aside
+    class="result-context"
+    data-result-context
+    data-equivalencias={equivalencias.join(",")}
+    {...dataAttrs}
+    hidden
+    aria-label={t.title}
+  >
+    <div class="result-context-head">
+      <span class="result-context-title">{t.title}</span>
+      <span class="result-context-live">
+        <span class="result-context-dot" aria-hidden="true"></span>
+        <span>en vivo</span>
+      </span>
+    </div>
+    <div class="result-context-chips" data-result-context-chips></div>
+  </aside>
+)}
+
+<style>
+  .result-context {
+    margin-top: 1rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+    border-radius: var(--radius);
+    position: relative;
+    z-index: 1;
+  }
+  .result-context[hidden] {
+    display: none;
+  }
+  .result-context-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.625rem;
+  }
+  .result-context-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+  .result-context-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.6875rem;
+    color: var(--success);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .result-context-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: ctx-pulse 2s ease-in-out infinite;
+  }
+  @keyframes ctx-pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 var(--success-soft);
+    }
+    50% {
+      box-shadow: 0 0 0 5px transparent;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .result-context-dot {
+      animation: none;
+    }
+  }
+  .result-context-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .result-context-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.375rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    color: var(--text);
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+  .result-context-chip strong {
+    font-weight: 700;
+    color: var(--accent-strong);
+    letter-spacing: -0.01em;
+  }
+  html[data-theme="dark"] .result-context-chip strong {
+    color: var(--accent-strong);
+  }
+  .result-context-chip-label {
+    color: var(--text-subtle);
+    font-size: 0.75rem;
+  }
+  @media (max-width: 480px) {
+    .result-context {
+      padding: 0.75rem 0.875rem;
+    }
+    .result-context-chip {
+      padding: 0.35rem 0.625rem;
+      font-size: 0.75rem;
+    }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    function fmtMoney(n, currency) {
+      currency = currency || "$";
+      return (
+        currency +
+        n.toLocaleString("es-AR", { maximumFractionDigits: 0 })
+      );
+    }
+    function fmtUsd(n) {
+      if (n >= 1000) {
+        return (
+          "USD " +
+          n.toLocaleString("en-US", { maximumFractionDigits: 0 })
+        );
+      }
+      return "USD " + n.toFixed(1);
+    }
+    function fmtPct(n, d) {
+      d = d === undefined ? 1 : d;
+      return n.toFixed(d) + "%";
+    }
+
+    // Parse el contenido del primary result, intenta extraer un número ARS.
+    // IMPORTANTE: solo dispara para "valor limpio" tras compute (ej. "$498.000").
+    // Si el texto tiene narrativa (baseline pre-compute con varias frases y
+    // multiples montos), devuelve null para no calcular equivalencias falsas.
+    function parsePrimary(text) {
+      if (!text || typeof text !== "string") return null;
+      var trimmed = text.trim();
+      // Rechazar si tiene mas de 4 letras consecutivas (palabra real).
+      // El compute produce strings tipo "$498.000" o "1,2 años" - sin palabras.
+      if (/[a-záéíóúñ]{5,}/i.test(trimmed)) return null;
+      // Rechazar si es muy largo (> 50 chars probablemente narrativa).
+      if (trimmed.length > 50) return null;
+      // Limpia $, espacios, US$, EUR, USD prefix
+      var clean = trimmed
+        .replace(/\$|USD|US\$|EUR|€|ARS|\s/gi, "")
+        .replace(/[^\d,.\-]/g, "")
+        .trim();
+      if (!clean) return null;
+      // Formato AR: 1.234.567,89 → 1234567.89
+      var hasDot = clean.indexOf(".") !== -1;
+      var hasComma = clean.indexOf(",") !== -1;
+      if (hasDot && hasComma) {
+        clean = clean.replace(/\./g, "").replace(",", ".");
+      } else if (hasComma) {
+        clean = clean.replace(",", ".");
+      } else {
+        var parts = clean.split(".");
+        if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+          clean = clean.replace(/\./g, "");
+        }
+      }
+      var n = parseFloat(clean);
+      return isFinite(n) ? n : null;
+    }
+
+    function buildChip(label, valueHtml, title) {
+      var el = document.createElement("span");
+      el.className = "result-context-chip";
+      el.innerHTML =
+        '<span class="result-context-chip-label">' + label + "</span>" +
+        "<strong>" + valueHtml + "</strong>";
+      if (title) el.title = title;
+      return el;
+    }
+
+    function renderChips(host, value) {
+      var chipsHost = host.querySelector("[data-result-context-chips]");
+      if (!chipsHost) return;
+      chipsHost.innerHTML = "";
+
+      var equivStr = host.getAttribute("data-equivalencias") || "";
+      var equivs = equivStr.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+
+      var dolarMep = parseFloat(host.getAttribute("data-dolar-mep")) || 0;
+      var dolarBlue = parseFloat(host.getAttribute("data-dolar-blue")) || 0;
+      var dolarOficial = parseFloat(host.getAttribute("data-dolar-oficial")) || 0;
+      var inflacion12m = parseFloat(host.getAttribute("data-inflacion-12m")) || 0;
+      var smvm = parseFloat(host.getAttribute("data-smvm")) || 0;
+
+      equivs.forEach(function (id) {
+        var chip = null;
+        if (id === "dolar-mep" && dolarMep > 0) {
+          var usd = value / dolarMep;
+          chip = buildChip(
+            "≈",
+            fmtUsd(usd),
+            "Convertido al dólar MEP (" + fmtMoney(dolarMep) + ") — fuente DolarAPI/BYMA"
+          );
+        } else if (id === "dolar-blue" && dolarBlue > 0) {
+          var usdB = value / dolarBlue;
+          chip = buildChip(
+            "≈",
+            fmtUsd(usdB),
+            "Convertido al dólar blue (" + fmtMoney(dolarBlue) + ")"
+          );
+        } else if (id === "dolar-oficial" && dolarOficial > 0) {
+          var usdO = value / dolarOficial;
+          chip = buildChip(
+            "≈",
+            fmtUsd(usdO) + " of.",
+            "Convertido al dólar oficial (" + fmtMoney(dolarOficial) + ")"
+          );
+        } else if (id === "inflacion-12m" && inflacion12m > 0) {
+          // % del valor que se "come" la inflación anual: pure framing
+          chip = buildChip(
+            "inflación 12m",
+            fmtPct(inflacion12m, 1),
+            "Inflación interanual INDEC — para dimensionar el monto en el tiempo"
+          );
+        } else if (id === "salario-minimo" && smvm > 0) {
+          var ratio = value / smvm;
+          var ratioTxt;
+          if (ratio >= 1) {
+            ratioTxt = ratio.toFixed(1).replace(/\.0$/, "") + "× SMVM";
+          } else {
+            ratioTxt = Math.round(ratio * 100) + "% del SMVM";
+          }
+          chip = buildChip(
+            "vs",
+            ratioTxt,
+            "Comparado con el SMVM ($" +
+              smvm.toLocaleString("es-AR") +
+              " — Salario Mínimo Vital y Móvil)"
+          );
+        }
+        if (chip) chipsHost.appendChild(chip);
+      });
+
+      // Solo mostrar el host si quedó algún chip
+      if (chipsHost.children.length > 0) {
+        host.hidden = false;
+      } else {
+        host.hidden = true;
+      }
+    }
+
+    function init(host) {
+      var minValue = parseFloat(host.getAttribute("data-min-value")) || 1000;
+      var container = host.closest(".calc-container");
+      if (!container) return;
+      var primaryValueEl = container.querySelector(
+        ".result.primary [data-value]"
+      );
+      if (!primaryValueEl) return;
+
+      function recompute() {
+        var n = parsePrimary(primaryValueEl.textContent || "");
+        if (n === null || n < minValue) {
+          host.hidden = true;
+          return;
+        }
+        renderChips(host, n);
+      }
+
+      // 1) Observar mutaciones al primary value (cubre animateValue + textContent)
+      var obs = new MutationObserver(function () {
+        // requestAnimationFrame para evitar leer mid-tween
+        if ("requestAnimationFrame" in window) {
+          requestAnimationFrame(recompute);
+        } else {
+          recompute();
+        }
+      });
+      obs.observe(primaryValueEl, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+      });
+
+      // 2) Escuchar evento explícito post-compute (más confiable que el observer
+      //    porque dispara una vez al final, no por cada frame de la animación).
+      container.addEventListener("hc-calc-result", function () {
+        // pequeño delay para que termine animateValue
+        setTimeout(recompute, 700);
+      });
+
+      // 3) Estado inicial: si el SSG ya plantó un baseline numérico, intenta renderizar.
+      recompute();
+    }
+
+    function bootstrap() {
+      var hosts = document.querySelectorAll("[data-result-context]");
+      hosts.forEach(init);
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", bootstrap);
+    } else {
+      bootstrap();
+    }
+  })();
+</script>

@@ -16,8 +16,10 @@
  */
 interface Props {
   lang?: "es" | "en" | "pt";
+  /** Si la calc tiene calendarReminder, mostramos el botón "Agendar". */
+  showCalendar?: boolean;
 }
-const { lang = "es" } = Astro.props;
+const { lang = "es", showCalendar = false } = Astro.props;
 
 const t = {
   es: {
@@ -31,6 +33,8 @@ const t = {
     linkSub: "Con datos precargados",
     pdf: "Descargar PDF",
     pdfSub: "Con desglose completo",
+    calendar: "Agendar en calendario",
+    calendarSub: "Recordatorio .ics",
     reset: "Empezar de nuevo",
     close: "Cerrar",
   },
@@ -45,6 +49,8 @@ const t = {
     linkSub: "With data preloaded",
     pdf: "Download PDF",
     pdfSub: "Full breakdown",
+    calendar: "Add to calendar",
+    calendarSub: ".ics reminder",
     reset: "Start over",
     close: "Close",
   },
@@ -59,6 +65,8 @@ const t = {
     linkSub: "Com dados pré-carregados",
     pdf: "Baixar PDF",
     pdfSub: "Detalhamento completo",
+    calendar: "Adicionar ao calendário",
+    calendarSub: "Lembrete .ics",
     reset: "Recomeçar",
     close: "Fechar",
   },
@@ -141,6 +149,18 @@ const t = {
       <span>{t.pdfSub}</span>
     </span>
   </button>
+
+  {showCalendar && (
+    <button type="button" class="share-bottom-action share-bottom-action--calendar" data-action="calendar-delegate">
+      <span class="share-bottom-action-icon share-bottom-action-icon--cal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </span>
+      <span class="share-bottom-action-text">
+        <strong>{t.calendar}</strong>
+        <span>{t.calendarSub}</span>
+      </span>
+    </button>
+  )}
 
   <button type="button" class="share-bottom-action" data-action="reset">
     <span class="share-bottom-action-icon share-bottom-action-icon--reset">
@@ -396,6 +416,13 @@ const t = {
       // Cerrar al tocar una acción (después del click handler de Calculator)
       sheet.querySelectorAll('.share-bottom-action').forEach(function (btn) {
         btn.addEventListener('click', function () {
+          // calendar-delegate: hacemos click programático al .btn-share-calendar
+          // del share row (que tiene los data-attrs del .ics generator).
+          var action = btn.getAttribute('data-action');
+          if (action === 'calendar-delegate') {
+            var rowBtn = document.querySelector('.btn-share-calendar');
+            if (rowBtn) rowBtn.click();
+          }
           // pequeño delay para que el handler de Calculator (event delegation) procese primero
           setTimeout(close, 80);
         });
