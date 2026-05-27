@@ -5,7 +5,7 @@
 //  - Bypass: analytics, dominios externos (gtag, fonts.googleapis con request por separado)
 //  - Versionado por CACHE_VERSION: cambiar el número fuerza re-cache en deploy
 
-const CACHE_VERSION = 'hc-1779903393739';
+const CACHE_VERSION = 'hc-1779910206051';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const PAGES_CACHE = `${CACHE_VERSION}-pages`;
 const OFFLINE_URL = '/offline.html';
@@ -18,13 +18,16 @@ const PRECACHE_URLS = [
   '/manifest.webmanifest',
 ];
 
-// Dominios que NO queremos interceptar (analytics, fonts externos)
+// Dominios que NO queremos interceptar (analytics, ads, fonts externos)
 const BYPASS_HOSTS = [
   'www.googletagmanager.com',
   'www.google-analytics.com',
   'fonts.googleapis.com',
   'fonts.gstatic.com',
   'cdn.jsdelivr.net',
+  'resources.infolinks.com',
+  'cdn.infolinks.com',
+  'payload.infolinks.com',
 ];
 
 self.addEventListener('install', (event) => {
