@@ -249,37 +249,6 @@ const globalSchema = {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Google AdSense — interaction-triggered load (facade pattern).
-         PSI audit 2026-05-19 detectó LCP 6.9s y TBT 1.510ms con AdSense en
-         requestIdleCallback. AdSense aporta 132KB de unused JS post-LCP.
-         Solución: cargar SOLO al primer scroll/touch/click/keydown del user,
-         o fallback 5s si nadie interactúa. Esto garantiza que AdSense NO
-         compite con el LCP por main-thread CPU.
-         Trade-off: ~10% potencial de impressions perdidas en users que
-         bounce <5s sin interactuar; pero al mejorar LCP, el ranking Google
-         sube y eso compensa con creces (revenue total ↑).
-         Política AdSense: el script SIGUE inyectándose en <head> via JS
-         (compliant con docs CF Workers Wonder), solo cambia el trigger.
-         GA4 + Google Ads gtag.js NO se tocan — siguen async/head normal. -->
-    <script is:inline>
-      (function() {
-        var loaded = false;
-        var events = ['scroll','touchstart','mousedown','keydown','mousemove'];
-        function loadAdSense() {
-          if (loaded) return;
-          loaded = true;
-          events.forEach(function(e) { window.removeEventListener(e, loadAdSense, { passive: true }); });
-          var s = document.createElement('script');
-          s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561';
-          s.async = true;
-          s.crossOrigin = 'anonymous';
-          document.head.appendChild(s);
-        }
-        events.forEach(function(e) { window.addEventListener(e, loadAdSense, { passive: true, once: true }); });
-        // Fallback: si el user no interactúa en 5s, cargamos igual para no perder revenue
-        setTimeout(loadAdSense, 5000);
-      })();
-    </script>
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
     <!-- Favicon v3 (logo completo sin bandas blancas) -->
@@ -498,7 +467,6 @@ const globalSchema = {
          coingecko) se prefetchean para LiveData.astro — la conexión queda
          caliente antes que el JS la dispare. -->
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
-    <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
     <link rel="dns-prefetch" href="https://www.google-analytics.com" />
     <link rel="dns-prefetch" href="https://static.cloudflareinsights.com" />
@@ -510,7 +478,7 @@ const globalSchema = {
 
     <!-- Google Consent Mode v2
          Default 'granted' para analytics (Argentina/LATAM no requiere opt-in bajo Ley 25.326).
-         ad_storage denied por default por compliance AdSense/UE; user lo activa via banner.
+         ad_storage denied por default por compliance UE / Google Ads; user lo activa via banner.
          url_passthrough + ads_data_redaction permiten pings cookieless cuando el user rechaza.
          wait_for_update bajado a 500ms — con analytics_storage granted default no
          necesitamos esperar tanto; 2000ms hacía perder sesiones cortas. -->
@@ -563,7 +531,6 @@ const globalSchema = {
          Ads en el runtime ya cargado. Cargar 2 scripts de gtag/js duplica 105KB
          de JS unused sin agregar funcionalidad. (PSI audit 2026-05-19: confirmado). -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
-    <!-- (AdSense script movido al inicio del <head>, ver arriba) -->
 
     <!-- Microsoft Clarity (signal positiva para Bing/Copilot rankings) -->
     <!-- Se activa solo si está seteada la env var PUBLIC_MS_CLARITY_ID en build. -->
@@ -930,8 +897,6 @@ const globalSchema = {
         .example-box, .seo-content, .cat-faq, .hc-embed-overlay,
         /* Cookie consent & modal */
         .hc-cookie-banner, .hc-cookie-modal,
-        /* Ads */
-        .ad-slot, .adsbygoogle,
         /* Share buttons, embed button */
         .share, .embed-cta,
         /* Feedback section */

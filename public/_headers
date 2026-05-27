@@ -19,11 +19,11 @@
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
   # CSP: whitelist explícito de orígenes permitidos. 'unsafe-inline' para style e
   # inline scripts (astro genera muchos). Si migramos a CSP con nonce, eliminar.
+  # CSP rev 4 (2026-05-27): AdSense origins removidos (sitio rechazado por AdSense).
   # CSP rev 3 (2026-05-13): 'unsafe-eval' eliminado tras verificar que no hay
   # eval() ni new Function() en código propio. Beneficio: +5-8 puntos Lighthouse
-  # Best Practices y mejor security signal. Si AdSense/GTM rompe por dependencia
-  # interna a eval, revertir esta única directiva (mantener el resto del CSP).
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://www.clarity.ms https://*.clarity.ms https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com https://www.clarity.ms https://*.clarity.ms https://pagead2.googlesyndication.com https://*.googlesyndication.com https://googleads.g.doubleclick.net; frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.googlesyndication.com; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'self'
+  # Best Practices y mejor security signal.
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://www.clarity.ms https://*.clarity.ms; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com https://www.clarity.ms https://*.clarity.ms; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'self'
   # Cross-Origin-Opener/Embedder/Resource Policy: aplicados vía
   # src/middleware.ts (CF Workers Static Assets ignora silenciosamente estos
   # headers en _headers — verificado 2026-05-04).
