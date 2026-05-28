@@ -12,6 +12,14 @@ import ClusterHub from '../components/ClusterHub.astro';
 import CalendarioFeriados from '../components/CalendarioFeriados.astro';
 import GaugeImcPediatrico from '../components/GaugeImcPediatrico.astro';
 import GaugeEmbarazo from '../components/GaugeEmbarazo.astro';
+import InteractiveBmiTable from '../components/InteractiveBmiTable.astro';
+import ImcUnitsHook from '../components/ImcUnitsHook.astro';
+import ImcResultCta from '../components/ImcResultCta.astro';
+import HealthCalcsSticky from '../components/HealthCalcsSticky.astro';
+import HealthHub from '../components/HealthHub.astro';
+import DateRangePresetsTable from '../components/DateRangePresetsTable.astro';
+import IclVsIpcVsUvaTable from '../components/IclVsIpcVsUvaTable.astro';
+import PediatricBmiChart from '../components/PediatricBmiChart.astro';
 import ScrollToTop from '../components/ScrollToTop.astro';
 import { findClusterForSlug } from '../lib/clusters';
 import { md, mdInline } from '../lib/markdown';
@@ -458,6 +466,60 @@ const schemaGraph: any[] = [schemaHowTo, schemaBreadcrumb, schemaApp];
 if (schemaFAQ) schemaGraph.push(schemaFAQ);
 if (schemaArticle) schemaGraph.push(schemaArticle);
 
+// MedicalWebPage — sólo para category=salud. Suma a SoftwareApplication/Article
+// (no reemplaza). Le dice a Google/Bing que es una página sanitaria y la trata
+// distinto en SERP de salud. Sin medicalSpecialty para no overreach (claim que
+// no podemos respaldar sin reviewer matriculado).
+if (calc.category === 'salud') {
+  const MEDICAL_CONDITION_MAP: Record<string, { name: string; sameAs?: string }> = {
+    'calculadora-imc': { name: 'Body mass index', sameAs: 'https://www.wikidata.org/wiki/Q170481' },
+    'calculadora-indice-masa-corporal-pediatrico': { name: 'Body mass index', sameAs: 'https://www.wikidata.org/wiki/Q170481' },
+    'calculadora-embarazo': { name: 'Pregnancy', sameAs: 'https://www.wikidata.org/wiki/Q47912' },
+    'calculadora-ovulacion-dias-fertiles': { name: 'Ovulation', sameAs: 'https://www.wikidata.org/wiki/Q210380' },
+    'calculadora-fecha-probable-parto': { name: 'Estimated date of delivery', sameAs: 'https://www.wikidata.org/wiki/Q5404105' },
+    'calculadora-fecha-probable-parto-ultima-menstruacion': { name: 'Estimated date of delivery', sameAs: 'https://www.wikidata.org/wiki/Q5404105' },
+    'calculadora-semanas-embarazo': { name: 'Gestational age', sameAs: 'https://www.wikidata.org/wiki/Q3503590' },
+    'calculadora-semanas-gestacion-ecografia': { name: 'Gestational age', sameAs: 'https://www.wikidata.org/wiki/Q3503590' },
+    'calculadora-peso-ideal-bebe-mes-percentil': { name: 'Infant growth', sameAs: 'https://www.wikidata.org/wiki/Q176916' },
+    'calculadora-dosis-paracetamol-pediatrico': { name: 'Paracetamol', sameAs: 'https://www.wikidata.org/wiki/Q57055' },
+    'calculadora-filtrado-glomerular-tfg-creatinina': { name: 'Glomerular filtration rate', sameAs: 'https://www.wikidata.org/wiki/Q5570538' },
+    'calculadora-clearance-creatinina-cockcroft-gault': { name: 'Creatinine clearance', sameAs: 'https://www.wikidata.org/wiki/Q1130003' },
+    'calculadora-peso-ideal': { name: 'Ideal body weight', sameAs: 'https://www.wikidata.org/wiki/Q1349589' },
+    'calculadora-calorias-diarias-tdee': { name: 'Basal metabolic rate', sameAs: 'https://www.wikidata.org/wiki/Q815273' },
+    'calculadora-grasa-corporal-pliegues': { name: 'Body fat percentage', sameAs: 'https://www.wikidata.org/wiki/Q812534' },
+    'calculadora-proteina-gramos-por-peso-actividad': { name: 'Protein (nutrient)', sameAs: 'https://www.wikidata.org/wiki/Q8047' },
+    'calculadora-agua-diaria-necesaria': { name: 'Drinking water', sameAs: 'https://www.wikidata.org/wiki/Q42278' },
+  };
+  const medicalCondition = MEDICAL_CONDITION_MAP[calc.slug];
+  schemaGraph.push({
+    '@context': 'https://schema.org',
+    '@type': 'MedicalWebPage',
+    url: `https://hacecuentas.com/${calc.slug}`,
+    name: calc.h1,
+    description: snippetDescription,
+    inLanguage: schemaLang,
+    isAccessibleForFree: true,
+    lastReviewed: dateModified.split('T')[0],
+    audience: {
+      '@type': 'MedicalAudience',
+      audienceType: 'Patient',
+    },
+    ...(medicalCondition ? {
+      about: {
+        '@type': 'MedicalCondition',
+        name: medicalCondition.name,
+        ...(medicalCondition.sameAs ? { sameAs: medicalCondition.sameAs } : {}),
+      },
+    } : {}),
+    citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+    publisher: {
+      '@type': 'Organization',
+      name: 'Hacé Cuentas',
+      url: 'https://hacecuentas.com',
+    },
+  });
+}
+
 // Dataset schema — RESTRINGIDO a calcs con datos vivos (auto-api / auto-scrape).
 // Schema.org/Dataset es para CONJUNTOS DE DATOS CURADOS (escala ARCA, tasas
 // BCRA, IPC INDEC, etc.), no para cualquier calc con tabla en explanation.
@@ -488,7 +550,7 @@ if (isLiveDataCalc && hasTable) {
       url: 'https://hacecuentas.com',
     },
     dateModified,
-    temporalCoverage: `${tempStart}/..`,  // ISO 8601 interval, abierto al futuro
+    temporalCoverage: `${tempStart}/`,  // ISO 8601 open-ended interval (slash sin terminador, per schema.org)
     keywords: datasetKeywords,
     license: 'https://creativecommons.org/licenses/by/4.0/',
   });
@@ -872,6 +934,27 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           <GaugeEmbarazo />
         )}
 
+        {calc.slug === 'calculadora-imc' && (
+          <>
+            <ImcResultCta />
+            <InteractiveBmiTable />
+            <ImcUnitsHook />
+            <HealthCalcsSticky />
+          </>
+        )}
+
+        {calc.slug === 'dias-entre-dos-fechas' && (
+          <DateRangePresetsTable />
+        )}
+
+        {calc.slug === 'calculadora-actualizacion-alquiler-icl' && (
+          <IclVsIpcVsUvaTable />
+        )}
+
+        {calc.slug === 'calculadora-indice-masa-corporal-pediatrico' && (
+          <PediatricBmiChart />
+        )}
+
         {downloads.length > 0 && (
           <aside class="calc-downloads" aria-label="Descargas">
             <div class="calc-downloads-head">
@@ -928,6 +1011,17 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
         )}
 
         <p class="intro calc-intro" set:html={mdInline(calc.intro)}></p>
+
+        {calc.audienceRedirect && (
+          <aside class="audience-redirect" role="note" aria-label={calc.audienceRedirect.title}>
+            <span class="ar-icon" aria-hidden="true">{calc.audienceRedirect.icon}</span>
+            <div class="ar-body">
+              <strong>{calc.audienceRedirect.title}</strong>
+              <p set:html={mdInline(calc.audienceRedirect.body)}></p>
+              <a href={calc.audienceRedirect.ctaHref} class="ar-cta">{calc.audienceRedirect.ctaText}</a>
+            </div>
+          </aside>
+        )}
 
         {audience === 'AR' && (
           <aside class="audience-notice" role="note" aria-label="Aviso sobre la audiencia de esta calculadora">
@@ -1021,6 +1115,10 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             </div>
             <Fragment set:html={`<p>${md(calc.explanation)}</p>`} />
           </section>
+        )}
+
+        {calc.slug === 'calculadora-imc' && (
+          <HealthHub />
         )}
 
         {calc.faq && calc.faq.length > 0 && (
@@ -1431,6 +1529,45 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
     font-weight: 600;
     margin-bottom: 0.125rem;
   }
+
+  /* Audience redirect — bloque visible que redirige a una calc específica
+     para una audiencia distinta (ej: niños, embarazo). Se renderiza arriba
+     del fold para que el usuario vea la opción correcta antes de calcular. */
+  .audience-redirect {
+    display: flex;
+    gap: 0.875rem;
+    align-items: flex-start;
+    margin: 0.75rem 0 1.25rem;
+    padding: 0.875rem 1.125rem;
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg-card));
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+  .audience-redirect .ar-icon {
+    flex-shrink: 0;
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+  .audience-redirect .ar-body { color: var(--text-muted); }
+  .audience-redirect strong {
+    display: block;
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  .audience-redirect p {
+    margin: 0 0 0.5rem;
+  }
+  .audience-redirect .ar-cta {
+    display: inline-block;
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .audience-redirect .ar-cta:hover { text-decoration: underline; }
 
   .meta-reviewer a {
     color: var(--accent);
