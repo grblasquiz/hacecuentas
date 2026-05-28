@@ -17,7 +17,7 @@ export interface Props {
   canonical?: string;
   schema?: object;
   image?: string;
-  audience?: 'AR' | 'MX' | 'CL' | 'CO' | 'ES' | 'BO' | 'PE' | 'UY' | 'BR' | 'global'; // país-específica o 'global'
+  audience?: 'AR' | 'MX' | 'CL' | 'CO' | 'ES' | 'BO' | 'PE' | 'UY' | 'BR' | 'US' | 'GB' | 'CA' | 'AU' | 'global'; // país-específica o 'global'
   lang?: 'es' | 'en' | 'pt';
   hreflang?: Array<{lang: string, href: string}>;
   noindex?: boolean;
@@ -68,10 +68,16 @@ const _LANG_BY_AUDIENCE: Record<string, [string, string]> = {
   AR: ['es-AR', 'es_AR'], MX: ['es-MX', 'es_MX'], CL: ['es-CL', 'es_CL'],
   CO: ['es-CO', 'es_CO'], ES: ['es-ES', 'es_ES'], BO: ['es-BO', 'es_BO'],
   PE: ['es-PE', 'es_PE'], UY: ['es-UY', 'es_UY'], BR: ['pt-BR', 'pt_BR'],
+  US: ['en-US', 'en_US'], GB: ['en-GB', 'en_GB'], CA: ['en-CA', 'en_CA'],
+  AU: ['en-AU', 'en_AU'],
   global: ['es', 'es_419'],
 };
 const _audByLocale = _LANG_BY_AUDIENCE[audience] || _LANG_BY_AUDIENCE.global;
-const htmlLang = lang === 'en' ? 'en' : lang === 'pt' ? 'pt-BR' : _audByLocale[0];
+// htmlLang: para lang='en' usar el locale del audience si existe (en-US, en-GB, etc.)
+// Si el audience no es EN-mercado pero lang='en', default a en-US (mercado prioritario Bing).
+const htmlLang = lang === 'en'
+  ? (['US','GB','CA','AU'].includes(audience) ? _audByLocale[0] : 'en-US')
+  : lang === 'pt' ? 'pt-BR' : _audByLocale[0];
 
 // Geo targeting por audience — Bing Local + Yandex usan; Google ignora.
 const _GEO_BY_AUDIENCE: Record<string, {region: string; placename: string; icbm: string; country: string}> = {
@@ -81,9 +87,17 @@ const _GEO_BY_AUDIENCE: Record<string, {region: string; placename: string; icbm:
   CL: { region: 'CL', placename: 'Santiago, Chile', icbm: '-33.4489, -70.6693', country: 'Chile' },
   CO: { region: 'CO', placename: 'Bogotá, Colombia', icbm: '4.7110, -74.0721', country: 'Colombia' },
   BR: { region: 'BR', placename: 'São Paulo, Brasil', icbm: '-23.5505, -46.6333', country: 'Brazil' },
+  US: { region: 'US', placename: 'Washington, DC, United States', icbm: '38.8951, -77.0364', country: 'United States' },
+  GB: { region: 'GB', placename: 'London, United Kingdom', icbm: '51.5074, -0.1278', country: 'United Kingdom' },
+  CA: { region: 'CA', placename: 'Ottawa, Canada', icbm: '45.4215, -75.6972', country: 'Canada' },
+  AU: { region: 'AU', placename: 'Canberra, Australia', icbm: '-35.2809, 149.1300', country: 'Australia' },
 };
-const _geo = _GEO_BY_AUDIENCE[audience] || _GEO_BY_AUDIENCE.AR;
-const ogLocale = lang === 'en' ? 'en_US' : lang === 'pt' ? 'pt_BR' : _audByLocale[1];
+// _geo default: si lang='en' default a US (mercado Bing prioritario); pt → BR; es → AR.
+const _geo = _GEO_BY_AUDIENCE[audience] ||
+  (lang === 'en' ? _GEO_BY_AUDIENCE.US : lang === 'pt' ? _GEO_BY_AUDIENCE.BR : _GEO_BY_AUDIENCE.AR);
+const ogLocale = lang === 'en'
+  ? (['US','GB','CA','AU'].includes(audience) ? _audByLocale[1] : 'en_US')
+  : lang === 'pt' ? 'pt_BR' : _audByLocale[1];
 const schemaLang = htmlLang;
 
 // Schema.org WebSite + Organization global (siempre presente)
@@ -251,29 +265,15 @@ const globalSchema = {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     {/* Bidvertiser site ownership verification (PID 2104912) */}
     <!-- Bidvertiser2104912 -->
-    {/* Infolinks — facade pattern lazy load (mismo approach que tenía AdSense).
-        PID 3445727 (publisher Hacé Cuentas). Carga al primer scroll/touch/click
-        o fallback 5s. Protege LCP en recovery post Core Update. https forzado
-        porque el snippet oficial de Infolinks viene en http (mixed content). */}
-    <script is:inline>
-      (function() {
-        var loaded = false;
-        var events = ['scroll','touchstart','mousedown','keydown','mousemove'];
-        function loadInfolinks() {
-          if (loaded) return;
-          loaded = true;
-          events.forEach(function(e) { window.removeEventListener(e, loadInfolinks, { passive: true }); });
-          window.infolinks_pid = 3445727;
-          window.infolinks_wsid = 0;
-          var s = document.createElement('script');
-          s.src = 'https://resources.infolinks.com/js/infolinks_main.js';
-          s.async = true;
-          document.head.appendChild(s);
-        }
-        events.forEach(function(e) { window.addEventListener(e, loadInfolinks, { passive: true, once: true }); });
-        setTimeout(loadInfolinks, 5000);
-      })();
-    </script>
+    {/* Speculation Rules vacío — Chrome lo respeta y NO hace prefetch
+        automático con header `Sec-Purpose: prefetch`. CF Pages rechaza esos
+        prefetches con 503 (`cf-speculation-refused: disabled for worker
+        requests`) porque todas nuestras rutas pasan por Worker (middleware +
+        wrapper.mjs para redirects/410). Esto ensucia consola y desperdicia
+        bandwidth sin servir prefetch real. Astro ClientRouter sigue
+        haciendo su propio prefetch on-hover vía fetch normal (sin header
+        Sec-Purpose). */}
+    <script type="speculationrules" is:inline set:html={`{"prefetch":[]}`}></script>
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
     <!-- Favicon v3 (logo completo sin bandas blancas) -->

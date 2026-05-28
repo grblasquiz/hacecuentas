@@ -7,6 +7,9 @@ import Footer from '../../components/Footer.astro';
 import Calculator from '../../components/Calculator.astro';
 import RelatedCalcs from '../../components/RelatedCalcs.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import InteractiveBmiTable from '../../components/InteractiveBmiTable.astro';
+import ImcUnitsHook from '../../components/ImcUnitsHook.astro';
+import ImcResultCta from '../../components/ImcResultCta.astro';
 import { md, mdInline } from '../../lib/markdown';
 import ogManifest from '../../lib/og-manifest.json';
 import { findMentions, findPrimaryAbout } from '../../lib/wikidata-entities';
@@ -74,8 +77,15 @@ const datePublished: string | undefined = typeof _rawDatePub === 'string' && /^\
   ? (_rawDatePub.length === 10 ? new Date(_rawDatePub + 'T00:00:00Z').toISOString() : _rawDatePub)
   : undefined;
 
-// audience: 'AR' = Argentina-specific; 'global' (default) = worldwide
-const audience: 'AR' | 'global' = calc.audience === 'AR' ? 'AR' : 'global';
+// audience: 'AR' = Argentina-specific; 'US' = United States (default for EN content,
+// Bing US mercado prioritario); 'global' = worldwide (catch-all). El default a 'US'
+// fixea geo.region=AR bug que estaba afectando ranking en Bing US y Google US.
+const audience: 'AR' | 'US' | 'global' = calc.audience === 'AR'
+  ? 'AR'
+  : calc.audience === 'global'
+  ? 'global'
+  : 'US';
+const enLocale = 'en-US';
 
 const schemaHowTo = {
   '@context': 'https://schema.org',
@@ -83,7 +93,7 @@ const schemaHowTo = {
   name: calc.h1,
   description: calc.description,
   totalTime: 'PT1M',
-  inLanguage: 'en',
+  inLanguage: enLocale,
   step: calc.fields.map((f: any, i: number) => ({
     '@type': 'HowToStep',
     position: i + 1,
@@ -133,7 +143,7 @@ const schemaApp = {
   applicationSubCategory: 'Calculator',
   operatingSystem: 'Any (Web)',
   browserRequirements: 'Requires JavaScript. Requires HTML5.',
-  inLanguage: 'en',
+  inLanguage: enLocale,
   isAccessibleForFree: true,
   datePublished,
   dateModified,
@@ -179,7 +189,7 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   description: calc.description,
   url: `https://hacecuentas.com/en/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/en/${calc.slug}`,
-  inLanguage: 'en',
+  inLanguage: enLocale,
   datePublished,
   dateModified,
   author: {
@@ -220,7 +230,7 @@ if (calc.category === 'medio-ambiente') {
     name: calc.h1,
     description: schemaDescription,
     url: `https://hacecuentas.com/en/${calc.slug}`,
-    inLanguage: 'en',
+    inLanguage: enLocale,
     about: [
       { '@type': 'Thing', name: 'Climate change', sameAs: 'https://www.wikidata.org/wiki/Q7942' },
       { '@type': 'Thing', name: 'Sustainability', sameAs: 'https://www.wikidata.org/wiki/Q219416' },
@@ -236,19 +246,34 @@ if (calc.category === 'medio-ambiente') {
 }
 
 if (calc.category === 'salud') {
+  const MEDICAL_CONDITION_MAP_EN: Record<string, { name: string; sameAs?: string }> = {
+    'bmi-calculator': { name: 'Body mass index', sameAs: 'https://www.wikidata.org/wiki/Q170481' },
+    'child-bmi-percentile': { name: 'Body mass index', sameAs: 'https://www.wikidata.org/wiki/Q170481' },
+    'pregnancy-weight-gain-bmi': { name: 'Pregnancy', sameAs: 'https://www.wikidata.org/wiki/Q47912' },
+    'bmi-seniors-65-plus-table': { name: 'Sarcopenia', sameAs: 'https://www.wikidata.org/wiki/Q1407294' },
+  };
+  const medicalCondition = MEDICAL_CONDITION_MAP_EN[calc.slug];
   schemaGraph.push({
     '@type': 'MedicalWebPage',
     name: calc.h1,
     description: schemaDescription,
     url: `https://hacecuentas.com/en/${calc.slug}`,
-    inLanguage: 'en',
+    inLanguage: enLocale,
+    isAccessibleForFree: true,
     datePublished: (datePublished || dateModified).split('T')[0],
     dateModified: dateModified.split('T')[0],
     lastReviewed: (calc.lastReviewed || dateModified.split('T')[0]),
     audience: { '@type': 'MedicalAudience', audienceType: 'Patient' },
     medicalAudience: 'Patient',
+    ...(medicalCondition ? {
+      about: {
+        '@type': 'MedicalCondition',
+        name: medicalCondition.name,
+        ...(medicalCondition.sameAs ? { sameAs: medicalCondition.sameAs } : {}),
+      },
+    } : {}),
+    citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
     publisher: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
-    specialty: { '@type': 'MedicalSpecialty', name: 'General medicine' },
   });
 }
 if (calc.category === 'educacion') {
@@ -257,7 +282,7 @@ if (calc.category === 'educacion') {
     name: calc.h1,
     description: schemaDescription,
     url: `https://hacecuentas.com/en/${calc.slug}`,
-    inLanguage: 'en',
+    inLanguage: enLocale,
     learningResourceType: 'Calculator',
     educationalUse: 'Practice',
     audience: { '@type': 'EducationalAudience', educationalRole: 'student' },
@@ -315,12 +340,18 @@ const esSlug = calc.esSlug;
 // Check if this calc has a PT version (lookup by esSlug in calcs-pt)
 const ptModulesHreflang = import.meta.glob<any>('../../content/calcs-pt/*.json', { eager: true });
 const ptCalc: any = Object.values(ptModulesHreflang).map((m: any) => m.default || m).find((c: any) => c.esSlug === esSlug);
-const hreflangTags = esSlug ? [
-  { lang: 'es-AR', href: `https://hacecuentas.com/${esSlug}` },
-  { lang: 'en', href: `https://hacecuentas.com/en/${calc.slug}` },
+// Hreflang: en-US específico (mejor que 'en' genérico para Bing/Google US),
+// + en fallback para otros mercados EN, + ES/PT equivalentes, + x-default a la
+// versión EN de esta página (no a ES) — la EN sirve al user "sin preferencia clara"
+// mejor que ES, que es geo-targeted AR.
+const enCanonical = `https://hacecuentas.com/en/${calc.slug}`;
+const hreflangTags = [
+  { lang: 'en-US', href: enCanonical },
+  { lang: 'en', href: enCanonical },
+  ...(esSlug ? [{ lang: 'es-AR', href: `https://hacecuentas.com/${esSlug}` }] : []),
   ...(ptCalc ? [{ lang: 'pt-BR', href: `https://hacecuentas.com/pt/${ptCalc.slug}` }] : []),
-  { lang: 'x-default', href: `https://hacecuentas.com/${esSlug}` },
-] : undefined;
+  { lang: 'x-default', href: enCanonical },
+];
 ---
 
 <Layout
@@ -379,6 +410,14 @@ const hreflangTags = esSlug ? [
           <Calculator config={calc} lang="en" />
         </section>
 
+        {calc.slug === 'bmi-calculator' && (
+          <>
+            <ImcResultCta />
+            <InteractiveBmiTable lang="en" />
+            <ImcUnitsHook />
+          </>
+        )}
+
         <div class="calc-actions" id="calc-actions">
           <div class="ca-feedback" data-state="ask">
             <span class="ca-q">Was this calculator helpful?</span>
@@ -406,6 +445,17 @@ const hreflangTags = esSlug ? [
         </div>
 
         <p class="intro" set:html={mdInline(calc.intro)}></p>
+
+        {calc.audienceRedirect && (
+          <aside class="audience-redirect" role="note" aria-label={calc.audienceRedirect.title}>
+            <span class="ar-icon" aria-hidden="true">{calc.audienceRedirect.icon}</span>
+            <div class="ar-body">
+              <strong>{calc.audienceRedirect.title}</strong>
+              <p set:html={mdInline(calc.audienceRedirect.body)}></p>
+              <a href={calc.audienceRedirect.ctaHref} class="ar-cta">{calc.audienceRedirect.ctaText}</a>
+            </div>
+          </aside>
+        )}
 
         {audience === 'AR' && (
           <aside class="audience-notice" role="note" aria-label="Audience notice for this calculator">
@@ -869,6 +919,40 @@ const hreflangTags = esSlug ? [
     font-weight: 600;
     margin-bottom: 0.125rem;
   }
+
+  .audience-redirect {
+    display: flex;
+    gap: 0.875rem;
+    align-items: flex-start;
+    margin: 0.75rem 0 1.25rem;
+    padding: 0.875rem 1.125rem;
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg-card));
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+  .audience-redirect .ar-icon {
+    flex-shrink: 0;
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+  .audience-redirect .ar-body { color: var(--text-muted); }
+  .audience-redirect strong {
+    display: block;
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  .audience-redirect p { margin: 0 0 0.5rem; }
+  .audience-redirect .ar-cta {
+    display: inline-block;
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .audience-redirect .ar-cta:hover { text-decoration: underline; }
 
   .meta-reviewer a {
     color: var(--accent);
