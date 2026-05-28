@@ -431,7 +431,22 @@ const schemaApp = {
 };
 
 // Article schema para categorías YMYL (Finanzas, Salud) y cualquier calc con explanation extensa
-const isYMYL = ['finanzas', 'salud', 'negocios', 'mascotas'].includes(calc.category);
+const isYMYL = ['finanzas', 'salud', 'negocios', 'mascotas', 'familia', 'impuestos'].includes(calc.category);
+// YMYL disclaimer auto-inject: si categoría sensible Y explanation no menciona ya
+// "consultá con", "no reemplaza", "disclaimer" o similar, agregar bloque visible.
+// Refuerza E-E-A-T trust signals para Bing/Gemini/Perplexity AI citations.
+const _explLower = ((calc.explanation || '') + (calc.intro || '') + (calc.keyTakeaway || '')).toLowerCase();
+const _hasDisclaimer = ['disclaimer','orientativ','no reemplaz','consultá con','consulta con','profesional matriculado','asesor financiero','contador público','profesional de la salud','no constituye asesoramiento','no sustituye'].some(kw => _explLower.includes(kw));
+const _disclaimerByCategory: Record<string, { who: string; verb: string }> = {
+  salud:     { who: 'médico, nutricionista o profesional de la salud matriculado', verb: 'reemplazan la consulta médica profesional' },
+  mascotas:  { who: 'veterinario matriculado', verb: 'reemplazan la consulta veterinaria' },
+  finanzas:  { who: 'asesor financiero registrado en la CNV o contador público matriculado', verb: 'constituyen asesoramiento financiero individualizado' },
+  impuestos: { who: 'contador público matriculado o asesor fiscal', verb: 'constituyen asesoramiento tributario' },
+  negocios:  { who: 'contador público, abogado o asesor matriculado', verb: 'constituyen asesoramiento profesional' },
+  familia:   { who: 'profesional matriculado del área correspondiente', verb: 'reemplazan asesoramiento personalizado' },
+};
+const _disc = _disclaimerByCategory[calc.category];
+const showYmylDisclaimer = isYMYL && !_hasDisclaimer && _disc;
 const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 1500)) ? {
   '@context': 'https://schema.org',
   '@type': 'Article',
@@ -1228,6 +1243,20 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           </section>
         )}
 
+        {showYmylDisclaimer && _disc && (
+          <aside class="ymyl-disclaimer" role="note" aria-label="Aviso profesional">
+            <p>
+              <strong>Disclaimer:</strong> Los resultados son orientativos y no {_disc.verb}.
+              Antes de tomar decisiones con impacto, consultá con un {_disc.who}.
+            </p>
+            <p class="ymyl-disclaimer-meta">
+              Contenido revisado según nuestra
+              {' '}<a href="/politica-editorial" rel="noopener">política editorial</a>{' '}
+              y <a href="/metodologia" rel="noopener">metodología</a>. Fuentes citadas al pie.
+            </p>
+          </aside>
+        )}
+
         {calc.slug === 'calculadora-imc' && (
           <HealthHub />
         )}
@@ -1615,6 +1644,22 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
   }
 
   /* Audience notice — banda visual para calculadoras AR-only */
+  .ymyl-disclaimer {
+    margin: 1.5rem 0 1rem;
+    padding: 0.875rem 1.125rem;
+    background: var(--warning-soft, color-mix(in srgb, #f59e0b 10%, transparent));
+    border-left: 3px solid var(--warning, #f59e0b);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+  .ymyl-disclaimer p { margin: 0 0 0.5rem; }
+  .ymyl-disclaimer p:last-child { margin-bottom: 0; }
+  .ymyl-disclaimer strong { color: var(--text); }
+  .ymyl-disclaimer-meta { font-size: 0.8125rem; opacity: 0.85; }
+  .ymyl-disclaimer a { color: var(--accent); text-decoration: underline; }
+
   .audience-notice {
     display: flex;
     gap: 0.875rem;
