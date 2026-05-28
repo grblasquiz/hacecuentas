@@ -1,6 +1,7 @@
 {
   "slug": "bmi-calculator",
   "esSlug": "calculadora-imc",
+  "lastReviewed": "2026-05-27",
   "title": "BMI Calculator 2026 — Body Mass Index by WHO Standards | Hacé Cuentas",
   "h1": "BMI Calculator (Body Mass Index)",
   "description": "Calculate your BMI with weight and height: WHO category, healthy weight range, and how far you are from it. Instant results, no sign-up required.",
@@ -33,23 +34,73 @@
       "id": "peso",
       "label": "Weight",
       "type": "number",
-      "suffix": "kg",
-      "placeholder": "70",
-      "min": 20,
-      "max": 300,
+      "suffix": "lb",
+      "placeholder": "154",
+      "min": 44,
+      "max": 660,
       "step": 0.1,
-      "required": true
+      "required": true,
+      "help": "Body weight in lb (or kg if you switch to metric)."
     },
     {
       "id": "altura",
       "label": "Height",
       "type": "number",
-      "suffix": "cm",
-      "placeholder": "170",
-      "min": 100,
-      "max": 250,
+      "suffix": "in",
+      "placeholder": "67",
+      "min": 40,
+      "max": 100,
+      "step": 0.1,
+      "required": true,
+      "help": "Height in in (or cm if you switch to metric)."
+    },
+    {
+      "id": "cintura",
+      "label": "Waist (optional)",
+      "type": "number",
+      "suffix": "in",
+      "placeholder": "33",
+      "min": 16,
+      "max": 80,
+      "step": 0.5,
+      "advanced": true,
+      "help": "Measure horizontally at navel level, not tight. If provided, we also compute waist-to-height ratio (WHtR) and cardiometabolic risk."
+    },
+    {
+      "id": "edad",
+      "label": "Age (optional)",
+      "type": "number",
+      "suffix": "years",
+      "placeholder": "35",
+      "min": 18,
+      "max": 110,
       "step": 1,
-      "required": true
+      "advanced": true,
+      "help": "If you're 65 or older, we adjust the healthy range to 23–28 (WHO recommendation for older adults, to protect against sarcopenia)."
+    },
+    {
+      "id": "perfil",
+      "label": "Body profile",
+      "type": "select",
+      "default": "estandar",
+      "advanced": true,
+      "options": [
+        { "value": "estandar", "label": "Standard" },
+        { "value": "atleta", "label": "Athlete / high muscle mass" }
+      ],
+      "help": "If you do strength training with high muscle mass, BMI may overestimate risk: we'll note that in the interpretation."
+    },
+    {
+      "id": "sistema",
+      "label": "Unit system",
+      "type": "select",
+      "default": "imperial",
+      "advanced": true,
+      "options": [
+        { "value": "metric", "label": "Metric (kg, cm)" },
+        { "value": "imperial", "label": "Imperial (lb, in)" }
+      ],
+      "help": "Switch to enter your weight in kilograms and height in centimeters. Suffixes update instantly."
     }
   ],
   "outputs": [
@@ -78,8 +129,30 @@
       "id": "diferenciaPesoIdeal",
       "label": "Difference",
       "format": "text"
+    },
+    {
+      "id": "whtr",
+      "label": "Waist / height (WHtR)",
+      "format": "text"
+    },
+    {
+      "id": "riesgoCardiometabolico",
+      "label": "Cardiometabolic risk",
+      "format": "text"
+    },
+    {
+      "id": "interpretacion",
+      "label": "Interpretation",
+      "format": "text"
     }
   ],
+  "audienceRedirect": {
+    "icon": "👶",
+    "title": "Under 18?",
+    "body": "For children and teens, BMI is evaluated by **age- and sex-specific percentiles** (CDC growth charts 2-19 years), not adult categories. Using the adult calculator may give an incorrect classification.",
+    "ctaText": "Use the child BMI percentile calculator →",
+    "ctaHref": "/en/child-bmi-percentile"
+  },
   "explanation": "## What Is BMI?\n\nThe **Body Mass Index** (BMI) is a formula created in 1832 by Belgian mathematician Adolphe Quetelet and adopted by the World Health Organization (WHO) in 1997 as the most widely used global indicator of nutritional status in adults. Today, doctors, nutritionists, and health organizations worldwide use it to quickly assess whether a person is within a healthy weight range.\n\n## How BMI Is Calculated\n\n```\nBMI = weight (kg) / height² (m)\n```\n\nWeight is in kilograms and height is in **meters, squared**. If you measure height in centimeters, divide by 100 first: 170 cm = 1.70 m.\n\n## WHO Category Table\n\n| BMI | Category | Risk |\n|---|---|---|\n| < 18.5 | Underweight | Increased |\n| 18.5 – 24.9 | **Normal weight** ✅ | Low |\n| 25.0 – 29.9 | Overweight | Increased |\n| 30.0 – 34.9 | Obesity grade I | Moderate |\n| 35.0 – 39.9 | Obesity grade II | High |\n| ≥ 40.0 | Obesity grade III (morbid) | Very high |\n\n## Healthy Weight by Height (Approximate)\n\n| Height | Min Weight | Max Weight |\n|---|---|---|\n| 1.50 m | 41.6 kg | 56.0 kg |\n| 1.55 m | 44.4 kg | 59.8 kg |\n| 1.60 m | 47.4 kg | 63.7 kg |\n| 1.65 m | 50.4 kg | 67.8 kg |\n| 1.70 m | 53.5 kg | 71.9 kg |\n| 1.75 m | 56.6 kg | 76.2 kg |\n| 1.80 m | 59.9 kg | 80.6 kg |\n| 1.85 m | 63.3 kg | 85.2 kg |\n| 1.90 m | 66.8 kg | 89.9 kg |\n\n## When BMI Doesn't Work Well\n\n- **Athletes and very muscular people**: muscle weighs more than fat. A rugby player at 95 kg and 1.80 m has a BMI of 29.3 (overweight) without actually being overweight.\n- **Adults over 65**: the WHO suggests shifting the healthy range to 23–28 because age-related muscle loss means a 'normal' BMI may hide sarcopenia.\n- **Children and adolescents**: age- and sex-adjusted BMI percentiles (WHO growth charts) are used instead.\n- **Pregnant women**: BMI doesn't apply during pregnancy. The OB/GYN follows a specific weight-gain range.\n\n## Common Mistakes When Calculating BMI\n\n1. **Using height in centimeters**: classic error. 170 cm² is not 1.70 m². Always convert to meters.\n2. **Weighing at different times**: weight can vary 1–2 kg between morning and night. Weigh yourself fasting and always at the same time.\n3. **Treating it as a diagnosis**: BMI is a signal, not a diagnosis. Add body fat percentage, waist circumference, and blood tests for a full picture.\n4. **Comparing BMI between people**: two individuals with the same BMI can have very different body compositions.\n\n## Beyond BMI: Useful Complements\n\n- **Body fat percentage** (US Navy or Jackson-Pollock method)\n- **Waist circumference**: >88 cm in women or >102 cm in men is a risk factor.\n- **Daily calories (TDEE)** to know how much to eat based on your goal.\n- **Basal metabolic rate (BMR)** using the Mifflin-St Jeor formula.\n\nFor a complete assessment, consult a registered dietitian or physician. BMI is a good starting point, not the final picture.",
   "faq": [
     {

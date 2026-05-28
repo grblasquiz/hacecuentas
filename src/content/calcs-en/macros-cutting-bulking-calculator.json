@@ -7,15 +7,16 @@
   "audience": "global",
   "icon": "🥩",
   "formulaId": "macros-cutting-bulking-calculator",
-  "intro": "Getting your macros right is the difference between spinning your wheels and making consistent progress. This calculator takes your **Total Daily Energy Expenditure (TDEE)** — either entered directly or computed from your BMR and activity level — applies a calorie adjustment for your goal (cut −20%, maintain, or lean bulk +10%), then splits those calories into **protein, fat, and carbohydrates** using evidence-based ranges. No guesswork, just numbers.",
-  "keyTakeaway": "Most active adults need 1.6–2.2 g of protein per kg (0.7–1.0 g/lb) of bodyweight; at a 20% caloric deficit that typically means 1,600–2,200 kcal/day for a 180 lb person.",
+  "intro": "If you're chasing a leaner physique or trying to add quality muscle without ballooning your waistline, dialing in your macros is what separates the lifters who actually change their body composition from the ones who spin their wheels for years. This calculator takes your **Total Daily Energy Expenditure (TDEE)** — either entered directly or estimated from your bodyweight, height, age, and activity — applies a calorie adjustment based on your goal, and splits those calories into **protein, carbohydrates, and fat** using the evidence-based ranges sports nutritionists have been recommending since the 2017 ISSN Position Stand. The macro split logic boils down to three rules. **Protein** anchors the equation: 1.6–2.2 g/kg of bodyweight (about 0.7–1.0 g/lb) covers virtually every recreational and competitive lifter, with the upper end (1.0 g/lb, ~2.2 g/kg) preferred in a deficit to protect lean mass. **Fat** has a floor — never drop below 0.3–0.4 g/lb of bodyweight, because dietary fat drives testosterone, estrogen, and cell membrane function. Going lower for weeks at a time tanks hormones and recovery. **Carbohydrates** fill whatever calories remain after protein and fat are set — they're the lever for training intensity, glycogen replenishment, and satiety. Your calorie target depends on phase: **cutting** runs a 15–25% deficit off TDEE (aggressive but sustainable, losing ~0.5–1% bodyweight per week), **lean bulking** sits at a 5–15% surplus (gaining no more than 1% bodyweight per week to keep the fat-to-muscle ratio favorable), and **maintenance/recomp** hovers at or slightly below TDEE with high protein. Plug in your numbers and the calculator handles the math.",
+  "keyTakeaway": "For a 180 lb lifter, expect roughly 180 g protein / 60–80 g fat / remainder carbs on a cut (around 2,000 kcal), and the same protein with more carbs on a lean bulk (around 2,800 kcal).",
   "useCases": [
-    "Planning a cut phase while preserving lean muscle mass",
-    "Setting up a lean bulk with a controlled 10% calorie surplus",
-    "Recalculating macros after a weight change or training block shift",
-    "Comparing macro splits before starting a new diet protocol",
-    "Verifying that a coach-prescribed plan aligns with evidence-based ranges",
-    "Estimating daily food targets when switching from IIFYM to a structured meal plan"
+    "Setting up an aesthetic cut for a vacation, photoshoot, or summer in 12–16 weeks",
+    "Dialing in an off-season strength bulk to add muscle without becoming the 'big guy at the gym'",
+    "Running a body recomposition phase as a beginner, returning lifter, or someone with significant fat to lose",
+    "Programming MyFitnessPal, Cronometer, or MacroFactor with starting macro targets instead of their generic defaults",
+    "Verifying that an online coach's macro prescription falls inside evidence-based ISSN ranges before you pay them",
+    "Rebuilding macros after a diet break, holiday, or stalled progress with a fresh weekly weight-trend average",
+    "Switching from IIFYM 'just hit the numbers' to a structured cut, bulk, or recomp protocol with a clear weekly target"
   ],
   "fields": [
     {
@@ -246,86 +247,98 @@
       "format": "text"
     }
   ],
-  "explanation": "## What is a Macro Calculator?\n\nA macro calculator determines your daily protein, carbohydrate, and fat targets based on your TDEE and fitness goal. It applies calorie adjustments—typically −20% for cutting or +10% for bulking—then distributes those calories across macronutrients using evidence-based ratios. Most active adults need 1.6–2.2 g protein per kg bodyweight for optimal body composition changes.\n\n## How It Works\n\nThis calculator follows a four-step process:\n\n**Step 1 — Determine TDEE**\n\nIf you enter your TDEE directly, that value is used as-is. If you choose BMR + activity, the calculator uses the **Mifflin–St Jeor equation** (the most accurate general-population equation per a 2005 meta-analysis in the *Journal of the American Dietetic Association*):\n\n```\nMale:   BMR = (10 × kg) + (6.25 × cm) − (5 × age) + 5\nFemale: BMR = (10 × kg) + (6.25 × cm) − (5 × age) − 161\n```\n\nTDEE = BMR × activity multiplier:\n\n| Activity Level | Multiplier |\n|---|---|\n| Sedentary | 1.2 |\n| Lightly active | 1.375 |\n| Moderately active | 1.55 |\n| Very active | 1.725 |\n| Extra active | 1.9 |\n\n**Step 2 — Apply calorie goal adjustment**\n\n- Cut: `target_kcal = TDEE × 0.80` (−20%)\n- Maintain: `target_kcal = TDEE × 1.00`\n- Lean Bulk: `target_kcal = TDEE × 1.10` (+10%)\n\nA 20% deficit is the upper bound of aggressive-but-safe cutting per sports nutrition literature. A 10% surplus is sufficient for lean muscle accrual without excessive fat gain.\n\n**Step 3 — Set protein grams**\n\nProtein is anchored to bodyweight, not calories, to protect lean mass:\n\n```\nprotein_g = weight_lb × protein_multiplier\n```\n\nDefault is **1.0 g/lb** (≈2.2 g/kg), the upper end of the evidence-based range from the International Society of Sports Nutrition (ISSN) Position Stand. Protein provides **4 kcal/g**.\n\n**Step 4 — Allocate fat, then fill carbs**\n\n```\nfat_g   = (target_kcal × fat_pct) / 9      // fat = 9 kcal/g\nfat_kcal = fat_g × 9\nprotein_kcal = protein_g × 4\ncarbs_kcal = target_kcal − protein_kcal − fat_kcal\ncarbs_g = carbs_kcal / 4                   // carbs = 4 kcal/g\n```\n\nIf `carbs_g` comes out negative (protein + fat exceed target calories), the calculator caps protein at the target calories minus minimum fat allocation and notes the conflict.\n\n## Worked Example\n\n180 lb male, 5'10\", 30 years old, moderately active, cutting with default settings:\n\n- BMR = (10 × 81.6) + (6.25 × 177.8) − (5 × 30) + 5 = 816 + 1111 − 150 + 5 = **1,782 kcal**\n- TDEE = 1,782 × 1.55 = **2,762 kcal**\n- Cut target = 2,762 × 0.80 = **2,210 kcal**\n- Protein = 180 × 1.0 = **180 g** (720 kcal)\n- Fat = (2,210 × 0.27) / 9 = 597 / 9 = **66 g** (597 kcal)\n- Carbs = (2,210 − 720 − 597) / 4 = 893 / 4 = **223 g**\n\nSplit: ~33% protein / 27% fat / 40% carbs.\n\n## Limitations\n\n- BMR equations carry ±10% error; measured RMR (indirect calorimetry) is more accurate.\n- These are *starting targets*. Adjust weekly based on scale weight trends (±0.5–1% bodyweight/week is a healthy rate).\n- Very low-calorie outputs (<1,200 kcal women / <1,500 kcal men) indicate an unrealistic deficit — consult a registered dietitian.\n- The calculator does not account for insulin resistance, thyroid conditions, or medication effects on metabolism.",
+  "explanation": "## The Cutting Protocol: Macros for Fat Loss Without Losing Muscle\n\nWhen you're in a caloric deficit, your body is in a catabolic state, and the single biggest factor protecting your hard-earned muscle is **protein intake**. Sports nutritionists working with physique athletes and natural bodybuilders settled on **1.0–1.2 g of protein per pound of bodyweight** during a cut, which translates to roughly 2.2–2.6 g/kg. That's slightly above the ISSN Position Stand floor (1.6 g/kg) because a deficit erodes muscle protein synthesis and high protein offsets the breakdown.\n\n**Fat** has a hard floor: **0.3–0.4 g per pound of bodyweight**. Below that, you risk impairing testosterone production, menstrual function, and essential fatty acid availability. A 180-lb lifter should not dip below ~55 g of fat per day even in a deep cut. **Carbohydrates** fill the residual calories — they're the lever that keeps training intensity high, replenishes glycogen, and supports satiety with whole-food choices (rice, oats, potatoes, fruit).\n\nThe deficit magnitude depends on how lean you already are. **15–20% off TDEE** works for the average lifter with 15%+ body fat; **20–25%** is the aggressive end for short-duration mini-cuts. The target rate of loss is **0.5–1% of bodyweight per week** — faster than that and you're shedding muscle along with fat. Many lifters add **1–2 refeed days per week at maintenance calories with higher carbs** (200 g+ carbs, fat held low) to restore leptin, recharge glycogen, and rescue training performance. Skipping refeeds in a long cut is a common reason progress stalls in week 6.\n\n## The Bulking Protocol: Build Muscle, Not Waist\n\nThe lean-bulk consensus is **a 5–15% calorie surplus** — typically 250–500 kcal above maintenance — with a target rate of **0.25–0.5 lb gained per week** (no more than 1% bodyweight per month for intermediates). Protein needs in a surplus actually drop slightly because muscle protein breakdown is suppressed; **0.8–1.0 g/lb (1.8–2.2 g/kg)** is sufficient. Fat stays at the same **0.3–0.4 g/lb minimum**, and **carbohydrates become the primary surplus driver** because they fuel training volume and maximize muscle protein synthesis when paired with resistance training.\n\nThe \"dirty bulk\" approach — eating 1,000+ kcal over maintenance to chase scale weight — is a holdover from the bro-era 1990s. Modern sports nutrition rejects it: research from Helms and the Renaissance Periodization team shows that for natural lifters, the ceiling on muscle accrual is roughly 1–2 lb per month for intermediates and slower for advanced lifters. Calories beyond that surplus go straight to body fat, which then requires a longer cut to remove.\n\n## The Recomp Protocol: Lose Fat, Gain Muscle Simultaneously\n\nBody recomposition — losing fat and gaining muscle at the same time — is real but limited to specific populations. Per Eric Helms (Muscle and Strength Pyramid) and Alan Aragon's research review, recomp works for **beginners (first 1–2 years of training), returning lifters after a layoff, overweight or obese individuals starting a program, and enhanced lifters**. For everyone else, you'll get better results cycling through dedicated cut and bulk phases.\n\nThe recomp protocol is a **slight deficit of ~10–15% below TDEE with high protein at 1.2 g/lb (2.6 g/kg)**, paired with progressive resistance training 3–5 days per week. Carbs and fat split the remaining calories with carbs typically favored on training days. Expect slow scale movement but visible composition changes over 12–16 weeks.\n\n## Meal Timing: Mostly Doesn't Matter\n\nThe ISSN 2017 Nutrient Timing Position Stand established that the **\"anabolic window\"** is far wider than the old 30-minute post-workout dogma — closer to **3–4 hours flexibility** around training. Total daily protein and calories dominate; whether you eat your post-workout meal 15 minutes or 2 hours after lifting is irrelevant for most lifters. The exceptions: athletes training twice per day (refuel within 60 min) and lifters training fasted (eating soon after helps).\n\n## Worked Example — 180-lb Lifter Cutting from 2,500 → 2,000 kcal\n\nA 180-lb male, TDEE 2,500 kcal, targeting a 20% deficit at 2,000 kcal:\n\n- **Protein:** 180 g × 4 kcal = **720 kcal (36%)**\n- **Fat:** 60 g × 9 kcal = **540 kcal (27%)** — meets the 0.33 g/lb floor\n- **Carbs:** 2,000 − 720 − 540 = 740 kcal ÷ 4 = **185 g (37%)**\n\nSplit: 180P / 60F / 185C. At 1 lb of loss per week, expect a 12-week cut to remove ~12 lb. Add a weekly refeed at 2,500 kcal with carbs bumped to ~280 g and fat dropped to 45 g.\n\n## Limitations and Adjustments\n\n- BMR/TDEE estimates carry ±10% error. Track weekly bodyweight trend (7-day average) and adjust calories ±100–150 kcal every 2–3 weeks based on actual rate of change.\n- Outputs below 1,500 kcal (men) or 1,200 kcal (women) signal an unsustainable deficit — work with a registered dietitian (RD) instead.\n- The calculator assumes a healthy adult without thyroid, PCOS, insulin resistance, or medication-driven metabolic changes.",
   "faq": [
     {
-      "q": "What is TDEE and why does it matter?",
-      "a": "Total Daily Energy Expenditure (TDEE) is the total number of calories you burn in a day, including your basal metabolic rate (BMR) plus all physical activity. It is the baseline from which any calorie surplus or deficit is calculated. Without an accurate TDEE, your macro targets will be off."
+      "q": "Is 1 gram of protein per pound of bodyweight actually right, or is that bro-science?",
+      "a": "1 g/lb (2.2 g/kg) is the upper end of the evidence-based range and is not bro-science — it's defensible per the 2017 ISSN Position Stand on Protein and Exercise. The actual evidence-based floor is 0.7 g/lb (1.6 g/kg) for muscle gain and maintenance. In a deficit, more protein helps preserve muscle, which is why physique athletes use 1.0–1.2 g/lb during cuts. Below 0.7 g/lb in a deficit and you'll lose meaningful muscle."
     },
     {
-      "q": "Why is the default protein set at 1.0 g per lb of bodyweight?",
-      "a": "1.0 g/lb (≈2.2 g/kg) is the upper bound of the range consistently supported by sports nutrition research for muscle retention during a caloric deficit. It leaves a safety margin and is practical for most people tracking macros."
+      "q": "Can you really lose fat and gain muscle at the same time?",
+      "a": "Yes, but only in specific populations: beginners in their first 1–2 years of lifting, returning lifters after a long layoff, overweight or obese individuals starting a structured program, and enhanced (PED-using) lifters. Per Eric Helms (Muscle and Strength Pyramid) and Alan Aragon, intermediate to advanced natural lifters with low body fat will see better progress separating cut and bulk phases rather than chasing recomp."
     },
     {
-      "q": "Can I lose fat and build muscle at the same time (body recomposition)?",
-      "a": "Yes, but primarily in beginners, detrained individuals, or people returning from a layoff. For them, maintaining calories near TDEE with high protein (1.0 g/lb) and progressive resistance training can drive simultaneous fat loss and muscle gain. Experienced lifters generally need distinct cut and bulk phases."
+      "q": "Is carb cycling worth doing for cutting?",
+      "a": "For most natural lifters cutting, simple constant macros work just as well as carb cycling. Where cycling helps is psychological adherence — high-carb refeed days 1–2 times per week give you a mental break, restore glycogen for hard training sessions, and may help blunt the leptin drop in a long cut. The math doesn't matter as much as the strategy matching how your training week is structured."
     },
     {
-      "q": "Why is a 20% deficit chosen for cutting?",
-      "a": "A 20% deficit is large enough to produce meaningful fat loss (roughly 0.5–1% of bodyweight per week for most people) while being sustainable and limiting muscle loss when protein is kept high. Deeper cuts (>25–30%) increase muscle loss risk and hormonal disruption."
+      "q": "How do I set macros for a keto cut?",
+      "a": "On keto, protein stays at 1.0 g/lb (~180 g for a 180-lb lifter), carbs drop to 20–50 g per day (below your body's glucose threshold), and fat fills the remaining calories at roughly 0.6–0.9 g/lb. Be aware: keto isn't superior to a standard high-protein/moderate-carb cut for fat loss when calories are equated, but it can help appetite control for some lifters. Performance on heavy resistance training often drops 5–10% on keto."
     },
     {
-      "q": "Why only a 10% surplus for bulking?",
-      "a": "The body can only synthesize a limited amount of new muscle tissue per week (roughly 0.25–0.5 lb for men, less for women). A 10% surplus provides enough extra energy to maximize muscle protein synthesis without accumulating excessive body fat — a hallmark of 'lean bulking.'"
+      "q": "Should I do a weekly refeed during a cut?",
+      "a": "If your cut runs longer than 4–6 weeks, yes — 1–2 refeed days per week at maintenance calories with carbs bumped to 250–350 g and fat dropped to ~40 g restore leptin signaling, glycogen, and training performance. Lyle McDonald's work on diet breaks is the most thorough resource here. Short mini-cuts of 3–4 weeks don't need refeeds."
     },
     {
-      "q": "What if my carbs come out very low or negative?",
-      "a": "This happens when protein and fat combined exceed your calorie target — most commonly in very short cuts with high protein intakes. The calculator will flag it. Solutions: lower your protein multiplier slightly (0.8 g/lb is still evidence-based), reduce fat to 25%, or accept a less aggressive deficit."
+      "q": "Is the post-workout 30-minute anabolic window real?",
+      "a": "No. The 2017 ISSN Nutrient Timing Position Stand established that the post-workout window is closer to 3–4 hours, not 30 minutes. As long as you eat a protein-containing meal within a few hours before or after training, you'll capture the benefits. Total daily protein and calories dominate any timing effect. The exception: lifters training fasted should eat soon after the session ends."
     },
     {
-      "q": "How accurate is the Mifflin–St Jeor equation?",
-      "a": "Mifflin–St Jeor predicts measured RMR within 10% for roughly 82% of the population, making it the most accurate widely-used predictive equation per a 2005 JADA meta-analysis. Athletes with high muscle mass may find it slightly underestimates BMR; obese individuals may find it slightly overestimates."
+      "q": "What's the difference between IIFYM and tracking specific macro targets?",
+      "a": "IIFYM (If It Fits Your Macros) is the philosophy of hitting protein, carbs, and fat targets without restricting specific foods. This calculator gives you those exact targets to plug into MyFitnessPal, Cronometer, or MacroFactor. The difference vs. a strict 'clean eating' plan is flexibility: you can have ice cream as long as you hit your macros — the actual macro grams are what change body composition, not the food source."
     },
     {
-      "q": "Should I track macros in grams or just calories?",
-      "a": "Both matter, but grams give you a more actionable target. Hitting your calorie target but falling short on protein (e.g., only 100 g/day during a cut) will cost you more muscle mass than a slight calorie overage with full protein met."
+      "q": "Why is fat capped at a minimum and not just maximum?",
+      "a": "Dietary fat below 0.3 g/lb of bodyweight for extended periods drops testosterone in men by 10–15% (per studies referenced in the Renaissance Periodization literature), disrupts menstrual cycles in women, and impairs absorption of fat-soluble vitamins. Hitting your protein at 1 g/lb while fat is below the floor will leave you weaker, less recovered, and with worse hormones. Always set fat to at least 0.3–0.4 g/lb, then let carbs fill the rest."
     },
     {
-      "q": "How often should I recalculate my macros?",
-      "a": "Recalculate every 4–6 weeks, or whenever your bodyweight changes by more than 5 lb (≈2.3 kg). As you lose or gain weight, your BMR shifts, so your TDEE and macro targets need updating to stay accurate."
+      "q": "How fast should I be losing or gaining weight?",
+      "a": "Cutting: 0.5–1% of bodyweight per week is the sweet spot (0.9–1.8 lb for a 180-lb lifter). Faster than 1.5% and you're losing muscle. Lean bulking: 0.25–0.5 lb per week for intermediates, slower for advanced lifters. If you're gaining more than 1% bodyweight per month, you're putting on excess fat that you'll have to cut off later — the lean-bulk advantage disappears."
     },
     {
-      "q": "Do these macros apply to vegetarians or vegans?",
-      "a": "The calorie and macro targets are the same regardless of diet type. However, plant-based protein sources often have lower leucine content and digestibility, so some researchers suggest adding 10–20% to the protein target for those relying entirely on plant protein."
+      "q": "When should I recalculate my macros?",
+      "a": "Every 4–6 weeks, or whenever bodyweight has changed by 5+ lb. Your TDEE shifts as you lose or gain weight, so old macros become inaccurate. Track a 7-day weight average (not single-day readings — water weight noise is huge) and adjust calories by 100–150 kcal in either direction if the trend is off target."
     }
   ],
   "sources": [
     {
-      "name": "ISSN Position Stand: Diets and Body Composition",
+      "name": "ISSN Position Stand: Protein and Exercise (Jäger et al.)",
+      "url": "https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0177-8",
+      "publisher": "Journal of the International Society of Sports Nutrition",
+      "date": "2017"
+    },
+    {
+      "name": "ISSN Position Stand: Nutrient Timing (Kerksick et al.)",
+      "url": "https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0189-4",
+      "publisher": "Journal of the International Society of Sports Nutrition",
+      "date": "2017"
+    },
+    {
+      "name": "ISSN Position Stand: Diets and Body Composition (Aragon et al.)",
       "url": "https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0174-y",
       "publisher": "Journal of the International Society of Sports Nutrition",
       "date": "2017"
+    },
+    {
+      "name": "Muscle and Strength Pyramid: Nutrition (Helms, Morgan, Valdez)",
+      "url": "https://muscleandstrengthpyramids.com/",
+      "publisher": "Eric Helms / 3DMJ Coaching",
+      "date": "2019"
+    },
+    {
+      "name": "Renaissance Periodization — Diet and Muscle Building Research",
+      "url": "https://rpstrength.com/blogs/articles",
+      "publisher": "Mike Israetel / RP Strength",
+      "date": "2025"
+    },
+    {
+      "name": "BodyRecomposition — The Ultimate Diet 2.0 and Stubborn Fat Solution",
+      "url": "https://bodyrecomposition.com/category/fat-loss",
+      "publisher": "Lyle McDonald",
+      "date": "2024"
     },
     {
       "name": "Mifflin–St Jeor BMR Equation Validation (JADA Meta-Analysis)",
       "url": "https://pubmed.ncbi.nlm.nih.gov/15883556/",
       "publisher": "Journal of the American Dietetic Association",
       "date": "2005"
-    },
-    {
-      "name": "Dietary Reference Intakes for Energy (DRI 2023)",
-      "url": "https://www.nationalacademies.org/our-work/dietary-reference-intakes-for-energy",
-      "publisher": "National Academies of Sciences, Engineering, and Medicine",
-      "date": "2023"
-    },
-    {
-      "name": "ISSN Position Stand: Protein and Exercise",
-      "url": "https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0177-8",
-      "publisher": "Journal of the International Society of Sports Nutrition",
-      "date": "2017"
-    },
-    {
-      "name": "Dietary Guidelines for Americans 2020–2025",
-      "url": "https://www.dietaryguidelines.gov/sites/default/files/2020-12/Dietary_Guidelines_for_Americans_2020-2025.pdf",
-      "publisher": "U.S. Department of Health and Human Services / USDA",
-      "date": "2020"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-28",
+    "lastUpdated": "2026-05-28",
     "updateType": "manual",
     "notes": "Update protein range recommendations if new ISSN or meta-analysis evidence revises the 1.6–2.2 g/kg consensus. BMR equation constants are stable and unlikely to change."
   },
-  "lastReviewed": "2026-04-28"
+  "lastReviewed": "2026-05-28"
 }

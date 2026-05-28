@@ -8,15 +8,16 @@
   "audience": "global",
   "icon": "🏠",
   "formulaId": "mortgage-payment-monthly-calculator",
-  "intro": "Buying a home? This calculator breaks down your **true monthly cost**: principal & interest (P&I), property taxes, homeowner's insurance, and PMI (if your down payment is under 20%). Enter your home price, down payment, loan term, and current rate to see exactly what you'll owe each month — and how much total interest you'll pay over the life of the loan.",
+  "intro": "If you're shopping for a home in the US in 2026, your real monthly cost is almost never just principal and interest. It's **PITI** — Principal, Interest, Taxes, and Insurance — and for most buyers putting down less than 20%, you can add **PMI** on top of that. This calculator builds the full PITI estimate the way a mortgage broker would: it amortizes the loan, layers in property taxes (which range from roughly 0.3% in Hawaii to 2.2% in New Jersey), adds homeowners insurance, and tacks on PMI when your loan-to-value ratio (LTV) exceeds 80%.\n\nAs of mid-2026, the **30-year fixed conforming rate** is sitting near 6.5%–7.0% per the Freddie Mac PMMS, with 15-year fixed loans running roughly 0.6%–0.8% lower. **5/1 and 7/1 ARMs** are typically 0.5%–1.0% below the 30-year fixed for the initial fixed period, then reset annually against SOFR. On the loan-program side, **conventional loans** (Fannie Mae/Freddie Mac conforming, up to $806,500 in most counties for 2026) require 3%–20% down and credit scores generally 620+; **FHA loans** allow 3.5% down with FICO 580+ but require both an upfront MIP (1.75%) and an annual MIP for the life of the loan in most cases; **VA loans** are zero-down with no PMI for eligible veterans; **USDA** is zero-down for rural-eligible properties. Lenders qualify you against the **28/36 rule** (housing ≤28% of gross monthly income, total debt ≤36%) or the more lenient **35/45 rule** for stronger profiles. PMI on a conventional loan typically drops off automatically at **78% LTV** under the Homeowners Protection Act, and you can request cancellation at 80%.",
   "keyTakeaway": "On a $400,000 home with 10% down, a 30-year fixed at 6.8% yields a P&I payment of ~$2,348/mo and $485,000+ in total interest over the loan life.",
   "useCases": [
-    "Estimating affordability before making an offer on a home",
-    "Comparing 15-year vs. 30-year loan total interest costs",
-    "Understanding how PMI adds to your payment when putting less than 20% down",
-    "Planning your budget after locking in a specific interest rate",
-    "Calculating your payoff date based on loan start month",
-    "Evaluating the impact of a larger down payment on monthly costs"
+    "First-time buyer affordability check: enter your target home price, down payment, current rate, and county property-tax rate to see whether PITI fits inside the 28% front-end DTI most lenders underwrite to.",
+    "Refinance break-even analysis: compare your existing P&I against a new rate-and-term scenario, then divide closing costs by monthly savings to find your break-even month before deciding whether the refi makes sense.",
+    "15-year vs. 30-year head-to-head: model the same loan amount at the typical 15-year rate (currently ~0.7% below 30-year) and see how the higher monthly payment trades against tens or hundreds of thousands in lifetime interest.",
+    "FHA vs. conventional decision: run a 3.5%-down FHA scenario with MIP layered in versus a 5%–10%-down conventional with PMI to see which program produces a lower true monthly payment for your credit and down-payment profile.",
+    "Down-payment optimization: test 5%, 10%, 15%, and 20% down to see exactly when PMI falls off and how much each additional 5% of down payment shaves off your monthly bill.",
+    "PITI budgeting after rate lock: once your lender locks a rate, plug in the locked figure plus the county tax rate and your insurance quote to validate the escrowed monthly payment your closing disclosure will show.",
+    "ARM reset stress test: model your 5/1 or 7/1 ARM at the initial fixed rate, then re-run at +1.5% or +2% to gauge payment shock when the loan begins adjusting against SOFR."
   ],
   "fields": [
     {
@@ -238,86 +239,98 @@
       "format": "text"
     }
   ],
-  "explanation": "## What is a mortgage payment?\n\nA mortgage payment is the monthly amount you owe to repay a home loan, calculated as principal plus interest divided across your loan term. On a $400,000 home at 6.8% over 30 years, P&I alone totals roughly $2,348 monthly. Your actual payment includes property taxes, insurance, and PMI, significantly increasing the true monthly cost.\n\n## How It Works\n\nThis calculator uses the standard **amortizing mortgage formula** to compute your monthly principal & interest payment, then adds escrow items (taxes, insurance, PMI) for a true PITI total.\n\n## Formula\n\n```\nM = P · [r(1+r)^n] / [(1+r)^n − 1]\n\nWhere:\n  M = monthly P&I payment\n  P = principal loan amount (home price − down payment)\n  r = monthly interest rate = annual rate / 12\n  n = total number of payments = loan term in years × 12\n```\n\n**Example — $400,000 home, 10% down, 30-year, 6.8% rate:**\n- P = $400,000 × (1 − 0.10) = $360,000\n- r = 6.8% / 12 = 0.5667% = 0.005667\n- n = 30 × 12 = 360\n- M = 360,000 × [0.005667 × (1.005667)^360] / [(1.005667)^360 − 1]\n- M ≈ **$2,348/month** (P&I only)\n- Total paid = $2,348 × 360 = $845,280\n- Total interest = $845,280 − $360,000 = **$485,280**\n\n## Component Breakdown\n\n| Component | Calculation |\n|---|---|\n| Principal & Interest | Amortization formula above |\n| Property Tax | (Home Price × Tax Rate) / 12 |\n| Home Insurance | Annual premium / 12 |\n| PMI | (Loan Amount × PMI Rate) / 12 (only if down < 20%) |\n\n## PMI Note\n\nPrivate Mortgage Insurance (PMI) is typically required when your down payment is **less than 20%** of the purchase price. PMI rates generally range from **0.2% to 2%** of the original loan amount per year, depending on your credit score, loan type, and lender. Once your loan balance reaches 80% of the original home value, you can request PMI cancellation under the Homeowners Protection Act.\n\n## Limitations & When NOT to Rely Solely on This Calculator\n\n- **Adjustable-rate mortgages (ARMs):** This tool calculates fixed-rate payments only. ARM payments change after the initial fixed period.\n- **HOA fees:** Not included. Add these manually to your budget.\n- **Closing costs:** Typically 2–5% of the loan amount; not factored into monthly payment here.\n- **Tax & insurance estimates:** Property tax rates vary widely by state and county (0.3%–2.5%). Verify with your local assessor.\n- **PMI removal timeline:** This calculator applies PMI for the full loan term. In practice, PMI drops off when you reach 20% equity.\n- **Escrow changes:** Lenders adjust escrow annually; your actual payment may vary slightly year to year.",
+  "explanation": "## The amortization formula every US mortgage uses\n\nWhether you're sitting in front of a Rocket Mortgage loan officer, a credit union, or a community bank, the **principal-and-interest** portion of your monthly payment is calculated the exact same way. It is the standard amortization formula:\n\n```\nM = P × [r(1+r)^n] / [(1+r)^n − 1]\n\nWhere:\n  M = monthly P&I payment (USD)\n  P = principal loan amount (home price − down payment)\n  r = monthly interest rate = annual rate / 12\n  n = total number of payments = loan term in years × 12\n```\n\n### Worked example — $400,000 loan, 30-year fixed, 6.5%\n\nLet's run a clean 2026 example. You buy a $500,000 home with 20% down, financing $400,000 on a 30-year fixed at 6.5%.\n\n- P = $400,000\n- r = 6.5% / 12 = 0.005417\n- n = 30 × 12 = 360\n- (1+r)^n = (1.005417)^360 ≈ 7.0383\n- M = 400,000 × [0.005417 × 7.0383] / [7.0383 − 1]\n- M = 400,000 × 0.03813 / 6.0383\n- **M ≈ $2,528 per month** (P&I only)\n\nTotal of payments = $2,528 × 360 = **$910,080**. Total interest paid = $910,080 − $400,000 = **$510,080**. That number — half a million in interest on a $400k loan — is why so many buyers run a 15-year scenario before signing.\n\n## PITI: the four components your lender actually cares about\n\nLenders qualify you on the full **PITI** figure, not just P&I, because property taxes and homeowners insurance are real cash obligations they don't want you missing.\n\n| Component | Monthly calculation |\n|---|---|\n| **P**rincipal & Interest | Amortization formula above |\n| **T**axes (property) | (Home price × annual tax rate) ÷ 12 |\n| **I**nsurance (homeowners / hazard) | Annual premium ÷ 12 |\n| PMI (private mortgage insurance) | (Loan amount × annual PMI rate) ÷ 12, only when LTV > 80% |\n\nIf you put less than 20% down on a conventional loan or take an FHA loan, your lender will require an **escrow / impound account**: every month they collect 1/12 of your annual property-tax bill and 1/12 of your annual insurance premium along with your P&I, then pay those bills on your behalf when they come due. Once a year your escrow is reanalyzed, which is why your payment can drift up $50–$150/month even on a fixed-rate loan.\n\n## Property taxes vary wildly by state\n\nProperty tax is the line item that surprises buyers the most when they relocate.\n\n| State | Approx. effective rate (2026) | Monthly tax on $500k home |\n|---|---|---|\n| Hawaii | ~0.30% | ~$125 |\n| Alabama | ~0.40% | ~$167 |\n| Colorado | ~0.55% | ~$229 |\n| California | ~0.70% | ~$292 |\n| Florida | ~0.85% | ~$354 |\n| US average | ~1.00% | ~$417 |\n| Pennsylvania | ~1.50% | ~$625 |\n| Texas | ~1.70% | ~$708 |\n| Illinois | ~2.05% | ~$854 |\n| New Jersey | ~2.20% | ~$917 |\n\nThese are statewide effective averages from the Tax Foundation; your specific county/municipality can be meaningfully higher or lower, and **always verify with the county assessor's website** before committing to a purchase.\n\n## Homeowners insurance — typical 2026 ranges\n\nNationally, homeowners insurance for a $300k–$500k home runs roughly **$1,400–$2,500 per year**, but it's wildly geography-dependent: Florida and Louisiana (hurricane), California (wildfire), and parts of Oklahoma/Texas (severe storm) are 2x–4x the national average. Coastal Florida policies for the same home value can clear $5,000–$8,000/year before windstorm endorsements.\n\n## PMI: cost, mechanics, and how to get rid of it\n\nOn conventional loans with less than 20% down, expect PMI of **0.5%–1.5% of the loan balance per year**, priced primarily off your FICO score and LTV. On a $400,000 loan, 0.8% PMI = $3,200/year = **$267/month** added to your payment.\n\nUnder the **Homeowners Protection Act of 1998**, lenders must:\n- **Automatically terminate** PMI when your scheduled balance reaches 78% LTV (based on the original home value), and\n- **Cancel on borrower request** at 80% LTV, provided you're current on payments.\n\nYou can also accelerate PMI removal by paying down principal aggressively or, after ~2 years, by ordering a new appraisal if home values in your area have risen.\n\n### FHA MIP is different — it doesn't go away\n\nFHA loans charge **two separate mortgage-insurance premiums**:\n- **UFMIP (upfront):** 1.75% of the loan, typically rolled into the loan balance.\n- **Annual MIP:** 0.50%–0.85% of the loan balance, paid monthly.\n\nFor most FHA loans originated today with less than 10% down, **annual MIP lasts the entire life of the loan**. The standard exit strategy is to refinance into a conventional loan once you've built 20% equity.\n\n## Conventional 80/20 vs. 80/10/10 piggyback\n\nIf you have 10% down but want to avoid PMI, lenders sometimes still offer the classic **80/10/10 piggyback**: an 80% LTV first mortgage, a 10% HELOC or second lien, and 10% cash down. You skip PMI on the first, but the second lien usually carries a higher rate (often prime + 1–3%). Run both scenarios in this calculator — sometimes the piggyback wins, sometimes paying PMI for 4–6 years until you refi is cheaper.\n\n## Refinance break-even math\n\nThe refinance decision is mostly arithmetic. If a refi saves you $220/month and costs $5,500 in closing costs, your break-even is $5,500 ÷ $220 ≈ **25 months**. If you'll stay in the home longer than that, the refi pencils. Add a comfort buffer — most borrowers want break-even under 36 months and a rate drop of at least 0.50%–0.75% before pulling the trigger.\n\n## Discount points and rate buy-downs\n\nOne **discount point** = 1% of the loan amount paid at closing in exchange for roughly a 0.25% rate reduction (this ratio varies by lender and market). On a $400k loan, one point costs $4,000. If it drops your rate from 6.75% to 6.50%, that's roughly $66/month in P&I savings, for a break-even around **60 months**. Points generally only make sense if you're confident you'll hold the loan well past break-even and you're not planning to refinance.",
   "faq": [
     {
-      "q": "What is the current average 30-year mortgage rate in 2026?",
-      "a": "As of early 2026, the average 30-year fixed mortgage rate is approximately 6.8%, based on Freddie Mac's Primary Mortgage Market Survey. Rates fluctuate weekly; always confirm the current rate with your lender before making financial decisions."
+      "q": "How much house can I afford on an $80,000 salary?",
+      "a": "Under the classic 28/36 rule, your PITI shouldn't exceed 28% of gross monthly income — for an $80k salary that's $6,667/month gross, capping housing at about $1,867/month. At a 6.5% 30-year fixed with ~$300/month for taxes + insurance and no PMI, $1,867 PITI supports roughly a $250,000 loan, so a $290,000–$320,000 home with 10%–20% down. The more lenient 35/45 rule used for stronger profiles (excellent credit, low non-housing debt) can push that toward a $350k–$370k home, but you'll feel the squeeze. Always run your number against your *real* take-home, not gross."
     },
     {
-      "q": "What does PITI stand for?",
-      "a": "PITI stands for Principal, Interest, Taxes, and Insurance. It represents the full monthly housing cost most lenders use to qualify borrowers. This calculator computes all four components, plus PMI if applicable, giving you a complete monthly payment estimate."
+      "q": "When does PMI automatically go away?",
+      "a": "Under the Homeowners Protection Act of 1998, PMI on a conventional loan **terminates automatically** when your loan balance reaches 78% of the original home value, assuming you're current on payments. You can **request cancellation** at 80% LTV. You can also accelerate removal by paying down principal aggressively or, after about two years, ordering a new appraisal if your area has appreciated — many borrowers in fast-rising markets knock PMI off in 18–36 months. Note: FHA MIP is different — on most FHA loans with less than 10% down it lasts the **life of the loan**, and the standard exit is refinancing into a conventional loan once you have 20% equity."
     },
     {
-      "q": "How much does PMI cost and when can I remove it?",
-      "a": "PMI typically costs 0.2%–2% of the original loan amount per year (often ~0.5% for well-qualified borrowers). You can request cancellation once your loan balance drops to 80% of the original purchase price. Lenders must automatically cancel it at 78% under the Homeowners Protection Act of 1998."
+      "q": "Is a 15-year or 30-year mortgage better in 2026?",
+      "a": "15-year fixed rates are currently running roughly 0.6%–0.8% below 30-year fixed. On a $400,000 loan, a 30-year at 6.75% costs ~$2,594/month in P&I and ~$534,000 in lifetime interest. The same loan as a 15-year at 6.05% jumps to ~$3,386/month — about $792/month higher — but lifetime interest drops to ~$209,000. So you save roughly **$325,000 over the life of the loan** at the cost of ~$800/month more upfront. The right answer: 15-year if you can comfortably afford the higher payment *and* still max retirement contributions; 30-year if you want flexibility or are still building emergency savings. A common middle path is taking the 30-year and voluntarily prepaying."
     },
     {
-      "q": "Is a 15-year or 30-year mortgage better?",
-      "a": "A 15-year mortgage carries a lower interest rate (typically 0.5–0.75% less) and you pay far less total interest — often 50–60% less than a 30-year loan. However, monthly payments are roughly 40–50% higher. A 30-year loan offers lower monthly payments and more cash-flow flexibility but significantly higher lifetime interest costs."
+      "q": "Should I buy discount points to lower my rate?",
+      "a": "One discount point costs 1% of the loan amount and typically buys about a 0.25% rate reduction. On a $400,000 loan, one point = $4,000 and saves roughly $66/month in P&I, so break-even is about 60 months. Points usually only make sense if (1) you're confident you'll hold the loan well past break-even — generally 7+ years — and (2) you're not planning to refinance. In the current rate environment many buyers expect to refi within 3–5 years if rates drop, which kills the math on points. If cash is tight, redirecting that money to a larger down payment (lowering LTV, possibly removing PMI) usually beats buying points."
     },
     {
-      "q": "What down payment do I need to avoid PMI?",
-      "a": "A down payment of 20% or more of the home's purchase price eliminates the PMI requirement on conventional loans. Some loan programs (FHA, VA, USDA) have different rules: VA loans have no PMI at all, while FHA loans require mortgage insurance premiums regardless of down payment size."
+      "q": "Which US states have the highest and lowest property taxes?",
+      "a": "By effective property-tax rate (Tax Foundation, 2026): **Highest** — New Jersey ~2.20%, Illinois ~2.05%, New Hampshire ~1.90%, Connecticut ~1.80%, Texas ~1.70%, Vermont ~1.65%, Nebraska ~1.55%, Pennsylvania ~1.50%. **Lowest** — Hawaii ~0.30%, Alabama ~0.40%, Colorado ~0.55%, Wyoming ~0.55%, Louisiana ~0.60%, South Carolina ~0.60%, Utah ~0.60%, Nevada ~0.60%. These are statewide effective averages — your actual county/municipal rate can vary 30%+ from the state figure. Always confirm with the county assessor before signing a purchase agreement."
     },
     {
-      "q": "How is the payoff date calculated?",
-      "a": "The payoff date is the first payment date plus the total number of monthly payments (loan term in months). For example, a 30-year loan starting in January 2026 has 360 payments and a payoff date of December 2055. This assumes no extra payments are made."
+      "q": "Is an ARM smart in 2026, or should I lock in a fixed rate?",
+      "a": "5/1 and 7/1 ARMs in 2026 are pricing about 0.5%–1.0% below the 30-year fixed, then resetting annually against SOFR after the initial fixed period. An ARM makes sense if you're confident you'll sell or refinance before the reset (military relocations, planned career moves, fix-and-flip), or if you're comfortable absorbing a payment increase of $200–$500/month at year 6 or 8. With many forecasters expecting Fed cuts through 2026–2027, locking a 30-year fixed and refinancing later if rates drop is the lower-risk play for most owner-occupants. Run the ARM at the initial rate *and* at initial rate +2% in this calculator to see your worst-case payment shock."
     },
     {
-      "q": "What is a typical property tax rate in the US?",
-      "a": "The US average effective property tax rate is roughly 0.9%–1.1% of the home's value per year, but it varies significantly: New Jersey averages ~2.2%, while Hawaii averages ~0.3%. Use your county assessor's website for an exact figure. The default in this calculator is 1.1%."
+      "q": "What's the minimum down payment for each loan type?",
+      "a": "**Conventional conforming** — 3% down on Fannie Mae HomeReady / Freddie Mac Home Possible for first-time or low-income buyers; 5% standard. **FHA** — 3.5% down with FICO 580+, or 10% down with FICO 500–579. **VA loans** — 0% down for eligible veterans and active-duty service members. **USDA Rural Development** — 0% down for eligible rural properties and income-qualified buyers. **Jumbo loans** — typically 10%–20% down, depending on lender and loan size. Remember: lower down payment means higher LTV, which means PMI or MIP — and on FHA that MIP often sticks for the life of the loan."
     },
     {
-      "q": "Does this calculator account for extra payments or lump-sum paydowns?",
-      "a": "No. This tool calculates a standard amortizing schedule with fixed monthly payments. Making extra principal payments each month or year would reduce your total interest and shorten your payoff date — use a dedicated amortization schedule tool to model those scenarios."
+      "q": "How is the refinance break-even point calculated?",
+      "a": "Divide your total closing costs by your monthly P&I savings. Example: you refinance from 7.25% to 6.25% on a $350,000 balance, saving $233/month in P&I. Closing costs are $6,500. Break-even = $6,500 ÷ $233 ≈ **28 months**. If you'll own the home longer than 28 months *and* you don't expect to refi again before then, the deal pencils. Most lenders and brokers like to see break-even under 36 months and a rate drop of at least 0.5%–0.75%. Don't forget to factor in any escrow refund from your old loan and the fact that a no-cost refi (where the lender absorbs closing costs in exchange for a slightly higher rate) shifts the math entirely."
     },
     {
-      "q": "What is a good debt-to-income (DTI) ratio for a mortgage?",
-      "a": "Most conventional lenders prefer a total DTI (all monthly debt payments divided by gross monthly income) of 43% or lower. Some loan programs allow up to 50% with strong compensating factors. Your housing costs (PITI) alone should ideally stay below 28% of gross monthly income — a rule known as the 'front-end ratio.'"
+      "q": "What credit score do I need for the best mortgage rate?",
+      "a": "On a conventional conforming loan, the best pricing tier kicks in at **FICO 780+**. Below that, Loan-Level Price Adjustments (LLPAs) increase your rate or fees: a borrower at FICO 740 will typically pay 0.125%–0.25% more, FICO 700 about 0.375%–0.50% more, and FICO 660 closer to 0.75%–1.0% more than the FICO 780+ borrower. FHA is more forgiving — you can qualify at 580, and FHA pricing is less FICO-sensitive — but you'll pay annual MIP regardless. If you're within 6 months of buying and sitting at FICO 720–760, paying down revolving balances to under 10% utilization can often pull you into the top tier before lock."
     },
     {
-      "q": "Are property taxes and insurance included in my mortgage payment?",
-      "a": "They can be, through an escrow account. Most lenders require escrow for taxes and insurance when your down payment is below 20%. Your lender collects 1/12 of the annual amounts each month and pays the bills on your behalf. This calculator adds those estimates to show your full PITI payment."
+      "q": "Does this calculator include closing costs and HOA fees?",
+      "a": "No. **Closing costs** typically run 2%–5% of the loan amount and are paid once at closing — they're not part of your monthly payment, so they're excluded here; budget separately. **HOA dues**, where applicable, are paid directly to your homeowners association (not through your lender's escrow) and vary from $50/month for a basic single-family HOA to $1,500+/month for a luxury condo. Add HOA dues manually to the PITI shown here to get your true monthly housing cost. The calculator also assumes a fixed-rate amortization schedule without extra principal payments — use a dedicated amortization tool to model accelerated payoffs."
     }
   ],
   "sources": [
     {
-      "name": "Freddie Mac Primary Mortgage Market Survey",
+      "name": "Freddie Mac Primary Mortgage Market Survey (PMMS)",
       "url": "https://www.freddiemac.com/pmms",
       "publisher": "Freddie Mac",
       "date": "2026"
     },
     {
-      "name": "Consumer Financial Protection Bureau — Mortgage Key Terms",
+      "name": "Consumer Financial Protection Bureau — What is PITI?",
       "url": "https://www.consumerfinance.gov/ask-cfpb/what-is-piti-en-1953/",
       "publisher": "CFPB",
       "date": "2026"
     },
     {
-      "name": "Homeowners Protection Act of 1998 (PMI Cancellation)",
-      "url": "https://www.fdic.gov/regulations/laws/rules/6500-3250.html",
-      "publisher": "FDIC",
+      "name": "Fannie Mae Selling Guide — Conforming Loan Limits",
+      "url": "https://singlefamily.fanniemae.com/originating-underwriting/loan-limits",
+      "publisher": "Fannie Mae",
       "date": "2026"
     },
     {
-      "name": "Tax Foundation — Property Taxes by State",
+      "name": "HUD — FHA Single Family Mortgage Insurance Premiums",
+      "url": "https://www.hud.gov/program_offices/housing/sfh/ins/sfh203b",
+      "publisher": "U.S. Department of Housing and Urban Development",
+      "date": "2026"
+    },
+    {
+      "name": "Homeowners Protection Act of 1998 (PMI Cancellation)",
+      "url": "https://www.consumerfinance.gov/rules-policy/regulations/1024/",
+      "publisher": "CFPB / 12 USC §4901",
+      "date": "2026"
+    },
+    {
+      "name": "Tax Foundation — Property Taxes by State and County",
       "url": "https://taxfoundation.org/data/all/state/property-taxes-by-state-county/",
       "publisher": "Tax Foundation",
       "date": "2026"
     },
     {
-      "name": "HUD — Homebuyer's Guide",
-      "url": "https://www.hud.gov/buying/localbuying",
-      "publisher": "U.S. Department of Housing and Urban Development",
+      "name": "Bankrate — Current Mortgage Rates",
+      "url": "https://www.bankrate.com/mortgages/mortgage-rates/",
+      "publisher": "Bankrate",
       "date": "2026"
     }
   ],
   "dataUpdate": {
     "frequency": "yearly",
-    "lastUpdated": "2026-04-28",
+    "lastUpdated": "2026-05-28",
     "updateType": "manual",
     "notes": "Default interest rate updated annually to reflect current Freddie Mac PMMS 30-year fixed average. PMI rate range and property tax default reviewed yearly."
   },
-  "lastReviewed": "2026-04-28"
+  "lastReviewed": "2026-05-28"
 }
