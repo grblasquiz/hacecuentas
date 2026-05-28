@@ -174,7 +174,12 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: calc.h1,
-  description: calc.description,
+  description: (() => {
+    const stripMd = (s: string) => (s || '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/\[(.+?)\]\(.+?\)/g, '$1').replace(/\s+/g, ' ').trim();
+    const candidate = calc.answerSnippet || calc.keyTakeaway || calc.description;
+    const stripped = stripMd(candidate);
+    return (stripped.length >= 50 ? stripped : calc.description).slice(0, 500);
+  })(),
   url: `https://hacecuentas.com/pt/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/pt/${calc.slug}`,
   inLanguage: 'pt',

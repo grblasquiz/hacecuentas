@@ -182,11 +182,17 @@ const schemaApp = {
 
 // Article schema for YMYL categories
 const isYMYL = ['finanzas', 'salud', 'negocios', 'mascotas'].includes(calc.category);
+// snippetDescription: answer-first format priority answerSnippet > keyTakeaway > description.
+// Used by Google AI Overviews + Gemini extract directly.
+const _stripMd = (s: string) => (s || '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/\[(.+?)\]\(.+?\)/g, '$1').replace(/\s+/g, ' ').trim();
+const _snippetCandidate = calc.answerSnippet || calc.keyTakeaway || calc.description;
+const _stripped = _stripMd(_snippetCandidate);
+const snippetDescription = (_stripped.length >= 50 ? _stripped : calc.description).slice(0, 500);
 const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 1500)) ? {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: calc.h1,
-  description: calc.description,
+  description: snippetDescription,
   url: `https://hacecuentas.com/en/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/en/${calc.slug}`,
   inLanguage: enLocale,
