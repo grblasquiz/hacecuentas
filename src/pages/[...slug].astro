@@ -622,6 +622,97 @@ if (isRecipeEligible) {
   });
 }
 
+// MathSolver schema — Google rich result para solucionadores matemáticos.
+// Solo se aplica a calcs matemáticas reales (no conversores). El reward es
+// aparecer en SERPs cuando el usuario busca un problema matemático concreto.
+// Bing/Copilot lo lee como "educational content" especializado.
+const MATH_SOLVER_EXPRESSIONS: Record<string, { name: string; mathExpression: string }[]> = {
+  'calculadora-ecuacion-cuadratica-formula-resolvente': [
+    { name: 'Resolver ecuación cuadrática', mathExpression: 'ax² + bx + c = 0' },
+    { name: 'Fórmula resolvente', mathExpression: 'x = (-b ± √(b²-4ac)) / 2a' },
+  ],
+  'calculadora-sistema-ecuaciones-2x2-cramer': [
+    { name: 'Sistema 2x2 por Cramer', mathExpression: 'ax + by = c; dx + ey = f' },
+  ],
+  'calculadora-regla-de-tres-simple-directa-inversa': [
+    { name: 'Regla de tres simple directa', mathExpression: 'x = (a × c) / b' },
+  ],
+  'calculadora-numeros-primos-factorizacion': [
+    { name: 'Factorización en primos', mathExpression: 'n = p₁^a × p₂^b × p₃^c' },
+  ],
+  'calculadora-area-triangulo-heron-tres-lados': [
+    { name: 'Área de triángulo (Herón)', mathExpression: 'A = √(s(s-a)(s-b)(s-c))' },
+  ],
+  'calculadora-volumen-superficie-esfera-radio': [
+    { name: 'Volumen de esfera', mathExpression: 'V = (4/3)πr³' },
+    { name: 'Superficie de esfera', mathExpression: 'S = 4πr²' },
+  ],
+  'calculadora-volumen-cilindro-radio-altura': [
+    { name: 'Volumen de cilindro', mathExpression: 'V = πr²h' },
+  ],
+  'calculadora-progresion-aritmetica': [
+    { name: 'Término n de progresión aritmética', mathExpression: 'aₙ = a₁ + (n-1)d' },
+    { name: 'Suma de progresión aritmética', mathExpression: 'Sₙ = n(a₁ + aₙ)/2' },
+  ],
+  'calculadora-progresion-geometrica-suma-termino': [
+    { name: 'Término n de progresión geométrica', mathExpression: 'aₙ = a₁ × r^(n-1)' },
+  ],
+  'calculadora-raiz-cuadrada-cubica': [
+    { name: 'Raíz cuadrada', mathExpression: '√n' },
+    { name: 'Raíz cúbica', mathExpression: '∛n' },
+  ],
+  'calculadora-fracciones-suma-resta-multiplicacion-division': [
+    { name: 'Suma de fracciones', mathExpression: 'a/b + c/d = (ad + bc)/bd' },
+  ],
+  'calculadora-pendiente-recta-dos-puntos': [
+    { name: 'Pendiente de recta', mathExpression: 'm = (y₂ - y₁) / (x₂ - x₁)' },
+  ],
+  'calculadora-seno-coseno-tangente-angulo-triangulo': [
+    { name: 'Razones trigonométricas', mathExpression: 'sin(θ) = opuesto/hipotenusa' },
+  ],
+  'calculadora-regresion-lineal-minimos-cuadrados': [
+    { name: 'Regresión lineal', mathExpression: 'y = mx + b' },
+  ],
+  'calculadora-media-mediana-moda': [
+    { name: 'Media aritmética', mathExpression: 'x̄ = Σxᵢ / n' },
+  ],
+  'calculadora-media-mediana-moda-rango-estadistica': [
+    { name: 'Media aritmética', mathExpression: 'x̄ = Σxᵢ / n' },
+  ],
+  'calculadora-chi-cuadrado-independencia': [
+    { name: 'Chi-cuadrado', mathExpression: 'χ² = Σ((O - E)² / E)' },
+  ],
+  'calculadora-intervalo-confianza-media': [
+    { name: 'Intervalo de confianza', mathExpression: 'IC = x̄ ± z(σ/√n)' },
+  ],
+  'calculadora-interes-simple': [
+    { name: 'Interés simple', mathExpression: 'I = C × i × t' },
+  ],
+  'calculadora-interes-simple-capital-tiempo-tasa': [
+    { name: 'Interés simple', mathExpression: 'I = C × i × t' },
+  ],
+};
+const mathSolverEntry = MATH_SOLVER_EXPRESSIONS[calc.slug];
+if (mathSolverEntry) {
+  schemaGraph.push({
+    '@context': 'https://schema.org',
+    '@type': 'MathSolver',
+    '@id': `https://hacecuentas.com/${calc.slug}#mathsolver`,
+    name: calc.h1,
+    url: `https://hacecuentas.com/${calc.slug}`,
+    description: schemaDescription,
+    inLanguage: schemaLang,
+    educationalLevel: 'Secundario, Universitario',
+    author: { '@id': 'https://hacecuentas.com/autores/martin-rodriguez#person' },
+    publisher: { '@id': 'https://hacecuentas.com/#organization' },
+    mathExpression: mathSolverEntry.map((e) => ({
+      '@type': 'MathExpression',
+      name: e.name,
+      mathExpression: e.mathExpression,
+    })),
+  });
+}
+
 // Sustainability / Climate schema — para calcs categoría 'medio-ambiente'.
 // Ecosia y AI engines verdes (también Brave Search) priorizan este señal.
 // Bing también lo lee como "specialty content".
