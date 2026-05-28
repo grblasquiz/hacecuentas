@@ -15,17 +15,21 @@
     "empresa paga vale transporte",
     "teto desconto vale transporte",
     "subsídio empresa VT",
-    "vale-transporte CLT 2026"
+    "vale-transporte CLT 2026",
+    "vale transporte indenizatório dinheiro",
+    "VT doméstica LC 150",
+    "VT intermitente Reforma Trabalhista",
+    "vale transporte INSS FGTS"
   ],
-  "intro": "Em 2026, o vale-transporte (Lei 7.418/1985 + Decreto 95.247/1987) é obrigatório para todo empregado CLT que usa transporte público no trajeto casa-trabalho-casa. A empresa custeia o transporte e pode descontar **até 6% do salário-base** do trabalhador. **Desconto = min(6% do salário-base, custo real)**. O VT não integra o salário para INSS, IRRF, FGTS ou demais verbas (art. 2º Lei 7.418). Em home office integral o benefício não é devido; em modelo híbrido, é proporcional aos dias presenciais.",
-  "keyTakeaway": "VT 2026: desconto do empregado = mín(6% do salário-base, custo real do transporte). Adicionais (insalubridade, noturno, horas extras) **não** entram na base. Sem incidência de INSS/IRRF.",
+  "intro": "O Vale-Transporte (VT) é direito do trabalhador CLT instituído pela **Lei nº 7.418/1985** e regulamentado pelo **Decreto nº 95.247/1987**, com aplicação obrigatória sempre que houver deslocamento residência↔trabalho↔residência mediante transporte público coletivo (urbano, intermunicipal ou interestadual de caráter regular). O empregador antecipa o custeio integral das passagens e tem direito de descontar do salário do empregado **no máximo 6% do salário-base** (art. 9º do Decreto 95.247/87), arcando com a diferença entre o custo real do transporte e esse percentual. O VT **não tem natureza salarial** (art. 2º, alínea \"b\", da Lei 7.418/85 e art. 458 da CLT por interpretação sistemática), ou seja, **não integra a base de cálculo do INSS, FGTS, IRRF, 13º salário, férias ou aviso prévio** — esse é o grande atrativo fiscal do benefício para a empresa. Após a **Reforma Trabalhista (Lei nº 13.467/2017)**, ganhou força a modalidade do **VT indenizatório em dinheiro** (PJ benefício mensal alternativo via PIX/conta-corrente), prática que mantém a natureza não salarial desde que haja acordo individual ou coletivo expresso e que o valor pago corresponda efetivamente ao custo das passagens — caso contrário, o Fisco pode requalificar como salário in natura. Em 2026, com a consolidação do home office híbrido e o avanço dos bilhetes únicos digitais (SP Bilhete Único, Rio Riocard, BH Optibus, BSB CMB), o cálculo do desconto de 6% segue sendo o coração da gestão de VT na folha brasileira, com regras específicas para domésticas (LC 150/2015), intermitentes (art. 452-A CLT) e teletrabalhadores (art. 75-A a 75-F CLT).",
+  "keyTakeaway": "VT 2026: desconto do empregado = mín(6% do salário-base, custo real do transporte). Adicionais (insalubridade, noturno, horas extras) **não** entram na base. Sem incidência de INSS, FGTS ou IRRF. Indenização em dinheiro pós-Reforma 13.467/17 é válida com acordo expresso.",
   "useCases": [
-    "Calcular o desconto mensal de VT na folha de pagamento de um funcionário CLT com salário de R$ 2.500 que gasta R$ 320/mês em transporte público.",
-    "Verificar se vale a pena exigir o vale-transporte ou optar por auxílio-mobilidade, comparando o custo real do deslocamento com o teto de 6% do salário.",
-    "Apurar o subsídio que a empresa precisa provisionar por trabalhador para cumprir a legislação sem erros no eSocial.",
-    "Conferir se um empregado com salário mínimo (R$ 1.518 em 2025) realmente pagará apenas R$ 91,08 de desconto mesmo que o VT custe R$ 250/mês.",
-    "Simular o impacto do aumento do salário mínimo 2026 sobre o teto de desconto do vale-transporte e replanejar a provisão de VT da empresa.",
-    "Auxiliar o RH a identificar casos em que o custo do transporte é menor que 6% do salário e nenhum subsídio empresarial é devido."
+    "Calcular o desconto mensal de VT: empregado com salário R$ 3.000 e transporte mensal de R$ 200 (10 dias × 4 passagens × R$ 5) — teto 6% = R$ 180, custo real R$ 200, desconto R$ 180 + custeio empresa R$ 20.",
+    "Decidir entre VT físico vs. indenizatório em dinheiro (PJ/PIX): comparar economia administrativa com o risco de requalificação salarial pela Receita e o impacto de INSS 20% patronal + FGTS 8% sobre o valor pago em espécie sem acordo coletivo.",
+    "Apurar o VT da empregada doméstica sob a LC nº 150/2015: mesma regra do 6%, com integração ao eSocial Doméstico e desconto obrigatório se houver uso de transporte público coletivo.",
+    "Calcular VT proporcional para empregado intermitente (Lei 13.467/2017, art. 452-A CLT): cada convocação gera direito ao VT do dia trabalhado, com desconto de 6% sobre o salário-hora proporcional ao período convocado.",
+    "Conferir se um empregado com salário mínimo (R$ 1.518 em 2025) pagará apenas R$ 91,08 de desconto mesmo que o VT custe R$ 250/mês.",
+    "Simular o impacto do reajuste do salário mínimo 2026 sobre o teto de desconto e replanejar a provisão de VT da empresa para o novo ciclo."
   ],
   "fields": [
     {
@@ -42,10 +46,10 @@
       "label": "Custo mensal com transporte (R$)",
       "type": "number",
       "required": true,
-      "placeholder": "400",
-      "default": 400,
+      "placeholder": "200",
+      "default": 200,
       "step": 0.01,
-      "help": "Soma de todas as passagens de ida e volta no mês."
+      "help": "Soma de todas as passagens de ida e volta no mês (Bilhete Único, Riocard, Optibus, etc.)."
     }
   ],
   "outputs": [
@@ -77,58 +81,59 @@
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-22",
-    "source": "Lei 7.418/1985 + Decreto 95.247/1987",
+    "lastUpdated": "2026-05-28",
+    "source": "Lei 7.418/1985 + Decreto 95.247/1987 + Lei 13.467/2017",
     "sourceUrl": "https://www.planalto.gov.br/ccivil_03/leis/l7418.htm",
     "updateType": "manual"
   },
   "example": {
-    "title": "Exemplo: salário R$ 3.000 e transporte R$ 400",
+    "title": "Exemplo: salário R$ 3.000 e transporte R$ 200/mês (Bilhete Único SP)",
     "steps": [
-      "Teto 6% = R$ 180,00",
-      "Custo real: R$ 400,00",
-      "Desconto do empregado: R$ 180,00",
-      "Subsídio da empresa: R$ 220,00"
+      "Teto 6% = R$ 3.000 × 0,06 = R$ 180,00",
+      "Custo real do VT: R$ 200,00 (10 dias × 4 passagens × R$ 5,00)",
+      "Desconto do empregado: min(R$ 180; R$ 200) = R$ 180,00",
+      "Custeio (subsídio) da empresa: R$ 200 − R$ 180 = R$ 20,00",
+      "Custo total para a empresa: R$ 200,00 — sem incidência de INSS/FGTS/IRRF"
     ],
-    "result": "Empregado paga R$ 180,00 (6% do salário); empresa subsidia R$ 220,00 (folha de 20/05/2026)."
+    "result": "Empregado paga R$ 180,00 (6% do salário-base); empresa custeia R$ 20,00 (folha de 20/05/2026)."
   },
-  "explanation": "## Como se calcula\n\nO cálculo segue rigorosamente o art. 9º do Decreto nº 95.247/1987:\n\n```\nTeto de desconto  = Salário-base × 0,06\nDesconto empregado = min(Teto de desconto, Custo mensal do transporte)\nSubsídio empresa   = Custo mensal do transporte − Desconto empregado\n% sobre salário    = (Desconto empregado / Salário-base) × 100\n```\n\n**Regra adicional importante:** se o custo mensal do transporte for **menor ou igual** ao teto de 6%, o desconto do empregado é o próprio custo do transporte, o subsídio da empresa é R$ 0,00 e o percentual real descontado fica abaixo de 6%.\n\n---\n\n## Tabela de referência\n\n| Salário-base (R$) | Teto 6% (R$) | VT mensal (R$) | Desconto empregado (R$) | Subsídio empresa (R$) |\n|-------------------|-------------|---------------|------------------------|-----------------------|\n| 1.518,00 (salário mínimo 2025) | 91,08 | 250,00 | 91,08 | 158,92 |\n| 2.000,00 | 120,00 | 180,00 | 120,00 | 60,00 |\n| 2.500,00 | 150,00 | 100,00 | 100,00 | 0,00 |\n| 3.000,00 | 180,00 | 400,00 | 180,00 | 220,00 |\n| 4.000,00 | 240,00 | 500,00 | 240,00 | 260,00 |\n| 5.000,00 | 300,00 | 280,00 | 280,00 | 0,00 |\n| 8.000,00 | 480,00 | 600,00 | 480,00 | 120,00 |\n\n> **Nota:** quando o custo do VT é menor que o teto, o subsídio da empresa é zero — o empregado paga o valor exato do transporte.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Operador de produção (salário mínimo)\n- Salário-base: **R$ 1.518,00**\n- Custo mensal do transporte: **R$ 250,00** (2 linhas de ônibus municipal)\n- Teto 6%: R$ 1.518 × 6% = **R$ 91,08**\n- Desconto do empregado: **R$ 91,08** (limitado ao teto)\n- Subsídio da empresa: R$ 250,00 − R$ 91,08 = **R$ 158,92**\n- A empresa absorve **63,6%** do custo total do transporte.\n\n### Caso 2 — Analista administrativo (salário médio)\n- Salário-base: **R$ 3.000,00**\n- Custo mensal do transporte: **R$ 400,00** (metrô + ônibus em São Paulo)\n- Teto 6%: R$ 3.000 × 6% = **R$ 180,00**\n- Desconto do empregado: **R$ 180,00**\n- Subsídio da empresa: R$ 400,00 − R$ 180,00 = **R$ 220,00**\n- Percentual real descontado: 6% exatos.\n\n### Caso 3 — Vendedor externo (custo abaixo do teto)\n- Salário-base: **R$ 2.500,00**\n- Custo mensal do transporte: **R$ 100,00** (apenas 1 linha)\n- Teto 6%: R$ 2.500 × 6% = **R$ 150,00**\n- Como R$ 100 < R$ 150, o desconto é o custo real: **R$ 100,00**\n- Subsídio da empresa: **R$ 0,00**\n- Percentual real descontado: 4% (abaixo do teto).\n\n---\n\n## Erros comuns\n\n1. **Aplicar 6% sobre o salário bruto total (com adicionais).** A lei fala em *salário-base*; horas extras, adicionais noturno, de insalubridade e gorjetas não entram na base de cálculo do desconto do VT.\n\n2. **Não limitar o desconto ao custo real do transporte.** Quando o VT mensal custa menos de 6% do salário, o empregador não pode descontar o teto cheio — só pode descontar o que foi efetivamente gasto com passagens.\n\n3. **Esquecer de recalcular no mês de admissão ou demissão.** Em meses incompletos, o custo do transporte deve ser proporcional aos dias trabalhados; descontar o mês cheio é ilegal.\n\n4. **Confundir vale-transporte com auxílio-mobilidade (auxílio-combustível).** O VT regulamentado pela Lei 7.418/1985 cobre transporte coletivo público; para outras modalidades (carro, moto, app de transporte), a empresa pode oferecer auxílio-mobilidade, mas as regras de desconto máximo de 6% não se aplicam automaticamente — dependem do acordo ou convenção coletiva.\n\n5. **Não atualizar o valor das passagens ao longo do ano.** As tarifas de transporte público são reajustadas periodicamente. Usar valor desatualizado gera desconto indevido ou subsídio insuficiente, ambos passíveis de autuação em fiscalização trabalhista.\n\n6. **Descontar VT de empregado que não utilizou o benefício.** Se o trabalhador comunicou que não usará o VT em determinado período (férias, home office integral), o desconto não pode ser realizado naquele mês.\n\n---\n\n## Calculadoras relacionadas\n\n- [Salário líquido CLT (INSS + IRRF 2026)](/salario-liquido-clt-inss-irrf-2026) — veja como o desconto do VT se encaixa no contracheque completo.\n- [Salário líquido com dependentes](/salario-liquido-com-dependentes-br) — calcule o impacto dos dependentes na base de IRRF junto com o VT.\n- [Horas extras 50% e 100% com DSR e reflexo](/horas-extras-50-100-dsr-reflexo) — entenda por que horas extras não entram na base do VT.\n- [Adicional noturno 20% CLT](/adicional-noturno-20-porcento-clt) — confirme que o adicional noturno também não compõe a base de cálculo do desconto.\n",
+  "explanation": "## Como se calcula\n\nO cálculo segue o art. 9º do Decreto nº 95.247/1987, regulamentador da Lei nº 7.418/1985:\n\n```\nTeto de desconto    = Salário-base × 0,06\nDesconto empregado  = mín(Teto de desconto; Custo mensal do transporte)\nCusteio empresa     = Custo mensal do transporte − Desconto empregado\n% sobre salário     = (Desconto empregado / Salário-base) × 100\n```\n\nSe o **custo mensal do transporte for menor ou igual** ao teto de 6%, o desconto do empregado equivale ao próprio custo do transporte, o custeio da empresa é **R$ 0,00** e o percentual real fica abaixo de 6%.\n\n---\n\n## Caso prático — empregado R$ 3.000 com VT R$ 200\n\nUm analista CLT em São Paulo, salário-base **R$ 3.000**, utiliza o **Bilhete Único de R$ 5,00** (ônibus + metrô integrado) para 10 dias presenciais por mês em modelo híbrido:\n\n- **Custo mensal** = 10 dias × 4 passagens (ida/volta + integração) × R$ 5,00 = **R$ 200,00**\n- **Teto 6%** = R$ 3.000 × 0,06 = **R$ 180,00**\n- **Desconto do trabalhador** = R$ 180,00 (limitado ao teto)\n- **Custeio da empresa** = R$ 200 − R$ 180 = **R$ 20,00**\n- **Custo total para a empresa** = R$ 200,00 — **sem INSS, FGTS ou IRRF**\n\nSe o mesmo trabalhador morasse mais perto e o custo caísse para **R$ 120/mês** (custo ≤ teto), o desconto seria de R$ 120 (não \"trava\" no teto) e o custeio da empresa seria **zero** — o VT vira neutro no orçamento.\n\n---\n\n## Tabela de referência — bilhete único nas capitais (tarifa 2025/2026)\n\n| Cidade | Bilhete / sistema | Tarifa unitária | VT mensal típico (44 passagens) |\n|--------|-------------------|-----------------|----------------------------------|\n| São Paulo | Bilhete Único (ônibus + metrô) | R$ 5,00 | R$ 220,00 |\n| Rio de Janeiro | Riocard ônibus municipal | R$ 4,30 | R$ 189,20 |\n| Belo Horizonte | Optibus | R$ 5,30 | R$ 233,20 |\n| Brasília | CMB (Cartão Mobilidade Brasília) | R$ 5,50 | R$ 242,00 |\n| Porto Alegre | TRI Gaúcho | R$ 4,80 | R$ 211,20 |\n| Curitiba | URBS Cartão Transporte | R$ 6,00 | R$ 264,00 |\n| Salvador | Salvador Card | R$ 5,20 | R$ 228,80 |\n\n> Considera 22 dias úteis × 2 passagens (ida/volta). Integrações modais podem reduzir o número total.\n\n---\n\n## VT indenizatório em dinheiro pós-Reforma 13.467/2017\n\nA **Reforma Trabalhista (Lei nº 13.467/2017)** flexibilizou a forma de pagamento do VT. Hoje é juridicamente aceito que o empregador pague o equivalente **em dinheiro (PIX/conta-corrente)**, desde que haja **acordo individual escrito ou previsão em convenção coletiva** e que o valor corresponda ao custo real das passagens. Quando esses requisitos são cumpridos, o VT em dinheiro **mantém a natureza não salarial** e não sofre incidência de INSS/FGTS/IRRF.\n\n**Comparativo prático (mesmo trabalhador R$ 3.000 / VT R$ 200):**\n\n| Item | VT físico (Bilhete Único) | Indenizatório dinheiro (com acordo) | Indenizatório dinheiro (sem acordo — risco) |\n|------|----------------------------|--------------------------------------|------------------------------------------------|\n| Custo bruto empresa | R$ 200,00 | R$ 200,00 | R$ 200,00 |\n| INSS patronal 20% | R$ 0,00 | R$ 0,00 | R$ 40,00 |\n| FGTS 8% | R$ 0,00 | R$ 0,00 | R$ 16,00 |\n| **Custo total empresa** | **R$ 200,00** | **R$ 200,00** | **R$ 256,00** |\n| Gestão administrativa | Recarga mensal, conciliação | PIX único — mais simples | PIX único, risco de autuação |\n\nO **Boletim Anual TPL 2024** apontou que **23% das empresas brasileiras migraram para o modelo indenizatório** após a Reforma, principalmente PMEs que buscavam reduzir custos operacionais de recarga de cartões. O ponto de atenção é **sempre formalizar o acordo** — sem ele, a fiscalização da Receita ou uma reclamação trabalhista pode requalificar o pagamento como salário in natura, gerando os 28% adicionais de encargos retroativos.\n\n---\n\n## Casos especiais\n\n### Doméstica (LC nº 150/2015)\n\nA empregada doméstica tem **exatamente o mesmo direito ao VT** desde a LC 150/2015. O cálculo do desconto de 6% é idêntico, integrado ao **eSocial Doméstico** mensalmente. Não há discricionariedade: se a empregada usa transporte público, o VT é obrigatório.\n\n### Intermitente (art. 452-A CLT, Reforma 13.467/17)\n\nO trabalhador intermitente recebe **VT proporcional aos dias efetivamente convocados**. Cada convocação gera direito ao VT do dia trabalhado; o desconto de 6% incide sobre o **salário-hora proporcional ao período convocado**. Na prática, paga-se diariamente junto com a remuneração.\n\n### Férias e licenças\n\nDurante as **férias**, o trabalhador **não recebe VT** (não há deslocamento). O fornecimento fica suspenso e retomado no retorno. Em licença-maternidade, auxílio-doença e afastamentos previdenciários, mesma lógica: suspende.\n\n### Aposentadoria proporcional e pensionistas\n\nAposentados que continuem trabalhando como CLT **mantêm o direito** ao VT integral, sem restrição etária. Pensionistas que voltam ao mercado também.\n\n### Greve de transporte público\n\nNa hipótese de **greve do transporte coletivo**, jurisprudência majoritária do TST entende que o empregador deve **disponibilizar alternativa** (fretado, vans, app de transporte ou reembolso) — não pode simplesmente descontar o dia.\n\n### Home office integral e híbrido\n\nNo **teletrabalho integral** (art. 75-A a 75-F CLT), não há VT — não existe deslocamento. No **modelo híbrido**, o VT é proporcional aos dias presenciais, calculado mês a mês.\n\n---\n\n## Recusa e prescrição\n\nO empregador **não pode** recusar sumariamente o VT a quem o solicita por escrito (Lei 7.418/85, art. 7º — formulário com endereço residencial e meios de transporte usados). A recusa indevida é falta grave passível de **reclamação trabalhista**, com prescrição **bienal** após o fim do contrato e **quinquenal retroativa** (art. 7º, XXIX, CF/88).\n\n---\n\n## Erros comuns\n\n1. **Aplicar 6% sobre o salário bruto total.** A lei é clara: incide sobre o **salário-base**. Adicional noturno, insalubridade, periculosidade, horas extras, comissões e gorjetas **não entram**.\n2. **Travar o desconto no teto quando o custo é menor.** Se R$ 120 < R$ 180 (teto), desconta-se R$ 120, não o teto cheio.\n3. **Esquecer o cálculo proporcional em admissão/demissão.** Mês incompleto exige proporcionalidade — descontar o mês cheio é ilegal.\n4. **Confundir VT com auxílio-mobilidade/combustível.** VT cobre transporte coletivo público. Auxílio para carro/moto/app depende de norma coletiva específica e não goza automaticamente da isenção de INSS/FGTS.\n5. **Não atualizar tarifa após reajuste municipal.** Tarifas urbanas mudam anualmente — usar valor desatualizado gera desconto indevido (ou custeio insuficiente).\n6. **Pagar VT em dinheiro sem acordo formal.** Sem acordo individual escrito ou convenção coletiva, o pagamento em espécie pode ser requalificado como salário in natura — gerando INSS patronal 20% + FGTS 8% retroativos.\n7. **Descontar VT em período de férias.** Sem deslocamento, sem desconto.\n\n---\n\n## Calculadoras relacionadas\n\n- [Salário líquido CLT (INSS + IRRF 2026)](/salario-liquido-clt-inss-irrf-2026) — veja como o desconto do VT se encaixa no contracheque completo.\n- [Salário líquido com dependentes](/salario-liquido-com-dependentes-br) — impacto dos dependentes na base de IRRF junto com o VT.\n- [Horas extras 50% e 100% com DSR e reflexo](/horas-extras-50-100-dsr-reflexo) — confirme por que horas extras não entram na base do VT.\n- [Adicional noturno 20% CLT](/adicional-noturno-20-porcento-clt) — adicional noturno também não compõe a base do desconto de 6%.\n",
   "faq": [
     {
-      "q": "Qual é a base legal do desconto de 6% do vale-transporte?",
-      "a": "O percentual de 6% está fixado no art. 9º do Decreto nº 95.247/1987, que regulamenta a Lei nº 7.418/1985. O decreto estabelece que o empregado contribui com até 6% do seu salário-base e o empregador custeia o restante. Esse percentual não mudou desde a criação do benefício e se aplica a todos os empregados regidos pela CLT."
+      "q": "O desconto de 6% incide sobre o salário bruto ou sobre o salário-base?",
+      "a": "Incide **exclusivamente sobre o salário-base**, conforme o art. 9º do Decreto nº 95.247/1987. Adicionais de insalubridade (NR-15), periculosidade (NR-16), adicional noturno (art. 73 CLT), horas extras, comissões e gorjetas ficam **fora da base de cálculo**. Aplicar 6% sobre o bruto resulta em desconto maior do que a lei permite e configura desconto ilegal passível de devolução em dobro (art. 462 CLT) e multa em reclamação trabalhista."
     },
     {
-      "q": "O 6% incide sobre o salário bruto ou sobre o salário-base?",
-      "a": "Incide **exclusivamente sobre o salário-base**, conforme o Decreto nº 95.247/1987. Adicionais de insalubridade, periculosidade, horas extras, adicional noturno, comissões e gorjetas ficam de fora da base de cálculo. Usar o salário bruto total resultaria em desconto maior do que a lei permite, caracterizando desconto ilegal."
+      "q": "VT indenizatório em dinheiro (PIX) vale a pena para o empregador?",
+      "a": "Sim, **desde que haja acordo individual escrito ou previsão em convenção coletiva**. Com acordo formalizado, o VT em dinheiro mantém a natureza não salarial (Lei 7.418/85 + Reforma 13.467/17) — sem INSS, FGTS ou IRRF. Vantagem principal: elimina o custo administrativo de recarga mensal de cartões. **Sem acordo**, a Receita pode requalificar como salário in natura, gerando **INSS patronal 20% + FGTS 8%** retroativos (cerca de 28% sobre o valor pago). Estima-se que **23% das empresas brasileiras** já migraram para esse modelo (Boletim Anual TPL 2024)."
     },
     {
-      "q": "O que acontece quando o custo do transporte é menor que 6% do salário?",
-      "a": "Nesse caso, o desconto do empregado é limitado ao **custo real das passagens**, e o subsídio da empresa é zero (R$ 0,00). Por exemplo, se o salário-base é R$ 2.500 (teto de R$ 150) e o VT custa R$ 100, desconta-se apenas R$ 100. O empregador não pode cobrar o teto se o trabalhador gastou menos do que isso."
+      "q": "O empregador pode recusar fornecer o vale-transporte?",
+      "a": "**Não.** A Lei nº 7.418/1985 (art. 7º) obriga o empregador a fornecer VT a todo empregado que solicite por escrito, informando endereço residencial e meios de transporte coletivo público utilizados. A recusa sumária é falta grave do empregador, passível de reclamação trabalhista, multa administrativa e ressarcimento dos valores indevidamente não pagos. A prescrição é **bienal** após o fim do contrato e **quinquenal retroativa** (art. 7º, XXIX, CF/88)."
     },
     {
-      "q": "A empresa é obrigada a fornecer vale-transporte a todos os funcionários?",
-      "a": "Sim, para todos os empregados que utilizam transporte coletivo público no trajeto residência-trabalho-residência, independentemente do salário ou cargo, conforme a Lei nº 7.418/1985. A obrigatoriedade existe inclusive para empregados domésticos (Lei Complementar nº 150/2015). A única exceção é quando o empregado reside no próprio local de trabalho ou se desloca a pé."
+      "q": "Empregada doméstica tem direito a vale-transporte?",
+      "a": "**Sim.** Desde a **LC nº 150/2015** (\"PEC das Domésticas\"), a empregada doméstica tem o mesmo direito ao VT que qualquer empregado CLT, com idêntica regra do desconto de 6% sobre o salário-base. O benefício é declarado mensalmente no **eSocial Doméstico** e não goza de qualquer tratamento diferenciado: se há transporte público no trajeto casa-trabalho, o VT é obrigatório."
     },
     {
-      "q": "O vale-transporte tem algum impacto no INSS ou no IRRF?",
-      "a": "Não. O vale-transporte não integra o salário para nenhum efeito legal (art. 2º da Lei nº 7.418/1985), portanto não incide INSS nem IRRF sobre ele. O desconto de até 6% que aparece no contracheque é uma mera restituição parcial do custo, não uma tributação. Isso o diferencia de outros benefícios como o plano de saúde, que pode ter incidência previdenciária dependendo da modalidade."
+      "q": "Durante as férias o trabalhador mantém o vale-transporte?",
+      "a": "**Não.** Durante as **férias** o empregado **não recebe VT**, pois não há deslocamento residência-trabalho-residência. O fornecimento é suspenso no início das férias e retomado no retorno. A mesma lógica se aplica a licença-maternidade, auxílio-doença e demais afastamentos previdenciários — sem deslocamento, sem VT."
     },
     {
-      "q": "Como calcular o VT em meses com admissão ou demissão no meio do mês?",
-      "a": "O cálculo deve ser **proporcional aos dias úteis trabalhados**. Fórmula: `VT proporcional = (Custo diário × Dias úteis trabalhados)`. O custo diário é obtido dividindo o custo mensal pelo total de dias úteis do mês. O desconto de 6% também incide sobre o salário proporcional. Descontar o mês cheio em caso de admissão ou demissão parcial é prática ilegal sujeita a reclamação trabalhista."
+      "q": "O vale-transporte sofre desconto de INSS, FGTS ou IRRF?",
+      "a": "**Não.** O VT **não integra o salário** para nenhum efeito legal (art. 2º, alínea \"b\", da Lei 7.418/1985), portanto **não há incidência de INSS, FGTS, IRRF, 13º salário, férias, aviso prévio ou qualquer outra verba**. O desconto de até 6% que aparece no contracheque é apenas restituição parcial do custo antecipado pelo empregador, **não é tributo nem incide sobre nenhuma base previdenciária ou fiscal**. Essa é a principal vantagem do benefício."
     },
     {
-      "q": "O empregado em home office tem direito a vale-transporte?",
-      "a": "**Não**, enquanto estiver em regime de teletrabalho integral (home office 100%), pois não há deslocamento casa-trabalho. Contudo, nos dias em que o empregado se deslocar ao escritório (modelo híbrido), o VT é devido proporcionalmente a esses dias. A empresa deve ajustar o benefício mês a mês conforme os dias presenciais realizados, evitando desconto ou fornecimento indevido."
+      "q": "Estagiário e jovem aprendiz CLT têm direito ao VT?",
+      "a": "**Jovem aprendiz** (Lei 10.097/2000) é empregado CLT por equiparação e tem **direito pleno ao VT**, com desconto de 6% sobre o salário-base aprendiz. **Estagiário** (Lei 11.788/2008) **não é CLT** e não tem direito automático ao VT — porém o **auxílio-transporte** ao estagiário é **obrigatório** por força do art. 12 da Lei do Estágio (concedido em dinheiro ou na forma de auxílio compatível), sem desconto algum, pois é parcela indenizatória integral."
     },
     {
-      "q": "Qual é o salário mínimo vigente em 2025 e qual o teto de VT correspondente?",
-      "a": "O salário mínimo nacional em 2025 é de **R$ 1.518,00** (Decreto nº 12.302/2024). O teto de desconto de VT para um empregado que recebe exatamente o mínimo é de **R$ 91,08** (R$ 1.518 × 6%). Para 2026, o novo valor do salário mínimo ainda será definido pelo governo federal e impactará diretamente esse teto."
+      "q": "Trabalhador intermitente recebe vale-transporte?",
+      "a": "**Sim, proporcionalmente.** Pelo art. 452-A da CLT (incluído pela **Lei 13.467/2017 — Reforma Trabalhista**), cada **convocação** do trabalhador intermitente gera direito ao VT do dia efetivamente trabalhado. O desconto de 6% incide sobre o **salário-hora proporcional ao período convocado** e o pagamento, na prática, é feito junto com a remuneração de cada convocação ou em folha mensal consolidada — depende do acordo entre empregador e empregado."
     },
     {
-      "q": "O empregador pode substituir o vale-transporte por dinheiro (auxílio em espécie)?",
-      "a": "Sim, desde que haja **autorização do empregado** e o valor pago seja equivalente ao custo das passagens. Porém, se pago em dinheiro sem previsão em acordo ou convenção coletiva, o valor poderá ser interpretado como salário pelo Fisco e pela Justiça do Trabalho, sujeitando-se a incidência de INSS e IRRF. A forma segura é o crédito em cartão específico de VT ou o pagamento via bilhete eletrônico."
+      "q": "Em modelo híbrido (3 dias presencial / 2 dias home office) como calcular o VT?",
+      "a": "O VT é **proporcional aos dias presenciais**. Fórmula prática: `VT mensal = (Custo diário × Dias presenciais no mês)`. O desconto de 6% sobre o salário-base permanece igual, mas o valor total do VT cai proporcionalmente. Em teletrabalho integral (art. 75-A a 75-F CLT) **não há VT**. A empresa deve ajustar mês a mês conforme os dias efetivamente presenciais — descontar dias de home office é ilegal e fornecer VT em dias não presenciais pode caracterizar pagamento indevido."
     }
   ],
   "sources": [
@@ -141,23 +146,31 @@
       "url": "https://www.planalto.gov.br/ccivil_03/decreto/d95247.htm"
     },
     {
+      "name": "Lei nº 13.467/2017 – Reforma Trabalhista (alterações CLT)",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2017/lei/l13467.htm"
+    },
+    {
+      "name": "CLT – Decreto-Lei nº 5.452/1943 (art. 458 e 452-A)",
+      "url": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm"
+    },
+    {
+      "name": "Lei Complementar nº 150/2015 – Empregado Doméstico",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp150.htm"
+    },
+    {
+      "name": "TST – Súmulas e jurisprudência sobre VT",
+      "url": "https://www.tst.jus.br/sumulas"
+    },
+    {
       "name": "Decreto nº 12.302/2024 – Salário Mínimo",
       "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2024/decreto/d12302.htm"
     },
     {
-      "name": "Receita Federal — Benefícios não salariais",
-      "url": "https://www.gov.br/receitafederal/pt-br"
-    },
-    {
       "name": "Ministério do Trabalho — Vale-Transporte",
       "url": "https://www.gov.br/trabalho-e-previdencia/pt-br"
-    },
-    {
-      "name": "eSocial — Eventos de remuneração",
-      "url": "https://www.gov.br/esocial/pt-br"
     }
   ],
-  "lastReviewed": "2026-05-20",
+  "lastReviewed": "2026-05-28",
   "relatedSlugs": [
     "salario-liquido-clt-inss-irrf-2026",
     "salario-liquido-com-dependentes-br",

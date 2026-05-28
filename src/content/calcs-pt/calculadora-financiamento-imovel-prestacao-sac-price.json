@@ -5,18 +5,18 @@
   "description": "Calcule e compare prestações SAC e Price para financiamento imóvel. Veja 1ª e última parcela, total de juros e qual sistema é mais vantajoso para você.",
   "answerSnippet": "No financiamento imobiliário brasileiro, o sistema SAC amortiza valor constante e gera prestações decrescentes, enquanto o sistema Price mantém parcela fixa. Com taxa Caixa SBPE 2026 (~10,5% a.a.), o Price costuma pagar 15–25% mais juros totais em prazos acima de 20 anos. Exemplo: financiar R$ 400.000 em 30 anos pelo SAC inicia em ~R$ 4.600 e termina em ~R$ 1.300; pelo Price fica em ~R$ 3.660 fixos com juros totais maiores.",
   "category": "finanzas",
-  "audience": "global",
+  "audience": "BR",
   "icon": "🏠",
   "formulaId": "financiamento-imovel-prestacao-sac-price",
-  "intro": "Ao financiar um imóvel no Brasil, você escolhe entre dois sistemas de amortização: **SAC** (prestação decrescente) ou **Price** (prestação fixa). A diferença no total de juros pagos pode ser de dezenas de milhares de reais. Esta calculadora usa a **taxa Caixa SBPE 2026 (~10,5% a.a.)** e projeta todas as parcelas, mostrando quanto você paga no início, no fim e ao total em cada sistema.",
-  "keyTakeaway": "No SAC, a 1ª parcela pode ser até 40% maior que a última; no Price, todas as parcelas são iguais, mas o total de juros pago costuma ser 15–25% maior que no SAC para prazos acima de 20 anos.",
+  "intro": "Decidir entre **SAC (Sistema de Amortização Constante)** e **PRICE (Sistema Francês de Amortização)** é a decisão mais importante na hora de financiar um imóvel no Brasil — e pode significar diferença de **R$ 300.000 ou mais** em juros totais ao longo de 30 anos. No SAC, a amortização do principal é constante e os juros incidem sobre saldo devedor decrescente, gerando **parcela inicial maior porém decrescente** e total pago menor. No PRICE, a fórmula matemática mantém **parcela fixa** durante todo o contrato, facilitando o planejamento mensal mas resultando em **total de juros 25%–40% superior** ao SAC para prazos longos. Os principais bancos brasileiros — **Caixa Econômica Federal (líder com Linha Poupança SBPE), Itaú Pro-Cotista, Bradesco, Santander, Banco do Brasil, Inter e Nubank** — oferecem ambos os sistemas, com **LTV (Loan-to-Value) de até 80% para imóveis novos** e até 70% para usados dentro do SFH (Sistema Financeiro de Habitação, teto de R$ 1,5 milhão). Esta calculadora simula ambos os sistemas com a taxa Caixa SBPE 2026 (~10,5% a.a.), mostrando 1ª e última parcela do SAC, prestação fixa do PRICE, total pago e total de juros — para você comparar com a planilha do simulador oficial de cada banco antes de assinar.",
+  "keyTakeaway": "No SAC, a 1ª parcela pode ser até 40% maior que a última; no Price, todas as parcelas são iguais, mas o total de juros pago costuma ser 25–40% maior que no SAC para prazos acima de 20 anos.",
   "useCases": [
-    "Comparar quanto pagará no total pelo imóvel em cada sistema antes de assinar o contrato",
-    "Saber se sua renda comporta a 1ª parcela do SAC, que é a mais alta",
-    "Calcular o financiamento com entrada de 20%, 30% ou 50% do valor do imóvel",
-    "Estimar o impacto da TR sobre as prestações ao longo do prazo",
-    "Decidir entre prazo de 20, 25 ou 30 anos e seu efeito nos juros totais",
-    "Planejar a compra do primeiro imóvel com dados reais da Caixa Econômica Federal"
+    "Simular SAC vs PRICE em 30 anos para imóvel de R$ 500.000 e ver quanto economiza em juros totais escolhendo SAC",
+    "Decidir orçamento mensal de R$ 4.000: quanto de imóvel você consegue financiar no SAC vs no PRICE com mesmo budget",
+    "Comparar propostas Caixa SBPE (9,16% + TR), Itaú Pro-Cotista (10,29%), Bradesco (10,49%) e Santander antes de fechar contrato",
+    "Avaliar refinanciamento antecipado: quanto FGTS aplicado em amortização reduz saldo devedor e juros futuros",
+    "Planejar portabilidade de crédito imobiliário (BACEN Res 4.292) entre bancos buscando taxa menor",
+    "Calcular comprometimento de renda de 30% para aprovação no banco em ambos os sistemas"
   ],
   "fields": [
     {
@@ -160,47 +160,43 @@
       "format": "text"
     }
   ],
-  "explanation": "## O que é financiamento imóvel com SAC e Price?\n\nSAC e Price são dois sistemas de amortização para empréstimos imobiliários. No SAC, as prestações diminuem ao longo do tempo; no Price, permanecem iguais. A escolha impacta significativamente o total de juros pagos, com diferenças de até 25% em financiamentos de longo prazo.\n\n## Como funciona o cálculo\n\nO financiamento imobiliário no Brasil utiliza dois sistemas de amortização principais, ambos com correção pela **TR (Taxa Referencial)** no caso da Caixa Econômica Federal (SBPE/FGTS).\n\n---\n\n## Sistema SAC (Sistema de Amortização Constante)\n\nNo SAC, a **amortização mensal é constante**: o saldo devedor cai de forma linear. Os juros diminuem a cada mês porque incidem sobre um saldo menor.\n\n```\nAmortização mensal  = Valor financiado ÷ Número de meses (n)\nJuros do mês k      = Saldo devedor(k) × taxa_mensal\nPrestação do mês k  = Amortização + Juros(k)\n```\n\nOnde:\n- `taxa_mensal = (1 + taxa_anual)^(1/12) − 1`\n- `Saldo devedor(k) = Valor financiado − (k − 1) × Amortização`\n\n**Com TR:** o saldo é corrigido mensalmente: `Saldo_corrigido = Saldo × (1 + TR_mensal)`, onde `TR_mensal = (1 + TR_anual)^(1/12) − 1`.\n\n---\n\n## Sistema Price (Tabela Price / Amortização Francesa)\n\nNo Price, a **prestação é constante** durante todo o prazo. A amortização cresce mês a mês enquanto os juros diminuem.\n\n```\nPrestação fixa (PMT) = PV × [i × (1+i)^n] ÷ [(1+i)^n − 1]\n```\n\nOnde:\n- `PV` = valor financiado\n- `i` = taxa mensal\n- `n` = número de meses\n\nCom TR, a prestação é recalculada periodicamente, mas nesta calculadora usamos a TR estimada para projeção.\n\n---\n\n## Exemplo prático\n\nImóvel de **R$ 500.000**, entrada de **20%** (R$ 100.000), financiamento de R$ 400.000, prazo **30 anos** (360 meses), taxa **10,5% a.a.**, TR **0%**:\n\n| Indicador | SAC | Price |\n|---|---|---|\n| 1ª prestação | ~R$ 4.611 | ~R$ 3.659 |\n| Última prestação | ~R$ 1.113 | ~R$ 3.659 |\n| Total de juros | ~R$ 207.000 | ~R$ 317.200 |\n| Total pago | ~R$ 607.000 | ~R$ 717.200 |\n\n---\n\n## Quando NÃO usar esta calculadora / Limitações\n\n- **Não inclui** seguros obrigatórios (MIP e DFI), que somam 0,02%–0,04% ao mês sobre o saldo.\n- **Não inclui** taxas administrativas e tarifas de avaliação do imóvel.\n- A TR futura é **estimada** — o valor real é publicado mensalmente pelo Banco Central.\n- Para financiamentos pelo **FGTS (SFH)**, podem existir subsídios e condições diferentes das simuladas.\n- Esta calculadora é uma **projeção educacional**; consulte sempre o banco para a proposta oficial.",
+  "explanation": "## SAC vs PRICE: fórmulas matemáticas e diferenças estruturais\n\nNo financiamento imobiliário brasileiro, a escolha entre os dois sistemas de amortização afeta diretamente o fluxo de caixa mensal, o total de juros e a capacidade de aquisição. Entender a matemática por trás de cada um é essencial antes de assinar contrato.\n\n## Fórmula do SAC (Sistema de Amortização Constante)\n\nNo SAC, a parcela do mês *n* é composta por duas partes:\n\n```\nParcela_n = (Principal ÷ n) + (Saldo Devedor × juros mensal)\n```\n\nA **amortização é constante** (Principal ÷ n meses) e os juros incidem sobre saldo devedor decrescente, gerando parcela total decrescente. A conversão de taxa anual para mensal é `i_mensal = (1 + i_anual)^(1/12) − 1`.\n\n## Fórmula do PRICE (Sistema Francês)\n\nNo PRICE, a parcela é calculada para ser constante:\n\n```\nPMT = SD × i ÷ (1 − (1 + i)^-n)\n```\n\nOnde SD = saldo devedor inicial, i = juros mensal, n = número de parcelas. A amortização cresce mês a mês enquanto os juros diminuem — soma constante.\n\n## Exemplo prático: R$ 500.000 em 30 anos a 10% a.a.\n\nConsiderando taxa mensal de 0,797% (equivalente a 10% a.a. composta), financiamento integral de R$ 500.000 em 360 meses:\n\n**SAC:**\n- Amortização mensal constante: R$ 1.389 (500.000 ÷ 360)\n- 1ª parcela: R$ 1.389 + (500.000 × 0,797%) = **R$ 5.378**\n- Última parcela: R$ 1.389 + (1.389 × 0,797%) ≈ **R$ 1.400**\n- Total pago: ~**R$ 1.244.760** (juros: ~R$ 744.760)\n\n**PRICE:**\n- Parcela fixa em todos os 360 meses: **R$ 4.387**\n- Total pago: **R$ 1.579.320** (juros: R$ 1.079.320)\n\n**Diferença: ~R$ 335.000 a mais no PRICE.**\n\n## Efeito do orçamento mensal idêntico\n\nSe você fixa R$ 4.387/mês (parcela do PRICE), no SAC esse valor só permite financiar **R$ 408.000** (~16% menos imóvel). Ou seja, o SAC exige fôlego inicial mas paga muito menos juros.\n\n## LTV e regras do SFH/SFI\n\n- **SFH (Sistema Financeiro de Habitação):** financia imóveis até R$ 1,5 milhão, LTV até 80%, taxa cap de TR + 12% a.a.\n- **SFI (Sistema Financeiro Imobiliário):** sem teto de valor, taxas livres, regulado pela Lei 9.514/97 (alienação fiduciária).\n- **Comprometimento de renda:** bancos exigem máximo 30% da renda familiar bruta para aprovação.\n\n## FGTS no financiamento\n\nO **FGTS (Fundo de Garantia do Tempo de Serviço)** pode ser usado para:\n- Compor entrada (complementar 20%)\n- Amortizar até 80% do saldo devedor a cada 2 anos\n- Pagar até 80% de até 12 prestações consecutivas\n\nNo SAC, amortização extraordinária com FGTS é especialmente vantajosa: reduz parcelas futuras proporcionalmente.\n\n## Portabilidade BACEN Res 4.292\n\nA **Resolução CMN 4.292/2013** permite portabilidade do financiamento imobiliário entre bancos, sem custo para o cliente. Se a Caixa cobra 11% a.a. e o Itaú oferece 10,29%, você pode transferir o saldo devedor mantendo as mesmas garantias.\n\n## Quitação antecipada (Lei 9.514/97)\n\nA Lei 9.514/97 e a Resolução BACEN garantem **quitação antecipada total ou parcial sem multa**. O banco é obrigado a aceitar amortização extraordinária e recalcular o saldo. No SFI (alienação fiduciária), o processo é direto.\n\n## Comparativo de bancos 2026\n\n| Banco | Linha | Taxa nominal |\n|---|---|---|\n| Caixa | SBPE Linha Poupança | 9,16% a.a. + TR |\n| Caixa | SBPE Pró-Cotista FGTS | 8,66% a.a. + TR |\n| Itaú | Pro-Cotista | 10,29% a.a. + TR |\n| Bradesco | SBPE | 10,49% a.a. + TR |\n| Santander | SBPE | 10,79% a.a. + TR |\n| Banco do Brasil | SBPE | 10,49% a.a. + TR |\n| Inter | SBPE Digital | 10,99% a.a. + IPCA |\n| Nubank | (via parceiros) | 11%–12% a.a. |\n\nTaxas indicativas — variam por relacionamento, score, conta-salário e LTV. Sempre simule no canal oficial do banco.\n\n## SCFI: a figura do correspondente\n\nO **SCFI (Sistema de Correspondentes de Financiamento Imobiliário)** permite que correspondentes bancários (corretoras de crédito) negociem propostas em múltiplos bancos simultaneamente. Útil para comparar 4–5 bancos sem abrir conta em cada um.\n\n## Limitações desta calculadora\n\n- **Não inclui** seguros MIP (morte/invalidez) e DFI (dano físico), que somam 0,02%–0,04% ao mês.\n- **Não inclui** tarifa de avaliação do imóvel (R$ 3.000–R$ 5.000) e ITBI (2%–3% do valor).\n- TR e IPCA futuros são **estimados**; valores reais são divulgados mensalmente pelo BACEN.\n- Para Minha Casa Minha Vida, taxas são subsidiadas (3,5%–8,16% a.a.) e a simulação oficial em gov.br/cidades é mais precisa.\n- Esta calculadora é **projeção educacional** — proposta oficial só sai do banco com análise de crédito completa.",
   "faq": [
     {
-      "q": "Qual sistema é melhor, SAC ou Price?",
-      "a": "Depende da sua situação. O SAC costuma gerar menos juros totais (economia de 15–25% para prazos longos), mas exige maior capacidade de pagamento no início. Se sua renda está crescendo ou se pode pagar a 1ª parcela maior, o SAC é mais vantajoso financeiramente."
+      "q": "SAC ou PRICE: qual escolher para financiamento imobiliário?",
+      "a": "Escolha **SAC** se você tem fôlego para pagar parcela inicial maior — vai pagar 25%–40% menos juros totais. Escolha **PRICE** se prefere parcela fixa e previsível, ou se sua renda no início do contrato é apertada. Para imóvel de R$ 500.000 em 30 anos a 10% a.a., SAC paga R$ 335.000 a menos em juros que PRICE."
     },
     {
-      "q": "Qual é a taxa de juros da Caixa para financiamento imóvel em 2026?",
-      "a": "A taxa Caixa SBPE 2026 está em torno de 10,5% a.a. para imóveis residenciais com recursos próprios (fora do FGTS). A taxa efetiva pode variar conforme relacionamento com o banco, score e uso de conta-salário. Consulte a simulação oficial em caixa.gov.br."
+      "q": "Quanto economizo escolhendo SAC em vez de PRICE?",
+      "a": "A economia típica fica entre 25% e 40% do total de juros para prazos de 25–35 anos. Em valores absolutos: financiamento de R$ 400.000 a 10,5% a.a. em 30 anos economiza ~R$ 110.000 no SAC vs PRICE. Em R$ 600.000 nas mesmas condições, a economia passa de R$ 165.000."
     },
     {
-      "q": "O que é a TR e como ela afeta as prestações?",
-      "a": "A TR (Taxa Referencial) é definida mensalmente pelo Banco Central e corrige o saldo devedor nos contratos de financiamento habitacional da Caixa. Historicamente ficou próxima de zero entre 2017 e 2021, mas voltou a subir. Em 2025, ficou entre 0,05% e 0,10% ao mês. Uma TR de 2% a.a. pode elevar o total de juros em R$ 15.000 a R$ 40.000 em um financiamento de 30 anos."
+      "q": "FGTS reduz o saldo devedor no financiamento?",
+      "a": "Sim. O FGTS pode ser usado para amortização extraordinária do saldo a cada 2 anos (até 80% do saldo), pagar até 80% de até 12 prestações consecutivas, ou compor a entrada. No SAC, amortizar com FGTS é especialmente vantajoso pois reduz proporcionalmente as parcelas futuras."
     },
     {
-      "q": "A renda mínima exigida é calculada aqui?",
-      "a": "Não diretamente. A regra geral dos bancos é que a parcela não pode comprometer mais de 30% da renda familiar bruta. Divida a 1ª prestação do SAC (ou a prestação fixa do Price) por 0,30 para estimar a renda mínima necessária. Para o exemplo de R$ 400.000 em 30 anos (SAC): R$ 4.611 ÷ 0,30 ≈ R$ 15.370 de renda mínima."
+      "q": "Vale a pena fazer portabilidade do financiamento imobiliário?",
+      "a": "Sim, sempre que a diferença de taxa entre bancos for superior a 0,5% a.a. e restem mais de 10 anos de contrato. A Resolução BACEN 4.292/2013 garante portabilidade sem custo para o cliente. Sair da Caixa a 11% para o Itaú a 10,29% em saldo de R$ 300.000 pelos próximos 20 anos economiza ~R$ 45.000."
     },
     {
-      "q": "Qual é o prazo máximo permitido no Brasil?",
-      "a": "Para financiamentos habitacionais no Brasil (SFH e SFI), o prazo máximo é de **35 anos (420 meses)**, conforme regras da Caixa Econômica Federal e do Banco Central. O prazo máximo pode ser limitado pela idade do mutuário (geralmente até 80 anos e 6 meses ao fim do contrato)."
+      "q": "Posso quitar o financiamento antecipadamente sem multa?",
+      "a": "Sim. A Lei 9.514/97 e regulamentação BACEN garantem quitação antecipada total ou parcial sem multa em contratos imobiliários (tanto SFH quanto SFI). O banco é obrigado a aceitar amortização extraordinária a qualquer momento e recalcular o saldo devedor com desconto dos juros futuros."
     },
     {
-      "q": "O que é a entrada mínima exigida?",
-      "a": "Pelo SFH (Sistema Financeiro de Habitação), a entrada mínima é de **20% do valor do imóvel**. No SFI (imóveis acima do limite do SFH, que em 2026 é R$ 1.500.000), a entrada mínima pode ser de 30% ou mais, dependendo do banco."
+      "q": "Qual a renda mínima exigida para financiar?",
+      "a": "A regra geral é que a parcela não pode comprometer mais de 30% da renda familiar bruta. Para financiamento de R$ 400.000 em 30 anos pelo SAC (1ª parcela ~R$ 4.611), renda mínima exigida: R$ 4.611 ÷ 0,30 = **R$ 15.370/mês**. Pelo PRICE (parcela R$ 3.659): R$ 12.197/mês. Bancos podem aceitar renda familiar somando cônjuges e pais."
     },
     {
-      "q": "Como os seguros MIP e DFI impactam as prestações?",
-      "a": "Os seguros obrigatórios (MIP: morte e invalidez; DFI: dano físico ao imóvel) são cobrados mensalmente sobre o saldo devedor, geralmente entre 0,02% e 0,04% ao mês. Para um saldo de R$ 400.000, isso representa R$ 80 a R$ 160 por mês apenas em seguros — valor que não está incluído nesta calculadora."
+      "q": "Indexação por IPCA, Poupança ou prefixada — qual é melhor?",
+      "a": "**Poupança (TR + juros)** é o tradicional da Caixa, com TR historicamente baixa (~0% entre 2017–2021). **IPCA + juros** (Inter, Bradesco) tem taxa nominal menor mas risco inflacionário. **Prefixada** é rara e cara em 2026. Para perfil conservador em juros altos como 2026, Poupança/TR ainda é a escolha mais previsível para a maioria dos brasileiros."
     },
     {
-      "q": "Vale a pena usar o FGTS para reduzir o saldo devedor?",
-      "a": "Sim, para contratos no SFH. O FGTS pode ser usado para amortização do saldo devedor ou para pagar até 80% das prestações por até 12 meses (a cada 2 anos). A amortização pelo FGTS reduz saldo e juros futuros — especialmente vantajosa no SAC, pois a amortização constante recomeça sobre um saldo menor."
+      "q": "O que é o LTV no financiamento imobiliário?",
+      "a": "LTV (Loan-to-Value) é a razão entre valor financiado e valor do imóvel. No SFH, LTV máximo é 80% para imóveis novos e 70% para usados (entrada mínima de 20% ou 30%). No SFI (imóveis acima de R$ 1,5M), LTV cai para 70%. Quanto menor o LTV (mais entrada), menor a taxa de juros oferecida."
     },
     {
-      "q": "Esta calculadora vale para financiamentos pelo Minha Casa Minha Vida?",
-      "a": "Parcialmente. O MCMV tem subsídios que reduzem o valor financiado e taxas de juros menores (3,5% a 8,16% a.a. conforme faixa de renda em 2026). Os sistemas SAC e Price se aplicam normalmente, mas o valor financiado efetivo é diferente. Recomendamos usar a simulação oficial em habitacao.gov.br para contratos MCMV."
-    },
-    {
-      "q": "A prestação do SAC pode subir ao longo do tempo?",
-      "a": "Sem TR, não — ela é sempre decrescente. Com TR positiva, a correção do saldo pode fazer as primeiras prestações oscilarem levemente para cima em meses de TR alta. Mas a tendência de longo prazo do SAC é sempre decrescente. No Price com TR, a prestação nominal pode subir, pois a prestação fixa é recalculada sobre o saldo corrigido."
+      "q": "Qual o prazo máximo de financiamento no Brasil?",
+      "a": "**420 meses (35 anos)** é o prazo máximo no SFH e SFI segundo regras Caixa e BACEN. Limitação adicional: a idade do mutuário ao fim do contrato não pode ultrapassar 80 anos e 6 meses (Súmula da Susep). Quem tem 50 anos hoje, prazo máximo cai para 30 anos."
     }
   ],
   "sources": [
@@ -211,29 +207,35 @@
       "date": "2026"
     },
     {
+      "name": "Banco Central do Brasil — Resolução CMN 4.292/2013 (Portabilidade)",
+      "url": "https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o&numero=4292",
+      "publisher": "Banco Central do Brasil",
+      "date": "2026"
+    },
+    {
+      "name": "Lei 9.514/1997 — Sistema Financeiro Imobiliário (SFI)",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/l9514.htm",
+      "publisher": "Presidência da República",
+      "date": "1997"
+    },
+    {
+      "name": "ABECIP — Associação Brasileira das Entidades de Crédito Imobiliário",
+      "url": "https://www.abecip.org.br/credito-imobiliario",
+      "publisher": "ABECIP",
+      "date": "2026"
+    },
+    {
       "name": "Banco Central do Brasil — Taxa Referencial (TR)",
       "url": "https://www.bcb.gov.br/controleinflacao/taxareferencial",
       "publisher": "Banco Central do Brasil",
-      "date": "2026"
-    },
-    {
-      "name": "Banco Central do Brasil — Resolução CMN 4.676/2018 (SFH)",
-      "url": "https://www.bcb.gov.br/estabilidadefinanceira/sfh",
-      "publisher": "Banco Central do Brasil",
-      "date": "2026"
-    },
-    {
-      "name": "Ministério das Cidades — Minha Casa Minha Vida 2026",
-      "url": "https://www.gov.br/cidades/pt-br/assuntos/habitacao/minha-casa-minha-vida",
-      "publisher": "Ministério das Cidades",
       "date": "2026"
     }
   ],
   "dataUpdate": {
     "frequency": "yearly",
-    "lastUpdated": "2026-04-28",
+    "lastUpdated": "2026-05-28",
     "updateType": "manual",
-    "notes": "Atualizar taxa SBPE da Caixa anualmente (atualmente ~10,5% a.a.) e o limite do SFH (atualmente R$ 1.500.000). Verificar TR média publicada pelo Banco Central para ajustar o default."
+    "notes": "Atualizar taxa SBPE da Caixa anualmente (atualmente ~10,5% a.a.) e o limite do SFH (atualmente R$ 1.500.000). Verificar TR média publicada pelo Banco Central para ajustar o default. Conferir comparativo de bancos no Q2 de cada ano."
   },
-  "lastReviewed": "2026-04-28"
+  "lastReviewed": "2026-05-28"
 }

@@ -19,14 +19,15 @@
     "CDB vs poupança",
     "rentabilidade CDB"
   ],
-  "intro": "Em 2026, o CDB (Certificado de Depósito Bancário) é tributado pela **tabela regressiva do IR** (IN RFB 1.585/2015): 22,5% até 180 dias, 20% até 360, 17,5% até 720 e **15% acima de 720 dias**. Indexação típica em % do CDI (próximo da Selic). Cobertura do FGC: R$ 250 mil por CPF/instituição, teto global R$ 1 milhão a cada 4 anos. Não há come-cotas (só fundos). IOF apenas em resgates com menos de 30 dias.",
-  "keyTakeaway": "CDB 2026: IR regressivo de 22,5% a 15% conforme prazo, garantia FGC até R$ 250 mil/CPF/instituição. Para empatar LCI/LCA isenta, CDB precisa render ~106% do CDI em prazos > 2 anos.",
+  "intro": "O **CDB (Certificado de Depósito Bancário)** é um título de renda fixa emitido por bancos comerciais, múltiplos e de investimento para captação de recursos. Quando você compra um CDB, está emprestando dinheiro ao banco em troca de uma rentabilidade contratada, que pode ser **pré-fixada** (% fixo ao ano, ex.: 13,5% aa), **pós-fixada** (% do CDI, ex.: 110% do CDI) ou **híbrida** (IPCA + taxa fixa). Em 2026 o **CDI está em 11,15% ao ano**, acompanhando de perto a Selic. A tributação segue a **tabela regressiva do IR (IN RFB 1.585/2015)**: 22,5% para resgates em até 180 dias, 20% de 181 a 360 dias, 17,5% de 361 a 720 dias e **15% acima de 720 dias** — quanto mais tempo você deixa, menos paga de imposto. Há também IOF nos primeiros 30 dias (regressivo de 96% a 0%, zera a partir do 30º dia). A segurança vem do **FGC (Fundo Garantidor de Créditos)**, que garante até **R$ 250.000 por CPF por instituição financeira**, com teto global de R$ 1 milhão a cada 4 anos. Esta calculadora desconta IR e IOF e mostra o líquido real para você comparar ofertas.",
+  "keyTakeaway": "CDB 2026: IR regressivo de 22,5% a 15% conforme prazo, garantia FGC até R$ 250 mil por CPF/instituição. Para empatar com LCI/LCA isenta, CDB precisa render ~117% do CDI em prazos > 2 anos.",
   "useCases": [
-    "Comparar ofertas de CDB de diferentes bancos (% do CDI vs prazo).",
-    "Decidir entre CDB e LCI/LCA equivalente considerando o IR.",
-    "Planejar reserva de emergência em CDB com liquidez diária.",
-    "Avaliar se vale a pena travar um CDB longo para pagar menos IR (15%).",
-    "Simular quanto um CDB rende em 24 meses para objetivo de entrada de imóvel."
+    "R$ 10.000 em CDB por 1 ano: qual banco/plataforma rende mais líquido após IR de 17,5%?",
+    "Comparar CDB de bancão (Itaú, Bradesco, BB) vs corretora (XP, Rico, Nubank) na mesma data e prazo.",
+    "Decidir entre CDB 115% CDI tributado e LCI 100% CDI isenta para horizonte de 2 anos.",
+    "Projetar rentabilidade de aporte de R$ 50.000 em CDB de 5 anos com objetivo de aposentadoria.",
+    "Avaliar reserva de emergência em CDB de liquidez diária (D+0) vs Tesouro Selic.",
+    "Simular quanto sobra após IR de 22,5% num CDB resgatado em 90 dias por urgência."
   ],
   "fields": [
     {
@@ -44,10 +45,10 @@
       "label": "Taxa CDI anual (%)",
       "type": "number",
       "required": true,
-      "placeholder": "Ex: 12.15",
+      "placeholder": "Ex: 11.15",
       "min": 0,
       "step": 0.01,
-      "help": "Veja no site do Banco Central. Em 2026 está próxima da Selic (~11-13%)."
+      "help": "Veja no site do Banco Central. Em 2026 está em ~11,15% aa (próxima da Selic)."
     },
     {
       "id": "pctCdi",
@@ -57,7 +58,7 @@
       "placeholder": "Ex: 100",
       "min": 0,
       "step": 0.1,
-      "help": "% oferecido pelo banco. Ex: 100, 110, 120."
+      "help": "% oferecido pelo banco. Ex: 90 (bancão), 110 (banco médio), 125 (corretora)."
     },
     {
       "id": "meses",
@@ -67,7 +68,7 @@
       "placeholder": "Ex: 24",
       "min": 1,
       "step": 1,
-      "help": "Prazo de aplicação. Acima de 24 meses o IR é de 15%."
+      "help": "Prazo de aplicação. Acima de 24 meses o IR é de 15% (alíquota mínima)."
     }
   ],
   "outputs": [
@@ -108,55 +109,58 @@
   ],
   "dataUpdate": {
     "frequency": "monthly",
-    "lastUpdated": "2026-04-22",
-    "source": "Banco Central + B3 + Receita Federal (IN 1.585/2015)",
+    "lastUpdated": "2026-05-28",
+    "source": "Banco Central + B3 + Receita Federal (IN 1.585/2015) + FGC",
     "sourceUrl": "https://www.bcb.gov.br/controleinflacao/taxaselic",
     "updateType": "manual"
   },
   "example": {
-    "title": "Exemplo: R$ 10.000 em CDB 100% CDI por 24 meses",
+    "title": "Exemplo: R$ 10.000 em CDB 100% CDI por 12 meses",
     "steps": [
-      "CDI anual 12,15% × 100% = 12,15% aa efetivo.",
-      "Taxa mensal equivalente: (1 + 0,1215)^(1/12) − 1 = 0,9596% am.",
-      "Valor bruto: 10.000 × (1,009596)^24 = R$ 12.582.",
-      "Prazo > 720 dias → alíquota IR 15%. IR = 0,15 × 2.582 = R$ 387,30.",
-      "Valor líquido: R$ 12.194,70."
+      "CDI anual 11,15% × 100% = 11,15% aa efetivo.",
+      "Valor bruto: 10.000 × 1,1115 = R$ 11.115 (rendimento bruto R$ 1.115).",
+      "Prazo entre 361 e 720 dias → alíquota IR 17,5%. IR = 0,175 × 1.115 = R$ 195,13.",
+      "Valor líquido: R$ 10.919,87 (rendimento líquido R$ 919,87)."
     ],
-    "result": "R$ 12.194,70 líquido após 24 meses (rentabilidade ~10,43% aa líquida) — vencimento previsto 20/05/2028."
+    "result": "R$ 10.919,87 líquidos após 12 meses — rentabilidade líquida de 9,20% aa."
   },
-  "explanation": "## Como se calcula\n\nO CDB pós-fixado rende uma % do CDI. Usamos juros compostos mensais:\n\n`Valor_Bruto = Aporte × (1 + CDI_anual × pctCDI)^(meses/12)`\n\nSobre o **rendimento bruto** (Valor_Bruto − Aporte) incide o IR regressivo.\n\n## Tabela IR regressivo 2026 (IN RFB 1.585/2015)\n\n| Prazo | Alíquota |\n|---|---|\n| Até 180 dias | 22,5% |\n| 181 a 360 dias | 20,0% |\n| 361 a 720 dias | 17,5% |\n| Acima de 720 dias | 15,0% |\n\n## Comparação: CDB vs LCI/LCA\n\nA LCI/LCA é isenta de IR para pessoa física. Um CDB precisa pagar IR sobre o rendimento, então para empatar uma LCI a 90% do CDI, o CDB precisa render aproximadamente 90% / (1 − 0,15) ≈ **106% do CDI** em prazos acima de 2 anos.\n\n## Fontes\n\n- Banco Central do Brasil — taxa Selic e CDI\n- Receita Federal — IN 1.585/2015 (regime de IR sobre aplicações)\n- B3 — registro de CDBs",
+  "explanation": "## Como se calcula o CDB líquido\n\nO CDB pós-fixado rende uma % do CDI. Usamos juros compostos:\n\n`Valor_Bruto = Aporte × (1 + CDI_anual × pctCDI)^(meses/12)`\n\nSobre o **rendimento bruto** (Valor_Bruto − Aporte) incide o IR regressivo. O resultado líquido é o que efetivamente cai na conta.\n\n## Exemplos práticos\n\n**Exemplo 1 — R$ 10.000 em CDB 100% CDI por 1 ano (CDI 11,15%):**\n- Bruto: R$ 11.115 → rendimento bruto R$ 1.115\n- IR 17,5% (prazo 361-720d): R$ 195,13\n- **Líquido: R$ 10.919,87** (R$ 920 de rendimento líquido)\n\n**Exemplo 2 — R$ 10.000 em CDB 110% CDI por 2 anos:**\n- Taxa efetiva: 11,15% × 1,10 = 12,265% aa\n- Bruto: 10.000 × 1,12265² = R$ 12.603 → rendimento bruto R$ 2.603 (~R$ 2.475 aproximado)\n- IR 15% (prazo > 720d): R$ 390\n- **Líquido: R$ 12.213** (~R$ 2.104 líquido aproximado)\n\n## Tabela IR regressivo 2026 (IN RFB 1.585/2015)\n\n| Prazo | Alíquota IR |\n|---|---|\n| Até 180 dias | 22,5% |\n| 181 a 360 dias | 20,0% |\n| 361 a 720 dias | 17,5% |\n| Acima de 720 dias | 15,0% |\n\n## CDB em diferentes plataformas: o que esperar\n\n- **Bancões (BB, Itaú, Bradesco, Santander, Caixa):** tipicamente 85-95% do CDI. Pagam menos porque já têm captação ampla via conta corrente. Vantagem: solidez, atendimento em agência.\n- **Bancos médios (Banco Pan, Inter, Daycoval, BTG, Original):** 100-115% do CDI. Precisam pagar mais para captar. FGC cobre normalmente.\n- **Plataformas de corretora (XP, Rico, Nubank, BTG Investimentos, Ágora):** 100-125% do CDI dependendo do prazo e do banco emissor (geralmente bancos pequenos/médios). Algumas ofertas chegam a 130% CDI em prazos longos ou para bancos menos conhecidos.\n\n## CDB vs LCI/LCA: o que rende mais?\n\nA LCI/LCA é **isenta de IR** para pessoa física. Para empatar uma LCI a 100% do CDI num prazo de 2 anos (onde o IR do CDB é 15%), o CDB precisa render aproximadamente **100% / (1 − 0,15) ≈ 117,6% do CDI**. Resumo prático:\n\n- LCI 95% CDI ≈ CDB 112% CDI (após IR 15%)\n- LCI 100% CDI ≈ CDB 117% CDI\n- LCA 90% CDI ≈ CDB 106% CDI\n\n## Risco e o FGC\n\nO **FGC (Fundo Garantidor de Créditos)** cobre até **R$ 250.000 por CPF por instituição financeira (CNPJ)**, somando todos os produtos elegíveis (CDB, LCI, LCA, LC, RDB, poupança). O teto global é R$ 1 milhão a cada 4 anos. Estratégia: pulverize entre bancos diferentes para multiplicar a cobertura. Emissores mais arriscados pagam prêmio na taxa, mas em caso de quebra o FGC paga em prazo de 60 dias a 2 anos (já houve casos de demora real).\n\n## Liquidez: D+0 vs prazo fixo\n\nDesde 2018 vários bancos médios oferecem CDB com **liquidez diária (D+0 ou D+1)**: você resgata quando quiser, sem precisar esperar o vencimento (Banco Pan, Inter, Sofisa, BTG, etc.). Tipicamente pagam 100-105% CDI. Já CDBs de **prazo fixo (D+30, D+60, D+720)** pagam mais (110-125% CDI) mas você fica preso até a data. Para reserva de emergência: liquidez diária. Para objetivos com data certa (entrada de imóvel em 2 anos, p.ex.): prazo fixo paga melhor.\n\n## Comparativo R$ 50.000 em 2 anos (CDI 11,15% aa, IR 15%)\n\n| Produto | Rendimento líquido | Saldo final |\n|---|---|---|\n| CDB Bancão 90% CDI | ~R$ 9.450 | R$ 59.450 |\n| CDB Plataforma 115% CDI | ~R$ 12.500 | R$ 62.500 |\n| LCI 100% CDI (isenta) | ~R$ 11.770 | R$ 61.770 |\n| Tesouro Selic (taxa B3 0,2%) | ~R$ 10.900 | R$ 60.900 |\n| Poupança (6% + TR) | ~R$ 6.180 | R$ 56.180 |\n\nEm prazos longos, plataformas de corretora com CDBs de bancos médios costumam ganhar — desde que respeitem o teto FGC.\n\n## Declaração no IR\n\nNa **DIRPF (Declaração de Imposto de Renda Pessoa Física)**, os CDBs entram na ficha **\"Rendimentos Sujeitos à Tributação Exclusiva/Definitiva\"**, código 06 — \"Rendimentos de aplicações financeiras\". O banco emite o **Informe de Rendimentos** anual (até o fim de fevereiro) com o valor já líquido de IR. Você apenas transcreve. O saldo em 31/12 vai na ficha de **Bens e Direitos** (código 45 — Aplicações de renda fixa, CDB).",
   "faq": [
     {
-      "q": "Qual a diferença entre CDB e LCI?",
-      "a": "O CDB paga IR regressivo (22,5% a 15%) sobre o rendimento; a LCI é isenta para pessoa física. Para empatar, um CDB precisa pagar uma taxa maior (em prazo longo, ~106% do CDI equivale a 90% CDI de LCI)."
+      "q": "Como funciona o IR regressivo do CDB em 2026?",
+      "a": "A alíquota cai conforme o prazo (IN RFB 1.585/2015): 22,5% até 180 dias, 20% de 181 a 360 dias, 17,5% de 361 a 720 dias e 15% acima de 720 dias. O IR é retido na fonte no resgate, sobre o rendimento bruto."
     },
     {
-      "q": "Como é cobrado o IR no CDB?",
-      "a": "Retido na fonte no momento do resgate. O banco deposita o valor líquido. Também há come-cotas? Não: come-cotas só em fundos, não em CDB."
+      "q": "CDB é seguro? Posso perder dinheiro?",
+      "a": "É seguro até o teto do FGC (R$ 250 mil por CPF por instituição). Se o banco quebrar, o FGC paga em prazo de 60 dias a 2 anos. Acima do teto, o risco é seu. Bancões (Itaú, Bradesco, BB) têm risco muito baixo; bancos pequenos pagam mais juros justamente pelo risco maior."
     },
     {
-      "q": "CDB tem garantia?",
-      "a": "Sim. O FGC (Fundo Garantidor de Créditos) cobre até R$ 250 mil por CPF por instituição, com teto global de R$ 1 milhão a cada 4 anos."
+      "q": "O FGC garante R$ 250 mil em cada banco diferente?",
+      "a": "Sim. A garantia é R$ 250 mil por CPF por CNPJ (instituição financeira), com teto global de R$ 1 milhão a cada 4 anos. Distribuir entre bancos diferentes multiplica a cobertura — R$ 250k no Pan + R$ 250k no Inter + R$ 250k no BTG = R$ 750k garantidos."
     },
     {
-      "q": "Quanto rende R$ 10.000 em CDB 100% CDI em 2026?",
-      "a": "Com CDI a ~12,15% aa e 2 anos, rende aproximadamente R$ 2.195 líquidos após IR de 15%."
+      "q": "Vale a pena CDB com liquidez diária (D+0)?",
+      "a": "Sim, para reserva de emergência ou dinheiro de curto prazo. Bancos médios (Pan, Inter, Sofisa, BTG, Original) pagam 100-105% do CDI com resgate no mesmo dia. Para objetivos com data definida (2-5 anos), CDB de prazo fixo paga mais (110-125% CDI)."
     },
     {
-      "q": "CDB é melhor que poupança?",
-      "a": "Sim, na grande maioria dos casos. Um CDB 90% do CDI líquido já supera a poupança (6% + TR). Apenas verifique o FGC do emissor."
+      "q": "CDB ou LCI/LCA: qual rende mais?",
+      "a": "Depende da taxa e do prazo. LCI/LCA é isenta de IR, então em prazo longo (IR 15%) o CDB precisa render ~117% do CDI para empatar uma LCI 100% CDI. Em prazos curtos (IR 22,5%), o CDB precisa render ~129% para empatar. Sempre simule líquido contra líquido."
     },
     {
-      "q": "Posso resgatar o CDB antes do vencimento?",
-      "a": "Depende. CDBs com liquidez diária (DI) sim; CDBs prefixados ou com prazo definido podem não ter liquidez antecipada ou sofrer marcação a mercado."
+      "q": "Posso resgatar o CDB antes do prazo?",
+      "a": "Depende do tipo. CDB com liquidez diária: sim, a qualquer momento sem perda. CDB de prazo fixo: geralmente não, ou só com deságio (marcação a mercado). Alguns bancos aceitam recompra com perda de rentabilidade. Confira sempre antes de aplicar."
     },
     {
-      "q": "CDB paga IOF?",
-      "a": "Sim, mas só em resgates com menos de 30 dias (tabela regressiva de 96% a 0%). Acima de 30 dias, IOF é zero."
+      "q": "Como declarar CDB no Imposto de Renda?",
+      "a": "Na DIRPF: o rendimento vai em \"Rendimentos Sujeitos à Tributação Exclusiva/Definitiva\" (código 06) com o valor já líquido (banco retém na fonte). O saldo em 31/12 entra em \"Bens e Direitos\" (código 45). O banco emite o Informe de Rendimentos em fevereiro — só transcrever."
     },
     {
-      "q": "O que é CDI?",
-      "a": "Taxa de juros dos empréstimos entre bancos, muito próxima da Selic (tipicamente 95-99%). Serve de referência para rentabilidade de CDBs e LCIs."
+      "q": "Há IOF no CDB?",
+      "a": "Sim, mas apenas em resgates com menos de 30 dias (tabela regressiva: 96% no dia 1, 0% no dia 30+). A partir do 31º dia, IOF zera. Por isso CDB não vale a pena para prazos muito curtos."
+    },
+    {
+      "q": "Quanto rende R$ 10.000 em CDB 100% CDI em 1 ano?",
+      "a": "Com CDI a 11,15% aa em 2026 e IR de 17,5% (prazo 361-720d): rendimento bruto R$ 1.115 − IR R$ 195 = R$ 920 líquido. Total resgatado: R$ 10.920. Rentabilidade líquida de 9,2% aa."
     }
   ],
   "sources": [
@@ -165,23 +169,23 @@
       "url": "https://www.bcb.gov.br/controleinflacao/taxaselic"
     },
     {
-      "name": "B3 — Renda Fixa",
-      "url": "https://www.b3.com.br/pt_br/produtos-e-servicos/negociacao/renda-fixa/"
-    },
-    {
-      "name": "Receita Federal — IN RFB 1.585/2015",
-      "url": "https://www.gov.br/receitafederal/pt-br/assuntos/legislacao/instrucoes-normativas/2015/in15852015"
-    },
-    {
-      "name": "FGC — Fundo Garantidor de Créditos",
+      "name": "FGC — Fundo Garantidor de Créditos (garantia R$ 250 mil)",
       "url": "https://www.fgc.org.br/"
     },
     {
-      "name": "ANBIMA — Renda Fixa",
+      "name": "Receita Federal — IN RFB 1.585/2015 (IR aplicações financeiras)",
+      "url": "https://www.gov.br/receitafederal/pt-br/assuntos/legislacao/instrucoes-normativas/2015/in15852015"
+    },
+    {
+      "name": "ANBIMA — Renda Fixa e dados de mercado",
       "url": "https://www.anbima.com.br/pt_br/index.htm"
+    },
+    {
+      "name": "B3 — Registro de CDBs e renda fixa",
+      "url": "https://www.b3.com.br/pt_br/produtos-e-servicos/negociacao/renda-fixa/"
     }
   ],
-  "lastReviewed": "2026-05-20",
+  "lastReviewed": "2026-05-28",
   "relatedSlugs": [
     "lci-lca-isento-ir-comparador",
     "tesouro-selic-rentabilidade-liquida",
@@ -195,7 +199,7 @@
     },
     {
       "name": "Informe CDI e % do CDI",
-      "text": "Coloque a taxa CDI anual vigente (consulte no BCB) e o % do CDI que o banco oferece."
+      "text": "Coloque a taxa CDI anual vigente (11,15% em 2026) e o % do CDI que o banco oferece (90% bancão, 100-115% banco médio, até 125% corretora)."
     },
     {
       "name": "Informe o prazo em meses",
@@ -203,7 +207,7 @@
     },
     {
       "name": "Veja o líquido",
-      "text": "A calculadora capitaliza com juros compostos e desconta o IR regressivo."
+      "text": "A calculadora capitaliza com juros compostos e desconta o IR regressivo conforme o prazo."
     }
   ]
 }

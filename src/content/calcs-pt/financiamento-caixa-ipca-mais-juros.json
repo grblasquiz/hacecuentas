@@ -19,15 +19,17 @@
     "Caixa econômica IPCA",
     "financiamento inflação"
   ],
-  "intro": "A Linha IPCA da **Caixa Econômica Federal** é financiamento habitacional **SBPE** (Sistema Brasileiro de Poupança e Empréstimo) com juros fixos de **3,95% ao ano** + correção monetária pelo **IPCA** (Índice de Preços ao Consumidor Amplo, divulgado pelo **IBGE**). Usa **Sistema de Amortização Constante (SAC)** com amortização fixa e juros decrescentes sobre saldo corrigido pelo IPCA mensal. Parcela inicial menor que a Linha Poupança (corrigida pela TR), mas risco de correção se IPCA subir (em 2015 chegou a 10,67%).",
-  "keyTakeaway": "Caixa Linha IPCA 2026: **IPCA + 3,95% aa** (SAC, prazo até 360 meses). Parcela inicial 20–30% menor que Linha Poupança (TR), mas saldo é corrigido mensalmente pela inflação IBGE. Meta de inflação do BCB: **3% ± 1,5 p.p.**. Entrada mínima 10% via FGTS permitido.",
+  "intro": "A **Linha IPCA da Caixa Econômica Federal** é o financiamento habitacional **SBPE** voltado principalmente para o público de **classe alta e média alta** (renda familiar a partir de **R$ 8.000/mês**), com prazo de até **35 anos (420 meses)** e teto de **R$ 1,5 milhão** pelo Sistema Financeiro da Habitação (SFH). A taxa nominal combina **juros fixos de 3,95% ao ano** com **correção mensal pelo IPCA** (Índice de Preços ao Consumidor Amplo, IBGE), mais o **spread bancário** já embutido na taxa contratual. A grande vantagem é que a taxa real é uma das menores do mercado brasileiro de crédito imobiliário — quem contrata aceita que o saldo devedor acompanhe a inflação real, em troca de uma parcela inicial **20 a 30% menor** do que a Linha Poupança (TR + ~3% aa). Comparada à Poupança, a Linha IPCA é menos previsível em valores nominais, mas mantém o **poder de compra** da dívida estável no tempo: se sua renda também é indexada à inflação (servidor público, aposentado INSS, contratos CLT com dissídio anual), o custo real do financiamento fica constante. A Linha Poupança, por sua vez, é mais previsível mês a mês, mas pode descolar negativamente da inflação quando o BCB mantém Selic alta e a TR sobe acima do IPCA.",
+  "keyTakeaway": "Caixa Linha IPCA 2026: **IPCA + 3,95% aa** (SAC ou PRICE, prazo até 420 meses). Parcela inicial 20–30% menor que Linha Poupança (TR), mas saldo corrigido mensalmente pela inflação IBGE. Meta BCB: **3% ± 1,5 p.p.**. Entrada mínima 20% (imóvel novo) ou 30% (usado). FGTS permitido até R$ 1,5M SFH.",
   "useCases": [
-    "Comparar Linha IPCA com Linha Poupança para o mesmo imóvel",
-    "Estimar impacto de diferentes cenários de IPCA (4%, 6%, 8%)",
-    "Avaliar para compra de imóvel na planta com prazo de construção de 30+ meses",
-    "Planejar amortização antecipada para neutralizar correção IPCA",
-    "Calcular comprometimento de renda na parcela inicial menor",
-    "Simular financiamento para quem tem renda indexada à inflação"
+    "Classe alta com imóvel R$ 1 milhão: simular parcela inicial IPCA vs Poupança com 20% de entrada",
+    "Comparar Linha IPCA com Linha Poupança Caixa para o mesmo imóvel e prazo",
+    "Refinanciar contrato IPCA antigo com portabilidade Bacen (Res 4.292) buscando taxa menor",
+    "Decidir entre prazo 20 ou 35 anos: impacto no comprometimento de renda e juros totais",
+    "Estimar impacto de diferentes cenários de IPCA (3%, 4,5%, 6%, 8%) na evolução da parcela",
+    "Avaliar uso de FGTS a cada 2 anos para abater saldo antes da correção anual acumulada",
+    "Planejar quitação antecipada parcial (Res BCB 4.292 veda multa) para neutralizar IPCA alto",
+    "Simular para servidor público com salário corrigido por dissídio: hedge natural contra IPCA"
   ],
   "fields": [
     {
@@ -106,79 +108,92 @@
   ],
   "dataUpdate": {
     "frequency": "yearly",
-    "lastUpdated": "2026-04-22",
-    "source": "Caixa Econômica Federal + IBGE (IPCA)",
+    "lastUpdated": "2026-05-28",
+    "source": "Caixa Econômica Federal + IBGE (IPCA) + BACEN Res 4.292",
     "sourceUrl": "https://www.caixa.gov.br/habitacao/Paginas/default.aspx",
     "updateType": "manual"
   },
   "example": {
-    "title": "Imóvel R$ 500.000, entrada R$ 100.000, 360 meses, IPCA 4,5%",
+    "title": "Imóvel R$ 500.000, entrada R$ 100.000, 240 meses (20 anos), IPCA 4,5%",
     "steps": [
-      "Valor financiado: R$ 400.000.",
-      "Taxa nominal: IPCA 4,5% + 3,95% = 8,45% aa.",
-      "Amortização SAC: R$ 1.111,11/mês.",
-      "1ª parcela ≈ R$ 3.810, última ≈ R$ 1.119 (nominal)."
+      "Valor financiado: R$ 400.000 (LTV 80%, imóvel novo).",
+      "Taxa nominal: IPCA 4,5% + 3,95% = 8,45% aa (PRICE).",
+      "Parcela inicial PRICE ≈ R$ 3.500/mês.",
+      "Correção mensal pelo IPCA: parcela 12 ≈ R$ 3.660, parcela 60 ≈ R$ 4.380.",
+      "Comprometimento de renda 30%: exige renda familiar bruta ≥ R$ 11.700."
     ],
-    "result": "Total de juros nominais ≈ **R$ 485.000,00** em 30 anos (varia com IPCA real)."
+    "result": "Total nominal pago em 20 anos ≈ **R$ 900.000** (varia com IPCA real acumulado)."
   },
-  "explanation": "## Como se calcula\n\nA Linha IPCA combina correção monetária e juros fixos:\n\n```\ntaxa_nominal = IPCA + 3,95% aa\n```\n\nAplica-se SAC: amortização constante, juros sobre saldo devedor decrescente, correção monetária mensal pelo IPCA acumulado.\n\n## Tabela 2026\n\n| Cenário IPCA | Taxa nominal | 1ª parcela (R$ 400k, 360 meses) |\n|---|---|---|\n| IPCA 3% | 6,95% aa | ~R$ 3.370 |\n| IPCA 4,5% | 8,45% aa | ~R$ 3.810 |\n| IPCA 6% | 9,95% aa | ~R$ 4.250 |\n| IPCA 8% | 11,95% aa | ~R$ 4.810 |\n\n## Vantagens e riscos\n\n**Vantagens:**\n- Parcela inicial 20-30% menor que Linha Poupança\n- Taxa fixa transparente (só varia pelo IPCA)\n- Juros reais entre os menores do mundo\n\n**Riscos:**\n- Correção monetária imprevisível (IPCA 2015 foi 10,67%)\n- Saldo devedor pode subir em períodos de inflação alta\n- Difícil planejar longo prazo com segurança\n\n## Isenções\n\n- Uso do FGTS: permitido, reduz saldo devedor (que depois sofre correção IPCA)\n- Portabilidade: possível após 36 meses\n\n## Fontes\n\n- Caixa Econômica Federal — Linha IPCA\n- IBGE — Índice Nacional de Preços ao Consumidor Amplo\n- Banco Central — Meta de inflação",
+  "explanation": "## Como se calcula: SAC vs PRICE\n\nA Linha IPCA da Caixa combina **correção monetária mensal pelo IPCA** com **juros fixos de 3,95% aa**:\n\n```\ntaxa_nominal_aa = (1 + IPCA_aa) × (1 + 0,0395) − 1\ntaxa_mensal = (1 + taxa_nominal_aa)^(1/12) − 1\n```\n\n**Sistema SAC (Amortização Constante):** amortização fixa do principal, juros decrescentes sobre saldo. Parcela inicial maior, decai ao longo do tempo. Recomendado pela Caixa por padrão.\n\n```\namortizacao = saldo_inicial / n_parcelas\nparcela_t = amortizacao + (saldo_t × taxa_mensal)\n```\n\n**Sistema PRICE (Tabela Price / Francês):** parcela nominal constante (antes da correção IPCA). Após correção, sobe junto com a inflação acumulada. Permite parcela inicial menor, mas paga mais juros no total.\n\n```\nparcela = PV × [i × (1+i)^n] / [(1+i)^n − 1]\n```\n\n## IPCA acumulado e impacto real\n\nO IBGE divulga o IPCA todo mês 10. A Caixa corrige o saldo devedor com base no **IPCA acumulado dos últimos 12 meses** (ou IPCA-15 quando aplicável). Em 2026 a projeção do **Boletim Focus BCB** aponta IPCA de ~4,5% aa, acima da meta central (3%) mas dentro da banda superior (4,5%). Em períodos de crise (2015: 10,67%; 2021: 10,06%) o saldo devedor pode crescer mais rápido do que a amortização nominal — o chamado **saldo crescente**.\n\n### Exemplo R$ 500k, 20 anos, PRICE, IPCA 4,5%\n\n| Mês | Saldo devedor | Parcela nominal | Parcela real (poder compra hoje) |\n|---|---|---|---|\n| 1 | R$ 400.000 | R$ 3.500 | R$ 3.500 |\n| 12 | R$ 405.200 | R$ 3.660 | R$ 3.500 |\n| 60 | R$ 410.800 | R$ 4.380 | R$ 3.500 |\n| 120 | R$ 350.000 | R$ 5.460 | R$ 3.500 |\n| 240 | R$ 0 | R$ 8.480 | R$ 3.500 |\n\nA parcela nominal cresce com o IPCA, mas em **termos reais** (descontada a inflação) permanece constante em ~R$ 3.500. Esse é o conceito chave: a Linha IPCA trava o **custo real**, não o nominal.\n\n## LTV e teto SFH\n\n- **Imóvel novo:** LTV de até **80%** (entrada mínima 20%).\n- **Imóvel usado:** LTV de até **70%** (entrada mínima 30%).\n- **Teto SFH 2026:** **R$ 1,5 milhão** em todo o país (Res CMN 4.676). Acima disso só via **SFI** (carteira hipotecária, sem FGTS, taxa maior).\n\n## Uso de FGTS\n\nO Fundo de Garantia pode ser usado para:\n- **Entrada:** abater até 100% do valor da entrada exigida.\n- **Amortização parcial:** a cada 2 anos, abate saldo devedor (recomendado em períodos de IPCA alto para neutralizar correção).\n- **Quitação de até 80% da parcela:** por até 12 meses consecutivos.\n- **Quitação total do saldo devedor.**\n\nCondições: imóvel residencial urbano, dentro do teto SFH (R$ 1,5M), trabalhador com 3 anos de FGTS sob regime CLT, sem outro imóvel no município ou região metropolitana.\n\n## Comparativo: Caixa IPCA vs concorrentes\n\n| Banco | Linha | Indexador + spread | Prazo máx | Diferencial |\n|---|---|---|---|---|\n| **Caixa** | IPCA Habitação | IPCA + 3,95% aa | 420 meses | Aceita FGTS, teto SFH R$ 1,5M |\n| **Itaú** | Pro-Cotista IPCA | IPCA + 4,20% aa | 360 meses | Para correntistas premium |\n| **Bradesco** | IPCA Imóvel Pronto | IPCA + 4,50% aa | 360 meses | Aprovação mais rápida |\n| **Santander** | IPCA Imobiliário | IPCA + 4,30% aa | 360 meses | Bom para portabilidade |\n| **Caixa** | Poupança SBPE | TR + 8,99% aa | 420 meses | Mais previsível, parcela inicial maior |\n\nApós a **EC 4.292 (Bacen)** de 2020, portabilidade entre bancos é livre após **180 dias** do contrato — não há mais carência de 36 meses como antes. Vale a pena revisar a cada 2 anos se outro banco oferece taxa menor.\n\n## Quitação antecipada e Resolução BCB 4.292\n\nA **Resolução BCB 4.292** veda expressamente cobrança de multa ou comissão por quitação antecipada parcial ou total em contratos de crédito imobiliário com pessoas físicas. Isso significa:\n\n- Você pode amortizar a qualquer momento sem custo.\n- Pode escolher entre **reduzir prazo** (mantém parcela, paga menos juros total) ou **reduzir parcela** (mantém prazo, alivia fluxo de caixa).\n- A Caixa não pode exigir aviso prévio nem aplicar carência.\n\n## Comprometimento de renda e análise de crédito\n\nA Caixa exige que a **parcela inicial** não ultrapasse **30% da renda familiar bruta comprovada**. Em casos especiais (renda alta, score elevado, relacionamento bancário longo) pode chegar a 35%. Atenção: como a Linha IPCA tem parcela crescente, o ideal é deixar margem extra — comprometer 25% no início para suportar 12 anos de IPCA acumulado sem estourar o orçamento.\n\n## Seguros MIP e DFI\n\nTodo financiamento SFH obriga dois seguros embutidos na parcela:\n- **MIP (Morte e Invalidez Permanente):** quita o saldo em caso de óbito ou invalidez. Cobertura proporcional ao saldo devedor.\n- **DFI (Danos Físicos ao Imóvel):** cobre incêndio, raio, explosão, desmoronamento. Pagos sobre o valor de avaliação do imóvel.\n\nJuntos representam ~3% a 6% do valor da parcela mensal. Você pode contratar seguradora de fora da Caixa (Lei 13.476/2017) e comparar preços anualmente.\n\n## Refinanciamento e Linha Caixa Saldão\n\nSe quiser sair da Linha IPCA por insatisfação com a correção, três caminhos:\n1. **Portabilidade Bacen** para outro banco com taxa menor (sem custos, Res 4.292).\n2. **Renegociação interna** com a Caixa, mudando para Linha Poupança (sujeito a nova análise de crédito e aprovação).\n3. **Linha Caixa Saldão**: programa especial de quitação com desconto, oferecido pontualmente em campanhas (acompanhar comunicados Caixa).",
   "faq": [
     {
-      "q": "O que é Linha IPCA da Caixa?",
-      "a": "É a modalidade de financiamento em que o saldo devedor é corrigido mensalmente pelo IPCA (inflação oficial do IBGE), mais juros fixos de 3,95% ao ano."
+      "q": "A Linha IPCA é segura para financiar imóvel em 2026?",
+      "a": "Segura sim, no sentido de que o contrato é regulado pelo Bacen e a Caixa não pode mudar regras. Mas tem risco de correção: se o IPCA disparar (como em 2015: 10,67% ou 2021: 10,06%), o saldo devedor cresce mais rápido do que a amortização nominal. Em 2026 o IPCA projetado é 4,5% aa, dentro da meta. Recomendado para quem tem renda indexada à inflação (servidor público, INSS, CLT com dissídio anual)."
     },
     {
-      "q": "Linha IPCA ou Linha Poupança: qual escolher?",
-      "a": "Linha IPCA tem parcela inicial menor, mas o saldo devedor pode crescer com inflação. Linha Poupança é mais previsível. Prefira IPCA se o prazo for curto (até 120 meses) ou se acreditar em inflação baixa."
+      "q": "Linha Poupança ou Linha IPCA: qual escolher na Caixa?",
+      "a": "Linha IPCA tem parcela inicial 20-30% menor, mas o saldo devedor é corrigido pela inflação real do IBGE. Linha Poupança (TR + ~8,99% aa) é mais previsível em valores nominais, mas a TR pode descolar negativamente do IPCA. Prefira IPCA se: prazo for longo (240+ meses), renda for indexada à inflação, ou se acreditar em IPCA controlado. Prefira Poupança se: você precisa de previsibilidade nominal, prazo curto, ou se trabalha com renda fixa nominal (autônomo, freelance)."
     },
     {
-      "q": "Qual o risco da Linha IPCA?",
-      "a": "O maior risco é o IPCA disparar. Em 2015 o IPCA foi 10,67%, o que levaria a taxa a 14,62% ao ano naquele período. Isso aumenta saldo devedor e a parcela mensal."
+      "q": "Posso usar FGTS na Linha IPCA da Caixa?",
+      "a": "Sim. O FGTS pode abater até 100% da entrada (mínimo 20% imóvel novo, 30% usado), amortizar saldo a cada 2 anos, quitar até 80% da parcela por 12 meses consecutivos ou quitar o saldo total. Condições: imóvel até R$ 1,5 milhão (teto SFH 2026), uso residencial urbano, trabalhador com 3 anos de FGTS sob CLT, sem outro imóvel no município. Recomendado usar FGTS para amortização em períodos de IPCA alto."
     },
     {
-      "q": "Como é aplicada a correção do IPCA?",
-      "a": "Mensalmente, sobre o saldo devedor, com base no IPCA-15 divulgado pelo IBGE. É automático e aparece no extrato de financiamento Caixa."
+      "q": "Como funciona a portabilidade Bacen na Linha IPCA?",
+      "a": "A Resolução Bacen 4.292 e a Lei 10.931/2004 garantem portabilidade livre após 180 dias do contrato (não há mais carência de 36 meses). Você solicita ao novo banco, ele paga o saldo da Caixa, e você passa a pagar a nova parcela com taxa renegociada. Sem custos, sem multa. Vale comparar a cada 2 anos: Itaú Pro-Cotista (IPCA + 4,20% aa), Bradesco (IPCA + 4,50% aa), Santander (IPCA + 4,30% aa)."
     },
     {
-      "q": "Posso usar FGTS na Linha IPCA?",
-      "a": "Sim. Entrada mínima de 10% via FGTS, amortização a cada 2 anos e quitação de até 80% das parcelas em 12 meses seguidos."
+      "q": "Posso quitar antecipadamente o financiamento IPCA?",
+      "a": "Sim, sem multa nem comissão (Resolução BCB 4.292 veda expressamente). Pode quitar parcial (recomendado a cada bônus, 13º salário, restituição de IR) ou total. Ao amortizar, escolha entre reduzir prazo (paga menos juros total) ou reduzir parcela (alivia fluxo de caixa). Como a correção IPCA incide sobre saldo devedor, quitar parcelas antecipadas reduz a base de correção futura — vale especialmente em períodos de inflação alta."
     },
     {
-      "q": "A Caixa oferece Linha IPCA para qualquer imóvel?",
-      "a": "Sim, desde que dentro do Sistema Financeiro da Habitação (imóvel até R$ 1,5 milhão nas capitais, R$ 650 mil no interior) e que o comprador não tenha outro financiamento ativo."
+      "q": "Qual a renda mínima para financiamento Caixa Linha IPCA em 2026?",
+      "a": "Não há renda mínima formal, mas a parcela inicial não pode ultrapassar 30% da renda familiar bruta comprovada (até 35% em casos especiais). Como a Linha IPCA é voltada a classe alta/média alta, na prática exige renda familiar a partir de R$ 8.000/mês para imóveis acima de R$ 400 mil. Para imóvel R$ 1 milhão com 80% financiado em 30 anos, renda mínima recomendada: R$ 23 mil/mês (parcela inicial ~R$ 7 mil)."
     },
     {
-      "q": "Qual a parcela máxima que a Caixa aceita?",
-      "a": "Até 30% da renda familiar bruta, como regra geral. Em alguns casos, com análise de crédito favorável, pode ir até 35%."
+      "q": "A parcela vai subir todo mês com o IPCA?",
+      "a": "Sim, a correção é mensal. Mas em períodos de IPCA baixo (próximo de zero ou negativo, como em alguns meses de 2017 e 2022), a parcela pode ficar estável ou até cair levemente. O importante é entender que em termos reais (descontada a inflação) a parcela permanece constante — é como pagar sempre o mesmo poder de compra, independentemente do nominal. Se sua renda também acompanha o IPCA, o comprometimento real fica fixo."
     },
     {
-      "q": "Posso migrar de Linha IPCA para Poupança?",
-      "a": "Não diretamente. É necessário quitar o contrato ou portar para outro banco (após 36 meses) e contratar uma nova modalidade."
+      "q": "Posso financiar imóvel de qualquer valor pela Linha IPCA?",
+      "a": "Não. O teto do Sistema Financeiro da Habitação (SFH) em 2026 é R$ 1,5 milhão em todo o país (Res CMN 4.676). Imóveis acima desse valor só podem ser financiados via SFI (Sistema Financeiro Imobiliário), que não aceita FGTS, tem taxa maior e LTV menor (geralmente 60-70%). Para SFH-IPCA, LTV máximo é 80% (novo) ou 70% (usado)."
     },
     {
-      "q": "Como proteger-se de uma alta do IPCA?",
-      "a": "Faça amortizações antecipadas quando o IPCA estiver baixo. Isso reduz o saldo sobre o qual incide a correção futura. Outra estratégia é usar o FGTS a cada 2 anos."
+      "q": "Qual a diferença entre SAC e PRICE na Linha IPCA?",
+      "a": "SAC tem amortização constante, parcela inicial maior e decrescente — você paga menos juros no total. PRICE tem parcela nominal constante (antes da correção IPCA), inicial menor, mas paga mais juros totais. A Caixa oferece os dois; SAC é o padrão recomendado para quem pode arcar com parcela inicial mais alta, enquanto PRICE serve para quem tem orçamento apertado no início ou espera aumento de renda futuro."
+    },
+    {
+      "q": "MIP e DFI são obrigatórios na Linha IPCA Caixa?",
+      "a": "Sim. MIP (Morte e Invalidez Permanente) e DFI (Danos Físicos ao Imóvel) são obrigatórios em todo financiamento SFH. Juntos pesam ~3% a 6% da parcela mensal. Desde a Lei 13.476/2017, você pode contratar seguradora de fora da Caixa e migrar a apólice — vale comparar preços anualmente para economizar."
     }
   ],
   "sources": [
     {
-      "name": "Caixa Econômica Federal — Habitação (Linha IPCA)",
+      "name": "Caixa Econômica Federal — Linha IPCA Habitação",
       "url": "https://www.caixa.gov.br/habitacao/Paginas/default.aspx"
     },
     {
-      "name": "Banco Central do Brasil — Meta de Inflação",
-      "url": "https://www.bcb.gov.br/controleinflacao/metainflacao"
+      "name": "Banco Central do Brasil — Resolução BCB 4.292 (Portabilidade e Quitação Antecipada)",
+      "url": "https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20BCB&numero=4292"
     },
     {
       "name": "IBGE — Índice Nacional de Preços ao Consumidor Amplo (IPCA)",
       "url": "https://www.ibge.gov.br/explica/inflacao.php"
     },
     {
-      "name": "Lei 4.380/1964 — Sistema Financeiro da Habitação (Planalto)",
-      "url": "https://www.planalto.gov.br/ccivil_03/leis/l4380.htm"
+      "name": "ABECIP — Associação Brasileira das Entidades de Crédito Imobiliário e Poupança",
+      "url": "https://www.abecip.org.br/credito-imobiliario"
+    },
+    {
+      "name": "Resolução CMN 4.676 — Teto SFH R$ 1,5 milhão",
+      "url": "https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o&numero=4676"
+    },
+    {
+      "name": "Banco Central — Meta de Inflação",
+      "url": "https://www.bcb.gov.br/controleinflacao/metainflacao"
     }
   ],
-  "lastReviewed": "2026-05-20",
+  "lastReviewed": "2026-05-28",
   "relatedSlugs": [
     "financiamento-caixa-tr-poupanca-taxa",
     "financiamento-imovel-sac-vs-price-comparador",
@@ -188,19 +203,19 @@
   "howToSteps": [
     {
       "name": "Informe valor do imóvel e entrada",
-      "text": "Entrada mínima na Linha IPCA é 10% do valor do imóvel."
+      "text": "Entrada mínima Linha IPCA: 20% (imóvel novo, LTV 80%) ou 30% (usado, LTV 70%). FGTS aceito até R$ 1,5M SFH."
     },
     {
       "name": "Informe prazo e IPCA estimado",
-      "text": "Prazo padrão: 360 meses. IPCA 2026 estimado ~4,5%, meta do BC é 3%."
+      "text": "Prazo máximo: 420 meses (35 anos). IPCA 2026 projetado ~4,5% aa (Focus BCB), meta central 3%."
     },
     {
       "name": "Clique em Calcular",
-      "text": "A calculadora aplica IPCA + 3,95% no SAC e mostra as parcelas nominais."
+      "text": "A calculadora aplica IPCA + 3,95% no SAC e mostra parcelas nominais e o total de juros."
     },
     {
       "name": "Rode cenários de IPCA",
-      "text": "Teste IPCA 3%, 6% e 8% para ver o risco da modalidade no seu caso."
+      "text": "Teste IPCA 3%, 6% e 8% para ver o risco de correção alta. Compare com Linha Poupança Caixa antes de decidir."
     }
   ]
 }

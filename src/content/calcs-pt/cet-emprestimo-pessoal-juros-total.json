@@ -15,18 +15,19 @@
     "taxa real empréstimo",
     "seguro prestamista",
     "comparar empréstimo bancos",
-    "Resolução CMN 3517",
+    "Resolução BCB 4881",
     "juros abusivos crédito",
     "simulador empréstimo CET"
   ],
-  "intro": "O **CET (Custo Efetivo Total)** é a taxa que engloba **todos os custos** do empréstimo no Brasil: juros, **IOF** (0,38% adicional + 0,0082%/dia até 3% ao ano, conforme Decreto 6.306/2007), tarifas administrativas e seguros (ex.: prestamista). A **Resolução CMN 3.517/2007** do **Banco Central do Brasil (BACEN)** obriga a instituição financeira a informar o CET antes da contratação, de forma destacada no contrato e na publicidade. É calculado pela **TIR (Taxa Interna de Retorno)** do fluxo de caixa real — valor líquido recebido versus parcelas pagas. Esta calculadora aplica a TIR sobre o valor efetivamente desembolsado pelo banco (já descontados IOF, tarifas e seguros).",
-  "keyTakeaway": "CET = TIR do fluxo real (valor líquido recebido vs parcelas). Obrigatório pela Resolução CMN 3.517/2007 do BACEN. Inclui juros + IOF (Decreto 6.306/2007: 0,38% + 0,0082%/dia) + tarifas + seguros. É a única métrica justa para comparar empréstimos de bancos diferentes no Brasil.",
+  "intro": "O **CET — Custo Efetivo Total** é a taxa que reúne **todos os custos** de um empréstimo no Brasil, e não apenas a taxa de juros nominal anunciada na vitrine do banco. A **Resolução BCB nº 4.881/2020** (que substituiu a antiga CMN 3.517/2007) obriga bancos, financeiras, cooperativas de crédito e fintechs a **divulgar o CET de forma destacada antes da assinatura do contrato**, seja para empréstimo pessoal, cartão de crédito, cheque especial, CDC veículo, consignado ou crédito imobiliário. O CET soma: **juros nominais** + **IOF** (alíquota fixa de 0,38% sobre o valor financiado à vista + alíquota diária de 0,0082% até o teto de 3% ao ano, conforme Decreto 6.306/2007) + **tarifas administrativas** (TAC — Tarifa de Abertura de Crédito, tarifa de cadastro, avaliação de garantia) + **seguro prestamista** (quando contratado, mesmo opcional) + **outros encargos**. Comparar bancos diferentes olhando apenas a taxa de juros nominal divulgada é cair em **propaganda enganosa de marketing** — só o CET oferece base justa de comparação entre instituições. Esta calculadora aplica a **TIR (Taxa Interna de Retorno)** sobre o fluxo de caixa real (valor líquido recebido versus parcelas pagas) e devolve o CET mensal e anual, exatamente como exige o Banco Central.",
+  "keyTakeaway": "CET = TIR do fluxo real (valor líquido recebido vs parcelas). Obrigatório pela Resolução BCB 4.881/2020. Inclui juros + IOF (0,38% + 0,0082%/dia) + TAC + seguros. É a única métrica justa para comparar empréstimos entre bancos no Brasil — taxa nominal isolada é marketing.",
   "useCases": [
-    "Comparar empréstimos de diferentes bancos pela mesma base.",
-    "Identificar propaganda enganosa (juros de 2% am que viram CET de 80% aa).",
-    "Avaliar se o seguro prestamista adicionado vale a pena.",
-    "Decidir entre empréstimo pessoal, cheque especial e cartão.",
-    "Negociar com o gerente mostrando a diferença entre juros e CET."
+    "Comparar empréstimo pessoal de R$ 10.000 entre Itaú e Nubank pela mesma base CET (não pela taxa nominal anunciada).",
+    "Decidir entre crédito consignado público (CET ~22% a.a.) e empréstimo pessoal tradicional (CET 60-80% a.a.).",
+    "Simular o CET do rotativo do cartão de crédito (>300% a.a.) para entender por que a Lei 14.181/2021 limitou esse produto.",
+    "Avaliar a portabilidade de crédito pessoal entre bancos médios (Pan, BMG, BV) e bancos grandes — Resolução BCB 4.292.",
+    "Renegociar dívidas no âmbito do Marco Legal do Superendividamento (Lei 14.181/2021) mostrando o CET real ao juiz.",
+    "Identificar se o seguro prestamista oferecido pelo gerente realmente compensa, comparando os dois CETs (com e sem seguro)."
   ],
   "fields": [
     {
@@ -69,7 +70,7 @@
     },
     {
       "id": "tarifas",
-      "label": "Tarifas administrativas (R$)",
+      "label": "Tarifas administrativas TAC (R$)",
       "type": "number",
       "required": false,
       "placeholder": "Ex: 50",
@@ -121,81 +122,91 @@
   ],
   "dataUpdate": {
     "frequency": "yearly",
-    "lastUpdated": "2026-04-22",
-    "source": "Banco Central + Resolução CMN 3.517/2007 (CET)",
+    "lastUpdated": "2026-05-28",
+    "source": "Banco Central + Resolução BCB 4.881/2020 (CET) + Lei 14.181/2021 (Superendividamento)",
     "sourceUrl": "https://www.bcb.gov.br/estabilidadefinanceira/cet",
     "updateType": "manual"
   },
   "example": {
-    "title": "Exemplo: R$ 10.000 em 48x de R$ 300 com IOF 300 + tarifa 50 + seguro 200",
+    "title": "Exemplo: R$ 5.000 em 12x no Itaú Crédito Pessoal Plus a 4,5% am",
     "steps": [
-      "Valor líquido recebido: 10.000 − 300 − 50 − 200 = R$ 9.450.",
-      "Fluxo: −9.450 hoje, +300 por 48 meses.",
-      "TIR mensal via bisseção: ~1,87% am.",
-      "CET anual: (1,0187)^12 − 1 = 24,9% aa.",
-      "Total pago: 48 × 300 = R$ 14.400.",
-      "Custo total: 14.400 − 9.450 = R$ 4.950."
+      "Empréstimo de R$ 5.000 em 12 meses, taxa nominal 4,5% am (Itaú Crédito Pessoal Plus).",
+      "Parcela PRICE PMT = 5.000 × 0,045 / (1 − (1+0,045)^−12) = R$ 546.",
+      "Total pago somente em parcelas: 12 × 546 = R$ 6.552.",
+      "IOF: 0,38% × 5.000 = R$ 19 + 0,0082% × 365 × 5.000 ≈ R$ 149 → total IOF R$ 168.",
+      "TAC (Tarifa de Abertura de Crédito): R$ 50.",
+      "Seguro prestamista: R$ 30/mês × 12 = R$ 360.",
+      "Custo total real: 6.552 + 168 + 50 + 360 − 5.000 = R$ 2.130.",
+      "CET mensal via TIR ≈ 5,2% am → CET anual = (1,052)^12 − 1 ≈ 80,77% a.a."
     ],
-    "result": "CET 24,9% aa (1,87% am). Custo total R$ 4.950,00 sobre R$ 9.450,00 realmente recebidos (contratação em 20/05/2026)."
+    "result": "Taxa anunciada 4,5% am parece baixa, mas o CET real chega a 80,77% a.a. (contratação simulada em 28/05/2026 — Itaú Crédito Pessoal Plus)."
   },
-  "explanation": "## Como se calcula\n\nO CET é a **Taxa Interna de Retorno** (TIR) do fluxo de caixa real:\n\n- Tempo 0: você recebe `valor_liberado − IOF − tarifas − seguros` (líquido)\n- Tempo 1 a n: você paga `parcela` todo mês\n\nÉ a taxa `i` que satisfaz:\n\n`valor_líquido = parcela × [1 − (1 + i)^(-n)] / i`\n\nResolvida por **bisseção numérica** (não tem fórmula fechada).\n\n`CET_Anual = (1 + CET_Mensal)^12 − 1`\n\n## Componentes do CET\n\n| Componente | Natureza |\n|---|---|\n| Juros contratuais | Explícito no contrato |\n| IOF adicional | 0,38% sobre valor financiado |\n| IOF diário | 0,0082%/dia (máx 3% aa) |\n| Tarifa de cadastro | Fixa, paga no início |\n| Seguro prestamista | Opcional, inflaciona o CET |\n| Avaliação de imóvel | (crédito imobiliário) |\n\n## Por que o CET é sempre maior que o juros nominal?\n\nPorque juros nominais escondem:\n\n- IOF retido na origem (reduz o valor líquido recebido)\n- Tarifa de cadastro\n- Seguros empurrados\n- Capitalização mensal\n\nExemplo típico: banco anuncia **1,99% ao mês** → CET real pode ser **32% ao ano** (=~2,3% am efetivo).\n\n## Comparação 2026: modalidades de crédito\n\n| Modalidade | CET típico (% aa) |\n|---|---|\n| Rotativo cartão (teto Lei 14.690) | 150-180% |\n| Cheque especial | 150-170% |\n| Empréstimo pessoal | 40-80% |\n| Crédito imobiliário garantia | 15-25% |\n| Consignado público | 18-25% |\n| Consignado privado INSS | 22-30% |\n\n## Fontes\n\n- Resolução CMN 3.517/2007 (CET obrigatório)\n- BCB — Portal do Cidadão\n- Decreto 6.306/2007 (IOF crédito)",
+  "explanation": "## Cálculo passo a passo: R$ 5.000 em 12x no Itaú Crédito Pessoal Plus\n\nVamos refazer o exemplo acima com todas as contas explícitas. Empréstimo pessoal de **R$ 5.000 em 12 meses** com taxa nominal de **4,5% ao mês** (faixa típica do Itaú Crédito Pessoal Plus em 2026 para cliente bom pagador).\n\n**Passo 1 — Parcela pela Tabela PRICE.** A fórmula PMT é `PMT = PV × i / (1 − (1+i)^−n)`. Substituindo: `PMT = 5.000 × 0,045 / (1 − (1,045)^−12) = 5.000 × 0,045 / 0,4126 = R$ 546`.\n\n**Passo 2 — Total das parcelas.** `12 × R$ 546 = R$ 6.552`. Só com juros, o custo seria R$ 1.552 sobre R$ 5.000 (31% no período).\n\n**Passo 3 — IOF (Decreto 6.306/2007).** Duas partes: alíquota adicional de **0,38%** sobre o valor financiado (`0,0038 × 5.000 = R$ 19`) + alíquota diária de **0,0082%** sobre o saldo médio (`0,000082 × 365 × 5.000 ≈ R$ 149`). Total IOF = **R$ 168** (teto legal: 3% a.a. + 0,38%).\n\n**Passo 4 — TAC.** Tarifa de Abertura de Crédito de **R$ 50** (banco pode cobrar uma única vez na contratação).\n\n**Passo 5 — Seguro prestamista.** Cobertura para morte/invalidez do tomador, **R$ 30/mês × 12 = R$ 360**. Opcional, mas o gerente costuma embutir como \"obrigatório\".\n\n**Passo 6 — Custo total efetivo.** `(6.552 + 168 + 50 + 360) − 5.000 = R$ 2.130`, ou seja **42,6% do valor tomado** em 1 ano.\n\n**Passo 7 — CET.** A TIR do fluxo `−5.000 hoje / +546 por 12 meses, mais encargos retidos na origem` resulta em **CET ≈ 5,2% am**, ou `(1,052)^12 − 1 = 80,77% a.a.`. O cliente acreditava em \"4,5% am\" e está pagando o equivalente a quase **81% ao ano** — esse é o engano da comparação por taxa nominal.\n\n## Comparativo CET 2026: bancos médios para empréstimo pessoal\n\n| Banco | Taxa nominal típica | CET anual aproximado |\n|---|---|---|\n| Itaú Crédito Pessoal Plus | 4,5 a 5,5% am | 70 a 90% a.a. |\n| Bradesco Empréstimo Fácil | 4,0 a 5,0% am | 60 a 80% a.a. |\n| Santander Crédito Pessoal | 4,0 a 6,0% am | 60 a 100% a.a. |\n| Caixa Crédito Pessoal | 3,0 a 5,0% am | 43 a 80% a.a. |\n| Nubank Empréstimo Pessoal | 5,0 a 7,0% am | 80 a 125% a.a. |\n| Banco Inter | 4,0 a 6,0% am | 60 a 100% a.a. |\n| Banco Pan / BMG / BV (consignado público) | 1,4 a 1,69% am | ~22% a.a. |\n\n## Outras modalidades de crédito (cuidado redobrado)\n\n- **Rotativo do cartão de crédito**: 15 a 18% **ao mês** → CET acima de **300% a.a.**. É comprovadamente o pior produto de crédito do mercado brasileiro. A Lei 14.690/2023 limitou o rotativo a no máximo o valor original da fatura em juros e encargos, mas continua caríssimo.\n- **Cheque especial**: limitado pela **Lei 14.181/2021 (Marco Legal do Superendividamento)** a **CET máximo de 8% ao mês** sobre o saldo devedor utilizado. Mesmo assim equivale a ~151% a.a.\n- **CDC Veículo**: 1,5 a 2,5% am → CET 27 a 37% a.a. (mais barato porque o carro é a garantia).\n- **Antecipação Saque-Aniversário FGTS** (Caixa e bancos médios autorizados): ~1,5% am.\n- **Consignado público (Lei 10.820/2003)**: teto de **1,69% am**, CET ~22% a.a. É o crédito não-garantido mais barato disponível no Brasil.\n\n## Marco Legal do Superendividamento e Portabilidade\n\nA **Lei 14.181/2021** permite **renegociação coletiva em juízo** das dívidas do consumidor superendividado em até **5 anos**, preservando o mínimo existencial. Procons e Defensorias Públicas conduzem a conciliação obrigatória antes do processo.\n\nA **Resolução BCB 4.292/2013** permite **portabilidade de crédito pessoal** entre instituições: se outro banco oferece CET menor, o banco atual é obrigado a aceitar a transferência da dívida em até 5 dias úteis. Bancos médios (Pan, BMG, BV, Daycoval) reaproveitam capital de clientes com renda comprovada e costumam oferecer CET 20 a 40% menor que os bancos grandes para o mesmo perfil.\n\n## Recomendação prática\n\nAntes de assinar qualquer empréstimo pessoal, simule o CET em **pelo menos 4 bancos diferentes** (1 público, 1 grande privado, 1 médio, 1 fintech) e compare. Plataformas como **Banco Hub** e o portal do **Sebrae** centralizam ofertas. E lembre: pela Resolução BCB 4.881/2020, exigir o CET por escrito **antes** da contratação é seu direito.\n\n## Fontes\n\n- Resolução BCB nº 4.881/2020 (CET obrigatório)\n- Lei 14.181/2021 (Marco Legal do Superendividamento)\n- Lei 10.820/2003 (Crédito consignado)\n- Decreto 6.306/2007 (IOF crédito)",
   "faq": [
     {
-      "q": "O que é CET?",
-      "a": "Custo Efetivo Total: a taxa real do empréstimo incluindo juros + IOF + tarifas + seguros. Obrigatória desde 2008 (Resolução CMN 3.517/2007)."
+      "q": "Qual a diferença entre CET e juros nominais?",
+      "a": "A taxa de juros nominal mostra apenas o custo do dinheiro emprestado. O CET (Custo Efetivo Total) soma tudo: juros + IOF (0,38% + 0,0082%/dia) + TAC + seguro prestamista + outros encargos. Um empréstimo de 4,5% am nominal pode ter CET de 80% a.a. — comparar bancos por taxa nominal é cair em propaganda enganosa."
     },
     {
-      "q": "Por que o CET é maior que a taxa de juros?",
-      "a": "Porque inclui tudo: IOF 0,38% + IOF diário + tarifa de cadastro + seguro prestamista. Um juros 'de 2% am' pode virar CET de 40% aa com esses adicionais."
+      "q": "Existe CET máximo permitido por lei no Brasil?",
+      "a": "Para empréstimo pessoal não há teto geral, mas há limites por produto: cheque especial tem CET máximo de 8% am (Lei 14.181/2021); consignado público tem teto de 1,69% am (Lei 10.820/2003); rotativo do cartão está limitado pela Lei 14.690/2023 a não cobrar mais juros que o valor original da fatura. Acima desses tetos, a cobrança é abusiva."
     },
     {
-      "q": "O banco é obrigado a mostrar o CET?",
-      "a": "Sim. Pela Resolução CMN 3.517/2007, o banco deve informar o CET de forma destacada no contrato e na publicidade de crédito."
+      "q": "Vale a pena pegar consignado público em vez de empréstimo pessoal?",
+      "a": "Quase sempre sim. O consignado público (servidores, aposentados INSS, militares) tem CET de ~22% a.a. — três a quatro vezes menor que o empréstimo pessoal tradicional (60 a 100% a.a.). A parcela é descontada direto da folha/benefício, o que reduz o risco para o banco e por isso a taxa cai. Limite legal: 1,69% am."
     },
     {
-      "q": "O que é seguro prestamista?",
-      "a": "Seguro opcional que cobre parcelas em caso de morte/invalidez. Pode ser útil mas encarece o CET. Pergunte se é realmente obrigatório ou apenas recomendado."
+      "q": "Por que devo evitar o rotativo do cartão de crédito?",
+      "a": "Porque é o crédito mais caro do mercado: CET acima de 300% a.a. (15 a 18% ao mês). A Lei 14.690/2023 limitou o total cobrado ao valor original da fatura, mas continua sendo absurdamente caro. Se não consegue pagar a fatura inteira, prefira o parcelamento da fatura pelo próprio cartão (CET 8 a 12% am) ou um empréstimo pessoal para quitar o cartão."
     },
     {
-      "q": "Posso recusar o seguro prestamista?",
-      "a": "Sim, a contratação é opcional. Bancos às vezes oferecem taxa menor com o seguro — compare os dois CETs."
+      "q": "O IOF é deduzido do valor que recebo na conta?",
+      "a": "Sim. O IOF é retido na origem: se você contrata R$ 10.000 e o IOF total é R$ 350, o banco deposita apenas R$ 9.650 na sua conta — mas você continua devendo as parcelas calculadas sobre os R$ 10.000. Por isso o IOF infla o CET: você paga juros sobre dinheiro que nem chegou a entrar na sua conta."
     },
     {
-      "q": "Como calcular o CET à mão?",
-      "a": "Não tem fórmula fechada. É a TIR do fluxo (valor líquido recebido vs parcelas). Use calculadora financeira (HP-12C: f CLX, entradas, função IRR) ou essa nossa calculadora online."
+      "q": "Estou superendividado, posso renegociar?",
+      "a": "Sim. A Lei 14.181/2021 (Marco Legal do Superendividamento) garante renegociação coletiva em juízo de todas as dívidas em até 5 anos, preservando o mínimo existencial para sobrevivência. O processo começa no Procon ou na Defensoria Pública com uma audiência de conciliação obrigatória. Bancos que se recusam podem ser obrigados pelo juiz a aceitar o plano."
     },
     {
-      "q": "Qual é um CET aceitável em empréstimo pessoal?",
-      "a": "Em 2026, entre 25% e 60% ao ano é típico em bancos tradicionais. Fintechs (Nubank, Banco Inter, C6) chegam a 20-40%. Consignado fica em 18-30%."
+      "q": "Posso portar meu empréstimo pessoal para outro banco?",
+      "a": "Sim. A Resolução BCB 4.292/2013 garante portabilidade de crédito: se outro banco oferece CET menor, basta solicitar a portabilidade. O banco atual tem 5 dias úteis para aceitar (ou oferecer contraproposta) e não pode cobrar tarifa pela transferência. Bancos médios (Pan, BMG, BV, Daycoval) costumam oferecer CET 20 a 40% menor para portabilidade de clientes bons pagadores."
     },
     {
-      "q": "CET inclui o IOF diário de 0,0082%?",
-      "a": "Sim. O IOF de crédito tem duas partes: 0,38% adicional (uma vez) + 0,0082% ao dia (cumulativo até 3% ao ano). Ambos entram no CET obrigatório."
+      "q": "O seguro prestamista é obrigatório?",
+      "a": "Não. É opcional, embora muitos gerentes empurrem como se fosse obrigatório. Cobre as parcelas em caso de morte ou invalidez do tomador. Encarece o CET de 5 a 15 pontos percentuais ao ano. Avalie se você já tem seguro de vida adequado antes de aceitar — em muitos casos é redundante."
+    },
+    {
+      "q": "Como descobrir o CET antes de assinar o contrato?",
+      "a": "Pela Resolução BCB 4.881/2020, o banco é obrigado a informar o CET por escrito antes da contratação, de forma destacada no contrato e na publicidade. Exija a planilha de encargos detalhada: valor liberado, parcela, IOF, TAC, seguros e o CET mensal e anual. Sem essa informação, o contrato pode ser questionado judicialmente."
     }
   ],
   "sources": [
     {
-      "name": "Banco Central do Brasil — CET (Custo Efetivo Total)",
-      "url": "https://www.bcb.gov.br/estabilidadefinanceira/cet"
+      "name": "BACEN — Resolução BCB nº 4.881/2020 (CET obrigatório)",
+      "url": "https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20BCB&numero=4881"
     },
     {
-      "name": "BACEN — Resolução CMN 3.517/2007 (informação do CET)",
-      "url": "https://www.bcb.gov.br/pre/normativos/busca/normativo.asp?numero=3517&tipo=resolucao"
+      "name": "Planalto — Lei 14.181/2021 (Marco Legal do Superendividamento)",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14181.htm"
+    },
+    {
+      "name": "Planalto — Lei 10.820/2003 (Crédito consignado)",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/2003/l10.820.htm"
     },
     {
       "name": "Planalto — Decreto 6.306/2007 (IOF sobre crédito)",
       "url": "https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/decreto/d6306.htm"
     },
     {
-      "name": "Banco Central — Cidadania Financeira",
-      "url": "https://www.bcb.gov.br/cidadaniafinanceira"
+      "name": "Banco Central do Brasil — Portal CET (Custo Efetivo Total)",
+      "url": "https://www.bcb.gov.br/estabilidadefinanceira/cet"
     },
     {
-      "name": "Receita Federal — IOF",
-      "url": "https://www.gov.br/receitafederal/pt-br"
+      "name": "Procon-SP — ProCalc / Dados de CET por instituição",
+      "url": "https://www.procon.sp.gov.br/"
     }
   ],
-  "lastReviewed": "2026-05-20",
+  "lastReviewed": "2026-05-28",
   "relatedSlugs": [
     "juros-rotativo-cartao-credito-maximo-8",
     "cdb-rendimento-liquido-ir-regressivo",
@@ -208,7 +219,7 @@
       "text": "Valor contratado, parcela mensal e quantas parcelas."
     },
     {
-      "name": "Adicione IOF, tarifas e seguros",
+      "name": "Adicione IOF, TAC e seguros",
       "text": "Consulte a planilha de encargos do contrato. Não pule — é onde o CET explode."
     },
     {
@@ -216,8 +227,8 @@
       "text": "A calculadora aplica a TIR do fluxo e devolve CET mensal e anual."
     },
     {
-      "name": "Use para comparar bancos",
-      "text": "CET é a única métrica justa. Não compare 'juros nominal' entre ofertas diferentes."
+      "name": "Compare entre bancos pelo CET",
+      "text": "CET é a única métrica justa entre Itaú, Nubank, Caixa, Pan e demais. Nunca compare por taxa nominal."
     }
   ]
 }
