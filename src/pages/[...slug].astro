@@ -8,6 +8,7 @@ import Calculator from '../components/Calculator.astro';
 import LiveData from '../components/LiveData.astro';
 import RelatedCalcs from '../components/RelatedCalcs.astro';
 import ogManifest from '../lib/og-manifest.json';
+import ratingsPulled from '../../db/ratings.json';
 import ClusterHub from '../components/ClusterHub.astro';
 import CalendarioFeriados from '../components/CalendarioFeriados.astro';
 import GaugeImcPediatrico from '../components/GaugeImcPediatrico.astro';
@@ -833,17 +834,17 @@ for (const v of videos) {
   });
 }
 
-// AggregateRating — si la calc tiene >= 5 ratings reales (almacenados en D1),
-// se inyectan en el schema. Por ahora populamos via API runtime; el JSON puede
-// declarar `ratings: { value, count }` opcional como override estático.
-if (calc.ratings && calc.ratings.count >= 5) {
-  // Encontrar SoftwareApplication / WebApplication (schemaApp) y mergear.
+// AggregateRating — pulled desde D1 vía scripts/ratings-pull.ts → db/ratings.json.
+// El JSON estatico de la calc puede sobreescribir con `ratings: { value, count }`.
+// Threshold >= 5 votos reales para evitar self-serving / low-sample bias.
+const calcRatings = (calc as any).ratings || (ratingsPulled as Record<string, { value: number; count: number }>)[calc.slug];
+if (calcRatings && calcRatings.count >= 5) {
   const appNode = schemaGraph.find((n: any) => n['@type'] === 'SoftwareApplication' || n['@type'] === 'WebApplication');
   if (appNode) {
     appNode.aggregateRating = {
       '@type': 'AggregateRating',
-      ratingValue: calc.ratings.value.toFixed(1),
-      ratingCount: calc.ratings.count,
+      ratingValue: Number(calcRatings.value).toFixed(1),
+      ratingCount: calcRatings.count,
       bestRating: '5',
       worstRating: '1',
     };
