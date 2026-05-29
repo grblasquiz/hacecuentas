@@ -1,0 +1,121 @@
+---
+/**
+ * HealthCalcsSticky — Sidebar flotante "Más calcs de salud" — desktop only.
+ *
+ * Se monta condicional al slug 'calculadora-imc'. En desktop (>=1024px) se
+ * fija como sticky a la derecha del contenido principal con z-index bajo
+ * para no tapar nada. En mobile/tablet se oculta (la nav alternativa es el
+ * grid del ImcResultCta + el HealthHub al final).
+ *
+ * Lista curada de 7 calcs salud que el usuario que llegó a IMC tiene alta
+ * probabilidad de querer también. Sin tracking (puro link estático).
+ */
+const CALCS = [
+  { icon: "👶", label: "IMC infantil", href: "/calculadora-imc-infantil-percentil" },
+  { icon: "🤰", label: "Embarazo", href: "/calculadora-embarazo" },
+  { icon: "🩺", label: "Ovulación", href: "/calculadora-ovulacion-dias-fertiles" },
+  { icon: "🧬", label: "Edad metabólica", href: "/calculadora-edad-metabolica" },
+  { icon: "⚡", label: "BMR (Mifflin)", href: "/calculadora-tmb-metabolismo-basal-mifflin" },
+  { icon: "🔥", label: "Calorías TDEE", href: "/calculadora-calorias-diarias-tdee" },
+  { icon: "👴", label: "IMC adultos mayores", href: "/calculadora-imc-adultos-mayores-edad-tabla" },
+];
+---
+
+<aside class="hcs" aria-label="Más calculadoras de salud">
+  <header class="hcs-head">
+    <span class="hcs-icon" aria-hidden="true">⚕️</span>
+    <span class="hcs-title">Más calcs de salud</span>
+  </header>
+  <ul class="hcs-list">
+    {CALCS.map((c) => (
+      <li>
+        <a href={c.href} class="hcs-item">
+          <span class="hcs-item-icon" aria-hidden="true">{c.icon}</span>
+          <span class="hcs-item-label">{c.label}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</aside>
+
+<style>
+  .hcs {
+    display: none;
+  }
+
+  /* Desktop only: fixed a la derecha, visible scroll arriba/abajo */
+  @media (min-width: 1280px) {
+    .hcs {
+      display: block;
+      position: fixed;
+      top: 50%;
+      right: 1rem;
+      transform: translateY(-50%);
+      width: 200px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 0.875rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      z-index: 20;
+      font-size: 0.8125rem;
+    }
+  }
+
+  .hcs-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.625rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .hcs-icon {
+    font-size: 1rem;
+    line-height: 1;
+  }
+  .hcs-title {
+    font-weight: 700;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+  .hcs-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  .hcs-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 500;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .hcs-item:hover {
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg-card));
+    color: var(--accent-strong);
+  }
+  .hcs-item-icon {
+    font-size: 0.9375rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .hcs-item-label {
+    flex: 1;
+    line-height: 1.3;
+  }
+
+  /* Auto-hide en pantallas <1280 (laptop chico, tablet, mobile): el HealthHub
+     y el ImcResultCta cubren la funcionalidad in-flow */
+</style>

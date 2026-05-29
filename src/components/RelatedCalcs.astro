@@ -1,5 +1,7 @@
 ---
-import relatedAuto from '../lib/related-auto.json';
+import relatedAutoEs from '../lib/related-auto.json';
+import relatedAutoEn from '../lib/related-auto-en.json';
+import relatedAutoPt from '../lib/related-auto-pt.json';
 
 export interface Props {
   currentSlug: string;
@@ -26,7 +28,9 @@ const manual = manualSlugs
   .map((s) => bySlug.get(s))
   .filter((c: any) => c && c.slug !== currentSlug);
 
-// 2. Si faltan para llegar a limit, completamos con el mapping auto (TF-IDF)
+// 2. Si faltan para llegar a limit, completamos con el mapping auto (TF-IDF).
+// Cada locale tiene su propio mapa (stopwords y vocabulario distintos).
+const relatedAuto = lang === 'en' ? relatedAutoEn : lang === 'pt' ? relatedAutoPt : relatedAutoEs;
 const autoSlugs: string[] = (relatedAuto as Record<string, string[]>)[currentSlug] || [];
 const auto = autoSlugs
   .map((s) => bySlug.get(s))

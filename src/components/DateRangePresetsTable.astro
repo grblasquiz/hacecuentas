@@ -1,0 +1,236 @@
+---
+/**
+ * DateRangePresetsTable — para /dias-entre-dos-fechas.
+ *
+ * Bloque interactivo "Plazos típicos desde hoy" con presets clickeables
+ * (10 días hábiles, 30/60/90 corridos, 6 meses, 1 año) que muestran la
+ * fecha de vencimiento calculada en vivo desde la fecha base (default: hoy).
+ *
+ * Cumple regla "siempre tener botón Calcular" — esto NO sustituye la calc,
+ * es una tabla auxiliar de referencia que vive aparte. El form principal
+ * sigue intacto.
+ */
+---
+
+<section class="dpt" aria-labelledby="dpt-heading">
+  <h2 id="dpt-heading">Plazos típicos desde hoy</h2>
+  <p class="dpt-sub">Cambiá la fecha base para ver cuándo vencen los plazos administrativos y judiciales más comunes.</p>
+
+  <div class="dpt-base">
+    <label for="dpt-base-date" class="dpt-base-label">Fecha base</label>
+    <input type="date" id="dpt-base-date" />
+  </div>
+
+  <table class="dpt-table" data-dpt-table>
+    <thead>
+      <tr>
+        <th scope="col">Plazo</th>
+        <th scope="col">Tipo</th>
+        <th scope="col">Vence el</th>
+        <th scope="col">Días desde hoy</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-preset="habil-10">
+        <td>10 días</td>
+        <td>Hábiles</td>
+        <td data-cell="date">—</td>
+        <td data-cell="days">—</td>
+      </tr>
+      <tr data-preset="corrido-30" class="dpt-highlight">
+        <td>30 días</td>
+        <td>Corridos</td>
+        <td data-cell="date">—</td>
+        <td data-cell="days">—</td>
+      </tr>
+      <tr data-preset="corrido-60">
+        <td>60 días</td>
+        <td>Corridos</td>
+        <td data-cell="date">—</td>
+        <td data-cell="days">—</td>
+      </tr>
+      <tr data-preset="corrido-90">
+        <td>90 días</td>
+        <td>Corridos</td>
+        <td data-cell="date">—</td>
+        <td data-cell="days">—</td>
+      </tr>
+      <tr data-preset="mes-6">
+        <td>6 meses</td>
+        <td>Calendario</td>
+        <td data-cell="date">—</td>
+        <td data-cell="days">—</td>
+      </tr>
+      <tr data-preset="ano-1">
+        <td>1 año</td>
+        <td>Calendario</td>
+        <td data-cell="date">—</td>
+        <td data-cell="days">—</td>
+      </tr>
+      <tr data-preset="ano-2">
+        <td>2 años</td>
+        <td>Calendario</td>
+        <td data-cell="date">—</td>
+        <td data-cell="days">—</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="dpt-foot">
+    <strong>Hábiles</strong> excluye sábados, domingos y feriados nacionales argentinos 2026. <strong>Corridos</strong> cuenta todos los días. <strong>Calendario</strong> suma meses/años conservando el día (con ajuste a fin de mes si no existe).
+  </p>
+</section>
+
+<style>
+  .dpt {
+    margin: 1.5rem 0 2rem;
+    padding: 1.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .dpt h2 { margin: 0 0 0.25rem; font-size: 1.125rem; }
+  .dpt-sub { margin: 0 0 1rem; color: var(--text-muted); font-size: 0.875rem; }
+  .dpt-base { margin-bottom: 1rem; }
+  .dpt-base-label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    margin-bottom: 0.375rem;
+  }
+  .dpt-base input[type="date"] {
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font: inherit;
+    background: var(--bg-input, var(--bg-soft));
+    color: var(--text);
+  }
+  .dpt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .dpt-table th, .dpt-table td {
+    padding: 0.55rem 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+  .dpt-table th {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+  .dpt-highlight {
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+  }
+  .dpt-highlight td:first-child { font-weight: 600; }
+  .dpt-foot {
+    margin: 0.75rem 0 0;
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    line-height: 1.5;
+  }
+  @media (max-width: 480px) {
+    .dpt { padding: 1rem; }
+    .dpt-table { font-size: 0.8125rem; }
+    .dpt-table th, .dpt-table td { padding: 0.5rem 0.375rem; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    // Feriados nacionales Argentina 2026 (inamovibles + trasladables como cae).
+    // Fuente: Decreto 1.584/2010 + calendario oficial 2026.
+    var FERIADOS_AR_2026 = new Set([
+      "2026-01-01", "2026-02-16", "2026-02-17", "2026-03-24",
+      "2026-04-02", "2026-04-03", "2026-05-01", "2026-05-25",
+      "2026-06-15", "2026-06-22", "2026-07-09", "2026-08-17",
+      "2026-10-12", "2026-11-23", "2026-12-08", "2026-12-25"
+    ]);
+
+    function toISO(d) {
+      var y = d.getFullYear();
+      var m = String(d.getMonth() + 1).padStart(2, "0");
+      var day = String(d.getDate()).padStart(2, "0");
+      return y + "-" + m + "-" + day;
+    }
+    function parseISO(s) {
+      var p = s.split("-");
+      return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+    }
+    function fmtDate(d) {
+      return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" });
+    }
+    function addCorridos(base, n) {
+      var d = new Date(base.getTime());
+      d.setDate(d.getDate() + n);
+      return d;
+    }
+    function addHabiles(base, n) {
+      var d = new Date(base.getTime());
+      var added = 0;
+      while (added < n) {
+        d.setDate(d.getDate() + 1);
+        var dow = d.getDay();
+        if (dow === 0 || dow === 6) continue;
+        if (FERIADOS_AR_2026.has(toISO(d))) continue;
+        added++;
+      }
+      return d;
+    }
+    function addMonths(base, m) {
+      var d = new Date(base.getTime());
+      var targetDay = d.getDate();
+      d.setMonth(d.getMonth() + m);
+      // Si el mes destino no tiene tantos días, JS ya ajusta. Aseguramos rollback explícito.
+      if (d.getDate() !== targetDay) d.setDate(0);
+      return d;
+    }
+    function diffDays(a, b) {
+      return Math.round((b.getTime() - a.getTime()) / 86400000);
+    }
+
+    function computeAll(base) {
+      var now = new Date(); now.setHours(0,0,0,0);
+      var map = {
+        "habil-10": addHabiles(base, 10),
+        "corrido-30": addCorridos(base, 30),
+        "corrido-60": addCorridos(base, 60),
+        "corrido-90": addCorridos(base, 90),
+        "mes-6": addMonths(base, 6),
+        "ano-1": addMonths(base, 12),
+        "ano-2": addMonths(base, 24),
+      };
+      Object.keys(map).forEach(function (k) {
+        var row = document.querySelector('[data-preset="' + k + '"]');
+        if (!row) return;
+        var d = map[k];
+        var dateCell = row.querySelector('[data-cell="date"]');
+        var daysCell = row.querySelector('[data-cell="days"]');
+        if (dateCell) dateCell.textContent = fmtDate(d);
+        if (daysCell) daysCell.textContent = diffDays(now, d) + " días";
+      });
+    }
+
+    function init() {
+      var input = document.getElementById("dpt-base-date");
+      if (!input) return;
+      var today = new Date(); today.setHours(0,0,0,0);
+      input.value = toISO(today);
+      computeAll(today);
+      input.addEventListener("change", function () {
+        if (!input.value) return;
+        computeAll(parseISO(input.value));
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  })();
+</script>

@@ -1,0 +1,159 @@
+---
+/**
+ * HealthHub — "Tu plan completo de salud" — bloque hub que se monta antes del
+ * FAQ en /calculadora-imc. Agrupa 11 calcs salud en 4 columnas temáticas:
+ *
+ *   1. Composición corporal
+ *   2. Nutrición
+ *   3. Salud reproductiva
+ *   4. Etapas de la vida
+ *
+ * Objetivo: que el user que llegó a IMC descubra 10+ calcs salud más sin tener
+ * que ir al footer ni hacer scroll a related-auto. Convierte la calc top en
+ * "entry point" al cluster salud entero.
+ */
+const SECTIONS = [
+  {
+    title: "Composición corporal",
+    icon: "📏",
+    calcs: [
+      { label: "Grasa corporal por pliegues", href: "/calculadora-grasa-corporal-pliegues" },
+      { label: "FFMI · masa libre de grasa", href: "/calculadora-ffmi-indice-masa-libre-grasa" },
+      { label: "Edad metabólica", href: "/calculadora-edad-metabolica" },
+    ],
+  },
+  {
+    title: "Nutrición",
+    icon: "🥗",
+    calcs: [
+      { label: "Calorías diarias (TDEE)", href: "/calculadora-calorias-diarias-tdee" },
+      { label: "Metabolismo basal (BMR)", href: "/calculadora-tmb-metabolismo-basal-mifflin" },
+      { label: "Proteína por peso", href: "/calculadora-proteina-gramos-por-peso-actividad" },
+      { label: "Agua diaria necesaria", href: "/calculadora-agua-diaria-necesaria" },
+      { label: "Macros déficit / volumen", href: "/calculadora-macros-deficit-volumen-mantenimiento" },
+    ],
+  },
+  {
+    title: "Salud reproductiva",
+    icon: "🌸",
+    calcs: [
+      { label: "Calculadora de embarazo", href: "/calculadora-embarazo" },
+      { label: "Ovulación · días fértiles", href: "/calculadora-ovulacion-dias-fertiles" },
+      { label: "Peso ideal bebé · percentil", href: "/calculadora-peso-ideal-bebe-mes-percentil" },
+    ],
+  },
+  {
+    title: "Etapas de la vida",
+    icon: "👨‍👩‍👧",
+    calcs: [
+      { label: "IMC infantil · percentiles OMS", href: "/calculadora-imc-infantil-percentil" },
+      { label: "IMC adultos mayores (65+)", href: "/calculadora-imc-adultos-mayores-edad-tabla" },
+    ],
+  },
+];
+---
+
+<section class="hh" aria-labelledby="hh-heading">
+  <header class="hh-head">
+    <h2 id="hh-heading">⚕️ Tu plan completo de salud</h2>
+    <p class="hh-sub">
+      El IMC es un punto de partida. Estas calcs te dan el panorama: composición,
+      nutrición, y herramientas según tu etapa de vida.
+    </p>
+  </header>
+
+  <div class="hh-grid">
+    {SECTIONS.map((s) => (
+      <article class="hh-col">
+        <h3 class="hh-col-title">
+          <span class="hh-col-icon" aria-hidden="true">{s.icon}</span>
+          {s.title}
+        </h3>
+        <ul class="hh-col-list">
+          {s.calcs.map((c) => (
+            <li>
+              <a href={c.href} class="hh-link">{c.label}</a>
+            </li>
+          ))}
+        </ul>
+      </article>
+    ))}
+  </div>
+</section>
+
+<style>
+  .hh {
+    margin: 2rem 0;
+    padding: 1.5rem 1.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .hh-head { margin-bottom: 1rem; }
+  .hh h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.25rem;
+    color: var(--text);
+  }
+  .hh-sub {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+  .hh-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+  .hh-col {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.875rem 1rem;
+  }
+  .hh-col-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+  .hh-col-icon {
+    font-size: 1rem;
+    line-height: 1;
+  }
+  .hh-col-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .hh-link {
+    display: block;
+    padding: 0.375rem 0.5rem;
+    margin-left: -0.5rem;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    line-height: 1.35;
+    border-radius: var(--radius-sm);
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .hh-link:hover {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent-strong);
+  }
+  @media (max-width: 980px) {
+    .hh-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 520px) {
+    .hh-grid { grid-template-columns: 1fr; }
+  }
+</style>

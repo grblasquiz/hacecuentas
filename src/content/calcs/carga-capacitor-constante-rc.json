@@ -6,7 +6,7 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "carga-capacitor-constante-rc",
-  "lastReviewed": "2026-05-23",
+  "lastReviewed": "2026-05-15",
   "intro": "Cuando conectás una resistencia y un capacitor en serie a una fuente de tensión, la física no te da un resultado inmediato: el capacitor carga (o descarga) siguiendo una curva exponencial que depende exactamente de dos parámetros —el valor de R y el de C. Ese producto R × C es la constante de tiempo τ (tau), medida en segundos, y gobierna toda la dinámica del circuito.\n\nEl problema en la práctica es que los errores de diseño con circuitos RC son silenciosos. Un filtro pasa-bajos mal calculado no \"falla\" de forma obvia: simplemente no filtra bien. Un circuito de debounce con τ demasiado corta sigue rebotando; con τ demasiado larga, el sistema no responde. Un snubber sobredimensionado disipa potencia innecesaria. La fórmula es sencilla, pero los cálculos de conversión de unidades (µF, nF, pF; kΩ, MΩ) generan errores constantes.\n\nEsta calculadora toma R y C en cualquier unidad práctica, calcula τ de forma exacta y te da tres datos que en papel son un trabajo extra: el voltaje V(t) en un instante específico usando V(t) = V₀ × (1 − e^(−t/τ)) para carga y V(t) = V₀ × e^(−t/τ) para descarga, más los tiempos característicos: 1τ (63.2%), 3τ (95.0%) y 5τ (99.3%). El punto del 5τ es la referencia estándar que usan los ingenieros para considerar un transitorio \"terminado\" en la mayoría de las aplicaciones.\n\nSi estás cursando Física II o Electrónica I en cualquier universidad argentina (UTN, UBA, UNC, UADE), estos circuitos transitorios son tema de parcial con valores numéricos concretos. Si estás en el mundo maker, el diseño de filtros RC para PWM de Arduino o temporizadores con NE555 depende exactamente de este cálculo. Y si trabajás en electrónica industrial, los snubbers RC en variadores de frecuencia o fuentes conmutadas también siguen la misma lógica.\n\nIngresás R, C y voltaje de fuente, elegís el modo (carga o descarga) y el instante t que te interesa. El resultado incluye τ, los tres tiempos clave y el voltaje exacto en ese instante.",
   "keyTakeaway": "**τ = R × C**. Carga: V(t) = V₀·(1 − e^(−t/τ)). Descarga: V(t) = V₀·e^(−t/τ). Regla: **5τ = completo**. Para 1 MΩ + 1 µF → τ = 1 s.",
   "useCases": [
@@ -35,8 +35,8 @@
       "type": "number",
       "required": true,
       "placeholder": "1",
-      "min": 0.000001,
-      "step": 0.000001
+      "min": 1e-06,
+      "step": 1e-06
     },
     {
       "id": "unidadC",

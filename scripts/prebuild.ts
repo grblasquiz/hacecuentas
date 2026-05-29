@@ -81,6 +81,11 @@ async function main() {
     task('sitemap', 'generate-sitemap'),
     task('search-index', 'generate-search-index'),
     task('stamp-sw', 'stamp-sw'),
+    // API para LLMs: catálogo /api/calcs-index.json + índice slim que consume
+    // el endpoint SSR /api/calc/[slug]/compute.ts. Ambos fs-only y rápidos.
+    // compute-index DEBE existir antes del build de Vite (lo importa el Worker).
+    task('calcs-api', 'generate-calc-api-index'),
+    task('compute-index', 'generate-compute-index'),
   ];
   // Skip compute-related solo si estamos en incremental Y el output cacheado
   // ya existe. Si no existe (primer build de la rama, cache invalidado, etc.)

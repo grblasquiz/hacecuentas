@@ -1,0 +1,190 @@
+---
+/**
+ * ImcResultCta — Grid de 3 cards contextuales que aparecen post-resultado IMC.
+ *
+ * Reemplaza el CTA single-link (v1) por un grid de 3 cards según categoría:
+ *   - Bajo peso              → TDEE superávit + Proteína + Macros bulk
+ *   - Peso normal            → BMR + Proteína + Agua diaria
+ *   - Sobrepeso / Obesidad   → TDEE déficit + Calorías deporte + Grasa pliegues
+ *
+ * Mismo evento hc-calc-result, mismo guardia slug='calculadora-imc'. 3x más
+ * superficie de click para reducir bounce y aumentar pages/session.
+ */
+---
+
+<section class="imc-next" data-imc-cta hidden aria-live="polite" aria-labelledby="imc-next-heading">
+  <header class="imc-next-head">
+    <span class="imc-next-icon" aria-hidden="true">🎯</span>
+    <div>
+      <strong id="imc-next-heading" data-imc-next-title>Tu próximo paso</strong>
+      <p data-imc-next-text></p>
+    </div>
+  </header>
+  <div class="imc-next-grid" data-imc-next-grid></div>
+</section>
+
+<style>
+  .imc-next {
+    margin: 1rem 0 0;
+    padding: 1rem 1.125rem 1.125rem;
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg-card));
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+  }
+  .imc-next[hidden] { display: none; }
+  .imc-next-head {
+    display: flex;
+    gap: 0.875rem;
+    align-items: flex-start;
+    margin-bottom: 0.875rem;
+  }
+  .imc-next-icon {
+    flex-shrink: 0;
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+  .imc-next strong {
+    display: block;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.125rem;
+  }
+  .imc-next p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  .imc-next-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.625rem;
+  }
+  .imc-next-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 0.75rem 0.875rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    text-decoration: none;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  .imc-next-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .imc-next-card-icon {
+    font-size: 1.375rem;
+    line-height: 1;
+  }
+  .imc-next-card-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .imc-next-card-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .imc-next-card-cta {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 600;
+    margin-top: auto;
+  }
+  @media (max-width: 720px) {
+    .imc-next-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    // 3 cards por categoría. Mantenemos slugs reales verificados.
+    var PLANS = {
+      deficit: {
+        title: "Tu próximo paso para bajar de forma sostenida",
+        text: "El IMC fuera del rango saludable se ataca con un déficit calórico controlado + más movimiento + composición corporal medida bien.",
+        cards: [
+          { icon: "🔥", title: "Calorías diarias TDEE", desc: "Cuántas kcal necesitás para un déficit moderado.", cta: "Calcular TDEE →", href: "/calculadora-calorias-diarias-tdee" },
+          { icon: "🏃", title: "Calorías quemadas por deporte", desc: "Cuánto quemás corriendo, caminando, en gym.", cta: "Calcular gasto →", href: "/calculadora-calorias-quemadas-deporte" },
+          { icon: "📏", title: "Grasa corporal (pliegues)", desc: "Mejor indicador que el IMC: % de grasa real.", cta: "Medir grasa →", href: "/calculadora-grasa-corporal-pliegues" },
+        ],
+      },
+      superavit: {
+        title: "Tu próximo paso para subir de peso bien",
+        text: "Para ganar peso saludable hace falta superávit calórico controlado + proteína suficiente + macros balanceados.",
+        cards: [
+          { icon: "🔥", title: "Calorías diarias TDEE", desc: "Cuántas kcal sumar para un superávit sostenible.", cta: "Calcular TDEE →", href: "/calculadora-calorias-diarias-tdee" },
+          { icon: "🥩", title: "Proteína por peso", desc: "Cuántos gramos de proteína diaria necesitás.", cta: "Calcular proteína →", href: "/calculadora-proteina-gramos-por-peso-actividad" },
+          { icon: "💪", title: "Macros bulk / volumen", desc: "Distribución óptima de carbs, proteína y grasa.", cta: "Ver macros →", href: "/calculadora-macros-deficit-volumen-mantenimiento" },
+        ],
+      },
+      mantenimiento: {
+        title: "Tu próximo paso para mantenerte en zona saludable",
+        text: "Estás en rango OMS. Para sostenerlo te conviene saber tu BMR, comer proteína suficiente y mantener hidratación adecuada.",
+        cards: [
+          { icon: "⚡", title: "Metabolismo basal (BMR)", desc: "Cuánto gastás sólo por estar viva/o (Mifflin-St Jeor).", cta: "Calcular BMR →", href: "/calculadora-tmb-metabolismo-basal-mifflin" },
+          { icon: "🥩", title: "Proteína por peso", desc: "Gramos diarios para mantener músculo.", cta: "Calcular proteína →", href: "/calculadora-proteina-gramos-por-peso-actividad" },
+          { icon: "💧", title: "Agua diaria necesaria", desc: "Hidratación según peso, actividad y clima.", cta: "Calcular agua →", href: "/calculadora-agua-diaria-necesaria" },
+        ],
+      },
+    };
+
+    function pickPlan(categoria) {
+      if (!categoria) return null;
+      var c = String(categoria).toLowerCase();
+      if (c.indexOf("bajo peso") !== -1) return PLANS.superavit;
+      if (c.indexOf("sobrepeso") !== -1 || c.indexOf("obesidad") !== -1) return PLANS.deficit;
+      if (c.indexOf("normal") !== -1) return PLANS.mantenimiento;
+      return null;
+    }
+
+    function render(host, plan) {
+      if (!plan) { host.hidden = true; return; }
+      host.querySelector("[data-imc-next-title]").textContent = plan.title;
+      host.querySelector("[data-imc-next-text]").textContent = plan.text;
+      var grid = host.querySelector("[data-imc-next-grid]");
+      grid.innerHTML = "";
+      plan.cards.forEach(function (c) {
+        var a = document.createElement("a");
+        a.className = "imc-next-card";
+        a.href = c.href;
+        a.innerHTML =
+          '<span class="imc-next-card-icon" aria-hidden="true">' + c.icon + '</span>' +
+          '<span class="imc-next-card-title">' + c.title + '</span>' +
+          '<span class="imc-next-card-desc">' + c.desc + '</span>' +
+          '<span class="imc-next-card-cta">' + c.cta + '</span>';
+        grid.appendChild(a);
+      });
+      host.hidden = false;
+    }
+
+    function init() {
+      var host = document.querySelector("[data-imc-cta]");
+      if (!host) return;
+      var containers = document.querySelectorAll(".calc-container");
+      if (containers.length === 0) return;
+      containers.forEach(function (container) {
+        container.addEventListener("hc-calc-result", function (ev) {
+          var detail = ev && ev.detail ? ev.detail : null;
+          if (!detail || !detail.output) return;
+          if (detail.slug && detail.slug !== "calculadora-imc") return;
+          render(host, pickPlan(detail.output.categoria));
+        });
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  })();
+</script>

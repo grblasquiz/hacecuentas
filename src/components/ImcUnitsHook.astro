@@ -1,0 +1,115 @@
+---
+/**
+ * ImcUnitsHook — script-only, sin UI.
+ *
+ * Escucha el cambio del select #sistema (definido en imc.json como field
+ * advanced "Sistema de unidades"). Cuando el usuario elige imperial:
+ *  - swappea suffixes peso (kg→lb), altura (cm→in), cintura (cm→in).
+ *  - convierte el value actual de cada input (cosmético, para que el número
+ *    visible se corresponda con la unidad elegida).
+ *  - persiste la preferencia en localStorage (key: hc-imc-units).
+ *
+ * El cálculo en sí lo hace la fórmula imc.ts: recibe `sistema` y convierte
+ * internamente. Este script es sólo para que el form se vea consistente.
+ *
+ * Único en IMC. Si más calcs ganan toggle de unidades, generalizar.
+ */
+---
+
+<script is:inline>
+  (function () {
+    var KEY = "hc-imc-units";
+
+    function $(sel) { return document.querySelector(sel); }
+
+    function getSelect() { return document.getElementById("sistema"); }
+    function getInputs() {
+      return {
+        peso: document.getElementById("peso"),
+        altura: document.getElementById("altura"),
+        cintura: document.getElementById("cintura"),
+      };
+    }
+    function getSuffixSpan(inputId) {
+      var input = document.getElementById(inputId);
+      if (!input) return null;
+      var wrap = input.parentElement;
+      if (!wrap) return null;
+      return wrap.querySelector(".suffix");
+    }
+
+    var SUFFIX_MAP = {
+      peso: { metric: "kg", imperial: "lb" },
+      altura: { metric: "cm", imperial: "in" },
+      cintura: { metric: "cm", imperial: "in" },
+    };
+
+    var PLACEHOLDER_MAP = {
+      peso: { metric: "70", imperial: "154" },
+      altura: { metric: "170", imperial: "67" },
+      cintura: { metric: "85", imperial: "33" },
+    };
+
+    function convertValue(val, fromSystem, fieldId) {
+      if (!val) return val;
+      var n = parseFloat(String(val).replace(",", "."));
+      if (!isFinite(n)) return val;
+      if (fromSystem === "metric") {
+        // metric → imperial
+        if (fieldId === "peso") return (n * 2.2046).toFixed(1);
+        return (n / 2.54).toFixed(1); // altura, cintura: cm → in
+      } else {
+        // imperial → metric
+        if (fieldId === "peso") return (n / 2.2046).toFixed(1);
+        return (n * 2.54).toFixed(0); // in → cm
+      }
+    }
+
+    function applySystem(newSys, prevSys) {
+      var inputs = getInputs();
+      Object.keys(inputs).forEach(function (fid) {
+        var input = inputs[fid];
+        if (!input) return;
+        // Suffix visible
+        var sufEl = getSuffixSpan(fid);
+        if (sufEl && SUFFIX_MAP[fid]) sufEl.textContent = SUFFIX_MAP[fid][newSys];
+        // Placeholder
+        if (PLACEHOLDER_MAP[fid]) input.placeholder = PLACEHOLDER_MAP[fid][newSys];
+        // Convertir value actual si hay
+        if (input.value && prevSys && prevSys !== newSys) {
+          input.value = convertValue(input.value, prevSys, fid);
+        }
+        // step más fino en imperial
+        if (fid === "altura") input.step = newSys === "imperial" ? "0.1" : "1";
+        if (fid === "cintura") input.step = newSys === "imperial" ? "0.5" : "1";
+      });
+    }
+
+    function init() {
+      var sel = getSelect();
+      if (!sel) return;
+
+      // Restaurar preferencia previa
+      var stored = null;
+      try { stored = localStorage.getItem(KEY); } catch (e) {}
+      if (stored === "imperial" || stored === "metric") {
+        sel.value = stored;
+        applySystem(stored, "metric");
+      }
+
+      var current = sel.value || "metric";
+      sel.addEventListener("change", function () {
+        var next = sel.value === "imperial" ? "imperial" : "metric";
+        applySystem(next, current);
+        current = next;
+        try { localStorage.setItem(KEY, next); } catch (e) {}
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  })();
+</script>

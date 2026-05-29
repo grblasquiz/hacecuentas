@@ -1,0 +1,190 @@
+---
+/**
+ * PediatricBmiChart — para /calculadora-indice-masa-corporal-pediatrico.
+ *
+ * Gráfico SVG estático con 5 curvas percentilada de IMC OMS (p3, p25, p50,
+ * p75, p97) para edad 2-19. Cuando el calc dispara `hc-calc-result`, el JS
+ * extrae edad e IMC del output y plotea un punto rojo sobre las curvas.
+ *
+ * Curvas LMS aproximadas de tablas WHO 2007 (boys y girls promediado).
+ * Suficiente para visualización; el cálculo exacto sigue siendo de la
+ * calculadora.
+ */
+---
+
+<section class="pbc" aria-labelledby="pbc-heading">
+  <h2 id="pbc-heading">Curvas de IMC pediátrico (OMS 2007)</h2>
+  <p class="pbc-sub">Después de calcular, tu hijo/a aparece marcado/a sobre las curvas de percentil para su edad.</p>
+
+  <div class="pbc-wrap" data-pbc>
+    <svg viewBox="0 0 600 360" role="img" aria-label="Curvas de percentiles IMC por edad 2 a 19 años">
+      <!-- Background -->
+      <rect x="50" y="20" width="530" height="290" fill="var(--bg-soft)" stroke="var(--border)" />
+
+      <!-- Gridlines verticales (cada 2 años) -->
+      <g stroke="var(--border)" stroke-width="0.5" opacity="0.6">
+        <line x1="111" y1="20" x2="111" y2="310" />
+        <line x1="173" y1="20" x2="173" y2="310" />
+        <line x1="235" y1="20" x2="235" y2="310" />
+        <line x1="297" y1="20" x2="297" y2="310" />
+        <line x1="359" y1="20" x2="359" y2="310" />
+        <line x1="421" y1="20" x2="421" y2="310" />
+        <line x1="483" y1="20" x2="483" y2="310" />
+        <line x1="545" y1="20" x2="545" y2="310" />
+      </g>
+
+      <!-- Gridlines horizontales IMC 12, 16, 20, 24, 28, 32 -->
+      <g stroke="var(--border)" stroke-width="0.5" opacity="0.6">
+        <line x1="50" y1="62" x2="580" y2="62" />
+        <line x1="50" y1="120" x2="580" y2="120" />
+        <line x1="50" y1="178" x2="580" y2="178" />
+        <line x1="50" y1="236" x2="580" y2="236" />
+        <line x1="50" y1="294" x2="580" y2="294" />
+      </g>
+
+      <!-- Eje X labels (edad) -->
+      <g font-size="10" fill="var(--text-muted)" text-anchor="middle">
+        <text x="50" y="328">2</text>
+        <text x="111" y="328">4</text>
+        <text x="173" y="328">6</text>
+        <text x="235" y="328">8</text>
+        <text x="297" y="328">10</text>
+        <text x="359" y="328">12</text>
+        <text x="421" y="328">14</text>
+        <text x="483" y="328">16</text>
+        <text x="545" y="328">18</text>
+      </g>
+      <text x="315" y="350" font-size="11" fill="var(--text-muted)" text-anchor="middle">Edad (años)</text>
+
+      <!-- Eje Y labels (IMC) -->
+      <g font-size="10" fill="var(--text-muted)" text-anchor="end">
+        <text x="45" y="25">32</text>
+        <text x="45" y="64">28</text>
+        <text x="45" y="122">24</text>
+        <text x="45" y="180">20</text>
+        <text x="45" y="238">16</text>
+        <text x="45" y="296">12</text>
+      </g>
+      <text x="14" y="170" font-size="11" fill="var(--text-muted)" text-anchor="middle" transform="rotate(-90 14 170)">IMC (kg/m²)</text>
+
+      <!-- Curvas percentilada (path approximation WHO 2007) -->
+      <!-- p3 (delgadez): IMC bajo, sube poco con edad -->
+      <path d="M50,243 Q200,259 350,222 T580,178" stroke="#f87171" stroke-width="1.5" fill="none" opacity="0.8" />
+      <!-- p25 -->
+      <path d="M50,227 Q200,236 350,189 T580,140" stroke="#fbbf24" stroke-width="1.5" fill="none" opacity="0.8" />
+      <!-- p50 (mediana) - resaltada -->
+      <path d="M50,218 Q200,225 350,170 T580,115" stroke="#10b981" stroke-width="2.5" fill="none" />
+      <!-- p75 -->
+      <path d="M50,205 Q200,210 350,143 T580,82" stroke="#fbbf24" stroke-width="1.5" fill="none" opacity="0.8" />
+      <!-- p97 (obesidad) -->
+      <path d="M50,180 Q200,180 350,108 T580,46" stroke="#dc2626" stroke-width="1.5" fill="none" opacity="0.8" />
+
+      <!-- Labels de curvas (al final) -->
+      <g font-size="10" fill="var(--text-subtle)">
+        <text x="582" y="180" fill="#f87171">p3</text>
+        <text x="582" y="142" fill="#fbbf24">p25</text>
+        <text x="582" y="115" fill="#10b981" font-weight="700">p50</text>
+        <text x="582" y="82" fill="#fbbf24">p75</text>
+        <text x="582" y="48" fill="#dc2626">p97</text>
+      </g>
+
+      <!-- Punto del usuario (hidden hasta calcular) -->
+      <g data-pbc-marker hidden>
+        <circle data-pbc-marker-circle cx="0" cy="0" r="6" fill="#2563eb" stroke="white" stroke-width="2" />
+        <text data-pbc-marker-label x="0" y="0" font-size="11" font-weight="700" fill="#2563eb"></text>
+      </g>
+    </svg>
+  </div>
+
+  <p class="pbc-legend">
+    🟢 <strong>p50</strong> es la mediana — la mitad de los niños están por encima, la mitad por debajo. <strong>p3</strong> y <strong>p97</strong> son los umbrales de bajo peso y obesidad según OMS. <strong>p25–p75</strong> es la zona considerada saludable promedio.
+  </p>
+  <p class="pbc-foot">
+    Curvas basadas en WHO Growth Reference 2007 (5-19 años, sexo promedio). Para evaluación clínica precisa usá la tabla LMS específica por sexo del/la pediatra.
+  </p>
+</section>
+
+<style>
+  .pbc {
+    margin: 1.5rem 0 2rem;
+    padding: 1.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .pbc h2 { margin: 0 0 0.25rem; font-size: 1.125rem; }
+  .pbc-sub { margin: 0 0 1rem; color: var(--text-muted); font-size: 0.875rem; }
+  .pbc-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+  .pbc-wrap svg {
+    width: 100%;
+    height: auto;
+    min-width: 360px;
+  }
+  .pbc-legend {
+    margin: 0.875rem 0 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text);
+    line-height: 1.55;
+    padding: 0.625rem 0.875rem;
+    background: var(--bg-soft);
+    border-radius: var(--radius-sm);
+  }
+  .pbc-foot {
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    function mapAgeToX(age) {
+      // Eje x: edad 2 → x=50, edad 18 → x=545. Linear.
+      var clamped = Math.max(2, Math.min(18, age));
+      return 50 + ((clamped - 2) / 16) * 495;
+    }
+    function mapImcToY(imc) {
+      // Eje y: IMC 12 → y=294, IMC 32 → y=20. Inverso linear.
+      var clamped = Math.max(12, Math.min(32, imc));
+      return 294 - ((clamped - 12) / 20) * 274;
+    }
+    function markerOn(host, age, imc) {
+      var marker = host.querySelector("[data-pbc-marker]");
+      if (!marker) return;
+      var circle = marker.querySelector("[data-pbc-marker-circle]");
+      var label = marker.querySelector("[data-pbc-marker-label]");
+      var x = mapAgeToX(age);
+      var y = mapImcToY(imc);
+      circle.setAttribute("cx", x);
+      circle.setAttribute("cy", y);
+      label.setAttribute("x", x + 10);
+      label.setAttribute("y", y - 6);
+      label.textContent = "IMC " + imc.toFixed(1);
+      marker.removeAttribute("hidden");
+    }
+
+    function init() {
+      var host = document.querySelector("[data-pbc]");
+      if (!host) return;
+      var containers = document.querySelectorAll(".calc-container");
+      containers.forEach(function (container) {
+        container.addEventListener("hc-calc-result", function (ev) {
+          var detail = ev && ev.detail ? ev.detail : null;
+          if (!detail || !detail.output || !detail.inputs) return;
+          var age = parseFloat(detail.inputs.edad);
+          var imc = parseFloat(detail.output.imc);
+          if (!isFinite(age) || !isFinite(imc)) return;
+          markerOn(host, age, imc);
+        });
+      });
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  })();
+</script>

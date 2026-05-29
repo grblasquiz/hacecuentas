@@ -87,22 +87,65 @@ const audience: 'AR' | 'US' | 'global' = calc.audience === 'AR'
   : 'US';
 const enLocale = 'en-US';
 
-const schemaHowTo = {
+// HowTo steps: prioridad a howToSteps explícitos, fallback a extracción del
+// explanation. Solo emitimos HowTo schema si hay pasos REALES — un HowTo de
+// relleno sobre "cómo usar la UI" (Enter X / Click Calculate) es schema padding
+// que Google penaliza. Mismo criterio que la página AR.
+const _stepRegex = /(?:^|\n)\s*(?:\d+\.|[-*])\s+(.+)/g;
+const _extractedSteps: string[] = [];
+if (calc.explanation) {
+  let m;
+  while ((m = _stepRegex.exec(calc.explanation)) !== null) {
+    const clean = m[1].replace(/\*\*/g, '').replace(/`/g, '').trim();
+    if (clean.length > 10 && clean.length < 200) _extractedSteps.push(clean);
+    if (_extractedSteps.length >= 8) break;
+  }
+}
+const _fallbackSteps = [
+  `Enter your data into the ${calc.h1}.`,
+  'Double-check that the values are correct.',
+  'Click Calculate to see the result.',
+];
+const howToSteps =
+    calc.howToSteps && calc.howToSteps.length > 0
+        ? calc.howToSteps
+        : _extractedSteps.length >= 3
+        ? _extractedSteps
+        : _fallbackSteps;
+const hasRealHowToSteps =
+    (Array.isArray(calc.howToSteps) && calc.howToSteps.length >= 2) ||
+    _extractedSteps.length >= 3;
+
+const schemaHowTo: any = {
   '@context': 'https://schema.org',
   '@type': 'HowTo',
-  name: calc.h1,
+  name: `How to use the ${calc.h1}`,
   description: calc.description,
   totalTime: 'PT1M',
   inLanguage: enLocale,
-  step: calc.fields.map((f: any, i: number) => ({
+  step: howToSteps.map((s: any, i: number) => ({
     '@type': 'HowToStep',
     position: i + 1,
-    name: f.label,
-    text: f.help || `Enter ${f.label.toLowerCase()}`,
+    name: typeof s === 'string' ? s.slice(0, 60) : s.name,
+    text: typeof s === 'string' ? s : s.text,
     url: `https://hacecuentas.com/en/${calc.slug}#paso-${i + 1}`,
     ...(ogImage !== '/og-default.png' ? { image: `https://hacecuentas.com${ogImage}` } : {}),
   })),
 };
+if (hasRealHowToSteps) {
+  if (Array.isArray(calc.fields) && calc.fields.length > 0) {
+    schemaHowTo.tool = calc.fields.slice(0, 8).map((f: any) => ({
+      '@type': 'HowToTool',
+      name: f.label,
+    }));
+  }
+  if (Array.isArray(calc.supplies) && calc.supplies.length > 0) {
+    schemaHowTo.supply = calc.supplies.map((s: any) => ({
+      '@type': 'HowToSupply',
+      name: s,
+    }));
+  }
+}
 
 const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
   '@context': 'https://schema.org',
@@ -204,7 +247,20 @@ const _stripMd = (s: string) => (s || '').replace(/\*\*(.+?)\*\*/g, '$1').replac
 const _snippetCandidate = calc.answerSnippet || calc.keyTakeaway || calc.description;
 const _stripped = _stripMd(_snippetCandidate);
 const snippetDescription = (_stripped.length >= 50 ? _stripped : calc.description).slice(0, 500);
-const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 1500)) ? {
+// wordCount REAL: explanation + intro + keyTakeaway + answerSnippet + FAQ +
+// useCases. No solo explanation — las calcs con explanation corto pero mucho
+// contenido editorial (FAQ largas, casos de uso) salían artificialmente thin.
+const _articleWordCount = [
+  calc.explanation || '',
+  calc.intro || '',
+  calc.keyTakeaway || '',
+  calc.answerSnippet || '',
+  ...(Array.isArray(calc.faq) ? calc.faq.flatMap((f: any) => [f.q || '', f.a || '']) : []),
+  ...(Array.isArray(calc.useCases) ? calc.useCases : []),
+].join(' ').split(/\s+/).filter(Boolean).length;
+// Article schema — emitido SIEMPRE (no solo YMYL), con wordCount real. Mismo
+// criterio que la página AR (post-comparativa Omni Calculator).
+const schemaArticle = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: calc.h1,
@@ -232,14 +288,14 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   about: categoryLabels[calc.category] || calc.category,
   articleSection: categoryLabels[calc.category] || calc.category,
   // wordCount: señal de profundidad para E-E-A-T (recomendado por Article schema).
-  wordCount: calc.explanation ? calc.explanation.split(/\s+/).filter(Boolean).length : 0,
+  wordCount: _articleWordCount,
   isAccessibleForFree: true,
   citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
-} : null;
+};
 
-const schemaGraph: any[] = [schemaHowTo, schemaBreadcrumb, schemaApp];
+const schemaGraph: any[] = [schemaBreadcrumb, schemaApp, schemaArticle];
+if (hasRealHowToSteps) schemaGraph.unshift(schemaHowTo);
 if (schemaFAQ) schemaGraph.push(schemaFAQ);
-if (schemaArticle) schemaGraph.push(schemaArticle);
 
 // MedicalWebPage / LearningResource — categoría 'salud' / 'educacion'.
 // Bing y Copilot priorizan schema médico/educativo para esos queries.

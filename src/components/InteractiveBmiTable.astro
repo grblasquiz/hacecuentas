@@ -1,0 +1,281 @@
+---
+/**
+ * InteractiveBmiTable — tabla IMC interactiva por altura.
+ *
+ * Render: slider de altura (140-210cm, 1cm step) + tabla con peso saludable
+ * mínimo/máximo y peso límite de cada categoría OMS. El JS calcula los pesos
+ * en vivo al mover el slider; el SSG planta valores baseline para 170cm.
+ *
+ * Único en IMC por ahora. Si después agregamos otras tablas interactivas,
+ * generalizamos a un componente abstracto.
+ *
+ * Featured snippet bait para queries "tabla imc oms", "tabla imc por altura",
+ * "peso ideal segun altura".
+ */
+interface Props {
+  lang?: "es" | "en" | "pt";
+}
+const { lang = "es" } = Astro.props;
+
+const t = {
+  es: {
+    title: "Tabla de peso saludable según tu altura",
+    sub: "Moveé el slider para ver el peso correspondiente a cada categoría OMS.",
+    height: "Altura",
+    category: "Categoría OMS",
+    range: "Rango de peso",
+    underweight: "Bajo peso",
+    normal: "Peso normal",
+    overweight: "Sobrepeso",
+    obesity1: "Obesidad I",
+    obesity2: "Obesidad II",
+    obesity3: "Obesidad III",
+    upTo: "hasta",
+    from: "desde",
+  },
+  en: {
+    title: "Healthy weight table by your height",
+    sub: "Move the slider to see weight for each WHO category.",
+    height: "Height",
+    category: "WHO category",
+    range: "Weight range",
+    underweight: "Underweight",
+    normal: "Normal weight",
+    overweight: "Overweight",
+    obesity1: "Obesity I",
+    obesity2: "Obesity II",
+    obesity3: "Obesity III",
+    upTo: "up to",
+    from: "from",
+  },
+  pt: {
+    title: "Tabela de peso saudável por altura",
+    sub: "Mova o controle para ver o peso de cada categoria OMS.",
+    height: "Altura",
+    category: "Categoria OMS",
+    range: "Faixa de peso",
+    underweight: "Abaixo do peso",
+    normal: "Peso normal",
+    overweight: "Sobrepeso",
+    obesity1: "Obesidade I",
+    obesity2: "Obesidade II",
+    obesity3: "Obesidade III",
+    upTo: "até",
+    from: "a partir de",
+  },
+}[lang];
+
+// SSG baseline: 1.70m para que el bot vea valores numéricos above-the-fold.
+const baselineH = 1.7;
+const fmt = (n: number) => n.toFixed(1).replace(".", lang === "en" ? "." : ",");
+const baseline = {
+  uMax: fmt(18.5 * baselineH * baselineH),
+  nMin: fmt(18.5 * baselineH * baselineH),
+  nMax: fmt(24.9 * baselineH * baselineH),
+  spMin: fmt(25 * baselineH * baselineH),
+  spMax: fmt(29.9 * baselineH * baselineH),
+  o1Min: fmt(30 * baselineH * baselineH),
+  o1Max: fmt(34.9 * baselineH * baselineH),
+  o2Min: fmt(35 * baselineH * baselineH),
+  o2Max: fmt(39.9 * baselineH * baselineH),
+  o3Min: fmt(40 * baselineH * baselineH),
+};
+---
+
+<section class="bmi-table" aria-labelledby="bmi-table-heading">
+  <h2 id="bmi-table-heading">{t.title}</h2>
+  <p class="bmi-table-sub">{t.sub}</p>
+
+  <div class="bmi-slider-wrap">
+    <label for="bmi-table-height" class="bmi-slider-label">
+      {t.height}: <output for="bmi-table-height" id="bmi-table-height-out">170 cm</output>
+    </label>
+    <input
+      type="range"
+      id="bmi-table-height"
+      min="140"
+      max="210"
+      step="1"
+      value="170"
+      aria-describedby="bmi-table-height-out"
+    />
+    <div class="bmi-slider-marks" aria-hidden="true">
+      <span>140</span><span>160</span><span>180</span><span>210</span>
+    </div>
+  </div>
+
+  <table class="bmi-ref-table" data-bmi-table>
+    <thead>
+      <tr>
+        <th scope="col">{t.category}</th>
+        <th scope="col">IMC</th>
+        <th scope="col">{t.range}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-row="underweight">
+        <td><span class="bmi-cat-dot" style="background:#fde68a"></span>{t.underweight}</td>
+        <td>&lt; 18.5</td>
+        <td>{t.upTo} <strong data-val="u-max">{baseline.uMax}</strong> kg</td>
+      </tr>
+      <tr data-row="normal" class="bmi-row-highlight">
+        <td><span class="bmi-cat-dot" style="background:#bbf7d0"></span>{t.normal}</td>
+        <td>18.5 – 24.9</td>
+        <td>
+          <strong data-val="n-min">{baseline.nMin}</strong> – <strong data-val="n-max">{baseline.nMax}</strong> kg
+        </td>
+      </tr>
+      <tr data-row="overweight">
+        <td><span class="bmi-cat-dot" style="background:#fed7aa"></span>{t.overweight}</td>
+        <td>25.0 – 29.9</td>
+        <td>
+          <strong data-val="sp-min">{baseline.spMin}</strong> – <strong data-val="sp-max">{baseline.spMax}</strong> kg
+        </td>
+      </tr>
+      <tr data-row="obesity1">
+        <td><span class="bmi-cat-dot" style="background:#fecaca"></span>{t.obesity1}</td>
+        <td>30.0 – 34.9</td>
+        <td>
+          <strong data-val="o1-min">{baseline.o1Min}</strong> – <strong data-val="o1-max">{baseline.o1Max}</strong> kg
+        </td>
+      </tr>
+      <tr data-row="obesity2">
+        <td><span class="bmi-cat-dot" style="background:#e8b4b8"></span>{t.obesity2}</td>
+        <td>35.0 – 39.9</td>
+        <td>
+          <strong data-val="o2-min">{baseline.o2Min}</strong> – <strong data-val="o2-max">{baseline.o2Max}</strong> kg
+        </td>
+      </tr>
+      <tr data-row="obesity3">
+        <td><span class="bmi-cat-dot" style="background:#d4a0a8"></span>{t.obesity3}</td>
+        <td>≥ 40.0</td>
+        <td>{t.from} <strong data-val="o3-min">{baseline.o3Min}</strong> kg</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<style>
+  .bmi-table {
+    margin: 1.5rem 0 2rem;
+    padding: 1.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .bmi-table h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.125rem;
+  }
+  .bmi-table-sub {
+    margin: 0 0 1rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+  .bmi-slider-wrap { margin-bottom: 1rem; }
+  .bmi-slider-label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    margin-bottom: 0.5rem;
+  }
+  .bmi-slider-label output {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .bmi-slider-wrap input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+  .bmi-slider-marks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6875rem;
+    color: var(--text-subtle);
+    margin-top: 0.25rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .bmi-ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .bmi-ref-table th,
+  .bmi-ref-table td {
+    padding: 0.55rem 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .bmi-ref-table th {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+  .bmi-ref-table strong {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+  .bmi-row-highlight {
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+  }
+  .bmi-row-highlight td:first-child {
+    font-weight: 600;
+  }
+  .bmi-cat-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    vertical-align: baseline;
+    border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  }
+  @media (max-width: 480px) {
+    .bmi-table { padding: 1rem; }
+    .bmi-ref-table { font-size: 0.8125rem; }
+    .bmi-ref-table th,
+    .bmi-ref-table td { padding: 0.5rem 0.375rem; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var slider = document.getElementById("bmi-table-height");
+    var out = document.getElementById("bmi-table-height-out");
+    if (!slider || !out) return;
+    var table = document.querySelector("[data-bmi-table]");
+    if (!table) return;
+    var lang = document.documentElement.lang || "es";
+    var fmt = function (n) {
+      var s = n.toFixed(1);
+      return lang === "en" ? s : s.replace(".", ",");
+    };
+    function update() {
+      var cm = parseInt(slider.value, 10);
+      var m = cm / 100;
+      var m2 = m * m;
+      out.textContent = cm + " cm";
+      var map = {
+        "u-max": 18.5 * m2,
+        "n-min": 18.5 * m2,
+        "n-max": 24.9 * m2,
+        "sp-min": 25 * m2,
+        "sp-max": 29.9 * m2,
+        "o1-min": 30 * m2,
+        "o1-max": 34.9 * m2,
+        "o2-min": 35 * m2,
+        "o2-max": 39.9 * m2,
+        "o3-min": 40 * m2,
+      };
+      Object.keys(map).forEach(function (k) {
+        var el = table.querySelector('[data-val="' + k + '"]');
+        if (el) el.textContent = fmt(map[k]);
+      });
+    }
+    slider.addEventListener("input", update);
+    // Estado inicial — por si el slider tiene otro valor (back/forward cache).
+    update();
+  })();
+</script>
