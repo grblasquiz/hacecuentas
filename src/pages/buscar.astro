@@ -237,27 +237,33 @@ for (const c of calcs as any[]) {
 <script define:vars={{ categoryLabels }}>
   // /buscar fetchea el \u00edndice y renderiza cards din\u00e1micamente.
   // Reduce HTML inicial de ~2.4MB \u2192 ~50KB; el JSON es ~100KB gzip.
-  type Entry = { s: string; h: string; d: string; c: string; i: string; a?: 'AR' };
+  //
+  // CR\u00cdTICO: este script va dentro de `define:vars` que NO transpila TypeScript.
+  // Todo el c\u00f3digo tiene que ser JS puro \u2014 sin `type`, sin `as Type`, sin
+  // generics, sin `!` non-null assertions. Bug del 28-may-2026: alguien lo
+  // escribi\u00f3 en TS y el browser crasheaba silenciosamente sin lanzar nada al
+  // console.error porque el parsing fallaba antes del runtime, dejando el grid
+  // colgado en "Cargando calculadoras\u2026" para siempre.
 
-  const input = document.getElementById('search-input') as HTMLInputElement;
-  const clear = document.getElementById('search-clear') as HTMLButtonElement;
-  const grid = document.getElementById('grid')!;
-  const empty = document.getElementById('empty')!;
-  const count = document.getElementById('results-count')!;
-  const filters = document.getElementById('filters')!;
+  const input = document.getElementById('search-input');
+  const clear = document.getElementById('search-clear');
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  const count = document.getElementById('results-count');
+  const filters = document.getElementById('filters');
 
   let activeCat = 'all';
-  let entries: Entry[] = [];
+  let entries = [];
   let ready = false;
 
-  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-  function escapeHtml(s: string): string {
-    return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
-  function cardHtml(e: Entry): string {
-    const label = (categoryLabels as Record<string, string>)[e.c] || e.c;
+  function cardHtml(e) {
+    const label = categoryLabels[e.c] || e.c;
     const ar = e.a === 'AR'
       ? '<span class="ar-badge" title="Espec\u00edfica para Argentina" aria-label="Espec\u00edfica para Argentina">\ud83c\udde6\ud83c\uddf7</span>'
       : '';
@@ -292,7 +298,7 @@ for (const c of calcs as any[]) {
   input.addEventListener('input', apply);
   clear.addEventListener('click', () => { input.value = ''; input.focus(); apply(); });
 
-  filters.querySelectorAll<HTMLButtonElement>('.chip').forEach((chip) => {
+  filters.querySelectorAll('.chip').forEach((chip) => {
     chip.addEventListener('click', () => {
       filters.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
       chip.classList.add('active');
@@ -307,7 +313,7 @@ for (const c of calcs as any[]) {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json();
     })
-    .then((data: Entry[]) => {
+    .then((data) => {
       entries = data;
       ready = true;
       // Aplicar query inicial si vino por URL
