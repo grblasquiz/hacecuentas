@@ -1,6 +1,7 @@
 {
   "slug": "calculadora-stream-bitrate-calidad",
-  "lastReviewed": "2026-05-23",
+  "lastReviewed": "2026-05-28",
+  "answerSnippet": "Para 720p60 usá entre 3.500 y 5.000 kbps, para 1080p60 en Twitch el máximo es 6.000 kbps y en YouTube hasta 12.000 kbps. Tu upload debe ser al menos 1,5 veces el bitrate elegido para evitar dropped frames. El encoder NVENC (GPU NVIDIA) no impacta el rendimiento del juego, mientras que x264 (CPU) da mejor calidad a bitrates bajos pero consume procesador.",
   "title": "Calculadora de Bitrate Ideal para Streaming 2026",
   "h1": "Calculadora de Bitrate Ideal para Streaming",
   "description": "Calculá el bitrate ideal para streamear en Twitch, YouTube o Kick según tu resolución y FPS. Configurá OBS con la calidad óptima para tu internet.",
@@ -17,11 +18,13 @@
   "intro": "El **bitrate** determina la calidad de tu stream. Muy bajo y se ve pixelado, muy alto y tu internet no aguanta (o Twitch lo rechaza). Twitch limita a **6.000 kbps** para no-partners, YouTube permite hasta **51.000 kbps**. Esta calculadora te dice el bitrate ideal según la plataforma, resolución, FPS y tu velocidad de subida. También incluye el preset de encoder recomendado para OBS.",
   "keyTakeaway": "**720p60 = 3.500-5.000 kbps, 1080p60 = 4.500-6.000 kbps (Twitch), 1080p60 = 8.000-12.000 kbps (YouTube).** Tu upload debe ser 1.5x el bitrate.",
   "useCases": [
-    "Empezás a streamear y querés configurar OBS correctamente.",
-    "Tu stream se ve pixelado y querés saber si es el bitrate.",
-    "Querés saber si tu internet aguanta stream en 1080p.",
-    "Cambiás de Twitch a YouTube y necesitás ajustar bitrate.",
-    "Querés optimizar calidad sin que tu juego pierda FPS."
+    "Empezás a streamear y querés configurar OBS correctamente desde el primer stream.",
+    "Tu stream se ve pixelado en escenas con movimiento y querés saber si es el bitrate.",
+    "Querés saber si tu internet doméstico aguanta stream en 1080p60 sin buffer.",
+    "Cambiás de Twitch a YouTube o Kick y necesitás ajustar bitrate por los límites de cada plataforma.",
+    "Querés optimizar calidad de stream sin que tu juego pierda FPS por usar x264 en CPU.",
+    "Hacés multistreaming a varias plataformas y necesitás dimensionar upload total.",
+    "Pasaste de NVENC a AV1 y querés ajustar el bitrate equivalente para misma calidad."
   ],
   "fields": [
     {
@@ -157,6 +160,18 @@
     {
       "q": "¿Qué es el bitrate y por qué importa?",
       "a": "El **bitrate** es la cantidad de datos (kbps, kilobits por segundo) que tu stream envía al servidor. Muy bajo → el stream se ve pixelado, especialmente en escenas rápidas. Muy alto → tu internet no aguanta, hay buffering, o la plataforma rechaza el stream (Twitch limita a 6000 kbps para cuentas no-partner)."
+    },
+    {
+      "q": "¿Cuánto bitrate necesito para streamear Fortnite, Valorant o Counter Strike en 1080p60?",
+      "a": "Los **shooters competitivos** (Valorant, CS2, Apex, Fortnite) son **CPU-intensive** y tienen escenas con mucho movimiento que pixelan a bitrates bajos. **Twitch (max 6.000 kbps)**: 1080p60 → 6.000 kbps con NVENC Quality preset, B-frames 2, keyframe 2s. **YouTube (libre)**: 1080p60 → 8.000-9.000 kbps recomendado. **Kick**: 6.000-8.000 kbps. **Truco para shooters**: bajá la resolución a **936p60** (1664×936) o **720p60** si tu upload es <10 Mbps — la imagen se ve más fluida y nítida que 1080p pixelado. Para Valorant/CS específicamente: **NVENC con preset P5-P6 y look-ahead activado** preserva mejor los detalles de los modelos. **Importante**: bajá settings gráficos del juego antes de subir bitrate — un Valorant en 1080p Bajo + 6000 kbps se ve mejor que en 1080p Alto + dropped frames."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre AV1, H.265 (HEVC) y H.264 para streaming?",
+      "a": "**H.264** (códec más usado, compatible con todo) es el estándar de Twitch y la mayoría de plataformas. **H.265/HEVC** ofrece **30-50% mejor compresión** (misma calidad a menor bitrate) pero **no es soportado por Twitch** (solo YouTube y Discord). **AV1** es el códec más nuevo (2018+), open-source, con **~50% mejor compresión que H.264** y **20% mejor que H.265**. Twitch lanzó AV1 streaming en 2024 para Beta Partners — requiere GPU **NVIDIA RTX 4000+, AMD RX 7000+ o Intel Arc A-Series**. **Equivalencias prácticas**: si streameás 1080p60 a 6.000 kbps en H.264, podés bajar a **4.500 kbps en H.265** o **3.000 kbps en AV1** con calidad similar. **YouTube**: ya soporta AV1 ingest a 1440p y 4K. **OBS Studio** desde 30.0+ soporta AV1 NVENC. **Recomendación 2026**: si tenés GPU compatible y streameás a YouTube/Kick, usá AV1; en Twitch seguí con H.264 hasta confirmar soporte general."
+    },
+    {
+      "q": "¿Cómo configuro OBS para multistream a Twitch + YouTube + Kick simultáneo?",
+      "a": "**Opción 1 — OBS nativo con plugin**: instalá **Multiple RTMP Outputs Plugin** (gratis, GitHub). Limitación: cada salida usa tu CPU/GPU separada → bitrate total = bitrate × cantidad de plataformas. Para 6.000 kbps × 3 plataformas necesitás **30 Mbps de upload estable** (con headroom 1.5x). **Opción 2 — Servicios cloud** (recomendado): **Restream.io** (gratis con marca de agua, paga $19/mes sin marca), **Castr.io**, **StreamYard**. Subís el stream una sola vez a su servidor y ellos lo replican a las plataformas → **solo necesitás 1× bitrate de upload**. **Opción 3 — Aitum Multistream** (OBS plugin, gratis, sin servidor intermedio pero limitado a Twitch+YouTube): replica el stream codificándolo 1 sola vez. **Importante en 2026**: Twitch cambió su ToS y **permite multistreaming sin restricciones** (antes lo prohibía). Para Twitch Affiliates/Partners revisá tu contrato porque algunos tienen cláusulas de exclusividad temporal. **Bitrate sugerido por plataforma**: Twitch 6.000, YouTube 8.000, Kick 6.000 → si usás Restream subís a 8.000 (el máximo) y Restream baja la calidad para Twitch."
     }
   ],
   "howToSteps": [
@@ -190,6 +205,22 @@
     ],
     "result": "Con upload de 10 Mbps, 6000 kbps CBR es el tope estable para 1080p60 en Twitch. Margen de 33 % para spikes o tráfico paralelo."
   },
+  "solvedExamples": [
+    {
+      "title": "Stream YouTube 1080p60 con AV1 y upload de 20 Mbps",
+      "context": "Streamer con GPU RTX 4070 transmitiendo gameplay a YouTube Live en 1080p60. Internet con 200 Mbps de bajada y 20 Mbps de subida. Quiere máxima calidad sin caídas.",
+      "steps": [
+        "Upload disponible: 20 Mbps = **20.000 kbps**",
+        "Bitrate máximo seguro (regla 1,5x): `20.000 / 1,5` = **13.333 kbps**",
+        "Codec AV1 (RTX 4070 lo soporta nativo): equivalencia visual H.264 → AV1 ~50% menos bitrate",
+        "Bitrate AV1 recomendado YouTube 1080p60: **6.000-7.000 kbps** (equivale a 12.000-14.000 H.264)",
+        "Bitrate audio AAC estéreo: **160 kbps**",
+        "Total stream: `6.500 + 160` = **6.660 kbps** = **6,66 Mbps** (uso 33% del upload)",
+        "Margen disponible para Discord, navegador, etc.: **13,34 Mbps libres**"
+      ],
+      "result": "Con AV1 + RTX 4070 lográs calidad de 12.000 kbps H.264 usando solo 6.500 kbps. El upload de 20 Mbps queda holgado para multitasking y multistreaming."
+    }
+  ],
   "sources": [
     {
       "name": "Twitch - Broadcasting Guidelines",

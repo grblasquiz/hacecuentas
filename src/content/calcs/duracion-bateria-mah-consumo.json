@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-duracion-bateria-mah-consumo",
-  "lastReviewed": "2026-05-23",
+  "lastReviewed": "2026-05-28",
   "title": "Duración Batería en Horas: Calculadora mAh 2026",
   "h1": "Calculadora Duración de Batería — mAh y Consumo",
   "answerSnippet": "Para saber cuántas horas dura una batería, dividí la capacidad en mAh por el consumo del dispositivo en mA y multiplicá por la eficiencia (0,85 promedio): horas = (mAh × 0,85) ÷ mA. Un celular de 5.000 mAh con consumo normal de 500 mA dura unas 8,5 horas; jugando juegos pesados con 1.500 mA cae a 2,8 horas. Las baterías nunca entregan el 100% nominal por pérdidas térmicas.",
@@ -18,11 +18,14 @@
   "intro": "La capacidad de una batería se mide en **mAh** (miliamperios hora), pero eso no te dice directamente cuántas **horas dura**. Depende del **consumo del dispositivo** en mA (miliamperios). Un celular con batería de **5.000 mAh** que consume **500 mA** en uso normal dura ~**10 horas**. Pero si jugás juegos pesados el consumo sube a **1.500 mA** y la duración baja a **3,3 horas**. Esta calculadora te da la estimación real considerando la **eficiencia** de la batería (que nunca entrega el 100 %).",
   "keyTakeaway": "**Horas = (Capacidad mAh × eficiencia) ÷ Consumo mA.** Un celular de 5.000 mAh con uso normal (~500 mA) dura unas 8,5 horas de pantalla activa.",
   "useCases": [
-    "Querés saber cuántas horas reales dura tu celular nuevo.",
-    "Estás comparando baterías externas (power banks) y querés saber cuántas cargas dan.",
-    "Necesitás calcular la autonomía de un dispositivo IoT o Arduino.",
-    "Evaluás cuánto dura tu notebook en una reunión sin cargador.",
-    "Querés dimensionar un sistema de batería para un proyecto electrónico."
+    "Querés saber cuántas horas reales dura tu celular nuevo de 5.000 mAh.",
+    "Estás comparando power banks de 10.000, 20.000 o 30.000 mAh y querés saber cuántas cargas reales dan.",
+    "Necesitás calcular la autonomía de un dispositivo IoT, ESP32 o Arduino con batería 18650.",
+    "Evaluás cuánto dura tu notebook en una reunión sin cargador (uso vs standby).",
+    "Querés dimensionar un sistema de batería para un proyecto electrónico de domótica.",
+    "Comparás la duración real de un drone DJI vs el tiempo de vuelo declarado por el fabricante.",
+    "Calculás cuántas horas dura un vape descartable o recargable según mAh y consumo del coil.",
+    "Sos técnico de servicio y necesitás estimar si la batería original tiene degradación severa."
   ],
   "fields": [
     {
@@ -99,6 +102,22 @@
     ],
     "result": "Con uso mixto normal, un celular de 5.000 mAh dura aproximadamente **8,5 horas** de pantalla activa. En standby puede durar 2-3 días."
   },
+  "solvedExamples": [
+    {
+      "title": "Power bank 20.000 mAh para viaje largo — ¿cuántas cargas reales?",
+      "context": "Viajero compra un power bank Xiaomi de 20.000 mAh para un trip de 3 semanas a Europa. Lleva iPhone 15 (4.383 mAh) e iPad mini (5.124 mAh). Quiere saber si le alcanza para cargar ambos en un día completo de turismo sin acceso a enchufes.",
+      "steps": [
+        "**Capacidad nominal power bank**: 20.000 mAh a 3,7V interno.",
+        "**Eficiencia conversión** (3,7V → 5V USB): 70% (pérdidas en boost converter + cable + protocolo de carga).",
+        "**Capacidad útil real**: 20.000 × 0,70 = **14.000 mAh efectivos a 5V**.",
+        "**Carga completa iPhone 15** (4.383 mAh): 14.000 / 4.383 = **3,2 cargas completas**.",
+        "**Carga combinada iPhone + iPad**: 4.383 + 5.124 = 9.507 mAh por sesión → 14.000 / 9.507 = **1,47 cargas combinadas**.",
+        "**Tiempo de carga iPhone con 18W PD**: aproximadamente 90 minutos del 0% al 100%.",
+        "**Duración del power bank en uso real**: si cargás ambos dispositivos 1 vez/día → 1,4 días de autonomía sin enchufe."
+      ],
+      "result": "El power bank de 20.000 mAh da **3 cargas completas a iPhone** o **1,5 cargas combinadas iPhone+iPad**. Suficiente para 1-1,5 días de turismo intenso, no para 3 semanas sin recargar el power bank. Recomendación: cargar el power bank cada noche en el hotel."
+    }
+  ],
   "explanation": "## La fórmula\n\n```\nDuración (horas) = (Capacidad mAh × Eficiencia) ÷ Consumo mA\n```\n\nLa **eficiencia** es clave: una batería de litio-ion nunca entrega el 100 % de su capacidad nominal. Factores que la reducen:\n- **Temperatura**: el frío reduce la capacidad un 10-20 %.\n- **Envejecimiento**: después de 500 ciclos, la batería retiene ~80 %.\n- **Regulación de voltaje**: el circuito de protección consume energía.\n\n## Consumos típicos por dispositivo\n\n| Dispositivo | Uso | Consumo (mA) |\n|---|---|---|\n| Celular - standby | Pantalla off | 10-30 mA |\n| Celular - uso ligero | Chat, mail | 200-400 mA |\n| Celular - uso normal | Redes, video | 400-600 mA |\n| Celular - gaming | Juegos pesados | 1.000-2.000 mA |\n| Auriculares BT | Reproducción | 20-50 mA |\n| Smartwatch | Uso normal | 5-15 mA |\n| Arduino | Proyecto básico | 30-50 mA |\n| Raspberry Pi 4 | Activa | 600-1.000 mA |\n\n## Power banks: ¿cuántas cargas dan?\n\nUn power bank de **10.000 mAh** no carga un celular de **5.000 mAh** dos veces. La conversión de voltaje (5V del power bank a 3,7V de la batería del celular) tiene pérdidas del 15-30 %. En la práctica, un power bank de 10.000 mAh da **~1,5 cargas** a un celular de 5.000 mAh.\n\n```\nCargas reales = (Power bank mAh × 0,70) ÷ Batería celular mAh\n```\n\n## Cómo cuidar la batería\n\n1. **No cargar al 100 % siempre**: lo ideal es mantenerla entre 20 % y 80 %.\n2. **Evitar calor extremo**: no dejes el celular al sol ni lo uses mientras carga.\n3. **Usar cargador original**: cargadores genéricos baratos pueden dañar la batería.\n4. **No dejarla llegar a 0 %**: las descargas profundas acortan la vida útil.\n5. **Carga lenta de noche**: mejor que carga rápida si no tenés apuro.\n\n## mAh vs Wh\n\nLos **mAh** dependen del voltaje. Para comparar baterías de distinto voltaje, usá **Wh** (Watts hora):\n\n```\nWh = mAh × Voltaje ÷ 1000\n```\n\nUna batería de celular de 5.000 mAh a 3,7V = **18,5 Wh**. Una notebook de 60 Wh equivale a ~16.200 mAh a 3,7V.",
   "faq": [
     {
@@ -132,6 +151,18 @@
     {
       "q": "¿Cómo cuidar la batería?",
       "a": "1. **No cargar al 100 % siempre**: lo ideal es mantenerla entre 20 % y 80 %. 2. **Evitar calor extremo**: no dejes el celular al sol ni lo uses mientras carga. 3. **Usar cargador original**: cargadores genéricos baratos pueden dañar la batería. 4. **No dejarla llegar a 0 %**: las descargas profundas acortan la vida útil. 5. **Carga lenta de noche**: mejor que carga rápida si no tenés apuro."
+    },
+    {
+      "q": "¿Cómo calcular la duración de un drone DJI con batería de 4.000 mAh paso a paso?",
+      "a": "**Caso real DJI Mini 4 Pro 2026**: batería **2.590 mAh a 7,38V** (19,1 Wh). **Paso 1**: convertir Wh a mAh equivalentes a tensión de motor (~11V): 19.100 mWh / 11V = ~1.736 mAh efectivos. **Paso 2**: consumo promedio en vuelo estable (modo P, sin viento): drone clase 250g consume ~250W → 250W / 11V = ~22.700 mA. **Paso 3**: duración teórica = 1.736 / 22.700 × 60 = **4,6 minutos vuelo continuo en condiciones extremas**. **Paso 4**: aplicando eficiencia real de 80% (vuelo real, viento ligero, hovering): 4,6 × 0,80 = **27 min declarados por DJI**. **Tip 2026**: con viento >25 km/h la autonomía cae hasta 40% por mayor consumo del compensar deriva. Reservá siempre 30% de batería para retorno seguro (RTH automático se activa al 25%). Para sesiones largas comprar baterías inteligentes adicionales (~USD 80/unidad)."
+    },
+    {
+      "q": "¿Cuándo conviene reemplazar la batería de un iPhone o Android según mAh y ciclos?",
+      "a": "**Criterios para reemplazo 2026**: (1) **Capacidad máxima <80%** en iOS (Configuración > Batería > Estado de la batería) o equivalente Android — significa que tu batería original retiene solo 80% de los mAh nominales. (2) **Apagados aleatorios** al 20-30% por incapacidad de entregar pico de corriente. (3) **Hinchazón visible** (pantalla levantada, carcasa abultada) — riesgo de incendio, reemplazo inmediato. (4) **Más de 800-1.000 ciclos completos** de carga (1 ciclo = 0% a 100%, sumando cargas parciales). (5) **Duración <50% comparado con nuevo** (ej: aguantaba 8h y ahora 4h con mismo uso). **Costos Argentina 2026**: iPhone reemplazo oficial Apple ~USD 100-130 según modelo, en SAT independiente ~USD 50-80 (con batería original). Android gama media ~USD 30-60. **Tip**: si tu equipo tiene <3 años y bajó a 75% capacidad, vale la pena cambiar batería antes que comprar equipo nuevo. **Cuidado** con baterías genéricas de Mercado Libre <USD 20 — suelen tener mAh sobreestimados 30-50%."
+    },
+    {
+      "q": "¿Por qué la duración real de un vape o cigarrillo electrónico no coincide con los mAh declarados?",
+      "a": "Los **vapes recargables 2026** declaran mAh nominales pero la duración real varía mucho por: **(1) Consumo del coil**: resistencias **<1Ω (subohm)** consumen 30-60W → 4.000-8.000 mA. Resistencias **>1Ω (MTL)** consumen 10-20W → 1.500-3.000 mA. **(2) Eficiencia del chipset**: vapes con chip regulado tienen 85% eficiencia; mech mods 100% pero sin protecciones. **(3) Duración de cada puff**: 3 segundos vs 5 segundos puede duplicar el consumo. **(4) Ejemplo cálculo**: vape Vaporesso XROS 4 con batería 1.000 mAh, coil 0,8Ω consumo 13W (~3.100 mA a 4,2V), 70 puffs/día de 3 seg cada uno = 350 segundos = 0,097 horas de descarga real → batería dura ~3,1 días por carga (vs los 'todo el día' declarados). **(5) Vapes descartables**: declaran 600-5000 puffs pero el consumo real depende del coil — usá esta calc dividiendo mAh por consumo promedio del coil para estimar puffs reales (suelen ser 50-70% de lo declarado en marketing)."
     }
   ],
   "sources": [

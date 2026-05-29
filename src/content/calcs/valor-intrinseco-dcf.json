@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-dcf-valor-intrinseco-flujo-caja",
-  "lastReviewed": "2026-05-23",
+  "lastReviewed": "2026-05-28",
   "title": "Valuación DCF Simplificada 2026 — Gratis | Hacé Cuentas",
   "h1": "Valuación DCF Simplificada",
   "description": "📊 Calculá el valor intrínseco de una empresa por DCF: flujos de caja proyectados + valor terminal descontados. Valor = Σ FCF/(1+r)^t + valor terminal.",
@@ -158,7 +158,40 @@
     },
     {
       "q": "¿Cuándo usar / Errores comunes?",
-      "a": "Usalo para empresas maduras con flujos predecibles. Es pésimo para startups que pierden plata o empresas cíclicas extremas. Errores habituales:"
+      "a": "Usalo para empresas maduras con flujos predecibles. Es pésimo para startups que pierden plata o empresas cíclicas extremas. Errores habituales: (1) crecimientos perpetuos imposibles (>4-5%), (2) WACC arbitrario sin justificar, (3) ignorar análisis de sensibilidad (variar WACC ±1% puede cambiar valor 20%), (4) no descontar correctamente el valor terminal, (5) confundir FCF con utilidad neta. El DCF es tan bueno como tus inputs — basura adentro, basura afuera."
+    },
+    {
+      "q": "¿Cómo hacer análisis de sensibilidad en un DCF?",
+      "a": "El **análisis de sensibilidad** es OBLIGATORIO en cualquier DCF profesional. Construir una **matriz de sensibilidad 2x2** variando: **(1) WACC** en ±1% y ±2% sobre el caso base. **(2) Tasa de crecimiento terminal** en ±0,5% y ±1%. **Resultado típico**: una empresa que vale $100 con WACC 10% y g=3% puede valer entre $70 y $150 con WACC 8-12% y g=2-4%. Esa **horquilla del 50%** es la realidad del DCF — no es un único número, es un rango. **Para tomar decisiones**: si el precio de mercado está **dentro del rango**, el activo es 'fairly valued'. Si está por debajo del **piso pesimista**, oportunidad clara. Si está sobre el **techo optimista**, es burbuja. **Mejores prácticas**: presentar siempre 3 escenarios (bear, base, bull) con probabilidades asignadas (ej: 25% bear, 50% base, 25% bull) y valor esperado ponderado."
+    },
+    {
+      "q": "¿Qué pasa si el FCF es negativo en algún año del proyectado?",
+      "a": "**Es válido y común**, especialmente en empresas growth o cíclicas. Cómo manejar: **(1) Si el FCF actual es negativo pero proyectás positivo en año 3-5** (típico growth tech): descontá cada flujo individualmente (negativos restan al EV, positivos suman). El valor terminal asume eventual positividad. **(2) Si todos los años son negativos**: el DCF NO es el método apropiado. Usá múltiplos de revenue (EV/Revenue), comparables o método de Venture Capital. **(3) Si hay un año específico atípico** (ej: año de CapEx extraordinario por expansión): proyectá igual, el modelo lo absorbe. **(4) Empresas con FCF crónicamente negativo**: WeWork pre-IPO valió USD 47B con DCF cuestionable; quebró un año después. **Lección**: el DCF requiere que la empresa eventualmente genere flujos positivos sostenibles, sino no funciona."
+    },
+    {
+      "q": "¿Cómo aplico el DCF a una empresa argentina con riesgo país?",
+      "a": "**3 ajustes obligatorios** para empresas AR: **(1) Modelar en USD reales**, no en pesos (inflación distorsiona todo). **(2) Sumar prima de riesgo país al WACC**: usar el **EMBI+ Argentina** vigente (~600-1.000 bps en 2026 según contexto) sobre el WACC base sectorial. WACC empresa AR = WACC sectorial USA + Riesgo país. Ejemplo: tech consolidada USA tiene WACC 9%, una empresa similar AR tendría 9% + 7% = **16% WACC**. **(3) Tasa de crecimiento terminal conservadora**: usar 2-3% (alineada con inflación USD a largo plazo, no con inflación AR). **Resultados típicos**: valuaciones de empresas AR son significativamente más bajas que comparables internacionales (descuento del 40-60%) por el costo de capital elevado. Cuando baja el riesgo país, las valuaciones revaluán fuerte (caso Mercado Libre 2017-2020). **Para inversión a largo plazo**: comprar empresas AR sólidas en momentos de máximo riesgo país puede ser muy rentable si confiás en normalización macro."
+    }
+  ],
+  "solvedExamples": [
+    {
+      "title": "DCF de Mercado Libre estilo análisis equity research",
+      "context": "Analista junior valúa Mercado Libre (MELI) post resultados Q3 2024. Datos: FCF último año USD 1.500M (TTM), crecimiento histórico 28% anual, expectativa de moderación. Acciones en circulación 50M diluidas. Caja neta USD 2.000M (más caja que deuda).",
+      "steps": [
+        "**Inputs**: FCF actual USD 1.500M, crecimiento 5a esperado **18%** (modera desde 28%), crecimiento terminal **3,5%** (sector tech consolidado), WACC **10%** (Latam, riesgo país considerado).",
+        "**Año 1**: 1.500 × 1,18 = 1.770M → /1,10 = **1.609M**.",
+        "**Año 2**: 2.089M → /1,21 = 1.726M.",
+        "**Año 3**: 2.465M → /1,331 = 1.852M.",
+        "**Año 4**: 2.909M → /1,464 = 1.987M.",
+        "**Año 5**: 3.432M → /1,611 = 2.131M.",
+        "**Σ flujos descontados 5 años**: 1.609 + 1.726 + 1.852 + 1.987 + 2.131 = **9.305M**.",
+        "**FCF año 6** (terminal): 3.432 × 1,035 = 3.552M.",
+        "**Valor terminal**: 3.552 / (0,10 - 0,035) = 54.646M → /1,611 = **33.921M**.",
+        "**Enterprise Value**: 9.305 + 33.921 = **43.226M USD**.",
+        "**Equity Value**: 43.226 + 2.000 (caja neta) = **45.226M**.",
+        "**Valor por acción**: 45.226M / 50M = **USD 904**."
+      ],
+      "result": "Valor intrínseco DCF: **USD 904/acción**. Si MELI cotiza a USD 1.500, está sobrevaluada 40% según este modelo conservador. Si cotiza a USD 750, hay margen de seguridad del 17%. **Análisis de sensibilidad**: con WACC 9% y g 4%, valor sube a USD 1.150. Con WACC 11% y g 3%, baja a USD 720. **Recomendación**: el valor real está entre USD 720-1.150 — comprar bajo USD 900 con plan de mantener largo plazo es razonable según supuestos. Datos macro (inflación USA, riesgo Latam, crecimiento de e-commerce) pueden mover el resultado significativamente."
     }
   ],
   "howToSteps": [

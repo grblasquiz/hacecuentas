@@ -1,9 +1,10 @@
 {
   "slug": "calculadora-grados-dia-calefaccion-refrigeracion-hdd-cdd-consumo",
-  "lastReviewed": "2026-05-23",
+  "lastReviewed": "2026-05-28",
   "title": "Calculadora Grados-Día HDD y CDD (Calefacción y AC)",
   "h1": "Calculadora de Grados-Día de Calefacción (HDD) y Refrigeración (CDD)",
   "description": "Calculá grados-día HDD y CDD (base ASHRAE 18°C/24°C) para estimar consumo de gas o electricidad según el clima de tu ciudad.",
+  "answerSnippet": "Los grados-día (HDD para calefacción, CDD para refrigeración) miden la demanda climática acumulada de un período. Se calculan como (base − temperatura media) × días para HDD, base ASHRAE 18°C. Buenos Aires acumula ~1.400 HDD/año y 400 CDD/año; Bariloche supera 3.000 HDD/año. Multiplicá los HDD por tu coeficiente m³ de gas para estimar la factura mensual.",
   "category": "hogar",
   "icon": "🌡️",
   "formulaId": "grados-dia-hdd-cdd",
@@ -202,6 +203,14 @@
     {
       "q": "¿Puedo usar esta calculadora para dimensionar una caldera o equipo de AC?",
       "a": "Como primera aproximación, sí. Para dimensionar correctamente un sistema HVAC se necesita además la <strong>carga térmica pico</strong> del edificio (en kcal/h o kW), que depende de la superficie, aislación, orientación y temperatura de diseño exterior. Las normas <strong>IRAM 11.604 e IRAM 11.659</strong> establecen la metodología oficial en Argentina. Pero los HDD y CDD te dan el <strong>consumo energético anual estimado</strong>, que es lo que determina si el equipo es eficiente en operación continua. Un instalador habilitado debería cruzar ambos análisis: potencia pico para el diseño y grados-día para estimar la factura anual."
+    },
+    {
+      "q": "¿Cómo afecta la aislación térmica al coeficiente m³/HDD de mi casa?",
+      "a": "La <strong>aislación térmica reduce drásticamente</strong> tu coeficiente m³/HDD. Una casa típica argentina sin aislación (paredes simples de 0,15 m, ventanas vidrio simple) tiene <strong>0,25-0,35 m³/HDD</strong>. Con mejoras: <strong>(1) Doble vidrio (DVH)</strong>: −15% (baja a 0,21-0,30). <strong>(2) Aislación en techo</strong> (lana de vidrio 100mm): −20% adicional (baja a 0,17-0,24). <strong>(3) Aislación en paredes</strong> (poliestireno expandido 50mm en cámara): −15% más (0,14-0,20). <strong>(4) Sellado de filtraciones</strong> (burletes, puertas exteriores): −5%. Combinando todo, una casa que consumía 0,30 m³/HDD baja a ~0,13 m³/HDD = <strong>57% menos gas</strong>. Para Buenos Aires (1.400 HDD/año), eso significa pasar de 420 m³/año a 182 m³/año. La inversión típica se recupera en 4-7 años (más rápido si el gas sube)."
+    },
+    {
+      "q": "¿Qué pasa si vivo en zona con clima mixto (HDD y CDD significativos)?",
+      "a": "Argentina central (Buenos Aires, Rosario, Córdoba) tiene <strong>clima mixto</strong>: necesitás calefacción en invierno (~1.400 HDD) y refrigeración en verano (~400 CDD). En esos casos: <strong>(1) Bomba de calor inverter</strong> es óptima: usa el mismo equipo en ambos modos con COP 3-4 (1 kWh eléctrico = 3-4 kWh térmicos). <strong>(2) Calefacción + AC separados</strong> (caldera + split): mayor inversión inicial pero independiente. <strong>(3) Cálculo de factura anual</strong>: consumo gas en HDD × tarifa + consumo eléctrico en CDD × tarifa = factura energética total. <strong>(4) Aislación</strong>: una sola inversión reduce ambos consumos (HDD y CDD). En zonas mixtas, la aislación es **doblemente rentable** porque la usás 8-10 meses al año (invierno y verano), no solo 3-4 meses como en clima frío puro."
     }
   ],
   "sources": [
@@ -239,6 +248,32 @@
     {
       "name": "Calculá HDD/CDD",
       "text": "Y estimá consumo esperado para el próximo período."
+    }
+  ],
+  "solvedExamples": [
+    {
+      "title": "Buenos Aires julio 2026 — estimación factura gas",
+      "scenario": "Vecino de Almagro, casa de 75 m² con aislación estándar. Temperatura media julio: 11°C. Quiere proyectar la factura de gas antes de que llegue.",
+      "inputs": {
+        "Temperatura media": "11°C",
+        "Días": "31",
+        "Base HDD": "18°C",
+        "Coeficiente": "0,18 m³/HDD"
+      },
+      "result": "HDD julio: (18 − 11) × 31 = **217 HDD** | Consumo estimado: 217 × 0,18 = **39,1 m³ de gas natural**",
+      "interpretation": "A tarifa Metrogas residencial T1 (2026, ~$350/m³ con impuestos): factura estimada **$13.700 + cargos fijos** = ~$18.000 total. Si el coeficiente real (verificable dividiendo m³ consumidos de últimos años por HDD del mismo período) es mayor (ej. 0,28), la factura sube proporcionalmente. Esa diferencia indica oportunidad de aislación térmica."
+    },
+    {
+      "title": "Salta enero 2026 — consumo AC en mes de calor",
+      "scenario": "Familia salteña con split inverter 4.500 frigorías (1.800W) en living de 40 m². Temperatura media enero: 30°C. Estiman consumo y costo eléctrico.",
+      "inputs": {
+        "Temperatura media": "30°C",
+        "Días": "31",
+        "Base CDD": "24°C",
+        "Coeficiente": "0,65 kWh/CDD"
+      },
+      "result": "CDD enero: (30 − 24) × 31 = **186 CDD** | Consumo estimado: 186 × 0,65 = **121 kWh adicionales** solo por el AC",
+      "interpretation": "A tarifa EDESAL residencial 2026 (~$70-90/kWh sin subsidio): costo del AC enero **~$8.500-11.000 extra**. Si el equipo fuera on/off antiguo en lugar de inverter, el coeficiente subiría a ~1,2 kWh/CDD = 223 kWh = ~$16.000-20.000. La diferencia justifica reemplazar equipos viejos por inverter (amortiza en 2-3 veranos en zonas como Salta o Santiago del Estero)."
     }
   ]
 }

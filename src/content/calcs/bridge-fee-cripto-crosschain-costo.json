@@ -140,6 +140,22 @@
     {
       "q": "¿Qué retorno esperar del mercado?",
       "a": "S&P 500 histórico: ~10% nominal anual (7% real ajustado por inflación). Pasado no predice futuro pero es referencia."
+    },
+    {
+      "q": "¿Cuánto cuesta bridgear USD 100 vs USD 5.000 en ETH→Arbitrum?",
+      "a": "**USD 100**: usando bridge oficial Arbitrum, sólo pagás gas L1 (~$3-8 USD según congestión) → costo efectivo **3-8%**. Para montos chicos, conviene usar **Across** (relayers compiten, ~$1.50 fijo + 0.05%). **USD 5.000**: bridge oficial sigue costando $3-8 USD (gas fijo) = **<0.2%**. A mayor monto, mejor es el porcentaje. Por debajo de $50-100 USD no conviene bridgear con ETH L1, mejor desde L2 (Base, Polygon)."
+    },
+    {
+      "q": "¿Qué pasa si me equivoco de chain al recibir?",
+      "a": "**Depende del token y de la wallet**. Si enviás USDC de Ethereum a una dirección de Arbitrum por error: muchas wallets self-custodial (MetaMask, Rabby) detectan la red y NO acreditan automáticamente (el USDC.e de Arbitrum es distinto contract). Si la wallet es de exchange y la red está soportada, puede aparecer o no según política. **Tokens perdidos en chains incompatibles**: posible recuperar técnicamente pero requiere expertise (cambiar RPC, importar contract custom). Sin chain bridge entre origen-destino, fondos perdidos."
+    },
+    {
+      "q": "¿CCTP de Circle es realmente gratis para mover USDC?",
+      "a": "Sí — el protocolo CCTP (Cross-Chain Transfer Protocol) de Circle quema USDC en chain origen y mintea USDC nativo en destino, **sin liquidez intermedia ni wrapping**. Sólo pagás gas en ambas chains (~$2-10 USD según pares). Aún mejor: terminás con USDC nativo (no USDC.e/bridged) que tiene mejor liquidez y aceptación. Soportado por Ethereum, Arbitrum, Base, Polygon, Avalanche, Optimism. Es la forma técnicamente más segura de mover USDC cross-chain."
+    },
+    {
+      "q": "¿Cuánto tarda en aparecer un bridge fallido?",
+      "a": "Si el bridge se cuelga (validators inactivos, congestión extrema, exploit en proceso), los fondos no se acreditan automáticamente. **Tiempos típicos de aparición tras incidente**: Across/Hop ~1-6h, LayerZero/Stargate ~6-24h, bridges canónicos L2→L1 hasta **7 días** (proof window). Si pasaron >48h sin acreditar y la transacción fue exitosa en origen, abrí ticket de soporte del bridge con tx hash y dirección destino. Algunos bridges tienen modo manual de claim si la transacción falló en destino."
     }
   ],
   "sources": [
@@ -173,5 +189,5 @@
     "bridge fee crosschain",
     "bridge fee cripto crosschain costo"
   ],
-  "lastReviewed": "2026-05-27"
+  "lastReviewed": "2026-05-28"
 }

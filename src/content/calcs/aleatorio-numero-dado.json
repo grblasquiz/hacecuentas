@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-aleatorio-numero-dado",
-  "lastReviewed": "2026-05-23",
+  "lastReviewed": "2026-05-28",
   "title": "Generador de Número Aleatorio / Tirar Dado 2026",
   "h1": "Generador de Número Aleatorio / Tirar Dado",
   "description": "Generador número aleatorio online: tirá dados, lanzá monedas o generá números al azar en cualquier rango. Gratis e instantáneo.",
@@ -160,6 +160,43 @@
     {
       "q": "¿Cuál es la diferencia entre generar números con y sin reposición?",
       "a": "Con reposición (el modo estándar de esta calculadora), un número puede repetirse: si pedís 3 números del 1 al 6, podrías obtener 3, 3, 5. Sin reposición, una vez que sale un número no puede volver a elegirse: ideal para rifas o sorteos donde cada participante puede ganar solo una vez. Para sorteos sin repetición, tirá de a una y descartá manualmente los resultados ya obtenidos."
+    },
+    {
+      "q": "¿Cómo generar un número aleatorio sin repetir?",
+      "a": "Cuando necesitás **N números distintos** de un rango sin repeticiones (sorteo sin reposición, lotería, asignación de orden, etc.), hay 3 estrategias prácticas: <strong>(1) Manual con esta calculadora</strong>: pedí 1 número a la vez, anotalo en un papel, y si la próxima tirada repite uno ya anotado, descartala y volvé a tirar. Para 6 números del 1 al 46, probablemente necesités 7-10 tiradas (algunos repiten). <strong>(2) Algoritmo Fisher-Yates (programación)</strong>: si sabés programar, generá el array [1, 2, ..., N], y para cada posición i desde N-1 hasta 1, intercambiá el elemento i con un índice aleatorio entre 0 e i. Resultado: los primeros N elementos del array son una permutación aleatoria sin repetición. <strong>(3) Usar herramientas online especializadas</strong>: sitios como **random.org** (modo 'numbers without replacement') o **wheelofnames.com** (para sorteos visuales con personas) implementan esto automáticamente. <strong>Probabilidades importantes</strong>: si necesitás 6 números distintos del 1 al 46 (caso Quini 6 argentino), hay **C(46,6) = 9.366.819** combinaciones posibles. La probabilidad de acertar exactamente la combinación ganadora con una tirada al azar es **1 / 9.366.819 ≈ 0,0000107%**. Si compartís el resultado con varios participantes, asegurate de que la asignación sea reproducible: anotá la fecha/hora del sorteo y screenshot para evitar disputas. <strong>Para sorteos importantes</strong> (premios reales, dinero, propiedades): usá generadores certificados como random.org (que usa ruido atmosférico real) y compartí el sorteo en vivo o grabado para transparencia."
+    },
+    {
+      "q": "¿Cómo usar la calculadora para Quini 6, Brinco o Loto?",
+      "a": "Las loterías argentinas tienen rangos específicos que podés generar con esta calculadora: <strong>Quini 6 Tradicional</strong> (Lotería Nacional Argentina, sorteos miércoles y domingos): 6 números del 1 al 46. Configurá **mínimo=1, máximo=46, cantidad=6** y descartá repetidos. Si querés jugar varias jugadas, repetí el proceso. Probabilidad de acertar los 6: 1 en 9.366.819 ≈ 0,00001%. <strong>Brinco</strong> (Lotería Provincia de Buenos Aires, sorteos los domingos): 6 números del 1 al 46 (mismo rango que Quini 6). Configurá igual. <strong>Loto Plus</strong> (Lotería Nacional, sorteos miércoles y sábados): 6 números del 1 al 41, sin extra. Configurá **mínimo=1, máximo=41, cantidad=6**. Probabilidad: 1 en 4.496.388. <strong>Telekino</strong> (sorteos los domingos): 7 números del 0 al 24. Configurá **mínimo=0, máximo=24, cantidad=7**. Probabilidad: 1 en 346.104. <strong>Tómbola Nocturna</strong> (Lotería Nacional, sorteos diarios): número de 4 cifras (0000-9999). Configurá **mínimo=0, máximo=9999, cantidad=1**. Probabilidad de acertar el orden exacto: 1 en 10.000. <strong>Quiniela Nacional</strong>: números del 0 al 99 (3 cifras: 000-999 si jugás 'a los tres'). <strong>Importante</strong>: (a) Los números generados son **estadísticamente equivalentes** a cualquier combinación — no existe combinación 'más probable'. (b) **Jugar números 'que nunca salen'** no aumenta probabilidad — cada sorteo es independiente. (c) **No gastes más de lo que podés perder** — el valor esperado siempre es negativo en juegos de azar (típicamente -40% a -60% por jugada). (d) Si jugás en grupo (pool), anotá las jugadas firmadas por todos para evitar conflictos si toca el premio. (e) **Apuestas con tendencia obsesiva**: si gastás más de lo planeado o jugás para 'recuperar' pérdidas, considerá ayuda profesional (Jugadores Anónimos Argentina: 0800-444-1144)."
+    },
+    {
+      "q": "¿Es seguro usar Math.random() de JavaScript para sorteos importantes?",
+      "a": "**Para sorteos casuales (entre amigos, en el aula, decisiones simples): sí, es perfectamente válido**. Math.random() en navegadores modernos usa xorshift128+ o algoritmos similares con período suficientemente largo. **Para sorteos con premios reales (concursos, rifas con dinero, asignación de algo de valor): no es recomendable** porque (1) es predecible si conocés el estado interno, (2) los sorteos legales requieren auditoría. Para esos casos usá: **random.org** (ruido atmosférico, certificado), **crypto.getRandomValues()** en navegador (CSPRNG seguro), o un escribano público que certifique el sorteo. Para criptografía y seguridad NUNCA uses Math.random()."
+    },
+    {
+      "q": "¿Cómo simulo una ruleta o una decisión con probabilidades desiguales?",
+      "a": "**Caso ruleta clásica europea**: 37 números (0 al 36), configurá mínimo=0, máximo=36, cantidad=1. P(número específico) = 1/37 ≈ 2,7%. Para color rojo/negro: hay 18 rojos, 18 negros, 1 verde (cero) → P(rojo) = 18/37 ≈ 48,6%. **Probabilidades desiguales** (ej: 70% sí, 30% no): generá un número del 1 al 100, si sale 1-70 → 'sí', si sale 71-100 → 'no'. Más complejo: tres opciones 50%/30%/20% → 1-50 = A, 51-80 = B, 81-100 = C. Este método se llama 'roulette wheel selection' y es la base de algoritmos genéticos y simulación Monte Carlo."
+    },
+    {
+      "q": "¿La calculadora guarda historial de mis tiradas?",
+      "a": "**No**, esta calculadora corre 100% en tu navegador y no guarda ninguna información en servidores. Cada tirada se calcula en tu dispositivo usando JavaScript local. Si necesitás conservar resultados (para reproducibilidad, auditoría o referencia), tomá screenshot o copiá los números a un documento. Para sorteos formales con testigos remotos, hay sitios como **random.org/draws** que dan un certificado verificable con timestamp y seed."
+    }
+  ],
+  "solvedExamples": [
+    {
+      "title": "Sorteo de un premio entre 350 inscriptos para evento corporativo",
+      "context": "Empresa con 350 empleados inscriptos para sortear 5 vouchers de regalo. Quiere usar un proceso transparente y aleatorio, sin que el dueño esté involucrado físicamente (todos están dispersos en home office).",
+      "steps": [
+        "Configuración calculadora: mínimo=1, máximo=350, cantidad=1",
+        "Primera tirada en vivo Zoom: número 187 → ganador #187",
+        "Segunda tirada (descartando 187): número 42 → ganador #42",
+        "Tercera tirada: número 213 → ganador #213",
+        "Cuarta tirada: número 187 (repetido) → DESCARTAR, volver a tirar → número 309 → ganador #309",
+        "Quinta tirada: número 56 → ganador #56",
+        "Documentación: screenshot de cada tirada con timestamp + grabación de la sesión Zoom + envío del registro a todos los inscriptos",
+        "Verificación: cualquier inscripto puede recalcular las probabilidades: P(ganar un voucher) = 5/350 = 1,43%"
+      ],
+      "result": "Sorteo transparente con **5 ganadores aleatorios** (#42, #56, #187, #213, #309). **Buenas prácticas aplicadas**: (1) lista de inscriptos numerada y compartida antes del sorteo, (2) tirada en vivo con testigos, (3) screenshot + grabación como evidencia, (4) descarte explícito de repetidos. Para premios de mayor valor (>$1M) o cuando hay dudas de transparencia, agregar: escribano público presente, uso de random.org con seed pública verificable, o publicar resultados auditados en redes sociales con respaldo."
     }
   ],
   "sources": [

@@ -279,15 +279,19 @@ const navItems = COUNTRY_NAVS[pageCountry];
     else { mobile.removeAttribute('hidden'); mToggle.setAttribute('aria-expanded', 'true'); }
   });
 
-  // Search modal — calcs se carga lazy al primer open (no inlinea en HTML)
-  const modal = document.getElementById('search-modal');
-  const openBtn = document.getElementById('open-search');
-  const input = document.getElementById('search-input');
-  const results = document.getElementById('search-results');
-  let currentIndex = -1;
-  let calcs = null;                 // se popula al primer openModal
+  // Search modal — calcs se carga lazy al primer open (no inlinea en HTML).
+  //
+  // CRÍTICO: Astro ClientRouter swappea el body en cada navegación SPA, lo que
+  // reemplaza #search-modal, #open-search, #search-input, #search-results con
+  // nodos nuevos. Si capturamos las refs una sola vez al cargar el módulo, los
+  // listeners quedan attached a elementos detached y la 2da apertura del modal
+  // no abre nada (bug 28-may-2026: "anda bien la primera vez, después no").
+  //
+  // Fix: initSearch() re-querea el DOM y re-attacha listeners en cada
+  // astro:page-load. Cada elemento lleva data-search-init como guard de
+  // idempotencia para no duplicar handlers si el nodo sobrevive al swap.
+  let calcs = null;                 // module-scoped: caché compartido entre swaps
   let calcsPromise = null;
-
   async function ensureCalcs() {
     if (calcs) return calcs;
     if (!calcsPromise) {
@@ -298,37 +302,9 @@ const navItems = COUNTRY_NAVS[pageCountry];
     calcs = await calcsPromise;
     return calcs;
   }
-  // Prefetch on hover/focus of the search button (free perf — before modal opens)
-  openBtn?.addEventListener('mouseenter', ensureCalcs, { once: true });
-  openBtn?.addEventListener('focus', ensureCalcs, { once: true });
 
   const categoryLabels = { finanzas: 'Finanzas', negocios: 'Negocios', negocio: 'Negocios', salud: 'Salud', marketing: 'Marketing', deportes: 'Deportes', viajes: 'Viajes', vida: 'Vida', mascotas: 'Mascotas', matematica: 'Matemática', construccion: 'Construcción', cocina: 'Cocina' };
   const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-  const searchLang = modal?.dataset?.lang;
-  const i18n = searchLang === 'en'
-    ? { loading: 'Loading...', noResults: 'No results for' }
-    : searchLang === 'pt'
-    ? { loading: 'Carregando...', noResults: 'Sem resultados para' }
-    : { loading: 'Cargando...', noResults: 'Sin resultados para' };
-
-  const openModal = async () => {
-    modal.hidden = false;
-    setTimeout(() => input?.focus(), 30);
-    if (!calcs) {
-      results.innerHTML = `<div class="no-results">${i18n.loading}</div>`;
-      await ensureCalcs();
-    }
-    renderResults('');
-  };
-  const closeModal = () => {
-    modal.hidden = true;
-    if (input) input.value = '';
-    currentIndex = -1;
-  };
-
-  openBtn?.addEventListener('click', openModal);
-  modal.addEventListener('click', (e) => { if (e.target.dataset.close !== undefined) closeModal(); });
 
   // XSS protection: escapar cualquier string antes de pegarlo en innerHTML
   function escapeHtml(s) {
@@ -348,7 +324,9 @@ const navItems = COUNTRY_NAVS[pageCountry];
     'calculadora-plazo-fijo',
   ];
   function pickDefault(allCalcs) {
-    const bySlug = new Map(allCalcs.map(function (c) { return [c.slug, c]; }));
+    // NOTA: el endpoint /search-index.json sirve claves abreviadas {s,h,d,c,i,a}
+    // para reducir el JSON ~40%. NO usar c.slug/c.h1/c.description — quedan undefined.
+    const bySlug = new Map(allCalcs.map(function (c) { return [c.s, c]; }));
     const picks = [];
     DEFAULT_TOP_SLUGS.forEach(function (s) {
       const c = bySlug.get(s);
@@ -358,113 +336,176 @@ const navItems = COUNTRY_NAVS[pageCountry];
     if (picks.length < 6) {
       for (const c of allCalcs) {
         if (picks.length >= 6) break;
-        if (!DEFAULT_TOP_SLUGS.includes(c.slug)) picks.push(c);
+        if (!DEFAULT_TOP_SLUGS.includes(c.s)) picks.push(c);
       }
     }
     return picks.slice(0, 6);
   }
 
-  function renderResults(q) {
-    if (!calcs) {
-      results.innerHTML = `<div class="no-results">${i18n.loading}</div>`;
-      return;
-    }
-    const query = norm(q);
-    let matches;
-    if (query) {
-      // Detectar audience preferido por path actual
-      const _path = location.pathname;
-      const preferredAudience =
-        _path.startsWith('/es/') || _path === '/es' ? 'ES' :
-        _path.startsWith('/mx/') || _path === '/mx' ? 'MX' :
-        _path.startsWith('/co/') || _path === '/co' ? 'CO' :
-        _path.startsWith('/cl/') || _path === '/cl' ? 'CL' :
-        _path.startsWith('/en') ? 'EN' :
-        _path.startsWith('/pt') ? 'BR' :
-        _path.startsWith('/global') ? 'global' :
-        'AR';
-      // Score:
-      // +100 título empieza con query
-      // +50 título contiene query
-      // +10 slug/desc contiene query
-      // +30 audience matches el path actual
-      // -20 audience es de otro país (penaliza fuerte calcs MX si estás en /es)
-      const scored = [];
-      const isOtherCountry = function(a) {
-        return ['AR','ES','MX','CO','CL','BO','PE','UY','BR'].indexOf(a) >= 0 && a !== preferredAudience;
-      };
-      for (const c of calcs) {
-        const title = norm(c.h1 || '');
-        const slug = norm(c.slug || '');
-        const desc = norm(c.description || '');
-        let score = 0;
-        if (title.startsWith(query)) score += 100;
-        else if (title.includes(query)) score += 50;
-        if (slug.includes(query) || desc.includes(query)) score += 10;
-        if (score === 0) continue;
-        if (c.audience === preferredAudience) score += 30;
-        else if (preferredAudience !== 'global' && isOtherCountry(c.audience)) score -= 20;
-        scored.push({ c: c, score: score });
+  // initSearch corre en DOMContentLoaded y en cada astro:page-load. Re-querea el
+  // DOM (porque ClientRouter puede haber swapeado los nodos), arma openModal/
+  // closeModal/renderResults sobre las refs FRESCAS y attacha listeners idempotente
+  // (cada nodo lleva data-search-init para no duplicar handlers).
+  function initSearch() {
+    const modal = document.getElementById('search-modal');
+    const openBtn = document.getElementById('open-search');
+    const input = document.getElementById('search-input');
+    const results = document.getElementById('search-results');
+    if (!modal || !openBtn || !input || !results) return;
+
+    const searchLang = modal.dataset.lang;
+    const i18n = searchLang === 'en'
+      ? { loading: 'Loading...', noResults: 'No results for' }
+      : searchLang === 'pt'
+      ? { loading: 'Carregando...', noResults: 'Sem resultados para' }
+      : { loading: 'Cargando...', noResults: 'Sin resultados para' };
+    let currentIndex = -1;
+
+    function renderResults(q) {
+      if (!calcs) {
+        results.innerHTML = `<div class="no-results">${i18n.loading}</div>`;
+        return;
       }
-      scored.sort(function (a, b) { return b.score - a.score; });
-      matches = scored.slice(0, 8).map(function (x) { return x.c; });
-    } else {
-      matches = pickDefault(calcs);
+      const query = norm(q);
+      let matches;
+      if (query) {
+        const _path = location.pathname;
+        const preferredAudience =
+          _path.startsWith('/es/') || _path === '/es' ? 'ES' :
+          _path.startsWith('/mx/') || _path === '/mx' ? 'MX' :
+          _path.startsWith('/co/') || _path === '/co' ? 'CO' :
+          _path.startsWith('/cl/') || _path === '/cl' ? 'CL' :
+          _path.startsWith('/en') ? 'EN' :
+          _path.startsWith('/pt') ? 'BR' :
+          _path.startsWith('/global') ? 'global' :
+          'AR';
+        // Score: +100 título empieza con query, +50 contiene, +10 slug/desc contiene,
+        // +30 audience matches path, -20 audience de otro país.
+        const scored = [];
+        const isOtherCountry = function(a) {
+          return ['AR','ES','MX','CO','CL','BO','PE','UY','BR'].indexOf(a) >= 0 && a !== preferredAudience;
+        };
+        for (const c of calcs) {
+          const title = norm(c.h || '');
+          const slug = norm(c.s || '');
+          const desc = norm(c.d || '');
+          let score = 0;
+          if (title.startsWith(query)) score += 100;
+          else if (title.includes(query)) score += 50;
+          if (slug.includes(query) || desc.includes(query)) score += 10;
+          if (score === 0) continue;
+          if (c.a === preferredAudience) score += 30;
+          else if (preferredAudience !== 'global' && isOtherCountry(c.a)) score -= 20;
+          scored.push({ c: c, score: score });
+        }
+        scored.sort(function (a, b) { return b.score - a.score; });
+        matches = scored.slice(0, 8).map(function (x) { return x.c; });
+      } else {
+        matches = pickDefault(calcs);
+      }
+      if (matches.length === 0) {
+        results.innerHTML = `<div class="no-results">${i18n.noResults} "<strong>${escapeHtml(q)}</strong>"</div>`;
+        return;
+      }
+      // Concatenación en vez de template literals: evita que Googlebot vea
+      // `href="/${...}"` literal y lo trate como URL real (bug previo: aparecía
+      // `http://hacecuentas.com/${c.slug}` como 404 en Search Console).
+      const arrow = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+      results.innerHTML = matches.map(function (c, i) {
+        var slug = escapeHtml(c.s);
+        var icon = escapeHtml(c.i || '');
+        var title = escapeHtml(c.h);
+        var cat = escapeHtml(categoryLabels[c.c] || c.c || '');
+        return '<a href="' + '/' + slug + '" class="result-item" data-index="' + i + '">'
+          + '<span class="result-icon">' + icon + '</span>'
+          + '<span class="result-body">'
+          + '<span class="result-title">' + title + '</span>'
+          + '<span class="result-cat">' + cat + '</span>'
+          + '</span>'
+          + arrow
+          + '</a>';
+      }).join('');
+      currentIndex = -1;
     }
-    if (matches.length === 0) {
-      // Escapar query para prevenir XSS: user puede pegar '<img src=x onerror=...>'
-      results.innerHTML = `<div class="no-results">${i18n.noResults} "<strong>${escapeHtml(q)}</strong>"</div>`;
-      return;
+
+    const openModal = async () => {
+      modal.hidden = false;
+      setTimeout(() => input.focus(), 30);
+      if (!calcs) {
+        results.innerHTML = `<div class="no-results">${i18n.loading}</div>`;
+        await ensureCalcs();
+      }
+      renderResults('');
+    };
+    const closeModal = () => {
+      modal.hidden = true;
+      input.value = '';
+      currentIndex = -1;
+    };
+
+    // Guards de idempotencia: si el nodo sobrevive al swap de ClientRouter
+    // (ej. el modal está fuera del fragmento swapeado), no duplicamos listeners.
+    if (!openBtn.dataset.searchInit) {
+      openBtn.dataset.searchInit = '1';
+      openBtn.addEventListener('click', openModal);
+      openBtn.addEventListener('mouseenter', ensureCalcs, { once: true });
+      openBtn.addEventListener('focus', ensureCalcs, { once: true });
     }
-    // Nota: usamos concatenación en lugar de template literals para evitar que
-    // Googlebot vea `href="/${...}"` en el HTML estático y lo trate como URL real.
-    // Antes: una URL literal `http://hacecuentas.com/${c.slug}` apareció como 404
-    // en Search Console porque Google parseó el template sin ejecutar el JS.
-    const arrow = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
-    results.innerHTML = matches.map(function (c, i) {
-      var slug = escapeHtml(c.slug);
-      var icon = escapeHtml(c.icon || '');
-      var title = escapeHtml(c.h1);
-      var cat = escapeHtml(categoryLabels[c.category] || c.category || '');
-      return '<a href="' + '/' + slug + '" class="result-item" data-index="' + i + '">'
-        + '<span class="result-icon">' + icon + '</span>'
-        + '<span class="result-body">'
-        + '<span class="result-title">' + title + '</span>'
-        + '<span class="result-cat">' + cat + '</span>'
-        + '</span>'
-        + arrow
-        + '</a>';
-    }).join('');
-    currentIndex = -1;
+    if (!modal.dataset.searchInit) {
+      modal.dataset.searchInit = '1';
+      modal.addEventListener('click', (e) => { if (e.target.dataset.close !== undefined) closeModal(); });
+    }
+    if (!input.dataset.searchInit) {
+      input.dataset.searchInit = '1';
+      input.addEventListener('input', (e) => renderResults(e.target.value));
+    }
+
+    // Expose para el handler global de teclado (se attacha una sola vez al document).
+    window.__hcSearch = {
+      modal, results, openModal, closeModal,
+      getIndex: () => currentIndex,
+      setIndex: (n) => { currentIndex = n; },
+    };
   }
 
-  input?.addEventListener('input', (e) => renderResults(e.target.value));
+  // Document keydown listener: se attacha UNA sola vez en toda la sesión.
+  // Lee siempre el estado fresco desde window.__hcSearch (que initSearch refresca
+  // en cada page-load). De otra forma duplicaríamos handlers en cada swap.
+  if (!window.__hcSearchKeydown) {
+    window.__hcSearchKeydown = true;
+    document.addEventListener('keydown', (e) => {
+      const ctx = window.__hcSearch;
+      if (!ctx) return;
+      const { modal, results, openModal, closeModal, getIndex, setIndex } = ctx;
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openModal(); return; }
+      if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName || '')) {
+        e.preventDefault(); openModal(); return;
+      }
+      if (modal.hidden) return;
+      const items = results.querySelectorAll('.result-item');
+      let idx = getIndex();
+      if (e.key === 'Escape') { closeModal(); }
+      else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        idx = Math.min(idx + 1, items.length - 1);
+        setIndex(idx);
+        items.forEach((it, i) => it.classList.toggle('active', i === idx));
+        items[idx]?.scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        idx = Math.max(idx - 1, 0);
+        setIndex(idx);
+        items.forEach((it, i) => it.classList.toggle('active', i === idx));
+        items[idx]?.scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter' && idx >= 0) {
+        e.preventDefault();
+        items[idx]?.click();
+      }
+    });
+  }
 
-  document.addEventListener('keydown', (e) => {
-    // Cmd/Ctrl + K
-    if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openModal(); return; }
-    // "/" para abrir search (si no esta en un input)
-    if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName || '')) {
-      e.preventDefault(); openModal(); return;
-    }
-    if (modal.hidden) return;
-    const items = results.querySelectorAll('.result-item');
-    if (e.key === 'Escape') { closeModal(); }
-    else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      currentIndex = Math.min(currentIndex + 1, items.length - 1);
-      items.forEach((it, i) => it.classList.toggle('active', i === currentIndex));
-      items[currentIndex]?.scrollIntoView({ block: 'nearest' });
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      currentIndex = Math.max(currentIndex - 1, 0);
-      items.forEach((it, i) => it.classList.toggle('active', i === currentIndex));
-      items[currentIndex]?.scrollIntoView({ block: 'nearest' });
-    } else if (e.key === 'Enter' && currentIndex >= 0) {
-      e.preventDefault();
-      items[currentIndex]?.click();
-    }
-  });
+  initSearch();
+  document.addEventListener('astro:page-load', initSearch);
 </script>
 
 <style>

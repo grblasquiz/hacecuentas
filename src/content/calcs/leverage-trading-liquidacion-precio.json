@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-leverage-trading-liquidacion-precio",
-  "lastReviewed": "2026-05-27",
+  "lastReviewed": "2026-05-28",
   "title": "Calculadora Liquidación trading apalancado 2026",
   "h1": "Liquidación trading apalancado",
   "description": "💰 Calculá liquidación trading apalancado según precio entrada USD, apalancamiento y posición. Obtené precio liquidación al instante.",
@@ -14,7 +14,11 @@
     "Resolver rápido una duda sobre liquidación trading apalancado sin papel y lápiz.",
     "Comparar escenarios o alternativas con números concretos.",
     "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Verificar si un valor que te dieron cuadra con el cálculo estándar.",
+    "Definir distancia óptima de stop loss antes de abrir posición en BTC o ETH.",
+    "Comparar cuánto riesgo asumís con 5x vs 10x vs 20x en el mismo activo.",
+    "Evaluar si una entrada se justifica dado el porcentaje de movimiento adverso que tolerás.",
+    "Educar a alguien sobre por qué 100x es matemáticamente casi siempre catastrófico."
   ],
   "fields": [
     {
@@ -77,39 +81,71 @@
     ],
     "result": "Caída 10% te liquida"
   },
+  "solvedExamples": [
+    {
+      "title": "Long en BTC a USD 70.000 con 10x",
+      "scenario": "Trader que abre long después de breakout técnico, busca movimiento alcista de 5-10%",
+      "inputs": {
+        "Precio entrada": "USD 70.000",
+        "Apalancamiento": "10x",
+        "Posición": "Long"
+      },
+      "result": "Precio liquidación: USD 63.000 | Movimiento adverso que liquida: 10%",
+      "interpretation": "Una caída del 10% (movimiento normal en BTC en 24-48h) liquida la posición. Stop loss recomendado en USD 65.800 (movimiento del 6%) preserva el 40% del capital y permite reentrada. Sin stop, riesgo de pérdida total."
+    },
+    {
+      "title": "Short en ETH a USD 4.000 con 5x",
+      "scenario": "Trader bajista en alt season tardía, espera corrección del 15-20%",
+      "inputs": {
+        "Precio entrada": "USD 4.000",
+        "Apalancamiento": "5x",
+        "Posición": "Short"
+      },
+      "result": "Precio liquidación: USD 4.800 | Movimiento adverso que liquida: 20%",
+      "interpretation": "Con 5x el margen de error es mucho más cómodo (20% vs 10% con 10x). Si la tesis bajista es correcta y ETH cae 15%, ganás 75% del capital arriesgado. Stop loss prudente en USD 4.320 (8% adverso) protege el resultado."
+    }
+  ],
   "explanation": "Operar con apalancamiento (leverage) en futuros o perpetuals significa pedir capital prestado al exchange para abrir una posición mayor que el margen propio. Si la operación va a favor, las ganancias se multiplican por el ratio de apalancamiento; si va en contra, las pérdidas también, hasta el punto en el que el exchange **liquida** la posición para proteger su préstamo. El precio en el que ocurre esa ejecución forzada se llama **precio de liquidación** y es la variable más importante para gestionar el riesgo de una operación apalancada.\n\nEsta calculadora estima el precio de liquidación a partir del precio de entrada, el ratio de apalancamiento y el tipo de posición (long o short). Aplica la fórmula simplificada que asume **margen aislado** y no incluye comisiones, funding rates ni el maintenance margin específico de cada exchange (que adelanta un poco el punto de liquidación). El resultado sirve como referencia rápida para decidir tamaño de posición, distancia de stop loss y para entender qué tan cerca está tu apertura del precio de quiebre.\n\n## Cómo se calcula\n\n```\nlong  →  precio_liquidacion = precio_entrada × (1 - 1 / apalancamiento)\nshort →  precio_liquidacion = precio_entrada × (1 + 1 / apalancamiento)\n\nmovimiento_critico = 100 / apalancamiento     (en %)\n```\n\nCon **10x de apalancamiento**, una variación adversa de **10%** liquida la posición. Con **20x**, basta un **5%**. Con **100x**, **1%** alcanza. Por eso el apalancamiento alto es matemáticamente incompatible con activos volátiles como cripto: el mercado se mueve más rápido que la liquidación.\n\n## Movimiento crítico por apalancamiento\n\n| Apalancamiento | Movimiento que liquida | Riesgo razonable |\n|---|---|---|\n| 2x | 50% | Posición conservadora |\n| 3x | 33% | Aceptable con activos blue-chip |\n| 5x | 20% | Requiere stop loss disciplinado |\n| 10x | 10% | Sólo traders experimentados |\n| 20x | 5% | Muy riesgoso, ruido de mercado liquida |\n| 50x | 2% | Imprudente en activos volátiles |\n| 100x+ | 1% o menos | Generalmente casino, no inversión |\n\nEl **maintenance margin** del exchange (típicamente 0,5% a 1%) reduce todavía un poco más la distancia real al precio de liquidación.\n\n## Conceptos clave\n\n- **Margen inicial** — capital propio aportado para abrir la posición.\n- **Margen aislado vs cruzado** — aislado limita la pérdida al margen aportado; cruzado puede usar todo tu saldo en garantía.\n- **Mark price** — referencia que usa el exchange para evaluar la liquidación (no es el last price del libro).\n- **Funding rate** — costo recurrente (cada 8 horas en perpetuals) por mantener la posición abierta; positivo paga el long al short, negativo al revés.\n- **ADL (Auto-Deleveraging)** — mecanismo de algunos exchanges para cerrar posiciones rentables cuando el insurance fund queda en negativo.\n- **Insurance Fund** — fondo de respaldo del exchange ante liquidaciones que no alcanzan a cubrir la pérdida.\n\n## Diferencias con instrumentos regulados argentinos\n\nLas plataformas más utilizadas para futuros apalancados son **Binance, Bybit, OKX, BingX, Bitget** y similares. **No están reguladas por la CNV argentina**. Localmente, los **futuros de dólar y commodities en MAtba Rofex** sí están regulados pero con apalancamiento mucho menor (típicamente 5x-10x), garantías estrictas y mercados con horarios. La operatoria cripto apalancada offshore es 24/7, sin garantías de protección al inversor y con riesgo regulatorio adicional.\n\n## Buenas prácticas de risk management\n\n1. **Definir tamaño de posición antes de entrar.** Regla común: no más del 1-2% del capital total en riesgo por operación.\n2. **Stop loss obligatorio**, ubicado **antes** del precio de liquidación, no en él. Una distancia segura es entre 70% y 80% del recorrido de liquidación.\n3. **No promediar perdedores apalancados.** Bajar el precio promedio en una posición que va en contra solo acerca más la liquidación.\n4. **Vigilar funding rate y comisiones** en posiciones largas: en perpetuals pueden erosionar el rendimiento incluso si el precio se mueve a favor.\n5. **Margen aislado por defecto** para que el daño quede contenido en esa sola posición.\n\n## Cuándo NO se aplica\n\n- Si operás **margin trading spot** y no futuros: la fórmula difiere y la liquidación se calcula sobre el préstamo de activos, no de margen.\n- Si tu cuenta usa **margen cruzado**: el cálculo de liquidación involucra todo tu balance y las posiciones abiertas adicionales.\n- Si operás **opciones**: el riesgo se mide por delta, gamma y prima pagada, no por precio de liquidación.\n- Si tu exchange aplica **escalonamiento de maintenance margin** por tamaño de posición: posiciones muy grandes liquidan antes del cálculo simple.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido se contrasta contra la documentación pública de los principales exchanges de futuros cripto (Binance, Bybit, OKX), el reglamento de Matba Rofex para futuros regulados argentinos y la normativa de la CNV sobre productos derivados.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
   "faq": [
     {
-      "q": "¿Apalancamiento?",
-      "a": "Pedís prestado al exchange para abrir posición más grande que tu margen."
+      "q": "¿Qué es el apalancamiento en trading?",
+      "a": "Es pedir prestado capital al exchange para abrir una posición varias veces mayor que tu margen propio. Con 10x, USD 100 controlan una posición de USD 1.000. Las ganancias y pérdidas se multiplican por el ratio. El exchange exige garantías y liquidación automática para protegerse del impago."
     },
     {
-      "q": "¿Liquidación?",
-      "a": "El exchange cierra tu posición para proteger el préstamo."
+      "q": "¿Qué significa que me liquiden una posición?",
+      "a": "El exchange cierra forzadamente tu posición cuando el precio se mueve en tu contra hasta consumir tu margen. Perdés todo el margen aportado. En margen aislado, solo perdés el margen de esa posición; en margen cruzado, podés perder todo el saldo de la cuenta."
     },
     {
-      "q": "¿Fórmula long?",
-      "a": "Precio × (1 - 1/apalancamiento) aprox."
+      "q": "¿Cuál es la fórmula para calcular precio de liquidación en long?",
+      "a": "Para long: precio_liquidación = precio_entrada × (1 - 1/apalancamiento). Para short: precio_liquidación = precio_entrada × (1 + 1/apalancamiento). Esta fórmula es simplificada y no incluye maintenance margin (0,5-1% adicional) ni comisiones, que adelantan un poco la liquidación real."
     },
     {
-      "q": "¿Mantenance margin?",
-      "a": "Adicional 0.5-1% que adelanta la liquidación."
+      "q": "¿Qué es el maintenance margin y cómo afecta?",
+      "a": "Es un porcentaje adicional (típicamente 0,5-1%) que el exchange requiere mantener sobre el valor de la posición para evitar liquidación. En la práctica, esto adelanta el precio de liquidación entre 0,5% y 1% respecto al cálculo simplificado. Para posiciones grandes, el maintenance margin puede escalonarse y ser mayor."
     },
     {
-      "q": "¿Funding rate?",
-      "a": "Costo por mantener posición perpetual (cada 8 horas)."
+      "q": "¿Qué es el funding rate en futuros perpetual?",
+      "a": "Es el costo recurrente (cada 8 horas en la mayoría de exchanges) que se paga o cobra para mantener una posición perpetual abierta. Si es positivo, los long pagan a los short; si es negativo, viceversa. Tasas típicas: 0,01% a 0,1% cada 8 horas. Puede acumularse y erosionar ganancias en posiciones de largo plazo."
     },
     {
-      "q": "¿Arriesgar todo?",
-      "a": "Nunca usar >10x sin entender. Risk management obligatorio."
+      "q": "¿Hasta qué apalancamiento es razonable usar?",
+      "a": "Depende del activo y del trader. Para principiantes en cripto: máximo 3-5x. Para traders intermedios con stop loss disciplinado: 5-10x. Más de 10x requiere experiencia y stops muy ajustados. Apalancamiento de 50x-125x es casino estadístico salvo para scalping de muy corto plazo con risk management extremo."
     },
     {
-      "q": "¿Stop loss?",
-      "a": "Siempre. Antes del precio de liquidación."
+      "q": "¿Por qué siempre usar stop loss en posiciones apalancadas?",
+      "a": "Sin stop loss, una corrida adversa puede liquidarte completamente. El stop loss debe estar antes del precio de liquidación, idealmente al 60-80% del recorrido hacia el precio de liquidación. Esto preserva parte de tu capital y te permite seguir operando. La regla básica: nunca arriesgar más del 1-2% del capital total por operación."
     },
     {
-      "q": "¿Qué retorno esperar del mercado?",
-      "a": "S&P 500 histórico: ~10% nominal anual (7% real ajustado por inflación). Pasado no predice futuro pero es referencia."
+      "q": "¿Qué diferencia hay entre margen aislado y margen cruzado?",
+      "a": "Margen aislado limita el riesgo al margen específicamente asignado a esa posición; si liquida, perdés solo ese margen. Margen cruzado usa todo tu saldo como garantía: posiciones rentables compensan posiciones perdedoras, pero el riesgo es perder toda la cuenta si el mercado se mueve fuertemente en contra. Para principiantes: siempre margen aislado."
+    },
+    {
+      "q": "¿Conviene usar futuros apalancados en Argentina con restricciones cambiarias?",
+      "a": "Los exchanges offshore (Binance, Bybit, OKX) operan en USDT/USDC y no están regulados por CNV. La operatoria implica riesgo regulatorio (cambio cripto-fiat en Argentina puede tener restricciones) y fiscal (declarar tenencias y ganancias en ARCA). Para alternativas reguladas, MAtba Rofex ofrece futuros de dólar y commodities con apalancamientos menores pero protección legal."
+    },
+    {
+      "q": "¿Qué es el ADL (Auto-Deleveraging) y cuándo aplica?",
+      "a": "Es un mecanismo de algunos exchanges (Bybit, OKX) que cierra forzadamente posiciones rentables cuando el insurance fund queda en negativo después de una liquidación masiva. Las posiciones más apalancadas y rentables son las primeras en ser ADL. Es una protección del exchange pero un riesgo para el trader: podés perder ganancias no realizadas."
     }
   ],
   "sources": [

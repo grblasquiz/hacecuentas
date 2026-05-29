@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-liquidacion-apalancamiento-cripto",
-  "lastReviewed": "2026-05-23",
+  "lastReviewed": "2026-05-28",
   "title": "Calculadora de Precio de Liquidación por Apalancamiento",
   "h1": "Calculadora de Precio de Liquidación por Apalancamiento",
   "description": "💰 Calculá tu precio de liquidación según el leverage en trading de cripto. Para posiciones long y short. Long: liq = entrada × .",
@@ -22,7 +22,10 @@
     "Necesitás calcular a qué precio te liquidarían.",
     "Querés comparar el riesgo entre 5x, 10x y 20x.",
     "Definís tu stop loss basado en el precio de liquidación.",
-    "Sos trader y gestionás el riesgo de tus posiciones."
+    "Sos trader y gestionás el riesgo de tus posiciones.",
+    "Comparás cuánto margen necesitás para un mismo notional en distintos apalancamientos.",
+    "Educás a un amigo/familiar sobre el riesgo real de operar con 50x o 100x.",
+    "Pivot entre exchanges (Binance vs Bybit vs OKX) y necesitás validar diferencias en MMR."
   ],
   "fields": [
     {
@@ -140,6 +143,18 @@
     {
       "q": "¿Las liquidaciones son instantáneas?",
       "a": "En mercados con alta liquidez (BTC, ETH), sí. En altcoins con baja liquidez, podés sufrir slippage y perder más que tu margen en cross margin."
+    },
+    {
+      "q": "¿Qué pasa si me liquidan justo en un wick (mecha de precio)?",
+      "a": "Los exchanges modernos (Binance, Bybit, OKX) usan mark price (precio indexado de múltiples exchanges) en lugar de last price para calcular la liquidación. Esto protege parcialmente de wicks aislados en un solo exchange. Aun así, si hay caídas/subidas reales generalizadas, los wicks profundos sí pueden liquidarte. Configurá stop loss para mayor protección."
+    },
+    {
+      "q": "¿Conviene operar futuros perpetuos o futuros con vencimiento?",
+      "a": "Los perpetuos no tienen vencimiento y usan funding rate (cobro/pago cada 8h) para acercarse al precio spot. Los futuros con vencimiento (quarterlies) tienen fecha de expiración y no funding rate, pero pueden cotizar con prima/descuento. Para retail: perpetuos son más prácticos. Para hedging institucional con horizonte claro: futuros con vencimiento."
+    },
+    {
+      "q": "¿Cómo se calcula el costo del funding rate en posiciones largas?",
+      "a": "Funding fee = notional × funding rate. Si tu notional es USD 10.000 y el funding rate es 0,01% positivo (long paga short), cada 8 horas pagás USD 1. Sobre una semana son ~USD 21. En posiciones de meses, el funding acumulado puede erosionar 30-50% del retorno esperado. Revisá funding rates históricos del par antes de holdear."
     }
   ],
   "howToSteps": [
@@ -173,6 +188,34 @@
     ],
     "result": "Liquidación en ~$58.825 (9,5% contra). Poné stop loss en $60.000 para salir antes."
   },
+  "solvedExamples": [
+    {
+      "title": "Short ETH a USD 3.500 con 5x y USD 2.000 margen",
+      "scenario": "Trader bajista entre $3.500 esperando corrección, leverage moderado",
+      "inputs": {
+        "Precio entrada": "USD 3.500",
+        "Leverage": "5x",
+        "Margen inicial": "USD 2.000",
+        "Posición": "Short",
+        "Tasa mantenimiento": "0,5%"
+      },
+      "result": "Notional: USD 10.000 | Liquidación: ~USD 4.183 (19,5% adverso) | Distancia: USD 683",
+      "interpretation": "Con 5x el margen para error es cómodo (~20% movimiento adverso). Si ETH sube 19,5% liquida; con stop loss en USD 3.780 (8% adverso) limitás pérdida a ~USD 800 (40% del margen)."
+    },
+    {
+      "title": "Long con leverage extremo en BTC a USD 65.000 con 50x",
+      "scenario": "Scalper experimentado intentando capturar movimiento de 1-2% intradiario",
+      "inputs": {
+        "Precio entrada": "USD 65.000",
+        "Leverage": "50x",
+        "Margen inicial": "USD 500",
+        "Posición": "Long",
+        "Tasa mantenimiento": "1%"
+      },
+      "result": "Notional: USD 25.000 | Liquidación: ~USD 63.700 (2% adverso) | Distancia: USD 1.300",
+      "interpretation": "Apenas 2% adverso liquida la posición. BTC mueve fácilmente 2% en 1 hora. Solo viable con stop loss en USD 64.500 (0,8% adverso) limitando pérdida a USD 200 y reentrada inmediata si rebota. Sin stop, riesgo de pérdida total del margen."
+    }
+  ],
   "relatedSlugs": [
     "calculadora-apalancamiento-liquidacion",
     "calculadora-position-size-cripto-leverage"

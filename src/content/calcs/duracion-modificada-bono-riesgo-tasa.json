@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-duracion-modificada-bono-riesgo-tasa",
-  "lastReviewed": "2026-05-27",
+  "lastReviewed": "2026-05-28",
   "title": "Calculadora Duration modificada bono 2026 | Hacé Cuentas",
   "h1": "Duration modificada bono",
   "description": "💰 Calculá duration modificada bono según tIR anual %, años al vencimiento y cupones por año. Obtené duration modificada al instante.",
@@ -14,7 +14,9 @@
     "Resolver rápido una duda sobre duration modificada bono sin papel y lápiz.",
     "Comparar escenarios o alternativas con números concretos.",
     "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Verificar si un valor que te dieron cuadra con el cálculo estándar.",
+    "Comparar bonos de distinto plazo en términos de riesgo de tasa equivalente antes de armar cartera.",
+    "Calcular el hedge ratio para neutralizar exposición usando futuros de bonos o swaps de tasa."
   ],
   "fields": [
     {
@@ -103,6 +105,22 @@
     {
       "q": "¿Qué retorno esperar del mercado?",
       "a": "S&P 500 histórico: ~10% nominal anual (7% real ajustado por inflación). Pasado no predice futuro pero es referencia."
+    },
+    {
+      "q": "¿Por qué los bonos cupón cero tienen mayor duración modificada?",
+      "a": "Porque concentran todo el flujo de caja al vencimiento. Sin cupones intermedios que recuperen capital antes, el inversor está expuesto al precio durante toda la vida del bono. Un cupón cero a 10 años tiene DM cercana a 10; uno con cupón 8% semestral, DM cercana a 7. A mismo plazo, menos cupón = más sensibilidad a tasa."
+    },
+    {
+      "q": "¿Cómo combino duration modificada con convexidad?",
+      "a": "Para movimientos chicos (< 0,5% en tasa) alcanza con DM lineal: Δprecio ≈ -DM × Δy. Para movimientos grandes (> 1%) sumá el término de convexidad: Δprecio ≈ -DM × Δy + 0,5 × Convexidad × (Δy)². La convexidad siempre es positiva en bonos sin opciones, corrige al alza el precio (la DM lineal subestima ganancias cuando tasa baja y sobreestima pérdidas cuando sube)."
+    },
+    {
+      "q": "¿Qué DM tienen los bonos soberanos argentinos típicos?",
+      "a": "Aproximaciones a mayo 2026: AL30 (USD ley local) ~3,5-4,5; GD30 (USD ley NY) ~3,5-4,5; AL35 ~5,5-6,5; GD35 ~5,5-6,5; AE38 ~6-7; AL41/GD41 ~6,5-7,5. Los duales 2026/2027 atados a inflación tienen DM real de 0,8-1,5 dependiendo del flujo. Verificá siempre con datos de pantalla del día."
+    },
+    {
+      "q": "¿Por qué la DM cambia si la TIR cambia?",
+      "a": "Porque el denominador (1 + y/m) depende de la TIR. Si la TIR sube, la DM baja un poco (el descuento de flujos más lejanos es más fuerte, su peso relativo cae). Por eso bonos con TIR muy altas — típico de emergentes en estrés — tienen DM más comprimida que su plazo nominal sugeriría."
     }
   ],
   "sources": [
@@ -141,5 +159,13 @@
     "como calcular duracion modificada bono riesgo",
     "duracion modificada bono riesgo ejemplo",
     "duracion modificada bono riesgo"
+  ],
+  "solvedExamples": [
+    {
+      "title": "Bono soberano 10 años, cupón 8% semestral, TIR 10%",
+      "scenario": "Inversor evalúa entrar en un bono a 10 años con cupón fijo del 8% nominal anual pagadero semestral, cotizando a una TIR del 10%. Quiere saber cuánto perdería si la tasa de mercado sube 1 punto porcentual.",
+      "calculation": "TIR anual = 10% → y/m = 5% semestral. Duración Macaulay ≈ 6,76 años. Duración modificada = 6,76 / (1 + 0,05) = 6,44. Cambio precio aproximado = -DM × Δy = -6,44 × 1% = -6,44%.",
+      "result": "Si la tasa sube de 10% a 11%, el bono cae aproximadamente 6,4% en precio. Para una posición de USD 10.000, la pérdida estimada por marcación a mercado sería de USD 644 (sin contar el efecto de convexidad, que la atenuaría levemente)."
+    }
   ]
 }

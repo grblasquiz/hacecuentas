@@ -20,7 +20,10 @@
     "Necesitás ajustar un contrato de alquiler o servicio por inflación del período.",
     "Querés comparar tu aumento salarial contra la inflación acumulada.",
     "Estás calculando el rendimiento real de una inversión descontando inflación.",
-    "Necesitás proyectar la inflación futura en base a la tendencia mensual."
+    "Necesitás proyectar la inflación futura en base a la tendencia mensual.",
+    "Estás negociando un sueldo o contrato y querés mostrar pérdida de poder adquisitivo.",
+    "Tu contador necesita actualizar un balance ajustado por inflación.",
+    "Querés convertir precios históricos (ej: $1.000 de 2020) a pesos de hoy."
   ],
   "fields": [
     {
@@ -79,6 +82,25 @@
       "format": "text"
     }
   ],
+  "solvedExamples": [
+    {
+      "title": "Empleada compara sueldo vs inflación acumulada para pedir aumento",
+      "context": "Carolina trabaja en una empresa de servicios. En mayo 2025 cobraba $800.000 brutos mensuales. Su último aumento fue en enero 2026 de $250.000 (32%), llegando a $1.050.000. Quiere saber cuánto perdió contra la inflación acumulada del período mayo 2025 - abril 2026 para negociar un nuevo ajuste.",
+      "steps": [
+        "**Período evaluado**: 12 meses (mayo 2025 a abril 2026).",
+        "**Tasa mensual promedio estimada del período** (datos INDEC): ~2.3% mensual.",
+        "**Inflación acumulada 12 meses**: `(1.023)^12 − 1` = **31.4%**.",
+        "**Sueldo nominal final**: $1.050.000 (con aumento enero 2026).",
+        "**Sueldo equivalente actualizado por inflación**: $800.000 × 1.314 = **$1.051.200**.",
+        "**Diferencia nominal**: $1.050.000 - $1.051.200 = -$1.200 (prácticamente empata).",
+        "**Pero análisis correcto**: Carolina cobró $800.000 los primeros 7 meses (mayo-noviembre 2025) cuando los precios ya subían mes a mes.",
+        "**Sueldo promedio nominal del período**: ($800.000 × 7 + $1.050.000 × 5) / 12 = **$904.166**.",
+        "**Sueldo promedio necesario para mantener poder adquisitivo** (ajustado mes a mes): ~$925.000.",
+        "**Pérdida real promedio**: ~$20.834/mes × 12 = **$250.000 acumulados en el año**."
+      ],
+      "result": "Aunque el aumento del 32% en enero **parece igualar la inflación interanual**, Carolina perdió **~$250.000 de poder adquisitivo en el año** porque el ajuste fue de una sola vez al final del período (mientras los precios subían mes a mes). **Recomendación para negociar**: pedir un **ajuste retroactivo trimestral por IPC** (con coeficiente publicado por INDEC) o aumentos cuatrimestrales del 8-10% en lugar de aumentos anuales. Caso típico de inflación argentina: el aumento nominal anual NUNCA compensa la pérdida real por composición."
+    }
+  ],
   "example": {
     "title": "Ejemplo real: 12 meses al 5% mensual",
     "steps": [
@@ -124,6 +146,26 @@
     {
       "q": "¿Por qué no se suman las tasas?",
       "a": "Ejemplo simple con 2 meses al 10%: - Mes 1: precio $100 → sube 10% → $110 - Mes 2: precio $110 → sube 10% → $121 - **Acumulada real**: 21% (no 20%)"
+    },
+    {
+      "q": "¿Cuál fue la inflación acumulada en los últimos 6/12/24/36 meses?",
+      "a": "**Datos aproximados según INDEC para los últimos meses (a mayo 2026)**: **Últimos 6 meses (noviembre 2025 - abril 2026)**: ~11-15% acumulado (estabilización del plan económico, IPC mensual promedio 1.8-2.5%). **Últimos 12 meses (mayo 2025 - abril 2026)**: ~27-35% (variación interanual). **Últimos 24 meses (mayo 2024 - abril 2026)**: ~152% acumulado (incluye desinflación post-pico 2023-2024). **Últimos 36 meses (mayo 2023 - abril 2026)**: ~640% acumulado (período que incluye el pico inflacionario 2023). **Comparativa**: en los últimos 5 años (2021-2026) la inflación acumulada ronda **1.300-1.800%** según el corte exacto. **Cómo calcular precisamente**: tomá el **IPC INDEC del mes inicial** y el **IPC del mes final**, dividí final ÷ inicial, restá 1 y multiplicá por 100. Ejemplo: IPC abril 2025 = 100, IPC abril 2026 = 132 → (132/100 − 1) × 100 = **32% inflación interanual**. **Fuente oficial**: [INDEC IPC mensual](https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31). Para cálculos exactos con tu período específico, usá esta calculadora arriba ingresando la tasa promedio mensual real. **Nota**: estos valores son orientativos y pueden actualizarse cuando INDEC publica revisiones."
+    },
+    {
+      "q": "¿Inflación acumulada vs interanual vs mensual: qué diferencia?",
+      "a": "Son **3 conceptos diferentes** que se confunden frecuentemente: **(1) Inflación mensual**: variación del IPC de un mes específico respecto al mes anterior. Ejemplo: 'la inflación de abril 2026 fue 2.1%' = los precios en abril estuvieron 2.1% por encima de marzo. **Período fijo de 1 mes**, sale en el comunicado mensual del INDEC. **(2) Inflación interanual** (también llamada 'año contra año' o 'YoY'): variación entre el mismo mes de dos años consecutivos. Ejemplo: 'inflación interanual a abril 2026 fue 32%' = los precios en abril 2026 estuvieron 32% por encima de abril 2025. **Período fijo de 12 meses** terminando en el mes referencia. Muy usada en titulares periodísticos. **(3) Inflación acumulada**: variación entre dos puntos cualquiera del tiempo, calculada por capitalización compuesta de las tasas mensuales. Ejemplo: 'inflación acumulada enero-abril 2026 fue 8%' = los precios subieron 8% en esos 4 meses específicos. **Período variable** según lo que necesites medir. **Cuál usar**: para **comparar tu aumento salarial** con inflación, usá la **interanual** si te aumentan una vez al año, o la **acumulada del período entre aumentos** si son parciales. Para **proyectar el costo de algo a futuro**, usá la **mensual promedio** como tendencia. Para **ajustar contratos retroactivos**, usá la **acumulada exacta** del período. **Diferencia clave con suma simple**: nunca sumes tasas mensuales para sacar interanual — usá multiplicación compuesta (factores 1+tasa) como muestra la calculadora arriba."
+    },
+    {
+      "q": "¿Cómo calcular cuánto valen $100.000 de 2020 en pesos de hoy?",
+      "a": "Necesitás la **inflación acumulada desde 2020 hasta hoy**. Tomá el IPC oficial del INDEC del mes inicial (ej: enero 2020) y del mes final (ej: abril 2026), dividí final/inicial y aplicá: **valor_actualizado = $100.000 × (IPC_final / IPC_inicial)**. Aproximación 2020-2026: inflación acumulada ~3.500-4.000%, factor ~35x-40x. Es decir, **$100.000 de enero 2020 ≈ $3.500.000-$4.000.000 de mayo 2026** en poder adquisitivo equivalente. Si tenés un préstamo histórico, contrato fijo o deuda en pesos sin actualizar, este factor te dice cuánto perdiste (o ganó la otra parte). Usá la calculadora ingresando los 75 meses y tasa promedio mensual ~5-7%."
+    },
+    {
+      "q": "¿Cómo ajusto el alquiler con inflación acumulada según el contrato?",
+      "a": "**Depende del índice acordado en el contrato**: (1) **ICL** (Índice de Contratos de Locación BCRA): es el índice oficial para contratos de la Ley de Alquileres (ya derogada pero aún vigente en contratos firmados antes). Combina 50% IPC + 50% RIPTE (salarios). El BCRA publica el coeficiente mensual. (2) **IPC puro**: ajuste con inflación del período. Si el contrato dice 'ajuste anual por IPC', tomás el IPC del mes de aniversario contra el mismo mes del año anterior. (3) **UVA** (Unidad de Valor Adquisitivo): ajuste mensual con IPC. (4) **Libre acuerdo post-DNU 70/2023**: las partes pactan el índice y la frecuencia. **Truco práctico**: en lugar de estimar, descargá el coeficiente publicado del BCRA o INDEC del mes exacto. Si no tenés ese dato, esta calculadora con la tasa promedio mensual del período te da una buena aproximación."
+    },
+    {
+      "q": "¿Por qué mi sueldo no le gana a la inflación aunque tenga aumentos del 30% al año?",
+      "a": "**Porque el aumento anual del 30% se da una vez, pero la inflación es mensual y compone todo el año**. Ejemplo: si la inflación anual es 30% acumulada (~2.21% mensual), tu sueldo aumentado el día 1 del año queda igual los siguientes 12 meses, pero los precios suben todos los meses. **Pérdida real**: comparás tu sueldo promedio anual (asumiendo ajuste único) vs precios promedio anuales. Resultado: **perdés ~13-15% de poder adquisitivo** incluso 'empatando' al 30%. **Solución**: pedir aumentos **trimestrales o cuatrimestrales** que sigan el ritmo de la inflación, o aumentos por **índice variable** (IPC del mes pasado). Sin esto, en inflación alta tu salario real cae sistemáticamente."
     }
   ],
   "sources": [
@@ -155,7 +197,8 @@
       "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
     }
   ],
-  "lastReviewed": "2026-05-11",
+  "lastReviewed": "2026-05-28",
+  "answerSnippet": "La inflación acumulada NO es la suma de tasas mensuales: se multiplican factores (1+tasa). Ejemplo: 5% mensual durante 12 meses = (1.05)^12 − 1 = 79.6% acumulada, no 60%. Los precios se multiplicaron por 1.80x.",
   "audience": "AR",
   "dataSource": [
     "inflacion:last_month",

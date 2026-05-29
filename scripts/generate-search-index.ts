@@ -24,7 +24,8 @@ interface Entry {
   d: string;          // description
   c: string;          // category
   i: string;          // icon
-  a?: 'AR';           // audience (solo si AR; default = global, ahorra bytes)
+  a?: string;         // audience (AR, ES, MX, CO, CL, BO, PE, global...) — necesario para
+                      // el ranking +30/-20 por país en el modal del Header.
 }
 
 const files = readdirSync(CALCS_DIR).filter((f) => f.endsWith('.json'));
@@ -33,7 +34,9 @@ const entries: Entry[] = [];
 for (const f of files) {
   try {
     const c = JSON.parse(readFileSync(join(CALCS_DIR, f), 'utf8'));
-    if (!c.slug || !c.h1) continue;
+    // Excluir noindex: si Google no las indexa, tampoco deberían aparecer en buscador
+    // interno. Esto bajó el índice de ~2850 → ~2366 entries (~17% menos payload).
+    if (!c.slug || !c.h1 || c.noindex) continue;
     const e: Entry = {
       s: c.slug,
       h: c.h1,
@@ -41,7 +44,10 @@ for (const f of files) {
       c: c.category ?? 'otros',
       i: c.icon ?? '🧮',
     };
-    if (c.audience === 'AR') e.a = 'AR';
+    // Preservamos cualquier audience seteado, no sólo 'AR'. El Header modal compara
+    // c.a contra el path actual (preferredAudience) para boostear (+30) calcs locales
+    // y penalizar (-20) calcs de otros países.
+    if (c.audience) e.a = c.audience;
     entries.push(e);
   } catch {}
 }

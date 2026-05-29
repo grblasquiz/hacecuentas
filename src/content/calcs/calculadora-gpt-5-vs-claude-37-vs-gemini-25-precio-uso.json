@@ -166,6 +166,30 @@
     {
       "q": "¿Con qué frecuencia se actualizan los precios en esta calculadora?",
       "a": "Los precios se revisan manualmente cuando alguno de los tres proveedores anuncia cambios tarifarios. La fecha de última revisión se indica al pie de la calculadora. Para decisiones de presupuesto importantes, siempre verificá los precios oficiales en las páginas de cada proveedor."
+    },
+    {
+      "q": "¿Conviene usar la API directa o un agregador como OpenRouter o Portkey?",
+      "a": "Para volúmenes bajos a medianos, la **API directa** es más barata (sin markup). Para volúmenes altos o si necesitás failover entre modelos, **OpenRouter** o **Portkey** agregan ~5-10% sobre el precio base pero ofrecen: unificación de API, ruteo automático ante caídas de un proveedor, fallback entre modelos, logs centralizados. Para apps en producción con SLAs estrictos, el costo extra suele compensar. Para experimentos o batch interno, API directa es la opción óptima."
+    },
+    {
+      "q": "¿Cómo impacta el modo de razonamiento extendido (Claude/GPT-o1) en el costo?",
+      "a": "Los modelos de razonamiento (Claude 3.7 con extended thinking, GPT-o1, o1-mini, o3) usan **tokens de razonamiento internos** que se facturan como output aunque no se devuelvan al usuario. Una respuesta corta puede generar 5.000-30.000 tokens de razonamiento interno. Esto multiplica el costo real 5x-20x respecto al modo estándar. Conviene activar razonamiento extendido solo cuando la calidad lo requiere (matemáticas complejas, código difícil, planificación multi-paso). Para tareas simples, el modelo base es mucho más barato."
+    },
+    {
+      "q": "¿Los precios incluyen el costo de las llamadas a herramientas (tool use / function calling)?",
+      "a": "Sí, pero hay matices. El **prompt que define las herramientas** (descripción de funciones, parámetros, ejemplos) se cobra como tokens de entrada en cada llamada — esto puede inflar significativamente el costo si tenés 20+ funciones definidas. Las **llamadas a herramientas devueltas por el modelo** se cobran como tokens de salida. La **respuesta de la herramienta** que vos devolvés al modelo se cobra como entrada en la próxima llamada. En workflows agénticos con muchas iteraciones, el costo real puede ser 2-3x el de un chat simple equivalente. Optimizá descripciones de herramientas para que sean concisas."
+    }
+  ],
+  "solvedExamples": [
+    {
+      "title": "Startup con chatbot RAG calcula costo mensual con caché agresivo",
+      "context": "Una startup tiene un chatbot RAG con **15M tokens input/mes** y **3M tokens output/mes**. El sistema usa contexto repetitivo (system prompt + chunks comunes), logrando **50% de caché en input**. No usa batch (chat en vivo). ¿Cuánto cuesta al mes con cada modelo y cuál conviene?",
+      "steps": [
+        "**GPT-5**: input std = 7,5M × $15 = $112,50; input cache = 7,5M × $3,75 = $28,13; output = 3M × $60 = $180 → **Total $320,63/mes**",
+        "**Claude 3.7 Sonnet**: input std = 7,5M × $3 = $22,50; input cache = 7,5M × $0,30 = $2,25; output = 3M × $15 = $45 → **Total $69,75/mes**",
+        "**Gemini 2.5 Pro**: input std = 7,5M × $1,25 = $9,38; input cache = 7,5M × $0,31 = $2,33; output = 3M × $10 = $30 → **Total $41,71/mes**"
+      ],
+      "result": "**Gemini 2.5 Pro es el más económico ($41,71/mes)**, ~8x más barato que GPT-5 ($320,63) y ~40% más barato que Claude 3.7 ($69,75). Para un chatbot RAG con caché agresivo y volumen moderado, Gemini ofrece la mejor relación costo/performance. Sin embargo, validá con benchmarks propios la calidad de las respuestas en tu dominio: el ahorro no compensa si la tasa de respuesta correcta cae más del 10-15%."
     }
   ],
   "sources": [
@@ -196,7 +220,7 @@
     "source": "OpenAI API Pricing",
     "sourceUrl": "https://openai.com/api/pricing/"
   },
-  "lastReviewed": "2026-04-27",
+  "lastReviewed": "2026-05-28",
   "relatedSlugs": [
     "calculadora-cursor-vs-copilot-vs-claude-code-precio-mensual",
     "calculadora-precio-hora-servicio-3d"

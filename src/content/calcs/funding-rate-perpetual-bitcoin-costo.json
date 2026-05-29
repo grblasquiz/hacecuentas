@@ -103,6 +103,40 @@
     {
       "q": "¿Qué retorno esperar del mercado?",
       "a": "S&P 500 histórico: ~10% nominal anual (7% real ajustado por inflación). Pasado no predice futuro pero es referencia."
+    },
+    {
+      "q": "¿Qué es el funding arbitrage o cash and carry trade en cripto?",
+      "a": "Es una estrategia delta-neutral: comprás BTC spot por X y vendés un perpetuo BTC por el mismo X (short). Si el funding rate es positivo y persistente, cobrás funding sin riesgo direccional porque el spot y el corto se compensan. En 2021-2022 esta estrategia rindió 15-30% APR en exchanges como Binance/Bybit. Las contras: requiere capital duplicado (margen + spot), liquidación si el spot sube mucho sin margen suficiente, y comisiones (maker/taker, withdraw) que erosionan el yield. Para tamaños chicos no compensa."
+    },
+    {
+      "q": "¿Cómo afecta el funding rate al apalancamiento sostenido?",
+      "a": "El funding es el costo invisible de mantener apalancamiento. Con leverage 10x y funding 0,05% cada 8h (típico en mercado bullish), pagás 0,15% diario sobre el notional, que es 1,05% semanal y ~55% anualizado sobre el margen real. En posiciones long sostenidas durante semanas en mercados con sesgo alcista, el funding acumulado puede superar la ganancia direccional. Por eso muchos traders cierran posiciones antes de cada funding extremo y reabren después, o usan futuros con vencimiento (sin funding) para horizontes largos."
+    },
+    {
+      "q": "¿El funding rate es deducible de Ganancias en Argentina?",
+      "a": "Sí, pero como parte del resultado neto de la operación. ARCA trata las operaciones con derivados cripto bajo Ganancias 4ta categoría o cedular (15%) según si la actividad es habitual o esporádica. El funding pagado se computa como costo (reduce ganancia gravada) y el funding cobrado como ingreso (suma a la base imponible). En PSAV registrados (Plataformas de Servicios de Activos Virtuales), las operaciones quedan informadas vía RG 4.614. Para volúmenes altos, consultá con contador especializado en cripto: el tratamiento puede variar según el broker (offshore vs. local)."
+    },
+    {
+      "q": "¿Hay diferencia entre funding de Binance, Bybit y dYdX?",
+      "a": "Sí. **Binance** y **Bybit** liquidan funding cada 8h (00:00, 08:00, 16:00 UTC) y tienen rates muy similares por arbitraje natural entre exchanges. **OKX** también cada 8h. **dYdX v4** y otros DEX perpetuos liquidan funding cada hora con rates típicamente más volátiles porque la liquidez es menor. **GMX v2** usa un modelo de borrowing rate y funding rate combinados que difiere del modelo clásico. Antes de operar, leé la documentación específica del exchange: la fórmula y los intervalos cambian."
+    },
+    {
+      "q": "¿Qué pasa con el funding si cierro la posición antes del settlement?",
+      "a": "**No pagás (ni cobrás) funding** si cerrás la posición antes del próximo punto de liquidación (típicamente 00:00, 08:00 o 16:00 UTC en Binance/Bybit). El funding se cobra/paga solo a las posiciones abiertas en el instante exacto del settlement. Muchos traders usan esto como estrategia: si saben que el funding será extremadamente alto (rate > 0,1% cada 8h), cierran posición 5 minutos antes del settlement y la reabren después, ahorrando el pago de funding a cambio de pagar 2 veces comisiones (taker × 2)."
+    }
+  ],
+  "solvedExamples": [
+    {
+      "title": "Long BTC 10k USD durante 3 días con funding 0,03% cada 8h",
+      "context": "Mariano abre un **long BTC perpetual** en Bybit por **USD 10.000** (notional) con leverage. El funding rate vigente es **0,03% cada 8h** (mercado moderadamente bullish). Mantiene la posición **72 horas (3 días)**. ¿Cuánto paga total de funding?",
+      "steps": [
+        "Períodos de funding en 72h = 72 / 8 = **9 settlements**",
+        "Funding por settlement = 10.000 × 0,03% = **USD 3,00**",
+        "Total funding 3 días = 3,00 × 9 = **USD 27,00**",
+        "Porcentaje sobre notional = 27 / 10.000 = **0,27% en 3 días**",
+        "Anualizado equivalente ≈ 0,03% × 3 × 365 = **32,85% anual**"
+      ],
+      "result": "Mariano paga **USD 27 en 3 días** solo por funding. Si su posición no se mueve, ya está USD 27 abajo. Esto equivale a un costo anualizado del **33%** si mantiene siempre la posición — alto para una estrategia direccional larga sin convicción muy fuerte."
     }
   ],
   "sources": [
@@ -144,5 +178,5 @@
     "como calcular funding rate perpetual bitcoin",
     "calcular funding rate perpetual bitcoin"
   ],
-  "lastReviewed": "2026-05-27"
+  "lastReviewed": "2026-05-28"
 }

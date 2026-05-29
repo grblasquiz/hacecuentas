@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-codigo-color-hex-rgb",
-  "lastReviewed": "2026-05-23",
+  "lastReviewed": "2026-05-28",
   "title": "Conversor de Colores HEX RGB HSL 2026 — Gratis",
   "h1": "Conversor de Colores HEX ↔ RGB ↔ HSL",
   "description": "Conversor colores: convertí entre HEX, RGB y HSL al instante. Ingresá cualquier formato y obtené los otros dos. Los tres representan el mismo color.",
@@ -142,6 +142,47 @@
     {
       "q": "¿Cómo se convierte un HEX de 3 dígitos como #F53 al formato completo de 6 dígitos?",
       "a": "Cada dígito se duplica: `#RGB` → `#RRGGBB`. Entonces `#F53` → `#FF5533`. Esto NO es lo mismo que agregar un cero: `#F53` ≠ `#F05030`. Es una convención CSS que existe desde HTML 3.2 para ahorrar caracteres. Los 4.096 colores representables en formato corto son exactamente aquellos en los que R, G y B tienen el mismo dígito hexadecimal repetido (ej: 00, 11, 22, ..., FF). La herramienta realiza esta expansión automáticamente antes de procesar la conversión."
+    },
+    {
+      "q": "¿Qué es Display P3 y por qué algunos diseñadores ya no usan solo sRGB?",
+      "a": "**Display P3** es un espacio de color con **gamut 25% más amplio que sRGB**, desarrollado por DCI (cine digital) y adoptado por Apple desde 2015 (iMac, iPhone, iPad, MacBook Pro). Pantallas modernas pueden mostrar rojos, verdes y naranjas que sRGB no puede representar. En CSS Color Level 4 se usa: `color(display-p3 1 0.4 0.2)`. Chrome, Safari y Firefox modernos soportan ambos. **Consideraciones**: si tu marca usa colores muy saturados, vale la pena diseñar en P3 con fallback a sRGB; si tu audiencia es masiva (web general), sRGB sigue siendo el estándar seguro porque garantiza la misma apariencia en TODO dispositivo."
+    },
+    {
+      "q": "¿Existen herramientas para generar paletas de color completas a partir de un único color?",
+      "a": "**Sí, varias gratuitas**: **Coolors.co** (genera paletas armónicas a partir de un color base, exporta CSS/SCSS/JSON). **Adobe Color** (basado en teoría de color clásica: complementarios, análogos, tríada). **Paletton** (clásico, online). **Tailwind Shades** (genera variantes 50-900 al estilo Tailwind para sistemas de diseño). **uiGradients** (gradientes preconstruidos). **Colormind** (IA que sugiere paletas). Para sistemas de diseño profesionales: **Tailwind Color Generator** + **Radix Colors** (con escalas perceptualmente uniformes diseñadas para UIs accesibles)."
+    },
+    {
+      "q": "¿Cómo determinar si dos colores 'combinan' bien matemáticamente?",
+      "a": "**Reglas basadas en teoría de color y rueda HSL**: **(1) Complementarios** (alto contraste, vibrante): H opuestos en 180°. Ej: H=20° (rojo) + H=200° (cian). **(2) Análogos** (suaves, armónicos): H adyacentes en ±30°. Ej: H=200°, 230°, 260° (azules). **(3) Triádicos** (dinámicos): 3 colores a 120° entre sí. **(4) Tétrádicos** (4 colores en cuadrado): a 90° entre sí. **(5) Split-complementarios**: 1 color + los 2 vecinos del complementario. Para UIs profesionales, también validar **contraste WCAG** (mínimo 4.5:1 texto/fondo) y **harmonía perceptual** usando espacios de color como OKLCH (CSS Color Level 4)."
+    }
+  ],
+  "solvedExamples": [
+    {
+      "title": "Diseñador convierte color de marca #2E86AB para usar en CSS, Figma y verificar contraste WCAG",
+      "context": "Agencia de marketing recibió el manual de marca de un cliente con el color principal **#2E86AB** (azul corporativo). Necesitan convertirlo a RGB y HSL para usarlo en CSS, generar variantes para hover/focus, y verificar que cumple WCAG AA con texto blanco.",
+      "steps": [
+        "**Conversión HEX → RGB**:",
+        "- R = parseInt('2E', 16) = **46**",
+        "- G = parseInt('86', 16) = **134**",
+        "- B = parseInt('AB', 16) = **171**",
+        "- Resultado: **rgb(46, 134, 171)**",
+        "**Conversión RGB → HSL**:",
+        "- r=0,180; g=0,525; b=0,671",
+        "- max=0,671 (b); min=0,180 (r); delta=0,491",
+        "- L = (0,671 + 0,180) / 2 = 0,426 → **42,6%**",
+        "- S = 0,491 / (1 − |2×0,426 − 1|) = 0,491 / 0,852 = **0,576 → 57,6%**",
+        "- H = 60 × ((0,180 − 0,525) / 0,491 + 4) = 60 × 3,297 = **197,8° ≈ 198°**",
+        "- Resultado: **hsl(198°, 58%, 43%)**",
+        "**Variantes generadas con HSL** (mismo H y S, distinta L):",
+        "- Hover (más oscuro, L=33%): hsl(198°, 58%, 33%) = #1E5E78",
+        "- Disabled (más claro, L=70%): hsl(198°, 58%, 70%) = #88B9CC",
+        "**Contraste WCAG con blanco** (#FFFFFF):",
+        "- Luminancia relativa #2E86AB: ~0,237",
+        "- Ratio = (1,0 + 0,05) / (0,237 + 0,05) = **3,66:1**",
+        "- **NO cumple WCAG AA** para texto normal (requiere ≥4,5:1)",
+        "- SÍ cumple para texto grande (≥18pt) que requiere ≥3:1"
+      ],
+      "result": "El color **#2E86AB = rgb(46,134,171) = hsl(198°, 58%, 43%)**. Recomendaciones: usar como fondo con texto BLANCO solo en textos grandes (titulares 18pt+), o usar texto NEGRO sobre este azul (contraste 5,7:1, cumple AA). Para texto normal sobre este color como fondo, oscurecer a L=35% (#23617D) que da contraste >4,5:1 con blanco."
     }
   ],
   "sources": [

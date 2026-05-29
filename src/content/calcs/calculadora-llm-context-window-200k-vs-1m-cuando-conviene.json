@@ -22,7 +22,10 @@
     "Procesar un codebase completo para code review sin perder contexto entre archivos",
     "Responder preguntas frecuentes sobre documentación técnica actualizada diariamente",
     "Comparar el costo mensual entre long context y RAG para un chatbot de soporte",
-    "Decidir si vale la pena pagar 1M context para un análisis financiero de un solo reporte"
+    "Decidir si vale la pena pagar 1M context para un análisis financiero de un solo reporte",
+    "Evaluar si conviene migrar de OpenAI a Anthropic para tu caso de uso de larga ventana.",
+    "Validar el ROI de implementar prompt caching (Anthropic / Gemini) para tu workload.",
+    "Comparar el costo anual de procesar 1.000 contratos por mes con long context vs RAG."
   ],
   "fields": [
     {
@@ -242,6 +245,18 @@
     {
       "q": "¿Qué pasa si mi documento no entra ni en 1M tokens?",
       "a": "Si el corpus supera 1M tokens (aprox. librerías enteras de código, bases de conocimiento corporativas), RAG o una arquitectura de agentes con múltiples llamadas es la única opción viable. Ningún modelo actual maneja más de 2M tokens de contexto en producción a escala."
+    },
+    {
+      "q": "¿Qué es prompt caching y cómo cambia esta ecuación?",
+      "a": "Prompt caching permite a Anthropic Claude y Google Gemini cachear partes del prompt entre llamadas, cobrando 0,1x o 0,25x del precio normal por tokens cacheados. Si haces múltiples queries sobre el mismo documento de 200K, la primera llamada paga full price, pero las siguientes pagan ~10% del input. Esto cambia drásticamente el costo de long context y lo vuelve competitivo con RAG en workloads repetitivos."
+    },
+    {
+      "q": "¿RAG con quality baja por chunks irrelevantes - cómo afecta?",
+      "a": "Si tu retrieval RAG recupera chunks no relevantes (típico problema en RAG mal afinado), la calidad de respuesta cae al 60-70% vs 90%+ con long context. Solución: usar reranking (Cohere Rerank, BGE), embeddings de mayor dimensión, o chunking semántico. RAG bien afinado puede ser indistinguible de long context en muchos casos."
+    },
+    {
+      "q": "¿Conviene combinar long context con RAG (hybrid)?",
+      "a": "Sí, en algunos casos. Por ejemplo: usar RAG para narrowear a 50K tokens relevantes y luego pasar esos 50K a un modelo capaz de razonamiento profundo. Combina precisión de retrieval con poder de long context. Especialmente útil en multi-document Q&A donde diferentes documentos pueden ser relevantes para diferentes preguntas."
     }
   ],
   "sources": [
@@ -272,9 +287,41 @@
     "source": "Gemini API Pricing — Google AI",
     "sourceUrl": "https://ai.google.dev/pricing"
   },
-  "lastReviewed": "2026-04-27",
+  "lastReviewed": "2026-05-28",
   "relatedSlugs": [
     "calculadora-fine-tuning-openai-vs-rag-cuando-conviene",
     "calculadora-batch-api-openai-anthropic-50-descuento-cuando"
+  ],
+  "solvedExamples": [
+    {
+      "title": "Chatbot soporte que recibe 5.000 queries/mes sobre docs estáticos de 300K tokens",
+      "scenario": "Equipo SaaS con base de conocimiento estable evalúa Gemini Pro long context vs RAG con GPT-4o mini",
+      "inputs": {
+        "Tokens documento": "300.000",
+        "Tokens por query": "500",
+        "Tokens respuesta": "800",
+        "Consultas por mes": "5.000",
+        "Modelo long context": "Gemini 2.5 Pro",
+        "Modelo RAG": "GPT-4o mini",
+        "Tokens RAG retrieval": "4.000"
+      },
+      "result": "Long context: ~USD 0,80/request × 5.000 = USD 4.000/mes | RAG: ~USD 0,001/request × 5.000 = USD 5/mes",
+      "interpretation": "RAG es ~800x más barato en este escenario. Long context solo justifica si la calidad/precisión del razonamiento entre documentos justifica USD 3.995/mes extra. Para soporte FAQ, RAG bien afinado es claramente superior en costo/beneficio."
+    },
+    {
+      "title": "Análisis legal único de contrato de 500K tokens",
+      "scenario": "Estudio jurídico analiza un contrato complejo una sola vez con 20 preguntas",
+      "inputs": {
+        "Tokens documento": "500.000",
+        "Tokens por query": "500",
+        "Tokens respuesta": "2.000",
+        "Consultas por mes": "20",
+        "Modelo long context": "Claude Sonnet 4",
+        "Modelo RAG": "Claude Haiku 3.5",
+        "Tokens RAG retrieval": "8.000"
+      },
+      "result": "Long context: ~USD 1,53/request × 20 = USD 30,60 | RAG: ~USD 0,015/request × 20 = USD 0,30",
+      "interpretation": "Diferencia absoluta de solo USD 30, pero la calidad de razonamiento jurídico de Claude Sonnet 4 con contexto completo del contrato es muy superior. Para análisis crítico, vale los USD 30 extras. RAG arriesga perder detalles cruzados entre cláusulas."
+    }
   ]
 }

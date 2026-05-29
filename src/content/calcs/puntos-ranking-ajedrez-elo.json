@@ -1,6 +1,7 @@
 {
   "slug": "calculadora-puntos-ranking-ajedrez-elo",
-  "lastReviewed": "2026-05-23",
+  "lastReviewed": "2026-05-28",
+  "answerSnippet": "Variación ELO = K × (Resultado − Esperado), donde Esperado = 1/(1 + 10^((ELO_rival − ELO_tuyo)/400)). K=40 nuevos, K=20 si <2400, K=10 si ≥2400. Le ganás a alguien 200 puntos arriba: ganás ~15 puntos.",
   "title": "Calculadora de variación ELO en ajedrez 2026 | Hacé Cuentas",
   "h1": "Calculadora de variación ELO en ajedrez",
   "description": "🏋️ Elo ajedrez: calculá cuántos puntos ELO ganás o perdés tras una partida de ajedrez según tu rating, el del rival y el resultado. Fórmula FIDE oficial.",
@@ -21,7 +22,10 @@
     "Saber cuánto perdés si empatás con alguien de menor rating.",
     "Planificar resultados necesarios para subir de categoría.",
     "Entender la variación de ELO en un torneo de ajedrez.",
-    "Comparar el impacto de ganar, perder o empatar contra distintos rivales."
+    "Comparar el impacto de ganar, perder o empatar contra distintos rivales.",
+    "Verificar el cálculo de un árbitro FIDE en un torneo donde participaste.",
+    "Decidir si conviene jugar contra rivales fuertes o débiles para optimizar el ELO.",
+    "Calcular el ELO necesario en el próximo torneo para mantener tu rating actual."
   ],
   "fields": [
     {
@@ -122,6 +126,24 @@
       "format": "text"
     }
   ],
+  "solvedExamples": [
+    {
+      "title": "Jugador analiza torneo Suizo de 7 rondas para calcular su ELO final",
+      "context": "Mateo tiene rating FIDE 1650 y K=20. Participa en un torneo Suizo de 7 rondas. Sus rivales con ELO: 1720, 1580, 1700, 1810, 1550, 1640, 1690. Resultados: G, G, T, G, G, T, G (5.5/7). Quiere calcular su nuevo ELO después del torneo.",
+      "steps": [
+        "**Partida 1 vs 1720 (G)**: Esperado = 1/(1+10^(70/400)) = 0.40. Variación = 20 × (1 − 0.40) = **+12 puntos**.",
+        "**Partida 2 vs 1580 (G)**: Esperado = 1/(1+10^(-70/400)) = 0.60. Variación = 20 × (1 − 0.60) = **+8 puntos**.",
+        "**Partida 3 vs 1700 (T)**: Esperado = 1/(1+10^(50/400)) = 0.43. Variación = 20 × (0.5 − 0.43) = **+1.4 puntos**.",
+        "**Partida 4 vs 1810 (G)**: Esperado = 1/(1+10^(160/400)) = 0.28. Variación = 20 × (1 − 0.28) = **+14.4 puntos**.",
+        "**Partida 5 vs 1550 (G)**: Esperado = 1/(1+10^(-100/400)) = 0.64. Variación = 20 × (1 − 0.64) = **+7.2 puntos**.",
+        "**Partida 6 vs 1640 (T)**: Esperado = 1/(1+10^(-10/400)) = 0.51. Variación = 20 × (0.5 − 0.51) = **−0.2 puntos**.",
+        "**Partida 7 vs 1690 (G)**: Esperado = 1/(1+10^(40/400)) = 0.44. Variación = 20 × (1 − 0.44) = **+11.2 puntos**.",
+        "**Variación total**: +12 + 8 + 1.4 + 14.4 + 7.2 − 0.2 + 11.2 = **+54 puntos**.",
+        "**Nuevo ELO**: 1650 + 54 = **1704**."
+      ],
+      "result": "Mateo terminó con **+54 puntos ELO**, pasando de 1650 a **1704** — su mejor torneo del año. Análisis clave: el **+14.4 vs el 1810** fue la partida que más rindió (premio por ganarle al jugador más fuerte). El empate contra 1640 (rival casi de su nivel) prácticamente no movió el rating. **Lección estratégica**: en torneos Suizos, **ganar contra rivales fuertes da el mayor ROI**, mientras que perder contra alguien débil castiga mucho más que lo que ganarías ganándole. Para subir 50 puntos en 1 torneo, necesitás performance ~150 puntos superior a tu rating actual."
+    }
+  ],
   "example": {
     "title": "Ejemplo: ELO 1500 le gana a ELO 1700, K=20",
     "steps": [
@@ -163,6 +185,18 @@
     {
       "q": "¿Cómo funciona el ELO en Argentina?",
       "a": "La **FADA (Federación Argentina de Ajedrez)** administra el rating nacional que es distinto del FIDE. Para tener rating FIDE necesitás jugar **torneos homologados FIDE** (con al menos un jugador con rating FIDE). Muchos torneos de club son solo FADA."
+    },
+    {
+      "q": "¿Cuántos puntos ELO ganás por victoria en una partida rápida o blitz?",
+      "a": "**FIDE separa 3 ratings distintos**: Standard (control lento), Rapid (15-60 minutos) y Blitz (3-10 minutos). Cada uno tiene factor K propio. El **rating Standard FIDE** suele ser **100-200 puntos mayor** que el Rapid y **200-400 puntos mayor** que el Blitz, porque en partidas largas se juega con más precisión. Si en Standard tenés 1800, esperá ronder **1600-1700 en Rapid y 1400-1600 en Blitz**. Cada modalidad evoluciona independientemente — podés ser fuerte en Blitz y débil en Standard o viceversa. La fórmula es la misma, solo cambia el factor K y la base del rival."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre ELO y Glicko-2 que usa Lichess?",
+      "a": "**Glicko-2** (creado por Mark Glickman) es una mejora del sistema ELO clásico que **agrega 2 variables**: la **desviación de rating (RD)** que mide qué tan confiable es tu rating, y la **volatilidad** que mide qué tan estable es. **Diferencias prácticas**: (1) Si jugás pocas partidas tu RD es alta y tus victorias/derrotas mueven mucho el rating; con muchas partidas el RD baja y se vuelve estable. (2) Si jugaste hace mucho, RD vuelve a subir y tus partidas pesan más. (3) Glicko-2 'sabe' qué tan seguro está de tu nivel. **Chess.com usa Glicko (variante)**; **Lichess usa Glicko-2**; **FIDE usa ELO clásico**. Resultado: en Lichess, después de partidas seguidas tu rating puede saltar 30-50 puntos en una sola jugada, mientras que en FIDE con K=20 el máximo movimiento es 20 puntos por partida."
+    },
+    {
+      "q": "¿Qué ELO necesito para empatar una partida contra Magnus Carlsen?",
+      "a": "**Magnus Carlsen ronda 2830-2870 ELO FIDE** (campeón mundial 2013-2023, top rating histórico ~2882). Para tener **50% de probabilidad de empatar** necesitarías un ELO similar (±50 puntos). Para tener **24% de probabilidad de ganarle** (lo que estadísticamente significa que en 100 partidas le ganarías 24), necesitarías estar ~2630 (200 puntos abajo). Si sos un jugador de club promedio (1500-1800), la probabilidad de empatar a Carlsen es **menor al 1%**. Importante: estas son probabilidades estadísticas del modelo ELO, en la práctica un GM superior a 2800 contra un 1500 gana el 99.9%+ de las veces. El modelo asume que los jugadores rinden cerca de su nivel — en partidas reales la varianza es enorme."
     }
   ],
   "sources": [

@@ -21,7 +21,9 @@
     "Empresa con base de conocimiento interna que se actualiza diariamente",
     "Equipo evaluando si construir un chatbot de soporte con fine-tune o con vector DB",
     "Desarrollador que compara costos de inference fine-tuned vs RAG con gpt-4o-mini",
-    "Arquitecto de soluciones que necesita justificar la elección ante stakeholders"
+    "Arquitecto de soluciones que necesita justificar la elección ante stakeholders",
+    "Decidir antes de gastar miles de dólares si tu caso de uso justifica fine-tuning o conviene quedarse con RAG.",
+    "Estimar el costo mensual operativo de un chatbot empresarial con base de conocimiento dinámica."
   ],
   "fields": [
     {
@@ -240,6 +242,22 @@
     {
       "q": "¿Qué es el vector DB y cuánto cuesta realmente?",
       "a": "Es la base de datos que almacena embeddings de tus documentos para recuperación semántica (Pinecone, Qdrant, Weaviate, pgvector). Planes cloud de producción parten de $0 (tier gratuito limitado) a ~$70+/mes según volumen. Esta calc asume ~$10/mes mínimo productivo."
+    },
+    {
+      "q": "¿Cuándo conviene fine-tuning vs RAG?",
+      "a": "Fine-tuning: cuando necesitás cambiar el ESTILO del modelo (tono, formato de respuesta, lenguaje técnico específico) o reducir tokens del prompt repetitivo. RAG: cuando necesitás respuestas basadas en CONOCIMIENTO actualizado o privado (docs, base de datos, FAQs). En 80% de los casos empresariales, RAG es la opción correcta porque el conocimiento cambia y los datos son confidenciales."
+    },
+    {
+      "q": "¿Cuánto cuesta hacer fine-tuning de un modelo de OpenAI?",
+      "a": "GPT-4o-mini fine-tuning: USD 3 por 1M tokens de entrenamiento (input + output). Para un dataset típico de 500 ejemplos de ~500 tokens cada uno (~250K tokens × 3 epochs = 750K tokens), el costo es ~USD 2-3. Después pagás más por inferencia: GPT-4o-mini ft cuesta USD 0,30/1M input vs USD 0,15 del base. Hosting incluido."
+    },
+    {
+      "q": "¿Cuánto cuesta un sistema RAG en producción?",
+      "a": "Depende de volumen y embedding model. Costo típico para un asistente con 10K consultas/mes y base de conocimiento de 100MB: ~USD 50-150/mes. Componentes: embeddings (USD 0,02/1M tokens con text-embedding-3-small), vector DB (Pinecone/Weaviate ~USD 30/mes en plan starter), llamadas a LLM (GPT-4o-mini USD 0,15/1M input, USD 0,60/1M output)."
+    },
+    {
+      "q": "¿Se pueden combinar fine-tuning y RAG?",
+      "a": "Sí, y suele ser la mejor estrategia para casos complejos. Fine-tunés para el estilo/formato (ej: respuestas siempre en JSON estructurado, lenguaje legal formal) y usás RAG para inyectar el conocimiento actualizado. El fine-tuning baja tokens del system prompt (más barato por consulta) y mejora consistencia, mientras que RAG mantiene la información al día sin reentrenar."
     }
   ],
   "sources": [
@@ -276,10 +294,18 @@
     "source": "OpenAI API Pricing",
     "sourceUrl": "https://openai.com/api/pricing/"
   },
-  "lastReviewed": "2026-04-27",
+  "lastReviewed": "2026-05-28",
   "relatedSlugs": [
     "calculadora-llm-context-window-200k-vs-1m-cuando-conviene",
     "calculadora-batch-api-openai-anthropic-50-descuento-cuando",
     "calculadora-modelo-local-ollama-vs-api-openai-costo-tco"
+  ],
+  "solvedExamples": [
+    {
+      "title": "Empresa quiere chatbot para responder preguntas sobre 200 docs internos",
+      "scenario": "Empresa con 200 documentos PDF (manuales, políticas internas, FAQs) quiere chatbot que conteste preguntas de empleados. Volumen estimado: 5.000 consultas mensuales. Documentos se actualizan trimestralmente.",
+      "calculation": "Opción A - Fine-tuning: convertir docs a 2.000 ejemplos Q&A. Costo entrenamiento USD 50. Costo por consulta USD 0,01 (GPT-4o-mini ft). Total: USD 500/mes + USD 50 cada reentrenamiento. Problema: no se puede citar la fuente exacta, riesgo de hallucinations. Opción B - RAG: embeddings de docs (~3M tokens × USD 0,02/1M = USD 60 una sola vez), vector DB Pinecone USD 30/mes, consultas 5K × USD 0,005 (GPT-4o-mini + contexto) = USD 25/mes. Total: USD 55/mes + reindexar gratis con actualizaciones.",
+      "result": "RAG gana por amplio margen: 10x más barato (USD 55 vs USD 500), permite citar fuentes, soporta actualizaciones trimestrales sin recosto, y reduce hallucinations. Fine-tuning solo se justificaría si necesitaras un formato/estilo muy específico que el prompt no logra. Stack sugerido: LangChain + Pinecone + GPT-4o-mini."
+    }
   ]
 }

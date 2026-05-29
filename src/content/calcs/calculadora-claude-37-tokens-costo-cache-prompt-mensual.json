@@ -164,6 +164,44 @@
     {
       "q": "¿Esta calculadora incluye el costo de las herramientas (tools/function calling)?",
       "a": "No. Los tokens de definición de herramientas también pueden cachearse pero no están incluidos en esta estimación. Si usás function calling extensivo, el costo real puede ser ligeramente mayor al calculado aquí."
+    },
+    {
+      "q": "¿Cuál es el ROI real del prompt caching para un chatbot SaaS de tráfico medio?",
+      "a": "Para una aplicación con **2.000 requests/día** de chatbot con system prompt de 8.000 tokens y 75% cache hit rate: **sin caching** costaría ~USD 1.080/mes solo en input + USD 720 en output = **USD 1.800/mes**. **Con caching** baja a ~USD 90 input + USD 720 output = **USD 810/mes** (55% ahorro total). El ROI se incrementa cuanto más largo sea el system prompt y más alto el cache hit rate. Para system prompts cortos (<2.000 tokens) el beneficio es menor; para prompts >20.000 tokens, el ahorro puede superar el 80% del costo total."
+    },
+    {
+      "q": "¿Cómo medir el cache hit rate real de mi aplicación?",
+      "a": "La API de Anthropic devuelve en cada response un objeto `usage` con: **`cache_creation_input_tokens`** (tokens recién escritos a caché) y **`cache_read_input_tokens`** (tokens leídos desde caché). Tu cache hit rate efectivo = `cache_read / (cache_read + cache_creation + input_tokens)`. Logueá estos valores para cada request y calculá el promedio diario/semanal. Si está por debajo del 50%, revisar: (1) TTL muy corto vs frecuencia de requests, (2) cambios en system prompt invalidando caché, (3) requests dispersos en el tiempo. Anthropic provee dashboard con estos KPIs en console.anthropic.com."
+    },
+    {
+      "q": "¿Conviene usar Claude 3.5 Haiku o Claude 3.7 Sonnet con caching para mi caso?",
+      "a": "**Regla práctica**: si la tarea requiere razonamiento complejo, escritura creativa de calidad, análisis profundo, código complejo o procesamiento de documentos largos → **Sonnet 3.7**. Si la tarea es clasificación simple, extracción de datos estructurados, respuestas factuales cortas, parsing → **Haiku 3.5** (4× más barato). Una estrategia híbrida que muchas empresas usan: **router con Haiku** que clasifica la complejidad de la consulta y deriva las simples a Haiku 3.5 y las complejas a Sonnet 3.7. Reduce 40-60% el costo total manteniendo la calidad donde importa."
+    },
+    {
+      "q": "¿El cache TTL extendido (1 hora) ya está disponible y cuánto cuesta extra?",
+      "a": "**Sí, desde 2025 Anthropic lanzó el extended TTL** de 1 hora (vs 5 min default). Costo: **2× el cache write** (USD 7,50/M tokens en Sonnet vs USD 3,75 estándar). Útil cuando: (1) Aplicación tiene picos de tráfico cada 30-45 min (típico de uso oficina). (2) Documentos grandes que se reusan toda la jornada laboral. (3) Workflows asincrónicos donde no podés garantizar requests cada 5 min. **No conviene** si tus requests son siempre seguidos (<5 min) o muy esporádicos (>1 hora). Para uso típico SaaS con tráfico 24/7, el TTL estándar de 5 min suele ser suficiente."
+    }
+  ],
+  "solvedExamples": [
+    {
+      "title": "Startup SaaS con chatbot 24/7: comparación de costos sin caching vs Sonnet 3.7 con 85% hit rate",
+      "context": "Startup ofrece chatbot de soporte 24/7 con system prompt de 12.000 tokens (incluye contexto del producto, FAQ, políticas). Promedio: 3.000 requests/día, 450 tokens variables/request, 600 tokens output/request. Cache hit rate medido: 85% (alto por uso constante).",
+      "steps": [
+        "**Configuración**: Claude 3.7 Sonnet, system prompt 12.000 tokens, 3.000 req/día = **90.000 req/mes**",
+        "**Sin prompt caching**:",
+        "- Input total/mes: (12.000 + 450) × 90.000 = **1.120 millones tokens** × USD 3/M = USD 3.361",
+        "- Output total/mes: 600 × 90.000 = 54 M tokens × USD 15/M = USD 810",
+        "- **Total sin caching: USD 4.171/mes**",
+        "**Con prompt caching (85% hit rate)**:",
+        "- Cache write: 12.000 × 0,15 × 90.000 = 162 M tokens × USD 3,75/M = USD 608",
+        "- Cache read: 12.000 × 0,85 × 90.000 = 918 M tokens × USD 0,30/M = USD 275",
+        "- Variable input: 450 × 90.000 = 40,5 M × USD 3 = USD 122",
+        "- Output: 54 M × USD 15 = USD 810",
+        "- **Total con caching: USD 1.815/mes**",
+        "**Ahorro mensual**: 4.171 − 1.815 = **USD 2.356** (56% reducción)",
+        "**Ahorro anual**: USD 28.272 (suficiente para contratar un developer junior o un mes de marketing)"
+      ],
+      "result": "El prompt caching reduce el costo de USD 4.171/mes a **USD 1.815/mes**, un **56% de ahorro** (USD 28.272/año). Para esta startup con tracción, es la diferencia entre rentabilidad y pérdida. **Acciones recomendadas**: (1) Implementar caching en sprint 1. (2) Monitorear cache hit rate; si baja del 70%, revisar TTL o estructura del prompt. (3) Considerar evaluar router Haiku para queries simples (ahorro adicional 30-40%)."
     }
   ],
   "sources": [
@@ -194,7 +232,7 @@
     "source": "Anthropic API Pricing",
     "sourceUrl": "https://www.anthropic.com/pricing"
   },
-  "lastReviewed": "2026-04-27",
+  "lastReviewed": "2026-05-28",
   "relatedSlugs": [
     "calculadora-rag-vector-db-pinecone-pgvector-costo-mensual",
     "calculadora-cursor-vs-copilot-vs-claude-code-precio-mensual"

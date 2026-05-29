@@ -18,14 +18,23 @@
     "peso saludable",
     "sobrepeso obesidad"
   ],
-  "intro": "El IMC o Índice de Masa Corporal es el indicador más usado del mundo para evaluar si tu peso está dentro de un rango saludable para tu altura. Lo definió Adolphe Quetelet en 1832 y la Organización Mundial de la Salud lo adoptó como estándar global en 1997. Con esta calculadora ingresás tu peso en kilos y tu altura en centímetros, y al instante obtenés tu IMC, la categoría según la OMS (bajo peso, normal, sobrepeso u obesidad grados I, II o III) y el rango de peso saludable para tu estatura. Sirve para adultos entre 18 y 65 años, no requiere registro y el cálculo se hace 100% en tu navegador —tus datos nunca salen de tu dispositivo.",
-  "keyTakeaway": "Tu **IMC saludable** está entre **18.5 y 24.9**. Por debajo indica bajo peso, por encima sobrepeso u obesidad. Es un indicador útil pero no único: también importan la masa muscular, la grasa abdominal y tu edad.",
+  "intro": "El IMC o Índice de Masa Corporal es el indicador más usado del mundo para evaluar si tu peso está dentro de un rango saludable para tu altura. Lo definió Adolphe Quetelet en 1832 y la Organización Mundial de la Salud lo adoptó como estándar global en 1997, y los rangos de clasificación (bajo peso, normal, sobrepeso, obesidad) **siguen vigentes en 2026 sin cambios**. Con esta calculadora ingresás tu peso en kilos y tu altura en centímetros, y al instante obtenés tu IMC, la categoría según la OMS (bajo peso, normal, sobrepeso u obesidad grados I, II o III) y el rango de peso saludable para tu estatura. Sirve para adultos entre 18 y 65 años, no requiere registro y el cálculo se hace 100% en tu navegador —tus datos nunca salen de tu dispositivo.",
+  "keyTakeaway": "Tu **IMC saludable** está entre **18.5 y 24.9** (rango OMS vigente en 2026, sin cambios desde 1997). Por debajo indica bajo peso, por encima sobrepeso u obesidad. Es un indicador útil pero no único: también importan la masa muscular, la grasa abdominal y tu edad. Última revisión editorial: mayo 2026.",
+  "audienceRedirect": {
+    "icon": "👶",
+    "title": "¿Sos menor de 18 años?",
+    "body": "En niños y adolescentes el IMC se evalúa por **percentiles según edad y sexo** (curvas OMS 5-19 años), no con las categorías de adultos. Usar la calculadora de adultos puede dar una clasificación incorrecta.",
+    "ctaText": "Calculadora de IMC infantil por percentil →",
+    "ctaHref": "/calculadora-imc-infantil-percentil"
+  },
   "useCases": [
     "Querés saber si tu peso actual está dentro del rango saludable recomendado por la OMS.",
-    "Estás por empezar una dieta y querés un punto de partida objetivo.",
+    "Estás por empezar una dieta y querés un punto de partida objetivo medible.",
     "Te hicieron un chequeo médico y querés entender qué significa el IMC que figura en el estudio.",
     "Vas al gimnasio y querés un número base para medir tu progreso en el tiempo.",
-    "Sos madre/padre y querés entender cómo se evalúa el peso en consultas médicas."
+    "Sos madre/padre y querés entender cómo se evalúa el peso en consultas médicas.",
+    "Querés calcular tu peso saludable mínimo y máximo para tu altura.",
+    "Necesitás complementar tu IMC con índice cintura-altura (WHtR) para evaluar riesgo cardiometabólico."
   ],
   "fields": [
     {
@@ -38,7 +47,7 @@
       "max": 300,
       "step": 0.1,
       "required": true,
-      "help": "Peso corporal en kg."
+      "help": "Peso corporal en kg (o lb si elegís sistema imperial)."
     },
     {
       "id": "altura",
@@ -50,7 +59,55 @@
       "max": 250,
       "step": 1,
       "required": true,
-      "help": "Altura en cm."
+      "help": "Altura en cm (o in si elegís sistema imperial)."
+    },
+    {
+      "id": "cintura",
+      "label": "Cintura (opcional)",
+      "type": "number",
+      "suffix": "cm",
+      "placeholder": "85",
+      "min": 40,
+      "max": 200,
+      "step": 1,
+      "advanced": true,
+      "help": "Medí en horizontal, a la altura del ombligo, sin apretar. Si la agregás, también calculamos el índice cintura/altura (WHtR) y el riesgo cardiometabólico."
+    },
+    {
+      "id": "edad",
+      "label": "Edad (opcional)",
+      "type": "number",
+      "suffix": "años",
+      "placeholder": "35",
+      "min": 18,
+      "max": 110,
+      "step": 1,
+      "advanced": true,
+      "help": "Si tenés 65 o más, ajustamos el rango saludable a 23–28 (recomendación OMS para adultos mayores, para proteger frente a la sarcopenia)."
+    },
+    {
+      "id": "perfil",
+      "label": "Perfil corporal",
+      "type": "select",
+      "default": "estandar",
+      "advanced": true,
+      "options": [
+        { "value": "estandar", "label": "Estándar" },
+        { "value": "atleta", "label": "Atleta / mucha masa muscular" }
+      ],
+      "help": "Si entrenás fuerza con alta masa muscular, el IMC puede sobreestimar el riesgo: aclará el contexto en la interpretación."
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema de unidades",
+      "type": "select",
+      "default": "metric",
+      "advanced": true,
+      "options": [
+        { "value": "metric", "label": "Métrico (kg, cm)" },
+        { "value": "imperial", "label": "Imperial (lb, in)" }
+      ],
+      "help": "Cambialo si querés ingresar tu peso en libras y altura en pulgadas. Los suffixes se actualizan al instante."
     }
   ],
   "dataUpdate": {
@@ -86,6 +143,21 @@
     {
       "id": "diferenciaPesoIdeal",
       "label": "Diferencia",
+      "format": "text"
+    },
+    {
+      "id": "whtr",
+      "label": "Cintura / altura (WHtR)",
+      "format": "text"
+    },
+    {
+      "id": "riesgoCardiometabolico",
+      "label": "Riesgo cardiometabólico",
+      "format": "text"
+    },
+    {
+      "id": "interpretacion",
+      "label": "Interpretación",
       "format": "text"
     }
   ],
@@ -129,6 +201,18 @@
     {
       "q": "¿Existe una versión del IMC específica para Argentina?",
       "a": "No. El Ministerio de Salud de la Nación y la Sociedad Argentina de Nutrición usan los mismos rangos que la OMS. La diferencia se da en la interpretación clínica cuando se combina con análisis de sangre, perímetro de cintura y hábitos."
+    },
+    {
+      "q": "¿Cuánto debe pesar una persona de 1,70 m para tener IMC normal?",
+      "a": "Para **1,70 m**, el rango de **peso saludable según OMS** es de **53,5 kg a 71,9 kg** (IMC 18,5 a 24,9). Por debajo de 53,5 kg se considera bajo peso; entre 72 y 86 kg sobrepeso; más de 87 kg obesidad. El peso 'ideal' depende también de composición corporal (masa muscular, % de grasa) y edad. Una persona musculosa puede estar saludable con 75 kg aunque el IMC marque sobrepeso."
+    },
+    {
+      "q": "¿Cómo bajar el IMC de manera saludable?",
+      "a": "Reducir el IMC de forma sostenible requiere **déficit calórico moderado de 300-500 kcal/día** + actividad física combinada (3-4 sesiones de cardio + 2-3 de fuerza por semana). Una pérdida saludable es de **0,5-1 kg por semana**. Para bajar 1 punto de IMC en una persona de 1,70 m, hay que perder ~2,9 kg. Evitar dietas extremas (<1.200 kcal mujeres / <1.500 kcal hombres) sin supervisión médica. Consultá con nutricionista matriculado para plan personalizado."
+    },
+    {
+      "q": "¿Cuál es la fórmula exacta del IMC?",
+      "a": "La fórmula es: **IMC = peso (kg) / altura² (m)**. La altura debe estar en **metros, no en centímetros**, y elevada al cuadrado. Ejemplo: 70 kg con 1,75 m → IMC = 70 / (1,75 × 1,75) = 70 / 3,0625 = **22,86**. Si tu altura está en cm, dividí por 100 primero: 175 cm = 1,75 m. La fórmula fue creada por Adolphe Quetelet en 1832 y la OMS la adoptó como estándar global en 1997."
     }
   ],
   "sources": [
@@ -190,8 +274,18 @@
         "IMC = 92 / (1.80 × 1.80) = 92 / 3.24 = **28.40**"
       ],
       "result": "IMC 28.40 lo clasificaría como sobrepeso, pero con 11% de grasa corporal es claramente atlético. **El IMC no distingue músculo de grasa**: en deportistas usar % de grasa o relación cintura-cadera."
+    },
+    {
+      "title": "IMC + cintura para evaluar riesgo cardiometabólico",
+      "context": "Mujer de 1,62 m, 70 kg, cintura 92 cm, 48 años.",
+      "steps": [
+        "IMC = 70 / (1,62 × 1,62) = 70 / 2,624 = **26,68** (sobrepeso).",
+        "WHtR (cintura/altura) = 92 / 162 = **0,57** (riesgo elevado).",
+        "Cintura 92 cm en mujer = riesgo cardiometabólico muy alto (umbral OMS ≥88 cm)."
+      ],
+      "result": "**IMC indica sobrepeso leve pero la cintura señala riesgo cardiometabólico alto**. La distribución de grasa abdominal predice mejor el riesgo que el IMC solo. Recomendación: consulta médica + medición de glucemia, colesterol y presión arterial."
     }
   ],
-  "lastReviewed": "2026-05-19",
+  "lastReviewed": "2026-05-28",
   "audience": "AR"
 }
