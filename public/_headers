@@ -19,13 +19,20 @@
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
   # CSP: whitelist explícito de orígenes permitidos. 'unsafe-inline' para style e
   # inline scripts (astro genera muchos). Si migramos a CSP con nonce, eliminar.
-  # CSP rev 6 (2026-05-27): Skimlinks origins agregados (s.skimresources.com + *.skimresources.com + go.skimresources.com).
-  # CSP rev 5 (2026-05-27): Infolinks origins agregados (resources.infolinks.com + *.infolinks.com).
+  # CSP rev 9 (2026-05-29): Skimlinks removido — afiliados desactivados durante recovery HCU
+  # (señal "made for affiliate" + reescritura de outbound links en home/legales).
+  # CSP rev 8 (2026-05-27): Infolinks removido — el script usa eval() y forzaba
+  # 'unsafe-eval' en CSP, además colgaba el envío de gtag a pagead2.googlesyndication
+  # (errores CSP cascadeaban y mataban GA4 → 0 en tiempo real). Sin infolinks ya
+  # no hace falta 'unsafe-eval'. Se mantiene pagead2/googleads/doubleclick en
+  # connect-src/img-src/frame-src porque gtag (AW-18096606872) envía conversions
+  # ahí independientemente de los partners de ads.
+  # CSP rev 7 (2026-05-27): fix GA4=0 — agregaba 'unsafe-eval' por infolinks. Superseded por rev 8.
+  # CSP rev 6 (2026-05-27): Skimlinks origins agregados.
+  # CSP rev 5 (2026-05-27): Infolinks origins agregados (removidos en rev 8).
   # CSP rev 4 (2026-05-27): AdSense origins removidos (sitio rechazado por AdSense).
-  # CSP rev 3 (2026-05-13): 'unsafe-eval' eliminado tras verificar que no hay
-  # eval() ni new Function() en código propio. Beneficio: +5-8 puntos Lighthouse
-  # Best Practices y mejor security signal.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://www.clarity.ms https://*.clarity.ms https://resources.infolinks.com https://*.infolinks.com https://s.skimresources.com https://*.skimresources.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://*.infolinks.com; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com https://www.clarity.ms https://*.clarity.ms https://*.infolinks.com https://*.skimresources.com https://t.skimresources.com; frame-src 'self' https://*.infolinks.com; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'self'
+  # CSP rev 3 (2026-05-13): 'unsafe-eval' eliminado — restaurado bajo control en rev 8 (vacío, sin partners eval).
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://www.clarity.ms https://*.clarity.ms; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; font-src 'self' data:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com https://www.clarity.ms https://*.clarity.ms; frame-src 'self' https://td.doubleclick.net; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'self'
   # Cross-Origin-Opener/Embedder/Resource Policy: aplicados vía
   # src/middleware.ts (CF Workers Static Assets ignora silenciosamente estos
   # headers en _headers — verificado 2026-05-04).

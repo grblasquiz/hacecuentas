@@ -97,11 +97,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Política:
   // - /embed/*: cross-origin permitido (es el feature core)
   // - resto: same-origin para isolation + defense vs Spectre/hotlinking
-  // - COEP credentialless (no require-corp) para no romper AdSense
+  // - COEP removido (2026-05-29): cero valor SEO y causa plausible de cortes
+  //   intermitentes de GA4 (subrecursos de terceros sin CORP se caían bajo
+  //   credentialless). AdSense ya no se usa, así que la razón histórica murió.
   const response = await next();
   const isEmbed = url.pathname.startsWith('/embed/');
   response.headers.set('Cross-Origin-Opener-Policy', isEmbed ? 'unsafe-none' : 'same-origin');
-  response.headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
   response.headers.set('Cross-Origin-Resource-Policy', isEmbed ? 'cross-origin' : 'same-origin');
   return response;
 });

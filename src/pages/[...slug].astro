@@ -235,6 +235,14 @@ const howToSteps = calc.howToSteps && calc.howToSteps.length > 0
       }));
     })();
 
+// ¿Hay pasos REALES para el HowTo? (explícitos en JSON o extraídos de la
+// explanation). Si caemos al fallback de fields ("Ingresá X"), NO emitimos el
+// HowTo schema: un HowTo de relleno sobre "cómo usar la UI" es schema padding
+// (señal de scaled content / HCU). El render visible no depende de esto.
+const hasRealHowToSteps =
+  (Array.isArray(calc.howToSteps) && calc.howToSteps.length >= 2) ||
+  extractStepsFromExplanation(calc.explanation || '').length >= 3;
+
 // HowTo schema: además de los steps, declaramos `tool` con los inputs del
 // calc (cada field es algo que el usuario "necesita aportar"). Boost al
 // rich result + ayuda a Google a entender qué datos requiere la calc.
@@ -394,22 +402,20 @@ const schemaApp = {
   // Selectores ampliados 2026-05-11 para incluir FAQ y primer párrafo de explicación.
   speakable: {
     '@type': 'SpeakableSpecification',
+    // Solo selectores que EXISTEN de verdad en el DOM renderizado (verificado
+    // 2026-05-29). Se removieron los fantasma (.aeo-direct-answer, .calc-summary,
+    // .calc-result-output, #faq dt, #faq dd, #cuando-usar p) que nunca matcheaban:
+    // Speakable con selectores rotos a escala es señal de markup auto-generado.
     cssSelector: [
-      '[data-speakable]',            // hook universal future-proof
+      '[data-speakable]',            // hook universal (answer-snippet + key-takeaway lo llevan)
       '.answer-snippet',            // Featured Snippet block (Position 0 Google)
       '.aeo-quick-answer',          // Respuesta rápida (TOP para AEO/voice)
-      '.aeo-direct-answer',         // 2026-05-28 expansión Gemini Assistant
       '.calc-intro',                 // intro
       '.calc-key-takeaway',          // en pocas palabras
-      '.calc-summary',               // resumen alternativo
-      '.calc-result', '.calc-result-output',  // resultado del cálculo (voice query "cuánto da")
       'h1',                          // título principal (siempre voice-relevant)
       '#como-funciona p:first-of-type',  // primer párrafo de explicación
-      '#faq dt',                     // todas las preguntas FAQ
-      '#faq dd',                     // todas las respuestas FAQ
       '#faq details > div p:first-of-type',  // 1er párrafo respuesta FAQ enfocado
       '.use-cases li',               // casos de uso (alta densidad de intent)
-      '#cuando-usar p',              // intro de "cuando usar"
     ],
   },
   // Citation: fuentes verificables externas (mismo array que Article schema cuando aplica).
@@ -447,7 +453,32 @@ const _disclaimerByCategory: Record<string, { who: string; verb: string }> = {
 };
 const _disc = _disclaimerByCategory[calc.category];
 const showYmylDisclaimer = isYMYL && !_hasDisclaimer && _disc;
-const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 1500)) ? {
+// Article schema para TODAS las calcs (2026-05-28) post comparativa con Omni
+// Calculator (3.863 calcs, líder global): ellos emiten Article unconditional y
+// rankean #1 en la mayoría del nicho. Antes era condicional (YMYL OR explanation
+// >1500). El riesgo del cambio era inyectar Article con wordCount thin, pero
+// resolvimos contando el wordCount REAL (explanation + intro + keyTakeaway +
+// answerSnippet + FAQ q/a) — ver wordCount abajo. Las 11 calcs marketing/deportes
+// con explanation ~900 chars tienen FAQ 7-12 + intro ≥500 chars, suman 400-600
+// palabras de contenido editorial → suficiente para Article real, no thin.
+const _articleWordCount = (() => {
+  const parts: string[] = [
+    calc.explanation || '',
+    calc.intro || '',
+    calc.keyTakeaway || '',
+    calc.answerSnippet || '',
+  ];
+  if (Array.isArray(calc.faq)) {
+    for (const f of calc.faq) {
+      if (typeof f === 'object') {
+        parts.push(f.q || f.question || '');
+        parts.push(f.a || f.answer || '');
+      }
+    }
+  }
+  return parts.join(' ').split(/\s+/).filter(Boolean).length;
+})();
+const schemaArticle = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: calc.h1,
@@ -480,8 +511,12 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   },
   about: categoryLabels[calc.category] || calc.category,
   articleSection: categoryLabels[calc.category] || calc.category,
-  // wordCount calculado del explanation (campo recomendado por Article schema)
-  wordCount: calc.explanation ? calc.explanation.split(/\s+/).filter(Boolean).length : 0,
+  // wordCount: contamos TODO el contenido editorial (explanation + intro + key
+  // takeaway + answerSnippet + FAQ q/a), no solo explanation. Sin esto, calcs
+  // marketing/deportes con explanation ~900 chars salían con wordCount ~120 → Google
+  // lo lee como thin content. El cuerpo completo llega típicamente a 400-1500
+  // palabras → señal honesta al rich results check.
+  wordCount: _articleWordCount,
   isAccessibleForFree: true,
   citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
   // mentions: entidades Wikidata reconocidas en h1/seoKeywords (mismo helper que
@@ -495,11 +530,11 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   keywords: (calc.seoKeywords || []).slice(0, 5).join(', '),
   // publishingPrinciples a nivel Article (no solo Org) refuerza E-E-A-T en YMYL.
   publishingPrinciples: 'https://hacecuentas.com/politica-editorial',
-} : null;
+};
 
-const schemaGraph: any[] = [schemaHowTo, schemaBreadcrumb, schemaApp];
+const schemaGraph: any[] = [schemaBreadcrumb, schemaApp, schemaArticle];
+if (hasRealHowToSteps) schemaGraph.unshift(schemaHowTo);
 if (schemaFAQ) schemaGraph.push(schemaFAQ);
-if (schemaArticle) schemaGraph.push(schemaArticle);
 
 // MedicalWebPage — sólo para category=salud. Suma a SoftwareApplication/Article
 // (no reemplaza). Le dice a Google/Bing que es una página sanitaria y la trata
@@ -763,44 +798,13 @@ if (calc.category === 'medio-ambiente') {
   });
 }
 
-// MedicalWebPage / MedicalEntity — para calcs categoría 'salud'.
-// Bing y Copilot priorizan schema médico para queries de salud → más confianza,
-// más rich snippets, más citas en respuestas AI.
-// Sin "reviewedBy" de un médico real, usamos Organization con disclosure honesta.
-if (calc.category === 'salud') {
-  schemaGraph.push({
-    '@type': 'MedicalWebPage',
-    name: calc.h1,
-    description: schemaDescription,
-    url: `https://hacecuentas.com/${calc.slug}`,
-    inLanguage: schemaLang,
-    datePublished: (datePublished || dateModified).split('T')[0],
-    dateModified: dateModified.split('T')[0],
-    lastReviewed: (calc.lastReviewed || dateModified.split('T')[0]),
-    audience: {
-      '@type': 'MedicalAudience',
-      audienceType: 'Patient',
-    },
-    medicalAudience: 'Patient',
-    publisher: {
-      '@type': 'Organization',
-      name: 'Hacé Cuentas',
-      url: 'https://hacecuentas.com',
-      logo: 'https://hacecuentas.com/logo-512.png',
-    },
-    specialty: {
-      '@type': 'MedicalSpecialty',
-      name: 'General medicine',
-    },
-    // Disclosure: cálculos orientativos, no reemplazan consulta médica.
-    // Bing/Copilot premian la transparencia explícita.
-    aspect: 'Diagnosis',
-    citation: {
-      '@type': 'CreativeWork',
-      name: 'Fórmulas validadas — OMS, MD Calc, sociedades médicas',
-    },
-  });
-}
+// MedicalWebPage para salud: se emite UNA sola vez (bloque category==='salud' de
+// arriba, con MedicalCondition + Wikidata sameAs + citation desde sources reales).
+// Removido aquí el segundo bloque duplicado (2026-05-29): declaraba specialty
+// 'General medicine' + aspect:'Diagnosis' (overreach clínico sin reviewer
+// matriculado) y una citation placeholder ("Fórmulas validadas — OMS, MD Calc…").
+// Dos MedicalWebPage contradictorios para la misma URL en YMYL = distrust de
+// structured data justo en la categoría más sensible.
 
 // LearningResource — para calcs categoría 'educacion'.
 // Bing y AI engines lo usan para clasificar contenido educativo.
@@ -1132,7 +1136,7 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             <div class="kt-icon" aria-hidden="true">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             </div>
-            <div><strong>Respuesta rápida:</strong> <span set:html={md(keyTakeaway)} /></div>
+            <div><strong>Respuesta rápida de Hacé Cuentas:</strong> <span set:html={md(keyTakeaway)} /></div>
           </aside>
         )}
 
