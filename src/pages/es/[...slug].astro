@@ -396,12 +396,12 @@ const hreflangTags = esSlug ? [
 
         <p class="intro" set:html={mdInline(calc.intro)}></p>
 
-        {audience === 'AR' && (
-          <aside class="audience-notice" role="note" aria-label="Audience notice for this calculator">
-            <span class="an-flag" aria-hidden="true">🇦🇷</span>
+        {audience === 'ES' && (
+          <aside class="audience-notice" role="note" aria-label="Aviso sobre el ámbito de esta calculadora">
+            <span class="an-flag" aria-hidden="true">🇪🇸</span>
             <div class="an-body">
-              <strong>Argentina-specific calculator.</strong>
-              The laws, tax brackets, and values used are those in effect in Argentina (AFIP/ARCA, BCRA, ANSES). They do not apply to other countries.
+              <strong>Calculadora específica para España.</strong>
+              Las leyes, tramos fiscales y valores utilizados son los vigentes en España (AEAT, Seguridad Social, Banco de España). No se aplican a otros países.
             </div>
           </aside>
         )}
@@ -537,12 +537,12 @@ const hreflangTags = esSlug ? [
           </section>
         )}
 
-        <RelatedCalcs currentSlug={calc.slug} category={calc.category} limit={4} manualSlugs={relatedSlugs} />
+        <RelatedCalcs currentSlug={calc.slug} category={calc.category} limit={4} manualSlugs={relatedSlugs} lang="es-ES" />
 
         <aside class="cta-back">
-          <p>Looking for a different calculator?</p>
+          <p>¿Buscas otra calculadora?</p>
           <a href="/es" class="btn-ghost">Ver todas las calculadoras España &rarr;</a>
-          <p class="cta-suggest">Can't find what you need? <a href="mailto:ideas@hacecuentas.com?subject=Calculator idea&body=I'd like Hacé Cuentas to have a calculator for...">Request a new calculator &rarr;</a></p>
+          <p class="cta-suggest">¿No encuentras lo que buscas? <a href="mailto:ideas@hacecuentas.com?subject=Idea de calculadora&body=Me gustaría que Hacé Cuentas tuviera una calculadora para...">Solicitar una nueva calculadora &rarr;</a></p>
         </aside>
       </div>
     </div>
@@ -913,6 +913,31 @@ const hreflangTags = esSlug ? [
     font-family: var(--font-mono);
     font-size: 0.8125em;
     color: var(--accent-strong);
+    overflow-wrap: anywhere;
+  }
+
+  /* Bloques de código (fórmulas con ```): deben hacer scroll DENTRO de su caja,
+     no expandir el ancho de la página en mobile. */
+  .explanation :global(pre) {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.875rem 1rem;
+    margin: 1rem 0;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+  }
+  .explanation :global(pre) code {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+    color: var(--text);
+    white-space: pre;
+    overflow-wrap: normal;
   }
 
   .explanation :global(ul),
@@ -933,7 +958,9 @@ const hreflangTags = esSlug ? [
     width: 100%;
     background: var(--bg);
     border-radius: var(--radius-sm);
-    overflow: hidden;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border: 1px solid var(--border);
   }
 

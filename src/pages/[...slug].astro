@@ -16,13 +16,15 @@ import GaugeEmbarazo from '../components/GaugeEmbarazo.astro';
 import InteractiveBmiTable from '../components/InteractiveBmiTable.astro';
 import ImcUnitsHook from '../components/ImcUnitsHook.astro';
 import ImcResultCta from '../components/ImcResultCta.astro';
-import HealthCalcsSticky from '../components/HealthCalcsSticky.astro';
+import CalcRail from '../components/CalcRail.astro';
 import HealthHub from '../components/HealthHub.astro';
+import CategoryHub from '../components/CategoryHub.astro';
 import DateRangePresetsTable from '../components/DateRangePresetsTable.astro';
 import IclVsIpcVsUvaTable from '../components/IclVsIpcVsUvaTable.astro';
 import PediatricBmiChart from '../components/PediatricBmiChart.astro';
 import ScrollToTop from '../components/ScrollToTop.astro';
 import { findClusterForSlug } from '../lib/clusters';
+import { findHubForSlug } from '../lib/category-hubs';
 import { md, mdInline } from '../lib/markdown';
 import { CATEGORY_TO_GUIDE, GUIDE_TITLES } from '../lib/category-guide-map';
 import { findMentions, findPrimaryAbout } from '../lib/wikidata-entities';
@@ -749,26 +751,16 @@ const MATH_SOLVER_EXPRESSIONS: Record<string, { name: string; mathExpression: st
     { name: 'Interés simple', mathExpression: 'I = C × i × t' },
   ],
 };
-const mathSolverEntry = MATH_SOLVER_EXPRESSIONS[calc.slug];
-if (mathSolverEntry) {
-  schemaGraph.push({
-    '@context': 'https://schema.org',
-    '@type': 'MathSolver',
-    '@id': `https://hacecuentas.com/${calc.slug}#mathsolver`,
-    name: calc.h1,
-    url: `https://hacecuentas.com/${calc.slug}`,
-    description: schemaDescription,
-    inLanguage: schemaLang,
-    educationalLevel: 'Secundario, Universitario',
-    author: { '@id': 'https://hacecuentas.com/autores/martin-rodriguez#person' },
-    publisher: { '@id': 'https://hacecuentas.com/#organization' },
-    mathExpression: mathSolverEntry.map((e) => ({
-      '@type': 'MathExpression',
-      name: e.name,
-      mathExpression: e.mathExpression,
-    })),
-  });
-}
+// MathSolver: schema REMOVIDO (2026-05-30). El rich result "Math solver" de Google
+// EXIGE potentialAction/SolveMathAction (un endpoint que resuelva una expresión
+// arbitraria que Google envía como string), además de usageInfo + url + learningResourceType.
+// Nuestras calcs toman inputs estructurados (a, b, c) y NO resuelven expresiones libres,
+// así que no podemos satisfacer potentialAction de forma legítima. El schema que emitíamos
+// no tenía ni usageInfo ni potentialAction → GSC lo marcaba INVÁLIDO ("Falta el campo
+// usageInfo", sin rich result). Mejor no emitir nada que emitir structured data inválida
+// en plena recovery YMYL. El mapa MATH_SOLVER_EXPRESSIONS de arriba queda como referencia
+// por si se construye un solver real (endpoint que parsee expresiones) en el futuro.
+void MATH_SOLVER_EXPRESSIONS;
 
 // Sustainability / Climate schema — para calcs categoría 'medio-ambiente'.
 // Ecosia y AI engines verdes (también Brave Search) priorizan este señal.
@@ -906,6 +898,9 @@ const pillarGuideTitle: string | null = pillarGuideSlug ? GUIDE_TITLES[pillarGui
 // Cluster al que pertenece esta calc (embarazo, dólar, etc.)
 const cluster = findClusterForSlug(calc.slug);
 
+// Hub de categoría: bloque rico de columnas si esta calc es "ancla" de su familia
+const categoryHub = findHubForSlug(calc.slug);
+
 // Lookup para related links dentro del contenido
 const allCalcsModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
@@ -923,6 +918,21 @@ if (example && example.steps) tocSections.push({ id: 'ejemplo', label: 'Ejemplo 
 if (calc.explanation) tocSections.push({ id: 'como-funciona', label: 'Cómo funciona' });
 if (calc.faq && calc.faq.length > 0) tocSections.push({ id: 'faq', label: 'Preguntas frecuentes' });
 if (sources.length > 0) tocSections.push({ id: 'fuentes', label: 'Fuentes y referencias' });
+
+// Rail derecho de calcs sugeridas — 3ra columna del grid en desktop >=1280px.
+// Se muestra cuando hay TOC (así el grid es siempre [TOC][contenido][rail], sin
+// columnas vacías). IMC mantiene su lista curada diversa; el resto auto-deriva.
+const hasRail = tocSections.length > 2;
+const isImc = calc.slug === 'calculadora-imc';
+const IMC_RAIL_ITEMS = [
+  { icon: '👶', label: 'IMC infantil', href: '/calculadora-imc-infantil-percentil' },
+  { icon: '🤰', label: 'Embarazo', href: '/calculadora-embarazo' },
+  { icon: '🩺', label: 'Ovulación', href: '/calculadora-ovulacion-dias-fertiles' },
+  { icon: '🧬', label: 'Edad metabólica', href: '/calculadora-edad-metabolica' },
+  { icon: '⚡', label: 'TMB basal', href: '/calculadora-tmb-basal-harris-benedict-metabolismo' },
+  { icon: '🔥', label: 'Calorías TDEE', href: '/calculadora-calorias-diarias-tdee' },
+  { icon: '👴', label: 'IMC adultos mayores', href: '/calculadora-imc-adultos-mayores-edad-tabla' },
+];
 
 // Icons del quick-nav (sticky pills) por section id
 const quickNavIcons: Record<string, string> = {
@@ -986,7 +996,7 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
 >
   <Header slot="header" />
 
-  <article class="calc-page">
+  <article class:list={['calc-page', hasRail && 'has-rail']}>
     <nav class="breadcrumbs" aria-label="Ruta de navegación">
       <a href="/">Inicio</a>
       <span class="sep" aria-hidden="true">/</span>
@@ -1015,7 +1025,7 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
       </nav>
     )}
 
-    <div class="calc-layout">
+    <div class:list={['calc-layout', hasRail && 'has-rail']}>
       {tocSections.length > 2 && (
         <aside class="toc" aria-label="Índice del artículo">
           <div class="toc-title">En esta página</div>
@@ -1069,7 +1079,6 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             <ImcResultCta />
             <InteractiveBmiTable />
             <ImcUnitsHook />
-            <HealthCalcsSticky />
           </>
         )}
 
@@ -1265,6 +1274,14 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           <HealthHub />
         )}
 
+        {categoryHub && (
+          <CategoryHub
+            title={categoryHub.title}
+            subtitle={categoryHub.subtitle}
+            sections={categoryHub.sections}
+          />
+        )}
+
         {calc.faq && calc.faq.length > 0 && (
           <section id="faq" class="faq">
             <h2>Preguntas frecuentes</h2>
@@ -1361,6 +1378,16 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           <p class="cta-suggest">¿No encontrás lo que buscás? <a href="mailto:ideas@hacecuentas.com?subject=Idea de calculadora&body=Me gustaría que Hacé Cuentas tenga una calculadora de...">Pedí una calculadora nueva →</a></p>
         </aside>
       </div>
+
+      {hasRail && (
+        <CalcRail
+          currentSlug={calc.slug}
+          category={calc.category}
+          items={isImc ? IMC_RAIL_ITEMS : undefined}
+          title={isImc ? 'Más calcs de salud' : undefined}
+          headerIcon={isImc ? '⚕️' : undefined}
+        />
+      )}
     </div>
 
     {/* Mobile bottom bar: shortcuts a secciones clave. Solo visible <768px. */}
@@ -2394,6 +2421,10 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
     gap: 2rem;
   }
   .calc-main { min-width: 0; }
+  /* Bloques <pre> (fórmulas del markdown) scrollean en vez de desbordar la
+     columna — clave con el rail (contenido más angosto) y en tablet/mobile.
+     :global porque el HTML del markdown se inyecta con set:html (sin scope). */
+  .calc-main :global(pre) { overflow-x: auto; }
 
   @media (min-width: 1100px) {
     .calc-page { max-width: 1080px; }
@@ -2404,6 +2435,21 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
       align-self: flex-start;
       max-height: calc(100vh - 110px);
       overflow-y: auto;
+    }
+  }
+
+  /* Variante con rail derecho (3 columnas). Solo >=1280px: ensancha la
+     pagina para hacerle lugar al rail SIN achicar el contenido (queda
+     ~800px, casi igual que sin rail). Abajo de 1280 cae a 2 columnas y el
+     rail se oculta (ver CalcRail). */
+  @media (min-width: 1280px) {
+    /* El <main> del Layout topa en 1120px; lo ensanchamos SOLO cuando
+       contiene una calc con rail (via :has), para que la 3ra columna no
+       comprima el contenido. No afecta a las demás páginas. */
+    :global(main:has(.calc-page.has-rail)) { max-width: 1380px; }
+    .calc-page.has-rail { max-width: 1340px; }
+    .calc-layout.has-rail {
+      grid-template-columns: 220px minmax(0, 1fr) 220px;
     }
   }
 

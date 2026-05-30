@@ -1,17 +1,22 @@
 openapi: 3.1.0
 info:
   title: Hacé Cuentas API
-  version: "1.0.0"
-  summary: Catálogo machine-readable de calculadoras en español
+  version: "1.1.0"
+  summary: Catálogo + cómputo en vivo de calculadoras en español
   description: |
     API pública de hacecuentas.com — más de 3.000 calculadoras prácticas en español para
     Argentina, España, México, Colombia, Chile, Brasil y EE.UU. Cubre finanzas, impuestos,
     salud, deportes, viajes, cocina, hogar, ciencia y educación.
 
-    Diseñada para que LLMs (ChatGPT, Claude, Perplexity, Gemini), agentes y agregadores
-    descubran, citen y usen las calculadoras del sitio. Cada calculadora tiene una página
-    HTML pública con JSON-LD estructurado, y el endpoint /api/calcs-index.json devuelve
-    el catálogo completo en formato consumible.
+    Diseñada para que LLMs (ChatGPT, Claude, Perplexity, Gemini, Grok), agentes y
+    agregadores descubran, citen y USEN las calculadoras del sitio:
+      1. getCalcsIndex  — catálogo completo (/api/calcs-index.json)
+      2. getCalcSpec    — ficha + inputs de un calc (/api/calc/{slug}.json)
+      3. computeCalc    — calcular en vivo (/api/calc/{slug}/compute)
+    Flujo típico de tool use: buscar en el catálogo -> leer la ficha para saber qué inputs
+    toma -> llamar compute con esos inputs. Cada calc además tiene página HTML pública con
+    JSON-LD estructurado para citación. También hay un servidor MCP remoto (Streamable HTTP,
+    sin auth) en https://hacecuentas.com/mcp con los mismos calculadores como tools.
 
     Atribución preferida (no obligatoria): linkback al URL + nombre "Hacé Cuentas".
   contact:
@@ -48,6 +53,100 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CalcsIndex"
+
+  /api/calc/{slug}.json:
+    get:
+      operationId: getCalcSpec
+      summary: Ficha machine-readable de una calculadora
+      description: |
+        Devuelve la especificación de una calculadora: qué hace, qué inputs toma
+        (con tipo, unidad, rango, opciones y valores de ejemplo), un ejemplo listo
+        para llamar y la URL del endpoint de cómputo en vivo. Usalo para descubrir
+        cómo invocar `computeCalc` antes de calcular.
+      tags: [calc]
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+          description: slug de la calculadora (ej. calculadora-imc)
+          examples:
+            imc: { value: calculadora-imc }
+      responses:
+        "200":
+          description: Ficha de la calculadora
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CalcSpec" }
+        "404":
+          description: Calc no encontrada
+
+  /api/calc/{slug}/compute:
+    get:
+      operationId: computeCalc
+      summary: Calcular en vivo el resultado de una calculadora
+      description: |
+        Ejecuta la fórmula de la calculadora con los inputs provistos y devuelve el
+        resultado en JSON. Los inputs se pasan como query params (los nombres y tipos
+        de cada calc están en GET /api/calc/{slug}.json -> inputs). Agregá ?lang=en|pt
+        para resultados en otro idioma. Respuesta determinística y cacheable.
+        Ejemplo: /api/calc/calculadora-imc/compute?peso=80&altura=180
+      tags: [calc]
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+          description: slug de la calculadora (ej. calculadora-imc)
+        - in: query
+          name: lang
+          required: false
+          schema: { type: string, enum: [es, en, pt], default: es }
+          description: idioma de los strings del resultado
+      responses:
+        "200":
+          description: Resultado calculado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ComputeResult" }
+        "400":
+          description: Faltan campos obligatorios (ver missingFields)
+        "404":
+          description: Calc no encontrada
+        "422":
+          description: Inputs inválidos para la fórmula (ver message)
+    post:
+      operationId: computeCalcPost
+      summary: Calcular en vivo (inputs en JSON body)
+      description: |
+        Igual que el GET pero los inputs van en el body JSON. Útil cuando hay muchos
+        campos. Body: { "inputs": { ... }, "lang": "es" } — o un objeto plano de inputs.
+      tags: [calc]
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                inputs:
+                  type: object
+                  additionalProperties: true
+                  description: pares campo->valor (los campos están en la ficha del calc)
+                lang:
+                  type: string
+                  enum: [es, en, pt]
+      responses:
+        "200":
+          description: Resultado calculado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ComputeResult" }
 
   /llms.txt:
     get:
@@ -198,6 +297,83 @@ components:
         lastUpdated:
           type: string
           format: date
+
+    CalcSpec:
+      type: object
+      required: [slug, url, name, formulaId, inputs, compute]
+      properties:
+        slug: { type: string, example: calculadora-imc }
+        url: { type: string, format: uri }
+        name: { type: string }
+        title: { type: string }
+        description: { type: string }
+        category: { type: string }
+        audience: { type: string }
+        locale: { type: string }
+        formulaId: { type: string }
+        summary: { type: string, description: resultado clave en una línea }
+        inputs:
+          type: array
+          items:
+            type: object
+            required: [id, type]
+            properties:
+              id: { type: string }
+              label: { type: string }
+              type: { type: string, enum: [number, select, radio, date, datetime-local, text, textarea, boolean] }
+              unit: { type: string }
+              required: { type: boolean }
+              min: { type: number }
+              max: { type: number }
+              step: { type: number }
+              default: {}
+              example: {}
+              options:
+                type: array
+                items: { type: object }
+              help: { type: string }
+        compute:
+          type: object
+          properties:
+            method: { type: string }
+            url: { type: string, format: uri }
+            example: { type: string, format: uri, description: URL GET lista para llamar con inputs de ejemplo }
+        example:
+          type: object
+          properties:
+            inputs: { type: object, additionalProperties: true }
+        license: { type: string, format: uri }
+        attribution: { type: string }
+
+    ComputeResult:
+      type: object
+      required: [ok, slug, result]
+      properties:
+        ok: { type: boolean }
+        slug: { type: string }
+        formulaId: { type: string }
+        h1: { type: string }
+        category: { type: string }
+        audience: { type: string }
+        locale: { type: string }
+        inputs:
+          type: object
+          additionalProperties: true
+          description: inputs coercidos que se usaron para calcular
+        result:
+          type: object
+          additionalProperties: true
+          description: salida de la fórmula (claves dependen de cada calc)
+        meta:
+          type: object
+          properties:
+            calculator: { type: string, format: uri }
+            spec: { type: string, format: uri }
+            source: { type: string }
+            license: { type: string, format: uri }
+            attribution: { type: string }
+            disclaimer: { type: string }
+            computedAt: { type: string, format: date-time }
 
 tags:
   - name: catalog

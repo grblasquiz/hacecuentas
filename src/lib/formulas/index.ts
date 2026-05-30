@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-05-25
+// Generated: 2026-05-29
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -3076,7 +3076,7 @@ import { compute as compute__tasacion_vivienda_chile_dictuc_perito_precio } from
 import { compute as compute__tasacion_vivienda_colombia_precio_m2_zona_estrato } from './tasacion-vivienda-colombia-precio-m2-zona-estrato';
 import { compute as compute__tasacion_vivienda_espana_precio_m2_zona } from './tasacion-vivienda-espana-precio-m2-zona';
 import { tazasGramos } from './tazas-gramos';
-import { tdeeCalculadoraMifflinStJeor } from './tdee-calculadora-mifflin-st-jeor';
+import { compute as compute__tdee_calculadora_mifflin_st_jeor } from './tdee-calculadora-mifflin-st-jeor';
 import { techosTejas } from './techos-tejas';
 import { teclaPorMinutoTypingTest } from './tecla-por-minuto-typing-test';
 import { tecnicaMemoryPalaceTiempo } from './tecnica-memory-palace-tiempo';
@@ -6481,7 +6481,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tasacion-vivienda-colombia-precio-m2-zona-estrato': compute__tasacion_vivienda_colombia_precio_m2_zona_estrato,
   'tasacion-vivienda-espana-precio-m2-zona': compute__tasacion_vivienda_espana_precio_m2_zona,
   'tazas-gramos': tazasGramos,
-  'tdee-calculadora-mifflin-st-jeor': tdeeCalculadoraMifflinStJeor,
+  'tdee-calculadora-mifflin-st-jeor': compute__tdee_calculadora_mifflin_st_jeor,
   'techos-tejas': techosTejas,
   'tecla-por-minuto-typing-test': teclaPorMinutoTypingTest,
   'tecnica-memory-palace-tiempo': tecnicaMemoryPalaceTiempo,
