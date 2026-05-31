@@ -1,3 +1,6 @@
+// Valor UF live desde mindicador.cl (cron diario fetch-chile.mjs), con fallback verificado.
+import clLive from "../../data/live/chile.json";
+
 export interface Inputs {
   aporte_mensual_clp: number;
   modalidad: 'A' | 'B';
@@ -23,7 +26,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 Chile
-  const UF_2026 = 30200; // Valor UF promedio 2026 (CLP), Banco Central
+  const UF_2026 = (clLive as any)?.uf?.valor ?? 40610.69; // Valor UF live mindicador.cl con fallback verificado
   const LIMITE_RGC_UF = 600; // Límite Rebaja Global Complementario en UF
   const LIMITE_RGC_CLP = LIMITE_RGC_UF * UF_2026; // ~18.120.000 CLP
   

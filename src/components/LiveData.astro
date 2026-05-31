@@ -14,10 +14,14 @@
  *  - "inflacion:last_month" | "inflacion:acumulado_12m" | "inflacion:acumulado_ytd"
  *  - "tasa:plazo_fijo_30d" | "tasa:badlar" | "tasa:prestamos_personales"
  *  - "uva"
+ *  - Chile (mindicador.cl):  "cl:uf" | "cl:utm" | "cl:uta" | "cl:dolar" | "cl:euro"
+ *  - Colombia (datos.gov.co): "co:trm"  (alias: "co:dolar")
  */
 import dolarData from "../data/live/dolar.json";
 import inflacionData from "../data/live/inflacion.json";
 import tasasData from "../data/live/tasas.json";
+import clData from "../data/live/chile.json";
+import coData from "../data/live/colombia.json";
 
 interface Props {
   dataSource?: string[];
@@ -40,6 +44,12 @@ function fmtPct(n: number, d = 1): string {
 }
 function fmtMoney(n: number): string {
   return `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
+}
+function fmtLocaleMoney(n: number, locale: string, decimals = 0): string {
+  return `$${n.toLocaleString(locale, {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })}`;
 }
 function sparklinePoints(values: number[], w = 100, h = 24): string {
   if (!values.length) return "";
@@ -160,19 +170,53 @@ for (const ref of dataSource || []) {
         sourceUrl: (tasasData._meta as any).sourceOfficial,
       });
     }
+  } else if (kind === "cl" && sub) {
+    // Chile — UF/UTM/UTA/dólar observado/euro desde mindicador.cl (Banco Central de Chile / SII)
+    const CL_CFG: Record<string, { label: string; key: string; decimals: number; meta: string }> = {
+      uf: { label: "UF", key: "uf", decimals: 2, meta: "Unidad de Fomento" },
+      utm: { label: "UTM", key: "utm", decimals: 0, meta: "Unidad Tributaria Mensual" },
+      uta: { label: "UTA", key: "uta", decimals: 0, meta: "Unidad Tributaria Anual" },
+      dolar: { label: "Dólar observado", key: "dolar", decimals: 2, meta: "CLP por USD" },
+      euro: { label: "Euro", key: "euro", decimals: 2, meta: "CLP por EUR" },
+    };
+    const cfg = CL_CFG[sub];
+    const q = cfg ? (clData as any)?.[cfg.key] : null;
+    if (cfg && q?.valor != null) {
+      items.push({
+        shortLabel: cfg.label,
+        value: fmtLocaleMoney(q.valor, "es-CL", cfg.decimals),
+        meta: cfg.meta,
+        source: "Banco Central de Chile",
+        sourceShort: "mindicador.cl",
+        sourceUrl: (clData as any)._meta.sourceUrl,
+      });
+    }
+  } else if (kind === "co" && (sub === "trm" || sub === "dolar")) {
+    // Colombia — TRM oficial (USD/COP) desde datos.gov.co (Superintendencia Financiera)
+    const q = (coData as any)?.trm;
+    if (q?.valor != null) {
+      items.push({
+        shortLabel: "TRM",
+        value: fmtLocaleMoney(q.valor, "es-CO", 2),
+        meta: "COP por USD · tasa oficial",
+        source: "Superintendencia Financiera",
+        sourceShort: "datos.gov.co",
+        sourceUrl: (coData as any)._meta.sourceUrl,
+      });
+    }
   }
 }
 
-// Latest fetch timestamp across all data
-const fetchedTimestamps = [
-  dolarData._meta?.fetchedAt,
-  inflacionData._meta?.fetchedAt,
-  tasasData._meta?.fetchedAt,
-]
-  .filter(Boolean)
-  .sort()
-  .reverse();
-const latestFetch = fetchedTimestamps[0] || "";
+// Latest fetch timestamp — solo de las fuentes efectivamente referenciadas,
+// para no mostrar el timestamp de un dataset AR en una calc CL/CO (o viceversa).
+const _refs = dataSource || [];
+const fetchedTimestamps: (string | undefined)[] = [];
+if (_refs.some((r) => r?.startsWith("dolar"))) fetchedTimestamps.push(dolarData._meta?.fetchedAt);
+if (_refs.some((r) => r?.startsWith("inflacion"))) fetchedTimestamps.push(inflacionData._meta?.fetchedAt);
+if (_refs.some((r) => r?.startsWith("tasa") || r === "uva")) fetchedTimestamps.push(tasasData._meta?.fetchedAt);
+if (_refs.some((r) => r?.startsWith("cl:"))) fetchedTimestamps.push((clData as any)._meta?.fetchedAt);
+if (_refs.some((r) => r?.startsWith("co:"))) fetchedTimestamps.push((coData as any)._meta?.fetchedAt);
+const latestFetch = fetchedTimestamps.filter(Boolean).sort().reverse()[0] || "";
 const updatedLabel = fmtUpdated(latestFetch);
 
 // Unique sources with urls

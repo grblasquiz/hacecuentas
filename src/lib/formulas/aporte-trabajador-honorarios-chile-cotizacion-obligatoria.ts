@@ -1,3 +1,6 @@
+// Valor UF live desde mindicador.cl (cron diario fetch-chile.mjs), con fallback verificado.
+import clLive from "../../data/live/chile.json";
+
 export interface Inputs {
   ingreso_bruto_anual: number;
   mes_calculo?: number;
@@ -20,7 +23,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 Chile (SII + SP + CMF)
-  const UF_2026 = 38350; // Valor UF enero 2026 (Banco Central)
+  const UF_2026 = (clLive as any)?.uf?.valor ?? 40610.69; // Valor UF live mindicador.cl con fallback verificado
   const TOPE_MENSUAL_UF = 84.3; // Ley 21.133
   const TOPE_MENSUAL_CLP = TOPE_MENSUAL_UF * UF_2026; // ~3.234.960
   const PORCENTAJE_BASE_80 = 0.80; // Base sobre 80% renta

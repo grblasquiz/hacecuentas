@@ -1,3 +1,6 @@
+// Valor UTM live desde mindicador.cl (cron diario fetch-chile.mjs), con fallback verificado.
+import clLive from "../../data/live/chile.json";
+
 export interface Inputs {
   tipo_vehiculo: 'particular' | 'comercial_ligero' | 'comercial_pesado' | 'moto';
   ano_fabricacion: number;
@@ -58,7 +61,7 @@ export function compute(i: Inputs): Outputs {
   
   // Calcular multa por atraso (Código Tránsito, UTA 2026 ≈ 62.000 CLP)
   // Tramos: 0-1 mes = 5-10 UTM, 2-3 meses = 15-20 UTM, 4+ meses = 30-50 UTM
-  const utmValor = 62000; // Valor UTM 2026 referencial
+  const utmValor = (clLive as any)?.utm?.valor ?? 70588; // Valor UTM live mindicador.cl con fallback verificado
   let multaUtm = 0;
   let estadoLegal = 'Revisión vigente: legal';
   

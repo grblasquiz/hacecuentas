@@ -1,3 +1,6 @@
+// Valor UF live desde mindicador.cl (cron diario fetch-chile.mjs), con fallback verificado.
+import clLive from "../../data/live/chile.json";
+
 export interface Inputs {
   ingresos_anuales: number;
   gastos_deducibles: number;
@@ -23,7 +26,7 @@ export function compute(i: Inputs): Outputs {
   const TASA_IMPUESTO_PYME14D = 0.25; // 25% - Régimen Pyme Ley 3500
   const TASA_IVA = 0.19; // 19% - Impuesto Valor Agregado
   const LIMITE_INGRESOS_UF = 75000; // UF máximo permitido
-  const VALOR_UF_2026 = 33600; // Pesos - Banco Central 2026 aproximado
+  const VALOR_UF_2026 = (clLive as any)?.uf?.valor ?? 40610.69; // Pesos - live mindicador.cl con fallback verificado
   const LIMITE_INGRESOS_PESOS = LIMITE_INGRESOS_UF * VALOR_UF_2026; // ~2.52 millones
 
   // Validaciones

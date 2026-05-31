@@ -1,3 +1,6 @@
+// Valor UF live desde mindicador.cl (cron diario fetch-chile.mjs), con fallback verificado.
+import clLive from "../../data/live/chile.json";
+
 export interface Inputs {
   sueldo_liquido_mensual: number; // CLP
   horas_semana: number;
@@ -14,7 +17,7 @@ export interface Outputs {
 }
 
 // Constantes 2026 Chile
-const VALOR_UF_2026 = 36640; // CLP, valor referencial Banco Central abril 2026
+const VALOR_UF_2026 = (clLive as any)?.uf?.valor ?? 40610.69; // CLP, live mindicador.cl con fallback verificado
 const SMI_MENSUAL_2026 = 450000; // CLP, Sueldo Mínimo Interprofesional
 const HORAS_SEMANA_SMI = 40; // jornada estándar
 

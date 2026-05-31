@@ -1,3 +1,6 @@
+// TRM oficial live desde datos.gov.co (cron diario fetch-colombia.mjs), con fallback verificado.
+import coLive from "../../data/live/colombia.json";
+
 export interface Inputs {
   tipo_vuelo: 'domestico' | 'internacional_usa' | 'internacional_latinoamerica' | 'internacional_europa';
   tarifa_base_cop: number;
@@ -22,7 +25,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 Colombia - fuentes DIAN, Aerocivil, ACDAC, Fontur
-  const TRM_2026 = 4000; // TRM promedio 2026 COP/USD (DIAN)
+  const TRM_2026 = (coLive as any)?.trm?.valor ?? 3678.15; // TRM live datos.gov.co con fallback verificado
   const IVA_DOMESTICO = 0.05; // 5% IVA vuelos domésticos (Decreto 1165/2017)
   
   // Tasas por tipo vuelo (COP por pasajero) - Aerocivil 2026
