@@ -1,3 +1,7 @@
+// Datos en vivo desde mindicador.cl (refrescados por el cron diario fetch-chile.mjs).
+// Si el JSON no tiene valor, cae al fallback hardcodeado (último valor verificado).
+import clLive from "../../data/live/chile.json";
+
 export interface Inputs {
   tipo_conversion: string;
   monto: number;
@@ -13,11 +17,10 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Valores UF, UTM, UTA 2026 - Banco Central y SII
-  // Datos vigentes al 30.05.2026 (UF se reajusta mensualmente, día 10)
-  const UF_28_04_2026 = 40593.77; // UF Banco Central/SII 30.05.2026 (verificado)
-  const UTM_ABRIL_2026 = 67891.43; // UTM SII — verificar valor mensual vigente
-  const UTA_2026 = 814697.16; // UTA SII — verificar valor anual vigente
+  // Valores UF, UTM, UTA — live (mindicador.cl) con fallback al último verificado.
+  const UF_28_04_2026 = (clLive as any)?.uf?.valor ?? 40593.77;
+  const UTM_ABRIL_2026 = (clLive as any)?.utm?.valor ?? 70588;
+  const UTA_2026 = (clLive as any)?.uta?.valor ?? 847056;
   const IPC_REAJUSTE_12M = 3.85; // Reajuste IPC acumulado últimos 12 meses (% aprox.)
 
   let resultado_conversion = 0;

@@ -1,3 +1,6 @@
+// TRM oficial live desde datos.gov.co (cron diario), usada como default si el user no la ingresa.
+import coLive from "../../data/live/colombia.json";
+
 export interface Inputs {
   monto_usd: number;
   tipo_cambio: 'trm_oficial' | 'banco_comercial' | 'casa_cambio' | 'mercado_informal';
@@ -24,8 +27,8 @@ export function compute(i: Inputs): Outputs {
   const SPREAD_CASA_CAMBIO_DEFECTO = 2.5; // Diferencial típico 2-3%
   const SPREAD_MERCADO_INFORMAL = 6.0; // Premium riesgoso
 
-  const trm = i.trm_oficial;
-  
+  const trm = i.trm_oficial || (coLive as any)?.trm?.valor || 0;
+
   // Validación básica
   if (i.monto_usd <= 0 || trm <= 0) {
     return {

@@ -1,3 +1,7 @@
+// Dólar observado live desde mindicador.cl (cron diario), con fallback verificado.
+import clLive from "../../data/live/chile.json";
+const DOLAR_LIVE: number = (clLive as any)?.dolar?.valor ?? 890.05;
+
 export interface Inputs {
   monto_origen: number;
   direccion_conversion: 'usd_a_clp' | 'clp_a_usd';
@@ -33,39 +37,40 @@ export interface Outputs {
 // Tipo cambio observado Banco Central 2026 (referencia actualizada cada día)
 // Base de datos simulada - en producción conectar a API oficial BC
 const tipo_cambio_bc: { [key: string]: number } = {
-  '2026-05-30': 890.05,
+  // Histórico fijo + valor vigente live (default) desde mindicador.cl
   '2026-04-28': 945.50,
   '2026-04-27': 944.75,
   '2026-04-26': 946.25,
   '2026-04-25': 945.00,
   '2026-04-24': 944.50,
-  'default': 890.05
+  'default': DOLAR_LIVE
 };
 
-// Tasas casas cambio 2026 (datos aproximados, varían según monto)
+// Casas de cambio: tracking del observado live ± spread típico (datos aprox., varían según monto)
+const r2 = (n: number) => Math.round(n * 100) / 100;
 const tasas_casas_cambio: { [key: string]: CasaCambioTasa } = {
   'banco_central_observado': {
     nombre: 'Banco Central (observado)',
-    compra: 890.05,
-    venta: 890.05,
+    compra: DOLAR_LIVE,
+    venta: DOLAR_LIVE,
     comision_porcentaje: 0
   },
   'bancoestado': {
     nombre: 'BancoEstado',
-    compra: 941.00,
-    venta: 949.00,
+    compra: r2(DOLAR_LIVE * 0.996),
+    venta: r2(DOLAR_LIVE * 1.004),
     comision_porcentaje: 0.50
   },
   'afex': {
     nombre: 'AFEX',
-    compra: 940.50,
-    venta: 949.50,
+    compra: r2(DOLAR_LIVE * 0.995),
+    venta: r2(DOLAR_LIVE * 1.005),
     comision_porcentaje: 1.00
   },
   'cocha': {
     nombre: 'Cocha',
-    compra: 939.00,
-    venta: 951.00,
+    compra: r2(DOLAR_LIVE * 0.993),
+    venta: r2(DOLAR_LIVE * 1.007),
     comision_porcentaje: 1.50
   }
 };
