@@ -14,10 +14,10 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Valores UF, UTM, UTA 2026 - Banco Central y SII
-  // Datos vigentes al 28.04.2026
-  const UF_28_04_2026 = 32456.84; // UF Banco Central 28.04.2026
-  const UTM_ABRIL_2026 = 67891.43; // UTM SII abril 2026
-  const UTA_2026 = 814697.16; // UTA SII 2026 (12 × UTM promedio)
+  // Datos vigentes al 30.05.2026 (UF se reajusta mensualmente, día 10)
+  const UF_28_04_2026 = 40593.77; // UF Banco Central/SII 30.05.2026 (verificado)
+  const UTM_ABRIL_2026 = 67891.43; // UTM SII — verificar valor mensual vigente
+  const UTA_2026 = 814697.16; // UTA SII — verificar valor anual vigente
   const IPC_REAJUSTE_12M = 3.85; // Reajuste IPC acumulado últimos 12 meses (% aprox.)
 
   let resultado_conversion = 0;

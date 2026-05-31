@@ -33,20 +33,21 @@ export interface Outputs {
 // Tipo cambio observado Banco Central 2026 (referencia actualizada cada día)
 // Base de datos simulada - en producción conectar a API oficial BC
 const tipo_cambio_bc: { [key: string]: number } = {
+  '2026-05-30': 890.05,
   '2026-04-28': 945.50,
   '2026-04-27': 944.75,
   '2026-04-26': 946.25,
   '2026-04-25': 945.00,
   '2026-04-24': 944.50,
-  'default': 945.00
+  'default': 890.05
 };
 
 // Tasas casas cambio 2026 (datos aproximados, varían según monto)
 const tasas_casas_cambio: { [key: string]: CasaCambioTasa } = {
   'banco_central_observado': {
     nombre: 'Banco Central (observado)',
-    compra: 945.00,
-    venta: 945.00,
+    compra: 890.05,
+    venta: 890.05,
     comision_porcentaje: 0
   },
   'bancoestado': {

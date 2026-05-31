@@ -48,6 +48,12 @@ except ImportError:
     sys.stderr.write("pip install google-auth google-api-python-client\n")
     sys.exit(1)
 
+# Guard compartido: excluye locales jóvenes/secundarios y calcs nuevas (<6m)
+# del barrido 410. Evita el falso positivo del 2026-05-27 (60 calcs-es marcadas
+# como zombies cuando todavía no se habían indexado). Ver scripts/prune_guard.py.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from prune_guard import PruneGuard
+
 ROOT = Path(__file__).resolve().parent.parent
 PRUNING_FILE = ROOT / "src" / "lib" / "pruning-redirects.ts"
 DOCS_DIR = ROOT / "docs"
@@ -129,13 +135,17 @@ def query_page_stats(s, page_url: str, start: str, end: str) -> dict:
 
 
 # ---- verdict logic -------------------------------------------------------
-# Tres estados de verdict:
-#   * GONE_410  → URL zombie con 0 trafico real, target tampoco trafica.
-#                 Aplica 410 (Mueller-style fast desindex).
-#   * DESPRUNE  → URL tiene impressions o ranking real, vale recuperarla.
-#   * REVIEW    → caso ambiguo, decision manual.
-#   * KEEP      → target absorbio el trafico bien, no tocar.
-#   * SKIP_LOW  → bajo threshold, no analizar.
+# Estados de verdict:
+#   * GONE_410        → URL zombie con 0 trafico real, target tampoco trafica.
+#                       Aplica 410 (Mueller-style fast desindex).
+#   * PROTECTED_YOUNG → seria GONE_410 pero el guard la salva: locale joven
+#                       (/es,/mx,/co,/cl,...) o calc publicada hace <6m. "0
+#                       impresiones" no implica zombie si no tuvo tiempo de
+#                       indexarse. NO se emite a gone-410.ts.
+#   * DESPRUNE        → URL tiene impressions o ranking real, vale recuperarla.
+#   * REVIEW          → caso ambiguo, decision manual.
+#   * KEEP            → target absorbio el trafico bien, no tocar.
+#   * SKIP_LOW        → bajo threshold, no analizar.
 
 def verdict(zombie_stats: dict, target_stats: dict, threshold_impr: int) -> str:
     z_impr = zombie_stats.get("impressions", 0)
@@ -174,6 +184,7 @@ def fmt_row(item: dict) -> str:
 
 def write_markdown(items: list[dict], out: Path, start: str, end: str, threshold: int) -> None:
     gone = [i for i in items if i["verdict"] == "GONE_410"]
+    protected = [i for i in items if i["verdict"] == "PROTECTED_YOUNG"]
     desprune = [i for i in items if i["verdict"] == "DESPRUNE"]
     review = [i for i in items if i["verdict"] == "REVIEW"]
     keep = [i for i in items if i["verdict"] == "KEEP"]
@@ -191,6 +202,7 @@ def write_markdown(items: list[dict], out: Path, start: str, end: str, threshold
         f"Threshold impressions: **{threshold}/periodo**.",
         "",
         f"- **GONE_410**: {len(gone)} URLs (0 impr + 0 clicks, candidatas a 410 Gone para fast desindex)",
+        f"- **PROTECTED_YOUNG**: {len(protected)} URLs excluidas del 410 (locale joven /es,/mx,/co,/cl o calc <6m — NO se emiten a gone-410.ts)",
         f"- **DESPRUNE recomendado**: {len(desprune)} URLs (≈ **{total_recovered_impr} impressions/periodo recuperables**)",
         f"- **REVIEW manual**: {len(review)} URLs",
         f"- **KEEP** (target funciona): {len(keep)} URLs",
@@ -204,11 +216,29 @@ def write_markdown(items: list[dict], out: Path, start: str, end: str, threshold
         "",
         f"Total: {len(gone)} URLs. Para aplicar: corre `--emit-gone-410`.",
         "",
+        "## PROTECTED_YOUNG — excluidas del 410 por el guard",
+        "",
+        "URLs que tendrian 0 impr/0 clicks pero NO se 410'ean: pertenecen a un",
+        "locale joven/secundario (/es, /mx, /co, /cl, ...) o a una calc publicada",
+        "hace menos de 6 meses. \"0 impresiones\" no implica zombie si la URL no",
+        "tuvo tiempo de indexarse en un mercado con autoridad. Falso positivo del",
+        "2026-05-27 (60 calcs-es). Override con `--no-guard` (peligroso).",
+        "",
+        f"Total: {len(protected)} URLs.",
+        "",
+    ]
+    if protected:
+        lines.append("| URL | Motivo guard |")
+        lines.append("|-----|--------------|")
+        for i in sorted(protected, key=lambda x: x["from"]):
+            lines.append(f"| `{i['from']}` | {i.get('guard_reason', '')} |")
+    lines.extend([
+        "",
         "## DESPRUNE — orden por impressions desc",
         "",
         "| Zombie | Target | Z.Impr | Z.Clicks | Z.CTR | Z.Pos | T.Impr | T.Clicks | Verdict |",
         "|--------|--------|-------:|---------:|------:|------:|-------:|---------:|---------|",
-    ]
+    ])
     lines.extend(fmt_row(i) for i in desprune)
     lines.extend(["", "## REVIEW — decision manual", ""])
     lines.append("| Zombie | Target | Z.Impr | Z.Clicks | Z.CTR | Z.Pos | T.Impr | T.Clicks | Verdict |")
@@ -282,6 +312,12 @@ def main() -> int:
     ap.add_argument("--only-categoria", action="store_true", help="Filtrar solo zombies que redirigen a /categoria/*")
     ap.add_argument("--emit-gone-410", action="store_true", help="Escribir/actualizar src/lib/gone-410.ts con URLs verdict=GONE_410")
     ap.add_argument("--dry-run", action="store_true", help="No llamar GSC, mock data")
+    ap.add_argument("--min-age-days", type=int, default=180,
+                    help="Calcs publicadas hace < N dias quedan protegidas del 410 (default 180 ~6 meses)")
+    ap.add_argument("--include-en-pt", action="store_true",
+                    help="Tambien proteger /en/ y /pt/ por locale (default: solo por edad)")
+    ap.add_argument("--no-guard", action="store_true",
+                    help="DESACTIVAR el guard de locales jovenes/calcs nuevas (PELIGROSO: puede re-410'ear calcs nuevas)")
     args = ap.parse_args()
 
     redirects = parse_pruning_redirects(PRUNING_FILE)
@@ -301,6 +337,17 @@ def main() -> int:
 
     s = None if args.dry_run else svc()
 
+    guard = None if args.no_guard else PruneGuard(
+        today=today,
+        min_age_days=args.min_age_days,
+        include_en_pt=True if args.include_en_pt else None,
+    )
+    if guard is not None:
+        print(f"Guard 410: locales bloqueados={sorted(guard.block_locales)} "
+              f"| edad min={guard.min_age_days}d (publicado > {guard.cutoff} = protegido)",
+              file=sys.stderr)
+    excluded: list[dict] = []
+
     items: list[dict] = []
     for i, (zombie, target) in enumerate(redirects.items(), 1):
         zombie_url = BASE_URL + zombie
@@ -313,13 +360,28 @@ def main() -> int:
             t_stats = query_page_stats(s, target_url, start, end)
 
         v = verdict(z_stats, t_stats, args.impressions_min)
-        items.append({
+
+        # Guard: una URL de locale joven/secundario o de calc nueva (<6m) NO
+        # puede pasar a 410 aunque tenga 0 impresiones — todavia no tuvo tiempo
+        # de indexarse en un mercado con autoridad. Falso positivo del
+        # 2026-05-27 (60 calcs-es). Ver scripts/prune_guard.py.
+        guard_reason = None
+        if guard is not None and v == "GONE_410":
+            protected, guard_reason = guard.is_protected(zombie)
+            if protected:
+                v = "PROTECTED_YOUNG"
+                excluded.append({"from": zombie, "to": target, "reason": guard_reason})
+
+        item = {
             "from": zombie,
             "to": target,
             "zombie_stats": z_stats,
             "target_stats": t_stats,
             "verdict": v,
-        })
+        }
+        if v == "PROTECTED_YOUNG":
+            item["guard_reason"] = guard_reason
+        items.append(item)
 
         if i % 25 == 0:
             print(f"  procesadas {i}/{len(redirects)}", file=sys.stderr)
@@ -339,6 +401,12 @@ def main() -> int:
             "period": {"start": start, "end": end, "days": args.days},
             "threshold_impressions": args.impressions_min,
             "total_zombies_analyzed": len(redirects),
+            "guard": None if guard is None else {
+                "block_locales": sorted(guard.block_locales),
+                "min_age_days": guard.min_age_days,
+                "cutoff_date": guard.cutoff.isoformat(),
+            },
+            "excluded_by_guard": excluded,
             "items": items,
         }, indent=2),
         encoding="utf-8",
@@ -346,11 +414,18 @@ def main() -> int:
 
     desprune_count = sum(1 for i in items if i["verdict"] == "DESPRUNE")
     gone_count = sum(1 for i in items if i["verdict"] == "GONE_410")
+    protected_count = sum(1 for i in items if i["verdict"] == "PROTECTED_YOUNG")
     print(f"\nResultados:", file=sys.stderr)
     print(f"  GONE_410: {gone_count}", file=sys.stderr)
     print(f"  DESPRUNE: {desprune_count}", file=sys.stderr)
     print(f"  REVIEW  : {sum(1 for i in items if i['verdict'] == 'REVIEW')}", file=sys.stderr)
     print(f"  KEEP    : {sum(1 for i in items if i['verdict'] == 'KEEP')}", file=sys.stderr)
+    if guard is not None:
+        print(f"  PROTECTED_YOUNG (excluidas del 410 por guard): {protected_count}", file=sys.stderr)
+        if excluded:
+            print(f"\n  Slugs excluidos del barrido 410 (locale joven / calc nueva):", file=sys.stderr)
+            for e in excluded:
+                print(f"    - {e['from']}  [{e['reason']}]", file=sys.stderr)
     print(f"\nReporte: {md_path}", file=sys.stderr)
     print(f"Data:    {json_path}", file=sys.stderr)
 

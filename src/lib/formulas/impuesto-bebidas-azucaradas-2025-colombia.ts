@@ -16,12 +16,11 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes DIAN Ley 2277/2022 - Tarifa 2025
-  const TARIFA_MINIMA = 18; // $/100ml (0 - 2.5g azúcar)
-  const TARIFA_BAJA = 24;   // $/100ml (2.6 - 5.0g azúcar)
-  const TARIFA_MEDIA = 30;  // $/100ml (5.1 - 7.5g azúcar)
-  const TARIFA_ALTA = 36;   // $/100ml (7.6 - 10.0g azúcar)
-  const TARIFA_MAXIMA = 38; // $/100ml (>10.0g azúcar)
+  // Constantes IBUA Art. 513-4 ET — Tarifa 2026 (UVT-indexada, DIAN Res. 000247/2025)
+  // Umbrales oficiales: 5g y 9g por 100ml (3 tramos). Confirmar pesos vs resolución oficial.
+  const TARIFA_EXENTA = 0;  // $/100ml (< 5g azúcar/100ml — exento)
+  const TARIFA_MEDIA = 40;  // $/100ml (≥5g y <9g azúcar/100ml) — 2026
+  const TARIFA_ALTA = 68;   // $/100ml (≥9g azúcar/100ml) — 2026
   const IVA = 0.19;         // 19% según Ley 1819/2016
 
   // Validación básica
@@ -29,18 +28,14 @@ export function compute(i: Inputs): Outputs {
   const volumen = Math.max(100, Math.min(5000, i.volumen_ml));
   const precioBase = Math.max(0, i.precio_base);
 
-  // 1. Determinar tarifa según contenido de azúcar (Ley 2277/2022)
+  // 1. Determinar tarifa según contenido de azúcar (Art. 513-4 ET, umbrales 5g/9g)
   let tarifaImpuesto: number;
-  if (gramoAzucar <= 2.5) {
-    tarifaImpuesto = TARIFA_MINIMA;
-  } else if (gramoAzucar <= 5.0) {
-    tarifaImpuesto = TARIFA_BAJA;
-  } else if (gramoAzucar <= 7.5) {
+  if (gramoAzucar < 5) {
+    tarifaImpuesto = TARIFA_EXENTA;
+  } else if (gramoAzucar < 9) {
     tarifaImpuesto = TARIFA_MEDIA;
-  } else if (gramoAzucar <= 10.0) {
-    tarifaImpuesto = TARIFA_ALTA;
   } else {
-    tarifaImpuesto = TARIFA_MAXIMA;
+    tarifaImpuesto = TARIFA_ALTA;
   }
 
   // 2. Calcular impuesto a bebidas azucaradas

@@ -19,6 +19,13 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from datetime import timedelta
 
+# Guard compartido: locales jóvenes/secundarios (/es,/mx,/co,/cl) y calcs nuevas
+# (<6m) NO pueden caer en bucket_1 (muertas duro → 410). "0 impresiones" no
+# implica zombie si la URL no tuvo tiempo de indexarse. Ver scripts/prune_guard.py.
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from prune_guard import PruneGuard
+
 ROOT = Path('/Users/marrod/hacecuentas')
 SA = '/Users/marrod/.config/gcp/hacecuentas-indexing.json'
 SITE = 'sc-domain:hacecuentas.com'
@@ -158,9 +165,18 @@ bucket_1 = []  # muertas duro
 bucket_2 = []  # estacional/long-tail
 bucket_3 = []  # clusters duplicados (todas las del cluster)
 bucket_safe = []  # tiene internal link → protegida, revisión humana
+bucket_protected_young = []  # locale joven/calc <6m → NUNCA 410 (guard)
+
+guard = PruneGuard()
+print(f'Guard 410: locales bloqueados={sorted(guard.block_locales)} | edad min={guard.min_age_days}d')
 
 for u in zero_impr_urls:
-    if u in linked_urls:
+    # Guard primero: una calc de locale joven/secundario o nueva (<6m) jamás va
+    # a "muertas duro", aunque tenga 0 impr y 0 internal links. Falso positivo
+    # del 2026-05-27 (60 calcs-es marcadas como zombies sin haberse indexado).
+    if guard.is_protected(u)[0]:
+        bucket_protected_young.append(u)
+    elif u in linked_urls:
         bucket_safe.append(u)
     elif is_seasonal(u):
         bucket_2.append(u)
@@ -180,6 +196,7 @@ out.append(f'| 🟢 **1 — Muertas duro** | {len(bucket_1):,} | **410 Gone** �
 out.append(f'| 🟡 **2 — Estacionales/long-tail** | {len(bucket_2):,} | Revisar antes de matar — pueden tener picos Oct-Dic | Medio |')
 out.append(f'| 🟠 **3 — Clusters duplicados (≥3 URLs misma temática)** | {len(bucket_3):,} | Consolidar: mantener 1 por cluster, 301 el resto | Medio |')
 out.append(f'| 🔵 **Protegidas (internal link)** | {len(bucket_safe):,} | Revisión humana, NO matar | Alto |')
+out.append(f'| 🛡️ **Protegidas (locale joven /es,/mx,/co,/cl o calc <6m)** | {len(bucket_protected_young):,} | NO matar — todavía no tuvieron tiempo de indexarse (guard) | Alto |')
 
 out.append(f'\n## 🟢 Bucket 1 — Muertas duro (CANDIDATAS 410 GONE)\n')
 out.append(f'**Acción:** Agregar a `src/lib/gone-410.ts` en batch. Total: {len(bucket_1):,}\n')
@@ -213,6 +230,13 @@ for u in bucket_safe[:50]:
     out.append(f'- `{u}`')
 out.append(f'\n</details>\n')
 
+out.append(f'\n## 🛡️ Protegidas — locale joven/secundario o calc <6m\n')
+out.append(f'**Acción:** NO matar. Locales jóvenes (/es, /mx, /co, /cl) o calcs publicadas hace <6m: "0 impresiones" no implica zombie, todavía no tuvieron tiempo de indexarse en un mercado con autoridad. Excluidas de bucket_1 por scripts/prune_guard.py. Falso positivo del 2026-05-27 (60 calcs-es). Total: {len(bucket_protected_young):,}\n')
+out.append(f'\n<details><summary>Ver primeras 80 (de {len(bucket_protected_young):,})</summary>\n')
+for u in bucket_protected_young[:80]:
+    out.append(f'- `{u}`')
+out.append(f'\n</details>\n')
+
 # Guardar bucket 1 como lista plana para próximo paso de ejecución
 Path('/tmp/bucket1-410.json').write_text(json.dumps(bucket_1, ensure_ascii=False))
 Path('/tmp/bucket3-clusters.json').write_text(json.dumps(clusters, ensure_ascii=False))
@@ -224,4 +248,5 @@ print(f'\n✅ Reporte: {out_path}')
 print(f'   Bucket 1 (matar): {len(bucket_1):,}')
 print(f'   Bucket 2 (estacional): {len(bucket_2):,}')
 print(f'   Bucket 3 (consolidar): {len(bucket_3):,} en {len(clusters):,} clusters')
-print(f'   Bucket protegidas: {len(bucket_safe):,}')
+print(f'   Bucket protegidas (internal link): {len(bucket_safe):,}')
+print(f'   Bucket protegidas (locale joven/calc <6m): {len(bucket_protected_young):,}')

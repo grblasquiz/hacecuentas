@@ -22,6 +22,12 @@ from xml.etree import ElementTree as ET
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
+# Guard compartido: excluye locales jóvenes/secundarios (/es,/mx,/co,/cl) y
+# calcs nuevas (<6m) del bucket de candidatas a 410. "0 impresiones" no implica
+# zombie si la URL todavía no tuvo tiempo de indexarse. Ver scripts/prune_guard.py.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from prune_guard import PruneGuard
+
 ROOT = Path('/Users/marrod/hacecuentas')
 SA = '/Users/marrod/.config/gcp/hacecuentas-indexing.json'
 SITE = 'sc-domain:hacecuentas.com'
@@ -127,11 +133,15 @@ buckets = {
     'mid_performers': [],       # 50-199 impr 90d: optimizar
     'low_value': [],            # 10-49 impr 90d: revisar
     'zero_value': [],           # 0-9 impr 90d, calc viva: candidata 410 Gone
+    'protected_young': [],      # locale joven/calc <6m: NUNCA 410 (guard)
     'noindex_with_traffic': [],  # noindex pero recibiendo impr: zombies a desprune
     'noindex_no_traffic': [],    # noindex y 0 impr: dejar así, confirmado prune
     'pruned_with_traffic': [],   # 301 pero aún recibe impr: revisar restaurar
     'pruned_no_traffic': [],     # 301 y 0 impr: confirmado
 }
+
+guard = PruneGuard()
+print(f'  guard 410: locales bloqueados={sorted(guard.block_locales)} | edad min={guard.min_age_days}d')
 
 for url in universe:
     m = gsc_metrics.get(url, {'impr': 0, 'clicks': 0, 'pos': 0, 'ctr': 0})
@@ -153,7 +163,14 @@ for url in universe:
         elif impr >= 10:
             buckets['low_value'].append(entry)
         else:
-            buckets['zero_value'].append(entry)
+            # zero_value = candidata 410. Guard: si es locale joven/secundario
+            # o calc nueva (<6m), va a protected_young — NO se 410'ea.
+            prot, reason = guard.is_protected(url)
+            if prot:
+                entry['guard_reason'] = reason
+                buckets['protected_young'].append(entry)
+            else:
+                buckets['zero_value'].append(entry)
 
 # Sort
 for k in buckets:
@@ -210,8 +227,15 @@ section(
 section(
     '🔴 Zero value (<10 impr) — CANDIDATAS A 410 GONE',
     'zero_value',
-    'Lista larga. Estas son las que diluyen calidad agregada del sitio y disparan SERP suppression sobre TODAS las URLs. Mover a 410 Gone en batch reduce footprint y libera "credibility budget" para que Google muestre más las top performers.',
+    'Lista larga. Estas son las que diluyen calidad agregada del sitio y disparan SERP suppression sobre TODAS las URLs. Mover a 410 Gone en batch reduce footprint y libera "credibility budget" para que Google muestre más las top performers. (Las de locales jóvenes /es,/mx,/co,/cl y calcs <6m YA fueron excluidas → ver sección Protegidas.)',
     n=100,
+)
+
+section(
+    '🛡️ Protegidas del 410 (locale joven / calc <6m) — NO MATAR',
+    'protected_young',
+    'URLs con <10 impr que NO son candidatas a 410: pertenecen a un locale joven/secundario (/es,/mx,/co,/cl) o son calcs publicadas hace <6m. "0 impresiones" no implica zombie si la URL todavía no tuvo tiempo de indexarse en un mercado con autoridad. Falso positivo del 2026-05-27 (60 calcs-es). Optimizar/esperar indexación, JAMÁS 410. Override: scripts/prune_guard.py.',
+    n=50,
 )
 
 section(
@@ -241,5 +265,6 @@ out_path.write_text('\n'.join(out))
 print(f'\n✅ Reporte guardado en: {out_path}')
 print(f'   Total URLs analizadas: {len(universe):,}')
 print(f'   Candidatas 410 Gone (zero_value): {len(buckets["zero_value"]):,}')
+print(f'   Protegidas del 410 (locale joven/calc <6m): {len(buckets["protected_young"]):,}')
 print(f'   Top performers a reinvertir: {len(buckets["top_performers"]):,}')
 print(f'   Zombies a desprune: {len(buckets["noindex_with_traffic"]):,}')

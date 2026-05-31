@@ -17,6 +17,10 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Guard compartido: no 410'ear locales jóvenes/secundarios ni calcs nuevas (<6m).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from prune_guard import PruneGuard
+
 ROOT = Path(__file__).resolve().parent.parent
 AUDIT_FILE = ROOT / "scripts" / "audit-en-pt-2026-05-20.json"
 GONE_410_FILE = ROOT / "src" / "lib" / "gone-410.ts"
@@ -64,6 +68,12 @@ def write_gone_410(urls: set[str]) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--min-age-days", type=int, default=180,
+                    help="Calcs publicadas hace < N dias quedan protegidas del 410 (default 180 ~6 meses)")
+    ap.add_argument("--include-en-pt", action="store_true",
+                    help="Bloquear /en/ y /pt/ por locale (regla a), no solo por edad")
+    ap.add_argument("--no-guard", action="store_true",
+                    help="DESACTIVAR el guard de locales jovenes/calcs nuevas (PELIGROSO)")
     args = ap.parse_args()
 
     if not AUDIT_FILE.exists():
@@ -75,13 +85,37 @@ def main() -> int:
     # --- 1) KILL_410 ---
     kill = [r for r in results if r["verdict"] == "KILL_410"]
     existing_gone = parse_gone_410()
-    new_paths = {r["path"] for r in kill}
+
+    # Guard: el verdict KILL_410 de este audit es estatico (2026-05-20). Re-
+    # correr el script NO debe re-410'ear calcs de locales jovenes/secundarios
+    # ni calcs nuevas (<6m) que todavia se estan indexando. Mismo falso positivo
+    # que barrio 60 calcs-es el 2026-05-27. Ver scripts/prune_guard.py.
+    guard = None if args.no_guard else PruneGuard(
+        min_age_days=args.min_age_days,
+        include_en_pt=True if args.include_en_pt else None,
+    )
+    excluded_guard: list[tuple[str, str]] = []
+    kept_kill = []
+    for r in kill:
+        if guard is not None:
+            prot, reason = guard.is_protected(r["path"])
+            if prot:
+                excluded_guard.append((r["path"], reason or "protegido"))
+                continue
+        kept_kill.append(r)
+
+    new_paths = {r["path"] for r in kept_kill}
     merged = existing_gone | new_paths
     added = merged - existing_gone
 
     print(f"KILL_410:", file=sys.stderr)
     print(f"  Existing in gone-410.ts: {len(existing_gone)}", file=sys.stderr)
-    print(f"  Audit KILL_410 candidates: {len(new_paths)}", file=sys.stderr)
+    print(f"  Audit KILL_410 candidates: {len(kill)}", file=sys.stderr)
+    if guard is not None:
+        print(f"  Excluidas por guard (locale joven/calc nueva): {len(excluded_guard)}", file=sys.stderr)
+        for p, reason in excluded_guard:
+            print(f"    - {p}  [{reason}]", file=sys.stderr)
+    print(f"  410'eables tras guard: {len(new_paths)}", file=sys.stderr)
     print(f"  New to add: {len(added)}", file=sys.stderr)
     print(f"  Total after merge: {len(merged)}", file=sys.stderr)
 
