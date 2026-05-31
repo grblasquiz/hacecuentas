@@ -19,12 +19,13 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Precios base refinería por tipo combustible (COP/galón, 2026)
-  // Fuente: DIAN, última revisión abril 2026
+  // Precios base refinería por tipo combustible (COP/galón)
+  // Calibrados para reproducir el precio pump de mayo 2026 (MinHacienda/CREG,
+  // alza del 4-may): corriente Bogotá ~$16.300, ACPM ~$11.600. Verificar mensual.
   const preciosRefineria: Record<string, number> = {
-    'gasolina_corriente': 9200,
-    'gasolina_extra': 9850,
-    'acpm': 8320
+    'gasolina_corriente': 10390,
+    'gasolina_extra': 11120,
+    'acpm': 6550
   };
 
   // IBGM (Impuesto sobre Gasolina y Diésel Motor) por tipo
