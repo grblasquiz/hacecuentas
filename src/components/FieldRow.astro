@@ -11,9 +11,68 @@ import type { Field } from "./Calculator.astro";
 
 interface Props {
   field: Field;
+  lang?: "es" | "en" | "pt";
 }
-const { field } = Astro.props;
+const { field, lang = "es" } = Astro.props;
 const isWide = field.type === "select" || field.type === "date";
+
+/**
+ * Separador de miles AUTOMÁTICO.
+ *
+ * Hasta ahora `format: "thousands"` era opt-in por campo en cada JSON; la
+ * mayoría de los campos de plata NO lo declaraban y se veían "100000" crudo
+ * (la queja recurrente de Martin). Acá lo activamos automáticamente para los
+ * campos numéricos donde el separador de miles es correcto, EXCLUYENDO los
+ * casos donde rompería el valor:
+ *   - step decimal (0.1 / 0.01 / "any") → el punto es separador decimal
+ *     (tasas, altura en m, litros, factores).
+ *   - campos de año (1990 → "1.990" sería incorrecto).
+ *   - campos de tasa/porcentaje → el usuario tipea "12.5" con punto decimal.
+ *   - locale `en` → usa coma como separador de miles (modelo invertido); se
+ *     deja como opt-in para no mezclar locales.
+ * Escape hatch: `format: "plain"` en el JSON fuerza a dejar el campo crudo.
+ *
+ * El parse/format cliente vive en Calculator.astro y ya reacciona a
+ * data-format="thousands" (live-format al tipear, presets, querystring,
+ * what-if y lectura en submit), así que no hay que tocar JS.
+ */
+function stepIsDecimal(step: Field["step"]): boolean {
+  if (step === undefined || step === null) return false;
+  if ((step as unknown as string) === "any") return true;
+  const n = Number(step);
+  return Number.isFinite(n) && n !== Math.trunc(n);
+}
+function isYearLike(f: Field): boolean {
+  const min = typeof f.min === "number" ? f.min : undefined;
+  const max = typeof f.max === "number" ? f.max : undefined;
+  if (min !== undefined && max !== undefined && min >= 1900 && max <= 2100) return true;
+  return /(^|_)(anio|ano|year)(_|$)/i.test(f.id || "");
+}
+const RATE_RE =
+  /%|tasa|porcentaje|\brate\b|inter[eé]s|rendimiento|rentabilidad|inflaci[oó]n|\bt[ei]r\b|\btna\b|\btea\b|\bea\b|marginal|densidad|cup[oó]n|alcohol|grado/i;
+function isRateLike(f: Field): boolean {
+  return RATE_RE.test(`${f.label || ""} ${f.suffix || ""} ${f.id || ""}`);
+}
+const autoThousands =
+  field.type === "number" &&
+  field.format !== "thousands" &&
+  (field.format as unknown as string) !== "plain" &&
+  lang !== "en" &&
+  !stepIsDecimal(field.step) &&
+  !isYearLike(field) &&
+  !isRateLike(field);
+const useThousands = field.format === "thousands" || autoThousands;
+
+// SSR: si hay default numérico en un campo de miles, renderizarlo ya agrupado
+// ("100.000") para que el bot y el usuario lo vean sin flash de "100000".
+const groupedDefault = (() => {
+  if (!useThousands) return undefined;
+  const d = field.default;
+  if (d === 0 || d === undefined || d === null || d === "") return undefined;
+  const n = typeof d === "number" ? d : Number(String(d).replace(/[^\d.-]/g, ""));
+  if (!Number.isFinite(n)) return d;
+  return new Intl.NumberFormat("es-AR").format(n);
+})();
 ---
 
 <div class={`field ${isWide ? "field-wide" : ""}`}>
@@ -46,16 +105,16 @@ const isWide = field.type === "select" || field.type === "date";
       <input
         id={field.id}
         name={field.id}
-        type={field.type === "number" && field.format === "thousands" ? "text" : field.type}
+        type={field.type === "number" && useThousands ? "text" : field.type}
         placeholder={field.placeholder}
         min={field.min}
         max={field.max}
         step={field.step}
-        value={field.default === 0 || field.default === undefined ? undefined : field.default}
+        value={useThousands ? groupedDefault : (field.default === 0 || field.default === undefined ? undefined : field.default)}
         required={field.required}
         inputmode={field.type === "number" ? "decimal" : undefined}
         autocomplete="off"
-        data-format={field.format}
+        data-format={useThousands ? "thousands" : field.format}
         data-type={field.type}
       />
     )}

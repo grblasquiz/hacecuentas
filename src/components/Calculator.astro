@@ -24,7 +24,8 @@ export interface Field {
   options?: { value: string; label: string }[];
   required?: boolean;
   help?: string;
-  format?: 'thousands';
+  /** 'thousands' = separador de miles. 'plain' = opt-out del auto-miles (campo crudo). */
+  format?: 'thousands' | 'plain';
   advanced?: boolean;
   /** Smart Input Groups: agrupador opcional. Fields con el mismo `group` se renderizan juntos en un panel con header. */
   group?: string;
@@ -484,18 +485,18 @@ const formatFreshnessDate = (iso: string): string => {
               <span>{g.name}</span>
             </legend>
             <div class="fields-grid">
-              {g.fields.map((field) => <FieldRow field={field} />)}
+              {g.fields.map((field) => <FieldRow field={field} lang={lang} />)}
             </div>
           </fieldset>
         ) : (
           <div class="fields-grid">
-            {g.fields.map((field) => <FieldRow field={field} />)}
+            {g.fields.map((field) => <FieldRow field={field} lang={lang} />)}
           </div>
         )
       ))
     ) : (
       <div class="fields-grid">
-        {basicFields.map((field) => <FieldRow field={field} />)}
+        {basicFields.map((field) => <FieldRow field={field} lang={lang} />)}
       </div>
     )}
 
@@ -515,18 +516,18 @@ const formatFreshnessDate = (iso: string): string => {
                   <span>{g.name}</span>
                 </legend>
                 <div class="fields-grid advanced-grid">
-                  {g.fields.map((field) => <FieldRow field={field} />)}
+                  {g.fields.map((field) => <FieldRow field={field} lang={lang} />)}
                 </div>
               </fieldset>
             ) : (
               <div class="fields-grid advanced-grid">
-                {g.fields.map((field) => <FieldRow field={field} />)}
+                {g.fields.map((field) => <FieldRow field={field} lang={lang} />)}
               </div>
             )
           ))
         ) : (
           <div class="fields-grid advanced-grid">
-            {advancedFields.map((field) => <FieldRow field={field} />)}
+            {advancedFields.map((field) => <FieldRow field={field} lang={lang} />)}
           </div>
         )}
       </details>
