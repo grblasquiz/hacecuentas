@@ -1,7 +1,7 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
 export function paralajeDistanciaEstrellaParsec(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const T = ({
     es: {
       errorParalaje: 'Ingresá paralaje positivo',
@@ -12,6 +12,11 @@ export function paralajeDistanciaEstrellaParsec(i: Inputs): Outputs {
       errorParalaje: 'Enter a positive parallax value',
       unitAL: ' ly',
       resumen: (pcVal: string, alVal: string) => `Distance ${pcVal} pc (${alVal} light-years).`,
+    },
+    pt: {
+      errorParalaje: 'Insira um paralaxe positivo',
+      unitAL: ' al',
+      resumen: (pcVal: string, alVal: string) => `Distância ${pcVal} pc (${alVal} anos-luz).`,
     },
   } as const)[__lang];
   const p = Number(i.paralaje);

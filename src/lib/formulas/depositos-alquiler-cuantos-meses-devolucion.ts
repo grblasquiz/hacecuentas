@@ -1,7 +1,7 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
 export function depositosAlquilerCuantosMesesDevolucion(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const T = ({
     es: {
       devolucion: '30 días post egreso - daños',
@@ -18,6 +18,14 @@ export function depositosAlquilerCuantosMesesDevolucion(i: Inputs): Outputs {
       resumen_prefix: 'Rent',
       resumen_mid: 'deposit',
       resumen_suffix: '= up to',
+    },
+    pt: {
+      devolucion: '30 dias após saída - danos',
+      meses_actual: '1-3 meses',
+      meses_nuevo: 'máx 1 mês',
+      resumen_prefix: 'Aluguel',
+      resumen_mid: 'depósito',
+      resumen_suffix: '= até',
     },
   } as const)[__lang];
   const a=Number(i.alquilerMensual)||0; const c=String(i.contrato||'actual');

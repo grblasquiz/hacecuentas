@@ -1,7 +1,7 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
 export function dashHipertensionSodioDiarioTabla(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const T = ({
     es: {
       dia: 'mg/día',
@@ -14,6 +14,12 @@ export function dashHipertensionSodioDiarioTabla(i: Inputs): Outputs {
       equivalente: (sal: string) => `${sal} g salt (1 teaspoon ≈ 2.3g)`,
       observacionEstricta: 'Strict version: severe hypertension or high risk.',
       observacionEstandar: 'Standard version for general blood pressure control.',
+    },
+    pt: {
+      dia: 'mg/dia',
+      equivalente: (sal: string) => `${sal} g de sal (1 colher de chá ≈ 2,3g)`,
+      observacionEstricta: 'Versão estrita: hipertensão grave ou risco alto.',
+      observacionEstandar: 'Versão padrão para controle geral da pressão arterial.',
     },
   } as const)[__lang];
   const t=String(i.tipoDash||'estandar');

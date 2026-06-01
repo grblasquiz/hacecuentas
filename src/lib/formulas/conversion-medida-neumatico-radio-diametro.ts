@@ -1,10 +1,11 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
 export function conversionMedidaNeumaticoRadioDiametro(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const T = ({
     es: { diameter: 'diámetro' },
     en: { diameter: 'diameter' },
+    pt: { diameter: 'diâmetro' },
   } as const)[__lang];
   const w=Number(i.ancho)||0; const a=Number(i.aspect)||0; const r=Number(i.rin)||0;
   const h=w*a/100*2; const d=r*25.4+h;

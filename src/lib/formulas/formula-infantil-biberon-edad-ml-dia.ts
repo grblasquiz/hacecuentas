@@ -1,10 +1,11 @@
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; }
 export function formulaInfantilBiberonEdadMlDia(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const T = ({
     es: { feedingsPerDay: 'tomas/día', mlPerFeeding: 'mL por toma' },
     en: { feedingsPerDay: 'feedings/day', mlPerFeeding: 'mL per feeding' },
+    pt: { feedingsPerDay: 'mamadas/dia', mlPerFeeding: 'mL por mamada' },
   } as const)[__lang];
   const m=Number(i.edadMeses)||0; const p=Number(i.pesoKg)||0;
   const total=p*150;

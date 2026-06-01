@@ -1,7 +1,7 @@
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number | object; }
 export function rugbyHandicapPuntosDescensoPromedio(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const T = ({
     es: {
       clasGold: 'Clasifica Copa de Oro',
@@ -33,6 +33,21 @@ export function rugbyHandicapPuntosDescensoPromedio(i: Inputs): Outputs {
       segGold: 'Gold Cup',
       aria: 'Points-per-game scale: relegation, risk, safety, Gold Cup',
     },
+    pt: {
+      clasGold: 'Classifica Copa de Ouro',
+      clasSafe: 'Salvação confortável',
+      clasRisk: 'Zona de risco',
+      clasRel: 'Rebaixamento provável',
+      riesgoNull: 'Nulo',
+      riesgoBajo: 'Baixo',
+      riesgoMedio: 'Médio',
+      riesgoAlto: 'Alto',
+      segDesc: 'Rebaixamento',
+      segRisk: 'Risco',
+      segSave: 'Salvação',
+      segGold: 'Copa de Ouro',
+      aria: 'Escala de média de pontos por partida: rebaixamento, risco, salvação, Copa de Ouro',
+    },
   } as const)[__lang];
   const p=Number(i.puntosGanados)||0; const pj=Number(i.partidosJugados)||1;
   const prom=p/pj;
@@ -44,7 +59,7 @@ export function rugbyHandicapPuntosDescensoPromedio(i: Inputs): Outputs {
   const chart = {
     type: 'scale' as const,
     marker: Number(prom.toFixed(2)),
-    markerLabel: __lang === 'en' ? 'Your average: ' + prom.toFixed(2) : 'Tu promedio: ' + prom.toFixed(2),
+    markerLabel: __lang === 'en' ? 'Your average: ' + prom.toFixed(2) : __lang === 'pt' ? 'Sua média: ' + prom.toFixed(2) : 'Tu promedio: ' + prom.toFixed(2),
     min: 0,
     unit: '',
     segments: [

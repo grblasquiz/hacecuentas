@@ -1,7 +1,7 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
 export function eloAjedrezGanadoPerdidoVariacion(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const ea=Number(i.eloActual)||0; const eo=Number(i.eloOponente)||0; const r=String(i.resultado||'gane'); const k=Number(i.kFactor)||20;
   const exp=1/(1+Math.pow(10,(eo-ea)/400));
   const resNum={'gane':1,'tabla':0.5,'perdi':0}[r];
@@ -9,6 +9,8 @@ export function eloAjedrezGanadoPerdidoVariacion(i: Inputs): Outputs {
   const nuevo=ea+delta;
   const expectativaStr = __lang === 'en'
     ? `${(exp*100).toFixed(0)}% chance of winning`
+    : __lang === 'pt'
+    ? `${(exp*100).toFixed(0)}% de chance de ganhar`
     : `${(exp*100).toFixed(0)}% de ganar`;
   return { nuevoElo:`${Math.round(nuevo)}`, variacion:`${delta>=0?'+':''}${Math.round(delta)}`, expectativa:expectativaStr };
 }

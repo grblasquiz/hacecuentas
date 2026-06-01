@@ -1,7 +1,7 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
 export function divorcioLiquidacionBienesGanancialesCosto(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const T = ({
     es: {
       tiempo_acuerdo: '2-4 meses',
@@ -14,6 +14,12 @@ export function divorcioLiquidacionBienesGanancialesCosto(i: Inputs): Outputs {
       tiempo_contradictorio: '1-3 years',
       obs_acuerdo: 'Agreed divorce: faster, always recommended when possible.',
       obs_contradictorio: 'Contested: higher costs + longer timeframe.',
+    },
+    pt: {
+      tiempo_acuerdo: '2-4 meses',
+      tiempo_contradictorio: '1-3 anos',
+      obs_acuerdo: 'Divórcio consensual: mais rápido, sempre recomendado quando possível.',
+      obs_contradictorio: 'Litigioso: custos mais altos + prazo mais longo.',
     },
   } as const)[__lang];
   const b=Number(i.bienes)||0; const a=String(i.acuerdo||'acuerdo');

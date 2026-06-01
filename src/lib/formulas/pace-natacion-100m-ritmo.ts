@@ -1,7 +1,7 @@
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _chart?: any; }
 export function paceNatacion100mRitmo(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const T = ({
     es: {
       avanzado: 'Avanzado',
@@ -14,6 +14,12 @@ export function paceNatacion100mRitmo(i: Inputs): Outputs {
       intermedio: 'Intermediate',
       principiante: 'Beginner',
       ariaLabel: 'Swimming pace scale by level (seconds per 100m)',
+    },
+    pt: {
+      avanzado: 'Avançado',
+      intermedio: 'Intermediário',
+      principiante: 'Iniciante',
+      ariaLabel: 'Escala de pace de natação por nível (segundos por 100m)',
     },
   } as const)[__lang];
   const d=Number(i.distanciaM)||0; const t=Number(i.tiempoMinutos)||0;
@@ -28,6 +34,8 @@ export function paceNatacion100mRitmo(i: Inputs): Outputs {
   const markerSeg=Math.round(paceSegPor100);
   const markerLabel=__lang==='en'
     ?`Your pace: ${min}:${String(seg).padStart(2,'0')}/100m`
+    :__lang==='pt'
+    ?`Seu pace: ${min}:${String(seg).padStart(2,'0')}/100m`
     :`Tu pace: ${min}:${String(seg).padStart(2,'0')}/100m`;
   const chart={
     type:'scale' as const,

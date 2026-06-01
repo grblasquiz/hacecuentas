@@ -1797,15 +1797,17 @@ const formatFreshnessDate = (iso: string): string => {
   }
   .chart-wrap[hidden] { display: none; }
 
-  /* ── Tabs de gráfico (multi-chart: Evolución / Desglose / …) ── */
-  .chart-tabs {
+  /* ── Tabs de gráfico (multi-chart: Evolución / Desglose / …) ──
+     Render client-side (innerHTML/createElement) → SIN scope de Astro.
+     Por eso los selectores van en :global() o el CSS no matchearía. */
+  :global(.chart-tabs) {
     display: flex;
     flex-wrap: wrap;
     gap: 0.375rem;
     margin-bottom: 0.75rem;
   }
-  .chart-tabs[hidden] { display: none; }
-  .chart-tab {
+  :global(.chart-tabs[hidden]) { display: none; }
+  :global(.chart-tab) {
     font: inherit;
     font-size: 0.8125rem;
     font-weight: 600;
@@ -1817,15 +1819,16 @@ const formatFreshnessDate = (iso: string): string => {
     cursor: pointer;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
   }
-  .chart-tab:hover { color: var(--text); border-color: var(--accent); }
-  .chart-tab.active {
+  :global(.chart-tab:hover) { color: var(--text); border-color: var(--accent); }
+  :global(.chart-tab.active) {
     color: #fff;
     background: var(--accent);
     border-color: var(--accent);
   }
 
-  /* ── Caja de insight narrativa (qué significa tu resultado) ── */
-  .result-insight {
+  /* ── Caja de insight narrativa (qué significa tu resultado) ──
+     Contenido inyectado por JS → :global() (igual que la tabla). */
+  :global(.result-insight) {
     display: flex;
     gap: 0.625rem;
     align-items: flex-start;
@@ -1838,21 +1841,23 @@ const formatFreshnessDate = (iso: string): string => {
     font-size: 0.9rem;
     line-height: 1.5;
   }
-  .result-insight[hidden] { display: none; }
-  .result-insight--good { border-left-color: #10b981; }
-  .result-insight--warn { border-left-color: #f59e0b; }
-  .result-insight-icon { font-size: 1.15rem; line-height: 1.3; flex-shrink: 0; }
-  .result-insight-body { display: flex; flex-direction: column; gap: 0.15rem; }
-  .result-insight-title { font-size: 0.95rem; color: var(--text); }
-  .result-insight-text { color: var(--text-muted); }
-  .result-insight-text strong { color: var(--text); font-weight: 700; }
+  :global(.result-insight[hidden]) { display: none; }
+  :global(.result-insight--good) { border-left-color: #10b981; }
+  :global(.result-insight--warn) { border-left-color: #f59e0b; }
+  :global(.result-insight-icon) { font-size: 1.15rem; line-height: 1.3; flex-shrink: 0; }
+  :global(.result-insight-body) { display: flex; flex-direction: column; gap: 0.15rem; }
+  :global(.result-insight-title) { font-size: 0.95rem; color: var(--text); }
+  :global(.result-insight-text) { color: var(--text-muted); }
+  :global(.result-insight-text strong) { color: var(--text); font-weight: 700; }
 
-  /* ── Tabla de resultado dinámica (amortización, cronogramas) ── */
-  .result-table-wrap {
+  /* ── Tabla de resultado dinámica (amortización, cronogramas) ──
+     Render client-side (renderResultTable → innerHTML) → SIN scope de Astro.
+     Los selectores van en :global() o no aplicarían (era el bug del "sin formato"). */
+  :global(.result-table-wrap) {
     margin: 1.25rem 0 0.5rem;
   }
-  .result-table-wrap[hidden] { display: none; }
-  .result-table-title {
+  :global(.result-table-wrap[hidden]) { display: none; }
+  :global(.result-table-title) {
     font-size: 0.75rem;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -1860,20 +1865,20 @@ const formatFreshnessDate = (iso: string): string => {
     font-weight: 700;
     margin-bottom: 0.625rem;
   }
-  .result-table-scroll {
+  :global(.result-table-scroll) {
     max-height: 440px;
     overflow: auto;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     -webkit-overflow-scrolling: touch;
   }
-  table.result-table {
+  :global(table.result-table) {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.8125rem;
     font-variant-numeric: tabular-nums;
   }
-  table.result-table thead th {
+  :global(table.result-table thead th) {
     position: sticky;
     top: 0;
     z-index: 1;
@@ -1885,20 +1890,20 @@ const formatFreshnessDate = (iso: string): string => {
     white-space: nowrap;
     border-bottom: 1px solid var(--border);
   }
-  table.result-table tbody td {
+  :global(table.result-table tbody td) {
     padding: 0.4375rem 0.75rem;
     border-bottom: 1px solid var(--border-subtle, var(--border));
     color: var(--text);
     white-space: nowrap;
   }
-  table.result-table tbody tr:nth-child(even) td {
+  :global(table.result-table tbody tr:nth-child(even) td) {
     background: color-mix(in srgb, var(--bg-muted) 35%, transparent);
   }
-  table.result-table tbody tr.result-table-row-emph td {
+  :global(table.result-table tbody tr.result-table-row-emph td) {
     border-bottom: 2px solid var(--accent);
     font-weight: 600;
   }
-  table.result-table tfoot th {
+  :global(table.result-table tfoot th) {
     padding: 0.5rem 0.75rem;
     text-align: left;
     font-weight: 800;
@@ -1909,12 +1914,12 @@ const formatFreshnessDate = (iso: string): string => {
     bottom: 0;
     white-space: nowrap;
   }
-  .result-table-note {
+  :global(.result-table-note) {
     font-size: 0.6875rem;
     color: var(--text-subtle);
     margin: 0.5rem 0.125rem 0;
   }
-  .result-table-toggle {
+  :global(.result-table-toggle) {
     margin-top: 0.625rem;
     width: 100%;
     padding: 0.5rem 0.875rem;
@@ -1927,7 +1932,7 @@ const formatFreshnessDate = (iso: string): string => {
     cursor: pointer;
     transition: background 0.15s ease;
   }
-  .result-table-toggle:hover { background: var(--bg-muted); }
+  :global(.result-table-toggle:hover) { background: var(--bg-muted); }
   .chart-download-btn {
     position: absolute;
     top: 0.625rem;

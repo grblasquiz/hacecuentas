@@ -1,7 +1,7 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
 export function pañalesPorDiaMesBebeEdad(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const m=Number(i.mes)||0;
   let d:number; let t:string;
   if (m<=2) { d=11; t='RN/T1'; }
@@ -9,10 +9,12 @@ export function pañalesPorDiaMesBebeEdad(i: Inputs): Outputs {
   else if (m<=12) { d=6; t='T3/T4'; }
   else if (m<=24) { d=5; t='T4/T5'; }
   else { d=4; t='T5/T6'; }
-  const diarios = __lang === 'en' ? `${d}/day` : `${d}/día`;
-  const mensuales = __lang === 'en' ? `~${d*30}/month` : `~${d*30}/mes`;
+  const diarios = __lang === 'en' ? `${d}/day` : __lang === 'pt' ? `${d}/dia` : `${d}/día`;
+  const mensuales = __lang === 'en' ? `~${d*30}/month` : __lang === 'pt' ? `~${d*30}/mês` : `~${d*30}/mes`;
   const resumen = __lang === 'en'
     ? `At ${m} months: ${d} diapers/day (~${d*30}/month), size ${t}.`
+    : __lang === 'pt'
+    ? `Com ${m} meses: ${d} fraldas/dia (~${d*30}/mês), tamanho ${t}.`
     : `A los ${m} meses: ${d} pañales/día (~${d*30}/mes), talle ${t}.`;
   return { diarios, mensuales, tamano:t, resumen };
 }

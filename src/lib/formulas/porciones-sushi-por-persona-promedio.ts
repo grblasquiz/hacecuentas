@@ -44,7 +44,7 @@ const PIEZAS_NINO: Record<string, number> = {
 const PIEZAS_POR_ROLL = 8; // maki estándar 8 piezas
 
 export function porcionesSushiPorPersonaPromedio(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const T = ({
     es: {
       errorNivel: 'Seleccioná un tipo de comida válido',
@@ -73,6 +73,20 @@ export function porcionesSushiPorPersonaPromedio(i: Inputs): Outputs {
       ninos: 'children',
       resumenTemplate: (ps: number, ns: number, nLabel: string, total: number, rolls: number, pA: number, pN: number) =>
         `For ${ps} ${ps === 1 ? 'person' : 'people'}${ns > 0 ? ` (${ns} ${ns === 1 ? 'child' : 'children'})` : ''} for ${nLabel}: order ~${total} pieces total (≈ ${rolls} rolls of 8). Base ${pA}/adult + ${pN}/child, +10% buffer.`,
+    },
+    pt: {
+      errorNivel: 'Selecione um tipo de refeição válido',
+      errorNinos: 'O número de crianças não pode superar o total de pessoas',
+      costoPlaceholder: 'Informe o preço por peça para estimar o custo',
+      nivelEntrada: 'entrada/petisco',
+      nivelDegustacion: 'degustação ampla',
+      nivelPrincipal: 'refeição principal',
+      persona: 'pessoa',
+      personas: 'pessoas',
+      nino: 'criança',
+      ninos: 'crianças',
+      resumenTemplate: (ps: number, ns: number, nLabel: string, total: number, rolls: number, pA: number, pN: number) =>
+        `Para ${ps} ${ps === 1 ? 'pessoa' : 'pessoas'}${ns > 0 ? ` (${ns} ${ns === 1 ? 'criança' : 'crianças'})` : ''} em modo ${nLabel}: peça ~${total} peças no total (≈ ${rolls} rolls de 8). Base ${pA}/adulto + ${pN}/criança, +10% de reserva.`,
     },
   } as const)[__lang];
 

@@ -1,10 +1,11 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
 export function mesadaSemanalHijoEdadSugeridaMonto(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const T = ({
     es: { proposito: 'Educación financiera desde temprano. 10-20% ahorro obligatorio.' },
     en: { proposito: 'Financial education from an early age. 10-20% mandatory savings.' },
+    pt: { proposito: 'Educação financeira desde cedo. 10-20% de poupança obrigatória.' },
   } as const)[__lang];
   const e=Number(i.edad)||0; const n=String(i.nivelVida||'medio');
   const mult={'basico':1,'medio':2,'alto':4}[n];

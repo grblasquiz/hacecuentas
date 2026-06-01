@@ -1,7 +1,7 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
 export function introduccionAlimentosBlwEdadEtapa6meses(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const T = ({
     es: {
       aptoNo: 'No todavía',
@@ -26,6 +26,18 @@ export function introduccionAlimentosBlwEdadEtapa6meses(i: Inputs): Outputs {
       rec2: 'Shredded meat, soft legumes, fruit in chunks.',
       etapa3: 'Varied',
       rec3: 'Family food without added salt or sugar.',
+    },
+    pt: {
+      aptoNo: 'Ainda não',
+      etapa0: 'Leite exclusivo',
+      rec0: 'Aguarde até 6 meses e observe os sinais de prontidão.',
+      aptoSi: 'Sim',
+      etapa1: 'Início BLW',
+      rec1: 'Tiras macias de abacate, banana, batata-doce, abóbora.',
+      etapa2: 'Variedade crescente',
+      rec2: 'Carne desfiada, leguminosas macias, frutas em pedaços.',
+      etapa3: 'Variada',
+      rec3: 'Comida da família sem sal nem açúcar adicionados.',
     },
   } as const)[__lang];
   const m=Number(i.edadMeses)||0;

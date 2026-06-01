@@ -44,7 +44,7 @@ const FACTOR_EDAD: Record<string, number> = {
 };
 
 export function paseosPerroMinutosRazaEnergia(i: Inputs): Outputs {
-  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
 
   const T = ({
     es: {
@@ -70,6 +70,18 @@ export function paseosPerroMinutosRazaEnergia(i: Inputs): Outputs {
       advCachorro: 'AKC puppy rule: 5 min of structured exercise × each month of age, split into 2-3 sessions. Avoid running on hard surfaces until growth plates close. ',
       advSenior: 'Senior: prioritize shorter, more frequent walks. Consult a vet if arthritis or heart conditions are present. ',
       sinAdvertencias: 'No specific warnings — adjust based on weather and the dog\'s condition.',
+    },
+    pt: {
+      errEnergia: 'Selecione um nível de energia válido',
+      errTamano: 'Selecione um tamanho válido',
+      errEdad: 'Selecione uma idade válida',
+      intensidadAlta: 'Alta: combine caminhada rápida, trote e brincadeiras ativas (corrida, buscar). Precisam de estimulação mental além da física.',
+      intensidadBaja: 'Baixa-moderada: ritmo confortável em terreno plano, paradas frequentes para farejar.',
+      intensidadMedia: 'Moderada: caminhada em ritmo animado com algum trecho de trote. Farejar também conta como exercício.',
+      advBraqui: 'Raça braquicéfala (focinho achatado): evite calor >25°C e esforço intenso — dificuldade respiratória. ',
+      advCachorro: 'Regra AKC para filhotes: 5 min de exercício estruturado × cada mês de idade, divididos em 2-3 sessões. Evite corrida em superfícies duras até o fechamento das placas de crescimento. ',
+      advSenior: 'Sênior: prefira passeios mais curtos e frequentes. Consulte o veterinário se houver artrose ou problemas cardíacos. ',
+      sinAdvertencias: 'Sem advertências específicas — ajuste conforme o clima e o estado do cão.',
     },
   } as const)[__lang];
 
@@ -114,6 +126,8 @@ export function paseosPerroMinutosRazaEnergia(i: Inputs): Outputs {
 
   const resumen = __lang === 'en'
     ? `Your dog needs ~${minutosDia} min/day of walking, split into ${paseosDia} outings of ~${duracionPorPaseo} min. ${intensidad}`
+    : __lang === 'pt'
+    ? `Seu cão precisa de ~${minutosDia} min/dia de passeio, divididos em ${paseosDia} saídas de ~${duracionPorPaseo} min. ${intensidad}`
     : `Tu perro necesita ~${minutosDia} min/día de paseo, repartidos en ${paseosDia} salidas de ~${duracionPorPaseo} min. ${intensidad}`;
 
   return {
