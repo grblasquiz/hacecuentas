@@ -1,7 +1,11 @@
-export interface Inputs { [k: string]: number | string; }
+export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
 export function creatinaDosisPesoCargaMantenimiento(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const v1=Number(i.valor1)||0; const v2=Number(i.valor2)||1;
   const r=v1*v2/10;
-  return { resultado:r.toFixed(1), resumen:`Cálculo: ${v1} × ${v2} / 10 = ${r.toFixed(1)}.` };
+  const resumen = __lang === 'en'
+    ? `Calculation: ${v1} × ${v2} / 10 = ${r.toFixed(1)}.`
+    : `Cálculo: ${v1} × ${v2} / 10 = ${r.toFixed(1)}.`;
+  return { resultado:r.toFixed(1), resumen };
 }

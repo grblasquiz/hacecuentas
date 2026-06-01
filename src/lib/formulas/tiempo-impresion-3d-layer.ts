@@ -4,6 +4,7 @@
 
 export interface Inputs {
   altura: number; layer: number; velocidad: number; areaCapa: number;
+  __lang?: string;
 }
 
 export interface Outputs {
@@ -11,11 +12,16 @@ export interface Outputs {
 }
 
 export function tiempoImpresion3dLayer(inputs: Inputs): Outputs {
+  const __lang = inputs.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: { errorFields: 'Completá todos los campos' },
+    en: { errorFields: 'Please fill in all fields' },
+  } as const)[__lang];
   const altura = Number(inputs.altura);
   const layer = Number(inputs.layer);
   const vel = Number(inputs.velocidad);
   const area = Number(inputs.areaCapa);
-  if (!altura || !layer || !vel || !area) throw new Error('Completá todos los campos');
+  if (!altura || !layer || !vel || !area) throw new Error(T.errorFields);
   const capas = Math.ceil(altura / layer);
   const nozzle = 0.4;
   const extrusion = (area * 100) / (nozzle * layer);

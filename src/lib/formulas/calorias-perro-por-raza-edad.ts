@@ -1,15 +1,16 @@
 /**
  * Calorías del perro por raza y edad (MER = RER × factor).
  */
-export interface Inputs { raza: string; peso: number; edad: string; actividad: string; castrado: string; }
+export interface Inputs { raza: string; peso: number; edad: string; actividad: string; castrado: string; __lang?: string; }
 export interface Outputs { kcalDia: number; rer: number; factor: number; gramosAlimento: number; }
 
 export function caloriasPerroPorRazaEdad(inputs: Inputs): Outputs {
+  const __lang = inputs.__lang === 'en' ? 'en' : 'es';
   const peso = Number(inputs.peso);
   const edad = String(inputs.edad || 'adulto');
   const actividad = String(inputs.actividad || 'media');
   const castrado = String(inputs.castrado || 'si') === 'si';
-  if (!peso || peso <= 0) throw new Error('Ingresá peso válido');
+  if (!peso || peso <= 0) throw new Error(__lang === 'en' ? 'Enter a valid weight' : 'Ingresá peso válido');
 
   const rer = 70 * Math.pow(peso, 0.75);
 

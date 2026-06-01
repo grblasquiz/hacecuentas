@@ -1,13 +1,30 @@
 /** Ventana de implantación del embrión */
-export interface Inputs { fechaReferencia: string; tipoCalculo?: string; }
+export interface Inputs { fechaReferencia: string; tipoCalculo?: string; __lang?: string; }
 export interface Outputs { ventanaImplantacion: string; diaMasProbable: string; primerTestConfiable: string; sintomas: string; }
 
 export function implantacionEmbrion(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+
+  const T = ({
+    es: {
+      errorFecha: 'Ingresá una fecha válida',
+      ventanaPrefix: 'Del',
+      ventanaSep: 'al',
+      sintomas: 'Posibles síntomas post-implantación (1-3 días después): manchado leve rosado/marrón, cólicos suaves, sensibilidad mamaria, fatiga. No todas las mujeres los tienen.',
+    },
+    en: {
+      errorFecha: 'Enter a valid date',
+      ventanaPrefix: 'From',
+      ventanaSep: 'to',
+      sintomas: 'Possible post-implantation symptoms (1–3 days after): light pink/brown spotting, mild cramps, breast tenderness, fatigue. Not all women experience them.',
+    },
+  } as const)[__lang];
+
   const parts = String(i.fechaReferencia || '').split('-').map(Number);
-  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error(T.errorFecha);
   const [yy, mm, dd] = parts;
   const ref = new Date(yy, mm - 1, dd);
-  if (isNaN(ref.getTime())) throw new Error('Ingresá una fecha válida');
+  if (isNaN(ref.getTime())) throw new Error(T.errorFecha);
   const tipo = String(i.tipoCalculo || 'ovulacion');
   const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
@@ -27,9 +44,9 @@ export function implantacionEmbrion(i: Inputs): Outputs {
   const test = new Date(pico.getTime()); test.setDate(test.getDate() + 5);
 
   return {
-    ventanaImplantacion: `Del ${fmt(inicio)} al ${fmt(fin)}`,
+    ventanaImplantacion: `${T.ventanaPrefix} ${fmt(inicio)} ${T.ventanaSep} ${fmt(fin)}`,
     diaMasProbable: fmt(pico),
     primerTestConfiable: fmt(test),
-    sintomas: 'Posibles síntomas post-implantación (1-3 días después): manchado leve rosado/marrón, cólicos suaves, sensibilidad mamaria, fatiga. No todas las mujeres los tienen.',
+    sintomas: T.sintomas,
   };
 }

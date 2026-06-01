@@ -1,9 +1,10 @@
-export interface Inputs { [k: string]: number | string; }
+export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
 export function energiaFotonesFrecuenciaLongitudOnda(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const h = 6.626e-34; const c = 3e8;
   const modo = String(i.modo); const v = Number(i.valor); const u = String(i.unidad);
-  if (!v) throw new Error('Completá valor');
+  if (!v) throw new Error(__lang === 'en' ? 'Enter a value' : 'Completá valor');
   let freq: number;
   if (modo === 'freq') { freq = u === 'THz' ? v * 1e12 : v; }
   else { const lam = u === 'um' ? v * 1e-6 : v * 1e-9; freq = c / lam; }

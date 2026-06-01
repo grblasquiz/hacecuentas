@@ -1,5 +1,5 @@
 /** 1RM — peso máximo levantable (Epley, Brzycki, Lombardi) */
-export interface Inputs { peso: number; repeticiones: number; }
+export interface Inputs { peso: number; repeticiones: number; __lang?: string; }
 export interface Outputs {
   rmEpley: number;
   rmBrzycki: number;
@@ -9,10 +9,21 @@ export interface Outputs {
 }
 
 export function rm(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errPeso: 'Ingresá el peso levantado',
+      errReps: 'Las repeticiones deben estar entre 1 y 15 para buena precisión',
+    },
+    en: {
+      errPeso: 'Enter the weight lifted',
+      errReps: 'Repetitions must be between 1 and 15 for good accuracy',
+    },
+  } as const)[__lang];
   const peso = Number(i.peso);
   const reps = Number(i.repeticiones);
-  if (!peso || peso <= 0) throw new Error('Ingresá el peso levantado');
-  if (!reps || reps <= 0 || reps > 15) throw new Error('Las repeticiones deben estar entre 1 y 15 para buena precisión');
+  if (!peso || peso <= 0) throw new Error(T.errPeso);
+  if (!reps || reps <= 0 || reps > 15) throw new Error(T.errReps);
 
   // Epley: 1RM = peso × (1 + reps / 30)
   const epley = peso * (1 + reps / 30);

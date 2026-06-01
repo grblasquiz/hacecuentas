@@ -17,6 +17,7 @@ export interface Inputs {
   nivelHambre: string;    // 'entrada' | 'principal' | 'degustacion'
   ninos?: number;
   precioPorPieza?: number; // opcional para costo total
+  __lang?: string;
 }
 
 export interface Outputs {
@@ -43,13 +44,45 @@ const PIEZAS_NINO: Record<string, number> = {
 const PIEZAS_POR_ROLL = 8; // maki estándar 8 piezas
 
 export function porcionesSushiPorPersonaPromedio(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errorNivel: 'Seleccioná un tipo de comida válido',
+      errorNinos: 'Los niños no pueden superar el total de personas',
+      costoPlaceholder: 'Ingresá precio por pieza para estimar costo',
+      nivelEntrada: 'entrada/picoteo',
+      nivelDegustacion: 'degustación amplia',
+      nivelPrincipal: 'comida principal',
+      persona: 'persona',
+      personas: 'personas',
+      nino: 'niño',
+      ninos: 'niños',
+      resumenTemplate: (ps: number, ns: number, nLabel: string, total: number, rolls: number, pA: number, pN: number) =>
+        `Para ${ps} ${ps === 1 ? 'persona' : 'personas'}${ns > 0 ? ` (${ns} ${ns === 1 ? 'niño' : 'niños'})` : ''} en modo ${nLabel}: pedí ~${total} piezas en total (≈ ${rolls} rolls de 8). Base ${pA}/adulto + ${pN}/niño, +10% reserva.`,
+    },
+    en: {
+      errorNivel: 'Select a valid meal type',
+      errorNinos: 'Children cannot exceed the total number of people',
+      costoPlaceholder: 'Enter price per piece to estimate cost',
+      nivelEntrada: 'appetizer/snack',
+      nivelDegustacion: 'full tasting',
+      nivelPrincipal: 'main meal',
+      persona: 'person',
+      personas: 'people',
+      nino: 'child',
+      ninos: 'children',
+      resumenTemplate: (ps: number, ns: number, nLabel: string, total: number, rolls: number, pA: number, pN: number) =>
+        `For ${ps} ${ps === 1 ? 'person' : 'people'}${ns > 0 ? ` (${ns} ${ns === 1 ? 'child' : 'children'})` : ''} for ${nLabel}: order ~${total} pieces total (≈ ${rolls} rolls of 8). Base ${pA}/adult + ${pN}/child, +10% buffer.`,
+    },
+  } as const)[__lang];
+
   const personas = Math.max(1, Math.floor(Number(i.personas) || 0));
   const ninos = Math.max(0, Math.floor(Number(i.ninos) || 0));
   const nivel = String(i.nivelHambre || 'principal').toLowerCase();
   const precio = Math.max(0, Number(i.precioPorPieza) || 0);
 
-  if (!PIEZAS_ADULTO[nivel]) throw new Error('Seleccioná un tipo de comida válido');
-  if (ninos > personas) throw new Error('Los niños no pueden superar el total de personas');
+  if (!PIEZAS_ADULTO[nivel]) throw new Error(T.errorNivel);
+  if (ninos > personas) throw new Error(T.errorNinos);
 
   const adultos = personas - ninos;
   const piezasPorAdulto = PIEZAS_ADULTO[nivel];
@@ -63,10 +96,10 @@ export function porcionesSushiPorPersonaPromedio(i: Inputs): Outputs {
   const costoEstimado =
     precio > 0
       ? `~$${Math.round(piezasTotales * precio).toLocaleString('es-AR')} (${piezasTotales} piezas × $${Math.round(precio)}/pieza)`
-      : 'Ingresá precio por pieza para estimar costo';
+      : T.costoPlaceholder;
 
-  const nivelLabel = nivel === 'entrada' ? 'entrada/picoteo' : nivel === 'degustacion' ? 'degustación amplia' : 'comida principal';
-  const resumen = `Para ${personas} ${personas === 1 ? 'persona' : 'personas'}${ninos > 0 ? ` (${ninos} ${ninos === 1 ? 'niño' : 'niños'})` : ''} en modo ${nivelLabel}: pedí ~${piezasTotales} piezas en total (≈ ${rollsEquivalentes} rolls de 8). Base ${piezasPorAdulto}/adulto + ${piezasPorNino}/niño, +10% reserva.`;
+  const nivelLabel = nivel === 'entrada' ? T.nivelEntrada : nivel === 'degustacion' ? T.nivelDegustacion : T.nivelPrincipal;
+  const resumen = T.resumenTemplate(personas, ninos, nivelLabel, piezasTotales, rollsEquivalentes, piezasPorAdulto, piezasPorNino);
 
   return {
     piezasTotales,

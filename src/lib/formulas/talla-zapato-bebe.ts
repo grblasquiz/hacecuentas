@@ -1,5 +1,5 @@
 /** Talla de zapato del bebé por medida del pie o edad */
-export interface Inputs { medidasPie?: number; edadBebeMeses?: number; }
+export interface Inputs { medidasPie?: number; edadBebeMeses?: number; __lang?: string; }
 export interface Outputs { tallaArgentina: string; tallaEuropea: string; tallaUSA: string; recomendacion: string; }
 
 const tablaPie: { cm: number; ar: number; eu: number; us: number }[] = [
@@ -23,6 +23,7 @@ const edadACm: Record<number, number> = {
 };
 
 export function tallaZapatoBebe(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   let cm = Number(i.medidasPie) || 0;
   const edad = Number(i.edadBebeMeses) || 0;
 
@@ -33,7 +34,11 @@ export function tallaZapatoBebe(i: Inputs): Outputs {
     cm = edadACm[closest];
   }
 
-  if (!cm || cm < 7 || cm > 22) throw new Error('Ingresá la medida del pie (7-22 cm) o la edad del bebé');
+  if (!cm || cm < 7 || cm > 22) throw new Error(
+    __lang === 'en'
+      ? 'Enter the foot measurement (7-22 cm) or the baby\'s age'
+      : 'Ingresá la medida del pie (7-22 cm) o la edad del bebé'
+  );
 
   let best = tablaPie[0];
   for (const t of tablaPie) { if (t.cm <= cm) best = t; }
@@ -42,6 +47,8 @@ export function tallaZapatoBebe(i: Inputs): Outputs {
     tallaArgentina: `${best.ar}`,
     tallaEuropea: `${best.eu}`,
     tallaUSA: `${best.us}`,
-    recomendacion: `Para pie de ${cm} cm: talla ${best.ar} (AR/EU). Recordá dejar 1-1,5 cm extra entre el dedo y la punta del zapato.`,
+    recomendacion: __lang === 'en'
+      ? `For a ${cm} cm foot: size ${best.ar} (AR/EU). Remember to leave 1-1.5 cm of extra room between the toe and the tip of the shoe.`
+      : `Para pie de ${cm} cm: talla ${best.ar} (AR/EU). Recordá dejar 1-1,5 cm extra entre el dedo y la punta del zapato.`,
   };
 }

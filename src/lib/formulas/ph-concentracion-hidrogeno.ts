@@ -1,8 +1,25 @@
 /** Calculadora de pH — pH = -log[H⁺] */
-export interface Inputs { ph?: number; concentracionH?: number; }
+export interface Inputs { ph?: number; concentracionH?: number; __lang?: string; }
 export interface Outputs { phOut: number; pOH: number; concentracionHOut: string; concentracionOH: string; clasificacion: string; }
 
 export function phConcentracionHidrogeno(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+
+  const T = ({
+    es: {
+      errorInput: 'Ingresá el pH o la concentración de H⁺',
+      acida: 'Ácida',
+      neutra: 'Neutra',
+      basica: 'Básica (alcalina)',
+    },
+    en: {
+      errorInput: 'Enter the pH or the H⁺ concentration',
+      acida: 'Acidic',
+      neutra: 'Neutral',
+      basica: 'Basic (alkaline)',
+    },
+  } as const)[__lang];
+
   let pH: number;
   let H: number;
 
@@ -16,16 +33,16 @@ export function phConcentracionHidrogeno(i: Inputs): Outputs {
     H = hVal;
     pH = -Math.log10(H);
   } else {
-    throw new Error('Ingresá el pH o la concentración de H⁺');
+    throw new Error(T.errorInput);
   }
 
   const pOH = 14 - pH;
   const OH = Math.pow(10, -pOH);
 
   let clasif: string;
-  if (pH < 6.5) clasif = 'Ácida';
-  else if (pH <= 7.5) clasif = 'Neutra';
-  else clasif = 'Básica (alcalina)';
+  if (pH < 6.5) clasif = T.acida;
+  else if (pH <= 7.5) clasif = T.neutra;
+  else clasif = T.basica;
 
   return {
     phOut: Number(pH.toFixed(4)),

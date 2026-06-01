@@ -1,5 +1,5 @@
 /** Peso ideal — fórmulas clásicas Devine, Lorentz, Robinson */
-export interface Inputs { altura: number; sexo: 'm' | 'f' | string; }
+export interface Inputs { altura: number; sexo: 'm' | 'f' | string; __lang?: string; }
 export interface Outputs {
   devine: number;
   robinson: number;
@@ -9,9 +9,10 @@ export interface Outputs {
 }
 
 export function pesoIdeal(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const alt = Number(i.altura);
   const sexo = String(i.sexo || 'm');
-  if (!alt || alt <= 0) throw new Error('Ingresá la altura en cm');
+  if (!alt || alt <= 0) throw new Error(__lang === 'en' ? 'Enter height in cm' : 'Ingresá la altura en cm');
   const alturaPulgadas = alt / 2.54;
   const pulgadasSobre5pies = Math.max(0, alturaPulgadas - 60);
 

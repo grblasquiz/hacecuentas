@@ -8,6 +8,7 @@ export interface PrestamoInputs {
   capital: number;
   tasaAnual: number; // %
   plazoMeses: number;
+  __lang?: string;
 }
 
 export interface PrestamoOutputs {
@@ -20,13 +21,33 @@ export interface PrestamoOutputs {
 }
 
 export function prestamoCuota(inputs: PrestamoInputs): PrestamoOutputs {
+  const __lang = inputs.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errCapital: 'Ingresá el monto del préstamo',
+      errTasa: 'Ingresá la tasa anual',
+      errPlazo: 'Ingresá el plazo en meses',
+      caeLabel: 'aprox, sin gastos',
+      cuotaLabel: 'Cuota',
+      interesLabel: 'Interés',
+    },
+    en: {
+      errCapital: 'Enter the loan amount',
+      errTasa: 'Enter the annual rate',
+      errPlazo: 'Enter the term in months',
+      caeLabel: 'approx, excl. fees',
+      cuotaLabel: 'Installment',
+      interesLabel: 'Interest',
+    },
+  } as const)[__lang];
+
   const capital = Number(inputs.capital);
   const tasaAnual = Number(inputs.tasaAnual);
   const plazoMeses = Number(inputs.plazoMeses);
 
-  if (!capital || capital <= 0) throw new Error('Ingresá el monto del préstamo');
-  if (!tasaAnual || tasaAnual <= 0) throw new Error('Ingresá la tasa anual');
-  if (!plazoMeses || plazoMeses <= 0) throw new Error('Ingresá el plazo en meses');
+  if (!capital || capital <= 0) throw new Error(T.errCapital);
+  if (!tasaAnual || tasaAnual <= 0) throw new Error(T.errTasa);
+  if (!plazoMeses || plazoMeses <= 0) throw new Error(T.errPlazo);
 
   const i = tasaAnual / 100 / 12; // tasa mensual
 
@@ -69,9 +90,9 @@ export function prestamoCuota(inputs: PrestamoInputs): PrestamoOutputs {
 
     if (cuotasEnBucket === bucketSize || mes === plazoMeses) {
       const labelTxt = bucketSize === 1
-        ? `Cuota ${mes}`
+        ? `${T.cuotaLabel} ${mes}`
         : primeraCuotaBucket === mes
-          ? `Cuota ${mes}`
+          ? `${T.cuotaLabel} ${mes}`
           : `${primeraCuotaBucket}-${mes}`;
       labels.push(labelTxt);
       capitalPorBucket.push(Math.round(accCapital));
@@ -87,12 +108,14 @@ export function prestamoCuota(inputs: PrestamoInputs): PrestamoOutputs {
   const chart = {
     type: 'bar' as const,
     stacked: true,
-    ariaLabel: `Distribución de cuotas del préstamo: capital total ${Math.round(capital).toLocaleString('es-AR')}, intereses totales ${Math.round(totalIntereses).toLocaleString('es-AR')}.`,
+    ariaLabel: __lang === 'en'
+      ? `Loan installment breakdown: total principal ${Math.round(capital).toLocaleString('es-AR')}, total interest ${Math.round(totalIntereses).toLocaleString('es-AR')}.`
+      : `Distribución de cuotas del préstamo: capital total ${Math.round(capital).toLocaleString('es-AR')}, intereses totales ${Math.round(totalIntereses).toLocaleString('es-AR')}.`,
     data: {
       labels,
       datasets: [
         { label: 'Capital', data: capitalPorBucket },
-        { label: 'Interés', data: interesPorBucket, color: 'muted' },
+        { label: T.interesLabel, data: interesPorBucket, color: 'muted' },
       ],
     },
   };
@@ -102,7 +125,7 @@ export function prestamoCuota(inputs: PrestamoInputs): PrestamoOutputs {
     totalPagar: Math.round(totalPagar),
     totalIntereses: Math.round(totalIntereses),
     tasaMensual: `${(i * 100).toFixed(2)}%`,
-    cae: `${cae.toFixed(2)}% (aprox, sin gastos)`,
+    cae: `${cae.toFixed(2)}% (${T.caeLabel})`,
     _chart: chart,
   };
 }

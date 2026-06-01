@@ -5,6 +5,7 @@ export interface Inputs {
   tension?: number; // 220 monofasico, 380 trifasico
   tipoInstalacion?: string; // interior | exterior | enterrado
   caidaMaxPct?: number;
+  __lang?: string;
 }
 export interface Outputs {
   seccionRecomendada: number; // mm²
@@ -35,12 +36,26 @@ const CAPACIDADES: Array<{ seccion: number; amperes: number }> = [
 const TERMICAS = [6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160];
 
 export function electricidadCableAmperaje(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errorAmperaje: 'Ingresá el amperaje',
+      errorDistancia: 'Ingresá la distancia en metros',
+      errorAlto: 'Amperaje demasiado alto, consultá con electricista',
+    },
+    en: {
+      errorAmperaje: 'Enter the amperage',
+      errorDistancia: 'Enter the distance in meters',
+      errorAlto: 'Amperage too high, consult an electrician',
+    },
+  } as const)[__lang];
+
   const A = Number(i.amperaje);
   const L = Number(i.distancia);
   const V = Number(i.tension) || 220;
   const caidaMax = Number(i.caidaMaxPct) || 3;
-  if (!A || A <= 0) throw new Error('Ingresá el amperaje');
-  if (!L || L <= 0) throw new Error('Ingresá la distancia en metros');
+  if (!A || A <= 0) throw new Error(T.errorAmperaje);
+  if (!L || L <= 0) throw new Error(T.errorDistancia);
 
   // Fórmula para caída de tensión (monofásico 220V):
   // S (mm²) = (2 × L × A × ρ) / (ΔV)
@@ -59,7 +74,7 @@ export function electricidadCableAmperaje(i: Inputs): Outputs {
       break;
     }
   }
-  if (seccionFinal === 0) throw new Error('Amperaje demasiado alto, consultá con electricista');
+  if (seccionFinal === 0) throw new Error(T.errorAlto);
 
   // Caída real
   const caidaRealV = (factor * L * A * rho) / seccionFinal;
@@ -85,6 +100,8 @@ export function electricidadCableAmperaje(i: Inputs): Outputs {
     caidaVolts: Number(caidaRealV.toFixed(2)),
     amperajeMaxCable: capCable,
     termicaRecomendada: termica,
-    resumen: `Para ${A} A a ${L} m en ${V} V usá cable de ${seccionFinal} mm² (caída real ${caidaRealPct.toFixed(2)}%) con térmica de ${termica} A.`,
+    resumen: __lang === 'en'
+      ? `For ${A} A at ${L} m on ${V} V use ${seccionFinal} mm² cable (actual drop ${caidaRealPct.toFixed(2)}%) with a ${termica} A circuit breaker.`
+      : `Para ${A} A a ${L} m en ${V} V usá cable de ${seccionFinal} mm² (caída real ${caidaRealPct.toFixed(2)}%) con térmica de ${termica} A.`,
   };
 }

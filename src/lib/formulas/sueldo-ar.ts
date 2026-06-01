@@ -30,6 +30,7 @@ export interface SueldoInputs {
   hijos?: number | string;
   /** @deprecated Input legacy genérico. Se usa sólo si conyuge/hijos no vienen. */
   cargas?: number | string;
+  __lang?: string;
 }
 
 export interface SueldoOutputs {
@@ -45,9 +46,31 @@ export interface SueldoOutputs {
 }
 
 export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
+  const __lang = inputs.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errorBruto: 'Ingresá un sueldo bruto válido',
+      netoEnMano: 'Neto en mano',
+      jubilacion: 'Jubilación',
+      obraSocial: 'Obra social',
+      ganancias: 'Ganancias',
+      centerLabel: 'Bruto',
+      ariaLabel: 'Composición del sueldo bruto: neto en mano, jubilación, obra social, PAMI e impuesto a las Ganancias',
+    },
+    en: {
+      errorBruto: 'Enter a valid gross salary',
+      netoEnMano: 'Take-home pay',
+      jubilacion: 'Retirement',
+      obraSocial: 'Health insurance',
+      ganancias: 'Income tax',
+      centerLabel: 'Gross',
+      ariaLabel: 'Gross salary breakdown: take-home pay, retirement, health insurance, PAMI and income tax',
+    },
+  } as const)[__lang];
+
   const bruto = Number(inputs.bruto);
   if (!bruto || bruto <= 0) {
-    throw new Error('Ingresá un sueldo bruto válido');
+    throw new Error(T.errorBruto);
   }
 
   // Resolver familia: si vienen los campos nuevos, usarlos. Si no, degradar desde
@@ -92,16 +115,16 @@ export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
   const chart = {
     type: 'doughnut' as const,
     slices: [
-      { label: 'Neto en mano', value: Math.round(neto) },
-      { label: 'Jubilación', value: Math.round(jubilacion) },
-      { label: 'Obra social', value: Math.round(obraSocial) },
+      { label: T.netoEnMano, value: Math.round(neto) },
+      { label: T.jubilacion, value: Math.round(jubilacion) },
+      { label: T.obraSocial, value: Math.round(obraSocial) },
       { label: 'PAMI', value: Math.round(pami) },
-      { label: 'Ganancias', value: Math.round(ganancias) },
+      { label: T.ganancias, value: Math.round(ganancias) },
     ],
     prefix: '$',
     centerValue: '$' + Math.round(bruto).toLocaleString('es-AR'),
-    centerLabel: 'Bruto',
-    ariaLabel: 'Composición del sueldo bruto: neto en mano, jubilación, obra social, PAMI e impuesto a las Ganancias',
+    centerLabel: T.centerLabel,
+    ariaLabel: T.ariaLabel,
   };
 
   return {

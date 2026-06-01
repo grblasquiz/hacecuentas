@@ -1,12 +1,13 @@
 /** Barrel aging */
-export interface Inputs { litrosBarril: number; intensidadDeseada: string; tipoLicor: string; }
+export interface Inputs { litrosBarril: number; intensidadDeseada: string; tipoLicor: string; __lang?: string; }
 export interface Outputs { diasMinimo: number; diasMaximo: number; equivalenteAnios: string; frecuenciaProbar: string; tips: string; }
 
 export function barrelAgingTiempoWhiskey(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const L = Number(i.litrosBarril);
   const int = String(i.intensidadDeseada);
   const tipo = String(i.tipoLicor);
-  if (!L || L <= 0) throw new Error('Ingresá tamaño');
+  if (!L || L <= 0) throw new Error(__lang === 'en' ? 'Enter barrel size' : 'Ingresá tamaño');
 
   // Factor vs 200L
   const factor = Math.pow(200 / L, 1 / 3);
@@ -25,17 +26,38 @@ export function barrelAgingTiempoWhiskey(i: Inputs): Outputs {
   const diasMin = Math.round(meses * 30 * 0.8);
   const diasMax = Math.round(meses * 30 * 1.2);
 
-  const equiv = `${(meses200 / 12).toFixed(1)} años en barril 200L`;
+  const equiv = __lang === 'en'
+    ? `${(meses200 / 12).toFixed(1)} years in a 200L barrel`
+    : `${(meses200 / 12).toFixed(1)} años en barril 200L`;
+
+  const T = ({
+    es: {
+      freqSmall: 'Cada 1-2 semanas',
+      freqMed: 'Cada 2-4 semanas',
+      freqLarge: 'Cada 1-2 meses',
+      tipsSmall: 'Micro barril: pre-remojar 48h antes. Evaporación alta (10-15% en 6 meses).',
+      tipsMed: 'Mantener en lugar fresco 18-22°C. Chequear nivel mensualmente.',
+      tipsLarge: 'Barril grande estándar — paciencia es la clave.',
+    },
+    en: {
+      freqSmall: 'Every 1-2 weeks',
+      freqMed: 'Every 2-4 weeks',
+      freqLarge: 'Every 1-2 months',
+      tipsSmall: 'Micro barrel: pre-soak 48h before use. High evaporation (10-15% over 6 months).',
+      tipsMed: 'Keep in a cool place at 18-22°C. Check level monthly.',
+      tipsLarge: 'Standard large barrel — patience is the key.',
+    },
+  } as const)[__lang];
 
   let freq = '';
-  if (L <= 5) freq = 'Cada 1-2 semanas';
-  else if (L <= 20) freq = 'Cada 2-4 semanas';
-  else freq = 'Cada 1-2 meses';
+  if (L <= 5) freq = T.freqSmall;
+  else if (L <= 20) freq = T.freqMed;
+  else freq = T.freqLarge;
 
   let tips = '';
-  if (L <= 5) tips = 'Micro barril: pre-remojar 48h antes. Evaporación alta (10-15% en 6 meses).';
-  else if (L <= 20) tips = 'Mantener en lugar fresco 18-22°C. Chequear nivel mensualmente.';
-  else tips = 'Barril grande estándar — paciencia es la clave.';
+  if (L <= 5) tips = T.tipsSmall;
+  else if (L <= 20) tips = T.tipsMed;
+  else tips = T.tipsLarge;
 
   return {
     diasMinimo: diasMin,

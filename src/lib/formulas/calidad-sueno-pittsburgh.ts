@@ -6,6 +6,7 @@ export interface Inputs {
   perturbaciones: string;
   calidadSubjetiva: string;
   disfuncionDiurna: string;
+  __lang?: string;
 }
 export interface Outputs {
   puntajeGlobal: number;
@@ -16,14 +17,39 @@ export interface Outputs {
 }
 
 export function calidadSuenoPittsburgh(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+
+  const T = ({
+    es: {
+      errorDuracion: 'Ingresá las horas de sueño',
+      errorCama: 'Ingresá las horas en cama',
+      resultadoBuena: 'Buena calidad de sueño',
+      recBuena: 'Tu sueño está dentro de parámetros normales. Mantené tus hábitos actuales.',
+      resultadoPobre: 'Calidad de sueño pobre',
+      recPobre: 'Necesitás mejorar tu higiene del sueño: horario fijo, no pantallas antes de dormir, habitación oscura y fresca.',
+      resultadoMala: 'Mala calidad de sueño',
+      recMala: 'Se recomienda consultar a un especialista en sueño. Tu calidad es significativamente peor que lo normal.',
+    },
+    en: {
+      errorDuracion: 'Enter your sleep hours',
+      errorCama: 'Enter your time in bed',
+      resultadoBuena: 'Good sleep quality',
+      recBuena: 'Your sleep is within normal parameters. Keep up your current habits.',
+      resultadoPobre: 'Poor sleep quality',
+      recPobre: 'You need to improve your sleep hygiene: fixed schedule, no screens before bed, dark and cool room.',
+      resultadoMala: 'Bad sleep quality',
+      recMala: 'Consulting a sleep specialist is recommended. Your sleep quality is significantly worse than normal.',
+    },
+  } as const)[__lang];
+
   const latencia = Number(i.latencia) || 0;
   const duracion = Number(i.duracion);
   const horasCama = Number(i.horasCama);
   const perturbaciones = Number(i.perturbaciones);
   const calidadSubjetiva = Number(i.calidadSubjetiva);
   const disfuncionDiurna = Number(i.disfuncionDiurna);
-  if (!duracion) throw new Error('Ingresá las horas de sueño');
-  if (!horasCama) throw new Error('Ingresá las horas en cama');
+  if (!duracion) throw new Error(T.errorDuracion);
+  if (!horasCama) throw new Error(T.errorCama);
 
   // Component 1: Subjective quality (0-3)
   const c1 = calidadSubjetiva;
@@ -61,14 +87,14 @@ export function calidadSuenoPittsburgh(i: Inputs): Outputs {
   let resultado: string;
   let recomendacion: string;
   if (puntajeGlobal <= 5) {
-    resultado = 'Buena calidad de sueño';
-    recomendacion = 'Tu sueño está dentro de parámetros normales. Mantené tus hábitos actuales.';
+    resultado = T.resultadoBuena;
+    recomendacion = T.recBuena;
   } else if (puntajeGlobal <= 10) {
-    resultado = 'Calidad de sueño pobre';
-    recomendacion = 'Necesitás mejorar tu higiene del sueño: horario fijo, no pantallas antes de dormir, habitación oscura y fresca.';
+    resultado = T.resultadoPobre;
+    recomendacion = T.recPobre;
   } else {
-    resultado = 'Mala calidad de sueño';
-    recomendacion = 'Se recomienda consultar a un especialista en sueño. Tu calidad es significativamente peor que lo normal.';
+    resultado = T.resultadoMala;
+    recomendacion = T.recMala;
   }
 
   return {

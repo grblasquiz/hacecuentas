@@ -4,6 +4,7 @@ export interface Inputs {
   intensidad: string;
   edad: number;
   sueno: number;
+  __lang?: string;
 }
 export interface Outputs {
   horasRecuperacion: number;
@@ -13,6 +14,7 @@ export interface Outputs {
 }
 
 export function recuperacionMuscularHoras(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const grupo = String(i.grupoMuscular || 'piernas');
   const intensidad = String(i.intensidad || 'moderada');
   const edad = Number(i.edad) || 30;
@@ -45,7 +47,11 @@ export function recuperacionMuscularHoras(i: Inputs): Outputs {
   return {
     horasRecuperacion: horas,
     diasDescanso,
-    frecuenciaSemanal: `${frecuenciaSemanal}x por semana como máximo`,
-    mensaje: `Descansá al menos ${horas} horas (${diasDescanso} días) antes de volver a entrenar ${grupo}. Podés entrenarlos ${frecuenciaSemanal}x/semana.`
+    frecuenciaSemanal: __lang === 'en'
+      ? `${frecuenciaSemanal}x per week at most`
+      : `${frecuenciaSemanal}x por semana como máximo`,
+    mensaje: __lang === 'en'
+      ? `Rest at least ${horas} hours (${diasDescanso} days) before training ${grupo} again. You can train them ${frecuenciaSemanal}x/week.`
+      : `Descansá al menos ${horas} horas (${diasDescanso} días) antes de volver a entrenar ${grupo}. Podés entrenarlos ${frecuenciaSemanal}x/semana.`
   };
 }

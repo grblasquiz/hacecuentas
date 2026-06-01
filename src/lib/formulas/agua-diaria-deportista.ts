@@ -4,6 +4,7 @@ export interface Inputs {
   minutosEntrenamiento: number;
   intensidad: string;
   clima: string;
+  __lang?: string;
 }
 export interface Outputs {
   aguaBase: number;
@@ -15,11 +16,25 @@ export interface Outputs {
 }
 
 export function aguaDiariaDeportista(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errorPeso: 'Ingresá tu peso',
+      electrolitosSi: 'Sí — sumá electrolitos (sodio, potasio) si entrenás más de 60 min o con alta intensidad.',
+      electrolitosNo: 'No indispensable, pero recomendado en clima caluroso.',
+    },
+    en: {
+      errorPeso: 'Enter your weight',
+      electrolitosSi: 'Yes — add electrolytes (sodium, potassium) if you train more than 60 min or at high intensity.',
+      electrolitosNo: 'Not essential, but recommended in hot weather.',
+    },
+  } as const)[__lang];
+
   const peso = Number(i.peso);
   const minutos = Number(i.minutosEntrenamiento) || 60;
   const intensidad = String(i.intensidad || 'moderada');
   const clima = String(i.clima || 'templado');
-  if (!peso || peso <= 0) throw new Error('Ingresá tu peso');
+  if (!peso || peso <= 0) throw new Error(T.errorPeso);
 
   // Base: 40 ml/kg para deportistas (más que 35 ml/kg sedentarios)
   let aguaBase = peso * 40 / 1000; // en litros
@@ -41,9 +56,9 @@ export function aguaDiariaDeportista(i: Inputs): Outputs {
   // Electrolitos
   let electrolitos: string;
   if (minutos > 60 || intensidad === 'alta') {
-    electrolitos = 'Sí — sumá electrolitos (sodio, potasio) si entrenás más de 60 min o con alta intensidad.';
+    electrolitos = T.electrolitosSi;
   } else {
-    electrolitos = 'No indispensable, pero recomendado en clima caluroso.';
+    electrolitos = T.electrolitosNo;
   }
 
   return {
@@ -52,6 +67,8 @@ export function aguaDiariaDeportista(i: Inputs): Outputs {
     aguaTotal: Number(aguaTotal.toFixed(2)),
     vasosTotal,
     electrolitos,
-    mensaje: `Tomá ${aguaTotal.toFixed(1)} L/día (${vasosTotal} vasos). Base: ${aguaBase.toFixed(1)} L + entrenamiento: ${aguaEntrenamiento.toFixed(1)} L.`,
+    mensaje: __lang === 'en'
+      ? `Drink ${aguaTotal.toFixed(1)} L/day (${vasosTotal} glasses). Base: ${aguaBase.toFixed(1)} L + training: ${aguaEntrenamiento.toFixed(1)} L.`
+      : `Tomá ${aguaTotal.toFixed(1)} L/día (${vasosTotal} vasos). Base: ${aguaBase.toFixed(1)} L + entrenamiento: ${aguaEntrenamiento.toFixed(1)} L.`,
   };
 }

@@ -1,18 +1,32 @@
 /** Calculadora de Ondas — v = λf */
-export interface Inputs { velocidad?: number; longitudOnda?: number; frecuencia?: number; }
+export interface Inputs { velocidad?: number; longitudOnda?: number; frecuencia?: number; __lang?: string; }
 export interface Outputs { resultado: string; velocidadMs: number; longitudOndaM: string; frecuenciaHz: string; }
 
 export function ondaLongitudFrecuenciaVelocidad(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      atLeastTwo: 'Ingresá al menos dos de los tres valores',
+      freqZero: 'La frecuencia no puede ser 0',
+      lambdaZero: 'La longitud de onda no puede ser 0',
+    },
+    en: {
+      atLeastTwo: 'Enter at least two of the three values',
+      freqZero: 'Frequency cannot be 0',
+      lambdaZero: 'Wavelength cannot be 0',
+    },
+  } as const)[__lang];
+
   const v = i.velocidad != null && i.velocidad !== 0 ? Number(i.velocidad) : null;
   const l = i.longitudOnda != null && i.longitudOnda !== 0 ? Number(i.longitudOnda) : null;
   const f = i.frecuencia != null && i.frecuencia !== 0 ? Number(i.frecuencia) : null;
   const filled = [v, l, f].filter(x => x !== null).length;
-  if (filled < 2) throw new Error('Ingresá al menos dos de los tres valores');
+  if (filled < 2) throw new Error(T.atLeastTwo);
 
   let vel: number, lambda: number, freq: number;
   if (v === null) { lambda = l!; freq = f!; vel = lambda * freq; }
-  else if (l === null) { vel = v; freq = f!; if (freq === 0) throw new Error('La frecuencia no puede ser 0'); lambda = vel / freq; }
-  else if (f === null) { vel = v; lambda = l; if (lambda === 0) throw new Error('La longitud de onda no puede ser 0'); freq = vel / lambda; }
+  else if (l === null) { vel = v; freq = f!; if (freq === 0) throw new Error(T.freqZero); lambda = vel / freq; }
+  else if (f === null) { vel = v; lambda = l; if (lambda === 0) throw new Error(T.lambdaZero); freq = vel / lambda; }
   else { vel = v; lambda = l; freq = f; }
 
   // Format lambda and freq with appropriate units

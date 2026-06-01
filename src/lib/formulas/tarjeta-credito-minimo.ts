@@ -1,13 +1,33 @@
 /** Costo de pagar solo el mínimo de la tarjeta */
-export interface Inputs { saldoActual: number; tnaAnual: number; minimoPct?: number; }
+export interface Inputs { saldoActual: number; tnaAnual: number; minimoPct?: number; __lang?: string; }
 export interface Outputs { totalPagado: number; interesesPagados: number; mesesPagar: number; costoFinanciacion: string; _chart?: any; }
 
 export function tarjetaCreditoMinimo(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errSaldo: 'Ingresá el saldo a financiar',
+      errTna: 'La TNA no puede ser negativa',
+      sliceSaldo: 'Saldo original',
+      sliceIntereses: 'Intereses',
+      centerLabel: 'Total pagado',
+      ariaLabel: 'Composición del total pagado: saldo original más intereses.',
+    },
+    en: {
+      errSaldo: 'Enter the balance to finance',
+      errTna: 'APR cannot be negative',
+      sliceSaldo: 'Original balance',
+      sliceIntereses: 'Interest',
+      centerLabel: 'Total paid',
+      ariaLabel: 'Breakdown of total paid: original balance plus interest.',
+    },
+  } as const)[__lang];
+
   let saldo = Number(i.saldoActual);
   const tna = Number(i.tnaAnual);
   const minPct = Number(i.minimoPct) || 15;
-  if (!saldo || saldo <= 0) throw new Error('Ingresá el saldo a financiar');
-  if (tna < 0) throw new Error('La TNA no puede ser negativa');
+  if (!saldo || saldo <= 0) throw new Error(T.errSaldo);
+  if (tna < 0) throw new Error(T.errTna);
 
   const tasaMensual = tna / 100 / 12;
   let totalPagado = 0;
@@ -30,20 +50,22 @@ export function tarjetaCreditoMinimo(i: Inputs): Outputs {
   const chart = {
     type: 'doughnut' as const,
     slices: [
-      { label: 'Saldo original', value: saldoOriginal },
-      { label: 'Intereses', value: intereses },
+      { label: T.sliceSaldo, value: saldoOriginal },
+      { label: T.sliceIntereses, value: intereses },
     ],
     prefix: '$',
     centerValue: '$' + Math.round(totalPagado).toLocaleString('es-AR'),
-    centerLabel: 'Total pagado',
-    ariaLabel: 'Composición del total pagado: saldo original más intereses.',
+    centerLabel: T.centerLabel,
+    ariaLabel: T.ariaLabel,
   };
 
   return {
     totalPagado: Math.round(totalPagado),
     interesesPagados: Math.round(intereses),
     mesesPagar: meses,
-    costoFinanciacion: `Pagás ${costoPct}% más del saldo original solo en intereses`,
+    costoFinanciacion: __lang === 'en'
+      ? `You pay ${costoPct}% more than the original balance in interest alone`
+      : `Pagás ${costoPct}% más del saldo original solo en intereses`,
     _chart: chart,
   };
 }

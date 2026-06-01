@@ -1,13 +1,25 @@
 /** ¿Cuándo hacerse el test de embarazo? */
-export interface Inputs { fumTest: string; duracionCicloTest: number; }
+export interface Inputs { fumTest: string; duracionCicloTest: number; __lang?: string; }
 export interface Outputs { testSangre: string; testOrina: string; ovulacionEstimada: string; nota: string; }
 
 export function testEmbarazoCuando(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      fechaInvalida: 'Ingresá una fecha válida',
+      nota: 'Para mayor confiabilidad, hacé el test con la primera orina de la mañana. Si da negativo pero no viene la menstruación, repetí en 3-5 días.',
+    },
+    en: {
+      fechaInvalida: 'Please enter a valid date',
+      nota: 'For best accuracy, take the test with your first morning urine. If it comes back negative but your period still hasn\'t arrived, repeat in 3–5 days.',
+    },
+  } as const)[__lang];
+
   const parts = String(i.fumTest || '').split('-').map(Number);
-  if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
+  if (parts.length !== 3 || parts.some(isNaN)) throw new Error(T.fechaInvalida);
   const [yy, mm, dd] = parts;
   const fum = new Date(yy, mm - 1, dd);
-  if (isNaN(fum.getTime())) throw new Error('Ingresá una fecha válida');
+  if (isNaN(fum.getTime())) throw new Error(T.fechaInvalida);
   const ciclo = Number(i.duracionCicloTest) || 28;
 
   const diaOvulacion = ciclo - 14;
@@ -28,6 +40,6 @@ export function testEmbarazoCuando(i: Inputs): Outputs {
     testSangre: fmt(sangre),
     testOrina: fmt(orina),
     ovulacionEstimada: fmt(ovulacion),
-    nota: 'Para mayor confiabilidad, hacé el test con la primera orina de la mañana. Si da negativo pero no viene la menstruación, repetí en 3-5 días.',
+    nota: T.nota,
   };
 }

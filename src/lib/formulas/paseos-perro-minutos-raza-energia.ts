@@ -17,6 +17,7 @@ export interface Inputs {
   tamano: string;         // 'chico' | 'mediano' | 'grande' | 'gigante'
   edad: string;           // 'cachorro' | 'adulto' | 'senior'
   braquicefalo?: boolean | string; // perros chatos: bulldog, pug, boxer
+  __lang?: string;
 }
 
 export interface Outputs {
@@ -43,6 +44,35 @@ const FACTOR_EDAD: Record<string, number> = {
 };
 
 export function paseosPerroMinutosRazaEnergia(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+
+  const T = ({
+    es: {
+      errEnergia: 'Seleccioná un nivel de energía válido',
+      errTamano: 'Seleccioná un tamaño válido',
+      errEdad: 'Seleccioná una edad válida',
+      intensidadAlta: 'Alta: combinar caminata rápida, trote y juegos activos (correr, fetch). Necesitan descarga mental además de física.',
+      intensidadBaja: 'Baja-moderada: paso cómodo en terreno plano, paradas frecuentes para olfatear.',
+      intensidadMedia: 'Moderada: caminata con ritmo, algún tramo de trote. Olfatear es parte del ejercicio.',
+      advBraqui: 'Raza braquicéfala (cara chata): evitar calor >25°C y esfuerzo intenso — dificultad respiratoria. ',
+      advCachorro: 'Regla AKC para cachorros: 5 min de ejercicio estructurado × cada mes de edad, repartido en 2-3 sesiones. No correr en superficies duras hasta cerrar placas de crecimiento. ',
+      advSenior: 'Senior: priorizá paseos más cortos y frecuentes. Consultá con veterinario si hay artrosis o problemas cardíacos. ',
+      sinAdvertencias: 'Sin advertencias específicas — ajustá según el clima y el estado del perro.',
+    },
+    en: {
+      errEnergia: 'Select a valid energy level',
+      errTamano: 'Select a valid size',
+      errEdad: 'Select a valid age',
+      intensidadAlta: 'High: combine brisk walking, trotting, and active play (running, fetch). They need mental stimulation as well as physical exercise.',
+      intensidadBaja: 'Low-moderate: comfortable pace on flat terrain, frequent stops to sniff.',
+      intensidadMedia: 'Moderate: brisk walk with some trotting. Sniffing counts as exercise.',
+      advBraqui: 'Brachycephalic breed (flat face): avoid heat >25°C and intense exertion — breathing difficulties. ',
+      advCachorro: 'AKC puppy rule: 5 min of structured exercise × each month of age, split into 2-3 sessions. Avoid running on hard surfaces until growth plates close. ',
+      advSenior: 'Senior: prioritize shorter, more frequent walks. Consult a vet if arthritis or heart conditions are present. ',
+      sinAdvertencias: 'No specific warnings — adjust based on weather and the dog\'s condition.',
+    },
+  } as const)[__lang];
+
   const energia = String(i.energia || 'media').toLowerCase();
   const tamano = String(i.tamano || 'mediano').toLowerCase();
   const edad = String(i.edad || 'adulto').toLowerCase();
@@ -50,11 +80,11 @@ export function paseosPerroMinutosRazaEnergia(i: Inputs): Outputs {
     i.braquicefalo === true || i.braquicefalo === 'true' || i.braquicefalo === 'si';
 
   const baseEnergia = BASE[energia];
-  if (!baseEnergia) throw new Error('Seleccioná un nivel de energía válido');
+  if (!baseEnergia) throw new Error(T.errEnergia);
   const baseMin = baseEnergia[tamano];
-  if (!baseMin) throw new Error('Seleccioná un tamaño válido');
+  if (!baseMin) throw new Error(T.errTamano);
   const factor = FACTOR_EDAD[edad];
-  if (!factor) throw new Error('Seleccioná una edad válida');
+  if (!factor) throw new Error(T.errEdad);
 
   const minutosDia = Math.max(15, Math.round(baseMin * factor));
 
@@ -64,28 +94,27 @@ export function paseosPerroMinutosRazaEnergia(i: Inputs): Outputs {
 
   let intensidad: string;
   if (energia === 'alta' && edad === 'adulto') {
-    intensidad = 'Alta: combinar caminata rápida, trote y juegos activos (correr, fetch). Necesitan descarga mental además de física.';
+    intensidad = T.intensidadAlta;
   } else if (energia === 'baja' || edad === 'senior') {
-    intensidad = 'Baja-moderada: paso cómodo en terreno plano, paradas frecuentes para olfatear.';
+    intensidad = T.intensidadBaja;
   } else {
-    intensidad = 'Moderada: caminata con ritmo, algún tramo de trote. Olfatear es parte del ejercicio.';
+    intensidad = T.intensidadMedia;
   }
 
   let advertencia = '';
   if (braqui) {
-    advertencia +=
-      'Raza braquicéfala (cara chata): evitar calor >25°C y esfuerzo intenso — dificultad respiratoria. ';
+    advertencia += T.advBraqui;
   }
   if (edad === 'cachorro') {
-    advertencia +=
-      'Regla AKC para cachorros: 5 min de ejercicio estructurado × cada mes de edad, repartido en 2-3 sesiones. No correr en superficies duras hasta cerrar placas de crecimiento. ';
+    advertencia += T.advCachorro;
   }
   if (edad === 'senior') {
-    advertencia +=
-      'Senior: priorizá paseos más cortos y frecuentes. Consultá con veterinario si hay artrosis o problemas cardíacos. ';
+    advertencia += T.advSenior;
   }
 
-  const resumen = `Tu perro necesita ~${minutosDia} min/día de paseo, repartidos en ${paseosDia} salidas de ~${duracionPorPaseo} min. ${intensidad}`;
+  const resumen = __lang === 'en'
+    ? `Your dog needs ~${minutosDia} min/day of walking, split into ${paseosDia} outings of ~${duracionPorPaseo} min. ${intensidad}`
+    : `Tu perro necesita ~${minutosDia} min/día de paseo, repartidos en ${paseosDia} salidas de ~${duracionPorPaseo} min. ${intensidad}`;
 
   return {
     minutosDia,
@@ -93,6 +122,6 @@ export function paseosPerroMinutosRazaEnergia(i: Inputs): Outputs {
     duracionPorPaseo,
     intensidad,
     resumen,
-    advertencia: advertencia.trim() || 'Sin advertencias específicas — ajustá según el clima y el estado del perro.',
+    advertencia: advertencia.trim() || T.sinAdvertencias,
   };
 }

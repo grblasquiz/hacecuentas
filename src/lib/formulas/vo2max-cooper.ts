@@ -1,5 +1,5 @@
 /** VO2max estimado con test de Cooper (12 minutos) */
-export interface Inputs { distanciaMetros: number; edad: number; sexo: string; }
+export interface Inputs { distanciaMetros: number; edad: number; sexo: string; __lang?: string; }
 export interface Outputs {
   vo2max: number;
   categoria: string;
@@ -25,7 +25,7 @@ const TABLAS_MUJER: Record<string, number[]> = {
   '60': [18, 22, 26, 31, 35],
 };
 
-function getCategoria(vo2: number, edad: number, sexo: string): string {
+function getCategoria(vo2: number, edad: number, sexo: string, lang: string): string {
   const tabla = sexo === 'mujer' ? TABLAS_MUJER : TABLAS_HOMBRE;
   let decada = '20';
   if (edad >= 60) decada = '60';
@@ -35,24 +35,60 @@ function getCategoria(vo2: number, edad: number, sexo: string): string {
   else decada = '20';
 
   const umbrales = tabla[decada];
-  if (vo2 < umbrales[0]) return 'Muy pobre';
-  if (vo2 < umbrales[1]) return 'Pobre';
-  if (vo2 < umbrales[2]) return 'Regular';
-  if (vo2 < umbrales[3]) return 'Buena';
-  if (vo2 < umbrales[4]) return 'Excelente';
-  return 'Superior';
+  const T = ({
+    es: { veryPoor: 'Muy pobre', poor: 'Pobre', fair: 'Regular', good: 'Buena', excellent: 'Excelente', superior: 'Superior' },
+    en: { veryPoor: 'Very poor', poor: 'Poor', fair: 'Fair', good: 'Good', excellent: 'Excellent', superior: 'Superior' },
+  } as const)[lang as 'es' | 'en'] ?? ({ veryPoor: 'Muy pobre', poor: 'Pobre', fair: 'Regular', good: 'Buena', excellent: 'Excelente', superior: 'Superior' } as const);
+  if (vo2 < umbrales[0]) return T.veryPoor;
+  if (vo2 < umbrales[1]) return T.poor;
+  if (vo2 < umbrales[2]) return T.fair;
+  if (vo2 < umbrales[3]) return T.good;
+  if (vo2 < umbrales[4]) return T.excellent;
+  return T.superior;
 }
 
 export function vo2maxCooper(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errorDist: 'Ingresá la distancia en metros',
+      errorEdad: 'Ingresá tu edad',
+      markerLabel: (v: string) => `Tu VO2max: ${v} ml/kg/min`,
+      segVeryPoor: 'Muy pobre',
+      segPoor: 'Pobre',
+      segFair: 'Regular',
+      segGood: 'Buena',
+      segExcellent: 'Excelente',
+      segSuperior: 'Superior',
+      ariaLabel: 'Escala VO2max ACSM por edad y sexo: de muy pobre a superior',
+      detalle: (dist: string, vo2: string, cat: string, sexo: string, edad: number) =>
+        `Test de Cooper: ${dist} m en 12 min → VO2max = ${vo2} ml/kg/min. Categoría: ${cat} para ${sexo} de ${edad} años.`,
+    },
+    en: {
+      errorDist: 'Enter the distance in meters',
+      errorEdad: 'Enter your age',
+      markerLabel: (v: string) => `Your VO2max: ${v} ml/kg/min`,
+      segVeryPoor: 'Very poor',
+      segPoor: 'Poor',
+      segFair: 'Fair',
+      segGood: 'Good',
+      segExcellent: 'Excellent',
+      segSuperior: 'Superior',
+      ariaLabel: 'VO2max ACSM scale by age and sex: from very poor to superior',
+      detalle: (dist: string, vo2: string, cat: string, sexo: string, edad: number) =>
+        `Cooper Test: ${dist} m in 12 min → VO2max = ${vo2} ml/kg/min. Category: ${cat} for ${sexo}, age ${edad}.`,
+    },
+  } as const)[__lang];
+
   const dist = Number(i.distanciaMetros);
   const edad = Number(i.edad);
   const sexo = String(i.sexo || 'hombre');
-  if (!dist || dist <= 0) throw new Error('Ingresá la distancia en metros');
-  if (!edad || edad <= 0) throw new Error('Ingresá tu edad');
+  if (!dist || dist <= 0) throw new Error(T.errorDist);
+  if (!edad || edad <= 0) throw new Error(T.errorEdad);
 
   // Fórmula de Cooper: VO2max = (distancia - 504.9) / 44.73
   const vo2 = (dist - 504.9) / 44.73;
-  const cat = getCategoria(vo2, edad, sexo);
+  const cat = getCategoria(vo2, edad, sexo, __lang);
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 
@@ -68,24 +104,24 @@ export function vo2maxCooper(i: Inputs): Outputs {
   const chart = {
     type: 'scale' as const,
     marker: Number(vo2.toFixed(1)),
-    markerLabel: 'Tu VO2max: ' + Number(vo2.toFixed(1)) + ' ml/kg/min',
+    markerLabel: T.markerLabel(String(Number(vo2.toFixed(1)))),
     min: 10,
     unit: '',
     segments: [
-      { nombre: 'Muy pobre', max: u[0], color: '#fecaca', colorDark: '#b91c1c' },
-      { nombre: 'Pobre', max: u[1], color: '#fed7aa', colorDark: '#9a3412' },
-      { nombre: 'Regular', max: u[2], color: '#fde68a', colorDark: '#b45309' },
-      { nombre: 'Buena', max: u[3], color: '#d9f99d', colorDark: '#3f6212' },
-      { nombre: 'Excelente', max: u[4], color: '#bbf7d0', colorDark: '#166534' },
-      { nombre: 'Superior', max: topChart, color: '#a7f3d0', colorDark: '#047857' },
+      { nombre: T.segVeryPoor, max: u[0], color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: T.segPoor, max: u[1], color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: T.segFair, max: u[2], color: '#fde68a', colorDark: '#b45309' },
+      { nombre: T.segGood, max: u[3], color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: T.segExcellent, max: u[4], color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: T.segSuperior, max: topChart, color: '#a7f3d0', colorDark: '#047857' },
     ],
-    ariaLabel: 'Escala VO2max ACSM por edad y sexo: de muy pobre a superior',
+    ariaLabel: T.ariaLabel,
   };
 
   return {
     vo2max: Number(vo2.toFixed(1)),
     categoria: cat,
-    detalle: `Test de Cooper: ${fmt.format(dist)} m en 12 min → VO2max = ${fmt.format(vo2)} ml/kg/min. Categoría: ${cat} para ${sexo} de ${edad} años.`,
+    detalle: T.detalle(fmt.format(dist), fmt.format(vo2), cat, sexo, edad),
     _chart: chart,
   };
 }

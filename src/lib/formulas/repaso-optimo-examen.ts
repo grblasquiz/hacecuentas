@@ -1,6 +1,7 @@
 /** Plan de Repaso Óptimo para Examen */
 export interface Inputs {
   [k: string]: any;
+  __lang?: string;
 }
 export interface Outputs {
   repaso1: number;
@@ -12,9 +13,19 @@ export interface Outputs {
 }
 
 export function repasoOptimoExamen(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      minDias: 'Mínimo 3 días',
+    },
+    en: {
+      minDias: 'Minimum 3 days',
+    },
+  } as const)[__lang];
+
   const dias = Number(i.diasHastaExamen) || 30;
   const n = Number(i.cantidadRepasos) || 4;
-  if (dias < 3) throw new Error('Mínimo 3 días');
+  if (dias < 3) throw new Error(T.minDias);
 
   // Distribución logarítmica: intervalos crecientes
   const ultimoDia = Math.max(dias - Math.max(3, Math.round(dias * 0.1)), Math.ceil(dias * 0.7));
@@ -33,7 +44,9 @@ export function repasoOptimoExamen(i: Inputs): Outputs {
   out.repaso4 = puntos[3] || 0;
   out.repaso5 = puntos[4] || 0;
 
-  out.diaUltimoRepaso = `${dias - ultimoDia} días antes del examen`;
+  out.diaUltimoRepaso = __lang === 'en'
+    ? `${dias - ultimoDia} days before the exam`
+    : `${dias - ultimoDia} días antes del examen`;
 
   return out;
 

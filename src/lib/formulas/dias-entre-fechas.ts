@@ -5,6 +5,7 @@
 export interface DiasInputs {
   desde: string;
   hasta: string;
+  __lang?: string;
 }
 
 export interface DiasOutputs {
@@ -16,14 +17,33 @@ export interface DiasOutputs {
 }
 
 export function diasEntreFechas(inputs: DiasInputs): DiasOutputs {
+  const __lang = inputs.__lang === 'en' ? 'en' : 'es';
+
+  const T = ({
+    es: {
+      bothDates: 'Ingresá ambas fechas',
+      invalidDate: 'Fecha inválida',
+      weeks: (v: string) => `${v} semanas`,
+      months: (v: string) => `${v} meses`,
+      years: (v: string) => `${v} años`,
+    },
+    en: {
+      bothDates: 'Enter both dates',
+      invalidDate: 'Invalid date',
+      weeks: (v: string) => `${v} weeks`,
+      months: (v: string) => `${v} months`,
+      years: (v: string) => `${v} years`,
+    },
+  } as const)[__lang];
+
   if (!inputs.desde || !inputs.hasta) {
-    throw new Error('Ingresá ambas fechas');
+    throw new Error(T.bothDates);
   }
 
   const partsD = String(inputs.desde || '').split('-').map(Number);
   const partsH = String(inputs.hasta || '').split('-').map(Number);
   if (partsD.length !== 3 || partsD.some(isNaN) || partsH.length !== 3 || partsH.some(isNaN)) {
-    throw new Error('Fecha inválida');
+    throw new Error(T.invalidDate);
   }
   const [yD, mD, dD] = partsD;
   const [yH, mH, dH] = partsH;
@@ -31,7 +51,7 @@ export function diasEntreFechas(inputs: DiasInputs): DiasOutputs {
   const hasta = new Date(yH, mH - 1, dH);
 
   if (isNaN(desde.getTime()) || isNaN(hasta.getTime())) {
-    throw new Error('Fecha inválida');
+    throw new Error(T.invalidDate);
   }
 
   desde.setHours(0, 0, 0, 0);
@@ -58,9 +78,9 @@ export function diasEntreFechas(inputs: DiasInputs): DiasOutputs {
 
   return {
     dias,
-    semanas: `${semanas} semanas`,
-    meses: `${meses} meses`,
-    anios: `${anios} años`,
+    semanas: T.weeks(semanas),
+    meses: T.months(meses),
+    anios: T.years(anios),
     habiles,
   };
 }

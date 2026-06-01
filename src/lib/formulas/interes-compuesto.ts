@@ -2,6 +2,12 @@
  * Calculadora de interés compuesto (con aportes mensuales y frecuencia de capitalización)
  * Fórmula: VF = VP × (1 + i)^n  ·  con aportes: VF = VP(1+i)^n + PMT × ((1+i)^n - 1)/i
  * `i` es la tasa MENSUAL equivalente derivada de la frecuencia de capitalización elegida.
+ *
+ * Devuelve:
+ *  - outputs numéricos (valorFinal, totalAportado, gananciaIntereses, rendimiento, tasaMensual)
+ *  - _charts: dos vistas en tabs → "Evolución" (line) y "Desglose" (donut capital/aportes/interés)
+ *  - _insight: narrativa dinámica (proporción interés, año de cruce, y poder de compra real si hay inflación)
+ *  - _table: evolución año por año
  */
 
 export interface InteresInputs {
@@ -11,6 +17,8 @@ export interface InteresInputs {
   plazoAnios: number;
   /** Frecuencia de capitalización: 'mensual' (default) | 'diaria' | 'trimestral' | 'semestral' | 'anual'. */
   frecuenciaCapitalizacion?: string;
+  /** Inflación anual esperada (%). Opcional: si se ingresa, calcula poder de compra real. */
+  inflacionAnual?: number;
   __lang?: string;
 }
 
@@ -20,7 +28,8 @@ export interface InteresOutputs {
   gananciaIntereses: number;
   rendimiento: string;
   tasaMensual: string;
-  _chart?: any;
+  _charts?: any[];
+  _insight?: any;
   _table?: any;
 }
 
@@ -52,6 +61,15 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
       headerInteresGanado: 'Interés ganado',
       tableFooterLabel: 'Final',
       tableNote: 'Proyección con aporte mensual constante. Valores nominales (no ajustados por inflación).',
+      tabEvolucion: 'Evolución',
+      tabDesglose: 'De dónde sale',
+      sliceCapital: 'Capital inicial',
+      sliceAportes: 'Aportes',
+      sliceInteres: 'Interés compuesto',
+      centerLabel: 'Valor final',
+      insightTitleGood: 'El interés hace el trabajo pesado',
+      insightTitlePlain: 'Tu capital crece',
+      insightTitleWarn: 'Ojo: la inflación se come la ganancia',
     },
     en: {
       errorCapitalNegativo: 'Initial capital cannot be negative',
@@ -67,6 +85,15 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
       headerInteresGanado: 'Interest earned',
       tableFooterLabel: 'Final',
       tableNote: 'Projection with constant monthly contributions. Nominal values (not adjusted for inflation).',
+      tabEvolucion: 'Growth',
+      tabDesglose: 'Breakdown',
+      sliceCapital: 'Initial capital',
+      sliceAportes: 'Contributions',
+      sliceInteres: 'Compound interest',
+      centerLabel: 'Final value',
+      insightTitleGood: 'Interest does the heavy lifting',
+      insightTitlePlain: 'Your capital grows',
+      insightTitleWarn: 'Watch out: inflation eats the gains',
     },
   } as const)[__lang];
 
@@ -78,6 +105,9 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
   const freqRaw = inputs.frecuenciaCapitalizacion;
   const freq = freqRaw === '' || freqRaw === null || freqRaw === undefined ? 'mensual' : String(freqRaw);
   const m = PERIODOS_POR_ANIO[freq] ?? 12;
+  // Inflación opcional: '' / null / undefined / 0 → sin capa de poder de compra.
+  const inflRaw = inputs.inflacionAnual;
+  const inflacion = inflRaw === '' || inflRaw === null || inflRaw === undefined ? 0 : Number(inflRaw) || 0;
 
   if (capital < 0) throw new Error(T.errorCapitalNegativo);
   if (capital === 0 && aporte === 0) throw new Error(T.errorCapitalOAporte);
@@ -114,12 +144,17 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
   }
 
   // Serie anual: valor acumulado vs total aportado (para el gráfico y la tabla).
+  // De paso detectamos el "año de cruce": el primer año en que el interés generado
+  // EN ESE AÑO supera el aporte anual (tu plata empieza a trabajar más que vos).
   const labels = Array.from({ length: anios + 1 }, (_, k) =>
     __lang === 'en' ? `Year ${k}` : `Año ${k}`
   );
   const serieValor: number[] = [];
   const serieAportado: number[] = [];
   const tableRows: string[][] = [];
+  const aporteAnual = aporte * 12;
+  let crossYear = 0;
+  let prevVf = capital;
   for (let k = 0; k <= anios; k++) {
     const nK = k * 12;
     const factorK = Math.pow(1 + i, nK);
@@ -128,33 +163,45 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
     serieValor.push(Math.round(vfK));
     serieAportado.push(Math.round(aportadoK));
     if (k >= 1) {
+      const interesAnioK = vfK - prevVf - aporteAnual;
+      if (crossYear === 0 && aporteAnual > 0 && interesAnioK > aporteAnual) crossYear = k;
       tableRows.push([`${k}`, fmtAR(vfK), fmtAR(aportadoK), fmtAR(Math.max(0, vfK - aportadoK))]);
     }
+    prevVf = vfK;
   }
 
-  const chart = {
+  // ── Vista 1: evolución (line) ────────────────────────────────
+  const chartEvolucion = {
     type: 'line' as const,
+    tabLabel: T.tabEvolucion,
     ariaLabel: __lang === 'en'
       ? `Capital evolution over ${anios} years: final value of ${Math.round(valorFinal).toLocaleString('es-AR')} vs total contributed of ${Math.round(totalAportado).toLocaleString('es-AR')}.`
       : `Evolución del capital durante ${anios} años: valor final de ${Math.round(valorFinal).toLocaleString('es-AR')} vs total aportado de ${Math.round(totalAportado).toLocaleString('es-AR')}.`,
     data: {
       labels,
       datasets: [
-        {
-          label: T.labelValorAcumulado,
-          data: serieValor,
-          fill: true,
-          tension: 0.25,
-        },
-        {
-          label: T.labelTotalAportado,
-          data: serieAportado,
-          fill: false,
-          dashed: true,
-          tension: 0.15,
-        },
+        { label: T.labelValorAcumulado, data: serieValor, fill: true, tension: 0.25 },
+        { label: T.labelTotalAportado, data: serieAportado, fill: false, dashed: true, tension: 0.15 },
       ],
     },
+  };
+
+  // ── Vista 2: desglose (donut) — las slices SUMAN el valor final ──
+  const sliceData = [
+    { label: T.sliceCapital, value: Math.round(capital) },
+    { label: T.sliceAportes, value: Math.round(aporte * n) },
+    { label: T.sliceInteres, value: Math.round(Math.max(0, gananciaIntereses)) },
+  ];
+  const chartDesglose = {
+    type: 'doughnut' as const,
+    tabLabel: T.tabDesglose,
+    prefix: '$',
+    slices: sliceData,
+    centerValue: fmtAR(valorFinal),
+    centerLabel: T.centerLabel,
+    ariaLabel: __lang === 'en'
+      ? `Final value breakdown: ${sliceData.map((s) => `${s.label} ${s.value.toLocaleString('es-AR')}`).join(', ')}.`
+      : `Desglose del valor final: ${sliceData.map((s) => `${s.label} ${s.value.toLocaleString('es-AR')}`).join(', ')}.`,
   };
 
   const table = {
@@ -168,13 +215,57 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
     note: T.tableNote,
   };
 
+  // ── Insight narrativo dinámico ───────────────────────────────
+  const pctInteres = valorFinal > 0 ? Math.round((gananciaIntereses / valorFinal) * 100) : 0;
+  const partes: string[] = [];
+  if (pctInteres >= 50) {
+    partes.push(__lang === 'en'
+      ? `Of every $100 you end up with, **$${pctInteres}** is interest and only **$${100 - pctInteres}** came out of your pocket.`
+      : `De cada $100 que terminás teniendo, **$${pctInteres}** son interés y solo **$${100 - pctInteres}** salieron de tu bolsillo.`);
+  } else {
+    partes.push(__lang === 'en'
+      ? `Interest makes up **${pctInteres}%** of the final value — the rest is what you put in.`
+      : `El interés representa el **${pctInteres}%** del valor final — el resto es lo que vos pusiste.`);
+  }
+  if (crossYear > 0) {
+    partes.push(__lang === 'en'
+      ? `From **year ${crossYear}** on, what you earn in interest each year is more than what you contribute.`
+      : `A partir del **año ${crossYear}**, lo que ganás en intereses cada año supera lo que aportás.`);
+  }
+
+  let tone: 'good' | 'warn' | 'neutral' = pctInteres >= 50 ? 'good' : 'neutral';
+  let icon = pctInteres >= 50 ? '🚀' : '📈';
+  let insightTitle = pctInteres >= 50 ? T.insightTitleGood : T.insightTitlePlain;
+
+  // Capa de poder de compra real (si hay inflación)
+  if (inflacion > 0) {
+    const factorInfl = Math.pow(1 + inflacion / 100, anios);
+    const valorReal = valorFinal / factorInfl;
+    const tasaReal = ((1 + r) / (1 + inflacion / 100) - 1) * 100;
+    if (tasaReal < 0) {
+      tone = 'warn';
+      icon = '⚠️';
+      insightTitle = T.insightTitleWarn;
+      partes.push(__lang === 'en'
+        ? `With **${inflacion}%** annual inflation your real rate is **${tasaReal.toFixed(1)}%** (negative): the nominal balance grows, but you lose purchasing power. In today's money those ${fmtAR(valorFinal)} are worth about **${fmtAR(valorReal)}** — less than the ${fmtAR(totalAportado)} you put in.`
+        : `Con inflación del **${inflacion}%** anual tu tasa real es **${tasaReal.toFixed(1)}%** (negativa): el saldo nominal crece, pero perdés poder de compra. En pesos de hoy esos ${fmtAR(valorFinal)} equivalen a unos **${fmtAR(valorReal)}** — menos que los ${fmtAR(totalAportado)} que aportaste.`);
+    } else {
+      partes.push(__lang === 'en'
+        ? `In today's money (after **${inflacion}%** inflation, real rate **+${tasaReal.toFixed(1)}%**), your result is worth about **${fmtAR(valorReal)}** of real purchasing power.`
+        : `En pesos de hoy (descontando inflación del **${inflacion}%**, tasa real **+${tasaReal.toFixed(1)}%**), tu resultado equivale a unos **${fmtAR(valorReal)}** de poder de compra real.`);
+    }
+  }
+
+  const insight = { title: insightTitle, text: partes.join(' '), tone, icon };
+
   return {
     valorFinal: Math.round(valorFinal),
     totalAportado: Math.round(totalAportado),
     gananciaIntereses: Math.round(gananciaIntereses),
     rendimiento: rendimientoLabel,
     tasaMensual: `${(i * 100).toFixed(2)}%`,
-    _chart: chart,
+    _charts: [chartEvolucion, chartDesglose],
+    _insight: insight,
     _table: table,
   };
 }

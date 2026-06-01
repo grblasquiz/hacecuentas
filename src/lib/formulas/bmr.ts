@@ -5,6 +5,7 @@ export interface Inputs {
   edad: number;
   sexo: 'm' | 'f' | string;
   actividad?: 'sedentario' | 'ligero' | 'moderado' | 'alto' | 'muy-alto' | string;
+  __lang?: string;
 }
 export interface Outputs {
   bmr: number;
@@ -24,14 +25,28 @@ const FACTORES: Record<string, number> = {
 };
 
 export function bmr(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errPeso: 'Ingresá el peso',
+      errAltura: 'Ingresá la altura',
+      errEdad: 'Ingresá la edad',
+    },
+    en: {
+      errPeso: 'Enter your weight',
+      errAltura: 'Enter your height',
+      errEdad: 'Enter your age',
+    },
+  } as const)[__lang];
+
   const peso = Number(i.peso);
   const alt = Number(i.altura);
   const edad = Number(i.edad);
   const sexo = String(i.sexo || 'm');
   const act = String(i.actividad || 'sedentario');
-  if (!peso || peso <= 0) throw new Error('Ingresá el peso');
-  if (!alt || alt <= 0) throw new Error('Ingresá la altura');
-  if (!edad || edad <= 0) throw new Error('Ingresá la edad');
+  if (!peso || peso <= 0) throw new Error(T.errPeso);
+  if (!alt || alt <= 0) throw new Error(T.errAltura);
+  if (!edad || edad <= 0) throw new Error(T.errEdad);
 
   // Mifflin-St Jeor
   let bmrVal = 10 * peso + 6.25 * alt - 5 * edad;

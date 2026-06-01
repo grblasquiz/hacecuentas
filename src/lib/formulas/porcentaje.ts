@@ -12,6 +12,7 @@ export interface PorcentajeInputs {
   modo: string;
   valor1: number;
   valor2: number;
+  __lang?: string;
 }
 
 export interface PorcentajeOutputs {
@@ -21,11 +22,12 @@ export interface PorcentajeOutputs {
 }
 
 export function porcentaje(inputs: PorcentajeInputs): PorcentajeOutputs {
+  const __lang = inputs.__lang === 'en' ? 'en' : 'es';
   const modo = inputs.modo || 'simple';
   const v1 = Number(inputs.valor1);
   const v2 = Number(inputs.valor2);
 
-  if (isNaN(v1) || isNaN(v2)) throw new Error('Ingresá valores numéricos válidos');
+  if (isNaN(v1) || isNaN(v2)) throw new Error(__lang === 'en' ? 'Enter valid numeric values' : 'Ingresá valores numéricos válidos');
 
   const fmt = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(n);
 
@@ -35,7 +37,7 @@ export function porcentaje(inputs: PorcentajeInputs): PorcentajeOutputs {
       return {
         resultado: fmt(r),
         formula: `${v1} × ${v2} ÷ 100 = ${fmt(r)}`,
-        explicacion: `El ${v2}% de ${v1} es ${fmt(r)}`,
+        explicacion: __lang === 'en' ? `${v2}% of ${v1} is ${fmt(r)}` : `El ${v2}% de ${v1} es ${fmt(r)}`,
       };
     }
     case 'descuento': {
@@ -44,7 +46,9 @@ export function porcentaje(inputs: PorcentajeInputs): PorcentajeOutputs {
       return {
         resultado: fmt(final),
         formula: `${v1} − (${v1} × ${v2}%) = ${fmt(final)}`,
-        explicacion: `${v1} con ${v2}% de descuento: ahorrás ${fmt(descuento)} y pagás ${fmt(final)}`,
+        explicacion: __lang === 'en'
+          ? `${v1} with ${v2}% discount: you save ${fmt(descuento)} and pay ${fmt(final)}`
+          : `${v1} con ${v2}% de descuento: ahorrás ${fmt(descuento)} y pagás ${fmt(final)}`,
       };
     }
     case 'aumento': {
@@ -53,31 +57,33 @@ export function porcentaje(inputs: PorcentajeInputs): PorcentajeOutputs {
       return {
         resultado: fmt(final),
         formula: `${v1} + (${v1} × ${v2}%) = ${fmt(final)}`,
-        explicacion: `${v1} con ${v2}% de aumento: sumás ${fmt(aumento)} y pagás ${fmt(final)}`,
+        explicacion: __lang === 'en'
+          ? `${v1} with ${v2}% increase: you add ${fmt(aumento)} and pay ${fmt(final)}`
+          : `${v1} con ${v2}% de aumento: sumás ${fmt(aumento)} y pagás ${fmt(final)}`,
       };
     }
     case 'diferencia': {
-      if (v2 === 0) throw new Error('El segundo valor no puede ser cero');
+      if (v2 === 0) throw new Error(__lang === 'en' ? 'The second value cannot be zero' : 'El segundo valor no puede ser cero');
       const pct = (v1 / v2) * 100;
       return {
         resultado: `${pct.toFixed(2)}%`,
         formula: `(${v1} ÷ ${v2}) × 100`,
-        explicacion: `${v1} es el ${pct.toFixed(2)}% de ${v2}`,
+        explicacion: __lang === 'en' ? `${v1} is ${pct.toFixed(2)}% of ${v2}` : `${v1} es el ${pct.toFixed(2)}% de ${v2}`,
       };
     }
     case 'variacion': {
-      if (v1 === 0) throw new Error('El valor inicial no puede ser cero');
+      if (v1 === 0) throw new Error(__lang === 'en' ? 'The initial value cannot be zero' : 'El valor inicial no puede ser cero');
       const variacion = ((v2 - v1) / v1) * 100;
       const signo = variacion >= 0 ? '+' : '';
       return {
         resultado: `${signo}${variacion.toFixed(2)}%`,
         formula: `((${v2} − ${v1}) ÷ ${v1}) × 100`,
         explicacion: variacion >= 0
-          ? `Aumentó ${variacion.toFixed(2)}% de ${v1} a ${v2}`
-          : `Disminuyó ${Math.abs(variacion).toFixed(2)}% de ${v1} a ${v2}`,
+          ? (__lang === 'en' ? `Increased ${variacion.toFixed(2)}% from ${v1} to ${v2}` : `Aumentó ${variacion.toFixed(2)}% de ${v1} a ${v2}`)
+          : (__lang === 'en' ? `Decreased ${Math.abs(variacion).toFixed(2)}% from ${v1} to ${v2}` : `Disminuyó ${Math.abs(variacion).toFixed(2)}% de ${v1} a ${v2}`),
       };
     }
     default:
-      throw new Error('Modo no reconocido');
+      throw new Error(__lang === 'en' ? 'Unrecognized mode' : 'Modo no reconocido');
   }
 }

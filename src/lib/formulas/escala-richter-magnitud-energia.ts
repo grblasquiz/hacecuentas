@@ -1,8 +1,9 @@
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; }
 export function escalaRichterMagnitudEnergia(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const m = Number(i.magnitud);
-  if (!m) throw new Error('Ingresá magnitud');
+  if (!m) throw new Error(__lang === 'en' ? 'Enter magnitude' : 'Ingresá magnitud');
   const E = Math.pow(10, 4.8 + 1.5 * m);
   const tntKg = E / 4.18e6;
   let eqTnt: string;

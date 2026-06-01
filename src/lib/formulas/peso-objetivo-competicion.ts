@@ -3,6 +3,7 @@ export interface Inputs {
   altura: number;
   sexo: string;
   deporte: string;
+  __lang?: string;
 }
 export interface Outputs {
   pesoIdeal: string;
@@ -13,10 +14,20 @@ export interface Outputs {
 }
 
 export function pesoObjetivoCompeticion(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errorAltura: 'Ingresá tu altura',
+    },
+    en: {
+      errorAltura: 'Enter your height',
+    },
+  } as const)[__lang];
+
   const altura = Number(i.altura);
   const sexo = String(i.sexo || 'masculino');
   const deporte = String(i.deporte || 'running');
-  if (!altura || altura <= 0) throw new Error('Ingresá tu altura');
+  if (!altura || altura <= 0) throw new Error(T.errorAltura);
 
   const alturaM = altura / 100;
 
@@ -45,6 +56,8 @@ export function pesoObjetivoCompeticion(i: Inputs): Outputs {
     bmiRango: `BMI ${bmiMin}-${bmiMax}`,
     pesoMin,
     pesoMax,
-    mensaje: `Para ${deporte} a ${altura} cm (${sexo}): peso competitivo entre ${pesoMin} y ${pesoMax} kg (BMI ${bmiMin}-${bmiMax}).`
+    mensaje: __lang === 'en'
+      ? `For ${deporte} at ${altura} cm (${sexo}): competitive weight between ${pesoMin} and ${pesoMax} kg (BMI ${bmiMin}-${bmiMax}).`
+      : `Para ${deporte} a ${altura} cm (${sexo}): peso competitivo entre ${pesoMin} y ${pesoMax} kg (BMI ${bmiMin}-${bmiMax}).`
   };
 }

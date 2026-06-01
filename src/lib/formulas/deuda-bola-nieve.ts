@@ -1,18 +1,42 @@
 /** Plan de pago de deudas — método bola de nieve */
-export interface Inputs { deuda1Nombre?: string; deuda1Monto: number; deuda1Minimo: number; deuda2Monto?: number; deuda2Minimo?: number; deuda3Monto?: number; deuda3Minimo?: number; pagoExtraMensual: number; }
+export interface Inputs { deuda1Nombre?: string; deuda1Monto: number; deuda1Minimo: number; deuda2Monto?: number; deuda2Minimo?: number; deuda3Monto?: number; deuda3Minimo?: number; pagoExtraMensual: number; __lang?: string; }
 export interface Outputs { mesesParaLibrarse: number; ordenPago: string; totalPagado: number; deudaTotal: number; _chart?: any; }
 
 export function deudaBolaNieve(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errorExtraNegatvo: 'El pago extra no puede ser negativo',
+      deuda1: 'Deuda 1',
+      deuda2: 'Deuda 2',
+      deuda3: 'Deuda 3',
+      errorSinDeudas: 'Ingresá al menos una deuda',
+      intereses: 'Intereses',
+      totalPagado: 'Total pagado',
+      ariaLabel: 'Composición del total pagado: capital de las deudas más intereses',
+    },
+    en: {
+      errorExtraNegatvo: 'Extra payment cannot be negative',
+      deuda1: 'Debt 1',
+      deuda2: 'Debt 2',
+      deuda3: 'Debt 3',
+      errorSinDeudas: 'Enter at least one debt',
+      intereses: 'Interest',
+      totalPagado: 'Total paid',
+      ariaLabel: 'Breakdown of total paid: debt principal plus interest',
+    },
+  } as const)[__lang];
+
   const extra = Number(i.pagoExtraMensual);
-  if (extra < 0) throw new Error('El pago extra no puede ser negativo');
+  if (extra < 0) throw new Error(T.errorExtraNegatvo);
 
   interface Deuda { nombre: string; saldo: number; minimo: number; }
   const deudas: Deuda[] = [];
-  if (Number(i.deuda1Monto) > 0) deudas.push({ nombre: i.deuda1Nombre || 'Deuda 1', saldo: Number(i.deuda1Monto), minimo: Number(i.deuda1Minimo) || 0 });
-  if (Number(i.deuda2Monto) > 0) deudas.push({ nombre: 'Deuda 2', saldo: Number(i.deuda2Monto), minimo: Number(i.deuda2Minimo) || 0 });
-  if (Number(i.deuda3Monto) > 0) deudas.push({ nombre: 'Deuda 3', saldo: Number(i.deuda3Monto), minimo: Number(i.deuda3Minimo) || 0 });
+  if (Number(i.deuda1Monto) > 0) deudas.push({ nombre: i.deuda1Nombre || T.deuda1, saldo: Number(i.deuda1Monto), minimo: Number(i.deuda1Minimo) || 0 });
+  if (Number(i.deuda2Monto) > 0) deudas.push({ nombre: T.deuda2, saldo: Number(i.deuda2Monto), minimo: Number(i.deuda2Minimo) || 0 });
+  if (Number(i.deuda3Monto) > 0) deudas.push({ nombre: T.deuda3, saldo: Number(i.deuda3Monto), minimo: Number(i.deuda3Minimo) || 0 });
 
-  if (deudas.length === 0) throw new Error('Ingresá al menos una deuda');
+  if (deudas.length === 0) throw new Error(T.errorSinDeudas);
 
   // Sort by balance (smallest first = snowball)
   deudas.sort((a, b) => a.saldo - b.saldo);
@@ -58,12 +82,12 @@ export function deudaBolaNieve(i: Inputs): Outputs {
     type: 'doughnut' as const,
     slices: [
       { label: 'Capital', value: deudaTotalR },
-      { label: 'Intereses', value: interesesR },
+      { label: T.intereses, value: interesesR },
     ],
     prefix: '$',
     centerValue: '$' + totalPagadoR.toLocaleString('es-AR'),
-    centerLabel: 'Total pagado',
-    ariaLabel: 'Composición del total pagado: capital de las deudas más intereses',
+    centerLabel: T.totalPagado,
+    ariaLabel: T.ariaLabel,
   };
 
   return { mesesParaLibrarse: meses, ordenPago: orden, totalPagado: totalPagadoR, deudaTotal: deudaTotalR, _chart: chart };

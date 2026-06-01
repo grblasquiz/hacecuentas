@@ -1,10 +1,11 @@
 /** Calorías extra necesarias durante lactancia */
-export interface Inputs { pesoMadre: number; actividadMadre?: string; tipoLactancia?: string; }
+export interface Inputs { pesoMadre: number; actividadMadre?: string; tipoLactancia?: string; __lang?: string; }
 export interface Outputs { caloriasTotal: string; caloriasExtra: string; hidratacion: string; nota: string; }
 
 export function caloriasLactancia(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const peso = Number(i.pesoMadre);
-  if (!peso || peso < 40) throw new Error('Ingresá tu peso');
+  if (!peso || peso < 40) throw new Error(__lang === 'en' ? 'Enter your weight' : 'Ingresá tu peso');
   const act = String(i.actividadMadre || 'leve');
   const tipo = String(i.tipoLactancia || 'exclusiva');
 
@@ -18,12 +19,25 @@ export function caloriasLactancia(i: Inputs): Outputs {
   const extra = extraMap[tipo] || 500;
 
   const total = Math.round(tdee + extra);
-  const agua = tipo === 'exclusiva' ? '2,5-3 litros/día (tomá un vaso en cada toma)' : '2-2,5 litros/día';
+
+  const agua = __lang === 'en'
+    ? (tipo === 'exclusiva' ? '2.5–3 liters/day (drink a glass at each feeding)' : '2–2.5 liters/day')
+    : (tipo === 'exclusiva' ? '2,5-3 litros/día (tomá un vaso en cada toma)' : '2-2,5 litros/día');
+
+  const tipoLabel = __lang === 'en'
+    ? (tipo === 'exclusiva' ? 'exclusive breastfeeding' : tipo === 'mixta' ? 'mixed breastfeeding' : 'partial breastfeeding')
+    : (tipo === 'exclusiva' ? 'lactancia exclusiva' : tipo === 'mixta' ? 'lactancia mixta' : 'lactancia parcial');
 
   return {
-    caloriasTotal: `${total} kcal/día (incluye extra por lactancia)`,
-    caloriasExtra: `${extra} kcal extra por ${tipo === 'exclusiva' ? 'lactancia exclusiva' : tipo === 'mixta' ? 'lactancia mixta' : 'lactancia parcial'}`,
+    caloriasTotal: __lang === 'en'
+      ? `${total} kcal/day (includes breastfeeding extra)`
+      : `${total} kcal/día (incluye extra por lactancia)`,
+    caloriasExtra: __lang === 'en'
+      ? `${extra} extra kcal for ${tipoLabel}`
+      : `${extra} kcal extra por ${tipoLabel}`,
     hidratacion: agua,
-    nota: 'No bajes de 1.800 kcal/día durante la lactancia. Para perder peso de forma segura: déficit de máx 300-500 kcal.',
+    nota: __lang === 'en'
+      ? 'Do not go below 1,800 kcal/day while breastfeeding. To lose weight safely: max deficit of 300–500 kcal.'
+      : 'No bajes de 1.800 kcal/día durante la lactancia. Para perder peso de forma segura: déficit de máx 300-500 kcal.',
   };
 }

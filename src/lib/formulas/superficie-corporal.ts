@@ -2,6 +2,7 @@
 export interface Inputs {
   peso: number;
   altura: number;
+  __lang?: string;
 }
 export interface Outputs {
   mosteller: number;
@@ -13,10 +14,11 @@ export interface Outputs {
 }
 
 export function superficieCorporal(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const peso = Number(i.peso);
   const altura = Number(i.altura);
-  if (!peso || peso < 1 || peso > 400) throw new Error('Peso entre 1 y 400 kg');
-  if (!altura || altura < 30 || altura > 250) throw new Error('Altura entre 30 y 250 cm');
+  if (!peso || peso < 1 || peso > 400) throw new Error(__lang === 'en' ? 'Weight between 1 and 400 kg' : 'Peso entre 1 y 400 kg');
+  if (!altura || altura < 30 || altura > 250) throw new Error(__lang === 'en' ? 'Height between 30 and 250 cm' : 'Altura entre 30 y 250 cm');
 
   // Mosteller (1987) — la más usada hoy en oncología pediátrica:
   //   BSA (m²) = √(peso × altura / 3600)
@@ -37,7 +39,11 @@ export function superficieCorporal(i: Inputs): Outputs {
     duBois: Number(duBois.toFixed(3)),
     haycock: Number(haycock.toFixed(3)),
     promedio: Number(promedio.toFixed(3)),
-    resumen: `Tu superficie corporal (Mosteller) es ${mosteller.toFixed(2)} m². Promedio de las 3 fórmulas: ${promedio.toFixed(2)} m².`,
-    ejemplos: `Aplicaciones: dosis quimioterapia (mg/m²), índice cardíaco (L/min/m²), aclaramiento renal por superficie.`,
+    resumen: __lang === 'en'
+      ? `Your body surface area (Mosteller) is ${mosteller.toFixed(2)} m². Average of the 3 formulas: ${promedio.toFixed(2)} m².`
+      : `Tu superficie corporal (Mosteller) es ${mosteller.toFixed(2)} m². Promedio de las 3 fórmulas: ${promedio.toFixed(2)} m².`,
+    ejemplos: __lang === 'en'
+      ? `Applications: chemotherapy dosing (mg/m²), cardiac index (L/min/m²), renal clearance by body surface.`
+      : `Aplicaciones: dosis quimioterapia (mg/m²), índice cardíaco (L/min/m²), aclaramiento renal por superficie.`,
   };
 }

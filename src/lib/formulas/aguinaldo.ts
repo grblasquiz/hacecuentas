@@ -7,6 +7,7 @@
 export interface AguinaldoInputs {
   mejorSueldo: number;
   mesesTrabajados: number;
+  __lang?: string;
 }
 
 export interface AguinaldoOutputs {
@@ -18,14 +19,39 @@ export interface AguinaldoOutputs {
 }
 
 export function aguinaldo(inputs: AguinaldoInputs): AguinaldoOutputs {
+  const __lang = inputs.__lang === 'en' ? 'en' : 'es';
+
+  const T = ({
+    es: {
+      errorSueldo: 'Ingresá la mejor remuneración del semestre',
+      errorMeses: 'Ingresá los meses trabajados en el semestre',
+      labelNeto: 'Neto',
+      labelDescuentos: 'Descuentos (17%)',
+      centerLabel: 'Bruto',
+      proporcion: (m: number) => `${m}/6 meses trabajados`,
+      ariaLabel: (neto: number, desc: number) =>
+        `Composición del aguinaldo bruto: neto ${neto}, descuentos ${desc}.`,
+    },
+    en: {
+      errorSueldo: 'Enter the highest monthly salary of the semester',
+      errorMeses: 'Enter the months worked in the semester',
+      labelNeto: 'Net',
+      labelDescuentos: 'Deductions (17%)',
+      centerLabel: 'Gross',
+      proporcion: (m: number) => `${m}/6 months worked`,
+      ariaLabel: (neto: number, desc: number) =>
+        `Annual bonus breakdown: net ${neto}, deductions ${desc}.`,
+    },
+  } as const)[__lang];
+
   const mejorSueldo = Number(inputs.mejorSueldo);
   const mesesTrabajados = Math.min(6, Math.max(0, Number(inputs.mesesTrabajados)));
 
   if (!mejorSueldo || mejorSueldo <= 0) {
-    throw new Error('Ingresá la mejor remuneración del semestre');
+    throw new Error(T.errorSueldo);
   }
   if (!mesesTrabajados) {
-    throw new Error('Ingresá los meses trabajados en el semestre');
+    throw new Error(T.errorMeses);
   }
 
   // SAC proporcional: mejor_sueldo × (meses_trabajados / 12) -> según LCT art 122
@@ -39,20 +65,20 @@ export function aguinaldo(inputs: AguinaldoInputs): AguinaldoOutputs {
   const chart = {
     type: 'doughnut' as const,
     slices: [
-      { label: 'Neto', value: Math.round(aguinaldoNeto) },
-      { label: 'Descuentos (17%)', value: Math.round(descuentos) },
+      { label: T.labelNeto, value: Math.round(aguinaldoNeto) },
+      { label: T.labelDescuentos, value: Math.round(descuentos) },
     ],
     prefix: '$',
     centerValue: '$' + Math.round(aguinaldoBruto).toLocaleString('es-AR'),
-    centerLabel: 'Bruto',
-    ariaLabel: `Composición del aguinaldo bruto: neto ${Math.round(aguinaldoNeto)}, descuentos ${Math.round(descuentos)}.`,
+    centerLabel: T.centerLabel,
+    ariaLabel: T.ariaLabel(Math.round(aguinaldoNeto), Math.round(descuentos)),
   };
 
   return {
     aguinaldoBruto: Math.round(aguinaldoBruto),
     aguinaldoNeto: Math.round(aguinaldoNeto),
     descuentos: Math.round(descuentos),
-    proporcion: `${mesesTrabajados}/6 meses trabajados`,
+    proporcion: T.proporcion(mesesTrabajados),
     _chart: chart,
   };
 }

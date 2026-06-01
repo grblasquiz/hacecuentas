@@ -3,6 +3,7 @@ export interface Inputs {
   componente: string;
   tempActual: number;
   tempAmbiente: number;
+  __lang?: string;
 }
 export interface Outputs {
   margenTermico: number;
@@ -19,14 +20,15 @@ const TEMP_MAX: Record<string, number> = {
 };
 
 export function overclockTemperaturaSegura(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const tempActual = Number(i.tempActual);
   const tempAmb = Number(i.tempAmbiente);
   const comp = i.componente;
 
-  if (!tempActual) throw new Error('Ingresá la temperatura bajo carga');
-  if (!tempAmb && tempAmb !== 0) throw new Error('Ingresá la temperatura ambiente');
+  if (!tempActual) throw new Error(__lang === 'en' ? 'Enter the temperature under load' : 'Ingresá la temperatura bajo carga');
+  if (!tempAmb && tempAmb !== 0) throw new Error(__lang === 'en' ? 'Enter the ambient temperature' : 'Ingresá la temperatura ambiente');
   const tempMaxima = TEMP_MAX[comp];
-  if (!tempMaxima) throw new Error('Seleccioná un tipo de componente');
+  if (!tempMaxima) throw new Error(__lang === 'en' ? 'Select a component type' : 'Seleccioná un tipo de componente');
 
   const margenTermico = tempMaxima - tempActual;
   const deltaT = tempActual - tempAmb;
@@ -35,21 +37,31 @@ export function overclockTemperaturaSegura(i: Inputs): Outputs {
   let recomendacion: string;
 
   if (margenTermico > 25) {
-    estado = 'Excelente — temperaturas bajas con mucho margen';
-    recomendacion = `Tenés ${margenTermico}°C de margen. Podés hacer overclock moderado a agresivo. Tu cooler es más que suficiente.`;
+    estado = __lang === 'en' ? 'Excellent — low temperatures with plenty of headroom' : 'Excelente — temperaturas bajas con mucho margen';
+    recomendacion = __lang === 'en'
+      ? `You have ${margenTermico}°C of headroom. You can do moderate to aggressive overclocking. Your cooler is more than adequate.`
+      : `Tenés ${margenTermico}°C de margen. Podés hacer overclock moderado a agresivo. Tu cooler es más que suficiente.`;
   } else if (margenTermico > 15) {
-    estado = 'Bueno — margen suficiente para overclock moderado';
-    recomendacion = `Con ${margenTermico}°C de margen, podés hacer overclock suave. Subí frecuencia gradualmente y monitoreá temperaturas.`;
+    estado = __lang === 'en' ? 'Good — enough headroom for moderate overclocking' : 'Bueno — margen suficiente para overclock moderado';
+    recomendacion = __lang === 'en'
+      ? `With ${margenTermico}°C of headroom, you can do light overclocking. Raise frequency gradually and monitor temperatures.`
+      : `Con ${margenTermico}°C de margen, podés hacer overclock suave. Subí frecuencia gradualmente y monitoreá temperaturas.`;
   } else if (margenTermico > 5) {
-    estado = 'Ajustado — poco margen, overclock muy limitado';
-    recomendacion = `Solo ${margenTermico}°C de margen. No recomendable hacer OC sin mejorar la refrigeración primero. Considerá mejor pasta térmica o cooler.`;
+    estado = __lang === 'en' ? 'Tight — little headroom, very limited overclocking' : 'Ajustado — poco margen, overclock muy limitado';
+    recomendacion = __lang === 'en'
+      ? `Only ${margenTermico}°C of headroom. Not recommended to OC without improving cooling first. Consider better thermal paste or a new cooler.`
+      : `Solo ${margenTermico}°C de margen. No recomendable hacer OC sin mejorar la refrigeración primero. Considerá mejor pasta térmica o cooler.`;
   } else {
-    estado = 'Crítico — demasiado caliente, riesgo de throttling';
-    recomendacion = `Tu componente está a ${tempActual}°C, apenas ${margenTermico}°C del throttling a ${tempMaxima}°C. NO hagas overclock. Mejorá la refrigeración urgente.`;
+    estado = __lang === 'en' ? 'Critical — too hot, risk of throttling' : 'Crítico — demasiado caliente, riesgo de throttling';
+    recomendacion = __lang === 'en'
+      ? `Your component is at ${tempActual}°C, only ${margenTermico}°C away from throttling at ${tempMaxima}°C. DO NOT overclock. Improve cooling urgently.`
+      : `Tu componente está a ${tempActual}°C, apenas ${margenTermico}°C del throttling a ${tempMaxima}°C. NO hagas overclock. Mejorá la refrigeración urgente.`;
   }
 
   if (tempAmb > 30) {
-    recomendacion += ` Nota: tu ambiente está a ${tempAmb}°C (caluroso). En invierno tendrías ~${tempAmb - 20}°C menos.`;
+    recomendacion += __lang === 'en'
+      ? ` Note: your ambient is ${tempAmb}°C (hot environment). In winter you would have ~${tempAmb - 20}°C less.`
+      : ` Nota: tu ambiente está a ${tempAmb}°C (caluroso). En invierno tendrías ~${tempAmb - 20}°C menos.`;
   }
 
   return {

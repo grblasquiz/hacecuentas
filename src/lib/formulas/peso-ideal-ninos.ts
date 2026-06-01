@@ -1,5 +1,5 @@
 /** Peso ideal para niños por edad y sexo — OMS */
-export interface Inputs { edadNinoAnios: number; sexoNino: string; }
+export interface Inputs { edadNinoAnios: number; sexoNino: string; __lang?: string; }
 export interface Outputs { pesoPromedio: string; rangoSaludable: string; evaluacion: string; }
 
 const datosVaron: Record<number, [number, number, number]> = { // [P15, P50, P85]
@@ -18,9 +18,12 @@ const datosMujer: Record<number, [number, number, number]> = {
 };
 
 export function pesoIdealNinos(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const edad = Number(i.edadNinoAnios);
   const sexo = String(i.sexoNino);
-  if (edad < 0 || edad > 10) throw new Error('Ingresá una edad entre 0 y 10 años');
+  if (edad < 0 || edad > 10) throw new Error(
+    __lang === 'en' ? 'Enter an age between 0 and 10 years' : 'Ingresá una edad entre 0 y 10 años'
+  );
 
   const tabla = sexo === 'f' ? datosMujer : datosVaron;
   const edades = Object.keys(tabla).map(Number).sort((a, b) => a - b);
@@ -28,9 +31,26 @@ export function pesoIdealNinos(i: Inputs): Outputs {
   for (const e of edades) { if (e <= edad) closest = e; }
   const [p15, p50, p85] = tabla[closest];
 
+  const T = ({
+    es: {
+      percentil50: 'percentil 50',
+      percentil15a85: 'percentil 15 a 85',
+      nina: 'una niña',
+      nino: 'un niño',
+      rango: (child: string) => `El rango saludable para ${child} de ${edad} años es de ${p15} a ${p85} kg. El promedio es ${p50} kg.`,
+    },
+    en: {
+      percentil50: 'percentile 50',
+      percentil15a85: 'percentile 15 to 85',
+      nina: 'a girl',
+      nino: 'a boy',
+      rango: (child: string) => `The healthy range for ${child} aged ${edad} is ${p15} to ${p85} kg. The average is ${p50} kg.`,
+    },
+  } as const)[__lang];
+
   return {
-    pesoPromedio: `${p50} kg (percentil 50)`,
-    rangoSaludable: `${p15} kg a ${p85} kg (percentil 15 a 85)`,
-    evaluacion: `El rango saludable para ${sexo === 'f' ? 'una niña' : 'un niño'} de ${edad} años es de ${p15} a ${p85} kg. El promedio es ${p50} kg.`,
+    pesoPromedio: `${p50} kg (${T.percentil50})`,
+    rangoSaludable: `${p15} kg a ${p85} kg (${T.percentil15a85})`,
+    evaluacion: T.rango(sexo === 'f' ? T.nina : T.nino),
   };
 }

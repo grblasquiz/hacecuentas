@@ -4,6 +4,7 @@ export interface Inputs {
   b?: number;
   c?: number;
   calcular?: string;
+  __lang?: string;
 }
 export interface Outputs {
   resultado: number;
@@ -15,6 +16,20 @@ export interface Outputs {
 }
 
 export function pitagoras(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errAmbos: 'Ingresá los dos catetos',
+      errCatetoHipo: 'Ingresá el otro cateto y la hipotenusa',
+      errHipoMayor: 'La hipotenusa debe ser mayor al cateto',
+    },
+    en: {
+      errAmbos: 'Enter both legs',
+      errCatetoHipo: 'Enter the other leg and the hypotenuse',
+      errHipoMayor: 'The hypotenuse must be greater than the leg',
+    },
+  } as const)[__lang];
+
   const a = Number(i.a) || 0;
   const b = Number(i.b) || 0;
   const c = Number(i.c) || 0;
@@ -25,20 +40,20 @@ export function pitagoras(i: Inputs): Outputs {
   let formula = '';
 
   if (calcular === 'hipotenusa') {
-    if (!a || !b) throw new Error('Ingresá los dos catetos');
+    if (!a || !b) throw new Error(T.errAmbos);
     hipotenusa = Math.sqrt(a * a + b * b);
     resultado = hipotenusa;
     formula = `c = √(${a}² + ${b}²) = √${a * a + b * b} = ${resultado.toFixed(4)}`;
   } else if (calcular === 'cateto-a') {
-    if (!b || !c) throw new Error('Ingresá el otro cateto y la hipotenusa');
-    if (c <= b) throw new Error('La hipotenusa debe ser mayor al cateto');
+    if (!b || !c) throw new Error(T.errCatetoHipo);
+    if (c <= b) throw new Error(T.errHipoMayor);
     lado_a = Math.sqrt(c * c - b * b);
     resultado = lado_a;
     formula = `a = √(${c}² − ${b}²) = √${c * c - b * b} = ${resultado.toFixed(4)}`;
   } else {
     // cateto-b
-    if (!a || !c) throw new Error('Ingresá el otro cateto y la hipotenusa');
-    if (c <= a) throw new Error('La hipotenusa debe ser mayor al cateto');
+    if (!a || !c) throw new Error(T.errCatetoHipo);
+    if (c <= a) throw new Error(T.errHipoMayor);
     lado_b = Math.sqrt(c * c - a * a);
     resultado = lado_b;
     formula = `b = √(${c}² − ${a}²) = √${c * c - a * a} = ${resultado.toFixed(4)}`;

@@ -1,5 +1,5 @@
 /** Factorial, combinatoria y permutaciones */
-export interface Inputs { n: number; r?: number; tipo?: string; }
+export interface Inputs { n: number; r?: number; tipo?: string; __lang?: string; }
 export interface Outputs {
   resultado: string;
   resultadoNum: number;
@@ -23,11 +23,12 @@ function factorialStr(n: number): string {
 }
 
 export function factorialCalc(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const n = Math.floor(Number(i.n));
   const r = Math.floor(Number(i.r) || 0);
   const tipo = String(i.tipo || 'factorial');
 
-  if (n < 0) throw new Error('n debe ser ≥ 0');
+  if (n < 0) throw new Error(__lang === 'en' ? 'n must be ≥ 0' : 'n debe ser ≥ 0');
   if (n > 170 && tipo === 'factorial') {
     // n! > Number.MAX; usar BigInt
   }
@@ -42,11 +43,13 @@ export function factorialCalc(i: Inputs): Outputs {
       resultado = factorialStr(n);
       resNum = n <= 20 ? factorial(n) : Infinity;
       formula = `${n}! = ${n} × ${n - 1} × ... × 1`;
-      descripcion = `Formas de ordenar ${n} objetos distintos.`;
+      descripcion = __lang === 'en'
+        ? `Ways to arrange ${n} distinct objects.`
+        : `Formas de ordenar ${n} objetos distintos.`;
       break;
     case 'permutacion':
       // P(n,r) = n! / (n-r)!
-      if (r > n) throw new Error('r no puede ser mayor que n');
+      if (r > n) throw new Error(__lang === 'en' ? 'r cannot be greater than n' : 'r no puede ser mayor que n');
       if (n - r <= 20) {
         resNum = factorial(n) / factorial(n - r);
         resultado = resNum.toString();
@@ -58,11 +61,13 @@ export function factorialCalc(i: Inputs): Outputs {
         resNum = Number(acc);
       }
       formula = `P(${n}, ${r}) = ${n}! / (${n}−${r})!`;
-      descripcion = `Formas de ordenar ${r} elementos tomados de ${n} (importa el orden).`;
+      descripcion = __lang === 'en'
+        ? `Ways to arrange ${r} elements taken from ${n} (order matters).`
+        : `Formas de ordenar ${r} elementos tomados de ${n} (importa el orden).`;
       break;
     case 'combinacion':
       // C(n,r) = n! / (r! × (n-r)!)
-      if (r > n) throw new Error('r no puede ser mayor que n');
+      if (r > n) throw new Error(__lang === 'en' ? 'r cannot be greater than n' : 'r no puede ser mayor que n');
       let accC = 1n;
       for (let i = n; i > n - r; i--) accC *= BigInt(i);
       for (let i = 1n; i <= BigInt(r); i++) accC /= i; // división entera
@@ -77,7 +82,9 @@ export function factorialCalc(i: Inputs): Outputs {
       resultado = combo.toString();
       resNum = Number(combo);
       formula = `C(${n}, ${r}) = ${n}! / (${r}! × ${n - r}!)`;
-      descripcion = `Formas de elegir ${r} elementos de ${n} (NO importa el orden).`;
+      descripcion = __lang === 'en'
+        ? `Ways to choose ${r} elements from ${n} (order does NOT matter).`
+        : `Formas de elegir ${r} elementos de ${n} (NO importa el orden).`;
       break;
   }
 

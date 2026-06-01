@@ -643,6 +643,12 @@ const formatFreshnessDate = (iso: string): string => {
       ))}
     </div>
 
+    {/* Caja de insight narrativa. La fórmula devuelve output._insight (string
+        o {title,text,tone,icon}) y el cliente la renderiza acá: explica qué
+        significa el resultado en lenguaje claro. Retrocompatible: si la fórmula
+        no lo devuelve, queda oculta. */}
+    <div class="result-insight" data-insight hidden></div>
+
     {config.visualization && (
       <Visualization title={config.visualization.title} data={config.visualization.data} />
     )}
@@ -697,6 +703,10 @@ const formatFreshnessDate = (iso: string): string => {
     </button>
 
     <div class="chart-wrap" data-chart-wrap hidden>
+      {/* Tabs de gráfico. Se llenan client-side cuando la fórmula devuelve
+          output._charts (array de specs con label). Con un solo gráfico
+          (output._chart) quedan ocultas y el comportamiento es el de siempre. */}
+      <div class="chart-tabs" data-chart-tabs role="tablist" hidden></div>
       <canvas data-chart-canvas role="img" aria-label={t.chartAriaLabel}></canvas>
       <button type="button" class="chart-download-btn" data-chart-download aria-label={t.downloadPng} title={t.downloadPng}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1787,6 +1797,56 @@ const formatFreshnessDate = (iso: string): string => {
   }
   .chart-wrap[hidden] { display: none; }
 
+  /* ── Tabs de gráfico (multi-chart: Evolución / Desglose / …) ── */
+  .chart-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-bottom: 0.75rem;
+  }
+  .chart-tabs[hidden] { display: none; }
+  .chart-tab {
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .chart-tab:hover { color: var(--text); border-color: var(--accent); }
+  .chart-tab.active {
+    color: #fff;
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* ── Caja de insight narrativa (qué significa tu resultado) ── */
+  .result-insight {
+    display: flex;
+    gap: 0.625rem;
+    align-items: flex-start;
+    margin-top: 1rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .result-insight[hidden] { display: none; }
+  .result-insight--good { border-left-color: #10b981; }
+  .result-insight--warn { border-left-color: #f59e0b; }
+  .result-insight-icon { font-size: 1.15rem; line-height: 1.3; flex-shrink: 0; }
+  .result-insight-body { display: flex; flex-direction: column; gap: 0.15rem; }
+  .result-insight-title { font-size: 0.95rem; color: var(--text); }
+  .result-insight-text { color: var(--text-muted); }
+  .result-insight-text strong { color: var(--text); font-weight: 700; }
+
   /* ── Tabla de resultado dinámica (amortización, cronogramas) ── */
   .result-table-wrap {
     margin: 1.25rem 0 0.5rem;
@@ -2692,7 +2752,7 @@ const formatFreshnessDate = (iso: string): string => {
       const segments = spec.segments as Array<{ nombre: string; max: number }>;
       const minVal = spec.min ?? 0;
       const marker = spec.marker as number;
-      const markerLabel = spec.markerLabel as string;
+      const markerLabel = translateOutputStr(spec.markerLabel as string);
       const unit = spec.unit || '';
       // Construimos segmentos: cada uno es una barra apilada horizontal
       const defaultPalette = col.isDark
@@ -2706,7 +2766,7 @@ const formatFreshnessDate = (iso: string): string => {
           ? (col.isDark ? (seg.colorDark || seg.color) : seg.color)
           : defaultPalette[idx % defaultPalette.length];
         const ds = {
-          label: seg.nombre,
+          label: translateOutputStr(seg.nombre),
           data: [width],
           backgroundColor: segColor,
           borderWidth: 0,
@@ -2726,7 +2786,7 @@ const formatFreshnessDate = (iso: string): string => {
 
       return new Chart(canvas, {
         type: 'bar',
-        data: { labels: [spec.markerLabel ? '' : 'Rango'], datasets },
+        data: { labels: [spec.markerLabel ? '' : translateOutputStr('Rango')], datasets },
         options: {
           indexAxis: 'y',
           responsive: true,
@@ -2783,7 +2843,7 @@ const formatFreshnessDate = (iso: string): string => {
       const palLight = ['#2563eb', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4'];
       const palDark = ['#60a5fa', '#fbbf24', '#34d399', '#f87171', '#a78bfa', '#22d3ee'];
       const pal = col.isDark ? palDark : palLight;
-      const labels = slices.map((s) => s.label);
+      const labels = slices.map((s) => translateOutputStr(s.label));
       const values = slices.map((s) => Math.max(0, Number(s.value) || 0));
       const colors = slices.map((s, idx) => (col.isDark ? (s.colorDark || s.color) : s.color) || pal[idx % pal.length]);
       const total = values.reduce((a, b) => a + b, 0) || 1;
@@ -2802,12 +2862,12 @@ const formatFreshnessDate = (iso: string): string => {
           if (spec.centerValue) {
             ctx.font = '700 16px system-ui, -apple-system, sans-serif';
             ctx.fillStyle = col.isDark ? '#f1f5f9' : '#0f172a';
-            ctx.fillText(String(spec.centerValue), cx, cy - (spec.centerLabel ? 6 : 0));
+            ctx.fillText(translateOutputStr(String(spec.centerValue)), cx, cy - (spec.centerLabel ? 6 : 0));
           }
           if (spec.centerLabel) {
             ctx.font = '500 10px system-ui, -apple-system, sans-serif';
             ctx.fillStyle = col.muted;
-            ctx.fillText(String(spec.centerLabel), cx, cy + 12);
+            ctx.fillText(translateOutputStr(String(spec.centerLabel)), cx, cy + 12);
           }
           ctx.restore();
         },
@@ -2849,7 +2909,7 @@ const formatFreshnessDate = (iso: string): string => {
       const border = useMuted ? palette[1] : palette[0];
       const fill = useMuted ? paletteSoft[1] : paletteSoft[0];
       const base: any = {
-        label: ds.label,
+        label: translateOutputStr(ds.label),
         data: ds.data,
       };
       if (isBar) {
@@ -3504,6 +3564,92 @@ const formatFreshnessDate = (iso: string): string => {
         });
       }
     }
+
+    // ── Insight narrativo (output._insight) ─────────────────────
+    // Caja que explica el resultado en lenguaje claro. spec puede ser un string
+    // o un objeto {title, text, tone, icon}. tone ∈ neutral|good|warn.
+    const insightEl = container.querySelector<HTMLElement>('[data-insight]');
+    function insightInline(text: string): string {
+      // Escapa HTML y luego convierte **negrita** simple (markdown liviano).
+      return escapeCell(text).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    }
+    function renderInsight(spec: any) {
+      if (!insightEl) return;
+      let title = '', text = '', tone = 'neutral', icon = '💡';
+      if (typeof spec === 'string') { text = spec; }
+      else if (spec && typeof spec === 'object') {
+        title = spec.title || ''; text = spec.text || '';
+        tone = spec.tone || 'neutral'; icon = spec.icon || '💡';
+      }
+      if (!text && !title) { insightEl.hidden = true; insightEl.innerHTML = ''; return; }
+      insightEl.className = 'result-insight result-insight--' + tone;
+      insightEl.innerHTML =
+        '<span class="result-insight-icon" aria-hidden="true">' + escapeCell(icon) + '</span>' +
+        '<div class="result-insight-body">' +
+        (title ? '<strong class="result-insight-title">' + insightInline(translateOutputStr(title)) + '</strong>' : '') +
+        '<span class="result-insight-text">' + insightInline(translateOutputStr(text)) + '</span>' +
+        '</div>';
+      insightEl.hidden = false;
+    }
+
+    // ── Multi-chart con tabs (output._charts) ───────────────────
+    // Si la fórmula devuelve output._charts (array de specs, cada uno con
+    // tabLabel/label), mostramos tabs para alternar entre vistas (ej. Evolución
+    // vs Desglose). renderChart NO cambia: cada tab es un spec normal.
+    let chartVariants: any[] = [];
+    let activeChartIdx = 0;
+    const chartTabsEl = container.querySelector<HTMLElement>('[data-chart-tabs]');
+    function paintActiveChart() {
+      const spec = chartVariants[activeChartIdx];
+      if (!spec || !(window as any).Chart || !chartCanvas) return;
+      lastChartSpec = spec; // mantiene coherente el re-render por cambio de tema
+      if (spec.ariaLabel) chartCanvas.setAttribute('aria-label', spec.ariaLabel);
+      chartInstance = renderChart((window as any).Chart, chartCanvas, spec, chartInstance);
+    }
+    function renderChartTabs() {
+      if (!chartTabsEl) return;
+      if (chartVariants.length <= 1) { chartTabsEl.hidden = true; chartTabsEl.innerHTML = ''; return; }
+      chartTabsEl.innerHTML = '';
+      chartVariants.forEach((v, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chart-tab' + (i === activeChartIdx ? ' active' : '');
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', i === activeChartIdx ? 'true' : 'false');
+        btn.textContent = translateOutputStr(v.tabLabel || v.label || ('Vista ' + (i + 1)));
+        btn.addEventListener('click', () => {
+          if (activeChartIdx === i) return;
+          activeChartIdx = i;
+          chartTabsEl.querySelectorAll<HTMLElement>('.chart-tab').forEach((b, bi) => {
+            b.classList.toggle('active', bi === i);
+            b.setAttribute('aria-selected', bi === i ? 'true' : 'false');
+          });
+          paintActiveChart();
+        });
+        chartTabsEl.appendChild(btn);
+      });
+      chartTabsEl.hidden = false;
+    }
+    // Decide variantes (de _charts o _chart) y pinta. resetActive=true vuelve a la 1ª tab.
+    function setChartsFromOutput(output: any, resetActive: boolean): boolean {
+      const variants = (Array.isArray(output._charts) && output._charts.length)
+        ? output._charts
+        : (output._chart ? [output._chart] : []);
+      if (!variants.length) return false;
+      chartVariants = variants;
+      if (resetActive || activeChartIdx >= variants.length) activeChartIdx = 0;
+      renderChartTabs();
+      paintActiveChart();
+      return true;
+    }
+    function clearCharts() {
+      chartVariants = [];
+      activeChartIdx = 0;
+      lastChartSpec = null;
+      if (chartInstance) { try { chartInstance.destroy(); } catch {} chartInstance = null; }
+      if (chartTabsEl) { chartTabsEl.hidden = true; chartTabsEl.innerHTML = ''; }
+    }
+
     let whatIfInitialized = false;
     const whatIfEl = container.querySelector<HTMLElement>('[data-what-if]');
 
@@ -3592,14 +3738,15 @@ const formatFreshnessDate = (iso: string): string => {
         const valueEl = el.querySelector<HTMLElement>('[data-value]')!;
         valueEl.textContent = formatValue(val, fmt, suf);
       });
-      // Actualizar chart (si corresponde)
-      if (output._chart && chartWrap && chartCanvas && (window as any).Chart) {
-        lastChartSpec = output._chart;
+      // Actualizar chart(s) — mantiene la tab activa mientras movés sliders
+      if (((output._charts && output._charts.length) || output._chart) && chartWrap && chartCanvas && (window as any).Chart) {
         chartWrap.hidden = false;
-        chartInstance = renderChart((window as any).Chart, chartCanvas, output._chart, chartInstance);
+        setChartsFromOutput(output, false);
       }
       // Actualizar tabla (si corresponde)
       renderResultTable(output._table);
+      // Actualizar insight (si corresponde)
+      renderInsight(output._insight);
     }
 
     function scheduleWhatIf(overrides: Record<string, number>) {
@@ -3815,27 +3962,26 @@ const formatFreshnessDate = (iso: string): string => {
             }
           }
 
-          // Chart opcional — solo si la fórmula devolvió _chart
-          if (output._chart && chartWrap && chartCanvas) {
-            lastChartSpec = output._chart;
-            if (output._chart.ariaLabel) {
-              chartCanvas.setAttribute('aria-label', output._chart.ariaLabel);
-            }
+          // Gráfico(s) opcional(es) — soporta output._charts (tabs) y output._chart (single)
+          const hasChart = (Array.isArray(output._charts) && output._charts.length) || output._chart;
+          if (hasChart && chartWrap && chartCanvas) {
             chartWrap.hidden = false;
-            loadChartJs().then((Chart) => {
-              chartInstance = renderChart(Chart, chartCanvas, output._chart, chartInstance);
+            loadChartJs().then(() => {
+              setChartsFromOutput(output, true);
             }).catch((err) => {
               console.warn('[Calculator] Chart.js load failed:', err);
               chartWrap.hidden = true;
             });
           } else if (chartWrap) {
             chartWrap.hidden = true;
-            if (chartInstance) { try { chartInstance.destroy(); } catch {} chartInstance = null; }
-            lastChartSpec = null;
+            clearCharts();
           }
 
           // Tabla de resultado opcional — solo si la fórmula devolvió _table
           renderResultTable(output._table);
+
+          // Insight narrativo opcional — solo si la fórmula devolvió _insight
+          renderInsight(output._insight);
 
           // Sliders "¿qué pasa si...?" — mostrar + inicializar tras primer cálculo
           if (whatIfEl) {
@@ -4119,8 +4265,8 @@ const formatFreshnessDate = (iso: string): string => {
           results.hidden = true;
           errorBox.hidden = true;
           if (chartWrap) chartWrap.hidden = true;
-          if (chartInstance) { try { chartInstance.destroy(); } catch {} chartInstance = null; }
-          lastChartSpec = null;
+          clearCharts();
+          renderInsight(null);
           // Reset email capture state
           const emailCap = container.querySelector<HTMLElement>('[data-email-capture]');
           if (emailCap) {

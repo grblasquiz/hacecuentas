@@ -15,6 +15,7 @@ export interface ViajeDividirInputs {
   persona4: number;
   persona5: number;
   persona6: number;
+  __lang?: string;
 }
 
 export interface ViajeDividirOutputs {
@@ -26,6 +27,28 @@ export interface ViajeDividirOutputs {
 }
 
 export function viajeDividir(inputs: ViajeDividirInputs): ViajeDividirOutputs {
+  const __lang = inputs.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      minPersons: 'Ingresá los gastos de al menos 2 personas',
+      even:       'queda parejo',
+      owed:       'LE DEBEN',
+      owes:       'TIENE QUE PAGAR',
+      put:        'puso',
+      person:     'Persona',
+      ariaLabel:  'Composición del gasto total por persona',
+    },
+    en: {
+      minPersons: 'Enter expenses for at least 2 people',
+      even:       'all even',
+      owed:       'IS OWED',
+      owes:       'NEEDS TO PAY',
+      put:        'paid',
+      person:     'Person',
+      ariaLabel:  'Breakdown of total expenses by person',
+    },
+  } as const)[__lang];
+
   const gastos = [
     Number(inputs.persona1) || 0,
     Number(inputs.persona2) || 0,
@@ -37,7 +60,7 @@ export function viajeDividir(inputs: ViajeDividirInputs): ViajeDividirOutputs {
 
   const personasActivas = gastos.filter((g) => g > 0).length;
   if (personasActivas < 2) {
-    throw new Error('Ingresá los gastos de al menos 2 personas');
+    throw new Error(T.minPersons);
   }
 
   const totalGastado = gastos.reduce((a, b) => a + b, 0);
@@ -53,23 +76,23 @@ export function viajeDividir(inputs: ViajeDividirInputs): ViajeDividirOutputs {
     .filter((b) => b.gasto > 0)
     .map((b) => {
       if (Math.abs(b.balance) < 1) {
-        return `Persona ${b.idx}: puso $${Math.round(b.gasto).toLocaleString('es-AR')} → queda parejo`;
+        return `${T.person} ${b.idx}: ${T.put} $${Math.round(b.gasto).toLocaleString('es-AR')} → ${T.even}`;
       }
       if (b.balance > 0) {
-        return `Persona ${b.idx}: puso $${Math.round(b.gasto).toLocaleString('es-AR')} → LE DEBEN $${Math.round(b.balance).toLocaleString('es-AR')}`;
+        return `${T.person} ${b.idx}: ${T.put} $${Math.round(b.gasto).toLocaleString('es-AR')} → ${T.owed} $${Math.round(b.balance).toLocaleString('es-AR')}`;
       }
-      return `Persona ${b.idx}: puso $${Math.round(b.gasto).toLocaleString('es-AR')} → TIENE QUE PAGAR $${Math.abs(Math.round(b.balance)).toLocaleString('es-AR')}`;
+      return `${T.person} ${b.idx}: ${T.put} $${Math.round(b.gasto).toLocaleString('es-AR')} → ${T.owes} $${Math.abs(Math.round(b.balance)).toLocaleString('es-AR')}`;
     });
 
   const chart = {
     type: 'doughnut' as const,
     slices: balances
       .filter((b) => b.gasto > 0)
-      .map((b) => ({ label: 'Persona ' + b.idx, value: Math.round(b.gasto) })),
+      .map((b) => ({ label: T.person + ' ' + b.idx, value: Math.round(b.gasto) })),
     prefix: '$',
     centerValue: '$' + Math.round(totalGastado).toLocaleString('es-AR'),
     centerLabel: 'Total',
-    ariaLabel: 'Composición del gasto total por persona',
+    ariaLabel: T.ariaLabel,
   };
 
   return {

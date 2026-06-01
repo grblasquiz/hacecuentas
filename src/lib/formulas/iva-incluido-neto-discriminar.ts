@@ -8,6 +8,7 @@ export interface IvaIncluidoNetoDiscriminarInputs {
   monto: number;
   montoTipo: string;
   alicuota: number;
+  __lang?: string;
 }
 
 export interface IvaIncluidoNetoDiscriminarOutputs {
@@ -21,12 +22,38 @@ export interface IvaIncluidoNetoDiscriminarOutputs {
 export function ivaIncluidoNetoDiscriminar(
   inputs: IvaIncluidoNetoDiscriminarInputs
 ): IvaIncluidoNetoDiscriminarOutputs {
+  const __lang = inputs.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errorMonto: 'Ingresá un monto',
+      errorAlicuota: 'La alícuota debe ser positiva',
+      sliceNeto: 'Neto',
+      centerLabel: 'Total',
+      ariaLabel: 'Composición del precio: neto más IVA',
+      labelConIva: 'Precio con IVA',
+      labelNeto: 'Precio neto',
+      discriminando: 'Discriminando',
+      agregando: 'Agregando',
+    },
+    en: {
+      errorMonto: 'Enter an amount',
+      errorAlicuota: 'The tax rate must be positive',
+      sliceNeto: 'Net',
+      centerLabel: 'Total',
+      ariaLabel: 'Price breakdown: net plus VAT',
+      labelConIva: 'Price with VAT',
+      labelNeto: 'Net price',
+      discriminando: 'Breaking down',
+      agregando: 'Adding',
+    },
+  } as const)[__lang];
+
   const monto = Number(inputs.monto);
   const tipo = inputs.montoTipo || 'conIva';
   const alicuota = Number(inputs.alicuota) || 21;
 
-  if (!monto || monto <= 0) throw new Error('Ingresá un monto');
-  if (alicuota <= 0) throw new Error('La alícuota debe ser positiva');
+  if (!monto || monto <= 0) throw new Error(T.errorMonto);
+  if (alicuota <= 0) throw new Error(T.errorAlicuota);
 
   const factor = 1 + alicuota / 100;
   let neto: number;
@@ -45,25 +72,30 @@ export function ivaIncluidoNetoDiscriminar(
     iva = total - neto;
   }
 
-  const operacion = tipo === 'conIva' ? 'sacando' : 'agregando';
-
   const chart = {
     type: 'doughnut' as const,
     slices: [
-      { label: 'Neto', value: Math.round(neto * 100) / 100 },
+      { label: T.sliceNeto, value: Math.round(neto * 100) / 100 },
       { label: `IVA ${alicuota}%`, value: Math.round(iva * 100) / 100 },
     ],
     prefix: '$',
     centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
-    centerLabel: 'Total',
-    ariaLabel: 'Composición del precio: neto más IVA',
+    centerLabel: T.centerLabel,
+    ariaLabel: T.ariaLabel,
   };
+
+  const netoFmt = (Math.round(neto * 100) / 100).toLocaleString('es-AR');
+  const ivaFmt = (Math.round(iva * 100) / 100).toLocaleString('es-AR');
+  const totalFmt = (Math.round(total * 100) / 100).toLocaleString('es-AR');
+  const montoFmt = monto.toLocaleString('es-AR');
+  const labelTipo = tipo === 'conIva' ? T.labelConIva : T.labelNeto;
+  const labelOp = tipo === 'conIva' ? T.discriminando : T.agregando;
 
   return {
     neto: Math.round(neto * 100) / 100,
     iva: Math.round(iva * 100) / 100,
     total: Math.round(total * 100) / 100,
-    detalle: `${tipo === 'conIva' ? 'Precio con IVA' : 'Precio neto'}: $${monto.toLocaleString('es-AR')}. ${operacion === 'sacando' ? 'Discriminando' : 'Agregando'} IVA ${alicuota}%: neto $${(Math.round(neto * 100) / 100).toLocaleString('es-AR')} + IVA $${(Math.round(iva * 100) / 100).toLocaleString('es-AR')} = total $${(Math.round(total * 100) / 100).toLocaleString('es-AR')}.`,
+    detalle: `${labelTipo}: $${montoFmt}. ${labelOp} IVA ${alicuota}%: neto $${netoFmt} + IVA $${ivaFmt} = total $${totalFmt}.`,
     _chart: chart,
   };
 }

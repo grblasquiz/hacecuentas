@@ -31,6 +31,7 @@ const SI_TABLE: Record<string, { si: number; nombre: string }> = {
 
 export interface IndiceSaciedadAlimentoInputs {
   alimento: string;
+  __lang?: string;
 }
 
 export interface IndiceSaciedadAlimentoOutputs {
@@ -41,13 +42,40 @@ export interface IndiceSaciedadAlimentoOutputs {
 }
 
 export function indiceSaciedadAlimento(inputs: IndiceSaciedadAlimentoInputs): IndiceSaciedadAlimentoOutputs {
+  const __lang = inputs.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errorAlimento: 'Seleccioná un alimento válido',
+      muySaciante: 'Muy saciante ✅',
+      saciante: 'Saciante',
+      saciedadMedia: 'Saciedad media',
+      pocoSaciante: 'Poco saciante ⚠️',
+      segPocoSaciante: 'Poco saciante',
+      segSaciedadMedia: 'Saciedad media',
+      segSaciante: 'Saciante',
+      segMuySaciante: 'Muy saciante',
+      ariaLabel: 'Escala de índice de saciedad Holt (pan blanco = 100): poco saciante menos de 100, muy saciante 200 o más',
+    },
+    en: {
+      errorAlimento: 'Select a valid food',
+      muySaciante: 'Very satiating ✅',
+      saciante: 'Satiating',
+      saciedadMedia: 'Moderate satiety',
+      pocoSaciante: 'Low satiety ⚠️',
+      segPocoSaciante: 'Low satiety',
+      segSaciedadMedia: 'Moderate satiety',
+      segSaciante: 'Satiating',
+      segMuySaciante: 'Very satiating',
+      ariaLabel: 'Holt satiety index scale (white bread = 100): low satiety below 100, very satiating 200 or more',
+    },
+  } as const)[__lang];
   const data = SI_TABLE[inputs.alimento];
-  if (!data) throw new Error('Seleccioná un alimento válido');
+  if (!data) throw new Error(T.errorAlimento);
   let clasif = '';
-  if (data.si >= 200) clasif = 'Muy saciante ✅';
-  else if (data.si >= 130) clasif = 'Saciante';
-  else if (data.si >= 100) clasif = 'Saciedad media';
-  else clasif = 'Poco saciante ⚠️';
+  if (data.si >= 200) clasif = T.muySaciante;
+  else if (data.si >= 130) clasif = T.saciante;
+  else if (data.si >= 100) clasif = T.saciedadMedia;
+  else clasif = T.pocoSaciante;
   const ratio = (data.si / 100).toFixed(1);
   const chart = {
     type: 'scale' as const,
@@ -56,17 +84,19 @@ export function indiceSaciedadAlimento(inputs: IndiceSaciedadAlimentoInputs): In
     min: 0,
     unit: '',
     segments: [
-      { nombre: 'Poco saciante', max: 99, color: '#fecaca', colorDark: '#b91c1c' },
-      { nombre: 'Saciedad media', max: 129, color: '#fde68a', colorDark: '#b45309' },
-      { nombre: 'Saciante', max: 199, color: '#d9f99d', colorDark: '#3f6212' },
-      { nombre: 'Muy saciante', max: Math.max(330, Math.ceil(data.si) + 10), color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: T.segPocoSaciante, max: 99, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: T.segSaciedadMedia, max: 129, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: T.segSaciante, max: 199, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: T.segMuySaciante, max: Math.max(330, Math.ceil(data.si) + 10), color: '#bbf7d0', colorDark: '#166534' },
     ],
-    ariaLabel: 'Escala de índice de saciedad Holt (pan blanco = 100): poco saciante menos de 100, muy saciante 200 o más',
+    ariaLabel: T.ariaLabel,
   };
   return {
     si: data.si,
     clasificacion: clasif,
-    comparacion: `Sacia ${ratio}× el pan blanco (referencia).`,
+    comparacion: __lang === 'en'
+      ? `Satiates ${ratio}× white bread (reference).`
+      : `Sacia ${ratio}× el pan blanco (referencia).`,
     _chart: chart,
   };
 }

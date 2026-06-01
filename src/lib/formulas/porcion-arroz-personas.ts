@@ -1,12 +1,13 @@
 /** Porción de arroz por persona */
-export interface Inputs { personas: number; tipo?: string; ninos?: string; }
+export interface Inputs { personas: number; tipo?: string; ninos?: string; __lang?: string; }
 export interface Outputs { gramosCrudo: number; tazasArroz: number; tazasAgua: number; porPersona: number; }
 
 const GRAMOS_PERSONA: Record<string, number> = { guarnicion: 70, principal: 110, sushi: 120, ensalada: 80 };
 const RATIO_AGUA: Record<string, number> = { guarnicion: 2, principal: 2, sushi: 1.2, ensalada: 2 };
 
 export function porcionArrozPersonas(i: Inputs): Outputs {
-  const pers = Number(i.personas); if (!pers || pers <= 0) throw new Error('Ingresá la cantidad de personas');
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const pers = Number(i.personas); if (!pers || pers <= 0) throw new Error(__lang === 'en' ? 'Enter the number of people' : 'Ingresá la cantidad de personas');
   const tipo = String(i.tipo || 'guarnicion');
   const ninos = String(i.ninos || 'no');
   const gBase = GRAMOS_PERSONA[tipo] || 70;

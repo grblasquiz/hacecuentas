@@ -5,6 +5,7 @@ export interface Inputs {
   dimensionPieza?: string; // "60x60"
   m2PorCaja?: number;
   desperdicio?: number;
+  __lang?: string;
 }
 export interface Outputs {
   m2Totales: number;
@@ -16,12 +17,21 @@ export interface Outputs {
 }
 
 export function pisosCeramicos(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errorDimensions: 'Ingresá largo y ancho del ambiente',
+    },
+    en: {
+      errorDimensions: 'Enter the room length and width',
+    },
+  } as const)[__lang];
   const l = Number(i.largo);
   const a = Number(i.ancho);
   const pieza = String(i.dimensionPieza || '60x60');
   const m2Caja = Number(i.m2PorCaja) || 0;
   const desp = Number(i.desperdicio) || 10;
-  if (!l || !a) throw new Error('Ingresá largo y ancho del ambiente');
+  if (!l || !a) throw new Error(T.errorDimensions);
 
   const m2 = l * a;
   const conDesp = m2 * (1 + desp / 100);

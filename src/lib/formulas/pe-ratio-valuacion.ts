@@ -5,6 +5,7 @@ export interface Inputs {
   gananciaPorAccion: number;
   pePromedioSector: number;
   tasaCrecimiento: number;
+  __lang?: string;
 }
 
 export interface Outputs {
@@ -18,13 +19,46 @@ export interface Outputs {
 }
 
 export function peRatioValuacion(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+
+  const T = ({
+    es: {
+      errPrecio: 'Ingresá el precio de la acción',
+      errEps: 'Ingresá la ganancia por acción (EPS)',
+      sinValuacion: 'Sin valuación P/E (EPS negativo)',
+      subvaluada: 'Potencialmente subvaluada',
+      sobrevaluada: 'Potencialmente sobrevaluada',
+      enRango: 'Valuación en rango del sector',
+      pegAtractivo: 'atractivo',
+      pegCaro: 'caro',
+      pegJusto: 'justo',
+      sobrePrecio: 'sobre precio justo',
+      bajoPrecio: 'bajo precio justo',
+      precioJustoLabel: 'Precio justo según P/E del sector',
+    },
+    en: {
+      errPrecio: 'Enter the stock price',
+      errEps: 'Enter the earnings per share (EPS)',
+      sinValuacion: 'No P/E valuation (negative EPS)',
+      subvaluada: 'Potentially undervalued',
+      sobrevaluada: 'Potentially overvalued',
+      enRango: 'Valuation within sector range',
+      pegAtractivo: 'attractive',
+      pegCaro: 'expensive',
+      pegJusto: 'fair',
+      sobrePrecio: 'above fair value',
+      bajoPrecio: 'below fair value',
+      precioJustoLabel: 'Fair price based on sector P/E',
+    },
+  } as const)[__lang];
+
   const precio = Number(i.precioAccion);
   const eps = Number(i.gananciaPorAccion);
   const pePromedio = Number(i.pePromedioSector) || 15;
   const crecimiento = Number(i.tasaCrecimiento) || 0;
 
-  if (!precio || precio <= 0) throw new Error('Ingresá el precio de la acción');
-  if (!eps) throw new Error('Ingresá la ganancia por acción (EPS)');
+  if (!precio || precio <= 0) throw new Error(T.errPrecio);
+  if (!eps) throw new Error(T.errEps);
 
   const peRatio = precio / eps;
 
@@ -37,17 +71,17 @@ export function peRatioValuacion(i: Inputs): Outputs {
 
   let valuacion: string;
   if (eps < 0) {
-    valuacion = 'Sin valuación P/E (EPS negativo)';
+    valuacion = T.sinValuacion;
   } else if (peRatio < pePromedio * 0.7) {
-    valuacion = 'Potencialmente subvaluada';
+    valuacion = T.subvaluada;
   } else if (peRatio > pePromedio * 1.3) {
-    valuacion = 'Potencialmente sobrevaluada';
+    valuacion = T.sobrevaluada;
   } else {
-    valuacion = 'Valuación en rango del sector';
+    valuacion = T.enRango;
   }
 
   const formula = `P/E = $${precio} / $${eps} = ${peRatio.toFixed(2)}`;
-  const explicacion = `P/E ratio: ${peRatio.toFixed(2)} (sector: ${pePromedio}).${pegRatio > 0 ? ` PEG ratio: ${pegRatio.toFixed(2)} (${pegRatio < 1 ? 'atractivo' : pegRatio > 2 ? 'caro' : 'justo'}).` : ''} Precio justo según P/E del sector: $${precioJusto.toFixed(2)} (${diferenciaPrecio > 0 ? `+${diferenciaPrecio.toFixed(1)}% sobre precio justo` : `${diferenciaPrecio.toFixed(1)}% bajo precio justo`}). ${valuacion}.`;
+  const explicacion = `P/E ratio: ${peRatio.toFixed(2)} (sector: ${pePromedio}).${pegRatio > 0 ? ` PEG ratio: ${pegRatio.toFixed(2)} (${pegRatio < 1 ? T.pegAtractivo : pegRatio > 2 ? T.pegCaro : T.pegJusto}).` : ''} ${T.precioJustoLabel}: $${precioJusto.toFixed(2)} (${diferenciaPrecio > 0 ? `+${diferenciaPrecio.toFixed(1)}% ${T.sobrePrecio}` : `${diferenciaPrecio.toFixed(1)}% ${T.bajoPrecio}`}). ${valuacion}.`;
 
   return {
     peRatio: Number(peRatio.toFixed(2)),

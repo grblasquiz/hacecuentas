@@ -2,6 +2,7 @@
 export interface Inputs {
   circunferencia: number;
   sistema: string;
+  __lang?: string;
 }
 export interface Outputs {
   tallaAR: number;
@@ -13,8 +14,13 @@ export interface Outputs {
 }
 
 export function tallaAnilloDedo(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const circ = Number(i.circunferencia); // mm
-  if (!circ || circ < 35 || circ > 80) throw new Error('Ingresá la circunferencia del dedo en mm (35-80)');
+  if (!circ || circ < 35 || circ > 80) throw new Error(
+    __lang === 'en'
+      ? 'Enter the finger circumference in mm (35-80)'
+      : 'Ingresá la circunferencia del dedo en mm (35-80)'
+  );
 
   const diametro = circ / Math.PI;
 
@@ -33,12 +39,15 @@ export function tallaAnilloDedo(i: Inputs): Outputs {
   const ukIndex = Math.round((circ - 44.2) / 1.25);
   const tallaUK = ukIndex >= 0 && ukIndex < ukSizes.length ? ukSizes[ukIndex] : '—';
 
+  const usVal = Math.max(0, tallaUS);
   return {
     tallaAR,
-    tallaUS: Math.max(0, tallaUS),
+    tallaUS: usVal,
     tallaEU,
     tallaUK,
     diametro: Number(diametro.toFixed(1)),
-    mensaje: `Circunferencia ${circ}mm → Diámetro ${diametro.toFixed(1)}mm. Talla AR/EU: ${tallaAR} | US: ${Math.max(0, tallaUS)} | UK: ${tallaUK}.`,
+    mensaje: __lang === 'en'
+      ? `Circumference ${circ}mm → Diameter ${diametro.toFixed(1)}mm. Size AR/EU: ${tallaAR} | US: ${usVal} | UK: ${tallaUK}.`
+      : `Circunferencia ${circ}mm → Diámetro ${diametro.toFixed(1)}mm. Talla AR/EU: ${tallaAR} | US: ${usVal} | UK: ${tallaUK}.`,
   };
 }

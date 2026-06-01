@@ -11,6 +11,7 @@ export interface Inputs {
   compra4Precio: number;
   compra5Cantidad: number;
   compra5Precio: number;
+  __lang?: string;
 }
 
 export interface Outputs {
@@ -24,6 +25,29 @@ export interface Outputs {
 }
 
 export function precioPromedioCompraCripto(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+
+  const T = ({
+    es: {
+      errorNoCompras: 'Ingresá al menos una compra con cantidad y precio',
+      purchaseLabel: (idx: number, cantidad: number, precio: string) => `Compra ${idx + 1}: ${cantidad} tokens a $${precio}`,
+      formulaLabel: (totalInvertido: string, totalTokens: string, precioPromedio: string) => `Precio promedio = $${totalInvertido} / ${totalTokens} tokens = $${precioPromedio}`,
+      totalInvertido: 'Total invertido',
+      totalTokens: 'Total tokens',
+      precioPromedioDesc: (precioPromedio: string) => `Tu precio promedio ponderado es $${precioPromedio} por token`,
+      rangoPreciosLabel: 'Rango de precios',
+    },
+    en: {
+      errorNoCompras: 'Enter at least one purchase with quantity and price',
+      purchaseLabel: (idx: number, cantidad: number, precio: string) => `Purchase ${idx + 1}: ${cantidad} tokens at $${precio}`,
+      formulaLabel: (totalInvertido: string, totalTokens: string, precioPromedio: string) => `Average price = $${totalInvertido} / ${totalTokens} tokens = $${precioPromedio}`,
+      totalInvertido: 'Total invested',
+      totalTokens: 'Total tokens',
+      precioPromedioDesc: (precioPromedio: string) => `Your weighted average price is $${precioPromedio} per token`,
+      rangoPreciosLabel: 'Price range',
+    },
+  } as const)[__lang];
+
   const compras: Array<{ cantidad: number; precio: number }> = [];
 
   for (let n = 1; n <= 5; n++) {
@@ -34,7 +58,7 @@ export function precioPromedioCompraCripto(i: Inputs): Outputs {
     }
   }
 
-  if (compras.length === 0) throw new Error('Ingresá al menos una compra con cantidad y precio');
+  if (compras.length === 0) throw new Error(T.errorNoCompras);
 
   let totalTokens = 0;
   let totalInvertido = 0;
@@ -51,11 +75,11 @@ export function precioPromedioCompraCripto(i: Inputs): Outputs {
   const precioPromedio = totalInvertido / totalTokens;
 
   const detalles = compras.map((c, idx) =>
-    `Compra ${idx + 1}: ${c.cantidad} tokens a $${c.precio.toLocaleString()}`
+    T.purchaseLabel(idx, c.cantidad, c.precio.toLocaleString())
   ).join('. ');
 
-  const formula = `Precio promedio = $${totalInvertido.toLocaleString()} / ${totalTokens.toFixed(4)} tokens = $${precioPromedio.toFixed(2)}`;
-  const explicacion = `${detalles}. Total invertido: $${totalInvertido.toLocaleString()}. Total tokens: ${totalTokens.toFixed(4)}. Tu precio promedio ponderado es $${precioPromedio.toFixed(2)} por token. Rango de precios: $${precioMasBajo.toFixed(2)} — $${precioMasAlto.toFixed(2)}.`;
+  const formula = T.formulaLabel(totalInvertido.toLocaleString(), totalTokens.toFixed(4), precioPromedio.toFixed(2));
+  const explicacion = `${detalles}. ${T.totalInvertido}: $${totalInvertido.toLocaleString()}. ${T.totalTokens}: ${totalTokens.toFixed(4)}. ${T.precioPromedioDesc(precioPromedio.toFixed(2))}. ${T.rangoPreciosLabel}: $${precioMasBajo.toFixed(2)} — $${precioMasAlto.toFixed(2)}.`;
 
   return {
     precioPromedio: Number(precioPromedio.toFixed(4)),

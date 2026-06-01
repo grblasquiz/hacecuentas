@@ -21,6 +21,7 @@ export interface IndemnizacionInputs {
   antiguedadMeses: number; // 0-11, meses extra más allá de los años completos
   topeConvenio: number; // 3 × promedio convencional; 0 = sin tope
   diaDespido: number; // 1-31, día del mes del despido
+  __lang?: string;
 }
 
 export interface IndemnizacionOutputs {
@@ -40,6 +41,38 @@ export interface IndemnizacionOutputs {
 }
 
 export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs {
+  const __lang = inputs.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errSueldo: 'Ingresá el sueldo bruto mensual',
+      errAntiguedad: 'Ingresá la antigüedad laboral',
+      sliceAntiguedad: 'Antigüedad (Art. 245)',
+      slicePreaviso: 'Preaviso + SAC',
+      sliceIntegracion: 'Integración mes + SAC',
+      sliceSac: 'SAC proporcional',
+      sliceVacaciones: 'Vacaciones + SAC',
+      centerLabel: 'Total',
+      ariaLabel: 'Composición de la indemnización por despido: antigüedad, preaviso, integración del mes, SAC proporcional y vacaciones.',
+      anioSingular: 'año',
+      anioPlural: 'años',
+      aniosComputables: (n: number) => `${n} ${n === 1 ? 'año' : 'años'} computables`,
+    },
+    en: {
+      errSueldo: 'Enter the gross monthly salary',
+      errAntiguedad: 'Enter the length of employment',
+      sliceAntiguedad: 'Severance (Art. 245)',
+      slicePreaviso: 'Notice pay + vacation bonus',
+      sliceIntegracion: 'Month integration + vacation bonus',
+      sliceSac: 'Proportional vacation bonus',
+      sliceVacaciones: 'Unused vacation + vacation bonus',
+      centerLabel: 'Total',
+      ariaLabel: 'Breakdown of dismissal severance: seniority pay, notice pay, month integration, proportional vacation bonus, and unused vacation.',
+      anioSingular: 'year',
+      anioPlural: 'years',
+      aniosComputables: (n: number) => `${n} ${n === 1 ? 'year' : 'years'} computed`,
+    },
+  } as const)[__lang];
+
   const sueldo = Number(inputs.sueldoBruto);
   const anios = Math.max(0, Number(inputs.antiguedadAnios) || 0);
   const meses = Math.max(0, Math.min(11, Number(inputs.antiguedadMeses) || 0));
@@ -47,10 +80,10 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
   const diaDespido = Math.max(1, Math.min(31, Number(inputs.diaDespido) || 15));
 
   if (!sueldo || sueldo <= 0) {
-    throw new Error('Ingresá el sueldo bruto mensual');
+    throw new Error(T.errSueldo);
   }
   if (anios === 0 && meses === 0) {
-    throw new Error('Ingresá la antigüedad laboral');
+    throw new Error(T.errAntiguedad);
   }
 
   const antiguedadTotalMeses = anios * 12 + meses;
@@ -123,16 +156,16 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
   const chart = {
     type: 'doughnut' as const,
     slices: [
-      { label: 'Antigüedad (Art. 245)', value: Math.round(antiguedad) },
-      { label: 'Preaviso + SAC', value: Math.round(preaviso + sacPreaviso) },
-      { label: 'Integración mes + SAC', value: Math.round(integracionMes + sacIntegracion) },
-      { label: 'SAC proporcional', value: Math.round(sacProporcional) },
-      { label: 'Vacaciones + SAC', value: Math.round(vacacionesProporcionales + sacVacaciones) },
+      { label: T.sliceAntiguedad, value: Math.round(antiguedad) },
+      { label: T.slicePreaviso, value: Math.round(preaviso + sacPreaviso) },
+      { label: T.sliceIntegracion, value: Math.round(integracionMes + sacIntegracion) },
+      { label: T.sliceSac, value: Math.round(sacProporcional) },
+      { label: T.sliceVacaciones, value: Math.round(vacacionesProporcionales + sacVacaciones) },
     ],
     prefix: '$',
     centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
-    centerLabel: 'Total',
-    ariaLabel: 'Composición de la indemnización por despido: antigüedad, preaviso, integración del mes, SAC proporcional y vacaciones.',
+    centerLabel: T.centerLabel,
+    ariaLabel: T.ariaLabel,
   };
 
   return {
@@ -145,7 +178,7 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
     vacacionesProporcionales: Math.round(vacacionesProporcionales),
     sacVacaciones: Math.round(sacVacaciones),
     total: Math.round(total),
-    aniosComputables: `${aniosComputables} ${aniosComputables === 1 ? 'año' : 'años'} computables`,
+    aniosComputables: T.aniosComputables(aniosComputables),
     baseArt245: Math.round(baseArt245),
     vizzotiAplicado,
     _chart: chart,

@@ -1,6 +1,7 @@
 /** ¿Cuánto tarda leer un libro? */
 export interface Inputs {
   [k: string]: any;
+  __lang?: string;
 }
 export interface Outputs {
   diasTotales: number;
@@ -10,10 +11,11 @@ export interface Outputs {
 }
 
 export function tiempoLeerLibroGeneral(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const pag = Number(i.paginas) || 300;
   const min = Number(i.minutosDia) || 30;
   const gen = String(i.genero || 'ficcion');
-  if (pag <= 0 || min <= 0) throw new Error('Datos inválidos');
+  if (pag <= 0 || min <= 0) throw new Error(__lang === 'en' ? 'Invalid data' : 'Datos inválidos');
 
   const WPM: Record<string, number> = { thriller: 290, ficcion: 250, clasico: 180, ensayo: 220, academico: 160 };
   const PAL_PAG: Record<string, number> = { thriller: 260, ficcion: 275, clasico: 300, ensayo: 290, academico: 320 };

@@ -2,6 +2,7 @@
 export interface Inputs {
   peso: number;
   tolerancia: string;
+  __lang?: string;
 }
 export interface Outputs {
   dosisOptima: string;
@@ -13,9 +14,29 @@ export interface Outputs {
 }
 
 export function cafeinaDosisRendimiento(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errorPeso: 'Ingresá tu peso',
+      cafesEquiv: (min: string, max: string) => `${min}-${max} cafés de filtro (~95 mg c/u)`,
+      timingBaja: '45-60 min antes de entrenar (empezá con la dosis mínima)',
+      timingNormal: '30-60 min antes de entrenar',
+      mensaje: (mgMin: number, mgMax: number, cMin: string, cMax: string) =>
+        `Dosis óptima: ${Math.round(mgMin)}-${Math.round(mgMax)} mg (${cMin}-${cMax} cafés). Tomá 30-60 min antes de entrenar.`,
+    },
+    en: {
+      errorPeso: 'Enter your weight',
+      cafesEquiv: (min: string, max: string) => `${min}-${max} filter coffees (~95 mg each)`,
+      timingBaja: '45-60 min before training (start with the minimum dose)',
+      timingNormal: '30-60 min before training',
+      mensaje: (mgMin: number, mgMax: number, cMin: string, cMax: string) =>
+        `Optimal dose: ${Math.round(mgMin)}-${Math.round(mgMax)} mg (${cMin}-${cMax} coffees). Take 30-60 min before training.`,
+    },
+  } as const)[__lang];
+
   const peso = Number(i.peso);
   const tolerancia = String(i.tolerancia || 'media');
-  if (!peso || peso <= 0) throw new Error('Ingresá tu peso');
+  if (!peso || peso <= 0) throw new Error(T.errorPeso);
 
   // ISSN: 3-6 mg/kg para rendimiento
   let mgMin: number, mgMax: number;
@@ -38,8 +59,8 @@ export function cafeinaDosisRendimiento(i: Inputs): Outputs {
     dosisOptima: `${Math.round(mgMin)}-${Math.round(mgMax)} mg`,
     dosisMinima: Math.round(mgMin),
     dosisMaxima: Math.round(mgMax),
-    cafesEquiv: `${cafesMin}-${cafesMax} cafés de filtro (~95 mg c/u)`,
-    timing: tolerancia === 'baja' ? '45-60 min antes de entrenar (empezá con la dosis mínima)' : '30-60 min antes de entrenar',
-    mensaje: `Dosis óptima: ${Math.round(mgMin)}-${Math.round(mgMax)} mg (${cafesMin}-${cafesMax} cafés). Tomá 30-60 min antes de entrenar.`
+    cafesEquiv: T.cafesEquiv(cafesMin, cafesMax),
+    timing: tolerancia === 'baja' ? T.timingBaja : T.timingNormal,
+    mensaje: T.mensaje(mgMin, mgMax, cafesMin, cafesMax),
   };
 }

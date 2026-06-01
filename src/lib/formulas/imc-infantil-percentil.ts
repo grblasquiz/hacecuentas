@@ -1,5 +1,5 @@
 /** IMC infantil con percentiles OMS */
-export interface Inputs { pesoNinoIMC: number; tallaNinoIMC: number; edadNinoIMC: number; sexoNinoIMC: string; }
+export interface Inputs { pesoNinoIMC: number; tallaNinoIMC: number; edadNinoIMC: number; sexoNinoIMC: string; __lang?: string; }
 export interface Outputs { imc: string; percentilIMC: string; clasificacion: string; recomendacion: string; _chart?: any; }
 
 // P5, P50, P85, P97 de IMC por edad (simplificado, varones)
@@ -23,13 +23,61 @@ const imcMujer: Record<number, number[]> = {
 };
 
 export function imcInfantilPercentil(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errPeso: 'Ingresá el peso',
+      errTalla: 'Ingresá la talla',
+      errEdad: 'Esta calculadora es para niños de 2 a 18 años',
+      pctBajo: '< percentil 5',
+      clsBajo: 'Bajo peso',
+      recBajo: 'Consultá con el pediatra para evaluar causas y plan nutricional.',
+      pctNormal: 'percentil 5-84 (normal)',
+      clsNormal: 'Peso saludable',
+      recNormal: 'Peso adecuado para la edad. Seguí con alimentación variada y actividad física.',
+      pctSobre: 'percentil 85-96',
+      clsSobre: 'Sobrepeso',
+      recSobre: 'Consultá con el pediatra. Más actividad física y menos ultraprocesados.',
+      pctObe: '≥ percentil 97',
+      clsObe: 'Obesidad',
+      recObe: 'Consultá con pediatra y nutricionista. Plan de alimentación + actividad física.',
+      segBajo: 'Bajo peso',
+      segNormal: 'Peso saludable',
+      segSobre: 'Sobrepeso',
+      segObe: 'Obesidad',
+      aria: 'Escala de IMC infantil según percentiles OMS para la edad y sexo',
+    },
+    en: {
+      errPeso: 'Enter the child\'s weight',
+      errTalla: 'Enter the child\'s height',
+      errEdad: 'This calculator is for children aged 2 to 18 years',
+      pctBajo: '< 5th percentile',
+      clsBajo: 'Underweight',
+      recBajo: 'Consult your pediatrician to evaluate causes and a nutritional plan.',
+      pctNormal: '5th–84th percentile (normal)',
+      clsNormal: 'Healthy weight',
+      recNormal: 'Weight is appropriate for the age. Keep up a varied diet and physical activity.',
+      pctSobre: '85th–96th percentile',
+      clsSobre: 'Overweight',
+      recSobre: 'Consult your pediatrician. More physical activity and fewer ultra-processed foods.',
+      pctObe: '≥ 97th percentile',
+      clsObe: 'Obesity',
+      recObe: 'Consult a pediatrician and nutritionist. A meal plan + physical activity is recommended.',
+      segBajo: 'Underweight',
+      segNormal: 'Healthy weight',
+      segSobre: 'Overweight',
+      segObe: 'Obesity',
+      aria: 'Child BMI scale by WHO percentiles for age and sex',
+    },
+  } as const)[__lang];
+
   const peso = Number(i.pesoNinoIMC);
   const talla = Number(i.tallaNinoIMC);
   const edad = Number(i.edadNinoIMC);
   const sexo = String(i.sexoNinoIMC);
-  if (!peso || peso < 5) throw new Error('Ingresá el peso');
-  if (!talla || talla < 60) throw new Error('Ingresá la talla');
-  if (edad < 2 || edad > 18) throw new Error('Esta calculadora es para niños de 2 a 18 años');
+  if (!peso || peso < 5) throw new Error(T.errPeso);
+  if (!talla || talla < 60) throw new Error(T.errTalla);
+  if (edad < 2 || edad > 18) throw new Error(T.errEdad);
 
   const tallaM = talla / 100;
   const imc = peso / (tallaM * tallaM);
@@ -62,21 +110,21 @@ export function imcInfantilPercentil(i: Inputs): Outputs {
   let recomendacion = '';
 
   if (imc < p5) {
-    percentil = '< percentil 5';
-    clasificacion = 'Bajo peso';
-    recomendacion = 'Consultá con el pediatra para evaluar causas y plan nutricional.';
+    percentil = T.pctBajo;
+    clasificacion = T.clsBajo;
+    recomendacion = T.recBajo;
   } else if (imc < p85) {
-    percentil = 'percentil 5-84 (normal)';
-    clasificacion = 'Peso saludable';
-    recomendacion = 'Peso adecuado para la edad. Seguí con alimentación variada y actividad física.';
+    percentil = T.pctNormal;
+    clasificacion = T.clsNormal;
+    recomendacion = T.recNormal;
   } else if (imc < p97) {
-    percentil = 'percentil 85-96';
-    clasificacion = 'Sobrepeso';
-    recomendacion = 'Consultá con el pediatra. Más actividad física y menos ultraprocesados.';
+    percentil = T.pctSobre;
+    clasificacion = T.clsSobre;
+    recomendacion = T.recSobre;
   } else {
-    percentil = '≥ percentil 97';
-    clasificacion = 'Obesidad';
-    recomendacion = 'Consultá con pediatra y nutricionista. Plan de alimentación + actividad física.';
+    percentil = T.pctObe;
+    clasificacion = T.clsObe;
+    recomendacion = T.recObe;
   }
 
   const imcVal = Number(imc.toFixed(1));
@@ -90,12 +138,12 @@ export function imcInfantilPercentil(i: Inputs): Outputs {
     min: Math.min(10, Math.floor(r1)),
     unit: '',
     segments: [
-      { nombre: 'Bajo peso', max: r1, color: '#fde68a', colorDark: '#b45309' },
-      { nombre: 'Peso saludable', max: r2, color: '#bbf7d0', colorDark: '#166534' },
-      { nombre: 'Sobrepeso', max: r3, color: '#fed7aa', colorDark: '#9a3412' },
-      { nombre: 'Obesidad', max: Math.max(r3 + 4, Math.ceil(imcVal) + 2), color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: T.segBajo, max: r1, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: T.segNormal, max: r2, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: T.segSobre, max: r3, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: T.segObe, max: Math.max(r3 + 4, Math.ceil(imcVal) + 2), color: '#fecaca', colorDark: '#b91c1c' },
     ],
-    ariaLabel: 'Escala de IMC infantil según percentiles OMS para la edad y sexo',
+    ariaLabel: T.aria,
   };
 
   return {

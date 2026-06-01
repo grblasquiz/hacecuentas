@@ -1,8 +1,15 @@
-export interface Inputs { [k: string]: number | string; }
+export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
 export function cuotaAlimentosPorcentajeSueldoHijo(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const s=Number(i.sueldoProgenitor)||0; const h=Number(i.cantidadHijos)||1;
   const pct=h===1?22:h===2?32:h===3?40:45;
   const cuota=s*pct/100;
-  return { cuotaMensual:`$${Math.round(cuota).toLocaleString('es-AR')}`, porcentaje:`${pct}%`, interpretacion:`Referencia: ${pct}% del sueldo neto para ${h} hijo${h>1?'s':''} = $${Math.round(cuota).toLocaleString('es-AR')}/mes. El juez fija el valor final.` };
+  const cuotaFmt = __lang === 'en'
+    ? `$${Math.round(cuota).toLocaleString('en-US')}`
+    : `$${Math.round(cuota).toLocaleString('es-AR')}`;
+  const interpretacion = __lang === 'en'
+    ? `Reference: ${pct}% of net salary for ${h} child${h>1?'ren':''} = $${Math.round(cuota).toLocaleString('en-US')}/month. The judge sets the final amount.`
+    : `Referencia: ${pct}% del sueldo neto para ${h} hijo${h>1?'s':''} = $${Math.round(cuota).toLocaleString('es-AR')}/mes. El juez fija el valor final.`;
+  return { cuotaMensual: cuotaFmt, porcentaje:`${pct}%`, interpretacion };
 }

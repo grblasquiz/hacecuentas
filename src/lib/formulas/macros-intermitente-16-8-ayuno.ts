@@ -4,6 +4,7 @@
 
 export interface MacrosIntermitente168AyunoInputs {
   calorias: number;
+  __lang?: string;
 }
 
 export interface MacrosIntermitente168AyunoOutputs {
@@ -16,8 +17,11 @@ export interface MacrosIntermitente168AyunoOutputs {
 }
 
 export function macrosIntermitente168Ayuno(inputs: MacrosIntermitente168AyunoInputs): MacrosIntermitente168AyunoOutputs {
+  const __lang = inputs.__lang === 'en' ? 'en' : 'es';
   const cal = Number(inputs.calorias);
-  if (!cal || cal <= 0) throw new Error('Ingresá calorías válidas');
+  if (!cal || cal <= 0) throw new Error(
+    __lang === 'en' ? 'Enter valid calories' : 'Ingresá calorías válidas'
+  );
   const c1 = cal * 0.40;
   const c2 = cal * 0.60;
   const prot = (cal * 0.30) / 4;
@@ -29,6 +33,8 @@ export function macrosIntermitente168Ayuno(inputs: MacrosIntermitente168AyunoInp
     proteinaDiaGramos: Number(prot.toFixed(0)),
     grasaDiaGramos: Number(grasa.toFixed(0)),
     carbosDiaGramos: Number(carbos.toFixed(0)),
-    resumen: `AI 16:8 ${cal} kcal: ${c1.toFixed(0)} + ${c2.toFixed(0)} kcal. Total ${prot.toFixed(0)}g prot.`,
+    resumen: __lang === 'en'
+      ? `IF 16:8 ${cal} kcal: ${c1.toFixed(0)} + ${c2.toFixed(0)} kcal. Total ${prot.toFixed(0)}g protein.`
+      : `AI 16:8 ${cal} kcal: ${c1.toFixed(0)} + ${c2.toFixed(0)} kcal. Total ${prot.toFixed(0)}g prot.`,
   };
 }

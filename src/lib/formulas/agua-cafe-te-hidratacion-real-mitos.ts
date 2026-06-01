@@ -1,8 +1,19 @@
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; }
 export function aguaCafeTeHidratacionRealMitos(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
   const c=Number(i.cafesDia)||0; const t=Number(i.taza_ml)||150;
   const totalMl=c*t;
   const hidratacion=totalMl*0.9;
-  return { hidratacionNeta:`${Math.round(hidratacion)} mL (~${(hidratacion/1000).toFixed(1)} L)`, mito:'Mito: café deshidrata. Realidad: hidrata ~90%. Solo efecto diurético leve.', recomendacion:'Café cuenta como hidratación. Con moderación (<400 mg cafeína/día).' };
+  const T = ({
+    es: {
+      mito: 'Mito: café deshidrata. Realidad: hidrata ~90%. Solo efecto diurético leve.',
+      recomendacion: 'Café cuenta como hidratación. Con moderación (<400 mg cafeína/día).',
+    },
+    en: {
+      mito: 'Myth: coffee dehydrates. Reality: it hydrates ~90%. Only a mild diuretic effect.',
+      recomendacion: 'Coffee counts as hydration. In moderation (<400 mg caffeine/day).',
+    },
+  } as const)[__lang];
+  return { hidratacionNeta:`${Math.round(hidratacion)} mL (~${(hidratacion/1000).toFixed(1)} L)`, mito:T.mito, recomendacion:T.recomendacion };
 }

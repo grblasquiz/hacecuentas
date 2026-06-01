@@ -3,6 +3,7 @@ export interface Inputs {
   presupuesto: number;
   nivel: string;
   tipo: string;
+  __lang?: string;
 }
 export interface Outputs {
   instrumento: number;
@@ -32,27 +33,57 @@ const DISTRIBUCIONES: Record<string, Record<string, Dist>> = {
   },
 };
 
+const T = {
+  es: {
+    errorPresupuesto: 'Ingresá el presupuesto',
+    errorNivelTipo: 'Seleccioná nivel y tipo válidos',
+    distribPrefix: 'Distribución para',
+    instrumento: 'Instrumento',
+    amplificacion: 'Amplificación',
+    accesorios: 'Accesorios',
+    grabacion: 'Grabación',
+    tipBajo: 'Con este presupuesto, priorizá lo esencial y comprá usado.',
+    tipMedio: 'Buen presupuesto para empezar. Podés conseguir equipo de calidad media.',
+    tipAlto: 'Excelente presupuesto. Podés armar un setup muy completo.',
+  },
+  en: {
+    errorPresupuesto: 'Enter your budget',
+    errorNivelTipo: 'Select a valid level and type',
+    distribPrefix: 'Distribution for',
+    instrumento: 'Instrument',
+    amplificacion: 'Amplification',
+    accesorios: 'Accessories',
+    grabacion: 'Recording',
+    tipBajo: 'With this budget, prioritize the essentials and consider buying used.',
+    tipMedio: 'Good budget to get started. You can get mid-quality gear.',
+    tipAlto: 'Excellent budget. You can put together a very complete setup.',
+  },
+} as const;
+
 export function presupuestoEquipoMusica(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const t = T[__lang];
+
   const presupuesto = Number(i.presupuesto);
-  if (!presupuesto || presupuesto <= 0) throw new Error('Ingresá el presupuesto');
+  if (!presupuesto || presupuesto <= 0) throw new Error(t.errorPresupuesto);
 
   const dist = DISTRIBUCIONES[i.nivel]?.[i.tipo];
-  if (!dist) throw new Error('Seleccioná nivel y tipo válidos');
+  if (!dist) throw new Error(t.errorNivelTipo);
 
   const instrumento = Math.round(presupuesto * dist.instrumento);
   const amplificacion = Math.round(presupuesto * dist.amplificacion);
   const accesorios = Math.round(presupuesto * dist.accesorios);
   const grabacion = Math.round(presupuesto * dist.grabacion);
 
-  let recomendacion = `Distribución para ${i.nivel} (${i.tipo}): `;
-  recomendacion += `Instrumento ${(dist.instrumento * 100).toFixed(0)}%, `;
-  recomendacion += `Amplificación ${(dist.amplificacion * 100).toFixed(0)}%, `;
-  recomendacion += `Accesorios ${(dist.accesorios * 100).toFixed(0)}%, `;
-  recomendacion += `Grabación ${(dist.grabacion * 100).toFixed(0)}%. `;
+  let recomendacion = `${t.distribPrefix} ${i.nivel} (${i.tipo}): `;
+  recomendacion += `${t.instrumento} ${(dist.instrumento * 100).toFixed(0)}%, `;
+  recomendacion += `${t.amplificacion} ${(dist.amplificacion * 100).toFixed(0)}%, `;
+  recomendacion += `${t.accesorios} ${(dist.accesorios * 100).toFixed(0)}%, `;
+  recomendacion += `${t.grabacion} ${(dist.grabacion * 100).toFixed(0)}%. `;
 
-  if (presupuesto < 200000) recomendacion += 'Con este presupuesto, priorizá lo esencial y comprá usado.';
-  else if (presupuesto < 500000) recomendacion += 'Buen presupuesto para empezar. Podés conseguir equipo de calidad media.';
-  else recomendacion += 'Excelente presupuesto. Podés armar un setup muy completo.';
+  if (presupuesto < 200000) recomendacion += t.tipBajo;
+  else if (presupuesto < 500000) recomendacion += t.tipMedio;
+  else recomendacion += t.tipAlto;
 
   return { instrumento, amplificacion, accesorios, grabacion, recomendacion };
 }

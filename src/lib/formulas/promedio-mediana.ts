@@ -1,5 +1,5 @@
 /** Promedio, mediana, moda, desvío */
-export interface Inputs { numeros: string; }
+export interface Inputs { numeros: string; __lang?: string; }
 export interface Outputs {
   promedio: number;
   mediana: number;
@@ -14,11 +14,25 @@ export interface Outputs {
 }
 
 export function promedioMediana(i: Inputs): Outputs {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const T = ({
+    es: {
+      errorEmpty: 'Ingresá números separados por coma',
+      errorNoValid: 'No se encontraron números válidos',
+      sinModa: 'Sin moda (todos únicos)',
+    },
+    en: {
+      errorEmpty: 'Enter numbers separated by commas',
+      errorNoValid: 'No valid numbers found',
+      sinModa: 'No mode (all unique)',
+    },
+  } as const)[__lang];
+
   const str = String(i.numeros || '').trim();
-  if (!str) throw new Error('Ingresá números separados por coma');
+  if (!str) throw new Error(T.errorEmpty);
 
   const nums = str.split(/[,\s;]+/).map(Number).filter(n => !isNaN(n));
-  if (nums.length === 0) throw new Error('No se encontraron números válidos');
+  if (nums.length === 0) throw new Error(T.errorNoValid);
 
   const n = nums.length;
   const suma = nums.reduce((a, b) => a + b, 0);
@@ -32,7 +46,7 @@ export function promedioMediana(i: Inputs): Outputs {
   nums.forEach(x => { freq[x] = (freq[x] || 0) + 1; });
   const maxFreq = Math.max(...Object.values(freq));
   const modas = Object.entries(freq).filter(([, f]) => f === maxFreq).map(([v]) => v);
-  const modaStr = maxFreq === 1 ? 'Sin moda (todos únicos)' : modas.join(', ');
+  const modaStr = maxFreq === 1 ? T.sinModa : modas.join(', ');
 
   const minimo = ord[0];
   const maximo = ord[n - 1];
