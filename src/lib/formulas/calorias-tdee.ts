@@ -22,6 +22,7 @@ export interface TDEEOutputs {
   paraBajarPeso: number;
   paraSubirPeso: number;
   nivelActividad: string;
+  _insight?: any;
 }
 
 const factoresActividad: Record<string, { factor: number; labelEs: string; labelEn: string }> = {
@@ -54,12 +55,33 @@ export function caloriasTDEE(inputs: TDEEInputs): TDEEOutputs {
   const factor = factoresActividad[actividad] || factoresActividad.moderado;
   const tdee = bmr * factor.factor;
 
+  const tdeeR = Math.round(tdee);
+  const bmrR = Math.round(bmr);
+  const bajarR = Math.round(tdee - 500);
+  const subirR = Math.round(tdee + 500);
+  const nf = new Intl.NumberFormat(__lang === 'en' ? 'en-US' : 'es-AR');
+
+  const _insight = __lang === 'en'
+    ? {
+        title: 'Reading your numbers',
+        text: `Your body burns about **${nf.format(tdeeR)} kcal/day** at your current activity level; **${nf.format(bmrR)} kcal** of that is just staying alive (resting metabolism). Eat **${nf.format(bajarR)} kcal** to lose roughly 0.5 kg/week, or **${nf.format(subirR)} kcal** to gain it.`,
+        tone: 'neutral',
+        icon: '🔥',
+      }
+    : {
+        title: 'Cómo leer tus números',
+        text: `Tu cuerpo gasta unas **${nf.format(tdeeR)} kcal/día** con tu nivel de actividad actual; **${nf.format(bmrR)} kcal** de eso es sólo mantenerte vivo (metabolismo en reposo). Comé **${nf.format(bajarR)} kcal** para bajar ~0,5 kg/semana, o **${nf.format(subirR)} kcal** para subirlo.`,
+        tone: 'neutral',
+        icon: '🔥',
+      };
+
   return {
-    bmr: Math.round(bmr),
-    tdee: Math.round(tdee),
-    mantenimiento: Math.round(tdee),
-    paraBajarPeso: Math.round(tdee - 500), // déficit ~0.5 kg/semana
-    paraSubirPeso: Math.round(tdee + 500), // superávit ~0.5 kg/semana
+    bmr: bmrR,
+    tdee: tdeeR,
+    mantenimiento: tdeeR,
+    paraBajarPeso: bajarR, // déficit ~0.5 kg/semana
+    paraSubirPeso: subirR, // superávit ~0.5 kg/semana
     nivelActividad: __lang === 'en' ? factor.labelEn : factor.labelEs,
+    _insight,
   };
 }

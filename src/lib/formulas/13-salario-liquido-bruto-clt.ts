@@ -17,6 +17,8 @@ export interface Outputs {
   liquido_total: number;
   aliquota_efetiva_irrf: number;
   detalhamento: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // --- Tabela INSS Progressiva 2026 ---
@@ -145,6 +147,49 @@ export function compute(i: Inputs): Outputs {
     `2ª parcela líquida: R$ ${fmt(segundaParcelaLiquida)}. ` +
     `Líquido total (1ª + 2ª): R$ ${fmt(liquidoTotal)}.`;
 
+  // --- Insight narrativo ---
+  const totalDescontos = Math.round((inssDesconto + irrfDesconto) * 100) / 100;
+  const pctLiquido = decimoTerceiroBruto > 0
+    ? Math.round((liquidoTotal / decimoTerceiroBruto) * 100)
+    : 0;
+  const pctDescontos = 100 - pctLiquido;
+
+  let insightText: string;
+  let insightTone: "good" | "warn" | "neutral";
+  if (totalDescontos <= 0) {
+    insightText = `Tu 13° de **R$ ${fmt(decimoTerceiroBruto)}** cae na faixa de isenção: sem INSS nem IRRF, você recebe os **R$ ${fmt(liquidoTotal)}** integrais.`;
+    insightTone = "good";
+  } else if (pctDescontos >= 20) {
+    insightText = `Dos **R$ ${fmt(decimoTerceiroBruto)}** brutos, **R$ ${fmt(totalDescontos)}** (${pctDescontos}%) vão pra INSS + IRRF e sobram **R$ ${fmt(liquidoTotal)}** líquidos. O desconto pesa: confira se vale antecipar gastos.`;
+    insightTone = "warn";
+  } else {
+    insightText = `Do 13° bruto de **R$ ${fmt(decimoTerceiroBruto)}**, descontam **R$ ${fmt(totalDescontos)}** (${pctDescontos}%) e você fica com **R$ ${fmt(liquidoTotal)}** líquidos (${pctLiquido}% do bruto).`;
+    insightTone = "neutral";
+  }
+
+  const insight = {
+    title: "Quanto sobra do seu 13°",
+    text: insightText,
+    tone: insightTone,
+    icon: "💸",
+  };
+
+  // --- Gráfico: composição do 13° bruto (líquido + INSS + IRRF) ---
+  const chart = totalDescontos > 0
+    ? {
+        type: "doughnut" as const,
+        slices: [
+          { label: "Líquido", value: liquidoTotal },
+          { label: "INSS", value: inssDesconto },
+          { label: "IRRF", value: irrfDesconto },
+        ],
+        prefix: "R$ ",
+        centerValue: "R$ " + fmt(decimoTerceiroBruto),
+        centerLabel: "13° bruto",
+        ariaLabel: "Composição do 13° salário bruto: parte líquida, desconto de INSS e desconto de IRRF.",
+      }
+    : undefined;
+
   return {
     decimo_terceiro_bruto: decimoTerceiroBruto,
     primeira_parcela: primeiraParcela,
@@ -155,5 +200,7 @@ export function compute(i: Inputs): Outputs {
     liquido_total: liquidoTotal,
     aliquota_efetiva_irrf: aliquotaEfetiva,
     detalhamento,
+    _insight: insight,
+    ...(chart ? { _chart: chart } : {}),
   };
 }

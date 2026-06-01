@@ -1,6 +1,6 @@
 /** Costo del primer año de un bebé en Argentina */
 export interface Inputs { alimentacion: string; panales: string; nivelGasto: string; }
-export interface Outputs { totalAnual: number; promedioMensual: number; alimentacionAnual: number; panalesAnual: number; mensaje: string; _chart?: any; }
+export interface Outputs { totalAnual: number; promedioMensual: number; alimentacionAnual: number; panalesAnual: number; mensaje: string; _chart?: any; _insight?: any; }
 
 export function costoHijoPrimerAno(i: Inputs): Outputs {
   const alimentacion = String(i.alimentacion || 'mixta');
@@ -55,12 +55,22 @@ export function costoHijoPrimerAno(i: Inputs): Outputs {
     ariaLabel: 'Composición del gasto del primer año del bebé: alimentación, pañales, ropa, salud, higiene, otros, muebles y equipamiento.',
   };
 
+  const unicos = Math.round(muebles + equipamiento);
+  const pctUnicos = totalAnual > 0 ? Math.round((unicos / totalAnual) * 100) : 0;
+  const insight = {
+    title: 'Arranque vs. mes a mes',
+    text: `El equipamiento inicial (cuna, cochecito, silla de auto) se lleva **$${unicos.toLocaleString('es-AR')}**, un **${pctUnicos}%** del total: es un golpe de una sola vez. El resto, **$${Math.round(gastoMensual).toLocaleString('es-AR')}/mes**, es el gasto que se repite todos los meses.`,
+    tone: 'neutral' as const,
+    icon: '🍼',
+  };
+
   return {
     totalAnual,
     promedioMensual,
     alimentacionAnual: Math.round(alimentacionMes * 12),
     panalesAnual: Math.round(panalesMes * 12),
     mensaje: `Primer año: $${totalAnual.toLocaleString()}. Mensual promedio: $${promedioMensual.toLocaleString()}. Alimentación: $${Math.round(alimentacionMes).toLocaleString()}/mes. Pañales: $${Math.round(panalesMes).toLocaleString()}/mes.`,
-    _chart: chart
+    _chart: chart,
+    _insight: insight
   };
 }

@@ -1,6 +1,6 @@
 /** Actualización alquiler IRAV España — Ley Vivienda 2023, tope 2,2% en 2026 */
 export interface Inputs { alquilerActual: number; indiceIrav: number; granTenedor: string; zonaTensionada: string; }
-export interface Outputs { alquilerNuevo: number; incrementoEuros: number; incrementoPct: number; topeAplicado: number; notaAplicacion: string; }
+export interface Outputs { alquilerNuevo: number; incrementoEuros: number; incrementoPct: number; topeAplicado: number; notaAplicacion: string; _insight?: any; _chart?: any; }
 
 export function actualizacionAlquilerIravEspana(i: Inputs): Outputs {
   const alquiler = Number(i.alquilerActual);
@@ -30,11 +30,35 @@ export function actualizacionAlquilerIravEspana(i: Inputs): Outputs {
   }
   const incrementoEuros = alquiler * (incrementoPct / 100);
   const alquilerNuevo = alquiler + incrementoEuros;
+  const nuevoR = Math.round(alquilerNuevo * 100) / 100;
+  const incEurR = Math.round(incrementoEuros * 100) / 100;
+  const incPctR = Number(incrementoPct.toFixed(2));
+  const fmtEur = (n: number) => '€' + n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const enTope = incPctR >= topeLegal;
+  const _insight = {
+    title: 'Tu nuevo alquiler',
+    text: `El alquiler pasa de **${fmtEur(alquiler)}** a **${fmtEur(nuevoR)}** al mes: **+${fmtEur(incEurR)}** (${incPctR}%).` + (enTope ? ` Estás en el **tope legal del ${topeLegal}%**, el casero no puede subir más en 2026.` : ` Por debajo del tope legal del ${topeLegal}%, así que es una subida moderada.`),
+    tone: enTope ? 'warn' : 'good',
+    icon: '🏠',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Alquiler actual', value: alquiler },
+      { label: 'Incremento', value: incEurR },
+    ],
+    prefix: '€',
+    centerValue: fmtEur(nuevoR),
+    centerLabel: 'Nuevo/mes',
+    ariaLabel: `Nuevo alquiler de ${fmtEur(nuevoR)}: ${fmtEur(alquiler)} actuales más ${fmtEur(incEurR)} de incremento`,
+  };
   return {
-    alquilerNuevo: Math.round(alquilerNuevo * 100) / 100,
-    incrementoEuros: Math.round(incrementoEuros * 100) / 100,
-    incrementoPct: Number(incrementoPct.toFixed(2)),
+    alquilerNuevo: nuevoR,
+    incrementoEuros: incEurR,
+    incrementoPct: incPctR,
     topeAplicado: topeLegal,
     notaAplicacion: nota,
+    _insight,
+    _chart,
   };
 }

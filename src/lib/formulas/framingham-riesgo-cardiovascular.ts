@@ -17,6 +17,7 @@ export interface Outputs {
   recomendacion: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Puntos por edad y sexo (simplificado - D'Agostino 2008)
@@ -142,6 +143,27 @@ export function framinghamRiesgoCardiovascular(i: Inputs): Outputs {
   // Edad cardiovascular estimada: cuando ese riesgo se daría con perfil "ideal"
   // Aproximación simplificada
   const edadCV = edad + Math.round((riesgoPorcentaje - 5) * 0.8);
+  const edadCardio = Math.max(edad, edadCV);
+
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (riesgoPorcentaje < 5) {
+    insightTone = 'good';
+    insightText = `Con **${riesgoPorcentaje.toFixed(1)}%** caés en la franja de ${categoria.toLowerCase()}: menos de 1 en 20 chances de un evento cardiovascular en 10 años. Sostené hábitos y controlate cada 2-5 años.`;
+  } else if (riesgoPorcentaje < 10) {
+    insightTone = 'neutral';
+    insightText = `Tu **${riesgoPorcentaje.toFixed(1)}%** te ubica en ${categoria.toLowerCase()}${edadCardio > edad ? `, con una edad cardiovascular de ~${edadCardio} (vs ${edad} reales)` : ''}. Ajustar dieta, ejercicio y peso te baja a la zona verde.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `Estás en **${categoria.toLowerCase()}** con **${riesgoPorcentaje.toFixed(1)}%** a 10 años${edadCardio > edad ? ` y una edad cardiovascular de ~${edadCardio} frente a ${edad} reales` : ''}. No es para alarmarse, pero sí para consultar al cardiólogo sobre estatinas y control de presión.`;
+  }
+
+  const insight = {
+    title: 'Qué significa tu riesgo',
+    text: insightText,
+    tone: insightTone,
+    icon: '\u{2764}\u{FE0F}',
+  };
 
   const chart = {
     type: 'scale' as const,
@@ -162,9 +184,10 @@ export function framinghamRiesgoCardiovascular(i: Inputs): Outputs {
     puntaje,
     riesgoPorcentaje: Number(riesgoPorcentaje.toFixed(1)),
     categoria,
-    edadCardiovascular: Math.max(edad, edadCV),
+    edadCardiovascular: edadCardio,
     recomendacion,
     resumen: `Puntaje Framingham: ${puntaje}. Riesgo cardiovascular a 10 años: ${riesgoPorcentaje}% (${categoria}).`,
     _chart: chart,
+    _insight: insight,
   };
 }

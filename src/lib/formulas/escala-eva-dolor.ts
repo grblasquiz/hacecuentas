@@ -13,6 +13,7 @@ export interface Outputs {
   requiereConsulta: boolean;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function escalaEvaDolor(i: Inputs): Outputs {
@@ -74,6 +75,21 @@ export function escalaEvaDolor(i: Inputs): Outputs {
     ariaLabel: 'Escala visual analógica del dolor de 0 a 10: leve, moderado, intenso e insoportable.',
   };
 
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+  if (v === 0) { insightTone = 'good'; insightIcon = '😀'; }
+  else if (v <= 3 && !requiereConsulta) { insightTone = 'neutral'; insightIcon = '🙂'; }
+  else { insightTone = 'warn'; insightIcon = v >= 9 ? '🚑' : '😣'; }
+  const insight = {
+    title: 'Tu nivel en la escala EVA',
+    text: requiereConsulta
+      ? `Tu **${v}/10** entra en **${categoria}**: ${impacto.toLowerCase()} Conviene **consulta médica** según el resultado.`
+      : v === 0
+        ? 'Marcaste **0/10**: sin dolor, sin necesidad de analgésicos.'
+        : `Tu **${v}/10** es **${categoria}**: ${impacto.toLowerCase()}`,
+    tone: insightTone,
+    icon: insightIcon,
+  };
   return {
     valor: v,
     categoria,
@@ -83,5 +99,6 @@ export function escalaEvaDolor(i: Inputs): Outputs {
     requiereConsulta,
     resumen: `EVA ${v}/10 — ${categoria}. ${descripcion}`,
     _chart: chart,
+    _insight: insight,
   };
 }

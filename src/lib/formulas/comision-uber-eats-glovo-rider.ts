@@ -1,6 +1,6 @@
 /** Comision Uber Eats / Glovo rider */
 export interface Inputs { horasDia: number; diasMes: number; pedidosHora: number; pagoPromedio: number; tipPct: number; combustibleDia: number; amortizacionDia: number; }
-export interface Outputs { ingresoNetoMes: number; ingresoBrutoMes: number; netoPorHora: number; costosTotalesMes: number; pedidosMes: number; _chart?: any; }
+export interface Outputs { ingresoNetoMes: number; ingresoBrutoMes: number; netoPorHora: number; costosTotalesMes: number; pedidosMes: number; _chart?: any; _insight?: any; }
 export function comisionUberEatsGlovoRider(i: Inputs): Outputs {
   const hs = Number(i.horasDia);
   const dias = Number(i.diasMes);
@@ -26,12 +26,23 @@ export function comisionUberEatsGlovoRider(i: Inputs): Outputs {
     centerLabel: 'Bruto mensual',
     ariaLabel: 'Composición del ingreso bruto: parte que queda como neto y parte que se va en costos',
   };
+  // Insight: porcentaje del bruto que queda neto y neto real por hora trabajada.
+  const pctNeto = bruto > 0 ? (neto / bruto) * 100 : 0;
+  const netoHora = horasTotales > 0 ? neto / horasTotales : 0;
+  const fmtR = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'Tu neto real por hora',
+    text: `De **${fmtR(bruto)}** brutos al mes te quedan **${fmtR(neto)}** netos (el **${pctNeto.toFixed(0)}%**) tras combustible y amortización: son **${fmtR(netoHora)}/hora** reales sobre **${pedidosMes.toLocaleString('es-AR')}** pedidos.`,
+    tone: (pctNeto < 60 ? 'warn' : pctNeto >= 75 ? 'good' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '🛵',
+  };
   return {
     ingresoNetoMes: Math.round(neto),
     ingresoBrutoMes: Math.round(bruto),
     netoPorHora: horasTotales > 0 ? Number((neto / horasTotales).toFixed(2)) : 0,
     costosTotalesMes: Math.round(costos),
     pedidosMes,
-    _chart: chart
+    _chart: chart,
+    _insight: insight
   };
 }

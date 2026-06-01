@@ -10,6 +10,7 @@ export interface Outputs {
   total_oz_per_day: number;
   age_stage: string;
   notes: string;
+  _insight?: any;
 }
 
 // AAP/CDC 2024 age-based feeding stage data
@@ -110,11 +111,24 @@ export function compute(i: Inputs): Outputs {
     notes += " Daily total has been capped at 32 oz per AAP guidelines."
   }
 
+  const ozFeedRounded = Math.round(ozPerFeeding * 10) / 10;
+  const totalRounded = Math.round(totalOzPerDay * 10) / 10;
+  const capped = weightBasedDaily >= MAX_OZ_PER_DAY;
+  const insightText = capped
+    ? `At **${stage.label}**, aim for about **${ozFeedRounded} oz** per feed across **${feedsDisplay}** — totaling **${totalRounded} oz/day**, capped at the AAP **32 oz** daily maximum.`
+    : `At **${stage.label}**, plan roughly **${ozFeedRounded} oz** per feed across **${feedsDisplay}**, for about **${totalRounded} oz/day**. Let your baby's hunger and fullness cues fine-tune each bottle.`;
+
   return {
-    oz_per_feeding: Math.round(ozPerFeeding * 10) / 10,
+    oz_per_feeding: ozFeedRounded,
     feeds_per_day: feedsDisplay,
-    total_oz_per_day: Math.round(totalOzPerDay * 10) / 10,
+    total_oz_per_day: totalRounded,
     age_stage: stage.label,
     notes: notes.trim(),
+    _insight: {
+      title: 'Your feeding plan',
+      text: insightText,
+      tone: capped ? 'warn' : 'neutral',
+      icon: '🍼',
+    },
   };
 }

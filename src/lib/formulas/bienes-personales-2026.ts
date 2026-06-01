@@ -15,6 +15,7 @@ export interface Outputs {
   mejorOpcion: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 const MNI = 350_000_000;
@@ -71,6 +72,16 @@ export function bienesPersonales2026(i: Inputs): Outputs {
 
   const explicacion = `Bienes totales: $${totalBienes.toLocaleString()} (país $${pais.toLocaleString()} + exterior $${exterior.toLocaleString()}).${casa > 0 ? ` Deducción casa: $${deduccionCasa.toLocaleString()}.` : ''} MNI: $${MNI.toLocaleString()}. Base imponible: $${baseImponible.toLocaleString()}. ${reibp ? `Con REIBP: $${Math.round(impuesto).toLocaleString()} (0.45% fijo).` : `Impuesto: $${Math.round(impuesto).toLocaleString()} (alícuota efectiva ${alicuotaEfectiva.toFixed(3)}%).`} Comparativa: régimen general $${Math.round(impuestoNormal).toLocaleString()} vs REIBP $${Math.round(reibpAlternativo).toLocaleString()} → conviene ${mejorOpcion}.`;
 
+  const ahorroOpcion = Math.abs(impuestoNormal - reibpAlternativo);
+  const _insight = {
+    title: baseImponible <= 0 && !reibp ? 'No tributás Bienes Personales' : 'Tu impuesto y qué régimen conviene',
+    text: baseImponible <= 0 && !reibp
+      ? `Con bienes por **$${totalBienes.toLocaleString()}** quedás por debajo del mínimo no imponible ($${MNI.toLocaleString()}), así que no pagás Bienes Personales.`
+      : `Tu impuesto es **$${Math.round(impuesto).toLocaleString()}** (alícuota efectiva **${alicuotaEfectiva.toFixed(2)}%**). Conviene el **${mejorOpcion}**: te ahorra **$${Math.round(ahorroOpcion).toLocaleString()}** frente a la otra opción.`,
+    tone: (baseImponible <= 0 && !reibp) ? 'good' : 'warn',
+    icon: '🏛️',
+  };
+
   return {
     baseImponible: Math.round(baseImponible),
     impuesto: Math.round(impuesto),
@@ -79,5 +90,6 @@ export function bienesPersonales2026(i: Inputs): Outputs {
     mejorOpcion,
     formula,
     explicacion,
+    _insight,
   };
 }

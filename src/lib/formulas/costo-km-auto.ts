@@ -1,6 +1,6 @@
 /** Costo por kilómetro del auto */
 export interface Inputs { kmMensuales: number; consumoKm: number; precioNafta: number; seguroMensual?: number; patenteMensual?: number; mantenimientoMes?: number; estacionamientoMes?: number; }
-export interface Outputs { costoPorKm: number; costoMensualTotal: number; costoNaftaMes: number; costosFijosMes: number; _chart?: any; }
+export interface Outputs { costoPorKm: number; costoMensualTotal: number; costoNaftaMes: number; costosFijosMes: number; _chart?: any; _insight?: any; }
 
 export function costoKmAuto(i: Inputs): Outputs {
   const km = Number(i.kmMensuales);
@@ -35,11 +35,23 @@ export function costoKmAuto(i: Inputs): Outputs {
     ariaLabel: 'Composición del costo mensual del auto: nafta, seguro, patente, mantenimiento y estacionamiento.',
   };
 
+  const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const pctNafta = costoMensualTotal > 0 ? Math.round((costoNaftaMes / costoMensualTotal) * 100) : 0;
+  const insight = {
+    title: 'Cuánto te cuesta cada km',
+    text: costosFijosMes > 0
+      ? `Cada kilómetro te sale **$${fmt.format(Math.round(costoPorKm))}**. La nafta es solo el **${pctNafta}%**: el resto son costos fijos (seguro, patente, mantenimiento) que pagás manejes mucho o poco.`
+      : `Cada kilómetro te sale **$${fmt.format(Math.round(costoPorKm))}**, todo en combustible. Sumando seguro, patente y mantenimiento, el costo real por km es bastante más alto.`,
+    tone: 'neutral' as const,
+    icon: '🚗',
+  };
+
   return {
     costoPorKm: Math.round(costoPorKm),
     costoMensualTotal: Math.round(costoMensualTotal),
     costoNaftaMes: Math.round(costoNaftaMes),
     costosFijosMes: Math.round(costosFijosMes),
     _chart: chart,
+    _insight: insight,
   };
 }

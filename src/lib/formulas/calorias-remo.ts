@@ -4,6 +4,7 @@ export interface Outputs {
   caloriasQuemadas: number;
   wattsEstimados: number;
   detalle: string;
+  _insight?: any;
 }
 
 const MET_REMO: Record<string, { met: number; watts: number; nombre: string }> = {
@@ -25,9 +26,21 @@ export function caloriasRemo(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const kcalHora = kcalMin * 60;
+  const insight = {
+    title: 'Tu sesión de remo',
+    text: `**${min} min** a intensidad **${info.nombre}** queman **${fmt.format(Math.round(total))} kcal** (~${fmt.format(Math.round(kcalHora))} kcal/hora a ${info.watts} W).` +
+      (int === 'intensa'
+        ? ' El remo intenso recluta casi todo el cuerpo: de los gastos más altos por minuto que vas a encontrar.'
+        : ' Subí la intensidad o estirá la sesión para empujar el gasto hacia arriba.'),
+    tone: 'good',
+    icon: '🚣',
+  };
+
   return {
     caloriasQuemadas: Math.round(total),
     wattsEstimados: info.watts,
     detalle: `Remo indoor ${min} min a intensidad ${info.nombre} (MET ${info.met}): ~${fmt.format(Math.round(total))} kcal. Watts estimados: ~${info.watts} W.`,
+    _insight: insight,
   };
 }

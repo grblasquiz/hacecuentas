@@ -12,6 +12,8 @@ export interface Outputs {
   ketosis_start_label: string;
   autophagy_start_label: string;
   lifestyle_note: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Umbrales metabólicos basados en literatura revisada (NEJM 2019, Cell Metabolism 2022)
@@ -89,6 +91,22 @@ export function compute(i: Inputs): Outputs {
   const autophagyNormalized = ((autophagyMinutes % 1440) + 1440) % 1440;
   const autophagyDay = autophagyMinutes >= 1440 ? " (día siguiente)" : "";
 
+  // --- Insight dinámico según el alcance metabólico del protocolo ---
+  const reachesAutophagy = protocol.fastHours >= AUTOPHAGY_THRESHOLD_H;
+  const reachesKetosis = protocol.fastHours >= KETOSIS_THRESHOLD_H;
+  let insightTone: string;
+  let insightText: string;
+  if (reachesAutophagy) {
+    insightTone = "good";
+    insightText = `Con el protocolo **${protocol.label}** ayunás **${protocol.fastHours} h** y comés en una ventana de **${protocol.eatHours} h** (cierre ${formatHour(eatEndMinutes)}${closingSuffix}). Superás el umbral de autofagia (~16 h), estimada cerca de las **${formatHour(autophagyMinutes)}**.`;
+  } else if (reachesKetosis) {
+    insightTone = "neutral";
+    insightText = `Con **${protocol.label}** ayunás **${protocol.fastHours} h** y comés en **${protocol.eatHours} h** (cierre ${formatHour(eatEndMinutes)}${closingSuffix}). Entrás en cetosis leve (~${formatHour(ketosisMinutes)}) pero te quedan ${AUTOPHAGY_THRESHOLD_H - protocol.fastHours} h cortas para el umbral de autofagia.`;
+  } else {
+    insightTone = "neutral";
+    insightText = `Con **${protocol.label}** ayunás **${protocol.fastHours} h** y comés en **${protocol.eatHours} h** (cierre ${formatHour(eatEndMinutes)}${closingSuffix}). Es un ayuno corto: no alcanzás el umbral estimado de cetosis (~12 h).`;
+  }
+
   return {
     eating_window_hours: eatWindowLabel,
     eating_start_label: formatHour(startMinutes),
@@ -96,6 +114,23 @@ export function compute(i: Inputs): Outputs {
     fast_hours: `${protocol.fastHours} horas de ayuno`,
     ketosis_start_label: `~${formatHour(ketosisMinutes)}${ketosisDay} (${KETOSIS_THRESHOLD_H} h desde el cierre)`,
     autophagy_start_label: `~${formatHour(autophagyMinutes)}${autophagyDay} (${AUTOPHAGY_THRESHOLD_H} h desde el cierre)`,
-    lifestyle_note: lifestyleNote
+    lifestyle_note: lifestyleNote,
+    _insight: {
+      title: "Tu ciclo metabólico",
+      text: insightText,
+      tone: insightTone,
+      icon: "⏱️",
+    },
+    _chart: {
+      type: "doughnut",
+      slices: [
+        { label: "Ayuno", value: protocol.fastHours },
+        { label: "Ventana comida", value: protocol.eatHours },
+      ],
+      suffix: "h",
+      centerValue: `${protocol.fastHours}h`,
+      centerLabel: "Ayuno",
+      ariaLabel: `Reparto del día con protocolo ${protocol.label}: ${protocol.fastHours} horas de ayuno y ${protocol.eatHours} horas de ventana de comida.`,
+    },
   };
 }

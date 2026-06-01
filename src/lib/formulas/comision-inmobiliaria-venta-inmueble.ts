@@ -31,6 +31,7 @@ export interface ComisionInmobiliariaOutputs {
   montoFinalVendedor: number;
   totalComisionMercado: number;
   _chart?: any;
+  _insight?: any;
 }
 
 const IVA_ALICUOTA = 0.21;
@@ -82,6 +83,16 @@ export function comisionInmobiliariaVentaInmueble(
     ariaLabel: 'Composición de la comisión inmobiliaria total: parte del vendedor y del comprador, con IVA.',
   };
 
+  // Insight: cuánto le cuesta al vendedor la comisión sobre el precio de escritura.
+  const pctVendedorSobrePrecio = precio > 0 ? (totalAPagarVendedor / precio) * 100 : 0;
+  const fmtMoneda = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'Lo que te queda como vendedor',
+    text: `La comisión que pagás como vendedor representa el **${pctVendedorSobrePrecio.toFixed(1)}%** del precio de escritura: de **${fmtMoneda(precio)}** te quedan **${fmtMoneda(montoFinalVendedor)}** netos${sumaIva ? ' (ya descontado el IVA del 21% sobre la comisión)' : ''}. Los honorarios son negociables: cada punto que bajes son **${fmtMoneda(precio * 0.01)}** que retenés.`,
+    tone: (pctVendedorSobrePrecio >= 4 ? 'warn' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '🏠',
+  };
+
   return {
     comisionVendedorMonto: Math.round(comisionVendedorMonto),
     ivaVendedor: Math.round(ivaVendedor),
@@ -93,5 +104,6 @@ export function comisionInmobiliariaVentaInmueble(
     montoFinalVendedor: Math.round(montoFinalVendedor),
     totalComisionMercado: Math.round(totalComisionMercado),
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -2,7 +2,7 @@
  * Calculadora de Achuras por Invitado - Parrilla.
  */
 export interface AchurasPorInvitadoParrillaInputs { invitados:number; nivelAchurero:string; }
-export interface AchurasPorInvitadoParrillaOutputs { kgMolleja:number; kgChinchulines:number; kgRinon:number; morcillas:number; kgTotal:number; _chart?:any; }
+export interface AchurasPorInvitadoParrillaOutputs { kgMolleja:number; kgChinchulines:number; kgRinon:number; morcillas:number; kgTotal:number; _chart?:any; _insight?:any; }
 export function achurasPorInvitadoParrilla(inputs: AchurasPorInvitadoParrillaInputs): AchurasPorInvitadoParrillaOutputs {
   const inv = Number(inputs.invitados);
   const nivel = inputs.nivelAchurero;
@@ -33,5 +33,15 @@ export function achurasPorInvitadoParrilla(inputs: AchurasPorInvitadoParrillaInp
     centerLabel: 'Total',
     ariaLabel: 'Composición en kilos de las achuras por tipo.',
   } : undefined;
-  return { kgMolleja, kgChinchulines, kgRinon, morcillas, kgTotal, _chart: chart };
+  // Insight narrativo: interpreta el total y el reparto por cabeza.
+  const kgPorInvitado = Number((kgTotal / inv).toFixed(2));
+  const insight = {
+    title: 'Cuántas achuras comprar',
+    text: `Para **${inv}** invitados necesitás **${kgTotal.toLocaleString('es-AR')} kg** de achuras en total (unos **${kgPorInvitado.toLocaleString('es-AR')} kg por cabeza**)` +
+      (morcillas > 0 ? `, más **${morcillas}** morcilla${morcillas === 1 ? '' : 's'}` : '') +
+      `. Comprá fresco y un toque de más: la achura se achica en la parrilla.`,
+    tone: 'neutral' as const,
+    icon: '🔥',
+  };
+  return { kgMolleja, kgChinchulines, kgRinon, morcillas, kgTotal, _chart: chart, _insight: insight };
 }

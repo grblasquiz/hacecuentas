@@ -18,6 +18,8 @@ export interface Outputs {
   novoAluguel: string;
   aumentoAnual: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -41,6 +43,7 @@ export function aluguelReajusteIpca(i: Inputs): Outputs {
   const valorReajuste = novoAluguel - atual;
   const aumentoAno = valorReajuste * 12;
 
+  const tone = ipca > 6 ? 'warn' : ipca < 0 ? 'good' : 'neutral';
   return {
     aluguelAtual: brl(atual),
     indiceAplicado: indice,
@@ -49,5 +52,24 @@ export function aluguelReajusteIpca(i: Inputs): Outputs {
     novoAluguel: brl(novoAluguel),
     aumentoAnual: brl(aumentoAno),
     resumen: `Aluguel de ${brl(atual)} reajustado por ${indice} (${ipca.toFixed(2)}%) = ${brl(novoAluguel)}. Aumento mensal ${brl(valorReajuste)} (impacto anual ${brl(aumentoAno)}).`,
+    _insight: {
+      title: ipca < 0 ? 'Reajuste negativo: você paga menos' : 'O que o reajuste pesa no bolso',
+      text: ipca < 0
+        ? `Com ${indice} de **${ipca.toFixed(2)}%**, o aluguel cai para **${brl(novoAluguel)}**, uma redução de ${brl(Math.abs(valorReajuste))}/mês. Deflação no índice é rara, então confirme o número oficial antes de renegociar.`
+        : `O reajuste de **${ipca.toFixed(2)}%** pelo ${indice} eleva o aluguel para **${brl(novoAluguel)}**: são **${brl(valorReajuste)}** a mais por mês e **${brl(aumentoAno)}** ao longo do ano.${ipca > 6 ? ' Acima de 6% já dói no orçamento — vale comparar com o IGP-M e negociar.' : ''}`,
+      tone,
+      icon: ipca < 0 ? '📉' : '🏠',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Aluguel atual', value: Number(atual.toFixed(2)) },
+        { label: 'Reajuste', value: Number(valorReajuste.toFixed(2)) },
+      ],
+      prefix: 'R$ ',
+      centerValue: brl(novoAluguel),
+      centerLabel: 'Novo aluguel',
+      ariaLabel: `Novo aluguel de ${brl(novoAluguel)} composto pelo valor atual ${brl(atual)} mais reajuste de ${brl(valorReajuste)}.`,
+    },
   };
 }

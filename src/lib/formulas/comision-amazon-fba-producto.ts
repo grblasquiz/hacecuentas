@@ -1,6 +1,6 @@
 /** Comision Amazon FBA */
 export interface Inputs { precioVenta: number; referralPct: number; fulfillmentFee: number; costoProducto: number; storageFee: number; }
-export interface Outputs { netoVendedor: number; totalFees: number; gananciaBruta: number; roiPct: number; margenPct: number; _chart?: any; }
+export interface Outputs { netoVendedor: number; totalFees: number; gananciaBruta: number; roiPct: number; margenPct: number; _chart?: any; _insight?: any; }
 export function comisionAmazonFbaProducto(i: Inputs): Outputs {
   const precio = Number(i.precioVenta);
   const refPct = Number(i.referralPct) / 100;
@@ -31,12 +31,39 @@ export function comisionAmazonFbaProducto(i: Inputs): Outputs {
     };
   }
 
+  const margen = Number(((ganancia / precio) * 100).toFixed(2));
+  const feesPct = precio > 0 ? (total / precio) * 100 : 0;
+  let insight: any;
+  if (ganancia <= 0) {
+    insight = {
+      title: 'Estás perdiendo plata',
+      text: `Después de fees y costo del producto, cada venta te deja **$${ganancia.toFixed(2)}**. Subí el precio o bajá el costo: con Amazon llevándose **${feesPct.toFixed(1)}%** del precio, no cierra.`,
+      tone: 'warn',
+      icon: '📉',
+    };
+  } else if (margen < 15) {
+    insight = {
+      title: 'Margen ajustado',
+      text: `Ganás **$${ganancia.toFixed(2)}** por unidad, apenas **${margen.toFixed(1)}%** del precio. Amazon se queda con **${feesPct.toFixed(1)}%** en fees: un imprevisto (devolución, storage) te puede dejar en rojo.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    insight = {
+      title: 'Producto rentable',
+      text: `Te quedan **$${ganancia.toFixed(2)}** por unidad (**${margen.toFixed(1)}%** de margen) con un ROI de **${costo > 0 ? ((ganancia / costo) * 100).toFixed(1) : '0'}%**. Los fees de Amazon se llevan **${feesPct.toFixed(1)}%** del precio.`,
+      tone: 'good',
+      icon: '📦',
+    };
+  }
+
   return {
     netoVendedor: Number(neto.toFixed(2)),
     totalFees: Number(total.toFixed(2)),
     gananciaBruta: Number(ganancia.toFixed(2)),
     roiPct: costo > 0 ? Number(((ganancia / costo) * 100).toFixed(2)) : 0,
-    margenPct: Number(((ganancia / precio) * 100).toFixed(2)),
-    _chart: chart
+    margenPct: margen,
+    _chart: chart,
+    _insight: insight
   };
 }

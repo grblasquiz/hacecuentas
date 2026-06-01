@@ -11,6 +11,7 @@ export interface Outputs {
   diasMirando: number;
   diasConHorario: number;
   resumenRitmo: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -83,11 +84,28 @@ export function compute(i: Inputs): Outputs {
       ? `Mirando ${horasPorDia} hora${horasPorDia !== 1 ? "s" : ""} por día a ${velocidadLabel}, terminás en ${diasRedondeados} día${diasRedondeados !== 1 ? "s" : ""}.`
       : "Ingresá cuántas horas mirás por día para ver el plan.";
 
+  const ahorroVelocidad = velocidad > 1 ? (minutosBrutos - minutosAjustados) / 60 : 0;
+  const tono = diasRedondeados <= 7 ? 'good' : diasRedondeados <= 30 ? 'neutral' : 'warn';
+  const notaPlan = diasRedondeados <= 7
+    ? 'es un maratón corto, perfectamente bingeable en una semana.'
+    : diasRedondeados <= 30
+    ? 'un mes de constancia y lo terminás sin apurarte.'
+    : 'es una serie enorme: vas a estar varios meses, ideal para tomártelo con calma.';
+  const extraVelocidad = velocidad > 1
+    ? ` Mirando a **${velocidad}x** te ahorrás unas **${ahorroVelocidad.toFixed(1)} h** respecto a velocidad normal.`
+    : '';
+
   return {
     totalMinutos,
     totalHoras: Math.round(totalHoras * 100) / 100,
     diasMirando: Math.round(diasMirando * 100) / 100,
     diasConHorario: Math.round(diasConHorario * 100) / 100,
     resumenRitmo,
+    _insight: {
+      title: 'Tu plan de maratón',
+      text: `Son **${episodios} episodios** = **${totalMinutos}** de visionado. A **${horasPorDia} h/día** lo terminás en **${diasRedondeados} día${diasRedondeados !== 1 ? 's' : ''}**: ${notaPlan}${extraVelocidad}`,
+      tone: tono,
+      icon: '🍿',
+    },
   };
 }

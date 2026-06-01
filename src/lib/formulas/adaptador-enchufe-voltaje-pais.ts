@@ -9,6 +9,7 @@ export interface AdaptadorEnchufeOutputs {
   necesitaAdaptador: string;
   necesitaTransformador: string;
   detalle: string;
+  _insight?: any;
 }
 
 interface InfoEnchufe {
@@ -58,11 +59,31 @@ export function adaptadorEnchufeVoltajePais(inputs: AdaptadorEnchufeInputs): Ada
     textoTransformador = 'NO — voltaje compatible';
   }
 
+  const nombrePais: Record<string, string> = {
+    eeuu: 'Estados Unidos', europa: 'Europa', reinoUnido: 'Reino Unido', brasil: 'Brasil',
+    chile: 'Chile', australia: 'Australia', japon: 'Japón', china: 'China',
+    india: 'India', sudafrica: 'Sudáfrica', israel: 'Israel',
+  };
+  const pais = nombrePais[destino] || destino;
+  const _insight = necesitaTransformador
+    ? {
+        title: 'Ojo con el voltaje',
+        text: `En **${pais}** la red es de **${info.voltaje}** y enchufás aparatos argentinos de 220V: para los que NO son bi-voltaje (secador, planchita) necesitás **transformador**, no solo adaptador de ficha. Sin él se queman.`,
+        tone: 'warn',
+        icon: '⚡',
+      }
+    : {
+        title: 'Qué llevar a ' + pais,
+        text: `**${pais}** usa enchufe **tipo ${info.tipo.split(' ')[0]}** a **${info.voltaje}**. Con cargadores bi-voltaje (100-240V) solo necesitás un **adaptador de ficha**: nada de transformador.`,
+        tone: 'good',
+        icon: '🔌',
+      };
   return {
     tipoEnchufe: info.tipo,
     voltaje: `${info.voltaje} / ${info.frecuencia}`,
     necesitaAdaptador: textoAdaptador,
     necesitaTransformador: textoTransformador,
     detalle: `${info.notas} Recomendación: comprá un adaptador universal con puertos USB que sirve para todos los países.`,
+    _insight,
   };
 }

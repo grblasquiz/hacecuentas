@@ -14,6 +14,8 @@ export interface Outputs {
   costo_laboral_total: number;
   porcentaje_extra: number;
   costo_anual: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -25,6 +27,8 @@ export function compute(i: Inputs): Outputs {
   
   const sueldo = Math.max(i.sueldo_bruto_mensual, 420000); // Sueldo mínimo 2026
   
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+
   // Si es trabajador a honorarios, no hay aportes obligatorios del empleador
   if (i.tipo_trabajador === 'honorarios') {
     return {
@@ -35,7 +39,13 @@ export function compute(i: Inputs): Outputs {
       total_aportes: 0,
       costo_laboral_total: sueldo,
       porcentaje_extra: 0,
-      costo_anual: sueldo * MESES_AÑO
+      costo_anual: sueldo * MESES_AÑO,
+      _insight: {
+        title: 'Honorarios: sin sobrecosto laboral',
+        text: `A honorarios no hay aportes obligatorios del empleador: el costo mensual es igual al pago bruto de **${fmtCLP(sueldo)}** (**${fmtCLP(sueldo * MESES_AÑO)}** al año). El trabajador asume sus propias cotizaciones.`,
+        tone: 'neutral',
+        icon: '🧾',
+      }
     };
   }
   
@@ -54,6 +64,28 @@ export function compute(i: Inputs): Outputs {
   const porcentajeExtra = (totalAportes / sueldo) * 100;
   const costoAnual = costoTotal * MESES_AÑO;
   
+  const _insight = {
+    title: 'El sueldo te cuesta más que el bruto',
+    text: `Sobre un bruto de **${fmtCLP(sueldo)}**, los aportes suman **${fmtCLP(totalAportes)}** al mes: el costo laboral real sube a **${fmtCLP(costoTotal)}**, un **${(Math.round(porcentajeExtra * 100) / 100).toLocaleString('es-CL')}% extra**. En el año son **${fmtCLP(costoAnual)}**.`,
+    tone: 'warn' as const,
+    icon: '🇨🇱',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Sueldo bruto', value: Math.round(sueldo) },
+      { label: 'Cesantía (2,4%)', value: Math.round(cesantia) },
+      { label: 'Mutual', value: Math.round(mutual) },
+      { label: 'SIS (1,5%)', value: Math.round(sis) },
+      ...(gratificacion > 0 ? [{ label: 'Gratificación', value: Math.round(gratificacion) }] : []),
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(costoTotal),
+    centerLabel: 'costo mensual',
+    ariaLabel: `Costo laboral mensual de ${fmtCLP(costoTotal)}: sueldo bruto de ${fmtCLP(sueldo)} más aportes por ${fmtCLP(totalAportes)}`,
+  };
+
   return {
     cesantia_mensual: Math.round(cesantia),
     mutual_mensual: Math.round(mutual),
@@ -62,6 +94,8 @@ export function compute(i: Inputs): Outputs {
     total_aportes: Math.round(totalAportes),
     costo_laboral_total: Math.round(costoTotal),
     porcentaje_extra: Math.round(porcentajeExtra * 100) / 100,
-    costo_anual: Math.round(costoAnual)
+    costo_anual: Math.round(costoAnual),
+    _insight,
+    _chart
   };
 }

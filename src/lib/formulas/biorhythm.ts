@@ -1,6 +1,6 @@
 /** Biorritmo físico, emocional e intelectual */
 export interface Inputs { fechaNacimiento: string; }
-export interface Outputs { fisico: number; emocional: number; intelectual: number; mensaje: string; }
+export interface Outputs { fisico: number; emocional: number; intelectual: number; mensaje: string; _insight?: any; }
 
 export function biorhythm(i: Inputs): Outputs {
   const parts = String(i.fechaNacimiento || '').split('-').map(Number);
@@ -35,5 +35,25 @@ export function biorhythm(i: Inputs): Outputs {
   if (criticos.length) msg += `Ciclo(s) en zona crítica: ${criticos.join(', ')}.`;
   else msg += 'Sin ciclos en zona crítica hoy.';
 
-  return { fisico, emocional, intelectual, mensaje: msg };
+  const ciclos = [
+    { nombre: 'físico', v: fisico },
+    { nombre: 'emocional', v: emocional },
+    { nombre: 'intelectual', v: intelectual },
+  ];
+  const top = ciclos.reduce((a, b) => (b.v > a.v ? b : a));
+  const bottom = ciclos.reduce((a, b) => (b.v < a.v ? b : a));
+  const tone = criticos.length ? 'warn' : top.v > 50 && bottom.v >= 0 ? 'good' : 'neutral';
+  const insText = criticos.length
+    ? `Hoy tu ciclo **${criticos.join(' y ')}** cruza el cero (zona crítica): día de mayor inestabilidad, mejor evitar decisiones de alto riesgo en ${criticos.length > 1 ? 'esas áreas' : 'esa área'}.`
+    : `Tu pico de hoy es el **${top.nombre}** (**${top.v > 0 ? '+' : ''}${top.v}%**) y el más bajo el **${bottom.nombre}** (**${bottom.v > 0 ? '+' : ''}${bottom.v}%**). Aprovechá lo alto y bajá expectativas en lo bajo.`;
+
+  return {
+    fisico, emocional, intelectual, mensaje: msg,
+    _insight: {
+      title: 'Tu día según el biorritmo',
+      text: insText,
+      tone,
+      icon: criticos.length ? '⚠️' : top.nombre === 'físico' ? '💪' : top.nombre === 'emocional' ? '❤️' : '🧠',
+    },
+  };
 }

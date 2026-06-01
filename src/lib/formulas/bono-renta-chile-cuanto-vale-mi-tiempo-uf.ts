@@ -14,6 +14,8 @@ export interface Outputs {
   horas_anuales: number;
   comparativa_smi: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Constantes 2026 Chile

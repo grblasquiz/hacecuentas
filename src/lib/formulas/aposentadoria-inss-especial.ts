@@ -21,6 +21,7 @@ export interface Outputs {
   status: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
 }
 
 const fmtBRL = (n: number) =>
@@ -57,6 +58,21 @@ export function aposentadoriaInssEspecial(i: Inputs): Outputs {
   const formula = `Categoria ${cat} anos: idade mín ${idadeMin} + ${tempoMin} anos exposição comprovada (PPP + LTCAT)`;
   const explicacao = `Aposentadoria especial por insalubridade (EC 103/2019): três categorias conforme intensidade da exposição: 15 anos (baixa — mineração subterrânea), 20 anos (média — asbesto/mineração não frente), 25 anos (alta — demais agentes nocivos: ruído acima de 85dB, químicos, biológicos, calor). Após EC 103, exige idade mínima (55/58/60). Documentação exigida: PPP (Perfil Profissiográfico Previdenciário) e LTCAT. Teto ${fmtBRL(teto)}.`;
 
+  const apto = faltaIdade === 0 && faltaExp === 0;
+  const _insight = apto
+    ? {
+        title: 'Aposentadoria especial liberada',
+        text: `Você atingiu os requisitos da categoria de **${descricao}**: ${exp} anos de exposição comprovada e idade mínima de ${idadeMin}. O benefício estimado é **${fmtBRL(valor)}/mês** (**${percentual}%** da média de ${fmtBRL(mediaAplicada)}). Garanta PPP e LTCAT atualizados.`,
+        tone: 'good',
+        icon: '🛡️',
+      }
+    : {
+        title: 'Ainda não dá para a aposentadoria especial',
+        text: `Faltam **${faltaIdade} ano(s) de idade** e **${faltaExp} ano(s) de exposição** para a categoria de ${descricao}. A idade mínima exigida é **${idadeMin} anos** com **${tempoMin} anos** de exposição comprovada (PPP + LTCAT).`,
+        tone: 'warn',
+        icon: '⏳',
+      };
+
   return {
     categoriaDescricao: descricao,
     idadeMinima: `${idadeMin} anos`,
@@ -66,5 +82,6 @@ export function aposentadoriaInssEspecial(i: Inputs): Outputs {
     status,
     formula,
     explicacao,
+    _insight,
   };
 }

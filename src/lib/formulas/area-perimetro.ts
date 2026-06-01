@@ -10,6 +10,7 @@ export interface Outputs {
   perimetro: number;
   figura: string;
   formula: string;
+  _insight?: any;
 }
 
 export function areaPerimetro(i: Inputs): Outputs {
@@ -75,10 +76,19 @@ export function areaPerimetro(i: Inputs): Outputs {
       throw new Error('Figura no reconocida');
   }
 
+  const areaFmt = Number(area.toFixed(4)).toLocaleString('es-AR');
+  const periFmt = Number(perimetro.toFixed(4)).toLocaleString('es-AR');
+  const _insight = {
+    title: `${nombre}: área y perímetro`,
+    text: `Tu ${nombre.toLowerCase()} tiene un área de **${areaFmt}** y un perímetro de **${periFmt}** (unidades²/unidades según lo que cargaste).`,
+    tone: 'neutral',
+    icon: '📐',
+  };
   return {
     area: Number(area.toFixed(4)),
     perimetro: Number(perimetro.toFixed(4)),
     figura: nombre,
     formula,
+    _insight,
   };
 }

@@ -1,6 +1,6 @@
 /** Score educativo de elegibilidad de wallet para airdrops segun metricas onchain */
 export interface Inputs { transaccionesTotales: number; volumenOperadoUsd: number; antiguedadMeses: number; bridgesUsados: number; protocolosInteractuados: number; }
-export interface Outputs { scoreTransacciones: number; scoreVolumen: number; scoreAntiguedad: number; scoreBridges: number; scoreProtocolos: number; scoreTotal: number; tier: string; explicacion: string; _chart?: any; }
+export interface Outputs { scoreTransacciones: number; scoreVolumen: number; scoreAntiguedad: number; scoreBridges: number; scoreProtocolos: number; scoreTotal: number; tier: string; explicacion: string; _chart?: any; _insight?: any; }
 export function airdropElegibilidadWalletScorePuntaje(i: Inputs): Outputs {
   const tx = Number(i.transaccionesTotales);
   const vol = Number(i.volumenOperadoUsd);
@@ -33,6 +33,22 @@ export function airdropElegibilidadWalletScorePuntaje(i: Inputs): Outputs {
     centerLabel: 'Score',
     ariaLabel: 'Composición del score de elegibilidad: transacciones, volumen, antigüedad, bridges y protocolos.',
   };
+  // Dimensión más floja: menor ratio score/tope (la que más margen de mejora tiene).
+  const dims = [
+    { nombre: 'transacciones', ratio: sTx / 20 },
+    { nombre: 'volumen', ratio: sVol / 25 },
+    { nombre: 'antigüedad', ratio: sAnt / 20 },
+    { nombre: 'bridges', ratio: sBr / 15 },
+    { nombre: 'protocolos', ratio: sPr / 20 },
+  ];
+  const masFloja = dims.reduce((min, d) => (d.ratio < min.ratio ? d : min), dims[0]);
+  const insightTone: 'good' | 'warn' | 'neutral' = total >= 80 ? 'good' : total >= 40 ? 'neutral' : 'warn';
+  const insight = {
+    title: `Perfil ${tier.toLowerCase()}`,
+    text: `Tu score educativo da **${total.toFixed(0)}/100** (${tier}). La métrica con más margen es **${masFloja.nombre}**: subirla acerca el perfil a un patrón sybil-resistant. Recordá que esto **no garantiza** un airdrop real, los criterios reales son secretos y cambian por proyecto.`,
+    tone: insightTone,
+    icon: '🪂',
+  };
   return {
     scoreTransacciones: Number(sTx.toFixed(2)),
     scoreVolumen: Number(sVol.toFixed(2)),
@@ -43,5 +59,6 @@ export function airdropElegibilidadWalletScorePuntaje(i: Inputs): Outputs {
     tier,
     explicacion: `Score educativo: ${total.toFixed(0)}/100 (${tier}). Tx ${sTx.toFixed(0)}, Volumen ${sVol.toFixed(0)}, Antigüedad ${sAnt.toFixed(0)}, Bridges ${sBr.toFixed(0)}, Protocolos ${sPr.toFixed(0)}. No garantiza elegibilidad real.`,
     _chart: chart,
+    _insight: insight,
   };
 }

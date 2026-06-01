@@ -7,7 +7,7 @@ export interface Inputs {
 }
 
 export interface Outputs {
-  cuadradosTotal: string; telaTotal: string; telaPorColor: string; guata: string; forro: string;
+  cuadradosTotal: string; telaTotal: string; telaPorColor: string; guata: string; forro: string; _insight?: any;
 }
 
 export function acolchadoPatchworkCuadrados(inputs: Inputs): Outputs {
@@ -26,11 +26,18 @@ export function acolchadoPatchworkCuadrados(inputs: Inputs): Outputs {
   const porColor = telaTotalM2 / vt;
   const guata = `${(af / 100 + 0.1).toFixed(2)} × ${(hf / 100 + 0.1).toFixed(2)} m`;
   const forro = `${((af / 100 + 0.15) * (hf / 100 + 0.15)).toFixed(2)} m²`;
+  const _insight = {
+    title: 'Tu lista de corte',
+    text: `Necesitás **${total} cuadrados** (${cuadAn} × ${cuadAl}) cortados a **${cuadReal} cm** con la costura incluida, lo que suma **${telaTotalM2.toFixed(2)} m²** de tela frontal (~${porColor.toFixed(2)} m² por cada uno de los ${vt} géneros). Comprá un 10 % extra para alinear estampados y absorber errores de corte.`,
+    tone: 'neutral',
+    icon: '🧵',
+  };
   return {
     cuadradosTotal: `${total} cuadrados (${cuadAn} × ${cuadAl})`,
     telaTotal: `${telaTotalM2.toFixed(2)} m² tela frontal`,
     telaPorColor: `${porColor.toFixed(2)} m² por color`,
     guata: guata,
     forro: forro,
+    _insight,
   };
 }

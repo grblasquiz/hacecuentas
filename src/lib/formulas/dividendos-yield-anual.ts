@@ -14,6 +14,7 @@ export interface Outputs {
   categoria: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function dividendosYieldAnual(i: Inputs): Outputs {
@@ -59,6 +60,20 @@ export function dividendosYieldAnual(i: Inputs): Outputs {
     ariaLabel: 'Escala del dividend yield anual: bajo de growth, moderado, atractivo y alto con posible trampa de dividendo.',
   };
 
+  const insightTone: 'good' | 'warn' | 'neutral' =
+    yieldR >= 8 ? 'warn' : yieldR >= 2 ? 'good' : 'neutral';
+  const insightZona =
+    yieldR >= 8 ? 'zona **alta**: un yield así suele esconder una caída de precio o un recorte de dividendo en puerta, revisá el payout ratio'
+    : yieldR >= 4 ? 'zona **atractiva**: rinde como una acción de valor o un REIT, buen flujo si el dividendo es sostenible'
+    : yieldR >= 2 ? 'zona **moderada**: rinde como un blue chip maduro'
+    : 'zona **baja**: típico de growth, donde la ganancia esperás que venga por revalorización, no por dividendos';
+  const insight = {
+    title: 'Tu yield en contexto',
+    text: `Con un yield de **${yieldR}%** estás en ${insightZona}. Tus ${acciones} acciones generan **$${ingresoAnual.toFixed(2)}** al año (**$${ingresoMensual.toFixed(2)}**/mes) sobre **$${inversionTotal.toFixed(2)}** invertidos.`,
+    tone: insightTone,
+    icon: '💵',
+  };
+
   return {
     yieldAnual: Number(yieldAnual.toFixed(2)),
     ingresoAnual: Number(ingresoAnual.toFixed(2)),
@@ -68,5 +83,6 @@ export function dividendosYieldAnual(i: Inputs): Outputs {
     categoria,
     resumen,
     _chart: chart,
+    _insight: insight,
   };
 }

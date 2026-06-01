@@ -8,6 +8,7 @@ export interface Outputs {
   sodioCorregido24: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function correccionSodioGlucemia(i: Inputs): Outputs {
@@ -60,10 +61,36 @@ export function correccionSodioGlucemia(i: Inputs): Outputs {
     ariaLabel: 'Escala de sodio corregido: hiponatremia, normal e hipernatremia',
   };
 
+  // Insight clínico: interpreta la zona del sodio corregido (Katz)
+  let insight: any;
+  if (naCorregidoKatz < 135) {
+    insight = {
+      title: 'Hiponatremia real',
+      text: `El sodio corregido es **${naKatz.toFixed(1)} mEq/L**, por debajo de 135 aun descontando la glucemia: no es solo dilucional. Buscá otras causas de hiponatremia.`,
+      tone: 'warn' as const,
+      icon: '🩸',
+    };
+  } else if (naCorregidoKatz <= 145) {
+    insight = {
+      title: 'Sodio corregido normal',
+      text: `Corregido por glucemia da **${naKatz.toFixed(1)} mEq/L** (rango normal): la hiponatremia que veías era **dilucional** por la hiperglucemia, no un déficit real de sodio.`,
+      tone: 'good' as const,
+      icon: '✅',
+    };
+  } else {
+    insight = {
+      title: 'Hipernatremia oculta',
+      text: `El corregido sube a **${naKatz.toFixed(1)} mEq/L**: el paciente está **más deshidratado** de lo que sugiere el sodio medido. Considerá rehidratación.`,
+      tone: 'warn' as const,
+      icon: '⚠️',
+    };
+  }
+
   return {
     sodioCorregido: naKatz,
     sodioCorregido24: Number(naCorregidoHillier.toFixed(1)),
     detalle,
     _chart: chart,
+    _insight: insight,
   };
 }

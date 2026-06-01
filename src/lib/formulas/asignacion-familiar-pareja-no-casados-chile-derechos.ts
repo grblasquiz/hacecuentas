@@ -22,6 +22,7 @@ export interface Outputs {
   pasos_formalizacion: string;
   documentos_requeridos: string;
   estado_actual_derechos: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -223,6 +224,37 @@ Sin AUC/matrimonio, pierdes:
     }
   }
   
+  // Insight narrativo según situación legal
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  let _insight;
+  if (i.situacion_legal === 'convivencia_informal') {
+    const perdidaAnual = Math.round(
+      MONTO_BASE_ASIGNACION_HIJO * 12 * Math.max(1, i.num_hijos_menores),
+    );
+    _insight = {
+      title: 'Sin formalización: cero derechos',
+      text: `Como **convivencia informal**, tu pareja **no hereda, no cobra pensión de sobrevivencia ni es carga en salud**. Solo por asignación familiar estás resignando hasta **${fmtCLP(perdidaAnual)}/año**. Formalizar un AUC cuesta ~$350.000 y se recupera en cerca de un año.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (es_formalizado) {
+    _insight = {
+      title: puede_reclamar ? 'Derechos vigentes + asignación' : 'Derechos formales vigentes',
+      text: puede_reclamar
+        ? `Con ${i.situacion_legal === 'matrimonio' ? 'matrimonio' : 'AUC'} formalizado cobrás hasta **${fmtCLP(monto_asignacion)}/año** de asignación familiar, tu pareja **hereda el ${Math.round(hereda_pct * 100)}%** sin testamento y accede a **pensión de sobrevivencia** y cargas en salud.`
+        : `Con ${i.situacion_legal === 'matrimonio' ? 'matrimonio' : 'AUC'} formalizado tu pareja **hereda el ${Math.round(hereda_pct * 100)}%** sin testamento y tiene **pensión de sobrevivencia** y cargas en salud. La asignación familiar no aplica ${i.num_hijos_menores > 0 ? 'porque tus ingresos superan el tope' : 'porque no hay hijos menores'}.`,
+      tone: 'good',
+      icon: '💍',
+    };
+  } else {
+    _insight = {
+      title: 'Derechos según formalización',
+      text: 'Los derechos de herencia, pensión de sobrevivencia, salud y asignación familiar dependen de formalizar un **AUC** o **matrimonio**. Sin eso, la pareja no tiene reconocimiento legal.',
+      tone: 'neutral',
+      icon: 'ℹ️',
+    };
+  }
+
   return {
     puede_reclamar_asignacion_familiar: puede_reclamar,
     monto_asignacion_familiar_anual: Math.round(monto_asignacion),
@@ -234,6 +266,7 @@ Sin AUC/matrimonio, pierdes:
     comparativa_matrimonio: comparativa,
     pasos_formalizacion: pasos,
     documentos_requeridos: documentos,
-    estado_actual_derechos: estado
+    estado_actual_derechos: estado,
+    _insight
   };
 }

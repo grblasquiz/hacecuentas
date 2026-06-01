@@ -16,6 +16,7 @@ export interface Outputs {
   inversionLED: number;
   mesesParaAmortizar: number;
   resumen: string;
+  _insight?: any;
 }
 
 export function ahorroLedVsIncandescente(i: Inputs): Outputs {
@@ -43,6 +44,19 @@ export function ahorroLedVsIncandescente(i: Inputs): Outputs {
   const inversionLED = precioLED * n;
   const mesesParaAmortizar = ahorroMonetarioAnio > 0 ? (inversionLED / ahorroMonetarioAnio) * 12 : 999;
 
+  const fmt = (v: number) => '$' + Math.round(v).toLocaleString('es-AR');
+  const amortTxt = mesesParaAmortizar < 1
+    ? 'en menos de un mes'
+    : mesesParaAmortizar < 12
+      ? `en **${mesesParaAmortizar.toFixed(1).replace('.', ',')} meses**`
+      : `en **${(mesesParaAmortizar / 12).toFixed(1).replace('.', ',')} años**`;
+  const _insight = {
+    title: 'LED: ahorro que se acumula',
+    text: `Cambiar ${n} lámpara(s) incandescente(s) por LED recorta el consumo en **${ahorroKwhAnio.toFixed(0)} kWh/año** y te ahorra **${fmt(ahorroMonetarioAnio)} por año**. Recuperás los **${fmt(inversionLED)}** de inversión ${amortTxt}; en 10 años el ahorro acumulado llega a **${fmt(ahorroMonetario10Anios)}**.`,
+    tone: mesesParaAmortizar <= 24 ? 'good' : 'neutral',
+    icon: '💡',
+  };
+
   return {
     consumoActualKwhAnio: Number(consumoActualKwhAnio.toFixed(2)),
     consumoLEDKwhAnio: Number(consumoLEDKwhAnio.toFixed(2)),
@@ -52,5 +66,6 @@ export function ahorroLedVsIncandescente(i: Inputs): Outputs {
     inversionLED: Math.round(inversionLED),
     mesesParaAmortizar: Number(mesesParaAmortizar.toFixed(1)),
     resumen: `Cambiando ${n} lámpara(s) ahorrás $${Math.round(ahorroMonetarioAnio).toLocaleString('es-AR')} por año. Recuperás la inversión en ${mesesParaAmortizar.toFixed(1)} meses.`,
+    _insight,
   };
 }

@@ -12,6 +12,7 @@ export interface Outputs {
   rangoNormalMmolL: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Factor: 1 mmol/L = 18.016 mg/dL
@@ -93,6 +94,19 @@ export function glucemiaConversionMgDlMmolL(i: Inputs): Outputs {
     ariaLabel: 'Escala de glucemia en mg/dL con zonas según criterios ADA.',
   };
 
+  const esNormal = categoria.startsWith('Normal');
+  const ctxTxt = ctx === 'ayunas' ? 'en ayunas' : ctx === 'postprandial' ? '2 h post comida' : 'aleatoria';
+  const insightTone: 'good' | 'warn' = esNormal ? 'good' : 'warn';
+  const insightText = esNormal
+    ? `Con **${mgDL.toFixed(0)} mg/dL** (${mmolL.toFixed(2)} mmol/L) ${ctxTxt} caés en zona **${categoria.replace(' ✅', '')}**, dentro del rango de referencia (${rangoMgDL}). Un solo valor no diagnostica: lo importante es la tendencia.`
+    : `Con **${mgDL.toFixed(0)} mg/dL** (${mmolL.toFixed(2)} mmol/L) ${ctxTxt} tu resultado cae en **${categoria}**, fuera del rango normal (${rangoMgDL}). Un valor aislado no confirma nada: repetí la medición y consultá con un profesional.`;
+  const insight = {
+    title: 'Cómo leer tu glucemia',
+    text: insightText,
+    tone: insightTone,
+    icon: '🩸',
+  };
+
   return {
     mgDL: Number(mgDL.toFixed(1)),
     mmolL: Number(mmolL.toFixed(2)),
@@ -101,5 +115,6 @@ export function glucemiaConversionMgDlMmolL(i: Inputs): Outputs {
     rangoNormalMmolL: rangoMmolL,
     resumen: `${v} ${unidad.replace('-', '/').toUpperCase()} = ${mgDL.toFixed(0)} mg/dL = ${mmolL.toFixed(2)} mmol/L. Categoría: ${categoria}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

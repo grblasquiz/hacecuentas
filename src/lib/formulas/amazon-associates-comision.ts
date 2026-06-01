@@ -1,6 +1,6 @@
 /** Amazon Associates */
 export interface Inputs { categoria: string; ventasMensuales: number; pais: string; }
-export interface Outputs { tasaComision: string; comisionMensual: string; comisionAnual: string; nota: string; }
+export interface Outputs { tasaComision: string; comisionMensual: string; comisionAnual: string; nota: string; _insight?: any; }
 
 export function amazonAssociatesComision(i: Inputs): Outputs {
   const cat = String(i.categoria);
@@ -24,10 +24,18 @@ export function amazonAssociatesComision(i: Inputs): Outputs {
   if (p === 'Amazon.es' || p === 'Amazon.com.mx') tasa *= 1.2;
   const mensual = v * tasa;
   const anual = mensual * 12;
+  const pct = tasa * 100;
+  const tone = pct >= 6 ? 'good' : pct <= 2 ? 'warn' : 'neutral';
   return {
     tasaComision: `${(tasa * 100).toFixed(1)}% (categoría ${cat})`,
     comisionMensual: `$${mensual.toFixed(2)} USD/mes`,
     comisionAnual: `$${anual.toFixed(2)} USD/año`,
     nota: cat === 'Amazon Prime memberships' ? 'Prime memberships pagan flat fee $3-10 por signup según país' : 'Tasa aplica al carrito completo (no sólo al producto linkeado), con cookie de 24 hs',
+    _insight: {
+      title: pct <= 2 ? 'Categoría de comisión baja' : pct >= 6 ? 'Categoría bien paga' : 'Tu comisión estimada',
+      text: `Con **${pct.toFixed(1)}%** en "${cat}", $${v.toLocaleString('es-AR')} de ventas mensuales rinden **$${mensual.toFixed(2)}/mes** (~$${anual.toFixed(2)}/año).${pct <= 2 ? ' Electrónica y videojuegos pagan muy poco: el mismo tráfico hacia hogar, moda o lujo multiplica la comisión.' : pct >= 6 ? ' Estás en el tramo más rentable del programa; cuidá que la cookie de 24 hs no se pierda con otros links.' : ' Recordá que la tasa aplica al carrito completo, no sólo al producto linkeado.'}`,
+      tone,
+      icon: '🛒',
+    },
   };
 }

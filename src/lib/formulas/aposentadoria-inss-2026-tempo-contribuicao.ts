@@ -15,6 +15,7 @@ export interface Outputs {
   age_rule_eligible: string;
   transition_rule_eligible: string;
   years_missing: string;
+  _insight?: any;
 }
 
 // Constantes 2026 — Portaria MPS
@@ -42,6 +43,9 @@ function calcRate(contribYears: number): number {
   return Math.min(1.0, BASE_RATE + INCREMENT_RATE * extra);
 }
 
+const fmtBRL = (n: number) =>
+  'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 function clampBenefit(value: number): number {
   if (value < SALARIO_MINIMO_2026) return SALARIO_MINIMO_2026;
   if (value > TETO_INSS_2026) return TETO_INSS_2026;
@@ -62,7 +66,8 @@ export function compute(i: Inputs): Outputs {
       best_rule: "Preencha todos os campos com valores válidos.",
       age_rule_eligible: "—",
       transition_rule_eligible: "—",
-      years_missing: "Verifique os dados informados."
+      years_missing: "Verifique os dados informados.",
+      _insight: undefined
     };
   }
 
@@ -163,12 +168,28 @@ export function compute(i: Inputs): Outputs {
     yearsMissing = "Você é elegível por ambas as regras. Consulte o Meu INSS para confirmar.";
   }
 
+  const elegivel = cumpreIdade || cumpriuPontos;
+  const _insight = elegivel
+    ? {
+        title: 'Você já pode se aposentar',
+        text: `Pela regra mais vantajosa — **${bestRule}** — seu benefício estimado é de **${fmtBRL(finalBenefit)}/mês** (alíquota de **${(finalRate * 100).toFixed(0)}%** sobre a média de ${fmtBRL(salaryAvg)}).`,
+        tone: 'good',
+        icon: '🎉',
+      }
+    : {
+        title: 'Ainda falta tempo para aposentar',
+        text: `Com **${age} anos** de idade e **${contrib} anos** de contribuição você somou **${pontosTotais} pontos** (mínimo ${pontosMin}). Nenhuma regra está liberada ainda — mantendo a média de ${fmtBRL(salaryAvg)}, a alíquota projetada seria de **${(calcRate(contrib) * 100).toFixed(0)}%**.`,
+        tone: 'warn',
+        icon: '⏳',
+      };
+
   return {
     benefit_value: finalBenefit,
     benefit_rate: finalRate,
     best_rule: bestRule,
     age_rule_eligible: ageRuleText,
     transition_rule_eligible: transRuleText,
-    years_missing: yearsMissing
+    years_missing: yearsMissing,
+    _insight
   };
 }

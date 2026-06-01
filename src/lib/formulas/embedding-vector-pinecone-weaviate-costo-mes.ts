@@ -1,6 +1,6 @@
 /** Costo mensual vector DB (Pinecone, Weaviate, Qdrant) según vectores, dimensión y QPS */
 export interface Inputs { vectoresMillones: number; dimension: number; qps: number; precioGbMesUsd: number; precioPorMillonQueriesUsd: number; }
-export interface Outputs { storageGb: number; queriesMes: number; costoStorageUsd: number; costoQueriesUsd: number; costoTotalMesUsd: number; explicacion: string; _chart?: any; }
+export interface Outputs { storageGb: number; queriesMes: number; costoStorageUsd: number; costoQueriesUsd: number; costoTotalMesUsd: number; explicacion: string; _chart?: any; _insight?: any; }
 export function embeddingVectorPineconeWeaviateCostoMes(i: Inputs): Outputs {
   const m = Number(i.vectoresMillones);
   const dim = Number(i.dimension);
@@ -16,6 +16,19 @@ export function embeddingVectorPineconeWeaviateCostoMes(i: Inputs): Outputs {
   const costoStorage = gb * pGb;
   const costoQueries = (queriesMes / 1e6) * pQ;
   const total = costoStorage + costoQueries;
+  const storagePct = total > 0 ? (costoStorage / total) * 100 : 0;
+  const queriesPct = total > 0 ? (costoQueries / total) * 100 : 0;
+  const storageDomina = costoStorage >= costoQueries;
+  const dominanteLabel = storageDomina ? 'storage' : 'queries';
+  const dominantePct = storageDomina ? storagePct : queriesPct;
+  const insight = {
+    title: 'Dónde se va tu factura mensual',
+    text: storageDomina
+      ? `El **storage manda**: ${'$' + costoStorage.toFixed(2)} (**${storagePct.toFixed(0)}%**) de los ${'$' + total.toFixed(2)}/mes son por guardar ${gb.toFixed(1)} GB de vectores. Bajar la **dimensión** o cuantizar a int8 recorta el almacenamiento casi linealmente.`
+      : `Las **queries mandan**: ${'$' + costoQueries.toFixed(2)} (**${queriesPct.toFixed(0)}%**) de los ${'$' + total.toFixed(2)}/mes vienen de ${(queriesMes / 1e6).toFixed(1)}M consultas. Cachear los embeddings más pedidos o bajar el **QPS** es la palanca de ahorro.`,
+    tone: (dominantePct >= 70 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+    icon: storageDomina ? '💾' : '🔎',
+  };
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -35,5 +48,6 @@ export function embeddingVectorPineconeWeaviateCostoMes(i: Inputs): Outputs {
     costoTotalMesUsd: Number(total.toFixed(2)),
     explicacion: `${m}M vectores de dim ${dim} = ${gb.toFixed(1)} GB storage. ${qps} QPS = ${(queriesMes / 1e6).toFixed(1)}M queries/mes. Total USD ${total.toFixed(2)}/mes.`,
     _chart: chart,
+    _insight: insight,
   };
 }

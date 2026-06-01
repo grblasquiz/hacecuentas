@@ -50,6 +50,11 @@ interface Strings {
   segOb1: string;
   segOb2: string;
   segOb3: string;
+  insightTitle: string;
+  insightBajo: (imc: string, cat: string, rango: string) => string;
+  insightNormal: (imc: string, cat: string, rango: string, bracket: string) => string;
+  insightSobre: (imc: string, cat: string, rango: string) => string;
+  insightObesidad: (imc: string, cat: string, rango: string) => string;
 }
 
 const STRINGS: Record<Lang, Strings> = {
@@ -85,6 +90,15 @@ const STRINGS: Record<Lang, Strings> = {
     segOb1: 'Obesidad I',
     segOb2: 'Obesidad II',
     segOb3: 'Obesidad III',
+    insightTitle: 'Qué significa tu IMC',
+    insightBajo: (imc, cat, rango) =>
+      `Con un IMC de **${imc}** caés en **${cat}**: estás por debajo del rango saludable. Para tu altura, un peso de **${rango}** te ubicaría en zona normal.`,
+    insightNormal: (imc, cat, rango, bracket) =>
+      `Tu IMC es **${imc}**, dentro de la zona **${cat}** (rango saludable **${bracket}** de IMC). Para tu altura eso equivale a un peso de **${rango}**: vas bien, mantenelo.`,
+    insightSobre: (imc, cat, rango) =>
+      `Con un IMC de **${imc}** estás en **${cat}**, por encima del rango saludable. Para tu altura, un peso de **${rango}** te devolvería a la zona normal.`,
+    insightObesidad: (imc, cat, rango) =>
+      `Tu IMC de **${imc}** cae en **${cat}**, una zona de mayor riesgo para la salud. Para tu altura, el rango saludable es **${rango}**; conviene consultar con un profesional.`,
   },
   en: {
     bajoPeso: 'Underweight',
@@ -118,6 +132,15 @@ const STRINGS: Record<Lang, Strings> = {
     segOb1: 'Obesity I',
     segOb2: 'Obesity II',
     segOb3: 'Obesity III',
+    insightTitle: 'What your BMI means',
+    insightBajo: (imc, cat, rango) =>
+      `With a BMI of **${imc}** you fall into **${cat}**: you're below the healthy range. For your height, a weight of **${rango}** would put you in the normal zone.`,
+    insightNormal: (imc, cat, rango, bracket) =>
+      `Your BMI is **${imc}**, within the **${cat}** zone (healthy BMI range **${bracket}**). For your height that means a weight of **${rango}**: you're doing well, keep it up.`,
+    insightSobre: (imc, cat, rango) =>
+      `With a BMI of **${imc}** you're in **${cat}**, above the healthy range. For your height, a weight of **${rango}** would bring you back to the normal zone.`,
+    insightObesidad: (imc, cat, rango) =>
+      `Your BMI of **${imc}** falls into **${cat}**, a higher health-risk zone. For your height, the healthy range is **${rango}**; it's worth consulting a professional.`,
   },
 };
 
@@ -141,6 +164,7 @@ export interface IMCOutputs {
   riesgoCardiometabolico: string;
   interpretacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function imc(inputs: IMCInputs): IMCOutputs {
@@ -254,6 +278,44 @@ export function imc(inputs: IMCInputs): IMCOutputs {
   const pesoIdealMinOut = isImperial ? pesoIdealMin * KG_TO_LB : pesoIdealMin;
   const pesoIdealMaxOut = isImperial ? pesoIdealMax * KG_TO_LB : pesoIdealMax;
 
+  // Insight narrativo: refleja la zona REAL del resultado (misma lógica que categoria,
+  // incluyendo el ajuste 23–28 para adulto mayor). Reutiliza imc, categoria y rango saludable.
+  const rangoSaludable = `${fmtPeso(pesoIdealMin)} – ${fmtPeso(pesoIdealMax)}`;
+  const fmtImc = (n: number) => {
+    const s = Number.isInteger(n) ? String(n) : n.toFixed(1);
+    return lang === 'es' ? s.replace('.', ',') : s;
+  };
+  const bracketSaludable = `${fmtImc(rangoMin)}–${fmtImc(rangoMax)}`;
+  const imcStr = lang === 'es' ? imcRedondeado.toFixed(2).replace('.', ',') : imcRedondeado.toFixed(2);
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+  if (imcValue < rangoMin) {
+    // Bajo peso (o bajo peso para adulto mayor si imc < 23).
+    insightText = S.insightBajo(imcStr, categoria, rangoSaludable);
+    insightTone = 'warn';
+    insightIcon = '⚖️';
+  } else if (imcValue <= rangoMax) {
+    // Zona saludable/normal (18.5–24.9, o 23–28 ajustado para ≥65).
+    insightText = S.insightNormal(imcStr, categoria, rangoSaludable, bracketSaludable);
+    insightTone = 'good';
+    insightIcon = '✅';
+  } else if (imcValue < 30) {
+    insightText = S.insightSobre(imcStr, categoria, rangoSaludable);
+    insightTone = 'warn';
+    insightIcon = '⚠️';
+  } else {
+    insightText = S.insightObesidad(imcStr, categoria, rangoSaludable);
+    insightTone = 'warn';
+    insightIcon = '🩺';
+  }
+  const insight = {
+    title: S.insightTitle,
+    text: insightText,
+    tone: insightTone,
+    icon: insightIcon,
+  };
+
   return {
     imc: imcRedondeado,
     categoria,
@@ -264,5 +326,6 @@ export function imc(inputs: IMCInputs): IMCOutputs {
     riesgoCardiometabolico,
     interpretacion,
     _chart: chart,
+    _insight: insight,
   };
 }

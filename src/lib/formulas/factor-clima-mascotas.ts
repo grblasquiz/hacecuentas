@@ -14,6 +14,7 @@ export interface Outputs {
   advertencia: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function factorClimaMascotas(i: Inputs): Outputs {
@@ -90,6 +91,18 @@ export function factorClimaMascotas(i: Inputs): Outputs {
     ariaLabel: 'Escala de minutos seguros al exterior para la mascota: de peligro extremo a seguro.',
   };
 
+  const insightTone = riesgo === 'Bajo' ? 'good' : 'warn';
+  const insightIcon = riesgo === 'Bajo' ? '🐾' : '🌡️';
+  const insightText = riesgo === 'Bajo'
+    ? `A ${T.toFixed(0)} °C y ${H.toFixed(0)}% de humedad tu ${i.especie} aguanta **~${minutos} min** afuera sin problema (zona **${categoria}**). Igual ofrecé agua y sombra/refugio.`
+    : `Zona **${categoria}** (riesgo ${riesgo.toLowerCase()}): a ${T.toFixed(0)} °C y ${H.toFixed(0)}% de humedad el límite cae a **~${minutos} min**. ${adv}`;
+  const insight = {
+    title: `Tiempo seguro afuera: ${minutos} min`,
+    text: insightText,
+    tone: insightTone,
+    icon: insightIcon,
+  };
+
   return {
     minutosSeguros: `${minutos} min`,
     minutosNumero: minutos,
@@ -98,5 +111,6 @@ export function factorClimaMascotas(i: Inputs): Outputs {
     advertencia: adv,
     mensaje: `${i.especie} ${i.tamano} pelo ${i.pelaje} a ${T.toFixed(1)} °C y ${H.toFixed(0)}% HR: hasta ~${minutos} min seguros (${categoria}).`,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -12,6 +12,7 @@ export interface Outputs {
   precioTrasDescuento1: number;
   precioTrasDescuento2: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function descuento(i: Inputs): Outputs {
@@ -40,6 +41,18 @@ export function descuento(i: Inputs): Outputs {
     ariaLabel: 'Composición del precio original: lo que pagás más lo que ahorrás con el descuento',
   };
 
+  const efectivoR = Number(efectivo.toFixed(1));
+  const sumaNominal = d1 + d2 + d3;
+  const hayEncadenado = (d2 > 0 || d3 > 0);
+  const insight = {
+    title: hayEncadenado ? 'Descuentos encadenados' : 'Tu descuento real',
+    text: hayEncadenado
+      ? `Encadenar los descuentos no suma **${sumaNominal.toFixed(0)}%**: el efectivo real es **${efectivoR}%** porque cada uno se aplica sobre el saldo anterior. Ahorrás **$${Math.round(ahorro).toLocaleString('es-AR')}** y pagás **$${Math.round(final).toLocaleString('es-AR')}**.`
+      : `Con un **${efectivoR}%** de descuento te ahorrás **$${Math.round(ahorro).toLocaleString('es-AR')}** y pagás **$${Math.round(final).toLocaleString('es-AR')}** en vez de $${Math.round(precio).toLocaleString('es-AR')}.`,
+    tone: 'good' as const,
+    icon: '🏷️',
+  };
+
   return {
     precioFinal: Math.round(final),
     ahorro: Math.round(ahorro),
@@ -47,5 +60,6 @@ export function descuento(i: Inputs): Outputs {
     precioTrasDescuento1: Math.round(tras1),
     precioTrasDescuento2: Math.round(tras2),
     _chart: chart,
+    _insight: insight,
   };
 }

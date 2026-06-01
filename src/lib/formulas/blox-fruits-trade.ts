@@ -11,6 +11,8 @@ export interface Outputs {
   ratio: number;
   veredicto: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Trade value points (community-based, Update 24 2026)
@@ -72,6 +74,15 @@ export function bloxFruitsTrade(i: Inputs): Outputs {
   else if (ratio >= 0.85) veredicto = 'Slight L (leve pérdida)';
   else veredicto = 'L trade (perdés bastante)';
 
+  const favorable = ratio >= 1.03;
+  const parejo = ratio >= 0.97 && ratio < 1.03;
+  const insTone: 'good' | 'warn' | 'neutral' = favorable ? 'good' : parejo ? 'neutral' : 'warn';
+  const insText = favorable
+    ? `Recibís **${rec.nombre}** por **${da.nombre}** con un ratio de **${ratio.toFixed(2)}x** y ganás **${Math.abs(diff)} puntos** de valor: es un **${veredicto}**.`
+    : parejo
+    ? `Trade parejo: das **${da.nombre}** (${da.valor}) y recibís **${rec.nombre}** (${rec.valor}), ratio **${ratio.toFixed(2)}x**. Ninguno sale perdiendo de forma clara.`
+    : `Cuidado: entregás **${da.nombre}** (${da.valor}) y recibís solo **${rec.nombre}** (${rec.valor}), perdiendo **${Math.abs(diff)} puntos** de valor (ratio **${ratio.toFixed(2)}x**) → **${veredicto}**.`;
+
   return {
     valorDa: da.valor,
     valorRecibe: rec.valor,
@@ -79,5 +90,25 @@ export function bloxFruitsTrade(i: Inputs): Outputs {
     ratio: Number(ratio.toFixed(2)),
     veredicto,
     resumen: `Das **${da.nombre}** (${da.valor}) por **${rec.nombre}** (${rec.valor}). Ratio ${ratio.toFixed(2)}x → **${veredicto}**.`,
+    _insight: {
+      title: 'Veredicto del trade',
+      text: insText,
+      tone: insTone,
+      icon: favorable ? '🍈' : parejo ? '⚖️' : '⚠️',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(ratio.toFixed(2)),
+      markerLabel: `${ratio.toFixed(2)}x`,
+      min: 0,
+      segments: [
+        { nombre: 'L trade', max: 0.85, color: '#dc2626', colorDark: '#ef4444' },
+        { nombre: 'Slight L', max: 0.97, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Fair', max: 1.03, color: '#64748b', colorDark: '#94a3b8' },
+        { nombre: 'Slight W', max: 1.15, color: '#84cc16', colorDark: '#a3e635' },
+        { nombre: 'W trade', max: Math.max(2, Number(ratio.toFixed(2)) + 0.1), color: '#16a34a', colorDark: '#22c55e' },
+      ],
+      ariaLabel: `Ratio de trade ${ratio.toFixed(2)}x sobre escala de L trade a W trade`,
+    },
   };
 }

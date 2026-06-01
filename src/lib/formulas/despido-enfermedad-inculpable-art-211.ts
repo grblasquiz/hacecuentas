@@ -76,6 +76,7 @@ export interface DespidoEnfermedadOutputs {
   vizzotiAplicado: boolean;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 const SUPUESTOS_VALIDOS: SupuestoArt212[] = [
@@ -202,6 +203,14 @@ export function despidoEnfermedadInculpableArt211(
       'Composición de la liquidación por despido tras enfermedad inculpable: indemnización del Art. 245, preaviso, integración del mes, SAC proporcional y vacaciones no gozadas.',
   };
 
+  const pctBase = total > 0 ? Math.round((indemnizacionBase / total) * 100) : 0;
+  const insight = {
+    title: 'Composición de la liquidación',
+    text: `La indemnización del **Art. 245** (**$${Math.round(indemnizacionBase).toLocaleString('es-AR')}**) es el grueso del cobro: **${pctBase}%** del total de **$${Math.round(total).toLocaleString('es-AR')}**. El resto son preaviso, integración del mes, SAC y vacaciones no gozadas.${vizzotiAplicado ? ' Se aplicó el piso Vizzoti (67% del sueldo) porque el tope convencional era más bajo.' : ''}`,
+    tone: 'neutral' as const,
+    icon: '⚖️',
+  };
+
   return {
     total: Math.round(total),
     supuestoAplicado,
@@ -218,5 +227,6 @@ export function despidoEnfermedadInculpableArt211(
     vizzotiAplicado,
     mensaje,
     _chart: chart,
+    _insight: insight,
   };
 }

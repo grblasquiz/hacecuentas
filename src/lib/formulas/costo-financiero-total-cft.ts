@@ -19,6 +19,7 @@ export interface CostoFinancieroTotalCftOutputs {
   costoTotal: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function costoFinancieroTotalCft(
@@ -94,6 +95,16 @@ export function costoFinancieroTotalCft(
     ariaLabel: 'Composición del total pagado: capital prestado más el costo financiero (intereses, IVA, seguro y gastos).',
   };
 
+  // Insight: el CFT real es lo que de verdad pagás, no la tasa de la vidriera
+  const brechaPuntos = cftAnual - teaNominal;
+  const costoSobreCapital = monto > 0 ? (costoTotal / monto) * 100 : 0;
+  const insight = {
+    title: 'El CFT es tu costo real',
+    text: `Tu crédito cuesta **${cftAnual.toFixed(1)}% TEA** real, **${brechaPuntos.toFixed(1)} puntos** arriba de la tasa nominal de ${teaNominal.toFixed(1)}% por IVA, seguro y gastos. Vas a devolver **$${Math.round(costoTotal).toLocaleString('es-AR')}** de intereses y cargos sobre $${Math.round(monto).toLocaleString('es-AR')} prestados (**+${costoSobreCapital.toFixed(0)}%**). Compará créditos por CFT, no por TNA.`,
+    tone: 'warn' as const,
+    icon: '🏦',
+  };
+
   return {
     cftAnual: `${cftAnual.toFixed(1)}% TEA`,
     cuotaTotalMensual: Math.round(cuotaTotalPrimera),
@@ -101,5 +112,6 @@ export function costoFinancieroTotalCft(
     costoTotal: Math.round(costoTotal),
     detalle: `El CFT real es ${cftAnual.toFixed(1)}% vs la TEA nominal de ${teaNominal.toFixed(1)}% (diferencia de ${(cftAnual - teaNominal).toFixed(1)} puntos). Cuota total mensual: $${Math.round(cuotaTotalPrimera).toLocaleString('es-AR')} (cuota pura $${Math.round(cuotaPura).toLocaleString('es-AR')} + IVA + seguro). Costo total del crédito: $${Math.round(costoTotal).toLocaleString('es-AR')}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -15,6 +15,7 @@ export interface Outputs {
   progreso: number; // %
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function fireRetiroTemprano(i: Inputs): Outputs {
@@ -97,6 +98,27 @@ export function fireRetiroTemprano(i: Inputs): Outputs {
     },
   };
 
+  const yaFire = patrimonio >= numeroFire;
+  const sinCamino = falta > 0 && aniosHastaFire === 0;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (yaFire) {
+    insightTone = 'good';
+    insightText = `Ya alcanzaste tu número FIRE de **$${Math.round(numeroFire).toLocaleString('es-AR')}**: tu patrimonio rinde **$${Math.round(rentaMensualFire).toLocaleString('es-AR')}/mes** al ${tasaRetiro}%, suficiente para cubrir tus gastos a perpetuidad.`;
+  } else if (sinCamino) {
+    insightTone = 'warn';
+    insightText = `Llevás **${progreso.toFixed(0)}%** del camino, pero sin aportes ni patrimonio que crezca no avanzás hacia los **$${Math.round(numeroFire).toLocaleString('es-AR')}**. Te falta juntar **$${Math.round(falta).toLocaleString('es-AR')}**: definí un aporte mensual.`;
+  } else {
+    insightTone = progreso >= 50 ? 'good' : 'neutral';
+    insightText = `Vas **${progreso.toFixed(0)}%** de tu número FIRE (**$${Math.round(numeroFire).toLocaleString('es-AR')}**). A tu ritmo llegás en **${aniosHastaFire.toFixed(1)} años**; te falta juntar **$${Math.round(falta).toLocaleString('es-AR')}**.`;
+  }
+  const insight = {
+    title: `Progreso a FIRE: ${progreso.toFixed(0)}%`,
+    text: insightText,
+    tone: insightTone,
+    icon: '🔥',
+  };
+
   return {
     numeroFire: Math.round(numeroFire),
     gastosAnuales: Math.round(gastosAnuales),
@@ -106,5 +128,6 @@ export function fireRetiroTemprano(i: Inputs): Outputs {
     progreso: Number(progreso.toFixed(1)),
     resumen,
     _chart: chart,
+    _insight: insight,
   };
 }

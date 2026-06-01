@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; }
 
 const CICLO_MIN = 90;
 
@@ -36,6 +36,21 @@ export function aQueHoraAcostarme(i: Inputs): Outputs {
   const despertar = hh * 60 + mm;
   const bed = (c: number) => fmt(despertar - c * CICLO_MIN - dormirse);
 
+  // Horas de sueño que da cada opción (ciclos × 90 min), sin contar la latencia.
+  const horasCiclo = (c: number) => (c * CICLO_MIN) / 60;
+  const fmtHoras = (hs: number) => {
+    const h = Math.floor(hs);
+    const min = Math.round((hs - h) * 60);
+    return min === 0 ? `${h}h` : `${h}h${min}`;
+  };
+
+  const _insight = {
+    title: 'Acostate a esta hora',
+    text: `Para despertarte a las **${hora}** descansado, acostate a las **${bed(6)}** (${fmtHoras(horasCiclo(6))} de sueño, 6 ciclos) o a las **${bed(5)}** (${fmtHoras(horasCiclo(5))}, 5 ciclos). Despertarte al final de un ciclo evita la modorra de cortar el sueño profundo. Calculado con **${dormirse} min** para quedarte dormido.`,
+    tone: 'good' as const,
+    icon: '😴',
+  };
+
   return {
     // El primary muestra solo las dos mejores horas (6 y 5 ciclos), bien grande.
     // El detalle de horas de sueño va en los cards secundarios, sin jerga.
@@ -43,6 +58,7 @@ export function aQueHoraAcostarme(i: Inputs): Outputs {
     acostarse6: bed(6),
     acostarse5: bed(5),
     acostarse4: bed(4),
+    _insight,
   };
 }
 

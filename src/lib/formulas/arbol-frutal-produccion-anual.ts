@@ -1,6 +1,6 @@
 /** Árbol frutal: producción anual estimada */
 export interface Inputs { especie: string; edadAnios: number; cuidados?: string; }
-export interface Outputs { kgAnual: number; estadoArbol: string; epocaCosecha: string; consejo: string; }
+export interface Outputs { kgAnual: number; estadoArbol: string; epocaCosecha: string; consejo: string; _insight?: any; }
 
 interface FrutalData { kgAdulto: number; edadAdulto: number; cosecha: string; }
 const FRUTALES: Record<string, FrutalData> = {
@@ -48,10 +48,25 @@ export function arbolFrutalProduccionAnual(i: Inputs): Outputs {
     ? 'El árbol está entrando en producción. Fertilizá en primavera y podá en invierno.'
     : 'Producción plena. Hacé poda de mantenimiento anual y raleo de frutos si produce en exceso.';
 
+  const nombreEsp = especie.charAt(0).toUpperCase() + especie.slice(1);
+  const kgFmt = Number(kg.toFixed(1)).toLocaleString('es-AR');
+  // A los pocos años todavía no rinde; en plena producción es buena noticia
+  const tone = edad <= 2 ? 'warn' : edad < data.edadAdulto ? 'neutral' : 'good';
+  const _insight = {
+    title: `${nombreEsp} de ${edad} años`,
+    text: edad <= 2
+      ? `Con **${edad} años** tu ${especie} recién arranca: estimamos apenas **${kgFmt} kg/año**. Recién hacia los ${data.edadAdulto} años llega a producción plena (~${data.kgAdulto} kg con cuidado medio).`
+      : edad < data.edadAdulto
+      ? `A los **${edad} años** y cuidado ${cuid}, tu ${especie} rinde **~${kgFmt} kg/año** y sigue subiendo hasta los ${data.edadAdulto} años, cuando alcanza su techo (~${data.kgAdulto} kg).`
+      : `Tu ${especie} está en **producción plena**: **~${kgFmt} kg/año** con cuidado ${cuid}. La cosecha cae en ${data.cosecha.toLowerCase()}.`,
+    tone,
+    icon: '🌳',
+  };
   return {
     kgAnual: Number(kg.toFixed(1)),
     estadoArbol: estado,
     epocaCosecha: data.cosecha,
     consejo,
+    _insight,
   };
 }

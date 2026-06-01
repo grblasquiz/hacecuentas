@@ -1,6 +1,6 @@
 /** Costo total de operar acciones AR / CEDEAR entre brokers */
 export interface Inputs { montoOperacion: number; comisionPct: number; derechoMercadoPct: number; ivaPct: number; arancelMinimo: number; }
-export interface Outputs { comisionBruta: number; iva: number; derechoMercado: number; comisionTotal: number; netoOperado: number; costoPorcentual: number; explicacion: string; _chart?: any; }
+export interface Outputs { comisionBruta: number; iva: number; derechoMercado: number; comisionTotal: number; netoOperado: number; costoPorcentual: number; explicacion: string; _chart?: any; _insight?: any; }
 export function comisionBrokerCocosIolBullComparativa(i: Inputs): Outputs {
   const monto = Number(i.montoOperacion);
   const comPct = Number(i.comisionPct) / 100;
@@ -35,6 +35,31 @@ export function comisionBrokerCocosIolBullComparativa(i: Inputs): Outputs {
     };
   }
 
+  const minimoAplicado = minimo > 0 && monto * comPct < minimo;
+  let insight: any;
+  if (minimoAplicado) {
+    insight = {
+      title: 'Pagás el arancel mínimo',
+      text: `Tu operación es chica: el mínimo de **$${minimo.toFixed(2)}** pesa más que la comisión porcentual y dispara el costo a **${pct.toFixed(2)}%**. Operá montos más grandes para diluirlo.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (pct >= 1) {
+    insight = {
+      title: 'Costo alto por operación',
+      text: `Entrar y salir te cuesta **${pct.toFixed(2)}%** del monto (**$${total.toFixed(2)}**). En el ida y vuelta perdés cerca de **${(pct * 2).toFixed(2)}%**: compará brokers antes de operar.`,
+      tone: 'warn',
+      icon: '📊',
+    };
+  } else {
+    insight = {
+      title: 'Costo competitivo',
+      text: `Operar te cuesta solo **${pct.toFixed(2)}%** (**$${total.toFixed(2)}**) y te queda neto **$${neto.toFixed(2)}**. La comisión es la parte más grande del costo; el IVA y el derecho de mercado pesan poco.`,
+      tone: 'good',
+      icon: '📈',
+    };
+  }
+
   return {
     comisionBruta: Number(comBruta.toFixed(2)),
     iva: Number(iva.toFixed(2)),
@@ -44,5 +69,6 @@ export function comisionBrokerCocosIolBullComparativa(i: Inputs): Outputs {
     costoPorcentual: Number(pct.toFixed(3)),
     explicacion: `Costo total: $${total.toFixed(2)} (${pct.toFixed(2)}% del monto). Te queda neto $${neto.toFixed(2)} de los $${monto.toLocaleString('es-AR')} operados.`,
     _chart: chart,
+    _insight: insight,
   };
 }

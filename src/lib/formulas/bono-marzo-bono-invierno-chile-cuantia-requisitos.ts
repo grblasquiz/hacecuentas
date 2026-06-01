@@ -13,6 +13,7 @@ export interface Outputs {
   fecha_pago_estimada: string;
   monto_adicional_hijos: number;
   monto_discapacidad: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -158,12 +159,33 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  const nombreBono = i.tipo_bono === 'marzo' ? 'Marzo' : i.tipo_bono === 'invierno' ? 'Invierno' : 'Logro Escolar';
+  const montoFmt = Math.round(cuantia_bono).toLocaleString('es-CL');
+  const extras: string[] = [];
+  if (monto_adicional_hijos > 0) extras.push(`**$${Math.round(monto_adicional_hijos).toLocaleString('es-CL')}** por hijos`);
+  if (monto_discapacidad > 0) extras.push(`**$${Math.round(monto_discapacidad).toLocaleString('es-CL')}** por discapacidad`);
+  const extrasTxt = extras.length ? ` Incluye ${extras.join(' y ')}.` : '';
+  const _insight = califica
+    ? {
+        title: `Calificás al Bono ${nombreBono}`,
+        text: `Según tu RSH de **${i.rsh_uf.toFixed(2)} UF** te corresponden **$${montoFmt}** (peso chileno).${extrasTxt} Pago estimado: ${fecha_pago_estimada}.`,
+        tone: 'good' as const,
+        icon: '💰',
+      }
+    : {
+        title: `No calificás al Bono ${nombreBono}`,
+        text: `Tu RSH de **${i.rsh_uf.toFixed(2)} UF** supera el tope de calificación, así que **no te corresponde** este bono. El cupo se reserva para hogares de mayor vulnerabilidad socioeconómica.`,
+        tone: 'warn' as const,
+        icon: '🚫',
+      };
+
   return {
     cuantia_bono: Math.round(cuantia_bono),
-    califica: califica ? `Sí, califica al Bono ${i.tipo_bono === 'marzo' ? 'Marzo' : i.tipo_bono === 'invierno' ? 'Invierno' : 'Logro Escolar'}` : 'No califica',
+    califica: califica ? `Sí, califica al Bono ${nombreBono}` : 'No califica',
     requisitos_cumplidos,
     fecha_pago_estimada,
     monto_adicional_hijos: Math.round(monto_adicional_hijos),
-    monto_discapacidad: Math.round(monto_discapacidad)
+    monto_discapacidad: Math.round(monto_discapacidad),
+    _insight
   };
 }

@@ -14,6 +14,8 @@ export interface Outputs {
   cuota_postgraduada_estimada: number;
   plazo_meses: number;
   total_a_pagar_postgraduada: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -70,13 +72,42 @@ export function compute(i: Inputs): Outputs {
     totalAPagarPostGrada = montoTotalFinanciable;
   }
 
-  return {
+  const interesesTotal = Math.max(0, totalAPagarPostGrada - montoTotalFinanciable);
+
+  const insightText = porcentajeSubsidio >= 100
+    ? `Por tu estrato accedés a **subsidio del 100%** y tasa 0%: financiás **$${montoTotalFinanciable.toLocaleString('es-CO')}** y devolvés exactamente eso en **${plazoMeses} cuotas** de $${cuotaPostGrada.toLocaleString('es-CO')}, sin intereses.`
+    : `Financiás **$${montoTotalFinanciable.toLocaleString('es-CO')}** y, tras egresar, devolvés **$${totalAPagarPostGrada.toLocaleString('es-CO')}** en ${plazoMeses} cuotas de **$${cuotaPostGrada.toLocaleString('es-CO')}**. Los intereses (tasa ${(tasaPostGrado * 100).toFixed(1)}%) suman **$${interesesTotal.toLocaleString('es-CO')}** extra sobre el capital.`;
+
+  const out: Outputs = {
     monto_total_financiable: montoTotalFinanciable,
     cuota_periodo_estudio: cuotaPeriodoEstudio,
     porcentaje_subsidio: porcentajeSubsidio,
     tasa_interes_postgraduada: tasaPostGrado * 100, // en %
     cuota_postgraduada_estimada: cuotaPostGrada,
     plazo_meses: plazoMeses,
-    total_a_pagar_postgraduada: totalAPagarPostGrada
+    total_a_pagar_postgraduada: totalAPagarPostGrada,
+    _insight: {
+      title: 'Capital vs. lo que devolvés',
+      text: insightText,
+      tone: interesesTotal > 0 ? 'warn' : 'good',
+      icon: '💳',
+    },
   };
+
+  // Donut solo si hay intereses (con tasa 0% el total = capital y no aporta)
+  if (interesesTotal > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Capital financiado', value: montoTotalFinanciable },
+        { label: 'Intereses', value: interesesTotal },
+      ],
+      prefix: '$',
+      centerValue: '$' + totalAPagarPostGrada.toLocaleString('es-CO'),
+      centerLabel: 'Total a devolver',
+      ariaLabel: `Del total a devolver de $${totalAPagarPostGrada.toLocaleString('es-CO')}, $${montoTotalFinanciable.toLocaleString('es-CO')} es capital y $${interesesTotal.toLocaleString('es-CO')} son intereses`,
+    };
+  }
+
+  return out;
 }

@@ -13,6 +13,8 @@ export interface Outputs {
   interest_earned: number;
   effective_years: string;
   monthly_rate_display: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -95,11 +97,50 @@ export function compute(i: Inputs): Outputs {
   const yearLabel = payoutYears === 1 ? "year" : "years";
   const effectiveYears = `${payoutYears} ${yearLabel} (${n} monthly payments)`;
 
-  return {
+  const fmt0 = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+  const fmt2 = (n: number) =>
+    `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const interestPct = totalReceived > 0 ? (interestEarned / totalReceived) * 100 : 0;
+
+  let insight: any;
+  if (interestEarned > 0) {
+    insight = {
+      title: "Your monthly income",
+      text: `A **${fmt0(pv)}** lump sum pays out **${fmt2(pmt)}/month** for ${n} months. Interest adds **${fmt0(interestEarned)}** on top, so you collect **${fmt0(totalReceived)}** in total — **${interestPct.toFixed(0)}%** of it is growth, not principal.`,
+      tone: "good",
+      icon: "💸",
+    };
+  } else {
+    insight = {
+      title: "Your monthly income",
+      text: `With 0% interest, your **${fmt0(pv)}** is simply divided into ${n} payments of **${fmt2(pmt)}/month**. No interest is earned — you just draw down the principal.`,
+      tone: "neutral",
+      icon: "💸",
+    };
+  }
+
+  const out: Outputs = {
     monthly_payout: pmt,
     total_received: totalReceived,
     interest_earned: interestEarned,
     effective_years: effectiveYears,
     monthly_rate_display: r_m * 100,
+    _insight: insight,
   };
+
+  if (interestEarned > 0) {
+    out._chart = {
+      type: "doughnut",
+      slices: [
+        { label: "Your principal", value: Math.round(pv) },
+        { label: "Interest earned", value: Math.round(interestEarned) },
+      ],
+      prefix: "$",
+      centerValue: fmt0(totalReceived),
+      centerLabel: "Total received",
+      ariaLabel: `Of ${fmt0(totalReceived)} received, ${fmt0(pv)} is your principal and ${fmt0(interestEarned)} is interest earned.`,
+    };
+  }
+
+  return out;
 }

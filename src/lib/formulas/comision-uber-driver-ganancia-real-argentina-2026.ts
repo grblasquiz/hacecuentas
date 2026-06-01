@@ -25,6 +25,7 @@ export interface Outputs {
   ganancia_neta_mensual_usd: number;
   ganancia_neta_mensual_ars: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -91,6 +92,18 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición del ingreso bruto diario de Uber: comisión, combustible, mantenimiento, monotributo y ganancia neta.',
   };
 
+  // Insight: qué porcentaje del bruto diario terminás reteniendo como ganancia neta.
+  const pct_neto_sobre_bruto = ingreso_bruto_diario_usd > 0
+    ? (ganancia_neta_final_diaria_usd / ingreso_bruto_diario_usd) * 100
+    : 0;
+  const fmtUsd = (n: number) => 'US$' + (Math.round(n * 100) / 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const insight = {
+    title: 'Lo que realmente te queda',
+    text: `De cada **${fmtUsd(ingreso_bruto_diario_usd)}** brutos por día te quedan **${fmtUsd(ganancia_neta_final_diaria_usd)}** netos: solo el **${pct_neto_sobre_bruto.toFixed(0)}%**. Eso son **${fmtUsd(ganancia_neta_por_hora_usd)}/hora** reales tras comisión de Uber (${comision_porcentaje}%), nafta, mantenimiento y monotributo.`,
+    tone: (pct_neto_sobre_bruto < 50 ? 'warn' : pct_neto_sobre_bruto >= 60 ? 'good' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '🚗',
+  };
+
   return {
     ingreso_bruto_diario_usd: Math.max(0, ingreso_bruto_diario_usd),
     comision_uber_diaria_usd: Math.max(0, comision_uber_diaria_usd),
@@ -103,6 +116,7 @@ export function compute(i: Inputs): Outputs {
     ganancia_neta_por_hora_usd: Math.max(0, ganancia_neta_por_hora_usd),
     ganancia_neta_mensual_usd: Math.max(0, ganancia_neta_mensual_usd),
     ganancia_neta_mensual_ars: Math.max(0, ganancia_neta_mensual_ars),
-    _chart: chart
+    _chart: chart,
+    _insight: insight
   };
 }

@@ -17,6 +17,7 @@ export interface Outputs {
   z7: { min: number };
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function ftpWattsCiclismo(i: Inputs): Outputs {
@@ -61,6 +62,14 @@ export function ftpWattsCiclismo(i: Inputs): Outputs {
     ariaLabel: 'Escala de potencia w/kg según niveles Coggan: cuanto más alto, mejor nivel.',
   };
 
+  const z4 = z(0.91, 1.05);
+  const insight = {
+    title: 'Tu nivel en la escala Coggan',
+    text: `Con **${wKg.toFixed(2)} w/kg** quedás en la zona **${cat.replace(/\s*\(.*\)/, '')}**. Para subir de nivel, entrená al umbral en Z4 (**${z4.min}-${z4.max} W**), que es donde se mueve tu FTP.`,
+    tone: (wKg >= 4.0 ? 'good' : 'neutral') as 'good' | 'neutral',
+    icon: '🚴',
+  };
+
   return {
     ftp: Math.round(ftp),
     wattsPorKg: Number(wKg.toFixed(2)),
@@ -74,5 +83,6 @@ export function ftpWattsCiclismo(i: Inputs): Outputs {
     z7: { min: Math.round(ftp * 1.51) }, // Esprint neuromuscular
     resumen: `Tu FTP es **${Math.round(ftp)} W** (${wKg.toFixed(2)} w/kg) → **${cat}**. Entrená en Z2 (${z(0.56, 0.75).min}-${z(0.56, 0.75).max} W) para volumen y en Z4 al FTP para mejorar umbral.`,
     _chart: chart,
+    _insight: insight,
   };
 }

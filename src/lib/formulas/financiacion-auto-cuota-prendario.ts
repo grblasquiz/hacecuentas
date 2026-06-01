@@ -11,6 +11,7 @@ export interface Outputs {
   cft: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function financiacionAutoCuotaPrendario(i: Inputs): Outputs {
@@ -43,6 +44,15 @@ export function financiacionAutoCuotaPrendario(i: Inputs): Outputs {
     ariaLabel: 'Composición del total del crédito prendario: capital financiado vs intereses',
   };
 
+  const interesPctTotal = totalAPagar > 0 ? (totalIntereses / totalAPagar) * 100 : 0;
+  const insightTone = totalIntereses >= monto ? 'warn' : (interesPctTotal >= 35 ? 'warn' : 'neutral');
+  const insight = {
+    title: `Intereses: $${Math.round(totalIntereses).toLocaleString('es-AR')} sobre el préstamo`,
+    text: `En ${plazo} meses pagás **$${Math.round(totalAPagar).toLocaleString('es-AR')}** por **$${Math.round(monto).toLocaleString('es-AR')}** financiados: los intereses son **$${Math.round(totalIntereses).toLocaleString('es-AR')}** (**${interesPctTotal.toFixed(0)}%** del total, ${cft.toFixed(2)}× el capital).${totalIntereses >= monto ? ' Pagás más de intereses que de auto: acortá el plazo o subí el anticipo.' : ''}`,
+    tone: insightTone,
+    icon: '🚗',
+  };
+
   return {
     cuotaMensual: Math.round(cuotaMensual),
     totalAPagar: Math.round(totalAPagar),
@@ -50,5 +60,6 @@ export function financiacionAutoCuotaPrendario(i: Inputs): Outputs {
     cft: Number(cft.toFixed(2)),
     detalle: `Cuota mensual: $${Math.round(cuotaMensual).toLocaleString('es-AR')} × ${plazo} meses. Total a pagar: $${Math.round(totalAPagar).toLocaleString('es-AR')} (${cft.toFixed(1)}x el monto). Intereses: $${Math.round(totalIntereses).toLocaleString('es-AR')}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

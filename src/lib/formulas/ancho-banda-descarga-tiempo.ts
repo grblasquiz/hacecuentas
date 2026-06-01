@@ -1,6 +1,6 @@
 /** Tiempo de descarga según ancho de banda y tamaño de archivo */
 export interface Inputs { tamanoMb: number; velocidadMbps: number; eficiencia?: number; }
-export interface Outputs { segundos: number; minutos: number; horas: number; detalle: string; }
+export interface Outputs { segundos: number; minutos: number; horas: number; detalle: string; _insight?: any; }
 
 export function anchoBandaDescargaTiempo(i: Inputs): Outputs {
   const tamano = Number(i.tamanoMb);
@@ -22,10 +22,23 @@ export function anchoBandaDescargaTiempo(i: Inputs): Outputs {
   else if (minutos < 60) tiempoTexto = `${minutos.toFixed(1)} minutos`;
   else tiempoTexto = `${horas.toFixed(2)} horas`;
 
+  const tono = minutos < 2 ? 'good' : minutos < 15 ? 'neutral' : 'warn';
+  const nota = minutos < 2
+    ? 'descarga prácticamente instantánea para ese archivo.'
+    : minutos < 15
+    ? 'una espera razonable; podés arrancar otra cosa mientras tanto.'
+    : 'es una descarga larga: conviene dejarla corriendo o buscar una conexión más rápida.';
+
   return {
     segundos: Number(segundos.toFixed(1)),
     minutos: Number(minutos.toFixed(2)),
     horas: Number(horas.toFixed(3)),
     detalle: `Un archivo de ${tamano} MB con ${velocidad} Mbps (${(eficiencia * 100).toFixed(0)}% eficiencia) tarda ~${tiempoTexto}. Velocidad real: ${velocidadMBs.toFixed(2)} MB/s.`,
+    _insight: {
+      title: 'Cuánto vas a esperar',
+      text: `Tu archivo de **${tamano} MB** baja en **~${tiempoTexto}**: de los ${velocidad} Mbps contratados, sólo se aprovechan **${velocidadRealMbps.toFixed(1)} Mbps** reales (${velocidadMBs.toFixed(2)} MB/s) por el ${(100 - eficiencia * 100).toFixed(0)}% de overhead. ${nota}`,
+      tone: tono,
+      icon: '⬇️',
+    },
   };
 }

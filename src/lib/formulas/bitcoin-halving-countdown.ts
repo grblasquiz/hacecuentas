@@ -1,6 +1,6 @@
 /** Bitcoin halving countdown */
 export interface Inputs { currentBlockHeight: number; avgBlockTimeMin: number; }
-export interface Outputs { blocksToHalving: number; daysUntilHalving: number; estimatedDate: string; currentReward: number; nextReward: number; explicacion: string; }
+export interface Outputs { blocksToHalving: number; daysUntilHalving: number; estimatedDate: string; currentReward: number; nextReward: number; explicacion: string; _insight?: any; }
 export function bitcoinHalvingCountdown(i: Inputs): Outputs {
   const currentBlock = Number(i.currentBlockHeight);
   const avgBlockTime = Number(i.avgBlockTimeMin) || 10;
@@ -22,5 +22,11 @@ export function bitcoinHalvingCountdown(i: Inputs): Outputs {
     currentReward: Number(currentReward.toFixed(6)),
     nextReward: Number(nextReward.toFixed(6)),
     explicacion: `Block actual ${currentBlock}, próximo halving en ${blocksRemaining} bloques (${daysRemaining.toFixed(0)} días, aprox ${estimatedDate.toISOString().split('T')[0]}). Reward actual ${currentReward} BTC → ${nextReward} BTC.`,
+    _insight: {
+      title: 'Cuándo cae el próximo halving',
+      text: `Faltan **${blocksRemaining.toLocaleString('es-AR')} bloques** (~**${daysRemaining.toFixed(0)} días**, cerca del **${estimatedDate.toISOString().split('T')[0]}**) para que la recompensa por bloque baje de **${currentReward} BTC** a **${nextReward} BTC**. La emisión nueva de bitcoin se parte al medio.`,
+      tone: daysRemaining < 180 ? 'warn' : 'neutral',
+      icon: '⏳',
+    },
   };
 }

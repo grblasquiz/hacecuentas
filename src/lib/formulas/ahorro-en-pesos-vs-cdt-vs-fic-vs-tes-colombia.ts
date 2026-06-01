@@ -35,6 +35,8 @@ export interface Outputs {
   mejor_opcion: string;
   diferencia_maxima: number;
   tabla_resumen: OutputRow[];
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -214,7 +216,38 @@ export function compute(i: Inputs): Outputs {
   const maxima = Math.max(...rentabilidades_netas);
   const minima = Math.min(...rentabilidades_netas);
   const diferencia_maxima = maxima - minima;
-  
+
+  // Fila ganadora (la de mayor rentabilidad neta), para insight y gráfico
+  const fila_ganadora = tabla_resumen.reduce((a, b) => b.rentabilidad_neta > a.rentabilidad_neta ? b : a);
+  const fmtCO = (x: number) => '$' + Math.round(x).toLocaleString('es-CO');
+  const pct_ganador = (fila_ganadora.rentabilidad_neta / i.monto_inversion) * 100;
+  // Descuentos totales sobre el bruto del ganador
+  const desc_ganador = fila_ganadora.retencion + fila_ganadora.comision + fila_ganadora.gravamen_4x1000;
+  // Neto reconstruido (sin clamp) para que las partes sumen exacto el bruto en el donut
+  const neto_donut = fila_ganadora.rentabilidad_bruta - desc_ganador;
+
+  const _insight = {
+    title: 'La mejor opción para tu perfil',
+    text: `**${fila_ganadora.instrumento}** rinde **${fmtCO(fila_ganadora.rentabilidad_neta)} netos** (${pct_ganador.toFixed(2)}% sobre el capital) tras impuestos y comisiones. La diferencia con la peor alternativa es de **${fmtCO(diferencia_maxima)}**: elegir bien sí mueve la aguja.`,
+    tone: 'good',
+    icon: '🏆',
+  };
+
+  // Donut: a dónde va el rendimiento BRUTO del instrumento ganador
+  const _chart = (fila_ganadora.rentabilidad_bruta > 0 && neto_donut > 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Rentabilidad neta', value: Math.round(neto_donut) },
+      { label: 'Retención', value: Math.round(fila_ganadora.retencion) },
+      { label: 'Comisión', value: Math.round(fila_ganadora.comision) },
+      { label: 'Gravamen 4×1000', value: Math.round(fila_ganadora.gravamen_4x1000) },
+    ].filter(s => s.value > 0),
+    prefix: '$',
+    centerValue: fmtCO(fila_ganadora.rentabilidad_bruta),
+    centerLabel: 'Rendimiento bruto',
+    ariaLabel: `Descomposición del rendimiento bruto de ${fila_ganadora.instrumento}: cuánto queda neto y cuánto se va en retención, comisión y gravamen`,
+  } : undefined;
+
   return {
     resultado_cuenta_ahorro: i.monto_inversion + cuenta_ahorro.neto,
     rentabilidad_neta_cuenta_ahorro: cuenta_ahorro.neto,
@@ -228,6 +261,8 @@ export function compute(i: Inputs): Outputs {
     rentabilidad_neta_fondo_activo: fondo_activo.neto,
     mejor_opcion: `${mejor_opcion}: $${Math.round(mejor_neto).toLocaleString('es-CO')} netos (${((mejor_neto / i.monto_inversion) * 100).toFixed(2)}% sobre capital)`,
     diferencia_maxima: diferencia_maxima,
-    tabla_resumen: tabla_resumen
+    tabla_resumen: tabla_resumen,
+    _insight,
+    _chart
   };
 }

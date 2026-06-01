@@ -16,6 +16,7 @@ export interface Outputs {
   terabytes: number;
   tebibytes: number;
   explanation_text: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -100,6 +101,14 @@ export function compute(i: Inputs): Outputs {
 
   const systemLabel = system === 'binary' ? 'binario (KiB, MiB, GiB, TiB)' : 'decimal (KB, MB, GB, TB)';
   const explanation_text = `Conversión desde ${from_unit}. Mostrado en sistema ${systemLabel}.`;
+
+  const fmt = (x: number) => Math.round(x * 1000000) / 1000000;
+  const _insight = {
+    title: 'Decimal vs binario: la diferencia que te cobran',
+    text: `Tu valor equivale a **${fmt(bytes).toLocaleString('es-AR')} bytes**. En sistema decimal son **${fmt(megabytes).toLocaleString('es-AR')} MB**, pero en binario son **${fmt(mebibytes).toLocaleString('es-AR')} MiB**: el sistema operativo cuenta de a 1024 y el fabricante del disco de a 1000, por eso un disco "de 1 TB" muestra ~931 GiB.`,
+    tone: 'neutral',
+    icon: '💾',
+  };
 
   return {
     bits: Math.round(bits * 1000000) / 1000000,

@@ -15,6 +15,8 @@ export interface Outputs {
   pollo_kg: number;
   achuras_kg: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -110,6 +112,37 @@ export function compute(i: Inputs): Outputs {
     (conAchuras ? ` | Achuras: ${achuras_kg.toFixed(2)} kg` : "") +
     ".";
 
+  const embutidos_kg_r = parseFloat(embutidos_kg.toFixed(3));
+  const porPersona = total_kg / totalComensales;
+
+  const _insight = {
+    title: "Cuánto comprar",
+    text:
+      `Para **${totalComensales} comensal${totalComensales !== 1 ? "es" : ""}** comprá **${total_kg.toFixed(2)} kg** de carne cruda (` +
+      `~**${(porPersona * 1000).toFixed(0)} g por persona** en promedio). ` +
+      `Lo grueso va en tira (**${tira_kg.toFixed(2)} kg**) y vacío (**${vacio_kg.toFixed(2)} kg**); ` +
+      `sumá **${chorizo_cant}** chorizo${chorizo_cant !== 1 ? "s" : ""} y **${morcilla_cant}** morcilla${morcilla_cant !== 1 ? "s" : ""} para la picada inicial.`,
+    tone: "neutral",
+    icon: "🔥",
+  };
+
+  const slices = [
+    { label: "Tira de asado", value: tira_kg },
+    { label: "Vacío", value: vacio_kg },
+    { label: "Embutidos", value: embutidos_kg_r },
+  ];
+  if (conPollo) slices.push({ label: "Pollo", value: pollo_kg });
+  if (conAchuras) slices.push({ label: "Achuras", value: achuras_kg });
+
+  const _chart = {
+    type: "doughnut",
+    slices,
+    prefix: "",
+    centerValue: `${total_kg.toFixed(1)} kg`,
+    centerLabel: "Total a comprar",
+    ariaLabel: `Distribución del asado: ${total_kg.toFixed(2)} kg totales repartidos entre tira, vacío, embutidos${conPollo ? ", pollo" : ""}${conAchuras ? ", achuras" : ""}.`,
+  };
+
   return {
     total_kg: parseFloat(total_kg.toFixed(3)),
     tira_kg,
@@ -119,5 +152,7 @@ export function compute(i: Inputs): Outputs {
     pollo_kg,
     achuras_kg,
     resumen,
+    _insight,
+    _chart,
   };
 }

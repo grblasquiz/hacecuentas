@@ -11,6 +11,8 @@ export interface Outputs {
   cuotaConBeca: number;
   ahorroMensual: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function becaPorcentajeDescuentoCuota(i: Inputs): Outputs {
@@ -32,10 +34,31 @@ export function becaPorcentajeDescuentoCuota(i: Inputs): Outputs {
   const cuotaConBeca = cuota - descuento;
   const ahorroTotal = descuento * meses;
 
+  const cuotaConBecaR = Math.round(cuotaConBeca);
+  const ahorroMensualR = Math.round(descuento);
+  const ahorroTotalR = Math.round(ahorroTotal);
+
   return {
-    ahorroTotal: Math.round(ahorroTotal),
-    cuotaConBeca: Math.round(cuotaConBeca),
-    ahorroMensual: Math.round(descuento),
+    ahorroTotal: ahorroTotalR,
+    cuotaConBeca: cuotaConBecaR,
+    ahorroMensual: ahorroMensualR,
     detalle: `Beca del ${porcentaje}%: pagás $${cuotaConBeca.toLocaleString('es-AR')}/mes en vez de $${cuota.toLocaleString('es-AR')}. Ahorro total en ${meses} meses: $${ahorroTotal.toLocaleString('es-AR')}`,
+    _insight: {
+      title: 'Lo que te ahorra la beca',
+      text: `Con la beca del **${porcentaje}%** pagás **$${cuotaConBecaR.toLocaleString('es-AR')}/mes** en lugar de $${Math.round(cuota).toLocaleString('es-AR')}, y al cabo de **${meses} ${meses === 1 ? 'mes' : 'meses'}** te ahorrás **$${ahorroTotalR.toLocaleString('es-AR')}** en total.`,
+      tone: 'good',
+      icon: '🎓',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Lo que pagás', value: cuotaConBecaR },
+        { label: 'Cubre la beca', value: ahorroMensualR },
+      ],
+      prefix: '$',
+      centerValue: '$' + Math.round(cuota).toLocaleString('es-AR'),
+      centerLabel: 'Cuota mensual',
+      ariaLabel: `De la cuota mensual de $${Math.round(cuota).toLocaleString('es-AR')}, pagás $${cuotaConBecaR.toLocaleString('es-AR')} y la beca cubre $${ahorroMensualR.toLocaleString('es-AR')}`,
+    },
   };
 }

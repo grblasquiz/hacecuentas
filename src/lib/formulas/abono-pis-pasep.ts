@@ -21,6 +21,7 @@ export interface AbonoPisPasepOutputs {
   fracaoAplicada: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 const SALARIO_MINIMO = 1518;
@@ -55,11 +56,28 @@ export function abonoPisPasep(inputs: AbonoPisPasepInputs): AbonoPisPasepOutputs
   const formula = `Abono = 1 SM × (meses trabalhados / 12) = R$ ${SALARIO_MINIMO} × (${meses}/12) = R$ ${valorAbono.toFixed(2)}`;
   const explicacion = `${motivo}. Valor do abono PIS/PASEP 2026: R$ ${valorAbono.toFixed(2)} (proporcional aos ${meses} meses trabalhados no ano-base). O pagamento é feito pela Caixa (PIS) ou Banco do Brasil (PASEP) conforme calendário anual.`;
 
+  const fmtBRL = (n: number) =>
+    'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const _insight = elegivelBool
+    ? {
+        title: 'Você tem direito ao abono',
+        text: `Pelos seus dados, você está **elegível** e recebe **${fmtBRL(valorAbono)}** — proporcional aos **${meses} de 12 meses** trabalhados no ano-base. Com 12 meses o valor cheio seria ${fmtBRL(SALARIO_MINIMO)}.`,
+        tone: 'good',
+        icon: '💰',
+      }
+    : {
+        title: 'Você não se enquadra (ainda)',
+        text: `Pelos dados informados você **não está elegível** ao abono: ${motivo.replace('Não elegível: ', '')}. Sem cumprir todos os requisitos, o valor a receber é **R$ 0,00**.`,
+        tone: 'warn',
+        icon: '⚠️',
+      };
+
   return {
     elegivel: motivo,
     valorAbono,
     fracaoAplicada: `${meses}/12`,
     formula,
     explicacion,
+    _insight,
   };
 }

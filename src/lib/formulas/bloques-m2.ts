@@ -8,6 +8,7 @@ export interface BloquesM2Outputs {
   cantidadBloques: number;
   morteroKg: number;
   detalle: string;
+  _insight?: any;
 }
 
 const TIPOS: Record<string, { nombre: string; cementoKgM2: number }> = {
@@ -38,5 +39,11 @@ export function bloquesM2(inputs: BloquesM2Inputs): BloquesM2Outputs {
     cantidadBloques: bloquesConDesp,
     morteroKg: mortero,
     detalle: `${fmt.format(superficie)} m² de pared con ${t.nombre} → ${fmt.format(bloquesConDesp)} bloques (incluye ${desperdicio}% desperdicio) + ${fmt.format(mortero)} kg de cemento para mortero.`,
+    _insight: {
+      title: 'Materiales para tu pared',
+      text: `Para **${fmt.format(superficie)} m²** con ${t.nombre} comprá **${fmt.format(bloquesConDesp)} bloques** (ya incluye **${desperdicio}%** de desperdicio) y **${fmt.format(mortero)} kg** de cemento para el mortero de asiento.`,
+      tone: 'neutral',
+      icon: '🧱',
+    },
   };
 }

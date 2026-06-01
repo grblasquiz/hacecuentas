@@ -17,6 +17,8 @@ export interface Outputs {
   costoAlimentacionAnual: number;
   costoSaludAnual: number;
   desglose: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -81,12 +83,43 @@ export function compute(i: Inputs): Outputs {
 
   const desglose = lineas.join(" | ");
 
+  // Insight: identificar el rubro que más pesa
+  const rubros: Array<[string, number]> = [
+    ["grooming", costoGroomingAnual],
+    ["alimentación", costoAlimentacionAnual],
+    ["salud", costoSaludAnual],
+    ["accesorios", costoAccesoriosAnual],
+  ];
+  const mayor = rubros.reduce((a, b) => (b[1] > a[1] ? b : a), rubros[0]);
+  const pctMayor = costoAnual > 0 ? (mayor[1] / costoAnual) * 100 : 0;
+  const _insight = {
+    title: "Cuánto cuesta tu Bichón al año",
+    text: `Mantener a tu Bichón Maltés cuesta unos **USD ${costoMensual.toFixed(0)}/mes** (**USD ${costoAnual.toFixed(0)}/año**). El rubro que más pesa es **${mayor[0]}** con el **${pctMayor.toFixed(0)}%** del total.`,
+    tone: "neutral",
+    icon: "🐶",
+  };
+  const _chart = {
+    type: "doughnut",
+    slices: [
+      { label: "Grooming", value: Number(costoGroomingAnual.toFixed(0)) },
+      { label: "Alimentación", value: Number(costoAlimentacionAnual.toFixed(0)) },
+      { label: "Salud", value: Number(costoSaludAnual.toFixed(0)) },
+      { label: "Accesorios", value: Number(costoAccesoriosAnual.toFixed(0)) },
+    ],
+    prefix: "USD ",
+    centerValue: `USD ${costoAnual.toFixed(0)}`,
+    centerLabel: "al año",
+    ariaLabel: `Costo anual del Bichón Maltés USD ${costoAnual.toFixed(0)}: grooming, alimentación, salud y accesorios.`,
+  };
+
   return {
     costoMensual,
     costoAnual,
     costoGroomingAnual,
     costoAlimentacionAnual,
     costoSaludAnual,
-    desglose
+    desglose,
+    _insight,
+    _chart
   };
 }

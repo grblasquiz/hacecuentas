@@ -20,6 +20,8 @@ export interface BcaaPreWorkoutGramosOutputs {
   leucina: string;
   utilidad: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function bcaaPreWorkoutGramos(inputs: BcaaPreWorkoutGramosInputs): BcaaPreWorkoutGramosOutputs {
@@ -47,10 +49,36 @@ export function bcaaPreWorkoutGramos(inputs: BcaaPreWorkoutGramosInputs): BcaaPr
   else if (pGkg < 1.2) util = 'Moderada — tu ingesta proteica está por debajo del óptimo';
   else util = 'Baja-moderada';
 
+  // Ratio 2:1:1 → leucina 50%, isoleucina 25%, valina 25% (suman la dosis)
+  const iso = Math.round(dosis * 0.25 * 10) / 10;
+  const val = Math.round((dosis - leu - iso) * 10) / 10;
+  const leuOk = leu >= 2.5;
+  const esBaja = util.startsWith('Baja');
+  const tone = esBaja ? 'warn' : 'good';
+  const insight = {
+    title: 'Tu dosis pre-entreno',
+    text: `**${dosis} g** de BCAA aportan **${leu} g de leucina**, ${leuOk ? 'por encima' : 'por debajo'} del umbral de **2.5-3 g** que activa la mTOR. ${esBaja ? 'Ojo: con tu ingesta proteica el extra de BCAA aporta poco — priorizá proteína completa.' : 'Buen momento para tomarlos: el contexto justifica la suplementación.'}`,
+    tone,
+    icon: '💪'
+  };
+  const chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Leucina', value: leu },
+      { label: 'Isoleucina', value: iso },
+      { label: 'Valina', value: val },
+    ],
+    suffix: ' g',
+    centerValue: `${dosis} g`,
+    centerLabel: 'BCAA total',
+    ariaLabel: `Reparto de ${dosis} g de BCAA en ratio 2:1:1: ${leu} g de leucina, ${iso} g de isoleucina y ${val} g de valina.`
+  };
   return {
     bcaaGramos: dosis,
     leucina: `${leu}g leucina (umbral mTOR 2.5-3g)`,
     utilidad: util,
     resumen: `${dosis}g BCAA pre-entreno para ${peso}kg corporal (${(dosisPorKg*1000).toFixed(0)}mg/kg, ratio 2:1:1). Utilidad: ${util}.`,
+    _insight: insight,
+    _chart: chart,
   };
 }

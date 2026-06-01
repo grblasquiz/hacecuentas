@@ -15,6 +15,7 @@ export interface Outputs {
   annualized_return: number;
   tax_term: string;
   breakeven_price: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -90,6 +91,20 @@ export function compute(i: Inputs): Outputs {
     tax_term = `Long-term (${holdingDays} days > 365) — 0%, 15%, or 20% preferential rates`;
   }
 
+  const isLong = holdingDays > 365;
+  const _insight = profit_loss >= 0
+    ? {
+        title: 'Operación en ganancia',
+        text: `Vendés con **+$${profit_loss.toFixed(2)}** de ganancia neta (**+${pct_return.toFixed(1)}%** sobre tu costo de $${cost_basis.toFixed(2)}), ya descontadas las comisiones. ${isLong ? 'Mantuviste más de 365 días, así que tributás a tasa **long-term** preferencial.' : 'Mantuviste 365 días o menos: la ganancia tributa como **ingreso ordinario** (short-term).'}`,
+        tone: 'good',
+        icon: '📈',
+      }
+    : {
+        title: 'Operación en pérdida',
+        text: `Vendés con **−$${Math.abs(profit_loss).toFixed(2)}** de pérdida neta (**${pct_return.toFixed(1)}%** sobre tu costo de $${cost_basis.toFixed(2)}). Para no perder, necesitás un precio de venta de al menos **$${breakeven_price.toFixed(2)}** por BTC (cubre el costo más las comisiones).`,
+        tone: 'warn',
+        icon: '📉',
+      };
   return {
     cost_basis,
     net_proceeds,
@@ -98,5 +113,6 @@ export function compute(i: Inputs): Outputs {
     annualized_return,
     tax_term,
     breakeven_price,
+    _insight,
   };
 }

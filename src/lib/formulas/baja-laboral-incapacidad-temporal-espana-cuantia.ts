@@ -17,6 +17,8 @@ export interface Outputs {
   diferencia_neta: number;
   porcentaje_sueldo_recuperado: number;
   desglose_texto: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -127,16 +129,43 @@ export function compute(i: Inputs): Outputs {
 
   const desglose_texto = desglose_lineas.join(' | ');
 
+  const pctRec = round2(porcentaje_sueldo_recuperado);
+  const netoR = round2(subsidio_neto_total);
+  const difR = round2(diferencia_neta);
+  const tone = pctRec >= 95 ? 'good' : pctRec >= 75 ? 'neutral' : 'warn';
+  const insightText = difR < 0
+    ? `Durante la baja cobrás unos **${formatEur(netoR)}** netos: recuperás el **${pctRec.toFixed(0)}%** de tu sueldo normal y perdés cerca de **${formatEur(Math.abs(difR))}** frente a trabajar esos días.`
+    : `Durante la baja cobrás unos **${formatEur(netoR)}** netos, el **${pctRec.toFixed(0)}%** de tu sueldo habitual: tu ingreso prácticamente no varía respecto a trabajar esos días.`;
+
   return {
     base_reguladora_diaria: round2(br_diaria),
     subsidio_bruto_total: round2(subsidio_bruto),
     retencion_irpf: round2(retencion_irpf),
     cotizacion_ss_trabajador: round2(cotizacion_ss_trabajador),
-    subsidio_neto_total: round2(subsidio_neto_total),
+    subsidio_neto_total: netoR,
     sueldo_neto_normal: round2(sueldo_neto_normal),
-    diferencia_neta: round2(diferencia_neta),
-    porcentaje_sueldo_recuperado: round2(porcentaje_sueldo_recuperado),
+    diferencia_neta: difR,
+    porcentaje_sueldo_recuperado: pctRec,
     desglose_texto,
+    _insight: {
+      title: 'Cuánto de tu sueldo recuperás',
+      text: insightText,
+      tone,
+      icon: '🏥',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Math.round(pctRec),
+      markerLabel: `${pctRec.toFixed(0)}% recuperado`,
+      min: 0,
+      segments: [
+        { nombre: 'Pérdida alta', max: 60, color: '#dc2626', colorDark: '#ef4444' },
+        { nombre: 'Pérdida moderada', max: 75, color: '#f97316', colorDark: '#fb923c' },
+        { nombre: 'Casi completo', max: 95, color: '#eab308', colorDark: '#facc15' },
+        { nombre: 'Sin pérdida', max: Math.max(110, Math.ceil(pctRec) + 5), color: '#16a34a', colorDark: '#22c55e' },
+      ],
+      ariaLabel: `Durante la baja recuperás el ${pctRec.toFixed(0)} por ciento de tu sueldo neto habitual`,
+    },
   };
 }
 

@@ -1,6 +1,6 @@
 /** Costo mensual de mantener un hijo */
 export interface Inputs { edadHijo: string; tipoEducacion: string; obraSocial?: string; actividadesExtra?: number; }
-export interface Outputs { costoMensualTotal: number; costoAnual: number; desglose: string; costoHasta18: number; _chart?: any; }
+export interface Outputs { costoMensualTotal: number; costoAnual: number; desglose: string; costoHasta18: number; _chart?: any; _insight?: any; }
 
 export function costoHijoMensual(i: Inputs): Outputs {
   const edad = i.edadHijo || 'primaria';
@@ -52,11 +52,32 @@ export function costoHijoMensual(i: Inputs): Outputs {
     ariaLabel: 'Composición del costo mensual de un hijo: alimentación, educación, salud, higiene, ropa, actividades y otros.',
   };
 
+  const partes = [
+    { label: 'la alimentación', value: alim },
+    { label: 'la educación', value: eduCost },
+    { label: 'la salud', value: saludMonto },
+    { label: 'la higiene', value: hig },
+    { label: 'la ropa', value: rop },
+    { label: 'las actividades', value: actCost },
+    { label: 'otros gastos', value: otros },
+  ];
+  const mayor = partes.reduce((a, b) => (b.value > a.value ? b : a), partes[0]);
+  const pctMayor = costoMensualTotal > 0 ? Math.round((mayor.value / costoMensualTotal) * 100) : 0;
+  const insight = {
+    title: 'Qué pesa más en el costo',
+    text: aniosRestantes > 0
+      ? `El rubro más caro es **${mayor.label}**, que se lleva el **${pctMayor}%** del gasto mensual. Proyectado hasta los 18 años, este chico suma **$${fmt.format(Math.round(costoHasta18))}** a valores de hoy.`
+      : `El rubro más caro es **${mayor.label}**, que se lleva el **${pctMayor}%** del gasto mensual de **$${fmt.format(Math.round(costoMensualTotal))}**.`,
+    tone: 'neutral' as const,
+    icon: '👶',
+  };
+
   return {
     costoMensualTotal: Math.round(costoMensualTotal),
     costoAnual: Math.round(costoAnual),
     desglose: `Alimentación $${fmt.format(alim)} + Educación $${fmt.format(eduCost)} + Salud $${fmt.format(saludMonto)} + Higiene $${fmt.format(hig)} + Ropa $${fmt.format(rop)} + Actividades $${fmt.format(actCost)} + Otros $${fmt.format(otros)}`,
     costoHasta18: Math.round(costoHasta18),
     _chart: chart,
+    _insight: insight,
   };
 }

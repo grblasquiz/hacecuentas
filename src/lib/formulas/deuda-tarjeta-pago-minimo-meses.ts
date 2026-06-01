@@ -16,6 +16,7 @@ export interface DeudaTarjetaPagoMinimoMesesOutputs {
   multiplicador: string;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function deudaTarjetaPagoMinimoMeses(
@@ -87,12 +88,20 @@ export function deudaTarjetaPagoMinimoMeses(
     centerLabel: 'Total pagado',
     ariaLabel: 'Composición del total pagado: saldo original de la tarjeta más intereses',
   };
+  const pctIntereses = totalPagado > 0 ? Math.round((interesesTotales / totalPagado) * 100) : 0;
   const anios = Math.floor(meses / 12);
   const mesesRestantes = meses % 12;
   const tiempoStr =
     anios > 0
       ? `${anios} año${anios > 1 ? 's' : ''} y ${mesesRestantes} mes${mesesRestantes !== 1 ? 'es' : ''}`
       : `${meses} mes${meses > 1 ? 'es' : ''}`;
+
+  const insight = {
+    title: 'Lo que cuesta pagar el mínimo',
+    text: `Pagando solo el mínimo tardás **${tiempoStr}** y terminás pagando **${mult.toFixed(1)}x** el saldo original: los intereses son el **${pctIntereses}%** del total (**$${Math.round(interesesTotales).toLocaleString('es-AR')}**). Subir la cuota acorta drásticamente el plazo.`,
+    tone: 'warn' as const,
+    icon: '💳',
+  };
 
   return {
     mesesParaCancelar: meses,
@@ -101,5 +110,6 @@ export function deudaTarjetaPagoMinimoMeses(
     multiplicador: `${mult.toFixed(1)}x el monto original`,
     detalle: `Pagando el mínimo del ${pagoMinPct}%, tardás ${tiempoStr} en cancelar la deuda. Pagás $${Math.round(totalPagado).toLocaleString('es-AR')} en total (${mult.toFixed(1)} veces los $${saldo.toLocaleString('es-AR')} originales).`,
     _chart: chart,
+    _insight: insight,
   };
 }

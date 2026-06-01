@@ -9,6 +9,8 @@ export interface Outputs {
   rango_smmlv: string;
   aporte_anual: number;
   aplica_fsp: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -58,11 +60,43 @@ export function compute(i: Inputs): Outputs {
   const aporteMensual = salario * tarifaAplicada;
   const aporteAnual = aporteMensual * 12;
   
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const _insight = aplicaFsp
+    ? {
+        title: 'Pagás Fondo de Solidaridad',
+        text: `Con un salario de **${(Math.round(rangoSmmlv * 100) / 100).toLocaleString('es-CO')} SMMLV** te aplica la tarifa del **${(tarifaAplicada * 100).toLocaleString('es-CO')}%**: **${fmtCOP(aporteMensual)}** al mes (**${fmtCOP(aporteAnual)}** al año) que se suman a tu cotización a pensión.`,
+        tone: 'warn' as const,
+        icon: '🤝',
+      }
+    : {
+        title: 'Estás exento del FSP',
+        text: `Tu salario equivale a **${(Math.round(rangoSmmlv * 100) / 100).toLocaleString('es-CO')} SMMLV**, por debajo del umbral de **4 SMMLV**. No pagás el Fondo de Solidaridad Pensional: **$0** de aporte extra.`,
+        tone: 'good' as const,
+        icon: '🤝',
+      };
+
+  const _chart = {
+    type: 'scale',
+    marker: Math.round(rangoSmmlv * 100) / 100,
+    markerLabel: `${(Math.round(rangoSmmlv * 100) / 100).toLocaleString('es-CO')} SMMLV`,
+    min: 0,
+    segments: [
+      { nombre: 'Exento', max: 4, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: '1%', max: 16, color: '#84cc16', colorDark: '#a3e635' },
+      { nombre: '1,2%', max: 17, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: '1,4%', max: 18, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: '1,5%', max: Math.max(22, Math.ceil(rangoSmmlv) + 1), color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Salario de ${(Math.round(rangoSmmlv * 100) / 100).toLocaleString('es-CO')} SMMLV ubicado en el tramo de tarifa del FSP`,
+  };
+
   return {
     aporte_fsp_mensual: Math.round(aporteMensual * 100) / 100,
     tarifa_aplicada: tarifaAplicada * 100, // En porcentaje para display
     rango_smmlv: rangoDescripcion,
     aporte_anual: Math.round(aporteAnual * 100) / 100,
-    aplica_fsp: aplicaFsp ? "Sí, aplica FSP" : "No aplica FSP (salario < 4 SMMLV)"
+    aplica_fsp: aplicaFsp ? "Sí, aplica FSP" : "No aplica FSP (salario < 4 SMMLV)",
+    _insight,
+    _chart
   };
 }

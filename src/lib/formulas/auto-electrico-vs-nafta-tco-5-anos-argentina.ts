@@ -21,6 +21,8 @@ export interface Outputs {
   costoKmElectricoUSD: number;
   costoKmNaftaUSD: number;
   resumenTexto: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Precios de lista en USD (referencia ACARA / importadores, abril 2026)
@@ -245,6 +247,51 @@ export function compute(i: Inputs): Outputs {
     resumen = "Ambas opciones tienen un TCO idéntico a 5 años.";
   }
 
+  // --- Insight narrativo ---
+  const fmtUSD = (n: number) => "USD " + Math.round(n).toLocaleString("es-AR");
+  let insightTone: "good" | "warn" | "neutral";
+  let insightText: string;
+  if (diferenciaUSD > 0) {
+    insightTone = "good";
+    const beTxt =
+      breakevenAnios <= 0
+        ? "y conviene desde el primer año"
+        : breakevenAnios <= ANOS
+          ? `y se amortiza la diferencia en **${breakevenAnios.toFixed(1)} años**`
+          : `aunque el punto de equilibrio recién llega después de los ${ANOS} años`;
+    insightText = `A ${ANOS} años el **eléctrico** sale **${fmtUSD(difAbs)}** más barato en costo total de propiedad (${fmtUSD(tcoElectricoUSD)} vs ${fmtUSD(tcoNaftaUSD)}) ${beTxt}. Ahorrás **${fmtUSD(ahorroCombustibleUSD)}** solo en energía sobre ${kmTotales.toLocaleString("es-AR")} km.`;
+  } else if (diferenciaUSD < 0) {
+    insightTone = "warn";
+    insightText = `A ${ANOS} años el **de nafta** queda **${fmtUSD(difAbs)}** más barato en costo total (${fmtUSD(tcoNaftaUSD)} vs ${fmtUSD(tcoElectricoUSD)}): en este escenario el eléctrico **no recupera** el sobreprecio de compra.`;
+  } else {
+    insightTone = "neutral";
+    insightText = `Ambas opciones empatan: el costo total a ${ANOS} años es prácticamente idéntico (${fmtUSD(tcoElectricoUSD)}).`;
+  }
+  const _insight = {
+    title: "Eléctrico vs nafta a 5 años",
+    text: insightText,
+    tone: insightTone,
+    icon: "🔌",
+  };
+
+  // --- Donut: composición del TCO del eléctrico (las partes suman el total) ---
+  const slicesElec = [
+    { label: "Depreciación", value: Math.round(depreciacionElec) },
+    { label: "Energía", value: Math.round(costoElecUSD) },
+    { label: "Mantenimiento", value: Math.round(mantElecUSD) },
+    { label: "Patente", value: Math.round(patenteElecUSD) },
+    { label: "Seguro", value: Math.round(seguroElecUSD) },
+    { label: "Interés financiación", value: Math.round(interesElecUSD) },
+  ].filter((s) => s.value > 0);
+  const _chart = {
+    type: "doughnut",
+    slices: slicesElec,
+    prefix: "USD ",
+    centerValue: fmtUSD(tcoElectricoUSD),
+    centerLabel: "TCO eléctrico 5 años",
+    ariaLabel: `Composición del costo total del auto eléctrico a ${ANOS} años: depreciación, energía, mantenimiento, patente y seguro`,
+  };
+
   return {
     tcoElectricoUSD: Math.round(tcoElectricoUSD * 100) / 100,
     tcoNaftaUSD: Math.round(tcoNaftaUSD * 100) / 100,
@@ -254,5 +301,7 @@ export function compute(i: Inputs): Outputs {
     costoKmElectricoUSD: Math.round(costoKmElectricoUSD * 10000) / 10000,
     costoKmNaftaUSD: Math.round(costoKmNaftaUSD * 10000) / 10000,
     resumenTexto: resumen,
+    _insight,
+    _chart,
   };
 }

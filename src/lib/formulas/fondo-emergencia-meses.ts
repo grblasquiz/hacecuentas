@@ -25,6 +25,7 @@ export interface Outputs {
   explicacion: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function fondoEmergenciaMeses(i: Inputs): Outputs {
@@ -92,6 +93,28 @@ export function fondoEmergenciaMeses(i: Inputs): Outputs {
     : `Fondo completo: $${Math.round(fondoActual).toLocaleString()} cubre ${mesesCubiertos.toFixed(1)} meses (meta ${mesesObj}).`;
 
   const yaAhorrado = Math.min(fondoActual, fondoIdeal);
+  const pctCubierto = fondoIdeal > 0 ? Math.round((yaAhorrado / fondoIdeal) * 100) : 0;
+
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (faltante <= 0) {
+    insightTone = 'good';
+    insightText = `Tu fondo ya cubre **${mesesCubiertos.toFixed(1)} meses** de gastos, completando la meta de ${mesesObj}. Pasá el excedente a instrumentos que rindan e invertí: el colchón ya está armado.`;
+  } else if (mesesCubiertos < 3) {
+    insightTone = 'warn';
+    insightText = `Cubrís solo **${mesesCubiertos.toFixed(1)} meses** (${pctCubierto}% de la meta de ${mesesObj}): zona frágil ante un imprevisto. Apuntá primero a 3 meses sumando $${Math.round(aporteEfectivo).toLocaleString()}/mes.`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `Llevás **${pctCubierto}%** del fondo (${mesesCubiertos.toFixed(1)} de ${mesesObj} meses). Te faltan $${Math.round(faltante).toLocaleString()}: con $${Math.round(aporteEfectivo).toLocaleString()}/mes lo completás en ${mesesParaCompletarlo} meses.`;
+  }
+
+  const insight = {
+    title: 'Qué dice tu colchón',
+    text: insightText,
+    tone: insightTone,
+    icon: '\u{1F6E1}\u{FE0F}',
+  };
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -108,6 +131,7 @@ export function fondoEmergenciaMeses(i: Inputs): Outputs {
     fondoIdeal: Math.round(fondoIdeal),
     fondoObjetivo: Math.round(fondoIdeal),
     _chart: chart,
+    _insight: insight,
     mesesCubiertos: Number(mesesCubiertos.toFixed(1)),
     faltante: Math.round(faltante),
     faltaAhorrar: Math.round(faltante),

@@ -19,6 +19,7 @@ export interface Outputs {
   status: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
 }
 
 const fmtBRL = (n: number) =>
@@ -57,6 +58,21 @@ export function aposentadoriaInssIdadeProgressiva(i: Inputs): Outputs {
   const formula = `Idade mín ${ano} = ${base2019} + ${anosDesde2019} × 0,5 = ${idadeMin.toFixed(1)} anos (máx ${tetoIdade})`;
   const explicacao = `Regra de transição por idade progressiva (EC 103/2019): em 2019 a idade mínima era ${base2019} (${sexo}), sobe 6 meses/ano até chegar a ${tetoIdade} anos. Em ${ano}: ${idadeMin.toFixed(1)} anos necessários. Contribuição mínima ${tempoMin} anos. Benefício: ${percentual.toFixed(0)}% da média (${fmtBRL(mediaAplicada)}) = ${fmtBRL(valor)}.`;
 
+  const apto = faltaIdade === 0 && faltaContrib === 0;
+  const _insight = apto
+    ? {
+        title: 'Você se encaixa na regra de idade progressiva',
+        text: `Em **${ano}** a idade mínima é **${idadeMin.toFixed(1)} anos** e você cumpre, com **${contrib} anos** de contribuição (mín. ${tempoMin}). Benefício estimado: **${fmtBRL(valor)}/mês** (**${percentual.toFixed(0)}%** da média de ${fmtBRL(mediaAplicada)}).`,
+        tone: 'good',
+        icon: '📈',
+      }
+    : {
+        title: 'Ainda falta para a idade progressiva',
+        text: `Em **${ano}** a regra exige **${idadeMin.toFixed(1)} anos** de idade e **${tempoMin} anos** de contribuição. Faltam **${faltaIdade.toFixed(1)} ano(s) de idade** e **${faltaContrib} ano(s) de contribuição**. A idade mínima sobe 6 meses por ano até o teto de ${tetoIdade}.`,
+        tone: 'warn',
+        icon: '⏳',
+      };
+
   return {
     idadeMinimaAno: `${idadeMin.toFixed(1)} anos (em ${ano})`,
     tempoContribMinimo: `${tempoMin} anos`,
@@ -65,5 +81,6 @@ export function aposentadoriaInssIdadeProgressiva(i: Inputs): Outputs {
     status,
     formula,
     explicacao,
+    _insight,
   };
 }

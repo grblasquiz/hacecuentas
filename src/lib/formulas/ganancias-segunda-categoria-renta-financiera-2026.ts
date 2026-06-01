@@ -1,6 +1,6 @@
 /** Impuesto cedular renta financiera 2026 (intereses, dividendos, bonos) */
 export interface Inputs { interesesPlazoFijoArs: number; interesesBonosUsd: number; dividendosArs: number; gananciaCompraventaCedearsUsd: number; tipoCambioCierre: number; minimoNoImponible: number; }
-export interface Outputs { impuestoIntereses: number; impuestoDividendos: number; impuestoBonosUsd: number; impuestoCedears: number; impuestoTotal: number; baseImponibleTotal: number; explicacion: string; _chart?: any; }
+export interface Outputs { impuestoIntereses: number; impuestoDividendos: number; impuestoBonosUsd: number; impuestoCedears: number; impuestoTotal: number; baseImponibleTotal: number; explicacion: string; _chart?: any; _insight?: any; }
 export function gananciasSegundaCategoriaRentaFinanciera2026(i: Inputs): Outputs {
   const intArs = Number(i.interesesPlazoFijoArs);
   const intUsd = Number(i.interesesBonosUsd);

@@ -1,6 +1,6 @@
 /** Costo total mascota toda su vida */
 export interface Inputs { tipoMascota: string; nivelGasto: string; }
-export interface Outputs { costoTotal: number; costoAnual: number; costoMensual: number; esperanzaVida: string; mensaje: string; _chart?: any; }
+export interface Outputs { costoTotal: number; costoAnual: number; costoMensual: number; esperanzaVida: string; mensaje: string; _chart?: any; _insight?: any; }
 
 export function costoMascotaVidaUtil(i: Inputs): Outputs {
   const tipo = String(i.tipoMascota || 'perro_mediano');
@@ -37,10 +37,20 @@ export function costoMascotaVidaUtil(i: Inputs): Outputs {
     ariaLabel: 'Composición del costo anual de la mascota por rubro',
   };
 
+  const pctAlimento = Math.round((d.alimentoMes * 12 * f) / costoAnual * 100);
+
+  const insight = {
+    title: 'Lo que implica adoptar',
+    text: `Un ${d.nombre.toLowerCase()} es un compromiso de **${d.anos} años** y **$${costoTotal.toLocaleString()}** en total, equivalente a **$${costoMensual.toLocaleString()}/mes** parejos. El **alimento** se lleva el **${pctAlimento}%**: comprar bolsas grandes o por mayor es el ahorro más fácil.`,
+    tone: 'warn' as const,
+    icon: '🐾',
+  };
+
   return {
     costoTotal, costoAnual, costoMensual,
     esperanzaVida: `${d.anos} años (promedio para ${d.nombre.toLowerCase()})`,
-    mensaje: `${d.nombre}: $${costoTotal.toLocaleString()} en ${d.anos} años. $${costoAnual.toLocaleString()}/año ($${costoMensual.toLocaleString()}/mes). Alimento: ~${Math.round(d.alimentoMes * 12 * f / costoAnual * 100)}% del total.`,
-    _chart: chart
+    mensaje: `${d.nombre}: $${costoTotal.toLocaleString()} en ${d.anos} años. $${costoAnual.toLocaleString()}/año ($${costoMensual.toLocaleString()}/mes). Alimento: ~${pctAlimento}% del total.`,
+    _chart: chart,
+    _insight: insight
   };
 }

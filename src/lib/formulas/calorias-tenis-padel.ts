@@ -12,6 +12,7 @@ export interface Outputs {
   deporteMostrado: string;
   equivalenteAlimento: string;
   resumen: string;
+  _insight?: any;
 }
 
 const MET: Record<string, { met: number; nombre: string }> = {
@@ -55,6 +56,14 @@ export function caloriasTenisPadel(i: Inputs): Outputs {
     equivalenteAlimento = `${totalRounded} kcal equivalen a 1 hamburguesa completa con papas (~900 kcal) o 1 pizza de muzzarella personal.`;
   }
 
+  const intensidad = info.met >= 8 ? 'vigorosa' : info.met >= 6 ? 'moderada-alta' : 'moderada';
+  const _insight = {
+    title: 'Lo que dice tu partido',
+    text: `Con un MET de **${info.met}** (intensidad ${intensidad}), quemás **${kcalMin.toFixed(1)} kcal por minuto**: ${min} min te dejan en **${totalRounded} kcal**. Una hora de juego sumaría unas **${Math.round(kcalMin * 60)} kcal**.`,
+    tone: 'good',
+    icon: '🎾',
+  };
+
   return {
     caloriasTotal: totalRounded,
     caloriasPorMinuto: Number(kcalMin.toFixed(2)),
@@ -62,5 +71,6 @@ export function caloriasTenisPadel(i: Inputs): Outputs {
     deporteMostrado: info.nombre,
     equivalenteAlimento,
     resumen: `Jugando **${info.nombre}** durante ${min} minutos quemás **${totalRounded} kcal** (${kcalMin.toFixed(1)} kcal/min, MET ${info.met}).`,
+    _insight,
   };
 }

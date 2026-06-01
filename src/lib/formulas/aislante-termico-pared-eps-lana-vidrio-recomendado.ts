@@ -11,6 +11,7 @@ export interface Outputs {
   costo_m2: number;
   costo_total: number;
   resumen: string;
+  _insight?: any;
 }
 
 // Resistencia térmica mínima requerida [m²·K/W] según IRAM 11605 (paredes)
@@ -110,11 +111,28 @@ export function compute(i: Inputs): Outputs {
     resumen += `Ingresá la superficie para obtener el costo total.`;
   }
 
+  const costoM2Fmt = costo_m2.toLocaleString("es-AR", { maximumFractionDigits: 0 });
+  const costoTotalFmt = costo_total.toLocaleString("es-AR", { maximumFractionDigits: 0 });
+  const insight = superficie > 0
+    ? {
+        title: "Tu aislación recomendada",
+        text: `**${espesor_cm.toFixed(1)} cm de ${nombreMaterial}** cumplen la zona ${zona} (R ${r_valor} ≥ ${r_requerido} exigido). Para ${superficie} m² son **ARS ${costoTotalFmt}** en material (ARS ${costoM2Fmt}/m²), sin mano de obra.`,
+        tone: "good",
+        icon: "🧱",
+      }
+    : {
+        title: "Tu aislación recomendada",
+        text: `Con **${espesor_cm.toFixed(1)} cm de ${nombreMaterial}** alcanzás R ${r_valor} m²·K/W y cumplís la zona ${zona} (exige ${r_requerido}). Cargá la superficie para ver el costo total — el material sale **ARS ${costoM2Fmt}/m²**.`,
+        tone: "neutral",
+        icon: "🧱",
+      };
+
   return {
     espesor_cm: parseFloat(espesor_cm.toFixed(1)),
     r_valor,
     costo_m2: parseFloat(costo_m2.toFixed(0)),
     costo_total: parseFloat(costo_total.toFixed(0)),
     resumen,
+    _insight: insight,
   };
 }

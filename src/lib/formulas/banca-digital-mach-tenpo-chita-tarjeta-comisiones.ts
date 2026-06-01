@@ -19,6 +19,8 @@ export interface Outputs {
   ahorro_vs_mejor: number;
   puntuacion_general: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface BancoConfig {
@@ -234,13 +236,63 @@ export function compute(inputs: Inputs): Outputs {
     recomendacion = `**Perfil usuario promedio**: ${mejor.nombre} es tu banco digital más barato. Sin transferencias frecuentes ni retiros, el costo es marginal para los cinco.`;
   }
   
+  const puntuacionRedondeada = Math.round(banco_actual.puntuacion);
+  const ahorroPosible = Math.max(0, ahorro_vs_mejor);
+  const esElMejor = banco_actual.slug === mejor.slug;
+  const costoNetoFmt = banco_actual.costo_neto.toLocaleString('es-CL', { maximumFractionDigits: 0 });
+  const ahorroFmt = ahorroPosible.toLocaleString('es-CL', { maximumFractionDigits: 0 });
+
+  // Insight dinámico: posición vs el mejor + lectura del costo neto
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (esElMejor) {
+    insightTone = 'good';
+    insightText =
+      `**${banco_actual.nombre}** es tu opción más barata para este perfil: costo neto anual de **$${costoNetoFmt}** ` +
+      `${banco_actual.costo_neto < 0 ? '(en realidad te queda a favor por beneficios)' : ''}. Ningún otro banco digital te deja mejor parado.`;
+  } else if (ahorroPosible > 0) {
+    insightTone = 'warn';
+    insightText =
+      `Con **${banco_actual.nombre}** pagás **$${costoNetoFmt}** netos al año. Cambiando a **${mejor.nombre}** te ahorrarías **$${ahorroFmt}** anuales — ` +
+      `vale la pena comparar antes de quedarte donde estás.`;
+  } else {
+    insightTone = 'neutral';
+    insightText =
+      `**${banco_actual.nombre}** queda con un costo neto anual de **$${costoNetoFmt}** y una puntuación de **${puntuacionRedondeada}/100** para tu uso. ` +
+      `La diferencia con el resto es marginal en este perfil.`;
+  }
+
+  const _insight = {
+    title: 'Tu banco vs el más conveniente',
+    text: insightText,
+    tone: insightTone,
+    icon: '🏦',
+  };
+
+  // Gauge: puntuación 0-100 en zonas de conveniencia
+  const _chart = {
+    type: 'scale',
+    marker: puntuacionRedondeada,
+    markerLabel: `${banco_actual.nombre}: ${puntuacionRedondeada}`,
+    min: 0,
+    segments: [
+      { nombre: 'Poco conveniente', max: 40, color: '#ef4444', colorDark: '#b91c1c' },
+      { nombre: 'Aceptable', max: 65, color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Bueno', max: 85, color: '#84cc16', colorDark: '#4d7c0f' },
+      { nombre: 'Excelente', max: 100, color: '#22c55e', colorDark: '#15803d' },
+    ],
+    ariaLabel: `Puntuación de conveniencia de ${banco_actual.nombre}: ${puntuacionRedondeada} sobre 100.`,
+  };
+
   return {
     comisiones_anuales: banco_actual.comisiones,
     beneficios_anuales: banco_actual.beneficios,
     costo_neto_anual: banco_actual.costo_neto,
     ranking_bancos: ranking_texto,
-    ahorro_vs_mejor: Math.max(0, ahorro_vs_mejor),
-    puntuacion_general: Math.round(banco_actual.puntuacion),
-    recomendacion
+    ahorro_vs_mejor: ahorroPosible,
+    puntuacion_general: puntuacionRedondeada,
+    recomendacion,
+    _insight,
+    _chart
   };
 }

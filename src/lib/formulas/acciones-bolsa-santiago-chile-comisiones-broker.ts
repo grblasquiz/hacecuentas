@@ -19,6 +19,8 @@ export interface Outputs {
   costo_total_operacion: number;
   rentabilidad_neta_pct: number;
   comparacion_brokers: Array<{broker: string; comision_compra: number; comision_venta: number; total_operacion: number}>;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -98,6 +100,60 @@ export function compute(i: Inputs): Outputs {
     };
   });
 
+  const costoR = Math.round(costo_total_operacion * 100) / 100;
+  const rentNetaR = Math.round(rentabilidad_neta_pct * 100) / 100;
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+
+  // Broker más barato según la comparación (mismo monto/horizonte).
+  const masBarato = comparacion_brokers.reduce((a, b) => (b.total_operacion < a.total_operacion ? b : a));
+  const ahorroVsBarato = Math.round((costoR - masBarato.total_operacion) * 100) / 100;
+  const costoPctMonto = i.monto_compra > 0 ? (costoR / i.monto_compra) * 100 : 0;
+
+  // Tono dinámico: pérdida o costos que se comen buena parte de la ganancia bruta.
+  const gananciaBruta = valor_con_rentabilidad - i.monto_compra;
+  let tone: 'good' | 'warn' | 'neutral' = 'neutral';
+  if (rentNetaR < 0) tone = 'warn';
+  else if (gananciaBruta > 0 && costoR / gananciaBruta > 0.4) tone = 'warn';
+  else if (rentNetaR > 0) tone = 'good';
+
+  let cierre: string;
+  if (rentNetaR < 0) {
+    cierre = `Con esa rentabilidad esperada terminás en rojo: **${rentNetaR}%** neto después de costos e impuesto.`;
+  } else {
+    cierre = `Tu rentabilidad neta real queda en **${rentNetaR}%** después de costos.`;
+  }
+  const tipBroker = ahorroVsBarato > 1
+    ? ` Con ${masBarato.broker} ahorrarías ~**${fmt(ahorroVsBarato)}** en costos.`
+    : '';
+
+  const _insight = {
+    title: 'Lo que te cuesta operar',
+    text: `Entre comisiones, derecho de bolsa, custodia e IGC pagás **${fmt(costoR)}** (≈**${costoPctMonto.toFixed(2)}%** del monto). ${cierre}${tipBroker}`,
+    tone,
+    icon: '📉',
+  };
+
+  // Donut: el costo total se descompone en sus componentes (suman costo_total_operacion).
+  const slicesRaw = [
+    { label: 'Comisión compra', value: comision_compra },
+    { label: 'Comisión venta', value: comision_venta },
+    { label: 'IGC (impuesto)', value: igc_impuesto },
+    { label: 'Custodia', value: custodia_proporcional },
+    { label: 'Derecho de bolsa', value: derecho_bolsa_compra + derecho_bolsa_venta },
+  ];
+  const slices = slicesRaw
+    .filter(s => s.value > 0)
+    .map(s => ({ label: s.label, value: Math.round(s.value * 100) / 100 }));
+
+  const _chart = slices.length > 1 ? {
+    type: 'doughnut',
+    slices,
+    prefix: '$',
+    centerValue: fmt(costoR),
+    centerLabel: 'Costo total',
+    ariaLabel: `Desglose del costo total de operación de ${fmt(costoR)}: comisiones, custodia, derecho de bolsa e impuesto IGC`,
+  } : undefined;
+
   return {
     comision_compra: Math.round(comision_compra * 100) / 100,
     derecho_bolsa_compra: Math.round(derecho_bolsa_compra * 100) / 100,
@@ -108,8 +164,10 @@ export function compute(i: Inputs): Outputs {
     derecho_bolsa_venta: Math.round(derecho_bolsa_venta * 100) / 100,
     igc_impuesto: Math.round(igc_impuesto * 100) / 100,
     total_venta: Math.round(total_venta * 100) / 100,
-    costo_total_operacion: Math.round(costo_total_operacion * 100) / 100,
-    rentabilidad_neta_pct: Math.round(rentabilidad_neta_pct * 100) / 100,
-    comparacion_brokers
+    costo_total_operacion: costoR,
+    rentabilidad_neta_pct: rentNetaR,
+    comparacion_brokers,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

@@ -1,6 +1,6 @@
 /** Volume at fermenter */
 export interface Inputs { volumenPostHervor: number; gramosLupuloTotal?: number; trubKettleL?: number; deadSpaceFermentador?: number; }
-export interface Outputs { volumenFermentador: number; hopAbsorption: number; volumenEmbotellado: number; perdidaTotal: number; _chart?: any; }
+export interface Outputs { volumenFermentador: number; hopAbsorption: number; volumenEmbotellado: number; perdidaTotal: number; _chart?: any; _insight?: any; }
 
 export function finalVolumeCervezaFermentador(i: Inputs): Outputs {
   const vPost = Number(i.volumenPostHervor);
@@ -27,11 +27,22 @@ export function finalVolumeCervezaFermentador(i: Inputs): Outputs {
     ariaLabel: 'Composición del volumen post-hervor: litros embotellados vs pérdidas (lúpulo, trub, borra)',
   };
 
+  const rendimientoPct = vPost > 0 ? (vBottle / vPost) * 100 : 0;
+  const perdidaPct = 100 - rendimientoPct;
+  const insightTone = rendimientoPct >= 80 ? 'good' : (rendimientoPct >= 65 ? 'neutral' : 'warn');
+  const insight = {
+    title: `Rendimiento: ${rendimientoPct.toFixed(0)}% al envasado`,
+    text: `De los **${vPost.toLocaleString('es-AR')} L** post-hervor terminás embotellando **${vBottle.toFixed(1)} L** (${rendimientoPct.toFixed(0)}%); se van **${perdida.toFixed(1)} L** (${perdidaPct.toFixed(0)}%) entre lúpulo, trub y borra.${rendimientoPct < 65 ? ' Si querés más litros, bajá el trub/dead space o ajustá el volumen de hervido.' : ''}`,
+    tone: insightTone,
+    icon: '🍺',
+  };
+
   return {
     volumenFermentador: Number(vFerm.toFixed(2)),
     hopAbsorption: Number(hopAbs.toFixed(2)),
     volumenEmbotellado: Number(vBottle.toFixed(2)),
     perdidaTotal: Number(perdida.toFixed(2)),
     _chart: chart,
+    _insight: insight,
   };
 }

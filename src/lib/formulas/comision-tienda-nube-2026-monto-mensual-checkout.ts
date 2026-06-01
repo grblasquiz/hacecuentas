@@ -13,6 +13,7 @@ export interface Outputs {
   cost_percentage: number;
   net_revenue: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -57,6 +58,21 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición del costo mensual de Tienda Nube: abono del plan, comisión de la plataforma y procesamiento de pagos.',
   };
 
+  // Insight: peso del costo total sobre las ventas e identificación del componente dominante.
+  const fmtTN = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const componentes = [
+    { label: 'el abono del plan', value: planCost },
+    { label: 'la comisión de Tienda Nube', value: tnCommission },
+    { label: 'el procesamiento de Mercado Pago', value: paymentProcessingFee },
+  ];
+  const mayor = componentes.reduce((a, b) => (b.value > a.value ? b : a));
+  const insight = {
+    title: 'Cuánto te come Tienda Nube',
+    text: `Entre plan, comisión y Mercado Pago, los costos se llevan el **${costPercentage.toFixed(1)}%** de tus ventas: de **${fmtTN(monthlySales)}** te quedan **${fmtTN(netRevenue)}** netos. El componente más pesado es **${mayor.label}** con **${fmtTN(mayor.value)}**.`,
+    tone: (costPercentage >= 9 ? 'warn' : costPercentage > 0 ? 'neutral' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '🛒',
+  };
+
   return {
     plan_cost: Math.round(planCost * 100) / 100,
     num_transactions: numTransactions,
@@ -65,6 +81,7 @@ export function compute(i: Inputs): Outputs {
     total_monthly_cost: Math.round(totalMonthlyCost * 100) / 100,
     cost_percentage: Math.round(costPercentage * 100) / 100,
     net_revenue: Math.round(netRevenue * 100) / 100,
-    _chart: chart
+    _chart: chart,
+    _insight: insight
   };
 }

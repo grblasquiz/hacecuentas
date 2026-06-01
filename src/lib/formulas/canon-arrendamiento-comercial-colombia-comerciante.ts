@@ -15,6 +15,8 @@ export interface Outputs {
   porcentaje_ingresos: number;
   valor_m2_mensual: number;
   duracion_contrato_minima: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tabla de valores m² mensual por departamento y zona (COP 2026)
@@ -281,6 +283,47 @@ export function compute(i: Inputs): Outputs {
   // Duración mínima contrato comercial: 1 año obligatorio - Ley 820/2003 Art. 10
   const duracionMinimaAnos = 1;
 
+  const fmtCOP = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+  const pct = Math.round(porcentajeIngresos * 100) / 100;
+  const canonRedondeado = Math.round(canonMensual);
+
+  // Insight dinámico según carga del canon sobre los ingresos
+  let insightTone: string;
+  let insightText: string;
+  if (pct <= 6) {
+    insightTone = 'good';
+    insightText = `Un canon de **$${fmtCOP.format(canonRedondeado)}/mes** representa el **${pct}%** de tus ingresos anuales: margen cómodo, por debajo del 8% que el mercado considera saludable para un local comercial.`;
+  } else if (pct <= 10) {
+    insightTone = 'neutral';
+    insightText = `El canon de **$${fmtCOP.format(canonRedondeado)}/mes** se lleva el **${pct}%** de tus ingresos anuales: dentro de lo razonable, pero vigilá que las ventas acompañen el costo fijo del local.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `Cuidado: el canon de **$${fmtCOP.format(canonRedondeado)}/mes** equivale al **${pct}%** de tus ingresos anuales, muy por encima del 8% recomendado. A ese nivel el alquiler comprime el margen y conviene negociar o buscar un local más chico.`;
+  }
+
+  const _insight = {
+    title: 'Tu canon vs. los ingresos del negocio',
+    text: insightText,
+    tone: insightTone,
+    icon: '🏪',
+  };
+
+  // Gauge: porcentaje del canon sobre los ingresos, con zonas de viabilidad
+  const markerPct = Math.max(0, Math.min(pct, 25));
+  const _chart = {
+    type: 'scale',
+    marker: markerPct,
+    markerLabel: `${pct}% de ingresos`,
+    min: 0,
+    segments: [
+      { nombre: 'Cómodo', max: 6, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Razonable', max: 10, color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Exigente', max: 15, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Riesgoso', max: 25, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `El canon representa el ${pct}% de los ingresos anuales del negocio`,
+  };
+
   return {
     canon_mensual_estimado: Math.round(canonMensual),
     canon_anual: Math.round(canonAnual),
@@ -288,6 +331,8 @@ export function compute(i: Inputs): Outputs {
     canon_ano_2_reajustado: Math.round(canonAno2Reajustado),
     porcentaje_ingresos: Math.round(porcentajeIngresos * 100) / 100,
     valor_m2_mensual: Math.round(valorM2Mensual),
-    duracion_contrato_minima: duracionMinimaAnos
+    duracion_contrato_minima: duracionMinimaAnos,
+    _insight,
+    _chart
   };
 }

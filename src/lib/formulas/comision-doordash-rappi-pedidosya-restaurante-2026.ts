@@ -17,6 +17,7 @@ export interface Outputs {
   ticket_minimo_rentable: number;
   breakeven_pedidos: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -91,6 +92,31 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición de las ventas mensuales: lo que recibe el restaurante y la comisión de la plataforma de delivery.',
   };
 
+  const comision_pct_display = comision_pct * 100;
+  let insight: any;
+  if (margen_neto_restaurante <= 0) {
+    insight = {
+      title: 'Perdés en cada pedido',
+      text: `La plataforma se queda con **${comision_pct_display.toFixed(0)}%** del ticket y eso supera tu margen bruto: cada pedido te deja **$${margen_neto_restaurante.toFixed(2)}**. Subí precios en el menú de delivery o renegociá la comisión.`,
+      tone: 'warn',
+      icon: '📉',
+    };
+  } else if (margen_neto_porcentaje < 10) {
+    insight = {
+      title: 'Margen al límite',
+      text: `Tras la comisión del **${comision_pct_display.toFixed(0)}%**, te queda solo **${margen_neto_porcentaje.toFixed(1)}%** neto por pedido (**$${margen_neto_restaurante.toFixed(2)}**). Necesitás **${breakeven_pedidos}** pedidos/mes solo para cubrir la publicidad.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    insight = {
+      title: 'Delivery rentable',
+      text: `Aún con la comisión del **${comision_pct_display.toFixed(0)}%**, te queda **${margen_neto_porcentaje.toFixed(1)}%** neto por pedido (**$${margen_neto_restaurante.toFixed(2)}**). Con **${breakeven_pedidos}** pedidos cubrís la publicidad y de ahí en más es ganancia.`,
+      tone: 'good',
+      icon: '🍔',
+    };
+  }
+
   return {
     comision_total_mensual: Math.round(comision_total_mensual * 100) / 100,
     comision_por_pedido: Math.round(comision_por_pedido * 100) / 100,
@@ -100,6 +126,7 @@ export function compute(i: Inputs): Outputs {
     margen_neto_porcentaje: Math.round(margen_neto_porcentaje * 100) / 100,
     ticket_minimo_rentable: Math.round(ticket_minimo_rentable * 100) / 100,
     breakeven_pedidos: breakeven_pedidos,
-    _chart: chart
+    _chart: chart,
+    _insight: insight
   };
 }

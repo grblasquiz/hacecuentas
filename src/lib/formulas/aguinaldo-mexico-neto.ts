@@ -20,6 +20,7 @@ export interface Outputs {
   formula: string;
   explicacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // ISR tabla Art. 96 mensual
@@ -81,6 +82,27 @@ export function aguinaldoMexicoNeto(i: Inputs): Outputs {
     ariaLabel: `Composición del aguinaldo bruto: neto ${Math.round(aguinaldoNeto)}, ISR retenido ${Math.round(isrRetenido)}.`,
   };
 
+  // Insight narrativo: cuánto neto queda, qué se lleva el ISR y a cuántos sueldos equivale.
+  const isrPct = aguinaldoBruto > 0 ? (isrRetenido / aguinaldoBruto) * 100 : 0;
+  const netoRound = Math.round(aguinaldoNeto);
+  const isrRound = Math.round(isrRetenido);
+  let insight: any;
+  if (isrRound <= 0) {
+    insight = {
+      title: 'Aguinaldo sin ISR',
+      text: `Tu aguinaldo de **$${netoRound.toLocaleString('es-MX')} MXN** queda exento de ISR (no supera las 30 UMA). Lo cobrás completo: equivale a **${equivalenteSueldos.toFixed(2)} sueldos** mensuales.`,
+      tone: 'good' as const,
+      icon: '🎉',
+    };
+  } else {
+    insight = {
+      title: 'El ISR recorta tu aguinaldo',
+      text: `Te quedan **$${netoRound.toLocaleString('es-MX')} MXN** netos (**${equivalenteSueldos.toFixed(2)} sueldos**): el ISR se lleva **$${isrRound.toLocaleString('es-MX')}**, el **${isrPct.toFixed(1)}%** del bruto. Solo se grava lo que pasa de 30 UMA.`,
+      tone: 'warn' as const,
+      icon: '🎄',
+    };
+  }
+
   return {
     aguinaldoBruto: Math.round(aguinaldoBruto),
     exentoIsr: Math.round(exentoIsr),
@@ -91,5 +113,6 @@ export function aguinaldoMexicoNeto(i: Inputs): Outputs {
     formula,
     explicacion,
     _chart: chart,
+    _insight: insight,
   };
 }

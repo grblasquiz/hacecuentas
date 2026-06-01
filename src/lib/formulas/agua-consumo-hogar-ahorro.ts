@@ -1,6 +1,6 @@
 /** Consumo de agua del hogar y ahorro potencial */
 export interface Inputs { personas: number; minutossDucha: number; duchasPorDia: number; descargas: number; }
-export interface Outputs { consumoMensualLitros: number; consumoConAhorro: number; litrosAhorrados: number; porcentajeAhorro: number; detalle: string; }
+export interface Outputs { consumoMensualLitros: number; consumoConAhorro: number; litrosAhorrados: number; porcentajeAhorro: number; detalle: string; _insight?: any; _chart?: any; }
 
 export function aguaConsumoHogarAhorro(i: Inputs): Outputs {
   const personas = Number(i.personas);
@@ -30,11 +30,34 @@ export function aguaConsumoHogarAhorro(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const duchasMes = aguaDuchas * 30;
+  const inodoroMes = aguaInodoro * 30;
+  const otrosMes = aguaOtros * 30;
+  const m3Ahorrados = litrosAhorrados / 1000;
+
   return {
     consumoMensualLitros: Number(consumoMensual.toFixed(0)),
     consumoConAhorro: Number(consumoConAhorro.toFixed(0)),
     litrosAhorrados: Number(litrosAhorrados.toFixed(0)),
     porcentajeAhorro: Number(porcentajeAhorro.toFixed(0)),
-    detalle: `Consumo actual: ${fmt.format(consumoMensual)} L/mes (duchas ${fmt.format(aguaDuchas * 30)} L + inodoro ${fmt.format(aguaInodoro * 30)} L + otros ${fmt.format(aguaOtros * 30)} L). Con hábitos eficientes: ${fmt.format(consumoConAhorro)} L/mes. Ahorro: ${fmt.format(litrosAhorrados)} L/mes (${fmt.format(porcentajeAhorro)}%).`,
+    detalle: `Consumo actual: ${fmt.format(consumoMensual)} L/mes (duchas ${fmt.format(duchasMes)} L + inodoro ${fmt.format(inodoroMes)} L + otros ${fmt.format(otrosMes)} L). Con hábitos eficientes: ${fmt.format(consumoConAhorro)} L/mes. Ahorro: ${fmt.format(litrosAhorrados)} L/mes (${fmt.format(porcentajeAhorro)}%).`,
+    _insight: {
+      title: 'Tu margen de ahorro',
+      text: `Hoy gastás ~**${fmt.format(consumoMensual)} L/mes** y con hábitos eficientes bajarías a **${fmt.format(consumoConAhorro)} L/mes**: un ahorro de **${fmt.format(litrosAhorrados)} L** (${fmt.format(porcentajeAhorro)}%), unos **${fmt.format(m3Ahorrados)} m³** que se reflejan en la factura. Las duchas son ${fmt.format(duchasMes)} L del total, el punto donde más se recorta.`,
+      tone: porcentajeAhorro >= 30 ? 'good' : 'neutral',
+      icon: '💧',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Duchas', value: Number(duchasMes.toFixed(0)) },
+        { label: 'Inodoro', value: Number(inodoroMes.toFixed(0)) },
+        { label: 'Otros usos', value: Number(otrosMes.toFixed(0)) },
+      ],
+      prefix: '',
+      centerValue: `${fmt.format(consumoMensual)} L`,
+      centerLabel: 'consumo/mes',
+      ariaLabel: `Composición del consumo mensual de agua: duchas ${fmt.format(duchasMes)} L, inodoro ${fmt.format(inodoroMes)} L y otros usos ${fmt.format(otrosMes)} L.`,
+    },
   };
 }

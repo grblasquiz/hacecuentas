@@ -1,6 +1,6 @@
 /** Conversión entre unidades de almacenamiento digital */
 export interface Inputs { valor: number; unidadOrigen?: string; }
-export interface Outputs { bytes: number; kb: number; mb: number; gb: number; tb: number; detalle: string; }
+export interface Outputs { bytes: number; kb: number; mb: number; gb: number; tb: number; detalle: string; _insight?: any; }
 
 export function almacenamientoBytesKbMbGbTb(i: Inputs): Outputs {
   const valor = Number(i.valor);
@@ -27,6 +27,8 @@ export function almacenamientoBytesKbMbGbTb(i: Inputs): Outputs {
 
   const binGb = enBytes / 1073741824;
 
+  const gapPct = gb > 0 ? (1 - binGb / gb) * 100 : 0;
+
   return {
     bytes: Math.round(bytes),
     kb: Number(kb.toFixed(4)),
@@ -34,5 +36,11 @@ export function almacenamientoBytesKbMbGbTb(i: Inputs): Outputs {
     gb: Number(gb.toFixed(6)),
     tb: Number(tb.toFixed(9)),
     detalle: `${valor} ${unidad.toUpperCase()} = ${mb.toFixed(2)} MB = ${gb.toFixed(4)} GB = ${tb.toFixed(6)} TB (decimal). En binario: ${binGb.toFixed(4)} GiB.`,
+    _insight: {
+      title: 'Decimal vs binario',
+      text: `Esos **${gb.toFixed(2)} GB** decimales (lo que dice el fabricante) equivalen a solo **${binGb.toFixed(2)} GiB** binarios (lo que muestra tu sistema operativo): un **${gapPct.toFixed(1)}% menos**. Por eso un disco "de 1 TB" aparece como ~931 GB en la PC.`,
+      tone: 'neutral',
+      icon: '💾',
+    },
   };
 }

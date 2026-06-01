@@ -20,6 +20,7 @@ export interface Outputs {
   prazoNovo: string;
   economiaJuros: string;
   resumen: string;
+  _insight?: any;
 }
 
 function brl(n: number): string {
@@ -95,5 +96,13 @@ export function amortizacaoAntecipada(i: Inputs): Outputs {
     resumen: modo === 'parcela'
       ? `Amortizando ${brl(amort)} e reduzindo parcela: nova parcela ${brl(parcelaNova)} (antes ${brl(parcelaAnterior)}). Prazo mantido em ${n} meses. Economia em juros: ${brl(economia)}.`
       : `Amortizando ${brl(amort)} e reduzindo prazo: de ${n} para ${prazoNovo} meses (economia de ${n - prazoNovo} meses). Economia em juros: ${brl(economia)}.`,
+    _insight: {
+      title: modo === 'prazo' ? 'Reduzir prazo: mais economia de juros' : 'Reduzir parcela: alívio no mês',
+      text: modo === 'prazo'
+        ? `Pagar ${brl(amort)} agora encurta o financiamento em **${n - prazoNovo} meses** (de ${n} para ${prazoNovo}) e economiza **${brl(economia)}** em juros. Reduzir prazo costuma render mais que reduzir parcela, porque corta os meses mais caros do fim.`
+        : `Pagar ${brl(amort)} agora baixa a parcela de ${brl(parcelaAnterior)} para **${brl(parcelaNova)}** (alívio de ${brl(parcelaAnterior - parcelaNova)}/mês), mantendo o prazo em ${n} meses. A economia em juros é de **${brl(economia)}** — menor que reduzir o prazo, mas dá fôlego imediato no orçamento.`,
+      tone: economia > 0 ? 'good' : 'neutral',
+      icon: '💸',
+    },
   };
 }

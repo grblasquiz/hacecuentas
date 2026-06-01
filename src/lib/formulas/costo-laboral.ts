@@ -14,6 +14,7 @@ export interface Outputs {
   costoAnualTotal: number;
   ratioSueldoCosto: number;
   _chart?: any;
+  _insight?: any;
 }
 
 // Alícuotas patronales 2026 (aproximadas)
@@ -56,6 +57,16 @@ export function costoLaboral(i: Inputs): Outputs {
     ariaLabel: 'Composición del costo laboral mensual: sueldo bruto, cargas patronales, SAC, vacaciones y ART.',
   };
 
+  const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const extra = costoMensual - bruto;
+  const pctExtra = bruto > 0 ? Math.round((extra / bruto) * 100) : 0;
+  const insight = {
+    title: 'El costo real va más allá del sueldo',
+    text: `Por cada **$${fmt.format(Math.round(bruto))}** de sueldo bruto, la empresa termina pagando **$${fmt.format(Math.round(costoMensual))}**: un **${pctExtra}% extra** en cargas, SAC, vacaciones y ART. En el año son **$${fmt.format(Math.round(costoAnual))}**.`,
+    tone: 'warn' as const,
+    icon: '🧾',
+  };
+
   return {
     sueldoBruto: Math.round(bruto),
     cargasPatronales: Math.round(cargas),
@@ -66,5 +77,6 @@ export function costoLaboral(i: Inputs): Outputs {
     costoAnualTotal: Math.round(costoAnual),
     ratioSueldoCosto: Number(ratio.toFixed(2)),
     _chart: chart,
+    _insight: insight,
   };
 }

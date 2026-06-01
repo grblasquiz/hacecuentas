@@ -12,6 +12,7 @@ export interface Outputs {
   porcentajeRecargo: number;
   tasaMensual: number;
   _chart?: any;
+  _insight?: any;
 }
 
 /**
@@ -64,11 +65,34 @@ export function costoRealCuotas(i: Inputs): Outputs {
     ariaLabel: 'Composición del costo en cuotas: precio de contado más intereses',
   } : undefined;
 
+  const recargoFmt = Number(porcentajeRecargo.toFixed(2));
+  const tasaFmt = Number(tasaMensual.toFixed(2));
+  const interesFmt = Math.round(interesTotal).toLocaleString('es-AR');
+
+  let insight;
+  if (Math.round(interesTotal) <= 0) {
+    insight = {
+      title: 'Cuotas sin interés: conviene financiar',
+      text: `Pagás lo mismo en **${cantidadCuotas} cuotas** que de contado (**0% de recargo**). Comprar financiado y dejar la plata rindiendo es la jugada: con cualquier inflación o plazo fijo, las cuotas te salen más baratas en términos reales.`,
+      tone: 'good' as const,
+      icon: '✅',
+    };
+  } else {
+    const alto = recargoFmt >= 30;
+    insight = {
+      title: alto ? 'Recargo alto en cuotas' : 'Lo que cuesta financiar',
+      text: `Pagar en cuotas suma **$${interesFmt}** de interés, un **${recargoFmt}%** sobre el precio de contado, que equivale a una tasa implícita del **${tasaFmt}% mensual**. ${alto ? 'Compará contra un plazo fijo: a esta tasa probablemente convenga pagar de contado.' : 'Si tu plazo fijo rinde más que esa tasa, financiar todavía te conviene.'}`,
+      tone: alto ? ('warn' as const) : ('neutral' as const),
+      icon: '💳',
+    };
+  }
+
   return {
     costoTotal: Math.round(costoTotal),
     interesTotal: Math.round(interesTotal),
-    porcentajeRecargo: Number(porcentajeRecargo.toFixed(2)),
-    tasaMensual: Number(tasaMensual.toFixed(2)),
+    porcentajeRecargo: recargoFmt,
+    tasaMensual: tasaFmt,
     _chart: chart,
+    _insight: insight,
   };
 }

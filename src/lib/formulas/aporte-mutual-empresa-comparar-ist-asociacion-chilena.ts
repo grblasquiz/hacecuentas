@@ -26,6 +26,8 @@ export interface Outputs {
   cobertura_accidentes: number;
   prestaciones_incluidas: string[];
   ahorro_potencial: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Fuente: SII 2026 - Aportes adicionales por sector
@@ -103,6 +105,8 @@ export function compute(i: Inputs): Outputs {
       cobertura_accidentes: 0,
       prestaciones_incluidas: [],
       ahorro_potencial: 0,
+      _insight: undefined,
+      _chart: undefined,
     };
   }
 
@@ -190,17 +194,48 @@ export function compute(i: Inputs): Outputs {
     prestaciones_incluidas = DATOS_MUTUALES['mutual_seguridad'].prestaciones;
   }
 
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const aporteMensualR = Math.round(aporte_mensual_total);
+  const aporteAnualR = Math.round(aporte_anual_total);
+  const ahorroR = Math.round(ahorro_potencial);
+
+  // Donut: descompone el aporte mensual total en su porción legal base (0,95%)
+  // y la porción adicional por sector, escaladas para sumar el total real
+  // (que ya puede incluir el descuento por bono de prevención).
+  const sliceBase = tasa_sin_bono > 0 ? aporteMensualR * (TASA_BASE / tasa_sin_bono) : 0;
+  const sliceAdic = aporteMensualR - sliceBase;
+  const _chart = aporteMensualR <= 0 ? undefined : {
+    type: 'doughnut',
+    slices: [
+      { label: 'Tasa base legal (0,95%)', value: Math.round(sliceBase) },
+      { label: `Adicional sector (${aporte_adicional}%)`, value: Math.round(sliceAdic) },
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(aporteMensualR),
+    centerLabel: 'aporte/mes',
+    ariaLabel: `Aporte mensual total de ${fmtCLP(aporteMensualR)} a la mutualidad, compuesto por la tasa base legal de 0,95% y el adicional por sector de ${aporte_adicional}%.`,
+  };
+
+  const _insight = {
+    title: 'Lo que paga tu empresa por la Ley de Accidentes',
+    text: `Con **${i.numero_trabajadores}** trabajador${i.numero_trabajadores === 1 ? '' : 'es'} y una renta promedio de **${fmtCLP(i.remuneracion_promedio_mensual)}**, el aporte a la mutualidad suma **${fmtCLP(aporteMensualR)}/mes** (**${fmtCLP(aporteAnualR)}** al año) a una tasa de **${tasa_a_usar}%**.${i.considerar_bono_prevencion ? ' Ya estás aplicando el **bono de prevención**, que te baja la tasa.' : ''}${ahorroR > 0 ? ` Comparando mutualidades, podrías ahorrar hasta **${fmtCLP(ahorroR)}/año** eligiendo la más conveniente.` : ''}`,
+    tone: ahorroR > 0 ? 'warn' : 'neutral',
+    icon: '🏭',
+  };
+
   return {
     tasa_aporte_base: TASA_BASE,
     tasa_aporte_adicional: aporte_adicional,
     tasa_total_sin_bono: tasa_sin_bono,
     tasa_total_con_bono: tasa_con_bono,
     aporte_mensual_por_trabajador: Math.round(aporte_por_trabajador),
-    aporte_mensual_total: Math.round(aporte_mensual_total),
-    aporte_anual_total: Math.round(aporte_anual_total),
+    aporte_mensual_total: aporteMensualR,
+    aporte_anual_total: aporteAnualR,
     comparativa_mutualidades: comparativa,
     cobertura_accidentes: cobertura_accidentes,
     prestaciones_incluidas: prestaciones_incluidas,
-    ahorro_potencial: Math.round(ahorro_potencial),
+    ahorro_potencial: ahorroR,
+    _insight,
+    _chart,
   };
 }

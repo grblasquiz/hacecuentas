@@ -20,6 +20,7 @@ export interface Outputs {
   comparacion_mercado: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Rangos de precios de referencia de mercado 2026 (CABA)
@@ -130,6 +131,22 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición del precio sugerido: insumos, costos fijos, ganancia e IVA.',
   };
 
+  // --- Insight narrativo: posición de mercado + breakeven diario ---
+  const insightTone: 'good' | 'warn' | 'neutral' =
+    posicion.startsWith('dentro') ? 'good'
+    : (posicion.startsWith('por debajo') || posicion.startsWith('por encima')) ? 'warn'
+    : 'neutral';
+  const peDia = puntoEquilibrio > 0 ? Math.round(puntoEquilibrio / diasMes) : 0;
+  const peFrase = puntoEquilibrio > 0
+    ? ` Para no perder plata necesitás vender **${peDia} ${peDia === 1 ? 'unidad' : 'unidades'} por día** solo de este producto.`
+    : '';
+  const insight = {
+    title: 'Tu precio frente al mercado',
+    text: `A $${Math.round(precioSugerido).toLocaleString('es-AR')} con **${margenReal.toFixed(0)}%** de margen bruto, quedás **${posicion}**.` + peFrase,
+    tone: insightTone,
+    icon: '☕',
+  };
+
   return {
     precio_sugerido:          Math.round(precioSugerido),
     precio_sin_iva:           Math.round(precioNeto),
@@ -140,5 +157,6 @@ export function compute(i: Inputs): Outputs {
     comparacion_mercado:      comparacion,
     resumen,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -14,6 +14,8 @@ export interface Outputs {
   total_mensual: number;
   inversion_inicial: number;
   rango_mercado: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -110,6 +112,8 @@ export function compute(i: Inputs): Outputs {
   const maxRango = Math.round(arriendo * 1.15);
   const rangoMercado = `$${minRango.toLocaleString('es-CL')} - $${maxRango.toLocaleString('es-CL')} (varía según estado, antigüedad y servicios)`;
 
+  const fmtCL = (n: number) => `$${n.toLocaleString('es-CL')}`;
+
   return {
     arriendo_promedio: arriendo,
     gastos_comunes: gastosComunes,
@@ -118,6 +122,24 @@ export function compute(i: Inputs): Outputs {
     comision_inmobiliaria: comisionInmobiliaria,
     total_mensual: totalMensual,
     inversion_inicial: inversionInicial,
-    rango_mercado: rangoMercado
+    rango_mercado: rangoMercado,
+    _insight: {
+      title: 'Lo que sale cada mes y la entrada',
+      text: `El arriendo ronda **${fmtCL(arriendo)}**, pero gasto real al mes es **${fmtCL(totalMensual)}** sumando gastos comunes${serviciosBasicos > 0 ? ' y servicios' : ''}. Para entrar necesitás juntar **${fmtCL(inversionInicial)}** (garantía + primer mes + gastos comunes)${comisionInmobiliaria > 0 ? `, más ${fmtCL(comisionInmobiliaria)} si la corredora cobra comisión` : ''}.`,
+      tone: 'warn',
+      icon: '🏢',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Garantía', value: garantiaDeposito },
+        { label: 'Primer mes', value: arriendo },
+        { label: 'Gastos comunes', value: gastosComunes },
+      ],
+      prefix: '$',
+      centerValue: fmtCL(inversionInicial),
+      centerLabel: 'Entrada',
+      ariaLabel: `Inversión inicial de ${fmtCL(inversionInicial)}: garantía ${fmtCL(garantiaDeposito)}, primer mes ${fmtCL(arriendo)} y gastos comunes ${fmtCL(gastosComunes)}`,
+    },
   };
 }

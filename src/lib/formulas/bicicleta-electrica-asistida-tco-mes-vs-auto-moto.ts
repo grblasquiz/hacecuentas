@@ -19,6 +19,8 @@ export interface Outputs {
   combustibleMes: number;
   kmMes: number;
   desglose: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -87,12 +89,39 @@ export function compute(i: Inputs): Outputs {
     ` | Km/mes: ${kmMes.toFixed(0)} km` +
     ` | Costo/km: ${fmt(costoPorKm)}`;
 
+  // Insight: costo mensual y por km del vehículo elegido
+  const vehLabel: Record<string, string> = { ebike: "tu e-bike", auto: "tu auto", moto: "tu moto" };
+  const vLabel = vehLabel[vehiculo] ?? "tu vehículo";
+  const _insight = {
+    title: "Costo real por mes",
+    text: `Mover ${vLabel} cuesta **${fmt(costoTotalMes)}/mes**${kmMes > 0 ? ` (**${fmt(costoPorKm)}/km** sobre ${kmMes.toFixed(0)} km)` : ""}. La amortización pesa **${fmt(amortizacionMes)}/mes** y la energía **${fmt(combustibleMes)}/mes**.`,
+    tone: "neutral",
+    icon: vehiculo === "ebike" ? "🚲" : vehiculo === "moto" ? "🏍️" : "🚗",
+  };
+  const slices = [
+    { label: "Amortización", value: Math.round(amortizacionMes) },
+    { label: label, value: Math.round(combustibleMes) },
+    { label: "Seguro", value: Math.round(seguro) },
+    { label: "Mantenimiento", value: Math.round(mantenimiento) },
+  ];
+  if (patente > 0) slices.push({ label: "Patente/VTV", value: Math.round(patente) });
+  const _chart = {
+    type: "doughnut",
+    slices,
+    prefix: "$",
+    centerValue: fmt(costoTotalMes),
+    centerLabel: "por mes",
+    ariaLabel: `Costo mensual ${fmt(costoTotalMes)} desglosado en amortización, energía, seguro y mantenimiento.`,
+  };
+
   return {
     costoTotalMes,
     costoPorKm,
     amortizacionMes,
     combustibleMes,
     kmMes,
-    desglose
+    desglose,
+    _insight,
+    _chart
   };
 }

@@ -15,6 +15,7 @@ export interface ColesterolLdlHdlRatioOutputs {
   riesgo: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function colesterolLdlHdlRatio(inputs: ColesterolLdlHdlRatioInputs): ColesterolLdlHdlRatioOutputs {
@@ -31,6 +32,13 @@ export function colesterolLdlHdlRatio(inputs: ColesterolLdlHdlRatioInputs): Cole
   else if (ratio < 5) riesgo = 'Alto ⚠️';
   else riesgo = 'Muy alto 🚨';
   const ratioMarker = Number(ratio.toFixed(2));
+
+  const insTone: 'good' | 'warn' = ratio < 2.5 ? 'good' : 'warn';
+  const insIcon = ratio < 2.5 ? '❤️' : ratio < 3.5 ? '🩺' : '⚠️';
+  const insText = ratio < 2.5
+    ? `Tu ratio LDL/HDL es **${ratio.toFixed(2)}**, en zona **óptima** (<2,5): tu HDL "bueno" equilibra bien al LDL. El índice de Castelli (CT/HDL) da **${castelli.toFixed(2)}**, también favorable.`
+    : `Tu ratio LDL/HDL es **${ratio.toFixed(2)}** (${riesgo.replace(/[^\wÁÉÍÓÚáéíóúñ ]/g, '').trim().toLowerCase()}) y tu Castelli da **${castelli.toFixed(2)}**. Con un LDL estimado de **${ldl.toFixed(0)} mg/dL**, subir el HDL (ejercicio, grasas buenas) baja el ratio más rápido que sólo recortar el LDL.`;
+  const insight = { title: 'Qué dice tu ratio', text: insText, tone: insTone, icon: insIcon };
 
   const chart = {
     type: 'scale' as const,
@@ -54,5 +62,6 @@ export function colesterolLdlHdlRatio(inputs: ColesterolLdlHdlRatioInputs): Cole
     riesgo,
     resumen: `LDL ${ldl.toFixed(0)}, ratio LDL/HDL ${ratio.toFixed(2)}, Castelli ${castelli.toFixed(2)} - ${riesgo}`,
     _chart: chart,
+    _insight: insight,
   };
 }

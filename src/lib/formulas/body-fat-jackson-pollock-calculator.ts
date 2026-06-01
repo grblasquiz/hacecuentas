@@ -13,6 +13,8 @@ export interface Outputs {
   fat_mass_lb: number;
   lean_mass_lb: number;
   body_density: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -94,12 +96,37 @@ export function compute(i: Inputs): Outputs {
 
   const fatMassLb  = weightLb * (bfPct / 100);
   const leanMassLb = weightLb - fatMassLb;
+  const bf = Math.round(bfPct * 10) / 10;
+  const cls = classify(bfPct, sex);
+  const th = sex === 'female' ? ACE_FEMALE : ACE_MALE;
+  const insTone: 'good' | 'warn' | 'neutral' =
+    cls === 'Obese' ? 'warn' : (cls === 'Fitness' || cls === 'Athlete') ? 'good' : 'neutral';
 
   return {
-    body_fat_pct:   Math.round(bfPct * 10) / 10,
-    classification: classify(bfPct, sex),
+    body_fat_pct:   bf,
+    classification: cls,
     fat_mass_lb:    Math.round(fatMassLb  * 10) / 10,
     lean_mass_lb:   Math.round(leanMassLb * 10) / 10,
     body_density:   Math.round(Db * 100000) / 100000,
+    _insight: {
+      title: 'What your body fat means',
+      text: `At **${bf}%** body fat you fall in the **${cls}** range, which means about **${Math.round(fatMassLb * 10) / 10} lb** of fat mass and **${Math.round(leanMassLb * 10) / 10} lb** of lean mass.`,
+      tone: insTone,
+      icon: cls === 'Obese' ? '⚠️' : '💪',
+    },
+    _chart: {
+      type: 'scale',
+      marker: bf,
+      markerLabel: `${bf}%`,
+      min: 0,
+      segments: [
+        { nombre: 'Essential', max: th[0], color: '#3b82f6', colorDark: '#60a5fa' },
+        { nombre: 'Athlete',   max: th[1], color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Fitness',   max: th[2], color: '#84cc16', colorDark: '#a3e635' },
+        { nombre: 'Average',   max: th[3], color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Obese',     max: Math.max(th[3] + 10, bf + 2), color: '#dc2626', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Body fat ${bf}% on the ACE classification scale`,
+    },
   };
 }

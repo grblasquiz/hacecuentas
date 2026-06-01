@@ -15,6 +15,8 @@ export interface Outputs {
   cafeLitros: number;
   jugoLitros: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -117,6 +119,8 @@ export function compute(i: Inputs): Outputs {
     frutasTexto +
     ` | Café: ${cafeLitros} L | Jugos/agua: ${jugoLitros} L`;
 
+  const totalPiezas = medialunas + sandwiches + masasSecas + tortaPorciones;
+
   return {
     bocadillosTotales,
     medialunas,
@@ -127,5 +131,24 @@ export function compute(i: Inputs): Outputs {
     cafeLitros,
     jugoLitros,
     resumen,
+    _insight: {
+      title: 'Qué comprar para el coffee break',
+      text: `Para **${invitados} invitados** en un coffee break de ${labelDuracion} necesitás unas **${totalPiezas} piezas** en total: **${medialunas} medialunas**, **${sandwiches} sándwiches**, **${masasSecas} masas secas** y **${tortaPorciones} porciones de torta**.`,
+      tone: 'neutral',
+      icon: '🥐',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Medialunas', value: medialunas },
+        { label: 'Sándwiches', value: sandwiches },
+        { label: 'Masas secas', value: masasSecas },
+        { label: 'Torta', value: tortaPorciones },
+      ],
+      prefix: '',
+      centerValue: `${totalPiezas}`,
+      centerLabel: 'piezas',
+      ariaLabel: `Distribución de ${totalPiezas} piezas del coffee break entre medialunas, sándwiches, masas secas y torta`,
+    },
   };
 }

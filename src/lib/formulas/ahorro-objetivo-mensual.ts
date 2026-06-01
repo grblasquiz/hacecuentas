@@ -9,6 +9,8 @@ export interface Outputs {
   ahorroDiario: number;
   ahorroSemanal: number;
   faltante: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function ahorroObjetivoMensual(i: Inputs): Outputs {
@@ -24,10 +26,41 @@ export function ahorroObjetivoMensual(i: Inputs): Outputs {
   const ahorroDiario = ahorroMensual / 30;
   const ahorroSemanal = ahorroMensual / 4.33;
 
+  const yaTenes = Math.min(actual, meta);
+  const fmt = (v: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(v));
+  const yaCubierto = meta > 0 ? Math.round((yaTenes / meta) * 100) : 0;
+  const _insight = faltante <= 0
+    ? {
+        title: '¡Objetivo cubierto!',
+        text: `Con **${fmt(actual)}** ya alcanzaste tu meta de **${fmt(meta)}**. No necesitás ahorrar nada más.`,
+        tone: 'good',
+        icon: '🎯',
+      }
+    : {
+        title: 'Tu cuota de ahorro',
+        text: `Para juntar **${fmt(meta)}** en **${meses} meses** tenés que apartar **${fmt(Math.ceil(ahorroMensual))} por mes** (unos ${fmt(Math.ceil(ahorroSemanal))} por semana). ${yaTenes > 0 ? `Ya tenés el **${yaCubierto}%**, te falta **${fmt(faltante)}**.` : `Arrancás de cero: la meta completa son **${fmt(faltante)}**.`}`,
+        tone: 'neutral',
+        icon: '🎯',
+      };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Ya tenés ahorrado', value: Math.round(yaTenes) },
+      { label: 'Te falta juntar', value: Math.round(faltante) },
+    ],
+    prefix: '$',
+    centerValue: fmt(meta),
+    centerLabel: 'Meta total',
+    ariaLabel: `De una meta de ${fmt(meta)}, ya tenés ${fmt(yaTenes)} y te falta ${fmt(faltante)}.`,
+  };
+
   return {
     ahorroMensual: Math.ceil(ahorroMensual),
     ahorroDiario: Math.ceil(ahorroDiario),
     ahorroSemanal: Math.ceil(ahorroSemanal),
     faltante: Math.round(faltante),
+    _insight,
+    _chart,
   };
 }

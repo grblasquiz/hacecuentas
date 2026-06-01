@@ -16,6 +16,7 @@ export interface Outputs {
   categoria: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function grasaCorporalPliegues(i: Inputs): Outputs {

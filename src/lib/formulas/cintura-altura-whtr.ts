@@ -9,6 +9,7 @@ export interface Outputs {
   riesgo: string;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function cinturaAlturaWhtr(i: Inputs): Outputs {
@@ -45,6 +46,20 @@ export function cinturaAlturaWhtr(i: Inputs): Outputs {
     : `Tu WHtR es ${whtr.toFixed(2)} — riesgo ${riesgo.toLowerCase()}. Deberías reducir ${diff} cm de cintura para llegar a la zona saludable (${cinturaIdeal} cm).`;
 
   const whtrVal = Number(whtr.toFixed(2));
+
+  let insTone: 'good' | 'warn', insIcon: string, insText: string;
+  if (whtr < 0.4) {
+    insTone = 'warn'; insIcon = '🩺';
+    insText = `Tu WHtR es **${whtrVal.toFixed(2)}**, por debajo de 0,40: **delgadez extrema**. La regla "cintura < mitad de la altura" se cumple de sobra, pero un valor tan bajo conviene revisarlo con un profesional.`;
+  } else if (whtr < 0.5) {
+    insTone = 'good'; insIcon = '✅';
+    insText = `Tu WHtR es **${whtrVal.toFixed(2)}**, en **zona saludable** (<0,50): tu cintura es menos de la mitad de tu altura, el umbral clave de bajo riesgo metabólico. Tu cintura ideal máxima es **${cinturaIdeal} cm**.`;
+  } else {
+    insTone = 'warn'; insIcon = '⚠️';
+    insText = `Tu WHtR es **${whtrVal.toFixed(2)}**, sobre 0,50: **${categoria.toLowerCase()}**, riesgo **${riesgo.toLowerCase()}**. Bajar **${diff} cm** de cintura te llevaría al umbral saludable de **${cinturaIdeal} cm**.`;
+  }
+  const insight = { title: 'Tu riesgo según WHtR', text: insText, tone: insTone, icon: insIcon };
+
   const chart = {
     type: 'scale' as const,
     marker: whtrVal,
@@ -66,5 +81,6 @@ export function cinturaAlturaWhtr(i: Inputs): Outputs {
     riesgo,
     detalle,
     _chart: chart,
+    _insight: insight,
   };
 }

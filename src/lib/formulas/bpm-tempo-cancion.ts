@@ -9,6 +9,8 @@ export interface Outputs {
   msPorBeat: number;
   msPorCompas: number;
   genero: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function bpmTempoCancion(i: Inputs): Outputs {

@@ -17,6 +17,7 @@ export interface DensidadNutricionalScoreOutputs {
   nutrientesPositivos: string;
   nutrientesNegativos: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function densidadNutricionalScore(inputs: DensidadNutricionalScoreInputs): DensidadNutricionalScoreOutputs {
@@ -55,11 +56,38 @@ export function densidadNutricionalScore(inputs: DensidadNutricionalScoreInputs)
     ariaLabel: 'Escala de densidad nutricional de 0 a 100',
   };
 
+  // Mayor penalizador (mismas unidades que en 'negativos')
+  const penalizadores = [
+    { nombre: 'azúcar añadido', peso: azu },
+    { nombre: 'sodio', peso: sodio / 100 },
+    { nombre: 'grasa saturada', peso: gsat * 3 },
+  ].sort((a, b) => b.peso - a.peso);
+  const peor = penalizadores[0];
+  let insightTitle: string, insightText: string, insightTone: string;
+  if (scoreFinal >= 70) {
+    insightTitle = `Score ${scoreFinal}/100: muy densa en nutrientes`;
+    insightText = `Por cada 100 kcal este alimento aporta mucha **proteína (${prot} g)** y **fibra (${fibra} g)** frente a pocos nutrientes a limitar. Es de los que conviene priorizar en la dieta.`;
+    insightTone = 'good';
+  } else if (scoreFinal >= 50) {
+    insightTitle = `Score ${scoreFinal}/100: densa`;
+    insightText = `Buen aporte de **proteína (${prot} g)** y **fibra (${fibra} g)**, aunque el **${peor.nombre}** le resta puntos. Sólida opción; bajando ese componente sube a "muy densa".`;
+    insightTone = 'neutral';
+  } else if (scoreFinal >= 20) {
+    insightTitle = `Score ${scoreFinal}/100: densidad moderada`;
+    insightText = `El **${peor.nombre}** es lo que más penaliza frente a sus **${prot} g de proteína** y **${fibra} g de fibra**. Reducir ${peor.nombre} es la palanca más directa para mejorar el score.`;
+    insightTone = 'neutral';
+  } else {
+    insightTitle = `Score ${scoreFinal}/100: calorías "vacías"`;
+    insightText = `Aporta muchas calorías con poca proteína/fibra y demasiado **${peor.nombre}**. Conviene moderar la porción o elegir una alternativa más densa en nutrientes.`;
+    insightTone = 'warn';
+  }
+  const insight = { title: insightTitle, text: insightText, tone: insightTone, icon: '🥗' };
   return {
     score: scoreFinal,
     clasificacion: clasif,
     nutrientesPositivos: `Proteína ${prot} g + fibra ${fibra} g`,
     nutrientesNegativos: `Azúcar ${azu} g + sodio ${sodio} mg + grasa sat ${gsat} g`,
     _chart: chart,
+    _insight: insight,
   };
 }

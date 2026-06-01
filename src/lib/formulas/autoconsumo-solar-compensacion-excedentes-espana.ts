@@ -19,6 +19,8 @@ export interface Outputs {
   payback_anos: number;
   factura_sin_solar_mensual_eur: number;
   factura_con_solar_mensual_eur: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -73,6 +75,39 @@ export function compute(i: Inputs): Outputs {
   const factura_consumo_red = consumo_red_con_solar_kwh * i.precio_compra_electricidad_eur_kwh;
   const factura_con_solar_mensual_eur = Math.max(0, factura_consumo_red - ingresos_excedentes_eur);
   
+  // --- Insight narrativo ---
+  const fmtEur = (n: number) => Math.round(n).toLocaleString("es-ES") + " €";
+  const reduccion = factura_sin_solar_mensual_eur > 0
+    ? (1 - factura_con_solar_mensual_eur / factura_sin_solar_mensual_eur) * 100
+    : 0;
+  let solarTone: "good" | "warn" | "neutral";
+  if (payback_anos > 0 && payback_anos <= 8) solarTone = "good";
+  else if (payback_anos > 12) solarTone = "warn";
+  else solarTone = "neutral";
+  const paybackTxt = payback_anos > 0
+    ? `Amortizás la inversión en **${payback_anos.toFixed(1)} años**.`
+    : "Cargá la inversión inicial para estimar la amortización.";
+  const _insight = {
+    title: "Tu ahorro con placas solares",
+    text: `La instalación te ahorra **${fmtEur(ahorro_total_mensual_eur)}/mes** (${fmtEur(ahorro_anual_eur)} al año) y baja la factura un **${Math.round(reduccion)}%**, de ${fmtEur(factura_sin_solar_mensual_eur)} a ${fmtEur(factura_con_solar_mensual_eur)}. ${paybackTxt}`,
+    tone: solarTone,
+    icon: "☀️",
+  };
+
+  // --- Donut: de dónde viene el ahorro mensual (las partes suman el total) ---
+  const slicesSolar = [
+    { label: "Autoconsumo directo", value: Math.round(ahorro_consumo_directo_eur * 100) / 100 },
+    { label: "Venta de excedentes", value: Math.round(ingresos_excedentes_eur * 100) / 100 },
+  ].filter((s) => s.value > 0);
+  const _chart = {
+    type: "doughnut",
+    slices: slicesSolar,
+    prefix: "€ ",
+    centerValue: fmtEur(ahorro_total_mensual_eur),
+    centerLabel: "Ahorro mensual",
+    ariaLabel: "Composición del ahorro mensual: ahorro por autoconsumo directo más ingresos por venta de excedentes a la red",
+  };
+
   return {
     produccion_mensual_kwh: Math.round(produccion_mensual_kwh * 10) / 10,
     energia_autoconsumo_directo_kwh: Math.round(energia_autoconsumo_directo_kwh * 10) / 10,
@@ -83,6 +118,8 @@ export function compute(i: Inputs): Outputs {
     ahorro_anual_eur: Math.round(ahorro_anual_eur * 100) / 100,
     payback_anos: Math.round(payback_anos * 10) / 10,
     factura_sin_solar_mensual_eur: Math.round(factura_sin_solar_mensual_eur * 100) / 100,
-    factura_con_solar_mensual_eur: Math.round(factura_con_solar_mensual_eur * 100) / 100
+    factura_con_solar_mensual_eur: Math.round(factura_con_solar_mensual_eur * 100) / 100,
+    _insight,
+    _chart
   };
 }

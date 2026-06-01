@@ -2,7 +2,7 @@
  * Generador de Número Aleatorio / Tirar Dado
  */
 export interface AleatorioNumeroDadoInputs { minimo: number; maximo: number; cantidad: number; tipo: string; }
-export interface AleatorioNumeroDadoOutputs { resultado: string; numeros: string; total: number; promedio: string; }
+export interface AleatorioNumeroDadoOutputs { resultado: string; numeros: string; total: number; promedio: string; _insight?: any; }
 
 export function aleatorioNumeroDado(inputs: AleatorioNumeroDadoInputs): AleatorioNumeroDadoOutputs {
   const tipo = (inputs.tipo || 'rango').toLowerCase();
@@ -62,10 +62,33 @@ export function aleatorioNumeroDado(inputs: AleatorioNumeroDadoInputs): Aleatori
       : `${cantidad} resultados (${tipoLabel}): ${numeros}`;
   }
 
+  let insText: string;
+  let insIcon: string;
+  if (tipo === 'moneda') {
+    insIcon = '🪙';
+    const carasN = resultados.filter(n => n === 0).length;
+    const cruzN = resultados.filter(n => n === 1).length;
+    insText = cantidad === 1
+      ? `Salió **${resultados[0] === 0 ? 'Cara' : 'Cruz'}**. Cada lanzamiento es 50/50, independiente del anterior.`
+      : `En **${cantidad} lanzamientos**: **${carasN} cara${carasN !== 1 ? 's' : ''}** y **${cruzN} cruz${cruzN !== 1 ? 'ces' : ''}**. Con pocas tiradas es normal alejarse del 50/50.`;
+  } else {
+    insIcon = tipo.startsWith('dado') ? '🎲' : '🔢';
+    insText = cantidad === 1
+      ? `Tu número es **${resultados[0]}**, elegido al azar entre ${min} y ${max} con probabilidad uniforme.`
+      : `Generaste **${cantidad} números** entre ${min} y ${max}. Suman **${total}** y promedian **${promedio.toLocaleString('es-AR', { maximumFractionDigits: 2 })}**.`;
+  }
+  const _insight = {
+    title: 'Resultado al azar',
+    text: insText,
+    tone: 'neutral',
+    icon: insIcon,
+  };
+
   return {
     resultado,
     numeros,
     total,
     promedio: promedio.toLocaleString('es-AR', { maximumFractionDigits: 2 }),
+    _insight,
   };
 }

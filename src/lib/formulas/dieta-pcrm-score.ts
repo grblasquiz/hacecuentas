@@ -17,6 +17,7 @@ export interface DietaPcrmScoreOutputs {
   nivel: string;
   recomendacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function dietaPcrmScore(inputs: DietaPcrmScoreInputs): DietaPcrmScoreOutputs {
@@ -44,5 +45,14 @@ export function dietaPcrmScore(inputs: DietaPcrmScoreInputs): DietaPcrmScoreOutp
     ariaLabel: 'Escala del score PCRM de 0 a 7 grupos plant-based: bajo, moderado, muy buena y óptima.',
   };
 
-  return { score, nivel, recomendacion: rec, _chart: chart };
+  const nivelLimpio = nivel.replace(/[✅✪\s]+$/u, '').trim();
+  const insightTone: 'good' | 'warn' | 'neutral' = score >= 5 ? 'good' : score <= 2 ? 'warn' : 'neutral';
+  const insight = {
+    title: 'Tu nivel plant-based',
+    text: `Cubrís **${score} de 7** grupos vegetales, lo que te ubica en la zona **${nivelLimpio}**. ${score >= 5 ? 'Buen perfil cardiovascular: mantené la variedad.' : `Sumar ${7 - score} grupo${7 - score === 1 ? '' : 's'} más te acerca al óptimo PCRM.`}`,
+    tone: insightTone,
+    icon: '🥦',
+  };
+
+  return { score, nivel, recomendacion: rec, _chart: chart, _insight: insight };
 }

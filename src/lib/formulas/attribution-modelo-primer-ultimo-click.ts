@@ -14,6 +14,7 @@ export interface Outputs {
   creditoUltimoClick: number;
   creditoLineal: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function attributionModeloPrimerUltimoClick(i: Inputs): Outputs {
@@ -60,10 +61,22 @@ export function attributionModeloPrimerUltimoClick(i: Inputs): Outputs {
     `Lineal (${participaPct}% de conv. / ${touchpoints} touchpoints): $${fmt.format(creditoLineal)}. ` +
     `El canal vale más con el modelo de ${mayorModelo}.`;
 
+  const maxCredito = Math.max(creditoPrimerClick, creditoUltimoClick, creditoLineal);
+  const minCredito = Math.min(creditoPrimerClick, creditoUltimoClick, creditoLineal);
+  const brechaPct = maxCredito > 0 ? Math.round(((maxCredito - minCredito) / maxCredito) * 100) : 0;
+
+  const _insight = {
+    title: `El modelo cambia la valoración un ${brechaPct}%`,
+    text: `Según el modelo de atribución, este canal vale entre **$${fmt.format(minCredito)}** y **$${fmt.format(maxCredito)}** — una brecha del **${brechaPct}%**. Con **${mayorModelo}** es donde más crédito recibe, así que el modelo que elijas define cuánto presupuesto justifica.`,
+    tone: (brechaPct >= 50 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+    icon: '🎯',
+  };
+
   return {
     creditoPrimerClick: Math.round(creditoPrimerClick),
     creditoUltimoClick: Math.round(creditoUltimoClick),
     creditoLineal: Math.round(creditoLineal),
     detalle,
+    _insight,
   };
 }

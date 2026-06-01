@@ -10,6 +10,7 @@ export interface Outputs {
   perimetro: number;
   tipo: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function areaTrianguloVerticesCoordenadas(i: Inputs): Outputs {
@@ -42,5 +43,11 @@ export function areaTrianguloVerticesCoordenadas(i: Inputs): Outputs {
     perimetro: Number(perimetro.toFixed(4)),
     tipo,
     detalle: `**Vértices**: A(${x1},${y1}), B(${x2},${y2}), C(${x3},${y3})\n**Fórmula**: ½|${x1}(${y2}−${y3}) + ${x2}(${y3}−${y1}) + ${x3}(${y1}−${y2})|\n= ½|${det}| = **${area.toFixed(4)}**\n**Lados**: AB=${ab.toFixed(4)}, BC=${bc.toFixed(4)}, CA=${ca.toFixed(4)}\n**Perímetro**: ${perimetro.toFixed(4)}\n**Tipo**: ${tipo}`,
+    _insight: {
+      title: 'Lectura del resultado',
+      text: `El triángulo A(${x1},${y1}), B(${x2},${y2}), C(${x3},${y3}) encierra **${area.toFixed(4)} unidades²** y mide **${perimetro.toFixed(4)}** de perímetro. Por la longitud de sus lados es **${tipo.toLowerCase()}**.`,
+      tone: 'neutral',
+      icon: '📐',
+    },
   };
 }

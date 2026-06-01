@@ -14,6 +14,8 @@ export interface Outputs {
   pension_total_aps: number;
   motivo_ineligibilidad: string;
   referencias_pgu: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -103,13 +105,47 @@ export function compute(i: Inputs): Outputs {
           { maximumFractionDigits: 0 }
         )} MXN/mes.`;
 
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const complementoR = Math.round(aps_complemento);
+  const pensionActualR = Math.round(i.pension_actual);
+  const pensionTotalR = Math.round(pension_total_aps);
+
+  const _insight = elegible
+    ? {
+        title: 'Tu pensión sube con el Aporte Previsional Solidario',
+        text: `Cumplís los requisitos: el APS te suma **${fmtCLP(complementoR)}/mes** sobre tu pensión actual de **${fmtCLP(pensionActualR)}**, llevándola a **${fmtCLP(pensionTotalR)}** (hasta el tope PMAS de **${fmtCLP(PMAS_2026)}**).`,
+        tone: 'good',
+        icon: '👵',
+      }
+    : {
+        title: 'Hoy no calificás para el APS',
+        text: `Con los datos ingresados no accedés al complemento solidario. Motivo: ${motivo_ineligibilidad} Revisá igualmente tu situación en la **PGU** (Pensión Garantizada Universal), vigente desde 2022.`,
+        tone: 'warn',
+        icon: '⚠️',
+      };
+
+  // Donut sólo si hay complemento real que sumar a la pensión actual.
+  const _chart = (elegible && complementoR > 0 && pensionActualR >= 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Pensión actual', value: pensionActualR },
+      { label: 'Complemento APS', value: complementoR },
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(pensionTotalR),
+    centerLabel: 'pensión total',
+    ariaLabel: `Pensión total de ${fmtCLP(pensionTotalR)}: ${fmtCLP(pensionActualR)} de pensión actual más ${fmtCLP(complementoR)} de complemento APS.`,
+  } : undefined;
+
   return {
     elegible_aps: elegible,
     pmas_2026: PMAS_2026,
     brecha_pension: Math.round(brecha_pension),
-    aps_complemento: Math.round(aps_complemento),
-    pension_total_aps: Math.round(pension_total_aps),
+    aps_complemento: complementoR,
+    pension_total_aps: pensionTotalR,
     motivo_ineligibilidad: motivo_ineligibilidad,
     referencias_pgu: referencias_pgu,
+    _insight,
+    _chart,
   };
 }

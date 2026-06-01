@@ -16,6 +16,7 @@ export interface CargaGlucemicaComidaOutputs {
   clasificacion: string;
   recomendacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function cargaGlucemicaComida(inputs: CargaGlucemicaComidaInputs): CargaGlucemicaComidaOutputs {
@@ -36,6 +37,10 @@ export function cargaGlucemicaComida(inputs: CargaGlucemicaComidaInputs): CargaG
       segMedia: 'Media',
       segAlta: 'Alta',
       ariaLabel: 'Escala de carga glucémica (Harvard): baja <10, media 10-20, alta >20',
+      insTitle: 'Qué significa tu CG',
+      insBaja: (cg: string, g: string) => `Esta porción aporta **${g} g de carbos** y una carga glucémica de **${cg}**, en zona **baja** (<10). Impacto suave sobre la glucemia: apta para cualquier momento del día.`,
+      insMedia: (cg: string, g: string) => `Esta porción aporta **${g} g de carbos** y una carga glucémica de **${cg}**, en zona **media** (10-20). Combinala con fibra o proteína para amortiguar el pico de azúcar.`,
+      insAlta: (cg: string, g: string) => `Esta porción aporta **${g} g de carbos** y una carga glucémica de **${cg}**, en zona **alta** (>20). Bajá la porción o sumá grasas/proteína para frenar la subida de glucosa.`,
     },
     en: {
       errIg: 'Enter a valid GI',
@@ -51,6 +56,10 @@ export function cargaGlucemicaComida(inputs: CargaGlucemicaComidaInputs): CargaG
       segMedia: 'Medium',
       segAlta: 'High',
       ariaLabel: 'Glycemic load scale (Harvard): low <10, medium 10-20, high >20',
+      insTitle: 'What your GL means',
+      insBaja: (cg: string, g: string) => `This serving provides **${g} g of carbs** and a glycemic load of **${cg}**, in the **low** zone (<10). Gentle impact on blood sugar: fine at any time of day.`,
+      insMedia: (cg: string, g: string) => `This serving provides **${g} g of carbs** and a glycemic load of **${cg}**, in the **medium** zone (10-20). Pair it with fiber or protein to soften the sugar spike.`,
+      insAlta: (cg: string, g: string) => `This serving provides **${g} g of carbs** and a glycemic load of **${cg}**, in the **high** zone (>20). Reduce the portion or add fats/protein to slow the glucose rise.`,
     },
   } as const)[__lang];
 
@@ -70,6 +79,14 @@ export function cargaGlucemicaComida(inputs: CargaGlucemicaComidaInputs): CargaG
   else { clasif = T.clasifAlta; rec = T.recAlta; }
 
   const cgFinal = Number(cg.toFixed(1));
+  const cgStr = String(cgFinal);
+  const carbosStr = carbosReales.toFixed(1);
+
+  let insTone: 'good' | 'warn' | 'neutral', insIcon: string, insText: string;
+  if (cgFinal < 10) { insTone = 'good'; insIcon = '🥗'; insText = T.insBaja(cgStr, carbosStr); }
+  else if (cgFinal < 20) { insTone = 'neutral'; insIcon = '🍽️'; insText = T.insMedia(cgStr, carbosStr); }
+  else { insTone = 'warn'; insIcon = '⚠️'; insText = T.insAlta(cgStr, carbosStr); }
+  const insight = { title: T.insTitle, text: insText, tone: insTone, icon: insIcon };
 
   const chart = {
     type: 'scale' as const,
@@ -91,5 +108,6 @@ export function cargaGlucemicaComida(inputs: CargaGlucemicaComidaInputs): CargaG
     clasificacion: clasif,
     recomendacion: rec,
     _chart: chart,
+    _insight: insight,
   };
 }

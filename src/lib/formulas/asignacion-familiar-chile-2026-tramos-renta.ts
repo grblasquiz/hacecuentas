@@ -11,6 +11,8 @@ export interface Outputs {
   descripcion_tramo: string;
   es_elegible: boolean;
   observaciones: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Decreto Ministerio Trabajo 2026 - Asignación Familiar
@@ -90,12 +92,46 @@ export function compute(i: Inputs): Outputs {
     observaciones = `Tramo ${tramo.id}: Requiere 1 mes cotización AFP mínimo, cargas legítimas (hijos, cónyuge, padres), RUT vigente. Confirma con tu empleador o Ministerio Trabajo.`;
   }
   
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+
+  const _insight = esElegible
+    ? {
+        title: `Tramo ${tramo.id}`,
+        text: `Con un ingreso de **${fmt(ingreso)}** caés en el **tramo ${tramo.id}** (${tramo.descripcion.toLowerCase()}): cobrás **${fmt(asignacionPorCarga)}** por carga, o sea **${fmt(totalAsignacion)}/mes** por tus **${cargas}** carga${cargas !== 1 ? 's' : ''}. En Chile, a menor renta más alta la asignación por carga.`,
+        tone: 'good' as const,
+        icon: '👨‍👩‍👧',
+      }
+    : {
+        title: 'Sin derecho a asignación',
+        text: `Tu ingreso de **${fmt(ingreso)}** supera el tope de **${fmt(LIMITE_MAXIMO_ELEGIBILIDAD)}** (tramo D), así que no te corresponde asignación familiar. El beneficio aplica solo hasta ese límite de renta.`,
+        tone: 'warn' as const,
+        icon: '🚫',
+      };
+
+  const topSegmentMax = Math.max(LIMITE_MAXIMO_ELEGIBILIDAD + 560000, ingreso + 1);
+  const _chart = {
+    type: 'scale',
+    marker: Math.round(ingreso),
+    markerLabel: `Tu renta: ${fmt(ingreso)}`,
+    min: 0,
+    segments: [
+      { nombre: 'Tramo A', max: 784591, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Tramo B', max: 1176887, color: '#65a30d', colorDark: '#84cc16' },
+      { nombre: 'Tramo C', max: 1569184, color: '#d97706', colorDark: '#f59e0b' },
+      { nombre: 'Tramo D', max: 2129184, color: '#ea580c', colorDark: '#fb923c' },
+      { nombre: 'Sin derecho', max: topSegmentMax, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Tramos de renta para la asignación familiar en Chile. Tu ingreso de ${fmt(ingreso)} cae en el tramo ${esElegible ? tramo.id : 'sin derecho (supera el tope)'}.`,
+  };
+
   return {
     tramo: tramo.id,
     asignacion_por_carga: asignacionPorCarga,
     total_asignacion_mensual: totalAsignacion,
     descripcion_tramo: tramo.descripcion,
     es_elegible: esElegible,
-    observaciones: observaciones
+    observaciones: observaciones,
+    _insight,
+    _chart
   };
 }

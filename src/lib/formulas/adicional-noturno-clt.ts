@@ -16,6 +16,8 @@ export interface Outputs {
   valorTotalNoturno: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmt = (n: number) =>
@@ -38,6 +40,26 @@ export function adicionalNoturnoClt(i: Inputs): Outputs {
   const formula = `Noturno = ${horasRelogio}h (relógio) × ${FATOR_REDUZIDO.toFixed(4)} × ${fmt(horaNoturna)} = ${fmt(valorTotal)}`;
   const explicacao = `Hora normal: ${fmt(horaNormal)}. Jornada noturna (22h-5h) com hora reduzida 52min30s: ${horasRelogio}h relógio = ${horasReduzidas.toFixed(2)}h noturnas computadas. Hora noturna com adicional de 20%: ${fmt(horaNoturna)}. Adicional noturno: ${fmt(adicional)}. Total noturno a pagar: ${fmt(valorTotal)}. Base legal: CLT art. 73.`;
 
+  const totalR = Number(valorTotal.toFixed(2));
+  const adicionalR = Number(adicional.toFixed(2));
+  const baseR = Number((totalR - adicionalR).toFixed(2));
+  const _insight = {
+    title: 'Quanto rende o adicional',
+    text: `Trabalhando **${horasRelogio}h** no horário noturno (22h-5h) você recebe **${fmt(valorTotal)}**, dos quais **${fmt(adicional)}** são o adicional de **20%** da CLT. A hora reduzida (52min30s) faz suas ${horasRelogio}h valerem como **${horasReduzidas.toFixed(2)}h**.`,
+    tone: 'good',
+    icon: '🌙',
+  };
+  const _chart = totalR > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Horas (base)', value: baseR },
+      { label: 'Adicional 20%', value: adicionalR },
+    ],
+    prefix: 'R$ ',
+    centerValue: fmt(valorTotal),
+    centerLabel: 'Total noturno',
+    ariaLabel: `Total noturno de ${fmt(valorTotal)}: ${fmt(baseR)} de horas base mais ${fmt(adicionalR)} de adicional de 20%`,
+  } : undefined;
   return {
     valorHoraNormal: fmt(horaNormal),
     valorHoraNoturna: fmt(horaNoturna),
@@ -46,5 +68,7 @@ export function adicionalNoturnoClt(i: Inputs): Outputs {
     valorTotalNoturno: fmt(valorTotal),
     formula,
     explicacao,
+    _insight,
+    _chart,
   };
 }

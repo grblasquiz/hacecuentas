@@ -16,6 +16,8 @@ export interface Outputs {
   splitRecomendado: string;
   potenciaConsumo: number; // consumo eléctrico watts
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function aireAcondicionadoFrigorias(i: Inputs): Outputs {
@@ -68,13 +70,41 @@ export function aireAcondicionadoFrigorias(i: Inputs): Outputs {
   // Consumo eléctrico aproximado (EER ~ 3): watts_consumo = watts_frio / 3
   const potConsumo = watts / 3;
 
+  const frigR = Math.round(frigorias);
+  const densidad = Math.round(frigR / m2);
+  const insightTone = ais === 'mala' ? 'warn' : 'neutral';
+  const insightText = ais === 'mala'
+    ? `Con aislación mala el cálculo sube a **${frigR.toLocaleString('es-AR')} frig/h** (${densidad} frig/m²): mejorar cortinas o burletes te bajaría el equipo y el consumo. ${split}.`
+    : `Para ${m2.toFixed(1)} m² necesitás **${frigR.toLocaleString('es-AR')} frig/h** (${densidad} frig/m²). Consumo eléctrico estimado **~${Math.round(potConsumo).toLocaleString('es-AR')} W** con EER 3. ${split}.`;
+
   return {
-    frigorias: Math.round(frigorias),
+    frigorias: frigR,
     btuH: Math.round(btuH),
     watts: Math.round(watts),
     m2: Number(m2.toFixed(2)),
     splitRecomendado: split,
     potenciaConsumo: Math.round(potConsumo),
-    resumen: `Necesitás ~${Math.round(frigorias)} frigorías/h (${Math.round(btuH)} BTU/h) para ${m2.toFixed(1)} m². ${split}.`,
+    resumen: `Necesitás ~${frigR} frigorías/h (${Math.round(btuH)} BTU/h) para ${m2.toFixed(1)} m². ${split}.`,
+    _insight: {
+      title: 'Tu equipo recomendado',
+      text: insightText,
+      tone: insightTone,
+      icon: '❄️',
+    },
+    _chart: {
+      type: 'scale',
+      marker: frigR,
+      markerLabel: `${frigR.toLocaleString('es-AR')} frig/h`,
+      min: 0,
+      segments: [
+        { nombre: '9.000 BTU', max: 2500, color: '#bae6fd', colorDark: '#0c4a6e' },
+        { nombre: '12.000 BTU', max: 3500, color: '#7dd3fc', colorDark: '#075985' },
+        { nombre: '18.000 BTU', max: 4800, color: '#38bdf8', colorDark: '#0369a1' },
+        { nombre: '24.000 BTU', max: 6500, color: '#0ea5e9', colorDark: '#0284c7' },
+        { nombre: '36.000 BTU', max: 9000, color: '#0284c7', colorDark: '#0ea5e9' },
+        { nombre: 'Multi/central', max: Math.max(12000, frigR + 1000), color: '#075985', colorDark: '#38bdf8' },
+      ],
+      ariaLabel: `Frigorías necesarias ${frigR} sobre la escala de equipos de aire acondicionado`,
+    },
   };
 }

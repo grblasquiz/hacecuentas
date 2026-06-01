@@ -16,6 +16,8 @@ export interface Outputs {
   cost_low: number;
   cost_high: number;
   breakdown: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Standard catering drink rate: 1 drink/guest/hr first 2 hrs, 0.5/hr after
@@ -110,6 +112,27 @@ export function compute(i: Inputs): Outputs {
     "Note: does not include mixers, ice, or non-alcoholic beverages.",
   ].join("\n");
 
+  const drinksPerGuest = (totalDrinks / guests).toFixed(1);
+  const _insight = {
+    title: "What you'll need",
+    text: `Plan for about **${totalDrinks} drinks** (~${drinksPerGuest} per guest): **${wineBottles} wine bottle${wineBottles !== 1 ? "s" : ""}**, **${beers} beer${beers !== 1 ? "s" : ""}** and **${spiritsBottles} spirits bottle${spiritsBottles !== 1 ? "s" : ""}**. Budget **$${costLow.toFixed(2)}–$${costHigh.toFixed(2)}**, mixers and ice not included.`,
+    tone: "neutral",
+    icon: "🍸",
+  };
+
+  const _chart = {
+    type: "doughnut",
+    slices: [
+      { label: "Wine",    value: parseFloat(wineCost.toFixed(2)) },
+      { label: "Beer",    value: parseFloat(beerCost.toFixed(2)) },
+      { label: "Spirits", value: parseFloat(spiritsCost.toFixed(2)) },
+    ],
+    prefix: "$",
+    centerValue: `$${costLow.toFixed(2)}`,
+    centerLabel: "Min. cost",
+    ariaLabel: "Breakdown of the minimum alcohol cost by drink type",
+  };
+
   return {
     total_drinks:    totalDrinks,
     wine_bottles:    wineBottles,
@@ -119,5 +142,7 @@ export function compute(i: Inputs): Outputs {
     cost_low:        costLow,
     cost_high:       costHigh,
     breakdown,
+    _insight,
+    _chart,
   };
 }

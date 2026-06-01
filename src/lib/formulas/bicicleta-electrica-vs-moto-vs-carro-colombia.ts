@@ -22,6 +22,7 @@ export interface Outputs {
   costo_por_km_carro: number;
   break_even_moto_vs_bici: number;
   viabilidad_bicicleta: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -176,8 +177,20 @@ export function compute(i: Inputs): Outputs {
     viabilidad_bicicleta = '⚠️ Viable pero límite: autonomía de batería comprometida';
   }
 
+  // Insight: mejor opción y ahorro frente a la segunda
+  const fmtCOP = (n: number) =>
+    "$" + Math.round(n).toLocaleString("es-CO");
+  const biciNoViable = viabilidad_bicicleta.startsWith("❌");
+  const _insight = {
+    title: "Cuál te conviene",
+    text: `Para **${km_anual.toLocaleString("es-CO")} km/año**, la opción más económica es **${mejor_opcion}** con un TCO de **${fmtCOP(costo_mejor)}/año**, **${fmtCOP(ahorro_vs_opcion2)}** menos que la segunda alternativa.`,
+    tone: biciNoViable ? "warn" : "good",
+    icon: mejor_opcion.startsWith("Bicicleta") ? "🚲" : mejor_opcion.startsWith("Moto") ? "🏍️" : "🚗",
+  };
+
   // Redondeo a pesos sin decimales
   return {
+    _insight,
     tco_bicicleta_anual: Math.round(tco_bicicleta_anual),
     tco_moto_anual: Math.round(tco_moto_anual),
     tco_carro_anual: Math.round(tco_carro_anual),

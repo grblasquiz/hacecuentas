@@ -1,6 +1,6 @@
 /** Aniversario de pareja — tiempo juntos */
 export interface Inputs { fechaInicio: string; }
-export interface Outputs { resumen: string; totalDias: number; totalSemanas: number; totalHoras: number; finesDeSemana: number; proximoHito: string; }
+export interface Outputs { resumen: string; totalDias: number; totalSemanas: number; totalHoras: number; finesDeSemana: number; proximoHito: string; _insight?: any; }
 
 export function aniversarioPareja(i: Inputs): Outputs {
   const parts = String(i.fechaInicio || '').split('-').map(Number);
@@ -43,5 +43,13 @@ export function aniversarioPareja(i: Inputs): Outputs {
     }
   }
 
-  return { resumen, totalDias, totalSemanas, totalHoras, finesDeSemana, proximoHito };
+  return {
+    resumen, totalDias, totalSemanas, totalHoras, finesDeSemana, proximoHito,
+    _insight: {
+      title: 'Tiempo juntos',
+      text: `Llevan **${resumen}** de relación: son **${totalDias.toLocaleString('es-AR')} días**, **${totalSemanas.toLocaleString('es-AR')} semanas** y más de **${totalHoras.toLocaleString('es-AR')} horas** compartidas. Próximo hito a festejar → ${proximoHito}`,
+      tone: 'good',
+      icon: '❤️',
+    },
+  };
 }

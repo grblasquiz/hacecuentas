@@ -23,6 +23,8 @@ export interface BolsaFamiliaOutputs {
   valorTotal: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const LIMITE_PER_CAPITA = 218;
@@ -50,6 +52,35 @@ export function bolsaFamiliaValor(inputs: BolsaFamiliaInputs): BolsaFamiliaOutpu
   const formula = `Valor = R$ ${VALOR_BASE} base + ${criancas}×R$ ${ADICIONAL_CRIANCA} (crianças) + ${jovens + gestantes}×R$ ${ADICIONAL_JOVEM} (jovens/gestantes) = R$ ${valorTotal}`;
   const explicacion = `Sua família tem renda per capita de R$ ${perCapita.toFixed(2)}. ${elegivel}. O valor total do Bolsa Família seria R$ ${valorTotal} (base R$ ${VALOR_BASE} + R$ ${adicCriancas} por crianças 0-6 anos + R$ ${adicJovens} por jovens 7-17/gestantes). Lembre que é obrigatório estar cadastrado no CadÚnico.`;
 
+  const _insight = elegivelBool
+    ? {
+        title: 'Benefício estimado',
+        text: `Com renda per capita de **R$ ${perCapita.toFixed(2)}** sua família se enquadra e receberia **R$ ${valorTotal}/mês** (base de R$ ${VALOR_BASE}${adicCriancas > 0 ? ` + R$ ${adicCriancas} por crianças 0-6` : ''}${adicJovens > 0 ? ` + R$ ${adicJovens} por jovens/gestantes` : ''}). Mantenha o CadÚnico atualizado para não perder o pagamento.`,
+        tone: 'good',
+        icon: '👨‍👩‍👧',
+      }
+    : {
+        title: 'Fora do critério',
+        text: `Sua renda per capita de **R$ ${perCapita.toFixed(2)}** supera o limite de **R$ ${LIMITE_PER_CAPITA}**, então a família não se enquadra no Bolsa Família. Verifique se todos os rendimentos foram informados corretamente no CadÚnico.`,
+        tone: 'warn',
+        icon: '⚠️',
+      };
+
+  const _chart = elegivelBool && (adicCriancas + adicJovens) > 0
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Base por família', value: VALOR_BASE },
+          ...(adicCriancas > 0 ? [{ label: 'Adicional crianças 0-6', value: adicCriancas }] : []),
+          ...(adicJovens > 0 ? [{ label: 'Adicional jovens/gestantes', value: adicJovens }] : []),
+        ],
+        prefix: 'R$ ',
+        centerValue: `R$ ${valorTotal}`,
+        centerLabel: 'por mês',
+        ariaLabel: `Composição do benefício mensal de R$ ${valorTotal}: base de R$ ${VALOR_BASE} mais adicionais`,
+      }
+    : undefined;
+
   return {
     rendaPerCapita: Math.round(perCapita * 100) / 100,
     elegivel,
@@ -59,5 +90,7 @@ export function bolsaFamiliaValor(inputs: BolsaFamiliaInputs): BolsaFamiliaOutpu
     valorTotal,
     formula,
     explicacion,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

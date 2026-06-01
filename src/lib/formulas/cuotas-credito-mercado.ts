@@ -14,6 +14,7 @@ export interface Outputs {
   cuotasRecomendadas: { cuotas: number; cuota: number; total: number; interes: number }[];
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function cuotasCreditoMercado(i: Inputs): Outputs {
@@ -71,6 +72,22 @@ export function cuotasCreditoMercado(i: Inputs): Outputs {
     ariaLabel: 'Composición del total financiado a 12 cuotas: precio de contado más interés.',
   };
 
+  const entraEnPresupuesto = cuotasRecomendadas.some(o => o.cuota <= cuotaMaximaSoportable);
+  const pctIntct12 = c12.total > 0 ? Math.round((Math.max(0, c12.interes) / c12.total) * 100) : 0;
+  const insight = entraEnPresupuesto
+    ? {
+        title: 'Te entra en el presupuesto',
+        text: `Con **$${Math.round(cuotaMaximaSoportable).toLocaleString('es-AR')}** disponibles al mes, te alcanza estirando a **${cuotasMinimas} cuotas**. A 12 cuotas el interés es **$${Math.max(0, c12.interes).toLocaleString('es-AR')}** (**${pctIntct12}%** del total): cuantas menos cuotas, menos intereses pagás.`,
+        tone: 'good',
+        icon: '🛒',
+      }
+    : {
+        title: 'No te entra ni a 36 cuotas',
+        text: `Con **$${Math.round(cuotaMaximaSoportable).toLocaleString('es-AR')}** disponibles al mes, ni la cuota más larga (36) entra en tu presupuesto. Conviene esperar, juntar para pagar parte de contado o buscar una tasa más baja antes de financiar.`,
+        tone: 'warn',
+        icon: '🛒',
+      };
+
   return {
     cuotaMaximaSoportable: Math.round(cuotaMaximaSoportable),
     cuotasMinimas,
@@ -80,5 +97,6 @@ export function cuotasCreditoMercado(i: Inputs): Outputs {
     cuotasRecomendadas,
     resumen: `Con $${Math.round(cuotaMaximaSoportable).toLocaleString('es-AR')} disponibles por mes, necesitás al menos ${cuotasMinimas} cuotas. A 12 cuotas pagás $${c12.cuota.toLocaleString('es-AR')} cada una.`,
     _chart: chart,
+    _insight: insight,
   };
 }

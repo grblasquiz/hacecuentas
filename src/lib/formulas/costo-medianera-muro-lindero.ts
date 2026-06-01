@@ -11,6 +11,7 @@ export interface CostoMedianeraOutputs {
   superficieM2: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 const COSTOS_REF: Record<string, { nombre: string; costoM2: number }> = {
@@ -49,11 +50,19 @@ export function costoMedianeraMuroLindero(inputs: CostoMedianeraInputs): CostoMe
     ariaLabel: 'Reparto del costo de la medianera entre tu parte y la del vecino',
   };
 
+  const insight = {
+    title: 'La mitad la paga el vecino',
+    text: `El muro cuesta **${fmt.format(costoTotal)}**, pero como medianera el lindero está obligado a aportar su mitad: a vos te corresponden **${fmt.format(costoVecino)}**. Acordá el reparto por escrito con el vecino antes de empezar la obra para poder reclamar el cobro de medianería.`,
+    tone: 'neutral' as const,
+    icon: '🧱',
+  };
+
   return {
     costoTotal,
     costoVecino,
     superficieM2: superficie,
     detalle: `Medianera de ${fmtN.format(largo)} m × ${fmtN.format(altura)} m = ${fmtN.format(superficie)} m² en ${COSTOS_REF[tipo].nombre}. Costo total: ${fmt.format(costoTotal)}. Tu parte (50%): ${fmt.format(costoVecino)}. Parte del vecino: ${fmt.format(costoVecino)}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

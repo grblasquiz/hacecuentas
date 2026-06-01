@@ -16,6 +16,8 @@ export interface Outputs {
   total_dough_g: number;
   hydration_class: string;
   formula_summary: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Hydration class thresholds — based on standard baker's classification
@@ -120,6 +122,51 @@ export function compute(i: Inputs): Outputs {
     (otherPct > 0 ? ` | Other: ${round2(otherG)} g (${otherPct}%)` : "") +
     ` | Total baker's %: ${totalBakerPct.toFixed(1)}%`;
 
+  // Insight: dynamic tone based on how challenging the hydration is to handle
+  let insightTone: "good" | "warn" | "neutral";
+  let insightText: string;
+  if (hydration >= 80) {
+    insightTone = "warn";
+    insightText =
+      `At **${hydration}% hydration** this is a wet, slack dough (**${hydrationClass}**) — sticky and hard to shape by hand. ` +
+      `For **${round2(flourG)} g of flour** you add **${round2(waterG)} g of water**, yielding **${round2(totalG)} g** of total dough. Use wet hands or a dough scraper.`;
+  } else if (hydration < 60) {
+    insightTone = "neutral";
+    insightText =
+      `At **${hydration}% hydration** this is a stiff, low-water dough (**${hydrationClass}**) — easy to knead but denser crumb. ` +
+      `**${round2(flourG)} g of flour** + **${round2(waterG)} g of water** give **${round2(totalG)} g** of total dough.`;
+  } else {
+    insightTone = "good";
+    insightText =
+      `At **${hydration}% hydration** the dough sits in a workable, forgiving range (**${hydrationClass}**). ` +
+      `**${round2(flourG)} g of flour** + **${round2(waterG)} g of water** make **${round2(totalG)} g** of total dough — a solid all-purpose ratio.`;
+  }
+
+  const _insight = {
+    title: "Reading your formula",
+    text: insightText,
+    tone: insightTone,
+    icon: "🍞",
+  };
+
+  // Donut: total dough broken into its weighed ingredients (slices sum to total)
+  const slices = [
+    { label: "Flour", value: round2(flourG) },
+    { label: "Water", value: round2(waterG) },
+    { label: "Salt", value: round2(saltG) },
+    { label: "Yeast", value: round2(yeastG) },
+  ];
+  if (otherG > 0) slices.push({ label: "Other", value: round2(otherG) });
+
+  const _chart = {
+    type: "doughnut",
+    slices,
+    prefix: "",
+    centerValue: `${round2(totalG)} g`,
+    centerLabel: "Total dough",
+    ariaLabel: `Dough composition by weight: flour ${round2(flourG)} g, water ${round2(waterG)} g, salt ${round2(saltG)} g, yeast ${round2(yeastG)} g${otherG > 0 ? `, other ${round2(otherG)} g` : ""}, totaling ${round2(totalG)} g.`,
+  };
+
   return {
     flour_g:       round2(flourG),
     water_g:       round2(waterG),
@@ -129,5 +176,7 @@ export function compute(i: Inputs): Outputs {
     total_dough_g: round2(totalG),
     hydration_class: hydrationClass,
     formula_summary: formulaSummary,
+    _insight,
+    _chart,
   };
 }

@@ -15,6 +15,7 @@ export interface Outputs {
   requiereAtencion: boolean;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function anionGapElectrolitos(i: Inputs): Outputs {
@@ -84,6 +85,26 @@ export function anionGapElectrolitos(i: Inputs): Outputs {
     ariaLabel: 'Escala de anion gap: bajo, normal, levemente elevado y muy elevado.',
   };
 
+  // Insight clínico: en qué zona de la escala cae el AG y qué implica.
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (ag >= limMin && ag <= limMax && !requiereAtencion) {
+    insightTone = 'good';
+    insightText = `Tu anion gap de **${agRed} mEq/L** cae dentro del rango normal (**${rangoNormal}**): el balance de cationes y aniones no medidos no sugiere acidosis con gap aumentado.`;
+  } else if (ag < limMin) {
+    insightTone = 'neutral';
+    insightText = `Tu anion gap de **${agRed} mEq/L** está **por debajo de ${limMin}**: un gap bajo casi siempre es hipoalbuminemia o artefacto de laboratorio, no una urgencia. ${interpretacion}`;
+  } else {
+    insightTone = 'warn';
+    insightText = `Tu anion gap de **${agRed} mEq/L** está fuera del rango normal (${rangoNormal}): **${categoria.replace(/[✅⚠️]/g, '').trim()}**. ${interpretacion}`;
+  }
+  const chartInsight = {
+    title: 'Qué dice tu anion gap',
+    text: insightText,
+    tone: insightTone,
+    icon: '🩸',
+  };
+
   return {
     anionGap: Number(ag.toFixed(1)),
     anionGapCorregido: Number(agCorr.toFixed(1)),
@@ -93,5 +114,6 @@ export function anionGapElectrolitos(i: Inputs): Outputs {
     requiereAtencion,
     resumen: `Anion gap: ${ag.toFixed(1)} mEq/L (normal ${rangoNormal}). ${categoria}. ${interpretacion}`,
     _chart: chart,
+    _insight: chartInsight,
   };
 }

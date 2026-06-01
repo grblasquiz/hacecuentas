@@ -13,6 +13,8 @@ export interface Outputs {
   vasosTotal: number;
   electrolitos: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function aguaDiariaDeportista(i: Inputs): Outputs {
@@ -22,11 +24,25 @@ export function aguaDiariaDeportista(i: Inputs): Outputs {
       errorPeso: 'Ingresá tu peso',
       electrolitosSi: 'Sí — sumá electrolitos (sodio, potasio) si entrenás más de 60 min o con alta intensidad.',
       electrolitosNo: 'No indispensable, pero recomendado en clima caluroso.',
+      insTitle: 'Tu plan de hidratación',
+      insIcon: '🏃',
+      insGlasses: 'vasos',
+      chartCenterLabel: 'total/día',
+      chartBase: 'Base diaria',
+      chartTraining: 'Entrenamiento',
+      chartAria: 'Composición del agua diaria: base metabólica y reposición por entrenamiento.',
     },
     en: {
       errorPeso: 'Enter your weight',
       electrolitosSi: 'Yes — add electrolytes (sodium, potassium) if you train more than 60 min or at high intensity.',
       electrolitosNo: 'Not essential, but recommended in hot weather.',
+      insTitle: 'Your hydration plan',
+      insIcon: '🏃',
+      insGlasses: 'glasses',
+      chartCenterLabel: 'total/day',
+      chartBase: 'Daily base',
+      chartTraining: 'Training',
+      chartAria: 'Daily water breakdown: metabolic base and training replacement.',
     },
   } as const)[__lang];
 

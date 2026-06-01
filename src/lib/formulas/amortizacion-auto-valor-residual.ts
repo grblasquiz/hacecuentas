@@ -10,6 +10,8 @@ export interface Outputs {
   porcentajeRetenido: number;
   depreciacionAnualProm: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function amortizacionAutoValorResidual(i: Inputs): Outputs {
@@ -27,11 +29,30 @@ export function amortizacionAutoValorResidual(i: Inputs): Outputs {
   const porcentajeRetenido = (valorResidual / precio) * 100;
   const depreciacionAnualProm = perdidaTotal / anos;
 
+  const ret = Number(porcentajeRetenido.toFixed(1));
+  const tone = ret >= 60 ? 'good' : ret < 40 ? 'warn' : 'neutral';
   return {
     valorResidual: Math.round(valorResidual),
     perdidaTotal: Math.round(perdidaTotal),
-    porcentajeRetenido: Number(porcentajeRetenido.toFixed(1)),
+    porcentajeRetenido: ret,
     depreciacionAnualProm: Math.round(depreciacionAnualProm),
     detalle: `Después de ${anos} año(s), el auto valdría ~$${Math.round(valorResidual).toLocaleString('es-AR')} (retiene ${porcentajeRetenido.toFixed(1)}% del valor). Pérdida total: $${Math.round(perdidaTotal).toLocaleString('es-AR')}. Depreciación promedio: $${Math.round(depreciacionAnualProm).toLocaleString('es-AR')}/año.`,
+    _insight: {
+      title: ret < 40 ? 'Depreciación fuerte' : ret >= 60 ? 'Buena retención de valor' : 'Cuánto valor pierde tu auto',
+      text: `En ${anos} año(s) el auto conserva el **${ret.toFixed(1)}%** de su precio (~$${Math.round(valorResidual).toLocaleString('es-AR')}) y pierde **$${Math.round(perdidaTotal).toLocaleString('es-AR')}**, unos $${Math.round(depreciacionAnualProm).toLocaleString('es-AR')} por año.${ret < 40 ? ' Más de la mitad del valor se evapora: vender antes o elegir modelos que deprecian menos hace una gran diferencia.' : ret >= 60 ? ' Retiene buena parte de su valor, señal de un modelo con reventa sólida.' : ''}`,
+      tone,
+      icon: '🚗',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Valor residual', value: Math.round(valorResidual) },
+        { label: 'Pérdida por depreciación', value: Math.round(perdidaTotal) },
+      ],
+      prefix: '$',
+      centerValue: '$' + Math.round(precio).toLocaleString('es-AR'),
+      centerLabel: 'Precio de compra',
+      ariaLabel: `De $${Math.round(precio).toLocaleString('es-AR')} de compra, quedan $${Math.round(valorResidual).toLocaleString('es-AR')} de valor residual y se pierden $${Math.round(perdidaTotal).toLocaleString('es-AR')} por depreciación.`,
+    },
   };
 }

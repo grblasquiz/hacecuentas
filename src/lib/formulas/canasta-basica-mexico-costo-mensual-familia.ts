@@ -13,6 +13,8 @@ export interface Outputs {
   comparativa_cadenas: string;
   porcentaje_salario: number;
   advertencia_nutricion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -119,12 +121,50 @@ export function compute(i: Inputs): Outputs {
     advertencia += `\n\n💡 Familia grande (${total_personas} personas): Considera comprar al mayoreo en COPPEL o COSTCO para ahorrar 8–12%.`;
   }
 
+  // Insight narrativo
+  const fmtMX = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  const tone_insight = porcentaje_salario >= 80 ? 'warn' : porcentaje_salario >= 50 ? 'neutral' : 'good';
+  const lectura_pct = porcentaje_salario >= 80
+    ? `consume **${porcentaje_salario}%** de un salario mínimo: prácticamente no queda nada para renta, transporte o servicios`
+    : porcentaje_salario >= 50
+      ? `representa **${porcentaje_salario}%** de un salario mínimo, una porción muy alta del ingreso`
+      : `equivale a **${porcentaje_salario}%** de un salario mínimo`;
+  const _insight = {
+    title: 'Qué significa este costo',
+    text: total_personas > 0
+      ? `Alimentar a ${total_personas} ${total_personas === 1 ? 'persona' : 'personas'} (perfil ${i.perfil}) cuesta **${fmtMX(costo_mensual)}/mes** (**${fmtMX(costo_diario)}** por persona al día) y ${lectura_pct}.`
+      : `Ingresá al menos 1 persona para estimar el costo de la canasta.`,
+    tone: total_personas > 0 ? tone_insight : 'neutral',
+    icon: '🌮'
+  };
+
+  // Gráfico gauge: peso de la canasta sobre el salario mínimo
+  let _chart: any;
+  if (total_personas > 0 && porcentaje_salario > 0) {
+    const markerVal = Math.min(porcentaje_salario, 160);
+    _chart = {
+      type: 'scale',
+      marker: markerVal,
+      markerLabel: porcentaje_salario + '% del salario mín.',
+      min: 0,
+      segments: [
+        { nombre: 'Holgado', max: 35, color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Justo', max: 60, color: '#eab308', colorDark: '#facc15' },
+        { nombre: 'Apretado', max: 90, color: '#f97316', colorDark: '#fb923c' },
+        { nombre: 'Insostenible', max: Math.max(160, Math.ceil(markerVal) + 10), color: '#dc2626', colorDark: '#ef4444' }
+      ],
+      ariaLabel: `La canasta consume ${porcentaje_salario}% de un salario mínimo mensual`
+    };
+  }
+
   return {
     costo_mensual,
     costo_diario,
     productos_clave: productos_clave_texto,
     comparativa_cadenas: comparativa_texto,
     porcentaje_salario,
-    advertencia_nutricion: advertencia
+    advertencia_nutricion: advertencia,
+    _insight,
+    _chart
   };
 }

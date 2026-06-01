@@ -11,6 +11,8 @@ export interface Outputs {
   botellasVino: number;
   litrosGaseosa: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function bebidasEventoLitrosPorPersona(i: Inputs): Outputs {
@@ -71,11 +73,42 @@ export function bebidasEventoLitrosPorPersona(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  // --- Gráfico: composición de la compra (las porciones suman el total exacto)
+  const cervezaInt = Math.round(litrosCerveza);
+  const vinoInt = Math.round(litrosVino);
+  const destiladoInt = Math.round(litrosDestilado);
+  const gaseosaInt = Math.max(0, litrosTotales - cervezaInt - vinoInt - destiladoInt);
+  const slices: { label: string; value: number }[] = [];
+  if (cervezaInt > 0) slices.push({ label: 'Cerveza', value: cervezaInt });
+  if (vinoInt > 0) slices.push({ label: 'Vino', value: vinoInt });
+  if (destiladoInt > 0) slices.push({ label: 'Destilados', value: destiladoInt });
+  if (gaseosaInt > 0) slices.push({ label: 'Gaseosa/agua', value: gaseosaInt });
+  const chart = {
+    type: 'doughnut',
+    slices,
+    suffix: ' L',
+    centerValue: `${litrosTotales} L`,
+    centerLabel: 'Compra total',
+    ariaLabel: `Composición de la compra de bebidas para ${personas} personas: ${litrosTotales} litros en total repartidos entre alcohol y bebidas sin alcohol.`
+  };
+
+  // --- Insight: cuánto compras por cabeza
+  const litrosPorPersona = litrosTotales / personas;
+  const tone = tipo === 'sin_alcohol' ? 'good' : litrosPorPersona >= 4 ? 'warn' : 'neutral';
+  const insight = {
+    title: 'Cuánto comprar',
+    text: `Para **${personas} personas** durante **${horas} h** (${temporada}) calculá **${litrosTotales} litros** en total, unos **${litrosPorPersona.toFixed(1)} L por cabeza**${tipo !== 'sin_alcohol' ? `, de los cuales ${Math.ceil(litrosCerveza)} L son de cerveza y ${botellasVino} botellas de vino` : ' de bebidas sin alcohol'}. Comprá un 10% de más para no quedarte corto.`,
+    tone,
+    icon: '🍻'
+  };
+
   return {
     litrosTotales,
     litrosCerveza: Math.ceil(litrosCerveza),
     botellasVino,
     litrosGaseosa,
     detalle: `Para ${personas} personas, ${horas} hs (${temporada}): ${fmt.format(Math.ceil(litrosCerveza))} L cerveza, ${botellasVino} botellas de vino${litrosDestilado > 0 ? `, ${Math.ceil(litrosDestilado)} L destilados` : ''}, ${litrosGaseosa} L gaseosa/agua. Total: ${litrosTotales} litros.`,
+    _insight: insight,
+    _chart: chart,
   };
 }

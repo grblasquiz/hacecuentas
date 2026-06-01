@@ -2,7 +2,7 @@
  * Calculadora de Fruta por Invitado - Cumple.
  */
 export interface FrutaPorInvitadoCumpleInputs { invitados:number; rol:string; }
-export interface FrutaPorInvitadoCumpleOutputs { kgFruta:number; kgFrutillas:number; kgManzana:number; kgBanana:number; kgVariados:number; _chart?:any; }
+export interface FrutaPorInvitadoCumpleOutputs { kgFruta:number; kgFrutillas:number; kgManzana:number; kgBanana:number; kgVariados:number; _chart?:any; _insight?:any; }
 export function frutaPorInvitadoCumple(inputs: FrutaPorInvitadoCumpleInputs): FrutaPorInvitadoCumpleOutputs {
   const inv = Number(inputs.invitados);
   const rol = inputs.rol;

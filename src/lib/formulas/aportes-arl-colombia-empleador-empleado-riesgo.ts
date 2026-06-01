@@ -12,6 +12,8 @@ export interface Outputs {
   aporte_anual_empleador: number;
   costo_anual_total_empresa: number;
   clase_riesgo_desc: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -37,13 +39,42 @@ export function compute(i: Inputs): Outputs {
   const aporteAnualEmpleador = aporteEmpleadorMensual * 12;
   const costoAnualTotalEmpresa = aporteAnualEmpleador * numTrabajadores;
 
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const empleadorR = Math.round(aporteEmpleadorMensual * 100) / 100;
+  const empleadoR = Math.round(aporteEmpleadoMensual * 100) / 100;
+  const totalMensualR = Math.round(aporteTotalMensual * 100) / 100;
+  const anualEmpleadorR = Math.round(aporteAnualEmpleador * 100) / 100;
+  const costoAnualR = Math.round(costoAnualTotalEmpresa * 100) / 100;
+
+  const claseAlta = ['IV', 'V', 'VI'].includes(i.clase_riesgo);
+  const _insight = {
+    title: `Costo ARL — Clase de riesgo ${i.clase_riesgo}`,
+    text: `Con una tarifa de **${tarifaPorcentaje}%** sobre un salario de **${fmtCOP(i.salario_mensual)}**, el aporte a la ARL es **${fmtCOP(totalMensualR)}/mes**. Para ${numTrabajadores} trabajador${numTrabajadores === 1 ? '' : 'es'}, el costo anual de la empresa llega a **${fmtCOP(costoAnualR)}**.${claseAlta ? ' Es una **clase de riesgo alta**: la tarifa pesa fuerte en la nómina.' : ''}`,
+    tone: claseAlta ? 'warn' : 'neutral',
+    icon: '🦺',
+  };
+
+  const _chart = totalMensualR <= 0 ? undefined : {
+    type: 'doughnut',
+    slices: [
+      { label: 'Aporte empleador', value: empleadorR },
+      { label: 'Aporte empleado', value: empleadoR },
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(totalMensualR),
+    centerLabel: 'aporte/mes',
+    ariaLabel: `Aporte ARL mensual de ${fmtCOP(totalMensualR)}: ${fmtCOP(empleadorR)} del empleador y ${fmtCOP(empleadoR)} del empleado.`,
+  };
+
   return {
     tarifa_arl: `${tarifaPorcentaje}%`,
-    aporte_empleador_mensual: Math.round(aporteEmpleadorMensual * 100) / 100,
-    aporte_empleado_mensual: Math.round(aporteEmpleadoMensual * 100) / 100,
-    aporte_total_mensual: Math.round(aporteTotalMensual * 100) / 100,
-    aporte_anual_empleador: Math.round(aporteAnualEmpleador * 100) / 100,
-    costo_anual_total_empresa: Math.round(costoAnualTotalEmpresa * 100) / 100,
-    clase_riesgo_desc: claseInfo.desc
+    aporte_empleador_mensual: empleadorR,
+    aporte_empleado_mensual: empleadoR,
+    aporte_total_mensual: totalMensualR,
+    aporte_anual_empleador: anualEmpleadorR,
+    costo_anual_total_empresa: costoAnualR,
+    clase_riesgo_desc: claseInfo.desc,
+    _insight,
+    _chart
   };
 }

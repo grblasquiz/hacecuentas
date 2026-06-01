@@ -1,6 +1,6 @@
 /** Alimentación complementaria por edad */
 export interface Inputs { edadBebeAC: number; metodoAC?: string; }
-export interface Outputs { alimentosPermitidos: string; listaAlimentos: string; textura: string; cantidad: string; frecuencia: string; }
+export interface Outputs { alimentosPermitidos: string; listaAlimentos: string; textura: string; cantidad: string; frecuencia: string; _insight?: any; }
 
 export function alimentacionComplementaria(i: Inputs): Outputs {
   const edad = Math.round(Number(i.edadBebeAC));
@@ -41,5 +41,18 @@ export function alimentacionComplementaria(i: Inputs): Outputs {
     frecuencia = '3 comidas + 2 snacks. Leche complementaria.';
   }
 
-  return { alimentosPermitidos: titular, listaAlimentos: alimentos, textura, cantidad, frecuencia };
+  const _insight = edad < 6
+    ? {
+        title: `A los ${edad} meses`,
+        text: `**${titular}**: la OMS recomienda esperar a los **6 meses** para arrancar con sólidos. Si tu pediatra indicó inicio temprano, ofrecé **${cantidad.toLowerCase()}**, **${frecuencia.toLowerCase()}**.`,
+        tone: 'warn',
+        icon: '🤱',
+      }
+    : {
+        title: `A los ${edad} meses`,
+        text: `**${titular}**. Ofrecé **${cantidad.toLowerCase()}** y mantené una rutina de **${frecuencia.toLowerCase()}**. Avanzá la textura según cómo lo lleve.`,
+        tone: 'neutral',
+        icon: '🥄',
+      };
+  return { alimentosPermitidos: titular, listaAlimentos: alimentos, textura, cantidad, frecuencia, _insight };
 }

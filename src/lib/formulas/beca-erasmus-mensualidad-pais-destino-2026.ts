@@ -18,6 +18,8 @@ export interface Outputs {
   total_mensual: number;
   total_estancia: number;
   desglose_texto: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -109,6 +111,32 @@ export function compute(i: Inputs): Outputs {
 
   const desglose_texto = lineas.join('\n');
 
+  // --- Gráfico: composición de la ayuda mensual (las partes suman el total)
+  const slices: { label: string; value: number }[] = [
+    { label: `Subvención UE (${grupoNombre[grupo].replace(/ \(.*\)/, '')})`, value: cuantia_ue_mensual },
+  ];
+  if (complemento_practicas_mensual > 0) slices.push({ label: 'Suplemento prácticas', value: complemento_practicas_mensual });
+  if (complemento_mec_mensual > 0) slices.push({ label: 'Complemento MEC', value: complemento_mec_mensual });
+  if (complemento_inclusion_mensual > 0) slices.push({ label: 'Complemento inclusión', value: complemento_inclusion_mensual });
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '€',
+    centerValue: `${total_mensual.toLocaleString('es-ES')} €`,
+    centerLabel: 'Ayuda/mes',
+    ariaLabel: `Composición de la ayuda Erasmus+ mensual de ${total_mensual} €: subvención UE de ${cuantia_ue_mensual} € más los complementos aplicables.`
+  };
+
+  // --- Insight: total de la estancia y peso de los complementos
+  const complementos = total_mensual - cuantia_ue_mensual;
+  const tone = complementos > 0 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Lo que cobrás',
+    text: `Tu beca Erasmus+ suma **${total_mensual.toLocaleString('es-ES')} €/mes**${complementos > 0 ? ` (la base UE de ${cuantia_ue_mensual} € más **${complementos.toLocaleString('es-ES')} €** en complementos)` : ''}, lo que da **${total_estancia.toLocaleString('es-ES')} €** por los **${duracion} mes${duracion !== 1 ? 'es' : ''}** de estancia.`,
+    tone,
+    icon: '🎓'
+  };
+
   return {
     cuantia_ue_mensual,
     complemento_practicas_mensual,
@@ -117,5 +145,7 @@ export function compute(i: Inputs): Outputs {
     total_mensual,
     total_estancia,
     desglose_texto,
+    _insight,
+    _chart,
   };
 }

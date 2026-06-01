@@ -14,6 +14,8 @@ export interface Outputs {
   paraMantener: number;
   paraSubir: number;
   factorActividad: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 const FACTORES: Record<string, number> = {
@@ -31,11 +33,25 @@ export function bmr(i: Inputs): Outputs {
       errPeso: 'Ingresá el peso',
       errAltura: 'Ingresá la altura',
       errEdad: 'Ingresá la edad',
+      insTitle: 'Qué significan tus calorías',
+      insText: (bmrV: number, tdeeV: number, burn: number) =>
+        `Tu cuerpo quema **${bmrV} kcal/día** solo por existir (metabolismo basal) y con tu nivel de actividad sumás **${burn} kcal**, llegando a un gasto total de **${tdeeV} kcal/día**.`,
+      chartCenterLabel: 'TDEE',
+      chartBmr: 'Metabolismo basal',
+      chartActividad: 'Actividad',
+      chartAria: 'Composición del gasto calórico diario entre metabolismo basal y actividad física',
     },
     en: {
       errPeso: 'Enter your weight',
       errAltura: 'Enter your height',
       errEdad: 'Enter your age',
+      insTitle: 'What your calories mean',
+      insText: (bmrV: number, tdeeV: number, burn: number) =>
+        `Your body burns **${bmrV} kcal/day** just to exist (basal metabolism) and your activity level adds **${burn} kcal**, reaching a total expenditure of **${tdeeV} kcal/day**.`,
+      chartCenterLabel: 'TDEE',
+      chartBmr: 'Basal metabolism',
+      chartActividad: 'Activity',
+      chartAria: 'Breakdown of daily calorie expenditure between basal metabolism and physical activity',
     },
   } as const)[__lang];
 
@@ -55,12 +71,33 @@ export function bmr(i: Inputs): Outputs {
   const factor = FACTORES[act] ?? 1.2;
   const tdeeVal = bmrVal * factor;
 
+  const bmrR = Math.round(bmrVal);
+  const tdeeR = Math.round(tdeeVal);
+  const burn = tdeeR - bmrR;
+
   return {
-    bmr: Math.round(bmrVal),
-    tdee: Math.round(tdeeVal),
+    bmr: bmrR,
+    tdee: tdeeR,
     paraBajar: Math.round(tdeeVal - 500), // déficit 500 kcal → ~0.5 kg/sem
     paraMantener: Math.round(tdeeVal),
     paraSubir: Math.round(tdeeVal + 300),
     factorActividad: factor,
+    _insight: {
+      title: T.insTitle,
+      text: T.insText(bmrR, tdeeR, burn),
+      tone: 'neutral',
+      icon: '🔥',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: T.chartBmr, value: bmrR },
+        { label: T.chartActividad, value: burn },
+      ],
+      prefix: '',
+      centerValue: `${tdeeR} kcal`,
+      centerLabel: T.chartCenterLabel,
+      ariaLabel: T.chartAria,
+    },
   };
 }

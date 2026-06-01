@@ -15,6 +15,7 @@ export interface Outputs {
   impuestosAnuales: number;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function freelanceHourlyRate(i: Inputs): Outputs {
@@ -40,6 +41,20 @@ export function freelanceHourlyRate(i: Inputs): Outputs {
 
   const resumen = `Tu tarifa debería ser ${tarifaHora.toFixed(2)}/hora para cobrar ${ingresoDeseado.toLocaleString()} netos al mes (${horasAnuales} horas facturables al año).`;
 
+  // De cada hora facturada, cuánto se va en impuestos
+  const impPorHora = tarifaHora * (imp / 100);
+  const insightTone: 'good' | 'warn' | 'neutral' = imp >= 30 ? 'warn' : 'neutral';
+  const insightText = imp >= 30
+    ? `De cada hora a $${tarifaHora.toFixed(2)} se te van **$${impPorHora.toFixed(2)} en impuestos** (${imp}%): $${Math.round(impuestosAnuales).toLocaleString()}/año. Cobrar menos que esta tarifa significa trabajar gratis para el fisco.`
+    : `Tu tarifa de $${tarifaHora.toFixed(2)}/hora ya tiene los impuestos adentro: $${impPorHora.toFixed(2)} por hora (${imp}%). El neto que te queda es **$${ingresoDeseado.toLocaleString()}/mes**; cobrar por debajo te lo come.`;
+
+  const insight = {
+    title: 'Qué te queda por hora',
+    text: insightText,
+    tone: insightTone,
+    icon: '\u{1F4BC}',
+  };
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -61,5 +76,6 @@ export function freelanceHourlyRate(i: Inputs): Outputs {
     impuestosAnuales: Math.round(impuestosAnuales),
     resumen,
     _chart: chart,
+    _insight: insight,
   };
 }

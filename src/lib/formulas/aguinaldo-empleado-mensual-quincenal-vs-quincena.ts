@@ -14,6 +14,7 @@ export interface Outputs {
   diferencia: number;
   remuneracion_normalizada: number;
   mejor_mes: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -57,11 +58,38 @@ export function compute(i: Inputs): Outputs {
   // Diferencia
   const diferencia = aguinaldo_quincenal - aguinaldo_mensual;
 
+  const fmtAR = (x: number) => Math.round(x).toLocaleString('es-AR');
+  const difAbs = Math.abs(Math.round(diferencia * 100) / 100);
+  let _insight;
+  if (difAbs < 1) {
+    _insight = {
+      title: 'Mismo aguinaldo por los dos métodos',
+      text: `Tanto el método mensual (mejor mes) como el quincenal normalizado dan **$${fmtAR(aguinaldo_quincenal)}**: tu remuneración fue pareja en el semestre, así que no hay diferencia práctica.`,
+      tone: 'neutral',
+      icon: '⚖️',
+    };
+  } else if (diferencia > 0) {
+    _insight = {
+      title: 'El método quincenal te favorece',
+      text: `Promediando las 6 quincenas el aguinaldo da **$${fmtAR(aguinaldo_quincenal)}**, frente a **$${fmtAR(aguinaldo_mensual)}** tomando solo el mejor mes: **$${fmtAR(difAbs)}** más. Conviene verificar con el empleador qué base usa, porque la ley manda tomar la mejor remuneración devengada.`,
+      tone: 'good',
+      icon: '📈',
+    };
+  } else {
+    _insight = {
+      title: 'El mejor mes da más aguinaldo',
+      text: `Tomar tu **mejor mes** rinde **$${fmtAR(aguinaldo_mensual)}**, contra **$${fmtAR(aguinaldo_quincenal)}** promediando las quincenas: **$${fmtAR(difAbs)}** a tu favor. El SAC se calcula sobre la mejor remuneración del semestre, así que reclamá esa base.`,
+      tone: 'good',
+      icon: '📈',
+    };
+  }
+
   return {
     aguinaldo_quincenal: Math.round(aguinaldo_quincenal * 100) / 100,
     aguinaldo_mensual: Math.round(aguinaldo_mensual * 100) / 100,
     diferencia: Math.round(diferencia * 100) / 100,
     remuneracion_normalizada: Math.round(remuneracion_normalizada * 100) / 100,
-    mejor_mes: Math.round(mejor_mes * 100) / 100
+    mejor_mes: Math.round(mejor_mes * 100) / 100,
+    _insight
   };
 }

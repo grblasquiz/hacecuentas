@@ -12,6 +12,7 @@ export interface Outputs {
   costoTotalCompra: number;
   cuotaMensualCredito: number;
   recomendacion: string;
+  _insight?: any;
 }
 
 export function alquilerVsComprar(i: Inputs): Outputs {
@@ -58,6 +59,11 @@ export function alquilerVsComprar(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const diff = Math.abs(Math.round(costoTotalAlquiler - costoTotalCompra));
+  const insText = conviene === 'comprar'
+    ? `En **${plazo} años** comprar sale **$${fmt.format(diff)}** más barato que alquilar ($${fmt.format(costoTotalCompra)} vs $${fmt.format(costoTotalAlquiler)}) y encima terminás con la propiedad. La cuota del crédito sería **$${fmt.format(Math.round(cuotaMensual))}/mes**.`
+    : `En **${plazo} años** alquilar sale **$${fmt.format(diff)}** más barato que comprar ($${fmt.format(costoTotalAlquiler)} vs $${fmt.format(costoTotalCompra)}), con cuota de crédito de **$${fmt.format(Math.round(cuotaMensual))}/mes**. Pero ojo: comprando construís patrimonio y no quedás expuesto a ajustes de alquiler.`;
+
   return {
     costoTotalAlquiler: Math.round(costoTotalAlquiler),
     costoTotalCompra: Math.round(costoTotalCompra),
@@ -65,5 +71,11 @@ export function alquilerVsComprar(i: Inputs): Outputs {
     recomendacion: conviene === 'comprar'
       ? `Comprar conviene. En ${plazo} años, alquilar cuesta $${fmt.format(costoTotalAlquiler)} vs comprar $${fmt.format(costoTotalCompra)}. Además, al comprar tenés la propiedad.`
       : `Alquilar conviene financieramente. En ${plazo} años, alquilar cuesta $${fmt.format(costoTotalAlquiler)} vs comprar $${fmt.format(costoTotalCompra)}. Pero comprando construís patrimonio.`,
+    _insight: {
+      title: conviene === 'comprar' ? 'Conviene comprar' : 'Conviene alquilar',
+      text: insText,
+      tone: conviene === 'comprar' ? 'good' : 'neutral',
+      icon: '🏡',
+    },
   };
 }

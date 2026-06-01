@@ -16,6 +16,8 @@ export interface Outputs {
   cuantia_total_estimada: number;
   requisito_academico: string;
   conclusion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // ─── Umbrales oficiales MEC (convocatoria 2025-26, referencia 2026-27)
@@ -198,7 +200,13 @@ export function compute(i: Inputs): Outputs {
     conclusion = `Tu renta (${renta.toLocaleString('es-ES')}€) está en el tramo U3 (${u2.toLocaleString('es-ES')}€–${u3.toLocaleString('es-ES')}€). Cumples el requisito económico mínimo: puedes optar a beca de matrícula y cuantía variable, pero no a la cuantía fija. Estimación: ${cuantia_total_estimada.toLocaleString('es-ES')}€.`;
   }
 
-  return {
+  const tramoCorto = !tiene_derecho ? 'fuera de umbral' : renta <= u1 ? 'U1' : renta <= u2 ? 'U2' : 'U3';
+
+  const insightText = !tiene_derecho
+    ? `Tu renta de **${renta.toLocaleString('es-ES')}€** supera el umbral **U3 (${u3.toLocaleString('es-ES')}€)** para ${miembros} miembros, así que no tenés derecho a la beca general MEC. Conviene revisar las ayudas de tu comunidad autónoma o universidad.`
+    : `En el tramo **${tramoCorto}** tu beca estimada suma **${cuantia_total_estimada.toLocaleString('es-ES')}€/año** (cuantía fija ${cuantia_fija_renta.toLocaleString('es-ES')}€ + matrícula ${beca_matricula.toLocaleString('es-ES')}€ + variable ${cuantia_variable_orientativa.toLocaleString('es-ES')}€)${cuantia_fija_residencia > 0 ? `, más **${cuantia_fija_residencia.toLocaleString('es-ES')}€** de residencia si vivís fuera del domicilio familiar` : ''}.`;
+
+  const out: Outputs = {
     tramo_renta,
     umbral_aplicable: u3,
     cuantia_fija_renta,
@@ -208,5 +216,31 @@ export function compute(i: Inputs): Outputs {
     cuantia_total_estimada,
     requisito_academico: requisito.texto,
     conclusion,
+    _insight: {
+      title: !tiene_derecho ? 'Sin derecho a beca general' : 'Cómo se compone tu beca',
+      text: insightText,
+      tone: !tiene_derecho ? 'warn' : 'good',
+      icon: '🎓',
+    },
   };
+
+  // Donut solo si hay beca y al menos un componente > 0
+  if (tiene_derecho && cuantia_total_estimada > 0) {
+    const slices = [
+      { label: 'Cuantía fija', value: cuantia_fija_renta },
+      { label: 'Beca de matrícula', value: beca_matricula },
+      { label: 'Cuantía variable', value: cuantia_variable_orientativa },
+    ].filter((s) => s.value > 0);
+    out._chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '',
+      suffix: '€',
+      centerValue: cuantia_total_estimada.toLocaleString('es-ES') + '€',
+      centerLabel: 'Total estimado',
+      ariaLabel: `La beca total estimada de ${cuantia_total_estimada.toLocaleString('es-ES')}€ se compone de cuantía fija ${cuantia_fija_renta.toLocaleString('es-ES')}€, matrícula ${beca_matricula.toLocaleString('es-ES')}€ y variable ${cuantia_variable_orientativa.toLocaleString('es-ES')}€`,
+    };
+  }
+
+  return out;
 }

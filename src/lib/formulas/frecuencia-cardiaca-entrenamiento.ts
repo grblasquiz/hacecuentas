@@ -13,6 +13,7 @@ export interface Outputs {
   zona5Min: number; zona5Max: number;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function frecuenciaCardiacaEntrenamiento(i: Inputs): Outputs {
@@ -30,6 +31,9 @@ export function frecuenciaCardiacaEntrenamiento(i: Inputs): Outputs {
       ariaLabel: 'Escala de zonas de frecuencia cardíaca de entrenamiento (Karvonen)',
       mensaje: (fcMax: number, z2min: number, z2max: number, z3min: number, z3max: number) =>
         `FC máxima: ${fcMax} bpm. Zona quema grasa: ${z2min}–${z2max} bpm. Zona cardio: ${z3min}–${z3max} bpm.`,
+      insightTitle: 'Cómo usar tus zonas',
+      insightText: (fcMax: number, z2min: number, z2max: number, z3min: number, z3max: number) =>
+        `Para quemar grasa entrená sostenido en **${z2min}–${z2max} bpm** (Z2), donde el cuerpo tira más de la reserva grasa. Para ganar fondo cardiovascular subí a **${z3min}–${z3max} bpm** (Z3) y nunca cruces tu techo de ${fcMax} bpm.`,
     },
     en: {
       errorEdad: 'Enter a valid age',
@@ -42,6 +46,9 @@ export function frecuenciaCardiacaEntrenamiento(i: Inputs): Outputs {
       ariaLabel: 'Heart rate training zones scale (Karvonen)',
       mensaje: (fcMax: number, z2min: number, z2max: number, z3min: number, z3max: number) =>
         `Max HR: ${fcMax} bpm. Fat burn zone: ${z2min}–${z2max} bpm. Cardio zone: ${z3min}–${z3max} bpm.`,
+      insightTitle: 'How to use your zones',
+      insightText: (fcMax: number, z2min: number, z2max: number, z3min: number, z3max: number) =>
+        `To burn fat, train steady at **${z2min}–${z2max} bpm** (Z2), where the body draws more on fat reserves. To build cardiovascular endurance step up to **${z3min}–${z3max} bpm** (Z3) and never cross your ceiling of ${fcMax} bpm.`,
     },
   } as const)[__lang];
 
@@ -82,6 +89,13 @@ export function frecuenciaCardiacaEntrenamiento(i: Inputs): Outputs {
     ariaLabel: T.ariaLabel,
   };
 
+  const insight = {
+    title: T.insightTitle,
+    text: T.insightText(Math.round(fcMaxima), z2.min, z2.max, z3.min, z3.max),
+    tone: 'neutral' as const,
+    icon: '\u{1F3C3}',
+  };
+
   return {
     fcMaxima: Math.round(fcMaxima),
     zona1Min: z1.min, zona1Max: z1.max,
@@ -91,5 +105,6 @@ export function frecuenciaCardiacaEntrenamiento(i: Inputs): Outputs {
     zona5Min: z5.min, zona5Max: z5.max,
     mensaje: T.mensaje(Math.round(fcMaxima), z2.min, z2.max, z3.min, z3.max),
     _chart: chart,
+    _insight: insight,
   };
 }

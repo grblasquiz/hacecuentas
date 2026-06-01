@@ -10,6 +10,7 @@ export interface Outputs {
   totalConPropina: number;
   propinaMonto: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function dividirCuentaAmigos(i: Inputs): Outputs {
@@ -40,10 +41,23 @@ export function dividirCuentaAmigos(i: Inputs): Outputs {
     ariaLabel: 'Composición del total a dividir: cuenta, propina y gastos extra',
   };
 
+  const porPersonaR = Math.ceil(porPersona);
+  const totalR = Math.round(totalConPropina);
+  const sobrante = porPersonaR * personas - totalR;
+  const insight = {
+    title: 'Lo que pone cada uno',
+    text: `Entre **${personas}** la cuenta cae a **$${porPersonaR.toLocaleString('es-AR')}** por cabeza` +
+      (propPct > 0 ? `, con **$${Math.round(propinaMonto).toLocaleString('es-AR')}** de propina (${propPct}%) ya repartida` : '') +
+      (sobrante > 0 ? `. Redondeando para arriba sobran **$${sobrante.toLocaleString('es-AR')}** que suman a la propina.` : '.'),
+    tone: 'neutral' as const,
+    icon: '🧾',
+  };
+
   return {
-    porPersona: Math.ceil(porPersona),
-    totalConPropina: Math.round(totalConPropina),
+    porPersona: porPersonaR,
+    totalConPropina: totalR,
     propinaMonto: Math.round(propinaMonto),
     _chart: chart,
+    _insight: insight,
   };
 }

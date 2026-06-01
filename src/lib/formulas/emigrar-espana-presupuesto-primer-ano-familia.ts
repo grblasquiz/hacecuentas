@@ -15,6 +15,7 @@ export interface Outputs {
   totalMensualUSD: number;
   ahorroMinimo: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -231,11 +232,29 @@ export function compute(i: Inputs): Outputs {
       "Composición del presupuesto del primer año al emigrar a España: visado, vuelos, mudanza, depósito y alquiler, manutención, seguro médico, escolarización y transporte.",
   };
 
+  // ─── INSIGHT ──────────────────────────────────────────────────────────────
+  const viviendaUSD = Math.round(depositoAlquilerUSD + alquilerAnualUSD);
+  const viviendaPct = totalUSD > 0 ? (viviendaUSD / totalUSD) * 100 : 0;
+  const topSlice = chartSlices.reduce(
+    (a, b) => (b.value > a.value ? b : a),
+    chartSlices[0]
+  );
+  const topPct = totalUSD > 0 ? (topSlice.value / totalUSD) * 100 : 0;
+  const insight = {
+    title: "Tu mayor gasto del primer año",
+    text:
+      `La **vivienda** (depósito + 12 meses de alquiler) se lleva **${fmt(viviendaUSD)}**, el **${viviendaPct.toFixed(0)}%** del presupuesto total — el rubro que más mueve la aguja es **${topSlice.label}** (${topPct.toFixed(0)}%). ` +
+      `Tu gasto mensual recurrente queda en **${fmt(totalMensualUSD)}/mes**; llegá con un colchón de al menos **${fmt(ahorroMinimo)}** (instalación + 3 meses) para no vivir al límite.`,
+    tone: "warn" as const,
+    icon: "🏠",
+  };
+
   return {
     totalUSD,
     desglose: lines.join("\n"),
     totalMensualUSD,
     ahorroMinimo,
     _chart: chart,
+    _insight: insight,
   };
 }

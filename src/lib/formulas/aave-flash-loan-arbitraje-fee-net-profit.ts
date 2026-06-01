@@ -17,6 +17,7 @@ export interface Outputs {
   roiPct: number;
   verdict: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -98,6 +99,40 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
+  // Insight narrativo: interpreta el profit neto y los costos que se comen el gross.
+  const totalCostos = aaveFee + slippageCost + gasCostUsd;
+  let insight: any;
+  if (spreadPct <= 0) {
+    insight = {
+      title: 'Sin spread, sin arbitraje',
+      text: `Con **0% de spread** no hay diferencia de precio que capturar. El flash loan no genera ganancia: revisá los precios entre exchanges.`,
+      tone: 'warn' as const,
+      icon: '⚡',
+    };
+  } else if (netProfit > 0) {
+    const margenPct = (netProfit / grossProfit) * 100;
+    insight = {
+      title: 'Arbitraje rentable',
+      text: `Después de fee de Aave, slippage y gas, te quedan **$${netProfit.toFixed(2)}** netos: el **${margenPct.toFixed(1)}%** del profit bruto. Aguantás gas hasta **${breakevenGwei.toFixed(1)} gwei** antes de quedar en cero.`,
+      tone: 'good' as const,
+      icon: '✅',
+    };
+  } else if (profitBeforeGas > 0) {
+    insight = {
+      title: 'El gas se come la ganancia',
+      text: `El spread cubre fee y slippage, pero a **${gasPriceGwei} gwei** el gas ($${gasCostUsd.toFixed(2)}) deja el trade en **$${netProfit.toFixed(2)}**. Necesitás gas **≤ ${breakevenGwei.toFixed(1)} gwei** para que dé positivo.`,
+      tone: 'warn' as const,
+      icon: '⛽',
+    };
+  } else {
+    insight = {
+      title: 'Spread insuficiente',
+      text: `Los costos (**$${totalCostos.toFixed(2)}** entre fee, slippage y gas) superan el profit bruto de **$${grossProfit.toFixed(2)}**. El trade pierde **$${Math.abs(netProfit).toFixed(2)}**: necesitás un spread mayor.`,
+      tone: 'warn' as const,
+      icon: '🔻',
+    };
+  }
+
   return {
     grossProfit,
     aaveFee,
@@ -108,5 +143,6 @@ export function compute(i: Inputs): Outputs {
     roiPct,
     verdict,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -16,6 +16,8 @@ export interface Outputs {
   recomendacion: string;
   especie: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function aguaPerroGatoDiaria(i: Inputs): Outputs {
@@ -67,7 +69,17 @@ export function aguaPerroGatoDiaria(i: Inputs): Outputs {
     else recomendacion = 'Bebedero de 2+ L o dos bebederos en distintos lugares de la casa. Ojo en verano.';
   }
 
-  return {
+  const aguaABeber = Math.max(0, promedio - aguaComida);
+  const tone = especie === 'gato' ? 'warn' : 'neutral';
+  const _insight = {
+    title: especie === 'gato' ? 'Hidratación de tu gato' : 'Hidratación de tu perro',
+    text: especie === 'gato'
+      ? `Tu gato de ${peso} kg necesita ~**${Math.round(promedio)} ml/día**. Los gatos toman poco solos: la comida le aporta ~**${Math.round(aguaComida)} ml**, así que ofrecé fuente circulante y agua lejos del plato.`
+      : `Tu perro de ${peso} kg necesita ~**${Math.round(promedio)} ml/día** (rango ${Math.round(aguaMin)}-${Math.round(aguaMax)} ml). La comida le aporta ~**${Math.round(aguaComida)} ml**; el resto, ~**${Math.round(aguaABeber)} ml**, lo tiene que tomar.`,
+    tone,
+    icon: especie === 'gato' ? '🐱' : '🐶',
+  };
+  const out: Outputs = {
     aguaMinMl: Math.round(aguaMin),
     aguaMaxMl: Math.round(aguaMax),
     aguaPromedioMl: Math.round(promedio),
@@ -76,5 +88,20 @@ export function aguaPerroGatoDiaria(i: Inputs): Outputs {
     recomendacion,
     especie: especie === 'perro' ? 'Perro' : 'Gato',
     resumen: `Tu ${especie} de ${peso} kg necesita ~${Math.round(promedio)} ml de agua/día (rango ${Math.round(aguaMin)}-${Math.round(aguaMax)} ml).`,
+    _insight,
   };
+  if (aguaComida > 0 && aguaABeber > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Que toma del bebedero', value: Math.round(aguaABeber) },
+        { label: 'Que aporta la comida', value: Math.round(aguaComida) },
+      ],
+      prefix: '',
+      centerValue: `${Math.round(promedio)} ml`,
+      centerLabel: 'total/día',
+      ariaLabel: `De ${Math.round(promedio)} ml diarios, ${Math.round(aguaComida)} ml vienen de la comida y ${Math.round(aguaABeber)} ml del bebedero`,
+    };
+  }
+  return out;
 }

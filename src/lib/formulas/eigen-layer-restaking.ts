@@ -1,6 +1,6 @@
 /** EigenLayer restaking rewards */
 export interface Inputs { stEthRestaked: number; baseEthApr: number; avsRewardApr: number; pointsMultiplier: number; ethPriceUsd: number; months: number; }
-export interface Outputs { totalApy: number; baseRewardEth: number; avsRewardEth: number; totalRewardEth: number; totalRewardUsd: number; pointsEstimated: number; explicacion: string; _chart?: any; }
+export interface Outputs { totalApy: number; baseRewardEth: number; avsRewardEth: number; totalRewardEth: number; totalRewardUsd: number; pointsEstimated: number; explicacion: string; _chart?: any; _insight?: any; }
 export function eigenLayerRestaking(i: Inputs): Outputs {
   const amount = Number(i.stEthRestaked);
   const baseApr = Number(i.baseEthApr) / 100;
@@ -26,6 +26,18 @@ export function eigenLayerRestaking(i: Inputs): Outputs {
     centerLabel: 'Reward total USD',
     ariaLabel: 'Composición de las recompensas de restaking en EigenLayer en USD: reward base de staking de ETH frente a reward de los AVS.',
   };
+  const totalUsd = total * price;
+  const avsShare = total > 0 ? (avsReward / total) * 100 : 0;
+  const insightLectura = avsReward > baseReward
+    ? `el grueso (**${avsShare.toFixed(0)}%**) viene de los **AVS**, la capa extra de restaking sobre el staking base`
+    : `el grueso viene del **staking base** de ETH; los AVS suman un ${avsShare.toFixed(0)}% encima`;
+  const insight = {
+    title: 'De dónde sale tu reward',
+    text: `Con **${amount}** stETH a un APY de **${totalApy.toFixed(2)}%**, en ${months} meses juntás **${total.toFixed(4)} ETH** (≈ **$${totalUsd.toFixed(2)}**) más **${points.toFixed(0)}** puntos. Hoy ${insightLectura}; la parte AVS es la más variable, ajustala si cambian los rewards.`,
+    tone: 'good' as const,
+    icon: '🔁',
+  };
+
   return {
     totalApy: Number(totalApy.toFixed(2)),
     baseRewardEth: Number(baseReward.toFixed(6)),
@@ -35,5 +47,6 @@ export function eigenLayerRestaking(i: Inputs): Outputs {
     pointsEstimated: Number(points.toFixed(0)),
     explicacion: `Restakeando ${amount} stETH: APY total ${totalApy.toFixed(2)}% (${(baseApr*100).toFixed(2)}% base + ${(avsApr*100).toFixed(2)}% AVS). En ${months} meses: ${total.toFixed(4)} ETH = $${(total*price).toFixed(2)} + ${points.toFixed(0)} puntos.`,
     _chart: chart,
+    _insight: insight,
   };
 }

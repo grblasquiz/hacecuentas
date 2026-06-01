@@ -19,6 +19,7 @@ export interface CesantiasColombiaOutputs {
   formula: string;
   explicacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function cesantiasColombia(inputs: CesantiasColombiaInputs): CesantiasColombiaOutputs {
@@ -48,6 +49,14 @@ export function cesantiasColombia(inputs: CesantiasColombiaInputs): CesantiasCol
 
   const explicacion = `Con un salario de $${salario.toLocaleString('es-CO')} COP${auxTransporte > 0 ? ` y auxilio de transporte de $${auxTransporte.toLocaleString('es-CO')}` : ''}${proporcional}, tus cesantías son $${Math.round(cesantias).toLocaleString('es-CO')}. Los intereses sobre cesantías (12% anual proporcional) son $${Math.round(interesesCesantias).toLocaleString('es-CO')}. El total a recibir es $${Math.round(total).toLocaleString('es-CO')} COP. El empleador debe consignar las cesantías al fondo antes del 14 de febrero y pagar los intereses directamente al trabajador antes del 31 de enero.`;
 
+  const interesPct = total > 0 ? (interesesCesantias / total) * 100 : 0;
+  const insight = {
+    title: 'Composición de tu liquidación',
+    text: `De los **$${Math.round(total).toLocaleString('es-CO')} COP** totales, **$${Math.round(cesantias).toLocaleString('es-CO')}** son cesantías (van al fondo antes del 14 de febrero) y **$${Math.round(interesesCesantias).toLocaleString('es-CO')}** son los intereses del 12% (el **${interesPct.toFixed(1)}%** del total), que el empleador te paga directo antes del 31 de enero. Si no te consignan a tiempo, el empleador debe **un día de salario por cada día de mora**.`,
+    tone: 'neutral' as const,
+    icon: '💰',
+  };
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -67,5 +76,6 @@ export function cesantiasColombia(inputs: CesantiasColombiaInputs): CesantiasCol
     formula,
     explicacion,
     _chart: chart,
+    _insight: insight,
   };
 }

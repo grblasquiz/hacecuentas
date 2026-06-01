@@ -14,6 +14,8 @@ export interface Outputs {
   total_aportes_empleador: number;
   costo_total_empleado: number;
   porcentaje_descuento: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -50,6 +52,29 @@ export function compute(i: Inputs): Outputs {
   const costo_total_empleado = salario + total_aportes_empleador;
   const porcentaje_descuento = salario > 0 ? (total_descuentos_empleado / salario) * 100 : 0;
 
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const netoEmpleado = salario - total_descuentos_empleado;
+  const _insight = {
+    title: 'Descuentos y costo real del empleo',
+    text: `Al trabajador le descuentan **${fmtCOP(total_descuentos_empleado)}** (**${(Math.round(porcentaje_descuento * 100) / 100).toLocaleString('es-CO')}%**: 4% salud + 4% pensión), quedando un neto de **${fmtCOP(netoEmpleado)}**. Para la empresa, ese sueldo cuesta **${fmtCOP(costo_total_empleado)}** sumando sus aportes.`,
+    tone: 'warn' as const,
+    icon: '🇨🇴',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Salario base', value: Math.round(salario) },
+      ...(aporte_eps_empleador > 0 ? [{ label: 'Salud empleador (8,5%)', value: Math.round(aporte_eps_empleador) }] : []),
+      { label: 'Pensión empleador (12%)', value: Math.round(aporte_pension_empleador) },
+      { label: 'ARL empleador', value: Math.round(aporte_arl_empleador) },
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(costo_total_empleado),
+    centerLabel: 'costo empresa',
+    ariaLabel: `Costo total para la empresa de ${fmtCOP(costo_total_empleado)}: salario de ${fmtCOP(salario)} más aportes patronales de ${fmtCOP(total_aportes_empleador)}`,
+  };
+
   return {
     aporte_eps_empleado: Math.round(aporte_eps_empleado),
     aporte_pension_empleado: Math.round(aporte_pension_empleado),
@@ -59,6 +84,8 @@ export function compute(i: Inputs): Outputs {
     aporte_arl_empleador: Math.round(aporte_arl_empleador),
     total_aportes_empleador: Math.round(total_aportes_empleador),
     costo_total_empleado: Math.round(costo_total_empleado),
-    porcentaje_descuento: Math.round(porcentaje_descuento * 100) / 100
+    porcentaje_descuento: Math.round(porcentaje_descuento * 100) / 100,
+    _insight,
+    _chart
   };
 }

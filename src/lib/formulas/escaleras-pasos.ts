@@ -15,6 +15,7 @@ export interface Outputs {
   comodidad: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function escalerasPasos(i: Inputs): Outputs {
@@ -72,6 +73,17 @@ export function escalerasPasos(i: Inputs): Outputs {
     ariaLabel: 'Escala de comodidad de la escalera según su ángulo de inclinación en grados.',
   };
 
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+  if (angulo < 30) { insightTone = 'good'; insightIcon = '🪜'; }
+  else if (angulo < 38) { insightTone = 'neutral'; insightIcon = '🪜'; }
+  else { insightTone = 'warn'; insightIcon = '⚠️'; }
+  const insight = {
+    title: 'Cómo queda tu escalera',
+    text: `Con **${cantidad} escalones** de **${contrahuella.toFixed(1)} cm** de contrahuella y **${huella.toFixed(1)} cm** de huella, la inclinación es de **${angulo.toFixed(1)}°**: ${comodidad.toLowerCase()}.${angulo >= 38 ? ' Subí la huella o sumá un escalón para pisar mejor.' : ''}`,
+    tone: insightTone,
+    icon: insightIcon,
+  };
   return {
     cantidadEscalones: cantidad,
     contrahuella: Number(contrahuella.toFixed(2)),
@@ -82,5 +94,6 @@ export function escalerasPasos(i: Inputs): Outputs {
     comodidad,
     resumen: `${cantidad} escalones con contrahuella ${contrahuella.toFixed(1)} cm y huella ${huella.toFixed(1)} cm. Ángulo ${angulo.toFixed(1)}°.`,
     _chart: chart,
+    _insight: insight,
   };
 }

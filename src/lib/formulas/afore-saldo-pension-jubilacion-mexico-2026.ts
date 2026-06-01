@@ -22,6 +22,8 @@ export interface Outputs {
   contribucion_total_estimada: number;
   diferencia_ley_97_vs_ley_73: number;
   saldo_herencia_esperada: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -128,6 +130,23 @@ export function compute(i: Inputs): Outputs {
     saldo_proyectado_retiro - (pension_mensual_fondo * MESES_ESPERANZA * 0.75)
   ); // 75% de vida esperada
 
+  // Composición del saldo proyectado: cuánto viene de tu saldo actual capitalizado
+  // y cuánto de los aportes futuros. Las dos partes suman el saldo proyectado mostrado.
+  const slice_saldo_actual = Math.min(saldo_proyectado_retiro, Math.round(saldo_proyectado_base));
+  const slice_aportes = Math.max(0, saldo_proyectado_retiro - slice_saldo_actual);
+
+  // Insight dinámico según tasa de reemplazo (referencia OCDE: ~70% adecuado, <50% bajo).
+  const fmtMXN = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightCalif: string;
+  if (tasa_reemplazo >= 70) { insightTone = 'good'; insightCalif = 'holgada'; }
+  else if (tasa_reemplazo >= 50) { insightTone = 'neutral'; insightCalif = 'ajustada'; }
+  else { insightTone = 'warn'; insightCalif = 'baja'; }
+  const faltanTxt = semanas_faltantes > 0
+    ? ` Te faltan **${semanas_faltantes} semanas** de cotización para alcanzar el mínimo de 1.250.`
+    : ' Ya superás el mínimo de **1.250 semanas** cotizadas.';
+  const insightText = `Proyectás **${fmtMXN(saldo_proyectado_retiro)}** al retiro, lo que da una pensión vitalicia de **${fmtMXN(pension_mensual_vitalicia)}/mes** y una tasa de reemplazo **${insightCalif}** de **${tasa_reemplazo}%** de tu sueldo actual.${faltanTxt}`;
+
   return {
     saldo_proyectado_retiro,
     semanas_faltantes,
@@ -137,6 +156,23 @@ export function compute(i: Inputs): Outputs {
     tasa_reemplazo,
     contribucion_total_estimada: Math.round(contribucion_total_estimada),
     diferencia_ley_97_vs_ley_73,
-    saldo_herencia_esperada: Math.max(0, saldo_herencia_esperada)
+    saldo_herencia_esperada: Math.max(0, saldo_herencia_esperada),
+    _insight: {
+      title: 'Tu retiro en perspectiva',
+      text: insightText,
+      tone: insightTone,
+      icon: '🏖️',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Saldo actual capitalizado', value: slice_saldo_actual },
+        { label: 'Aportes futuros + rendimiento', value: slice_aportes },
+      ],
+      prefix: '$',
+      centerValue: fmtMXN(saldo_proyectado_retiro),
+      centerLabel: 'saldo al retiro',
+      ariaLabel: `Composición del saldo proyectado de ${fmtMXN(saldo_proyectado_retiro)}: saldo actual capitalizado ${fmtMXN(slice_saldo_actual)} y aportes futuros con rendimiento ${fmtMXN(slice_aportes)}.`,
+    },
   };
 }

@@ -10,6 +10,7 @@ export interface VentanasLuzOutputs {
   superficieVidriadaMin: number;
   superficieVentilacionMin: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function cantidadVentanasLuzNaturalM2(inputs: VentanasLuzInputs): VentanasLuzOutputs {
@@ -30,10 +31,17 @@ export function cantidadVentanasLuzNaturalM2(inputs: VentanasLuzInputs): Ventana
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
   const pct = (factor * 100).toFixed(1);
 
+  const _insight = {
+    title: `${ventanas} ventana${ventanas === 1 ? '' : 's'} para cumplir`,
+    text: `Para **${fmt.format(superficie)} m²** de piso necesitás **${fmt.format(supVidriadaMin)} m²** vidriados (factor ${pct}%): **${ventanas} ventana${ventanas === 1 ? '' : 's'}** de ${fmt.format(anchoV)}×${fmt.format(altoV)} m. Asegurá que al menos **${fmt.format(supVentilacionMin)} m²** abran para ventilar, no solo iluminar.`,
+    tone: 'neutral',
+    icon: '🪟',
+  };
   return {
     ventanasNecesarias: ventanas,
     superficieVidriadaMin: supVidriadaMin,
     superficieVentilacionMin: supVentilacionMin,
     detalle: `Para ${fmt.format(superficie)} m² de piso con factor ${pct}%: mínimo ${fmt.format(supVidriadaMin)} m² vidriados. Con ventanas de ${fmt.format(anchoV)}×${fmt.format(altoV)} m (${fmt.format(m2Ventana)} m² c/u): ${ventanas} ventanas (${fmt.format(supReal)} m² reales).`,
+    _insight,
   };
 }

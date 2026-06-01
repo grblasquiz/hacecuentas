@@ -37,6 +37,7 @@ export interface ComprarAnosAportesMoratoriaOutputs {
   cumpleEdad: boolean;
   recomendacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function comprarAnosAportesMoratoria(
@@ -123,6 +124,37 @@ export function comprarAnosAportesMoratoria(
         }
       : undefined;
 
+  // Insight narrativo: interpreta la situación concreta del afiliado
+  let insight: any;
+  if (!cumpleEdad) {
+    const faltan = edadMinimaLegal - edad;
+    insight = {
+      title: 'Todavía no podés iniciarla',
+      text: `Te faltan **${faltan} año${faltan === 1 ? '' : 's'}** para los **${edadMinimaLegal}** que exige la moratoria. Aprovechá para juntar certificaciones de servicios y validar los años que ya tenés.`,
+      tone: 'neutral' as const,
+      icon: '⏳',
+    };
+  } else if (aportes >= 30) {
+    insight = {
+      title: 'No necesitás moratoria',
+      text: `Con **${Math.floor(aportes)} años** de aportes ya tenés los 30 requeridos: tramitá la jubilación ordinaria y cobrá el **haber pleno**, sin cuota descontada.`,
+      tone: 'good' as const,
+      icon: '✅',
+    };
+  } else {
+    const conviene = haberNetoTrasDescuento > importePuam;
+    insight = {
+      title: conviene ? 'La moratoria te conviene' : 'Cuidado con el descuento',
+      text:
+        `Comprás **${aniosAComprar} años** y la cuota se lleva **${porcentajeDescuento}%** de tu haber: cobrás **$${Math.round(haberNetoTrasDescuento).toLocaleString('es-AR')}** en mano. ` +
+        (conviene
+          ? `Eso supera a la PUAM ($${Math.round(importePuam).toLocaleString('es-AR')}) y además te da derecho a pensión.`
+          : `Queda por debajo de la PUAM ($${Math.round(importePuam).toLocaleString('es-AR')}): evaluá si te conviene esa opción.`),
+      tone: conviene ? ('good' as const) : ('warn' as const),
+      icon: conviene ? '👍' : '⚠️',
+    };
+  }
+
   return {
     aniosAComprar,
     mesesAComprar,
@@ -136,5 +168,6 @@ export function comprarAnosAportesMoratoria(
     cumpleEdad,
     recomendacion,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -24,6 +24,8 @@ export interface Outputs {
   totalPagado: number;
   costoTotalAnual: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function catTarjetaCreditoMexico(i: Inputs): Outputs {

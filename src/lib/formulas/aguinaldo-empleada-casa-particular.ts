@@ -28,6 +28,7 @@ export interface AguinaldoEmpleadaOutputs {
   aguinaldoCuota: number;
   mejorSueldoBase: number;
   mensaje: string;
+  _insight?: any;
 }
 
 const CATEGORIA_LABELS: Record<string, string> = {
@@ -59,9 +60,21 @@ export function aguinaldoEmpleadaCasaParticular(
     `Base: mejor remuneración mensual del semestre = $${Math.round(sueldo).toLocaleString('es-AR')}. ` +
     `Si trabajó los 6 meses completos, corresponde medio sueldo (1ra cuota al 30/6 o 2da al 31/12).`;
 
+  const cuotaR = Math.round(aguinaldoCuota);
+  const completo = meses >= 6;
+  const _insight = {
+    title: completo ? 'Medio sueldo de aguinaldo' : 'Aguinaldo proporcional',
+    text: completo
+      ? `Le corresponde **$${cuotaR.toLocaleString('es-AR')}**, equivalente a **medio mejor sueldo** del semestre. Se paga hasta el último día hábil de junio (1ra cuota) o de diciembre (2da cuota); pagarlo fuera de plazo genera intereses y multas.`
+      : `Por trabajar **${meses} de 6 meses** del semestre, el aguinaldo proporcional es **$${cuotaR.toLocaleString('es-AR')}** (no medio sueldo completo). Aun la jornada parcial o por horas devenga SAC proporcional según el Art. 39.`,
+    tone: 'neutral',
+    icon: '💵',
+  };
+
   return {
-    aguinaldoCuota: Math.round(aguinaldoCuota),
+    aguinaldoCuota: cuotaR,
     mejorSueldoBase: Math.round(mejorSueldoBase),
     mensaje,
+    _insight,
   };
 }

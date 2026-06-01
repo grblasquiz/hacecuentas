@@ -3,7 +3,7 @@
  * Base: 500g varón, 300g mujer, 150g niño.
  */
 export interface AsadoPorInvitadoKgCarneInputs { invitados:number; mujeres:number; ninos:number; cortes:string; }
-export interface AsadoPorInvitadoKgCarneOutputs { kgCarne:number; kgAsado:number; kgVacio:number; kgChorizo:number; gramosPorPersona:number; _chart?:any; }
+export interface AsadoPorInvitadoKgCarneOutputs { kgCarne:number; kgAsado:number; kgVacio:number; kgChorizo:number; gramosPorPersona:number; _chart?:any; _insight?:any; }
 export function asadoPorInvitadoKgCarne(inputs: AsadoPorInvitadoKgCarneInputs): AsadoPorInvitadoKgCarneOutputs {
   const total = Number(inputs.invitados);
   const mujeres = Number(inputs.mujeres);
@@ -35,12 +35,22 @@ export function asadoPorInvitadoKgCarne(inputs: AsadoPorInvitadoKgCarneInputs): 
     ariaLabel: 'Composición de la carne del asado por tipo de corte',
   };
 
+  const gramosPP = Math.round((kgCarne * 1000) / total);
+
+  const insight = {
+    title: 'Cuánto comprar',
+    text: `Comprá **${kgCarneRedondeado.toLocaleString('es-AR')} kg** de carne para ${total} invitado${total === 1 ? '' : 's'}: unos **${gramosPP} g por persona** (ya con un 10% de margen). El corte que más pesa es **${kgAsado >= kgVacio && kgAsado >= kgChorizo ? 'asado/costillar' : kgVacio >= kgChorizo ? 'vacío' : 'chorizo'}**.`,
+    tone: 'neutral' as const,
+    icon: '🥩',
+  };
+
   return {
     kgCarne: kgCarneRedondeado,
     kgAsado,
     kgVacio,
     kgChorizo,
-    gramosPorPersona: Math.round((kgCarne * 1000) / total),
+    gramosPorPersona: gramosPP,
     _chart: chart,
+    _insight: insight,
   };
 }

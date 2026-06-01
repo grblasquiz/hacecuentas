@@ -12,6 +12,7 @@ export interface Outputs {
   monthly: number;
   total_hours: number;
   note: string;
+  _insight?: any;
 }
 
 // Standard U.S. work year: 2,080 hours (40 hrs/week x 52 weeks)
@@ -86,6 +87,21 @@ export function compute(i: Inputs): Outputs {
     note = `Your schedule is ${diff.toFixed(0)} hrs/year above the 2,080-hour standard. Your effective hourly rate is lower than a standard 40-hr week. All figures are gross (pre-tax).`;
   }
 
+  const fmtHourly = `$${hourly.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmtAnnual = `$${annual_salary.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  let insightTone: string;
+  let insightText: string;
+  if (isStandard) {
+    insightTone = "neutral";
+    insightText = `A **${fmtAnnual}** salary on a standard 40-hr week works out to **${fmtHourly}/hour** gross — that's **${total_hours.toLocaleString("en-US")} hours** a year.`;
+  } else if (total_hours < STANDARD_HOURS_PER_YEAR) {
+    insightTone = "good";
+    insightText = `Working **${total_hours.toLocaleString("en-US")} hours/year** (below the 2,080 standard) pushes your effective rate up to **${fmtHourly}/hour** for the same **${fmtAnnual}** salary.`;
+  } else {
+    insightTone = "warn";
+    insightText = `Working **${total_hours.toLocaleString("en-US")} hours/year** (above the 2,080 standard) drags your effective rate down to **${fmtHourly}/hour** — you're earning **${fmtAnnual}** for more hours than a standard week.`;
+  }
+
   return {
     hourly,
     daily,
@@ -94,5 +110,11 @@ export function compute(i: Inputs): Outputs {
     monthly,
     total_hours,
     note,
+    _insight: {
+      title: "Your hourly rate",
+      text: insightText,
+      tone: insightTone,
+      icon: "💵",
+    },
   };
 }

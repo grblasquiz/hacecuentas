@@ -1,6 +1,6 @@
 /** Costo mensual EOR (Deel/Remote/Oyster) según país del empleado y salario */
 export interface Inputs { pais: string; salarioBrutoUsd: number; provider: string; incluyeBeneficios: boolean; }
-export interface Outputs { feeEorUsd: number; cargasSocialesUsd: number; costoTotalEmpleadorUsd: number; costoEfectivoVsSalarioPct: number; explicacion: string; _chart?: any; }
+export interface Outputs { feeEorUsd: number; cargasSocialesUsd: number; costoTotalEmpleadorUsd: number; costoEfectivoVsSalarioPct: number; explicacion: string; _chart?: any; _insight?: any; }
 export function employerOfRecordEorCostoMesPais(i: Inputs): Outputs {
   const pais = String(i.pais || '').toUpperCase();
   const salario = Number(i.salarioBrutoUsd);
@@ -22,6 +22,13 @@ export function employerOfRecordEorCostoMesPais(i: Inputs): Outputs {
   const beneficiosUsd = beneficios ? salario * 0.08 : 0;
   const total = salario + cargas + fee + beneficiosUsd;
   const sobreSalario = ((total - salario) / salario) * 100;
+  const feePctSobreTotal = (fee / total) * 100;
+  const insight = {
+    title: 'Cuánto pesa el overhead sobre el salario',
+    text: `Sobre el salario de **${'$' + Math.round(salario).toLocaleString('es-AR')}** pagás un **+${sobreSalario.toFixed(1)}%** extra: ${(cargasPct * 100).toFixed(0)}% de cargas sociales de ${pais} más el fee fijo de ${'$' + Math.round(fee).toLocaleString('es-AR')}. Ese fee es hoy el **${feePctSobreTotal.toFixed(0)}%** del costo total — ${feePctSobreTotal >= 15 ? 'pesa bastante; con un salario más alto el fijo se diluye y el EOR rinde mejor' : 'ya pesa poco, el grueso son las cargas sociales del país'}.`,
+    tone: (sobreSalario >= 35 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+    icon: '🌍',
+  };
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -42,5 +49,6 @@ export function employerOfRecordEorCostoMesPais(i: Inputs): Outputs {
     costoEfectivoVsSalarioPct: Number(sobreSalario.toFixed(1)),
     explicacion: `Empleado ${pais} a USD ${salario}/mes vía ${provider}: cargas USD ${cargas.toFixed(0)} + fee EOR USD ${fee}. Costo total empleador USD ${total.toFixed(0)}/mes (+${sobreSalario.toFixed(1)}% sobre salario).`,
     _chart: chart,
+    _insight: insight,
   };
 }

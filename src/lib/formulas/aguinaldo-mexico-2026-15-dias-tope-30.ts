@@ -11,6 +11,8 @@ export interface Outputs {
   isr_retenido: number;
   aguinaldo_neto: number;
   tasa_isr_efectiva: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -72,11 +74,48 @@ export function compute(i: Inputs): Outputs {
   // Tasa efectiva
   const tasa_isr_efectiva = aguinaldo_bruto > 0 ? (isr_retenido / aguinaldo_bruto) * 100 : 0;
 
-  return {
+  const brutoR = Math.round(aguinaldo_bruto);
+  const netoR = Math.round(aguinaldo_neto);
+  const isrR = Math.round(isr_retenido);
+  const tasaR = Math.round(tasa_isr_efectiva * 100) / 100;
+  const fmtMX = (x: number) => x.toLocaleString('es-MX');
+
+  const _insight = isrR <= 0
+    ? {
+        title: 'Aguinaldo libre de ISR',
+        text: `Cobrás **$${fmtMX(netoR)}** completos: tu aguinaldo no supera las **30 UMA exentas** ($${fmtMX(EXENCION_PESOS)}), así que no hay retención de ISR. Por ley el mínimo es 15 días de salario.`,
+        tone: 'good',
+        icon: '🎁',
+      }
+    : {
+        title: 'Te retienen ISR del aguinaldo',
+        text: `De **$${fmtMX(brutoR)}** brutos, los primeros $${fmtMX(EXENCION_PESOS)} (30 UMA) van exentos y sobre el resto te retienen **$${fmtMX(isrR)}** de ISR (tasa efectiva **${tasaR}%**). Te quedan **$${fmtMX(netoR)}** netos.`,
+        tone: tasaR >= 10 ? 'warn' : 'neutral',
+        icon: '🧾',
+      };
+
+  const _chart = isrR > 0
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Neto a cobrar', value: netoR },
+          { label: 'ISR retenido', value: isrR },
+        ],
+        prefix: '$',
+        centerValue: `$${fmtMX(brutoR)}`,
+        centerLabel: 'Aguinaldo bruto',
+        ariaLabel: `Aguinaldo bruto de $${fmtMX(brutoR)} repartido en $${fmtMX(netoR)} netos y $${fmtMX(isrR)} de ISR retenido.`,
+      }
+    : undefined;
+
+  const out: Outputs = {
     aguinaldo_bruto: Math.round(aguinaldo_bruto * 100) / 100,
     base_isr: Math.round(base_isr * 100) / 100,
     isr_retenido: Math.round(isr_retenido * 100) / 100,
     aguinaldo_neto: Math.round(aguinaldo_neto * 100) / 100,
-    tasa_isr_efectiva: Math.round(tasa_isr_efectiva * 100) / 100
+    tasa_isr_efectiva: tasaR,
+    _insight
   };
+  if (_chart) out._chart = _chart;
+  return out;
 }

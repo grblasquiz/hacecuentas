@@ -1,6 +1,6 @@
 /** Ángel guardián por fecha de nacimiento (72 ángeles de la Kabbalah) */
 export interface Inputs { fechaNacimiento: string; }
-export interface Outputs { angel: string; virtud: string; periodo: string; mensaje: string; }
+export interface Outputs { angel: string; virtud: string; periodo: string; mensaje: string; _insight?: any; }
 
 const ANGELES: {n:string;v:string;desde:[number,number];hasta:[number,number]}[] = [
   {n:'Vehuiah',v:'Voluntad y nuevos comienzos',desde:[3,21],hasta:[3,25]},
@@ -86,14 +86,22 @@ export function angelGuardianFecha(i: Inputs): Outputs {
   const m = d.getMonth() + 1;
   const day = d.getDate();
 
+  const mkInsight = (n: string, v: string, periodo: string) => ({
+    title: `Tu ángel: ${n}`,
+    text: `Según la tradición de los **72 ángeles de la Kabbalah**, a quien nace entre el **${periodo}** lo acompaña **${n}**, cuya virtud es **${v.toLowerCase()}**. Es el ángel que se invoca para pedir esa energía en particular.`,
+    tone: 'neutral',
+    icon: '😇',
+  });
+
   for (const a of ANGELES) {
     const [dm, dd] = a.desde;
     const [hm, hd] = a.hasta;
+    const periodo = `${dd}/${dm} al ${hd}/${hm}`;
     if (dm === hm) {
-      if (m === dm && day >= dd && day <= hd) return { angel: a.n, virtud: a.v, periodo: `${dd}/${dm} al ${hd}/${hm}`, mensaje: `Tu ángel guardián es ${a.n}. Su virtud es: ${a.v}. Invocalo cuando necesites su protección.` };
+      if (m === dm && day >= dd && day <= hd) return { angel: a.n, virtud: a.v, periodo, mensaje: `Tu ángel guardián es ${a.n}. Su virtud es: ${a.v}. Invocalo cuando necesites su protección.`, _insight: mkInsight(a.n, a.v, periodo) };
     } else {
-      if ((m === dm && day >= dd) || (m === hm && day <= hd)) return { angel: a.n, virtud: a.v, periodo: `${dd}/${dm} al ${hd}/${hm}`, mensaje: `Tu ángel guardián es ${a.n}. Su virtud es: ${a.v}. Invocalo cuando necesites su protección.` };
+      if ((m === dm && day >= dd) || (m === hm && day <= hd)) return { angel: a.n, virtud: a.v, periodo, mensaje: `Tu ángel guardián es ${a.n}. Su virtud es: ${a.v}. Invocalo cuando necesites su protección.`, _insight: mkInsight(a.n, a.v, periodo) };
     }
   }
-  return { angel: 'Mumiah', virtud: 'Renacimiento y finalización', periodo: '16/3 al 20/3', mensaje: 'Tu ángel guardián es Mumiah. Su virtud es: renacimiento y finalización.' };
+  return { angel: 'Mumiah', virtud: 'Renacimiento y finalización', periodo: '16/3 al 20/3', mensaje: 'Tu ángel guardián es Mumiah. Su virtud es: renacimiento y finalización.', _insight: mkInsight('Mumiah', 'Renacimiento y finalización', '16/3 al 20/3') };
 }

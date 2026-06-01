@@ -1,6 +1,6 @@
 /** Niveles de beta hCG en embarazo */
 export interface Inputs { nivelHCG: number; semanaDesdeFUM: number; segundaBeta?: number; diasEntreBetas?: number; }
-export interface Outputs { evaluacion: string; rangoNormal: string; duplicacion: string; siguiente: string; _chart?: any; }
+export interface Outputs { evaluacion: string; rangoNormal: string; duplicacion: string; siguiente: string; _chart?: any; _insight?: any; }
 
 export function betaHcg(i: Inputs): Outputs {
   const hcg = Number(i.nivelHCG);
@@ -69,5 +69,15 @@ export function betaHcg(i: Inputs): Outputs {
     ariaLabel: `Escala de beta hCG para la semana ${semInt}: bajo, rango normal y alto.`,
   };
 
-  return { evaluacion, rangoNormal, duplicacion, siguiente, _chart: chart };
+  const zona = hcg < rango[0] ? 'bajo' : hcg > rango[1] ? 'alto' : 'normal';
+  const insight = {
+    title: zona === 'normal' ? 'Nivel dentro de lo esperado' : zona === 'bajo' ? 'Nivel por debajo de lo esperado' : 'Nivel por encima de lo esperado',
+    text: zona === 'normal'
+      ? `Tu beta de **${Math.round(hcg).toLocaleString()} mUI/ml** cae en el rango normal de la semana ${semInt} (**${rango[0].toLocaleString()}–${rango[1].toLocaleString()}**). Lo que más importa no es un valor aislado sino que duplique cada 48–72 h.`
+      : `Tu beta de **${Math.round(hcg).toLocaleString()} mUI/ml** queda **${zona === 'bajo' ? 'por debajo' : 'por encima'}** del rango de la semana ${semInt} (**${rango[0].toLocaleString()}–${rango[1].toLocaleString()}**). Un valor puntual no diagnostica nada: repetí la beta en 48–72 h y confirmá con tu obstetra.`,
+    tone: (zona === 'normal' ? 'good' : 'warn') as 'good' | 'warn' | 'neutral',
+    icon: '🤰',
+  };
+
+  return { evaluacion, rangoNormal, duplicacion, siguiente, _chart: chart, _insight: insight };
 }

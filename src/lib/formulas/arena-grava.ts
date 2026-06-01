@@ -14,6 +14,8 @@ export interface Outputs {
   gravaTon: number;
   tipo: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Dosificaciones típicas (parts) por m³ de hormigón
@@ -43,6 +45,8 @@ export function arenaGrava(i: Inputs): Outputs {
   const arenaTon = (arenaM3 * 1550) / 1000;
   const gravaTon = (gravaM3 * 1600) / 1000;
 
+  const aridosM3 = arenaM3 + gravaM3;
+
   return {
     arenaM3: Number(arenaM3.toFixed(2)),
     gravaM3: Number(gravaM3.toFixed(2)),
@@ -53,5 +57,22 @@ export function arenaGrava(i: Inputs): Outputs {
     gravaTon: Number(gravaTon.toFixed(2)),
     tipo: d.nombre,
     resumen: `Para ${m3} m³ de hormigón (${d.nombre}) necesitás ${arenaM3.toFixed(2)} m³ de arena y ${gravaM3.toFixed(2)} m³ de grava.`,
+    _insight: {
+      title: 'Lo que tenés que comprar',
+      text: `Para esos **${m3} m³** de hormigón necesitás **${arenaM3.toFixed(2)} m³ de arena** y **${gravaM3.toFixed(2)} m³ de grava** (≈ ${arenaTon.toFixed(2)} t + ${gravaTon.toFixed(2)} t), más **${Math.ceil(cementoKg / 50)} bolsas** de cemento de 50 kg y ${Math.round(aguaL)} L de agua. Ya incluye **${desp}% de desperdicio**.`,
+      tone: 'neutral',
+      icon: '🧱',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Arena', value: Number(arenaM3.toFixed(2)) },
+        { label: 'Grava', value: Number(gravaM3.toFixed(2)) },
+      ],
+      prefix: '',
+      centerValue: `${aridosM3.toFixed(2)} m³`,
+      centerLabel: 'Áridos',
+      ariaLabel: `Mezcla de áridos: ${arenaM3.toFixed(2)} m³ de arena y ${gravaM3.toFixed(2)} m³ de grava`,
+    },
   };
 }

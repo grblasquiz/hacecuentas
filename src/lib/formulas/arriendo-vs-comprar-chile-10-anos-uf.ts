@@ -25,6 +25,7 @@ export interface Outputs {
   diferencia_coste_uf: number;
   breakeven_anos: number;
   tir_compra_porcentaje: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -130,6 +131,20 @@ export function compute(i: Inputs): Outputs {
   const ganancia_neta_patrimonial = patrimonio_neto_compra_uf - (coste_total_compra_10_anos_uf - gastos_compra_totales_uf - pie_inicial_uf);
   const tir_compra_porcentaje = (Math.pow(ganancia_neta_patrimonial / (pie_inicial_uf + gastos_compra_totales_uf), 1 / PERIODO_ANOS) - 1) * 100;
 
+  // Veredicto narrativo (no altera la matemática): coste neto de comprar = lo pagado − patrimonio acumulado
+  const coste_neto_compra = coste_total_compra_10_anos_uf - patrimonio_neto_compra_uf;
+  const ventaja_compra_uf = coste_total_arriendo_10_anos_uf - coste_neto_compra;
+  const compra_conviene = ventaja_compra_uf >= 0;
+  const fmtUF = (n: number) => `${(Math.round(n * 10) / 10).toLocaleString('es-CL')} UF`;
+  const _insight = {
+    title: compra_conviene ? 'A 10 años, conviene comprar' : 'A 10 años, conviene arrendar',
+    text: compra_conviene
+      ? `Comprar deja un **patrimonio neto de ${fmtUF(patrimonio_neto_compra_uf)}** al año 10. Descontándolo, el costo neto de ser dueño (**${fmtUF(coste_neto_compra)}**) queda **${fmtUF(Math.abs(ventaja_compra_uf))} por debajo** del arriendo (${fmtUF(coste_total_arriendo_10_anos_uf)}). El punto de equilibrio llega a los **${(Math.round(breakeven_anos * 10) / 10)} años**.`
+      : `Arrendar 10 años cuesta **${fmtUF(coste_total_arriendo_10_anos_uf)}**. Aun contando el **patrimonio de ${fmtUF(patrimonio_neto_compra_uf)}** que dejaría comprar, ser dueño sale **${fmtUF(Math.abs(ventaja_compra_uf))} más caro** en este horizonte. Con esta cuota de **${fmtUF(cuota_mensual_uf)}/mes**, conviene arrendar e invertir el pie aparte.`,
+    tone: compra_conviene ? 'good' : 'warn',
+    icon: '🏡',
+  };
+
   // Validaciones
   const resultado: Outputs = {
     pie_inicial_uf: Math.round(pie_inicial_uf * 100) / 100,
@@ -144,6 +159,7 @@ export function compute(i: Inputs): Outputs {
     diferencia_coste_uf: Math.round(diferencia_coste_uf * 100) / 100,
     breakeven_anos: Math.round(breakeven_anos * 10) / 10,
     tir_compra_porcentaje: Math.round(Math.max(tir_compra_porcentaje, -50) * 100) / 100,
+    _insight,
   };
 
   return resultado;

@@ -14,6 +14,7 @@ export interface Outputs {
   tasaComentariosPorLike: number;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function engagement(i: Inputs): Outputs {
@@ -52,6 +53,22 @@ export function engagement(i: Inputs): Outputs {
     ariaLabel: 'Escala de engagement rate sobre seguidores: bajo, promedio, muy bueno, extraordinario',
   };
 
+  let zona: string;
+  let tone: 'good' | 'warn' | 'neutral';
+  if (erFollowers > 6) { zona = 'Extraordinario'; tone = 'good'; }
+  else if (erFollowers > 3) { zona = 'Muy bueno'; tone = 'good'; }
+  else if (erFollowers > 1) { zona = 'Promedio'; tone = 'neutral'; }
+  else { zona = 'Bajo'; tone = 'warn'; }
+  const insight = {
+    title: 'Cómo se lee tu engagement',
+    text: `Tu **${erRounded}%** sobre ${followers.toLocaleString('es-AR')} seguidores cae en zona **${zona}** (${total.toLocaleString('es-AR')} interacciones). ` +
+      (tone === 'warn'
+        ? `Para subir de **1%** apuntá a contenido que invite a comentar y guardar, no solo a likes${ratioComm > 0 ? ` (hoy hay ${ratioComm.toFixed(1)} comentarios cada 100 likes)` : ''}.`
+        : `Mantené el ritmo${ratioComm >= 5 ? ` — tus ${ratioComm.toFixed(1)} comentarios cada 100 likes muestran una comunidad que conversa` : ', y reforzá los formatos que generan comentarios y guardados'}.`),
+    tone,
+    icon: '📈',
+  };
+
   return {
     engagementPorFollowers: erRounded,
     engagementPorImpresiones: Number(erImps.toFixed(2)),
@@ -59,5 +76,6 @@ export function engagement(i: Inputs): Outputs {
     tasaComentariosPorLike: Number(ratioComm.toFixed(2)),
     mensaje: msg,
     _chart: chart,
+    _insight: insight,
   };
 }

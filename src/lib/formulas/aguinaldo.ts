@@ -16,6 +16,7 @@ export interface AguinaldoOutputs {
   descuentos: number;
   proporcion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function aguinaldo(inputs: AguinaldoInputs): AguinaldoOutputs {
@@ -31,6 +32,12 @@ export function aguinaldo(inputs: AguinaldoInputs): AguinaldoOutputs {
       proporcion: (m: number) => `${m}/6 meses trabajados`,
       ariaLabel: (neto: number, desc: number) =>
         `Composición del aguinaldo bruto: neto ${neto}, descuentos ${desc}.`,
+      insightTitle: 'Tu aguinaldo en mano',
+      insightText: (bruto: string, neto: string, desc: string, parcial: boolean, meses: number) =>
+        `De **$${bruto}** brutos cobrás **$${neto}** en mano: se descuenta **$${desc}** (17% de aportes).` +
+        (parcial
+          ? ` El monto es proporcional porque trabajaste **${meses} de 6 meses** del semestre; con el semestre completo sería el doble.`
+          : ` Trabajaste el semestre completo, así que cobrás el SAC sin recorte por proporción.`),
     },
     en: {
       errorSueldo: 'Enter the highest monthly salary of the semester',
@@ -41,6 +48,12 @@ export function aguinaldo(inputs: AguinaldoInputs): AguinaldoOutputs {
       proporcion: (m: number) => `${m}/6 months worked`,
       ariaLabel: (neto: number, desc: number) =>
         `Annual bonus breakdown: net ${neto}, deductions ${desc}.`,
+      insightTitle: 'Your take-home bonus',
+      insightText: (bruto: string, neto: string, desc: string, parcial: boolean, meses: number) =>
+        `Out of **$${bruto}** gross you take home **$${neto}**: **$${desc}** is deducted (17% in social-security contributions).` +
+        (parcial
+          ? ` The amount is prorated because you worked **${meses} of 6 months** in the semester; with the full semester it would be double.`
+          : ` You worked the full semester, so you get the SAC with no proration cut.`),
     },
   } as const)[__lang];
 
@@ -74,11 +87,30 @@ export function aguinaldo(inputs: AguinaldoInputs): AguinaldoOutputs {
     ariaLabel: T.ariaLabel(Math.round(aguinaldoNeto), Math.round(descuentos)),
   };
 
+  const brutoR = Math.round(aguinaldoBruto);
+  const netoR = Math.round(aguinaldoNeto);
+  const descR = Math.round(descuentos);
+  const esParcial = mesesTrabajados < 6;
+
+  const insight = {
+    title: T.insightTitle,
+    text: T.insightText(
+      brutoR.toLocaleString('es-AR'),
+      netoR.toLocaleString('es-AR'),
+      descR.toLocaleString('es-AR'),
+      esParcial,
+      mesesTrabajados
+    ),
+    tone: 'neutral' as const,
+    icon: '💵',
+  };
+
   return {
-    aguinaldoBruto: Math.round(aguinaldoBruto),
-    aguinaldoNeto: Math.round(aguinaldoNeto),
-    descuentos: Math.round(descuentos),
+    aguinaldoBruto: brutoR,
+    aguinaldoNeto: netoR,
+    descuentos: descR,
     proporcion: T.proporcion(mesesTrabajados),
     _chart: chart,
+    _insight: insight,
   };
 }

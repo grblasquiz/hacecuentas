@@ -31,6 +31,7 @@ export interface Outputs {
   absorcionAplicada: number;
   especieNombre: string;
   detalle: string;
+  _insight?: any;
 }
 
 const ESPECIES: Record<string, { nombre: string; absorcion: number; anios: number; densidad: number }> = {
@@ -79,6 +80,12 @@ export function arbolesCompensarCo2Huella(i: Inputs): Outputs {
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
   const fmt2 = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  const _insight = {
+    title: 'Árboles para compensar tu huella',
+    text: `Para neutralizar **${fmt2.format(ton)} t de CO₂** con ${nombreEspecie.toLowerCase()} necesitás plantar **${fmt.format(arboles)} árboles** (~${fmt2.format(hectareas)} ha). Ojo: la compensación no es inmediata — tardan **~${anios} años** en alcanzar la absorción plena de ${fmt.format(absorcion)} kg/árbol/año.`,
+    tone: 'neutral',
+    icon: '🌲',
+  };
   return {
     arbolesNecesarios: arboles,
     hectareas: Number(hectareas.toFixed(2)),
@@ -86,5 +93,6 @@ export function arbolesCompensarCo2Huella(i: Inputs): Outputs {
     absorcionAplicada: absorcion,
     especieNombre: nombreEspecie,
     detalle: `${nombreEspecie}: ${fmt.format(absorcion)} kg CO₂/árbol/año. ${fmt2.format(ton)} t = ${fmt.format(kgCO2)} kg ÷ ${fmt.format(absorcion)} = ${fmt.format(arboles)} árboles en ~${fmt2.format(hectareas)} ha (densidad ${densidad}/ha). Tardan ~${anios} años en alcanzar absorción plena.`,
+    _insight,
   };
 }

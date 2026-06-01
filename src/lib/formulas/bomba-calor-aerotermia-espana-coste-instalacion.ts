@@ -24,6 +24,67 @@ export interface Outputs {
   payback_anos: number;
   cop_estimado: number;
   ahorro_co2_kg_anual: number;
+  _insight?: any;
+  _chart?: any;
+}
+
+function buildExtras(o: {
+  coste_real_final: number;
+  subvencion_next_gen: number;
+  deduccion_irpf: number;
+  coste_instalacion_base: number;
+  ahorro_anual: number;
+  payback_anos: number;
+}): { _insight: any; _chart: any } {
+  const fmt = (n: number) => n.toLocaleString('es-ES');
+  const ayudas = o.subvencion_next_gen + o.deduccion_irpf;
+
+  let _insight: any;
+  if (o.ahorro_anual <= 0) {
+    _insight = {
+      title: 'Coste real tras ayudas',
+      text: `Tras la subvención Next Gen y la deducción del IRPF pagarías **${fmt(o.coste_real_final)} €** (sobre ${fmt(o.coste_instalacion_base)} € de instalación). No estimamos ahorro frente a tu sistema actual, así que el atractivo aquí es el confort y la descarbonización, no el retorno económico.`,
+      tone: 'neutral',
+      icon: '🌡️',
+    };
+  } else if (o.payback_anos <= 8) {
+    _insight = {
+      title: 'Inversión que se recupera rápido',
+      text: `Las ayudas reducen el coste a **${fmt(o.coste_real_final)} €** y ahorrarías **${fmt(o.ahorro_anual)} €/año** en calefacción, así que recuperas la inversión en unos **${o.payback_anos} años**. A partir de ahí es ahorro neto en cada factura.`,
+      tone: 'good',
+      icon: '✅',
+    };
+  } else if (o.payback_anos <= 15) {
+    _insight = {
+      title: 'Amortización a medio plazo',
+      text: `Pagando **${fmt(o.coste_real_final)} €** tras ayudas y ahorrando **${fmt(o.ahorro_anual)} €/año**, la aerotermia se amortiza en torno a **${o.payback_anos} años**. Razonable dado que el equipo dura 15-20 años, pero compará presupuestos antes de decidir.`,
+      tone: 'neutral',
+      icon: '🔁',
+    };
+  } else {
+    _insight = {
+      title: 'Retorno largo',
+      text: `Aun con ayudas (coste real **${fmt(o.coste_real_final)} €**) el ahorro de **${fmt(o.ahorro_anual)} €/año** tarda unos **${o.payback_anos} años** en amortizarse. Revisá el precio de la electricidad y pedí varios presupuestos: el payback es sensible a ambos.`,
+      tone: 'warn',
+      icon: '⏳',
+    };
+  }
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Pagás de tu bolsillo', value: o.coste_real_final },
+      ...(o.subvencion_next_gen > 0 ? [{ label: 'Subvención Next Gen', value: o.subvencion_next_gen }] : []),
+      ...(o.deduccion_irpf > 0 ? [{ label: 'Deducción IRPF', value: o.deduccion_irpf }] : []),
+    ],
+    prefix: '',
+    suffix: ' €',
+    centerValue: `${fmt(o.coste_instalacion_base)} €`,
+    centerLabel: 'instalación',
+    ariaLabel: `De ${fmt(o.coste_instalacion_base)} € de instalación, pagás ${fmt(o.coste_real_final)} € y ${fmt(ayudas)} € los cubren ayudas`,
+  };
+
+  return { _insight, _chart };
 }
 
 export function compute(i: Inputs): Outputs {
@@ -190,6 +251,7 @@ export function compute(i: Inputs): Outputs {
       payback_anos,
       cop_estimado,
       ahorro_co2_kg_anual,
+      ...buildExtras({ coste_real_final, subvencion_next_gen, deduccion_irpf, coste_instalacion_base, ahorro_anual, payback_anos }),
     };
   } else if (sistemaActual === 'bomba_calor_antigua') {
     // BdC antigua: usa electricidad con COP 2.2
@@ -217,6 +279,7 @@ export function compute(i: Inputs): Outputs {
       payback_anos,
       cop_estimado,
       ahorro_co2_kg_anual,
+      ...buildExtras({ coste_real_final, subvencion_next_gen, deduccion_irpf, coste_instalacion_base, ahorro_anual, payback_anos }),
     };
   } else if (sistemaActual === 'ninguno') {
     // Sin calefacción previa: no hay ahorro real, payback se basa en beneficio en confort
@@ -240,6 +303,7 @@ export function compute(i: Inputs): Outputs {
       payback_anos,
       cop_estimado,
       ahorro_co2_kg_anual,
+      ...buildExtras({ coste_real_final, subvencion_next_gen, deduccion_irpf, coste_instalacion_base, ahorro_anual, payback_anos }),
     };
   } else {
     // Gas natural o gasoil: demanda térmica / rendimiento = kWh combustible consumidos
@@ -269,6 +333,7 @@ export function compute(i: Inputs): Outputs {
       payback_anos,
       cop_estimado,
       ahorro_co2_kg_anual,
+      ...buildExtras({ coste_real_final, subvencion_next_gen, deduccion_irpf, coste_instalacion_base, ahorro_anual, payback_anos }),
     };
   }
 }

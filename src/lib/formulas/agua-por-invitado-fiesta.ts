@@ -14,6 +14,8 @@ export interface AguaPorInvitadoFiestaOutputs {
   botellas500: number;
   bidones20L: number;
   litrosPorPersona: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function aguaPorInvitadoFiesta(
@@ -36,10 +38,31 @@ export function aguaPorInvitadoFiesta(
   const botellas500 = Math.ceil(litrosTotales / 0.5);
   const bidones20L = Math.ceil(litrosTotales / 20);
 
+  const consumoBase = litrosPorPersona * invitados;
+  const margen = litrosTotales - consumoBase; // 10% de reserva
+  const _insight = {
+    title: 'Cuánta agua comprar',
+    text: `Para ${invitados} invitados durante ${horas} h${clima === 'verano' ? ' en verano' : clima === 'invierno' ? ' en invierno' : ''} comprá **${Number(litrosTotales.toFixed(1))} L** (~**${botellas500} botellas** de 500 ml o **${bidones20L} bidón${bidones20L > 1 ? 'es' : ''}** de 20 L). Ya incluye un 10% de reserva por si se alarga.`,
+    tone: 'neutral',
+    icon: '🥤',
+  };
+
   return {
     litrosTotales: Number(litrosTotales.toFixed(1)),
     botellas500,
     bidones20L,
     litrosPorPersona: Number(litrosPorPersona.toFixed(2)),
+    _insight,
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Consumo estimado', value: Number(consumoBase.toFixed(1)) },
+        { label: 'Reserva (10%)', value: Number(margen.toFixed(1)) },
+      ],
+      prefix: '',
+      centerValue: `${Number(litrosTotales.toFixed(1))} L`,
+      centerLabel: 'a comprar',
+      ariaLabel: `De ${Number(litrosTotales.toFixed(1))} litros totales, ${Number(consumoBase.toFixed(1))} son consumo y ${Number(margen.toFixed(1))} de reserva`,
+    },
   };
 }

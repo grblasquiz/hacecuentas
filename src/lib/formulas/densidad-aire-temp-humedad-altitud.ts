@@ -16,6 +16,7 @@ export interface Outputs {
   densityAltitude: string;
   comentario: string;
   _chart?: any;
+  _insight?: any;
 }
 
 function presionSat_hPa(T_C: number): number {
@@ -90,6 +91,22 @@ export function densidadAireTempHumedadAltitud(i: Inputs): Outputs {
     ariaLabel: 'Escala de densidad del aire relativa a la estándar (1.225 kg/m³)',
   };
 
+  const deltaDA = DA_m - h;
+  let insightTitle: string, insightText: string, insightTone: string;
+  if (rel >= 100) {
+    insightTitle = `Aire denso: ${rel.toFixed(1)}% del estándar`;
+    insightText = `Con **${T_C.toFixed(0)} °C** a **${h.toFixed(0)} m** el aire está **${(rel - 100).toFixed(1)}%** por encima del estándar. La altitud de densidad (**${DA_m.toFixed(0)} m**) queda por debajo de la física: mejor sustentación y más empuje de motores atmosféricos.`;
+    insightTone = 'good';
+  } else if (rel >= 90) {
+    insightTitle = `Densidad casi estándar: ${rel.toFixed(1)}%`;
+    insightText = `A **${h.toFixed(0)} m** y **${T_C.toFixed(0)} °C** la densidad de **${rho.toFixed(3)} kg/m³** está cerca de la ISA. Altitud de densidad **${DA_m.toFixed(0)} m** (${deltaDA >= 0 ? '+' : ''}${deltaDA.toFixed(0)} m): rendimiento de motores y alas casi sin penalización.`;
+    insightTone = 'neutral';
+  } else {
+    insightTitle = `Aire enrarecido: solo ${rel.toFixed(1)}% del estándar`;
+    insightText = `El calor/altura llevan la **altitud de densidad a ${DA_m.toFixed(0)} m** (**+${deltaDA.toFixed(0)} m** sobre la física). Esperá menos potencia y carreras de despegue más largas; para correr/pedalear hay **menos resistencia** del aire.`;
+    insightTone = 'warn';
+  }
+  const insight = { title: insightTitle, text: insightText, tone: insightTone, icon: '🌡️' };
   return {
     densidad: `${rho.toFixed(4)} kg/m³`,
     densidadRelativa: `${rel.toFixed(1)} % de la densidad estándar (1.225 kg/m³)`,
@@ -97,5 +114,6 @@ export function densidadAireTempHumedadAltitud(i: Inputs): Outputs {
     densityAltitude: `${DA_m.toFixed(0)} m (altitud de densidad)`,
     comentario,
     _chart: chart,
+    _insight: insight,
   };
 }

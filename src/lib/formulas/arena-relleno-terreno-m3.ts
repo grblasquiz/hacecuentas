@@ -9,6 +9,7 @@ export interface ArenaRellenoOutputs {
   m3Necesarios: number;
   camiones: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function arenaRellenoTerrenoM3(inputs: ArenaRellenoInputs): ArenaRellenoOutputs {
@@ -29,9 +30,17 @@ export function arenaRellenoTerrenoM3(inputs: ArenaRellenoInputs): ArenaRellenoO
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 
+  const extraCompact = volTotal - volNeto;
+
   return {
     m3Necesarios: volTotal,
     camiones,
     detalle: `${fmt.format(superficie)} m² × ${espesorCm} cm = ${fmt.format(volNeto)} m³ netos. Con ${compactacion}% de compactación: ${fmt.format(volTotal)} m³ a pedir → ${camiones} camiones de ${m3Camion} m³.`,
+    _insight: {
+      title: 'Cuánto pedir',
+      text: `Necesitás **${fmt.format(volTotal)} m³** de arena, lo que entra en **${camiones} camión${camiones > 1 ? 'es' : ''}** de ${m3Camion} m³. Por el **${compactacion}% de compactación** estás pidiendo ${fmt.format(extraCompact)} m³ más que el volumen neto (${fmt.format(volNeto)} m³): no lo recortes o el relleno queda bajo nivel.`,
+      tone: 'neutral',
+      icon: '🚚',
+    },
   };
 }

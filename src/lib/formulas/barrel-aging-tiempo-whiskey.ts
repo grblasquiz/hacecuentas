@@ -1,6 +1,6 @@
 /** Barrel aging */
 export interface Inputs { litrosBarril: number; intensidadDeseada: string; tipoLicor: string; __lang?: string; }
-export interface Outputs { diasMinimo: number; diasMaximo: number; equivalenteAnios: string; frecuenciaProbar: string; tips: string; }
+export interface Outputs { diasMinimo: number; diasMaximo: number; equivalenteAnios: string; frecuenciaProbar: string; tips: string; _insight?: any; }
 
 export function barrelAgingTiempoWhiskey(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -38,6 +38,7 @@ export function barrelAgingTiempoWhiskey(i: Inputs): Outputs {
       tipsSmall: 'Micro barril: pre-remojar 48h antes. Evaporación alta (10-15% en 6 meses).',
       tipsMed: 'Mantener en lugar fresco 18-22°C. Chequear nivel mensualmente.',
       tipsLarge: 'Barril grande estándar — paciencia es la clave.',
+      insightTitle: 'Tu ventana de añejado',
     },
     en: {
       freqSmall: 'Every 1-2 weeks',
@@ -46,6 +47,7 @@ export function barrelAgingTiempoWhiskey(i: Inputs): Outputs {
       tipsSmall: 'Micro barrel: pre-soak 48h before use. High evaporation (10-15% over 6 months).',
       tipsMed: 'Keep in a cool place at 18-22°C. Check level monthly.',
       tipsLarge: 'Standard large barrel — patience is the key.',
+      insightTitle: 'Your aging window',
     },
   } as const)[__lang];
 
@@ -59,11 +61,27 @@ export function barrelAgingTiempoWhiskey(i: Inputs): Outputs {
   else if (L <= 20) tips = T.tipsMed;
   else tips = T.tipsLarge;
 
+  const insightText = __lang === 'en'
+    ? `In your **${L}L barrel**, aim for **${diasMin}–${diasMax} days** (around ${(meses).toFixed(1)} months). ` +
+      (L < 200
+        ? `The smaller barrel has more wood contact per liter, so it ages **${factor.toFixed(1)}× faster** than a 200L cask — taste often to avoid over-oaking.`
+        : `This is full-size, so flavor develops slowly — let time do the work and taste periodically.`)
+    : `En tu **barril de ${L}L** apuntá a **${diasMin}–${diasMax} días** (unos ${(meses).toFixed(1)} meses). ` +
+      (L < 200
+        ? `Al ser chico tiene más contacto con la madera por litro, así que añeja **${factor.toFixed(1)}× más rápido** que uno de 200L — probá seguido para no pasarte de roble.`
+        : `Es de tamaño estándar, así que el sabor se desarrolla lento — dejá que el tiempo haga lo suyo y probá cada tanto.`);
+  const _insight = {
+    title: T.insightTitle,
+    text: insightText,
+    tone: (L <= 5 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+    icon: '🥃',
+  };
   return {
     diasMinimo: diasMin,
     diasMaximo: diasMax,
     equivalenteAnios: equiv,
     frecuenciaProbar: freq,
     tips,
+    _insight,
   };
 }

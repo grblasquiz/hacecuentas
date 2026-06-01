@@ -12,6 +12,7 @@ export interface Outputs {
   impuestosAduana: number;
   sobrecargoVsProducto: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function costoEnvioCompraExterior(i: Inputs): Outputs {
@@ -44,11 +45,31 @@ export function costoEnvioCompraExterior(i: Inputs): Outputs {
     ariaLabel: 'Composición del costo total en USD: producto, envío e impuestos de aduana.',
   };
 
+  // Insight: cuánto pesa el impuesto de aduana sobre la compra
+  const impRedondeado = Math.round(impuestosAduana * 100) / 100;
+  let insight: any;
+  if (impRedondeado > 0) {
+    insight = {
+      title: 'Pagás impuesto de aduana',
+      text: `El valor declarado supera la franquicia de US$${Math.round(franquicia)}, así que tributás **US$${impRedondeado.toLocaleString('es-AR')}** (${impPct}% del excedente). En total el envío te sale **${sobrecargoPct}% más caro** que el producto solo.`,
+      tone: 'warn' as const,
+      icon: '🛃',
+    };
+  } else {
+    insight = {
+      title: 'Entrás sin impuesto',
+      text: `Los US$${Math.round(valorDeclarado)} declarados quedan dentro de la franquicia de US$${Math.round(franquicia)}: **no pagás impuesto de aduana**. El costo total es solo producto más envío.`,
+      tone: 'good' as const,
+      icon: '✅',
+    };
+  }
+
   return {
     costoTotalPesos: Math.round(costoTotalPesos),
     costoTotalUSD: Math.round(costoTotalUSD * 100) / 100,
-    impuestosAduana: Math.round(impuestosAduana * 100) / 100,
+    impuestosAduana: impRedondeado,
     sobrecargoVsProducto: `+${sobrecargoPct}% sobre el precio del producto`,
     _chart: chart,
+    _insight: insight,
   };
 }

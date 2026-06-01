@@ -9,6 +9,7 @@ export interface Outputs {
   notaNombre: string;
   longOnda: number;
   midiNote: number;
+  _insight?: any;
 }
 
 const NOMBRES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -36,10 +37,24 @@ export function afinacionFrecuenciaNota(i: Inputs): Outputs {
 
   const notaNombre = `${NOMBRES[notaIdx]}${octava}`;
 
+  // Insight: interpretar la nota, su frecuencia y la afinación elegida vs el estándar 440 Hz.
+  const desvioStd = base - 440;
+  const refTxt = Math.abs(desvioStd) < 0.01
+    ? `con el estándar **A4 = 440 Hz**`
+    : `con una afinación base de **${base} Hz** (${desvioStd > 0 ? '+' : ''}${desvioStd.toFixed(1)} Hz vs el estándar 440)`;
+  const insightTone = Math.abs(desvioStd) < 0.01 ? 'good' : 'neutral';
+  const insightText = `La nota **${notaNombre}** vibra a **${frecuencia.toFixed(2)} Hz** ${refTxt}. Su onda mide **${longOnda.toFixed(2)} m** en el aire (343 m/s) y corresponde al MIDI **${midiNote}**.`;
+
   return {
     frecuencia: Number(frecuencia.toFixed(2)),
     notaNombre,
     longOnda: Number(longOnda.toFixed(3)),
     midiNote,
+    _insight: {
+      title: 'Tu nota en números',
+      text: insightText,
+      tone: insightTone,
+      icon: '🎵',
+    },
   };
 }

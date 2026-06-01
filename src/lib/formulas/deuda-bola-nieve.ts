@@ -1,6 +1,6 @@
 /** Plan de pago de deudas — método bola de nieve */
 export interface Inputs { deuda1Nombre?: string; deuda1Monto: number; deuda1Minimo: number; deuda2Monto?: number; deuda2Minimo?: number; deuda3Monto?: number; deuda3Minimo?: number; pagoExtraMensual: number; __lang?: string; }
-export interface Outputs { mesesParaLibrarse: number; ordenPago: string; totalPagado: number; deudaTotal: number; _chart?: any; }
+export interface Outputs { mesesParaLibrarse: number; ordenPago: string; totalPagado: number; deudaTotal: number; _chart?: any; _insight?: any; }
 
 export function deudaBolaNieve(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -14,6 +14,8 @@ export function deudaBolaNieve(i: Inputs): Outputs {
       intereses: 'Intereses',
       totalPagado: 'Total pagado',
       ariaLabel: 'Composición del total pagado: capital de las deudas más intereses',
+      insightTitle: 'Tu plan bola de nieve',
+      insightText: (m: string, p: number, intereses: string) => `Arrancás por la deuda más chica y, al cancelarla, sumás su mínimo a la siguiente. Quedás libre en **${m}** y los intereses son el **${p}%** de todo lo que pagás (**$${intereses}**).`,
     },
     en: {
       errorExtraNegatvo: 'Extra payment cannot be negative',
@@ -24,6 +26,8 @@ export function deudaBolaNieve(i: Inputs): Outputs {
       intereses: 'Interest',
       totalPagado: 'Total paid',
       ariaLabel: 'Breakdown of total paid: debt principal plus interest',
+      insightTitle: 'Your snowball plan',
+      insightText: (m: string, p: number, intereses: string) => `You start with the smallest debt and, once it's gone, roll its minimum into the next one. You're debt-free in **${m}** and interest is **${p}%** of everything you pay (**$${intereses}**).`,
     },
   } as const)[__lang];
 
@@ -90,5 +94,16 @@ export function deudaBolaNieve(i: Inputs): Outputs {
     ariaLabel: T.ariaLabel,
   };
 
-  return { mesesParaLibrarse: meses, ordenPago: orden, totalPagado: totalPagadoR, deudaTotal: deudaTotalR, _chart: chart };
+  const pctIntereses = totalPagadoR > 0 ? Math.round((interesesR / totalPagadoR) * 100) : 0;
+  const mesesStr = __lang === 'en'
+    ? `${meses} ${meses === 1 ? 'month' : 'months'}`
+    : `${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+  const insight = {
+    title: T.insightTitle,
+    text: T.insightText(mesesStr, pctIntereses, interesesR.toLocaleString('es-AR')),
+    tone: (pctIntereses >= 25 ? 'warn' : 'good') as 'warn' | 'good',
+    icon: '❄️',
+  };
+
+  return { mesesParaLibrarse: meses, ordenPago: orden, totalPagado: totalPagadoR, deudaTotal: deudaTotalR, _chart: chart, _insight: insight };
 }

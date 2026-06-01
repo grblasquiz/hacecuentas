@@ -21,6 +21,7 @@ export interface Outputs {
   desglose_vehiculo: number;
   nota: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -196,9 +197,34 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición del presupuesto del primer año en Uruguay por rubro.',
   };
 
+  // ── INSIGHT ──────────────────────────────────────────────────────────────
+  const fmtUsd = (n: number) => "USD " + Math.round(n).toLocaleString("es-AR");
+  const viviendaPct =
+    total_usd > 0 ? (desglose_alquiler / total_usd) * 100 : 0;
+  const slicesInsight = [
+    { label: "Alquiler + depósito", value: Math.round(desglose_alquiler) },
+    { label: "Manutención", value: Math.round(desglose_manutencion) },
+    { label: "Salud", value: Math.round(desglose_salud) },
+    { label: "Colegio", value: Math.round(desglose_colegio) },
+    { label: "Residencia", value: Math.round(desglose_residencia) },
+    { label: "Vuelos", value: Math.round(desglose_vuelos) },
+    { label: "Vehículo", value: Math.round(desglose_vehiculo) },
+  ];
+  const topSlice = slicesInsight.reduce((a, b) => (b.value > a.value ? b : a));
+  const topPct = total_usd > 0 ? (topSlice.value / total_usd) * 100 : 0;
+  const insight = {
+    title: "Tu mayor gasto del primer año",
+    text:
+      `El **alquiler + depósito** (${fmtUsd(desglose_alquiler)}) es el **${viviendaPct.toFixed(0)}%** del presupuesto del año 1, con un alquiler de **USD ${alquilerMensual.toLocaleString("es-AR")}/mes** en ${zonaLabel[zonaKey]}. ` +
+      `El rubro que más pesa es **${topSlice.label}** (${topPct.toFixed(0)}%); tu costo recurrente ronda **${fmtUsd(costo_mensual_usd)}/mes** una vez instalado.`,
+    tone: "warn" as const,
+    icon: "🏠",
+  };
+
   return {
     total_usd:            Math.round(total_usd),
     costo_mensual_usd,
+    _insight: insight,
     desglose_residencia:  Math.round(desglose_residencia),
     desglose_vuelos:      Math.round(desglose_vuelos),
     desglose_alquiler:    Math.round(desglose_alquiler),

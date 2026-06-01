@@ -14,6 +14,8 @@ export interface Outputs {
   tokensEstimados: string;
   nivel: string;
   recomendaciones: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface ProtocolConfig {
@@ -171,11 +173,36 @@ export function compute(i: Inputs): Outputs {
       ? `✅ Tu perfil cumple todos los criterios mínimos de ${config.nombre}. Mantené tu actividad activa hasta el snapshot.`
       : `Para mejorar tu elegibilidad en ${config.nombre}: ${recs.join(" | ")}`;
 
+  const probPct = Math.round(probabilidad * 100);
+  const toneByNivel = puntaje >= 70 ? "good" : puntaje >= 40 ? "neutral" : "warn";
+  const _insight = {
+    title: `Elegibilidad: ${nivel}`,
+    text: `Tu wallet suma **${puntaje}/100** puntos en ${config.nombre} (nivel **${nivel}**, ~${probPct}% de probabilidad), lo que apunta a un rango estimado de **${tokensEstimados}**. ` + (recs.length === 0 ? `Cumplís todos los mínimos: mantené la actividad hasta el snapshot.` : `Subí tu puntaje cerrando las acciones pendientes antes del snapshot.`),
+    tone: toneByNivel,
+    icon: puntaje >= 70 ? "🪂" : "⏳",
+  };
+
+  const _chart = {
+    type: "scale",
+    marker: puntaje,
+    markerLabel: `${puntaje} pts`,
+    min: 0,
+    segments: [
+      { nombre: "Básico", max: 40, color: "#f87171", colorDark: "#b91c1c" },
+      { nombre: "Intermedio", max: 70, color: "#fbbf24", colorDark: "#b45309" },
+      { nombre: "Avanzado", max: 90, color: "#34d399", colorDark: "#047857" },
+      { nombre: "Power User", max: 100, color: "#22c55e", colorDark: "#15803d" },
+    ],
+    ariaLabel: `Puntaje de elegibilidad ${puntaje} de 100 en zona ${nivel}`,
+  };
+
   return {
     probabilidad,
     puntaje,
     tokensEstimados,
     nivel,
     recomendaciones,
+    _insight,
+    _chart,
   };
 }

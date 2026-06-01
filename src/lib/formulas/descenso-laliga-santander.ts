@@ -23,6 +23,7 @@ export interface DescensoLaLigaOutputs {
   porcentajeSalvacion: number;
   veredicto: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function descensoLaligaSantander(inputs: DescensoLaLigaInputs): DescensoLaLigaOutputs {
@@ -79,6 +80,23 @@ export function descensoLaligaSantander(inputs: DescensoLaLigaInputs): DescensoL
     ariaLabel: 'Escala de probabilidad de salvación del descenso (0 a 100 %)',
   };
 
+  // Zona de la escala según la prob. de salvación (mismos cortes que el _chart)
+  let zona: string;
+  let tone: 'good' | 'warn' | 'neutral';
+  if (salv <= 25) { zona = 'descenso probable'; tone = 'warn'; }
+  else if (salv <= 50) { zona = 'riesgo alto'; tone = 'warn'; }
+  else if (salv <= 75) { zona = 'peleado'; tone = 'neutral'; }
+  else { zona = 'salvación probable'; tone = 'good'; }
+
+  const insight = {
+    title: 'Lectura de la pelea por la permanencia',
+    text: puntosMaxPosibles < pts17
+      ? `Con un máximo de **${puntosMaxPosibles} pts** posibles no alcanzás al 17º (**${pts17} pts**): descenso matemático.`
+      : `Con **${pts} pts** estás a **${puntosParaAlcanzar17} ${puntosParaAlcanzar17 === 1 ? 'punto' : 'puntos'}** de superar al 17º y a **${diferenciaConSafety >= 0 ? '+' : ''}${diferenciaConSafety} del umbral de salvación** (${safety} pts). La escala te ubica en zona de **${zona}** (**${salv}%** de salvarte): te quedan ${fechas} ${fechas === 1 ? 'fecha' : 'fechas'} y ${puntosParaAlcanzar17} ${puntosParaAlcanzar17 === 1 ? 'punto' : 'puntos'} a sumar.`,
+    tone,
+    icon: '⚽',
+  };
+
   return {
     puntosParaAlcanzar17,
     puntosMaxPosibles,
@@ -87,5 +105,6 @@ export function descensoLaligaSantander(inputs: DescensoLaLigaInputs): DescensoL
     porcentajeSalvacion: salv,
     veredicto,
     _chart: chart,
+    _insight: insight,
   };
 }

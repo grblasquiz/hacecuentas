@@ -19,6 +19,8 @@ export interface Outputs {
   status: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmtBRL = (n: number) =>
@@ -48,6 +50,33 @@ export function aposentadoriaInssPedagio50(i: Inputs): Outputs {
   const formula = `Tempo total = contrib. em 2019 (${contrib2019}) + faltava (${faltava.toFixed(1)}) × 1,5 = ${totalNecessario.toFixed(1)} anos`;
   const explicacao = `Regra de transição pedágio 50% (EC 103/2019): exclusiva para quem estava a ≤ 2 anos de se aposentar em 13/11/2019 pela regra antiga (${tempoMin} anos - ${sexo}). Paga-se pedágio de 50% do tempo faltante. Aplica fator previdenciário. Exemplo: se faltavam 2 anos, total = 2 × 1,5 = 3 anos adicionais. Média aplicada: ${fmtBRL(mediaAplicada)} (teto ${fmtBRL(teto)}).`;
 
+  const _insight = elegivel
+    ? {
+        title: 'Elegível pela regra pedágio 50%',
+        text: `Faltavam apenas **${faltava.toFixed(1)} anos** em 13/11/2019, então o pedágio é de só **${pedagio.toFixed(1)} anos** (50% do faltante). Total de ${totalNecessario.toFixed(1)} anos — lembre que esta regra aplica o **fator previdenciário**, que pode reduzir o valor final.`,
+        tone: 'good',
+        icon: '✅',
+      }
+    : {
+        title: 'Não elegível para o pedágio 50%',
+        text: `Em 13/11/2019 faltavam **${faltava.toFixed(1)} anos** para os ${tempoMin} anos, acima do limite de **2 anos** desta regra. Considere as regras de pontos, idade progressiva ou pedágio 100%.`,
+        tone: 'warn',
+        icon: '🚫',
+      };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Contribuído até 2019', value: Number(contrib2019.toFixed(1)) },
+      { label: 'Tempo que faltava', value: Number(faltava.toFixed(1)) },
+      { label: 'Pedágio (50%)', value: Number(pedagio.toFixed(1)) },
+    ],
+    suffix: ' anos',
+    centerValue: `${totalNecessario.toFixed(1)}`,
+    centerLabel: 'anos no total',
+    ariaLabel: `Composição do tempo total de contribuição: ${contrib2019.toFixed(1)} anos até 2019, ${faltava.toFixed(1)} anos que faltavam e ${pedagio.toFixed(1)} anos de pedágio de 50%`,
+  };
+
   return {
     tempoRequerido: `${tempoMin} anos (regra antiga)`,
     tempoFaltavaEm2019: `${faltava.toFixed(1)} anos`,
@@ -57,5 +86,7 @@ export function aposentadoriaInssPedagio50(i: Inputs): Outputs {
     status,
     formula,
     explicacao,
+    _insight,
+    _chart,
   };
 }

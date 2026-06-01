@@ -1,6 +1,6 @@
 /** Escala de dolor numérica NRS */
 export interface Inputs { dolor: number; tipo: string; ubicacion: string; }
-export interface Outputs { clasificacion: string; escalon: string; recomendacion: string; mensaje: string; _chart?: any; }
+export interface Outputs { clasificacion: string; escalon: string; recomendacion: string; mensaje: string; _chart?: any; _insight?: any; }
 
 export function escalaDolorNumerica(i: Inputs): Outputs {
   const dolor = Number(i.dolor);
@@ -42,5 +42,20 @@ export function escalaDolorNumerica(i: Inputs): Outputs {
     ariaLabel: 'Escala numérica del dolor (NRS) de 0 a 10: leve, moderado, severo',
   };
 
-  return { clasificacion, escalon, recomendacion, mensaje: `Dolor: ${dolor}/10. ${clasificacion}. ${escalon}.`, _chart: chart };
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+  let zonaLabel: string;
+  if (dolor === 0) { insightTone = 'good'; insightIcon = '😀'; zonaLabel = 'sin dolor'; }
+  else if (dolor <= 3) { insightTone = 'neutral'; insightIcon = '🙂'; zonaLabel = 'leve'; }
+  else if (dolor <= 6) { insightTone = 'warn'; insightIcon = '😣'; zonaLabel = 'moderado'; }
+  else { insightTone = 'warn'; insightIcon = '🚑'; zonaLabel = 'severo'; }
+  const insight = {
+    title: 'Qué significa tu puntaje',
+    text: dolor === 0
+      ? 'Marcaste **0/10**: sin dolor actual, no se requiere analgesia.'
+      : `Tu **${dolor}/10** cae en zona de dolor **${zonaLabel}**. ${escalon}.`,
+    tone: insightTone,
+    icon: insightIcon,
+  };
+  return { clasificacion, escalon, recomendacion, mensaje: `Dolor: ${dolor}/10. ${clasificacion}. ${escalon}.`, _chart: chart, _insight: insight };
 }

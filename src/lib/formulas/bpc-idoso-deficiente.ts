@@ -19,6 +19,7 @@ export interface BpcOutputs {
   valorBeneficio: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 const SALARIO_MINIMO = 1518;
@@ -56,6 +57,27 @@ export function bpcIdosoDeficiente(inputs: BpcInputs): BpcOutputs {
   const formula = `Renda per capita = R$ ${renda.toFixed(2)} / ${membros} = R$ ${perCapita.toFixed(2)} (limite: R$ ${LIMITE_PER_CAPITA.toFixed(2)})`;
   const explicacion = `${motivo}. O BPC (Lei 8.742/1993 — LOAS) paga 1 salário mínimo (R$ ${SALARIO_MINIMO} em 2026) mensais. Valor: R$ ${valorBeneficio}. O benefício é solicitado no INSS e requer cadastro no CadÚnico.`;
 
+  const fmtBr = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  let insightText: string;
+  let insightTone: string;
+  if (elegivelBool) {
+    insightText = `Renda per capita de **R$ ${fmtBr(perCapita)}** fica abaixo do limite de **R$ ${fmtBr(LIMITE_PER_CAPITA)}** e o requerente se enquadra: direito a **R$ ${SALARIO_MINIMO}/mês** (1 salário mínimo). Solicite no INSS com o CadÚnico atualizado.`;
+    insightTone = 'good';
+  } else if (!atendeIdade && !atendeDeficiencia) {
+    insightText = `Mesmo com renda baixa, o BPC exige ter **65+ anos** ou ser **pessoa com deficiência**. Com ${idade} anos e sem deficiência declarada, não há direito ao benefício hoje.`;
+    insightTone = 'warn';
+  } else {
+    const excesso = perCapita - LIMITE_PER_CAPITA;
+    insightText = `A renda per capita de **R$ ${fmtBr(perCapita)}** supera o limite de **R$ ${fmtBr(LIMITE_PER_CAPITA)}** por **R$ ${fmtBr(excesso)}**. Sem enquadramento na renda, o pedido tende a ser indeferido — vale revisar a composição familiar e despesas dedutíveis.`;
+    insightTone = 'warn';
+  }
+  const _insight = {
+    title: elegivelBool ? 'Você tem direito' : 'Atenção ao requisito',
+    text: insightText,
+    tone: insightTone,
+    icon: elegivelBool ? '✅' : '⚠️',
+  };
+
   return {
     rendaPerCapita: Math.round(perCapita * 100) / 100,
     limitePerCapita: Math.round(LIMITE_PER_CAPITA * 100) / 100,
@@ -63,5 +85,6 @@ export function bpcIdosoDeficiente(inputs: BpcInputs): BpcOutputs {
     valorBeneficio,
     formula,
     explicacion,
+    _insight,
   };
 }

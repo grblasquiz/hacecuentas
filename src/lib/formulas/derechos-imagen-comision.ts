@@ -16,6 +16,7 @@ export interface Outputs {
   moneda: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Rangos de comisión vigentes (FIFA Football Agents 2023 + práctica de mercado)
@@ -56,6 +57,15 @@ export function derechosImagenComision(i: Inputs): Outputs {
     ariaLabel: 'Composición del ingreso anual por derechos de imagen: neto, comisión y gastos',
   };
 
+  // % del ingreso bruto que termina en la agencia (no sobre la base, sino sobre el total)
+  const shareSobreBruto = ing > 0 ? (comisionAnual / ing) * 100 : 0;
+  const insight = {
+    title: 'Cuánto se lleva la agencia',
+    text: `La comisión del **${(pct * 100).toFixed(1)}%** equivale a **US$ ${Math.round(comisionAnual).toLocaleString('en')}/año** — el **${shareSobreBruto.toFixed(0)}% de tu ingreso bruto** por imagen. En ${anos} ${anos === 1 ? 'año' : 'años'} de contrato la agencia se queda con **US$ ${Math.round(comisionTotal).toLocaleString('en')}**; cada punto que negocies a la baja vale ~US$ ${Math.round(baseComision / 100).toLocaleString('en')}/año.`,
+    tone: 'warn' as const,
+    icon: '🤝',
+  };
+
   return {
     comisionPct: Number((pct * 100).toFixed(1)),
     comisionAnual: Math.round(comisionAnual),
@@ -65,5 +75,6 @@ export function derechosImagenComision(i: Inputs): Outputs {
     moneda: 'USD',
     resumen: `Sobre US$ ${ing.toLocaleString('en')} anuales de imagen, ${info.nombre} cobra **${(pct * 100).toFixed(1)}% = US$ ${Math.round(comisionAnual).toLocaleString('en')}/año**. Neto jugador: **US$ ${Math.round(netoAnual).toLocaleString('en')}/año**.`,
     _chart: chart,
+    _insight: insight,
   };
 }

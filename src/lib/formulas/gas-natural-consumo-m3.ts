@@ -15,6 +15,7 @@ export interface Outputs {
   categoriaDetectada: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Cuadro tarifario residencial ENARGAS (Argentina 2026, valores base sin subsidio).
@@ -91,6 +92,19 @@ export function gasNaturalConsumoM3(i: Inputs): Outputs {
     ariaLabel: 'Composición de la factura de gas: consumo, cargo fijo e IVA.',
   };
 
+  const consumoSharePct = total > 0 ? Math.round((consumoVariable / total) * 100) : 0;
+  const cargoFijoSharePct = total > 0 ? Math.round((cargoFijo / total) * 100) : 0;
+  const insightText =
+    cargoFijo >= consumoVariable
+      ? `Tu factura bimestral es **$${Math.round(total).toLocaleString('es-AR')}** y el **cargo fijo (${cargoFijoSharePct}%)** pesa más que el consumo: con ${m3} m³ pagás casi lo mismo abras o no la llave. Bajar el consumo mueve poco la cuenta.`
+      : `El consumo variable es **${consumoSharePct}%** de los **$${Math.round(total).toLocaleString('es-AR')}** de tu factura bimestral; el cargo fijo aporta ${cargoFijoSharePct}% y el IVA 21%. Cada m³ que recortes baja la cuenta de forma directa.`;
+  const insight = {
+    title: 'Qué pesa en tu factura',
+    text: insightText,
+    tone: 'neutral' as const,
+    icon: '🔥',
+  };
+
   return {
     consumoM3Mensual: Number(consumoM3Mensual.toFixed(1)),
     subtotal: Math.round(subtotal),
@@ -102,5 +116,6 @@ export function gasNaturalConsumoM3(i: Inputs): Outputs {
     categoriaDetectada,
     resumen: `Categoría ${categoriaDetectada}. Factura bimestral estimada: $${Math.round(total).toLocaleString('es-AR')} ($${Math.round(totalMensual).toLocaleString('es-AR')} por mes).`,
     _chart: chart,
+    _insight: insight,
   };
 }

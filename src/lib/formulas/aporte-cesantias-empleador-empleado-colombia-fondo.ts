@@ -18,6 +18,8 @@ export interface Outputs {
   retiro_vivienda_permitido: number;
   aporte_total_empleador_con_intereses: number;
   proyeccion_5_anos: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -73,6 +75,29 @@ export function compute(i: Inputs): Outputs {
   }
   const proyeccion_5_anos = proyeccion;
 
+  // Insight: interpreta la obligación del empleador y el rol del interés 12%
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const _insight = {
+    title: 'Lo que cuestan las cesantías',
+    text: `Por un sueldo de **${fmtCOP(salario_valido)}** el empleador aporta **${fmtCOP(aporte_anual)}** al año (8,33%) más **${fmtCOP(intereses_anuales)}** de intereses del 12%: una obligación total de **${fmtCOP(aporte_total_empleador_con_intereses)}** que el trabajador acumula en su fondo.`,
+    tone: 'neutral',
+    icon: '🏦',
+  };
+
+  // Donut: composición del saldo del fondo (antes de retiros)
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      ...(saldo_inicial > 0 ? [{ label: 'Saldo inicial', value: Math.round(saldo_inicial) }] : []),
+      { label: 'Aporte del año (8,33%)', value: Math.round(aporte_anual) },
+      { label: 'Intereses (12%)', value: Math.round(intereses_anuales) },
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(saldo_total_con_intereses),
+    centerLabel: 'fondo acumulado',
+    ariaLabel: `Composición del fondo de cesantías: aporte anual de ${fmtCOP(aporte_anual)} e intereses de ${fmtCOP(intereses_anuales)}`,
+  };
+
   return {
     aporte_anual_empleador: Math.round(aporte_anual),
     aporte_mensual_empleador: Math.round(aporte_mensual),
@@ -83,6 +108,8 @@ export function compute(i: Inputs): Outputs {
     retiro_educacion_permitido: Math.round(retiro_educacion_permitido),
     retiro_vivienda_permitido: Math.round(retiro_vivienda_permitido),
     aporte_total_empleador_con_intereses: Math.round(aporte_total_empleador_con_intereses),
-    proyeccion_5_anos: Math.round(proyeccion_5_anos)
+    proyeccion_5_anos: Math.round(proyeccion_5_anos),
+    _insight,
+    _chart
   };
 }

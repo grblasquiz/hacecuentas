@@ -7,7 +7,7 @@ export interface Inputs {
 }
 
 export interface Outputs {
-  litros: string; envase: string; tiempoAplicacion: string; consejo: string;
+  litros: string; envase: string; tiempoAplicacion: string; consejo: string; _insight?: any;
 }
 
 export function barnizAceiteM2Madera(inputs: Inputs): Outputs {
@@ -36,10 +36,21 @@ export function barnizAceiteM2Madera(inputs: Inputs): Outputs {
   const tiempoHsMap: Record<number, number> = { 1: 6, 2: 18, 3: 0.7, 4: 3, 5: 1 };
   const hsCapa = tiempoHsMap[pr];
   const tiempoTotal = c * hsCapa + (c - 1) * 2; // secado + lijado
+  const poroLabel: Record<number, string> = { 1: 'baja', 2: 'media', 3: 'alta' };
+  const _insight = {
+    title: 'Cuánto producto comprar',
+    text:
+      `Para **${m2} m²** con **${c} capa${c>1?'s':''}** de ${envases[pr].toLowerCase()} sobre madera de porosidad **${poroLabel[po] || 'media'}** ` +
+      `vas a usar unos **${litros.toFixed(2)} L** (ya incluye 10% de margen por pérdidas). ` +
+      `Calculá ~**${tiempoTotal.toFixed(0)} hs** en total contando secado y lijado entre manos.`,
+    tone: 'neutral',
+    icon: '🪵',
+  };
   return {
     litros: `${litros.toFixed(2)} L`,
     envase: env,
     tiempoAplicacion: `${tiempoTotal.toFixed(1)} hs totales (${c} capas)`,
     consejo: `Lijá 180→240 antes; lijado suave 280 entre capas.`,
+    _insight,
   };
 }

@@ -14,6 +14,7 @@ export interface Outputs {
   interesesGenerados: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Costos de referencia 2026 en USD
@@ -134,6 +135,25 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición de la meta de ahorro: aporte propio e intereses generados.',
   };
 
+  const metaCubierta = aporteSlice + interesSlice;
+  const interesPct = metaCubierta > 0 ? (interesSlice / metaCubierta) * 100 : 0;
+  let insight: { title: string; text: string; tone: 'good' | 'warn' | 'neutral'; icon: string };
+  if (ahorroPorMes === 0) {
+    insight = {
+      title: 'Ya llegás a la meta',
+      text: `Con lo que ya tenés ahorrado y un **${tasaAnual}% real anual**, en **${aniosRestantes} años** superás la meta de **USD ${metaFinal.toLocaleString('es-AR')}** sin aportes nuevos. El interés compuesto hace el resto: podés dejar de aportar a este objetivo.`,
+      tone: 'good',
+      icon: '🎓',
+    };
+  } else {
+    insight = {
+      title: 'El plan de ahorro',
+      text: `Aportando **USD ${ahorroPorMes.toFixed(0)}/mes** durante **${aniosRestantes} años**, el interés compuesto cubre el **${interesPct.toFixed(0)}%** de la meta (USD ${Math.round(interesSlice).toLocaleString('es-AR')}) y vos ponés el resto. Empezar antes de los 18 es la palanca: cada año de demora sube fuerte la cuota mensual.`,
+      tone: 'neutral',
+      icon: '🎓',
+    };
+  }
+
   return {
     ahorroPorMes: Math.max(ahorroPorMes, 0),
     metaFinal,
@@ -142,5 +162,6 @@ export function compute(i: Inputs): Outputs {
     interesesGenerados: Math.max(interesesGenerados, 0),
     detalle,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -11,6 +11,7 @@ export interface Outputs {
   millasTerrestres: number;
   tiempoSegundos: number;
   resumen: string;
+  _insight?: any;
 }
 
 // Constantes
@@ -40,6 +41,21 @@ export function anosLuzDistanciaConversion(i: Inputs): Outputs {
   const millas = km / MILLA_KM;
   const tiempoSegundos = km / C_KM_S;
 
+  // Tiempo que la luz tarda en recorrer esta distancia, en la escala más legible
+  let tiempoLegible: string;
+  if (tiempoSegundos >= 3.15576e7) tiempoLegible = `**${(tiempoSegundos / 3.15576e7).toLocaleString('es-AR', { maximumFractionDigits: 2 })} años**`;
+  else if (tiempoSegundos >= 86400) tiempoLegible = `**${(tiempoSegundos / 86400).toLocaleString('es-AR', { maximumFractionDigits: 1 })} días**`;
+  else if (tiempoSegundos >= 3600) tiempoLegible = `**${(tiempoSegundos / 3600).toLocaleString('es-AR', { maximumFractionDigits: 1 })} horas**`;
+  else if (tiempoSegundos >= 60) tiempoLegible = `**${(tiempoSegundos / 60).toLocaleString('es-AR', { maximumFractionDigits: 1 })} minutos**`;
+  else tiempoLegible = `**${tiempoSegundos.toLocaleString('es-AR', { maximumFractionDigits: 2 })} segundos**`;
+
+  const _insight = {
+    title: 'A la velocidad de la luz',
+    text: `Esa distancia es **${km.toExponential(2)} km** (unos **${anosLuz.toExponential(2)} años luz**). Un rayo de luz tardaría ${tiempoLegible} en cruzarla de punta a punta.`,
+    tone: 'neutral',
+    icon: '🌌',
+  };
+
   return {
     anosLuz: Number(anosLuz.toExponential(6)),
     kilometros: Number(km.toExponential(6)),
@@ -48,5 +64,6 @@ export function anosLuzDistanciaConversion(i: Inputs): Outputs {
     millasTerrestres: Number(millas.toExponential(6)),
     tiempoSegundos: Number(tiempoSegundos.toExponential(4)),
     resumen: `${valor} ${unidad.replace('-', ' ')} equivalen a ${anosLuz.toExponential(3)} años luz (${km.toExponential(3)} km, ${parsecs.toExponential(3)} parsecs).`,
+    _insight,
   };
 }

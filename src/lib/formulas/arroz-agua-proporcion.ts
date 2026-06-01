@@ -14,6 +14,7 @@ export interface Outputs {
   tipo: string;
   instrucciones: string;
   resumen: string;
+  _insight?: any;
 }
 
 const TIPOS: Record<string, {
@@ -49,6 +50,8 @@ export function arrozAguaProporcion(i: Inputs): Outputs {
   const aguaTazas = aguaMl / 240;
   const cocido = gramos * t.rendimiento;
 
+  const porcionesRinde = Math.round(cocido / 200); // ~200 g cocido por porción de plato
+
   return {
     arrozGramos: gramos,
     aguaMl: Math.round(aguaMl),
@@ -59,5 +62,11 @@ export function arrozAguaProporcion(i: Inputs): Outputs {
     tipo: t.nombre,
     instrucciones: t.instrucciones,
     resumen: `${gramos} g de ${t.nombre.toLowerCase()} + ${Math.round(aguaMl)} ml de agua, ${t.tiempoMin} min. Rinde ~${Math.round(cocido)} g cocido.`,
+    _insight: {
+      title: 'La proporción justa',
+      text: `Para **${gramos} g** de ${t.nombre.toLowerCase()} van **${Math.round(aguaMl)} ml de agua** (~${aguaTazas.toFixed(1)} tazas): la regla es **${t.ratio} de agua por 1 de arroz**. Coccionalo **${t.tiempoMin} min** y rinde ~**${Math.round(cocido)} g cocido**${porcionesRinde >= 1 ? `, unas ${porcionesRinde} porcion${porcionesRinde > 1 ? 'es' : ''}` : ''}.`,
+      tone: 'neutral',
+      icon: '🍚',
+    },
   };
 }

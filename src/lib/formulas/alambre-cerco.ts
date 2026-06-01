@@ -9,6 +9,7 @@ export interface AlambreCercoOutputs {
   cantidadPostes: number;
   rollosAlambre: number;
   detalle: string;
+  _insight?: any;
 }
 
 const SEP_POSTES: Record<string, number> = {
@@ -33,10 +34,17 @@ export function alambreCerco(inputs: AlambreCercoInputs): AlambreCercoOutputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  const sobranteRollos = rollos * 1000 - metrosAlambre;
   return {
     metrosAlambre,
     cantidadPostes: cantPostes,
     rollosAlambre: rollos,
     detalle: `${fmt.format(perimetro)} m de perímetro × ${hilos} hilos = ${fmt.format(metrosAlambre)} m de alambre (${rollos} rollos de 1.000 m) + ${cantPostes} postes cada ${fmt.format(sep)} m.`,
+    _insight: {
+      title: 'Tu lista de materiales',
+      text: `Para ${fmt.format(perimetro)} m con **${hilos} hilos** comprás **${fmt.format(metrosAlambre)} m de alambre** (${rollos} rollo${rollos === 1 ? '' : 's'} de 1.000 m, te sobran ${fmt.format(sobranteRollos)} m) y **${cantPostes} postes** cada ${fmt.format(sep)} m. Sumá un poste por esquina y refuerzos en los portones.`,
+      tone: 'neutral',
+      icon: '🔩',
+    },
   };
 }

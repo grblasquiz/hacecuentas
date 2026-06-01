@@ -19,6 +19,7 @@ export interface Outputs {
   status: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
 }
 
 const fmtBRL = (n: number) =>
@@ -55,6 +56,21 @@ export function aposentadoriaInssIdade(i: Inputs): Outputs {
   const formula = `${idadeMin} anos + ${contribMin} anos contrib. → 60% + 2%×(${anosContrib}−${contribMin}) = ${percentual.toFixed(0)}% × ${fmtBRL(baseMedia)}`;
   const explicacao = `Regra permanente pós-EC 103/2019: ${sexo === 'mulher' ? 'mulher 62+15' : 'homem 65+20'}. Com ${anosContrib} anos de contribuição, percentual aplicado: ${percentual.toFixed(0)}%. Benefício estimado: ${fmtBRL(valor)} (teto INSS 2026: ${fmtBRL(teto)}).`;
 
+  const apto = faltaIdade === 0 && faltaContrib === 0;
+  const _insight = apto
+    ? {
+        title: 'Você pode se aposentar por idade',
+        text: `Cumpre os requisitos (**${idadeMin} anos** + **${contribMin} anos** de contribuição). Com **${anosContrib} anos** contribuídos, a alíquota é **${percentual.toFixed(0)}%** e o benefício estimado fica em **${fmtBRL(valor)}/mês** (sobre a média de ${fmtBRL(baseMedia)}).`,
+        tone: 'good',
+        icon: '✅',
+      }
+    : {
+        title: 'Ainda falta para a aposentadoria por idade',
+        text: `A regra exige **${idadeMin} anos** de idade e **${contribMin} anos** de contribuição. Faltam **${faltaIdade} ano(s) de idade** e **${faltaContrib} ano(s) de contribuição**. Cada ano extra de contribuição acima de ${contribMin} soma 2% ao benefício.`,
+        tone: 'warn',
+        icon: '⏳',
+      };
+
   return {
     idadeRequerida: `${idadeMin} anos`,
     contribuicaoRequerida: `${contribMin} anos`,
@@ -64,5 +80,6 @@ export function aposentadoriaInssIdade(i: Inputs): Outputs {
     status,
     formula,
     explicacao,
+    _insight,
   };
 }

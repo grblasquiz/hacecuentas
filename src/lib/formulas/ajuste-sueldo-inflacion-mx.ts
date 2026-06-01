@@ -17,6 +17,8 @@ export interface AjusteSueldoInflacionMxOutputs {
   gananciaRealOfrecida: number;
   sueldoConOfrecido: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function ajusteSueldoInflacionMx(inputs: AjusteSueldoInflacionMxInputs): AjusteSueldoInflacionMxOutputs {
@@ -43,11 +45,38 @@ export function ajusteSueldoInflacionMx(inputs: AjusteSueldoInflacionMxInputs): 
       ? `Con aumento del ${ofrecido}% perdés poder adquisitivo (inflación ${inflacion}%): ${gananciaRealOfrecida.toFixed(2)}% real.`
       : `Tu aumento empata con la inflación.`;
 
+  const ajustadoR = Math.round(sueldoAjustadoInflacion);
+  const aumentoR = Math.round(aumentoNecesario);
+  const fmt = (n: number) => n.toLocaleString('es-MX', { maximumFractionDigits: 0 });
+  const ganaTone = ofrecido > inflacion ? 'good' : ofrecido < inflacion ? 'warn' : 'neutral';
+  const insightText = ofrecido > inflacion
+    ? `El aumento del **${ofrecido}%** supera la inflación (${inflacion}%): ganás **+${gananciaRealOfrecida.toFixed(2)}%** de poder adquisitivo real. Tu sueldo queda en $${fmt(Math.round(sueldoConOfrecido))}.`
+    : ofrecido < inflacion
+      ? `Con **${ofrecido}%** quedás por debajo de la inflación (${inflacion}%): perdés **${gananciaRealOfrecida.toFixed(2)}%** real. Para no perder necesitás llegar a **$${fmt(ajustadoR)}** (subir $${fmt(aumentoR)}).`
+      : `Tu aumento del ${ofrecido}% empata exacto con la inflación: tu poder adquisitivo queda igual, en **$${fmt(ajustadoR)}**.`;
+
   return {
-    sueldoAjustadoInflacion: Math.round(sueldoAjustadoInflacion),
-    aumentoNecesario: Math.round(aumentoNecesario),
+    sueldoAjustadoInflacion: ajustadoR,
+    aumentoNecesario: aumentoR,
     gananciaRealOfrecida: Number(gananciaRealOfrecida.toFixed(2)),
     sueldoConOfrecido: Math.round(sueldoConOfrecido),
     mensaje,
+    _insight: {
+      title: '¿Le ganás a la inflación?',
+      text: insightText,
+      tone: ganaTone,
+      icon: ofrecido >= inflacion ? '📈' : '📉',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Sueldo actual', value: Math.round(sueldoActual) },
+        { label: 'Ajuste para empatar inflación', value: aumentoR },
+      ],
+      prefix: '$',
+      centerValue: `$${fmt(ajustadoR)}`,
+      centerLabel: 'Sueldo ajustado',
+      ariaLabel: `Sueldo ajustado por inflación ${fmt(ajustadoR)} pesos, compuesto por el sueldo actual y el ajuste necesario`,
+    },
   };
 }

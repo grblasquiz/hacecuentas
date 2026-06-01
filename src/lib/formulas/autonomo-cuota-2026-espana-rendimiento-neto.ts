@@ -16,6 +16,8 @@ export interface Outputs {
   porcentaje_sobre_rendimiento: number;
   pension_estimada_mensual: number;
   descripcion_tramo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Fuente: Seguridad Social / BOE - Tramos RETA 2026
@@ -134,6 +136,36 @@ export function compute(i: Inputs): Outputs {
     );
   }
 
+  // Insight: interpretacion de la cuota y su peso sobre el rendimiento
+  const fmtEUR = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' €';
+  const pesoAlto = porcentajeSobreRendimiento >= 25;
+  const insightTone = porcentajeSobreRendimiento === 0 ? 'neutral' : (pesoAlto ? 'warn' : 'good');
+  const insightText = porcentajeSobreRendimiento === 0
+    ? `Con un rendimiento neto ajustado de **${fmtEUR(rendimientoNeto_ajustado)}/mes** te ubicás en el **tramo ${tramoSeleccionado.numero} de 15**, con una cuota mínima de **${fmtEUR(cuotaMensualMin)}/mes** (${fmtEUR(cuotaAnualMin)} al año).`
+    : (pesoAlto
+      ? `Tu cuota mínima de **${fmtEUR(cuotaMensualMin)}/mes** representa el **${porcentajeSobreRendimiento}%** de tu rendimiento neto: un peso alto sobre lo que ganás. Cotizar por la base mínima del tramo ${tramoSeleccionado.numero} es lo más eficiente salvo que quieras mejorar tu futura pensión.`
+      : `En el **tramo ${tramoSeleccionado.numero} de 15**, la cuota mínima de **${fmtEUR(cuotaMensualMin)}/mes** equivale al **${porcentajeSobreRendimiento}%** de tu rendimiento neto (${fmtEUR(cuotaAnualMin)} al año). Podés elegir base entre ${fmtEUR(tramoSeleccionado.base_min)} y ${fmtEUR(tramoSeleccionado.base_max)}.`);
+  const _insight = {
+    title: 'Tu cuota de autónomo 2026',
+    text: insightText,
+    tone: insightTone,
+    icon: '🧾',
+  };
+
+  // Gauge: posicion del tramo dentro de la escala 1-15 del RETA
+  const _chart = {
+    type: 'scale',
+    marker: tramoSeleccionado.numero,
+    markerLabel: `Tramo ${tramoSeleccionado.numero}`,
+    min: 1,
+    segments: [
+      { nombre: 'Rendimiento bajo', max: 5, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Rendimiento medio', max: 10, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Rendimiento alto', max: 15, color: '#dc2626', colorDark: '#f87171' },
+    ],
+    ariaLabel: `Tu tramo de cotización es el ${tramoSeleccionado.numero} de 15 en la escala del RETA 2026`,
+  };
+
   return {
     rendimiento_neto_ajustado: rendimientoNeto_ajustado,
     tramo_numero: `Tramo ${tramoSeleccionado.numero} de 15`,
@@ -145,5 +177,7 @@ export function compute(i: Inputs): Outputs {
     porcentaje_sobre_rendimiento: porcentajeSobreRendimiento,
     pension_estimada_mensual: pensionEstimadaMensual,
     descripcion_tramo: tramoSeleccionado.descripcion,
+    _insight,
+    _chart,
   };
 }

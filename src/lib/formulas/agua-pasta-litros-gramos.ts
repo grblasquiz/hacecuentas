@@ -8,6 +8,7 @@ export interface Outputs {
   gramosSal: number;
   tamanoOlla: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function aguaPastaLitrosGramos(i: Inputs): Outputs {
@@ -30,10 +31,18 @@ export function aguaPastaLitrosGramos(i: Inputs): Outputs {
   const tipoNombre = tipo === 'fresca' ? 'fresca' : tipo === 'rellena' ? 'rellena' : 'seca';
   const cucharadasSal = (sal / 20).toFixed(1); // 1 cucharada ~20g de sal gruesa
 
+  const _insight = {
+    title: 'La regla de la pasta',
+    text: `Para ${gramos} g de pasta ${tipoNombre}: **${litros.toFixed(1)} L** de agua y **${Math.round(sal)} g** de sal (~${cucharadasSal} cdas). Salá recién cuando hierve y usá una olla de **${ollaLitros} L** para que no se pegue.`,
+    tone: 'neutral',
+    icon: '🍝',
+  };
+
   return {
     litrosAgua: Number(litros.toFixed(1)),
     gramosSal: Math.round(sal),
     tamanoOlla: `${ollaLitros} litros mínimo`,
     detalle: `Para ${gramos} g de pasta ${tipoNombre}: ${litros.toFixed(1)} litros de agua + ${Math.round(sal)} g de sal (~${cucharadasSal} cucharadas de sal gruesa). Olla de al menos ${ollaLitros} litros.`,
+    _insight,
   };
 }

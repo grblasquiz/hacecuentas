@@ -1,6 +1,6 @@
 /** Precio mensual coworking CABA flex vs fijo comparativa */
 export interface Inputs { espacio: string; tipoPlan: string; diasPorSemana: number; meetingRoomHorasMes: number; }
-export interface Outputs { precioBaseMensual: number; meetingRoomMensual: number; totalMensualArs: number; totalMensualUsd: number; explicacion: string; _chart?: any; }
+export interface Outputs { precioBaseMensual: number; meetingRoomMensual: number; totalMensualArs: number; totalMensualUsd: number; explicacion: string; _chart?: any; _insight?: any; }
 export function coworkingPrecioMesFlexFijoComparativa(i: Inputs): Outputs {
   const espacio = String(i.espacio || '').toLowerCase();
   const tipo = String(i.tipoPlan || '').toLowerCase();
@@ -36,6 +36,32 @@ export function coworkingPrecioMesFlexFijoComparativa(i: Inputs): Outputs {
           ariaLabel: 'Composición del costo mensual de coworking: plan base más horas de salas de reunión',
         }
       : undefined;
+  const mrPct = totalArs > 0 ? Math.round((mr / totalArs) * 100) : 0;
+  const esFlex = tipo.startsWith('flex');
+  let insight;
+  if (mr > 0 && mrPct >= 20) {
+    insight = {
+      title: 'Las salas pesan en la factura',
+      text: `Las meeting rooms son **${mrPct}%** del total ($${Math.round(mr).toLocaleString('es-AR')}/mes). Si las usás seguido, conviene mirar un plan con horas de sala incluidas en vez de pagarlas sueltas.`,
+      tone: 'warn',
+      icon: '🏢',
+    };
+  } else if (esFlex) {
+    insight = {
+      title: 'Plan flex: pagás por presencia',
+      text: `El plan **${tipo}** te deja el escritorio en **$${Math.round(precioBase).toLocaleString('es-AR')}/mes** (~USD ${usd.toFixed(0)}). Si vas ${dias} día(s) o menos por semana, el flex te ahorra frente al fijo; si vas casi todos los días, comparalo con el hot-desk fijo.`,
+      tone: 'good',
+      icon: '🏢',
+    };
+  } else {
+    insight = {
+      title: 'Plan fijo: lugar asegurado',
+      text: `El plan **${tipo}** cuesta **$${Math.round(totalArs).toLocaleString('es-AR')}/mes** (~USD ${usd.toFixed(0)}) con acceso pleno. Tiene sentido si vas casi todos los días; si tu asistencia es irregular, un flex puede salir más barato.`,
+      tone: 'neutral',
+      icon: '🏢',
+    };
+  }
+
   return {
     precioBaseMensual: Number(precioBase.toFixed(0)),
     meetingRoomMensual: Number(mr.toFixed(0)),
@@ -43,5 +69,6 @@ export function coworkingPrecioMesFlexFijoComparativa(i: Inputs): Outputs {
     totalMensualUsd: Number(usd.toFixed(2)),
     explicacion: `${espacio} plan ${tipo}: $${precioBase.toLocaleString('es-AR')} ARS/mes + meeting rooms $${mr.toLocaleString('es-AR')}. Total: $${totalArs.toLocaleString('es-AR')} ARS (~USD ${usd.toFixed(0)}).`,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -12,6 +12,8 @@ export interface Outputs {
   valorLibroActual: number;
   aniosRestantes: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function amortizacionPaseFifa(i: Inputs): Outputs {
@@ -28,12 +30,32 @@ export function amortizacionPaseFifa(i: Inputs): Outputs {
   const mesesRestantes = anios * 12 - meses;
   const aniosRestantes = mesesRestantes / 12;
 
+  const rLibro = Math.round(valorLibro);
+  const rAcum = Math.round(amortizacionAcumulada);
+  const pctAmort = transfer > 0 ? (amortizacionAcumulada / transfer) * 100 : 0;
   return {
     amortizacionAnual: Math.round(amortizacionAnual),
     amortizacionMensual: Math.round(amortizacionMensual),
-    amortizacionAcumulada: Math.round(amortizacionAcumulada),
-    valorLibroActual: Math.round(valorLibro),
+    amortizacionAcumulada: rAcum,
+    valorLibroActual: rLibro,
     aniosRestantes: Number(aniosRestantes.toFixed(2)),
     mensaje: `Amortización lineal: €${Math.round(amortizacionAnual).toLocaleString('es-AR')}/año. Valor en libros: €${Math.round(valorLibro).toLocaleString('es-AR')}.`,
+    _insight: {
+      title: 'Cómo impacta el pase en el balance',
+      text: `El club amortiza **€${Math.round(amortizacionAnual).toLocaleString('es-AR')} por año** del pase de €${transfer.toLocaleString('es-AR')} a lo largo de ${anios} año(s). Hoy ya descontó **€${rAcum.toLocaleString('es-AR')}** (${pctAmort.toFixed(0)}%) y el valor en libros es de **€${rLibro.toLocaleString('es-AR')}**, con ${aniosRestantes.toFixed(2)} año(s) de contrato restantes.${pctAmort >= 70 ? ' Con el pase casi amortizado, una venta ahora generaría plusvalía contable casi total.' : ''}`,
+      tone: 'neutral',
+      icon: '⚽',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Valor en libros', value: rLibro },
+        { label: 'Amortización acumulada', value: rAcum },
+      ],
+      prefix: '€',
+      centerValue: '€' + (rLibro + rAcum).toLocaleString('es-AR'),
+      centerLabel: 'Costo del pase',
+      ariaLabel: `Pase de €${(rLibro + rAcum).toLocaleString('es-AR')}: €${rLibro.toLocaleString('es-AR')} de valor en libros restante y €${rAcum.toLocaleString('es-AR')} ya amortizados.`,
+    },
   };
 }

@@ -11,6 +11,8 @@ export interface Outputs {
   valorProximoAnio: number;
   depreciacionPorAnio: { anio: number; valor: number; perdida: number }[];
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function antiguedadAutoAmortizacion(i: Inputs): Outputs {
@@ -40,12 +42,39 @@ export function antiguedadAutoAmortizacion(i: Inputs): Outputs {
     });
   }
 
+  const valorActualR = Math.round(valorActual);
+  const depreciacionTotalR = Math.round(depreciacionTotal);
+  const valorProximoAnioR = Math.round(valorProximoAnio);
+  const caeProximo = valorActualR - valorProximoAnioR;
+  const total = valorActualR + depreciacionTotalR;
+
+  const _insight = {
+    title: 'Cuánto vale tu auto hoy',
+    text: `Tras **${anos} año(s)** a una depreciación del **${tasa}%** anual, el auto conserva **$${valorActualR.toLocaleString('es-AR')}**: ya perdió **${porcentajePerdido.toFixed(1)}%** (**$${depreciacionTotalR.toLocaleString('es-AR')}**) de su valor 0km. El próximo año caería otros **$${caeProximo.toLocaleString('es-AR')}**.`,
+    tone: porcentajePerdido >= 40 ? 'warn' : 'neutral',
+    icon: '🚗',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Valor que conserva', value: valorActualR },
+      { label: 'Valor perdido', value: depreciacionTotalR },
+    ],
+    prefix: '$',
+    centerValue: `$${valorActualR.toLocaleString('es-AR')}`,
+    centerLabel: 'Valor hoy',
+    ariaLabel: `Del precio 0km de $${total.toLocaleString('es-AR')}, el auto conserva $${valorActualR.toLocaleString('es-AR')} y perdió $${depreciacionTotalR.toLocaleString('es-AR')} por depreciación.`,
+  };
+
   return {
-    valorActual: Math.round(valorActual),
-    depreciacionTotal: Math.round(depreciacionTotal),
+    valorActual: valorActualR,
+    depreciacionTotal: depreciacionTotalR,
     porcentajePerdido: Number(porcentajePerdido.toFixed(1)),
-    valorProximoAnio: Math.round(valorProximoAnio),
+    valorProximoAnio: valorProximoAnioR,
     depreciacionPorAnio,
-    resumen: `Tras ${anos} año(s), el auto vale ~$${Math.round(valorActual).toLocaleString('es-AR')} (perdió ${porcentajePerdido.toFixed(1)}% del valor inicial).`,
+    resumen: `Tras ${anos} año(s), el auto vale ~$${valorActualR.toLocaleString('es-AR')} (perdió ${porcentajePerdido.toFixed(1)}% del valor inicial).`,
+    _insight,
+    _chart,
   };
 }

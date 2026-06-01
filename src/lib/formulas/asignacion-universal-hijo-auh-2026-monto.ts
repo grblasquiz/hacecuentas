@@ -15,6 +15,7 @@ export interface Outputs {
   acreditacion_anual: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -70,6 +71,12 @@ export function compute(i: Inputs): Outputs {
       bono_mensual: 0,
       acreditacion_anual: 0,
       detalle: `El tope vigente es $${TOPE_POR_INTEGRANTE.toLocaleString("es-AR")} por integrante × ${integrantesGrupo} integrantes = $${topeIngreso.toLocaleString("es-AR")}.`,
+      _insight: {
+        title: 'No accedés por ingresos',
+        text: `El ingreso familiar declarado (**$${ingresoFamiliar.toLocaleString("es-AR")}**) supera el tope de **$${topeIngreso.toLocaleString("es-AR")}** para un grupo de ${integrantesGrupo} integrante/s. Por cada integrante adicional el tope sube $${TOPE_POR_INTEGRANTE.toLocaleString("es-AR")}.`,
+        tone: 'warn',
+        icon: '🚫',
+      },
     };
   }
 
@@ -122,6 +129,13 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición de la AUH mensual: 80% de cobro mensual y 20% retenido hasta marzo',
   };
 
+  const insight = {
+    title: 'Cobrás el 80% por mes',
+    text: `De los **$${Math.round(montoBrutoTotal).toLocaleString("es-AR")}** brutos mensuales, ANSES te deposita **$${Math.round(montoMensualNeto).toLocaleString("es-AR")} cada mes** (80%) y retiene **$${Math.round(montoRetenido).toLocaleString("es-AR")}** (20%), que se acumula y se acredita junto en marzo: **$${Math.round(acreditacionAnual).toLocaleString("es-AR")}**${bonoActivo ? `. Sumá el bono de $${Math.round(bonoMensual).toLocaleString("es-AR")} sin retención` : ''}.`,
+    tone: 'good' as const,
+    icon: '👶',
+  };
+
   return {
     accede: "Accede a la AUH ✓",
     monto_mensual_neto: Math.round(montoMensualNeto),
@@ -131,5 +145,6 @@ export function compute(i: Inputs): Outputs {
     acreditacion_anual: Math.round(acreditacionAnual),
     detalle: lines.join(" | "),
     _chart: chart,
+    _insight: insight,
   };
 }

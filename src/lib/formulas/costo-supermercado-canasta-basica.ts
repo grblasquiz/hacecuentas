@@ -11,6 +11,7 @@ export interface Outputs {
   gastoDiario: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function costoSupermercadoCanasticaBasica(i: Inputs): Outputs {
@@ -52,11 +53,28 @@ export function costoSupermercadoCanasticaBasica(i: Inputs): Outputs {
     ariaLabel: 'Reparto del gasto mensual en supermercado entre adultos y menores',
   } : undefined;
 
+  const sobreCBA = Math.round((factor - 1) * 100);
+  const nivelLabel: Record<string, string> = { basico: 'básico', moderado: 'moderado', premium: 'premium' };
+  const insight = nivel === 'basico'
+    ? {
+        title: 'Consumo en el piso de la CBA',
+        text: `Elegiste nivel **básico**: el gasto se apoya en la canasta de subsistencia, **$${fmt.format(gastoDiario)}/día** para ${personas} persona(s). Es lo mínimo nutricional; cualquier extra mensual lo supera.`,
+        tone: 'neutral',
+        icon: '🛒',
+      }
+    : {
+        title: `Nivel ${nivelLabel[nivel] || nivel}: +${sobreCBA}% sobre la CBA`,
+        text: `Tu consumo **${nivelLabel[nivel] || nivel}** gasta **${sobreCBA}% más** que la canasta básica pura: **$${fmt.format(gastoDiario)}/día** ($${fmt.format(gastoPorPersona)}/persona al mes). Bajando a básico recortás cerca de $${fmt.format(gastoTotal - adultosEquivalentes * costoBase)}/mes.`,
+        tone: nivel === 'premium' ? 'warn' : 'neutral',
+        icon: '🛒',
+      };
+
   return {
     gastoMensualTotal: Math.round(gastoTotal),
     gastoPorPersona: Math.round(gastoPorPersona),
     gastoDiario: Math.round(gastoDiario),
     detalle: `${adultos} adulto(s) + ${menores} menor(es) = ${adultosEquivalentes.toFixed(2)} adultos equivalentes. CBA $${fmt.format(costoBase)} × factor ${nivel} (${factor}) = $${fmt.format(costoAjustado)}/AE. Total: $${fmt.format(gastoTotal)}/mes ($${fmt.format(gastoPorPersona)}/persona, $${fmt.format(gastoDiario)}/día).`,
     _chart: chart,
+    _insight: insight,
   };
 }

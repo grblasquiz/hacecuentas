@@ -30,6 +30,7 @@ export interface ArtPrestacionIltOutputs {
   fechaLimiteIltMax: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 const DIAS_EMPLEADOR = 10;
@@ -117,6 +118,31 @@ export function artPrestacionIltIncapacidadTemporaria(
     ariaLabel: 'Composición de la prestación: tramo a cargo del empleador y tramo a cargo de la ART',
   };
 
+  // Insight: cómo se reparte la prestación entre empleador y ART, y alertas por plazo.
+  const fmt = (x: number) => Math.round(x).toLocaleString('es-AR');
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (dias > DIAS_MAX_ILT) {
+    insightTone = 'warn';
+    insightText = `Con **${dias} días** superaste el tope de 365: la ILT termina y el caso pasa a **incapacidad permanente (ILP)**. La ART solo cubrió hasta el día 365 ($${fmt(pagaArtDias11Plus)}); el resto se indemniza por Art. 14 LRT.`;
+  } else if (dias >= 300) {
+    insightTone = 'warn';
+    insightText = `La ART paga **$${fmt(pagaArtDias11Plus)}** (días 11 al ${dias}) y el empleador $${fmt(pagaEmpleadorDias1a10)}. Atención: te quedan **${DIAS_MAX_ILT - dias} días** antes del tope de 365 — conviene iniciar la Comisión Médica.`;
+  } else if (dias <= DIAS_EMPLEADOR) {
+    insightTone = 'neutral';
+    insightText = `Con **${dias} días** toda la prestación ($${fmt(totalPrestacion)}) la paga el **empleador**: la ART recién entra a partir del día 11, así que en este tramo no desembolsa nada.`;
+  } else {
+    const pctArt = totalPrestacion > 0 ? (pagaArtDias11Plus / totalPrestacion) * 100 : 0;
+    insightTone = 'neutral';
+    insightText = `De los $${fmt(totalPrestacion)} de prestación, la **ART cubre $${fmt(pagaArtDias11Plus)}** (${pctArt.toFixed(0)}%, los ${diasArtNum} días desde el 11) y el empleador los primeros 10 días ($${fmt(pagaEmpleadorDias1a10)}).`;
+  }
+  const insight = {
+    title: 'Quién paga qué',
+    text: insightText,
+    tone: insightTone,
+    icon: '🩺',
+  };
+
   return {
     pagaEmpleadorDias1a10: Math.round(pagaEmpleadorDias1a10),
     pagaArtDias11Plus: Math.round(pagaArtDias11Plus),
@@ -126,5 +152,6 @@ export function artPrestacionIltIncapacidadTemporaria(
     fechaLimiteIltMax,
     mensaje,
     _chart: chart,
+    _insight: insight,
   };
 }

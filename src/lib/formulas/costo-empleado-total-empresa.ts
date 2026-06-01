@@ -20,6 +20,7 @@ export interface Outputs {
   formula: string;
   explicacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function costoEmpleadoTotalEmpresa(i: Inputs): Outputs {
@@ -75,6 +76,16 @@ export function costoEmpleadoTotalEmpresa(i: Inputs): Outputs {
     ariaLabel: 'Composición del costo mensual total del empleado para la empresa',
   };
 
+  // Insight: cuánto se infla el sueldo de bolsillo hasta el costo real
+  const extraPct = porcentajeSobreBruto - 100;
+  const cargaPct = (contribucionesPatronales / sueldoBrutoTotal) * 100;
+  const insight = {
+    title: 'El costo real supera al sueldo',
+    text: `Cada empleado te cuesta **${extraPct.toFixed(0)}% más** que su bruto: pagás **$${Math.round(costoMensualTotal).toLocaleString('es-AR')}/mes** por un sueldo de $${Math.round(sueldoBrutoTotal).toLocaleString('es-AR')}. Las cargas patronales (**${cargaPct.toFixed(1)}%**) son el principal sobrecosto; sumá SAC, vacaciones y ART al presupuestar una contratación.`,
+    tone: 'warn' as const,
+    icon: '💼',
+  };
+
   return {
     sueldoBrutoTotal: Math.round(sueldoBrutoTotal),
     contribucionesPatronales: Math.round(contribucionesPatronales),
@@ -87,5 +98,6 @@ export function costoEmpleadoTotalEmpresa(i: Inputs): Outputs {
     formula,
     explicacion,
     _chart: chart,
+    _insight: insight,
   };
 }

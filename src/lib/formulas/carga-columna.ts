@@ -9,6 +9,8 @@ export interface CargaColumnaOutputs {
   cargaMaximaTon: number;
   factorSeguridad: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const RESISTENCIAS: Record<string, { fc: number; nombre: string }> = {
@@ -38,10 +40,30 @@ export function cargaColumna(inputs: CargaColumnaInputs): CargaColumnaOutputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  const reservaSeguridad = cargaRotura - cargaAdmisible; // kg que quedan como margen frente a la rotura
+  const cargaAdmisibleKg = Math.round(cargaAdmisible);
+
   return {
-    cargaMaximaKg: Math.round(cargaAdmisible),
+    cargaMaximaKg: cargaAdmisibleKg,
     cargaMaximaTon: cargaTon,
     factorSeguridad: FACTOR_SEGURIDAD,
     detalle: `Columna de ${lado}×${lado} cm (${fmt.format(seccion)} cm²), ${r.nombre}, altura ${fmt.format(altura)} m → carga de rotura ${fmt.format(cargaRotura)} kg / factor ${FACTOR_SEGURIDAD} = carga admisible ~${fmt.format(cargaTon)} toneladas. Este cálculo no incluye pandeo ni armadura; consultá un ingeniero.`,
+    _insight: {
+      title: 'Carga admisible estimada',
+      text: `Esta columna soporta con seguridad **${fmt.format(cargaTon)} t** (${fmt.format(cargaAdmisibleKg)} kg): es la rotura de ${fmt.format(cargaRotura)} kg dividida por un factor de seguridad de **${FACTOR_SEGURIDAD}**. No contempla pandeo ni armadura, así que tomalo como orientativo y validá con un ingeniero.`,
+      tone: 'warn',
+      icon: '🏗️',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Carga admisible', value: cargaAdmisibleKg },
+        { label: 'Reserva de seguridad', value: Math.round(reservaSeguridad) },
+      ],
+      prefix: '',
+      centerValue: `${fmt.format(Math.round(cargaRotura))} kg`,
+      centerLabel: 'Carga de rotura',
+      ariaLabel: `De ${fmt.format(Math.round(cargaRotura))} kg de carga de rotura, ${fmt.format(cargaAdmisibleKg)} kg son admisibles y el resto es reserva de seguridad`,
+    },
   };
 }

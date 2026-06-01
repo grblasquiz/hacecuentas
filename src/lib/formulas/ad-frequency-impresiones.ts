@@ -17,6 +17,7 @@ export interface Outputs {
   recomendacion: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function adFrequencyImpresiones(i: Inputs): Outputs {
@@ -81,6 +82,29 @@ export function adFrequencyImpresiones(i: Inputs): Outputs {
     ariaLabel: 'Escala de frecuencia publicitaria: muy baja, óptima, alta, muy alta y saturación.',
   };
 
+  // Insight narrativo: ubica la frecuencia en su zona e interpreta qué significa.
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightTitle: string;
+  let insightIcon: string;
+  if (frecuencia < 1.5) {
+    insightTone = 'warn'; insightTitle = 'Frecuencia muy baja'; insightIcon = '📉';
+  } else if (frecuencia <= 3) {
+    insightTone = 'good'; insightTitle = 'Zona óptima'; insightIcon = '🎯';
+  } else if (frecuencia <= 7) {
+    insightTone = 'neutral'; insightTitle = 'Frecuencia alta'; insightIcon = '📊';
+  } else if (frecuencia <= 15) {
+    insightTone = 'warn'; insightTitle = 'Riesgo de fatiga'; insightIcon = '⚠️';
+  } else {
+    insightTone = 'warn'; insightTitle = 'Saturación'; insightIcon = '🛑';
+  }
+  const cppFrase = cpp > 0 ? ` Cada persona te costó **$${cpp.toFixed(2)}** alcanzarla.` : '';
+  const insight = {
+    title: insightTitle,
+    text: `Cada persona vio tu anuncio **${frecuencia.toFixed(2)} veces** en promedio: zona "${clasificacion}".${cppFrase} ${recomendacion}`,
+    tone: insightTone,
+    icon: insightIcon,
+  };
+
   return {
     frecuencia: Number(frecuencia.toFixed(2)),
     frecuenciaTotal: Number(frecuenciaTotal.toFixed(2)),
@@ -93,5 +117,6 @@ export function adFrequencyImpresiones(i: Inputs): Outputs {
     recomendacion,
     resumen,
     _chart: chart,
+    _insight: insight,
   };
 }

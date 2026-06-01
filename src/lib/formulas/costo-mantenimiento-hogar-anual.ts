@@ -15,6 +15,7 @@ export interface Outputs {
   gastoDiario: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function costoMantenimientoHogarAnual(i: Inputs): Outputs {
@@ -67,11 +68,22 @@ export function costoMantenimientoHogarAnual(i: Inputs): Outputs {
     ariaLabel: 'Composición del gasto anual de mantenimiento del hogar por rubro',
   };
 
+  const mayor = slices.length ? slices.reduce((a, b) => (b.value > a.value ? b : a)) : null;
+  const pctMayor = mayor && total > 0 ? Math.round((mayor.value / total) * 100) : 0;
+
+  const insight = mayor ? {
+    title: 'Dónde se va la plata',
+    text: `El rubro más pesado es **${mayor.label.toLowerCase()}** con **$${fmt.format(mayor.value)}/año** (**${pctMayor}%** del total). Mantener el hogar te cuesta **$${fmt.format(Math.round(diario))}/día**: es el primer lugar para recortar si querés bajar el gasto.`,
+    tone: 'neutral' as const,
+    icon: '🏠',
+  } : undefined;
+
   return {
     gastoAnualTotal: Math.round(total),
     gastoMensualPromedio: Math.round(mensual),
     gastoDiario: Math.round(diario),
     detalle: `${rubros.join(' + ')} = $${fmt.format(total)}/año ($${fmt.format(mensual)}/mes, $${fmt.format(diario)}/día).`,
     _chart: chart,
+    _insight: insight,
   };
 }

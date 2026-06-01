@@ -17,6 +17,7 @@ export interface Outputs {
   costo_neto_fic: number;
   requiere_certificacion: string;
   resumen_cumplimiento: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -82,6 +83,24 @@ export function compute(i: Inputs): Outputs {
 
   const resumen_cumplimiento = `CHECKLIST FIC 2026:\n${checklist.join('\n')}\n\nIMPORTANTE: Incumplimiento genera rechazo de deducción, impuesto adicional + intereses. Consulta contador especializado en beneficios fiscales.`;
 
+  // Insight: interpreta el ahorro fiscal y si el gasto superó el tope del 1%
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const topado = i.gasto_fic_certificado > aporte_maximo_fic + 1;
+  const excedente = i.gasto_fic_certificado - aporte_a_deducir;
+  const _insight = topado
+    ? {
+        title: 'Tu deducción quedó topada al 1%',
+        text: `El límite deducible es **${fmtCOP(aporte_maximo_fic)}** (1% de la renta), así que de tu gasto certificado solo deduce eso y ahorrás **${fmtCOP(ahorro_tributario)}** en renta. Quedan **${fmtCOP(excedente)}** sin beneficio fiscal este año.`,
+        tone: 'warn' as const,
+        icon: '🔬',
+      }
+    : {
+        title: 'Cuánto te ahorra el aporte FIC',
+        text: `Deducís **${fmtCOP(aporte_a_deducir)}** y bajás el impuesto de renta de **${fmtCOP(impuesto_sin_fic)}** a **${fmtCOP(impuesto_con_fic)}**: un ahorro de **${fmtCOP(ahorro_tributario)}**. El costo neto real del aporte queda en **${fmtCOP(costo_neto_fic)}**.`,
+        tone: 'good' as const,
+        icon: '🔬',
+      };
+
   return {
     aporte_maximo_fic: Math.round(aporte_maximo_fic),
     aporte_a_deducir: Math.round(aporte_a_deducir),
@@ -92,6 +111,7 @@ export function compute(i: Inputs): Outputs {
     tasa_beneficio_efectiva: Math.round(tasa_beneficio_efectiva * 100) / 100,
     costo_neto_fic: Math.round(costo_neto_fic),
     requiere_certificacion,
-    resumen_cumplimiento
+    resumen_cumplimiento,
+    _insight
   };
 }

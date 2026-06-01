@@ -7,5 +7,18 @@ export function azucaresAnadidosDiariosOmsMgGramos(i: Inputs): Outputs {
   const resumen = __lang === 'en'
     ? `Calculation with ${v1} and ${v2}: ${r.toFixed(2)}.`
     : `Cálculo con ${v1} y ${v2}: ${r.toFixed(2)}.`;
-  return { resultado:r.toFixed(2), resumen };
+  const _insight = __lang === 'en'
+    ? {
+        title: 'Your result',
+        text: `Combining **${v1}** and **${v2}** gives **${r.toFixed(2)}**. The WHO advises keeping added sugars under **25 g/day** (about 6 teaspoons) for extra health benefits.`,
+        tone: 'neutral',
+        icon: '🍬',
+      }
+    : {
+        title: 'Tu resultado',
+        text: `Combinando **${v1}** y **${v2}** obtenés **${r.toFixed(2)}**. La OMS recomienda mantener los azúcares añadidos por debajo de **25 g/día** (unas 6 cucharaditas) para un beneficio extra de salud.`,
+        tone: 'neutral',
+        icon: '🍬',
+      };
+  return { resultado:r.toFixed(2), resumen, _insight };
 }

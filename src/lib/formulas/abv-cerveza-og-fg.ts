@@ -1,6 +1,6 @@
 /** ABV cerveza OG/FG — fórmula estándar homebrewing */
 export interface Inputs { og: number; fg: number; }
-export interface Outputs { abv: number; atenuacion: number; calorias100ml: number; estilo: string; }
+export interface Outputs { abv: number; atenuacion: number; calorias100ml: number; estilo: string; _insight?: any; _chart?: any; }
 
 export function abvCervezaOgFg(i: Inputs): Outputs {
   const og = Number(i.og);
@@ -21,10 +21,50 @@ export function abvCervezaOgFg(i: Inputs): Outputs {
   else if (abv < 9) estilo = 'Double IPA / Belgian Strong';
   else estilo = 'Imperial / Barleywine';
 
+  const abvR = Number(abv.toFixed(2));
+  const atenR = Number(atenuacion.toFixed(1));
+  const calR = Number(calorias100ml.toFixed(0));
+
+  // Tono: la atenuación ideal de la mayoría de levaduras cae ~70-85%.
+  // Baja (<65%) suele indicar fermentación incompleta; alta (>85%) cuerpo muy seco.
+  let tone: 'good' | 'warn' | 'neutral' = 'good';
+  if (atenR < 65 || atenR > 88) tone = 'warn';
+  else if (atenR < 70 || atenR > 85) tone = 'neutral';
+
+  let atenNota = '';
+  if (atenR < 65) atenNota = ' Atenuación baja: revisá si la fermentación terminó.';
+  else if (atenR > 88) atenNota = ' Atenuación muy alta: cuerpo seco, casi sin azúcares residuales.';
+
+  const _insight = {
+    title: 'Tu cerveza',
+    text: `Te queda en **${abvR}% ABV** (${estilo}), con **${atenR}%** de atenuación y unas **${calR} kcal** por 100 ml.${atenNota}`,
+    tone,
+    icon: '🍺',
+  };
+
+  // Gauge: el ABV ubica la cerveza en una banda de estilo.
+  const _chart = {
+    type: 'scale',
+    marker: abvR,
+    markerLabel: `${abvR}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Session', max: 3.5, color: '#bae6fd', colorDark: '#0c4a6e' },
+      { nombre: 'Lager', max: 5, color: '#86efac', colorDark: '#14532d' },
+      { nombre: 'Ale', max: 6, color: '#fde047', colorDark: '#713f12' },
+      { nombre: 'IPA', max: 7.5, color: '#fdba74', colorDark: '#7c2d12' },
+      { nombre: 'Fuerte', max: 9, color: '#fca5a5', colorDark: '#7f1d1d' },
+      { nombre: 'Imperial', max: Math.max(15, Math.ceil(abvR) + 1), color: '#d8b4fe', colorDark: '#581c87' },
+    ],
+    ariaLabel: `Graduación alcohólica de ${abvR}% ABV ubicada en la banda de estilo ${estilo}`,
+  };
+
   return {
-    abv: Number(abv.toFixed(2)),
-    atenuacion: Number(atenuacion.toFixed(1)),
-    calorias100ml: Number(calorias100ml.toFixed(0)),
+    abv: abvR,
+    atenuacion: atenR,
+    calorias100ml: calR,
     estilo,
+    _insight,
+    _chart,
   };
 }

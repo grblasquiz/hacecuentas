@@ -17,6 +17,7 @@ export interface Outputs {
   moneda: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function bosmanLibreCosto(i: Inputs): Outputs {
@@ -49,6 +50,14 @@ export function bosmanLibreCosto(i: Inputs): Outputs {
     ariaLabel: 'Composición del costo del traspaso libre: salario, comisión de agente, prima de firma y pagos a terceros.',
   };
 
+  const comisionPctTotal = total > 0 ? (comision / total) * 100 : 0;
+  const insight = {
+    title: 'Lectura del traspaso libre',
+    text: `Sin fee de transferencia, el club se ahorra ~**US$ ${Math.round(ahorro).toLocaleString('en')}** frente a un pase de mercado. La comisión del agente (**${comPct.toFixed(0)}%**) pesa **US$ ${Math.round(comision).toLocaleString('en')}**, un **${comisionPctTotal.toFixed(0)}%** del costo total: el rubro a negociar.`,
+    tone: 'good' as const,
+    icon: '⚽',
+  };
+
   return {
     feeTransferencia: feeTransfer,
     salarioTotalContrato: Math.round(salarioTotal),
@@ -58,6 +67,7 @@ export function bosmanLibreCosto(i: Inputs): Outputs {
     ahorroVsMercado: Math.round(ahorro),
     moneda: 'USD',
     _chart: chart,
+    _insight: insight,
     resumen: `Traspaso libre (Bosman): **fee transferencia US$ 0** + salario US$ ${Math.round(salarioTotal).toLocaleString('en')} + comisión US$ ${Math.round(comision).toLocaleString('en')} + prima US$ ${Math.round(prima).toLocaleString('en')} = **costo total US$ ${Math.round(total).toLocaleString('en')}**. Ahorro estimado vs fee mercado: ~US$ ${Math.round(ahorro).toLocaleString('en')}.`,
   };
 }

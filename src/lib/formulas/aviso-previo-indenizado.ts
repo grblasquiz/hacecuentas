@@ -15,6 +15,8 @@ export interface Outputs {
   reflexoFerias: string;
   totalBruto: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -32,11 +34,31 @@ export function avisoPrevioIndenizado(i: Inputs): Outputs {
   const reflexoFerias = valor / 12 + (valor / 12) / 3;
   const total = valor + reflexo13 + reflexoFerias;
 
+  const pctReflexos = total > 0 ? Math.round(((reflexo13 + reflexoFerias) / total) * 100) : 0;
+
   return {
     valorAviso: brl(valor),
     reflexo13: brl(reflexo13),
     reflexoFerias: brl(reflexoFerias),
     totalBruto: brl(total),
     resumen: `Aviso prévio indenizado de ${dias} dias: ${brl(valor)} + reflexos em 13º e férias = ${brl(total)} total bruto.`,
+    _insight: {
+      title: 'Quanto você recebe',
+      text: `Seu aviso prévio indenizado de **${dias} dias** soma **${brl(total)}** brutos: ${brl(valor)} do aviso mais **${brl(reflexo13 + reflexoFerias)}** em reflexos de 13º e férias (${pctReflexos}% extra). Esse valor entra na rescisão e tem desconto de INSS/IRRF na fonte.`,
+      tone: 'good',
+      icon: '💼',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Aviso prévio', value: Number(valor.toFixed(2)) },
+        { label: 'Reflexo 13º', value: Number(reflexo13.toFixed(2)) },
+        { label: 'Reflexo férias', value: Number(reflexoFerias.toFixed(2)) },
+      ],
+      prefix: 'R$ ',
+      centerValue: brl(total),
+      centerLabel: 'Total bruto',
+      ariaLabel: `Composição do total bruto: aviso prévio ${brl(valor)}, reflexo 13º ${brl(reflexo13)}, reflexo férias ${brl(reflexoFerias)}.`,
+    },
   };
 }

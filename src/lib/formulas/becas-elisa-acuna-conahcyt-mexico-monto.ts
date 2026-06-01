@@ -12,6 +12,7 @@ export interface Outputs {
   categoria_apoyo: string;
   requisitos_clave: string;
   variacion_nota: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -88,6 +89,12 @@ export function compute(i: Inputs): Outputs {
     variacionNota += ' Duración > 4 años requiere evaluación especial Conahcyt.';
   }
 
+  const mesesTotal = Math.max(1, i.duracion_meses || 24);
+
+  const insightText = i.categoria_pnpc === 'no_evaluado'
+    ? `Como tu programa está **no evaluado en el PNPC**, el monto se calcula al **70%** del máximo: **$${montoMensual.toLocaleString('es-MX')}/mes**. Si el programa logra inclusión al PNPC, el apoyo sube. En ${mesesTotal} meses acumularías **$${montoTotal.toLocaleString('es-MX')}**.`
+    : `Tu beca Elisa Acuña queda en **$${montoMensual.toLocaleString('es-MX')}/mes** (${categoriaApoyo}), que en **${mesesTotal} meses** suman **$${montoTotal.toLocaleString('es-MX')}** de apoyo total.`;
+
   return {
     monto_mensual_pesos: montoMensual,
     monto_anual_pesos: montoAnual,
@@ -95,5 +102,11 @@ export function compute(i: Inputs): Outputs {
     categoria_apoyo: categoriaApoyo,
     requisitos_clave: requisitosClave,
     variacion_nota: variacionNota,
+    _insight: {
+      title: 'Tu apoyo Conahcyt',
+      text: insightText,
+      tone: i.categoria_pnpc === 'no_evaluado' ? 'warn' : 'good',
+      icon: '🎓',
+    },
   };
 }

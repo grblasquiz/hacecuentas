@@ -9,6 +9,7 @@ export interface Outputs {
   clasificacion: string;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function escalaGlasgowNivelConciencia(i: Inputs): Outputs {
@@ -56,10 +57,18 @@ export function escalaGlasgowNivelConciencia(i: Inputs): Outputs {
     ariaLabel: 'Escala de coma de Glasgow de 3 a 15: grave, moderado, leve',
   };
 
+  const zona = gcs >= 14 ? 'leve' : gcs >= 9 ? 'moderado' : 'grave';
+  const insight = {
+    title: 'Tu nivel de conciencia',
+    text: `Tu **GCS ${gcs}/15** (O${o} V${v} M${m}) indica un TEC **${zona}**${gcs <= 8 ? ' con vía aérea en riesgo' : ''}. Conducta sugerida: ${conducta}`,
+    tone: (gcs >= 14 ? 'good' : 'warn') as 'good' | 'warn',
+    icon: gcs <= 8 ? '🚑' : gcs >= 14 ? '🧠' : '⚠️',
+  };
   return {
     gcs,
     clasificacion: `${clasificacion} — ${conducta}`,
     detalle,
     _chart: chart,
+    _insight: insight,
   };
 }

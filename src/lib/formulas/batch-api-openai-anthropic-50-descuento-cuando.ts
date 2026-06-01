@@ -15,6 +15,8 @@ export interface Outputs {
   recomendacion: string;
   volumen_minimo_ok: string;
   detalle_precios: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Precios en USD por millón de tokens (MTok) — fuente: OpenAI & Anthropic pricing 2026
@@ -103,13 +105,59 @@ export function compute(i: Inputs): Outputs {
     `Output: USD ${precio.outputRT.toFixed(3)} → USD ${outputBatch.toFixed(4)}/MTok`
   );
 
+  const costoRTr = Math.round(costoRealtimeUsd * 100) / 100;
+  const costoBatchR = Math.round(costoBatchUsd * 100) / 100;
+  const ahorroR = Math.round(ahorroUsd * 100) / 100;
+
+  // Insight dinámico: depende de latencia tolerada y de si el volumen justifica el batch
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (!latenciaOk) {
+    insightTone = 'warn';
+    insightText =
+      `El descuento del Batch API sería de **USD ${ahorroR.toFixed(2)}/mes** (${precio.label}), pero tu caso necesita respuesta inmediata. ` +
+      `La Batch API solo aplica si tolerás hasta **24 h** de espera, así que acá no te sirve.`;
+  } else if (volumenSuficiente) {
+    insightTone = 'good';
+    insightText =
+      `Te conviene el Batch API: bajás de **USD ${costoRTr.toFixed(2)}** a **USD ${costoBatchR.toFixed(2)}/mes** con ${precio.label}, ` +
+      `un ahorro de **USD ${ahorroR.toFixed(2)} (${Math.round(ahorroPct)}%)**, y tu volumen de ${solicitudesDia} solicitudes/día lo justifica.`;
+  } else {
+    insightTone = 'neutral';
+    insightText =
+      `El Batch API te ahorraría **USD ${ahorroR.toFixed(2)}/mes (${Math.round(ahorroPct)}%)** con ${precio.label}, ` +
+      `pero con ${solicitudesDia} solicitudes/día el ahorro es chico frente al overhead operativo. Evaluá si compensa la complejidad.`;
+  }
+
+  const _insight = {
+    title: '¿Te conviene el Batch API?',
+    text: insightText,
+    tone: insightTone,
+    icon: '🧮',
+  };
+
+  // Donut: el costo real-time se descompone en lo que pagás con batch + lo que ahorrás
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Costo con Batch', value: costoBatchR },
+      { label: 'Ahorro (50% off)', value: ahorroR },
+    ],
+    prefix: 'USD ',
+    centerValue: `USD ${costoRTr.toFixed(2)}`,
+    centerLabel: 'Costo real-time',
+    ariaLabel: `El costo real-time de USD ${costoRTr.toFixed(2)} se divide en USD ${costoBatchR.toFixed(2)} que pagarías con Batch API y USD ${ahorroR.toFixed(2)} de ahorro.`,
+  };
+
   return {
-    costo_realtime_usd: Math.round(costoRealtimeUsd * 100) / 100,
-    costo_batch_usd:    Math.round(costoBatchUsd    * 100) / 100,
-    ahorro_usd:         Math.round(ahorroUsd        * 100) / 100,
+    costo_realtime_usd: costoRTr,
+    costo_batch_usd:    costoBatchR,
+    ahorro_usd:         ahorroR,
     ahorro_pct:         Math.round(ahorroPct * 100)  / 100,
     recomendacion,
     volumen_minimo_ok: volumenMinOk,
     detalle_precios: detalle,
+    _insight,
+    _chart,
   };
 }

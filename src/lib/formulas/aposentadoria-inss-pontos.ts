@@ -21,6 +21,8 @@ export interface Outputs {
   status: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmtBRL = (n: number) =>
@@ -59,6 +61,35 @@ export function aposentadoriaInssPontos(i: Inputs): Outputs {
   const formula = `Pontos = idade + tempo contrib. = ${idade} + ${contrib} = ${pontosAtuais} (mín ${pontosNecessarios})`;
   const explicacao = `Regra de transição por pontos (EC 103/2019): em 2019 exigia ${base2019} pontos (${sexo}), aumentando 1 ponto/ano até ${maxTeto} em ${sexo === 'mulher' ? 2033 : 2028}. Em ${ano}: ${pontosNecessarios} pontos necessários. Pontos atuais: ${pontosAtuais}. Contribuição mínima: ${contribMin} anos. Benefício: ${percentual.toFixed(0)}% da média (${fmtBRL(mediaAplicada)}) = ${fmtBRL(valor)}.`;
 
+  const elegivel = faltaPontos === 0 && faltaContrib === 0;
+  const _insight = elegivel
+    ? {
+        title: 'Requisitos de pontos atingidos',
+        text: `Você soma **${pontosAtuais} pontos** (mín. ${pontosNecessarios}) e o benefício fica em **${percentual.toFixed(0)}% da média** = ${fmtBRL(valor)}. Cada ano a mais de contribuição soma 2% até o teto de 100%.`,
+        tone: 'good',
+        icon: '✅',
+      }
+    : {
+        title: 'Ainda faltam pontos',
+        text: `Com **${pontosAtuais} pontos** você está a **${faltaPontos}** dos ${pontosNecessarios} exigidos em ${ano}${faltaContrib > 0 ? ` e a ${faltaContrib} anos do mínimo de contribuição` : ''}. Como idade e contribuição somam pontos juntas, cada ano trabalhado aproxima o objetivo em 2 pontos.`,
+        tone: 'warn',
+        icon: '⏳',
+      };
+
+  const _chart = {
+    type: 'scale',
+    marker: Number(percentual.toFixed(0)),
+    markerLabel: `${percentual.toFixed(0)}% da média`,
+    min: 60,
+    segments: [
+      { nombre: 'Piso (60%)', max: 70, color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Parcial', max: 85, color: '#fcd34d', colorDark: '#a16207' },
+      { nombre: 'Quase integral', max: 99, color: '#86efac', colorDark: '#15803d' },
+      { nombre: 'Integral (100%)', max: 101, color: '#22c55e', colorDark: '#166534' },
+    ],
+    ariaLabel: `Percentual do benefício sobre a média: ${percentual.toFixed(0)}% de um máximo de 100%`,
+  };
+
   return {
     pontosAtuais: `${pontosAtuais} pontos`,
     pontosNecessarios: `${pontosNecessarios} pontos`,
@@ -68,5 +99,7 @@ export function aposentadoriaInssPontos(i: Inputs): Outputs {
     status,
     formula,
     explicacao,
+    _insight,
+    _chart,
   };
 }

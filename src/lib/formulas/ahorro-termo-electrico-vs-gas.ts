@@ -11,6 +11,7 @@ export interface Outputs {
   costoMensualGas: number;
   ahorroMensual: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function ahorroTermoElectricoVsGas(i: Inputs): Outputs {
@@ -42,10 +43,20 @@ export function ahorroTermoElectricoVsGas(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const ahorroPct = Math.max(costoElecMes, costoGasMes) > 0 ? Math.round((ahorro / Math.max(costoElecMes, costoGasMes)) * 100) : 0;
+  const ahorroAnual = ahorro * 12;
+  const _insight = {
+    title: `Te conviene calentar con ${masBarato}`,
+    text: `Para **${litros} L/día** de agua caliente, el ${masBarato} sale **$${fmt.format(masBarato === 'gas' ? costoGasMes : costoElecMes)}/mes** contra **$${fmt.format(masBarato === 'gas' ? costoElecMes : costoGasMes)}/mes** de la otra opción. Elegir ${masBarato} te ahorra **$${fmt.format(ahorro)}/mes** (${ahorroPct}%), unos **$${fmt.format(ahorroAnual)}** al año.`,
+    tone: 'good',
+    icon: masBarato === 'gas' ? '🔥' : '⚡',
+  };
+
   return {
     costoMensualElectrico: Math.round(costoElecMes),
     costoMensualGas: Math.round(costoGasMes),
     ahorroMensual: Math.round(ahorro),
     detalle: `Para ${litros} L/día: eléctrico $${fmt.format(costoElecMes)}/mes vs gas $${fmt.format(costoGasMes)}/mes. El ${masBarato} es más barato por $${fmt.format(ahorro)}/mes (${((ahorro / Math.max(costoElecMes, costoGasMes)) * 100).toFixed(0)}% de ahorro).`,
+    _insight,
   };
 }

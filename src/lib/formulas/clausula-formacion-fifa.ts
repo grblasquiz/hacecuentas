@@ -15,6 +15,7 @@ export interface Outputs {
   factorEdad: number;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Tarifas anuales FIFA Circular 1798 (ajustadas 2024) en EUR por categoría del club que compra
@@ -81,6 +82,24 @@ export function clausulaFormacionFifa(i: Inputs): Outputs {
     };
   }
 
+  const totalFmt = '€' + Math.round(finalComp).toLocaleString('en');
+  const factorNota = factor < 1
+    ? ` Como el jugador tiene **${edad} años** (>21), se aplica un **factor de descuento ×${factor}** sobre la tarifa plena.`
+    : '';
+  let insText: string;
+  if (compTempranoFinal > 0 && compMayorFinal > 0) {
+    const tempPct = finalComp > 0 ? (compTempranoFinal / finalComp) * 100 : 0;
+    insText = `El club formador cobra **${totalFmt}**: **€${compTempranoFinal.toLocaleString('en')}** por los años 12-15 (tarifa protegida Cat IV, el **${tempPct.toFixed(0)}%**) más **€${compMayorFinal.toLocaleString('en')}** por los años 16-21 a tarifa Cat ${catCompra} de ${conf.toUpperCase()}.${factorNota}`;
+  } else {
+    insText = `El club formador cobra **${totalFmt}** por los **${anosPropuestos} años** de formación, a la tarifa Cat ${catCompra} de ${conf.toUpperCase()} (**€${(tablaCompra[catCompra] ?? tablaCompra.II).toLocaleString('en')}/año**).${factorNota}`;
+  }
+  const insight = {
+    title: 'Cómo se compone la indemnización',
+    text: insText,
+    tone: 'neutral' as const,
+    icon: '⚽',
+  };
+
   return {
     tarifaAnualAplicada: tablaCompra[catCompra] ?? tablaCompra.II,
     anosFormacionComputados: anosPropuestos,
@@ -89,5 +108,6 @@ export function clausulaFormacionFifa(i: Inputs): Outputs {
     factorEdad: factor,
     resumen: `Training compensation FIFA: €${Math.round(finalComp).toLocaleString('en')} a clubes formadores por jugador de ${edad} años (${anosPropuestos} años formado, Cat ${catForm} → ${catCompra} ${conf.toUpperCase()}).`,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -17,6 +17,7 @@ export interface Outputs {
   beneficios_adicionales: string;
   ingreso_per_capita: number;
   observaciones: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -194,6 +195,33 @@ export function compute(i: Inputs): Outputs {
 
   observaciones += `**Próximos pasos:** 1) Actualiza RSH en dssi.cl. 2) Si trabajas, verifica asignación en tu liquidación. 3) Accede a beneficios educacionales en tu municipio o establecimiento. 4) Consulta cambios anuales en mintrabajo.gob.cl.`;
 
+  // Insight narrativo: combina asignación familiar mensual con acceso a gratuidad
+  const _fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const tieneGratuidad = acceso_gratuidad.startsWith('Sí');
+  let _insTitle: string;
+  let _insText: string;
+  let _insTone: 'good' | 'warn' | 'neutral';
+  let _insIcon: string;
+
+  if (cargas === 0) {
+    _insTitle = 'Sin cargas familiares';
+    _insText = `Sin cargas declaradas no corresponde asignación familiar. Tu hogar quedó estimado en **${tramo_rsh_resultado}**${tieneGratuidad ? `, lo que **sí da acceso a gratuidad** en educación superior` : ', sin acceso a gratuidad por tramo'}.`;
+    _insTone = tieneGratuidad ? 'good' : 'neutral';
+    _insIcon = '👪';
+  } else if (monto_asignacion_mensual > 0) {
+    _insTitle = porcentaje_asignacion === 100 ? 'Asignación completa' : `Asignación parcial (${porcentaje_asignacion}%)`;
+    _insText = `Cobrás **${_fmtCLP(monto_asignacion_mensual)}/mes** (**${_fmtCLP(asignacion_anual)}/año**) por ${cargas} carga${cargas > 1 ? 's' : ''} en el **${tramo_asignacion}**. Tu hogar quedó en **${tramo_rsh_resultado}**${tieneGratuidad ? ', que habilita **gratuidad** en educación superior' : ', sin acceso a gratuidad por nivel de ingresos'}.`;
+    _insTone = tieneGratuidad ? 'good' : (porcentaje_asignacion < 100 ? 'warn' : 'neutral');
+    _insIcon = '💸';
+  } else {
+    _insTitle = 'Sin asignación familiar';
+    _insText = `Con ${_fmtCLP(ingresos)} mensuales ${tipo === 'estudiante' || tipo === 'beneficiario_pgu' ? 'tu situación no genera asignación laboral' : 'superaste el tope de asignación familiar 2026'}. Tu hogar quedó en **${tramo_rsh_resultado}**${tieneGratuidad ? ', pero **sí accedés a gratuidad** en educación superior' : ', sin acceso a gratuidad'}.`;
+    _insTone = tieneGratuidad ? 'good' : 'warn';
+    _insIcon = '📋';
+  }
+
+  const _insight = { title: _insTitle, text: _insText, tone: _insTone, icon: _insIcon };
+
   return {
     tramo_asignacion,
     monto_asignacion_mensual: Math.round(monto_asignacion_mensual),
@@ -203,6 +231,7 @@ export function compute(i: Inputs): Outputs {
     acceso_pgu,
     beneficios_adicionales,
     ingreso_per_capita: Math.round(ingreso_per_capita),
-    observaciones
+    observaciones,
+    _insight
   };
 }

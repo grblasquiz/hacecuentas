@@ -10,6 +10,7 @@ export interface Outputs {
   ventana: string;
   costoEstimado: string;
   detalle: string;
+  _insight?: any;
 }
 
 interface Recomendacion {
@@ -69,10 +70,43 @@ export function castracionEdadIdealPerroGato(i: Inputs): Outputs {
   const especieLabel = especie === 'gato' ? 'gato' : `perro (raza ${tamano})`;
   const sexoLabel = sexo === 'macho' ? 'macho' : 'hembra';
 
+  let insight: any;
+  if (edadActual && edadActual < rec.mesesMin) {
+    const falta = rec.mesesMin - edadActual;
+    insight = {
+      title: 'Todavía es pronto',
+      text: `Tu ${especieLabel} ${sexoLabel} tiene **${edadActual} meses**: faltan **~${falta} ${falta === 1 ? 'mes' : 'meses'}** para entrar en la ventana ideal (**${rec.ventana}**). Agendá la consulta prequirúrgica para llegar a tiempo.`,
+      tone: 'neutral',
+      icon: '⏳',
+    };
+  } else if (edadActual && edadActual <= rec.mesesMax) {
+    insight = {
+      title: 'Momento ideal',
+      text: `Con **${edadActual} meses** tu ${especieLabel} ${sexoLabel} está **dentro de la ventana ideal** (${rec.ventana}). Es el mejor momento para castrar: coordiná turno con el veterinario.`,
+      tone: 'good',
+      icon: '✅',
+    };
+  } else if (edadActual && edadActual > rec.mesesMax) {
+    insight = {
+      title: 'Ya pasó la ventana ideal',
+      text: `Tu ${especieLabel} ${sexoLabel} tiene **${edadActual} meses** y ya superó la ventana recomendada (${rec.ideal}). **Igual conviene castrar**: se mantienen beneficios de salud y conducta, aunque algunos preventivos (como tumores) bajan con la edad.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    insight = {
+      title: 'Ventana recomendada',
+      text: `Para un ${especieLabel} ${sexoLabel}, la edad ideal de castración es **${rec.ideal}**. Costo estimado: **${costoStr}**. Ingresá la edad actual de tu mascota para saber si ya está en la ventana.`,
+      tone: 'neutral',
+      icon: '🐾',
+    };
+  }
+
   return {
     edadIdeal: rec.ideal,
     ventana: rec.ventana,
     costoEstimado: costoStr,
     detalle: `Para ${especieLabel} ${sexoLabel}: edad ideal ${rec.ideal}. Ventana: ${rec.ventana}. Costo: ${costoStr}.${estadoActual}`,
+    _insight: insight,
   };
 }

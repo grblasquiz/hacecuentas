@@ -1,6 +1,6 @@
 /** Tiempo de biodegradación según tipo de material */
 export interface Inputs { cantidadUnidades: number; tipoMaterial: number; pesoUnitarioKg: number; }
-export interface Outputs { tiempoDegradacionAnios: number; nombreMaterial: string; pesoTotalKg: number; detalle: string; }
+export interface Outputs { tiempoDegradacionAnios: number; nombreMaterial: string; pesoTotalKg: number; detalle: string; _insight?: any; }
 
 const MATERIALES: Record<number, { nombre: string; anios: number }> = {
   1: { nombre: 'Papel', anios: 0.4 },
@@ -35,10 +35,23 @@ export function biodegradacionTiempoMateriales(i: Inputs): Outputs {
     tiempoTexto = `${fmt.format(mat.anios)} años`;
   }
 
+  const clase = mat.anios < 1 ? 'rapido' : mat.anios < 50 ? 'medio' : 'lento';
+  const insText = clase === 'rapido'
+    ? `Tus **${cantidad}** unidades de **${mat.nombre}** (${fmt.format(pesoTotal)} kg) se degradan en **${tiempoTexto}**: residuo de descomposición rápida, apto para compost.`
+    : clase === 'medio'
+    ? `Tus **${cantidad}** unidades de **${mat.nombre}** (${fmt.format(pesoTotal)} kg) tardan **${tiempoTexto}** en degradarse: décadas en el ambiente, conviene reciclarlas.`
+    : `Tus **${cantidad}** unidades de **${mat.nombre}** (${fmt.format(pesoTotal)} kg) tardan **${tiempoTexto}** en degradarse: siguen ahí mucho después del **${fmt.format(anioFuturo)}** — reducir y reciclar es clave.`;
+
   return {
     tiempoDegradacionAnios: mat.anios,
     nombreMaterial: mat.nombre,
     pesoTotalKg: Number(pesoTotal.toFixed(3)),
     detalle: `${cantidad} unidades de ${mat.nombre} (${fmt.format(pesoTotal)} kg total). Tiempo de degradación: ${tiempoTexto}. Si lo tirás hoy, recién se degrada alrededor del año ${fmt.format(anioFuturo)}.`,
+    _insight: {
+      title: 'Persistencia de tu residuo',
+      text: insText,
+      tone: clase === 'rapido' ? 'good' : clase === 'medio' ? 'neutral' : 'warn',
+      icon: clase === 'rapido' ? '🌱' : '♻️',
+    },
   };
 }

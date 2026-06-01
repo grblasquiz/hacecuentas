@@ -2,7 +2,7 @@
  * Calculadora de Alianza de Boda - Precio Pareja.
  */
 export interface AlianzaBodaPrecioParejaInputs { presupuestoPareja:number; material:string; }
-export interface AlianzaBodaPrecioParejaOutputs { precioPorAlianza:number; gramosOro:number; grabadoSugerido:string; costoGrabado:number; }
+export interface AlianzaBodaPrecioParejaOutputs { precioPorAlianza:number; gramosOro:number; grabadoSugerido:string; costoGrabado:number; _insight?:any; }
 export function alianzaBodaPrecioPareja(inputs: AlianzaBodaPrecioParejaInputs): AlianzaBodaPrecioParejaOutputs {
   const preso = Number(inputs.presupuestoPareja);
   const mat = inputs.material;
@@ -16,10 +16,24 @@ export function alianzaBodaPrecioPareja(inputs: AlianzaBodaPrecioParejaInputs): 
   else gramosOro = precioPorAlianza / 40;
   const grabadoSugerido = 'Fecha + iniciales (ej: 15-12-2026 M & L)';
   const costoGrabado = 30;
+  const precioRedondeado = Number(precioPorAlianza.toFixed(0));
+  const gramos = Number(gramosOro.toFixed(1));
+  const totalConGrabado = precioRedondeado * 2 + costoGrabado * 2;
+  const matLabel: Record<string, string> = {
+    plata925: 'plata 925', oro14k: 'oro 14k', oro18k: 'oro 18k', platino: 'platino',
+  };
+  const matTxt = matLabel[mat] ?? 'oro';
+  const _insight = {
+    title: 'Tu presupuesto por alianza',
+    text: `Te alcanza para **$${precioRedondeado.toLocaleString('es-AR')} por alianza** en ${matTxt}, equivalente a unos **${gramos} g** de material. Sumando el grabado ($${costoGrabado} c/u), el par te queda en **$${totalConGrabado.toLocaleString('es-AR')}**.`,
+    tone: 'neutral',
+    icon: '💍',
+  };
   return {
-    precioPorAlianza: Number(precioPorAlianza.toFixed(0)),
-    gramosOro: Number(gramosOro.toFixed(1)),
+    precioPorAlianza: precioRedondeado,
+    gramosOro: gramos,
     grabadoSugerido,
     costoGrabado,
+    _insight,
   };
 }

@@ -56,6 +56,7 @@ export interface AportesPatronalesOutputs {
   sueldoNetoEmpleado: number;
   porcentajeCargaTotal: string;
   _chart?: any;
+  _insight?: any;
 }
 
 const ALICUOTAS_DEC_814 = {
@@ -140,6 +141,15 @@ export function aportesPatronalesCargasSociales(
     ariaLabel: 'Composición del costo laboral total: sueldo bruto más cargas patronales',
   };
 
+  // Insight: cuánto suma la mochila patronal sobre el bruto y qué pesa más.
+  const fmt = (x: number) => Math.round(x).toLocaleString('es-AR');
+  const insight = {
+    title: 'La mochila patronal',
+    text: `Por cada $${fmt(sueldo)} de sueldo bruto, la empresa desembolsa $${fmt(costoTotalEmpresa)}: las cargas suman **${porcentajeSobreBruto.toFixed(1)}% extra** sobre el bruto. El SIPA (jubilación) es el componente más pesado con **$${fmt(aporteSIPA)}**.`,
+    tone: 'warn' as const,
+    icon: '🏭',
+  };
+
   return {
     costoTotalEmpresa: Math.round(costoTotalEmpresa),
     aporteSIPA: Math.round(aporteSIPA),
@@ -153,5 +163,6 @@ export function aportesPatronalesCargasSociales(
     sueldoNetoEmpleado: Math.round(sueldoNetoEmpleado),
     porcentajeCargaTotal,
     _chart: chart,
+    _insight: insight,
   };
 }

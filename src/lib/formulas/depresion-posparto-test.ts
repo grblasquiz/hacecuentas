@@ -1,6 +1,6 @@
 /** Test de Edinburgh para depresión posparto (EPDS) */
 export interface Inputs { epds1: string; epds2: string; epds3: string; epds4: string; epds5: string; epds6: string; epds7: string; epds8: string; epds9: string; epds10: string; __lang?: string; }
-export interface Outputs { puntaje: string; interpretacion: string; recomendacion: string; recursos: string; _chart?: any; }
+export interface Outputs { puntaje: string; interpretacion: string; recomendacion: string; recursos: string; _chart?: any; _insight?: any; }
 
 export function depresionPospartoTest(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -20,6 +20,15 @@ export function depresionPospartoTest(i: Inputs): Outputs {
       seg2: 'Probable depresión',
       ariaLabel: 'Escala EPDS de depresión posparto: bajo riesgo hasta 9, posible leve 10 a 12, probable depresión 13 o más',
       recursos: 'Centro de asistencia al suicida: 135 (24 hs, gratuito). Tu obstetra, pediatra o médico pueden derivarte a salud mental. Muchas obras sociales cubren psicoterapia.',
+      ins_icon: '🤱',
+      ins_q10_title: 'Buscá ayuda ahora',
+      ins_q10_text: (t: number) => `Más allá del puntaje (**${t}/30**), marcaste pensamientos de hacerte daño: eso pide atención inmediata. Llamá al **135** (24 hs, gratis) o andá a una guardia. **No estás sola.**`,
+      ins_low_title: (t: number) => `Puntaje ${t}/30: bajo riesgo`,
+      ins_low_text: (t: number) => `Con **${t}/30** estás en la zona verde de la escala EPDS (corte en 10). Buena señal. Si algo cambia, repetí el test y hablalo con tu médico.`,
+      ins_mild_title: (t: number) => `Puntaje ${t}/30: posible depresión leve`,
+      ins_mild_text: (t: number) => `**${t}/30** supera el corte de **10** que sugiere malestar emocional. No es un diagnóstico, pero merece que hables con tu obstetra, pediatra o un psicólogo.`,
+      ins_high_title: (t: number) => `Puntaje ${t}/30: probable depresión`,
+      ins_high_text: (t: number) => `Con **${t}/30** (≥13) la escala sugiere depresión posparto probable. Buscá ayuda profesional: el tratamiento es efectivo y hay opciones compatibles con la lactancia.`,
     },
     en: {
       interp_q10: '⚠️ ATTENTION: Your answer to the self-harm question requires immediate evaluation.',
@@ -36,6 +45,15 @@ export function depresionPospartoTest(i: Inputs): Outputs {
       seg2: 'Probable depression',
       ariaLabel: 'EPDS postpartum depression scale: low risk up to 9, possible mild 10 to 12, probable depression 13 or more',
       recursos: 'Crisis support: 988 Suicide & Crisis Lifeline (call or text 988, 24/7, free). Your OB, pediatrician, or doctor can refer you to mental health services. Many insurance plans cover psychotherapy.',
+      ins_icon: '🤱',
+      ins_q10_title: 'Seek help now',
+      ins_q10_text: (t: number) => `Beyond the score (**${t}/30**), you flagged thoughts of self-harm: that needs immediate attention. Call or text **988** (24/7, free) or go to an emergency room. **You are not alone.**`,
+      ins_low_title: (t: number) => `Score ${t}/30: low risk`,
+      ins_low_text: (t: number) => `At **${t}/30** you're in the green zone of the EPDS scale (cutoff at 10). A good sign. If things change, retake the test and talk to your doctor.`,
+      ins_mild_title: (t: number) => `Score ${t}/30: possible mild depression`,
+      ins_mild_text: (t: number) => `**${t}/30** is above the **10** cutoff that suggests emotional distress. It's not a diagnosis, but it's worth talking to your OB, pediatrician, or a psychologist.`,
+      ins_high_title: (t: number) => `Score ${t}/30: probable depression`,
+      ins_high_text: (t: number) => `At **${t}/30** (≥13) the scale suggests probable postpartum depression. Seek professional help: treatment is effective and there are breastfeeding-compatible options.`,
     },
   } as const)[__lang];
 
@@ -73,11 +91,31 @@ export function depresionPospartoTest(i: Inputs): Outputs {
     ariaLabel: T.ariaLabel,
   };
 
+  let insTitle: string, insText: string, insTone: string;
+  if (q10 > 0) {
+    insTitle = T.ins_q10_title;
+    insText = T.ins_q10_text(total);
+    insTone = 'warn';
+  } else if (total <= 9) {
+    insTitle = T.ins_low_title(total);
+    insText = T.ins_low_text(total);
+    insTone = 'good';
+  } else if (total <= 12) {
+    insTitle = T.ins_mild_title(total);
+    insText = T.ins_mild_text(total);
+    insTone = 'neutral';
+  } else {
+    insTitle = T.ins_high_title(total);
+    insText = T.ins_high_text(total);
+    insTone = 'warn';
+  }
+  const insight = { title: insTitle, text: insText, tone: insTone, icon: T.ins_icon };
   return {
     puntaje: `${total}/30`,
     interpretacion,
     recomendacion,
     recursos: T.recursos,
     _chart: chart,
+    _insight: insight,
   };
 }

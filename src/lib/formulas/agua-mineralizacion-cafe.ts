@@ -1,6 +1,6 @@
 /** Agua mineralización café */
 export interface Inputs { durezaActual: number; tdsActual: number; phActual: number; __lang?: string; }
-export interface Outputs { evaluacion: string; scaCompliant: string; recomendacion: string; alternativa: string; }
+export interface Outputs { evaluacion: string; scaCompliant: string; recomendacion: string; alternativa: string; _insight?: any; }
 
 export function aguaMineralizacionCafe(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -32,6 +32,10 @@ export function aguaMineralizacionCafe(i: Inputs): Outputs {
       recPhHigh:     'pH alto — filtro con intercambio iónico.',
       recPhLow:      'pH bajo — pizca de bicarbonato sodio.',
       alt:           'Agua mineral comercial: Volvic (ideal), Villa del Sur (bueno), Villavicencio (bueno). Evitá Evian para café.',
+      insTitleGood:  'Tu agua para café',
+      insTitleWarn:  'Ajustá tu agua',
+      insGood:       'las tres en rango SCA. Filtrá el cloro y andá tranquilo.',
+      insWarn:       'al menos una métrica está fuera del rango SCA (50-175 / 75-250 / 6.5-7.5) y afecta la taza.',
     },
     en: {
       evalAll:       'Water in SCA range — excellent for specialty coffee',
@@ -50,6 +54,10 @@ export function aguaMineralizacionCafe(i: Inputs): Outputs {
       recPhHigh:     'pH too high — use an ion-exchange filter.',
       recPhLow:      'pH too low — add a pinch of baking soda.',
       alt:           'Commercial mineral water: Volvic (ideal), Villa del Sur (good), Villavicencio (good). Avoid Evian for coffee.',
+      insTitleGood:  'Your coffee water',
+      insTitleWarn:  'Tune your water',
+      insGood:       'all three within SCA range. Filter the chlorine and you are good to go.',
+      insWarn:       'at least one metric is outside the SCA range (50-175 / 75-250 / 6.5-7.5) and it hurts the cup.',
     },
   } as const)[__lang];
 
@@ -73,5 +81,15 @@ export function aguaMineralizacionCafe(i: Inputs): Outputs {
 
   const alt = T.alt;
 
-  return { evaluacion: eval_, scaCompliant: sca, recomendacion: rec, alternativa: alt };
+  const metricLine = __lang === 'en'
+    ? `Hardness **${d} ppm**, TDS **${tds} ppm** and pH **${ph}**:`
+    : `Dureza **${d} ppm**, TDS **${tds} ppm** y pH **${ph}**:`;
+  const _insight = {
+    title: all ? T.insTitleGood : T.insTitleWarn,
+    text: `${metricLine} ${all ? T.insGood : T.insWarn}`,
+    tone: all ? 'good' : 'warn',
+    icon: '☕',
+  };
+
+  return { evaluacion: eval_, scaCompliant: sca, recomendacion: rec, alternativa: alt, _insight };
 }

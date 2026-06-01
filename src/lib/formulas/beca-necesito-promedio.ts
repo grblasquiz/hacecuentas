@@ -12,6 +12,8 @@ export interface Outputs {
   probabilidad: string;
   requisitos: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function becaNecesitoPromedio(i: Inputs): Outputs {
@@ -47,6 +49,44 @@ export function becaNecesitoPromedio(i: Inputs): Outputs {
     probabilidad = 'Baja — necesitás mejorar significativamente el promedio.';
   }
 
+  // --- Insight dinámico según cumplimiento y cercanía al mínimo
+  const tone = probabilidad.startsWith('Alta')
+    ? 'good'
+    : probabilidad.startsWith('Baja —')
+      ? 'warn'
+      : 'neutral';
+  let insightText: string;
+  if (cumplePromedio) {
+    insightText = `Tu promedio de **${promedioActual}** supera el mínimo de **${beca.promedio}** que pide esta beca${beca.promedio === 0 ? ' (esta beca no exige promedio, mirá la regularidad)' : ` por **${Math.abs(diferencia).toFixed(2)}** puntos`}. Probabilidad: **${probabilidad.split(' — ')[0]}** — revisá el resto de requisitos.`;
+  } else {
+    insightText = `Con **${promedioActual}** te faltan **${diferencia.toFixed(2)}** puntos para el mínimo de **${beca.promedio}**. ${diferencia <= 1 ? 'Estás cerca: un par de buenas notas te alcanzan.' : 'Vas a necesitar varias materias con nota alta para llegar.'}`;
+  }
+  const _insight = {
+    title: cumplePromedio ? 'Llegás al promedio' : 'Te falta promedio',
+    text: insightText,
+    tone,
+    icon: '🎓'
+  };
+
+  // --- Gauge: tu promedio frente al mínimo exigido (escala 0-10)
+  const umbral = beca.promedio;
+  const segments = umbral > 0
+    ? [
+        { nombre: 'Por debajo', max: umbral, color: '#dc2626', colorDark: '#ef4444' },
+        { nombre: 'Cumple el mínimo', max: Math.max(10, promedioActual + 0.1), color: '#16a34a', colorDark: '#22c55e' },
+      ]
+    : [
+        { nombre: 'Sin mínimo de promedio', max: Math.max(10, promedioActual + 0.1), color: '#16a34a', colorDark: '#22c55e' },
+      ];
+  const _chart = {
+    type: 'scale',
+    marker: promedioActual,
+    markerLabel: `Tu promedio: ${promedioActual}`,
+    min: 0,
+    segments,
+    ariaLabel: `Tu promedio es ${promedioActual} sobre 10${umbral > 0 ? `; la beca exige un mínimo de ${umbral}` : '; esta beca no exige promedio mínimo'}.`
+  };
+
   return {
     promedioMinimo: beca.promedio,
     cumplePromedio,
@@ -54,5 +94,7 @@ export function becaNecesitoPromedio(i: Inputs): Outputs {
     probabilidad,
     requisitos: beca.desc,
     mensaje: `${beca.desc} Promedio mínimo: ${beca.promedio}. Tu promedio: ${promedioActual}. ${cumplePromedio ? 'Cumplís el requisito de promedio.' : `Te faltan ${diferencia.toFixed(2)} puntos.`}`,
+    _insight,
+    _chart,
   };
 }

@@ -1,6 +1,6 @@
 /** Constante de tiempo RC y voltajes de carga de capacitor */
 export interface Inputs { resistenciaOhm: number; capacitanciaUf: number; voltajeFuente: number; }
-export interface Outputs { tauSegundos: number; tiempoCarga99: number; voltaje1Tau: number; voltaje3Tau: number; detalle: string; }
+export interface Outputs { tauSegundos: number; tiempoCarga99: number; voltaje1Tau: number; voltaje3Tau: number; detalle: string; _insight?: any; }
 
 export function capacitorCargaDescargaRc(i: Inputs): Outputs {
   const r = Number(i.resistenciaOhm);

@@ -17,6 +17,7 @@ export interface Outputs {
   status: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
 }
 
 const fmtBRL = (n: number) =>
@@ -44,6 +45,21 @@ export function aposentadoriaInssTempoContrib(i: Inputs): Outputs {
   const formula = `${minimo} anos contribuição (${sexo}) — benefício = 100% × média (limitada ao teto)`;
   const explicacao = `Regra antiga extinta em 13/nov/2019 para novos filiados. Para quem já contribuía antes, existem regras de transição (pontos, pedágio 50%, pedágio 100%, idade progressiva). Esta calculadora estima o tempo mínimo necessário pela regra antiga: ${minimo} anos (${sexo}). Benefício: 100% da média dos salários × fator previdenciário. Teto INSS 2026: ${fmtBRL(teto)}.`;
 
+  const _insight =
+    falta === 0
+      ? {
+          title: 'Tempo mínimo atingido',
+          text: `Você já soma os **${minimo} anos** exigidos pela regra antiga (${sexo}). Atenção: essa regra foi **extinta em 13/11/2019** para quem não a completou antes — quem entrou depois precisa usar uma regra de transição (pontos, pedágio ou idade progressiva).`,
+          tone: 'good',
+          icon: '✅',
+        }
+      : {
+          title: `Faltam ${falta} anos de contribuição`,
+          text: `Com ${anos} anos você está a **${falta} anos** dos ${minimo} exigidos. Como a regra antiga já não vale para novos casos, vale comparar quanto tempo extra pedem as regras de transição antes de decidir o caminho.`,
+          tone: 'warn',
+          icon: '⏳',
+        };
+
   return {
     tempoRequerido: `${minimo} anos`,
     faltaContribuicao: `${falta} anos`,
@@ -52,5 +68,6 @@ export function aposentadoriaInssTempoContrib(i: Inputs): Outputs {
     status,
     formula,
     explicacao,
+    _insight,
   };
 }

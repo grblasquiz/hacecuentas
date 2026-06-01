@@ -12,6 +12,8 @@ export interface Outputs {
   neto_asignacion: number;
   beneficio_anual: number;
   detalle_zona: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -119,14 +121,44 @@ export function compute(i: Inputs): Outputs {
   // Detalle descriptivo
   const detalle_zona = `${zonaData.nombre} | Asignación ${porcentaje_zona.toFixed(1)}% s/sueldo bruto | DL 889/1975 | Imponible AFP e Isapre | Descontable IRPF`;
 
+  const neto_final = Math.max(0, neto_asignacion);
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+
+  // Insight: cuánto de la asignación de zona queda en mano tras descuentos
+  const descuentos = afp_asignacion + salud_asignacion + irpf_asignacion;
+  const pctNeto = monto_asignacion > 0 ? Math.round((neto_final / monto_asignacion) * 100) : 0;
+  const _insight = {
+    title: `${zonaData.nombre}: ${porcentaje_zona.toFixed(0)}% de zona`,
+    text: `Tu asignación bruta de zona es **${fmtCLP(monto_asignacion)}/mes**, pero tras AFP, salud e IRPF quedan **${fmtCLP(neto_final)} en mano** (${pctNeto}%). En el año suma **${fmtCLP(Math.max(0, beneficio_anual))}** extra neto.`,
+    tone: (pctNeto < 70 ? 'warn' : 'good') as 'warn' | 'good',
+    icon: '🏔️',
+  };
+
+  // Donut: la asignación bruta se reparte entre neto y descuentos obligatorios
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Neto en mano', value: neto_final },
+      { label: 'AFP (10%)', value: afp_asignacion },
+      { label: 'Salud (7%)', value: salud_asignacion },
+      { label: 'IRPF', value: irpf_asignacion },
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(monto_asignacion),
+    centerLabel: 'Asignación bruta',
+    ariaLabel: `Reparto de la asignación de zona de ${fmtCLP(monto_asignacion)}: ${fmtCLP(neto_final)} netos y ${fmtCLP(descuentos)} en descuentos.`,
+  };
+
   return {
     porcentaje_zona: Math.round(porcentaje_zona * 100) / 100,
     monto_asignacion,
     afp_asignacion,
     salud_asignacion,
     irpf_asignacion,
-    neto_asignacion: Math.max(0, neto_asignacion),
+    neto_asignacion: neto_final,
     beneficio_anual: Math.max(0, beneficio_anual),
-    detalle_zona
+    detalle_zona,
+    _insight,
+    _chart
   };
 }

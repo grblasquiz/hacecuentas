@@ -14,6 +14,7 @@ export interface AntiguedadLaboralOutputs {
   meses: number;
   dias: number;
   totalDias: number;
+  _insight?: any;
 }
 
 export function antiguedadLaboral(inputs: AntiguedadLaboralInputs): AntiguedadLaboralOutputs {
@@ -69,11 +70,19 @@ export function antiguedadLaboral(inputs: AntiguedadLaboralInputs): AntiguedadLa
   if (dias > 0) partes.push(`${dias} día${dias !== 1 ? 's' : ''}`);
   const resumen = partes.length > 0 ? partes.join(', ') : '0 días';
 
+  const _insight = {
+    title: 'Tu antigüedad',
+    text: `Llevás **${resumen}** en el puesto, equivalente a **${totalDias.toLocaleString('es-AR')} días** corridos${anios >= 1 ? ` (más de ${anios} año${anios !== 1 ? 's' : ''} completo${anios !== 1 ? 's' : ''})` : ''}. La antigüedad cuenta para vacaciones, indemnización y adicionales por convenio.`,
+    tone: 'neutral',
+    icon: '📅',
+  };
+
   return {
     resumen,
     anios,
     meses,
     dias,
     totalDias,
+    _insight,
   };
 }

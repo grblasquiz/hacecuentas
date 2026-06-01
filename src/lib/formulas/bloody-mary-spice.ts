@@ -1,6 +1,6 @@
 /** Bloody Mary */
 export interface Inputs { personas: number; tragosPorPersona: number; mlvodkaPorTrago: number; mljugodetomatePorTrago: number; mljugodelimonPorTrago: number; mlsalsaworcestershirePorTrago: number; mltabascoPorTrago: number; mlsalypimientaPorTrago: number; }
-export interface Outputs { totalTragos: number; totalvodka: string; totaljugodetomate: string; totaljugodelimon: string; totalsalsaworcestershire: string; totaltabasco: string; totalsalypimienta: string; listaCompras: string; }
+export interface Outputs { totalTragos: number; totalvodka: string; totaljugodetomate: string; totaljugodelimon: string; totalsalsaworcestershire: string; totaltabasco: string; totalsalypimienta: string; listaCompras: string; _insight?: any; }
 
 export function bloodyMarySpice(i: Inputs): Outputs {
   const p = Number(i.personas);
@@ -18,6 +18,9 @@ export function bloodyMarySpice(i: Inputs): Outputs {
   const fmt = (ml: number) => `${ml}ml`;
   const lista = `Vodka: ${fmt(Math.ceil(v * tot * 1.15))} (${Math.ceil(v * tot * 1.15 / 750)} bot) | Jugo tomate: ${fmt(Math.ceil(to * tot * 1.15))} (${Math.ceil(to * tot * 1.15 / 1000)} L) | Limones: ${Math.ceil(l * tot / 30)} | Worcestershire: botella 140ml | Tabasco: botella 60ml | Apio: ${tot} palitos | Hielo: ${(p * 0.6).toFixed(1)}kg`;
 
+  const botVodka = Math.ceil(v * tot * 1.15 / 750);
+  const litrosTomate = Math.ceil(to * tot * 1.15 / 1000);
+
   return {
     totalTragos: tot,
     totalvodka: fmt(v * tot),
@@ -27,5 +30,11 @@ export function bloodyMarySpice(i: Inputs): Outputs {
     totaltabasco: `${tb * tot}ml (${Math.ceil(tb * tot / 1)} gotas)`,
     totalsalypimienta: `${s * tot}g (a gusto)`,
     listaCompras: lista,
+    _insight: {
+      title: 'Tu compra para los Bloody Mary',
+      text: `Para **${p} personas** salen **${tot} tragos** en total: comprá **${botVodka} botella${botVodka === 1 ? '' : 's'}** de vodka (750ml) y **${litrosTomate} L** de jugo de tomate. El total ya suma un 15% de margen para no quedarte corto.`,
+      tone: 'neutral',
+      icon: '🍅',
+    },
   };
 }

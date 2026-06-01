@@ -1,6 +1,6 @@
 /** Ahorro en plata y CO2 de transporte público vs auto */
 export interface Inputs { distanciaDiariaKm: number; diasPorMes: number; precioNaftaPorLitro: number; consumoAutoL100km: number; costoEstacionamiento: number; costoBoletoIda: number; }
-export interface Outputs { costoAutoMensual: number; costoTransporteMensual: number; ahorroMensual: number; co2AutoKg: number; co2TransporteKg: number; detalle: string; }
+export interface Outputs { costoAutoMensual: number; costoTransporteMensual: number; ahorroMensual: number; co2AutoKg: number; co2TransporteKg: number; detalle: string; _insight?: any; }
 
 export function ahorroTransportePublicoVsAuto(i: Inputs): Outputs {
   const distDiaria = Number(i.distanciaDiariaKm);
@@ -28,6 +28,22 @@ export function ahorroTransportePublicoVsAuto(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const co2Menos = co2Auto - co2Transporte;
+  const ahorroAnual = Math.abs(ahorro) * 12;
+  const _insight = ahorro >= 0
+    ? {
+        title: 'Dejar el auto te conviene',
+        text: `Yendo en transporte público gastás **$${fmt.format(costoTransporte)}/mes** en vez de **$${fmt.format(costoAuto)}/mes** con el auto: ahorrás **$${fmt.format(ahorro)}/mes** (unos **$${fmt.format(ahorroAnual)}** al año) y emitís **${fmt.format(co2Menos)} kg menos de CO₂** por mes.`,
+        tone: 'good',
+        icon: '🚌',
+      }
+    : {
+        title: 'Acá el auto sale más barato',
+        text: `Con estos números el auto cuesta **$${fmt.format(costoAuto)}/mes** contra **$${fmt.format(costoTransporte)}/mes** del transporte público: te sale **$${fmt.format(Math.abs(ahorro))}/mes más caro** ir en colectivo. Eso sí, el auto emite **${fmt.format(co2Menos)} kg más de CO₂** al mes.`,
+        tone: 'warn',
+        icon: '🚗',
+      };
+
   return {
     costoAutoMensual: Number(costoAuto.toFixed(0)),
     costoTransporteMensual: Number(costoTransporte.toFixed(0)),
@@ -35,5 +51,6 @@ export function ahorroTransportePublicoVsAuto(i: Inputs): Outputs {
     co2AutoKg: Number(co2Auto.toFixed(1)),
     co2TransporteKg: Number(co2Transporte.toFixed(1)),
     detalle: `Auto: $${fmt.format(costoAuto)}/mes (${fmt.format(co2Auto)} kg CO2). Transporte público: $${fmt.format(costoTransporte)}/mes (${fmt.format(co2Transporte)} kg CO2). Ahorro: $${fmt.format(ahorro)}/mes y ${fmt.format(co2Auto - co2Transporte)} kg menos de CO2.`,
+    _insight,
   };
 }

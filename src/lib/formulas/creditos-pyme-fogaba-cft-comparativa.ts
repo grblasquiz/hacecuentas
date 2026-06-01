@@ -1,6 +1,6 @@
 /** Costo financiero total pyme con garantia FOGABA vs sin garantia */
 export interface Inputs { montoArs: number; tnaPct: number; plazoMeses: number; comisionFogabaPct: number; gastosOtorgamientoPct: number; ivaSobreInteresPct: number; }
-export interface Outputs { cuotaMensualArs: number; totalPagadoArs: number; cftAnualPct: number; costoFogabaArs: number; gastosTotalesArs: number; explicacion: string; _chart?: any; }
+export interface Outputs { cuotaMensualArs: number; totalPagadoArs: number; cftAnualPct: number; costoFogabaArs: number; gastosTotalesArs: number; explicacion: string; _chart?: any; _insight?: any; }
 export function creditosPymeFogabaCftComparativa(i: Inputs): Outputs {
   const monto = Number(i.montoArs);
   const tna = Number(i.tnaPct) / 100;
@@ -33,6 +33,14 @@ export function creditosPymeFogabaCftComparativa(i: Inputs): Outputs {
     centerLabel: 'Total a pagar',
     ariaLabel: 'Composición del costo total del crédito pyme: capital, intereses, IVA, comisión FOGABA y gastos de otorgamiento.',
   };
+  const sobrecostoArs = interesTotal + ivaTotal + costoFog + gastosOtorg;
+  const sobrecostoPct = Math.round((sobrecostoArs / monto) * 100);
+  const insight = {
+    title: 'Cuánto pagás de más',
+    text: `Sobre el capital de **$${Math.round(monto).toLocaleString('es-AR')}** pagás **$${Math.round(sobrecostoArs).toLocaleString('es-AR')}** extra (**+${sobrecostoPct}%**) entre intereses, IVA, comisión FOGABA y gastos, lo que da un **CFT de ${cft.toFixed(1)}%**. La garantía FOGABA suma **$${Math.round(costoFog).toLocaleString('es-AR')}**: compará el CFT contra un crédito sin garantía antes de firmar.`,
+    tone: cft >= 100 ? 'warn' : 'neutral',
+    icon: '🏢',
+  };
   return {
     cuotaMensualArs: Number(cuota.toFixed(2)),
     totalPagadoArs: Number(totalPagado.toFixed(2)),
@@ -41,5 +49,6 @@ export function creditosPymeFogabaCftComparativa(i: Inputs): Outputs {
     gastosTotalesArs: Number((ivaTotal + costoFog + gastosOtorg).toFixed(2)),
     explicacion: `Crédito pyme de $${monto.toLocaleString('es-AR')} ARS a ${n} meses con TNA ${(tna * 100).toFixed(2)}%: cuota mensual $${cuota.toFixed(0)}, CFT efectivo ${cft.toFixed(2)}%. FOGABA suma $${costoFog.toFixed(0)} en comisión.`,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -1,6 +1,6 @@
 /** Comision eBay */
 export interface Inputs { precioVenta: number; costoEnvio: number; categoria: string; costoProducto: number; }
-export interface Outputs { netoVendedor: number; totalFees: number; gananciaBruta: number; margenPct: number; _chart?: any; }
+export interface Outputs { netoVendedor: number; totalFees: number; gananciaBruta: number; margenPct: number; _chart?: any; _insight?: any; }
 export function comisionEbayVenta(i: Inputs): Outputs {
   const precio = Number(i.precioVenta);
   const envio = Number(i.costoEnvio);
@@ -25,11 +25,37 @@ export function comisionEbayVenta(i: Inputs): Outputs {
     centerLabel: 'Precio venta',
     ariaLabel: 'Composición del precio de venta: neto para el vendedor y comisiones de eBay.',
   };
+  const margen = Number(((ganancia / precio) * 100).toFixed(2));
+  const feesPct = precio > 0 ? (totalFees / precio) * 100 : 0;
+  let insight: any;
+  if (ganancia <= 0) {
+    insight = {
+      title: 'La venta no deja ganancia',
+      text: `eBay se lleva **$${totalFees.toFixed(2)}** (**${feesPct.toFixed(1)}%** del precio) y, con tu costo, cada venta te deja **$${ganancia.toFixed(2)}**. Subí el precio o ajustá el costo del producto.`,
+      tone: 'warn',
+      icon: '📉',
+    };
+  } else if (margen < 15) {
+    insight = {
+      title: 'Margen finito',
+      text: `Te quedan **$${ganancia.toFixed(2)}** (**${margen.toFixed(1)}%** del precio). Entre la comisión por categoría y el fee de pago, eBay se lleva **${feesPct.toFixed(1)}%**: poco colchón ante una devolución.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    insight = {
+      title: 'Venta con buen margen',
+      text: `Después de las comisiones de eBay (**$${totalFees.toFixed(2)}**, **${feesPct.toFixed(1)}%** del precio) te quedan **$${ganancia.toFixed(2)}** limpios, un margen del **${margen.toFixed(1)}%**.`,
+      tone: 'good',
+      icon: '🏷️',
+    };
+  }
   return {
     netoVendedor: Number(neto.toFixed(2)),
     totalFees: Number(totalFees.toFixed(2)),
     gananciaBruta: Number(ganancia.toFixed(2)),
-    margenPct: Number(((ganancia / precio) * 100).toFixed(2)),
-    _chart: chart
+    margenPct: margen,
+    _chart: chart,
+    _insight: insight
   };
 }

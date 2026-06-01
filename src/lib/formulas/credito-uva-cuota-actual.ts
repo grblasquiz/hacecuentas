@@ -1,6 +1,6 @@
 /** Calculadora de cuota de crédito UVA */
 export interface Inputs { montoPrestamoUVAs: number; tasaAnual: number; plazoAnios: number; valorUVAHoy: number; }
-export interface Outputs { cuotaPesos: number; cuotaUVAs: number; totalPagado: number; interesesTotales: number; _chart?: any; }
+export interface Outputs { cuotaPesos: number; cuotaUVAs: number; totalPagado: number; interesesTotales: number; _chart?: any; _insight?: any; }
 
 export function creditoUvaCuotaActual(i: Inputs): Outputs {
   const monto = Number(i.montoPrestamoUVAs);
@@ -39,11 +39,20 @@ export function creditoUvaCuotaActual(i: Inputs): Outputs {
     ariaLabel: 'Composición del total a pagar del crédito UVA: capital más intereses',
   } : undefined;
 
+  const pctInteres = totalPagado > 0 ? Math.round((interesesTotales / totalPagado) * 100) : 0;
+  const insight = {
+    title: 'Capital vs intereses',
+    text: `De cada cuota, el capital es **${100 - pctInteres}%** y los intereses **${pctInteres}%** del total a pagar (**${Math.round(totalPagado).toLocaleString('es-AR')} UVAs**). Recordá que en un crédito UVA el saldo se ajusta por inflación: tu cuota en pesos sube mes a mes aunque en UVAs sea fija.`,
+    tone: pctInteres >= 50 ? 'warn' : 'neutral',
+    icon: '🏠',
+  };
+
   return {
     cuotaPesos: Math.round(cuotaPesos),
     cuotaUVAs: Math.round(cuotaUVAs * 100) / 100,
     totalPagado: Math.round(totalPagado),
     interesesTotales: Math.round(interesesTotales),
     _chart: chart,
+    _insight: insight,
   };
 }

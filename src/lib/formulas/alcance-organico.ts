@@ -12,6 +12,7 @@ export interface AlcanceOrganicoOutputs {
   alcanceTotal: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function alcanceOrganico(inputs: AlcanceOrganicoInputs): AlcanceOrganicoOutputs {
@@ -53,6 +54,16 @@ export function alcanceOrganico(inputs: AlcanceOrganicoInputs): AlcanceOrganicoO
     ariaLabel: 'Escala de tasa de alcance orgánico: muy bajo, bajo, promedio, bueno y excelente.',
   };
 
+  const insightTone: 'good' | 'warn' | 'neutral' = tasaOrg >= 15 ? 'good' : tasaOrg >= 8 ? 'neutral' : 'warn';
+  const insight = {
+    title: evaluacion.split('—')[0].trim(),
+    text: tasaOrg >= 15
+      ? `Tu **${fmt.format(tasaOrg)}%** de alcance orgánico está sobre el promedio: el algoritmo está mostrando tus posts. Capitalizalo con frecuencia y formatos que ya funcionan antes de meter inversión paga.`
+      : `Tu **${fmt.format(tasaOrg)}%** de alcance orgánico queda en zona **${evaluacion.split('—')[0].trim().toLowerCase()}**: de cada 100 seguidores te ven ~${Math.round(tasaOrg)}. Mejorá gancho y frecuencia, y considerá inversión paga para ampliar alcance.`,
+    tone: insightTone,
+    icon: '📣',
+  };
+
   return {
     tasaAlcanceOrganico: tasaOrg,
     impresionesOrganicas: impOrganicas,
@@ -60,5 +71,6 @@ export function alcanceOrganico(inputs: AlcanceOrganicoInputs): AlcanceOrganicoO
     alcanceTotal,
     detalle: `Tasa de alcance orgánico: ${fmt.format(tasaOrg)}% (${evaluacion}). ~${fmt.format(impOrganicas)} impresiones orgánicas + ${fmt.format(impPagas)} impresiones pagas = alcance total ~${fmt.format(alcanceTotal)}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

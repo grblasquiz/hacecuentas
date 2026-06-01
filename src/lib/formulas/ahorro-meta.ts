@@ -7,6 +7,7 @@ export interface Outputs {
   montoFinal: number;
   tasaMensual: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function ahorroMeta(i: Inputs): Outputs {
@@ -60,6 +61,16 @@ export function ahorroMeta(i: Inputs): Outputs {
     ariaLabel: 'Composición de la meta de ahorro: aportes mensuales, intereses ganados y ahorro inicial.',
   };
 
+  const interesPct = meta > 0 ? (interesesR / meta) * 100 : 0;
+  const insight = {
+    title: 'Cómo se arma tu meta',
+    text: interesesR > 0
+      ? `Ahorrando **$${Math.round(aporteMensual).toLocaleString('es-AR')}/mes** durante **${meses} meses**, los intereses aportan **$${interesesR.toLocaleString('es-AR')}** (el **${interesPct.toFixed(0)}%** de la meta) y vos ponés el resto. A mayor plazo, mayor es ese empujón del interés compuesto.`
+      : `Para juntar **$${Math.round(meta).toLocaleString('es-AR')}** en **${meses} meses** necesitás aportar **$${Math.round(aporteMensual).toLocaleString('es-AR')}/mes**. Con tasa 0% todo sale de tu bolsillo: una tasa positiva bajaría la cuota.`,
+    tone: 'neutral' as const,
+    icon: '🎯',
+  };
+
   return {
     aporteMensual: Math.round(aporteMensual),
     totalAportado: totalAportadoR,
@@ -67,5 +78,6 @@ export function ahorroMeta(i: Inputs): Outputs {
     montoFinal: Math.round(meta),
     tasaMensual: Number((tasaMensual * 100).toFixed(2)),
     _chart: chart,
+    _insight: insight,
   };
 }

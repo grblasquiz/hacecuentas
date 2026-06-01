@@ -26,6 +26,7 @@ export interface Outputs {
   formula: string;
   explicacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function finiquitoMexicoCalculo(i: Inputs): Outputs {
@@ -107,6 +108,19 @@ export function finiquitoMexicoCalculo(i: Inputs): Outputs {
     ariaLabel: 'Composición del finiquito: salarios, aguinaldo, vacaciones, prima vacacional y conceptos por despido',
   };
 
+  const isrPct = totalBruto > 0 ? (isrEstimado / totalBruto) * 100 : 0;
+  const indemPct = totalBruto > 0 ? (indemnizacion3meses / totalBruto) * 100 : 0;
+  const insightTone = causa === 'despido' ? 'good' : 'neutral';
+  const insightText = causa === 'despido'
+    ? `Como fue **despido injustificado** te corresponde indemnización: **$${Math.round(indemnizacion3meses).toLocaleString('es-MX')}** (${indemPct.toFixed(0)}% del bruto). Tras un ISR estimado de **$${Math.round(isrEstimado).toLocaleString('es-MX')}** (${isrPct.toFixed(0)}%), cobrás neto **$${Math.round(totalNeto).toLocaleString('es-MX')}** MXN.`
+    : `Por **renuncia voluntaria** cobrás finiquito (salarios, aguinaldo y vacaciones proporcionales), sin indemnización. Bruto **$${Math.round(totalBruto).toLocaleString('es-MX')}**, menos ISR estimado **$${Math.round(isrEstimado).toLocaleString('es-MX')}** (${isrPct.toFixed(0)}%) = neto **$${Math.round(totalNeto).toLocaleString('es-MX')}** MXN.`;
+  const insight = {
+    title: `Neto estimado: $${Math.round(totalNeto).toLocaleString('es-MX')} MXN`,
+    text: insightText,
+    tone: insightTone,
+    icon: '💼',
+  };
+
   return {
     salariosPendientes: Math.round(salariosPendientes),
     aguinaldoProporcional: Math.round(aguinaldoProporcional),
@@ -120,5 +134,6 @@ export function finiquitoMexicoCalculo(i: Inputs): Outputs {
     formula,
     explicacion,
     _chart: chart,
+    _insight: insight,
   };
 }

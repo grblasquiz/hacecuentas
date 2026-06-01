@@ -20,6 +20,7 @@ export interface DescensoPremierOutputs {
   diferenciaConSafety: number;
   veredicto: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function descensoPremierLeague(inputs: DescensoPremierInputs): DescensoPremierOutputs {
@@ -66,6 +67,25 @@ export function descensoPremierLeague(inputs: DescensoPremierInputs): DescensoPr
     ariaLabel: 'Proyección de puntos finales frente al umbral de salvación de 40 puntos',
   };
 
+  // Zona de la proyección final frente al umbral (mismos cortes que el _chart)
+  let zona: string;
+  let tone: 'good' | 'warn' | 'neutral';
+  if (puntosMaxPosibles < pts17) { zona = 'descenso matemático'; tone = 'warn'; }
+  else if (puntosEsperadosFinal < safety - 5) { zona = 'descenso casi seguro'; tone = 'warn'; }
+  else if (puntosEsperadosFinal < safety) { zona = 'zona de descenso'; tone = 'warn'; }
+  else if (puntosEsperadosFinal < safety + 12) { zona = 'salvado'; tone = 'good'; }
+  else { zona = 'holgado'; tone = 'good'; }
+
+  const margen = puntosEsperadosFinal - safety;
+  const insight = {
+    title: 'Lectura del run-in',
+    text: puntosMaxPosibles < pts17
+      ? `Tu techo es **${puntosMaxPosibles} pts** y el 17º tiene **${pts17}**: ya no llegás, descenso matemático.`
+      : `Al ritmo de **${proyeccionActualPorPartido.toFixed(2)} pts/partido** proyectás **${puntosEsperadosFinal} pts** al cierre — **${margen >= 0 ? margen + ' por encima' : Math.abs(margen) + ' por debajo'}** del umbral de los ${safety} (zona **${zona}**). Te quedan ${fechas} ${fechas === 1 ? 'fecha' : 'fechas'} y necesitás **${puntosParaAlcanzar17} ${puntosParaAlcanzar17 === 1 ? 'punto' : 'puntos'}** para pasar al 17º.`,
+    tone,
+    icon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  };
+
   return {
     puntosParaAlcanzar17,
     puntosMaxPosibles,
@@ -74,5 +94,6 @@ export function descensoPremierLeague(inputs: DescensoPremierInputs): DescensoPr
     diferenciaConSafety,
     veredicto,
     _chart: chart,
+    _insight: insight,
   };
 }

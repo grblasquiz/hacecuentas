@@ -29,6 +29,8 @@ export interface ArtIndemnizacionOutputs {
   factorEdad: string;
   categoriaIncapacidad: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const COEFICIENTE_LRT = 53;
@@ -102,6 +104,34 @@ export function artIndemnizacionTablaIncapacidadPermanente(
 
   const factorEdad = `${factorEdadNum.toFixed(4)} (= 65 / ${edad})`;
 
+  const fmt = (n: number) =>
+    '$' + Math.round(n).toLocaleString('es-AR');
+
+  const insightTone = porc >= 66 ? 'warn' : porc >= 50 ? 'warn' : 'neutral';
+  const _insight = {
+    title: 'Tu indemnización estimada',
+    text:
+      `Con **${porc}%** de incapacidad y **${edad}** años, te corresponde una indemnización de **${fmt(indemnizacionUnica)}** ` +
+      `(base Art. 14: **${fmt(indemnizacionBaseLRT)}** + **${fmt(adicional20Ley26773)}** del adicional 20% Ley 26.773). ` +
+      (porc >= 66
+        ? 'Es una incapacidad **total**: podés optar por renta vitalicia o pago único y aplican pisos mínimos SRT.'
+        : 'Verificá que el monto no quede por debajo del piso mínimo de la Resolución SRT vigente.'),
+    tone: insightTone,
+    icon: '⚖️',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Base Art. 14 LRT', value: Math.round(indemnizacionBaseLRT) },
+      { label: 'Adicional 20% (Ley 26.773)', value: Math.round(adicional20Ley26773) },
+    ],
+    prefix: '$',
+    centerValue: fmt(indemnizacionUnica),
+    centerLabel: 'Indemnización',
+    ariaLabel: `Composición de la indemnización de ${fmt(indemnizacionUnica)}: base del Art. 14 más el adicional del 20% de la Ley 26.773.`,
+  };
+
   return {
     indemnizacionUnica: Math.round(indemnizacionUnica),
     indemnizacionBaseLRT: Math.round(indemnizacionBaseLRT),
@@ -110,5 +140,7 @@ export function artIndemnizacionTablaIncapacidadPermanente(
     factorEdad,
     categoriaIncapacidad,
     mensaje,
+    _insight,
+    _chart,
   };
 }

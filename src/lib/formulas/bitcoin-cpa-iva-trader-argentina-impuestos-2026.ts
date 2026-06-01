@@ -18,6 +18,7 @@ export interface Outputs {
   tasaEfectiva: number;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -131,6 +132,24 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición de la carga fiscal del trader: Ganancias, IVA, Bienes Personales y percepción AFIP',
   };
 
+  const insight = (() => {
+    if (utilidadNeta <= 0) {
+      return {
+        title: 'Operación sin Ganancias a pagar',
+        text: `La operación cerró con quebranto o resultado neutro, así que **no pagás Ganancias**.${percepcionAFIP > 0 ? ` Igual te retuvieron **$${Math.round(percepcionAFIP).toLocaleString('es-AR')}** de percepción AFIP, que es pago a cuenta y recuperás en la DDJJ.` : ''}`,
+        tone: 'good' as 'good' | 'warn' | 'neutral',
+        icon: '🪙',
+      };
+    }
+    const cargaReal = cargaFiscalTotal - percepcionAFIP;
+    return {
+      title: `Tasa efectiva del ${tasaEfectiva.toFixed(1)}%`,
+      text: `Sobre tu ganancia bruta, los impuestos definitivos suman **$${Math.round(cargaReal).toLocaleString('es-AR')}** (Ganancias${ivaEstimado > 0 ? ' + IVA' : ''}${bienesPersonales > 0 ? ' + Bienes Personales' : ''}).${percepcionAFIP > 0 ? ` La percepción del 99% (**$${Math.round(percepcionAFIP).toLocaleString('es-AR')}**) infla la cifra pero es pago a cuenta: la recuperás en la DDJJ.` : ''}`,
+      tone: (tasaEfectiva > 30 ? 'warn' : 'neutral') as 'good' | 'warn' | 'neutral',
+      icon: '🪙',
+    };
+  })();
+
   return {
     utilidadNeta,
     impuestoGanancias,
@@ -141,5 +160,6 @@ export function compute(i: Inputs): Outputs {
     tasaEfectiva,
     resumen,
     _chart: chart,
+    _insight: insight,
   };
 }

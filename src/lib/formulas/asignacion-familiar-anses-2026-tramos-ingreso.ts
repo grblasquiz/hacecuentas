@@ -14,6 +14,7 @@ export interface Outputs {
   total_mensual: number;
   observaciones: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -90,6 +91,14 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición de la asignación familiar mensual: asignación por hijos más adicionales',
   };
 
+  const adicionales = montoEscolar + montoPrenatal;
+  const insight = {
+    title: `Estás en el ${tramoLabel}`,
+    text: `Cobrás **$${asignacionPorHijo.toLocaleString('es-AR')} por hijo** (${hijos} hijo/s = $${totalAsignacion.toLocaleString('es-AR')})${adicionales > 0 ? ` más **$${adicionales.toLocaleString('es-AR')}** en adicionales` : ''}, total **$${Math.round(totalMensual).toLocaleString('es-AR')}/mes**. ${tramoActual.tramo <= 2 ? 'Estás en un tramo bajo, que es el que más paga por hijo.' : 'A mayor ingreso declarado, menor el monto por hijo: el tramo 1 paga más del doble.'}`,
+    tone: (tramoActual.tramo <= 2 ? 'good' : 'neutral') as 'good' | 'neutral' | 'warn',
+    icon: '👨‍👩‍👧',
+  };
+
   return {
     tramo_ingreso: tramoLabel,
     asignacion_por_hijo: asignacionPorHijo,
@@ -97,6 +106,7 @@ export function compute(i: Inputs): Outputs {
     monto_prenatal: montoPrenatal,
     total_mensual: totalMensual,
     observaciones: obs,
-    _chart: chart
+    _chart: chart,
+    _insight: insight
   };
 }

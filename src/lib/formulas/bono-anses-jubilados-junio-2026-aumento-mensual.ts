@@ -10,6 +10,8 @@ export interface Outputs {
   haber_total: number;
   fecha_acreditacion: string;
   observaciones: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -91,11 +93,52 @@ export function compute(i: Inputs): Outputs {
     observaciones = 'Verifica tus datos. Contactá a ANSES si hay dudas.';
   }
 
+  let _insight: any;
+  if (esElegible && montoBono > 0) {
+    const pct = haberActual > 0 ? (montoBono / haberActual) * 100 : 0;
+    _insight = {
+      title: 'Te corresponde el bono',
+      text: `Con un haber de **$${haberActual.toLocaleString('es-AR')}** cobrás un bono de **$${montoBono.toLocaleString('es-AR')}**, así que este mes percibís **$${haberTotal.toLocaleString('es-AR')}** en total (un **${pct.toFixed(0)}%** extra). El bono es por única vez y no se incorpora al haber.`,
+      tone: 'good',
+      icon: '💸',
+    };
+  } else if (haberActual > LIMITE_HABER_2026) {
+    _insight = {
+      title: 'Tu haber supera el tope',
+      text: `Tu haber de **$${haberActual.toLocaleString('es-AR')}** está por encima del límite de **$${LIMITE_HABER_2026.toLocaleString('es-AR')}**, por eso este bono no aplica en junio 2026. Seguís cobrando tu haber normal sin el refuerzo.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    _insight = {
+      title: 'Completá tus datos',
+      text: `Ingresá un haber válido y tu tipo de prestación para ver si te corresponde el bono de ANSES y cuánto cobrarías en total.`,
+      tone: 'neutral',
+      icon: '📝',
+    };
+  }
+
+  const _chart = (esElegible && montoBono > 0)
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Tu haber', value: haberActual },
+          { label: 'Bono ANSES', value: montoBono },
+        ],
+        prefix: '$',
+        centerValue: `$${haberTotal.toLocaleString('es-AR')}`,
+        centerLabel: 'a cobrar',
+        ariaLabel: `De $${haberTotal.toLocaleString('es-AR')} a cobrar, $${haberActual.toLocaleString('es-AR')} es tu haber y $${montoBono.toLocaleString('es-AR')} el bono`,
+      }
+    : undefined;
+
   return {
     es_elegible: esElegible ? 'Sí' : 'No',
     monto_bono: montoBono,
     haber_total: haberTotal,
     fecha_acreditacion: fechaAcreditacion,
-    observaciones: observaciones
+    observaciones: observaciones,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

@@ -10,6 +10,7 @@ export interface Outputs {
   kcalMin: number;
   metUsado: number;
   detalle: string;
+  _insight?: any;
 }
 
 const MET_NIEVE: Record<string, { met: number; nombre: string }> = {
@@ -35,10 +36,23 @@ export function caloriasSkiSnowboardMontaña(i: Inputs): Outputs {
   const kcalPorMin = (info.met * 3.5 * peso) / 200;
   const total = kcalPorMin * min;
 
+  const horas = min / 60;
+  const kcalHora = kcalPorMin * 60;
+  const insight = {
+    title: 'Tu jornada en la nieve',
+    text: `**${info.nombre}** durante **${min} min** (${horas.toFixed(1)} h) te quema **${Math.round(total)} kcal**, a un ritmo de ~${Math.round(kcalHora)} kcal/hora.` +
+      (info.met >= 9
+        ? ' Es una actividad de altísima demanda: el frío y el esfuerzo continuo disparan el gasto.'
+        : ' Un día completo en pista suma fácil varias horas, así que el total real puede multiplicarse.'),
+    tone: 'good',
+    icon: info.nombre.toLowerCase().includes('snowboard') ? '🏂' : '⛷️',
+  };
+
   return {
     result: Math.round(total),
     kcalMin: Number(kcalPorMin.toFixed(2)),
     metUsado: info.met,
     detalle: `Haciendo **${info.nombre}** durante ${min} min quemás **${Math.round(total)} kcal** (${kcalPorMin.toFixed(2)} kcal/min, MET ${info.met}).`,
+    _insight: insight,
   };
 }

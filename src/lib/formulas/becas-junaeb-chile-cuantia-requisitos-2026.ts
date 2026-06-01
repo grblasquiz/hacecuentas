@@ -12,6 +12,7 @@ export interface Outputs {
   monto_anual: number;
   requisitos_clave: string;
   estado_elegibilidad: 'Elegible' | 'No elegible' | 'Condicionado';
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -34,17 +35,29 @@ export function compute(i: Inputs): Outputs {
       monto_mensual: 0,
       monto_anual: 0,
       requisitos_clave: `Promedio ${i.promedio_ponderado} < mínimo requerido ${PROMEDIO_MINIMO}. No cumples requisito base.`,
-      estado_elegibilidad: 'No elegible'
+      estado_elegibilidad: 'No elegible',
+      _insight: {
+        title: 'No alcanzás el mínimo',
+        text: `Tu promedio **${i.promedio_ponderado}** está por debajo del mínimo de **${PROMEDIO_MINIMO}** que exige Junaeb. Es un requisito excluyente: sin ese promedio no se accede a ninguna de las becas.`,
+        tone: 'warn',
+        icon: '⚠️',
+      },
     };
   }
-  
+
   if (i.rsh_familiar > RSH_MAXIMO) {
     return {
       beca_aplicable: 'No elegible',
       monto_mensual: 0,
       monto_anual: 0,
       requisitos_clave: `RSH $${i.rsh_familiar.toLocaleString('es-CL')} excede límite $${RSH_MAXIMO.toLocaleString('es-CL')}. No cumples requisito de ingresos.`,
-      estado_elegibilidad: 'No elegible'
+      estado_elegibilidad: 'No elegible',
+      _insight: {
+        title: 'Superás el tope de ingresos',
+        text: `Tu RSH familiar de **$${i.rsh_familiar.toLocaleString('es-CL')}** supera el límite aproximado de **$${RSH_MAXIMO.toLocaleString('es-CL')}**. Junaeb prioriza los tramos de menores ingresos, así que con ese RSH no calificás.`,
+        tone: 'warn',
+        icon: '⚠️',
+      },
     };
   }
   
@@ -92,17 +105,29 @@ export function compute(i: Inputs): Outputs {
       monto_mensual: 0,
       monto_anual: 0,
       requisitos_clave: `Promedio ${i.promedio_ponderado} cumple mínimo, pero no calificas para modalidades específicas. Revisa requisitos detallados con tu establecimiento.`,
-      estado_elegibilidad: 'Condicionado'
+      estado_elegibilidad: 'Condicionado',
+      _insight: {
+        title: 'Cumplís el mínimo, falta encajar',
+        text: `Con promedio **${i.promedio_ponderado}** pasás el filtro base, pero tu combinación de nivel y perfil no encaja en ninguna modalidad específica (Indígena, Presidente, Bicentenario o Práctica Técnica). Consultá con tu establecimiento qué requisitos adicionales podrías cumplir.`,
+        tone: 'neutral',
+        icon: '🔎',
+      },
     };
   }
-  
+
   const monto_anual = monto * MESES_PAGO_ANUAL;
-  
+
   return {
     beca_aplicable: beca_seleccionada,
     monto_mensual: monto,
     monto_anual: monto_anual,
     requisitos_clave: requisitos,
-    estado_elegibilidad: 'Elegible'
+    estado_elegibilidad: 'Elegible',
+    _insight: {
+      title: 'Beca asignada',
+      text: `Calificás para la **${beca_seleccionada}**: **$${monto.toLocaleString('es-CL')}/mes** durante ${MESES_PAGO_ANUAL} meses (feb–nov), o sea **$${monto_anual.toLocaleString('es-CL')}** al año.`,
+      tone: 'good',
+      icon: '🎓',
+    },
   };
 }

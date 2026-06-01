@@ -160,6 +160,7 @@ export interface GananciasRG830Outputs {
   aplicoMinimo: boolean;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function gananciasRG830(inputs: GananciasRG830Inputs): GananciasRG830Outputs {
@@ -219,6 +220,28 @@ export function gananciasRG830(inputs: GananciasRG830Inputs): GananciasRG830Outp
     ? 'Monto acumulado no supera el mínimo no sujeto. No se retiene.'
     : `Retención aplicada: ${alicuotaAplicada} sobre base de $${Math.round(baseRetencion).toLocaleString('es-AR')}`;
 
+  const pctRet = pago > 0 ? (retencionFinal / pago) * 100 : 0;
+  const insight = retencionFinal > 0
+    ? {
+        title: 'Cuánto te retienen de este pago',
+        text: `Se retienen **$${Math.round(retencionFinal).toLocaleString('es-AR')}** (**${pctRet.toFixed(1)}%** del pago) y cobrás **$${Math.round(netoACobrar).toLocaleString('es-AR')}**. Esa retención es pago a cuenta de tu Ganancias anual: la descontás en tu declaración.`,
+        tone: 'warn' as const,
+        icon: '🧾',
+      }
+    : aplicoMinimo
+    ? {
+        title: 'Retención por debajo del mínimo operativo',
+        text: `La retención calculada no llega al mínimo operativo (**$${minimoOperativo.toLocaleString('es-AR')}**), así que no se retiene y cobrás los **$${Math.round(netoACobrar).toLocaleString('es-AR')}** completos.`,
+        tone: 'good' as const,
+        icon: '✅',
+      }
+    : {
+        title: 'No corresponde retención',
+        text: `El monto acumulado (**$${Math.round(montoAcumulado).toLocaleString('es-AR')}**) no supera el mínimo no sujeto, así que cobrás los **$${Math.round(netoACobrar).toLocaleString('es-AR')}** sin retención.`,
+        tone: 'good' as const,
+        icon: '✅',
+      };
+
   const chart = retencionFinal > 0 ? {
     type: 'doughnut' as const,
     slices: [
@@ -243,5 +266,6 @@ export function gananciasRG830(inputs: GananciasRG830Inputs): GananciasRG830Outp
     aplicoMinimo,
     resumen,
     _chart: chart,
+    _insight: insight,
   };
 }

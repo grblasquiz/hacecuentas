@@ -13,6 +13,8 @@ export interface Outputs {
   administracion: number;
   gasto_total_primer_mes: number;
   rango_texto: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -97,6 +99,8 @@ export function compute(i: Inputs): Outputs {
 
   const rangoTexto = `Apartamento de ${alcobaNombre} en ${zonaNombre[i.zona]} de ${ciudadNombre[i.ciudad]}: $${precioMinimo.toLocaleString('es-CO')} - $${precioMaximo.toLocaleString('es-CO')} mensuales. Depósito: $${depositoMinimo.toLocaleString('es-CO')} a $${depositoMaximo.toLocaleString('es-CO')}.`;
 
+  const fmtCO = (n: number) => `$${n.toLocaleString('es-CO')}`;
+
   return {
     precio_minimo: precioMinimo,
     precio_maximo: precioMaximo,
@@ -106,5 +110,23 @@ export function compute(i: Inputs): Outputs {
     administracion: administracion,
     gasto_total_primer_mes: gastoTotalPrimerMes,
     rango_texto: rangoTexto,
+    _insight: {
+      title: 'Cuánto necesitás para entrar',
+      text: `Un apartamento de ${alcobaNombre} en ${zonaNombre[i.zona]} de ${ciudadNombre[i.ciudad]} ronda **${fmtCO(precioPromedio)}/mes** de canon. Pero para arrancar tenés que juntar **${fmtCO(gastoTotalPrimerMes)}**: el primer mes, el depósito (hasta ${fmtCO(depositoMaximo)}) y la administración (${fmtCO(administracion)}).`,
+      tone: 'warn',
+      icon: '🏠',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Primer canon', value: precioPromedio },
+        { label: 'Depósito', value: depositoMaximo },
+        { label: 'Administración', value: administracion },
+      ],
+      prefix: '$',
+      centerValue: fmtCO(gastoTotalPrimerMes),
+      centerLabel: 'Primer mes',
+      ariaLabel: `Desembolso inicial de ${fmtCO(gastoTotalPrimerMes)}: canon ${fmtCO(precioPromedio)}, depósito ${fmtCO(depositoMaximo)} y administración ${fmtCO(administracion)}`,
+    },
   };
 }

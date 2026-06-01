@@ -16,6 +16,7 @@ export interface Outputs {
   forma: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function capacidadTanqueCisterna(i: Inputs): Outputs {
@@ -62,6 +63,14 @@ export function capacidadTanqueCisterna(i: Inputs): Outputs {
     ariaLabel: `Volumen útil vs no aprovechable del tanque (llenado ${llenado}%).`,
   } : undefined;
 
+  const noUsadoPct = volLitros > 0 ? (noUsado / volLitros) * 100 : 0;
+  const insight = {
+    title: 'Cuánta autonomía te da',
+    text: `Con **${Math.round(volUtil).toLocaleString('es-AR')} L** útiles (llenado ${Math.round(llenado)}%), una familia de 4 aguanta **${diasFam4.toFixed(1)} días** sin reposición; siendo 2 personas, **${diasFam2.toFixed(1)} días**. El ${Math.round(llenado)}% de llenado deja **${Math.round(noUsado).toLocaleString('es-AR')} L (${noUsadoPct.toFixed(0)}%)** sin aprovechar.`,
+    tone: 'neutral' as const,
+    icon: '💧',
+  };
+
   return {
     volumenLitros: Number(volLitros.toFixed(1)),
     volumenM3: Number((volLitros / 1000).toFixed(3)),
@@ -71,5 +80,6 @@ export function capacidadTanqueCisterna(i: Inputs): Outputs {
     forma: forma === 'cilindrico' ? 'Cilíndrico' : 'Rectangular',
     resumen: `Capacidad total: ${Math.round(volLitros)} litros. Útil (${llenado}%): ${Math.round(volUtil)} litros.`,
     _chart: chart,
+    _insight: insight,
   };
 }

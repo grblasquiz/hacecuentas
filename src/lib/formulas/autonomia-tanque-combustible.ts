@@ -9,6 +9,7 @@ export interface Outputs {
   costoLlenarTanque: number;
   costoPorKm: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function autonomiaTanqueCombustible(i: Inputs): Outputs {
@@ -28,10 +29,22 @@ export function autonomiaTanqueCombustible(i: Inputs): Outputs {
     detalleStr += ` Llenar el tanque cuesta $${Math.round(costoLlenarTanque).toLocaleString('es-AR')}. Costo por km: $${Math.round(costoPorKm)}.`;
   }
 
+  let insightText = `Con el tanque lleno (**${tanque} L**) y un consumo de **${consumo} L/100km** recorrés unos **${Math.round(autonomiaKm).toLocaleString('es-AR')} km** antes de volver a cargar.`;
+  if (costoLlenarTanque > 0) {
+    insightText += ` Cada llenado cuesta **$${Math.round(costoLlenarTanque).toLocaleString('es-AR')}** y te sale **$${Math.round(costoPorKm).toLocaleString('es-AR')} por km**.`;
+  }
+  const _insight = {
+    title: 'Tu autonomía por tanque',
+    text: insightText,
+    tone: 'neutral',
+    icon: '⛽',
+  };
+
   return {
     autonomiaKm: Math.round(autonomiaKm),
     costoLlenarTanque: Math.round(costoLlenarTanque),
     costoPorKm: Math.round(costoPorKm),
     detalle: detalleStr,
+    _insight,
   };
 }

@@ -16,6 +16,8 @@ export interface AlquilerAutoPaisPresupuestoOutputs {
   porDia: number;
   desglose: string;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 type PaisData = {
@@ -98,10 +100,56 @@ export function alquilerAutoPaisPresupuesto(
     recomendacion = 'Buen presupuesto. Confirmá en 2-3 agencias antes de reservar: los precios varían hasta 40%.';
   }
 
+  const sAlquiler = Math.round(subtotalBase);
+  const sSeguro = Math.round(seguro);
+  const sImpuestos = Math.round(impuestos);
+  const sNafta = Math.round(nafta);
+  const slices = [
+    { label: 'Alquiler', value: sAlquiler },
+    { label: 'Seguro', value: sSeguro },
+    { label: 'Impuestos', value: sImpuestos },
+    { label: 'Nafta', value: sNafta },
+    { label: 'Peajes', value: peajes },
+    { label: 'Parking', value: parking },
+  ].filter((s) => s.value > 0);
+  const sliceTotal = slices.reduce((acc, s) => acc + s.value, 0);
+
+  const ocultos = sliceTotal - sAlquiler;
+  const pctOcultos = sliceTotal > 0 ? Math.round((ocultos / sliceTotal) * 100) : 0;
+
+  let insightTone: 'good' | 'warn' | 'neutral' = 'neutral';
+  let insightTitle = 'El alquiler no es todo';
+  let insightText = `El alquiler base es **USD ${sAlquiler}**, pero seguro, impuestos, nafta y extras suman **USD ${ocultos}** más: el **${pctOcultos}%** del total real (**USD ${totalUSD}**, USD ${porDia}/día).`;
+  if (inputs.seguroTotal === 'no') {
+    insightTone = 'warn';
+    insightTitle = 'Vas sin seguro CDW';
+    insightText = `Estás presupuestando **USD ${totalUSD}** sin seguro CDW. Un solo rayón puede costarte una franquicia de **USD 1.000+**: el ahorro no compensa el riesgo.`;
+  } else if (porDia > 90) {
+    insightTone = 'warn';
+    insightTitle = 'Costo diario alto';
+    insightText = `A **USD ${porDia}/día** estás en la franja cara. Retirar fuera del aeropuerto y comparar agencias puede bajar el total (**USD ${totalUSD}**) un 20-30%.`;
+  } else {
+    insightTone = 'good';
+  }
+
   return {
     totalUSD,
     porDia,
     desglose,
     recomendacion,
+    _insight: {
+      title: insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: '🚗',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: `$${sliceTotal}`,
+      centerLabel: 'total USD',
+      ariaLabel: `Desglose del costo: alquiler USD ${sAlquiler}, seguro USD ${sSeguro}, impuestos USD ${sImpuestos}, nafta USD ${sNafta}, peajes USD ${peajes}, parking USD ${parking}.`,
+    },
   };
 }

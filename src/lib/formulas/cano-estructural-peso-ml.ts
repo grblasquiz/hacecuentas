@@ -12,6 +12,7 @@ export interface CanoEstructuralOutputs {
   pesoBarra: number;
   pesoTotal: number;
   detalle: string;
+  _insight?: any;
 }
 
 const DENSIDAD_ACERO = 7850; // kg/m³
@@ -54,10 +55,20 @@ export function canoEstructuralPesoMl(inputs: CanoEstructuralInputs): CanoEstruc
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  const _insight = {
+    title: 'Peso para tu pedido',
+    text: cantidad > 1
+      ? `Cada barra de ${fmt.format(largo)} m pesa **${fmt.format(pesoBarra)} kg**. Tus **${cantidad} barras** suman **${fmt.format(pesoTotal)} kg** — usalo para cotizar por kilo y para calcular el flete.`
+      : `Una barra de ${fmt.format(largo)} m pesa **${fmt.format(pesoBarra)} kg** (**${fmt.format(pesoMl)} kg/m**). Multiplicá por el precio del kilo para cotizar el acero.`,
+    tone: 'neutral',
+    icon: '🏗️',
+  };
+
   return {
     pesoMl,
     pesoBarra,
     pesoTotal,
     detalle: `${descripcion}: ${fmt.format(pesoMl)} kg/m × ${fmt.format(largo)} m = ${fmt.format(pesoBarra)} kg/barra. ${cantidad} barra${cantidad > 1 ? 's' : ''} = ${fmt.format(pesoTotal)} kg total.`,
+    _insight,
   };
 }

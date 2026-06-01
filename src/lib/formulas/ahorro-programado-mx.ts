@@ -18,6 +18,8 @@ export interface Outputs {
   interesesGanados: number;
   tasaEfectivaAnual: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function ahorroProgramadoMx(i: Inputs): Outputs {
@@ -47,6 +49,30 @@ export function ahorroProgramadoMx(i: Inputs): Outputs {
   const factorInflacion = Math.pow(1 + inflacion / 100, anios);
   const saldoReal = factorInflacion > 0 ? saldoNominal / factorInflacion : saldoNominal;
 
+  const fmt = (v: number) => '$' + new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(Math.round(v));
+  const pctInteres = saldoNominal > 0 ? Math.round((interesesGanados / saldoNominal) * 100) : 0;
+  const perdidaInflacion = saldoNominal - saldoReal;
+  const _insight = {
+    title: 'Cuánto trabaja tu dinero',
+    text: inflacion > 0
+      ? `Aportando **${fmt(aporte)}/mes** durante **${anios} años** juntás **${fmt(saldoNominal)}**, de los cuales el **${pctInteres}%** (${fmt(interesesGanados)}) son intereses que generó el interés compuesto. Ojo: con una inflación del **${inflacion}%** anual, ese saldo equivale a **${fmt(saldoReal)}** de hoy (perdés **${fmt(perdidaInflacion)}** de poder de compra).`
+      : `Aportando **${fmt(aporte)}/mes** durante **${anios} años** juntás **${fmt(saldoNominal)}**, de los cuales el **${pctInteres}%** (${fmt(interesesGanados)}) son intereses puros del interés compuesto. Cargá una inflación esperada para ver el valor real de ese monto.`,
+    tone: inflacion > 0 && perdidaInflacion > interesesGanados ? 'warn' : 'good',
+    icon: '📈',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Lo que aportaste', value: Math.round(totalAportado) },
+      { label: 'Intereses ganados', value: Math.round(interesesGanados) },
+    ],
+    prefix: '$',
+    centerValue: fmt(saldoNominal),
+    centerLabel: 'Saldo final',
+    ariaLabel: `Del saldo final de ${fmt(saldoNominal)}, ${fmt(totalAportado)} son tus aportes y ${fmt(interesesGanados)} son intereses ganados.`,
+  };
+
   return {
     saldoNominal: Number(saldoNominal.toFixed(2)),
     saldoReal: Number(saldoReal.toFixed(2)),
@@ -54,5 +80,7 @@ export function ahorroProgramadoMx(i: Inputs): Outputs {
     interesesGanados: Number(interesesGanados.toFixed(2)),
     tasaEfectivaAnual: Number(tasaEfectivaAnual.toFixed(2)),
     mensaje: `Tras ${anios} años aportando $${aporte}/mes, juntás $${saldoNominal.toFixed(2)} nominales ($${saldoReal.toFixed(2)} en valor real). Aportaste $${totalAportado.toFixed(2)} y ganaste $${interesesGanados.toFixed(2)} en intereses.`,
+    _insight,
+    _chart,
   };
 }

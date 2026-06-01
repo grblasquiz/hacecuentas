@@ -12,6 +12,7 @@ export interface Outputs {
   comisionTotal: number;
   porcentajeSobreVenta: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function comisionVenta(i: Inputs): Outputs {
@@ -44,11 +45,29 @@ export function comisionVenta(i: Inputs): Outputs {
       }
     : undefined;
 
+  // Insight: cuánto representa la comisión sobre la venta y el peso del IVA.
+  const pctTotalSobreVenta = (total / venta) * 100;
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insight = conIva
+    ? {
+        title: 'Comisión + IVA sobre la venta',
+        text: `Sobre una venta de **${fmt(venta)}** cobrás **${fmt(total)}** (el **${pctTotalSobreVenta.toFixed(2)}%**), de los cuales **${fmt(ivaComision)}** son IVA del ${alic}% que vas a tener que ingresar a la AFIP: tu honorario real es **${fmt(comisionNeta)}**.`,
+        tone: 'neutral' as 'good' | 'warn' | 'neutral',
+        icon: '🧾',
+      }
+    : {
+        title: 'Tu comisión sobre la venta',
+        text: `Sobre una venta de **${fmt(venta)}** tu comisión es **${fmt(total)}**, equivalente al **${pctTotalSobreVenta.toFixed(2)}%** del total${base === 'neto' ? ' (calculada sobre la base neta, sin IVA de la venta)' : ''}. No se sumó IVA sobre la comisión.`,
+        tone: 'good' as 'good' | 'warn' | 'neutral',
+        icon: '💼',
+      };
+
   return {
     comisionNeta: Math.round(comisionNeta),
     ivaComision: Math.round(ivaComision),
     comisionTotal: Math.round(total),
     porcentajeSobreVenta: Number(((total / venta) * 100).toFixed(2)),
     _chart: chart,
+    _insight: insight,
   };
 }

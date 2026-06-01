@@ -10,6 +10,7 @@ export interface Outputs {
   bandejas: number;
   frecuenciaCambio: string;
   detalle: string;
+  _insight?: any;
 }
 
 interface ArenaData {
@@ -58,6 +59,10 @@ export function arenaSanitariaGatoKgMes(i: Inputs): Outputs {
   const bandejas = gatos + 1;
 
   const nombreArena = NOMBRES_ARENA[tipo] || tipo;
+  const costoAnual = costoMes * 12;
+  const costoPorGato = Math.round(costoMes / gatos);
+  // Tono dinámico: la sílice rinde poco kilaje pero es cara; >$3500/gato es gasto alto
+  const tono = costoPorGato > 3500 ? 'warn' : 'neutral';
 
   return {
     kgMes,
@@ -65,5 +70,11 @@ export function arenaSanitariaGatoKgMes(i: Inputs): Outputs {
     bandejas,
     frecuenciaCambio: arena.cambio,
     detalle: `Para ${gatos} gato${gatos > 1 ? 's' : ''} con arena ${nombreArena}: ~${kgMes} kg/mes. Costo: ~$${costoMes.toLocaleString('es-AR')}/mes. Necesitás ${bandejas} bandejas. ${arena.cambio}`,
+    _insight: {
+      title: 'Tu gasto en arena',
+      text: `${gatos} gato${gatos > 1 ? 's' : ''} con arena ${nombreArena.toLowerCase()} consumen **~${kgMes} kg/mes** (**$${costoMes.toLocaleString('es-AR')}/mes**, ~$${costoAnual.toLocaleString('es-AR')} al año). Son **$${costoPorGato.toLocaleString('es-AR')} por gato** y conviene tener **${bandejas} bandejas** (regla N+1).`,
+      tone: tono,
+      icon: '🐱',
+    },
   };
 }

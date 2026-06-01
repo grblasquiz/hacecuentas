@@ -17,6 +17,7 @@ export interface AmortizacionPrestamoFrancesAlemanOutputs {
   totalPagado: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
   _table?: any;
 }
 
@@ -36,6 +37,31 @@ function buildDonut(capital: number, intereses: number, totalPagado: number) {
     centerValue: '$' + Math.round(totalPagado).toLocaleString('es-AR'),
     centerLabel: 'Total a pagar',
     ariaLabel: `Composición del préstamo: capital ${Math.round(capital)}, intereses ${Math.round(intereses)}.`,
+  };
+}
+
+// Insight narrativo: qué proporción del total a pagar son intereses.
+function buildInsight(
+  sistema: 'frances' | 'aleman',
+  monto: number,
+  intereses: number,
+  totalPagado: number,
+) {
+  const pctInteresesSobreTotal = (intereses / totalPagado) * 100;
+  const pctInteresesSobreCapital = (intereses / monto) * 100;
+  const sistemaNombre = sistema === 'frances' ? 'francés' : 'alemán';
+  const tone = pctInteresesSobreCapital >= 50 ? 'warn' : pctInteresesSobreCapital >= 25 ? 'neutral' : 'good';
+  let text: string;
+  if (pctInteresesSobreCapital >= 50) {
+    text = `Vas a pagar **$${fmtMoney(intereses)}** de intereses, **${pctInteresesSobreCapital.toFixed(0)}% del capital**: el préstamo te cuesta casi tanto como lo que pedís. El ${pctInteresesSobreTotal.toFixed(0)}% de cada peso que devolvés es interés puro.`;
+  } else {
+    text = `Del total a pagar, **$${fmtMoney(intereses)}** son intereses (**${pctInteresesSobreTotal.toFixed(0)}% de cada cuota**) y $${fmtMoney(monto)} es capital. El crédito ${sistemaNombre} suma un ${pctInteresesSobreCapital.toFixed(0)}% sobre lo que pedís.`;
+  }
+  return {
+    title: 'Cuánto te cuesta el crédito',
+    text,
+    tone,
+    icon: '🏦',
   };
 }
 
@@ -118,6 +144,7 @@ export function amortizacionPrestamoFrancesAleman(
       totalPagado: Math.round(totalPagado),
       detalle: `Sistema francés: ${plazo} cuotas fijas de $${Math.round(cuota).toLocaleString('es-AR')}. Total intereses: $${Math.round(totalIntereses).toLocaleString('es-AR')} (${((totalIntereses / monto) * 100).toFixed(1)}% del capital).`,
       _chart: buildDonut(monto, totalIntereses, totalPagado),
+      _insight: buildInsight('frances', monto, totalIntereses, totalPagado),
       _table: buildTable('frances', rows, totalPagado, totalIntereses, monto),
     };
   }
@@ -144,6 +171,7 @@ export function amortizacionPrestamoFrancesAleman(
     totalPagado: Math.round(totalPagado),
     detalle: `Sistema alemán: primera cuota $${Math.round(cuotaInicial).toLocaleString('es-AR')}, cuotas decrecientes. Amortización mensual fija de $${Math.round(amortCapital).toLocaleString('es-AR')}. Total intereses: $${Math.round(totalIntereses).toLocaleString('es-AR')} (${((totalIntereses / monto) * 100).toFixed(1)}% del capital).`,
     _chart: buildDonut(monto, totalIntereses, totalPagado),
+    _insight: buildInsight('aleman', monto, totalIntereses, totalPagado),
     _table: buildTable('aleman', rows, totalPagado, totalIntereses, monto),
   };
 }

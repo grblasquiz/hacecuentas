@@ -14,6 +14,7 @@ export interface Outputs {
   diferencias_clave: string;
   recursos_recomendados: string;
   advertencia: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -139,6 +140,40 @@ export function compute(i: Inputs): Outputs {
       "Las horas estimadas son un promedio. El estudio activo y la inmersión real aceleran el progreso más que el tiempo de exposición pasiva.";
   }
 
+  // --- Insight narrativo
+  const meses = Math.round((semanas_estimadas / 4.345) * 10) / 10;
+  const tiempoTxt =
+    semanas_estimadas <= 0
+      ? ''
+      : semanas_estimadas < 8
+      ? `unas **${semanas_estimadas} semanas**`
+      : `**${semanas_estimadas} semanas** (~${meses} meses)`;
+  const varianteCorta = es_br ? 'PT-BR (Brasil)' : 'PT-PT (Portugal)';
+
+  let _insight;
+  if (horas_totales <= 0) {
+    _insight = {
+      title: 'Tu nivel ya cubre la meta',
+      text: `Según tu nivel actual, ya alcanzás el objetivo en **${varianteCorta}** sin horas extra. Apuntá al siguiente nivel o a una certificación formal para seguir avanzando.`,
+      tone: 'good',
+      icon: '🎯',
+    };
+  } else if (lengua_materna === 'espanol') {
+    _insight = {
+      title: 'Ventaja del español de partida',
+      text: `Necesitás unas **${horas_totales} horas** de estudio activo (${tiempoTxt} a ${horas_dia} h/día) para llegar a tu meta en **${varianteCorta}**. Partir del español recorta el esfuerzo a **${Math.round(factor_lengua * 100)}%** vs un angloparlante: aprovechá la cercanía.`,
+      tone: 'good',
+      icon: '🇧🇷',
+    };
+  } else {
+    _insight = {
+      title: 'Tu plan de estudio',
+      text: `Para llegar a tu meta en **${varianteCorta}** vas a invertir unas **${horas_totales} horas** de estudio activo, es decir ${tiempoTxt} a ${horas_dia} h/día. Sumar inmersión pasiva (series, podcasts) acelera el progreso real.`,
+      tone: 'neutral',
+      icon: '📚',
+    };
+  }
+
   return {
     variante_recomendada,
     semanas_estimadas,
@@ -146,5 +181,6 @@ export function compute(i: Inputs): Outputs {
     diferencias_clave,
     recursos_recomendados,
     advertencia,
+    _insight,
   };
 }

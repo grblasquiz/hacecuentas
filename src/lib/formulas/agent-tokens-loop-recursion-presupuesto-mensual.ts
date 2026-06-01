@@ -21,6 +21,8 @@ export interface Outputs {
   cost_per_month: number;
   context_final_tokens: number;
   breakdown: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Precios en USD por 1M tokens [input, output] — verificar en pricing pages oficiales
@@ -123,13 +125,59 @@ export function compute(i: Inputs): Outputs {
     `Runs/mes: ${runsPerMonth.toLocaleString()} → Total: ${Math.round(tokensPerMonth).toLocaleString()} tokens/mes`,
   ].join("\n");
 
+  // Composición de los tokens por run (con errores): contexto acumulado, tool calls y reintentos.
+  // Las tres partes suman tokens_per_run_with_errors (redondeado).
+  const tokensRunErr  = Math.round(tokensPerRunWithErrors);
+  const sliceContext  = Math.round(contextSumAllIterations);
+  const sliceTools    = Math.round(toolTokensAllIterations);
+  const sliceRetries  = Math.max(0, tokensRunErr - sliceContext - sliceTools);
+
+  // Insight: costo y qué componente domina el gasto.
+  const costRunDisp   = Math.round(costPerRun * 100000) / 100000;
+  const costMonthDisp = Math.round(costPerMonth * 100) / 100;
+  const retryPct = tokensRunErr > 0 ? (sliceRetries / tokensRunErr) * 100 : 0;
+  const ctxPct   = tokensRunErr > 0 ? (sliceContext / tokensRunErr) * 100 : 0;
+  const dominante = sliceContext >= sliceTools && sliceContext >= sliceRetries
+    ? `el **contexto acumulado** (${ctxPct.toFixed(0)}% de los tokens)`
+    : (sliceTools >= sliceRetries
+        ? `las **tool calls** (${(100 - ctxPct - retryPct).toFixed(0)}% de los tokens)`
+        : `los **reintentos por error** (${retryPct.toFixed(0)}% de los tokens)`);
+  const fmtUSD = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: n < 1 ? 5 : 2 });
+  let insightTone: 'good' | 'warn' | 'neutral' = 'neutral';
+  if (costMonthDisp >= 500 || retryPct >= 25) insightTone = 'warn';
+  else if (costMonthDisp > 0 && costMonthDisp < 50 && retryPct < 10) insightTone = 'good';
+  const mesTxt = runsPerMonth > 0
+    ? ` Con **${runsPerMonth.toLocaleString()} runs/mes** son **${fmtUSD(costMonthDisp)}/mes**.`
+    : '';
+  const retryWarnTxt = retryPct >= 25
+    ? ` Cuidado: los reintentos se comen un **${retryPct.toFixed(0)}%** del presupuesto — bajar la tasa de error es la palanca más barata.`
+    : '';
+  const insightText = `Cada run cuesta **${fmtUSD(costRunDisp)}** y consume **${tokensRunErr.toLocaleString()} tokens**, donde manda ${dominante}.${mesTxt}${retryWarnTxt}`;
+
   return {
     tokens_per_run:             Math.round(tokensPerRunBase),
-    tokens_per_run_with_errors: Math.round(tokensPerRunWithErrors),
+    tokens_per_run_with_errors: tokensRunErr,
     tokens_per_month:           Math.round(tokensPerMonth),
-    cost_per_run:               Math.round(costPerRun * 100000) / 100000,
-    cost_per_month:             Math.round(costPerMonth * 100) / 100,
+    cost_per_run:               costRunDisp,
+    cost_per_month:             costMonthDisp,
     context_final_tokens:       Math.round(contextFinalTokens),
     breakdown,
+    _insight: {
+      title: 'Dónde se va el presupuesto',
+      text: insightText,
+      tone: insightTone,
+      icon: '🤖',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Contexto acumulado', value: sliceContext },
+        { label: 'Tool calls', value: sliceTools },
+        { label: 'Reintentos por error', value: sliceRetries },
+      ],
+      centerValue: tokensRunErr.toLocaleString(),
+      centerLabel: 'tokens/run',
+      ariaLabel: `Composición de los ${tokensRunErr.toLocaleString()} tokens por run: contexto acumulado ${sliceContext.toLocaleString()}, tool calls ${sliceTools.toLocaleString()} y reintentos por error ${sliceRetries.toLocaleString()}.`,
+    },
   };
 }

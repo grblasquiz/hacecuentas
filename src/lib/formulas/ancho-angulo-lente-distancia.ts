@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   anchoCapturado: string; altoCapturado: string; anguloHorizontal: string; anguloDiagonal: string;
+  _insight?: any;
 }
 
 export function anchoAnguloLenteDistancia(inputs: Inputs): Outputs {
@@ -28,10 +29,25 @@ export function anchoAnguloLenteDistancia(inputs: Inputs): Outputs {
   const aD = 2 * Math.atan((diag / 2) / f) * (180 / Math.PI);
   const anchoM = 2 * d * Math.tan((aH * Math.PI / 180) / 2);
   const altoM = 2 * d * Math.tan((aV * Math.PI / 180) / 2);
+
+  const tipoLente = aH >= 60 ? 'gran angular' : aH >= 28 ? 'lente normal' : 'teleobjetivo';
+  const tono = aH >= 60 ? 'good' : aH < 28 ? 'warn' : 'neutral';
+  const nota = aH >= 60
+    ? 'ideal para paisajes, arquitectura e interiores donde necesitás meter mucho en el cuadro.'
+    : aH < 28
+    ? 'encuadre cerrado: ojo con que el sujeto entero entre a esa distancia; acercate o alejate para ajustar.'
+    : 'encuadre equilibrado, parecido a como ve el ojo humano.';
+
   return {
     anchoCapturado: `${anchoM.toFixed(2)} m`,
     altoCapturado: `${altoM.toFixed(2)} m`,
     anguloHorizontal: `${aH.toFixed(1)}°`,
     anguloDiagonal: `${aD.toFixed(1)}°`,
+    _insight: {
+      title: 'Qué entra en tu encuadre',
+      text: `A **${d} m** de distancia, con un **${f} mm** capturás un campo de **${anchoM.toFixed(2)} m** de ancho por **${altoM.toFixed(2)} m** de alto (ángulo horizontal **${aH.toFixed(1)}°**). Es un **${tipoLente}**: ${nota}`,
+      tone: tono,
+      icon: '📷',
+    },
   };
 }

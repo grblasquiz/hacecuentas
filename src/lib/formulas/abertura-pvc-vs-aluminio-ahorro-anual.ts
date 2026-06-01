@@ -1,6 +1,6 @@
 /** Ahorro energético anual aberturas PVC DVH vs aluminio según m² y zona climática. */
 export interface Inputs { metrosCuadradosVentana: number; zonaClimatica: 'templada' | 'fria' | 'muy-fria'; tarifaArsKwh: number; }
-export interface Outputs { kwhAhorradosAnuales: number; ahorroAnualArs: number; reduccionConsumoPct: number; explicacion: string; }
+export interface Outputs { kwhAhorradosAnuales: number; ahorroAnualArs: number; reduccionConsumoPct: number; explicacion: string; _insight?: any; _chart?: any; }
 export function aberturaPvcVsAluminioAhorroAnual(i: Inputs): Outputs {
   const m2 = Number(i.metrosCuadradosVentana);
   const tarifa = Number(i.tarifaArsKwh);
@@ -17,10 +17,39 @@ export function aberturaPvcVsAluminioAhorroAnual(i: Inputs): Outputs {
   const ahorroKwh = (pAl - pPvc) * m2;
   const ahorroArs = ahorroKwh * tarifa;
   const reduccion = ((pAl - pPvc) / pAl) * 100;
+
+  // Composición de la pérdida térmica actual (aluminio): lo que ahorrás al
+  // pasar a PVC DVH + lo que el PVC todavía deja escapar. Suman pAl × m2.
+  const perdidaAlTotal = pAl * m2;
+  const perdidaPvcResidual = pPvc * m2;
+  const ahorroArsFmt = `$${ahorroArs.toLocaleString('es-AR')}`;
+
+  const _insight = {
+    title: 'Cuánto ahorrás por año',
+    text: `Pasar ${m2}m² de aluminio a **PVC DVH** en zona ${i.zonaClimatica} te ahorra **${ahorroKwh.toFixed(0)} kWh/año** (**${ahorroArsFmt} ARS**), recortando **${reduccion.toFixed(1)}%** de las pérdidas de calor por esas ventanas. El PVC paga su sobreprecio con la factura energética.`,
+    tone: 'good' as const,
+    icon: '🪟',
+  };
+
+  // Donut: de toda la pérdida con aluminio, cuánto eliminás vs cuánto persiste.
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Ahorro con PVC DVH', value: Number(ahorroKwh.toFixed(0)) },
+      { label: 'Pérdida que persiste', value: Number(perdidaPvcResidual.toFixed(0)) },
+    ],
+    prefix: '',
+    centerValue: `${Math.round(perdidaAlTotal).toLocaleString('es-AR')} kWh`,
+    centerLabel: 'Pérdida con aluminio',
+    ariaLabel: `De ${Math.round(perdidaAlTotal)} kWh/año que pierden las ventanas de aluminio, ${ahorroKwh.toFixed(0)} kWh se ahorran con PVC DVH y ${perdidaPvcResidual.toFixed(0)} kWh siguen escapando.`,
+  };
+
   return {
     kwhAhorradosAnuales: Number(ahorroKwh.toFixed(0)),
     ahorroAnualArs: Number(ahorroArs.toFixed(0)),
     reduccionConsumoPct: Number(reduccion.toFixed(1)),
     explicacion: `Cambiando ${m2}m² de ventanas de aluminio a PVC DVH en zona ${i.zonaClimatica}: ahorro de ${ahorroKwh.toFixed(0)} kWh/año = $${ahorroArs.toLocaleString('es-AR')} ARS. Reducción de pérdidas: ${reduccion.toFixed(1)}%.`,
+    _insight,
+    _chart,
   };
 }

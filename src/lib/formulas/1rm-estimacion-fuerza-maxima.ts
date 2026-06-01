@@ -21,6 +21,7 @@ export interface Outputs {
   pct_95: number;
   unit_label: string;
   warning: string;
+  _insight?: any;
 }
 
 /** Redondea al múltiplo más cercano de 0.5 (práctico para discos) */
@@ -103,6 +104,31 @@ export function compute(i: Inputs): Outputs {
     warning = `Con ${reps} repeticiones el error de estimación puede superar el 10%. Para mayor precisión, usa una carga que te permita completar entre 3 y 6 repeticiones al fallo técnico.`;
   }
 
+  // --- Insight narrativo ---
+  const spread = Math.abs(orm_epley_raw - orm_brzycki_raw);
+  const spreadPct = orm_average_raw > 0 ? (spread / orm_average_raw) * 100 : 0;
+  let insightText: string;
+  let insightTone: "good" | "warn" | "neutral";
+  if (reps === 1) {
+    insightText = `Con 1 repetición tu **1RM real ya es ${weight} ${unit}**: las fórmulas lo confirman con diferencia mínima. Para entrenar fuerza, apuntá a **${pct_85}–${pct_95} ${unit}** (85–95%).`;
+    insightTone = "good";
+  } else if (reps >= 2 && reps <= 6) {
+    insightText = `Con **${reps} reps a ${weight} ${unit}**, tu 1RM estimado es **${orm_average} ${unit}** (Epley y Brzycki coinciden dentro del ${spreadPct.toFixed(1)}%). Rango muy confiable para planificar cargas.`;
+    insightTone = "good";
+  } else if (reps <= 10) {
+    insightText = `Tu 1RM estimado es **${orm_average} ${unit}** con ${reps} reps. Sigue siendo útil, pero acercate a **3–6 reps al fallo** para afinar el dato (las fórmulas ya difieren ${spreadPct.toFixed(1)}%).`;
+    insightTone = "neutral";
+  } else {
+    insightText = `Con **${reps} reps** el margen de error supera el 10%: el **${orm_average} ${unit}** es solo orientativo. Repetí el test con una carga de **3–6 reps** para un 1RM fiable.`;
+    insightTone = "warn";
+  }
+  const insight = {
+    title: "Tu 1RM estimado",
+    text: insightText,
+    tone: insightTone,
+    icon: "🏋️",
+  };
+
   return {
     orm_epley,
     orm_brzycki,
@@ -115,6 +141,7 @@ export function compute(i: Inputs): Outputs {
     pct_90,
     pct_95,
     unit_label: unit,
-    warning
+    warning,
+    _insight: insight,
   };
 }

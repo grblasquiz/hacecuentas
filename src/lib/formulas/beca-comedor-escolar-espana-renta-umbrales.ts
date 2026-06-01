@@ -18,6 +18,8 @@ export interface Outputs {
   umbral_renta_aplicado: number;
   tramo_beca: string;
   notas: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -216,6 +218,40 @@ export function compute(i: Inputs): Outputs {
 
   const notas = notasParts.join(' | ');
 
+  // --- Insight dinámico según el tramo de beca
+  const accesoPreferente = situacionEspecial === 'victima_violencia' || situacionEspecial === 'acogimiento';
+  const tone = porcentajeCubierto >= 75 ? 'good' : porcentajeCubierto > 0 ? 'neutral' : 'warn';
+  let insightText: string;
+  if (accesoPreferente) {
+    insightText = `Tu situación da **acceso preferente**: beca del **100%** con independencia de la renta, lo que supone **${ahorroMensualTotal.toLocaleString('es-ES')} €/mes** y **${ahorroAnualTotal.toLocaleString('es-ES')} €** en el curso.`;
+  } else if (porcentajeCubierto > 0) {
+    insightText = `Con **${rentaFamiliar.toLocaleString('es-ES')} €** de renta frente a un umbral de **${umbralCalculado.toLocaleString('es-ES', {maximumFractionDigits: 0})} €** entrás en el tramo del **${porcentajeCubierto}%**: ahorrás **${ahorroMensualTotal.toLocaleString('es-ES')} €/mes** (**${ahorroAnualTotal.toLocaleString('es-ES')} €** en los 9 meses de curso).`;
+  } else {
+    insightText = `Tu renta de **${rentaFamiliar.toLocaleString('es-ES')} €** supera el umbral de **${umbralCalculado.toLocaleString('es-ES', {maximumFractionDigits: 0})} €** para ${numMiembros} miembros, así que **no entrás en beca**. Pagarías el menú completo a **${precioMenuDia.toLocaleString('es-ES')} €/día**.`;
+  }
+  const _insight = {
+    title: porcentajeCubierto > 0 ? 'Tu beca de comedor' : 'Sin derecho a beca',
+    text: insightText,
+    tone,
+    icon: '🍽️'
+  };
+
+  // --- Gauge: posición de la renta respecto al umbral (define el tramo de beca)
+  const ratioPct = umbralCalculado > 0 ? Math.round((rentaFamiliar / umbralCalculado) * 100) : 0;
+  const _chart = accesoPreferente ? undefined : {
+    type: 'scale',
+    marker: ratioPct,
+    markerLabel: `${ratioPct}% del umbral`,
+    min: 0,
+    segments: [
+      { nombre: 'Beca 100%', max: 55, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Beca 75%', max: 80, color: '#65a30d', colorDark: '#84cc16' },
+      { nombre: 'Beca 50%', max: 100, color: '#d97706', colorDark: '#f59e0b' },
+      { nombre: 'Sin beca', max: Math.max(140, ratioPct + 10), color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Tu renta familiar equivale al ${ratioPct}% del umbral aplicable; por debajo del 55% la beca es del 100%, hasta el 80% del 75%, hasta el 100% del 50% y por encima no hay derecho.`
+  };
+
   return {
     elegibilidad,
     porcentaje_cubierto: porcentajeCubierto,
@@ -226,5 +262,7 @@ export function compute(i: Inputs): Outputs {
     umbral_renta_aplicado: parseFloat(umbralCalculado.toFixed(2)),
     tramo_beca: tramoBeca,
     notas,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

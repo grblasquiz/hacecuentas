@@ -14,7 +14,11 @@ export interface Outputs {
   impuesto: number;
   paga: boolean;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
+
+const fmtPesos = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
 
 // Escala 2026 (Ley 27.743): unificación de alícuotas país/exterior
 // MNI: $292.994.206 (valor 2025 actualizado) — aproximamos a $350M para 2026
@@ -51,6 +55,12 @@ export function bienesPersonales(i: Inputs): Outputs {
       impuesto: 0,
       paga: false,
       mensaje: `Estás por debajo del mínimo no imponible de $${(MNI / 1e6).toFixed(0)}M — no pagás Bienes Personales.`,
+      _insight: {
+        title: 'No alcanzás el mínimo imponible',
+        text: `Tu base de **${fmtPesos(Math.max(0, baseBruta))}** queda por debajo del mínimo no imponible de **${fmtPesos(MNI)}**, así que este año **no pagás** Bienes Personales.`,
+        tone: 'good',
+        icon: '✅',
+      },
     };
   }
 
@@ -67,6 +77,23 @@ export function bienesPersonales(i: Inputs): Outputs {
       impuesto: Math.round(impuesto),
       paga: true,
       mensaje: `REIBP: pagás el equivalente a 5 años por adelantado a la tasa fija de 0.45 %.`,
+      _insight: {
+        title: 'REIBP: 5 años por adelantado',
+        text: `Bajo el régimen especial pagás **${fmtPesos(impuesto)}** de una sola vez sobre una base de **${fmtPesos(baseBruta)}** (tasa fija **0.45%** × 5 años). A cambio quedás blindado ante subas de alícuotas hasta 2028.`,
+        tone: 'warn',
+        icon: '🏛️',
+      },
+      _chart: {
+        type: 'doughnut',
+        slices: [
+          { label: 'Mínimo no imponible (exento)', value: Math.round(MNI) },
+          { label: 'Excedente gravado', value: Math.round(excedente) },
+        ],
+        prefix: '$',
+        centerValue: fmtPesos(baseBruta),
+        centerLabel: 'Base imponible',
+        ariaLabel: `Base de ${fmtPesos(baseBruta)}: ${fmtPesos(MNI)} exento y ${fmtPesos(excedente)} gravado.`,
+      },
     };
   }
 
@@ -83,6 +110,7 @@ export function bienesPersonales(i: Inputs): Outputs {
     }
   }
 
+  const efectiva = baseBruta > 0 ? (impuesto / baseBruta) * 100 : 0;
   return {
     baseImponible: baseBruta,
     minimoNoImponible: MNI,
@@ -91,5 +119,22 @@ export function bienesPersonales(i: Inputs): Outputs {
     impuesto: Math.round(impuesto),
     paga: true,
     mensaje: `Con base imponible de $${(baseBruta / 1e6).toFixed(1)}M te corresponde una alícuota marginal del ${(tasa * 100).toFixed(2)}%.`,
+    _insight: {
+      title: 'Cuánto pagás de Bienes Personales',
+      text: `Sobre una base de **${fmtPesos(baseBruta)}** tributás **${fmtPesos(impuesto)}**: alícuota marginal **${(tasa * 100).toFixed(2)}%** y tasa efectiva **${efectiva.toFixed(2)}%**. Solo el excedente de **${fmtPesos(excedente)}** por encima del mínimo paga impuesto.`,
+      tone: 'warn',
+      icon: '🏛️',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Mínimo no imponible (exento)', value: Math.round(MNI) },
+        { label: 'Excedente gravado', value: Math.round(excedente) },
+      ],
+      prefix: '$',
+      centerValue: fmtPesos(baseBruta),
+      centerLabel: 'Base imponible',
+      ariaLabel: `Base de ${fmtPesos(baseBruta)}: ${fmtPesos(MNI)} exento y ${fmtPesos(excedente)} gravado.`,
+    },
   };
 }

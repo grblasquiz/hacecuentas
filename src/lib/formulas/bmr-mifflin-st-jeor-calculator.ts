@@ -15,6 +15,8 @@ export interface Outputs {
   weight_kg: number;
   height_cm: number;
   formula_used: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Mifflin-St Jeor equation constants (Mifflin et al., Am J Clin Nutr 1990)
@@ -82,12 +84,33 @@ export function compute(i: Inputs): Outputs {
   const activity_lbl = ACTIVITY_LABELS[i.activity] ?? "Sedentary (x1.2)";
   const formula_used = `Mifflin-St Jeor — ${sex_label}, ${activity_lbl}`;
 
+  const bmrR  = Math.round(bmr * 10) / 10;
+  const tdeeR = Math.round(tdee * 10) / 10;
+  const burn  = Math.round((tdeeR - bmrR) * 10) / 10;
+
   return {
-    bmr:             Math.round(bmr * 10) / 10,
-    tdee:            Math.round(tdee * 10) / 10,
+    bmr:             bmrR,
+    tdee:            tdeeR,
     activity_factor: activity_factor,
     weight_kg:       Math.round(weight_kg * 100) / 100,
     height_cm:       Math.round(height_cm * 100) / 100,
     formula_used,
+    _insight: {
+      title: 'What your calories mean',
+      text: `Your body burns **${bmrR} kcal/day** at rest (BMR), and your activity level (×${activity_factor}) adds **${burn} kcal**, for a total daily expenditure of **${tdeeR} kcal/day**.`,
+      tone: 'neutral',
+      icon: '🔥',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'BMR (at rest)', value: bmrR },
+        { label: 'Activity', value: burn },
+      ],
+      prefix: '',
+      centerValue: `${tdeeR} kcal`,
+      centerLabel: 'TDEE',
+      ariaLabel: `Daily calorie expenditure split between BMR (${bmrR} kcal) and activity (${burn} kcal)`,
+    },
   };
 }

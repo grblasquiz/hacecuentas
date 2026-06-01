@@ -12,6 +12,7 @@ export interface Outputs {
   iti: number;
   otros: number;
   _chart?: any;
+  _insight?: any;
 }
 
 /**
@@ -58,5 +59,19 @@ export function gastosEscrituraCompraventa(i: Inputs): Outputs {
     ariaLabel: 'Composición de los gastos de escritura: honorarios, sellos, ITI y otros',
   } : undefined;
 
-  return { gastoTotal, honorarios, sellos, iti, otros, _chart: chart };
+  const pctSobreOperacion = valor > 0 ? (gastoTotal / valor) * 100 : 0;
+  const mayor = partes.length ? partes.reduce((a, b) => (b.value > a.value ? b : a)) : null;
+  const mayorPct = mayor && gastoTotal > 0 ? Math.round((mayor.value / gastoTotal) * 100) : 0;
+  const ladoTxt = esComprador ? 'comprador' : 'vendedor';
+  const insightText = mayor
+    ? `Como **${ladoTxt}** vas a desembolsar **$${gastoTotal.toLocaleString('es-AR')}** en gastos de escritura, un **${pctSobreOperacion.toFixed(1)}%** del valor de la operación. El rubro más pesado es **${mayor.label.toLowerCase()}** (${mayorPct}% del total): presupuestalo aparte del precio.`
+    : `Como **${ladoTxt}** vas a desembolsar **$${gastoTotal.toLocaleString('es-AR')}** en gastos de escritura, un **${pctSobreOperacion.toFixed(1)}%** del valor de la operación. Presupuestalo aparte del precio.`;
+  const insight = {
+    title: 'Cuánto suman los gastos',
+    text: insightText,
+    tone: 'warn' as const,
+    icon: '🏠',
+  };
+
+  return { gastoTotal, honorarios, sellos, iti, otros, _chart: chart, _insight: insight };
 }

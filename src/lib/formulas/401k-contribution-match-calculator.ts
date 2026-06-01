@@ -16,6 +16,8 @@ export interface Outputs {
   limit_status: string;
   year_end_balance: number;
   match_efficiency: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -89,6 +91,24 @@ export function compute(i: Inputs): Outputs {
     matchEfficiency = `⚠️ Partial match — increase contribution by ${uncapturedPct.toFixed(1)}% to capture an additional $${uncapturedDollars.toFixed(0)}/yr in employer match.`;
   }
 
+  // Narrative insight — interprets the real numbers (employer match = free money)
+  const fmt0 = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
+  const matchShare = totalContribution > 0 ? (employerMatch / totalContribution) * 100 : 0;
+  let insightText: string;
+  let insightTone: "good" | "warn" | "neutral";
+  if (matchRate <= 0 || matchCap <= 0) {
+    insightText = `You're setting aside **${fmt0(employeeContribution)}/yr** of your own pay. With no employer match configured, every dollar here is yours alone — consider whether your plan offers a match you haven't entered.`;
+    insightTone = "neutral";
+  } else if (employeeRate >= matchCap) {
+    insightText = `You're capturing the **full employer match of ${fmt0(employerMatch)}/yr** — free money that makes up **${matchShare.toFixed(0)}%** of your **${fmt0(totalContribution)}** total contribution. That's an instant, guaranteed return on top of market growth.`;
+    insightTone = "good";
+  } else {
+    const uncapturedPct = matchCap - employeeRate;
+    const uncapturedDollars = salary * (uncapturedPct / 100) * (matchRate / 100);
+    insightText = `You're leaving **${fmt0(uncapturedDollars)}/yr** in employer match on the table. Raising your deferral by **${uncapturedPct.toFixed(1)}%** of salary would unlock that free money — it's a guaranteed return you can't get anywhere else.`;
+    insightTone = "warn";
+  }
+
   return {
     employee_contribution: parseFloat(employeeContribution.toFixed(2)),
     employer_match: parseFloat(employerMatch.toFixed(2)),
@@ -96,6 +116,24 @@ export function compute(i: Inputs): Outputs {
     irs_limit: irsLimit,
     limit_status: limitStatus,
     year_end_balance: parseFloat(yearEndBalance.toFixed(2)),
-    match_efficiency: matchEfficiency
+    match_efficiency: matchEfficiency,
+    _insight: {
+      title: "What your contribution really means",
+      text: insightText,
+      tone: insightTone,
+      icon: "💰"
+    },
+    // Donut: total annual contribution split into your money vs. employer's match
+    _chart: employerMatch > 0 ? {
+      type: "doughnut",
+      slices: [
+        { label: "Your contribution", value: parseFloat(employeeContribution.toFixed(2)) },
+        { label: "Employer match", value: parseFloat(employerMatch.toFixed(2)) }
+      ],
+      prefix: "$",
+      centerValue: fmt0(totalContribution),
+      centerLabel: "Total / yr",
+      ariaLabel: `Annual 401(k) contribution of ${fmt0(totalContribution)}: ${fmt0(employeeContribution)} from you and ${fmt0(employerMatch)} from your employer's match.`
+    } : undefined
   };
 }

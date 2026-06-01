@@ -19,6 +19,8 @@ export interface Outputs {
   ingreso_mensual_promedio: number;
   cotizacion_mensual_promedio: number;
   tasa_efectiva: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -84,17 +86,49 @@ export function compute(i: Inputs): Outputs {
     ? (total_cotizacion_anual / i.ingreso_bruto_anual) * 100
     : 0;
   
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const afpR = Math.round(cotizacion_afp_base);
+  const comR = Math.round(comision_afp_calculo);
+  const saludR = Math.round(cotizacion_salud_calculo);
+  const cesR = Math.round(cotizacion_cesantia_calculo);
+  const totalR = Math.round(total_cotizacion_anual);
+  const tasaR = Math.round(tasa_efectiva * 100) / 100;
+  const topeAplicado = aplicar_tope && base_80_pct > TOPE_MENSUAL_CLP;
+
+  const _insight = i.ingreso_bruto_anual <= 0 ? undefined : {
+    title: 'Cuánto te descuenta la cotización obligatoria',
+    text: `De tus **${fmtCLP(i.ingreso_bruto_anual)}** brutos anuales, las cotizaciones obligatorias se llevan **${fmtCLP(totalR)}** al año (**${tasaR}%** efectivo, unos **${fmtCLP(cotizacion_mensual_promedio)}**/mes). Te queda un neto de **${fmtCLP(ingreso_neto_anual)}**.${topeAplicado ? ' Tu base quedó **topada en 84,3 UF**, así que la tasa efectiva baja respecto del bruto.' : ''}`,
+    tone: 'warn',
+    icon: '🧾',
+  };
+
+  const _chart = totalR <= 0 ? undefined : {
+    type: 'doughnut',
+    slices: [
+      { label: 'AFP (10%)', value: afpR },
+      { label: 'Salud (7%)', value: saludR },
+      { label: 'Comisión AFP', value: comR },
+      { label: 'Cesantía (0,8%)', value: cesR },
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(totalR),
+    centerLabel: 'cotización/año',
+    ariaLabel: `Composición de la cotización obligatoria anual de ${fmtCLP(totalR)}: AFP ${fmtCLP(afpR)}, salud ${fmtCLP(saludR)}, comisión ${fmtCLP(comR)} y cesantía ${fmtCLP(cesR)}.`,
+  };
+
   return {
     base_cotizable_80_pct: Math.round(base_80_pct),
     base_cotizable_tope: Math.round(base_con_tope),
-    cotizacion_afp: Math.round(cotizacion_afp_base),
-    comision_afp: Math.round(comision_afp_calculo),
-    cotizacion_salud: Math.round(cotizacion_salud_calculo),
-    cotizacion_cesantia: Math.round(cotizacion_cesantia_calculo),
-    total_cotizacion_obligatoria: Math.round(total_cotizacion_anual),
+    cotizacion_afp: afpR,
+    comision_afp: comR,
+    cotizacion_salud: saludR,
+    cotizacion_cesantia: cesR,
+    total_cotizacion_obligatoria: totalR,
     ingreso_neto_anual: Math.round(ingreso_neto_anual),
     ingreso_mensual_promedio: Math.round(ingreso_mensual_promedio),
     cotizacion_mensual_promedio: Math.round(cotizacion_mensual_promedio),
-    tasa_efectiva: Math.round(tasa_efectiva * 100) / 100
+    tasa_efectiva: tasaR,
+    _insight,
+    _chart
   };
 }

@@ -13,6 +13,7 @@ export interface Outputs {
   desgloseUsd: { alojamiento: number; comida: number; transporte: number; extras: number };
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Presupuestos diarios por persona en USD (base: estilo mochilero)
@@ -89,6 +90,13 @@ export function costoMochileroPorPais(i: Inputs): Outputs {
     ariaLabel: 'Composición del presupuesto diario por persona: alojamiento, comida, transporte y extras',
   };
 
+  const insight = {
+    title: 'Cuánto llevar y dónde ajustar',
+    text: `Para ${dias} días en ${pais} con estilo ${estilo} necesitás unos **US$ ${Math.round(total).toLocaleString()}**${personas > 1 ? ` entre ${personas} personas` : ''}, a razón de **US$ ${Math.round(diario)}/día por persona**. El **alojamiento** es el rubro más caro (**US$ ${Math.round(alojamiento)}/día**, 40%): bajar a hostels o reservar con anticipación es lo que más mueve el total.`,
+    tone: 'neutral' as const,
+    icon: '🎒',
+  };
+
   return {
     costoDiarioUsd: Math.round(diario),
     costoTotalUsd: Math.round(total),
@@ -101,5 +109,6 @@ export function costoMochileroPorPais(i: Inputs): Outputs {
     },
     resumen: `Presupuesto estimado en ${pais} (estilo ${estilo}): **US$ ${Math.round(diario)} por día por persona**. Total ${dias} días × ${personas} personas: **US$ ${Math.round(total).toLocaleString()}**.`,
     _chart: chart,
+    _insight: insight,
   };
 }

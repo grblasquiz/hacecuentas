@@ -16,6 +16,7 @@ export interface Outputs {
   obligacion_declarativa: string;
   retenciones_estimadas: number;
   comparativa_entidades: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -86,6 +87,24 @@ export function compute(i: Inputs): Outputs {
     comparativa_entidades = `${i.banco_seleccionado}: Comisión USD ${comision_total_periodo.toFixed(2)}, interés neto USD ${interes_neto.toFixed(2)}. Compara con Charles Schwab (sin comisión, mejor tasa) o Bancolombia (cuenta inversión con comisiones ajustables).`;
   }
   
+  // Insight: ¿el rendimiento neto es positivo o las comisiones se comen el interés?
+  const fmtUsd = (x: number) => 'USD ' + x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  let _insight: any;
+  if (rendimiento_neto_pct < 0) {
+    _insight = {
+      title: 'Las comisiones te dejan en rojo',
+      text: `Con esta cuenta el saldo neto baja a **${fmtUsd(saldo_neto_usd)}**: las comisiones (${fmtUsd(comision_total_periodo)}) superan al interés neto, dejando un rendimiento de **${rendimiento_neto_pct.toFixed(2)}%** en ${i.meses_a_calcular} meses. Una cuenta sin comisión y mejor tasa te conviene mucho más.`,
+      tone: 'warn',
+      icon: '📉',
+    };
+  } else {
+    _insight = {
+      title: 'Tu rendimiento neto',
+      text: `Tras descontar comisiones (${fmtUsd(comision_total_periodo)}) y retención del 4% (${fmtUsd(retenciones_estimadas_usd)}), tu saldo queda en **${fmtUsd(saldo_neto_usd)}**, un rendimiento neto del **${rendimiento_neto_pct.toFixed(2)}%** en ${i.meses_a_calcular} meses.` + (i.monto_usd >= 10000 ? ` Recordá que con USD ${i.monto_usd.toFixed(0)} estás **obligado a declarar** ante la DIAN.` : ''),
+      tone: 'good',
+      icon: '💵',
+    };
+  }
   return {
     comision_mensual_usd: parseFloat(comision_mensual_usd.toFixed(2)),
     comision_total_periodo: parseFloat(comision_total_periodo.toFixed(2)),
@@ -95,6 +114,7 @@ export function compute(i: Inputs): Outputs {
     rendimiento_neto_pct: parseFloat(rendimiento_neto_pct.toFixed(2)),
     obligacion_declarativa,
     retenciones_estimadas: parseFloat(retenciones_estimadas.toFixed(0)),
-    comparativa_entidades
+    comparativa_entidades,
+    _insight
   };
 }

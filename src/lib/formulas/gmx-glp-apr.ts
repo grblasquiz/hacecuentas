@@ -1,6 +1,6 @@
 /** GMX GLP APR */
 export interface Inputs { glpAmount: number; glpPriceUsd: number; ethRewardApr: number; escGmxApr: number; months: number; }
-export interface Outputs { totalApr: number; ethRewardsUsd: number; escGmxUsd: number; totalUsd: number; monthlyUsd: number; explicacion: string; _chart?: any; }
+export interface Outputs { totalApr: number; ethRewardsUsd: number; escGmxUsd: number; totalUsd: number; monthlyUsd: number; explicacion: string; _chart?: any; _insight?: any; }
 export function gmxGlpApr(i: Inputs): Outputs {
   const amt = Number(i.glpAmount);
   const price = Number(i.glpPriceUsd) || 1;

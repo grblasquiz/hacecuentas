@@ -1,6 +1,6 @@
 /** Calculadora de Breakeven por Comisiones y Spread */
 export interface Inputs { precioEntrada: number; tamanoPosicion: number; comisionEntradaPorc: number; comisionSalidaPorc: number; spreadPorcentaje: number; direccion: 'long'|'short'; }
-export interface Outputs { precioBreakeven: number; movimientoNecesario: number; costoTotalFees: number; resumen: string; _chart?: any; }
+export interface Outputs { precioBreakeven: number; movimientoNecesario: number; costoTotalFees: number; resumen: string; _chart?: any; _insight?: any; }
 export function breakevenTradeComisiones(i: Inputs): Outputs {
   const ent = Number(i.precioEntrada); const tam = Number(i.tamanoPosicion);
   const fe = Number(i.comisionEntradaPorc)/100;
@@ -25,11 +25,21 @@ export function breakevenTradeComisiones(i: Inputs): Outputs {
     centerLabel: 'Costo total',
     ariaLabel: 'Desglose del costo total: comisión de entrada, de salida y spread.',
   } : undefined;
+  const movPct = costoPct * 100;
+  const mayor = rawSlices.length ? rawSlices.reduce((a, b) => (b.value > a.value ? b : a)) : null;
+  const insightTone = movPct >= 0.8 ? 'warn' as const : movPct >= 0.3 ? 'neutral' as const : 'good' as const;
+  const insight = {
+    title: 'Cuánto tenés que mover para no perder',
+    text: `Antes de ganar un peso, el precio tiene que moverse **${movPct.toFixed(2)}%** a tu favor solo para cubrir comisiones y spread (**$${costoTotal.toFixed(2)}**).` + (mayor ? ` El mayor mordisco es **${mayor.label.toLowerCase()}** (**$${mayor.value.toFixed(2)}**).` : ''),
+    tone: insightTone,
+    icon: '⚖️',
+  };
   return {
     precioBreakeven: Number(be.toFixed(4)),
     movimientoNecesario: Number((costoPct * 100).toFixed(3)),
     costoTotalFees: Number(costoTotal.toFixed(2)),
     resumen: `Breakeven a ${be.toFixed(2)} (mov ${(costoPct*100).toFixed(2)}%). Costo total: ${costoTotal.toFixed(2)}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

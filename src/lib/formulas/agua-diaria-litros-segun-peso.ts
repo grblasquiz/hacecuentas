@@ -10,6 +10,8 @@ export interface Outputs {
   glasses_per_day: number;
   bottles_per_day: number;
   breakdown: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Constantes basadas en recomendaciones OMS / IOM (2004-2006)
@@ -82,10 +84,47 @@ export function compute(i: Inputs): Outputs {
   }
   lines.push(`Total: ${totalMl.toFixed(0)} ml ≈ ${liters.toFixed(2)} L/día`);
 
+  // Insight dinámico: cuánto pesan los extras sobre la base
+  const extrasMl = exerciseMl + climateMl + specialMl;
+  const extrasPct = totalMl > 0 ? Math.round((extrasMl / totalMl) * 100) : 0;
+  const insightText = extrasMl > 0
+    ? `Necesitás **${liters.toFixed(2)} L/día** (${glasses} vasos): **${baseMl.toFixed(0)} ml** de base por tu peso más **${extrasMl.toFixed(0)} ml** extra (${extrasPct}%) por ejercicio, clima o condición especial.`
+    : `Necesitás **${liters.toFixed(2)} L/día** (${glasses} vasos), todo correspondiente a tu necesidad basal de **${BASE_ML_PER_KG} ml por kg** de peso.`;
+  const _insight = {
+    title: "Tu hidratación diaria",
+    text: insightText,
+    tone: "neutral",
+    icon: "💧",
+  };
+
+  // Donut: las porciones suman el total exacto (no incluye el total como porción)
+  const slices: { label: string; value: number }[] = [
+    { label: "Base por peso", value: Math.round(baseMl) },
+  ];
+  if (exerciseMl > 0) slices.push({ label: "Ejercicio", value: Math.round(exerciseMl) });
+  if (climateMl > 0) slices.push({ label: "Clima caluroso", value: climateMl });
+  if (specialMl > 0) {
+    slices.push({
+      label: i.special_condition === "pregnant" ? "Embarazo" : "Lactancia",
+      value: specialMl,
+    });
+  }
+  const _chart = {
+    type: "doughnut",
+    slices,
+    prefix: "",
+    suffix: " ml",
+    centerValue: `${liters.toFixed(2)} L`,
+    centerLabel: "por día",
+    ariaLabel: `Composición de tu necesidad de agua: ${totalMl.toFixed(0)} ml totales por día`,
+  };
+
   return {
     liters_per_day: Math.round(liters * 100) / 100,
     glasses_per_day: glasses,
     bottles_per_day: bottles,
-    breakdown: lines.join(" | ")
+    breakdown: lines.join(" | "),
+    _insight,
+    _chart
   };
 }

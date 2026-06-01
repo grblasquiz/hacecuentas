@@ -19,6 +19,8 @@ export interface Outputs {
   composicion_detalle: string;
   margen_seguridad: number;
   comparacion_cadenas: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -105,6 +107,50 @@ export function compute(i: Inputs): Outputs {
     `- Unimarc: $${unimarc_price.toLocaleString('es-CL')} (-3%)\n` +
     `Ahorro comprando en Unimarc vs Líder: $${ahorro_unimarc_vs_lider.toLocaleString('es-CL')}/mes (~${Math.round((ahorro_unimarc_vs_lider / lider_price) * 100)}%).`;
 
+  // Insight narrativo
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  let _insight: any;
+  if ((i.salario_mensual || 0) > 0) {
+    const tone = porcentaje_salario >= 60 ? 'warn' : porcentaje_salario >= 35 ? 'neutral' : 'good';
+    const lectura = porcentaje_salario >= 60
+      ? `se come **${porcentaje_salario}%** de tu sueldo: la sola comida es la mayor presión del presupuesto`
+      : porcentaje_salario >= 35
+        ? `representa **${porcentaje_salario}%** de tu ingreso, un peso considerable pero manejable`
+        : `equivale a **${porcentaje_salario}%** de tu sueldo, dejando margen para el resto de gastos`;
+    _insight = {
+      title: 'Qué significa este monto',
+      text: `Alimentar a ${personas} ${personas === 1 ? 'persona' : 'personas'} cuesta **${fmt(cba_ajustada)}/mes** en ${i.cadena_supermercado === 'promedio' ? 'un super promedio' : 'esa cadena'} y ${lectura}.`,
+      tone,
+      icon: '🛒'
+    };
+  } else {
+    _insight = {
+      title: 'Qué significa este monto',
+      text: `La canasta básica alimentaria de tu hogar (${personas} ${personas === 1 ? 'persona' : 'personas'}) suma **${fmt(cba_ajustada)}/mes**, o sea **${fmt(cba_por_persona)}** por persona. Sumá tu sueldo para ver qué porción se lleva.`,
+      tone: 'neutral',
+      icon: '🛒'
+    };
+  }
+
+  // Gráfico: composición de la CBA por grupo etario (suma cba_total)
+  const slicesRaw = [
+    { label: 'Adultos', value: (i.adultos || 0) * CBA_ADULTO },
+    { label: 'Adolescentes', value: (i.adolescentes || 0) * CBA_ADOLESCENTE },
+    { label: 'Niños', value: (i.ninos || 0) * CBA_NINO },
+    { label: 'Menores', value: (i.menores || 0) * CBA_MENOR }
+  ].filter(s => s.value > 0).map(s => ({ label: s.label, value: Math.round(s.value) }));
+  let _chart: any;
+  if (slicesRaw.length >= 2) {
+    _chart = {
+      type: 'doughnut',
+      slices: slicesRaw,
+      prefix: '$',
+      centerValue: fmt(cba_total),
+      centerLabel: 'CBA mensual',
+      ariaLabel: `Composición de la canasta básica alimentaria por grupo etario, total ${fmt(cba_total)} al mes`
+    };
+  }
+
   return {
     cba_total: Math.round(cba_total),
     cbt_total: Math.round(cbt_total),
@@ -115,6 +161,8 @@ export function compute(i: Inputs): Outputs {
     personas_totales: personas,
     composicion_detalle,
     margen_seguridad,
-    comparacion_cadenas
+    comparacion_cadenas,
+    _insight,
+    _chart
   };
 }

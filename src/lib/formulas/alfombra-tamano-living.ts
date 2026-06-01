@@ -1,5 +1,5 @@
 export interface Inputs { largoLiving: number; anchoLiving: number; distribucion?: string; }
-export interface Outputs { largoAlfombra: number; anchoAlfombra: number; tamanoComercial: string; regla: string; }
+export interface Outputs { largoAlfombra: number; anchoAlfombra: number; tamanoComercial: string; regla: string; _insight?: any; }
 const TAMANOS = [[1.2, 1.8], [1.6, 2.3], [2, 3], [2.4, 3.4], [2.5, 3.5], [3, 4], [3.5, 4.5]];
 export function alfombraTamanoLiving(i: Inputs): Outputs {
   const largo = Number(i.largoLiving); const ancho = Number(i.anchoLiving);
@@ -12,5 +12,11 @@ export function alfombraTamanoLiving(i: Inputs): Outputs {
   else { factor = 0.5; regla = 'Al pie de la cama: 2/3 del largo, que sobresalga 60 cm de cada lado.'; }
   const la = Number((largo * factor).toFixed(1)); const aa = Number((ancho * factor).toFixed(1));
   const comercial = TAMANOS.reduce((prev, curr) => Math.abs(curr[0]*curr[1] - la*aa) < Math.abs(prev[0]*prev[1] - la*aa) ? curr : prev);
-  return { largoAlfombra: la, anchoAlfombra: aa, tamanoComercial: `${comercial[0]} × ${comercial[1]} m`, regla };
+  const _insight = {
+    title: 'Medida ideal para tu living',
+    text: `Para un ambiente de **${largo} × ${ancho} m**, la alfombra ideal mide aprox. **${la} × ${aa} m**. La medida comercial más cercana es **${comercial[0]} × ${comercial[1]} m**, fácil de conseguir.`,
+    tone: 'neutral',
+    icon: '🟫',
+  };
+  return { largoAlfombra: la, anchoAlfombra: aa, tamanoComercial: `${comercial[0]} × ${comercial[1]} m`, regla, _insight };
 }

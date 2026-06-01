@@ -10,6 +10,7 @@ export interface Outputs {
   temperatura: string;
   equipamiento: string;
   cambioAguaFrecuencia: string;
+  _insight?: any;
 }
 
 export function aguaPezBettaLitros(i: Inputs): Outputs {
@@ -44,11 +45,22 @@ export function aguaPezBettaLitros(i: Inputs): Outputs {
       ? '25% cada semana'
       : '20-25% por semana';
 
+  const machosJuntos = (tipo === 'macho') && cant > 1;
+  const _insight = {
+    title: machosJuntos ? 'Ojo: bettas machos juntos' : 'El acuario de tu betta',
+    text: machosJuntos
+      ? `Mínimo **${Math.round(min)} L** (ideal **${Math.round(ideal)} L**), pero **${cant} machos no pueden convivir**: pelean a muerte. Necesitás peceras separadas.`
+      : `Tu betta necesita mínimo **${Math.round(min)} L**, ideal **${Math.round(ideal)} L**. Olvidate del recipiente chico: con más agua, calefactor a 25-27°C y filtro suave vive mucho mejor.`,
+    tone: machosJuntos ? 'warn' : 'neutral',
+    icon: '🐟',
+  };
+
   return {
     litrosMinimo: Math.round(min),
     litrosIdeal: Math.round(ideal),
     temperatura: '25-27°C constante. Por debajo de 22°C enferman.',
     equipamiento,
     cambioAguaFrecuencia: cambio,
+    _insight,
   };
 }

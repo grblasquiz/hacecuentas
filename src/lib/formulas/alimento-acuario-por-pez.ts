@@ -11,6 +11,7 @@ export interface Outputs {
   tipoAlimento: string;
   complementos: string;
   ayunoSugerido: string;
+  _insight?: any;
 }
 
 export function alimentoAcuarioPorPez(i: Inputs): Outputs {
@@ -26,6 +27,12 @@ export function alimentoAcuarioPorPez(i: Inputs): Outputs {
       tipoAlimento: 'Sin comida — ayuno terapéutico (1 día/semana o hasta 3 días seguidos).',
       complementos: 'Mantené temperatura, filtro y luz normales.',
       ayunoSugerido: 'Este es el día de ayuno. Retomá alimentación normal mañana.',
+      _insight: {
+        title: 'Día de ayuno',
+        text: 'Hoy **no des alimento**: el ayuno terapéutico ayuda a la digestión y mejora la calidad del agua. Retomá la alimentación normal mañana.',
+        tone: 'neutral',
+        icon: '🐟',
+      },
     };
   }
 
@@ -60,11 +67,20 @@ export function alimentoAcuarioPorPez(i: Inputs): Outputs {
 
   const ayuno = estado === 'cria' ? 'Sin ayuno en alevines.' : '1 día de ayuno por semana para adultos sanos.';
 
+  const porcionFinal = Math.round(porcion * 100) / 100;
+  const _insight = {
+    title: 'Tu ración diaria',
+    text: `Para **${cant} ${cant === 1 ? 'pez' : 'peces'}** dales **${tomas} toma${tomas !== 1 ? 's' : ''} por día** de aprox. **${porcionFinal.toLocaleString('es-AR')} g** cada una. Ofrecé sólo lo que coman en **1-2 minutos**: de más comida ensucia el agua.`,
+    tone: 'neutral',
+    icon: '🐠',
+  };
+
   return {
     tomasDia: tomas,
-    porcionGr: Math.round(porcion * 100) / 100,
+    porcionGr: porcionFinal,
     tipoAlimento: tipo,
     complementos,
     ayunoSugerido: ayuno,
+    _insight,
   };
 }

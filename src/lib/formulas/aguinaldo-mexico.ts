@@ -20,6 +20,7 @@ export interface AguinaldoMexicoOutputs {
   formula: string;
   explicacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // ISR 2026 Mexico - tabla mensual
@@ -108,6 +109,27 @@ export function aguinaldoMexico(inputs: AguinaldoMexicoInputs): AguinaldoMexicoO
     ariaLabel: `Composición del aguinaldo bruto: neto ${Math.round(aguinaldoNeto)}, ISR retenido ${Math.round(isrAguinaldo)}.`,
   };
 
+  // Insight narrativo: cuánto neto cobrás y qué proporción del bruto se lleva el ISR.
+  const isrPct = aguinaldoBruto > 0 ? (isrAguinaldo / aguinaldoBruto) * 100 : 0;
+  const netoRound = Math.round(aguinaldoNeto);
+  const isrRound = Math.round(isrAguinaldo);
+  let insight: any;
+  if (isrRound <= 0) {
+    insight = {
+      title: 'Aguinaldo libre de ISR',
+      text: `Cobrás los **$${netoRound.toLocaleString('es-MX')} MXN** completos: tu aguinaldo no supera las 30 UMA exentas ($${Math.round(umaDiario2026 * 30).toLocaleString('es-MX')}), así que no se retiene ISR.`,
+      tone: 'good' as const,
+      icon: '🎉',
+    };
+  } else {
+    insight = {
+      title: 'El ISR te descuenta del aguinaldo',
+      text: `De **$${Math.round(aguinaldoBruto).toLocaleString('es-MX')}** brutos, el ISR retiene **$${isrRound.toLocaleString('es-MX')}** (el **${isrPct.toFixed(1)}%**) y te quedan **$${netoRound.toLocaleString('es-MX')} MXN** netos. Solo se grava lo que excede las 30 UMA exentas.`,
+      tone: 'warn' as const,
+      icon: '🎄',
+    };
+  }
+
   return {
     aguinaldoBruto: Math.round(aguinaldoBruto),
     exentoIsr: Math.round(exentoIsr),
@@ -117,5 +139,6 @@ export function aguinaldoMexico(inputs: AguinaldoMexicoInputs): AguinaldoMexicoO
     formula,
     explicacion,
     _chart: chart,
+    _insight: insight,
   };
 }

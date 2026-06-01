@@ -11,6 +11,7 @@ export interface Outputs {
   cambioAguaHoras: string;
   bebederoSugerido: string;
   senalesDeshidratacion: string;
+  _insight?: any;
 }
 
 export function aguaPeriquitoDiaria(i: Inputs): Outputs {
@@ -40,11 +41,20 @@ export function aguaPeriquitoDiaria(i: Inputs): Outputs {
 
   const senales = 'Plumas erizadas, ojos hundidos, letargo, heces muy secas, piel arrugada en patas. Es emergencia.';
 
+  const dosVeces = calor || criando;
+  const _insight = {
+    title: cant > 1 ? 'Agua para tus periquitos' : 'Agua para tu periquito',
+    text: `${cant > 1 ? `Tus ${cant} periquitos toman` : 'Tu periquito toma'} ~**${Math.round(total * 10) / 10} ml por día** (**${Math.round(porAve * 10) / 10} ml** cada uno).${dosVeces ? ` Por ${calor && criando ? 'el calor y la cría' : calor ? 'el calor' : 'la cría'} renová el agua **2 veces al día** para que esté siempre fresca.` : ' Cambiá el agua todos los días, aunque parezca limpia.'}`,
+    tone: dosVeces ? 'warn' : 'neutral',
+    icon: '🦜',
+  };
+
   return {
     aguaDiaMl: Math.round(total * 10) / 10,
     aguaPorAve: Math.round(porAve * 10) / 10,
     cambioAguaHoras: cambio,
     bebederoSugerido: bebedero,
     senalesDeshidratacion: senales,
+    _insight,
   };
 }

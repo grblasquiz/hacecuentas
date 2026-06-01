@@ -12,6 +12,8 @@ export interface Outputs {
   chiller_watts: number;
   alerta_temp: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Parámetros biológicos recomendados para Ambystoma mexicanum
@@ -110,6 +112,28 @@ export function compute(i: Inputs): Outputs {
     `temperatura objetivo ${TEMP_OPTIMA_MIN}-${TEMP_OPTIMA_MAX} °C. ` +
     chillerTexto;
 
+  // --- Insight dinámico según zona térmica ---
+  let insightTone: string;
+  let insightText: string;
+  let insightIcon: string;
+  if (temp_ambiente <= TEMP_OPTIMA_MAX) {
+    insightTone = "good";
+    insightIcon = "🦎";
+    insightText = `Tu ambiente a **${temp_ambiente} °C** está dentro del rango óptimo (${TEMP_OPTIMA_MIN}-${TEMP_OPTIMA_MAX} °C): no necesitás chiller. Para ${cantidad} ejemplar(es) apuntá a **${litros_recomendados} L** y un filtro de caudal suave (≤ ${caudal_max} L/h).`;
+  } else if (temp_ambiente <= TEMP_ESTRES) {
+    insightTone = "warn";
+    insightIcon = "🌡️";
+    insightText = `A **${temp_ambiente} °C** estás por encima del óptimo (${TEMP_OPTIMA_MIN}-${TEMP_OPTIMA_MAX} °C) pero todavía sin estrés grave. Conviene un chiller de **≥ ${chiller_watts} W** o enfriamiento activo para no acercarte al límite de ${TEMP_PELIGRO} °C.`;
+  } else if (temp_ambiente <= TEMP_PELIGRO) {
+    insightTone = "warn";
+    insightIcon = "🌡️";
+    insightText = `A **${temp_ambiente} °C** tu axolotl sufre estrés térmico. Necesitás un chiller de **≥ ${chiller_watts} W** para bajar el agua al rango ${TEMP_OPTIMA_MIN}-${TEMP_OPTIMA_MAX} °C antes de superar los ${TEMP_PELIGRO} °C de peligro.`;
+  } else {
+    insightTone = "warn";
+    insightIcon = "🔴";
+    insightText = `**${temp_ambiente} °C** supera el límite de peligro de ${TEMP_PELIGRO} °C: la vida del axolotl está en riesgo. Un chiller de **≥ ${chiller_watts} W** es imprescindible para llevar el agua al rango seguro de ${TEMP_OPTIMA_MIN}-${TEMP_OPTIMA_MAX} °C.`;
+  }
+
   return {
     litros_minimos,
     litros_recomendados,
@@ -118,5 +142,24 @@ export function compute(i: Inputs): Outputs {
     chiller_watts,
     alerta_temp,
     resumen,
+    _insight: {
+      title: "Lectura térmica",
+      text: insightText,
+      tone: insightTone,
+      icon: insightIcon,
+    },
+    _chart: {
+      type: "scale",
+      marker: temp_ambiente,
+      markerLabel: `${temp_ambiente} °C ambiente`,
+      min: 10,
+      segments: [
+        { nombre: `Óptimo (${TEMP_OPTIMA_MIN}-${TEMP_OPTIMA_MAX})`, max: TEMP_OPTIMA_MAX, color: "#34d399", colorDark: "#10b981" },
+        { nombre: "Tolerable", max: TEMP_ESTRES, color: "#fbbf24", colorDark: "#f59e0b" },
+        { nombre: "Estrés", max: TEMP_PELIGRO, color: "#fb923c", colorDark: "#ea580c" },
+        { nombre: "Peligro", max: Math.max(28, Math.ceil(temp_ambiente) + 1), color: "#f87171", colorDark: "#dc2626" },
+      ],
+      ariaLabel: `Escala térmica del axolotl. Temperatura ambiente ${temp_ambiente} °C; rango óptimo ${TEMP_OPTIMA_MIN}-${TEMP_OPTIMA_MAX} °C, peligro por encima de ${TEMP_PELIGRO} °C.`,
+    },
   };
 }

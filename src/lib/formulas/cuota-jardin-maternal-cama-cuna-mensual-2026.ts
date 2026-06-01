@@ -14,6 +14,7 @@ export interface Outputs {
   costo_anual_total: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -85,6 +86,12 @@ export function compute(i: Inputs): Outputs {
       detalle:
         "Los jardines estatales son gratuitos, pero tienen vacantes muy limitadas. " +
         "Anotate en lista de espera desde el embarazo.",
+      _insight: {
+        title: "Gratis, pero con cupo",
+        text: "El jardín **estatal no tiene costo de cuota ni matrícula**, pero las vacantes son muy limitadas. Anotate en lista de espera lo antes posible y tené un plan B privado por si no entrás.",
+        tone: "neutral",
+        icon: "🍼",
+      },
     };
   }
 
@@ -145,6 +152,15 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: "Composición del costo anual del jardín maternal: suma de cuotas, extras mensuales y matrícula.",
   };
 
+  const costoMensualReal = costo_anual_total / meses;
+  const pctMatricula = costo_anual_total > 0 ? Math.round((matricula / costo_anual_total) * 100) : 0;
+  const insight = {
+    title: "Lo que cuesta de verdad por mes",
+    text: `Sumando cuotas, extras y matrícula, el jardín te sale **$${Math.round(costoMensualReal).toLocaleString("es-AR")}/mes** efectivos sobre el año (no solo la cuota de **$${Math.round(cuota_mensual).toLocaleString("es-AR")}**). La matrícula de **$${Math.round(matricula).toLocaleString("es-AR")}** es un pago inicial de golpe y pesa **${pctMatricula}%** del total anual: presupuestala aparte.`,
+    tone: "neutral",
+    icon: "🍼",
+  };
+
   return {
     cuota_mensual: Math.round(cuota_mensual),
     matricula: Math.round(matricula),
@@ -152,5 +168,6 @@ export function compute(i: Inputs): Outputs {
     costo_anual_total: Math.round(costo_anual_total),
     detalle,
     _chart: chart,
+    _insight: insight,
   };
 }
