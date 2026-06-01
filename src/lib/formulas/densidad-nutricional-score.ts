@@ -16,6 +16,7 @@ export interface DensidadNutricionalScoreOutputs {
   clasificacion: string;
   nutrientesPositivos: string;
   nutrientesNegativos: string;
+  _chart?: any;
 }
 
 export function densidadNutricionalScore(inputs: DensidadNutricionalScoreInputs): DensidadNutricionalScoreOutputs {
@@ -38,10 +39,27 @@ export function densidadNutricionalScore(inputs: DensidadNutricionalScoreInputs)
   else if (score >= 20) clasif = 'Moderada';
   else clasif = 'Calorie-dense ⚠️ (vacía)';
 
+  const scoreFinal = Number(score.toFixed(0));
+  const chart = {
+    type: 'scale' as const,
+    marker: scoreFinal,
+    markerLabel: 'Tu score: ' + scoreFinal,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Vacía', max: 20, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Moderada', max: 50, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Densa', max: 70, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Muy densa', max: 100, color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: 'Escala de densidad nutricional de 0 a 100',
+  };
+
   return {
-    score: Number(score.toFixed(0)),
+    score: scoreFinal,
     clasificacion: clasif,
     nutrientesPositivos: `Proteína ${prot} g + fibra ${fibra} g`,
     nutrientesNegativos: `Azúcar ${azu} g + sodio ${sodio} mg + grasa sat ${gsat} g`,
+    _chart: chart,
   };
 }

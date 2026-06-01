@@ -13,6 +13,7 @@ export interface Outputs {
   costoMensualTotal: number;
   costoAnualTotal: number;
   ratioSueldoCosto: number;
+  _chart?: any;
 }
 
 // Alícuotas patronales 2026 (aproximadas)
@@ -40,6 +41,21 @@ export function costoLaboral(i: Inputs): Outputs {
   const costoAnual = costoMensual * 12;
   const ratio = costoMensual / bruto;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Sueldo bruto', value: Math.round(bruto) },
+      { label: 'Cargas patronales', value: Math.round(cargas) },
+      { label: 'SAC', value: Math.round(sacMensual) },
+      { label: 'Vacaciones', value: Math.round(vacaciones) },
+      { label: 'ART', value: Math.round(artMonto) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(costoMensual).toLocaleString('es-AR'),
+    centerLabel: 'Costo/mes',
+    ariaLabel: 'Composición del costo laboral mensual: sueldo bruto, cargas patronales, SAC, vacaciones y ART.',
+  };
+
   return {
     sueldoBruto: Math.round(bruto),
     cargasPatronales: Math.round(cargas),
@@ -49,5 +65,6 @@ export function costoLaboral(i: Inputs): Outputs {
     costoMensualTotal: Math.round(costoMensual),
     costoAnualTotal: Math.round(costoAnual),
     ratioSueldoCosto: Number(ratio.toFixed(2)),
+    _chart: chart,
   };
 }

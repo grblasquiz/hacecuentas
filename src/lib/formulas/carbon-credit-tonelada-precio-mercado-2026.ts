@@ -1,6 +1,6 @@
 /** Precio tonelada CO2 por mercado y proyecto (2026) */
 export interface Inputs { mercado: 'eu_ets' | 'verra_vcs' | 'gold_standard' | 'voluntary'; tipoProyecto: 'forestacion' | 'biochar' | 'dac' | 'cocinas' | 'renovables'; toneladas: number; feeBrokerPct: number; }
-export interface Outputs { precioPorToneladaUsd: number; subtotalUsd: number; feeUsd: number; totalUsd: number; explicacion: string; }
+export interface Outputs { precioPorToneladaUsd: number; subtotalUsd: number; feeUsd: number; totalUsd: number; explicacion: string; _chart?: any; }
 export function carbonCreditToneladaPrecioMercado2026(i: Inputs): Outputs {
   const ton = Number(i.toneladas);
   const fee = Number(i.feeBrokerPct) / 100;
@@ -16,11 +16,23 @@ export function carbonCreditToneladaPrecioMercado2026(i: Inputs): Outputs {
   const subtotal = precio * ton;
   const feeUsd = subtotal * fee;
   const total = subtotal + feeUsd;
+  const chart = feeUsd > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Créditos', value: Number(subtotal.toFixed(2)) },
+      { label: 'Fee broker', value: Number(feeUsd.toFixed(2)) },
+    ],
+    prefix: 'USD ',
+    centerValue: 'USD ' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del costo: créditos de carbono más fee del broker.',
+  } : undefined;
   return {
     precioPorToneladaUsd: precio,
     subtotalUsd: Number(subtotal.toFixed(2)),
     feeUsd: Number(feeUsd.toFixed(2)),
     totalUsd: Number(total.toFixed(2)),
     explicacion: `${ton} t CO2 en ${i.mercado} (${i.tipoProyecto}) a USD ${precio}/t = USD ${subtotal.toLocaleString('es-AR')} + fee broker ${(fee * 100).toFixed(1)}% (USD ${feeUsd.toFixed(2)}) = USD ${total.toLocaleString('es-AR')}.`,
+    _chart: chart,
   };
 }

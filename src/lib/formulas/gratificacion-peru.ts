@@ -18,6 +18,7 @@ export interface Outputs {
   gratificacionTotal: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 export function gratificacionPeru(i: Inputs): Outputs {
@@ -49,6 +50,18 @@ export function gratificacionPeru(i: Inputs): Outputs {
   const formula = `Gratificación = (S/${remuneracionComputable.toFixed(2)} / 6) × ${meses} + 9% = S/${gratificacionTotal.toFixed(2)}`;
   const explicacion = `Gratificación ${periodoStr} (semestre ${semestre}): remuneración computable S/${remuneracionComputable.toFixed(2)}${tieneAsignacion ? ` (incluye asignación familiar)` : ''}. Proporcional: S/${gratificacionProporcional.toFixed(2)} (${meses} meses, ${dias} días). Bonificación extraordinaria 9%: S/${bonificacion9Porc.toFixed(2)}. Total a recibir: S/${gratificacionTotal.toFixed(2)}. La gratificación NO está afecta a descuentos (ONP/AFP, EsSalud). Se paga en la primera quincena de ${periodo === 'julio' ? 'julio' : 'diciembre'}.`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Gratificación', value: Number(gratificacionProporcional.toFixed(2)) },
+      { label: 'Bonificación 9%', value: Number(bonificacion9Porc.toFixed(2)) },
+    ],
+    prefix: 'S/',
+    centerValue: 'S/' + Math.round(gratificacionTotal).toLocaleString('es-PE'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición de la gratificación: proporcional más bonificación extraordinaria del 9%',
+  };
+
   return {
     remuneracionComputable: Number(remuneracionComputable.toFixed(2)),
     gratificacionProporcional: Number(gratificacionProporcional.toFixed(2)),
@@ -56,5 +69,6 @@ export function gratificacionPeru(i: Inputs): Outputs {
     gratificacionTotal: Number(gratificacionTotal.toFixed(2)),
     formula,
     explicacion,
+    _chart: chart,
   };
 }

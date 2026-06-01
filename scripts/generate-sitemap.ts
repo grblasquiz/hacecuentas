@@ -362,7 +362,14 @@ function loadState(): { state: Map<string, string>; source: 'state-file' | 'xml-
     }
   }
   const fromXml = bootstrapStateFromXmls();
-  if (fromXml.size > 0) return { state: fromXml, source: 'xml-bootstrap' };
+  if (fromXml.size > 0) {
+    // Tripwire: estamos SIN el state file persistido. El cap anti-churn arranca
+    // del XML público (mejor que nada) pero si esto pasa en CI es señal de que
+    // db/sitemap-state.json se perdió/gitignoreó — restaurarlo de git.
+    console.warn(`[sitemap] ⚠ sin db/sitemap-state.json — bootstrap desde ${fromXml.size} URLs de XMLs públicos. db/sitemap-state.json DEBE estar trackeado en git (es el estado anti-churn). Ver db/README.md.`);
+    return { state: fromXml, source: 'xml-bootstrap' };
+  }
+  console.warn('[sitemap] ⚠ sin state file ni XMLs públicos — modo FRESH: lastmod sin cap anti-churn. Esperable solo en repo limpio; en CI/prod esto puede INFLAR el sitemap (regla #1 SEO). Ver db/README.md.');
   return { state: new Map(), source: 'fresh' };
 }
 

@@ -1,6 +1,6 @@
 /** Calculadora de cuota de crédito UVA */
 export interface Inputs { montoPrestamoUVAs: number; tasaAnual: number; plazoAnios: number; valorUVAHoy: number; }
-export interface Outputs { cuotaPesos: number; cuotaUVAs: number; totalPagado: number; interesesTotales: number; }
+export interface Outputs { cuotaPesos: number; cuotaUVAs: number; totalPagado: number; interesesTotales: number; _chart?: any; }
 
 export function creditoUvaCuotaActual(i: Inputs): Outputs {
   const monto = Number(i.montoPrestamoUVAs);
@@ -27,10 +27,23 @@ export function creditoUvaCuotaActual(i: Inputs): Outputs {
   const interesesTotales = totalPagado - monto;
   const cuotaPesos = cuotaUVAs * uva;
 
+  const chart = interesesTotales > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital (UVAs)', value: Math.round(monto) },
+      { label: 'Intereses (UVAs)', value: Math.round(interesesTotales) },
+    ],
+    prefix: '',
+    centerValue: Math.round(totalPagado).toLocaleString('es-AR') + ' UVAs',
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del total a pagar del crédito UVA: capital más intereses',
+  } : undefined;
+
   return {
     cuotaPesos: Math.round(cuotaPesos),
     cuotaUVAs: Math.round(cuotaUVAs * 100) / 100,
     totalPagado: Math.round(totalPagado),
     interesesTotales: Math.round(interesesTotales),
+    _chart: chart,
   };
 }

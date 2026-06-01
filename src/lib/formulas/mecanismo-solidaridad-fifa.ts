@@ -18,6 +18,7 @@ export interface Outputs {
   repartoPorClubPromedio: number;
   moneda: string;
   resumen: string;
+  _chart?: any;
 }
 
 export function mecanismoSolidaridadFifa(i: Inputs): Outputs {
@@ -39,6 +40,21 @@ export function mecanismoSolidaridadFifa(i: Inputs): Outputs {
   const porClub = totalClubes / clubes;
   const repartoPorAno = (pctPorAno12 + pctPorAno16) / 2; // info
 
+  const chart =
+    reparto12 > 0 && reparto16 > 0
+      ? {
+          type: 'doughnut' as const,
+          slices: [
+            { label: 'Años 12-15 (0,25%/año)', value: Math.round(reparto12) },
+            { label: 'Años 16-23 (0,5%/año)', value: Math.round(reparto16) },
+          ],
+          prefix: 'US$ ',
+          centerValue: 'US$ ' + Math.round(totalClubes).toLocaleString('en'),
+          centerLabel: 'A clubes formadores',
+          ariaLabel: 'Reparto a clubes formadores por franja de edad: 12-15 y 16-23 años.',
+        }
+      : undefined;
+
   return {
     poolSolidaridad: Math.round(pool),
     pctPool: 5,
@@ -49,5 +65,6 @@ export function mecanismoSolidaridadFifa(i: Inputs): Outputs {
     repartoPorClubPromedio: Math.round(porClub),
     moneda: 'USD',
     resumen: `Sobre fee US$ ${fee.toLocaleString('en')}, pool 5% = **US$ ${Math.round(pool).toLocaleString('en')}**. Clubes formadores reciben **US$ ${Math.round(totalClubes).toLocaleString('en')}** (${a12} años 12-15 + ${a16} años 16-23). Por club (${clubes}): **US$ ${Math.round(porClub).toLocaleString('en')}**.`,
+    _chart: chart,
   };
 }

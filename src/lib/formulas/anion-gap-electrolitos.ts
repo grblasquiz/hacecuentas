@@ -14,6 +14,7 @@ export interface Outputs {
   rangoNormal: string;
   requiereAtencion: boolean;
   resumen: string;
+  _chart?: any;
 }
 
 export function anionGapElectrolitos(i: Inputs): Outputs {
@@ -66,6 +67,23 @@ export function anionGapElectrolitos(i: Inputs): Outputs {
     requiereAtencion = true;
   }
 
+  const agRed = Number(ag.toFixed(1));
+  // Gauge clínico: el rango normal depende de si se incluye K (8-12 ó 10-16).
+  const chart = {
+    type: 'scale' as const,
+    marker: agRed,
+    markerLabel: 'Tu anion gap: ' + agRed + ' mEq/L',
+    min: 0,
+    unit: ' mEq/L',
+    segments: [
+      { nombre: 'Bajo', max: limMin, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Normal', max: limMax, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Levemente elevado', max: 20, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Muy elevado', max: Math.max(30, Math.ceil(agRed) + 5), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de anion gap: bajo, normal, levemente elevado y muy elevado.',
+  };
+
   return {
     anionGap: Number(ag.toFixed(1)),
     anionGapCorregido: Number(agCorr.toFixed(1)),
@@ -74,5 +92,6 @@ export function anionGapElectrolitos(i: Inputs): Outputs {
     rangoNormal,
     requiereAtencion,
     resumen: `Anion gap: ${ag.toFixed(1)} mEq/L (normal ${rangoNormal}). ${categoria}. ${interpretacion}`,
+    _chart: chart,
   };
 }

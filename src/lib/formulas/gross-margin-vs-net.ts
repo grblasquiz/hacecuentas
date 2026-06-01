@@ -16,6 +16,7 @@ export interface Outputs {
   gananciaNeta: number;
   margenNeto: number;
   resumen: string;
+  _chart?: any;
 }
 
 export function grossMarginVsNet(i: Inputs): Outputs {
@@ -41,6 +42,23 @@ export function grossMarginVsNet(i: Inputs): Outputs {
 
   const resumen = `Margen bruto: ${margenBruto.toFixed(1)}%. EBITDA: ${margenEbitda.toFixed(1)}%. Neto: ${margenNeto.toFixed(1)}%.`;
 
+  // Descomposición de los ingresos en sus componentes (suman el total de ingresos)
+  const slices = [
+    { label: 'Costo de ventas', value: cogs },
+    { label: 'Gastos operativos', value: opex },
+    { label: 'Deprec. y amort.', value: da },
+    { label: 'Intereses e impuestos', value: ii },
+    { label: 'Ganancia neta', value: Math.max(0, gananciaNeta) },
+  ].filter((s) => s.value > 0);
+  const chart = {
+    type: 'doughnut' as const,
+    slices,
+    prefix: '$',
+    centerValue: '$' + Math.round(ingresos).toLocaleString('es-AR'),
+    centerLabel: 'Ingresos',
+    ariaLabel: 'Composición de los ingresos: costo de ventas, gastos operativos, depreciación, intereses e impuestos y ganancia neta',
+  };
+
   return {
     gananciaBruta: Math.round(gananciaBruta),
     margenBruto: Number(margenBruto.toFixed(2)),
@@ -51,5 +69,6 @@ export function grossMarginVsNet(i: Inputs): Outputs {
     gananciaNeta: Math.round(gananciaNeta),
     margenNeto: Number(margenNeto.toFixed(2)),
     resumen,
+    _chart: chart,
   };
 }

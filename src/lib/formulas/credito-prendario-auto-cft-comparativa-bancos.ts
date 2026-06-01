@@ -1,6 +1,6 @@
 /** Crédito prendario auto: comparativa CFT entre bancos AR */
 export interface Inputs { montoCredito: number; plazoMeses: number; tnaBancoPct: number; gastosOtorgamientoPct: number; seguroMensual: number; }
-export interface Outputs { cuotaMensual: number; totalAPagar: number; intereses: number; cftEstimadoPct: number; costoTotalConSeguro: number; explicacion: string; }
+export interface Outputs { cuotaMensual: number; totalAPagar: number; intereses: number; cftEstimadoPct: number; costoTotalConSeguro: number; explicacion: string; _chart?: any; }
 export function creditoPrendarioAutoCftComparativaBancos(i: Inputs): Outputs {
   const monto = Number(i.montoCredito);
   const plazo = Number(i.plazoMeses);
@@ -20,6 +20,19 @@ export function creditoPrendarioAutoCftComparativaBancos(i: Inputs): Outputs {
   const costoTotal = total + gastosOtorg + seguroTotal;
   // CFT estimado: anualizar costo total
   const cftAnual = (Math.pow(costoTotal / monto, 12 / plazo) - 1) * 100;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: Math.round(monto) },
+      { label: 'Intereses', value: Math.round(intereses) },
+      { label: 'Gastos de otorgamiento', value: Math.round(gastosOtorg) },
+      { label: 'Seguro', value: Math.round(seguroTotal) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(costoTotal).toLocaleString('es-AR'),
+    centerLabel: 'Costo total',
+    ariaLabel: 'Composición del costo total del crédito prendario: capital, intereses, gastos de otorgamiento y seguro',
+  };
   return {
     cuotaMensual: Number(cuota.toFixed(2)),
     totalAPagar: Number(total.toFixed(2)),
@@ -27,5 +40,6 @@ export function creditoPrendarioAutoCftComparativaBancos(i: Inputs): Outputs {
     cftEstimadoPct: Number(cftAnual.toFixed(2)),
     costoTotalConSeguro: Number(costoTotal.toFixed(2)),
     explicacion: `Cuota: $${cuota.toFixed(0)}. Total a pagar: $${total.toFixed(0)}. CFT estimado: ${cftAnual.toFixed(2)}% anual.`,
+    _chart: chart,
   };
 }

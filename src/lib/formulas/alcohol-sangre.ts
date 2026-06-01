@@ -10,6 +10,7 @@ export interface Outputs {
   nivelMensaje: string;
   puedeManejar: boolean;
   horasHastaCero: number;
+  _chart?: any;
 }
 
 export function alcoholSangre(i: Inputs): Outputs {
@@ -40,10 +41,28 @@ export function alcoholSangre(i: Inputs): Outputs {
   // Horas hasta cero
   const horasAcero = bac / 0.15;
 
+  const bacR = Number(bac.toFixed(2));
+  const chart = {
+    type: 'scale' as const,
+    marker: bacR,
+    markerLabel: 'Tu BAC: ' + bacR + ' g/L',
+    min: 0,
+    unit: ' g/L',
+    segments: [
+      { nombre: 'Bajo', max: 0.2, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Límite legal', max: 0.5, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Riesgo alto', max: 0.8, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Embriaguez', max: 1.5, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Peligroso', max: Math.max(2.5, Math.ceil(bacR) + 1), color: '#fca5a5', colorDark: '#991b1b' },
+    ],
+    ariaLabel: 'Escala de alcohol en sangre (BAC) en g/L: bajo, límite legal, riesgo alto, embriaguez y peligroso.',
+  };
+
   return {
-    bac: Number(bac.toFixed(2)),
+    bac: bacR,
     nivelMensaje: msg,
     puedeManejar: puede,
     horasHastaCero: Number(horasAcero.toFixed(1)),
+    _chart: chart,
   };
 }

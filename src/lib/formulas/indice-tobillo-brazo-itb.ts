@@ -14,6 +14,7 @@ export interface Outputs {
   interpretacion: string;
   requiereEstudios: boolean;
   resumen: string;
+  _chart?: any;
 }
 
 function categoriaITB(itb: number): string {
@@ -65,14 +66,32 @@ export function indiceTobilloBrazoItb(i: Inputs): Outputs {
     requiereEstudios = true;
   }
 
+  const itbProm = Number(itbPromedio.toFixed(2));
+  const chart = {
+    type: 'scale' as const,
+    marker: itbProm,
+    markerLabel: 'ITB: ' + itbProm.toFixed(2),
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'EAP severa', max: 0.4, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'EAP moderada', max: 0.7, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'EAP leve', max: 0.9, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Normal', max: 1.4, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'No compresible', max: Math.max(1.6, Math.ceil(itbProm * 10) / 10 + 0.1), color: '#fed7aa', colorDark: '#9a3412' },
+    ],
+    ariaLabel: 'Escala del índice tobillo-brazo: normal entre 0,9 y 1,4; valores menores indican enfermedad arterial periférica y mayores arterias no compresibles',
+  };
+
   return {
     itbDerecho: Number(itbDer.toFixed(2)),
     itbIzquierdo: Number(itbIzq.toFixed(2)),
-    itbPromedio: Number(itbPromedio.toFixed(2)),
+    itbPromedio: itbProm,
     categoriaDerecho: catDer,
     categoriaIzquierdo: catIzq,
     interpretacion,
     requiereEstudios,
     resumen: `ITB derecho ${itbDer.toFixed(2)} (${catDer}), izquierdo ${itbIzq.toFixed(2)} (${catIzq}). ${interpretacion}`,
+    _chart: chart,
   };
 }

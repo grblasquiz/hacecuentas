@@ -159,6 +159,7 @@ export interface GananciasRG830Outputs {
   netoACobrar: number;
   aplicoMinimo: boolean;
   resumen: string;
+  _chart?: any;
 }
 
 export function gananciasRG830(inputs: GananciasRG830Inputs): GananciasRG830Outputs {
@@ -218,6 +219,18 @@ export function gananciasRG830(inputs: GananciasRG830Inputs): GananciasRG830Outp
     ? 'Monto acumulado no supera el mínimo no sujeto. No se retiene.'
     : `Retención aplicada: ${alicuotaAplicada} sobre base de $${Math.round(baseRetencion).toLocaleString('es-AR')}`;
 
+  const chart = retencionFinal > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto a cobrar', value: Math.round(netoACobrar) },
+      { label: 'Retención RG 830', value: Math.round(retencionFinal) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(pago).toLocaleString('es-AR'),
+    centerLabel: 'Pago',
+    ariaLabel: 'Composición del pago: neto a cobrar vs retención de Ganancias RG 830',
+  } : undefined;
+
   return {
     conceptoNombre: cfg.nombre,
     montoAcumulado: Math.round(montoAcumulado),
@@ -229,5 +242,6 @@ export function gananciasRG830(inputs: GananciasRG830Inputs): GananciasRG830Outp
     netoACobrar: Math.round(netoACobrar),
     aplicoMinimo,
     resumen,
+    _chart: chart,
   };
 }

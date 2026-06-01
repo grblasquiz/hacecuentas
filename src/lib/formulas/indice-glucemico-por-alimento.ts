@@ -36,6 +36,7 @@ export interface IndiceGlucemicoPorAlimentoOutputs {
   ig: number;
   clasificacion: string;
   recomendacion: string;
+  _chart?: any;
 }
 
 export function indiceGlucemicoPorAlimento(inputs: IndiceGlucemicoPorAlimentoInputs): IndiceGlucemicoPorAlimentoOutputs {
@@ -45,5 +46,18 @@ export function indiceGlucemicoPorAlimento(inputs: IndiceGlucemicoPorAlimentoInp
   if (data.ig < 55) { clasif = 'Bajo'; rec = 'IG bajo: libera glucosa lentamente, ideal para diabéticos y saciedad.'; }
   else if (data.ig < 70) { clasif = 'Medio'; rec = 'IG medio: consumir con moderación; combiná con proteína o grasa.'; }
   else { clasif = 'Alto'; rec = 'IG alto: eleva glucemia rápido. Limitar porciones y evitar en ayuno.'; }
-  return { ig: data.ig, clasificacion: clasif, recomendacion: rec };
+  const chart = {
+    type: 'scale' as const,
+    marker: data.ig,
+    markerLabel: 'IG: ' + data.ig,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Bajo', max: 54, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Medio', max: 69, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Alto', max: Math.max(100, Math.ceil(data.ig) + 5), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de índice glucémico: bajo menos de 55, medio 55-69, alto 70 o más',
+  };
+  return { ig: data.ig, clasificacion: clasif, recomendacion: rec, _chart: chart };
 }

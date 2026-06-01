@@ -16,6 +16,7 @@ export interface Outputs {
   edadCardiovascular: number;
   recomendacion: string;
   resumen: string;
+  _chart?: any;
 }
 
 // Puntos por edad y sexo (simplificado - D'Agostino 2008)
@@ -142,6 +143,21 @@ export function framinghamRiesgoCardiovascular(i: Inputs): Outputs {
   // Aproximación simplificada
   const edadCV = edad + Math.round((riesgoPorcentaje - 5) * 0.8);
 
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(riesgoPorcentaje.toFixed(1)),
+    markerLabel: 'Tu riesgo: ' + Number(riesgoPorcentaje.toFixed(1)) + '%',
+    min: 0,
+    unit: '%',
+    segments: [
+      { nombre: 'Bajo', max: 5, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Intermedio-bajo', max: 10, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Intermedio', max: 20, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Alto', max: Math.max(30, Math.ceil(riesgoPorcentaje) + 5), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de riesgo cardiovascular Framingham a 10 años: bajo, intermedio y alto',
+  };
+
   return {
     puntaje,
     riesgoPorcentaje: Number(riesgoPorcentaje.toFixed(1)),
@@ -149,5 +165,6 @@ export function framinghamRiesgoCardiovascular(i: Inputs): Outputs {
     edadCardiovascular: Math.max(edad, edadCV),
     recomendacion,
     resumen: `Puntaje Framingham: ${puntaje}. Riesgo cardiovascular a 10 años: ${riesgoPorcentaje}% (${categoria}).`,
+    _chart: chart,
   };
 }

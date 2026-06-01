@@ -12,6 +12,7 @@ export interface Outputs {
   iibb: number;
   otrosGastos: number;
   detalle: string;
+  _chart?: any;
 }
 
 // Pagos mensuales estimados monotributo 2026 (actualización enero 2026)
@@ -52,11 +53,26 @@ export function sueldoAutonomoNeto(i: Inputs): Outputs {
     `$${fmt.format(iibb)} de IIBB (${porcentajeIIBB}%) y ~$${fmt.format(otrosGastos)} de otros gastos. ` +
     `Te queda un neto de $${fmt.format(netoEstimado)} (${porcentajeNeto.toFixed(1)}% de tu facturación).`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto estimado', value: Math.round(Math.max(0, netoEstimado)) },
+      { label: 'Monotributo', value: monotributo },
+      { label: 'IIBB', value: Math.round(iibb) },
+      { label: 'Otros gastos', value: otrosGastos },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(facturacion).toLocaleString('es-AR'),
+    centerLabel: 'Facturación',
+    ariaLabel: 'Composición de la facturación mensual: neto estimado, monotributo, IIBB y otros gastos',
+  };
+
   return {
     netoEstimado: Math.round(Math.max(0, netoEstimado)),
     monotributo,
     iibb: Math.round(iibb),
     otrosGastos,
     detalle,
+    _chart: chart,
   };
 }

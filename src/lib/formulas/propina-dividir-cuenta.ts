@@ -1,6 +1,6 @@
 /** Dividir cuenta con propina */
 export interface Inputs { totalCuenta: number; personas: number; propinaPct: number; }
-export interface Outputs { porPersona: number; propina: number; totalConPropina: number; mensaje: string; }
+export interface Outputs { porPersona: number; propina: number; totalConPropina: number; mensaje: string; _chart?: any; }
 
 export function propinaDividirCuenta(i: Inputs): Outputs {
   const total = Number(i.totalCuenta);
@@ -12,8 +12,21 @@ export function propinaDividirCuenta(i: Inputs): Outputs {
   const totalConPropina = total + propina;
   const porPersona = Math.ceil(totalConPropina / personas);
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cuenta', value: Math.round(total) },
+      { label: 'Propina', value: propina },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalConPropina).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del total: cuenta más propina',
+  };
+
   return {
     porPersona, propina, totalConPropina,
-    mensaje: `Cuenta: $${total.toLocaleString()} + ${pct}% propina ($${propina.toLocaleString()}) = $${totalConPropina.toLocaleString()}. Cada uno: $${porPersona.toLocaleString()}.`
+    mensaje: `Cuenta: $${total.toLocaleString()} + ${pct}% propina ($${propina.toLocaleString()}) = $${totalConPropina.toLocaleString()}. Cada uno: $${porPersona.toLocaleString()}.`,
+    _chart: chart,
   };
 }

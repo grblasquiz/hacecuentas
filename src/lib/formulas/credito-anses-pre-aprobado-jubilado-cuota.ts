@@ -1,6 +1,6 @@
 /** Cuota crédito ANSES para jubilados según monto y plazo */
 export interface Inputs { montoSolicitado: number; plazoMeses: number; tnaPct: number; haberMensual: number; }
-export interface Outputs { cuotaMensual: number; totalAPagar: number; intereses: number; relacionCuotaHaberPct: number; aproboPorRelacion: boolean; explicacion: string; }
+export interface Outputs { cuotaMensual: number; totalAPagar: number; intereses: number; relacionCuotaHaberPct: number; aproboPorRelacion: boolean; explicacion: string; _chart?: any; }
 export function creditoAnsesPreAprobadoJubiladoCuota(i: Inputs): Outputs {
   const monto = Number(i.montoSolicitado);
   const plazo = Number(i.plazoMeses);
@@ -17,6 +17,17 @@ export function creditoAnsesPreAprobadoJubiladoCuota(i: Inputs): Outputs {
   const relacion = (cuota / haber) * 100;
   // ANSES suele aprobar hasta 30% del haber
   const aprobado = relacion <= 30;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: Math.round(monto) },
+      { label: 'Intereses', value: Math.round(intereses) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del total a pagar: capital prestado más intereses',
+  };
   return {
     cuotaMensual: Number(cuota.toFixed(2)),
     totalAPagar: Number(total.toFixed(2)),
@@ -24,5 +35,6 @@ export function creditoAnsesPreAprobadoJubiladoCuota(i: Inputs): Outputs {
     relacionCuotaHaberPct: Number(relacion.toFixed(2)),
     aproboPorRelacion: aprobado,
     explicacion: `Cuota: $${cuota.toFixed(0)} (${relacion.toFixed(1)}% del haber). ${aprobado ? 'Dentro del límite ANSES (30%).' : 'Supera el 30% del haber — ANSES suele rechazar.'}`,
+    _chart: chart,
   };
 }

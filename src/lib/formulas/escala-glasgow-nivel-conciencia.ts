@@ -8,6 +8,7 @@ export interface Outputs {
   gcs: number;
   clasificacion: string;
   detalle: string;
+  _chart?: any;
 }
 
 export function escalaGlasgowNivelConciencia(i: Inputs): Outputs {
@@ -41,9 +42,24 @@ export function escalaGlasgowNivelConciencia(i: Inputs): Outputs {
     `Conducta sugerida: ${conducta}` +
     (gcs <= 8 ? ' | ⚠️ GCS ≤8: proteger vía aérea, considerar IOT.' : '');
 
+  const chart = {
+    type: 'scale' as const,
+    marker: gcs,
+    markerLabel: `Tu GCS: ${gcs}/15`,
+    min: 3,
+    unit: '',
+    segments: [
+      { nombre: 'Grave', max: 8, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Moderado', max: 13, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Leve', max: Math.max(15, gcs), color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: 'Escala de coma de Glasgow de 3 a 15: grave, moderado, leve',
+  };
+
   return {
     gcs,
     clasificacion: `${clasificacion} — ${conducta}`,
     detalle,
+    _chart: chart,
   };
 }

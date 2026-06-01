@@ -1,6 +1,6 @@
 /** Percentil fetal por ecografía — Hadlock */
 export interface Inputs { semanaEco: number; dbp?: number; cc?: number; ca?: number; lf?: number; }
-export interface Outputs { pesoEstimado: string; percentilPeso: string; clasificacion: string; nota: string; }
+export interface Outputs { pesoEstimado: string; percentilPeso: string; clasificacion: string; nota: string; _chart?: any; }
 
 export function percentilEcografia(i: Inputs): Outputs {
   const sem = Math.round(Number(i.semanaEco));
@@ -58,10 +58,25 @@ export function percentilEcografia(i: Inputs): Outputs {
 
   const pesoStr = pesoG >= 1000 ? `${(pesoG / 1000).toFixed(2)} kg` : `${Math.round(pesoG)} g`;
 
+  const chart = {
+    type: 'scale' as const,
+    marker: Math.round(pesoG),
+    markerLabel: 'Peso fetal estimado: ' + pesoStr,
+    min: 0,
+    unit: ' g',
+    segments: [
+      { nombre: 'PEG (<P10)', max: Math.round(p10), color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Adecuado (P10–P90)', max: Math.round(p90), color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'GEG (>P90)', max: Math.max(Math.round(p90 + (p90 - p10)), Math.ceil(pesoG) + 100), color: '#fed7aa', colorDark: '#9a3412' },
+    ],
+    ariaLabel: 'Escala de peso fetal estimado para la edad gestacional: pequeño (PEG), adecuado (AEG), grande (GEG).',
+  };
+
   return {
     pesoEstimado: pesoStr,
     percentilPeso: percentil,
     clasificacion,
     nota: 'El peso fetal estimado por ecografía tiene un margen de error de ±15%. Consultá siempre con tu obstetra.',
+    _chart: chart,
   };
 }

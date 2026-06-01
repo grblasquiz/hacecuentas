@@ -14,6 +14,7 @@ export interface Outputs {
   neto: number;
   categoriaLabel: string;
   mensaje: string;
+  _chart?: any;
 }
 
 // Referencia CCT AFA-FAA 2026 (ARS/mes)
@@ -41,6 +42,19 @@ export function sueldoMinimoAfa(i: Inputs): Outputs {
   const aportes = descuenta ? Math.round(bruto * 0.17) : 0;
   const neto = bruto - aportes;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Mínimo', value: Math.round(minimo) },
+      { label: 'Antigüedad', value: Math.round(antiguedad) },
+      { label: 'Premios', value: Math.round(premios) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(bruto).toLocaleString('es-AR'),
+    centerLabel: 'Bruto',
+    ariaLabel: 'Composición del sueldo bruto: mínimo de convenio, antigüedad y premios.',
+  };
+
   return {
     minimoMensual: Math.round(minimo),
     antiguedad: Math.round(antiguedad),
@@ -49,6 +63,7 @@ export function sueldoMinimoAfa(i: Inputs): Outputs {
     aportes: Math.round(aportes),
     neto: Math.round(neto),
     categoriaLabel: fila.label,
+    _chart: chart,
     mensaje: `${fila.label}: mínimo $${Math.round(minimo).toLocaleString('es-AR')}/mes. Con antigüedad y premios, bruto $${Math.round(bruto).toLocaleString('es-AR')}.`,
   };
 }

@@ -30,6 +30,7 @@ export interface ComisionInmobiliariaOutputs {
   montoEscritura: number;
   montoFinalVendedor: number;
   totalComisionMercado: number;
+  _chart?: any;
 }
 
 const IVA_ALICUOTA = 0.21;
@@ -65,6 +66,22 @@ export function comisionInmobiliariaVentaInmueble(
   // Neto del vendedor (precio escritura menos su comisión total)
   const montoFinalVendedor = precio - totalAPagarVendedor;
 
+  // Donut: descomposición de la comisión total que cobra la inmobiliaria
+  // (parte vendedor + parte comprador, cada una con su IVA si corresponde).
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Comisión vendedor', value: Math.max(0, Math.round(comisionVendedorMonto)) },
+      { label: 'IVA vendedor', value: Math.max(0, Math.round(ivaVendedor)) },
+      { label: 'Comisión comprador', value: Math.max(0, Math.round(comisionCompradorMonto)) },
+      { label: 'IVA comprador', value: Math.max(0, Math.round(ivaComprador)) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalComisionMercado).toLocaleString('es-AR'),
+    centerLabel: 'Comisión total',
+    ariaLabel: 'Composición de la comisión inmobiliaria total: parte del vendedor y del comprador, con IVA.',
+  };
+
   return {
     comisionVendedorMonto: Math.round(comisionVendedorMonto),
     ivaVendedor: Math.round(ivaVendedor),
@@ -75,5 +92,6 @@ export function comisionInmobiliariaVentaInmueble(
     montoEscritura: Math.round(precio),
     montoFinalVendedor: Math.round(montoFinalVendedor),
     totalComisionMercado: Math.round(totalComisionMercado),
+    _chart: chart,
   };
 }

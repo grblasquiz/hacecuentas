@@ -19,6 +19,7 @@ export interface Outputs {
   equivalenteSueldos: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 // ISR tabla Art. 96 mensual
@@ -68,6 +69,18 @@ export function aguinaldoMexicoNeto(i: Inputs): Outputs {
   const formula = `Neto = ($${salarioDiario.toFixed(2)} × ${diasAg} × ${mesesT}/12) - ISR($${gravado.toFixed(2)}) = $${aguinaldoNeto.toFixed(2)}`;
   const explicacion = `Con sueldo mensual de $${sueldo.toLocaleString('es-MX')} MXN (diario: $${salarioDiario.toFixed(2)}) y ${diasAg} días de aguinaldo${mesesT < 12 ? ` (proporcional ${mesesT} meses)` : ''}: bruto $${Math.round(aguinaldoBruto).toLocaleString('es-MX')}, exento $${Math.round(exentoIsr).toLocaleString('es-MX')}, gravado $${Math.round(gravado).toLocaleString('es-MX')}, ISR $${Math.round(isrRetenido).toLocaleString('es-MX')}. Neto en mano: $${Math.round(aguinaldoNeto).toLocaleString('es-MX')} MXN (equivale a ${equivalenteSueldos.toFixed(2)} sueldos).`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto en mano', value: Math.round(aguinaldoNeto) },
+      { label: 'ISR retenido', value: Math.round(isrRetenido) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(aguinaldoBruto).toLocaleString('es-AR'),
+    centerLabel: 'Bruto',
+    ariaLabel: `Composición del aguinaldo bruto: neto ${Math.round(aguinaldoNeto)}, ISR retenido ${Math.round(isrRetenido)}.`,
+  };
+
   return {
     aguinaldoBruto: Math.round(aguinaldoBruto),
     exentoIsr: Math.round(exentoIsr),
@@ -77,5 +90,6 @@ export function aguinaldoMexicoNeto(i: Inputs): Outputs {
     equivalenteSueldos: Number(equivalenteSueldos.toFixed(2)),
     formula,
     explicacion,
+    _chart: chart,
   };
 }

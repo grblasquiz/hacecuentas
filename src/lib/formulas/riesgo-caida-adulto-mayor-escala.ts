@@ -10,6 +10,7 @@ export interface Outputs {
   puntaje: number;
   riesgo: string;
   detalle: string;
+  _chart?: any;
 }
 
 export function riesgoCaidaAdultoMayorEscala(i: Inputs): Outputs {
@@ -45,9 +46,23 @@ export function riesgoCaidaAdultoMayorEscala(i: Inputs): Outputs {
     `Factores presentes: ${factores.length > 0 ? factores.join(', ') : 'ninguno'} | ` +
     `${recomendacion}`;
 
+  const chart = {
+    type: 'scale' as const,
+    marker: puntaje,
+    markerLabel: 'Tu puntaje: ' + puntaje + '/5',
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Bajo riesgo', max: 3, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Alto riesgo', max: 5, color: '#fed7aa', colorDark: '#9a3412' },
+    ],
+    ariaLabel: 'Escala de Downton de riesgo de caída: bajo riesgo (0-2), alto riesgo (3-5)',
+  };
+
   return {
     puntaje,
     riesgo: `${riesgo}. ${recomendacion}`,
     detalle,
+    _chart: chart,
   };
 }

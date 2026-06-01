@@ -1,6 +1,6 @@
 /** Score educativo de elegibilidad de wallet para airdrops segun metricas onchain */
 export interface Inputs { transaccionesTotales: number; volumenOperadoUsd: number; antiguedadMeses: number; bridgesUsados: number; protocolosInteractuados: number; }
-export interface Outputs { scoreTransacciones: number; scoreVolumen: number; scoreAntiguedad: number; scoreBridges: number; scoreProtocolos: number; scoreTotal: number; tier: string; explicacion: string; }
+export interface Outputs { scoreTransacciones: number; scoreVolumen: number; scoreAntiguedad: number; scoreBridges: number; scoreProtocolos: number; scoreTotal: number; tier: string; explicacion: string; _chart?: any; }
 export function airdropElegibilidadWalletScorePuntaje(i: Inputs): Outputs {
   const tx = Number(i.transaccionesTotales);
   const vol = Number(i.volumenOperadoUsd);
@@ -18,6 +18,21 @@ export function airdropElegibilidadWalletScorePuntaje(i: Inputs): Outputs {
   if (total >= 80) tier = 'Sybil-resistant alto';
   else if (total >= 60) tier = 'Buen perfil';
   else if (total >= 40) tier = 'Medio';
+  // Donut: el score total se compone de 5 métricas onchain (suman /100).
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Transacciones', value: Number(sTx.toFixed(2)) },
+      { label: 'Volumen', value: Number(sVol.toFixed(2)) },
+      { label: 'Antigüedad', value: Number(sAnt.toFixed(2)) },
+      { label: 'Bridges', value: Number(sBr.toFixed(2)) },
+      { label: 'Protocolos', value: Number(sPr.toFixed(2)) },
+    ].filter((s) => s.value > 0),
+    prefix: '',
+    centerValue: Math.round(total) + '/100',
+    centerLabel: 'Score',
+    ariaLabel: 'Composición del score de elegibilidad: transacciones, volumen, antigüedad, bridges y protocolos.',
+  };
   return {
     scoreTransacciones: Number(sTx.toFixed(2)),
     scoreVolumen: Number(sVol.toFixed(2)),
@@ -27,5 +42,6 @@ export function airdropElegibilidadWalletScorePuntaje(i: Inputs): Outputs {
     scoreTotal: Number(total.toFixed(2)),
     tier,
     explicacion: `Score educativo: ${total.toFixed(0)}/100 (${tier}). Tx ${sTx.toFixed(0)}, Volumen ${sVol.toFixed(0)}, Antigüedad ${sAnt.toFixed(0)}, Bridges ${sBr.toFixed(0)}, Protocolos ${sPr.toFixed(0)}. No garantiza elegibilidad real.`,
+    _chart: chart,
   };
 }

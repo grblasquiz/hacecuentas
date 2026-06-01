@@ -12,6 +12,7 @@ export interface Outputs {
   total_interest: number;
   interest_ratio: number;
   yearly_breakdown: string;
+  _chart?: any;
 }
 
 // Mapa de frecuencia de capitalización a períodos por año
@@ -150,11 +151,28 @@ export function compute(i: Inputs): Outputs {
 
   const yearly_breakdown = rows.join("\n");
 
+  const final_balance_r = parseFloat(final_balance.toFixed(2));
+  const total_contributed_r = parseFloat(total_contributed.toFixed(2));
+  const total_interest_r = parseFloat(total_interest.toFixed(2));
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Total aportado', value: total_contributed_r },
+      { label: 'Interés ganado', value: total_interest_r },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(final_balance_r).toLocaleString('es-AR'),
+    centerLabel: 'Balance final',
+    ariaLabel: 'Composición del balance final: capital aportado más interés ganado',
+  };
+
   return {
-    final_balance: parseFloat(final_balance.toFixed(2)),
-    total_contributed: parseFloat(total_contributed.toFixed(2)),
-    total_interest: parseFloat(total_interest.toFixed(2)),
+    final_balance: final_balance_r,
+    total_contributed: total_contributed_r,
+    total_interest: total_interest_r,
     interest_ratio: parseFloat(interest_ratio.toFixed(2)),
     yearly_breakdown,
+    _chart: chart,
   };
 }

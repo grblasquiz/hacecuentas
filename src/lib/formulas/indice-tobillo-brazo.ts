@@ -1,6 +1,6 @@
 /** Índice Tobillo-Brazo */
 export interface Inputs { presionTobillo: number; presionBrazo: number; }
-export interface Outputs { itb: number; clasificacion: string; recomendacion: string; mensaje: string; }
+export interface Outputs { itb: number; clasificacion: string; recomendacion: string; mensaje: string; _chart?: any; }
 
 export function indiceTobilloBrazo(i: Inputs): Outputs {
   const tobillo = Number(i.presionTobillo);
@@ -32,5 +32,23 @@ export function indiceTobilloBrazo(i: Inputs): Outputs {
     recomendacion = 'Isquemia crítica. Derivación urgente a cirugía vascular. Riesgo de amputación.';
   }
 
-  return { itb, clasificacion, recomendacion, mensaje: `ITB: ${itb}. ${clasificacion}.` };
+  const topSeg = Math.max(1.4, Math.ceil(itb * 10) / 10 + 0.1);
+  const chart = {
+    type: 'scale' as const,
+    marker: itb,
+    markerLabel: 'Tu ITB: ' + itb,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'EAP severa', max: 0.40, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'EAP moderada', max: 0.70, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'EAP leve', max: 0.90, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Limítrofe', max: 0.99, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Normal', max: 1.30, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Calcificado', max: topSeg, color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala del índice tobillo-brazo (ITB): de enfermedad arterial periférica severa a calcificación arterial.',
+  };
+
+  return { itb, clasificacion, recomendacion, mensaje: `ITB: ${itb}. ${clasificacion}.`, _chart: chart };
 }

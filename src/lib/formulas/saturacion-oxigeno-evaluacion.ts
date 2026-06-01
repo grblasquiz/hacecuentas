@@ -12,6 +12,7 @@ export interface Outputs {
   rangoEsperado: string;
   recomendacion: string;
   resumen: string;
+  _chart?: any;
 }
 
 export function saturacionOxigenoEvaluacion(i: Inputs): Outputs {
@@ -71,6 +72,22 @@ export function saturacionOxigenoEvaluacion(i: Inputs): Outputs {
     else if (fc > 100) obsFC = ' Taquicardia asociada (compensación por baja SpO2).';
   }
 
+  const chart = {
+    type: 'scale' as const,
+    marker: spo2,
+    markerLabel: 'Tu SpO2: ' + spo2 + '%',
+    min: 70,
+    unit: '%',
+    segments: [
+      { nombre: 'Crítica', max: 80, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Severa', max: 85, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Moderada', max: 90, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Leve', max: 95, color: '#fef9c3', colorDark: '#854d0e' },
+      { nombre: 'Normal', max: Math.max(100, Math.ceil(spo2) + 1), color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: 'Escala de saturación de oxígeno: crítica, severa, moderada, leve y normal.',
+  };
+
   return {
     spo2,
     categoria,
@@ -79,5 +96,6 @@ export function saturacionOxigenoEvaluacion(i: Inputs): Outputs {
     rangoEsperado,
     recomendacion,
     resumen: `SpO2 ${spo2}% → ${categoria}. ${recomendacion}${obsFC}`,
+    _chart: chart,
   };
 }

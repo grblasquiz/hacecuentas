@@ -15,6 +15,7 @@ export interface Outputs {
   totalBruto: number;
   totalConViaticos: number;
   detalle: string;
+  _chart?: any;
 }
 
 // Básicos mensuales paritaria 2026 (FADEEAC / Federación Camioneros)
@@ -111,6 +112,20 @@ export function compute(i: Inputs): Outputs {
   lines.push(`TOTAL con viáticos: ${fmt(totalConViaticos)}`);
   lines.push("— Valores antes de descuentos (SIPA 11%, OS 3%, sindicato ~3%)");
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Básico proporcional', value: basicoProporcional },
+      { label: 'Antigüedad', value: adicionalAntiguedad },
+      { label: 'Horas extras', value: horasExtrasTotal },
+      { label: 'Viáticos', value: viaticosTotal },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalConViaticos).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del total a cobrar: básico, antigüedad, horas extras y viáticos.',
+  };
+
   return {
     basicoMensual,
     adicionalAntiguedad,
@@ -119,5 +134,6 @@ export function compute(i: Inputs): Outputs {
     totalBruto,
     totalConViaticos,
     detalle: lines.join("\n"),
+    _chart: chart,
   };
 }

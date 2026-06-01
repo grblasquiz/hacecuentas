@@ -20,6 +20,7 @@ export interface Outputs {
   tir_neta_rwa: number;
   plazo_break_even_dias: number;
   resumen: string;
+  _chart?: any;
 }
 
 // Fee anual por producto (fraccion decimal)
@@ -166,6 +167,26 @@ export function compute(i: Inputs): Outputs {
     resumen += " Con el yield y fees actuales, el RWA no supera al CEX en ning\u00fan plazo.";
   }
 
+  // Donut: en qué se reparte el yield bruto del RWA (solo cuando el neto es
+  // positivo, para que las porciones sumen un todo positivo).
+  let chart: any = undefined;
+  if (yield_neto_rwa > 0) {
+    const slicesRwa = [
+      { label: 'Yield neto', value: Math.round(yield_neto_rwa * 100) / 100 },
+      { label: 'Fee plataforma', value: Math.round(costo_plataforma_rwa * 100) / 100 },
+      { label: 'Gas', value: Math.round(costo_gas_total * 100) / 100 },
+      { label: 'Retenciones', value: Math.round(costo_retenciones * 100) / 100 },
+    ].filter((s) => s.value > 0);
+    chart = {
+      type: 'doughnut' as const,
+      slices: slicesRwa,
+      prefix: '$',
+      centerValue: '$' + Math.round(yield_bruto_rwa).toLocaleString('en-US'),
+      centerLabel: 'Yield bruto',
+      ariaLabel: 'Reparto del yield bruto del RWA: yield neto, fee de plataforma, gas y retenciones.',
+    };
+  }
+
   return {
     yield_bruto_rwa: Math.round(yield_bruto_rwa * 100) / 100,
     costo_plataforma_rwa: Math.round(costo_plataforma_rwa * 100) / 100,
@@ -177,5 +198,6 @@ export function compute(i: Inputs): Outputs {
     tir_neta_rwa: Math.round(tir_neta_rwa * 1000) / 1000,
     plazo_break_even_dias,
     resumen,
+    _chart: chart,
   };
 }

@@ -1,6 +1,6 @@
 /** Staking ATOM rewards */
 export interface Inputs { amount: number; apy: number; priceUsd: number; months: number; commission: number; }
-export interface Outputs { tokensEarned: number; usdEarned: number; netTokens: number; monthlyTokens: number; effectiveApy: number; totalValue: number; explicacion: string; }
+export interface Outputs { tokensEarned: number; usdEarned: number; netTokens: number; monthlyTokens: number; effectiveApy: number; totalValue: number; explicacion: string; _chart?: any; }
 export function stakingAtomRewards(i: Inputs): Outputs {
   const amt = Number(i.amount);
   const apy = Number(i.apy) / 100;
@@ -16,6 +16,17 @@ export function stakingAtomRewards(i: Inputs): Outputs {
   const monthly = netTokens / months;
   const effectiveApy = (Math.pow(1 + apy / 365, 365) - 1) * 100 * (1 - commission);
   const totalValue = (amt + netTokens) * price;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital inicial', value: Number((amt * price).toFixed(2)) },
+      { label: 'Recompensas netas', value: Number(usd.toFixed(2)) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalValue).toLocaleString('es-AR'),
+    centerLabel: 'Valor total',
+    ariaLabel: 'Composición del valor final: capital inicial más recompensas netas de staking',
+  };
   return {
     tokensEarned: Number(grossTokens.toFixed(4)),
     netTokens: Number(netTokens.toFixed(4)),
@@ -24,5 +35,6 @@ export function stakingAtomRewards(i: Inputs): Outputs {
     effectiveApy: Number(effectiveApy.toFixed(3)),
     totalValue: Number(totalValue.toFixed(2)),
     explicacion: `Stakeando ${amt} ATOM al ${(apy*100).toFixed(2)}% APY durante ${months} meses (comisión ${(commission*100).toFixed(1)}%): ganás ${netTokens.toFixed(2)} ATOM netos = $${usd.toFixed(2)} USD.`,
+    _chart: chart,
   };
 }

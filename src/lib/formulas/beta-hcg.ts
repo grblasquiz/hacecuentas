@@ -1,6 +1,6 @@
 /** Niveles de beta hCG en embarazo */
 export interface Inputs { nivelHCG: number; semanaDesdeFUM: number; segundaBeta?: number; diasEntreBetas?: number; }
-export interface Outputs { evaluacion: string; rangoNormal: string; duplicacion: string; siguiente: string; }
+export interface Outputs { evaluacion: string; rangoNormal: string; duplicacion: string; siguiente: string; _chart?: any; }
 
 export function betaHcg(i: Inputs): Outputs {
   const hcg = Number(i.nivelHCG);
@@ -54,5 +54,20 @@ export function betaHcg(i: Inputs): Outputs {
   else if (hcg < 20000) siguiente = 'Con estos niveles, se debería ver el embrión en la ecografía.';
   else siguiente = 'Con estos niveles, se debería ver embrión con latido cardíaco en la ecografía.';
 
-  return { evaluacion, rangoNormal, duplicacion, siguiente };
+  const topMax = Math.max(Math.ceil(rango[1] * 1.2), Math.ceil(hcg) + 1);
+  const chart = {
+    type: 'scale' as const,
+    marker: Math.round(hcg),
+    markerLabel: 'Tu nivel: ' + Math.round(hcg).toLocaleString() + ' mUI/ml',
+    min: 0,
+    unit: ' mUI/ml',
+    segments: [
+      { nombre: 'Bajo', max: rango[0], color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Rango normal', max: rango[1], color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Alto', max: topMax, color: '#fed7aa', colorDark: '#9a3412' },
+    ],
+    ariaLabel: `Escala de beta hCG para la semana ${semInt}: bajo, rango normal y alto.`,
+  };
+
+  return { evaluacion, rangoNormal, duplicacion, siguiente, _chart: chart };
 }

@@ -19,6 +19,7 @@ export interface Outputs {
   net_profit: number;
   roas: number;
   recommendation: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -97,6 +98,23 @@ export function compute(i: Inputs): Outputs {
     recommendation += ' Objetivo: Engagement. Monitorea likes, comentarios y compartidos; CR puede ser más bajo pero valioso para brand awareness.';
   }
 
+  const roasRounded = Math.round(roas * 100) / 100;
+  const chart = {
+    type: 'scale' as const,
+    marker: roasRounded,
+    markerLabel: 'Tu ROAS: ' + roasRounded.toFixed(2) + ':1',
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Crítico', max: 1, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Marginal', max: 2, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Aceptable', max: 3, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Rentable', max: 5, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Excepcional', max: Math.max(7, Math.ceil(roasRounded) + 1), color: '#86efac', colorDark: '#14532d' },
+    ],
+    ariaLabel: 'Escala de ROAS: crítico (<1), marginal (<2), aceptable (<3), rentable (<5), excepcional (>5)',
+  };
+
   return {
     total_impressions: totalImpressions,
     estimated_reach: actualReach,
@@ -105,7 +123,8 @@ export function compute(i: Inputs): Outputs {
     cac: Math.round(cac * 100) / 100,
     revenue_generated: Math.round(revenueGenerated * 100) / 100,
     net_profit: Math.round(netProfit * 100) / 100,
-    roas: Math.round(roas * 100) / 100,
-    recommendation: recommendation
+    roas: roasRounded,
+    recommendation: recommendation,
+    _chart: chart
   };
 }

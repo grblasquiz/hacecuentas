@@ -11,6 +11,7 @@ export interface Outputs {
   reembolso_neto: number;
   porcentaje_sobre_compra: number;
   detalle: string;
+  _chart?: any;
 }
 
 // Tasas de IVA estándar por país (2026)
@@ -82,6 +83,22 @@ export function compute(i: Inputs): Outputs {
     `Reembolso neto estimado: ${reembolso_neto.toFixed(2)} ${moneda} (${porcentajeFmt}% del precio pagado).\n` +
     `Nota: estimación orientativa. El importe exacto depende del contrato tienda-operadora y la forma de cobro.`;
 
+  const precioSinIva = monto - iva_incluido;
+  const chartSlices = [
+    { label: "Precio sin IVA", value: precioSinIva },
+    { label: "Reembolso neto", value: reembolso_neto },
+    { label: "Comisión operadora", value: comision_operadora },
+  ].filter((s) => s.value > 0);
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: chartSlices,
+    prefix: '',
+    centerValue: Math.round(monto).toLocaleString('es-AR') + ' ' + moneda,
+    centerLabel: 'Compra',
+    ariaLabel: 'Composición del precio pagado: base sin IVA, reembolso neto recuperado y comisión de la operadora.',
+  };
+
   return {
     iva_incluido: Math.round(iva_incluido * 100) / 100,
     reembolso_bruto: Math.round(reembolso_bruto * 100) / 100,
@@ -89,5 +106,6 @@ export function compute(i: Inputs): Outputs {
     reembolso_neto: Math.round(reembolso_neto * 100) / 100,
     porcentaje_sobre_compra: Math.round(porcentaje_sobre_compra * 100) / 100,
     detalle,
+    _chart: chart,
   };
 }

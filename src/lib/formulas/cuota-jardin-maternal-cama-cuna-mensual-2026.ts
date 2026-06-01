@@ -13,6 +13,7 @@ export interface Outputs {
   extras_mes: number;
   costo_anual_total: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -131,11 +132,25 @@ export function compute(i: Inputs): Outputs {
     `$${Math.round(cuota_base).toLocaleString("es-AR")}. ` +
     `Proyección a ${meses} mes${meses === 1 ? "" : "es"} + matrícula.`;
 
+  const chart = {
+    type: "doughnut" as const,
+    slices: [
+      { label: "Cuotas (" + meses + " meses)", value: Math.round(cuota_mensual * meses) },
+      { label: "Extras (" + meses + " meses)", value: Math.round(extras_mes * meses) },
+      { label: "Matrícula", value: Math.round(matricula) },
+    ],
+    prefix: "$",
+    centerValue: "$" + Math.round(costo_anual_total).toLocaleString("es-AR"),
+    centerLabel: "Costo anual",
+    ariaLabel: "Composición del costo anual del jardín maternal: suma de cuotas, extras mensuales y matrícula.",
+  };
+
   return {
     cuota_mensual: Math.round(cuota_mensual),
     matricula: Math.round(matricula),
     extras_mes: Math.round(extras_mes),
     costo_anual_total: Math.round(costo_anual_total),
     detalle,
+    _chart: chart,
   };
 }

@@ -9,6 +9,7 @@ export interface Outputs {
   velocidadMs: number;
   tiempoReaccion: string;
   detalle: string;
+  _chart?: any;
 }
 
 export function velocidadPelotaFutbolTiro(i: Inputs): Outputs {
@@ -39,10 +40,28 @@ export function velocidadPelotaFutbolTiro(i: Inputs): Outputs {
   else if (kmh >= 50) nivel = 'Nivel recreativo';
   else nivel = 'Baja potencia';
 
+  const kmhRound = Number(kmh.toFixed(1));
+  const chart = {
+    type: 'scale' as const,
+    marker: kmhRound,
+    markerLabel: 'Tu disparo: ' + kmhRound + ' km/h',
+    min: 0,
+    unit: ' km/h',
+    segments: [
+      { nombre: 'Baja', max: 50, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Recreativo', max: 80, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Amateur', max: 100, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Profesional', max: 120, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Élite', max: Math.max(160, Math.ceil(kmhRound) + 20), color: '#a7f3d0', colorDark: '#065f46' },
+    ],
+    ariaLabel: 'Escala de velocidad de disparo en km/h: baja, recreativo, amateur, profesional, élite.',
+  };
+
   return {
-    result: Number(kmh.toFixed(1)),
+    result: kmhRound,
     velocidadMs: Number(ms.toFixed(2)),
     tiempoReaccion: reaccion,
     detalle: `Disparo a **${kmh.toFixed(1)} km/h** (${ms.toFixed(2)} m/s) desde ${dist}m en ${t}s. ${nivel}. ${reaccion}.`,
+    _chart: chart,
   };
 }

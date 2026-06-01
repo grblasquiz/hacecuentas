@@ -1,6 +1,6 @@
 /** Costo total mascota toda su vida */
 export interface Inputs { tipoMascota: string; nivelGasto: string; }
-export interface Outputs { costoTotal: number; costoAnual: number; costoMensual: number; esperanzaVida: string; mensaje: string; }
+export interface Outputs { costoTotal: number; costoAnual: number; costoMensual: number; esperanzaVida: string; mensaje: string; _chart?: any; }
 
 export function costoMascotaVidaUtil(i: Inputs): Outputs {
   const tipo = String(i.tipoMascota || 'perro_mediano');
@@ -23,9 +23,24 @@ export function costoMascotaVidaUtil(i: Inputs): Outputs {
   const costoTotal = costoAnual * d.anos;
   const costoMensual = Math.round(costoAnual / 12);
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Alimento', value: Math.round(d.alimentoMes * 12 * f) },
+      { label: 'Veterinario', value: Math.round(d.vetAnual * f) },
+      { label: 'Accesorios', value: Math.round(d.accesoriosAnual * f) },
+      { label: 'Emergencias', value: Math.round(d.emergenciasAnual * f) },
+    ],
+    prefix: '$',
+    centerValue: '$' + costoAnual.toLocaleString('es-AR'),
+    centerLabel: 'Costo/año',
+    ariaLabel: 'Composición del costo anual de la mascota por rubro',
+  };
+
   return {
     costoTotal, costoAnual, costoMensual,
     esperanzaVida: `${d.anos} años (promedio para ${d.nombre.toLowerCase()})`,
-    mensaje: `${d.nombre}: $${costoTotal.toLocaleString()} en ${d.anos} años. $${costoAnual.toLocaleString()}/año ($${costoMensual.toLocaleString()}/mes). Alimento: ~${Math.round(d.alimentoMes * 12 * f / costoAnual * 100)}% del total.`
+    mensaje: `${d.nombre}: $${costoTotal.toLocaleString()} en ${d.anos} años. $${costoAnual.toLocaleString()}/año ($${costoMensual.toLocaleString()}/mes). Alimento: ~${Math.round(d.alimentoMes * 12 * f / costoAnual * 100)}% del total.`,
+    _chart: chart
   };
 }

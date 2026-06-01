@@ -1,6 +1,6 @@
 /** Cuota mensual jardín maternal/preescolar comparativa AR/MX/CL/UY/ES */
 export interface Inputs { pais: string; tipoJardin: string; horasDiarias: number; incluyeAlmuerzo: boolean; }
-export interface Outputs { cuotaMensualLocal: number; cuotaMensualUsd: number; matriculaAnualLocal: number; costoAnualTotalUsd: number; explicacion: string; }
+export interface Outputs { cuotaMensualLocal: number; cuotaMensualUsd: number; matriculaAnualLocal: number; costoAnualTotalUsd: number; explicacion: string; _chart?: any; }
 export function preescolarJardinCuotaMensualComparativaPaises(i: Inputs): Outputs {
   const pais = String(i.pais || '').toUpperCase();
   const tipo = String(i.tipoJardin || '').toLowerCase();
@@ -23,11 +23,25 @@ export function preescolarJardinCuotaMensualComparativaPaises(i: Inputs): Output
   const matricula = cuota * 1.5;
   const usd = cuota / d.tc;
   const anualUsd = (cuota * 10 + matricula) / d.tc;
+  const cuotasAnualUsd = (cuota * 10) / d.tc;
+  const matriculaUsd = matricula / d.tc;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: '10 cuotas mensuales', value: Number(cuotasAnualUsd.toFixed(2)) },
+      { label: 'Matrícula', value: Number(matriculaUsd.toFixed(2)) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(anualUsd).toLocaleString('es-AR'),
+    centerLabel: 'Anual USD',
+    ariaLabel: 'Composición del costo anual en USD: 10 cuotas mensuales y matrícula',
+  };
   return {
     cuotaMensualLocal: Number(cuota.toFixed(0)),
     cuotaMensualUsd: Number(usd.toFixed(2)),
     matriculaAnualLocal: Number(matricula.toFixed(0)),
     costoAnualTotalUsd: Number(anualUsd.toFixed(2)),
     explicacion: `Jardín ${tipo} ${horas}h en ${pais}: cuota $${cuota.toLocaleString('es-AR')} ${d.simbolo} (~USD ${usd.toFixed(0)}/mes). Anual con matrícula: USD ${anualUsd.toFixed(0)}.`,
+    _chart: chart,
   };
 }

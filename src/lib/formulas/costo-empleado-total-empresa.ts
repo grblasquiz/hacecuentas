@@ -19,6 +19,7 @@ export interface Outputs {
   porcentajeSobreBruto: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 export function costoEmpleadoTotalEmpresa(i: Inputs): Outputs {
@@ -59,6 +60,21 @@ export function costoEmpleadoTotalEmpresa(i: Inputs): Outputs {
   const formula = `Costo total = $${sueldoBrutoTotal.toLocaleString()} + ${((contribucionesPatronales / sueldoBrutoTotal) * 100).toFixed(1)}% contrib. + SAC + vac + ART = $${Math.round(costoMensualTotal).toLocaleString()}/mes`;
   const explicacion = `Sueldo bruto: $${sueldoBrutoTotal.toLocaleString()}. Contribuciones patronales: $${Math.round(contribucionesPatronales).toLocaleString()} (${((contribucionesPatronales / sueldoBrutoTotal) * 100).toFixed(1)}%). Provisión SAC: $${Math.round(costoAguinaldo).toLocaleString()}. Provisión vacaciones: $${Math.round(costoVacaciones).toLocaleString()}. ART: $${Math.round(artCosto).toLocaleString()}. Costo mensual total: $${Math.round(costoMensualTotal).toLocaleString()} (${porcentajeSobreBruto.toFixed(1)}% del bruto). Costo anual: $${Math.round(costoAnualTotal).toLocaleString()}. El empleado cuesta ${((porcentajeSobreBruto / 100) - 1).toFixed(0) > '0' ? `${((porcentajeSobreBruto - 100)).toFixed(0)}% más que su sueldo bruto` : 'lo mismo que su sueldo'}.`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Sueldo bruto', value: Math.round(sueldoBrutoTotal) },
+      { label: 'Contribuciones patronales', value: Math.round(contribucionesPatronales) },
+      { label: 'Provisión SAC', value: Math.round(costoAguinaldo) },
+      { label: 'Provisión vacaciones', value: Math.round(costoVacaciones) },
+      { label: 'ART', value: Math.round(artCosto) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(costoMensualTotal).toLocaleString('es-AR'),
+    centerLabel: 'Costo/mes',
+    ariaLabel: 'Composición del costo mensual total del empleado para la empresa',
+  };
+
   return {
     sueldoBrutoTotal: Math.round(sueldoBrutoTotal),
     contribucionesPatronales: Math.round(contribucionesPatronales),
@@ -70,5 +86,6 @@ export function costoEmpleadoTotalEmpresa(i: Inputs): Outputs {
     porcentajeSobreBruto: Number(porcentajeSobreBruto.toFixed(2)),
     formula,
     explicacion,
+    _chart: chart,
   };
 }

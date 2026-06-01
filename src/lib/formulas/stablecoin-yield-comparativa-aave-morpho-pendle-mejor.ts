@@ -18,6 +18,7 @@ export interface Outputs {
   nivelRiesgoLabel: string;
   liquidezLabel: string;
   nota: string;
+  _chart?: any;
 }
 
 // APYs de referencia Q1-Q2 2026 (fuente: interfaces de cada protocolo, valores orientativos)
@@ -167,6 +168,19 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  // Desglose del rendimiento bruto: interés neto + costo de gas
+  const chart = (apyBruto > 0 && interesNeto > 0) ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Interés neto', value: Number(interesNeto.toFixed(2)) },
+      { label: 'Costo de gas', value: Number(gasTotal.toFixed(2)) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(interessBruto).toLocaleString('es-AR'),
+    centerLabel: 'Interés bruto',
+    ariaLabel: 'Composición del interés bruto: interés neto más costo de gas',
+  } : undefined;
+
   return {
     apyBruto,
     apyAjustado,
@@ -177,5 +191,6 @@ export function compute(i: Inputs): Outputs {
     nivelRiesgoLabel,
     liquidezLabel,
     nota,
+    _chart: chart,
   };
 }

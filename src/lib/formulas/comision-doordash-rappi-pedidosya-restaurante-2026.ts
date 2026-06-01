@@ -16,6 +16,7 @@ export interface Outputs {
   margen_neto_porcentaje: number;
   ticket_minimo_rentable: number;
   breakeven_pedidos: number;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -74,6 +75,22 @@ export function compute(i: Inputs): Outputs {
     ? Math.ceil(publicidad / margen_neto_restaurante)
     : pedidos;
 
+  // Donut: descomposición del ingreso bruto mensual (ticket × pedidos)
+  // en lo que retiene la plataforma (comisión) vs lo que recibe el restaurante.
+  const comision_plataforma_mensual = comision_por_pedido * pedidos;
+  const recibe_restaurante_mensual = ingreso_bruto_mensual - comision_plataforma_mensual;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Recibe el restaurante', value: Math.max(0, Math.round(recibe_restaurante_mensual)) },
+      { label: 'Comisión plataforma', value: Math.max(0, Math.round(comision_plataforma_mensual)) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(ingreso_bruto_mensual).toLocaleString('es-AR'),
+    centerLabel: 'Ventas/mes',
+    ariaLabel: 'Composición de las ventas mensuales: lo que recibe el restaurante y la comisión de la plataforma de delivery.',
+  };
+
   return {
     comision_total_mensual: Math.round(comision_total_mensual * 100) / 100,
     comision_por_pedido: Math.round(comision_por_pedido * 100) / 100,
@@ -82,6 +99,7 @@ export function compute(i: Inputs): Outputs {
     margen_neto_restaurante: Math.round(margen_neto_restaurante * 100) / 100,
     margen_neto_porcentaje: Math.round(margen_neto_porcentaje * 100) / 100,
     ticket_minimo_rentable: Math.round(ticket_minimo_rentable * 100) / 100,
-    breakeven_pedidos: breakeven_pedidos
+    breakeven_pedidos: breakeven_pedidos,
+    _chart: chart
   };
 }

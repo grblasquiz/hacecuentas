@@ -20,6 +20,16 @@ const { post } = Astro.props;
 
 const siteUrl = 'https://hacecuentas.com';
 
+// OG / Discover image: generada por scripts/generate-og-images.ts en prebuild
+// (blog-<slug>.jpg, 1200×630, JPG). Discover pondera fuerte la imagen y prefiere
+// JPG ≥1200px. El generador produce imagen para TODO post con slug/title/
+// description (que son required acá), así que siempre existe en el deploy.
+// No usamos node:fs para chequear: el adapter de Cloudflare corre las páginas
+// en workerd y node:fs rompe el build. og-default.png queda como red de
+// seguridad sólo si alguien borra el JPG a mano.
+const ogImage = `/og/blog-${post.slug}.jpg`;
+const ogImageAbs = `${siteUrl}${ogImage}`;
+
 // ─── Related calcs ──────────────────────────────────────────────────────────
 const calcModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
 const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
@@ -154,13 +164,10 @@ const articleSchema: any = {
     '@type': 'WebPage',
     '@id': `${siteUrl}/blog/${post.slug}`,
   },
-  // Image array con múltiples aspect ratios — recomendado por Google para
-  // Discover + Top Stories (16:9, 4:3, 1:1 según Google guidelines).
-  image: [
-    `${siteUrl}/og-default.png`,           // 1200x630 (16:9-ish, OK Twitter/FB)
-    `${siteUrl}/og-default.png`,           // placeholder — todo: generate 4:3
-    `${siteUrl}/og-default.png`,           // placeholder — todo: generate 1:1
-  ],
+  // Imagen OG/Discover real por post (1200×630 JPG, generada en prebuild).
+  // Antes eran 3x og-default.png placeholder con TODOs — Discover descartaba la
+  // imagen por genérica. Ahora cada post tiene su card de marca con el titular.
+  image: [ogImageAbs],
   inLanguage: 'es-AR',
   keywords: (post.seoKeywords || []).join(', '),
   // articleBody para que Google Discover entienda contenido completo
@@ -224,6 +231,8 @@ const pageSchema = {
   description={post.description}
   canonical={`/blog/${post.slug}`}
   schema={pageSchema}
+  image={ogImage}
+  ogTitle={post.ogTitle}
   noindex={false}
   audience="AR"
   ogType="article"

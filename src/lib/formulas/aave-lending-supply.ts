@@ -1,6 +1,6 @@
 /** AAVE v3 supply APY with rewards */
 export interface Inputs { supplyAmount: number; supplyApy: number; rewardApr: number; assetPriceUsd: number; months: number; }
-export interface Outputs { supplyInterestUsd: number; rewardTokensUsd: number; totalApy: number; totalReturnUsd: number; netFinalValue: number; explicacion: string; }
+export interface Outputs { supplyInterestUsd: number; rewardTokensUsd: number; totalApy: number; totalReturnUsd: number; netFinalValue: number; explicacion: string; _chart?: any; }
 export function aaveLendingSupply(i: Inputs): Outputs {
   const p = Number(i.supplyAmount);
   const supplyApy = Number(i.supplyApy) / 100;
@@ -15,6 +15,17 @@ export function aaveLendingSupply(i: Inputs): Outputs {
   const rewardUsd = rewardTokens * price;
   const total = supplyUsd + rewardUsd;
   const totalApy = (supplyApy + rewardApr) * 100;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Interés supply', value: Number(supplyUsd.toFixed(2)) },
+      { label: 'Rewards', value: Number(rewardUsd.toFixed(2)) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Ganancia total',
+    ariaLabel: 'Composición de la ganancia: interés del supply y rewards.',
+  };
   return {
     supplyInterestUsd: Number(supplyUsd.toFixed(2)),
     rewardTokensUsd: Number(rewardUsd.toFixed(2)),
@@ -22,5 +33,6 @@ export function aaveLendingSupply(i: Inputs): Outputs {
     totalReturnUsd: Number(total.toFixed(2)),
     netFinalValue: Number((p * price + total).toFixed(2)),
     explicacion: `Supply de ${p} al ${(supplyApy*100).toFixed(2)}% APY + ${(rewardApr*100).toFixed(2)}% rewards en ${months} meses: gano $${total.toFixed(2)} USD.`,
+    _chart: chart,
   };
 }

@@ -13,6 +13,7 @@ export interface Outputs {
   diferencial3: number;
   nivel: string;
   mensaje: string;
+  _chart?: any;
 }
 
 export function handicapGolfEstimado(i: Inputs): Outputs {
@@ -40,12 +41,29 @@ export function handicapGolfEstimado(i: Inputs): Outputs {
 
   const hcap = Math.max(0, handicap);
 
+  const chart = {
+    type: 'scale' as const,
+    marker: hcap,
+    markerLabel: 'Tu handicap: ' + hcap,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Single digit', max: 5, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Avanzado', max: 10, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Intermedio', max: 18, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Principiante-intermedio', max: 28, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Principiante', max: Math.max(36, Math.ceil(hcap) + 2), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de handicap de golf: menor handicap indica mejor nivel de juego',
+  };
+
   return {
     handicap: hcap,
     diferencial1: diferenciales[0],
     diferencial2: diferenciales[1],
     diferencial3: diferenciales[2],
     nivel,
-    mensaje: `Handicap estimado: ${hcap}. ${nivel}. Mejor diferencial: ${sorted[0]}.`
+    mensaje: `Handicap estimado: ${hcap}. ${nivel}. Mejor diferencial: ${sorted[0]}.`,
+    _chart: chart,
   };
 }

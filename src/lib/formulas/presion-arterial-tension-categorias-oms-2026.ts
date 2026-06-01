@@ -9,6 +9,7 @@ export interface Outputs {
   clasificacion_numerica: number;
   riesgo_descripcion: string;
   recomendacion: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -64,10 +65,27 @@ export function compute(i: Inputs): Outputs {
     recomendacion = "Mantén tu presión en este rango mediante estilo de vida saludable: ejercicio regular, alimentación equilibrada, sueño adecuado, manejo de estrés. Mide periódicamente.";
   }
 
+  const chart = {
+    type: 'scale' as const,
+    marker: sistolica,
+    markerLabel: 'Tu sistólica: ' + sistolica + ' mmHg',
+    min: 90,
+    unit: ' mmHg',
+    segments: [
+      { nombre: 'Normal', max: 120, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Elevada', max: 130, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'HTA Estadio 1', max: 140, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'HTA Estadio 2', max: 180, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Crisis', max: Math.max(200, Math.ceil(sistolica) + 10), color: '#fca5a5', colorDark: '#7f1d1d' },
+    ],
+    ariaLabel: 'Escala de presión arterial sistólica según OMS/AHA',
+  };
+
   return {
     categoria,
     clasificacion_numerica,
     riesgo_descripcion,
-    recomendacion
+    recomendacion,
+    _chart: chart
   };
 }

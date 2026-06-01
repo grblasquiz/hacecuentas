@@ -14,6 +14,7 @@ export interface AguinaldoOutputs {
   aguinaldoNeto: number;
   descuentos: number;
   proporcion: string;
+  _chart?: any;
 }
 
 export function aguinaldo(inputs: AguinaldoInputs): AguinaldoOutputs {
@@ -35,10 +36,23 @@ export function aguinaldo(inputs: AguinaldoInputs): AguinaldoOutputs {
   const descuentos = aguinaldoBruto * 0.17;
   const aguinaldoNeto = aguinaldoBruto - descuentos;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto', value: Math.round(aguinaldoNeto) },
+      { label: 'Descuentos (17%)', value: Math.round(descuentos) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(aguinaldoBruto).toLocaleString('es-AR'),
+    centerLabel: 'Bruto',
+    ariaLabel: `Composición del aguinaldo bruto: neto ${Math.round(aguinaldoNeto)}, descuentos ${Math.round(descuentos)}.`,
+  };
+
   return {
     aguinaldoBruto: Math.round(aguinaldoBruto),
     aguinaldoNeto: Math.round(aguinaldoNeto),
     descuentos: Math.round(descuentos),
     proporcion: `${mesesTrabajados}/6 meses trabajados`,
+    _chart: chart,
   };
 }

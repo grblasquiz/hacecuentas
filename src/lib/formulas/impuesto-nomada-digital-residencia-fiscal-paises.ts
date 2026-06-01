@@ -9,6 +9,7 @@ export interface Outputs {
   tasaEfectiva: number;
   ingresoNeto: number;
   detalle: string;
+  _chart?: any;
 }
 
 // Tipo de cambio referencial USD -> EUR (aproximado 2026)
@@ -175,10 +176,26 @@ export function compute(i: Inputs): Outputs {
   const tasaEfectiva = ingreso > 0 ? (impuestoUSD / ingreso) * 100 : 0;
   const ingresoNeto = ingreso - impuestoUSD;
 
+  const chart =
+    impuestoUSD > 0
+      ? {
+          type: "doughnut" as const,
+          slices: [
+            { label: "Ingreso neto", value: Math.round(ingresoNeto * 100) / 100 },
+            { label: "Impuesto", value: Math.round(impuestoUSD * 100) / 100 },
+          ],
+          prefix: "$",
+          centerValue: "$" + Math.round(ingreso).toLocaleString("es"),
+          centerLabel: "Ingreso bruto",
+          ariaLabel: "Reparto del ingreso anual entre neto e impuesto",
+        }
+      : undefined;
+
   return {
     impuestoUSD: Math.round(impuestoUSD * 100) / 100,
     tasaEfectiva: Math.round(tasaEfectiva * 100) / 100,
     ingresoNeto: Math.round(ingresoNeto * 100) / 100,
     detalle,
+    _chart: chart,
   };
 }

@@ -5,7 +5,7 @@
  * IVA 21% + aportes Caja Seguridad Social Escribanos PBA ~12%.
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _chart?: any; }
 
 export function honorariosEscribanoPba(i: Inputs): Outputs {
   const v = Math.max(0, Number(i.valorEscritura) || 0);
@@ -24,6 +24,21 @@ export function honorariosEscribanoPba(i: Inputs): Outputs {
   const total = honorarios + iva + aportes + gastosFijos;
 
   const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Honorarios', value: honorarios },
+      { label: 'IVA 21%', value: iva },
+      { label: 'Aportes Caja', value: aportes },
+      { label: 'Gastos fijos', value: gastosFijos },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del costo de escritura: honorarios, IVA, aportes y gastos fijos',
+  };
+
   return {
     honorarios: fmt(honorarios),
     iva: fmt(iva),
@@ -31,5 +46,6 @@ export function honorariosEscribanoPba(i: Inputs): Outputs {
     gastosFijos: fmt(gastosFijos),
     total: fmt(total),
     resumen: `Honorarios ${fmt(honorarios)} + IVA 21% + aportes Caja ~12% + gastos. Total ${fmt(total)}.`,
+    _chart: chart,
   };
 }

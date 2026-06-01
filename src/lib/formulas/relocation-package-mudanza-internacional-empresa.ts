@@ -1,6 +1,6 @@
 /** Costo total relocation package para mudanza internacional de empleado */
 export interface Inputs { mudanzaUsd: number; visaUsd: number; housingMensualUsd: number; mesesHousing: number; viajesUsd: number; bonusFirmaUsd: number; }
-export interface Outputs { totalRelocationUsd: number; housingTotalUsd: number; costoMensualPromedioUsd: number; explicacion: string; }
+export interface Outputs { totalRelocationUsd: number; housingTotalUsd: number; costoMensualPromedioUsd: number; explicacion: string; _chart?: any; }
 export function relocationPackageMudanzaInternacionalEmpresa(i: Inputs): Outputs {
   const mudanza = Number(i.mudanzaUsd) || 0;
   const visa = Number(i.visaUsd) || 0;
@@ -12,10 +12,26 @@ export function relocationPackageMudanzaInternacionalEmpresa(i: Inputs): Outputs
   const housingTotal = housingM * meses;
   const total = mudanza + visa + housingTotal + viajes + bonus;
   const promedio = meses > 0 ? total / meses : total;
+  const chartSlices = [
+    { label: 'Mudanza', value: mudanza },
+    { label: 'Visa', value: visa },
+    { label: 'Housing', value: housingTotal },
+    { label: 'Viajes', value: viajes },
+    { label: 'Bonus firma', value: bonus },
+  ].filter((s) => s.value > 0);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: chartSlices,
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total USD',
+    ariaLabel: 'Composición del paquete de relocation: mudanza, visa, housing, viajes y bonus de firma.',
+  };
   return {
     totalRelocationUsd: Number(total.toFixed(2)),
     housingTotalUsd: Number(housingTotal.toFixed(2)),
     costoMensualPromedioUsd: Number(promedio.toFixed(2)),
     explicacion: `Relocation total USD ${total.toLocaleString('es-AR')} (mudanza ${mudanza}, visa ${visa}, housing ${housingTotal}, viajes ${viajes}, bonus ${bonus}).`,
+    _chart: chart,
   };
 }

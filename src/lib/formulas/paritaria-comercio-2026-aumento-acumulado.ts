@@ -15,6 +15,7 @@ export interface Outputs {
   bonoNoRem: number;
   totalBolsillo: number;
   detalle: string;
+  _chart?: any;
 }
 
 // Escala salarial CCT 130/75 — básicos jornada completa 48 h
@@ -84,6 +85,18 @@ export function compute(i: Inputs): Outputs {
     `Bruto $${sueldoBruto.toFixed(0)}. Aportes 17%: $${descuentosAportes.toFixed(0)}. ` +
     (incluirBono ? `Bono no rem.: $${bonoNoRem.toFixed(0)}.` : "Sin bono no remunerativo.");
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto de bolsillo', value: sueldoNeto },
+      { label: 'Aportes (17%)', value: descuentosAportes },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(sueldoBruto).toLocaleString('es-AR'),
+    centerLabel: 'Bruto',
+    ariaLabel: 'Composición del sueldo bruto: neto de bolsillo más aportes del trabajador.',
+  };
+
   return {
     basicoCategoria,
     adicionalAntiguedad,
@@ -93,5 +106,6 @@ export function compute(i: Inputs): Outputs {
     bonoNoRem,
     totalBolsillo,
     detalle,
+    _chart: chart,
   };
 }

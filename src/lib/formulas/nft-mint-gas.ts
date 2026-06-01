@@ -1,6 +1,6 @@
 /** NFT mint gas cost */
 export interface Inputs { gasPriceGwei: number; gasUnitsMint: number; ethPriceUsd: number; mintPriceEth: number; quantity: number; }
-export interface Outputs { gasCostEth: number; gasCostUsd: number; mintCostEth: number; totalCostEth: number; totalCostUsd: number; gasPerMintUsd: number; explicacion: string; }
+export interface Outputs { gasCostEth: number; gasCostUsd: number; mintCostEth: number; totalCostEth: number; totalCostUsd: number; gasPerMintUsd: number; explicacion: string; _chart?: any; }
 export function nftMintGas(i: Inputs): Outputs {
   const gwei = Number(i.gasPriceGwei);
   const units = Number(i.gasUnitsMint);
@@ -16,6 +16,17 @@ export function nftMintGas(i: Inputs): Outputs {
   const totalEth = mintCost + gasEth;
   const totalUsd = totalEth * ethUsd;
   const perMint = gasUsd / qty;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Precio mint', value: Number(mintCost.toFixed(6)) },
+      { label: 'Gas', value: Number(gasEth.toFixed(6)) },
+    ],
+    prefix: '',
+    centerValue: totalEth.toFixed(4) + ' ETH',
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del costo total en ETH: precio de mint más gas',
+  };
   return {
     gasCostEth: Number(gasEth.toFixed(6)),
     gasCostUsd: Number(gasUsd.toFixed(2)),
@@ -24,5 +35,6 @@ export function nftMintGas(i: Inputs): Outputs {
     totalCostUsd: Number(totalUsd.toFixed(2)),
     gasPerMintUsd: Number(perMint.toFixed(2)),
     explicacion: `Mint de ${qty} NFT a ${gwei} gwei × ${units} units: gas ${gasEth.toFixed(4)} ETH ($${gasUsd.toFixed(2)}). Mint price ${mintCost.toFixed(2)} ETH. Total ${totalEth.toFixed(4)} ETH = $${totalUsd.toFixed(2)}.`,
+    _chart: chart,
   };
 }

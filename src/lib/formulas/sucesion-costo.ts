@@ -14,6 +14,7 @@ export interface SucesionCostoOutputs {
   honorarios: number;
   tasaJusticia: number;
   otrosGastos: number;
+  _chart?: any;
 }
 
 export function sucesionCosto(inputs: SucesionCostoInputs): SucesionCostoOutputs {
@@ -51,10 +52,24 @@ export function sucesionCosto(inputs: SucesionCostoInputs): SucesionCostoOutputs
   const otrosGastos = acervo * porcOtros;
   const costoTotal = honorarios + tasaJusticia + otrosGastos;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Honorarios', value: Math.round(honorarios) },
+      { label: 'Tasa de justicia', value: Math.round(tasaJusticia) },
+      { label: 'Otros gastos', value: Math.round(otrosGastos) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(costoTotal).toLocaleString('es-AR'),
+    centerLabel: 'Costo total',
+    ariaLabel: 'Composición del costo de sucesión: honorarios, tasa de justicia y otros gastos',
+  };
+
   return {
     costoTotal: Math.round(costoTotal),
     honorarios: Math.round(honorarios),
     tasaJusticia: Math.round(tasaJusticia),
     otrosGastos: Math.round(otrosGastos),
+    _chart: chart,
   };
 }

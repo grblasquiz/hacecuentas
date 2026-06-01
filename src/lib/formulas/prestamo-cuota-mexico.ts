@@ -19,6 +19,7 @@ export interface PrestamoCuotaMexicoOutputs {
   formula: string;
   explicacion: string;
   tablaResumen: string;
+  _chart?: any;
 }
 
 export function prestamoCuotaMexico(inputs: PrestamoCuotaMexicoInputs): PrestamoCuotaMexicoOutputs {
@@ -99,6 +100,18 @@ export function prestamoCuotaMexico(inputs: PrestamoCuotaMexicoInputs): Prestamo
 
   const explicacion = `Préstamo de ${fmt(monto)} a ${fmtPct(tasaAnual)} anual (${fmtPct(i * 100)} mensual) en ${plazoMeses} meses. Tu cuota mensual es de ${fmt(cuota)}. En total pagás ${fmt(totalPagado)}, de los cuales ${fmt(totalIntereses)} son intereses (${fmtPct(totalIntereses / monto * 100)} del capital). CAT aproximado: ${fmtPct(catAprox)} (sin comisiones). ${tipoTasaTxt}`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: Math.round(monto) },
+      { label: 'Intereses', value: Math.round(totalIntereses) },
+    ],
+    prefix: '$',
+    centerValue: fmt(Math.round(totalPagado)),
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del total pagado: capital más intereses',
+  };
+
   return {
     cuotaMensual: Math.round(cuota),
     totalPagado: Math.round(totalPagado),
@@ -107,5 +120,6 @@ export function prestamoCuotaMexico(inputs: PrestamoCuotaMexicoInputs): Prestamo
     formula,
     explicacion,
     tablaResumen,
+    _chart: chart,
   };
 }

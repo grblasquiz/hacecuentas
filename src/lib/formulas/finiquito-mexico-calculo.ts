@@ -25,6 +25,7 @@ export interface Outputs {
   totalNeto: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 export function finiquitoMexicoCalculo(i: Inputs): Outputs {
@@ -89,6 +90,23 @@ export function finiquitoMexicoCalculo(i: Inputs): Outputs {
   const formula = `${tipoStr}: salarios + aguinaldo + vac + prima${causa === 'despido' ? ' + 3 meses + 20d/año + prima ant.' : ''} = $${Math.round(totalBruto).toLocaleString('es-MX')}`;
   const explicacion = `${tipoStr} con ${aniosAntiguedad.toFixed(1)} años de antigüedad y salario diario de $${salarioDiario.toLocaleString('es-MX')}. Desglose: salarios pendientes $${Math.round(salariosPendientes).toLocaleString('es-MX')}, aguinaldo proporcional $${Math.round(aguinaldoProporcional).toLocaleString('es-MX')}, vacaciones $${Math.round(vacacionesProporcionales).toLocaleString('es-MX')}, prima vacacional $${Math.round(primaVacacional).toLocaleString('es-MX')}${primaAntiguedad > 0 ? `, prima antigüedad $${Math.round(primaAntiguedad).toLocaleString('es-MX')}` : ''}${indemnizacion3meses > 0 ? `, indemnización $${Math.round(indemnizacion3meses).toLocaleString('es-MX')}` : ''}. Total bruto: $${Math.round(totalBruto).toLocaleString('es-MX')}. ISR estimado: $${Math.round(isrEstimado).toLocaleString('es-MX')}. Neto: $${Math.round(totalNeto).toLocaleString('es-MX')} MXN.`;
 
+  const slices = [
+    { label: 'Salarios pendientes', value: Math.round(salariosPendientes) },
+    { label: 'Aguinaldo proporcional', value: Math.round(aguinaldoProporcional) },
+    { label: 'Vacaciones', value: Math.round(vacacionesProporcionales) },
+    { label: 'Prima vacacional', value: Math.round(primaVacacional) },
+  ];
+  if (primaAntiguedad > 0) slices.push({ label: 'Prima de antigüedad', value: Math.round(primaAntiguedad) });
+  if (indemnizacion3meses > 0) slices.push({ label: 'Indemnización', value: Math.round(indemnizacion3meses) });
+  const chart = {
+    type: 'doughnut' as const,
+    slices,
+    prefix: '$',
+    centerValue: '$' + Math.round(totalBruto).toLocaleString('es-MX'),
+    centerLabel: 'Total bruto',
+    ariaLabel: 'Composición del finiquito: salarios, aguinaldo, vacaciones, prima vacacional y conceptos por despido',
+  };
+
   return {
     salariosPendientes: Math.round(salariosPendientes),
     aguinaldoProporcional: Math.round(aguinaldoProporcional),
@@ -101,5 +119,6 @@ export function finiquitoMexicoCalculo(i: Inputs): Outputs {
     totalNeto: Math.round(totalNeto),
     formula,
     explicacion,
+    _chart: chart,
   };
 }

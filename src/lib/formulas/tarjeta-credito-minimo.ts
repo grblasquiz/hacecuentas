@@ -1,6 +1,6 @@
 /** Costo de pagar solo el mínimo de la tarjeta */
 export interface Inputs { saldoActual: number; tnaAnual: number; minimoPct?: number; }
-export interface Outputs { totalPagado: number; interesesPagados: number; mesesPagar: number; costoFinanciacion: string; }
+export interface Outputs { totalPagado: number; interesesPagados: number; mesesPagar: number; costoFinanciacion: string; _chart?: any; }
 
 export function tarjetaCreditoMinimo(i: Inputs): Outputs {
   let saldo = Number(i.saldoActual);
@@ -27,10 +27,23 @@ export function tarjetaCreditoMinimo(i: Inputs): Outputs {
   const intereses = totalPagado - saldoOriginal;
   const costoPct = ((intereses / saldoOriginal) * 100).toFixed(0);
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Saldo original', value: saldoOriginal },
+      { label: 'Intereses', value: intereses },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalPagado).toLocaleString('es-AR'),
+    centerLabel: 'Total pagado',
+    ariaLabel: 'Composición del total pagado: saldo original más intereses.',
+  };
+
   return {
     totalPagado: Math.round(totalPagado),
     interesesPagados: Math.round(intereses),
     mesesPagar: meses,
     costoFinanciacion: `Pagás ${costoPct}% más del saldo original solo en intereses`,
+    _chart: chart,
   };
 }

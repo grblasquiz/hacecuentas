@@ -4,7 +4,7 @@
  * Seguro de vida ~0.04%/mes s/saldo + seguro incendio ~0.02%/mes.
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _chart?: any; }
 
 export function hipotecaUvaBbva(i: Inputs): Outputs {
   const monto = Math.max(0, Number(i.monto) || 0);
@@ -28,6 +28,20 @@ export function hipotecaUvaBbva(i: Inputs): Outputs {
   const totalAPagar = cuotaTotal * n;
 
   const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
+
+  // Composición de la cuota inicial: cuota pura + seguros
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cuota pura', value: Math.round(cuotaPuraArs) },
+      { label: 'Seguros', value: Math.round(seguroVida + seguroIncendio) },
+    ],
+    prefix: '$',
+    centerValue: fmt(cuotaTotal),
+    centerLabel: 'Cuota inicial',
+    ariaLabel: 'Composición de la cuota inicial: cuota pura y seguros',
+  };
+
   return {
     cuotaInicial: fmt(cuotaTotal),
     cuotaPura: fmt(cuotaPuraArs),
@@ -36,5 +50,6 @@ export function hipotecaUvaBbva(i: Inputs): Outputs {
     capitalUvas: `${capitalUvas.toFixed(2)} UVAs`,
     totalAproxPagado: fmt(totalAPagar),
     resumen: `Cuota inicial ${fmt(cuotaTotal)} — se ajusta mensualmente por UVA. Tasa ${tnaPct}% + UVA.`,
+    _chart: chart,
   };
 }

@@ -44,6 +44,7 @@ export interface IndemAgravadaOutputs {
   vacaciones: number;
   aniosComputables: string;
   mensaje: string;
+  _chart?: any;
 }
 
 export function indemnizacionEmpleadaCasaParticularLey26844(
@@ -120,6 +121,21 @@ export function indemnizacionEmpleadaCasaParticularLey26844(
 
   const total = antiguedad + agravada + preaviso + sac + vacaciones;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Antigüedad (Art. 48)', value: Math.round(antiguedad) },
+      { label: 'Indemnización agravada (6 sueldos)', value: Math.round(agravada) },
+      { label: 'Preaviso', value: Math.round(preaviso) },
+      { label: 'SAC proporcional', value: Math.round(sac) },
+      { label: 'Vacaciones proporcionales', value: Math.round(vacaciones) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición de la liquidación: antigüedad, indemnización agravada, preaviso, SAC y vacaciones',
+  };
+
   return {
     total: Math.round(total),
     antiguedad: Math.round(antiguedad),
@@ -129,5 +145,6 @@ export function indemnizacionEmpleadaCasaParticularLey26844(
     vacaciones: Math.round(vacaciones),
     aniosComputables: `${aniosComputables} ${aniosComputables === 1 ? 'año' : 'años'} computables`,
     mensaje,
+    _chart: chart,
   };
 }

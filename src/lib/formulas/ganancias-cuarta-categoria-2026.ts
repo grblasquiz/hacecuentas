@@ -21,6 +21,7 @@ export interface Outputs {
   tasaEfectiva: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 // Valores estimados 2026 (basado en Ley 27.743 + actualización por inflación)
@@ -87,6 +88,19 @@ export function gananciasCuartaCategoria2026(i: Inputs): Outputs {
     ? `Con un sueldo bruto de $${sueldoBruto.toLocaleString()}/mes, tus deducciones ($${Math.round(deduccionesTotal).toLocaleString()}) superan tu ganancia neta ($${Math.round(gananciaAnual).toLocaleString()}). No pagás Ganancias.`
     : `Sueldo bruto: $${sueldoBruto.toLocaleString()}/mes. Aportes seg. social (17%): $${Math.round(aportesSegSocial).toLocaleString()}. Ganancia anual (13 sueldos): $${Math.round(gananciaAnual).toLocaleString()}. Deducciones: $${Math.round(deduccionesTotal).toLocaleString()} (MNI + especial${tieneConyuge ? ' + cónyuge' : ''}${hijos > 0 ? ` + ${hijos} hijo(s)` : ''}). Ganancia sujeta a impuesto: $${Math.round(gananciaNetaSujetaImpuesto).toLocaleString()}. Impuesto anual: $${Math.round(impuestoAnual).toLocaleString()} ($${Math.round(impuestoMensual).toLocaleString()}/mes). Tasa efectiva: ${tasaEfectiva.toFixed(2)}%.`;
 
+  const netoDespuesImpuesto = Math.max(0, gananciaAnual - impuestoAnual);
+  const chart = impuestoAnual > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Queda en mano', value: Math.round(netoDespuesImpuesto) },
+      { label: 'Impuesto Ganancias', value: Math.round(impuestoAnual) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(gananciaAnual).toLocaleString('es-AR'),
+    centerLabel: 'Ganancia anual',
+    ariaLabel: 'Composición de la ganancia anual: lo que queda en mano vs el impuesto a las Ganancias',
+  } : undefined;
+
   return {
     sueldoNetoSegSocial: Math.round(sueldoNetoSegSocial),
     gananciaAnual: Math.round(gananciaAnual),
@@ -97,5 +111,6 @@ export function gananciasCuartaCategoria2026(i: Inputs): Outputs {
     tasaEfectiva: Number(tasaEfectiva.toFixed(2)),
     formula,
     explicacion,
+    _chart: chart,
   };
 }

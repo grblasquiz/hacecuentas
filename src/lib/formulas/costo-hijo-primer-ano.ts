@@ -1,6 +1,6 @@
 /** Costo del primer año de un bebé en Argentina */
 export interface Inputs { alimentacion: string; panales: string; nivelGasto: string; }
-export interface Outputs { totalAnual: number; promedioMensual: number; alimentacionAnual: number; panalesAnual: number; mensaje: string; }
+export interface Outputs { totalAnual: number; promedioMensual: number; alimentacionAnual: number; panalesAnual: number; mensaje: string; _chart?: any; }
 
 export function costoHijoPrimerAno(i: Inputs): Outputs {
   const alimentacion = String(i.alimentacion || 'mixta');
@@ -37,11 +37,30 @@ export function costoHijoPrimerAno(i: Inputs): Outputs {
   const totalAnual = Math.round(gastoMensual * 12 + muebles + equipamiento);
   const promedioMensual = Math.round(totalAnual / 12);
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Alimentación', value: Math.round(alimentacionMes * 12) },
+      { label: 'Pañales', value: Math.round(panalesMes * 12) },
+      { label: 'Ropa', value: Math.round(ropaMes * 12) },
+      { label: 'Salud', value: Math.round(saludMes * 12) },
+      { label: 'Higiene', value: Math.round(higieneMes * 12) },
+      { label: 'Otros', value: Math.round(otrosMes * 12) },
+      { label: 'Muebles', value: Math.round(muebles) },
+      { label: 'Equipamiento', value: Math.round(equipamiento) },
+    ],
+    prefix: '$',
+    centerValue: '$' + totalAnual.toLocaleString('es-AR'),
+    centerLabel: 'Total año 1',
+    ariaLabel: 'Composición del gasto del primer año del bebé: alimentación, pañales, ropa, salud, higiene, otros, muebles y equipamiento.',
+  };
+
   return {
     totalAnual,
     promedioMensual,
     alimentacionAnual: Math.round(alimentacionMes * 12),
     panalesAnual: Math.round(panalesMes * 12),
-    mensaje: `Primer año: $${totalAnual.toLocaleString()}. Mensual promedio: $${promedioMensual.toLocaleString()}. Alimentación: $${Math.round(alimentacionMes).toLocaleString()}/mes. Pañales: $${Math.round(panalesMes).toLocaleString()}/mes.`
+    mensaje: `Primer año: $${totalAnual.toLocaleString()}. Mensual promedio: $${promedioMensual.toLocaleString()}. Alimentación: $${Math.round(alimentacionMes).toLocaleString()}/mes. Pañales: $${Math.round(panalesMes).toLocaleString()}/mes.`,
+    _chart: chart
   };
 }

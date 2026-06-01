@@ -13,6 +13,7 @@ export interface Outputs {
   totalInteracciones: number;
   tasaComentariosPorLike: number;
   mensaje: string;
+  _chart?: any;
 }
 
 export function engagement(i: Inputs): Outputs {
@@ -35,11 +36,28 @@ export function engagement(i: Inputs): Outputs {
   else if (erFollowers > 1) msg = 'Engagement en línea con el promedio Instagram 2026.';
   else msg = 'Engagement bajo — revisá contenido, horario y hashtags.';
 
+  const erRounded = Number(erFollowers.toFixed(2));
+  const chart = {
+    type: 'scale' as const,
+    marker: erRounded,
+    markerLabel: 'Tu engagement: ' + erRounded + '%',
+    min: 0,
+    unit: '%',
+    segments: [
+      { nombre: 'Bajo', max: 1, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Promedio', max: 3, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Muy bueno', max: 6, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Extraordinario', max: Math.max(9, Math.ceil(erRounded) + 1), color: '#86efac', colorDark: '#15803d' },
+    ],
+    ariaLabel: 'Escala de engagement rate sobre seguidores: bajo, promedio, muy bueno, extraordinario',
+  };
+
   return {
-    engagementPorFollowers: Number(erFollowers.toFixed(2)),
+    engagementPorFollowers: erRounded,
     engagementPorImpresiones: Number(erImps.toFixed(2)),
     totalInteracciones: total,
     tasaComentariosPorLike: Number(ratioComm.toFixed(2)),
     mensaje: msg,
+    _chart: chart,
   };
 }

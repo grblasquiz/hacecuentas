@@ -67,13 +67,14 @@ for (const c of calcs as any[]) {
     </button>
   </div>
 
-  <div class="filters" id="filters">
-    <button class="chip active" data-cat="all">Todas ({totalCount})</button>
+  <fieldset class="filters" id="filters">
+    <legend class="filters-legend">Filtrar por categoría</legend>
+    <button class="chip active" data-cat="all" aria-pressed="true">Todas ({totalCount})</button>
     {Object.entries(categoryLabels).map(([cat, label]) => {
       const count = categoryCounts[cat] || 0;
-      return count > 0 ? <button class="chip" data-cat={cat}>{label} ({count})</button> : null;
+      return count > 0 ? <button class="chip" data-cat={cat} aria-pressed="false">{label} ({count})</button> : null;
     })}
-  </div>
+  </fieldset>
 
   <div class="results-count" id="results-count" aria-live="polite"></div>
 
@@ -146,6 +147,20 @@ for (const c of calcs as any[]) {
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
+    /* reset de <fieldset> (lo usamos como grupo a11y de los chips) */
+    border: 0;
+    padding: 0;
+    min-width: 0;
+  }
+  .filters-legend {
+    /* visually-hidden: lo anuncia el lector de pantalla, sin ocupar espacio */
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .chip {
@@ -277,19 +292,49 @@ for (const c of calcs as any[]) {
     </a>`;
   }
 
+  // Score de relevancia por entrada. Usa campos normalizados precomputados
+  // (e._h título, e._s slug, e._d desc, e._hw/_sw palabras). Semántica AND:
+  // todo token de la query tiene que matchear en algún lado o la entrada se
+  // descarta. Prioridad título > slug > descripción; prefijo de palabra (para
+  // "sueld" → "sueldo") puntúa más que substring suelto.
+  function scoreEntry(e, qNorm, tokens) {
+    let score = 0;
+    if (e._h.startsWith(qNorm)) score += 45;       // título arranca con la query
+    else if (e._h.includes(qNorm)) score += 28;    // frase completa en el título
+    for (const t of tokens) {
+      let ts = 0;
+      if (e._hw.includes(t)) ts = 30;                       // palabra exacta en título
+      else if (e._hw.some((w) => w.startsWith(t))) ts = 22; // prefijo en título
+      else if (e._h.includes(t)) ts = 14;                   // substring en título
+      else if (e._sw.some((w) => w.startsWith(t))) ts = 12; // prefijo en slug
+      else if (e._s.includes(t)) ts = 8;                    // substring en slug
+      else if (e._d.includes(t)) ts = 4;                    // en descripción
+      else return 0;                                        // token sin match → fuera (AND)
+      score += ts;
+    }
+    return score;
+  }
+
   function apply() {
     if (!ready) return;
-    const q = norm(input.value.trim());
-    const filtered = entries.filter((e) => {
-      const matchCat = activeCat === 'all' || e.c === activeCat;
-      if (!matchCat) return false;
-      if (!q) return true;
-      return norm(`${e.h} ${e.d} ${e.s}`).includes(q);
-    });
+    const raw = input.value.trim();
+    const qNorm = norm(raw);
+    const tokens = qNorm.split(/\s+/).filter(Boolean);
+    let filtered;
+    if (!tokens.length) {
+      filtered = entries.filter((e) => activeCat === 'all' || e.c === activeCat);
+    } else {
+      filtered = entries
+        .filter((e) => activeCat === 'all' || e.c === activeCat)
+        .map((e) => ({ e, score: scoreEntry(e, qNorm, tokens) }))
+        .filter((x) => x.score > 0)
+        .sort((a, b) => b.score - a.score || a.e.h.length - b.e.h.length)
+        .map((x) => x.e);
+    }
     grid.removeAttribute('data-loading');
     grid.innerHTML = filtered.map(cardHtml).join('');
     empty.hidden = filtered.length > 0;
-    count.textContent = q || activeCat !== 'all'
+    count.textContent = raw || activeCat !== 'all'
       ? `${filtered.length} resultado${filtered.length === 1 ? '' : 's'}`
       : '';
     clear.hidden = !input.value;
@@ -300,8 +345,9 @@ for (const c of calcs as any[]) {
 
   filters.querySelectorAll('.chip').forEach((chip) => {
     chip.addEventListener('click', () => {
-      filters.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+      filters.querySelectorAll('.chip').forEach((c) => { c.classList.remove('active'); c.setAttribute('aria-pressed', 'false'); });
       chip.classList.add('active');
+      chip.setAttribute('aria-pressed', 'true');
       activeCat = chip.dataset.cat || 'all';
       apply();
     });
@@ -315,6 +361,15 @@ for (const c of calcs as any[]) {
     })
     .then((data) => {
       entries = data;
+      // Precomputar campos normalizados una vez (no por keystroke): título,
+      // slug-como-palabras y descripción + listas de palabras para el scoring.
+      for (const e of entries) {
+        e._h = norm(e.h);
+        e._s = norm(e.s).replace(/-/g, ' ');
+        e._d = norm(e.d);
+        e._hw = e._h.split(/\s+/).filter(Boolean);
+        e._sw = e._s.split(/\s+/).filter(Boolean);
+      }
       ready = true;
       // Aplicar query inicial si vino por URL
       const params = new URLSearchParams(window.location.search);

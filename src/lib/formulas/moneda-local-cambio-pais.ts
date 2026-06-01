@@ -10,6 +10,7 @@ export interface MonedaLocalOutputs {
   gastoTotalUSD: number;
   tarjetaUSD: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function monedaLocalCambioPais(inputs: MonedaLocalInputs): MonedaLocalOutputs {
@@ -32,10 +33,23 @@ export function monedaLocalCambioPais(inputs: MonedaLocalInputs): MonedaLocalOut
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const chart = (efectivoTotal > 0 && tarjetaTotal > 0) ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Efectivo', value: efectivoTotal },
+      { label: 'Tarjeta', value: tarjetaTotal },
+    ],
+    prefix: 'USD ',
+    centerValue: 'USD ' + Math.round(gastoTotal).toLocaleString('es-AR'),
+    centerLabel: 'Gasto total',
+    ariaLabel: 'Composición del gasto del viaje: efectivo y tarjeta',
+  } : undefined;
+
   return {
     efectivoTotalUSD: efectivoTotal,
     gastoTotalUSD: gastoTotal,
     tarjetaUSD: tarjetaTotal,
+    _chart: chart,
     detalle: `${dias} días × USD ${fmt.format(gastoDiario)}/día = USD ${fmt.format(totalPorPersona)}/persona. Efectivo (${pctEfectivo}%): USD ${fmt.format(efectivoPorPersona)}/persona. Tarjeta: USD ${fmt.format(tarjetaPorPersona)}/persona.${viajeros > 1 ? ` Total ${viajeros} viajeros: USD ${fmt.format(efectivoTotal)} en efectivo.` : ''}`,
   };
 }

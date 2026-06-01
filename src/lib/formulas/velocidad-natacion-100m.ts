@@ -16,6 +16,7 @@ export interface Outputs {
   tiempoEstimado1500m: string;
   categoria: string;
   resumen: string;
+  _chart?: any;
 }
 
 export function velocidadNatacion100m(i: Inputs): Outputs {
@@ -52,6 +53,22 @@ export function velocidadNatacion100m(i: Inputs): Outputs {
 
   const paceLabel = fmt(segPor100);
 
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(segPor100.toFixed(1)),
+    markerLabel: 'Tu pace: ' + paceLabel + '/100m',
+    min: 40,
+    unit: 's',
+    segments: [
+      { nombre: 'Competitivo', max: 60, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Avanzado', max: 80, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Intermedio', max: 100, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Recreativo', max: 120, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Principiante', max: Math.max(150, Math.ceil(segPor100) + 10), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de pace en natación por 100m: menor tiempo es mejor',
+  };
+
   return {
     pacePor100m: paceLabel,
     pace100m: paceLabel,
@@ -63,5 +80,6 @@ export function velocidadNatacion100m(i: Inputs): Outputs {
     tiempoEstimado1500m,
     categoria: cat,
     resumen: `Nadaste ${dist}m en ${min}:${String(seg).padStart(2, '0')} → pace de **${paceLabel} por 100m** (${vKmh.toFixed(2)} km/h). Nivel: ${cat}. Para 1500m: ${tiempoEstimado1500m}.`,
+    _chart: chart,
   };
 }

@@ -29,6 +29,7 @@ export interface ArtPrestacionIltOutputs {
   diasArt: string;
   fechaLimiteIltMax: string;
   mensaje: string;
+  _chart?: any;
 }
 
 const DIAS_EMPLEADOR = 10;
@@ -104,6 +105,18 @@ export function artPrestacionIltIncapacidadTemporaria(
       ? `${diasArtNum} ${diasArtNum === 1 ? 'día' : 'días'} a cargo de la ART`
       : 'Sin días a cargo de la ART (todo el empleador)';
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Empleador (días 1-10)', value: Math.round(pagaEmpleadorDias1a10) },
+      { label: 'ART (días 11+)', value: Math.round(pagaArtDias11Plus) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalPrestacion).toLocaleString('es-AR'),
+    centerLabel: 'Prestación total',
+    ariaLabel: 'Composición de la prestación: tramo a cargo del empleador y tramo a cargo de la ART',
+  };
+
   return {
     pagaEmpleadorDias1a10: Math.round(pagaEmpleadorDias1a10),
     pagaArtDias11Plus: Math.round(pagaArtDias11Plus),
@@ -112,5 +125,6 @@ export function artPrestacionIltIncapacidadTemporaria(
     diasArt,
     fechaLimiteIltMax,
     mensaje,
+    _chart: chart,
   };
 }

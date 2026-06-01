@@ -12,6 +12,7 @@ export interface SueldoBrutoDesdeNetoOutputs {
   sueldoBruto: number;
   aportesMonto: number;
   netoResultado: number;
+  _chart?: any;
 }
 
 export function sueldoBrutoDesdeNeto(inputs: SueldoBrutoDesdeNetoInputs): SueldoBrutoDesdeNetoOutputs {
@@ -27,9 +28,22 @@ export function sueldoBrutoDesdeNeto(inputs: SueldoBrutoDesdeNetoInputs): Sueldo
   const aportesMonto = sueldoBruto * tasaAportes;
   const netoResultado = sueldoBruto - aportesMonto;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto de bolsillo', value: Math.round(netoResultado) },
+      { label: 'Aportes y descuentos', value: Math.round(aportesMonto) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(sueldoBruto).toLocaleString('es-AR'),
+    centerLabel: 'Bruto',
+    ariaLabel: 'Composición del sueldo bruto: neto de bolsillo y aportes/descuentos.',
+  };
+
   return {
     sueldoBruto: Math.round(sueldoBruto),
     aportesMonto: Math.round(aportesMonto),
     netoResultado: Math.round(netoResultado),
+    _chart: chart,
   };
 }

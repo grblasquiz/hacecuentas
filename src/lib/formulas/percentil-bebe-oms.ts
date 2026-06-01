@@ -1,6 +1,6 @@
 /** Percentil de peso y talla del bebé — OMS */
 export interface Inputs { edadMeses: number; sexoBebe: string; pesoBebe: number; tallaBebe?: number; }
-export interface Outputs { percentilPeso: string; percentilTalla: string; evaluacion: string; pesoEsperado: string; }
+export interface Outputs { percentilPeso: string; percentilTalla: string; evaluacion: string; pesoEsperado: string; _chart?: any; }
 
 // Datos OMS simplificados: [P3, P15, P50, P85, P97] en kg por mes, varones
 const pesoVaron: Record<number, number[]> = {
@@ -66,5 +66,21 @@ export function percentilBebeOms(i: Inputs): Outputs {
     percentilTalla = 'Percentil de talla calculado de forma aproximada (consultá tablas OMS detalladas para precisión)';
   }
 
-  return { percentilPeso, percentilTalla, evaluacion, pesoEsperado };
+  const chart = {
+    type: 'scale' as const,
+    marker: peso,
+    markerLabel: 'Peso del bebé: ' + peso + ' kg',
+    min: Math.max(0, Math.floor(datos[0] - 1)),
+    unit: ' kg',
+    segments: [
+      { nombre: 'Bajo (< P3)', max: datos[0], color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'P3-P15', max: datos[1], color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Normal (P15-P85)', max: datos[3], color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'P85-P97', max: datos[4], color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Alto (> P97)', max: Math.max(datos[4] + 1, Math.ceil(peso) + 1), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de percentiles de peso OMS para ' + closest + ' meses',
+  };
+
+  return { percentilPeso, percentilTalla, evaluacion, pesoEsperado, _chart: chart };
 }

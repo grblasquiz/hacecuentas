@@ -24,6 +24,7 @@ export interface Outputs {
   ganancia_neta_por_hora_usd: number;
   ganancia_neta_mensual_usd: number;
   ganancia_neta_mensual_ars: number;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -73,6 +74,23 @@ export function compute(i: Inputs): Outputs {
   const ganancia_neta_mensual_usd = ganancia_neta_final_diaria_usd * dias_trabajo_mes;
   const ganancia_neta_mensual_ars = ganancia_neta_mensual_usd * tasa_cambio_usd_ars;
 
+  // Donut: descomposición del ingreso bruto diario en costos y ganancia neta.
+  // ingreso_bruto = comisión Uber + combustible + mantenimiento + monotributo + ganancia neta.
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Ganancia neta', value: Math.max(0, Math.round(ganancia_neta_final_diaria_usd * 100) / 100) },
+      { label: 'Comisión Uber', value: Math.max(0, Math.round(comision_uber_diaria_usd * 100) / 100) },
+      { label: 'Combustible', value: Math.max(0, Math.round(costo_combustible_diario_usd * 100) / 100) },
+      { label: 'Mantenimiento', value: Math.max(0, Math.round(costo_mantenimiento_diario_usd * 100) / 100) },
+      { label: 'Monotributo', value: Math.max(0, Math.round(aportacion_monotributo_usd * 100) / 100) },
+    ],
+    prefix: 'US$',
+    centerValue: 'US$' + Math.round(ingreso_bruto_diario_usd).toLocaleString('es-AR'),
+    centerLabel: 'Bruto/día',
+    ariaLabel: 'Composición del ingreso bruto diario de Uber: comisión, combustible, mantenimiento, monotributo y ganancia neta.',
+  };
+
   return {
     ingreso_bruto_diario_usd: Math.max(0, ingreso_bruto_diario_usd),
     comision_uber_diaria_usd: Math.max(0, comision_uber_diaria_usd),
@@ -84,6 +102,7 @@ export function compute(i: Inputs): Outputs {
     ganancia_neta_final_diaria_usd: Math.max(0, ganancia_neta_final_diaria_usd),
     ganancia_neta_por_hora_usd: Math.max(0, ganancia_neta_por_hora_usd),
     ganancia_neta_mensual_usd: Math.max(0, ganancia_neta_mensual_usd),
-    ganancia_neta_mensual_ars: Math.max(0, ganancia_neta_mensual_ars)
+    ganancia_neta_mensual_ars: Math.max(0, ganancia_neta_mensual_ars),
+    _chart: chart
   };
 }

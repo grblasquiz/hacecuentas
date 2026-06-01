@@ -25,6 +25,7 @@ export interface HorasExtraOutputs {
   monto100: number;
   totalExtras: number;
   sueldoConExtras: number;
+  _chart?: any;
 }
 
 export function horasExtra(inputs: HorasExtraInputs): HorasExtraOutputs {
@@ -49,6 +50,19 @@ export function horasExtra(inputs: HorasExtraInputs): HorasExtraOutputs {
   const totalExtras = monto50 + monto100;
   const sueldoConExtras = sueldo + totalExtras;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Sueldo base', value: Math.round(sueldo) },
+      { label: 'Extras 50%', value: Math.round(monto50) },
+      { label: 'Extras 100%', value: Math.round(monto100) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(sueldoConExtras).toLocaleString('es-AR'),
+    centerLabel: 'Sueldo total',
+    ariaLabel: 'Composición del sueldo con extras: sueldo base más horas al 50% y al 100%',
+  };
+
   return {
     valorHoraNormal: Math.round(valorHoraNormal),
     valorHora50: Math.round(valorHora50),
@@ -57,5 +71,6 @@ export function horasExtra(inputs: HorasExtraInputs): HorasExtraOutputs {
     monto100: Math.round(monto100),
     totalExtras: Math.round(totalExtras),
     sueldoConExtras: Math.round(sueldoConExtras),
+    _chart: chart,
   };
 }

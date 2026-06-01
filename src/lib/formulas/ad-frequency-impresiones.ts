@@ -16,6 +16,7 @@ export interface Outputs {
   costoPorPersona: number;
   recomendacion: string;
   resumen: string;
+  _chart?: any;
 }
 
 export function adFrequencyImpresiones(i: Inputs): Outputs {
@@ -63,6 +64,23 @@ export function adFrequencyImpresiones(i: Inputs): Outputs {
 
   const resumen = `Cada persona vio tu anuncio ${frecuencia.toFixed(2)} veces en promedio.`;
 
+  const frecRed = Number(frecuencia.toFixed(2));
+  const chart = {
+    type: 'scale' as const,
+    marker: frecRed,
+    markerLabel: 'Tu frecuencia: ' + frecRed,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Muy baja', max: 1.5, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Óptima', max: 3, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Alta', max: 7, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Muy alta', max: 15, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Saturación', max: Math.max(20, Math.ceil(frecRed) + 2), color: '#fca5a5', colorDark: '#7f1d1d' },
+    ],
+    ariaLabel: 'Escala de frecuencia publicitaria: muy baja, óptima, alta, muy alta y saturación.',
+  };
+
   return {
     frecuencia: Number(frecuencia.toFixed(2)),
     frecuenciaTotal: Number(frecuenciaTotal.toFixed(2)),
@@ -74,5 +92,6 @@ export function adFrequencyImpresiones(i: Inputs): Outputs {
     costoPorPersona: Number(cpp.toFixed(2)),
     recomendacion,
     resumen,
+    _chart: chart,
   };
 }

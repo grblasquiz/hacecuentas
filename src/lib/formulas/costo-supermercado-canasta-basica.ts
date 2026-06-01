@@ -10,6 +10,7 @@ export interface Outputs {
   gastoPorPersona: number;
   gastoDiario: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function costoSupermercadoCanasticaBasica(i: Inputs): Outputs {
@@ -39,10 +40,23 @@ export function costoSupermercadoCanasticaBasica(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const chart = menores > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Adultos', value: Math.round(adultos * 1.0 * costoAjustado) },
+      { label: 'Menores', value: Math.round(menores * 0.63 * costoAjustado) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(gastoTotal).toLocaleString('es-AR'),
+    centerLabel: 'Total/mes',
+    ariaLabel: 'Reparto del gasto mensual en supermercado entre adultos y menores',
+  } : undefined;
+
   return {
     gastoMensualTotal: Math.round(gastoTotal),
     gastoPorPersona: Math.round(gastoPorPersona),
     gastoDiario: Math.round(gastoDiario),
     detalle: `${adultos} adulto(s) + ${menores} menor(es) = ${adultosEquivalentes.toFixed(2)} adultos equivalentes. CBA $${fmt.format(costoBase)} × factor ${nivel} (${factor}) = $${fmt.format(costoAjustado)}/AE. Total: $${fmt.format(gastoTotal)}/mes ($${fmt.format(gastoPorPersona)}/persona, $${fmt.format(gastoDiario)}/día).`,
+    _chart: chart,
   };
 }

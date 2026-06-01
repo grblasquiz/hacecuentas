@@ -1,6 +1,6 @@
 /** Tarifa hora niñera AR según día (semana/finde), horario (día/noche) y zona */
 export interface Inputs { tarifaBaseHoraDiurna: number; horasContratadas: number; esFinDeSemana: boolean; esNocturna: boolean; zonaPremium: boolean; cantidadNinos: number; }
-export interface Outputs { tarifaHoraAjustada: number; recargoTotalPct: number; subtotal: number; aportesEstimados: number; totalAPagar: number; explicacion: string; }
+export interface Outputs { tarifaHoraAjustada: number; recargoTotalPct: number; subtotal: number; aportesEstimados: number; totalAPagar: number; explicacion: string; _chart?: any; }
 export function nineraHoraNocheFinDeSemanaTarifa(i: Inputs): Outputs {
   const base = Number(i.tarifaBaseHoraDiurna);
   const horas = Number(i.horasContratadas);
@@ -19,6 +19,17 @@ export function nineraHoraNocheFinDeSemanaTarifa(i: Inputs): Outputs {
   const subtotal = tarifa * horas;
   const aportes = subtotal * 0.17;
   const total = subtotal + aportes;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Pago a la niñera', value: Number(subtotal.toFixed(2)) },
+      { label: 'Aportes', value: Number(aportes.toFixed(2)) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del total a pagar: pago neto a la niñera más aportes',
+  };
   return {
     tarifaHoraAjustada: Number(tarifa.toFixed(2)),
     recargoTotalPct: Number(recargo.toFixed(2)),
@@ -26,5 +37,6 @@ export function nineraHoraNocheFinDeSemanaTarifa(i: Inputs): Outputs {
     aportesEstimados: Number(aportes.toFixed(2)),
     totalAPagar: Number(total.toFixed(2)),
     explicacion: `Tarifa ajustada ${tarifa.toFixed(0)}/h con recargo ${recargo.toFixed(0)}%. ${horas}h = ${subtotal.toFixed(0)} subtotal + ${aportes.toFixed(0)} aportes (UPCN/personal casas particulares) = ${total.toFixed(0)} total.`,
+    _chart: chart,
   };
 }

@@ -14,6 +14,7 @@ export interface Outputs {
   tasaRetornoEsperada: string;
   semaforoBiomarcador: string;
   mensaje: string;
+  _chart?: any;
 }
 
 function parseFecha(s: string): number {
@@ -83,12 +84,28 @@ export function recuperacionLca(i: Inputs): Outputs {
     'Fase 6 (9-12 meses): retorno progresivo a competencia con criterios objetivos.'
   ].join(' | ');
 
+  // Gauge del criterio de alta por fuerza de cuádriceps (LSI vs lado sano, umbrales JOSPT)
+  const chart = cuadPct > 0 ? {
+    type: 'scale' as const,
+    marker: cuadPct,
+    markerLabel: 'Tu fuerza: ' + cuadPct + '%',
+    min: 0,
+    unit: '%',
+    segments: [
+      { nombre: 'Alto riesgo', max: 70, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Insuficiente', max: 85, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Apto (≥85%)', max: Math.max(100, Math.ceil(cuadPct) + 1), color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: 'Escala del índice de simetría de fuerza del cuádriceps vs lado sano: alto riesgo bajo 70%, insuficiente 70-85% y apto desde 85%.',
+  } : undefined;
+
   return {
     fasesRehab: fases,
     mesesRetornoEntrenamiento: `${baseEntrenoMin}-${baseEntrenoMax} meses (fútbol controlado, sin contacto).`,
     mesesRetornoCompeticion: `${baseCompeticionMin}-${baseCompeticionMax} meses (competencia oficial, con contacto).`,
     tasaRetornoEsperada: `${tasaMin}-${tasaMax}% de retorno a nivel pre-lesión (6-24 meses post-op).`,
     semaforoBiomarcador: semaforo,
+    _chart: chart,
     mensaje: `Retorno a competencia estimado ${baseCompeticionMin}-${baseCompeticionMax} meses post-cirugía.${infoFecha} No reemplaza evaluación de médico deportólogo/traumatólogo.`
   };
 }

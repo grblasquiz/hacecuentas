@@ -12,6 +12,7 @@ export interface Outputs {
   percentilAprox: string;
   clasificacion: string;
   detalle: string;
+  _chart?: any;
 }
 
 // CDF de la normal estándar — aproximación Abramowitz & Stegun 26.2.17 (error < 7.5e-8).
@@ -114,10 +115,26 @@ export function indiceMasaCorporalPediatrico(i: Inputs): Outputs {
     `Z-score: ${z.toFixed(2)} | ${percentilAprox} | Clasificación: ${clasificacion}. ` +
     `Tablas LMS oficiales CDC 2000 (bmiagerev).`;
 
+  const chart = {
+    type: 'scale' as const,
+    marker: pRound,
+    markerLabel: 'Percentil ' + pRound,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Bajo peso', max: 5, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Peso normal', max: 85, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Sobrepeso', max: 95, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Obesidad', max: 100, color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de percentil de IMC pediátrico (CDC 2000): bajo peso, normal, sobrepeso y obesidad.',
+  };
+
   return {
     imc: Number(imc.toFixed(1)),
     percentilAprox,
     clasificacion,
     detalle,
+    _chart: chart,
   };
 }

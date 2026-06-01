@@ -1,6 +1,6 @@
 /** GMX GLP APR */
 export interface Inputs { glpAmount: number; glpPriceUsd: number; ethRewardApr: number; escGmxApr: number; months: number; }
-export interface Outputs { totalApr: number; ethRewardsUsd: number; escGmxUsd: number; totalUsd: number; monthlyUsd: number; explicacion: string; }
+export interface Outputs { totalApr: number; ethRewardsUsd: number; escGmxUsd: number; totalUsd: number; monthlyUsd: number; explicacion: string; _chart?: any; }
 export function gmxGlpApr(i: Inputs): Outputs {
   const amt = Number(i.glpAmount);
   const price = Number(i.glpPriceUsd) || 1;
@@ -14,6 +14,17 @@ export function gmxGlpApr(i: Inputs): Outputs {
   const escRewards = principal * escGmx * years;
   const total = ethRewards + escRewards;
   const totalApr = (ethApr + escGmx) * 100;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Recompensas ETH', value: Number(ethRewards.toFixed(2)) },
+      { label: 'Recompensas esGMX', value: Number(escRewards.toFixed(2)) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Ingreso total',
+    ariaLabel: 'Composición del ingreso de GLP: recompensas en ETH y en esGMX.',
+  };
   return {
     totalApr: Number(totalApr.toFixed(3)),
     ethRewardsUsd: Number(ethRewards.toFixed(2)),
@@ -21,5 +32,6 @@ export function gmxGlpApr(i: Inputs): Outputs {
     totalUsd: Number(total.toFixed(2)),
     monthlyUsd: Number((total / months).toFixed(2)),
     explicacion: `${amt} GLP ($${principal.toFixed(2)}) al ${(ethApr*100).toFixed(2)}% ETH + ${(escGmx*100).toFixed(2)}% esGMX = ${totalApr.toFixed(2)}% APR total. Ingreso $${total.toFixed(2)} USD ($${(total/months).toFixed(2)}/mes).`,
+    _chart: chart,
   };
 }

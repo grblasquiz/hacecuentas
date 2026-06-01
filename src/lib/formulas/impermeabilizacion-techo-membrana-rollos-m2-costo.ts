@@ -12,6 +12,7 @@ export interface Outputs {
   costoManoObra: number;
   costoTotal: number;
   detalle: string;
+  _chart?: any;
 }
 
 // Precios orientativos AMBA, abril 2026 (sin IVA)
@@ -102,6 +103,19 @@ export function compute(i: Inputs): Outputs {
     moTexto +
     ` Precios orientativos sin IVA, AMBA abril 2026.`;
 
+  const chart = {
+    type: "doughnut" as const,
+    slices: [
+      { label: "Membrana (rollos)", value: costoRollos },
+      { label: "Pegamento", value: costoPegamento },
+      { label: "Mano de obra", value: costoManoObra },
+    ],
+    prefix: "$",
+    centerValue: "$" + Math.round(costoTotal).toLocaleString("es-AR"),
+    centerLabel: "Total",
+    ariaLabel: "Composición del costo: membrana, pegamento y mano de obra",
+  };
+
   return {
     rollosNecesarios,
     kgPegamento,
@@ -109,5 +123,6 @@ export function compute(i: Inputs): Outputs {
     costoManoObra,
     costoTotal,
     detalle,
+    _chart: chart,
   };
 }

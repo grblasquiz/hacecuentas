@@ -10,6 +10,7 @@ export interface Outputs {
   vacation_plus_pay: number;
   total_vacation_payment: number;
   vacation_period: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -56,11 +57,24 @@ export function compute(i: Inputs): Outputs {
   // Período válido: 1 octubre - 30 abril
   const vacationPeriod = 'Entre 1 de octubre y 30 de abril (según acuerdo con empleador)';
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Sueldo vacacional', value: Math.round(vacationGrossPay * 100) / 100 },
+      { label: 'Plus vacacional 3%', value: Math.round(vacationPlusPay * 100) / 100 },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalVacationPayment).toLocaleString('es-AR'),
+    centerLabel: 'Total a cobrar',
+    ariaLabel: 'Composición del pago de vacaciones: sueldo vacacional más plus del 3%',
+  };
+
   return {
     vacation_days: Math.round(vacationDays * 100) / 100,
     vacation_gross_pay: Math.round(vacationGrossPay * 100) / 100,
     vacation_plus_pay: Math.round(vacationPlusPay * 100) / 100,
     total_vacation_payment: Math.round(totalVacationPayment * 100) / 100,
-    vacation_period: vacationPeriod
+    vacation_period: vacationPeriod,
+    _chart: chart
   };
 }

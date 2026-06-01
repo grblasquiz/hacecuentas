@@ -28,6 +28,11 @@ function mjsTask(name: string, script: string): Task {
   return { name, cmd: NODE, args: [`scripts/${script}.mjs`] };
 }
 
+// Scripts python (sin build step).
+function pyTask(name: string, script: string): Task {
+  return { name, cmd: 'python3', args: [`scripts/${script}.py`] };
+}
+
 function run(t: Task): Promise<void> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
@@ -80,6 +85,9 @@ async function main() {
     task('og', 'generate-og-images'),
     task('sitemap', 'generate-sitemap'),
     task('search-index', 'generate-search-index'),
+    // Índice slim {slug, esSlug} por locale para el hreflang de [...slug].astro
+    // (reemplaza 6 import.meta.glob eager de ~18 MB). DEBE existir antes del build.
+    task('hreflang-index', 'generate-hreflang-index'),
     task('stamp-sw', 'stamp-sw'),
     // API para LLMs: catálogo /api/calcs-index.json + índice slim que consume
     // el endpoint SSR /api/calc/[slug]/compute.ts. Ambos fs-only y rápidos.
@@ -103,7 +111,7 @@ async function main() {
   console.log(`[prebuild] fase 2: ${phase2Tasks.map((t) => t.name).join(', ')} (paralelo)`);
   await Promise.all(phase2Tasks.map((t) => run(t)));
 
-  console.log('[prebuild] fase 3: og-manifest');
+  console.log('[prebuild] fase 3: og-manifest + page-feed');
   // optimize-images sacado del prebuild 2026-04-27. Generaba webp+avif de
   // 2786 OG PNGs (5572 conversiones, sharp+avif effort:4). En CI no hay
   // cache de webp/avif (están en .gitignore) → cada deploy regeneraba todo
@@ -112,7 +120,20 @@ async function main() {
   // Si en el futuro se quiere servir <picture> con webp/avif, correr
   // `node scripts/optimize-images.mjs` manualmente y commitear los
   // resultados, o agregar un actions/cache step al workflow.
-  await run(task('og-manifest', 'generate-og-manifest'));
+  //
+  // page-feed (CSV de Google Ads DSA) parsea los sitemap-*.xml de fase 2, así
+  // que corre acá, después de generate-sitemap. og-manifest es independiente.
+  const phase3Tasks: Task[] = [
+    task('og-manifest', 'generate-og-manifest'),
+    task('page-feed', 'generate-page-feed'),
+  ];
+  // llms-full.txt (~1.5MB) refleja el contenido de TODAS las calcs para que los
+  // LLMs lo ingieran fresco (#59). Solo tiene sentido regenerarlo en full build;
+  // en incremental se reutiliza el del último deploy.
+  if (!incremental) {
+    phase3Tasks.push(pyTask('llms-full', 'generate-llms-full'));
+  }
+  await Promise.all(phase3Tasks.map((t) => run(t)));
 
   const total = ((Date.now() - t0) / 1000).toFixed(1);
   console.log(`[prebuild] ✓ total ${total}s`);

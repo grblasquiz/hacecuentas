@@ -55,6 +55,7 @@ export interface AportesPatronalesOutputs {
   aportesEmpleado: number;
   sueldoNetoEmpleado: number;
   porcentajeCargaTotal: string;
+  _chart?: any;
 }
 
 const ALICUOTAS_DEC_814 = {
@@ -122,6 +123,23 @@ export function aportesPatronalesCargasSociales(
   const porcentajeSobreBruto = (totalCargasPatronales / sueldo) * 100;
   const porcentajeCargaTotal = `${porcentajeSobreBruto.toFixed(1)}% del sueldo bruto`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Sueldo bruto', value: Math.round(sueldo) },
+      { label: 'SIPA', value: Math.round(aporteSIPA) },
+      { label: 'INSSJP / PAMI', value: Math.round(aporteINSSJP) },
+      { label: 'Fondo Nacional Empleo', value: Math.round(aporteFNE) },
+      { label: 'Asignaciones familiares', value: Math.round(aporteAAFF) },
+      { label: 'ART', value: Math.round(art) },
+      { label: 'Obra social empleador', value: Math.round(obraSocial) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(costoTotalEmpresa).toLocaleString('es-AR'),
+    centerLabel: 'Costo total empresa',
+    ariaLabel: 'Composición del costo laboral total: sueldo bruto más cargas patronales',
+  };
+
   return {
     costoTotalEmpresa: Math.round(costoTotalEmpresa),
     aporteSIPA: Math.round(aporteSIPA),
@@ -134,5 +152,6 @@ export function aportesPatronalesCargasSociales(
     aportesEmpleado: Math.round(aportesEmpleado),
     sueldoNetoEmpleado: Math.round(sueldoNetoEmpleado),
     porcentajeCargaTotal,
+    _chart: chart,
   };
 }

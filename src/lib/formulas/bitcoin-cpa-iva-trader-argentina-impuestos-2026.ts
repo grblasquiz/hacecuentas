@@ -17,6 +17,7 @@ export interface Outputs {
   cargaFiscalTotal: number;
   tasaEfectiva: number;
   resumen: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -116,6 +117,20 @@ export function compute(i: Inputs): Outputs {
 
   const resumen = lines.join(" | ");
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Ganancias (15%)', value: Math.round(impuestoGanancias) },
+      { label: 'IVA estimado', value: Math.round(ivaEstimado) },
+      { label: 'Bienes Personales', value: Math.round(bienesPersonales) },
+      { label: 'Percepción AFIP (a cuenta)', value: Math.round(percepcionAFIP) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(cargaFiscalTotal).toLocaleString('es-AR'),
+    centerLabel: 'Carga fiscal total',
+    ariaLabel: 'Composición de la carga fiscal del trader: Ganancias, IVA, Bienes Personales y percepción AFIP',
+  };
+
   return {
     utilidadNeta,
     impuestoGanancias,
@@ -125,5 +140,6 @@ export function compute(i: Inputs): Outputs {
     cargaFiscalTotal,
     tasaEfectiva,
     resumen,
+    _chart: chart,
   };
 }

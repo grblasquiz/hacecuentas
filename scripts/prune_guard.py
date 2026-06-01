@@ -313,10 +313,56 @@ def _report(guard: PruneGuard) -> int:
     return 0
 
 
+GONE_410_FILE = ROOT / "src" / "lib" / "gone-410.ts"
+
+
+def _audit_list(guard: PruneGuard) -> int:
+    """Lee src/lib/gone-410.ts y FALLA (exit 1) si la lista de 410 contiene
+    URLs que el guard considera protegidas (jóvenes o de locale secundario) —
+    o sea, falsos-410 que hay que sacar de la lista. READ-ONLY: no reescribe
+    gone-410.ts (eso se hace a mano tras revisar). Cierra el gap de "re-correr
+    el guard sobre gone-410.ts tras cada revival"."""
+    if not GONE_410_FILE.is_file():
+        print(f"prune_guard --audit-list: no encontré {GONE_410_FILE} (skip)")
+        return 0
+    text = GONE_410_FILE.read_text(encoding="utf8")
+    urls = re.findall(r'"(/[^"]+)"', text)
+    # HARD: core-secondary (es/mx/co/cl) NUNCA debe estar en 410 (regla a) — son
+    #       falsos-410 inequívocos (el incidente de las 193 ES). Rompe el gate.
+    # SOFT: jóvenes de otros locales (en/pt/ar). en/pt se 410'ean a propósito en
+    #       el cull de calidad (apply-en-pt-audit.py), así que NO rompen — solo
+    #       se reportan para revisión manual.
+    hard, soft = [], []
+    core_prefixes = tuple(f"/{loc}/" for loc in CORE_SECONDARY)
+    for u in urls:
+        prot, reason = guard.is_protected(u)
+        if not prot:
+            continue
+        (hard if u.startswith(core_prefixes) else soft).append((u, reason))
+    print(f"prune_guard --audit-list  ({len(urls)} URLs en gone-410.ts)\n")
+    if soft:
+        print(f"  ⚠ {len(soft)} jóvenes en 410 (en/pt/ar — intencional si vino del cull de calidad; revisar):")
+        for u, r in soft[:10]:
+            print(f"     {u}  →  {r}")
+        if len(soft) > 10:
+            print(f"     … y {len(soft) - 10} más")
+        print()
+    if hard:
+        print(f"  ❌ {len(hard)} URL(s) de locale core-secundario (es/mx/co/cl) en gone-410.ts — FALSOS-410, removerlas:")
+        for u, r in hard[:50]:
+            print(f"     {u}  →  {r}")
+        print("\nRESULTADO: FAIL ❌ (remover las core-secundario de gone-410.ts y re-deployar)")
+        return 1
+    print("  ✓ ninguna URL core-secundario (es/mx/co/cl) en la lista")
+    print("\nRESULTADO: PASS ✅")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--self-test", action="store_true", help="Asegura es/mx/co/cl 100% protegidos (exit 1 si no)")
     ap.add_argument("--report", action="store_true", help="Resumen de protección por locale")
+    ap.add_argument("--audit-list", action="store_true", help="Falla si gone-410.ts contiene URLs protegidas (falsos-410)")
     ap.add_argument("--check", nargs="+", metavar="PATH", help="Chequear URLs puntuales")
     ap.add_argument("--min-age-days", type=int, default=DEFAULT_MIN_AGE_DAYS)
     ap.add_argument("--include-en-pt", action="store_true", help="Bloquear en/pt por locale (regla a)")
@@ -327,6 +373,8 @@ def main(argv: list[str] | None = None) -> int:
         include_en_pt=True if args.include_en_pt else None,
     )
 
+    if args.audit_list:
+        return _audit_list(guard)
     if args.check:
         for p in args.check:
             prot, reason = guard.is_protected(p)

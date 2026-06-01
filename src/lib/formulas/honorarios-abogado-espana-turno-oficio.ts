@@ -11,6 +11,7 @@ export interface Outputs {
   comunidadMostrada: string;
   procedimientoMostrado: string;
   resumen: string;
+  _chart?: any;
 }
 
 // Baremos orientativos 2026 (EUR), basados en normativa autonómica
@@ -72,6 +73,19 @@ export function honorariosAbogadoEspanaTurnoOficio(i: Inputs): Outputs {
   const iva = base * 0.21;
   const total = base + iva;
 
+  // Composición del total facturado: base imponible + IVA 21%
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Honorarios (base)', value: Number(base.toFixed(2)) },
+      { label: 'IVA 21%', value: Number(iva.toFixed(2)) },
+    ],
+    prefix: '€',
+    centerValue: '€' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del total facturado: honorarios base e IVA del 21%',
+  };
+
   return {
     importeBase: Number(base.toFixed(2)),
     iva: Number(iva.toFixed(2)),
@@ -79,5 +93,6 @@ export function honorariosAbogadoEspanaTurnoOficio(i: Inputs): Outputs {
     comunidadMostrada: COMUNIDADES[com] || com,
     procedimientoMostrado: item.label,
     resumen: `Turno de oficio **${item.label}** en ${COMUNIDADES[com]} = **€${base.toFixed(2)}** + IVA 21% (€${iva.toFixed(2)}) = **€${total.toFixed(2)}**.`,
+    _chart: chart,
   };
 }

@@ -19,6 +19,7 @@ export interface Outputs {
   tasaEfectiva: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 // UVT 2026 estimado (UVT 2025: $49,799 — ajuste por inflación ~6%)
@@ -72,6 +73,18 @@ export function rentaColombiaPersonaNatural(i: Inputs): Outputs {
   const formula = `Renta gravable: ${rentaGravableUvt.toFixed(0)} UVT → Impuesto: ${impuestoUvt.toFixed(1)} UVT × $${UVT.toLocaleString()} = $${impuestoBruto.toLocaleString()}`;
   const explicacion = `Ingreso anual: $${ingreso.toLocaleString()} COP. Deducciones: $${deducciones.toLocaleString()}. Rentas exentas aplicadas: $${totalExenciones.toLocaleString()} (tope 40%). Renta gravable: $${rentaGravable.toLocaleString()} (${rentaGravableUvt.toFixed(0)} UVT). Impuesto bruto: $${impuestoBruto.toLocaleString()}. Retenciones acreditadas: $${retencionAcreditada.toLocaleString()}. Impuesto neto a pagar: $${impuestoNeto.toLocaleString()} COP (tasa efectiva ${tasaEfectiva.toFixed(2)}%).`;
 
+  const chart = impuestoBruto > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Retenciones ya pagadas', value: retencionAcreditada },
+      { label: 'Impuesto neto a pagar', value: impuestoNeto },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(impuestoBruto).toLocaleString('es-AR'),
+    centerLabel: 'Impuesto bruto',
+    ariaLabel: 'Composición del impuesto bruto: retenciones ya pagadas vs impuesto neto a pagar',
+  } : undefined;
+
   return {
     ingresoNeto: Math.round(ingresoNeto),
     rentaGravable: Math.round(rentaGravable),
@@ -82,5 +95,6 @@ export function rentaColombiaPersonaNatural(i: Inputs): Outputs {
     tasaEfectiva: Number(tasaEfectiva.toFixed(2)),
     formula,
     explicacion,
+    _chart: chart,
   };
 }

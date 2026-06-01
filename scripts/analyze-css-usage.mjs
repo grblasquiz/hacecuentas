@@ -106,3 +106,17 @@ if (orphans.length > 0) {
 
 console.log(`\nTotal CSS analizado: ${totalCss.toFixed(1)} KB`);
 console.log(`Huérfanos: ${totalUnused.toFixed(1)} KB`);
+
+// #20: gate opcional para CI. `--max-unused-pct=N` → exit 1 si algún CSS supera
+// N% de clases sin usar. Sin el flag, solo reporta (exit 0, no rompe nada).
+const maxArg = process.argv.find((a) => a.startsWith('--max-unused-pct='));
+if (maxArg) {
+  const max = Number(maxArg.split('=')[1]);
+  const over = report.filter((r) => r.unusedPct && Number(r.unusedPct) > max);
+  if (over.length) {
+    console.log(`\n⚠️ ${over.length} CSS con >${max}% de clases sin usar (umbral):`);
+    over.forEach((r) => console.log(`  - ${r.css}: ${r.unusedPct}% sin usar (${r.size.toFixed(1)} KB)`));
+    process.exit(1);
+  }
+  console.log(`\n✓ ningún CSS supera ${max}% de clases sin usar`);
+}

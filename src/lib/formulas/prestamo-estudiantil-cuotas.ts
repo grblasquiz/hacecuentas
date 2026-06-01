@@ -11,6 +11,7 @@ export interface Outputs {
   totalAPagar: number;
   totalIntereses: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function prestamoEstudiantilCuotas(i: Inputs): Outputs {
@@ -41,10 +42,23 @@ export function prestamoEstudiantilCuotas(i: Inputs): Outputs {
   const totalAPagar = cuotaMensual * plazo;
   const totalIntereses = totalAPagar - monto;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: Math.round(monto) },
+      { label: 'Intereses', value: Math.round(totalIntereses) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalAPagar).toLocaleString('es-AR'),
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del total a pagar: capital más intereses',
+  };
+
   return {
     cuotaMensual: Math.round(cuotaMensual),
     totalAPagar: Math.round(totalAPagar),
     totalIntereses: Math.round(totalIntereses),
     detalle: `Préstamo de $${monto.toLocaleString('es-AR')} a ${tasaAnual}% anual en ${plazo} meses. Cuota: $${Math.round(cuotaMensual).toLocaleString('es-AR')}/mes. Total a pagar: $${Math.round(totalAPagar).toLocaleString('es-AR')} (intereses: $${Math.round(totalIntereses).toLocaleString('es-AR')})`,
+    _chart: chart,
   };
 }

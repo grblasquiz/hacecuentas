@@ -13,6 +13,7 @@ export interface Outputs {
   premioTotal: number;
   moneda: string;
   resumen: string;
+  _chart?: any;
 }
 
 // Distribución oficial FIFA CWC 2025 (pool US$ 1.000 M)
@@ -49,6 +50,19 @@ export function premiosMundialClubes2025(i: Inputs): Outputs {
   const progres = BONUS_FASE[fase] ?? 0;
   const total = base + rendim + progres;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Participación base', value: base },
+      { label: 'Rendimiento (V/E)', value: rendim },
+      { label: 'Progresión de fase', value: progres },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Premio total',
+    ariaLabel: 'Composición del premio: participación base, rendimiento y progresión de fase',
+  };
+
   return {
     participacionBase: base,
     premioPorRendimiento: rendim,
@@ -56,5 +70,6 @@ export function premiosMundialClubes2025(i: Inputs): Outputs {
     premioTotal: total,
     moneda: 'USD',
     resumen: `Club ${conf.toUpperCase()} en ${fase}: participación US$ ${(base / 1e6).toFixed(2)} M + rendimiento US$ ${(rendim / 1e6).toFixed(2)} M + progresión US$ ${(progres / 1e6).toFixed(2)} M = **US$ ${(total / 1e6).toFixed(2)} M**.`,
+    _chart: chart,
   };
 }

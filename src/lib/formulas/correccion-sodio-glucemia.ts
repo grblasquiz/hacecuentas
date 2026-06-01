@@ -7,6 +7,7 @@ export interface Outputs {
   sodioCorregido: number;
   sodioCorregido24: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function correccionSodioGlucemia(i: Inputs): Outputs {
@@ -44,9 +45,25 @@ export function correccionSodioGlucemia(i: Inputs): Outputs {
     `Na corregido Hillier (+2,4): ${naCorregidoHillier.toFixed(1)} mEq/L | ` +
     `${interpretacion}`;
 
+  const naKatz = Number(naCorregidoKatz.toFixed(1));
+  const chart = {
+    type: 'scale' as const,
+    marker: naKatz,
+    markerLabel: 'Na corregido (Katz): ' + naKatz.toFixed(1) + ' mEq/L',
+    min: Math.min(120, Math.floor(naKatz) - 5),
+    unit: ' mEq/L',
+    segments: [
+      { nombre: 'Hiponatremia', max: 135, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Normal', max: 145, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Hipernatremia', max: Math.max(160, Math.ceil(naKatz) + 5), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de sodio corregido: hiponatremia, normal e hipernatremia',
+  };
+
   return {
-    sodioCorregido: Number(naCorregidoKatz.toFixed(1)),
+    sodioCorregido: naKatz,
     sodioCorregido24: Number(naCorregidoHillier.toFixed(1)),
     detalle,
+    _chart: chart,
   };
 }

@@ -10,6 +10,7 @@ export interface Outputs {
   cargo_variable: number;
   impuestos_total: number;
   desglose_texto: string;
+  _chart?: any;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,11 +101,25 @@ export function compute(i: Inputs): Outputs {
     `(Valores de referencia 2026 — verificar cuadro ENRE vigente)`,
   ].join('\n');
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cargo fijo', value: Math.round(cargoFijo) },
+      { label: 'Cargo variable', value: Math.round(cargoVariable) },
+      { label: 'Impuestos y tasas', value: Math.round(impuestosTotal) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalFactura).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición de la factura eléctrica: cargo fijo, cargo variable por consumo e impuestos y tasas.',
+  };
+
   return {
     total_factura:   Math.round(totalFactura),
     cargo_fijo:      Math.round(cargoFijo),
     cargo_variable:  Math.round(cargoVariable),
     impuestos_total: Math.round(impuestosTotal),
     desglose_texto:  desglose,
+    _chart:          chart,
   };
 }

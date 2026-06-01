@@ -11,6 +11,7 @@ export interface Outputs {
   duracion_dias: string;
   dificultad: string;
   notas: string;
+  _chart?: any;
 }
 
 /** Redondea al múltiplo de 0.5 más cercano */
@@ -129,11 +130,27 @@ export function compute(i: Inputs): Outputs {
 
   const notas = notasArr.join(" | ");
 
+  const chart = {
+    type: "scale" as const,
+    marker: Number(puntuacion.toFixed(1)),
+    markerLabel: dificultad,
+    min: 0,
+    unit: "",
+    segments: [
+      { nombre: "Leve", max: 2, color: "#bbf7d0", colorDark: "#166534" },
+      { nombre: "Moderado", max: 5, color: "#fef9c3", colorDark: "#854d0e" },
+      { nombre: "Alto", max: 8, color: "#fed7aa", colorDark: "#9a3412" },
+      { nombre: "Muy alto", max: Math.max(12, Math.ceil(puntuacion) + 1), color: "#fecaca", colorDark: "#b91c1c" },
+    ],
+    ariaLabel: "Escala de severidad del jet lag según zonas horarias y dirección: leve, moderado, alto y muy alto.",
+  };
+
   return {
     dosis_mg,
     hora_toma,
     duracion_dias,
     dificultad,
     notas,
+    _chart: chart,
   };
 }

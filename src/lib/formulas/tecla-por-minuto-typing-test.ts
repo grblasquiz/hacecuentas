@@ -7,6 +7,7 @@ export interface Outputs {
   wpmNeto: number;
   accuracy: number;
   categoria: string;
+  _chart?: any;
 }
 
 export function teclaPorMinutoTypingTest(i: Inputs): Outputs {
@@ -28,11 +29,30 @@ export function teclaPorMinutoTypingTest(i: Inputs): Outputs {
   else if (wpmNeto < 120) cat = 'Excelente';
   else cat = 'Experto mundial';
 
+  const wpmNetoR = Math.round(wpmNeto);
+  const chart = {
+    type: 'scale' as const,
+    marker: wpmNetoR,
+    markerLabel: 'Tu velocidad: ' + wpmNetoR + ' WPM',
+    min: 0,
+    unit: ' WPM',
+    segments: [
+      { nombre: 'Muy lento', max: 25, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Promedio', max: 40, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Normal', max: 55, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Bueno', max: 70, color: '#d9f99d', colorDark: '#4d7c0f' },
+      { nombre: 'Muy bueno', max: 90, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Excelente / experto', max: Math.max(120, Math.ceil(wpmNetoR) + 10), color: '#86efac', colorDark: '#15803d' },
+    ],
+    ariaLabel: 'Escala de velocidad de tipeo en palabras por minuto, de muy lento a experto.',
+  };
+
   return {
     wpmBruto: Math.round(wpmBruto),
-    wpmNeto: Math.round(wpmNeto),
+    wpmNeto: wpmNetoR,
     accuracy: Math.round(accuracy * 10) / 10,
     categoria: cat,
+    _chart: chart,
   };
 
 }

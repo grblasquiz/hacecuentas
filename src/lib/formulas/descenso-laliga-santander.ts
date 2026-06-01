@@ -22,6 +22,7 @@ export interface DescensoLaLigaOutputs {
   diferenciaConSafety: number;
   porcentajeSalvacion: number;
   veredicto: string;
+  _chart?: any;
 }
 
 export function descensoLaligaSantander(inputs: DescensoLaLigaInputs): DescensoLaLigaOutputs {
@@ -62,12 +63,29 @@ export function descensoLaligaSantander(inputs: DescensoLaLigaInputs): DescensoL
     veredicto = '🟡 En tus manos: con 2-3 triunfos te salvás.';
   }
 
+  const salv = Number(porcentajeSalvacion.toFixed(1));
+  const chart = {
+    type: 'scale' as const,
+    marker: salv,
+    markerLabel: 'Prob. salvación: ' + salv + ' %',
+    min: 0,
+    unit: ' %',
+    segments: [
+      { nombre: 'Descenso probable', max: 25, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Riesgo alto', max: 50, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Peleado', max: 75, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Salvación probable', max: 100, color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: 'Escala de probabilidad de salvación del descenso (0 a 100 %)',
+  };
+
   return {
     puntosParaAlcanzar17,
     puntosMaxPosibles,
     puntosProyectadosEmpatando,
     diferenciaConSafety,
-    porcentajeSalvacion: Number(porcentajeSalvacion.toFixed(1)),
+    porcentajeSalvacion: salv,
     veredicto,
+    _chart: chart,
   };
 }

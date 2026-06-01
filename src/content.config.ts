@@ -57,6 +57,12 @@ const dateString = z.string().regex(
 const dataUpdateBase = z.object({
   frequency: updateFrequency,
   lastUpdated: dateString,
+  // dataAsOf = fecha a la que CORRESPONDE el dato real (ej. el mes del IPC, la
+  // fecha de la UF, la vigencia de la ley), distinta de lastUpdated = cuándo
+  // refrescamos/revisamos nuestra copia. Opcional y backward-compatible: si
+  // falta, el display cae a lastUpdated. NO lo usa el sitemap (lastmod sigue
+  // con lastUpdated) — es solo honestidad de cara al usuario / E-E-A-T.
+  dataAsOf: dateString.optional(),
   updateType: updateType,
   source: z.string().nullable().optional(),
   sourceUrl: z.string().nullable().optional(),
@@ -84,6 +90,18 @@ const dataUpdateStrict = dataUpdateBase.superRefine((val, ctx) => {
 // locales la version base (sin require de source).
 // AR es el master locale: dataUpdate es required + strict.
 // Locales secundarios: dataUpdate optional (40 calcs-en historicas no lo tienen).
+// Tablas de referencia estáticas (rangos IMC, pesos por altura, tramos de impuesto…).
+// Render server-side en [...slug].astro → contenido SEO que el bot ve sin ejecutar JS.
+const referenceTable = z.object({
+  title: z.string(),
+  caption: z.string().optional(),
+  headers: z.array(z.string()).min(1),
+  rows: z.array(z.array(z.union([z.string(), z.number()]))).min(1),
+  note: z.string().optional(),
+  /** Índice de columna (0-based) a resaltar visualmente. */
+  highlightCol: z.number().int().optional(),
+});
+
 const makeCalcSchema = (strictDataUpdate: boolean) => z.object({
   slug: z.string().min(1),
   title: z.string().min(1),
@@ -95,6 +113,7 @@ const makeCalcSchema = (strictDataUpdate: boolean) => z.object({
   icon: z.string().optional(),
   formulaId: z.string().optional(),
   lastReviewed: dateString.optional(),
+  referenceTables: z.array(referenceTable).optional(),
 }).passthrough();
 
 // ---- Collection definitions (Astro v6 glob loader) ----

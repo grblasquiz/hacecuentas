@@ -12,6 +12,7 @@ export interface Outputs {
   total_interest: number;
   cft_estimated: number;
   amortization_table: string;
+  _chart?: any;
 }
 
 // IVA aplicado sobre intereses en países LATAM (ej. México, Colombia)
@@ -163,11 +164,28 @@ export function compute(i: Inputs): Outputs {
     `**Cuota promedio total estimada (con seguro${includeVAT ? " e IVA" : ""}):** ${avgMonthlyWithCosts.toFixed(2)} USD\n\n` +
     tableRows.join("\n");
 
+  const chartSlices = [
+    { label: "Capital", value: principal },
+    { label: "Intereses", value: totalInterest },
+    { label: "Seguro", value: totalInsurance },
+    { label: "IVA s/interés", value: totalVAT },
+  ].filter((s) => s.value > 0);
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: chartSlices,
+    prefix: '$',
+    centerValue: '$' + Math.round(totalPayment).toLocaleString('es-AR'),
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del total a pagar: capital, intereses, seguro e IVA sobre intereses.',
+  };
+
   return {
     monthly_payment: parseFloat(basePayment.toFixed(2)),
     total_payment: parseFloat(totalPayment.toFixed(2)),
     total_interest: parseFloat(totalCost.toFixed(2)),
     cft_estimated: parseFloat(cftAnnual.toFixed(2)),
-    amortization_table: tableNote
+    amortization_table: tableNote,
+    _chart: chart
   };
 }

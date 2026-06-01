@@ -1,6 +1,6 @@
 /** Plan de pago de deudas — método bola de nieve */
 export interface Inputs { deuda1Nombre?: string; deuda1Monto: number; deuda1Minimo: number; deuda2Monto?: number; deuda2Minimo?: number; deuda3Monto?: number; deuda3Minimo?: number; pagoExtraMensual: number; }
-export interface Outputs { mesesParaLibrarse: number; ordenPago: string; totalPagado: number; deudaTotal: number; }
+export interface Outputs { mesesParaLibrarse: number; ordenPago: string; totalPagado: number; deudaTotal: number; _chart?: any; }
 
 export function deudaBolaNieve(i: Inputs): Outputs {
   const extra = Number(i.pagoExtraMensual);
@@ -51,5 +51,20 @@ export function deudaBolaNieve(i: Inputs): Outputs {
     }
   }
 
-  return { mesesParaLibrarse: meses, ordenPago: orden, totalPagado: Math.round(totalPagado), deudaTotal: Math.round(deudaTotal) };
+  const totalPagadoR = Math.round(totalPagado);
+  const deudaTotalR = Math.round(deudaTotal);
+  const interesesR = Math.max(0, totalPagadoR - deudaTotalR);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: deudaTotalR },
+      { label: 'Intereses', value: interesesR },
+    ],
+    prefix: '$',
+    centerValue: '$' + totalPagadoR.toLocaleString('es-AR'),
+    centerLabel: 'Total pagado',
+    ariaLabel: 'Composición del total pagado: capital de las deudas más intereses',
+  };
+
+  return { mesesParaLibrarse: meses, ordenPago: orden, totalPagado: totalPagadoR, deudaTotal: deudaTotalR, _chart: chart };
 }

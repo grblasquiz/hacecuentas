@@ -11,6 +11,7 @@ export interface Outputs {
   ivaComision: number;
   comisionTotal: number;
   porcentajeSobreVenta: number;
+  _chart?: any;
 }
 
 export function comisionVenta(i: Inputs): Outputs {
@@ -29,10 +30,25 @@ export function comisionVenta(i: Inputs): Outputs {
   const ivaComision = conIva ? comisionNeta * alic / 100 : 0;
   const total = comisionNeta + ivaComision;
 
+  const chart = ivaComision > 0
+    ? {
+        type: 'doughnut' as const,
+        slices: [
+          { label: 'Comisión neta', value: Math.round(comisionNeta) },
+          { label: `IVA (${alic}%)`, value: Math.round(ivaComision) },
+        ],
+        prefix: '$',
+        centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+        centerLabel: 'Comisión total',
+        ariaLabel: 'Composición de la comisión: neto más IVA',
+      }
+    : undefined;
+
   return {
     comisionNeta: Math.round(comisionNeta),
     ivaComision: Math.round(ivaComision),
     comisionTotal: Math.round(total),
     porcentajeSobreVenta: Number(((total / venta) * 100).toFixed(2)),
+    _chart: chart,
   };
 }

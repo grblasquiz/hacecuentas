@@ -32,6 +32,9 @@ export interface Props {
   articlePublishedTime?: string;  // og:article:published_time ISO
   articleModifiedTime?: string;   // og:article:modified_time ISO
   newsKeywords?: string[];   // <meta name=news_keywords> — Bing News indexing
+  ogTitle?: string;          // título "curiosidad" para og:title/twitter:title
+                             // (Discover/redes). Si falta, usa `title` (SEO). El
+                             // <title> del <head> NO cambia — sigue optimizado SEO.
 }
 
 const {
@@ -55,7 +58,11 @@ const {
   articlePublishedTime,
   articleModifiedTime,
   newsKeywords,
+  ogTitle,
 } = Astro.props;
+
+// Título para tarjetas sociales/Discover: curiosidad si se provee, sino el SEO.
+const socialTitle = ogTitle || title;
 
 const siteUrl = 'https://hacecuentas.com';
 // Cloudflare Pages sirve /foo.html en /foo — canonical sin .html para matchear sitemap
@@ -117,6 +124,7 @@ const globalSchema = {
         : 'Calculadoras online gratuitas para todo el mundo hispanohablante, con cobertura específica para Argentina.',
       sameAs: [
         'https://x.com/Hacecuentas',
+        'https://www.instagram.com/hacecuentas',
         'https://www.linkedin.com/company/122324467/',
         'https://github.com/grblasquiz/hacecuentas',
         'https://www.wikidata.org/wiki/Q139824747',
@@ -394,7 +402,7 @@ const globalSchema = {
          og:type=article para indexar más rápido + mostrar en News tab. -->
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={fullCanonical} />
-    <meta property="og:title" content={title} />
+    <meta property="og:title" content={socialTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={fullImage} />
     <meta property="og:image:width" content="1200" />
@@ -439,7 +447,7 @@ const globalSchema = {
     <!-- Twitter Cards — Bing/Copilot también consumen estos tags directamente
          (Bing es Microsoft + Twitter colab, signals fuertes para News + Discover) -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
+    <meta name="twitter:title" content={socialTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={fullImage} />
     <meta name="twitter:image:alt" content={title} />

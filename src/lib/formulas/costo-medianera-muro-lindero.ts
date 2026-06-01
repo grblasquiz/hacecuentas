@@ -10,6 +10,7 @@ export interface CostoMedianeraOutputs {
   costoVecino: number;
   superficieM2: number;
   detalle: string;
+  _chart?: any;
 }
 
 const COSTOS_REF: Record<string, { nombre: string; costoM2: number }> = {
@@ -36,10 +37,23 @@ export function costoMedianeraMuroLindero(inputs: CostoMedianeraInputs): CostoMe
   const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
   const fmtN = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Tu parte (50%)', value: costoTotal - costoVecino },
+      { label: 'Parte del vecino (50%)', value: costoVecino },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(costoTotal).toLocaleString('es-AR'),
+    centerLabel: 'Costo total',
+    ariaLabel: 'Reparto del costo de la medianera entre tu parte y la del vecino',
+  };
+
   return {
     costoTotal,
     costoVecino,
     superficieM2: superficie,
     detalle: `Medianera de ${fmtN.format(largo)} m × ${fmtN.format(altura)} m = ${fmtN.format(superficie)} m² en ${COSTOS_REF[tipo].nombre}. Costo total: ${fmt.format(costoTotal)}. Tu parte (50%): ${fmt.format(costoVecino)}. Parte del vecino: ${fmt.format(costoVecino)}.`,
+    _chart: chart,
   };
 }

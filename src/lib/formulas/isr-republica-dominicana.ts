@@ -18,6 +18,7 @@ export interface Outputs {
   tasaMarginal: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 // Tabla ISR personas físicas 2026 (estimada con ajuste inflación ~4%)
@@ -64,6 +65,19 @@ export function isrRepublicaDominicana(i: Inputs): Outputs {
   const formula = `ISR = cuota fija + (RD$${rentaNetaGravable.toLocaleString()} - tramo) × ${tasaMarginal}% = RD$${Math.round(impuestoBruto).toLocaleString()}`;
   const explicacion = `Ingreso anual: RD$${ingreso.toLocaleString()}${deducciones > 0 ? `. Deducciones: RD$${deducciones.toLocaleString()}` : ''}. Renta neta gravable: RD$${rentaNetaGravable.toLocaleString()}. ${rentaNetaGravable <= EXENCION ? 'Estás dentro de la exención anual, no pagás ISR.' : `ISR bruto: RD$${Math.round(impuestoBruto).toLocaleString()} (tasa marginal ${tasaMarginal}%).${retenciones > 0 ? ` Retenciones acreditadas: RD$${retencionesAcreditadas.toLocaleString()}.` : ''} ISR neto: RD$${Math.round(impuestoNeto).toLocaleString()} (tasa efectiva ${tasaEfectiva.toFixed(2)}%).`}`;
 
+  const teQueda = Math.max(0, rentaNetaGravable - impuestoBruto);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'ISR', value: Math.round(impuestoBruto) },
+      { label: 'Te queda', value: Math.round(teQueda) },
+    ],
+    prefix: 'RD$',
+    centerValue: 'RD$' + Math.round(rentaNetaGravable).toLocaleString('es-AR'),
+    centerLabel: 'Renta gravable',
+    ariaLabel: 'Composición de la renta neta gravable: ISR vs lo que te queda',
+  };
+
   return {
     rentaNetaGravable: Math.round(rentaNetaGravable),
     impuestoBruto: Math.round(impuestoBruto),
@@ -73,5 +87,6 @@ export function isrRepublicaDominicana(i: Inputs): Outputs {
     tasaMarginal,
     formula,
     explicacion,
+    _chart: chart,
   };
 }

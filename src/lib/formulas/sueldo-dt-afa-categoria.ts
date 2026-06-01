@@ -17,6 +17,7 @@ export interface Outputs {
   premioObjetivos: number;
   moneda: string;
   resumen: string;
+  _chart?: any;
 }
 
 // Valores estimados de referencia AFA / Sindicato de Entrenadores abril 2026
@@ -46,6 +47,20 @@ export function sueldoDtAfaCategoria(i: Inputs): Outputs {
   const anual = totalMensual * 13; // 12 + SAC
   const premios = anual * (pctPremio / 100);
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Base', value: Math.round(base) },
+      { label: 'Adic. experiencia', value: Math.round(adicExp) },
+      { label: 'Adic. títulos', value: Math.round(adicTit) },
+      { label: 'Viáticos', value: Math.round(viaticosM) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalMensual).toLocaleString('es-AR'),
+    centerLabel: 'Total mensual',
+    ariaLabel: 'Composición del sueldo mensual del DT: base, adicional por experiencia, adicional por títulos y viáticos.',
+  };
+
   return {
     sueldoMensualBase: Math.round(base),
     adicionalExperiencia: Math.round(adicExp),
@@ -55,6 +70,7 @@ export function sueldoDtAfaCategoria(i: Inputs): Outputs {
     sueldoAnual: Math.round(anual),
     premioObjetivos: Math.round(premios),
     moneda: 'ARS',
+    _chart: chart,
     resumen: `DT ${info.nombre}: **$${Math.round(totalMensual).toLocaleString('es-AR')} /mes** (base $${base.toLocaleString('es-AR')} + exp $${Math.round(adicExp).toLocaleString('es-AR')} + títulos $${Math.round(adicTit).toLocaleString('es-AR')}). Anual: **$${Math.round(anual).toLocaleString('es-AR')}**.`,
   };
 }

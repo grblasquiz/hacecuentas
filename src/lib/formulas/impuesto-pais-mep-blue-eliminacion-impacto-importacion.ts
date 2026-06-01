@@ -11,6 +11,7 @@ export interface Outputs {
   ahorroPesos: number;
   ahorroPorcentaje: number;
   desglose: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -99,11 +100,29 @@ export function compute(i: Inputs): Outputs {
 
   const desglose = desgloseLineas.join("\n");
 
+  // Composición del costo actual (sin PAIS, vigente): base + impuestos que sí se pagan hoy
+  const slicesSinPais = [
+    { label: "Base (dólar oficial)", value: baseSinPais },
+    { label: "IVA 21%", value: ivaSinPais },
+    { label: "Percep. Ganancias", value: gananciasSinPais },
+    { label: "Percep. IIBB", value: iibbSinPais },
+  ].filter((s) => s.value > 0);
+
+  const chart = {
+    type: "doughnut" as const,
+    slices: slicesSinPais,
+    prefix: "$",
+    centerValue: "$" + Math.round(costoSinPais).toLocaleString("es-AR"),
+    centerLabel: "Costo final",
+    ariaLabel: "Composición del costo final sin Impuesto PAIS: base, IVA y percepciones",
+  };
+
   return {
     costoConPais,
     costoSinPais,
     ahorroPesos,
     ahorroPorcentaje,
     desglose,
+    _chart: chart,
   };
 }

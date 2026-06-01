@@ -1,6 +1,6 @@
 /** Cuánto necesitás para jubilarte */
 export interface Inputs { gastoMensualRetiro: number; aniosParaRetiro: number; ahorroActualUSD?: number; rendimientoAnual?: number; }
-export interface Outputs { capitalNecesario: string; ahorroMensualNecesario: number; totalAportado: string; interesesGanados: string; }
+export interface Outputs { capitalNecesario: string; ahorroMensualNecesario: number; totalAportado: string; interesesGanados: string; _chart?: any; }
 
 export function jubilacionCuantoNecesito(i: Inputs): Outputs {
   const gastoMensual = Number(i.gastoMensualRetiro);
@@ -32,10 +32,25 @@ export function jubilacionCuantoNecesito(i: Inputs): Outputs {
   const intereses = capitalNecesario - totalAportado;
   const fmt = (n: number) => `US$${Math.round(n).toLocaleString('es-AR')}`;
 
+  const aportadoSlice = Math.max(0, Math.min(totalAportado, capitalNecesario));
+  const interesesSlice = Math.max(0, capitalNecesario - aportadoSlice);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Lo que aportás', value: Math.round(aportadoSlice) },
+      { label: 'Rendimiento', value: Math.round(interesesSlice) },
+    ],
+    prefix: 'US$',
+    centerValue: 'US$' + Math.round(capitalNecesario).toLocaleString('es-AR'),
+    centerLabel: 'Capital',
+    ariaLabel: 'Composición del capital necesario: aportes propios vs rendimiento de la inversión',
+  };
+
   return {
     capitalNecesario: fmt(capitalNecesario),
     ahorroMensualNecesario: Math.round(ahorroMensual),
     totalAportado: fmt(totalAportado),
     interesesGanados: fmt(Math.max(0, intereses)),
+    _chart: chart,
   };
 }

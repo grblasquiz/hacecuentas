@@ -11,6 +11,7 @@ export interface Outputs {
   tiempoPorKm: string;
   wattsPorKg: number;
   categoriaFtp: string;
+  _chart?: any;
 }
 
 export function ritmoCiclismo(i: Inputs): Outputs {
@@ -40,11 +41,30 @@ export function ritmoCiclismo(i: Inputs): Outputs {
     else catFtp = 'Pro World Tour (>6 W/kg)';
   }
 
+  // Gauge sólo si hay W/kg real (potencia y peso ingresados); las zonas son las categorías FTP estándar (W/kg crece = mejor)
+  const chart = wKg > 0 ? {
+    type: 'scale' as const,
+    marker: Number(wKg.toFixed(2)),
+    markerLabel: 'Tu potencia: ' + wKg.toFixed(2) + ' W/kg',
+    min: 0,
+    unit: ' W/kg',
+    segments: [
+      { nombre: 'Recreativo', max: 2, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Aficionado', max: 3, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Entrenado', max: 4, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Cat. 2', max: 5, color: '#d9f99d', colorDark: '#4d7c0f' },
+      { nombre: 'Élite', max: 6, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Pro', max: Math.max(7, Math.ceil(wKg) + 1), color: '#86efac', colorDark: '#15803d' },
+    ],
+    ariaLabel: 'Escala de potencia en ciclismo (W/kg): tu valor ' + wKg.toFixed(2),
+  } : undefined;
+
   return {
     velocidadKmh: Number(kmh.toFixed(2)),
     velocidadMph: Number(mph.toFixed(2)),
     tiempoPorKm: `${mm}:${String(ss).padStart(2, '0')} min/km`,
     wattsPorKg: Number(wKg.toFixed(2)),
     categoriaFtp: catFtp,
+    _chart: chart,
   };
 }

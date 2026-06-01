@@ -15,6 +15,7 @@ export interface Outputs {
   netoJugadorTotal: number;
   moneda: string;
   resumen: string;
+  _chart?: any;
 }
 
 // Rangos de comisión vigentes (FIFA Football Agents 2023 + práctica de mercado)
@@ -42,6 +43,19 @@ export function derechosImagenComision(i: Inputs): Outputs {
   const netoAnual = ing - gastos - comisionAnual;
   const netoTotal = netoAnual * anos;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto jugador', value: Math.round(netoAnual) },
+      { label: 'Comisión agencia', value: Math.round(comisionAnual) },
+      { label: 'Gastos producción', value: Math.round(gastos) },
+    ],
+    prefix: 'US$',
+    centerValue: 'US$' + Math.round(ing).toLocaleString('en'),
+    centerLabel: 'Ingreso/año',
+    ariaLabel: 'Composición del ingreso anual por derechos de imagen: neto, comisión y gastos',
+  };
+
   return {
     comisionPct: Number((pct * 100).toFixed(1)),
     comisionAnual: Math.round(comisionAnual),
@@ -50,5 +64,6 @@ export function derechosImagenComision(i: Inputs): Outputs {
     netoJugadorTotal: Math.round(netoTotal),
     moneda: 'USD',
     resumen: `Sobre US$ ${ing.toLocaleString('en')} anuales de imagen, ${info.nombre} cobra **${(pct * 100).toFixed(1)}% = US$ ${Math.round(comisionAnual).toLocaleString('en')}/año**. Neto jugador: **US$ ${Math.round(netoAnual).toLocaleString('en')}/año**.`,
+    _chart: chart,
   };
 }

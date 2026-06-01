@@ -1,6 +1,6 @@
 /** Impuesto cedular renta financiera 2026 (intereses, dividendos, bonos) */
 export interface Inputs { interesesPlazoFijoArs: number; interesesBonosUsd: number; dividendosArs: number; gananciaCompraventaCedearsUsd: number; tipoCambioCierre: number; minimoNoImponible: number; }
-export interface Outputs { impuestoIntereses: number; impuestoDividendos: number; impuestoBonosUsd: number; impuestoCedears: number; impuestoTotal: number; baseImponibleTotal: number; explicacion: string; }
+export interface Outputs { impuestoIntereses: number; impuestoDividendos: number; impuestoBonosUsd: number; impuestoCedears: number; impuestoTotal: number; baseImponibleTotal: number; explicacion: string; _chart?: any; }
 export function gananciasSegundaCategoriaRentaFinanciera2026(i: Inputs): Outputs {
   const intArs = Number(i.interesesPlazoFijoArs);
   const intUsd = Number(i.interesesBonosUsd);
@@ -17,6 +17,19 @@ export function gananciasSegundaCategoriaRentaFinanciera2026(i: Inputs): Outputs
   const impCedears = ceuUsd * tc * 0.15;
   const total = impInt + impBonos + impDiv + impCedears;
   const base = intArs + (intUsd * tc) + div + (ceuUsd * tc);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Plazo fijo (5%)', value: impInt },
+      { label: 'Bonos USD (15%)', value: impBonos },
+      { label: 'Dividendos (7%)', value: impDiv },
+      { label: 'CEDEAR (15%)', value: impCedears },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Impuesto total',
+    ariaLabel: 'Composición del impuesto cedular por tipo de renta financiera.',
+  };
   return {
     impuestoIntereses: Number(impInt.toFixed(2)),
     impuestoDividendos: Number(impDiv.toFixed(2)),
@@ -25,5 +38,6 @@ export function gananciasSegundaCategoriaRentaFinanciera2026(i: Inputs): Outputs
     impuestoTotal: Number(total.toFixed(2)),
     baseImponibleTotal: Number(base.toFixed(2)),
     explicacion: `Impuesto cedular total: $${total.toFixed(2)} sobre base $${base.toFixed(2)}. Plazo fijo (5%): $${impInt.toFixed(2)}. Bonos USD (15%): $${impBonos.toFixed(2)}. Dividendos (7%): $${impDiv.toFixed(2)}. CEDEAR (15%): $${impCedears.toFixed(2)}.`,
+    _chart: chart,
   };
 }

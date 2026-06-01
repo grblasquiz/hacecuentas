@@ -14,6 +14,7 @@ export interface Outputs {
   valorBaseMillaCent: number; // centavos USD que vale una milla típicamente
   esBuenCanje: string;
   resumen: string;
+  _chart?: any;
 }
 
 // Valor base aproximado por milla (centavos USD) - referencia de mercado
@@ -50,6 +51,21 @@ export function valorMillasViajeroFrecuente(i: Inputs): Outputs {
   else if (valorCentavos >= base * 0.7) esBuenCanje = 'Regular — un poco por debajo del promedio';
   else esBuenCanje = 'Malo — guardá las millas para otro canje';
 
+  const valorCent = Number(valorCentavos.toFixed(2));
+  const chart = {
+    type: 'scale' as const,
+    marker: valorCent,
+    markerLabel: 'Tu canje: ' + valorCent.toFixed(2) + '¢/milla',
+    min: 0,
+    unit: '¢',
+    segments: [
+      { nombre: 'Malo', max: Number((base * 0.7).toFixed(2)), color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Regular', max: Number(base.toFixed(2)), color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Bueno', max: Number((base * 1.3).toFixed(2)), color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Excelente', max: Math.max(Number((base * 1.8).toFixed(2)), Math.ceil(valorCent) + 1), color: '#86efac', colorDark: '#15803d' },
+    ],
+    ariaLabel: 'Escala de valor del canje en centavos de dólar por milla, según el promedio del programa',
+  };
   return {
     valorPorMillaUsd: Number(valorPorMillaUsd.toFixed(4)),
     valorPorMillaArs: Number(valorPorMillaArs.toFixed(2)),
@@ -58,5 +74,6 @@ export function valorMillasViajeroFrecuente(i: Inputs): Outputs {
     valorBaseMillaCent: base,
     esBuenCanje,
     resumen: `Tu canje vale **US$ ${valorPorMillaUsd.toFixed(3)} por milla** (${valorCentavos.toFixed(2)}¢). El valor promedio en ${programa} es ${base}¢. Resultado: ${esBuenCanje.toLowerCase()}.`,
+    _chart: chart,
   };
 }

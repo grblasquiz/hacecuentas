@@ -15,6 +15,7 @@ export interface Outputs {
   diasConsumoFamilia2: number;
   forma: string;
   resumen: string;
+  _chart?: any;
 }
 
 export function capacidadTanqueCisterna(i: Inputs): Outputs {
@@ -48,6 +49,19 @@ export function capacidadTanqueCisterna(i: Inputs): Outputs {
   const diasFam4 = volUtil / (4 * 200);
   const diasFam2 = volUtil / (2 * 200);
 
+  const noUsado = volLitros - volUtil;
+  const chart = noUsado > 0.5 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Útil', value: Number(volUtil.toFixed(1)) },
+      { label: 'No aprovechable', value: Number(noUsado.toFixed(1)) },
+    ],
+    prefix: '',
+    centerValue: Math.round(volLitros).toLocaleString('es-AR') + ' L',
+    centerLabel: 'Total',
+    ariaLabel: `Volumen útil vs no aprovechable del tanque (llenado ${llenado}%).`,
+  } : undefined;
+
   return {
     volumenLitros: Number(volLitros.toFixed(1)),
     volumenM3: Number((volLitros / 1000).toFixed(3)),
@@ -56,5 +70,6 @@ export function capacidadTanqueCisterna(i: Inputs): Outputs {
     diasConsumoFamilia2: Number(diasFam2.toFixed(1)),
     forma: forma === 'cilindrico' ? 'Cilíndrico' : 'Rectangular',
     resumen: `Capacidad total: ${Math.round(volLitros)} litros. Útil (${llenado}%): ${Math.round(volUtil)} litros.`,
+    _chart: chart,
   };
 }

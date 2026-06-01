@@ -6,5 +6,22 @@ export function alquilerTemporalAirbnbGananciaNeta(i: Inputs): Outputs {
   const com=bruto*0.03;
   const imp=bruto*0.08;
   const neto=bruto-com-imp-e;
-  return { bruto:'$'+bruto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), comisiones:'$'+com.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), neto:'$'+neto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), roiBruto:'~2.5x', resumen:`$${p}/noche × ${n}: bruto $${bruto.toFixed(0)}, neto ~$${neto.toFixed(0)}.` };
+  const out: Outputs & { _chart?: any } = { bruto:'$'+bruto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), comisiones:'$'+com.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), neto:'$'+neto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), roiBruto:'~2.5x', resumen:`$${p}/noche × ${n}: bruto $${bruto.toFixed(0)}, neto ~$${neto.toFixed(0)}.` };
+  if (bruto > 0 && neto >= 0) {
+    const slices = [
+      { label: 'Ganancia neta', value: Math.round(neto) },
+      { label: 'Comisión plataforma (3%)', value: Math.round(com) },
+      { label: 'Impuestos (8%)', value: Math.round(imp) },
+    ];
+    if (e > 0) slices.push({ label: 'Expensas', value: Math.round(e) });
+    out._chart = {
+      type: 'doughnut' as const,
+      slices,
+      prefix: '$',
+      centerValue: '$' + Math.round(bruto).toLocaleString('es-AR'),
+      centerLabel: 'Bruto',
+      ariaLabel: 'Composición del ingreso bruto del alquiler temporal: ganancia neta, comisión, impuestos y expensas.',
+    };
+  }
+  return out;
 }

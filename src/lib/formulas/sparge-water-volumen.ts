@@ -1,6 +1,6 @@
 /** Sparge water volume */
 export interface Inputs { kgGrano: number; ratioMashLkg: number; volumenPrehervor: number; deadSpace?: number; }
-export interface Outputs { aguaMash: number; aguaSparge: number; aguaTotal: number; absorcion: number; }
+export interface Outputs { aguaMash: number; aguaSparge: number; aguaTotal: number; absorcion: number; _chart?: any; }
 
 export function spargeWaterVolumen(i: Inputs): Outputs {
   const kg = Number(i.kgGrano);
@@ -17,10 +17,23 @@ export function spargeWaterVolumen(i: Inputs): Outputs {
   const aguaSparge = Math.max(0, vPre - mostoDelMash + dead);
   const aguaTotal = aguaMash + aguaSparge;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Agua de macerado', value: Number(aguaMash.toFixed(1)) },
+      { label: 'Agua de sparge', value: Number(aguaSparge.toFixed(1)) },
+    ],
+    prefix: '',
+    centerValue: aguaTotal.toFixed(1) + ' L',
+    centerLabel: 'Agua total',
+    ariaLabel: 'Composición del agua total: agua de macerado más agua de sparge',
+  };
+
   return {
     aguaMash: Number(aguaMash.toFixed(1)),
     aguaSparge: Number(aguaSparge.toFixed(1)),
     aguaTotal: Number(aguaTotal.toFixed(1)),
     absorcion: Number(absorcion.toFixed(1)),
+    _chart: chart,
   };
 }

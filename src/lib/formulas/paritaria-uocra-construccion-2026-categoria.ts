@@ -20,6 +20,7 @@ export interface Outputs {
   sueldo_neto: number;
   costo_empleador: number;
   detalle: string;
+  _chart?: any;
 }
 
 // Básicos mensuales por categoría — paritaria UOCRA 2026 (enero 2026)
@@ -145,6 +146,21 @@ export function compute(i: Inputs): Outputs {
     `Aportes trabajador: 17% sobre bruto. Fondo de cese: 12% (a cargo del empleador). ` +
     `Valores orientativos — verificar última circular UOCRA-CAMARCO.`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Básico proporcional', value: Math.round(basicoProporcional) },
+      { label: 'Adicional zona', value: Math.round(adicionalZona) },
+      { label: 'Antigüedad', value: Math.round(adicionalAntiguedad) },
+      { label: 'Presentismo', value: Math.round(adicionalPresentismo) },
+      { label: 'Horas extra', value: Math.round(horasExtraTotal) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalBruto).toLocaleString('es-AR'),
+    centerLabel: 'Bruto',
+    ariaLabel: 'Composición del bruto remunerativo: básico, zona, antigüedad, presentismo y horas extra.',
+  };
+
   return {
     salario_basico: Math.round(basicoProporcional),
     adicional_zona: Math.round(adicionalZona),
@@ -157,5 +173,6 @@ export function compute(i: Inputs): Outputs {
     sueldo_neto: Math.round(sueldoNeto),
     costo_empleador: Math.round(costoEmpleador),
     detalle,
+    _chart: chart,
   };
 }

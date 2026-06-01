@@ -18,6 +18,7 @@ export interface CesantiasColombiaOutputs {
   total: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 export function cesantiasColombia(inputs: CesantiasColombiaInputs): CesantiasColombiaOutputs {
@@ -47,11 +48,24 @@ export function cesantiasColombia(inputs: CesantiasColombiaInputs): CesantiasCol
 
   const explicacion = `Con un salario de $${salario.toLocaleString('es-CO')} COP${auxTransporte > 0 ? ` y auxilio de transporte de $${auxTransporte.toLocaleString('es-CO')}` : ''}${proporcional}, tus cesantías son $${Math.round(cesantias).toLocaleString('es-CO')}. Los intereses sobre cesantías (12% anual proporcional) son $${Math.round(interesesCesantias).toLocaleString('es-CO')}. El total a recibir es $${Math.round(total).toLocaleString('es-CO')} COP. El empleador debe consignar las cesantías al fondo antes del 14 de febrero y pagar los intereses directamente al trabajador antes del 31 de enero.`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cesantías', value: Math.round(cesantias) },
+      { label: 'Intereses (12%)', value: Math.round(interesesCesantias) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-CO'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición: cesantías más intereses sobre cesantías',
+  };
+
   return {
     cesantias: Math.round(cesantias),
     interesesCesantias: Math.round(interesesCesantias),
     total: Math.round(total),
     formula,
     explicacion,
+    _chart: chart,
   };
 }

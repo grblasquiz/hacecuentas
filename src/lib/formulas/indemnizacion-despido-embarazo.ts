@@ -48,6 +48,7 @@ export interface IndemnizacionDespidoEmbarazoOutputs {
   baseArt245: number;
   vizzotiAplicado: boolean;
   mensaje: string;
+  _chart?: any;
 }
 
 export function indemnizacionDespidoEmbarazo(
@@ -128,6 +129,22 @@ export function indemnizacionDespidoEmbarazo(
 
   const mensaje = `Si el despido se produjo dentro de los 7,5 meses anteriores o posteriores al parto y notificaste el embarazo al empleador, se presume causa de maternidad (Art. 178 LCT) y corresponde la indemnización agravada del Art. 182: 13 sueldos brutos adicionales al Art. 245.`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Antigüedad (Art. 245)', value: Math.round(antiguedad) },
+      { label: 'Estabilidad maternidad (Art. 182)', value: Math.round(estabilidadMaternidad) },
+      { label: 'Preaviso + SAC', value: Math.round(preaviso + sacPreaviso) },
+      { label: 'Integración mes + SAC', value: Math.round(integracionMes + sacIntegracion) },
+      { label: 'SAC proporcional', value: Math.round(sacProporcional) },
+      { label: 'Vacaciones + SAC', value: Math.round(vacacionesProporcionales + sacVacaciones) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición de la indemnización: antigüedad, estabilidad por maternidad, preaviso, integración, SAC y vacaciones',
+  };
+
   return {
     antiguedad: Math.round(antiguedad),
     estabilidadMaternidad: Math.round(estabilidadMaternidad),
@@ -143,5 +160,6 @@ export function indemnizacionDespidoEmbarazo(
     baseArt245: Math.round(baseArt245),
     vizzotiAplicado,
     mensaje,
+    _chart: chart,
   };
 }

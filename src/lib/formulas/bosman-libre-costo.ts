@@ -16,6 +16,7 @@ export interface Outputs {
   ahorroVsMercado: number; // comparado a un fee de mercado estimado
   moneda: string;
   resumen: string;
+  _chart?: any;
 }
 
 export function bosmanLibreCosto(i: Inputs): Outputs {
@@ -34,6 +35,20 @@ export function bosmanLibreCosto(i: Inputs): Outputs {
   const feeMercadoEstim = salario * 3.5;
   const ahorro = feeMercadoEstim;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Salario contrato', value: Math.round(salarioTotal) },
+      { label: 'Comisión agente', value: Math.round(comision) },
+      { label: 'Prima firma', value: Math.round(prima) },
+      { label: 'Pago a terceros', value: Math.round(tercero) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Costo total',
+    ariaLabel: 'Composición del costo del traspaso libre: salario, comisión de agente, prima de firma y pagos a terceros.',
+  };
+
   return {
     feeTransferencia: feeTransfer,
     salarioTotalContrato: Math.round(salarioTotal),
@@ -42,6 +57,7 @@ export function bosmanLibreCosto(i: Inputs): Outputs {
     costoTotalClub: Math.round(total),
     ahorroVsMercado: Math.round(ahorro),
     moneda: 'USD',
+    _chart: chart,
     resumen: `Traspaso libre (Bosman): **fee transferencia US$ 0** + salario US$ ${Math.round(salarioTotal).toLocaleString('en')} + comisión US$ ${Math.round(comision).toLocaleString('en')} + prima US$ ${Math.round(prima).toLocaleString('en')} = **costo total US$ ${Math.round(total).toLocaleString('en')}**. Ahorro estimado vs fee mercado: ~US$ ${Math.round(ahorro).toLocaleString('en')}.`,
   };
 }

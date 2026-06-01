@@ -20,6 +20,7 @@ export interface Outputs {
   alicuota_efectiva: number;
   detalle_tramos: string;
   mensaje: string;
+  _chart?: any;
 }
 
 // Fuente: Ley 23.966 y RG ARCA vigente para período fiscal 2025
@@ -131,6 +132,30 @@ export function compute(i: Inputs): Outputs {
     mensaje = `Tu base imponible es $${baseImponible.toLocaleString("es-AR", { maximumFractionDigits: 0 })}. Impuesto determinado: $${impuesto.toLocaleString("es-AR", { maximumFractionDigits: 0 })}. Alícuota efectiva: ${alicuotaEfectiva.toFixed(3)}%.`;
   }
 
+  // Composición del patrimonio bruto (cada activo es una parte real del total)
+  const composicion: Array<{ label: string; value: number }> = [
+    { label: "Cripto", value: cripto },
+    { label: "Cedears", value: cedears },
+    { label: "Plazo fijo", value: plazoFijo },
+    { label: "Fondos", value: fondos },
+    { label: "Vivienda", value: inmuebleVivienda },
+    { label: "Otros inmuebles", value: otrosInmuebles },
+    { label: "Automotores", value: autos },
+    { label: "Otros bienes", value: otros },
+  ].filter((s) => s.value > 0);
+
+  const chart =
+    patrimonioBruto > 0 && composicion.length >= 2
+      ? {
+          type: "doughnut" as const,
+          slices: composicion,
+          prefix: "$",
+          centerValue: "$" + Math.round(patrimonioBruto).toLocaleString("es-AR"),
+          centerLabel: "Patrimonio",
+          ariaLabel: "Composición del patrimonio bruto por tipo de activo",
+        }
+      : undefined;
+
   return {
     patrimonio_bruto: patrimonioBruto,
     patrimonio_neto: patrimonioNeto,
@@ -140,5 +165,6 @@ export function compute(i: Inputs): Outputs {
     alicuota_efectiva: alicuotaEfectiva,
     detalle_tramos: detalle || "Sin tramos aplicados.",
     mensaje,
+    _chart: chart,
   };
 }

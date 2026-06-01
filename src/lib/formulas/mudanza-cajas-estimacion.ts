@@ -1,5 +1,5 @@
 export interface Inputs { m2Vivienda: number; ambientes: number; nivelLlenado?: string; }
-export interface Outputs { cajasTotal: number; cajasGrandes: number; cajasMedianas: number; cajasChicas: number; }
+export interface Outputs { cajasTotal: number; cajasGrandes: number; cajasMedianas: number; cajasChicas: number; _chart?: any; }
 const FACTOR: Record<string, number> = { poco: 0.6, medio: 1, mucho: 1.5 };
 export function mudanzaCajasEstimacion(i: Inputs): Outputs {
   const m2 = Number(i.m2Vivienda); const amb = Number(i.ambientes);
@@ -11,5 +11,17 @@ export function mudanzaCajasEstimacion(i: Inputs): Outputs {
   const grandes = Math.round(total * 0.25);
   const medianas = Math.round(total * 0.45);
   const chicas = total - grandes - medianas;
-  return { cajasTotal: total, cajasGrandes: grandes, cajasMedianas: medianas, cajasChicas: chicas };
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Grandes', value: grandes },
+      { label: 'Medianas', value: medianas },
+      { label: 'Chicas', value: chicas },
+    ],
+    prefix: '',
+    centerValue: String(total),
+    centerLabel: 'Cajas',
+    ariaLabel: 'Composición de cajas: grandes, medianas y chicas',
+  };
+  return { cajasTotal: total, cajasGrandes: grandes, cajasMedianas: medianas, cajasChicas: chicas, _chart: chart };
 }

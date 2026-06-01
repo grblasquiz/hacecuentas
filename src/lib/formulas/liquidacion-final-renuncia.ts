@@ -17,6 +17,7 @@ export interface LiquidacionRenunciaOutputs {
   vacacionesNoGozadas: number;
   sacProporcional: number;
   sacSobreVacaciones: number;
+  _chart?: any;
 }
 
 export function liquidacionFinalRenuncia(inputs: LiquidacionRenunciaInputs): LiquidacionRenunciaOutputs {
@@ -43,11 +44,26 @@ export function liquidacionFinalRenuncia(inputs: LiquidacionRenunciaInputs): Liq
 
   const totalLiquidacion = diasTrabajados + vacacionesNoGozadas + sacProporcional + sacSobreVacaciones;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Días trabajados', value: Math.round(diasTrabajados) },
+      { label: 'Vacaciones no gozadas', value: Math.round(vacacionesNoGozadas) },
+      { label: 'SAC proporcional', value: Math.round(sacProporcional) },
+      { label: 'SAC s/ vacaciones', value: Math.round(sacSobreVacaciones) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalLiquidacion).toLocaleString('es-AR'),
+    centerLabel: 'Liquidación',
+    ariaLabel: 'Composición de la liquidación final: días trabajados, vacaciones, SAC proporcional y SAC sobre vacaciones',
+  };
+
   return {
     totalLiquidacion: Math.round(totalLiquidacion),
     diasTrabajados: Math.round(diasTrabajados),
     vacacionesNoGozadas: Math.round(vacacionesNoGozadas),
     sacProporcional: Math.round(sacProporcional),
     sacSobreVacaciones: Math.round(sacSobreVacaciones),
+    _chart: chart,
   };
 }

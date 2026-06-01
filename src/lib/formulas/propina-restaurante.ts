@@ -9,6 +9,7 @@ export interface Outputs {
   montoPropina: number;
   totalConPropina: number;
   porPersona: number;
+  _chart?: any;
 }
 
 export function propinaRestaurante(i: Inputs): Outputs {
@@ -31,9 +32,22 @@ export function propinaRestaurante(i: Inputs): Outputs {
   const totalConPropina = cuenta + montoPropina;
   const porPersona = totalConPropina / personas;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cuenta', value: Math.round(cuenta) },
+      { label: 'Propina', value: Math.round(montoPropina) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalConPropina).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del total: cuenta más propina',
+  };
+
   return {
     montoPropina: Math.round(montoPropina),
     totalConPropina: Math.round(totalConPropina),
     porPersona: Math.round(porPersona),
+    _chart: chart,
   };
 }

@@ -4,7 +4,7 @@
  * Seguro de vida ~0.035%/mes + seguro todo riesgo vivienda ~0.025%/mes.
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _chart?: any; }
 
 export function hipotecaUvaSantander(i: Inputs): Outputs {
   const monto = Math.max(0, Number(i.monto) || 0);
@@ -26,6 +26,20 @@ export function hipotecaUvaSantander(i: Inputs): Outputs {
   const totalAPagar = cuotaTotal * n;
 
   const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
+
+  // Composición de la cuota inicial: cuota pura + seguros
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cuota pura', value: Math.round(cuotaPuraArs) },
+      { label: 'Seguros', value: Math.round(seguros) },
+    ],
+    prefix: '$',
+    centerValue: fmt(cuotaTotal),
+    centerLabel: 'Cuota inicial',
+    ariaLabel: 'Composición de la cuota inicial: cuota pura y seguros',
+  };
+
   return {
     cuotaInicial: fmt(cuotaTotal),
     cuotaPura: fmt(cuotaPuraArs),
@@ -34,5 +48,6 @@ export function hipotecaUvaSantander(i: Inputs): Outputs {
     capitalUvas: `${capitalUvas.toFixed(2)} UVAs`,
     totalAproxPagado: fmt(totalAPagar),
     resumen: `Cuota inicial ${fmt(cuotaTotal)} ajustable por UVA. Tasa Santander ${tnaPct}% + UVA.`,
+    _chart: chart,
   };
 }

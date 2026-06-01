@@ -14,6 +14,7 @@ export interface Outputs {
   iibbInscripto: number;
   diferencia: number;
   recomendacion: string;
+  _chart?: any;
 }
 
 // Categorías monotributo 2026 (aproximadas — actualizadas semestralmente)
@@ -76,6 +77,21 @@ export function monotributoVsInscripto(i: Inputs): Outputs {
     recomendacion = `Inscripto te ahorra ~$${Math.round(-diferencia / 1000).toLocaleString('es-AR')}k al año gracias a la deducción de IVA y gastos.`;
   }
 
+  const slicesRI = [
+    { label: 'IVA', value: Math.round(ivaNeto) },
+    { label: 'Ganancias', value: Math.round(gananciasAnual) },
+    { label: 'Ingresos Brutos', value: Math.round(iibb) },
+  ].filter((s) => s.value > 0);
+
+  const chart = slicesRI.length >= 2 ? {
+    type: 'doughnut' as const,
+    slices: slicesRI,
+    prefix: '$',
+    centerValue: '$' + Math.round(inscriptoAnual).toLocaleString('es-AR'),
+    centerLabel: 'RI anual',
+    ariaLabel: 'Composición de impuestos como Responsable Inscripto: IVA, Ganancias e Ingresos Brutos',
+  } : undefined;
+
   return {
     monotributoAnual: monoAnual,
     cuotaMensualMonotributo: cuotaMens,
@@ -86,5 +102,6 @@ export function monotributoVsInscripto(i: Inputs): Outputs {
     iibbInscripto: Math.round(iibb),
     diferencia: Math.round(diferencia),
     recomendacion,
+    _chart: chart,
   };
 }

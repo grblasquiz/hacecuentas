@@ -1,6 +1,6 @@
 /** Costo mensual operar agente IA con MCP servers: tokens + cómputo + storage */
 export interface Inputs { llmCallsDia: number; tokensPorCallProm: number; precioInputUsdM: number; precioOutputUsdM: number; ratioOutputPct: number; computoMcpUsdMes: number; storageUsdMes: number; }
-export interface Outputs { tokensTotalesMes: number; costoLlmUsdMes: number; costoComputoUsd: number; costoTotalUsdMes: number; explicacion: string; }
+export interface Outputs { tokensTotalesMes: number; costoLlmUsdMes: number; costoComputoUsd: number; costoTotalUsdMes: number; explicacion: string; _chart?: any; }
 export function agenteIaMcpServidorCostoMensual(i: Inputs): Outputs {
   const calls = Number(i.llmCallsDia);
   const tokCall = Number(i.tokensPorCallProm);
@@ -18,11 +18,23 @@ export function agenteIaMcpServidorCostoMensual(i: Inputs): Outputs {
   const costoLlm = (tokIn / 1e6) * pIn + (tokOut / 1e6) * pOut;
   const costoComp = compMcp + storage;
   const total = costoLlm + costoComp;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'LLM (tokens)', value: Number(costoLlm.toFixed(2)) },
+      { label: 'Cómputo + storage', value: Number(costoComp.toFixed(2)) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total/mes',
+    ariaLabel: 'Composición del costo mensual: tokens del LLM y cómputo más storage.',
+  };
   return {
     tokensTotalesMes: Number(tokTotal.toFixed(0)),
     costoLlmUsdMes: Number(costoLlm.toFixed(2)),
     costoComputoUsd: Number(costoComp.toFixed(2)),
     costoTotalUsdMes: Number(total.toFixed(2)),
     explicacion: `${callsMes.toLocaleString('en-US')} calls/mes × ${tokCall} tokens = ${(tokTotal / 1e6).toFixed(1)}M tokens. LLM USD ${costoLlm.toFixed(0)} + cómputo USD ${costoComp.toFixed(0)} = USD ${total.toFixed(0)}/mes.`,
+    _chart: chart,
   };
 }

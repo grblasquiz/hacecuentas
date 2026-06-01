@@ -9,6 +9,7 @@ export interface Outputs {
   base_price: number;
   total_price: number;
   calculation_mode: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -53,10 +54,27 @@ export function compute(i: Inputs): Outputs {
   }
 
   // Redondeo a 2 decimales para moneda EUR
+  const ivaR = Math.round(ivaAmount * 100) / 100;
+  const baseR = Math.round(basePrice * 100) / 100;
+  const totalR = Math.round(totalPrice * 100) / 100;
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Base imponible', value: baseR },
+      { label: `IVA ${taxRateStr}%`, value: ivaR },
+    ],
+    prefix: '€',
+    centerValue: '€' + totalR.toLocaleString('es-ES'),
+    centerLabel: 'Total con IVA',
+    ariaLabel: 'Composición del precio total: base imponible más IVA',
+  };
+
   return {
-    iva_amount: Math.round(ivaAmount * 100) / 100,
-    base_price: Math.round(basePrice * 100) / 100,
-    total_price: Math.round(totalPrice * 100) / 100,
-    calculation_mode: calcMode
+    iva_amount: ivaR,
+    base_price: baseR,
+    total_price: totalR,
+    calculation_mode: calcMode,
+    _chart: chart
   };
 }

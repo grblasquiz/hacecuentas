@@ -13,6 +13,7 @@ export interface Outputs {
   difference: number;
   effective_rate: number;
   alert: string;
+  _chart?: any;
 }
 
 // Umbral en años a partir del cual se emite advertencia sobre diferencia simple vs compuesto
@@ -85,12 +86,25 @@ export function compute(i: Inputs): Outputs {
     alert = `Diferencia vs interés compuesto: ${difference.toFixed(2)} (${diffRelative.toFixed(2)}% sobre el interés simple).`;
   }
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: Math.round(capital) },
+      { label: 'Interés simple', value: Math.round(interest_simple) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total_amount).toLocaleString('es-AR'),
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del total a pagar: capital más interés simple',
+  };
+
   return {
     interest_simple,
     total_amount,
     interest_compound,
     difference,
     effective_rate,
-    alert
+    alert,
+    _chart: chart
   };
 }

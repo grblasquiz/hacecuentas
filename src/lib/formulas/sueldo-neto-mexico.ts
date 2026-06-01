@@ -22,6 +22,7 @@ export interface Outputs {
   subsidioEmpleo: number;
   totalDescuentos: number;
   detalle: string;
+  _chart?: any;
 }
 
 // Tarifa ISR mensual SAT 2026 (Art. 96 LISR)
@@ -153,6 +154,21 @@ export function sueldoNetoMexico(inputs: Inputs): Outputs {
     (vales > 0 ? `Vales despensa: $${vales.toFixed(2)} | ` : '') +
     `Neto: $${neto.toFixed(2)} (${porcentaje}% del bruto)`;
 
+  const centerTotal = Math.round(neto + isrEfectivo + imss + infonavit);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto', value: Math.round(neto) },
+      ...(isrEfectivo > 0 ? [{ label: 'ISR', value: Math.round(isrEfectivo) }] : []),
+      { label: 'IMSS', value: Math.round(imss) },
+      ...(infonavit > 0 ? [{ label: 'Infonavit', value: Math.round(infonavit) }] : []),
+    ],
+    prefix: '$',
+    centerValue: '$' + centerTotal.toLocaleString('es-MX'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del salario: neto más descuentos (ISR, IMSS e Infonavit).',
+  };
+
   return {
     salarioNeto: neto,
     sueldoNeto: neto,
@@ -164,5 +180,6 @@ export function sueldoNetoMexico(inputs: Inputs): Outputs {
     subsidioEmpleo: Math.round(speEntregado * 100) / 100,
     totalDescuentos: totalDesc,
     detalle,
+    _chart: chart,
   };
 }

@@ -16,6 +16,7 @@ export interface Outputs {
   rendimientoEfectivo: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 export function rentabilidadStaking(i: Inputs): Outputs {
@@ -55,6 +56,19 @@ export function rentabilidadStaking(i: Inputs): Outputs {
   const formula = `${cantidad} × (1 + ${apy}%/${n})^(${n} × ${(meses / 12).toFixed(2)}) = ${totalTokens.toFixed(4)} tokens`;
   const explicacion = `Stakeando ${cantidad} tokens al ${apy}% APY con compounding ${compType} durante ${meses} meses, ganás ${tokensGanados.toFixed(4)} tokens adicionales (${rendimientoEfectivo.toFixed(2)}% rendimiento efectivo). Al precio actual de $${precio} USD/token, eso son $${gananciaUsd.toFixed(2)} USD de ganancia.`;
 
+  const capitalInicialUsd = cantidad * precio;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital inicial', value: capitalInicialUsd },
+      { label: 'Ganancia staking', value: gananciaUsd },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalUsd).toLocaleString('es-AR'),
+    centerLabel: 'Total final',
+    ariaLabel: 'Composición del valor final del staking: capital inicial vs ganancia generada',
+  };
+
   return {
     tokensGanados: Number(tokensGanados.toFixed(6)),
     gananciaUsd: Number(gananciaUsd.toFixed(2)),
@@ -63,5 +77,6 @@ export function rentabilidadStaking(i: Inputs): Outputs {
     rendimientoEfectivo: Number(rendimientoEfectivo.toFixed(2)),
     formula,
     explicacion,
+    _chart: chart,
   };
 }

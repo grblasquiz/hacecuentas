@@ -16,6 +16,7 @@ export interface AntiinflamatorioScoreComidaOutputs {
   score: number;
   clasificacion: string;
   recomendacion: string;
+  _chart?: any;
 }
 
 export function antiinflamatorioScoreComida(inputs: AntiinflamatorioScoreComidaInputs): AntiinflamatorioScoreComidaOutputs {
@@ -37,5 +38,20 @@ export function antiinflamatorioScoreComida(inputs: AntiinflamatorioScoreComidaI
   else if (score <= 2) { clasif = 'Neutra'; rec = 'Hay margen de mejora: más verduras, menos azúcar.'; }
   else { clasif = 'Proinflamatoria ⚠️'; rec = 'Reducir carnes procesadas, azúcar y aumentar omega-3.'; }
 
-  return { score, clasificacion: clasif, recomendacion: rec };
+  const chart = {
+    type: 'scale' as const,
+    marker: score,
+    markerLabel: 'Tu score: ' + score,
+    min: -6,
+    unit: '',
+    segments: [
+      { nombre: 'Antiinflamatoria óptima', max: -3, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Ligeramente antiinflamatoria', max: 0, color: '#d9f99d', colorDark: '#4d7c0f' },
+      { nombre: 'Neutra', max: 2, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Proinflamatoria', max: Math.max(5, Math.ceil(score) + 1), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala DII: de antiinflamatoria óptima (score bajo) a proinflamatoria (score alto)',
+  };
+
+  return { score, clasificacion: clasif, recomendacion: rec, _chart: chart };
 }

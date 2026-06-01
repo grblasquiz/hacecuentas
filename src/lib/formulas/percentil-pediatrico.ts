@@ -11,6 +11,7 @@ export interface Outputs {
   imc: number;
   mensajePeso: string;
   mensajeAltura: string;
+  _chart?: any;
 }
 
 // Tablas aproximadas OMS (percentil 50) — para mayor precisión usar tablas reales
@@ -73,11 +74,28 @@ export function percentilPediatrico(i: Inputs): Outputs {
     return `Por encima del P97 de ${que} — consultar pediatra.`;
   };
 
+  const chart = {
+    type: 'scale' as const,
+    marker: pctPeso,
+    markerLabel: 'Percentil de peso: ' + pctPeso,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Muy bajo (<P3)', max: 3, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Bajo (P3–P15)', max: 15, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Normal (P15–P85)', max: 85, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Alto (P85–P97)', max: 97, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Muy alto (>P97)', max: 100, color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de percentil de peso pediátrico (OMS): muy bajo, bajo, normal, alto, muy alto.',
+  };
+
   return {
     percentilPeso: pctPeso,
     percentilAltura: pctAlt,
     imc: Number(imc.toFixed(1)),
     mensajePeso: catMsg(pctPeso, 'peso'),
     mensajeAltura: catMsg(pctAlt, 'altura'),
+    _chart: chart,
   };
 }

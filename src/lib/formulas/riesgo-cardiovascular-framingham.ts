@@ -3,7 +3,7 @@ export interface Inputs {
   edad: number; sexo: string; colesterolTotal: number; hdl: number;
   sistolica: number; fumador: string; diabetes: string;
 }
-export interface Outputs { riesgo10: string; clasificacion: string; recomendacion: string; mensaje: string; }
+export interface Outputs { riesgo10: string; clasificacion: string; recomendacion: string; mensaje: string; _chart?: any; }
 
 export function riesgoCardiovascularFramingham(i: Inputs): Outputs {
   const edad = Number(i.edad);
@@ -86,10 +86,25 @@ export function riesgoCardiovascularFramingham(i: Inputs): Outputs {
     recomendacion = 'Consultá a un cardiólogo. Probablemente necesites medicación (estatinas, antihipertensivos) además de cambios de estilo de vida.';
   }
 
+  const chart = {
+    type: 'scale' as const,
+    marker: riskPct,
+    markerLabel: 'Tu riesgo: ' + riskPct + '%',
+    min: 0,
+    unit: '%',
+    segments: [
+      { nombre: 'Bajo', max: 10, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Moderado', max: 20, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Alto', max: Math.max(40, Math.ceil(riskPct) + 5), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de riesgo cardiovascular a 10 años: bajo (<10%), moderado (10-20%), alto (>20%)',
+  };
+
   return {
     riesgo10: `${riskPct}%`,
     clasificacion,
     recomendacion,
-    mensaje: `Riesgo cardiovascular a 10 años: ${riskPct}%. ${clasificacion}.`
+    mensaje: `Riesgo cardiovascular a 10 años: ${riskPct}%. ${clasificacion}.`,
+    _chart: chart,
   };
 }

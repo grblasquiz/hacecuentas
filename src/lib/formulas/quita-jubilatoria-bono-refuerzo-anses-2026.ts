@@ -10,6 +10,7 @@ export interface Outputs {
   acumulado_anual: number;
   porcentaje_refuerzo: number;
   detalle: string;
+  _chart?: any;
 }
 
 // Parámetros vigentes 2026 — actualizar mensualmente según resoluciones ANSES/decretos PEN
@@ -75,11 +76,26 @@ export function compute(i: Inputs): Outputs {
     detalle = `Beneficio: ${params.nombre}. Haber mínimo de referencia: $${params.haberMinimo.toLocaleString("es-AR")} ARS. Tu haber ($${haber.toLocaleString("es-AR")}) no supera el tope, por lo que te correspondería un bono de $${bono_mensual.toLocaleString("es-AR")} ARS mensuales. Acumulado en ${meses} mes${meses !== 1 ? "es" : ""}: $${acumulado_anual.toLocaleString("es-AR")} ARS. Nota: el bono es no remunerativo, no computable para SAC ni movilidad.`;
   }
 
+  const chart = bono_mensual > 0
+    ? {
+        type: 'doughnut' as const,
+        slices: [
+          { label: 'Haber', value: haber },
+          { label: 'Bono refuerzo', value: bono_mensual },
+        ],
+        prefix: '$',
+        centerValue: '$' + Math.round(total_con_bono).toLocaleString('es-AR'),
+        centerLabel: 'Total mensual',
+        ariaLabel: 'Composición del total mensual: haber base más bono de refuerzo ANSES.',
+      }
+    : undefined;
+
   return {
     bono_mensual,
     total_con_bono,
     acumulado_anual,
     porcentaje_refuerzo,
     detalle,
+    _chart: chart,
   };
 }

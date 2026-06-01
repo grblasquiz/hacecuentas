@@ -14,6 +14,7 @@ export interface Outputs {
   bono_mensual: number;
   acreditacion_anual: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -109,6 +110,18 @@ export function compute(i: Inputs): Outputs {
   }
   lines.push(`Acreditación anual estimada en marzo: $${acreditacionAnual.toLocaleString("es-AR")}`);
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cobro mensual (80%)', value: Math.round(montoMensualNeto) },
+      { label: 'Retención (20%, se acredita en marzo)', value: Math.round(montoRetenido) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(montoBrutoTotal).toLocaleString('es-AR'),
+    centerLabel: 'AUH bruta mensual',
+    ariaLabel: 'Composición de la AUH mensual: 80% de cobro mensual y 20% retenido hasta marzo',
+  };
+
   return {
     accede: "Accede a la AUH ✓",
     monto_mensual_neto: Math.round(montoMensualNeto),
@@ -117,5 +130,6 @@ export function compute(i: Inputs): Outputs {
     bono_mensual: Math.round(bonoMensual),
     acreditacion_anual: Math.round(acreditacionAnual),
     detalle: lines.join(" | "),
+    _chart: chart,
   };
 }

@@ -16,6 +16,7 @@ export interface DescensoSerieAOutputs {
   puntosEsperadosFinal: number;
   diferenciaConSafety: number;
   veredicto: string;
+  _chart?: any;
 }
 
 export function descensoSerieAItalia(inputs: DescensoSerieAInputs): DescensoSerieAOutputs {
@@ -47,11 +48,27 @@ export function descensoSerieAItalia(inputs: DescensoSerieAInputs): DescensoSeri
     veredicto = '🟡 En tus manos: 2-3 triunfos alcanzan.';
   }
 
+  const chart = {
+    type: 'scale' as const,
+    marker: puntosEsperadosFinal,
+    markerLabel: 'Proyección final: ' + puntosEsperadosFinal + ' pts',
+    min: 0,
+    unit: ' pts',
+    segments: [
+      { nombre: 'Descenso casi seguro', max: safety - 5, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Zona de descenso', max: safety, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Salvo', max: safety + 12, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Holgado', max: Math.max(safety + 22, Math.ceil(puntosEsperadosFinal) + 3), color: '#86efac', colorDark: '#15803d' },
+    ],
+    ariaLabel: 'Proyección de puntos finales frente al umbral de salvezza de 37 puntos',
+  };
+
   return {
     puntosParaAlcanzar17,
     puntosMaxPosibles,
     puntosEsperadosFinal,
     diferenciaConSafety,
     veredicto,
+    _chart: chart,
   };
 }

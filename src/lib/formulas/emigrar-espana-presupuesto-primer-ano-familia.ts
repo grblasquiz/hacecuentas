@@ -14,6 +14,7 @@ export interface Outputs {
   desglose: string;
   totalMensualUSD: number;
   ahorroMinimo: number;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -206,10 +207,35 @@ export function compute(i: Inputs): Outputs {
     `💰 TOTAL PRIMER AÑO: ${fmt(totalUSD)}`,
   ];
 
+  // Componentes que suman exactamente totalUSD (las dos matrículas se cancelan
+  // entre instalación y recurrente). Se grafican solo los positivos.
+  const chartSlices = [
+    { label: "Visado y trámites", value: Math.round(costoVisado) },
+    { label: "Vuelos", value: Math.round(costoVuelos) },
+    { label: "Mudanza", value: Math.round(costoMudanza) },
+    { label: "Depósito alquiler", value: Math.round(depositoAlquilerUSD) },
+    { label: "Alquiler 12 meses", value: Math.round(alquilerAnualUSD) },
+    { label: "Manutención 12 meses", value: Math.round(manutencionAnualUSD) },
+    { label: "Seguro médico 12 meses", value: Math.round(seguroAnualUSD) },
+    { label: "Escolarización", value: Math.round(escolarizacionAnualUSD) },
+    { label: "Transporte 12 meses", value: Math.round(transporteAnualUSD) },
+  ].filter((s) => s.value > 0);
+
+  const chart = {
+    type: "doughnut" as const,
+    slices: chartSlices,
+    prefix: "$",
+    centerValue: "$" + Math.round(totalUSD).toLocaleString("es-AR"),
+    centerLabel: "Total 1er año",
+    ariaLabel:
+      "Composición del presupuesto del primer año al emigrar a España: visado, vuelos, mudanza, depósito y alquiler, manutención, seguro médico, escolarización y transporte.",
+  };
+
   return {
     totalUSD,
     desglose: lines.join("\n"),
     totalMensualUSD,
     ahorroMinimo,
+    _chart: chart,
   };
 }

@@ -10,6 +10,7 @@ export interface Outputs {
   costoTotal: number;
   precioVentaSugerido: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function costoRecetaPrecioPorPorcion(i: Inputs): Outputs {
@@ -28,10 +29,23 @@ export function costoRecetaPrecioPorPorcion(i: Inputs): Outputs {
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
   const foodCost = precioVenta > 0 ? ((costoPorPorcion / precioVenta) * 100).toFixed(0) : '—';
 
+  const chart = indirectos > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Ingredientes', value: Math.round(ingredientes) },
+      { label: 'Gastos indirectos', value: Math.round(indirectos) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(costoTotal).toLocaleString('es-AR'),
+    centerLabel: 'Costo total',
+    ariaLabel: 'Composición del costo de la receta: ingredientes más gastos indirectos',
+  } : undefined;
+
   return {
     costoPorPorcion: Math.round(costoPorPorcion),
     costoTotal: Math.round(costoTotal),
     precioVentaSugerido: Math.round(precioVenta),
     detalle: `Ingredientes $${fmt.format(ingredientes)} + indirectos $${fmt.format(indirectos)} = $${fmt.format(costoTotal)} total. En ${porciones} porciones: $${fmt.format(costoPorPorcion)}/porción.${precioVenta > 0 ? ` Precio de venta sugerido: $${fmt.format(precioVenta)} (food cost ${foodCost}%).` : ''}`,
+    _chart: chart,
   };
 }

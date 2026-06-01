@@ -17,6 +17,7 @@ export interface Outputs {
   cargaEmpleado: number;
   recomendacion: string;
   resumen: string;
+  _chart?: any;
 }
 
 // ─── MONOTRIBUTO: cuotas fijas mensuales por categoría (servicios, 2026)
@@ -173,6 +174,26 @@ export function compute(i: Inputs): Outputs {
     `Diferencia máxima entre regímenes: ${fmt(netos[0].neto - netos[2].neto)}. ` +
     `Nota: el empleado percibe además SAC y beneficios laborales no incluidos en este cálculo.`;
 
+  // ─── GRÁFICO: descomposición del régimen recomendado (neto + carga = bruto)
+  const cargaPorLabel: Record<string, number> = {
+    "Monotributo": cargaMonotributo,
+    "Autónomo": cargaAutonomo,
+    "Empleado RD": cargaEmpleado,
+  };
+  const mejor = netos[0];
+  const cargaMejor = cargaPorLabel[mejor.label] ?? 0;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto en mano', value: Math.round(Math.max(0, mejor.neto)) },
+      { label: 'Cargas e impuestos', value: Math.round(Math.max(0, cargaMejor)) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(ingresoBruto).toLocaleString('es-AR'),
+    centerLabel: 'Bruto (' + mejor.label + ')',
+    ariaLabel: 'Composición del ingreso bruto en el régimen recomendado: neto en mano más cargas e impuestos',
+  };
+
   return {
     netoMonotributo: Math.round(netoMonotributo),
     cargaMonotributo: Math.round(cargaMonotributo),
@@ -182,5 +203,6 @@ export function compute(i: Inputs): Outputs {
     cargaEmpleado: Math.round(cargaEmpleado),
     recomendacion,
     resumen,
+    _chart: chart,
   };
 }

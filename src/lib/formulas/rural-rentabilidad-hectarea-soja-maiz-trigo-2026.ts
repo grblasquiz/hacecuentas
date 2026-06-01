@@ -22,6 +22,7 @@ export interface Outputs {
   margenNeto: number;
   rendimientoIndiferencia: number;
   resumen: string;
+  _chart?: any;
 }
 
 // Alícuotas derechos de exportación vigentes 2026 — Decreto 37/2024 y modificatorias
@@ -131,6 +132,26 @@ export function compute(i: Inputs): Outputs {
     `Punto de equilibrio (sin arr.): ${rendimientoIndSinArr.toFixed(1)} qq/ha | (con arr.): ${rendimientoIndConArr.toFixed(1)} qq/ha.\n` +
     estadoMargen;
 
+  // Donut: descomposición del ingreso bruto (solo si la campaña es rentable,
+  // para que todas las porciones sean positivas).
+  let chart: any = undefined;
+  if (margenNeto > 0) {
+    const slicesRural = [
+      { label: 'Retenciones', value: Math.round(retencion * 100) / 100 },
+      { label: 'Costos directos', value: Math.round(costoDirecto * 100) / 100 },
+      { label: 'Arrendamiento', value: Math.round(arrendamiento * 100) / 100 },
+      { label: 'Margen neto', value: Math.round(margenNeto * 100) / 100 },
+    ].filter((s) => s.value > 0);
+    chart = {
+      type: 'doughnut' as const,
+      slices: slicesRural,
+      prefix: '$',
+      centerValue: '$' + Math.round(ingresoBruto).toLocaleString('es-AR'),
+      centerLabel: 'Ingreso bruto/ha',
+      ariaLabel: 'Composición del ingreso bruto por hectárea: retenciones, costos, arrendamiento y margen neto.',
+    };
+  }
+
   return {
     ingresoBruto: Math.round(ingresoBruto * 100) / 100,
     retencion: Math.round(retencion * 100) / 100,
@@ -141,5 +162,6 @@ export function compute(i: Inputs): Outputs {
     margenNeto: Math.round(margenNeto * 100) / 100,
     rendimientoIndiferencia: Math.round(rendimientoIndConArr * 100) / 100,
     resumen,
+    _chart: chart,
   };
 }

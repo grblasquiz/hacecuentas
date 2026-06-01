@@ -16,6 +16,7 @@ export interface Outputs {
   propina_sugerida: number;
   total_con_propina: number;
   precio_promedio_km: number;
+  _chart?: any;
 }
 
 const CITY_RATES_2026: Record<string, {bandera: number, tarifa_km: number, espera_5min: number}> = {
@@ -91,6 +92,19 @@ export function compute(i: Inputs): Outputs {
   // Precio promedio por km
   const precio_promedio_km = distance_km > 0 ? Math.round((total_fare / distance_km) * 100) / 100 : 0;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Bajada de bandera', value: bandera },
+      { label: 'Distancia', value: costo_distancia },
+      { label: 'Espera', value: costo_espera },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(subtotal).toLocaleString('es-AR'),
+    centerLabel: 'Subtotal',
+    ariaLabel: 'Composición del viaje: bajada de bandera, distancia y espera',
+  };
+
   return {
     bandera: Math.round(bandera * 100) / 100,
     tarifa_km: Math.round(tarifa_km * 100) / 100,
@@ -100,6 +114,7 @@ export function compute(i: Inputs): Outputs {
     total_fare: total_fare,
     propina_sugerida: propina_sugerida,
     total_con_propina: total_con_propina,
-    precio_promedio_km: precio_promedio_km
+    precio_promedio_km: precio_promedio_km,
+    _chart: chart
   };
 }

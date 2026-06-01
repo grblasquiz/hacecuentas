@@ -1,6 +1,6 @@
 /** Calculadora Z-Score — z = (x - μ) / σ */
 export interface Inputs { valor: number; media: number; desviacion: number; }
-export interface Outputs { zScore: number; percentil: number; interpretacion: string; formula: string; }
+export interface Outputs { zScore: number; percentil: number; interpretacion: string; formula: string; _chart?: any; }
 
 // Approximation of the standard normal CDF using Abramowitz and Stegun 26.2.17
 function normalCDF(z: number): number {
@@ -31,10 +31,30 @@ export function zScoreValorNormal(i: Inputs): Outputs {
   else if (az < 3) interp = 'Valor atípico (entre 2σ y 3σ, fuera del 95%)';
   else interp = 'Valor muy raro (más de 3σ, fuera del 99,7%)';
 
+  const ext = Math.max(4, Math.ceil(az) + 1);
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(z.toFixed(2)),
+    markerLabel: 'Tu z-score: ' + z.toFixed(2),
+    min: -ext,
+    unit: 'σ',
+    segments: [
+      { nombre: 'Muy raro', max: -3, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Atípico', max: -2, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Poco usual', max: -1, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Normal', max: 1, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Poco usual', max: 2, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Atípico', max: 3, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Muy raro', max: ext, color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala z-score en desviaciones estándar: normal en el centro, atípico en los extremos',
+  };
+
   return {
     zScore: Number(z.toFixed(4)),
     percentil: Number(percentil.toFixed(2)),
     interpretacion: interp,
     formula: `z = (${x} - ${mu}) / ${sigma} = ${z.toFixed(4)}`,
+    _chart: chart,
   };
 }

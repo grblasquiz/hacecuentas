@@ -15,6 +15,7 @@ export interface Outputs {
   presion: string;
   densityAltitude: string;
   comentario: string;
+  _chart?: any;
 }
 
 function presionSat_hPa(T_C: number): number {
@@ -74,11 +75,27 @@ export function densidadAireTempHumedadAltitud(i: Inputs): Outputs {
     comentario = 'Aire muy enrarecido (altura extrema o calor extremo): baja eficiencia de motores y de sustentación aérea.';
   }
 
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(rel.toFixed(1)),
+    markerLabel: 'Densidad relativa: ' + rel.toFixed(1) + ' %',
+    min: 60,
+    unit: ' %',
+    segments: [
+      { nombre: 'Muy enrarecido', max: 75, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Enrarecido', max: 90, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Cercana a estándar', max: 100, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Aire denso', max: Math.max(115, Math.ceil(rel) + 5), color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: 'Escala de densidad del aire relativa a la estándar (1.225 kg/m³)',
+  };
+
   return {
     densidad: `${rho.toFixed(4)} kg/m³`,
     densidadRelativa: `${rel.toFixed(1)} % de la densidad estándar (1.225 kg/m³)`,
     presion: `${P_hPa.toFixed(1)} hPa`,
     densityAltitude: `${DA_m.toFixed(0)} m (altitud de densidad)`,
     comentario,
+    _chart: chart,
   };
 }

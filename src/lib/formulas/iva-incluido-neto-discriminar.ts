@@ -15,6 +15,7 @@ export interface IvaIncluidoNetoDiscriminarOutputs {
   iva: number;
   total: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function ivaIncluidoNetoDiscriminar(
@@ -46,10 +47,23 @@ export function ivaIncluidoNetoDiscriminar(
 
   const operacion = tipo === 'conIva' ? 'sacando' : 'agregando';
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto', value: Math.round(neto * 100) / 100 },
+      { label: `IVA ${alicuota}%`, value: Math.round(iva * 100) / 100 },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del precio: neto más IVA',
+  };
+
   return {
     neto: Math.round(neto * 100) / 100,
     iva: Math.round(iva * 100) / 100,
     total: Math.round(total * 100) / 100,
     detalle: `${tipo === 'conIva' ? 'Precio con IVA' : 'Precio neto'}: $${monto.toLocaleString('es-AR')}. ${operacion === 'sacando' ? 'Discriminando' : 'Agregando'} IVA ${alicuota}%: neto $${(Math.round(neto * 100) / 100).toLocaleString('es-AR')} + IVA $${(Math.round(iva * 100) / 100).toLocaleString('es-AR')} = total $${(Math.round(total * 100) / 100).toLocaleString('es-AR')}.`,
+    _chart: chart,
   };
 }

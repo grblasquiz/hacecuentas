@@ -12,6 +12,7 @@ export interface Outputs {
   recomendacion: string;
   requiereConsulta: boolean;
   resumen: string;
+  _chart?: any;
 }
 
 export function escalaEvaDolor(i: Inputs): Outputs {
@@ -58,6 +59,21 @@ export function escalaEvaDolor(i: Inputs): Outputs {
   // En dolor crónico, el umbral para consulta baja
   if (tipo === 'cronico' && v >= 4) requiereConsulta = true;
 
+  const chart = {
+    type: 'scale' as const,
+    marker: v,
+    markerLabel: 'Tu dolor: ' + v + '/10',
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Leve', max: 3, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Moderado', max: 6, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Intenso', max: 8, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Insoportable', max: 10, color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala visual analógica del dolor de 0 a 10: leve, moderado, intenso e insoportable.',
+  };
+
   return {
     valor: v,
     categoria,
@@ -66,5 +82,6 @@ export function escalaEvaDolor(i: Inputs): Outputs {
     recomendacion,
     requiereConsulta,
     resumen: `EVA ${v}/10 — ${categoria}. ${descripcion}`,
+    _chart: chart,
   };
 }

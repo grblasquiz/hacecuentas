@@ -41,6 +41,7 @@ export interface SueldoOutputs {
   jubilacion: number;
   obraSocial: number;
   pami: number;
+  _chart?: any;
 }
 
 export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
@@ -88,6 +89,21 @@ export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
   const neto = bruto - descuentoTotal;
   const porcentajeDescuento = (descuentoTotal / bruto) * 100;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto en mano', value: Math.round(neto) },
+      { label: 'Jubilación', value: Math.round(jubilacion) },
+      { label: 'Obra social', value: Math.round(obraSocial) },
+      { label: 'PAMI', value: Math.round(pami) },
+      { label: 'Ganancias', value: Math.round(ganancias) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(bruto).toLocaleString('es-AR'),
+    centerLabel: 'Bruto',
+    ariaLabel: 'Composición del sueldo bruto: neto en mano, jubilación, obra social, PAMI e impuesto a las Ganancias',
+  };
+
   return {
     neto: Math.round(neto),
     aportes: Math.round(aportes),
@@ -97,5 +113,6 @@ export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
     jubilacion: Math.round(jubilacion),
     obraSocial: Math.round(obraSocial),
     pami: Math.round(pami),
+    _chart: chart,
   };
 }

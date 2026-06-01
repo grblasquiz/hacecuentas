@@ -11,6 +11,7 @@ export interface Outputs {
   tiempo1500: string;
   tiempoMilla: string;
   mensaje: string;
+  _chart?: any;
 }
 
 function fmtTime(sec: number): string {
@@ -45,12 +46,29 @@ export function natacionPace100m(i: Inputs): Outputs {
   else if (pace100seg < 160) nivel = 'Nivel principiante-intermedio';
   else nivel = 'Nivel principiante';
 
+  const markerSeg = Math.round(pace100seg);
+  const chart = {
+    type: 'scale' as const,
+    marker: markerSeg,
+    markerLabel: 'Tu pace: ' + fmtTime(pace100seg) + '/100m',
+    min: 50,
+    unit: 's',
+    segments: [
+      { nombre: 'Avanzado', max: 75, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Intermedio-avanzado', max: 100, color: '#fef9c3', colorDark: '#854d0e' },
+      { nombre: 'Intermedio', max: 130, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Principiante', max: Math.max(180, markerSeg + 10), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de pace de natación por nivel (segundos por 100m)',
+  };
+
   return {
     pace100,
     velocidad,
     tiempo400,
     tiempo1500,
     tiempoMilla,
-    mensaje: `Pace: ${fmtTime(pace100seg)}/100m (${velocidad}). ${nivel}.`
+    mensaje: `Pace: ${fmtTime(pace100seg)}/100m (${velocidad}). ${nivel}.`,
+    _chart: chart
   };
 }

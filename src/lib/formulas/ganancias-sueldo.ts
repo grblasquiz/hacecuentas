@@ -40,6 +40,7 @@ export interface GananciasSueldoOutputs {
   paga: boolean;
   mensaje: string;
   umbralMensual: number; // sueldo bruto desde el que empieza a pagar
+  _chart?: any;
 }
 
 export function gananciasSueldo(inputs: GananciasSueldoInputs): GananciasSueldoOutputs {
@@ -90,6 +91,20 @@ export function gananciasSueldo(inputs: GananciasSueldoInputs): GananciasSueldoO
     ? `Te retienen aproximadamente $${retencionMensual.toLocaleString('es-AR')} por mes. Tu sueldo en mano se reduce en esa cifra por Ganancias.`
     : `Tu sueldo no supera el mínimo no imponible (~$${umbralMensual.toLocaleString('es-AR')}/mes en tu caso) — no pagás Ganancias.`;
 
+  const enManoMensual = Math.max(0, Math.round(netoDeAportesMensual) - retencionMensual);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Sueldo en mano', value: enManoMensual },
+      { label: 'Aportes (17%)', value: Math.round(aportesMensuales) },
+      { label: 'Ganancias', value: retencionMensual },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(brutoMensual).toLocaleString('es-AR'),
+    centerLabel: 'Bruto/mes',
+    ariaLabel: 'Composición del sueldo bruto mensual: en mano, aportes y retención de Ganancias',
+  };
+
   return {
     retencionMensual,
     retencionAnual: Math.round(retencionAnual),
@@ -108,5 +123,6 @@ export function gananciasSueldo(inputs: GananciasSueldoInputs): GananciasSueldoO
     paga,
     mensaje,
     umbralMensual,
+    _chart: chart,
   };
 }

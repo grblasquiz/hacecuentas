@@ -17,6 +17,7 @@ export interface Outputs {
   m2Neto: number;
   porcentajeAberturas: number;
   resumen: string;
+  _chart?: any;
 }
 
 export function m2ParedAberturas(i: Inputs): Outputs {
@@ -39,11 +40,27 @@ export function m2ParedAberturas(i: Inputs): Outputs {
   const neto = Math.max(0, bruto - m2Abert);
   const pct = bruto > 0 ? (m2Abert / bruto) * 100 : 0;
 
+  const chart =
+    m2Abert > 0
+      ? {
+          type: 'doughnut' as const,
+          slices: [
+            { label: 'Superficie a pintar', value: Number(neto.toFixed(2)) },
+            { label: 'Aberturas', value: Number(m2Abert.toFixed(2)) },
+          ],
+          prefix: '',
+          centerValue: bruto.toFixed(2) + ' m²',
+          centerLabel: 'Pared total',
+          ariaLabel: 'Composición de la pared: superficie neta a pintar más superficie de aberturas.',
+        }
+      : undefined;
+
   return {
     m2Bruto: Number(bruto.toFixed(2)),
     m2Aberturas: Number(m2Abert.toFixed(2)),
     m2Neto: Number(neto.toFixed(2)),
     porcentajeAberturas: Number(pct.toFixed(1)),
     resumen: `Pared de ${bruto.toFixed(2)} m² bruto − ${m2Abert.toFixed(2)} m² de aberturas (${pct.toFixed(1)}%) = **${neto.toFixed(2)} m² netos** para pintar o revestir.`,
+    _chart: chart,
   };
 }

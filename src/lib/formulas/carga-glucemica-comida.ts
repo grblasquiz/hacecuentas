@@ -14,6 +14,7 @@ export interface CargaGlucemicaComidaOutputs {
   carbosEnPorcion: string;
   clasificacion: string;
   recomendacion: string;
+  _chart?: any;
 }
 
 export function cargaGlucemicaComida(inputs: CargaGlucemicaComidaInputs): CargaGlucemicaComidaOutputs {
@@ -32,10 +33,27 @@ export function cargaGlucemicaComida(inputs: CargaGlucemicaComidaInputs): CargaG
   else if (cg < 20) { clasif = 'Media'; rec = 'Impacto moderado. Combiná con fibra/proteína.'; }
   else { clasif = 'Alta ⚠️'; rec = 'Impacto alto. Reducir porción o combinar con grasas/proteína.'; }
 
+  const cgFinal = Number(cg.toFixed(1));
+
+  const chart = {
+    type: 'scale' as const,
+    marker: cgFinal,
+    markerLabel: 'CG: ' + cgFinal,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Baja', max: 10, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Media', max: 20, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Alta', max: Math.max(30, Math.ceil(cgFinal) + 5), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de carga glucémica (Harvard): baja <10, media 10-20, alta >20',
+  };
+
   return {
-    cg: Number(cg.toFixed(1)),
+    cg: cgFinal,
     carbosEnPorcion: `${carbosReales.toFixed(1)} g`,
     clasificacion: clasif,
     recomendacion: rec,
+    _chart: chart,
   };
 }

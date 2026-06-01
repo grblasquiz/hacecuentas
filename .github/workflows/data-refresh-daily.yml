@@ -31,6 +31,26 @@ jobs:
       - name: Fetch all sources
         run: node scripts/data-sources/fetch-all.mjs
 
+      # Gate de sanidad: compara los valores recién fetcheados (working tree)
+      # contra el último commiteado (HEAD) + bounds absolutos + 2ª fuente.
+      # FAIL (drift imposible / fuera de rango) → rompe el job y NO commitea el
+      # dato sospechoso (la falla del workflow manda mail = alerta). WARN (2ª
+      # fuente caída, drift moderado en serie periódica) → solo anota, no bloquea.
+      - name: Sanity gate (valores, no solo frescura)
+        run: |
+          set +e
+          node --experimental-strip-types scripts/validate-data-sanity.ts --strict --cross-source --out=/tmp/data-sanity.md
+          code=$?
+          cat /tmp/data-sanity.md || true
+          if [ "$code" = "1" ]; then
+            echo "::error::Sanity FAIL — dato fuera de rango o drift imposible. NO se commitea. Revisar el reporte de arriba."
+            exit 1
+          fi
+          if [ "$code" = "2" ]; then
+            echo "::warning::Sanity WARN — revisar el reporte (no bloqueante)."
+          fi
+          exit 0
+
       - name: Commit if changed
         run: |
           # Verifica cambios en datos live (src/data/live/) Y en datasets públicos (public/datasets/)

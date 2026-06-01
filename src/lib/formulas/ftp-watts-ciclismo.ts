@@ -16,6 +16,7 @@ export interface Outputs {
   z6: { min: number; max: number };
   z7: { min: number };
   resumen: string;
+  _chart?: any;
 }
 
 export function ftpWattsCiclismo(i: Inputs): Outputs {
@@ -43,6 +44,23 @@ export function ftpWattsCiclismo(i: Inputs): Outputs {
     max: Math.round(ftp * pMax),
   });
 
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(wKg.toFixed(2)),
+    markerLabel: 'Tu nivel: ' + wKg.toFixed(2) + ' w/kg',
+    min: 0,
+    unit: ' w/kg',
+    segments: [
+      { nombre: 'Principiante', max: 2.5, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Recreativo', max: 3.2, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Entrenado', max: 4.0, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Bueno', max: 4.8, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Muy bueno', max: 5.6, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Excepcional/Pro', max: Math.max(6.8, Math.ceil(wKg) + 1), color: '#86efac', colorDark: '#15803d' },
+    ],
+    ariaLabel: 'Escala de potencia w/kg según niveles Coggan: cuanto más alto, mejor nivel.',
+  };
+
   return {
     ftp: Math.round(ftp),
     wattsPorKg: Number(wKg.toFixed(2)),
@@ -55,5 +73,6 @@ export function ftpWattsCiclismo(i: Inputs): Outputs {
     z6: z(1.21, 1.50), // Capacidad anaeróbica
     z7: { min: Math.round(ftp * 1.51) }, // Esprint neuromuscular
     resumen: `Tu FTP es **${Math.round(ftp)} W** (${wKg.toFixed(2)} w/kg) → **${cat}**. Entrená en Z2 (${z(0.56, 0.75).min}-${z(0.56, 0.75).max} W) para volumen y en Z4 al FTP para mejorar umbral.`,
+    _chart: chart,
   };
 }

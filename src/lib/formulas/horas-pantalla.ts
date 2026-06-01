@@ -1,5 +1,5 @@
 export interface Inputs { celularHs?: number; computadoraHs?: number; tvHs?: number; tabletHs?: number; }
-export interface Outputs { totalSemanal: number; totalDiario: number; porcentajeDespierto: number; mensaje: string; }
+export interface Outputs { totalSemanal: number; totalDiario: number; porcentajeDespierto: number; mensaje: string; _chart?: any; }
 export function horasPantalla(i: Inputs): Outputs {
   const cel = Number(i.celularHs)||0;
   const comp = Number(i.computadoraHs)||0;
@@ -14,5 +14,18 @@ export function horasPantalla(i: Inputs): Outputs {
   else if(diario<=8) msg='Uso moderado. Dentro de lo normal si incluye trabajo, pero intentá reducir el tiempo recreativo.';
   else if(diario<=12) msg='Uso alto. Considerá implementar la regla 20-20-20 y no usar pantallas 1 hora antes de dormir.';
   else msg='Uso muy alto. Pasás la mayor parte del día frente a pantallas. Evaluá hacer un digital detox parcial.';
-  return { totalSemanal: semanal, totalDiario: Number(diario.toFixed(1)), porcentajeDespierto: pct, mensaje: msg };
+  const chart = diario > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Celular', value: cel },
+      { label: 'Computadora', value: comp },
+      { label: 'TV', value: tv },
+      { label: 'Tablet', value: tab },
+    ],
+    prefix: '',
+    centerValue: Number(diario.toFixed(1)).toLocaleString('es-AR') + ' h',
+    centerLabel: 'Horas/día',
+    ariaLabel: 'Composición del tiempo de pantalla diario por dispositivo',
+  } : undefined;
+  return { totalSemanal: semanal, totalDiario: Number(diario.toFixed(1)), porcentajeDespierto: pct, mensaje: msg, _chart: chart };
 }

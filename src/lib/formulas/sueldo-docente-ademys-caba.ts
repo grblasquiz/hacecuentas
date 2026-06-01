@@ -44,6 +44,19 @@ export function sueldoDocenteAdemysCaba(i: Inputs): Outputs {
   const neto = bruto - aportes;
 
   const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Básico', value: basico },
+      { label: 'Antigüedad', value: antiguedad },
+      { label: 'Presentismo', value: presentismo },
+      { label: 'Material didáctico', value: material },
+    ],
+    prefix: '$',
+    centerValue: fmt(bruto),
+    centerLabel: 'Bruto',
+    ariaLabel: 'Composición del sueldo bruto docente: básico, antigüedad, presentismo y material didáctico',
+  };
   return {
     sueldoBruto: fmt(bruto),
     sueldoNeto: fmt(neto),
@@ -52,5 +65,6 @@ export function sueldoDocenteAdemysCaba(i: Inputs): Outputs {
     presentismoYMaterial: fmt(presentismo + material),
     aportes: fmt(aportes),
     cargo,
+    _chart: chart,
   };
 }

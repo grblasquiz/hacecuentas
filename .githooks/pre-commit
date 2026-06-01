@@ -7,8 +7,18 @@
 #  1) check-slug-renames: si renombraste el `slug` de una calc, pedir 301.
 #  2) related-auto-sync: si tocaste calcs, verificar que related-auto.{json,hash}
 #     este al dia. Sino, CI rebuildea 150s al pedo.
+#  3) anti-secrets: bloquear que entren al repo .env / .dev.vars / keys / creds.
 
 set -e
+
+# 3) anti-secrets — antes que nada, no dejar pasar archivos sensibles staged.
+SECRET_FILES=$(git diff --cached --name-only | grep -E '(^|/)\.env($|\.)|(^|/)\.dev\.vars($|[^.e])|\.pem$|\.p12$|(^|/)id_(rsa|ed25519)$|credentials.*\.json$|hacecuentas-indexing\.json$' | grep -vE '\.example$' || true)
+if [ -n "$SECRET_FILES" ]; then
+  echo "✗ pre-commit BLOQUEADO: estás por commitear archivos sensibles:"
+  echo "$SECRET_FILES" | sed 's/^/    /'
+  echo "  → git restore --staged <archivo>  (y agregalo a .gitignore si falta)"
+  exit 1
+fi
 
 node scripts/check-slug-renames.mjs
 

@@ -10,6 +10,7 @@ export interface Outputs {
   aumentoRecomendadoMax: number;
   pesoActualIdeal: string;
   detalle: string;
+  _chart?: any;
 }
 
 export function pesoEmbarazo(i: Inputs): Outputs {
@@ -55,11 +56,27 @@ export function pesoEmbarazo(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(imc.toFixed(1)),
+    markerLabel: 'Tu IMC previo: ' + fmt.format(imc),
+    min: 15,
+    unit: '',
+    segments: [
+      { nombre: 'Bajo peso', max: 18.5, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Normal', max: 25, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Sobrepeso', max: 30, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Obesidad', max: Math.max(40, Math.ceil(imc) + 2), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de IMC pre-embarazo (IOM 2009): bajo peso, normal, sobrepeso, obesidad.',
+  };
+
   return {
     imcPrevio: Number(imc.toFixed(1)),
     aumentoRecomendadoMin: minTotal,
     aumentoRecomendadoMax: maxTotal,
     pesoActualIdeal: `${fmt.format(pesoIdealMin)} – ${fmt.format(pesoIdealMax)} kg`,
     detalle: `IMC previo: ${fmt.format(imc)} (${catIMC}). A la semana ${semana}, tu peso ideal estaría entre ${fmt.format(pesoIdealMin)} y ${fmt.format(pesoIdealMax)} kg. Aumento total recomendado: ${fmt.format(minTotal)}–${fmt.format(maxTotal)} kg.`,
+    _chart: chart,
   };
 }

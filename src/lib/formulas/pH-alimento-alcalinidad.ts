@@ -37,6 +37,7 @@ export interface PHAlimentoAlcalinidadOutputs {
   ph: number;
   clasificacion: string;
   impacto: string;
+  _chart?: any;
 }
 
 export function pHAlimentoAlcalinidad(inputs: PHAlimentoAlcalinidadInputs): PHAlimentoAlcalinidadOutputs {
@@ -65,5 +66,20 @@ export function pHAlimentoAlcalinidad(inputs: PHAlimentoAlcalinidadInputs): PHAl
     clasif = 'Alcalino';
     imp = 'Alto poder alcalinizante. Útil para pH urinario. Consumo moderado.';
   }
-  return { ph: data.ph, clasificacion: clasif, impacto: imp };
+  const chart = {
+    type: 'scale' as const,
+    marker: data.ph,
+    markerLabel: 'pH ' + data.ph + ' — ' + data.nombre,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Muy ácido', max: 3, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Ácido', max: 4, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Suave ácido', max: 5.5, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Neutro', max: 7.5, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Alcalino', max: 14, color: '#bae6fd', colorDark: '#075985' },
+    ],
+    ariaLabel: 'Escala de pH del alimento: del muy ácido al alcalino. Umbral de erosión dental en pH 5,5.',
+  };
+  return { ph: data.ph, clasificacion: clasif, impacto: imp, _chart: chart };
 }

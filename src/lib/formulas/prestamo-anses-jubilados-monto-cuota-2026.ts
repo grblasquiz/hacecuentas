@@ -13,6 +13,7 @@ export interface Outputs {
   totalIntereses: number;
   cfteaStr: string;
   advertencia: string;
+  _chart?: any;
 }
 
 // Límite normativo de cuota sobre haber neto (ANSES)
@@ -152,6 +153,18 @@ export function compute(i: Inputs): Outputs {
   const cftea = calcularCFTEA(montoUsado, cuotaMensual, plazo);
   const cfteaStr = `${(cftea * 100).toFixed(2)}% anual efectivo (estimado, sin seguros ni cargos)`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: Math.round(montoUsado) },
+      { label: 'Intereses', value: Math.round(totalIntereses) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalPagar).toLocaleString('es-AR'),
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del total a pagar: capital prestado e intereses',
+  };
+
   return {
     cuotaMensual: Math.round(cuotaMensual),
     montoMaximo,
@@ -160,5 +173,6 @@ export function compute(i: Inputs): Outputs {
     totalIntereses: Math.round(totalIntereses),
     cfteaStr,
     advertencia,
+    _chart: chart,
   };
 }

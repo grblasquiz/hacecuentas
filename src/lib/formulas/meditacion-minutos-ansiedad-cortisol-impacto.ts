@@ -11,6 +11,7 @@ export interface Outputs {
   dosis_semanal: number;
   nivel_evidencia: string;
   resumen: string;
+  _chart?: any;
 }
 
 // Factores por técnica derivados de metaanálisis (Hofmann 2010, Pascoe 2017, Orme-Johnson 2014)
@@ -94,11 +95,27 @@ export function compute(i: Inputs): Outputs {
       ? "El beneficio marginal adicional es pequeño; mantener la consistencia es clave."
       : "Estás dentro del rango óptimo de los protocolos más estudiados.");
 
+  const chart = {
+    type: "scale" as const,
+    marker: dosis_total,
+    markerLabel: "Tu práctica: " + dosis_total + " min acumulados",
+    min: 0,
+    unit: " min",
+    segments: [
+      { nombre: "Bajo", max: 280, color: "#fde68a", colorDark: "#b45309" },
+      { nombre: "Moderado", max: 560, color: "#fef9c3", colorDark: "#854d0e" },
+      { nombre: "Óptimo (MBSR)", max: 1400, color: "#bbf7d0", colorDark: "#166534" },
+      { nombre: "Meseta", max: Math.max(2000, Math.ceil(dosis_total) + 100), color: "#bae6fd", colorDark: "#075985" },
+    ],
+    ariaLabel: "Escala de dosis acumulada de meditación según evidencia: bajo, moderado, óptimo y meseta.",
+  };
+
   return {
     reduccion_ansiedad: pct_ansiedad,
     reduccion_cortisol: pct_cortisol,
     dosis_semanal,
     nivel_evidencia,
     resumen,
+    _chart: chart,
   };
 }

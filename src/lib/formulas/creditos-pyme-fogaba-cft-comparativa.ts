@@ -1,6 +1,6 @@
 /** Costo financiero total pyme con garantia FOGABA vs sin garantia */
 export interface Inputs { montoArs: number; tnaPct: number; plazoMeses: number; comisionFogabaPct: number; gastosOtorgamientoPct: number; ivaSobreInteresPct: number; }
-export interface Outputs { cuotaMensualArs: number; totalPagadoArs: number; cftAnualPct: number; costoFogabaArs: number; gastosTotalesArs: number; explicacion: string; }
+export interface Outputs { cuotaMensualArs: number; totalPagadoArs: number; cftAnualPct: number; costoFogabaArs: number; gastosTotalesArs: number; explicacion: string; _chart?: any; }
 export function creditosPymeFogabaCftComparativa(i: Inputs): Outputs {
   const monto = Number(i.montoArs);
   const tna = Number(i.tnaPct) / 100;
@@ -19,6 +19,20 @@ export function creditosPymeFogabaCftComparativa(i: Inputs): Outputs {
   const gastosOtorg = monto * cOtorg;
   const totalPagado = cuota * n + ivaTotal + costoFog + gastosOtorg;
   const cft = (Math.pow(totalPagado / monto, 12 / n) - 1) * 100;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: monto },
+      { label: 'Intereses', value: interesTotal },
+      { label: 'IVA s/interés', value: ivaTotal },
+      { label: 'Comisión FOGABA', value: costoFog },
+      { label: 'Gastos otorgamiento', value: gastosOtorg },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalPagado).toLocaleString('es-AR'),
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del costo total del crédito pyme: capital, intereses, IVA, comisión FOGABA y gastos de otorgamiento.',
+  };
   return {
     cuotaMensualArs: Number(cuota.toFixed(2)),
     totalPagadoArs: Number(totalPagado.toFixed(2)),
@@ -26,5 +40,6 @@ export function creditosPymeFogabaCftComparativa(i: Inputs): Outputs {
     costoFogabaArs: Number(costoFog.toFixed(2)),
     gastosTotalesArs: Number((ivaTotal + costoFog + gastosOtorg).toFixed(2)),
     explicacion: `Crédito pyme de $${monto.toLocaleString('es-AR')} ARS a ${n} meses con TNA ${(tna * 100).toFixed(2)}%: cuota mensual $${cuota.toFixed(0)}, CFT efectivo ${cft.toFixed(2)}%. FOGABA suma $${costoFog.toFixed(0)} en comisión.`,
+    _chart: chart,
   };
 }

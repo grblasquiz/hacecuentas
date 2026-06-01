@@ -9,6 +9,7 @@ export interface Outputs {
   savings_vs_general: number;
   tax_rate_applied: number;
   info_message: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -55,11 +56,29 @@ export function compute(i: Inputs): Outputs {
     infoMsg = 'Tasa general 16% para resto de México. No aplica estímulo fiscal fronterizo.';
   }
 
+  const ivaR = parseFloat(ivaAmount.toFixed(2));
+  const baseR = parseFloat(priceBeforeTax.toFixed(2));
+  const totalR = parseFloat(totalWithTax.toFixed(2));
+  const ratePct = Math.round(taxRate * 100);
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Precio sin IVA', value: baseR },
+      { label: `IVA ${ratePct}%`, value: ivaR },
+    ],
+    prefix: '$',
+    centerValue: '$' + totalR.toLocaleString('es-MX'),
+    centerLabel: 'Total con IVA',
+    ariaLabel: 'Composición del precio total: precio sin IVA más IVA aplicado',
+  };
+
   return {
-    iva_amount: parseFloat(ivaAmount.toFixed(2)),
-    total_with_tax: parseFloat(totalWithTax.toFixed(2)),
+    iva_amount: ivaR,
+    total_with_tax: totalR,
     savings_vs_general: parseFloat(savingsVsGeneral.toFixed(2)),
     tax_rate_applied: taxRate,
-    info_message: infoMsg
+    info_message: infoMsg,
+    _chart: chart
   };
 }

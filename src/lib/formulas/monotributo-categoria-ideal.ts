@@ -21,6 +21,7 @@ export interface Outputs {
   componenteObraSocial: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 interface Categoria {
@@ -89,6 +90,19 @@ export function monotributoCategoriaIdeal(i: Inputs): Outputs {
   const formula = `Categoría ${categoriaIdeal.letra}: cuota = $${categoriaIdeal.impositivo.toLocaleString()} + $${categoriaIdeal.jubilatorio.toLocaleString()} + $${categoriaIdeal.obraSocial.toLocaleString()} = $${cuotaMensual.toLocaleString()}/mes`;
   const explicacion = `Con facturación anual de $${facturacion.toLocaleString()} (${actividad}), tu categoría ideal es **${categoriaIdeal.letra}**. Cuota mensual total: $${cuotaMensual.toLocaleString()} (impositivo $${categoriaIdeal.impositivo.toLocaleString()} + jubilatorio $${categoriaIdeal.jubilatorio.toLocaleString()} + obra social $${categoriaIdeal.obraSocial.toLocaleString()}). Tope de la categoría: $${facMax.toLocaleString()}. Margen: $${margenDisponible.toLocaleString()} (${((margenDisponible / facMax) * 100).toFixed(1)}%). Valores estimados 2026.`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Impositivo', value: categoriaIdeal.impositivo },
+      { label: 'Jubilatorio', value: categoriaIdeal.jubilatorio },
+      { label: 'Obra social', value: categoriaIdeal.obraSocial },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(cuotaMensual).toLocaleString('es-AR'),
+    centerLabel: 'Cuota/mes',
+    ariaLabel: 'Composición de la cuota mensual: impositivo, jubilatorio y obra social',
+  };
+
   return {
     categoriaIdeal: categoriaIdeal.letra,
     cuotaMensual,
@@ -99,5 +113,6 @@ export function monotributoCategoriaIdeal(i: Inputs): Outputs {
     componenteObraSocial: categoriaIdeal.obraSocial,
     formula,
     explicacion,
+    _chart: chart,
   };
 }

@@ -1,6 +1,6 @@
 /** Costo mensual de mantener un hijo */
 export interface Inputs { edadHijo: string; tipoEducacion: string; obraSocial?: string; actividadesExtra?: number; }
-export interface Outputs { costoMensualTotal: number; costoAnual: number; desglose: string; costoHasta18: number; }
+export interface Outputs { costoMensualTotal: number; costoAnual: number; desglose: string; costoHasta18: number; _chart?: any; }
 
 export function costoHijoMensual(i: Inputs): Outputs {
   const edad = i.edadHijo || 'primaria';
@@ -35,10 +35,28 @@ export function costoHijoMensual(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Alimentación', value: alim },
+      { label: 'Educación', value: eduCost },
+      { label: 'Salud', value: saludMonto },
+      { label: 'Higiene', value: hig },
+      { label: 'Ropa', value: rop },
+      { label: 'Actividades', value: actCost },
+      { label: 'Otros', value: otros },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(costoMensualTotal).toLocaleString('es-AR'),
+    centerLabel: 'Total/mes',
+    ariaLabel: 'Composición del costo mensual de un hijo: alimentación, educación, salud, higiene, ropa, actividades y otros.',
+  };
+
   return {
     costoMensualTotal: Math.round(costoMensualTotal),
     costoAnual: Math.round(costoAnual),
     desglose: `Alimentación $${fmt.format(alim)} + Educación $${fmt.format(eduCost)} + Salud $${fmt.format(saludMonto)} + Higiene $${fmt.format(hig)} + Ropa $${fmt.format(rop)} + Actividades $${fmt.format(actCost)} + Otros $${fmt.format(otros)}`,
     costoHasta18: Math.round(costoHasta18),
+    _chart: chart,
   };
 }

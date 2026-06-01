@@ -20,6 +20,7 @@ export interface SueldoNetoColombiaOutputs {
   totalDescuentos: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 // SMLMV 2026 Colombia estimado
@@ -121,6 +122,22 @@ export function sueldoNetoColombia(inputs: SueldoNetoColombiaInputs): SueldoNeto
 
   const explicacion = `De tu salario de $${salario.toLocaleString('es-CO')} COP${auxTransporte > 0 ? ` (con auxilio de transporte de $${auxTransporte.toLocaleString('es-CO')})` : ''}, se descuentan: Salud 4% ($${aporteSalud.toLocaleString('es-CO')}), Pensión 4% a ${fondoPension} ($${aportePension.toLocaleString('es-CO')})${fondoSolidaridad > 0 ? `, Fondo de Solidaridad Pensional ($${fondoSolidaridad.toLocaleString('es-CO')})` : ''}${retencionFuente > 0 ? `, y Retención en la fuente ($${retencionFuente.toLocaleString('es-CO')})` : ''}. Total descuentos: $${totalDescuentos.toLocaleString('es-CO')}. Tu sueldo neto es $${sueldoNeto.toLocaleString('es-CO')} COP.`;
 
+  const totalBase = salario + auxTransporte;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto', value: Math.round(sueldoNeto) },
+      { label: 'Salud (4%)', value: aporteSalud },
+      { label: 'Pensión (4%)', value: aportePension },
+      ...(fondoSolidaridad > 0 ? [{ label: 'FSP', value: fondoSolidaridad }] : []),
+      ...(retencionFuente > 0 ? [{ label: 'ReteFuente', value: retencionFuente }] : []),
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalBase).toLocaleString('es-CO'),
+    centerLabel: auxTransporte > 0 ? 'Salario + aux.' : 'Salario',
+    ariaLabel: 'Composición del salario: neto más descuentos (salud, pensión, fondo de solidaridad y retención en la fuente).',
+  };
+
   return {
     sueldoNeto: Math.round(sueldoNeto),
     aporteSalud,
@@ -130,5 +147,6 @@ export function sueldoNetoColombia(inputs: SueldoNetoColombiaInputs): SueldoNeto
     totalDescuentos,
     formula,
     explicacion,
+    _chart: chart,
   };
 }

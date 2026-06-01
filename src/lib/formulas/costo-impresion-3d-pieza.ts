@@ -7,7 +7,7 @@ export interface Inputs {
 }
 
 export interface Outputs {
-  precioFinal: number; costoMaterial: number; costoLuz: number; costoDesgaste: number; costoTotal: number; desglose: string;
+  precioFinal: number; costoMaterial: number; costoLuz: number; costoDesgaste: number; costoTotal: number; desglose: string; _chart?: any;
 }
 
 export function costoImpresion3dPieza(inputs: Inputs): Outputs {
@@ -23,6 +23,18 @@ export function costoImpresion3dPieza(inputs: Inputs): Outputs {
   const desgaste = (material + luz) * 0.10;
   const total = material + luz + desgaste;
   const precio = total * (1 + mg / 100);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Material', value: Number(material.toFixed(0)) },
+      { label: 'Luz', value: Number(luz.toFixed(0)) },
+      { label: 'Desgaste', value: Number(desgaste.toFixed(0)) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Costo total',
+    ariaLabel: 'Composición del costo de impresión: material, luz y desgaste de la máquina',
+  };
   return {
     precioFinal: Number(precio.toFixed(0)),
     costoMaterial: Number(material.toFixed(0)),
@@ -30,5 +42,6 @@ export function costoImpresion3dPieza(inputs: Inputs): Outputs {
     costoDesgaste: Number(desgaste.toFixed(0)),
     costoTotal: Number(total.toFixed(0)),
     desglose: `Material ${Math.round((material/total)*100)}% · Luz ${Math.round((luz/total)*100)}% · Desgaste ${Math.round((desgaste/total)*100)}%`,
+    _chart: chart,
   };
 }

@@ -14,6 +14,7 @@ export interface Outputs {
   scq: number;
   gravedad: string;
   detalle: string;
+  _chart?: any;
 }
 
 export function superficieQuemaduraReglaNueves(i: Inputs): Outputs {
@@ -48,9 +49,24 @@ export function superficieQuemaduraReglaNueves(i: Inputs): Outputs {
     `%SCQ: ${scq}% | ${gravedad}${parkland}. ` +
     `Solo contar quemaduras de 2do y 3er grado.`;
 
+  const chart = {
+    type: 'scale' as const,
+    marker: scq,
+    markerLabel: 'Tu %SCQ: ' + scq + '%',
+    min: 0,
+    unit: '%',
+    segments: [
+      { nombre: 'Leve', max: 10, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Moderada', max: 20, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Gran quemado', max: Math.max(40, Math.ceil(scq) + 5), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de superficie corporal quemada: leve <10%, moderada 10-20%, gran quemado >20%.',
+  };
+
   return {
     scq,
     gravedad,
     detalle,
+    _chart: chart,
   };
 }

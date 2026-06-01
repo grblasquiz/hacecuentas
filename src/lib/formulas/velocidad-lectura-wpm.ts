@@ -10,6 +10,7 @@ export interface Outputs {
   paginasPorHora: number;
   tiempoLibro200pag: number;
   mensaje: string;
+  _chart?: any;
 }
 
 export function velocidadLecturaWpm(i: Inputs): Outputs {
@@ -39,12 +40,32 @@ export function velocidadLecturaWpm(i: Inputs): Outputs {
   // Tiempo para un libro de 200 páginas
   const tiempoLibro200pag = (200 * 250) / wpm; // en minutos
 
+  const wpmRound = Math.round(wpm);
+  const chart = {
+    type: 'scale' as const,
+    marker: wpmRound,
+    markerLabel: 'Tu velocidad: ' + wpmRound + ' PPM',
+    min: 0,
+    unit: ' PPM',
+    segments: [
+      { nombre: 'Lento', max: 150, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Debajo', max: 200, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Promedio', max: 250, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Encima', max: 350, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Rápido', max: 500, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Muy rápido', max: 800, color: '#a7f3d0', colorDark: '#065f46' },
+      { nombre: 'Speed reader', max: Math.max(1000, Math.ceil(wpmRound) + 100), color: '#99f6e4', colorDark: '#115e59' },
+    ],
+    ariaLabel: 'Escala de velocidad de lectura en palabras por minuto: lento, promedio, rápido, speed reader.',
+  };
+
   return {
-    wpm: Math.round(wpm),
+    wpm: wpmRound,
     nivel,
     percentil,
     paginasPorHora: Math.round(paginasPorHora),
     tiempoLibro200pag: Math.round(tiempoLibro200pag),
     mensaje: `Velocidad: ${Math.round(wpm)} PPM (${nivel}). Leés ~${Math.round(paginasPorHora)} páginas/hora. Un libro de 200 págs: ~${Math.round(tiempoLibro200pag)} minutos.`,
+    _chart: chart,
   };
 }

@@ -13,6 +13,7 @@ export interface Outputs {
   categoria: string;
   advertencia: string;
   mensaje: string;
+  _chart?: any;
 }
 
 export function factorClimaMascotas(i: Inputs): Outputs {
@@ -74,6 +75,21 @@ export function factorClimaMascotas(i: Inputs): Outputs {
     adv = 'Limitar tiempo y vigilar signos de estrés térmico (jadeo, temblor).';
   }
 
+  const chart = {
+    type: 'scale' as const,
+    marker: minutos,
+    markerLabel: 'Tiempo seguro: ' + minutos + ' min',
+    min: 0,
+    unit: ' min',
+    segments: [
+      { nombre: 'Peligro extremo', max: 5, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Alto riesgo', max: 15, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Precaución', max: 30, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Seguro', max: Math.max(60, minutos + 10), color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: 'Escala de minutos seguros al exterior para la mascota: de peligro extremo a seguro.',
+  };
+
   return {
     minutosSeguros: `${minutos} min`,
     minutosNumero: minutos,
@@ -81,5 +97,6 @@ export function factorClimaMascotas(i: Inputs): Outputs {
     categoria,
     advertencia: adv,
     mensaje: `${i.especie} ${i.tamano} pelo ${i.pelaje} a ${T.toFixed(1)} °C y ${H.toFixed(0)}% HR: hasta ~${minutos} min seguros (${categoria}).`,
+    _chart: chart,
   };
 }

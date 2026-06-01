@@ -11,6 +11,7 @@ export interface Outputs {
   nivelRiesgo: string;
   pronostico: string;
   recomendacion: string;
+  _chart?: any;
 }
 
 export function probabilidadLluvia24h(i: Inputs): Outputs {
@@ -73,10 +74,28 @@ export function probabilidadLluvia24h(i: Inputs): Outputs {
     recomendacion = 'Evitá actividades al aire libre y revisá alertas oficiales del servicio meteorológico.';
   }
 
+  const probRedondeada = Math.round(prob);
+  const chart = {
+    type: 'scale' as const,
+    marker: probRedondeada,
+    markerLabel: 'Probabilidad: ' + probRedondeada + ' %',
+    min: 0,
+    unit: '%',
+    segments: [
+      { nombre: 'Muy bajo', max: 20, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Bajo', max: 40, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Moderado', max: 60, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Alto', max: 80, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Muy alto', max: 100, color: '#fca5a5', colorDark: '#7f1d1d' },
+    ],
+    ariaLabel: 'Escala de probabilidad de lluvia en 24 horas, de muy bajo a muy alto.',
+  };
+
   return {
-    probabilidad: `${Math.round(prob)} %`,
+    probabilidad: `${probRedondeada} %`,
     nivelRiesgo,
     pronostico,
     recomendacion,
+    _chart: chart,
   };
 }

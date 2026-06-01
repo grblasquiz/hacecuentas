@@ -11,6 +11,7 @@ export interface Outputs {
   costoTotalUSD: number;
   impuestosAduana: number;
   sobrecargoVsProducto: string;
+  _chart?: any;
 }
 
 export function costoEnvioCompraExterior(i: Inputs): Outputs {
@@ -30,10 +31,24 @@ export function costoEnvioCompraExterior(i: Inputs): Outputs {
   const costoTotalPesos = costoTotalUSD * cotiz;
   const sobrecargoPct = ((costoTotalUSD - producto) / producto * 100).toFixed(1);
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Producto', value: producto },
+      { label: 'Envío', value: envio },
+      { label: 'Impuestos aduana', value: impuestosAduana },
+    ],
+    prefix: 'US$',
+    centerValue: 'US$' + Math.round(costoTotalUSD).toLocaleString('es-AR'),
+    centerLabel: 'Costo total',
+    ariaLabel: 'Composición del costo total en USD: producto, envío e impuestos de aduana.',
+  };
+
   return {
     costoTotalPesos: Math.round(costoTotalPesos),
     costoTotalUSD: Math.round(costoTotalUSD * 100) / 100,
     impuestosAduana: Math.round(impuestosAduana * 100) / 100,
     sobrecargoVsProducto: `+${sobrecargoPct}% sobre el precio del producto`,
+    _chart: chart,
   };
 }

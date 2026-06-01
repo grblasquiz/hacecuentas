@@ -18,6 +18,7 @@ export interface HorasExtrasOutputs {
   valorHora100: number;
   subtotal50: number;
   subtotal100: number;
+  _chart?: any;
 }
 
 export function horasExtras50100(inputs: HorasExtrasInputs): HorasExtrasOutputs {
@@ -38,6 +39,18 @@ export function horasExtras50100(inputs: HorasExtrasInputs): HorasExtrasOutputs 
   const subtotal100 = horasExtra100 * valorHora100;
   const totalExtras = subtotal50 + subtotal100;
 
+  const chart = totalExtras > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Extras 50%', value: Math.round(subtotal50) },
+      { label: 'Extras 100%', value: Math.round(subtotal100) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalExtras).toLocaleString('es-AR'),
+    centerLabel: 'Total extras',
+    ariaLabel: 'Composición del total de horas extra: subtotal al 50% y subtotal al 100%',
+  } : undefined;
+
   return {
     totalExtras: Math.round(totalExtras),
     valorHoraNormal: Math.round(valorHoraNormal),
@@ -45,5 +58,6 @@ export function horasExtras50100(inputs: HorasExtrasInputs): HorasExtrasOutputs 
     valorHora100: Math.round(valorHora100),
     subtotal50: Math.round(subtotal50),
     subtotal100: Math.round(subtotal100),
+    _chart: chart,
   };
 }

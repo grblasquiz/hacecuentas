@@ -13,6 +13,7 @@ export interface Outputs {
   monto_prenatal: number;
   total_mensual: number;
   observaciones: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -76,12 +77,26 @@ export function compute(i: Inputs): Outputs {
   if (prenatal) obs += ` Incluye prenatal ($${montoPrenatal.toLocaleString('es-AR')}).`;
   obs += ' Valores aproximados; verificar en anses.gob.ar.';
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: `Asignación (${hijos} hijo/s)`, value: totalAsignacion },
+      { label: 'Adicional escolaridad', value: montoEscolar },
+      { label: 'Adicional prenatal', value: montoPrenatal },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalMensual).toLocaleString('es-AR'),
+    centerLabel: 'Total mensual',
+    ariaLabel: 'Composición de la asignación familiar mensual: asignación por hijos más adicionales',
+  };
+
   return {
     tramo_ingreso: tramoLabel,
     asignacion_por_hijo: asignacionPorHijo,
     monto_escolaridad: montoEscolar,
     monto_prenatal: montoPrenatal,
     total_mensual: totalMensual,
-    observaciones: obs
+    observaciones: obs,
+    _chart: chart
   };
 }

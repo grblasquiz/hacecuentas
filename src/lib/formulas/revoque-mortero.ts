@@ -16,6 +16,7 @@ export interface Outputs {
   volumenMorteroM3: number;
   tipo: string;
   resumen: string;
+  _chart?: any;
 }
 
 const TIPOS: Record<string, { nombre: string; espesor: number; cementoKg: number; calKg: number; arena: number; agua: number }> = {
@@ -44,6 +45,22 @@ export function revoqueMortero(i: Inputs): Outputs {
   const arena = volM3 * t.arena * factor;
   const agua = volM3 * t.agua;
 
+  const arenaKg = arena * 1550;
+  const totalSolidoKg = cemento + cal + arenaKg;
+  const slicesComp = [
+    { label: 'Cemento', value: Math.round(cemento) },
+    { label: 'Cal', value: Math.round(cal) },
+    { label: 'Arena', value: Math.round(arenaKg) },
+  ].filter((s) => s.value > 0);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: slicesComp,
+    prefix: '',
+    centerValue: Math.round(totalSolidoKg).toLocaleString('es-AR') + ' kg',
+    centerLabel: 'Material seco',
+    ariaLabel: 'Composición del mortero por peso: cemento, cal y arena.',
+  };
+
   return {
     cementoKg: Math.round(cemento),
     cementoBolsas: Math.ceil(cemento / 50),
@@ -55,5 +72,6 @@ export function revoqueMortero(i: Inputs): Outputs {
     volumenMorteroM3: Number(volM3.toFixed(3)),
     tipo: t.nombre,
     resumen: `Para ${m2} m² de ${t.nombre.toLowerCase()} (${espesor} cm) necesitás ${Math.ceil(cemento / 50)} bolsas de cemento${cal > 0 ? ', ' + Math.ceil(cal / 25) + ' bolsas de cal' : ''} y ${arena.toFixed(2)} m³ de arena.`,
+    _chart: chart,
   };
 }

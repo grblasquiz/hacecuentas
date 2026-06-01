@@ -10,6 +10,7 @@ export interface Outputs {
   category: string;
   percentile: string;
   interpretation: string;
+  _chart?: any;
 }
 
 // Fórmula original de Cooper (1968): VO2max = (distancia_m - 504.9) / 44.73
@@ -135,10 +136,30 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
+  // Escala usando las normas Cooper Institute para el grupo edad/sexo del usuario
+  const normsForGroup = (sex === "female" ? NORMS_FEMALE : NORMS_MALE)[ageGroup];
+  const [tSuperior, tExcelente, tBueno, tRegular] = normsForGroup;
+  const chart = {
+    type: "scale" as const,
+    marker: vo2maxRounded,
+    markerLabel: "Tu VO2max: " + vo2maxRounded.toFixed(1),
+    min: Math.min(Math.floor(tRegular) - 5, Math.floor(vo2maxRounded) - 2),
+    unit: "",
+    segments: [
+      { nombre: "Bajo", max: tRegular, color: "#fecaca", colorDark: "#b91c1c" },
+      { nombre: "Regular", max: tBueno, color: "#fed7aa", colorDark: "#9a3412" },
+      { nombre: "Bueno", max: tExcelente, color: "#fde68a", colorDark: "#b45309" },
+      { nombre: "Excelente", max: tSuperior, color: "#d9f99d", colorDark: "#3f6212" },
+      { nombre: "Superior", max: Math.max(tSuperior + 8, Math.ceil(vo2maxRounded) + 3), color: "#bbf7d0", colorDark: "#166534" },
+    ],
+    ariaLabel: "Escala de VO2max según normas Cooper Institute para tu edad y sexo",
+  };
+
   return {
     vo2max: vo2maxRounded,
     category,
     percentile,
-    interpretation
+    interpretation,
+    _chart: chart
   };
 }

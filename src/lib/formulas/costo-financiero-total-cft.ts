@@ -18,6 +18,7 @@ export interface CostoFinancieroTotalCftOutputs {
   totalPagado: number;
   costoTotal: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function costoFinancieroTotalCft(
@@ -81,11 +82,24 @@ export function costoFinancieroTotalCft(
   const teaNominal = (Math.pow(1 + i, 12) - 1) * 100;
   const costoTotal = totalPagado - monto;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: monto },
+      { label: 'Costo financiero', value: costoTotal },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalPagado).toLocaleString('es-AR'),
+    centerLabel: 'Total pagado',
+    ariaLabel: 'Composición del total pagado: capital prestado más el costo financiero (intereses, IVA, seguro y gastos).',
+  };
+
   return {
     cftAnual: `${cftAnual.toFixed(1)}% TEA`,
     cuotaTotalMensual: Math.round(cuotaTotalPrimera),
     totalPagado: Math.round(totalPagado),
     costoTotal: Math.round(costoTotal),
     detalle: `El CFT real es ${cftAnual.toFixed(1)}% vs la TEA nominal de ${teaNominal.toFixed(1)}% (diferencia de ${(cftAnual - teaNominal).toFixed(1)} puntos). Cuota total mensual: $${Math.round(cuotaTotalPrimera).toLocaleString('es-AR')} (cuota pura $${Math.round(cuotaPura).toLocaleString('es-AR')} + IVA + seguro). Costo total del crédito: $${Math.round(costoTotal).toLocaleString('es-AR')}.`,
+    _chart: chart,
   };
 }

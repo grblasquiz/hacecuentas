@@ -36,6 +36,7 @@ export interface ComprarAnosAportesMoratoriaOutputs {
   edadMinimaLegal: number;
   cumpleEdad: boolean;
   recomendacion: string;
+  _chart?: any;
 }
 
 export function comprarAnosAportesMoratoria(
@@ -105,6 +106,23 @@ export function comprarAnosAportesMoratoria(
     recomendacion = `Aún no llegás a la edad mínima. Mientras esperás, juntá certificaciones de servicios para validar los años ya aportados (Form. PS 6.2 en ANSES).`;
   }
 
+  // Donut: cómo queda el haber mensual mientras se paga la moratoria
+  // (sólo tiene sentido si efectivamente hay cuota que descontar)
+  const chart =
+    cuotaMensual > 0 && haberMinimo > 0
+      ? {
+          type: 'doughnut' as const,
+          slices: [
+            { label: 'Haber neto en mano', value: Math.round(haberNetoTrasDescuento) },
+            { label: 'Cuota moratoria', value: Math.round(cuotaMensual) },
+          ],
+          prefix: '$',
+          centerValue: '$' + Math.round(haberMinimo).toLocaleString('es-AR'),
+          centerLabel: 'Haber mensual',
+          ariaLabel: 'Composición del haber jubilatorio: parte que cobrás en mano y parte que se descuenta por la cuota de moratoria',
+        }
+      : undefined;
+
   return {
     aniosAComprar,
     mesesAComprar,
@@ -117,5 +135,6 @@ export function comprarAnosAportesMoratoria(
     edadMinimaLegal,
     cumpleEdad,
     recomendacion,
+    _chart: chart,
   };
 }

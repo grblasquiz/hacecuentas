@@ -22,6 +22,7 @@ export interface ViajeDividirOutputs {
   parteJusta: number;
   personasActivas: number;
   liquidacion: string; // detalle por persona
+  _chart?: any;
 }
 
 export function viajeDividir(inputs: ViajeDividirInputs): ViajeDividirOutputs {
@@ -60,10 +61,22 @@ export function viajeDividir(inputs: ViajeDividirInputs): ViajeDividirOutputs {
       return `Persona ${b.idx}: puso $${Math.round(b.gasto).toLocaleString('es-AR')} → TIENE QUE PAGAR $${Math.abs(Math.round(b.balance)).toLocaleString('es-AR')}`;
     });
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: balances
+      .filter((b) => b.gasto > 0)
+      .map((b) => ({ label: 'Persona ' + b.idx, value: Math.round(b.gasto) })),
+    prefix: '$',
+    centerValue: '$' + Math.round(totalGastado).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del gasto total por persona',
+  };
+
   return {
     totalGastado: Math.round(totalGastado),
     parteJusta: Math.round(parteJusta),
     personasActivas,
     liquidacion: lineas.join('\n'),
+    _chart: chart,
   };
 }

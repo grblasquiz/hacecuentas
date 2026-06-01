@@ -14,6 +14,7 @@ export interface Outputs {
   gastoMensualPromedio: number;
   gastoDiario: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function costoMantenimientoHogarAnual(i: Inputs): Outputs {
@@ -46,10 +47,31 @@ export function costoMantenimientoHogarAnual(i: Inputs): Outputs {
   if (jardineria > 0) rubros.push(`Jardinería $${fmt.format(jardineria)}`);
   if (otros > 0) rubros.push(`Otros $${fmt.format(otros)}`);
 
+  const slices = [
+    { label: 'Expensas', value: expensas },
+    { label: 'Servicios', value: servicios },
+    { label: 'Impuestos', value: impuestos },
+    { label: 'Seguro', value: seguro },
+    { label: 'Reparaciones', value: reparaciones },
+    { label: 'Limpieza', value: limpieza },
+    { label: 'Jardinería', value: jardineria },
+    { label: 'Otros', value: otros },
+  ].filter((s) => s.value > 0);
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices,
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total/año',
+    ariaLabel: 'Composición del gasto anual de mantenimiento del hogar por rubro',
+  };
+
   return {
     gastoAnualTotal: Math.round(total),
     gastoMensualPromedio: Math.round(mensual),
     gastoDiario: Math.round(diario),
     detalle: `${rubros.join(' + ')} = $${fmt.format(total)}/año ($${fmt.format(mensual)}/mes, $${fmt.format(diario)}/día).`,
+    _chart: chart,
   };
 }

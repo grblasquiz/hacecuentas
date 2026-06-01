@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-05-29
+// Generated: 2026-05-31
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -8,6 +8,7 @@ import { rmPesoMuertoEstimador } from './1rm-peso-muerto-estimador';
 import { rmPressBancaEstimador } from './1rm-press-banca-estimador';
 import { rmSentadillaEstimador } from './1rm-sentadilla-estimador';
 import { compute as compute__401k_contribution_match_calculator } from './401k-contribution-match-calculator';
+import { aQueHoraAcostarme } from './a-que-hora-acostarme';
 import { a1cGlucosa } from './a1c-glucosa';
 import { a1cHemoglobinaGlicosiladaDiabetes } from './a1c-hemoglobina-glicosilada-diabetes';
 import { compute as compute__aave_flash_loan_arbitraje_fee_net_profit } from './aave-flash-loan-arbitraje-fee-net-profit';
@@ -2635,7 +2636,6 @@ import { protectorSolarSpf } from './protector-solar-spf';
 import { proteinaDiaria } from './proteina-diaria';
 import { proteinaDiariaFisicoculturismoGanarMusculo } from './proteina-diaria-fisicoculturismo-ganar-musculo';
 import { compute as compute__proteina_diaria_gramos_objetivo } from './proteina-diaria-gramos-objetivo';
-import { proteinaDiariaObjetivo } from './proteina-diaria-objetivo';
 import { proteinaDiariaPeso } from './proteina-diaria-peso';
 import { proteinaPorComidaAbsorcion } from './proteina-por-comida-absorcion';
 import { proteinaPorComidaAnabolismo } from './proteina-por-comida-anabolismo';
@@ -3093,7 +3093,6 @@ import { temperaturaHornoConversion } from './temperatura-horno-conversion';
 import { temperaturaServicioVino } from './temperatura-servicio-vino';
 import { compute as compute__tenencia_vehicular_mexico_cdmx_edomex_2026 } from './tenencia-vehicular-mexico-cdmx-edomex-2026';
 import { tenenciaVehicularMx } from './tenencia-vehicular-mx';
-import { teoremaPitagorasHipotenusaCateto } from './teorema-pitagoras-hipotenusa-cateto';
 import { teoremaTales } from './teorema-tales';
 import { compute as compute__terapia_online_cuanto_cuesta_mensual_frecuencia } from './terapia-online-cuanto-cuesta-mensual-frecuencia';
 import { termotanqueHeatPumpVsElectricoAnos } from './termotanque-heat-pump-vs-electrico-anos';
@@ -3413,6 +3412,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-press-banca-estimador': rmPressBancaEstimador,
   '1rm-sentadilla-estimador': rmSentadillaEstimador,
   '401k-contribution-match-calculator': compute__401k_contribution_match_calculator,
+  'a-que-hora-acostarme': aQueHoraAcostarme,
   'a1c-glucosa': a1cGlucosa,
   'a1c-hemoglobina-glicosilada-diabetes': a1cHemoglobinaGlicosiladaDiabetes,
   'aave-flash-loan-arbitraje-fee-net-profit': compute__aave_flash_loan_arbitraje_fee_net_profit,
@@ -6040,7 +6040,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'proteina-diaria': proteinaDiaria,
   'proteina-diaria-fisicoculturismo-ganar-musculo': proteinaDiariaFisicoculturismoGanarMusculo,
   'proteina-diaria-gramos-objetivo': compute__proteina_diaria_gramos_objetivo,
-  'proteina-diaria-objetivo': proteinaDiariaObjetivo,
   'proteina-diaria-peso': proteinaDiariaPeso,
   'proteina-por-comida-absorcion': proteinaPorComidaAbsorcion,
   'proteina-por-comida-anabolismo': proteinaPorComidaAnabolismo,
@@ -6498,7 +6497,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'temperatura-servicio-vino': temperaturaServicioVino,
   'tenencia-vehicular-mexico-cdmx-edomex-2026': compute__tenencia_vehicular_mexico_cdmx_edomex_2026,
   'tenencia-vehicular-mx': tenenciaVehicularMx,
-  'teorema-pitagoras-hipotenusa-cateto': teoremaPitagorasHipotenusaCateto,
   'teorema-tales': teoremaTales,
   'terapia-online-cuanto-cuesta-mensual-frecuencia': compute__terapia_online_cuanto_cuesta_mensual_frecuencia,
   'termotanque-heat-pump-vs-electrico-anos': termotanqueHeatPumpVsElectricoAnos,

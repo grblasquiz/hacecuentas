@@ -13,6 +13,7 @@ export interface Outputs {
   totalAportado: number;
   interesesGenerados: number;
   detalle: string;
+  _chart?: any;
 }
 
 // Costos de referencia 2026 en USD
@@ -118,6 +119,21 @@ export function compute(i: Inputs): Outputs {
     detalle = `Horizonte: ${aniosRestantes} años (${mesesRestantes} meses). Tasa real: ${tasaAnual}% anual = ${tasaMensualPct}% mensual. Aportás USD ${ahorroPorMes.toFixed(2)}/mes durante ${mesesRestantes} meses. De tu bolsillo: USD ${(ahorroPorMes * mesesRestantes).toFixed(0)} en cuotas + USD ${ahorroActual} ya ahorrado = USD ${totalAportado.toFixed(0)} total. El interés compuesto aporta los USD ${interesesGenerados.toFixed(0)} restantes.`;
   }
 
+  const aporteSlice = Math.min(totalAportado, metaFinal);
+  const interesSlice = Math.max(interesesGenerados, 0);
+  // Donut: la meta se cubre con aporte propio + intereses generados.
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Tu aporte', value: aporteSlice },
+      { label: 'Intereses', value: interesSlice },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(aporteSlice + interesSlice).toLocaleString('es-AR'),
+    centerLabel: 'Meta',
+    ariaLabel: 'Composición de la meta de ahorro: aporte propio e intereses generados.',
+  };
+
   return {
     ahorroPorMes: Math.max(ahorroPorMes, 0),
     metaFinal,
@@ -125,5 +141,6 @@ export function compute(i: Inputs): Outputs {
     totalAportado: Math.min(totalAportado, metaFinal),
     interesesGenerados: Math.max(interesesGenerados, 0),
     detalle,
+    _chart: chart,
   };
 }

@@ -28,6 +28,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # fetch-depth 0 = historia completa, para que prune_guard pueda
+          # detectar la edad de cada calc por su primer commit (audit-list).
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -41,3 +45,9 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      # Gate anti falsos-410: falla si gone-410.ts contiene URLs de locales
+      # core-secundarios (es/mx/co/cl) — el bug recurrente que mató 193 URLs ES.
+      # Las jóvenes en/pt (cull de calidad intencional) solo se reportan.
+      - name: Guard contra falsos-410 (gone-410.ts)
+        run: python3 scripts/prune_guard.py --audit-list

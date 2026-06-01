@@ -7,10 +7,38 @@ import Footer from '../components/Footer.astro';
 import ScrollToTop from '../components/ScrollToTop.astro';
 import Newsletter from '../components/Newsletter.astro';
 import { TOTAL_DISPLAY, PT_DISPLAY } from '../lib/calc-counts';
+import { GONE_410_URLS } from '../lib/gone-410';
 
 // Cargar todas las calculadoras
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const calcs = Object.values(calcModules).map((m: any) => m.default || m);
+
+// Notas recientes del blog → bloque "Novedades" en la home. Señal de frescura
+// para Google Discover + enlazado interno desde la home hacia el contenido
+// fresco (recomendación clave para que Discover levante las notas nuevas).
+function formatNoteDate(iso: string): string {
+  if (!iso || !/^\d{4}-\d{2}-\d{2}/.test(iso)) return '';
+  const d = new Date(iso.slice(0, 10) + 'T00:00:00Z');
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+}
+const blogModules = import.meta.glob<any>('../content/blog/*.json', { eager: true });
+const recentPosts = Object.values(blogModules)
+  .map((m: any) => m.default || m)
+  .filter((p: any) => p && p.slug && p.title)
+  // Excluir posts que el Worker sirve como 410 GONE: tienen JSON (renderizan en
+  // dev) pero en prod están pruned. Linkearlos desde la home = links a páginas
+  // muertas (mala UX + SEO). gone-410 gana sobre el JSON. Ver [[gone-410-overrides-noindex]].
+  .filter((p: any) => !GONE_410_URLS.has('/blog/' + p.slug))
+  .sort((a: any, b: any) =>
+    String(b.updatedDate || b.date || '').localeCompare(String(a.updatedDate || a.date || '')))
+  .slice(0, 6)
+  .map((p: any) => ({
+    slug: p.slug,
+    title: (p.ogTitle || p.title || '').replace(/\s*[|·–—-]\s*Hac[eé] Cuentas\s*$/i, '').trim(),
+    emoji: p.heroEmoji || '📝',
+    date: formatNoteDate(p.updatedDate || p.date || ''),
+  }));
 
 // Agrupar por categoría
 const byCategory: Record<string, any[]> = {};
@@ -320,6 +348,7 @@ const schema = {
       },
       sameAs: [
         'https://x.com/Hacecuentas',
+        'https://www.instagram.com/hacecuentas',
         'https://www.linkedin.com/company/122324467/',
         'https://www.wikidata.org/wiki/Q139824747',
         'https://hacecuentas.com/sobre-nosotros',
@@ -613,6 +642,32 @@ const schema = {
       <a href="/guia/cocina-medidas-recetas" class="pilar-card"><span class="pilar-icon">🍳</span><div><strong>Cocina, medidas y recetas</strong><span>Conversión, porciones, tiempos</span></div></a>
     </div>
   </section>
+
+  {recentPosts.length > 0 && (
+  <section class="pilares" aria-labelledby="novedades-heading">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow eyebrow-inline">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+            <path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6z"/>
+          </svg>
+          Novedades
+        </span>
+        <h2 id="novedades-heading">Últimas notas</h2>
+      </div>
+      <a href="/blog" class="see-all">Ver el blog →</a>
+    </div>
+    <div class="pilares-grid">
+      {recentPosts.map((p) => (
+        <a href={`/blog/${p.slug}`} class="pilar-card">
+          <span class="pilar-icon">{p.emoji}</span>
+          <div><strong>{p.title}</strong><span>{p.date}</span></div>
+        </a>
+      ))}
+    </div>
+  </section>
+  )}
 
 
   <section class="stats">

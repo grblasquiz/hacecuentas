@@ -15,6 +15,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
+import sharp from 'sharp';
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -37,6 +38,7 @@ const CALCS_INTL_DIRS = [
   join(ROOT, 'src', 'content', 'calcs-cl'),
   join(ROOT, 'src', 'content', 'calcs-pt'),
 ];
+const BLOG_DIR = join(ROOT, 'src', 'content', 'blog');
 const OUT_DIR = join(ROOT, 'public', 'og');
 const FONTS_DIR = join(__dirname, '.fonts');
 
@@ -153,7 +155,20 @@ function truncate(str: string, max: number): string {
  * Build the satori element tree. satori accepts React-like JSX but we emit
  * it as plain object nodes so this file does not need the React runtime.
  */
-function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
+interface TemplateOpts {
+  /** Texto de la "pill" del footer (default calc: 'Gratis · Sin registro'). */
+  footerTag?: string;
+  /** Alto del lienzo en px (default 630 = 16:9). Blog usa también 1200 = 1:1. */
+  heightPx?: number;
+  /** Oculta el círculo del icono. Blog/Discover lo usa: satori no tiene fuente
+   *  de emoji cargada → un emoji saldría como "NO GLYPH". */
+  hideIcon?: boolean;
+}
+
+function buildTemplate(calc: Calc, opts: TemplateOpts = {}): Parameters<typeof satori>[0] {
+  const footerTag = opts.footerTag ?? 'Gratis · Sin registro';
+  const heightPx = opts.heightPx ?? 630;
+  const hideIcon = opts.hideIcon ?? false;
   const title = truncate(calc.h1, 60);
   const description = truncate(calc.description, 140);
   const icon = calc.icon && calc.icon.trim().length > 0 ? calc.icon : '🧮';
@@ -168,7 +183,7 @@ function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
     props: {
       style: {
         width: '1200px',
-        height: '630px',
+        height: `${heightPx}px`,
         display: 'flex',
         flexDirection: 'column',
         padding: '72px 72px 60px',
@@ -257,8 +272,9 @@ function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
                   children: theme.label,
                 },
               },
-              // Icon grande en círculo con gradient
-              {
+              // Icon grande en círculo con gradient. Se omite si hideIcon
+              // (blog/Discover): satori no tiene fuente de emoji → "NO GLYPH".
+              ...(hideIcon ? [] : [{
                 type: 'div',
                 props: {
                   style: {
@@ -275,7 +291,7 @@ function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
                   },
                   children: icon,
                 },
-              },
+              }]),
             ],
           },
         },
@@ -386,7 +402,7 @@ function buildTemplate(calc: Calc): Parameters<typeof satori>[0] {
                     fontWeight: 600,
                     color: '#f1f5f9',
                   },
-                  children: 'Gratis · Sin registro',
+                  children: footerTag,
                 },
               },
             ],
@@ -410,11 +426,13 @@ interface GenResult {
 async function renderOne(
   calc: Calc,
   fonts: Awaited<ReturnType<typeof loadFonts>>,
+  opts: TemplateOpts = {},
 ): Promise<Buffer> {
-  const element = buildTemplate(calc);
+  const heightPx = opts.heightPx ?? 630;
+  const element = buildTemplate(calc, opts);
   const svg = await satori(element, {
     width: 1200,
-    height: 630,
+    height: heightPx,
     fonts,
   });
   const resvg = new Resvg(svg, {
@@ -422,6 +440,92 @@ async function renderOne(
     font: { loadSystemFonts: false },
   });
   return resvg.render().asPng();
+}
+
+// ---------------------------------------------------------------------------
+// Blog / Discover OG images
+// ---------------------------------------------------------------------------
+// Los posts del blog no entraban al pipeline → caían a /og-default.png (3x el
+// mismo placeholder en el schema NewsArticle). Google Discover pondera fuerte
+// la imagen: requiere ≥1200px de ancho y prefiere JPG/WebP sobre PNG. Generamos
+// por post: blog-<slug>.jpg (1200×630, og:image) y blog-<slug>-1x1.jpg
+// (1200×1200, ratio que Discover/Top-Stories favorece). Reusa el template de
+// las calcs con footer editorial ("hacecuentas.com") en vez de "Gratis · Sin
+// registro". Salida JPG (committeada; webp/avif están gitignoreados).
+
+interface BlogPost {
+  slug: string;
+  title: string;
+  description: string;
+  category?: string;
+  heroEmoji?: string;
+  ogTitle?: string;
+}
+
+/** Quita el sufijo " | Hacé Cuentas" del title para la card (queda muy largo). */
+function cleanBlogTitle(post: BlogPost): string {
+  const raw = (post.ogTitle || post.title || post.slug).trim();
+  return raw.replace(/\s*[|·–—-]\s*Hac[eé] Cuentas\s*$/i, '').trim();
+}
+
+async function renderBlogJpg(
+  post: BlogPost,
+  fonts: Awaited<ReturnType<typeof loadFonts>>,
+  heightPx: number,
+): Promise<Buffer> {
+  // Mapeamos el post a la shape Calc del template: h1=título limpio,
+  // icon=heroEmoji. El footer editorial reemplaza el CTA de las calcs.
+  const asCalc: Calc = {
+    slug: post.slug,
+    h1: cleanBlogTitle(post),
+    description: post.description || '',
+    icon: post.heroEmoji && post.heroEmoji.trim() ? post.heroEmoji : '📰',
+    category: post.category,
+  };
+  const png = await renderOne(asCalc, fonts, { footerTag: 'hacecuentas.com', heightPx, hideIcon: true });
+  // PNG → JPG (Discover-friendly, committeable). quality 82 = buen balance.
+  return sharp(png).jpeg({ quality: 82, progressive: true }).toBuffer();
+}
+
+async function processBlog(
+  fonts: Awaited<ReturnType<typeof loadFonts>>,
+  result: GenResult,
+): Promise<void> {
+  if (!existsSync(BLOG_DIR)) return;
+  const files = readdirSync(BLOG_DIR).filter((f) => f.endsWith('.json'));
+  for (const file of files) {
+    let post: BlogPost;
+    try {
+      post = JSON.parse(readFileSync(join(BLOG_DIR, file), 'utf8')) as BlogPost;
+    } catch (err) {
+      result.failed.push({ slug: `blog/${file}`, error: `parse: ${(err as Error).message}` });
+      continue;
+    }
+    if (!post.slug || !post.title || !post.description) {
+      result.failed.push({ slug: `blog/${file}`, error: 'missing slug/title/description' });
+      continue;
+    }
+    // 16:9 → 1200×630, formato principal para og:image, Twitter y Discover.
+    // (El 1:1 quedaba con demasiado espacio vacío al centro con este template;
+    //  agregar ratios extra requiere una variante con contenido centrado —
+    //  pendiente si Discover muestra tracción.)
+    const ratios: Array<{ suffix: string; height: number }> = [
+      { suffix: '', height: 630 },       // blog-<slug>.jpg → 1200×630
+    ];
+    for (const r of ratios) {
+      const outPath = join(OUT_DIR, `blog-${post.slug}${r.suffix}.jpg`);
+      // SIN cache: el blog son ~17 posts (regenerar todos ≈2s, despreciable vs
+      // las 9477 calcs). Regenerar siempre garantiza que la card matchee el
+      // título/ogTitle/description actuales — editar un post se refleja solo.
+      try {
+        const jpg = await renderBlogJpg(post, fonts, r.height);
+        writeFileSync(outPath, jpg);
+        result.generated++;
+      } catch (err) {
+        result.failed.push({ slug: `blog-${post.slug}${r.suffix}`, error: (err as Error).message });
+      }
+    }
+  }
 }
 
 async function processDir(
@@ -502,6 +606,14 @@ async function main(): Promise<void> {
   // Intl: filtrar noindex para evitar ~430+ PNGs sin valor SEO/social.
   for (const dir of CALCS_INTL_DIRS) {
     await processDir(dir, fonts, result, { skipNoindex: true });
+  }
+
+  // Blog / Discover: aislado en try/catch — un fallo acá NO debe abortar la
+  // generación de las 9477 calcs (que ya corrió arriba).
+  try {
+    await processBlog(fonts, result);
+  } catch (err) {
+    console.warn(`[og] blog pass falló (no crítico): ${(err as Error).message}`);
   }
 
   const elapsed = ((Date.now() - started) / 1000).toFixed(2);

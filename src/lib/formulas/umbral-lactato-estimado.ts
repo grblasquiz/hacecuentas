@@ -10,6 +10,7 @@ export interface Outputs {
   paceUmbral: string;
   zonaUmbral: string;
   mensaje: string;
+  _chart?: any;
 }
 
 export function umbralLactatoEstimado(i: Inputs): Outputs {
@@ -37,11 +38,29 @@ export function umbralLactatoEstimado(i: Inputs): Outputs {
 
   const zonaUmbral = `${Math.round(fcMaxima * (pct - 0.03))}-${Math.round(fcMaxima * (pct + 0.03))} lpm`;
 
+  // Gauge: FC del umbral ubicada en las zonas de entrenamiento (% de FCmax)
+  const chart = {
+    type: 'scale' as const,
+    marker: fcUmbral,
+    markerLabel: 'Tu umbral: ' + fcUmbral + ' lpm',
+    min: Math.round(fcMaxima * 0.5),
+    unit: ' lpm',
+    segments: [
+      { nombre: 'Recuperación', max: Math.round(fcMaxima * 0.70), color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Aeróbico', max: Math.round(fcMaxima * 0.80), color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Tempo', max: Math.round(fcMaxima * 0.87), color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Umbral', max: Math.round(fcMaxima * 0.92), color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'VO2 máx', max: Math.max(Math.round(fcMaxima), Math.ceil(fcUmbral) + 5), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de zonas de frecuencia cardíaca según % de FCmax: recuperación, aeróbico, tempo, umbral y VO2 máx.',
+  };
+
   return {
     fcUmbral,
     porcentajeFcMax,
     paceUmbral,
     zonaUmbral,
-    mensaje: `Umbral estimado: ${fcUmbral} lpm (${porcentajeFcMax}% FCmax). Zona: ${zonaUmbral}.`
+    mensaje: `Umbral estimado: ${fcUmbral} lpm (${porcentajeFcMax}% FCmax). Zona: ${zonaUmbral}.`,
+    _chart: chart,
   };
 }

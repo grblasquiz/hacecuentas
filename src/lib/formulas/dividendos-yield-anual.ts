@@ -13,6 +13,7 @@ export interface Outputs {
   inversionTotal: number;
   categoria: string;
   resumen: string;
+  _chart?: any;
 }
 
 export function dividendosYieldAnual(i: Inputs): Outputs {
@@ -42,6 +43,22 @@ export function dividendosYieldAnual(i: Inputs): Outputs {
 
   const resumen = `Con ${acciones} acciones generarías ${ingresoAnual.toFixed(2)} al año (${yieldAnual.toFixed(2)}% de yield).`;
 
+  const yieldR = Number(yieldAnual.toFixed(2));
+  const chart = {
+    type: 'scale' as const,
+    marker: yieldR,
+    markerLabel: 'Tu yield: ' + yieldR + '%',
+    min: 0,
+    unit: '%',
+    segments: [
+      { nombre: 'Bajo (growth)', max: 2, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Moderado', max: 4, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Atractivo', max: 8, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Alto (posible trampa)', max: Math.max(12, Math.ceil(yieldR) + 1), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala del dividend yield anual: bajo de growth, moderado, atractivo y alto con posible trampa de dividendo.',
+  };
+
   return {
     yieldAnual: Number(yieldAnual.toFixed(2)),
     ingresoAnual: Number(ingresoAnual.toFixed(2)),
@@ -50,5 +67,6 @@ export function dividendosYieldAnual(i: Inputs): Outputs {
     inversionTotal: Number(inversionTotal.toFixed(2)),
     categoria,
     resumen,
+    _chart: chart,
   };
 }

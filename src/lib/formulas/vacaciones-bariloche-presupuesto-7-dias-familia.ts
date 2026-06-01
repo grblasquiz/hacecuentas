@@ -1,6 +1,6 @@
 /** Presupuesto 7 días Bariloche familia tipo (4 personas) */
 export interface Inputs { temporada: 'alta' | 'media' | 'baja'; categoriaHotel: '3estrellas' | '4estrellas' | '5estrellas' | 'cabana'; personas: number; dias: number; vueloPorPersonaArs: number; gastosExtraDiariosArs: number; }
-export interface Outputs { hospedajeArs: number; comidasArs: number; vuelosArs: number; excursionesArs: number; totalArs: number; totalPorPersonaArs: number; explicacion: string; }
+export interface Outputs { hospedajeArs: number; comidasArs: number; vuelosArs: number; excursionesArs: number; totalArs: number; totalPorPersonaArs: number; explicacion: string; _chart?: any; }
 export function vacacionesBarilochePresupuesto7DiasFamilia(i: Inputs): Outputs {
   const personas = Number(i.personas) || 4;
   const dias = Number(i.dias) || 7;
@@ -20,6 +20,19 @@ export function vacacionesBarilochePresupuesto7DiasFamilia(i: Inputs): Outputs {
   const vuelos = vuelo * personas;
   const excursiones = 45000 * personas + extra * dias;
   const total = hospedaje + comidas + vuelos + excursiones;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Hospedaje', value: Number(hospedaje.toFixed(2)) },
+      { label: 'Comidas', value: Number(comidas.toFixed(2)) },
+      { label: 'Vuelos', value: Number(vuelos.toFixed(2)) },
+      { label: 'Excursiones', value: Number(excursiones.toFixed(2)) },
+    ].filter(sl => sl.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del presupuesto: hospedaje, comidas, vuelos y excursiones',
+  };
   return {
     hospedajeArs: Number(hospedaje.toFixed(2)),
     comidasArs: Number(comidas.toFixed(2)),
@@ -28,5 +41,6 @@ export function vacacionesBarilochePresupuesto7DiasFamilia(i: Inputs): Outputs {
     totalArs: Number(total.toFixed(2)),
     totalPorPersonaArs: Number((total / personas).toFixed(2)),
     explicacion: `${personas} personas, ${dias} días, ${i.temporada}, ${i.categoriaHotel}: hospedaje $${hospedaje.toLocaleString('es-AR')} + comidas $${comidas.toLocaleString('es-AR')} + vuelos $${vuelos.toLocaleString('es-AR')} + excursiones $${excursiones.toLocaleString('es-AR')} = $${total.toLocaleString('es-AR')}.`,
+    _chart: chart,
   };
 }

@@ -12,6 +12,7 @@ export interface Outputs {
   total_monthly_cost: number;
   cost_percentage: number;
   net_revenue: number;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -42,6 +43,20 @@ export function compute(i: Inputs): Outputs {
   const costPercentage = monthlySales > 0 ? (totalMonthlyCost / monthlySales) * 100 : 0;
   const netRevenue = monthlySales - totalMonthlyCost;
 
+  // Donut: descomposición del costo mensual total en sus tres componentes.
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Abono del plan', value: Math.max(0, Math.round(planCost)) },
+      { label: 'Comisión Tienda Nube', value: Math.max(0, Math.round(tnCommission)) },
+      { label: 'Procesamiento Mercado Pago', value: Math.max(0, Math.round(paymentProcessingFee)) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalMonthlyCost).toLocaleString('es-AR'),
+    centerLabel: 'Costo/mes',
+    ariaLabel: 'Composición del costo mensual de Tienda Nube: abono del plan, comisión de la plataforma y procesamiento de pagos.',
+  };
+
   return {
     plan_cost: Math.round(planCost * 100) / 100,
     num_transactions: numTransactions,
@@ -49,6 +64,7 @@ export function compute(i: Inputs): Outputs {
     payment_processing_fee: Math.round(paymentProcessingFee * 100) / 100,
     total_monthly_cost: Math.round(totalMonthlyCost * 100) / 100,
     cost_percentage: Math.round(costPercentage * 100) / 100,
-    net_revenue: Math.round(netRevenue * 100) / 100
+    net_revenue: Math.round(netRevenue * 100) / 100,
+    _chart: chart
   };
 }

@@ -20,6 +20,7 @@ export interface SueldoNetoChileOutputs {
   totalDescuentos: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 // Tasas AFP Chile 2026 (cotizacion obligatoria + SIS/comision)
@@ -128,6 +129,21 @@ export function sueldoNetoChile(inputs: SueldoNetoChileInputs): SueldoNetoChileO
 
   const explicacion = `De tu sueldo bruto de $${bruto.toLocaleString('es-CL')} CLP, se descuentan: AFP ${afpInfo.nombre} ${afpPct}% ($${afpMonto.toLocaleString('es-CL')}), ${saludTipo} ${saludPct}% ($${saludMonto.toLocaleString('es-CL')}), Seguro de Cesantía 0.6% ($${cesantiaMonto.toLocaleString('es-CL')})${impuesto > 0 ? ` e Impuesto Único $${impuesto.toLocaleString('es-CL')}` : ''}. Total descuentos: $${totalDescuentos.toLocaleString('es-CL')}. Tu sueldo líquido es $${sueldoLiquido.toLocaleString('es-CL')} CLP.`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Líquido', value: Math.round(sueldoLiquido) },
+      { label: `AFP ${afpInfo.nombre}`, value: afpMonto },
+      { label: saludTipo, value: saludMonto },
+      { label: 'Cesantía', value: cesantiaMonto },
+      ...(impuesto > 0 ? [{ label: 'Impuesto Único', value: impuesto }] : []),
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(bruto).toLocaleString('es-CL'),
+    centerLabel: 'Bruto',
+    ariaLabel: 'Composición del sueldo bruto: líquido más descuentos (AFP, salud, cesantía e impuesto).',
+  };
+
   return {
     sueldoLiquido: Math.round(sueldoLiquido),
     afpMonto,
@@ -137,5 +153,6 @@ export function sueldoNetoChile(inputs: SueldoNetoChileInputs): SueldoNetoChileO
     totalDescuentos,
     formula,
     explicacion,
+    _chart: chart,
   };
 }

@@ -38,6 +38,7 @@ export interface LiquidacionEmpleadaOutputs {
   vacacionesProporcionales: number;
   aniosComputables: string;
   mensaje: string;
+  _chart?: any;
 }
 
 export function liquidacionFinalEmpleadaCasaParticular(
@@ -113,6 +114,21 @@ export function liquidacionFinalEmpleadaCasaParticular(
       ' Con jornada superior a 24 hs/semana el régimen previsional y de obra social es pleno, equiparado a LCT en ese aspecto.';
   }
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Antigüedad', value: Math.round(antiguedad) },
+      { label: 'Preaviso', value: Math.round(preaviso) },
+      { label: 'Integración mes', value: Math.round(integracion) },
+      { label: 'SAC proporcional', value: Math.round(sacProporcional) },
+      { label: 'Vacaciones', value: Math.round(vacacionesProporcionales) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición de la liquidación final: antigüedad, preaviso, integración, SAC y vacaciones.',
+  };
+
   return {
     total: Math.round(total),
     antiguedad: Math.round(antiguedad),
@@ -122,5 +138,6 @@ export function liquidacionFinalEmpleadaCasaParticular(
     vacacionesProporcionales: Math.round(vacacionesProporcionales),
     aniosComputables: `${aniosComputables} ${aniosComputables === 1 ? 'año' : 'años'} computables`,
     mensaje,
+    _chart: chart,
   };
 }

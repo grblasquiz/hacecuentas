@@ -12,6 +12,7 @@ export interface Outputs {
   categoriaUV: string;
   recomendacion: string;
   mensaje: string;
+  _chart?: any;
 }
 
 // Minutos a UV 10 para cada fototipo (referencia OMS/WHO Global Solar UV Index)
@@ -49,6 +50,22 @@ export function tiempoSeguroSolUvFitzpatrick(i: Inputs): Outputs {
 
   const fmt = (m: number) => m >= 120 ? `${(m / 60).toFixed(1)} h` : `${Math.round(m)} min`;
 
+  const chart = {
+    type: 'scale' as const,
+    marker: uv,
+    markerLabel: 'Índice UV: ' + uv,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Bajo', max: 3, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Moderado', max: 6, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Alto', max: 8, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Muy alto', max: 11, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Extremo', max: Math.max(12, Math.ceil(uv) + 1), color: '#fca5a5', colorDark: '#7f1d1d' },
+    ],
+    ariaLabel: 'Escala del índice UV de la OMS: bajo, moderado, alto, muy alto y extremo. Marcador en el UV ingresado.',
+  };
+
   return {
     minutosSinProteccion: fmt(minSinSPF),
     minutosConSPF: fmt(minConSPF),
@@ -56,6 +73,7 @@ export function tiempoSeguroSolUvFitzpatrick(i: Inputs): Outputs {
     minutosConSPFNumero: Number(minConSPF.toFixed(1)),
     categoriaUV: `UV ${uv} — ${catUV}`,
     recomendacion: rec,
+    _chart: chart,
     mensaje: `Fototipo ${i.fototipo} con UV ${uv}: quemadura en ~${fmt(minSinSPF)} sin protección; ${spf > 0 ? `~${fmt(minConSPF)} con SPF ${spf}` : 'usá protector solar'}.`,
   };
 }

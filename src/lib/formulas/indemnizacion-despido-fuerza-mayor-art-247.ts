@@ -57,6 +57,7 @@ export interface IndemnizacionDespidoFuerzaMayorOutputs {
   baseArt245: number;
   vizzotiAplicado: boolean;
   mensaje: string;
+  _chart?: any;
 }
 
 export function indemnizacionDespidoFuerzaMayorArt247(
@@ -136,6 +137,21 @@ export function indemnizacionDespidoFuerzaMayorArt247(
   const mensaje =
     'El Art. 247 LCT aplica solo si la causa (fuerza mayor o falta/disminución de trabajo) es acreditada fehacientemente y se respeta el orden inverso de antigüedad. Sin prueba estricta, la jurisprudencia reactiva el 100 % del Art. 245.';
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Antigüedad (Art. 247, 50%)', value: Math.round(antiguedad) },
+      { label: 'Preaviso + SAC', value: Math.round(preaviso + sacPreaviso) },
+      { label: 'Integración mes + SAC', value: Math.round(integracionMes + sacIntegracion) },
+      { label: 'SAC proporcional', value: Math.round(sacProporcional) },
+      { label: 'Vacaciones + SAC', value: Math.round(vacacionesProporcionales + sacVacaciones) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición de la liquidación Art. 247: antigüedad reducida al 50%, preaviso, integración, SAC y vacaciones',
+  };
+
   return {
     antiguedad: Math.round(antiguedad),
     antiguedad245Completa: Math.round(antiguedad245Completa),
@@ -151,5 +167,6 @@ export function indemnizacionDespidoFuerzaMayorArt247(
     baseArt245: Math.round(baseArt245),
     vizzotiAplicado,
     mensaje,
+    _chart: chart,
   };
 }

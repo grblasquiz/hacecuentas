@@ -11,6 +11,7 @@ export interface Outputs {
   totalAportado: number;
   interesesGanados: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function metaAhorroMensual(i: Inputs): Outputs {
@@ -45,10 +46,26 @@ export function metaAhorroMensual(i: Inputs): Outputs {
     `De tu bolsillo ponés $${fmt.format(totalAportado)}` +
     (interesesGanados > 0 ? ` y los intereses aportan $${fmt.format(interesesGanados)}.` : '.');
 
+  const aportadoR = Math.round(totalAportado);
+  const interesesR = Math.round(Math.max(0, interesesGanados));
+
+  const chart = interesesR > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'De tu bolsillo', value: aportadoR },
+      { label: 'Intereses', value: interesesR },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(meta).toLocaleString('es-AR'),
+    centerLabel: 'Meta',
+    ariaLabel: 'Composición de la meta: aportes propios e intereses ganados',
+  } : undefined;
+
   return {
     ahorroMensual: Math.round(ahorroMensual),
-    totalAportado: Math.round(totalAportado),
-    interesesGanados: Math.round(Math.max(0, interesesGanados)),
+    totalAportado: aportadoR,
+    interesesGanados: interesesR,
     detalle,
+    _chart: chart,
   };
 }

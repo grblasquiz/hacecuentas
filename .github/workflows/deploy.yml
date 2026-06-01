@@ -100,6 +100,10 @@ jobs:
           # (ver src/layouts/Layout.astro). Sin el secret la condición evalúa
           # falso y el script no se renderiza — no rompe el build.
           PUBLIC_MS_CLARITY_ID: ${{ secrets.PUBLIC_MS_CLARITY_ID }}
+          # Observability: NO usamos Sentry (pago). Usamos Cloudflare Workers
+          # Observability nativa (gratis), ya activada en wrangler.jsonc
+          # ("observability": { "enabled": true }) → logs/errores en el dashboard
+          # CF + `npx wrangler tail`. Sentry queda no-op en astro.config (sin DSN).
         run: |
           set -e
           echo "::group::env info"
@@ -180,6 +184,11 @@ jobs:
               sys.exit(1)
           print('\n✅ Bundle size dentro del budget')
           PYEOF
+
+      # #20: análisis de CSS sin usar (warn-only — NO rompe el deploy). Alerta
+      # como anotación si algún bundle CSS tiene >50% de clases sin usar.
+      - name: CSS usage (analyze, warn-only)
+        run: node scripts/analyze-css-usage.mjs --max-unused-pct=50 || echo "::warning::CSS con alto % de clases sin usar — ver log de analyze-css-usage"
 
       # El adapter @astrojs/cloudflare genera DOS configs en el build:
       #   1. dist/server/wrangler.json  ← la que queremos usar (workingDirectory)

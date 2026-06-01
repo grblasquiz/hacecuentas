@@ -6,6 +6,7 @@ export interface Outputs {
   interesesGanados: number;
   montoFinal: number;
   tasaMensual: number;
+  _chart?: any;
 }
 
 export function ahorroMeta(i: Inputs): Outputs {
@@ -40,11 +41,31 @@ export function ahorroMeta(i: Inputs): Outputs {
   const totalAportado = aporteMensual * meses;
   const intereses = meta - totalAportado - inicial;
 
+  const totalAportadoR = Math.round(totalAportado);
+  const interesesR = Math.round(Math.max(0, intereses));
+  const inicialR = Math.round(inicial);
+
+  const slices = [
+    { label: 'Aportes mensuales', value: totalAportadoR },
+    { label: 'Intereses ganados', value: interesesR },
+  ];
+  if (inicialR > 0) slices.push({ label: 'Ahorro inicial', value: inicialR });
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices,
+    prefix: '$',
+    centerValue: '$' + Math.round(meta).toLocaleString('es-AR'),
+    centerLabel: 'Meta',
+    ariaLabel: 'Composición de la meta de ahorro: aportes mensuales, intereses ganados y ahorro inicial.',
+  };
+
   return {
     aporteMensual: Math.round(aporteMensual),
-    totalAportado: Math.round(totalAportado),
-    interesesGanados: Math.round(Math.max(0, intereses)),
+    totalAportado: totalAportadoR,
+    interesesGanados: interesesR,
     montoFinal: Math.round(meta),
     tasaMensual: Number((tasaMensual * 100).toFixed(2)),
+    _chart: chart,
   };
 }

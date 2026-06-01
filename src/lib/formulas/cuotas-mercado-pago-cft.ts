@@ -1,6 +1,6 @@
 /** Cuotas Mercado Pago — comprador paga total, vendedor recibe neto (comisión + CFT prorrateado) */
 export interface Inputs { precioTotal: number; cuotas: number; tipoCuotas: string; }
-export interface Outputs { cuotaMensualComprador: number; totalCompradorPaga: number; comisionMp: number; cftEstimado: number; netoVendedor: number; perdidaVendedor: number; }
+export interface Outputs { cuotaMensualComprador: number; totalCompradorPaga: number; comisionMp: number; cftEstimado: number; netoVendedor: number; perdidaVendedor: number; _chart?: any; }
 
 export function cuotasMercadoPagoCft(i: Inputs): Outputs {
   const precio = Number(i.precioTotal);
@@ -23,6 +23,18 @@ export function cuotasMercadoPagoCft(i: Inputs): Outputs {
   const netoVendedor = precio - comisionMp - cftEstimado;
   const perdidaVendedor = comisionMp + cftEstimado;
   const cuotaMensualComprador = precio / cuotas;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto vendedor', value: Math.round(netoVendedor) },
+      { label: 'Comisión MP', value: Math.round(comisionMp) },
+      { label: 'CFT cuotas', value: Math.round(cftEstimado) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(precio).toLocaleString('es-AR'),
+    centerLabel: 'Paga el comprador',
+    ariaLabel: 'Reparto del precio que paga el comprador: neto para el vendedor, comisión de Mercado Pago y CFT de las cuotas.',
+  };
   return {
     cuotaMensualComprador: Math.round(cuotaMensualComprador),
     totalCompradorPaga: Math.round(precio),
@@ -30,5 +42,6 @@ export function cuotasMercadoPagoCft(i: Inputs): Outputs {
     cftEstimado: Math.round(cftEstimado),
     netoVendedor: Math.round(netoVendedor),
     perdidaVendedor: Math.round(perdidaVendedor),
+    _chart: chart,
   };
 }

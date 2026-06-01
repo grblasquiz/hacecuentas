@@ -1151,6 +1151,34 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
 
         <p class="intro calc-intro" set:html={mdInline(calc.intro)}></p>
 
+        {calc.referenceTables && calc.referenceTables.length > 0 && (
+          <section class="calc-ref-tables" aria-label="Tablas de referencia">
+            {calc.referenceTables.map((tbl) => (
+              <figure class="calc-ref-table">
+                <figcaption class="calc-ref-table-cap">
+                  <strong>{tbl.title}</strong>
+                  {tbl.caption && <span>{tbl.caption}</span>}
+                </figcaption>
+                <div class="calc-ref-table-scroll">
+                  <table>
+                    <thead>
+                      <tr>{tbl.headers.map((h) => <th>{h}</th>)}</tr>
+                    </thead>
+                    <tbody>
+                      {tbl.rows.map((row) => (
+                        <tr>{row.map((cell, ci) => (
+                          ci === tbl.highlightCol ? <td class="is-highlight">{cell}</td> : <td>{cell}</td>
+                        ))}</tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {tbl.note && <p class="calc-ref-table-note">{tbl.note}</p>}
+              </figure>
+            ))}
+          </section>
+        )}
+
         {calc.audienceRedirect && (
           <aside class="audience-redirect" role="note" aria-label={calc.audienceRedirect.title}>
             <span class="ar-icon" aria-hidden="true">{calc.audienceRedirect.icon}</span>
@@ -1720,6 +1748,68 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
   /* Audience redirect — bloque visible que redirige a una calc específica
      para una audiencia distinta (ej: niños, embarazo). Se renderiza arriba
      del fold para que el usuario vea la opción correcta antes de calcular. */
+  /* ── Tablas de referencia estáticas (rangos IMC, pesos por altura, tramos) ── */
+  .calc-ref-tables {
+    display: grid;
+    gap: 1.25rem;
+    margin: 1rem 0 1.5rem;
+  }
+  .calc-ref-table {
+    margin: 0;
+  }
+  .calc-ref-table-cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .calc-ref-table-cap strong {
+    font-size: 0.9375rem;
+    color: var(--text);
+    font-weight: 700;
+  }
+  .calc-ref-table-cap span {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+  .calc-ref-table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    -webkit-overflow-scrolling: touch;
+  }
+  .calc-ref-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .calc-ref-table thead th {
+    background: var(--bg-muted);
+    color: var(--text);
+    font-weight: 700;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  .calc-ref-table tbody td {
+    padding: 0.4375rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .calc-ref-table tbody tr:last-child td { border-bottom: none; }
+  .calc-ref-table tbody td.is-highlight {
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .calc-ref-table-note {
+    font-size: 0.6875rem;
+    color: var(--text-subtle);
+    margin: 0.5rem 0.125rem 0;
+  }
+
   .audience-redirect {
     display: flex;
     gap: 0.875rem;

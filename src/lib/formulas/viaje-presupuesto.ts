@@ -22,6 +22,7 @@ export interface ViajePresupuestoOutputs {
   comidaTotal: number;
   transporteTotal: number;
   actividadesTotal: number;
+  _chart?: any;
 }
 
 export function viajePresupuesto(inputs: ViajePresupuestoInputs): ViajePresupuestoOutputs {
@@ -46,6 +47,21 @@ export function viajePresupuesto(inputs: ViajePresupuestoInputs): ViajePresupues
   const porPersona = presupuestoTotal / personas;
   const porDia = presupuestoTotal / dias;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Alojamiento', value: Math.round(alojamientoTotal) },
+      { label: 'Comida', value: Math.round(comidaTotal) },
+      { label: 'Transporte', value: Math.round(transporteTotal) },
+      { label: 'Actividades', value: Math.round(actividadesTotal) },
+      { label: 'Extra fijo', value: Math.round(extra) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(presupuestoTotal).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del presupuesto del viaje por rubro',
+  };
+
   return {
     presupuestoTotal: Math.round(presupuestoTotal),
     porPersona: Math.round(porPersona),
@@ -55,5 +71,6 @@ export function viajePresupuesto(inputs: ViajePresupuestoInputs): ViajePresupues
     comidaTotal: Math.round(comidaTotal),
     transporteTotal: Math.round(transporteTotal),
     actividadesTotal: Math.round(actividadesTotal),
+    _chart: chart,
   };
 }

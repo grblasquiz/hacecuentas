@@ -24,6 +24,7 @@ export interface Outputs {
   formula: string;
   explicacion: string;
   resumen: string;
+  _chart?: any;
 }
 
 export function fondoEmergenciaMeses(i: Inputs): Outputs {
@@ -90,9 +91,23 @@ export function fondoEmergenciaMeses(i: Inputs): Outputs {
     ? `Necesitás $${Math.round(fondoIdeal).toLocaleString()} para ${mesesObj} meses. Te faltan $${Math.round(faltante).toLocaleString()}: con $${Math.round(aporteEfectivo).toLocaleString()}/mes lo armás en ${mesesParaCompletarlo} meses.`
     : `Fondo completo: $${Math.round(fondoActual).toLocaleString()} cubre ${mesesCubiertos.toFixed(1)} meses (meta ${mesesObj}).`;
 
+  const yaAhorrado = Math.min(fondoActual, fondoIdeal);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Ya ahorrado', value: Math.round(yaAhorrado) },
+      { label: 'Faltante', value: Math.round(faltante) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(fondoIdeal).toLocaleString('es-AR'),
+    centerLabel: 'Fondo objetivo',
+    ariaLabel: 'Progreso del fondo de emergencia: monto ya ahorrado vs faltante para llegar al objetivo',
+  };
+
   return {
     fondoIdeal: Math.round(fondoIdeal),
     fondoObjetivo: Math.round(fondoIdeal),
+    _chart: chart,
     mesesCubiertos: Number(mesesCubiertos.toFixed(1)),
     faltante: Math.round(faltante),
     faltaAhorrar: Math.round(faltante),

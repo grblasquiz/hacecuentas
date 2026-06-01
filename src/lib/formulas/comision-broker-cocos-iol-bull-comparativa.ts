@@ -1,6 +1,6 @@
 /** Costo total de operar acciones AR / CEDEAR entre brokers */
 export interface Inputs { montoOperacion: number; comisionPct: number; derechoMercadoPct: number; ivaPct: number; arancelMinimo: number; }
-export interface Outputs { comisionBruta: number; iva: number; derechoMercado: number; comisionTotal: number; netoOperado: number; costoPorcentual: number; explicacion: string; }
+export interface Outputs { comisionBruta: number; iva: number; derechoMercado: number; comisionTotal: number; netoOperado: number; costoPorcentual: number; explicacion: string; _chart?: any; }
 export function comisionBrokerCocosIolBullComparativa(i: Inputs): Outputs {
   const monto = Number(i.montoOperacion);
   const comPct = Number(i.comisionPct) / 100;
@@ -14,6 +14,27 @@ export function comisionBrokerCocosIolBullComparativa(i: Inputs): Outputs {
   const total = comBruta + iva + derecho;
   const neto = monto - total;
   const pct = (total / monto) * 100;
+
+  // Donut: el monto operado se descompone en neto + comisión + IVA + derecho de mercado.
+  // Solo si el neto es positivo (las partes suman el monto operado).
+  let chart: any = undefined;
+  if (neto > 0) {
+    const slices = [
+      { label: 'Neto operado', value: Number(neto.toFixed(2)) },
+      { label: 'Comisión', value: Number(comBruta.toFixed(2)) },
+      { label: 'IVA', value: Number(iva.toFixed(2)) },
+      { label: 'Derecho de mercado', value: Number(derecho.toFixed(2)) },
+    ].filter((s) => s.value > 0);
+    chart = {
+      type: 'doughnut' as const,
+      slices,
+      prefix: '$',
+      centerValue: '$' + Math.round(monto).toLocaleString('es-AR'),
+      centerLabel: 'Monto operado',
+      ariaLabel: 'Composición del monto operado: neto, comisión, IVA y derecho de mercado',
+    };
+  }
+
   return {
     comisionBruta: Number(comBruta.toFixed(2)),
     iva: Number(iva.toFixed(2)),
@@ -22,5 +43,6 @@ export function comisionBrokerCocosIolBullComparativa(i: Inputs): Outputs {
     netoOperado: Number(neto.toFixed(2)),
     costoPorcentual: Number(pct.toFixed(3)),
     explicacion: `Costo total: $${total.toFixed(2)} (${pct.toFixed(2)}% del monto). Te queda neto $${neto.toFixed(2)} de los $${monto.toLocaleString('es-AR')} operados.`,
+    _chart: chart,
   };
 }

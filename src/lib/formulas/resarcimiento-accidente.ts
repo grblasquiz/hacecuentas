@@ -15,6 +15,7 @@ export interface ResarcimientoAccidenteOutputs {
   danoFisico: number;
   danoMoral: number;
   lucroCesante: number;
+  _chart?: any;
 }
 
 export function resarcimientoAccidente(inputs: ResarcimientoAccidenteInputs): ResarcimientoAccidenteOutputs {
@@ -47,10 +48,24 @@ export function resarcimientoAccidente(inputs: ResarcimientoAccidenteInputs): Re
 
   const resarcimientoTotal = danoFisicoSimple + danoMoral + lucroCesante + gastosMedicos;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Daño físico (incapacidad)', value: Math.round(danoFisicoSimple) },
+      { label: 'Daño moral', value: Math.round(danoMoral) },
+      { label: 'Lucro cesante + gastos médicos', value: Math.round(lucroCesante + gastosMedicos) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(resarcimientoTotal).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del resarcimiento: daño físico, daño moral y lucro cesante más gastos médicos',
+  };
+
   return {
     resarcimientoTotal: Math.round(resarcimientoTotal),
     danoFisico: Math.round(danoFisicoSimple),
     danoMoral: Math.round(danoMoral),
     lucroCesante: Math.round(lucroCesante + gastosMedicos),
+    _chart: chart,
   };
 }

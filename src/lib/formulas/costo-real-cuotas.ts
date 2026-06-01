@@ -11,6 +11,7 @@ export interface Outputs {
   interesTotal: number;
   porcentajeRecargo: number;
   tasaMensual: number;
+  _chart?: any;
 }
 
 /**
@@ -51,10 +52,23 @@ export function costoRealCuotas(i: Inputs): Outputs {
     tasaMensual = calcularTasaImplicita(precioContado, montoCuota, cantidadCuotas) * 100;
   }
 
+  const chart = interesTotal > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Precio contado', value: Math.round(precioContado) },
+      { label: 'Intereses', value: Math.round(interesTotal) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(costoTotal).toLocaleString('es-AR'),
+    centerLabel: 'Total en cuotas',
+    ariaLabel: 'Composición del costo en cuotas: precio de contado más intereses',
+  } : undefined;
+
   return {
     costoTotal: Math.round(costoTotal),
     interesTotal: Math.round(interesTotal),
     porcentajeRecargo: Number(porcentajeRecargo.toFixed(2)),
     tasaMensual: Number(tasaMensual.toFixed(2)),
+    _chart: chart,
   };
 }

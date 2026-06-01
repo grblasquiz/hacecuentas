@@ -10,6 +10,7 @@ export interface Outputs {
   totalIntereses: number;
   cft: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function financiacionAutoCuotaPrendario(i: Inputs): Outputs {
@@ -30,11 +31,24 @@ export function financiacionAutoCuotaPrendario(i: Inputs): Outputs {
   const totalIntereses = totalAPagar - monto;
   const cft = totalAPagar / monto;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: Math.round(monto) },
+      { label: 'Intereses', value: Math.round(totalIntereses) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalAPagar).toLocaleString('es-AR'),
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del total del crédito prendario: capital financiado vs intereses',
+  };
+
   return {
     cuotaMensual: Math.round(cuotaMensual),
     totalAPagar: Math.round(totalAPagar),
     totalIntereses: Math.round(totalIntereses),
     cft: Number(cft.toFixed(2)),
     detalle: `Cuota mensual: $${Math.round(cuotaMensual).toLocaleString('es-AR')} × ${plazo} meses. Total a pagar: $${Math.round(totalAPagar).toLocaleString('es-AR')} (${cft.toFixed(1)}x el monto). Intereses: $${Math.round(totalIntereses).toLocaleString('es-AR')}.`,
+    _chart: chart,
   };
 }

@@ -11,6 +11,7 @@ export interface Outputs {
   cuotaMinimaEfectiva: number;
   resumen: string;
   alerta: string;
+  _chart?: any;
 }
 
 export function interesAcumuladoTarjeta(i: Inputs): Outputs {
@@ -42,6 +43,18 @@ export function interesAcumuladoTarjeta(i: Inputs): Outputs {
 
   const resumen = `Pagando ${pago.toLocaleString()}/mes a ${tasaAnual}% TNA tardás ${Math.ceil(meses)} meses y pagás ${interesTotal.toLocaleString()} en intereses.`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Saldo (capital)', value: Math.round(saldo) },
+      { label: 'Intereses', value: Math.round(interesTotal) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalPagado).toLocaleString('es-AR'),
+    centerLabel: 'Total pagado',
+    ariaLabel: 'Composición del total pagado: saldo original más intereses',
+  };
+
   return {
     mesesParaPagar: Math.ceil(meses),
     interesTotal: Math.round(interesTotal),
@@ -49,5 +62,6 @@ export function interesAcumuladoTarjeta(i: Inputs): Outputs {
     cuotaMinimaEfectiva: Math.round(interesMensualInicial),
     resumen,
     alerta,
+    _chart: chart,
   };
 }

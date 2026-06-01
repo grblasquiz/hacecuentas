@@ -13,6 +13,7 @@ export interface Outputs {
   totalPagado: number;
   cuotasRecomendadas: { cuotas: number; cuota: number; total: number; interes: number }[];
   resumen: string;
+  _chart?: any;
 }
 
 export function cuotasCreditoMercado(i: Inputs): Outputs {
@@ -58,6 +59,18 @@ export function cuotasCreditoMercado(i: Inputs): Outputs {
   // Cuota sugerida: la de 12 cuotas
   const c12 = cuotasRecomendadas.find(c => c.cuotas === 12)!;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Precio de contado', value: Math.round(p) },
+      { label: 'Interés (12 cuotas)', value: Math.max(0, c12.interes) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(c12.total).toLocaleString('es-AR'),
+    centerLabel: 'Total a 12 cuotas',
+    ariaLabel: 'Composición del total financiado a 12 cuotas: precio de contado más interés.',
+  };
+
   return {
     cuotaMaximaSoportable: Math.round(cuotaMaximaSoportable),
     cuotasMinimas,
@@ -66,5 +79,6 @@ export function cuotasCreditoMercado(i: Inputs): Outputs {
     totalPagado: c12.total,
     cuotasRecomendadas,
     resumen: `Con $${Math.round(cuotaMaximaSoportable).toLocaleString('es-AR')} disponibles por mes, necesitás al menos ${cuotasMinimas} cuotas. A 12 cuotas pagás $${c12.cuota.toLocaleString('es-AR')} cada una.`,
+    _chart: chart,
   };
 }

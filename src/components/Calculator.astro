@@ -49,7 +49,8 @@ export type UpdateType = 'manual' | 'auto-api' | 'auto-scrape' | 'auto-llm';
 
 export interface DataUpdate {
   frequency: UpdateFrequency;
-  lastUpdated: string; // YYYY-MM-DD
+  lastUpdated: string; // YYYY-MM-DD — cuándo refrescamos/revisamos nuestra copia
+  dataAsOf?: string;   // YYYY-MM-DD — fecha a la que corresponde el dato real (mes IPC, fecha UF, vigencia ley). Fallback a lastUpdated.
   source?: string | null;
   sourceUrl?: string | null;
   updateType: UpdateType;
@@ -211,7 +212,7 @@ const translations = {
     share: 'Share:', copyResult: 'Copy result', copyLink: 'Copy link with data',
     newCalc: 'New calculation', helpful: 'Was this calculation helpful?',
     yes: 'Yes', no: 'No', feedback: 'Tell us (optional, 500 chars)', send: 'Send',
-    disclaimer: '', dataUpdated: 'Data updated',
+    disclaimer: '', dataUpdated: 'Data updated', dataAsOf: 'Data as of',
     recentCalcs: 'Your recent calculations', clear: 'Clear', clearHistory: 'Clear history',
     sourceLabel: 'Source', advancedOptions: 'Advanced options', calculating: 'Calculating...',
     emptyText: 'Your result will appear here', emptySub: 'Fill in the fields and tap',
@@ -237,7 +238,7 @@ const translations = {
     share: 'Compartilhar:', copyResult: 'Copiar resultado', copyLink: 'Copiar link com dados',
     newCalc: 'Novo cálculo', helpful: 'Este cálculo foi útil?',
     yes: 'Sim', no: 'Não', feedback: 'Conte para nós (opcional, 500 caracteres)', send: 'Enviar',
-    disclaimer: '', dataUpdated: 'Dados atualizados',
+    disclaimer: '', dataUpdated: 'Dados atualizados', dataAsOf: 'Dados de',
     recentCalcs: 'Seus últimos cálculos', clear: 'Limpar', clearHistory: 'Apagar histórico',
     sourceLabel: 'Fonte', advancedOptions: 'Opções avançadas', calculating: 'Calculando...',
     emptyText: 'Seu resultado vai aparecer aqui', emptySub: 'Preencha os campos e toque em',
@@ -263,7 +264,7 @@ const translations = {
     share: 'Compartir:', copyResult: 'Copiar resultado', copyLink: 'Copiar link con datos',
     newCalc: 'Nuevo cálculo', helpful: '¿Te sirvió este cálculo?',
     yes: 'Sí', no: 'No', feedback: 'Contanos (opcional, 500 chars)', send: 'Enviar',
-    disclaimer: '', dataUpdated: 'Datos actualizados',
+    disclaimer: '', dataUpdated: 'Datos actualizados', dataAsOf: 'Dato al',
     recentCalcs: 'Tus últimos cálculos', clear: 'Limpiar', clearHistory: 'Borrar historial',
     sourceLabel: 'Fuente', advancedOptions: 'Opciones avanzadas', calculating: 'Calculando...',
     emptyText: 'Tu resultado va a aparecer acá', emptySub: 'Completá los datos y tocá',
@@ -398,7 +399,11 @@ const formatFreshnessDate = (iso: string): string => {
     <div class="data-freshness" title={dataUpdate.notes}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       <span>
-        {t.dataUpdated}: <time datetime={dataUpdate.lastUpdated}>{formatFreshnessDate(dataUpdate.lastUpdated)}</time>
+        {dataUpdate.dataAsOf ? (
+          <>{t.dataAsOf}: <time datetime={dataUpdate.dataAsOf}>{formatFreshnessDate(dataUpdate.dataAsOf)}</time></>
+        ) : (
+          <>{t.dataUpdated}: <time datetime={dataUpdate.lastUpdated}>{formatFreshnessDate(dataUpdate.lastUpdated)}</time></>
+        )}
         {dataUpdate.source && (
           <>
             {` · ${t.sourceLabel}: `}
@@ -700,6 +705,10 @@ const formatFreshnessDate = (iso: string): string => {
         <span>PNG</span>
       </button>
     </div>
+
+    {/* Tabla de resultado dinámica (ej. cronograma de amortización). La fórmula
+        devuelve output._table y el cliente la renderiza acá. Colapsable si es larga. */}
+    <div class="result-table-wrap" data-table-wrap hidden></div>
 
     {config.interactive && config.interactive.sliders && config.interactive.sliders.length > 0 && (
       <div class="what-if" data-what-if hidden>
@@ -1777,6 +1786,88 @@ const formatFreshnessDate = (iso: string): string => {
     position: relative;
   }
   .chart-wrap[hidden] { display: none; }
+
+  /* ── Tabla de resultado dinámica (amortización, cronogramas) ── */
+  .result-table-wrap {
+    margin: 1.25rem 0 0.5rem;
+  }
+  .result-table-wrap[hidden] { display: none; }
+  .result-table-title {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    margin-bottom: 0.625rem;
+  }
+  .result-table-scroll {
+    max-height: 440px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    -webkit-overflow-scrolling: touch;
+  }
+  table.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+  table.result-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--bg-muted);
+    color: var(--text);
+    font-weight: 700;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  table.result-table tbody td {
+    padding: 0.4375rem 0.75rem;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+    color: var(--text);
+    white-space: nowrap;
+  }
+  table.result-table tbody tr:nth-child(even) td {
+    background: color-mix(in srgb, var(--bg-muted) 35%, transparent);
+  }
+  table.result-table tbody tr.result-table-row-emph td {
+    border-bottom: 2px solid var(--accent);
+    font-weight: 600;
+  }
+  table.result-table tfoot th {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 800;
+    color: var(--text);
+    background: var(--bg-muted);
+    border-top: 2px solid var(--border);
+    position: sticky;
+    bottom: 0;
+    white-space: nowrap;
+  }
+  .result-table-note {
+    font-size: 0.6875rem;
+    color: var(--text-subtle);
+    margin: 0.5rem 0.125rem 0;
+  }
+  .result-table-toggle {
+    margin-top: 0.625rem;
+    width: 100%;
+    padding: 0.5rem 0.875rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--accent);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .result-table-toggle:hover { background: var(--bg-muted); }
   .chart-download-btn {
     position: absolute;
     top: 0.625rem;
@@ -2684,6 +2775,67 @@ const formatFreshnessDate = (iso: string): string => {
       });
     }
 
+    // Donut / pie: desglose de composición (ej. capital vs intereses, gastos).
+    // spec: { type:'doughnut'|'pie', slices:[{label,value,color?}], prefix?, suffix?, centerValue?, centerLabel? }
+    if (type === 'doughnut' || type === 'pie') {
+      const rawSlices = (spec.slices || []) as Array<{ label: string; value: number; color?: string; colorDark?: string }>;
+      const slices = rawSlices.filter((s) => Number(s.value) > 0);
+      const palLight = ['#2563eb', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4'];
+      const palDark = ['#60a5fa', '#fbbf24', '#34d399', '#f87171', '#a78bfa', '#22d3ee'];
+      const pal = col.isDark ? palDark : palLight;
+      const labels = slices.map((s) => s.label);
+      const values = slices.map((s) => Math.max(0, Number(s.value) || 0));
+      const colors = slices.map((s, idx) => (col.isDark ? (s.colorDark || s.color) : s.color) || pal[idx % pal.length]);
+      const total = values.reduce((a, b) => a + b, 0) || 1;
+      const pfx = spec.prefix || '';
+      const sfx = spec.suffix || '';
+      const fmtN = (n: number) => pfx + new Intl.NumberFormat('es-AR').format(Math.round(n)) + sfx;
+      const centerPlugin = {
+        id: 'doughnutCenter',
+        afterDraw(chart: any) {
+          if (!spec.centerValue && !spec.centerLabel) return;
+          const { ctx, chartArea } = chart;
+          const cx = (chartArea.left + chartArea.right) / 2;
+          const cy = (chartArea.top + chartArea.bottom) / 2;
+          ctx.save();
+          ctx.textAlign = 'center';
+          if (spec.centerValue) {
+            ctx.font = '700 16px system-ui, -apple-system, sans-serif';
+            ctx.fillStyle = col.isDark ? '#f1f5f9' : '#0f172a';
+            ctx.fillText(String(spec.centerValue), cx, cy - (spec.centerLabel ? 6 : 0));
+          }
+          if (spec.centerLabel) {
+            ctx.font = '500 10px system-ui, -apple-system, sans-serif';
+            ctx.fillStyle = col.muted;
+            ctx.fillText(String(spec.centerLabel), cx, cy + 12);
+          }
+          ctx.restore();
+        },
+      };
+      return new Chart(canvas, {
+        type: type === 'pie' ? 'pie' : 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: type === 'pie' ? 0 : '62%',
+          plugins: {
+            legend: { position: 'bottom', labels: { color: col.text, boxWidth: 12, padding: 10, font: { size: 11 } } },
+            tooltip: {
+              callbacks: {
+                label: (ctx: any) => {
+                  const v = Number(ctx.parsed) || 0;
+                  const pct = ((v / total) * 100).toFixed(1);
+                  return ` ${ctx.label}: ${fmtN(v)} (${pct}%)`;
+                },
+              },
+            },
+          },
+        },
+        plugins: [centerPlugin],
+      });
+    }
+
     // Line / bar genéricos
     const isBar = type === 'bar';
     const isStacked = !!spec.stacked;
@@ -3288,6 +3440,70 @@ const formatFreshnessDate = (iso: string): string => {
     const chartDownloadBtn = container.querySelector<HTMLButtonElement>('[data-chart-download]');
     let chartInstance: any = null;
     let lastChartSpec: any = null;
+
+    // ── Tabla de resultado dinámica (output._table) ──────────────
+    // La fórmula devuelve { headers, rows, align?, collapseAfter?, emphasisEvery?, footer?, title?, note? }.
+    // Las celdas vienen pre-formateadas (la fórmula decide moneda/decimales).
+    const tableWrap = container.querySelector<HTMLElement>('[data-table-wrap]');
+    function escapeCell(v: any): string {
+      return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function renderResultTable(spec: any) {
+      if (!tableWrap) return;
+      if (!spec || !Array.isArray(spec.rows) || spec.rows.length === 0 || !Array.isArray(spec.headers)) {
+        tableWrap.hidden = true;
+        tableWrap.innerHTML = '';
+        return;
+      }
+      const headers: string[] = spec.headers;
+      const align: string[] = Array.isArray(spec.align) ? spec.align : [];
+      const rows: any[][] = spec.rows;
+      const collapseAfter: number = typeof spec.collapseAfter === 'number' && spec.collapseAfter > 0 ? spec.collapseAfter : 0;
+      const emphasisEvery: number = typeof spec.emphasisEvery === 'number' && spec.emphasisEvery > 0 ? spec.emphasisEvery : 0;
+      const needsCollapse = collapseAfter > 0 && rows.length > collapseAfter;
+      const alignStyle = (i: number) => {
+        const a = align[i];
+        return a === 'right' ? ' style="text-align:right"' : a === 'center' ? ' style="text-align:center"' : '';
+      };
+      let html = '';
+      if (spec.title) html += '<div class="result-table-title">' + escapeCell(spec.title) + '</div>';
+      html += '<div class="result-table-scroll"><table class="result-table"><thead><tr>';
+      headers.forEach((h, i) => { html += '<th' + alignStyle(i) + '>' + escapeCell(h) + '</th>'; });
+      html += '</tr></thead><tbody>';
+      rows.forEach((r, ri) => {
+        const cls: string[] = [];
+        if (needsCollapse && ri >= collapseAfter) cls.push('result-table-row-hidden');
+        if (emphasisEvery && (ri + 1) % emphasisEvery === 0) cls.push('result-table-row-emph');
+        const attrs = (cls.length ? ' class="' + cls.join(' ') + '"' : '') + (needsCollapse && ri >= collapseAfter ? ' hidden' : '');
+        html += '<tr' + attrs + '>';
+        r.forEach((c, i) => { html += '<td' + alignStyle(i) + '>' + escapeCell(c) + '</td>'; });
+        html += '</tr>';
+      });
+      html += '</tbody>';
+      if (Array.isArray(spec.footer) && spec.footer.length) {
+        html += '<tfoot><tr>';
+        spec.footer.forEach((c: any, i: number) => { html += '<th' + alignStyle(i) + '>' + escapeCell(c) + '</th>'; });
+        html += '</tr></tfoot>';
+      }
+      html += '</table></div>';
+      if (spec.note) html += '<p class="result-table-note">' + escapeCell(spec.note) + '</p>';
+      if (needsCollapse) {
+        html += '<button type="button" class="result-table-toggle" data-table-toggle data-expanded="false">Ver tabla completa (' + rows.length + ' filas)</button>';
+      }
+      tableWrap.innerHTML = html;
+      tableWrap.hidden = false;
+      const toggle = tableWrap.querySelector<HTMLButtonElement>('[data-table-toggle]');
+      if (toggle) {
+        toggle.addEventListener('click', () => {
+          const expanded = toggle.dataset.expanded === 'true';
+          tableWrap.querySelectorAll<HTMLElement>('.result-table-row-hidden').forEach((tr) => {
+            if (expanded) tr.setAttribute('hidden', ''); else tr.removeAttribute('hidden');
+          });
+          toggle.dataset.expanded = expanded ? 'false' : 'true';
+          toggle.textContent = expanded ? 'Ver tabla completa (' + rows.length + ' filas)' : 'Ver menos';
+        });
+      }
+    }
     let whatIfInitialized = false;
     const whatIfEl = container.querySelector<HTMLElement>('[data-what-if]');
 
@@ -3382,6 +3598,8 @@ const formatFreshnessDate = (iso: string): string => {
         chartWrap.hidden = false;
         chartInstance = renderChart((window as any).Chart, chartCanvas, output._chart, chartInstance);
       }
+      // Actualizar tabla (si corresponde)
+      renderResultTable(output._table);
     }
 
     function scheduleWhatIf(overrides: Record<string, number>) {
@@ -3615,6 +3833,9 @@ const formatFreshnessDate = (iso: string): string => {
             if (chartInstance) { try { chartInstance.destroy(); } catch {} chartInstance = null; }
             lastChartSpec = null;
           }
+
+          // Tabla de resultado opcional — solo si la fórmula devolvió _table
+          renderResultTable(output._table);
 
           // Sliders "¿qué pasa si...?" — mostrar + inicializar tras primer cálculo
           if (whatIfEl) {

@@ -36,6 +36,7 @@ export interface IndemnizacionOutputs {
   aniosComputables: string;
   baseArt245: number;
   vizzotiAplicado: boolean;
+  _chart?: any;
 }
 
 export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs {
@@ -119,6 +120,21 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
     vacacionesProporcionales +
     sacVacaciones;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Antigüedad (Art. 245)', value: Math.round(antiguedad) },
+      { label: 'Preaviso + SAC', value: Math.round(preaviso + sacPreaviso) },
+      { label: 'Integración mes + SAC', value: Math.round(integracionMes + sacIntegracion) },
+      { label: 'SAC proporcional', value: Math.round(sacProporcional) },
+      { label: 'Vacaciones + SAC', value: Math.round(vacacionesProporcionales + sacVacaciones) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición de la indemnización por despido: antigüedad, preaviso, integración del mes, SAC proporcional y vacaciones.',
+  };
+
   return {
     antiguedad: Math.round(antiguedad),
     preaviso: Math.round(preaviso),
@@ -132,5 +148,6 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
     aniosComputables: `${aniosComputables} ${aniosComputables === 1 ? 'año' : 'años'} computables`,
     baseArt245: Math.round(baseArt245),
     vizzotiAplicado,
+    _chart: chart,
   };
 }

@@ -11,6 +11,7 @@ export interface Outputs {
   primaAnual: number;
   sumaAseguradaTotal: number;
   detalle: string;
+  _chart?: any;
 }
 
 export function seguroHogarEstimacionCobertura(i: Inputs): Outputs {
@@ -48,10 +49,23 @@ export function seguroHogarEstimacionCobertura(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Edificio', value: valorEdificio },
+      { label: 'Contenido', value: contenido },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(sumaTotal).toLocaleString('es-AR'),
+    centerLabel: 'Suma asegurada',
+    ariaLabel: 'Composición de la suma asegurada: valor del edificio y del contenido',
+  };
+
   return {
     primaMensual: Math.round(primaMensual),
     primaAnual: Math.round(primaAnual),
     sumaAseguradaTotal: Math.round(sumaTotal),
     detalle: `Edificio: ${m2} m² × $${fmt.format(valorM2)} = $${fmt.format(valorEdificio)}. Contenido: $${fmt.format(contenido)}. Suma asegurada: $${fmt.format(sumaTotal)}. Tasa ${(tasa * 100).toFixed(2)}% anual (${cobertura}, zona ${zona}). Prima: $${fmt.format(primaAnual)}/año = $${fmt.format(primaMensual)}/mes.`,
+    _chart: chart,
   };
 }

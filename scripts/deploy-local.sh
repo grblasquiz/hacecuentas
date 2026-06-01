@@ -137,19 +137,80 @@ fi
 T_BUILD=$(($(date +%s) - T_BUILD_START))
 ok "build $MODE completado en ${T_BUILD}s"
 
+# ─── 3b. Verificar el build ANTES de subirlo (no deployar un build roto) ───
+# Incidente 2026-06-01: un build con prerender vacío (1 HTML en vez de ~3800)
+# se deployó y dejó TODO en 404 (home + calcs + /es). Gate: cantidad de HTMLs
+# en dist/client + worker wrapper. Si el prerender salió vacío, abortamos SIN
+# tocar la versión live.
+if [ ! -f dist/server/wrapper.mjs ]; then
+  err "dist/server/wrapper.mjs no existe — build incompleto (wrap-worker no corrió). NO deployo."
+  exit 1
+fi
+HTML_COUNT=$(find dist/client -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
+MIN_HTML=2000
+if [ "$HTML_COUNT" -lt "$MIN_HTML" ]; then
+  err "prerender ROTO: solo $HTML_COUNT HTMLs en dist/client (esperados ≥$MIN_HTML). NO deployo — el sitio en vivo queda intacto."
+  exit 1
+fi
+ok "build verificado: $HTML_COUNT HTMLs + wrapper.mjs"
+
 # ─── 4. Cleanup pre-deploy ────────────────────────────────────────────────
 rm -rf .wrangler/deploy 2>/dev/null || true
+# dist/server/.prerender/ son chunks build-time (generan el HTML); el runtime
+# entry.mjs NO los importa. Pero con no_bundle:true wrangler sube TODO dist/server
+# → +51 MiB de dead weight → el worker supera 64 MiB y CF lo rechaza (code 10027).
+# Sin esto, el deploy queda en false-OK (asset upload "Success" pero worker viejo).
+rm -rf dist/server/.prerender 2>/dev/null || true
 
 # ─── 5. Wrangler deploy ────────────────────────────────────────────────────
 T_DEPLOY_START=$(date +%s)
 log "wrangler deploy desde dist/server..."
 cd dist/server
-npx wrangler@latest deploy 2>&1 | grep -E "(Uploaded.*assets|Success|Total Upload|Worker Startup|Current Version|error|Error)" | head -10
+# Capturamos output + RC reales (antes el pipe a grep enmascaraba el exit code
+# de wrangler → false-OK). Fallamos fuerte si el worker fue rechazado.
+set -o pipefail
+DEPLOY_OUT=$(npx wrangler@latest deploy 2>&1); DEPLOY_RC=$?
+set +o pipefail
+echo "$DEPLOY_OUT" | grep -E "(Uploaded.*assets|Success|Total Upload|Worker Startup|Current Version|error|Error)" | head -10
+if [ "$DEPLOY_RC" -ne 0 ] || echo "$DEPLOY_OUT" | grep -qE "uncompressed size limit|code: 10027"; then
+  cd "$REPO_ROOT"
+  err "wrangler RECHAZÓ el worker (size>64MiB o error). NO está en vivo — revisá el bundle."
+  exit 1
+fi
 cd "$REPO_ROOT"
 T_DEPLOY=$(($(date +%s) - T_DEPLOY_START))
 ok "wrangler deploy completado en ${T_DEPLOY}s"
 
-# ─── 6. Purge CF cache ────────────────────────────────────────────────────
+# ─── 6. Smoke test (ANTES del purge — gate de seguridad) ───────────────────
+# HTML es CDN no-store → el smoke pega al worker recién deployado, no a cache
+# vieja. Si las rutas root/catch-all fallan (build/worker roto), AUTO-ROLLBACK
+# a la versión previa y abortamos SIN purgar cache → una versión rota nunca
+# queda viva ni se cachea. Incidente 2026-06-01 (deploy con prerender vacío).
+if [ "$SMOKE" = true ]; then
+  log "smoke test (pre-purge, 6 URLs)..."
+  sleep 5
+  FAIL=0
+  for url in / /calculadora-imc /calculadora-aguinaldo-sac /en/bmi-calculator /es /sitemap.xml; do
+    STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -A "HC-LocalDeploy/1.0" "https://hacecuentas.com$url" || echo "ERR")
+    if [ "$STATUS" = "200" ]; then
+      echo "  ✓ $url"
+    else
+      echo -e "  ${RED}✗${NC} $url (HTTP $STATUS)"
+      FAIL=$((FAIL + 1))
+    fi
+  done
+  if [ "$FAIL" -gt 0 ]; then
+    err "$FAIL URLs fallaron — la versión deployada está ROTA. Auto-rollback a la previa..."
+    ( cd dist/server && printf 'y\ny\n' | npx wrangler@latest rollback --message "auto-rollback: smoke falló ($FAIL URLs)" 2>&1 | tail -6 )
+    err "rollback ejecutado · cache NO purgado · el sitio quedó en la versión previa. Revisá el build antes de reintentar."
+    exit 1
+  fi
+  ok "smoke test OK — versión sana"
+else
+  warn "smoke skip (--no-smoke) — SIN gate de seguridad post-deploy"
+fi
+
+# ─── 7. Purge CF cache (solo si el smoke pasó) ─────────────────────────────
 if [ "$PURGE" = true ]; then
   log "purge CF cache..."
   if [ "$MODE" = "incremental" ] && [ -n "$INCREMENTAL_CHANGES" ]; then
@@ -174,29 +235,6 @@ if [ "$PURGE" = true ]; then
   fi
 else
   warn "purge skip (--no-purge)"
-fi
-
-# ─── 7. Smoke test ────────────────────────────────────────────────────────
-if [ "$SMOKE" = true ]; then
-  log "smoke test (5 URLs críticas)..."
-  sleep 5
-  FAIL=0
-  for url in / /calculadora-imc /calculadora-aguinaldo-sac /en/bmi-calculator /sitemap.xml; do
-    STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -A "HC-LocalDeploy/1.0" "https://hacecuentas.com$url" || echo "ERR")
-    if [ "$STATUS" = "200" ]; then
-      echo "  ✓ $url"
-    else
-      echo -e "  ${RED}✗${NC} $url (HTTP $STATUS)"
-      FAIL=$((FAIL + 1))
-    fi
-  done
-  if [ "$FAIL" -gt 0 ]; then
-    warn "$FAIL/5 URLs fallaron — revisar en https://hacecuentas.com"
-  else
-    ok "smoke test OK"
-  fi
-else
-  warn "smoke skip (--no-smoke)"
 fi
 
 # ─── 8. Guardar SHA actual para próximo incremental ───────────────────────

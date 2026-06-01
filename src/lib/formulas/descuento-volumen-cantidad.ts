@@ -18,6 +18,7 @@ export interface Outputs {
   ahorroPorUnidad: number;
   mesesParaConsumir: number;
   resumen: string;
+  _chart?: any;
 }
 
 export function descuentoVolumenCantidad(i: Inputs): Outputs {
@@ -42,6 +43,18 @@ export function descuentoVolumenCantidad(i: Inputs): Outputs {
 
   const resumen = `Comprando ${cant} unidades con ${desc}% de descuento, pagás ${total.toLocaleString()} total (${precioEfectivo.toFixed(2)} por unidad, ahorrás ${ahorroUnit.toFixed(2)} en cada una).`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Pagás', value: Math.round(total) },
+      { label: 'Ahorrás', value: Math.round(descMonto) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(subtotal).toLocaleString('es-AR'),
+    centerLabel: 'Sin descuento',
+    ariaLabel: 'Composición del precio sin descuento: lo que pagás y lo que ahorrás',
+  };
+
   return {
     subtotal: Math.round(subtotal),
     descuentoMonto: Math.round(descMonto),
@@ -55,5 +68,6 @@ export function descuentoVolumenCantidad(i: Inputs): Outputs {
     ahorroPorUnidad: Number(ahorroUnit.toFixed(2)),
     mesesParaConsumir,
     resumen,
+    _chart: chart,
   };
 }

@@ -1,6 +1,6 @@
 /** IMC infantil con percentiles OMS */
 export interface Inputs { pesoNinoIMC: number; tallaNinoIMC: number; edadNinoIMC: number; sexoNinoIMC: string; }
-export interface Outputs { imc: string; percentilIMC: string; clasificacion: string; recomendacion: string; }
+export interface Outputs { imc: string; percentilIMC: string; clasificacion: string; recomendacion: string; _chart?: any; }
 
 // P5, P50, P85, P97 de IMC por edad (simplificado, varones)
 const imcVaron: Record<number, number[]> = {
@@ -79,10 +79,30 @@ export function imcInfantilPercentil(i: Inputs): Outputs {
     recomendacion = 'Consultá con pediatra y nutricionista. Plan de alimentación + actividad física.';
   }
 
+  const imcVal = Number(imc.toFixed(1));
+  const r1 = Number(p5.toFixed(1));
+  const r2 = Number(p85.toFixed(1));
+  const r3 = Number(p97.toFixed(1));
+  const chart = {
+    type: 'scale' as const,
+    marker: imcVal,
+    markerLabel: 'IMC: ' + imcVal,
+    min: Math.min(10, Math.floor(r1)),
+    unit: '',
+    segments: [
+      { nombre: 'Bajo peso', max: r1, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Peso saludable', max: r2, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Sobrepeso', max: r3, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Obesidad', max: Math.max(r3 + 4, Math.ceil(imcVal) + 2), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de IMC infantil según percentiles OMS para la edad y sexo',
+  };
+
   return {
     imc: `${imc.toFixed(1)} kg/m²`,
     percentilIMC: percentil,
     clasificacion,
     recomendacion,
+    _chart: chart,
   };
 }

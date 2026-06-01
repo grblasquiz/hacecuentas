@@ -1,6 +1,6 @@
 /** Escala de dolor numérica NRS */
 export interface Inputs { dolor: number; tipo: string; ubicacion: string; }
-export interface Outputs { clasificacion: string; escalon: string; recomendacion: string; mensaje: string; }
+export interface Outputs { clasificacion: string; escalon: string; recomendacion: string; mensaje: string; _chart?: any; }
 
 export function escalaDolorNumerica(i: Inputs): Outputs {
   const dolor = Number(i.dolor);
@@ -28,5 +28,19 @@ export function escalaDolorNumerica(i: Inputs): Outputs {
   if (tipo === 'cronico') recomendacion += ' En dolor crónico: considerar abordaje multimodal (medicación + fisioterapia + psicología).';
   if (tipo === 'oncologico') recomendacion += ' En dolor oncológico: manejo según protocolo específico con equipo de cuidados paliativos.';
 
-  return { clasificacion, escalon, recomendacion, mensaje: `Dolor: ${dolor}/10. ${clasificacion}. ${escalon}.` };
+  const chart = {
+    type: 'scale' as const,
+    marker: dolor,
+    markerLabel: `Tu dolor: ${dolor}/10`,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Leve', max: 3, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Moderado', max: 6, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Severo', max: Math.max(10, dolor), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala numérica del dolor (NRS) de 0 a 10: leve, moderado, severo',
+  };
+
+  return { clasificacion, escalon, recomendacion, mensaje: `Dolor: ${dolor}/10. ${clasificacion}. ${escalon}.`, _chart: chart };
 }

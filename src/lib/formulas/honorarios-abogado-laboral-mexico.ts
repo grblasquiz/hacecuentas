@@ -14,6 +14,7 @@ export interface Outputs {
   netoParaTrabajador: number;
   modalidadMostrada: string;
   resumen: string;
+  _chart?: any;
 }
 
 export function honorariosAbogadoLaboralMexico(i: Inputs): Outputs {
@@ -47,6 +48,19 @@ export function honorariosAbogadoLaboralMexico(i: Inputs): Outputs {
   const conIva = honor + iva;
   const neto = finiquito > 0 ? Math.max(0, finiquito - conIva) : 0;
 
+  // Composición del costo total del abogado: honorarios + IVA 16%
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Honorarios', value: Number(honor.toFixed(2)) },
+      { label: 'IVA 16%', value: Number(iva.toFixed(2)) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(conIva).toLocaleString('es-MX'),
+    centerLabel: 'Total con IVA',
+    ariaLabel: 'Composición del costo del abogado: honorarios e IVA del 16%',
+  };
+
   return {
     honorariosBrutos: Number(honor.toFixed(2)),
     iva: Number(iva.toFixed(2)),
@@ -54,5 +68,6 @@ export function honorariosAbogadoLaboralMexico(i: Inputs): Outputs {
     netoParaTrabajador: Number(neto.toFixed(2)),
     modalidadMostrada: label,
     resumen: `**${label}** → honorarios $${honor.toFixed(0)} + IVA 16% ($${iva.toFixed(0)}) = **$${conIva.toFixed(0)} MXN**.${finiquito > 0 ? ` Neto para el trabajador: **$${neto.toFixed(0)} MXN**.` : ''}`,
+    _chart: chart,
   };
 }

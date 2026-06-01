@@ -13,6 +13,7 @@ export interface Outputs {
   z5: string;
   z6: string;
   mensaje: string;
+  _chart?: any;
 }
 
 export function potenciaCiclismoWattsKg(i: Inputs): Outputs {
@@ -40,10 +41,29 @@ export function potenciaCiclismoWattsKg(i: Inputs): Outputs {
   const z5 = `${Math.round(ftp * 1.06)}-${Math.round(ftp * 1.20)} W (106-120%) — VO2max`;
   const z6 = `${Math.round(ftp * 1.21)}-${Math.round(ftp * 1.50)} W (121-150%) — Anaeróbica`;
 
+  const chart = {
+    type: 'scale' as const,
+    marker: wattsKg,
+    markerLabel: 'Tu W/kg: ' + wattsKg,
+    min: 0,
+    unit: ' W/kg',
+    segments: [
+      { nombre: 'Principiante', max: 2.0, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Recreativo', max: 2.5, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Intermedio', max: 3.0, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Avanzado', max: 3.7, color: '#d9f99d', colorDark: '#4d7c0f' },
+      { nombre: 'Competitivo', max: 4.5, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Élite', max: 5.5, color: '#a7f3d0', colorDark: '#047857' },
+      { nombre: 'Profesional', max: Math.max(6.5, Math.ceil(wattsKg) + 1), color: '#99f6e4', colorDark: '#0f766e' },
+    ],
+    ariaLabel: 'Escala de potencia relativa (W/kg) según niveles de Coggan',
+  };
+
   return {
     wattsKg,
     nivel,
     z1, z2, z3, z4, z5, z6,
-    mensaje: `FTP: ${ftp}W / ${peso}kg = ${wattsKg} W/kg. Nivel: ${nivel}.`
+    mensaje: `FTP: ${ftp}W / ${peso}kg = ${wattsKg} W/kg. Nivel: ${nivel}.`,
+    _chart: chart,
   };
 }

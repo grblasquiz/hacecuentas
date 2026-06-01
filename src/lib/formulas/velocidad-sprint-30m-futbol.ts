@@ -11,6 +11,7 @@ export interface Outputs {
   benchmarkPosicion: string;
   diferenciaBenchmark: number;
   detalle: string;
+  _chart?: any;
 }
 
 // Tiempo 30m (s) de referencia elite masculino por posición
@@ -45,6 +46,22 @@ export function velocidadSprint30mFutbol(i: Inputs): Outputs {
   const dif = t - bench.t;
   const cat = getCategoria(t);
 
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(t.toFixed(2)),
+    markerLabel: 'Tu tiempo: ' + t.toFixed(2) + ' s',
+    min: 3.4,
+    unit: 's',
+    segments: [
+      { nombre: 'Élite', max: 3.75, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Profesional', max: 4.00, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Semipro', max: 4.30, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Amateur avanzado', max: 4.70, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Amateur', max: Math.max(5.5, Math.ceil(t * 10) / 10 + 0.3), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de tiempo en sprint 30m: menor tiempo es mejor',
+  };
+
   return {
     velocidadPromedioKmh: Number(kmh.toFixed(2)),
     velocidadPromedioMs: Number(ms.toFixed(2)),
@@ -52,5 +69,6 @@ export function velocidadSprint30mFutbol(i: Inputs): Outputs {
     benchmarkPosicion: `${bench.nombre}: ${bench.t.toFixed(2)} s`,
     diferenciaBenchmark: Number(dif.toFixed(2)),
     detalle: `30 m en **${t.toFixed(2)} s** = ${kmh.toFixed(2)} km/h. Categoría: **${cat}**. Benchmark élite ${bench.nombre}: ${bench.t}s (diferencia: ${dif > 0 ? '+' : ''}${dif.toFixed(2)}s).`,
+    _chart: chart,
   };
 }

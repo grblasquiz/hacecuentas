@@ -19,6 +19,7 @@ export interface Outputs {
   punto_equilibrio_unidades: number;
   comparacion_mercado: string;
   resumen: string;
+  _chart?: any;
 }
 
 // Rangos de precios de referencia de mercado 2026 (CABA)
@@ -109,6 +110,26 @@ export function compute(i: Inputs): Outputs {
     peTexto +
     `Posición de mercado: ${posicion}.`;
 
+  // --- Composición del precio sugerido (suma exacta = precioSugerido) ---
+  const gananciaUnitaria = precioNeto - costoTotalUnitario;
+  const ivaUnitario = precioSugerido - precioNeto;
+  const slices: { label: string; value: number }[] = [
+    { label: 'Insumos', value: Math.round(costoInsumo) },
+    { label: 'Costos fijos', value: Math.round(costoFijoUnitario) },
+    { label: 'Ganancia', value: Math.round(gananciaUnitaria) },
+  ];
+  if (conIva && ivaUnitario > 0) {
+    slices.push({ label: 'IVA 21%', value: Math.round(ivaUnitario) });
+  }
+  const chart = {
+    type: 'doughnut' as const,
+    slices,
+    prefix: '$',
+    centerValue: '$' + Math.round(precioSugerido).toLocaleString('es-AR'),
+    centerLabel: 'Precio',
+    ariaLabel: 'Composición del precio sugerido: insumos, costos fijos, ganancia e IVA.',
+  };
+
   return {
     precio_sugerido:          Math.round(precioSugerido),
     precio_sin_iva:           Math.round(precioNeto),
@@ -118,5 +139,6 @@ export function compute(i: Inputs): Outputs {
     punto_equilibrio_unidades: puntoEquilibrio,
     comparacion_mercado:      comparacion,
     resumen,
+    _chart: chart,
   };
 }

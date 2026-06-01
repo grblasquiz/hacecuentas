@@ -1,6 +1,6 @@
 /** Costo mensual EOR (Deel/Remote/Oyster) según país del empleado y salario */
 export interface Inputs { pais: string; salarioBrutoUsd: number; provider: string; incluyeBeneficios: boolean; }
-export interface Outputs { feeEorUsd: number; cargasSocialesUsd: number; costoTotalEmpleadorUsd: number; costoEfectivoVsSalarioPct: number; explicacion: string; }
+export interface Outputs { feeEorUsd: number; cargasSocialesUsd: number; costoTotalEmpleadorUsd: number; costoEfectivoVsSalarioPct: number; explicacion: string; _chart?: any; }
 export function employerOfRecordEorCostoMesPais(i: Inputs): Outputs {
   const pais = String(i.pais || '').toUpperCase();
   const salario = Number(i.salarioBrutoUsd);
@@ -22,11 +22,25 @@ export function employerOfRecordEorCostoMesPais(i: Inputs): Outputs {
   const beneficiosUsd = beneficios ? salario * 0.08 : 0;
   const total = salario + cargas + fee + beneficiosUsd;
   const sobreSalario = ((total - salario) / salario) * 100;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Salario neto', value: Math.round(salario) },
+      { label: 'Cargas sociales', value: Math.round(cargas) },
+      { label: 'Fee EOR', value: Math.round(fee) },
+      { label: 'Beneficios', value: Math.round(beneficiosUsd) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Costo total/mes',
+    ariaLabel: 'Composición del costo mensual del empleador vía EOR: salario, cargas sociales, fee y beneficios.',
+  };
   return {
     feeEorUsd: Number(fee.toFixed(0)),
     cargasSocialesUsd: Number(cargas.toFixed(0)),
     costoTotalEmpleadorUsd: Number(total.toFixed(0)),
     costoEfectivoVsSalarioPct: Number(sobreSalario.toFixed(1)),
     explicacion: `Empleado ${pais} a USD ${salario}/mes vía ${provider}: cargas USD ${cargas.toFixed(0)} + fee EOR USD ${fee}. Costo total empleador USD ${total.toFixed(0)}/mes (+${sobreSalario.toFixed(1)}% sobre salario).`,
+    _chart: chart,
   };
 }

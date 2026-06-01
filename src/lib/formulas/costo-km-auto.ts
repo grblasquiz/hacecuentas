@@ -1,6 +1,6 @@
 /** Costo por kilómetro del auto */
 export interface Inputs { kmMensuales: number; consumoKm: number; precioNafta: number; seguroMensual?: number; patenteMensual?: number; mantenimientoMes?: number; estacionamientoMes?: number; }
-export interface Outputs { costoPorKm: number; costoMensualTotal: number; costoNaftaMes: number; costosFijosMes: number; }
+export interface Outputs { costoPorKm: number; costoMensualTotal: number; costoNaftaMes: number; costosFijosMes: number; _chart?: any; }
 
 export function costoKmAuto(i: Inputs): Outputs {
   const km = Number(i.kmMensuales);
@@ -20,10 +20,26 @@ export function costoKmAuto(i: Inputs): Outputs {
   const costoMensualTotal = costoNaftaMes + costosFijosMes;
   const costoPorKm = costoMensualTotal / km;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Nafta', value: Math.round(costoNaftaMes) },
+      { label: 'Seguro', value: Math.round(seguro) },
+      { label: 'Patente', value: Math.round(patente) },
+      { label: 'Mantenimiento', value: Math.round(mant) },
+      { label: 'Estacionamiento', value: Math.round(estac) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(costoMensualTotal).toLocaleString('es-AR'),
+    centerLabel: 'Total/mes',
+    ariaLabel: 'Composición del costo mensual del auto: nafta, seguro, patente, mantenimiento y estacionamiento.',
+  };
+
   return {
     costoPorKm: Math.round(costoPorKm),
     costoMensualTotal: Math.round(costoMensualTotal),
     costoNaftaMes: Math.round(costoNaftaMes),
     costosFijosMes: Math.round(costosFijosMes),
+    _chart: chart,
   };
 }

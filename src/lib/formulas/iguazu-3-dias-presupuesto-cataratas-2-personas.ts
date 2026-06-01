@@ -1,6 +1,6 @@
 /** Presupuesto 3 días Cataratas Iguazú 2 personas */
 export interface Inputs { personas: number; dias: number; vueloPorPersonaArs: number; hotelPorNocheArs: number; entradaParqueArs: number; ladoBrasil: boolean; comidaDiariaArs: number; trasladosArs: number; }
-export interface Outputs { vuelosArs: number; hospedajeArs: number; entradasArs: number; comidasArs: number; trasladosTotalArs: number; totalArs: number; totalPorPersonaArs: number; explicacion: string; }
+export interface Outputs { vuelosArs: number; hospedajeArs: number; entradasArs: number; comidasArs: number; trasladosTotalArs: number; totalArs: number; totalPorPersonaArs: number; explicacion: string; _chart?: any; }
 export function iguazu3DiasPresupuestoCataratas2Personas(i: Inputs): Outputs {
   const personas = Number(i.personas) || 2;
   const dias = Number(i.dias) || 3;
@@ -15,6 +15,20 @@ export function iguazu3DiasPresupuestoCataratas2Personas(i: Inputs): Outputs {
   const entradas = entrada * personas * (i.ladoBrasil ? 2 : 1);
   const comidas = comida * personas * dias;
   const total = vuelos + hospedaje + entradas + comidas + traslados;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Vuelos', value: vuelos },
+      { label: 'Hospedaje', value: hospedaje },
+      { label: 'Entradas', value: entradas },
+      { label: 'Comidas', value: comidas },
+      { label: 'Traslados', value: traslados },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición del presupuesto: vuelos, hospedaje, entradas, comidas y traslados',
+  };
   return {
     vuelosArs: Number(vuelos.toFixed(2)),
     hospedajeArs: Number(hospedaje.toFixed(2)),
@@ -24,5 +38,6 @@ export function iguazu3DiasPresupuestoCataratas2Personas(i: Inputs): Outputs {
     totalArs: Number(total.toFixed(2)),
     totalPorPersonaArs: Number((total / personas).toFixed(2)),
     explicacion: `${personas} personas, ${dias} días: vuelos $${vuelos.toLocaleString('es-AR')} + hotel $${hospedaje.toLocaleString('es-AR')} + entradas $${entradas.toLocaleString('es-AR')} + comidas $${comidas.toLocaleString('es-AR')} + traslados $${traslados.toLocaleString('es-AR')} = $${total.toLocaleString('es-AR')}${i.ladoBrasil ? ' (incluye lado brasileño)' : ''}.`,
+    _chart: chart,
   };
 }

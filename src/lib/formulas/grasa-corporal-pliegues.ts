@@ -14,6 +14,7 @@ export interface Outputs {
   masaMagra: number;
   categoria: string;
   mensaje: string;
+  _chart?: any;
 }
 
 export function grasaCorporalPliegues(i: Inputs): Outputs {
@@ -56,6 +57,32 @@ export function grasaCorporalPliegues(i: Inputs): Outputs {
     else categoria = 'Sobrepeso';
   }
 
+  const pg = Number(porcentajeGrasa.toFixed(1));
+  const segments = sexo === 'f'
+    ? [
+        { nombre: 'Grasa esencial', max: 14, color: '#fde68a', colorDark: '#b45309' },
+        { nombre: 'Atleta', max: 21, color: '#bbf7d0', colorDark: '#166534' },
+        { nombre: 'Fitness', max: 25, color: '#a7f3d0', colorDark: '#047857' },
+        { nombre: 'Promedio', max: 32, color: '#fed7aa', colorDark: '#9a3412' },
+        { nombre: 'Sobrepeso', max: Math.max(45, Math.ceil(pg) + 5), color: '#fecaca', colorDark: '#b91c1c' },
+      ]
+    : [
+        { nombre: 'Grasa esencial', max: 6, color: '#fde68a', colorDark: '#b45309' },
+        { nombre: 'Atleta', max: 14, color: '#bbf7d0', colorDark: '#166534' },
+        { nombre: 'Fitness', max: 18, color: '#a7f3d0', colorDark: '#047857' },
+        { nombre: 'Promedio', max: 25, color: '#fed7aa', colorDark: '#9a3412' },
+        { nombre: 'Sobrepeso', max: Math.max(40, Math.ceil(pg) + 5), color: '#fecaca', colorDark: '#b91c1c' },
+      ];
+  const chart = {
+    type: 'scale' as const,
+    marker: pg,
+    markerLabel: 'Tu grasa: ' + pg + '%',
+    min: 0,
+    unit: '%',
+    segments,
+    ariaLabel: 'Escala de porcentaje de grasa corporal por categorías (Jackson-Pollock)',
+  };
+
   return {
     densidadCorporal: Number(densidad.toFixed(5)),
     porcentajeGrasa: Number(porcentajeGrasa.toFixed(1)),
@@ -63,5 +90,6 @@ export function grasaCorporalPliegues(i: Inputs): Outputs {
     masaMagra: peso > 0 ? Number((peso - peso * porcentajeGrasa / 100).toFixed(1)) : 0,
     categoria,
     mensaje: `Tu porcentaje de grasa corporal estimado es ${porcentajeGrasa.toFixed(1)}% — categoría: ${categoria}.`,
+    _chart: chart,
   };
 }

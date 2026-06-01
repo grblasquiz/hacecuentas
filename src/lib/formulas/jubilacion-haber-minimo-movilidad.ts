@@ -19,6 +19,7 @@ export interface Outputs {
   haberMinimo: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 export function jubilacionHaberMinimoMovilidad(i: Inputs): Outputs {
@@ -50,6 +51,20 @@ export function jubilacionHaberMinimoMovilidad(i: Inputs): Outputs {
   const formula = `Haber proyectado = $${haber.toLocaleString()} × (1 + ${movilidadTrimestral.toFixed(2)}%)^${trimestres} = $${Math.round(haberProyectado).toLocaleString()}`;
   const explicacion = `Haber actual: $${haber.toLocaleString()}. Movilidad trimestral estimada: ${movilidadTrimestral.toFixed(2)}% (RIPTE ${ripte}% + IPC ${ipc}% promediados). En ${trimestres} trimestre(s): haber proyectado $${Math.round(haberProyectado).toLocaleString()} (+${aumentoPorcentaje.toFixed(1)}%, +$${Math.round(aumentoTotal).toLocaleString()}). Haber mínimo garantizado (ref. abril 2026): ~$${haberMinimo.toLocaleString()}. Nota: desde marzo 2024 la movilidad se actualiza mensualmente por IPC del mes anterior (DNU 274/2024).`;
 
+  const baseSlice = Math.max(0, Math.min(haber, haberProyectado));
+  const aumentoSlice = Math.max(0, haberProyectado - baseSlice);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Haber actual', value: Math.round(baseSlice) },
+      { label: 'Aumento movilidad', value: Math.round(aumentoSlice) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(haberProyectado).toLocaleString('es-AR'),
+    centerLabel: 'Proyectado',
+    ariaLabel: 'Composición del haber proyectado: haber actual más aumento por movilidad',
+  };
+
   return {
     haberProyectado: Math.round(haberProyectado),
     aumentoTotal: Math.round(aumentoTotal),
@@ -58,5 +73,6 @@ export function jubilacionHaberMinimoMovilidad(i: Inputs): Outputs {
     haberMinimo,
     formula,
     explicacion,
+    _chart: chart,
   };
 }

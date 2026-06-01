@@ -13,6 +13,7 @@ export interface Outputs {
   desglose: { criterio: string; valor: string; puntos: number }[];
   accionSugerida: string;
   resumen: string;
+  _chart?: any;
 }
 
 function fcPts(v: string): number {
@@ -77,6 +78,20 @@ export function scoreApgarRecienNacido(i: Inputs): Outputs {
     { criterio: 'Color', valor: String(i.color), puntos: col },
   ];
 
+  const chart = {
+    type: 'scale' as const,
+    marker: score,
+    markerLabel: 'Apgar: ' + score + '/10',
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Depresión severa', max: 4, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Depresión moderada', max: 7, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Normal', max: Math.max(10, score + 1), color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: 'Escala del score Apgar: depresión severa, moderada y normal.',
+  };
+
   return {
     score,
     categoria,
@@ -84,5 +99,6 @@ export function scoreApgarRecienNacido(i: Inputs): Outputs {
     desglose,
     accionSugerida: accion,
     resumen: `Score Apgar: ${score}/10 — ${categoria}. ${interpretacion}`,
+    _chart: chart,
   };
 }

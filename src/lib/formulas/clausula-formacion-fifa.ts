@@ -14,6 +14,7 @@ export interface Outputs {
   moneda: string;
   factorEdad: number;
   resumen: string;
+  _chart?: any;
 }
 
 // Tarifas anuales FIFA Circular 1798 (ajustadas 2024) en EUR por categoría del club que compra
@@ -60,6 +61,26 @@ export function clausulaFormacionFifa(i: Inputs): Outputs {
 
   const finalComp = total * factor;
 
+  // Donut: descomposición de la compensación en tramo temprano (12-15, tarifa Cat IV)
+  // y tramo mayor (16-21, tarifa categoría real). Escalados por el factor de edad
+  // para que sumen el total final mostrado. Solo si ambos tramos aportan.
+  const compTempranoFinal = Math.round(compTemprano * factor);
+  const compMayorFinal = Math.round(compMayor * factor);
+  let chart: any = undefined;
+  if (compTempranoFinal > 0 && compMayorFinal > 0) {
+    chart = {
+      type: 'doughnut' as const,
+      slices: [
+        { label: 'Años 12-15 (Cat IV)', value: compTempranoFinal },
+        { label: `Años 16-21 (Cat ${catCompra})`, value: compMayorFinal },
+      ],
+      prefix: '€',
+      centerValue: '€' + Math.round(finalComp).toLocaleString('en'),
+      centerLabel: 'Total',
+      ariaLabel: 'Composición de la compensación por formación FIFA: tramo temprano y tramo mayor',
+    };
+  }
+
   return {
     tarifaAnualAplicada: tablaCompra[catCompra] ?? tablaCompra.II,
     anosFormacionComputados: anosPropuestos,
@@ -67,5 +88,6 @@ export function clausulaFormacionFifa(i: Inputs): Outputs {
     moneda: 'EUR',
     factorEdad: factor,
     resumen: `Training compensation FIFA: €${Math.round(finalComp).toLocaleString('en')} a clubes formadores por jugador de ${edad} años (${anosPropuestos} años formado, Cat ${catForm} → ${catCompra} ${conf.toUpperCase()}).`,
+    _chart: chart,
   };
 }

@@ -15,6 +15,7 @@ export interface InteresJudicialOutputs {
   interesesGenerados: number;
   diasTranscurridos: number;
   porcentajeTotal: string;
+  _chart?: any;
 }
 
 export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudicialOutputs {
@@ -50,10 +51,23 @@ export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudic
   const totalConIntereses = capital + interesesGenerados;
   const porcentajeTotal = ((interesesGenerados / capital) * 100).toFixed(1);
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: Math.round(capital) },
+      { label: 'Intereses', value: Math.round(interesesGenerados) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalConIntereses).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición de la deuda: capital más intereses judiciales.',
+  };
+
   return {
     totalConIntereses: Math.round(totalConIntereses),
     interesesGenerados: Math.round(interesesGenerados),
     diasTranscurridos,
     porcentajeTotal: `${porcentajeTotal}% sobre el capital`,
+    _chart: chart,
   };
 }

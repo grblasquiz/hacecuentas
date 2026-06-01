@@ -13,6 +13,7 @@ export interface Outputs {
   fat_mass: number;
   lean_mass: number;
   classification: string;
+  _chart?: any;
 }
 
 // Coeficientes de Jackson & Pollock (1978 hombres, 1980 mujeres)
@@ -98,11 +99,39 @@ export function compute(i: Inputs): Outputs {
   const leanMass = weight - fatMass;
   const classification = classifyFat(fatPercent, sex);
 
+  const fatRounded = Math.round(fatPercent * 10) / 10;
+  const segments =
+    sex === "male"
+      ? [
+          { nombre: "Esencial", max: 6, color: "#fde68a", colorDark: "#b45309" },
+          { nombre: "Atleta", max: 14, color: "#bbf7d0", colorDark: "#166534" },
+          { nombre: "Fitness", max: 18, color: "#d9f99d", colorDark: "#3f6212" },
+          { nombre: "Promedio", max: 25, color: "#fed7aa", colorDark: "#9a3412" },
+          { nombre: "Obesidad", max: Math.max(40, Math.ceil(fatRounded) + 5), color: "#fecaca", colorDark: "#b91c1c" },
+        ]
+      : [
+          { nombre: "Esencial", max: 14, color: "#fde68a", colorDark: "#b45309" },
+          { nombre: "Atleta", max: 21, color: "#bbf7d0", colorDark: "#166534" },
+          { nombre: "Fitness", max: 25, color: "#d9f99d", colorDark: "#3f6212" },
+          { nombre: "Promedio", max: 32, color: "#fed7aa", colorDark: "#9a3412" },
+          { nombre: "Obesidad", max: Math.max(45, Math.ceil(fatRounded) + 5), color: "#fecaca", colorDark: "#b91c1c" },
+        ];
+  const chart = {
+    type: "scale" as const,
+    marker: fatRounded,
+    markerLabel: "Tu grasa: " + fatRounded + " %",
+    min: 0,
+    unit: " %",
+    segments,
+    ariaLabel: "Escala de porcentaje de grasa corporal con zonas según sexo.",
+  };
+
   return {
     body_density: Math.round(density * 1000000) / 1000000,
     fat_percent: Math.round(fatPercent * 10) / 10,
     fat_mass: Math.round(fatMass * 10) / 10,
     lean_mass: Math.round(leanMass * 10) / 10,
     classification,
+    _chart: chart,
   };
 }

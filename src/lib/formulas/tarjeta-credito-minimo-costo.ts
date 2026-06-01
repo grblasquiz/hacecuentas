@@ -15,6 +15,7 @@ export interface Outputs {
   multiplicadorCosto: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 export function tarjetaCreditoMinimoCosto(i: Inputs): Outputs {
@@ -52,6 +53,18 @@ export function tarjetaCreditoMinimoCosto(i: Inputs): Outputs {
   const formula = `$${saldo.toLocaleString()} al ${tna}% TNA pagando ${porcMinimo}% mínimo = ${meses} meses, $${Math.round(totalPagado).toLocaleString()} total`;
   const explicacion = `Saldo: $${saldo.toLocaleString()}. TNA: ${tna}% (${(tasaMensual * 100).toFixed(2)}% mensual). Pago mínimo actual: $${Math.round(pagoMinimoActual).toLocaleString()}. Si pagás solo el mínimo: tardás ${meses} meses (${(meses / 12).toFixed(1)} años) en liquidar. Pagás $${Math.round(interesTotal).toLocaleString()} en intereses. Total pagado: $${Math.round(totalPagado).toLocaleString()} (${multiplicadorCosto.toFixed(1)}x el saldo original). ¡Pagás ${multiplicadorCosto.toFixed(1)} veces lo que debías!`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Saldo original', value: saldo },
+      { label: 'Intereses', value: interesTotal },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalPagado).toLocaleString('es-AR'),
+    centerLabel: 'Total pagado',
+    ariaLabel: 'Composición del total pagado: saldo original más intereses.',
+  };
+
   return {
     pagoMinimoActual: Math.round(pagoMinimoActual),
     mesesLiquidar: meses,
@@ -60,5 +73,6 @@ export function tarjetaCreditoMinimoCosto(i: Inputs): Outputs {
     multiplicadorCosto: Number(multiplicadorCosto.toFixed(2)),
     formula,
     explicacion,
+    _chart: chart,
   };
 }

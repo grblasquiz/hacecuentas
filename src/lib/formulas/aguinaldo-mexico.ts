@@ -19,6 +19,7 @@ export interface AguinaldoMexicoOutputs {
   aguinaldoNeto: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 // ISR 2026 Mexico - tabla mensual
@@ -95,6 +96,18 @@ export function aguinaldoMexico(inputs: AguinaldoMexicoInputs): AguinaldoMexicoO
 
   const explicacion = `Tu aguinaldo bruto${proporcional} es de $${Math.round(aguinaldoBruto).toLocaleString('es-MX')} MXN. De ese monto, $${Math.round(exentoIsr).toLocaleString('es-MX')} estan exentos de ISR (hasta 30 UMA = $${Math.round(umaDiario2026 * 30).toLocaleString('es-MX')}). La parte gravada es $${Math.round(gravadoIsr).toLocaleString('es-MX')}, sobre la cual se retiene ISR de $${Math.round(isrAguinaldo).toLocaleString('es-MX')}. Tu aguinaldo neto es $${Math.round(aguinaldoNeto).toLocaleString('es-MX')} MXN.${aniosAntiguedad > 0 ? ` Llevas ${aniosAntiguedad} año(s) de antigüedad.` : ''}`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto en mano', value: Math.round(aguinaldoNeto) },
+      { label: 'ISR retenido', value: Math.round(isrAguinaldo) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(aguinaldoBruto).toLocaleString('es-AR'),
+    centerLabel: 'Bruto',
+    ariaLabel: `Composición del aguinaldo bruto: neto ${Math.round(aguinaldoNeto)}, ISR retenido ${Math.round(isrAguinaldo)}.`,
+  };
+
   return {
     aguinaldoBruto: Math.round(aguinaldoBruto),
     exentoIsr: Math.round(exentoIsr),
@@ -103,5 +116,6 @@ export function aguinaldoMexico(inputs: AguinaldoMexicoInputs): AguinaldoMexicoO
     aguinaldoNeto: Math.round(aguinaldoNeto),
     formula,
     explicacion,
+    _chart: chart,
   };
 }

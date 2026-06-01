@@ -16,6 +16,7 @@ export interface DietaPcrmScoreOutputs {
   score: number;
   nivel: string;
   recomendacion: string;
+  _chart?: any;
 }
 
 export function dietaPcrmScore(inputs: DietaPcrmScoreInputs): DietaPcrmScoreOutputs {
@@ -28,5 +29,20 @@ export function dietaPcrmScore(inputs: DietaPcrmScoreInputs): DietaPcrmScoreOutp
   else if (score <= 6) { nivel = 'Muy buena ✅'; rec = 'Excelente. Con 1-2 grupos más llegás al óptimo.'; }
   else { nivel = 'Óptima ✅✅'; rec = '¡Dieta PCRM óptima! Máximo beneficio cardiovascular.'; }
 
-  return { score, nivel, recomendacion: rec };
+  const chart = {
+    type: 'scale' as const,
+    marker: score,
+    markerLabel: 'Tu score: ' + score + '/7',
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Bajo', max: 2, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Moderado', max: 4, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Muy buena', max: 6, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Óptima', max: Math.max(7, score + 1), color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: 'Escala del score PCRM de 0 a 7 grupos plant-based: bajo, moderado, muy buena y óptima.',
+  };
+
+  return { score, nivel, recomendacion: rec, _chart: chart };
 }

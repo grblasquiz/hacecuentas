@@ -14,6 +14,7 @@ export interface Outputs {
   totalMensual: number;
   categoriaDetectada: string;
   resumen: string;
+  _chart?: any;
 }
 
 // Cuadro tarifario residencial ENARGAS (Argentina 2026, valores base sin subsidio).
@@ -76,6 +77,20 @@ export function gasNaturalConsumoM3(i: Inputs): Outputs {
   const totalMensual = total / 2;
   const consumoM3Mensual = m3 / 2;
 
+  const consumoVariable = m3 * precioPorM3;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Consumo (' + m3 + ' m³)', value: Math.round(consumoVariable) },
+      { label: 'Cargo fijo', value: Math.round(cargoFijo) },
+      { label: 'IVA (21%)', value: Math.round(iva) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Factura bimestral',
+    ariaLabel: 'Composición de la factura de gas: consumo, cargo fijo e IVA.',
+  };
+
   return {
     consumoM3Mensual: Number(consumoM3Mensual.toFixed(1)),
     subtotal: Math.round(subtotal),
@@ -86,5 +101,6 @@ export function gasNaturalConsumoM3(i: Inputs): Outputs {
     totalMensual: Math.round(totalMensual),
     categoriaDetectada,
     resumen: `Categoría ${categoriaDetectada}. Factura bimestral estimada: $${Math.round(total).toLocaleString('es-AR')} ($${Math.round(totalMensual).toLocaleString('es-AR')} por mes).`,
+    _chart: chart,
   };
 }

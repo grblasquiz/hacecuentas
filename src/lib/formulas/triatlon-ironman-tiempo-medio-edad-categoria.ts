@@ -1,6 +1,6 @@
 /** Tiempo promedio Ironman 70.3/Full según edad y categoría AG */
 export interface Inputs { distancia: 'half' | 'full'; edad: number; sexo: 'masculino' | 'femenino'; nivel: 'finisher' | 'mid-pack' | 'top-pack' | 'kona-qualifier'; }
-export interface Outputs { tiempoEstimadoHoras: string; ritmoSwimMin100m: string; ritmoBikeKmh: number; ritmoRunMinKm: string; explicacion: string; }
+export interface Outputs { tiempoEstimadoHoras: string; ritmoSwimMin100m: string; ritmoBikeKmh: number; ritmoRunMinKm: string; explicacion: string; _chart?: any; }
 export function triatlonIronmanTiempoMedioEdadCategoria(i: Inputs): Outputs {
   const edad = Number(i.edad);
   if (!edad || edad < 18 || edad > 80) throw new Error('Edad debe estar entre 18 y 80 años');
@@ -29,11 +29,26 @@ export function triatlonIronmanTiempoMedioEdadCategoria(i: Inputs): Outputs {
   const runPace = (runSec / runKm);
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
   const horasFmt = `${Math.floor(horas)}:${String(Math.round((horas % 1) * 60)).padStart(2, '0')}`;
+  const transitionSec = totalSec - swimSec - bikeSec - runSec;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Natación', value: Math.round(swimSec / 60) },
+      { label: 'Ciclismo', value: Math.round(bikeSec / 60) },
+      { label: 'Carrera', value: Math.round(runSec / 60) },
+      { label: 'Transiciones', value: Math.round(transitionSec / 60) },
+    ],
+    prefix: '',
+    centerValue: horasFmt + ' hs',
+    centerLabel: 'Tiempo total',
+    ariaLabel: 'Distribución del tiempo total por disciplina, en minutos',
+  };
   return {
     tiempoEstimadoHoras: horasFmt,
     ritmoSwimMin100m: fmt(swimPace),
     ritmoBikeKmh: Number(bikeKmh.toFixed(1)),
     ritmoRunMinKm: fmt(runPace),
     explicacion: `Ironman ${i.distancia === 'half' ? '70.3' : 'Full'} ${i.sexo} edad ${edad} nivel ${i.nivel}: tiempo estimado **${horasFmt} hs**. Ritmos: swim ${fmt(swimPace)}/100m, bike ${bikeKmh.toFixed(1)} km/h, run ${fmt(runPace)}/km.`,
+    _chart: chart,
   };
 }

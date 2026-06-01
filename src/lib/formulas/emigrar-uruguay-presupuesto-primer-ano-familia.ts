@@ -20,6 +20,7 @@ export interface Outputs {
   desglose_manutencion: number;
   desglose_vehiculo: number;
   nota: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -178,6 +179,23 @@ export function compute(i: Inputs): Outputs {
       : "") +
     "Valores orientativos 2026.";
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Alquiler + depósito', value: Math.round(desglose_alquiler) },
+      { label: 'Manutención', value: Math.round(desglose_manutencion) },
+      { label: 'Salud', value: Math.round(desglose_salud) },
+      { label: 'Colegio', value: Math.round(desglose_colegio) },
+      { label: 'Residencia', value: Math.round(desglose_residencia) },
+      { label: 'Vuelos', value: Math.round(desglose_vuelos) },
+      { label: 'Vehículo', value: Math.round(desglose_vehiculo) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(total_usd).toLocaleString('es-AR'),
+    centerLabel: 'Total año 1',
+    ariaLabel: 'Composición del presupuesto del primer año en Uruguay por rubro.',
+  };
+
   return {
     total_usd:            Math.round(total_usd),
     costo_mensual_usd,
@@ -189,5 +207,6 @@ export function compute(i: Inputs): Outputs {
     desglose_manutencion: Math.round(desglose_manutencion),
     desglose_vehiculo:    Math.round(desglose_vehiculo),
     nota,
+    _chart: chart,
   };
 }

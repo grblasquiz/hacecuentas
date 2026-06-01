@@ -1,4 +1,5 @@
 import calcIndex from './calc-compute-index.json';
+import type { Formula } from './formula-types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Núcleo compartido de cómputo de calculadoras. Lo usan tanto el endpoint REST
@@ -53,17 +54,18 @@ export function calcUrl(slug: string): string {
 
 // Lazy: 1 chunk por fórmula. Path relativo a src/lib/ → src/lib/formulas/*.ts
 const formulaLoaders = import.meta.glob<any>('./formulas/*.ts');
-const formulaCache = new Map<string, Function>();
+const formulaCache = new Map<string, Formula>();
 
-export async function loadFormula(formulaId: string): Promise<Function | null> {
+export async function loadFormula(formulaId: string): Promise<Formula | null> {
   if (formulaCache.has(formulaId)) return formulaCache.get(formulaId)!;
   const loader = formulaLoaders[`./formulas/${formulaId}.ts`];
   if (!loader) return null;
   const mod: any = await loader();
   const fnKey = Object.keys(mod).find((k) => typeof mod[k] === 'function');
   if (!fnKey) return null;
-  formulaCache.set(formulaId, mod[fnKey]);
-  return mod[fnKey];
+  const fn = mod[fnKey] as Formula;
+  formulaCache.set(formulaId, fn);
+  return fn;
 }
 
 // Coercion: espejo de getFormFieldValue / runWhatIfNow de Calculator.astro.
@@ -168,6 +170,9 @@ export async function runCompute(
   try {
     result = fn(inputs);
   } catch (err: any) {
+    // Log a Cloudflare Workers Observability (logs nativos del Worker) para
+    // tener visibilidad de fórmulas que rompen en prod sin pagar Sentry.
+    console.error(`[compute] formula "${entry.f}" (slug "${slug}") threw:`, err?.stack || err?.message || err);
     return {
       ok: false,
       status: 422,

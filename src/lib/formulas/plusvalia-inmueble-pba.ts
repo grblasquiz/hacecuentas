@@ -31,6 +31,7 @@ export interface PlusvaliaOutputs {
   totalTributos: number;
   percibeEscribano: string;
   mensaje: string;
+  _chart?: any;
 }
 
 const SELLO_VENDEDOR: Record<Provincia, number> = {
@@ -101,11 +102,30 @@ export function plusvaliaInmueblePba(
       `+ presenta los sellos. Sellos: ${SELLO_LABEL[provincia]}.`;
   }
 
+  // Donut solo si hay ≥2 componentes reales (ITI + sellos). Si ITI=0
+  // (persona jurídica o exención), el desglose es un único ítem → sin gráfico.
+  const slicesTributos = [
+    { label: 'ITI 1,5%', value: Math.round(iti15Porciento) },
+    { label: 'Sellos', value: Math.round(sellosCompraventa) },
+  ].filter((s) => s.value > 0);
+  const chart =
+    slicesTributos.length >= 2
+      ? {
+          type: 'doughnut' as const,
+          slices: slicesTributos,
+          prefix: '$',
+          centerValue: '$' + Math.round(totalTributos).toLocaleString('es-AR'),
+          centerLabel: 'Total tributos',
+          ariaLabel: 'Composición de los tributos por venta: ITI nacional y sellos provinciales.',
+        }
+      : undefined;
+
   return {
     iti15Porciento: Math.round(iti15Porciento),
     sellosCompraventa: Math.round(sellosCompraventa),
     totalTributos: Math.round(totalTributos),
     percibeEscribano,
     mensaje,
+    _chart: chart,
   };
 }

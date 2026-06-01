@@ -1,6 +1,6 @@
 /** FINDRISC v2 — riesgo diabetes tipo 2 */
 export interface Inputs { edad: string; imc: string; cintura: string; actividad: string; verduras: string; medicacion: string; glucemia: string; antecedentes: string; }
-export interface Outputs { puntaje: number; riesgo: string; clasificacion: string; recomendacion: string; mensaje: string; }
+export interface Outputs { puntaje: number; riesgo: string; clasificacion: string; recomendacion: string; mensaje: string; _chart?: any; }
 
 export function riesgoDiabetesFindrisc(i: Inputs): Outputs {
   const puntaje = Number(i.edad) + Number(i.imc) + Number(i.cintura) + Number(i.actividad) + Number(i.verduras) + Number(i.medicacion) + Number(i.glucemia) + Number(i.antecedentes);
@@ -23,5 +23,21 @@ export function riesgoDiabetesFindrisc(i: Inputs): Outputs {
     recomendacion = 'Riesgo muy alto. Evaluación médica inmediata. Probablemente ya tengas prediabetes o diabetes.';
   }
 
-  return { puntaje, riesgo, clasificacion, recomendacion, mensaje: `FINDRISC: ${puntaje}/26. Riesgo a 10 años: ${riesgo}. ${clasificacion}.` };
+  const chart = {
+    type: 'scale' as const,
+    marker: puntaje,
+    markerLabel: 'Tu puntaje: ' + puntaje,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Bajo', max: 7, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Ligero', max: 12, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Moderado', max: 15, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Alto', max: 21, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Muy alto', max: Math.max(26, Math.ceil(puntaje) + 1), color: '#fca5a5', colorDark: '#991b1b' },
+    ],
+    ariaLabel: 'Escala FINDRISC de riesgo de diabetes tipo 2: tu puntaje ' + puntaje + ' sobre 26',
+  };
+
+  return { puntaje, riesgo, clasificacion, recomendacion, mensaje: `FINDRISC: ${puntaje}/26. Riesgo a 10 años: ${riesgo}. ${clasificacion}.`, _chart: chart };
 }

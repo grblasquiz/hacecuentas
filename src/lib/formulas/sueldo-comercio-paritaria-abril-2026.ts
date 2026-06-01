@@ -37,6 +37,19 @@ export function sueldoComercioParitariaAbril2026(i: Inputs): Outputs {
   const neto = bruto - aportes;
 
   const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Básico', value: basicoAjust },
+      { label: 'Antigüedad', value: antiguedad },
+      { label: 'Presentismo', value: presentismo },
+      { label: 'No remunerativo', value: noRem },
+    ],
+    prefix: '$',
+    centerValue: fmt(bruto),
+    centerLabel: 'Bruto',
+    ariaLabel: 'Composición del sueldo bruto: básico, antigüedad, presentismo y no remunerativo',
+  };
   return {
     sueldoBruto: fmt(bruto),
     sueldoNeto: fmt(neto),
@@ -46,5 +59,6 @@ export function sueldoComercioParitariaAbril2026(i: Inputs): Outputs {
     noRemunerativo: fmt(noRem),
     aportes: fmt(aportes),
     categoria: `Cat. ${cat} (CCT 130/75)`,
+    _chart: chart,
   };
 }

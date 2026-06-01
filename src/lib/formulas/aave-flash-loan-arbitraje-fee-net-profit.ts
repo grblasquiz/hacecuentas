@@ -16,6 +16,7 @@ export interface Outputs {
   breakevenGwei: number;
   roiPct: number;
   verdict: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -78,6 +79,25 @@ export function compute(i: Inputs): Outputs {
     verdict = `Spread insuficiente para cubrir la fee de Aave (${(AAVE_FEE_RATE * 100).toFixed(2)}%) y el slippage. Necesitás un spread mayor al ${((aaveFee + slippageCost) / loanAmount * 100).toFixed(3)}%.`;
   }
 
+  // Donut: desglose del profit bruto en fees, costos y profit neto.
+  // Solo tiene sentido cuando hay profit neto positivo (todas las partes ≥ 0).
+  let chart: any = undefined;
+  if (grossProfit > 0 && netProfit > 0) {
+    chart = {
+      type: 'doughnut' as const,
+      slices: [
+        { label: 'Profit neto', value: netProfit },
+        { label: 'Fee Aave', value: aaveFee },
+        { label: 'Slippage', value: slippageCost },
+        { label: 'Gas', value: gasCostUsd },
+      ].filter((s) => s.value > 0),
+      prefix: '$',
+      centerValue: '$' + Math.round(grossProfit).toLocaleString('es-AR'),
+      centerLabel: 'Profit bruto',
+      ariaLabel: 'Composición del profit bruto: profit neto, fee de Aave, slippage y gas.',
+    };
+  }
+
   return {
     grossProfit,
     aaveFee,
@@ -87,5 +107,6 @@ export function compute(i: Inputs): Outputs {
     breakevenGwei,
     roiPct,
     verdict,
+    _chart: chart,
   };
 }

@@ -6,6 +6,7 @@ export interface Outputs {
   total: number;
   jurisdiccion: string;
   actividadAplicada: string;
+  _chart?: any;
 }
 
 // Alícuotas típicas 2026 (valores aproximados — consultar código fiscal vigente)
@@ -62,11 +63,23 @@ export function ingresosBrutos(i: Inputs): Outputs {
   const key = `${prov}:${act}`;
   const alicuota = ALICUOTAS[key] ?? 3.5;
   const impuesto = fact * alicuota / 100;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Facturación', value: Math.round(fact) },
+      { label: 'Impuesto IIBB', value: Math.round(impuesto) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(fact + impuesto).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: 'Composición: facturación más impuesto sobre los Ingresos Brutos.',
+  };
   return {
     alicuota,
     impuesto: Math.round(impuesto),
     total: Math.round(fact + impuesto),
     jurisdiccion: PROV_LABEL[prov] ?? prov,
     actividadAplicada: ACT_LABEL[act] ?? act,
+    _chart: chart,
   };
 }

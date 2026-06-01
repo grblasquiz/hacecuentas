@@ -11,6 +11,7 @@ export interface Outputs {
   rangoNormalMgDL: string;
   rangoNormalMmolL: string;
   resumen: string;
+  _chart?: any;
 }
 
 // Factor: 1 mmol/L = 18.016 mg/dL
@@ -60,6 +61,38 @@ export function glucemiaConversionMgDlMmolL(i: Inputs): Outputs {
     else categoria = 'Elevada (≥ 200 mg/dL con síntomas sugiere diabetes)';
   }
 
+  let segments: Array<{ nombre: string; max: number; color: string; colorDark: string }>;
+  if (ctx === 'postprandial') {
+    segments = [
+      { nombre: 'Hipoglucemia', max: 70, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Normal', max: 140, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Prediabetes', max: 200, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Diabetes', max: Math.max(260, Math.ceil(mgDL) + 20), color: '#fecaca', colorDark: '#b91c1c' },
+    ];
+  } else if (ctx === 'ayunas') {
+    segments = [
+      { nombre: 'Hipoglucemia', max: 70, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Normal', max: 100, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Prediabetes', max: 126, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Diabetes', max: Math.max(200, Math.ceil(mgDL) + 20), color: '#fecaca', colorDark: '#b91c1c' },
+    ];
+  } else {
+    segments = [
+      { nombre: 'Bajo', max: 70, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Rango típico', max: 200, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Elevada', max: Math.max(260, Math.ceil(mgDL) + 20), color: '#fecaca', colorDark: '#b91c1c' },
+    ];
+  }
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(mgDL.toFixed(0)),
+    markerLabel: 'Tu valor: ' + mgDL.toFixed(0) + ' mg/dL',
+    min: 0,
+    unit: ' mg/dL',
+    segments,
+    ariaLabel: 'Escala de glucemia en mg/dL con zonas según criterios ADA.',
+  };
+
   return {
     mgDL: Number(mgDL.toFixed(1)),
     mmolL: Number(mmolL.toFixed(2)),
@@ -67,5 +100,6 @@ export function glucemiaConversionMgDlMmolL(i: Inputs): Outputs {
     rangoNormalMgDL: rangoMgDL,
     rangoNormalMmolL: rangoMmolL,
     resumen: `${v} ${unidad.replace('-', '/').toUpperCase()} = ${mgDL.toFixed(0)} mg/dL = ${mmolL.toFixed(2)} mmol/L. Categoría: ${categoria}.`,
+    _chart: chart,
   };
 }

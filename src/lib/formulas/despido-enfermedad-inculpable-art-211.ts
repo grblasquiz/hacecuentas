@@ -75,6 +75,7 @@ export interface DespidoEnfermedadOutputs {
   baseArt245: number;
   vizzotiAplicado: boolean;
   mensaje: string;
+  _chart?: any;
 }
 
 const SUPUESTOS_VALIDOS: SupuestoArt212[] = [
@@ -185,6 +186,22 @@ export function despidoEnfermedadInculpableArt211(
       break;
   }
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Indemnización Art. 245', value: Math.round(indemnizacionBase) },
+      { label: 'Preaviso (+ SAC)', value: Math.round(preaviso + sacPreaviso) },
+      { label: 'Integración mes (+ SAC)', value: Math.round(integracionMes + sacIntegracion) },
+      { label: 'SAC proporcional', value: Math.round(sacProporcional) },
+      { label: 'Vacaciones (+ SAC)', value: Math.round(vacaciones + sacVacaciones) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel:
+      'Composición de la liquidación por despido tras enfermedad inculpable: indemnización del Art. 245, preaviso, integración del mes, SAC proporcional y vacaciones no gozadas.',
+  };
+
   return {
     total: Math.round(total),
     supuestoAplicado,
@@ -200,5 +217,6 @@ export function despidoEnfermedadInculpableArt211(
     baseArt245: Math.round(baseArt245),
     vizzotiAplicado,
     mensaje,
+    _chart: chart,
   };
 }

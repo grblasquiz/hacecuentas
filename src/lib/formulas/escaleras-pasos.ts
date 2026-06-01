@@ -14,6 +14,7 @@ export interface Outputs {
   anguloGrados: number;
   comodidad: string;
   resumen: string;
+  _chart?: any;
 }
 
 export function escalerasPasos(i: Inputs): Outputs {
@@ -55,6 +56,22 @@ export function escalerasPasos(i: Inputs): Outputs {
     throw new Error(`No entra en ${largo} cm. Se requieren ${Math.ceil(largoEscalera)} cm. Aumentá contrahuella.`);
   }
 
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(angulo.toFixed(1)),
+    markerLabel: 'Tu ángulo: ' + angulo.toFixed(1) + '°',
+    min: 0,
+    unit: '°',
+    segments: [
+      { nombre: 'Muy cómoda', max: 20, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Cómoda', max: 30, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Estándar', max: 38, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Pendiente fuerte', max: 45, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Muy empinada', max: Math.max(55, Math.ceil(angulo) + 2), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de comodidad de la escalera según su ángulo de inclinación en grados.',
+  };
+
   return {
     cantidadEscalones: cantidad,
     contrahuella: Number(contrahuella.toFixed(2)),
@@ -64,5 +81,6 @@ export function escalerasPasos(i: Inputs): Outputs {
     anguloGrados: Number(angulo.toFixed(2)),
     comodidad,
     resumen: `${cantidad} escalones con contrahuella ${contrahuella.toFixed(1)} cm y huella ${huella.toFixed(1)} cm. Ángulo ${angulo.toFixed(1)}°.`,
+    _chart: chart,
   };
 }

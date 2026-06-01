@@ -12,6 +12,7 @@ export interface Outputs {
   total_interest: number;
   interest_percentage: number;
   monthly_breakdown: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -82,11 +83,24 @@ export function compute(i: Inputs): Outputs {
     breakdownTable += `${row.month} | $${row.start.toFixed(2)} | $${row.contribution.toFixed(2)} | $${row.interest.toFixed(2)} | $${row.end.toFixed(2)}\n`;
   }
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Aportado', value: totalContributed },
+      { label: 'Interés ganado', value: Math.max(0, totalInterest) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(balance).toLocaleString('es-AR'),
+    centerLabel: 'Balance final',
+    ariaLabel: 'Composición del balance final: capital aportado más interés ganado.',
+  };
+
   return {
     final_balance: Number(balance.toFixed(2)),
     total_contributed: Number(totalContributed.toFixed(2)),
     total_interest: Number(totalInterest.toFixed(2)),
     interest_percentage: Number(interestPercentage.toFixed(2)),
-    monthly_breakdown: breakdownTable
+    monthly_breakdown: breakdownTable,
+    _chart: chart
   };
 }

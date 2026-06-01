@@ -16,6 +16,8 @@ export interface Outputs {
   capital_year1: number;
   capital_year5: number;
   payoff_date: string;
+  _chart?: any;
+  _table?: any;
 }
 
 // Tasa anual de referencia LATAM 2026 (Banxico, CMF, Superfinanciera)
@@ -33,6 +35,11 @@ function formatDate(date: Date): string {
     "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
   ];
   return months[date.getMonth()] + " " + date.getFullYear();
+}
+
+function shortDate(date: Date): string {
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  return mm + "/" + date.getFullYear();
 }
 
 export function compute(i: Inputs): Outputs {
@@ -124,6 +131,57 @@ export function compute(i: Inputs): Outputs {
   const payoffDateObj = addMonths(startDateObj, n);
   payoffDate = formatDate(payoffDateObj);
 
+  // ── Donut: composición del costo total (capital vs intereses [+ seguro]) ──
+  // Replica el desglose visual del Mortgage Calculator de Calculator.net.
+  const insuranceTotal = monthlyInsurance * n;
+  const donutSlices: Array<{ label: string; value: number }> = [
+    { label: "Capital prestado", value: Math.round(principal) },
+    { label: "Intereses", value: Math.round(totalInterest) },
+  ];
+  if (insuranceTotal > 0) donutSlices.push({ label: "Seguro", value: Math.round(insuranceTotal) });
+  const grandTotal = Math.round(totalPaid + insuranceTotal);
+  const chart = {
+    type: "doughnut" as const,
+    slices: donutSlices,
+    prefix: "$",
+    centerValue: "$" + grandTotal.toLocaleString("es-AR"),
+    centerLabel: "Costo total",
+    ariaLabel: `Composición del crédito: capital ${Math.round(principal)}, intereses ${Math.round(totalInterest)}` +
+      (insuranceTotal > 0 ? `, seguro ${Math.round(insuranceTotal)}.` : "."),
+  };
+
+  // ── Cronograma de amortización (sistema francés), mes a mes ──
+  const fmt = (x: number) => Math.round(x).toLocaleString("es-AR");
+  const schedRows: Array<Array<string | number>> = [];
+  let schedBalance = principal;
+  let schedDate = new Date(startDateObj.getTime());
+  for (let m = 1; m <= n; m++) {
+    const interestPart = schedBalance * monthlyRate;
+    const capitalPart = monthlyPayment - interestPart;
+    schedBalance -= capitalPart;
+    if (schedBalance < 0.005) schedBalance = 0;
+    schedRows.push([
+      m,
+      shortDate(schedDate),
+      fmt(monthlyPayment),
+      fmt(interestPart),
+      fmt(capitalPart),
+      fmt(schedBalance),
+    ]);
+    schedDate = addMonths(schedDate, 1);
+  }
+  const table = {
+    type: "amortization",
+    title: "Cronograma de amortización (sistema francés)",
+    headers: ["Cuota", "Fecha", "Pago", "Interés", "Capital", "Saldo"],
+    align: ["left", "left", "right", "right", "right", "right"],
+    rows: schedRows,
+    collapseAfter: 12,
+    emphasisEvery: 12,
+    footer: ["Totales", n + " cuotas", fmt(monthlyPayment * n), fmt(totalInterest), fmt(principal), "0"],
+    note: "Montos redondeados, en la moneda de tu país. Con el sistema francés la cuota es fija: al principio pagás más interés y menos capital, y la proporción se invierte con el tiempo.",
+  };
+
   return {
     monthly_payment: Math.round(monthlyPayment * 100) / 100,
     monthly_total: Math.round(monthlyTotal * 100) / 100,
@@ -132,6 +190,8 @@ export function compute(i: Inputs): Outputs {
     principal: Math.round(principal * 100) / 100,
     capital_year1: Math.round(capitalYear1 * 100) / 100,
     capital_year5: Math.round(capitalYear5 * 100) / 100,
-    payoff_date: payoffDate
+    payoff_date: payoffDate,
+    _chart: chart,
+    _table: table
   };
 }

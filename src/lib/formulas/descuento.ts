@@ -11,6 +11,7 @@ export interface Outputs {
   descuentoEfectivo: number;
   precioTrasDescuento1: number;
   precioTrasDescuento2: number;
+  _chart?: any;
 }
 
 export function descuento(i: Inputs): Outputs {
@@ -27,11 +28,24 @@ export function descuento(i: Inputs): Outputs {
   const ahorro = precio - final;
   const efectivo = ((precio - final) / precio) * 100;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Pagás', value: Math.round(final) },
+      { label: 'Ahorrás', value: Math.round(ahorro) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(precio).toLocaleString('es-AR'),
+    centerLabel: 'Precio original',
+    ariaLabel: 'Composición del precio original: lo que pagás más lo que ahorrás con el descuento',
+  };
+
   return {
     precioFinal: Math.round(final),
     ahorro: Math.round(ahorro),
     descuentoEfectivo: Number(efectivo.toFixed(2)),
     precioTrasDescuento1: Math.round(tras1),
     precioTrasDescuento2: Math.round(tras2),
+    _chart: chart,
   };
 }

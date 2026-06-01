@@ -4,6 +4,7 @@ export interface Outputs {
   vo2max: number;
   categoria: string;
   detalle: string;
+  _chart?: any;
 }
 
 // Tablas ACSM de clasificación VO2max por sexo y edad
@@ -55,9 +56,36 @@ export function vo2maxCooper(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 
+  // Umbrales ACSM para la banda edad/sexo del usuario (para la escala)
+  const tablaChart = sexo === 'mujer' ? TABLAS_MUJER : TABLAS_HOMBRE;
+  let decadaChart = '20';
+  if (edad >= 60) decadaChart = '60';
+  else if (edad >= 50) decadaChart = '50';
+  else if (edad >= 40) decadaChart = '40';
+  else if (edad >= 30) decadaChart = '30';
+  const u = tablaChart[decadaChart];
+  const topChart = Math.max(u[4] + 8, Math.ceil(vo2) + 4);
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(vo2.toFixed(1)),
+    markerLabel: 'Tu VO2max: ' + Number(vo2.toFixed(1)) + ' ml/kg/min',
+    min: 10,
+    unit: '',
+    segments: [
+      { nombre: 'Muy pobre', max: u[0], color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Pobre', max: u[1], color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Regular', max: u[2], color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Buena', max: u[3], color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Excelente', max: u[4], color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Superior', max: topChart, color: '#a7f3d0', colorDark: '#047857' },
+    ],
+    ariaLabel: 'Escala VO2max ACSM por edad y sexo: de muy pobre a superior',
+  };
+
   return {
     vo2max: Number(vo2.toFixed(1)),
     categoria: cat,
     detalle: `Test de Cooper: ${fmt.format(dist)} m en 12 min → VO2max = ${fmt.format(vo2)} ml/kg/min. Categoría: ${cat} para ${sexo} de ${edad} años.`,
+    _chart: chart,
   };
 }

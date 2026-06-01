@@ -13,6 +13,7 @@ export interface Outputs {
   duracionSemanas: number;
   retest: string;
   observaciones: string;
+  _chart?: any;
 }
 
 // Umbrales según Endocrine Society Clinical Practice Guideline 2024
@@ -78,6 +79,23 @@ export function compute(i: Inputs): Outputs {
   const pesoAlto = peso >= PESO_AJUSTE;
   const mayorDe70 = edad > 70;
   const esEmbarazoLactancia = embarazo === "embarazo" || embarazo === "lactancia";
+
+  const nivelRedondeado = Math.round(nivelNgMl * 100) / 100;
+  const chart = {
+    type: "scale" as const,
+    marker: nivelRedondeado,
+    markerLabel: "Tu nivel: " + nivelRedondeado + " ng/mL",
+    min: 0,
+    unit: " ng/mL",
+    segments: [
+      { nombre: "Deficiencia severa", max: UMBRAL_DEFICIENCIA_SEVERA, color: "#fecaca", colorDark: "#b91c1c" },
+      { nombre: "Deficiencia", max: UMBRAL_DEFICIENCIA, color: "#fed7aa", colorDark: "#9a3412" },
+      { nombre: "Insuficiencia", max: UMBRAL_INSUFICIENCIA, color: "#fde68a", colorDark: "#b45309" },
+      { nombre: "Suficiente", max: UMBRAL_TOXICIDAD, color: "#bbf7d0", colorDark: "#166534" },
+      { nombre: "Toxicidad", max: Math.max(120, Math.ceil(nivelRedondeado) + 10), color: "#fecaca", colorDark: "#b91c1c" },
+    ],
+    ariaLabel: "Escala de vitamina D sérica: deficiencia, insuficiencia, suficiente y toxicidad",
+  };
 
   let categoria: string;
   let dosisDiariaUI: number;
@@ -165,10 +183,11 @@ export function compute(i: Inputs): Outputs {
 
   return {
     categoria,
-    nivelNgMl: Math.round(nivelNgMl * 100) / 100,
+    nivelNgMl: nivelRedondeado,
     dosisDiariaUI,
     duracionSemanas,
     retest,
     observaciones,
+    _chart: chart,
   };
 }

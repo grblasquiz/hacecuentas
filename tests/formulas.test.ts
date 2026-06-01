@@ -31,6 +31,7 @@ import { diasEntreFechas } from '../src/lib/formulas/dias-entre-fechas';
 import { interesCompuesto } from '../src/lib/formulas/interes-compuesto';
 import { interesSimple } from '../src/lib/formulas/interes-simple';
 import { plazoFijo } from '../src/lib/formulas/plazo-fijo';
+import { gastosEscrituraCompraventa } from '../src/lib/formulas/gastos-escritura-compraventa';
 
 // --- Matemática ---
 import { porcentaje } from '../src/lib/formulas/porcentaje';
@@ -425,6 +426,74 @@ describe('plazoFijo', () => {
     expect(r.interesGanado).toBeGreaterThan(18000);
     expect(r.interesGanado).toBeLessThan(22000);
     expect(r.montoFinal).toBeGreaterThan(r.interesGanado);
+  });
+});
+
+describe('gastosEscrituraCompraventa (defaults selloPct/honorariosPct)', () => {
+  // Bug regresión: `Number(i.selloPct) ?? 3.6` daba NaN cuando la clave estaba
+  // ausente (Number(undefined)=NaN, y NaN ?? x = NaN), y daba 0 cuando el form
+  // mandaba "" (Number("")=0). Ambos colapsaban honorarios/sellos/gastoTotal.
+  // El comprador SIEMPRE paga sellos+honorarios, así que nunca deben ser 0/NaN.
+
+  // Comprador $50M con defaults (3.6% sellos, 2% honorarios) — golden del JSON.
+  it('comprador, pct AUSENTES → aplica defaults 3.6%/2% (no NaN)', () => {
+    const r = gastosEscrituraCompraventa({ valorOperacion: 50_000_000, esComprador: 'comprador' });
+    expect(r.honorarios).toBe(1_210_000); // 50M*2%*1.21
+    expect(r.sellos).toBe(1_800_000); // 50M*3.6%
+    expect(r.otros).toBe(200_000); // 50M*0.4%
+    expect(r.iti).toBe(0); // comprador no paga ITI
+    expect(r.gastoTotal).toBe(3_210_000);
+    expect(Number.isFinite(r.gastoTotal)).toBe(true);
+  });
+
+  // El form (FormData) manda "" para campos opcionales en blanco — caso dominante.
+  it('comprador, pct = "" (form en blanco) → aplica defaults, NO $0', () => {
+    const r = gastosEscrituraCompraventa({
+      valorOperacion: 50_000_000,
+      esComprador: 'comprador',
+      selloPct: '' as any,
+      honorariosPct: '' as any,
+    });
+    expect(r.honorarios).toBeGreaterThan(0);
+    expect(r.sellos).toBeGreaterThan(0);
+    expect(r.honorarios).toBe(1_210_000);
+    expect(r.sellos).toBe(1_800_000);
+    expect(r.gastoTotal).toBe(3_210_000);
+  });
+
+  it('comprador, pct explícitos (PBA 2% / 1.8%) → usa los valores dados', () => {
+    const r = gastosEscrituraCompraventa({
+      valorOperacion: 80_000_000,
+      esComprador: 'comprador',
+      selloPct: 2,
+      honorariosPct: 1.8,
+    });
+    expect(r.honorarios).toBe(Math.round(80_000_000 * 0.018 * 1.21)); // 1.742.400
+    expect(r.sellos).toBe(80_000_000 * 0.02); // 1.600.000
+  });
+
+  it('selloPct = 0 explícito (jurisdicción exenta) se respeta, NO se reemplaza por 3.6', () => {
+    const r = gastosEscrituraCompraventa({
+      valorOperacion: 50_000_000,
+      esComprador: 'comprador',
+      selloPct: 0,
+    });
+    expect(r.sellos).toBe(0);
+    expect(r.honorarios).toBe(1_210_000); // honorarios sigue con default 2%
+  });
+
+  it('vendedor → solo ITI 1.5%, sin honorarios/sellos', () => {
+    const r = gastosEscrituraCompraventa({ valorOperacion: 50_000_000, esComprador: 'vendedor' });
+    expect(r.iti).toBe(750_000); // 50M*1.5%
+    expect(r.honorarios).toBe(0);
+    expect(r.sellos).toBe(0);
+    expect(r.otros).toBe(0);
+    expect(r.gastoTotal).toBe(750_000);
+  });
+
+  it('valor 0 o ausente → error', () => {
+    expect(() => gastosEscrituraCompraventa({ valorOperacion: 0, esComprador: 'comprador' })).toThrow();
+    expect(() => gastosEscrituraCompraventa({ esComprador: 'comprador' } as any)).toThrow();
   });
 });
 

@@ -12,6 +12,7 @@ export interface Outputs {
   impactoGlucemico: string;
   recomendacion: string;
   resumen: string;
+  _chart?: any;
 }
 
 // Tabla ampliada de IG (referencia: Universidad de Sydney / International Tables)
@@ -91,6 +92,20 @@ export function indiceGlucemicoAlimentos(i: Inputs): Outputs {
     recomendacion = 'Cuidado si tenés diabetes o resistencia a la insulina. Combiná con fibra/proteína.';
   }
 
+  const chart = {
+    type: 'scale' as const,
+    marker: ig,
+    markerLabel: 'IG: ' + ig,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'IG bajo', max: 55, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'IG medio', max: 69, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'IG alto', max: Math.max(100, Math.ceil(ig) + 5), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de índice glucémico: bajo hasta 55, medio 56-69, alto 70 o más',
+  };
+
   return {
     indiceGlucemico: ig,
     cargaGlucemica: Number(cg.toFixed(1)),
@@ -99,5 +114,6 @@ export function indiceGlucemicoAlimentos(i: Inputs): Outputs {
     impactoGlucemico: impacto,
     recomendacion,
     resumen: `${alimento} tiene IG ${ig} (${categoriaIG}) y con ${carbs} g de carbos genera CG ${cg.toFixed(1)} (${categoriaCG}). ${impacto}`,
+    _chart: chart,
   };
 }

@@ -20,6 +20,7 @@ export interface Outputs {
   tasaEfectiva: number;
   formula: string;
   explicacion: string;
+  _chart?: any;
 }
 
 // Tabla ISLR personas naturales residentes (en UT)
@@ -78,6 +79,19 @@ export function islrVenezuela(i: Inputs): Outputs {
   const formula = `ISLR = ${enriquecimientoUt.toFixed(0)} UT × alícuota - sustraendo - rebajas = Bs ${impuestoNeto.toFixed(2)}`;
   const explicacion = `Enriquecimiento neto: Bs ${enriquecimientoNeto.toLocaleString()} (${enriquecimientoUt.toFixed(0)} UT). Impuesto bruto: Bs ${impuestoBruto.toFixed(2)}. Rebajas: ${rebajaPersonalUt} UT personal + ${rebajaCargasUt} UT cargas = Bs ${rebajaTotal.toFixed(2)}. ISLR neto: Bs ${impuestoNeto.toFixed(2)} (tasa efectiva ${tasaEfectiva.toFixed(2)}%). Nota: valores calculados con UT = Bs ${ut}.`;
 
+  const teQueda = Math.max(0, enriquecimientoNeto - impuestoNeto);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'ISLR neto', value: Math.round(impuestoNeto) },
+      { label: 'Te queda', value: Math.round(teQueda) },
+    ],
+    prefix: 'Bs ',
+    centerValue: 'Bs ' + Math.round(enriquecimientoNeto).toLocaleString('es-AR'),
+    centerLabel: 'Enriq. neto',
+    ariaLabel: 'Composición del enriquecimiento neto: ISLR vs lo que te queda',
+  };
+
   return {
     enriquecimientoNeto: Math.round(enriquecimientoNeto),
     enriquecimientoUt: Number(enriquecimientoUt.toFixed(2)),
@@ -87,5 +101,6 @@ export function islrVenezuela(i: Inputs): Outputs {
     tasaEfectiva: Number(tasaEfectiva.toFixed(2)),
     formula,
     explicacion,
+    _chart: chart,
   };
 }

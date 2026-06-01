@@ -10,6 +10,7 @@ export interface Outputs {
   clasificacion: string;
   percentil: string;
   mensaje: string;
+  _chart?: any;
 }
 
 export function vo2maxEstimadoSinTest(i: Inputs): Outputs {
@@ -42,10 +43,31 @@ export function vo2maxEstimadoSinTest(i: Inputs): Outputs {
     else { clasificacion = 'Bajo'; percentil = 'Percentil <20%'; }
   }
 
+  // Umbrales ACSM usados arriba, para la escala
+  const u = sexo === 'masculino' ? [30, 38, 45, 52, 60] : [25, 32, 38, 45, 52];
+  const topChart = Math.max(u[4] + 8, Math.ceil(vo2max) + 4);
+  const chart = {
+    type: 'scale' as const,
+    marker: vo2max,
+    markerLabel: 'Tu VO2max: ' + vo2max + ' ml/kg/min',
+    min: 15,
+    unit: '',
+    segments: [
+      { nombre: 'Bajo', max: u[0], color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Bajo el promedio', max: u[1], color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Promedio', max: u[2], color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Bueno', max: u[3], color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Excelente', max: u[4], color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Superior', max: topChart, color: '#a7f3d0', colorDark: '#047857' },
+    ],
+    ariaLabel: 'Escala VO2max ACSM por sexo: de bajo a superior',
+  };
+
   return {
     vo2max,
     clasificacion,
     percentil,
-    mensaje: `VO2max estimado: ${vo2max} ml/kg/min (${clasificacion}). ${percentil} para tu edad y sexo.`
+    mensaje: `VO2max estimado: ${vo2max} ml/kg/min (${clasificacion}). ${percentil} para tu edad y sexo.`,
+    _chart: chart
   };
 }

@@ -15,6 +15,7 @@ export interface DeudaTarjetaPagoMinimoMesesOutputs {
   interesesTotales: number;
   multiplicador: string;
   detalle: string;
+  _chart?: any;
 }
 
 export function deudaTarjetaPagoMinimoMeses(
@@ -75,6 +76,17 @@ export function deudaTarjetaPagoMinimoMeses(
 
   const interesesTotales = totalPagado - saldo;
   const mult = totalPagado / saldo;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: Math.round(saldo) },
+      { label: 'Intereses', value: Math.round(interesesTotales) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(totalPagado).toLocaleString('es-AR'),
+    centerLabel: 'Total pagado',
+    ariaLabel: 'Composición del total pagado: saldo original de la tarjeta más intereses',
+  };
   const anios = Math.floor(meses / 12);
   const mesesRestantes = meses % 12;
   const tiempoStr =
@@ -88,5 +100,6 @@ export function deudaTarjetaPagoMinimoMeses(
     interesesTotales: Math.round(interesesTotales),
     multiplicador: `${mult.toFixed(1)}x el monto original`,
     detalle: `Pagando el mínimo del ${pagoMinPct}%, tardás ${tiempoStr} en cancelar la deuda. Pagás $${Math.round(totalPagado).toLocaleString('es-AR')} en total (${mult.toFixed(1)} veces los $${saldo.toLocaleString('es-AR')} originales).`,
+    _chart: chart,
   };
 }

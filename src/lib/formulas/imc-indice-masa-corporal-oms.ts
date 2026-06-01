@@ -8,6 +8,7 @@ export interface Outputs {
   category: string;
   ideal_weight_range: string;
   weight_to_normal: string;
+  _chart?: any;
 }
 
 // Umbrales de categoría IMC según OMS (vigentes 2026)
@@ -65,10 +66,30 @@ export function compute(i: Inputs): Outputs {
     weight_to_normal = `Necesitas perder aproximadamente ${diff.toFixed(1)} kg para alcanzar el peso normal.`;
   }
 
+  // Gauge de escala IMC: muestra dónde cae el valor del usuario entre las
+  // categorías OMS. Replica el indicador visual de Calculator.net (BMI gauge).
+  const chart = {
+    type: 'scale' as const,
+    ariaLabel: `Escala de IMC: tu valor ${imcRounded} corresponde a "${category}".`,
+    marker: imcRounded,
+    markerLabel: `Tu IMC: ${imcRounded}`,
+    min: 10,
+    unit: '',
+    segments: [
+      { nombre: 'Bajo peso', max: 18.5, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Normal', max: 25, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Sobrepeso', max: 30, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Obesidad I', max: 35, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Obesidad II', max: 40, color: '#e8b4b8', colorDark: '#991b1b' },
+      { nombre: 'Obesidad III', max: Math.max(50, Math.ceil(imc) + 2), color: '#d4a0a8', colorDark: '#7f1d1d' },
+    ],
+  };
+
   return {
     imc: imcRounded,
     category,
     ideal_weight_range,
     weight_to_normal,
+    _chart: chart,
   };
 }

@@ -1,6 +1,6 @@
 /** Precio mensual coworking CABA flex vs fijo comparativa */
 export interface Inputs { espacio: string; tipoPlan: string; diasPorSemana: number; meetingRoomHorasMes: number; }
-export interface Outputs { precioBaseMensual: number; meetingRoomMensual: number; totalMensualArs: number; totalMensualUsd: number; explicacion: string; }
+export interface Outputs { precioBaseMensual: number; meetingRoomMensual: number; totalMensualArs: number; totalMensualUsd: number; explicacion: string; _chart?: any; }
 export function coworkingPrecioMesFlexFijoComparativa(i: Inputs): Outputs {
   const espacio = String(i.espacio || '').toLowerCase();
   const tipo = String(i.tipoPlan || '').toLowerCase();
@@ -21,11 +21,27 @@ export function coworkingPrecioMesFlexFijoComparativa(i: Inputs): Outputs {
   const mr = horasMR * 8500; // ARS/hora ref
   const totalArs = precioBase + mr;
   const usd = totalArs / 1250;
+  // Donut sólo cuando hay ≥2 partes reales (plan base + meeting rooms contratadas)
+  const chart =
+    mr > 0
+      ? {
+          type: 'doughnut' as const,
+          slices: [
+            { label: 'Plan base', value: Number(precioBase.toFixed(0)) },
+            { label: 'Meeting rooms', value: Number(mr.toFixed(0)) },
+          ],
+          prefix: '$',
+          centerValue: '$' + Math.round(totalArs).toLocaleString('es-AR'),
+          centerLabel: 'Total mensual',
+          ariaLabel: 'Composición del costo mensual de coworking: plan base más horas de salas de reunión',
+        }
+      : undefined;
   return {
     precioBaseMensual: Number(precioBase.toFixed(0)),
     meetingRoomMensual: Number(mr.toFixed(0)),
     totalMensualArs: Number(totalArs.toFixed(0)),
     totalMensualUsd: Number(usd.toFixed(2)),
     explicacion: `${espacio} plan ${tipo}: $${precioBase.toLocaleString('es-AR')} ARS/mes + meeting rooms $${mr.toLocaleString('es-AR')}. Total: $${totalArs.toLocaleString('es-AR')} ARS (~USD ${usd.toFixed(0)}).`,
+    _chart: chart,
   };
 }

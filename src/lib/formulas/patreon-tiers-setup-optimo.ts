@@ -1,6 +1,6 @@
 /** Patreon Tiers Setup */
 export interface Inputs { audienciaTotal: number; conversionRate: number; plan: string; }
-export interface Outputs { patronsEstimados: number; setupTiers: string; ingresoBruto: string; ingresoNeto: string; }
+export interface Outputs { patronsEstimados: number; setupTiers: string; ingresoBruto: string; ingresoNeto: string; _chart?: any; }
 
 export function patreonTiersSetupOptimo(i: Inputs): Outputs {
   const aud = Number(i.audienciaTotal);
@@ -16,10 +16,23 @@ export function patreonTiersSetupOptimo(i: Inputs): Outputs {
   const comPct = plan.startsWith('Lite') ? 0.05 : plan.startsWith('Pro') ? 0.08 : 0.12;
   const fees = bruto * 0.029 + patrons * 0.30;
   const neto = bruto * (1 - comPct) - fees;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Seguidor ($5)', value: t1 * 5 },
+      { label: 'Fan ($15)', value: t2 * 15 },
+      { label: 'Super Fan ($50)', value: t3 * 50 },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + Math.round(bruto).toLocaleString('en-US'),
+    centerLabel: 'Bruto/mes',
+    ariaLabel: 'Composición del ingreso bruto mensual por tier de Patreon.',
+  };
   return {
     patronsEstimados: patrons,
     setupTiers: `${t1} a $5 (Seguidor) + ${t2} a $15 (Fan) + ${t3} a $50 (Super Fan)`,
     ingresoBruto: `$${bruto.toLocaleString('en-US', {maximumFractionDigits: 0})} USD`,
     ingresoNeto: `$${neto.toLocaleString('en-US', {maximumFractionDigits: 0})} USD (después de ${(comPct*100)}% Patreon + fees)`,
+    _chart: chart,
   };
 }

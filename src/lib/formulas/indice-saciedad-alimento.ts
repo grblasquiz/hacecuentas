@@ -37,6 +37,7 @@ export interface IndiceSaciedadAlimentoOutputs {
   si: number;
   clasificacion: string;
   comparacion: string;
+  _chart?: any;
 }
 
 export function indiceSaciedadAlimento(inputs: IndiceSaciedadAlimentoInputs): IndiceSaciedadAlimentoOutputs {
@@ -48,9 +49,24 @@ export function indiceSaciedadAlimento(inputs: IndiceSaciedadAlimentoInputs): In
   else if (data.si >= 100) clasif = 'Saciedad media';
   else clasif = 'Poco saciante ⚠️';
   const ratio = (data.si / 100).toFixed(1);
+  const chart = {
+    type: 'scale' as const,
+    marker: data.si,
+    markerLabel: 'IS: ' + data.si,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Poco saciante', max: 99, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Saciedad media', max: 129, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Saciante', max: 199, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Muy saciante', max: Math.max(330, Math.ceil(data.si) + 10), color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: 'Escala de índice de saciedad Holt (pan blanco = 100): poco saciante menos de 100, muy saciante 200 o más',
+  };
   return {
     si: data.si,
     clasificacion: clasif,
     comparacion: `Sacia ${ratio}× el pan blanco (referencia).`,
+    _chart: chart,
   };
 }

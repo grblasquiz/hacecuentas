@@ -15,6 +15,7 @@ export interface Outputs {
   recomendacionFiltro: string;
   deficit: number;
   resumen: string;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -125,6 +126,22 @@ export function compute(i: Inputs): Outputs {
 
   const resumen = pausasFaltantes + consejo20 + consejoPausaLarga + avisoMedico;
 
+  // Gauge: score de riesgo de fatiga visual (síndrome visual informático)
+  const chart = {
+    type: 'scale' as const,
+    marker: riesgoScore,
+    markerLabel: 'Tu score: ' + riesgoScore,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Bajo', max: 3, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Moderado', max: 6, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Alto', max: 10, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Crítico', max: Math.max(16, riesgoScore + 1), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de riesgo de fatiga visual: bajo, moderado, alto y crítico.',
+  };
+
   return {
     pausasMinimas,
     nivelRiesgo,
@@ -133,5 +150,6 @@ export function compute(i: Inputs): Outputs {
     recomendacionFiltro,
     deficit,
     resumen: resumen.trim(),
+    _chart: chart,
   };
 }

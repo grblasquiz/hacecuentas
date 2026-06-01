@@ -14,6 +14,7 @@ export interface Outputs {
   ingresoNetoAnual: number;
   impuestosAnuales: number;
   resumen: string;
+  _chart?: any;
 }
 
 export function freelanceHourlyRate(i: Inputs): Outputs {
@@ -39,6 +40,18 @@ export function freelanceHourlyRate(i: Inputs): Outputs {
 
   const resumen = `Tu tarifa debería ser ${tarifaHora.toFixed(2)}/hora para cobrar ${ingresoDeseado.toLocaleString()} netos al mes (${horasAnuales} horas facturables al año).`;
 
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto', value: Math.round(ingresoNetoAnual) },
+      { label: 'Impuestos', value: Math.round(impuestosAnuales) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(ingresoBrutoAnual).toLocaleString('es-AR'),
+    centerLabel: 'Bruto anual',
+    ariaLabel: 'Composición del ingreso bruto anual freelance: neto que te queda vs impuestos',
+  };
+
   return {
     tarifaHora: Number(tarifaHora.toFixed(2)),
     tarifaDia: Number(tarifaDia.toFixed(2)),
@@ -47,5 +60,6 @@ export function freelanceHourlyRate(i: Inputs): Outputs {
     ingresoNetoAnual: Math.round(ingresoNetoAnual),
     impuestosAnuales: Math.round(impuestosAnuales),
     resumen,
+    _chart: chart,
   };
 }
