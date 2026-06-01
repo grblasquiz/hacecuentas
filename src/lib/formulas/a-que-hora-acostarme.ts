@@ -23,18 +23,26 @@ export function aQueHoraAcostarme(i: Inputs): Outputs {
   const mm = Number(m[2]);
   if (hh > 23 || mm > 59) throw new Error('Hora inválida. Usá formato 24h, ej: 07:00.');
 
-  let dormirse = Number(i.minutosDormirse);
-  if (isNaN(dormirse) || dormirse < 0) dormirse = 15;
+  // Campo opcional: el form manda '' cuando está vacío, y Number('') === 0,
+  // así que un guard que sólo chequea NaN dejaría dormirse=0 (default 15 perdido).
+  const rawDormirse = i.minutosDormirse;
+  let dormirse =
+    rawDormirse === '' || rawDormirse === null || rawDormirse === undefined
+      ? 15
+      : Number(rawDormirse);
+  if (!Number.isFinite(dormirse) || dormirse < 0) dormirse = 15;
   if (dormirse > 90) dormirse = 90;
 
   const despertar = hh * 60 + mm;
   const bed = (c: number) => fmt(despertar - c * CICLO_MIN - dormirse);
 
   return {
+    // El primary muestra solo las dos mejores horas (6 y 5 ciclos), bien grande.
+    // El detalle de horas de sueño va en los cards secundarios, sin jerga.
+    resumen: `${bed(6)} o ${bed(5)}`,
     acostarse6: bed(6),
     acostarse5: bed(5),
     acostarse4: bed(4),
-    resumen: `Para despertarte a las ${fmt(despertar)} descansado, acostate a las ${bed(6)} (9 h) o ${bed(5)} (7½ h). Se suman ${dormirse} min para quedarte dormido.`,
   };
 }
 
