@@ -33,11 +33,11 @@ export function f1PuntosRestantes(i: Inputs): Outputs {
 
   let asegurado = '';
   if (diff > maxPuntos) {
-    asegurado = `Matemáticamente campeón (diferencia ${diff} > ${maxPuntos} max posibles)`;
+    asegurado = `Campeón asegurado`;
   } else if (diff === maxPuntos) {
-    asegurado = `Necesita sumar 1 punto más para asegurar el título`;
+    asegurado = `A 1 punto del título`;
   } else {
-    asegurado = `Campeonato abierto — el rival puede alcanzarlo (faltan ${maxPuntos - diff} pts de margen)`;
+    asegurado = `Campeonato abierto`;
   }
 
   const empate = `Si el líder no suma nada, el rival necesita **${diff + 1} pts** en las ${gps} carreras + ${sprints} sprints que quedan para superarlo.`;

@@ -39,7 +39,7 @@ export function calculadoraProporcionesReceta(inputs: ProporcionesRecetaInputs):
 
   const recetaAjustada = lineas.join('\n');
 
-  const resumen = `Receta original: ${original} porciones → Ajustada: ${deseadas} porciones (factor ${factorStr})`;
+  const resumen = `${original} → ${deseadas} porciones`;
 
   return { factor: factorStr, recetaAjustada, resumen };
 }

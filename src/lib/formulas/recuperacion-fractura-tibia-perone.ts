@@ -61,6 +61,6 @@ export function recuperacionFracturaTibiaPerone(i: Inputs): Outputs {
     retornoCarrera: retCarrera,
     retornoCompeticion: `${compMin}-${compMax} meses para competencia oficial con contacto.`,
     protocolo,
-    mensaje: `${hueso} · ${tipo} · ${trat}: retorno competencia ${compMin}-${compMax} meses. No reemplaza evaluación de traumatólogo/médico deportólogo.`
+    mensaje: `${compMin}-${compMax} meses para competir`
   };
 }

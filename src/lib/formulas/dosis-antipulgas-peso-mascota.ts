@@ -63,6 +63,7 @@ export function dosisAntipulgasPesoMascota(i: Inputs): Outputs {
   if (!peso || peso <= 0 || peso > 80) throw new Error('Ingresá el peso de la mascota (0,5-80 kg)');
 
   let presentacion = '';
+  let presentacionDetalle = '';
   let frecuencia = '';
   let costoMensual = 0;
   let alerta = '';
@@ -71,30 +72,36 @@ export function dosisAntipulgasPesoMascota(i: Inputs): Outputs {
     alerta = 'NUNCA uses un producto de PERRO en gato. La permetrina es MORTAL para gatos. Comprá solo productos específicos para gatos.';
 
     if (tipo === 'pipeta') {
-      presentacion = `Pipeta para GATO ${encontrarRango(peso, RANGOS_GATO_PIPETA)} (Frontline Plus Gato, Revolution Gato, Advantage Gato).`;
+      presentacion = `Pipeta gato ${encontrarRango(peso, RANGOS_GATO_PIPETA)}`;
+      presentacionDetalle = `Pipeta para GATO ${encontrarRango(peso, RANGOS_GATO_PIPETA)} (Frontline Plus Gato, Revolution Gato, Advantage Gato).`;
       frecuencia = 'Cada 30 días.';
       costoMensual = 7000;
     } else if (tipo === 'comprimido') {
-      presentacion = `Comprimido/spot-on para GATO ${encontrarRango(peso, RANGOS_GATO_COMPRIMIDO)} (Bravecto Gato, NexGard Combo Gato).`;
+      presentacion = `Comprimido gato ${encontrarRango(peso, RANGOS_GATO_COMPRIMIDO)}`;
+      presentacionDetalle = `Comprimido/spot-on para GATO ${encontrarRango(peso, RANGOS_GATO_COMPRIMIDO)} (Bravecto Gato, NexGard Combo Gato).`;
       frecuencia = 'Bravecto gato: cada 90 días. NexGard Combo: cada 30 días.';
       costoMensual = 9000;
     } else {
-      presentacion = 'Collar Seresto para gato (talle < 8 kg). No usar collares genéricos en gatos.';
+      presentacion = 'Collar Seresto gato (< 8 kg)';
+      presentacionDetalle = 'Collar Seresto para gato (talle < 8 kg). No usar collares genéricos en gatos.';
       frecuencia = 'Cada 8 meses.';
       costoMensual = 5500;
     }
   } else {
     // Perro
     if (tipo === 'pipeta') {
-      presentacion = `Pipeta para perro ${encontrarRango(peso, RANGOS_PERRO_PIPETA)} (Frontline Plus, Advantage, Revolution).`;
+      presentacion = `Pipeta perro ${encontrarRango(peso, RANGOS_PERRO_PIPETA)}`;
+      presentacionDetalle = `Pipeta para perro ${encontrarRango(peso, RANGOS_PERRO_PIPETA)} (Frontline Plus, Advantage, Revolution).`;
       frecuencia = 'Cada 30 días. No bañar 48 h antes ni después.';
       costoMensual = peso <= 10 ? 7000 : peso <= 25 ? 9000 : 12000;
     } else if (tipo === 'comprimido') {
-      presentacion = `Comprimido oral para perro ${encontrarRango(peso, RANGOS_PERRO_COMPRIMIDO)} (NexGard cada 30 días o Bravecto cada 90 días).`;
+      presentacion = `Comprimido perro ${encontrarRango(peso, RANGOS_PERRO_COMPRIMIDO)}`;
+      presentacionDetalle = `Comprimido oral para perro ${encontrarRango(peso, RANGOS_PERRO_COMPRIMIDO)} (NexGard cada 30 días o Bravecto cada 90 días).`;
       frecuencia = 'NexGard/Simparica: cada 30 días. Bravecto: cada 90 días.';
       costoMensual = peso <= 10 ? 10000 : peso <= 25 ? 14000 : 18000;
     } else {
-      presentacion = peso > 8
+      presentacion = peso > 8 ? 'Collar Seresto o Scalibor' : 'Collar Seresto perro (< 8 kg)';
+      presentacionDetalle = peso > 8
         ? 'Collar Seresto para perro > 8 kg o Scalibor (talle único).'
         : 'Collar Seresto para perro < 8 kg.';
       frecuencia = 'Seresto: cada 8 meses. Scalibor: cada 6 meses.';
@@ -107,6 +114,6 @@ export function dosisAntipulgasPesoMascota(i: Inputs): Outputs {
     frecuencia,
     costoMensual,
     alerta,
-    detalle: `${especie === 'gato' ? 'Gato' : 'Perro'} de ${peso} kg → ${presentacion} ${frecuencia} Costo estimado: ~$${costoMensual.toLocaleString('es-AR')}/mes.${alerta ? ' ⚠️ ' + alerta : ''}`,
+    detalle: `${especie === 'gato' ? 'Gato' : 'Perro'} de ${peso} kg → ${presentacionDetalle} ${frecuencia} Costo estimado: ~$${costoMensual.toLocaleString('es-AR')}/mes.${alerta ? ' ⚠️ ' + alerta : ''}`,
   };
 }

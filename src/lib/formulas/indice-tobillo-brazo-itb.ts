@@ -48,21 +48,27 @@ export function indiceTobilloBrazoItb(i: Inputs): Outputs {
 
   const itbMenor = Math.min(itbDer, itbIzq);
   let interpretacion = '';
+  let detalle = '';
   let requiereEstudios = false;
 
   if (itbMenor >= 0.9 && itbMenor <= 1.4) {
-    interpretacion = 'ITB normal en ambas piernas. Sin evidencia de EAP.';
+    interpretacion = 'ITB normal';
+    detalle = 'ITB normal en ambas piernas. Sin evidencia de EAP.';
   } else if (itbMenor >= 0.7) {
-    interpretacion = 'Sugerencia de EAP leve. Considerá control cardiovascular y factores de riesgo (tabaquismo, diabetes).';
+    interpretacion = 'EAP leve';
+    detalle = 'Sugerencia de EAP leve. Considerá control cardiovascular y factores de riesgo (tabaquismo, diabetes).';
     requiereEstudios = true;
   } else if (itbMenor >= 0.4) {
-    interpretacion = 'EAP moderada. Consultá con vascular periférico; puede haber claudicación intermitente.';
+    interpretacion = 'EAP moderada';
+    detalle = 'EAP moderada. Consultá con vascular periférico; puede haber claudicación intermitente.';
     requiereEstudios = true;
   } else if (itbMenor < 0.4) {
-    interpretacion = 'EAP severa / isquemia crítica. Derivación urgente a cirugía vascular.';
+    interpretacion = 'EAP severa';
+    detalle = 'EAP severa / isquemia crítica. Derivación urgente a cirugía vascular.';
     requiereEstudios = true;
   } else {
-    interpretacion = 'ITB > 1.4: arterias no compresibles (frecuente en diabetes o ERC). Requiere ecodoppler.';
+    interpretacion = 'Arterias no compresibles';
+    detalle = 'ITB > 1.4: arterias no compresibles (frecuente en diabetes o ERC). Requiere ecodoppler.';
     requiereEstudios = true;
   }
 
@@ -91,7 +97,7 @@ export function indiceTobilloBrazoItb(i: Inputs): Outputs {
     categoriaIzquierdo: catIzq,
     interpretacion,
     requiereEstudios,
-    resumen: `ITB derecho ${itbDer.toFixed(2)} (${catDer}), izquierdo ${itbIzq.toFixed(2)} (${catIzq}). ${interpretacion}`,
+    resumen: `ITB derecho ${itbDer.toFixed(2)} (${catDer}), izquierdo ${itbIzq.toFixed(2)} (${catIzq}). ${detalle}`,
     _chart: chart,
   };
 }

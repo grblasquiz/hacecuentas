@@ -1,6 +1,6 @@
 /** Sugerencias de regalo según presupuesto */
 export interface Inputs { presupuesto: number; ocasion?: string; persona?: string; }
-export interface Outputs { sugerencias: string; rangoGasto: string; mensaje: string; }
+export interface Outputs { sugerencias: string; listaSugerencias: string; rangoGasto: string; mensaje: string; }
 
 const REGALOS: Record<string, Record<string, string[]>> = {
   bajo: {
@@ -43,7 +43,9 @@ export function regaloIdealPresupuesto(i: Inputs): Outputs {
   const rangoLabels: Record<string,string> = { bajo:'Hasta $15.000', medio:'$15.000 - $50.000', alto:'$50.000 - $150.000', premium:'Más de $150.000' };
 
   const ideas = REGALOS[rango]?.[persona] || REGALOS[rango]?.pareja || ['Experiencia','Gift card'];
-  const sugerencias = ideas.map((r, i) => `${i+1}. ${r}`).join('\n');
+  const listaSugerencias = ideas.map((r, i) => `${i+1}. ${r}`).join('\n');
+  // Titular corto: conteo (la lista completa queda en "listaSugerencias")
+  const sugerencias = `${ideas.length} ideas para tu presupuesto`;
 
   const tips: Record<string,string> = {
     cumpleanos: 'Para cumpleaños, personalizá el regalo con algo que demuestre que escuchaste sus gustos.',
@@ -56,6 +58,7 @@ export function regaloIdealPresupuesto(i: Inputs): Outputs {
 
   return {
     sugerencias,
+    listaSugerencias,
     rangoGasto: rangoLabels[rango],
     mensaje: tips[ocasion] || 'Elegí algo que demuestre que pensaste en la persona.'
   };

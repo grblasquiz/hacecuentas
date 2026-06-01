@@ -17,19 +17,19 @@ export function formulaCitacionApa(i: Inputs): Outputs {
 
   switch (i.tipo) {
     case 'libro':
-      referencia = `${apellido}, ${inicial} (${ano}). *${titulo}*. ${fuente}.`;
+      referencia = `${apellido}, ${inicial} (${ano}). ${titulo}. ${fuente}.`;
       notas = 'Si hay edición: agregar (Xª ed.) después del título. Si hay DOI, agregalo al final.';
       break;
     case 'articulo':
-      referencia = `${apellido}, ${inicial} (${ano}). ${titulo}. *${fuente}*.`;
+      referencia = `${apellido}, ${inicial} (${ano}). ${titulo}. ${fuente}.`;
       notas = 'Formato completo: Apellido, I. (Año). Título artículo. *Revista*, *vol*(núm), pp-pp. https://doi.org/xxx';
       break;
     case 'web':
-      referencia = `${apellido}, ${inicial} (${ano}). *${titulo}*. ${fuente}.`;
+      referencia = `${apellido}, ${inicial} (${ano}). ${titulo}. ${fuente}.`;
       notas = 'Para webs sin autor: usar el título en posición de autor. Sin fecha: usar (s.f.).';
       break;
     default:
-      referencia = `${apellido}, ${inicial} (${ano}). *${titulo}*. ${fuente}.`;
+      referencia = `${apellido}, ${inicial} (${ano}). ${titulo}. ${fuente}.`;
       notas = 'Verificá el formato según el tipo específico de fuente.';
   }
 

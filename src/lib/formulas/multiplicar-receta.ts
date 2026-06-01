@@ -9,6 +9,7 @@ export interface Outputs {
   porcionesOriginal: number;
   porcionesDeseadas: number;
   ingredientesAjustados: string;
+  listaAjustada: string;
   advertencia: string;
 }
 
@@ -44,11 +45,16 @@ export function multiplicarReceta(i: Inputs): Outputs {
   if (factor > 3) adv = 'Factor >3x: verificá que la cocción y los moldes sean adecuados.';
   else if (factor < 0.33) adv = 'Factor muy chico: algunos ingredientes (huevos, levadura) pueden perder precisión.';
 
+  const factorTxt = factor % 1 === 0 ? `×${factor}` : `×${factor.toFixed(2).replace(/\.?0+$/, '')}`;
+  const n = ajustados.length;
+  const resumen = `${n} ingrediente${n === 1 ? '' : 's'} ${factorTxt}`;
+
   return {
     factor: Number(factor.toFixed(4)),
     porcionesOriginal: orig,
     porcionesDeseadas: des,
-    ingredientesAjustados: ajustados.join('\n'),
+    ingredientesAjustados: resumen,
+    listaAjustada: ajustados.join('\n'),
     advertencia: adv,
   };
 }

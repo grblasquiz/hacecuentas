@@ -166,20 +166,11 @@ export function compute(i: Inputs): Outputs {
   savingsPercent = expensiveCost > 0 ? ((expensiveCost - cheaperCost) / expensiveCost) * 100 : 0;
 
   if (score >= 6) {
-    recommendation = `Fine-tuning recomendado (score ${score}/8). ` +
-      `Es ${savingsPercent.toFixed(0)}% más barato que RAG en este escenario ` +
-      `(USD ${ftTotalMonthly.toFixed(2)}/mes vs USD ${ragTotalMonthly.toFixed(2)}/mes). ` +
-      `Tus datos son estables y el perfil de tarea favorece el modelo especializado.`;
+    recommendation = 'Conviene Fine-tuning';
   } else if (score <= 3) {
-    recommendation = `RAG recomendado (score Fine-tune: ${score}/8). ` +
-      `Es ${savingsPercent.toFixed(0)}% más barato que fine-tuning en este escenario ` +
-      `(USD ${ragTotalMonthly.toFixed(2)}/mes vs USD ${ftTotalMonthly.toFixed(2)}/mes). ` +
-      `Tus datos cambian con frecuencia o el volumen es bajo: RAG es más flexible y económico.`;
+    recommendation = 'Conviene RAG';
   } else {
-    recommendation = `Caso intermedio (score Fine-tune: ${score}/8). ` +
-      `Fine-tune: USD ${ftTotalMonthly.toFixed(2)}/mes | RAG: USD ${ragTotalMonthly.toFixed(2)}/mes. ` +
-      `La opción más barata por costo puro es ${cheaperOption} (${savingsPercent.toFixed(0)}% menos). ` +
-      `Considerá también latencia, complejidad operativa y frecuencia de actualización.`;
+    recommendation = `Empate · ${cheaperOption} más barato`;
   }
 
   return {

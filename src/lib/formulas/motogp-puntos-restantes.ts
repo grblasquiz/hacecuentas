@@ -31,11 +31,11 @@ export function motogpPuntosRestantes(i: Inputs): Outputs {
 
   let asegurado = '';
   if (diff > maxPuntos) {
-    asegurado = `Matemáticamente campeón (diferencia ${diff} > ${maxPuntos} max posibles)`;
+    asegurado = `Sí, campeón matemático`;
   } else if (diff === maxPuntos) {
-    asegurado = `Necesita sumar 1 punto más para asegurar el título`;
+    asegurado = `Falta 1 punto`;
   } else {
-    asegurado = `El campeonato sigue abierto — el rival puede alcanzarlo con ${maxPuntos - diff} pts de diferencia`;
+    asegurado = `No, campeonato abierto`;
   }
 
   const empate = `Si el líder no suma más, el rival necesita **${diff + 1} pts** en las ${gps + sprints} competiciones restantes para superarlo.`;

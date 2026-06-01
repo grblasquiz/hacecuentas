@@ -57,6 +57,6 @@ export function recuperacionIsquiotibial(i: Inputs): Outputs {
     retornoEntrenamiento: retEntreno,
     retornoCompeticion: retComp,
     protocolo,
-    mensaje: `Isquio ${grado} ${loc}: ${minSem}-${maxSem} semanas. No reemplaza evaluación de médico deportólogo/kinesiólogo.`
+    mensaje: `${minSem}-${maxSem} semanas`
   };
 }

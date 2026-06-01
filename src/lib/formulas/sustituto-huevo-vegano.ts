@@ -91,6 +91,14 @@ export function sustitutoHuevoVegano(i: Inputs): Outputs {
 
   const escalado = parseCantidad(s.porHuevo, n);
 
+  // Titular corto: sólo la cantidad escalada, sin parentesis ni instrucciones de reposo/batido.
+  const porHuevoCorto = s.porHuevo
+    .replace(/\s*\([^)]*\)/g, '')
+    .replace(/,\s*reposar[^,]*$/i, '')
+    .replace(/\.\s*Batir[^.]*\.?$/i, '')
+    .trim();
+  const escaladoCorto = parseCantidad(porHuevoCorto, n).replace(/\s+/g, ' ').trim();
+
   // Recomendación cruzada
   let recomendacion = '';
   if (proposito === 'leudante' && key !== 'polvoHornear') {
@@ -106,7 +114,7 @@ export function sustitutoHuevoVegano(i: Inputs): Outputs {
   return {
     sustitutoNombre: s.nombre,
     porHuevoUnidad: `Por 1 huevo: ${s.porHuevo}`,
-    totalNecesario: `Para ${n} huevo(s): ${escalado}`,
+    totalNecesario: escaladoCorto,
     mejorPara: s.mejorPara,
     recomendacion,
     resumen: `Reemplazar ${n} huevo(s) con ${s.nombre}: ${escalado}. ${s.mejorPara}.`,

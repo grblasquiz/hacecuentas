@@ -7,6 +7,7 @@ export interface Inputs {
 
 export interface Outputs {
   forma_recomendada: string;
+  por_que: string;
   dosis_mg: number;
   dosis_comprimido_ref: string;
   biodisponibilidad: number;
@@ -74,6 +75,7 @@ export function compute(i: Inputs): Outputs {
   if (peso <= 0 || peso > 300) {
     return {
       forma_recomendada: "Ingresá un peso válido (1–300 kg)",
+      por_que: "",
       dosis_mg: 0,
       dosis_comprimido_ref: "",
       biodisponibilidad: 0,
@@ -135,7 +137,8 @@ export function compute(i: Inputs): Outputs {
   }
 
   return {
-    forma_recomendada: `${formaInfo.nombre} — ${formaInfo.descripcion}`,
+    forma_recomendada: formaInfo.nombre,
+    por_que: formaInfo.descripcion,
     dosis_mg: dosisMg,
     dosis_comprimido_ref: dosisComprimidoRef,
     biodisponibilidad: formaInfo.biodisponibilidad,

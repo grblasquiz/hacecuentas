@@ -9,6 +9,7 @@ export interface Outputs {
   conversion: string;
   cumpleNormativa: string;
   sancionPorAdelantamiento: string;
+  zonaDetalle: string;
   mensaje: string;
 }
 
@@ -44,11 +45,14 @@ export function distanciaBarreraTiroLibre(i: Inputs): Outputs {
 
   const sancion = 'IFAB: si un jugador defensor adelanta su posición de barrera antes de la ejecución, el árbitro advierte y, en caso de reincidencia o conducta antideportiva, amonesta con amarilla. En tiros libres cercanos al área se usa spray evanescente para marcar los 9.15 m.';
 
+  const titular = cumple ? 'Cumple' : 'No cumple';
+
   return {
     distanciaReglamento: `9.15 m (10 yardas / 30 pies) según IFAB Laws of the Game 2025-2026 (Law 13).`,
     conversion: `${reglamento} m = ${reglamentoYardas} yd = ${reglamentoPies} ft = ${reglamento * 100} cm.`,
     cumpleNormativa: cumpleTxt,
     sancionPorAdelantamiento: sancion,
-    mensaje: `${zonaInfo[zona] || zonaInfo['media-cancha']} Ingresaste ${d} ${unidad} (${metros.toFixed(2)} m). ${cumpleTxt}`
+    zonaDetalle: `${zonaInfo[zona] || zonaInfo['media-cancha']} Ingresaste ${d} ${unidad} (${metros.toFixed(2)} m). ${cumpleTxt}`,
+    mensaje: titular
   };
 }

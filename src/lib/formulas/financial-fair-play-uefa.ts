@@ -47,7 +47,9 @@ export function financialFairPlayUefa(i: Inputs): Outputs {
   if (!cumpleRatio) problemas.push(`squad ratio ${ratio.toFixed(1)}% > 70%`);
   if (!cumpleSpons) problemas.push('no acreditó sponsor test');
 
-  const diagnostico = problemas.length === 0 ? 'Cumple UEFA Financial Sustainability. Sin sanción.' : `Incumple: ${problemas.join('; ')}.`;
+  const diagnostico = problemas.length === 0
+    ? 'Cumple. Sin sanción'
+    : (problemas.length === 1 ? 'Incumple 1 regla UEFA' : `Incumple ${problemas.length} reglas UEFA`);
 
   return {
     deficitPermitidoMax: deficitMaxPermitido,

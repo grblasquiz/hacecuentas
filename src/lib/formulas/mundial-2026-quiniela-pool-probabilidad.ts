@@ -98,7 +98,7 @@ export function mundial2026QuinielaPoolProbabilidad(i: Inputs): Outputs {
     : 'Ingresá una apuesta para calcular Expected Value en USD.';
 
   return {
-    probabilidadGanar: `**${probaPct}% de quedar primero** en un pool de ${N} personas con ${P} partidos. Baseline (todos iguales): ${(100 / N).toFixed(1)}%.`,
+    probabilidadGanar: `${probaPct}%`,
     aciertosEsperados: `**${aciertosEsp.toFixed(1)} aciertos** esperados de ${P} partidos (${(myRate * 100).toFixed(0)}% acierto). El pool promedio acertaría ${aciertosPoolAvg.toFixed(1)}.`,
     rankingEstimado: `Ranking estimado: **puesto ${rankingEst}** de ${N}.${rankingEst === 1 ? ' Sos el favorito matemático del pool.' : ''}`,
     expectedValue: evTxt,

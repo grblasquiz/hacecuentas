@@ -143,7 +143,7 @@ export function mundial2026CamisetaPrecioComparador(i: Inputs): Outputs {
   const resumen = `Camiseta ${sel.label} ${MARCA_LABEL[sel.marca]} ${MODELO_LABEL[modKey]} en ${pais.label}${personaliza ? ' con personalización' : ''}: **USD ${precioUSD.toFixed(2)}**. ${precioLocalTxt} ${compHist}`;
 
   return {
-    precioUSD: `**USD ${precioUSD.toFixed(2)}** total${personaliza ? ' (incluye +USD 25 personalización)' : ''}. Marca: ${MARCA_LABEL[sel.marca]} · Modelo: ${MODELO_LABEL[modKey]} · Origen: ${pais.label}.`,
+    precioUSD: `USD ${precioUSD.toFixed(0)}`,
     precioLocal: precioLocalTxt,
     comparativaHistorica: compHist,
     tipDeAhorro: tip,

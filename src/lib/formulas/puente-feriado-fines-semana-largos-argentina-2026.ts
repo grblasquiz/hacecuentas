@@ -5,6 +5,7 @@ export interface Inputs {
 
 export interface Outputs {
   bridgeList: string;
+  bridgeDetalle: string;
   totalDays: number;
   recommendation: string;
 }
@@ -117,8 +118,14 @@ export function compute(i: Inputs): Outputs {
     recommendation = "Año seleccionado: " + year + ". Total de días de descanso: " + totalDays + ". Consulta con tu empleador sobre trasladables en tu provincia.";
   }
 
+  const detalle = bridgeText.trim();
+  const resumen = filtered.length > 0
+    ? `${filtered.length} períodos largos`
+    : "Sin puentes en el filtro";
+
   return {
-    bridgeList: bridgeText.trim() || "Sin puentes en el filtro seleccionado.",
+    bridgeList: resumen,
+    bridgeDetalle: detalle || "Sin puentes en el filtro seleccionado.",
     totalDays: totalDays,
     recommendation: recommendation
   };

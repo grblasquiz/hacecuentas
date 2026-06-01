@@ -32,23 +32,29 @@ export function vacunasGatoCalendarioGatito(i: Inputs): Outputs {
   ];
 
   let proxima = '';
+  let proximaLarga = '';
   let alerta = '';
 
   if (em < 2) {
-    proxima = 'A las 8-9 semanas: 1° Triple Felina (FVRCP).';
+    proxima = '1° Triple Felina';
+    proximaLarga = 'A las 8-9 semanas: 1° Triple Felina (FVRCP).';
     if (!yaVacunado) {
       alerta = 'Tu gatito aún no tiene edad para vacunarse. Mantenelo indoor y sin contacto con gatos de origen desconocido.';
     }
   } else if (em < 3) {
-    proxima = yaVacunado
+    proxima = yaVacunado ? '2° Triple Felina' : '1° Triple Felina (atrasada)';
+    proximaLarga = yaVacunado
       ? 'A las 12 semanas: 2° Triple Felina' + (saleAfuera ? ' + 1° FeLV.' : '.')
       : '1° Triple Felina (FVRCP) — debería haberse puesto a las 8-9 semanas. Aplicar ahora.';
   } else if (em < 4) {
-    proxima = 'A las 16 semanas: 3° Triple Felina + Antirrábica obligatoria' + (saleAfuera ? ' + 2° FeLV.' : '.');
+    proxima = '3° Triple + Antirrábica';
+    proximaLarga = 'A las 16 semanas: 3° Triple Felina + Antirrábica obligatoria' + (saleAfuera ? ' + 2° FeLV.' : '.');
   } else if (em < 12) {
-    proxima = 'Al año de vida: refuerzo anual (Triple + Antirrábica' + (saleAfuera ? ' + FeLV).' : ').');
+    proxima = 'Refuerzo anual al año';
+    proximaLarga = 'Al año de vida: refuerzo anual (Triple + Antirrábica' + (saleAfuera ? ' + FeLV).' : ').');
   } else {
-    proxima = 'Refuerzo anual: Antirrábica (obligatoria) + Triple felina (cada 1-3 años según protocolo).';
+    proxima = 'Refuerzo anual';
+    proximaLarga = 'Refuerzo anual: Antirrábica (obligatoria) + Triple felina (cada 1-3 años según protocolo).';
   }
 
   if (em > 6 && !yaVacunado) {
@@ -65,6 +71,6 @@ export function vacunasGatoCalendarioGatito(i: Inputs): Outputs {
     calendario,
     alerta,
     necesitaFeLV,
-    detalle: `Tu gato tiene ${em.toFixed(1)} meses. Próxima vacuna: ${proxima}${alerta ? ' ' + alerta : ''}`,
+    detalle: `Tu gato tiene ${em.toFixed(1)} meses. Próxima vacuna: ${proximaLarga}${alerta ? ' ' + alerta : ''}`,
   };
 }

@@ -52,6 +52,6 @@ export function pubalgiaRecuperacion(i: Inputs): Outputs {
     retornoEntrenamiento: `${Math.round(minSem * 0.7)}-${Math.round(maxSem * 0.75)} semanas (entrenamiento sin contacto).`,
     retornoCompeticion: `${minSem}-${maxSem} semanas para competencia oficial.`,
     tasaExito: tasa,
-    mensaje: `Pubalgia ${abordaje} ${cronicidad}: ${minSem}-${maxSem} semanas. No reemplaza evaluación de médico deportólogo/traumatólogo especialista en ingle.`
+    mensaje: `${minSem}-${maxSem} semanas`
   };
 }

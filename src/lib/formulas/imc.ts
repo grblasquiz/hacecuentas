@@ -7,11 +7,119 @@
  *  - edad ≥ 65 → corre rango saludable a 23–28 (OMS para adultos mayores, evita sarcopenia).
  *  - perfil "atleta" → agrega warning de sobreestimación si IMC cae en sobrepeso/obesidad.
  *  - sistema "imperial" → convierte lb→kg y in→cm antes del cálculo; devuelve pesos en lb.
+ *
+ * i18n: la calc tiene versión en inglés (/en/bmi-calculator). El runtime inyecta
+ * `inputs.__lang`. Los strings de salida (categoría, diferencia, riesgo, interpretación
+ * y labels del gráfico) se devuelven ya traducidos según el idioma — el dict client-side
+ * (formula-strings-i18n.json) no cubre los dinámicos ni el gráfico, así que la fuente de
+ * verdad para el idioma es esta función. Patrón: igual que sueno-bebe-horas.ts.
  */
 
 const LB_TO_KG = 0.4536;
 const IN_TO_CM = 2.54;
 const KG_TO_LB = 1 / LB_TO_KG;
+
+type Lang = 'es' | 'en';
+
+interface Strings {
+  bajoPeso: string;
+  bajoPesoMayor: string;
+  normal: string;
+  normalMayor: string;
+  sobrepeso: string;
+  obesidad1: string;
+  obesidad2: string;
+  obesidad3: string;
+  dentroNormal: string;
+  faltan: (s: string) => string;
+  exceso: (s: string) => string;
+  riesgoBajo: string;
+  riesgoNormal: string;
+  riesgoAumentado: string;
+  riesgoAlto: string;
+  interpAtleta: string;
+  interpMayor: string;
+  interpWhtr: string;
+  errPeso: string;
+  errAltura: string;
+  markerLabel: (v: number) => string;
+  ariaLabel: (v: number, cat: string) => string;
+  segBajo: string;
+  segNormal: string;
+  segSobrepeso: string;
+  segOb1: string;
+  segOb2: string;
+  segOb3: string;
+}
+
+const STRINGS: Record<Lang, Strings> = {
+  es: {
+    bajoPeso: 'Bajo peso',
+    bajoPesoMayor: 'Bajo peso para adulto mayor',
+    normal: 'Peso normal ✅',
+    normalMayor: 'Peso normal (ajustado >65) ✅',
+    sobrepeso: 'Sobrepeso',
+    obesidad1: 'Obesidad grado I',
+    obesidad2: 'Obesidad grado II',
+    obesidad3: 'Obesidad grado III',
+    dentroNormal: 'Estás dentro del peso normal',
+    faltan: (s) => `Te faltan ${s} para el peso normal`,
+    exceso: (s) => `Tenés ${s} por encima del peso normal`,
+    riesgoBajo: 'Bajo (cintura proporcionalmente fina, descartar bajo peso)',
+    riesgoNormal: 'Normal ✅',
+    riesgoAumentado: 'Aumentado — considerá reducir grasa abdominal',
+    riesgoAlto: 'Alto — consultá con un profesional de la salud',
+    interpAtleta:
+      'Marcaste "atleta": el IMC sobreestima el riesgo cuando hay mucha masa muscular. Confirmá con porcentaje de grasa corporal o relación cintura-cadera antes de actuar sobre este número.',
+    interpMayor:
+      'Aplicamos rango ajustado 23–28 (OMS para ≥65 años). Mantener algo más de peso protege frente a la sarcopenia.',
+    interpWhtr:
+      'Aunque el IMC da normal, tu WHtR está sobre 0.5: hay grasa abdominal de riesgo aunque el peso total parezca bien.',
+    errPeso: 'Ingresá un peso válido',
+    errAltura: 'Ingresá una altura válida',
+    markerLabel: (v) => `Tu IMC: ${v}`,
+    ariaLabel: (v, cat) => `Escala de IMC: tu valor ${v} corresponde a "${cat}".`,
+    segBajo: 'Bajo peso',
+    segNormal: 'Normal',
+    segSobrepeso: 'Sobrepeso',
+    segOb1: 'Obesidad I',
+    segOb2: 'Obesidad II',
+    segOb3: 'Obesidad III',
+  },
+  en: {
+    bajoPeso: 'Underweight',
+    bajoPesoMayor: 'Underweight for older adults',
+    normal: 'Normal weight ✅',
+    normalMayor: 'Normal weight (adjusted >65) ✅',
+    sobrepeso: 'Overweight',
+    obesidad1: 'Obesity class I',
+    obesidad2: 'Obesity class II',
+    obesidad3: 'Obesity class III',
+    dentroNormal: "You're at a healthy weight",
+    faltan: (s) => `You need to gain about ${s} to reach a healthy weight`,
+    exceso: (s) => `You're about ${s} over a healthy weight`,
+    riesgoBajo: 'Low (proportionally slim waist; rule out underweight)',
+    riesgoNormal: 'Normal ✅',
+    riesgoAumentado: 'Increased — consider reducing abdominal fat',
+    riesgoAlto: 'High — consult a healthcare professional',
+    interpAtleta:
+      'You selected "athlete": BMI overestimates risk when there is a lot of muscle mass. Confirm with body fat percentage or waist-to-hip ratio before acting on this number.',
+    interpMayor:
+      'We applied the adjusted 23–28 range (WHO for ages ≥65). Carrying a bit more weight protects against sarcopenia.',
+    interpWhtr:
+      'Even though your BMI reads normal, your WHtR is above 0.5: there is risky abdominal fat even if your total weight looks fine.',
+    errPeso: 'Enter a valid weight',
+    errAltura: 'Enter a valid height',
+    markerLabel: (v) => `Your BMI: ${v}`,
+    ariaLabel: (v, cat) => `BMI scale: your value ${v} falls in "${cat}".`,
+    segBajo: 'Underweight',
+    segNormal: 'Normal',
+    segSobrepeso: 'Overweight',
+    segOb1: 'Obesity I',
+    segOb2: 'Obesity II',
+    segOb3: 'Obesity III',
+  },
+};
 
 export interface IMCInputs {
   peso: number;
@@ -20,6 +128,7 @@ export interface IMCInputs {
   edad?: number;
   perfil?: 'estandar' | 'atleta';
   sistema?: 'metric' | 'imperial';
+  __lang?: string;
 }
 
 export interface IMCOutputs {
@@ -35,6 +144,9 @@ export interface IMCOutputs {
 }
 
 export function imc(inputs: IMCInputs): IMCOutputs {
+  const lang: Lang = inputs.__lang === 'en' ? 'en' : 'es';
+  const S = STRINGS[lang];
+
   const sistema = inputs.sistema === 'imperial' ? 'imperial' : 'metric';
   const isImperial = sistema === 'imperial';
 
@@ -42,8 +154,8 @@ export function imc(inputs: IMCInputs): IMCOutputs {
   let alturaCm = Number(inputs.altura);
   let cintura = inputs.cintura ? Number(inputs.cintura) : 0;
 
-  if (!peso || peso <= 0) throw new Error('Ingresá un peso válido');
-  if (!alturaCm || alturaCm <= 0) throw new Error('Ingresá una altura válida');
+  if (!peso || peso <= 0) throw new Error(S.errPeso);
+  if (!alturaCm || alturaCm <= 0) throw new Error(S.errAltura);
 
   if (isImperial) {
     peso = peso * LB_TO_KG;
@@ -61,12 +173,12 @@ export function imc(inputs: IMCInputs): IMCOutputs {
   const rangoMax = esAdultoMayor ? 28 : 24.9;
 
   let categoria = '';
-  if (imcValue < 18.5) categoria = 'Bajo peso';
-  else if (imcValue < 25) categoria = esAdultoMayor && imcValue < 23 ? 'Bajo peso para adulto mayor' : 'Peso normal ✅';
-  else if (imcValue < 30) categoria = esAdultoMayor && imcValue <= 28 ? 'Peso normal (ajustado >65) ✅' : 'Sobrepeso';
-  else if (imcValue < 35) categoria = 'Obesidad grado I';
-  else if (imcValue < 40) categoria = 'Obesidad grado II';
-  else categoria = 'Obesidad grado III';
+  if (imcValue < 18.5) categoria = S.bajoPeso;
+  else if (imcValue < 25) categoria = esAdultoMayor && imcValue < 23 ? S.bajoPesoMayor : S.normal;
+  else if (imcValue < 30) categoria = esAdultoMayor && imcValue <= 28 ? S.normalMayor : S.sobrepeso;
+  else if (imcValue < 35) categoria = S.obesidad1;
+  else if (imcValue < 40) categoria = S.obesidad2;
+  else categoria = S.obesidad3;
 
   const pesoIdealMin = rangoMin * alturaM * alturaM;
   const pesoIdealMax = rangoMax * alturaM * alturaM;
@@ -80,11 +192,11 @@ export function imc(inputs: IMCInputs): IMCOutputs {
 
   let diferencia = '';
   if (peso < pesoIdealMin) {
-    diferencia = `Te faltan ${fmtPeso(pesoIdealMin - peso)} para el peso normal`;
+    diferencia = S.faltan(fmtPeso(pesoIdealMin - peso));
   } else if (peso > pesoIdealMax) {
-    diferencia = `Tenés ${fmtPeso(peso - pesoIdealMax)} por encima del peso normal`;
+    diferencia = S.exceso(fmtPeso(peso - pesoIdealMax));
   } else {
-    diferencia = 'Estás dentro del peso normal';
+    diferencia = S.dentroNormal;
   }
 
   // WHtR (Waist-to-Height Ratio) — Lancet 2024 lo posiciona como mejor predictor
@@ -96,48 +208,43 @@ export function imc(inputs: IMCInputs): IMCOutputs {
     const ratio = cintura / alturaCm;
     whtr = ratio.toFixed(2);
     if (ratio < 0.4) {
-      riesgoCardiometabolico = 'Bajo (cintura proporcionalmente fina, descartar bajo peso)';
+      riesgoCardiometabolico = S.riesgoBajo;
     } else if (ratio < 0.5) {
-      riesgoCardiometabolico = 'Normal ✅';
+      riesgoCardiometabolico = S.riesgoNormal;
     } else if (ratio < 0.6) {
-      riesgoCardiometabolico = 'Aumentado — considerá reducir grasa abdominal';
+      riesgoCardiometabolico = S.riesgoAumentado;
     } else {
-      riesgoCardiometabolico = 'Alto — consultá con un profesional de la salud';
+      riesgoCardiometabolico = S.riesgoAlto;
     }
   }
 
   // Interpretación contextual: combina categoría + edad + perfil + WHtR.
   const partes: string[] = [];
   if (inputs.perfil === 'atleta' && imcValue >= 25) {
-    partes.push(
-      `Marcaste "atleta": el IMC sobreestima el riesgo cuando hay mucha masa muscular. Confirmá con porcentaje de grasa corporal o relación cintura-cadera antes de actuar sobre este número.`
-    );
+    partes.push(S.interpAtleta);
   }
   if (esAdultoMayor) {
-    partes.push(
-      `Aplicamos rango ajustado 23–28 (OMS para ≥65 años). Mantener algo más de peso protege frente a la sarcopenia.`
-    );
+    partes.push(S.interpMayor);
   }
   if (cintura > 0 && imcValue >= 18.5 && imcValue < 25 && cintura / alturaCm >= 0.5) {
-    partes.push(
-      `Aunque el IMC da normal, tu WHtR está sobre 0.5: hay grasa abdominal de riesgo aunque el peso total parezca bien.`
-    );
+    partes.push(S.interpWhtr);
   }
   const interpretacion = partes.length > 0 ? partes.join(' ') : '—';
 
   const imcRedondeado = Number(imcValue.toFixed(2));
+  const categoriaLimpia = categoria.replace(/[^\p{L}\p{N}\s]/gu, '').trim();
   const chart = {
     type: 'scale' as const,
-    ariaLabel: `Escala de IMC: tu valor ${imcRedondeado} corresponde a "${categoria.replace(/[^\p{L}\p{N}\s]/gu, '').trim()}".`,
+    ariaLabel: S.ariaLabel(imcRedondeado, categoriaLimpia),
     marker: imcRedondeado,
-    markerLabel: `Tu IMC: ${imcRedondeado}`,
+    markerLabel: S.markerLabel(imcRedondeado),
     segments: [
-      { nombre: 'Bajo peso', max: 18.5, color: '#fde68a', colorDark: '#b45309' },
-      { nombre: 'Normal', max: 25, color: '#bbf7d0', colorDark: '#166534' },
-      { nombre: 'Sobrepeso', max: 30, color: '#fed7aa', colorDark: '#9a3412' },
-      { nombre: 'Obesidad I', max: 35, color: '#fecaca', colorDark: '#b91c1c' },
-      { nombre: 'Obesidad II', max: 40, color: '#e8b4b8', colorDark: '#991b1b' },
-      { nombre: 'Obesidad III', max: Math.max(50, Math.ceil(imcValue) + 2), color: '#d4a0a8', colorDark: '#7f1d1d' },
+      { nombre: S.segBajo, max: 18.5, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: S.segNormal, max: 25, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: S.segSobrepeso, max: 30, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: S.segOb1, max: 35, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: S.segOb2, max: 40, color: '#e8b4b8', colorDark: '#991b1b' },
+      { nombre: S.segOb3, max: Math.max(50, Math.ceil(imcValue) + 2), color: '#d4a0a8', colorDark: '#7f1d1d' },
     ],
     unit: '',
     min: 10,

@@ -10,6 +10,7 @@ export interface Inputs {
 
 export interface Outputs {
   recomendacion: string;
+  detalleRecomendacion: string;
   nivelUrgencia: string;
   score: number;
   pasos: string;
@@ -27,7 +28,8 @@ export function compute(i: Inputs): Outputs {
 
   if (edadMeses < 1) {
     return {
-      recomendacion: "Ingresá la edad del niño en meses para obtener una recomendación.",
+      recomendacion: "Ingresá la edad",
+      detalleRecomendacion: "Ingresá la edad del niño en meses para obtener una recomendación.",
       nivelUrgencia: "—",
       score: 0,
       pasos: "—",
@@ -126,26 +128,34 @@ export function compute(i: Inputs): Outputs {
 
   // --- Recomendación principal ---
   let recomendacion: string;
+  let detalleRecomendacion: string;
   if (edadMeses < 18 && !urgenciaTrepar) {
-    recomendacion =
+    recomendacion = "Todavía es pronto";
+    detalleRecomendacion =
       "Todavía es pronto. Los menores de 18 meses generalmente no están listos para la cama. Mantené la cuna y revisá en algunos meses.";
   } else if (riesgoSeguridad) {
-    recomendacion =
+    recomendacion = "Transición inmediata";
+    detalleRecomendacion =
       "Transición INMEDIATA recomendada por seguridad. El niño ya intenta trepar y el barrandal tiene menos de 66 cm de altura, lo que representa un riesgo real de caída grave. Pasá a cama de transición esta semana.";
   } else if (urgenciaTrepar && alturaBarrote >= 66) {
-    recomendacion =
+    recomendacion = "Transición en 2-4 semanas";
+    detalleRecomendacion =
       "El niño ya intenta trepar la cuna. Aunque el barrandal es alto, el riesgo aumenta con el tiempo. Planificá la transición en las próximas 2-4 semanas.";
   } else if (score >= 75) {
-    recomendacion =
+    recomendacion = "Buen momento para empezar";
+    detalleRecomendacion =
       "El niño muestra señales claras de preparación. Es un muy buen momento para iniciar la transición. Planificalo para las próximas 1-3 semanas.";
   } else if (score >= 50) {
-    recomendacion =
+    recomendacion = "Esperá un poco";
+    detalleRecomendacion =
       "Hay señales positivas pero también factores que sugieren esperar un poco. Podés empezar a preparar el entorno y hacer la transición en 4-8 semanas, cuando el contexto sea más estable.";
   } else if (hermanoPorVenir === "si_pronto") {
-    recomendacion =
+    recomendacion = "Planificá antes del bebé";
+    detalleRecomendacion =
       "Aunque el niño no muestra todas las señales de preparación, la llegada del nuevo bebé en menos de 3 meses requiere planificar la transición pronto. Intentá hacerla al menos 6 semanas antes del nacimiento.";
   } else {
-    recomendacion =
+    recomendacion = "Sin urgencia";
+    detalleRecomendacion =
       "El niño no muestra señales claras de preparación todavía. No hay urgencia. Revisá en 4-8 semanas o cuando aparezcan nuevas señales.";
   }
 
@@ -210,6 +220,7 @@ export function compute(i: Inputs): Outputs {
 
   return {
     recomendacion,
+    detalleRecomendacion,
     nivelUrgencia,
     score,
     pasos,

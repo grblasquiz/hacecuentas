@@ -127,11 +127,11 @@ export function mundial2026CervezaComidaEstadioPrecio(i: Inputs): Outputs {
   ].filter(Boolean).join(' · ');
 
   return {
-    totalUSD: `**USD ${subtotal.toFixed(2)}** (sin propina). Desglose: ${detalle}. Zona: ${ZONA_LABEL[zonaKey]}${factorZona > 1 ? ` (+${((factorZona - 1) * 100).toFixed(0)}% premium)` : ''}.`,
+    totalUSD: `USD ${subtotal.toFixed(0)}`,
     totalConPropina: propinaTxt,
     comparativaAfuera: compTxt,
     alertaPresupuesto: alerta,
     recomendacion: reco,
-    resumen: `En un estadio del Mundial 2026 en ${precios.label}, ${cervezas} cerveza(s) + ${hotDogs} hot dog(s) + ${refrescos} refresco(s) + ${snacks} snack(s) en zona ${ZONA_LABEL[zonaKey]} = **USD ${total.toFixed(2)} por persona** (con propina si aplica). Familia de 4: USD ${(total * 4).toFixed(0)}.`,
+    resumen: `En un estadio del Mundial 2026 en ${precios.label}, ${cervezas} cerveza(s) + ${hotDogs} hot dog(s) + ${refrescos} refresco(s) + ${snacks} snack(s) en zona ${ZONA_LABEL[zonaKey]} = **USD ${total.toFixed(2)} por persona** (con propina si aplica). Familia de 4: USD ${(total * 4).toFixed(0)}. Desglose: ${detalle}.`,
   };
 }

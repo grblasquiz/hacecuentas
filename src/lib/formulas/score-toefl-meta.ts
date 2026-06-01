@@ -8,6 +8,7 @@ export interface Outputs {
   speaking: number;
   writing: number;
   comentario: string;
+  guia: string;
 }
 
 export function scoreToeflMeta(i: Inputs): Outputs {
@@ -32,12 +33,12 @@ export function scoreToeflMeta(i: Inputs): Outputs {
   W = Math.min(30, Math.max(0, Math.round(W)));
 
   const suma = R + L + S + W;
-  let coment = '';
-  if (total >= 110) coment = 'Nivel top universidades. 6-10 meses prep desde C1.';
-  else if (total >= 100) coment = 'Nivel universidad top 50. 4-6 meses desde B2 sólido.';
-  else if (total >= 80) coment = 'Nivel state university. 2-4 meses desde B2.';
-  else coment = 'Nivel community college o intermedio. 1-3 meses desde B1-B2.';
+  let nivel = '', guia = '';
+  if (total >= 110) { nivel = 'top universidades'; guia = 'Nivel top universidades. 6-10 meses de prep desde C1.'; }
+  else if (total >= 100) { nivel = 'top 50'; guia = 'Nivel universidad top 50. 4-6 meses desde B2 sólido.'; }
+  else if (total >= 80) { nivel = 'state university'; guia = 'Nivel state university. 2-4 meses desde B2.'; }
+  else { nivel = 'community college'; guia = 'Nivel community college o intermedio. 1-3 meses desde B1-B2.'; }
 
-  return { reading: R, listening: L, speaking: S, writing: W, comentario: `${coment} Total aprox ${suma}` };
+  return { reading: R, listening: L, speaking: S, writing: W, comentario: `Total ~${suma} · ${nivel}`, guia };
 
 }

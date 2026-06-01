@@ -6,6 +6,7 @@ export interface Inputs {
 }
 export interface Outputs {
   plan: string;
+  planDetalle: string;
   seriesSemana1: number;
   intensidadSemana1: string;
   deloadSemana: string;
@@ -64,8 +65,12 @@ export function periodizacionEntrenamiento(i: Inputs): Outputs {
     }
   }
 
+  // Titular corto: resumen del mesociclo (el plan semana a semana queda en "planDetalle")
+  const planResumen = `${semanas} sem · ${trainingWeeks} de trabajo + deload`;
+
   return {
-    plan,
+    plan: planResumen,
+    planDetalle: plan,
     seriesSemana1,
     intensidadSemana1,
     deloadSemana: `Semana ${semanas}: -40% volumen, -20% intensidad`,

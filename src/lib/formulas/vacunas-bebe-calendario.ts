@@ -38,13 +38,17 @@ export function vacunasBebe(i: Inputs): Outputs {
     calendario += `${estado} ${e.meses} meses (${fechaStr}): ${e.vacunas}\n`;
 
     if (!proxima && edadMeses < e.meses) {
-      proxima = `${e.vacunas} — fecha estimada: ${fechaStr}`;
+      const cant = e.vacunas.split(' + ').length;
+      proxima = `${cant} vacuna${cant === 1 ? '' : 's'} · ${fechaStr}`;
     }
   }
 
   if (!proxima) {
-    if (edadMeses >= 18) proxima = 'Tu bebé completó el esquema de 0-18 meses. Las próximas son a los 5-6 años.';
-    else proxima = esquema[0].vacunas;
+    if (edadMeses >= 18) proxima = 'Esquema completo';
+    else {
+      const cant = esquema[0].vacunas.split(' + ').length;
+      proxima = `${cant} vacuna${cant === 1 ? '' : 's'} al nacer`;
+    }
   }
 
   const completadas = esquema.filter(e => edadMeses >= e.meses).length;

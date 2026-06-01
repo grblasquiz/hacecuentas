@@ -12,7 +12,7 @@ export function organizadorPlacardEspacios(i: Inputs): Outputs {
   const cmCajones = ancho - cmColgar - cmEstantes;
   const altoBarra = tipo === 'formal' ? 120 : tipo === 'ninos' ? 80 : 100;
   return {
-    zonaColgar: `${cmColgar} cm de ancho — barra a ${altoBarra} cm del piso, espacio arriba para estante superior`,
+    zonaColgar: `${cmColgar} cm — barra a ${altoBarra} cm`,
     zonaEstantes: `${cmEstantes} cm de ancho — estantes cada 30 cm para remeras, buzos, toallas dobladas`,
     zonaCajones: `${cmCajones} cm de ancho — 3-4 cajones de 15-20 cm alto para ropa interior, medias, accesorios`,
     distribucion: `Colgar: ${Math.round(pColgar*100)}% | Estantes: ${Math.round(pEstantes*100)}% | Cajones: ${Math.round(pCajones*100)}%`,

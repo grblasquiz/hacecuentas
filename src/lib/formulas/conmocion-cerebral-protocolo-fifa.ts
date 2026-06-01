@@ -66,11 +66,15 @@ export function conmocionCerebralProtocoloFifa(i: Inputs): Outputs {
 
   const msgFecha = fechaCon ? ` Transcurridos ${diasDesde} días desde la conmoción.` : '';
 
+  const titular = sint === 'si'
+    ? `Paso ${nroPaso} de 6 · volvé a reposo`
+    : `Paso ${nroPaso} de 6`;
+
   return {
     pasoActual: pasoActualTxt,
     siguientesPasos: siguientes,
     minimoDiasTotal: `${minDiasTotal} días mínimo hasta retorno a competencia (protocolo FIFA / Consenso Ámsterdam 2022).`,
     recomendacion,
-    mensaje: `${pasoActualTxt}${msgFecha} No reemplaza evaluación de médico (idealmente neurología deportiva).`
+    mensaje: titular
   };
 }

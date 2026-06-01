@@ -15,14 +15,14 @@ export function edadSolVidaRestante(i: Inputs): Outputs {
   const pct = Math.min(100, (edad / vidaTotal) * 100);
 
   let estado: string;
-  if (pct < 10) estado = 'Estrella joven (inicio de secuencia principal)';
-  else if (pct < 50) estado = 'Estrella en primera mitad de vida';
-  else if (pct < 90) estado = 'Estrella en segunda mitad de vida';
-  else if (pct < 100) estado = 'Estrella al final de la secuencia principal';
-  else estado = 'Estrella post-secuencia principal (gigante/supergigante)';
+  if (pct < 10) estado = 'Estrella joven';
+  else if (pct < 50) estado = 'Primera mitad de vida';
+  else if (pct < 90) estado = 'Segunda mitad de vida';
+  else if (pct < 100) estado = 'Final de secuencia principal';
+  else estado = 'Post-secuencia principal';
 
   return {
-    resultado: `${estado}. Vida total: ${vidaTotal.toFixed(0)} M años. Restante: ${restante.toFixed(0)} M años (${(100 - pct).toFixed(1)}%).`,
+    resultado: `${estado} · ${(100 - pct).toFixed(0)}% restante`,
     vidaTotal: Number(vidaTotal.toFixed(0)),
     vidaRestante: Number(restante.toFixed(0)),
     porcentaje: Number(pct.toFixed(2)),

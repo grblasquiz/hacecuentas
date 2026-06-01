@@ -6,6 +6,7 @@ export interface Inputs {
 
 export interface Outputs {
   estadioAInfo: string;
+  estadioADetalle: string;
   estadioBInfo: string;
   distanciaKm: number;
   diferenciaAltura: number;
@@ -57,6 +58,10 @@ function formatInfo(s: StadiumData): string {
   return `**${s.nombre}** (${s.ciudad}, ${s.pais}) — capacidad ~${s.capacidad.toLocaleString('es-AR')}, altura ${s.altura} m, clima ${s.climaJunJul}.`;
 }
 
+function formatShort(s: StadiumData): string {
+  return `${s.nombre} · ~${s.capacidad.toLocaleString('es-AR')}`;
+}
+
 export function mundial2026EstadiosComparador(i: Inputs): Outputs {
   const keyA = String(i.estadioA || '').toLowerCase();
   const keyB = String(i.estadioB || '').toLowerCase();
@@ -90,7 +95,8 @@ export function mundial2026EstadiosComparador(i: Inputs): Outputs {
   }
 
   return {
-    estadioAInfo: formatInfo(a),
+    estadioAInfo: formatShort(a),
+    estadioADetalle: formatInfo(a),
     estadioBInfo: formatInfo(b),
     distanciaKm: distancia,
     diferenciaAltura: difAltura,

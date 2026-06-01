@@ -34,7 +34,7 @@ export function calendarioEstudioParciales(i: Inputs): Outputs {
   else viab = 'Plan NO viable a largo plazo. Considerá priorizar o redistribuir.';
 
   return {
-    planDiario: `${totalDiario.toFixed(1)} horas/día de estudio para ${materias.length} materia(s) (${totalHoras} horas totales)`,
+    planDiario: `${totalDiario.toFixed(1).replace('.', ',')} h/día · ${materias.length} materia(s)`,
     horasDiariasTotal: Number(totalDiario.toFixed(1)),
     detalleMateria1: detalles[0] || 'No ingresada',
     detalleMateria2: detalles[1] || 'No ingresada',

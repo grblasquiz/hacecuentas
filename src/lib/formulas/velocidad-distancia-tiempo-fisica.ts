@@ -28,22 +28,22 @@ export function velocidadDistanciaTiempoFisica(i: Inputs): Outputs {
   if (v === null && d !== null && t !== null) {
     if (t <= 0) throw new Error('El tiempo debe ser mayor a 0');
     velKmh = d / t;
-    resultado = `Velocidad = ${velKmh.toFixed(2)} km/h`;
+    resultado = `${velKmh.toFixed(2)} km/h`;
     formula = `v = d / t = ${d} / ${t} = ${velKmh.toFixed(2)} km/h`;
   } else if (d === null && v !== null && t !== null) {
     dist = v * t;
     velKmh = v;
-    resultado = `Distancia = ${dist.toFixed(2)} km`;
+    resultado = `${dist.toFixed(2)} km`;
     formula = `d = v × t = ${v} × ${t} = ${dist.toFixed(2)} km`;
   } else if (t === null && d !== null && v !== null) {
     if (v <= 0) throw new Error('La velocidad debe ser mayor a 0');
     time = d / v;
     velKmh = v;
-    resultado = `Tiempo = ${time.toFixed(4)} horas (${(time * 60).toFixed(1)} minutos)`;
+    resultado = `${time.toFixed(2)} h`;
     formula = `t = d / v = ${d} / ${v} = ${time.toFixed(4)} h`;
   } else {
     velKmh = v!;
-    resultado = `Todos los valores ingresados. Velocidad: ${v} km/h, Distancia: ${d} km, Tiempo: ${t} h`;
+    resultado = `${velKmh.toFixed(2)} km/h`;
     formula = `v = d / t → ${v} = ${d} / ${t}`;
   }
 

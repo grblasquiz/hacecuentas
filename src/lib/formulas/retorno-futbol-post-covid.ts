@@ -65,6 +65,6 @@ export function retornoFutbolPostCovid(i: Inputs): Outputs {
     etapasRetorno: etapas,
     evaluacionCardio: evalCardio,
     semaforoRetorno: semaforo,
-    mensaje: `Severidad ${sev}: reposo mínimo ${minSem}-${maxSem} sem. No reemplaza evaluación de médico deportólogo/cardiólogo.`
+    mensaje: `${minSem}-${maxSem} semanas de reposo`
   };
 }

@@ -6,6 +6,7 @@ export interface Inputs {
 
 export interface Outputs {
   totalMundialesJugados: string;
+  detalleMundiales: string;
   totalPartidosProyectados: string;
   totalMinutosProyectados: string;
   golesProyectados2026: string;
@@ -51,7 +52,8 @@ export function mundial2026MessiRecord(i: Inputs): Outputs {
   }
 
   return {
-    totalMundialesJugados: '6 Mundiales (2006, 2010, 2014, 2018, 2022, 2026) — primer jugador en la historia',
+    totalMundialesJugados: '6 Mundiales',
+    detalleMundiales: '2006, 2010, 2014, 2018, 2022 y 2026 — primer jugador en la historia en disputar 6 Copas del Mundo',
     totalPartidosProyectados: `${partidosTotales} partidos (${HISTORICO.partidosPrevios} previos + ${partidos} en 2026)`,
     totalMinutosProyectados: `${minutosTotales.toLocaleString('es-AR')} minutos (~${Math.round(minutosTotales / 90)} partidos completos equivalentes)`,
     golesProyectados2026: `${goles2026.toFixed(1)} goles estimados (tasa ajustada por edad/minutaje)`,

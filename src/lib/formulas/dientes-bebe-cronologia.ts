@@ -1,6 +1,6 @@
 /** Cronología de erupción de dientes de leche */
 export interface Inputs { edadBebeDientes: number; }
-export interface Outputs { dientesEsperados: string; cantidadDientes: string; proximosDientes: string; cuidados: string; }
+export interface Outputs { dientesEsperados: string; dientesDetalle: string; cantidadDientes: string; proximosDientes: string; cuidados: string; }
 
 const cronologia = [
   { mes: 6, diente: 'Incisivos centrales inferiores (2)', total: 2 },
@@ -25,8 +25,14 @@ export function dientesBebe(i: Inputs): Outputs {
   const total = salidos.length > 0 ? salidos[salidos.length - 1].total : 0;
   const aprox = Math.max(0, Math.min(20, edad - 6)); // regla edad-6
 
-  let esperados = salidos.map(c => `${c.diente} (~${c.mes} meses)`).join('; ');
-  if (!esperados) esperados = 'Todavía no se esperan dientes. Los primeros suelen salir entre los 6-10 meses.';
+  const detalle = salidos.map(c => `${c.diente} (~${c.mes} meses)`).join('; ');
+  const dientesDetalle = detalle || 'Todavía no se esperan dientes. Los primeros suelen salir entre los 6-10 meses.';
+
+  // Titular corto: conteo de dientes ya salidos
+  let esperados: string;
+  if (total === 0) esperados = 'Todavía sin dientes';
+  else if (total === 1) esperados = '1 diente ya salió';
+  else esperados = `${total} dientes ya salieron`;
 
   let proxStr = proximos.map(c => `${c.diente} (~${c.mes} meses)`).join('; ');
   if (!proxStr) proxStr = '¡Dentición completa! Los 20 dientes de leche ya deberían estar.';
@@ -38,6 +44,7 @@ export function dientesBebe(i: Inputs): Outputs {
 
   return {
     dientesEsperados: esperados,
+    dientesDetalle,
     cantidadDientes: `~${total} dientes (regla práctica: edad en meses − 6 = ~${aprox})`,
     proximosDientes: proxStr,
     cuidados,

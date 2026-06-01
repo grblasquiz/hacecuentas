@@ -52,15 +52,15 @@ export function descensoLaligaSantander(inputs: DescensoLaLigaInputs): DescensoL
 
   let veredicto = '';
   if (puntosMaxPosibles < pts17) {
-    veredicto = '🔴 Matemáticamente descendido: imposible alcanzar al 17º.';
+    veredicto = '🔴 Matemáticamente descendido';
   } else if (pts >= safety && pts > pts17) {
-    veredicto = '✅ Salvación virtual: por encima del umbral histórico.';
+    veredicto = '✅ Salvación virtual';
   } else if (puntosParaAlcanzar17 > fechas * 3 * 0.6) {
-    veredicto = '⚠️ Crítico: necesitás ganar la mayoría de los partidos que quedan.';
+    veredicto = '⚠️ Riesgo crítico';
   } else if (puntosParaAlcanzar17 > fechas) {
-    veredicto = '🟠 Complicado pero posible: varios triunfos directos.';
+    veredicto = '🟠 Complicado pero posible';
   } else {
-    veredicto = '🟡 En tus manos: con 2-3 triunfos te salvás.';
+    veredicto = '🟡 Salvación en tus manos';
   }
 
   const salv = Number(porcentajeSalvacion.toFixed(1));

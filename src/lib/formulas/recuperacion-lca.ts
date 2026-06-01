@@ -106,6 +106,6 @@ export function recuperacionLca(i: Inputs): Outputs {
     tasaRetornoEsperada: `${tasaMin}-${tasaMax}% de retorno a nivel pre-lesión (6-24 meses post-op).`,
     semaforoBiomarcador: semaforo,
     _chart: chart,
-    mensaje: `Retorno a competencia estimado ${baseCompeticionMin}-${baseCompeticionMax} meses post-cirugía.${infoFecha} No reemplaza evaluación de médico deportólogo/traumatólogo.`
+    mensaje: `${baseCompeticionMin}-${baseCompeticionMax} meses para competir`
   };
 }

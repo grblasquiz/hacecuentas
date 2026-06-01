@@ -25,7 +25,7 @@ export function magnitudAparenteAbsoluta(i: Inputs): Outputs {
   const dLy = dOut * 3.26156;
 
   return {
-    resultado: `m = ${mOut.toFixed(2)}, M = ${MOut.toFixed(2)}, d = ${dOut.toFixed(2)} pc (${dLy.toFixed(2)} ly)`,
+    resultado: `m=${mOut.toFixed(2)} · M=${MOut.toFixed(2)} · d=${dOut.toFixed(2)} pc`,
     moduloDistancia: Number(modDist.toFixed(4)),
     distanciaLy: Number(dLy.toFixed(4)),
     formula: `m - M = 5·log₁₀(${dOut.toFixed(2)}/10) = ${modDist.toFixed(4)}`,

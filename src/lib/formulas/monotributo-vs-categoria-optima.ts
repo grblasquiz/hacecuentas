@@ -73,7 +73,7 @@ export function monotributoVsCategoriaOptima(
       topeCategoria: TABLA_2026[0].topeFacturacionAnual,
       cuotaMensualCorrecta: TABLA_2026[0].cuotaServicios,
       cuotaAnualCorrecta: TABLA_2026[0].cuotaServicios * 12,
-      diagnostico: 'Sin facturación → categoría A (mínima)',
+      diagnostico: 'Categoría A',
       ahorroAnualSiCambias: 0,
       margenHastaSiguienteCat: TABLA_2026[0].topeFacturacionAnual,
       vigenciaTabla: FECHA_VIGENCIA,
@@ -88,7 +88,7 @@ export function monotributoVsCategoriaOptima(
       topeCategoria: topeMaximo,
       cuotaMensualCorrecta: 0,
       cuotaAnualCorrecta: 0,
-      diagnostico: `Tu facturación supera el tope de cat K ($${topeMaximo.toLocaleString('es-AR')}/año). Debés inscribirte en el Régimen General (Responsable Inscripto). Consultá con un contador para hacer el pase.`,
+      diagnostico: 'Pasá a Régimen General',
       ahorroAnualSiCambias: 0,
       margenHastaSiguienteCat: 0,
       vigenciaTabla: FECHA_VIGENCIA,
@@ -120,17 +120,17 @@ export function monotributoVsCategoriaOptima(
 
   let diagnostico: string;
   if (categoriaActualLetra && categoriaActualLetra === correcta.letra) {
-    diagnostico = `Estás en la categoría correcta (${correcta.letra}). Tu facturación encaja sin problema en el tope de $${correcta.topeFacturacionAnual.toLocaleString('es-AR')}/año.`;
+    diagnostico = 'Categoría correcta';
   } else if (categoriaActualLetra && ahorroAnual !== null) {
     if (ahorroAnual > 0) {
-      diagnostico = `Estás pagando de más. Tu categoría correcta es ${correcta.letra} (no ${categoriaActualLetra}). Ahorrarías $${Math.round(ahorroAnual).toLocaleString('es-AR')}/año si recategorizás.`;
+      diagnostico = `Pagás de más — sería ${correcta.letra}`;
     } else if (ahorroAnual < 0) {
-      diagnostico = `Estás subcategorizado — facturás más que el tope de ${categoriaActualLetra}. Debés pasarte a ${correcta.letra} ($${Math.abs(Math.round(ahorroAnual)).toLocaleString('es-AR')}/año más de cuota, pero evitás multas/exclusión).`;
+      diagnostico = `Subcategorizado — pasá a ${correcta.letra}`;
     } else {
-      diagnostico = `Tu categoría correcta es ${correcta.letra}. La cuota es la misma que la de ${categoriaActualLetra} (categoría A o B).`;
+      diagnostico = `Categoría ${correcta.letra}`;
     }
   } else {
-    diagnostico = `Te corresponde la categoría ${correcta.letra}. Cuota mensual ${tipo}: $${cuotaCorrecta.toLocaleString('es-AR')}.`;
+    diagnostico = `Categoría ${correcta.letra}`;
   }
 
   const margen = correcta.topeFacturacionAnual - facturacion;

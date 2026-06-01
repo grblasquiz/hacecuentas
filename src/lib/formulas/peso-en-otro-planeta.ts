@@ -30,7 +30,7 @@ export function pesoEnOtroPlaneta(i: Inputs): Outputs {
   const todos = pesos.map(p => `${p.nombre}: ${p.peso} kg`).join(' | ');
 
   return {
-    resultado: `En la Luna: ${luna} kg. En Marte: ${marte} kg. En Júpiter: ${jupiter} kg.`,
+    resultado: `Luna ${luna} kg · Marte ${marte} kg`,
     pesoLuna: luna,
     pesoMarte: marte,
     pesoJupiter: jupiter,

@@ -55,17 +55,15 @@ export function pesoIdealPerroRaza(inputs: PesoIdealPerroInputs): PesoIdealPerro
 
   if (pesoActual < min) {
     const falta = min - pesoActual;
-    resultado = `Bajo peso: le faltan ${falta.toFixed(1)} kg para llegar al mínimo ideal`;
+    resultado = 'Bajo peso';
     diferencia = `-${falta.toFixed(1)} kg (bajo el mínimo)`;
   } else if (pesoActual > max) {
     const exceso = pesoActual - max;
     const porcExceso = ((exceso / max) * 100).toFixed(0);
-    resultado = exceso > max * 0.15
-      ? `Obesidad: ${exceso.toFixed(1)} kg por encima del máximo (${porcExceso}% excedido)`
-      : `Sobrepeso leve: ${exceso.toFixed(1)} kg por encima del máximo`;
+    resultado = exceso > max * 0.15 ? 'Obesidad' : 'Sobrepeso leve';
     diferencia = `+${exceso.toFixed(1)} kg (${porcExceso}% sobre el máximo)`;
   } else {
-    resultado = '¡Peso ideal! Tu perro está dentro del rango saludable';
+    resultado = 'Peso ideal';
     diferencia = 'Dentro del rango';
   }
 

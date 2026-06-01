@@ -46,6 +46,8 @@ export function tarjetasAmarillasSuspension(i: Inputs): Outputs {
     amarillasParaSuspension: faltan === 0 ? 'Ya suspendido.' : `${faltan} amarilla(s) más para ser suspendido.`,
     estadoActual: estado,
     resetReglas: info.reset,
-    mensaje: `${comp.toUpperCase()}: ${amarillas}/${info.umbral}. Quedan ${fechasRestantes} fechas en la temporada. ${estado}`
+    mensaje: faltan === 0
+      ? `${amarillas}/${info.umbral}: suspendido`
+      : `Faltan ${faltan} para suspensión`
   };
 }

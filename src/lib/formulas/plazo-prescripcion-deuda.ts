@@ -58,10 +58,10 @@ export function plazoPrescripcionDeuda(inputs: PlazoPrescripcionInputs): PlazoPr
   let diasRestantes: string;
 
   if (diffDias <= 0) {
-    resultado = `¡Sí, tu deuda prescribió! Prescribió hace ${Math.abs(diffDias)} días`;
+    resultado = 'Sí, prescribió';
     diasRestantes = 'Ya prescribió';
   } else {
-    resultado = `No, tu deuda aún NO prescribió. Faltan ${diffDias} días`;
+    resultado = 'Aún no prescribió';
     diasRestantes = `${diffDias} días (${(diffDias / 30).toFixed(1)} meses)`;
   }
 

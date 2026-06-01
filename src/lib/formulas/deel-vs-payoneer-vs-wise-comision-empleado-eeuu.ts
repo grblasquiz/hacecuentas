@@ -135,10 +135,7 @@ export function compute(i: Inputs): Outputs {
     `• Mercury: -USD ${comision_mercury.toFixed(2)} → neto USD ${neto_mercury.toFixed(2)}` +
     notaMercury;
 
-  const mejor_opcion =
-    `${mejor.name} es la opción más conveniente: cobrás USD ${mejor.neto.toFixed(2)} ` +
-    `(comisión USD ${mejor.comision.toFixed(2)}). ` +
-    `Ahorrás USD ${ahorro_anual.toFixed(2)}/año vs ${peor.name}.`;
+  const mejor_opcion = mejor.name;
 
   return {
     neto_deel: parseFloat(neto_deel.toFixed(2)),

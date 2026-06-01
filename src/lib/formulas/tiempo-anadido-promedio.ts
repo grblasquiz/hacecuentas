@@ -50,6 +50,6 @@ export function tiempoAnadidoPromedio(i: Inputs): Outputs {
     tiempoAnadidoEstimadoT2: `${t2Est} minutos aprox en el segundo tiempo.`,
     tiempoTotalPartido: `${Math.round(total * 10) / 10} minutos de duración total estimada (sin prórroga).`,
     referenciaHistorica: p.base,
-    mensaje: `${comp}: ${t1Est}' + ${t2Est}' añadidos. Instrucción FIFA post-Qatar 2022 = descuento estricto por todos los incidentes.`
+    mensaje: `+${Math.round((t1Est + t2Est) * 10) / 10}' añadidos`
   };
 }

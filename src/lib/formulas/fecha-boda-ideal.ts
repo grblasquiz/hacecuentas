@@ -1,6 +1,6 @@
 /** Fecha de boda ideal 2026 */
 export interface Inputs { mesPreferido?: string; evitarSupersticiones?: string; }
-export interface Outputs { mejoresFechas: string; totalSabados: number; mensaje: string; }
+export interface Outputs { mejoresFechas: string; listaFechas: string; totalSabados: number; mensaje: string; }
 
 const FERIADOS_2026 = [
   '2026-01-01','2026-02-16','2026-02-17','2026-03-23','2026-03-24',
@@ -51,13 +51,21 @@ export function fechaBodaIdeal(i: Inputs): Outputs {
 
   sabados.sort((a, b) => b.score - a.score);
   const top = sabados.slice(0, 8);
-  const mejores = top.map(s =>
+  const listaFechas = top.map(s =>
     `${s.fecha.toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} (puntaje: ${s.score}) — ${s.nota}`
   ).join('\n');
+
+  // Titular corto: la mejor fecha en formato compacto
+  let mejores = 'Sin sábados en el rango';
+  if (top.length) {
+    const t = top[0];
+    const dia = t.fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }).replace('.', '');
+    mejores = `Sáb ${dia} ${anio} · puntaje ${t.score}`;
+  }
 
   const estacion = mesPref !== 'todos'
     ? (Number(mesPref) >= 10 || Number(mesPref) <= 11 ? 'Excelente época — primavera argentina.' : 'Buena elección de mes.')
     : 'Te mostramos las mejores opciones de todo 2026.';
 
-  return { mejoresFechas: mejores, totalSabados: sabados.length, mensaje: estacion };
+  return { mejoresFechas: mejores, listaFechas, totalSabados: sabados.length, mensaje: estacion };
 }

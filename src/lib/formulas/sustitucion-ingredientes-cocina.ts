@@ -102,7 +102,7 @@ export function sustitucionIngredientesCocina(i: Inputs): Outputs {
   if (!dato) throw new Error('Ingrediente no encontrado');
 
   const cantPrincipal = cantidad * dato.principal.factor;
-  const principal = `${dato.principal.nombre}: ${cantPrincipal % 1 === 0 ? cantPrincipal : cantPrincipal.toFixed(1)} ${dato.principal.unidad} (${dato.principal.nota})`;
+  const principal = `${dato.principal.nombre}: ${cantPrincipal % 1 === 0 ? cantPrincipal : cantPrincipal.toFixed(1)} ${dato.principal.unidad}`;
 
   const alts = dato.alternativas.map(a => {
     const cant = cantidad * a.factor;
@@ -112,6 +112,6 @@ export function sustitucionIngredientesCocina(i: Inputs): Outputs {
   return {
     sustitutoPrincipal: principal,
     alternativas: alts,
-    detalle: `Para reemplazar ${cantidad} ${dato.unidadOriginal} de ${ingrediente.replace('_', ' ')}: mejor opción → ${dato.principal.nombre} (${cantPrincipal % 1 === 0 ? cantPrincipal : cantPrincipal.toFixed(1)} ${dato.principal.unidad}).`,
+    detalle: `Para reemplazar ${cantidad} ${dato.unidadOriginal} de ${ingrediente.replace('_', ' ')}: mejor opción → ${dato.principal.nombre} (${cantPrincipal % 1 === 0 ? cantPrincipal : cantPrincipal.toFixed(1)} ${dato.principal.unidad}). ${dato.principal.nota}.`,
   };
 }

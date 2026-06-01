@@ -96,8 +96,8 @@ export function licenciaAdopcionLct(inputs: LicenciaAdopcionInputs): LicenciaAdo
 
   const diasLicencia =
     dias === 0
-      ? `Sin licencia automática (${info.norma})`
-      : `${dias} días corridos (${info.norma})`;
+      ? `Sin licencia automática`
+      : `${dias} días corridos`;
 
   return {
     diasLicencia,

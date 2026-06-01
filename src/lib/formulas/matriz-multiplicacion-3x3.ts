@@ -52,8 +52,11 @@ export function matrizMultiplicacion3x3(i: Inputs): Outputs {
 
   const matrizStr = `| ${C[0].join('  ')} |\n| ${C[1].join('  ')} |\n| ${C[2].join('  ')} |`;
 
+  // Titular corto: una sola línea con las 9 entradas (la matriz completa queda en "detalle")
+  const resultInline = `[${C[0].join(', ')}; ${C[1].join(', ')}; ${C[2].join(', ')}]`;
+
   return {
-    result: matrizStr,
+    result: resultInline,
     detalle: `**Matriz A × B:**\n\n${matrizStr}\n\n**Cálculo por elemento:**\n${pasos.join('\n')}`,
   };
 }

@@ -130,10 +130,7 @@ export function compute(i: Inputs): Outputs {
     lines.push("📦 El batch processing aplica descuento del 50% en input y output (GPT-5 y Claude).");
   }
 
-  const modelo_recomendado =
-    activos.length === 1
-      ? `${masBarato.nombre} — USD ${masBarato.costo.toFixed(2)}/mes`
-      : `${masBarato.nombre} — USD ${masBarato.costo.toFixed(2)}/mes (el más económico de los seleccionados)`;
+  const modelo_recomendado = masBarato.nombre;
 
   return {
     costo_gpt5:   costo_gpt5   >= 0 ? parseFloat(costo_gpt5.toFixed(2))   : 0,

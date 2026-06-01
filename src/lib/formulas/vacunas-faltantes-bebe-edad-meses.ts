@@ -7,5 +7,9 @@ export function vacunasFaltantesBebeEdadMeses(i: Inputs): Outputs {
   let esperadas:string[]=[];
   for (const k of keys) if (k<=m) esperadas.push(`${k}m: ${cal[k]}`);
   const prox=keys.find(k=>k>m);
-  return { esperadas:esperadas.join('; ')||'Ninguna', proximas:prox!==undefined?`A los ${prox}m: ${cal[prox]}`:'Calendario completo (edad escolar siguiente)', resumen:`A los ${m}m: ${esperadas.length} grupos de vacunas esperados.` };
+  const esperadasDetalle=esperadas.join('; ')||'Ninguna todavía';
+  // Titular corto: conteo de controles con vacunas (el detalle completo queda en "esperadasDetalle")
+  const n=esperadas.length;
+  const titular = n===0 ? 'Sin vacunas esperadas aún' : n===1 ? '1 control con vacunas' : `${n} controles con vacunas`;
+  return { esperadas:titular, esperadasDetalle, proximas:prox!==undefined?`A los ${prox}m: ${cal[prox]}`:'Calendario completo (edad escolar siguiente)', resumen:`A los ${m}m: ${n} grupos de vacunas esperados.` };
 }

@@ -37,11 +37,11 @@ export function ajusteSueldoInflacion(inputs: AjusteSueldoInflacionInputs): Ajus
 
   let resultado: string;
   if (diferenciaReal > 0) {
-    resultado = `¡Le ganaste a la inflación! Tu sueldo real subió ${aumentoRealPorc.toFixed(1)}%`;
+    resultado = `Subió ${aumentoRealPorc.toFixed(1).replace('.', ',')}% real`;
   } else if (diferenciaReal < 0) {
-    resultado = `Perdiste poder adquisitivo. Tu sueldo real cayó ${Math.abs(aumentoRealPorc).toFixed(1)}%`;
+    resultado = `Cayó ${Math.abs(aumentoRealPorc).toFixed(1).replace('.', ',')}% real`;
   } else {
-    resultado = 'Tu sueldo empató exactamente con la inflación';
+    resultado = 'Empató la inflación';
   }
 
   return {

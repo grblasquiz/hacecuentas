@@ -32,35 +32,35 @@ export function contraccionesParto(i: Inputs): Outputs {
   // Evaluar fase del trabajo de parto
   if (freq > 10 && dur < 40) {
     fase = 'Pródromos o Braxton Hicks';
-    evaluacion = 'Contracciones irregulares y cortas. Probablemente NO es trabajo de parto activo.';
+    evaluacion = 'Probablemente NO es parto';
     recomendacion = 'Descansá, tomá agua, cambiá de posición. Si se vuelven más frecuentes e intensas, volvé a medir.';
   } else if (freq >= 5 && freq <= 10 && dur >= 30 && dur <= 60) {
     fase = 'Fase latente del trabajo de parto';
-    evaluacion = 'Contracciones que se están regularizando. Posible inicio del trabajo de parto.';
+    evaluacion = 'Posible inicio de parto';
     recomendacion = 'Seguí midiendo. Si se mantienen o aumentan durante 1-2 horas, llamá a tu obstetra.';
   } else if (freq >= 3 && freq < 5 && dur >= 45 && dur <= 90) {
     fase = 'Fase activa del trabajo de parto';
-    evaluacion = 'Contracciones regulares y de buena intensidad. Probablemente en fase activa.';
+    evaluacion = 'Parto activo probable';
     recomendacion = '¡Llamá a tu obstetra y dirigite al hospital!';
   } else if (freq <= 5 && dur >= 60 && horas >= 1) {
     // Regla 5-1-1
     fase = 'Fase activa — cumple regla 5-1-1';
-    evaluacion = 'Contracciones cada ≤5 min, duración ≥60 seg, durante ≥1 hora. CUMPLE la regla 5-1-1.';
+    evaluacion = 'Cumple la regla 5-1-1';
     recomendacion = '¡Es momento de ir al hospital! Llamá a tu obstetra en camino.';
   } else if (freq < 3 && dur >= 60) {
     fase = 'Transición / Fase avanzada';
-    evaluacion = 'Contracciones muy frecuentes e intensas. Posible fase de transición.';
+    evaluacion = 'Posible fase de transición';
     recomendacion = '¡Andá al hospital AHORA si no estás ya internada!';
   } else {
     fase = 'Fase temprana';
-    evaluacion = 'Contracciones presentes pero sin patrón claro de parto activo.';
+    evaluacion = 'Sin patrón de parto activo';
     recomendacion = 'Seguí midiendo cada 30-60 minutos. Descansá y mantené la hidratación.';
   }
 
   // Alerta de pretérmino
   if (esPretermino && freq <= 10 && dur >= 30) {
-    evaluacion = '⚠️ ALERTA: Contracciones regulares ANTES de la semana 37. Posible amenaza de parto prematuro.';
-    recomendacion = '¡Llamá a tu obstetra o andá a la guardia DE INMEDIATO! No esperes.';
+    evaluacion = 'Alerta: posible parto prematuro';
+    recomendacion = '¡Llamá a tu obstetra o andá a la guardia DE INMEDIATO! No esperes. Contracciones regulares antes de la semana 37 pueden indicar amenaza de parto prematuro.';
     fase = 'Posible amenaza de parto prematuro';
   }
 
