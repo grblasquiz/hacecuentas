@@ -57,7 +57,7 @@ export const CATEGORY_HUBS: CategoryHubData[] = [
         "calcs": [
           {
             "label": "Interés compuesto",
-            "slug": "calculadora-interes-compuesto-aporte-mensual"
+            "slug": "calculadora-interes-compuesto"
           },
           {
             "label": "Regla 72",

@@ -969,7 +969,6 @@ import { cuantosJuguetesNinoEdadDesarrollo } from './cuantos-juguetes-nino-edad-
 import { cuartaCategoriaEmpleadoEmpresaArgentina } from './cuarta-categoria-empleado-empresa-argentina';
 import { compute as compute__cuenta_2_afp_chile_aporte_voluntario_rendimiento } from './cuenta-2-afp-chile-aporte-voluntario-rendimiento';
 import { compute as compute__cuenta_afc_ahorro_fomento_construccion_colombia } from './cuenta-afc-ahorro-fomento-construccion-colombia';
-import { compute as compute__cuenta_crecimiento_aporte_mensual_vs_tasa_anual } from './cuenta-crecimiento-aporte-mensual-vs-tasa-anual';
 import { compute as compute__cuenta_de_ahorro_mexico_rendimiento_cetes_directo_nu_mercado_pago } from './cuenta-de-ahorro-mexico-rendimiento-cetes-directo-nu-mercado-pago';
 import { cuentaRegresiva } from './cuenta-regresiva';
 import { cuentaRegresivaFecha } from './cuenta-regresiva-fecha';
@@ -1798,7 +1797,6 @@ import { integralDefinidaBasica } from './integral-definida-basica';
 import { integralIndefinidaPolinomioCoefs } from './integral-indefinida-polinomio-coefs';
 import { interesAcumuladoTarjeta } from './interes-acumulado-tarjeta';
 import { interesCompuesto } from './interes-compuesto';
-import { compute as compute__interes_compuesto_aporte_mensual } from './interes-compuesto-aporte-mensual';
 import { interesJudicialTasa } from './interes-judicial-tasa';
 import { interesSimple } from './interes-simple';
 import { interesSimpleCapitalTiempoTasa } from './interes-simple-capital-tiempo-tasa';
@@ -3258,7 +3256,6 @@ import { vacunasPerroCalendarioCachorro } from './vacunas-perro-calendario-cacho
 import { vajillaAlquilerInvitados } from './vajilla-alquiler-invitados';
 import { valeTransporteDesconto } from './vale-transporte-desconto';
 import { valorEmpresaMultiploEbitda } from './valor-empresa-multiplo-ebitda';
-import { valorFuturoAporteMensual } from './valor-futuro-aporte-mensual';
 import { valorHoraTrabajo } from './valor-hora-trabajo';
 import { valorIntrinsecoDcf } from './valor-intrinseco-dcf';
 import { valorMillasPuntoCentavos } from './valor-millas-punto-centavos';
@@ -4373,7 +4370,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuarta-categoria-empleado-empresa-argentina': cuartaCategoriaEmpleadoEmpresaArgentina,
   'cuenta-2-afp-chile-aporte-voluntario-rendimiento': compute__cuenta_2_afp_chile_aporte_voluntario_rendimiento,
   'cuenta-afc-ahorro-fomento-construccion-colombia': compute__cuenta_afc_ahorro_fomento_construccion_colombia,
-  'cuenta-crecimiento-aporte-mensual-vs-tasa-anual': compute__cuenta_crecimiento_aporte_mensual_vs_tasa_anual,
   'cuenta-de-ahorro-mexico-rendimiento-cetes-directo-nu-mercado-pago': compute__cuenta_de_ahorro_mexico_rendimiento_cetes_directo_nu_mercado_pago,
   'cuenta-regresiva': cuentaRegresiva,
   'cuenta-regresiva-fecha': cuentaRegresivaFecha,
@@ -5202,7 +5198,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'integral-indefinida-polinomio-coefs': integralIndefinidaPolinomioCoefs,
   'interes-acumulado-tarjeta': interesAcumuladoTarjeta,
   'interes-compuesto': interesCompuesto,
-  'interes-compuesto-aporte-mensual': compute__interes_compuesto_aporte_mensual,
   'interes-judicial-tasa': interesJudicialTasa,
   'interes-simple': interesSimple,
   'interes-simple-capital-tiempo-tasa': interesSimpleCapitalTiempoTasa,
@@ -6662,7 +6657,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'vajilla-alquiler-invitados': vajillaAlquilerInvitados,
   'vale-transporte-desconto': valeTransporteDesconto,
   'valor-empresa-multiplo-ebitda': valorEmpresaMultiploEbitda,
-  'valor-futuro-aporte-mensual': valorFuturoAporteMensual,
   'valor-hora-trabajo': valorHoraTrabajo,
   'valor-intrinseco-dcf': valorIntrinsecoDcf,
   'valor-millas-punto-centavos': valorMillasPuntoCentavos,

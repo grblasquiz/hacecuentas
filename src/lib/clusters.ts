@@ -198,7 +198,7 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Ahorro e inversión",
     "items": [
       {
-        "slug": "calculadora-interes-compuesto-aporte-mensual",
+        "slug": "calculadora-interes-compuesto",
         "label": "Interés compuesto",
         "icon": "📈"
       },
